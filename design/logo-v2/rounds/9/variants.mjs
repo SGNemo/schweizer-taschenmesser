@@ -1,6 +1,19 @@
 // Round 9 – the final candidate: mark A2b, pill W10c3 with the F4 proportions (final.params.mjs).
 // Rendered by `node render.mjs rounds/9`.
-import { LOCKUP, MARK, WORD } from '../../final.params.mjs';
+import { LOCKUP, WORD } from '../../final.params.mjs';
+
+// The mark of this round (A2b), frozen here: final.params.mjs has moved on to v2.1 (round 10).
+const MARK = {
+  params: {
+    body: { nose: 466, joint: 176, height: 132, peak: 0.48, blunt: 0.74, stalk: 50 },
+    tail: { style: 'fan', length: 68, spread: 76, notch: 16, overlap: 30 },
+    stripes: { at: [0.7, 0.37], width: [34, 40], bend: [-24, -16] },
+    eye: { at: 0.84, dy: -0.22, r: 26 },
+    fins: { dorsal: { height: 30, from: 0.3, to: 0.7 }, ventral: { height: 18, from: 0.36, to: 0.6 } },
+    soften: 12,
+    views: { tile: { radius: 146, scale: 0.8 }, adaptive: { scale: 0.56 } },
+  },
+};
 
 export default {
   title: 'Final candidate: A2b + NEMO pill (F4)',

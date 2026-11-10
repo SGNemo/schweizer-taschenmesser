@@ -10,6 +10,11 @@
 // fill with a same-colour stroke (corner rounding) under a mask that cuts the two bands and the eye.
 // Both bands are stroked with one width (the narrower one); the wider band is two offset strokes, so
 // the React `Logo` (one stroke width constant) draws the same shape as the master.
+// With `stripes.rim` the bands are cut inside the body only (clip path = `body`) and a white stroke of
+// that width on the body outline puts the rim back: the one-colour fish stays one piece.
+// The app icon, the maskable icon and the Android foreground are the two-colour fish (`views.tile.style:
+// 'duo'`): the same two paths in the accent, the same band strokes in white (filled, clipped to the body),
+// the eye in the dark ocean tone, on the ocean gradient.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
@@ -36,7 +41,19 @@ for (const [what, got, want] of [
 ]) {
   if (got !== want) throw new Error(`tokens.css ${what} is ${got}, the master has ${want}: update COLORS in mark.mjs and re-export`);
 }
+const [, hoverDark] = hexes('--accent-hover');
+const [oceanFrom] = hexes('--ocean-from');
+const [oceanTo] = hexes('--ocean-to');
+for (const [what, got, want] of [
+  ['--accent-hover (dark)', hoverDark, COLORS.accentHover.dark],
+  ['--ocean-from', oceanFrom, COLORS.ocean.from],
+  ['--ocean-to', oceanTo, COLORS.ocean.to],
+]) {
+  if (got !== want) throw new Error(`tokens.css ${what} is ${got}, the master has ${want}: update COLORS in mark.mjs and re-export`);
+}
 const ACCENT = COLORS.accent;
+const HOVER = COLORS.accentHover;
+const OCEAN = COLORS.ocean;
 const CONTRAST = COLORS.accentContrast;
 const WHITE = '#ffffff';
 
@@ -74,13 +91,19 @@ function bandPath(cut) {
 const [cut1, cut2] = g.cuts.map(bandPath);
 const { cx, cy, r } = g.eye;
 
+const RIM = g.rim;
+/** Clip path of the body: keeps the bands inside it (rim) and, in the two-colour fish, the white bands on it. */
+const bodyClip = (id, indent = '    ') =>
+  `<clipPath id="${id}-b">
+${indent}  <path d="${g.body}"/>
+${indent}</clipPath>`;
 const mask = (id, indent = '    ') =>
-  `<mask id="${id}" maskUnits="userSpaceOnUse" x="-512" y="-512" width="1536" height="1536">
+  `${RIM > 0 ? `${bodyClip(id, indent)}\n${indent}` : ''}<mask id="${id}" maskUnits="userSpaceOnUse" x="-512" y="-512" width="1536" height="1536">
 ${indent}  <rect x="-512" y="-512" width="1536" height="1536" fill="#fff"/>
-${indent}  <g fill="none" stroke="#000">
+${indent}  <g fill="none" stroke="#000"${RIM > 0 ? ` clip-path="url(#${id}-b)"` : ''}>
 ${indent}    <path d="${cut1}" stroke-width="${base}"/>
 ${indent}    <path d="${cut2}" stroke-width="${base}"/>
-${indent}  </g>
+${indent}  </g>${RIM > 0 ? `\n${indent}  <path d="${g.body}" fill="none" stroke="#fff" stroke-width="${RIM}" stroke-linejoin="round"/>` : ''}
 ${indent}  <circle cx="${cx}" cy="${cy}" r="${r}" fill="#000"/>
 ${indent}</mask>`;
 /** The fish with the bands and the eye cut out; the stroke in the same colour rounds the corners. */
@@ -89,6 +112,28 @@ const fish = (color, id, indent = '  ') =>
 ${indent}  <path d="${g.body}"/>
 ${indent}  <path d="${tailD}"/>
 ${indent}</g>`;
+/** Two-colour fish (app icon, maskable, Android foreground): gradient of two accent tokens, white bands, ocean eye. */
+const duoDefs = (id, indent = '    ') =>
+  `<linearGradient id="${id}-f" gradientUnits="userSpaceOnUse" x1="0" y1="${r1(g.box.y)}" x2="0" y2="${r1(g.box.y + g.box.h)}">
+${indent}  <stop offset="0" stop-color="${HOVER.dark}"/>
+${indent}  <stop offset="1" stop-color="${ACCENT.dark}"/>
+${indent}</linearGradient>
+${indent}${bodyClip(id, indent)}`;
+const oceanDef = (id, indent = '    ') =>
+  `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
+${indent}  <stop offset="0" stop-color="${OCEAN.from}"/>
+${indent}  <stop offset="1" stop-color="${OCEAN.to}"/>
+${indent}</linearGradient>`;
+const duoFish = (id, indent = '    ') =>
+  `${indent}<g fill="url(#${id}-f)" stroke="url(#${id}-f)" stroke-width="${g.soften}" stroke-linejoin="round">
+${indent}  <path d="${g.body}"/>
+${indent}  <path d="${tailD}"/>
+${indent}</g>
+${indent}<g fill="none" stroke="${WHITE}" clip-path="url(#${id}-b)">
+${indent}  <path d="${cut1}" stroke-width="${base}"/>
+${indent}  <path d="${cut2}" stroke-width="${base}"/>
+${indent}</g>
+${indent}<circle cx="${cx}" cy="${cy}" r="${r}" fill="${OCEAN.to}"/>`;
 const svg = (viewBox, inner, label = true) =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"${label ? ' role="img" aria-label="Nemo"' : ''}>\n${inner}\n</svg>\n`;
 /** translate + scale that equals "scale s around (256,256), then move by (dx, dy)". */
@@ -104,7 +149,10 @@ const square = [r1(b.x + b.w / 2 - side / 2), r1(b.y + b.h / 2 - side / 2), side
 const tile = views.tile;
 const ad = views.adaptive;
 if (g.radius(ad.scale, ad.dx ?? 0, ad.dy ?? 0) > ADAPTIVE_SAFE_RADIUS) throw new Error('the adaptive layer leaves the 66 dp safe zone');
-const maskable = Math.min(1, MASKABLE_SAFE_RADIUS / g.radius(1));
+if (tile.style !== 'duo') throw new Error("the export writes the two-colour app icon: set views.tile.style to 'duo'");
+// The fish's box is not centred in the canvas: the maskable icon centres it before scaling into the safe circle.
+const offCentre = b.x + b.w / 2 - 256;
+const maskable = Math.min(1, MASKABLE_SAFE_RADIUS / g.radius(1, -offCentre, 0));
 
 // ---- files ---------------------------------------------------------------------------------------
 const files = {};
@@ -125,32 +173,44 @@ ${fish('#000', 'nemo-mono-cut')}`,
 );
 files['app-icon.svg'] = svg(
   '0 0 512 512',
-  `  <defs>
-    ${mask('nemo-app-cut')}
+  `  <!-- Nemo app icon: the fish in the accent (dark-theme value) with white bands on the ocean gradient. -->
+  <defs>
+    ${oceanDef('nemo-app-o')}
+    ${duoDefs('nemo-app')}
   </defs>
-  <rect width="512" height="512" rx="${tile.radius}" fill="${ACCENT.light}"/>
+  <rect width="512" height="512" rx="${tile.radius}" fill="url(#nemo-app-o)"/>
   <g transform="${place(tile.scale, tile.dx ?? 0, tile.dy ?? 0)}">
-${fish(WHITE, 'nemo-app-cut', '    ')}
+${duoFish('nemo-app')}
   </g>`,
 );
 files['app-icon-maskable.svg'] = svg(
   '0 0 512 512',
   `  <defs>
-    ${mask('nemo-maskable-cut')}
+    ${oceanDef('nemo-maskable-o')}
+    ${duoDefs('nemo-maskable')}
   </defs>
-  <rect width="512" height="512" fill="${ACCENT.light}"/>
-  <g transform="${place(r3(maskable))}">
-${fish(WHITE, 'nemo-maskable-cut', '    ')}
+  <rect width="512" height="512" fill="url(#nemo-maskable-o)"/>
+  <g transform="${place(r3(maskable), r3(-offCentre * maskable))}">
+${duoFish('nemo-maskable')}
   </g>`,
 );
 files['android-foreground.svg'] = svg(
   '0 0 512 512',
   `  <defs>
-    ${mask('nemo-fg-cut')}
+    ${duoDefs('nemo-fg')}
   </defs>
   <g transform="${place(ad.scale, ad.dx ?? 0, ad.dy ?? 0)}">
-${fish(WHITE, 'nemo-fg-cut', '    ')}
+${duoFish('nemo-fg')}
   </g>`,
+  false,
+);
+// Android adaptive background: the ocean gradient (gen-icons turns the two stops into a drawable).
+files['android-background.svg'] = svg(
+  '0 0 512 512',
+  `  <defs>
+    ${oceanDef('nemo-bg-o')}
+  </defs>
+  <rect width="512" height="512" fill="url(#nemo-bg-o)"/>`,
   false,
 );
 files['android-monochrome.svg'] = svg(
@@ -232,6 +292,8 @@ const checks = [
   ['logo-mark.svg', files['logo-mark.svg'], master.mark],
   ['app-icon.svg', files['app-icon.svg'], master.app],
   ['android-foreground.svg', files['android-foreground.svg'], master.adFg],
+  ['android-background.svg', files['android-background.svg'], master.adBg],
+  ['android-monochrome.svg', files['android-monochrome.svg'], master.adMono],
 ];
 for (const [name, ours, theirs] of checks) {
   const d = await diff(ours, theirs);
@@ -257,6 +319,8 @@ export const LOGO_PATHS = {
 export const LOGO_CUT_WIDTH = ${base};
 export const LOGO_EYE = { cx: ${cx}, cy: ${cy}, r: ${r} } as const;
 export const LOGO_SOFTEN = ${g.soften};
+/** The bands are cut inside the body only; a stroke of this width on the body outline keeps the rim (0 = bands cut through). */
+export const LOGO_RIM = ${RIM};
 /** The mark follows the accent token (and "Logo in Themenfarbe" via \`--logo-ink\`). */
 export const LOGO_COLOR = 'var(--accent)';
 /** The accent token's two values (tokens.css \`--accent\`, light and dark) that the static brand files use. */
@@ -286,5 +350,5 @@ const splash = `<!-- brand:begin -->
       <!-- brand:end -->`;
 replaceBlock('index.html', /<!-- brand:begin -->[\s\S]*?<!-- brand:end -->/, splash);
 
-console.log(`brand sources written; fish view box ${tight.join(' ')}, maskable scale ${r3(maskable)}, adaptive radius ${r1(g.radius(ad.scale))} of ${ADAPTIVE_SAFE_RADIUS}`);
+console.log(`brand sources written; fish view box ${tight.join(' ')}, maskable scale ${r3(maskable)}, adaptive radius ${r1(g.radius(ad.scale, ad.dx ?? 0, ad.dy ?? 0))} of ${ADAPTIVE_SAFE_RADIUS}`);
 console.log(`wordmark box ${files['logo-wordmark.svg'].match(/viewBox="([^"]+)"/)[1]}`);

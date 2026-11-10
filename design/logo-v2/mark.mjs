@@ -7,7 +7,8 @@
 //
 //   mark / markSquare   transparent mark in the accent colour (tight / square view box)
 //   mono                the same shape in one colour (tray, themed icon, notification icon)
-//   app / appSmall      app icon: the mark on a rounded tile (taskbar, launcher, PWA), small-size corners
+//   app / appSmall      app icon: the mark on a rounded tile (taskbar, launcher, PWA), small-size corners;
+//                       `views.tile.style: 'duo'` = the fish in the accent with white filled bands on the ocean gradient
 //   adFg adBg adMono    Android adaptive foreground / background / monochrome (66 dp safe zone)
 //   markIn(color)       the mark in any colour or CSS variable (lockups, palette checks)
 //   box / tight         the mark's exact bounding box inside the 512 canvas
@@ -17,7 +18,10 @@
 export const COLORS = {
   // --accent (light / dark), --accent-contrast, --text, surfaces: web/src/ui/tokens.css
   accent: { light: '#b5430c', dark: '#ff9a57' },
+  accentHover: { light: '#963709', dark: '#ffb07a' },
   accentContrast: { light: '#ffffff', dark: '#1b0f06' },
+  // --ocean-from / --ocean-to: the brand gradient (same value in both themes), the tile of the two-colour app icon
+  ocean: { from: '#1d6b7a', to: '#0e2f45' },
   accentSoft: { light: '#fbe9de', dark: '#2e241c' },
   text: { light: '#171f24', dark: '#eceff1' },
   text3: { light: '#5f6c75', dark: '#88939b' },
@@ -56,8 +60,10 @@ const svg = (inner, label = 'Nemo', viewBox = '0 0 512 512') =>
 // ---------------------------------------------------------------------------------------------
 export const FISH = {
   body: { nose: 470, joint: 150, height: 112, peak: 0.5, blunt: 0.62, stalk: 44 },
-  tail: { style: 'fork', length: 96, spread: 96, notch: 34, overlap: 30 }, // style: fan | fork
-  stripes: { at: [0.72, 0.38], width: 38, bend: -10 }, // fractions 0 = tail joint .. 1 = nose; width and bend may be arrays
+  tail: { style: 'fork', length: 96, spread: 96, notch: 34, overlap: 30 }, // style: fan | fork | lobe
+  // fractions 0 = tail joint .. 1 = nose; width and bend may be arrays. rim > 0: the cut bands stop before the body
+  // outline (a rim of rim / 2 stays), so the one-colour fish remains one piece instead of three.
+  stripes: { at: [0.72, 0.38], width: 38, bend: -10, rim: 0 },
   eye: { at: 0.84, dy: -0.16, r: 22 },
   fins: { dorsal: { height: 0, from: 0.3, to: 0.7 }, ventral: { height: 0, from: 0.38, to: 0.6 } }, // height 0 = none
   soften: 12, // rounds every outer corner (same-colour stroke)
@@ -81,6 +87,21 @@ function tailPath(b, t, cy = 256) {
   const { length: L, spread: s, notch, overlap: ov } = t;
   const x0 = xp + ov;
   const xe = xp - L;
+  if (t.style === 'lobe') {
+    // Two rounded lobes and a shallow notch (v2.1): the tips are drawn round instead of relying on the soften
+    // stroke, so the tail reads as a fin at 16 px and not as two spikes.
+    const r = L * 0.23; // tip rounding
+    const half = (d) =>
+      `C${xp - L * 0.3} ${cy + d * (ph + s * 0.1)} ${xp - L * 0.56} ${cy + d * s * 0.87} ${xe + r} ${cy + d * s}` +
+      `C${xe + r * 0.15} ${cy + d * s * 1.07} ${xe - r * 0.34} ${cy + d * s * 0.92} ${xe - r * 0.08} ${cy + d * s * 0.68}`;
+    // top lobe forwards (joint → tip → notch), bottom lobe is its mirror image walked backwards
+    const top = `M${x0} ${cy - ph}L${xp} ${cy - ph}${half(-1)}C${xe + r * 0.17} ${cy - s * 0.45} ${xe + notch} ${cy - s * 0.21} ${xe + notch} ${cy}`;
+    const bottom =
+      `C${xe + notch} ${cy + s * 0.21} ${xe + r * 0.17} ${cy + s * 0.45} ${xe - r * 0.08} ${cy + s * 0.68}` +
+      `C${xe - r * 0.34} ${cy + s * 0.92} ${xe + r * 0.15} ${cy + s * 1.07} ${xe + r} ${cy + s}` +
+      `C${xp - L * 0.56} ${cy + s * 0.87} ${xp - L * 0.3} ${cy + ph + s * 0.1} ${xp} ${cy + ph}L${x0} ${cy + ph}Z`;
+    return fmt(top + bottom);
+  }
   const top = `M${x0} ${cy - ph}L${xp} ${cy - ph}C${xp - L * 0.4} ${cy - ph} ${xe + L * 0.3} ${cy - s} ${xe} ${cy - s}`;
   const back =
     t.style === 'fork'
@@ -180,22 +201,52 @@ function fishBox(f) {
 function fishFilled(f, color, id) {
   const stripes = fishStripes(f);
   const eye = fishEye(f);
-  const holes =
-    stripes.map((s) => `<path d="${s.d}" stroke-width="${s.w}"/>`).join('') +
-    (f.eye.r > 0 ? `<circle cx="${eye.cx}" cy="${eye.cy}" r="${eye.r}" fill="#000" stroke="none"/>` : '');
+  const rim = f.stripes.rim ?? 0;
+  const bands = stripes.map((s) => `<path d="${s.d}" stroke-width="${s.w}"/>`).join('');
+  const eyeHole = f.eye.r > 0 ? `<circle cx="${eye.cx}" cy="${eye.cy}" r="${eye.r}" fill="#000" stroke="none"/>` : '';
+  const holes = bands + eyeHole;
+  const body0 = bodyPath(f.body);
+  // rim: the bands are cut inside the body only, and a white stroke on the body outline puts the rim back
+  const cut = rim > 0 ? `<g fill="none" stroke="#000" clip-path="url(#${id}-b)">${bands}</g><path d="${body0}" fill="none" stroke="#fff" stroke-width="${rim}" stroke-linejoin="round"/>${eyeHole}` : `<g fill="none" stroke="#000">${holes}</g>`;
   const defs = holes
-    ? `<mask id="${id}" maskUnits="userSpaceOnUse" x="-512" y="-512" width="1536" height="1536"><rect x="-512" y="-512" width="1536" height="1536" fill="#fff"/><g fill="none" stroke="#000">${holes}</g></mask>`
+    ? `${rim > 0 ? `<clipPath id="${id}-b"><path d="${body0}"/></clipPath>` : ''}<mask id="${id}" maskUnits="userSpaceOnUse" x="-512" y="-512" width="1536" height="1536"><rect x="-512" y="-512" width="1536" height="1536" fill="#fff"/>${cut}</mask>`
     : '';
   const soft = f.soften > 0 ? ` stroke="${color}" stroke-width="${f.soften}" stroke-linejoin="round"` : '';
   const body = `<g fill="${color}"${soft}${holes ? ` mask="url(#${id})"` : ''}>${fishShapes(f).map((d) => `<path d="${d}"/>`).join('')}</g>`;
   return { defs, body, box: fishBox(f) };
 }
 
+/**
+ * Two-colour fish for the app icon: the whole fish in the accent (a soft top-to-bottom gradient of two accent
+ * tokens), the bands as white strokes clipped to the body (filled, not cut: the fish stays one piece at 16 px),
+ * the eye in the dark end of the ocean gradient.
+ */
+function fishDuo(f, id, ink) {
+  const stripes = fishStripes(f);
+  const eye = fishEye(f);
+  const box = fishBox(f);
+  const defs =
+    `<linearGradient id="${id}-f" gradientUnits="userSpaceOnUse" x1="0" y1="${r1(box.y)}" x2="0" y2="${r1(box.y + box.h)}"><stop offset="0" stop-color="${ink.fishTop}"/><stop offset="1" stop-color="${ink.fish}"/></linearGradient>` +
+    `<clipPath id="${id}-b"><path d="${bodyPath(f.body)}"/></clipPath>`;
+  const soft = f.soften > 0 ? ` stroke="url(#${id}-f)" stroke-width="${f.soften}" stroke-linejoin="round"` : '';
+  const body =
+    `<g fill="url(#${id}-f)"${soft}>${fishShapes(f).map((d) => `<path d="${d}"/>`).join('')}</g>` +
+    `<g fill="none" stroke="${ink.band}" clip-path="url(#${id}-b)">${stripes.map((s) => `<path d="${s.d}" stroke-width="${s.w}"/>`).join('')}</g>` +
+    (f.eye.r > 0 ? `<circle cx="${eye.cx}" cy="${eye.cy}" r="${eye.r}" fill="${ink.eye}"/>` : '');
+  return { defs, body, box };
+}
+// Top to bottom, not diagonal: every pixel row is one colour, so the PNG icons stay small (a diagonal
+// gradient made pwa-512.png six times larger and broke the precache budget).
+export const oceanGradient = (id) =>
+  `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${COLORS.ocean.from}"/><stop offset="1" stop-color="${COLORS.ocean.to}"/></linearGradient>`;
+
 // ---------------------------------------------------------------------------------------------
 // Views: tile (app icon), adaptive, transparent mark.
 // ---------------------------------------------------------------------------------------------
 export const VIEWS = {
-  tile: { radius: 146, scale: 0.8, dx: 0, dy: 0, clip: false }, // radius 146/512 = the module chip's 8/28; clip: the mark may bleed off the tile
+  // radius 146/512 = the module chip's 8/28; clip: the mark may bleed off the tile; style: mono (one colour on the
+  // accent tile) | duo (accent fish, white bands, ocean gradient tile – also the Android adaptive layers)
+  tile: { radius: 146, scale: 0.8, dx: 0, dy: 0, clip: false, style: 'mono' },
   adaptive: { scale: 0.62, dx: 0, dy: 0 }, // Android: 512 box = 108 dp, safe circle r 156
   mark: { scale: 1, dx: 0, dy: 0 },
 };
@@ -211,7 +262,11 @@ export function buildLayers(params = {}, opts = {}) {
   const { views: viewsOver, ...shapeOver } = params;
   const p = merge(FISH, shapeOver);
   const views = merge(VIEWS, viewsOver ?? {});
-  const ink = merge({ mark: COLORS.accent.light, mono: '#000000', tile: COLORS.accent.light, onTile: '#ffffff' }, opts.ink ?? {});
+  const ink = merge(
+    { mark: COLORS.accent.light, mono: '#000000', tile: COLORS.accent.light, onTile: '#ffffff', fish: COLORS.accent.dark, fishTop: COLORS.accentHover.dark, band: '#ffffff', eye: COLORS.ocean.to },
+    opts.ink ?? {},
+  );
+  const duo = views.tile.style === 'duo';
   const uid = opts.id ?? 'nemo';
   const tilt = p.tilt ?? 0;
   const draw = (color, id, view) => {
@@ -221,8 +276,14 @@ export function buildLayers(params = {}, opts = {}) {
   };
   const m = draw(ink.mark, `${uid}-m`, views.mark);
   const mono = draw(ink.mono, `${uid}-o`, views.mark);
-  const t = draw(ink.onTile, `${uid}-t`, views.tile);
-  const a = draw(ink.onTile, `${uid}-a`, views.adaptive);
+  const drawDuo = (id, view) => {
+    const d = fishDuo(p, id, ink);
+    return { defs: d.defs, body: `<g transform="${place(view)}">${d.body}</g>`, box: d.box };
+  };
+  const t = duo ? drawDuo(`${uid}-t`, views.tile) : draw(ink.onTile, `${uid}-t`, views.tile);
+  const a = duo ? drawDuo(`${uid}-a`, views.adaptive) : draw(ink.onTile, `${uid}-a`, views.adaptive);
+  if (duo) t.defs += oceanGradient(`${uid}-o`);
+  const tileFill = duo ? `url(#${uid}-o)` : ink.tile;
   const am = draw('#ffffff', `${uid}-am`, views.adaptive);
   const box = m.box;
   const tight = `${Math.floor(box.x)} ${Math.floor(box.y)} ${Math.ceil(box.w) + 1} ${Math.ceil(box.h) + 1}`;
@@ -238,10 +299,10 @@ export function buildLayers(params = {}, opts = {}) {
     mark: svg(`<defs>${m.defs}</defs>${m.body}`, 'Nemo', tight),
     markSquare: svg(`<defs>${m.defs}</defs>${m.body}`, 'Nemo', square),
     mono: svg(`<defs>${mono.defs}</defs>${mono.body}`, 'Nemo', square),
-    app: tileSvg(t, views.tile.radius, ink.tile, views.tile.clip, `${uid}-clip`),
-    appSmall: tileSvg(t, Math.round(views.tile.radius * 0.85), ink.tile, views.tile.clip, `${uid}-clips`),
+    app: tileSvg(t, views.tile.radius, tileFill, views.tile.clip, `${uid}-clip`),
+    appSmall: tileSvg(t, Math.round(views.tile.radius * 0.85), tileFill, views.tile.clip, `${uid}-clips`),
     adFg: svg(`<defs>${a.defs}</defs>${a.body}`),
-    adBg: svg(`<rect width="512" height="512" fill="${ink.tile}"/>`),
+    adBg: duo ? svg(`<defs>${oceanGradient(`${uid}-ob`)}</defs><rect width="512" height="512" fill="url(#${uid}-ob)"/>`) : svg(`<rect width="512" height="512" fill="${ink.tile}"/>`),
     adMono: svg(`<defs>${am.defs}</defs>${am.body}`),
     /** The mark recoloured (same geometry): any colour or a CSS variable. */
     markIn: (color) => {
@@ -274,6 +335,7 @@ export function markGeometry(params = {}) {
     body: shapes[0],
     rest: shapes.slice(1),
     cuts: fishStripes(p),
+    rim: p.stripes.rim ?? 0,
     eye: fishEye(p),
     soften: p.soften,
     box: fishBox(p),
