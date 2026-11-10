@@ -29,12 +29,15 @@ const stored = (page: Page) =>
           const db = open.result;
           const tx = db.transaction(['_meta', '_modules'], 'readonly');
           const meta = tx.objectStore('_meta').get('defaults.version');
-          const rows = tx.objectStore('_modules').count();
+          const rows = tx.objectStore('_modules').getAll();
           tx.oncomplete = () => {
             db.close();
             resolve({
               meta: (meta.result as { value?: unknown } | undefined)?.value,
-              rows: rows.result,
+              // A deleted row counts as no row (the app reads only live ones).
+              rows: (rows.result as { deletedAt: number | null }[]).filter(
+                (r) => r.deletedAt === null,
+              ).length,
             });
           };
           tx.onerror = () => reject(tx.error);
@@ -85,4 +88,16 @@ test('switching a set module off in the library is a household choice: it writes
   await page.getByTestId('module-lists').getByRole('switch').click();
   await expect(page.getByTestId('module-lists').getByRole('switch')).not.toBeChecked();
   await expect.poll(async () => (await stored(page)).rows).toBe(1);
+});
+
+test('"Rückgängig" after that brings the device back to no row: lists are on again through the set', async ({
+  page,
+}) => {
+  await fresh(page, { set: true, desktop: true });
+  const lists = page.getByTestId('module-lists').getByRole('switch');
+  await lists.click();
+  await expect(lists).not.toBeChecked();
+  await page.getByRole('button', { name: 'Rückgängig' }).click();
+  await expect(lists).toBeChecked();
+  await expect.poll(async () => (await stored(page)).rows).toBe(0);
 });
