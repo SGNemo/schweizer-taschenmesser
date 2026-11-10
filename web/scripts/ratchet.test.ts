@@ -356,6 +356,12 @@ describe('protected paths', () => {
     // A new spec with the file name of a protected one is picked up by the smoke list and the measuring run.
     expect(found('web/e2e/x/a11y.spec.ts')).toBe(1);
     expect(found('web/e2e/screenshots/x/screenshots/stimulus.spec.ts')).toBe(1);
+    // Project npm settings and nested ts/jsconfig files change what every command and spec loads.
+    expect(found('web/.npmrc')).toBe(1);
+    expect(found('.npmrc')).toBe(1);
+    expect(found('web/e2e/tsconfig.json')).toBe(1);
+    expect(found('web/e2e/seed/tsconfig.json')).toBe(1);
+    expect(found('web/e2e/screenshots/jsconfig.json')).toBe(1);
     // What no resolver loads is no shadow.
     expect(found('web/e2e/axe.md')).toBe(0);
     expect(found('web/e2e/seed/other-helpers.ts')).toBe(0);
@@ -543,6 +549,18 @@ describe('additions only in protected test files', () => {
     [
       'vi.mock with a comment in between',
       "test('z', () => {\n  vi/**/.mock('@/core/ai/aiSchema', () => ({}));\n});",
+    ],
+    [
+      'division after a doubled postfix `!`',
+      "test('a', () => { const x = 4; const y = x!! / 2 }); (globalThis as any).evil = 1; test('b', () => { const z = 4 / 2 });",
+    ],
+    [
+      'division after a string with postfix `!`',
+      "test('a', () => { const y = 'a'! / 2 }); (globalThis as any).evil = 1; test('b', () => { const z = 4 / 2 });",
+    ],
+    [
+      'division after a private name spelled like a keyword',
+      "test('a', () => { class C { #in = 4; m() { return this.#in / 2 } } }); (globalThis as any).evil = 1; test('b', () => { class D { m() { return 4 / 2 } } });",
     ],
     ['regex after a closing bracket', "test('a', () => {\n  if (x) /a/.test(y);\n});"],
     [

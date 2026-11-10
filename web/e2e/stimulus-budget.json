@@ -354,15 +354,15 @@
       "signatureBlocks": 0
     },
     "d1920--settings-benachrichtigungen": {
-      "height": 2346,
-      "buttons": 69,
+      "height": 2324,
+      "buttons": 68,
       "links": 31,
       "icons": 36,
-      "firstScreenActions": 60,
+      "firstScreenActions": 59,
       "borders": 4,
       "shadows": 14,
       "surfaceLanguages": 2,
-      "colouredAboveFold": 10,
+      "colouredAboveFold": 9,
       "signatureBlocks": 0
     },
     "d1920--settings-darstellung": {
@@ -462,7 +462,7 @@
       "signatureBlocks": 0
     },
     "p412--bookmarks": {
-      "height": 3205,
+      "height": 3179,
       "buttons": 42,
       "links": 43,
       "icons": 48,
@@ -546,7 +546,7 @@
       "signatureBlocks": 0
     },
     "p412--finance": {
-      "height": 2992,
+      "height": 3017,
       "buttons": 18,
       "links": 11,
       "icons": 19,
@@ -606,7 +606,7 @@
       "signatureBlocks": 0
     },
     "p412--invoices": {
-      "height": 1914,
+      "height": 1940,
       "buttons": 37,
       "links": 11,
       "icons": 36,
@@ -618,7 +618,7 @@
       "signatureBlocks": 0
     },
     "p412--library": {
-      "height": 8627,
+      "height": 8604,
       "buttons": 50,
       "links": 29,
       "icons": 35,
@@ -714,7 +714,7 @@
       "signatureBlocks": 0
     },
     "p412--reminders": {
-      "height": 2463,
+      "height": 2484,
       "buttons": 60,
       "links": 17,
       "icons": 38,
@@ -726,7 +726,7 @@
       "signatureBlocks": 0
     },
     "p412--settings": {
-      "height": 2446,
+      "height": 2467,
       "buttons": 15,
       "links": 27,
       "icons": 48,
@@ -738,15 +738,15 @@
       "signatureBlocks": 0
     },
     "p412--settings-benachrichtigungen": {
-      "height": 2659,
-      "buttons": 46,
+      "height": 2660,
+      "buttons": 45,
       "links": 7,
       "icons": 12,
-      "firstScreenActions": 15,
+      "firstScreenActions": 14,
       "borders": 4,
       "shadows": 9,
       "surfaceLanguages": 2,
-      "colouredAboveFold": 4,
+      "colouredAboveFold": 3,
       "signatureBlocks": 0
     },
     "p412--settings-darstellung": {

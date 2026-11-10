@@ -53,6 +53,12 @@ export const ALWAYS_PROTECTED = [
   '.github/actions/**',
   'web/*.config.*',
   'web/.env*',
+  // npm reads a project `.npmrc` for every `npm run` / `npx` (script-shell, node-options, registry).
+  '.npmrc',
+  '**/.npmrc',
+  // Playwright applies the nearest tsconfig/jsconfig (`paths`) to every spec below it.
+  'web/**/tsconfig*.json',
+  'web/**/jsconfig*.json',
 ];
 
 const E2E_PROMISES = [
@@ -444,6 +450,9 @@ const EXPRESSION_KEYWORDS = new Set(
   'return typeof case do else in void delete throw new instanceof'.split(' '),
 );
 const AMBIGUOUS_WORDS = new Set(['of', 'await', 'yield']);
+/** Tokens an expression may follow (allow-list: everything else is no expression start). */
+const OPENS_EXPRESSION = '(,=:[&|?{;+-*%<~^';
+const BEFORE_KEYWORD = ';{}(),=:[&|?!+-*%<>~^)';
 const CONTROL_BEFORE = /(?<![\p{ID_Continue}$.\\])(?:if|while|for|with|await)$/u;
 /**
  * True if `appended` is nothing but top-level statements of the form
@@ -531,9 +540,12 @@ export function onlyAppendedTests(appended, { jsx = false } = {}) {
       src.slice(src.lastIndexOf('\n', k) + 1, k + 1).includes('//')
     )
       fail();
-    if (k >= 0 && src[k] === '.') return false; // a property name
+    if (k >= 0 && (src[k] === '.' || src[k] === '#')) return false; // a property or a private name
     if (AMBIGUOUS_WORDS.has(word)) fail();
-    return EXPRESSION_KEYWORDS.has(word);
+    if (!EXPRESSION_KEYWORDS.has(word)) return false;
+    // A keyword only where a statement or an expression can begin; anywhere else do not guess.
+    if (k >= 0 && !BEFORE_KEYWORD.includes(src[k])) fail();
+    return true;
   };
   /** May an expression start here (then `/` opens a regex and `<` a JSX element)? */
   const expression = (last, lastAt) => {
@@ -547,9 +559,12 @@ export function onlyAppendedTests(appended, { jsx = false } = {}) {
       while (k >= 0 && (src[k] === ' ' || src[k] === '\t')) k--;
       if (k < 0) return true;
       if (/[\p{ID_Continue}$]/u.test(src[k])) return keywordAt(k); // `return !/x/` against `x! / 2`
-      return src[k] !== ')' && src[k] !== ']';
+      // Prefix only behind an operator or an opening bracket; behind a string, `!`, `)`, `]`, `}` it is the
+      // postfix (`'a'! / 2`, `x!! / 2`) or undecidable: no expression, a `/` then fails closed.
+      if (src[k] === '>') return src[k - 1] === '=';
+      return OPENS_EXPRESSION.includes(src[k]);
     }
-    if ('(,=:[&|?{;+-*%<~^'.includes(last)) return true;
+    if (OPENS_EXPRESSION.includes(last)) return true;
     return /[\p{ID_Continue}$]/u.test(last) && keywordAt(lastAt);
   };
   const name = () => {
@@ -619,7 +634,11 @@ export function onlyAppendedTests(appended, { jsx = false } = {}) {
         mark();
       } else if (c === '/') {
         if (expression(last, lastAt)) regex();
-        else if (/[\w$\]]/.test(last) || (last === ')' && !afterControl))
+        else if (
+          /[\w$\]]/.test(last) ||
+          (last === ')' && !afterControl) ||
+          (last === '!' && /[\p{ID_Continue}$)\]]/u.test(src.slice(0, lastAt).trimEnd().slice(-1)))
+        )
           i++; // division (after a call or a bracketed expression too)
         else fail(); // after `if (…)` or `}` it could be either: do not guess
         mark('/');
