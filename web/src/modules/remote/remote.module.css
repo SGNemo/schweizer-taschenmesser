@@ -2,7 +2,9 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  min-height: 100%;
+  /* Fill the screen below the page head and above the bottom bar, so the buttons (pushed down by
+     `margin-top: auto`) end up in the thumb zone. */
+  min-height: calc(100dvh - 14rem - var(--bottom-nav-h));
 }
 .state {
   display: flex;

@@ -87,7 +87,7 @@ test('pause, louder and quieter on the PC, one-handed', async ({ page }, info) =
   await expect(state).toHaveText('Dein PC · Lautstärke 80 %');
 
   // "Ton aus" from the menu; "Lauter" lifts it again
-  await page.getByRole('button', { name: 'Mehr' }).click();
+  await page.getByRole('button', { name: 'Weitere Aktionen' }).click();
   await page.getByRole('menuitem', { name: 'Ton aus / an' }).click();
   await expect(state).toHaveText('Dein PC · Ton aus');
   await page.getByTestId('remote-volume-up').click();

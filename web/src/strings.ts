@@ -8674,7 +8674,7 @@ export const de = {
     },
     phoneOnly: 'Die Fernbedienung gibt es in der Handy-App.',
     media: 'Medien',
-    more: 'Mehr',
+    more: 'Weitere Aktionen',
     mute: 'Ton aus / an',
     lock: 'PC sperren',
     previous: 'Vorheriger',

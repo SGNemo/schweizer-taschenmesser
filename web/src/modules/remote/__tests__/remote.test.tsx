@@ -145,11 +145,11 @@ describe('RemotePage (Medien)', () => {
 
   it('"Ton aus" and "PC sperren" sit in the menu', async () => {
     await show();
-    fireEvent.click(screen.getByRole('button', { name: 'Mehr' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Weitere Aktionen' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Ton aus / an' }));
     await flush();
     expect(state()).toBe('Dein PC · Ton aus');
-    fireEvent.click(screen.getByRole('button', { name: 'Mehr' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Weitere Aktionen' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'PC sperren' }));
     await flush();
     expect(state()).toBe('Dein PC · Ton aus · gesperrt');

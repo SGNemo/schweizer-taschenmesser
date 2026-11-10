@@ -13,7 +13,7 @@ export const remote: Strings['remote'] = {
   },
   phoneOnly: 'The remote is available in the phone app.',
   media: 'Media',
-  more: 'More',
+  more: 'More actions',
   mute: 'Sound off / on',
   lock: 'Lock PC',
   previous: 'Previous',
