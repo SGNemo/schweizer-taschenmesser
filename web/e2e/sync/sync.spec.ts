@@ -319,8 +319,13 @@ test.describe('end-to-end encryption', () => {
       .click();
     await b.page.getByRole('dialog').getByRole('button', { name: 'Zurücksetzen' }).click();
     await expect(b.page.getByTestId('sync-status')).toContainText('Verschlüsselt');
+    // "Verschlüsselt" shows as soon as the first round starts; go on only when it has pushed. Before
+    // that the server is still empty: the dump below would prove nothing, and A's sync further down
+    // would see no ciphertext and upload its plain data.
+    await expect(b.page.getByTestId('sync-status')).toContainText('Synchronisiert');
 
     const { text, ops } = await serverDump(request);
+    expect(ops.length).toBeGreaterThan(0);
     expect(text).not.toContain('lag unverschlüsselt');
     expect(text).not.toContain('Neuer Start');
     expect(ops.every((o) => typeof o.value === 'string' && o.value.startsWith('enc:v1:'))).toBe(
