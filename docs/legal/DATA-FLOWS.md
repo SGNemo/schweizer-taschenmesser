@@ -25,24 +25,7 @@ Eine Tabelle für App, Website und README. Quelle der In-App-Texte: `web/src/str
 | `ip` | GET der öffentlichen IP | api.ipify.org | nur auf Klick (Windows) | nein | – | `modules/disk/components/PublicIp.tsx` |
 | `links` | Adresse an den System-Browser (Google Maps, WhatsApp, Lesezeichen, Doku) | Linkziel | nur auf Klick | nein | – | `core/links.ts`, `app.openUrl` |
 
-**Mail → ToDo (Kopf leer 3a):** auf Tipp („In den Plan“, „Alle in den Plan…“ nach Vorschau) gelangen Absendername und Betreff als ToDo-Titel und ein Mail-Link (Thread-Id, Betreff) und als Notiz die Web-Adresse der Mail (ohne Mail-Adresse) in ein ToDo – synchronisiert, im Backup, in Daten-API/MCP wie jedes ToDo; nie Mail-Adresse, Kontoschlüssel oder Mailtext. Mail-Cache und `link`-Tabelle bleiben `local: true`, `dataApi: false`; keine neue Sammlung, kein neues Feld auf der synchronisierten Seite.
-
-**Mail → Rechnung (Kopf leer 3b):** auf Tipp („Anlegen“, „Mahnung vermerken“) gelangen Empfängername, Betrag, Fälligkeit und als Notiz die Web-Adresse der Mail (ohne Mail-Adresse) in eine Rechnung bzw. Mahnstufe, Datum und eine Notizzeile an die offene Rechnung – synchronisiert, im Backup wie jede Rechnung; gelesen wird nur auf dem Gerät aus Absender, Betreff und Vorschauzeile des Mail-Caches (keine KI, kein Netz); die Id kommt nur aus der Nachrichten-Id (die Id der neuesten Nachricht liegt dafür im lokalen, versiegelten Mail-Cache; die lokale `link`-Zeile trägt die Nachrichten-Id, `local: true`, `dataApi: false`); der Planer zeigt bei einer vermerkten Mahnung deren Notizzeile (neuer Betrag, Frist; nur in der Sprache, in der sie geschrieben wurde) in der Plan-Zeile; nie Mail-Adresse, Kontoschlüssel oder Mailtext.
-
-**Nur lokal, kein Datenfluss:** lokale API (Loopback), MCP-Wrapper, Browser-Erweiterung (Native Messaging), Diagnose-Export (Datei, nichts gesendet), Backup (Datei), eingebautes Modell und Ollama (lokal), Supporter-Prüfung. **Keine** Webhooks, Analytics, Telemetrie, CDN-Schriften oder Feeds in der App (`parseFeed` hat keinen Aufrufer). Website: [datenschutz.astro](../../site/src/pages/datenschutz.astro) (Cloudflare Pages, GitHub-/Ko-fi-Links).
-
-## Website und README (nachgezogen)
-
-Erledigt in diesem PR (DE + EN): [datenschutz.astro](../../site/src/pages/datenschutz.astro), [en/privacy.astro](../../site/src/pages/en/privacy.astro), [README](../../README.md) / [README.de](../../README.de.md) (ein Aufzählungspunkt). Bei jeder Änderung an der Tabelle erneut abgleichen:
-
-- **Website Datenschutz:** Abschnitt „Die App Nemo“ nennt jetzt die optionalen Flüsse (Sync, Update, KI, Google, Kalender-Abo, Modell-Download, Währung, Supporter) und verweist auf die In-App-Seite. Offen bleibt der Satz „speichert keine Namen“ beim Supporter-Dienst stimmt nur mit Einschränkung: ein öffentlicher Name steckt (≤ 20 Zeichen) im Code selbst ([SUPPORTER-NOTES](SUPPORTER-NOTES.md) §3).
-- **Website Impressum/Datenschutz:** Platzhalter `[PLATZHALTER: …]` und die In-App-`[[…]]` müssen dieselben Angaben tragen (Name, Anschrift, E-Mail). Die E-Mail der Website steht schon im Repo; in der App bewusst Platzhalter, bis du sie freigibst.
-- **README:** neuer Punkt „Nur, was du einrichtest, verlässt das Gerät“ unter „Datenschutz in Kürze“.
-- **docs/user/security.md, ai-assistant.md** (+ `.de.md`): gegen die Zeilen `ai-cloud` und `google` prüfen.
-
-## Lücken, die beim Lesen auffielen (nicht geändert, keine Funktionsänderung)
-
-- Schreib-Pipeline: Cloud-Fallback ist standardmäßig an, solange kein lokales Modell aktiv ist (`cloudAllowed`); wirksam erst mit eingerichtetem Anbieter.
-- Chat-Modul sendet mehr als der Assistent und ist nicht von `privacy.test.ts` abgedeckt. Der Chat zeigt jetzt bei „Meine Anbieter“ einen Hinweis, dass der Text das Gerät verlässt, mit der Schaltfläche „KI abschalten …“ (führt zu Einstellungen → KI).
-- Währungsrechner holt Kurse ohne Rückfrage.
-- Google-Status „Testing“: die App erkennt ihn nicht, nur die Folge (`invalid_grant`/401 → „Abgelaufen“, kein Vorab-Ablaufdatum).
+Weitere Abschnitte:
+- [data-flows-hinweise](data-flows-hinweise.md) – Mail → ToDo, Mail → Rechnung, „Nur lokal, kein Datenfluss“
+- [data-flows-website](data-flows-website.md) – „Website und README (nachgezogen)“
+- [data-flows-luecken](data-flows-luecken.md) – „Lücken, die beim Lesen auffielen“
