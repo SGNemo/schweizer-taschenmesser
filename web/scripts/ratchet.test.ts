@@ -1,8 +1,9 @@
 import { execFileSync } from 'node:child_process';
 import { createHash, generateKeyPairSync, sign } from 'node:crypto';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
 import {
   approvalMessage,
@@ -18,6 +19,7 @@ import {
   loadPublicKey,
   onlyAppendedTests,
   parseArgs,
+  PROTECTED,
   RATCHET_PUBLIC_KEY,
   REPO,
   routeSlug,
@@ -117,7 +119,8 @@ describe('stimulus-budget.json', () => {
         'd1920--routines': PAGE,
       }),
     };
-    expect(hits(BASE_BUDGET, more)).toEqual([`page-new ${BUDGET_FILE} d1920--routines`]);
+    const NEW = `page-new ${BUDGET_FILE} d1920--routines {"borders":4,"buttons":20,"height":900}`;
+    expect(hits(BASE_BUDGET, more)).toEqual([NEW]);
     const manifest = 'web/src/modules/routines/manifest.ts';
     expect(
       hits(BASE_BUDGET, { ...more, [manifest]: "routes: [{ path: '/routines', element }]" }),
@@ -128,8 +131,21 @@ describe('stimulus-budget.json', () => {
         { ...BASE_BUDGET, [manifest]: "routes: [{ path: '/routines' }]" },
         { ...more, [manifest]: "routes: [{ path: '/routines' }], layout: 'wide'" },
       ),
-    ).toEqual([`page-new ${BUDGET_FILE} d1920--routines`]);
+    ).toEqual([NEW]);
     expect(routeSlug('/disk/scan')).toBe('disk-scan');
+  });
+  it('a new page carries its values: rewriting it after an approval changes the hash', () => {
+    const withPage = (page: Record<string, number>) => ({
+      [BUDGET_FILE]: budget({ 'd1920--finance': PAGE, 'p412--finance': PAGE, 'd1920--new': page }),
+    });
+    const approved = hits(BASE_BUDGET, withPage(PAGE));
+    const pushed = hits(BASE_BUDGET, withPage({ ...PAGE, buttons: 200 }));
+    expect(approved).toHaveLength(1);
+    expect(pushed).toHaveLength(1);
+    expect(pushed[0]).toContain('"buttons":200');
+    expect(hashOf(pushed)).not.toBe(hashOf(approved));
+    // Key order and whitespace are no change.
+    expect(hits(BASE_BUDGET, withPage({ borders: 4, buttons: 20, height: 900 }))).toEqual(approved);
   });
   it('an unreadable budget is a hit', () => {
     expect(hits(BASE_BUDGET, { [BUDGET_FILE]: '{' })).toEqual([
@@ -189,14 +205,41 @@ describe('baselines', () => {
         blocks({ 'pantry-label': { page: 'lists' }, 'finance-card': { page: 'finance' } }),
       ),
     ).toEqual([
-      `signature ${SIGNATURE_FILE} finance-card added`,
-      `signature ${SIGNATURE_FILE} pantry-label changed`,
-      `signature ${SIGNATURE_FILE} vault-doc removed`,
+      `signature ${SIGNATURE_FILE} finance-card added {"page":"finance"}`,
+      `signature ${SIGNATURE_FILE} pantry-label changed {"page":"pantry"}→{"page":"lists"}`,
+      `signature ${SIGNATURE_FILE} vault-doc removed {"page":"vault"}`,
     ]);
     expect(hits({}, base)).toEqual([
-      `signature ${SIGNATURE_FILE} pantry-label added`,
-      `signature ${SIGNATURE_FILE} vault-doc added`,
+      `signature ${SIGNATURE_FILE} pantry-label added {"page":"pantry"}`,
+      `signature ${SIGNATURE_FILE} vault-doc added {"page":"vault"}`,
     ]);
+  });
+  it('signature blocks: a hit line carries the entry, so rewriting it after an approval changes the hash', () => {
+    const file = (b: object, extra: object = {}) => ({
+      [SIGNATURE_FILE]: json({ version: 1, ...extra, blocks: b }),
+    });
+    const base = file({ 'pantry-label': { page: 'pantry', frames: 1 } });
+    // Approved: one new block. Pushed afterwards: the same id with another content.
+    const added = (entry: object) =>
+      hits(base, file({ ...JSON.parse(base[SIGNATURE_FILE]!).blocks, x: entry }));
+    expect(added({ page: 'finance', frames: 0 })).toHaveLength(1);
+    expect(hashOf(added({ page: 'finance', frames: 5 }))).not.toBe(
+      hashOf(added({ page: 'finance', frames: 0 })),
+    );
+    // Approved: a changed block. Pushed afterwards: changed once more.
+    const changed = (frames: number) =>
+      hits(base, file({ 'pantry-label': { page: 'pantry', frames } }));
+    expect(changed(2)).toEqual([
+      `signature ${SIGNATURE_FILE} pantry-label changed {"frames":1,"page":"pantry"}→{"frames":2,"page":"pantry"}`,
+    ]);
+    expect(hashOf(changed(9))).not.toBe(hashOf(changed(2)));
+    // The fields next to `blocks` too.
+    const rest = (limit: number) =>
+      hits(base, file(JSON.parse(base[SIGNATURE_FILE]!).blocks, { limit }));
+    expect(rest(480)).toEqual([
+      `signature ${SIGNATURE_FILE} @file changed {"version":1}→{"limit":480,"version":1}`,
+    ]);
+    expect(hashOf(rest(960))).not.toBe(hashOf(rest(480)));
   });
 });
 
@@ -280,6 +323,13 @@ const CASE = "test('b', async ({ page }) => {\n  await page.goto('/');\n});";
 
 describe('protected paths', () => {
   const a11y = 'web/e2e/a11y.spec.ts';
+  it('every file the list names literally exists (a stale name protects nothing)', () => {
+    const root = join(dirname(fileURLToPath(import.meta.url)), '../..');
+    const named = PROTECTED.filter((p: string) => !p.includes('*') && !p.endsWith('.npmrc'));
+    expect(named.length).toBeGreaterThan(50);
+    expect(named.filter((p: string) => !existsSync(join(root, p)))).toEqual([]);
+    expect(PROTECTED).not.toContain('web/src/modules/vault/__tests__/palette.test.ts');
+  });
   it('a change of an existing protected file is a hit with both blob ids', () => {
     const changed = SPEC.replace("'a'", "'changed'");
     expect(hits({ [a11y]: SPEC }, { [a11y]: changed })).toEqual([
@@ -308,6 +358,15 @@ describe('protected paths', () => {
       'web/src/ui/tokens.test.ts',
       'web/src/ui/a.contrast.test.ts',
       'web/src/core/ai/testing.ts',
+      // Added after the council acceptance of package 0a (Guardian F6, Architect F5, F15).
+      'web/src/layout/NotificationCenter.readaid.test.tsx',
+      'web/src/layout/PageLoadingCard.test.tsx',
+      'web/src/layout/ModuleErrorBoundary.test.tsx',
+      'web/src/modules/accounts/__tests__/lockFocus.test.tsx',
+      'web/scripts/lib/eslintFixedLocale.test.ts',
+      'web/scripts/lib/eslintAutoFocus.test.ts',
+      'web/scripts/lib/cssMotion.ts',
+      'web/scripts/lib/cssMotion.test.ts',
     ])
       expect(hits({ [path]: 'a\n' }, { [path]: 'b\n' }), path).toEqual([
         `protected ${path} ${blob('a\n')}→${blob('b\n')}`,
@@ -399,6 +458,41 @@ describe('protected paths', () => {
         },
       ),
     ).toEqual([]);
+  });
+  it('several new seed specs in one change are free, each of them; a borrowed name stays a hit', () => {
+    const base = { 'web/e2e/a11y.spec.ts': SPEC, 'web/e2e/seed/a11y.seed.spec.ts': SPEC };
+    expect(
+      hits(base, {
+        ...base,
+        'web/e2e/seed/one.seed.spec.ts': SPEC,
+        'web/e2e/seed/two.seed.spec.ts': SPEC,
+        'web/e2e/seed/more/three.seed.spec.ts': SPEC,
+      }),
+    ).toEqual([]);
+    // Whatever the order of the changed files: a new spec named like another protected one is a hit,
+    // the free ones next to it stay free.
+    for (const borrowed of [
+      'web/e2e/x/a11y.spec.ts',
+      'web/e2e/seed/x/a11y.seed.spec.ts',
+      'web/e2e/zz/a11y.seed.spec.ts',
+    ])
+      expect(
+        hits(base, {
+          ...base,
+          'web/e2e/seed/one.seed.spec.ts': SPEC,
+          [borrowed]: SPEC,
+          'web/e2e/seed/two.seed.spec.ts': SPEC,
+        }),
+        borrowed,
+      ).toEqual([`protected ${borrowed} -→${blob(SPEC)}`]);
+    // Two new specs that share a name with each other: both are hits (one of them would shadow the other).
+    expect(
+      hits(base, {
+        ...base,
+        'web/e2e/seed/same.seed.spec.ts': SPEC,
+        'web/e2e/seed/x/same.seed.spec.ts': SPEC,
+      }),
+    ).toHaveLength(2);
     expect(
       hits(
         {},
@@ -663,13 +757,13 @@ describe('hash and table', () => {
       'baseline web/scripts/baselines/own-h1.json ["count"] 3→4',
       `budget ${BUDGET_FILE} d1920--finance.height 900→950`,
       "ignore web/playwright.config.ts testIgnore '**/calm*'",
-      `page-new ${BUDGET_FILE} d1920--new`,
+      `page-new ${BUDGET_FILE} d1920--new {"borders":4,"buttons":20,"height":900}`,
       `page-removed ${BUDGET_FILE} p412--finance`,
       'protected web/e2e/calm.spec.ts <blob>→<blob>',
       'protected web/playwright.config.ts <blob>→<blob>',
       'scripts test "vitest run"→"true"',
       'seed-rows notes_note 12→10',
-      `signature ${SIGNATURE_FILE} vault-doc removed`,
+      `signature ${SIGNATURE_FILE} vault-doc removed {"page":"vault"}`,
       'skip web/e2e/calm.spec.ts test.skip later',
       `tolerance ${BUDGET_FILE} {"percent":10,"px":50}→{"percent":20,"px":50}`,
       `version ${BUDGET_FILE} 1→2`,
