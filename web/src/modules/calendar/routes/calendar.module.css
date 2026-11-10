@@ -1037,6 +1037,10 @@ button.recentChip {
 }
 
 /* Head line: the next appointment, quiet text under the date block. */
+/* U01: the head line's room while the entries are read (the shape of "Heute frei", unseen). */
+.headPending {
+  visibility: hidden;
+}
 .nextLine {
   margin: 0;
   font-size: var(--text-md);
