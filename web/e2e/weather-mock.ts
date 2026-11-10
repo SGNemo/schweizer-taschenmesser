@@ -112,12 +112,24 @@ export async function pickWeatherPlace(page: Page): Promise<boolean> {
       .getByRole('button', { name: 'Suchen', exact: true });
     await search.click({ timeout: 15_000 });
     const notice = page.getByRole('button', { name: 'Verstanden' });
-    if (await notice.isVisible({ timeout: 5_000 }).catch(() => false)) {
+    const pick = page.getByRole('button', { name: 'Bern, Schweiz wählen' });
+    // Either the data-flow notice or the result comes next. `isVisible()` does not wait, so wait for one of them
+    // first (the notice used to be missed when it rendered a moment later, and the place was never picked).
+    await notice.or(pick).first().waitFor({ state: 'visible', timeout: 15_000 });
+    if (await notice.isVisible()) {
       await notice.click();
-      const pick = page.getByRole('button', { name: 'Bern, Schweiz wählen' });
-      if (!(await pick.isVisible({ timeout: 5_000 }).catch(() => false))) await search.click();
+      const shown = await pick
+        .waitFor({ state: 'visible', timeout: 3_000 })
+        .then(() => true)
+        .catch(() => false);
+      if (!shown) await search.click();
     }
-    await page.getByRole('button', { name: 'Bern, Schweiz wählen' }).click({ timeout: 15_000 });
+    await pick.click({ timeout: 15_000 });
+    // The choice is stored asynchronously: a navigation right after the click would lose it.
+    await page
+      .getByTestId('weather-place')
+      .filter({ hasText: 'Bern' })
+      .waitFor({ timeout: 15_000 });
     return true;
   } catch {
     return false;

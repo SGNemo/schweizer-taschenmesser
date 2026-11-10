@@ -232,7 +232,7 @@ git fetch origin develop && git show origin/develop:web/scripts/ratchet.mjs > /t
 ```
 
 ```bash
-printf '%s' 'stimulus-raise SGNemo/schweizer-taschenmesser#<n> <hash>' > /tmp/ratchet-msg && openssl pkeyutl -sign -rawin -inkey ~/.nemo/ratchet.pem -in /tmp/ratchet-msg | base64 -w0
+printf '%s' 'stimulus-raise SGNemo/schweizer-taschenmesser#<n> <hash>' > /tmp/ratchet-msg.txt && openssl pkeyutl -sign -rawin -inkey ~/.nemo/ratchet.pem -in /tmp/ratchet-msg.txt -out /tmp/ratchet-sig.bin && openssl base64 -A -in /tmp/ratchet-sig.bin; echo
 ```
 
   Der erste druckt die Treffer-Tabelle, den Hash, die Nachricht und den zweiten Befehl fertig zum Kopieren; der zweite fragt die Passphrase ab und druckt die Signatur (88 Zeichen; die Nachricht geht über eine Datei, weil `openssl` sie bei Ed25519 nicht von stdin liest). Den 0a-1a-PR selbst gibst du nach eigener Prüfung frei – dafür gibt es noch keine `develop`-Fassung (PACKAGE-0 „Bootstrap“). Kommentar = Nachricht + Leerzeichen + Signatur, als PR-Kommentar posten, Label `stimulus-raise` setzen (nur für CI), dann „Re-run failed jobs“ am CI-Lauf. Nach einem Push mit neuen Treffern dasselbe noch einmal. Schlüsselwechsel: neuer öffentlicher Schlüssel in `ratchet.mjs`, diesen PR mergst du selbst (benannte Ausnahme).
