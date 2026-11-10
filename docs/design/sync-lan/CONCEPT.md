@@ -1,6 +1,6 @@
 # Sync in the home network – the PC is the server (concept)
 
-Branch `design/sync-lan-concept`, 2026-11-06. Status: **answered 2026-11-07** – all five questions in §11 answered with the recommended option (built-in hub incl. the new rule and autostart, server path stays folded, Android on open + Wi-Fi change, one main PC; hub store: (b)); §10 holds. Fable check done ([REVIEW-FABLE.md](REVIEW-FABLE.md), findings F1–F18 worked in); Frage 5 decided 2026-11-07: (b), (b′) rejected; package 1 free after merge. No product code; prototype in [`proto/`](proto/). Facts with sources: [NOTES.md](NOTES.md) (cited as `N§x`). Package prompts: [PACKAGES.md](PACKAGES.md).
+Branch `design/sync-lan-concept`, 2026-11-06. Status: **answered 2026-11-07** – all five questions in §11 answered with the recommended option (built-in hub incl. the new rule and autostart, server path stays folded, Android on open + Wi-Fi change, one main PC; hub store: (b)); §10 holds. Fable check done ([REVIEW-FABLE.md](REVIEW-FABLE.md), findings F1–F18 worked in); Frage 5 decided 2026-11-07: (b), (b′) rejected; package 1 free after merge. No product code; prototype in [`proto/`](proto/). Facts with sources: [NOTES.md](NOTES.md) (cited as `N§x`). Package prompts: PACKAGES.md (removed 2026-11-10, in the git history).
 
 Sven's wish: "Beim Wechsel vom Handy auf den PC syncen und andersrum, nur im WLAN – wenn das Handy heimkommt und der PC an ist. Wenn es nur mit Server geht, soll mein PC der Server sein." Today: own sync server with address + token + passphrase, otherwise "Nicht verbunden".
 

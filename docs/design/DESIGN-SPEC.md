@@ -1,6 +1,6 @@
 # Nemo design specification (final, 2026-10-01)
 
-Result of the eight-round design evaluation with the maintainer (rounds: [1 diagnosis](ROUND-1-DIAGNOSIS.md) · [2 direction](ROUND-2-DIRECTION.md) · [3 layout](ROUND-3-LAYOUT.md) · [4 tokens](ROUND-4-TOKENS.md) · [5 components](ROUND-5-COMPONENTS.md) · [6 motion](ROUND-6-MOTION.md) · [7 modules](ROUND-7-MODULES.md)). Everything below is **decided** unless listed under § 13. The implementation prompt is [`IMPLEMENTATION-PROMPT.md`](IMPLEMENTATION-PROMPT.md). Mockups (standalone HTML + PNG) live in [`mockups/`](mockups/); the reference renders are named per section.
+Result of the eight-round design evaluation with the maintainer (rounds: [1 diagnosis](ROUND-1-DIAGNOSIS.md) · [2 direction](ROUND-2-DIRECTION.md) · [3 layout](ROUND-3-LAYOUT.md) · [4 tokens](ROUND-4-TOKENS.md) · [5 components](ROUND-5-COMPONENTS.md) · [6 motion](ROUND-6-MOTION.md) · [7 modules](ROUND-7-MODULES.md)). Everything below is **decided** unless listed under § 13. The implementation prompt is IMPLEMENTATION-PROMPT.md (removed 2026-11-10, in the git history). Mockups (standalone HTML + PNG) live in [`mockups/`](mockups/); the reference renders are named per section.
 
 Guiding idea: pleasant and easy to use every day, calm, clear, easy on the eyes, not overloaded. Main use: desktop with the mouse; dark theme first; phone must never break.
 

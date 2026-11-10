@@ -6,12 +6,14 @@ Goal: a new chat starts with ≈ 2 000 tokens (hard budget 2 600, so there is ro
 | Kind | File |
 |---|---|
 | Rule every chat needs (short) | root `CLAUDE.md`; unabridged → `docs/RULES.md` |
-| Area-only rule | `<area>/CLAUDE.md` (`web/src/modules`, `web/src-tauri`, `server`) – loaded only there |
+| Area-only rule | `<area>/CLAUDE.md` (`web/src/modules`, `web/src-tauri`, `server`, `extension`) – loaded only there; repeats a root rule only where that area enforces it (a security guardrail, or a test or lint that fails there) |
 | Where is X / interfaces / data flow | `docs/ARCHITECTURE-MAP.md`; long design notes → `docs/architecture/<topic>.md` |
 | Why (decision) | one bullet in `docs/decisions/<area>.md` (what – why, date, sources); `docs/DECISIONS.md` is the index of areas |
 | How (command, recipe, gotcha) | `docs/HOW-TO.md` index → `docs/howto/<topic>.md` |
-| Status, open, limits, next steps | `docs/STATUS.md` (German parts stay German); hardware checklists → `docs/MANUAL-TESTS.md`; ideas → `docs/ROADMAP.md` |
-| Running chats, hotspots | `docs/CHATS.md` |
+| Status, open, limits, next steps | `docs/STATUS.md` (state only, at most one line per PR, no log; German parts stay German); hardware checklists → `docs/MANUAL-TESTS.md`; ideas → `docs/ROADMAP.md` |
+| Running chats, what waits on the maintainer, hotspots | `docs/CHATS.md` (open items only, one screen; rules on top of the file) |
+| Notes between chats | private notes repo (root `CLAUDE.md` step 2), never this repo |
+| Finished working documents (package prompts, round logs, mockups, audit tools) | deleted in the PR that closes the round; decisions live in `docs/decisions/`, the rest in the git history |
 | Report/audit/measurement | `docs/security/`, `docs/perf/`, `docs/features/`, `docs/meta/` (each with an index) |
 | Finished/obsolete report | `docs/archive/<yyyy-mm>/` + banner |
 | User docs, README | English source + German copy: `README.md`/`README.de.md`, `docs/user/<name>.md`/`<name>.de.md` (short, no dev details); change both, `npm run check:readme` compares them |
@@ -20,7 +22,7 @@ Goal: a new chat starts with ≈ 2 000 tokens (hard budget 2 600, so there is ro
 | Class | Budget |
 |---|---|
 | Start context (root `CLAUDE.md`, no `@` imports) | ≤ 2 600 (target ≈ 2 000; raised 2026-10-02 so small rule additions need no cuts elsewhere) |
-| Area `CLAUDE.md` | ≤ 500 |
+| Area `CLAUDE.md` | ≤ 700 (raised 2026-11-10: module and shell details moved here from the always-loaded root) |
 | Lookup doc (every `docs/**` file not exempt) | ≤ 3 000; overrides in `web/scripts/check-docs.mjs` (MAP 4 200; DECISIONS 3 500; STATUS 5 000; CHATS/PROMPT-TEMPLATES 2 000; `docs/README.md` 700; DOCS-GUIDE 1 500) |
 | Exempt (never auto-loaded) | `docs/user/`, `archive/`, `security/`, `perf/`, `features/`, `meta/`, `AI-IMPORT.md` (+ `.de.md`), `MANUAL-TESTS.md`, `ROADMAP.md`, `CHANGELOG.md` |
 A file over budget is split by topic (index + `<dir>/<topic>.md`), not trimmed by dropping content.
@@ -36,4 +38,4 @@ A file over budget is split by topic (index + `<dir>/<topic>.md`), not trimmed b
 Images belong in the PR text (drag & drop, GitHub hosts them) or in a workflow artifact; in the repo only README pictures (`docs/assets/screenshots/*.webp`, `npm run app:screenshots -- --readme`), user-doc images (linked from `docs/user/`) and brand files (`docs/brand/`), each ≤ 100 KB. Local captures go to `web/.screens/` (gitignored). `check:docs` fails on any other image under `docs/` (blocking in CI); old screenshots stay in the git history and in their PRs.
 
 ## Archive rule
-Move a report to `docs/archive/<yyyy-mm>/` when its findings are fixed or summarised in STATUS/DECISIONS; keep it unchanged below a banner (date, pointer). After a release, collapse the round log in STATUS to one line per release. `docs/archive/` is excluded from ripgrep/fd via `.ignore`.
+Move a report to `docs/archive/<yyyy-mm>/` when its findings are fixed or summarised in STATUS/DECISIONS; keep it unchanged below a banner (date, pointer). STATUS keeps no round log: a finished round is one line with a link. `docs/archive/` is excluded from ripgrep/fd via `.ignore`.
