@@ -2,8 +2,9 @@
 /**
  * `npm run chats:sync`: rewrites the generated open-PR block of docs/CHATS.md (lib/chatsSync.ts).
  * No network: the open PRs come as JSON from a file (`--from prs.json`) or from stdin, e.g.
- *   gh pr list --state open --json number,title,headRefName,isDraft,labels | npm run chats:sync
- * or the answer of the GitHub MCP `list_pull_requests` (state open) saved to a file.
+ *   gh api 'repos/SGNemo/schweizer-taschenmesser/pulls?state=open&per_page=100' | npm run chats:sync
+ * or the answer of the GitHub MCP `list_pull_requests` (state open, perPage 100) saved to a file.
+ * The list must be complete: a PR missing from it counts as closed and loses its row.
  * Flags: --from <file>, --doc <file> (default docs/CHATS.md), --check (exit 1 when the block is stale,
  * writes nothing).
  */
@@ -15,18 +16,24 @@ import { isCurrent, normalizePrs, syncDoc } from './lib/chatsSync.ts';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const args = parseArgs(process.argv.slice(2));
-const docPath = typeof args.doc === 'string' ? resolve(args.doc) : resolve(repo, 'docs/CHATS.md');
+// npm runs scripts in web/; paths are meant relative to where the user called npm.
+const cwd = process.env.INIT_CWD ?? process.cwd();
+const docPath =
+  typeof args.doc === 'string' ? resolve(cwd, args.doc) : resolve(repo, 'docs/CHATS.md');
 
 if (typeof args.from !== 'string' && process.stdin.isTTY) {
   console.error(
     'chats:sync needs the open PRs as JSON: --from <file> or on stdin\n' +
-      '  gh pr list --state open --json number,title,headRefName,isDraft,labels | npm run chats:sync',
+      "  gh api 'repos/SGNemo/schweizer-taschenmesser/pulls?state=open&per_page=100' | npm run chats:sync",
   );
   process.exit(2);
 }
 
 try {
-  const json = readFileSync(typeof args.from === 'string' ? resolve(args.from) : 0, 'utf8');
+  // stdin is read as a stream: readFileSync(0) fails with EAGAIN while a pipe is still filling.
+  let json = '';
+  if (typeof args.from === 'string') json = readFileSync(resolve(cwd, args.from), 'utf8');
+  else for await (const chunk of process.stdin) json += chunk;
   const prs = normalizePrs(JSON.parse(json));
   const doc = readFileSync(docPath, 'utf8');
   if (args.check) {
