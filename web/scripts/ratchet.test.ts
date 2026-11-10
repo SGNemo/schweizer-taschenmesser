@@ -257,6 +257,16 @@ describe('package.json scripts', () => {
     expect(found[0]).not.toContain('\n');
     expect(found[0]).toContain('<U+a>');
   });
+  it('the root package.json is read the same way', () => {
+    const root = (extra: object) => ({
+      'package.json': json({ name: 'root', private: true, ...extra }),
+    });
+    expect(hits(root({}), root({ workspaces: ['web'], overrides: { vitest: '1.0.0' } }))).toEqual([
+      'scripts root:@overrides -→{"vitest":"1.0.0"}',
+      'scripts root:@workspaces -→["web"]',
+    ]);
+    expect(hits(root({ version: '1.0.0' }), root({ version: '1.0.1' }))).toEqual([]);
+  });
   it('dependencies and version stay free (Dependabot, version bumps)', () => {
     expect(
       hits(pkg(SCRIPTS), pkg(SCRIPTS, { version: '1.1.0', dependencies: { zod: '^4.1.0' } })),
@@ -562,6 +572,22 @@ describe('additions only in protected test files', () => {
       'division after a private name spelled like a keyword',
       "test('a', () => { class C { #in = 4; m() { return this.#in / 2 } } }); (globalThis as any).evil = 1; test('b', () => { class D { m() { return 4 / 2 } } });",
     ],
+    [
+      'a regex on the line after a statement that ends without a semicolon',
+      "test('a', () => {\n  let x\n  /'/;});evil();test(\"b\",()=>{//'\n});",
+    ],
+    [
+      'the same behind a type annotation',
+      "test('a', () => {\n  let x: string[]\n  /'/;});globalThis.x=1;test(\"b\",()=>{//'\n});",
+    ],
+    [
+      'the same behind break',
+      "test('a', () => {\n  for(;;){break\n/'/;}});evil();test(\"b\",()=>{{//'\n}});",
+    ],
+    [
+      'the same behind debugger',
+      "test('a', () => {\n  debugger\n  /'/;});evil();test(\"b\",()=>{//'\n});",
+    ],
     ['regex after a closing bracket', "test('a', () => {\n  if (x) /a/.test(y);\n});"],
     [
       'nested regex class',
@@ -590,6 +616,13 @@ describe('additions only in protected test files', () => {
     expect(
       onlyAppendedTests('it(\'a\', () => {\n  render(<p title="\\" />);\n});', { jsx: true }),
     ).toBe(true);
+    // An element on the line after a statement that ends without a semicolon.
+    expect(
+      onlyAppendedTests(
+        "test('a', () => {\n  for(;;){break\n<a>'</a>;}});evil();test(\"b\",()=>{{//'\n}});",
+        { jsx: true },
+      ),
+    ).toBe(false);
     expect(onlyAppendedTests("it('a', () => {\n  f(<T,>(x: T) => x);\n});", { jsx: true })).toBe(
       false,
     );

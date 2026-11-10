@@ -648,6 +648,9 @@ export function onlyAppendedTests(appended, { jsx = false } = {}) {
         mark();
       } else if (c === '/') {
         if (expression(last, lastAt)) regex();
+        // A line break before the `/`: JavaScript may end the statement there (`let x⏎/re/`), and then a
+        // regex follows. Only a token that cannot end a statement makes it certain: do not guess.
+        else if (src.slice(lastAt + 1, i).includes('\n')) fail();
         else if (
           /[\w$\]]/.test(last) ||
           (last === ')' && !afterControl) ||
@@ -660,9 +663,11 @@ export function onlyAppendedTests(appended, { jsx = false } = {}) {
         jsx &&
         c === '<' &&
         /[A-Za-z_$>]/.test(src[i + 1] ?? '') &&
-        !/[\w$\]'"`]/.test(last)
+        // Behind a name, `]` or a string on the same line it is a comparison or type arguments.
+        !(/[\w$\]'"`]/.test(last) && !src.slice(lastAt + 1, i).includes('\n'))
       ) {
-        if (!expression(last, lastAt)) fail(); // after `)` or `}`: could be a comparison or an element
+        // After `)`, `}`, `<`, or a line break behind a name: a comparison or an element, do not guess.
+        if (last === '<' || !expression(last, lastAt)) fail();
         jsxElement();
         afterControl = true; // nothing is assumed behind an element
         mark(')');
@@ -881,6 +886,13 @@ export function collectHits(repo, base, head) {
     )
       hits.push(...baselineHits(path, text(was(path)), text(now(path))));
     else if (path === PACKAGE_FILE) hits.push(...scriptsHits(text(was(path)), text(now(path))));
+    // The root manifest too: `workspaces` or `overrides` there change what `npm ci` installs in web/.
+    else if (path === 'package.json')
+      hits.push(
+        ...scriptsHits(text(was(path)), text(now(path))).map((h) =>
+          h.replace(/^scripts /, 'scripts root:'),
+        ),
+      );
     else {
       const blob = (tree) => tree.get(path) ?? '-';
       const line = `protected ${path} ${blob(baseTree)}→${blob(headTree)}`;
