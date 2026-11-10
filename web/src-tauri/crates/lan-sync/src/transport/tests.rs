@@ -864,7 +864,7 @@ mod input_client {
         wait_for(|| input.is_over());
         assert_eq!(
             input.send_events(&[Record::Media(Media::PlayPause)]),
-            Err(InputError::Network)
+            Err(InputError::Closed)
         );
         assert!(r.sink.taken().is_empty());
         assert!(sync
@@ -909,8 +909,6 @@ mod input_client {
         assert_eq!(full.send_text(""), Err(InputError::Protocol));
         full.close();
         wait_for(|| r.remote.status().controller.is_none());
-        // once for the media session the hub closed, once for the full one
-        assert_eq!(r.sink.released.load(std::sync::atomic::Ordering::SeqCst), 2);
     }
 
     #[test]
@@ -1011,8 +1009,9 @@ mod input_client {
         assert!(r.sink.taken().is_empty());
     }
 
-    /// The phone is in the middle of sending when the PC ends the session: the reason still
-    /// arrives (the hub does not just drop the socket with unread bytes in it).
+    /// The phone is in the middle of sending when the PC ends the session and still hears the
+    /// reason. (A smoke test: on loopback the reason mostly arrives also without the hub's
+    /// half-close and drain, which is there for real networks.)
     #[test]
     fn the_reason_arrives_also_while_the_phone_is_still_sending() {
         for _ in 0..5 {
@@ -1023,9 +1022,10 @@ mod input_client {
             let sender = {
                 let input = input.clone();
                 std::thread::spawn(move || {
-                    let frame = [Record::Move { dx: 1, dy: 0 }; 8];
+                    // well under the limits, so the only reason to close is the PC's
+                    let frame = [Record::Move { dx: 1, dy: 0 }];
                     while input.send_events(&frame).is_ok() {
-                        std::thread::sleep(Duration::from_millis(1));
+                        std::thread::sleep(Duration::from_millis(4));
                     }
                 })
             };

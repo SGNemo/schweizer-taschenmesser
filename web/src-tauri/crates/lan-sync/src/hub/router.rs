@@ -88,12 +88,12 @@ impl Admission {
             .any(|b| IpAddr::V4(b.ip()) == local && b.is_home() && b.contains(peer))
     }
 
-    /// The addresses that count as the home network right now.
-    fn home_addrs(&self) -> Vec<std::net::Ipv4Addr> {
+    /// The subnets that count as the home network right now (address and prefix).
+    fn home_nets(&self) -> Vec<(std::net::Ipv4Addr, u8)> {
         self.binds
             .iter()
             .filter(|b| b.is_home())
-            .map(Bind::ip)
+            .map(|b| (b.ip(), b.prefix()))
             .collect()
     }
 
@@ -170,22 +170,25 @@ impl Router {
         }
     }
 
-    /// Wires remote control: the PC's switch and grants, and the sink that acts on the PC.
+    /// Wires remote control: the PC's switch and grants, and the sink that acts on the PC. The
+    /// shell calls this on every desktop – with a sink that says `supported() == false` where the
+    /// system cannot be controlled, so the phone hears `unsupported` instead of a bare refusal.
     pub fn with_input(mut self, remote: Arc<Remote>, sink: Arc<dyn InputSink>) -> Self {
         self.input = Some((remote, sink));
         self
     }
 
-    /// Replaces the binds. If an address stops being the home network (the home network was
-    /// replaced, or the hub stopped listening there), every input session is closed: input is
+    /// Replaces the binds. If a subnet stops being the home network (the home network was
+    /// replaced, its address or prefix changed, or the hub stopped listening there), every input
+    /// session is closed: input is
     /// accepted on the stored home network only, not just at its handshake.
     pub fn set_binds(&self, binds: Vec<Bind>) {
         let lost_home = match self.admission.lock() {
             Ok(mut a) => {
-                let before = a.home_addrs();
+                let before = a.home_nets();
                 a.set_binds(binds);
-                let after = a.home_addrs();
-                before.iter().any(|ip| !after.contains(ip))
+                let after = a.home_nets();
+                before.iter().any(|net| !after.contains(net))
             }
             Err(_) => true,
         };

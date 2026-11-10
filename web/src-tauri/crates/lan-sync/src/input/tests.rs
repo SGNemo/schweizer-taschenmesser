@@ -5,7 +5,7 @@ use super::sink::{Action, InputSink, NoSink};
 use super::wire::{self, Button, Code, Key, Level, Media, Opened, PcState, Record};
 use crate::noise::{Mode, PublicKey};
 use crate::trust::{Device, MemoryTrustStore, RemoteGrant, SessionRegistry, TrustStore};
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -13,7 +13,6 @@ use std::time::Duration;
 pub(crate) struct TestSink {
     pub actions: Mutex<Vec<Action>>,
     pub state: Mutex<PcState>,
-    pub released: AtomicUsize,
     pub supported: AtomicBool,
 }
 
@@ -27,7 +26,6 @@ impl TestSink {
                 playing: true,
                 locked: false,
             }),
-            released: AtomicUsize::new(0),
             supported: AtomicBool::new(true),
         })
     }
@@ -55,9 +53,6 @@ impl InputSink for TestSink {
     fn apply(&self, action: Action) {
         self.actions.lock().unwrap().push(action);
     }
-    fn release_all(&self) {
-        self.released.fetch_add(1, Ordering::SeqCst);
-    }
 }
 
 /// The PC's confirmation given at once: a ticket taken right before the setter runs.
@@ -69,11 +64,11 @@ pub(crate) trait Confirmed {
 impl Confirmed for Remote {
     fn grant_now(&self, key: &PublicKey, grant: RemoteGrant) -> Result<(), ControlError> {
         let ticket = self.ticket();
-        self.set_grant(key, grant, Some(&ticket))
+        self.set_grant(key, grant, Some(ticket))
     }
     fn enable_now(&self, on: bool) -> Result<(), ControlError> {
         let ticket = self.ticket();
-        self.set_enabled(on, Some(&ticket))
+        self.set_enabled(on, Some(ticket))
     }
 }
 
@@ -180,6 +175,14 @@ const CLICK: Record = Record::Button {
 const UNCLICK: Record = Record::Button {
     button: Button::Left,
     down: false,
+};
+const LEFT_UP: Action = Action::Button {
+    button: Button::Left,
+    down: false,
+};
+const LEFT_DOWN: Action = Action::Button {
+    button: Button::Left,
+    down: true,
 };
 const PAUSE: Record = Record::Media(Media::PlayPause);
 
@@ -355,9 +358,9 @@ fn a_locked_pc_takes_media_commands_only() {
     );
     assert_eq!(c.on_frame(wire::TAG_TEXT, b"hello", T0), Step::Continue);
     assert!(b.sink.taken() == vec![Action::Media(Media::PlayPause)]);
-    // … except the release of a button, which always goes through (nothing stays held)
+    // a release of a button this session does not hold is mouse input like any other
     assert_eq!(events(&mut c, &[UNCLICK], T0), Step::Continue);
-    assert_eq!(b.sink.taken().len(), 1);
+    assert!(b.sink.taken().is_empty());
     // unlocked again (at the PC): the session goes on
     b.sink.set_locked(false);
     assert_eq!(events(&mut c, &[MOVE], T0), Step::Continue);
@@ -373,7 +376,6 @@ fn every_frame_looks_at_the_switch_and_the_grant_again() {
     b.remote.enable_now(false).unwrap();
     assert_eq!(closed_with(&events(&mut c, &[MOVE], T0)), Code::RemoteOff);
     assert!(b.sink.taken().is_empty());
-    assert_eq!(b.sink.released.load(Ordering::SeqCst), 1, "buttons let go");
 
     // the grant changes but something is left: the session ends without a reason, and the
     // phone's next open tells it what it has now (never "remote control is off" when media works)
@@ -437,7 +439,6 @@ fn ending_at_the_pc_closes_with_a_reason_and_pauses_that_device() {
     );
     // the session hears it on its next tick, without any frame from the phone
     assert_eq!(closed_with(&c.poll(T0)), Code::Ended);
-    assert_eq!(b.sink.released.load(Ordering::SeqCst), 1);
     assert_eq!(c.poll(T0), Step::Continue, "over: nothing more to say");
     assert_eq!(events(&mut c, &[MOVE], T0), Step::Close);
     assert!(b.sink.taken().is_empty());
@@ -468,6 +469,92 @@ fn an_event_that_races_the_end_does_not_act() {
         Code::Ended
     );
     assert!(b.sink.taken().is_empty());
+}
+
+// ---- held buttons ----
+
+#[test]
+fn a_session_lets_go_of_exactly_the_buttons_it_holds() {
+    let right = |down| Record::Button {
+        button: Button::Right,
+        down,
+    };
+    // letting go of a held button passes the lock and every limit
+    let b = bench();
+    b.grant(PHONE, Level::Full);
+    let (mut c, _) = b.opened(PHONE, Level::Full);
+    assert_eq!(events(&mut c, &[CLICK], T0), Step::Continue);
+    b.sink.set_locked(true); // locked in the middle of a drag
+    for _ in 0..20 {
+        events(&mut c, &[MOVE; wire::MAX_RECORDS], T0); // and the budget used up
+    }
+    b.sink.taken();
+    assert_eq!(events(&mut c, &[UNCLICK], T0), Step::Continue);
+    assert!(b.sink.taken() == vec![LEFT_UP], "the drag ends");
+    // … once: the button is not held any more, so a second release is an ordinary (locked) event
+    assert_eq!(events(&mut c, &[UNCLICK], T0), Step::Continue);
+    assert!(b.sink.taken().is_empty());
+
+    // releases of buttons nobody pressed cannot be used to flood the PC
+    let b = bench();
+    b.grant(PHONE, Level::Full);
+    let (mut c, _) = b.opened(PHONE, Level::Full);
+    let mut last = Step::Continue;
+    let mut frames = 0;
+    while last == Step::Continue && frames < 200 {
+        last = events(&mut c, &[UNCLICK; wire::MAX_RECORDS], T0);
+        frames += 1;
+    }
+    assert_eq!(closed_with(&last), Code::Limit);
+    assert_eq!(b.sink.taken().len(), 250, "limited like every other event");
+
+    // every way a session ends lets go of what it holds, and of nothing else
+    for how in 0..5 {
+        let b = bench();
+        b.grant(PHONE, Level::Full);
+        let (mut c, _) = b.opened(PHONE, Level::Full);
+        assert_eq!(
+            events(&mut c, &[CLICK, right(true), right(false)], T0),
+            Step::Continue
+        );
+        b.sink.taken();
+        match how {
+            0 => drop(c), // the connection is gone
+            1 => {
+                b.remote.end();
+                c.poll(T0);
+            }
+            2 => {
+                b.grant(PHONE, Level::Media); // ends without a reason
+                c.poll(T0);
+            }
+            3 => {
+                b.remote.enable_now(false).unwrap();
+                c.poll(T0);
+            }
+            _ => {
+                c.on_frame(0x7f, &[], T0); // a protocol violation
+            }
+        }
+        assert!(b.sink.taken() == vec![LEFT_UP], "way {how}");
+        assert!(!b.remote.full_session_open());
+    }
+
+    // a session that was ended and whose device opened anew before it finished: the older one
+    // still lets go of its own button, the newer one's stays down
+    let b = bench();
+    b.grant(PHONE, Level::Full);
+    let (mut old, _) = b.opened(PHONE, Level::Full);
+    assert_eq!(events(&mut old, &[CLICK], T0), Step::Continue);
+    b.grant(PHONE, Level::Media);
+    let (mut new, _) = b.opened(PHONE, Level::Media);
+    b.sink.taken();
+    drop(old);
+    assert!(b.sink.taken() == vec![LEFT_UP]);
+    assert_eq!(events(&mut new, &[PAUSE], T0), Step::Continue);
+    // a media session holds nothing and lets go of nothing
+    drop(new);
+    assert!(b.sink.taken() == vec![Action::Media(Media::PlayPause)]);
 }
 
 // ---- one controller ----
@@ -505,21 +592,19 @@ fn the_same_device_moves_from_media_to_full_by_opening_anew() {
     // the older session ends without a word and can do nothing any more
     assert_eq!(events(&mut media, &[PAUSE], T0), Step::Close);
     assert!(b.sink.taken().is_empty());
-    // what the older session might have held was let go when the newer one opened …
-    assert_eq!(b.sink.released.load(Ordering::SeqCst), 1);
     assert_eq!(events(&mut full, &[CLICK], T0), Step::Continue);
-    // … and the older session's end neither frees the newer one's slot nor lets go of the
-    // button the newer one is holding by now
+    // the older session's end neither frees the newer one's slot nor lets go of the button the
+    // newer one is holding by now (a session lets go of its own buttons only)
     drop(media);
-    assert_eq!(b.sink.released.load(Ordering::SeqCst), 1);
     assert_eq!(
         b.remote.status().controller,
         Some((key(PHONE), Level::Full))
     );
     assert_eq!(events(&mut full, &[MOVE], T0), Step::Continue);
-    assert_eq!(b.sink.taken().len(), 2);
+    assert!(b.sink.taken() == vec![LEFT_DOWN, Action::Move { dx: 3, dy: -2 }]);
+    // … and when it ends itself, it lets go of what it holds
     drop(full);
-    assert_eq!(b.sink.released.load(Ordering::SeqCst), 2);
+    assert!(b.sink.taken() == vec![LEFT_UP]);
 }
 
 #[test]
@@ -634,7 +719,7 @@ fn a_widening_needs_a_ticket_from_before_the_confirmation() {
     assert!(!b.remote.full_session_open());
     // … the dialog returns "confirmed": refused, because that session could have clicked it
     assert_eq!(
-        b.remote.set_grant(&key(TABLET), widen, Some(&ticket)),
+        b.remote.set_grant(&key(TABLET), widen, Some(ticket)),
         Err(ControlError::BusyControlled)
     );
     assert_eq!(b.remote.grant_of(&key(TABLET)), RemoteGrant::default());
@@ -643,7 +728,7 @@ fn a_widening_needs_a_ticket_from_before_the_confirmation() {
     let (c, _) = b.opened(PHONE, Level::Media);
     drop(c);
     b.remote
-        .set_grant(&key(TABLET), widen, Some(&ticket))
+        .set_grant(&key(TABLET), widen, Some(ticket))
         .unwrap();
     // narrowing never needs one
     b.remote
@@ -661,7 +746,7 @@ fn a_widening_needs_a_ticket_from_before_the_confirmation() {
     drop(c);
     b.remote.set_enabled(false, None).unwrap();
     assert_eq!(
-        b.remote.set_enabled(true, Some(&stale)),
+        b.remote.set_enabled(true, Some(stale)),
         Err(ControlError::BusyControlled)
     );
     assert!(!b.remote.enabled());
@@ -768,6 +853,19 @@ fn the_pc_tells_a_changed_state_at_most_every_interval_and_nothing_else() {
         Step::Continue,
         "told already"
     );
+    // after a frame from the phone the state is told once more even though nothing changed (at
+    // 100 % "louder" changes nothing; the phone still hears that its frames arrive)
+    let at = T0 + STATE_INTERVAL * 10;
+    assert_eq!(events(&mut c, &[PAUSE], at), Step::Continue);
+    assert_eq!(c.poll(at), Step::Reply(wire::TAG_STATE, body.clone()));
+    // … and not faster than the interval, however many frames come
+    let soon = at + STATE_INTERVAL + STATE_INTERVAL / 4;
+    assert_eq!(c.poll(at + STATE_INTERVAL), Step::Continue);
+    assert_eq!(events(&mut c, &[PAUSE], soon), Step::Continue);
+    assert!(matches!(c.poll(soon), Step::Reply(..)));
+    assert_eq!(events(&mut c, &[PAUSE], soon), Step::Continue);
+    assert_eq!(c.poll(soon + STATE_INTERVAL / 2), Step::Continue);
+    assert!(matches!(c.poll(soon + STATE_INTERVAL), Step::Reply(..)));
     // a connection that has not opened says nothing; with the switch off, its open is refused
     let mut idle = b.conn(TABLET);
     assert_eq!(idle.poll(T0), Step::Continue);
@@ -836,19 +934,17 @@ fn each_kind_has_its_own_limit() {
     );
     assert_eq!(count(Record::Media(Media::VolumeDown), 100), 10);
     assert_eq!(count(Record::Media(Media::Lock), 100), 1);
-    // a release passes even when no click is left
+    // a release costs no click, but it is an event like any other
     let mut l = Limits::new(T0);
     for _ in 0..40 {
         l.record(&CLICK, T0);
     }
     assert_eq!(l.record(&CLICK, T0), Verdict::Drop);
     assert_eq!(l.record(&UNCLICK, T0), Verdict::Pass);
-    // … and even when nothing at all is left
     for _ in 0..300 {
         l.record(&MOVE, T0);
     }
-    assert_eq!(l.record(&MOVE, T0), Verdict::Drop);
-    assert_eq!(l.record(&UNCLICK, T0), Verdict::Pass);
+    assert_eq!(l.record(&UNCLICK, T0), Verdict::Drop);
     // a refused volume step does not use up the budget of the other media commands
     let mut l = Limits::new(T0);
     for _ in 0..50 {

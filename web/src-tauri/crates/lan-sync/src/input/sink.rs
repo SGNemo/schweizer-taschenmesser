@@ -43,10 +43,10 @@ pub trait InputSink: Send + Sync {
     fn supported(&self) -> bool;
     /// The last known state (cached; must not block).
     fn state(&self) -> PcState;
-    /// Does it. Only called for an action that passed the gate and the limits.
+    /// Does it. Only called for an action that passed the gate and the limits – and, when a
+    /// session ends, for the release of each mouse button that session still held. A key is
+    /// pressed and released within one `apply`, so a mouse button is all that can stay held.
     fn apply(&self, action: Action);
-    /// An input session ended: let go of every button and key that is still held.
-    fn release_all(&self);
 }
 
 /// The sink of a PC that cannot be controlled (not Windows, or nothing wired yet).
@@ -60,5 +60,4 @@ impl InputSink for NoSink {
         PcState::UNKNOWN
     }
     fn apply(&self, _action: Action) {}
-    fn release_all(&self) {}
 }

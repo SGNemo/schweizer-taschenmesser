@@ -257,9 +257,10 @@ Pages: `PageHeader`/`PageTitle` with three tabs _Medien_ (default) · _Touchpad_
 | no screen lock set up on the phone | „Dieses Handy hat keine Bildschirmsperre. Maus und Tastatur gehen ohne Entsperren.“ (a fact line, nothing is blocked) | – |
 | `paused`, `ended` | „Die Fernbedienung ist am PC pausiert. Am PC unter Einstellungen → Fernsteuerung wieder einschalten.“ | _Erneut versuchen_ |
 | `busy` | „Gerade steuert ein anderes Gerät den PC.“ | _Erneut versuchen_ |
+| the PC refuses the input session, sync works (`UnknownDevice`: the PC is not on its home network right now, or takes no remote control) | „PC-Sven nimmt hier gerade keine Fernbedienung an. Ist der PC im Heimnetz?“ – never a reason to unpair | _Erneut versuchen_ |
 | `locked` (Touchpad, Tastatur) | „PC ist gesperrt. Medien und Lautstärke gehen weiter.“ | _Zu Medien_ |
 | `unsupported` | „Dieser PC lässt sich nicht fernsteuern (nur Windows).“ | _Modul ausschalten_ |
-| PC too old | „Nemo auf dem PC ist zu alt für die Fernbedienung. Am PC aktualisieren.“ | _Erneut versuchen_ |
+| PC too old (the PC hangs up without an answer twice, a few seconds apart, while sync works) | „Nemo auf dem PC ist zu alt für die Fernbedienung. Am PC aktualisieren.“ | _Erneut versuchen_ |
 | `limit` | „Verbindung kurz unterbrochen.“ | _Erneut versuchen_ |
 
 **Platform seam.** New services `remoteHost` (desktop) and `remote` (phone) in `core/platform`, pattern of `system`: contract, Tauri bridge, web stub `unsupported`, E2E fake. Hotspot: one chat at a time.

@@ -9,10 +9,12 @@
 //!   "seal, then write" of two senders in the order of their nonces.
 //! * Only private IPv4 addresses are dialled. Nothing is logged or formatted: no address, no
 //!   frame, no event.
-//! * A hub from before remote control reads the first message and closes without a word:
-//!   `InputError::NoAnswer` (the connection stood, the hub hung up). Together with a sync session
-//!   that still opens, that means "the PC's Nemo is too old". A connection that never stood, or a
-//!   timeout, is `Network` and says nothing about the hub's age.
+//! * `InputError::NoAnswer`: the connection stood and the hub hung up on the first message
+//!   without a word. That is what a hub from before remote control does with this mode – and also
+//!   what any hub does when it is not the pinned one, or when it sheds load (too many first
+//!   messages from one address). So: try again once; if it stays `NoAnswer` while a sync session
+//!   opens, the PC's Nemo is too old. A connection that never stood, or a timeout, is `Network`
+//!   and says nothing about the hub's age.
 //! * `UnknownDevice` is the hub's authenticated refusal of the handshake. It means one of two
 //!   things the hub does not tell apart on purpose: this device is not paired any more, or the hub
 //!   takes no input where this connection came in (not the home network, or nothing wired). **The
@@ -23,9 +25,11 @@
 //!   The right reaction is the same every time: show the unconnected state and open again on the
 //!   next touch – the answer to that `open` is the real state. A `Closed` from a session the
 //!   caller has already replaced or closed is to be ignored.
-//! * There is no heartbeat. A PC that vanishes without closing (sleep, Wi-Fi gone) is noticed only
-//!   when a send fails or the operating system gives up; the caller should treat a longer silence
-//!   after its own sends as "not connected".
+//! * There is no heartbeat, but an answer: after frames came in, the hub sends its state within
+//!   about 200 ms even if nothing changed. A PC that vanishes without closing (sleep, Wi-Fi gone)
+//!   is therefore noticed by the caller as "sent something, heard nothing for a few seconds".
+//! * A send error is never a state to show: `Closed` means this session is over (see its
+//!   `Event::Closed`, or just open again), `Network` that the write failed.
 
 use crate::client::{hello_name, ClientError, Conn, IO_TIMEOUT};
 use crate::input::wire::{self, Code, Level, Opened, PcState, Record};
@@ -43,8 +47,8 @@ use std::time::Duration;
 pub enum InputError {
     /// Not reachable, a timeout, or the connection dropped.
     Network,
-    /// The connection stood and the first message was sent, then the hub closed without answering:
-    /// what a hub from before remote control does.
+    /// The connection stood and the first message was sent, then the hub closed without answering
+    /// (an old hub, not the pinned hub, or a hub shedding load – see the module's header).
     NoAnswer,
     /// The hub authenticated itself and refused the handshake.
     UnknownDevice,
@@ -52,6 +56,9 @@ pub enum InputError {
     Refused(Code),
     /// A frame that does not belong to the protocol, or text the protocol does not carry.
     Protocol,
+    /// A send on a session that is over. Not a state of its own: what happened is in the
+    /// `Event::Closed` of that session, or in the answer to the next `open`.
+    Closed,
 }
 
 /// What the PC says unasked. After `Closed` nothing follows.
@@ -201,7 +208,7 @@ impl InputSession {
 
     fn send(&self, tag: u8, body: &[u8]) -> Result<(), InputError> {
         if self.is_over() {
-            return Err(InputError::Network);
+            return Err(InputError::Closed);
         }
         // the writer lock spans "seal, then write", so frames leave in the order of their nonces
         let mut writer = self.writer.lock().map_err(|_| InputError::Network)?;
@@ -209,7 +216,13 @@ impl InputSession {
             let mut t = self.transport.lock().map_err(|_| InputError::Network)?;
             t.seal(tag, body).map_err(|_| InputError::Protocol)?
         };
-        writer.write(&sealed).map_err(net)
+        writer.write(&sealed).map_err(|e| {
+            if self.is_over() {
+                InputError::Closed
+            } else {
+                net(e)
+            }
+        })
     }
 
     /// Ends the session and waits for the reader thread. `on_event` is not called for this.

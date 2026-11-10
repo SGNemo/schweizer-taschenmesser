@@ -6,21 +6,27 @@
 //! per record: does the session's level cover it (a pointer, key or text record on a media session
 //! is a violation and closes it, whatever the grant says), is the PC locked (then only media
 //! commands act; the phone learns it from the `locked` bit of the state), is it within the limits.
-//! Only what passed reaches the sink. The release of a button always passes: nothing may stay
-//! held because a limit or the lock got in the way.
+//! Only what passed reaches the sink.
+//!
+//! A session knows which mouse buttons it pressed. Letting go of one of those always passes (no
+//! limit, no lock: nothing may stay held because something got in the way), and when the session
+//! ends it lets go of exactly those – never of a button another session holds. A release of a
+//! button this session does not hold is an ordinary event: limited, and not applied on a locked
+//! PC.
 //!
 //! Nothing here touches the sync store, sets a grant or records anything.
 
 use super::limits::{Limits, Verdict};
 use super::remote::{Claimed, Ended, Flag, Remote};
 use super::sink::{Action, InputSink};
-use super::wire::{self, Code, Level, Opened, PcState, Record};
+use super::wire::{self, Button, Code, Level, Opened, PcState, Record};
 use crate::noise::PublicKey;
 use crate::trust::SessionHandle;
 use std::sync::Arc;
 use std::time::Duration;
 
-/// The PC tells the phone a changed state at most this often.
+/// The PC tells the phone its state at most this often: when it changed, and once after frames
+/// came in (as the sign that they arrived).
 pub const STATE_INTERVAL: Duration = Duration::from_millis(200);
 
 /// What the connection does next. `Reply`/`ReplyClose` carry a tag and a plaintext body; the
@@ -45,6 +51,12 @@ struct Live {
     level: Level,
     flag: Arc<Flag>,
     limits: Limits,
+    /// The mouse buttons this session pressed and has not let go of (left, right).
+    held: [bool; 2],
+    /// A frame came in since the state was last told: the next tick tells it again even if
+    /// nothing changed, so the phone hears that its frames arrive (a volume step at 100 % changes
+    /// nothing, and silence would look like a dead connection).
+    answer_due: bool,
     told: PcState,
     told_at: Duration,
 }
@@ -55,6 +67,22 @@ pub struct InputConn {
     peer: PublicKey,
     handle: SessionHandle,
     phase: Phase,
+}
+
+fn slot_of(button: Button) -> usize {
+    match button {
+        Button::Left => 0,
+        Button::Right => 1,
+    }
+}
+
+/// Frees the controller slot when dropped, whatever happens while the buttons are let go.
+struct Releasing<'a>(&'a Remote, &'a Arc<Flag>);
+
+impl Drop for Releasing<'_> {
+    fn drop(&mut self) {
+        self.0.release(self.1);
+    }
 }
 
 fn closed(code: Code) -> Step {
@@ -112,9 +140,12 @@ impl InputConn {
                 Err(step) => step,
                 Ok(()) => {
                     let state = self.sink.state();
-                    if state != live.told && now.saturating_sub(live.told_at) >= STATE_INTERVAL {
+                    if (state != live.told || live.answer_due)
+                        && now.saturating_sub(live.told_at) >= STATE_INTERVAL
+                    {
                         live.told = state;
                         live.told_at = now;
+                        live.answer_due = false;
                         Step::Reply(wire::TAG_STATE, wire::encode_state(state).to_vec())
                     } else {
                         Step::Continue
@@ -141,31 +172,24 @@ impl InputConn {
         if !self.sink.supported() {
             return refused(Code::Unsupported);
         }
-        let level = match self.remote.level_for(&self.peer, asked) {
-            Ok((level, _)) => level,
-            Err(code) => return refused(code),
-        };
-        let state = self.sink.state();
-        if state.locked && level == Level::Full {
-            return refused(Code::Locked);
+        if let Err(code) = self.remote.level_for(&self.peer, asked) {
+            return refused(code);
         }
+        let state = self.sink.state();
         match self.remote.claim(self.peer, asked, self.handle.clone()) {
             Err(code) => refused(code),
-            Ok(Claimed {
-                level,
-                grant,
-                flag,
-                replaced,
-            }) => {
-                if replaced {
-                    // whatever the older session of this device still held is let go now, before
-                    // this one acts (its own teardown will not do it later, see `teardown`)
-                    self.sink.release_all();
+            Ok(Claimed { level, grant, flag }) => {
+                // judged on the level the session really got
+                if state.locked && level == Level::Full {
+                    self.remote.release(&flag);
+                    return refused(Code::Locked);
                 }
                 self.phase = Phase::Live(Box::new(Live {
                     level,
                     flag,
                     limits: Limits::new(now),
+                    held: [false; 2],
+                    answer_due: false,
                     told: state,
                     told_at: now,
                 }));
@@ -212,6 +236,7 @@ impl InputConn {
         if let Err(step) = Self::still_allowed(remote, peer, live) {
             return step;
         }
+        live.answer_due = true;
         match tag {
             wire::TAG_EVENTS => {
                 let Ok(records) = wire::decode_events(body) else {
@@ -222,15 +247,30 @@ impl InputConn {
                     return Step::Close;
                 }
                 for r in records {
-                    let release = matches!(r, Record::Button { down: false, .. });
+                    if let Record::Button {
+                        button,
+                        down: false,
+                    } = r
+                    {
+                        // letting go of a button this session holds: always, and at no cost
+                        if std::mem::take(&mut live.held[slot_of(button)]) {
+                            sink.apply(Action::from(r));
+                            continue;
+                        }
+                    }
                     // the lock state is looked at for every record
-                    let verdict = if !release && r.needs_full() && sink.state().locked {
+                    let verdict = if r.needs_full() && sink.state().locked {
                         live.limits.dropped(now)
                     } else {
                         live.limits.record(&r, now)
                     };
                     match verdict {
-                        Verdict::Pass => sink.apply(Action::from(r)),
+                        Verdict::Pass => {
+                            if let Record::Button { button, down: true } = r {
+                                live.held[slot_of(button)] = true;
+                            }
+                            sink.apply(Action::from(r));
+                        }
                         Verdict::Drop => {}
                         Verdict::Flood => return closed(Code::Limit),
                     }
@@ -261,7 +301,7 @@ impl InputConn {
         }
     }
 
-    /// A closing step ends the session for good: buttons are let go and the slot is freed.
+    /// A closing step ends the session for good: its buttons are let go and the slot is freed.
     fn finish(&mut self, step: Step) -> Step {
         if matches!(step, Step::Close | Step::ReplyClose(..)) {
             self.teardown();
@@ -271,12 +311,17 @@ impl InputConn {
 
     fn teardown(&mut self) {
         if let Phase::Live(live) = std::mem::replace(&mut self.phase, Phase::Done) {
-            // a session that was replaced by a newer one of the same device lets go of nothing
-            // here: the newer one did that when it opened, and may be holding a button by now
-            if !(live.flag.ended_silently() && self.remote.status().controller.is_some()) {
-                self.sink.release_all();
+            // the slot is freed (and the session stops counting as open) only after its buttons
+            // are let go – also if the sink fails while doing so
+            let _slot = Releasing(&self.remote, &live.flag);
+            for button in [Button::Left, Button::Right] {
+                if live.held[slot_of(button)] {
+                    self.sink.apply(Action::Button {
+                        button,
+                        down: false,
+                    });
+                }
             }
-            self.remote.release(&live.flag);
         }
     }
 }

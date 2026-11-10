@@ -99,10 +99,12 @@ impl Limits {
         // the buckets on this record's path; a token is taken only if every one of them has one,
         // so a refused volume step does not use up the media or the overall budget
         let (a, b): (Option<&mut Bucket>, Option<&mut Bucket>) = match r {
-            // a release passes everything: a button must never stay down
-            Record::Button { down: false, .. } => return Verdict::Pass,
-            Record::Move { .. } | Record::Scroll { .. } => (None, None),
-            Record::Button { .. } => (Some(&mut self.clicks), None),
+            // a release costs no click (the session lets a button it holds go without asking here
+            // at all; a release of a button nobody pressed is just one more event)
+            Record::Move { .. } | Record::Scroll { .. } | Record::Button { down: false, .. } => {
+                (None, None)
+            }
+            Record::Button { down: true, .. } => (Some(&mut self.clicks), None),
             Record::Key(_) => (Some(&mut self.keys), None),
             Record::Media(Media::VolumeUp) => (Some(&mut self.media), Some(&mut self.volume_up)),
             Record::Media(Media::Lock) => (Some(&mut self.media), Some(&mut self.lock)),
