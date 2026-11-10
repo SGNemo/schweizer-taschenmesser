@@ -37,9 +37,7 @@ export const MODULE_IDS = readdirSync(MODULES)
  * The modules of the phone-sized window: a browser at 412 px is the web platform, so everything with a platform limit
  * (`manifest.platforms`: desktop app, Android app) is not there.
  */
-export const PHONE_MODULE_IDS = MODULE_IDS.filter(
-  (id) => !/\bplatforms: \[/.test(manifestOf(id)),
-);
+export const PHONE_MODULE_IDS = MODULE_IDS.filter((id) => !/\bplatforms: \[/.test(manifestOf(id)));
 
 /** Entry route of every module for the given window. */
 export const moduleRoutes = (phone: boolean): string[] =>
