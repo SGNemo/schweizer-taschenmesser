@@ -18,7 +18,7 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 | Browser extension (its own E2E runs against the web app) | if `extension/` or `web/` (not only `src-tauri/`) changed | yes | no | yes | yes | – |
 | server, MCP, supporter (+ CLI), supporter webhook (job "Small packages") | only for the package that changed | yes | no | yes | yes | – |
 | vault-core | only when a shared input changed | yes | no | yes | yes | – |
-| Native shell (fmt, clippy, tests; on Windows clippy and tests), local model | if `web/src-tauri/` (model: `crates/local-llm/`) changed | yes, plus the Windows release build for the exe size | no | yes, with the release build | yes, with the release build | – |
+| Native shell on Linux and Windows (fmt, clippy, tests), local model | if `web/src-tauri/` (model: `crates/local-llm/`) changed; Windows without the release build | yes (with the Windows release build and exe size) | no | yes (with the Windows release build) | yes (with the Windows release build) | – |
 | Shared inputs (`packages/`, `contract/`, workflows, root manifests) and any path the pre-check does not know (e.g. `README*.md`) | every package runs | yes | static + unit only | yes | yes | – |
 | CodeQL | JS/TS + Actions always; Rust only if the PR touches Rust | same | same | all three languages | weekly, on `main` | – |
 | Dev-Preview (signed exe + APK) | never | never | never | built next to the tests, **published when the gate is green: gitleaks, licences, static, unit, E2E smoke, native shell**; the rest of the run (rest E2E, sync E2E + seed, small packages, extension, local model, docs) follows and cannot hold the preview back (not for docs-only pushes) | – | – |

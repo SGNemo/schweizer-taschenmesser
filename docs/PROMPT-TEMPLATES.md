@@ -11,8 +11,8 @@ Blocks for the maintainer's prompts. Reference a block instead of repeating it: 
 
 - Own branch `<type>/<topic>` from fresh `develop` (`git fetch`, update `develop`, branch). Ignore a branch name the session suggests.
 - Work only there; small thematic commits, push regularly (`git push -u origin <branch>`; retry on network errors only).
-- Merge `develop` into the branch **once**, right before opening the PR (`git fetch`; no rebase; doc conflicts: keep both contents; re-run checks). Afterwards only when GitHub reports a conflict or the maintainer asks: "`develop` moved" is no reason, the `develop` run tests the merge result.
-- Every push to a PR starts about 35 runner minutes and cancels the checks that were running: bundle fixes into one push, never push to restart CI (no empty commit; use "Re-run failed jobs"). Numbers: [perf/CI-2026-11.md](perf/CI-2026-11.md).
+- Merge `develop` into the branch **once**, right before opening the PR (`git fetch`; no rebase; doc conflicts: keep both contents; re-run checks). Afterwards only when GitHub reports a conflict, `npm run chats:status` or a heads-up shows that `develop` changed files or guards your branch touches, `develop` changed a shared input (`packages/`, `contract/`, workflows, root manifests), your last green run is older than two days, or the maintainer asks. "`develop` moved" alone is no reason. After your PR is merged, look at the `develop` run: if it is red from your merge, you fix it.
+- Every push to a PR starts about 35 runner minutes and cancels the checks that were running: bundle fixes into one push, never push to restart CI (no empty commit; re-run the failed jobs instead: `gh run rerun <run-id> --failed` or the Actions tool). Numbers: [perf/CI-2026-11.md](perf/CI-2026-11.md).
 - PR against `develop`, do **not** merge. If push or PR fails: stop and print the PR text.
 
 ## hard-rules

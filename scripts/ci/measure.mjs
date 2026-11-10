@@ -9,7 +9,8 @@
 //   node scripts/ci/measure.mjs --since 2026-11-10T00:00:00Z --logs 5 --json /tmp/ci.json
 //   node scripts/ci/measure.mjs --tests 150         also read job logs: failed and retried tests by file:line
 //
-// Needs `gh` (logged in); without `gh` on the PATH it uses GITHUB_TOKEN. Read-only: it only sends GET requests. Node built-ins only.
+// Needs `gh` (logged in); without `gh` on the PATH it uses GITHUB_TOKEN. `--cache` keeps raw API answers and
+// job logs: point it outside the repository. Read-only: it only sends GET requests. Node built-ins only.
 // How to read the numbers: docs/perf/CI-2026-11.md; mentioned in docs/HOW-TO.md.
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -27,7 +28,7 @@ if (argv.includes("--help")) {
   console.log(
     readFileSync(new URL(import.meta.url), "utf8")
       .split("\n")
-      .slice(1, 13)
+      .slice(1, 15)
       .join("\n"),
   );
   process.exit(0);
@@ -73,7 +74,9 @@ async function rest(path, { raw = false, fresh = false } = {}) {
       if (!HAS_GH) {
         const res = await fetch(`https://api.github.com/${path}`, {
           headers: {
-            authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+            ...(process.env.GITHUB_TOKEN
+              ? { authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
+              : {}),
             accept: "application/vnd.github+json",
             "x-github-api-version": "2022-11-28",
           },
@@ -522,8 +525,15 @@ try {
 const prRuns = done.filter(
   (r) => r.event === "pull_request" || r.cls === "full-ci label",
 );
+// A commit with a run that is still going is left out: it is neither green nor overtaken yet.
+const unfinished = new Set(
+  runs.filter((r) => r.status !== "completed").map((r) => r.head_sha),
+);
 const commits = [
-  ...groupBy(prRuns, (r) => `${r.head_branch}@${r.head_sha}`),
+  ...groupBy(
+    prRuns.filter((r) => !unfinished.has(r.head_sha)),
+    (r) => `${r.head_branch}@${r.head_sha}`,
+  ),
 ].map(([key, rs]) => {
   const start = Math.min(...rs.map((r) => ms(r.created_at)));
   const jobs = rs.flatMap((r) =>
@@ -557,7 +567,7 @@ const commits = [
 const green = commits.filter((c) => c.state === "green");
 say("### Pull requests: from push to green");
 say(
-  `Required checks from the ruleset on \`develop\`: ${required.length ? required.map((c) => `\`${c}\``).join(", ") : "none readable (or none set), so every check of the commit counts"}.`,
+  `Required checks from the ruleset on \`develop\`: ${required.length ? required.map((c) => `\`${c}\``).join(", ") : "none set (or not readable with this token)"}.`,
 );
 say(
   table(
@@ -888,11 +898,11 @@ say(
     ["What", "Runs", "Runner min", "Workflows"],
     [
       wasteRow(
-        "Docs-, notes- or change-note-only change (pull request)",
+        "Docs-, notes- or change-note-only change (pull request, judged by all files of the pull request)",
         done.filter((r) => r.event === "pull_request" && docsOnly(r)),
       ),
       wasteRow(
-        "Docs-, notes- or change-note-only change (push)",
+        "Docs-, notes- or change-note-only change (push, judged by the head commit)",
         done.filter((r) => r.event === "push" && docsOnly(r)),
       ),
       wasteRow(

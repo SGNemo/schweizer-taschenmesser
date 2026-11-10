@@ -666,6 +666,10 @@ jobs:
         run: |
           pick=--grep-invert
           if [ "$SEED_PART" = "page walks" ]; then pick=--grep; fi
+          # A shard without tests exits 0: if the title of the walks is ever renamed, they all move to "other"
+          # (still run once) and this part must say so instead of passing empty.
+          npx playwright test --project=seed-dev "$pick" 'every page fits the window' --list | grep -q 'Total: [1-9]' \
+            || { echo "::error::No test matches 'every page fits the window' ($SEED_PART): update the pattern of the e2e-seed job."; exit 1; }
           npx playwright test --project=seed-dev "$pick" 'every page fits the window' --shard="$SEED_SHARD/2"
       - name: Upload Playwright report
         if: failure()
@@ -711,8 +715,11 @@ jobs:
   # lan-sync with its bundled SQLite cannot be cross-checked from Linux: build, lint and test them natively.
   # The release build reports the exe size (placeholder frontend, no local model: a trend value, not the
   # shipped size) on full runs only (push to develop/main, nightly, label `full-ci`): it took 5.2 of the job's
-  # 8.9 min on every pull request that touches Rust, for a number nobody reads there. Clippy and the tests
-  # above compile the same crates on every run. The signed release build stays in release.yml.
+  # 8.9 min on every pull request that touches Rust, for a number nobody reads there. Trade-off: clippy and
+  # the tests build the debug profile, so a break that only the release profile shows (LTO, panic=abort,
+  # `cfg(not(debug_assertions))`) is found by the run on develop and the release dry run, not on the pull
+  # request; label `full-ci` when a pull request touches the profile or a build script. The signed release
+  # build stays in release.yml.
   rust-windows:
     name: Native shell on Windows (clippy, tests, size)
     needs: changes

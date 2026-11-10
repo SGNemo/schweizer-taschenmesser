@@ -8,27 +8,25 @@ prompts are). Every package that touches a workflow, an action or `web/*.config.
 
 | # | Package | Model | Depends on | Parallel with |
 |---|---|---|---|---|
-| 1 | `develop` runs: stop testing what a newer push overtook, rest E2E for the newest commit only | Fable | this round merged | 3, 4, 5 |
-| 2 | Install and build once per run | Opus | package 1 merged (both rewrite `ci.yml`) | 3, 4, 5 |
+| 1 | `develop` runs: stop the jobs outside the Dev-Preview gate when a newer push waits, rest E2E for the newest commit only | Fable | this round merged | 3, 4 (tests only), 5 |
+| 2 | Install and build once per run | Opus | package 1 merged (both rewrite `ci.yml`) | 3, 4 (tests only), 5 |
 | 3 | CodeQL only where code changed | Fable | the maintainer's yes (question in the prompt) | 1, 2, 4, 5 |
-| 4 | Flaky tests | Opus | – | all |
+| 4 | Flaky tests | Opus | its one workflow commit (retried tests in the job summary) after package 2 | all, without that commit |
 | 5 | Dependabot spread over the week | Opus | – | all |
 
-`ci.yml` is a hotspot: packages 1 and 2 one after the other, with a heads-up row in `docs/CHATS.md`. After
-package 1 and again after package 2: `node scripts/ci/measure.mjs --runs 1000` and one line in
-[CI-2026-11.md](CI-2026-11.md).
+`ci.yml` is a hotspot: packages 1 and 2 one after the other, with a heads-up row in `docs/CHATS.md`. Baseline for
+every target below: `node scripts/ci/measure.mjs --runs 1000` a few days after this round is merged (one line in
+[CI-2026-11.md](CI-2026-11.md)), again after each package. In every prompt `#git` comes before the skill:
+`develop` is merged in once, before the pull request.
 
 ## Only the maintainer
 
 | What | Why | Where to click |
 |---|---|---|
+| Skills `full-stop`, `file-pr`, `modernize`, `babysit-pr` (outside the repo), before package 1 is sent | they ask for "branch is up to date with `develop`" and merge `develop` in before every hand-over: every fourth pull-request commit | change the gate to "GitHub reports the pull request mergeable (no conflict)"; `babysit-pr`: no push to restart CI; wording: `docs/PROMPT-TEMPLATES.md#git` |
 | Runner limit | 20 jobs at once, reached 22 % of the time; GitHub Pro allows 40 | github.com → profile picture → Settings → Billing and licensing → Plans and usage |
-| Required checks (branch protection) | none is required today, "green" is a rule of the chats only; candidates: `Web (lint, types, unit, E2E)`, `Secret scan (gitleaks)`, `Change note present`; CodeQL stays informative. Leave "Require branches to be up to date" off: it would force the merge of `develop` this round removes | repository → Settings → Rules → Rulesets → the ruleset of `develop` → Require status checks to pass |
-| Merge queue | not offered for a personal account's repository; no action | – |
 | Nightly run | `nightly.yml`, `full-ci.yml` and `change-note.yml` are on `develop` only; scheduled workflows fire from `main` | next release merge `develop` → `main`; then Actions → Nightly → Run workflow once |
-| Skills `full-stop`, `file-pr`, `modernize`, `babysit-pr` (outside the repo) | they ask for "branch is up to date with `develop`" and merge `develop` in before every hand-over: every fourth pull-request commit | change the gate to "GitHub reports the pull request mergeable (no conflict)"; `babysit-pr`: no push to restart CI, "Re-run failed jobs" instead; wording: `docs/PROMPT-TEMPLATES.md#git` |
-| Second gitleaks scan in `dev-preview.yml` | same commit as the scan in `ci.yml` (0.9 min a `develop` push); signing path, so not touched by a chat | decide whether the build stage may rely on `secret-scan` of the same run |
-| Secrets | nothing to do in this round | – |
+| Required checks (optional) | candidates: `Web (lint, types, unit, E2E)`, `Secret scan (gitleaks)`, `Change note present`; leave "Require branches to be up to date" off, it would force the merges this round removes | repository → Settings → Rules → Rulesets → ruleset of `develop` → Require status checks to pass |
 
 ## Package 1 – `develop` runs
 
@@ -43,7 +41,7 @@ Branch `ci/develop-load` von frischem `develop`. Vorgegebene Session-Branches ig
 docs/perf/CI-2026-11.md (Diagnose, Hebel 1): 90 Pushes auf develop in 42 h, ein Voll-Lauf will 35 Jobs und 152 Runner-Minuten, das Konto hat 20 Runner. 28 Läufe liefen zu Ende, obwohl ein neuerer Push wartete (2709 Runner-Minuten); das Rest-E2E allein kostet 56 Minuten je Lauf (2742 gesamt). Lies docs/decisions/meta.md (CI-Bullets vom 2026-11-04 bis 2026-11-10, vor allem „runs for develop are never cancelled“ und „Dev-Preview gate“), docs/howto/ci.md („Concurrency“, „Dev-Preview“, „Never lost“), `.github/workflows/ci.yml` ganz.
 
 ## Pflichtliste
-- Die Test-Jobs eines develop-Laufs (Unit, E2E Smoke/Rest/Seed, Sync, Extension, Pakete, Rust, Stimulus) enden, sobald ein neuerer Push auf develop einen Lauf gestartet hat; der neuere Lauf testet den neueren Stand. Dev-Preview-Build und -Publish eines gestarteten Laufs laufen wie heute zu Ende (Entscheidung `ci/develop-runs-finish` bleibt für sie). Weg selbst wählen und begründen (eigene `concurrency`-Gruppe je Job-Gruppe, getrennter Workflow für die Tests, oder ein Prüfschritt) – der Dev-Preview-Gate (gitleaks, Lizenzen, Static, Unit, Smoke, Rust) muss für den Commit, der veröffentlicht wird, grün gewesen sein.
+- Heute hält die Workflow-Gruppe (`ci-…-push-refs/heads/develop`, kein Abbruch) einen neueren Lauf zurück, bis der ältere fertig ist; Job-Gruppen greifen erst danach. Die Gruppe für develop-Pushes muss sich also ändern (z. B. je Lauf), damit ein neuerer Lauf starten kann; Job-`concurrency` mit `cancel-in-progress` bekommen nur die Jobs **außerhalb** des Dev-Preview-Gates: Rest-E2E, Seed, Sync, Extension, kleine Pakete, Stimulus, lokales Modell, Windows-Shell. Die Gate-Jobs (gitleaks, Lizenzen, Static, Unit, Smoke, `rust`) und Dev-Preview-Build/-Publish eines gestarteten Laufs laufen zu Ende – veröffentlicht wird nur von grünem Gate (Entscheidung `ci/develop-runs-finish` bleibt für sie). Zwei Dev-Preview-Publishes dürfen sich nicht überholen (eigene Gruppe ohne Abbruch für den Publish). Alternative, falls das nicht sauber geht: ein überholter Commit bekommt gar keinen Preview – dann als Frage an Sven mit Empfehlung.
 - Rest-E2E (8 Shards) nur für den neuesten Stand: kein Lauf startet es für einen Commit, der schon überholt ist. Wenn `nightly.yml` auf `main` aktiv ist (prüfen: `gh api repos/SGNemo/schweizer-taschenmesser/actions/workflows`), zusätzlich vorschlagen, ob das Rest-E2E je Push bleibt oder stündlich gebündelt wird – als Frage an Sven mit Empfehlung, nicht selbst entscheiden.
 - Kein Commit geht ungetestet durch: nach einer Kette überholter Läufe testet der letzte Lauf alles; ein roter Lauf nennt im Job-Summary die Commits seit dem letzten grünen Voll-Lauf (`git log <letzter grüner>..HEAD --oneline`), damit der Verursacher findbar ist.
 - Die Regel „welcher Stand seit dem letzten veröffentlichten Dev-Preview“ im Job `changes` bleibt.
@@ -53,8 +51,8 @@ docs/perf/CI-2026-11.md (Diagnose, Hebel 1): 90 Pushes auf develop in 42 h, ein 
 `dev-preview.yml`, `release.yml`, Signing, gitleaks, Artefakt-Audit, Branch-Schutz; der PR-Umfang (Smoke-Liste); Caches und Builds (Paket 2); CodeQL (Paket 3).
 
 ## Abnahme
-- `node scripts/ci/measure.mjs --runs 1000` vorher/nachher im PR-Text: „Overtaken by a newer push, but not cancelled“ für CI/develop von 2709 auf unter 400 Runner-Minuten je 42 h; Wartezeit p90 der PR-Jobs (heute 7 bis 9 min) unter 4 min; Push → grün Median unter 9 min (heute 12,3).
-- Ein Probelauf mit zwei schnellen Pushes auf einem Test-Branch mit derselben Gruppen-Logik (oder `workflow_dispatch`), im PR-Text verlinkt: der ältere Lauf beendet seine Tests, sein Dev-Preview-Teil nicht.
+- `node scripts/ci/measure.mjs --runs 1000` vorher/nachher im PR-Text: „Overtaken by a newer push, but not cancelled“ für CI/develop von 2709 auf unter 800 Runner-Minuten je 42 h (die Gate-Jobs laufen weiter); Wartezeit p90 der PR-Jobs (vor Runde 3: 7 bis 9 min) unter 4 min; Push → grün Median unter 9 min (vor Runde 3: 12,3; Baseline neu messen, siehe „Order“).
+- Ein Probelauf mit zwei schnellen Pushes auf einem Test-Branch mit derselben Gruppen-Logik (oder `workflow_dispatch`), im PR-Text verlinkt: der ältere Lauf bricht seine Jobs außerhalb des Gates ab; Gate und Dev-Preview-Teil laufen zu Ende.
 - `npm run check:docs`; Label `no-changelog`; Ratchet-Treffer im PR-Text nennen und auf Svens Signatur warten.
 
 ## Skills
@@ -71,10 +69,10 @@ Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Q
 Branch `ci/install-build-once` von frischem `develop`, erst nach Paket 1. Vorgegebene Session-Branches ignorieren. Hotspot `.github/workflows/ci.yml`: Zeile in docs/CHATS.md.
 
 ## Ausgangslage
-docs/perf/CI-2026-11.md (Hebel 3): `npm ci` läuft in 2719 Jobs je 42 h, zusammen 1969 Minuten (Median 0,8 bis 0,9 min je Job, trotz npm-Cache-Treffer). Jeder der bis zu 14 E2E-Jobs (Smoke 3, Rest 8, Seed 4, Stimulus, Sync, Extension) baut die App selbst (`webServer` in `web/playwright*.config.ts`: `build:e2e`, im Seed-Job zusätzlich `build:e2e-seed`).
+docs/perf/CI-2026-11.md (Hebel 3): `npm ci` läuft in 2719 Jobs je 42 h, zusammen 1969 Minuten (Median 0,8 bis 0,9 min je Job, trotz npm-Cache-Treffer). Jeder der bis zu 18 E2E-Jobs (Smoke 3, Rest 8, Seed 4, Stimulus, Sync, Extension) baut die App selbst (`webServer` in `web/playwright*.config.ts`: `build:e2e`, im Seed-Job zusätzlich `build:e2e-seed`).
 
 ## Pflichtliste
-- `node_modules` von `web/` als Cache mit dem Hash von `web/package-lock.json`, Node-Version und Runner-Image im Schlüssel (eine zusammengesetzte Action `.github/actions/web-install`): Treffer → kein `npm ci`; kein Treffer → `npm ci` und speichern. Kein `restore-keys` (nie ein fremder Stand). Postinstall-Ergebnisse müssen im Cache liegen; vergleiche `npm ls --all` und einen Hash über `node_modules/.package-lock.json` zwischen Cache-Treffer und frischem `npm ci`.
+- `node_modules` von `web/` als Cache mit dem Hash von `web/package-lock.json`, Node-Version und Runner-Image im Schlüssel (eine zusammengesetzte Action `.github/actions/web-install`): Treffer → kein `npm ci`; kein Treffer → `npm ci`. Gespeichert wird nur auf Pushes nach develop/main (`actions/cache/restore` auf PRs): Caches sind je Branch getrennt, das Repo hat 10 GB, und PR-Einträge von mehreren hundert MB würden die Rust-/Windows-Caches verdrängen, von denen Releases leben (docs/howto/ci.md „Windows release cache“). Cache-Größe im PR-Text nennen. Kein `restore-keys` (nie ein fremder Stand). Postinstall-Ergebnisse müssen im Cache liegen; vergleiche `npm ls --all` und einen Hash über `node_modules/.package-lock.json` zwischen Cache-Treffer und frischem `npm ci`.
 - Ein Job baut `dist` für `build:e2e` (und einer `build:e2e-seed`) und lädt sie als Artefakt hoch (1 Tag); die E2E-Jobs laden es und starten nur `preview`. Die Playwright-Konfiguration bekommt dafür einen Schalter (z. B. `E2E_PREBUILT=1` → `command: 'npm run preview'`), lokal bleibt alles wie heute. Der Seed-Job baut den Nicht-Seed-Build nicht mehr.
 - Shard 1 des Smoke-E2E schreibt weiter das Bundle-Manifest (`VITE_BUNDLE_REPORT`) – der Build-Job übernimmt es samt „Bundle budget“.
 - Messen, ob der Umweg über das Artefakt wirklich kürzer ist als der Build je Job (Upload/Download gegen Build-Zeit); wenn nicht, den Build-Teil weglassen und im PR begründen.
@@ -84,7 +82,7 @@ docs/perf/CI-2026-11.md (Hebel 3): `npm ci` läuft in 2719 Jobs je 42 h, zusamme
 gitleaks bleibt ohne Cache (Entscheidung), Rust-Caches, `dev-preview.yml`, `release.yml`, Testumfang, Retries, Shard-Zahlen.
 
 ## Abnahme
-- `node scripts/ci/measure.mjs --branch ci/install-build-once --top 6`: Schritt „Install“ der E2E- und Unit-Jobs von 0,8 bis 1,1 auf unter 0,3 min; Runner-Minuten eines grünen PR-Laufs von 34 auf unter 28; Push → grün eine halbe bis eine Minute kürzer.
+- `node scripts/ci/measure.mjs --branch ci/install-build-once --top 6`: Schritt „Install“ der E2E- und Unit-Jobs von 0,8 bis 1,1 auf unter 0,3 min; Runner-Minuten eines grünen PR-Laufs (Median vor Runde 3: 34) um mindestens 6 Minuten niedriger als die neue Baseline; Push → grün eine halbe bis eine Minute kürzer.
 - Gleiche Testzahl je Job wie vorher (`Running N tests` in den Logs vergleichen, Zahlen im PR-Text).
 - Ratchet-Treffer (Workflow, Action, `playwright*.config.ts`) im PR-Text; Label `no-changelog`; `npm run check:docs`.
 
@@ -109,7 +107,7 @@ docs/perf/CI-2026-11.md (Hebel 4): auf jedem Push nach develop analysiert CodeQL
 2. Doku-only-Änderungen (gleiche Liste wie `ignorable` in `ci.yml`) starten gar keine Analyse (Empfohlen) oder weiter JS/TS + Actions.
 
 ## Pflichtliste (nach Svens Ja)
-- Der Vorab-Job liefert die Sprachliste als JSON, `analyze` nimmt sie als Matrix: kein Runner für einen Zweig, der nichts prüft. Fällt der Vorab-Job aus oder ist die Spanne unlesbar: alle drei Sprachen (fail-open wie heute).
+- Der Vorab-Job liefert die Sprachliste als JSON, `analyze` nimmt sie als Matrix: kein Runner für einen Zweig, der nichts prüft. Eine leere Liste lässt den Workflow scheitern (Matrix ohne Einträge): `analyze` bekommt `if: needs.<vorab>.outputs.languages != '[]'`. Fällt der Vorab-Job aus oder ist die Spanne unlesbar: alle drei Sprachen (fail-open wie heute).
 - Push auf develop: Spanne `github.event.before..github.sha`; ein Push ohne lesbare Spanne prüft alles.
 - Kein Rust-Stand bleibt länger als einen Tag ungeprüft (täglicher Voll-Scan, siehe Frage 1); der wöchentliche Lauf und `workflow_dispatch` prüfen immer alles.
 - Entscheidungs-Bullet in docs/decisions/meta.md (schränkt den vom 2026-11-04 ein), HOW-TO-Zeile „CodeQL“.
@@ -118,7 +116,7 @@ docs/perf/CI-2026-11.md (Hebel 4): auf jedem Push nach develop analysiert CodeQL
 Abfragen, Sprachen, `security-events`-Rechte, `ci.yml`, gitleaks.
 
 ## Abnahme
-- `node scripts/ci/measure.mjs --runs 1000`: CodeQL/develop von 1562 auf unter 500 Runner-Minuten je 42 h; „Analyze (rust)“ ist auf PRs ohne Rust kein Job mehr.
+- `node scripts/ci/measure.mjs --runs 1000`: CodeQL/develop von 1562 auf unter 500 Runner-Minuten je 42 h (rund 600 Minuten am Tag weniger); „Analyze (rust)“ ist auf PRs ohne Rust kein Job mehr.
 - Ein PR mit Rust-Änderung und einer ohne, beide verlinkt: Rust wird geprüft bzw. nicht gestartet.
 - Ratchet-Treffer im PR-Text; Label `no-changelog`; `npm run check:docs`.
 
@@ -142,14 +140,14 @@ Liste mit Datei:Zeile in docs/perf/CI-2026-11.md („Flaky tests“); frische Li
 - Je Test der Liste: lokal reproduzieren (`npx playwright test <datei>:<zeile> --repeat-each=30 --workers=4`, Unit: `npx vitest run <datei> --retry=0` in einer Schleife, Rust: `cargo test <name> -- --test-threads=8` wiederholt), Ursache benennen (Uhr, Reihenfolge, fehlendes Warten auf einen Zustand, geteilter Zustand), Ursache beheben. Kein `waitForTimeout`, kein längeres Timeout, kein `test.fixme`/`skip`, kein zusätzlicher Retry.
 - `web/e2e/calendar-drag.spec.ts:55` zuerst prüfen: Flake oder auf develop wirklich kaputt?
 - `web/e2e/subscriptions-plus.spec.ts:78` und `web/e2e/phone-paths.spec.ts:367` waren sechs develop-Läufe lang rot, weil sie nicht im PR-Satz laufen: prüfen, ob sie heute grün sind; Vorschlag im PR-Text, ob eine der beiden Dateien in `SMOKE_FILES` gehört (nicht selbst eintragen: Ratchet-Treffer, Svens Entscheidung).
-- Wiederholte Tests sichtbar machen, ohne den Retry zu ändern: der E2E-Schritt schreibt die „flaky“-Zeilen in das Job-Summary (zusätzlicher Reporter oder ein Schritt, der den Report liest). Das ist ein Workflow-/Konfig-Treffer: eigener kleiner Commit, im PR-Text nennen.
+- Wiederholte Tests sichtbar machen, ohne den Retry zu ändern: der E2E-Schritt schreibt die „flaky“-Zeilen in das Job-Summary (zusätzlicher Reporter oder ein Schritt, der den Report liest). Das ist ein Workflow-/Konfig-Treffer: eigener kleiner PR nach Paket 2 (`ci.yml` ist Hotspot), im PR-Text nennen.
 
 ## Nicht in diesem Paket
 `retries` ändern, Tests löschen oder abschwächen, Produktverhalten ändern (wenn ein Test einen echten Fehler zeigt: stoppen, im PR beschreiben).
 
 ## Abnahme
-- Je Test: 30 Wiederholungen grün, Befehl und Ergebnis im PR-Text; Ursache in einem Satz.
-- Eine Woche später `node scripts/ci/measure.mjs --runs 1000 --tests 150`: kein Test der Liste mehr unter „retried“ oder „Green on re-run“; Anteil wiederholter PR-Läufe unter 2 % (heute 7 %).
+- Im PR: je Test 30 Wiederholungen grün, Befehl und Ergebnis im PR-Text; Ursache in einem Satz. Ziel: die 12 bis 24 Minuten Warten je Wiederholung fallen auf den betroffenen Commits weg.
+- Nachmessung (Sven oder der nächste CI-Chat, eine Woche später): `node scripts/ci/measure.mjs --runs 1000 --tests 150` – kein Test der Liste mehr unter „retried“ oder „Green on re-run“; Anteil wiederholter PR-Läufe unter 2 % (vor Runde 3: 7 %).
 - `npm run check`, `npm test`, `npm run e2e` grün; Label `no-changelog`.
 
 ## Skills
@@ -175,7 +173,8 @@ docs/perf/CI-2026-11.md (Hebel 9): alle 21 Einträge in `.github/dependabot.yml`
 Workflows, Auto-Merge, Versionssprünge selbst.
 
 ## Abnahme
-- Am folgenden Montag: höchstens 25 wartende Jobs in der Stunde nach 04:00 UTC (`node scripts/ci/measure.mjs --since <Montag>T03:00:00Z --until <Montag>T07:00:00Z`), heute 68.
+- Im PR: Diff von `.github/dependabot.yml` zeigt nur geänderte `day`-Zeilen; höchstens fünf Einträge je Tag.
+- Nachmessung am folgenden Montag (Sven oder der nächste CI-Chat): `node scripts/ci/measure.mjs --since <Montag>T03:00:00Z --until <Montag>T07:00:00Z` – höchstens 25 wartende Jobs (vorher 68), Wartezeit p90 der PR-Jobs unter 4 min.
 - Label `no-changelog`; `npm run check:docs`.
 
 ## Skills
