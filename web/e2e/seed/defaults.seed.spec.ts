@@ -17,6 +17,9 @@ async function fresh(page: Page, opts: { set: boolean; desktop: boolean }) {
   await bootDev(page);
   await page.goto('/library');
   await expect(page.locator('main h1')).toBeVisible();
+  // The cards are there before the module states are read, with every switch off until then. ToDos are on in every
+  // build: once their switch says so, the other switches show what the device really has (and a click toggles that).
+  await expect(page.getByTestId('module-todos').getByRole('switch')).toBeChecked();
 }
 
 const stored = (page: Page) =>
@@ -45,8 +48,8 @@ const stored = (page: Page) =>
       }),
   );
 
-const isOn = (page: Page, id: string) =>
-  page.getByTestId(`module-${id}`).getByRole('switch').isChecked();
+const moduleSwitch = (page: Page, id: string) =>
+  page.getByTestId(`module-${id}`).getByRole('switch');
 
 test.use({ viewport: DESKTOP });
 
@@ -67,8 +70,8 @@ test('a new installation in the browser gets lists and budgets; downloads does n
   page,
 }) => {
   await fresh(page, { set: true, desktop: false });
-  expect(await isOn(page, 'lists')).toBe(true);
-  expect(await isOn(page, 'budgets')).toBe(true);
+  await expect(moduleSwitch(page, 'lists')).toBeChecked();
+  await expect(moduleSwitch(page, 'budgets')).toBeChecked();
   await expect(page.getByTestId('module-downloads')).toHaveCount(0);
 });
 
@@ -76,8 +79,8 @@ test('the test builds themselves keep the set off: lists and budgets are off as 
   page,
 }) => {
   await fresh(page, { set: false, desktop: true });
-  expect(await isOn(page, 'lists')).toBe(false);
-  expect(await isOn(page, 'budgets')).toBe(false);
+  await expect(moduleSwitch(page, 'lists')).not.toBeChecked();
+  await expect(moduleSwitch(page, 'budgets')).not.toBeChecked();
   expect((await stored(page)).meta).toBeUndefined();
 });
 
