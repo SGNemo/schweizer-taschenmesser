@@ -95,9 +95,18 @@
   transform: rotate(45deg) scale(1);
   opacity: 1;
 }
+/* Locked like a disabled button (AE1): neutral surface, no accent, no opacity. A ticked box keeps its tick. */
 .check input:disabled {
-  opacity: 0.45;
+  background: var(--surface-2);
+  border-color: var(--border);
   cursor: not-allowed;
+}
+.check input:disabled:checked {
+  background: var(--text-3);
+  border-color: var(--text-3);
+}
+.check input:disabled:checked::after {
+  border-color: var(--surface-2);
 }
 .check input:active {
   transform: scale(0.9);
@@ -125,13 +134,19 @@
   position: absolute;
   inset: -9px 0;
 }
-.track:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
 .track[aria-checked='true'] {
   background: var(--accent);
   border-color: var(--accent);
+}
+/* Locked like a disabled button (AE1): no accent, no opacity; on and off stay apart by position and fill. */
+.track:disabled {
+  background: var(--surface-2);
+  border-color: var(--border);
+  cursor: not-allowed;
+}
+.track:disabled[aria-checked='true'] {
+  background: var(--text-3);
+  border-color: var(--text-3);
 }
 .thumb {
   position: absolute;
@@ -146,6 +161,13 @@
 }
 .track[aria-checked='true'] .thumb {
   transform: translateX(1.125rem);
+}
+.track:disabled .thumb {
+  background: var(--text-3);
+  box-shadow: none;
+}
+.track:disabled[aria-checked='true'] .thumb {
+  background: var(--surface-2);
 }
 
 .area {
