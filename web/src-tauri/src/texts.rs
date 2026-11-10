@@ -324,6 +324,7 @@ pub fn remote_notice(lang: Lang, name: &str, named: bool) -> (&'static str, Stri
         // our own label for a nameless device: short by construction
         short = name.to_owned();
     } else if name.chars().count() > NOTICE_NAME_CHARS {
+        short.truncate(short.trim_end().len());
         short.push('…');
     }
     let german = german(lang);
