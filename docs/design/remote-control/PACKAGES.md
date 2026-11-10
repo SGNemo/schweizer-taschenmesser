@@ -74,6 +74,8 @@ Nach dem Bau `council` über den Diff (Guardian: Heimnetz-Bedingung, Tor je Erei
 
 ### Prompt – package 1b: PC – media sink, settings, visible state (`feat/remote-host-media`)
 
+Split in two PRs (one topic each): **part 1** `feat/remote-host-media` = crate `remote-input`, shell `src/remote.rs`, tray, commands, Rust tests, hand tests. **Part 2** `feat/remote-host-settings` (from fresh `develop` after part 1) = everything under "Web" below plus the web tests, the diagnostics negative list, the DE/EN texts, the focus checklist and the `.changes/` note; contract of the four commands: `src/remote.rs` (`RemoteStatusDto`, error names `not-started`, `busy-controlled`, `cancelled`, `busy`, `not-found`, `bad-id`, `bad-level`, `failed`).
+
 ```
 # Aufgabe: Fernsteuerung – PC-Seite: Medien und Lautstärke, Einstellungen, sichtbarer Zustand (Paket 1b)
 

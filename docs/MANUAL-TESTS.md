@@ -150,6 +150,18 @@ L3. _Teilen (Android, PWA in Chrome installiert):_ in einer anderen App „Teile
 L4. _Lesezeichen:_ Merkliste → Lesezeichen → Startdaten; Kacheln (Gruppe = erster Tag) öffnen den Link im Browser; alter Pfad `/launcher` leitet dorthin um. ☐
 L5. _Spotify:_ gebaut als Verbindung mit „Läuft gerade“-Zeile (Handtests S1–S4 unten bei „Spotify“). ☐
 
+### Fernsteuerung, PC-Seite (`feat/remote-host-media`) – nur auf echtem Windows prüfbar, R3–R9 ab Paket 2 (Handy-Modul)
+
+R1. _Hub ohne Fernsteuerung:_ Heimnetz-Sync wie bisher starten, koppeln, synchronisieren: alles unverändert; Tray zeigt das normale Symbol und kein „Fernsteuerung beenden“. ☐
+R2. _Tray nach Neuaufbau:_ App-Sprache wechseln und einen Termin für heute anlegen (Tray-Menü wird neu gebaut): Menü und Tooltip bleiben vollständig, das Symbol flackert nicht. ☐
+R3. _Lautstärke und Ton aus:_ vom Handy lauter/leiser (je 2 %) und Ton aus; „lauter“ hebt Ton aus auf; die Anzeige am Handy folgt dem PC, auch wenn am PC selbst gedreht wird. ☐
+R4. _Zwei Player:_ Spotify und ein Browser-Video offen: Wiedergabe/Pause, Nächster, Vorheriger treffen den Player, den auch die Medientasten der Tastatur treffen. ☐
+R5. _Sperrbildschirm:_ PC sperren (Win+L): Medien und Lautstärke gehen weiter; „PC sperren“ vom Handy sperrt; der Zustand „gesperrt“ kommt am Handy an. ☐
+R6. _Tray bei geschlossenem Fenster:_ Fenster in den Tray schließen, Sitzung öffnen: Symbol bekommt den Punkt, Tooltip nennt das Gerät, erster Menüeintrag „Fernsteuerung beenden“. ☐
+R7. _Beenden pausiert:_ „Fernsteuerung beenden“ im Tray: das Handy verliert die Verbindung sofort und kommt nicht wieder, bis das Gerät am PC wieder eingeschaltet wird (mit Bestätigung). ☐
+R8. _Bestätigung nur am PC:_ Stufe erhöhen, Pause aufheben, „Am Handy entsperren“ aus, Hauptschalter an (bei vorhandener Freigabe): jedes Mal ein Windows-Dialog mit Gerätename und letztem Kontakt; „Abbrechen“ ändert nichts; Senken (Stufe runter, Schalter aus) fragt nicht. ☐
+R9. _Nicht während einer Sitzung (ab Paket 3):_ während das Handy Maus und Tastatur steuert, lässt sich keine Freigabe erhöhen – auch nicht mit einem Dialog, der vor der Sitzung geöffnet wurde. ☐
+
 ### Einrichtungsassistent
 
 E1. _Aus den Einstellungen starten und abbrechen (Windows-Portable und Android):_ Einstellungen → „Einrichtung starten“ → ein, zwei Schritte mit „Weiter“ → X → „Später fortsetzen“; App schließen und neu öffnen: es öffnet sich nichts von selbst; erneut starten bietet „Fortsetzen bei …“. Android: Zurück-Geste fragt nach, statt die Seite zu verlassen. ☐
@@ -726,4 +738,3 @@ Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währ
 - **H5 Schnellerfassung mit Zwischenablage:** Einstellung „Zwischenablage beim Öffnen einfügen“ ein, in einem anderen Programm Text kopieren, Schnellerfassung per Tastenkürzel öffnen: der Text steht sofort im Feld. Noch einmal mit einer großen kopierten Excel-Tabelle (Excel offen lassen): das Fenster öffnet sich ohne Hänger. ☐
 - **H6 Einstellungen und „Über Nemo“:** „Mit Windows starten“ ein und aus: der Schalter bleibt nach erneutem Öffnen der Seite auf dem gewählten Stand (Task-Manager → Autostart zeigt Nemo bzw. nicht). „Datenordner öffnen“ öffnet den Explorer. Im Systemmonitor „Task-Manager öffnen“ startet ihn. ☐
 - **H7 Browser-Tabs (bleiben auf dem Hauptthread):** in einem Tab vier Seiten nacheinander öffnen, dann dreimal sehr schnell „Zurück“: der Tab steht auf der ersten Seite, „Vor“ dreimal: auf der vierten. Neu laden und Zoom (Strg +/−) reagieren sofort. Hängt das Fenster genau hier, bitte mit Seite und Uhrzeit notieren – das wäre ein Fall für WebView2 selbst. ☐
-
