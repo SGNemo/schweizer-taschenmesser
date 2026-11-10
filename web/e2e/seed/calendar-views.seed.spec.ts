@@ -72,6 +72,11 @@ test.describe('phone 412x915', () => {
     await expect(
       main.getByRole('group', { name: 'Kalender' }).getByRole('button').first(),
     ).toBeVisible();
+    // On a busy machine the chips can be there one layout before the head band has shrunk (the grid then
+    // still sits 59 px lower). Wait for the grid to reach its place; the limit below is the same one.
+    await expect
+      .poll(async () => (await main.locator('table').boundingBox())!.y, { timeout: 5_000 })
+      .toBeLessThanOrEqual(580);
     const top = (await main.getByRole('button', { name: 'Neuer Termin' }).last().boundingBox())!.y;
     const grid = (await main.locator('table').boundingBox())!.y;
     // Three 44 px rows and their gaps (was five rows, grid at 669 px); the module head band above is not part of it.
