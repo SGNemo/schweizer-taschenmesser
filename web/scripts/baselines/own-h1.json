@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "what": "own <h1> elements in src/modules/**/routes",
+  "total": 6,
+  "files": {
+    "modules/planner/routes/FocusPage.tsx": 3,
+    "modules/todos/routes/FocusPage.tsx": 3
+  }
+}

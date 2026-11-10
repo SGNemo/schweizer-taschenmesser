@@ -128,7 +128,7 @@ export function GoalCard({
             variant="secondary"
             size="sm"
             aria-pressed={count >= 1}
-            aria-label={`${goal.name}: ${t.habits.today.markDone}`}
+            aria-label={`${goal.name}: ${count >= 1 ? t.habits.today.undo : t.habits.today.markDone}`}
             onClick={() => {
               if (count < 1) pop();
               silent(goal.name, () =>
