@@ -33,7 +33,7 @@ const MAX_ACTIONS: usize = 8;
 pub struct RemoteClient {
     /// The open session and its number. The number tells a late event or a late `send` of an
     /// older session apart from the current one.
-    session: Mutex<Option<(u64, InputSession)>>,
+    session: Mutex<Option<(u64, Arc<InputSession>)>>,
     /// The number of the newest `open` asked for (also while it still connects).
     newest: Arc<AtomicU64>,
 }
@@ -90,12 +90,21 @@ fn level_name(level: Level) -> &'static str {
     }
 }
 
-/// A session is asked for with a level that does something; "off" is not a session.
+/// The level a session may be asked for. Only `media` until this file can send pointer and key
+/// records: a mouse/keyboard session that can send nothing would still show as one at the PC and
+/// block its confirmations.
 fn level_from(name: &str) -> Option<Level> {
     match name {
         "media" => Some(Level::Media),
-        "full" => Some(Level::Full),
         _ => None,
+    }
+}
+
+/// Ends a session that is no longer in the slot. A `send` that is writing right now still holds
+/// it; then dropping the last handle shuts the connection without waiting.
+fn end(session: Arc<InputSession>) {
+    if let Ok(session) = Arc::try_unwrap(session) {
+        session.close();
     }
 }
 
@@ -190,7 +199,7 @@ pub async fn remote_client_open<R: Runtime>(
         // the session this one replaces ends now (its late events are dropped by their number)
         let old = state.session.lock().map_err(|_| "internal")?.take();
         if let Some((_, session)) = old {
-            session.close();
+            end(session);
         }
         let (hub, addr, name) = crate::lan_client::hub_entry(&app).map_err(stored_error)?;
         let key = crate::lan_client::stored_key(&app).map_err(stored_error)?;
@@ -215,7 +224,7 @@ pub async fn remote_client_open<R: Runtime>(
             session.close();
             return Err("closed".to_owned());
         }
-        *slot = Some((id, session));
+        *slot = Some((id, Arc::new(session)));
         Ok(OpenedDto {
             session: id,
             level: level_name(opened.level),
@@ -239,13 +248,17 @@ pub async fn remote_client_send<R: Runtime>(
     let records = records_from(&actions)?;
     tauri::async_runtime::spawn_blocking(move || {
         let state = app.state::<RemoteClient>();
-        let slot = state.session.lock().map_err(|_| "internal")?;
-        match slot.as_ref() {
-            Some((id, open)) if *id == session => open
-                .send_events(&records)
-                .map_err(|e| error_name(e).to_owned()),
-            _ => Err("closed".to_owned()),
-        }
+        // the lock is held only to pick the session: a write that stalls (the PC vanished)
+        // must not keep `open` and `close` waiting
+        let open = {
+            let slot = state.session.lock().map_err(|_| "internal")?;
+            match slot.as_ref() {
+                Some((id, open)) if *id == session => open.clone(),
+                _ => return Err("closed".to_owned()),
+            }
+        };
+        open.send_events(&records)
+            .map_err(|e| error_name(e).to_owned())
     })
     .await
     .map_err(|_| "internal".to_owned())?
@@ -264,7 +277,7 @@ pub async fn remote_client_close<R: Runtime>(
         if slot.as_ref().is_some_and(|(id, _)| *id == session) {
             if let Some((_, open)) = slot.take() {
                 drop(slot);
-                open.close();
+                end(open);
             }
         }
         Ok(())
@@ -321,10 +334,9 @@ mod tests {
     }
 
     #[test]
-    fn a_session_is_asked_for_with_a_level_that_does_something() {
+    fn only_a_media_session_can_be_asked_for() {
         assert_eq!(level_from("media"), Some(Level::Media));
-        assert_eq!(level_from("full"), Some(Level::Full));
-        for bad in ["off", "", "Media", "admin"] {
+        for bad in ["full", "off", "", "Media", "admin"] {
             assert_eq!(level_from(bad), None, "{bad:?}");
         }
     }
@@ -412,6 +424,17 @@ mod tests {
         assert_eq!(
             serde_json::to_string(&event).unwrap(),
             r#"{"kind":"state","session":7,"state":{"volume":42,"mute":false,"playing":true,"locked":false}}"#
+        );
+        let opened = OpenedDto {
+            session: 7,
+            level: level_name(Level::Media),
+            grant: level_name(Level::Full),
+            unlock_required: true,
+            state: state_dto(PcState::UNKNOWN),
+        };
+        assert_eq!(
+            serde_json::to_string(&opened).unwrap(),
+            r#"{"session":7,"level":"media","grant":"full","unlockRequired":true,"state":{"volume":null,"mute":false,"playing":false,"locked":false}}"#
         );
         let closed = EventDto::Closed {
             session: 7,

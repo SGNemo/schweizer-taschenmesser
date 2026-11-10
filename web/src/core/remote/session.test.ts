@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createFakeRemoteParts } from '@/core/platform/fakeRemote';
 import {
   ANSWER_WAIT_MS,
+  KEYS_LINGER_MS,
+  OPEN_PATIENCE_MS,
   createHoldGate,
   createRemoteSession,
   HOLD_STEPS_PER_SECOND,
@@ -209,12 +211,67 @@ describe('remote session: sending', () => {
     expect(session.view().kind).toBe('connected');
     await pass(1);
     expect(session.view().kind).toBe('disconnected');
-    expect(hooks.isOpen()).toBe(false);
     hooks.goSilent(false);
     const touch = session.send('next');
     await pass(OPEN_EVERY_MS);
     expect(await touch).toBe(true);
     expect(session.view().kind).toBe('connected');
+    expect(hooks.opens()).toBe(2);
+  });
+
+  it('an answer that arrives in time keeps a working session (the timer starts before the call)', async () => {
+    const { session } = rig();
+    await session.open();
+    expect(await session.send('next')).toBe(true);
+    await pass(ANSWER_WAIT_MS * 3);
+    expect(session.view().kind).toBe('connected');
+  });
+
+  it('a late answer heals a session that had gone quiet, without a new connection', async () => {
+    const { session, hooks } = rig();
+    await session.open();
+    hooks.goSilent();
+    await session.send('play-pause');
+    await pass(ANSWER_WAIT_MS);
+    expect(session.view().kind).toBe('disconnected');
+    // the PC did carry it out; only its word was late
+    hooks.goSilent(false);
+    hooks.setState({});
+    expect(session.view()).toMatchObject({ kind: 'connected', pc: { playing: true } });
+    expect(hooks.opens()).toBe(1);
+    expect(await session.send('next')).toBe(true);
+    expect(hooks.opens()).toBe(1);
+  });
+
+  it('while it connects only the last press waits: held keys never pile up', async () => {
+    const { session, hooks } = rig();
+    const release = hooks.holdOpens();
+    const presses = [
+      session.send('volume-up'),
+      session.send('volume-up'),
+      session.send('volume-up'),
+      session.send('play-pause'),
+    ];
+    await pass(0);
+    release();
+    expect(await Promise.all(presses)).toEqual([false, false, false, true]);
+    expect(hooks.sent()).toEqual(['play-pause']);
+    expect(hooks.opens()).toBe(1);
+  });
+
+  it('a key repeat never opens a connection', async () => {
+    const { session, hooks } = rig();
+    await session.open();
+    hooks.close(null);
+    expect(await session.send('volume-up', { repeat: true })).toBe(false);
+    expect(hooks.opens()).toBe(1);
+    // a fresh press does
+    const press = session.send('volume-up');
+    await pass(OPEN_EVERY_MS);
+    expect(await press).toBe(true);
+    expect(hooks.opens()).toBe(2);
+    // and once it stands, repeats go through
+    expect(await session.send('volume-up', { repeat: true })).toBe(true);
   });
 
   it('an end without a reason is "not connected"; with a reason it is that state', async () => {
@@ -239,15 +296,29 @@ describe('remote session: sending', () => {
     expect(session.takesVolumeKeys()).toBe(false);
   });
 
-  it('the volume keys belong to the PC while a session is open or just dropped', async () => {
+  it('the volume keys belong to the PC while a session is open, and only briefly after it dropped', async () => {
     const { session, hooks } = rig();
     expect(session.takesVolumeKeys()).toBe(false);
     await session.open();
     expect(session.takesVolumeKeys()).toBe(true);
     hooks.close(null);
     expect(session.takesVolumeKeys()).toBe(true);
+    await pass(KEYS_LINGER_MS);
+    expect(session.takesVolumeKeys()).toBe(false);
     await session.close();
     expect(session.takesVolumeKeys()).toBe(false);
+  });
+
+  it('a first connect never takes the phone’s volume keys', async () => {
+    const { session, hooks } = rig();
+    const release = hooks.holdOpens();
+    const opening = session.open();
+    await pass(0);
+    expect(session.view().kind).toBe('connecting');
+    expect(session.takesVolumeKeys()).toBe(false);
+    release();
+    await opening;
+    expect(session.takesVolumeKeys()).toBe(true);
   });
 
   it('a send error is never a state of its own', async () => {
@@ -281,6 +352,68 @@ describe('remote session: leaving', () => {
     expect(session.view().kind).toBe('idle');
     expect(hooks.isOpen()).toBe(false);
     expect(hooks.opens()).toBe(1);
+  });
+});
+
+describe('remote session: patience and races', () => {
+  it('"connecting" is shown for a few seconds at most, then "not reachable" while it keeps trying', async () => {
+    const { session, hooks } = rig();
+    const release = hooks.holdOpens();
+    const opening = session.open();
+    await pass(OPEN_PATIENCE_MS - 1);
+    expect(session.view().kind).toBe('connecting');
+    await pass(1);
+    expect(session.view().kind).toBe('unreachable');
+    // "Erneut versuchen" joins the attempt that is still running
+    void session.open();
+    expect(hooks.opens()).toBe(1);
+    release();
+    await opening;
+    expect(session.view().kind).toBe('connected');
+  });
+
+  it('leaving while the PC is being dialled, then coming back, connects afresh', async () => {
+    const { session, hooks } = rig();
+    const release = hooks.holdOpens();
+    const first = session.open();
+    await pass(0);
+    await session.close();
+    expect(session.view().kind).toBe('idle');
+    const second = session.open();
+    release();
+    await pass(OPEN_EVERY_MS);
+    await Promise.all([first, second]);
+    expect(session.view().kind).toBe('connected');
+    expect(hooks.isOpen()).toBe(true);
+    // the first attempt left nothing behind and the press after coming back works
+    expect(await session.send('next')).toBe(true);
+  });
+
+  it('leaving during the wait between two tries dials nothing more', async () => {
+    const { session, hooks } = rig('ok');
+    hooks.failOpen('no-answer', 1);
+    const opening = session.open();
+    await pass(0);
+    await session.close();
+    await pass(NO_ANSWER_GAP_MS + OPEN_EVERY_MS);
+    await opening;
+    expect(hooks.opens()).toBe(1);
+    expect(session.view().kind).toBe('idle');
+  });
+
+  it('an open overtaken by a newer one of this device is "not connected", not "connecting" forever', async () => {
+    const { session, hooks } = rig();
+    hooks.failOpen('closed');
+    await session.open();
+    expect(session.view().kind).toBe('disconnected');
+    expect(session.takesVolumeKeys()).toBe(false);
+  });
+
+  it('what the PC says before the answer to "open" arrives is not lost', async () => {
+    const { session, hooks } = rig();
+    hooks.endRightAfterOpen('paused');
+    await session.open();
+    expect(session.view()).toEqual({ kind: 'refused', reason: 'paused' });
   });
 });
 

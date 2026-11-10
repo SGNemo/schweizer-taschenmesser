@@ -29,6 +29,8 @@ export function createFakeRemoteParts() {
   let silent = false;
   const sent: RemoteAction[] = [];
   let opens = 0;
+  let hold: Promise<void> | undefined;
+  let greeting: RemoteCloseReason | undefined;
 
   const apply = (action: RemoteAction) => {
     const volume = pc.volume ?? 0;
@@ -45,13 +47,21 @@ export function createFakeRemoteParts() {
     supported: true,
     open: async (level, onEvent): Promise<RemoteOpened> => {
       opens += 1;
+      // like the shell: every attempt has a number, also one that fails
+      next += 1;
+      const session = next;
+      if (hold) await hold;
       if (openError && openErrorsLeft > 0) {
         openErrorsLeft -= 1;
         throw new Error(openError);
       }
-      next += 1;
-      live = { session: next, onEvent };
-      return { session: next, level, grant: 'media', unlockRequired: false, state: { ...pc } };
+      // an attempt overtaken by a newer one is not a session
+      if (session !== next) throw new Error('closed');
+      live = { session, onEvent };
+      if (greeting) onEvent({ kind: 'closed', session, reason: greeting });
+      // the demo PC grants media: a session never gets more than that, whatever was asked
+      void level;
+      return { session, level: 'media', grant: 'media', unlockRequired: false, state: { ...pc } };
     },
     send: async (session, actions) => {
       if (!live || live.session !== session) throw new Error('closed');
@@ -87,6 +97,19 @@ export function createFakeRemoteParts() {
     /** The PC stops answering without closing (sleep, Wi-Fi gone). */
     goSilent(on = true) {
       silent = on;
+    },
+    /** The next opens wait until the returned function is called (a slow connect). */
+    holdOpens(): () => void {
+      let release: () => void = () => undefined;
+      hold = new Promise<void>((resolve) => (release = resolve));
+      return () => {
+        hold = undefined;
+        release();
+      };
+    },
+    /** The PC ends the next session at once, before the answer to `open` arrives. */
+    endRightAfterOpen(reason: RemoteCloseReason | undefined) {
+      greeting = reason;
     },
     sent: () => [...sent],
     opens: () => opens,
