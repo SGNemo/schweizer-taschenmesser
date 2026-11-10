@@ -460,7 +460,9 @@ export function onlyAppendedTests(appended, { jsx = false } = {}) {
   // and `vitest`, whatever stands between the name and the method.
   if (
     /\b(?:vi|vitest)\b/.test(src) &&
-    /\b(?:mock|unmock|hoisted|doMock|doUnmock|importActual|importMock)\b/.test(src)
+    /\b(?:mock|unmock|hoisted|doMock|doUnmock|importActual|importMock)\b\s*(?:\/\*[\s\S]*?\*\/\s*)*[(<]/.test(
+      src,
+    )
   )
     return false;
   const n = src.length;
