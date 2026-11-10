@@ -86,6 +86,13 @@ describe('ListSurface', () => {
     expect(surface).not.toContainElement(screen.getByRole('button', { name: /Heute/ }));
   });
 
+  it('ItemList keeps the padding of the surface, whatever the order of the two stylesheets', () => {
+    // `.list` resets padding for the grid; `.rows` (same element as `.surface`) must restate the surface's own.
+    const padding = /padding:\s*([^;]+);/.exec(rule(css('ListSurface.module.css'), '.surface'))![1];
+    const rows = rule(css('Patterns.module.css'), '.rows');
+    expect(/padding:\s*([^;]+);/.exec(rows)?.[1]).toBe(padding);
+  });
+
   it('ItemList tiles (grid) are raised tone steps too, without a shadow', () => {
     const patterns = css('Patterns.module.css');
     expect(patterns).toMatch(/\.grid > \.item \{[^}]*background:\s*var\(--surface-raised\)/);

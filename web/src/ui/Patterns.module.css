@@ -143,9 +143,11 @@
 .item {
   min-width: 0;
 }
-/* List layout: the rows lie on a `ListSurface` (tone step, hairlines between the rows: ui/ListSurface). */
+/* List layout: the rows lie on a `ListSurface` (tone step, hairlines between the rows: ui/ListSurface). The
+   surface's padding is restated here because `.list` above resets it and the two stylesheets have no fixed order. */
 .rows {
   gap: 0;
+  padding: var(--space-1) var(--space-2);
 }
 .rows > .item {
   border-radius: var(--radius-sm);
