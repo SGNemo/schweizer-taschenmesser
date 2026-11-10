@@ -146,3 +146,16 @@ describe('isLoadError', () => {
     expect(isLoadError('text')).toBe(false);
   });
 });
+
+it('in the Android app, offline: the code is in the app, so the card stays "Neu laden"', () => {
+  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+  vi.spyOn(platform, 'getPlatform').mockReturnValue({ kind: 'android' } as ReturnType<
+    typeof platform.getPlatform
+  >);
+  const reload = vi.spyOn(page, 'reload').mockImplementation(() => {});
+  render(<PageLoadingCard />);
+  expect(screen.getByTestId('page-loading-card')).toHaveTextContent('Die Seite lädt noch.');
+  expect(screen.getByTestId('page-loading-card')).not.toHaveTextContent('online');
+  fireEvent.click(screen.getByRole('button', { name: 'Neu laden' }));
+  expect(reload).toHaveBeenCalledTimes(1);
+});

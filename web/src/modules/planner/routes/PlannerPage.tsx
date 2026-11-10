@@ -595,11 +595,17 @@ export default function PlannerPage() {
   return (
     <>
       <PageHeader title={t.planner.title} />
-      {todayDay ? (
-        <HeroSlot area="figure">
+      {/* U01: the figure has no caps label, the frame's placeholder for a `kennzahl` head has one. Until the board is
+          read the page holds the row itself, in the figure's own shape, so the entry row below never moves. */}
+      <HeroSlot area="figure">
+        {todayDay ? (
           <HeroFigure value={headValue} detail={headDetail} type="thin" testId="planner-head" />
-        </HeroSlot>
-      ) : null}
+        ) : (
+          <div className={styles.headPending} aria-hidden="true" data-testid="planner-head-pending">
+            <HeroFigure value={'\u00a0'} detail={'\u00a0'} type="thin" />
+          </div>
+        )}
+      </HeroSlot>
       {board ? (
         <HeroSlot area="signature">
           <WeekBars
