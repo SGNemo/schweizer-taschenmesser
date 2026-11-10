@@ -1,20 +1,24 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import { bootDev, seedApp } from '../seed/helpers';
+import { weekGridTextFaults } from '../seed/weekGridText';
 
 /**
  * Manual tooling (QA B14, identity C18): lists text that is cut off (line clamp or one-line ellipsis) per page
  * and per region – widget bodies, module heads, board/list rows and the rest of the page – on the phone and at
  * 1920 × 1080, with the element's class and its full text, so each case can be judged: fine (the full text is one
- * tap away) or a dead end. The overview shows every widget. Usage: `CLIPPED_OUT=../scratch/clipped.json npx
+ * tap away) or a dead end. The overview shows every widget. The week's hour grid at 1440 × 900 with the agenda open
+ * (narrowest day columns, UI audit 2026-11 AE4) is listed too and must be free of cut lines and broken words. Usage: `CLIPPED_OUT=../scratch/clipped.json npx
  * playwright test -c playwright.screens.config.ts clipped-text --project=seeded`.
  */
+const WEEK = '/calendar?view=week&date=2026-09-29';
 const PAGES = [
   '/',
   '/todos',
   '/planner',
   '/calendar',
   '/calendar?tab=reminders',
+  WEEK,
   '/finance',
   '/invoices',
   '/subscriptions',
@@ -30,6 +34,7 @@ const PAGES = [
 ];
 const SIZES = [
   { name: 'phone', width: 360, height: 800 },
+  { name: 'laptop', width: 1440, height: 900 },
   { name: 'desktop', width: 1920, height: 1080 },
 ];
 type Region = 'widget' | 'head' | 'row' | 'page';
@@ -72,6 +77,10 @@ test('clipped text by region, phone and desktop', async ({ page }) => {
         return Object.fromEntries(Object.entries(regions).map(([k, v]) => [k, [...v]]));
       });
       out[size.name]![url] = found;
+      if (url === WEEK && size.name === 'laptop') {
+        await expect(page.getByRole('complementary', { name: 'Agenda' })).toBeVisible();
+        expect(await weekGridTextFaults(page), 'week grid at 1440 with the agenda').toEqual([]);
+      }
       for (const [k, v] of Object.entries(found)) totals[size.name]![k as Region] += v.length;
     }
   }

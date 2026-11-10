@@ -173,6 +173,82 @@ test.describe('Calendar: month lines, all-day pane, phone toolbar (UI round 6: S
     });
   });
 
+  test.describe('narrow day columns (UI audit 2026-11, AE4)', () => {
+    test.use({ viewport: { width: 1440, height: 900 } });
+    test.skip(({ isMobile }) => isMobile, 'the hour grid is a desktop layout');
+
+    test('overlapping entries fold into a stack with "+n" that opens the day', async ({ page }) => {
+      await page.clock.install({ time: new Date('2026-11-03T10:00:00') });
+      await ready(page, '/calendar');
+      await page.evaluate(
+        () =>
+          new Promise<void>((resolve, reject) => {
+            const open = indexedDB.open('taschenmesser');
+            open.onerror = () => reject(open.error);
+            open.onsuccess = () => {
+              const db = open.result;
+              const env = { createdAt: 1, updatedAt: 1, deviceId: 'e2e', deletedAt: null, _f: {} };
+              const tx = db.transaction(['calendar_event'], 'readwrite');
+              const store = tx.objectStore('calendar_event');
+              ['Elternsprechtag', 'Zahnreinigung', 'Geburtstagsfeier', 'Schwimmtraining'].forEach(
+                (title, i) =>
+                  store.put({
+                    id: `overlap${i}`,
+                    title,
+                    allDay: false,
+                    startDate: '2026-11-04',
+                    startTime: '12:00',
+                    endTime: '13:00',
+                    ...env,
+                  }),
+              );
+              store.put({
+                id: 'alone',
+                title: 'Einzeltermin Werkstatt',
+                allDay: false,
+                startDate: '2026-11-05',
+                startTime: '12:00',
+                endTime: '13:00',
+                ...env,
+              });
+              tx.oncomplete = () => {
+                db.close();
+                resolve();
+              };
+              tx.onerror = () => reject(tx.error);
+            };
+          }),
+      );
+      await page.goto('/calendar?view=week&date=2026-11-03');
+      const grid = page.getByRole('group', { name: 'Zeitraster' });
+      const stack = grid.locator('[data-date="2026-11-04"] [data-stack]');
+      await expect(stack).toHaveAttribute('data-stack', '4');
+      // One hour holds two rows: two entries are named, the other two are "+2".
+      const rows = stack.getByRole('button', { name: /12:00/ });
+      await expect(rows).toHaveCount(2);
+      await expect(rows.first()).toHaveAttribute('title', /12:00–13:00 Elternsprechtag/);
+      const stackBox = (await stack.boundingBox())!;
+      for (const row of await rows.all()) {
+        const box = (await row.boundingBox())!;
+        expect(box.y + box.height).toBeLessThanOrEqual(stackBox.y + stackBox.height + 0.5);
+      }
+      // A block on its own shows whole lines only: the title's height is a multiple of its line height.
+      const title = grid
+        .getByRole('button', { name: /Einzeltermin Werkstatt/ })
+        .locator('span[class*="tgTitle"]');
+      const lines = await title.evaluate(
+        (el) => el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight),
+      );
+      expect(Math.abs(lines - Math.round(lines))).toBeLessThan(0.05);
+      await stack.getByRole('button', { name: /^\+2 weitere, Mittwoch/ }).click();
+      await expect(page).toHaveURL(/view=day&date=2026-11-04/);
+      // The day's column is wide: every entry is a block of its own again.
+      const day = page.getByRole('group', { name: 'Zeitraster' });
+      await expect(day.locator('[data-stack]')).toHaveCount(0);
+      await expect(day.getByRole('button', { name: /12:00/ })).toHaveCount(4);
+    });
+  });
+
   test.describe('phone', () => {
     test.use({ viewport: { width: 412, height: 915 } });
 
