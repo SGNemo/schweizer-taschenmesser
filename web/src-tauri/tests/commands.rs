@@ -191,13 +191,14 @@ fn webview_lifecycle_commands_never_run_on_the_main_thread() {
 /// thread" stay off it. `disk_delete` is deliberately not in this list (its checks are frozen).
 #[test]
 fn blocking_commands_never_run_on_the_main_thread() {
-    let lan = read("src/lan_sync.rs");
+    // Windows checkouts have CRLF line ends; the patterns below span two lines.
+    let lan = read("src/lan_sync.rs").replace("\r\n", "\n");
     assert_eq!(lan.matches("#[tauri::command]").count(), 0, "lan_sync.rs");
     assert_eq!(
         lan.matches("#[tauri::command(async)]\npub fn lan_").count(),
         11
     );
-    let disk = read("src/disk.rs");
+    let disk = read("src/disk.rs").replace("\r\n", "\n");
     for name in ["disk_query", "disk_can_delete", "disk_delete_plan"] {
         assert!(
             disk.contains(&format!("#[tauri::command(async)]\npub fn {name}(")),
