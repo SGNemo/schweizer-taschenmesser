@@ -80,6 +80,12 @@
   background: color-mix(in srgb, var(--module-color) 12%, transparent);
   color: var(--module-color);
 }
+/* A screen that can be touched (also a touch laptop, which reports a fine pointer) gets the full hit height. */
+@media (any-pointer: coarse) {
+  .favLink {
+    height: var(--touch);
+  }
+}
 .favLink:hover {
   background: color-mix(in srgb, var(--module-color) 20%, transparent);
 }
@@ -270,4 +276,19 @@ li[data-area] .railLink > svg {
 li[data-area] .railLink[aria-current='page'] {
   background: color-mix(in srgb, var(--area-color) 16%, var(--surface));
   color: var(--text);
+}
+
+/* A screen that can be touched: the area heads and the favourite pins get the full hit size too (after the compact
+   rules above, which never apply there). */
+@media (any-pointer: coarse) {
+  .groupHead {
+    min-height: var(--touch);
+  }
+  .pin {
+    width: var(--touch);
+    height: var(--touch);
+  }
+  .link:has(+ .pin) {
+    padding-right: calc(var(--touch) + var(--space-1));
+  }
 }
