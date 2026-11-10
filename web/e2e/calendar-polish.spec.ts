@@ -148,9 +148,9 @@ test.describe('Calendar polish (UI round 6)', () => {
     const group = page.getByRole('dialog').getByRole('group', { name: 'Wie zuletzt' });
     const chips = group.getByRole('button');
     await expect(chips).toHaveCount(4);
-    const heights = new Set<number>();
-    for (const chip of await chips.all())
-      heights.add(Math.round((await chip.boundingBox())!.height));
+    // Layout heights, read in one go: the dialog opens with a short scale animation, and a bounding box read
+    // while it runs is scaled with it (chip after chip, so the first ones came out smaller than the last).
+    const heights = new Set(await chips.evaluateAll((els) => els.map((el) => el.offsetHeight)));
     expect(heights.size).toBe(1);
     const long = group.getByRole('button', { name: /Zahnarzt/ });
     await expect(long).toHaveAccessibleName(
@@ -160,7 +160,7 @@ test.describe('Calendar polish (UI round 6)', () => {
     const lineHeight = await long.evaluate(
       (el) => parseFloat(getComputedStyle(el).lineHeight) || 24,
     );
-    expect((await long.boundingBox())!.height).toBeLessThan(lineHeight * 2 + 24);
+    expect(await long.evaluate((el) => el.offsetHeight)).toBeLessThan(lineHeight * 2 + 24);
   });
 
   test('U35: the scrolling hour grid can be reached with the keyboard', async ({
