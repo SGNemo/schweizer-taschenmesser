@@ -49,6 +49,9 @@ afterAll(() => {
 });
 
 function renderRoute([path, m, r]: (typeof all)[number]) {
+  // A module of other platforms only (the phone's remote control) is framed on its own platform.
+  const kind = !m.platforms || m.platforms.includes('desktop') ? 'desktop' : m.platforms[0]!;
+  setPlatform({ ...createWebPlatform(), kind });
   PREPARE[path]?.();
   const Page = lazyComponent(r.component);
   return render(

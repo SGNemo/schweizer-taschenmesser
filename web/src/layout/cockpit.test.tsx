@@ -89,12 +89,18 @@ describe('cockpit mode', () => {
   it('asks Android for immersive mode while on, and keep-awake only when wanted', async () => {
     useUiStore.setState({ cockpitAwake: true });
     render(<Host />);
-    expect(display.calls).toEqual(['immersive:false', 'awake:false']);
+    // off: nothing asks for the screen to stay on (keep-awake is a hold that is given back,
+    // `core/shell/keepAwake.ts`, so it is not switched off for someone else who holds it)
+    expect(display.calls).toEqual(['immersive:false']);
     act(() => useUiStore.getState().setCockpit(true));
     await act(async () => {});
     expect(display.calls.slice(-2)).toEqual(['immersive:true', 'awake:true']);
     act(() => useUiStore.getState().setCockpit(false));
-    expect(display.calls.slice(-2)).toEqual(['immersive:false', 'awake:false']);
+    expect(display.calls.filter((c) => c.startsWith('awake'))).toEqual([
+      'awake:true',
+      'awake:false',
+    ]);
+    expect(display.calls.filter((c) => c.startsWith('immersive')).at(-1)).toBe('immersive:false');
   });
 
   it('shows a module in the panel; Esc closes the panel first, then the cockpit', async () => {

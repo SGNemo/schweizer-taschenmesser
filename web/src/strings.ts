@@ -8667,7 +8667,7 @@ export const de = {
       description:
         'Steuere Medien und Lautstärke deines PCs vom Handy aus – im Heimnetz, sobald du es am PC erlaubt hast.',
       widget: 'Fernbedienung',
-      haptics: 'Kurzes Vibrieren beim Tippen',
+      haptics: 'Kurzes Vibrieren bei jedem Tastendruck',
       hapticsHelp: 'Ein kurzer Tick bei jedem Tastendruck, damit du nicht hinsehen musst.',
       keepAwake: 'Bildschirm anlassen',
       keepAwakeHelp: 'Der Bildschirm bleibt an, solange die Fernbedienung offen ist.',
@@ -8675,7 +8675,8 @@ export const de = {
     phoneOnly: 'Die Fernbedienung gibt es in der Handy-App.',
     media: 'Medien',
     more: 'Weitere Aktionen',
-    mute: 'Ton aus / an',
+    mute: 'Ton aus',
+    unmute: 'Ton an',
     lock: 'PC sperren',
     previous: 'Vorheriger',
     next: 'Nächster',
@@ -8687,7 +8688,7 @@ export const de = {
     pair: 'PC koppeln',
     disable: 'Modul ausschalten',
     open: 'Öffnen',
-    widgetIdle: 'Dein PC · bereit',
+    widgetIdle: 'Dein PC',
     widgetHint: 'Medien und Lautstärke des PCs steuern.',
     state: {
       connecting: 'Dein PC',

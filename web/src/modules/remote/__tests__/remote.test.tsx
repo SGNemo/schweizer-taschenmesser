@@ -146,10 +146,12 @@ describe('RemotePage (Medien)', () => {
   it('"Ton aus" and "PC sperren" sit in the menu', async () => {
     await show();
     fireEvent.click(screen.getByRole('button', { name: 'Weitere Aktionen' }));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Ton aus / an' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Ton aus' }));
     await flush();
     expect(state()).toBe('Dein PC · Ton aus');
     fireEvent.click(screen.getByRole('button', { name: 'Weitere Aktionen' }));
+    // the entry says what the press will do
+    expect(screen.getByRole('menuitem', { name: 'Ton an' })).toBeTruthy();
     fireEvent.click(screen.getByRole('menuitem', { name: 'PC sperren' }));
     await flush();
     expect(state()).toBe('Dein PC · Ton aus · gesperrt');
@@ -199,16 +201,91 @@ describe('RemotePage (Medien)', () => {
   });
 });
 
+describe('holding a volume key, haptics, keep-awake', () => {
+  it('the press acts when the finger goes down, repeats a few times a second, and the release adds nothing', async () => {
+    const vibrate = vi.fn();
+    Object.defineProperty(navigator, 'vibrate', { value: vibrate, configurable: true });
+    await show();
+    const louder = key('volume-up');
+    vi.useFakeTimers();
+    try {
+      fireEvent.pointerDown(louder, { pointerId: 1 });
+      // first step and the one tick at once
+      expect(fake.parts.hooks.sent()).toEqual(['volume-up']);
+      expect(vibrate).toHaveBeenCalledTimes(1);
+      await act(async () => vi.advanceTimersByTimeAsync(1000));
+      const held = fake.parts.hooks.sent().length;
+      expect(held).toBeGreaterThanOrEqual(4);
+      expect(held).toBeLessThanOrEqual(6);
+      fireEvent.pointerUp(louder, { pointerId: 1 });
+      fireEvent.click(louder, { detail: 1 });
+      await act(async () => vi.advanceTimersByTimeAsync(1000));
+      // the click after the press and the time after the release send nothing more
+      expect(fake.parts.hooks.sent().length).toBe(held);
+      // repeats do not tick
+      expect(vibrate).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('a click from the keyboard or a screen reader acts once', async () => {
+    await show();
+    fireEvent.click(key('volume-up'), { detail: 0 });
+    await flush();
+    expect(fake.parts.hooks.sent()).toEqual(['volume-up']);
+  });
+
+  it('a key that goes inactive while held stops repeating', async () => {
+    await show();
+    vi.useFakeTimers();
+    try {
+      fireEvent.pointerDown(key('volume-up'), { pointerId: 1 });
+      await act(async () => vi.advanceTimersByTimeAsync(300));
+      act(() => fake.parts.hooks.close('ended'));
+      const sent = fake.parts.hooks.sent().length;
+      await act(async () => vi.advanceTimersByTimeAsync(2000));
+      expect(fake.parts.hooks.sent().length).toBe(sent);
+      expect(key('volume-up').disabled).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps the screen on only when asked, and gives the hold back on leaving', async () => {
+    const view = await show();
+    expect(fake.keepAwake).not.toHaveBeenCalled();
+    view.unmount();
+    await flush();
+    expect(fake.keepAwake).not.toHaveBeenCalled();
+  });
+});
+
 describe('RemoteWidget', () => {
-  it('shows where it stands and one way in, and opens no connection', async () => {
+  const widget = async () => {
     render(
       <MemoryRouter>
         <RemoteWidget />
       </MemoryRouter>,
     );
     await flush();
-    expect(screen.getByText('Dein PC · bereit')).toBeTruthy();
+  };
+
+  it('paired: one way in, no claim about the PC, and no connection', async () => {
+    await widget();
+    expect(screen.getByText('Dein PC')).toBeTruthy();
+    expect(screen.queryByText(/bereit/)).toBeNull();
     expect(screen.getByRole('link', { name: 'Öffnen' }).getAttribute('href')).toBe('/remote');
+    expect(fake.parts.hooks.opens()).toBe(0);
+  });
+
+  it('no PC paired: says so and leads to pairing', async () => {
+    useSyncStatus.getState().set({ phase: 'off', via: undefined });
+    await widget();
+    expect(screen.getByText(/Noch kein PC gekoppelt\./)).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'PC koppeln' }).getAttribute('href')).toBe(
+      '/settings/sync#sync',
+    );
     expect(fake.parts.hooks.opens()).toBe(0);
   });
 });
@@ -228,10 +305,20 @@ describe('what a sync round says about the pairing', () => {
     });
     expect(await syncRound()).toBe('not-paired');
 
-    // syncing through a server, or not at all: no PC is paired – and no round is run for it
+    // syncing through a server: no PC is paired – and no round is run for it
     fake.syncNow.mockClear();
     useSyncStatus.getState().set({ phase: 'idle', via: 'server', error: undefined });
     expect(await syncRound()).toBe('not-paired');
     expect(fake.syncNow).not.toHaveBeenCalled();
+
+    // right after the app started nothing is known yet: only a round can tell
+    useSyncStatus.getState().set({ phase: 'off', via: undefined, error: undefined });
+    fake.syncNow.mockImplementationOnce(async () => {
+      useSyncStatus.getState().set({ phase: 'idle', via: 'lanClient' });
+    });
+    expect(await syncRound()).toBe('ok');
+    useSyncStatus.getState().set({ phase: 'off', via: undefined, error: undefined });
+    expect(await syncRound()).toBe('not-paired');
+    expect(fake.syncNow).toHaveBeenCalledTimes(2);
   });
 });

@@ -82,13 +82,28 @@ test('pause, louder and quieter on the PC, one-handed', async ({ page }, info) =
   await page.getByTestId('remote-play-pause').click();
   await expect(page.getByTestId('remote-play-pause')).toHaveText('Pause');
 
+  // holding "Lauter": the first step comes at once, then a few more – never a pile
+  const before = await page.evaluate(() => window.__tmRemote.sent().length);
+  const box = (await page.getByTestId('remote-volume-up').boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await expect
+    .poll(() => page.evaluate(() => window.__tmRemote.sent().length))
+    .toBeGreaterThan(before);
+  await page.waitForTimeout(900);
+  await page.mouse.up();
+  const steps = (await page.evaluate(() => window.__tmRemote.sent().length)) - before;
+  expect(steps).toBeGreaterThanOrEqual(3);
+  expect(steps).toBeLessThanOrEqual(6);
+  await page.evaluate(() => window.__tmRemote.setState({ volume: 40, playing: true }));
+
   // someone turns the volume at the PC: the phone follows
   await page.evaluate(() => window.__tmRemote.setState({ volume: 80 }));
   await expect(state).toHaveText('Dein PC · Lautstärke 80 %');
 
   // "Ton aus" from the menu; "Lauter" lifts it again
   await page.getByRole('button', { name: 'Weitere Aktionen' }).click();
-  await page.getByRole('menuitem', { name: 'Ton aus / an' }).click();
+  await page.getByRole('menuitem', { name: 'Ton aus' }).click();
   await expect(state).toHaveText('Dein PC · Ton aus');
   await page.getByTestId('remote-volume-up').click();
   await expect(state).toHaveText('Dein PC · Lautstärke 82 %');
@@ -105,6 +120,12 @@ test('ended at the PC: the phone says so and offers one step', async ({ page }, 
   await page.evaluate(() => window.__tmRemote.close('ended'));
   await expect(state).toContainText('Die Fernbedienung ist am PC pausiert.');
   await expect(page.getByTestId('remote-play-pause')).toBeDisabled();
+  // an inactive main key is not a filled accent button any more
+  expect(
+    await page
+      .getByTestId('remote-play-pause')
+      .evaluate((el) => getComputedStyle(el).backgroundColor),
+  ).toBe('rgba(0, 0, 0, 0)');
   await page.screenshot({ path: info.outputPath('remote-2-paused.png') });
 
   // switched on again at the PC: "Erneut versuchen" connects
@@ -115,14 +136,7 @@ test('ended at the PC: the phone says so and offers one step', async ({ page }, 
 
 test('no PC paired: a sentence and the way to pairing', async ({ page }) => {
   await asPhoneWithRemote(page);
-  await page.addInitScript(() => {
-    const wait = setInterval(() => {
-      if (window.__tmRemote) {
-        window.__tmRemote.failOpen('not-paired', 99);
-        clearInterval(wait);
-      }
-    }, 5);
-  });
+  await page.addInitScript(() => localStorage.setItem('tm-e2e-remote-fail', 'not-paired:99'));
   await page.goto('/remote');
   await expect(page.getByTestId('remote-state')).toContainText('Noch kein PC gekoppelt.');
   await expect(page.getByRole('link', { name: 'PC koppeln' })).toBeVisible();

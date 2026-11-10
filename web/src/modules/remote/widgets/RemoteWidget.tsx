@@ -1,29 +1,32 @@
 import { getPlatform } from '@/core/platform';
+import { settingsPath } from '@/core/settings/registry/paths';
+import { useSyncStatus } from '@/core/sync/status';
 import { t } from '@/strings';
 import { StatusWidget } from '@/ui';
-import { useRemoteView } from '../session';
-import { describe } from '../view';
 
 /**
- * The remote control on the home screen: where it stands and one way in. Showing it opens no
- * connection – it only reads what the page's session last knew.
+ * The remote control on the home screen: one way in. It opens no connection, so it claims
+ * nothing about the PC – only what the phone knows by itself: whether a PC is paired at all.
  */
 export default function RemoteWidget() {
-  const view = useRemoteView();
   const supported = getPlatform().remote.supported;
-  const idle = view.kind === 'idle';
+  const paired = useSyncStatus((s) => s.via === 'lanClient');
+  if (!supported) return <StatusWidget icon="monitor" state={t.remote.phoneOnly} />;
+  if (!paired) {
+    return (
+      <StatusWidget
+        icon="monitor"
+        state={t.remote.state.notPaired}
+        action={{ label: t.remote.pair, to: settingsPath('sync', 'sync') }}
+      />
+    );
+  }
   return (
     <StatusWidget
       icon="monitor"
-      state={
-        !supported
-          ? t.remote.phoneOnly
-          : idle
-            ? t.remote.widgetIdle
-            : describe(view, undefined).text
-      }
+      state={t.remote.widgetIdle}
       hint={t.remote.widgetHint}
-      action={supported ? { label: t.remote.open, to: '/remote' } : undefined}
+      action={{ label: t.remote.open, to: '/remote' }}
     />
   );
 }

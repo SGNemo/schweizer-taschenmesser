@@ -6,7 +6,7 @@ export const remote: Strings['remote'] = {
     description:
       'Control media and volume of your PC from your phone – on your home network, once you allowed it at the PC.',
     widget: 'Remote',
-    haptics: 'Short vibration on a tap',
+    haptics: 'Vibrate briefly on every press',
     hapticsHelp: 'A short tick on every press, so you do not have to look.',
     keepAwake: 'Keep the screen on',
     keepAwakeHelp: 'The screen stays on while the remote is open.',
@@ -14,7 +14,8 @@ export const remote: Strings['remote'] = {
   phoneOnly: 'The remote is available in the phone app.',
   media: 'Media',
   more: 'More actions',
-  mute: 'Sound off / on',
+  mute: 'Mute',
+  unmute: 'Unmute',
   lock: 'Lock PC',
   previous: 'Previous',
   next: 'Next',
@@ -26,7 +27,7 @@ export const remote: Strings['remote'] = {
   pair: 'Pair a PC',
   disable: 'Switch the module off',
   open: 'Open',
-  widgetIdle: 'Your PC · ready',
+  widgetIdle: 'Your PC',
   widgetHint: 'Control media and volume of the PC.',
   state: {
     connecting: 'Your PC',
@@ -42,7 +43,7 @@ export const remote: Strings['remote'] = {
     paused:
       'The remote is paused at the PC. Switch it on again at the PC under Settings → Remote control.',
     busy: 'Another device is controlling the PC right now.',
-    noInputHere: 'Your PC takes no remote control here right now. Is the PC on your home network?',
+    noInputHere: 'Your PC is not taking the remote right now. Is it on your home network?',
     unsupported: 'This PC cannot be remote controlled (Windows only).',
     tooOld: 'Your PC does not answer the remote. Is Nemo on the PC up to date?',
     locked: 'The PC is locked. Media and volume keep working.',

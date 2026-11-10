@@ -5,6 +5,7 @@ import type { RemoteAction } from '@/core/platform/types';
 import { createHoldGate, HOLD_STEPS_PER_SECOND } from '@/core/remote/session';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { useSettings } from '@/core/settings/settings';
+import { holdKeepAwake } from '@/core/shell/keepAwake';
 import { usePageChrome } from '@/core/shell/pageChrome';
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
@@ -51,9 +52,8 @@ export default function RemotePage() {
 
   useEffect(() => {
     if (!supported || !keepAwake) return;
-    const display = getPlatform().display;
-    void display.setKeepAwake(true).catch(() => undefined);
-    return () => void display.setKeepAwake(false).catch(() => undefined);
+    // a hold that is given back: the cockpit may keep the screen on too
+    return holdKeepAwake();
   }, [supported, keepAwake]);
 
   if (!supported) {
@@ -74,6 +74,7 @@ export default function RemotePage() {
     if (!repeat) tick();
     void remoteSession.send(action, { repeat });
   };
+  const muted = (view.kind === 'connected' ? view.pc : last)?.mute ?? false;
 
   return (
     <div className={styles.page} data-testid="remote-page">
@@ -83,13 +84,18 @@ export default function RemotePage() {
           open={menu}
           onOpenChange={setMenu}
           items={[
-            { id: 'mute', label: r.mute, onSelect: () => press('mute') },
+            { id: 'mute', label: muted ? r.unmute : r.mute, onSelect: () => press('mute') },
             { id: 'lock', label: r.lock, onSelect: () => press('lock') },
           ]}
         />
       </PageHeader>
 
-      <section className={styles.state} aria-live="polite" data-testid="remote-state">
+      {/* announced only when it is a sentence to act on, never for every volume step */}
+      <section
+        className={styles.state}
+        aria-live={view.kind === 'connected' ? 'off' : 'polite'}
+        data-testid="remote-state"
+      >
         <p className={styles.stateLine}>{line.text}</p>
         {line.step === 'retry' ? (
           <div>
@@ -151,8 +157,10 @@ export default function RemotePage() {
 }
 
 /**
- * One big button. `hold`: keeping it pressed repeats the action, at most a few steps a second –
- * a repeat never opens a connection, only the first press does.
+ * One big button. `hold` (volume): the press acts at once – a tick and the first step when the
+ * finger goes down – and keeping it pressed repeats the step, at most a few times a second. A
+ * repeat never opens a connection; only the press itself does. The click that follows a pointer
+ * press is ignored (it already acted); a click from the keyboard or a screen reader acts once.
  */
 function Key({
   icon,
@@ -172,30 +180,47 @@ function Key({
   hold?: boolean;
 }) {
   const timer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const byPointer = useRef(false);
   const stop = () => {
     if (timer.current !== undefined) clearInterval(timer.current);
     timer.current = undefined;
   };
   useEffect(() => stop, []);
-  const start = () => {
+  // a key that goes inactive while held (the PC ended the session) stops repeating at once
+  useEffect(() => {
+    if (disabled) stop();
+  }, [disabled]);
+  const down = (e: React.PointerEvent<HTMLButtonElement>) => {
     if (!hold || disabled) return;
+    byPointer.current = true;
+    // the release always arrives here, also when the thumb drifts off the key
+    e.currentTarget.setPointerCapture?.(e.pointerId);
     stop();
+    onPress(action);
     const gate = createHoldGate(now);
     gate();
     timer.current = setInterval(() => {
       if (gate()) onPress(action, true);
     }, HOLD_MS);
   };
+  const click = () => {
+    if (byPointer.current) {
+      byPointer.current = false;
+      return;
+    }
+    onPress(action);
+  };
   return (
     <button
       type="button"
-      className={`${styles.key} ${main ? styles.main : ''}`}
+      className={`${styles.key} ${main ? styles.main : ''} ${hold ? styles.hold : ''}`}
       disabled={disabled}
-      onClick={() => onPress(action)}
-      onPointerDown={start}
+      onClick={click}
+      onPointerDown={down}
       onPointerUp={stop}
-      onPointerLeave={stop}
       onPointerCancel={stop}
+      onLostPointerCapture={stop}
+      onContextMenu={hold ? (e) => e.preventDefault() : undefined}
       data-testid={`remote-${action}`}
     >
       <Icon name={icon} size={28} />

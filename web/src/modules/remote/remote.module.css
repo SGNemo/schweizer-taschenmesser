@@ -2,9 +2,10 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  /* Fill the screen below the page head and above the bottom bar, so the buttons (pushed down by
-     `margin-top: auto`) end up in the thumb zone. */
-  min-height: calc(100dvh - 14rem - var(--bottom-nav-h));
+  /* Fill the screen below the page head (about 14rem: top bar, module head, menu row) and above the
+     bottom bar, so the buttons – pushed down by `margin-top: auto` – end up in the thumb zone. A
+     short or landscape screen simply gets the natural height. */
+  min-height: calc(100dvh - 14rem - var(--bottom-nav-h) - env(safe-area-inset-bottom, 0px));
 }
 .state {
   display: flex;
@@ -28,7 +29,8 @@
   display: grid;
   gap: var(--space-3);
   margin-top: auto;
-  padding-bottom: var(--space-4);
+  /* room between the lowest row and the bottom bar: a thumb reaching blind must not hit the bar */
+  padding-bottom: var(--space-6);
 }
 .row {
   display: grid;
@@ -55,8 +57,16 @@
 .key:active:not(:disabled) {
   transform: scale(0.98);
 }
-.key:disabled {
+/* Inactive: flat and outlined, clearly not a button to press – also the main one. */
+.key:disabled,
+.main:disabled {
+  border: 1px dashed var(--border-strong);
+  background: transparent;
   color: var(--text-muted);
+}
+/* Held keys: no scrolling or long-press menu under the thumb. */
+.hold {
+  touch-action: none;
 }
 .main {
   background: var(--accent);

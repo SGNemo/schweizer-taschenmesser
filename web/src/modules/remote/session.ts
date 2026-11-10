@@ -12,7 +12,10 @@ import { now } from '@/core/time/now';
  * failure = `failed`; else `ok`.
  */
 export async function syncRound(): Promise<SyncVerdict> {
-  if (useSyncStatus.getState().via !== 'lanClient') return 'not-paired';
+  // Known to sync another way (a server): no PC is paired. Not known yet (the app has just
+  // started and no round has run): only a round can tell.
+  const before = useSyncStatus.getState().via;
+  if (before !== undefined && before !== 'lanClient') return 'not-paired';
   await syncNow().catch(() => undefined);
   const after = useSyncStatus.getState();
   if (after.via !== 'lanClient') return 'not-paired';

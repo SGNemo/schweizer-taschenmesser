@@ -171,13 +171,16 @@ R11. _Schalter aus:_ Hauptschalter aus fragt nicht nach und der Heimnetz-Abgleic
 Vorher am Handy: Einstellungen → Allgemein → „In Arbeit anzeigen“, Modul „Fernbedienung“ einschalten; am PC: Einstellungen → Verbindungen → Fernsteuerung, dem Handy „Medien und Lautstärke“ erlauben. Zugleich R3–R7 oben ausführen.
 
 FB1. _Erster Android-Build mit dem Client:_ APK bauen und starten; „Fernbedienung“ öffnen: Zeile „Dein PC · Lautstärke … %“ erscheint binnen etwa einer Sekunde. ☐
-FB2. _Einhändig, ohne Hinsehen:_ Pause, Nächster, Vorheriger, Leiser/Lauter (auch gehalten: höchstens etwa 5 Schritte je Sekunde) treffen; das kurze Vibrieren hilft, lässt sich abschalten. ☐
-FB3. _Menü:_ „Ton aus / an“ und „PC sperren“; nach dem Sperren steht „gesperrt“ in der Zeile, Medien gehen weiter. ☐
+FB2. _Einhändig, ohne Hinsehen:_ Pause, Nächster, Vorheriger, Leiser/Lauter treffen; gehalten kommt der erste Schritt sofort mit einem Vibrieren, dann höchstens etwa 5 Schritte je Sekunde, auch mit leicht wanderndem Daumen, ohne Kontextmenü; zehnmal blind Leiser/Lauter, nie die untere Leiste getroffen. ☐
+FB3. _Menü:_ „Ton aus“ (danach „Ton an“) und „PC sperren“; nach dem Sperren steht „gesperrt“ in der Zeile, Medien gehen weiter. ☐
 FB4. _Zustände:_ am PC Schalter aus → Satz mit dem Schritt am PC; am PC „Fernsteuerung beenden“ → „am PC pausiert“; WLAN am Handy aus → nach etwa 5 s „antwortet noch nicht“, dann „nicht erreichbar“; WLAN an + „Erneut versuchen“ → verbunden. ☐
 FB5. _Langsames WLAN:_ Wiedergabe/Pause drücken; zeigt die Zeile kurz den alten Stand, heilt eine späte Antwort ihn ohne zweiten Druck? Ein zweiter Druck davor schaltet erneut um (bekannt). ☐
 FB6. _App wechseln:_ anderes Programm öffnen und zurück: verbindet neu ohne Frage; am PC verschwindet in der Zwischenzeit der Chip. ☐
-FB7. _Widget:_ auf der Übersicht steht „Dein PC · bereit“ mit „Öffnen“; es öffnet keine Verbindung (am PC kein Chip). ☐
+FB7. _Widget:_ gekoppelt steht auf der Übersicht „Dein PC“ mit „Öffnen“, ohne Kopplung „Noch kein PC gekoppelt.“ mit „PC koppeln“; es öffnet keine Verbindung (am PC kein Chip). ☐
 FB8. _Player ohne Medien-Sitzung:_ ein Player, der sich so nicht pausieren lässt: notieren, welcher (Frage an Sven, kein Tasten-Ersatz). ☐
+FB9. _Unterbrechung:_ Bildschirm aus oder eingehender Anruf: am PC verschwindet der Chip; zurück auf der Seite verbindet sie ohne Frage neu. ☐
+FB10. _Bildschirm anlassen:_ Einstellung an: der Bildschirm bleibt an, solange die Seite offen ist, und geht nach dem Verlassen wieder normal aus; mit eingeschaltetem Cockpit bleibt dessen „Bildschirm an“ nach dem Verlassen erhalten. ☐
+FB11. _TalkBack:_ liest die Zustandszeile bei Sätzen (nicht bei jedem Lautstärkeschritt) und jede Taste mit ihrem Namen. ☐
 
 ### Einrichtungsassistent
 
