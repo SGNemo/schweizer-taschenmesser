@@ -1,10 +1,10 @@
 # Remote control – packages (prompts)
 
-Decisions: [CONCEPT.md](CONCEPT.md) §11 (decided 2026-11-10, all recommendations) and [`docs/decisions/core.md`](../../decisions/core.md) "Remote control". Template: [plan/PACKAGES.md](../plan/PACKAGES.md). One package = one chat, one branch, one PR against `develop`; paste one prompt per chat. Order 0 → 1a → 1b → 2 → 3 → 4 → 5, a stop after each. Sven's answers to CONCEPT §12 are recorded (all recommendations), so the prompts below stand as written; package 0 starts after this concept's PR is merged. **Never parallel to an open LAN-sync package or PR** (`crates/lan-sync` is the shared hotspot): check `docs/CHATS.md` and the open PRs first. Model: Claude Opus. Skills: `council` per package with the lenses named in the prompt (Guardian always: grant, logging, rate limits, channel), then `full stop` (PR against `develop`, council table in the PR description, never merge).
+Decisions: [CONCEPT.md](CONCEPT.md) §11 (decided 2026-11-10, all recommendations) and [`docs/decisions/core.md`](../../decisions/core.md) "Remote control". Template: [plan/PACKAGES.md](../plan/PACKAGES.md). One package = one chat, one branch, one PR against `develop`; paste one prompt per chat. Order 0 → 1a → 1b → 2 → 3 → 4 → 5, a stop after each. Sven's answers to CONCEPT §12 are recorded (all recommendations), so the prompts below stand as written; package 0 is done (2026-11-10). **Never parallel to an open LAN-sync package or PR** (`crates/lan-sync` is the shared hotspot): check `docs/CHATS.md` and the open PRs first. Model: Claude Opus. Skills: `council` per package with the lenses named in the prompt (Guardian always: grant, logging, rate limits, channel), then `full stop` (PR against `develop`, council table in the PR description, never merge).
 
 | # | Package | Branch | Scope | Hotspots to announce | Skills |
 |---|---|---|---|---|---|
-| 0 | Rules | `docs/remote-control-rules` | `CLAUDE.md` one line, `docs/RULES.md` full text | root `CLAUDE.md` | `review-loop`, `full stop` |
+| 0 | Rules (done) | `docs/remote-control-rules` | `CLAUDE.md` one line, `docs/rules/remote-control.md` full text | root `CLAUDE.md` | `review-loop`, `full stop` |
 | 1a | Hub: input session and grant | `feat/remote-hub-session` | `crates/lan-sync` only: mode 3, `input/`, trust fields, registry with mode, outbound queue, duplex client, rule tests (all testable on Linux) | `crates/lan-sync` | `council`, `full stop` |
 | 1b | PC: media sink, settings, visible state | `feat/remote-host-media` | new `crates/remote-input`, `src/remote.rs`, tray variant, seam `remoteHost`, settings section, chip | `core/platform`, `Cargo.toml`/lock, capabilities, `strings.ts` | `council`, `full stop` |
 | 2 | Phone: module with _Medien_, volume keys | `feat/remote-module-media` | `src/remote_client.rs`, seam `remote`, module `remote` (page Medien, all states), volume keys in `plugins/screen-mode`, fake; **first real hand test of 1a + 1b** | `core/platform`, capabilities, `strings.ts` | `council`, `full stop` |
@@ -27,7 +27,7 @@ Branch `docs/remote-control-rules` von frischem `develop`. Vorgegebene Session-B
 Konzept docs/design/remote-control/CONCEPT.md, entschieden am 2026-11-10 (§11, §12). Regelvorschlag wörtlich in CONCEPT §5 „Proposed rule lines“.
 
 ## Pflichtliste
-- Regelzeile in root CLAUDE.md (nach „LAN sync“) und Volltext in docs/RULES.md, aus CONCEPT §5; nichts an bestehenden Regeln ändern. Startkontext-Budget von CLAUDE.md prüfen (`npm run check:docs`).
+- Regelzeile in root CLAUDE.md (nach „LAN sync“) und Volltext aus CONCEPT §5 (liegt in docs/rules/remote-control.md, weil docs/RULES.md am Größen-Budget ist); nichts an bestehenden Regeln ändern. Startkontext-Budget von CLAUDE.md prüfen (`npm run check:docs`).
 
 ## Nicht in diesem Paket
 Jeder Produktcode.
@@ -49,7 +49,7 @@ Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Q
 Branch `feat/remote-hub-session` von frischem `develop` – **erst wenn kein LAN-Sync-PR offen ist und Paket 0 gemergt ist** (Hotspot `crates/lan-sync`; vorher Zeile in docs/CHATS.md „Hotspots“, ein Chat). Vorgegebene Session-Branches ignorieren. Nur `web/src-tauri/crates/lan-sync/**` und Doku.
 
 ## Ausgangslage
-Konzept docs/design/remote-control/CONCEPT.md (§1 Inventur, §3 „Shape of the input session“, §4 Freigabe, §5 Bedrohungsmodell), Regeln docs/RULES.md „Remote control“ + „LAN sync“. Lies `noise/frame.rs` (Modus-Byte, Tags, Caps), `noise/mod.rs` (`raise_cap`, `read_first`), `endpoint.rs` (`handle_first`, `Session::receive`, `check_open`), `hub/router.rs` (`Connection::on_frame`, Limits), `hub/netpolicy.rs` (`decide`: Heimnetz vs. Kopplungsfenster), `transport/mod.rs` (`drive`, `deliveries`, Zeitlimits), `transport/client.rs`, `trust/mod.rs` (`SessionRegistry`) + `trust/file.rs`, `tests/rules.rs`; web/src-tauri/CLAUDE.md.
+Konzept docs/design/remote-control/CONCEPT.md (§1 Inventur, §3 „Shape of the input session“, §4 Freigabe, §5 Bedrohungsmodell), Regeln docs/rules/remote-control.md + docs/RULES.md „LAN sync“. Lies `noise/frame.rs` (Modus-Byte, Tags, Caps), `noise/mod.rs` (`raise_cap`, `read_first`), `endpoint.rs` (`handle_first`, `Session::receive`, `check_open`), `hub/router.rs` (`Connection::on_frame`, Limits), `hub/netpolicy.rs` (`decide`: Heimnetz vs. Kopplungsfenster), `transport/mod.rs` (`drive`, `deliveries`, Zeitlimits), `transport/client.rs`, `trust/mod.rs` (`SessionRegistry`) + `trust/file.rs`, `tests/rules.rs`; web/src-tauri/CLAUDE.md.
 
 ## Pflichtliste
 - Handshake-Modus 3 (`MODE_INPUT`, im Prolog). Angenommen **nur** auf einem Bind des gespeicherten Heimnetzes: jeder Bind trägt ein Heimnetz-Kennzeichen, berechnet aus der gespeicherten Netz-Id auch bei offenem Kopplungsfenster, fail-closed; geprüft je angenommener Verbindung (CONCEPT §3). Das ist eine Kennzeichnung, keine Änderung der Bind-Regeln. Frame-Cap der Eingabe-Sitzung: 256 Byte bis zum ersten authentisierten Frame, dann 512, nie 65 535.

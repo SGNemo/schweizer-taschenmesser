@@ -21,6 +21,14 @@ export function moduleFiles(keep: (path: string) => boolean): string[] {
     .sort();
 }
 
+/** Every file under `src`, as posix paths relative to `src/`, sorted. */
+export function srcFiles(keep: (path: string) => boolean): string[] {
+  return (readdirSync(SRC, { recursive: true }) as string[])
+    .map((f) => f.split('\\').join('/'))
+    .filter(keep)
+    .sort();
+}
+
 /** A source file of a `routes` folder at any depth of a module (no tests). */
 export const isRouteSource = (path: string): boolean =>
   /^modules\/.+\/routes\/.+\.tsx$/.test(path) &&

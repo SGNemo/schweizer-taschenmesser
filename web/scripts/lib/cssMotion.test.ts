@@ -1,13 +1,6 @@
 import { writeFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import {
-  baselineFile,
-  countPerFile,
-  diffBaseline,
-  moduleFiles,
-  readBaseline,
-  sum,
-} from './baseline';
+import { baselineFile, countPerFile, diffBaseline, srcFiles, readBaseline, sum } from './baseline';
 import { findCssMotion, transitionProperties } from './cssMotion';
 
 /**
@@ -18,8 +11,9 @@ import { findCssMotion, transitionProperties } from './cssMotion';
  */
 const NAME = 'css-motion';
 const WHAT =
-  'transition entries and @keyframes declarations in src/modules/**/*.module.css that move something else than transform/opacity';
-const files = () => moduleFiles((p) => /\.module\.css$/.test(p));
+  'transition entries and @keyframes declarations in src/**/*.css that move something else than transform/opacity';
+// Every stylesheet of the app, not only the modules': the 4.0 packages build in `ui/` and `layout/` first.
+const files = () => srcFiles((p) => /\.css$/.test(p));
 
 describe('findCssMotion (what counts as a hit)', () => {
   it('a transition of another property is a hit, with line, selector and property', () => {
