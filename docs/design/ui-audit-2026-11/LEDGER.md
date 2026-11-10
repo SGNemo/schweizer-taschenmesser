@@ -229,6 +229,8 @@ Zweite, kurze Abnahme auf `develop` 96a207f (2026-11-10), nach #636 (B2), #638 (
 4. **Ein kleiner Label-PR:** `a11y`-Ausnahme nur für `target-size`, CSS-Zähler über `src/**`, `one-primary` mit einem Moduldialog oder der kleinere Umfang in `PACKAGE-0.md:44`; dazu ohne Label: Besitzer für die `ItemList`-Frage in PACKAGES 0b-1, Browser-Fall entschieden (`SMOKE_FILES` oder Abweichung in `ci.md`).
 5. Ein Reviewer (`review-loop`) auf 3 und 4. Nicht vor 0b-1 nötig: Architect F4 (vor 0b-2), PACKAGES 0b-4, die Follow-ups.
 
+**Nachtrag 2026-11-10 (Svens Entscheidung):** B1 ist keine Go-Bedingung für 0b-1 mehr. `nemo-merge` kann Sven erst im Dezember 2026 nutzen; bis dahin bleibt die Ratsche Rückmeldung in CI, Label-Schritte merged Sven selbst, und der Probelauf von Regel 7 wird nachgeholt, sobald der Agent da ist ([decisions/meta.md](../../decisions/meta.md)). Erledigt seit Runde 2: Punkt 3 bis auf den Handtest (#647 N1a-Wortlaut, #649 `browser_show` nach Neuladen), Punkt 4 (#647) und Punkt 5 (ein Reviewer, APPROVE). Offen für das Go: Punkt 2 und der Handtest N1a.
+
 ## Council V-1
 
 Council über [PR #639](https://github.com/SGNemo/schweizer-taschenmesser/pull/639) (`feat/ui4-v1-defaults`, Kopf `2830c5a`, Basis `b5659c5`), 2026-11-10, eine Runde, drei Delegierte mit frischem Kontext (Claude Opus), nur lesend. Maßstab: PACKAGES „V-1“, PACKAGE-0 „H-a“. Nichts behoben; die Befunde gehen an den Chat von #639.

@@ -1,16 +1,20 @@
-// Final parameters of the Nemo logo v2 (chosen in rounds 1–8 with the maintainer). Everything the
+// Final parameters of the Nemo logo v2 (chosen in rounds 1–8 with the maintainer; mark revised as v2.1 in round 10). Everything the
 // asset export needs comes from here: the mark (variant A2b), the lettering
 // (W10c3: own rounded monoline capitals, M vertex at half height) and the pill lockup (F4).
 export const MARK = {
   params: {
-    body: { nose: 466, joint: 176, height: 132, peak: 0.48, blunt: 0.74, stalk: 50 },
-    tail: { style: 'fan', length: 68, spread: 76, notch: 16, overlap: 30 },
-    stripes: { at: [0.7, 0.37], width: [34, 40], bend: [-24, -16] },
-    eye: { at: 0.84, dy: -0.22, r: 26 },
-    fins: { dorsal: { height: 30, from: 0.3, to: 0.7 }, ventral: { height: 18, from: 0.36, to: 0.6 } },
+    // v2.1 (2026-11-10): pinched tail stalk and a two-lobed fan instead of the cone, so the piece behind the band no
+    // longer reads as a speaker; the bands stop before the outline (rim), so the fish stays one piece. Flat as
+    // before: one colour, white on the accent tile, no gradient.
+    body: { nose: 452, joint: 184, height: 110, peak: 0.49, blunt: 0.6, stalk: 34 },
+    tail: { style: 'lobe', length: 106, spread: 94, notch: 18, overlap: 30 },
+    stripes: { at: [0.69, 0.31], width: [24, 34], bend: [-21, -18], rim: 28 },
+    eye: { at: 0.836, dy: -0.22, r: 22 },
+    fins: { dorsal: { height: 34, from: 0.23, to: 0.76 }, ventral: { height: 30, from: 0.33, to: 0.63 } },
     soften: 12,
-    // tile radius 146/512 = the module chips' 8/28; Android adaptive at 0.56 keeps the fish inside the 66 dp safe zone (reach 153 of 156)
-    views: { tile: { radius: 146, scale: 0.8 }, adaptive: { scale: 0.56 } },
+    // tile radius 146/512 = the module chips' 8/28; dx centres the fish on the tile (its box is not centred in the
+    // canvas); Android adaptive keeps the fish inside the 66 dp safe zone
+    views: { tile: { radius: 146, scale: 0.875, dx: -6 }, adaptive: { scale: 0.7, dx: -5 } },
   },
 };
 
