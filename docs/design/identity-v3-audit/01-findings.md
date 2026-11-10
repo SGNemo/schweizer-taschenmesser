@@ -1,6 +1,6 @@
 # Identity v3 – audit, phase 1: findings (2026-11-04, `review/identity-v3-audit`)
 
-Whole-picture check of identity v3 on `develop` (73da10c4): foundation (#414) plus the four group chats – Planen + Geld (#443), Haushalt/Tresor/Wissen/Medien/Dienste (#442, #448, #453), Einstellungen + Bibliothek (#444, #449), Werkzeuge (#445–#447). Rules under test: [MODULE-IDENTITY.md](../MODULE-IDENTITY.md). Phase 2 (proposals) and the fix packages follow in `02-packages.md`.
+Whole-picture check of identity v3 on `develop` (73da10c4): foundation (#414) plus the four group chats – Planen + Geld (#443), Haushalt/Tresor/Wissen/Medien/Dienste (#442, #448, #453), Einstellungen + Bibliothek (#444, #449), Werkzeuge (#445–#447). Rules under test: [MODULE-IDENTITY.md](../MODULE-IDENTITY.md). Phase 2 (proposals) and the fix packages follow in `02-packages.md` (removed 2026-11-10, in the git history).
 
 ## Method
 - Dev-Preview build with seed scale `medium`, fixed clock 2026-09-29. Tours: `web/e2e/screenshots/identity-v3.spec.ts` (every module entry page, overview, library, tools, settings × 1280·1920·2560·412 × light/dark, reading aid on at 1920/412) and the audit spec tools/identity-audit.spec.ts (removed 2026-11-10, in the git history) (blind crops, empty states, toolbox, overview head). Sheets: tools/grid-audit.mjs (removed 2026-11-10, in the git history). Contrast matrix: tools/contrast.mjs (removed 2026-11-10, in the git history); mapping seams: tools/seams.mjs (removed 2026-11-10, in the git history).

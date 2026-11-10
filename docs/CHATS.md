@@ -21,27 +21,25 @@ Several Claude chats work in parallel and only see each other through GitHub. `c
 | [#542](https://github.com/SGNemo/schweizer-taschenmesser/pull/542) `ci/signing-release-split` (Draft, pausiert) | Secrets-Umzug in ein Release-Environment | vor dem Launch entscheiden (Dev-Preview- und Dev-Keystore-Teil offen); Repo-Secrets bis dahin unverändert |
 | [#606](https://github.com/SGNemo/schweizer-taschenmesser/pull/606) Dependabot | Dev-Abhängigkeiten `web/` | mergen, wenn grün |
 
-**Handtests:** alle in [MANUAL-TESTS.md](MANUAL-TESTS.md). Neu aus den letzten Merges: „Handtests aus gemergten PRs“ GM1–GM23, Fernsteuerung FB1–FB12 und „Fernsteuerung, PC-Seite“ R3–R7, Hauptthread N1a und H1–H7, Logo LG7, Heimnetz-Sync L9 a–c und L17.
+**Handtests:** alle in [MANUAL-TESTS.md](MANUAL-TESTS.md). Neu aus den letzten Merges: „Handtests aus gemergten PRs“ GM1–GM23, Fernsteuerung FB1–FB12 und „Fernsteuerung, PC-Seite“ R3–R7, PC-Befehle ohne Hänger (Windows) N1a und H1–H7, Logo LG7, Heimnetz-Sync L9 a–c und L17.
 
 **Entscheidungen** (Empfehlung in Klammern):
 
-1. Übersicht ohne Daten springt je Laden um 0,18: hinnehmen oder das Raster erst nach allen Karten packen ([qa/round-6/STATUS.md](qa/round-6/STATUS.md)).
-2. Pflicht-Check `Web` im `develop`-Ruleset (ja; heute beschreibt `decisions/meta.md` das Ruleset ohne ihn).
+1. Übersicht ohne Daten springt je Laden um 0,18: hinnehmen oder das Raster erst nach allen Karten packen? (keine Empfehlung; [qa/round-6/STATUS.md](qa/round-6/STATUS.md))
+2. Pflicht-Check `Web` im `develop`-Ruleset in GitHub eintragen? (ja; danach Bullet in `decisions/meta.md`)
 3. Die Angabe „seit n Tagen“ überall in der App einheitlich machen: als eigenes Paket starten? (ja; Fund C27 aus der Abnahme #496)
 4. Bestätigen: kein Muster hinter Text im Modulkopf (AE2, kommt mit 0b-2), und die Einblend-Bewegung auf der Website bleibt (AE6, seit #674 so gebaut).
 5. Website zeigt Listen und Budgets weiter als „optional“ (eigener kleiner Site-PR).
-6. Browser-Erweiterung: Store oder Release-Zip.
+6. Browser-Erweiterung: Store oder Release-Zip? (erst X1–X14 auf Hardware prüfen, dann entscheiden)
 7. Unterlagen: Titel der Einträge auf der Übersicht zeigen, als Opt-in? (nein; aus #489)
-8. Backup-Seite: „Was ging wohin?“ auch ohne „In Arbeit anzeigen“ zeigen? (aus #566)
-9. Merkliste und Unterlagen haben denselben Kopf: so lassen? Und: Akzent-Varianten gegen den festen 25°-Abstand der Modulfarben (beides aus #485).
+8. Backup-Seite: „Was ging wohin?“ auch ohne „In Arbeit anzeigen“ zeigen? (keine Empfehlung; aus #566)
+9. Merkliste und Unterlagen haben denselben Kopf: so lassen? Und: Akzent-Varianten gegen den festen 25°-Abstand der Modulfarben (keine Empfehlung; beides aus #485).
 10. Weitere Fragen stehen nur in den PR-Texten unter „Open questions“ und sind von hier aus nicht zu beantworten: #656 (vor allem: darf `disk_delete` nur per Attribut `async` bleiben), #632, #490, #492 (Planer: Budget von `plan.md`, Seed-Widget-Test, Swipe-Clip, schema-history).
 
 **Handgriffe:**
 
 - `ci.yml`-Patch aus dem PR-Text von #653 einspielen (`GITHUB_TOKEN` nur am Ratschen-Schritt; steht heute im Job-`env` von `stimulus-budget`).
 - `nemo-merge` aus der JSON neu anlegen, Wegwerf-PR mit echter Signatur, Probelauf `ratchet.mjs --pr`, Treffer von #640/#642 nachträglich ansehen (zuerst `ratchet.mjs`; auf Dezember verschoben, `decisions/meta.md`).
-- Fehlerberichte: echte Adresse als `REPORT_MAIL` in `web/src/core/diagnostics/config.ts` eintragen (mit `.invalid` bleibt „Per Mail melden“ ausgeblendet).
-- [LAUNCH-CHECKLIST](LAUNCH-CHECKLIST.md) auf frischer Windows-VM und Android-Gerät abhaken (Installation, SmartScreen, Update N→N+1, Deinstallation, Sicherer Modus).
 - Agenten v3.1: `docs/meta/AGENTS.md` nennt jetzt die sieben Agenten; dazu gehören noch dein `ant apply` und ein Bullet in `decisions/meta.md` ([agents-v3/README.md](meta/agents-v3/README.md) „Switch-over“). Wenn v3.1 nicht gelten soll: Commit zu AGENTS.md zurücknehmen.
 - Auf Zuruf starten: `feat/remote-volume-keys` (Lautstärketasten am Handy).
 - Nachrichten an A, B, C, D aus `docs/qa/round-5/<x>/MESSAGE.md` mit Dev-Preview-Link schicken.

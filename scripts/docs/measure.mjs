@@ -152,10 +152,11 @@ const SCAN = (f) =>
 const remoteBranches = new Set(
   git('branch', '-r', '--format=%(refname:short)')
     .split('\n')
-    .map((b) => b.replace(/^origin\//, '')),
+    .map((b) => b.replace(/^origin\//, ''))
+    .filter((b) => b && b !== 'HEAD' && b !== 'origin'),
 );
 // Without remote branches (no remote, single-branch or CI checkout) "gone" would mean every branch: skip that finding.
-const knowsBranches = remoteBranches.size > 2;
+const knowsBranches = remoteBranches.size > 1;
 const shallow = git('rev-parse', '--is-shallow-repository').trim() === 'true';
 const STALE = [
   ['five app languages', /\b(five|5|fünf) (app |UI )?(languages|Sprachen)\b/i],

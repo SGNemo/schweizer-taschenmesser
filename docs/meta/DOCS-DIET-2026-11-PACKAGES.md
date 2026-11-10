@@ -10,7 +10,7 @@ Ready prompts for what is larger than the diet PR or touches code. Background an
 | 4 | Summarise the 2026-10 design rounds into DESIGN-SPEC | Opus | needs to judge which numbers the spec still needs |
 | 5 | Board housekeeping and the end of `scribble/` | Haiku | applies a written rule to dated files |
 | 6 | Agent prompts: remove repeats, finish the switch-over | Fable | guardrail texts: every cut is a trade-off, and Sven applies it |
-| 7 | MANUAL-TESTS by device, done items out | Opus | regrouping 760 lines without losing an id |
+| 7 | MANUAL-TESTS by device, done items out | Opus | regrouping 800 lines without losing an id |
 | 8 | Move the round-5 fixture, drop the rest of `qa/round-5` | Haiku | one file move and a path in one spec |
 | 9 | STATUS lower half: "Offen – macht Sven" as one numbered list | Opus | needs care with what is done; Sven confirms |
 
@@ -123,7 +123,7 @@ Routing: Claude Code · MANUAL-TESTS regrouped · Opus
 Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
 Branch: docs/manual-tests-by-device · Read: docs/MANUAL-TESTS.md
 
-Goal: Sven sits at one device and works one list top to bottom (33 k tokens, 760 lines today, grouped by the PR that added the test).
+Goal: Sven sits at one device and works one list top to bottom (33 k tokens, 800 lines today, grouped by the PR that added the test).
 Scope: docs/MANUAL-TESTS.md, references to its ids in docs/ and web/src/strings*.ts; not: test wording.
 Done means:
 - Sections: Windows · Android · both devices · website · accounts needed (Google, Spotify, Ko-fi); inside each, by module. Every id keeps its name (ids that collide, like C1–C4 three times, get the section prefix and a redirect line); a table old heading → new place in the PR.
@@ -158,9 +158,9 @@ Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Q
 Branch: docs/status-open-list · Read: docs/STATUS.md, docs/CHATS.md
 
 Goal: Sven reads one numbered list of what only he can do, each item one or two lines with the link to its instructions.
-Scope: docs/STATUS.md from "Heute möglich in 15 Minuten" down; long instructions move to docs/MANUAL-TESTS.md "Anleitungen für Sven"; not: the heading "Offen – macht Sven" (pinned, `web/src/strings.ts` cites it).
+Scope: docs/STATUS.md from "Heute möglich in 15 Minuten" down; long instructions move to docs/MANUAL-TESTS.md "Anleitungen für Sven"; not: the heading "Offen – macht Sven" (pinned: docs/howto/supporter.md and a comment in `web/src/pages/settings/supporterLinks.ts` cite it).
 Done means:
-- Numbering 1…n (today 0b, 0a, 0, then bullets, then 10–13); items marked "erledigt" are gone; the social preview appears once; "Modul-Review 2026-10-01" is one line about package 7; "Nächste sinnvolle Schritte" does not repeat CHATS.
+- Numbering 1…n (today 0b, 0a, 0, then bullets, then 10–13); items marked "erledigt" are gone; the social preview appears once; "Modul-Review 2026-10-01" is one line: what of the module plan is still open, with the link to docs/product/MODULE-PLAN.md; "Nächste sinnvolle Schritte" does not repeat CHATS.
 - Every removed sentence is either done (evidence in the PR) or moved (table old → new in the PR). Nothing about keys, keystore or legal items is reworded.
 Stop and ask only if: it is unclear whether an item is done (bundle these, at most 4).
 Review: review-loop · then file-pr (label no-changelog)

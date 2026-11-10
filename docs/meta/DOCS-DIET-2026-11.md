@@ -39,7 +39,7 @@ After the diet the largest start items are the board of the notes repo (15,610 i
 ## 3. What changed
 
 ### CHATS and STATUS
-- CHATS: open PRs (5), one line for hand tests with ids, 8 open decisions, 5 chores; rules on top say who deletes a row and when. 23 hand tests that lived only in CHATS rows are now `MANUAL-TESTS.md` "Handtests aus gemergten PRs" (GM1–GM23). Ten decisions were already answered in `decisions/` or in code and were dropped (FileField, ItemList, C31/F06, `--text-on-tint`, "+ Neu", B1, BankCard contrast, AE5, the four questions of #664, Google OAuth).
+- CHATS: open PRs (5), one line for hand tests with ids, the open decisions and chores as two short lists; rules on top say who deletes a row and when. 23 hand tests that lived only in CHATS rows are now `MANUAL-TESTS.md` "Handtests aus gemergten PRs" (GM1–GM23). Ten decisions were already answered in `decisions/` or in code and were dropped (FileField, ItemList, C31/F06, `--text-on-tint`, "+ Neu", BankCard contrast, AE5, the four questions of #664, Google OAuth).
 - STATUS: state only. Running rounds (5) and finished rounds (20) are one line each with a link; open leftovers of finished rounds are kept on those lines. The work log moved unchanged to [archive/2026-11/](../archive/2026-11/STATUS-log-until-2026-11-10.md). "Offen – macht Sven", limits, the module review and the release lines are unchanged.
 
 ### Rules: where each one was and where it is now
@@ -117,11 +117,11 @@ Numbers are estimates from the repo (bytes / 4); what a session really costs dep
 ```
 (`docs/rules/core-privacy.md` = the three bullets above, word for word.)
 
-**2. Root `CLAUDE.md` step 2: the board is read through `chats:status`, never in full** (up to −15 k tokens per chat). Price: a heads-up that names no path can be missed.
+**2. Root `CLAUDE.md` step 2 (first clause only, the rest of the step stays): the board is read through `chats:status`, never in full** (up to −15 k tokens per chat). Price: a heads-up that names no path can be missed.
 
 ```diff
--2. Start: `npm run chats:status` (in `web/`: other branches, file overlap, open board items); …
-+2. Start: `npm run chats:status` (in `web/`: other branches, file overlap, first line of every open board item); open a board file only when its first line names your branch, your files or "all chats"; never read the board in full. A board item older than a week is deleted by the chat that sees it. …
+-2. Start: `npm run chats:status` (in `web/`: other branches, file overlap, open board items); [docs/CHATS.md]
++2. Start: `npm run chats:status` (in `web/`: other branches, file overlap, first line of every open board item); open a board file only when its first line names your branch, your files or "all chats"; never read the board in full; a board item older than a week is deleted by the chat that sees it; [docs/CHATS.md]
 ```
 
 **3. `docs/PROMPT-TEMPLATES.md`: a `review` block that says when `council` is worth it.** Price: fewer lenses on ordinary PRs.
