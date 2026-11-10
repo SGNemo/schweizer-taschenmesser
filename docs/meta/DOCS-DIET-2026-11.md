@@ -40,7 +40,7 @@ After the diet the largest start items are the board of the notes repo (15,610 i
 
 ### CHATS and STATUS
 - CHATS: open PRs (5), one line for hand tests with ids, the open decisions and chores as two short lists; rules on top say who deletes a row and when. 23 hand tests that lived only in CHATS rows are now `MANUAL-TESTS.md` "Handtests aus gemergten PRs" (GM1–GM23). Ten decisions were already answered in `decisions/` or in code and were dropped (FileField, ItemList, C31/F06, `--text-on-tint`, "+ Neu", BankCard contrast, AE5, the four questions of #664, Google OAuth).
-- STATUS: state only. Running rounds (5) and finished rounds (19) are one line each with a link; open leftovers of finished rounds are kept on those lines. The work log moved unchanged to [archive/2026-11/](../archive/2026-11/STATUS-log-until-2026-11-10.md). "Offen – macht Sven", limits, the module review and the release lines are unchanged.
+- STATUS: state only. Running rounds (5) and finished rounds (19) are one line each with a link; open leftovers of finished rounds are kept on those lines. The work log moved unchanged to [archive/2026-11/](../archive/2026-11/STATUS-log-until-2026-11-10.md). "Offen – macht Sven", limits, the module review and the release lines are unchanged, except that "Offen – macht Sven" lost one finished item and gained the two launch to-dos from CHATS.
 
 ### Rules: where each one was and where it is now
 No rule was dropped or changed in meaning. `docs/RULES.md` and `docs/rules/remote-control.md` are untouched.
