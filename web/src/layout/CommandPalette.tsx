@@ -28,6 +28,7 @@ import { resolveRules } from '@/core/automation/templates';
 import { openAppImport } from '@/core/importer/appImportStore';
 import { formatMuteEnd, MUTE_PRESETS, muteUntil, setMute } from '@/core/notifications/mute';
 import { now } from '@/core/time/now';
+import { isCredentialPath } from '@/core/text/credentialPath';
 import { normalize } from '@/core/text/normalize';
 import { useSettingsSections } from '@/pages/settings/useSections';
 import type { ResultRow } from '@/core/ai/query/types';
@@ -38,7 +39,7 @@ import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { tCockpit } from '@/strings.cockpit';
 import { enterCockpit, exitCockpit } from './useCockpit';
-import { Button, Dialog, Icon, Keys, type IconName } from '@/ui';
+import { Button, Dialog, Icon, Keys, NoReadAid, type IconName } from '@/ui';
 import { paletteKeys } from '@/core/keyboard/labels';
 import { useShortcutPrefs } from '@/core/keyboard/prefs';
 import { useVoicePrefs } from '@/core/voice/settings';
@@ -638,7 +639,16 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
             >
               <Icon name={o.icon} />
               <span className={styles.optionText}>
-                {o.kind === 'ask' ? `${o.label}: ${quoted(query.trim())}` : o.label}
+                {o.kind === 'hit' && isCredentialPath(o.row.to) ? (
+                  // A document's title from the vault: the reading aid stays off, as on the vault page itself.
+                  <NoReadAid>
+                    <span>{o.label}</span>
+                  </NoReadAid>
+                ) : o.kind === 'ask' ? (
+                  `${o.label}: ${quoted(query.trim())}`
+                ) : (
+                  o.label
+                )}
                 {o.kind === 'setting' ? (
                   <span className={styles.optionMeta}>{o.hit.path}</span>
                 ) : null}
