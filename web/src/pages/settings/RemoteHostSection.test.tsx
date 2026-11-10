@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createFakeRemoteHostParts } from '@/core/platform/fakeRemoteHost';
-import { useRemoteHost } from '@/core/remote/host';
+import { refreshRemoteHost, useRemoteHost, WATCH_MS } from '@/core/remote/host';
 import { useSyncStatus } from '@/core/sync/status';
 
 const fake = vi.hoisted(() => ({
@@ -62,11 +62,12 @@ describe('RemoteHostSection (desktop)', () => {
     expect(screen.getByTestId('remote-hint').textContent).toBe(
       'Schalte oben „Fernsteuerung erlauben“ ein, um einem Gerät etwas zu erlauben.',
     );
+    // mouse and keyboard are held back until they exist (package 3)
     expect([...level().options].map((o) => o.textContent)).toEqual([
       'Nichts',
       'Medien und Lautstärke',
-      'Medien, Maus und Tastatur',
     ]);
+    expect(screen.queryByText('Erweitert')).toBeNull();
   });
 
   it('switching on with no grant asks nobody; allowing a device is asked at the PC', async () => {
@@ -95,7 +96,7 @@ describe('RemoteHostSection (desktop)', () => {
     fireEvent.click(master());
     await flush();
     fake.parts.hooks.answer('cancel');
-    fireEvent.change(level(), { target: { value: 'full' } });
+    fireEvent.change(level(), { target: { value: 'media' } });
     await flush();
     expect(level().value).toBe('off');
     expect(screen.queryByTestId('remote-note')).toBeNull();
@@ -112,17 +113,17 @@ describe('RemoteHostSection (desktop)', () => {
 
     expect(fake.parts.hooks.open(id)).toBe(true);
     await act(async () => {
-      await import('@/core/remote/host').then((m) => m.refreshRemoteHost());
+      await refreshRemoteHost();
     });
     expect(screen.getByTestId('remote-controlling').textContent).toContain(
       'Pixel 7 steuert gerade Medien und Lautstärke',
     );
     expect(screen.getByTestId('remote-controlling').textContent).toContain(
-      'Danach bleibt das Gerät pausiert, bis du es hier wieder einschaltest.',
+      'Beenden pausiert Pixel 7, bis du es hier wieder einschaltest.',
     );
     // the quiet chip in the top bar, only now
     const chip = screen.getByTestId('remote-chip');
-    expect(chip.textContent).toBe('Wird ferngesteuert');
+    expect(chip.textContent).toBe('Fernsteuerung: Pixel 7');
     expect(chip.getAttribute('aria-label')).toContain('Pixel 7');
     expect(chip.getAttribute('href')).toBe('/settings/verbindungen#remote');
 
@@ -132,6 +133,8 @@ describe('RemoteHostSection (desktop)', () => {
     expect(screen.queryByTestId('remote-chip')).toBeNull();
     expect(screen.getByTestId('remote-note').textContent).toBe('Beendet. Pixel 7 ist pausiert.');
     expect(screen.getByTestId('remote-device').textContent).toContain('Pausiert');
+    // while paused there is one step only: no choice next to "Wieder einschalten"
+    expect(screen.queryByTestId('remote-level')).toBeNull();
     expect(fake.parts.hooks.open(id)).toBe(false);
 
     // switching it on again is a widening: asked at the PC
@@ -140,19 +143,21 @@ describe('RemoteHostSection (desktop)', () => {
     await flush();
     expect(fake.parts.hooks.asked()).toBe(before + 1);
     expect(screen.queryByTestId('remote-resume')).toBeNull();
+    expect(level().value).toBe('media');
     expect(fake.parts.hooks.open(id)).toBe(true);
   });
 
   it('refuses to widen while mouse and keyboard are controlled, with a calm sentence', async () => {
     const a = fake.parts.hooks.addDevice('Pixel 7');
     fake.parts.hooks.addDevice('Tablet');
-    await show();
-    fireEvent.click(master());
-    await flush();
-    const selects = () => screen.getAllByTestId('remote-level') as HTMLSelectElement[];
-    fireEvent.change(selects()[0]!, { target: { value: 'full' } });
-    await flush();
+    await fake.parts.host.setEnabled(true);
+    // a grant from a later package (not choosable here yet), and its session
+    await fake.parts.host.setDevice(a, { level: 'full', paused: false, unlock: true });
     expect(fake.parts.hooks.open(a, 'full')).toBe(true);
+    await show();
+    const selects = () => screen.getAllByTestId('remote-level') as HTMLSelectElement[];
+    // a level set elsewhere is shown as it is
+    expect(selects()[0]!.value).toBe('full');
     const asked = fake.parts.hooks.asked();
     fireEvent.change(selects()[1]!, { target: { value: 'media' } });
     await flush();
@@ -163,22 +168,72 @@ describe('RemoteHostSection (desktop)', () => {
     );
   });
 
-  it('"Am Handy entsperren" sits under "Erweitert", on by default; switching it off is asked', async () => {
+  it('lowering a level never lifts a pause that came from the tray a moment ago', async () => {
+    const id = fake.parts.hooks.addDevice('Pixel 7');
+    await show();
+    fireEvent.click(master());
+    await flush();
+    fireEvent.change(level(), { target: { value: 'media' } });
+    await flush();
+    const asked = fake.parts.hooks.asked();
+    // "Fernsteuerung beenden" in the tray: the page still shows the old reading
+    fake.parts.hooks.open(id);
+    await fake.parts.host.end();
+    fireEvent.change(level(), { target: { value: 'off' } });
+    await flush();
+    expect(fake.parts.hooks.asked()).toBe(asked);
+    const state = fake.parts.hooks.state().devices[0]!;
+    expect([state.level, state.paused]).toEqual(['off', true]);
+  });
+
+  it.each([
+    ['busy', 'Ein Fenster von Nemo wartet noch auf deine Antwort. Beantworte es zuerst.'],
+    ['changed', 'In der Zwischenzeit hat sich die Freigabe geändert. Wähle noch einmal.'],
+    ['failed', 'Das ließ sich nicht speichern. Versuche es noch einmal.'],
+    ['toString', 'Das ließ sich nicht speichern. Versuche es noch einmal.'],
+  ])('says what to do after the PC refused with "%s"', async (code, text) => {
     fake.parts.hooks.addDevice('Pixel 7');
     await show();
     fireEvent.click(master());
     await flush();
-    const unlock = screen.getByRole('switch', { name: 'Pixel 7: Am Handy entsperren' });
-    expect(unlock.getAttribute('aria-checked')).toBe('true');
-    expect(unlock.closest('details')).not.toBeNull();
-    fireEvent.click(unlock);
+    fake.parts.hooks.failNext(code);
+    fireEvent.change(level(), { target: { value: 'media' } });
     await flush();
-    expect(fake.parts.hooks.asked()).toBe(1);
-    expect(
-      screen
-        .getByRole('switch', { name: 'Pixel 7: Am Handy entsperren' })
-        .getAttribute('aria-checked'),
-    ).toBe('false');
+    expect(screen.getByTestId('remote-note').textContent).toBe(text);
+    expect(level().value).toBe('off');
+  });
+
+  it('a device unpaired in the meantime is reported, not changed', async () => {
+    const id = fake.parts.hooks.addDevice('Pixel 7');
+    await show();
+    fireEvent.click(master());
+    await flush();
+    fake.parts.hooks.removeDevice(id);
+    fireEvent.change(level(), { target: { value: 'media' } });
+    await flush();
+    expect(screen.getByTestId('remote-note').textContent).toBe(
+      'Dieses Gerät ist nicht mehr gekoppelt.',
+    );
+    expect(screen.queryByTestId('remote-device')).toBeNull();
+  });
+
+  it('a stored permission is announced before the switch asks Windows', async () => {
+    const id = fake.parts.hooks.addDevice('Pixel 7');
+    await fake.parts.host.setEnabled(true);
+    await fake.parts.host.setDevice(id, { level: 'media', paused: false, unlock: true });
+    await fake.parts.host.setEnabled(false);
+    const asked = fake.parts.hooks.asked();
+    await show();
+    expect(master().parentElement?.parentElement?.textContent).toContain('fragt Windows');
+    fireEvent.click(master());
+    await flush();
+    expect(fake.parts.hooks.asked()).toBe(asked + 1);
+  });
+
+  it('a device without a name gets a label', async () => {
+    fake.parts.hooks.addDevice('');
+    await show();
+    expect(screen.getByTestId('remote-device').textContent).toContain('Gerät ohne Namen (dev1)');
   });
 
   it('switching off needs no question and ends the session', async () => {
@@ -223,6 +278,71 @@ describe('RemoteChip', () => {
       </MemoryRouter>,
     );
     await flush();
-    expect(screen.getByTestId('remote-chip').textContent).toBe('Wird ferngesteuert');
+    expect(screen.getByTestId('remote-chip').textContent).toBe('Fernsteuerung: Pixel 7');
+  });
+});
+
+describe('the shared reading (core/remote/host)', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('one timer for chip and section, none left when both are gone, and the store is emptied', async () => {
+    vi.useFakeTimers();
+    const status = vi.spyOn(fake.parts.host, 'status');
+    useSyncStatus.getState().set({ phase: 'idle', via: 'lanHub', encrypted: true });
+    const view = render(
+      <MemoryRouter>
+        <RemoteChip />
+        <RemoteHostSection />
+      </MemoryRouter>,
+    );
+    await act(async () => vi.advanceTimersByTimeAsync(0));
+    const first = status.mock.calls.length;
+    await act(async () => vi.advanceTimersByTimeAsync(WATCH_MS));
+    expect(status.mock.calls.length).toBe(first + 1);
+    // the hub goes: the chip stops asking, the open section keeps reading – and keeps its state
+    useSyncStatus.getState().set({ phase: 'off', via: undefined });
+    await act(async () => vi.advanceTimersByTimeAsync(WATCH_MS));
+    expect(status.mock.calls.length).toBe(first + 2);
+    expect(useRemoteHost.getState().status).toBeDefined();
+    view.unmount();
+    const after = status.mock.calls.length;
+    await vi.advanceTimersByTimeAsync(WATCH_MS * 3);
+    expect(status.mock.calls.length).toBe(after);
+    expect(useRemoteHost.getState()).toEqual({ status: undefined, off: true });
+  });
+
+  it('an answer that arrives after a newer one is dropped', async () => {
+    const id = fake.parts.hooks.addDevice('Pixel 7');
+    await fake.parts.host.setEnabled(true);
+    await fake.parts.host.setDevice(id, { level: 'media', paused: false, unlock: true });
+    fake.parts.hooks.open(id);
+    const real = fake.parts.host.status.bind(fake.parts.host);
+    let release: () => void = () => undefined;
+    const slow = vi.spyOn(fake.parts.host, 'status').mockImplementationOnce(async () => {
+      const old = await real();
+      await new Promise<void>((r) => (release = r));
+      return old;
+    });
+    const stale = refreshRemoteHost();
+    await fake.parts.host.end();
+    await refreshRemoteHost();
+    expect(useRemoteHost.getState().status?.controller).toBeNull();
+    release();
+    await stale;
+    expect(useRemoteHost.getState().status?.controller).toBeNull();
+    slow.mockRestore();
+  });
+
+  it('a reading that fails no longer vouches for a controller', async () => {
+    const id = fake.parts.hooks.addDevice('Pixel 7');
+    await fake.parts.host.setEnabled(true);
+    await fake.parts.host.setDevice(id, { level: 'media', paused: false, unlock: true });
+    fake.parts.hooks.open(id);
+    await refreshRemoteHost();
+    expect(useRemoteHost.getState().status?.controller?.name).toBe('Pixel 7');
+    vi.spyOn(fake.parts.host, 'status').mockRejectedValueOnce(new Error('internal'));
+    await refreshRemoteHost();
+    expect(useRemoteHost.getState().status?.controller).toBeNull();
+    expect(useRemoteHost.getState().off).toBe(false);
   });
 });

@@ -5,7 +5,7 @@ import type { RemoteHostStatus } from '@/core/platform/types';
 import { useSyncStatus } from '@/core/sync/status';
 
 /** How often the PC's remote-control state is read while something on screen shows it. */
-const WATCH_MS = 4000;
+export const WATCH_MS = 4000;
 
 export interface RemoteHostState {
   /** The last reading; unset before the first one and while the hub is off. */
@@ -20,15 +20,36 @@ export interface RemoteHostState {
  */
 export const useRemoteHost = create<RemoteHostState>(() => ({ off: true }));
 
-/** Reads the state once. Quiet on failure: the next reading catches up. */
-export async function refreshRemoteHost(): Promise<void> {
+/** Counts the readings asked for, so an answer that arrives after a newer one is dropped. */
+let asked = 0;
+let applied = 0;
+
+/**
+ * Reads the state once and returns it. Answers can overtake each other (the shell serves commands
+ * from a thread pool): only the newest one asked for is kept. A reading that fails for any other
+ * reason than "the hub is off" no longer vouches for a controller, so the chip goes – the tray,
+ * which Rust draws, stays the place that tells who controls.
+ */
+export async function refreshRemoteHost(): Promise<RemoteHostStatus | undefined> {
   const host = getPlatform().remoteHost;
-  if (!host.supported) return;
+  if (!host.supported) return undefined;
+  const mine = ++asked;
   try {
-    useRemoteHost.setState({ status: await host.status(), off: false });
+    const status = await host.status();
+    if (mine < applied) return useRemoteHost.getState().status;
+    applied = mine;
+    useRemoteHost.setState({ status, off: false });
+    return status;
   } catch (e) {
-    if (e instanceof Error && e.message === 'not-started')
+    if (mine < applied) return useRemoteHost.getState().status;
+    applied = mine;
+    if (e instanceof Error && e.message === 'not-started') {
       useRemoteHost.setState({ status: undefined, off: true });
+      return undefined;
+    }
+    const last = useRemoteHost.getState().status;
+    if (last?.controller) useRemoteHost.setState({ status: { ...last, controller: null } });
+    return undefined;
   }
 }
 
@@ -46,20 +67,17 @@ export function useRemoteHostWatch(whileOpen = false): void {
   const supported = getPlatform().remoteHost.supported;
   const wanted = whileOpen || hubOn;
   useEffect(() => {
-    if (!supported) return;
-    if (!wanted) {
-      useRemoteHost.setState({ status: undefined, off: true });
-      return;
-    }
+    if (!supported || !wanted) return;
     watchers += 1;
     void refreshRemoteHost();
     timer ??= setInterval(() => void refreshRemoteHost(), WATCH_MS);
     return () => {
       watchers -= 1;
-      if (watchers === 0 && timer !== undefined) {
-        clearInterval(timer);
-        timer = undefined;
-      }
+      if (watchers > 0) return;
+      // nobody reads any more: what is here would only go stale
+      if (timer !== undefined) clearInterval(timer);
+      timer = undefined;
+      useRemoteHost.setState({ status: undefined, off: true });
     };
   }, [wanted, supported]);
 }

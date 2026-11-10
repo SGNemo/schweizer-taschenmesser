@@ -36,27 +36,23 @@ export const tRemoteHost = defineBundle(
       media: 'Medien und Lautstärke',
       full: 'Medien, Maus und Tastatur',
     },
-    fullLater:
-      'Maus und Tastatur kommen mit einem späteren Update. Die Erlaubnis gilt dann ohne weitere Frage.',
     lastSeen: (when: string) => `Letzter Kontakt: ${when}`,
     neverSeen: 'Noch nie verbunden',
     paused: 'Pausiert',
-    pausedLine: 'Du hast die Fernsteuerung für dieses Gerät beendet.',
+    pausedLine: 'Pausiert, bis du es hier wieder einschaltest.',
     resume: 'Wieder einschalten',
-    more: 'Erweitert',
-    unlock: (name: string) => `${name}: Am Handy entsperren`,
-    unlockHint: 'Vor Maus und Tastatur muss sich das Handy entsperren (Fingerabdruck oder PIN).',
+    unnamed: (id: string) => `Gerät ohne Namen (${id})`,
     controlling: (name: string, level: 'off' | 'media' | 'full') =>
       level === 'full'
         ? `${name} steuert gerade Maus, Tastatur und Medien`
         : `${name} steuert gerade Medien und Lautstärke`,
     end: 'Fernsteuerung beenden',
-    endHint: 'Danach bleibt das Gerät pausiert, bis du es hier wieder einschaltest.',
+    endHint: (name: string) => `Beenden pausiert ${name}, bis du es hier wieder einschaltest.`,
     ended: (name: string) => `Beendet. ${name} ist pausiert.`,
-    chip: 'Wird ferngesteuert',
+    chip: (name: string) => `Fernsteuerung: ${name}`,
     chipLabel: (name: string) => `Dieser PC wird ferngesteuert von ${name}. Zu den Einstellungen`,
     errors: {
-      busy: 'Am PC ist schon eine Frage offen. Beantworte sie zuerst.',
+      busy: 'Ein Fenster von Nemo wartet noch auf deine Antwort. Beantworte es zuerst.',
       'busy-controlled':
         'Das geht nicht, solange ein Gerät Maus und Tastatur steuert. Beende die Fernsteuerung und versuche es noch einmal.',
       changed: 'In der Zwischenzeit hat sich die Freigabe geändert. Wähle noch einmal.',
@@ -84,37 +80,33 @@ export const tRemoteHost = defineBundle(
       needHub: 'Remote control runs over home-network sync.',
       needHubLine: 'Pair your phone with this PC there first.',
       toHub: 'To home-network sync',
-      notWindows: 'This PC cannot be remote controlled yet. That works on Windows only for now.',
+      notWindows: 'Remote control works only on Windows for now.',
       devices: 'Paired devices',
       devicesNone: 'No device paired yet.',
-      switchFirst: 'Switch on “Allow remote control” above to allow a device anything.',
+      switchFirst: 'Switch on “Allow remote control” above to give a device access.',
       levelLabel: (name: string) => `What may ${name} do?`,
       levels: {
         off: 'Nothing',
         media: 'Media and volume',
         full: 'Media, mouse and keyboard',
       },
-      fullLater:
-        'Mouse and keyboard come with a later update. The permission then applies without another question.',
       lastSeen: (when: string) => `Last contact: ${when}`,
       neverSeen: 'Never connected yet',
       paused: 'Paused',
-      pausedLine: 'You ended remote control for this device.',
+      pausedLine: 'Paused until you switch it on here again.',
       resume: 'Switch on again',
-      more: 'Advanced',
-      unlock: (name: string) => `${name}: unlock at the phone`,
-      unlockHint: 'Before mouse and keyboard the phone has to unlock itself (fingerprint or PIN).',
+      unnamed: (id: string) => `Device without a name (${id})`,
       controlling: (name: string, level: 'off' | 'media' | 'full') =>
         level === 'full'
           ? `${name} is controlling mouse, keyboard and media`
           : `${name} is controlling media and volume`,
       end: 'End remote control',
-      endHint: 'Afterwards the device stays paused until you switch it on here again.',
+      endHint: (name: string) => `Ending pauses ${name} until you switch it on here again.`,
       ended: (name: string) => `Ended. ${name} is paused.`,
-      chip: 'Remote controlled',
+      chip: (name: string) => `Remote control: ${name}`,
       chipLabel: (name: string) => `This PC is remote controlled by ${name}. Go to settings`,
       errors: {
-        busy: 'A question is already open at the PC. Answer it first.',
+        busy: 'A Nemo window is still waiting for your answer. Answer it first.',
         'busy-controlled':
           'That is not possible while a device controls mouse and keyboard. End remote control and try again.',
         changed: 'The permission changed in the meantime. Choose again.',

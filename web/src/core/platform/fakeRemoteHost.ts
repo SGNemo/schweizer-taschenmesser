@@ -21,14 +21,6 @@ const widens = (next: RemoteHostGrant, old: RemoteHostGrant): boolean =>
   (old.paused && !next.paused) ||
   (old.unlock && !next.unlock);
 
-export const noRemoteHost: RemoteHostService = {
-  supported: false,
-  status: () => Promise.reject(new Error('unsupported')),
-  setEnabled: () => Promise.reject(new Error('unsupported')),
-  setDevice: () => Promise.reject(new Error('unsupported')),
-  end: async () => false,
-};
-
 /** The fake and its test hooks (unit tests use them directly). */
 export function createFakeRemoteHostParts() {
   let running = true;
@@ -36,11 +28,18 @@ export function createFakeRemoteHostParts() {
   let enabled = false;
   let answer: 'allow' | 'cancel' = 'allow';
   let asked = 0;
+  let failNext: string | undefined;
   let controller: { id: string; level: RemoteLevel } | null = null;
   const devices: RemoteHostDevice[] = [];
 
   const needRunning = () => {
     if (!running) throw new Error('not-started');
+  };
+  /** A change the shell refuses with a given code (once), as the test arranged. */
+  const mayFail = () => {
+    const code = failNext;
+    failNext = undefined;
+    if (code) throw new Error(code);
   };
   /** The native question: counted, answered by the test, refused while mouse/keyboard are controlled. */
   const ask = () => {
@@ -80,6 +79,7 @@ export function createFakeRemoteHostParts() {
       needRunning();
       const device = devices.find((d) => d.id === id);
       if (!device) throw new Error('not-found');
+      mayFail();
       if (widens(grant, device)) ask();
       Object.assign(device, grant);
       if (controller?.id === id) controller = null;
@@ -112,6 +112,15 @@ export function createFakeRemoteHostParts() {
     answer(next: 'allow' | 'cancel') {
       answer = next;
     },
+    /** The next change of a device is refused with this code (`busy`, `changed`, …). */
+    failNext(code: string) {
+      failNext = code;
+    },
+    /** A device disappears (unpaired in another window). */
+    removeDevice(id: string) {
+      const at = devices.findIndex((d) => d.id === id);
+      if (at >= 0) devices.splice(at, 1);
+    },
     /** How many questions were shown at the PC. */
     asked: () => asked,
     /** A device opens a session; `false` if the switch or its grant does not allow it. */
@@ -119,6 +128,7 @@ export function createFakeRemoteHostParts() {
       const device = devices.find((d) => d.id === id);
       if (!enabled || !device || device.paused || RANK[device.level] < RANK[level]) return false;
       controller = { id, level };
+      device.lastSeen = Math.floor(Date.now() / 1000);
       return true;
     },
     state: status,

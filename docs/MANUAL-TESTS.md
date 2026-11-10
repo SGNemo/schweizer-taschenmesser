@@ -150,7 +150,7 @@ L3. _Teilen (Android, PWA in Chrome installiert):_ in einer anderen App „Teile
 L4. _Lesezeichen:_ Merkliste → Lesezeichen → Startdaten; Kacheln (Gruppe = erster Tag) öffnen den Link im Browser; alter Pfad `/launcher` leitet dorthin um. ☐
 L5. _Spotify:_ gebaut als Verbindung mit „Läuft gerade“-Zeile (Handtests S1–S4 unten bei „Spotify“). ☐
 
-### Fernsteuerung, PC-Seite (`feat/remote-host-media`) – nur auf echtem Windows prüfbar
+### Fernsteuerung, PC-Seite (`feat/remote-host-media`, `feat/remote-host-settings`) – nur auf echtem Windows prüfbar
 
 R1, R2, R8, R10 und R11 gehen sofort (Einstellungen → Allgemein → „In Arbeit anzeigen“ an, dann Einstellungen → Verbindungen → Fernsteuerung). R3–R7 brauchen Paket 2 (Handy-Modul), R9 Paket 3.
 
@@ -161,9 +161,9 @@ R4. _Zwei Player:_ Spotify und ein Browser-Video offen: Wiedergabe/Pause, Nächs
 R5. _Sperrbildschirm:_ PC sperren (Win+L): Medien und Lautstärke gehen weiter; „PC sperren“ vom Handy sperrt; der Zustand „gesperrt“ kommt am Handy an. ☐
 R6. _Tray bei geschlossenem Fenster:_ Fenster in den Tray schließen, Sitzung öffnen: Symbol bekommt den Punkt, Tooltip nennt das Gerät, erster Menüeintrag „Fernsteuerung beenden“, darunter grau „Danach bleibt das Gerät pausiert, bis du es hier wieder einschaltest“. ☐
 R7. _Beenden pausiert:_ „Fernsteuerung beenden“ im Tray: das Handy verliert die Verbindung sofort und kommt nicht wieder, bis das Gerät am PC wieder eingeschaltet wird (mit Bestätigung). ☐
-R8. _Bestätigung nur am PC:_ Stufe erhöhen, Pause aufheben, „Am Handy entsperren“ aus, Hauptschalter an (bei vorhandener Freigabe): jedes Mal ein Windows-Dialog mit Gerätename (eigene Zeile) und letztem Kontakt in ganzen Tagen (keine Uhrzeit; unter einem Tag „in den letzten 24 Stunden“), Warnzeichen nur bei Maus/Tastatur oder „Entsperren aus“; „Abbrechen“ ändert nichts; Senken (Stufe runter, Schalter aus) fragt nicht. ☐
+R8. _Bestätigung nur am PC:_ „Medien und Lautstärke“ wählen, „Wieder einschalten“, Hauptschalter an (bei vorhandener Freigabe); ab Paket 3 auch Maus/Tastatur und „Entsperren aus“: jedes Mal ein Windows-Dialog mit Gerätename (eigene Zeile) und letztem Kontakt in ganzen Tagen (keine Uhrzeit; unter einem Tag „in den letzten 24 Stunden“), Warnzeichen nur bei Maus/Tastatur oder „Entsperren aus“; „Abbrechen“ ändert nichts; Senken (Stufe runter, Schalter aus) fragt nicht. ☐
 R9. _Nicht während einer Sitzung (ab Paket 3):_ während das Handy Maus und Tastatur steuert, lässt sich keine Freigabe erhöhen – auch nicht mit einem Dialog, der vor der Sitzung geöffnet wurde. ☐
-R10. _Abschnitt ohne Hub:_ Heimnetz-Abgleich aus: der Abschnitt zeigt nur einen Satz und den Link zum Abgleich, keinen Schalter. Mit Hub, Hauptschalter aus: die Auswahl je Gerät ist grau, ein Satz erklärt warum. ☐
+R10. _Abschnitt ohne Hub:_ Heimnetz-Abgleich aus: der Abschnitt zeigt zwei kurze Sätze und den Link „Zum Abgleich im Heimnetz“, keinen Schalter. Mit Hub, Hauptschalter aus: die Auswahl je Gerät ist grau, ein Satz erklärt warum. ☐
 R11. _Schalter aus:_ Hauptschalter aus fragt nicht nach und der Heimnetz-Abgleich läuft weiter (Handy synchronisiert danach noch). ☐
 
 ### Einrichtungsassistent

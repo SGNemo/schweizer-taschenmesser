@@ -439,7 +439,7 @@ fn status_of(lang: Lang, parts: &Parts) -> RemoteStatusDto {
                 let grant = parts.remote.grant_of(&d.key);
                 RemoteDeviceDto {
                     id: to_hex(d.key.as_bytes()),
-                    name: d.name,
+                    name: shown_name(lang, &d.name, &d.key),
                     last_seen: d.last_seen,
                     level: level_name(grant.level),
                     paused: grant.paused,

@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
+import { noRemoteHost } from '../noRemoteHost';
 import type { RemoteHostService, RemoteHostStatus } from '../types';
 
 /** Rust answers with a short code string on failure; keep it as the error message. */
@@ -22,11 +23,3 @@ export function createRemoteHost(supported: boolean): RemoteHostService {
     end: () => call<boolean>('remote_end'),
   };
 }
-
-const noRemoteHost: RemoteHostService = {
-  supported: false,
-  status: () => Promise.reject(new Error('unsupported')),
-  setEnabled: () => Promise.reject(new Error('unsupported')),
-  setDevice: () => Promise.reject(new Error('unsupported')),
-  end: async () => false,
-};

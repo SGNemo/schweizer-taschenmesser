@@ -63,7 +63,7 @@ test('allow a phone media control, see it control, end it, and find it paused', 
   await expect(section.getByTestId('remote-controlling')).toContainText(
     'Pixel 7 steuert gerade Medien und Lautstärke',
   );
-  await expect(page.getByTestId('remote-chip')).toHaveText('Wird ferngesteuert');
+  await expect(page.getByTestId('remote-chip')).toHaveText('Fernsteuerung: Pixel 7');
   await section.screenshot({ path: info.outputPath('remote-2-controlling.png') });
 
   await section.getByTestId('remote-end').click();
@@ -74,8 +74,11 @@ test('allow a phone media control, see it control, end it, and find it paused', 
   expect(await page.evaluate((d) => window.__tmRemoteHost.open(d), id)).toBe(false);
   await section.screenshot({ path: info.outputPath('remote-3-paused.png') });
 
+  // paused: one step only, no choice next to it
+  await expect(section.getByTestId('remote-level')).toHaveCount(0);
   await section.getByTestId('remote-resume').click();
   await expect(section.getByTestId('remote-resume')).toHaveCount(0);
+  await expect(section.getByTestId('remote-level')).toHaveValue('media');
   expect(await page.evaluate((d) => window.__tmRemoteHost.open(d), id)).toBe(true);
 });
 

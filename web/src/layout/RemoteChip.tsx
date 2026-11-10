@@ -7,24 +7,26 @@ import styles from './AppShell.module.css';
 
 /**
  * Top bar, desktop: a quiet chip while a device controls this PC, and nothing at all otherwise.
- * Words and an icon, no colour of alarm, no motion; a click leads to the place where it can be
+ * It names the device (so a second person at the PC sees who it is); in a narrow window only the
+ * icon stays. Words and an icon, no colour of alarm, no motion; a click leads to the place where it can be
  * ended. The tray shows the same state from Rust when the window is closed.
  */
 export function RemoteChip() {
   useRemoteHostWatch();
-  const controller = useRemoteHost((s) => s.status?.controller ?? undefined);
+  // the name alone: a reading that changes nothing re-renders nothing
+  const name = useRemoteHost((s) => s.status?.controller?.name);
   const l = tRemoteHost.use();
-  if (!controller) return null;
+  if (name === undefined) return null;
   return (
     <Link
       to={settingsPath('verbindungen', 'remote')}
       className={styles.remoteChip}
-      aria-label={l.chipLabel(controller.name)}
-      title={l.chipLabel(controller.name)}
+      aria-label={l.chipLabel(name)}
+      title={l.chipLabel(name)}
       data-testid="remote-chip"
     >
       <Icon name="monitor" size={18} />
-      <span>{l.chip}</span>
+      <span className={styles.remoteChipText}>{l.chip(name)}</span>
     </Link>
   );
 }

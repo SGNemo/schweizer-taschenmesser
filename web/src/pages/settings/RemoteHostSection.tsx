@@ -8,10 +8,13 @@ import { formatDateTime } from '@/core/time/dates';
 import { tRemoteHost } from '@/strings.remoteHost';
 import { Badge, Button, SelectField, Switch } from '@/ui';
 import { Actions, StateBanner, Step } from './ConnectParts';
-import { FoldedGroup } from './FoldedGroup';
 import styles from './settings.module.css';
 
-const LEVELS: readonly RemoteLevel[] = ['off', 'media', 'full'];
+/**
+ * What can be chosen here. Mouse and keyboard are held back until they exist (package 3): nobody
+ * should confirm in a Windows dialog what does nothing yet and would switch on silently later.
+ */
+const LEVELS: readonly RemoteLevel[] = ['off', 'media'];
 type Texts = ReturnType<typeof tRemoteHost.use>;
 type ErrorCode = keyof Texts['errors'];
 
@@ -19,7 +22,7 @@ type ErrorCode = keyof Texts['errors'];
 function errorText(e: unknown, l: Texts): string | undefined {
   const code = e instanceof Error ? e.message : 'failed';
   if (code === 'cancelled') return undefined;
-  return code in l.errors ? l.errors[code as ErrorCode] : l.errors.failed;
+  return Object.hasOwn(l.errors, code) ? l.errors[code as ErrorCode] : l.errors.failed;
 }
 
 /**
@@ -75,17 +78,33 @@ export function RemoteHostSection() {
     );
   }
 
+  /**
+   * One field of a device's grant. The rest is taken from a reading made right now, not from what
+   * is on screen: a device paused from the tray a moment ago stays paused, so a narrowing never
+   * turns into a question.
+   */
   const setGrant = (d: RemoteHostDevice, patch: Partial<RemoteHostGrant>) =>
-    change(() =>
-      host.setDevice(d.id, { level: d.level, paused: d.paused, unlock: d.unlock, ...patch }),
-    );
+    change(async () => {
+      const now = (await refreshRemoteHost())?.devices.find((x) => x.id === d.id);
+      if (!now) throw new Error('not-found');
+      await host.setDevice(d.id, {
+        level: now.level,
+        paused: now.paused,
+        unlock: now.unlock,
+        ...patch,
+      });
+    });
+  const nameOf = (d: RemoteHostDevice) => d.name || l.unnamed(d.id.slice(0, 4));
+  const hasGrant = status.devices.some((d) => d.level !== 'off');
   const controller = status.controller ?? undefined;
 
   return (
     <div className={styles.form} data-testid="remote-host">
       <Switch
         label={l.allow}
-        hint={status.enabled ? l.allowHintOn : l.allowHint}
+        hint={
+          status.enabled ? l.allowHintOn : hasGrant ? `${l.allowHint} ${l.askNote}` : l.allowHint
+        }
         checked={status.enabled}
         disabled={busy}
         onChange={(on) => void change(() => host.setEnabled(on))}
@@ -94,7 +113,7 @@ export function RemoteHostSection() {
         <StateBanner
           icon="monitor"
           title={l.controlling(controller.name, controller.level)}
-          line={l.endHint}
+          line={l.endHint(controller.name)}
           testId="remote-controlling"
           action={
             <Button
@@ -126,7 +145,7 @@ export function RemoteHostSection() {
             {status.devices.map((d) => (
               <div key={d.id} className={styles.provider} data-testid="remote-device">
                 <div className={styles.row}>
-                  <strong>{d.name}</strong>
+                  <strong>{nameOf(d)}</strong>
                   {d.paused ? <Badge>{l.paused}</Badge> : null}
                 </div>
                 <span className={styles.muted}>
@@ -145,43 +164,27 @@ export function RemoteHostSection() {
                       </Button>
                     </Actions>
                   </>
-                ) : null}
-                <SelectField
-                  label={l.levelLabel(d.name)}
-                  value={d.level}
-                  disabled={busy || !status.enabled}
-                  onChange={(e) => void setGrant(d, { level: e.target.value as RemoteLevel })}
-                  data-testid="remote-level"
-                >
-                  {LEVELS.map((level) => (
-                    <option key={level} value={level}>
-                      {l.levels[level]}
-                    </option>
-                  ))}
-                </SelectField>
-                {d.level === 'full' ? <span className={styles.muted}>{l.fullLater}</span> : null}
+                ) : (
+                  <SelectField
+                    label={l.levelLabel(nameOf(d))}
+                    value={d.level}
+                    disabled={busy || !status.enabled}
+                    onChange={(e) => void setGrant(d, { level: e.target.value as RemoteLevel })}
+                    data-testid="remote-level"
+                  >
+                    {/* a level set elsewhere stays visible, so the choice never shows a wrong value */}
+                    {(LEVELS.includes(d.level) ? LEVELS : [...LEVELS, d.level]).map((level) => (
+                      <option key={level} value={level}>
+                        {l.levels[level]}
+                      </option>
+                    ))}
+                  </SelectField>
+                )}
               </div>
             ))}
           </>
         )}
       </Step>
-
-      {status.devices.length > 0 ? (
-        <FoldedGroup id="remote-more" section="remote" title={l.more} current={[]}>
-          <div className={styles.form}>
-            <p className={styles.muted}>{l.unlockHint}</p>
-            {status.devices.map((d) => (
-              <Switch
-                key={d.id}
-                label={l.unlock(d.name)}
-                checked={d.unlock}
-                disabled={busy || !status.enabled}
-                onChange={(unlock) => void setGrant(d, { unlock })}
-              />
-            ))}
-          </div>
-        </FoldedGroup>
-      ) : null}
     </div>
   );
 }
