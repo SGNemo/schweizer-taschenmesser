@@ -7,7 +7,6 @@ en: Module heads show their mark in a fixed place next to the figure or title; t
 ---
 
 ---
-
 type: changed
 area: app
 breaking: false
@@ -16,7 +15,6 @@ en: Calmer overview and sidebar; “Focus & attention” now links to the module
 ---
 
 ---
-
 type: changed
 area: app
 breaking: false

@@ -70,12 +70,12 @@
   background: color-mix(in srgb, var(--module-color, var(--text-3)) 14%, var(--surface-raised));
   color: var(--module-color, var(--text-3));
 }
-/* The title is the head's orientation: it keeps its width and everything beside it gives way first (the figure and
-   its context line end in an ellipsis). Only a title longer than the row itself is cut. */
+/* The title is the head's orientation: the figure beside it gives way first (its context line ends in an ellipsis,
+   it shrinks a thousand times as readily); only when that is used up does the h1 itself get an ellipsis, so the
+   actions never leave the row. */
 .titleBlock {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   min-width: 0;
-  max-width: 100%;
 }
 .eyebrow {
   margin: 0;
@@ -111,10 +111,10 @@
 }
 /* The one figure with its context line, at the right of the title (the compact look: ui/identity/HeroFigure). */
 .figure {
-  flex: 0 1 auto;
-  min-width: 0;
+  flex: 0 1000 auto;
+  /* Never narrower than its number: a figure is shown whole or not at all, never as "12.34…". */
+  min-width: min-content;
   margin-left: auto;
-  overflow: hidden;
   text-align: right;
 }
 .figure:not(:has(> :not(:empty))) {
@@ -137,6 +137,7 @@
 /* A menu opened from the head cannot be scrolled into view with the page (the head stays put): a long one scrolls
    inside itself instead of running past the window. */
 .actions [role='menu'] {
+  /* 11 rem: the top bar and the title row above the menu, and some air below it. */
   max-height: calc(100dvh - 11rem);
   overflow-y: auto;
 }
@@ -222,6 +223,11 @@
   :global(:root:not([data-theme='light'])) .stage .plate {
     color: var(--bg);
   }
+}
+/* The phone's module row lies on the stage's backdrop (the sun, a cover): a quiet backing keeps its text readable. */
+.stage nav[data-module-row] {
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  border-radius: var(--radius-md);
 }
 .stage .figure {
   margin-left: 0;

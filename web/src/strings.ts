@@ -136,7 +136,7 @@ export const de = {
     /** Plus in the phone's bottom bar: the name always contains the visible label (WCAG 2.5.3). */
     plusCapture: 'Neu eintragen',
     plusThing: (thing: string) => `${thing} eintragen`,
-    plusModule: (action: string) => `Neu: ${action}`,
+    plusModule: (module: string) => `Neu: ${module}`,
     /** The thing a page's action adds, where the module has no such noun yet (the text under the plus). */
     plusThings: {
       list: 'Liste',

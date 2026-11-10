@@ -159,7 +159,7 @@ textarea {
 /* Phone: the page scrolls under the top bar and the tabs of a module head that stay below it (layout/AreaFrame);
    what is scrolled into view (keyboard focus, a search hit) stops below them. */
 @media (max-width: 899px) {
-  html {
+  html:has([data-head='standard']) {
     scroll-padding-top: calc(2 * var(--touch) + 2 * var(--space-3) + var(--space-4));
   }
 }

@@ -7,7 +7,6 @@ en: The update notice now shows “Version x · date” with all changes, in you
 ---
 
 ---
-
 type: changed
 area: ui
 breaking: false

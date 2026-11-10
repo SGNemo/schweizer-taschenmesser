@@ -30,7 +30,7 @@ export const nav: Strings['nav'] = {
   createAria: 'New: quick add',
   plusCapture: 'New entry',
   plusThing: (thing: string) => `Add ${thing}`,
-  plusModule: (action: string) => `New: ${action}`,
+  plusModule: (module: string) => `New: ${module}`,
   plusThings: {
     list: 'List',
     budget: 'Budget',

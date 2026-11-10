@@ -262,7 +262,7 @@ test.describe('Eintragen per KI (Regeln, 0 Token)', () => {
     const box = page.getByRole('combobox');
     if (phone) {
       // Phone: the plus of a module page is the module's action, so the sentence goes into the search bar of the
-      // page; the bar offers "Eintragen" for it and knows the module it was opened in.
+      // page, which offers "Eintragen" for it.
       await page.locator('header').first().getByRole('button', { name: /suche/i }).click();
     } else {
       await page.getByRole('button', { name: 'Neu: schnell hinzufügen' }).click();

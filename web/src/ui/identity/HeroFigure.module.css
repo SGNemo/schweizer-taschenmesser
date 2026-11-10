@@ -63,20 +63,17 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
-:global([data-head='standard']) .figure {
-  max-width: 100%;
-}
 :global([data-head='standard']) .value {
-  max-width: 100%;
-  overflow: hidden;
+  /* The number is never cut (no ellipsis on a value): the context line under it gives way. */
   font-size: var(--text-2xl);
   line-height: 1.1;
   letter-spacing: -0.02em;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 :global([data-head='standard']) .detail {
-  max-width: 100%;
+  /* Takes the figure's width without asking for any of its own, so it is the part that shrinks. */
+  width: 0;
+  min-width: 100%;
   overflow: hidden;
   font-size: var(--text-meta);
   line-height: 1.3;

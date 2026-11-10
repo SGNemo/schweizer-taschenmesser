@@ -41,6 +41,8 @@ interface Head {
   hasTitleRow: boolean;
   /** The h1 is cut off (its text is wider than its box). */
   titleCut: boolean;
+  /** The figure's number is cut off or pushed out of the row. */
+  valueCut: boolean;
   /** The page put its views into the row of the tabs. */
   hasTabs: boolean;
   /** The frame keeps that row from the first paint (`identity.tabs` in the manifest). */
@@ -78,6 +80,17 @@ function readHead(): Head | null {
       const h1 = head.querySelector('h1');
       return !!h1 && h1.scrollWidth > h1.clientWidth + 1;
     })(),
+    valueCut: (() => {
+      const figure = titleRow?.querySelector<HTMLElement>('[data-testid="module-figure"]');
+      if (!figure || !figure.getBoundingClientRect().width) return false;
+      const row = titleRow!.getBoundingClientRect();
+      const f = figure.getBoundingClientRect();
+      return (
+        figure.scrollWidth > figure.clientWidth + 1 ||
+        f.right > row.right + 1 ||
+        f.left < row.left - 1
+      );
+    })(),
     hasTabs: (head.querySelector('[data-slot="tabs"]')?.childElementCount ?? 0) > 0,
     holdsTabs: head.querySelector('[data-slot="tabs"]')?.getAttribute('data-hold') === 'true',
   };
@@ -108,6 +121,7 @@ async function check(page: Page, phone: boolean, theme: string) {
     expect.soft(head.hasTitleRow, `${path}: the head has a title row`).toBe(true);
     // The title is the head's orientation: the figure beside it gives way first, the h1 is never cut.
     expect.soft(head.titleCut, `${path}: the h1 is cut off`).toBe(false);
+    expect.soft(head.valueCut, `${path}: the figure's number is cut or leaves the row`).toBe(false);
     // U01: the manifest says whether the entry page has views, so the row is there before the page's code is.
     expect
       .soft(head.holdsTabs, `${path}: \`identity.tabs\` in the manifest matches the page's views`)

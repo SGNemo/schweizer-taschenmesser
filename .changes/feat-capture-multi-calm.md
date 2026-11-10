@@ -8,7 +8,6 @@ en: Several lines in quick capture show their target as text instead of drop-dow
 ---
 
 ---
-
 type: added
 area: invoices
 breaking: false
