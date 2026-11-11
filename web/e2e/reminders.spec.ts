@@ -13,6 +13,37 @@ async function addReminder(page: Page, title: string) {
   await expect(page.getByRole('button', { name: new RegExp(title) })).toBeVisible();
 }
 
+/**
+ * Moves the clock and waits until the reminder scheduler has checked up to the new time. `runFor` fires its
+ * 30-second check many times in a row, and a check still reading the database makes the next ones skip; the last
+ * minute could then stay unchecked until the next check 30 real seconds later. Coming back to the app checks at once
+ * (`visibilitychange`, as when a person switches back), so nudge until a check has started at or after that time.
+ */
+async function advance(page: Page, how: 'runFor' | 'fastForward', ms: number) {
+  await page.clock[how](ms);
+  const reached = await page.evaluate(() => Date.now());
+  await expect
+    .poll(async () => {
+      await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+      return page.evaluate(
+        () =>
+          new Promise<number>((resolve, reject) => {
+            const open = indexedDB.open('taschenmesser');
+            open.onerror = () => reject(open.error);
+            open.onsuccess = () => {
+              const req = open.result.transaction('_meta').objectStore('_meta').get('notifyCursor');
+              req.onsuccess = () => {
+                open.result.close();
+                resolve((req.result as { value?: number } | undefined)?.value ?? 0);
+              };
+              req.onerror = () => reject(req.error);
+            };
+          }),
+      );
+    })
+    .toBeGreaterThanOrEqual(reached);
+}
+
 /** The automatic in-app card is off by default; the tests of the card switch it on in the settings. */
 async function enableCard(page: Page) {
   await page.goto('/settings/benachrichtigungen');
@@ -69,13 +100,13 @@ test.describe('Calm reminders', () => {
     await addReminder(page, 'Tabletten nehmen');
     await expect(page.getByTestId('reminder-prompt')).toHaveCount(0);
 
-    await page.clock.fastForward(90_000);
+    await advance(page, 'fastForward', 90_000);
     const card = page.getByTestId('reminder-prompt');
     await expect(card).toContainText('Tabletten nehmen');
     await card.getByRole('button', { name: 'Erledigt' }).click();
     await expect(card).toHaveCount(0);
     // The same occurrence never comes back.
-    await page.clock.fastForward(120_000);
+    await advance(page, 'fastForward', 120_000);
     await expect(page.getByTestId('reminder-prompt')).toHaveCount(0);
   });
 
@@ -83,7 +114,7 @@ test.describe('Calm reminders', () => {
     await page.clock.install({ time: new Date('2026-09-29T19:59:00') });
     await enableCard(page);
     await addReminder(page, 'Wäsche aufhängen');
-    await page.clock.fastForward(90_000);
+    await advance(page, 'fastForward', 90_000);
     const card = page.getByTestId('reminder-prompt');
     await card.getByRole('button', { name: 'Später' }).click();
     await expect(card.getByRole('button', { name: 'Heute Abend' })).toHaveCount(0); // it is evening already
@@ -91,9 +122,9 @@ test.describe('Calm reminders', () => {
     await expect(page.getByText('Okay, in einer Stunde.')).toBeVisible();
     await expect(page.getByTestId('reminder-prompt')).toHaveCount(0);
 
-    await page.clock.runFor(30 * 60_000);
+    await advance(page, 'runFor', 30 * 60_000);
     await expect(page.getByTestId('reminder-prompt')).toHaveCount(0);
-    await page.clock.runFor(35 * 60_000); // 20:00:30 + 65 min
+    await advance(page, 'runFor', 35 * 60_000); // 20:00:30 + 65 min
     await expect(page.getByTestId('reminder-prompt')).toContainText('Wäsche aufhängen');
   });
 
@@ -101,20 +132,20 @@ test.describe('Calm reminders', () => {
     await page.clock.install({ time: new Date('2026-09-29T19:59:00') });
     await enableCard(page);
     await addReminder(page, 'Wäsche aufhängen');
-    await page.clock.fastForward(90_000); // 20:00:30
+    await advance(page, 'fastForward', 90_000); // 20:00:30
     const card = page.getByTestId('reminder-prompt');
     await expect(card).toContainText('Wäsche aufhängen');
     await expect(card).not.toContainText('Noch offen');
 
-    await page.clock.runFor(30 * 60_000); // 20:30
+    await advance(page, 'runFor', 30 * 60_000); // 20:30
     await expect(card).toContainText('Noch offen: Wäsche aufhängen');
-    await page.clock.runFor(30 * 60_000); // 21:00, the card is replaced, not stacked
+    await advance(page, 'runFor', 30 * 60_000); // 21:00, the card is replaced, not stacked
     await expect(card).toContainText('Noch offen: Wäsche aufhängen');
     await expect(card).not.toContainText('weitere');
 
     await card.getByRole('button', { name: 'Erledigt' }).click();
     await expect(page.getByTestId('reminder-prompt')).toHaveCount(0);
-    await page.clock.runFor(60 * 60_000); // would be 21:30 and 22:00
+    await advance(page, 'runFor', 60 * 60_000); // would be 21:30 and 22:00
     await expect(page.getByTestId('reminder-prompt')).toHaveCount(0);
   });
 
@@ -124,17 +155,17 @@ test.describe('Calm reminders', () => {
     await page.clock.install({ time: new Date('2026-09-29T19:59:00') });
     await enableCard(page);
     await addReminder(page, 'Wäsche aufhängen');
-    await page.clock.fastForward(90_000);
-    await page.clock.runFor(30 * 60_000); // 20:30, the first repeat
+    await advance(page, 'fastForward', 90_000);
+    await advance(page, 'runFor', 30 * 60_000); // 20:30, the first repeat
     const card = page.getByTestId('reminder-prompt');
     await expect(card).toContainText('Noch offen: Wäsche aufhängen');
     await card.getByRole('button', { name: 'Später' }).click();
     await card.getByRole('button', { name: 'In 1 Std' }).click();
     await expect(page.getByTestId('reminder-prompt')).toHaveCount(0);
 
-    await page.clock.runFor(35 * 60_000); // 21:05: no further repeat
+    await advance(page, 'runFor', 35 * 60_000); // 21:05: no further repeat
     await expect(page.getByTestId('reminder-prompt')).toHaveCount(0);
-    await page.clock.runFor(30 * 60_000); // 21:35: the snoozed reminder, under its own title
+    await advance(page, 'runFor', 30 * 60_000); // 21:35: the snoozed reminder, under its own title
     const again = page.getByTestId('reminder-prompt');
     await expect(again).toContainText('Wäsche aufhängen');
     await expect(again).not.toContainText('Noch offen');
@@ -150,10 +181,10 @@ test.describe('Calm reminders', () => {
     await repeat.click();
     await expect(repeat).toHaveAttribute('aria-checked', 'false');
     await addReminder(page, 'Wäsche aufhängen');
-    await page.clock.fastForward(90_000);
+    await advance(page, 'fastForward', 90_000);
     const card = page.getByTestId('reminder-prompt');
     await expect(card).toContainText('Wäsche aufhängen');
-    await page.clock.runFor(35 * 60_000);
+    await advance(page, 'runFor', 35 * 60_000);
     await expect(card).not.toContainText('Noch offen');
   });
 

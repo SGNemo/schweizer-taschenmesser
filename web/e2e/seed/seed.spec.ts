@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { showAllWidgets } from '../helpers';
-import { bootDev, SEED_TODAY, seedApp } from './helpers';
+import { bootDev, SEED_TODAY, seedApp, test as seededTest } from './helpers';
 
 const MODULES = [
   'calendar',
@@ -45,11 +45,17 @@ async function countRows(page: Page): Promise<Record<string, number>> {
 
 const total = (counts: Record<string, number>) => Object.values(counts).reduce((a, b) => a + b, 0);
 
-test.describe('Dev-Preview test data', () => {
-  test('dev flavour: load → home and every module show data → remove → empty', async ({ page }) => {
+/**
+ * "Every module shows data" and "remove leaves nothing" start from the seeded snapshot (`seeded`, built once per worker
+ * through the same "Testdaten laden" path): as one test that also loaded the data itself they needed 23 of their 30 s
+ * on a quiet machine and ran out on a busy runner. Loading through the page is covered by the tests further down.
+ */
+seededTest.describe('Dev-Preview test data: shown everywhere, removed completely', () => {
+  seededTest.use({ seeded: { scale: 'small' } });
+
+  seededTest('dev flavour: home and every module show the loaded data', async ({ page }) => {
     await bootDev(page);
     await showAllWidgets(page); // the calm home is the default; this test is about every widget
-    await seedApp(page, 'small');
 
     await page.goto('/');
     await expect(page.locator('main h1')).toBeVisible();
@@ -66,22 +72,40 @@ test.describe('Dev-Preview test data', () => {
       .evaluateAll((els) => els.map((el) => el.getAttribute('data-testid')).sort());
     expect(empty).toEqual(['widget-music:player', 'widget-weather:today']);
 
+    // In-app navigation, as a click in the sidebar does (a full page load per module took 13 s of the budget). The
+    // heading of the page before is gone once the next page is there.
+    const heading = page.locator('main h1');
     for (const id of MODULES) {
-      await page.goto(`/${id}`);
-      await expect(page.locator('main h1'), id).toBeVisible();
+      const before = (await heading.textContent()) ?? '';
+      await page.evaluate((to) => {
+        history.pushState({}, '', to);
+        dispatchEvent(new PopStateEvent('popstate'));
+      }, `/${id}`);
+      await expect(heading, id).toBeVisible();
+      await expect(heading, id).not.toHaveText(before);
       await expect(page.locator('main h2[class*="emptyTitle"]'), `${id} page is empty`).toHaveCount(
         0,
       );
     }
     expect(total(await countRows(page))).toBeGreaterThan(100);
-
-    await page.goto('/settings/entwickler');
-    const section = page.locator('section[aria-labelledby="developer"]');
-    await section.getByTestId('seed-remove').click();
-    await expect(section.getByTestId('seed-status')).toHaveCount(0);
-    await expect.poll(async () => total(await countRows(page))).toBe(0);
   });
 
+  seededTest(
+    'dev flavour: "Testdaten entfernen" leaves every module table empty',
+    async ({ page }) => {
+      await bootDev(page);
+      await page.goto('/settings/entwickler');
+      const section = page.locator('section[aria-labelledby="developer"]');
+      await expect(section.getByTestId('seed-status')).toContainText(SEED_TODAY);
+      expect(total(await countRows(page))).toBeGreaterThan(100);
+      await section.getByTestId('seed-remove').click();
+      await expect(section.getByTestId('seed-status')).toHaveCount(0);
+      await expect.poll(async () => total(await countRows(page))).toBe(0);
+    },
+  );
+});
+
+test.describe('Dev-Preview test data', () => {
   test('seed data never enters the sync outbox', async ({ page }) => {
     await bootDev(page);
     await seedApp(page, 'small');
