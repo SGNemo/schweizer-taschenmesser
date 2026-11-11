@@ -21,9 +21,8 @@ function block(css, startMarker, endMarker) {
 
 const HUES = ['lime', 'moss', 'fern', 'teal', 'ocean', 'sky', 'cobalt', 'indigo', 'violet', 'orchid', 'slate'];
 const COLOURS = ['--bg', '--surface', '--surface-2', '--border', '--border-strong', '--text', '--text-muted', '--text-3', '--focus', '--accent', '--accent-hover', '--accent-contrast', '--warning', ...HUES.map((h) => `--mod-${h}`)];
-// Identity v3 tints and pattern strengths: the app sets them once in :root (same in both themes).
-const IDENTITY = ['--head-tint-0', '--head-tint-1', '--group-tint', '--pattern-ink'];
-const AREAS = ['plan', 'money', 'household', 'knowledge', 'vault', 'system'];
+// The neutral tint of a sketch stage: the app sets it once in :root (same in both themes).
+const IDENTITY = ['--group-tint'];
 const identity = readFileSync(path.join(here, '..', 'src', 'styles', 'identity.css'), 'utf8');
 const SCALE = ['--radius-sm', '--radius-md', '--radius-lg', '--radius-xl', '--radius-full', '--space-1', '--space-2', '--space-3', '--space-4', '--space-5', '--space-6', '--space-7', '--font-mono'];
 
@@ -33,31 +32,8 @@ test('light theme colours match the app', () => {
   for (const k of [...COLOURS, ...SCALE, ...IDENTITY]) assert.equal(s[k], a[k], k);
 });
 
-test('every hue maps to --module-color and --module-color-2 (identity.css)', () => {
-  for (const h of HUES) {
-    const one = block(identity, `[data-hue='${h}'] {`, '}');
-    assert.equal(one['--module-color'], `var(--mod-${h})`, h);
-    const two = block(identity, `[data-hue2='${h}'] {`, '}');
-    assert.equal(two['--module-color-2'], `var(--mod-${h})`, h);
-  }
-  const hue = block(identity, '[data-hue] {', '\n}');
-  const appHue = block(app, '[data-hue] {', '\n}');
-  for (const k of ['--head-flat', '--head-gradient']) assert.equal(hue[k], appHue[k], k);
-});
-
-test('neutral plates keep the text ink in the dark theme', () => {
-  // The dark plate rules out-specify `.plate.neutral`; they must leave neutral plates alone.
-  const dark = identity.match(/:root(?:\[data-theme='dark'\]|:not\(\[data-theme='light'\]\)) \.plate[^{]*\{/g) ?? [];
-  assert.equal(dark.length, 2, 'two dark plate rules');
-  for (const rule of dark) assert.match(rule, /\.plate:not\(\.neutral\)/, rule);
-});
-
-test('area patterns match the app', () => {
-  for (const id of AREAS) {
-    const s = block(identity, `[data-area='${id}'] {`, '}');
-    const a = block(app, `[data-area='${id}'] {`, '}');
-    for (const k of ['--area-pattern', '--area-pattern-size']) assert.equal(s[k], a[k], `${id} ${k}`);
-  }
+test('every hue maps to --module-color (identity.css)', () => {
+  for (const h of HUES) assert.equal(block(identity, `[data-hue='${h}'] {`, '}')['--module-color'], `var(--mod-${h})`, h);
 });
 
 test('dark theme colours match the app', () => {

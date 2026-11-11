@@ -2,6 +2,25 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 import { SITE_URL } from './src/config.js';
+import { routes } from './src/routes.js';
+
+// Sitemap alternates from the route table: the integration only pairs pages whose paths differ by the locale prefix,
+// and most pages have their own slug per language (/module ↔ /en/modules).
+const abs = (p) => new URL(p, SITE_URL).toString();
+const alternates = new Map(
+  Object.values(routes).flatMap((r) => {
+    const links = [
+      { lang: 'de', url: abs(r.de) },
+      { lang: 'en', url: abs(r.en) },
+      { lang: 'x-default', url: abs(r.de) },
+    ];
+    return [
+      [abs(r.de), links],
+      [abs(r.en), links],
+    ];
+  }),
+);
+const bare = (u) => (u.length > 1 ? u.replace(/\/$/, '') : u);
 
 export default defineConfig({
   site: SITE_URL,
@@ -25,6 +44,7 @@ export default defineConfig({
     sitemap({
       i18n: { defaultLocale: 'de', locales: { de: 'de', en: 'en' } },
       filter: (page) => !page.endsWith('/404'),
+      serialize: (item) => ({ ...item, links: alternates.get(item.url) ?? alternates.get(bare(item.url)) ?? alternates.get(`${bare(item.url)}/`) ?? item.links }),
     }),
   ],
   // Lucide icons are inlined as SVG; the only script is the tiny theme switch in public/theme.js.
