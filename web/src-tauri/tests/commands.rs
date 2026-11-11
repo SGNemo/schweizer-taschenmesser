@@ -569,6 +569,7 @@ fn remote_client_commands_exist_on_the_phone_only() {
     let wanted = [
         "remote_client_open",
         "remote_client_send",
+        "remote_client_pointer",
         "remote_client_close",
     ];
     let mobile = mobile_handler_commands();
@@ -643,9 +644,7 @@ fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
         "Link",
         "send_text",
         "Record::Key",
-        "Record::Move",
-        "Record::Button",
-        "Record::Scroll",
+        "Key::",
         "println!",
         "eprintln!",
         "log::",
@@ -656,9 +655,45 @@ fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
             "remote_client.rs mentions {forbidden}"
         );
     }
+    // the mouse level goes through the gate, and the phone's unlock never touches the vault's
+    // biometric key: it is the plugin's keyless presence prompt, which no command of the page
+    // maps to
+    let open = &code[code.find("pub async fn remote_client_open").unwrap()..];
+    let open = &open[..open.find("\n}\n").unwrap()];
+    assert!(open.contains("pass_gate(&app, lang.as_deref()).await?"));
+    // the prompt's texts are fixed in Rust: the page hands over a language, never a text
+    for text in ["title: String", "subtitle: String", "PromptDto"] {
+        assert!(
+            !code.contains(text),
+            "remote_client.rs takes prompt texts: {text}"
+        );
+    }
+    // … and what the PC answers is checked in the connect every open goes through
+    assert!(open.contains("open_now(&app, level, no_lock, on_event)"));
+    assert!(!open.contains("InputSession::open"));
+    let connect = &code[code.find("fn open_now").unwrap()..];
+    let connect = &connect[..connect.find("\n}\n").unwrap()];
+    assert!(connect.contains("InputSession::open"));
+    assert!(connect.contains("if !keep("));
+    for vault in ["biometric_seal", "biometric_unseal", "biometric_delete"] {
+        assert!(!code.contains(vault), "remote_client.rs mentions {vault}");
+    }
+    let plugin = format!("{}/plugins/secure-store", env!("CARGO_MANIFEST_DIR"));
+    for file in [
+        "build.rs",
+        "src/commands.rs",
+        "src/lib.rs",
+        "permissions/default.toml",
+    ] {
+        let text = fs::read_to_string(format!("{plugin}/{file}")).unwrap();
+        assert!(
+            !text.contains("confirm_user") && !text.contains("confirm-user"),
+            "{file}: the presence prompt must not become a command of the page"
+        );
+    }
     // the key and the hub entry are read, never returned: no DTO carries them
-    assert_eq!(code.matches("stored_key(&app)").count(), 1);
-    assert_eq!(code.matches("hub_entry(&app)").count(), 1);
+    assert_eq!(code.matches("stored_key(").count(), 1);
+    assert_eq!(code.matches("hub_entry(").count(), 1);
     for dto in ["StateDto", "EventDto", "OpenedDto"] {
         let at = code
             .find(&format!("pub struct {dto}"))
