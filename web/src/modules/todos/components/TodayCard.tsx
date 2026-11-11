@@ -1,5 +1,6 @@
 import { t } from '@/strings';
 import { Button } from '@/ui';
+import { HeroFigure, HeroSlot } from '@/ui/identity';
 import { usePageWidthAtLeast } from '@/ui/pageWidth';
 import { focusMinutesFor } from '../focus';
 import { pickNext, type PickTask } from '../next';
@@ -10,20 +11,32 @@ import styles from '../routes/todos.module.css';
 
 type CardTask = PickTask & Pick<Task, 'title' | 'startDate'> & { id: string };
 
+/** What is on today (top-level tasks of the Heute view) and their summed estimate: the head's figure and its line. */
+export function todayFigure(
+  tasks: readonly CardTask[],
+  day: string,
+  planner = false,
+): { today: CardTask[]; minutes: number } {
+  const today = tasks.filter((x) => !x.parentId && viewOf(x, day, planner) === 'today');
+  return { today, minutes: today.reduce((sum, x) => sum + (x.estimateMin ?? 0), 0) };
+}
+
 /**
- * Focus head of the ToDos: a count box ("11 heute"), the one task that suggests itself as the large line (one line,
- * shortened), and "Anfangen" as the primary action ("Später" moves it out of today); both buttons name the task. Static,
- * no state colour; the numbers are text. Empty day = a calm sentence instead of a zero.
+ * The first row of the ToDos page: the one task that suggests itself (one line, shortened) with "Anfangen" and
+ * "Später"; both buttons name the task. The count of today ("11 heute", with the summed estimate as its context line)
+ * is the head's figure, so it stands once. Static, no state colour; an empty day is a calm sentence instead of a zero.
+ * While the tasks load the row keeps its height (the phone's "⋯" menu lies beside it).
  */
 export function TodayCard({
-  tasks,
+  tasks: loaded,
   day,
   focusMinutes = 25,
   onStart,
   onLater,
   planner = false,
 }: {
-  tasks: readonly CardTask[];
+  /** `undefined` while the tasks are read. */
+  tasks: readonly CardTask[] | undefined;
   day: string;
   /** Default length of a focus round (the task's own estimate wins). */
   focusMinutes?: number;
@@ -33,11 +46,11 @@ export function TodayCard({
   /** The planner module is on: it counts what the plan counts (a later plan day wins over an older due date, N02). */
   planner?: boolean;
 }) {
-  // C22/F15: a narrow page (phone) keeps the same parts – count, the task title on one line, "Anfangen", "Später" – only
-  // the label line, the estimate and the minutes step back. The page container decides, not the window.
+  // C22/F15: a narrow page (phone) keeps the task title on one line and both buttons; the label and the estimate
+  // step back. The page container decides, not the window.
   const narrow = usePageWidthAtLeast(40) === false;
-  const today = tasks.filter((x) => !x.parentId && viewOf(x, day, planner) === 'today');
-  const minutes = today.reduce((sum, x) => sum + (x.estimateMin ?? 0), 0);
+  const tasks = loaded ?? [];
+  const { today, minutes } = todayFigure(tasks, day, planner);
   const next = pickNext(today, day, [], planner);
   const detail = next
     ? next.estimateMin
@@ -52,69 +65,75 @@ export function TodayCard({
         ? t.todos.todayCard.done
         : t.todos.todayCard.nothing
       : undefined;
-
-  const count = (
-    <span className={styles.countBox} data-testid="today-count">
-      <strong>{today.length}</strong>
-      <span>{t.todos.todayCard.label}</span>
-      {minutes > 0 && !narrow ? <span>{t.todos.todayCard.minutes(minutes)}</span> : null}
-    </span>
-  );
   const startLabel = next
     ? t.focus.next.startMin(focusMinutesFor(next, focusMinutes))
     : t.focus.next.start;
 
   return (
-    <div
-      className={styles.todayCard}
-      data-testid="today-card"
-      data-narrow={narrow ? 'true' : undefined}
-    >
-      {count}
-      <div className={styles.nextTask}>
-        {next ? (
-          <>
-            <span className="sr-only">{t.todos.todayCard.next(next.title)}</span>
-            {narrow ? null : (
-              <span className={styles.nextLabel} aria-hidden="true">
-                {t.todos.todayCard.next('').trim()}
-              </span>
-            )}
-            <strong className={styles.nextTitle} aria-hidden="true" title={next.title}>
-              {next.title}
-            </strong>
-            {detail && !narrow ? <span className={styles.nextDetail}>{detail}</span> : null}
-          </>
-        ) : (
-          <strong className={styles.nextTitle}>{detail}</strong>
-        )}
-      </div>
-      {next && onStart ? (
-        <div className={styles.nextActions}>
-          <Button
-            variant="primary"
-            size={narrow ? 'sm' : undefined}
-            onClick={() => onStart(next)}
-            aria-label={t.todos.todayCard.named(
-              narrow ? t.focus.next.start : startLabel,
-              next.title,
-            )}
-          >
-            {narrow ? t.focus.next.start : startLabel}
-          </Button>
-          {onLater ? (
-            <Button
-              variant="ghost"
-              size={narrow ? 'sm' : undefined}
-              onClick={() => onLater(next)}
-              aria-label={t.todos.todayCard.named(t.focus.next.later, next.title)}
-            >
-              {t.focus.next.later}
-            </Button>
-          ) : null}
-        </div>
+    <>
+      {loaded ? (
+        <HeroSlot area="figure">
+          {/* The standard head draws no label: the unit names the number, the context line its effort. */}
+          <HeroFigure
+            value={String(today.length)}
+            unit={t.todos.todayCard.unit}
+            detail={minutes > 0 ? t.todos.todayCard.minutes(minutes) : undefined}
+            testId="today-count"
+          />
+        </HeroSlot>
       ) : null}
-      <span className="sr-only">{t.todos.todayCard.count(today.length)}</span>
-    </div>
+      <div
+        className={styles.todayCard}
+        data-testid="today-card"
+        data-narrow={narrow ? 'true' : undefined}
+      >
+        <div className={styles.nextTask}>
+          {!loaded ? (
+            <span aria-hidden="true">{'\u00a0'}</span>
+          ) : next ? (
+            <>
+              <span className="sr-only">{t.todos.todayCard.next(next.title)}</span>
+              {narrow ? null : (
+                <span className={styles.nextLabel} aria-hidden="true">
+                  {t.todos.todayCard.next('').trim()}
+                </span>
+              )}
+              <strong className={styles.nextTitle} aria-hidden="true" title={next.title}>
+                {next.title}
+              </strong>
+              {detail && !narrow ? <span className={styles.nextDetail}>{detail}</span> : null}
+            </>
+          ) : (
+            <span className={styles.nextTitle}>{detail}</span>
+          )}
+        </div>
+        {next && onStart ? (
+          <div className={styles.nextActions}>
+            {/* Not filled: the page's one filled action is "Neue Aufgabe" in the head (rule 4). */}
+            <Button
+              size="sm"
+              onClick={() => onStart(next)}
+              aria-label={t.todos.todayCard.named(
+                narrow ? t.focus.next.start : startLabel,
+                next.title,
+              )}
+            >
+              {narrow ? t.focus.next.start : startLabel}
+            </Button>
+            {onLater ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onLater(next)}
+                aria-label={t.todos.todayCard.named(t.focus.next.later, next.title)}
+              >
+                {t.focus.next.later}
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
+        <span className="sr-only">{t.todos.todayCard.count(today.length)}</span>
+      </div>
+    </>
   );
 }

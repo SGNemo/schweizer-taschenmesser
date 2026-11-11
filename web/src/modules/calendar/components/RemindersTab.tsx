@@ -15,16 +15,7 @@ import { t } from '@/strings';
 import { deleteWithUndo, changeWithUndo } from '@/core/undo/withToast';
 import { snoozeOptions } from '@/core/notifications/snooze';
 import { snoozeTarget } from '@/core/time/quickShift';
-import {
-  Badge,
-  Button,
-  EmptyState,
-  GroupedList,
-  Icon,
-  ItemList,
-  ItemRow,
-  type RowMenuItem,
-} from '@/ui';
+import { Badge, Button, EmptyState, GroupedList, ItemList, ItemRow, type RowMenuItem } from '@/ui';
 import type { Stored } from '@/core/db/types';
 import type { CalendarEvent } from '../schema';
 import { groupReminders } from '../reminderGroups';
@@ -178,14 +169,6 @@ export function RemindersTab({
 
   return (
     <>
-      <div className={styles.header}>
-        <h2>{t.calendar.reminders.title}</h2>
-        <Button variant="primary" onClick={() => setTarget(draft)}>
-          <Icon name="plus" size={18} />
-          {t.calendar.reminders.add}
-        </Button>
-      </div>
-
       {reminders && inHead ? (
         <HeroSlot area="figure">
           <p className={calendarStyles.nextLine} data-testid="reminders-next">
@@ -212,7 +195,11 @@ export function RemindersTab({
         <EmptyState
           title={t.calendar.reminders.empty}
           motif={<SignatureMark id="calendarLeaf" size={64} />}
-        />
+        >
+          <Button variant="primary" onClick={() => setTarget(draft)}>
+            {t.calendar.reminders.emptyAction}
+          </Button>
+        </EmptyState>
       ) : null}
       {groups.length > 0 ? (
         <GroupedList

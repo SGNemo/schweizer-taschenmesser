@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { copyData } from '@/core/db/copy';
 import type { Stored } from '@/core/db/types';
@@ -9,7 +9,6 @@ import { usePageChrome } from '@/core/shell/pageChrome';
 import { useWriteAvailable, useWriteLabel } from '@/core/shell/writeAvailable';
 import { useModuleStates } from '@/core/modules/activation';
 import { dayName } from '@/core/plan/explain';
-import { useAdvanced } from '@/core/settings/comfort';
 import { useFocusSettings } from '@/core/settings/focus';
 import { useSettings } from '@/core/settings/settings';
 import { formatDay, relativeDayLabel, today } from '@/core/time/dates';
@@ -18,23 +17,24 @@ import { groupByTime } from '@/core/time/groups';
 import { DATE_PRESETS, presetDate } from '@/core/time/quickShift';
 import { changeWithUndo, deleteWithUndo, undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { tAdvanced } from '@/strings.advanced';
 import { useUiStore } from '@/stores/ui';
 import {
   Button,
   EmptyState,
   GroupedList,
   ItemList,
+  Icon,
   ItemRow,
+  PageAction,
   PageHeader,
   Tabs,
   Progress,
   RowMenu,
-  TextField,
   type RowMenuItem,
+  useAdvancedMenuItem,
   useOpenParam,
 } from '@/ui';
-import { HeroSlot } from '@/ui/identity';
+import { AddTaskDialog } from '../components/AddTaskDialog';
 import { BoardView } from '../components/BoardView';
 import { InboxSorter } from '../components/InboxSorter';
 import { TodayCard } from '../components/TodayCard';
@@ -122,17 +122,19 @@ function TaskRow({
     label: t.focus.next.later,
     onSelect: () => postpone(task, day),
   };
-  // U21: on the phone the row's "Auf heute" button gives way to the title; the menu always offers it.
-  const todayItem: RowMenuItem[] = waiting
-    ? [
-        {
-          id: 'today',
-          label: t.todos.moveToday,
-          onSelect: () => moveDue(task, presetDate('today', day)),
-        },
-      ]
-    : [];
-  const dueMenu: RowMenuItem[] = DATE_PRESETS.map((p) => ({
+  // "Auf heute" is the first entry of the row's menu (the phone's sheet) for every task that is not due today yet:
+  // one tap after "⋯" (UI audit 2026-11, click path "ToDo auf heute"). Swiping stays.
+  const todayItem: RowMenuItem[] =
+    task.dueDate !== day
+      ? [
+          {
+            id: 'today',
+            label: t.todos.moveToday,
+            onSelect: () => moveDue(task, presetDate('today', day)),
+          },
+        ]
+      : [];
+  const dueMenu: RowMenuItem[] = DATE_PRESETS.filter((p) => p !== 'today').map((p) => ({
     id: `due-${p}`,
     group: t.todos.due,
     label: t.ui.datePresets[p],
@@ -351,37 +353,39 @@ export default function TodosPage() {
   const plannerOn = useModuleStates()?.planner === true;
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
-  // A shared title (`/todos?new=1&title=…`, from the share page) prefills the create field.
-  const [title, setTitle] = useState(() => params.get('title') ?? '');
+  // The page's one entry: the head's action, the plus on the phone, `?new=1` (quick add) and a shared title
+  // (`/todos?new=1&title=…`, from the share page) all open the same small dialog.
+  const [adding, setAdding] = useState<{ title: string } | null>(null);
   const [editing, setEditing] = useState<StoredTask | null>(null);
   useOpenParam((id) => taskRepo.get(id), setEditing);
   const [listTarget, setListTarget] = useState<Stored<TodoList> | 'new' | null>(null);
   const [sorting, setSorting] = useState(false);
-  const addRef = useRef<HTMLFormElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [advanced, setAdvanced] = useAdvanced('todos');
-  const tx = tAdvanced.use();
+  const advancedItem = useAdvancedMenuItem('todos');
+  const advanced = advancedItem.checked === true;
   const writeAvailable = useWriteAvailable('todos');
   const writeLabel = useWriteLabel();
   const openWrite = useUiStore((s) => s.openWritePalette);
   const toast = useUiStore((s) => s.toast);
-  // The page has its own add field: no round "+" button, and the AI entry lives in the "⋯" menu.
+  // The AI entry lives in the page's "⋯" menu.
   usePageChrome({ writeInMenu: true });
 
   useEffect(() => {
     if (lists && lists.length === 0) void ensureInbox(t.todos.inbox);
   }, [lists]);
 
-  // `?new=1` (Quick-Add) focuses the create field.
-  useEffect(() => {
+  // `?new=1` (Quick-Add) opens the dialog; derived from the URL, as the calendar does it.
+  const fromUrl = params.get('new') ? { title: params.get('title') ?? '' } : null;
+  const addTarget = adding ?? fromUrl;
+  const closeAdd = () => {
+    setAdding(null);
     if (params.get('new')) {
-      addRef.current?.querySelector('input')?.focus();
       const next = new URLSearchParams(params);
       next.delete('new');
       next.delete('title');
       setParams(next, { replace: true });
     }
-  }, [params, setParams]);
+  };
 
   const day = today();
   const rawView = params.get('view');
@@ -445,8 +449,7 @@ export default function TodosPage() {
     : [];
   const editingLive = editing ? ((tasks ?? []).find((x) => x.id === editing.id) ?? null) : null;
 
-  async function add(e: FormEvent) {
-    e.preventDefault();
+  async function add(title: string) {
     if (!title.trim() || !targetListId) return;
     const typed = readQuickAdd(title, new Date(now()));
     // One line of feedback; Ctrl+Z still takes it back (no second "Rückgängig" next to the next action's).
@@ -467,9 +470,6 @@ export default function TodosPage() {
       }),
     );
     toast(t.todos.added);
-    setTitle('');
-    // The next entry follows right away: the field keeps the focus (and the keyboard stays up).
-    addRef.current?.querySelector('input')?.focus();
   }
 
   function setParam(key: 'view' | 'tag', value: string | null) {
@@ -597,6 +597,7 @@ export default function TodosPage() {
     });
   }
 
+  const isEmpty = !!tasks && top.length === 0 && pageView !== 'board';
   const startItems = useStartDataItems('todos');
   const pageMenu: RowMenuItem[] = [
     {
@@ -636,13 +637,7 @@ export default function TodosPage() {
           },
         ]
       : []),
-    {
-      id: 'advanced',
-      group: t.todos.moreOptions,
-      label: tx.switchLabel,
-      checked: advanced,
-      onSelect: () => setAdvanced(!advanced),
-    },
+    { ...advancedItem, group: t.todos.moreOptions },
     ...(writeAvailable
       ? [
           {
@@ -672,7 +667,18 @@ export default function TodosPage() {
             onChange={(v) => setParam('view', v === 'list' ? null : v)}
           />
         }
+        besideContent
       >
+        {/* While nothing is there the empty state owns the filled button of the view. */}
+        <PageAction
+          short={t.todos.addShort}
+          variant={isEmpty ? 'secondary' : 'primary'}
+          disabled={!targetListId}
+          onClick={() => setAdding({ title: '' })}
+        >
+          <Icon name="plus" size={18} />
+          {t.todos.newTask}
+        </PageAction>
         <RowMenu
           label={t.todos.moreOptions}
           open={menuOpen}
@@ -680,6 +686,20 @@ export default function TodosPage() {
           items={pageMenu}
         />
       </PageHeader>
+
+      {/* The first row of the page: what is next today. On the phone the page's "⋯" menu lies beside it
+          (`besideContent`), so the row is always there and keeps its height while the tasks load. */}
+      <TodayCard
+        tasks={tasks}
+        day={day}
+        focusMinutes={focus.focusMinutes}
+        planner={plannerOn}
+        onStart={(x) => void startFocus(x.id)}
+        onLater={(x) => {
+          const full = tasks?.find((y) => y.id === x.id);
+          if (full) postpone(full, day);
+        }}
+      />
 
       {selected !== ALL ? (
         <p className={styles.filterNote} data-testid="todos-filter">
@@ -692,42 +712,9 @@ export default function TodosPage() {
         </p>
       ) : null}
 
-      {/* The card is the fokus head's "one thing" (extra: full width on the phone, so the title can shorten); the frame
-          draws the todayCard mark in the S slot beside it. */}
-      {tasks ? (
-        <HeroSlot>
-          <TodayCard
-            tasks={tasks}
-            day={day}
-            focusMinutes={focus.focusMinutes}
-            planner={plannerOn}
-            onStart={(x) => void startFocus(x.id)}
-            onLater={(x) => {
-              const full = tasks.find((y) => y.id === x.id);
-              if (full) postpone(full, day);
-            }}
-          />
-        </HeroSlot>
-      ) : null}
-
       <PersonFilter usedIds={(tasks ?? []).flatMap((x) => (x.personId ? [x.personId] : []))} />
       <div className={styles.layout}>
         <div className={styles.main}>
-          <form ref={addRef} onSubmit={add} className={styles.add} data-keep-visible>
-            <div className={styles.grow}>
-              <TextField
-                label={t.todos.add}
-                placeholder={t.todos.addPlaceholder}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
-            {/* C29: the head's "Anfangen" is the one filled action of the page. */}
-            <Button type="submit" disabled={!targetListId}>
-              {t.actions.add}
-            </Button>
-          </form>
-
           {/* Tags are an advanced feature: the chips show in "Mehr Felder" mode or while a tag filters. */}
           {tagList.length > 0 && (advanced || tag) ? (
             <div className={styles.tagBar} role="group" aria-label={t.todos.tags.filter}>
@@ -780,15 +767,16 @@ export default function TodosPage() {
             </div>
           ) : null}
 
-          {tasks && top.length === 0 && pageView !== 'board' ? (
+          {isEmpty ? (
             <EmptyState
               title={t.todos.empty}
               testId="todos-empty"
               motif={<SignatureMark id="todayCard" size={64} />}
             >
-              {/* U26: one next step – the add field above takes the first thing. */}
+              {/* B6: the motif, one sentence, one verb. */}
               <Button
-                onClick={() => addRef.current?.querySelector('input')?.focus()}
+                variant="primary"
+                onClick={() => setAdding({ title: '' })}
                 data-testid="todos-empty-add"
               >
                 {t.todos.emptyAction}
@@ -811,6 +799,12 @@ export default function TodosPage() {
         </div>
       </div>
 
+      <AddTaskDialog
+        open={addTarget !== null}
+        initialTitle={addTarget?.title}
+        onAdd={add}
+        onClose={closeAdd}
+      />
       <InboxSorter
         open={sorting}
         tasks={inboxOpen}

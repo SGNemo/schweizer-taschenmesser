@@ -143,8 +143,10 @@ export const calendar: Strings['calendar'] = {
   reminders: {
     title: 'Reminders',
     add: 'Add reminder',
+    short: 'Reminder',
     edit: 'Edit reminder',
     empty: 'No reminders yet.',
+    emptyAction: 'Add your first reminder',
     next: 'Next',
     ended: 'Ended',
     paused: 'Paused',
@@ -188,6 +190,11 @@ export const calendar: Strings['calendar'] = {
     minutes: (n: number) => (n === 1 ? '1 minute before' : `${n} minutes before`),
     hour: '1 hour before',
     day: '1 day before',
+  },
+  moreSummary: {
+    once: 'Once',
+    noReminder: 'No reminder',
+    reminder: (lead) => `Reminder: ${lead}`,
   },
   tabsLabel: 'View',
   tabCalendar: 'Calendar',

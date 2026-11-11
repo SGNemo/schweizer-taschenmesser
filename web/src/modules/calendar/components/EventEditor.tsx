@@ -1,7 +1,7 @@
 import { useSubmitOnce } from '@/core/forms/submitOnce';
 import { changedFields } from '@/core/db/patch';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { bus } from '@/core/events';
 import { mapsUrl } from '@/core/links';
@@ -13,6 +13,8 @@ import type { Recurrence } from '@/core/recurrence/types';
 import { copyData } from '@/core/db/copy';
 import { PersonField } from '@/core/people/PersonField';
 import { addDaysStr, formatDay } from '@/core/time/dates';
+import { describeRecurrence } from '@/core/recurrence/describe';
+import { getFocusSettings } from '@/core/settings/focus';
 import { t } from '@/strings';
 import { tDraft } from '@/strings.draft';
 import {
@@ -21,6 +23,7 @@ import {
   Checkbox,
   DateChips,
   Dialog,
+  FormActions,
   Icon,
   SelectField,
   Switch,
@@ -154,6 +157,21 @@ function Form({
   const [opened] = useState(existing);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  // The remembered lead time of a new appointment (`focus.eventLead`) applies while "Erinnern" is still folded
+  // behind "Mehr Felder" too: the summary beside that button names it, and saving keeps it.
+  const isNew = !existing && !draft.restored;
+  useEffect(() => {
+    if (!isNew || reminder) return;
+    let alive = true;
+    void getFocusSettings().then((f) => {
+      if (alive && f.eventLead !== null) draft.set('notifyChoice', String(f.eventLead));
+    });
+    return () => {
+      alive = false;
+    };
+    // Once, when the form opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // Shifts and other fixed slots from earlier entries: one tap fills title, start and end.
   const slots = useLiveQuery(
     async () => (existing || reminder ? [] : recentSlots(await eventRepo.active().toArray())),
@@ -283,74 +301,114 @@ function Form({
           if (endDate && endDate < d) setEndDate(d);
         }}
       />
-      {reminder ? null : (
-        <TextField
-          label={t.calendar.location}
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-        />
-      )}
-      {!reminder && location.trim() ? (
-        <div>
-          <Button variant="ghost" onClick={() => void getPlatform().app.openUrl(mapsUrl(location))}>
-            <Icon name="pin" size={16} />
-            {t.calendar.showOnMap}
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => {
-              onClose();
-              void navigate(`/maps?q=${encodeURIComponent(location.trim())}`);
-            }}
+      {reminder ? (
+        <>
+          <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={startDate} />
+          <SelectField
+            label={t.calendar.notify.label}
+            value={notifyChoice}
+            onChange={(e) => setNotifyChoice(e.target.value)}
           >
-            <Icon name="pin" size={16} />
-            {t.calendar.saveAsPlace}
-          </Button>
-        </div>
+            {NOTIFY_LEADS.map((m) => (
+              <option key={m} value={m}>
+                {leadLabel(m)}
+              </option>
+            ))}
+          </SelectField>
+        </>
       ) : null}
-      {!reminder && calendars && calendars.length > 0 ? (
-        <SelectField
-          label={t.calendar.calendars.field}
-          value={calendarId}
-          onChange={(e) => draft.set('calendarId', e.target.value)}
-        >
-          <option value="">{t.calendar.calendars.none}</option>
-          {calendars.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </SelectField>
-      ) : null}
-      <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={startDate} />
-      <PersonField value={personId} onChange={setPersonId} />
-      {!reminder && !allDay && startTime ? (
-        <LeadRow
-          value={notifyChoice}
-          onChange={setNotifyChoice}
-          isNew={!existing && !draft.restored}
-        />
-      ) : (
-        <SelectField
-          label={t.calendar.notify.label}
-          value={notifyChoice}
-          onChange={(e) => setNotifyChoice(e.target.value)}
-        >
-          {reminder ? null : <option value="none">{t.calendar.notify.none}</option>}
-          {NOTIFY_LEADS.map((m) => (
-            <option key={m} value={m}>
-              {leadLabel(m)}
-            </option>
-          ))}
-        </SelectField>
-      )}
-      {reminder ? (
-        <Switch label={t.calendar.reminders.active} checked={active} onChange={setActive} />
-      ) : null}
-      {reminder ? (
-        <Switch label={t.calendar.reminders.intake} checked={taken} onChange={setTaken} />
-      ) : null}
-      <AdvancedFields moduleId="calendar" hasData={!!endDate || !!note || extra.length > 0}>
+      {/* First what is needed (UI audit 2026-11, B10): a new entry shows at most five fields; the rest folds behind
+          "Mehr Felder" with what it will save beside the button. An existing entry shows everything. */}
+      <AdvancedFields
+        moduleId="calendar"
+        hasData={
+          !!existing ||
+          !!location ||
+          !!calendarId ||
+          !!personId ||
+          !!endDate ||
+          !!note ||
+          extra.length > 0 ||
+          (!reminder && !!recurrence)
+        }
+        summary={(reminder
+          ? [active ? t.calendar.reminders.active : t.calendar.reminders.paused]
+          : [
+              recurrence ? describeRecurrence(recurrence) : t.calendar.moreSummary.once,
+              notifyChoice === 'none'
+                ? t.calendar.moreSummary.noReminder
+                : t.calendar.moreSummary.reminder(leadLabel(Number(notifyChoice))),
+            ]
+        ).join(' · ')}
+      >
+        {reminder ? null : (
+          <TextField
+            label={t.calendar.location}
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+          />
+        )}
+        {!reminder && location.trim() ? (
+          <div>
+            <Button
+              variant="ghost"
+              onClick={() => void getPlatform().app.openUrl(mapsUrl(location))}
+            >
+              <Icon name="pin" size={16} />
+              {t.calendar.showOnMap}
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                onClose();
+                void navigate(`/maps?q=${encodeURIComponent(location.trim())}`);
+              }}
+            >
+              <Icon name="pin" size={16} />
+              {t.calendar.saveAsPlace}
+            </Button>
+          </div>
+        ) : null}
+        {!reminder && calendars && calendars.length > 0 ? (
+          <SelectField
+            label={t.calendar.calendars.field}
+            value={calendarId}
+            onChange={(e) => draft.set('calendarId', e.target.value)}
+          >
+            <option value="">{t.calendar.calendars.none}</option>
+            {calendars.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </SelectField>
+        ) : null}
+        {reminder ? null : (
+          <RecurrenceEditor value={recurrence} onChange={setRecurrence} startDate={startDate} />
+        )}
+        <PersonField value={personId} onChange={setPersonId} />
+        {reminder ? null : !allDay && startTime ? (
+          <LeadRow value={notifyChoice} onChange={setNotifyChoice} isNew={isNew} />
+        ) : (
+          <SelectField
+            label={t.calendar.notify.label}
+            value={notifyChoice}
+            onChange={(e) => setNotifyChoice(e.target.value)}
+          >
+            <option value="none">{t.calendar.notify.none}</option>
+            {NOTIFY_LEADS.map((m) => (
+              <option key={m} value={m}>
+                {leadLabel(m)}
+              </option>
+            ))}
+          </SelectField>
+        )}
+        {reminder ? (
+          <Switch label={t.calendar.reminders.active} checked={active} onChange={setActive} />
+        ) : null}
+        {reminder ? (
+          <Switch label={t.calendar.reminders.intake} checked={taken} onChange={setTaken} />
+        ) : null}
         {reminder ? null : (
           <div className={styles.split}>
             <TextField
@@ -386,22 +444,10 @@ function Form({
           {error}
         </p>
       ) : null}
-      <div className={styles.actions}>
-        {existing ? (
-          <Button
-            variant="danger"
-            onClick={async () => {
-              await deleteWithUndo(() => eventRepo.remove(existing.id));
-              draft.clear();
-              onClose();
-            }}
-          >
-            {t.actions.delete}
-          </Button>
-        ) : (
-          <span />
-        )}
-        <span className={patternStyles.hstack}>
+      {/* What else can be done with a saved entry: a row of its own, so the foot holds delete, cancel and save only
+          (it is the fixed foot of the sheet on the phone). */}
+      {existing ? (
+        <div className={patternStyles.hstackWrap} data-testid="event-more-actions">
           {existing && !reminder ? (
             <Button
               variant="ghost"
@@ -462,12 +508,29 @@ function Form({
               {t.actions.duplicate}
             </Button>
           ) : null}
-          <Button onClick={cancel}>{t.actions.cancel}</Button>
-          <Button type="submit" variant="primary">
-            {t.actions.save}
-          </Button>
-        </span>
-      </div>
+        </div>
+      ) : null}
+      <FormActions
+        start={
+          existing ? (
+            <Button
+              variant="danger"
+              onClick={async () => {
+                await deleteWithUndo(() => eventRepo.remove(existing.id));
+                draft.clear();
+                onClose();
+              }}
+            >
+              {t.actions.delete}
+            </Button>
+          ) : undefined
+        }
+      >
+        <Button onClick={cancel}>{t.actions.cancel}</Button>
+        <Button type="submit" variant="primary">
+          {t.actions.save}
+        </Button>
+      </FormActions>
     </form>
   );
 }

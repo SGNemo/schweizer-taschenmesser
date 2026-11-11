@@ -1573,14 +1573,19 @@ export const de = {
     },
     title: 'ToDos',
     add: 'ToDo hinzufügen',
+    /** The head's action on the desktop. */
+    newTask: 'Neue Aufgabe',
+    /** The noun on the phone's plus ("Aufgabe eintragen"). */
+    addShort: 'Aufgabe',
     addPlaceholder: 'Neue Aufgabe …',
+    addHint: 'Datum und Dauer kannst du mitschreiben, zum Beispiel „morgen 15 min“.',
     markedDone: 'Als erledigt markiert.',
     markedOpen: 'Wieder geöffnet.',
     taskDeleted: 'ToDo gelöscht.',
     changed: 'ToDo geändert.',
     noDue: 'Ohne Datum',
     empty: 'Nichts zu tun – gut so.',
-    emptyAction: 'Eine Sache eintragen',
+    emptyAction: 'Aufgabe eintragen',
     someday: 'Irgendwann',
     views: {
       label: 'Ansicht',
@@ -1627,6 +1632,8 @@ export const de = {
     projectProgress: (done: number, total: number) => `${done} von ${total} erledigt`,
     todayCard: {
       label: 'Heute',
+      /** Behind the head's number: "11 heute". */
+      unit: 'heute',
       count: (n: number) => (n === 0 ? 'Nichts offen' : n === 1 ? '1 Aufgabe' : `${n} Aufgaben`),
       minutes: (m: number) => `etwa ${m} Min`,
       next: (title: string) => `Als Nächstes: ${title}`,
@@ -1834,8 +1841,11 @@ export const de = {
     reminders: {
       title: 'Erinnerungen',
       add: 'Erinnerung hinzufügen',
+      /** The noun on the phone's plus ("Erinnerung eintragen"). */
+      short: 'Erinnerung',
       edit: 'Erinnerung bearbeiten',
       empty: 'Noch keine Erinnerungen.',
+      emptyAction: 'Erste Erinnerung eintragen',
       next: 'Nächste',
       ended: 'Beendet',
       paused: 'Pausiert',
@@ -1882,6 +1892,12 @@ export const de = {
       minutes: (n: number) => `${n} Minuten vorher`,
       hour: '1 Stunde vorher',
       day: '1 Tag vorher',
+    },
+    /** Beside "Mehr Felder" in the dialog of a new appointment: what the folded fields will save. */
+    moreSummary: {
+      once: 'Einmalig',
+      noReminder: 'Ohne Erinnerung',
+      reminder: (lead: string) => `Erinnerung: ${lead}`,
     },
     tabsLabel: 'Ansicht',
     tabCalendar: 'Kalender',

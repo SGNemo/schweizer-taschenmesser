@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { patchFocusSettings } from '@/core/settings/focus';
 import { setNow } from '@/core/time/now';
-import { TodayCard } from '../components/TodayCard';
+import { TodayCard, todayFigure } from '../components/TodayCard';
 import TodosPage from '../routes/TodosPage';
 import { listRepo, taskRepo } from '../repo';
 
@@ -43,13 +43,15 @@ describe('ToDos views', () => {
   it('shows one task per view by its dates', async () => {
     await seedThree();
     const { unmount } = draw('/todos?view=today');
-    expect(await screen.findByText('Heute fällig')).toBeVisible();
+    // The title stands in the list and in the page's first row ("Als Nächstes").
+    expect((await screen.findAllByText('Heute fällig'))[0]).toBeVisible();
     expect(screen.queryByText('Nächste Woche')).toBeNull();
     expect(screen.queryByText('Ohne Datum')).toBeNull();
     unmount();
     draw('/todos?view=soon');
     expect(await screen.findByText('Nächste Woche')).toBeVisible();
-    expect(screen.queryByText('Heute fällig')).toBeNull();
+    // Only the first row ("Als Nächstes") still names it, no row of the list.
+    expect(screen.queryAllByText('Heute fällig').filter((el) => el.closest('li'))).toEqual([]);
   });
 
   it('keeps a task with a later start date out of the plain list and the Heute view', async () => {
@@ -125,7 +127,7 @@ describe('ToDos board', () => {
   it('ticks a card off when it goes to Erledigt', async () => {
     const task = await taskRepo.create({ ...base, title: 'Fertig machen', dueDate: '2026-11-03' });
     draw('/todos?view=board');
-    await screen.findByText('Fertig machen');
+    await screen.findAllByText('Fertig machen');
     const today = screen.getByRole('region', { name: 'Heute' });
     await userEvent.click(within(today).getByRole('button', { name: 'Weitere Optionen' }));
     await userEvent.click(
@@ -139,7 +141,9 @@ describe('ToDos board wording (U48)', () => {
   it('names a passed due date as passed and gives the card button a verb', async () => {
     await taskRepo.create({ ...base, title: 'Recherche', dueDate: '2026-11-01' });
     draw('/todos?view=board');
-    const card = (await screen.findByText('Recherche')).closest('li')!;
+    const card = (await screen.findAllByText('Recherche'))
+      .map((el) => el.closest('li'))
+      .find((li) => li !== null)!;
     expect(card).toHaveTextContent('war am So., 1. Nov. fällig');
     expect(within(card).getByRole('button', { name: 'Auf morgen' })).toBeVisible();
   });
@@ -154,12 +158,22 @@ describe('ToDos board wording (U48)', () => {
 });
 
 describe('ToDos empty page (U26)', () => {
-  it('offers one next step that puts the cursor into the add field', async () => {
+  it('offers one next step that opens the add dialog; the page has no add field of its own', async () => {
     draw('/todos');
     const empty = await screen.findByTestId('todos-empty');
     expect(empty).toHaveTextContent('Nichts zu tun – gut so.');
-    await userEvent.click(within(empty).getByRole('button', { name: 'Eine Sache eintragen' }));
-    expect(screen.getByRole('textbox', { name: 'ToDo hinzufügen' })).toHaveFocus();
+    expect(within(empty).getAllByRole('button')).toHaveLength(1);
+    expect(screen.queryByRole('textbox')).toBeNull();
+    await userEvent.click(within(empty).getByRole('button', { name: 'Aufgabe eintragen' }));
+    const dialog = await screen.findByRole('dialog', { name: 'ToDo hinzufügen' });
+    await userEvent.type(
+      within(dialog).getByRole('textbox', { name: 'Titel' }),
+      'Erste Sache{Enter}',
+    );
+    await waitFor(async () =>
+      expect((await taskRepo.active().toArray()).map((x) => x.title)).toEqual(['Erste Sache']),
+    );
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 });
 
@@ -197,9 +211,18 @@ describe('Heute card', () => {
         ]}
       />,
     );
-    expect(screen.getByTestId('today-count')).toHaveTextContent('2');
-    expect(screen.getByTestId('today-count')).toHaveTextContent('etwa 45 Min');
+    // The count and the summed estimate are the head's figure (drawn by the frame); the row names the next task.
+    expect(screen.getByTestId('today-card')).toHaveTextContent('2 Aufgaben');
     expect(screen.getByText(/Als Nächstes: /)).toBeVisible();
+    const figure = todayFigure(
+      [
+        task({ id: 'a', dueDate: '2026-11-03', estimateMin: 15 }),
+        task({ id: 'b', plannedFor: '2026-11-03', estimateMin: 30 }),
+        task({ id: 'c', dueDate: '2026-11-20', estimateMin: 99 }),
+      ],
+      '2026-11-03',
+    );
+    expect([figure.today.length, figure.minutes]).toEqual([2, 45]);
   });
 
   it('with the planner on counts what the plan counts: a later plan day beats an older due date (N02)', () => {
@@ -215,11 +238,13 @@ describe('Heute card', () => {
       }),
     ];
     const { unmount } = render(<TodayCard day="2026-11-03" tasks={tasks} />);
-    expect(screen.getByTestId('today-count')).toHaveTextContent('2');
+    expect(screen.getByTestId('today-card')).toHaveTextContent('2 Aufgaben');
+    expect(todayFigure(tasks, '2026-11-03').minutes).toBe(65);
     unmount();
     render(<TodayCard day="2026-11-03" tasks={tasks} planner />);
-    expect(screen.getByTestId('today-count')).toHaveTextContent('1');
-    expect(screen.getByTestId('today-count')).toHaveTextContent('etwa 5 Min');
+    expect(screen.getByTestId('today-card')).toHaveTextContent('1 Aufgabe');
+    const plan = todayFigure(tasks, '2026-11-03', true);
+    expect([plan.today.length, plan.minutes]).toEqual([1, 5]);
   });
 
   it('says so calmly when nothing is left for today', () => {
@@ -266,7 +291,7 @@ describe('with the planner module on', () => {
     unmount();
     await plannerOn();
     draw('/todos');
-    await screen.findByText('Alte Sache');
+    await screen.findAllByText('Alte Sache');
     await waitFor(() => expect(screen.queryByTestId('todos-waiting')).toBeNull());
     expect(screen.queryByRole('button', { name: 'Neu planen' })).toBeNull();
   });
@@ -285,15 +310,15 @@ describe('with the planner module on', () => {
     await waitFor(() => expect(screen.getByTestId('all-today')).toBeInTheDocument());
     first.unmount();
     const before = draw('/todos?view=today');
-    await screen.findByText('Vom Planer später');
+    await screen.findAllByText('Vom Planer später');
     before.unmount();
     await plannerOn();
     const all = draw('/todos');
-    await screen.findByText('Alte Sache');
+    await screen.findAllByText('Alte Sache');
     await waitFor(() => expect(screen.queryByTestId('all-today')).toBeNull());
     all.unmount();
     draw('/todos?view=today');
-    await screen.findByText('Alte Sache');
+    await screen.findAllByText('Alte Sache');
     await waitFor(() => expect(screen.queryByText('Vom Planer später')).toBeNull());
   });
 

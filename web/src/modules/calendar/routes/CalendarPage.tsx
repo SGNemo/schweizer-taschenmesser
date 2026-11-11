@@ -7,12 +7,10 @@ import { changeWithUndo } from '@/core/undo/withToast';
 import { useUiStore } from '@/stores/ui';
 import type { CalendarItem } from '@/core/modules/types';
 import { useWeekStart } from '@/core/settings/core';
-import { useAdvanced } from '@/core/settings/comfort';
 import { useSettings } from '@/core/settings/settings';
 import { addDaysStr, DATE_RE, eachDay, isoWeekday, today } from '@/core/time/dates';
 import { useModuleStates } from '@/core/modules/activation';
 import { t } from '@/strings';
-import { tAdvanced } from '@/strings.advanced';
 import {
   Button,
   Icon,
@@ -21,6 +19,8 @@ import {
   PageHeader,
   Segmented,
   SplitView,
+  Tabs,
+  useAdvancedMenuItem,
   useOpenParam,
   useSplitView,
 } from '@/ui';
@@ -79,15 +79,9 @@ export default function CalendarPage() {
   const [externalId, setExternalId] = useState<string | null>(null);
   const [occurrence, setOccurrence] = useState<string | null>(null);
   const split = useSplitView();
-  const [advanced, setAdvanced] = useAdvanced('calendar');
-  const tx = tAdvanced.use();
-  // U25 (UI round 6): "Mehr Felder anzeigen" lives in the page's "⋯" menu, not as its own toolbar row on the phone.
-  const advancedItem = {
-    id: 'advanced',
-    label: tx.switchLabel,
-    checked: advanced,
-    onSelect: () => setAdvanced(!advanced),
-  };
+  // "Mehr Felder anzeigen" lives in the page's "⋯" menu (Identity 4.0, rule 4: no switch in the head).
+  const advancedItem = useAdvancedMenuItem('calendar');
+  const advanced = advancedItem.checked === true;
   const weekStart = useWeekStart();
   const plannerOn = useModuleStates()?.planner === true;
 
@@ -166,54 +160,45 @@ export default function CalendarPage() {
     setParams(p, { replace: true });
   };
 
+  // The two views of the page are tabs at the head's lower edge; month, week … choose the range inside "Kalender".
+  const tabs = (
+    <Tabs
+      label={t.calendar.tabsLabel}
+      value={tab}
+      options={[
+        { value: 'calendar', label: t.calendar.tabCalendar },
+        { value: 'reminders', label: t.calendar.tabReminders },
+      ]}
+      onChange={pickTab}
+    />
+  );
+
   if (tab === 'reminders') {
+    const setNew = (on: boolean) => {
+      const p = new URLSearchParams(params);
+      if (on) p.set('new', '1');
+      else p.delete('new');
+      setParams(p, { replace: true });
+    };
     return (
       <>
-        <PageHeader
-          title={t.calendar.title}
-          views={
-            <Segmented
-              label={t.calendar.tabsLabel}
-              value={'reminders'}
-              options={[
-                { value: 'calendar', label: t.calendar.tabCalendar },
-                { value: 'reminders', label: t.calendar.tabReminders },
-              ]}
-              onChange={pickTab}
-            />
-          }
-        >
+        {/* Phone: the "⋯" menu lies beside the tab's first row (the time ring's line or the empty state). */}
+        <PageHeader title={t.calendar.title} views={tabs} besideContent>
+          <PageAction short={t.calendar.reminders.short} onClick={() => setNew(true)}>
+            <Icon name="plus" size={18} />
+            {t.calendar.reminders.add}
+          </PageAction>
           <StartDataMenu moduleId="calendar" items={[advancedItem]} />
         </PageHeader>
 
-        <RemindersTab
-          newRequested={params.get('new') === '1'}
-          onNewHandled={() => {
-            const p = new URLSearchParams(params);
-            p.delete('new');
-            setParams(p, { replace: true });
-          }}
-        />
+        <RemindersTab newRequested={params.get('new') === '1'} onNewHandled={() => setNew(false)} />
       </>
     );
   }
 
   return (
     <>
-      <PageHeader
-        title={t.calendar.title}
-        views={
-          <Segmented
-            label={t.calendar.tabsLabel}
-            value={'calendar'}
-            options={[
-              { value: 'calendar', label: t.calendar.tabCalendar },
-              { value: 'reminders', label: t.calendar.tabReminders },
-            ]}
-            onChange={pickTab}
-          />
-        }
-      >
+      <PageHeader title={t.calendar.title} views={tabs} besideContent>
         <PageAction
           short={t.calendar.meta.quickAdd}
           onClick={() => setTarget({ draft: { startDate: date } })}

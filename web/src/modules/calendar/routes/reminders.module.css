@@ -17,7 +17,7 @@
   padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-4);
   border-radius: var(--radius-md);
-  background: var(--accent-soft);
+  background: var(--surface-raised);
 }
 .banner a {
   display: inline-flex;
@@ -30,6 +30,12 @@
   align-items: center;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
+}
+/* Phone: the page's "⋯" menu lies at the right edge of this row. */
+@media (max-width: 899px) {
+  .bell {
+    padding-inline-end: calc(var(--touch) + var(--space-2));
+  }
 }
 .bellText {
   color: var(--text);
