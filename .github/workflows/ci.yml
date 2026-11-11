@@ -631,10 +631,10 @@ jobs:
   # The Dev-Preview flavour (seed project, playwright.config.ts `seed-dev`) whenever the app E2E runs (output
   # `seed`: every pull request that can change the web app, and every full run); the app shards skip it. Part of
   # the aggregate check `web`. Its own job: it took 6.5 min behind the sync E2E in the same job.
-  # Four jobs: the 12 "every page fits the window" tests (one walk over all pages per window size and theme,
-  # about a minute each) and the other 82 tests, each half in two shards. `--grep` and `--grep-invert` with the
+  # Four jobs: the "every page fits the window" tests (one walk over all pages per window size and theme,
+  # about a minute each; 12 in Nov 2026) and the other tests, each half in two shards. `--grep` and `--grep-invert` with the
   # same pattern split the project in two without a list to maintain: every test runs exactly once. Plain
-  # shards put all 12 walks into one job, the slowest of every web pull request (9.6 min of tests against 4.8
+  # shards put all walks into one job, the slowest of every web pull request (9.6 min of tests against 4.8
   # in the other shard, docs/perf/CI-2026-11.md).
   e2e-seed:
     name: E2E seed project (Dev-Preview flavour, ${{ matrix.part }}, shard ${{ matrix.shard }})
