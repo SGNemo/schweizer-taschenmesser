@@ -47,7 +47,11 @@ test('Einkauf: quantities, duplicates, ticking, clearing bought entries (and und
   await expect(rows(page)).toHaveCount(2);
   await expect(page.getByText('2', { exact: true })).toBeVisible(); // the quantity
   // One primary per view: "Neue Liste"; the inline add is secondary (round 6, U12).
-  expect(await primaryActions(page)).toEqual(['Neue Liste']);
+  // Identity 4.0: on the phone the page's one action is the plus of the bottom bar, no filled button in the page.
+  if ((page.viewportSize()?.width ?? 1280) < 900) {
+    expect(await primaryActions(page)).toEqual([]);
+    await expect(page.getByTestId('bottom-plus')).toHaveAccessibleName('Liste eintragen');
+  } else expect(await primaryActions(page)).toEqual(['Neue Liste']);
 
   await tick(page.getByRole('checkbox', { name: 'Milch' }));
   await page.getByRole('button', { name: 'Gekauftes entfernen (1)' }).click();
@@ -60,7 +64,7 @@ test('Einkauf: quantities, duplicates, ticking, clearing bought entries (and und
 test('Packliste: pack, reset, copy as template, checklist and delete', async ({ page }) => {
   await enable(page, 'lists');
   await open(page, '/lists');
-  await page.getByRole('button', { name: 'Neue Liste' }).click();
+  await page.getByRole('button', { name: /Neue Liste|Liste eintragen/ }).click();
   const dialog = page.getByRole('dialog', { name: 'Neue Liste' });
   await dialog.getByLabel('Name der Liste').fill('Urlaub');
   await dialog.getByLabel('Art').selectOption({ label: 'Packliste' });
@@ -109,7 +113,7 @@ test('Lesezeichen: links as tiles, grouped by the first tag', async ({ page }) =
   await enable(page, 'bookmarks');
   await open(page, '/bookmarks?view=links');
   await expect(page.getByText('Noch keine Lesezeichen')).toBeVisible();
-  await page.getByRole('button', { name: 'Lesezeichen anlegen' }).click();
+  await page.getByRole('button', { name: /Lesezeichen (anlegen|eintragen)/ }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Titel').fill('Bahn');
   await dialog.getByLabel('Adresse (Link)').fill('https://bahn.example.org');

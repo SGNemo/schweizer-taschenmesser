@@ -18,17 +18,19 @@
     "check:downloads": "node scripts/check-downloads.mjs",
     "lighthouse": "node scripts/lighthouse.mjs",
     "screenshots": "node scripts/screenshots.mjs",
-    "app:screenshots": "node scripts/app-screenshots.mjs"
+    "app:screenshots": "node scripts/app-screenshots.mjs",
+    "a11y": "node scripts/a11y.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",
-    "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/atkinson-hyperlegible-next": "^5.3.0",
     "astro": "^7.3.6",
     "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.6",
     "@lhci/cli": "^0.16.0",
+    "axe-core": "^4.14.0",
     "linkinator": "^8.1.0",
     "playwright-core": "^1.63.0",
     "typescript": "^5.9.0"

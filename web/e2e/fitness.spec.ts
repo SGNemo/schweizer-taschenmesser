@@ -35,7 +35,7 @@ async function rows(page: Page, table: string): Promise<Record<string, unknown>[
 
 async function capture(page: Page, text: string) {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Schnell hinzufügen' }).click();
+  await page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }).click();
   await page.getByRole('textbox', { name: 'Was möchtest du festhalten?' }).fill(text);
   await expect(page.getByText('Ziel: Fitness')).toBeVisible();
   await page.getByRole('button', { name: 'Speichern', exact: true }).click();

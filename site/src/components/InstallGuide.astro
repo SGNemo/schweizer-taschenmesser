@@ -6,8 +6,8 @@ import Icon from './Icon.astro';
 
 /**
  * The /install page: downloads, why Windows and Android warn, the exact clicks per platform, how to check
- * the SHA-256 and what the first start looks like. Text only (no screenshots yet, see scribble/docs-install-first-run.md),
- * no script, no inline style.
+ * the SHA-256 and what the first start looks like. The content is unchanged by the rethink round; the form follows
+ * the site (heavy headings, ruled sections). Text only, no script, no inline style.
  */
 interface Props { locale: Locale }
 const { locale } = Astro.props;
@@ -28,13 +28,13 @@ const platforms = [
     <h2 id="dl-title">{p.downloads.title}</h2>
     <div class="dl">
       <p class="label">{p.downloads.stable}</p>
-      <a class="btn btn-primary" href={assetUrl('windows')} rel="noopener" download><Icon name="windows" size={22} />{s.hero.windows}</a>
-      <a class="btn btn-primary" href={assetUrl('android')} rel="noopener" download><Icon name="android" size={22} />{s.hero.android}</a>
+      <a class="btn btn-primary" href={assetUrl('windows')} rel="noopener" download><Icon name="windows" size={22} />{s.download.windows}</a>
+      <a class="btn btn-primary" href={assetUrl('android')} rel="noopener" download><Icon name="android" size={22} />{s.download.android}</a>
     </div>
     <div class="dl">
       <p class="label">{p.downloads.dev}</p>
-      <a class="btn btn-secondary" href={DEV_PREVIEW.windows} rel="noopener"><Icon name="windows" size={22} />{s.hero.windows}</a>
-      <a class="btn btn-secondary" href={DEV_PREVIEW.android} rel="noopener"><Icon name="android" size={22} />{s.hero.android}</a>
+      <a class="btn btn-secondary" href={DEV_PREVIEW.windows} rel="noopener"><Icon name="windows" size={22} />{s.download.windows}</a>
+      <a class="btn btn-secondary" href={DEV_PREVIEW.android} rel="noopener"><Icon name="android" size={22} />{s.download.android}</a>
     </div>
     <p class="muted small">{p.downloads.devHint}</p>
   </section>
@@ -68,7 +68,7 @@ const platforms = [
     <h2 id="check-title">{p.check.title}</h2>
     <p>{p.check.text}</p>
     <p>{p.check.windows}</p>
-    <pre><code>Get-FileHash .\Nemo-Portable.exe -Algorithm SHA256</code></pre>
+    <pre tabindex="0"><code>Get-FileHash .\Nemo-Portable.exe -Algorithm SHA256</code></pre>
     <p class="muted">{p.check.android}</p>
     <p class="links">
       <a href={STABLE_RELEASE_URL} rel="noopener">{p.check.stable} <Icon name="external" size={14} /></a>
@@ -95,23 +95,26 @@ const platforms = [
   }
   .lead {
     color: var(--text-muted);
-    font-size: var(--text-lg);
-    max-width: var(--measure);
   }
   section {
     display: grid;
     gap: var(--space-3);
   }
   h2 {
-    font-size: var(--text-xl);
+    font-size: var(--text-h2);
     display: flex;
     align-items: center;
     gap: var(--space-3);
   }
+  section {
+    padding-top: var(--space-5);
+    border-top: var(--rule) solid var(--text);
+  }
   .card {
     padding: var(--space-5);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border: var(--line) solid var(--border);
+    border-top: var(--rule) solid var(--text);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
     background: var(--surface);
   }
   .dl {
@@ -133,8 +136,8 @@ const platforms = [
     gap: var(--space-3);
   }
   .steps li::marker {
-    font-weight: var(--weight-semibold);
-    color: var(--text-3);
+    font-weight: var(--weight-heavy);
+    color: var(--text-muted);
   }
   .path {
     display: inline-flex;
@@ -155,7 +158,7 @@ const platforms = [
     white-space: nowrap;
   }
   .sep {
-    color: var(--text-3);
+    color: var(--text-muted);
   }
   pre {
     margin: 0;

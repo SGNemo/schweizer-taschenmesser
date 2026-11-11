@@ -28,9 +28,12 @@
   --frame-bleed-top: var(--space-5);
   display: flex;
   flex-direction: column;
-  /* Room for the bottom bar plus the "+" button (56 px, 16 px above the bar), so it never covers the last field. */
+  /* Phone: the height of the top bar, for what sticks under it (the tabs of a module head); 0 while the bar is
+     folded away (layout/TopBar.module.css). */
+  --topbar-h: calc(var(--touch) + 2 * var(--space-3) + 1px + env(safe-area-inset-top));
+  /* Room for the bottom bar and the plus that rises above it, so they never cover the last field. */
   padding: var(--space-5) var(--page-gutter)
-    calc(var(--bottom-nav-h) + env(safe-area-inset-bottom) + 6rem);
+    calc(var(--bottom-nav-h) + env(safe-area-inset-bottom) + var(--space-6));
 }
 /* Focus is moved here programmatically after navigation; a ring around the whole page is noise. */
 /* Cockpit (phone): no bottom bar, so no room kept for it; the mini bar floats over the top edge. */
@@ -96,6 +99,9 @@
     z-index: var(--z-nav);
   }
   .main {
+    /* The content area is the scroller: a module head sticks to its top edge. */
+    --topbar-h: 0px;
+
     flex: 1;
     min-height: 0;
     overflow-y: auto;
@@ -178,5 +184,13 @@
     overflow: visible;
     padding: 0;
     margin: 0;
+  }
+}
+
+/* Desktop, a page with a module head: what is scrolled into view (keyboard focus, a search hit) stops below the
+   sticky head, not under it. */
+@media (min-width: 900px) {
+  .main:has([data-head='standard']) {
+    scroll-padding-top: calc(var(--head-pad) + var(--head-row) + var(--touch) + var(--space-4));
   }
 }

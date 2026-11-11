@@ -107,7 +107,10 @@ test.describe('Calendar polish (UI round 6)', () => {
     await page.clock.install({ time: new Date('2026-11-03T10:00:00') });
     await ready(page, '/calendar?view=month&date=2026-11-03');
     await expect(page.getByTestId('calendar-free')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Neuer Termin' })).toHaveCount(1);
+    // Once on either device: the head's button on the desktop, the plus of the bottom bar on the phone.
+    await expect(page.getByRole('button', { name: /Neuer Termin|Termin eintragen/ })).toHaveCount(
+      1,
+    );
   });
 
   test('U16 + U17: one heading size, and the head keeps its height on the reminders tab', async ({

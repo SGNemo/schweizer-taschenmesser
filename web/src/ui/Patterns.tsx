@@ -4,6 +4,8 @@ import { createPortal } from 'react-dom';
 import { t } from '@/strings';
 import { useSubmitOnce } from '@/core/forms/submitOnce';
 import { useHeroControls, useHeroTargets } from '@/core/shell/heroContext';
+import { usePageAction } from '@/core/shell/pageAction';
+import { Button } from './Button';
 import { Checkbox } from './Fields';
 import { ListSurface } from './ListSurface';
 import { ReadableText } from './ReadableText';
@@ -15,13 +17,13 @@ import styles from './Patterns.module.css';
 
 /** `views` = the switch between the sub-views of the page: `Tabs` (Identity 4.0). `Segmented` is for filters only. */
 /**
- * The page title (h1). Inside a module page it renders into the module head (`layout/ModuleShell` hero), anywhere else
- * where it is called. Pages that lay out their own header use this instead of a bare `<h1>`.
+ * The page title (h1). Inside a module page it renders into the title row of the module head (`layout/AreaFrame`),
+ * anywhere else where it is called. Pages that lay out their own header use this instead of a bare `<h1>`.
  */
 export function PageTitle({ title, spacer = false }: { title: string; spacer?: boolean }) {
   const hero = useHeroTargets();
   const controls = useHeroControls();
-  // The frame's compact bar (phone, scrolled) shows the title from here, never from the DOM.
+  // The frame's eyebrow reads the title from here, never from the DOM.
   useEffect(() => {
     controls?.setTitle(title);
     return () => controls?.setTitle(undefined);
@@ -53,6 +55,56 @@ function headerActions(children: ReactNode): ReactNode {
   );
 }
 
+/** Below this the shell is the phone layout: bottom bar with the plus, no action in the head (same as the CSS). */
+export const PHONE_QUERY = '(max-width: 899px)';
+
+/**
+ * The one action of a module page (Identity 4.0, rule 4), a child of `PageHeader`: on the desktop the one filled
+ * button in the head's title row; on the phone it renders nothing and is the plus in the bottom bar instead, which
+ * shows `short` (the thing it adds, a noun) and is named "<short> eintragen". Outside a shell (dialogs, tests) it is
+ * the button where it is called. `variant="secondary"` while an empty state owns the filled button of the view.
+ */
+export function PageAction({
+  short,
+  onClick,
+  disabled,
+  variant = 'primary',
+  'aria-label': ariaLabel,
+  testId,
+  children,
+}: {
+  short: string;
+  onClick: () => void;
+  disabled?: boolean;
+  variant?: 'primary' | 'secondary';
+  'aria-label'?: string;
+  testId?: string;
+  children: ReactNode;
+}) {
+  const inShell = !!useHeroControls();
+  const phone = useMediaQuery(PHONE_QUERY);
+  usePageAction({ short, onClick, disabled }, inShell);
+  if (inShell && phone) return null;
+  return (
+    <Button
+      variant={variant}
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={ariaLabel}
+      data-testid={testId}
+      data-page-action
+    >
+      {children}
+    </Button>
+  );
+}
+
+/**
+ * Title, views and actions of a page. Inside the module frame (Identity 4.0) the title is the h1 of the head's title
+ * row, `views` (the `Tabs` of the page) lie at the head's lower edge, and the actions (`children`, with the one
+ * `PageAction`) sit in the title row on the desktop; on the phone the head has no action, so what is left of them
+ * stays as a row in the page. Without a shell everything renders in place.
+ */
 export function PageHeader({
   title,
   views,
@@ -63,14 +115,17 @@ export function PageHeader({
   children?: ReactNode;
 }) {
   const hero = useHeroTargets();
+  const phone = useMediaQuery(PHONE_QUERY);
   if (hero) {
+    const inHead = !phone;
     return (
       <>
         <PageTitle title={title} />
-        {views || children ? (
+        {views && hero.tabs ? createPortal(views, hero.tabs) : null}
+        {children && inHead ? (hero.actions ? createPortal(children, hero.actions) : null) : null}
+        {children && !inHead ? (
           <div className={styles.header} data-in-head="true">
-            {views ? <div className={styles.headerViews}>{views}</div> : null}
-            {children ? <div className={styles.headerEnd}>{headerActions(children)}</div> : null}
+            <div className={styles.headerEnd}>{headerActions(children)}</div>
           </div>
         ) : null}
       </>

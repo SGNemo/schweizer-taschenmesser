@@ -12,7 +12,6 @@ import {
   TYPE_ACCENTS,
   WIDGET_VARIANTS,
   AREAS,
-  type ModuleManifest,
 } from './types';
 import { checkIdentity, type IdentityFacts } from '../../../scripts/lib/checkIdentity';
 
@@ -79,6 +78,8 @@ describe('module registry', () => {
     for (const patch of [
       { head: 'banner' },
       { head: 'figure' },
+      // Identity 4.0: the nine silhouettes of identity v3 are no head variants any more.
+      { head: 'kennzahl' },
       { head: undefined },
       { widget: 'chart' },
       { widget: undefined },
@@ -107,23 +108,26 @@ describe('module registry', () => {
     }
   });
 
-  it('neighbours in the navigation of one area never share a head variant (every module has its own silhouette)', () => {
-    const order = (a: ModuleManifest, b: ModuleManifest) =>
-      (a.order ?? 100) - (b.order ?? 100) || a.id.localeCompare(b.id);
+  it('Identity 4.0: two head variants; the stage is the exception, at most one module per area (weather, music)', () => {
+    expect([...HEAD_VARIANTS]).toEqual(['standard', 'stage']);
+    const live = allManifests.filter((x) => !x.retired);
+    const stages = live.filter((m) => m.identity.head === 'stage');
+    expect(stages.map((m) => m.id).sort()).toEqual(['music', 'weather']);
+    for (const area of AREAS)
+      expect(
+        stages.filter((m) => m.area === area).length,
+        `more than one stage head in ${area}`,
+      ).toBeLessThanOrEqual(1);
+    // The head no longer tells neighbours apart; hue and signature do: no two modules of an area share either.
     for (const area of AREAS) {
-      const group = allManifests.filter((x) => !x.retired && x.area === area).sort(order);
-      for (const [i, m] of group.entries()) {
-        const next = group[i + 1];
-        if (next)
-          expect(
-            m.identity.head,
-            `${m.id} and ${next.id} are neighbours in ${area} and share the head "${m.identity.head}"`,
-          ).not.toBe(next.identity.head);
-      }
+      const group = live.filter((m) => m.area === area);
+      const signatures = group.map((m) => m.identity.signature);
+      expect(new Set(signatures).size, `signatures in ${area}`).toBe(signatures.length);
+      expect(signatures, area).not.toContain('none');
     }
   });
 
-  it('identity v3.1: the app-wide rules hold on the runtime registry (same facts as npm run check:modules)', () => {
+  it('Identity 4.0: the app-wide rules hold on the runtime registry (same facts as npm run check:modules)', () => {
     const facts: IdentityFacts[] = allManifests.map((m) => ({
       id: m.id,
       area: m.area,
@@ -136,9 +140,10 @@ describe('module registry', () => {
       retired: !!m.retired,
     }));
     expect(checkIdentity(facts)).toEqual([]);
-    // Every head variant names the size of its signature slot.
+    // Every head variant names the size of its signature slot: the standard head has none, the stage is the slot.
     for (const head of HEAD_VARIANTS)
       expect([...SLOT_SIZES, 'none'], head).toContain(SIGNATURE_SLOTS[head]);
+    expect(SIGNATURE_SLOTS).toEqual({ standard: 'none', stage: 'L' });
   });
 
   it('no two modules of one navigation area share a hue (the palette has ten; areas are small)', () => {

@@ -22,7 +22,7 @@ const manifest: ModuleManifest = {
     hue: 'lime',
     hue2: 'fern',
     widget: 'kacheln',
-    head: 'fokus',
+    head: 'standard',
     signature: 'dial',
   },
   version: 1,

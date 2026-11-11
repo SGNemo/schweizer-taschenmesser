@@ -30,7 +30,9 @@ test.describe('Focus and attention aids', () => {
     await expect(page.getByRole('timer')).toContainText('25:00');
     // One thing only: no sidebar, no bottom navigation, no quick-add button.
     await expect(page.getByRole('navigation', { name: 'Hauptnavigation' })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Schnell hinzufügen' })).toHaveCount(0);
+    await expect(
+      page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }),
+    ).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Fertig' }).click();
     await expect(page).toHaveURL(/\/$/);
@@ -174,7 +176,7 @@ test.describe('Focus and attention aids', () => {
     page,
   }) => {
     await ready(page, '/');
-    await page.getByRole('button', { name: 'Schnell hinzufügen' }).click();
+    await page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }).click();
     const input = page.getByRole('textbox', { name: 'Was möchtest du festhalten?' });
     await input.fill('t Formular ausfüllen 15 min');
     await expect(page.getByTestId('capture-chips')).toContainText('etwa 15 Min');

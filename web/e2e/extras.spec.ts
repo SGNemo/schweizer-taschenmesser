@@ -202,7 +202,7 @@ test.describe('Budgets & Sparziele', () => {
     await save(page);
 
     await open(page, '/budgets');
-    await page.getByRole('button', { name: 'Budget hinzufügen' }).click();
+    await page.getByRole('button', { name: /Budget (hinzufügen|eintragen)/ }).click();
     const editor = page.getByRole('dialog');
     await editor.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
     await editor.getByLabel('Limit pro Monat').fill('50');

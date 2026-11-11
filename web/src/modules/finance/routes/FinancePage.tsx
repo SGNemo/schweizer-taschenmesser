@@ -12,6 +12,7 @@ import {
   Card,
   Icon,
   IconButton,
+  PageAction,
   PageHeader,
   Segmented,
   SplitView,
@@ -111,15 +112,15 @@ export default function FinancePage() {
         }
       >
         <AdvancedToggle moduleId="finance" />
-        <Button
-          variant="primary"
+        <PageAction
+          short={t.finance.addTransactionShort}
           onClick={() => setTarget({ draft: true })}
           aria-label={t.finance.addTransaction}
           disabled={!data || data.accounts.length === 0}
         >
           <Icon name="plus" size={18} />
           {t.finance.addTransactionShort}
-        </Button>
+        </PageAction>
         <StartDataMenu moduleId="finance" />
       </PageHeader>
 

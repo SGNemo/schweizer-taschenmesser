@@ -10,7 +10,7 @@ UI-Audit 4.0 weiterführen: Paket 0b-2 (Modulkopf als eine Titelzeile mit Reiter
 
 - **UI-Audit 4.0** ([design/ui-audit-2026-11/](design/ui-audit-2026-11/REPORT.md), Entscheidungen [decisions/ui-shell.md](decisions/ui-shell.md)): Paket 0a (Wächter, Ratsche, Lade-Robustheit, Hauptthread), V-1, AE1, AE4 und 0b-1 Fundament sind auf `develop`; 0b-2 läuft. Offen daraus: Monatskalender-Zeilen 18 px (0b-4), Tooltip der eingeklappten Seitenleiste schließt nicht mit Escape; technische Reste im [LEDGER](design/ui-audit-2026-11/LEDGER.md).
 - **Fernsteuerung des PCs vom Handy** ([design/remote-control/PACKAGES.md](design/remote-control/PACKAGES.md), Regel [rules/remote-control.md](rules/remote-control.md)): PC-Seite, Modul „Fernbedienung“ und Benachrichtigung der vollen Stufe sind auf `develop`. Offen: Latenzmessung mit echtem Handy (#690), dann Seite Touchpad; Schalter für die Benachrichtigung; Lautstärketasten (`feat/remote-volume-keys`, braucht Android-Build).
-- **Website Runde 5** ([design/site/ROUND-5.md](design/site/ROUND-5.md)): Pakete 2–4 auf `develop`; Paket 1 (neue Bilder, Social-Preview) wartet auf 0b-8. Website-Screenshots bleiben bis dahin deutsch und zeigen das alte Logo.
+- **Website neu gedacht** ([design/site/RETHINK.md](design/site/RETHINK.md), PR #694): Richtung „Ein Tag“ mit der Tabelle „Was ins Netz geht“, Aussage „Eine Sache zuerst.“; Start, `/module`, `/daten`, `/unterstuetzen`, `/install` und Rechtliches in neuer Form, de und en, ohne ein App-Bild. Sechs Bild-Slots sind gezeichnet gefüllt; echte Bilder kommen über [design/site/SLOTS.md](design/site/SLOTS.md), sobald die App steht (ersetzt Runde 5, Paket 1).
 - **Modul Uhr** ([features/clock.md](features/clock.md)): Paket 1 auf `develop`; Folge-Prompts in [product/clock/](product/clock/01-followups.md), nicht gestartet.
 - **UI schärfen, Runde 6** ([qa/round-6/STATUS.md](qa/round-6/STATUS.md)): alle acht Fix-PRs auf `develop`; offen U41 Kopfbandhöhen (`fix/ui6-head-heights`) und der Sammel-PR `fix/ui6-followups`.
 
@@ -18,7 +18,7 @@ UI-Audit 4.0 weiterführen: Paket 0b-2 (Modulkopf als eine Titelzeile mit Reiter
 
 - Heimnetz-Sync (LAN-Hub, Koppeln, zweiter PC, „Nur im WLAN“): [design/sync-lan/CONCEPT.md](design/sync-lan/CONCEPT.md). Nicht gebaut: Abgleich ganz im Hintergrund.
 - Use case „Kopf leer“ (Pakete 1–4, Nachlese, nachgemessen): [design/usecases/kopf-leer/TARGET.md](design/usecases/kopf-leer/TARGET.md).
-- Erstkontakt-Runde 5 (Personen A–D, Installation ohne Hilfe, Dev-Preview-Erststart): `docs/qa/round-5/<a–d>/FINDINGS.md`.
+- Erstkontakt-Runde 5 (Personen A–D, Installation ohne Hilfe, Dev-Preview-Erststart): [`docs/qa/round-5.md`](qa/round-5.md).
 - Fitness (Pakete 1–5, Vorschau, aus): [features/fitness.md](features/fitness.md). Offen: Yazio-Import (Format unbekannt).
 - Planer (Pakete 1–5, Sweep): [design/plan/CONCEPT.md](design/plan/CONCEPT.md), [decisions/plan.md](decisions/plan.md). Eigene Konzepte stehen aus für Zeiterfassung, Energie, Gewohnheiten, Wochenrückblick.
 - Identität v3 und v3.1 (Fundament, alle Modulgruppen, Werkzeuge, Bibliotheken, Einstellungen, Abnahme): [design/MODULE-IDENTITY.md](design/MODULE-IDENTITY.md), [Abnahme](design/identity-v3-audit/03-acceptance.md).

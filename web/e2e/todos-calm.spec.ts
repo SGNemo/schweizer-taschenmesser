@@ -55,16 +55,28 @@ test.describe('Calm ToDo page (focus audit 2, package 2b)', () => {
     await expect(page.getByRole('checkbox', { name: 'Wäsche falten' })).toBeVisible();
   });
 
-  test('no round "+" button on this page; other pages keep it on the phone', async ({
+  test('no round "+" button anywhere; on the phone the plus of the bottom bar adds a ToDo here and captures on the overview', async ({
     page,
   }, info) => {
-    // The round button (a phone control; the top bar has its own "+ Neu" with the same name).
+    // The round button is gone with Identity 4.0 (its class name was the hook of this test).
     const fab = page.locator('[class*="_fab_"]');
+    const plus = page.getByTestId('bottom-plus');
     await ready(page, '/todos');
     await expect(fab).toHaveCount(0);
+    await expect(plus).toHaveCount(1);
+    await expect(plus).toHaveAttribute('data-plus', 'module');
+    await expect(plus).toHaveAttribute('aria-label', 'Neu: ToDos');
     await ready(page, '/');
-    await expect(fab).toHaveCount(1);
-    if (info.project.name === 'pixel-7') await expect(fab).toBeVisible();
+    await expect(fab).toHaveCount(0);
+    await expect(plus).toHaveAttribute('data-plus', 'capture');
+    await expect(plus).toHaveAttribute('aria-label', 'Neu eintragen');
+    if (info.project.name === 'pixel-7') {
+      await expect(plus).toBeVisible();
+      await ready(page, '/todos');
+      await plus.click();
+      // The module's own entry: the add field of the page takes the focus, no second sheet opens.
+      await expect(page.getByRole('dialog', { name: 'Schnell hinzufügen' })).toHaveCount(0);
+    }
   });
 
   test('"Wartet noch" appears once, as a group; each row can move to today right there', async ({

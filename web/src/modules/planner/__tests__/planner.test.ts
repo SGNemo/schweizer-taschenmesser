@@ -20,7 +20,7 @@ describe('planner module', () => {
     expect(manifest.identity).toMatchObject({
       hue: 'indigo',
       hue2: 'cobalt',
-      head: 'kennzahl',
+      head: 'standard',
       widget: 'fortschritt',
       signature: 'weekBars',
     });

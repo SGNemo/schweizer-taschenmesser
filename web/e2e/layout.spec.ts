@@ -84,13 +84,6 @@ async function metrics(page: Page) {
   });
 }
 
-/** U01: the frame stores the head row's room once the hold for that route ended, i.e. the page has settled. */
-async function headSettled(page: Page, key: string) {
-  await expect
-    .poll(() => page.evaluate((k) => localStorage.getItem(k), `tm-head-room:${key}`))
-    .not.toBeNull();
-}
-
 for (const vp of VIEWPORTS) {
   test.describe(`${vp.width}x${vp.height}`, () => {
     test.use({ viewport: vp });
@@ -233,45 +226,64 @@ test.describe('phone header', () => {
     });
   const scrollTo = (page: Page, y: number) => page.evaluate((top) => window.scrollTo(0, top), y);
 
-  test('area label and gear share one line; the sub-navigation scrolls under the head; the title starts high', async ({
+  // Identity 4.0, rule 2 and 3 (phone): title row, the one module row, tabs; ≤ 144 px in all; content on screen 1.
+  test('the head is a title row, the module row and the tabs: one line each, ≤ 144 px, no control in the title row', async ({
     page,
   }) => {
     await prepare(page);
     await page.goto('/calendar');
     await expect(page.locator('main h1').first()).toBeVisible();
-    const box = await page.evaluate(() => {
-      const r = (el: Element | null) => el?.getBoundingClientRect();
-      const label = document.querySelector('main p');
-      const gear = document.querySelector('main a[href^="/settings"]');
-      const tabs = document.querySelector('main nav[aria-label]');
-      const h1 = document.querySelector('main h1');
+    const box = await page.getByTestId('module-frame').evaluate((head) => {
+      const r = (el: Element | null) => el!.getBoundingClientRect();
+      const row = head.querySelector('[data-testid="module-title-row"]');
+      const modules = head.querySelector('nav[data-module-row]');
+      const tabs = head.querySelector('[data-slot="tabs"]');
+      const h1 = head.querySelector('h1');
       return {
-        labelMid: (r(label)!.top + r(label)!.bottom) / 2,
-        gearMid: (r(gear)!.top + r(gear)!.bottom) / 2,
-        pillHeights: [...tabs!.querySelectorAll('a')].map((a) => a.getBoundingClientRect().height),
+        height: r(head).height,
+        headBottom: r(head).bottom,
+        eyebrowMid: (r(head.querySelector('p')).top + r(head.querySelector('p')).bottom) / 2,
+        h1Top: r(h1).top,
+        h1Bottom: r(h1).bottom,
+        rowBottom: r(row).bottom,
+        modulesTop: r(modules).top,
+        modulesBottom: r(modules).bottom,
+        tabsTop: r(tabs).top,
+        pillHeights: [...modules!.querySelectorAll('a')].map((a) => r(a).height),
         // The row scrolls sideways on a phone (it never wraps to a second line).
-        pillTops: new Set(
-          [...tabs!.querySelectorAll('a')].map((a) => Math.round(a.getBoundingClientRect().top)),
-        ).size,
-        h1Top: r(h1)!.top,
-        mainTop: r(document.querySelector('main'))!.top,
+        pillTops: new Set([...modules!.querySelectorAll('a')].map((a) => Math.round(r(a).top)))
+          .size,
+        controls: row!.querySelectorAll('button, a[href]').length,
+        mainTop: r(document.querySelector('main')).top,
+        firstContentTop: r(document.querySelector('main [data-testid="page"]')).top,
       };
     });
-    expect(Math.abs(box.labelMid - box.gearMid)).toBeLessThan(8);
+    expect(box.height).toBeLessThanOrEqual(144);
     for (const h of box.pillHeights) expect(h).toBeGreaterThanOrEqual(44);
     expect(box.pillTops).toBe(1);
-    // The head is a band at the top of the page: the title sits near its top edge.
-    expect(box.h1Top - box.mainTop).toBeLessThan(120);
+    // Three rows in this order, none overlapping: title row, module row, tabs.
+    expect(box.h1Bottom).toBeLessThanOrEqual(box.rowBottom + 1);
+    expect(box.modulesTop).toBeGreaterThanOrEqual(box.rowBottom - 1);
+    expect(box.tabsTop).toBeGreaterThanOrEqual(box.modulesBottom - 1);
+    // The eyebrow sits above the title, in the same block.
+    expect(box.eyebrowMid).toBeLessThan(box.h1Top);
+    // Rule 4: no button and no link in the phone's title row (the plus in the bottom bar is the entry).
+    expect(box.controls).toBe(0);
+    // The head starts at the top of the page and the content follows on the first screen (≤ 240 here; PACKAGES leaves y ≤ 220 to the area packages).
+    expect(box.h1Top - box.mainTop).toBeLessThan(60);
+    expect(box.firstContentTop).toBeLessThanOrEqual(240);
   });
 
-  // U24 (UI round 6): a `fokus` head stacks on the phone – the module's name, then the figure with the mark beside it
-  // where it fits, else under it; one left edge, nothing centred.
-  test('fokus heads stack left-aligned under the title', async ({ page }) => {
+  // Successor of U24 (the stacked `fokus` head): every standard head has the same title row on the phone – plate,
+  // title and the one figure on one line, the figure at the right edge, nothing wraps under the title.
+  test('title rows are alike on every module: plate, title and figure on one line', async ({
+    page,
+  }) => {
     await prepare(page);
+    const rows: Record<string, number> = {};
     for (const path of ['/people', '/invoices', '/todos']) {
       await page.goto(path);
       await expect(page.locator('main h1').first()).toBeVisible();
-      await headSettled(page, `${path}@phone`);
       const box = await page.getByTestId('module-frame').evaluate((frame) => {
         const r = (el: Element | null | undefined) => {
           const b = el?.getBoundingClientRect();
@@ -279,23 +291,56 @@ test.describe('phone header', () => {
             ? { left: b.left, right: b.right, top: b.top, bottom: b.bottom }
             : null;
         };
-        const mark = frame.querySelector('[data-testid="module-signature"]');
-        // The figure's box is the slot right before the mark.
+        const row = frame.querySelector('[data-testid="module-title-row"]');
         return {
+          head: frame.getAttribute('data-head'),
+          row: r(row),
+          plate: r(row?.querySelector('[aria-hidden="true"]')),
           title: r(frame.querySelector('h1')),
-          figure: r(mark?.previousElementSibling),
-          mark: r(mark),
+          figure: r(frame.querySelector('[data-testid="module-figure"]')),
+          // The signature mark is no part of a standard head any more.
+          mark: r(frame.querySelector('[data-testid="module-signature"]')),
         };
       });
+      expect(box.head, path).toBe('standard');
       expect(box.title, path).not.toBeNull();
-      expect(box.mark, path).not.toBeNull();
-      // Under the title, never beside it.
-      expect(box.mark!.top, path).toBeGreaterThanOrEqual(box.title!.bottom - 1);
-      // On the title's left edge, or right beside the figure.
-      const onEdge = Math.abs(box.mark!.left - box.title!.left) <= 1;
-      const besideFigure = !!box.figure && box.mark!.left >= box.figure.right - 1;
-      expect(onEdge || besideFigure, `${path}: mark at ${box.mark!.left}`).toBe(true);
+      expect(box.plate, path).not.toBeNull();
+      expect(box.mark, path).toBeNull();
+      // Plate left of the title, both inside the one row.
+      expect(box.plate!.right, path).toBeLessThanOrEqual(box.title!.left);
+      expect(box.title!.top, path).toBeGreaterThanOrEqual(box.row!.top - 1);
+      expect(box.title!.bottom, path).toBeLessThanOrEqual(box.row!.bottom + 1);
+      if (box.figure) {
+        // Beside the title, never under it.
+        expect(box.figure.left, path).toBeGreaterThanOrEqual(box.title!.right - 1);
+        expect(box.figure.bottom, path).toBeLessThanOrEqual(box.row!.bottom + 1);
+      }
+      rows[path] = Math.round(box.row!.bottom - box.row!.top);
     }
+    // One row height for every module.
+    expect(new Set(Object.values(rows)).size, JSON.stringify(rows)).toBe(1);
+  });
+
+  test('scrolled, the title row and the module row slide away and the tabs stay under the top bar', async ({
+    page,
+  }) => {
+    await prepare(page);
+    await page.goto('/calendar');
+    await expect(page.locator('main h1').first()).toBeVisible();
+    await makeTall(page);
+    await scrollTo(page, 150);
+    await scrollTo(page, 600);
+    const at = await page.getByTestId('module-frame').evaluate((head) => {
+      const tabs = head.querySelector('[data-slot="tabs"]')!.getBoundingClientRect();
+      const h1 = head.querySelector('h1')!.getBoundingClientRect();
+      return { tabsTop: tabs.top, tabsBottom: tabs.bottom, h1Bottom: h1.bottom };
+    });
+    // The tabs are on screen, at the top; the title has left it.
+    expect(at.tabsTop).toBeGreaterThanOrEqual(-1);
+    expect(at.tabsBottom).toBeLessThanOrEqual(140);
+    expect(at.h1Bottom).toBeLessThanOrEqual(at.tabsTop + 1);
+    // No second bar repeats the title.
+    await expect(page.getByTestId('module-compact')).toHaveCount(0);
   });
 
   test('the topbar folds away on scrolling down and returns on scrolling up', async ({ page }) => {
@@ -368,13 +413,28 @@ test.describe('desktop header', () => {
     });
     await page.waitForTimeout(300);
     await expect(page.locator('header').first()).not.toHaveAttribute('data-collapsed', 'true');
-    // area label above the tabs, as before
-    const stacked = await page.evaluate(() => {
-      const label = document.querySelector('main p')!.getBoundingClientRect();
-      const tabs = document.querySelector('main nav[aria-label]')!.getBoundingClientRect();
-      return tabs.top >= label.bottom - 1;
+    await page.evaluate(() => {
+      document.querySelector<HTMLElement>('main [data-testid="page"]')!.style.minHeight = '4000px';
+      document.getElementById('main')!.scrollTop = 500;
     });
-    expect(stacked).toBe(true);
+    // Identity 4.0: the head stays at the top of the content area while it scrolls (sticky), the eyebrow above the
+    // row of the tabs, and the content has moved under it.
+    const at = await page.getByTestId('module-frame').evaluate((head) => {
+      const main = document.getElementById('main')!.getBoundingClientRect();
+      const box = head.getBoundingClientRect();
+      const label = head.querySelector('p')!.getBoundingClientRect();
+      const tabs = head.querySelector('[data-slot="tabs"]')!.getBoundingClientRect();
+      return {
+        headTop: box.top - main.top,
+        height: box.height,
+        stacked: tabs.top >= label.bottom - 1,
+        scrolled: document.getElementById('main')!.scrollTop,
+      };
+    });
+    expect(at.scrolled).toBeGreaterThan(120);
+    expect(Math.abs(at.headTop)).toBeLessThanOrEqual(1);
+    expect(at.height).toBeLessThanOrEqual(120);
+    expect(at.stacked).toBe(true);
   });
 });
 
@@ -456,7 +516,9 @@ test.describe('no layout shift on load', () => {
     await prepare(page);
     await page.goto('/people');
     await expect(page.locator('main h1')).toBeVisible();
-    await headSettled(page, '/people@wide');
+    // Identity 4.0: a standard head has one row height whatever is in it, so nothing is remembered between visits.
+    await page.waitForTimeout(1200);
+    expect(await page.evaluate(() => localStorage.getItem('tm-head-room:/people@wide'))).toBeNull();
     await watchShifts(page);
     await visit(page, '/people');
   });

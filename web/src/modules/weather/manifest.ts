@@ -18,7 +18,7 @@ const manifest: ModuleManifest = {
     hue: 'cobalt',
     hue2: 'sky',
     widget: 'himmel',
-    head: 'himmel',
+    head: 'stage',
     signature: 'sky',
     type: 'thin',
     shape: 'round',

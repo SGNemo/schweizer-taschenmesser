@@ -22,7 +22,7 @@ Zusammengesetzte Persona, keine Beschreibung einer bestimmten Person. Grundlage:
 
 ## Drei Aufgaben, die er ohne Hilfe schaffen muss
 
-1. Die Sparkassen-CSV (Fixture [`sparkasse-demo.csv`](sparkasse-demo.csv), CSV-CAMT, Windows-1252, `1.234,56`, frei erfunden) importieren und danach sehen, was diesen Monat noch kommt.
+1. Die Sparkassen-CSV (Fixture `web/e2e/fixtures/sparkasse-demo.csv`, CSV-CAMT, Windows-1252, `1.234,56`, frei erfunden) importieren und danach sehen, was diesen Monat noch kommt.
 2. Zwei Abos (Netflix 12,99 €, Fitnessstudio 29,90 €) und eine Rechnung (Zahnarzt 84,50 €) anlegen und auf der Übersicht wiederfinden.
 3. Ein Budget „Essen“ (bei Nemo: Kategorie „Lebensmittel“) mit 400 € anlegen und den Stand nach dem Import sehen.
 
