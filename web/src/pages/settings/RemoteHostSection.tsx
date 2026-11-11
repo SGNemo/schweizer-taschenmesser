@@ -38,6 +38,8 @@ export function RemoteHostSection() {
   const { status, off } = useRemoteHost();
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string>();
+  /** What was said about the notification switch: shown right below it, not far above. */
+  const [noticeNote, setNoticeNote] = useState<string>();
   // A Windows dialog can outlive this page: once it is gone, an answer changes nothing here and
   // must not fill the shared state again (nobody would keep it fresh).
   const open = useRef(true);
@@ -51,8 +53,13 @@ export function RemoteHostSection() {
   if (!host.supported) return null;
 
   /** One change at the PC, then a fresh reading whatever came of it. */
-  async function change(action: () => Promise<unknown>, done?: string) {
+  async function change(
+    action: () => Promise<unknown>,
+    done?: string,
+    say: (text: string | undefined) => void = setNote,
+  ) {
     setNote(undefined);
+    setNoticeNote(undefined);
     setBusy(true);
     let said = done;
     try {
@@ -63,7 +70,7 @@ export function RemoteHostSection() {
     if (!open.current) return;
     await refreshRemoteHost();
     if (!open.current) return;
-    setNote(said);
+    say(said);
     setBusy(false);
   }
 
@@ -218,8 +225,13 @@ export function RemoteHostSection() {
         hint={l.noticeHint}
         checked={status.notice !== false}
         disabled={busy}
-        onChange={(on) => void change(() => host.setNotice(on))}
+        onChange={(on) => void change(() => host.setNotice(on), undefined, setNoticeNote)}
       />
+      {noticeNote ? (
+        <p role="status" className={styles.muted} data-testid="remote-notice-note">
+          {noticeNote}
+        </p>
+      ) : null}
     </div>
   );
 }

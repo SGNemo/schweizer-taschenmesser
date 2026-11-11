@@ -152,9 +152,11 @@ describe('RemoteHostSection (desktop)', () => {
     fireEvent.click(notice());
     await flush();
     expect(notice().getAttribute('aria-checked')).toBe('true');
-    expect(screen.getByTestId('remote-note').textContent).toContain(
+    // said right below the switch that was touched
+    expect(screen.getByTestId('remote-notice-note').textContent).toContain(
       'solange ein Gerät Maus und Tastatur steuert',
     );
+    expect(screen.queryByTestId('remote-note')).toBeNull();
   });
 
   it('"Abbrechen" at the PC changes nothing and is not reported as a fault', async () => {

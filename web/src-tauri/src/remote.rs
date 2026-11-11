@@ -266,6 +266,15 @@ impl RemoteHost {
         self.quiet.lock().ok().and_then(|q| q.clone())
     }
 
+    /// Whether the hub's controls and the notice's switch are still the ones that were read
+    /// before a question was put (a hub that was stopped and started has new ones).
+    fn same_hub(&self, parts: &Parts, quiet: &Arc<dyn MasterSwitch>) -> bool {
+        let controls = self
+            .parts()
+            .is_ok_and(|now| Arc::ptr_eq(&now.remote, &parts.remote));
+        controls && self.quiet().is_some_and(|now| Arc::ptr_eq(&now, quiet))
+    }
+
     /// Whether a device that starts to control mouse and keyboard is told at the PC. Anything
     /// unclear – a lock that cannot be taken, no switch – is "yes".
     fn notice_on(&self) -> bool {
@@ -801,13 +810,15 @@ pub fn remote_set_notice(
     state: State<'_, RemoteHost>,
     on: bool,
 ) -> Result<(), String> {
-    let parts = state.parts()?;
-    let quiet = state.quiet().ok_or("not-started")?;
     if on {
-        // remembered first: on holds for this run even if it cannot be written
+        // remembered first: on holds for this run – without a hub, and even if it cannot be
+        // written
         state.narrowed(|n| n.notice = true);
+        let quiet = state.quiet().ok_or("not-started")?;
         return quiet.set(false).map_err(|_| "failed".to_owned());
     }
+    let parts = state.parts()?;
+    let quiet = state.quiet().ok_or("not-started")?;
     if !state.notice_on() {
         return Ok(());
     }
@@ -821,6 +832,11 @@ pub fn remote_set_notice(
     let question = texts::remote_ask_quiet(lang).to_owned();
     if !asked(&app, texts::remote_quiet_dialog(lang), question, true) {
         return Err("cancelled".to_owned());
+    }
+    // The hub may have been stopped and started while the question was on screen: the answer
+    // then belongs to controls that are gone, and their count says nothing about the new ones.
+    if !state.same_hub(&parts, &quiet) {
+        return Err("changed".to_owned());
     }
     if !parts.untouched_since(before) {
         return Err("busy-controlled".to_owned());

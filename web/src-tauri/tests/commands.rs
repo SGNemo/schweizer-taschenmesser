@@ -482,9 +482,12 @@ fn remote_widening_takes_a_ticket_before_the_native_dialog() {
     let again = body
         .find("untouched_since(before)")
         .expect("check after the answer");
+    let same = body
+        .find("same_hub(&parts, &quiet)")
+        .expect("the same hub after the answer");
     let off = body.find("quiet.set(true)").expect("the write");
     assert!(
-        count < busy && busy < dialog && dialog < again && again < off,
+        count < busy && busy < dialog && dialog < same && same < again && again < off,
         "remote_set_notice: wrong order"
     );
     assert_eq!(body.matches("quiet.set(true)").count(), 1);

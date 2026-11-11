@@ -30,10 +30,10 @@ export const tRemoteHost = defineBundle(
     },
     unlock: 'Vor Maus und Tastatur am Handy entsperren',
     unlockHint:
-      'Das Handy fragt dann einmal in acht Stunden nach Fingerabdruck, Gesicht oder PIN. Eine Bremse, falls es entsperrt herumliegt.',
+      'Bevor es Maus und Tastatur steuert, fragt das Handy nach Fingerabdruck, Gesicht oder PIN, höchstens alle acht Stunden. Eine Hürde, falls es entsperrt herumliegt.',
     notice: 'Melden, wenn ein Gerät Maus und Tastatur steuert',
     noticeHint:
-      'Eine ruhige Benachrichtigung von Windows ohne Ton, höchstens einmal in 30 Minuten je Gerät. Das Symbol im Tray zeigt die Fernsteuerung immer an.',
+      'Eine ruhige Benachrichtigung von Windows, ohne Ton, höchstens einmal in 30 Minuten je Gerät. Auch ohne sie zeigt das Tray-Symbol jede Fernsteuerung an.',
     lastSeen: (when: string) => `Letzter Kontakt: ${when}`,
     neverSeen: 'Noch nie verbunden',
     paused: 'Pausiert',
@@ -52,7 +52,7 @@ export const tRemoteHost = defineBundle(
     errors: {
       busy: 'Ein Fenster von Nemo wartet noch auf deine Antwort. Beantworte es zuerst.',
       'busy-controlled':
-        'Das geht nicht, solange ein Gerät Maus und Tastatur steuert. Beende die Fernsteuerung und versuche es noch einmal.',
+        'Das geht nicht, solange ein Gerät Maus und Tastatur steuert. Beende die Fernsteuerung oder warte, bis sie von selbst endet, und versuche es dann noch einmal.',
       changed: 'In der Zwischenzeit hat sich die Freigabe geändert. Wähle noch einmal.',
       'not-found': 'Dieses Gerät ist nicht mehr gekoppelt.',
       failed: 'Das ließ sich nicht speichern. Versuche es noch einmal.',
@@ -61,7 +61,7 @@ export const tRemoteHost = defineBundle(
   {
     en: {
       title: 'Remote control',
-      help: 'A paired phone may control media and volume of this PC, and mouse and keyboard if you want – only on your home network and only if you allow it here.',
+      help: 'A paired phone may control media and volume of this PC, and, if you choose, mouse and keyboard – only on your home network and only if you allow it here.',
       keywords: ['Remote', 'Phone controls PC', 'Volume', 'Media', 'Remote control'],
       allow: 'Allow remote control',
       allowHint: 'Off: no device can control this PC. Home-network sync keeps running unchanged.',
@@ -80,12 +80,12 @@ export const tRemoteHost = defineBundle(
         media: 'Media and volume',
         full: 'Media, mouse and keyboard',
       },
-      unlock: 'Unlock at the phone before mouse and keyboard',
+      unlock: 'Unlock the phone before mouse and keyboard',
       unlockHint:
-        'The phone then asks for fingerprint, face or PIN once in eight hours. A brake in case it lies around unlocked.',
+        'Before it controls mouse and keyboard, the phone asks for fingerprint, face or PIN, at most every eight hours. A speed bump in case it is left lying around unlocked.',
       notice: 'Tell me when a device controls mouse and keyboard',
       noticeHint:
-        'A quiet Windows notification without a sound, at most once in 30 minutes per device. The tray icon always shows remote control.',
+        'A quiet Windows notification, without sound, at most once in 30 minutes per device. Without it, the tray icon still shows any remote control.',
       lastSeen: (when: string) => `Last contact: ${when}`,
       neverSeen: 'Never connected yet',
       paused: 'Paused',
@@ -104,7 +104,7 @@ export const tRemoteHost = defineBundle(
       errors: {
         busy: 'A Nemo window is still waiting for your answer. Answer it first.',
         'busy-controlled':
-          'That is not possible while a device controls mouse and keyboard. End remote control and try again.',
+          'That is not possible while a device controls mouse and keyboard. End remote control or wait until it ends by itself, then try again.',
         changed: 'The permission changed in the meantime. Choose again.',
         'not-found': 'This device is no longer paired.',
         failed: 'That could not be saved. Try again.',
