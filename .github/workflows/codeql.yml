@@ -30,14 +30,16 @@ concurrency:
 jobs:
   # Rust takes 9 to 14 min, the other languages 1 to 2. This job decides which languages the run analyses and
   # hands them to `analyze` as its matrix, so a language that is not analysed takes no runner:
-  # - only documentation changed (the `ignorable` list of ci.yml): nothing;
-  # - code changed: Actions + JS/TS, and Rust when the change touches Rust (or this file);
-  # - the first run of a UTC day on a branch (the nightly dispatch on develop, or else the first push), the weekly
-  #   run, a manual run, and every change that cannot be read: all three.
-  # So no Rust state on develop stays unscanned for longer than a day. Fail-open: if this job fails or gives no
-  # list, `analyze` falls back to all three. Decision: docs/decisions/meta-ci-docs.md (2026-11-11).
+  # - only text changed (.md/.txt/LICENSE under the `ignorable` paths of ci.yml): nothing. `analyze` is then
+  #   skipped and shows as one skipped check with the unexpanded name "Analyze (${{ matrix.language }})";
+  # - anything else changed: Actions + JS/TS, and Rust when the change touches Rust (or this file);
+  # - the first green run of a UTC day on a branch (the nightly dispatch on develop, or else the first push, even
+  #   a docs-only one), the weekly run, a manual run, and every change that cannot be read: all three.
+  # So no state of develop stays unscanned for longer than a day once nightly.yml is on main (scheduled workflows
+  # start from the default branch); until then: until the first push of the next day. Fail-open: if this job
+  # fails or gives no list, `analyze` falls back to all three. Decision: docs/decisions/meta-ci-docs.md (2026-11-11).
   scope:
-    name: Which languages does the change touch?
+    name: CodeQL scope
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -72,35 +74,40 @@ jobs:
           elif [ "$EVENT" = "push" ]; then
             why="the pushed range could not be read"
             if [ -n "$PUSH_BEFORE" ] && [ "${PUSH_BEFORE//0/}" != "" ]; then range="$PUSH_BEFORE..$PUSH_AFTER"; fi
-            # Daily full scan: the first run of the UTC day on this branch analyses everything. An earlier run
-            # counts when it is still running or ended green (a red or cancelled one does not), whatever started
-            # it: once the nightly run dispatches this workflow on develop, that run is the first of the day.
+            # Daily full scan: until a run of this UTC day on this branch has ended green, every push analyses
+            # everything (a running, red or cancelled run does not count, so the first green run of a day is
+            # always a full one). Whatever started it counts: once the nightly run dispatches this workflow on
+            # develop, that run is the first of the day.
             today="$(date -u +%Y-%m-%d)"
             earlier="$(gh api -X GET "repos/$REPO/actions/workflows/codeql.yml/runs" -f "branch=$BRANCH" -f "created=>=$today" -f per_page=100 \
-              --jq "[.workflow_runs[] | select(.id < $RUN_ID and .event != \"pull_request\" and (.conclusion == null or .conclusion == \"success\"))] | length" 2>/dev/null)"
+              --jq "[.workflow_runs[] | select(.id < $RUN_ID and .event != \"pull_request\" and .conclusion == \"success\")] | length" 2>/dev/null)"
             case "$earlier" in
               ''|*[!0-9]*) range=""; why="earlier runs of today could not be read" ;;
-              0) range=""; why="first run of $today (UTC) on $BRANCH: daily full scan" ;;
+              0) range=""; why="no green run on $BRANCH yet on $today (UTC): daily full scan" ;;
             esac
           fi
-          if [ -n "$range" ] && files="$(git diff --name-only "$range" 2>/dev/null)" && [ -n "$files" ]; then
-            # Same list as `ignorable` in ci.yml: documentation no analysed language reads.
+          if [ -n "$range" ] && files="$(git diff --no-renames --name-only "$range" 2>/dev/null)" && [ -n "$files" ]; then
+            # Paths as `ignorable` in ci.yml, but only their text files: docs/ and site/ also hold JS and HTML
+            # that the JS/TS analysis reads. --no-renames: a file moved out of analysed code shows its old path.
             ignorable='^(docs/|site/|scribble/|CLAUDE\.md$|CONTRIBUTING\.md$|SECURITY\.md$|CHANGELOG(\.de)?\.md$|LICENSE$|\.github/ISSUE_TEMPLATE/|\.github/PULL_REQUEST_TEMPLATE\.md$)'
-            if ! printf '%s\n' "$files" | grep -Evq "$ignorable"; then
-              languages='[]'; why="only documentation changed ($range)"
-            elif printf '%s\n' "$files" | grep -Eq '(\.rs$|(^|/)Cargo\.(toml|lock)$|^web/src-tauri/|^\.github/workflows/codeql\.yml$)'; then
+            text='(\.(md|txt)$|^LICENSE$)'
+            if ! printf '%s\n' "$files" | grep -Evq "$ignorable" && ! printf '%s\n' "$files" | grep -Evq "$text"; then
+              languages='[]'; why="only documentation text changed ($range)"
+            elif printf '%s\n' "$files" | grep -Eq '(\.rs$|(^|/)Cargo\.(toml|lock)$|(^|/)rust-toolchain(\.toml)?$|(^|/)\.cargo/|^web/src-tauri/|^\.github/workflows/codeql\.yml$)'; then
               why="the change touches Rust ($range)"
             else
               languages='["actions","javascript-typescript"]'; why="no Rust file changed ($range)"
             fi
           fi
           echo "languages=$languages" >> "$GITHUB_OUTPUT"
-          {
-            echo "### CodeQL scope"
-            echo "Analysed in this run: \`$languages\`"
-            echo "Why: $why."
-            echo "Not analysed here is covered by the daily full scan of develop and the weekly run."
-          } | tee -a "$GITHUB_STEP_SUMMARY"
+          case "$languages" in
+            "$all") said="Actions, JS/TS, Rust"; rest="" ;;
+            '[]') said="nothing"; rest=" Actions, JS/TS and Rust: next daily full scan of develop." ;;
+            *) said="Actions, JS/TS"; rest=" Rust: next daily full scan of develop." ;;
+          esac
+          echo "::notice title=CodeQL scope::Analysed in this run: $said. Why: $why.$rest"
+          echo "### CodeQL scope: $said" >> "$GITHUB_STEP_SUMMARY"
+          echo "Why: $why.$rest" >> "$GITHUB_STEP_SUMMARY"
 
   analyze:
     name: Analyze (${{ matrix.language }})
