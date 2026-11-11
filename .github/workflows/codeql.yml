@@ -88,7 +88,7 @@ jobs:
             ignorable='^(docs/|site/|scribble/|CLAUDE\.md$|CONTRIBUTING\.md$|SECURITY\.md$|CHANGELOG(\.de)?\.md$|LICENSE$|\.github/ISSUE_TEMPLATE/|\.github/PULL_REQUEST_TEMPLATE\.md$)'
             if ! printf '%s\n' "$files" | grep -Evq "$ignorable"; then
               languages='[]'; why="only documentation changed ($range)"
-            elif printf '%s\n' "$files" | grep -Eq '(\.rs$|(^|/)Cargo\.(toml|lock)$|^web/src-tauri/)'; then
+            elif printf '%s\n' "$files" | grep -Eq '(\.rs$|(^|/)Cargo\.(toml|lock)$|^web/src-tauri/|^\.github/workflows/codeql\.yml$)'; then
               why="the change touches Rust ($range)"
             else
               languages='["actions","javascript-typescript"]'; why="no Rust file changed ($range)"
