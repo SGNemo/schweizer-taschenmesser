@@ -123,11 +123,11 @@ export const kindOf = (a: Pick<Account, 'kind'>): AccountKind => a.kind ?? 'chec
  */
 export function netWorth(
   accounts: (Pick<Account, 'openingBalanceMinor' | 'currency' | 'kind'> & { id: string })[],
-  txs: readonly Tx[],
+  txs: Tx[],
   asOf: string,
 ): NetWorth[] {
   if (accounts.length === 0) return [];
-  const perAccount = balances(accounts, txs as Tx[], asOf);
+  const perAccount = balances(accounts, txs, asOf);
   return currenciesOf(accounts).map((currency) => {
     const own = accounts.filter((a) => currencyOf(a) === currency);
     const parts = ACCOUNT_KINDS.map((kind): NetWorthPart => {

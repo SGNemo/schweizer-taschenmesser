@@ -160,6 +160,14 @@ test('the net worth on the tab "Verlauf" is hidden: head, rows by kind and the a
             order: 1,
             kind: 'savings',
           });
+          accounts.put({
+            ...row,
+            id: 'u',
+            name: 'Dollar',
+            openingBalanceMinor: 77700,
+            order: 2,
+            currency: 'USD',
+          });
           tx.objectStore('finance_transaction').put({
             ...row,
             id: 't',
@@ -180,6 +188,7 @@ test('the net worth on the tab "Verlauf" is hidden: head, rows by kind and the a
   const main = page.locator('main');
   await expect(page.getByTestId('hero')).toHaveText(/6\.200,00\s€/);
   await expect(page.getByTestId('net-worth-savings')).toHaveText(/5\.000,00\s€/);
+  await expect(page.getByTestId('net-worth-USD')).toHaveText(/777,00\s\$/);
   await expect(page.getByTestId('net-worth-chart')).toBeVisible();
   await expect(main.getByTestId('sensitive-value')).toHaveCount(0);
 
@@ -191,12 +200,12 @@ test('the net worth on the tab "Verlauf" is hidden: head, rows by kind and the a
   await expect(toggle).toHaveAttribute('aria-checked', 'true');
 
   await page.goto('/finance?tab=trend');
-  // Head figure, two rows, the foot of the curve.
-  await expect(main.getByTestId('sensitive-value')).toHaveCount(4);
+  // Head figure, two rows by kind, the row of the other currency, the foot of the curve.
+  await expect(main.getByTestId('sensitive-value')).toHaveCount(5);
   await expect(page.getByTestId('net-worth-chart')).toBeVisible();
   // No amount in the text, none in the accessibility tree (the curve's label, the table for screen readers).
-  await expect(main).not.toContainText(/\d,\d\d\s€/);
-  expect(await main.ariaSnapshot()).not.toMatch(/\d,\d\d\s€/);
+  await expect(main).not.toContainText(/\d,\d\d\s[€$]/);
+  expect(await main.ariaSnapshot()).not.toMatch(/\d,\d\d\s[€$]/);
   // The context lines stay: they name no amount.
   await expect(page.getByTestId('module-title-row')).toContainText('Vermögen · 2 Konten');
   await expect(page.getByTestId('net-worth-context')).toBeVisible();

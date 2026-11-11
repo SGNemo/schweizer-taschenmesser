@@ -72,14 +72,17 @@ export function useAvailability(
 /**
  * What still goes out until the end of the month, as counts for the context line of the net worth ("Vermögen"): open
  * invoices and subscriptions with a charge from today on, both in `currency`. Counts only: the line carries no amount.
- * A module that is switched off counts nothing.
+ * Every open invoice counts, whatever its due date (as in "Verfügbar"); a module that is switched off counts nothing.
  */
 export function useOpenUntilMonthEnd(
   currency: string = DEFAULT_CURRENCY,
 ): { invoices: number; subscriptions: number; known: boolean } | undefined {
+  // The same switches as "Verfügbar" (`useAvailability`): what is not deducted there is not named here either.
   const states = useModuleStates();
-  const invoicesOn = Boolean(states?.invoices);
-  const subsOn = Boolean(states?.subscriptions);
+  const [prefs] = useSettings('module.finance', settings.schema, settings.defaults);
+  const p = prefs as { includeOpenInvoices?: boolean; includeSubscriptions?: boolean } | undefined;
+  const invoicesOn = Boolean(states?.invoices && p?.includeOpenInvoices);
+  const subsOn = Boolean(states?.subscriptions && p?.includeSubscriptions);
   const day = today();
   return useLiveQuery(async () => {
     const [invoices, charges] = await Promise.all([

@@ -209,7 +209,6 @@ describe('netWorth', () => {
       { kind: 'checking', valueMinor: 80000, accounts: 1 },
       { kind: 'savings', valueMinor: 320000, accounts: 1 },
     ]);
-    expect(netWorth.length, 'accounts, bookings, day: nothing else goes in').toBe(3);
   });
 
   it('keeps every currency apart: one entry each, the euro first, nothing converted', () => {

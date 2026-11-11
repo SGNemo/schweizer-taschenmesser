@@ -97,7 +97,7 @@ async function check(page: Page, phone: boolean) {
   const notice = page.getByRole('button', { name: 'Schließen', exact: true });
   if (await notice.count()) await notice.first().click();
   await expect(page.getByTestId('net-worth-chart')).toBeVisible();
-  await expect(page.getByTestId('net-worth-context')).toContainText('Monatsende');
+  await expect(page.getByTestId('net-worth-context')).toContainText('offen');
   const r = await page.evaluate(read);
   const m = surfaceMetrics(await page.evaluate(measurePage));
   console.log(`net worth ${phone ? 'phone' : 'desktop'}: ${JSON.stringify({ ...r, m })}`);

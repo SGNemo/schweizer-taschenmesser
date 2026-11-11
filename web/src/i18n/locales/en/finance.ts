@@ -188,17 +188,19 @@ export const finance: Strings['finance'] = {
   netWorth: {
     named: (n: number) => `Net worth · ${n === 1 ? '1 account' : `${n} accounts`}`,
     open: (invoices: number, subs: number) =>
-      `Still open until month end: ${[
+      `Still open: ${[
         invoices > 0 && (invoices === 1 ? '1 invoice' : `${invoices} invoices`),
-        subs > 0 && (subs === 1 ? '1 subscription' : `${subs} subscriptions`),
+        subs > 0 && `${subs === 1 ? '1 subscription' : `${subs} subscriptions`} until month end`,
       ]
         .filter(Boolean)
         .join(' · ')}`,
-    nothingOpen: 'Nothing else is open until month end.',
+    nothingOpen: 'No open invoice, no subscription left until month end.',
+    curve: (a: string, b: string) => `Net worth from ${a} to ${b}`,
     byKind: 'Net worth by account type',
     otherCurrency: (code: string) => `Accounts in ${code}`,
     notConverted: 'not converted',
     widget: 'Net worth',
+    widgetAvailable: (amount: string) => `Net worth, ${amount} of it available`,
   },
   curveFrom: 'Start of month',
   curveLabel: (a: string, b: string) => `Balance from ${a} to ${b}`,

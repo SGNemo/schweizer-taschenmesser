@@ -463,8 +463,27 @@ test.describe('Finance: net worth on the tab "Verlauf"', () => {
     await expect(page.getByTestId('net-worth-chart-foot')).not.toContainText(/5\.850,00/);
     // Nothing open: the context line says so, without an amount.
     await expect(page.getByTestId('net-worth-context')).toHaveText(
-      'Bis Monatsende ist nichts mehr offen.',
+      'Keine Rechnung offen, kein Abo mehr bis Monatsende.',
     );
+    // Showing the tab wrote nothing: the old account still has no kind (no migration, nothing for LWW to carry).
+    const alt = await page.evaluate(
+      () =>
+        new Promise<Record<string, unknown>>((resolve, reject) => {
+          const open = indexedDB.open('taschenmesser');
+          open.onerror = () => reject(open.error);
+          open.onsuccess = () => {
+            const db = open.result;
+            const req = db.transaction('finance_account').objectStore('finance_account').get('alt');
+            req.onsuccess = () => {
+              db.close();
+              resolve(req.result as Record<string, unknown>);
+            };
+            req.onerror = () => reject(req.error);
+          };
+        }),
+    );
+    expect(alt.kind).toBeUndefined();
+    expect(alt.updatedAt).toBe(1);
 
     await addInvoice(page, 'Zahnarzt', '320,00', '2026-10-10');
     await ready(page, '/subscriptions?new=1');
@@ -474,9 +493,10 @@ test.describe('Finance: net worth on the tab "Verlauf"', () => {
     await dialog.getByLabel('Abbuchung am').fill('2026-09-30');
     await save(page);
     await ready(page, '/finance?tab=trend');
-    // Counts, the invoices first; the figure is what the accounts hold and deducts nothing.
+    // Counts, the invoices first (every open one, as in "Verfügbar"); the figure is what the accounts hold and
+    // deducts nothing.
     await expect(page.getByTestId('net-worth-context')).toHaveText(
-      'Bis Monatsende noch offen: 1 Rechnung · 1 Abo',
+      'Noch offen: 1 Rechnung · 1 Abo bis Monatsende',
     );
     await expect(page.getByTestId('hero')).toHaveText(/5\.850,00\s€/);
     // The overview keeps the liquidity figure.
@@ -487,7 +507,7 @@ test.describe('Finance: net worth on the tab "Verlauf"', () => {
     // The widget names its figure as the net worth in the context line: no second large number.
     await ready(page, '/');
     const widget = page.getByTestId('widget-finance:balance');
-    await expect(widget).toContainText(/Vermögen · 5\.484,01\s€ verfügbar/);
+    await expect(widget).toContainText(/Vermögen, davon 5\.484,01\s€ verfügbar/);
     await expect(widget.getByText(/5\.850,00\s€/)).toHaveCount(1);
   });
 

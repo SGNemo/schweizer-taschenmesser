@@ -67,7 +67,7 @@ export function TrendChart({
         aria-label={
           hide
             ? title
-            : t.finance.curveLabel(
+            : t.finance.netWorth.curve(
                 formatMoney(first.valueMinor, currency),
                 formatMoney(last.valueMinor, currency),
               )

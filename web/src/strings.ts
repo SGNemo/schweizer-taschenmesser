@@ -3298,20 +3298,23 @@ export const de = {
     netWorth: {
       /** The head draws no label: the context line names the figure first. */
       named: (n: number) => `Vermögen · ${n === 1 ? '1 Konto' : `${n} Konten`}`,
-      /** Context line: counts only, the invoices first. Never an amount. */
+      /** Context line: counts only, the invoices first (all open ones, whatever their due date). Never an amount. */
       open: (invoices: number, subs: number) =>
-        `Bis Monatsende noch offen: ${[
+        `Noch offen: ${[
           invoices > 0 && (invoices === 1 ? '1 Rechnung' : `${invoices} Rechnungen`),
-          subs > 0 && (subs === 1 ? '1 Abo' : `${subs} Abos`),
+          subs > 0 && `${subs === 1 ? '1 Abo' : `${subs} Abos`} bis Monatsende`,
         ]
           .filter(Boolean)
           .join(' · ')}`,
-      nothingOpen: 'Bis Monatsende ist nichts mehr offen.',
+      nothingOpen: 'Keine Rechnung offen, kein Abo mehr bis Monatsende.',
+      curve: (a: string, b: string) => `Vermögen von ${a} auf ${b}`,
       byKind: 'Vermögen nach Art des Kontos',
       otherCurrency: (code: string) => `Konten in ${code}`,
       notConverted: 'nicht umgerechnet',
       /** First words of the widget's context line: they name its figure. */
       widget: 'Vermögen',
+      /** The amount is a part of the figure, not the figure. */
+      widgetAvailable: (amount: string) => `Vermögen, davon ${amount} verfügbar`,
     },
     categoriesRing: (n: number) => (n === 1 ? '1 Kategorie' : `${n} Kategorien`),
     ringTitle: 'Wohin das Geld ging',

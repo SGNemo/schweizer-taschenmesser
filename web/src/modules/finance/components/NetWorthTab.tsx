@@ -4,6 +4,7 @@ import { t } from '@/strings';
 import { useNavigate } from 'react-router';
 import { Button, EmptyState, ItemList, ItemRow, SensitiveValue } from '@/ui';
 import { netWorth, netWorthSeries } from '../netWorth';
+import { useCurrency } from '../currency';
 import { useOpenUntilMonthEnd } from '../summary';
 import type { FinanceData } from '../types';
 import styles from '../routes/finance.module.css';
@@ -18,13 +19,14 @@ export function NetWorthTab({ data, all }: { data: FinanceData; all: FinanceData
   const navigate = useNavigate();
   const day = today();
   const points = netWorthSeries(data.accounts, data.txs, day, 12);
+  const currency = useCurrency();
   const worth = netWorth(all.accounts, all.txs, day);
-  const shown = data.accounts.length > 0 ? netWorth(data.accounts, data.txs, day)[0] : undefined;
-  const others = worth.filter((w) => w.currency !== shown?.currency);
-  const open = useOpenUntilMonthEnd(shown?.currency);
+  const shown = worth.find((w) => w.currency === currency);
+  const others = worth.filter((w) => w !== shown);
+  const open = useOpenUntilMonthEnd(currency);
   const n = t.finance.netWorth;
-  // One kind in one currency is the head's figure again: no row repeats it (B2).
-  const parts = shown && (shown.parts.length > 1 || others.length > 0) ? shown.parts : [];
+  // One kind is the head's figure again: no row repeats it (B2). Another currency keeps its own row.
+  const parts = shown && shown.parts.length > 1 ? shown.parts : [];
   return (
     <>
       {/* The first row of the tab: on the phone the page's "⋯" menu lies beside it (`besideContent`), so the row is
@@ -40,7 +42,7 @@ export function NetWorthTab({ data, all }: { data: FinanceData; all: FinanceData
           </p>
         ) : null}
       </div>
-      {shown && parts.length > 0 ? (
+      {shown && parts.length + others.length > 0 ? (
         <div className={styles.worthParts} data-testid="net-worth-parts">
           <ItemList label={n.byKind}>
             {parts.map((p) => (
