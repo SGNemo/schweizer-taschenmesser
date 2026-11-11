@@ -18,7 +18,7 @@ UI-Audit 4.0 weiterführen: Paket 0b-2 (Modulkopf als eine Titelzeile mit Reiter
 
 - Heimnetz-Sync (LAN-Hub, Koppeln, zweiter PC, „Nur im WLAN“): [design/sync-lan/CONCEPT.md](design/sync-lan/CONCEPT.md). Nicht gebaut: Abgleich ganz im Hintergrund.
 - Use case „Kopf leer“ (Pakete 1–4, Nachlese, nachgemessen): [design/usecases/kopf-leer/TARGET.md](design/usecases/kopf-leer/TARGET.md).
-- Erstkontakt-Runde 5 (Personen A–D, Installation ohne Hilfe, Dev-Preview-Erststart): `docs/qa/round-5/<a–d>/FINDINGS.md`.
+- Erstkontakt-Runde 5 (Personen A–D, Installation ohne Hilfe, Dev-Preview-Erststart): [`docs/qa/round-5.md`](qa/round-5.md).
 - Fitness (Pakete 1–5, Vorschau, aus): [features/fitness.md](features/fitness.md). Offen: Yazio-Import (Format unbekannt).
 - Planer (Pakete 1–5, Sweep): [design/plan/CONCEPT.md](design/plan/CONCEPT.md), [decisions/plan.md](decisions/plan.md). Eigene Konzepte stehen aus für Zeiterfassung, Energie, Gewohnheiten, Wochenrückblick.
 - Identität v3 und v3.1 (Fundament, alle Modulgruppen, Werkzeuge, Bibliotheken, Einstellungen, Abnahme): [design/MODULE-IDENTITY.md](design/MODULE-IDENTITY.md), [Abnahme](design/identity-v3-audit/03-acceptance.md).

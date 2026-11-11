@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { ready } from './helpers';
 
-/** Erstkontakt-Runde, person C (docs/qa/round-5/c/FINDINGS.md): quick capture on a phone. */
+/** Erstkontakt-Runde, person C (docs/qa/round-5.md, person C): quick capture on a phone. */
 test.use({ viewport: { width: 412, height: 915 }, hasTouch: true, isMobile: true });
 
 const openSheet = async (page: Page) => {

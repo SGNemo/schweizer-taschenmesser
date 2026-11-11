@@ -5,14 +5,13 @@ import { enable, ready } from './helpers';
 
 /**
  * Round 5, person B (office clerk, Excel, Sparkasse): the three tasks of the first 15 minutes on a
- * fresh installation. Finding ids refer to docs/qa/round-5/b/FINDINGS.md.
+ * fresh installation. Finding ids refer to docs/qa/round-5.md (person B).
  */
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-11-08T10:00:00'));
 });
 
-const sparkasse = () =>
-  readFileSync(resolve(process.cwd(), '../docs/qa/round-5/b/sparkasse-demo.csv'));
+const sparkasse = () => readFileSync(resolve(process.cwd(), 'e2e/fixtures/sparkasse-demo.csv'));
 
 async function importStatement(page: Page) {
   // Straight from the module settings, before the finance page was ever opened (B01).
