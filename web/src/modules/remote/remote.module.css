@@ -161,16 +161,16 @@
     grid-row: 1;
     grid-column: 1 / -1;
   }
-  .touch:has(> .legend) {
+  .touch:has(> .legend:not(.touchLegend)) {
     grid-template-rows: auto auto 1fr;
   }
-  .touch:has(> .legend) .touchState {
+  .touch:has(> .legend:not(.touchLegend)) .touchState {
     grid-row: 2;
   }
-  .touch:has(> .legend) .surface {
+  .touch:has(> .legend:not(.touchLegend)) .surface {
     grid-row: 2 / span 2;
   }
-  .touch:has(> .legend) .strips {
+  .touch:has(> .legend:not(.touchLegend)) .strips {
     grid-row: 3;
   }
   .surface {
