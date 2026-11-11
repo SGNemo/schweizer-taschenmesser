@@ -289,12 +289,12 @@ test.describe('Calendar: month lines, all-day pane, phone toolbar (UI round 6: S
         .filter({ has: page.getByRole('button', { name: 'Monat' }) });
       // "Mehr Felder anzeigen" moved into the "⋯" menu.
       await expect(main.getByRole('switch', { name: 'Mehr Felder anzeigen' })).toHaveCount(0);
-      const controls = [
-        // the toolbar's button (the head band may name one too until U15 lands)
-        main.getByRole('button', { name: 'Neuer Termin' }).last(),
-        main.getByRole('button', { name: 'Heute', exact: true }),
-        views,
-      ];
+      // Identity 4.0: the phone has no "Neuer Termin" button in the page; the plus of the bottom bar adds one.
+      await expect(main.getByRole('button', { name: 'Neuer Termin' })).toHaveCount(0);
+      await expect(
+        page.getByRole('button', { name: 'Termin eintragen', exact: true }),
+      ).toBeVisible();
+      const controls = [main.getByRole('button', { name: 'Heute', exact: true }), views];
       const tops = new Set<number>();
       for (const c of controls) {
         await expect(c).toBeVisible();

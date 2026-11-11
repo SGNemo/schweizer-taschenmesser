@@ -15,6 +15,7 @@ import {
   Icon,
   ItemList,
   ItemRow,
+  PageAction,
   PageHeader,
   Segmented,
   TextField,
@@ -636,18 +637,19 @@ export default function MapsPage() {
         {/* The primary follows the tab (U14): places are added on the map, routes on "Routen". On the map the
             search and the picked point lead; adding a route stays at hand as a secondary button. */}
         {tab === 'places' ? (
-          <Button variant="primary" onClick={addPlace}>
+          <PageAction short={t.nav.plusThings.place} onClick={addPlace}>
             <Icon name="plus" size={18} />
             {t.maps.add.place}
-          </Button>
+          </PageAction>
         ) : (
-          <Button
-            variant={tab === 'routes' ? 'primary' : undefined}
+          <PageAction
+            short={t.nav.plusThings.route}
+            variant={tab === 'routes' ? 'primary' : 'secondary'}
             onClick={() => setRouteTarget({ draft: true })}
           >
             <Icon name="route" size={18} />
             {t.maps.add.route}
-          </Button>
+          </PageAction>
         )}
       </PageHeader>
 

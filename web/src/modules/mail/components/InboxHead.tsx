@@ -18,12 +18,15 @@ export function InboxStamp({ unread }: { unread: number }) {
   );
 }
 
-/** Head of the mail page: the stamp with the count in the figure, the envelope at slot size S. No mail text. */
+/**
+ * Head of the mail page: the stamp with the count and the envelope. Identity 4.0: both are the page's signature block,
+ * which lies in the page under the standard head (the title row takes a plain figure only). No mail text.
+ */
 export function InboxHead({ unread }: { unread?: number }) {
   return (
     <>
       {unread !== undefined ? (
-        <HeroSlot area="figure">
+        <HeroSlot area="signature">
           <InboxStamp unread={unread} />
         </HeroSlot>
       ) : null}

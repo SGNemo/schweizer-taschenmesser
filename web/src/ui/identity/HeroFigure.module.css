@@ -29,6 +29,12 @@
   font-size: var(--text-sm);
   color: var(--text);
 }
+/* The placeholder of a hidden value keeps the size of running text, whatever the figure's size. */
+.mask {
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0;
+}
 .figure[data-type='thin'] .value {
   font-weight: var(--weight-light);
   letter-spacing: -0.045em;
@@ -40,4 +46,49 @@
 .figure[data-type='serif'] .value {
   font-family: var(--font-serif);
   letter-spacing: -0.01em;
+}
+
+/* In the title row of a standard module head (Identity 4.0, rule 2): one figure and its context line, right-aligned,
+   two short lines that fit the row. The caps label is not drawn (the context line names the number for the eye). */
+:global([data-head='standard']) .figure {
+  /* One column that is at least as wide as the number and at most as wide as the widest line: the context line has
+     no least width of its own (it hides its overflow), so it is the part that gives way, with an ellipsis. */
+  display: grid;
+  grid-template-columns: minmax(auto, max-content);
+  justify-items: end;
+  gap: 0;
+}
+/* Not shown, still read: a screen reader hears what the number measures ("Kontostand"). */
+:global([data-head='standard']) .label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+:global([data-head='standard']) .value {
+  /* The number is never cut (no ellipsis on a value): the context line under it gives way. */
+  font-size: var(--text-2xl);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+:global([data-head='standard']) .detail {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: var(--text-meta);
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-on-tint);
+}
+@media (max-width: 899px) {
+  :global([data-head='standard']) .value {
+    font-size: var(--text-lg);
+  }
+  :global([data-head='standard']) .detail {
+    font-size: var(--text-xs);
+  }
 }

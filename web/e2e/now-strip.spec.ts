@@ -7,7 +7,10 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function addLowItem(page: Page) {
-  await page.getByRole('button', { name: 'Vorrat hinzufügen' }).first().click();
+  await page
+    .getByRole('button', { name: /Vorrat (hinzufügen|eintragen)/ })
+    .first()
+    .click();
   const dialog = page.getByRole('dialog', { name: 'Vorrat hinzufügen' });
   await dialog.getByLabel('Name', { exact: true }).fill('Milch');
   await dialog.getByLabel('Vorrat (Anzahl)').fill('1');

@@ -312,7 +312,7 @@ describe('music page', () => {
     expect(await within(frame).findByTestId('music-now')).toHaveTextContent('Jetztlied');
     expect(within(frame).getByTestId('music-cover')).toBeTruthy();
     expect(frame).toHaveAttribute('data-signature', 'coverTone');
-    expect(frame).toHaveAttribute('data-head', 'cover');
+    expect(frame).toHaveAttribute('data-head', 'stage');
   });
 
   it('the start view is never empty: recently played and your playlists as covers', async () => {

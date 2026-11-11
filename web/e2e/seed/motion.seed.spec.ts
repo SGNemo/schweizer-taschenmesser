@@ -15,8 +15,8 @@ const moving = (page: Page) =>
     const roots = [
       document.querySelector('header'),
       document.querySelector('main [data-head]'),
-      // The bar that takes the head's place once the page is scrolled (layout/AreaFrame).
-      document.querySelector('[data-testid="module-compact"]'),
+      // Identity 4.0: the head itself stays at the top (sticky); its tabs are the part that remains on the phone.
+      document.querySelector('main [data-head] [data-slot="tabs"]'),
     ];
     const out = new Set<string>();
     for (const root of roots) {

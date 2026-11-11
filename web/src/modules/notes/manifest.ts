@@ -16,7 +16,7 @@ const manifest: ModuleManifest = {
     hue: 'violet',
     hue2: 'indigo',
     widget: 'notiz',
-    head: 'schreib',
+    head: 'standard',
     signature: 'notePaper',
     type: 'serif',
   },

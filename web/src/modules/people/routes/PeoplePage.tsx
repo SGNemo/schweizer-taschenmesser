@@ -18,6 +18,7 @@ import {
   IconButton,
   ItemList,
   ItemRow,
+  PageAction,
   PageHeader,
   patternStyles,
   Segmented,
@@ -158,10 +159,10 @@ function PeopleList({
     <>
       <PageHeader title={t.people.title}>
         <AdvancedToggle moduleId="people" />
-        <Button variant="primary" onClick={() => setTarget({ draft: true })}>
+        <PageAction short={t.people.meta.quickAdd} onClick={() => setTarget({ draft: true })}>
           <Icon name="plus" size={18} />
           {t.people.add}
-        </Button>
+        </PageAction>
         <StartDataMenu moduleId="people" />
       </PageHeader>
       {soonest ? (

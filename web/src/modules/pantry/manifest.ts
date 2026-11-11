@@ -16,7 +16,7 @@ const manifest: ModuleManifest = {
     hue: 'fern',
     hue2: 'moss',
     widget: 'kacheln',
-    head: 'regal',
+    head: 'standard',
     signature: 'shelf',
   },
   version: 3,

@@ -16,13 +16,14 @@ const manifest: ModuleManifest = {
   // (lime | moss | fern | teal | ocean | sky | cobalt | indigo | violet | orchid | slate; free in the area, 25° apart),
   // the catalogue type of the main widget (kpi | dueList | progress | checklist | timeline | tiles | status | gauge), the
   // widget's shape (kennzahl | zeitleiste | fortschritt | cover | himmel | kacheln | status | notiz | fokus | faellig | checkliste),
-  // the head variant (kennzahl | zeit | fortschritt | cover | himmel | regal | tresor | schreib | fokus; not the same as the
-  // neighbour module's in the area) and the signature inside the head ('none' until you build one).
+  // the head variant (standard | stage; Identity 4.0: `standard` for every module, a stage is the exception) and the
+  // signature (the drawing the module is recognised by; two modules with one hue each need one of their own, so pick
+  // yours from SIGNATURES before you ship: 'none' only passes while no other module has your hue).
   identity: {
     hue: 'slate',
     widgetType: 'kpi',
     widget: 'kennzahl',
-    head: 'schreib',
+    head: 'standard',
     signature: 'none',
   },
   version: 1,

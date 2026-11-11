@@ -91,9 +91,15 @@ h3 {
 p {
   margin: 0;
 }
+/* B7: links are neutral and underlined (tokens.css `--link*`); hovering firms the line up. */
 a {
-  color: var(--accent);
-  text-underline-offset: 0.18em;
+  color: var(--link);
+  text-decoration-line: var(--link-line);
+  text-decoration-color: var(--link-line-color);
+  text-underline-offset: var(--link-line-offset);
+}
+a:hover {
+  text-decoration-color: currentColor;
 }
 ::selection {
   background: var(--accent-soft);
@@ -148,4 +154,12 @@ textarea {
 [data-hash-target='true'] {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* Phone: the page scrolls under the top bar and the tabs of a module head that stay below it (layout/AreaFrame);
+   what is scrolled into view (keyboard focus, a search hit) stops below them. */
+@media (max-width: 899px) {
+  html:has([data-head='standard']) {
+    scroll-padding-top: calc(2 * var(--touch) + 2 * var(--space-3) + var(--space-4));
+  }
 }

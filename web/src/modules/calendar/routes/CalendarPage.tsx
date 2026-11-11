@@ -17,6 +17,7 @@ import {
   Button,
   Icon,
   IconButton,
+  PageAction,
   PageHeader,
   Segmented,
   SplitView,
@@ -213,10 +214,13 @@ export default function CalendarPage() {
           />
         }
       >
-        <Button variant="primary" onClick={() => setTarget({ draft: { startDate: date } })}>
+        <PageAction
+          short={t.calendar.meta.quickAdd}
+          onClick={() => setTarget({ draft: { startDate: date } })}
+        >
           <Icon name="plus" size={18} />
           {t.calendar.newEvent}
-        </Button>
+        </PageAction>
         <StartDataMenu moduleId="calendar" items={[advancedItem]} />
       </PageHeader>
       <NextEventLine />

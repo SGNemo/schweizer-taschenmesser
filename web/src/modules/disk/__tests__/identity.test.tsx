@@ -24,15 +24,18 @@ const drive = (root: string, totalGb: number, freeGb: number, isSystem = false):
   health: { status: 'ok', temperatureC: null, gap: null },
 });
 
-/** A minimal head: the figure and signature slots as real elements the page portals into. */
+/** A minimal head: the figure, signature and strip slots as real elements the page portals into. */
 function Head({ children }: { children: ReactNode }) {
   const [figure, setFigure] = useState<HTMLElement | null>(null);
   const [signature, setSignature] = useState<HTMLElement | null>(null);
+  const [extra, setExtra] = useState<HTMLElement | null>(null);
   const targets: HeroTargets = {
     notice: null,
     backdrop: null,
     title: null,
-    extra: null,
+    actions: null,
+    tabs: null,
+    extra,
     figure,
     signature,
   };
@@ -40,6 +43,7 @@ function Head({ children }: { children: ReactNode }) {
     <HeroContext.Provider value={targets}>
       <div data-testid="figure" ref={setFigure} />
       <div data-testid="signature" ref={setSignature} />
+      <div data-testid="extra" ref={setExtra} />
       {children}
     </HeroContext.Provider>
   );

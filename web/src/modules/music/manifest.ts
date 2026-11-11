@@ -19,7 +19,7 @@ const manifest: ModuleManifest = {
     hue: 'orchid',
     hue2: 'violet',
     widget: 'cover',
-    head: 'cover',
+    head: 'stage',
     signature: 'coverTone',
     type: 'mono',
   },

@@ -14,6 +14,7 @@ import {
   Icon,
   ItemList,
   ItemRow,
+  PageAction,
   PageHeader,
   Segmented,
   useOpenParam,
@@ -186,15 +187,15 @@ export default function FitnessPage() {
         }
       >
         {!view ? null : view !== 'food' ? (
-          <Button variant="primary" onClick={() => setSession('new')}>
+          <PageAction short={t.nav.plusThings.session} onClick={() => setSession('new')}>
             <Icon name="plus" size={18} />
             {t.fitness.addSession}
-          </Button>
+          </PageAction>
         ) : (
-          <Button variant="primary" onClick={() => setMeal('new')}>
+          <PageAction short={t.nav.plusThings.meal} onClick={() => setMeal('new')}>
             <Icon name="plus" size={18} />
             {t.fitness.addMeal}
-          </Button>
+          </PageAction>
         )}
         {/* ⋯: Importieren (Strong, Hevy, Cronometer) and the setup, as on the other module pages. */}
         <StartDataMenu moduleId="fitness" />

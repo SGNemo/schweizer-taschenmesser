@@ -137,13 +137,21 @@ test.describe('shopping list on a phone', () => {
     await noSideScroll(page);
   });
 
-  test('the "+" button leaves room: the last row can be scrolled above it', async ({ page }) => {
+  test('the plus leaves room: the last row can be scrolled above it; nothing floats over the page', async ({
+    page,
+  }) => {
     await addItems(page, ['Milch']);
-    const fab = page.getByRole('button', { name: 'Schnell hinzufügen' });
+    // Identity 4.0: the plus of the bottom bar is the page's entry (here: a new list); there is no round button.
+    const plus = page.getByTestId('bottom-plus');
+    await expect(plus).toHaveAccessibleName('Liste eintragen');
+    await expect(plus).toHaveText('Liste');
+    await expect(page.getByRole('button', { name: 'Schnell hinzufügen', exact: true })).toHaveCount(
+      0,
+    );
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     const last = (await page.getByRole('main').locator('li').last().boundingBox())!;
-    const fabBox = (await fab.boundingBox())!;
-    expect(last.y + last.height).toBeLessThanOrEqual(fabBox.y);
+    const plusBox = (await plus.boundingBox())!;
+    expect(last.y + last.height).toBeLessThanOrEqual(plusBox.y);
   });
 });
 

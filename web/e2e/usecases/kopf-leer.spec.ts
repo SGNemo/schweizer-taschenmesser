@@ -309,7 +309,7 @@ test('A Kopf leeren: fünf Dinge auf einmal', async ({ page, isMobile }, info) =
   await expect(page.getByRole('region', { name: 'Jetzt wichtig' }))
     .toBeVisible({ timeout: 5_000 })
     .catch(() => undefined);
-  await m.tap(page.getByRole('button', { name: 'Schnell hinzufügen' }));
+  await m.tap(page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }));
   m.dialog();
   const input = page.getByRole('textbox', { name: 'Was möchtest du festhalten?' }).last();
   await expect(input).toBeVisible();
@@ -555,7 +555,7 @@ test('C Handy: eine Sache im Vorbeigehen', async ({ page, isMobile }, info) => {
   await prepare(page);
   const m = new Meter(page, true);
   await m.go('/');
-  await m.tap(page.getByRole('button', { name: 'Schnell hinzufügen' }));
+  await m.tap(page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }));
   m.dialog();
   const input = page.getByRole('textbox', { name: 'Was möchtest du festhalten?' }).last();
   await m.type(input, 'Müll runterbringen');
