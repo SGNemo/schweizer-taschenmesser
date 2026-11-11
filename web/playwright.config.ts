@@ -32,6 +32,7 @@ const SMOKE_FILES = [
   'offline',
   'accounts',
   'money',
+  'subscriptions-plus',
   'todos-views',
   'calendar-views',
   'notes',
