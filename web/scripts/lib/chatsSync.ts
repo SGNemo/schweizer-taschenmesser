@@ -10,7 +10,22 @@
 
 export const START = '<!-- generated:open-prs -->';
 export const END = '<!-- /generated:open-prs -->';
-const REPO_URL = 'https://github.com/SGNemo/schweizer-taschenmesser/pull/';
+export const REPO = 'SGNemo/schweizer-taschenmesser';
+const REPO_URL = `https://github.com/${REPO}/pull/`;
+const PAGE = 100;
+
+/**
+ * The open PRs from GitHub's REST API through the `gh` CLI (GraphQL `gh pr list` is blocked in Claude
+ * sessions). One page of 100; more open PRs throw instead of silently dropping rows. `run` is the
+ * command runner (tests pass a fake).
+ */
+export function fetchOpenPrs(run: (cmd: string, args: string[]) => string): OpenPr[] {
+  const out = run('gh', ['api', `repos/${REPO}/pulls?state=open&per_page=${PAGE}`]);
+  const list: unknown = JSON.parse(out);
+  if (Array.isArray(list) && list.length >= PAGE)
+    throw new Error(`${PAGE} or more open PRs: the list may be incomplete, sync stopped`);
+  return normalizePrs(list);
+}
 
 export interface OpenPr {
   number: number;

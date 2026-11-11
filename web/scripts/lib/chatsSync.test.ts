@@ -3,7 +3,7 @@ import { copyFileSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { cells, isCurrent, normalizePrs, readTodos, syncDoc } from './chatsSync.ts';
+import { cells, fetchOpenPrs, isCurrent, normalizePrs, readTodos, syncDoc } from './chatsSync.ts';
 
 const FIX = resolve(__dirname, '__fixtures__/chatsSync');
 const CLI = resolve(__dirname, '../chats-sync.mjs');
@@ -28,6 +28,23 @@ describe('chats:sync – PR list', () => {
       labels: [],
     });
     expect(prs[1]!.labels).toEqual(['full-ci', 'no-changelog']);
+  });
+
+  it('fetches through gh api (REST, one page) and refuses a full page', () => {
+    const calls: string[][] = [];
+    const prsFrom = (n: number) => (cmd: string, args: string[]) => {
+      calls.push([cmd, ...args]);
+      return JSON.stringify(
+        Array.from({ length: n }, (_, i) => ({ number: i + 1, title: 't', head: { ref: 'b' } })),
+      );
+    };
+    expect(fetchOpenPrs(prsFrom(2))).toHaveLength(2);
+    expect(calls[0]).toEqual([
+      'gh',
+      'api',
+      'repos/SGNemo/schweizer-taschenmesser/pulls?state=open&per_page=100',
+    ]);
+    expect(() => fetchOpenPrs(prsFrom(100))).toThrow(/incomplete/);
   });
 
   it('refuses entries without number, title or branch', () => {
