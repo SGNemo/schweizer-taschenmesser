@@ -4,6 +4,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createFakeRemoteParts } from '@/core/platform/fakeRemote';
+import type { RemoteKeyAction } from '@/core/platform/types';
 import { useSyncStatus } from '@/core/sync/status';
 
 const fake = vi.hoisted(() => ({
@@ -85,6 +86,7 @@ describe('page Tastatur', () => {
     fake.parts.hooks.setGrant('full');
     await showKeyboard();
     await until(() => fake.parts.hooks.level() === 'full');
+    fireEvent.blur(field());
     const names = () =>
       [
         ...screen.getByTestId('remote-keys').querySelectorAll('button[data-testid^="remote-key-"]'),
@@ -117,6 +119,10 @@ describe('page Tastatur', () => {
     fake.parts.hooks.setGrant('full');
     await showKeyboard();
     await until(() => fake.parts.hooks.level() === 'full');
+    // the field took the focus by itself: the phone's keyboard is open
+    expect(document.activeElement).toBe(field());
+    expect(screen.queryByTestId('remote-keys')).toBeNull();
+    fireEvent.click(screen.getByTestId('remote-show-keys'));
     expect(screen.getByTestId('remote-keys')).toBeTruthy();
     fireEvent.focus(field());
     expect(screen.queryByTestId('remote-keys')).toBeNull();
@@ -164,5 +170,100 @@ describe('page Tastatur', () => {
     expect((screen.getByTestId('remote-send') as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByTestId('remote-to-media'));
     expect(screen.getByTestId('remote-play-pause')).toBeTruthy();
+  });
+
+  it('every key of the fixed list has its button – a new one cannot be forgotten', async () => {
+    // (the compiler makes this list complete: a key added to the type fails here first)
+    const all: Record<RemoteKeyAction, true> = {
+      'key-enter': true,
+      'key-backspace': true,
+      'key-escape': true,
+      'key-tab': true,
+      'key-alt-tab': true,
+      'key-f11': true,
+      'key-up': true,
+      'key-down': true,
+      'key-left': true,
+      'key-right': true,
+      'key-space': true,
+      'key-home': true,
+      'key-end': true,
+      'key-page-up': true,
+      'key-page-down': true,
+      'key-delete': true,
+    };
+    fake.parts.hooks.setGrant('full');
+    await showKeyboard();
+    await until(() => fake.parts.hooks.level() === 'full');
+    fireEvent.blur(field());
+    fireEvent.click(screen.getByTestId('remote-more-keys'));
+    const shown = [
+      ...screen.getByTestId('remote-keys').querySelectorAll('button[data-testid^="remote-key-"]'),
+    ].map((b) => b.getAttribute('data-testid')!.replace('remote-', ''));
+    expect(shown.sort()).toEqual(Object.keys(all).sort());
+    // the button keeps its name; open or closed is its state
+    expect(screen.getByTestId('remote-more-keys').textContent).toBe('Mehr Tasten');
+    expect(screen.getByTestId('remote-more-keys').getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('a press while the PC is not connected only connects, and the page says to press again', async () => {
+    fake.parts.hooks.setGrant('full');
+    await showKeyboard();
+    await until(() => fake.parts.hooks.level() === 'full');
+    // the session ended while the person was typing (the PC ends an idle one without a word)
+    await act(async () => fake.parts.hooks.close());
+    type('noch da');
+    fireEvent.click(screen.getByTestId('remote-send'));
+    expect(screen.getByTestId('remote-type-note').textContent).toBe(
+      'Die Verbindung steht gleich. Dann noch einmal senden.',
+    );
+    expect(fake.parts.hooks.typed()).toEqual([]);
+    expect(field().value).toBe('noch da');
+    // connected: the sentence goes, nothing was sent by itself, the next press sends
+    await until(() => fake.parts.hooks.level() === 'full');
+    await until(() => screen.queryByTestId('remote-type-note') === null);
+    expect(fake.parts.hooks.typed()).toEqual([]);
+    fireEvent.click(screen.getByTestId('remote-send'));
+    await until(() => fake.parts.hooks.typed().length === 1);
+    expect(fake.parts.hooks.typed()).toEqual(['noch da']);
+  });
+
+  it('what was typed is in no log, no storage and no database afterwards', async () => {
+    const said: unknown[] = [];
+    const spies = (['log', 'info', 'warn', 'error', 'debug'] as const).map((name) =>
+      vi.spyOn(console, name).mockImplementation((...args) => void said.push(...args)),
+    );
+    fake.parts.hooks.setGrant('full');
+    await showKeyboard();
+    await until(() => fake.parts.hooks.level() === 'full');
+    type('Merkwort-7391');
+    enter();
+    await until(() => fake.parts.hooks.typed().length === 1);
+    type('Merkwort-7391 bleibt');
+    fake.parts.hooks.cutNextText(3);
+    fireEvent.click(screen.getByTestId('remote-send'));
+    await until(() => screen.queryByTestId('remote-type-note') !== null);
+    spies.forEach((spy) => spy.mockRestore());
+    expect(JSON.stringify(said)).not.toContain('Merkwort');
+    expect(
+      JSON.stringify({ ...localStorage }) + JSON.stringify({ ...sessionStorage }),
+    ).not.toContain('Merkwort');
+    expect(window.location.href).not.toContain('Merkwort');
+    for (const { name } of await indexedDB.databases()) {
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        const open = indexedDB.open(name!);
+        open.onsuccess = () => resolve(open.result);
+        open.onerror = () => reject(open.error);
+      });
+      for (const store of [...db.objectStoreNames]) {
+        const rows = await new Promise<unknown[]>((resolve, reject) => {
+          const all = db.transaction(store).objectStore(store).getAll();
+          all.onsuccess = () => resolve(all.result);
+          all.onerror = () => reject(all.error);
+        });
+        expect(JSON.stringify(rows), `${name}/${store}`).not.toContain('Merkwort');
+      }
+      db.close();
+    }
   });
 });

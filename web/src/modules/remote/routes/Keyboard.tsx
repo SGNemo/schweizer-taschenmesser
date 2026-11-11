@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { RemotePcState, RemoteKeyAction } from '@/core/platform/types';
 import type { RemoteView, TypeResult } from '@/core/remote/session';
 import { t } from '@/strings';
-import { Button, NoReadAid, TextField } from '@/ui';
+import { Button, NoReadAid, TextField, useMediaQuery } from '@/ui';
 import { remoteSession } from '../session';
 import { describePad } from '../view';
 import styles from '../remote.module.css';
@@ -38,16 +38,43 @@ export function Keyboard({
   const [sending, setSending] = useState(false);
   const [more, setMore] = useState(false);
   const [note, setNote] = useState<string>();
+  // a press that found the page not connected yet: it connects, and the page says so
+  const [asked, setAsked] = useState(false);
+  // sideways on a phone the open keyboard leaves a strip: the hint makes room for the field
+  const low = useMediaQuery('(orientation: landscape) and (max-height: 500px)');
   const field = useRef<HTMLInputElement>(null);
+  const root = useRef<HTMLDivElement>(null);
   const usable = line.live || line.waiting;
   // The field takes the focus once, as soon as it can be typed in: the phone's keyboard opens by
-  // itself. Later the person decides (after "Tasten zeigen" it stays closed).
+  // itself. Later the person decides (after "Tasten zeigen" it stays closed) – and it never
+  // takes the focus away from a key or a step of this view the person is on.
   const focusedOnce = useRef(false);
   useEffect(() => {
     if (!usable || focusedOnce.current) return;
     focusedOnce.current = true;
+    const on = document.activeElement;
+    if (on && on !== field.current && root.current?.contains(on)) return;
     field.current?.focus();
   }, [usable]);
+  // Android closes its keyboard (back gesture, its own hide key) without taking the focus off
+  // the field. The screen growing back while the field has the focus is that: show the keys.
+  useEffect(() => {
+    const screen = window.visualViewport;
+    if (!screen || !focused) return;
+    let height = screen.height;
+    const onResize = () => {
+      if (screen.height > height + 100) {
+        field.current?.blur();
+        setFocused(false);
+      }
+      height = screen.height;
+    };
+    screen.addEventListener('resize', onResize);
+    return () => screen.removeEventListener('resize', onResize);
+  }, [focused]);
+  // a field that was switched off (the PC got locked) may never say that it lost the focus:
+  // the phone's keyboard counts as open only on a field that can be typed in
+  const typing = focused && usable;
 
   const said = (result: TypeResult): string | undefined => {
     if (result === 'busy') return k.busy;
@@ -59,10 +86,13 @@ export function Keyboard({
   const submit = async (enter: boolean) => {
     if (sending) return;
     if (!line.live) {
-      // not ready yet: the press is the person's step that connects or asks for the level
+      // not ready yet: the press is the person's step that connects or asks for the level –
+      // nothing is sent later by itself, so the page says to press again
       level.touched();
+      setAsked(true);
       return;
     }
+    setAsked(false);
     const value = text;
     if (!value && !enter) return;
     setNote(undefined);
@@ -76,8 +106,10 @@ export function Keyboard({
   const press = (key: RemoteKeyAction) => {
     if (!line.live) {
       level.touched();
+      setAsked(true);
       return;
     }
+    setAsked(false);
     tick();
     // a key that finds the queue full is simply not pressed: nothing to report
     remoteSession.key(key);
@@ -96,8 +128,11 @@ export function Keyboard({
     </button>
   );
 
+  // a press that only connected: said until the page is connected (then the next press sends)
+  const waitNote = asked && !line.live && usable ? k.connecting : note;
+
   return (
-    <div className={styles.typeView}>
+    <div className={styles.typeView} ref={root}>
       <LevelState line={line} level={level} onMedia={onMedia} />
 
       {/* what is typed here is nobody's to read along: no reading aid on it */}
@@ -114,7 +149,7 @@ export function Keyboard({
           <TextField
             ref={field}
             label={k.field}
-            hint={k.fieldHint}
+            hint={low && typing ? undefined : k.fieldHint}
             value={text}
             onChange={(e) => setText(e.target.value)}
             onFocus={() => setFocused(true)}
@@ -123,6 +158,7 @@ export function Keyboard({
             enterKeyHint="send"
             // no history of what was typed here; the phone's own word suggestions stay
             autoComplete="off"
+            // (the mark of "this field wants the focus"; the effect above gives it)
             data-autofocus
             data-testid="remote-text"
           />
@@ -130,27 +166,37 @@ export function Keyboard({
             <Button
               variant="primary"
               disabled={!usable || sending}
+              // sending keeps the phone's keyboard open: type, send, type on
+              onPointerDown={(e) => {
+                if (focused) e.preventDefault();
+              }}
               onClick={() => void submit(false)}
               data-testid="remote-send"
             >
               {sending ? k.sending : k.send}
             </Button>
-            {focused ? (
+            {typing ? (
               // the phone's keyboard covers the keys: closing it brings them back
-              <Button onClick={() => field.current?.blur()} data-testid="remote-show-keys">
+              <Button
+                onClick={() => {
+                  field.current?.blur();
+                  setFocused(false);
+                }}
+                data-testid="remote-show-keys"
+              >
                 {k.showKeys}
               </Button>
             ) : null}
           </div>
-          {note ? (
+          {waitNote ? (
             <p role="status" className={styles.note} data-testid="remote-type-note">
-              {note}
+              {waitNote}
             </p>
           ) : null}
         </form>
       </NoReadAid>
 
-      {focused ? null : (
+      {typing ? null : (
         <div className={styles.keys} role="group" aria-label={k.group} data-testid="remote-keys">
           <div className={styles.keyRow}>
             {key('key-enter', k.enter)}
@@ -177,7 +223,7 @@ export function Keyboard({
               onClick={() => setMore((on) => !on)}
               data-testid="remote-more-keys"
             >
-              {more ? k.less : k.more}
+              {k.more}
             </Button>
           </div>
           {more ? (

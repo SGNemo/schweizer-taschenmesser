@@ -181,6 +181,10 @@
 .padKey:active:not(:disabled) {
   transform: scale(0.98);
 }
+/* the arrows are one sign each: big enough to read in their tile */
+.arrows .padKey {
+  font-size: var(--text-xl);
+}
 .padKey:disabled {
   border: 1px dashed var(--border-strong);
   background: transparent;

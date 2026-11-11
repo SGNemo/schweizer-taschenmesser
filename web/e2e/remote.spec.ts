@@ -379,6 +379,28 @@ test('keyboard: type, read, send – the enter key sends with Enter, "Senden" wi
   const kept = await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }));
   expect(kept).not.toContain('Köln');
   expect(kept).not.toContain('zweite Zeile');
+  const rows = await page.evaluate(async () => {
+    let all = '';
+    for (const { name } of await indexedDB.databases()) {
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        const open = indexedDB.open(name!);
+        open.onsuccess = () => resolve(open.result);
+        open.onerror = () => reject(open.error);
+      });
+      for (const store of [...db.objectStoreNames]) {
+        all += await new Promise<string>((resolve, reject) => {
+          const get = db.transaction(store).objectStore(store).getAll();
+          get.onsuccess = () => resolve(JSON.stringify(get.result));
+          get.onerror = () => reject(get.error);
+        });
+      }
+      db.close();
+    }
+    return all;
+  });
+  expect(rows.length).toBeGreaterThan(0);
+  expect(rows).not.toContain('Köln');
+  expect(rows).not.toContain('zweite Zeile');
 
   // closing the keyboard shows the keys: the main ones first, the rare ones behind "Mehr Tasten"
   await page.getByTestId('remote-show-keys').click();
