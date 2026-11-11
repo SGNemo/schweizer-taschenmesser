@@ -8691,6 +8691,9 @@ export const de = {
       keepAwake: 'Bildschirm anlassen',
       keepAwakeHelp:
         'Der Bildschirm bleibt an, solange die Fernbedienung offen ist. Auf dem Touchpad bleibt er immer an.',
+      volumeKeys: 'Lautstärketasten des Handys steuern den PC',
+      volumeKeysHelp:
+        'Nur solange die Fernbedienung mit dem PC verbunden ist. Sonst regeln die Tasten wie gewohnt das Handy.',
       padSpeed: 'Zeigergeschwindigkeit auf dem Touchpad',
       padSpeedHelp:
         'Wie weit sich der Zeiger bei einer Wischbewegung bewegt. Die Zeigergeschwindigkeit von Windows kommt dazu.',
@@ -8699,6 +8702,7 @@ export const de = {
       padFast: 'Schnell',
     },
     phoneOnly: 'Die Fernbedienung gibt es in der Handy-App.',
+    volumeKeysNote: 'Lautstärketasten steuern den PC',
     views: 'Ansicht',
     touchpad: 'Touchpad',
     pad: {

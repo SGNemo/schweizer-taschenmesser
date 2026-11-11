@@ -4,7 +4,7 @@
  * and `FLAG_KEEP_SCREEN_ON`); the window itself cannot go "full screen" there, so the webview's
  * Fullscreen API answers that request and the bars go through the plugin.
  */
-import { invoke } from '@tauri-apps/api/core';
+import { addPluginListener, invoke, type PluginListener } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { createWebDisplay } from '../web';
 import type { DisplayService, PlatformKind } from '../types';
@@ -32,6 +32,32 @@ export function createDisplay(kind: PlatformKind): DisplayService {
         } catch (e) {
           console.warn('[platform] could not change keep-awake', e);
         }
+      },
+      volumeKeys: {
+        hold: (on) => call('set_volume_keys', on),
+        onKey(callback) {
+          let stopped = false;
+          let listener: PluginListener | undefined;
+          void addPluginListener<{ key?: unknown; repeat?: unknown }>(
+            'screen-mode',
+            'volume-key',
+            (event) => {
+              // only the two keys the plugin names; anything else is not ours to act on
+              if (event.key === 'up' || event.key === 'down')
+                callback(event.key, event.repeat === true);
+            },
+          )
+            .then((l) => {
+              if (stopped) void l.unregister().catch(() => undefined);
+              else listener = l;
+            })
+            .catch(() => undefined);
+          return () => {
+            stopped = true;
+            void listener?.unregister().catch(() => undefined);
+            listener = undefined;
+          };
+        },
       },
     };
   }
