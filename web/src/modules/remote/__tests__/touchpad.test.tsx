@@ -57,6 +57,16 @@ function finger(type: 'pointerdown' | 'pointermove' | 'pointerup', x: number, y:
 beforeEach(async () => {
   await remoteSession.close();
   fake.parts = createFakeRemoteParts();
+  // A dismissed unlock outlives the page (it is the app's one session): a test that failed
+  // midway must not hand it to the next one.
+  if (['unlock', 'unavailable'].includes(remoteSession.pad().kind)) {
+    fake.parts.hooks.setGrant('full');
+    const settled = remoteSession.raise('de', { again: true });
+    await until(() => remoteSession.pad().kind === 'ready');
+    await settled;
+    await remoteSession.close();
+    fake.parts = createFakeRemoteParts();
+  }
   fake.prefs = { haptics: false, keepAwake: false, padSpeed: 'normal', padLegendSeen: true };
   fake.setPrefs.mockClear();
   fake.keepAwake.mockClear();
@@ -230,7 +240,27 @@ describe('page Touchpad', () => {
     await until(() => fake.parts.hooks.level() === 'full');
   });
 
-  it('a PC that was locked when asked and is unlocked now: the pad waits for a touch, it does not say locked', async () => {
+  it('a mouse level that keeps failing is asked for a few times at most, not in a loop', async () => {
+    fake.parts.hooks.setGrant('full');
+    await showPad();
+    await until(() => fake.parts.hooks.level() === 'full');
+    // the session drops and every further ask for the level fails; Medien still opens
+    const open = fake.parts.remote.open.bind(fake.parts.remote);
+    let asked = 0;
+    fake.parts.remote.open = async (level, onEvent, lang) => {
+      if (level !== 'full') return open(level, onEvent, lang);
+      asked += 1;
+      throw new Error('protocol');
+    };
+    await act(async () => fake.parts.hooks.close());
+    finger('pointerdown', 20, 20);
+    finger('pointerup', 20, 20);
+    await wait(4500);
+    expect(asked).toBeGreaterThanOrEqual(1);
+    expect(asked).toBeLessThanOrEqual(2);
+  }, 15_000);
+
+  it('a PC that was locked when asked and is unlocked now: the pad asks again, it does not say locked', async () => {
     fake.parts.hooks.setGrant('full');
     fake.parts.hooks.setState({ locked: true });
     await showPad();

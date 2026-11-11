@@ -70,13 +70,11 @@ export function Touchpad({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Being on the pad asks for the mouse level – a few times by itself at most, then a touch does.
+  // Being on the pad asks for the mouse level – a few times by itself at most, then a touch does
+  // (only the person's own steps – a touch, "Erneut versuchen" – give it new tries: a try that
+  // fails reconnects by itself and must not count as a fresh start).
   const connected = view.kind === 'connected';
   const pcLocked = view.kind === 'connected' && view.pc.locked;
-  // every new session and every unlock of the PC may be asked about afresh
-  useEffect(() => {
-    if (connected && !pcLocked) tries.current = 0;
-  }, [connected, pcLocked]);
   useEffect(() => {
     if (!connected) return;
     const wants = pad.kind === 'off' || (pad.kind === 'locked' && !pcLocked);
@@ -124,7 +122,13 @@ export function Touchpad({
         <p className={styles.stateLine}>{line.text}</p>
         {line.step === 'retry' ? (
           <div>
-            <Button onClick={() => void remoteSession.open()} data-testid="remote-retry">
+            <Button
+              onClick={() => {
+                tries.current = 0;
+                void remoteSession.open();
+              }}
+              data-testid="remote-retry"
+            >
               {r.retry}
             </Button>
           </div>

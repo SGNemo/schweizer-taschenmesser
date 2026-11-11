@@ -156,8 +156,22 @@
     grid-column: 2;
     padding: var(--space-3);
   }
+  /* asked for from the menu: on top, everything else one row down – only while it is there */
   .legend {
+    grid-row: 1;
     grid-column: 1 / -1;
+  }
+  .touch:has(> .legend) {
+    grid-template-rows: auto auto 1fr;
+  }
+  .touch:has(> .legend) .touchState {
+    grid-row: 2;
+  }
+  .touch:has(> .legend) .surface {
+    grid-row: 2 / span 2;
+  }
+  .touch:has(> .legend) .strips {
+    grid-row: 3;
   }
   .surface {
     grid-row: 1 / span 2;

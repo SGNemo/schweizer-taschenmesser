@@ -324,4 +324,15 @@ test('touchpad: the strips reach the thumb zone upright, and sideways the pad fi
   expect(right.y + right.height).toBeLessThanOrEqual(412);
   expect(pad.y + pad.height).toBeLessThanOrEqual(412);
   await page.screenshot({ path: info.outputPath('remote-8-touchpad-landscape.png') });
+
+  // asked for from the menu, the legend shows on top – also sideways
+  await page.getByRole('button', { name: 'Weitere Aktionen' }).click();
+  await page.getByRole('menuitem', { name: 'So geht das Touchpad' }).click();
+  const legend = page.getByTestId('remote-legend');
+  await legend.scrollIntoViewIfNeeded();
+  const box = (await legend.boundingBox())!;
+  const below = (await surface.boundingBox())!;
+  expect(box.y + box.height).toBeLessThanOrEqual(below.y + 1);
+  await page.getByTestId('remote-legend-close').click();
+  await expect(legend).toHaveCount(0);
 });
