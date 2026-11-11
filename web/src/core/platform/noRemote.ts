@@ -5,5 +5,6 @@ export const noRemote: RemoteService = {
   supported: false,
   open: () => Promise.reject(new Error('unsupported')),
   send: () => Promise.reject(new Error('unsupported')),
+  pointer: () => Promise.reject(new Error('unsupported')),
   close: async () => undefined,
 };

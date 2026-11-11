@@ -250,6 +250,16 @@ export interface RemoteHostService {
 export type RemoteAction =
   'play-pause' | 'next' | 'previous' | 'volume-up' | 'volume-down' | 'mute' | 'lock';
 
+/** Mouse buttons, pressed or released (a session of the mouse level only). A fixed list. */
+export type RemoteButtonAction = 'left-down' | 'left-up' | 'right-down' | 'right-up';
+
+/** The texts of the phone's own unlock prompt (the shell has none; it shows them natively). */
+export interface RemoteUnlockPrompt {
+  title: string;
+  subtitle: string;
+  cancel: string;
+}
+
 /** The PC's four facts. `volume` is 0–100, or `null` when the PC cannot tell. */
 export interface RemotePcState {
   volume: number | null;
@@ -274,6 +284,8 @@ export interface RemoteOpened {
   /** What the PC grants this device at most. */
   grant: RemoteLevel;
   unlockRequired: boolean;
+  /** The PC asks for an unlock at the phone, and this phone has no lock the app can ask for. */
+  noLock: boolean;
   state: RemotePcState;
 }
 
@@ -283,14 +295,25 @@ export interface RemoteOpened {
  * decided and checked by the PC alone. `open` rejects with a short code: `not-paired`, `network`,
  * `no-answer` (the PC hung up without a word), `unknown-device` (the PC takes no input here, or
  * this device is not paired any more – never a reason to unpair), `protocol`, `closed` (a newer
- * `open` overtook this one), or a [`RemoteCloseReason`]. `send` rejects with `closed` or
- * `network`; neither is a state to show.
+ * `open` overtook this one), or a [`RemoteCloseReason`]. `send` and `pointer` reject with
+ * `closed`, `network` or `bad-level` (a mouse action on a media session); none is a state to show.
+ *
+ * Two levels. `full` (mouse) is opened only after a `media` session of this run told what the PC
+ * grants: `media-first` without one, `not-granted` when the grant is less – in both cases nothing
+ * is asked and the open session is left alone. When the PC asks for it, the shell unlocks the
+ * phone first, natively (once in eight hours): `unlock-cancelled`, `unlock-failed`. While the PC
+ * is locked the shell sends no pointer and no button.
  */
 export interface RemoteService {
   supported: boolean;
-  /** Only `media` for now: the shell refuses any other level until it can send pointer and keys. */
-  open(level: 'media', onEvent: (event: RemoteEvent) => void): Promise<RemoteOpened>;
-  send(session: number, actions: RemoteAction[]): Promise<void>;
+  open(
+    level: 'media' | 'full',
+    onEvent: (event: RemoteEvent) => void,
+    prompt?: RemoteUnlockPrompt,
+  ): Promise<RemoteOpened>;
+  send(session: number, actions: (RemoteAction | RemoteButtonAction)[]): Promise<void>;
+  /** One pointer move or wheel step; `dy > 0` is down, `dx > 0` to the right. */
+  pointer(session: number, kind: 'move' | 'scroll', dx: number, dy: number): Promise<void>;
   close(session: number): Promise<void>;
 }
 

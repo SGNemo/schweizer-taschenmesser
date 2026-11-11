@@ -17,12 +17,24 @@ export function createRemote(supported: boolean): RemoteService {
   if (!supported) return noRemote;
   return {
     supported,
-    open(level, onEvent) {
+    open(level, onEvent, prompt) {
       const channel = new Channel<RemoteEvent>();
       channel.onmessage = (event) => onEvent(event);
-      return call<RemoteOpened>('remote_client_open', { level, onEvent: channel });
+      return call<RemoteOpened>('remote_client_open', {
+        level,
+        prompt: prompt ?? null,
+        onEvent: channel,
+      });
     },
     send: (session, actions) => call<void>('remote_client_send', { session, actions }),
+    pointer: (session, kind, dx, dy) =>
+      call<void>('remote_client_pointer', {
+        session,
+        kind,
+        // the shell takes whole numbers; a fraction is the caller's to carry over
+        dx: Math.trunc(dx),
+        dy: Math.trunc(dy),
+      }),
     close: (session) => call<void>('remote_client_close', { session }),
   };
 }

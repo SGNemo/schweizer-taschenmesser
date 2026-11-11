@@ -537,6 +537,7 @@ fn remote_client_commands_exist_on_the_phone_only() {
     let wanted = [
         "remote_client_open",
         "remote_client_send",
+        "remote_client_pointer",
         "remote_client_close",
     ];
     let mobile = mobile_handler_commands();
@@ -611,9 +612,7 @@ fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
         "Link",
         "send_text",
         "Record::Key",
-        "Record::Move",
-        "Record::Button",
-        "Record::Scroll",
+        "Key::",
         "println!",
         "eprintln!",
         "log::",
@@ -624,6 +623,18 @@ fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
             "remote_client.rs mentions {forbidden}"
         );
     }
+    // pointer and button records are built in one place each, from numbers and a fixed list
+    for (record, times) in [
+        ("Record::Move", 1),
+        ("Record::Scroll", 1),
+        ("Record::Button", 1),
+    ] {
+        assert_eq!(code.matches(record).count(), times, "{record}");
+    }
+    // the phone's unlock is asked from Rust, in one place, over a value the page cannot name
+    assert_eq!(code.matches("native_unlock(app, prompt)").count(), 1);
+    assert!(code.contains(r#"const NAME: &str = "lan-client:remote-unlock";"#));
+    assert!(code.contains("Gate::Unlock =>"));
     // the key and the hub entry are read, never returned: no DTO carries them
     assert_eq!(code.matches("stored_key(&app)").count(), 1);
     assert_eq!(code.matches("hub_entry(&app)").count(), 1);

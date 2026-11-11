@@ -7,9 +7,11 @@
  */
 import type {
   RemoteAction,
+  RemoteButtonAction,
   RemoteCloseReason,
   RemoteEvent,
   RemoteOpened,
+  RemoteLevel,
   RemotePcState,
   RemoteService,
 } from './types';
@@ -26,14 +28,25 @@ export function createFakeRemoteParts() {
   let openError: string | undefined;
   let openErrorsLeft = 0;
   let next = 0;
-  let live: { session: number; onEvent: (e: RemoteEvent) => void } | undefined;
+  let live:
+    { session: number; level: 'media' | 'full'; onEvent: (e: RemoteEvent) => void } | undefined;
   let silent = false;
-  const sent: RemoteAction[] = [];
+  const sent: (RemoteAction | RemoteButtonAction)[] = [];
+  const pointed: { kind: 'move' | 'scroll'; dx: number; dy: number }[] = [];
+  // what the demo PC grants this phone, and what it said in its last `opened` (like the shell,
+  // the fake opens the mouse level only after a media session told the grant)
+  let grant: RemoteLevel = 'media';
+  let unlockRequired = false;
+  let known: { grant: RemoteLevel; unlockRequired: boolean } | undefined;
+  let unlock: 'ok' | 'cancel' | 'none' = 'ok';
+  let unlocked = false;
+  let unlocks = 0;
+  const MOUSE = new Set<string>(['left-down', 'left-up', 'right-down', 'right-up']);
   let opens = 0;
   let hold: Promise<void> | undefined;
   let greeting: RemoteCloseReason | undefined;
 
-  const apply = (action: RemoteAction) => {
+  const apply = (action: RemoteAction | RemoteButtonAction) => {
     const volume = pc.volume ?? 0;
     if (action === 'play-pause') pc.playing = !pc.playing;
     else if (action === 'volume-up') {
@@ -47,6 +60,18 @@ export function createFakeRemoteParts() {
   const remote: RemoteService = {
     supported: true,
     open: async (level, onEvent): Promise<RemoteOpened> => {
+      let noLock = false;
+      if (level === 'full') {
+        // the shell's gate: decided before anything is asked or closed
+        if (!known) throw new Error('media-first');
+        if (known.grant !== 'full') throw new Error('not-granted');
+        if (known.unlockRequired && !unlocked) {
+          unlocks += 1;
+          if (unlock === 'cancel') throw new Error('unlock-cancelled');
+          if (unlock === 'none') noLock = true;
+          else unlocked = true;
+        }
+      }
       opens += 1;
       // like the shell: every attempt has a number, also one that fails
       next += 1;
@@ -58,20 +83,37 @@ export function createFakeRemoteParts() {
       }
       // an attempt overtaken by a newer one is not a session
       if (session !== next) throw new Error('closed');
-      live = { session, onEvent };
+      // a session never gets more than the PC grants, whatever was asked
+      const got = level === 'full' && grant === 'full' ? 'full' : 'media';
+      live = { session, level: got, onEvent };
+      known = { grant, unlockRequired: grant === 'full' && unlockRequired };
       if (greeting) onEvent({ kind: 'closed', session, reason: greeting });
-      // the demo PC grants media: a session never gets more than that, whatever was asked
-      void level;
-      return { session, level: 'media', grant: 'media', unlockRequired: false, state: { ...pc } };
+      return {
+        session,
+        level: got,
+        grant,
+        unlockRequired: known.unlockRequired,
+        noLock,
+        state: { ...pc },
+      };
     },
     send: async (session, actions) => {
       if (!live || live.session !== session) throw new Error('closed');
+      if (live.level !== 'full' && actions.some((a) => MOUSE.has(a))) throw new Error('bad-level');
       for (const action of actions) {
+        // like the shell: no button reaches a locked PC
+        if (MOUSE.has(action) && pc.locked) continue;
         sent.push(action);
         apply(action);
       }
       // the PC answers with its state after what it took in, even unchanged
       if (!silent) live.onEvent({ kind: 'state', session, state: { ...pc } });
+    },
+    pointer: async (session, kind, dx, dy) => {
+      if (!live || live.session !== session) throw new Error('closed');
+      if (live.level !== 'full') throw new Error('bad-level');
+      if (pc.locked || (dx === 0 && dy === 0)) return;
+      pointed.push({ kind, dx: Math.trunc(dx), dy: Math.trunc(dy) });
     },
     close: async (session) => {
       if (live?.session === session) live = undefined;
@@ -112,6 +154,19 @@ export function createFakeRemoteParts() {
     endRightAfterOpen(reason: RemoteCloseReason | undefined) {
       greeting = reason;
     },
+    /** What the PC grants this phone from the next `open` on, and whether it asks for an unlock. */
+    setGrant(level: RemoteLevel, askUnlock = false) {
+      grant = level;
+      unlockRequired = askUnlock;
+    },
+    /** How the phone's own unlock prompt ends: done, dismissed, or the phone has no lock. */
+    setUnlock(answer: 'ok' | 'cancel' | 'none') {
+      unlock = answer;
+    },
+    /** How often the phone asked for an unlock. */
+    unlocks: () => unlocks,
+    pointed: () => [...pointed],
+    level: () => live?.level,
     sent: () => [...sent],
     opens: () => opens,
     isOpen: () => live !== undefined,
