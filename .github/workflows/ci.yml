@@ -2,7 +2,11 @@ name: CI
 
 # What runs when: docs/HOW-TO.md -> "Which checks run when" (PR / develop / nightly / release).
 #  - pull request: only the packages the change touches, E2E as the smoke list (desktop), draft PRs static + unit
-#  - label `full-ci` on a PR (full-ci.yml), push to develop/main, nightly (nightly.yml), manual run: everything
+#  - label `full-ci` on a PR (full-ci.yml), push to main, nightly (nightly.yml), manual run: everything
+#  - push to develop: everything, in two runs. This run (push) is the Dev-Preview gate with build and publish; the
+#    jobs outside the gate run in a second run of this file (`part: rest`, started by develop-rest.yml), which a
+#    newer push cancels. docs/howto/ci-layout.md -> "Concurrency".
+run-name: ${{ inputs.part == 'rest' && format('Outside the Dev-Preview gate ({0})', github.ref_name) || '' }}
 on:
   push:
     branches: [develop, main]
@@ -12,18 +16,26 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
+    inputs:
+      part:
+        description: 'all = every job (nightly, label full-ci, manual) | rest = only the jobs outside the Dev-Preview gate, for what changed since the last green manual run on this branch; a newer rest run cancels it'
+        type: choice
+        options: [all, rest]
+        default: all
 
 permissions:
   contents: read
 
 concurrency:
   # The event is part of the group so that the nightly dispatch never cancels a push run (and vice versa).
-  # A newer push to a pull request replaces its older run. Runs for develop and main are never cancelled: a
-  # push that lands while one is running waits its turn (GitHub keeps one pending run per group, and a newer
-  # push replaces a pending run, never a running one), so every run that starts also finishes, Dev-Preview
-  # build and publish included.
-  group: ci-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  # A newer push to a pull request replaces its older run. Push runs for develop and main and full dispatches
+  # are never cancelled: a push that lands while one is running waits its turn (GitHub keeps one pending run per
+  # group, and a newer push replaces a pending run, never a running one), so every run that starts also
+  # finishes, Dev-Preview build and publish included, and two publishes never overlap.
+  # The one run a newer one cancels is `part: rest` (the jobs outside the Dev-Preview gate of a develop push, own
+  # group): it only tests, and the run that replaces it tests everything since the last green one.
+  group: ci-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}${{ inputs.part == 'rest' && '-rest' || '' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || inputs.part == 'rest' }}
 
 jobs:
   # Decides what has to run. Any doubt (no diff, unreadable range, an unknown path, an error) means
@@ -34,11 +46,22 @@ jobs:
   #   PR    = only the packages the change touches (below), E2E smoke list on desktop (3 shards), the seed
   #           project (`seed`) and the stimulus budget with its ratchet whenever the web app can change;
   #           a draft PR runs only the static checks and the unit tests of the web app
+  #   develop = a push runs the Dev-Preview gate only (gitleaks, licences, static, unit, E2E smoke, native
+  #           shell on Linux); everything else runs in the `part: rest` run of the same commit, which leaves the
+  #           gate jobs out. Together they are a full run.
   changes:
     name: Which parts changed
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # A job-level block replaces the workflow-level one. `actions: read`: the rest part looks up the last green
+    # manual run of this workflow (read-only).
+    permissions:
+      contents: read
+      actions: read
     outputs:
+      since: ${{ steps.diff.outputs.since }}
+      stimulus: ${{ steps.diff.outputs.stimulus }}
+      windows: ${{ steps.diff.outputs.windows }}
       code: ${{ steps.diff.outputs.code }}
       web: ${{ steps.diff.outputs.web }}
       e2e: ${{ steps.diff.outputs.e2e }}
@@ -71,12 +94,19 @@ jobs:
           PUSH_BEFORE: ${{ github.event.before }}
           PUSH_AFTER: ${{ github.sha }}
           REF: ${{ github.ref }}
+          REF_NAME: ${{ github.ref_name }}
+          PART: ${{ inputs.part }}
           REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set +e
           code=true
           range=""
+          # Which jobs of a full run belong to this run: `gate` (push to develop), `rest` (dispatch with
+          # part=rest), `all` (everything else).
+          part=all
+          if [ "$EVENT" = "push" ] && [ "$REF" = "refs/heads/develop" ]; then part=gate; fi
+          if [ "$EVENT" = "workflow_dispatch" ] && [ "$PART" = "rest" ]; then part=rest; fi
           # Push to develop: look at everything since the last *published* Dev-Preview (its release name ends in
           # +<sha7>), not only at this push. A code merge whose run was replaced by a newer push (a pending run is
           # replaced, never a running one) is then built by the next run, whatever that push contained.
@@ -86,6 +116,19 @@ jobs:
             if [ -n "$built" ] && git cat-file -e "$built^{commit}" 2>/dev/null && git merge-base --is-ancestor "$built" "$PUSH_AFTER" 2>/dev/null; then
               since="$built"
               echo "Last published Dev-Preview was built from $built: checking $built..$PUSH_AFTER"
+            fi
+          fi
+          # Rest part: everything since the last green manual run on this branch (a rest run or a full one). A green
+          # run tested all code up to its commit or found none since the green run before it, so no commit is left
+          # out, however many rest runs were cancelled in between or started by a documentation push. No such run,
+          # an unknown commit or an API error: no range, so everything runs.
+          if [ "$part" = "rest" ]; then
+            green="$(gh api "repos/$REPO/actions/workflows/ci.yml/runs?branch=$REF_NAME&event=workflow_dispatch&status=success&per_page=1" -q '.workflow_runs[0].head_sha // ""' 2>/dev/null)"
+            if [ -n "$green" ] && git cat-file -e "$green^{commit}" 2>/dev/null && git merge-base --is-ancestor "$green" "$PUSH_AFTER" 2>/dev/null; then
+              since="$green"
+              echo "Last green manual run tested $green: checking $green..$PUSH_AFTER"
+              # The same commit was green already (a second start for one push): nothing left to test.
+              if [ "$(git rev-parse "$green")" = "$(git rev-parse "$PUSH_AFTER")" ]; then code=false; fi
             fi
           fi
           if [ "$EVENT" = "pull_request" ] && [ -n "$PR_BASE" ] && [ -n "$PR_HEAD" ]; then
@@ -156,7 +199,20 @@ jobs:
           # The seed project (guards of the UI rebuild) runs whenever the app E2E runs, not only on full runs. Set
           # here, after the draft and documentation overrides above, so that those stay without it.
           seed=$e2e
+          # Stimulus budget and the Windows shell have their own flags, so that the two runs of a develop push can
+          # split them from the smoke E2E and the Linux shell.
+          stimulus=$e2e; windows=$tauri
+          # Push to develop: only the Dev-Preview gate. Rest part: everything but the gate. Applied last, so the
+          # flags above mean the same in every run; the aggregate `web` reads the same flags.
+          if [ "$part" = "gate" ]; then
+            rest=false; seed=false; stimulus=false; windows=false; sync=false; server=false; mcp=false
+            shared=false; supporter=false; webhook=false; extension=false; llm=false
+          fi
+          if [ "$part" = "rest" ]; then
+            web=false; e2e=false; tauri=false
+          fi
           {
+            echo "since=$since"; echo "stimulus=$stimulus"; echo "windows=$windows"
             echo "code=$code"; echo "full=$full"; echo "rest=$rest"; echo "seed=$seed"; echo "shards=$shards"; echo "e2e_profile=$profile"
             echo "web=$web"; echo "e2e=$e2e"; echo "sync=$sync"; echo "server=$server"; echo "mcp=$mcp"
             echo "shared=$shared"; echo "supporter=$supporter"; echo "webhook=$webhook"
@@ -164,6 +220,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "code=$code full=$full profile=$profile web=$web e2e=$e2e sync=$sync server=$server mcp=$mcp shared=$shared"
           echo "supporter=$supporter webhook=$webhook extension=$extension tauri=$tauri llm=$llm"
+          echo "part=$part rest=$rest seed=$seed stimulus=$stimulus windows=$windows since=$since"
 
   # scribble/ is the chats' scratch space on develop (see scribble/README.md); the release merge removes it.
   scribble-guard:
@@ -227,7 +284,7 @@ jobs:
   stimulus-budget:
     name: Stimulus budget
     needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.e2e != 'false' }}
+    if: ${{ !cancelled() && needs.changes.outputs.stimulus != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # A job-level block replaces the workflow-level one: `contents: read` has to be repeated.
@@ -464,7 +521,7 @@ jobs:
           REST_RESULT: ${{ needs.web-e2e-rest.result }}
           SEED: ${{ needs.changes.outputs.seed }}
           SEED_RESULT: ${{ needs.e2e-seed.result }}
-          STIMULUS: ${{ needs.changes.outputs.e2e }}
+          STIMULUS: ${{ needs.changes.outputs.stimulus }}
           STIMULUS_RESULT: ${{ needs.stimulus-budget.result }}
         run: |
           echo "pre-check=$CHANGES web=$WEB e2e=$E2E static=$STATIC unit=$UNIT e2e-result=$E2E_RESULT"
@@ -723,7 +780,7 @@ jobs:
   rust-windows:
     name: Native shell on Windows (clippy, tests, size)
     needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.tauri != 'false' }}
+    if: ${{ !cancelled() && needs.changes.outputs.windows != 'false' }}
     runs-on: windows-latest
     timeout-minutes: 60
     defaults:
@@ -809,14 +866,61 @@ jobs:
       stage: build
     secrets: inherit
 
+  # An older run never turns the preview back: right before the publish, compare this commit with the one the
+  # published preview was built from (`+<sha>` at the end of the release name). Publish when this commit is ahead
+  # of it or the same (a repeated publish repairs a broken one), skip when it is behind or on another line.
+  # Push runs on develop never overlap (workflow group above), so this is about a re-run of an old run. No
+  # release yet or a name without a commit: publish. An API error fails the job (re-run it), it never guesses.
+  # No checkout: one API call. dev-preview.yml stays untouched.
+  dev-preview-fresh:
+    name: Dev-Preview would not go back in time
+    needs: [changes, dev-preview-build, secret-scan, licences, web-static, web-unit, web-e2e, rust]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.changes.outputs.code == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      publish: ${{ steps.order.outputs.publish }}
+    steps:
+      - name: Is this commit newer than the published Dev-Preview?
+        id: order
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          publish=true
+          if name="$(gh release view dev-preview --repo "$REPO" --json name -q .name 2>err.txt)"; then
+            built="$(printf '%s\n' "$name" | sed -n 's/.*+\([0-9a-f]\{7,40\}\)$/\1/p')"
+            if [ -z "$built" ]; then
+              echo "Release name '$name' carries no commit: publishing."
+            else
+              status="$(gh api "repos/$REPO/compare/$built...$SHA" -q .status)"
+              echo "Published preview: $built, this run: $SHA, this commit is '$status'."
+              case "$status" in
+                ahead|identical) ;;
+                behind|diverged)
+                  publish=false
+                  echo "::warning::The published Dev-Preview ($built) is not older than this commit ($status): publish skipped."
+                  echo "Dev-Preview publish skipped: the published preview \`$built\` is not older than this commit ($status)." >> "$GITHUB_STEP_SUMMARY" ;;
+                *) echo "::error::Unexpected compare status '$status'."; exit 1 ;;
+              esac
+            fi
+          elif grep -qi 'release not found' err.txt; then
+            echo "No dev-preview release yet: publishing."
+          else
+            cat err.txt; echo "::error::Could not read the dev-preview release."; exit 1
+          fi
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+
   # Publish gate: what can break the Dev-Preview app itself and finishes before its build does. Everything else
   # (rest of E2E, sync E2E + seed project, small packages, browser extension, local model, docs checks, CodeQL)
   # runs next to the build and after the publish: a red one turns the run red, but the preview is out already.
   # The preview is "an untested intermediate build" by its release notes; docs/HOW-TO.md "Which checks run when".
   dev-preview:
     name: Dev-Preview publish
-    needs: [changes, dev-preview-build, secret-scan, licences, web-static, web-unit, web-e2e, rust]
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.changes.outputs.code == 'true' }}
+    needs: [changes, dev-preview-build, dev-preview-fresh, secret-scan, licences, web-static, web-unit, web-e2e, rust]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.changes.outputs.code == 'true' && needs.dev-preview-fresh.outputs.publish == 'true' }}
     permissions:
       contents: write
     uses: ./.github/workflows/dev-preview.yml
@@ -828,3 +932,43 @@ jobs:
       tag: ${{ needs.dev-preview-build.outputs.tag }}
       publish: ${{ needs.dev-preview-build.outputs.publish }}
     secrets: inherit
+
+  # A red run on develop says who is next: the merges since the last green run of this part (gate: since the last
+  # published Dev-Preview; rest: since the last green manual run), because a run can stand for several pushes
+  # (a pending run is replaced, a rest run is cancelled by a newer one). Only starts when a job above failed.
+  culprits:
+    name: Red on develop – commits since the last green run
+    needs: [changes, secret-scan, docs-budget, docs-pairs, stimulus-budget, licences, web-static, web-unit, web-e2e, web-e2e-rest, web, packages, extension, e2e-sync, e2e-seed, rust, rust-windows, local-llm]
+    if: ${{ failure() && github.ref == 'refs/heads/develop' && github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: List the merges since the last green run
+        env:
+          SINCE: ${{ needs.changes.outputs.since }}
+          PART: ${{ inputs.part }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          what="the last published Dev-Preview"
+          if [ "$EVENT" = "workflow_dispatch" ]; then what="the last green manual run (part '${PART:-all}' or a full one)"; fi
+          {
+            echo "### This run is red"
+            if [ -n "$SINCE" ] && git cat-file -e "$SINCE^{commit}" 2>/dev/null; then
+              echo "Commits on \`develop\` since $what (\`${SINCE:0:7}\`), newest first. One of them broke it:"
+              echo
+              echo '```'
+              git log --first-parent --oneline "$SINCE..HEAD"
+              echo '```'
+            else
+              echo "No green run found to compare with ($what). The last 15 commits on \`develop\`:"
+              echo
+              echo '```'
+              git log --first-parent --oneline -15
+              echo '```'
+            fi
+            echo
+            echo "Who fixes it: docs/HOW-TO.md, \"Which checks run when\"."
+          } | tee -a "$GITHUB_STEP_SUMMARY"
