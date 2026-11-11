@@ -21,7 +21,7 @@ export function AddTaskDialog({
   onClose: () => void;
 }) {
   return (
-    <Dialog open={open} onClose={onClose} title={t.todos.add}>
+    <Dialog open={open} onClose={onClose} title={t.todos.newTask}>
       {open ? <Body initialTitle={initialTitle} onAdd={onAdd} onClose={onClose} /> : null}
     </Dialog>
   );

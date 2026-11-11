@@ -79,7 +79,7 @@ test.describe('Calm ToDo page (focus audit 2, package 2b)', () => {
       await plus.click();
       // The page's own entry: its add dialog opens with the cursor in the title, not the capture sheet.
       await expect(
-        page.getByRole('dialog', { name: 'ToDo hinzufügen' }).getByLabel('Titel'),
+        page.getByRole('dialog', { name: 'Neue Aufgabe' }).getByLabel('Titel'),
       ).toBeFocused();
       await expect(page.getByRole('dialog', { name: 'Schnell hinzufügen' })).toHaveCount(0);
     }

@@ -57,6 +57,19 @@ export function Tabs<T extends string = string>(props: TabsByItems | TabsByValue
     const left = Math.max(0, el.scrollLeft + b.left - a.left - (el.clientWidth - b.width) / 2);
     el.scrollTo({ left, behavior: motionReduced() ? 'auto' : 'smooth' });
   }, [activeId]);
+  // The edge fade of the phone's row is drawn only while the row overflows (`Tabs.module.css`).
+  useEffect(() => {
+    const el = nav.current;
+    if (!el) return;
+    const mark = () => {
+      el.dataset.overflow = el.scrollWidth > el.clientWidth + 1 ? 'true' : 'false';
+    };
+    mark();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(mark);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [items.length]);
   return (
     <nav ref={nav} aria-label={label} className={styles.tabs}>
       {items.map((i) =>

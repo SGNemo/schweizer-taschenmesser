@@ -1632,8 +1632,8 @@ export const de = {
     projectProgress: (done: number, total: number) => `${done} von ${total} erledigt`,
     todayCard: {
       label: 'Heute',
-      /** Behind the head's number: "11 heute". */
-      unit: 'heute',
+      /** The context line under the head's number names it: "heute" or "heute · etwa 45 Min". */
+      detail: (minutes: number) => (minutes > 0 ? `heute · etwa ${minutes} Min` : 'heute'),
       count: (n: number) => (n === 0 ? 'Nichts offen' : n === 1 ? '1 Aufgabe' : `${n} Aufgaben`),
       minutes: (m: number) => `etwa ${m} Min`,
       next: (title: string) => `Als Nächstes: ${title}`,
@@ -1749,6 +1749,8 @@ export const de = {
     },
     weekNoShort: 'KW',
     agendaEmpty: 'In diesem Zeitraum ist nichts geplant.',
+    /** A month line names its calendar in words (tooltip, screen reader). */
+    inCalendar: (name: string) => `Kalender ${name}`,
     /** The one verb of an empty day or an empty agenda. */
     emptyAction: 'Termin eintragen',
     holidayLabel: 'Feiertag',
@@ -1847,7 +1849,7 @@ export const de = {
       short: 'Erinnerung',
       edit: 'Erinnerung bearbeiten',
       empty: 'Noch keine Erinnerungen.',
-      emptyAction: 'Erste Erinnerung eintragen',
+      emptyAction: 'Erinnerung eintragen',
       next: 'Nächste',
       ended: 'Beendet',
       paused: 'Pausiert',
@@ -1901,7 +1903,7 @@ export const de = {
       noReminder: 'Ohne Erinnerung',
       reminder: (lead: string) => `Erinnerung: ${lead}`,
     },
-    tabsLabel: 'Ansicht',
+    tabsLabel: 'Bereich',
     tabCalendar: 'Kalender',
     tabReminders: 'Erinnerungen',
     kinds: {

@@ -38,7 +38,7 @@ export function AgendaView({ items, holidays, onOpenItem, onAdd }: Props) {
         const list = byDate.get(d) ?? [];
         const holiday = holidays.get(d);
         return (
-          <section key={d} className={styles.agendaDay} aria-label={formatDay(d, 'EEEE, d. MMMM')}>
+          <section key={d} className={styles.weekDay} aria-label={formatDay(d, 'EEEE, d. MMMM')}>
             <h3 className={styles.agendaHead}>
               {formatDay(d, 'EEEE, d. MMMM')}
               {holiday ? (

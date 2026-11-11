@@ -165,7 +165,7 @@ describe('ToDos empty page (U26)', () => {
     expect(within(empty).getAllByRole('button')).toHaveLength(1);
     expect(screen.queryByRole('textbox')).toBeNull();
     await userEvent.click(within(empty).getByRole('button', { name: 'Aufgabe eintragen' }));
-    const dialog = await screen.findByRole('dialog', { name: 'ToDo hinzufügen' });
+    const dialog = await screen.findByRole('dialog', { name: 'Neue Aufgabe' });
     await userEvent.type(
       within(dialog).getByRole('textbox', { name: 'Titel' }),
       'Erste Sache{Enter}',

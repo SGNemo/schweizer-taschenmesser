@@ -63,7 +63,7 @@ test.describe('keyboard (desktop)', () => {
     await ready(page, '/todos');
     // Typing "n" into a text field writes the letter, it opens no quick-add dialog on top.
     await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
-    const title = page.getByRole('dialog', { name: 'ToDo hinzufügen' }).getByLabel('Titel');
+    const title = page.getByRole('dialog', { name: 'Neue Aufgabe' }).getByLabel('Titel');
     await title.press('n');
     await expect(title).toHaveValue('n');
     await expect(page.getByRole('dialog')).toHaveCount(1);

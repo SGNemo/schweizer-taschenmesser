@@ -222,8 +222,8 @@ test.describe('Planer (week board, package 1)', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
     await expect(page.getByRole('button', { name: /Alte Sache/ }).first()).toBeVisible();
     // Without the plan the overdue thing is on today.
-    // The count of today is the head's figure ("1 heute").
-    await expect(page.getByTestId('today-count')).toHaveText(/^1\s*heute$/);
+    // The count of today is the head's figure, named by its context line ("heute · etwa 60 Min").
+    await expect(page.getByTestId('today-count')).toHaveText('1');
     // Today off: the planner puts the overdue thing on Tuesday.
     await page.goto('/planner');
     await today(page)
@@ -235,7 +235,9 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(page.getByTestId('day-2026-11-10')).toContainText('Alte Sache');
     // The ToDo page follows: not in Heute, the head counts nothing for today, no „Alle auf heute“.
     await page.goto('/todos?view=today');
-    await expect(page.getByTestId('today-count')).toHaveText(/^0\s*heute$/);
+    // Nothing on today: the head shows no zero, the first row says it in a sentence.
+    await expect(page.getByTestId('today-count')).toHaveCount(0);
+    await expect(page.getByTestId('today-card')).toContainText('Für heute ist nichts eingetragen.');
     await expect(page.getByRole('button', { name: /Alte Sache/ })).toHaveCount(0);
     await page.goto('/todos');
     await expect(page.getByRole('button', { name: /Alte Sache/ }).first()).toBeVisible();

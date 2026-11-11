@@ -13,6 +13,8 @@ import { ItemRow, kindLabel } from './ItemRow';
 import { KindMark } from './KindMark';
 import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { TimeGrid } from './TimeGrid';
+import { useCalendars } from './CalendarsBar';
+import { categoryColor } from '@/ui';
 import styles from '../routes/calendar.module.css';
 
 interface ViewProps {
@@ -90,6 +92,17 @@ export function MonthView({ date, items, onPickDay, onOpenItem, holidays }: View
   const widePage = usePageWidthAtLeast(MONTH_CHIPS_REM);
   const wide = wideViewport && (widePage ?? true);
   const weekStart = useWeekStart();
+  // The mark's colour is the entry's calendar: its name goes into the line in words (tooltip and accessible name),
+  // so the calendar is never told by colour alone (WCAG 1.4.1). An entry carries only the colour, so the name is
+  // looked up by it; two calendars of one colour are both named.
+  const calendars = useCalendars();
+  const calendarOf = (color: string | undefined): string | undefined =>
+    color
+      ? calendars
+          ?.filter((c) => categoryColor(c.tone) === color)
+          .map((c) => c.name)
+          .join(', ') || undefined
+      : undefined;
   return (
     <div className={styles.monthWrap}>
       <table className={styles.month}>
@@ -144,21 +157,36 @@ export function MonthView({ date, items, onPickDay, onOpenItem, holidays }: View
                     ) : null}
                     {wide ? (
                       <ul className={styles.lines}>
-                        {list.slice(0, limit).map((i) => (
-                          <li key={`${i.source}:${i.id}`}>
-                            <button
-                              type="button"
-                              className={`${styles.line} ${i.kind === 'event' && !repeats.has(repeatKey(i)) ? styles.lineOwn : ''} ${repeats.has(repeatKey(i)) ? styles.lineRepeat : ''} ${i.done ? styles.done : ''}`}
-                              title={`${kindLabel(i.kind)}: ${i.title}`}
-                              style={i.color ? ({ '--cal': i.color } as CSSProperties) : undefined}
-                              onClick={() => onOpenItem(i)}
-                            >
-                              <KindMark item={i} />
-                              {i.time ? <span className={styles.lineTime}>{i.time}</span> : null}
-                              <span className={styles.lineTitle}>{i.title}</span>
-                            </button>
-                          </li>
-                        ))}
+                        {list.slice(0, limit).map((i) => {
+                          const calendar = calendarOf(i.color);
+                          // Kind and calendar in words: the tooltip for the mouse, the hidden text for keyboard
+                          // and screen reader (a tooltip never shows on focus or touch).
+                          const about = [
+                            kindLabel(i.kind),
+                            calendar ? t.calendar.inCalendar(calendar) : null,
+                            i.done ? t.groups.done : null,
+                          ]
+                            .filter(Boolean)
+                            .join(', ');
+                          return (
+                            <li key={`${i.source}:${i.id}`}>
+                              <button
+                                type="button"
+                                className={`${styles.line} ${i.kind === 'event' && !repeats.has(repeatKey(i)) ? styles.lineOwn : ''} ${repeats.has(repeatKey(i)) ? styles.lineRepeat : ''} ${i.done ? styles.done : ''}`}
+                                title={`${about}: ${i.title}`}
+                                style={
+                                  i.color ? ({ '--cal': i.color } as CSSProperties) : undefined
+                                }
+                                onClick={() => onOpenItem(i)}
+                              >
+                                <KindMark item={i} />
+                                <span className={styles.srOnly}>{`${about}: `}</span>
+                                {i.time ? <span className={styles.lineTime}>{i.time}</span> : null}
+                                <span className={styles.lineTitle}>{i.title}</span>
+                              </button>
+                            </li>
+                          );
+                        })}
                         {list.length > limit ? (
                           <li>
                             <button

@@ -71,13 +71,13 @@ export function TodayCard({
 
   return (
     <>
-      {loaded ? (
+      {/* The standard head draws no label: the context line names the number ("heute · etwa 45 Min"). An empty
+          day shows no zero: the row's sentence says it. */}
+      {loaded && today.length > 0 ? (
         <HeroSlot area="figure">
-          {/* The standard head draws no label: the unit names the number, the context line its effort. */}
           <HeroFigure
             value={String(today.length)}
-            unit={t.todos.todayCard.unit}
-            detail={minutes > 0 ? t.todos.todayCard.minutes(minutes) : undefined}
+            detail={t.todos.todayCard.detail(minutes)}
             testId="today-count"
           />
         </HeroSlot>
@@ -93,11 +93,9 @@ export function TodayCard({
           ) : next ? (
             <>
               <span className="sr-only">{t.todos.todayCard.next(next.title)}</span>
-              {narrow ? null : (
-                <span className={styles.nextLabel} aria-hidden="true">
-                  {t.todos.todayCard.next('').trim()}
-                </span>
-              )}
+              <span className={styles.nextLabel} aria-hidden="true">
+                {t.todos.todayCard.next('').trim()}
+              </span>
               <strong className={styles.nextTitle} aria-hidden="true" title={next.title}>
                 {next.title}
               </strong>

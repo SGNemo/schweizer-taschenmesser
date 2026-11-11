@@ -106,7 +106,7 @@ test.describe('ten paths', () => {
     await expect(plus).toHaveAccessibleName('Aufgabe eintragen');
     await expect(plus).toBeEnabled();
     await s.tap(plus);
-    const field = page.getByRole('dialog', { name: 'ToDo hinzufügen' }).getByLabel('Titel');
+    const field = page.getByRole('dialog', { name: 'Neue Aufgabe' }).getByLabel('Titel');
     // The sheet opens with the cursor in the title: typing needs no tap of its own.
     await expect(field).toBeFocused();
     await s.type(field, 'Wäsche falten');
@@ -378,7 +378,7 @@ test.describe('Keyboard', () => {
   }) => {
     await ready(page, '/todos');
     await page.getByTestId('bottom-plus').click();
-    const field = page.getByRole('dialog', { name: 'ToDo hinzufügen' }).getByLabel('Titel');
+    const field = page.getByRole('dialog', { name: 'Neue Aufgabe' }).getByLabel('Titel');
     await field.click();
     // Emulate a browser that does not resize the page for the keyboard: only visualViewport shrinks.
     await page.evaluate(() => {

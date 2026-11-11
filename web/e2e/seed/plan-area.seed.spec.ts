@@ -75,7 +75,7 @@ test.describe('click paths: one click, a title, Enter', () => {
       await expect(page.locator('main form')).toHaveCount(0);
       // Click 1 of at most 2.
       await page.locator('[data-page-action]').click();
-      const dialog = page.getByRole('dialog', { name: 'ToDo hinzufügen' });
+      const dialog = page.getByRole('dialog', { name: 'Neue Aufgabe' });
       await expect(dialog).toBeVisible();
       expect(await visibleFields(page), 'visible fields of a new task').toBe(1);
       // The title has the focus: typing and Enter is all that is left.
@@ -120,7 +120,7 @@ test.describe('click paths: one click, a title, Enter', () => {
       await openPage(page, '/todos');
       await expect(page.getByTestId('bottom-plus')).toHaveAccessibleName('Aufgabe eintragen');
       await page.getByTestId('bottom-plus').tap();
-      const dialog = page.getByRole('dialog', { name: 'ToDo hinzufügen' });
+      const dialog = page.getByRole('dialog', { name: 'Neue Aufgabe' });
       await expect(dialog).toBeVisible();
       await dialog.getByLabel('Titel').fill('Wächter-Aufgabe am Handy');
       await page.keyboard.press('Enter');

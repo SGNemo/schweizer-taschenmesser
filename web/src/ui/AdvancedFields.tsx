@@ -35,6 +35,15 @@ export function useAdvancedMenuItem(moduleId: string): RowMenuItem {
   };
 }
 
+/** Ref callback: focuses the first control inside the node once, when it mounts. */
+function focusFirst(node: HTMLDivElement | null) {
+  node
+    ?.querySelector<HTMLElement>(
+      'input:not([type="hidden"]):not(:disabled), select:not(:disabled), textarea:not(:disabled), button:not(:disabled)',
+    )
+    ?.focus();
+}
+
 /**
  * Rarely used fields of a form. Shown when the module is in the Erweitert view, when one of them
  * already holds data (`hasData`: nothing is ever hidden that is in use), or after "Mehr Felder"
@@ -54,11 +63,20 @@ export function AdvancedFields({
 }) {
   const [advanced] = useAdvanced(moduleId);
   const [revealed, setRevealed] = useState(false);
+  const [clicked, setClicked] = useState(false);
   const summaryId = useId();
   const tx = tAdvanced.use();
   // Once the fields were shown they stay for this form: a field in the middle of an edit never unmounts because
   // the value that opened the fold was cleared.
   if (hasData && !revealed) setRevealed(true);
+  // After a click on "Mehr Felder" the button is gone: the focus moves to the first revealed control instead of
+  // falling back to the page (WCAG 2.4.3). `display: contents` keeps the fields in the form's own layout.
+  if (clicked)
+    return (
+      <div ref={focusFirst} className={styles.revealed}>
+        {children}
+      </div>
+    );
   if (advanced || hasData || revealed) return <>{children}</>;
   return (
     <div className={styles.folded}>
@@ -67,7 +85,10 @@ export function AdvancedFields({
         className={buttonStyles.flushStart}
         aria-label={tx.moreFieldsAria}
         aria-describedby={summary ? summaryId : undefined}
-        onClick={() => setRevealed(true)}
+        onClick={() => {
+          setRevealed(true);
+          setClicked(true);
+        }}
       >
         {tx.moreFields}
       </Button>

@@ -17,7 +17,7 @@ export const todos: Strings['todos'] = {
   newTask: 'New task',
   addShort: 'Task',
   addPlaceholder: 'New task …',
-  addHint: 'You can type the date and the duration along with it, for example „morgen 15 min“.',
+  addHint: 'You can add a date and a duration in the title, for example “morgen 15 min”.',
   markedDone: 'Marked as done.',
   markedOpen: 'Reopened.',
   taskDeleted: 'To-do deleted.',
@@ -71,7 +71,7 @@ export const todos: Strings['todos'] = {
   projectProgress: (done: number, total: number) => `${done} of ${total} done`,
   todayCard: {
     label: 'Today',
-    unit: 'today',
+    detail: (minutes) => (minutes > 0 ? `today · about ${minutes} min` : 'today'),
     count: (n: number) => (n === 0 ? 'Nothing open' : n === 1 ? '1 task' : `${n} tasks`),
     minutes: (m: number) => `about ${m} min`,
     next: (title: string) => `Next: ${title}`,
