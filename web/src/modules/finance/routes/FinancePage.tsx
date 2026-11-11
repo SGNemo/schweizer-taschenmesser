@@ -131,8 +131,9 @@ export default function FinancePage() {
     <>
       <PageHeader
         title={t.finance.title}
-        // The month switch is a short first row; the other tabs start with wider content.
-        besideContent={tab === 'overview' || tab === 'transactions'}
+        // The month switch is a short first row, and so is the context line of "Verlauf"; the other tabs start with
+        // wider content.
+        besideContent={tab === 'overview' || tab === 'transactions' || tab === 'trend'}
         views={
           <Tabs
             label={t.finance.tabsLabel}
@@ -158,7 +159,20 @@ export default function FinancePage() {
         <StartDataMenu moduleId="finance" items={[advancedItem]} />
       </PageHeader>
 
-      {availability && accountCount > 0 ? (
+      {tab === 'trend' ? (
+        // "Verlauf" shows what the accounts hold (net worth): the head's one figure here, named in its context line.
+        // No red below zero: a minus sign says it, and there is no notion of debt in the data.
+        balance !== undefined && accountCount > 0 ? (
+          <HeroSlot area="figure">
+            <HeroFigure
+              value={formatMoney(balance, currency)}
+              detail={t.finance.netWorth.named(accountCount)}
+              sensitive
+              testId="hero"
+            />
+          </HeroSlot>
+        ) : null
+      ) : availability && accountCount > 0 ? (
         <HeroSlot area="figure">
           <HeroFigure
             value={formatMoney(deducting ? availability.available : availability.balance, currency)}
@@ -287,7 +301,7 @@ export default function FinancePage() {
                 selectedId={wideScreen ? detail?.id : undefined}
               />
             ) : null}
-            {tab === 'trend' ? <NetWorthTab data={view} /> : null}
+            {tab === 'trend' ? <NetWorthTab data={view} all={data} /> : null}
             {tab === 'accounts' ? <AccountsTab data={data} /> : null}
             {tab === 'categories' ? <CategoriesTab data={data} /> : null}
           </SplitView>

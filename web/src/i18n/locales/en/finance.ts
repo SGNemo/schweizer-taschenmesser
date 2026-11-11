@@ -179,12 +179,27 @@ export const finance: Strings['finance'] = {
   balanceCurve: 'Course through the month',
   categoriesRing: (n: number) => (n === 1 ? '1 category' : `${n} categories`),
   ringTitle: 'Where the money went',
-  netWorthTitle: 'Total balance at month end',
+  netWorthTitle: 'Net worth at month end',
   netWorthChange: (amount: string, since: string) => `${amount} since ${since}`,
   netWorthUnchanged: (since: string) => `unchanged since ${since}`,
   netWorthEmpty: 'Not enough history yet',
   netWorthEmptyHint:
-    'From the second month with bookings, this shows how your total balance develops.',
+    'From the second month with transactions, this shows how your net worth develops.',
+  netWorth: {
+    named: (n: number) => `Net worth · ${n === 1 ? '1 account' : `${n} accounts`}`,
+    open: (invoices: number, subs: number) =>
+      `Still open until month end: ${[
+        invoices > 0 && (invoices === 1 ? '1 invoice' : `${invoices} invoices`),
+        subs > 0 && (subs === 1 ? '1 subscription' : `${subs} subscriptions`),
+      ]
+        .filter(Boolean)
+        .join(' · ')}`,
+    nothingOpen: 'Nothing else is open until month end.',
+    byKind: 'Net worth by account type',
+    otherCurrency: (code: string) => `Accounts in ${code}`,
+    notConverted: 'not converted',
+    widget: 'Net worth',
+  },
   curveFrom: 'Start of month',
   curveLabel: (a: string, b: string) => `Balance from ${a} to ${b}`,
   showTable: 'Show as table',

@@ -1,7 +1,8 @@
 import { addMonthsToMonth, monthOf } from '@/core/time/dates';
 import { toDateString } from '@/core/time/now';
-import { signed } from './logic';
-import type { Account, Transaction } from './schema';
+import { currencyOf } from '@/core/money';
+import { balances, currenciesOf, signed } from './logic';
+import { ACCOUNT_KINDS, type Account, type AccountKind, type Transaction } from './schema';
 
 type Tx = Pick<Transaction, 'accountId' | 'categoryId' | 'kind' | 'amountMinor' | 'date'>;
 
@@ -89,4 +90,59 @@ export function changeOver(
     diffMinor: points[points.length - 1]!.valueMinor - first.valueMinor,
     since: first.month,
   };
+}
+
+/** The accounts of one kind inside one currency. */
+export interface NetWorthPart {
+  kind: AccountKind;
+  /** Signed sum of the balances, cents. */
+  valueMinor: number;
+  /** How many accounts are of this kind. */
+  accounts: number;
+}
+
+/** What the accounts of one currency hold together, split by the account's kind. */
+export interface NetWorth {
+  currency: string;
+  /** Signed sum of all balances in this currency, cents. */
+  totalMinor: number;
+  accounts: number;
+  /** Only kinds that have an account, in the order of `ACCOUNT_KINDS`. */
+  parts: NetWorthPart[];
+}
+
+/** What an account is; one saved before version 4 (no `kind`) reads as a checking account. Nothing is written back. */
+export const kindOf = (a: Pick<Account, 'kind'>): AccountKind => a.kind ?? 'checking';
+
+/**
+ * Net worth ("Vermögen") on `asOf`: the signed sum of the balances of all accounts (`balances()`), per currency and
+ * split by the account's kind. One entry per currency, the main one first (`currenciesOf`); nothing is converted and
+ * no two currencies are ever added. A card account is negative through its own bookings: there is no sign rule here.
+ * Accounts are the only input: a savings goal (module Budgets) is a label on money that already lies on an account,
+ * so it can never be counted a second time. Without accounts the list is empty. Pure.
+ */
+export function netWorth(
+  accounts: (Pick<Account, 'openingBalanceMinor' | 'currency' | 'kind'> & { id: string })[],
+  txs: readonly Tx[],
+  asOf: string,
+): NetWorth[] {
+  if (accounts.length === 0) return [];
+  const perAccount = balances(accounts, txs as Tx[], asOf);
+  return currenciesOf(accounts).map((currency) => {
+    const own = accounts.filter((a) => currencyOf(a) === currency);
+    const parts = ACCOUNT_KINDS.map((kind): NetWorthPart => {
+      const group = own.filter((a) => kindOf(a) === kind);
+      return {
+        kind,
+        valueMinor: group.reduce((sum, a) => sum + (perAccount.get(a.id) ?? 0), 0),
+        accounts: group.length,
+      };
+    }).filter((p) => p.accounts > 0);
+    return {
+      currency,
+      totalMinor: parts.reduce((sum, p) => sum + p.valueMinor, 0),
+      accounts: own.length,
+      parts,
+    };
+  });
 }

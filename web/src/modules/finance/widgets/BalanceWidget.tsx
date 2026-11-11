@@ -49,6 +49,7 @@ export default function BalanceWidget() {
     : undefined;
   const firstBalance =
     first && data ? (balances(data.accounts, data.txs, day).get(first.id) ?? 0) : 0;
+  const accountsLabel = t.finance.headline.accounts(data?.accounts.length ?? 0);
   const body = (
     <>
       {/* The module's signature in small (identity v2): the first account as a card; the figure below is the total. */}
@@ -61,15 +62,16 @@ export default function BalanceWidget() {
         value={noAccounts || balance === undefined ? undefined : formatMoney(balance, currency)}
         empty={t.finance.noAccounts}
         emptyAction={{ label: t.finance.title, to: '/finance?tab=accounts' }}
-        context={
-          [
-            a?.deducting ? t.widgets.kpiAvailable(formatMoney(a.available, currency)) : '',
-            others,
-            expenseChange,
-          ]
-            .filter(Boolean)
-            .join(' · ') || t.finance.headline.accounts(data?.accounts.length ?? 0)
-        }
+        // The figure is the net worth ("Vermögen", what the accounts hold; tab "Verlauf"): the context line names it
+        // first instead of showing it as a second number. What is free until the month's end is the other widget.
+        context={[
+          t.finance.netWorth.widget,
+          a?.deducting ? t.widgets.kpiAvailable(formatMoney(a.available, currency)) : '',
+          others,
+          expenseChange || (a?.deducting || others ? '' : accountsLabel),
+        ]
+          .filter(Boolean)
+          .join(' · ')}
         trend={
           net !== 0
             ? {

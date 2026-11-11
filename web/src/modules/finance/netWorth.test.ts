@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { balances } from './logic';
-import { changeOver, lastMonths, netWorthSeries } from './netWorth';
+import { changeOver, kindOf, lastMonths, netWorth, netWorthSeries } from './netWorth';
+import { accountSchema } from './schema';
 
 const acc = (id: string, openingBalanceMinor: number) => ({ id, openingBalanceMinor });
 const tx = (date: string, kind: 'income' | 'expense', amountMinor: number, accountId = 'a') => ({
@@ -118,5 +119,147 @@ describe('changeOver', () => {
   });
   it('is undefined for fewer than two points', () => {
     expect(changeOver([{ month: '2026-05', valueMinor: 1 }])).toBeUndefined();
+  });
+});
+
+describe('netWorth', () => {
+  const DAY = '2026-09-15';
+  const account = (
+    id: string,
+    openingBalanceMinor: number,
+    kind?: 'checking' | 'savings' | 'cash' | 'card',
+    currency?: string,
+  ) => ({ id, openingBalanceMinor, kind, currency });
+
+  it('is empty without accounts', () => {
+    expect(netWorth([], [], DAY)).toEqual([]);
+    // Bookings of an account that is gone add nothing.
+    expect(netWorth([], [tx('2026-09-01', 'income', 500)], DAY)).toEqual([]);
+  });
+
+  it('adds the signed balances and groups them by kind, in the order of the kinds', () => {
+    const accounts = [
+      account('cash', 6000, 'cash'),
+      account('giro', 100000, 'checking'),
+      account('tages', 500000, 'savings'),
+      account('giro2', 2500, 'checking'),
+    ];
+    const txs = [tx('2026-09-01', 'expense', 40000, 'giro'), tx('2026-09-20', 'income', 9, 'giro')];
+    const [w, ...rest] = netWorth(accounts, txs, DAY);
+    expect(rest).toEqual([]);
+    expect(w).toEqual({
+      currency: 'EUR',
+      totalMinor: 568500,
+      accounts: 4,
+      parts: [
+        { kind: 'checking', valueMinor: 62500, accounts: 2 },
+        { kind: 'savings', valueMinor: 500000, accounts: 1 },
+        { kind: 'cash', valueMinor: 6000, accounts: 1 },
+      ],
+    });
+    // The same number as the sum of the balances and as the last point of the curve.
+    const sum = [...balances(accounts, txs, DAY).values()].reduce((a, b) => a + b, 0);
+    expect(w!.totalMinor).toBe(sum);
+    expect(netWorthSeries(accounts, txs, DAY, 12).at(-1)!.valueMinor).toBe(sum);
+  });
+
+  it('takes a card balance with the sign its bookings gave it: not negated, not negated twice', () => {
+    const accounts = [account('giro', 100000, 'checking'), account('card', 0, 'card')];
+    const txs = [tx('2026-09-03', 'expense', 25000, 'card')];
+    const [w] = netWorth(accounts, txs, DAY);
+    expect(w!.parts).toEqual([
+      { kind: 'checking', valueMinor: 100000, accounts: 1 },
+      { kind: 'card', valueMinor: -25000, accounts: 1 },
+    ]);
+    expect(w!.totalMinor).toBe(75000);
+    // A card with credit on it (a refund, a prepaid card) stays positive.
+    const [credit] = netWorth(
+      [account('card', 0, 'card')],
+      [tx('2026-09-04', 'income', 1500, 'card')],
+      DAY,
+    );
+    expect(credit!.totalMinor).toBe(1500);
+    // Paying the card off is a transfer: the parts move, the total does not.
+    const paid = netWorth(
+      accounts,
+      [
+        ...txs,
+        tx('2026-09-10', 'expense', 25000, 'giro'),
+        tx('2026-09-10', 'income', 25000, 'card'),
+      ],
+      DAY,
+    )[0]!;
+    expect(paid.totalMinor).toBe(75000);
+    expect(paid.parts.map((p) => p.valueMinor)).toEqual([75000, 0]);
+  });
+
+  it('counts money put aside for a savings goal once: it lies on the savings account', () => {
+    // 200 € go from the checking to the savings account for a goal. Goals (module Budgets) are no input of the
+    // formula, so what is saved for one cannot be added on top of the account that holds it.
+    const accounts = [account('giro', 100000, 'checking'), account('tages', 300000, 'savings')];
+    const before = netWorth(accounts, [], DAY)[0]!;
+    const after = netWorth(
+      accounts,
+      [tx('2026-09-05', 'expense', 20000, 'giro'), tx('2026-09-05', 'income', 20000, 'tages')],
+      DAY,
+    )[0]!;
+    expect(before.totalMinor).toBe(400000);
+    expect(after.totalMinor).toBe(400000);
+    expect(after.parts).toEqual([
+      { kind: 'checking', valueMinor: 80000, accounts: 1 },
+      { kind: 'savings', valueMinor: 320000, accounts: 1 },
+    ]);
+    expect(netWorth.length, 'accounts, bookings, day: nothing else goes in').toBe(3);
+  });
+
+  it('keeps every currency apart: one entry each, the euro first, nothing converted', () => {
+    const accounts = [
+      account('usd', 50000, 'savings', 'USD'),
+      account('giro', 100000, 'checking'),
+      account('mxn', 900000, 'cash', 'MXN'),
+    ];
+    const txs = [tx('2026-09-02', 'expense', 10000, 'usd')];
+    expect(netWorth(accounts, txs, DAY)).toEqual([
+      {
+        currency: 'EUR',
+        totalMinor: 100000,
+        accounts: 1,
+        parts: [{ kind: 'checking', valueMinor: 100000, accounts: 1 }],
+      },
+      {
+        currency: 'MXN',
+        totalMinor: 900000,
+        accounts: 1,
+        parts: [{ kind: 'cash', valueMinor: 900000, accounts: 1 }],
+      },
+      {
+        currency: 'USD',
+        totalMinor: 40000,
+        accounts: 1,
+        parts: [{ kind: 'savings', valueMinor: 40000, accounts: 1 }],
+      },
+    ]);
+  });
+
+  it('reads an account without a kind as a checking account and writes nothing back', () => {
+    const old = { id: 'old', ...accountSchema.parse({ name: 'Konto', openingBalanceMinor: 1234 }) };
+    expect(old.kind).toBeUndefined();
+    expect(kindOf(old)).toBe('checking');
+    const frozen = Object.freeze(old);
+    expect(netWorth([frozen, account('s', 10, 'savings')], [], DAY)[0]!.parts).toEqual([
+      { kind: 'checking', valueMinor: 1234, accounts: 1 },
+      { kind: 'savings', valueMinor: 10, accounts: 1 },
+    ]);
+    expect(frozen.kind).toBeUndefined();
+  });
+
+  it('stays in whole cents', () => {
+    const [w] = netWorth(
+      [account('a', 1, 'cash'), account('b', -3, 'card')],
+      [tx('2026-09-01', 'income', 33, 'a')],
+      DAY,
+    );
+    expect(Number.isInteger(w!.totalMinor)).toBe(true);
+    expect(w!.totalMinor).toBe(31);
   });
 });

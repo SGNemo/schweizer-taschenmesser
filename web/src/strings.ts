@@ -3288,12 +3288,31 @@ export const de = {
     expensesByCategory: 'Ausgaben nach Kategorie',
     trend: 'Einnahmen und Ausgaben der letzten 6 Monate',
     balanceCurve: 'Verlauf im Monat',
-    netWorthTitle: 'Gesamtstand am Monatsende',
+    netWorthTitle: 'Vermögen am Monatsende',
     netWorthChange: (amount: string, since: string) => `${amount} seit ${since}`,
     netWorthUnchanged: (since: string) => `unverändert seit ${since}`,
     netWorthEmpty: 'Noch zu wenig Verlauf',
     netWorthEmptyHint:
-      'Ab dem zweiten Monat mit Buchungen zeigt sich hier, wie sich dein Gesamtstand entwickelt.',
+      'Ab dem zweiten Monat mit Buchungen zeigt sich hier, wie sich dein Vermögen entwickelt.',
+    /** Net worth: what all accounts hold together (tab "Verlauf", context line of the widget). */
+    netWorth: {
+      /** The head draws no label: the context line names the figure first. */
+      named: (n: number) => `Vermögen · ${n === 1 ? '1 Konto' : `${n} Konten`}`,
+      /** Context line: counts only, the invoices first. Never an amount. */
+      open: (invoices: number, subs: number) =>
+        `Bis Monatsende noch offen: ${[
+          invoices > 0 && (invoices === 1 ? '1 Rechnung' : `${invoices} Rechnungen`),
+          subs > 0 && (subs === 1 ? '1 Abo' : `${subs} Abos`),
+        ]
+          .filter(Boolean)
+          .join(' · ')}`,
+      nothingOpen: 'Bis Monatsende ist nichts mehr offen.',
+      byKind: 'Vermögen nach Art des Kontos',
+      otherCurrency: (code: string) => `Konten in ${code}`,
+      notConverted: 'nicht umgerechnet',
+      /** First words of the widget's context line: they name its figure. */
+      widget: 'Vermögen',
+    },
     categoriesRing: (n: number) => (n === 1 ? '1 Kategorie' : `${n} Kategorien`),
     ringTitle: 'Wohin das Geld ging',
     curveFrom: 'Monatsbeginn',

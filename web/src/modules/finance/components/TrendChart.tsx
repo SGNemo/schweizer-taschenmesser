@@ -1,7 +1,8 @@
 import { formatMoney } from '@/core/money';
 import { formatMonth } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Card } from '@/ui';
+import { useHideValues } from '@/core/focus/hideValues';
+import { Card, SensitiveValue } from '@/ui';
 import { useCurrency } from '../currency';
 import { changeOver, type MonthPoint } from '../netWorth';
 import styles from '../routes/finance.module.css';
@@ -18,12 +19,17 @@ export function TrendChart({
   points,
   title,
   testId = 'trend-chart',
+  lastElsewhere = false,
 }: {
   points: MonthPoint[];
   title: string;
   testId?: string;
+  /** Today's value is the page's head figure already: the foot names the last month without repeating the amount. */
+  lastElsewhere?: boolean;
 }) {
   const currency = useCurrency();
+  // "Werte ausblenden": the line keeps its shape, every amount around it (label, foot, table) is masked.
+  const hide = useHideValues();
   if (points.length < 2) return null;
   const values = points.map((p) => p.valueMinor);
   const lo = Math.min(...values);
@@ -58,37 +64,44 @@ export function TrendChart({
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="none"
         role="img"
-        aria-label={t.finance.curveLabel(
-          formatMoney(first.valueMinor, currency),
-          formatMoney(last.valueMinor, currency),
-        )}
+        aria-label={
+          hide
+            ? title
+            : t.finance.curveLabel(
+                formatMoney(first.valueMinor, currency),
+                formatMoney(last.valueMinor, currency),
+              )
+        }
         data-testid={testId}
       >
         <path d={area} className={styles.curveFill} />
         <path d={line} className={styles.curveLine} vectorEffect="non-scaling-stroke" />
       </svg>
-      <div className={styles.curveFoot}>
-        <span>
-          {formatMonth(first.month)} · {formatMoney(first.valueMinor, currency)}
-        </span>
-        <span>
-          {formatMonth(last.month)} · {formatMoney(last.valueMinor, currency)}
-        </span>
-      </div>
-      <p className={styles.curveFoot} data-testid={`${testId}-change`}>
-        {changeText}
-      </p>
-      <table className="sr-only">
-        <caption>{title}</caption>
-        <tbody>
-          {points.map((p) => (
-            <tr key={p.month}>
-              <th scope="row">{formatMonth(p.month)}</th>
-              <td>{formatMoney(p.valueMinor, currency)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <SensitiveValue>
+        <div className={styles.curveFoot} data-testid={`${testId}-foot`}>
+          <span>
+            {formatMonth(first.month)} · {formatMoney(first.valueMinor, currency)}
+          </span>
+          <span>
+            {formatMonth(last.month)}
+            {lastElsewhere ? null : ` · ${formatMoney(last.valueMinor, currency)}`}
+          </span>
+        </div>
+        <p className={styles.curveFoot} data-testid={`${testId}-change`}>
+          {changeText}
+        </p>
+        <table className="sr-only">
+          <caption>{title}</caption>
+          <tbody>
+            {points.map((p) => (
+              <tr key={p.month}>
+                <th scope="row">{formatMonth(p.month)}</th>
+                <td>{formatMoney(p.valueMinor, currency)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </SensitiveValue>
     </Card>
   );
 }
