@@ -32,10 +32,8 @@ export const budgets: Strings['budgets'] = {
       bookings: 'View transactions',
     },
     head: {
-      free: 'Still free',
       chip: (name: string, pct: number) => `${name} ${pct} %`,
-      context: (_n: number, over: number) =>
-        over > 0 ? `Free · ${over} over` : 'Free · within limit',
+      context: (over: number) => (over > 0 ? `Left · ${over} over` : 'Left · within limit'),
       ring: (n: number) => `Spending across ${n} budgets`,
     },
     goal: {

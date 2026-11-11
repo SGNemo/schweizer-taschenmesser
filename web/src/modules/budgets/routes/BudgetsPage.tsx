@@ -130,9 +130,8 @@ export default function BudgetsPage() {
       {tab === 'budgets' && data && inMain.length > 0 && mainCurrency ? (
         <HeroSlot area="figure">
           <HeroFigure
-            label={t.budgets.ext.head.free}
             value={formatMoney(free, mainCurrency)}
-            detail={t.budgets.ext.head.context(inMain.length, overCount)}
+            detail={t.budgets.ext.head.context(overCount)}
             sensitive
             testId="budgets-free"
           />

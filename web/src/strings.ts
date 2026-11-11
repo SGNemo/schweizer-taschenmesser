@@ -5094,12 +5094,9 @@ export const de = {
         bookings: 'Buchungen ansehen',
       },
       head: {
-        free: 'Noch frei',
         chip: (name: string, pct: number) => `${name} ${pct} %`,
-        /** The important part first: a line cut short on the phone still says the right thing (UI audit B2). */
         /** Names the figure (the head draws no label), then what matters; short enough for the phone's head. */
-        context: (_n: number, over: number) =>
-          over > 0 ? `Frei · ${over} darüber` : 'Frei · im Rahmen',
+        context: (over: number) => (over > 0 ? `Frei · ${over} darüber` : 'Frei · im Rahmen'),
         ring: (n: number) => `Verteilung der Ausgaben auf ${n} Budgets`,
       },
       goal: {

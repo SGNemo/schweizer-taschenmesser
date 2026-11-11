@@ -161,7 +161,6 @@ export default function FinancePage() {
       {availability && accountCount > 0 ? (
         <HeroSlot area="figure">
           <HeroFigure
-            label={deducting ? t.finance.available : t.finance.balance}
             value={formatMoney(deducting ? availability.available : availability.balance, currency)}
             detail={t.finance.headline.named(!!deducting, accountCount)}
             tone={
