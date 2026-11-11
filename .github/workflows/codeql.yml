@@ -30,7 +30,7 @@ concurrency:
 jobs:
   # Rust takes 9 to 14 min, the other languages 1 to 2. On a pull request the Rust analysis runs only when the PR
   # touches Rust (or this file); every push to develop, the weekly run and a manual run always analyse all three
-  # languages, so no commit that lands is left unscanned. Decision: docs/decisions/meta.md.
+  # languages, so no commit that lands is left unscanned. Decision: docs/decisions/meta-ci-docs.md.
   rust-changed:
     name: Does the change touch Rust?
     runs-on: ubuntu-latest
@@ -67,6 +67,8 @@ jobs:
     #   - https://gh.io/using-larger-runners (GitHub.com only)
     # Consider using larger runners or machines with greater resources for possible analysis time improvements.
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+    # Rust takes 13 min (p90 15.4, Nov 2026); without a limit a hang holds a runner for six hours.
+    timeout-minutes: 40
     permissions:
       # required for all workflows
       security-events: write
