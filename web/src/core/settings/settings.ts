@@ -40,19 +40,39 @@ export function setSettings(
   patch: Record<string, unknown>,
   defaults?: Readonly<Record<string, unknown>>,
 ): Promise<void> {
-  return inOrder(scope, () => writeSettings(scope, patch, defaults));
+  return updateSettings(scope, () => patch, defaults);
+}
+
+/**
+ * Like `setSettings`, but the patch is computed from the stored values inside the queue: for a
+ * change that depends on what is there (append to a list, remove one entry). `make` returns
+ * `undefined` to write nothing; it must not wait for anything but the values it gets.
+ */
+export function updateSettings(
+  scope: string,
+  make: (values: Readonly<Record<string, unknown>>) => Record<string, unknown> | undefined,
+  defaults?: Readonly<Record<string, unknown>>,
+): Promise<void> {
+  return inSettingsOrder(scope, async () => {
+    const old = valuesOf(await settingsRepo.get(scope));
+    const patch = make(old);
+    if (patch) await writeSettings(scope, old, patch, defaults);
+  });
 }
 
 /** Tail of the running patches per scope; a scope leaves the map once its last patch is done. */
 const pending = new Map<string, Promise<unknown>>();
 
 /**
- * Runs the patches of one scope one after the other. Each patch reads, merges and writes the whole
- * row, so two patches started together would read the same row and the later write would drop the
- * earlier change. A queue instead of a Dexie transaction: the repo write already opens its own
- * transaction after awaiting the device context, which must not happen inside an outer one.
+ * Runs the writes of one scope one after the other. Each write reads, merges and writes the whole
+ * row, so two writes started together would read the same row and the later one would drop the
+ * earlier change. Every read-modify-write of a settings row goes through here (`setSettings` and
+ * the few callers that write `settingsRepo` directly); `run` must not wait for another write of the
+ * same scope, or the queue stalls. A queue instead of a Dexie transaction: the repo write already
+ * opens its own transaction after awaiting the device context, which must not happen inside an
+ * outer one.
  */
-function inOrder(scope: string, run: () => Promise<void>): Promise<void> {
+export function inSettingsOrder<R>(scope: string, run: () => Promise<R>): Promise<R> {
   const before = pending.get(scope) ?? Promise.resolve();
   const mine = before.then(run, run);
   const tail = mine.catch(() => undefined);
@@ -65,11 +85,10 @@ function inOrder(scope: string, run: () => Promise<void>): Promise<void> {
 
 async function writeSettings(
   scope: string,
+  old: Record<string, unknown>,
   patch: Record<string, unknown>,
   defaults?: Readonly<Record<string, unknown>>,
 ): Promise<void> {
-  const row = await settingsRepo.get(scope);
-  const old = valuesOf(row);
   await settingsRepo.upsert(scope, { ...old, ...patch });
   if (!changeListener) return;
   for (const [key, after] of Object.entries(patch)) {

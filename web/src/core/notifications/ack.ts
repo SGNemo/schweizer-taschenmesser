@@ -8,7 +8,7 @@
  */
 import { db } from '@/core/db/db';
 import { ENVELOPE_KEYS } from '@/core/db/types';
-import { settingsRepo } from '@/core/settings/settings';
+import { inSettingsOrder, settingsRepo } from '@/core/settings/settings';
 import { now } from '@/core/time/now';
 import { REMINDERS_SCOPE } from './snooze';
 
@@ -34,7 +34,12 @@ export async function loadAcked(): Promise<Set<string>> {
   return keys;
 }
 
-export async function ackNotification(key: string): Promise<void> {
+/** Queued with the other writes of the scope (the "Später" entries), so neither drops the other. */
+export function ackNotification(key: string): Promise<void> {
+  return inSettingsOrder(REMINDERS_SCOPE, () => writeAck(key));
+}
+
+async function writeAck(key: string): Promise<void> {
   const at = now();
   const data = Object.fromEntries(
     Object.entries((await row()) ?? {}).filter(([field, value]) => {

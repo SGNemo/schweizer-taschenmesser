@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ALL_WIDGET_SIZES, type WidgetSize } from '@/core/modules/types';
-import { settingsRepo } from '@/core/settings/settings';
+import { inSettingsOrder, settingsRepo } from '@/core/settings/settings';
 import { useLiveQuery } from 'dexie-react-hooks';
 
 /**
@@ -116,6 +116,10 @@ export async function saveLayout(
   layout: HomeLayout,
   scope: LayoutScope = HOME_SCOPE,
 ): Promise<void> {
+  await inSettingsOrder(scope, () => writeLayout(layout, scope));
+}
+
+async function writeLayout(layout: HomeLayout, scope: LayoutScope): Promise<void> {
   await settingsRepo.upsert(scope, homeLayoutSchema.parse(layout));
 }
 
@@ -124,7 +128,10 @@ export async function updateLayout(
   patch: Partial<HomeLayout>,
   scope: LayoutScope = HOME_SCOPE,
 ): Promise<void> {
-  await saveLayout({ ...(await loadLayout(scope)), ...patch }, scope);
+  // Read and write in one queued step: two quick toggles on the overview must both stay.
+  await inSettingsOrder(scope, async () =>
+    writeLayout({ ...(await loadLayout(scope)), ...patch }, scope),
+  );
 }
 
 /** Back to the defaults: manifest order, everything visible, default sizes. */

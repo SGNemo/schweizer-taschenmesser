@@ -1,7 +1,7 @@
 import { createRepo } from '@/core/db/repo';
 import { tableName } from '@/core/db/schema';
 import { currencyOf, DEFAULT_CURRENCY } from '@/core/money';
-import { settingsRepo } from '@/core/settings/settings';
+import { inSettingsOrder, settingsRepo } from '@/core/settings/settings';
 import { accountSchema, categorySchema, transactionSchema } from './schema';
 
 export const accountRepo = createRepo(tableName('finance', 'account'), accountSchema);
@@ -51,10 +51,12 @@ export async function ensureDefaults(): Promise<void> {
   for (const [id, name, kind] of SEED_CATEGORIES) {
     if (!(await categoryRepo.table.get(id))) await categoryRepo.create({ name, kind }, { id });
   }
-  const current = await settingsRepo.get(SETTINGS_SCOPE);
-  await settingsRepo.upsert(SETTINGS_SCOPE, {
-    ...(current ? stripEnvelope(current) : {}),
-    seeded: true,
+  await inSettingsOrder(SETTINGS_SCOPE, async () => {
+    const current = await settingsRepo.get(SETTINGS_SCOPE);
+    await settingsRepo.upsert(SETTINGS_SCOPE, {
+      ...(current ? stripEnvelope(current) : {}),
+      seeded: true,
+    });
   });
 }
 

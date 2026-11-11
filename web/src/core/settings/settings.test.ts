@@ -2,7 +2,7 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_FOCUS, FOCUS_SCOPE, getFocusSettings, patchFocusSettings } from './focus';
-import { setChangeListener, settingsRepo } from './settings';
+import { setChangeListener, settingsRepo, updateSettings } from './settings';
 
 beforeEach(async () => {
   await patchFocusSettings({ ...DEFAULT_FOCUS });
@@ -46,5 +46,12 @@ describe('setSettings', () => {
     await expect(bad).rejects.toThrow('disk full');
     await good;
     expect((await getFocusSettings()).repeatMax).toBe(6);
+  });
+
+  it('computes an update from what the patch before it wrote', async () => {
+    const add = (n: number) =>
+      updateSettings('test.list', (v) => ({ items: [...((v.items as number[]) ?? []), n] }));
+    await Promise.all([add(1), add(2), updateSettings('test.list', () => undefined), add(3)]);
+    expect((await settingsRepo.get('test.list'))?.items).toEqual([1, 2, 3]);
   });
 });
