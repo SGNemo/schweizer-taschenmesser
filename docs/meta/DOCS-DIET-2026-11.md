@@ -107,7 +107,7 @@ Numbers are estimates from the repo (bytes / 4); what a session really costs dep
 
 ### Three rule changes (decided and applied 2026-11-11: all three, as proposed)
 
-Root `CLAUDE.md` after them: ≈ 2,730 tokens, still above its 2,600 budget, because step 2 gained the notes lookup order and the generated CHATS rows in the meantime.
+Root `CLAUDE.md` after them: ≈ 2,790 tokens, still above its 2,600 budget, because steps 2 and 3 gained the notes lookup order, the generated CHATS rows and the "merge `develop` once" rule in the meantime.
 
 **1. Root `CLAUDE.md`: three area rules keep one line, the text moves unchanged to `docs/rules/`** (about −170 tokens in every chat; root lands at ≈ 2,620, next to its 2,600 budget). Price: a chat that touches supporter codes, diagnostics or the setup assistant must open the rule file; the tests named in the rules still fail on a breach.
 
