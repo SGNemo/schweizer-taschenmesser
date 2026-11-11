@@ -475,3 +475,25 @@ test('keyboard: without the level at the PC the sentence and the way back, no fi
   await page.getByTestId('remote-to-media').click();
   await expect(page.getByTestId('remote-play-pause')).toBeVisible();
 });
+
+test('the card on the overview: shown it opens nothing; without a paired PC it leads to pairing', async ({
+  page,
+}, info) => {
+  // (the tap itself needs a paired PC, which this build cannot fake: the unit tests of the
+  // widget cover it – `modules/remote/__tests__/remote.test.tsx`)
+  await asPhoneWithRemote(page);
+  await page.goto('/');
+  const card = page.getByTestId('widget-remote:status');
+  await expect(card).toBeVisible({ timeout: 15_000 });
+  await expect(card).toContainText('Noch kein PC gekoppelt.');
+  await expect(card.getByRole('link', { name: 'PC koppeln' })).toBeVisible();
+  await expect(card.getByRole('button')).toHaveCount(0);
+  // being shown is not a touch: no session, however long the card stands there
+  await page.waitForTimeout(1500);
+  expect(await page.evaluate(() => window.__tmRemote.isOpen())).toBe(false);
+  await card.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: info.outputPath('remote-11-widget.png') });
+  // the card's own title leads into the module
+  await card.getByRole('link', { name: 'Fernbedienung' }).click();
+  await expect(page).toHaveURL(/\/remote$/);
+});

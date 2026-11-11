@@ -8787,6 +8787,7 @@ export const de = {
     pair: 'PC koppeln',
     disable: 'Modul ausschalten',
     open: 'Öffnen',
+    playPause: 'Wiedergabe / Pause',
     widgetIdle: 'Dein PC',
     widgetHint: 'Medien und Lautstärke des PCs steuern.',
     state: {

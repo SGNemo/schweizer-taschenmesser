@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import 'fake-indexeddb/auto';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createFakeRemoteParts } from '@/core/platform/fakeRemote';
@@ -324,12 +324,77 @@ describe('RemoteWidget', () => {
     await flush();
   };
 
-  it('paired: one way in, no claim about the PC, and no connection', async () => {
+  it('paired: shown, it claims nothing about the PC and opens no connection', async () => {
     await widget();
     expect(screen.getByText('Dein PC')).toBeTruthy();
-    expect(screen.queryByText(/bereit/)).toBeNull();
-    expect(screen.getByRole('link', { name: 'Öffnen' }).getAttribute('href')).toBe('/remote');
+    expect(screen.queryByText(/Lautstärke/)).toBeNull();
+    expect(screen.getByRole('button', { name: 'Wiedergabe / Pause' })).toBeTruthy();
+    // being shown is not a touch: nothing opens, however long it stands there
+    await act(async () => new Promise((r) => setTimeout(r, 1200)));
     expect(fake.parts.hooks.opens()).toBe(0);
+    expect(fake.parts.hooks.isOpen()).toBe(false);
+  });
+
+  it('one tap connects and sends; the volume shows only while the session is open', async () => {
+    await widget();
+    fireEvent.click(screen.getByRole('button', { name: 'Wiedergabe / Pause' }));
+    for (let i = 0; i < 600 && fake.parts.hooks.sent().length === 0; i++) {
+      await act(async () => new Promise((r) => setTimeout(r, 10)));
+    }
+    await flush();
+    expect(fake.parts.hooks.opens()).toBe(1);
+    expect(fake.parts.hooks.sent()).toEqual(['play-pause']);
+    expect(fake.parts.hooks.level()).toBe('media');
+    expect(screen.getByText('Dein PC · Lautstärke 42 %')).toBeTruthy();
+    // a second tap uses the session that stands
+    fireEvent.click(screen.getByRole('button', { name: 'Wiedergabe / Pause' }));
+    await flush();
+    expect(fake.parts.hooks.sent()).toEqual(['play-pause', 'play-pause']);
+    expect(fake.parts.hooks.opens()).toBe(1);
+    // the PC ends the idle session: no stale number stays, and nothing reconnects by itself
+    await act(async () => fake.parts.hooks.close());
+    expect(screen.getByText('Dein PC')).toBeTruthy();
+    expect(screen.queryByText(/Lautstärke/)).toBeNull();
+    await act(async () => new Promise((r) => setTimeout(r, 1200)));
+    expect(fake.parts.hooks.opens()).toBe(1);
+  });
+
+  it('a tap that cannot go shows the sentence of that state and one step into the module', async () => {
+    fake.parts.hooks.failOpen('network', 99);
+    await widget();
+    fireEvent.click(screen.getByRole('button', { name: 'Wiedergabe / Pause' }));
+    for (let i = 0; i < 1500 && !screen.queryByText(/nicht erreichbar/); i++) {
+      await act(async () => new Promise((r) => setTimeout(r, 10)));
+    }
+    expect(
+      screen.getByText('Dein PC ist gerade nicht erreichbar. Beide Geräte im selben WLAN?'),
+    ).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Öffnen' }).getAttribute('href')).toBe('/remote');
+    expect(fake.parts.hooks.sent()).toEqual([]);
+  }, 20_000);
+
+  it('leaving the home screen ends the session the widget opened – and only that one', async () => {
+    const shown = render(
+      <MemoryRouter>
+        <RemoteWidget />
+      </MemoryRouter>,
+    );
+    await flush();
+    // never tapped: leaving closes nothing (a session of the page would not be this widget's)
+    const close = vi.spyOn(remoteSession, 'close');
+    shown.unmount();
+    expect(close).not.toHaveBeenCalled();
+    await widget();
+    fireEvent.click(screen.getByRole('button', { name: 'Wiedergabe / Pause' }));
+    for (let i = 0; i < 600 && !fake.parts.hooks.isOpen(); i++) {
+      await act(async () => new Promise((r) => setTimeout(r, 10)));
+    }
+    expect(fake.parts.hooks.isOpen()).toBe(true);
+    cleanup();
+    await flush();
+    expect(close).toHaveBeenCalledTimes(1);
+    expect(fake.parts.hooks.isOpen()).toBe(false);
+    close.mockRestore();
   });
 
   it('no PC paired: says so and leads to pairing', async () => {

@@ -23,4 +23,4 @@ Chats: root [CLAUDE.md](../CLAUDE.md) first, then only the row you need. Budgets
 | [archive/](archive/README.md) | history (hidden from scans) | never |
 | `assets/screenshots/`, `brand/`, `design-proposals/` | pictures, brand, token trials | design work |
 
-Users (English; German copies `*.de.md`): [installation](user/installation.md) · [modules](user/modules.md) · [ai-assistant](user/ai-assistant.md) (+ [AI-IMPORT.md](AI-IMPORT.md)) · [sync](user/sync.md) · [backup](user/backup.md) · [security](user/security.md) · [faq](user/faq.md) · [spotify](user/spotify.md) · [browser-extension](user/browser-extension.md) · [development](user/development.md)
+Users (English; German copies `*.de.md`): [installation](user/installation.md) · [modules](user/modules.md) · [ai-assistant](user/ai-assistant.md) (+ [AI-IMPORT.md](AI-IMPORT.md)) · [sync](user/sync.md) · [backup](user/backup.md) · [security](user/security.md) · [faq](user/faq.md) · [spotify](user/spotify.md) · [remote-control](user/remote-control.md) · [browser-extension](user/browser-extension.md) · [development](user/development.md)

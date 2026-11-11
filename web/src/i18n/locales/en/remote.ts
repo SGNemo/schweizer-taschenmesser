@@ -92,6 +92,7 @@ export const remote: Strings['remote'] = {
   pair: 'Pair a PC',
   disable: 'Switch the module off',
   open: 'Open',
+  playPause: 'Play / Pause',
   widgetIdle: 'Your PC',
   widgetHint: 'Control media and volume of the PC.',
   state: {
