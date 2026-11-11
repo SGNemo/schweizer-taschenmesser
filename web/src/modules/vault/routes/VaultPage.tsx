@@ -15,6 +15,7 @@ import {
   Icon,
   ItemList,
   ItemRow,
+  PageAction,
   PageHeader,
   TextField,
   useOpenParam,
@@ -104,10 +105,10 @@ export default function VaultPage() {
   return (
     <>
       <PageHeader title={t.vault.title}>
-        <Button variant="primary" onClick={() => setTarget({ draft: true })}>
+        <PageAction short={t.vault.meta.quickAdd} onClick={() => setTarget({ draft: true })}>
           <Icon name="plus" size={18} />
           {t.vault.add}
-        </Button>
+        </PageAction>
         {docs && docs.length === 0 ? <StartDataMenu moduleId="vault" /> : null}
       </PageHeader>
       <p className={styles.privacy} data-testid="vault-local">

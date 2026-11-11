@@ -15,6 +15,8 @@ function Head({ children }: { children: ReactNode }) {
     notice: null,
     backdrop: null,
     title: null,
+    actions: null,
+    tabs: null,
     extra: null,
     figure,
     signature,

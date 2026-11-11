@@ -10,6 +10,7 @@ import {
   Icon,
   ItemList,
   ItemRow,
+  PageAction,
   PageHeader,
   Segmented,
   useOpenParam,
@@ -93,13 +94,14 @@ export default function HabitsPage() {
         }
       >
         {/* U26: while there is nothing, the empty state holds the one filled step. */}
-        <Button
+        <PageAction
+          short={t.habits.meta.quickAdd}
           variant={goals && goals.length === 0 && view !== 'archive' ? 'secondary' : 'primary'}
           onClick={() => setTarget('new')}
         >
           <Icon name="plus" size={18} />
           {t.habits.add}
-        </Button>
+        </PageAction>
       </PageHeader>
       {goals && planned.length > 0 ? (
         <HeroSlot area="figure">

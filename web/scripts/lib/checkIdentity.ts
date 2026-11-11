@@ -1,8 +1,9 @@
 /**
- * Cross-module identity checks (identity v3.1, docs/design/MODULE-IDENTITY.md "Rules"): inside one navigation
- * area no two modules share a hue and two neighbours (in the order of the navigation) never share a head
- * variant; app-wide two modules with the same hue never share head *and* widget, and a shared head or widget needs
- * a signature of its own. Pure functions over
+ * Cross-module identity checks (Identity 4.0, docs/design/MODULE-IDENTITY.md "4.0"): inside one navigation area no
+ * two modules share a hue and at most one module has a stage head (the stage is the exception, weather and music);
+ * app-wide two modules with the same hue each need a signature of their own. The head no longer tells modules apart
+ * (two variants where identity v3 had nine), so the old rules "neighbours never share a head" and "same hue never
+ * head and widget alike" are gone: hue, signature and widget carry the difference. Pure functions over
  * facts: `npm run check:modules` reads them from the manifest source (no build), `src/core/modules/registry.test.ts`
  * from the runtime registry, so both see the same rule. The palette pins every pair of hues at ≥ 26°
  * (`ui/tokens.test.ts`), so "25° apart" is the same as "a different hue" and no angle is computed here.
@@ -56,13 +57,11 @@ export function checkIdentityGroups(facts: readonly IdentityFacts[]): string[] {
       if (other) errors.push(`${f.id} and ${other} share the hue "${f.hue}" in the area "${area}"`);
       else byHue.set(f.hue, f.id);
     }
-    for (const [i, f] of sorted.entries()) {
-      const next = sorted[i + 1];
-      if (next && f.head && f.head === next.head)
-        errors.push(
-          `${f.id} and ${next.id} are neighbours in the area "${area}" and share the head variant "${f.head}"`,
-        );
-    }
+    const stages = sorted.filter((f) => f.head === 'stage').map((f) => f.id);
+    if (stages.length > 1)
+      errors.push(
+        `${stages.join(' and ')} both have a stage head in the area "${area}" (at most one stage per area)`,
+      );
   }
   return errors;
 }
@@ -74,28 +73,19 @@ const ownSignature = (a: IdentityFacts, b: IdentityFacts): boolean =>
     : false;
 
 /**
- * App-wide collisions (the overview, the sidebar and the library show every area side by side):
- * same hue ⇒ head and widget never both the same, and a shared head or widget needs a signature of its own
- * (so one widget shape on one hue needs another head). Retired modules take no part.
+ * App-wide collisions (the overview, the sidebar and the library show every area side by side): two modules with the
+ * same hue each need a signature of their own, whatever their head and widget (Identity 4.0: nearly every head is the
+ * standard one, so the drawing is what tells one teal module from the other). Retired modules take no part.
  */
 export function checkIdentityCollisions(facts: readonly IdentityFacts[]): string[] {
   const errors: string[] = [];
   const live = facts.filter((f) => !f.retired).sort((a, b) => a.id.localeCompare(b.id));
   for (const [i, a] of live.entries())
     for (const b of live.slice(i + 1)) {
-      const pair = `${a.id} and ${b.id}`;
-      if (a.hue && a.hue === b.hue) {
-        const head = !!a.head && a.head === b.head;
-        const widget = !!a.widget && a.widget === b.widget;
-        if (head && widget)
-          errors.push(
-            `${pair} share the hue "${a.hue}", the head "${a.head}" and the widget "${a.widget}" (app-wide rule: differ in head or widget)`,
-          );
-        else if ((head || widget) && !ownSignature(a, b))
-          errors.push(
-            `${pair} share the hue "${a.hue}" and the ${head ? `head "${a.head}"` : `widget "${a.widget}"`}; each needs a signature of its own (not "none", not the same)`,
-          );
-      }
+      if (a.hue && a.hue === b.hue && !ownSignature(a, b))
+        errors.push(
+          `${a.id} and ${b.id} share the hue "${a.hue}"; each needs a signature of its own (not "none", not the same)`,
+        );
     }
   return errors;
 }
@@ -119,7 +109,7 @@ export function checkSignatureUse(
   if (facts.retired || facts.signature !== 'none') return [];
   return pageSources.some((s) => /<HeroSlot\b[^>]*\barea=\{?["']signature["']\}?/.test(s))
     ? [
-        `${id}: identity.signature is "none" but the page fills the signature slot – name the signature (SIGNATURES) so the frame and the settings head show it`,
+        `${id}: identity.signature is "none" but the page fills the signature slot – name the signature (SIGNATURES) so the settings head and the library show it`,
       ]
     : [];
 }

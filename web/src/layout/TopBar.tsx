@@ -12,7 +12,10 @@ import { SyncBadge } from './SyncBadge';
 import { useTopbarCollapse } from './useTopbarCollapse';
 import styles from './TopBar.module.css';
 
-/** Search, the one "+ Neu", tools and sync; the logo only shows where there is no sidebar. */
+/**
+ * Search, the neutral "Neu" (quick capture; the filled action of a screen is the module's, Identity 4.0 rule 4),
+ * tools and sync; the logo only shows where there is no sidebar.
+ */
 export function TopBar() {
   const setPaletteOpen = useUiStore((s) => s.setPaletteOpen);
   const setQuickAddOpen = useUiStore((s) => s.setQuickAddOpen);
@@ -52,7 +55,7 @@ export function TopBar() {
         </span>
       ) : null}
       <Button
-        variant="primary"
+        variant="secondary"
         className={`${styles.create} ${styles.desktopOnly}`}
         aria-label={t.nav.createAria}
         onClick={() => setQuickAddOpen(true)}

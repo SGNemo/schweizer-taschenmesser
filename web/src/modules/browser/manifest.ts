@@ -15,7 +15,7 @@ const manifest: ModuleManifest = {
     hue: 'cobalt',
     hue2: 'sky',
     widget: 'kacheln',
-    head: 'schreib',
+    head: 'standard',
     signature: 'addressBar',
     type: 'mono',
   },

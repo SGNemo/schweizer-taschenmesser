@@ -47,23 +47,42 @@ test.describe('module library', () => {
   });
 
   /** Example sits in the area "Wissen": a sidebar link on desktop, the area entry in the bottom bar on phones. */
+  // Phone (Identity 4.0): the bottom bar holds two areas; "Wissen" is the third and lives in the "Mehr" sheet.
   const exampleNav = (page: Page, phone: boolean) =>
-    mainNav(page).getByRole('link', { name: phone ? 'Wissen' : 'Beispiel' });
+    phone
+      ? page.getByRole('dialog', { name: 'Mehr' }).getByRole('link', { name: 'Wissen' })
+      : mainNav(page).getByRole('link', { name: 'Beispiel' });
+  const openMore = async (page: Page, phone: boolean) => {
+    if (!phone) return;
+    await mainNav(page).getByRole('button', { name: 'Mehr' }).click();
+    await expect(page.getByRole('dialog', { name: 'Mehr' })).toBeVisible();
+  };
+  const closeMore = async (page: Page, phone: boolean) => {
+    if (!phone) return;
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog', { name: 'Mehr' })).toHaveCount(0);
+  };
 
   test('enabling adds navigation, disabling removes it', async ({ page }, info) => {
     const phone = info.project.name === 'pixel-7';
     await page.goto('/library');
+    await openMore(page, phone);
     await expect(exampleNav(page, phone)).toHaveCount(0);
+    await closeMore(page, phone);
 
     await enableExample(page);
     // F06: on desktop only the area of the open page is unfolded; open "Wissen" by hand.
     if (!phone) await openNavArea(page, 'Wissen');
+    await openMore(page, phone);
     await expect(exampleNav(page, phone)).toBeVisible();
+    await closeMore(page, phone);
 
     const card = page.getByTestId('module-example');
     await moduleSwitch(card).click();
     await expect(moduleSwitch(card)).not.toBeChecked();
+    await openMore(page, phone);
     await expect(exampleNav(page, phone)).toHaveCount(0);
+    await closeMore(page, phone);
   });
 
   test('a disabled module route redirects to the library', async ({ page }) => {
@@ -124,7 +143,7 @@ test.describe('entries (local-first data)', () => {
   test('quick add opens the module create form', async ({ page }) => {
     await enableExample(page);
     await page.goto('/');
-    await page.getByRole('button', { name: 'Schnell hinzufügen' }).click();
+    await page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }).click();
     // The form types are folded below the one text field.
     await page.getByText('Oder mit dem ganzen Formular').click();
     await page.getByRole('link', { name: 'Beispiel: neuer Eintrag' }).click();

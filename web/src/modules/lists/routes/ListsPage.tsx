@@ -23,6 +23,7 @@ import {
   ItemList,
   RowMenu,
   ItemRow,
+  PageAction,
   PageHeader,
   Progress,
   Tabs,
@@ -270,10 +271,10 @@ export default function ListsPage() {
     <>
       <PageHeader title={t.lists.title}>
         <Button onClick={() => setTemplates(true)}>{t.lists.routines.title}</Button>
-        <Button variant="primary" onClick={() => setListTarget('new')}>
+        <PageAction short={t.nav.plusThings.list} onClick={() => setListTarget('new')}>
           <Icon name="plus" size={18} />
           {t.lists.newList}
-        </Button>
+        </PageAction>
         <StartDataMenu moduleId="lists" />
       </PageHeader>
       {lists && current && isShopping ? (

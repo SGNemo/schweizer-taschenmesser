@@ -5,7 +5,7 @@ import { useAiOn } from '@/core/ai/switch';
 import { useSettings } from '@/core/settings/settings';
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
-import { Badge, Button, Checkbox, EmptyState, Icon, PageHeader, TextField } from '@/ui';
+import { Badge, Checkbox, EmptyState, Icon, PageAction, PageHeader, TextField } from '@/ui';
 import { Bubble, HeroSlot, SignatureMark } from '@/ui/identity';
 import { SetupHint, useChatSetup } from '../components/SetupHint';
 import { ThreadView } from '../components/ThreadView';
@@ -112,10 +112,14 @@ export default function ChatPage() {
       </HeroSlot>
       <PageHeader title={c.title}>
         {/* One filled action per page (C23): while the setup hint shows, it is that one and this steps back. */}
-        <Button variant={setup?.needed ? 'secondary' : 'primary'} onClick={() => void create()}>
+        <PageAction
+          short={t.nav.plusThings.chat}
+          variant={setup?.needed ? 'secondary' : 'primary'}
+          onClick={() => void create()}
+        >
           <Icon name="plus" size={18} />
           {c.newChat}
-        </Button>
+        </PageAction>
       </PageHeader>
       <SetupHint setup={setup} />
       <div className={styles.layout} data-after-hint={setup?.needed ? '' : undefined}>

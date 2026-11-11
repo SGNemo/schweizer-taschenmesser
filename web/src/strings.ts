@@ -133,6 +133,22 @@ export const de = {
     toggleArea: (area: string) => `${area} auf- oder zuklappen`,
     create: 'Neu',
     createAria: 'Neu: schnell hinzufügen',
+    /** Plus in the phone's bottom bar: the name always contains the visible label (WCAG 2.5.3). */
+    plusCapture: 'Neu eintragen',
+    plusThing: (thing: string) => `${thing} eintragen`,
+    plusModule: (module: string) => `Neu: ${module}`,
+    /** The thing a page's action adds, where the module has no such noun yet (the text under the plus). */
+    plusThings: {
+      list: 'Liste',
+      budget: 'Budget',
+      link: 'Lesezeichen',
+      chat: 'Chat',
+      place: 'Ort',
+      route: 'Route',
+      session: 'Einheit',
+      meal: 'Mahlzeit',
+      feed: 'Feed',
+    },
     tools: 'Werkzeuge',
     favouritesFull: 'Es sind höchstens 5 Favoriten möglich. Entferne zuerst einen anderen.',
   },

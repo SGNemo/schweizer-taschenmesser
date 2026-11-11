@@ -69,32 +69,46 @@ test.describe('shell: sidebar, areas, favourites (desktop)', () => {
     await expect(page).toHaveURL(/\/invoices$/);
   });
 
-  test('the modules of an area are a sub-navigation under the head', async ({ page }) => {
+  test('navigation in one level: no sub-navigation under the head, the sidebar switches the modules of an area', async ({
+    page,
+  }) => {
     await ready(page, '/finance');
-    const tabs = page.getByRole('navigation', { name: 'Geld: Module' });
-    await expect(tabs.getByRole('link', { name: 'Finanzen' })).toHaveAttribute(
+    // Identity 4.0, rule 3: the row of area modules under the head is gone on the desktop.
+    await expect(page.getByRole('navigation', { name: 'Geld: Module' })).toHaveCount(0);
+    await expect(page.getByTestId('subnav')).toHaveCount(0);
+    // The sidebar is the one place that lists them: the open area shows its modules, the current one marked.
+    const nav = mainNav(page);
+    await expect(nav.getByRole('link', { name: 'Finanzen', exact: true }).last()).toHaveAttribute(
       'aria-current',
       'page',
     );
-    await tabs.getByRole('link', { name: 'Rechnungen' }).click();
+    await nav.getByRole('link', { name: 'Rechnungen', exact: true }).last().click();
     await expect(page).toHaveURL(/\/invoices$/);
-    await expect(tabs.getByRole('link', { name: 'Rechnungen' })).toHaveAttribute(
+    await expect(nav.getByRole('link', { name: 'Rechnungen', exact: true }).last()).toHaveAttribute(
       'aria-current',
       'page',
     );
+    // The head names the area in its eyebrow and holds the page's one h1.
+    const head = page.getByTestId('module-frame');
+    await expect(head.getByTestId('module-eyebrow')).toHaveText('Geld');
+    await expect(head.getByRole('heading', { level: 1 })).toHaveText('Rechnungen');
   });
 
-  test('one "+ Neu" in the top bar opens quick capture; there is no FAB on the desktop', async ({
+  test('one neutral "Neu" in the top bar opens quick capture; there is no FAB and no plus on the desktop', async ({
     page,
   }) => {
     await ready(page, '/');
     await expect(page.getByRole('button', { name: /Neu/ })).toBeVisible();
-    await page.getByRole('button', { name: 'Neu: schnell hinzufügen' }).click();
+    const create = page.getByRole('button', { name: 'Neu: schnell hinzufügen' });
+    // Identity 4.0, rule 4: "Neu" is neutral; the filled accent belongs to the module's action in the head.
+    await expect(create).toHaveAttribute('data-variant', 'secondary');
+    await create.click();
     await expect(page.getByRole('textbox', { name: 'Was möchtest du festhalten?' })).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(page.getByRole('button', { name: 'Schnell hinzufügen', exact: true })).toHaveCount(
       0,
     );
+    await expect(page.getByTestId('bottom-plus')).toBeHidden();
   });
 
   test('the sidebar can be switched to the rail in the settings and back with the handle', async ({
@@ -139,7 +153,7 @@ test.describe('shell: sidebar, areas, favourites (desktop)', () => {
 test.describe('shell: phone', () => {
   test.skip(({ isMobile }) => !isMobile, 'bottom navigation is a phone feature');
 
-  test('bottom navigation by area, FAB for capture, no "+ Neu" in the top bar', async ({
+  test('bottom navigation: Übersicht · area 1 · plus · area 2 · Mehr; the plus captures, no FAB, no "Neu" in the top bar', async ({
     page,
   }) => {
     await ready(page, '/');
@@ -147,12 +161,53 @@ test.describe('shell: phone', () => {
     await expect(nav.getByRole('link', { name: 'Übersicht' })).toBeVisible();
     await expect(nav.getByRole('link', { name: 'Planen' })).toBeVisible();
     await expect(nav.getByRole('link', { name: 'Geld' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Schnell hinzufügen' })).toBeVisible();
+    // Five targets, the plus in the middle (Identity 4.0, rule 3).
+    await expect(nav.locator(':scope > *')).toHaveCount(5);
+    await expect(nav.locator(':scope > *').nth(2)).toHaveAttribute('data-testid', 'bottom-plus');
+    // On the overview the plus is the quick capture; its name contains its visible text (WCAG 2.5.3).
+    const plus = nav.getByRole('button', { name: 'Neu eintragen', exact: true });
+    await expect(plus).toBeVisible();
+    await expect(plus).toHaveText('Neu');
+    await expect(page.getByRole('button', { name: 'Schnell hinzufügen', exact: true })).toHaveCount(
+      0,
+    );
     await expect(page.getByRole('button', { name: 'Neu: schnell hinzufügen' })).toBeHidden();
+    await plus.click();
+    await expect(page.getByRole('dialog', { name: 'Schnell hinzufügen' })).toBeVisible();
+    await page.keyboard.press('Escape');
 
     await nav.getByRole('link', { name: 'Geld' }).click();
     await expect(page).toHaveURL(/\/finance$/);
     await expect(nav.getByRole('link', { name: 'Geld' })).toHaveAttribute('aria-current', 'page');
+    // On a module page the plus is the module's action, named after the thing it adds.
+    const add = nav.getByRole('button', { name: 'Buchung eintragen', exact: true });
+    await expect(add).toHaveText('Buchung');
+    // The head of the phone holds no control: the plus is the one entry.
+    const row = page.getByTestId('module-title-row');
+    await expect(row.getByRole('button')).toHaveCount(0);
+    await expect(row.getByRole('link')).toHaveCount(0);
+  });
+
+  test('phone: the modules of an area are the one module row in the head; the tabs stay at hand when scrolled', async ({
+    page,
+  }) => {
+    await ready(page, '/finance');
+    const head = page.getByTestId('module-frame');
+    const row = head.getByRole('navigation', { name: 'Geld: Module' });
+    await expect(row.getByRole('link', { name: 'Finanzen' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    await row.getByRole('link', { name: 'Rechnungen' }).click();
+    await expect(page).toHaveURL(/\/invoices$/);
+    await expect(
+      page
+        .getByTestId('module-frame')
+        .getByRole('navigation', { name: 'Geld: Module' })
+        .getByRole('link', { name: 'Rechnungen' }),
+    ).toHaveAttribute('aria-current', 'page');
+    // No second bar that repeats the title: the head is the one thing at the top.
+    await expect(page.getByTestId('module-compact')).toHaveCount(0);
   });
 
   test('"Mehr" reaches tools, library and settings', async ({ page }) => {
@@ -166,10 +221,10 @@ test.describe('shell: phone', () => {
   });
 });
 
-test.describe('shell: the „+“ button never covers the end of a page (G17, phone 390 px)', () => {
+test.describe('shell: the plus never covers the end of a page (G17, phone 390 px)', () => {
   test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 
-  test('scrolled to the end, the last day of the planner board ends above the „+“ button', async ({
+  test('scrolled to the end, the last day of the planner board ends above the plus', async ({
     page,
   }) => {
     await page.clock.setFixedTime(new Date('2026-11-09T10:00:00'));
@@ -210,10 +265,14 @@ test.describe('shell: the „+“ button never covers the end of a page (G17, ph
       await field.press('Enter');
       await expect(field).toHaveValue('');
     }
-    const fab = page.getByRole('button', { name: 'Schnell hinzufügen' });
+    // Identity 4.0: no floating button any more; the plus sits in the bottom bar and rises a little above it.
+    await expect(page.getByRole('button', { name: 'Schnell hinzufügen', exact: true })).toHaveCount(
+      0,
+    );
+    const fab = page.getByTestId('bottom-plus');
     await expect(fab).toBeVisible();
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-    // The lowest content of the page (inside <main>) against the top of the floating button.
+    // The lowest content of the page (inside <main>) against the top of the plus.
     const contentBottom = await page.evaluate(() =>
       Math.max(
         ...[...document.querySelectorAll('main *')]
