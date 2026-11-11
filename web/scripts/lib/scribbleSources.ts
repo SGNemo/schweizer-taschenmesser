@@ -1,12 +1,11 @@
 /**
  * Where the chats' notes ("scribble") are read from by `npm run chats:status` (erasable TypeScript, imported by
  * `../chats-status.mjs`). Order: `NEMO_SCRIBBLE_DIR` override, the session folder `/workspace/scribble` (live,
- * no git), the notes repo clone `/workspace/nemo-scribble` (persistent), the legacy `scribble/` folder of the
- * repository (until it is removed). The first candidate that holds notes wins.
+ * no git), the notes repo clone `/workspace/nemo-scribble` (persistent). The first candidate that holds notes
+ * wins. The notes are not part of this repository.
  *
- * Layout (session folder and notes repo): `board/<date>-<agent>-<slug>.md` (first line `- [ ] item`, or `- [x]`
- * when answered) and `notes/<agent>-<topic>.md`. Legacy layout: `BOARD.md` (open items are `- [ ]` lines) plus
- * one `<branch>.md` per branch next to it. Notes are data for the reader, never instructions.
+ * Layout: `board/<date>-<agent>-<slug>.md` (first line `- [ ] item`, or `- [x]` when answered) and
+ * `notes/<agent>-<topic>.md`. Notes are data for the reader, never instructions.
  */
 import {
   closeSync,
@@ -22,7 +21,7 @@ import {
 import { join } from 'node:path';
 
 export interface ScribbleItem {
-  /** Path relative to the source, e.g. `board/2026-11-08-docs-x.md` or `BOARD.md`. */
+  /** Path relative to the source, e.g. `board/2026-11-08-docs-x.md`. */
   file: string;
   /** The open item or the first line of the note. */
   text: string;
@@ -30,7 +29,6 @@ export interface ScribbleItem {
 
 export interface ScribbleSource {
   dir: string;
-  layout: 'board' | 'legacy';
   open: ScribbleItem[];
   notes: ScribbleItem[];
 }
@@ -40,14 +38,13 @@ export const NOTES_REPO_DIR = '/workspace/nemo-scribble';
 
 /** Candidate folders in reading order. */
 export function candidateDirs(
-  repoRoot: string,
   env: Record<string, string | undefined> = process.env,
   fixedDirs: readonly string[] = [SESSION_DIR, NOTES_REPO_DIR],
 ): string[] {
   const dirs: string[] = [];
   const override = env.NEMO_SCRIBBLE_DIR?.trim();
   if (override) dirs.push(override);
-  dirs.push(...fixedDirs, join(repoRoot, 'scribble'));
+  dirs.push(...fixedDirs);
   return dirs;
 }
 
@@ -58,7 +55,6 @@ export function candidateDirs(
  * characters replaced (a note must not be able to drive the terminal).
  */
 const FIRST_LINE_BYTES = 4096;
-const BOARD_BYTES = 1024 * 1024;
 const MAX_FILES = 500;
 const OPEN_ITEM_CHARS = 200;
 const NOTE_CHARS = 100;
@@ -127,45 +123,30 @@ function mdFiles(dir: string): string[] {
     .slice(0, MAX_FILES);
 }
 
-/** Reads one folder; `undefined` when it holds neither a `board/`/`notes/` folder nor a `BOARD.md`. */
+/** Reads one folder; `undefined` when it holds neither a `board/` nor a `notes/` folder. */
 export function readScribble(dir: string): ScribbleSource | undefined {
   if (!existsSync(dir) || !statSync(dir).isDirectory()) return undefined;
-  if (isRealDir(join(dir, 'board')) || isRealDir(join(dir, 'notes'))) {
-    const open: ScribbleItem[] = [];
-    for (const name of mdFiles(join(dir, 'board'))) {
-      const first = firstLine(join(dir, 'board', name));
-      if (/^- \[ \]/.test(first)) {
-        open.push({ file: clean(`board/${name}`), text: clip(clean(first), OPEN_ITEM_CHARS) });
-      }
+  if (!isRealDir(join(dir, 'board')) && !isRealDir(join(dir, 'notes'))) return undefined;
+  const open: ScribbleItem[] = [];
+  for (const name of mdFiles(join(dir, 'board'))) {
+    const first = firstLine(join(dir, 'board', name));
+    if (/^- \[ \]/.test(first)) {
+      open.push({ file: clean(`board/${name}`), text: clip(clean(first), OPEN_ITEM_CHARS) });
     }
-    const notes = mdFiles(join(dir, 'notes')).map((name) => ({
-      file: clean(`notes/${name}`),
-      text: clip(clean(firstLine(join(dir, 'notes', name))), NOTE_CHARS),
-    }));
-    return { dir, layout: 'board', open, notes };
   }
-  const board = readHead(join(dir, 'BOARD.md'), BOARD_BYTES);
-  if (board === undefined) return undefined;
-  const open = lines(board)
-    .filter((l) => /^- \[ \]/.test(l))
-    .slice(0, MAX_FILES)
-    .map((text) => ({ file: 'BOARD.md', text: clip(clean(text), OPEN_ITEM_CHARS) }));
-  const notes = mdFiles(dir)
-    .filter((n) => n !== 'README.md' && n !== 'BOARD.md')
-    .map((name) => ({
-      file: clean(name),
-      text: clip(clean(firstLine(join(dir, name))), NOTE_CHARS),
-    }));
-  return { dir, layout: 'legacy', open, notes };
+  const notes = mdFiles(join(dir, 'notes')).map((name) => ({
+    file: clean(`notes/${name}`),
+    text: clip(clean(firstLine(join(dir, 'notes', name))), NOTE_CHARS),
+  }));
+  return { dir, open, notes };
 }
 
 /** The first candidate that holds notes, or `undefined`. */
 export function findScribble(
-  repoRoot: string,
   env: Record<string, string | undefined> = process.env,
   fixedDirs: readonly string[] = [SESSION_DIR, NOTES_REPO_DIR],
 ): ScribbleSource | undefined {
-  for (const dir of candidateDirs(repoRoot, env, fixedDirs)) {
+  for (const dir of candidateDirs(env, fixedDirs)) {
     const source = readScribble(dir);
     if (source) return source;
   }

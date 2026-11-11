@@ -1,0 +1,16 @@
+[
+  {
+    "number": 10,
+    "title": "feat(a): new title of A",
+    "headRefName": "feat/a",
+    "isDraft": false,
+    "labels": [{ "name": "no-changelog" }, { "name": "full-ci" }]
+  },
+  {
+    "number": 12,
+    "title": "draft: pipes | in a title",
+    "headRefName": "feat/b",
+    "isDraft": true,
+    "labels": []
+  }
+]

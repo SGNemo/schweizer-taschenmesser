@@ -1,0 +1,16 @@
+[
+  {
+    "number": 12,
+    "title": "draft: pipes | in a title",
+    "head": { "ref": "feat/b" },
+    "draft": true,
+    "labels": []
+  },
+  {
+    "number": 10,
+    "title": "feat(a): new title of A",
+    "head": { "ref": "feat/a" },
+    "draft": false,
+    "labels": ["full-ci", "no-changelog"]
+  }
+]

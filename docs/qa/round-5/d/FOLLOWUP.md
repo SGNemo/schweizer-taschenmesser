@@ -1,6 +1,6 @@
 # Follow-ups D (not built here: other owner, > M or cross-module)
 
-Findings: [FINDINGS.md](FINDINGS.md). Each block is a prompt sketch for a later chat.
+Findings: [round-5.md](../../round-5.md). Each block is a prompt sketch for a later chat.
 
 ## F1 · Phone pairing text and one name (D01, D02, D18) – LAN-sync chat
 

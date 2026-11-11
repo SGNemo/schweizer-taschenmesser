@@ -1,23 +1,474 @@
 ---
+/**
+ * Start page (rethink round, direction C "Ein Tag" with the ledger from B): one statement and the download, a day
+ * down a time rail with one sketch per moment (picture slots), the ledger "what goes online", what is inside.
+ * No app picture: every picture place is a Slot whose drawing stands for itself (docs/design/site/SLOTS.md).
+ */
 import Base from '../layouts/Base.astro';
-import Hero from './Hero.astro';
-import Features from './Features.astro';
-import Data from './Data.astro';
-import Focus from './Focus.astro';
-import Compare from './Compare.astro';
-import Install from './Install.astro';
-import Support from './Support.astro';
-import type { Locale } from '../i18n';
+import { routes, t, type Locale } from '../i18n';
+import { areas, moduleCount } from '../catalog/shipped';
+import Icon from './Icon.astro';
+import Slot from './Slot.astro';
+import Downloads from './Downloads.astro';
+import Ledger from './Ledger.astro';
 
 interface Props { locale: Locale }
 const { locale } = Astro.props;
+const s = t(locale);
+const h = s.home;
+const d = h.day;
+const rows = areas(locale);
+const BAR = ['w4', 'w3', 'w2'];
 ---
 <Base locale={locale} route="home" og>
-  <Hero locale={locale} />
-  <Features locale={locale} />
-  <Data locale={locale} />
-  <Focus locale={locale} />
-  <Compare locale={locale} />
-  <Support locale={locale} />
-  <Install locale={locale} />
+  <section class="wrap hero" aria-labelledby="home-h1">
+    <div>
+      <h1 id="home-h1">{h.h1}</h1>
+      <p class="lead">{h.lead}</p>
+      <p class="sub">{h.sub}</p>
+      <Downloads locale={locale} />
+    </div>
+    <Slot name="now" alt={h.now.alt}>
+      <div class="stage now" data-hue="moss">
+        <div class="ghost g2"><span>{h.now.waiting}</span></div>
+        <div class="ghost g1"><span>{h.now.waiting}</span></div>
+        <div class="card">
+          <span class="label">{h.now.label}</span>
+          <b>{h.now.task}</b>
+          <span class="row"><span class="pill">{h.now.start}</span><span class="alt">{h.now.later}</span><span class="alt">{h.now.other}</span></span>
+        </div>
+      </div>
+    </Slot>
+  </section>
+
+  <section class="wrap rail" id="tag" aria-labelledby="home-day">
+    <header class="railhead">
+      <h2 id="home-day">{d.h}</h2>
+      <p class="muted">{d.intro}</p>
+    </header>
+    <ol>
+      <li class="moment">
+        <p class="time">{d.plan.time}</p>
+        <div class="text"><h3>{d.plan.h}</h3><p>{d.plan.p}</p></div>
+        <Slot name="plan" alt={d.plan.alt} class="sketch">
+          <div class="stage" data-hue="sky">
+            <ul class="plan">{d.plan.rows.map(([time, what]) => <li><span class="t">{time}</span><i class="dot"></i><span>{what}</span></li>)}</ul>
+          </div>
+        </Slot>
+      </li>
+      <li class="moment">
+        <p class="time">{d.focus.time}</p>
+        <div class="text"><h3>{d.focus.h}</h3><p>{d.focus.p}</p></div>
+        <Slot name="focus" alt={d.focus.alt} class="sketch">
+          <div class="stage focus" data-hue="moss">
+            <div class="ring">
+              <svg viewBox="0 0 120 120" aria-hidden="true">
+                <circle class="track" cx="60" cy="60" r="50" fill="none" stroke-width="10" />
+                <circle class="fill" cx="60" cy="60" r="50" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="209 314" transform="rotate(-90 60 60)" />
+              </svg>
+              <span>{d.focus.ring}</span>
+            </div>
+            <ul class="steps">{d.focus.steps.map((step, n) => <li class:list={{ done: n === 0 }}><i>{n === 0 && <Icon name="check" size={14} />}</i><span>{step}</span></li>)}</ul>
+          </div>
+        </Slot>
+      </li>
+      <li class="moment">
+        <p class="time">{d.capture.time}</p>
+        <div class="text"><h3>{d.capture.h}</h3><p>{d.capture.p}</p></div>
+        <Slot name="capture" alt={d.capture.alt} class="sketch">
+          <div class="stage" data-hue="sky">
+            <div class="field"><span>{d.capture.input}</span><i></i></div>
+            <div class="found"><span class="kind"><i class="dot"></i>{d.capture.kind}</span><b>{d.capture.what}</b><span class="when">{d.capture.when}</span></div>
+          </div>
+        </Slot>
+      </li>
+      <li class="moment">
+        <p class="time">{d.money.time}</p>
+        <div class="text"><h3>{d.money.h}</h3><p>{d.money.p}</p></div>
+        <Slot name="money" alt={d.money.alt} class="sketch">
+          <div class="stage" data-hue="teal">
+            <ul class="bars">{d.money.bars.map((name, n) => <li><span>{name}</span><span class="bar"><i class={BAR[n]}></i></span></li>)}</ul>
+          </div>
+        </Slot>
+      </li>
+      <li class="moment">
+        <p class="time">{d.night.time}</p>
+        <div class="text"><h3>{d.night.h}</h3><p>{d.night.p}</p></div>
+      </li>
+    </ol>
+    <p class="honest">{s.honest}</p>
+  </section>
+
+  <section class="band" id="daten" aria-labelledby="home-data">
+    <div class="wrap">
+      <h2 id="home-data">{h.data.h}</h2>
+      <p class="lead intro">{h.data.lead}</p>
+      <Ledger locale={locale} short />
+      <p><a class="more" href={routes.data[locale]}>{h.data.link}<Icon name="arrow" size={16} /></a></p>
+    </div>
+  </section>
+
+  <section class="wrap part" id="drin" aria-labelledby="home-inside">
+    <h2 id="home-inside">{h.inside.h}</h2>
+    <p class="muted">{h.inside.intro(rows.length, moduleCount(rows))}</p>
+    <dl class="areas">
+      {rows.map((a) => (
+        <div>
+          <dt>{a.name}</dt>
+          <dd>{a.modules.map((m) => <span class="chip" data-hue={m.hue}><i class="dot"></i>{m.name}</span>)}</dd>
+        </div>
+      ))}
+    </dl>
+    <p><a class="more" href={routes.modules[locale]}>{h.inside.link}<Icon name="arrow" size={16} /></a></p>
+  </section>
+
+  <section class="wrap part last" id="laden" aria-labelledby="home-get">
+    <h2 id="home-get">{h.get.h}</h2>
+    <p class="muted">{h.get.p}</p>
+    <Downloads locale={locale} />
+  </section>
 </Base>
+
+<style>
+  .hero {
+    display: grid;
+    gap: var(--space-7);
+    padding-block: clamp(2.5rem, 1.5rem + 5vw, 6rem) var(--section);
+  }
+  h1 {
+    font-size: var(--text-display);
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+  }
+  .hero .lead {
+    margin-block: var(--space-5) var(--space-3);
+  }
+  .sub {
+    margin-bottom: var(--space-6);
+    max-width: 36rem;
+    color: var(--text-muted);
+  }
+
+  /* Sketches: drawn placeholders inside a .stage (global.css). Surfaces are neutral, one accent per scene. */
+  .stage.now {
+    justify-items: stretch;
+  }
+  .card,
+  .ghost,
+  .plan li,
+  .found,
+  .field {
+    background: var(--surface);
+    border: var(--line) solid var(--border);
+  }
+  .card {
+    position: relative;
+    display: grid;
+    gap: var(--space-3);
+    padding: clamp(1rem, 5%, 1.75rem);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-1);
+  }
+  .card b {
+    font-size: clamp(1.25rem, 6cqw, 2rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+  .label,
+  .kind {
+    font-size: var(--text-meta);
+    font-weight: var(--weight-semibold);
+    color: var(--text-muted);
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+  }
+  .pill {
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-full);
+    background: var(--accent);
+    color: var(--accent-contrast);
+    font-weight: var(--weight-semibold);
+  }
+  .alt,
+  .when {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+  .ghost {
+    margin-inline: 5%;
+    margin-bottom: calc(-1 * var(--space-2));
+    padding: var(--space-2) var(--space-4) var(--space-4);
+    border-bottom: 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    font-size: var(--text-meta);
+    color: var(--text-muted);
+  }
+  .ghost.g2 {
+    margin-inline: 10%;
+  }
+  .plan,
+  .steps,
+  .bars {
+    list-style: none;
+    padding: 0;
+    display: grid;
+  }
+  .plan,
+  .bars,
+  .field,
+  .found {
+    width: 100%;
+  }
+  .plan {
+    gap: var(--space-2);
+  }
+  .plan li {
+    display: grid;
+    grid-template-columns: 3.25rem 0.5rem minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+  }
+  .plan .t {
+    font-variant-numeric: var(--font-num);
+    color: var(--text-muted);
+  }
+  .stage.focus {
+    grid-auto-flow: column;
+    place-content: center;
+    align-items: center;
+    gap: clamp(1rem, 6%, 2.5rem);
+  }
+  .ring {
+    position: relative;
+    width: clamp(6.5rem, 34cqw, 13rem);
+    display: grid;
+    place-items: center;
+  }
+  .ring svg {
+    width: 100%;
+    height: auto;
+  }
+  .ring .track {
+    stroke: var(--surface);
+  }
+  .ring .fill {
+    stroke: var(--module-color);
+  }
+  .ring span {
+    position: absolute;
+    font-weight: var(--weight-heavy);
+    font-size: clamp(1.125rem, 6cqw, 1.75rem);
+    font-variant-numeric: var(--font-num);
+  }
+  .steps {
+    gap: var(--space-3);
+  }
+  .steps li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .steps i {
+    flex: none;
+    width: 1.375rem;
+    height: 1.375rem;
+    display: grid;
+    place-items: center;
+    border: var(--rule) solid var(--border-strong);
+    border-radius: var(--radius-full);
+  }
+  .steps .done {
+    color: var(--text-muted);
+  }
+  .steps .done i {
+    border-color: var(--module-color);
+    color: var(--module-color);
+  }
+  .field {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+    padding: var(--space-3) var(--space-4);
+    border-color: var(--border-strong);
+    border-radius: var(--radius-md);
+  }
+  .field i {
+    width: var(--rule);
+    height: 1.25em;
+    background: var(--accent);
+  }
+  .found {
+    margin-top: var(--space-3);
+    display: grid;
+    gap: 0.125rem;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+  }
+  .kind {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .bars {
+    gap: var(--space-4);
+  }
+  .bars li {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .bar {
+    height: 0.75rem;
+    border-radius: var(--radius-full);
+    background: var(--surface);
+    overflow: hidden;
+  }
+  .bar i {
+    display: block;
+    height: 100%;
+    border-radius: var(--radius-full);
+    background: var(--module-color);
+  }
+  .bar .w4 {
+    width: 82%;
+  }
+  .bar .w3 {
+    width: 58%;
+  }
+  .bar .w2 {
+    width: 34%;
+  }
+
+  /* The day: a time rail. */
+  .rail {
+    padding-bottom: var(--section);
+  }
+  .railhead {
+    display: grid;
+    gap: var(--space-2);
+    padding-bottom: var(--space-6);
+  }
+  ol {
+    list-style: none;
+    padding: 0;
+  }
+  .moment {
+    display: grid;
+    gap: var(--space-3);
+    padding-block: var(--space-6);
+    border-top: var(--rule) solid var(--text);
+  }
+  .time {
+    font-size: var(--text-time);
+    font-weight: var(--weight-heavy);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    font-variant-numeric: var(--font-num);
+  }
+  .text {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+    max-width: 30rem;
+    font-size: var(--text-lg);
+  }
+  .sketch {
+    margin-top: var(--space-3);
+  }
+  .honest {
+    max-width: 40rem;
+    padding-top: var(--space-5);
+    border-top: var(--rule) solid var(--text);
+    color: var(--text-muted);
+  }
+
+  .band {
+    padding-block: clamp(2.5rem, 2rem + 3vw, 5rem);
+    background: var(--surface);
+    border-block: var(--line) solid var(--border);
+  }
+  .band :global(.never) {
+    background: var(--bg);
+  }
+  .intro {
+    margin-block: var(--space-3) var(--space-6);
+    color: var(--text-muted);
+  }
+  .band .more {
+    margin-top: var(--space-4);
+  }
+  .part {
+    display: grid;
+    gap: var(--space-4);
+    padding-top: var(--section);
+  }
+  .part.last {
+    padding-bottom: var(--section);
+  }
+  .areas div {
+    display: grid;
+    gap: var(--space-2);
+    padding-block: var(--space-4);
+    border-top: var(--line) solid var(--border-strong);
+  }
+  .areas dt {
+    font-weight: var(--weight-heavy);
+  }
+  .areas dd {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    border: var(--line) solid var(--border-strong);
+    border-radius: var(--radius-full);
+  }
+
+  @media (min-width: 48rem) {
+    .areas div {
+      grid-template-columns: 10rem minmax(0, 1fr);
+      align-items: baseline;
+    }
+    .moment {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      column-gap: clamp(2rem, 5vw, 5rem);
+      align-items: start;
+    }
+    .moment .time,
+    .moment .text {
+      grid-column: 1;
+    }
+    .moment .sketch {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      margin-top: 0;
+    }
+  }
+  @media (min-width: 64rem) {
+    .hero {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: center;
+      gap: clamp(2rem, 5vw, 5rem);
+    }
+    .moment {
+      grid-template-columns: 14rem minmax(0, 1fr) minmax(0, 1.15fr);
+    }
+    .moment .text {
+      grid-column: 2;
+    }
+    .moment .sketch {
+      grid-column: 3;
+      grid-row: 1;
+    }
+  }
+</style>

@@ -2,7 +2,7 @@
 
 Alles hier wurde gegen die Doku vom 2026-11-08 geschrieben ([REVIEW.md](REVIEW.md) hat die Links). Befehle, die die Sandbox nicht ausführen konnte, sind mit **„nicht hier geprüft“** markiert. Die Sandbox hat geprüft: `validate.mjs`, `to-ant.mjs`, `session.mjs --dry-run`, das SDK-Paket `@anthropic-ai/sdk@1.6.0` (Methoden `beta.sessions.create/update`, `events.stream/send`, `threads.list/archive`).
 
-Voraussetzungen: Node ≥ 20, `jq`, `gh` (angemeldet), ein Konto auf `platform.claude.com` mit Workspace, GitHub-Zugriff auf `SGNemo/schweizer-taschenmesser`. **Reihenfolge:** (1) diesen PR mergen, (2) diese Anleitung mit den Pfaden `docs/meta/agents-v3/…` durchführen und das Team ausprobieren, (3) erst danach die Umstellung aus README „Switch-over“ (Ordner → `docs/meta/agents/`; dann Pfade in den 7 Prompts, in `session.mjs` und hier ändern und erneut `ant apply`). Alle `ant`-Befehle: **nicht hier geprüft** (kein `ant` in der Sandbox).
+Voraussetzungen: Node ≥ 20, `jq`, `gh` (angemeldet), ein Konto auf `platform.claude.com` mit Workspace, GitHub-Zugriff auf `SGNemo/schweizer-taschenmesser`. **Reihenfolge:** (1) den Einrichtungs-PR mergen (erledigt), (2) diese Anleitung mit den Pfaden `docs/meta/agents-v3/…` durchführen und das Team ausprobieren; was davon noch offen ist, steht in README „Switch-over state“ (der Ordner wird nicht umbenannt). Alle `ant`-Befehle: **nicht hier geprüft** (kein `ant` in der Sandbox).
 
 ## 0 Windows (Git Bash / MinTTY)
 
@@ -51,11 +51,11 @@ Zeilenenden: `.gitattributes` hält `docs/meta/agents-v3/**` und `scripts/agents
    ```
    Ergebnis: `claude-lock.json` im Repo-Root mit je Datei `kind`, `id` (`agent_…`, `env_…`), `version`, `hash`. **Committen** (Branch + PR wie immer; keine Secrets darin). `session.mjs` sucht darin die Einträge, deren Schlüssel auf `docs/meta/agents-v3/nemo-lead.md` bzw. `environment.yaml` enden (`cat claude-lock.json` zeigt die Schlüssel; beide Schreibweisen, mit und ohne `./`, werden erkannt – geprüft mit einer nachgebauten Lock-Datei, nicht mit einer echten). Findet es sie nicht: IDs als `NEMO_LEAD_AGENT_ID` und `NEMO_ENV_ID` setzen oder `--agent`/`--env` übergeben.
 5. **Aktualisieren bei Prompt-Änderung:** JSON ändern → `node scripts/agents/to-ant.mjs` → `node scripts/agents/validate.mjs` → `ant apply …` für die geänderten Dateien. Lead und Auditor pinnen die Versionen ihrer Subagenten (Lead 5, Auditor 4 ohne `nemo-merge`; Snapshot beim Anlegen/Ändern); nach einer Änderung an einem Subagenten deshalb **`ant apply` auch für `nemo-lead.md` und `nemo-auditor.md`** ausführen, sonst delegieren sie an die alte Version. Eine Änderung nur am Auditor betrifft den Lead nicht. Laufende Sessions behalten ihre Konfiguration; Änderungen gelten für neue Sessions. `SHARED.md` dagegen wirkt ohne `ant apply`, sobald sie in `develop` gemergt ist (das Mount liest `develop`) – darum mergt diese PRs nur Sven selbst.
-6. Aufräumen: `ant apply --prune` entfernt Ressourcen, die im Lockfile stehen, aber keine Datei mehr haben (z. B. nach dem Umbenennen des Ordners beim Umstieg).
+6. Aufräumen: `ant apply --prune` entfernt Ressourcen, die im Lockfile stehen, aber keine Datei mehr haben (z. B. die 16 alten Agenten nach dem Umstieg, §2a).
 
 ## 2a Umstieg v3 → v3.1 (21 → 7 Agenten; nicht hier geprüft, kein `ant` in der Sandbox)
 
-Nach dem Merge dieses PRs, im Repo-Root auf frischem `develop`:
+Im Repo-Root auf frischem `develop`:
 
 ```bash
 node scripts/agents/validate.mjs && node scripts/agents/to-ant.mjs --check     # ✓ 7 / ✓ 8

@@ -20,12 +20,12 @@ function block(css, startMarker, endMarker) {
 }
 
 const HUES = ['lime', 'moss', 'fern', 'teal', 'ocean', 'sky', 'cobalt', 'indigo', 'violet', 'orchid', 'slate'];
-const COLOURS = ['--bg', '--surface', '--surface-2', '--border', '--border-strong', '--text', '--text-muted', '--text-3', '--focus', '--accent', '--accent-hover', '--accent-contrast', '--accent-soft', '--warning', ...HUES.map((h) => `--mod-${h}`), '--sky-day-0', '--sky-day-1'];
+const COLOURS = ['--bg', '--surface', '--surface-2', '--border', '--border-strong', '--text', '--text-muted', '--text-3', '--focus', '--accent', '--accent-hover', '--accent-contrast', '--warning', ...HUES.map((h) => `--mod-${h}`)];
 // Identity v3 tints and pattern strengths: the app sets them once in :root (same in both themes).
-const IDENTITY = ['--head-tint-0', '--head-tint-1', '--widget-tint', '--group-tint', '--pattern-head', '--pattern-widget', '--pattern-ink', '--sky-sun'];
+const IDENTITY = ['--head-tint-0', '--head-tint-1', '--group-tint', '--pattern-ink'];
 const AREAS = ['plan', 'money', 'household', 'knowledge', 'vault', 'system'];
 const identity = readFileSync(path.join(here, '..', 'src', 'styles', 'identity.css'), 'utf8');
-const SCALE = ['--radius-sm', '--radius-md', '--radius-lg', '--radius-xl', '--radius-full', '--space-1', '--space-2', '--space-3', '--space-4', '--space-5', '--space-6', '--space-7', '--font-sans', '--font-mono'];
+const SCALE = ['--radius-sm', '--radius-md', '--radius-lg', '--radius-xl', '--radius-full', '--space-1', '--space-2', '--space-3', '--space-4', '--space-5', '--space-6', '--space-7', '--font-mono'];
 
 test('light theme colours match the app', () => {
   const s = block(site, ':root {', ':root[data-theme');
@@ -72,26 +72,43 @@ test('both dark blocks of the site are identical', () => {
   for (const k of Object.keys(explicit)) assert.equal(system[k], explicit[k], k);
 });
 
-// Round 5: the hero stands on the app's ocean gradient. The two stops are pinned to the app; the site's own ink on
-// it must stay readable on the lighter stop (WCAG AA: 4.5 for text, 3 for large text and non-text).
-const lum = (hex) => {
-  const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
-  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-};
-const contrast = (a, b) => (Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05);
+// Site-only tokens: everything in tokens.css is either the app's token (same name, pinned above where it is a
+// colour or a scale step) or one of these. A new site token must be listed here; none may reuse an app name.
+const SITE_ONLY = ['--text-h2', '--block', '--content-w', '--gutter', '--font-site', '--weight-heavy', '--text-display', '--text-time', '--text-lead', '--section', '--line', '--rule'];
+const PALETTES = ['korallenriff', 'tiefsee', 'sand', 'nordlicht', 'monochrom'];
+const names = (css) => new Set([...css.matchAll(/(--[\w-]+)\s*:/g)].map((m) => m[1]));
 
-test('the ocean gradient matches the app', () => {
-  const s = block(site, ':root {', ':root[data-theme');
-  const a = block(app, ':root {', ':root[data-theme');
-  for (const k of ['--ocean-from', '--ocean-to']) assert.equal(s[k], a[k], k);
+test('every site token is the app\'s or a listed site-only token', () => {
+  const appNames = names(app);
+  const known = new Set([...SITE_ONLY, ...PALETTES.map((p) => `--palette-${p}`)]);
+  for (const n of names(site)) assert.ok(appNames.has(n) || known.has(n), `${n} is neither an app token nor listed as site-only`);
+  for (const n of known) assert.ok(!appNames.has(n), `${n} also exists in the app: use the app's value or another name`);
 });
 
-test('ink on the ocean surface keeps AA contrast', () => {
+test('the supporter palette accents match the app', () => {
+  const themes = readFileSync(path.join(here, '..', '..', 'web', 'src', 'ui', 'supporterThemes.css'), 'utf8');
   const s = block(site, ':root {', ':root[data-theme');
-  const from = s['--ocean-from'];
-  for (const k of ['--on-ocean', '--on-ocean-muted', '--on-ocean-meta']) assert.ok(contrast(s[k], from) >= 4.5, `${k} ${contrast(s[k], from).toFixed(2)}`);
-  // The accent word is 34 px bold or larger, the button a non-text shape, the tick an icon.
-  for (const k of ['--on-ocean-accent', '--on-ocean-accent-hover', '--on-ocean-ok']) assert.ok(contrast(s[k], from) >= 3, `${k} ${contrast(s[k], from).toFixed(2)}`);
-  assert.ok(contrast(s['--on-ocean-accent-ink'], s['--on-ocean-accent']) >= 4.5, 'button text');
-  assert.ok(contrast(s['--on-ocean-accent-ink'], s['--on-ocean-accent-hover']) >= 4.5, 'button text on hover');
+  for (const p of PALETTES) assert.equal(s[`--palette-${p}`], block(themes, `:root[data-palette='${p}']`, '}')['--accent'], p);
+});
+
+// Colours live in tokens.css only: no colour literal and no inline style in a component, page, layout or stylesheet
+// (the CSP allows no inline style; a literal would drift from the app).
+test('components, pages and stylesheets write no colour of their own', async () => {
+  const { readdirSync } = await import('node:fs');
+  const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]));
+  const root = path.join(here, '..', 'src');
+  for (const file of walk(root).filter((f) => /\.(astro|css)$/.test(f) && !f.endsWith('tokens.css'))) {
+    // The two theme-color metas cannot read a custom property; the next test pins them to --bg.
+    const src = readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/&#\d+;/g, '').replace(/<meta name="theme-color"[^>]*>/g, '');
+    const code = src.replace(/href=(["'{`])[^"'}`]*\1?/g, '');
+    assert.doesNotMatch(code, /#(?:[0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})\b(?![\w-])|\b(?:rgb|hsl|hwb|lab|lch|oklab|oklch|color)a?\(/i, `colour literal in ${path.relative(root, file)}`);
+    assert.doesNotMatch(src, /\sstyle=/, `inline style in ${path.relative(root, file)}`);
+  }
+});
+
+test('the theme-color metas are the page background of each theme', () => {
+  const base = readFileSync(path.join(here, '..', 'src', 'layouts', 'Base.astro'), 'utf8');
+  const meta = (scheme) => base.match(new RegExp(`<meta name="theme-color" media="\\(prefers-color-scheme: ${scheme}\\)" content="([^"]+)"`))?.[1];
+  assert.equal(meta('light'), block(site, ':root {', ':root[data-theme')['--bg']);
+  assert.equal(meta('dark'), block(site, ":root[data-theme='dark']", '@media')['--bg']);
 });
