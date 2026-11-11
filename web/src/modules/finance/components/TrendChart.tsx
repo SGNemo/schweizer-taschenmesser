@@ -12,8 +12,9 @@ const H = 180;
 const PAD = 6;
 
 /**
- * The net worth as a line over months (its label for screen readers names the net worth). Same look as the month curve; the
- * first and last value are text, and a table below carries every single value for screen readers.
+ * The net worth as a line over months (its label for screen readers names the net worth). A line only, no filled
+ * area: the scale does not start at zero (a small change stays visible), and a fill down to the lower edge would say
+ * it does. The first and last value are text, and a table below carries every single value for screen readers.
  */
 export function TrendChart({
   points,
@@ -44,7 +45,6 @@ export function TrendChart({
   const line = points
     .map((p, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)} ${y(p.valueMinor).toFixed(1)}`)
     .join(' ');
-  const area = `${line} L${x(points.length - 1).toFixed(1)} ${H} L${x(0).toFixed(1)} ${H} Z`;
   const first = points[0]!;
   const last = points[points.length - 1]!;
   const change = changeOver(points)!;
@@ -74,7 +74,6 @@ export function TrendChart({
         }
         data-testid={testId}
       >
-        <path d={area} className={styles.curveFill} />
         <path d={line} className={styles.curveLine} vectorEffect="non-scaling-stroke" />
       </svg>
       <SensitiveValue>

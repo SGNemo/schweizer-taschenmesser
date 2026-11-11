@@ -1,0 +1,64 @@
+name: Web install
+description: >
+  `web/node_modules` from a cache, `npm ci` only on a miss (CI round 3, package 2: `npm ci` cost 0.8 to 1.1 min
+  in every web job, docs/perf/CI-2026-11.md). Needs `actions/setup-node` before it (its Node version is part of the
+  key). The key holds the runner image, the Node version, the lock file and the dependency fields of package.json,
+  and there is no `restore-keys`: a hit is exactly the tree `npm ci` would build, never another one. No package
+  in the lock file has an install script that runs on Linux (only `fsevents`, macOS), so nothing outside
+  `node_modules` is missing on a hit. Saved only on a push (develop, main), a dispatch (rest part, nightly, label
+  `full-ci`, manual run) and a pull request labelled `full-ci`; other pull requests only read. Caches are per
+  branch and the repository has 10 GB: entries from every pull request would push out the Rust and Windows caches
+  releases live on. docs/howto/ci-layout.md -> "Caches".
+runs:
+  using: composite
+  steps:
+    - name: Cache key (runner image, Node, lock file, package.json dependencies)
+      id: key
+      shell: bash
+      working-directory: web
+      run: |
+        deps=$(node -e 'const p=require("./package.json");const f=["dependencies","devDependencies","optionalDependencies","peerDependencies","overrides"];process.stdout.write(require("crypto").createHash("sha256").update(JSON.stringify(f.map((k)=>p[k]??null))).digest("hex").slice(0,16))')
+        echo "key=web-node-modules-${ImageOS:-unknown}-${ImageVersion:-0}-${RUNNER_ARCH}-node$(node --version)-${{ hashFiles('web/package-lock.json') }}-$deps" >> "$GITHUB_OUTPUT"
+    - name: node_modules cache
+      id: modules
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: web/node_modules
+        key: ${{ steps.key.outputs.key }}
+    # A miss only: npm's download cache. Its content is checked against the integrity hashes of the lock file, so
+    # an older entry (restore-keys) can only save downloads, never change what gets installed.
+    - name: npm download cache (miss only)
+      id: npm
+      if: steps.modules.outputs.cache-hit != 'true'
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.npm
+        key: web-npm-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}
+        restore-keys: web-npm-${{ runner.os }}-
+    - name: Install (npm ci on a cache miss)
+      shell: bash
+      working-directory: web
+      env:
+        HIT: ${{ steps.modules.outputs.cache-hit }}
+      run: |
+        if [ "$HIT" = "true" ]; then echo "node_modules restored from the cache, no npm ci."; else npm ci; fi
+        # Same tree on a hit as after npm ci: compare this line between a hit and a miss of the same key.
+        echo "node_modules/.package-lock.json sha256: $(sha256sum node_modules/.package-lock.json | cut -c1-16)"
+    # Saved right after the install, before any test writes into node_modules (.vite, tool caches). With several
+    # jobs missing at once only the first one saves; the others print a warning and go on.
+    - name: Save node_modules (push, dispatch, label full-ci; miss only)
+      if: >-
+        steps.modules.outputs.cache-hit != 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        || contains(github.event.pull_request.labels.*.name, 'full-ci'))
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: web/node_modules
+        key: ${{ steps.key.outputs.key }}
+    - name: Save npm download cache (same runs; miss only)
+      if: >-
+        steps.modules.outputs.cache-hit != 'true' && steps.npm.outputs.cache-hit != 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        || contains(github.event.pull_request.labels.*.name, 'full-ci'))
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.npm
+        key: web-npm-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}

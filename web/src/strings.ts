@@ -3318,10 +3318,13 @@ export const de = {
     netWorth: {
       /** The head draws no label: the context line names the figure first. */
       named: (n: number) => `Vermögen · ${n === 1 ? '1 Konto' : `${n} Konten`}`,
-      /** Context line: counts only, the invoices first (all open ones, whatever their due date). Never an amount. */
+      /**
+       * Context line: counts only, the invoices first (all open ones, whatever their due date). Never an amount. It
+       * says that the figure above does not deduct them.
+       */
       open: (invoices: number, subs: number) =>
-        `Noch offen: ${[
-          invoices > 0 && (invoices === 1 ? '1 Rechnung' : `${invoices} Rechnungen`),
+        `Noch nicht abgezogen: ${[
+          invoices > 0 && (invoices === 1 ? '1 offene Rechnung' : `${invoices} offene Rechnungen`),
           subs > 0 && `${subs === 1 ? '1 Abo' : `${subs} Abos`} bis Monatsende`,
         ]
           .filter(Boolean)

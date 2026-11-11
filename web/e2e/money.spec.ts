@@ -497,7 +497,7 @@ test.describe('Finance: net worth on the tab "Verlauf"', () => {
     // Counts, the invoices first (every open one, as in "Verfügbar"); the figure is what the accounts hold and
     // deducts nothing.
     await expect(page.getByTestId('net-worth-context')).toHaveText(
-      'Noch offen: 1 Rechnung · 1 Abo bis Monatsende',
+      'Noch nicht abgezogen: 1 offene Rechnung · 1 Abo bis Monatsende',
     );
     await expect(page.getByTestId('hero')).toHaveText(/5\.850,00\s€/);
     // The overview keeps the liquidity figure.

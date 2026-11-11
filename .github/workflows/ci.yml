@@ -327,9 +327,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 26
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - run: npm ci
+      - uses: ./.github/actions/web-install
       - uses: ./.github/actions/playwright-chromium
       # playwright.stimulus.config.ts builds (build:e2e-seed) and serves (preview:e2e-seed) the seeded app itself
       # and uses /opt/pw-browsers/chromium only where it exists. The job summary carries the measured values.
@@ -371,9 +369,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 26
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - run: npm ci
+      - uses: ./.github/actions/web-install
       - name: Version files agree (package.json, Cargo, Tauri)
         run: npm run version:check
       - name: Every module has a complete manifest and a home-screen widget
@@ -427,9 +423,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 26
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - run: npm ci
+      - uses: ./.github/actions/web-install
       - run: npx vitest run --shard=${{ matrix.shard }}/3
 
   # The Playwright suite is split into slices, each on its own runner with two workers (more workers on four
@@ -454,9 +448,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 26
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - run: npm ci
+      - uses: ./.github/actions/web-install
       - uses: ./.github/actions/playwright-chromium
       - name: E2E (smoke), shard ${{ matrix.shard }} of ${{ strategy.job-total }}
         run: npx playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
@@ -501,9 +493,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 26
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - run: npm ci
+      - uses: ./.github/actions/web-install
       - uses: ./.github/actions/playwright-chromium
       - name: E2E (rest), shard ${{ matrix.shard }} of ${{ strategy.job-total }}
         run: npx playwright test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
@@ -645,12 +635,9 @@ jobs:
         with:
           node-version: 26
           cache: npm
-          cache-dependency-path: |
-            web/package-lock.json
-            extension/package-lock.json
+          cache-dependency-path: extension/package-lock.json
       # The E2E suite loads the extension into Chromium and talks to the real web app (e2e build).
-      - run: npm ci
-        working-directory: web
+      - uses: ./.github/actions/web-install
       - run: npm ci
         working-directory: extension
       - run: npm run format:check
@@ -700,13 +687,10 @@ jobs:
         with:
           node-version: 26
           cache: npm
-          cache-dependency-path: |
-            web/package-lock.json
-            server/package-lock.json
+          cache-dependency-path: server/package-lock.json
       - run: npm ci
         working-directory: server
-      - run: npm ci
-        working-directory: web
+      - uses: ./.github/actions/web-install
       - uses: ./.github/actions/playwright-chromium
       - run: npm run e2e:sync
         working-directory: web
@@ -738,9 +722,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 26
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - run: npm ci
+      - uses: ./.github/actions/web-install
       - uses: ./.github/actions/playwright-chromium
       - name: E2E (seed project, ${{ matrix.part }}), shard ${{ matrix.shard }} of 2
         env:

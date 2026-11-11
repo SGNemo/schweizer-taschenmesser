@@ -8,10 +8,11 @@ describe('context line of the net worth', () => {
   const n = t.finance.netWorth;
 
   it('counts, the invoices first, and only the subscriptions are "until month end"', () => {
-    expect(n.open(2, 4)).toBe('Noch offen: 2 Rechnungen · 4 Abos bis Monatsende');
-    expect(n.open(1, 1)).toBe('Noch offen: 1 Rechnung · 1 Abo bis Monatsende');
-    expect(n.open(7, 0)).toBe('Noch offen: 7 Rechnungen');
-    expect(n.open(0, 1)).toBe('Noch offen: 1 Abo bis Monatsende');
+    // The line says that the figure above it does not deduct these.
+    expect(n.open(2, 4)).toBe('Noch nicht abgezogen: 2 offene Rechnungen · 4 Abos bis Monatsende');
+    expect(n.open(1, 1)).toBe('Noch nicht abgezogen: 1 offene Rechnung · 1 Abo bis Monatsende');
+    expect(n.open(7, 0)).toBe('Noch nicht abgezogen: 7 offene Rechnungen');
+    expect(n.open(0, 1)).toBe('Noch nicht abgezogen: 1 Abo bis Monatsende');
   });
 
   it('says "nothing" only about what was counted', () => {
