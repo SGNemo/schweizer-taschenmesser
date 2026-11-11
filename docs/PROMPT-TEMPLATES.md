@@ -44,6 +44,12 @@ Blocks for the maintainer's prompts; cite the anchor instead of repeating the te
 - Screenshots and mockups: PR text, never committed (`check:docs` fails on images under `docs/`).
 - Final message: **3 points + PR link**, nothing more: what changed · how it was verified · what waits on the maintainer (that also goes into "Wartet auf Sven" in [CHATS.md](CHATS.md)).
 
+## review
+
+- `council` (three Opus delegates) only for a decision PR: rules (`CLAUDE.md`, `docs/RULES.md`, `docs/rules/`), security, vault, sync and LWW, data formats and migrations, manifest or platform contracts, design system tokens. At most 2 rounds per PR; a third needs the maintainer.
+- Everything else: `review-loop` (one Opus reviewer). Docs-only and test-only PRs: `review-loop` with one round.
+- `babysit-pr` waits on PR events, never polls; a docs-only PR is handed over after the first green run.
+
 ## delegate
 
 Lead → agent, one block per task: **Goal** (why, what done looks like) · **Scope** (files/dirs; read-only or may edit) · **Acceptance** (checks + result) · **Docs** to read · **Branch** `<type>/<topic>` (or "no commit") · **Return** (file `/workspace/<agent-dir>/…` + short summary; verified vs. inferred) · last line: `Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text`. Roster: [meta/AGENTS.md](meta/AGENTS.md).
