@@ -94,6 +94,8 @@ export const remote: Strings['remote'] = {
   open: 'Open',
   playPause: 'Play / Pause',
   widgetIdle: 'Your PC',
+  widgetConnecting: 'Connecting to your PC …',
+  widgetMissed: 'Connected. Tap once more.',
   widgetHint: 'Control media and volume of the PC.',
   state: {
     connecting: 'Your PC',

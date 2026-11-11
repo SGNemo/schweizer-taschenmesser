@@ -3,7 +3,6 @@ import { Link } from 'react-router';
 import { getPlatform } from '@/core/platform';
 import type { RemoteAction } from '@/core/platform/types';
 import { createHoldGate, HOLD_STEPS_PER_SECOND } from '@/core/remote/session';
-import { settingsPath } from '@/core/settings/registry/paths';
 import { useSettings } from '@/core/settings/settings';
 import { holdKeepAwake } from '@/core/shell/keepAwake';
 import { now } from '@/core/time/now';
@@ -11,7 +10,7 @@ import { t } from '@/strings';
 import { Button, EmptyState, Icon, PageHeader, RowMenu, Tabs, type IconName } from '@/ui';
 import { remoteSession, useLastPc, useRemoteView } from '../session';
 import { DEFAULTS, PAD_SPEED, settings, type RemotePrefs } from '../settings';
-import { describe, type RemoteLine } from '../view';
+import { describe, stepLink, type RemoteLine } from '../view';
 import { useVolumeKeys } from '../volumeKeys';
 import styles from '../remote.module.css';
 import { Keyboard } from './Keyboard';
@@ -175,8 +174,9 @@ function Media({
             </Button>
           </div>
         ) : null}
-        {line.step === 'pair' ? <Link to={settingsPath('sync', 'sync')}>{r.pair}</Link> : null}
-        {line.step === 'disable' ? <Link to="/library/remote">{r.disable}</Link> : null}
+        {line.step === 'pair' || line.step === 'disable' ? (
+          <Link to={stepLink(line.step).to}>{stepLink(line.step).label}</Link>
+        ) : null}
       </section>
 
       <div className={styles.pad} role="group" aria-label={r.media}>

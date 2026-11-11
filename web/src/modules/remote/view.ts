@@ -1,6 +1,7 @@
 import type { RemotePcState } from '@/core/platform/types';
 import type { RemotePad, RemoteView } from '@/core/remote/session';
 import { t } from '@/strings';
+import { settingsPath } from '@/core/settings/registry/paths';
 
 /** The one step a state offers. */
 export type RemoteStep = 'retry' | 'pair' | 'disable';
@@ -110,4 +111,11 @@ export function pcLine(pc: RemotePcState): string {
   const r = t.remote.state;
   const sound = pc.mute ? r.muted : pc.volume === null ? r.volumeUnknown : r.volume(pc.volume);
   return pc.locked ? `${sound} · ${r.pcLocked}` : sound;
+}
+
+/** Where a step leads that is a way out of the page (the page and the widget share it). */
+export function stepLink(step: 'pair' | 'disable'): { to: string; label: string } {
+  return step === 'pair'
+    ? { to: settingsPath('sync', 'sync'), label: t.remote.pair }
+    : { to: '/library/remote', label: t.remote.disable };
 }

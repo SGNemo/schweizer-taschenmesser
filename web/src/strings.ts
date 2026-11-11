@@ -8789,6 +8789,8 @@ export const de = {
     open: 'Öffnen',
     playPause: 'Wiedergabe / Pause',
     widgetIdle: 'Dein PC',
+    widgetConnecting: 'Verbindet mit deinem PC …',
+    widgetMissed: 'Verbunden. Tippe noch einmal.',
     widgetHint: 'Medien und Lautstärke des PCs steuern.',
     state: {
       connecting: 'Dein PC',

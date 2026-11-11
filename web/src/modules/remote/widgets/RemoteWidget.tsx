@@ -5,7 +5,7 @@ import { useSyncStatus } from '@/core/sync/status';
 import { t } from '@/strings';
 import { StatusWidget } from '@/ui';
 import { remoteSession, useLastPc, useRemoteView } from '../session';
-import { describe } from '../view';
+import { describe, stepLink } from '../view';
 
 /**
  * The remote control on the home screen: one action, "Wiedergabe / Pause".
@@ -26,7 +26,10 @@ export default function RemoteWidget() {
   const last = useLastPc();
   // whether the person tapped here: only then a state of the session is this widget's to show
   const [tapped, setTapped] = useState(false);
-  // whether this widget opened the session (then it is this widget's to end)
+  // the press of a tap did not go out (a slow connect drops it): once connected, say so
+  const [missed, setMissed] = useState(false);
+  // whether this widget opened the session (then it is this widget's to end; ending one the PC
+  // already ended is harmless)
   const mine = useRef(false);
 
   useEffect(() => {
@@ -58,35 +61,50 @@ export default function RemoteWidget() {
 
   const line = describe(view, last);
   if (tapped && line.step) {
-    // the tap did not go: the sentence, and the one step where it can be solved
-    const to =
-      line.step === 'pair'
-        ? settingsPath('sync', 'sync')
-        : line.step === 'disable'
-          ? '/library/remote'
-          : '/remote';
-    const label =
-      line.step === 'pair'
-        ? t.remote.pair
-        : line.step === 'disable'
-          ? t.remote.disable
-          : t.remote.open;
-    return <StatusWidget icon="monitor" state={line.text} action={{ label, to }} />;
+    // the tap did not go: the sentence (read out once), and the one step where it can be solved
+    const action =
+      line.step === 'pair' || line.step === 'disable'
+        ? stepLink(line.step)
+        : { to: '/remote', label: t.remote.open };
+    return (
+      <>
+        <p className="sr-only" aria-live="polite">
+          {line.text}
+        </p>
+        <StatusWidget icon="monitor" state={line.text} action={action} />
+      </>
+    );
   }
 
   const tap = () => {
     mine.current = true;
     setTapped(true);
-    // without a session the press opens one first and goes out once it stands
-    void remoteSession.send('play-pause');
+    setMissed(false);
+    // without a session the press opens one first and goes out once it stands; `false`: it did
+    // not go out (the connect took too long and the press was let go, or the PC refused)
+    void remoteSession.send('play-pause').then((sent) => setMissed(!sent));
   };
+  // One still line. The PC's volume only while a session is open; after a tap, that the phone
+  // is connecting; and if the connect outlived its press, that one more tap is needed.
+  const state =
+    view.kind === 'connected'
+      ? missed
+        ? t.remote.widgetMissed
+        : line.text
+      : tapped && view.kind === 'connecting'
+        ? t.remote.widgetConnecting
+        : t.remote.widgetIdle;
   return (
-    <StatusWidget
-      icon="monitor"
-      // the PC's volume only while a session is open; else just whose remote this is
-      state={view.kind === 'connected' ? line.text : t.remote.widgetIdle}
-      hint={t.remote.widgetHint}
-      action={{ label: t.remote.playPause, onClick: tap }}
-    />
+    <>
+      <p className="sr-only" aria-live="polite">
+        {view.kind === 'connected' && missed ? t.remote.widgetMissed : ''}
+      </p>
+      <StatusWidget
+        icon="monitor"
+        state={state}
+        hint={t.remote.widgetHint}
+        action={{ label: t.remote.playPause, onClick: tap }}
+      />
+    </>
   );
 }

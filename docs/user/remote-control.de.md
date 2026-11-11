@@ -4,7 +4,7 @@
 
 Mit der Android-App steuerst du deinen Windows-PC vom Sofa aus: Wiedergabe und Lautstärke, auf Wunsch auch Mauszeiger und Tastatur. Das geht nur bei dir zu Hause im selben WLAN, und nur für ein Handy, dem du es am PC erlaubt hast.
 
-Die Fernbedienung ist noch in der Vorschau: Im Modulkatalog erscheint sie mit _In Arbeit anzeigen_.
+Die Fernbedienung ist noch in Arbeit. Damit du sie siehst, schalte **am PC und am Handy** _Einstellungen → Darstellung → In Arbeit anzeigen_ ein.
 
 ## Was du brauchst
 
@@ -14,7 +14,7 @@ Die Fernbedienung ist noch in der Vorschau: Im Modulkatalog erscheint sie mit _I
 
 ## Einschalten
 
-1. **PC:** _Einstellungen → Fernsteuerung → Fernsteuerung erlauben_ einschalten.
+1. **PC:** _Einstellungen → Verbindungen → Fernsteuerung → Fernsteuerung erlauben_ einschalten.
 2. **PC:** Beim Handy unter _Gekoppelte Geräte_ wählen, was es darf (siehe unten). Windows fragt in einem eigenen Fenster noch einmal nach.
 3. **Handy:** Im Modulkatalog die _Fernbedienung_ einschalten und öffnen.
 
@@ -28,7 +28,7 @@ Ohne Schritt 1 und 2 kann kein Gerät deinen PC steuern. Die Kopplung allein rei
 | Medien und Lautstärke     | Wiedergabe / Pause, nächster und vorheriger Titel, lauter, leiser, Ton aus, PC sperren                                          |
 | Medien, Maus und Tastatur | zusätzlich die Ansichten _Touchpad_ (Mauszeiger, Klicks, Scrollen) und _Tastatur_ (Text und einzelne Tasten wie Enter oder Esc) |
 
-Für Maus und Tastatur kann der PC verlangen, dass du dich vorher am Handy entsperrst (Fingerabdruck, Gesicht oder PIN). Der Schalter dafür steht am PC beim Gerät.
+Am PC lässt sich beim Gerät einstellen, dass das Handy vor Maus und Tastatur nach Fingerabdruck, Gesicht oder PIN fragt.
 
 Solange der PC gesperrt ist, gehen nur Medien und Lautstärke. Das Handy sieht nie deinen Bildschirm, deine Zwischenablage oder deine Dateien.
 
@@ -37,13 +37,13 @@ Solange der PC gesperrt ist, gehen nur Medien und Lautstärke. Das Handy sieht n
 - **Medien:** große Tasten für Wiedergabe und Lautstärke. Wenn du magst, steuern auch die Lautstärketasten des Handys den PC (Einstellung im Modul).
 - **Touchpad:** wischen bewegt den Zeiger, tippen klickt, mit zwei Fingern scrollen.
 - **Tastatur:** Text am Handy tippen, lesen und dann senden. Der Text wird nirgends gespeichert.
-- **Auf der Übersicht:** Die Karte _Fernbedienung_ hat eine Taste _Wiedergabe / Pause_. Ein Tipp verbindet und sendet. Die Karte verbindet sich nie von selbst.
+- **Auf der Übersicht:** Die Karte _Fernbedienung_ hat eine Taste _Wiedergabe / Pause_. Ein Tipp verbindet und sendet. Dauert das Verbinden länger, bittet die Karte um einen zweiten Tipp. Die Karte verbindet sich nie von selbst.
 
 ## Beenden und wieder einschalten
 
 - Am PC zeigt Nemo immer an, wenn ein Gerät steuert: im Fenster oben und am Symbol neben der Uhr.
 - **Sofort beenden:** dort _Fernsteuerung beenden_. Das Handy ist danach pausiert und kann nichts mehr steuern.
-- **Wieder einschalten:** am PC unter _Einstellungen → Fernsteuerung_ beim Gerät _Wieder einschalten_.
+- **Wieder einschalten:** am PC unter _Einstellungen → Verbindungen → Fernsteuerung_ beim Gerät _Wieder einschalten_.
 - **Ganz aus:** _Fernsteuerung erlauben_ ausschalten. Der Abgleich im Heimnetz läuft unverändert weiter.
 
 ## Gut zu wissen

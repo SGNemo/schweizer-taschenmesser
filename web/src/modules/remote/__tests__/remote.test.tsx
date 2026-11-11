@@ -363,12 +363,13 @@ describe('RemoteWidget', () => {
     fake.parts.hooks.failOpen('network', 99);
     await widget();
     fireEvent.click(screen.getByRole('button', { name: 'Wiedergabe / Pause' }));
-    for (let i = 0; i < 1500 && !screen.queryByText(/nicht erreichbar/); i++) {
+    for (let i = 0; i < 1500 && screen.queryAllByText(/nicht erreichbar/).length === 0; i++) {
       await act(async () => new Promise((r) => setTimeout(r, 10)));
     }
+    // (once to see and once for a screen reader to hear)
     expect(
-      screen.getByText('Dein PC ist gerade nicht erreichbar. Beide Geräte im selben WLAN?'),
-    ).toBeTruthy();
+      screen.getAllByText('Dein PC ist gerade nicht erreichbar. Beide Geräte im selben WLAN?'),
+    ).toHaveLength(2);
     expect(screen.getByRole('link', { name: 'Öffnen' }).getAttribute('href')).toBe('/remote');
     expect(fake.parts.hooks.sent()).toEqual([]);
   }, 20_000);
@@ -395,6 +396,75 @@ describe('RemoteWidget', () => {
     expect(close).toHaveBeenCalledTimes(1);
     expect(fake.parts.hooks.isOpen()).toBe(false);
     close.mockRestore();
+  });
+
+  it('between the tap and the PC the card says that it connects; a press a slow connect let go asks for one more tap', async () => {
+    const release = fake.parts.hooks.holdOpens();
+    await widget();
+    fireEvent.click(screen.getByRole('button', { name: 'Wiedergabe / Pause' }));
+    await flush();
+    expect(screen.getByText('Verbindet mit deinem PC …')).toBeTruthy();
+    // the connect takes longer than a press waits: the sentence of that state, nothing sent
+    for (
+      let i = 0;
+      i < 800 && screen.queryAllByText('Dein PC antwortet noch nicht.').length === 0;
+      i++
+    ) {
+      await act(async () => new Promise((r) => setTimeout(r, 10)));
+    }
+    expect(screen.getAllByText('Dein PC antwortet noch nicht.').length).toBeGreaterThan(0);
+    // it stands after all: the card does not look as if the press had gone out
+    await act(async () => release());
+    for (
+      let i = 0;
+      i < 600 && screen.queryAllByText('Verbunden. Tippe noch einmal.').length === 0;
+      i++
+    ) {
+      await act(async () => new Promise((r) => setTimeout(r, 10)));
+    }
+    expect(screen.getAllByText('Verbunden. Tippe noch einmal.').length).toBeGreaterThan(0);
+    expect(fake.parts.hooks.sent()).toEqual([]);
+    fireEvent.click(screen.getByRole('button', { name: 'Wiedergabe / Pause' }));
+    await flush();
+    expect(fake.parts.hooks.sent()).toEqual(['play-pause']);
+    expect(screen.getByText('Dein PC · Lautstärke 42 %')).toBeTruthy();
+  }, 20_000);
+
+  it('left while it still connects: nothing goes out afterwards and no session stays', async () => {
+    const release = fake.parts.hooks.holdOpens();
+    await widget();
+    fireEvent.click(screen.getByRole('button', { name: 'Wiedergabe / Pause' }));
+    await flush();
+    cleanup();
+    await act(async () => release());
+    await act(async () => new Promise((r) => setTimeout(r, 300)));
+    expect(fake.parts.hooks.sent()).toEqual([]);
+    expect(fake.parts.hooks.isOpen()).toBe(false);
+    expect(fake.parts.hooks.opens()).toBeLessThanOrEqual(1);
+  });
+
+  it('the app goes to the background: the session ends, and coming back opens nothing', async () => {
+    await widget();
+    fireEvent.click(screen.getByRole('button', { name: 'Wiedergabe / Pause' }));
+    for (let i = 0; i < 600 && !fake.parts.hooks.isOpen(); i++) {
+      await act(async () => new Promise((r) => setTimeout(r, 10)));
+    }
+    const seen = vi.spyOn(document, 'visibilityState', 'get');
+    seen.mockReturnValue('hidden');
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await flush();
+    expect(fake.parts.hooks.isOpen()).toBe(false);
+    const opens = fake.parts.hooks.opens();
+    seen.mockReturnValue('visible');
+    await act(async () => {
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await act(async () => new Promise((r) => setTimeout(r, 1200)));
+    expect(fake.parts.hooks.opens()).toBe(opens);
+    expect(screen.getByText('Dein PC')).toBeTruthy();
+    seen.mockRestore();
   });
 
   it('no PC paired: says so and leads to pairing', async () => {

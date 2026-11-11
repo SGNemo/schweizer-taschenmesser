@@ -476,7 +476,7 @@ test('keyboard: without the level at the PC the sentence and the way back, no fi
   await expect(page.getByTestId('remote-play-pause')).toBeVisible();
 });
 
-test('the card on the overview: shown it opens nothing; without a paired PC it leads to pairing', async ({
+test('the card on the overview without a paired PC: no button, the way to pairing, and its title into the module', async ({
   page,
 }, info) => {
   // (the tap itself needs a paired PC, which this build cannot fake: the unit tests of the
