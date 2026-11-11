@@ -35,7 +35,35 @@ export function setChangeListener(fn: ChangeListener | undefined): void {
  * Writes the given keys of a scope. `defaults` (when the caller knows them) say what a key held
  * before its first write, so the change history can offer to take it back.
  */
-export async function setSettings(
+export function setSettings(
+  scope: string,
+  patch: Record<string, unknown>,
+  defaults?: Readonly<Record<string, unknown>>,
+): Promise<void> {
+  return inOrder(scope, () => writeSettings(scope, patch, defaults));
+}
+
+/** Tail of the running patches per scope; a scope leaves the map once its last patch is done. */
+const pending = new Map<string, Promise<unknown>>();
+
+/**
+ * Runs the patches of one scope one after the other. Each patch reads, merges and writes the whole
+ * row, so two patches started together would read the same row and the later write would drop the
+ * earlier change. A queue instead of a Dexie transaction: the repo write already opens its own
+ * transaction after awaiting the device context, which must not happen inside an outer one.
+ */
+function inOrder(scope: string, run: () => Promise<void>): Promise<void> {
+  const before = pending.get(scope) ?? Promise.resolve();
+  const mine = before.then(run, run);
+  const tail = mine.catch(() => undefined);
+  pending.set(scope, tail);
+  void tail.then(() => {
+    if (pending.get(scope) === tail) pending.delete(scope);
+  });
+  return mine;
+}
+
+async function writeSettings(
   scope: string,
   patch: Record<string, unknown>,
   defaults?: Readonly<Record<string, unknown>>,
