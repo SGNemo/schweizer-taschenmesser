@@ -137,7 +137,7 @@ jobs:
       fail-fast: false
       matrix:
         # java-kotlin is not analysed: the Gradle project is generated only in CI (tauri android init), so autobuild fails, and build-mode none reads .java only (the plugins are Kotlin)
-        language: ${{ fromJSON(needs.scope.outputs.languages || '["actions","javascript-typescript","rust"]') }}
+        language: ${{ fromJSON(needs.scope.result == 'success' && needs.scope.outputs.languages || '["actions","javascript-typescript","rust"]') }}
         build-mode: [none]
         # CodeQL supports the following values keywords for 'language': 'actions', 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'rust', 'swift'
         # Use `c-cpp` to analyze code written in C, C++ or both
