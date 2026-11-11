@@ -17,8 +17,8 @@ import {
   PageHeader,
   patternStyles,
   Progress,
-  Segmented,
   Stat,
+  Tabs,
   useOpenParam,
 } from '@/ui';
 import { useBudgetData } from '../data';
@@ -88,7 +88,7 @@ export default function BudgetsPage() {
       <PageHeader
         title={t.budgets.title}
         views={
-          <Segmented
+          <Tabs
             label={t.budgets.tabs}
             value={tab}
             options={[

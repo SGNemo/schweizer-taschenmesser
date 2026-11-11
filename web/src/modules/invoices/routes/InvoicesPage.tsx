@@ -19,8 +19,8 @@ import {
   ItemRow,
   PageAction,
   PageHeader,
-  Segmented,
   StateBadge,
+  Tabs,
   useOpenParam,
 } from '@/ui';
 import { InvoiceEditor, type InvoiceTarget } from '../components/InvoiceEditor';
@@ -179,7 +179,7 @@ export default function InvoicesPage() {
       <PageHeader
         title={t.invoices.title}
         views={
-          <Segmented
+          <Tabs
             label={t.invoices.view}
             value={view}
             options={[

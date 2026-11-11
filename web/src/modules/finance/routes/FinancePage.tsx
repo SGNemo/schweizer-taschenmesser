@@ -16,6 +16,7 @@ import {
   PageHeader,
   Segmented,
   SplitView,
+  Tabs,
   useOpenParam,
   useSplitView,
 } from '@/ui';
@@ -103,7 +104,7 @@ export default function FinancePage() {
       <PageHeader
         title={t.finance.title}
         views={
-          <Segmented
+          <Tabs
             label={t.finance.tabsLabel}
             value={tab}
             options={tabs.map((k) => ({ value: k, label: t.finance.tabs[k] }))}
