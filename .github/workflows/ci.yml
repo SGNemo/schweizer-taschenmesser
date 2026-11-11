@@ -668,7 +668,7 @@ jobs:
           if [ "$SEED_PART" = "page walks" ]; then pick=--grep; fi
           # A shard without tests exits 0: if the title of the walks is ever renamed, they all move to "other"
           # (still run once) and this part must say so instead of passing empty.
-          npx playwright test --project=seed-dev "$pick" 'every page fits the window' --list | grep -q 'Total: [1-9]' \
+          npx playwright test --project=seed-dev "$pick" 'every page fits the window' --list | grep 'Total: [1-9]' > /dev/null \
             || { echo "::error::No test matches 'every page fits the window' ($SEED_PART): update the pattern of the e2e-seed job."; exit 1; }
           npx playwright test --project=seed-dev "$pick" 'every page fits the window' --shard="$SEED_SHARD/2"
       - name: Upload Playwright report
