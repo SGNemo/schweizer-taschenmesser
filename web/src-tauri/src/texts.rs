@@ -207,6 +207,25 @@ pub fn remote_dialog(lang: Lang) -> (&'static str, &'static str, &'static str) {
     }
 }
 
+/// The confirmation before the notice of a mouse/keyboard session is switched off:
+/// (title, switch off, cancel).
+pub fn remote_quiet_dialog(lang: Lang) -> (&'static str, &'static str, &'static str) {
+    if german(lang) {
+        ("Benachrichtigung ausschalten?", "Ausschalten", "Abbrechen")
+    } else {
+        ("Switch the notification off?", "Switch off", "Cancel")
+    }
+}
+
+/// What switching the notice off means, and what stays.
+pub fn remote_ask_quiet(lang: Lang) -> &'static str {
+    if german(lang) {
+        "Nemo meldet dann nicht mehr, wenn ein Gerät beginnt, Maus und Tastatur dieses PCs zu steuern.\n\nDas Symbol im Tray zeigt die Fernsteuerung weiterhin an, und dort lässt sie sich beenden."
+    } else {
+        "Nemo will then no longer tell you when a device starts to control this PC's mouse and keyboard.\n\nThe tray icon still shows remote control, and it can be ended there."
+    }
+}
+
 fn remote_level(lang: Lang, level: Level) -> &'static str {
     match (german(lang), level) {
         (true, Level::Full) => "Maus und Tastatur, dazu Medien, Lautstärke und das Sperren des PCs",
@@ -452,6 +471,12 @@ mod tests {
             let tip = remote_tooltip(lang, &"N".repeat(300), "X");
             assert!(tip.contains('X') && tip.chars().count() < 100);
             assert!(!remote_end_label(lang).is_empty() && !remote_end_hint(lang).is_empty());
+            let (title, off, cancel) = remote_quiet_dialog(lang);
+            assert!(!title.is_empty() && !off.is_empty() && !cancel.is_empty());
+            // it says what stays: the tray
+            assert!(
+                remote_ask_quiet(lang).contains("Tray") || remote_ask_quiet(lang).contains("tray")
+            );
             let (title, text) = remote_notice(lang, "X", true);
             assert!(!title.is_empty() && !text.contains('!'));
             // the name in quotes behind a label, and the tray entry by the label the tray shows

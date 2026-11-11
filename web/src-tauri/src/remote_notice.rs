@@ -13,6 +13,9 @@
 //!   is not told (it ends with the hub).
 //! * No event goes to the page from here. Should the page ever listen for notification actions
 //!   (it does not), the plugin would hand it a clicked notice's text, this one included.
+//! * It can be switched off at the PC (`remote_set_notice`, held in Rust next to the master
+//!   switch, device-local): off only through the native dialog, never while mouse and keyboard
+//!   are controlled. The tray entry and the tooltip have no switch.
 //! * Nothing here logs. A notice the system does not show (notifications switched off in the
 //!   system) is not an error; the tray stays the guarantee.
 
@@ -45,12 +48,17 @@ impl Notices {
     }
 
     /// `true` = show a notice for `device` now. Called with the hub's current count of full
-    /// sessions and the device of the latest one.
-    pub fn due(&mut self, count: u64, device: Option<[u8; 32]>, now: Duration) -> bool {
+    /// sessions and the device of the latest one. `on` = the notice is switched on; while it is
+    /// off the count is still followed (nothing is told late when it comes back on), and nobody
+    /// is remembered as told.
+    pub fn due(&mut self, on: bool, count: u64, device: Option<[u8; 32]>, now: Duration) -> bool {
         if count == self.seen {
             return false;
         }
         self.seen = count;
+        if !on {
+            return false;
+        }
         let Some(device) = device else {
             return false;
         };
@@ -90,51 +98,64 @@ mod tests {
     }
 
     #[test]
+    fn switched_off_nothing_is_due_and_nothing_is_told_late() {
+        let mut n = Notices::default();
+        assert!(!n.due(false, 1, Some(PHONE), min(0)));
+        // back on: the session that opened meanwhile is not told now …
+        assert!(!n.due(true, 1, Some(PHONE), min(1)));
+        // … and nobody counts as told: the next one is
+        assert!(n.due(true, 2, Some(PHONE), min(2)));
+    }
+
+    #[test]
     fn nothing_is_told_until_the_count_moves() {
         let mut n = Notices::default();
-        assert!(!n.due(0, None, min(0)));
-        assert!(!n.due(0, None, min(50)));
-        assert!(n.due(1, Some(PHONE), min(51)));
-        assert!(!n.due(1, Some(PHONE), min(52)), "the same session again");
+        assert!(!n.due(true, 0, None, min(0)));
+        assert!(!n.due(true, 0, None, min(50)));
+        assert!(n.due(true, 1, Some(PHONE), min(51)));
+        assert!(
+            !n.due(true, 1, Some(PHONE), min(52)),
+            "the same session again"
+        );
     }
 
     #[test]
     fn a_session_that_opened_before_the_first_look_is_told() {
         // the hub listens before the tray thread exists
         let mut n = Notices::default();
-        assert!(n.due(1, Some(PHONE), min(0)));
+        assert!(n.due(true, 1, Some(PHONE), min(0)));
     }
 
     #[test]
     fn one_notice_per_device_in_thirty_minutes() {
         let mut n = Notices::default();
-        assert!(n.due(1, Some(PHONE), min(0)));
-        assert!(!n.due(2, Some(PHONE), min(1)));
-        assert!(!n.due(3, Some(PHONE), min(29)));
+        assert!(n.due(true, 1, Some(PHONE), min(0)));
+        assert!(!n.due(true, 2, Some(PHONE), min(1)));
+        assert!(!n.due(true, 3, Some(PHONE), min(29)));
         // another device has its own time
-        assert!(n.due(4, Some(TABLET), min(29)));
+        assert!(n.due(true, 4, Some(TABLET), min(29)));
         // thirty minutes after the notice (not after the last session): told again
-        assert!(n.due(5, Some(PHONE), min(30)));
-        assert!(!n.due(6, Some(PHONE), min(45)));
-        assert!(!n.due(7, Some(TABLET), min(58)));
-        assert!(n.due(8, Some(TABLET), min(59)));
+        assert!(n.due(true, 5, Some(PHONE), min(30)));
+        assert!(!n.due(true, 6, Some(PHONE), min(45)));
+        assert!(!n.due(true, 7, Some(TABLET), min(58)));
+        assert!(n.due(true, 8, Some(TABLET), min(59)));
     }
 
     #[test]
     fn several_sessions_between_two_looks_are_one_notice_for_the_latest_device() {
         let mut n = Notices::default();
-        assert!(n.due(5, Some(TABLET), min(0)));
-        assert!(!n.due(5, Some(TABLET), min(0)));
+        assert!(n.due(true, 5, Some(TABLET), min(0)));
+        assert!(!n.due(true, 5, Some(TABLET), min(0)));
     }
 
     #[test]
     fn a_restarted_hub_counts_anew_but_the_quiet_time_holds() {
         let mut n = Notices::default();
-        assert!(n.due(1, Some(PHONE), min(0)));
+        assert!(n.due(true, 1, Some(PHONE), min(0)));
         n.reset();
-        assert!(!n.due(0, Some(PHONE), min(1)));
-        assert!(!n.due(1, Some(PHONE), min(2)), "still the quiet time");
-        assert!(n.due(2, Some(PHONE), min(31)));
+        assert!(!n.due(true, 0, Some(PHONE), min(1)));
+        assert!(!n.due(true, 1, Some(PHONE), min(2)), "still the quiet time");
+        assert!(n.due(true, 2, Some(PHONE), min(31)));
     }
 
     #[test]
@@ -143,7 +164,7 @@ mod tests {
         for i in 0..(REMEMBERED as u64 + 10) {
             let mut device = [0u8; 32];
             device[..8].copy_from_slice(&i.to_le_bytes());
-            assert!(n.due(i + 1, Some(device), min(0)));
+            assert!(n.due(true, i + 1, Some(device), min(0)));
         }
         assert_eq!(n.shown.len(), REMEMBERED);
     }

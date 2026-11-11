@@ -82,6 +82,43 @@ test('allow a phone media control, see it control, end it, and find it paused', 
   expect(await page.evaluate((d) => window.__tmRemoteHost.open(d), id)).toBe(true);
 });
 
+test('mouse and keyboard: offered with the switch of its notification, both asked at the PC', async ({
+  page,
+}, info) => {
+  await page.goto('/settings/verbindungen');
+  const section = page.getByTestId('remote-host');
+  await expect(section).toBeVisible();
+  await page.evaluate(() => window.__tmRemoteHost.addDevice('Pixel 7'));
+  const notice = section.getByRole('switch', {
+    name: 'Melden, wenn ein Gerät Maus und Tastatur steuert',
+  });
+  await expect(notice).toHaveAttribute('aria-checked', 'true');
+  await expect(section).toContainText('höchstens einmal in 30 Minuten je Gerät');
+
+  await section.getByRole('switch', { name: 'Fernsteuerung erlauben' }).click();
+  const level = section.getByTestId('remote-level');
+  await level.selectOption('full');
+  await expect(level).toHaveValue('full');
+  expect(await page.evaluate(() => window.__tmRemoteHost.asked())).toBe(1);
+  // the phone's own unlock is on with it
+  const unlock = section.getByRole('switch', { name: 'Vor Maus und Tastatur am Handy entsperren' });
+  await expect(unlock).toHaveAttribute('aria-checked', 'true');
+  await section.screenshot({ path: info.outputPath('remote-4-full.png') });
+
+  // switching the notification off is asked at the PC; "Abbrechen" leaves it on
+  await page.evaluate(() => window.__tmRemoteHost.answer('cancel'));
+  await notice.click();
+  await expect(notice).toHaveAttribute('aria-checked', 'true');
+  await page.evaluate(() => window.__tmRemoteHost.answer('allow'));
+  await notice.click();
+  await expect(notice).toHaveAttribute('aria-checked', 'false');
+  expect(await page.evaluate(() => window.__tmRemoteHost.asked())).toBe(3);
+  // back on asks nobody
+  await notice.click();
+  await expect(notice).toHaveAttribute('aria-checked', 'true');
+  expect(await page.evaluate(() => window.__tmRemoteHost.asked())).toBe(3);
+});
+
 test('a phone never sees the section', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('__tmPlatformKind', 'android'));
   await page.goto('/settings/verbindungen');

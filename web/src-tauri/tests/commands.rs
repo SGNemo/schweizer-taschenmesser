@@ -309,13 +309,13 @@ fn disk_delete_checks_keep_their_order() {
     assert_eq!(body.matches("guard_for(").count(), 1);
 }
 
-/// The four remote-control commands and nothing else, all off the main thread: two of them wait
+/// The five remote-control commands and nothing else, all off the main thread: three of them wait
 /// for a native dialog, which must never block the event loop (or be shown from it).
 #[test]
 fn remote_commands_never_run_on_the_main_thread() {
     let src = source("remote.rs");
     assert_eq!(src.matches("#[tauri::command]").count(), 0);
-    assert_eq!(src.matches("#[tauri::command(async)]\npub fn ").count(), 4);
+    assert_eq!(src.matches("#[tauri::command(async)]\npub fn ").count(), 5);
     assert_async(
         &src,
         &[
@@ -323,6 +323,7 @@ fn remote_commands_never_run_on_the_main_thread() {
             "remote_set_enabled",
             "remote_set_device",
             "remote_end",
+            "remote_set_notice",
         ],
     );
 }
@@ -468,6 +469,35 @@ fn remote_widening_takes_a_ticket_before_the_native_dialog() {
             "{name}"
         );
     }
+    // Switching the notice off loosens an option: counted before the question, asked natively,
+    // checked again after the answer, and only then written. Switching it on asks nothing.
+    let at = commands.find("pub fn remote_set_notice(").unwrap();
+    let body = &commands[at..];
+    let body = &body[..body.find("\n}\n").unwrap()];
+    let count = body
+        .find("parts.full_count()")
+        .expect("count before the question");
+    let busy = body.find("full_session_open()").expect("session check");
+    let dialog = body.find("asked(&app").expect("native dialog");
+    let again = body
+        .find("untouched_since(before)")
+        .expect("check after the answer");
+    let same = body
+        .find("same_hub(&parts, &quiet)")
+        .expect("the same hub after the answer");
+    let off = body.find("quiet.set(true)").expect("the write");
+    assert!(
+        count < busy && busy < dialog && dialog < same && same < again && again < off,
+        "remote_set_notice: wrong order"
+    );
+    assert_eq!(body.matches("quiet.set(true)").count(), 1);
+    // "on again in this run" is given up only once off is on disk, and remembered before on is
+    // even tried
+    assert_eq!(body.matches("n.notice = false").count(), 1);
+    assert!(body.find("n.notice = false").unwrap() > off);
+    assert!(body.find("n.notice = true").unwrap() < body.find("quiet.set(false)").unwrap());
+    assert!(body.find("quiet.set(false)").unwrap() < dialog);
+    assert!(!body.contains("set_enabled") && !body.contains("set_grant"));
     // the answer comes from a blocking native dialog, never from the page
     let src = source("remote.rs");
     assert_eq!(src.matches(".blocking_show()").count(), 1);

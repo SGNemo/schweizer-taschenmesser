@@ -29,6 +29,9 @@ const show = async () => {
 };
 const level = () => screen.getByTestId('remote-level') as HTMLSelectElement;
 const master = () => screen.getByRole('switch', { name: 'Fernsteuerung erlauben' });
+const notice = () =>
+  screen.getByRole('switch', { name: 'Melden, wenn ein Gerät Maus und Tastatur steuert' });
+const UNLOCK = 'Vor Maus und Tastatur am Handy entsperren';
 
 beforeEach(() => {
   fake.parts = createFakeRemoteHostParts();
@@ -62,11 +65,15 @@ describe('RemoteHostSection (desktop)', () => {
     expect(screen.getByTestId('remote-hint').textContent).toBe(
       'Schalte oben „Fernsteuerung erlauben“ ein, um einem Gerät etwas zu erlauben.',
     );
-    // mouse and keyboard are held back until they exist (package 3)
     expect([...level().options].map((o) => o.textContent)).toEqual([
       'Nichts',
       'Medien und Lautstärke',
+      'Medien, Maus und Tastatur',
     ]);
+    // the level is never offered without the switch of its notification, which is on
+    expect(notice().getAttribute('aria-checked')).toBe('true');
+    // the phone's unlock belongs to mouse and keyboard only
+    expect(screen.queryByRole('switch', { name: UNLOCK })).toBeNull();
     expect(screen.queryByText('Erweitert')).toBeNull();
   });
 
@@ -88,6 +95,68 @@ describe('RemoteHostSection (desktop)', () => {
     await flush();
     expect(fake.parts.hooks.asked()).toBe(1);
     expect(level().value).toBe('off');
+  });
+
+  it('mouse and keyboard: asked at the PC, with the phone’s unlock on; dropping the unlock is asked too', async () => {
+    fake.parts.hooks.addDevice('Pixel 7');
+    await show();
+    fireEvent.click(master());
+    await flush();
+    fireEvent.change(level(), { target: { value: 'full' } });
+    await flush();
+    expect(fake.parts.hooks.asked()).toBe(1);
+    expect(level().value).toBe('full');
+    const unlock = () => screen.getByRole('switch', { name: UNLOCK });
+    expect(unlock().getAttribute('aria-checked')).toBe('true');
+    // one protection less: a question, and "Abbrechen" leaves it on
+    fake.parts.hooks.answer('cancel');
+    fireEvent.click(unlock());
+    await flush();
+    expect(unlock().getAttribute('aria-checked')).toBe('true');
+    fake.parts.hooks.answer('allow');
+    fireEvent.click(unlock());
+    await flush();
+    expect(fake.parts.hooks.asked()).toBe(3);
+    expect(unlock().getAttribute('aria-checked')).toBe('false');
+    // back on is a narrowing: nobody is asked
+    fireEvent.click(unlock());
+    await flush();
+    expect(fake.parts.hooks.asked()).toBe(3);
+    expect(unlock().getAttribute('aria-checked')).toBe('true');
+  });
+
+  it('the notification: off is asked at the PC, on is not, and never while mouse and keyboard are controlled', async () => {
+    const id = fake.parts.hooks.addDevice('Pixel 7');
+    await show();
+    expect(screen.getByText(/höchstens einmal in 30 Minuten je Gerät/)).toBeTruthy();
+    fake.parts.hooks.answer('cancel');
+    fireEvent.click(notice());
+    await flush();
+    expect(notice().getAttribute('aria-checked')).toBe('true');
+    expect(screen.queryByTestId('remote-note')).toBeNull();
+    fake.parts.hooks.answer('allow');
+    fireEvent.click(notice());
+    await flush();
+    expect(fake.parts.hooks.asked()).toBe(2);
+    expect(notice().getAttribute('aria-checked')).toBe('false');
+    fireEvent.click(notice());
+    await flush();
+    expect(fake.parts.hooks.asked()).toBe(2);
+    expect(notice().getAttribute('aria-checked')).toBe('true');
+
+    // a device controls mouse and keyboard: the notification cannot be switched off now
+    fireEvent.click(master());
+    await flush();
+    await fake.parts.host.setDevice(id, { level: 'full', paused: false, unlock: true });
+    expect(fake.parts.hooks.open(id, 'full')).toBe(true);
+    fireEvent.click(notice());
+    await flush();
+    expect(notice().getAttribute('aria-checked')).toBe('true');
+    // said right below the switch that was touched
+    expect(screen.getByTestId('remote-notice-note').textContent).toContain(
+      'solange ein Gerät Maus und Tastatur steuert',
+    );
+    expect(screen.queryByTestId('remote-note')).toBeNull();
   });
 
   it('"Abbrechen" at the PC changes nothing and is not reported as a fault', async () => {

@@ -213,6 +213,7 @@ pub fn run() {
             remote::remote_set_enabled,
             remote::remote_set_device,
             remote::remote_end,
+            remote::remote_set_notice,
             lan_client::lan_client_pair,
             lan_client::lan_client_pair_cancel,
             lan_client::lan_client_request,

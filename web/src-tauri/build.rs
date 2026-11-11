@@ -53,6 +53,7 @@ const COMMANDS: &[&str] = &[
     "remote_set_enabled",
     "remote_set_device",
     "remote_end",
+    "remote_set_notice",
     "lan_client_pair",
     "lan_client_pair_cancel",
     "lan_client_request",

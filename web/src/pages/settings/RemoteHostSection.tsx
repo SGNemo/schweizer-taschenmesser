@@ -11,10 +11,10 @@ import { Actions, StateBanner, Step } from './ConnectParts';
 import styles from './settings.module.css';
 
 /**
- * What can be chosen here. Mouse and keyboard are held back until they exist (package 3): nobody
- * should confirm in a Windows dialog what does nothing yet and would switch on silently later.
+ * What can be chosen here. Mouse and keyboard are offered together with the switch of their
+ * notification (below the devices): the one must not exist without the other.
  */
-const LEVELS: readonly RemoteLevel[] = ['off', 'media'];
+const LEVELS: readonly RemoteLevel[] = ['off', 'media', 'full'];
 type Texts = ReturnType<typeof tRemoteHost.use>;
 type ErrorCode = keyof Texts['errors'];
 
@@ -38,6 +38,8 @@ export function RemoteHostSection() {
   const { status, off } = useRemoteHost();
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string>();
+  /** What was said about the notification switch: shown right below it, not far above. */
+  const [noticeNote, setNoticeNote] = useState<string>();
   // A Windows dialog can outlive this page: once it is gone, an answer changes nothing here and
   // must not fill the shared state again (nobody would keep it fresh).
   const open = useRef(true);
@@ -51,8 +53,13 @@ export function RemoteHostSection() {
   if (!host.supported) return null;
 
   /** One change at the PC, then a fresh reading whatever came of it. */
-  async function change(action: () => Promise<unknown>, done?: string) {
+  async function change(
+    action: () => Promise<unknown>,
+    done?: string,
+    say: (text: string | undefined) => void = setNote,
+  ) {
     setNote(undefined);
+    setNoticeNote(undefined);
     setBusy(true);
     let said = done;
     try {
@@ -63,7 +70,7 @@ export function RemoteHostSection() {
     if (!open.current) return;
     await refreshRemoteHost();
     if (!open.current) return;
-    setNote(said);
+    say(said);
     setBusy(false);
   }
 
@@ -191,19 +198,40 @@ export function RemoteHostSection() {
                     onChange={(e) => void setGrant(d, { level: e.target.value as RemoteLevel })}
                     data-testid="remote-level"
                   >
-                    {/* a level set elsewhere stays visible, so the choice never shows a wrong value */}
-                    {(LEVELS.includes(d.level) ? LEVELS : [...LEVELS, d.level]).map((level) => (
+                    {LEVELS.map((level) => (
                       <option key={level} value={level}>
                         {l.levels[level]}
                       </option>
                     ))}
                   </SelectField>
                 )}
+                {/* the phone's own unlock: only mouse and keyboard ask for it */}
+                {!d.paused && d.level === 'full' ? (
+                  <Switch
+                    label={l.unlock}
+                    hint={l.unlockHint}
+                    checked={d.unlock}
+                    disabled={busy || !status.enabled}
+                    onChange={(on) => void setGrant(d, { unlock: on })}
+                  />
+                ) : null}
               </div>
             ))}
           </>
         )}
       </Step>
+      <Switch
+        label={l.notice}
+        hint={l.noticeHint}
+        checked={status.notice !== false}
+        disabled={busy}
+        onChange={(on) => void change(() => host.setNotice(on), undefined, setNoticeNote)}
+      />
+      {noticeNote ? (
+        <p role="status" className={styles.muted} data-testid="remote-notice-note">
+          {noticeNote}
+        </p>
+      ) : null}
     </div>
   );
 }

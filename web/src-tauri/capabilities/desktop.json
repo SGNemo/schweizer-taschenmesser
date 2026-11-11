@@ -63,6 +63,7 @@
     "allow-remote-set-enabled",
     "allow-remote-set-device",
     "allow-remote-end",
+    "allow-remote-set-notice",
     "allow-local-api-start",
     "allow-local-api-stop",
     "allow-local-api-set-tokens",

@@ -148,6 +148,10 @@ pub fn parts(
 ) -> (Arc<Remote>, Arc<Sink>) {
     let remote = Arc::new(Remote::new(trust, switch_at(&dir.join("remote.json"))));
     host.narrowed(|n| n.apply(&remote));
+    // (an unreadable file gives the closed switch: it says "not quiet" and cannot be set)
+    if let Ok(mut quiet) = host.quiet.lock() {
+        *quiet = Some(switch_at(&dir.join("remote-notice.json")));
+    }
     (remote, Arc::new(Sink::start()))
 }
 
@@ -171,11 +175,18 @@ pub struct RemoteHost {
     narrowed: Mutex<Narrowed>,
     /// Whom the notice of a mouse/keyboard session was shown for, and when. Memory only.
     notices: Mutex<Notices>,
+    /// "No notice when a device starts to control mouse and keyboard" – the one option of the
+    /// notice, in a file next to the master switch (device-local, never synced). Stored as the
+    /// loosening it is: a missing file, an unreadable one or no hub started yet mean "notice on"
+    /// (after a stop the last hub's switch stays – nobody can be told while no hub runs).
+    quiet: Mutex<Option<Arc<dyn MasterSwitch>>>,
 }
 
 #[derive(Default)]
 struct Narrowed {
     off: bool,
+    /// The notice was switched on again in this run: it holds even if that could not be written.
+    notice: bool,
     grants: Vec<([u8; 32], RemoteGrant)>,
 }
 
@@ -226,6 +237,18 @@ impl Parts {
     fn look(&self) {
         let _ = self.watcher.send(Signal::Look);
     }
+
+    /// How many mouse/keyboard sessions were opened since the hub started.
+    fn full_count(&self) -> u64 {
+        self.remote.full_opened().0
+    }
+
+    /// After a question at the PC: no mouse/keyboard session is open, and none was opened since
+    /// `before` (the count taken before the question) – such a session could have clicked the
+    /// answer.
+    fn untouched_since(&self, before: u64) -> bool {
+        !self.remote.full_session_open() && self.full_count() == before
+    }
 }
 
 impl RemoteHost {
@@ -238,6 +261,26 @@ impl RemoteHost {
         if let Ok(mut narrowed) = self.narrowed.lock() {
             change(&mut narrowed);
         }
+    }
+
+    fn quiet(&self) -> Option<Arc<dyn MasterSwitch>> {
+        self.quiet.lock().ok().and_then(|q| q.clone())
+    }
+
+    /// Whether the hub's controls and the notice's switch are still the ones that were read
+    /// before a question was put (a hub that was stopped and started has new ones).
+    fn same_hub(&self, parts: &Parts, quiet: &Arc<dyn MasterSwitch>) -> bool {
+        let controls = self
+            .parts()
+            .is_ok_and(|now| Arc::ptr_eq(&now.remote, &parts.remote));
+        controls && self.quiet().is_some_and(|now| Arc::ptr_eq(&now, quiet))
+    }
+
+    /// Whether a device that starts to control mouse and keyboard is told at the PC. Anything
+    /// unclear – a lock that cannot be taken, no switch – is "yes".
+    fn notice_on(&self) -> bool {
+        let back_on = self.narrowed.lock().map_or(true, |n| n.notice);
+        back_on || !self.quiet().is_some_and(|q| q.enabled())
     }
 
     /// Ends the controlling session, pauses that device and remembers the pause.
@@ -361,16 +404,15 @@ pub fn attach(app: &AppHandle, remote: Arc<Remote>, trust: Arc<FileTrustStore>, 
                     |controller| crate::capture::set_remote_tray(&app, controller),
                     || {
                         let (count, device) = remote.full_opened();
-                        let due = app
-                            .state::<RemoteHost>()
-                            .notices
-                            .lock()
-                            .unwrap_or_else(|e| e.into_inner())
-                            .due(
-                                count,
-                                device.map(|k| *k.as_bytes()),
-                                remote_notice::since_start(),
-                            );
+                        let host = app.state::<RemoteHost>();
+                        // read first: the lock of the notices is not held while it is read
+                        let on = host.notice_on();
+                        let due = host.notices.lock().unwrap_or_else(|e| e.into_inner()).due(
+                            on,
+                            count,
+                            device.map(|k| *k.as_bytes()),
+                            remote_notice::since_start(),
+                        );
                         if let (true, Some(key)) = (due, device) {
                             let lang = crate::capture::native_lang(&app);
                             let name = trust.find_by_key(&key).map(|d| d.name).unwrap_or_default();
@@ -466,6 +508,8 @@ pub struct RemoteStatusDto {
     supported: bool,
     /// The master switch.
     enabled: bool,
+    /// A device that starts to control mouse and keyboard is told at the PC.
+    notice: bool,
     controller: Option<ControllerDto>,
     devices: Vec<RemoteDeviceDto>,
 }
@@ -490,11 +534,12 @@ pub struct RemoteDeviceDto {
     unlock: bool,
 }
 
-fn status_of(lang: Lang, parts: &Parts) -> RemoteStatusDto {
+fn status_of(lang: Lang, parts: &Parts, notice: bool) -> RemoteStatusDto {
     let status = parts.remote.status();
     RemoteStatusDto {
         supported: parts.supported,
         enabled: status.enabled,
+        notice,
         controller: status.controller.map(|(key, level)| ControllerDto {
             id: to_hex(key.as_bytes()),
             name: name_of(lang, &parts.trust, &key),
@@ -598,7 +643,16 @@ impl Drop for Asking<'_> {
 /// Shows the native question and waits for the answer. Runs on a command thread (never the main
 /// thread); the page cannot answer it.
 fn confirmed(app: &AppHandle, lang: Lang, text: String, serious: bool) -> bool {
-    let (title, allow, cancel) = texts::remote_dialog(lang);
+    asked(app, texts::remote_dialog(lang), text, serious)
+}
+
+/// The same with its own title and buttons: (title, the answer that changes something, cancel).
+fn asked(
+    app: &AppHandle,
+    (title, allow, cancel): (&str, &str, &str),
+    text: String,
+    serious: bool,
+) -> bool {
     let kind = if serious {
         MessageDialogKind::Warning
     } else {
@@ -626,6 +680,7 @@ pub fn remote_status(
     Ok(status_of(
         crate::capture::native_lang(&app),
         &state.parts()?,
+        state.notice_on(),
     ))
 }
 
@@ -747,6 +802,51 @@ pub fn remote_set_device(
     Ok(())
 }
 
+/// The notice when a device starts to control mouse and keyboard. On is immediate. Off loosens
+/// an option: asked at the PC, and refused while – or if since the question was put – a
+/// mouse/keyboard session is or was open (it could have clicked the answer).
+#[tauri::command(async)]
+pub fn remote_set_notice(
+    app: AppHandle,
+    state: State<'_, RemoteHost>,
+    on: bool,
+) -> Result<(), String> {
+    if on {
+        // remembered first: on holds for this run – without a hub, and even if it cannot be
+        // written
+        state.narrowed(|n| n.notice = true);
+        let quiet = state.quiet().ok_or("not-started")?;
+        return quiet.set(false).map_err(|_| "failed".to_owned());
+    }
+    let parts = state.parts()?;
+    let quiet = state.quiet().ok_or("not-started")?;
+    if !state.notice_on() {
+        return Ok(());
+    }
+    // counted first: a mouse/keyboard session opened at any moment from here on makes this refuse
+    let before = parts.full_count();
+    if parts.remote.full_session_open() {
+        return Err("busy-controlled".to_owned());
+    }
+    let _asking = Asking::take(&state.asking)?;
+    let lang = crate::capture::native_lang(&app);
+    let question = texts::remote_ask_quiet(lang).to_owned();
+    if !asked(&app, texts::remote_quiet_dialog(lang), question, true) {
+        return Err("cancelled".to_owned());
+    }
+    // The hub may have been stopped and started while the question was on screen: the answer
+    // then belongs to controls that are gone, and their count says nothing about the new ones.
+    if !state.same_hub(&parts, &quiet) {
+        return Err("changed".to_owned());
+    }
+    if !parts.untouched_since(before) {
+        return Err("busy-controlled".to_owned());
+    }
+    quiet.set(true).map_err(|_| "failed".to_owned())?;
+    state.narrowed(|n| n.notice = false);
+    Ok(())
+}
+
 /// "Fernsteuerung beenden": ends the controlling session and pauses that device. `false` if
 /// nobody controlled.
 #[tauri::command(async)]
@@ -855,6 +955,26 @@ mod tests {
             std::thread::sleep(Duration::from_millis(10));
             let _ = sink.state();
         }
+    }
+
+    #[test]
+    fn the_notice_is_on_unless_it_was_switched_off_and_on_again_holds_without_a_write() {
+        let host = RemoteHost::default();
+        // no hub yet, no switch: on
+        assert!(host.notice_on());
+        let quiet = Arc::new(MemorySwitch::new());
+        quiet.set(true).unwrap();
+        *host.quiet.lock().unwrap() = Some(quiet);
+        assert!(!host.notice_on());
+        // switched on again in this run: holds whatever the file says
+        host.narrowed(|n| n.notice = true);
+        assert!(host.notice_on());
+        // an unreadable file is the closed switch: on, and it cannot be switched off
+        let host = RemoteHost::default();
+        *host.quiet.lock().unwrap() = Some(Arc::new(ClosedSwitch));
+        assert!(host.notice_on());
+        assert!(host.quiet().unwrap().set(true).is_err());
+        assert!(host.notice_on());
     }
 
     #[test]
