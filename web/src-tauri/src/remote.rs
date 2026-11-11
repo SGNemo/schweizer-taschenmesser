@@ -19,12 +19,12 @@
 use crate::remote_notice::{self, Notices};
 use crate::texts::{self, Lang};
 use ::lan_sync::input::remote::SwitchError;
-use ::lan_sync::input::wire::{Button, Level, Media, PcState, VOLUME_UNKNOWN};
+use ::lan_sync::input::wire::{Button, Key, Level, Media, PcState, VOLUME_UNKNOWN};
 use ::lan_sync::input::{Action, ControlError, FileSwitch, InputSink, MasterSwitch, Remote};
 use ::lan_sync::noise::PublicKey;
 use ::lan_sync::trust::file::{from_hex32, to_hex};
 use ::lan_sync::trust::{FileTrustStore, RemoteGrant, TrustStore};
-use remote_input::{Command, Pointer, PointerAction, Worker};
+use remote_input::{Command, KeyAction, Keyboard, Pointer, PointerAction, Worker};
 use serde::Serialize;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -49,6 +49,7 @@ const ASK_LIST_MAX: usize = 6;
 pub struct Sink {
     media: Worker,
     pointer: Pointer,
+    keys: Keyboard,
 }
 
 impl Sink {
@@ -56,7 +57,42 @@ impl Sink {
         Sink {
             media: Worker::start(),
             pointer: Pointer::start(),
+            keys: Keyboard::start(),
         }
+    }
+}
+
+/// The hub's keys in the words of `remote_input`: the same sixteen, one to one. Written out so
+/// that a key added to one list does not compile until it is decided here.
+fn key_of(key: Key) -> remote_input::Key {
+    type K = remote_input::Key;
+    match key {
+        Key::Enter => K::Enter,
+        Key::Escape => K::Escape,
+        Key::Backspace => K::Backspace,
+        Key::Tab => K::Tab,
+        Key::Space => K::Space,
+        Key::Left => K::Left,
+        Key::Up => K::Up,
+        Key::Right => K::Right,
+        Key::Down => K::Down,
+        Key::Home => K::Home,
+        Key::End => K::End,
+        Key::PageUp => K::PageUp,
+        Key::PageDown => K::PageDown,
+        Key::Delete => K::Delete,
+        Key::F11 => K::F11,
+        Key::AltTab => K::AltTab,
+    }
+}
+
+/// The hub's keyboard actions in the words of `remote_input`; everything else is handed back.
+/// The text is moved, never copied: it lives in the one action that types it.
+fn keys_of(action: Action) -> Result<KeyAction, Action> {
+    match action {
+        Action::Key(key) => Ok(KeyAction::Key(key_of(key))),
+        Action::Text(text) => Ok(KeyAction::Text(text.into_boxed_str())),
+        other => Err(other),
     }
 }
 
@@ -107,13 +143,15 @@ impl InputSink for Sink {
     }
 
     fn apply(&self, action: Action) {
-        // Keys and text have no sink yet: dropped, never turned into anything. Media and pointer
-        // run on two threads: the order holds within each, not between them (the hub checks the
-        // lock per pointer record, so "lock, then a move" is still safe).
+        // Media, pointer and keyboard run on three threads: the order holds within each (a line
+        // of text, then Enter), not between them (the hub checks the lock per record and per
+        // text, so "lock, then a move or a key" is still safe).
         if let Action::Media(media) = action {
             self.media.send(command_of(media));
         } else if let Some(pointer) = pointer_of(&action) {
             self.pointer.send(pointer);
+        } else if let Ok(keys) = keys_of(action) {
+            self.keys.send(keys);
         }
     }
 }
@@ -871,6 +909,20 @@ mod tests {
         mute_sets: AtomicUsize,
         locks: AtomicUsize,
         pointer: Mutex<Vec<String>>,
+        keys: Mutex<Vec<String>>,
+    }
+
+    /// Writes down what the keyboard was asked to type.
+    struct FakeKeys(Arc<Seen>);
+
+    impl remote_input::Keys for FakeKeys {
+        fn key(&mut self, key: remote_input::Key) {
+            self.0.keys.lock().unwrap().push(format!("{key:?}"));
+        }
+        fn text(&mut self, units: &[u16]) {
+            let text = String::from_utf16_lossy(units);
+            self.0.keys.lock().unwrap().push(format!("text {text}"));
+        }
     }
 
     struct FakeSystem(Arc<Seen>);
@@ -942,9 +994,11 @@ mod tests {
         let seen = Arc::new(Seen::default());
         let for_worker = seen.clone();
         let for_mouse = seen.clone();
+        let for_keys = seen.clone();
         let sink = Sink {
             media: Worker::with(move || Some(Box::new(FakeSystem(for_worker)) as Box<dyn System>)),
             pointer: Pointer::with(Box::new(FakeMouse(for_mouse))),
+            keys: Keyboard::with(Box::new(FakeKeys(for_keys))),
         };
         (sink, seen)
     }
@@ -978,11 +1032,12 @@ mod tests {
     }
 
     #[test]
-    fn the_sink_sends_media_to_the_worker_the_pointer_to_its_thread_and_drops_the_rest() {
+    fn the_sink_sends_media_to_the_worker_and_pointer_and_keyboard_each_to_its_thread() {
         let (sink, seen) = fake_sink();
         assert!(sink.supported());
+        sink.apply(Action::Text("grüße".into()));
         sink.apply(Action::Key(Key::Enter));
-        sink.apply(Action::Text("abc".into()));
+        sink.apply(Action::Key(Key::AltTab));
         sink.apply(Action::Move { dx: 5, dy: -5 });
         sink.apply(Action::Button {
             button: Button::Left,
@@ -1016,10 +1071,21 @@ mod tests {
             0,
             "a non-media action reached the media worker"
         );
-        // keys and text became nothing; the release of a button nobody pressed is ignored
+        // the release of a button nobody pressed is ignored
         assert_eq!(
             *seen.pointer.lock().unwrap(),
             ["move 5 -5", "left true", "wheel false -120", "left false"]
+        );
+        // the keyboard has its own thread too; text and keys keep their order
+        for _ in 0..500 {
+            if seen.keys.lock().unwrap().len() >= 3 {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(10));
+        }
+        assert_eq!(
+            *seen.keys.lock().unwrap(),
+            ["text grüße", "Enter", "AltTab"]
         );
         sink.apply(Action::Media(Media::PlayPause));
         sink.apply(Action::Media(Media::VolumeDown));

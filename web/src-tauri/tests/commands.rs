@@ -385,6 +385,34 @@ fn no_tauri_command_simulates_input() {
     let map = &code[code.find("fn pointer_of(").unwrap()..];
     let map = &map[..map.find("\n}\n").unwrap()];
     assert!(map.contains("Action::Key(_) | Action::Media(_) | Action::Text(_) => return None"));
+    // … or to the keyboard thread (only what `keys_of` maps: a key of the fixed list, or text
+    // that is moved into the one action that types it)
+    assert_eq!(code.matches("self.keys.send(keys)").count(), 1);
+    assert_eq!(code.matches("self.keys.send(").count(), 1);
+    assert_eq!(
+        code.matches("Keyboard::start()").count(),
+        1,
+        "started by the sink only"
+    );
+    let keys = &code[code.find("fn keys_of(").unwrap()..];
+    let keys = &keys[..keys.find("\n}\n").unwrap()];
+    assert!(keys.contains("Action::Key(key) => Ok(KeyAction::Key(key_of(key)))"));
+    assert!(keys.contains("Action::Text(text) => Ok(KeyAction::Text(text.into_boxed_str()))"));
+    assert!(
+        !keys.contains(".clone()") && !keys.contains("to_owned") && !keys.contains("to_string")
+    );
+    // the key table is written out, one to one: no number, no cast, no catch-all
+    let table = &code[code.find("fn key_of(").unwrap()..];
+    let table = &table[..table.find("\n}\n").unwrap()];
+    assert_eq!(table.matches(" => K::").count(), 16);
+    assert!(!table.contains("_ =>") && !table.contains(" as ") && !table.contains("transmute"));
+    // no command, state or event carries text or a key back out of the sink
+    for forbidden in ["KeyAction", "Keyboard", "keys_of", "key_of"] {
+        assert!(
+            !remote_commands_source().contains(forbidden),
+            "a remote command mentions {forbidden}"
+        );
+    }
 
     // nowhere in the shell: simulated input, or a command of another module reaching the sink
     for entry in fs::read_dir(format!("{}/src", env!("CARGO_MANIFEST_DIR"))).unwrap() {
