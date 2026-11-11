@@ -9,6 +9,6 @@
 - [ ] New module? → `seed.ts` + `seed` in the manifest present, `core/seed/registry.test.ts` green, Dev-Preview checked with test data (Settings → Entwickler)
 - [ ] Change note in `.changes/` (`npm run change`; German + English, user view) or label `no-changelog` (docs/tests/CI only)
 - [ ] Docs updated where a decision or recipe changed (`docs/DECISIONS.md`, `docs/HOW-TO.md`, `docs/STATUS.md`; one line each)
-- [ ] Docs changed? `npm run check:docs` (in `web/`) has no new warnings; my row in `docs/CHATS.md` is removed
+- [ ] Docs changed? `npm run check:docs` (in `web/`) has no new warnings
 - [ ] Module name, description, area or platform changed? `npm run gen:modules` (in `web/`) updates the module tables in the READMEs, `docs/user/modules*.md` and the website list
 - [ ] README or user docs changed? German copy (`README.de.md`, `*.de.md`) updated too, `npm run check:readme` and `npm run check:doclinks` (in `web/`) green

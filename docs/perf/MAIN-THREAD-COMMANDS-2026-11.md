@@ -46,7 +46,7 @@ No command was added, renamed or removed, so `build.rs` `COMMANDS` and the capab
 - Fixed after this package (`fix/downloads-persist-race`): the download manager wrote its job list from the commands and from the worker threads through the same temporary file, so two writes at the same moment could collide. `persist` (crate `downloader`) now runs one at a time under its own lock, snapshot included; pinned by a test in `manager.rs`.
 - `find_duplicates` holds the tree's read lock for the whole search; a delete finishing meanwhile waits for the write lock, and a writer-preferring lock would then hold up every tree read. `disk_children` no longer waits on the main thread for that; `disk_node` and `disk_node_path` still do. Not changed.
 - After a reload of the Nemo page the native tab entries survive while the page's tab list is empty (orphan webviews stay hidden). Not changed.
-- Hand test on Windows: [MANUAL-TESTS](../MANUAL-TESTS.md) "Hauptthread frei halten" H1–H7.
+- Hand test on Windows: [MANUAL-TESTS](../MANUAL-TESTS.md) "Hauptthread frei halten" MT-H1–MT-H7.
 
 ## Commands that are not `async fn`
 
