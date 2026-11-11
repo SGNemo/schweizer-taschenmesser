@@ -194,6 +194,7 @@ export function Switch({
   disabled,
   hint,
   labelHidden,
+  tone = 'accent',
 }: {
   label: string;
   checked: boolean;
@@ -202,6 +203,11 @@ export function Switch({
   hint?: string;
   /** Label for screen readers only (the surrounding `SettingRow` shows the text). */
   labelHidden?: boolean;
+  /**
+   * `neutral`: on is a grey fill, not the accent. For a switch that repeats in every row of a list (UI audit
+   * 2026-11, B7: eight orange switches read as the page's colour); on and off stay apart by position and fill.
+   */
+  tone?: 'accent' | 'neutral';
 }) {
   const id = useId();
   return (
@@ -225,6 +231,7 @@ export function Switch({
         aria-labelledby={id}
         disabled={disabled}
         className={styles.track}
+        data-tone={tone === 'neutral' ? 'neutral' : undefined}
         onClick={() => onChange(!checked)}
       >
         <span className={styles.thumb} />

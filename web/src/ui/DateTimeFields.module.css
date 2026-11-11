@@ -1,0 +1,19 @@
+/* Text field and the calendar button side by side; the native date input only lends its picker. */
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.picker {
+  position: relative;
+  flex: none;
+}
+.native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+}
