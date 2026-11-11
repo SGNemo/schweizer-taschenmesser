@@ -244,6 +244,23 @@
 .queue li:first-child {
   border-top: 0;
 }
+/* Album picture of a row: a fixed square, so the row keeps its height while the picture loads. */
+.rowCover {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2rem;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+.rowCover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 .queueName {
   flex: 1;
   min-width: 0;

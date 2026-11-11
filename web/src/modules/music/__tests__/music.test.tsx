@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { forgetAccessToken } from '@/core/connectors/context';
 import { HIDDEN_KEY } from '@/core/connectors/hiddenTracks';
 import { NOW_KEY, NO_PREMIUM_KEY } from '@/core/connectors/nowPlaying';
@@ -9,6 +9,8 @@ import { loadStatus, saveStatus } from '@/core/connectors/state';
 import { db } from '@/core/db/db';
 import { enableModule } from '@/core/modules/activation';
 import manifest from '../manifest';
+import { clearCovers } from '../coverLoader';
+import { forgetRecent } from '../recentOnce';
 import { setPlatform, type PlatformService } from '@/core/platform';
 import { createWebPlatform } from '@/core/platform/web';
 import { AreaFrame } from '@/layout/AreaFrame';
@@ -163,6 +165,9 @@ beforeEach(async () => {
 afterEach(() => {
   cleanup();
   setPlatform(undefined);
+  clearCovers();
+  forgetRecent();
+  vi.unstubAllGlobals();
 });
 
 describe('music widget (overview)', () => {
@@ -602,5 +607,174 @@ describe('music page', () => {
       const panel = await screen.findByTestId('music-nodevice');
       await waitFor(() => expect(panel).toHaveTextContent('Noch kein Gerät gefunden'));
     });
+  });
+});
+
+describe('covers', () => {
+  const IDS = 'ab67616d00001e02ff9ca10b55ce82ae553c8228'.repeat(4);
+  const MOSAIC = (w: number) => `https://mosaic.scdn.co/${w}/${IDS}`;
+  const UPLOADED =
+    'https://image-cdn-ak.spotifycdn.com/image/ab67706c0000da846a4e437aa6c2a667a6e7fd46';
+  const ALBUM = (size: string) => `https://i.scdn.co/image/ab67616d${size}`;
+  const ALBUM_IMAGES = [
+    { url: ALBUM('640'), width: 640 },
+    { url: ALBUM('300'), width: 300 },
+    { url: ALBUM('64'), width: 64 },
+  ];
+  const PICTURE = () =>
+    new Response(new Uint8Array(8), { status: 200, headers: { 'content-type': 'image/jpeg' } });
+  const covers = () => calls.filter((c) => !c.path.startsWith('/')).map((c) => c.path);
+  const withCovers = (extra: (call: Call) => unknown = () => undefined) => {
+    router = (call) => {
+      if (!call.path.startsWith('/')) return PICTURE();
+      if (call.path.startsWith('/me/playlists'))
+        return {
+          items: [
+            {
+              id: 'PL1',
+              name: 'Fokus',
+              images: [640, 300, 60].map((w) => ({ url: MOSAIC(w), width: w })),
+            },
+            { id: 'PL2', name: 'Eigenes Bild', images: [{ url: UPLOADED, width: null }] },
+            { id: 'PL3', name: 'Fremd', images: [{ url: 'https://evil.test/image/x' }] },
+            { id: 'PL4', name: 'Leer', images: [] },
+          ],
+        };
+      return extra(call);
+    };
+  };
+
+  beforeEach(() => {
+    let n = 0;
+    URL.createObjectURL = () => `blob:test/${(n += 1)}`;
+    URL.revokeObjectURL = () => undefined;
+  });
+
+  it('playlist tiles show the mosaic and the uploaded picture, sized for the tile, with the playlist name as alt text', async () => {
+    withCovers();
+    await connect();
+    await renderPage();
+    const grid = await screen.findByTestId('music-playlists');
+    await waitFor(() => expect(within(grid).getAllByRole('img')).toHaveLength(2));
+    expect(within(grid).getByAltText('Fokus').getAttribute('src')).toMatch(/^blob:/);
+    expect(within(grid).getByAltText('Eigenes Bild').getAttribute('src')).toMatch(/^blob:/);
+    // 200 CSS px at one device pixel: the 300 mosaic, not the 640 one. A foreign host and an empty playlist: the icon, no request.
+    expect(covers().sort()).toEqual([MOSAIC(300), UPLOADED].sort());
+    expect(within(grid).getAllByTestId('music-tile-cover')).toHaveLength(4);
+  });
+
+  it('a sharper screen takes the larger picture for the same tile', async () => {
+    vi.stubGlobal('devicePixelRatio', 2);
+    withCovers();
+    await connect();
+    await renderPage();
+    await waitFor(() => expect(covers()).toContain(MOSAIC(640)));
+    expect(covers()).not.toContain(MOSAIC(300));
+  });
+
+  it('a playlist opens with its picture in the header and the album picture in every row, the small size', async () => {
+    withCovers((call) =>
+      call.path.startsWith('/playlists/PL1')
+        ? {
+            ...PLAYLIST,
+            images: [{ url: UPLOADED, width: null }],
+            tracks: {
+              total: 2,
+              items: ['s1', 's2'].map((id) => ({
+                track: { ...T(id, id).track, album: { name: 'Album A', images: ALBUM_IMAGES } },
+              })),
+            },
+          }
+        : undefined,
+    );
+    await connect();
+    await renderPage();
+    fireEvent.click(await screen.findByRole('button', { name: /Fokus/ }));
+    const rows = await screen.findAllByTestId('track-row');
+    await waitFor(() => expect(within(rows[0]!).getByAltText('Album A')).toBeTruthy());
+    expect(within(screen.getByTestId('music-list-cover')).getByAltText('Fokus')).toBeTruthy();
+    // Two rows, one album: one request for the 64 px picture, none for the larger sizes.
+    expect(covers().filter((u) => u === ALBUM('64'))).toHaveLength(1);
+    expect(covers()).not.toContain(ALBUM('300'));
+    expect(covers()).not.toContain(ALBUM('640'));
+  });
+
+  it('nothing plays: the head shows the cover of the song played last, named as such', async () => {
+    player = empty204;
+    withCovers((call) =>
+      call.path.startsWith('/me/player/recently-played')
+        ? {
+            items: [
+              {
+                track: {
+                  ...T('r1', 'Gestern').track,
+                  album: { name: 'Altes Album', images: ALBUM_IMAGES },
+                },
+              },
+            ],
+          }
+        : undefined,
+    );
+    await connect();
+    await renderPage();
+    const head = await screen.findByTestId('music-cover');
+    await waitFor(() =>
+      expect(within(head).getByAltText('Zuletzt gespielt: Altes Album')).toBeTruthy(),
+    );
+    expect(screen.queryByTestId('cover-tone')).toBeNull();
+    // The head and the start row share one reading of the history.
+    expect(sent('GET', '/me/player/recently-played')).toHaveLength(1);
+  });
+
+  it('nothing plays and no "Verlauf" feature: the icon stays and the history is not read', async () => {
+    player = empty204;
+    withCovers();
+    await connect(['show', 'control', 'playlists']);
+    await renderPage();
+    await screen.findByTestId('music-playlists');
+    expect(within(screen.getByTestId('music-cover')).queryByRole('img')).toBeNull();
+    expect(sent('GET', '/me/player/recently-played')).toHaveLength(0);
+  });
+
+  it('not connected: no cover is asked for, even with a stored reading that names one', async () => {
+    localStorage.setItem(
+      NOW_KEY,
+      JSON.stringify({
+        at: Date.now(),
+        value: { title: 'Alt', artist: 'Band', playing: true, coverUrl: ALBUM('64') },
+      }),
+    );
+    withCovers();
+    renderWidget();
+    await screen.findByText('Verbinde Spotify');
+    await renderPage();
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 30));
+    });
+    expect(calls).toEqual([]);
+  });
+
+  it('a row far below the visible area asks for nothing until it comes near', async () => {
+    const seen: ((entries: { isIntersecting: boolean }[]) => void)[] = [];
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        constructor(cb: (entries: { isIntersecting: boolean }[]) => void) {
+          seen.push(cb);
+        }
+        observe() {}
+        disconnect() {}
+      },
+    );
+    withCovers();
+    await connect();
+    await renderPage();
+    await screen.findByTestId('music-playlists');
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 30));
+    });
+    expect(covers()).toEqual([]);
+    act(() => seen.forEach((cb) => cb([{ isIntersecting: true }])));
+    await waitFor(() => expect(covers()).toContain(UPLOADED));
   });
 });

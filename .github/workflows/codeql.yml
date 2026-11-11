@@ -21,46 +21,101 @@ on:
   workflow_dispatch:
 
 # A newer push to the same pull request replaces the older scan. Every other event (push to develop, weekly,
-# manual) gets its own group per run, so nothing is cancelled and no pending run is replaced: every commit that
-# lands on develop is scanned.
+# manual) gets its own group per run, so nothing is cancelled and no pending run is replaced: every push to
+# develop gets its scope decision (job `scope`).
 concurrency:
   group: codeql-${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # Rust takes 9 to 14 min, the other languages 1 to 2. On a pull request the Rust analysis runs only when the PR
-  # touches Rust (or this file); every push to develop, the weekly run and a manual run always analyse all three
-  # languages, so no commit that lands is left unscanned. Decision: docs/decisions/meta-ci-docs.md.
-  rust-changed:
-    name: Does the change touch Rust?
+  # Rust takes 9 to 14 min, the other languages 1 to 2. This job decides which languages the run analyses and
+  # hands them to `analyze` as its matrix, so a language that is not analysed takes no runner:
+  # - only text changed (.md/.txt/LICENSE under the `ignorable` paths of ci.yml): nothing. `analyze` is then
+  #   skipped and shows as one skipped check with the unexpanded name "Analyze (${{ matrix.language }})";
+  # - anything else changed: Actions + JS/TS, and Rust when the change touches Rust (or this file);
+  # - the first green run of a UTC day on a branch (the nightly dispatch on develop, or else the first push, even
+  #   a docs-only one), the weekly run, a manual run, and every change that cannot be read: all three.
+  # So no state of develop stays unscanned for longer than a day once nightly.yml is on main (scheduled workflows
+  # start from the default branch); until then: until the first push of the next day. Fail-open: if this job
+  # fails or gives no list, `analyze` falls back to all three. Decision: docs/decisions/meta-ci-docs.md (2026-11-11).
+  scope:
+    name: CodeQL scope
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: read
+      actions: read
     outputs:
-      run: ${{ steps.diff.outputs.run }}
+      languages: ${{ steps.diff.outputs.languages }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
       - id: diff
         env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          BRANCH: ${{ github.ref_name }}
           EVENT: ${{ github.event_name }}
           PR_BASE: ${{ github.event.pull_request.base.sha }}
           PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.sha }}
         run: |
           set +e
-          run=true
-          if [ "$EVENT" = "pull_request" ] && files="$(git diff --name-only "$PR_BASE...$PR_HEAD" 2>/dev/null)" && [ -n "$files" ]; then
-            if printf '%s\n' "$files" | grep -Eq '(\.rs$|(^|/)Cargo\.(toml|lock)$|^web/src-tauri/|^\.github/workflows/codeql\.yml$)'; then run=true; else run=false; fi
+          all='["actions","javascript-typescript","rust"]'
+          languages="$all"
+          range=""
+          why="$EVENT run: always everything"
+          if [ "$EVENT" = "pull_request" ]; then
+            why="the changed files could not be read"
+            if [ -n "$PR_BASE" ] && [ -n "$PR_HEAD" ]; then range="$PR_BASE...$PR_HEAD"; fi
+          elif [ "$EVENT" = "push" ]; then
+            why="the pushed range could not be read"
+            if [ -n "$PUSH_BEFORE" ] && [ "${PUSH_BEFORE//0/}" != "" ]; then range="$PUSH_BEFORE..$PUSH_AFTER"; fi
+            # Daily full scan: until a run of this UTC day on this branch has ended green, every push analyses
+            # everything (a running, red or cancelled run does not count, so the first green run of a day is
+            # always a full one). Whatever started it counts: once the nightly run dispatches this workflow on
+            # develop, that run is the first of the day.
+            today="$(date -u +%Y-%m-%d)"
+            earlier="$(gh api -X GET "repos/$REPO/actions/workflows/codeql.yml/runs" -f "branch=$BRANCH" -f "created=>=$today" -f per_page=100 \
+              --jq "[.workflow_runs[] | select(.id < $RUN_ID and .event != \"pull_request\" and .conclusion == \"success\")] | length" 2>/dev/null)"
+            case "$earlier" in
+              ''|*[!0-9]*) range=""; why="earlier runs of today could not be read" ;;
+              0) range=""; why="no green run on $BRANCH yet on $today (UTC): daily full scan" ;;
+            esac
           fi
-          echo "run=$run" >> "$GITHUB_OUTPUT"
-          echo "Rust analysis on this event: $run"
+          if [ -n "$range" ] && files="$(git -c core.quotePath=false diff --no-renames --name-only "$range" 2>/dev/null)" && [ -n "$files" ]; then
+            # Paths as `ignorable` in ci.yml, but only their text files: docs/ and site/ also hold JS and HTML
+            # that the JS/TS analysis reads. --no-renames: a file moved out of analysed code shows its old path.
+            # A path git still quotes (quote, backslash, control character in the name) counts as Rust.
+            ignorable='^(docs/|site/|scribble/|CLAUDE\.md$|CONTRIBUTING\.md$|SECURITY\.md$|CHANGELOG(\.de)?\.md$|LICENSE$|\.github/ISSUE_TEMPLATE/|\.github/PULL_REQUEST_TEMPLATE\.md$)'
+            text='(\.(md|txt)$|^LICENSE$)'
+            if ! printf '%s\n' "$files" | grep -Evq "$ignorable" && ! printf '%s\n' "$files" | grep -Evq "$text"; then
+              languages='[]'; why="only documentation text changed ($range)"
+            elif printf '%s\n' "$files" | grep -Eq '(^"|\.rs$|(^|/)Cargo\.(toml|lock)$|(^|/)rust-toolchain(\.toml)?$|(^|/)\.cargo/|^web/src-tauri/|^\.github/workflows/codeql\.yml$)'; then
+              why="the change touches Rust ($range)"
+            else
+              languages='["actions","javascript-typescript"]'; why="no Rust file changed ($range)"
+            fi
+          fi
+          echo "languages=$languages" >> "$GITHUB_OUTPUT"
+          case "$languages" in
+            "$all") said="Actions, JS/TS, Rust"; rest="" ;;
+            '[]') said="nothing"; rest=" Actions, JS/TS and Rust: next daily full scan of develop." ;;
+            *) said="Actions, JS/TS"; rest=" Rust: next daily full scan of develop." ;;
+          esac
+          echo "::notice title=CodeQL scope::Analysed in this run: $said. Why: $why.$rest"
+          echo "### CodeQL scope: $said" >> "$GITHUB_STEP_SUMMARY"
+          echo "Why: $why.$rest" >> "$GITHUB_STEP_SUMMARY"
 
   analyze:
     name: Analyze (${{ matrix.language }})
-    needs: rust-changed
-    if: ${{ !cancelled() }}
+    needs: scope
+    # An empty list (documentation only) must not reach the matrix: a matrix without entries fails the workflow.
+    # Only a green `scope` may switch the analysis off; a failed one leaves the list empty and all three run.
+    if: ${{ !cancelled() && (needs.scope.result != 'success' || needs.scope.outputs.languages != '[]') }}
     # Runner size impacts CodeQL analysis time. To learn more, please see:
     #   - https://gh.io/recommended-hardware-resources-for-running-codeql
     #   - https://gh.io/supported-runners-and-hardware-resources
@@ -83,14 +138,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-        - language: actions
-          build-mode: none
         # java-kotlin is not analysed: the Gradle project is generated only in CI (tauri android init), so autobuild fails, and build-mode none reads .java only (the plugins are Kotlin)
-        - language: javascript-typescript
-          build-mode: none
-        - language: rust
-          build-mode: none
+        language: ${{ fromJSON(needs.scope.result == 'success' && needs.scope.outputs.languages || '["actions","javascript-typescript","rust"]') }}
+        build-mode: [none]
         # CodeQL supports the following values keywords for 'language': 'actions', 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'rust', 'swift'
         # Use `c-cpp` to analyze code written in C, C++ or both
         # Use 'java-kotlin' to analyze code written in Java, Kotlin or both
@@ -101,7 +151,6 @@ jobs:
         # your codebase is analyzed, see https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/codeql-code-scanning-for-compiled-languages
     steps:
     - name: Checkout repository
-      if: ${{ matrix.language != 'rust' || needs.rust-changed.outputs.run != 'false' }}
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
     # Add any setup steps before running the `github/codeql-action/init` action.
@@ -111,11 +160,7 @@ jobs:
     #   uses: actions/setup-example@v1
 
     # Initializes the CodeQL tools for scanning.
-    - name: Say when Rust is not scanned
-      if: ${{ matrix.language == 'rust' && needs.rust-changed.outputs.run == 'false' }}
-      run: echo "Rust is not analysed on this pull request (no Rust file changed). The push to develop and the weekly run scan it."
     - name: Initialize CodeQL
-      if: ${{ matrix.language != 'rust' || needs.rust-changed.outputs.run != 'false' }}
       uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
       with:
         languages: ${{ matrix.language }}
@@ -145,7 +190,6 @@ jobs:
         exit 1
 
     - name: Perform CodeQL Analysis
-      if: ${{ matrix.language != 'rust' || needs.rust-changed.outputs.run != 'false' }}
       uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
       with:
         category: "/language:${{matrix.language}}"
