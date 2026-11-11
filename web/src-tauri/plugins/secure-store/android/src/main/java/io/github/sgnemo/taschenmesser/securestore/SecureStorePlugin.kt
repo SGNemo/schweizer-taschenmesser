@@ -1,6 +1,7 @@
 package io.github.sgnemo.taschenmesser.securestore
 
 import android.app.Activity
+import android.app.KeyguardManager
 import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
@@ -311,7 +312,8 @@ class SecureStorePlugin(private val activity: Activity) : Plugin(activity) {
      * Asks the person to prove they are there – fingerprint, face, or the device's PIN/pattern/password –
      * without any key and without storing anything (the vault's biometric key is not touched). Only Rust
      * calls this: no plugin command of the webview maps to it.
-     * `status`: "ok", "cancelled", or "none" (the device has no screen lock to ask for).
+     * `status`: "ok", "cancelled", or "none" (the device has no screen lock at all). Anything that
+     * cannot be asked for another reason is rejected: an error is never a pass.
      */
     @Command
     fun confirmUser(invoke: Invoke) {
@@ -330,12 +332,27 @@ class SecureStorePlugin(private val activity: Activity) : Plugin(activity) {
         // (strong + credential is not on Android 9/10).
         val allowed = BiometricManager.Authenticators.BIOMETRIC_WEAK or
             BiometricManager.Authenticators.DEVICE_CREDENTIAL
-        if (BiometricManager.from(activity).canAuthenticate(allowed) != BiometricManager.BIOMETRIC_SUCCESS) {
+        val keyguard = activity.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+        if (keyguard == null) {
+            invoke.reject("no keyguard service")
+            return
+        }
+        if (!keyguard.isDeviceSecure) {
             answer("none")
+            return
+        }
+        if (BiometricManager.from(activity).canAuthenticate(allowed) != BiometricManager.BIOMETRIC_SUCCESS) {
+            invoke.reject("the screen lock cannot be asked for right now")
             return
         }
         activity.runOnUiThread {
             try {
+                // The prompt shows nothing (and calls nothing back) once the activity's state is saved,
+                // e.g. the person left the app in this very moment: that is a dismissal.
+                if (host.isFinishing || host.isDestroyed || host.supportFragmentManager.isStateSaved) {
+                    answer("cancelled")
+                    return@runOnUiThread
+                }
                 val callback = object : BiometricPrompt.AuthenticationCallback() {
                     override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                         answer("ok")

@@ -23,12 +23,12 @@ export function createRemote(supported: boolean): RemoteService {
   if (!supported) return noRemote;
   return {
     supported,
-    open(level, onEvent, prompt) {
+    open(level, onEvent, lang) {
       const channel = new Channel<RemoteEvent>();
       channel.onmessage = (event) => onEvent(event);
       return call<RemoteOpened>('remote_client_open', {
         level,
-        prompt: prompt ?? null,
+        lang: lang ?? null,
         onEvent: channel,
       });
     },

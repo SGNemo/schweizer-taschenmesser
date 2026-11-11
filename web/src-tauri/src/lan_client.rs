@@ -107,12 +107,19 @@ fn set<R: Runtime>(app: &AppHandle<R>, name: &str, value: String) -> Result<(), 
         .map_err(|_| "keystore-unavailable".to_owned())
 }
 
-fn forget<R: Runtime>(app: &AppHandle<R>) {
-    // what the old PC said about remote control, and the unlock given for it, go with the pairing
+/// The remote control's session with the old PC, what that PC said and the unlock given for it
+/// go with the pairing – on unpairing and when another PC is paired.
+fn reset_remote<R: Runtime>(app: &AppHandle<R>) {
     #[cfg(any(mobile, test))]
     if let Some(remote) = app.try_state::<crate::remote_client::RemoteClient>() {
         remote.reset();
     }
+    #[cfg(not(any(mobile, test)))]
+    let _ = app;
+}
+
+fn forget<R: Runtime>(app: &AppHandle<R>) {
+    reset_remote(app);
     for name in [HUB_NAME, KEY_NAME] {
         let _ = app.secure_store().delete(NameRequest {
             name: name.to_owned(),
@@ -345,6 +352,8 @@ pub async fn lan_client_pair<R: Runtime>(
                 set(&app, KEY_NAME, STANDARD.encode(&key.to_secret_bytes()[..]))?;
                 set(&app, HUB_NAME, json)
             });
+        // paired anew (the same PC or another one): nothing of the old pairing's remote control stays
+        reset_remote(&app);
         if let Err(e) = stored {
             // the new PC trusts a key this device cannot keep: undo it there, put the old entries back
             if let Ok(s) = Session::open(paired.addr, &key, &paired.hub_key, &entry.name) {

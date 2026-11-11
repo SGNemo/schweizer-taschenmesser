@@ -22,19 +22,18 @@ describe('remote bridge (phone)', () => {
     expect(mocks.invoke).not.toHaveBeenCalled();
   });
 
-  it('opens at a level and hands the unlock prompt texts over only when given', async () => {
+  it('opens at a level and hands over a language for the unlock prompt, never a text', async () => {
     const remote = createRemote(true);
     mocks.invoke.mockResolvedValue({ session: 1 });
     await remote.open('media', () => {});
     expect(mocks.invoke).toHaveBeenLastCalledWith(
       'remote_client_open',
-      expect.objectContaining({ level: 'media', prompt: null }),
+      expect.objectContaining({ level: 'media', lang: null }),
     );
-    const prompt = { title: 'T', subtitle: 'S' };
-    await remote.open('full', () => {}, prompt);
+    await remote.open('full', () => {}, 'de');
     expect(mocks.invoke).toHaveBeenLastCalledWith(
       'remote_client_open',
-      expect.objectContaining({ level: 'full', prompt }),
+      expect.objectContaining({ level: 'full', lang: 'de' }),
     );
   });
 

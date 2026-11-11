@@ -15,6 +15,8 @@ describe('fake remote: the mouse level behaves like the shell', () => {
     expect(hooks.level()).toBe('media');
     expect(hooks.unlocks()).toBe(0);
     await remote.send(media.session, ['mute']);
+    // after a refusal the shell knows nothing any more: Medien is opened again before the next try
+    await expect(remote.open('full', nothing)).rejects.toThrow('media-first');
   });
 
   it('asks for the unlock of the phone once when the PC wants it; a dismissed prompt leaves Medien open', async () => {
@@ -50,7 +52,9 @@ describe('fake remote: the mouse level behaves like the shell', () => {
     const media = await remote.open('media', nothing);
     hooks.setState({ locked: true });
     await expect(remote.open('full', nothing)).rejects.toThrow('locked');
-    expect(hooks.unlocks()).toBe(0);
+    // the phone asked first (the shell does not second-guess the PC's lock); the page, which
+    // knows the PC's state from Medien, does not try on a locked PC in the first place
+    expect(hooks.unlocks()).toBe(1);
     expect(hooks.level()).toBe('media');
     await remote.send(media.session, ['volume-down']);
   });

@@ -63,16 +63,24 @@ export function createFakeRemoteParts() {
     open: async (level, onEvent): Promise<RemoteOpened> => {
       let noLock = false;
       if (level === 'full') {
-        // the shell's gate: decided before anything is asked or closed
-        if (pc.locked) throw new Error('locked');
+        // like the shell: nothing known yet → Medien first; then the phone's own prompt, if the
+        // PC said it wants one
         if (!known) throw new Error('media-first');
-        if (known.grant !== 'full') throw new Error('not-granted');
         if (known.unlockRequired && !unlocked) {
           unlocks += 1;
           if (unlock === 'cancel') throw new Error('unlock-cancelled');
           if (unlock === 'none') noLock = true;
           else unlocked = true;
         }
+      }
+      if (level === 'full') {
+        // the PC's word, and it leaves the open session alone: no grant (then the shell forgets
+        // what it knew), or a locked PC
+        if (grant !== 'full') {
+          known = undefined;
+          throw new Error('not-granted');
+        }
+        if (pc.locked) throw new Error('locked');
       }
       opens += 1;
       // like the shell: every attempt has a number, also one that fails

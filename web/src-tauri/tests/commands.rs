@@ -628,7 +628,14 @@ fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
     // maps to
     let open = &code[code.find("pub async fn remote_client_open").unwrap()..];
     let open = &open[..open.find("\n}\n").unwrap()];
-    assert!(open.contains("pass_gate(&app, prompt.as_ref()).await?"));
+    assert!(open.contains("pass_gate(&app, lang.as_deref()).await?"));
+    // the prompt's texts are fixed in Rust: the page hands over a language, never a text
+    for text in ["title: String", "subtitle: String", "PromptDto"] {
+        assert!(
+            !code.contains(text),
+            "remote_client.rs takes prompt texts: {text}"
+        );
+    }
     assert!(open.contains("if !keep("));
     for vault in ["biometric_seal", "biometric_unseal", "biometric_delete"] {
         assert!(!code.contains(vault), "remote_client.rs mentions {vault}");

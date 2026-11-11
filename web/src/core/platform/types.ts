@@ -253,12 +253,6 @@ export type RemoteAction =
 /** Mouse buttons, pressed or released (a session of the mouse level only). A fixed list. */
 export type RemoteButtonAction = 'left-down' | 'left-up' | 'right-down' | 'right-up';
 
-/** The texts of the phone's own unlock prompt (the shell has none; it shows them natively). */
-export interface RemoteUnlockPrompt {
-  title: string;
-  subtitle: string;
-}
-
 /** The PC's four facts. `volume` is 0–100, or `null` when the PC cannot tell. */
 export interface RemotePcState {
   volume: number | null;
@@ -295,25 +289,29 @@ export interface RemoteOpened {
  * `no-answer` (the PC hung up without a word), `unknown-device` (the PC takes no input here, or
  * this device is not paired any more – never a reason to unpair), `protocol`, `closed` (a newer
  * `open` overtook this one), or a [`RemoteCloseReason`]. `send` and `pointer` reject with
- * `closed`, `network` or `bad-level` (a mouse action on a media session); none is a state to show.
+ * `closed`, `bad-level` (a mouse action on a media session), `bad-action`, or what a broken
+ * connection gives (`network`, `no-answer`, `protocol`, …); none is a state to show.
  *
- * Two levels. `full` (mouse) is opened only after a `media` session told what the PC grants –
- * and the shell remembers that only while the app runs, so after a restart, or when the person
- * lands on the touchpad directly, `media` is opened first. A `full` open rejects with
- * `media-first` (nothing known yet), `not-granted` (the grant is less) or `locked` (the PC is
- * locked) before anything is asked, and leaves the open session alone – as it does when the PC
- * refuses. When the PC asks for it, the shell unlocks the phone first, natively (fingerprint,
- * face or PIN; once in eight hours): `unlock-cancelled`, `unlock-failed`, `bad-prompt` (texts
- * missing). `unlock-needed`: the PC asked for an unlock only in the answer itself – both sessions
- * are gone; open `media`, then `full` again. While the PC is locked the shell sends no pointer
- * and no button press (a release always goes).
+ * Two levels. `full` (mouse) needs a `media` session first, because only the PC's answer tells
+ * whether it wants the phone unlocked – and the shell remembers that only while the app runs
+ * and the pairing stands: after a restart, or when the person lands on the touchpad directly,
+ * open `media` first (`media-first`). Whether this device is granted the level and whether the
+ * PC is locked is the PC's to say (`not-granted`, `locked`, …): a refused `full` open leaves the
+ * open session alone, here and at the PC; after `not-granted`, `paused` or `remote-off` open
+ * `media` again before the next try. When the PC asks for it, the shell unlocks the phone
+ * first, natively (fingerprint, face or PIN; once in eight hours; texts fixed in the shell,
+ * `lang` picks German or English): `unlock-cancelled`, `unlock-failed`, `unlock-busy` (the
+ * prompt is already up). `unlock-needed`: the PC asked for an unlock only in the answer itself
+ * – both sessions are gone; open `media`, then `full` again. While the PC is locked the shell
+ * sends no pointer and no button press (a release always goes).
  */
 export interface RemoteService {
   supported: boolean;
   open(
     level: 'media' | 'full',
     onEvent: (event: RemoteEvent) => void,
-    prompt?: RemoteUnlockPrompt,
+    /** The app's language, for the phone's unlock prompt. */
+    lang?: string,
   ): Promise<RemoteOpened>;
   send(session: number, actions: (RemoteAction | RemoteButtonAction)[]): Promise<void>;
   /** One pointer move or wheel step; `dy > 0` is down, `dx > 0` to the right. */
