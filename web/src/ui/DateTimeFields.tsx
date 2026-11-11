@@ -124,6 +124,10 @@ function ParsedField({
   );
 }
 
+/** The system's calendar can be opened from a button only where the browser has `showPicker` (no dead button). */
+const CAN_PICK =
+  typeof HTMLInputElement !== 'undefined' && 'showPicker' in HTMLInputElement.prototype;
+
 /**
  * A date field in the app's own format (UI audit 2026-11, B10): the text follows the format setting
  * ("31.12.2026", "12/31/2026"), not the system's locale as a native date input does. It reads what people type
@@ -142,33 +146,41 @@ export function DayField({ hint, ...props }: Props) {
       placeholder={datePlaceholder(tx.letters)}
       invalid={`${tx.invalidDate} ${formatDateInput(today())}`}
       inputMode="numeric"
-      picker={(labelId, reset) => (
-        <span className={styles.picker}>
-          {/* Named by what it does and described by the field's label: `getByLabel('Datum')` stays the field. */}
-          <IconButton
-            label={tx.pickDate}
-            aria-describedby={labelId}
-            onClick={() => native.current?.showPicker?.()}
-          >
-            <Icon name="calendar" />
-          </IconButton>
-          {/* The system's calendar, opened by the button; never in the tab order, never read out. */}
-          <input
-            ref={native}
-            className={styles.native}
-            type="date"
-            tabIndex={-1}
-            aria-hidden="true"
-            value={props.value}
-            onChange={(e) => {
-              if (!e.target.value) return;
-              // The picked day replaces whatever text stood in the field, an unreadable one included.
-              reset();
-              props.onChange(e.target.value);
-            }}
-          />
-        </span>
-      )}
+      picker={(labelId, reset) =>
+        !CAN_PICK ? null : (
+          <span className={styles.picker}>
+            {/* Named by what it does and described by the field's label: `getByLabel('Datum')` stays the field. */}
+            <IconButton
+              label={tx.pickDate}
+              aria-describedby={labelId}
+              onClick={() => {
+                try {
+                  native.current?.showPicker();
+                } catch {
+                  // The browser refused (no user activation, detached): the text field still takes the date.
+                }
+              }}
+            >
+              <Icon name="calendar" />
+            </IconButton>
+            {/* The system's calendar, opened by the button; never in the tab order, never read out. */}
+            <input
+              ref={native}
+              className={styles.native}
+              type="date"
+              tabIndex={-1}
+              aria-hidden="true"
+              value={props.value}
+              onChange={(e) => {
+                if (!e.target.value) return;
+                // The picked day replaces whatever text stood in the field, an unreadable one included.
+                reset();
+                props.onChange(e.target.value);
+              }}
+            />
+          </span>
+        )
+      }
     />
   );
 }

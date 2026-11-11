@@ -105,14 +105,13 @@ export default function SubscriptionsPage() {
       {hasSubs ? (
         <HeroSlot area="figure">
           <HeroFigure
-            label={t.subscriptions.perMonth}
             value={
               main ? formatMoney(main[1], main[0]) : formatMoney(0, subs[0] && currencyOf(subs[0]))
             }
             unit={t.subscriptions.ext.head.unit}
             detail={
               active.length === 0
-                ? t.subscriptions.ext.head.paused((subs ?? []).length)
+                ? t.subscriptions.ext.head.paused(subs.length)
                 : t.subscriptions.ext.head.context(active.length, soonCount)
             }
             sensitive

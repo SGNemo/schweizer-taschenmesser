@@ -3253,7 +3253,7 @@ export const de = {
       accounts: (n: number) => (n === 1 ? '1 Konto' : `${n} Konten`),
       /** The head draws no label: the context line names the figure first. */
       named: (available: boolean, n: number) =>
-        `${available ? 'verfügbar' : 'Kontostand'} · ${n === 1 ? '1 Konto' : `${n} Konten`}`,
+        `${available ? 'Verfügbar' : 'Kontostand'} · ${n === 1 ? '1 Konto' : `${n} Konten`}`,
     },
     available: 'Verfügbar',
     tabs: {
@@ -3293,7 +3293,6 @@ export const de = {
       'Ab dem zweiten Monat mit Buchungen zeigt sich hier, wie sich dein Gesamtstand entwickelt.',
     categoriesRing: (n: number) => (n === 1 ? '1 Kategorie' : `${n} Kategorien`),
     ringTitle: 'Wohin das Geld ging',
-    cardAvailable: (v: string) => `verfügbar ${v}`,
     curveFrom: 'Monatsbeginn',
     curveLabel: (a: string, b: string) => `Kontostand von ${a} auf ${b}`,
     showTable: 'Als Tabelle anzeigen',
@@ -5096,11 +5095,11 @@ export const de = {
       },
       head: {
         free: 'Noch frei',
-        unit: 'frei',
         chip: (name: string, pct: number) => `${name} ${pct} %`,
         /** The important part first: a line cut short on the phone still says the right thing (UI audit B2). */
-        context: (n: number, over: number) =>
-          over > 0 ? `${over} von ${n} darüber` : n === 1 ? 'Im Rahmen' : `Alle ${n} im Rahmen`,
+        /** Names the figure (the head draws no label), then what matters; short enough for the phone's head. */
+        context: (_n: number, over: number) =>
+          over > 0 ? `Frei · ${over} darüber` : 'Frei · im Rahmen',
         ring: (n: number) => `Verteilung der Ausgaben auf ${n} Budgets`,
       },
       goal: {

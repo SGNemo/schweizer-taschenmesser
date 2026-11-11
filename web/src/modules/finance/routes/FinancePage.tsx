@@ -47,7 +47,7 @@ export default function FinancePage() {
   const wideScreen = useSplitView();
   // Master–detail (layout `split`): on a wide page a booking opens in the panel beside the list, below that width
   // in its dialog (a sheet on the phone).
-  const [picked, setPicked] = useState<{ id: string } | 'closed' | null>(null);
+  const [picked, setPicked] = useState<{ id: string } | null>(null);
   const advancedItem = useAdvancedMenuItem('finance');
 
   useEffect(() => {
@@ -96,6 +96,8 @@ export default function FinancePage() {
     if (next.tab) p.set('tab', next.tab);
     if (next.month) p.set('month', next.month);
     p.delete('new');
+    // Another month or currency is another list: the panel does not keep a booking of the old one.
+    if (next.month || next.cur) setPicked(null);
     setParams(p, { replace: true });
   }
 
@@ -117,16 +119,11 @@ export default function FinancePage() {
   /** An account, but no booking yet. */
   const firstUse = canAdd && data.txs.length === 0;
 
-  // The panel shows the picked booking, else the newest of the month (the list's first row), so a wide page has
-  // its detail from the start; "Details schließen" gives the list the whole width back.
-  const monthTxs = (view?.txs ?? [])
-    .filter((x) => x.date.slice(0, 7) === month && !x.transferId)
-    .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
-  const detail: Stored<Transaction> | undefined =
-    picked === 'closed'
-      ? undefined
-      : // A pick from another month or currency no longer counts: the panel follows the list that is shown.
-        ((picked ? monthTxs.find((x) => x.id === picked.id) : undefined) ?? monthTxs[0]);
+  // The panel shows the booking that was picked in the list (any row the list can show: a search hit from another
+  // month, a filtered row). Nothing is picked by default: the list knows its rows, the page does not.
+  const detail: Stored<Transaction> | undefined = picked
+    ? view?.txs.find((x) => x.id === picked.id)
+    : undefined;
   const openBooking = (tx: Stored<Transaction>) =>
     wideScreen ? setPicked({ id: tx.id }) : setTarget(tx);
 
@@ -262,7 +259,7 @@ export default function FinancePage() {
                   tx={detail}
                   data={view}
                   onEdit={() => setTarget(detail)}
-                  onClose={() => setPicked('closed')}
+                  onClose={() => setPicked(null)}
                 />
               ) : (
                 <section aria-label={t.finance.tabs.transactions}>
@@ -286,7 +283,7 @@ export default function FinancePage() {
                 data={view}
                 month={month}
                 onOpen={openBooking}
-                onEdit={setTarget}
+                onEdit={wideScreen ? setTarget : undefined}
                 onAdd={canAdd ? addBooking : undefined}
                 selectedId={wideScreen ? detail?.id : undefined}
               />

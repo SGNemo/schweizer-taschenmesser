@@ -35,6 +35,8 @@ interface Read {
   /** Row heights of the first list rows (`data-row`'s list item). */
   rowHeights: number[];
   sideways: boolean;
+  /** The page's h1 is cut (the figure beside it took its room). */
+  titleCut: boolean;
 }
 
 /** Runs in the page. */
@@ -99,6 +101,10 @@ function read(): Read {
       .slice(0, 12)
       .map((el) => Math.round((el.closest('li') ?? el).getBoundingClientRect().height)),
     sideways: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    titleCut: (() => {
+      const h1 = head?.querySelector('h1');
+      return !!h1 && h1.scrollWidth > h1.clientWidth;
+    })(),
   };
 }
 
@@ -169,6 +175,8 @@ async function check(page: Page, phone: boolean, theme: string) {
       .soft(r.figure?.detailCut, `${path}: the context line "${r.figure?.detail}" is cut`)
       .toBe(false);
     expect.soft(r.sideways, `${path}: no sideways overflow`).toBe(false);
+    // The figure and its unit never push the title out (the medium seed has the longer numbers).
+    expect.soft(r.titleCut, `${path}: the h1 is cut`).toBe(false);
     // Rule 5: 48 px rows on the phone, 44 px on the desktop (a row may be taller, never lower).
     for (const h of r.rowHeights)
       expect.soft(h, `${path}: row height`).toBeGreaterThanOrEqual(phone ? 48 : 44);
@@ -262,6 +270,9 @@ test.describe('booking dialog: three fields, one click and Enter', () => {
       // Every field open: the sheet is longer than the screen now.
       await dialog.getByRole('button', { name: 'Mehr Felder anzeigen' }).tap();
       await expect(dialog.getByLabel('Datum')).toBeVisible();
+      // The date field shows the app's format and has its calendar button.
+      await expect(dialog.getByLabel('Datum')).toHaveValue('29.09.2026');
+      await expect(dialog.getByRole('button', { name: 'Kalender öffnen' })).toBeVisible();
       const foot = dialog.locator('[data-form-actions]');
       await expect(foot).toHaveCSS('position', 'sticky');
       const save = dialog.getByRole('button', { name: 'Speichern' });

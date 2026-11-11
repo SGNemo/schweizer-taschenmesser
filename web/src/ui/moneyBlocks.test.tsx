@@ -51,7 +51,8 @@ describe('DayField', () => {
     expect(screen.getByLabelText('Datum')).toHaveValue('29.09.2026');
     // The calendar button is named by what it does, so "Datum" finds one control.
     expect(screen.getAllByLabelText('Datum')).toHaveLength(1);
-    expect(screen.getByRole('button', { name: 'Kalender öffnen' })).toBeInTheDocument();
+    // jsdom has no `showPicker`: no dead calendar button there (browsers with it: e2e/seed/money-area.seed.spec.ts).
+    expect(screen.queryByRole('button', { name: 'Kalender öffnen' })).toBeNull();
   });
 
   it('reports the stored form for what is typed, in the region order or as ISO', async () => {

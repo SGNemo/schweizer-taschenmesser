@@ -145,7 +145,7 @@ export const finance: Strings['finance'] = {
   headline: {
     accounts: (n: number) => (n === 1 ? '1 account' : `${n} accounts`),
     named: (available: boolean, n: number) =>
-      `${available ? 'available' : 'balance'} · ${n === 1 ? '1 account' : `${n} accounts`}`,
+      `${available ? 'Available' : 'Balance'} · ${n === 1 ? '1 account' : `${n} accounts`}`,
   },
   available: 'Available',
   tabs: {
@@ -179,7 +179,6 @@ export const finance: Strings['finance'] = {
   balanceCurve: 'Course through the month',
   categoriesRing: (n: number) => (n === 1 ? '1 category' : `${n} categories`),
   ringTitle: 'Where the money went',
-  cardAvailable: (v: string) => `available ${v}`,
   netWorthTitle: 'Total balance at month end',
   netWorthChange: (amount: string, since: string) => `${amount} since ${since}`,
   netWorthUnchanged: (since: string) => `unchanged since ${since}`,

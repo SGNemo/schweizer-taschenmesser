@@ -132,7 +132,6 @@ export default function BudgetsPage() {
           <HeroFigure
             label={t.budgets.ext.head.free}
             value={formatMoney(free, mainCurrency)}
-            unit={t.budgets.ext.head.unit}
             detail={t.budgets.ext.head.context(inMain.length, overCount)}
             sensitive
             testId="budgets-free"

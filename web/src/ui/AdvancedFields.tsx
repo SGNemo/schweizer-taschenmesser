@@ -56,6 +56,9 @@ export function AdvancedFields({
   const [revealed, setRevealed] = useState(false);
   const summaryId = useId();
   const tx = tAdvanced.use();
+  // Once the fields were shown they stay for this form: a field in the middle of an edit never unmounts because
+  // the value that opened the fold was cleared.
+  if (hasData && !revealed) setRevealed(true);
   if (advanced || hasData || revealed) return <>{children}</>;
   return (
     <div className={styles.folded}>

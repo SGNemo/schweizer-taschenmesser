@@ -65,7 +65,8 @@ export default function InvoicesPage() {
   };
 
   const shown = (invoices ?? []).filter((i) => view === 'all' || i.status === view);
-  const emptyOpen = !!invoices && shown.length === 0 && view === 'open';
+  // Nothing open (or nothing at all): the empty state holds the one verb.
+  const emptyOpen = !!invoices && shown.length === 0 && view !== 'paid';
   const timeGroups = groupByTime(shown, (i) => i.dueDate, day);
   // The panel shows the picked invoice, else the first row as the list shows it (the open view is grouped by time).
   const firstShown = view === 'open' ? timeGroups[0]?.items[0] : shown[0];
@@ -111,7 +112,10 @@ export default function InvoicesPage() {
           i.status === 'open'
             ? [
                 { id: 'pay', label: t.invoices.markPaid, onSelect: () => void pay(i.id) },
-                { id: 'edit', label: t.actions.edit, onSelect: () => setTarget(i) },
+                // Master–detail: the row only picks the entry there; this opens its dialog at once.
+                ...(wide
+                  ? [{ id: 'edit', label: t.actions.edit, onSelect: () => setTarget(i) }]
+                  : []),
                 ...(hasPayData
                   ? [
                       {
@@ -140,7 +144,10 @@ export default function InvoicesPage() {
               ]
             : [
                 { id: 'open', label: t.invoices.reopen, onSelect: () => void markOpen(i.id) },
-                { id: 'edit', label: t.actions.edit, onSelect: () => setTarget(i) },
+                // Master–detail: the row only picks the entry there; this opens its dialog at once.
+                ...(wide
+                  ? [{ id: 'edit', label: t.actions.edit, onSelect: () => setTarget(i) }]
+                  : []),
                 {
                   id: 'booking',
                   label: t.invoices.ext.openBooking,
@@ -246,7 +253,7 @@ export default function InvoicesPage() {
       >
         {invoices && shown.length === 0 ? (
           <EmptyState
-            title={view === 'open' ? t.invoices.empty : t.invoices.emptyPaid}
+            title={view === 'paid' ? t.invoices.emptyPaid : t.invoices.empty}
             testId="invoices-empty"
             motif={<SignatureMark id="bill" size={64} />}
           >
