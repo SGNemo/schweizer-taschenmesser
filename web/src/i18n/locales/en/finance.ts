@@ -188,8 +188,8 @@ export const finance: Strings['finance'] = {
   netWorth: {
     named: (n: number) => `Net worth · ${n === 1 ? '1 account' : `${n} accounts`}`,
     open: (invoices: number, subs: number) =>
-      `Still open: ${[
-        invoices > 0 && (invoices === 1 ? '1 invoice' : `${invoices} invoices`),
+      `Not deducted yet: ${[
+        invoices > 0 && (invoices === 1 ? '1 open invoice' : `${invoices} open invoices`),
         subs > 0 && `${subs === 1 ? '1 subscription' : `${subs} subscriptions`} until month end`,
       ]
         .filter(Boolean)
