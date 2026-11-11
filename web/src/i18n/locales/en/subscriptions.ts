@@ -84,7 +84,7 @@ export const subscriptions: Strings['subscriptions'] = {
   pause: 'Pause',
   resume: 'Resume',
   empty: 'No subscriptions yet.',
-  emptyAction: 'Add a subscription',
+  emptyAction: 'Add your first subscription',
   perMonth: 'Per month',
   perYear: 'Per year',
   nextCharge: 'Next charge',

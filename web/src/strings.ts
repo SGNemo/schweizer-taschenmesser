@@ -3089,7 +3089,7 @@ export const de = {
     pause: 'Pausieren',
     resume: 'Fortsetzen',
     empty: 'Noch keine Abos.',
-    emptyAction: 'Abo eintragen',
+    emptyAction: 'Erstes Abo eintragen',
     perMonth: 'Pro Monat',
     perYear: 'Pro Jahr',
     nextCharge: 'Nächste Abbuchung',
@@ -3108,7 +3108,7 @@ export const de = {
   },
   finance: {
     chartLegend: 'Legende',
-    emptyAction: 'Buchung eintragen',
+    emptyAction: 'Erste Buchung eintragen',
     ext: {
       detail: {
         label: 'Buchung im Detail',
@@ -5149,8 +5149,8 @@ export const de = {
     nextMonth: 'Nächster Monat',
     emptyBudgets: 'Noch keine Budgets. Lege ein Monatslimit für eine Ausgabenkategorie fest.',
     emptyGoals: 'Noch keine Sparziele.',
-    emptyBudgetAction: 'Budget eintragen',
-    emptyGoalAction: 'Sparziel eintragen',
+    emptyBudgetAction: 'Erstes Budget eintragen',
+    emptyGoalAction: 'Erstes Sparziel eintragen',
     spentOf: (spent: string, limit: string) => `${spent} von ${limit}`,
     left: (amount: string) => `noch ${amount}`,
     over: (amount: string) => `${amount} drüber`,

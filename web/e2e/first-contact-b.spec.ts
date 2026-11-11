@@ -74,7 +74,12 @@ test('B06: after importing older bookings the balance can be set to what the ban
 }) => {
   await importStatement(page);
   await ready(page, '/finance?tab=accounts');
-  await page.getByTestId('balance-Girokonto').click();
+  // The account is a row of the list: its name opens it (the balance at the row's end is text, as in every list).
+  await page
+    .getByRole('listitem')
+    .filter({ has: page.getByTestId('balance-Girokonto') })
+    .getByRole('button', { name: /^Girokonto/ })
+    .click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel(/Kontostand heute laut Bank/).fill('1.250,00');
   await dialog.getByRole('button', { name: 'Speichern' }).click();

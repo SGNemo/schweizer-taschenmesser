@@ -2,7 +2,7 @@ import type { Strings } from '@/strings';
 
 export const finance: Strings['finance'] = {
   chartLegend: 'Legend',
-  emptyAction: 'Add a booking',
+  emptyAction: 'Add your first booking',
   ext: {
     detail: {
       label: 'Booking in detail',

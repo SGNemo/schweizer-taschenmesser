@@ -106,9 +106,10 @@ export function TransactionsTab({
           testId="finance-empty"
           motif={<SignatureMark id="bankCard" size={64} />}
         >
-          {/* B6: one sentence and one verb. The button is the page's own action (the head's "Buchung", the plus). */}
-          {onAdd ? (
-            <Button variant={data.txs.length === 0 ? 'primary' : 'secondary'} onClick={onAdd}>
+          {/* B6: one sentence and one verb, while nothing was ever booked. In an empty month the head's action
+              (the phone's plus) is right there and stays the one entry. */}
+          {onAdd && data.txs.length === 0 ? (
+            <Button variant="primary" onClick={onAdd}>
               {t.finance.emptyAction}
             </Button>
           ) : null}

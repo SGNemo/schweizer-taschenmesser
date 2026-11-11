@@ -198,3 +198,76 @@ for (const theme of SHOTS ? (['light', 'dark'] as const) : (['light'] as const))
     });
   });
 }
+
+/**
+ * The booking dialog, "first what is needed" (finding B10): three fields, the rest folded with its values named, and
+ * the click path "Buchung eintragen" is the head's action (or the plus) + typing + Enter.
+ */
+const visibleFields = (page: Page) =>
+  page
+    .getByRole('dialog')
+    .locator('input:not([type="hidden"]), select, textarea')
+    .evaluateAll(
+      (els) =>
+        els.filter((e) => {
+          const r = e.getBoundingClientRect();
+          return r.width > 1 && r.height > 1 && !e.closest('[aria-hidden="true"]');
+        }).length,
+    );
+
+test.describe('booking dialog: three fields, one click and Enter', () => {
+  test.describe('desktop', () => {
+    test.use({ viewport: DESKTOP, seeded: { scale: 'small', desktop: true, preview: true } });
+    test('"Buchung" in the head, an amount, Enter: the booking is in the list', async ({
+      page,
+    }) => {
+      await startSeeded(page);
+      await openPage(page, '/finance?tab=transactions');
+      // Click 1 of at most 2: the page's one action.
+      await page.locator('[data-page-action]').click();
+      const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
+      await expect(dialog).toBeVisible();
+      expect(await visibleFields(page), 'visible fields of a new booking').toBe(3);
+      // What the folded fields will save stands beside "Mehr Felder".
+      await expect(dialog.getByTestId('more-fields-summary')).toContainText('Heute');
+      // The amount field has the focus: typing and Enter is all that is left.
+      await page.keyboard.type('7,77');
+      await page.keyboard.press('Enter');
+      await expect(dialog).toHaveCount(0);
+      await expect(page.getByRole('listitem').filter({ hasText: /7,77\s€/ })).toBeVisible();
+    });
+  });
+
+  test.describe('phone', () => {
+    test.use({
+      viewport: PHONE,
+      isMobile: true,
+      hasTouch: true,
+      seeded: { scale: 'small', preview: true },
+    });
+    test('the plus opens the sheet; its foot with "Speichern" stays on screen while the fields scroll', async ({
+      page,
+    }) => {
+      await startSeeded(page, { phone: true });
+      await openPage(page, '/finance');
+      await page.getByTestId('bottom-plus').tap();
+      const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
+      await expect(dialog).toBeVisible();
+      expect(await visibleFields(page), 'visible fields of a new booking').toBe(3);
+      // Every field open: the sheet is longer than the screen now.
+      await dialog.getByRole('button', { name: 'Mehr Felder anzeigen' }).tap();
+      await expect(dialog.getByLabel('Datum')).toBeVisible();
+      const foot = dialog.locator('[data-form-actions]');
+      await expect(foot).toHaveCSS('position', 'sticky');
+      const save = dialog.getByRole('button', { name: 'Speichern' });
+      for (const top of [0, 9999]) {
+        await dialog.evaluate((el, y) => el.scrollTo(0, y), top);
+        const box = (await save.boundingBox())!;
+        expect(box.y, `"Speichern" on screen at scroll ${top}`).toBeGreaterThan(0);
+        expect(box.y + box.height, `"Speichern" on screen at scroll ${top}`).toBeLessThanOrEqual(
+          PHONE.height,
+        );
+      }
+    });
+  });
+});
