@@ -14,14 +14,15 @@ import { DEFAULTS, PAD_SPEED, settings, type RemotePrefs } from '../settings';
 import { describe, type RemoteLine } from '../view';
 import { useVolumeKeys } from '../volumeKeys';
 import styles from '../remote.module.css';
+import { Keyboard } from './Keyboard';
 import { Touchpad } from './Touchpad';
 
 const HOLD_MS = 1000 / HOLD_STEPS_PER_SECOND;
 
-type RemoteTab = 'media' | 'touchpad';
+type RemoteTab = 'media' | 'touchpad' | 'keyboard';
 
 /**
- * Two views: Medien (default) and Touchpad (`./Touchpad`).
+ * Three views: Medien (default), Touchpad (`./Touchpad`) and Tastatur (`./Keyboard`).
  *
  * Medien: volume in the lowest row, transport above it, the state as one line; "Ton aus" and "PC
  * sperren" in the menu. One-handed and without looking: big targets in the thumb zone, a short
@@ -109,6 +110,7 @@ export default function RemotePage() {
         options={[
           { value: 'media', label: r.media },
           { value: 'touchpad', label: r.touchpad },
+          { value: 'keyboard', label: r.keyboard },
         ]}
         onChange={(next) => {
           setTab(next);
@@ -137,6 +139,8 @@ export default function RemotePage() {
           }}
           onMedia={() => setTab('media')}
         />
+      ) : tab === 'keyboard' ? (
+        <Keyboard view={view} last={last} tick={tick} onMedia={() => setTab('media')} />
       ) : (
         <Media line={line} playing={playing} press={press} />
       )}

@@ -139,6 +139,53 @@
   color: var(--text-muted);
   font-size: var(--text-sm);
 }
+/* Tastatur: the field with its buttons, then the keys of the fixed list in rows of three. */
+.typeView {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.typing {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.typeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.keys {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.keyRow,
+.arrows {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+.padKey {
+  min-height: calc(var(--touch) * 1.25);
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.padKey:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.padKey:disabled {
+  border: 1px dashed var(--border-strong);
+  background: transparent;
+  color: var(--text-muted);
+}
 /* Sideways on a phone: the pad and the strips side by side, as tall as the screen leaves below
    the head that stays in place (about 11rem) – scrolled into view both are fully visible. The
    legend would take the whole height: it waits for upright. */
@@ -196,7 +243,8 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .strip:active:not(:disabled) {
+  .strip:active:not(:disabled),
+  .padKey:active:not(:disabled) {
     transform: none;
   }
   .key:active:not(:disabled) {
