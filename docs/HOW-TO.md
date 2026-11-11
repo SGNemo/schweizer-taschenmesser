@@ -20,7 +20,7 @@ Commands run in `web/` unless stated. Background: [ARCHITECTURE-MAP](ARCHITECTUR
 | vault-core | only when a shared input changed | yes | no | yes | yes | – |
 | Native shell (fmt, clippy, tests), local model | if `web/src-tauri/` (model: `crates/local-llm/`) changed | yes | no | yes | yes | – |
 | Shared inputs (`packages/`, `contract/`, workflows, root manifests) and any path the pre-check does not know (e.g. `README*.md`) | every package runs | yes | static + unit only | yes | yes | – |
-| CodeQL | JS/TS + Actions always; Rust only if the PR touches Rust | same | same | all three languages | weekly, on `main` | – |
+| CodeQL (job `scope` picks the languages; its run summary says which and why) | JS/TS + Actions; Rust only if the PR touches Rust; docs-only: nothing | same | same | like a PR, judged by the pushed commits; the first run of a UTC day: all three | nightly: all three on `develop` (once `nightly.yml` is on `main`); weekly: all three on `main` | – |
 | Dev-Preview (signed exe + APK) | never | never | never | built next to the tests, **published when the gate is green: gitleaks, licences, static, unit, E2E smoke, native shell**; the rest of the run (rest E2E, sync E2E + seed, small packages, extension, local model, docs) follows and cannot hold the preview back (not for docs-only pushes) | – | – |
 | Windows/Android release build (dry run) | never | never | never | if `web/src-tauri/**`, `web/scripts/**` or `release.yml` changed (also on pushes to `main`) | – | tag / manual run with `version`: build, sign, audit, publish |
 
