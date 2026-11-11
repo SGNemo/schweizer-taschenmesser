@@ -372,7 +372,14 @@ fn build(app: &AppHandle) -> Result<(Arc<Core>, DataKeyDto), String> {
         .map_err(|_| "keystore-unavailable")?;
     // Remote control is wired on every desktop; where the system cannot be controlled the sink
     // says so and every `open` is answered `unsupported`.
-    let (remote, sink) = crate::remote::parts(&dir, trust.clone());
+    let (remote, sink) = {
+        use tauri::Manager as _;
+        crate::remote::parts(
+            &dir,
+            trust.clone(),
+            &app.state::<crate::remote::RemoteHost>(),
+        )
+    };
     let router = Arc::new(
         Router::new(endpoint, host.clone(), hub.clone(), Admission::new())
             .with_input(remote.clone(), sink.clone()),
