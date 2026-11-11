@@ -216,7 +216,7 @@ export function RemoteHostSection() {
       <Switch
         label={l.notice}
         hint={l.noticeHint}
-        checked={status.notice}
+        checked={status.notice !== false}
         disabled={busy}
         onChange={(on) => void change(() => host.setNotice(on))}
       />

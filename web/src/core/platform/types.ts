@@ -223,8 +223,11 @@ export interface RemoteHostStatus {
   supported: boolean;
   /** The master switch. */
   enabled: boolean;
-  /** A device that starts to control mouse and keyboard is told at the PC (a system notification). */
-  notice: boolean;
+  /**
+   * A device that starts to control mouse and keyboard is told at the PC (a system
+   * notification). Only `false` is "switched off": a reading without it counts as on.
+   */
+  notice?: boolean;
   /** Who controls this PC right now. */
   controller?: { id: string; name: string; level: RemoteLevel } | null;
   devices: RemoteHostDevice[];
