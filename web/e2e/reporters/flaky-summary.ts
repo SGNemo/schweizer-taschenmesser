@@ -47,6 +47,7 @@ export default class FlakySummaryReporter implements Reporter {
   }
 }
 
+// Markdown table cell: backslashes first, so an escaped pipe cannot be undone by a backslash in the text.
 function cell(text: string): string {
-  return text.replace(/\|/g, '\\|').replace(/\s+/g, ' ').trim();
+  return text.replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\s+/g, ' ').trim();
 }
