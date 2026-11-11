@@ -307,8 +307,9 @@ export interface RemoteOpened {
  * the level is not for this phone, trying again does not help). `unlock-needed`: the PC asked for an unlock only in the answer itself
  * – both sessions are gone; open `media`, then `full` again. While the PC is locked the shell
  * sends no pointer and no button press (a release always goes). The session a `full`
- * open replaces ends without an event; only if that open fails after the PC already ended it
- * does its `closed` (no reason) arrive, right before the open rejects.
+ * open replaces ends without an event; if that open fails after the PC already ended it, its
+ * `closed` (no reason) arrives around the time the open rejects (not after `unlock-needed`,
+ * which says it all). One `open` at a time: wait for the answer before the next.
  */
 export interface RemoteService {
   supported: boolean;

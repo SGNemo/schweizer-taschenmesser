@@ -92,6 +92,8 @@ export function createFakeRemoteParts() {
       if (openError && openErrorsLeft > 0) {
         openErrorsLeft -= 1;
         if (FORGETS.has(openError)) known = undefined;
+        // like the shell: after `unlock-needed` both sessions are gone, without an event
+        if (openError === 'unlock-needed') live = undefined;
         throw new Error(openError);
       }
       // an attempt overtaken by a newer one is not a session

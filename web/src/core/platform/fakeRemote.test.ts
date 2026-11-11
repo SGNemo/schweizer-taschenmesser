@@ -58,6 +58,16 @@ describe('fake remote: the mouse level behaves like the shell', () => {
     expect(hooks.unlocks()).toBe(3);
   });
 
+  it('after unlock-needed both sessions are gone', async () => {
+    const { remote, hooks } = createFakeRemoteParts();
+    hooks.setGrant('full');
+    const media = await remote.open('media', nothing);
+    hooks.failOpen('unlock-needed');
+    await expect(remote.open('full', nothing)).rejects.toThrow('unlock-needed');
+    expect(hooks.isOpen()).toBe(false);
+    await expect(remote.send(media.session, ['mute'])).rejects.toThrow('closed');
+  });
+
   it('a phone without a lock is not blocked, and says so', async () => {
     const { remote, hooks } = createFakeRemoteParts();
     hooks.setGrant('full', true);
