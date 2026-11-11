@@ -85,10 +85,12 @@ export default function CalendarPage() {
   const advancedItem = useAdvancedMenuItem('calendar');
   const advanced = advancedItem.checked === true;
   const weekStart = useWeekStart();
-  // An empty reminders tab: its empty state owns the filled button, the head's action steps back.
-  const noReminders = useLiveQuery(
-    async () => !(await eventRepo.active().toArray()).some(isReminder),
-    [],
+  // An empty reminders tab: its empty state owns the filled button, the head's action steps back. Asked only on
+  // that tab; until the answer is there the head's action is not filled, so it never has to step back.
+  const onReminders = params.get('tab') === 'reminders';
+  const hasReminders = useLiveQuery(
+    async () => onReminders && (await eventRepo.active().toArray()).some(isReminder),
+    [onReminders],
   );
   const plannerOn = useModuleStates()?.planner === true;
 
@@ -193,7 +195,7 @@ export default function CalendarPage() {
         <PageHeader title={t.calendar.title} views={tabs} besideContent>
           <PageAction
             short={t.calendar.reminders.short}
-            variant={noReminders ? 'secondary' : 'primary'}
+            variant={hasReminders ? 'primary' : 'secondary'}
             onClick={() => setNew(true)}
           >
             <Icon name="plus" size={18} />
