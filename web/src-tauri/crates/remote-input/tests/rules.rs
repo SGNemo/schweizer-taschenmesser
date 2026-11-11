@@ -77,6 +77,17 @@ fn only_two_files_simulate_input_each_its_own_kind() {
         "MOUSE_EVENT_FLAGS(",
         "INPUT_TYPE(",
         " hi:",
+        // no input type changed after it was written, no bytes read as another type
+        "r#type.",
+        "transmute",
+        // no window message that carries a key, no scripting host that types
+        "SendNotifyMessage",
+        "PostThreadMessage",
+        "WM_KEY",
+        "WM_CHAR",
+        "WM_SYSKEY",
+        "IDispatch",
+        "CLSIDFromProgID",
     ]);
     let mouse = ["MOUSEEVENTF", "INPUT_MOUSE", "MOUSEINPUT", " mi:"];
     let keys = [
@@ -187,34 +198,55 @@ fn only_two_files_simulate_input_each_its_own_kind() {
             .filter(|l| !l.is_empty())
             .collect()
     };
-    let (now, pinned) = (lines(rest), lines(PINNED));
-    let differs = now
-        .iter()
-        .zip(&pinned)
-        .position(|(a, b)| a != b)
-        .or((now.len() != pinned.len()).then_some(now.len().min(pinned.len())));
-    if let Some(i) = differs {
-        panic!(
-            "keyboard.rs changed from the handle on, at code line {}:\n  now:    {}\n  pinned: {}\n\
-             Read docs/rules/remote-control.md and have the change reviewed; then update PINNED \
-             in tests/rules.rs. A new key also needs: `Key`, `KEYS`, `Code`, `chord`, `key_of` \
-             and its import, the count of sixteen below, tests/keyboard.rs, the hub's list and \
-             `key_of` in the shell.",
-            i + 1,
-            now.get(i).map_or("(end)", String::as_str),
-            pinned.get(i).map_or("(end)", String::as_str),
-        );
-    }
+    let same = |file: &str, now: Vec<String>, pinned: Vec<String>, name: &str| {
+        let differs = now
+            .iter()
+            .zip(&pinned)
+            .position(|(a, b)| a != b)
+            .or((now.len() != pinned.len()).then_some(now.len().min(pinned.len())));
+        if let Some(i) = differs {
+            panic!(
+                "{file} changed, at code line {}:\n  now:    {}\n  pinned: {}\n\
+                 Read docs/rules/remote-control.md and have the change reviewed; then update \
+                 {name} in tests/rules.rs. A new key also needs: `Key`, `KEYS`, `Code`, `chord`, \
+                 `key_of` and its import, the count of sixteen below, tests/keyboard.rs, the \
+                 hub's list and `key_of` in the shell.",
+                i + 1,
+                now.get(i).map_or("(end)", String::as_str),
+                pinned.get(i).map_or("(end)", String::as_str),
+            );
+        }
+    };
+    // the whole keyboard file: the plan too, so that no hidden case in it can hold a key
+    assert!(
+        rest.contains("mod imp"),
+        "the Windows part is in the pinned file"
+    );
+    same("keyboard.rs", lines(&keyboard), lines(PINNED), "PINNED");
+    // and the Windows part of the pointer: the one place a mouse event is built – it must stay
+    // a mouse event (an input union read as another member would be any key)
+    let at = pointer
+        .find("#[cfg(windows)]\nmod imp {")
+        .expect("the pointer's Windows part");
+    same(
+        "pointer.rs (Windows part)",
+        lines(&pointer[at..]),
+        lines(PINNED_POINTER),
+        "PINNED_POINTER",
+    );
+    assert_eq!(
+        pointer.matches("mod imp").count(),
+        2,
+        "the stub and Windows"
+    );
     // one list of keys, the public one: sixteen
     let list = &keyboard[keyboard.find("pub enum Key {").unwrap()..];
     let list = &list[..list.find("\n}").unwrap()];
-    assert_eq!(
-        list.lines()
-            .filter(|l| l.trim().ends_with(',') && !l.trim().starts_with("//"))
-            .count(),
-        16,
-        "the fixed list has sixteen keys"
-    );
+    let keys: usize = code_lines(list)
+        .skip(1)
+        .map(|l| l.split(',').filter(|w| !w.trim().is_empty()).count())
+        .sum();
+    assert_eq!(keys, 16, "the fixed list has sixteen keys");
 }
 
 /// The crate is five files and nothing else: no sub-directory, no file pulled in from elsewhere,
@@ -317,6 +349,59 @@ fn no_network_no_files_no_tauri_no_serde() {
         "the only dependency, and only on Windows"
     );
     assert!(manifest.contains("[target.'cfg(windows)'.dependencies]"));
+    // The system APIs the crate can reach at all: a new feature opens new calls (window
+    // messages, scripting hosts) that could type by a route the word lists above do not know.
+    let features: Vec<&str> = manifest
+        .lines()
+        .map(str::trim)
+        .filter(|l| l.starts_with('"') && l.ends_with("\","))
+        .map(|l| l.trim_matches(|c| c == '"' || c == ','))
+        .collect();
+    assert_eq!(
+        features,
+        [
+            "Foundation",
+            "Media_Control",
+            "Win32_Foundation",
+            "Win32_Media_Audio",
+            "Win32_Media_Audio_Endpoints",
+            "Win32_System_Com",
+            "Win32_System_Com_StructuredStorage",
+            "Win32_System_Variant",
+            "Win32_System_RemoteDesktop",
+            "Win32_System_Shutdown",
+            "Win32_UI_Input_KeyboardAndMouse",
+        ],
+        "a new Windows feature needs a review (docs/rules/remote-control.md)"
+    );
+    assert_eq!(manifest.matches("features").count(), 1);
+    // Of the standard library the crate uses threads, channels, time and two helpers for
+    // system calls – nothing that reads or writes a file, a stream or the environment.
+    for (name, text) in sources() {
+        for line in code_lines(&text) {
+            for (at, _) in line.match_indices("std::") {
+                let path: String = line[at + 5..]
+                    .chars()
+                    .take_while(|c| c.is_ascii_alphanumeric() || *c == '_')
+                    .collect();
+                assert!(
+                    ["mem", "ptr", "sync", "thread", "time"].contains(&path.as_str()),
+                    "{name}: `std::{path}` in `{}`",
+                    line.trim()
+                );
+            }
+            for n in [
+                "extern crate",
+                "use std;",
+                "OpenOptions",
+                "stderr",
+                "stdout",
+                "write_all",
+            ] {
+                assert!(!line.contains(n), "{name}: `{n}` in `{}`", line.trim());
+            }
+        }
+    }
     assert!(!manifest.contains("\n[dependencies]"));
 }
 
@@ -385,8 +470,150 @@ fn unsafe_is_windows_only_and_explained() {
     }
 }
 
-/// `src/keyboard.rs` from the handle on, as reviewed (see the test above).
+/// `src/keyboard.rs` as it stands, comments and layout aside (see the test above).
 const PINNED: &str = r#"
+use std::sync::mpsc::{self, SyncSender};
+pub const QUEUE: usize = 32;
+pub const TEXT_UNITS: usize = 512;
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Key {
+Enter,
+Escape,
+Backspace,
+Tab,
+Space,
+Left,
+Up,
+Right,
+Down,
+Home,
+End,
+PageUp,
+PageDown,
+Delete,
+F11,
+AltTab,
+}
+pub const KEYS: [Key; 16] = [
+Key::Enter,
+Key::Escape,
+Key::Backspace,
+Key::Tab,
+Key::Space,
+Key::Left,
+Key::Up,
+Key::Right,
+Key::Down,
+Key::Home,
+Key::End,
+Key::PageUp,
+Key::PageDown,
+Key::Delete,
+Key::F11,
+Key::AltTab,
+];
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Code {
+Enter,
+Escape,
+Backspace,
+Tab,
+Space,
+Left,
+Up,
+Right,
+Down,
+Home,
+End,
+PageUp,
+PageDown,
+Delete,
+F11,
+Alt,
+}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Stroke {
+Key { code: Code, up: bool },
+Unit { unit: u16, up: bool },
+}
+fn chord(key: Key) -> &'static [Code] {
+match key {
+Key::Enter => &[Code::Enter],
+Key::Escape => &[Code::Escape],
+Key::Backspace => &[Code::Backspace],
+Key::Tab => &[Code::Tab],
+Key::Space => &[Code::Space],
+Key::Left => &[Code::Left],
+Key::Up => &[Code::Up],
+Key::Right => &[Code::Right],
+Key::Down => &[Code::Down],
+Key::Home => &[Code::Home],
+Key::End => &[Code::End],
+Key::PageUp => &[Code::PageUp],
+Key::PageDown => &[Code::PageDown],
+Key::Delete => &[Code::Delete],
+Key::F11 => &[Code::F11],
+Key::AltTab => &[Code::Alt, Code::Tab],
+}
+}
+pub fn strokes(key: Key) -> Vec<Stroke> {
+let chord = chord(key);
+let downs = chord.iter().map(|code| Stroke::Key {
+code: *code,
+up: false,
+});
+let ups = chord.iter().rev().map(|code| Stroke::Key {
+code: *code,
+up: true,
+});
+downs.chain(ups).collect()
+}
+fn releases(plan: &[Stroke]) -> Vec<Stroke> {
+plan.iter()
+.copied()
+.filter(|stroke| matches!(stroke, Stroke::Key { up: true, .. }))
+.collect()
+}
+pub fn typed(text: &str) -> Vec<Stroke> {
+let wanted = |c: &char| !c.is_control() && !matches!(c, '\u{2028}' | '\u{2029}');
+let mut plan = Vec::new();
+let mut buf = [0u16; 2];
+for c in text.chars().filter(wanted) {
+let pair = c.encode_utf16(&mut buf);
+if plan.len() / 2 + pair.len() > TEXT_UNITS {
+break;
+}
+for unit in pair.iter().copied() {
+plan.push(Stroke::Unit { unit, up: false });
+plan.push(Stroke::Unit { unit, up: true });
+}
+}
+plan
+}
+#[derive(Clone, PartialEq, Eq)]
+pub enum KeyAction {
+Key(Key),
+Text(Box<str>),
+}
+pub trait Keys: Send {
+fn send(&mut self, strokes: &[Stroke]) -> usize;
+}
+fn apply(keys: &mut dyn Keys, action: KeyAction) {
+match action {
+KeyAction::Key(key) => {
+let plan = strokes(key);
+if keys.send(&plan) < plan.len() {
+keys.send(&releases(&plan));
+}
+}
+KeyAction::Text(text) => {
+let plan = typed(&text);
+if !plan.is_empty() {
+keys.send(&plan);
+}
+}
+}
+}
 pub struct Keyboard {
 tx: Option<SyncSender<KeyAction>>,
 }
@@ -500,6 +727,62 @@ return 0;
 let inputs: Vec<INPUT> = strokes.iter().map(|stroke| input(*stroke)).collect();
 let taken = unsafe { SendInput(&inputs, std::mem::size_of::<INPUT>() as i32) };
 taken as usize
+}
+}
+}
+"#;
+
+/// The Windows part of `src/pointer.rs` as it stands, comments and layout aside.
+const PINNED_POINTER: &str = r#"
+#[cfg(windows)]
+mod imp {
+use super::{Button, Mouse};
+use windows::Win32::UI::Input::KeyboardAndMouse::{
+SendInput, INPUT, INPUT_0, INPUT_MOUSE, MOUSEEVENTF_HWHEEL, MOUSEEVENTF_LEFTDOWN,
+MOUSEEVENTF_LEFTUP, MOUSEEVENTF_MOVE, MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP,
+MOUSEEVENTF_WHEEL, MOUSEINPUT, MOUSE_EVENT_FLAGS,
+};
+pub fn native() -> Option<Box<dyn Mouse>> {
+Some(Box::new(Windows))
+}
+struct Windows;
+fn send(flags: MOUSE_EVENT_FLAGS, dx: i32, dy: i32, data: i32) -> bool {
+let input = INPUT {
+r#type: INPUT_MOUSE,
+Anonymous: INPUT_0 {
+mi: MOUSEINPUT {
+dx,
+dy,
+mouseData: data as u32,
+dwFlags: flags,
+time: 0,
+dwExtraInfo: 0,
+},
+},
+};
+let taken = unsafe { SendInput(&[input], std::mem::size_of::<INPUT>() as i32) };
+taken == 1
+}
+impl Mouse for Windows {
+fn moved(&mut self, dx: i32, dy: i32) {
+send(MOUSEEVENTF_MOVE, dx, dy, 0);
+}
+fn button(&mut self, button: Button, down: bool) -> bool {
+let flags = match (button, down) {
+(Button::Left, true) => MOUSEEVENTF_LEFTDOWN,
+(Button::Left, false) => MOUSEEVENTF_LEFTUP,
+(Button::Right, true) => MOUSEEVENTF_RIGHTDOWN,
+(Button::Right, false) => MOUSEEVENTF_RIGHTUP,
+};
+send(flags, 0, 0, 0)
+}
+fn wheel(&mut self, horizontal: bool, amount: i32) {
+let flags = if horizontal {
+MOUSEEVENTF_HWHEEL
+} else {
+MOUSEEVENTF_WHEEL
+};
+send(flags, 0, 0, amount);
 }
 }
 }
