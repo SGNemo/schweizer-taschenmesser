@@ -410,8 +410,16 @@
   .trackAlbum {
     display: none;
   }
+  /* The cover takes the place of the row number, so the title keeps its width. */
   .trackMain {
-    grid-template-columns: 2rem 2rem minmax(0, 1fr);
+    grid-template-columns: 2rem minmax(0, 1fr);
+    padding: 0 var(--space-2);
+  }
+  .index {
+    display: none;
+  }
+  .head > span:first-child {
+    padding-left: calc(2rem + var(--space-2));
   }
   .bar {
     grid-template-columns: minmax(0, 1fr) auto;
