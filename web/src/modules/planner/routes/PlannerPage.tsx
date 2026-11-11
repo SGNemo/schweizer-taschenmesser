@@ -59,6 +59,8 @@ import styles from './planner.module.css';
 const SPAN = BOARD_DAYS;
 /** From this page width (rem) the seven columns stand side by side; below, one day per screen. */
 const WIDE_REM = 60;
+/** The week's bars while the board is read: seven empty tracks, the block's final size. */
+const EMPTY_WEEK: readonly number[] = Array.from({ length: SPAN }, () => 0);
 
 /** Device-local (`_meta`): the Monday of the week whose „Woche prüfen“ line was clicked away. */
 export const WEEK_CHECK_KEY = 'planner.weekCheck.dismissed';
@@ -606,13 +608,17 @@ export default function PlannerPage() {
           </div>
         )}
       </HeroSlot>
-      {board ? (
-        <HeroSlot area="signature">
-          <WeekBars
-            fill={board.days.map((d) => (d.usable > 0 ? Math.min(1, d.planned / d.usable) : 0))}
-          />
-        </HeroSlot>
-      ) : null}
+      {/* U01: the week's bars stand from the first render (empty until the board is read). Under a standard head
+          they are a row of the page, so a block that arrives with the board would push the entry row down. */}
+      <HeroSlot area="signature">
+        <WeekBars
+          fill={
+            board
+              ? board.days.map((d) => (d.usable > 0 ? Math.min(1, d.planned / d.usable) : 0))
+              : EMPTY_WEEK
+          }
+        />
+      </HeroSlot>
 
       {showWeekLink ? (
         <p className={styles.weekLink} data-testid="week-check-link">
