@@ -9,8 +9,10 @@ import { DESKTOP, MODULE_IDS, moduleRoutes, openPage, PHONE, startSeeded } from 
  * The module head of Identity 4.0 (UI audit 2026-11, package 0b-2, rule 2): one title row with the page's tabs at its
  * lower edge. On every module page of the seeded app the head is at most 120 px high on the desktop (title row +
  * tabs) and at most 144 px on the phone (title row + the one module row + tabs); a stage head (the modules whose
- * manifest says `head: 'stage'`: weather, music) may be up to 320 px and stays above the fold. Nothing in the head
+ * manifest says `head: 'stage'`: weather, music) may be up to 320 px and ends above the fold. Nothing in the head
  * runs past its edge, and on the phone the head holds no button of its own: the plus in the bottom bar is the entry.
+ * The title is never cut and the figure's number never ends in an ellipsis; its context line gives way first and is
+ * whole on the wide desktop. `identity.tabs` of the manifest matches whether the page has views.
  *
  * The pages come from the manifests (`guards.ts`), so a new module is measured without an edit here. The height is
  * the head's own box (`[data-testid="module-frame"]`); the notice above it (a weather hint) is not part of the head.
@@ -31,6 +33,8 @@ const SHOTS = process.env.HEAD_SHOTS;
 interface Head {
   variant: string | null;
   height: number;
+  /** Lower edge of the head in the window (a stage ends above the fold). */
+  bottom: number;
   /** Elements inside the head that reach past its box (wrapped or pushed out). */
   outside: string[];
   /** Buttons in the head (the phone's head has none; the tabs and the module row are navigation). */
@@ -73,6 +77,7 @@ function readHead(): Head | null {
   return {
     variant: head.getAttribute('data-head'),
     height: Math.round(box.height),
+    bottom: Math.round(box.bottom),
     outside,
     buttons,
     scrollWidth: document.documentElement.scrollWidth,
@@ -120,6 +125,10 @@ async function check(page: Page, phone: boolean, theme: string) {
     expect.soft(head.variant, `${path}: head variant`).toBe(stage ? 'stage' : 'standard');
     const limit = stage ? STAGE : phone ? STANDARD_PHONE : STANDARD_DESKTOP;
     expect.soft(head.height, `${path}: head height (limit ${limit} px)`).toBeLessThanOrEqual(limit);
+    if (stage)
+      expect
+        .soft(head.bottom, `${path}: the stage ends above the fold`)
+        .toBeLessThan((phone ? PHONE : DESKTOP).height);
     expect.soft(head.outside, `${path}: nothing in the head leaves its box`).toEqual([]);
     expect
       .soft(head.scrollWidth, `${path}: no sideways overflow`)
