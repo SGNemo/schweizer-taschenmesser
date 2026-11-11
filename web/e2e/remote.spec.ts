@@ -261,7 +261,7 @@ test('touchpad: a dismissed unlock keeps Medien and asks again only on "Entsperr
   await page.evaluate(() => window.__tmRemote.setUnlock('cancel'));
   await page.getByRole('button', { name: 'Touchpad' }).click();
   const state = page.getByTestId('remote-state');
-  await expect(state).toContainText('Maus und Tastatur brauchen einmal dein Entsperren.');
+  await expect(state).toContainText('Entsperre dieses Handy einmal, dann gehen Maus und Tastatur.');
   expect(await page.evaluate(() => window.__tmRemote.unlocks())).toBe(1);
   // Medien goes on meanwhile
   await page.getByRole('button', { name: 'Medien' }).click();
@@ -269,7 +269,7 @@ test('touchpad: a dismissed unlock keeps Medien and asks again only on "Entsperr
   await expect(page.getByTestId('remote-state')).toHaveText('Dein PC · Lautstärke 44 %');
   // back on the pad nothing asks by itself
   await page.getByRole('button', { name: 'Touchpad' }).click();
-  await expect(state).toContainText('Maus und Tastatur brauchen einmal dein Entsperren.');
+  await expect(state).toContainText('Entsperre dieses Handy einmal, dann gehen Maus und Tastatur.');
   expect(await page.evaluate(() => window.__tmRemote.unlocks())).toBe(1);
   await page.evaluate(() => window.__tmRemote.setUnlock('ok'));
   await page.getByTestId('remote-unlock').click();
@@ -315,6 +315,11 @@ test('touchpad: the strips reach the thumb zone upright, and sideways the pad fi
   expect(pad.height).toBeGreaterThan(130);
   expect(left.height).toBeGreaterThanOrEqual(44);
   expect(right.height).toBeGreaterThanOrEqual(44);
+  // the state line – a sentence and its step, when there is one – stays in sight beside the pad
+  const line = (await page.getByTestId('remote-state').boundingBox())!;
+  expect(line.x).toBeGreaterThan(pad.x + pad.width - 1);
+  expect(line.y).toBeGreaterThanOrEqual(0);
+  expect(line.y + line.height).toBeLessThanOrEqual(left.y + 1);
   // both strips and the whole pad are on the screen at once
   expect(right.y + right.height).toBeLessThanOrEqual(412);
   expect(pad.y + pad.height).toBeLessThanOrEqual(412);

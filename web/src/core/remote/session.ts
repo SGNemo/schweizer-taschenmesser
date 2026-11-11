@@ -402,6 +402,8 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
     const left = () => mine !== generation;
     if (view.kind !== 'connected') await open();
     if (left() || view.kind !== 'connected') return true;
+    // an unlock dismissed while this waited (an older try's prompt was still up) stands
+    if (!again && (pad.kind === 'unlock' || pad.kind === 'unavailable')) return true;
     if (level === 'full') {
       setPad({ kind: 'ready', noLock });
       return true;

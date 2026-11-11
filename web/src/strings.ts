@@ -8699,14 +8699,14 @@ export const de = {
     views: 'Ansicht',
     touchpad: 'Touchpad',
     pad: {
-      surface: 'Touchpad: wischen bewegt den Zeiger. Mit TalkBack gehen nur „Links“ und „Rechts“.',
+      surface: 'Touchpad: Wischen bewegt den Zeiger. Mit TalkBack gehen nur „Links“ und „Rechts“.',
       left: 'Links',
       right: 'Rechts',
       buttons: 'Maustasten',
       toMedia: 'Zu Medien',
       unlockStep: 'Entsperren',
       notGranted: 'Maus und Tastatur sind am PC für dieses Handy aus.',
-      unlock: 'Maus und Tastatur brauchen einmal dein Entsperren.',
+      unlock: 'Entsperre dieses Handy einmal, dann gehen Maus und Tastatur.',
       noLock: 'Dieses Handy hat keine Bildschirmsperre. Maus und Tastatur gehen ohne Entsperren.',
       unavailable:
         'Dieses Handy kann seine Bildschirmsperre für Nemo nicht abfragen. Maus und Tastatur gehen deshalb nicht – Medien schon.',

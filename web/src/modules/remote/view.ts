@@ -91,6 +91,8 @@ export function describePad(
     case 'unavailable':
       return { text: p.unavailable, step: 'media', live: false, waiting: false };
     case 'locked':
+      // the PC said so when it was asked; unlocked since, a touch asks again
+      if (!view.pc.locked) return { text: line.text, live: false, waiting: true };
       return { text: t.remote.state.locked, step: 'media', live: false, waiting: false };
     case 'ready':
       // the PC was locked meanwhile: the session stays, nothing moves

@@ -73,14 +73,22 @@ describe('the touchpad’s line', () => {
       live: false,
     });
     expect(describePad(connected, { kind: 'unlock' }, undefined)).toMatchObject({
-      text: 'Maus und Tastatur brauchen einmal dein Entsperren.',
+      text: 'Entsperre dieses Handy einmal, dann gehen Maus und Tastatur.',
       step: 'unlock',
       live: false,
     });
     expect(describePad(connected, { kind: 'unavailable' }, undefined).step).toBe('media');
-    expect(describePad(connected, { kind: 'locked' }, undefined)).toMatchObject({
+    const lockedPc: RemoteView = { kind: 'connected', pc: { ...pc, locked: true } };
+    expect(describePad(lockedPc, { kind: 'locked' }, undefined)).toMatchObject({
       text: 'PC ist gesperrt. Medien und Lautstärke gehen weiter.',
       step: 'media',
+      waiting: false,
+    });
+    // unlocked since it was asked: no stale sentence, a touch asks again
+    expect(describePad(connected, { kind: 'locked' }, undefined)).toMatchObject({
+      text: 'Dein PC · Lautstärke 42 %',
+      live: false,
+      waiting: true,
     });
     expect(describePad(connected, { kind: 'ready', noLock: false }, undefined)).toMatchObject({
       text: 'Dein PC · Lautstärke 42 %',
@@ -153,7 +161,7 @@ describe('page Touchpad', () => {
     fake.parts.hooks.setUnlock('cancel');
     await showPad();
     await until(() => fake.parts.hooks.unlocks() === 1);
-    expect(state()).toContain('Maus und Tastatur brauchen einmal dein Entsperren.');
+    expect(state()).toContain('Entsperre dieses Handy einmal, dann gehen Maus und Tastatur.');
     finger('pointerdown', 10, 10);
     finger('pointerup', 10, 10);
     await wait(1200);
@@ -200,6 +208,37 @@ describe('page Touchpad', () => {
     finger('pointermove', 120, 100);
     await wait(0);
     expect(fake.parts.hooks.pointed().at(-1)).toEqual({ kind: 'move', dx: 20, dy: 0 });
+  });
+
+  it('after a dismissed unlock and a lost session a touch connects again and offers "Entsperren"', async () => {
+    fake.parts.hooks.setGrant('full', true);
+    fake.parts.hooks.setUnlock('cancel');
+    await showPad();
+    await until(() => fake.parts.hooks.unlocks() === 1);
+    await act(async () => fake.parts.hooks.close());
+    expect(screen.queryByTestId('remote-unlock')).toBeNull();
+    // the strips do what the pad does while it waits (the way in for TalkBack)
+    fireEvent.click(screen.getByTestId('remote-strip-left'), { detail: 0 });
+    await until(() => fake.parts.hooks.isOpen());
+    expect(screen.getByTestId('remote-unlock')).toBeTruthy();
+    // connected again, nothing asked and nothing sent by that press
+    expect(fake.parts.hooks.unlocks()).toBe(1);
+    expect(fake.parts.hooks.sent()).toEqual([]);
+    // (the dismissal outlives the page – it is the app's one session: settle it for the next test)
+    fake.parts.hooks.setUnlock('ok');
+    fireEvent.click(screen.getByTestId('remote-unlock'));
+    await until(() => fake.parts.hooks.level() === 'full');
+  });
+
+  it('a PC that was locked when asked and is unlocked now: the pad waits for a touch, it does not say locked', async () => {
+    fake.parts.hooks.setGrant('full');
+    fake.parts.hooks.setState({ locked: true });
+    await showPad();
+    expect(state()).toContain('PC ist gesperrt.');
+    await act(async () => fake.parts.hooks.setState({ locked: false }));
+    await until(() => fake.parts.hooks.level() === 'full');
+    expect(state()).not.toContain('gesperrt');
+    expect(surface().getAttribute('data-live')).toBe('true');
   });
 
   it('the PC is locked while "Links" is held: the button is let go at once', async () => {

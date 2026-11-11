@@ -107,7 +107,10 @@ export default function RemotePage() {
           { value: 'media', label: r.media },
           { value: 'touchpad', label: r.touchpad },
         ]}
-        onChange={setTab}
+        onChange={(next) => {
+          setTab(next);
+          setLegendAgain(false);
+        }}
       />
 
       {tab === 'touchpad' ? (
@@ -117,7 +120,8 @@ export default function RemotePage() {
           speed={PAD_SPEED[padSpeed]}
           tick={tick}
           // (not before the stored answer is read: a closed legend must not flash up)
-          legend={legendAgain || (prefs !== undefined && !padLegendSeen)}
+          legend={prefs !== undefined && !padLegendSeen}
+          legendAsked={legendAgain}
           onLegendClose={() => {
             setLegendAgain(false);
             if (!padLegendSeen) void setPrefs({ padLegendSeen: true });
