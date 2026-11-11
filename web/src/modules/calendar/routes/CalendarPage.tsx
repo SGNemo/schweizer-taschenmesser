@@ -1,5 +1,6 @@
 import { NowStrip } from '@/core/modules/NowStrip';
 import { PersonFilter, usePersonFilter } from '@/core/people/PersonFilter';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useCalendarItems } from '@/core/modules/contributions';
@@ -35,6 +36,7 @@ import { ExternalDetail } from '../components/ExternalDetail';
 import { NextEventLine } from '../components/NextEventLine';
 import { RemindersTab } from '../components/RemindersTab';
 import { DayView, MonthView, WeekView } from '../components/Views';
+import { isReminder } from '../reminders';
 import { eventRepo } from '../repo';
 import { settings } from '../settings';
 import {
@@ -83,6 +85,11 @@ export default function CalendarPage() {
   const advancedItem = useAdvancedMenuItem('calendar');
   const advanced = advancedItem.checked === true;
   const weekStart = useWeekStart();
+  // An empty reminders tab: its empty state owns the filled button, the head's action steps back.
+  const noReminders = useLiveQuery(
+    async () => !(await eventRepo.active().toArray()).some(isReminder),
+    [],
+  );
   const plannerOn = useModuleStates()?.planner === true;
 
   const rawView = params.get('view');
@@ -184,7 +191,11 @@ export default function CalendarPage() {
       <>
         {/* Phone: the "⋯" menu lies beside the tab's first row (the time ring's line or the empty state). */}
         <PageHeader title={t.calendar.title} views={tabs} besideContent>
-          <PageAction short={t.calendar.reminders.short} onClick={() => setNew(true)}>
+          <PageAction
+            short={t.calendar.reminders.short}
+            variant={noReminders ? 'secondary' : 'primary'}
+            onClick={() => setNew(true)}
+          >
             <Icon name="plus" size={18} />
             {t.calendar.reminders.add}
           </PageAction>

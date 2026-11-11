@@ -318,6 +318,14 @@
   min-height: var(--touch);
   padding-inline-end: calc(var(--touch) + var(--space-2));
 }
+/* An empty view with nothing for today: the row is only the room beside the phone's menu, and nothing on a wide page. */
+.todayCard[data-quiet='true'] {
+  background: none;
+  margin-bottom: 0;
+}
+.todayCard[data-quiet='true']:not([data-narrow='true']) {
+  display: none;
+}
 /* Subtasks are indented rows of the same surface: no surface of their own inside a row (two tone levels at most). */
 .main [data-list-surface] [data-list-surface] {
   background: none;

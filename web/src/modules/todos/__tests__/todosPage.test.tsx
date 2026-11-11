@@ -183,7 +183,6 @@ describe('ToDos add dialog from a link (`?new=1&title=…`)', () => {
     const dialog = await screen.findByRole('dialog', { name: 'Neue Aufgabe' });
     const field = within(dialog).getByRole('textbox', { name: 'Titel' });
     expect(field).toHaveValue('Blumen gießen');
-    // The inbox exists (see `beforeEach`): the button waits for it and is ready now.
     const save = within(dialog).getByRole('button', { name: 'Hinzufügen' });
     await waitFor(() => expect(save).toBeEnabled());
     await userEvent.click(save);
@@ -195,11 +194,53 @@ describe('ToDos add dialog from a link (`?new=1&title=…`)', () => {
     expect(await taskRepo.active().count()).toBe(1);
   });
 
-  it('"Abbrechen" is the explicit way out: nothing is saved', async () => {
+  it('"Abbrechen" is the explicit way out: the dialog closes without a question and nothing is saved', async () => {
     draw('/todos?new=1&title=Nicht%20verlieren');
     const dialog = await screen.findByRole('dialog', { name: 'Neue Aufgabe' });
     await userEvent.click(within(dialog).getByRole('button', { name: 'Abbrechen' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.queryByRole('alertdialog')).toBeNull();
     expect(await taskRepo.active().count()).toBe(0);
+  });
+
+  it('Escape asks before a shared title is dropped, and "Weiter bearbeiten" keeps it', async () => {
+    draw('/todos?new=1&title=Nicht%20verlieren');
+    const dialog = await screen.findByRole('dialog', { name: 'Neue Aufgabe' });
+    const field = within(dialog).getByRole('textbox', { name: 'Titel' });
+    expect(field).toHaveValue('Nicht verlieren');
+    // Esc reaches the dialog as the native `cancel` event (jsdom does not raise it by itself).
+    fireEvent(document.querySelector('dialog')!, new Event('cancel', { cancelable: true }));
+    const question = await screen.findByRole('alertdialog');
+    await userEvent.click(within(question).getByRole('button', { name: 'Weiter bearbeiten' }));
+    expect(within(dialog).getByRole('textbox', { name: 'Titel' })).toHaveValue('Nicht verlieren');
+    expect(await taskRepo.active().count()).toBe(0);
+  });
+
+  it('waits for the inbox: without a list the button is disabled, then it saves', async () => {
+    await db.table('todos_list').clear();
+    draw('/todos?new=1&title=Erste');
+    const dialog = await screen.findByRole('dialog', { name: 'Neue Aufgabe' });
+    // The page creates the inbox right after it has read the (empty) lists; then saving is possible.
+    const save = within(dialog).getByRole('button', { name: 'Hinzufügen' });
+    await waitFor(() => expect(save).toBeEnabled());
+    await userEvent.click(save);
+    await waitFor(async () =>
+      expect((await taskRepo.active().toArray()).map((x) => x.title)).toEqual(['Erste']),
+    );
+  });
+
+  it('an empty view keeps the head figure and the next task of today; only an empty day stays silent', async () => {
+    await taskRepo.create({ ...base, title: 'Heute fällig', dueDate: '2026-11-03' });
+    const first = draw('/todos?view=someday');
+    await screen.findByTestId('todos-empty');
+    expect(screen.getByTestId('today-card')).toHaveTextContent('Heute fällig');
+    first.unmount();
+    await db.table('todos_task').clear();
+    draw('/todos');
+    await screen.findByTestId('todos-empty');
+    expect(screen.getByTestId('today-card')).not.toHaveTextContent(
+      'Für heute ist nichts eingetragen.',
+    );
   });
 });
 

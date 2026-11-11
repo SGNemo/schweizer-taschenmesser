@@ -17,7 +17,7 @@ export const todos: Strings['todos'] = {
   newTask: 'New task',
   addShort: 'Task',
   addPlaceholder: 'New task …',
-  addHint: 'You can add a date and a duration in the title, in German, for example “morgen 15 min”.',
+  addHint: 'You can add a date and a duration in German, for example “morgen 15 min”.',
   markedDone: 'Marked as done.',
   markedOpen: 'Reopened.',
   taskDeleted: 'To-do deleted.',

@@ -388,9 +388,7 @@ function Form({
         )}
         <PersonField value={personId} onChange={setPersonId} />
         {reminder ? null : !allDay && startTime ? (
-          /* The remembered lead is applied once, by the effect above: the row never applies it again when it
-             mounts (after "Mehr Felder", or when "Ganztägig" is switched off again). */
-          <LeadRow value={notifyChoice} onChange={setNotifyChoice} isNew={false} />
+          <LeadRow value={notifyChoice} onChange={setNotifyChoice} />
         ) : (
           <SelectField
             label={t.calendar.notify.label}

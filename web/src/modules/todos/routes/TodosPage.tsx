@@ -688,21 +688,20 @@ export default function TodosPage() {
       </PageHeader>
 
       {/* The first row of the page: what is next today. On the phone the page's "⋯" menu lies beside it
-          (`besideContent`), so the row is always there and keeps its height while the tasks load. */}
-      {/* An empty view says it once, in its empty state below (B6). */}
-      {isEmpty ? null : (
-        <TodayCard
-          tasks={tasks}
-          day={day}
-          focusMinutes={focus.focusMinutes}
-          planner={plannerOn}
-          onStart={(x) => void startFocus(x.id)}
-          onLater={(x) => {
-            const full = tasks?.find((y) => y.id === x.id);
-            if (full) postpone(full, day);
-          }}
-        />
-      )}
+          (`besideContent`), so the row is always there and keeps its height while the tasks load. An empty view
+          says "nothing" once, in its empty state: the row then keeps only its room (`quiet`). */}
+      <TodayCard
+        tasks={tasks}
+        day={day}
+        focusMinutes={focus.focusMinutes}
+        planner={plannerOn}
+        quiet={isEmpty}
+        onStart={(x) => void startFocus(x.id)}
+        onLater={(x) => {
+          const full = tasks?.find((y) => y.id === x.id);
+          if (full) postpone(full, day);
+        }}
+      />
 
       {selected !== ALL ? (
         <p className={styles.filterNote} data-testid="todos-filter">

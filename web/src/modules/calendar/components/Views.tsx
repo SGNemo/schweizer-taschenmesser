@@ -173,7 +173,7 @@ export function MonthView({ date, items, onPickDay, onOpenItem, holidays }: View
                               <button
                                 type="button"
                                 className={`${styles.line} ${i.kind === 'event' && !repeats.has(repeatKey(i)) ? styles.lineOwn : ''} ${repeats.has(repeatKey(i)) ? styles.lineRepeat : ''} ${i.done ? styles.done : ''}`}
-                                title={`${about}: ${i.title}`}
+                                title={`${i.title}, ${about}`}
                                 style={
                                   i.color ? ({ '--cal': i.color } as CSSProperties) : undefined
                                 }

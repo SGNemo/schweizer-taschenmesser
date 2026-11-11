@@ -34,6 +34,7 @@ export function TodayCard({
   onStart,
   onLater,
   planner = false,
+  quiet = false,
 }: {
   /** `undefined` while the tasks are read. */
   tasks: readonly CardTask[] | undefined;
@@ -45,6 +46,8 @@ export function TodayCard({
   onLater?: (task: CardTask) => void;
   /** The planner module is on: it counts what the plan counts (a later plan day wins over an older due date, N02). */
   planner?: boolean;
+  /** The view below is empty and says so itself: without a next task the row keeps only its room, no sentence. */
+  quiet?: boolean;
 }) {
   // C22/F15: a narrow page (phone) keeps the task title on one line and both buttons; the label and the estimate
   // step back. The page container decides, not the window.
@@ -85,6 +88,7 @@ export function TodayCard({
       <div
         className={styles.todayCard}
         data-testid="today-card"
+        data-quiet={loaded && !next && quiet ? 'true' : undefined}
         data-narrow={narrow ? 'true' : undefined}
       >
         <div className={styles.nextTask}>
@@ -101,6 +105,8 @@ export function TodayCard({
               </strong>
               {detail && !narrow ? <span className={styles.nextDetail}>{detail}</span> : null}
             </>
+          ) : quiet ? (
+            <span aria-hidden="true">{'\u00a0'}</span>
           ) : (
             <span className={styles.nextTitle}>{detail}</span>
           )}

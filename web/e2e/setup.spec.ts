@@ -91,8 +91,8 @@ test('an existing installation never shows the assistant by itself, but it start
 }) => {
   await ready(page, '/todos');
   // Give the app some data, then let the start migration run again as if this were an update.
-  // On a fresh database the inbox list is created right after the page shows; until then the
-  // add button is disabled and Enter is a silent no-op, so wait for it before typing.
+  // On a fresh database the inbox list is created right after the page shows; until then the page's action
+  // (the plus on the phone) is disabled, and the click below waits for it.
   await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
   await page.getByRole('dialog').getByLabel('Titel').fill('Erfundene Aufgabe');
   await page.keyboard.press('Enter');

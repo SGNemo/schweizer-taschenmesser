@@ -15,65 +15,56 @@ export function AddTaskDialog({
   onClose,
 }: {
   open: boolean;
-  /** False until there is a list to add to (a fresh installation creates its inbox first): saving waits for it. */
-  ready?: boolean;
   /** A shared title (`/todos?new=1&title=…`). */
   initialTitle?: string;
+  /** False until there is a list to add to (a fresh installation creates its inbox first): saving waits for it. */
+  ready?: boolean;
   /** Saves the task; the dialog closes once it has settled. */
   onAdd: (title: string) => Promise<unknown>;
   onClose: () => void;
 }) {
+  // A new opening, or another shared title, starts with that title.
+  const session = open ? initialTitle : null;
+  const [seen, setSeen] = useState<string | null>(null);
+  const [title, setTitle] = useState(initialTitle);
+  if (session !== seen) {
+    setSeen(session);
+    setTitle(initialTitle);
+  }
   return (
-    // A typed or shared title is never dropped without a question (Esc, a tap beside the sheet, Back).
+    // Text in the field, typed or shared, is never dropped without a question (Esc, a tap beside the sheet,
+    // Back); an empty field closes at once. Saving and "Abbrechen" are explicit and close directly.
     <Dialog
       open={open}
       onClose={onClose}
       title={t.todos.newTask}
-      askAfterTyping
-      dirty={open && initialTitle.trim() !== ''}
+      dirty={open && title.trim() !== ''}
     >
       {open ? (
-        <Body initialTitle={initialTitle} ready={ready} onAdd={onAdd} onClose={onClose} />
+        <Form
+          onSubmit={async () => {
+            if (!title.trim() || !ready) return;
+            await onAdd(title);
+            onClose();
+          }}
+        >
+          <TextField
+            label={t.form.title}
+            placeholder={t.todos.addPlaceholder}
+            hint={t.todos.addHint}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+            data-autofocus
+          />
+          <FormActions>
+            <Button onClick={onClose}>{t.actions.cancel}</Button>
+            <Button type="submit" variant="primary" disabled={!ready}>
+              {t.actions.add}
+            </Button>
+          </FormActions>
+        </Form>
       ) : null}
     </Dialog>
-  );
-}
-
-function Body({
-  initialTitle,
-  ready,
-  onAdd,
-  onClose,
-}: {
-  initialTitle: string;
-  ready: boolean;
-  onAdd: (title: string) => Promise<unknown>;
-  onClose: () => void;
-}) {
-  const [title, setTitle] = useState(initialTitle);
-  return (
-    <Form
-      onSubmit={async () => {
-        if (!title.trim() || !ready) return;
-        await onAdd(title);
-        onClose();
-      }}
-    >
-      <TextField
-        label={t.form.title}
-        placeholder={t.todos.addPlaceholder}
-        hint={t.todos.addHint}
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        required
-        data-autofocus
-      />
-      <FormActions>
-        <Button onClick={onClose}>{t.actions.cancel}</Button>
-        <Button type="submit" variant="primary" disabled={!ready}>
-          {t.actions.add}
-        </Button>
-      </FormActions>
-    </Form>
   );
 }
