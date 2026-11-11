@@ -229,11 +229,19 @@ test.describe('UI round 6 – empty app 1920', () => {
     await start(page, '/');
     const empty = page.locator('[data-testid="home-grid"] > [data-empty]');
     await expect(empty.first()).toBeVisible();
-    const heights = await empty.evaluateAll((els) =>
-      els.map((e) => [e.getAttribute('data-testid'), Math.round(e.getBoundingClientRect().height)]),
-    );
-    expect(heights.length).toBeGreaterThan(3);
-    expect(heights.filter(([, h]) => Number(h) > 160)).toEqual([]);
+    // The widgets load one by one after the page: until a card has swapped its skeleton for the empty state it keeps
+    // its size class's height, and the grid marks it `data-empty` one frame after the swap. Measure the settled grid.
+    await expect(page.locator('[data-testid="home-grid"] [class*="skeleton"]')).toHaveCount(0);
+    const tall = async () => {
+      const heights = await empty.evaluateAll((els) =>
+        els.map((e) => [
+          e.getAttribute('data-testid'),
+          Math.round(e.getBoundingClientRect().height),
+        ]),
+      );
+      return { many: heights.length > 3, tall: heights.filter(([, h]) => Number(h) > 160) };
+    };
+    await expect.poll(tall).toEqual({ many: true, tall: [] });
   });
 });
 
