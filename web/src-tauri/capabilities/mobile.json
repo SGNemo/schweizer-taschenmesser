@@ -8,6 +8,7 @@
     "lan-watch:default",
     "allow-remote-client-open",
     "allow-remote-client-send",
+    "allow-remote-client-pointer",
     "allow-remote-client-close"
   ]
 }

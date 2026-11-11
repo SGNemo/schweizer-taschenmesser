@@ -2,10 +2,10 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  /* Fill the screen below the page head (about 14rem: top bar, module head, menu row) and above the
+  /* Fill the screen below the page head (about 15rem: top bar, module head, menu row, tabs) and above the
      bottom bar, so the buttons – pushed down by `margin-top: auto` – end up in the thumb zone. A
      short or landscape screen simply gets the natural height. */
-  min-height: calc(100dvh - 14rem - var(--bottom-nav-h) - env(safe-area-inset-bottom, 0px));
+  min-height: calc(100dvh - 15rem - var(--bottom-nav-h) - env(safe-area-inset-bottom, 0px));
 }
 .state {
   display: flex;
@@ -72,7 +72,133 @@
   background: var(--accent);
   color: var(--accent-contrast);
 }
+/* Touchpad: the surface takes what is left of the screen, the two strips sit below it in the
+   thumb zone – above the bottom bar and the system's gesture zone. */
+.touch {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.surface {
+  flex: 1;
+  min-height: calc(var(--touch) * 4);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+  /* the pad owns every touch: no scrolling, no zoom, no text selection under the finger */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* Not usable right now: flat and outlined, like an inactive key. */
+.still {
+  border-style: dashed;
+  background: transparent;
+}
+.strips {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  /* (the layout keeps its own room above the bottom bar and the system's gesture zone) */
+}
+.strip {
+  min-height: calc(var(--touch) * 1.5);
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.strip:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.strip:disabled {
+  border: 1px dashed var(--border-strong);
+  background: transparent;
+  color: var(--text-muted);
+}
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+}
+.legendTitle {
+  margin: 0;
+  font-weight: var(--weight-semibold);
+}
+.legendList {
+  margin: 0;
+  padding-left: var(--space-5);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+/* Sideways on a phone: the pad and the strips side by side, as tall as the screen leaves below
+   the head that stays in place (about 11rem) – scrolled into view both are fully visible. The
+   legend would take the whole height: it waits for upright. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .touch {
+    display: grid;
+    /* the pad on the left over the whole height; beside it the state line – the sentence and its
+       step stay in sight while the pad is used – and the strips below it */
+    grid-template-columns: 1fr minmax(11rem, 30%);
+    grid-template-rows: auto 1fr;
+    column-gap: var(--space-3);
+  }
+  .touchState {
+    grid-row: 1;
+    grid-column: 2;
+    padding: var(--space-3);
+  }
+  /* asked for from the menu: on top, everything else one row down – only while it is there */
+  .legend {
+    grid-row: 1;
+    grid-column: 1 / -1;
+  }
+  .touch:has(> .legend:not(.touchLegend)) {
+    grid-template-rows: auto auto 1fr;
+  }
+  .touch:has(> .legend:not(.touchLegend)) .touchState {
+    grid-row: 2;
+  }
+  .touch:has(> .legend:not(.touchLegend)) .surface {
+    grid-row: 2 / span 2;
+  }
+  .touch:has(> .legend:not(.touchLegend)) .strips {
+    grid-row: 3;
+  }
+  .surface {
+    grid-row: 1 / span 2;
+    grid-column: 1;
+  }
+  .strips {
+    grid-row: 2;
+    grid-column: 2;
+  }
+  .touchLegend {
+    display: none;
+  }
+  .surface {
+    min-height: max(calc(var(--touch) * 3), calc(100dvh - 11rem));
+  }
+  .strips {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+  .strip {
+    min-height: var(--touch);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
+  .strip:active:not(:disabled) {
+    transform: none;
+  }
   .key:active:not(:disabled) {
     transform: none;
   }

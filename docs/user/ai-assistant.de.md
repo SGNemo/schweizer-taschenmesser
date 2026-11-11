@@ -5,6 +5,7 @@
 ## Suche und KI-Assistent
 
 Strg+K (Handy: das Suchfeld oben) öffnet die Suche: springen, in allen Modulen suchen und Fragen stellen.
+Freien Text, der keine Frage ist, übergibt Enter an „Schnell hinzufügen“; mit „?“ am Anfang oder Ende stellst du ihn als Frage.
 
 - **Lokal, ohne Kosten:** einfache Fragen versteht die App selbst – „Was steht heute an?“, „Termine morgen“, „offene Rechnungen“,
   „überfällige Aufgaben“, „Kontostand“, „Was kosten meine Abos?“, „Wie viel muss ich noch bezahlen?“, „suche Zahnarzt“.
