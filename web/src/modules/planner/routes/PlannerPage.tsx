@@ -606,13 +606,24 @@ export default function PlannerPage() {
           </div>
         )}
       </HeroSlot>
-      {board ? (
-        <HeroSlot area="signature">
+      {/* U01: under a standard head the signature lies in the page above the entry row (`AreaFrame` `.below`, hidden
+          while empty), and the frame's figure hold covers only a stage. Until the board is read the page holds the
+          bars' room itself, unseen; without it the entry row moved down by that room when the board arrived. */}
+      <HeroSlot area="signature">
+        {board ? (
           <WeekBars
             fill={board.days.map((d) => (d.usable > 0 ? Math.min(1, d.planned / d.usable) : 0))}
           />
-        </HeroSlot>
-      ) : null}
+        ) : (
+          <div
+            className={styles.headPending}
+            aria-hidden="true"
+            data-testid="planner-signature-pending"
+          >
+            <WeekBars fill={[]} />
+          </div>
+        )}
+      </HeroSlot>
 
       {showWeekLink ? (
         <p className={styles.weekLink} data-testid="week-check-link">
