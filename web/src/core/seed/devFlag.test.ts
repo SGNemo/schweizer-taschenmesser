@@ -17,6 +17,7 @@ const MARKERS = [
   'Komponentenblatt', // component sheet (pages/ComponentSheet, strings.dev.ts)
   'supporter.simulate', // dev supporter status key (core/supporter/devSupporter.ts)
   'Supporter-Status simulieren', // dev settings text (strings.dev.ts)
+  'nemo-remote-latency', // remote control latency probe (pages/settings/remoteLatencyStats.ts)
 ];
 
 // Must not ship in ANY of these builds: the public test key only exists in the E2E build.

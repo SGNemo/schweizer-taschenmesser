@@ -99,6 +99,29 @@ Goal for **our part**: pointer event in the page → input applied on the PC in 
 
 No timer on the phone: the WebView delivers pointer moves at most once per display frame, so **each pointer event is sent at once** (its coalesced moves summed into one record) – one `invoke` and one network frame per display frame, without the waiting time a bundling timer adds (prototype row 3). Only while a write is still pending do moves keep summing (latest position wins, nothing queues up); clicks and keys are never merged or dropped by the phone.
 
+### Measurement on a real phone (package 3, before the touchpad page)
+
+Tool: Dev-Preview build on the phone → Einstellungen → Entwickler → „Fernbedienung: Latenz messen“ (`pages/settings/RemoteLatencyProbe.tsx`; absent from every other build). It measures what the phone can measure alone, and nothing acts on the PC.
+
+**The question it answers is one: WebView or touch capture in the Kotlin plugin** – so it judges the `invoke`, not a total. Either way crosses the same Wi-Fi.
+
+- **invoke** – one call per pointer event while a finger is down, page → shell → page: `send` for a session number that is never open. The shell goes the way of a real send (command, worker thread, session lookup) and answers `closed` right before it would seal and write. A round trip, so it overstates the one direction a real move needs.
+- **invoke budget** – what that call may cost at p95: the goal (30 ms) − one trip to the PC (estimated) − 1 ms on the PC. The tool says "fits", "close" (up to 3 ms over: measure again and try by hand, not the fallback) or "too expensive". No verdict below a hundred calls (a p95 of a handful is just the slowest one). Three leanings: the trip estimate is too high, so the budget is too small – by about 3 ms, an assumption, not a measurement; the measured invoke is a round trip where a move needs one direction (both make the verdict stricter); and it is the best trip held against a p95, which makes the budget more generous.
+- **trip, at best (estimate)** – the fastest of up to five opens of a media session ÷ 6 (an open is three exchanges: TCP, handshake, `open`/`opened`). Too high rather than too low: every open also reads two keys from the phone's key store and does the key agreement on both sides, which can add as much per "trip" as the trip itself. The first open of a run that comes about is the warm-up (keys, Wi-Fi waking up, the PC's state read may wait up to 150 ms) and is not counted.
+- **spread** – p95 − p50 of those opens: how calm the Wi-Fi is right now. Shown on its own, never divided into a per-trip number.
+- **input** – the pointer event's own time stamp → handler: Android, the WebView and the wait for the next display frame, which "send per event" inherits. **events/s** = events the page was handed (about the display rate) = calls the page would make. **overlap** = events that arrived while the previous call was still running (then moves are summed).
+
+Not measured, and left to the touchpad hand test: seal and write on the phone (< 1 ms in the prototype – on one host; a real write blocks while the socket buffer is full, so on bad Wi-Fi the wait becomes per-event latency), `SendInput` on the PC, and the finger-to-pointer feeling as a whole.
+
+Measure twice: near the router and at the far end of the flat. **The run near the router decides**; the far-end run only shows what the Wi-Fi adds (trip, spread) and its verdict does not count.
+
+| Phone, Android, display Hz | Where | invoke p50 / p95 / max ms | invoke budget ms → verdict | events/s | overlap % | input p50 / p95 ms | open p50 / p95 ms | trip ≈ ms | spread ms | Date |
+|---|---|---|---|---|---|---|---|---|---|---|
+| _to be measured_ | near the router | | | | | | | | | |
+| | far end | | | | | | | | | |
+
+Reading (near the router): "fits" → the page sends per pointer event through the WebView as designed. "too expensive" → touch capture moves into the Kotlin plugin (fallback of package 3). "close" → measure again; if it stays close, build the page on the WebView path and let the hand test decide. A large spread or a high trip is the Wi-Fi, not the design, and no reason for the fallback.
+
 ### Prototype measurement
 
 `node docs/design/remote-control/proto/run.mjs` (Node ≥ 20, no install): two processes, the PC side and the phone side, over the interface address, with the Noise-_like_ channel of the sync prototype (**not** Noise; the product uses `snow`). The phone generates touchpad moves, the PC measures _event created → applied_ on the shared monotonic clock and "applies" to a virtual cursor (nothing is injected into the OS). Measured 2026-11-10, container, both processes on one host (not real Wi-Fi), 5 rounds × 3 s per variant, Node v22.23.4, Xeon 2.1 GHz:
