@@ -496,7 +496,17 @@ fn the_hub_wires_remote_control_and_drops_it_on_stop() {
     let lan = source("lan_sync.rs");
     assert_eq!(lan.matches(".with_input(").count(), 1);
     assert_eq!(lan.matches("crate::remote::attach(").count(), 1);
-    assert_eq!(lan.matches("crate::remote::detach(").count(), 1);
+    // on stop, and when a start fails after the controls were attached
+    assert_eq!(lan.matches("crate::remote::detach(").count(), 2);
+    // the PC's controls are reachable before the supervisor thread exists, i.e. before anything
+    // can listen
+    let start = &lan[lan.find("pub fn lan_hub_start(").unwrap()..];
+    let start = &start[..start.find("\n}\n").unwrap()];
+    assert!(
+        start.find("crate::remote::attach(").unwrap() < start.find(".spawn(").unwrap(),
+        "attach comes before the supervisor thread"
+    );
+    assert!(start.find("crate::remote::attach(").unwrap() < start.find("core.round()").unwrap());
     let stop = &lan[lan.find("pub fn lan_hub_stop(").unwrap()..];
     let stop = &stop[..stop.find("\n}\n").unwrap()];
     // sessions are closed before the controls and the tray indicator go

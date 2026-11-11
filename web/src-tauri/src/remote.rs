@@ -136,8 +136,18 @@ impl MasterSwitch for ClosedSwitch {
 
 /// The remote-control parts of a hub: its controls and its sink. The switch file sits next to the
 /// trust list; an unreadable one keeps remote control off (fail closed).
-pub fn parts(dir: &Path, trust: Arc<FileTrustStore>) -> (Arc<Remote>, Arc<Sink>) {
+///
+/// What was taken away at this PC earlier in this run is put onto the fresh controls **here**,
+/// before anything can listen with them: a hub that is stopped and started reads switch and
+/// grants from disk again, and a narrowing whose write failed must not be open for the moment
+/// between "listening" and "attached".
+pub fn parts(
+    dir: &Path,
+    trust: Arc<FileTrustStore>,
+    host: &RemoteHost,
+) -> (Arc<Remote>, Arc<Sink>) {
     let remote = Arc::new(Remote::new(trust, switch_at(&dir.join("remote.json"))));
+    host.narrowed(|n| n.apply(&remote));
     (remote, Arc::new(Sink::start()))
 }
 
@@ -322,8 +332,6 @@ pub fn attach(app: &AppHandle, remote: Arc<Remote>, trust: Arc<FileTrustStore>, 
     let Ok(mut slot) = host.slot.lock() else {
         return;
     };
-    // what was taken away earlier in this run holds for the freshly loaded controls too
-    host.narrowed(|n| n.apply(&remote));
     // a new hub counts its mouse/keyboard sessions from zero; whom a notice was shown for is kept
     host.notices
         .lock()
@@ -1074,6 +1082,51 @@ mod tests {
             },
             &media
         ));
+    }
+
+    #[test]
+    fn fresh_controls_are_narrowed_before_anything_can_listen_with_them() {
+        let dir = std::env::temp_dir().join(format!("nemo-remote-parts-{}", std::process::id()));
+        // a leftover of an earlier run with the same process id must not be read
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let trust = Arc::new(FileTrustStore::open(&dir.join("trust.json")).unwrap());
+        let key = PublicKey::from_bytes([9; 32]);
+        trust
+            .add(::lan_sync::trust::Device {
+                key,
+                name: "Handy".into(),
+                last_seen: None,
+                revoked: false,
+            })
+            .unwrap();
+        let full = RemoteGrant {
+            level: Level::Full,
+            paused: false,
+            unlock: true,
+        };
+        trust.set_remote(&key, full).unwrap();
+        // on disk: switch on, device granted – as if the earlier narrowing had not been written
+        FileSwitch::open(&dir.join("remote.json"))
+            .unwrap()
+            .set(true)
+            .unwrap();
+        let host = RemoteHost::default();
+        host.narrowed(|n| {
+            n.off = true;
+            n.keep(
+                &key,
+                RemoteGrant {
+                    paused: true,
+                    ..full
+                },
+            );
+        });
+        // what `build` hands to the router is already narrowed: there is no moment in between
+        let (remote, _sink) = parts(&dir, trust, &host);
+        assert!(!remote.enabled());
+        assert!(remote.grant_of(&key).paused);
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]
