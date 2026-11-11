@@ -7,7 +7,16 @@ import { localZone } from '@/core/time/placeSearch';
 import { useMinuteNow } from '@/core/time/useMinuteNow';
 import { changeWithUndo, undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { Button, EmptyState, Icon, PageHeader, RowMenu, SortableList, useOpenParam } from '@/ui';
+import {
+  Button,
+  EmptyState,
+  Icon,
+  PageAction,
+  PageHeader,
+  RowMenu,
+  SortableList,
+  useOpenParam,
+} from '@/ui';
 import { HeroFigure, HeroSlot } from '@/ui/identity';
 import { AddPlaceDialog } from '../components/AddPlaceDialog';
 import { RenameDialog } from '../components/RenameDialog';
@@ -58,14 +67,15 @@ export default function ClockPage() {
   return (
     <>
       <PageHeader title={t.clock.title}>
-        <Button
+        <PageAction
+          short={t.nav.plusThings.place}
           variant={places && list.length === 0 ? 'secondary' : 'primary'}
           onClick={() => setAdding(true)}
           disabled={full}
         >
           <Icon name="plus" size={18} />
           {t.clock.add}
-        </Button>
+        </PageAction>
       </PageHeader>
       <HeroSlot area="figure">
         <HeroFigure

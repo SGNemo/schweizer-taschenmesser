@@ -17,7 +17,9 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
-  min-width: var(--touch);
+  /* Five equal slots; a long label ends in an ellipsis instead of widening its slot. */
+  min-width: 0;
+  padding: 0 var(--space-1);
   font: inherit;
   font-size: var(--text-xs);
   color: var(--text-muted);
@@ -42,6 +44,40 @@
 }
 .link[aria-current='page'] > svg {
   color: var(--area-color, var(--accent));
+}
+.label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The plus in the middle (Identity 4.0, rule 4): the one filled action of a phone screen, in the thumb zone. On a
+   module page it is the module's action, on the overview the quick capture; the text under it says which. */
+.add {
+  color: var(--text);
+  font-weight: var(--weight-semibold);
+}
+.plus {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-top: -0.875rem;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: var(--accent-contrast);
+}
+.add:active .plus {
+  transform: scale(0.96);
+}
+/* Disabled is a state of its own (AE1): sunken and grey, never faded. */
+.add:disabled {
+  color: var(--text-3);
+  cursor: default;
+}
+.add:disabled .plus {
+  background: var(--surface-sunken);
+  color: var(--text-3);
 }
 @media (min-width: 900px) {
   .bottom {

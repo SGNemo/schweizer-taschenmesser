@@ -157,11 +157,10 @@ describe('Tabs', () => {
 
 describe('shadows in ui/ (Identity 4.0: only floating things cast one)', () => {
   // The stylesheets of `ui/` that may still write `--shadow-1`, with what casts it. A file that is not listed here
-  // must not use it; an entry goes when its package removes the shadow (head: 0b-2, signature blocks and widget
-  // bodies: the area packages and 0b-7).
+  // must not use it; an entry goes when its package removes the shadow (the head went with 0b-2; signature blocks
+  // and widget bodies: the area packages and 0b-7).
   const ALLOWED: Record<string, string> = {
     'Fields.module.css': 'switch thumb (lies on its track)',
-    'HeadSurface.module.css': 'module head band (package 0b-2)',
     'SelectionBar.module.css': 'sticky selection bar (floats over the list)',
     'identity/BankCard.module.css': 'signature block',
     'identity/CalendarLeaf.module.css': 'signature block',

@@ -16,6 +16,7 @@ import {
   GroupedList,
   Icon,
   ItemRow,
+  PageAction,
   PageHeader,
   TextField,
   useOpenParam,
@@ -101,10 +102,10 @@ export default function MainPage() {
   return (
     <>
       <PageHeader title={s.title}>
-        <Button variant="primary" onClick={() => setDraft(EMPTY)}>
+        <PageAction short={t.nav.plusThings.feed} onClick={() => setDraft(EMPTY)}>
           <Icon name="plus" size={18} />
           {s.add}
-        </Button>
+        </PageAction>
         {/* Import and export in the ⋯ menu: an empty page offers one verb (C23). */}
         <StartDataMenu
           moduleId="feeds"

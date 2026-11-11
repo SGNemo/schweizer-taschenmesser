@@ -21,7 +21,7 @@ const manifest: ModuleManifest = {
     hue: 'indigo',
     hue2: 'cobalt',
     widget: 'fortschritt',
-    head: 'kennzahl',
+    head: 'standard',
     signature: 'weekBars',
     type: 'thin',
   },

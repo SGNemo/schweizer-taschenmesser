@@ -14,6 +14,7 @@ import {
   Icon,
   ItemList,
   ItemRow,
+  PageAction,
   PageHeader,
   RowMenu,
   Segmented,
@@ -261,13 +262,13 @@ export default function BookmarksPage() {
           />
         }
       >
-        <Button
-          variant="primary"
+        <PageAction
+          short={linksView ? t.nav.plusThings.link : t.bookmarks.meta.quickAdd}
           onClick={() => setTarget(linksView ? { draft: true, kind: 'link' } : { draft: true })}
         >
           <Icon name="plus" size={18} />
           {linksView ? t.bookmarks.addLink : t.bookmarks.add}
-        </Button>
+        </PageAction>
         <RowMenu
           label={t.bookmarks.moreOptions}
           open={menuOpen}

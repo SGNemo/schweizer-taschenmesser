@@ -20,7 +20,7 @@ const manifest: ModuleManifest = {
   identity: {
     hue: 'lime',
     widget: 'status',
-    head: 'schreib',
+    head: 'standard',
     signature: 'display',
   },
   version: 1,

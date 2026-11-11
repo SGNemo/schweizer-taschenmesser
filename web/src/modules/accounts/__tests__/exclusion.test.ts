@@ -179,3 +179,79 @@ describe('search and answers', () => {
     }
   });
 });
+
+// Identity 4.0, package 0b-2: the palette and the quick capture are the entry points for adding things.
+it('is no target of the palette or the phone plus: no quick-add entry, so no "Neu: …" command and the plus on /accounts stays the plain quick capture', async () => {
+  const { isCredentialPath } = await import('@/core/text/credentialPath');
+  // `useQuickAddActions` (palette "Neu: …", the sheet's "Weitere") and `usePlusTarget` (kind 'module') both read
+  // `contributions.quickAdd`; without one the plus falls through to kind 'capture'.
+  expect(manifest.contributions?.quickAdd).toBeUndefined();
+  const actions = allManifests.flatMap((m) => m.contributions?.quickAdd ?? []);
+  expect(actions.length).toBeGreaterThan(0);
+  expect(actions.filter((a) => /^\/accounts(\/|\?|#|$)/.test(a.to))).toEqual([]);
+  // The page declares no action of its own for the plus either (kind 'page').
+  const { readdirSync, readFileSync } = await import('node:fs');
+  const root = new URL('../', import.meta.url);
+  const sources = readdirSync(root, { recursive: true, encoding: 'utf8' }).filter(
+    (f) => /\.tsx$/.test(f) && !f.includes('__tests__'),
+  );
+  expect(sources.length).toBeGreaterThan(0);
+  for (const file of sources) {
+    const src = readFileSync(new URL(file.replaceAll('\\', '/'), root), 'utf8');
+    expect(src, file).not.toMatch(/\bPageAction\b/);
+  }
+  // Should a row ever lead there, the palette keeps the reading aid off it.
+  expect(isCredentialPath('/accounts')).toBe(true);
+});
+
+it('is no hit of the palette: the live search over every module returns nothing of an unlocked vault', async () => {
+  // The palette's own call (`useSearchHits`): five hits, all words must match.
+  const manifests = [...visibleManifests];
+  expect(manifests.map((m) => m.id)).toContain('accounts');
+  for (const q of [SECRET_TITLE, 'Streng-Geheimes', 'alice', SECRET_PASSWORD, 'PIN 4711']) {
+    const rows = await searchEntries(q, { manifests, database: db }, 5, false);
+    expect(
+      rows.filter((r) => r.to?.startsWith('/accounts')),
+      q,
+    ).toEqual([]);
+    expect(JSON.stringify(rows), q).not.toContain(SECRET_TITLE);
+    expect(JSON.stringify(rows), q).not.toContain(SECRET_PASSWORD);
+  }
+});
+
+it('is no target of the quick capture: no capture type writes to it, whatever is typed, and a save leaves the vault alone', async () => {
+  const { parseCapture } = await import('@/quickCapture/parser');
+  const { TARGETS, availableTypes, saveCapture, targetFor } =
+    await import('@/quickCapture/targets');
+  expect(Object.values(TARGETS).map((target) => target.moduleId)).not.toContain('accounts');
+  const allOn = Object.fromEntries(allManifests.map((m) => [m.id, true]));
+  const types = availableTypes(allOn);
+  expect(types.length).toBeGreaterThan(0);
+  expect(types.map((type) => targetFor(type).moduleId)).not.toContain('accounts');
+
+  const opts = {
+    now: new Date(2026, 8, 29, 10, 0),
+    fitness: { meal: true, workout: true },
+    place: () => true,
+  };
+  const before = await db.table('accounts_entry').count();
+  for (const line of [
+    'Passwort Bank alice PIN 4711',
+    'Login github.com Benutzer alice',
+    'Zugangsdaten Streng-Geheimes-Bankkonto',
+    'Tresor: neues Passwort für das Bankkonto',
+  ]) {
+    const parsed = parseCapture(line, opts);
+    const reachable = [parsed.type, ...parsed.alternatives.map((a) => a.type)];
+    expect(
+      reachable.map((type) => targetFor(type).moduleId),
+      line,
+    ).not.toContain('accounts');
+    if (!targetFor(parsed.type).requiresConfirm) {
+      const saved = await saveCapture(parsed.type, parsed.fields, { states: allOn, database: db });
+      expect(saved.moduleId, line).not.toBe('accounts');
+    }
+  }
+  expect(await db.table('accounts_entry').count()).toBe(before);
+  expect(await db.table('accounts_vault').count()).toBe(1);
+});

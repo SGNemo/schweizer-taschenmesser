@@ -18,7 +18,7 @@ const manifest: ModuleManifest = {
     hue: 'cobalt',
     hue2: 'sky',
     widget: 'fortschritt',
-    head: 'fokus',
+    head: 'standard',
     signature: 'arrowProgress',
     type: 'mono',
   },

@@ -9,7 +9,7 @@ import { isFocusPath } from '@/core/focus/path';
 import { OnboardingHost } from '@/core/importer/host';
 import { isDevBuild } from '@/core/update/buildInfo';
 import { areaOfPath, rememberAreaModule } from '@/core/modules/areas';
-import { Fab, Toaster, useMediaQuery } from '@/ui';
+import { Toaster, useMediaQuery } from '@/ui';
 import { NoticeHost } from './NoticeHost';
 import { FocusWatcher } from './FocusWatcher';
 import { NotificationCenter } from './NotificationCenter';
@@ -30,7 +30,6 @@ import { watchScrolling } from '@/core/shell/scrollbars';
 import { watchKeyboard } from '@/core/shell/keyboardInset';
 import { BottomNav, BOTTOM_AREA_SLOTS } from './BottomNav';
 import { MoreSheet } from './MoreSheet';
-import { usePageChromeStore } from '@/core/shell/pageChrome';
 import { useNavTree } from './useNavItems';
 import { useShortcuts } from './useShortcuts';
 import { CockpitBar } from './CockpitBar';
@@ -146,8 +145,6 @@ export function AppShell() {
   const overflowAreas = tree.areas.slice(BOTTOM_AREA_SLOTS);
   // A focus screen (`/<module>/focus/…`) shows one thing: no menus, no quick add, no banners.
   const focusing = isFocusPath(location.pathname) || cockpit;
-  // A page with its own add field has no use for the round quick-add button.
-  const hideFab = usePageChromeStore((s) => s.chrome.hideFab);
 
   return (
     <div
@@ -200,9 +197,6 @@ export function AppShell() {
       {focusing && !cockpit ? null : (
         <>
           {cockpit ? null : <BottomNav tree={tree} onMore={() => setMoreOpen(true)} />}
-          {hideFab || cockpit ? null : (
-            <Fab label={t.actions.quickAdd} onClick={() => setQuickAddOpen(true)} />
-          )}
           <QuickAdd />
           <ShortcutSheet />
           <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} areas={overflowAreas} />

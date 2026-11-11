@@ -106,14 +106,6 @@ export function ErrorState({ title, onRetry }: { title: string; onRetry?: () => 
   );
 }
 
-export function Fab({ label, onClick }: { label: string; onClick: () => void }) {
-  return (
-    <button type="button" className={styles.fab} aria-label={label} title={label} onClick={onClick}>
-      <Icon name="plus" size={26} />
-    </button>
-  );
-}
-
 const TOAST_MS = 6000;
 
 export function Toaster() {

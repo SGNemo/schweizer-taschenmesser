@@ -16,7 +16,7 @@ const manifest: ModuleManifest = {
     hue: 'indigo',
     hue2: 'cobalt',
     widget: 'faellig',
-    head: 'fortschritt',
+    head: 'standard',
     signature: 'cycle',
   },
   version: 5,

@@ -39,7 +39,7 @@ test('three lines become three entries in one click, and "Rückgängig" takes al
   page,
 }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Schnell hinzufügen' }).click();
+  await page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }).click();
   await input(page).fill('Milch kaufen\nmorgen Oma anrufen\nFreitag Zahnarzt 9 Uhr');
 
   const list = page.getByTestId('capture-row');
@@ -68,7 +68,7 @@ test('three lines become three entries in one click, and "Rückgängig" takes al
 
 test('a sentence with commas and "und" splits; Mo, Mi und Fr does not', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Schnell hinzufügen' }).click();
+  await page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }).click();
   await input(page).fill('Sport Mo, Mi und Fr 18 Uhr');
   await expect(page.getByTestId('capture-chips')).toContainText('Ziel:');
   await expect(page.getByTestId('capture-rows')).toHaveCount(0);
@@ -84,7 +84,7 @@ test('Shift+Enter starts a new line, Enter saves; the phone shows "Eine Zeile = 
   isMobile,
 }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Schnell hinzufügen' }).click();
+  await page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }).click();
   const hint = page.getByTestId('capture-line-hint');
   if (isMobile) await expect(hint).toBeVisible();
   else await expect(hint).toBeHidden();
@@ -107,7 +107,7 @@ test('a batch with a money line: one tap saves all, nothing is booked, the line 
   page,
 }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Schnell hinzufügen' }).click();
+  await page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }).click();
   await input(page).fill('Müll runterbringen\nMittagessen 12,50 € ausgegeben\n$ 8,90 Pizza');
   const list = page.getByTestId('capture-row');
   await expect(list).toHaveCount(3);

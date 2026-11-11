@@ -105,51 +105,26 @@ export const MODULE_HUES = [
 export type ModuleHue = (typeof MODULE_HUES)[number];
 
 /**
- * Head variants of the module frame (identity v3, `docs/design/identity-v3/02-CONCEPT.md` § 3): each has its own
- * silhouette (height, arrangement, typography), not only a colour. `hero` heads are ≈ 200 px tall, `compact` ones ≈ 96 px.
- * - `kennzahl` big figure with context line, sparkline and mini cards (money)
- * - `zeit` day number and today's hour strip (calendar, time tracking)
- * - `fortschritt` rings or bars per item (habits, drives, downloads)
- * - `cover` cover art whose colour tints the head (music)
- * - `himmel` sky backdrop with a thin temperature (weather)
- * - `regal` count figure with tiles on a shelf line (pantry, lists, places, bookmarks)
- * - `tresor` lock status on a framed head (vault; never content)
- * - `schreib` plain paper with a serif title (notes, chat, mail, browser)
- * - `fokus` one task or one fact large (todos, people, invoices)
+ * Head variants of the module frame (Identity 4.0, `docs/design/MODULE-IDENTITY.md` "4.0"): two, where identity v3 had
+ * nine silhouettes.
+ * - `standard` one title row (plate, eyebrow, h1, one figure with its context line, the module's one filled action on
+ *   the desktop) and the page's tabs at its lower edge; no tint, no pattern, no signature slot.
+ * - `stage` the same title row above a stage that may be taller: the module's backdrop and its signature block
+ *   (weather: the sky; music: the cover). It stays above the fold.
  */
-export const HEAD_VARIANTS = [
-  'kennzahl',
-  'zeit',
-  'fortschritt',
-  'cover',
-  'himmel',
-  'regal',
-  'tresor',
-  'schreib',
-  'fokus',
-] as const;
+export const HEAD_VARIANTS = ['standard', 'stage'] as const;
 export type HeadVariant = (typeof HEAD_VARIANTS)[number];
-/** Height class of a head variant: three are a slim bar, the others a hero. */
-export const COMPACT_HEADS: readonly HeadVariant[] = ['tresor', 'schreib', 'fokus'];
-export const headHeight = (v: HeadVariant): 'hero' | 'compact' =>
-  COMPACT_HEADS.includes(v) ? 'compact' : 'hero';
 /**
- * Size of the signature slot in the head (identity v3.1, `layout/AreaFrame`): `S` the mark beside the title
- * (`--slot-s`, 4 rem), `M` a block of up to `--slot-m` (36 rem) beside the figure, `L` the whole content column
- * under the title. The head variant sets it; `himmel` has no slot (the sky is the backdrop).
+ * Size of the signature slot in the head (`layout/AreaFrame`), set by the head variant: the standard head has none
+ * (the module's mark lives on its widget, its empty state and its library card; a block the page still brings lies in
+ * the page, under the head), the stage has the whole stage (`L`). `S` and `M` remain the sizes of a mark and a block
+ * for the heads outside the module frame (settings, tools).
  */
 export const SLOT_SIZES = ['S', 'M', 'L'] as const;
 export type SlotSize = (typeof SLOT_SIZES)[number];
 export const SIGNATURE_SLOTS: Readonly<Record<HeadVariant, SlotSize | 'none'>> = {
-  kennzahl: 'M',
-  zeit: 'L',
-  fortschritt: 'M',
-  cover: 'L',
-  himmel: 'none',
-  regal: 'M',
-  tresor: 'S',
-  schreib: 'S',
-  fokus: 'S',
+  standard: 'none',
+  stage: 'L',
 };
 /**
  * Shape of a module's widget on the overview (identity v3 § 5), bound to the head variant: `kennzahl` figure + sparkline,
@@ -249,6 +224,12 @@ export interface ModuleIdentity {
   type?: TypeAccent;
   /** Corner radius of the module's cards: `soft` 16 px (default), `round` 20 px, `sharp` 10 px. */
   shape?: CardShape;
+  /**
+   * The module's entry page has views (`PageHeader views`): the head keeps the row of the tabs from the first paint,
+   * before the page's code has arrived, so nothing under the head moves (U01). Guard: `e2e/seed/head-height.seed.spec.ts`
+   * compares it with the page.
+   */
+  tabs?: boolean;
 }
 
 export type WidgetSize = 's' | 'm' | 'l';
@@ -634,8 +615,10 @@ export interface PlannableSource {
 export interface HeadlineFigure {
   label: string;
   value: string;
-  /** Context line under the number ("2 Konten · Giro 1.203,10 €"). */
+  /** Context line under the number ("2 Konten"); no amount in it when the figure is `sensitive`. */
   detail?: string;
+  /** A money figure: hidden behind a placeholder while "Werte ausblenden" is on (the head, like the widgets). */
+  sensitive?: boolean;
   /** Route to open when the figure is activated (default: the module page). */
   to?: string;
 }

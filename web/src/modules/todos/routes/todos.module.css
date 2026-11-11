@@ -526,34 +526,3 @@
     animation: none;
   }
 }
-
-/* The view chips wrap on the desktop; on a phone they are one scrollable row, so the list stays high. */
-.viewBar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1);
-  padding: var(--space-1);
-  border-radius: var(--radius-full);
-  background: var(--surface-2);
-}
-.viewBar .tagChip {
-  border-color: transparent;
-  background: transparent;
-}
-.viewBar .tagChip[aria-pressed='true'] {
-  background: var(--surface);
-  border-color: transparent;
-  color: var(--accent);
-}
-.viewBar .tagChip {
-  flex: none;
-}
-@media (max-width: 899px) {
-  .viewBar {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-    padding-bottom: var(--space-1);
-    mask-image: linear-gradient(90deg, #000 calc(100% - 2rem), transparent);
-  }
-}

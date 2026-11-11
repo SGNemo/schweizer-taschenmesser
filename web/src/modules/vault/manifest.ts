@@ -16,7 +16,7 @@ const manifest: ModuleManifest = {
     hue: 'indigo',
     hue2: 'violet',
     widget: 'kennzahl',
-    head: 'regal',
+    head: 'standard',
     signature: 'folderTab',
   },
   version: 3,
