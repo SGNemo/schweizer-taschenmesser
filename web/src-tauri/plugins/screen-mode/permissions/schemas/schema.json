@@ -295,6 +295,30 @@
       "type": "string",
       "oneOf": [
         {
+          "description": "Enables the register_listener command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-register-listener",
+          "markdownDescription": "Enables the register_listener command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the register_listener command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-register-listener",
+          "markdownDescription": "Denies the register_listener command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the remove_listener command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-remove-listener",
+          "markdownDescription": "Enables the remove_listener command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the remove_listener command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-remove-listener",
+          "markdownDescription": "Denies the remove_listener command without any pre-configured scope."
+        },
+        {
           "description": "Enables the set_immersive command without any pre-configured scope.",
           "type": "string",
           "const": "allow-set-immersive",
@@ -319,10 +343,22 @@
           "markdownDescription": "Denies the set_keep_awake command without any pre-configured scope."
         },
         {
-          "description": "Hide the Android system bars and keep the screen on while the cockpit is open.\n#### This default permission set includes:\n\n- `allow-set-immersive`\n- `allow-set-keep-awake`",
+          "description": "Enables the set_volume_keys command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-set-volume-keys",
+          "markdownDescription": "Enables the set_volume_keys command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_volume_keys command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-set-volume-keys",
+          "markdownDescription": "Denies the set_volume_keys command without any pre-configured scope."
+        },
+        {
+          "description": "Hide the Android system bars and keep the screen on while the cockpit is open; hand the two volume keys to the web app while the remote control holds them.\n#### This default permission set includes:\n\n- `allow-set-immersive`\n- `allow-set-keep-awake`\n- `allow-set-volume-keys`\n- `allow-register-listener`\n- `allow-remove-listener`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Hide the Android system bars and keep the screen on while the cockpit is open.\n#### This default permission set includes:\n\n- `allow-set-immersive`\n- `allow-set-keep-awake`"
+          "markdownDescription": "Hide the Android system bars and keep the screen on while the cockpit is open; hand the two volume keys to the web app while the remote control holds them.\n#### This default permission set includes:\n\n- `allow-set-immersive`\n- `allow-set-keep-awake`\n- `allow-set-volume-keys`\n- `allow-register-listener`\n- `allow-remove-listener`"
         }
       ]
     }

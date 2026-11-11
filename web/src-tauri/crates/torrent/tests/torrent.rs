@@ -200,7 +200,13 @@ async fn download_limit_pause_resume_and_remove() {
         .add(Source::File(file), &out, None, vec![addr])
         .await
         .unwrap();
-    until("some progress", || one(&leech).progress_bytes > 20_000).await;
+    // Downloaded bytes, not checked ones: while the engine still checks the files (`Starting`) its progress counts
+    // the bytes it hashed, and a pause in that phase reads as `Paused` with up to all of them "done".
+    until("some progress", || {
+        let t = one(&leech);
+        t.state == TorrentState::Downloading && t.progress_bytes > 20_000
+    })
+    .await;
 
     leech.pause(id).await.unwrap();
     until("paused", || one(&leech).state == TorrentState::Paused).await;

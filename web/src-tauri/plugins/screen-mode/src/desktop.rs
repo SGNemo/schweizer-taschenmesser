@@ -19,6 +19,10 @@ impl<R: Runtime> ScreenMode<R> {
         Ok(())
     }
 
+    pub fn set_volume_keys(&self, _request: EnabledRequest) -> Result<()> {
+        Ok(())
+    }
+
     pub fn set_keep_awake(&self, _request: EnabledRequest) -> Result<()> {
         Ok(())
     }
