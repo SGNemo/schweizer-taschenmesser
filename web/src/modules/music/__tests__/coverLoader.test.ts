@@ -41,7 +41,6 @@ function gate() {
   );
   return { fetch, open };
 }
-const settle = () => new Promise((r) => setTimeout(r, 0));
 
 describe('cover loader', () => {
   it('asks once per picture however many places show it, and serves the next one from memory', async () => {
@@ -74,13 +73,14 @@ describe('cover loader', () => {
     expect(coverStats()).toMatchObject({ running: MAX_PARALLEL, queued: 3 });
     handles[6]!.release();
     expect(coverStats().queued).toBe(2);
+    // Reading an answer takes a few turns of the event loop, more on a slow machine: wait for the effect, not for a time.
     open.splice(0).forEach((go) => go());
-    await settle();
-    expect(fetch).toHaveBeenCalledTimes(6);
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(6));
     open.splice(0).forEach((go) => go());
-    await settle();
+    await vi.waitFor(() =>
+      expect(coverStats()).toMatchObject({ running: 0, queued: 0, entries: 6 }),
+    );
     expect(fetch.mock.calls.map((c) => c[0])).not.toContain(url(6));
-    expect(coverStats()).toMatchObject({ running: 0, queued: 0, entries: 6 });
   });
 
   it('keeps the latest pictures only: the oldest unused one is dropped and its blob URL released', async () => {
