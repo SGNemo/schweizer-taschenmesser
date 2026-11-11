@@ -14,7 +14,7 @@ import {
   type PlayerQueue,
   type Tracklist,
 } from '@/core/connectors/types';
-import { API_ORIGIN, ID, PLAYER, call, clip, pickCover } from './api';
+import { API_ORIGIN, ID, PLAYER, call, clip, coverOf } from './api';
 
 const trackSchema = z.object({
   id: z.string().nullish(),
@@ -46,7 +46,7 @@ export function toTrack(t: RawTrack | null | undefined): MediaItem | undefined {
     subtitle: artist,
     album: t.album?.name ? clip(t.album.name) : undefined,
     durationMs: t.duration_ms ?? undefined,
-    coverUrl: pickCover(t.album?.images ?? undefined),
+    ...coverOf(t.album?.images),
   };
 }
 
@@ -106,7 +106,7 @@ export async function tracks(
     return {
       name: clip(a.data.name ?? ''),
       subtitle: a.data.artists?.[0]?.name ? clip(a.data.artists[0].name) : undefined,
-      coverUrl: pickCover(a.data.images ?? undefined),
+      ...coverOf(a.data.images),
       total: a.data.tracks?.total ?? items.length,
       items,
     };
@@ -127,7 +127,7 @@ export async function tracks(
   return {
     name: clip(p.data.name ?? ''),
     subtitle: p.data.owner?.display_name ? clip(p.data.owner.display_name) : undefined,
-    coverUrl: pickCover(p.data.images ?? undefined),
+    ...coverOf(p.data.images),
     total: first?.total ?? items.length,
     items: items.slice(0, MAX_TRACKS),
   };

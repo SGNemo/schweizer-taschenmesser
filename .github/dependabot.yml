@@ -35,7 +35,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
-      day: monday
+      day: wednesday
       time: "05:00"
       timezone: Europe/Berlin
     open-pull-requests-limit: 5
@@ -60,7 +60,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
-      day: monday
+      day: wednesday
       time: "05:00"
       timezone: Europe/Berlin
     open-pull-requests-limit: 5
@@ -85,7 +85,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
-      day: monday
+      day: wednesday
       time: "05:00"
       timezone: Europe/Berlin
     open-pull-requests-limit: 5
@@ -110,7 +110,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
-      day: monday
+      day: tuesday
       time: "05:00"
       timezone: Europe/Berlin
     open-pull-requests-limit: 5
@@ -134,7 +134,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
-      day: monday
+      day: friday
       time: "05:00"
       timezone: Europe/Berlin
     open-pull-requests-limit: 5
@@ -151,7 +151,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
-      day: monday
+      day: friday
       time: "05:00"
       timezone: Europe/Berlin
     open-pull-requests-limit: 5
@@ -168,7 +168,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
-      day: monday
+      day: friday
       time: "05:00"
       timezone: Europe/Berlin
     open-pull-requests-limit: 5
@@ -185,7 +185,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
-      day: monday
+      day: friday
       time: "05:00"
       timezone: Europe/Berlin
     open-pull-requests-limit: 5
@@ -202,7 +202,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
-      day: monday
+      day: friday
       time: "05:00"
       timezone: Europe/Berlin
     open-pull-requests-limit: 5
@@ -233,7 +233,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
-      day: monday
+      day: wednesday
       time: "05:00"
       timezone: Europe/Berlin
     open-pull-requests-limit: 5
@@ -261,7 +261,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
-      day: monday
+      day: thursday
       time: "05:00"
       timezone: Europe/Berlin
     open-pull-requests-limit: 5
@@ -286,7 +286,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
-      day: monday
+      day: thursday
       time: "05:00"
       timezone: Europe/Berlin
     open-pull-requests-limit: 5
@@ -311,7 +311,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
-      day: monday
+      day: thursday
       time: "05:00"
       timezone: Europe/Berlin
     open-pull-requests-limit: 5
@@ -336,7 +336,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
-      day: monday
+      day: thursday
       time: "05:00"
       timezone: Europe/Berlin
     open-pull-requests-limit: 5
@@ -361,7 +361,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
-      day: monday
+      day: tuesday
       time: "05:00"
       timezone: Europe/Berlin
     open-pull-requests-limit: 5
@@ -378,7 +378,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
-      day: monday
+      day: tuesday
       time: "05:00"
       timezone: Europe/Berlin
     open-pull-requests-limit: 5
@@ -398,7 +398,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
-      day: monday
+      day: tuesday
       time: "05:00"
       timezone: Europe/Berlin
     open-pull-requests-limit: 5
@@ -415,7 +415,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
-      day: monday
+      day: friday
       time: "05:00"
       timezone: Europe/Berlin
     open-pull-requests-limit: 5
@@ -432,7 +432,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
-      day: monday
+      day: friday
       time: "05:00"
       timezone: Europe/Berlin
     open-pull-requests-limit: 5

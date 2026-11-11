@@ -1,5 +1,5 @@
 import type { RemotePcState } from '@/core/platform/types';
-import type { RemoteView } from '@/core/remote/session';
+import type { RemotePad, RemoteView } from '@/core/remote/session';
 import { t } from '@/strings';
 
 /** The one step a state offers. */
@@ -57,6 +57,51 @@ export function describe(view: RemoteView, last: RemotePcState | undefined): Rem
         case 'limit':
           return { text: r.limit, step: 'retry', usable: false };
       }
+  }
+}
+
+/** The touchpad's line: the session's own sentence, or what stands between this phone and the pad. */
+export interface PadLine {
+  text: string;
+  step?: RemoteStep | 'media' | 'unlock';
+  /** The pad takes touches right now. */
+  live: boolean;
+  /** Not live yet, but a touch is the next step (it connects or asks for the level): the pad must not look switched off. */
+  waiting: boolean;
+}
+
+/**
+ * The touchpad's state as one sentence and one step (concept §7). The session's own states come
+ * first: without a session there is no pad to speak of.
+ */
+export function describePad(
+  view: RemoteView,
+  pad: RemotePad,
+  last: RemotePcState | undefined,
+): PadLine {
+  const line = describe(view, last);
+  if (line.step || view.kind !== 'connected')
+    return { text: line.text, step: line.step, live: false, waiting: !line.step && line.usable };
+  const p = t.remote.pad;
+  switch (pad.kind) {
+    case 'not-granted':
+      return { text: p.notGranted, step: 'media', live: false, waiting: false };
+    case 'unlock':
+      return { text: p.unlock, step: 'unlock', live: false, waiting: false };
+    case 'unavailable':
+      return { text: p.unavailable, step: 'media', live: false, waiting: false };
+    case 'locked':
+      // the PC said so when it was asked; unlocked since, a touch asks again
+      if (!view.pc.locked) return { text: line.text, live: false, waiting: true };
+      return { text: t.remote.state.locked, step: 'media', live: false, waiting: false };
+    case 'ready':
+      // the PC was locked meanwhile: the session stays, nothing moves
+      if (view.pc.locked)
+        return { text: t.remote.state.locked, step: 'media', live: false, waiting: false };
+      return { text: pad.noLock ? p.noLock : line.text, live: true, waiting: false };
+    case 'off':
+    case 'opening':
+      return { text: line.text, live: false, waiting: true };
   }
 }
 

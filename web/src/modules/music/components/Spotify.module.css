@@ -157,7 +157,7 @@
   font-size: var(--text-meta);
 }
 .head > span:first-child {
-  padding-left: 2.25rem;
+  padding-left: calc(4.25rem + var(--space-3));
 }
 .rows {
   margin: 0;
@@ -182,7 +182,7 @@
 }
 .trackMain {
   display: grid;
-  grid-template-columns: 2rem minmax(0, 3fr) minmax(0, 2fr);
+  grid-template-columns: 2rem 2rem minmax(0, 3fr) minmax(0, 2fr);
   align-items: center;
   gap: var(--space-3);
   min-height: var(--touch);
@@ -193,6 +193,23 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
+}
+/* Album picture of a row: a fixed square, so the row keeps its height while the picture loads. */
+.rowCover {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2rem;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+.rowCover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .index {
   color: var(--text-muted);
@@ -393,8 +410,16 @@
   .trackAlbum {
     display: none;
   }
+  /* The cover takes the place of the row number, so the title keeps its width. */
   .trackMain {
     grid-template-columns: 2rem minmax(0, 1fr);
+    padding: 0 var(--space-2);
+  }
+  .index {
+    display: none;
+  }
+  .head > span:first-child {
+    padding-left: calc(2rem + var(--space-2));
   }
   .bar {
     grid-template-columns: minmax(0, 1fr) auto;

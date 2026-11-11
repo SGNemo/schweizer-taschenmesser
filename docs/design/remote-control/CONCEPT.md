@@ -276,7 +276,7 @@ Pages: `PageHeader`/`PageTitle` with three tabs _Medien_ (default) · _Touchpad_
 | not reachable | „PC-Sven ist gerade nicht erreichbar. Beide Geräte im selben WLAN?“ | _Erneut versuchen_ |
 | `remote-off`, `not-granted` | „Am PC ist die Fernsteuerung für dieses Handy aus. Am PC unter Einstellungen → Fernsteuerung dieses Handy erlauben.“ | _Erneut versuchen_ |
 | media granted, on Touchpad or Tastatur (the tabs stay, with this line) | „Maus und Tastatur sind am PC für dieses Handy aus.“ | _Zu Medien_ |
-| unlock needed (prompt dismissed or failed; the pad stays visible and still, Medien stays usable) | „Maus und Tastatur brauchen einmal dein Entsperren.“ | _Entsperren_ |
+| unlock needed (prompt dismissed or failed; the pad stays visible and still, Medien stays usable) | „Entsperre dieses Handy einmal, dann gehen Maus und Tastatur.“ | _Entsperren_ |
 | no screen lock set up on the phone | „Dieses Handy hat keine Bildschirmsperre. Maus und Tastatur gehen ohne Entsperren.“ (a fact line, nothing is blocked) | – |
 | `paused`, `ended` | „Die Fernbedienung ist am PC pausiert. Am PC unter Einstellungen → Fernsteuerung wieder einschalten.“ | _Erneut versuchen_ |
 | `busy` | „Gerade steuert ein anderes Gerät den PC.“ | _Erneut versuchen_ |

@@ -4,8 +4,10 @@ import type { MediaItem, Playlist } from '@/core/connectors/types';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { tMusicPage } from '@/strings.musicPage';
 import { tSpotify } from '@/strings.spotify';
-import { Icon } from '@/ui';
-import { useCover } from '../useCover';
+import type { CoverImage } from '@/core/connectors/coverUrl';
+import { readRecent } from '../recentOnce';
+import { COVER_PX } from '../useCover';
+import { Cover } from './Cover';
 import { viewKey, type PlayerApi, type View } from './types';
 import styles from '../routes/music.module.css';
 
@@ -17,27 +19,35 @@ function Tile({
   api,
   title,
   sub,
-  coverUrl,
+  cover,
+  alt,
   onOpen,
   small = false,
 }: {
   api: PlayerApi;
   title: string;
   sub?: string;
-  coverUrl?: string;
+  cover: { coverUrl?: string; covers?: CoverImage[] };
+  /** Name of the playlist or album the picture belongs to. */
+  alt: string;
   onOpen: () => void;
   small?: boolean;
 }) {
-  const cover = useCover(api.np.ctx, coverUrl);
   return (
     <button
       type="button"
       className={small ? `${styles.tile} ${styles.tileSmall}` : styles.tile}
       onClick={onOpen}
     >
-      <span className={styles.tileCover}>
-        {cover ? <img src={cover} alt="" /> : <Icon name="music" size={28} />}
-      </span>
+      <Cover
+        ctx={api.np.ctx}
+        item={cover}
+        px={small ? COVER_PX.tileSmall : COVER_PX.tile}
+        alt={alt}
+        className={styles.tileCover}
+        icon={28}
+        testId="music-tile-cover"
+      />
       <span className={styles.tileTitle}>{title}</span>
       {sub ? <span className={styles.tileSub}>{sub}</span> : null}
     </button>
@@ -60,7 +70,7 @@ export function StartView({ api }: { api: PlayerApi }) {
   useEffect(() => {
     let alive = true;
     if (hasHistory)
-      source.recent!(ctx)
+      readRecent(source, ctx, api.version)
         .then((items) => alive && setRecent(items))
         .catch(() => alive && setRecent('error'));
     if (hasPlaylists)
@@ -98,7 +108,8 @@ export function StartView({ api }: { api: PlayerApi }) {
                   small
                   title={item.name}
                   sub={item.subtitle}
-                  coverUrl={item.coverUrl}
+                  cover={item}
+                  alt={item.album ?? item.name}
                   onOpen={() => void api.playFromList(item, recent)}
                 />
               </div>
@@ -130,7 +141,8 @@ export function StartView({ api }: { api: PlayerApi }) {
                     api={api}
                     title={p.name}
                     sub={p.trackCount !== undefined ? tm.tracks(p.trackCount) : undefined}
-                    coverUrl={p.coverUrl}
+                    cover={p}
+                    alt={p.name}
                     onOpen={() => open(view)}
                   />
                 </li>

@@ -58,6 +58,7 @@ describe('toTrack', () => {
       album: 'Erfundenes Album',
       durationMs: 185_000,
       coverUrl: 'https://i.scdn.co/image/ab67AAA',
+      covers: [{ url: 'https://i.scdn.co/image/ab67AAA', width: 300 }],
     });
   });
 

@@ -26,6 +26,10 @@ const nowSchema = z.object({
     trackUrl: z.string().max(300).optional(),
     album: z.string().max(200).optional(),
     coverUrl: z.string().max(300).optional(),
+    covers: z
+      .array(z.object({ url: z.string().max(300), width: z.number().finite().optional() }))
+      .max(6)
+      .optional(),
     progressMs: z.number().finite().optional(),
     durationMs: z.number().finite().optional(),
   }),

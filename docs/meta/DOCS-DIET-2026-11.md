@@ -105,7 +105,9 @@ Numbers are estimates from the repo (bytes / 4); what a session really costs dep
 | Screenshots, fixtures, mockups | 1,703 images (215 MB) left `docs/` on 2026-11-08; still there: `docs/design/mockups` 980 KB HTML, `docs/assets` 1.2 MB, `scribble/` 77 files | clone and scan time, not chat tokens (`.ignore` hides most) | none | merge #553; package 4 |
 | Oversized lookup docs | `decisions/core.md` 13.4 k, `ui-shell.md` 11.9 k, `modules.md` 9.4 k, `ARCHITECTURE-MAP.md` 6.9 k, `HOW-TO.md` 5.8 k, `howto/ci.md` 6 k (budgets 3–4.2 k) | a chat that needs one decision reads up to 13 k | splitting costs one PR each | package 3 (split by topic, mechanical) |
 
-### Three rule changes to decide (not applied)
+### Three rule changes (decided and applied 2026-11-11: all three, as proposed)
+
+Root `CLAUDE.md` after them: ≈ 2,790 tokens, still above its 2,600 budget, because steps 2 and 3 gained the notes lookup order, the generated CHATS rows and the "merge `develop` once" rule in the meantime.
 
 **1. Root `CLAUDE.md`: three area rules keep one line, the text moves unchanged to `docs/rules/`** (about −170 tokens in every chat; root lands at ≈ 2,620, next to its 2,600 budget). Price: a chat that touches supporter codes, diagnostics or the setup assistant must open the rule file; the tests named in the rules still fail on a breach.
 
