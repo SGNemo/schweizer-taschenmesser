@@ -6,7 +6,7 @@ name: CI
 #  - push to develop: everything, in two runs. This run (push) is the Dev-Preview gate with build and publish; the
 #    jobs outside the gate run in a second run of this file (`part: rest`, started by develop-rest.yml), which a
 #    newer push cancels. docs/howto/ci-layout.md -> "Concurrency".
-run-name: ${{ inputs.part == 'rest' && format('Outside the Dev-Preview gate ({0})', github.ref_name) || '' }}
+run-name: ${{ inputs.part == 'rest' && github.ref == 'refs/heads/develop' && format('Outside the Dev-Preview gate ({0})', github.ref_name) || '' }}
 on:
   push:
     branches: [develop, main]
@@ -18,7 +18,7 @@ on:
   workflow_dispatch:
     inputs:
       part:
-        description: 'all = every job (nightly, label full-ci, manual) | rest = only the jobs outside the Dev-Preview gate, for what changed since the last green manual run on this branch; a newer rest run cancels it'
+        description: 'all = every job (nightly, label full-ci, manual) | rest = develop only (elsewhere it means all): the jobs outside the Dev-Preview gate, for everything since the last green rest or full run; a newer rest run cancels it'
         type: choice
         options: [all, rest]
         default: all
@@ -34,15 +34,16 @@ concurrency:
   # finishes, Dev-Preview build and publish included, and two publishes never overlap.
   # The one run a newer one cancels is `part: rest` (the jobs outside the Dev-Preview gate of a develop push, own
   # group): it only tests, and the run that replaces it tests everything since the last green one.
-  # (`-rest` sits before the event, where no branch name can produce it.)
-  group: ci-${{ github.workflow }}${{ inputs.part == 'rest' && '-rest' || '' }}-${{ github.event_name }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' || inputs.part == 'rest' }}
+  # (`-rest` sits before the event, where no branch name can produce it.) The rest part exists on develop only:
+  # on any other branch the input means `all`, so it can neither cancel a run there nor leave the gate jobs out.
+  group: ci-${{ github.workflow }}${{ inputs.part == 'rest' && github.ref == 'refs/heads/develop' && '-rest' || '' }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || (inputs.part == 'rest' && github.ref == 'refs/heads/develop') }}
 
 jobs:
   # Decides what has to run. Any doubt (no diff, unreadable range, an unknown path, an error) means
   # "everything", and the jobs below also run when this job itself fails. Documentation only: nothing
   # heavy runs; the secret scan and the docs checks always run.
-  #   full  = push to develop/main, manual/nightly run, or label `full-ci` on the PR: every package, the
+  #   full  = push to main, manual/nightly run (part all), or label `full-ci` on the PR: every package, the
   #           whole E2E suite (smoke + rest on both browser projects) and the seed project
   #   PR    = only the packages the change touches (below), E2E smoke list on desktop (3 shards), the seed
   #           project (`seed`) and the stimulus budget with its ratchet whenever the web app can change;
@@ -108,7 +109,9 @@ jobs:
           # part=rest), `all` (everything else).
           part=all
           if [ "$EVENT" = "push" ] && [ "$REF" = "refs/heads/develop" ]; then part=gate; fi
-          if [ "$EVENT" = "workflow_dispatch" ] && [ "$PART" = "rest" ]; then part=rest; fi
+          if [ "$EVENT" = "workflow_dispatch" ] && [ "$PART" = "rest" ]; then
+            if [ "$REF" = "refs/heads/develop" ]; then part=rest; else echo "::warning::part rest exists on develop only: running everything."; fi
+          fi
           # Push to develop: look at everything since the last *published* Dev-Preview (its release name ends in
           # +<sha7>), not only at this push. A code merge whose run was replaced by a newer push (a pending run is
           # replaced, never a running one) is then built by the next run, whatever that push contained.
@@ -120,16 +123,16 @@ jobs:
               echo "Last published Dev-Preview was built from $built: checking $built..$PUSH_AFTER"
             fi
           fi
-          # Rest part: everything since the last green manual run on this branch (a rest run or a full one). A green
+          # Rest part: everything since the last green workflow_dispatch run on this branch (a rest run or a full one). A green
           # run tested all code up to its commit or found none since the green run before it, so no commit is left
           # out, however many rest runs were cancelled in between or started by a documentation push. No such run,
           # an unknown commit or an API error: no range, so everything runs.
           # A full manual run looks the same commit up too, but only to name it in a red summary (job `culprits`).
           green=""
           if [ "$EVENT" = "workflow_dispatch" ]; then
-            green="$(gh api "repos/$REPO/actions/workflows/ci.yml/runs?branch=$REF_NAME&event=workflow_dispatch&status=success&per_page=1" -q '.workflow_runs[0].head_sha // ""' 2>/dev/null)"
+            green="$(gh api -X GET "repos/$REPO/actions/workflows/ci.yml/runs" -f branch="$REF_NAME" -f event=workflow_dispatch -f status=success -F per_page=1 -q '.workflow_runs[0].head_sha // ""' 2>/dev/null)"
             if [ -n "$green" ] && git cat-file -e "$green^{commit}" 2>/dev/null && git merge-base --is-ancestor "$green" "$PUSH_AFTER" 2>/dev/null; then
-              echo "Last green manual run on this branch tested $green."
+              echo "Last green rest or full run on this branch tested $green."
             else
               green=""
             fi
@@ -142,9 +145,9 @@ jobs:
           fi
           if [ "$part" = "rest" ]; then
             if [ -n "$since" ]; then
-              echo "Jobs outside the Dev-Preview gate for \`${since:0:7}..${PUSH_AFTER:0:7}\` (everything since the last green manual run)." >> "$GITHUB_STEP_SUMMARY"
+              echo "Jobs outside the Dev-Preview gate for \`${since:0:7}..${PUSH_AFTER:0:7}\` (everything since the last green rest or full run)." >> "$GITHUB_STEP_SUMMARY"
             else
-              echo "Jobs outside the Dev-Preview gate for \`${PUSH_AFTER:0:7}\`: no green manual run found, so everything runs." >> "$GITHUB_STEP_SUMMARY"
+              echo "Jobs outside the Dev-Preview gate for \`${PUSH_AFTER:0:7}\`: no green rest or full run found, so everything runs." >> "$GITHUB_STEP_SUMMARY"
             fi
           fi
           if [ "$EVENT" = "pull_request" ] && [ -n "$PR_BASE" ] && [ -n "$PR_HEAD" ]; then
@@ -238,7 +241,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
           echo "code=$code full=$full profile=$profile web=$web e2e=$e2e sync=$sync server=$server mcp=$mcp shared=$shared"
           echo "supporter=$supporter webhook=$webhook extension=$extension tauri=$tauri llm=$llm"
-          echo "part=$part rest=$rest seed=$seed stimulus=$stimulus windows=$windows since=$since"
+          echo "part=$part rest=$rest seed=$seed stimulus=$stimulus windows=$windows since=${since:-$green}"
 
   # scribble/ is the chats' scratch space on develop (see scribble/README.md); the release merge removes it.
   scribble-guard:
@@ -524,7 +527,7 @@ jobs:
     # Always, so that a failed or cancelled part can never read as "skipped = passed" on a pull request. The one
     # exception is a cancelled rest run: a newer one waits in its group until every job here is done, and this
     # job would hold it up for as long as it waits for a runner.
-    if: ${{ always() && !(cancelled() && inputs.part == 'rest') }}
+    if: ${{ always() && !(cancelled() && inputs.part == 'rest' && github.ref == 'refs/heads/develop') }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -941,8 +944,8 @@ jobs:
           echo "publish=$publish" >> "$GITHUB_OUTPUT"
 
   # Publish gate: what can break the Dev-Preview app itself and finishes before its build does. Everything else
-  # (rest of E2E, sync E2E + seed project, small packages, browser extension, local model, docs checks, CodeQL)
-  # runs next to the build and after the publish: a red one turns the run red, but the preview is out already.
+  # (rest of E2E, sync E2E + seed project, small packages, browser extension, stimulus budget, local model, Windows
+  # shell) runs in the `part: rest` run (develop-rest.yml): a red one there never holds the preview back.
   # The preview is "an untested intermediate build" by its release notes; docs/HOW-TO.md "Which checks run when".
   dev-preview:
     name: Dev-Preview publish
@@ -961,12 +964,13 @@ jobs:
     secrets: inherit
 
   # A red run on develop says who is next: the merges since the last green run of this part (gate: since the last
-  # published Dev-Preview; rest: since the last green manual run), because a run can stand for several pushes
+  # published Dev-Preview; rest: since the last green rest or full run), because a run can stand for several pushes
   # (a pending run is replaced, a rest run is cancelled by a newer one). Only starts when a job above failed.
   culprits:
     name: Red on develop – merges that could have broken it
     needs: [changes, dev-preview-build, dev-preview-fresh, dev-preview, secret-scan, docs-budget, docs-pairs, stimulus-budget, licences, web-static, web-unit, web-e2e, web-e2e-rest, web, packages, extension, e2e-sync, e2e-seed, rust, rust-windows, local-llm]
-    if: ${{ failure() && github.ref == 'refs/heads/develop' }}
+    # Not in a cancelled run: it would wait for a runner and hold the next rest run in its group.
+    if: ${{ failure() && !cancelled() && github.ref == 'refs/heads/develop' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -979,7 +983,7 @@ jobs:
           EVENT: ${{ github.event_name }}
         run: |
           what="the last published Dev-Preview"
-          if [ "$EVENT" = "workflow_dispatch" ]; then what="the last green manual run of CI on this branch"; fi
+          if [ "$EVENT" = "workflow_dispatch" ]; then what="the last green \"Outside the Dev-Preview gate\" or full run"; fi
           {
             echo "### This run is red"
             if [ -n "$SINCE" ] && git cat-file -e "$SINCE^{commit}" 2>/dev/null; then
@@ -996,5 +1000,5 @@ jobs:
               echo '```'
             fi
             echo
-            echo "Open the red job above. The chat whose merge broke it fixes it: if one of these is yours, check it first."
+            echo "Open the red job above. The chat whose merge broke it fixes it: if one of these is yours, check it first. A red Dev-Preview job may have another cause than a merge: read its error first."
           } | tee -a "$GITHUB_STEP_SUMMARY"

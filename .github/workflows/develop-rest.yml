@@ -10,8 +10,8 @@ name: Start CI rest run (develop)
 # What the rest run tests is decided there (everything since the last green one); the path filter here only keeps
 # a documentation push from cancelling and restarting the rest run of the code push before it. It may let too
 # much through, never too little: a path that is missing here only costs a restart.
-# Not covered by itself: a rest run that was cancelled by hand, or a start that never happened, followed only by
-# documentation pushes. The next code push covers it, or Actions -> CI -> Run workflow (develop, part rest).
+# Not covered by itself: a rest run that was cancelled by hand, or a start that never happened (also a very large
+# push: GitHub looks at its first 300 files only), followed only by documentation pushes. The next code push covers it, or Actions -> CI -> Run workflow (develop, part rest).
 on:
   push:
     branches: [develop]
@@ -20,6 +20,13 @@ on:
       - '!docs/**'
       - '!scribble/**'
       - '!site/**'
+      - '!CLAUDE.md'
+      - '!CONTRIBUTING.md'
+      - '!SECURITY.md'
+      - '!CHANGELOG*.md'
+      - '!LICENSE'
+      - '!.github/ISSUE_TEMPLATE/**'
+      - '!.github/PULL_REQUEST_TEMPLATE.md'
       # Read by unit tests, so they count as code (same list as `pinned` in ci.yml).
       - 'docs/AI-IMPORT*.md'
       - 'docs/user/installation*.md'
