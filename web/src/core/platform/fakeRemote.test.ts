@@ -110,4 +110,25 @@ describe('fake remote: the mouse level behaves like the shell', () => {
     expect(hooks.sent()).toEqual(['left-down', 'left-up', 'mute', 'left-up']);
     await expect(remote.pointer(full.session + 1, 'move', 1, 1)).rejects.toThrow('closed');
   });
+
+  it('keys and text need the mouse-and-keyboard level and an unlocked PC; text is checked whole', async () => {
+    const { remote, hooks } = createFakeRemoteParts();
+    hooks.setGrant('full');
+    const media = await remote.open('media', nothing);
+    await expect(remote.send(media.session, ['key-enter'])).rejects.toThrow('bad-level');
+    await expect(remote.text(media.session, 'abc')).rejects.toThrow('bad-level');
+    const full = await remote.open('full', nothing);
+    await remote.text(full.session, 'grüße 👋');
+    await remote.send(full.session, ['key-enter', 'key-alt-tab']);
+    expect(hooks.typed()).toEqual(['grüße 👋']);
+    expect(hooks.sent()).toEqual(['key-enter', 'key-alt-tab']);
+    for (const bad of ['', 'a\nb', 'a\tb', 'a\u2028b', 'x'.repeat(2049)]) {
+      await expect(remote.text(full.session, bad)).rejects.toThrow('bad-text');
+    }
+    hooks.setState({ locked: true });
+    await expect(remote.text(full.session, 'abc')).rejects.toThrow('locked');
+    await remote.send(full.session, ['key-enter']);
+    expect(hooks.typed()).toEqual(['grüße 👋']);
+    expect(hooks.sent()).toEqual(['key-enter', 'key-alt-tab']);
+  });
 });

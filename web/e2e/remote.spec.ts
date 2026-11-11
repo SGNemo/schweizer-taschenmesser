@@ -16,6 +16,8 @@ interface Hooks {
   level(): 'media' | 'full' | undefined;
   unlocks(): number;
   setUnlock(answer: 'ok' | 'cancel' | 'none' | 'unavailable'): void;
+  typed(): string[];
+  cutNextText(chars: number): void;
 }
 declare global {
   interface Window {
@@ -335,4 +337,141 @@ test('touchpad: the strips reach the thumb zone upright, and sideways the pad fi
   expect(box.y + box.height).toBeLessThanOrEqual(below.y + 1);
   await page.getByTestId('remote-legend-close').click();
   await expect(legend).toHaveCount(0);
+});
+
+test('keyboard: type, read, send – the enter key sends with Enter, "Senden" without', async ({
+  page,
+}, info) => {
+  await asPhoneWithRemote(page, 'full');
+  await page.goto('/remote');
+  await expect(page.getByTestId('remote-state')).toHaveText('Dein PC · Lautstärke 42 %');
+  await page.getByRole('button', { name: 'Tastatur' }).click();
+
+  // the field has the focus, so the phone's keyboard is open: only the field and its buttons
+  const field = page.getByTestId('remote-text');
+  await expect(field).toBeFocused();
+  await expect(page.locator('form[data-live="true"]')).toBeVisible();
+  await expect(page.getByTestId('remote-keys')).toHaveCount(0);
+  expect(await page.evaluate(() => window.__tmRemote.level())).toBe('full');
+
+  // nothing goes to the PC while typing
+  await field.fill('Grüße aus Köln 🙂');
+  expect(await page.evaluate(() => window.__tmRemote.typed())).toEqual([]);
+  await page.screenshot({ path: info.outputPath('remote-9-keyboard-typing.png') });
+
+  // "Senden": the line without Enter, and the field is empty again
+  await page.getByTestId('remote-send').tap();
+  await expect(field).toHaveValue('');
+  expect(await page.evaluate(() => window.__tmRemote.typed())).toEqual(['Grüße aus Köln 🙂']);
+  // sending keeps the phone's keyboard open: the field still has the focus, no keys yet
+  await expect(field).toBeFocused();
+  await expect(page.getByTestId('remote-keys')).toHaveCount(0);
+  expect(await page.evaluate(() => window.__tmRemote.sent())).toEqual([]);
+
+  // the keyboard's enter key: the line, then Enter at the PC
+  await field.fill('zweite Zeile');
+  await field.press('Enter');
+  await expect(field).toHaveValue('');
+  expect(await page.evaluate(() => window.__tmRemote.typed())).toEqual([
+    'Grüße aus Köln 🙂',
+    'zweite Zeile',
+  ]);
+  expect(await page.evaluate(() => window.__tmRemote.sent())).toEqual(['key-enter']);
+
+  // what was typed is kept nowhere on the phone
+  const kept = await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }));
+  expect(kept).not.toContain('Köln');
+  expect(kept).not.toContain('zweite Zeile');
+  const rows = await page.evaluate(async () => {
+    let all = '';
+    for (const { name } of await indexedDB.databases()) {
+      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+        const open = indexedDB.open(name!);
+        open.onsuccess = () => resolve(open.result);
+        open.onerror = () => reject(open.error);
+      });
+      for (const store of [...db.objectStoreNames]) {
+        all += await new Promise<string>((resolve, reject) => {
+          const get = db.transaction(store).objectStore(store).getAll();
+          get.onsuccess = () => resolve(JSON.stringify(get.result));
+          get.onerror = () => reject(get.error);
+        });
+      }
+      db.close();
+    }
+    return all;
+  });
+  expect(rows.length).toBeGreaterThan(0);
+  expect(rows).not.toContain('Köln');
+  expect(rows).not.toContain('zweite Zeile');
+
+  // closing the keyboard shows the keys: the main ones first, the rare ones behind "Mehr Tasten"
+  await page.getByTestId('remote-show-keys').click();
+  const keys = page.getByTestId('remote-keys');
+  await expect(keys).toBeVisible();
+  for (const name of ['Enter', 'Rücktaste', 'Esc', 'Tab', 'Fenster wechseln', 'Vollbild']) {
+    await expect(keys.getByRole('button', { name, exact: true })).toBeVisible();
+  }
+  await expect(keys.getByRole('button', { name: 'Entf' })).toHaveCount(0);
+  const esc = (await page.getByTestId('remote-key-escape').boundingBox())!;
+  expect(esc.height).toBeGreaterThanOrEqual(44);
+  await page.getByTestId('remote-key-escape').click();
+  await page.getByRole('button', { name: 'Pfeil nach links' }).click();
+  await page.getByTestId('remote-key-alt-tab').click();
+  await page.getByTestId('remote-more-keys').click();
+  await page.getByRole('button', { name: 'Entf' }).click();
+  await expect
+    .poll(() => page.evaluate(() => window.__tmRemote.sent()))
+    .toEqual(['key-enter', 'key-escape', 'key-left', 'key-alt-tab', 'key-delete']);
+  await page.screenshot({ path: info.outputPath('remote-10-keyboard-keys.png') });
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations).toEqual([]);
+});
+
+test('keyboard: a text that did not go out stays in the field, and the page says so', async ({
+  page,
+}) => {
+  await asPhoneWithRemote(page, 'full');
+  await page.goto('/remote');
+  await expect(page.getByTestId('remote-state')).toHaveText('Dein PC · Lautstärke 42 %');
+  await page.getByRole('button', { name: 'Tastatur' }).click();
+  const field = page.getByTestId('remote-text');
+  await expect(page.locator('form[data-live="true"]')).toBeVisible();
+
+  // the PC stopped typing in the middle: the text stays, one calm sentence, nothing sent twice
+  await page.evaluate(() => window.__tmRemote.cutNextText(3));
+  await field.fill('abcdef');
+  await page.getByTestId('remote-send').click();
+  await expect(page.getByTestId('remote-type-note')).toHaveText(
+    'Nur ein Teil kam am PC an. Sieh am PC nach, bevor du noch einmal sendest.',
+  );
+  await expect(field).toHaveValue('abcdef');
+  expect(await page.evaluate(() => window.__tmRemote.typed())).toEqual(['abc']);
+
+  // the PC is locked: nothing is typed, the state line says why, the text stays
+  await page.evaluate(() => window.__tmRemote.setState({ locked: true } as never));
+  await expect(page.getByTestId('remote-state')).toContainText(
+    'PC ist gesperrt. Medien und Lautstärke gehen weiter.',
+  );
+  await expect(field).toHaveValue('abcdef');
+  expect(await page.evaluate(() => window.__tmRemote.typed())).toEqual(['abc']);
+});
+
+test('keyboard: without the level at the PC the sentence and the way back, no field to type in', async ({
+  page,
+}) => {
+  await asPhoneWithRemote(page);
+  await page.goto('/remote');
+  await expect(page.getByTestId('remote-state')).toHaveText('Dein PC · Lautstärke 42 %');
+  await page.getByRole('button', { name: 'Tastatur' }).click();
+  await expect(page.getByTestId('remote-state')).toContainText(
+    'Maus und Tastatur sind am PC für dieses Handy aus.',
+  );
+  await expect(page.getByTestId('remote-text')).toBeDisabled();
+  await expect(page.getByTestId('remote-send')).toBeDisabled();
+  expect(await page.evaluate(() => window.__tmRemote.unlocks())).toBe(0);
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations).toEqual([]);
+  await page.getByTestId('remote-to-media').click();
+  await expect(page.getByTestId('remote-play-pause')).toBeVisible();
 });

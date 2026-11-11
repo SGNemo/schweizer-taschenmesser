@@ -5,9 +5,13 @@
 //!   and the two share no frame. The device key and the pinned hub are the ones of
 //!   `lan_client.rs`; both stay in Rust, the page gets neither.
 //! * The phone decides nothing: what this device may do is checked by the PC for every session
-//!   and every frame. This file only passes on what the page asks for – media actions and mouse
-//!   buttons from fixed lists, pointer moves and wheel steps as numbers – and what the PC answers.
-//!   There is no key and no text here (a later package).
+//!   and every frame. This file only passes on what the page asks for – media actions, mouse
+//!   buttons and keys from fixed lists, pointer moves and wheel steps as numbers, text as the
+//!   person typed it – and what the PC answers. A key is a name of the list, never a code; there
+//!   is no free combination.
+//! * Text is passed on and forgotten: it is checked (length, no control character – a line
+//!   break is the key Enter, never part of a text), cut into frames and written. It is never
+//!   logged, stored, echoed in an error or kept after the call.
 //! * Two levels. `media` is asked for as before. `full` (mouse) needs a media session of this run
 //!   first, because only the PC's `opened` tells whether it asks for an unlock at the phone.
 //!   Whether this device is granted the level and whether the PC is locked is the PC's to say:
@@ -19,8 +23,9 @@
 //!   `opened` of the mouse session itself is checked again: a session that needs an unlock
 //!   nobody gave is closed at once. The unlock is a brake on a phone lying around unlocked, not
 //!   a proof to the PC.
-//! * While the PC is locked no pointer and no button press is sent (the PC would drop them and
-//!   count them against the session); a release always goes, so nothing stays held.
+//! * While the PC is locked no pointer, no button press, no key and no text is sent (the PC
+//!   would drop them and count them against the session); a release always goes, so nothing
+//!   stays held.
 //! * One session at a time. Opening a new one closes the old one; events of a replaced session
 //!   are dropped here, so the page never sees a late "closed" of a session it already left.
 //!   While a mouse session is being opened, the PC ends the session it replaces before it
@@ -34,12 +39,14 @@
 // tests alone.
 #![cfg_attr(not(mobile), allow(dead_code))]
 
-use ::lan_sync::input::wire::{Button, Code, Level, Media, PcState, Record, VOLUME_UNKNOWN};
+use ::lan_sync::input::wire::{
+    Button, Code, Key, Level, Media, PcState, Record, MAX_TEXT_BYTES, VOLUME_UNKNOWN,
+};
 use ::lan_sync::input_client::{Event, InputError, InputSession};
 use serde::Serialize;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, SystemTime};
+use std::time::{Duration, Instant, SystemTime};
 use tauri::ipc::Channel;
 use tauri::{AppHandle, Manager, Runtime};
 
@@ -92,6 +99,51 @@ pub struct RemoteClient {
     /// Counts the pairings of this run ([`RemoteClient::reset`]): an unlock asked for under an
     /// older one does not count for the next.
     pairing: AtomicU64,
+    /// How much text the PC still takes right now, as this phone reckons it ([`Pace`]).
+    pace: Mutex<Pace>,
+}
+
+/// The PC takes text only so fast (512 bytes at once, then 512 a second, per session) and drops
+/// what is over without a word. The phone therefore waits before a frame that would not fit: a
+/// long text arrives whole, a little later. The PC reckons when it reads a frame, and a network
+/// that stalls hands it several frames at once: so the phone sends one frame at a time and well
+/// below the PC's rate, which leaves the PC room for frames that bunch up behind a stall of half
+/// a second. One text at a time per session: the page sends its pieces one after another.
+#[derive(Default)]
+struct Pace {
+    /// The session this was reckoned for; another one starts full.
+    session: u64,
+    /// Bytes that may go at once.
+    room: f64,
+    /// When `room` was reckoned (`None` = never: full).
+    at: Option<Instant>,
+}
+
+/// Bytes the phone sends at once (one frame), and per second after that – see [`Pace`].
+const PACE_BURST: f64 = MAX_TEXT_BYTES as f64;
+const PACE_PER_SECOND: f64 = 384.0;
+
+impl Pace {
+    /// How long to wait before `bytes` may go on `session` at `now` – and they count as gone
+    /// after that wait.
+    fn wait(&mut self, session: u64, bytes: usize, now: Instant) -> Duration {
+        // a frame before this one may still be waiting its turn: this one is reckoned from then
+        let (from, since) = match self.at {
+            Some(at) if self.session == session => {
+                (at.max(now), now.saturating_duration_since(at).as_secs_f64())
+            }
+            _ => (now, f64::INFINITY),
+        };
+        let room = (self.room + since * PACE_PER_SECOND).min(PACE_BURST);
+        let need = bytes as f64;
+        let wait = ((need - room) / PACE_PER_SECOND).max(0.0);
+        // after the wait the room has grown by what was waited for, and the bytes leave it
+        let goes = from + Duration::from_secs_f64(wait);
+        self.session = session;
+        self.room = room + wait * PACE_PER_SECOND - need;
+        self.at = Some(goes);
+        goes.saturating_duration_since(now)
+    }
 }
 
 impl RemoteClient {
@@ -315,6 +367,55 @@ fn button_from(name: &str) -> Option<(Button, bool)> {
     })
 }
 
+/// The fixed list of keys, by name. A key is pressed and released by the PC in one step; the
+/// one combination (switch window) is a name of its own.
+fn key_from(name: &str) -> Option<Key> {
+    Some(match name {
+        "key-enter" => Key::Enter,
+        "key-escape" => Key::Escape,
+        "key-backspace" => Key::Backspace,
+        "key-tab" => Key::Tab,
+        "key-space" => Key::Space,
+        "key-left" => Key::Left,
+        "key-up" => Key::Up,
+        "key-right" => Key::Right,
+        "key-down" => Key::Down,
+        "key-home" => Key::Home,
+        "key-end" => Key::End,
+        "key-page-up" => Key::PageUp,
+        "key-page-down" => Key::PageDown,
+        "key-delete" => Key::Delete,
+        "key-f11" => Key::F11,
+        "key-alt-tab" => Key::AltTab,
+        _ => return None,
+    })
+}
+
+/// Longest text of one call, in bytes of UTF-8 (a long line; the PC limits text per second).
+const MAX_TEXT: usize = 2048;
+
+/// The text of one call as the frames to write: each at most [`MAX_TEXT_BYTES`] bytes, cut at a
+/// whole character. Empty, too long, or with a control character in it: refused whole.
+fn text_frames(text: &str) -> Result<Vec<&str>, &'static str> {
+    // (the two Unicode line breaks count as control characters here: a line break is a key)
+    let control = |c: char| c.is_control() || matches!(c, '\u{2028}' | '\u{2029}');
+    if text.is_empty() || text.len() > MAX_TEXT || text.chars().any(control) {
+        return Err("bad-text");
+    }
+    let mut frames = Vec::new();
+    let mut rest = text;
+    while !rest.is_empty() {
+        let mut cut = rest.len().min(MAX_TEXT_BYTES);
+        while !rest.is_char_boundary(cut) {
+            cut -= 1;
+        }
+        let (frame, tail) = rest.split_at(cut);
+        frames.push(frame);
+        rest = tail;
+    }
+    Ok(frames)
+}
+
 /// What kind of action a record is, for the two checks before it goes out.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Kind {
@@ -329,6 +430,10 @@ enum Kind {
 fn record_from(name: &str) -> Option<(Record, Kind)> {
     if let Some(media) = media_from(name) {
         return Some((Record::Media(media), Kind::Media));
+    }
+    if let Some(key) = key_from(name) {
+        // a key is its own press and release: on a locked PC it is left out like a press
+        return Some((Record::Key(key), Kind::Press));
     }
     let (button, down) = button_from(name)?;
     let kind = if down { Kind::Press } else { Kind::Release };
@@ -709,11 +814,11 @@ fn open_now<R: Runtime>(
 
 /// The open session `session`, or `closed`. The lock is held only to pick it: a write that
 /// stalls (the PC vanished) must not keep `open` and `close` waiting.
-fn picked(state: &RemoteClient, session: u64) -> Result<(Arc<InputSession>, Level), String> {
+fn picked(state: &RemoteClient, session: u64) -> Result<(Arc<InputSession>, Level), &'static str> {
     let slot = state.session.lock().map_err(|_| "internal")?;
     match slot.as_ref() {
         Some((id, open, level)) if *id == session => Ok((open.clone(), *level)),
-        _ => Err("closed".to_owned()),
+        _ => Err("closed"),
     }
 }
 
@@ -769,6 +874,73 @@ pub async fn remote_client_pointer<R: Runtime>(
     .map_err(|_| "internal".to_owned())?
 }
 
+/// Types `text` at the PC on session `session`, which must be of the mouse-and-keyboard level.
+/// `bad-text`: empty, too long, or with a control character (a line break is the key
+/// `key-enter`). `locked`: the PC is locked, nothing was sent. `cut`: the PC was locked or the
+/// session ended after a part was written – that part is typed. A long text takes its time:
+/// the PC takes only so much a second ([`Pace`]). The text is written and forgotten; every
+/// error is one of a fixed list of words and cannot name it.
+#[tauri::command]
+pub async fn remote_client_text<R: Runtime>(
+    app: AppHandle<R>,
+    session: u64,
+    text: String,
+) -> Result<(), String> {
+    // (the worker answers with a fixed word: no error of it can carry the text)
+    let typed = tauri::async_runtime::spawn_blocking(move || -> Result<(), &'static str> {
+        let frames = text_frames(&text)?;
+        let state = app.state::<RemoteClient>();
+        let (open, level) = picked(&state, session)?;
+        if level != Level::Full {
+            return Err("bad-level");
+        }
+        let mut written = false;
+        for frame in frames {
+            let wait = state
+                .pace
+                .lock()
+                .map_err(|_| failed_as(written, "internal"))?
+                .wait(session, frame.len(), Instant::now());
+            if !wait.is_zero() {
+                std::thread::sleep(wait);
+            }
+            // asked before every frame: while this one waited its turn the PC may have been
+            // locked, the session ended by the PC, or closed here (the page left, another PC)
+            let ended = open.is_over() || state.live.load(Ordering::SeqCst) != session;
+            if ended || state.locked.load(Ordering::SeqCst) {
+                return Err(stopped_as(written, state.locked.load(Ordering::SeqCst)));
+            }
+            open.send_text(frame)
+                .map_err(|e| failed_as(written, error_name(e)))?;
+            written = true;
+        }
+        Ok(())
+    })
+    .await
+    .map_err(|_| "internal")?;
+    typed.map_err(str::to_owned)
+}
+
+/// What a text that could not go on answers: `cut` once a part of it was written; before that
+/// `locked` on a locked PC, else the session is over.
+fn stopped_as(written: bool, locked: bool) -> &'static str {
+    match (written, locked) {
+        (true, _) => "cut",
+        (false, true) => "locked",
+        (false, false) => "closed",
+    }
+}
+
+/// What a text answers whose frame failed: `cut` once a part of it was written, else the error's
+/// own name – the page must never say "nothing arrived" after a part did.
+fn failed_as(written: bool, name: &'static str) -> &'static str {
+    if written {
+        "cut"
+    } else {
+        name
+    }
+}
+
 /// Ends session `session` (the page went to the background). A number that is not the open
 /// session changes nothing.
 #[tauri::command]
@@ -795,6 +967,182 @@ pub async fn remote_client_close<R: Runtime>(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn keys_are_sixteen_names_and_nothing_else_is_a_key() {
+        let names = [
+            "key-enter",
+            "key-escape",
+            "key-backspace",
+            "key-tab",
+            "key-space",
+            "key-left",
+            "key-up",
+            "key-right",
+            "key-down",
+            "key-home",
+            "key-end",
+            "key-page-up",
+            "key-page-down",
+            "key-delete",
+            "key-f11",
+            "key-alt-tab",
+        ];
+        let mut seen = Vec::new();
+        for name in names {
+            let key = key_from(name).unwrap();
+            assert!(!seen.contains(&key), "{name}");
+            seen.push(key);
+        }
+        for bad in [
+            "key-",
+            "key-a",
+            "key-win",
+            "key-ctrl-c",
+            "key-13",
+            "enter",
+            "Key-Enter",
+            "key-enter ",
+            "key-alt",
+            "key-shift-tab",
+            "vk_return",
+        ] {
+            assert!(key_from(bad).is_none(), "{bad:?}");
+            assert!(records_from(&[bad.to_owned()]).is_err(), "{bad:?}");
+        }
+        // a key needs the mouse-and-keyboard level, and is left out while the PC is locked
+        let enter = || records_from(&["key-enter".to_owned()]).unwrap();
+        assert_eq!(sendable(enter(), Level::Media, false), Err("bad-level"));
+        assert_eq!(sendable(enter(), Level::Full, false).unwrap().len(), 1);
+        assert!(sendable(enter(), Level::Full, true).unwrap().is_empty());
+    }
+
+    #[test]
+    fn text_goes_only_as_fast_as_the_pc_takes_it() {
+        let start = Instant::now();
+        let mut pace = Pace::default();
+        // a fresh session takes a first frame at once
+        assert!(pace.wait(1, 256, start).is_zero());
+        // the second does not fit the rest of the burst: it waits for what is missing
+        let wait = pace.wait(1, 256, start);
+        let missing = (256.0 - (PACE_BURST - 256.0)) / PACE_PER_SECOND;
+        assert!((wait.as_secs_f64() - missing).abs() < 1e-6, "{wait:?}");
+        // a third asked at the same moment goes after the second, not together with it
+        let third = pace.wait(1, 256, start);
+        assert!(
+            (third.as_secs_f64() - 2.0 * missing).abs() < 1e-6,
+            "{third:?}"
+        );
+        // eight frames in a row (one long call): never more than the PC's own 512 bytes at
+        // once and 512 a second – reckoned from the times the frames really go
+        let mut pace = Pace::default();
+        let mut now = start;
+        let mut sent: Vec<(Duration, usize)> = Vec::new();
+        for _ in 0..8 {
+            now += pace.wait(1, 256, now);
+            sent.push((now - start, 256));
+        }
+        let mut room = 512.0_f64;
+        let mut last = Duration::ZERO;
+        for (at, bytes) in sent {
+            room = (room + (at - last).as_secs_f64() * 512.0).min(512.0);
+            last = at;
+            assert!(room >= bytes as f64, "the PC would drop a frame at {at:?}");
+            room -= bytes as f64;
+        }
+        // 2048 bytes take a few seconds, not more
+        assert!(last < Duration::from_secs(5), "{last:?}");
+        // The PC reckons when it READS a frame. A network that stalls for half a second, at any
+        // moment, hands it the frames of that time at once: still none is dropped.
+        let sent: Vec<Duration> = {
+            let mut pace = Pace::default();
+            let mut now = start;
+            (0..8)
+                .map(|_| {
+                    now += pace.wait(1, 256, now);
+                    now - start
+                })
+                .collect()
+        };
+        for step in 0..=500 {
+            let from = Duration::from_millis(step * 10);
+            let until = from + Duration::from_millis(500);
+            let mut room = 512.0_f64;
+            let mut last = Duration::ZERO;
+            for at in &sent {
+                let read = if *at >= from && *at < until {
+                    until
+                } else {
+                    *at
+                };
+                room = (room + (read - last).as_secs_f64() * 512.0).min(512.0);
+                last = read;
+                assert!(
+                    room >= 256.0,
+                    "a stall from {from:?} makes the PC drop a frame"
+                );
+                room -= 256.0;
+            }
+        }
+        // a pause fills the room again, but never over the burst
+        let mut pace = Pace::default();
+        assert!(pace.wait(1, 256, start).is_zero());
+        assert!(pace.wait(1, 256, start + Duration::from_secs(60)).is_zero());
+        assert!(!pace.wait(1, 256, start + Duration::from_secs(60)).is_zero());
+        // another session starts full
+        assert!(pace.wait(2, 256, start + Duration::from_secs(60)).is_zero());
+    }
+
+    #[test]
+    fn a_text_that_stops_says_whether_a_part_was_typed() {
+        assert_eq!(stopped_as(false, true), "locked");
+        assert_eq!(stopped_as(false, false), "closed");
+        assert_eq!(stopped_as(true, true), "cut");
+        assert_eq!(stopped_as(true, false), "cut");
+        // a frame that failed: its own name only while nothing was typed yet
+        assert_eq!(failed_as(false, "network"), "network");
+        assert_eq!(failed_as(true, "network"), "cut");
+        assert_eq!(failed_as(true, "internal"), "cut");
+    }
+
+    #[test]
+    fn text_is_checked_whole_and_cut_into_frames_at_whole_characters() {
+        assert_eq!(text_frames("grüße").unwrap(), ["grüße"]);
+        for bad in [
+            "",
+            "a\nb",
+            "a\tb",
+            "a\rb",
+            "\u{0}",
+            "a\u{1b}[2J",
+            "a\u{7f}",
+            "a\u{85}b",
+            "a\u{2028}b",
+            "a\u{2029}b",
+        ] {
+            assert_eq!(text_frames(bad), Err("bad-text"), "{bad:?}");
+        }
+        assert!(text_frames(&"a".repeat(MAX_TEXT)).is_ok());
+        assert_eq!(text_frames(&"a".repeat(MAX_TEXT + 1)), Err("bad-text"));
+        // 300 two-byte characters = 600 bytes: three frames, none over the limit, nothing lost,
+        // no character cut in two
+        let long = "ü".repeat(300);
+        let frames = text_frames(&long).unwrap();
+        assert_eq!(frames.len(), 3);
+        assert!(frames
+            .iter()
+            .all(|f| f.len() <= MAX_TEXT_BYTES && !f.is_empty()));
+        assert_eq!(frames.concat(), long);
+        // four-byte characters at an odd offset
+        let emoji = format!("a{}", "👋".repeat(100));
+        let frames = text_frames(&emoji).unwrap();
+        assert!(frames.iter().all(|f| f.len() <= MAX_TEXT_BYTES));
+        assert_eq!(frames.concat(), emoji);
+        // every frame passes the PC's own check
+        for frame in frames {
+            assert!(::lan_sync::input::wire::check_text(frame.as_bytes()).is_ok());
+        }
+    }
 
     #[test]
     fn only_the_fixed_media_actions_are_accepted() {

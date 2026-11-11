@@ -272,6 +272,28 @@ export type RemoteAction =
 /** Mouse buttons, pressed or released (a session of the mouse level only). A fixed list. */
 export type RemoteButtonAction = 'left-down' | 'left-up' | 'right-down' | 'right-up';
 
+/**
+ * A key of the PC's fixed list (mouse-and-keyboard level): the PC presses and releases it in one
+ * step. There is no "any key" and no free combination; "switch window" is a name of its own.
+ */
+export type RemoteKeyAction =
+  | 'key-enter'
+  | 'key-escape'
+  | 'key-backspace'
+  | 'key-tab'
+  | 'key-space'
+  | 'key-left'
+  | 'key-up'
+  | 'key-right'
+  | 'key-down'
+  | 'key-home'
+  | 'key-end'
+  | 'key-page-up'
+  | 'key-page-down'
+  | 'key-delete'
+  | 'key-f11'
+  | 'key-alt-tab';
+
 /** The PC's four facts. `volume` is 0–100, or `null` when the PC cannot tell. */
 export interface RemotePcState {
   volume: number | null;
@@ -325,7 +347,7 @@ export interface RemoteOpened {
  * prompt is already up), `unlock-unavailable` (this phone has a screen lock it cannot ask for:
  * the level is not for this phone, trying again does not help). `unlock-needed`: the PC asked for an unlock only in the answer itself
  * – both sessions are gone; open `media`, then `full` again. While the PC is locked the shell
- * sends no pointer and no button press (a release always goes). The session a `full`
+ * sends no pointer, no button press and no key (a release always goes), and `text` rejects. The session a `full`
  * open replaces ends without an event; if that open fails after the PC already ended it, its
  * `closed` (no reason) arrives around the time the open rejects (not after `unlock-needed`,
  * which says it all). One `open` at a time: wait for the answer before the next.
@@ -338,7 +360,20 @@ export interface RemoteService {
     /** The app's language, for the phone's unlock prompt. */
     lang?: string,
   ): Promise<RemoteOpened>;
-  send(session: number, actions: (RemoteAction | RemoteButtonAction)[]): Promise<void>;
+  send(
+    session: number,
+    actions: (RemoteAction | RemoteButtonAction | RemoteKeyAction)[],
+  ): Promise<void>;
+  /**
+   * Types `text` at the PC (mouse-and-keyboard level): up to 2048 bytes of UTF-8 without control
+   * characters – a line break is the key `key-enter`, never part of a text. Rejects with
+   * `bad-text`, `locked` (the PC is locked, nothing was typed), `cut` (the PC was locked or the
+   * session ended after a part was typed), `bad-level`, `closed`, or what a broken connection
+   * gives. The PC takes text only so fast (about 500 bytes at once, then as much a second) and
+   * the shell waits for it: a long text resolves after a few seconds. The shell writes the
+   * text and forgets it.
+   */
+  text(session: number, text: string): Promise<void>;
   /** One pointer move or wheel step; `dy > 0` is down, `dx > 0` to the right. */
   pointer(session: number, kind: 'move' | 'scroll', dx: number, dy: number): Promise<void>;
   close(session: number): Promise<void>;

@@ -71,4 +71,20 @@ describe('remote bridge (phone)', () => {
     mocks.invoke.mockRejectedValueOnce({ not: 'a code' });
     await expect(remote.pointer(1, 'move', 1, 1)).rejects.toThrow('failed');
   });
+
+  it('hands text to the shell as it is and keeps nothing of it', async () => {
+    const remote = createRemote(true);
+    await remote.text(3, 'grüße 👋');
+    expect(mocks.invoke).toHaveBeenLastCalledWith('remote_client_text', {
+      session: 3,
+      text: 'grüße 👋',
+    });
+    await remote.send(3, ['key-enter']);
+    expect(mocks.invoke).toHaveBeenLastCalledWith('remote_client_send', {
+      session: 3,
+      actions: ['key-enter'],
+    });
+    mocks.invoke.mockRejectedValueOnce('locked');
+    await expect(remote.text(3, 'abc')).rejects.toThrow('locked');
+  });
 });

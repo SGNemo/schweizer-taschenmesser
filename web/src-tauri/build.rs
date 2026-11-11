@@ -60,6 +60,7 @@ const COMMANDS: &[&str] = &[
     "lan_client_unpair",
     "remote_client_open",
     "remote_client_send",
+    "remote_client_text",
     "remote_client_pointer",
     "remote_client_close",
     "local_api_start",

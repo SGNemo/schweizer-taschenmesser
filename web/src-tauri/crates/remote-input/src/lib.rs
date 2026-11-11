@@ -5,14 +5,18 @@
 //! crate makes the system calls. It knows no network, no device and no grant, and the hub knows no
 //! system call: *the crate that listens cannot act, the crate that acts cannot listen.*
 //!
-//! Two levels, two threads:
+//! Two levels, three threads:
 //!
 //! * **Media** ([`Worker`]) is made of API calls – the audio endpoint's volume, the system's
 //!   media session, `LockWorkStation`. Nothing there simulates input: no media or volume key.
 //! * **Pointer** ([`Pointer`], `src/pointer.rs`) is simulated input: the mouse part of
-//!   `SendInput` – relative moves, the left and right button, the wheel. That file is the only
-//!   place in the whole app that simulates input (`tests/rules.rs`). There is no keyboard here
-//!   yet (it comes with its own package), no absolute position and no window message.
+//!   `SendInput` – relative moves, the left and right button, the wheel.
+//! * **Keyboard** ([`Keyboard`], `src/keyboard.rs`) is simulated input too: the keyboard part of
+//!   `SendInput` – text as Unicode units, and the sixteen keys of a fixed list. There is no
+//!   "any key" and no free combination.
+//!
+//! Those two files are the only places in the whole app that simulate input
+//! (`tests/rules.rs`); there is no absolute position and no window message.
 //!
 //! * The media worker thread owns every system object (COM and WinRT are initialised there). Commands
 //!   reach it through a bounded channel that never blocks the caller: when it is full, the command
@@ -25,10 +29,15 @@
 
 #![cfg_attr(not(windows), forbid(unsafe_code))]
 
+mod keyboard;
 mod pointer;
 mod system;
 mod worker;
 
+pub use keyboard::{
+    strokes, typed, Code, Key, KeyAction, Keyboard, Keys, Stroke, KEYS, QUEUE as KEY_QUEUE,
+    TEXT_UNITS,
+};
 pub use pointer::{Button, Mouse, Pointer, PointerAction, QUEUE, WHEEL_UNIT};
 pub use system::System;
 pub use worker::{Worker, FRESH_WAIT, STALE};

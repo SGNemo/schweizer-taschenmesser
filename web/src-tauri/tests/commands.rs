@@ -385,6 +385,34 @@ fn no_tauri_command_simulates_input() {
     let map = &code[code.find("fn pointer_of(").unwrap()..];
     let map = &map[..map.find("\n}\n").unwrap()];
     assert!(map.contains("Action::Key(_) | Action::Media(_) | Action::Text(_) => return None"));
+    // … or to the keyboard thread (only what `keys_of` maps: a key of the fixed list, or text
+    // that is moved into the one action that types it)
+    assert_eq!(code.matches("self.keys.send(keys)").count(), 1);
+    assert_eq!(code.matches("self.keys.send(").count(), 1);
+    assert_eq!(
+        code.matches("Keyboard::start()").count(),
+        1,
+        "started by the sink only"
+    );
+    let keys = &code[code.find("fn keys_of(").unwrap()..];
+    let keys = &keys[..keys.find("\n}\n").unwrap()];
+    assert!(keys.contains("Action::Key(key) => Ok(KeyAction::Key(key_of(key)))"));
+    assert!(keys.contains("Action::Text(text) => Ok(KeyAction::Text(text.into_boxed_str()))"));
+    assert!(
+        !keys.contains(".clone()") && !keys.contains("to_owned") && !keys.contains("to_string")
+    );
+    // the key table is written out, one to one: no number, no cast, no catch-all
+    let table = &code[code.find("fn key_of(").unwrap()..];
+    let table = &table[..table.find("\n}\n").unwrap()];
+    assert_eq!(table.matches(" => K::").count(), 16);
+    assert!(!table.contains("_ =>") && !table.contains(" as ") && !table.contains("transmute"));
+    // no command, state or event carries text or a key back out of the sink
+    for forbidden in ["KeyAction", "Keyboard", "keys_of", "key_of"] {
+        assert!(
+            !remote_commands_source().contains(forbidden),
+            "a remote command mentions {forbidden}"
+        );
+    }
 
     // nowhere in the shell: simulated input, or a command of another module reaching the sink
     for entry in fs::read_dir(format!("{}/src", env!("CARGO_MANIFEST_DIR"))).unwrap() {
@@ -577,6 +605,7 @@ fn remote_client_commands_exist_on_the_phone_only() {
     let wanted = [
         "remote_client_open",
         "remote_client_send",
+        "remote_client_text",
         "remote_client_pointer",
         "remote_client_close",
     ];
@@ -650,18 +679,79 @@ fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
         "unpair",
         ".link",
         "Link",
-        "send_text",
-        "Record::Key",
-        "Key::",
         "println!",
         "eprintln!",
         "log::",
         "dbg!",
+        "format!",
+        "tracing",
     ] {
         assert!(
             !code.contains(forbidden),
             "remote_client.rs mentions {forbidden}"
         );
+    }
+    // A key is a name of the fixed list – sixteen, mapped in one table, never built from a
+    // number – and reaches a record in one place.
+    let keys = &code[code.find("fn key_from(").unwrap()..];
+    let keys = &keys[..keys.find("\n}\n").unwrap()];
+    assert_eq!(keys.matches("\"key-").count(), 16);
+    assert_eq!(keys.matches(" => Key::").count(), 16);
+    assert!(!keys.contains(" as ") && !keys.contains("parse") && !keys.contains("from_"));
+    assert_eq!(code.matches("Record::Key(").count(), 1);
+    assert_eq!(code.matches("Key::").count(), 16);
+    // Text goes out in one place, checked first, and is never kept, echoed or handed back: no
+    // DTO, state or error carries it.
+    let typed = &code[code.find("pub async fn remote_client_text").unwrap()..];
+    let typed = &typed[..typed.find("\n}\n").unwrap()];
+    assert_eq!(code.matches("send_text(").count(), 1);
+    let check = typed.find("text_frames(&text)?").expect("checked first");
+    assert!(check < typed.find("send_text(").unwrap());
+    assert!(typed.find("Level::Full").unwrap() < typed.find("send_text(").unwrap());
+    assert!(typed.find("locked.load").unwrap() < typed.find("send_text(").unwrap());
+    // … at the PC's pace, and the worker's error type is a fixed word: nothing it answers can
+    // carry the text
+    let pace = typed.find(".pace").expect("paced");
+    assert!(pace < typed.find("send_text(").unwrap());
+    assert!(typed.contains("std::thread::sleep(wait);"));
+    // after the wait and before the frame: a session closed here meanwhile (the page left,
+    // another PC) types no more, and an error after a part was typed never reads as "nothing"
+    let closed = typed
+        .find("state.live.load(Ordering::SeqCst) != session")
+        .expect("a closed session stops the text");
+    assert!(typed.find("sleep(wait)").unwrap() < closed);
+    assert!(closed < typed.find("send_text(").unwrap());
+    assert_eq!(typed.matches("failed_as(written, ").count(), 2);
+    assert!(!typed.contains("map_err(error_name)"));
+    assert!(typed.contains("spawn_blocking(move || -> Result<(), &'static str> {"));
+    assert!(!typed.contains("to_owned()") && !typed.contains("to_string()"));
+    assert!(typed.contains("typed.map_err(str::to_owned)"));
+    // the text is used where it is checked and written, and nowhere else in the command
+    assert!(!typed.contains("clone()"));
+    assert_eq!(
+        typed.matches("text").count()
+            - typed.matches("send_text").count()
+            - typed.matches("text_frames").count()
+            - typed.matches("remote_client_text").count(),
+        2,
+        "the parameter and its one use"
+    );
+    for kept in [
+        "text: Mutex",
+        "text: String,\n}",
+        "last_text",
+        "history",
+        "Vec<String>>",
+    ] {
+        assert!(!code.contains(kept), "remote_client.rs keeps text: {kept}");
+    }
+    for dto in ["StateDto", "EventDto", "OpenedDto"] {
+        let at = code
+            .find(&format!("pub struct {dto}"))
+            .or_else(|| code.find(&format!("pub enum {dto}")));
+        let body = &code[at.unwrap()..];
+        let body = &body[..body.find("\n}\n").unwrap()];
+        assert!(!body.contains("text"), "{dto} carries text");
     }
     // the mouse level goes through the gate, and the phone's unlock never touches the vault's
     // biometric key: it is the plugin's keyless presence prompt, which no command of the page
