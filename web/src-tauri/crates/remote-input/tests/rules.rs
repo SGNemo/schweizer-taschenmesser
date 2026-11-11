@@ -8,6 +8,11 @@ fn root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
 }
 
+/// A source file as text, whatever line ends the checkout gave it (Windows: CRLF).
+fn read(path: impl AsRef<std::path::Path>) -> String {
+    fs::read_to_string(path).unwrap().replace("\r\n", "\n")
+}
+
 fn sources() -> Vec<(String, String)> {
     fs::read_dir(root().join("src"))
         .unwrap()
@@ -16,7 +21,7 @@ fn sources() -> Vec<(String, String)> {
         .map(|p| {
             (
                 p.file_name().unwrap().to_string_lossy().into_owned(),
-                fs::read_to_string(&p).unwrap(),
+                read(&p),
             )
         })
         .collect()
@@ -123,7 +128,7 @@ fn only_two_files_simulate_input_each_its_own_kind() {
 
     // the pointer: exactly one call site, and the flags are the seven of move, two buttons and
     // the wheel
-    let pointer = fs::read_to_string(root().join("src/pointer.rs")).unwrap();
+    let pointer = read(root().join("src/pointer.rs"));
     assert_eq!(one_call(&pointer), 1, "one SendInput call");
     assert_eq!(types(&pointer), ["r#type: INPUT_MOUSE,"]);
     assert_eq!(
@@ -142,44 +147,64 @@ fn only_two_files_simulate_input_each_its_own_kind() {
     // The keyboard. What is pressed is planned in plain code (`strokes`, `typed`), which
     // `tests/keyboard.rs` checks on every system; the Windows part below it may only turn one
     // planned stroke into one event. Linux never compiles that part, so it is read here.
-    let keyboard = fs::read_to_string(root().join("src/keyboard.rs")).unwrap();
+    let keyboard = read(root().join("src/keyboard.rs"));
+    // Two parts. The plan (which key goes down and comes up, in which order; what of a text is
+    // typed) is plain code that `tests/keyboard.rs` checks on every system. Everything from the
+    // handle on – the thread, the way to the system's keyboard, the Windows part – is pinned
+    // whole below: Linux never compiles the Windows part, and no behaviour test runs the real
+    // keyboard.
     let at = keyboard
-        .find("#[cfg(windows)]\nmod imp {")
-        .expect("the Windows part");
-    let (plain, imp) = keyboard.split_at(at);
-    // nothing of the system above it
-    for line in code_lines(plain) {
+        .find("/// The handle the shell keeps;")
+        .expect("the handle");
+    let (plan, rest) = keyboard.split_at(at);
+    // The plan is the same on every system and knows nothing of one: no conditional
+    // compilation, nothing of Windows, no second implementation of the keys, no module.
+    for line in code_lines(plan) {
         for n in [
-            "windows::",
+            "cfg",
+            "windows",
             "VK_",
             "KEYEVENTF",
             "INPUT",
             "VIRTUAL_KEY",
             "unsafe",
+            "impl Keys for",
+            "mod ",
         ] {
             assert!(
                 !line.contains(n),
-                "keyboard.rs: `{n}` above the Windows part"
+                "keyboard.rs: `{n}` in the plan: `{}`",
+                line.trim()
             );
         }
     }
-    // The Windows part itself is pinned whole, as it stands (comments and layout aside): every
-    // attempt to pin single properties left a way to hold a key down, add an event or change a
-    // flag. A change to it fails here on purpose – it needs a second pair of eyes, and then
-    // this copy is updated with it.
-    let normal = |text: &str| -> String {
+    // Every attempt to pin single properties of the rest left a way to hold a key down, add an
+    // event or change a flag. So it is pinned as it stands (comments and layout aside): a
+    // change fails here on purpose, needs a second pair of eyes, and this copy changes with it.
+    let lines = |text: &str| -> Vec<String> {
         code_lines(text)
-            .map(str::trim)
+            .map(|l| l.trim().to_owned())
             .filter(|l| !l.is_empty())
-            .collect::<Vec<_>>()
-            .join(" ")
+            .collect()
     };
-    assert_eq!(
-        normal(imp),
-        normal(IMP),
-        "the Windows part of keyboard.rs changed: read docs/rules/remote-control.md, have it \
-         reviewed, then update the copy in tests/rules.rs"
-    );
+    let (now, pinned) = (lines(rest), lines(PINNED));
+    let differs = now
+        .iter()
+        .zip(&pinned)
+        .position(|(a, b)| a != b)
+        .or((now.len() != pinned.len()).then_some(now.len().min(pinned.len())));
+    if let Some(i) = differs {
+        panic!(
+            "keyboard.rs changed from the handle on, at code line {}:\n  now:    {}\n  pinned: {}\n\
+             Read docs/rules/remote-control.md and have the change reviewed; then update PINNED \
+             in tests/rules.rs. A new key also needs: `Key`, `KEYS`, `Code`, `chord`, `key_of` \
+             and its import, the count of sixteen below, tests/keyboard.rs, the hub's list and \
+             `key_of` in the shell.",
+            i + 1,
+            now.get(i).map_or("(end)", String::as_str),
+            pinned.get(i).map_or("(end)", String::as_str),
+        );
+    }
     // one list of keys, the public one: sixteen
     let list = &keyboard[keyboard.find("pub enum Key {").unwrap()..];
     let list = &list[..list.find("\n}").unwrap()];
@@ -187,7 +212,50 @@ fn only_two_files_simulate_input_each_its_own_kind() {
         list.lines()
             .filter(|l| l.trim().ends_with(',') && !l.trim().starts_with("//"))
             .count(),
-        16
+        16,
+        "the fixed list has sixteen keys"
+    );
+}
+
+/// The crate is five files and nothing else: no sub-directory, no file pulled in from elsewhere,
+/// no macro that could hide code from the tests that read these files.
+#[test]
+fn the_crate_is_exactly_its_five_files() {
+    let mut names: Vec<String> = fs::read_dir(root().join("src"))
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
+    names.sort();
+    assert_eq!(
+        names,
+        [
+            "keyboard.rs",
+            "lib.rs",
+            "pointer.rs",
+            "system.rs",
+            "worker.rs"
+        ]
+    );
+    assert_absent(&[
+        "#[path",
+        "include!",
+        "include_str!",
+        "include_bytes!",
+        "macro_rules!",
+    ]);
+    let lib = read(root().join("src/lib.rs"));
+    let mods: Vec<&str> = code_lines(&lib)
+        .map(str::trim)
+        .filter(|l| l.starts_with("mod ") || l.starts_with("pub mod ") || l.contains(" mod "))
+        .collect();
+    assert_eq!(
+        mods,
+        [
+            "mod keyboard;",
+            "mod pointer;",
+            "mod system;",
+            "mod worker;"
+        ]
     );
 }
 
@@ -213,7 +281,7 @@ fn the_input_files_have_nowhere_to_keep_anything() {
                 assert!(!line.contains(n), "{name}: `{n}` in `{line}`");
             }
             assert!(
-                !line.starts_with("static ") && !line.starts_with("pub static "),
+                !line.split_whitespace().any(|w| w == "static"),
                 "{name}: a static in `{line}`"
             );
         }
@@ -236,7 +304,7 @@ fn no_network_no_files_no_tauri_no_serde() {
         "std::process",
         "Command::new",
     ]);
-    let manifest = fs::read_to_string(root().join("Cargo.toml")).unwrap();
+    let manifest = read(root().join("Cargo.toml"));
     let deps: Vec<&str> = manifest
         .lines()
         .skip_while(|l| !l.starts_with("[target.") && !l.starts_with("[dependencies"))
@@ -282,7 +350,7 @@ fn only_the_four_facts_leave() {
         "Thumbnail",
         "SourceAppUserModelId",
     ]);
-    let lib = fs::read_to_string(root().join("src/lib.rs")).unwrap();
+    let lib = read(root().join("src/lib.rs"));
     let state = &lib[lib.find("pub struct State").unwrap()..];
     let body = &state[..state.find("\n}").unwrap()];
     let fields: Vec<&str> = body
@@ -297,7 +365,7 @@ fn only_the_four_facts_leave() {
 /// `unsafe` is for the Windows calls only, and every block says why it is sound.
 #[test]
 fn unsafe_is_windows_only_and_explained() {
-    let lib = fs::read_to_string(root().join("src/lib.rs")).unwrap();
+    let lib = read(root().join("src/lib.rs"));
     assert!(lib.contains("#![cfg_attr(not(windows), forbid(unsafe_code))]"));
     for (name, text) in sources() {
         let lines: Vec<&str> = text.lines().collect();
@@ -317,8 +385,47 @@ fn unsafe_is_windows_only_and_explained() {
     }
 }
 
-/// The Windows part of `src/keyboard.rs`, as reviewed (see the test above).
-const IMP: &str = r#"
+/// `src/keyboard.rs` from the handle on, as reviewed (see the test above).
+const PINNED: &str = r#"
+pub struct Keyboard {
+tx: Option<SyncSender<KeyAction>>,
+}
+impl Keyboard {
+pub fn start() -> Keyboard {
+match imp::native() {
+Some(keys) => Keyboard::with(keys),
+None => Keyboard { tx: None },
+}
+}
+pub fn with(mut keys: Box<dyn Keys>) -> Keyboard {
+let (tx, rx) = mpsc::sync_channel::<KeyAction>(QUEUE);
+let spawned = std::thread::Builder::new()
+.name("remote-keys".into())
+.spawn(move || {
+while let Ok(action) = rx.recv() {
+apply(keys.as_mut(), action);
+}
+});
+Keyboard {
+tx: spawned.is_ok().then_some(tx),
+}
+}
+pub fn supported(&self) -> bool {
+self.tx.is_some()
+}
+pub fn send(&self, action: KeyAction) -> bool {
+self.tx
+.as_ref()
+.is_some_and(|tx| tx.try_send(action).is_ok())
+}
+}
+#[cfg(not(windows))]
+mod imp {
+use super::Keys;
+pub fn native() -> Option<Box<dyn Keys>> {
+None
+}
+}
 #[cfg(windows)]
 mod imp {
 use super::{Code, Keys, Stroke};
