@@ -37,7 +37,7 @@ While the PC is locked, only media and volume work. The phone never sees your sc
 - **Media:** big buttons for playback and volume. If you like, the phone's volume keys control the PC too (a setting of the module).
 - **Touchpad:** swiping moves the pointer, a tap clicks, two fingers scroll.
 - **Keyboard:** type text on the phone, read it, then send it. The text is stored nowhere.
-- **On the overview:** the card _Remote_ has one button, _Play / Pause_. One tap connects and sends. If connecting takes longer, the card asks for a second tap. The card never connects by itself.
+- **On the overview:** the card _Remote_ has one button, _Play / Pause_. One tap connects and sends. If connecting takes longer, the card says so; once it is connected, tap once more. The card never connects by itself.
 
 ## Ending it and switching it on again
 

@@ -16,7 +16,7 @@ Die Fernbedienung ist noch in Arbeit. Damit du sie siehst, schalte **am PC und a
 
 1. **PC:** _Einstellungen → Verbindungen → Fernsteuerung → Fernsteuerung erlauben_ einschalten.
 2. **PC:** Beim Handy unter _Gekoppelte Geräte_ wählen, was es darf (siehe unten). Windows fragt in einem eigenen Fenster noch einmal nach.
-3. **Handy:** Im Modulkatalog die _Fernbedienung_ einschalten und öffnen.
+3. **Handy:** In der Modul-Bibliothek die _Fernbedienung_ einschalten und öffnen.
 
 Ohne Schritt 1 und 2 kann kein Gerät deinen PC steuern. Die Kopplung allein reicht nicht.
 
@@ -37,7 +37,7 @@ Solange der PC gesperrt ist, gehen nur Medien und Lautstärke. Das Handy sieht n
 - **Medien:** große Tasten für Wiedergabe und Lautstärke. Wenn du magst, steuern auch die Lautstärketasten des Handys den PC (Einstellung im Modul).
 - **Touchpad:** wischen bewegt den Zeiger, tippen klickt, mit zwei Fingern scrollen.
 - **Tastatur:** Text am Handy tippen, lesen und dann senden. Der Text wird nirgends gespeichert.
-- **Auf der Übersicht:** Die Karte _Fernbedienung_ hat eine Taste _Wiedergabe / Pause_. Ein Tipp verbindet und sendet. Dauert das Verbinden länger, bittet die Karte um einen zweiten Tipp. Die Karte verbindet sich nie von selbst.
+- **Auf der Übersicht:** Die Karte _Fernbedienung_ hat eine Taste _Wiedergabe / Pause_. Ein Tipp verbindet und sendet. Dauert das Verbinden länger, sagt die Karte das; steht die Verbindung danach, tippe noch einmal. Die Karte verbindet sich nie von selbst.
 
 ## Beenden und wieder einschalten
 

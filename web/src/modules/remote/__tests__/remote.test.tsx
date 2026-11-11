@@ -430,6 +430,30 @@ describe('RemoteWidget', () => {
     expect(screen.getByText('Dein PC · Lautstärke 42 %')).toBeTruthy();
   }, 20_000);
 
+  it('an impatient second tap while it connects: one press goes out, and nothing asks for another', async () => {
+    const release = fake.parts.hooks.holdOpens();
+    await widget();
+    const button = () => screen.getByRole('button', { name: 'Wiedergabe / Pause' });
+    fireEvent.click(button());
+    await flush();
+    fireEvent.click(button());
+    await flush();
+    const asked: boolean[] = [];
+    const watch = new MutationObserver(() =>
+      asked.push(document.body.textContent.includes('Tippe noch einmal')),
+    );
+    watch.observe(document.body, { childList: true, subtree: true, characterData: true });
+    await act(async () => release());
+    for (let i = 0; i < 600 && fake.parts.hooks.sent().length === 0; i++) {
+      await act(async () => new Promise((r) => setTimeout(r, 10)));
+    }
+    await flush();
+    watch.disconnect();
+    expect(fake.parts.hooks.sent()).toEqual(['play-pause']);
+    expect(asked).not.toContain(true);
+    expect(screen.getByText('Dein PC · Lautstärke 42 %')).toBeTruthy();
+  });
+
   it('left while it still connects: nothing goes out afterwards and no session stays', async () => {
     const release = fake.parts.hooks.holdOpens();
     await widget();

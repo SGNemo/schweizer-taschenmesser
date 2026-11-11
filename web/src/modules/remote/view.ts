@@ -1,7 +1,7 @@
 import type { RemotePcState } from '@/core/platform/types';
 import type { RemotePad, RemoteView } from '@/core/remote/session';
-import { t } from '@/strings';
 import { settingsPath } from '@/core/settings/registry/paths';
+import { t } from '@/strings';
 
 /** The one step a state offers. */
 export type RemoteStep = 'retry' | 'pair' | 'disable';

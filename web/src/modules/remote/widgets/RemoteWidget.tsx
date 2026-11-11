@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { getPlatform } from '@/core/platform';
-import { settingsPath } from '@/core/settings/registry/paths';
 import { useSyncStatus } from '@/core/sync/status';
 import { t } from '@/strings';
 import { StatusWidget } from '@/ui';
@@ -31,6 +30,9 @@ export default function RemoteWidget() {
   // whether this widget opened the session (then it is this widget's to end; ending one the PC
   // already ended is harmless)
   const mine = useRef(false);
+  // counts the taps: only the latest tap's result says whether its press went out (an earlier
+  // tap that a later one replaced answers "not sent", and that is not news)
+  const taps = useRef(0);
 
   useEffect(() => {
     const end = () => {
@@ -51,11 +53,7 @@ export default function RemoteWidget() {
   if (!supported) return <StatusWidget icon="monitor" state={t.remote.phoneOnly} />;
   if (!paired) {
     return (
-      <StatusWidget
-        icon="monitor"
-        state={t.remote.state.notPaired}
-        action={{ label: t.remote.pair, to: settingsPath('sync', 'sync') }}
-      />
+      <StatusWidget icon="monitor" state={t.remote.state.notPaired} action={stepLink('pair')} />
     );
   }
 
@@ -77,12 +75,15 @@ export default function RemoteWidget() {
   }
 
   const tap = () => {
+    const tapNo = ++taps.current;
     mine.current = true;
     setTapped(true);
     setMissed(false);
     // without a session the press opens one first and goes out once it stands; `false`: it did
     // not go out (the connect took too long and the press was let go, or the PC refused)
-    void remoteSession.send('play-pause').then((sent) => setMissed(!sent));
+    void remoteSession.send('play-pause').then((sent) => {
+      if (tapNo === taps.current) setMissed(!sent);
+    });
   };
   // One still line. The PC's volume only while a session is open; after a tap, that the phone
   // is connecting; and if the connect outlived its press, that one more tap is needed.
