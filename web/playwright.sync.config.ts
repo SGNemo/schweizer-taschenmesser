@@ -17,7 +17,8 @@ export default defineConfig({
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  reporter: process.env.CI ? 'github' : 'list',
+  // CI: annotations plus the retried (flaky) tests in the job summary (e2e/reporters/flaky-summary.ts).
+  reporter: process.env.CI ? [['github'], ['./e2e/reporters/flaky-summary.ts']] : 'list',
   timeout: 60_000,
   use: {
     // The app follows the device language; the specs assert German texts.
