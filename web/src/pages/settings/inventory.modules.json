@@ -576,6 +576,11 @@
         "type": "boolean",
         "label": "Bildschirm anlassen",
         "default": false
+      },
+      "padSpeed": {
+        "type": "select",
+        "label": "Zeigergeschwindigkeit auf dem Touchpad",
+        "default": "normal"
       }
     }
   },
