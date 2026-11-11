@@ -4,7 +4,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
-UI-Audit 4.0 weiterführen: Paket 0b-2 (Modulkopf als eine Titelzeile mit Reitern) ist gemergt (#688); offen dazu das Senken des Reizbudgets aus den CI-Werten (`fix/ui4-0b-2-stimulus-budget`) und der Paletten-PR „Enter = eintragen, ? = fragen“, danach 0b-3 bis 0b-8. Plan, Ledger und Pakete: [design/ui-audit-2026-11/](design/ui-audit-2026-11/PACKAGES.md).
+UI-Audit 4.0 weiterführen: Paket 0b-2 (Modulkopf als eine Titelzeile mit Reitern) ist gemergt (#688); das Reizbudget folgt den CI-Werten (#713); offen dazu der Paletten-PR „Enter = eintragen, ? = fragen“ (`fix/palette-enter-captures`), danach 0b-3 bis 0b-8. Plan, Ledger und Pakete: [design/ui-audit-2026-11/](design/ui-audit-2026-11/PACKAGES.md).
 
 ## Laufende Runden
 

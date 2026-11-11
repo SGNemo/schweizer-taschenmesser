@@ -998,6 +998,9 @@ export const de = {
     nextReminder: 'Nächste Erinnerung zeigen',
     helpCommand: 'Hilfe und Anleitung öffnen',
     randomReminder: 'Eine Erinnerung zeigen',
+    /** Free text that is no question: Enter hands it to quick capture. */
+    capture: 'Schnell hinzufügen',
+    questionHint: 'Mit „?“ am Anfang oder Ende fragst du stattdessen.',
   },
   share: {
     title: 'Teilen',
