@@ -4,7 +4,7 @@ import {
   useFocusSettings,
   type FocusSettings,
 } from '@/core/settings/focus';
-import { setHideValues, useHideValues } from '@/core/focus/hideValues';
+import { setHideValues, useHideValuesSetting } from '@/core/focus/hideValues';
 import { clearRecent } from '@/core/search/recent';
 import { Link } from 'react-router';
 import { settingsPath } from '@/core/settings/registry/paths';
@@ -43,7 +43,7 @@ const EXTRAS: readonly BoolKey[] = [
  */
 export function FocusSection() {
   const [values, patch] = useFocusSettings();
-  const hideValues = useHideValues();
+  const hideValues = useHideValuesSetting();
   // „Woche prüfen“ belongs to the planner: hidden while the planner is off.
   const plannerOn = useModuleStates()?.planner === true;
   const extras: readonly BoolKey[] = plannerOn ? [...EXTRAS, 'weekCheck'] : EXTRAS;
@@ -124,7 +124,8 @@ export function FocusSection() {
           <Switch
             label={s.hideValues}
             labelHidden
-            checked={hideValues}
+            checked={hideValues === true}
+            disabled={hideValues === undefined}
             onChange={(v) => void setHideValues(v)}
           />
         </SettingRow>
