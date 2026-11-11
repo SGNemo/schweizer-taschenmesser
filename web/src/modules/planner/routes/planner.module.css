@@ -1,4 +1,4 @@
-/* U01: the head figure's room while the board is read (same shape as the figure, unseen). */
+/* U01: the room of the head figure and of the week bars while the board is read (same shape, unseen). */
 .headPending {
   visibility: hidden;
 }
