@@ -105,8 +105,10 @@ pub struct RemoteClient {
 
 /// The PC takes text only so fast (512 bytes at once, then 512 a second, per session) and drops
 /// what is over without a word. The phone therefore waits before a frame that would not fit: a
-/// long text arrives whole, a little later. Reckoned a little below the PC's own numbers, so
-/// that two clocks that differ never make it drop.
+/// long text arrives whole, a little later. The PC reckons when it reads a frame, and a network
+/// that stalls hands it several frames at once: so the phone sends one frame at a time and well
+/// below the PC's rate, which leaves the PC room for frames that bunch up behind a stall of most
+/// of a second.
 #[derive(Default)]
 struct Pace {
     /// The session this was reckoned for; another one starts full.
@@ -117,26 +119,30 @@ struct Pace {
     at: Option<Instant>,
 }
 
-/// Bytes the PC takes at once, and per second after that, as the phone reckons.
-const PACE_BURST: f64 = 448.0;
-const PACE_PER_SECOND: f64 = 448.0;
+/// Bytes the phone sends at once (one frame), and per second after that – see [`Pace`].
+const PACE_BURST: f64 = MAX_TEXT_BYTES as f64;
+const PACE_PER_SECOND: f64 = 384.0;
 
 impl Pace {
     /// How long to wait before `bytes` may go on `session` at `now` – and they count as gone
     /// after that wait.
     fn wait(&mut self, session: u64, bytes: usize, now: Instant) -> Duration {
-        let since = match self.at {
-            Some(at) if self.session == session => now.saturating_duration_since(at).as_secs_f64(),
-            _ => f64::INFINITY,
+        // a frame before this one may still be waiting its turn: this one is reckoned from then
+        let (from, since) = match self.at {
+            Some(at) if self.session == session => {
+                (at.max(now), now.saturating_duration_since(at).as_secs_f64())
+            }
+            _ => (now, f64::INFINITY),
         };
         let room = (self.room + since * PACE_PER_SECOND).min(PACE_BURST);
         let need = bytes as f64;
         let wait = ((need - room) / PACE_PER_SECOND).max(0.0);
         // after the wait the room has grown by what was waited for, and the bytes leave it
+        let goes = from + Duration::from_secs_f64(wait);
         self.session = session;
         self.room = room + wait * PACE_PER_SECOND - need;
-        self.at = Some(now + Duration::from_secs_f64(wait));
-        Duration::from_secs_f64(wait)
+        self.at = Some(goes);
+        goes.saturating_duration_since(now)
     }
 }
 
@@ -890,21 +896,22 @@ pub async fn remote_client_text<R: Runtime>(
         }
         let mut written = false;
         for frame in frames {
-            let wait = state.pace.lock().map_err(|_| "internal")?.wait(
-                session,
-                frame.len(),
-                Instant::now(),
-            );
+            let wait = state
+                .pace
+                .lock()
+                .map_err(|_| failed_as(written, "internal"))?
+                .wait(session, frame.len(), Instant::now());
             if !wait.is_zero() {
                 std::thread::sleep(wait);
             }
-            // asked before every frame: the PC may have been locked, or the session ended,
-            // while this one waited its turn
-            let stopped = state.locked.load(Ordering::SeqCst) || open.is_over();
-            if stopped {
+            // asked before every frame: while this one waited its turn the PC may have been
+            // locked, the session ended by the PC, or closed here (the page left, another PC)
+            let ended = open.is_over() || state.live.load(Ordering::SeqCst) != session;
+            if ended || state.locked.load(Ordering::SeqCst) {
                 return Err(stopped_as(written, state.locked.load(Ordering::SeqCst)));
             }
-            open.send_text(frame).map_err(error_name)?;
+            open.send_text(frame)
+                .map_err(|e| failed_as(written, error_name(e)))?;
             written = true;
         }
         Ok(())
@@ -921,6 +928,16 @@ fn stopped_as(written: bool, locked: bool) -> &'static str {
         (true, _) => "cut",
         (false, true) => "locked",
         (false, false) => "closed",
+    }
+}
+
+/// What a text answers whose frame failed: `cut` once a part of it was written, else the error's
+/// own name – the page must never say "nothing arrived" after a part did.
+fn failed_as(written: bool, name: &'static str) -> &'static str {
+    if written {
+        "cut"
+    } else {
+        name
     }
 }
 
@@ -1010,6 +1027,12 @@ mod tests {
         let wait = pace.wait(1, 256, start);
         let missing = (256.0 - (PACE_BURST - 256.0)) / PACE_PER_SECOND;
         assert!((wait.as_secs_f64() - missing).abs() < 1e-6, "{wait:?}");
+        // a third asked at the same moment goes after the second, not together with it
+        let third = pace.wait(1, 256, start);
+        assert!(
+            (third.as_secs_f64() - 2.0 * missing).abs() < 1e-6,
+            "{third:?}"
+        );
         // eight frames in a row (one long call): never more than the PC's own 512 bytes at
         // once and 512 a second – reckoned from the times the frames really go
         let mut pace = Pace::default();
@@ -1029,6 +1052,38 @@ mod tests {
         }
         // 2048 bytes take a few seconds, not more
         assert!(last < Duration::from_secs(5), "{last:?}");
+        // The PC reckons when it READS a frame. A network that stalls for half a second, at any
+        // moment, hands it the frames of that time at once: still none is dropped.
+        let sent: Vec<Duration> = {
+            let mut pace = Pace::default();
+            let mut now = start;
+            (0..8)
+                .map(|_| {
+                    now += pace.wait(1, 256, now);
+                    now - start
+                })
+                .collect()
+        };
+        for step in 0..=500 {
+            let from = Duration::from_millis(step * 10);
+            let until = from + Duration::from_millis(500);
+            let mut room = 512.0_f64;
+            let mut last = Duration::ZERO;
+            for at in &sent {
+                let read = if *at >= from && *at < until {
+                    until
+                } else {
+                    *at
+                };
+                room = (room + (read - last).as_secs_f64() * 512.0).min(512.0);
+                last = read;
+                assert!(
+                    room >= 256.0,
+                    "a stall from {from:?} makes the PC drop a frame"
+                );
+                room -= 256.0;
+            }
+        }
         // a pause fills the room again, but never over the burst
         let mut pace = Pace::default();
         assert!(pace.wait(1, 256, start).is_zero());
@@ -1044,6 +1099,10 @@ mod tests {
         assert_eq!(stopped_as(false, false), "closed");
         assert_eq!(stopped_as(true, true), "cut");
         assert_eq!(stopped_as(true, false), "cut");
+        // a frame that failed: its own name only while nothing was typed yet
+        assert_eq!(failed_as(false, "network"), "network");
+        assert_eq!(failed_as(true, "network"), "cut");
+        assert_eq!(failed_as(true, "internal"), "cut");
     }
 
     #[test]

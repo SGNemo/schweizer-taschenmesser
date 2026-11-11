@@ -711,9 +711,18 @@ fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
     assert!(typed.find("locked.load").unwrap() < typed.find("send_text(").unwrap());
     // … at the PC's pace, and the worker's error type is a fixed word: nothing it answers can
     // carry the text
-    let pace = typed.find("state.pace.lock()").expect("paced");
+    let pace = typed.find(".pace").expect("paced");
     assert!(pace < typed.find("send_text(").unwrap());
     assert!(typed.contains("std::thread::sleep(wait);"));
+    // after the wait and before the frame: a session closed here meanwhile (the page left,
+    // another PC) types no more, and an error after a part was typed never reads as "nothing"
+    let closed = typed
+        .find("state.live.load(Ordering::SeqCst) != session")
+        .expect("a closed session stops the text");
+    assert!(typed.find("sleep(wait)").unwrap() < closed);
+    assert!(closed < typed.find("send_text(").unwrap());
+    assert_eq!(typed.matches("failed_as(written, ").count(), 2);
+    assert!(!typed.contains("map_err(error_name)"));
     assert!(typed.contains("spawn_blocking(move || -> Result<(), &'static str> {"));
     assert!(!typed.contains("to_owned()") && !typed.contains("to_string()"));
     assert!(typed.contains("typed.map_err(str::to_owned)"));
