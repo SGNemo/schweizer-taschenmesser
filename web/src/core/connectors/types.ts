@@ -8,6 +8,7 @@
  * (ESLint), so nothing that was read from a mailbox can reach a model.
  */
 import type { MailProvider } from '@/core/mail/types';
+import type { CoverImage } from './coverUrl';
 import type { ComponentType } from 'react';
 import type { Maturity } from '@/core/modules/types';
 import type { PlatformKind } from '@/core/platform/types';
@@ -206,6 +207,8 @@ export interface NowPlaying {
   /** Album (or nothing for a podcast episode); small cover image of the service's own CDN. */
   album?: string;
   coverUrl?: string;
+  /** Every size of that picture that passed the host rule; the view picks the one its surface needs. */
+  covers?: CoverImage[];
   /** Position and length in milliseconds, as of the moment of the reading. */
   progressMs?: number;
   durationMs?: number;
@@ -235,6 +238,8 @@ export interface MediaItem {
   album?: string;
   durationMs?: number;
   coverUrl?: string;
+  /** Every size of that picture that passed the host rule; the view picks the one its surface needs. */
+  covers?: CoverImage[];
 }
 
 /** The content of a playlist or album: its own details and the tracks (up to 200). Shown on request, never stored. */
@@ -243,6 +248,8 @@ export interface Tracklist {
   /** Owner of a playlist, artist of an album. */
   subtitle?: string;
   coverUrl?: string;
+  /** Every size of that picture that passed the host rule; the view picks the one its surface needs. */
+  covers?: CoverImage[];
   /** How many tracks the whole list has (can be more than `items`). */
   total?: number;
   items: MediaItem[];
@@ -276,6 +283,8 @@ export interface Playlist {
   /** Extras of the player's own list (the focus-round picker needs only id and name). */
   trackCount?: number;
   coverUrl?: string;
+  /** Every size of that picture that passed the host rule; the view picks the one its surface needs. */
+  covers?: CoverImage[];
   owner?: string;
 }
 
