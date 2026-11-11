@@ -144,6 +144,12 @@ export function createFakeRemoteParts() {
       if (!live || live.session !== session) throw new Error('closed');
       if (live.level !== 'full') throw new Error('bad-level');
       if (pc.locked) throw new Error('locked');
+      if (cutAfter !== undefined) {
+        const part = Array.from(text).slice(0, cutAfter).join('');
+        cutAfter = undefined;
+        if (part) typed.push(part);
+        throw new Error('cut');
+      }
       typed.push(text);
     },
     close: async (session) => {
@@ -151,7 +157,14 @@ export function createFakeRemoteParts() {
     },
   };
 
+  /** The next text stops after this many characters were typed, as on a PC locked meanwhile. */
+  let cutAfter: number | undefined;
+
   const hooks = {
+    /** The next `text` types only its first `chars` characters and then answers `cut`. */
+    cutNextText(chars: number) {
+      cutAfter = chars;
+    },
     /** The next `count` opens fail with this code (`network`, `no-answer`, `paused`, …). */
     failOpen(code: string, count = 1) {
       openError = code;

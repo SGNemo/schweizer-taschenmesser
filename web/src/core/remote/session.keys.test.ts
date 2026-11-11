@@ -68,6 +68,9 @@ describe('remote session: text and keys', () => {
   it('a pasted line break or tab is a space, never a key; long text goes in whole pieces', async () => {
     expect(textPieces('a\nb\tc\r\nd e')).toEqual(['a b c d e']);
     expect(textPieces('')).toEqual([]);
+    // half a character from a broken paste becomes the replacement character
+    expect(textPieces('a\uD83Db\uDC4Bc')).toEqual(['a\uFFFDb\uFFFDc']);
+    expect(textPieces('👋')).toEqual(['👋']);
     const long = '👋'.repeat(900);
     const pieces = textPieces(long);
     expect(pieces.length).toBe(3);
@@ -143,7 +146,71 @@ describe('remote session: text and keys', () => {
     expect(await second).toBe('failed');
     release();
     await pass(0);
-    await first;
+    // the piece in flight was handed to the shell before the page left; whatever came of it,
+    // nothing more is typed for this text or the one behind it
+    expect(['sent', 'failed']).toContain(await first);
     expect(hooks.typed()).not.toContain('zwei');
+  });
+
+  it('a long text whose pieces were not all written yet stops when the page leaves', async () => {
+    const { session, hooks, remote } = await ready();
+    let release: () => void = () => undefined;
+    const text = remote.text.bind(remote);
+    vi.spyOn(remote, 'text').mockImplementationOnce(async (id, t) => {
+      await new Promise<void>((resolve) => (release = resolve));
+      return text(id, t);
+    });
+    const long = 'a'.repeat(900);
+    const typing = session.type(long, true);
+    await pass(0);
+    await session.close();
+    release();
+    await pass(0);
+    // the piece in flight meets a session that is gone; the rest and the Enter are never tried
+    expect(await typing).toBe('failed');
+    expect(remote.text).toHaveBeenCalledTimes(1);
+    expect(hooks.typed()).toEqual([]);
+    expect(hooks.sent()).toEqual([]);
+  });
+
+  it('says so when only a part was typed: the PC locked in the middle, or the Enter did not go', async () => {
+    const a = await ready();
+    a.hooks.cutNextText(2);
+    expect(await done(a.session.type('abcdef', true))).toBe('partial');
+    expect(a.hooks.typed()).toEqual(['ab']);
+    expect(a.hooks.sent()).toEqual([]);
+    expect(a.session.view().kind).toBe('connected');
+
+    const b = await ready();
+    vi.spyOn(b.remote, 'send').mockRejectedValueOnce(new Error('network'));
+    expect(await done(b.session.type('abc', true))).toBe('partial');
+    expect(b.hooks.typed()).toEqual(['abc']);
+
+    // the second piece of a long text meets a locked PC
+    const c = await ready();
+    const text = c.remote.text.bind(c.remote);
+    let calls = 0;
+    vi.spyOn(c.remote, 'text').mockImplementation(async (id, t) => {
+      calls += 1;
+      if (calls === 2) throw new Error('locked');
+      return text(id, t);
+    });
+    expect(await done(c.session.type('a'.repeat(900), false))).toBe('partial');
+    expect(c.session.view().kind).toBe('connected');
+  });
+
+  it('a full queue answers "busy", not a broken connection', async () => {
+    const { session, remote } = await ready();
+    let release: () => void = () => undefined;
+    vi.spyOn(remote, 'pointer').mockImplementationOnce(async () => {
+      await new Promise<void>((resolve) => (release = resolve));
+    });
+    session.point('move', 1, 1);
+    for (let i = 0; i < 8; i++) session.click(['left-down']);
+    expect(await session.type('abc', false)).toBe('busy');
+    expect(session.key('key-enter')).toBe(false);
+    expect(session.view().kind).toBe('connected');
+    release();
+    await pass(0);
   });
 });
