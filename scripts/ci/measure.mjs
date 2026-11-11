@@ -159,6 +159,9 @@ const eventClass = (r) => {
       : r.head_branch === "main"
         ? "main"
         : "push other";
+  // The second run of a develop push (ci.yml, part rest; started by develop-rest.yml) has its own run name.
+  if (/^Outside the Dev-Preview gate/.test(r.display_title ?? ""))
+    return "develop rest";
   if (r.event === "workflow_dispatch" || r.event === "schedule")
     return r.head_branch === "develop" || r.head_branch === "main"
       ? "nightly/manual"

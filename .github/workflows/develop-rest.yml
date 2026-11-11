@@ -1,0 +1,48 @@
+name: Start CI rest run (develop)
+
+# Starts the second half of the CI of a push to `develop`: every job outside the Dev-Preview gate (rest E2E, seed
+# project, sync E2E, extension, small packages, stimulus budget, local model, Windows shell) as its own run of
+# ci.yml (`part: rest`). That run is in a group of its own where a newer one cancels the older: the push run of
+# ci.yml (gate, Dev-Preview build and publish) is never cancelled and holds its group only as long as the gate
+# and the preview take. docs/howto/ci-layout.md -> "Concurrency".
+#
+# The dispatch always tests the tip of `develop`, so two starts in the wrong order still end on the newest commit.
+# What the rest run tests is decided there (everything since the last green one); the path filter here only keeps
+# a documentation push from cancelling and restarting the rest run of the code push before it. It may let too
+# much through, never too little: a path that is missing here only costs a restart.
+# Not covered by itself: a rest run that was cancelled by hand (also by re-running an older rest run), or a start that never happened (also a very large
+# push: GitHub looks at its first 300 files only), followed only by documentation pushes. The next code push covers it, or Actions -> CI -> Run workflow (develop, part rest).
+on:
+  push:
+    branches: [develop]
+    paths:
+      - '**'
+      - '!docs/**'
+      - '!scribble/**'
+      - '!site/**'
+      - '!CLAUDE.md'
+      - '!CONTRIBUTING.md'
+      - '!SECURITY.md'
+      - '!CHANGELOG.md'
+      - '!CHANGELOG.de.md'
+      - '!LICENSE'
+      - '!.github/ISSUE_TEMPLATE/**'
+      - '!.github/PULL_REQUEST_TEMPLATE.md'
+      # Read by unit tests, so they count as code (same list as `pinned` in ci.yml).
+      - 'docs/AI-IMPORT*.md'
+      - 'docs/user/installation*.md'
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  start:
+    name: Start the jobs outside the Dev-Preview gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch ci.yml (part rest) on develop
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run ci.yml --repo "$GITHUB_REPOSITORY" --ref develop -f part=rest
