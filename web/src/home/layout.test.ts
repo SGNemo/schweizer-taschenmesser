@@ -15,6 +15,9 @@ import {
   CALM_STAND_IN,
   withoutFolded,
   withSize,
+  loadLayout,
+  resetLayout,
+  updateLayout,
 } from './layout';
 
 const w = (...keys: string[]) => keys.map((key) => ({ key }));
@@ -192,5 +195,15 @@ describe('home layout: the Heute card folds the calendar widgets', () => {
       sizes: { 'calendar:today': 's' },
     };
     expect(resolveLayout(stored, undefined)).toMatchObject(stored);
+  });
+});
+
+describe('home layout: storage', () => {
+  it('keeps two quick changes of the overview made at the same time', async () => {
+    await resetLayout();
+    await Promise.all([updateLayout({ dense: true }), updateLayout({ hidden: ['todos'] })]);
+    const stored = await loadLayout();
+    expect(stored.dense).toBe(true);
+    expect(stored.hidden).toEqual(['todos']);
   });
 });
