@@ -191,6 +191,33 @@ fn only_two_files_simulate_input_each_its_own_kind() {
             assert!(!rest.contains(built), "keyboard.rs: `{}`", line.trim());
         }
     }
+    // … and by no other spelling: no struct literal, no field of a flag or key written or
+    // read, no reinterpreting
+    for line in code_lines(&keyboard) {
+        for n in [
+            "VIRTUAL_KEY {",
+            "KEYBD_EVENT_FLAGS {",
+            "transmute",
+            "from_raw",
+            "as *",
+        ] {
+            assert!(!line.contains(n), "keyboard.rs: `{n}` in `{}`", line.trim());
+        }
+        let field = line
+            .match_indices(".0")
+            .any(|(at, _)| !line[at + 2..].starts_with(|c: char| c.is_ascii_digit()));
+        assert!(!field, "keyboard.rs: a `.0` field in `{}`", line.trim());
+    }
+    // one way into an event: the three fields take what `event` is handed, and `event` is
+    // called for a key of the list and for a unit of text, nowhere else
+    for field in ["wVk: vk,", "wScan: scan,", "dwFlags: flags,"] {
+        assert_eq!(keyboard.matches(field).count(), 1, "{field}");
+    }
+    let calls = code_lines(&keyboard)
+        .filter(|l| l.contains("event(") && !l.contains("fn event("))
+        .count();
+    assert_eq!(calls, 3, "of_key once, text twice");
+    assert_eq!(keyboard.matches("event(vk, 0, flags)").count(), 1);
     // text is typed as Unicode units only: the unit never becomes a virtual key
     assert_eq!(
         keyboard

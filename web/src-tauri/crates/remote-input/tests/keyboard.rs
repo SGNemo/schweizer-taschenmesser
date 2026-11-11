@@ -71,7 +71,9 @@ fn text_and_keys_arrive_in_the_order_they_were_sent() {
 #[test]
 fn control_characters_are_never_typed_and_empty_text_is_nothing() {
     let (keyboard, log) = keyboard();
-    assert!(keyboard.send(KeyAction::Text("a\u{0}b\nc\u{1b}[d\u{7f}\u{85}".into())));
+    assert!(keyboard.send(KeyAction::Text(
+        "a\u{0}b\nc\u{1b}[d\u{7f}\u{85}\u{2028}\u{2029}".into()
+    )));
     assert!(keyboard.send(KeyAction::Text("\n\t\r".into())));
     assert!(keyboard.send(KeyAction::Text("".into())));
     assert!(keyboard.send(KeyAction::Key(Key::Tab)));

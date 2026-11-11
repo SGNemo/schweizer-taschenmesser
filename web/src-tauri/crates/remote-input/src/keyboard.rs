@@ -3,12 +3,15 @@
 //! of `SendInput`, nothing else (no window message, no hook, no clipboard).
 //!
 //! * There is no "any key". A [`Key`] is one of sixteen; the one combination among them
-//!   (Alt+Tab) is one id, pressed and released inside one call. No modifier is ever left down:
-//!   every call carries the release of everything it presses, and if the system took only part
-//!   of a call, the releases are sent once more on their own.
+//!   (Alt+Tab) is one id, pressed and released inside one call: every call carries the release
+//!   of everything it presses, and if the system took only part of a call, the releases are
+//!   sent once more on their own (the system takes a call whole or not at all in practice).
+//!   No key is held between two calls.
 //! * Text goes in as Unicode units (`KEYEVENTF_UNICODE`), each one down and up: what arrives is
 //!   the characters, whatever keyboard layout the PC has. The hub has already refused control
-//!   characters and anything over its length; this file caps the length again for itself.
+//!   characters and anything over its length; this file drops them again for itself, the two
+//!   Unicode line breaks with them (a line break is the key Enter, never part of a text), and
+//!   caps the length.
 //! * It has a thread of its own, so text and keys keep their order among themselves ("the line,
 //!   then Enter") and never wait for the media worker. When [`QUEUE`] actions wait, one more is
 //!   dropped – typed text that arrives late and in pieces is worse than text that does not.
@@ -87,7 +90,8 @@ pub trait Keys: Send {
 fn units_of(text: &str) -> Vec<u16> {
     let mut units = Vec::new();
     let mut buf = [0u16; 2];
-    for c in text.chars().filter(|c| !c.is_control()) {
+    let typed = |c: &char| !c.is_control() && !matches!(c, '\u{2028}' | '\u{2029}');
+    for c in text.chars().filter(typed) {
         let pair = c.encode_utf16(&mut buf);
         if units.len() + pair.len() > TEXT_UNITS {
             break;
@@ -245,7 +249,7 @@ mod imp {
             let all: Vec<INPUT> = downs.chain(ups.clone()).collect();
             if send(&all) < all.len() {
                 // the system took only a part: whatever went down comes up (a spare release
-                // does nothing)
+                // does nothing; a lone Alt tap may give the menu bar of the window the focus)
                 let ups: Vec<INPUT> = ups.collect();
                 send(&ups);
             }

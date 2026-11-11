@@ -3,9 +3,9 @@
 //!
 //! What decides lives in the crates (and is tested there). This file
 //! * hands the hub a sink ([`Sink`]): media actions go to the worker of `remote_input` (plain
-//!   system calls), pointer actions to its pointer thread (the one place that simulates input);
-//!   keys and text are dropped here (a later package) – nothing in this file or in any Tauri
-//!   command simulates input,
+//!   system calls), pointer actions to its pointer thread, keys and text to its keyboard thread
+//!   (those two files of `remote_input` are the only places that simulate input) – nothing in
+//!   this file or in any Tauri command simulates input,
 //! * offers the PC's own controls to the settings page. Every widening (a higher level, lifting a
 //!   pause, dropping the unlock request, the master switch) is confirmed in a **native** dialog
 //!   first, in a fixed order: take `Remote::ticket()`, show the dialog, call the setter with the
@@ -144,8 +144,10 @@ impl InputSink for Sink {
 
     fn apply(&self, action: Action) {
         // Media, pointer and keyboard run on three threads: the order holds within each (a line
-        // of text, then Enter), not between them (the hub checks the lock per record and per
-        // text, so "lock, then a move or a key" is still safe).
+        // of text, then Enter), not between them. "Lock, then a key" in one frame may therefore
+        // still type the key before the PC is locked – nothing the phone could not have done by
+        // sending the key first; once the PC is locked the hub applies nothing (it asks per
+        // record and per text) and Windows refuses injected input on the secure desktop.
         if let Action::Media(media) = action {
             self.media.send(command_of(media));
         } else if let Some(pointer) = pointer_of(&action) {
@@ -1029,6 +1031,21 @@ mod tests {
         assert!(host.notice_on());
         assert!(host.quiet().unwrap().set(true).is_err());
         assert!(host.notice_on());
+    }
+
+    #[test]
+    fn every_key_of_the_hub_is_the_same_key_at_the_keyboard() {
+        // the hub's list and the keyboard's list in their own order, id by id: a swapped pair
+        // (Up/Down, PageUp/PageDown) would compile and must fail here
+        for (i, expected) in remote_input::KEYS.iter().enumerate() {
+            let id = u8::try_from(i + 1).unwrap();
+            let records = ::lan_sync::input::wire::decode_events(&[4, id, 0, 0]).unwrap();
+            let ::lan_sync::input::wire::Record::Key(key) = records[0] else {
+                panic!("id {id} is not a key");
+            };
+            assert!(key_of(key) == *expected, "key {id}");
+        }
+        assert!(::lan_sync::input::wire::decode_events(&[4, 17, 0, 0]).is_err());
     }
 
     #[test]
