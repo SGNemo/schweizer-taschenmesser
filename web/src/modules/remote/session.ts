@@ -1,7 +1,12 @@
 import { useSyncExternalStore } from 'react';
 import { getPlatform } from '@/core/platform';
 import type { RemotePcState } from '@/core/platform/types';
-import { createRemoteSession, type RemoteView, type SyncVerdict } from '@/core/remote/session';
+import {
+  createRemoteSession,
+  type RemotePad,
+  type RemoteView,
+  type SyncVerdict,
+} from '@/core/remote/session';
 import { syncNow } from '@/core/sync/service';
 import { useSyncStatus } from '@/core/sync/status';
 import { now } from '@/core/time/now';
@@ -51,6 +56,11 @@ const readLast = () => lastPc;
 /** The PC's last known state (see above), re-rendering with the session. */
 export function useLastPc(): RemotePcState | undefined {
   return useSyncExternalStore(subscribe, readLast, readLast);
+}
+
+/** The mouse level of the session (the touchpad reads it), re-rendering on every change. */
+export function useRemotePad(): RemotePad {
+  return useSyncExternalStore(subscribe, remoteSession.pad, remoteSession.pad);
 }
 
 /** The session's state, re-rendering on every change. */

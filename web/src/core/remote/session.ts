@@ -1,7 +1,9 @@
 import type {
   RemoteAction,
+  RemoteButtonAction,
   RemoteCloseReason,
   RemoteEvent,
+  RemoteLevel,
   RemotePcState,
   RemoteService,
 } from '@/core/platform/types';
@@ -25,7 +27,12 @@ import type {
  * - while it connects, at most one action waits (the last one): held keys never pile up;
  * - "connecting" is shown for a few seconds at most, then "no answer yet" (no verdict before the
  *   attempt is over), and a press that waited until then is dropped: it must not arrive much later;
- * - one instance per app serves every screen (the PC keeps one session per device).
+ * - one instance per app serves every screen (the PC keeps one session per device);
+ * - the mouse level is asked for only when the touchpad is used (`raise`): Medien stays a media
+ *   session. A device granted only media, and a locked PC, get their sentence without a call; a
+ *   dismissed unlock is not asked again by itself (only the person's own step asks again);
+ * - what the pad sends goes out in order, one write at a time: moves are summed only while a
+ *   write is pending, a press that finds the queue full is dropped, a release never is.
  */
 export type RemoteView =
   | { kind: 'idle' }
@@ -42,6 +49,25 @@ export type RemoteView =
   | { kind: 'disconnected' }
   /** An answer this version does not understand (a newer PC): offer to try again. */
   | { kind: 'retry' };
+
+/**
+ * The mouse level of the session, apart from the session's own state: the touchpad reads this,
+ * Medien never does.
+ */
+export type RemotePad =
+  /** Not asked for (yet), or the session is gone. */
+  | { kind: 'off' }
+  | { kind: 'opening' }
+  /** `noLock`: the PC asks for an unlock and this phone has no screen lock (a fact, no block). */
+  | { kind: 'ready'; noLock: boolean }
+  /** The PC grants this phone media only. */
+  | { kind: 'not-granted' }
+  /** The PC is locked: no mouse session opens. */
+  | { kind: 'locked' }
+  /** The phone's unlock was dismissed or failed: waits for the person's own step. */
+  | { kind: 'unlock' }
+  /** This phone has a screen lock it cannot ask for: the level is not for this phone. */
+  | { kind: 'unavailable' };
 
 /** What a sync round says about the pairing. */
 export type SyncVerdict = 'ok' | 'not-paired' | 'failed';
@@ -78,6 +104,13 @@ const REASONS: readonly RemoteCloseReason[] = [
 const isReason = (code: string): code is RemoteCloseReason =>
   (REASONS as readonly string[]).includes(code);
 
+/** What the pad sends: a move or wheel step, or mouse buttons. */
+type Out =
+  | { kind: 'move' | 'scroll'; dx: number; dy: number }
+  | { kind: 'buttons'; actions: RemoteButtonAction[] };
+/** Entries that may wait behind the write in flight. */
+const OUT_MAX = 8;
+
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 export interface RemoteSession {
@@ -93,6 +126,19 @@ export interface RemoteSession {
   send(action: RemoteAction, options?: { repeat?: boolean }): Promise<boolean>;
   /** Ends the session (the page went to the background). */
   close(): Promise<void>;
+  /** The mouse level right now (a stable object until it changes; listeners hear of changes). */
+  pad(): RemotePad;
+  /**
+   * The touchpad is used: opens the mouse level in place of the media session, if the PC grants
+   * it and is not locked. May show the phone's own unlock prompt (`lang` picks its language).
+   * `again`: the person's own step – after a dismissed unlock, or coming back to the pad when
+   * the PC granted media only (the grant may have been given there meanwhile: one more ask).
+   */
+  raise(lang?: string, options?: { again?: boolean }): Promise<void>;
+  /** One pointer move or wheel step; goes nowhere unless the pad is ready and the PC unlocked. */
+  point(kind: 'move' | 'scroll', dx: number, dy: number): void;
+  /** Mouse buttons, in order. Presses go nowhere while the PC is locked; a release always goes. */
+  click(actions: readonly RemoteButtonAction[]): void;
   /** Whether a press of the phone's volume keys belongs to the PC right now. */
   takesVolumeKeys(): boolean;
 }
@@ -115,6 +161,31 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
   /** Counts `close()` calls: an attempt that finishes after one must leave nothing behind. */
   let generation = 0;
   const listeners = new Set<(view: RemoteView) => void>();
+  /** What the session in `session` may do, and what the PC grants this phone at most. */
+  let level: 'media' | 'full' = 'media';
+  let grant: RemoteLevel = 'media';
+  let noLock = false;
+  let pad: RemotePad = { kind: 'off' };
+  let raising: Promise<void> | undefined;
+  /** What the pad sends, in order; one write at a time. */
+  const out: Out[] = [];
+  let pumping = false;
+
+  const setPad = (next: RemotePad) => {
+    if (
+      next.kind === pad.kind &&
+      (next.kind !== 'ready' || pad.kind !== 'ready' || next.noLock === pad.noLock)
+    )
+      return;
+    pad = next;
+    for (const listener of listeners) listener(view);
+  };
+  /** The session is gone: the level with it. A dismissed unlock stays, so nothing asks again by itself. */
+  const padLost = () => {
+    out.length = 0;
+    level = 'media';
+    if (pad.kind !== 'unlock' && pad.kind !== 'unavailable') setPad({ kind: 'off' });
+  };
 
   const set = (next: RemoteView) => {
     if (view.kind === 'connected' || next.kind === 'connected') lastAliveAt = deps.now();
@@ -147,11 +218,16 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       return;
     }
     session = undefined;
+    padLost();
     set(event.reason ? { kind: 'refused', reason: event.reason } : { kind: 'disconnected' });
   };
 
   /** One attempt at the PC; returns the code of what went wrong, or nothing. */
-  const tryOpen = async (left: () => boolean): Promise<string | undefined> => {
+  const tryOpen = async (
+    left: () => boolean,
+    asked: 'media' | 'full' = 'media',
+    lang?: string,
+  ): Promise<string | undefined> => {
     const wait = lastOpenAt + OPEN_EVERY_MS - deps.now();
     if (wait > 0) await sleep(wait);
     // strictly one call at a time: one of an attempt that was left settles first, so the PC never
@@ -166,7 +242,7 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
     const onEvent = (event: RemoteEvent) =>
       known === undefined ? early.push(event) : handle(event);
     try {
-      const call = deps.remote.open('media', onEvent);
+      const call = deps.remote.open(asked, onEvent, lang);
       dialing = call;
       const opened = await call.finally(() => {
         if (dialing === call) dialing = undefined;
@@ -179,6 +255,9 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       quiet = undefined;
       session = opened.session;
       known = opened.session;
+      level = opened.level;
+      grant = opened.grant;
+      noLock = opened.noLock;
       set({ kind: 'connected', pc: opened.state });
       for (const event of early) if (event.session === known) handle(event);
       return undefined;
@@ -273,8 +352,142 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
     return attempt.done;
   };
 
+  /** The pad's queue: one write at a time, in order. An error means this session is over. */
+  const pump = async () => {
+    if (pumping) return;
+    pumping = true;
+    try {
+      for (;;) {
+        const item = out.shift();
+        if (!item) return;
+        const used = session;
+        if (used === undefined || level !== 'full') {
+          out.length = 0;
+          return;
+        }
+        try {
+          if (item.kind === 'buttons') await deps.remote.send(used, item.actions);
+          else await deps.remote.pointer(used, item.kind, item.dx, item.dy);
+        } catch {
+          if (session === used) {
+            stopWaiting();
+            session = undefined;
+            drop(used);
+            padLost();
+            set({ kind: 'disconnected' });
+          }
+          out.length = 0;
+          return;
+        }
+      }
+    } finally {
+      pumping = false;
+    }
+  };
+  /** Read through a call: an `await` in between may have changed it. */
+  const levelNow = (): 'media' | 'full' => level;
+  const padUsable = () =>
+    session !== undefined && level === 'full' && pad.kind === 'ready' && view.kind === 'connected';
+
+  /** One try at the mouse level; `true` = decided (whatever the outcome), `false` = try once more. */
+  const raiseOnce = async (
+    lang: string | undefined,
+    mine: number,
+    last: boolean,
+    again: boolean,
+  ) => {
+    const left = () => mine !== generation;
+    if (view.kind !== 'connected') await open();
+    if (left() || view.kind !== 'connected') return true;
+    if (level === 'full') {
+      setPad({ kind: 'ready', noLock });
+      return true;
+    }
+    // the PC's last word is enough for these two: no call, no prompt
+    // (`again`: the PC is asked once more – the grant may have been given there meanwhile)
+    if (grant !== 'full' && !again) {
+      setPad({ kind: 'not-granted' });
+      return true;
+    }
+    if (view.pc.locked) {
+      setPad({ kind: 'locked' });
+      return true;
+    }
+    setPad({ kind: 'opening' });
+    const code = await tryOpen(left, 'full', lang);
+    if (left() || code === 'left') return true;
+    if (code === undefined) {
+      // the PC opens at the smaller of asked and granted: read what the session really is
+      setPad(levelNow() === 'full' ? { kind: 'ready', noLock } : { kind: 'not-granted' });
+      return true;
+    }
+    switch (code) {
+      case 'locked':
+        setPad({ kind: 'locked' });
+        return true;
+      case 'unlock-cancelled':
+      case 'unlock-failed':
+      case 'unlock-busy':
+        setPad({ kind: 'unlock' });
+        return true;
+      case 'unlock-unavailable':
+        setPad({ kind: 'unavailable' });
+        return true;
+      case 'closed':
+        setPad({ kind: 'off' });
+        return true;
+    }
+    // Everything else starts from Medien again: the shell knows nothing of the PC any more
+    // (`media-first`), both sessions are gone (`unlock-needed`), or the PC took something away –
+    // then the media open says what, in the session's own words.
+    const old = session;
+    session = undefined;
+    stopWaiting();
+    drop(old);
+    setPad(last && code === 'unlock-needed' ? { kind: 'unlock' } : { kind: 'off' });
+    await open();
+    return last || (code !== 'media-first' && code !== 'unlock-needed');
+  };
+
   return {
     view: () => view,
+    pad: () => pad,
+    raise(lang, options) {
+      if (raising) return raising;
+      // a dismissed unlock is asked again only by the person's own step
+      if ((pad.kind === 'unlock' || pad.kind === 'unavailable') && !options?.again)
+        return Promise.resolve();
+      const mine = generation;
+      const run = (async () => {
+        const again = options?.again === true;
+        if (!(await raiseOnce(lang, mine, false, again))) await raiseOnce(lang, mine, true, false);
+      })().finally(() => {
+        if (raising === run) raising = undefined;
+      });
+      raising = run;
+      return run;
+    },
+    point(kind, dx, dy) {
+      if (!padUsable() || (view.kind === 'connected' && view.pc.locked)) return;
+      if (dx === 0 && dy === 0) return;
+      const tail = out[out.length - 1];
+      // summed only while a write is pending (the queue is empty otherwise)
+      if (tail && tail.kind === kind) {
+        tail.dx += dx;
+        tail.dy += dy;
+      } else if (out.length < OUT_MAX) out.push({ kind, dx, dy });
+      void pump();
+    },
+    click(actions) {
+      if (!padUsable()) return;
+      const locked = view.kind === 'connected' && view.pc.locked;
+      const sendable = actions.filter((a) => !locked || a.endsWith('-up'));
+      // a press that finds the queue full is dropped – with its release, which would be spare
+      const releasesOnly = sendable.every((a) => a.endsWith('-up'));
+      if (sendable.length === 0 || (out.length >= OUT_MAX && !releasesOnly)) return;
+      out.push({ kind: 'buttons', actions: sendable });
+      void pump();
+    },
     subscribe(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);
@@ -306,6 +519,7 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
           // maybe only the answer is late: keep the session for it, show "not connected"
           quiet = used;
           session = undefined;
+          padLost();
           set({ kind: 'disconnected' });
         }, ANSWER_WAIT_MS);
       }
@@ -318,6 +532,7 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
           stopWaiting();
           session = undefined;
           drop(used);
+          padLost();
           set({ kind: 'disconnected' });
         }
         return false;
@@ -332,6 +547,9 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       session = undefined;
       quiet = undefined;
       lastAliveAt = -Infinity;
+      out.length = 0;
+      level = 'media';
+      setPad({ kind: 'off' });
       set({ kind: 'idle' });
       await Promise.all(
         used.map((id) =>

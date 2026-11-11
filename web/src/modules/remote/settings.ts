@@ -6,11 +6,26 @@ import { t } from '@/strings';
 const schema = z.object({
   haptics: z.boolean(),
   keepAwake: z.boolean(),
+  padSpeed: z.enum(['slow', 'normal', 'fast']),
+  /** The touchpad's one-time legend was closed. */
+  padLegendSeen: z.boolean(),
 });
+
+/** The factor of each speed (the PC adds its own pointer speed and acceleration). */
+export const PAD_SPEED: Record<RemotePrefs['padSpeed'], number> = {
+  slow: 0.6,
+  normal: 1,
+  fast: 1.7,
+};
 
 export type RemotePrefs = z.output<typeof schema>;
 
-export const DEFAULTS: RemotePrefs = { haptics: true, keepAwake: false };
+export const DEFAULTS: RemotePrefs = {
+  haptics: true,
+  keepAwake: false,
+  padSpeed: 'normal',
+  padLegendSeen: false,
+};
 
 export const settings: ModuleSettings = {
   schema,
@@ -35,6 +50,24 @@ export const settings: ModuleSettings = {
         return t.remote.meta.keepAwakeHelp;
       },
       type: 'boolean',
+    },
+    {
+      key: 'padSpeed',
+      get label() {
+        return t.remote.meta.padSpeed;
+      },
+      get help() {
+        return t.remote.meta.padSpeedHelp;
+      },
+      type: 'select',
+      get options() {
+        const m = t.remote.meta;
+        return [
+          { value: 'slow', label: m.padSlow },
+          { value: 'normal', label: m.padNormal },
+          { value: 'fast', label: m.padFast },
+        ];
+      },
     },
   ],
 };
