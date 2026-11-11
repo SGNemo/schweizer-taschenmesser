@@ -709,6 +709,14 @@ fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
     assert!(check < typed.find("send_text(").unwrap());
     assert!(typed.find("Level::Full").unwrap() < typed.find("send_text(").unwrap());
     assert!(typed.find("locked.load").unwrap() < typed.find("send_text(").unwrap());
+    // … at the PC's pace, and the worker's error type is a fixed word: nothing it answers can
+    // carry the text
+    let pace = typed.find("state.pace.lock()").expect("paced");
+    assert!(pace < typed.find("send_text(").unwrap());
+    assert!(typed.contains("std::thread::sleep(wait);"));
+    assert!(typed.contains("spawn_blocking(move || -> Result<(), &'static str> {"));
+    assert!(!typed.contains("to_owned()") && !typed.contains("to_string()"));
+    assert!(typed.contains("typed.map_err(str::to_owned)"));
     // the text is used where it is checked and written, and nowhere else in the command
     assert!(!typed.contains("clone()"));
     assert_eq!(

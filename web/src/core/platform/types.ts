@@ -367,8 +367,11 @@ export interface RemoteService {
   /**
    * Types `text` at the PC (mouse-and-keyboard level): up to 2048 bytes of UTF-8 without control
    * characters – a line break is the key `key-enter`, never part of a text. Rejects with
-   * `bad-text`, `locked` (the PC is locked, nothing was typed), `bad-level`, `closed`, or what a
-   * broken connection gives. The shell writes the text and forgets it.
+   * `bad-text`, `locked` (the PC is locked, nothing was typed), `cut` (the PC was locked or the
+   * session ended after a part was typed), `bad-level`, `closed`, or what a broken connection
+   * gives. The PC takes text only so fast (about 500 bytes at once, then as much a second) and
+   * the shell waits for it: a long text resolves after a few seconds. The shell writes the
+   * text and forgets it.
    */
   text(session: number, text: string): Promise<void>;
   /** One pointer move or wheel step; `dy > 0` is down, `dx > 0` to the right. */

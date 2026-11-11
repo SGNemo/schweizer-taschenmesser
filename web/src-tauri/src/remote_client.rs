@@ -46,7 +46,7 @@ use ::lan_sync::input_client::{Event, InputError, InputSession};
 use serde::Serialize;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, SystemTime};
+use std::time::{Duration, Instant, SystemTime};
 use tauri::ipc::Channel;
 use tauri::{AppHandle, Manager, Runtime};
 
@@ -99,6 +99,45 @@ pub struct RemoteClient {
     /// Counts the pairings of this run ([`RemoteClient::reset`]): an unlock asked for under an
     /// older one does not count for the next.
     pairing: AtomicU64,
+    /// How much text the PC still takes right now, as this phone reckons it ([`Pace`]).
+    pace: Mutex<Pace>,
+}
+
+/// The PC takes text only so fast (512 bytes at once, then 512 a second, per session) and drops
+/// what is over without a word. The phone therefore waits before a frame that would not fit: a
+/// long text arrives whole, a little later. Reckoned a little below the PC's own numbers, so
+/// that two clocks that differ never make it drop.
+#[derive(Default)]
+struct Pace {
+    /// The session this was reckoned for; another one starts full.
+    session: u64,
+    /// Bytes that may go at once.
+    room: f64,
+    /// When `room` was reckoned (`None` = never: full).
+    at: Option<Instant>,
+}
+
+/// Bytes the PC takes at once, and per second after that, as the phone reckons.
+const PACE_BURST: f64 = 448.0;
+const PACE_PER_SECOND: f64 = 448.0;
+
+impl Pace {
+    /// How long to wait before `bytes` may go on `session` at `now` – and they count as gone
+    /// after that wait.
+    fn wait(&mut self, session: u64, bytes: usize, now: Instant) -> Duration {
+        let since = match self.at {
+            Some(at) if self.session == session => now.saturating_duration_since(at).as_secs_f64(),
+            _ => f64::INFINITY,
+        };
+        let room = (self.room + since * PACE_PER_SECOND).min(PACE_BURST);
+        let need = bytes as f64;
+        let wait = ((need - room) / PACE_PER_SECOND).max(0.0);
+        // after the wait the room has grown by what was waited for, and the bytes leave it
+        self.session = session;
+        self.room = room + wait * PACE_PER_SECOND - need;
+        self.at = Some(now + Duration::from_secs_f64(wait));
+        Duration::from_secs_f64(wait)
+    }
 }
 
 impl RemoteClient {
@@ -769,11 +808,11 @@ fn open_now<R: Runtime>(
 
 /// The open session `session`, or `closed`. The lock is held only to pick it: a write that
 /// stalls (the PC vanished) must not keep `open` and `close` waiting.
-fn picked(state: &RemoteClient, session: u64) -> Result<(Arc<InputSession>, Level), String> {
+fn picked(state: &RemoteClient, session: u64) -> Result<(Arc<InputSession>, Level), &'static str> {
     let slot = state.session.lock().map_err(|_| "internal")?;
     match slot.as_ref() {
         Some((id, open, level)) if *id == session => Ok((open.clone(), *level)),
-        _ => Err("closed".to_owned()),
+        _ => Err("closed"),
     }
 }
 
@@ -831,32 +870,58 @@ pub async fn remote_client_pointer<R: Runtime>(
 
 /// Types `text` at the PC on session `session`, which must be of the mouse-and-keyboard level.
 /// `bad-text`: empty, too long, or with a control character (a line break is the key
-/// `key-enter`). `locked`: the PC is locked, nothing was sent. The text is written and
-/// forgotten; no error names it.
+/// `key-enter`). `locked`: the PC is locked, nothing was sent. `cut`: the PC was locked or the
+/// session ended after a part was written – that part is typed. A long text takes its time:
+/// the PC takes only so much a second ([`Pace`]). The text is written and forgotten; every
+/// error is one of a fixed list of words and cannot name it.
 #[tauri::command]
 pub async fn remote_client_text<R: Runtime>(
     app: AppHandle<R>,
     session: u64,
     text: String,
 ) -> Result<(), String> {
-    tauri::async_runtime::spawn_blocking(move || {
+    // (the worker answers with a fixed word: no error of it can carry the text)
+    let typed = tauri::async_runtime::spawn_blocking(move || -> Result<(), &'static str> {
         let frames = text_frames(&text)?;
         let state = app.state::<RemoteClient>();
         let (open, level) = picked(&state, session)?;
         if level != Level::Full {
-            return Err("bad-level".to_owned());
+            return Err("bad-level");
         }
-        if state.locked.load(Ordering::SeqCst) {
-            return Err("locked".to_owned());
-        }
+        let mut written = false;
         for frame in frames {
-            open.send_text(frame)
-                .map_err(|e| error_name(e).to_owned())?;
+            let wait = state.pace.lock().map_err(|_| "internal")?.wait(
+                session,
+                frame.len(),
+                Instant::now(),
+            );
+            if !wait.is_zero() {
+                std::thread::sleep(wait);
+            }
+            // asked before every frame: the PC may have been locked, or the session ended,
+            // while this one waited its turn
+            let stopped = state.locked.load(Ordering::SeqCst) || open.is_over();
+            if stopped {
+                return Err(stopped_as(written, state.locked.load(Ordering::SeqCst)));
+            }
+            open.send_text(frame).map_err(error_name)?;
+            written = true;
         }
         Ok(())
     })
     .await
-    .map_err(|_| "internal".to_owned())?
+    .map_err(|_| "internal")?;
+    typed.map_err(str::to_owned)
+}
+
+/// What a text that could not go on answers: `cut` once a part of it was written; before that
+/// `locked` on a locked PC, else the session is over.
+fn stopped_as(written: bool, locked: bool) -> &'static str {
+    match (written, locked) {
+        (true, _) => "cut",
+        (false, true) => "locked",
+        (false, false) => "closed",
+    }
 }
 
 /// Ends session `session` (the page went to the background). A number that is not the open
@@ -933,6 +998,52 @@ mod tests {
         assert_eq!(sendable(enter(), Level::Media, false), Err("bad-level"));
         assert_eq!(sendable(enter(), Level::Full, false).unwrap().len(), 1);
         assert!(sendable(enter(), Level::Full, true).unwrap().is_empty());
+    }
+
+    #[test]
+    fn text_goes_only_as_fast_as_the_pc_takes_it() {
+        let start = Instant::now();
+        let mut pace = Pace::default();
+        // a fresh session takes a first frame at once
+        assert!(pace.wait(1, 256, start).is_zero());
+        // the second does not fit the rest of the burst: it waits for what is missing
+        let wait = pace.wait(1, 256, start);
+        let missing = (256.0 - (PACE_BURST - 256.0)) / PACE_PER_SECOND;
+        assert!((wait.as_secs_f64() - missing).abs() < 1e-6, "{wait:?}");
+        // eight frames in a row (one long call): never more than the PC's own 512 bytes at
+        // once and 512 a second – reckoned from the times the frames really go
+        let mut pace = Pace::default();
+        let mut now = start;
+        let mut sent: Vec<(Duration, usize)> = Vec::new();
+        for _ in 0..8 {
+            now += pace.wait(1, 256, now);
+            sent.push((now - start, 256));
+        }
+        let mut room = 512.0_f64;
+        let mut last = Duration::ZERO;
+        for (at, bytes) in sent {
+            room = (room + (at - last).as_secs_f64() * 512.0).min(512.0);
+            last = at;
+            assert!(room >= bytes as f64, "the PC would drop a frame at {at:?}");
+            room -= bytes as f64;
+        }
+        // 2048 bytes take a few seconds, not more
+        assert!(last < Duration::from_secs(5), "{last:?}");
+        // a pause fills the room again, but never over the burst
+        let mut pace = Pace::default();
+        assert!(pace.wait(1, 256, start).is_zero());
+        assert!(pace.wait(1, 256, start + Duration::from_secs(60)).is_zero());
+        assert!(!pace.wait(1, 256, start + Duration::from_secs(60)).is_zero());
+        // another session starts full
+        assert!(pace.wait(2, 256, start + Duration::from_secs(60)).is_zero());
+    }
+
+    #[test]
+    fn a_text_that_stops_says_whether_a_part_was_typed() {
+        assert_eq!(stopped_as(false, true), "locked");
+        assert_eq!(stopped_as(false, false), "closed");
+        assert_eq!(stopped_as(true, true), "cut");
+        assert_eq!(stopped_as(true, false), "cut");
     }
 
     #[test]
