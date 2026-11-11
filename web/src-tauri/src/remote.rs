@@ -1087,6 +1087,8 @@ mod tests {
     #[test]
     fn fresh_controls_are_narrowed_before_anything_can_listen_with_them() {
         let dir = std::env::temp_dir().join(format!("nemo-remote-parts-{}", std::process::id()));
+        // a leftover of an earlier run with the same process id must not be read
+        let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         let trust = Arc::new(FileTrustStore::open(&dir.join("trust.json")).unwrap());
         let key = PublicKey::from_bytes([9; 32]);

@@ -448,23 +448,8 @@ pub fn lan_hub_start(app: AppHandle, state: State<'_, LanSync>) -> Result<StartD
         return Err("client-paired".to_owned());
     }
     let (core, data_key) = build(&app)?;
-    let stop = Arc::new(AtomicBool::new(false));
-    let (wake, rx) = mpsc::channel::<()>();
-    let thread = {
-        let core = core.clone();
-        let stop = stop.clone();
-        std::thread::Builder::new()
-            .name("lan-sync-supervisor".into())
-            .spawn(move || {
-                while !stop.load(Ordering::SeqCst) {
-                    core.round();
-                    let _ = rx.recv_timeout(TICK);
-                }
-            })
-            .map_err(|_| "internal")?
-    };
-    core.round();
-    let status = core.status();
+    // The PC's own controls (end, switch off, the tray) are reachable before anything can listen:
+    // a session that opens in the hub's first moment can be ended like any other.
     {
         use ::lan_sync::input::InputSink as _;
         crate::remote::attach(
@@ -474,6 +459,30 @@ pub fn lan_hub_start(app: AppHandle, state: State<'_, LanSync>) -> Result<StartD
             core.sink.supported(),
         );
     }
+    let stop = Arc::new(AtomicBool::new(false));
+    let (wake, rx) = mpsc::channel::<()>();
+    let thread = {
+        let core = core.clone();
+        let stop = stop.clone();
+        let spawned = std::thread::Builder::new()
+            .name("lan-sync-supervisor".into())
+            .spawn(move || {
+                while !stop.load(Ordering::SeqCst) {
+                    core.round();
+                    let _ = rx.recv_timeout(TICK);
+                }
+            });
+        match spawned {
+            Ok(thread) => thread,
+            Err(_) => {
+                // nothing listens: the controls go again
+                crate::remote::detach(&app);
+                return Err("internal".to_owned());
+            }
+        }
+    };
+    core.round();
+    let status = core.status();
     *slot = Some(Running {
         core,
         stop,
