@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enable, ready } from './helpers';
+import { enable, moreFields, ready } from './helpers';
 
 /** Missing functions picked in the comfort review (package 5a). */
 test.beforeEach(async ({ page }) => {
@@ -10,6 +10,7 @@ async function addBooking(page: Page, payee: string, amount: string, date: strin
   await ready(page, '/finance?new=1');
   const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
   await dialog.getByLabel('Betrag').fill(amount);
+  await moreFields(page); // the date is one of the rarely used fields since UI audit 2026-11, package 0b-3
   await dialog.getByLabel('Datum').fill(date);
   await dialog.getByLabel('Empfänger / Titel').fill(payee);
   await dialog.getByRole('button', { name: 'Speichern' }).click();
