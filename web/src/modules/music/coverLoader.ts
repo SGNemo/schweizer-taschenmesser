@@ -95,9 +95,10 @@ function enqueue(fetch: CoverFetch, url: string): Job {
         jobs.delete(url);
         if (!entry) failed.set(url, now());
         resolve(entry);
-        // Nobody waited to the end: the entry stays as an unused one and ages out like any other.
-        trim();
         pump();
+        // After the views that waited have claimed it (their callbacks were registered first): a picture nobody waited for to
+        // the end stays as an unused one and ages out like any other.
+        void job.promise.then(trim);
       });
     },
   };
@@ -125,7 +126,8 @@ export function acquireCover(fetch: CoverFetch, url: string): CoverHandle {
   let held: Entry | undefined;
   let released = false;
   const hold = (entry: Entry | undefined): string | undefined => {
-    if (!entry || released) return undefined;
+    // Dropped from memory in the meantime (cleared on disconnect): its blob URL is gone.
+    if (!entry || released || cache.get(url) !== entry) return undefined;
     held = entry;
     entry.refs += 1;
     return entry.blob;

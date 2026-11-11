@@ -68,6 +68,8 @@ export function useCover(
     return () => {
       alive = false;
       handle.release();
+      // The claim is gone, so the blob URL may be released any time: never show it again from this state.
+      setCover(undefined);
     };
   }, [ctx, url, seen]);
   if (!ctx || !url) return undefined;

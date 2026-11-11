@@ -37,7 +37,6 @@ const playingSchema = z.object({
 
 export const clip = (text: string): string => text.trim().slice(0, MAX_TEXT);
 
-export { pickCover };
 type RawImages = { url: string; width?: number | null }[] | null | undefined;
 /** The cover fields of an item: the small default (`coverUrl`, at least 64 px) and every size that passed the host rule. */
 export const coverOf = (images: RawImages) => ({

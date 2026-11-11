@@ -101,6 +101,15 @@ describe('cover loader', () => {
     expect(peekCover(url(MAX_ENTRIES + 4))).toBeDefined();
   });
 
+  it('a full memory of pictures that are all on screen still shows the next one', async () => {
+    const fetch = vi.fn(async (_url: string) => image());
+    for (let i = 0; i < MAX_ENTRIES; i += 1) await acquireCover(fetch, url(i)).promise;
+    const next = await acquireCover(fetch, url('next')).promise;
+    expect(next).toBeDefined();
+    expect(revoked).toEqual([]);
+    expect(peekCover(url('next'))).toBe(next);
+  });
+
   it('a failure, a non-image or an empty answer gives no picture and is not retried at once', async () => {
     const answers = [
       () => new Response('nope', { status: 404 }),
