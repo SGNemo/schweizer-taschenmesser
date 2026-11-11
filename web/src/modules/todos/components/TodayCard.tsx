@@ -130,7 +130,7 @@ export function TodayCard({
             ) : null}
           </div>
         ) : null}
-        <span className="sr-only">{t.todos.todayCard.count(today.length)}</span>
+        {loaded ? <span className="sr-only">{t.todos.todayCard.count(today.length)}</span> : null}
       </div>
     </>
   );

@@ -177,6 +177,32 @@ describe('ToDos empty page (U26)', () => {
   });
 });
 
+describe('ToDos add dialog from a link (`?new=1&title=…`)', () => {
+  it('opens with the shared title, saves it once and does not open again', async () => {
+    draw('/todos?new=1&title=Blumen%20gie%C3%9Fen');
+    const dialog = await screen.findByRole('dialog', { name: 'Neue Aufgabe' });
+    const field = within(dialog).getByRole('textbox', { name: 'Titel' });
+    expect(field).toHaveValue('Blumen gießen');
+    // The inbox exists (see `beforeEach`): the button waits for it and is ready now.
+    const save = within(dialog).getByRole('button', { name: 'Hinzufügen' });
+    await waitFor(() => expect(save).toBeEnabled());
+    await userEvent.click(save);
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect((await taskRepo.active().toArray()).map((x) => x.title)).toEqual(['Blumen gießen']);
+    // The link's parameters are gone with the dialog: nothing reopens, nothing is added twice.
+    await screen.findAllByText('Blumen gießen');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(await taskRepo.active().count()).toBe(1);
+  });
+
+  it('"Abbrechen" is the explicit way out: nothing is saved', async () => {
+    draw('/todos?new=1&title=Nicht%20verlieren');
+    const dialog = await screen.findByRole('dialog', { name: 'Neue Aufgabe' });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Abbrechen' }));
+    expect(await taskRepo.active().count()).toBe(0);
+  });
+});
+
 describe('ToDos board drag and drop', () => {
   it('drops a card onto another column', async () => {
     const task = await taskRepo.create({ ...base, title: 'Ziehkarte' });

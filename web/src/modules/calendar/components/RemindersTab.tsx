@@ -196,9 +196,8 @@ export function RemindersTab({
           title={t.calendar.reminders.empty}
           motif={<SignatureMark id="calendarLeaf" size={64} />}
         >
-          <Button variant="primary" onClick={() => setTarget(draft)}>
-            {t.calendar.reminders.emptyAction}
-          </Button>
+          {/* Not filled: the head's action is the view's one filled button. */}
+          <Button onClick={() => setTarget(draft)}>{t.calendar.reminders.emptyAction}</Button>
         </EmptyState>
       ) : null}
       {groups.length > 0 ? (

@@ -10,10 +10,13 @@ import { Button, Dialog, Form, FormActions, TextField } from '@/ui';
 export function AddTaskDialog({
   open,
   initialTitle = '',
+  ready = true,
   onAdd,
   onClose,
 }: {
   open: boolean;
+  /** False until there is a list to add to (a fresh installation creates its inbox first): saving waits for it. */
+  ready?: boolean;
   /** A shared title (`/todos?new=1&title=…`). */
   initialTitle?: string;
   /** Saves the task; the dialog closes once it has settled. */
@@ -21,18 +24,29 @@ export function AddTaskDialog({
   onClose: () => void;
 }) {
   return (
-    <Dialog open={open} onClose={onClose} title={t.todos.newTask}>
-      {open ? <Body initialTitle={initialTitle} onAdd={onAdd} onClose={onClose} /> : null}
+    // A typed or shared title is never dropped without a question (Esc, a tap beside the sheet, Back).
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title={t.todos.newTask}
+      askAfterTyping
+      dirty={open && initialTitle.trim() !== ''}
+    >
+      {open ? (
+        <Body initialTitle={initialTitle} ready={ready} onAdd={onAdd} onClose={onClose} />
+      ) : null}
     </Dialog>
   );
 }
 
 function Body({
   initialTitle,
+  ready,
   onAdd,
   onClose,
 }: {
   initialTitle: string;
+  ready: boolean;
   onAdd: (title: string) => Promise<unknown>;
   onClose: () => void;
 }) {
@@ -40,7 +54,7 @@ function Body({
   return (
     <Form
       onSubmit={async () => {
-        if (!title.trim()) return;
+        if (!title.trim() || !ready) return;
         await onAdd(title);
         onClose();
       }}
@@ -56,7 +70,7 @@ function Body({
       />
       <FormActions>
         <Button onClick={onClose}>{t.actions.cancel}</Button>
-        <Button type="submit" variant="primary">
+        <Button type="submit" variant="primary" disabled={!ready}>
           {t.actions.add}
         </Button>
       </FormActions>

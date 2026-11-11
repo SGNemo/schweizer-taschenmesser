@@ -99,7 +99,7 @@ export function MonthView({ date, items, onPickDay, onOpenItem, holidays }: View
   const calendarOf = (color: string | undefined): string | undefined =>
     color
       ? calendars
-          ?.filter((c) => categoryColor(c.tone) === color)
+          ?.filter((c) => c.visible && categoryColor(c.tone) === color)
           .map((c) => c.name)
           .join(', ') || undefined
       : undefined;
@@ -180,9 +180,10 @@ export function MonthView({ date, items, onPickDay, onOpenItem, holidays }: View
                                 onClick={() => onOpenItem(i)}
                               >
                                 <KindMark item={i} />
-                                <span className={styles.srOnly}>{`${about}: `}</span>
                                 {i.time ? <span className={styles.lineTime}>{i.time}</span> : null}
                                 <span className={styles.lineTitle}>{i.title}</span>
+                                {/* Behind the title, so the line's name still starts with it. */}
+                                <span className={styles.srOnly}>{`, ${about}`}</span>
                               </button>
                             </li>
                           );

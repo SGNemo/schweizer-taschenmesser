@@ -41,6 +41,22 @@ describe('AdvancedFields', () => {
     expect(setAdvanced).not.toHaveBeenCalled();
   });
 
+  it('after "Mehr Felder" the focus is in the first revealed field, and a re-render leaves it where the user put it', async () => {
+    const user = userEvent.setup();
+    const fields = (
+      <AdvancedFields moduleId="todos">
+        <input aria-label="Ort" />
+        <input aria-label="Notiz" />
+      </AdvancedFields>
+    );
+    const { rerender } = render(fields);
+    await user.click(screen.getByRole('button', { name: 'Mehr Felder anzeigen' }));
+    expect(screen.getByLabelText('Ort')).toHaveFocus();
+    await user.click(screen.getByLabelText('Notiz'));
+    rerender(fields);
+    expect(screen.getByLabelText('Notiz')).toHaveFocus();
+  });
+
   it('shows the fields in Erweitert, and whenever one of them holds data', () => {
     advanced = true;
     const { rerender } = render(
