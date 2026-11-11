@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { RemotePcState, RemoteKeyAction } from '@/core/platform/types';
 import type { RemoteView, TypeResult } from '@/core/remote/session';
 import { t } from '@/strings';
@@ -40,6 +40,14 @@ export function Keyboard({
   const [note, setNote] = useState<string>();
   const field = useRef<HTMLInputElement>(null);
   const usable = line.live || line.waiting;
+  // The field takes the focus once, as soon as it can be typed in: the phone's keyboard opens by
+  // itself. Later the person decides (after "Tasten zeigen" it stays closed).
+  const focusedOnce = useRef(false);
+  useEffect(() => {
+    if (!usable || focusedOnce.current) return;
+    focusedOnce.current = true;
+    field.current?.focus();
+  }, [usable]);
 
   const said = (result: TypeResult): string | undefined => {
     if (result === 'busy') return k.busy;
@@ -96,6 +104,7 @@ export function Keyboard({
       <NoReadAid>
         <form
           className={styles.typing}
+          data-live={line.live}
           // the enter key of the phone's keyboard: the line, then Enter at the PC
           onSubmit={(e) => {
             e.preventDefault();
