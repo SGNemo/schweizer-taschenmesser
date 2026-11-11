@@ -18,9 +18,8 @@ Render the sheets (desktop 1280 + phone 360, dark and light) from `site/`:
 `node ../docs/design/site/render.mjs` → `out/*.png` (git-ignored); `MOCKUPS=round-5-a,round-5-b` picks sheets, `SHEET_ROW=1` for long pages.
 
 Rounds 4 and 5 put the app's identity v3.1 on the site (module cards, area patterns, the ocean hero). The rethink
-round replaced that form; of the identity only the hue mapping in `site/src/styles/identity.css` is still used
-(`data-hue` → the dot before a module's name). The pattern and head rules in that file are pinned to the app by
-`scripts/tokens.test.mjs` and unused today; removing them with their tests is an open follow-up.
+round replaced that form; of the identity only the hue mapping in `site/src/styles/identity.css` is left
+(`data-hue` → the dot before a module's name), pinned to the app by `scripts/tokens.test.mjs`.
 
 ## Building blocks of the site (since the rethink round)
 
