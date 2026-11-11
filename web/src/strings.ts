@@ -8688,9 +8688,9 @@ export const de = {
       keepAwake: 'Bildschirm anlassen',
       keepAwakeHelp:
         'Der Bildschirm bleibt an, solange die Fernbedienung offen ist. Auf dem Touchpad bleibt er immer an.',
-      padSpeed: 'Zeiger-Tempo auf dem Touchpad',
+      padSpeed: 'Zeigergeschwindigkeit auf dem Touchpad',
       padSpeedHelp:
-        'Wie weit sich der Zeiger je Wischbewegung bewegt. Das Zeiger-Tempo von Windows kommt dazu.',
+        'Wie weit sich der Zeiger bei einer Wischbewegung bewegt. Die Zeigergeschwindigkeit von Windows kommt dazu.',
       padSlow: 'Langsam',
       padNormal: 'Normal',
       padFast: 'Schnell',
@@ -8699,7 +8699,7 @@ export const de = {
     views: 'Ansicht',
     touchpad: 'Touchpad',
     pad: {
-      surface: 'Touchpad: wischen bewegt den Zeiger',
+      surface: 'Touchpad: wischen bewegt den Zeiger. Mit TalkBack gehen nur „Links“ und „Rechts“.',
       left: 'Links',
       right: 'Rechts',
       buttons: 'Maustasten',
@@ -8709,7 +8709,7 @@ export const de = {
       unlock: 'Maus und Tastatur brauchen einmal dein Entsperren.',
       noLock: 'Dieses Handy hat keine Bildschirmsperre. Maus und Tastatur gehen ohne Entsperren.',
       unavailable:
-        'Dieses Handy kann seine Bildschirmsperre hier nicht abfragen. Maus und Tastatur gehen damit nicht.',
+        'Dieses Handy kann seine Bildschirmsperre für Nemo nicht abfragen. Maus und Tastatur gehen deshalb nicht – Medien schon.',
       legendTitle: 'So geht das Touchpad',
       legend: [
         'Wischen bewegt den Zeiger.',

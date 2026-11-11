@@ -12,7 +12,7 @@ export const remote: Strings['remote'] = {
     keepAwakeHelp:
       'The screen stays on while the remote is open. On the touchpad it always stays on.',
     padSpeed: 'Pointer speed on the touchpad',
-    padSpeedHelp: 'How far the pointer moves per swipe. The pointer speed of Windows adds to it.',
+    padSpeedHelp: 'How far the pointer moves per swipe. Windows’ own pointer speed adds to it.',
     padSlow: 'Slow',
     padNormal: 'Normal',
     padFast: 'Fast',
@@ -21,17 +21,17 @@ export const remote: Strings['remote'] = {
   views: 'View',
   touchpad: 'Touchpad',
   pad: {
-    surface: 'Touchpad: swiping moves the pointer',
+    surface: 'Touchpad: swiping moves the pointer. With TalkBack only “Left” and “Right” work.',
     left: 'Left',
     right: 'Right',
     buttons: 'Mouse buttons',
     toMedia: 'To media',
     unlockStep: 'Unlock',
     notGranted: 'Mouse and keyboard are off for this phone at the PC.',
-    unlock: 'Mouse and keyboard need your unlock once.',
+    unlock: 'Unlock this phone once to use mouse and keyboard.',
     noLock: 'This phone has no screen lock. Mouse and keyboard work without unlocking.',
     unavailable:
-      'This phone cannot ask for its screen lock here. Mouse and keyboard do not work with it.',
+      'This phone cannot ask for its screen lock for Nemo, so mouse and keyboard do not work. Media still does.',
     legendTitle: 'How the touchpad works',
     legend: [
       'Swiping moves the pointer.',

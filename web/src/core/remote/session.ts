@@ -166,7 +166,7 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
   let grant: RemoteLevel = 'media';
   let noLock = false;
   let pad: RemotePad = { kind: 'off' };
-  let raising: Promise<void> | undefined;
+  let raising: { generation: number; run: Promise<void> } | undefined;
   /** What the pad sends, in order; one write at a time. */
   const out: Out[] = [];
   let pumping = false;
@@ -352,7 +352,10 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
     return attempt.done;
   };
 
-  /** The pad's queue: one write at a time, in order. An error means this session is over. */
+  /**
+   * The pad's queue: one write at a time, in order. An error means this session is over. (A
+   * media action of `send` is a write of its own beside it; the shell takes one frame at a time.)
+   */
   const pump = async () => {
     if (pumping) return;
     pumping = true;
@@ -415,6 +418,16 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
     }
     setPad({ kind: 'opening' });
     const code = await tryOpen(left, 'full', lang);
+    // The phone's own answer to the prompt counts even when the page was left meanwhile (the
+    // system's prompt may cover the app): coming back must not ask again by itself.
+    if (code === 'unlock-cancelled' || code === 'unlock-failed') {
+      setPad({ kind: 'unlock' });
+      return true;
+    }
+    if (code === 'unlock-unavailable') {
+      setPad({ kind: 'unavailable' });
+      return true;
+    }
     if (left() || code === 'left') return true;
     if (code === undefined) {
       // the PC opens at the smaller of asked and granted: read what the session really is
@@ -425,13 +438,8 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       case 'locked':
         setPad({ kind: 'locked' });
         return true;
-      case 'unlock-cancelled':
-      case 'unlock-failed':
       case 'unlock-busy':
         setPad({ kind: 'unlock' });
-        return true;
-      case 'unlock-unavailable':
-        setPad({ kind: 'unavailable' });
         return true;
       case 'closed':
         setPad({ kind: 'off' });
@@ -453,7 +461,8 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
     view: () => view,
     pad: () => pad,
     raise(lang, options) {
-      if (raising) return raising;
+      // (one from before a `close()` is not this one: it ends by itself and sets nothing)
+      if (raising?.generation === generation) return raising.run;
       // a dismissed unlock is asked again only by the person's own step
       if ((pad.kind === 'unlock' || pad.kind === 'unavailable') && !options?.again)
         return Promise.resolve();
@@ -462,9 +471,9 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
         const again = options?.again === true;
         if (!(await raiseOnce(lang, mine, false, again))) await raiseOnce(lang, mine, true, false);
       })().finally(() => {
-        if (raising === run) raising = undefined;
+        if (raising?.run === run) raising = undefined;
       });
-      raising = run;
+      raising = { generation: mine, run };
       return run;
     },
     point(kind, dx, dy) {
@@ -547,9 +556,8 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       session = undefined;
       quiet = undefined;
       lastAliveAt = -Infinity;
-      out.length = 0;
-      level = 'media';
-      setPad({ kind: 'off' });
+      // (a dismissed unlock stays: coming back to the page must not ask again by itself)
+      padLost();
       set({ kind: 'idle' });
       await Promise.all(
         used.map((id) =>

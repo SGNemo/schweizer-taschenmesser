@@ -37,6 +37,8 @@ export default function RemotePage() {
   };
   const [menu, setMenu] = useState(false);
   const [tab, setTab] = useState<RemoteTab>('media');
+  /** The legend was asked for again from the menu (the stored "seen" stays). */
+  const [legendAgain, setLegendAgain] = useState(false);
   const r = t.remote;
 
   const last = useLastPc();
@@ -92,6 +94,9 @@ export default function RemotePage() {
           items={[
             { id: 'mute', label: muted ? r.unmute : r.mute, onSelect: () => press('mute') },
             { id: 'lock', label: r.lock, onSelect: () => press('lock') },
+            ...(tab === 'touchpad'
+              ? [{ id: 'legend', label: r.pad.legendTitle, onSelect: () => setLegendAgain(true) }]
+              : []),
           ]}
         />
       </PageHeader>
@@ -112,8 +117,11 @@ export default function RemotePage() {
           speed={PAD_SPEED[padSpeed]}
           tick={tick}
           // (not before the stored answer is read: a closed legend must not flash up)
-          legend={prefs !== undefined && !padLegendSeen}
-          onLegendClose={() => void setPrefs({ padLegendSeen: true })}
+          legend={legendAgain || (prefs !== undefined && !padLegendSeen)}
+          onLegendClose={() => {
+            setLegendAgain(false);
+            if (!padLegendSeen) void setPrefs({ padLegendSeen: true });
+          }}
           onMedia={() => setTab('media')}
         />
       ) : (

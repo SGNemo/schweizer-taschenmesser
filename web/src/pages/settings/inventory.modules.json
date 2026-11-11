@@ -579,7 +579,7 @@
       },
       "padSpeed": {
         "type": "select",
-        "label": "Zeiger-Tempo auf dem Touchpad",
+        "label": "Zeigergeschwindigkeit auf dem Touchpad",
         "default": "normal"
       }
     }

@@ -66,6 +66,8 @@ export interface PadLine {
   step?: RemoteStep | 'media' | 'unlock';
   /** The pad takes touches right now. */
   live: boolean;
+  /** Not live yet, but a touch is the next step (it connects or asks for the level): the pad must not look switched off. */
+  waiting: boolean;
 }
 
 /**
@@ -79,24 +81,25 @@ export function describePad(
 ): PadLine {
   const line = describe(view, last);
   if (line.step || view.kind !== 'connected')
-    return { text: line.text, step: line.step, live: false };
+    return { text: line.text, step: line.step, live: false, waiting: !line.step && line.usable };
   const p = t.remote.pad;
   switch (pad.kind) {
     case 'not-granted':
-      return { text: p.notGranted, step: 'media', live: false };
+      return { text: p.notGranted, step: 'media', live: false, waiting: false };
     case 'unlock':
-      return { text: p.unlock, step: 'unlock', live: false };
+      return { text: p.unlock, step: 'unlock', live: false, waiting: false };
     case 'unavailable':
-      return { text: p.unavailable, step: 'media', live: false };
+      return { text: p.unavailable, step: 'media', live: false, waiting: false };
     case 'locked':
-      return { text: t.remote.state.locked, step: 'media', live: false };
+      return { text: t.remote.state.locked, step: 'media', live: false, waiting: false };
     case 'ready':
       // the PC was locked meanwhile: the session stays, nothing moves
-      if (view.pc.locked) return { text: t.remote.state.locked, step: 'media', live: false };
-      return { text: pad.noLock ? p.noLock : line.text, live: true };
+      if (view.pc.locked)
+        return { text: t.remote.state.locked, step: 'media', live: false, waiting: false };
+      return { text: pad.noLock ? p.noLock : line.text, live: true, waiting: false };
     case 'off':
     case 'opening':
-      return { text: line.text, live: false };
+      return { text: line.text, live: false, waiting: true };
   }
 }
 

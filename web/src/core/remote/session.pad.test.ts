@@ -108,6 +108,37 @@ describe('remote session: the mouse level', () => {
     expect(session.pad()).toEqual({ kind: 'ready', noLock: false });
   });
 
+  it('a dismissed unlock is not asked again after the page was left and came back', async () => {
+    const { session, hooks } = rig();
+    hooks.setGrant('full', true);
+    hooks.setUnlock('cancel');
+    await session.open();
+    await done(session.raise('de'));
+    await session.close();
+    expect(session.pad()).toEqual({ kind: 'unlock' });
+    await done(session.open());
+    await done(session.raise('de'));
+    expect(hooks.unlocks()).toBe(1);
+    expect(hooks.level()).toBe('media');
+  });
+
+  it('a try that was under way when the page left does not stand in for the next one', async () => {
+    const { session, hooks } = rig();
+    hooks.setGrant('full');
+    await session.open();
+    const release = hooks.holdOpens();
+    const stale = session.raise('de');
+    await pass(2 * OPEN_EVERY_MS);
+    await session.close();
+    const opened = session.open();
+    release();
+    await done(opened);
+    await stale;
+    expect(session.pad()).toEqual({ kind: 'off' });
+    await done(session.raise('de'));
+    expect(session.pad()).toEqual({ kind: 'ready', noLock: false });
+  });
+
   it('a phone without a screen lock is not blocked and says so; one that cannot ask is told', async () => {
     const a = rig();
     a.hooks.setGrant('full', true);

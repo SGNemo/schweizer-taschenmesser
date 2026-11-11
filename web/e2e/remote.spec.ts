@@ -69,6 +69,10 @@ test('pause, louder and quieter on the PC, one-handed', async ({ page }, info) =
   const state = page.getByTestId('remote-state');
   await expect(state).toHaveText('Dein PC · Lautstärke 42 %');
   await page.screenshot({ path: info.outputPath('remote-1-media.png') });
+  // with the tabs the page still fits the screen: nothing to scroll
+  expect(
+    await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight),
+  ).toBeLessThanOrEqual(1);
 
   // the buttons sit in the lower half of the screen (thumb zone), volume lowest
   const play = await page.getByTestId('remote-play-pause').boundingBox();
@@ -174,7 +178,7 @@ test('touchpad: slide, tap, hold "Links" to drag – on a phone the PC granted m
   await expect(page.getByTestId('remote-legend')).toHaveCount(0);
 
   const surface = page.getByTestId('remote-surface');
-  await expect(surface).toHaveAttribute('aria-disabled', 'false');
+  await expect(surface).toHaveAttribute('data-live', 'true');
   expect(await page.evaluate(() => window.__tmRemote.level())).toBe('full');
 
   // the strips are big targets in the thumb zone, below the pad
@@ -269,11 +273,50 @@ test('touchpad: a dismissed unlock keeps Medien and asks again only on "Entsperr
   expect(await page.evaluate(() => window.__tmRemote.unlocks())).toBe(1);
   await page.evaluate(() => window.__tmRemote.setUnlock('ok'));
   await page.getByTestId('remote-unlock').click();
-  await expect(page.getByTestId('remote-surface')).toHaveAttribute('aria-disabled', 'false');
+  await expect(page.getByTestId('remote-surface')).toHaveAttribute('data-live', 'true');
   expect(await page.evaluate(() => window.__tmRemote.unlocks())).toBe(2);
 
   // the PC is locked at the PC: the pad goes still and says so
   await page.evaluate(() => window.__tmRemote.setState({ locked: true } as never));
   await expect(state).toContainText('PC ist gesperrt. Medien und Lautstärke gehen weiter.');
-  await expect(page.getByTestId('remote-surface')).toHaveAttribute('aria-disabled', 'true');
+  await expect(page.getByTestId('remote-surface')).toHaveAttribute('data-live', 'false');
+});
+
+test('touchpad: the strips reach the thumb zone upright, and sideways the pad fills the screen', async ({
+  page,
+}, info) => {
+  await asPhoneWithRemote(page, 'full');
+  await page.goto('/remote');
+  await expect(page.getByTestId('remote-state')).toHaveText('Dein PC · Lautstärke 42 %');
+  await page.getByRole('button', { name: 'Touchpad' }).click();
+  await page.getByTestId('remote-legend-close').click();
+  const surface = page.getByTestId('remote-surface');
+  await expect(surface).toHaveAttribute('data-live', 'true');
+
+  // upright: nothing to scroll, the strips end just above the layout's own bottom room
+  const upright = await page.evaluate(() => ({
+    scroll: document.documentElement.scrollHeight - window.innerHeight,
+    main: document.querySelector('main')!.getBoundingClientRect().bottom,
+    pad: getComputedStyle(document.querySelector('main')!).paddingBottom,
+  }));
+  const strip = (await page.getByTestId('remote-strip-left').boundingBox())!;
+  info.annotations.push({ type: 'layout', description: JSON.stringify({ upright, strip }) });
+  expect(upright.scroll).toBeLessThanOrEqual(1);
+  await page.screenshot({ path: info.outputPath('remote-7-touchpad-upright.png') });
+
+  // sideways: pad and strips side by side; scrolled into view the pad takes the screen's height
+  await page.setViewportSize({ width: 915, height: 412 });
+  await page.getByTestId('remote-strip-right').scrollIntoViewIfNeeded();
+  const pad = (await surface.boundingBox())!;
+  const left = (await page.getByTestId('remote-strip-left').boundingBox())!;
+  const right = (await page.getByTestId('remote-strip-right').boundingBox())!;
+  expect(left.x).toBeGreaterThan(pad.x + pad.width - 1);
+  expect(right.y).toBeGreaterThan(left.y + left.height - 1);
+  expect(pad.height).toBeGreaterThan(130);
+  expect(left.height).toBeGreaterThanOrEqual(44);
+  expect(right.height).toBeGreaterThanOrEqual(44);
+  // both strips and the whole pad are on the screen at once
+  expect(right.y + right.height).toBeLessThanOrEqual(412);
+  expect(pad.y + pad.height).toBeLessThanOrEqual(412);
+  await page.screenshot({ path: info.outputPath('remote-8-touchpad-landscape.png') });
 });

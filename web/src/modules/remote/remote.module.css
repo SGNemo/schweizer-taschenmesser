@@ -2,10 +2,10 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  /* Fill the screen below the page head (about 14rem: top bar, module head, menu row) and above the
+  /* Fill the screen below the page head (about 15rem: top bar, module head, menu row, tabs) and above the
      bottom bar, so the buttons – pushed down by `margin-top: auto` – end up in the thumb zone. A
      short or landscape screen simply gets the natural height. */
-  min-height: calc(100dvh - 14rem - var(--bottom-nav-h) - env(safe-area-inset-bottom, 0px));
+  min-height: calc(100dvh - 15rem - var(--bottom-nav-h) - env(safe-area-inset-bottom, 0px));
 }
 .state {
   display: flex;
@@ -74,6 +74,12 @@
 }
 /* Touchpad: the surface takes what is left of the screen, the two strips sit below it in the
    thumb zone – above the bottom bar and the system's gesture zone. */
+.touch {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-4);
+}
 .surface {
   flex: 1;
   min-height: calc(var(--touch) * 4);
@@ -94,7 +100,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-3);
-  padding-bottom: var(--space-6);
+  /* (the layout keeps its own room above the bottom bar and the system's gesture zone) */
 }
 .strip {
   min-height: calc(var(--touch) * 1.5);
@@ -132,6 +138,33 @@
   padding-left: var(--space-5);
   color: var(--text-muted);
   font-size: var(--text-sm);
+}
+/* Sideways on a phone: the pad and the strips side by side, as tall as the screen leaves below
+   the head that stays in place (about 11rem) – scrolled into view both are fully visible. The
+   legend would take the whole height: it waits for upright. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .touch {
+    display: grid;
+    grid-template-columns: 1fr minmax(calc(var(--touch) * 2), 22%);
+    grid-template-rows: auto 1fr;
+    column-gap: var(--space-3);
+  }
+  .touchState {
+    grid-column: 1 / -1;
+  }
+  .touchLegend {
+    display: none;
+  }
+  .surface {
+    min-height: max(calc(var(--touch) * 3), calc(100dvh - 11rem));
+  }
+  .strips {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+  .strip {
+    min-height: var(--touch);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .strip:active:not(:disabled) {

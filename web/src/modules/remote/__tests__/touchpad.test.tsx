@@ -164,11 +164,53 @@ describe('page Touchpad', () => {
     expect(fake.parts.hooks.unlocks()).toBe(2);
   });
 
-  it('shows the legend once; closing it is remembered', async () => {
+  it('shows the legend once the pad can be used; closing it is remembered, the menu brings it back', async () => {
     fake.prefs = { haptics: false, keepAwake: false, padSpeed: 'normal', padLegendSeen: false };
+    // with a sentence to act on the legend waits: it must not push the pad away
     await showPad();
+    expect(state()).toContain('Maus und Tastatur sind am PC für dieses Handy aus.');
+    expect(screen.queryByTestId('remote-legend')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Medien' }));
+    fake.parts.hooks.setGrant('full');
+    fireEvent.click(screen.getByRole('button', { name: 'Touchpad' }));
+    await until(() => fake.parts.hooks.level() === 'full');
     expect(screen.getByTestId('remote-legend').textContent).toContain('Wischen bewegt den Zeiger.');
     fireEvent.click(screen.getByTestId('remote-legend-close'));
     expect(fake.setPrefs).toHaveBeenCalledWith({ padLegendSeen: true });
+
+    fake.prefs = { ...fake.prefs, padLegendSeen: true };
+    fireEvent.click(screen.getByRole('button', { name: 'Weitere Aktionen' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'So geht das Touchpad' }));
+    expect(screen.getByTestId('remote-legend')).toBeTruthy();
+  });
+
+  it('after the PC ended an idle session a touch connects again and the pad comes back', async () => {
+    fake.parts.hooks.setGrant('full');
+    await showPad();
+    await until(() => fake.parts.hooks.level() === 'full');
+    await act(async () => fake.parts.hooks.close());
+    expect(fake.parts.hooks.isOpen()).toBe(false);
+    // the pad waits for a touch: it does not look switched off
+    expect(surface().getAttribute('aria-disabled')).toBe('false');
+    finger('pointerdown', 20, 20);
+    finger('pointerup', 20, 20);
+    await until(() => fake.parts.hooks.level() === 'full');
+    expect(surface().getAttribute('aria-disabled')).toBe('false');
+    finger('pointerdown', 100, 100);
+    finger('pointermove', 120, 100);
+    await wait(0);
+    expect(fake.parts.hooks.pointed().at(-1)).toEqual({ kind: 'move', dx: 20, dy: 0 });
+  });
+
+  it('the PC is locked while "Links" is held: the button is let go at once', async () => {
+    fake.parts.hooks.setGrant('full');
+    await showPad();
+    await until(() => fake.parts.hooks.level() === 'full');
+    fireEvent.pointerDown(screen.getByTestId('remote-strip-left'));
+    await wait(0);
+    await act(async () => fake.parts.hooks.setState({ locked: true }));
+    await wait(0);
+    expect(fake.parts.hooks.sent()).toEqual(['left-down', 'left-up']);
+    expect(state()).toContain('PC ist gesperrt.');
   });
 });

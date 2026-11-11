@@ -89,7 +89,11 @@ export function Touchpad({
   const down = (e: React.PointerEvent<HTMLDivElement>) => {
     // every finger's touches arrive here, also when it slides off the pad
     e.currentTarget.setPointerCapture?.(e.pointerId);
-    if (connected && pad.kind === 'off') {
+    // A touch is the person's step: without a session it connects first (the PC ends an idle
+    // session by itself), then asks for the level – also when the PC was locked and is not now.
+    const reachable =
+      view.kind === 'connected' || view.kind === 'idle' || view.kind === 'disconnected';
+    if (reachable && (pad.kind === 'off' || (pad.kind === 'locked' && !pcLocked))) {
       tries.current = 0;
       void remoteSession.raise(lang);
     }
@@ -97,11 +101,11 @@ export function Touchpad({
   };
 
   return (
-    <>
+    <div className={styles.touch}>
       <p className="sr-only" aria-live="polite" data-testid="remote-announce">
         {line.step ? line.text : ''}
       </p>
-      <section className={styles.state} data-testid="remote-state">
+      <section className={`${styles.state} ${styles.touchState}`} data-testid="remote-state">
         <p className={styles.stateLine}>{line.text}</p>
         {line.step === 'retry' ? (
           <div>
@@ -131,9 +135,9 @@ export function Touchpad({
         {line.step === 'disable' ? <Link to="/library/remote">{r.disable}</Link> : null}
       </section>
 
-      {legend ? (
+      {legend && !line.step ? (
         <section
-          className={styles.legend}
+          className={`${styles.legend} ${styles.touchLegend}`}
           aria-label={r.pad.legendTitle}
           data-testid="remote-legend"
         >
@@ -152,10 +156,11 @@ export function Touchpad({
       ) : null}
 
       <div
-        className={`${styles.surface} ${line.live ? '' : styles.still}`}
+        className={`${styles.surface} ${line.live || line.waiting ? '' : styles.still}`}
         role="group"
         aria-label={r.pad.surface}
-        aria-disabled={!line.live}
+        aria-disabled={!line.live && !line.waiting}
+        data-live={line.live}
         data-testid="remote-surface"
         onPointerDown={down}
         onPointerMove={(e) =>
@@ -170,7 +175,7 @@ export function Touchpad({
         <Strip button="left" label={r.pad.left} disabled={!line.live} tick={tick} />
         <Strip button="right" label={r.pad.right} disabled={!line.live} tick={tick} />
       </div>
-    </>
+    </div>
   );
 }
 
@@ -204,6 +209,13 @@ function Strip({
     },
     [button],
   );
+  // the strip goes inactive while it is held (the PC was locked mid-drag): let go at once – a
+  // disabled button may never hear of the finger lifting
+  useEffect(() => {
+    if (disabled) release();
+    // `release` reads refs only
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [disabled]);
   const press = (e: React.PointerEvent<HTMLButtonElement>) => {
     if (disabled || held.current) return;
     // the release always arrives here, also when the thumb drifts off the strip
