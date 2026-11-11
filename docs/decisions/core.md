@@ -12,6 +12,7 @@ New decisions go into the matching topic file as one bullet (not into this index
 - [core-remote-control-2](core-remote-control-2.md) – Remote control: package 2 (phone client, module „Fernbedienung“), package 3 (pointer sink, PC notice, latency probe)
 - [core-remote-control-3](core-remote-control-3.md) – Remote control: package 3, part 3 (phone client for the mouse level, page Touchpad, the level in the PC's settings)
 - [core-remote-control-4](core-remote-control-4.md) – Remote control: package 4 (keyboard: text and the fixed keys on the PC, phone client, page Tastatur)
+- [core-remote-control-5](core-remote-control-5.md) – Remote control: package 5 (widget action, user docs, maturity)
 - [core-seeds](core-seeds.md) – Test data / seeds (2026-10-02): seeds required, `seed.ts`, mulberry32, `_seeds`, demo vault, `seed-dev` E2E
 - [core-app](core-app.md) – Diagnostics, bilingual texts, empty-state link, calendar/quick capture/focus steps/home (QA P4), backup checksum, connection log, partner share, „Für“, „Zuletzt gelöscht“, editors save only changes, backlog harvest 2026-11
 - [core-runtime](core-runtime.md) – Precache split (tool views, zxcvbn), lazy command palette, shared live queries, in-memory search index, indexed data reads, awaited `module.disabling`, undo scope

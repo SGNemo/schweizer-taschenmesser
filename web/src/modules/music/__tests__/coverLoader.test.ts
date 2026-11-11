@@ -54,6 +54,28 @@ describe('cover loader', () => {
     expect(peekCover(url(1))).toBe('blob:test/0');
   });
 
+  it('desktop shell: the answer carries its type only in the headers, the picture is shown all the same', async () => {
+    const typed: Blob[] = [];
+    URL.createObjectURL = (blob: Blob | MediaSource) => {
+      typed.push(blob as Blob);
+      return 'blob:test/desktop';
+    };
+    // Like `@tauri-apps/plugin-http`: a Response built without headers, `headers` defined on it afterwards.
+    const shell = (type: string) => {
+      const res = new Response(new Uint8Array(10), { status: 200 });
+      Object.defineProperty(res, 'headers', { value: new Headers({ 'content-type': type }) });
+      return res;
+    };
+    expect((await shell('image/jpeg').blob()).type).toBe('');
+    const fetch = vi.fn(async (_url: string) => shell('image/jpeg; charset=binary'));
+    expect(await acquireCover(fetch, url('desktop')).promise).toBe('blob:test/desktop');
+    expect(typed[0]!.type).toBe('image/jpeg');
+    expect(typed[0]!.size).toBe(10);
+    // Still no picture for an answer that is not an image.
+    const page = vi.fn(async (_url: string) => shell('text/html'));
+    expect(await acquireCover(page, url('desktop-html')).promise).toBeUndefined();
+  });
+
   it('never asks for a URL that fails the host rule', async () => {
     const fetch = vi.fn(async (_url: string) => image());
     for (const bad of [
