@@ -28,6 +28,13 @@ impl<R: Runtime> ScreenMode<R> {
             .map_err(Into::into)
     }
 
+    pub fn set_volume_keys(&self, request: EnabledRequest) -> Result<()> {
+        self.0
+            .run_mobile_plugin::<Value>("setVolumeKeys", request)
+            .map(drop)
+            .map_err(Into::into)
+    }
+
     pub fn set_keep_awake(&self, request: EnabledRequest) -> Result<()> {
         self.0
             .run_mobile_plugin::<Value>("setKeepAwake", request)

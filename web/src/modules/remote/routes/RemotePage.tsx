@@ -12,6 +12,7 @@ import { Button, EmptyState, Icon, PageHeader, RowMenu, Tabs, type IconName } fr
 import { remoteSession, useLastPc, useRemoteView } from '../session';
 import { DEFAULTS, PAD_SPEED, settings, type RemotePrefs } from '../settings';
 import { describe, type RemoteLine } from '../view';
+import { useVolumeKeys } from '../volumeKeys';
 import styles from '../remote.module.css';
 import { Touchpad } from './Touchpad';
 
@@ -31,7 +32,7 @@ export default function RemotePage() {
   const supported = getPlatform().remote.supported;
   const view = useRemoteView();
   const [prefs, setPrefs] = useSettings('module.remote', settings.schema, settings.defaults);
-  const { haptics, keepAwake, padSpeed, padLegendSeen } = {
+  const { haptics, keepAwake, volumeKeys, padSpeed, padLegendSeen } = {
     ...DEFAULTS,
     ...(prefs as RemotePrefs | undefined),
   };
@@ -42,6 +43,8 @@ export default function RemotePage() {
   const r = t.remote;
 
   const last = useLastPc();
+  // (not before the stored answer is read: a switched-off setting must not take the keys first)
+  const keysWithPc = useVolumeKeys(supported && prefs !== undefined && volumeKeys);
 
   // open while the page is in front, close when it leaves (another app, another page)
   useEffect(() => {
@@ -112,6 +115,12 @@ export default function RemotePage() {
           setLegendAgain(false);
         }}
       />
+
+      {keysWithPc ? (
+        <p className={styles.note} data-testid="remote-volume-keys">
+          {r.volumeKeysNote}
+        </p>
+      ) : null}
 
       {tab === 'touchpad' ? (
         <Touchpad

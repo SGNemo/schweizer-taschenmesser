@@ -6,6 +6,7 @@ import { t } from '@/strings';
 const schema = z.object({
   haptics: z.boolean(),
   keepAwake: z.boolean(),
+  volumeKeys: z.boolean(),
   padSpeed: z.enum(['slow', 'normal', 'fast']),
   /** The touchpad's one-time legend was closed. */
   padLegendSeen: z.boolean(),
@@ -23,6 +24,7 @@ export type RemotePrefs = z.output<typeof schema>;
 export const DEFAULTS: RemotePrefs = {
   haptics: true,
   keepAwake: false,
+  volumeKeys: true,
   padSpeed: 'normal',
   padLegendSeen: false,
 };
@@ -48,6 +50,16 @@ export const settings: ModuleSettings = {
       },
       get help() {
         return t.remote.meta.keepAwakeHelp;
+      },
+      type: 'boolean',
+    },
+    {
+      key: 'volumeKeys',
+      get label() {
+        return t.remote.meta.volumeKeys;
+      },
+      get help() {
+        return t.remote.meta.volumeKeysHelp;
       },
       type: 'boolean',
     },
