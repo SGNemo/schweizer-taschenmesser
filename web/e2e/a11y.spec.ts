@@ -230,6 +230,18 @@ for (const scheme of ['light', 'dark'] as const) {
       await form.getByRole('button', { name: 'Generator' }).click();
       await expect(form.getByTestId('generated')).toHaveText(/\S{20}/);
       await expect(form.getByTestId('strength')).toBeVisible();
+      // The form is longer than the phone's sheet and its buttons stay at the lower edge. Where the form stands after
+      // the steps above is not fixed, and a switch that is half under that edge counts as a too small target
+      // (target-size: "partially obscured"). At the end of the form nothing lies under the edge. The rules that need
+      // an element on screen (target size, contrast) then see the end of the form, the others see all of it.
+      await expect
+        .poll(() =>
+          form.evaluate((el) => {
+            el.scrollTop = el.scrollHeight;
+            return Math.round(el.scrollHeight - el.clientHeight - el.scrollTop);
+          }),
+        )
+        .toBe(0);
       await audit(page, `accounts form + generator (${scheme})`);
       await form.getByRole('button', { name: 'Speichern' }).click();
 

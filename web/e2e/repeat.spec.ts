@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { ready } from './helpers';
+import { openEditor } from './money-helpers';
 
 /** Recurring invoices (comfort review, package 5c). */
 test.beforeEach(async ({ page }) => {
@@ -40,6 +41,6 @@ test('paying a repeating invoice brings the next one; undo takes it away', async
 
 test('the repeat is kept when the invoice is edited', async ({ page }) => {
   await addRent(page);
-  await page.getByRole('button', { name: /^Vermieter/ }).click();
+  await openEditor(page, page.getByRole('button', { name: /^Vermieter/ }));
   await expect(page.getByRole('dialog').getByLabel('Wiederholen')).toHaveValue('monthly');
 });
