@@ -491,6 +491,11 @@ fn remote_widening_takes_a_ticket_before_the_native_dialog() {
         "remote_set_notice: wrong order"
     );
     assert_eq!(body.matches("quiet.set(true)").count(), 1);
+    // "on again in this run" is given up only once off is on disk, and remembered before on is
+    // even tried
+    assert_eq!(body.matches("n.notice = false").count(), 1);
+    assert!(body.find("n.notice = false").unwrap() > off);
+    assert!(body.find("n.notice = true").unwrap() < body.find("quiet.set(false)").unwrap());
     assert!(body.find("quiet.set(false)").unwrap() < dialog);
     assert!(!body.contains("set_enabled") && !body.contains("set_grant"));
     // the answer comes from a blocking native dialog, never from the page

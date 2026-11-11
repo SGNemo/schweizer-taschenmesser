@@ -177,7 +177,8 @@ pub struct RemoteHost {
     notices: Mutex<Notices>,
     /// "No notice when a device starts to control mouse and keyboard" – the one option of the
     /// notice, in a file next to the master switch (device-local, never synced). Stored as the
-    /// loosening it is: a missing file, an unreadable one or no hub at all mean "notice on".
+    /// loosening it is: a missing file, an unreadable one or no hub started yet mean "notice on"
+    /// (after a stop the last hub's switch stays – nobody can be told while no hub runs).
     quiet: Mutex<Option<Arc<dyn MasterSwitch>>>,
 }
 
