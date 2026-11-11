@@ -67,9 +67,13 @@ async function load(job: Job): Promise<Entry | undefined> {
   try {
     const res = await job.fetch(job.url);
     if (!res.ok) return undefined;
-    const blob = await res.blob();
-    if (!blob.type.startsWith('image/') || blob.size === 0 || blob.size > MAX_COVER_BYTES)
+    const raw = await res.blob();
+    // The desktop shell's fetch builds its answer without headers and adds them afterwards, so the blob itself has no type
+    // there: the type is read from the answer's `content-type`, and the picture is given that type.
+    const type = (raw.type || res.headers.get('content-type') || '').split(';')[0]!.trim();
+    if (!type.startsWith('image/') || raw.size === 0 || raw.size > MAX_COVER_BYTES)
       return undefined;
+    const blob = raw.type === type ? raw : raw.slice(0, raw.size, type);
     const entry: Entry = { blob: URL.createObjectURL(blob), bytes: blob.size, refs: 0 };
     cache.set(job.url, entry);
     bytes += entry.bytes;
