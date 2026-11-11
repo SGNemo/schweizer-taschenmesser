@@ -382,3 +382,160 @@ test.describe('Finance', () => {
     await expect(page.getByTestId('hero')).toHaveText(/2\.454,01\s€/);
   });
 });
+
+/** Accounts and bookings written straight into IndexedDB: kinds, a card and a second currency without ten dialogs. */
+async function putFinance(
+  page: Page,
+  accounts: Record<string, unknown>[],
+  txs: Record<string, unknown>[],
+) {
+  await page.evaluate(
+    ({ accounts, txs }) =>
+      new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open('taschenmesser');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const db = open.result;
+          const tx = db.transaction(['finance_account', 'finance_transaction'], 'readwrite');
+          const envelope = { createdAt: 1, updatedAt: 1, deviceId: 'e2e', deletedAt: null, _f: {} };
+          for (const a of accounts) tx.objectStore('finance_account').put({ ...envelope, ...a });
+          for (const t of txs) tx.objectStore('finance_transaction').put({ ...envelope, ...t });
+          tx.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+          tx.onerror = () => reject(tx.error);
+        };
+      }),
+    { accounts, txs },
+  );
+}
+
+// Package G-b (UI audit 2026-11): net worth = the signed sum of all balances, on the tab "Verlauf".
+test.describe('Finance: net worth on the tab "Verlauf"', () => {
+  test('one figure in the head, rows by kind with the card below zero, another currency on its own row', async ({
+    page,
+  }) => {
+    // From the overview: Finanzen has not been opened, so it has not created its own first account yet.
+    await ready(page, '/');
+    await putFinance(
+      page,
+      [
+        { id: 'giro', name: 'Giro', openingBalanceMinor: 100000, order: 0, kind: 'checking' },
+        // Saved before accounts had a kind: reads as a checking account.
+        { id: 'alt', name: 'Altes Konto', openingBalanceMinor: 10000, order: 1 },
+        { id: 'tages', name: 'Tagesgeld', openingBalanceMinor: 500000, order: 2, kind: 'savings' },
+        { id: 'karte', name: 'Kreditkarte', openingBalanceMinor: 0, order: 3, kind: 'card' },
+        {
+          id: 'usd',
+          name: 'Dollar',
+          openingBalanceMinor: 50000,
+          order: 4,
+          kind: 'savings',
+          currency: 'USD',
+        },
+      ],
+      [
+        {
+          id: 't1',
+          accountId: 'karte',
+          kind: 'expense',
+          amountMinor: 25000,
+          date: '2026-08-15',
+          payee: 'Hotel',
+        },
+      ],
+    );
+    await ready(page, '/finance?tab=trend');
+    // 1.000 + 100 + 5.000 − 250: the card counts with the sign its booking gave it; the dollars are not in it.
+    await expect(page.getByTestId('hero')).toHaveText(/5\.850,00\s€/);
+    await expect(page.getByTestId('module-title-row')).toContainText('Vermögen · 4 Konten');
+    const parts = page.getByTestId('net-worth-parts');
+    await expect(parts.getByRole('listitem')).toHaveCount(4);
+    await expect(page.getByTestId('net-worth-checking')).toHaveText(/^1\.100,00\s€$/);
+    await expect(parts.getByRole('listitem').first()).toContainText('2 Konten');
+    await expect(page.getByTestId('net-worth-savings')).toHaveText(/^5\.000,00\s€$/);
+    await expect(page.getByTestId('net-worth-card')).toHaveText(/^[-−]250,00\s€$/);
+    await expect(page.getByTestId('net-worth-USD')).toHaveText(/500,00\s\$/);
+    await expect(parts.getByRole('listitem').last()).toContainText('nicht umgerechnet');
+    // The curve is there, and its foot does not repeat the head's figure (B2: no number twice).
+    await expect(page.getByTestId('net-worth-chart')).toBeVisible();
+    await expect(page.getByTestId('net-worth-chart-foot')).toContainText('September 2026');
+    await expect(page.getByTestId('net-worth-chart-foot')).not.toContainText(/5\.850,00/);
+    // Nothing open: the context line says so, without an amount.
+    await expect(page.getByTestId('net-worth-context')).toHaveText(
+      'Keine Rechnung offen, kein Abo mehr bis Monatsende.',
+    );
+    // Showing the tab wrote nothing: the old account still has no kind (no migration, nothing for LWW to carry).
+    const alt = await page.evaluate(
+      () =>
+        new Promise<Record<string, unknown>>((resolve, reject) => {
+          const open = indexedDB.open('taschenmesser');
+          open.onerror = () => reject(open.error);
+          open.onsuccess = () => {
+            const db = open.result;
+            const req = db.transaction('finance_account').objectStore('finance_account').get('alt');
+            req.onsuccess = () => {
+              db.close();
+              resolve(req.result as Record<string, unknown>);
+            };
+            req.onerror = () => reject(req.error);
+          };
+        }),
+    );
+    expect(alt.kind).toBeUndefined();
+    expect(alt.updatedAt).toBe(1);
+
+    await addInvoice(page, 'Zahnarzt', '320,00', '2026-10-10');
+    await ready(page, '/subscriptions?new=1');
+    const dialog = page.getByRole('dialog');
+    await dialog.getByLabel('Name').fill('Handyvertrag');
+    await dialog.getByLabel('Betrag').fill('45,99');
+    await dialog.getByLabel('Abbuchung am').fill('2026-09-30');
+    await save(page);
+    await ready(page, '/finance?tab=trend');
+    // Counts, the invoices first (every open one, as in "Verfügbar"); the figure is what the accounts hold and
+    // deducts nothing.
+    await expect(page.getByTestId('net-worth-context')).toHaveText(
+      'Noch offen: 1 Rechnung · 1 Abo bis Monatsende',
+    );
+    await expect(page.getByTestId('hero')).toHaveText(/5\.850,00\s€/);
+    // The overview keeps the liquidity figure.
+    await ready(page, '/finance');
+    await expect(page.getByTestId('hero')).toHaveText(/5\.484,01\s€/);
+    await expect(page.getByTestId('module-title-row')).toContainText('Verfügbar');
+
+    // The widget names its figure as the net worth in the context line: no second large number.
+    await ready(page, '/');
+    const widget = page.getByTestId('widget-finance:balance');
+    await expect(widget).toContainText(/Vermögen, davon 5\.484,01\s€ verfügbar/);
+    await expect(widget.getByText(/5\.850,00\s€/)).toHaveCount(1);
+  });
+
+  test('one account: no row repeats the figure, and the empty state of the curve stays', async ({
+    page,
+  }) => {
+    // From the overview: Finanzen has not been opened, so it has not created its own first account yet.
+    await ready(page, '/');
+    await putFinance(
+      page,
+      [
+        {
+          id: 'giro',
+          name: 'Giro',
+          openingBalanceMinor: 123456,
+          order: 0,
+          kind: 'checking',
+          // Opened this month: one point is no curve yet.
+          createdAt: new Date('2026-09-20T10:00:00').getTime(),
+        },
+      ],
+      [],
+    );
+    await ready(page, '/finance?tab=trend');
+    await expect(page.getByTestId('hero')).toHaveText(/1\.234,56\s€/);
+    await expect(page.getByTestId('module-title-row')).toContainText('Vermögen · 1 Konto');
+    await expect(page.getByTestId('net-worth-parts')).toHaveCount(0);
+    await expect(page.getByTestId('net-worth-empty')).toContainText('Noch zu wenig Verlauf');
+  });
+});

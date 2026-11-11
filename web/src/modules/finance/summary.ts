@@ -69,6 +69,36 @@ export function useAvailability(
   };
 }
 
+/**
+ * What still goes out until the end of the month, as counts for the context line of the net worth ("Vermögen"): open
+ * invoices and subscriptions with a charge from today on, both in `currency`. Counts only: the line carries no amount.
+ * Every open invoice counts, whatever its due date (as in "Verfügbar"); a module that is switched off counts nothing.
+ */
+export function useOpenUntilMonthEnd(
+  currency: string = DEFAULT_CURRENCY,
+): { invoices: number; subscriptions: number; invoicesOn: boolean; subsOn: boolean } | undefined {
+  // The same switches as "Verfügbar" (`useAvailability`): what is not deducted there is not named here either.
+  const states = useModuleStates();
+  const [prefs] = useSettings('module.finance', settings.schema, settings.defaults);
+  const p = prefs as { includeOpenInvoices?: boolean; includeSubscriptions?: boolean } | undefined;
+  const invoicesOn = Boolean(states?.invoices && p?.includeOpenInvoices);
+  const subsOn = Boolean(states?.subscriptions && p?.includeSubscriptions);
+  const day = today();
+  return useLiveQuery(async () => {
+    const [invoices, charges] = await Promise.all([
+      invoicesOn ? listOpenInvoices() : [],
+      subsOn ? listSubscriptionCharges(day, endOfMonthStr(day), currency) : [],
+    ]);
+    return {
+      invoices: invoices.filter((i) => i.currency === currency).length,
+      // A weekly subscription charges several times until the month's end and is still one subscription.
+      subscriptions: new Set(charges.map((c) => c.subscriptionId)).size,
+      invoicesOn,
+      subsOn,
+    };
+  }, [invoicesOn, subsOn, day, currency]);
+}
+
 export function totalBalance(data: FinanceData | undefined): number | undefined {
   if (!data) return undefined;
   return sumMinor(balances(data.accounts, data.txs, today()).values());

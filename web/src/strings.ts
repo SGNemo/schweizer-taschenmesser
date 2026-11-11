@@ -3288,12 +3288,40 @@ export const de = {
     expensesByCategory: 'Ausgaben nach Kategorie',
     trend: 'Einnahmen und Ausgaben der letzten 6 Monate',
     balanceCurve: 'Verlauf im Monat',
-    netWorthTitle: 'Gesamtstand am Monatsende',
+    netWorthTitle: 'Vermögen am Monatsende',
     netWorthChange: (amount: string, since: string) => `${amount} seit ${since}`,
     netWorthUnchanged: (since: string) => `unverändert seit ${since}`,
     netWorthEmpty: 'Noch zu wenig Verlauf',
     netWorthEmptyHint:
-      'Ab dem zweiten Monat mit Buchungen zeigt sich hier, wie sich dein Gesamtstand entwickelt.',
+      'Ab dem zweiten Monat mit Buchungen zeigt sich hier, wie sich dein Vermögen entwickelt.',
+    /** Net worth: what all accounts hold together (tab "Verlauf", context line of the widget). */
+    netWorth: {
+      /** The head draws no label: the context line names the figure first. */
+      named: (n: number) => `Vermögen · ${n === 1 ? '1 Konto' : `${n} Konten`}`,
+      /** Context line: counts only, the invoices first (all open ones, whatever their due date). Never an amount. */
+      open: (invoices: number, subs: number) =>
+        `Noch offen: ${[
+          invoices > 0 && (invoices === 1 ? '1 Rechnung' : `${invoices} Rechnungen`),
+          subs > 0 && `${subs === 1 ? '1 Abo' : `${subs} Abos`} bis Monatsende`,
+        ]
+          .filter(Boolean)
+          .join(' · ')}`,
+      /** Names only what was counted: a part that is switched off is not claimed to be empty. */
+      nothingOpen: (invoices: boolean, subs: boolean) =>
+        invoices && subs
+          ? 'Keine Rechnung offen, kein Abo mehr bis Monatsende.'
+          : invoices
+            ? 'Keine Rechnung offen.'
+            : 'Kein Abo mehr bis Monatsende.',
+      curve: (a: string, b: string) => `Vermögen von ${a} auf ${b}`,
+      byKind: 'Vermögen nach Art des Kontos',
+      otherCurrency: (code: string) => `Konten in ${code}`,
+      notConverted: 'nicht umgerechnet',
+      /** First words of the widget's context line: they name its figure. */
+      widget: 'Vermögen',
+      /** The amount is a part of the figure, not the figure. */
+      widgetAvailable: (amount: string) => `Vermögen, davon ${amount} verfügbar`,
+    },
     categoriesRing: (n: number) => (n === 1 ? '1 Kategorie' : `${n} Kategorien`),
     ringTitle: 'Wohin das Geld ging',
     curveFrom: 'Monatsbeginn',

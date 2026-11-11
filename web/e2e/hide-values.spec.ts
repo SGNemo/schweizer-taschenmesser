@@ -133,3 +133,84 @@ test.describe('Werte ausblenden', () => {
     expect(await page.getByTestId('module-frame').ariaSnapshot()).not.toMatch(/42,00/);
   });
 });
+
+// Package G-b (UI audit 2026-11): the net worth on the tab "Verlauf" of Finanzen is a money figure like the others.
+test('the net worth on the tab "Verlauf" is hidden: head, rows by kind and the amounts around the curve', async ({
+  page,
+}) => {
+  await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
+  // From the overview: Finanzen has not created its own first account yet.
+  await page.goto('/');
+  await expect(page.locator('main h1')).toBeVisible();
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open('taschenmesser');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const db = open.result;
+          const tx = db.transaction(['finance_account', 'finance_transaction'], 'readwrite');
+          const row = { createdAt: 1, updatedAt: 1, deviceId: 'e2e', deletedAt: null, _f: {} };
+          const accounts = tx.objectStore('finance_account');
+          accounts.put({ ...row, id: 'g', name: 'Giro', openingBalanceMinor: 123456, order: 0 });
+          accounts.put({
+            ...row,
+            id: 's',
+            name: 'Tagesgeld',
+            openingBalanceMinor: 500000,
+            order: 1,
+            kind: 'savings',
+          });
+          accounts.put({
+            ...row,
+            id: 'u',
+            name: 'Dollar',
+            openingBalanceMinor: 77700,
+            order: 2,
+            currency: 'USD',
+          });
+          tx.objectStore('finance_transaction').put({
+            ...row,
+            id: 't',
+            accountId: 'g',
+            kind: 'expense',
+            amountMinor: 3456,
+            date: '2026-08-10',
+          });
+          tx.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+          tx.onerror = () => reject(tx.error);
+        };
+      }),
+  );
+  await page.goto('/finance?tab=trend');
+  const main = page.locator('main');
+  await expect(page.getByTestId('hero')).toHaveText(/6\.200,00\s€/);
+  await expect(page.getByTestId('net-worth-savings')).toHaveText(/5\.000,00\s€/);
+  await expect(page.getByTestId('net-worth-USD')).toHaveText(/777,00\s\$/);
+  await expect(page.getByTestId('net-worth-chart')).toBeVisible();
+  await expect(main.getByTestId('sensitive-value')).toHaveCount(0);
+
+  await page.goto('/settings/barrierefreiheit');
+  await expect(page.locator('main h1')).toBeVisible();
+  await openMoreFocus(page);
+  const toggle = page.getByRole('switch', { name: 'Werte ausblenden' });
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-checked', 'true');
+
+  await page.goto('/finance?tab=trend');
+  // Head figure, two rows by kind, the row of the other currency, the foot of the curve.
+  await expect(main.getByTestId('sensitive-value')).toHaveCount(5);
+  await expect(page.getByTestId('net-worth-chart')).toBeVisible();
+  // No amount in the text, none in the accessibility tree (the curve's label, the table for screen readers).
+  await expect(main).not.toContainText(/\d,\d\d\s[€$]/);
+  expect(await main.ariaSnapshot()).not.toMatch(/\d,\d\d\s[€$]/);
+  // The context lines stay: they name no amount.
+  await expect(page.getByTestId('module-title-row')).toContainText('Vermögen · 2 Konten');
+  await expect(page.getByTestId('net-worth-context')).toBeVisible();
+  // One tap shows a row's amount again.
+  await page.getByTestId('net-worth-savings').getByTestId('sensitive-value').click();
+  await expect(page.getByTestId('net-worth-savings')).toContainText(/5\.000,00\s€/);
+});
