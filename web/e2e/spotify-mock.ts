@@ -89,8 +89,6 @@ export async function seedConnected(page: Page, features: string[]) {
 
 export interface Mock {
   api: string[];
-  /** Every picture request that left the app (full URL), whatever the host. */
-  images: string[];
   player: () => { status: number; body?: unknown };
   command: (name: string) => { status: number; body?: unknown };
   playlists: () => { status: number; body?: unknown };
@@ -103,42 +101,6 @@ export interface Mock {
     pathname: string,
     search: string,
   ) => { status: number; body?: unknown } | undefined;
-}
-
-/** Invented picture ids in the shapes the Web API returns (40 hex characters; a mosaic strings four together). */
-const hexId = (seed: string) =>
-  Array.from({ length: 40 }, (_, i) =>
-    ((seed.charCodeAt(i % seed.length) + i * 7) % 16).toString(16),
-  ).join('');
-export const COVER = {
-  album: (seed: string, width: 640 | 300 | 64) =>
-    `https://i.scdn.co/image/${hexId(`${seed}${width}`)}`,
-  mosaic: (seed: string, width: 640 | 300 | 60) =>
-    `https://mosaic.scdn.co/${width}/${[1, 2, 3, 4].map((n) => hexId(`${seed}${n}`)).join('')}`,
-  uploaded: (seed: string, cdn: 'ak' | 'fa' = 'ak') =>
-    `https://image-cdn-${cdn}.spotifycdn.com/image/${hexId(seed)}`,
-  foreign: 'https://covers.evil.test/image/ab67616d0000b273',
-};
-export const albumImages = (seed: string) =>
-  ([640, 300, 64] as const).map((width) => ({ url: COVER.album(seed, width), width }));
-export const mosaicImages = (seed: string) =>
-  ([640, 300, 60] as const).map((width) => ({ url: COVER.mosaic(seed, width), width }));
-const COVER_HOSTS = [
-  'i.scdn.co',
-  'mosaic.scdn.co',
-  'image-cdn-ak.spotifycdn.com',
-  'image-cdn-fa.spotifycdn.com',
-  'covers.evil.test',
-];
-function picture(url: string): string {
-  let n = 0;
-  for (const c of url) n = (n * 31 + c.charCodeAt(0)) % 360;
-  const tile = (x: number, y: number, hue: number) =>
-    `<rect x="${x}" y="${y}" width="50" height="50" fill="hsl(${hue} 45% 50%)"/>`;
-  const body = url.includes('mosaic')
-    ? tile(0, 0, n) + tile(50, 0, n + 80) + tile(0, 50, n + 160) + tile(50, 50, n + 240)
-    : `<rect width="100" height="100" fill="hsl(${n} 45% 45%)"/><circle cx="50" cy="50" r="26" fill="hsl(${n + 40} 60% 70%)"/>`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${body}</svg>`;
 }
 
 const SONG = (id: string, name: string, ms = 200_000) => ({
@@ -203,7 +165,6 @@ export const defaultBrowse: Mock['browse'] = (method, pathname, search) => {
 export async function mockSpotify(page: Page): Promise<Mock> {
   const mock: Mock = {
     api: [],
-    images: [],
     player: () => ({ status: 200, body: TRACK }),
     command: () => ({ status: 204 }),
     search: () => ({
@@ -246,18 +207,6 @@ export async function mockSpotify(page: Page): Promise<Mock> {
       json: { access_token: 'AT-invented', expires_in: 3600 },
     }),
   );
-  // Covers: an invented picture per URL (its colour follows the URL), from the hosts the app may ask and from one it may not.
-  for (const host of COVER_HOSTS)
-    await page.route(`https://${host}/**`, (route) => {
-      const url = route.request().url();
-      mock.images.push(url);
-      return route.fulfill({
-        status: 200,
-        headers: CORS,
-        contentType: 'image/svg+xml',
-        body: picture(url),
-      });
-    });
   await page.route('https://api.spotify.com/**', (route) => {
     const request = route.request();
     if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });

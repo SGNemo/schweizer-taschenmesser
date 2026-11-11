@@ -1,14 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { ready, showPreview } from './helpers';
-import {
-  COVER,
-  albumImages,
-  defaultBrowse,
-  mockSpotify,
-  mosaicImages,
-  seedConnected,
-  type Mock,
-} from './spotify-mock';
+import { COVER, albumImages, mockCovers, mosaicImages } from './spotify-covers';
+import { defaultBrowse, mockSpotify, seedConnected, type Mock } from './spotify-mock';
 
 // Preview modules, tools, connectors and sections are listed only with "In Arbeit anzeigen" (maturity).
 test.beforeEach(({ page }) => showPreview(page));
@@ -105,6 +98,7 @@ test.describe('Music covers', () => {
   }) => {
     const mock = await mockSpotify(page);
     withCovers(mock);
+    const images = await mockCovers(page);
     await seedConnected(page, ALL);
     await openMusic(page);
     const grid = page.getByTestId('music-playlists');
@@ -128,15 +122,15 @@ test.describe('Music covers', () => {
     );
     for (const [w, h] of boxes) expect(w).toBe(h);
     expect(new Set(boxes.map(([w]) => w)).size).toBe(1);
-    const hosts = new Set(mock.images.map(host));
+    const hosts = new Set(images.map(host));
     expect(hosts.has('mosaic.scdn.co')).toBe(true);
     expect(hosts.has('image-cdn-ak.spotifycdn.com')).toBe(true);
     expect(hosts.has('image-cdn-fa.spotifycdn.com')).toBe(true);
     expect(hosts.has('covers.evil.test')).toBe(false);
     // One request per picture, in the size the tile needs: 300 on a plain screen, 640 on a sharp one (phone).
-    expect(new Set(mock.images).size).toBe(mock.images.length);
+    expect(new Set(images).size).toBe(images.length);
     const sharp = (await page.evaluate(() => window.devicePixelRatio)) > 1.5;
-    expect(mock.images.filter((u) => u.startsWith('https://mosaic.scdn.co/'))).toEqual([
+    expect(images.filter((u) => u.startsWith('https://mosaic.scdn.co/'))).toEqual([
       COVER.mosaic('fokus', sharp ? 640 : 300),
     ]);
   });
@@ -146,6 +140,7 @@ test.describe('Music covers', () => {
   }) => {
     const mock = await mockSpotify(page);
     withCovers(mock);
+    const images = await mockCovers(page);
     await seedConnected(page, ALL);
     const main = await openMusic(page);
     await expect(page.getByTestId('music-cover').getByRole('img')).toHaveAttribute(
@@ -163,9 +158,9 @@ test.describe('Music covers', () => {
       await expect(main.getByTestId('music-list-cover').getByRole('img')).toBeVisible();
     }
     // Rows take the 64 px picture; two rows of one album share one request.
-    const small = mock.images.filter((u) => u === COVER.album('Album Eins', 64));
+    const small = images.filter((u) => u === COVER.album('Album Eins', 64));
     expect(small).toHaveLength(1);
-    expect(mock.images).not.toContain(COVER.album('Album Eins', 640));
+    expect(images).not.toContain(COVER.album('Album Eins', 640));
     const queue = page.getByTestId('music-queue');
     await queue.scrollIntoViewIfNeeded();
     await expect(queue.getByRole('img')).toHaveCount(1);
@@ -174,6 +169,7 @@ test.describe('Music covers', () => {
   test('not connected: no picture is asked for', async ({ page }) => {
     const mock = await mockSpotify(page);
     withCovers(mock);
+    const images = await mockCovers(page);
     await page.addInitScript(
       (url) => {
         localStorage.setItem(
@@ -191,7 +187,7 @@ test.describe('Music covers', () => {
     await ready(page, '/music');
     await expect(page.getByTestId('music-empty')).toBeVisible();
     await page.waitForTimeout(500);
-    expect(mock.images).toEqual([]);
+    expect(images).toEqual([]);
     expect(mock.api).toEqual([]);
   });
 });
