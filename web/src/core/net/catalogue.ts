@@ -50,6 +50,9 @@ export const NET_CATALOGUE: readonly NetUse[] = [
       'api.spotify.com',
       'open.spotify.com',
       'i.scdn.co',
+      'mosaic.scdn.co',
+      'image-cdn-ak.spotifycdn.com',
+      'image-cdn-fa.spotifycdn.com',
     ],
   },
   {

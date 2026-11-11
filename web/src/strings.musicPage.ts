@@ -26,6 +26,7 @@ export const tMusicPage = defineBundle(
     startRecent: 'Zuletzt gespielt',
     startPlaylists: 'Deine Playlists',
     startEmpty: 'Noch nichts gespielt. Such etwas oder öffne eine Playlist.',
+    lastPlayedCover: (name: string) => `Zuletzt gespielt: ${name}`,
     startNeedsHistory:
       'Für „Zuletzt gespielt“ braucht Nemo die Funktion „Verlauf“ unter Verbindungen.',
     startNeedsPlaylists:
@@ -61,6 +62,7 @@ export const tMusicPage = defineBundle(
       noDevices: 'No device found yet. Open Spotify on your phone or PC and it shows up here.',
       premiumNote: 'Controlling needs Spotify Premium.',
       startRecent: 'Recently played',
+      lastPlayedCover: (name: string) => `Played last: ${name}`,
       startPlaylists: 'Your playlists',
       startEmpty: 'Nothing played yet. Search for something or open a playlist.',
       startNeedsHistory: '“Recently played” needs the “History” feature under Connections.',

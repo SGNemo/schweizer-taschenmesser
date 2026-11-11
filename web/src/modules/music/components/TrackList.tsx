@@ -1,15 +1,19 @@
 import { useState } from 'react';
-import type { MediaItem } from '@/core/connectors/types';
+import type { ConnectorContext, MediaItem } from '@/core/connectors/types';
 import { getPlatform } from '@/core/platform';
 import { tSpotify } from '@/strings.spotify';
 import { Icon, RowMenu, type RowMenuItem } from '@/ui';
 import { clock } from '../nowPlayingTime';
+import { COVER_PX } from '../useCover';
+import { Cover } from './Cover';
 import styles from './Spotify.module.css';
 
 /** Link of a track on Spotify's site (built from the checked id, never taken from a response). */
 export const trackUrl = (id: string): string => `https://open.spotify.com/track/${id}`;
 
 export interface TrackListProps {
+  /** The connection the album pictures are fetched through; without it every row shows the icon. */
+  ctx?: ConnectorContext;
   items: readonly MediaItem[];
   /** The id of the song that plays now, to mark its row. */
   playingId?: string;
@@ -33,6 +37,7 @@ export interface TrackListProps {
  * while "Ausgeblendete zeigen" is on).
  */
 export function TrackList({
+  ctx,
   items,
   playingId,
   onPlay,
@@ -110,6 +115,14 @@ export function TrackList({
                 <span className={styles.index} aria-hidden="true">
                   {item.id === playingId ? <Icon name="volume" size={14} /> : index + 1}
                 </span>
+                <Cover
+                  ctx={ctx}
+                  item={item}
+                  px={COVER_PX.row}
+                  alt={item.album ?? ''}
+                  className={styles.rowCover}
+                  icon={16}
+                />
                 <span className={styles.trackText}>
                   <span className={styles.trackName}>{item.name}</span>
                   {item.subtitle ? <span className={styles.trackSub}>{item.subtitle}</span> : null}
