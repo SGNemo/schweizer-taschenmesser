@@ -314,8 +314,9 @@ class SecureStorePlugin(private val activity: Activity) : Plugin(activity) {
      * Asks the person to prove they are there – fingerprint, face, or the device's PIN/pattern/password –
      * without any key and without storing anything (the vault's biometric key is not touched). Only Rust
      * calls this: no plugin command of the webview maps to it.
-     * `status`: "ok", "cancelled", or "none" (the device has no screen lock at all). Anything that
-     * cannot be asked for another reason is rejected: an error is never a pass.
+     * `status`: "ok", "cancelled" (also: nobody answered in time), "none" (the device has no screen
+     * lock at all) or "unavailable" (it has one the system cannot ask for). Any error is rejected: an
+     * error is never a pass.
      */
     @Command
     fun confirmUser(invoke: Invoke) {

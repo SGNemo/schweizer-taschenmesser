@@ -491,12 +491,14 @@ async fn pass_gate<R: Runtime>(app: &AppHandle<R>, lang: Option<&str>) -> Result
             let _asking = Asking(&state.asking);
             let answer = native_unlock(app, lang).await?;
             // unpaired or paired anew while the prompt was up: the answer was for the old PC
+            // (compared under the lock `reset` clears the unlock with)
+            let mut unlocked = state.unlocked.lock().map_err(|_| "internal")?;
             if state.pairing.load(Ordering::SeqCst) != pairing {
                 return Err("closed".to_owned());
             }
             match answer {
                 Unlocked::Yes => {
-                    *state.unlocked.lock().map_err(|_| "internal")? = Some(SystemTime::now());
+                    *unlocked = Some(SystemTime::now());
                     Ok(false)
                 }
                 Unlocked::NoLock => Ok(true),
@@ -540,9 +542,6 @@ pub async fn remote_client_open<R: Runtime>(
             .map_or(0, |(id, _, _)| *id);
         state.replacing.store(old, Ordering::SeqCst);
         let opened = open_now(&app, level, no_lock, on_event);
-        let _ = state
-            .replacing
-            .compare_exchange(old, 0, Ordering::SeqCst, Ordering::SeqCst);
         settle_lost(&state, old, opened.is_ok());
         opened
     })
@@ -557,6 +556,10 @@ fn settle_lost(state: &RemoteClient, old: u64, opened: bool) {
     let Ok(mut lost) = state.lost.lock() else {
         return;
     };
+    // under the lock the events hold their end back with: from here on none is held any more
+    let _ = state
+        .replacing
+        .compare_exchange(old, 0, Ordering::SeqCst, Ordering::SeqCst);
     if !matches!(lost.as_ref(), Some((id, _)) if *id == old) {
         return;
     }
@@ -635,10 +638,13 @@ fn open_now<R: Runtime>(
                 }
                 // the connection ended while a mouse session is being opened in its place: most
                 // likely the PC replacing it, so the page hears of it only if that open fails
-                if matches!(event, Event::Closed(None)) && replacing.load(Ordering::SeqCst) == id {
+                // (asked under the lock, so the open that settles it cannot miss it)
+                if matches!(event, Event::Closed(None)) {
                     if let Ok(mut lost) = lost.lock() {
-                        *lost = Some((id, on_event.clone()));
-                        return;
+                        if replacing.load(Ordering::SeqCst) == id {
+                            *lost = Some((id, on_event.clone()));
+                            return;
+                        }
                     }
                 }
                 let _ = on_event.send(event_dto(id, event));
@@ -949,7 +955,10 @@ mod tests {
     fn the_end_of_a_replaced_session_is_never_told() {
         let client = RemoteClient::default();
         let told = held(&client, 3);
+        client.replacing.store(3, Ordering::SeqCst);
         settle_lost(&client, 3, true);
+        // from here on no end of session 3 is held back any more
+        assert_eq!(client.replacing.load(Ordering::SeqCst), 0);
         assert!(client.lost.lock().unwrap().is_none());
         assert_eq!(told.load(Ordering::SeqCst), 0);
     }
