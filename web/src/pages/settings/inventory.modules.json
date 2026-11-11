@@ -577,6 +577,11 @@
         "label": "Bildschirm anlassen",
         "default": false
       },
+      "volumeKeys": {
+        "type": "boolean",
+        "label": "Lautstärketasten des Handys steuern den PC",
+        "default": true
+      },
       "padSpeed": {
         "type": "select",
         "label": "Zeigergeschwindigkeit auf dem Touchpad",

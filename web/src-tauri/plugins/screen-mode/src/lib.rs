@@ -1,7 +1,9 @@
 //! Android window modes for the cockpit: immersive (status and navigation bars hidden, a swipe
 //! from the edge shows them briefly) and keep-awake (`FLAG_KEEP_SCREEN_ON`). Both are plain window
 //! flags on the activity; nothing is stored and nothing is logged. The web app decides when they
-//! apply (`core/platform/tauri/display.ts`). On other platforms both commands do nothing.
+//! apply (`core/platform/tauri/display.ts`). A third switch hands the two hardware volume keys to
+//! the web app for a short lease (the remote control; event `volume-key`). On other platforms
+//! the commands do nothing.
 
 use tauri::{
     plugin::{Builder, TauriPlugin},
@@ -40,7 +42,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("screen-mode")
         .invoke_handler(tauri::generate_handler![
             commands::set_immersive,
-            commands::set_keep_awake
+            commands::set_keep_awake,
+            commands::set_volume_keys
         ])
         .setup(|app, api| {
             #[cfg(target_os = "android")]

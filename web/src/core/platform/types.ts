@@ -75,6 +75,17 @@ export interface DisplayService {
   setImmersive(on: boolean): Promise<void>;
   /** Keep the screen on (Android window flag, browser wake lock). */
   setKeepAwake(on: boolean): Promise<void>;
+  /**
+   * Android only: the phone's two hardware volume keys. Absent where there is no such thing.
+   * `hold(true)` hands them to the app for a short lease (a few seconds: ask again while they
+   * are wanted – if nobody asks, they return to the phone by themselves); `hold(false)` gives
+   * them back at once. While held, a press arrives on `onKey` and does not change the phone's
+   * volume (`repeat`: the key is being held down).
+   */
+  volumeKeys?: {
+    hold(on: boolean): Promise<void>;
+    onKey(callback: (key: 'up' | 'down', repeat: boolean) => void): () => void;
+  };
 }
 
 /**

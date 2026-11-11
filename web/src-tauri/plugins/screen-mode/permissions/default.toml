@@ -1,3 +1,9 @@
 [default]
-description = "Hide the Android system bars and keep the screen on while the cockpit is open."
-permissions = ["allow-set-immersive", "allow-set-keep-awake"]
+description = "Hide the Android system bars and keep the screen on while the cockpit is open; hand the two volume keys to the web app while the remote control holds them."
+permissions = [
+  "allow-set-immersive",
+  "allow-set-keep-awake",
+  "allow-set-volume-keys",
+  "allow-register-listener",
+  "allow-remove-listener",
+]

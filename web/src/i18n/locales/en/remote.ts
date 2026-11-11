@@ -11,6 +11,9 @@ export const remote: Strings['remote'] = {
     keepAwake: 'Keep the screen on',
     keepAwakeHelp:
       'The screen stays on while the remote is open. On the touchpad it always stays on.',
+    volumeKeys: 'The phone’s volume keys control the PC',
+    volumeKeysHelp:
+      'Only while the remote is connected to the PC. Otherwise the keys change the phone’s volume as usual.',
     padSpeed: 'Pointer speed on the touchpad',
     padSpeedHelp: 'How far the pointer moves per swipe. Windows’ own pointer speed adds to it.',
     padSlow: 'Slow',
@@ -18,6 +21,7 @@ export const remote: Strings['remote'] = {
     padFast: 'Fast',
   },
   phoneOnly: 'The remote is available in the phone app.',
+  volumeKeysNote: 'Volume keys control the PC',
   views: 'View',
   touchpad: 'Touchpad',
   pad: {
