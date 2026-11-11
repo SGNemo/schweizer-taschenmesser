@@ -12,7 +12,7 @@ name: CI rest (start)
 # much through, never too little: a path that is missing here only costs a restart.
 on:
   push:
-    branches: [develop]
+    branches: [ci/develop-load-probe]
     paths:
       - '**'
       - '!docs/**'
@@ -35,4 +35,4 @@ jobs:
       - name: Dispatch ci.yml (part rest) on develop
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run ci.yml --repo "$GITHUB_REPOSITORY" --ref develop -f part=rest
+        run: gh workflow run ci.yml --repo "$GITHUB_REPOSITORY" --ref ci/develop-load-probe -f part=rest

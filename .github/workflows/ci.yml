@@ -9,7 +9,7 @@ name: CI
 run-name: ${{ inputs.part == 'rest' && format('Outside the Dev-Preview gate ({0})', github.ref_name) || '' }}
 on:
   push:
-    branches: [develop, main]
+    branches: [develop, main, ci/develop-load-probe]
     # A push that only touches scribble/ (the chats' notes) starts no run at all. It cannot replace a pending
     # run of a code merge any more (a newer push replaces a pending run), and it would build nothing anyway.
     paths-ignore: ['scribble/**']
@@ -105,13 +105,13 @@ jobs:
           # Which jobs of a full run belong to this run: `gate` (push to develop), `rest` (dispatch with
           # part=rest), `all` (everything else).
           part=all
-          if [ "$EVENT" = "push" ] && [ "$REF" = "refs/heads/develop" ]; then part=gate; fi
+          if [ "$EVENT" = "push" ] && [ "$REF" = "refs/heads/ci/develop-load-probe" ]; then part=gate; fi
           if [ "$EVENT" = "workflow_dispatch" ] && [ "$PART" = "rest" ]; then part=rest; fi
           # Push to develop: look at everything since the last *published* Dev-Preview (its release name ends in
           # +<sha7>), not only at this push. A code merge whose run was replaced by a newer push (a pending run is
           # replaced, never a running one) is then built by the next run, whatever that push contained.
           since=""
-          if [ "$EVENT" = "push" ] && [ "$REF" = "refs/heads/develop" ]; then
+          if [ "$EVENT" = "push" ] && [ "$REF" = "refs/heads/ci/develop-load-probe" ]; then
             built="$(gh release view dev-preview --repo "$REPO" --json name -q .name 2>/dev/null | sed -n 's/.*+\([0-9a-f]\{7,40\}\)$/\1/p')"
             if [ -n "$built" ] && git cat-file -e "$built^{commit}" 2>/dev/null && git merge-base --is-ancestor "$built" "$PUSH_AFTER" 2>/dev/null; then
               since="$built"
@@ -853,18 +853,13 @@ jobs:
   # a release. See dev-preview.yml and
   # docs/howto/ci.md -> "Dev-Preview".
   dev-preview-build:
-    name: Dev-Preview build
+    name: Dev-Preview build (PROBE STUB - sleeps, builds and signs nothing)
     needs: [changes]
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.changes.outputs.code == 'true' }}
-    # dev-preview.yml's publish job asks for contents: write; a caller must allow it even though the
-    # publish job is skipped in the build stage (all other jobs there keep the workflow's read-only token).
-    permissions:
-      contents: write
-    uses: ./.github/workflows/dev-preview.yml
-    with:
-      target: dev-preview
-      stage: build
-    secrets: inherit
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/ci/develop-load-probe' && needs.changes.outputs.code == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - run: sleep 300
 
   # An older run never turns the preview back: right before the publish, compare this commit with the one the
   # published preview was built from (`+<sha>` at the end of the release name). Publish when this commit is ahead
@@ -875,7 +870,7 @@ jobs:
   dev-preview-fresh:
     name: Dev-Preview would not go back in time
     needs: [changes, dev-preview-build, secret-scan, licences, web-static, web-unit, web-e2e, rust]
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.changes.outputs.code == 'true' }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/ci/develop-load-probe' && needs.changes.outputs.code == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 3
     outputs:
@@ -918,20 +913,13 @@ jobs:
   # runs next to the build and after the publish: a red one turns the run red, but the preview is out already.
   # The preview is "an untested intermediate build" by its release notes; docs/HOW-TO.md "Which checks run when".
   dev-preview:
-    name: Dev-Preview publish
+    name: Dev-Preview publish (PROBE STUB - publishes nothing)
     needs: [changes, dev-preview-build, dev-preview-fresh, secret-scan, licences, web-static, web-unit, web-e2e, rust]
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.changes.outputs.code == 'true' && needs.dev-preview-fresh.outputs.publish == 'true' }}
-    permissions:
-      contents: write
-    uses: ./.github/workflows/dev-preview.yml
-    with:
-      target: dev-preview
-      stage: publish
-      version: ${{ needs.dev-preview-build.outputs.version }}
-      full: ${{ needs.dev-preview-build.outputs.full }}
-      tag: ${{ needs.dev-preview-build.outputs.tag }}
-      publish: ${{ needs.dev-preview-build.outputs.publish }}
-    secrets: inherit
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/ci/develop-load-probe' && needs.changes.outputs.code == 'true' && needs.dev-preview-fresh.outputs.publish == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: echo "probe - a real run would call dev-preview.yml (stage publish) here"
 
   # A red run on develop says who is next: the merges since the last green run of this part (gate: since the last
   # published Dev-Preview; rest: since the last green manual run), because a run can stand for several pushes
@@ -939,7 +927,7 @@ jobs:
   culprits:
     name: Red on develop – commits since the last green run
     needs: [changes, secret-scan, docs-budget, docs-pairs, stimulus-budget, licences, web-static, web-unit, web-e2e, web-e2e-rest, web, packages, extension, e2e-sync, e2e-seed, rust, rust-windows, local-llm]
-    if: ${{ failure() && github.ref == 'refs/heads/develop' && github.event_name != 'pull_request' }}
+    if: ${{ failure() && github.ref == 'refs/heads/ci/develop-load-probe' && github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
