@@ -4,7 +4,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
-UI-Audit 4.0 weiterführen: Paket 0b-2 (Modulkopf als eine Titelzeile mit Reitern, #688), danach 0b-3 bis 0b-8. Plan, Ledger und Pakete: [design/ui-audit-2026-11/](design/ui-audit-2026-11/PACKAGES.md).
+UI-Audit 4.0 weiterführen: Paket 0b-2 (Modulkopf als eine Titelzeile mit Reitern) ist gemergt (#688); offen dazu das Senken des Reizbudgets aus den CI-Werten (`fix/ui4-0b-2-stimulus-budget`) und der Paletten-PR „Enter = eintragen, ? = fragen“, danach 0b-3 bis 0b-8. Plan, Ledger und Pakete: [design/ui-audit-2026-11/](design/ui-audit-2026-11/PACKAGES.md).
 
 ## Laufende Runden
 
@@ -12,10 +12,12 @@ UI-Audit 4.0 weiterführen: Paket 0b-2 (Modulkopf als eine Titelzeile mit Reiter
 - **Fernsteuerung des PCs vom Handy** ([design/remote-control/PACKAGES.md](design/remote-control/PACKAGES.md), Regel [rules/remote-control.md](rules/remote-control.md)): PC-Seite, Modul „Fernbedienung“ und Benachrichtigung der vollen Stufe sind auf `develop`. Offen: Latenzmessung mit echtem Handy (#690), dann Seite Touchpad; Schalter für die Benachrichtigung; Lautstärketasten (`feat/remote-volume-keys`, braucht Android-Build).
 - **Website neu gedacht** ([design/site/RETHINK.md](design/site/RETHINK.md), PR #694): Richtung „Ein Tag“ mit der Tabelle „Was ins Netz geht“, Aussage „Eine Sache zuerst.“; Start, `/module`, `/daten`, `/unterstuetzen`, `/install` und Rechtliches in neuer Form, de und en, ohne ein App-Bild. Sechs Bild-Slots sind gezeichnet gefüllt; echte Bilder kommen über [design/site/SLOTS.md](design/site/SLOTS.md), sobald die App steht (ersetzt Runde 5, Paket 1).
 - **Modul Uhr** ([features/clock.md](features/clock.md)): Paket 1 auf `develop`; Folge-Prompts in [product/clock/](product/clock/01-followups.md), nicht gestartet.
+- **CI aufräumen, Runde 3** ([perf/CI-2026-11.md](perf/CI-2026-11.md)): Ursache ist die Warteschlange (20 Runner, 22 % der Zeit voll); kleine Workflow-Änderungen in #692, fünf Übergabe-Pakete in [perf/CI-2026-11-PACKAGES.md](perf/CI-2026-11-PACKAGES.md); messen: `node scripts/ci/measure.mjs`.
 - **UI schärfen, Runde 6** ([qa/round-6/STATUS.md](qa/round-6/STATUS.md)): alle acht Fix-PRs auf `develop`; offen U41 Kopfbandhöhen (`fix/ui6-head-heights`) und der Sammel-PR `fix/ui6-followups`.
 
 ## Abgeschlossene Runden (je eine Zeile; alles auf `develop`)
 
+- Musik: Cover für Playlists, Alben und Songs in allen Listen ([features/spotify.md](features/spotify.md)); offen: Handtest MU-C1 mit echtem Konto, Cover der von Spotify erzeugten Playlists (Daily Mix, Radio).
 - Heimnetz-Sync (LAN-Hub, Koppeln, zweiter PC, „Nur im WLAN“): [design/sync-lan/CONCEPT.md](design/sync-lan/CONCEPT.md). Nicht gebaut: Abgleich ganz im Hintergrund.
 - Use case „Kopf leer“ (Pakete 1–4, Nachlese, nachgemessen): [design/usecases/kopf-leer/TARGET.md](design/usecases/kopf-leer/TARGET.md).
 - Erstkontakt-Runde 5 (Personen A–D, Installation ohne Hilfe, Dev-Preview-Erststart): [`docs/qa/round-5.md`](qa/round-5.md).
