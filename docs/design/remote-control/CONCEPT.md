@@ -117,8 +117,10 @@ Measure twice: near the router and at the far end of the flat. **The run near th
 
 | Phone, Android, display Hz | Where | invoke p50 / p95 / max ms | invoke budget ms → verdict | events/s | overlap % | input p50 / p95 ms | open p50 / p95 ms | trip ≈ ms | spread ms | Date |
 |---|---|---|---|---|---|---|---|---|---|---|
-| _to be measured_ | near the router | | | | | | | | | |
-| | far end | | | | | | | | | |
+| phone not named (about 60 Hz, by the input interval) | near the router | 2.8 / 12.4 / 18.9 | 12.9 → fits (0.5 ms to spare) | 72 | 5 | 17.2 / 19.4 | 103.7 / 123.4 (n=5) | 16.1 | 19.7 | 2026-11-11 |
+| | far end | _not measured_ | | | | | | | | |
+
+Result of 2026-11-11 (maintainer's run, tool line `nemo-remote-latency v3`, accepted as passed): **fits**, narrowly. A first run the same evening, with the PC's switch still off, measured the phone's part alone: invoke p95 5.3 ms, overlap 2 % – the invoke value varies between runs, so the margin is not a constant. The touchpad hand test (FB15) remains the judge of how it feels.
 
 Reading (near the router): "fits" → the page sends per pointer event through the WebView as designed. "too expensive" → touch capture moves into the Kotlin plugin (fallback of package 3). "close" → measure again; if it stays close, build the page on the WebView path and let the hand test decide. A large spread or a high trip is the Wi-Fi, not the design, and no reason for the fallback.
 
