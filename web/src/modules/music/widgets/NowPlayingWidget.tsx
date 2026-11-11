@@ -1,5 +1,6 @@
 import { clock, useProgress } from '../nowPlayingTime';
-import { useCover } from '../useCover';
+import { COVER_PX } from '../useCover';
+import { Cover } from '../components/Cover';
 import { useNowPlaying } from '../useNowPlaying';
 import { tMusicPage } from '@/strings.musicPage';
 import { tSpotify } from '@/strings.spotify';
@@ -15,7 +16,6 @@ export default function NowPlayingWidget() {
   const tx = tSpotify.use();
   const tm = tMusicPage.use();
   const np = useNowPlaying();
-  const cover = useCover(np?.ctx, np?.current?.coverUrl);
   const current = np?.current;
   const position = useProgress(
     current?.progressMs,
@@ -34,9 +34,14 @@ export default function NowPlayingWidget() {
     >
       {np ? (
         <div className={styles.mini} data-testid="music-widget">
-          <span className={styles.miniCover}>
-            {cover ? <img src={cover} alt="" /> : <Icon name="music" size={22} />}
-          </span>
+          <Cover
+            ctx={np.ctx}
+            item={current}
+            px={COVER_PX.widget}
+            alt={current?.album ?? current?.title ?? ''}
+            className={styles.miniCover}
+            icon={22}
+          />
           <div className={styles.miniText}>
             {current ? (
               <>

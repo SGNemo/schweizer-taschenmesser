@@ -11,8 +11,11 @@ import { readHidden, setHidden, type HiddenTracks } from '@/core/connectors/hidd
 import { settingsPath } from '@/core/settings/registry/paths';
 import { useUiStore } from '@/stores/ui';
 import { tSpotify } from '@/strings.spotify';
+import type { CoverImage } from '@/core/connectors/coverUrl';
+import type { ConnectorContext } from '@/core/connectors/types';
 import { Button, Icon, TextField } from '@/ui';
-import { useCover } from '../useCover';
+import { COVER_PX } from '../useCover';
+import { Cover } from './Cover';
 import { useAddToPlaylist } from './AddToPlaylist';
 import { TrackList } from './TrackList';
 import { useSavedTracks } from './useSavedTracks';
@@ -98,6 +101,7 @@ function SongList({
       {hearts.note}
       {add.dialog}
       <TrackList
+        ctx={api.np.ctx}
         items={items}
         playingId={api.playingId}
         onPlay={(i) => void api.playFromList(i, items)}
@@ -113,19 +117,27 @@ function SongList({
 function ListHeader({
   title,
   sub,
+  ctx,
   cover,
   children,
 }: {
   title: string;
   sub?: string;
-  cover?: string;
+  ctx?: ConnectorContext;
+  cover?: { coverUrl?: string; covers?: CoverImage[] };
   children?: React.ReactNode;
 }) {
   return (
     <header className={styles.header}>
-      <div className={styles.headCover}>
-        {cover ? <img src={cover} alt="" /> : <Icon name="music" size={36} />}
-      </div>
+      <Cover
+        ctx={ctx}
+        item={cover}
+        px={COVER_PX.head}
+        alt={title}
+        className={styles.headCover}
+        icon={36}
+        testId="music-list-cover"
+      />
       <div className={styles.headText}>
         <h3 className={styles.headTitle}>{title}</h3>
         {sub ? <p className={styles.headSub}>{sub}</p> : null}
@@ -149,7 +161,6 @@ function ContentView({
     source.tracks ? () => source.tracks!(ctx, view.type, view.id) : undefined,
     viewKey(view),
   );
-  const cover = useCover(ctx, list.state === 'ready' ? list.value.coverUrl : undefined);
   const [hiddenAll, setHiddenAll] = useState<HiddenTracks>(readHidden);
   const [showHidden, setShowHidden] = useState(false);
   const hiddenIds = new Set(hiddenAll[view.id] ?? []);
@@ -190,7 +201,8 @@ function ContentView({
         sub={[value.subtitle, tx.tracksCount(value.total ?? items.length)]
           .filter(Boolean)
           .join(' · ')}
-        cover={cover}
+        ctx={ctx}
+        cover={value}
       >
         {canControl ? (
           <div className={styles.headActions}>
@@ -225,6 +237,7 @@ function ContentView({
         <p className={styles.note}>{tx.tracksShown(items.length, value.total)}</p>
       ) : null}
       <TrackList
+        ctx={api.np.ctx}
         items={items}
         playingId={api.playingId}
         onPlay={playOne}
@@ -255,7 +268,12 @@ function QueueView({ api }: { api: PlayerApi }) {
     <>
       <h3 className={styles.sub}>{tx.queueNow}</h3>
       {q.value.current ? (
-        <TrackList items={[q.value.current]} playingId={api.playingId} onPlay={() => undefined} />
+        <TrackList
+          ctx={ctx}
+          items={[q.value.current]}
+          playingId={api.playingId}
+          onPlay={() => undefined}
+        />
       ) : (
         <p className={styles.note}>{tx.nothingPlaying}</p>
       )}
@@ -335,6 +353,14 @@ function SearchView({ api }: { api: PlayerApi }) {
                           className={styles.navItem}
                           onClick={() => api.open({ type, id: i.id, name: i.name })}
                         >
+                          <Cover
+                            ctx={ctx}
+                            item={i}
+                            px={COVER_PX.row}
+                            alt={i.name}
+                            className={styles.rowCover}
+                            icon={16}
+                          />
                           <span className={styles.navName}>{i.name}</span>
                           {i.subtitle ? (
                             <span className={styles.trackSub}>{i.subtitle}</span>

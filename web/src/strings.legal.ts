@@ -78,7 +78,7 @@ export const tLegal = defineBundle(
       spotify: {
         title: 'Spotify (optional, Windows)',
         what: 'Anmeldung mit deiner eigenen Spotify-App (Client-ID, ohne Geheimnis). Danach fragt das Gerät bei Spotify, was gerade läuft (Titel, Interpret), und sendet auf Klick Pause, Weiter, Zurück oder Nächster. Im Player (nur auf Klick) liest es deine Playlists und gespeicherten Songs, sucht nach dem eingetippten Begriff und startet Titel; das Cover lädt es von Spotifys Bild-Server (i.scdn.co). Titel, Interpret, Cover und Suchbegriff bleiben auf dem Gerät: kein Sync, keine KI, keine Fehlerberichte.',
-        to: 'Spotify (accounts.spotify.com, api.spotify.com und i.scdn.co für Cover).',
+        to: 'Spotify (accounts.spotify.com, api.spotify.com; für Cover die Bildserver i.scdn.co, mosaic.scdn.co und image-cdn-*.spotifycdn.com).',
         when: 'Nur nach Verbinden und nur bei geöffneter, sichtbarer Übersicht: höchstens alle 30 Sekunden. Trennen unter Verbindungen → Spotify.',
       },
       supporter: {
@@ -322,7 +322,7 @@ export const tLegal = defineBundle(
         spotify: {
           title: 'Spotify (optional, Windows)',
           what: 'Sign-in with your own Spotify app (client ID, no secret). After that the device asks Spotify what is playing (title, artist) and, on a click, sends pause, resume, previous or next. In the player (only on a click) it reads your playlists and saved songs, searches for the term you typed and starts tracks; the cover comes from Spotify’s image server (i.scdn.co). Title, artist, cover and search term stay on the device: no sync, no AI, no error reports.',
-          to: 'Spotify (accounts.spotify.com, api.spotify.com and i.scdn.co for covers).',
+          to: 'Spotify (accounts.spotify.com, api.spotify.com; for covers the image servers i.scdn.co, mosaic.scdn.co and image-cdn-*.spotifycdn.com).',
           when: 'Only after connecting and only while the Overview is open and visible: at most every 30 seconds. Disconnect under Connections → Spotify.',
         },
         supporter: {
