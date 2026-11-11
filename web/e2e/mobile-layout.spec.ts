@@ -160,8 +160,9 @@ test.describe('top bar with a running focus round', () => {
 
   test('search stays a 44 px target and nothing is pushed out of the bar', async ({ page }) => {
     await ready(page, '/todos');
-    await page.getByLabel('ToDo hinzufügen').fill('Keller aufräumen');
-    await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+    await page.getByRole('dialog').getByLabel('Titel').fill('Keller aufräumen');
+    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
     await expect(page.getByText('Keller aufräumen').first()).toBeVisible();
     await ready(page, '/');
     await page
@@ -182,11 +183,16 @@ test.describe('ToDos on a wide screen', () => {
 
   test('the list uses the page width, not a 240 px rail column', async ({ page }) => {
     await ready(page, '/todos');
-    await page.getByLabel('ToDo hinzufügen').fill('Ein recht langer Titel für eine Aufgabe');
-    await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+    await page
+      .getByRole('dialog')
+      .getByLabel('Titel')
+      .fill('Ein recht langer Titel für eine Aufgabe');
+    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
     const title = page.getByText('Ein recht langer Titel für eine Aufgabe').first();
     await expect(title).toBeVisible();
-    const box = (await page.getByLabel('ToDo hinzufügen').boundingBox())!;
+    // The page has no add field any more (Identity 4.0): the row itself shows the width of the list.
+    const box = (await page.getByRole('listitem').filter({ has: title }).first().boundingBox())!;
     expect(box.width).toBeGreaterThan(500);
     expect((await title.boundingBox())!.height).toBeLessThan(40); // one line, not letter by letter
   });

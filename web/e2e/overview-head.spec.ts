@@ -13,8 +13,9 @@ test.beforeEach(async ({ page }) => {
 
 async function addTodo(page: Page, title: string, due: string) {
   await ready(page, '/todos');
-  await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill(title);
-  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+  await page.getByRole('dialog').getByLabel('Titel').fill(title);
+  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
   await page.getByRole('button', { name: new RegExp(title) }).click();
   await page.getByLabel('Fällig am').fill(due);
   await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();

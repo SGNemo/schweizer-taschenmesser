@@ -52,6 +52,7 @@ export const calendar: Strings['calendar'] = {
   },
   weekNoShort: 'Wk',
   agendaEmpty: 'Nothing planned in this period.',
+  emptyAction: 'Add an appointment',
   holidayLabel: 'Public holiday',
   holidayRegions: {
     off: 'Off',

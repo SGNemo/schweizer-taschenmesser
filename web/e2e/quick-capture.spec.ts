@@ -175,6 +175,9 @@ test('Ctrl+Enter opens the full ToDo form with the typed text', async ({ page },
   await expect(page.getByText('Strg+Enter öffnet das ganze Formular.')).toBeVisible();
   await input(page).press('Control+Enter');
   await expect(page).toHaveURL(/\/todos/);
-  await expect(page.getByLabel('ToDo hinzufügen')).toHaveValue('Blumen gießen');
+  // The ToDo page has no add field of its own (Identity 4.0): the typed text waits in its add dialog.
+  await expect(
+    page.getByRole('dialog', { name: 'ToDo hinzufügen' }).getByLabel('Titel'),
+  ).toHaveValue('Blumen gießen');
   expect(await rows(page, 'todos_task')).toHaveLength(0);
 });

@@ -8,8 +8,9 @@ test.beforeEach(async ({ page }) => {
 
 async function addTodo(page: Page, title: string, due?: string) {
   await ready(page, '/todos');
-  await page.getByLabel('ToDo hinzufügen').fill(title);
-  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+  await page.getByRole('dialog').getByLabel('Titel').fill(title);
+  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
   await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
   if (due) {
     await page.getByRole('button', { name: new RegExp(title) }).click();
@@ -25,7 +26,8 @@ test.describe('Calm ToDo page (focus audit 2, package 2b)', () => {
   }) => {
     await addTodo(page, 'Wäsche falten');
     const main = page.locator('main');
-    await expect(main.getByLabel('ToDo hinzufügen')).toBeVisible();
+    // Identity 4.0: no add field on the page; the head's action (the plus on the phone) is the one entry.
+    await expect(main.getByRole('textbox')).toHaveCount(0);
     await expect(main.getByRole('button', { name: 'Weitere Optionen' })).toBeVisible();
     // No separate list chips, no "Neue Liste" button, no "Erweitert" switch on the page itself.
     await expect(main.getByRole('button', { name: 'Neue Liste' })).toHaveCount(0);

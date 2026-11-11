@@ -70,8 +70,12 @@ test.describe('"Für" – a person or client on appointments and ToDos (QA V14)'
 
     for (const title of ['Zahnarzt anrufen', 'Müll rausbringen']) {
       await ready(page, '/todos');
-      await page.getByLabel('ToDo hinzufügen').fill(title);
-      await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+      await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+      await page.getByRole('dialog').getByLabel('Titel').fill(title);
+      await page
+        .getByRole('dialog')
+        .getByRole('button', { name: 'Hinzufügen', exact: true })
+        .click();
       await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
     }
     await page.getByRole('button', { name: /Zahnarzt anrufen/ }).click();

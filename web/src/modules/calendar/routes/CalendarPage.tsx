@@ -266,7 +266,12 @@ export default function CalendarPage() {
               onPickDay={(d) => go({ view: 'day', date: d })}
             />
           ) : view === 'agenda' ? (
-            <AgendaView items={list} holidays={holidays} onOpenItem={(i) => void openItem(i)} />
+            <AgendaView
+              items={list}
+              holidays={holidays}
+              onOpenItem={(i) => void openItem(i)}
+              onAdd={() => setTarget({ draft: { startDate: date } })}
+            />
           ) : view === 'month' ? (
             <MonthView
               date={date}

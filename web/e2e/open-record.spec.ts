@@ -18,8 +18,9 @@ test('searching for a to-do opens its edit dialog: Ctrl+K, text, click the hit',
 }, info) => {
   test.skip(info.project.name === 'pixel-7', 'the palette shortcut is a desktop feature');
   await ready(page, '/todos');
-  await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Garantie Waschmaschine');
-  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+  await page.getByRole('dialog').getByLabel('Titel').fill('Garantie Waschmaschine');
+  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
   await expect(
     page.getByRole('listitem').filter({ hasText: 'Garantie Waschmaschine' }),
   ).toBeVisible();

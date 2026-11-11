@@ -3,8 +3,9 @@ import { expect, test, type Page } from '@playwright/test';
 
 async function addTask(page: Page, title: string) {
   await page.goto('/todos?list=inbox');
-  await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill(title);
-  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+  await page.getByRole('dialog').getByLabel('Titel').fill(title);
+  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
   await expect(page.getByRole('checkbox', { name: title })).toBeVisible();
 }
 

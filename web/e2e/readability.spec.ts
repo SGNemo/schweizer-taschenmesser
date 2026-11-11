@@ -111,8 +111,9 @@ test.describe('Reading aid, colour mode and grouping', () => {
 
   test('todos are grouped; the navigation areas carry a stripe', async ({ page }) => {
     await ready(page, '/todos');
-    await page.getByLabel('ToDo hinzufügen').fill('Fenster putzen');
-    await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+    await page.getByRole('dialog').getByLabel('Titel').fill('Fenster putzen');
+    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
     await expect(page.locator('[data-group="none"]')).toContainText('Fenster putzen');
     await expect(page.getByRole('button', { name: 'Ohne Datum einklappen' })).toBeVisible();
   });

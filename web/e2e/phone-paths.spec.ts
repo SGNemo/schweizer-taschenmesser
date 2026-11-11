@@ -89,8 +89,9 @@ test.beforeEach(async ({ page }) => {
 
 async function addTodoPlain(page: Page, title: string) {
   await ready(page, '/todos');
-  await page.getByLabel('ToDo hinzufügen').fill(title);
-  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click(); // enabled once the lists are loaded
+  await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+  await page.getByRole('dialog').getByLabel('Titel').fill(title);
+  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click(); // enabled once the lists are loaded
   await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
 }
 
@@ -100,15 +101,20 @@ test.describe('ten paths', () => {
   test('1 ToDo anlegen', async ({ page }, info) => {
     await ready(page, '/todos');
     const s = new Steps(page);
-    const field = page.getByLabel('ToDo hinzufügen');
-    await expect(page.getByRole('button', { name: 'Hinzufügen', exact: true })).toBeEnabled();
-    await s.tap(field);
+    // Identity 4.0: the page has no add field; the plus of the bottom bar is the entry ("Aufgabe eintragen").
+    const plus = page.getByTestId('bottom-plus');
+    await expect(plus).toHaveAccessibleName('Aufgabe eintragen');
+    await expect(plus).toBeEnabled();
+    await s.tap(plus);
+    const field = page.getByRole('dialog', { name: 'ToDo hinzufügen' }).getByLabel('Titel');
+    // The sheet opens with the cursor in the title: typing needs no tap of its own.
+    await expect(field).toBeFocused();
     await s.type(field, 'Wäsche falten');
     await s.enter(field);
     await expect(page.getByRole('checkbox', { name: 'Wäsche falten' })).toBeVisible();
-    // The next entry follows right away: the field keeps the focus and is empty.
-    await expect(field).toBeFocused();
-    await expect(field).toHaveValue('');
+    // The sheet is gone; the plus is there for the next one.
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(plus).toBeVisible();
     await record(info, '1 ToDo anlegen', s.n);
   });
 
@@ -371,7 +377,8 @@ test.describe('Keyboard', () => {
     page,
   }) => {
     await ready(page, '/todos');
-    const field = page.getByLabel('ToDo hinzufügen');
+    await page.getByTestId('bottom-plus').click();
+    const field = page.getByRole('dialog', { name: 'ToDo hinzufügen' }).getByLabel('Titel');
     await field.click();
     // Emulate a browser that does not resize the page for the keyboard: only visualViewport shrinks.
     await page.evaluate(() => {
@@ -393,6 +400,6 @@ test.describe('Keyboard', () => {
     await field.fill('Müll rausbringen');
     await field.press('Enter');
     await expect(page.getByRole('checkbox', { name: 'Müll rausbringen' })).toBeVisible();
-    await expect(field).toBeFocused();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
   });
 });

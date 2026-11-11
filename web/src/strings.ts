@@ -1749,6 +1749,8 @@ export const de = {
     },
     weekNoShort: 'KW',
     agendaEmpty: 'In diesem Zeitraum ist nichts geplant.',
+    /** The one verb of an empty day or an empty agenda. */
+    emptyAction: 'Termin eintragen',
     holidayLabel: 'Feiertag',
     holidayRegions: {
       off: 'Aus',

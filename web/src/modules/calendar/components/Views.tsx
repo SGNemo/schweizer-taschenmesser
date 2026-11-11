@@ -3,7 +3,7 @@ import { formatDay, today } from '@/core/time/dates';
 import { weekdayShort } from '@/core/recurrence/describe';
 import { useWeekStart } from '@/core/settings/core';
 import { t } from '@/strings';
-import { Button, EmptyState, patternStyles, useMediaQuery } from '@/ui';
+import { Button, EmptyState, useMediaQuery } from '@/ui';
 import { usePageWidthAtLeast } from '@/ui/pageWidth';
 import { personName, usePeople } from '@/core/people/people';
 import type { Slot } from '../dragMath';
@@ -283,7 +283,12 @@ export function DayView({
     );
   return (
     <div>
-      {items.length === 0 ? <EmptyState compact title={t.calendar.nothing} /> : null}
+      {/* B6: an empty day is one sentence and one verb; a day with entries has no second "add" (rule 4). */}
+      {items.length === 0 ? (
+        <EmptyState compact title={t.calendar.nothing}>
+          <Button onClick={() => onAdd(date)}>{t.calendar.emptyAction}</Button>
+        </EmptyState>
+      ) : null}
       <ul className={styles.itemList}>
         {items.map((i) => (
           <ItemRow
@@ -294,9 +299,6 @@ export function DayView({
           />
         ))}
       </ul>
-      <div className={patternStyles.gapTop}>
-        <Button onClick={() => onAdd(date)}>{t.calendar.newEvent}</Button>
-      </div>
     </div>
   );
 }
