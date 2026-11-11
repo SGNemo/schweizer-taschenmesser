@@ -3306,7 +3306,13 @@ export const de = {
         ]
           .filter(Boolean)
           .join(' · ')}`,
-      nothingOpen: 'Keine Rechnung offen, kein Abo mehr bis Monatsende.',
+      /** Names only what was counted: a part that is switched off is not claimed to be empty. */
+      nothingOpen: (invoices: boolean, subs: boolean) =>
+        invoices && subs
+          ? 'Keine Rechnung offen, kein Abo mehr bis Monatsende.'
+          : invoices
+            ? 'Keine Rechnung offen.'
+            : 'Kein Abo mehr bis Monatsende.',
       curve: (a: string, b: string) => `Vermögen von ${a} auf ${b}`,
       byKind: 'Vermögen nach Art des Kontos',
       otherCurrency: (code: string) => `Konten in ${code}`,

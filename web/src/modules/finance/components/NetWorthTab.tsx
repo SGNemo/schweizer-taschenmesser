@@ -32,13 +32,13 @@ export function NetWorthTab({ data, all }: { data: FinanceData; all: FinanceData
       {/* The first row of the tab: on the phone the page's "⋯" menu lies beside it (`besideContent`), so the row is
           always there and keeps its height while the counts load. */}
       <div className={styles.worthHead}>
-        {shown && (open === undefined || open.known) ? (
+        {shown && (open === undefined || open.invoicesOn || open.subsOn) ? (
           <p className={styles.worthContext} data-testid="net-worth-context">
             {open === undefined
               ? '\u00a0'
               : open.invoices + open.subscriptions > 0
                 ? n.open(open.invoices, open.subscriptions)
-                : n.nothingOpen}
+                : n.nothingOpen(open.invoicesOn, open.subsOn)}
           </p>
         ) : null}
       </div>

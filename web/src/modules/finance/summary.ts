@@ -76,7 +76,7 @@ export function useAvailability(
  */
 export function useOpenUntilMonthEnd(
   currency: string = DEFAULT_CURRENCY,
-): { invoices: number; subscriptions: number; known: boolean } | undefined {
+): { invoices: number; subscriptions: number; invoicesOn: boolean; subsOn: boolean } | undefined {
   // The same switches as "Verfügbar" (`useAvailability`): what is not deducted there is not named here either.
   const states = useModuleStates();
   const [prefs] = useSettings('module.finance', settings.schema, settings.defaults);
@@ -93,7 +93,8 @@ export function useOpenUntilMonthEnd(
       invoices: invoices.filter((i) => i.currency === currency).length,
       // A weekly subscription charges several times until the month's end and is still one subscription.
       subscriptions: new Set(charges.map((c) => c.subscriptionId)).size,
-      known: invoicesOn || subsOn,
+      invoicesOn,
+      subsOn,
     };
   }, [invoicesOn, subsOn, day, currency]);
 }

@@ -65,9 +65,13 @@ export default function BalanceWidget() {
         // The figure is the net worth ("Vermögen", what the accounts hold; tab "Verlauf"): the context line names it
         // first instead of showing it as a second number. What is free until the month's end is the other widget.
         context={[
-          a?.deducting
+          // "davon" needs a part of a whole: with an amount below zero the two are named side by side.
+          a?.deducting && a.available >= 0
             ? t.finance.netWorth.widgetAvailable(formatMoney(a.available, currency))
             : t.finance.netWorth.widget,
+          a?.deducting && a.available < 0
+            ? t.widgets.kpiAvailable(formatMoney(a.available, currency))
+            : '',
           others,
           expenseChange || (a?.deducting || others ? '' : accountsLabel),
         ]

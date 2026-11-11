@@ -12,7 +12,7 @@ const H = 180;
 const PAD = 6;
 
 /**
- * A line over months (net worth; reusable for a category trend). Same look as the month curve; the
+ * The net worth as a line over months (its label for screen readers names the net worth). Same look as the month curve; the
  * first and last value are text, and a table below carries every single value for screen readers.
  */
 export function TrendChart({

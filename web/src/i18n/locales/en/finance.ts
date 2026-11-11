@@ -194,7 +194,12 @@ export const finance: Strings['finance'] = {
       ]
         .filter(Boolean)
         .join(' · ')}`,
-    nothingOpen: 'No open invoice, no subscription left until month end.',
+    nothingOpen: (invoices: boolean, subs: boolean) =>
+      invoices && subs
+        ? 'No open invoice, no subscription left until month end.'
+        : invoices
+          ? 'No open invoice.'
+          : 'No subscription left until month end.',
     curve: (a: string, b: string) => `Net worth from ${a} to ${b}`,
     byKind: 'Net worth by account type',
     otherCurrency: (code: string) => `Accounts in ${code}`,
