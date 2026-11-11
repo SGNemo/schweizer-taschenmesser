@@ -163,120 +163,23 @@ fn only_two_files_simulate_input_each_its_own_kind() {
             );
         }
     }
-    assert_eq!(one_call(imp), 1, "one SendInput call");
-    assert_eq!(types(imp), ["r#type: INPUT_KEYBOARD,"]);
+    // The Windows part itself is pinned whole, as it stands (comments and layout aside): every
+    // attempt to pin single properties left a way to hold a key down, add an event or change a
+    // flag. A change to it fails here on purpose – it needs a second pair of eyes, and then
+    // this copy is updated with it.
+    let normal = |text: &str| -> String {
+        code_lines(text)
+            .map(str::trim)
+            .filter(|l| !l.is_empty())
+            .collect::<Vec<_>>()
+            .join(" ")
+    };
     assert_eq!(
-        words(imp, "KEYEVENTF_"),
-        [
-            "KEYEVENTF_EXTENDEDKEY",
-            "KEYEVENTF_KEYUP",
-            "KEYEVENTF_UNICODE"
-        ]
+        normal(imp),
+        normal(IMP),
+        "the Windows part of keyboard.rs changed: read docs/rules/remote-control.md, have it \
+         reviewed, then update the copy in tests/rules.rs"
     );
-    assert_eq!(
-        words(imp, "VK_"),
-        [
-            "VK_BACK",
-            "VK_DELETE",
-            "VK_DOWN",
-            "VK_END",
-            "VK_ESCAPE",
-            "VK_F11",
-            "VK_HOME",
-            "VK_LEFT",
-            "VK_MENU",
-            "VK_NEXT",
-            "VK_PRIOR",
-            "VK_RETURN",
-            "VK_RIGHT",
-            "VK_SPACE",
-            "VK_TAB",
-            "VK_UP",
-        ]
-    );
-    // each virtual key is named twice: in the import and for its one `Code`; Alt is `Code::Alt`
-    for vk in words(imp, "VK_") {
-        assert_eq!(imp.matches(vk.as_str()).count(), 2, "{vk}");
-    }
-    assert!(imp.contains("Code::Alt => (VK_MENU, false),"));
-    assert_eq!(
-        code_lines(imp)
-            .filter(|l| l.contains("Code::") && l.contains("=> (VK_"))
-            .count(),
-        16
-    );
-    // No key and no flag by another spelling: none built from a number but "none", no struct
-    // literal, no renamed import, no alias, no field read or written after the event is built,
-    // no inverted flags, no reinterpreting.
-    for line in code_lines(imp) {
-        for (built, none) in [
-            ("VIRTUAL_KEY(", "VIRTUAL_KEY(0)"),
-            ("KEYBD_EVENT_FLAGS(", "KEYBD_EVENT_FLAGS(0)"),
-        ] {
-            let rest = line.replace(none, "");
-            assert!(!rest.contains(built), "keyboard.rs: `{}`", line.trim());
-        }
-        for n in [
-            "VIRTUAL_KEY {",
-            "KEYBD_EVENT_FLAGS {",
-            "transmute",
-            "from_raw",
-            "as *",
-            "type ",
-            ".Anonymous",
-            ".ki",
-            ".wVk",
-            ".wScan",
-            ".dwFlags",
-            "!(",
-            "!KEYEVENTF",
-            "!flags",
-            "^",
-            "<<",
-            "iter::once",
-            "repeat",
-            ".push(",
-            ".extend(",
-            ".insert(",
-            "chain(",
-        ] {
-            assert!(!line.contains(n), "keyboard.rs: `{n}` in `{}`", line.trim());
-        }
-        let renamed =
-            line.contains(" as ") && !line.contains(" as i32") && !line.contains(" as usize");
-        assert!(!renamed, "keyboard.rs: a renamed name in `{}`", line.trim());
-        let field = line
-            .match_indices(".0")
-            .any(|(at, _)| !line[at + 2..].starts_with(|c: char| c.is_ascii_digit()));
-        assert!(!field, "keyboard.rs: a `.0` field in `{}`", line.trim());
-    }
-    // one way into an event: the three fields take what `event` is handed, and `event` is
-    // called for a key of the list and for a unit of text, nowhere else
-    for field in ["wVk: vk,", "wScan: scan,", "dwFlags: flags,"] {
-        assert_eq!(imp.matches(field).count(), 1, "{field}");
-    }
-    let calls: Vec<&str> = code_lines(imp)
-        .filter(|l| l.contains("event(") && !l.contains("fn event("))
-        .map(str::trim)
-        .collect();
-    assert_eq!(
-        calls,
-        [
-            "event(vk, 0, flags)",
-            "Stroke::Unit { unit, .. } => event(VIRTUAL_KEY(0), unit, flags | KEYEVENTF_UNICODE),"
-        ]
-    );
-    // every planned stroke becomes exactly one event, in order: nothing added, nothing dropped
-    assert_eq!(
-        imp.matches(
-            "let inputs: Vec<INPUT> = strokes.iter().map(|stroke| input(*stroke)).collect();"
-        )
-        .count(),
-        1
-    );
-    assert_eq!(imp.matches("SendInput(&inputs,").count(), 1);
-    assert_eq!(imp.matches("input(").count(), 2, "defined once, used once");
-    assert_eq!(imp.matches("Vec<").count(), 1);
     // one list of keys, the public one: sixteen
     let list = &keyboard[keyboard.find("pub enum Key {").unwrap()..];
     let list = &list[..list.find("\n}").unwrap()];
@@ -286,6 +189,35 @@ fn only_two_files_simulate_input_each_its_own_kind() {
             .count(),
         16
     );
+}
+
+/// The two files that simulate input keep nothing: no place a coordinate, a key or a text could
+/// stay after the call that applies it.
+#[test]
+fn the_input_files_have_nowhere_to_keep_anything() {
+    for (name, text) in sources() {
+        if name != "keyboard.rs" && name != "pointer.rs" {
+            continue;
+        }
+        for line in code_lines(&text) {
+            let line = line.trim_start();
+            for n in [
+                "Mutex",
+                "RwLock",
+                "RefCell",
+                "OnceLock",
+                "OnceCell",
+                "thread_local",
+                "lazy_static",
+            ] {
+                assert!(!line.contains(n), "{name}: `{n}` in `{line}`");
+            }
+            assert!(
+                !line.starts_with("static ") && !line.starts_with("pub static "),
+                "{name}: a static in `{line}`"
+            );
+        }
+    }
 }
 
 /// The crate that acts cannot listen, read files, or be reached by anything but its typed API.
@@ -384,3 +316,84 @@ fn unsafe_is_windows_only_and_explained() {
         }
     }
 }
+
+/// The Windows part of `src/keyboard.rs`, as reviewed (see the test above).
+const IMP: &str = r#"
+#[cfg(windows)]
+mod imp {
+use super::{Code, Keys, Stroke};
+use windows::Win32::UI::Input::KeyboardAndMouse::{
+SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYBD_EVENT_FLAGS,
+KEYEVENTF_EXTENDEDKEY, KEYEVENTF_KEYUP, KEYEVENTF_UNICODE, VIRTUAL_KEY, VK_BACK, VK_DELETE,
+VK_DOWN, VK_END, VK_ESCAPE, VK_F11, VK_HOME, VK_LEFT, VK_MENU, VK_NEXT, VK_PRIOR,
+VK_RETURN, VK_RIGHT, VK_SPACE, VK_TAB, VK_UP,
+};
+pub fn native() -> Option<Box<dyn Keys>> {
+Some(Box::new(Windows))
+}
+struct Windows;
+fn key_of(code: Code) -> (VIRTUAL_KEY, bool) {
+match code {
+Code::Enter => (VK_RETURN, false),
+Code::Escape => (VK_ESCAPE, false),
+Code::Backspace => (VK_BACK, false),
+Code::Tab => (VK_TAB, false),
+Code::Space => (VK_SPACE, false),
+Code::Left => (VK_LEFT, true),
+Code::Up => (VK_UP, true),
+Code::Right => (VK_RIGHT, true),
+Code::Down => (VK_DOWN, true),
+Code::Home => (VK_HOME, true),
+Code::End => (VK_END, true),
+Code::PageUp => (VK_PRIOR, true),
+Code::PageDown => (VK_NEXT, true),
+Code::Delete => (VK_DELETE, true),
+Code::F11 => (VK_F11, false),
+Code::Alt => (VK_MENU, false),
+}
+}
+fn event(vk: VIRTUAL_KEY, scan: u16, flags: KEYBD_EVENT_FLAGS) -> INPUT {
+INPUT {
+r#type: INPUT_KEYBOARD,
+Anonymous: INPUT_0 {
+ki: KEYBDINPUT {
+wVk: vk,
+wScan: scan,
+dwFlags: flags,
+time: 0,
+dwExtraInfo: 0,
+},
+},
+}
+}
+fn input(stroke: Stroke) -> INPUT {
+let mut flags = KEYBD_EVENT_FLAGS(0);
+let up = match stroke {
+Stroke::Key { up, .. } | Stroke::Unit { up, .. } => up,
+};
+if up {
+flags |= KEYEVENTF_KEYUP;
+}
+match stroke {
+Stroke::Key { code, .. } => {
+let (vk, extended) = key_of(code);
+if extended {
+flags |= KEYEVENTF_EXTENDEDKEY;
+}
+event(vk, 0, flags)
+}
+Stroke::Unit { unit, .. } => event(VIRTUAL_KEY(0), unit, flags | KEYEVENTF_UNICODE),
+}
+}
+impl Keys for Windows {
+fn send(&mut self, strokes: &[Stroke]) -> usize {
+if strokes.is_empty() {
+return 0;
+}
+let inputs: Vec<INPUT> = strokes.iter().map(|stroke| input(*stroke)).collect();
+let taken = unsafe { SendInput(&inputs, std::mem::size_of::<INPUT>() as i32) };
+taken as usize
+}
+}
+}
+"#;
