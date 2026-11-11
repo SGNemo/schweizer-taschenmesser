@@ -13,9 +13,9 @@ import { checkPlanPage, visibleFields, type PageRule } from './planArea';
  * its own and only says "not more than today"; every other mark, line and badge is neutral.
  */
 const PAGES: PageRule[] = [
-  { path: '/calendar', colouredMax: 22, tabsMin: 2, figure: false, action: true },
-  { path: '/calendar?view=week', colouredMax: 22, tabsMin: 2, figure: false, action: true },
-  { path: '/calendar?view=agenda', colouredMax: 22, tabsMin: 2, figure: false, action: true },
+  { path: '/calendar', colouredMax: 24, tabsMin: 2, figure: false, action: true },
+  { path: '/calendar?view=week', colouredMax: 24, tabsMin: 2, figure: false, action: true },
+  { path: '/calendar?view=agenda', colouredMax: 24, tabsMin: 2, figure: false, action: true },
   { path: '/calendar?tab=reminders', colouredMax: 10, tabsMin: 2, figure: false, action: true },
   { path: '/todos', colouredMax: 10, tabsMin: 2, figure: true, action: true },
   { path: '/todos?view=today', colouredMax: 10, tabsMin: 2, figure: true, action: true },

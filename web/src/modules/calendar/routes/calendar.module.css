@@ -35,6 +35,8 @@
 @media (max-width: 899px) {
   /* The page's "⋯" menu lies at the right edge of the first row (`besideContent`): the month's name ends before it. */
   .title {
+    /* Beside "‹ Heute ›" on a 412 px phone; a narrower window or a longer title wraps it to its own row. */
+    min-width: 8rem;
     margin-inline-end: calc(var(--touch) + var(--space-2));
   }
   .viewRow {
