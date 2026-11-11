@@ -53,6 +53,12 @@ class UnsealArgs {
 }
 
 @InvokeArg
+class ConfirmArgs {
+    lateinit var title: String
+    lateinit var subtitle: String
+}
+
+@InvokeArg
 class SecureWindowArgs {
     var enabled: Boolean = false
 }
@@ -297,6 +303,66 @@ class SecureStorePlugin(private val activity: Activity) : Plugin(activity) {
         val args = invoke.parseArgs(NameArgs::class.java)
         prefs.edit().remove("b:${args.name}").apply()
         invoke.resolve()
+    }
+
+    /* ---- user presence (no key, nothing stored) ---- */
+
+    /**
+     * Asks the person to prove they are there – fingerprint, face, or the device's PIN/pattern/password –
+     * without any key and without storing anything (the vault's biometric key is not touched). Only Rust
+     * calls this: no plugin command of the webview maps to it.
+     * `status`: "ok", "cancelled", or "none" (the device has no screen lock to ask for).
+     */
+    @Command
+    fun confirmUser(invoke: Invoke) {
+        val args = invoke.parseArgs(ConfirmArgs::class.java)
+        fun answer(status: String) {
+            val ret = JSObject()
+            ret.put("status", status)
+            invoke.resolve(ret)
+        }
+        val host = activity as? FragmentActivity
+        if (host == null) {
+            invoke.reject("the activity cannot show a prompt")
+            return
+        }
+        // A weak biometric or the device credential: this combination is supported on every API level
+        // (strong + credential is not on Android 9/10).
+        val allowed = BiometricManager.Authenticators.BIOMETRIC_WEAK or
+            BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        if (BiometricManager.from(activity).canAuthenticate(allowed) != BiometricManager.BIOMETRIC_SUCCESS) {
+            answer("none")
+            return
+        }
+        activity.runOnUiThread {
+            try {
+                val callback = object : BiometricPrompt.AuthenticationCallback() {
+                    override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                        answer("ok")
+                    }
+
+                    override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                        when (errorCode) {
+                            BiometricPrompt.ERROR_USER_CANCELED,
+                            BiometricPrompt.ERROR_NEGATIVE_BUTTON,
+                            BiometricPrompt.ERROR_CANCELED -> answer("cancelled")
+                            else -> invoke.reject(errString.toString())
+                        }
+                    }
+                }
+                val prompt = BiometricPrompt(host, ContextCompat.getMainExecutor(activity), callback)
+                // No negative button: with the device credential allowed the system brings its own way out,
+                // and setting one would throw.
+                val info = BiometricPrompt.PromptInfo.Builder()
+                    .setTitle(args.title)
+                    .setSubtitle(args.subtitle)
+                    .setAllowedAuthenticators(allowed)
+                    .build()
+                prompt.authenticate(info)
+            } catch (e: Exception) {
+                invoke.reject(e.message ?: e.javaClass.simpleName)
+            }
+        }
     }
 
     /* ---- screenshot protection ---- */

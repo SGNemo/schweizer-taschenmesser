@@ -10,11 +10,14 @@
 //!   There is no key and no text here (a later package).
 //! * Two levels. `media` is asked for as before. `full` (mouse) is opened only when the PC said
 //!   in its last `opened` that this device is granted it; if the PC asks for it, the phone is
-//!   unlocked first – natively, from here, not by the page – and that holds for eight hours while
-//!   the app runs (process memory only). The unlock is a brake on a phone lying around unlocked,
-//!   not a proof to the PC. The media session stays open until the unlock succeeded.
-//! * While the PC is locked no pointer and no button is sent (the PC would drop them and count
-//!   them against the session).
+//!   unlocked first – natively, from here, not by the page: fingerprint, face or the phone's
+//!   PIN, through a prompt of the secure-store plugin that uses no key and stores nothing – and
+//!   that holds for eight hours while the app runs (process memory only). What the PC says in
+//!   the `opened` of the mouse session itself is checked again: a session that needs an unlock
+//!   nobody gave is closed at once. The unlock is a brake on a phone lying around unlocked, not
+//!   a proof to the PC. The media session stays open until the mouse session stands.
+//! * While the PC is locked no pointer and no button press is sent (the PC would drop them and
+//!   count them against the session); a release always goes, so nothing stays held.
 //! * One session at a time. Opening a new one closes the old one; events of a replaced session
 //!   are dropped here, so the page never sees a late "closed" of a session it already left.
 //! * Never unpairs: an `unknown-device` from the PC is only reported (see the header of
@@ -69,6 +72,21 @@ pub struct RemoteClient {
     locked: Arc<AtomicBool>,
     /// When the phone was last unlocked for the mouse level.
     unlocked: Mutex<Option<Instant>>,
+    /// The unlock prompt is on screen: a second `open` does not raise another one.
+    asking: AtomicBool,
+}
+
+impl RemoteClient {
+    /// Another PC, or none: what the old one said and the unlock given for it are gone.
+    pub fn reset(&self) {
+        if let Ok(mut known) = self.known.lock() {
+            *known = None;
+        }
+        if let Ok(mut unlocked) = self.unlocked.lock() {
+            *unlocked = None;
+        }
+        self.locked.store(false, Ordering::SeqCst);
+    }
 }
 
 /// The texts of the unlock prompt, from the page's translations (the plugin has none).
@@ -77,11 +95,10 @@ pub struct RemoteClient {
 pub struct PromptDto {
     title: String,
     subtitle: String,
-    cancel: String,
 }
 
 fn prompt_ok(p: &PromptDto) -> bool {
-    [&p.title, &p.subtitle, &p.cancel].into_iter().all(|t| {
+    [&p.title, &p.subtitle].into_iter().all(|t| {
         !t.trim().is_empty()
             && t.chars().count() <= PROMPT_MAX_CHARS
             && !t.chars().any(char::is_control)
@@ -115,9 +132,35 @@ fn gate(known: Option<Known>, since_unlock: Option<Duration>) -> Gate {
 #[derive(Debug, PartialEq, Eq)]
 enum Unlocked {
     Yes,
-    /// The phone has no lock this app can ask for: the session opens all the same and the page
-    /// says so (a hint, not a block).
+    /// The phone has no screen lock at all: the session opens all the same and the page says so
+    /// (a hint, not a block).
     NoLock,
+}
+
+/// The answer of the plugin's prompt as an outcome. Anything unexpected is a failure, never a
+/// pass.
+fn unlocked_from(status: &str) -> Result<Unlocked, &'static str> {
+    match status {
+        "ok" => Ok(Unlocked::Yes),
+        "none" => Ok(Unlocked::NoLock),
+        "cancelled" => Err("unlock-cancelled"),
+        _ => Err("unlock-failed"),
+    }
+}
+
+/// Whether a session the PC just opened may be kept. What the PC says in this very `opened`
+/// counts, not what it said before: a mouse session that needs an unlock nobody gave in the
+/// window – and on a phone that has a lock – is not kept.
+fn keep(
+    opened: Level,
+    unlock_required: bool,
+    since_unlock: Option<Duration>,
+    no_lock: bool,
+) -> bool {
+    opened != Level::Full
+        || !unlock_required
+        || no_lock
+        || since_unlock.is_some_and(|d| d < UNLOCK_VALID)
 }
 
 #[derive(Serialize, Clone, Copy, Debug, PartialEq, Eq)]
@@ -240,16 +283,27 @@ fn button_from(name: &str) -> Option<(Button, bool)> {
     })
 }
 
-/// One action of the page as a record; `true` = it needs the mouse level.
-fn record_from(name: &str) -> Option<(Record, bool)> {
-    if let Some(media) = media_from(name) {
-        return Some((Record::Media(media), false));
-    }
-    let (button, down) = button_from(name)?;
-    Some((Record::Button { button, down }, true))
+/// What kind of action a record is, for the two checks before it goes out.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Kind {
+    Media,
+    /// A mouse button going down.
+    Press,
+    /// A mouse button coming up: always sent, so nothing stays held on the PC.
+    Release,
 }
 
-fn records_from(actions: &[String]) -> Result<Vec<(Record, bool)>, &'static str> {
+/// One action of the page as a record.
+fn record_from(name: &str) -> Option<(Record, Kind)> {
+    if let Some(media) = media_from(name) {
+        return Some((Record::Media(media), Kind::Media));
+    }
+    let (button, down) = button_from(name)?;
+    let kind = if down { Kind::Press } else { Kind::Release };
+    Some((Record::Button { button, down }, kind))
+}
+
+fn records_from(actions: &[String]) -> Result<Vec<(Record, Kind)>, &'static str> {
     if actions.is_empty() || actions.len() > MAX_ACTIONS {
         return Err("bad-action");
     }
@@ -260,19 +314,19 @@ fn records_from(actions: &[String]) -> Result<Vec<(Record, bool)>, &'static str>
 }
 
 /// What of a bundle goes out on a session of `level`, with the PC locked or not. A mouse action
-/// on a media session is refused whole (the PC would close the session for it); with the PC
-/// locked the mouse actions are left out and the media ones still go.
+/// on a media session is refused whole (the PC would close the session for it). With the PC
+/// locked a press is left out; media actions and releases still go.
 fn sendable(
-    records: Vec<(Record, bool)>,
+    records: Vec<(Record, Kind)>,
     level: Level,
     pc_locked: bool,
 ) -> Result<Vec<Record>, &'static str> {
-    if level != Level::Full && records.iter().any(|(_, mouse)| *mouse) {
+    if level != Level::Full && records.iter().any(|(_, kind)| *kind != Kind::Media) {
         return Err("bad-level");
     }
     Ok(records
         .into_iter()
-        .filter(|(_, mouse)| !(*mouse && pc_locked))
+        .filter(|(_, kind)| !(pc_locked && *kind == Kind::Press))
         .map(|(record, _)| record)
         .collect())
 }
@@ -293,13 +347,19 @@ fn glide_from(name: &str) -> Option<Glide> {
 }
 
 /// A way of `dx`, `dy` as records of at most [`STEP`] each, at most [`MAX_STEPS`] of them (one
-/// frame); what is longer is cut, never queued. Nothing for no way at all.
+/// frame). A longer way is shortened along its direction, never queued. Nothing for no way.
 fn steps(kind: Glide, dx: i32, dy: i32) -> Vec<Record> {
-    let far = STEP * MAX_STEPS as i32;
-    let (mut x, mut y) = (dx.clamp(-far, far), dy.clamp(-far, far));
+    let far = i64::from(STEP) * MAX_STEPS as i64;
+    let (mut x, mut y) = (i64::from(dx), i64::from(dy));
+    let longest = x.abs().max(y.abs());
+    if longest > far {
+        x = x * far / longest;
+        y = y * far / longest;
+    }
+    let step = i64::from(STEP);
     let mut out = Vec::new();
-    while (x != 0 || y != 0) && out.len() < MAX_STEPS {
-        let (sx, sy) = (x.clamp(-STEP, STEP), y.clamp(-STEP, STEP));
+    while x != 0 || y != 0 {
+        let (sx, sy) = (x.clamp(-step, step), y.clamp(-step, step));
         x -= sx;
         y -= sy;
         let (dx, dy) = (sx as i8, sy as i8);
@@ -338,9 +398,10 @@ fn stored_error(e: String) -> String {
     }
 }
 
-/// Asks at the phone, natively: the biometric prompt of the secure-store plugin over a value
-/// that only Rust can name. The first time it seals that value, later it opens it – either way
-/// the person has to prove they are there. A phone without such a lock is not blocked.
+/// Asks at the phone, natively: fingerprint, face or the phone's PIN, through the secure-store
+/// plugin's presence prompt. It uses no key and stores nothing (the vault's biometric key is not
+/// touched), and no command of the page maps to it. A phone without any screen lock is not
+/// blocked; an error is a failure, never a pass.
 ///
 /// Compiled on every target (the plugin has the same face everywhere), so the desktop's checks
 /// see this code too; only the phone ever calls it.
@@ -348,64 +409,30 @@ async fn native_unlock<R: Runtime>(
     app: &AppHandle<R>,
     prompt: &PromptDto,
 ) -> Result<Unlocked, &'static str> {
-    use base64::engine::general_purpose::STANDARD;
-    use base64::Engine as _;
-    use tauri_plugin_secure_store::{NameRequest, SealRequest, SecureStoreExt, UnsealRequest};
-    /// Under the Rust-only prefix: no command of the page can read, open or delete it.
-    const NAME: &str = "lan-client:remote-unlock";
-    let store = app.secure_store();
-    if !store.available().map(|a| a.biometric).unwrap_or(false) {
-        return Ok(Unlocked::NoLock);
-    }
-    let present = store
-        .biometric_has(NameRequest {
-            name: NAME.to_owned(),
-        })
-        .map(|h| h.present)
-        .unwrap_or(false);
-    if present {
-        let opened = store
-            .biometric_unseal(UnsealRequest {
-                name: NAME.to_owned(),
-                title: prompt.title.clone(),
-                subtitle: prompt.subtitle.clone(),
-                cancel: prompt.cancel.clone(),
-            })
-            .await
-            .map_err(|_| "unlock-failed")?;
-        match opened.status.as_str() {
-            "ok" => return Ok(Unlocked::Yes),
-            "cancelled" => return Err("unlock-cancelled"),
-            // missing or no longer openable (a fingerprint was added): sealed anew below
-            _ => {}
-        }
-    }
-    match store
-        .biometric_seal(SealRequest {
-            name: NAME.to_owned(),
-            // nothing secret: the value only exists so that opening it asks the person
-            secret: STANDARD.encode([1u8]),
+    use tauri_plugin_secure_store::{ConfirmRequest, SecureStoreExt};
+    let answer = app
+        .secure_store()
+        .confirm_user(ConfirmRequest {
             title: prompt.title.clone(),
             subtitle: prompt.subtitle.clone(),
-            cancel: prompt.cancel.clone(),
         })
         .await
-    {
-        Ok(()) => Ok(Unlocked::Yes),
-        // the plugin rejects a dismissed prompt with this word
-        Err(e) if e.to_string().contains("cancelled") => Err("unlock-cancelled"),
-        Err(_) => Err("unlock-failed"),
-    }
+        .map_err(|_| "unlock-failed")?;
+    unlocked_from(&answer.status)
 }
 
 /// Before a session of the mouse level: is this device granted it, and does the phone have to
 /// be unlocked first? Touches no session. `Ok(true)` = the PC asks for an unlock and this phone
-/// has no lock to ask for.
+/// has no screen lock to ask for.
 async fn pass_gate<R: Runtime>(
     app: &AppHandle<R>,
     prompt: Option<&PromptDto>,
 ) -> Result<bool, String> {
     let state = app.state::<RemoteClient>();
+    // a locked PC opens no mouse session: say so before anything is asked or touched
+    if state.locked.load(Ordering::SeqCst) {
+        return Err("locked".to_owned());
+    }
     let known = *state.known.lock().map_err(|_| "internal")?;
     let since = state
         .unlocked
@@ -417,7 +444,13 @@ async fn pass_gate<R: Runtime>(
         Gate::Refuse(code) => Err(code.to_owned()),
         Gate::Unlock => {
             let prompt = prompt.filter(|p| prompt_ok(p)).ok_or("bad-prompt")?;
-            match native_unlock(app, prompt).await? {
+            // one prompt at a time: a second `open` meanwhile is simply not wanted
+            if state.asking.swap(true, Ordering::SeqCst) {
+                return Err("closed".to_owned());
+            }
+            let answer = native_unlock(app, prompt).await;
+            state.asking.store(false, Ordering::SeqCst);
+            match answer? {
                 Unlocked::Yes => {
                     *state.unlocked.lock().map_err(|_| "internal")? = Some(Instant::now());
                     Ok(false)
@@ -428,11 +461,13 @@ async fn pass_gate<R: Runtime>(
     }
 }
 
-/// Opens an input session with the paired PC at `level` (`media` or `full`). An older session of
-/// this device is closed first – for `full` only after the gate was passed, so Medien keeps
-/// working while the phone asks. The answer says what the session may really do and the PC's
-/// state; later states and the end of the session arrive on `on_event`. `prompt` = the texts of
-/// the unlock prompt (needed for `full`).
+/// Opens an input session with the paired PC at `level` (`media` or `full`). The answer says
+/// what the session may really do and the PC's state; later states and the end of the session
+/// arrive on `on_event`. `prompt` = the texts of the unlock prompt (needed for `full`).
+///
+/// A `media` open closes the older session of this device first. A `full` open leaves it alone
+/// until the new session stands (the PC replaces it on its side): a refusal – no grant, a locked
+/// PC, a dismissed unlock – costs Medien nothing.
 #[tauri::command]
 pub async fn remote_client_open<R: Runtime>(
     app: AppHandle<R>,
@@ -448,17 +483,40 @@ pub async fn remote_client_open<R: Runtime>(
     };
     tauri::async_runtime::spawn_blocking(move || {
         let state = app.state::<RemoteClient>();
-        let id = state.newest.fetch_add(1, Ordering::SeqCst) + 1;
-        // the session this one replaces ends now (its late events are dropped by their number)
-        let old = state.session.lock().map_err(|_| "internal")?.take();
-        if let Some((_, session, _)) = old {
-            end(session);
+        let before = state.newest.fetch_add(1, Ordering::SeqCst);
+        let id = before + 1;
+        if level != Level::Full {
+            // the session this one replaces ends now (its late events are dropped by their number)
+            let old = state.session.lock().map_err(|_| "internal")?.take();
+            if let Some((_, session, _)) = old {
+                end(session);
+            }
         }
-        let (hub, addr, name) = crate::lan_client::hub_entry(&app).map_err(stored_error)?;
-        let key = crate::lan_client::stored_key(&app).map_err(stored_error)?;
+        // A mouse open that does not come about gives the number back, so the session that is
+        // still open keeps telling its events.
+        let give_back = || {
+            if level == Level::Full {
+                let _ =
+                    state
+                        .newest
+                        .compare_exchange(id, before, Ordering::SeqCst, Ordering::SeqCst);
+            }
+        };
+        let stored = crate::lan_client::hub_entry(&app)
+            .and_then(|entry| crate::lan_client::stored_key(&app).map(|key| (entry, key)));
+        let ((hub, addr, name), key) = match stored {
+            Ok(stored) => stored,
+            Err(e) => {
+                give_back();
+                return Err(stored_error(e));
+            }
+        };
         let newest = state.newest.clone();
         let locked = state.locked.clone();
-        let (session, opened) = InputSession::open(
+        // a state the PC sent right after `opened` must not be overwritten by the older one in it
+        let told = Arc::new(AtomicBool::new(false));
+        let heard = told.clone();
+        let opening = InputSession::open(
             addr,
             &key,
             &hub,
@@ -468,6 +526,7 @@ pub async fn remote_client_open<R: Runtime>(
                 let current = newest.load(Ordering::SeqCst);
                 if id == current {
                     if let Event::State(pc) = &event {
+                        heard.store(true, Ordering::SeqCst);
                         locked.store(pc.locked, Ordering::SeqCst);
                     }
                 }
@@ -475,8 +534,14 @@ pub async fn remote_client_open<R: Runtime>(
                     let _ = on_event.send(dto);
                 }
             }),
-        )
-        .map_err(|e| error_name(e).to_owned())?;
+        );
+        let (session, opened) = match opening {
+            Ok(opening) => opening,
+            Err(e) => {
+                give_back();
+                return Err(error_name(e).to_owned());
+            }
+        };
         let mut slot = state.session.lock().map_err(|_| "internal")?;
         // a newer `open` overtook this one while it connected: this session is not wanted any more
         if state.newest.load(Ordering::SeqCst) != id {
@@ -488,8 +553,29 @@ pub async fn remote_client_open<R: Runtime>(
             grant: opened.grant,
             unlock_required: opened.unlock_required,
         });
-        state.locked.store(opened.state.locked, Ordering::SeqCst);
-        *slot = Some((id, Arc::new(session), opened.level));
+        if !told.load(Ordering::SeqCst) {
+            state.locked.store(opened.state.locked, Ordering::SeqCst);
+        }
+        // what the PC says now decides, not what it said before: the next `open` asks
+        let since = state
+            .unlocked
+            .lock()
+            .map_err(|_| "internal")?
+            .map(|at| at.elapsed());
+        if !keep(opened.level, opened.unlock_required, since, no_lock) {
+            let old = slot.take();
+            drop(slot);
+            session.close();
+            if let Some((_, old, _)) = old {
+                end(old);
+            }
+            return Err("unlock-needed".to_owned());
+        }
+        // the session this one replaced (the PC closed it on its side already)
+        if let Some((_, old, _)) = slot.replace((id, Arc::new(session), opened.level)) {
+            drop(slot);
+            end(old);
+        }
         Ok(OpenedDto {
             session: id,
             level: level_name(opened.level),
@@ -692,7 +778,6 @@ mod tests {
         let p = |title: &str| PromptDto {
             title: title.to_owned(),
             subtitle: "Für Maus und Tastatur".to_owned(),
-            cancel: "Abbrechen".to_owned(),
         };
         assert!(prompt_ok(&p("Handy entsperren")));
         assert!(!prompt_ok(&p("")));
@@ -701,57 +786,115 @@ mod tests {
         assert!(!prompt_ok(&p(&"x".repeat(PROMPT_MAX_CHARS + 1))));
         assert!(prompt_ok(&p(&"ä".repeat(PROMPT_MAX_CHARS))));
         // unknown fields are refused, not ignored
-        assert!(serde_json::from_str::<PromptDto>(
-            r#"{"title":"a","subtitle":"b","cancel":"c","extra":1}"#
-        )
-        .is_err());
+        assert!(
+            serde_json::from_str::<PromptDto>(r#"{"title":"a","subtitle":"b","cancel":"c"}"#)
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn the_prompts_answer_is_a_pass_only_when_it_says_so() {
+        assert_eq!(unlocked_from("ok"), Ok(Unlocked::Yes));
+        assert_eq!(unlocked_from("none"), Ok(Unlocked::NoLock));
+        assert_eq!(unlocked_from("cancelled"), Err("unlock-cancelled"));
+        for odd in ["", "OK", "invalidated", "missing", "error"] {
+            assert_eq!(unlocked_from(odd), Err("unlock-failed"), "{odd:?}");
+        }
+    }
+
+    #[test]
+    fn what_the_pc_says_in_this_very_opened_decides_whether_the_session_is_kept() {
+        let fresh = Some(Duration::from_secs(60));
+        // media, or a mouse session the PC wants no unlock for: kept
+        assert!(keep(Level::Media, true, None, false));
+        assert!(keep(Level::Full, false, None, false));
+        // the PC asks for an unlock: kept only with one inside the window …
+        assert!(keep(Level::Full, true, fresh, false));
+        assert!(!keep(Level::Full, true, None, false));
+        assert!(!keep(Level::Full, true, Some(UNLOCK_VALID), false));
+        // … or on a phone that has no lock to ask for (found by asking, in this very open)
+        assert!(keep(Level::Full, true, None, true));
+    }
+
+    #[test]
+    fn another_pc_starts_from_nothing() {
+        let client = RemoteClient::default();
+        *client.known.lock().unwrap() = known(Level::Full, false);
+        *client.unlocked.lock().unwrap() = Some(Instant::now());
+        client.locked.store(true, Ordering::SeqCst);
+        client.reset();
+        assert_eq!(*client.known.lock().unwrap(), None);
+        assert!(client.unlocked.lock().unwrap().is_none());
+        assert!(!client.locked.load(Ordering::SeqCst));
     }
 
     #[test]
     fn mouse_buttons_are_a_fixed_list_and_need_the_mouse_level() {
-        let all = ["left-down", "left-up", "right-down", "right-up"];
-        for name in all {
-            let (record, mouse) = record_from(name).unwrap();
-            assert!(mouse && matches!(record, Record::Button { .. }), "{name}");
+        for (name, kind) in [
+            ("left-down", Kind::Press),
+            ("left-up", Kind::Release),
+            ("right-down", Kind::Press),
+            ("right-up", Kind::Release),
+        ] {
+            let (record, got) = record_from(name).unwrap();
+            assert!(
+                got == kind && matches!(record, Record::Button { .. }),
+                "{name}"
+            );
         }
+        assert_eq!(record_from("mute").unwrap().1, Kind::Media);
         for bad in ["middle-down", "left", "left-click", "Left-down", "x1-down"] {
             assert!(record_from(bad).is_none(), "{bad:?}");
         }
         let bundle = |names: &[&str]| {
-            records_from(&names.iter().map(|n| (*n).to_owned()).collect::<Vec<_>>())
+            records_from(&names.iter().map(|n| (*n).to_owned()).collect::<Vec<_>>()).unwrap()
         };
-        // a media session never sends a button: the PC would close it for that
+        // a media session never sends a button, not even a release: the PC would close it
+        for names in [&["left-down"][..], &["left-up"], &["next", "right-up"]] {
+            assert_eq!(
+                sendable(bundle(names), Level::Media, false),
+                Err("bad-level")
+            );
+        }
         assert_eq!(
-            sendable(bundle(&["left-down"]).unwrap(), Level::Media, false),
-            Err("bad-level")
-        );
-        assert_eq!(
-            sendable(bundle(&["next", "left-up"]).unwrap(), Level::Media, false),
-            Err("bad-level")
-        );
-        assert_eq!(
-            sendable(bundle(&["next"]).unwrap(), Level::Media, true).unwrap(),
+            sendable(bundle(&["next"]), Level::Media, true).unwrap(),
             [Record::Media(Media::Next)]
         );
-        // the mouse level sends both …
+        // the mouse level sends all of it
         assert_eq!(
-            sendable(bundle(&["left-down", "mute"]).unwrap(), Level::Full, false)
-                .unwrap()
-                .len(),
-            2
+            sendable(
+                bundle(&["left-down", "mute", "left-up"]),
+                Level::Full,
+                false
+            )
+            .unwrap()
+            .len(),
+            3
         );
-        // … and with the PC locked only the media action
+    }
+
+    #[test]
+    fn a_locked_pc_gets_no_press_but_always_the_release() {
+        let bundle = |names: &[&str]| {
+            records_from(&names.iter().map(|n| (*n).to_owned()).collect::<Vec<_>>()).unwrap()
+        };
         assert_eq!(
-            sendable(bundle(&["left-down", "mute"]).unwrap(), Level::Full, true).unwrap(),
-            [Record::Media(Media::MuteToggle)]
+            sendable(bundle(&["left-down", "mute", "left-up"]), Level::Full, true).unwrap(),
+            [
+                Record::Media(Media::MuteToggle),
+                Record::Button {
+                    button: Button::Left,
+                    down: false
+                }
+            ]
         );
-        assert!(sendable(bundle(&["left-up"]).unwrap(), Level::Full, true)
+        assert!(sendable(bundle(&["right-down"]), Level::Full, true)
             .unwrap()
             .is_empty());
     }
 
     #[test]
-    fn a_way_becomes_steps_and_a_long_one_is_cut() {
+    fn a_way_becomes_steps_and_a_long_one_is_shortened_along_its_direction() {
         assert_eq!(glide_from("move"), Some(Glide::Move));
         assert_eq!(glide_from("scroll"), Some(Glide::Scroll));
         assert_eq!(glide_from("key"), None);
@@ -762,21 +905,38 @@ mod tests {
             [Record::Scroll { dx: 0, dy: 2 }]
         );
         // longer than one record: split, nothing of the way lost
-        let far = steps(Glide::Move, 300, -128);
         assert_eq!(
-            far,
+            steps(Glide::Move, 300, -128),
             [
                 Record::Move { dx: 127, dy: -127 },
                 Record::Move { dx: 127, dy: -1 },
                 Record::Move { dx: 46, dy: 0 },
             ]
         );
-        // never more than one frame, whatever the page hands over
-        for (dx, dy) in [(i32::MAX, i32::MIN), (1_000_000, 0), (0, -1_000_000)] {
+        let sum = |records: &[Record]| {
+            records.iter().fold((0i64, 0i64), |(x, y), r| match r {
+                Record::Move { dx, dy } => (x + i64::from(*dx), y + i64::from(*dy)),
+                _ => (x, y),
+            })
+        };
+        let far = i64::from(STEP) * MAX_STEPS as i64;
+        // never more than one frame, whatever the page hands over, and the direction holds
+        for (dx, dy) in [
+            (i32::MAX, i32::MIN),
+            (i32::MIN, i32::MIN),
+            (1_000_000, 0),
+            (0, -1_000_000),
+            (10_000, 5_000),
+        ] {
             let cut = steps(Glide::Move, dx, dy);
-            assert_eq!(cut.len(), MAX_STEPS);
+            assert!(cut.len() <= MAX_STEPS, "{dx} {dy}: {}", cut.len());
             assert!(cut.len() <= ::lan_sync::input::wire::MAX_RECORDS);
+            let (x, y) = sum(&cut);
+            assert_eq!(x.abs().max(y.abs()), far, "{dx} {dy}");
+            assert_eq!(x.signum(), i64::from(dx.signum()));
+            assert_eq!(y.signum(), i64::from(dy.signum()));
         }
+        assert_eq!(sum(&steps(Glide::Move, 10_000, 5_000)), (far, far / 2));
     }
 
     #[test]

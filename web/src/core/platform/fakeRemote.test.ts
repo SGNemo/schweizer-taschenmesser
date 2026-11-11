@@ -44,6 +44,17 @@ describe('fake remote: the mouse level behaves like the shell', () => {
     expect(await remote.open('full', nothing)).toMatchObject({ level: 'full', noLock: true });
   });
 
+  it('a locked PC opens no mouse session, and Medien stays as it is', async () => {
+    const { remote, hooks } = createFakeRemoteParts();
+    hooks.setGrant('full', true);
+    const media = await remote.open('media', nothing);
+    hooks.setState({ locked: true });
+    await expect(remote.open('full', nothing)).rejects.toThrow('locked');
+    expect(hooks.unlocks()).toBe(0);
+    expect(hooks.level()).toBe('media');
+    await remote.send(media.session, ['volume-down']);
+  });
+
   it('mouse actions need the mouse level and never reach a locked PC', async () => {
     const { remote, hooks } = createFakeRemoteParts();
     const media = await remote.open('media', nothing);
@@ -59,9 +70,10 @@ describe('fake remote: the mouse level behaves like the shell', () => {
     expect(hooks.sent()).toEqual(['left-down', 'left-up']);
     hooks.setState({ locked: true });
     await remote.pointer(full.session, 'move', 9, 9);
-    await remote.send(full.session, ['right-down', 'mute']);
+    // a locked PC gets no press – but the release always goes, so nothing stays held
+    await remote.send(full.session, ['right-down', 'mute', 'left-up']);
     expect(hooks.pointed()).toHaveLength(1);
-    expect(hooks.sent()).toEqual(['left-down', 'left-up', 'mute']);
+    expect(hooks.sent()).toEqual(['left-down', 'left-up', 'mute', 'left-up']);
     await expect(remote.pointer(full.session + 1, 'move', 1, 1)).rejects.toThrow('closed');
   });
 });

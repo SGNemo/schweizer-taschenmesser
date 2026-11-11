@@ -8,6 +8,12 @@ const call = <T>(cmd: string, args?: Record<string, unknown>): Promise<T> =>
     throw new Error(typeof e === 'string' ? e : 'failed');
   });
 
+/** Farthest way of one call the shell is handed (it shortens to one frame itself). */
+const FAR = 100_000;
+/** The shell takes whole numbers; a fraction is the caller's to carry over, nonsense is no way. */
+const whole = (n: number): number =>
+  Number.isFinite(n) ? Math.max(-FAR, Math.min(FAR, Math.trunc(n))) : 0;
+
 /**
  * The phone's input session with the paired PC (`src-tauri/src/remote_client.rs`). The device key
  * and the pinned PC stay in Rust; this bridge passes on a level, action names from a fixed list
@@ -31,9 +37,8 @@ export function createRemote(supported: boolean): RemoteService {
       call<void>('remote_client_pointer', {
         session,
         kind,
-        // the shell takes whole numbers; a fraction is the caller's to carry over
-        dx: Math.trunc(dx),
-        dy: Math.trunc(dy),
+        dx: whole(dx),
+        dy: whole(dy),
       }),
     close: (session) => call<void>('remote_client_close', { session }),
   };

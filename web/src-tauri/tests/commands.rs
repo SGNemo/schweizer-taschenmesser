@@ -623,18 +623,29 @@ fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
             "remote_client.rs mentions {forbidden}"
         );
     }
-    // pointer and button records are built in one place each, from numbers and a fixed list
-    for (record, times) in [
-        ("Record::Move", 1),
-        ("Record::Scroll", 1),
-        ("Record::Button", 1),
-    ] {
-        assert_eq!(code.matches(record).count(), times, "{record}");
+    // the mouse level goes through the gate, and the phone's unlock never touches the vault's
+    // biometric key: it is the plugin's keyless presence prompt, which no command of the page
+    // maps to
+    let open = &code[code.find("pub async fn remote_client_open").unwrap()..];
+    let open = &open[..open.find("\n}\n").unwrap()];
+    assert!(open.contains("pass_gate(&app, prompt.as_ref()).await?"));
+    assert!(open.contains("if !keep("));
+    for vault in ["biometric_seal", "biometric_unseal", "biometric_delete"] {
+        assert!(!code.contains(vault), "remote_client.rs mentions {vault}");
     }
-    // the phone's unlock is asked from Rust, in one place, over a value the page cannot name
-    assert_eq!(code.matches("native_unlock(app, prompt)").count(), 1);
-    assert!(code.contains(r#"const NAME: &str = "lan-client:remote-unlock";"#));
-    assert!(code.contains("Gate::Unlock =>"));
+    let plugin = format!("{}/plugins/secure-store", env!("CARGO_MANIFEST_DIR"));
+    for file in [
+        "build.rs",
+        "src/commands.rs",
+        "src/lib.rs",
+        "permissions/default.toml",
+    ] {
+        let text = fs::read_to_string(format!("{plugin}/{file}")).unwrap();
+        assert!(
+            !text.contains("confirm_user") && !text.contains("confirm-user"),
+            "{file}: the presence prompt must not become a command of the page"
+        );
+    }
     // the key and the hub entry are read, never returned: no DTO carries them
     assert_eq!(code.matches("stored_key(&app)").count(), 1);
     assert_eq!(code.matches("hub_entry(&app)").count(), 1);

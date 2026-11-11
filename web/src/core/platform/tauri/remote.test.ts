@@ -30,7 +30,7 @@ describe('remote bridge (phone)', () => {
       'remote_client_open',
       expect.objectContaining({ level: 'media', prompt: null }),
     );
-    const prompt = { title: 'T', subtitle: 'S', cancel: 'C' };
+    const prompt = { title: 'T', subtitle: 'S' };
     await remote.open('full', () => {}, prompt);
     expect(mocks.invoke).toHaveBeenLastCalledWith(
       'remote_client_open',
@@ -52,6 +52,17 @@ describe('remote bridge (phone)', () => {
       dx: 2,
       dy: -2,
     });
+    // nonsense is no way, and a huge one is bounded before it reaches the shell
+    await remote.pointer(3, 'move', Number.NaN, Number.POSITIVE_INFINITY);
+    expect(mocks.invoke).toHaveBeenLastCalledWith(
+      'remote_client_pointer',
+      expect.objectContaining({ dx: 0, dy: 0 }),
+    );
+    await remote.pointer(3, 'move', 1e12, -1e12);
+    expect(mocks.invoke).toHaveBeenLastCalledWith(
+      'remote_client_pointer',
+      expect.objectContaining({ dx: 100_000, dy: -100_000 }),
+    );
   });
 
   it('keeps the short code of the shell as the error message', async () => {

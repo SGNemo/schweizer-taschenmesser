@@ -42,6 +42,7 @@ export function createFakeRemoteParts() {
   let unlocked = false;
   let unlocks = 0;
   const MOUSE = new Set<string>(['left-down', 'left-up', 'right-down', 'right-up']);
+  const PRESS = new Set<string>(['left-down', 'right-down']);
   let opens = 0;
   let hold: Promise<void> | undefined;
   let greeting: RemoteCloseReason | undefined;
@@ -63,6 +64,7 @@ export function createFakeRemoteParts() {
       let noLock = false;
       if (level === 'full') {
         // the shell's gate: decided before anything is asked or closed
+        if (pc.locked) throw new Error('locked');
         if (!known) throw new Error('media-first');
         if (known.grant !== 'full') throw new Error('not-granted');
         if (known.unlockRequired && !unlocked) {
@@ -101,8 +103,8 @@ export function createFakeRemoteParts() {
       if (!live || live.session !== session) throw new Error('closed');
       if (live.level !== 'full' && actions.some((a) => MOUSE.has(a))) throw new Error('bad-level');
       for (const action of actions) {
-        // like the shell: no button reaches a locked PC
-        if (MOUSE.has(action) && pc.locked) continue;
+        // like the shell: no press reaches a locked PC, a release always goes
+        if (PRESS.has(action) && pc.locked) continue;
         sent.push(action);
         apply(action);
       }

@@ -108,6 +108,11 @@ fn set<R: Runtime>(app: &AppHandle<R>, name: &str, value: String) -> Result<(), 
 }
 
 fn forget<R: Runtime>(app: &AppHandle<R>) {
+    // what the old PC said about remote control, and the unlock given for it, go with the pairing
+    #[cfg(any(mobile, test))]
+    if let Some(remote) = app.try_state::<crate::remote_client::RemoteClient>() {
+        remote.reset();
+    }
     for name in [HUB_NAME, KEY_NAME] {
         let _ = app.secure_store().delete(NameRequest {
             name: name.to_owned(),

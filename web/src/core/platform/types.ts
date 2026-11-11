@@ -257,7 +257,6 @@ export type RemoteButtonAction = 'left-down' | 'left-up' | 'right-down' | 'right
 export interface RemoteUnlockPrompt {
   title: string;
   subtitle: string;
-  cancel: string;
 }
 
 /** The PC's four facts. `volume` is 0–100, or `null` when the PC cannot tell. */
@@ -284,7 +283,7 @@ export interface RemoteOpened {
   /** What the PC grants this device at most. */
   grant: RemoteLevel;
   unlockRequired: boolean;
-  /** The PC asks for an unlock at the phone, and this phone has no lock the app can ask for. */
+  /** The PC asks for an unlock at the phone, and this phone has no screen lock at all. */
   noLock: boolean;
   state: RemotePcState;
 }
@@ -298,11 +297,16 @@ export interface RemoteOpened {
  * `open` overtook this one), or a [`RemoteCloseReason`]. `send` and `pointer` reject with
  * `closed`, `network` or `bad-level` (a mouse action on a media session); none is a state to show.
  *
- * Two levels. `full` (mouse) is opened only after a `media` session of this run told what the PC
- * grants: `media-first` without one, `not-granted` when the grant is less – in both cases nothing
- * is asked and the open session is left alone. When the PC asks for it, the shell unlocks the
- * phone first, natively (once in eight hours): `unlock-cancelled`, `unlock-failed`. While the PC
- * is locked the shell sends no pointer and no button.
+ * Two levels. `full` (mouse) is opened only after a `media` session told what the PC grants –
+ * and the shell remembers that only while the app runs, so after a restart, or when the person
+ * lands on the touchpad directly, `media` is opened first. A `full` open rejects with
+ * `media-first` (nothing known yet), `not-granted` (the grant is less) or `locked` (the PC is
+ * locked) before anything is asked, and leaves the open session alone – as it does when the PC
+ * refuses. When the PC asks for it, the shell unlocks the phone first, natively (fingerprint,
+ * face or PIN; once in eight hours): `unlock-cancelled`, `unlock-failed`, `bad-prompt` (texts
+ * missing). `unlock-needed`: the PC asked for an unlock only in the answer itself – both sessions
+ * are gone; open `media`, then `full` again. While the PC is locked the shell sends no pointer
+ * and no button press (a release always goes).
  */
 export interface RemoteService {
   supported: boolean;
