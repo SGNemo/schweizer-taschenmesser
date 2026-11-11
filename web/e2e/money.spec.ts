@@ -416,7 +416,8 @@ test.describe('Finance: net worth on the tab "Verlauf"', () => {
   test('one figure in the head, rows by kind with the card below zero, another currency on its own row', async ({
     page,
   }) => {
-    await ready(page, '/finance');
+    // From the overview: Finanzen has not been opened, so it has not created its own first account yet.
+    await ready(page, '/');
     await putFinance(
       page,
       [
@@ -514,10 +515,21 @@ test.describe('Finance: net worth on the tab "Verlauf"', () => {
   test('one account: no row repeats the figure, and the empty state of the curve stays', async ({
     page,
   }) => {
-    await ready(page, '/finance');
+    // From the overview: Finanzen has not been opened, so it has not created its own first account yet.
+    await ready(page, '/');
     await putFinance(
       page,
-      [{ id: 'giro', name: 'Giro', openingBalanceMinor: 123456, order: 0, kind: 'checking' }],
+      [
+        {
+          id: 'giro',
+          name: 'Giro',
+          openingBalanceMinor: 123456,
+          order: 0,
+          kind: 'checking',
+          // Opened this month: one point is no curve yet.
+          createdAt: new Date('2026-09-20T10:00:00').getTime(),
+        },
+      ],
       [],
     );
     await ready(page, '/finance?tab=trend');

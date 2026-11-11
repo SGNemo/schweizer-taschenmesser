@@ -139,7 +139,8 @@ test('the net worth on the tab "Verlauf" is hidden: head, rows by kind and the a
   page,
 }) => {
   await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
-  await page.goto('/finance');
+  // From the overview: Finanzen has not created its own first account yet.
+  await page.goto('/');
   await expect(page.locator('main h1')).toBeVisible();
   await page.evaluate(
     () =>
