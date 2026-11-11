@@ -12,4 +12,6 @@ export const palette: Strings['palette'] = {
   helpCommand: 'Open help and guide',
   nextReminder: 'Show next reminder',
   randomReminder: 'Show a reminder',
+  capture: 'Quick add',
+  questionHint: 'Put “?” at the start or the end to ask instead.',
 };

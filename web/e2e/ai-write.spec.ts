@@ -270,7 +270,9 @@ test.describe('Eintragen per KI (Regeln, 0 Token)', () => {
       await expect(box).toHaveAttribute('placeholder', /Rechnung Stadtwerke/);
     }
     await box.fill('Telekom 39,99 € fällig 20.10.');
-    await box.press('Enter');
+    // Enter alone is quick capture; the write rules are their own entry in the list.
+    if (phone) await page.getByRole('option', { name: /^Satz eintragen/ }).click();
+    else await box.press('Enter');
     await expect(page.getByTestId('ai-write-preview')).toBeVisible();
     await expect(
       page.getByTestId('ai-write-preview').getByText('Rechnung anlegen', { exact: true }),
@@ -287,6 +289,7 @@ test.describe('Eintragen per KI (Regeln, 0 Token)', () => {
     const box = await openPalette(page);
     await box.fill('Aufgabe Fenster putzen');
     await expect(page.getByRole('option', { name: /^Eintragen/ })).toHaveCount(0);
+    await box.fill('?Aufgabe Fenster putzen'); // "?" asks; Enter alone would be quick capture
     await box.press('Enter'); // the normal assistant answers instead of a preview
     await expect(page.getByTestId('ai-answer')).toBeVisible();
     await expect(page.getByTestId('ai-write-preview')).toHaveCount(0);

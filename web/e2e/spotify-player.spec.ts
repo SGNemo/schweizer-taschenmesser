@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { ready, showPreview } from './helpers';
-import { mockSpotify, seedConnected } from './spotify-mock';
+import { COVER, albumImages, mockCovers, mosaicImages } from './spotify-covers';
+import { defaultBrowse, mockSpotify, seedConnected, type Mock } from './spotify-mock';
 
 // Preview modules, tools, connectors and sections are listed only with "In Arbeit anzeigen" (maturity).
 test.beforeEach(({ page }) => showPreview(page));
@@ -19,6 +20,177 @@ async function openMusic(page: Page) {
 /** The view chips of the toolbar (the only way into the lists; the aside holds the queue). */
 const chip = (page: Page, name: RegExp | string) =>
   page.getByRole('navigation', { name: 'Ansichten' }).getByRole('button', { name });
+
+/** Playlists and songs with pictures in every shape the service uses, plus one from a host that is not Spotify's. */
+function withCovers(mock: Mock) {
+  mock.playlists = () => ({
+    status: 200,
+    body: {
+      items: [
+        { id: 'pl1ABC', name: 'Tiefer Fokus', images: mosaicImages('fokus') },
+        { id: 'pl2DEF', name: 'Ruhe', images: [{ url: COVER.uploaded('ruhe'), width: null }] },
+        { id: 'pl3GHI', name: 'Abend', images: [{ url: COVER.uploaded('abend', 'fa') }] },
+        { id: 'pl4JKL', name: 'Fremdes Bild', images: [{ url: COVER.foreign, width: 300 }] },
+        { id: 'pl5MNO', name: 'Leer', images: [] },
+      ],
+    },
+  });
+  const song = (id: string, name: string, album: string) => ({
+    id,
+    name,
+    type: 'track',
+    duration_ms: 200_000,
+    artists: [{ name: 'Erfundene Band' }],
+    album: { name: album, images: albumImages(album) },
+  });
+  mock.browse = (method, pathname, search) => {
+    if (pathname === '/v1/playlists/pl1ABC' && method === 'GET')
+      return {
+        status: 200,
+        body: {
+          name: 'Tiefer Fokus',
+          owner: { display_name: 'Ich' },
+          images: mosaicImages('fokus'),
+          tracks: {
+            total: 3,
+            items: [
+              { track: song('sg1AAA', 'Erstes Lied', 'Album Eins') },
+              { track: song('sg2BBB', 'Zweites Lied', 'Album Eins') },
+              { track: song('sg3CCC', 'Drittes Lied', 'Album Zwei') },
+            ],
+          },
+        },
+      };
+    if (pathname === '/v1/me/player/recently-played')
+      return {
+        status: 200,
+        body: { items: [{ track: song('rc1AAA', 'Gestern gehört', 'Album Gestern') }] },
+      };
+    if (pathname === '/v1/me/player/queue' && method === 'GET')
+      return {
+        status: 200,
+        body: {
+          currently_playing: song('cur111', 'Testlied', 'Album Jetzt'),
+          queue: [song('qu1AAA', 'Als Nächstes', 'Album Zwei')],
+        },
+      };
+    return defaultBrowse(method, pathname, search);
+  };
+  mock.player = () => ({
+    status: 200,
+    body: {
+      is_playing: true,
+      currently_playing_type: 'track',
+      item: {
+        name: 'Testlied',
+        artists: [{ name: 'Erfundene Band' }],
+        album: { name: 'Album Jetzt', images: albumImages('Album Jetzt') },
+        external_urls: { spotify: 'https://open.spotify.com/track/abc123' },
+      },
+    },
+  });
+}
+const host = (url: string) => new URL(url).host;
+
+test.describe('Music covers', () => {
+  test('tiles show the mosaic and the uploaded pictures; a foreign host is never asked', async ({
+    page,
+  }) => {
+    const mock = await mockSpotify(page);
+    withCovers(mock);
+    const images = await mockCovers(page);
+    await seedConnected(page, ALL);
+    await openMusic(page);
+    const grid = page.getByTestId('music-playlists');
+    // Pictures load when their tile comes into view, so the test looks at each one.
+    for (const name of ['Tiefer Fokus', 'Ruhe', 'Abend']) {
+      await grid.getByRole('button', { name }).scrollIntoViewIfNeeded();
+      const img = grid.getByRole('img', { name });
+      await expect(img).toBeVisible();
+      await expect(img).toHaveAttribute('src', /^blob:/);
+      expect(await img.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBeGreaterThan(0);
+    }
+    // A foreign host and an empty playlist keep the icon; the tile is the same square either way (no shift).
+    const covers = grid.getByTestId('music-tile-cover');
+    await expect(covers).toHaveCount(5);
+    await expect(grid.getByRole('img')).toHaveCount(3);
+    const boxes = await covers.evaluateAll((els) =>
+      els.map((e) => {
+        const r = e.getBoundingClientRect();
+        return [Math.round(r.width), Math.round(r.height)];
+      }),
+    );
+    for (const [w, h] of boxes) expect(w).toBe(h);
+    expect(new Set(boxes.map(([w]) => w)).size).toBe(1);
+    const hosts = new Set(images.map(host));
+    expect(hosts.has('mosaic.scdn.co')).toBe(true);
+    expect(hosts.has('image-cdn-ak.spotifycdn.com')).toBe(true);
+    expect(hosts.has('image-cdn-fa.spotifycdn.com')).toBe(true);
+    expect(hosts.has('covers.evil.test')).toBe(false);
+    // One request per picture, in the size the tile needs: 300 on a plain screen, 640 on a sharp one (phone).
+    expect(new Set(images).size).toBe(images.length);
+    const sharp = (await page.evaluate(() => window.devicePixelRatio)) > 1.5;
+    expect(images.filter((u) => u.startsWith('https://mosaic.scdn.co/'))).toEqual([
+      COVER.mosaic('fokus', sharp ? 640 : 300),
+    ]);
+  });
+
+  test('a playlist shows its picture and the album picture of every row; the head shows what plays', async ({
+    page,
+  }) => {
+    const mock = await mockSpotify(page);
+    withCovers(mock);
+    const images = await mockCovers(page);
+    await seedConnected(page, ALL);
+    const main = await openMusic(page);
+    await expect(page.getByTestId('music-cover').getByRole('img')).toHaveAttribute(
+      'alt',
+      'Album Jetzt',
+    );
+    await main.getByRole('button', { name: /Tiefer Fokus/ }).click();
+    const rows = main.getByTestId('track-row');
+    await expect(rows).toHaveCount(3);
+    await rows.last().scrollIntoViewIfNeeded();
+    await expect(rows.getByRole('img')).toHaveCount(3);
+    // The phone layout has no picture in the list header (it keeps the header short).
+    if ((page.viewportSize()?.width ?? 0) >= 900) {
+      await main.getByTestId('music-list-cover').scrollIntoViewIfNeeded();
+      await expect(main.getByTestId('music-list-cover').getByRole('img')).toBeVisible();
+    }
+    // Rows take the 64 px picture; two rows of one album share one request.
+    const small = images.filter((u) => u === COVER.album('Album Eins', 64));
+    expect(small).toHaveLength(1);
+    expect(images).not.toContain(COVER.album('Album Eins', 640));
+    const queue = page.getByTestId('music-queue');
+    await queue.scrollIntoViewIfNeeded();
+    await expect(queue.getByRole('img')).toHaveCount(1);
+  });
+
+  test('not connected: no picture is asked for', async ({ page }) => {
+    const mock = await mockSpotify(page);
+    withCovers(mock);
+    const images = await mockCovers(page);
+    await page.addInitScript(
+      (url) => {
+        localStorage.setItem(
+          'tm-spotify-now',
+          JSON.stringify({
+            at: Date.now(),
+            value: { title: 'Alt', artist: 'Band', playing: true, coverUrl: url },
+          }),
+        );
+      },
+      COVER.album('alt', 64),
+    );
+    // The module is on, the sign-in is stored, but "Anzeigen" is not granted: the page reads as not connected.
+    await seedConnected(page, []);
+    await ready(page, '/music');
+    await expect(page.getByTestId('music-empty')).toBeVisible();
+    await page.waitForTimeout(500);
+    expect(images).toEqual([]);
+    expect(mock.api).toEqual([]);
+  });
+});
 
 test.describe('Music page', () => {
   test('a playlist opens with all its songs; a tap plays that song inside the playlist', async ({

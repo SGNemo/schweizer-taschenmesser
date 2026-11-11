@@ -82,6 +82,16 @@ impl<R: Runtime> SecureStore<R> {
             .map_err(Into::into)
     }
 
+    /// Asks the person to prove they are there (fingerprint, face or the device's PIN/pattern),
+    /// without a key and without storing anything. For Rust callers only: there is no plugin
+    /// command for it, so the webview cannot raise or answer this prompt.
+    pub async fn confirm_user(&self, request: ConfirmRequest) -> Result<ConfirmResponse> {
+        self.0
+            .run_mobile_plugin_async("confirmUser", request)
+            .await
+            .map_err(Into::into)
+    }
+
     pub fn set_secure_window(&self, request: SecureWindowRequest) -> Result<()> {
         self.0
             .run_mobile_plugin::<Value>("setSecureWindow", request)
