@@ -155,3 +155,18 @@ mod tests {
         assert!(validate_value(&"x".repeat(2049)).is_err());
     }
 }
+
+/// Rust-only (no command of the webview maps to it): ask the person to prove they are there.
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConfirmRequest {
+    pub title: String,
+    pub subtitle: String,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConfirmResponse {
+    /// `ok`, `cancelled`, or `none` (the device has no screen lock to ask for).
+    pub status: String,
+}

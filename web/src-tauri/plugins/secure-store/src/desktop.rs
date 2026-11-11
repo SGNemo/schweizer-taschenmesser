@@ -138,6 +138,11 @@ impl<R: Runtime> SecureStore<R> {
         remove(&format!("{BIO_PREFIX}{}", request.name))
     }
 
+    /// The phone's "prove you are there" prompt; no desktop caller exists.
+    pub async fn confirm_user(&self, _request: ConfirmRequest) -> Result<ConfirmResponse> {
+        Err(Error::Unsupported)
+    }
+
     /// Screenshot protection exists on Android only.
     pub fn set_secure_window(&self, _request: SecureWindowRequest) -> Result<()> {
         Err(Error::Unsupported)
