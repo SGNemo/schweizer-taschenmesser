@@ -23,6 +23,7 @@ import {
 import { now } from '@/core/time/now';
 import { useUiStore } from '@/stores/ui';
 import { tSpotify } from '@/strings.spotify';
+import { clearCovers } from './coverLoader';
 
 export const def = connectors.find((c) => c.nowPlaying);
 
@@ -85,6 +86,13 @@ export function useNowPlaying(): NowPlayingHandle | undefined {
     status.state !== 'expired' &&
     status.features.includes('show');
   const canControl = active && !!status?.features.includes('control') && !noPremium;
+
+  // Disconnected or expired: the covers of that session leave the memory.
+  const wasActive = useRef(false);
+  useEffect(() => {
+    if (wasActive.current && !active) clearCovers();
+    wasActive.current = active;
+  }, [active]);
 
   useEffect(() => {
     if (!active || !def?.nowPlaying || !ctx) return;

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import type { PlayerQueue } from '@/core/connectors/types';
 import { tMusicPage } from '@/strings.musicPage';
 import { clock } from '../nowPlayingTime';
+import { COVER_PX } from '../useCover';
+import { Cover } from './Cover';
 import type { PlayerApi } from './types';
 import styles from '../routes/music.module.css';
 
@@ -35,6 +37,14 @@ export function SideLists({ api }: { api: PlayerApi }) {
           <ol className={styles.queue} data-testid="music-queue">
             {next.map((item, i) => (
               <li key={`${item.id}-${i}`}>
+                <Cover
+                  ctx={ctx}
+                  item={item}
+                  px={COVER_PX.row}
+                  alt={item.album ?? ''}
+                  className={styles.rowCover}
+                  icon={16}
+                />
                 <span className={styles.queueName}>
                   {item.name}
                   {item.subtitle ? <span className={styles.queueSub}>{item.subtitle}</span> : null}

@@ -16,6 +16,7 @@ UI-Audit 4.0 weiterführen: Paket 0b-2 (Modulkopf als eine Titelzeile mit Reiter
 
 ## Abgeschlossene Runden (je eine Zeile; alles auf `develop`)
 
+- Musik: Cover für Playlists, Alben und Songs in allen Listen ([features/spotify.md](features/spotify.md)); offen: Handtest MU-C1 mit echtem Konto, Cover der von Spotify erzeugten Playlists (Daily Mix, Radio).
 - Heimnetz-Sync (LAN-Hub, Koppeln, zweiter PC, „Nur im WLAN“): [design/sync-lan/CONCEPT.md](design/sync-lan/CONCEPT.md). Nicht gebaut: Abgleich ganz im Hintergrund.
 - Use case „Kopf leer“ (Pakete 1–4, Nachlese, nachgemessen): [design/usecases/kopf-leer/TARGET.md](design/usecases/kopf-leer/TARGET.md).
 - Erstkontakt-Runde 5 (Personen A–D, Installation ohne Hilfe, Dev-Preview-Erststart): [`docs/qa/round-5.md`](qa/round-5.md).

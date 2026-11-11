@@ -193,6 +193,12 @@ FS-R10. _Abschnitt ohne Hub:_ Heimnetz-Abgleich aus: der Abschnitt zeigt zwei ku
 
 - **PK4 Ziehen im Zeitraster (≥ 1400 px):** Wochenansicht: Termin ziehen verschiebt (auch auf einen anderen Tag), unteren Rand ziehen ändert die Länge, über leere Fläche ziehen öffnet „Neuer Termin“ mit Beginn/Ende; „Rückgängig“ stellt wieder her; mit Tastatur `Alt+↓` (15 min) und `Alt+Umschalt+↓`; eine Serie lässt sich nicht ziehen (Hinweis). ☐
 
+### Musik
+
+#### Cover (Branch `fix/music-covers`) – nur mit echtem Spotify-Konto prüfbar
+
+- **MU-C1 Cover überall:** (1) Musik öffnen: unter „Deine Playlists“ zeigen Playlists mit eigenem Bild und solche ohne (Vierer-Mosaik) ein Cover; eine leere Playlist zeigt das Noten-Symbol. (2) Eine Playlist öffnen: Bild im Kopf, je Zeile das Albumbild; beim Scrollen springt nichts. (3) Einstellungen → Netzwerk → Verbindungsprotokoll: Einträge für `mosaic.scdn.co` und `image-cdn-…spotifycdn.com` mit Grund „Verbindung“, ohne Pfad. Wenn eine Playlist nur das Symbol zeigt: Namen notieren (von Spotify erzeugte Listen wie Daily Mix sind erwartet). ☐
+
 ### Uhr
 
 #### Uhr (Paket 1, #615) – nur von Hand prüfbar
