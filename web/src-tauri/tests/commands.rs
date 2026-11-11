@@ -577,6 +577,7 @@ fn remote_client_commands_exist_on_the_phone_only() {
     let wanted = [
         "remote_client_open",
         "remote_client_send",
+        "remote_client_text",
         "remote_client_pointer",
         "remote_client_close",
     ];
@@ -650,18 +651,62 @@ fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
         "unpair",
         ".link",
         "Link",
-        "send_text",
-        "Record::Key",
-        "Key::",
         "println!",
         "eprintln!",
         "log::",
         "dbg!",
+        "format!",
+        "tracing",
     ] {
         assert!(
             !code.contains(forbidden),
             "remote_client.rs mentions {forbidden}"
         );
+    }
+    // A key is a name of the fixed list – sixteen, mapped in one table, never built from a
+    // number – and reaches a record in one place.
+    let keys = &code[code.find("fn key_from(").unwrap()..];
+    let keys = &keys[..keys.find("\n}\n").unwrap()];
+    assert_eq!(keys.matches("\"key-").count(), 16);
+    assert_eq!(keys.matches(" => Key::").count(), 16);
+    assert!(!keys.contains(" as ") && !keys.contains("parse") && !keys.contains("from_"));
+    assert_eq!(code.matches("Record::Key(").count(), 1);
+    assert_eq!(code.matches("Key::").count(), 16);
+    // Text goes out in one place, checked first, and is never kept, echoed or handed back: no
+    // DTO, state or error carries it.
+    let typed = &code[code.find("pub async fn remote_client_text").unwrap()..];
+    let typed = &typed[..typed.find("\n}\n").unwrap()];
+    assert_eq!(code.matches("send_text(").count(), 1);
+    let check = typed.find("text_frames(&text)?").expect("checked first");
+    assert!(check < typed.find("send_text(").unwrap());
+    assert!(typed.find("Level::Full").unwrap() < typed.find("send_text(").unwrap());
+    assert!(typed.find("locked.load").unwrap() < typed.find("send_text(").unwrap());
+    // the text is used where it is checked and written, and nowhere else in the command
+    assert!(!typed.contains("clone()"));
+    assert_eq!(
+        typed.matches("text").count()
+            - typed.matches("send_text").count()
+            - typed.matches("text_frames").count()
+            - typed.matches("remote_client_text").count(),
+        2,
+        "the parameter and its one use"
+    );
+    for kept in [
+        "text: Mutex",
+        "text: String,\n}",
+        "last_text",
+        "history",
+        "Vec<String>>",
+    ] {
+        assert!(!code.contains(kept), "remote_client.rs keeps text: {kept}");
+    }
+    for dto in ["StateDto", "EventDto", "OpenedDto"] {
+        let at = code
+            .find(&format!("pub struct {dto}"))
+            .or_else(|| code.find(&format!("pub enum {dto}")));
+        let body = &code[at.unwrap()..];
+        let body = &body[..body.find("\n}\n").unwrap()];
+        assert!(!body.contains("text"), "{dto} carries text");
     }
     // the mouse level goes through the gate, and the phone's unlock never touches the vault's
     // biometric key: it is the plugin's keyless presence prompt, which no command of the page

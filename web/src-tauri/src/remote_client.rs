@@ -5,9 +5,13 @@
 //!   and the two share no frame. The device key and the pinned hub are the ones of
 //!   `lan_client.rs`; both stay in Rust, the page gets neither.
 //! * The phone decides nothing: what this device may do is checked by the PC for every session
-//!   and every frame. This file only passes on what the page asks for – media actions and mouse
-//!   buttons from fixed lists, pointer moves and wheel steps as numbers – and what the PC answers.
-//!   There is no key and no text here (a later package).
+//!   and every frame. This file only passes on what the page asks for – media actions, mouse
+//!   buttons and keys from fixed lists, pointer moves and wheel steps as numbers, text as the
+//!   person typed it – and what the PC answers. A key is a name of the list, never a code; there
+//!   is no free combination.
+//! * Text is passed on and forgotten: it is checked (length, no control character – a line
+//!   break is the key Enter, never part of a text), cut into frames and written. It is never
+//!   logged, stored, echoed in an error or kept after the call.
 //! * Two levels. `media` is asked for as before. `full` (mouse) needs a media session of this run
 //!   first, because only the PC's `opened` tells whether it asks for an unlock at the phone.
 //!   Whether this device is granted the level and whether the PC is locked is the PC's to say:
@@ -19,8 +23,9 @@
 //!   `opened` of the mouse session itself is checked again: a session that needs an unlock
 //!   nobody gave is closed at once. The unlock is a brake on a phone lying around unlocked, not
 //!   a proof to the PC.
-//! * While the PC is locked no pointer and no button press is sent (the PC would drop them and
-//!   count them against the session); a release always goes, so nothing stays held.
+//! * While the PC is locked no pointer, no button press, no key and no text is sent (the PC
+//!   would drop them and count them against the session); a release always goes, so nothing
+//!   stays held.
 //! * One session at a time. Opening a new one closes the old one; events of a replaced session
 //!   are dropped here, so the page never sees a late "closed" of a session it already left.
 //!   While a mouse session is being opened, the PC ends the session it replaces before it
@@ -34,7 +39,9 @@
 // tests alone.
 #![cfg_attr(not(mobile), allow(dead_code))]
 
-use ::lan_sync::input::wire::{Button, Code, Level, Media, PcState, Record, VOLUME_UNKNOWN};
+use ::lan_sync::input::wire::{
+    Button, Code, Key, Level, Media, PcState, Record, MAX_TEXT_BYTES, VOLUME_UNKNOWN,
+};
 use ::lan_sync::input_client::{Event, InputError, InputSession};
 use serde::Serialize;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -315,6 +322,53 @@ fn button_from(name: &str) -> Option<(Button, bool)> {
     })
 }
 
+/// The fixed list of keys, by name. A key is pressed and released by the PC in one step; the
+/// one combination (switch window) is a name of its own.
+fn key_from(name: &str) -> Option<Key> {
+    Some(match name {
+        "key-enter" => Key::Enter,
+        "key-escape" => Key::Escape,
+        "key-backspace" => Key::Backspace,
+        "key-tab" => Key::Tab,
+        "key-space" => Key::Space,
+        "key-left" => Key::Left,
+        "key-up" => Key::Up,
+        "key-right" => Key::Right,
+        "key-down" => Key::Down,
+        "key-home" => Key::Home,
+        "key-end" => Key::End,
+        "key-page-up" => Key::PageUp,
+        "key-page-down" => Key::PageDown,
+        "key-delete" => Key::Delete,
+        "key-f11" => Key::F11,
+        "key-alt-tab" => Key::AltTab,
+        _ => return None,
+    })
+}
+
+/// Longest text of one call, in bytes of UTF-8 (a long line; the PC limits text per second).
+const MAX_TEXT: usize = 2048;
+
+/// The text of one call as the frames to write: each at most [`MAX_TEXT_BYTES`] bytes, cut at a
+/// whole character. Empty, too long, or with a control character in it: refused whole.
+fn text_frames(text: &str) -> Result<Vec<&str>, &'static str> {
+    if text.is_empty() || text.len() > MAX_TEXT || text.chars().any(char::is_control) {
+        return Err("bad-text");
+    }
+    let mut frames = Vec::new();
+    let mut rest = text;
+    while !rest.is_empty() {
+        let mut cut = rest.len().min(MAX_TEXT_BYTES);
+        while !rest.is_char_boundary(cut) {
+            cut -= 1;
+        }
+        let (frame, tail) = rest.split_at(cut);
+        frames.push(frame);
+        rest = tail;
+    }
+    Ok(frames)
+}
+
 /// What kind of action a record is, for the two checks before it goes out.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Kind {
@@ -329,6 +383,10 @@ enum Kind {
 fn record_from(name: &str) -> Option<(Record, Kind)> {
     if let Some(media) = media_from(name) {
         return Some((Record::Media(media), Kind::Media));
+    }
+    if let Some(key) = key_from(name) {
+        // a key is its own press and release: on a locked PC it is left out like a press
+        return Some((Record::Key(key), Kind::Press));
     }
     let (button, down) = button_from(name)?;
     let kind = if down { Kind::Press } else { Kind::Release };
@@ -769,6 +827,36 @@ pub async fn remote_client_pointer<R: Runtime>(
     .map_err(|_| "internal".to_owned())?
 }
 
+/// Types `text` at the PC on session `session`, which must be of the mouse-and-keyboard level.
+/// `bad-text`: empty, too long, or with a control character (a line break is the key
+/// `key-enter`). `locked`: the PC is locked, nothing was sent. The text is written and
+/// forgotten; no error names it.
+#[tauri::command]
+pub async fn remote_client_text<R: Runtime>(
+    app: AppHandle<R>,
+    session: u64,
+    text: String,
+) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let frames = text_frames(&text)?;
+        let state = app.state::<RemoteClient>();
+        let (open, level) = picked(&state, session)?;
+        if level != Level::Full {
+            return Err("bad-level".to_owned());
+        }
+        if state.locked.load(Ordering::SeqCst) {
+            return Err("locked".to_owned());
+        }
+        for frame in frames {
+            open.send_text(frame)
+                .map_err(|e| error_name(e).to_owned())?;
+        }
+        Ok(())
+    })
+    .await
+    .map_err(|_| "internal".to_owned())?
+}
+
 /// Ends session `session` (the page went to the background). A number that is not the open
 /// session changes nothing.
 #[tauri::command]
@@ -795,6 +883,92 @@ pub async fn remote_client_close<R: Runtime>(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn keys_are_sixteen_names_and_nothing_else_is_a_key() {
+        let names = [
+            "key-enter",
+            "key-escape",
+            "key-backspace",
+            "key-tab",
+            "key-space",
+            "key-left",
+            "key-up",
+            "key-right",
+            "key-down",
+            "key-home",
+            "key-end",
+            "key-page-up",
+            "key-page-down",
+            "key-delete",
+            "key-f11",
+            "key-alt-tab",
+        ];
+        let mut seen = Vec::new();
+        for name in names {
+            let key = key_from(name).unwrap();
+            assert!(!seen.contains(&key), "{name}");
+            seen.push(key);
+        }
+        for bad in [
+            "key-",
+            "key-a",
+            "key-win",
+            "key-ctrl-c",
+            "key-13",
+            "enter",
+            "Key-Enter",
+            "key-enter ",
+            "key-alt",
+            "key-shift-tab",
+            "vk_return",
+        ] {
+            assert!(key_from(bad).is_none(), "{bad:?}");
+            assert!(records_from(&[bad.to_owned()]).is_err(), "{bad:?}");
+        }
+        // a key needs the mouse-and-keyboard level, and is left out while the PC is locked
+        let enter = || records_from(&["key-enter".to_owned()]).unwrap();
+        assert_eq!(sendable(enter(), Level::Media, false), Err("bad-level"));
+        assert_eq!(sendable(enter(), Level::Full, false).unwrap().len(), 1);
+        assert!(sendable(enter(), Level::Full, true).unwrap().is_empty());
+    }
+
+    #[test]
+    fn text_is_checked_whole_and_cut_into_frames_at_whole_characters() {
+        assert_eq!(text_frames("grüße").unwrap(), ["grüße"]);
+        for bad in [
+            "",
+            "a\nb",
+            "a\tb",
+            "a\rb",
+            "\u{0}",
+            "a\u{1b}[2J",
+            "a\u{7f}",
+            "a\u{85}b",
+        ] {
+            assert_eq!(text_frames(bad), Err("bad-text"), "{bad:?}");
+        }
+        assert!(text_frames(&"a".repeat(MAX_TEXT)).is_ok());
+        assert_eq!(text_frames(&"a".repeat(MAX_TEXT + 1)), Err("bad-text"));
+        // 300 two-byte characters = 600 bytes: three frames, none over the limit, nothing lost,
+        // no character cut in two
+        let long = "ü".repeat(300);
+        let frames = text_frames(&long).unwrap();
+        assert_eq!(frames.len(), 3);
+        assert!(frames
+            .iter()
+            .all(|f| f.len() <= MAX_TEXT_BYTES && !f.is_empty()));
+        assert_eq!(frames.concat(), long);
+        // four-byte characters at an odd offset
+        let emoji = format!("a{}", "👋".repeat(100));
+        let frames = text_frames(&emoji).unwrap();
+        assert!(frames.iter().all(|f| f.len() <= MAX_TEXT_BYTES));
+        assert_eq!(frames.concat(), emoji);
+        // every frame passes the PC's own check
+        for frame in frames {
+            assert!(::lan_sync::input::wire::check_text(frame.as_bytes()).is_ok());
+        }
+    }
 
     #[test]
     fn only_the_fixed_media_actions_are_accepted() {

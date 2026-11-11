@@ -16,8 +16,8 @@ const whole = (n: number): number =>
 
 /**
  * The phone's input session with the paired PC (`src-tauri/src/remote_client.rs`). The device key
- * and the pinned PC stay in Rust; this bridge passes on a level, action names from a fixed list
- * and what the PC answers.
+ * and the pinned PC stay in Rust; this bridge passes on a level, action names from a fixed list,
+ * text as the person typed it (never kept here) and what the PC answers.
  */
 export function createRemote(supported: boolean): RemoteService {
   if (!supported) return noRemote;
@@ -40,6 +40,7 @@ export function createRemote(supported: boolean): RemoteService {
         dx: whole(dx),
         dy: whole(dy),
       }),
+    text: (session, text) => call<void>('remote_client_text', { session, text }),
     close: (session) => call<void>('remote_client_close', { session }),
   };
 }

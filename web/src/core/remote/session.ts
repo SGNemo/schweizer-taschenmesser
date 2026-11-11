@@ -3,6 +3,7 @@ import type {
   RemoteButtonAction,
   RemoteCloseReason,
   RemoteEvent,
+  RemoteKeyAction,
   RemoteLevel,
   RemotePcState,
   RemoteService,
@@ -104,10 +105,30 @@ const REASONS: readonly RemoteCloseReason[] = [
 const isReason = (code: string): code is RemoteCloseReason =>
   (REASONS as readonly string[]).includes(code);
 
-/** What the pad sends: a move or wheel step, or mouse buttons. */
+/** How typing a text ended. `locked`: the PC is locked, nothing was typed. */
+export type TypeResult = 'sent' | 'locked' | 'failed';
+
+/** What the pad and the keyboard send: a move or wheel step, mouse buttons, keys, or text. */
 type Out =
   | { kind: 'move' | 'scroll'; dx: number; dy: number }
-  | { kind: 'buttons'; actions: RemoteButtonAction[] };
+  | { kind: 'buttons'; actions: (RemoteButtonAction | RemoteKeyAction)[] }
+  | { kind: 'text'; pieces: string[]; enter: boolean; done(result: TypeResult): void };
+
+/** Longest piece of text handed to the shell at once, in characters (4 bytes each at most). */
+const TEXT_PIECE = 400;
+
+/**
+ * Text as the shell takes it: control characters become a space (a pasted line break or tab is
+ * not a key), cut into pieces at whole characters.
+ */
+export function textPieces(text: string): string[] {
+  // eslint-disable-next-line no-control-regex
+  const clean = Array.from(text.replace(/[\u0000-\u001f\u007f-\u009f]+/g, ' '));
+  const pieces: string[] = [];
+  for (let i = 0; i < clean.length; i += TEXT_PIECE)
+    pieces.push(clean.slice(i, i + TEXT_PIECE).join(''));
+  return pieces;
+}
 /** Entries that may wait behind the write in flight. */
 const OUT_MAX = 8;
 
@@ -139,6 +160,17 @@ export interface RemoteSession {
   point(kind: 'move' | 'scroll', dx: number, dy: number): void;
   /** Mouse buttons, in order. Presses go nowhere while the PC is locked; a release always goes. */
   click(actions: readonly RemoteButtonAction[]): void;
+  /**
+   * One key of the fixed list, in order with everything else the level sends. Goes nowhere
+   * unless the level is open and the PC unlocked. `true` = it was taken.
+   */
+  key(action: RemoteKeyAction): boolean;
+  /**
+   * Types `text` at the PC, then Enter if `enter` (an empty text with `enter` is the key alone).
+   * In order with everything else; never dropped silently: the answer says whether it went out.
+   * The text lives in the queue until it is written and nowhere after.
+   */
+  type(text: string, enter: boolean): Promise<TypeResult>;
   /** Whether a press of the phone's volume keys belongs to the PC right now. */
   takesVolumeKeys(): boolean;
 }
@@ -181,8 +213,12 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
     for (const listener of listeners) listener(view);
   };
   /** The session is gone: the level with it. A dismissed unlock stays, so nothing asks again by itself. */
+  /** Empties the queue; a text that waited is answered, never left hanging. */
+  const emptyOut = () => {
+    for (const item of out.splice(0)) if (item.kind === 'text') item.done('failed');
+  };
   const padLost = () => {
-    out.length = 0;
+    emptyOut();
     level = 'media';
     if (pad.kind !== 'unlock' && pad.kind !== 'unavailable') setPad({ kind: 'off' });
   };
@@ -365,12 +401,27 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
         if (!item) return;
         const used = session;
         if (used === undefined || level !== 'full') {
-          out.length = 0;
+          if (item.kind === 'text') item.done('failed');
+          emptyOut();
           return;
         }
         try {
           if (item.kind === 'buttons') await deps.remote.send(used, item.actions);
-          else await deps.remote.pointer(used, item.kind, item.dx, item.dy);
+          else if (item.kind === 'text') {
+            try {
+              for (const piece of item.pieces) await deps.remote.text(used, piece);
+              if (item.enter) await deps.remote.send(used, ['key-enter']);
+              item.done('sent');
+            } catch (e) {
+              const code = e instanceof Error ? e.message : '';
+              // the PC is locked, or the shell refused the text: the session is fine
+              if (code !== 'locked' && code !== 'bad-text') {
+                item.done('failed');
+                throw e;
+              }
+              item.done(code === 'locked' ? 'locked' : 'failed');
+            }
+          } else await deps.remote.pointer(used, item.kind, item.dx, item.dy);
         } catch {
           if (session === used) {
             stopWaiting();
@@ -379,7 +430,7 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
             padLost();
             set({ kind: 'disconnected' });
           }
-          out.length = 0;
+          emptyOut();
           return;
         }
       }
@@ -498,6 +549,24 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       if (sendable.length === 0 || (out.length >= OUT_MAX && !releasesOnly)) return;
       out.push({ kind: 'buttons', actions: sendable });
       void pump();
+    },
+    key(action) {
+      if (!padUsable() || (view.kind === 'connected' && view.pc.locked)) return false;
+      if (out.length >= OUT_MAX) return false;
+      out.push({ kind: 'buttons', actions: [action] });
+      void pump();
+      return true;
+    },
+    type(text, enter) {
+      if (!padUsable()) return Promise.resolve('failed');
+      if (view.kind === 'connected' && view.pc.locked) return Promise.resolve('locked');
+      const pieces = textPieces(text);
+      if (pieces.length === 0 && !enter) return Promise.resolve('sent');
+      if (out.length >= OUT_MAX) return Promise.resolve('failed');
+      return new Promise<TypeResult>((done) => {
+        out.push({ kind: 'text', pieces, enter, done });
+        void pump();
+      });
     },
     subscribe(listener) {
       listeners.add(listener);

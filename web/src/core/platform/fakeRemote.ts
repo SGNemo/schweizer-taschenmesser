@@ -8,6 +8,7 @@
 import type {
   RemoteAction,
   RemoteButtonAction,
+  RemoteKeyAction,
   RemoteCloseReason,
   RemoteEvent,
   RemoteOpened,
@@ -32,7 +33,9 @@ export function createFakeRemoteParts() {
   let live:
     { session: number; level: 'media' | 'full'; onEvent: (e: RemoteEvent) => void } | undefined;
   let silent = false;
-  const sent: (RemoteAction | RemoteButtonAction)[] = [];
+  const sent: (RemoteAction | RemoteButtonAction | RemoteKeyAction)[] = [];
+  /** What was typed at the demo PC (a test reads it back; the real shell keeps nothing). */
+  const typed: string[] = [];
   const pointed: { kind: 'move' | 'scroll'; dx: number; dy: number }[] = [];
   // what the demo PC grants this phone, and what it said in its last `opened` (like the shell,
   // the fake opens the mouse level only after a media session told the grant)
@@ -50,7 +53,7 @@ export function createFakeRemoteParts() {
   let hold: Promise<void> | undefined;
   let greeting: RemoteCloseReason | undefined;
 
-  const apply = (action: RemoteAction | RemoteButtonAction) => {
+  const apply = (action: RemoteAction | RemoteButtonAction | RemoteKeyAction) => {
     const volume = pc.volume ?? 0;
     if (action === 'play-pause') pc.playing = !pc.playing;
     else if (action === 'volume-up') {
@@ -115,10 +118,11 @@ export function createFakeRemoteParts() {
     },
     send: async (session, actions) => {
       if (!live || live.session !== session) throw new Error('closed');
-      if (live.level !== 'full' && actions.some((a) => MOUSE.has(a))) throw new Error('bad-level');
+      const full = (a: string) => MOUSE.has(a) || a.startsWith('key-');
+      if (live.level !== 'full' && actions.some(full)) throw new Error('bad-level');
       for (const action of actions) {
-        // like the shell: no press reaches a locked PC, a release always goes
-        if (PRESS.has(action) && pc.locked) continue;
+        // like the shell: no press and no key reaches a locked PC, a release always goes
+        if ((PRESS.has(action) || action.startsWith('key-')) && pc.locked) continue;
         sent.push(action);
         apply(action);
       }
@@ -130,6 +134,17 @@ export function createFakeRemoteParts() {
       if (live.level !== 'full') throw new Error('bad-level');
       if (pc.locked || (dx === 0 && dy === 0)) return;
       pointed.push({ kind, dx: Math.trunc(dx), dy: Math.trunc(dy) });
+    },
+    text: async (session, text) => {
+      // like the shell: checked whole first, then the session, the level and the lock
+      const bytes = new TextEncoder().encode(text).length;
+      // eslint-disable-next-line no-control-regex
+      if (bytes === 0 || bytes > 2048 || /[\u0000-\u001f\u007f-\u009f]/.test(text))
+        throw new Error('bad-text');
+      if (!live || live.session !== session) throw new Error('closed');
+      if (live.level !== 'full') throw new Error('bad-level');
+      if (pc.locked) throw new Error('locked');
+      typed.push(text);
     },
     close: async (session) => {
       if (live?.session === session) live = undefined;
@@ -185,6 +200,7 @@ export function createFakeRemoteParts() {
     /** How often the phone asked for an unlock. */
     unlocks: () => unlocks,
     pointed: () => [...pointed],
+    typed: () => [...typed],
     level: () => live?.level,
     sent: () => [...sent],
     opens: () => opens,
