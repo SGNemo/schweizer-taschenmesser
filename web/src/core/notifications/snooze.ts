@@ -6,7 +6,7 @@
 import { z } from 'zod';
 import type { DueNotification } from '@/core/modules/types';
 import type { PlatformKind } from '@/core/platform/types';
-import { getSettings, setSettings } from '@/core/settings/settings';
+import { getSettings, updateSettings } from '@/core/settings/settings';
 import { now } from '@/core/time/now';
 import { baseKey } from './policy';
 import { sourceOf } from './source';
@@ -93,7 +93,13 @@ export async function getSnoozed(): Promise<SnoozeEntry[]> {
   return (await getSettings(REMINDERS_SCOPE, schema, { snoozed: [] })).snoozed;
 }
 
-const save = (snoozed: SnoozeEntry[]) => setSettings(REMINDERS_SCOPE, { snoozed });
+/** Read and write in one queued step, so two quick "Später" (or one next to "Erledigt") both stay. */
+const change = (fn: (all: SnoozeEntry[]) => SnoozeEntry[] | undefined): Promise<void> =>
+  updateSettings(REMINDERS_SCOPE, (values) => {
+    const parsed = schema.safeParse({ snoozed: [], ...values });
+    const next = fn(parsed.success ? parsed.data.snoozed : []);
+    return next && { snoozed: next };
+  });
 
 export async function snoozeNotification(
   n: { key: string; title: string; body?: string; url?: string },
@@ -112,16 +118,19 @@ export async function snoozeNotification(
     ...(source ? { source } : {}),
   };
   // Entries of the past day are dropped on every write; the list stays small.
-  const keep = (await getSnoozed()).filter(
-    (e) => e.id !== entry.id && (e.desktopOnly || e.until > at - 24 * 60 * MINUTE),
-  );
-  await save([...keep, entry].slice(-MAX_ENTRIES));
+  await change((all) => {
+    const keep = all.filter(
+      (e) => e.id !== entry.id && (e.desktopOnly || e.until > at - 24 * 60 * MINUTE),
+    );
+    return [...keep, entry].slice(-MAX_ENTRIES);
+  });
   return entry;
 }
 
 /** Removes an entry once it was shown (`snooze:<id>` keys are accepted too). */
 export async function removeSnoozed(idOrKey: string): Promise<void> {
   const id = idOrKey.replace(/^snooze:/, '');
-  const all = await getSnoozed();
-  if (all.some((e) => e.id === id)) await save(all.filter((e) => e.id !== id));
+  await change((all) =>
+    all.some((e) => e.id === id) ? all.filter((e) => e.id !== id) : undefined,
+  );
 }

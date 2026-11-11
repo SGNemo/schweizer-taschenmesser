@@ -68,7 +68,8 @@ test.describe('Chat', () => {
     ]);
     await setUp(page);
     await page.goto('/chat');
-    await page.getByRole('button', { name: 'Neuer Chat' }).click();
+    // Once on either device (Identity 4.0): the head's button on the desktop, the plus of the bottom bar on the phone.
+    await page.getByRole('button', { name: /Neuer Chat|Chat eintragen/ }).click();
 
     const input = page.getByPlaceholder('Nachricht schreiben …');
     await input.fill('Plane meine Woche');

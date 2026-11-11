@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
+import { getHideValues, setHideValues } from '@/core/focus/hideValues';
 import { t } from '@/strings';
 import { FocusSection } from './FocusSection';
 
@@ -51,5 +52,28 @@ describe('Focus settings, folded', () => {
     expect(aids).toHaveAttribute('open');
     await user.click(within(aids).getByRole('switch', { name: s.nextOne }));
     expect(await within(aids).findByText(g.line(s.aids, s.aidsOn(5, 6)))).toBeInTheDocument();
+  });
+
+  it('"Werte ausblenden" waits for its stored value: never "on" before it is read, one tap turns it on', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <FocusSection />
+      </MemoryRouter>,
+    );
+    // First render: the value is still being read. The switch is neither "on" nor usable.
+    const hide = screen.getByRole('switch', { name: s.hideValues, hidden: true });
+    expect(hide).toHaveAttribute('aria-checked', 'false');
+    expect(hide).toBeDisabled();
+    await waitFor(() => expect(hide).toBeEnabled());
+    expect(hide).toHaveAttribute('aria-checked', 'false');
+    try {
+      await user.click(screen.getByTestId('focus-more').querySelector('summary')!);
+      await user.click(hide);
+      await waitFor(() => expect(hide).toHaveAttribute('aria-checked', 'true'));
+      expect(await getHideValues()).toBe(true);
+    } finally {
+      await setHideValues(false);
+    }
   });
 });

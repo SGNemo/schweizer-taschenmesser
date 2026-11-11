@@ -449,3 +449,35 @@
 .toolbarRow button {
   white-space: nowrap;
 }
+
+/* "Verlauf": the context line of the net worth wraps (it is never cut), the rows by kind lie above the curve. */
+.worthHead {
+  margin-bottom: var(--space-3);
+}
+.worthHead:empty {
+  display: none;
+}
+.worthContext {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.worthParts {
+  margin-bottom: var(--space-4);
+}
+/* Phone: the page's menu floats at the right end of this row. */
+@media (max-width: 899px) {
+  .worthHead,
+  .worthHead:empty {
+    display: flex;
+    align-items: center;
+    min-height: var(--touch);
+    padding-inline-end: calc(var(--touch) + var(--space-2));
+  }
+  /* The line is as high as the menu beside it, so one line of text sits on the menu's middle. */
+  .worthContext {
+    display: flex;
+    align-items: center;
+    min-height: var(--touch);
+  }
+}

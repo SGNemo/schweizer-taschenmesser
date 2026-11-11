@@ -68,7 +68,7 @@ Nemo is a set of small modules for everyday life. You turn on what you need in t
 |  | Passwords | Password vault | optional |
 | **System** | This PC | Drives with a scan of the biggest folders and system info (processor, memory, battery, network) | optional, Windows app only |
 |  | Downloads | Downloads files | on for new installations, Windows app only |
-|  | Remote | Control media and volume of your PC from your phone | preview, Android app only |
+|  | Remote | Control media, volume, mouse and keyboard of your PC from your phone ([guide](docs/user/remote-control.md)) | preview, Android app only |
 
 “On for new installations”: switched on when you install Nemo fresh. An installation that already existed stays as it is; there you turn the module on in the module library.
 

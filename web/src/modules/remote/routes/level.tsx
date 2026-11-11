@@ -2,11 +2,10 @@ import { useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import { useLang } from '@/core/i18n/lang';
 import type { RemotePad, RemoteView } from '@/core/remote/session';
-import { settingsPath } from '@/core/settings/registry/paths';
 import { t } from '@/strings';
 import { Button } from '@/ui';
 import { remoteSession, useRemotePad } from '../session';
-import type { PadLine } from '../view';
+import { stepLink, type PadLine } from '../view';
 import styles from '../remote.module.css';
 
 /** How often a view asks for the mouse-and-keyboard level by itself before it waits for a touch. */
@@ -126,8 +125,9 @@ export function LevelState({
             </Button>
           </div>
         ) : null}
-        {line.step === 'pair' ? <Link to={settingsPath('sync', 'sync')}>{r.pair}</Link> : null}
-        {line.step === 'disable' ? <Link to="/library/remote">{r.disable}</Link> : null}
+        {line.step === 'pair' || line.step === 'disable' ? (
+          <Link to={stepLink(line.step).to}>{stepLink(line.step).label}</Link>
+        ) : null}
       </section>
     </>
   );

@@ -20,3 +20,9 @@ export async function setHideValues(on: boolean): Promise<void> {
 
 /** Live value; `true` while loading, so a figure is never shown for a moment by mistake. */
 export const useHideValues = (): boolean => useLiveQuery(getHideValues, [], true);
+
+/**
+ * For the switch in the settings: `undefined` until the value is read. The switch must not stand on "on" for that
+ * moment: a tap then would have switched it "off" and left the figures visible.
+ */
+export const useHideValuesSetting = (): boolean | undefined => useLiveQuery(getHideValues, []);

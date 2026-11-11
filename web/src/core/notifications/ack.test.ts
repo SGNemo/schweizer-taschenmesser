@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { ackNotification, isAcked } from './ack';
-import { snoozeNotification } from './snooze';
+import { getSnoozed, removeSnoozed, snoozeNotification } from './snooze';
 
 beforeEach(async () => {
   await db.table('_settings').clear();
@@ -46,6 +46,22 @@ describe('answers (Erledigt / Später)', () => {
     const row = await db.table('_settings').get('reminders');
     expect(Object.keys(row).filter((f) => f.startsWith('ack:'))).toEqual(['ack:k1', 'ack:k3']);
     expect(row.snoozed).toHaveLength(1);
+  });
+
+  it('keeps everything when answers and "Später" entries are written at the same time', async () => {
+    await Promise.all([
+      ackNotification('k1'),
+      snoozeNotification({ key: 'k2', title: 'Paket' }, '1h', 1_000_000),
+      snoozeNotification({ key: 'k3', title: 'Post' }, '1h', 1_000_000),
+      ackNotification('k4'),
+    ]);
+    expect(await isAcked('k1')).toBe(true);
+    expect(await isAcked('k4')).toBe(true);
+    expect((await getSnoozed()).map((e) => e.title)).toEqual(['Paket', 'Post']);
+    const [first] = await getSnoozed();
+    await Promise.all([removeSnoozed(first!.id), ackNotification('k5')]);
+    expect((await getSnoozed()).map((e) => e.title)).toEqual(['Post']);
+    expect(await isAcked('k5')).toBe(true);
   });
 
   it('two devices answering different reminders offline lose nothing (one field per answer)', async () => {
