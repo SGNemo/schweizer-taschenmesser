@@ -1,20 +1,21 @@
-/* Inter Variable, self-hosted (OFL). Same two subsets as the app (web/src/ui/global.css). */
+/* Atkinson Hyperlegible Next Variable, self-hosted (OFL): a face made for easy reading, the site's one family
+   (rethink round; the app keeps Inter). Two subsets, copied by scripts/copy-brand.mjs. */
 @font-face {
-  font-family: 'Inter Variable';
+  font-family: 'Atkinson Hyperlegible Next Variable';
   font-style: normal;
   font-display: swap;
-  font-weight: 100 900;
-  src: url('/fonts/inter-latin-wght-normal.woff2') format('woff2-variations');
+  font-weight: 200 800;
+  src: url('/fonts/atkinson-hyperlegible-next-latin-wght-normal.woff2') format('woff2-variations');
   unicode-range:
     U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
     U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
-  font-family: 'Inter Variable';
+  font-family: 'Atkinson Hyperlegible Next Variable';
   font-style: normal;
   font-display: swap;
-  font-weight: 100 900;
-  src: url('/fonts/inter-latin-ext-wght-normal.woff2') format('woff2-variations');
+  font-weight: 200 800;
+  src: url('/fonts/atkinson-hyperlegible-next-latin-ext-wght-normal.woff2') format('woff2-variations');
   unicode-range:
     U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
     U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
@@ -27,7 +28,7 @@
   box-sizing: border-box;
 }
 html {
-  font-family: var(--font-sans);
+  font-family: var(--font-site);
   font-size: 100%;
   line-height: var(--leading);
   -webkit-text-size-adjust: 100%;
@@ -54,22 +55,23 @@ dl {
   margin: 0;
 }
 h1 {
-  font-size: var(--text-h1);
-  font-weight: var(--weight-semibold);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  font-size: var(--text-time);
+  font-weight: var(--weight-heavy);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
 }
 h2 {
   font-size: var(--text-h2);
-  font-weight: var(--weight-semibold);
-  line-height: 1.2;
-  letter-spacing: -0.015em;
-  max-width: 28ch;
+  font-weight: var(--weight-heavy);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
   text-wrap: balance;
 }
 h3 {
-  font-size: var(--text-label);
-  font-weight: var(--weight-semibold);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-heavy);
+  letter-spacing: -0.015em;
 }
 a {
   color: inherit;
@@ -111,6 +113,12 @@ button {
 }
 .prose {
   max-width: var(--measure);
+  overflow-wrap: break-word;
+}
+h1,
+h2 {
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 .prose p + p,
 .prose p + ul,
@@ -132,6 +140,7 @@ button {
   margin-top: var(--space-1);
 }
 .prose code {
+  overflow-wrap: anywhere;
   font-family: var(--font-mono);
   font-size: 0.9em;
   background: var(--surface-2);
@@ -152,6 +161,9 @@ button {
   top: -3rem;
   background: var(--surface);
   color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-1);
@@ -233,53 +245,37 @@ section.band + section.band {
   border-radius: var(--radius-md);
   background: var(--surface);
 }
-/* Screenshot frames (components/Shot.astro): a thin window bar for the desktop, a bezel for the phone. No perspective;
-   the picture's own size sets the ratio, so renewed screenshots fit without a change here. */
-.frame {
-  border-radius: var(--radius-lg);
+/* Picture slots (components/Slot.astro, src/slots.js, docs/design/site/SLOTS.md): the aspect ratio is the contract.
+   A drawing fills the slot today, an app picture of the same ratio later; nothing around it moves. */
+.slot {
+  margin: 0;
+}
+.slot-art {
+  position: relative;
   overflow: hidden;
-  box-shadow: var(--shadow-1);
-  background: var(--surface);
-  border: 1px solid var(--border);
-}
-.frame .bar {
-  height: 1.75rem;
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding-inline: 0.75rem;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-2);
-}
-.frame .bar i {
-  width: 0.6rem;
-  height: 0.6rem;
-  border-radius: 50%;
-  background: var(--border-strong);
-  opacity: 0.5;
-}
-.frame img,
-.shot img {
   width: 100%;
-  height: auto;
+  border-radius: var(--radius-xl);
+  container-type: inline-size;
 }
-.phone {
-  border-radius: 1.1rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-1);
-  padding: 0.3rem;
-}
-.phone .screen {
-  border-radius: 0.85rem;
-  overflow: hidden;
-  background: var(--bg);
-}
-.phone img {
+.slot-art img {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
 }
-/* One image per theme; the hidden one is lazy and never requested. */
+.ratio-sm-4x5 .slot-art {
+  aspect-ratio: 4 / 5;
+}
+.ratio-sm-4x3 .slot-art {
+  aspect-ratio: 4 / 3;
+}
+@media (min-width: 48rem) {
+  .ratio-4x3 .slot-art {
+    aspect-ratio: 4 / 3;
+  }
+}
+/* One picture per theme in a slot; the hidden one is lazy and never requested. */
 .shot-light {
   display: none;
 }
@@ -297,8 +293,53 @@ section.band + section.band {
     display: block;
   }
 }
-/* Hover and focus only change colour, 150 ms. The one movement of the site is the hero picture's entrance
-   (components/Hero.astro), switched off under reduced motion. */
+/* A sketch stage (the drawn placeholder of a slot): neutral ground with a trace of the scene's module colour. */
+.stage {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center stretch;
+  justify-items: center;
+  padding: 7% 10%;
+  background: color-mix(in srgb, var(--module-color, var(--text-3)) var(--group-tint), var(--surface-2));
+  font-size: clamp(0.9375rem, 3.4cqw, 1.25rem);
+}
+/* Page head of the inner pages: one heavy line, one lead. */
+.page-head {
+  display: grid;
+  gap: var(--space-4);
+  padding-block: clamp(2.5rem, 1.5rem + 5vw, 5rem) var(--space-7);
+}
+.page-head > div {
+  display: grid;
+  gap: var(--space-4);
+}
+.lead {
+  max-width: 36rem;
+  font-size: var(--text-lead);
+}
+/* A section that opens with a rule, the rhythm of every page. */
+.ruled {
+  padding-block: var(--space-6);
+  border-top: var(--rule) solid var(--text);
+}
+.more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: var(--touch);
+  color: var(--accent);
+  font-weight: var(--weight-semibold);
+}
+/* A module or area dot: the one place a module colour appears (always next to the name). */
+.dot {
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: var(--radius-full);
+  background: var(--module-color);
+}
+/* Hover and focus only change colour, 150 ms. Nothing on the site moves. */
 a,
 .btn,
 button,

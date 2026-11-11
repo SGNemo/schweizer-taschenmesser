@@ -7,7 +7,6 @@
  * visitor override it (data-theme on <html>, stored locally, nothing is sent anywhere).
  */
 :root {
-  --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
   --font-num: tabular-nums;
 
@@ -18,15 +17,12 @@
   --text-md: 1rem;
   --text-lg: 1.125rem;
   --text-xl: 1.25rem;
-  --text-h1: 2rem;
   --text-h2: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);
   --block: clamp(1.75rem, 6vw, 5rem);
   --leading: 1.6;
-  --leading-tight: 1.25;
   --measure: 68ch;
   --weight-medium: 500;
   --weight-semibold: 600;
-  --weight-bold: 700;
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -43,7 +39,7 @@
   --radius-full: 999px;
 
   --touch: 44px;
-  --content-w: 68.75rem; /* ≈ 1100 px */
+  --content-w: 80rem;
   --gutter: clamp(1rem, 0.5rem + 1.5vw, 2.5rem);
 
   --dur: 200ms;
@@ -63,11 +59,9 @@
   --accent: #b5430c;
   --accent-hover: #963709;
   --accent-contrast: #ffffff;
-  --accent-soft: #fbe9de;
   --warning: #8a5a00;
-  --success: #1b7545;
   /* Identity v3 (web/src/ui/tokens.css, docs/design/MODULE-IDENTITY.md): the module palette, the tints of a
-     module head and widget zone, the neutral group tint of an area block and the strength of the area patterns.
+     module head, the neutral group tint of an area block and the ink of the area patterns.
      The selectors that turn them into --module-color and --area-pattern live in identity.css. */
   --mod-lime: #6c7a04;
   --mod-moss: #2f6800;
@@ -82,30 +76,26 @@
   --mod-slate: #55636b;
   --head-tint-0: 40%;
   --head-tint-1: 12%;
-  --widget-tint: 14%;
   --group-tint: 6%;
-  --pattern-head: 0.06;
-  --pattern-widget: 0.04;
   --pattern-ink: var(--text);
-  /* Sky wash of the weather head (identity "himmel"): day sky and sun. */
-  --sky-day-0: #6fb3e8;
-  --sky-day-1: #cfe7f7;
-  --sky-sun: #ffd36a;
-  /* Ocean gradient, the app's brand surface (splash, empty states); on the site it is the hero. Pinned to the app. */
-  --ocean-from: #1d6b7a;
-  --ocean-to: #0e2f45;
-  /* Site only: ink, accent and frame on the ocean surface, the same in both themes (the gradient does not change
-     with the theme). scripts/tokens.test.mjs checks their contrast against the lighter stop. */
-  --on-ocean: #ffffff;
-  --on-ocean-muted: #e6eef0;
-  --on-ocean-meta: #dbe6e9;
-  --on-ocean-line: rgb(255 255 255 / 0.2);
-  --on-ocean-accent: #ffb07a;
-  --on-ocean-accent-hover: #ffc59c;
-  --on-ocean-accent-ink: #1b0f06;
-  --on-ocean-ok: #a8ebc4;
-  --ocean-bezel: #0b2334;
-  --ocean-shadow: 0 24px 60px rgb(4 20 32 / 0.45);
+  /* Site only (rethink round, docs/design/site/README.md "Building blocks"): the reading face, the heavy weight of
+     headlines and times, three display sizes, the section rhythm and the two line weights. scripts/tokens.test.mjs
+     lists them (SITE_ONLY) and fails when one of them also exists in the app. */
+  --font-site: 'Atkinson Hyperlegible Next Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --weight-heavy: 800;
+  --text-display: clamp(2.75rem, 1.5rem + 6.5vw, 6.5rem);
+  --text-time: clamp(2.25rem, 1.4rem + 4.2vw, 4.5rem);
+  --text-lead: clamp(1.0625rem, 1rem + 0.4vw, 1.3125rem);
+  --section: clamp(3rem, 2rem + 5vw, 7rem);
+  --line: 1px;
+  --rule: 2px;
+  /* Site only: the accents of the five supporter palettes, the same pairs as web/src/ui/supporterThemes.css (pinned
+     by the test); light-dark() follows color-scheme, which the theme blocks below set. */
+  --palette-korallenriff: light-dark(#b3374a, #ff8f80);
+  --palette-tiefsee: light-dark(#0a6b9a, #5cc4f0);
+  --palette-sand: light-dark(#8a5a12, #e8b95e);
+  --palette-nordlicht: light-dark(#2f6f4f, #6be3b0);
+  --palette-monochrom: light-dark(#262626, #e8e8e8);
   color-scheme: light;
 }
 
@@ -124,9 +114,7 @@
   --accent: #ff9a57;
   --accent-hover: #ffb07a;
   --accent-contrast: #1b0f06;
-  --accent-soft: #2e241c;
   --warning: #e8b85a;
-  --success: #7fd3a3;
   --mod-lime: #c9d475;
   --mod-moss: #94c16f;
   --mod-fern: #99df98;
@@ -138,8 +126,6 @@
   --mod-violet: #f7aef0;
   --mod-orchid: #eb90ba;
   --mod-slate: #a9b7c0;
-  --sky-day-0: #1c3a5c;
-  --sky-day-1: #2e5a86;
   color-scheme: dark;
 }
 
@@ -159,9 +145,7 @@
     --accent: #ff9a57;
     --accent-hover: #ffb07a;
     --accent-contrast: #1b0f06;
-    --accent-soft: #2e241c;
     --warning: #e8b85a;
-    --success: #7fd3a3;
     --mod-lime: #c9d475;
     --mod-moss: #94c16f;
     --mod-fern: #99df98;
@@ -173,8 +157,6 @@
     --mod-violet: #f7aef0;
     --mod-orchid: #eb90ba;
     --mod-slate: #a9b7c0;
-    --sky-day-0: #1c3a5c;
-    --sky-day-1: #2e5a86;
     color-scheme: dark;
   }
 }

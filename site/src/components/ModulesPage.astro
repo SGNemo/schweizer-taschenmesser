@@ -1,0 +1,169 @@
+---
+/**
+ * /module: every shipped module by area, from the app's own catalogue (src/catalog/modules.json, shipped.ts). One
+ * picture slot (the module library). A module colour appears as the dot before its name, nowhere else.
+ */
+import { routes, t, type Locale } from '../i18n';
+import { areas, moduleCount } from '../catalog/shipped';
+import Slot from './Slot.astro';
+import Icon from './Icon.astro';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const s = t(locale);
+const m = s.modules;
+const rows = areas(locale);
+---
+<div class="wrap">
+  <header class="page-head top">
+    <div>
+      <h1>{m.h1}</h1>
+      <p class="lead">{m.lead(rows.length, moduleCount(rows))}</p>
+    </div>
+    <Slot name="library" alt={m.library.alt}>
+      <div class="stage">
+        <p class="title">{m.library.title}</p>
+        <ul class="lib">
+          {m.library.rows.map(([hue, name, state], n) => (
+            <li data-hue={hue}><i class="dot"></i><span>{name}</span><span class:list={['switch', { on: n < 2 }]}><i></i></span><span class="state">{state}</span></li>
+          ))}
+        </ul>
+      </div>
+    </Slot>
+  </header>
+
+  {rows.map((a) => (
+    <section class="ruled area" aria-labelledby={`area-${a.id}`}>
+      <div>
+        <h2 id={`area-${a.id}`}>{a.name}</h2>
+        <p class="muted">{m.areas[a.id as keyof typeof m.areas]}</p>
+      </div>
+      <ul class="mods">
+        {a.modules.map((mod) => (
+          <li data-hue={mod.hue}>
+            <h3><i class="dot"></i>{mod.name}</h3>
+            <p>{mod.short}</p>
+            {(mod.on || mod.platforms) && (
+              <p class="tags">
+                {mod.on && <span class="tag"><Icon name="check" size={14} />{m.on}</span>}
+                {mod.platforms && <span class="tag">{m.only[mod.platforms]}</span>}
+              </p>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+  <p class="meta end">{m.note} <a href={routes.home[locale]}>{s.legal.back}</a></p>
+</div>
+
+<style>
+  .top {
+    align-items: center;
+  }
+  .stage {
+    justify-items: stretch;
+    gap: var(--space-3);
+  }
+  .title {
+    font-weight: var(--weight-heavy);
+  }
+  .lib {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--space-2);
+  }
+  .lib li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto 2.5rem;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--surface);
+    border: var(--line) solid var(--border);
+    border-radius: var(--radius-md);
+  }
+  .switch {
+    width: 2.25rem;
+    height: 1.25rem;
+    padding: 0.125rem;
+    display: flex;
+    border-radius: var(--radius-full);
+    background: var(--border-strong);
+  }
+  .switch.on {
+    justify-content: flex-end;
+    background: var(--accent);
+  }
+  .switch i {
+    width: 1rem;
+    height: 1rem;
+    border-radius: var(--radius-full);
+    background: var(--surface);
+  }
+  .state {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+  }
+  .area {
+    display: grid;
+    gap: var(--space-5);
+  }
+  .mods {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: var(--space-5) var(--space-6);
+  }
+  .mods li {
+    display: grid;
+    gap: var(--space-1);
+    align-content: start;
+  }
+  .mods h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-lg);
+  }
+  .mods p {
+    color: var(--text-muted);
+  }
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    font-size: var(--text-sm);
+  }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+  .end {
+    padding-block: var(--space-6) var(--section);
+  }
+  .end a {
+    display: inline-block;
+    padding-block: var(--space-3);
+  }
+  @media (min-width: 40rem) {
+    .mods {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 64rem) {
+    .top {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
+      column-gap: clamp(2rem, 5vw, 5rem);
+    }
+    .area {
+      grid-template-columns: 14rem minmax(0, 1fr);
+      column-gap: clamp(2rem, 5vw, 5rem);
+    }
+    .mods {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>

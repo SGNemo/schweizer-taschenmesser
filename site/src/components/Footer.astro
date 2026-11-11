@@ -10,6 +10,10 @@ const choices = localesFor(route);
 <footer class="site-footer">
   <div class="wrap">
     <nav aria-label={s.a11y.footerNav}>
+      <a href={routes.modules[locale]}>{s.nav.modules}</a>
+      <a href={routes.data[locale]}>{s.nav.data}</a>
+      <a href={routes.install[locale]}>{s.nav.install}</a>
+      <a href={routes.support[locale]}>{s.nav.support}</a>
       <a href={REPO_URL} rel="noopener">{s.footer.github}</a>
       <a href={RELEASES_URL} rel="noopener">{s.footer.releases}</a>
       <a href={CHANGELOG_URL} rel="noopener">{s.footer.changelog}</a>
@@ -38,7 +42,7 @@ const choices = localesFor(route);
     border-top: 1px solid var(--border);
     padding-block: var(--space-4);
     font-size: var(--text-sm);
-    color: var(--text-3);
+    color: var(--text-muted);
   }
   .wrap {
     display: flex;
