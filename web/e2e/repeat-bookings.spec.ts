@@ -13,9 +13,9 @@ test('a monthly booking books the missed months at the next start; undo takes th
   const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
   await dialog.getByRole('button', { name: 'Ausgabe', exact: true }).click();
   await dialog.getByLabel('Betrag').fill('850,00');
+  await moreFields(page);
   await dialog.getByLabel('Datum').fill('2026-07-15');
   await dialog.getByLabel('Empfänger / Titel').fill('Miete');
-  await moreFields(page);
   await dialog.getByLabel('Wiederholen').selectOption('monthly');
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);

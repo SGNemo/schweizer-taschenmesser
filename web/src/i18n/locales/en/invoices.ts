@@ -56,14 +56,17 @@ export const invoices: Strings['invoices'] = {
     },
     openBooking: 'View transaction',
     head: {
-      count: (n: number) => (n === 1 ? '1 invoice' : `${n} invoices`),
-      next: (payee: string, date: string) => `Next: ${payee} on ${date}`,
       nothing: 'Nothing open',
       open: 'open',
-      overdue: (n: number) => `${n} overdue`,
-      nextShort: (payee: string, date: string) => `next ${payee}, ${date}`,
-      payNext: 'Pay next',
-      payNextName: (payee: string) => `Pay next: ${payee}`,
+      context: (n: number, overdue: number) => {
+        const count = n === 1 ? '1 invoice' : `${n} invoices`;
+        return overdue > 0 ? `${overdue} overdue · ${count}` : count;
+      },
+    },
+    detail: {
+      label: 'Invoice in detail',
+      eyebrow: 'Invoice',
+      rest: (rest: string, total: string) => `${rest} open of ${total}`,
     },
   },
   importDetail: (amount: string, due: string) => `${amount} · due ${due}`,

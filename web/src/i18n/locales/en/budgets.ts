@@ -35,13 +35,7 @@ export const budgets: Strings['budgets'] = {
       free: 'Still free',
       chip: (name: string, pct: number) => `${name} ${pct} %`,
       context: (n: number, over: number) =>
-        over === 0
-          ? n === 1
-            ? '1 budget, within limit'
-            : `${n} budgets, all within limit`
-          : n === 1
-            ? '1 budget, over'
-            : `${n} budgets, ${over} over`,
+        over > 0 ? `${over} of ${n} over` : n === 1 ? 'Within limit' : `All ${n} within limit`,
       ring: (n: number) => `Spending across ${n} budgets`,
     },
     goal: {
@@ -94,6 +88,8 @@ export const budgets: Strings['budgets'] = {
   nextMonth: 'Next month',
   emptyBudgets: 'No budgets yet. Set a monthly limit for an expense category.',
   emptyGoals: 'No savings goals yet.',
+  emptyBudgetAction: 'Add a budget',
+  emptyGoalAction: 'Add a savings goal',
   spentOf: (spent: string, limit: string) => `${spent} of ${limit}`,
   left: (amount: string) => `${amount} left`,
   over: (amount: string) => `${amount} over`,

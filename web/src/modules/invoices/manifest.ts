@@ -57,7 +57,7 @@ const manifest: ModuleManifest = {
   defaultEnabled: true,
   maturity: 'stable',
   seed: { version: 2, dependsOn: ['finance'] },
-  layout: 'wide',
+  layout: 'split',
   order: 50,
   area: 'money',
   automation: () => import('./automation'),

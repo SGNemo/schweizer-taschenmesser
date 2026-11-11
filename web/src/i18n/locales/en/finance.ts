@@ -2,7 +2,12 @@ import type { Strings } from '@/strings';
 
 export const finance: Strings['finance'] = {
   chartLegend: 'Legend',
+  emptyAction: 'Add a booking',
   ext: {
+    detail: {
+      label: 'Booking in detail',
+      eyebrow: (day: string) => `Booking · ${day}`,
+    },
     weekly: 'Weekly',
     subPrice: {
       title: (name: string, from: string, to: string) =>

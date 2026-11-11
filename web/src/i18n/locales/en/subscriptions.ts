@@ -32,9 +32,13 @@ export const subscriptions: Strings['subscriptions'] = {
     monthlyShort: (amount: string) => `${amount} / month`,
     top: { title: 'Most expensive', perYear: (amount: string) => `${amount} a year` },
     head: {
-      title: 'Next charges',
-      nothing: 'Nothing ahead',
-      on: (name: string, date: string, amount: string) => `${name}, ${date}: ${amount}`,
+      context: (n: number, soon: number) => {
+        const count = n === 1 ? '1 subscription' : `${n} subscriptions`;
+        return soon > 0
+          ? `${soon === 1 ? '1 deadline ends soon' : `${soon} deadlines end soon`} · ${count}`
+          : count;
+      },
+      alsoMonthly: 'also per month',
     },
     suggest: {
       apply: (amount: string) => `Take over the price: ${amount}`,
@@ -80,6 +84,7 @@ export const subscriptions: Strings['subscriptions'] = {
   pause: 'Pause',
   resume: 'Resume',
   empty: 'No subscriptions yet.',
+  emptyAction: 'Add a subscription',
   perMonth: 'Per month',
   perYear: 'Per year',
   nextCharge: 'Next charge',

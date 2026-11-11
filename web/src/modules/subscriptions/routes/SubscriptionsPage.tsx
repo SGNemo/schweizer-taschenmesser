@@ -8,8 +8,8 @@ import { formatDay, today } from '@/core/time/dates';
 import { changeWithUndo, deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import {
-  AdvancedToggle,
   Badge,
+  Button,
   EmptyState,
   Icon,
   ItemList,
@@ -17,6 +17,7 @@ import {
   PageAction,
   PageHeader,
   Switch,
+  useAdvancedMenuItem,
   useOpenParam,
 } from '@/ui';
 import { SubscriptionEditor, type SubscriptionTarget } from '../components/SubscriptionEditor';
@@ -36,9 +37,8 @@ import {
   cancelTone,
 } from '../logic';
 import { subscriptionRepo } from '../repo';
-import { NextChargesHead } from '../components/NextChargesHead';
 import { ServiceTile } from '../components/ServiceTile';
-import { HeroSlot, Ring, SignatureMark } from '@/ui/identity';
+import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import { useAdvanced } from '@/core/settings/comfort';
 import { tDeadline } from '@/strings.deadline';
 import styles from './subscriptions.module.css';
@@ -74,64 +74,60 @@ export default function SubscriptionsPage() {
   const [advanced] = useAdvanced('subscriptions');
   const top = advanced ? topExpensive(subs ?? [], day, 3) : [];
 
-  // Month cycle: the share of each active subscription (first currency) in the monthly sum, the biggest four.
-  const activeSubs = (subs ?? []).filter((s) => s.active);
-  const firstCurrency = activeSubs[0] ? currencyOf(activeSubs[0]) : undefined;
-  const monthly = activeSubs
-    .filter((s) => currencyOf(s) === firstCurrency)
-    .map((s) => ({ id: s.id, label: s.name, share: monthlyEquivalent(s) }))
-    .sort((a, b) => b.share - a.share);
-  const cycle = monthly.slice(0, 4);
+  const advancedItem = useAdvancedMenuItem('subscriptions');
+  // The head's one figure: the monthly sum of the main currency. Its context line leads with what needs a decision
+  // (cancellation deadlines that end soon) and then counts the active subscriptions.
+  const active = (subs ?? []).filter((s) => s.active);
+  const monthly = [...pickTotals(sums, 'monthly')];
+  const [main, ...otherMonthly] = monthly;
+  const soonCount = active.filter((s) => {
+    const cancel = nextCancelDeadline(s, day);
+    return cancel ? cancelTone(cancel.deadline, day)?.tone === 'soon' : false;
+  }).length;
+  const empty = !!subs && subs.length === 0;
+  const hasSubs = !!subs && subs.length > 0;
 
   return (
     <>
-      <PageHeader title={t.subscriptions.title}>
-        <AdvancedToggle moduleId="subscriptions" />
+      <PageHeader title={t.subscriptions.title} besideContent>
+        {/* While there is no subscription the empty state holds the one filled step (U26). */}
         <PageAction
           short={t.subscriptions.meta.quickAdd}
+          variant={empty ? 'secondary' : 'primary'}
           onClick={() => setTarget({ draft: true })}
         >
           <Icon name="plus" size={18} />
           {t.subscriptions.add}
         </PageAction>
-        <StartDataMenu moduleId="subscriptions" />
+        <StartDataMenu moduleId="subscriptions" items={[advancedItem]} />
       </PageHeader>
 
-      {cycle.length > 0 ? (
-        <HeroSlot area="signature">
-          <div className={styles.cycle} data-testid="cycle-ring">
-            <Ring
-              parts={cycle}
-              centre={<strong>{monthly.length}</strong>}
-              label={`${t.subscriptions.perMonth}: ${cycle.map((p) => p.label).join(', ')}`}
-              size={7.5}
-              segments={12}
-            />
-            <ul className={styles.cycleLegend}>
-              {cycle.map((p) => (
-                <li key={p.id}>{p.label}</li>
-              ))}
-            </ul>
-          </div>
+      {hasSubs ? (
+        <HeroSlot area="figure">
+          <HeroFigure
+            label={t.subscriptions.perMonth}
+            value={main ? formatMoney(main[1], main[0]) : formatMoney(0)}
+            detail={t.subscriptions.ext.head.context(active.length, soonCount)}
+            sensitive
+            testId="total-month"
+          />
         </HeroSlot>
       ) : null}
 
-      {subs ? <NextChargesHead subs={subs} /> : null}
-
-      <div className={styles.stats}>
-        <div className={styles.stat}>
-          <span className={styles.statLabel}>{t.subscriptions.perMonth}</span>
-          <span className={styles.statValue} data-testid="total-month">
-            {formatTotals(pickTotals(sums, 'monthly'))}
-          </span>
-        </div>
-        <div className={styles.stat}>
-          <span className={styles.statLabel}>{t.subscriptions.perYear}</span>
-          <span className={styles.statValue} data-testid="total-year">
-            {formatTotals(pickTotals(sums, 'yearly'))}
-          </span>
-        </div>
-      </div>
+      {/* One quiet line: the year (and the monthly sums of further currencies). The month stands in the head. */}
+      {hasSubs ? (
+        <p className={styles.totals}>
+          {t.subscriptions.perYear}{' '}
+          <b data-testid="total-year">{formatTotals(pickTotals(sums, 'yearly'))}</b>
+          {otherMonthly.length > 0 ? (
+            <>
+              {' · '}
+              {t.subscriptions.ext.head.alsoMonthly}{' '}
+              <b data-testid="total-month-other">{formatTotals(new Map(otherMonthly))}</b>
+            </>
+          ) : null}
+        </p>
+      ) : null}
 
       {top.length > 0 ? (
         <section aria-label={t.subscriptions.ext.top.title} data-testid="top-expensive">
@@ -151,12 +147,16 @@ export default function SubscriptionsPage() {
           </ul>
         </section>
       ) : null}
-      {subs && subs.length === 0 ? (
+      {empty ? (
         <EmptyState
           title={t.subscriptions.empty}
           testId="subscriptions-empty"
           motif={<SignatureMark id="cycle" size={64} />}
-        />
+        >
+          <Button variant="primary" onClick={() => setTarget({ draft: true })}>
+            {t.subscriptions.emptyAction}
+          </Button>
+        </EmptyState>
       ) : null}
       <ItemList label={t.subscriptions.title}>
         {subs?.map((s) => {
@@ -245,6 +245,7 @@ export default function SubscriptionsPage() {
                   <Switch
                     label={`${s.name}: ${t.subscriptions.active}`}
                     labelHidden
+                    tone="neutral"
                     checked={s.active}
                     onChange={toggle}
                   />

@@ -72,35 +72,19 @@ export function OverviewTab({
   const cmp = compareMonths(data.txs, month);
   const hasPrevious = data.txs.some((x) => x.date.slice(0, 7) < month);
   const trend = monthlyTrend(data.txs, month, 6);
-  const deducting = a?.deducting;
   const curve = monthBalanceSeries(data.accounts, data.txs, month, today());
 
   return (
     <>
-      {a ? (
-        <section
-          className={styles.hero}
-          aria-label={deducting ? t.finance.available : t.finance.balance}
-        >
-          <div className={styles.heroLabel}>
-            {deducting ? t.finance.available : t.finance.balance}
-          </div>
-          <div
-            className={`${styles.heroValue} ${(deducting ? a.available : a.balance) < 0 ? styles.negative : ''}`}
-            data-testid="hero"
-          >
-            {money(deducting ? a.available : a.balance)}
-          </div>
-          {deducting ? (
-            <div className={styles.heroNote} data-testid="hero-breakdown">
-              {t.finance.breakdown(
-                money(a.balance),
-                a.useInvoices && a.openInvoices ? money(a.openInvoices) : '',
-                a.useSubs && a.subscriptions ? money(a.subscriptions) : '',
-              )}
-            </div>
-          ) : null}
-        </section>
+      {/* The head carries the one large figure ("Verfügbar"); this line says what it is made of, once. */}
+      {a?.deducting ? (
+        <p className={styles.breakdown} data-testid="hero-breakdown">
+          {t.finance.breakdown(
+            money(a.balance),
+            a.useInvoices && a.openInvoices ? money(a.openInvoices) : '',
+            a.useSubs && a.subscriptions ? money(a.subscriptions) : '',
+          )}
+        </p>
       ) : null}
 
       <div className={styles.kpis}>

@@ -7,9 +7,7 @@ import { formatMonth, addMonthsToMonth, monthOf, today } from '@/core/time/dates
 import { YearView } from '../components/YearView';
 import { t } from '@/strings';
 import {
-  AdvancedToggle,
   Button,
-  Card,
   Icon,
   IconButton,
   PageAction,
@@ -17,6 +15,7 @@ import {
   Segmented,
   SplitView,
   Tabs,
+  useAdvancedMenuItem,
   useOpenParam,
   useSplitView,
 } from '@/ui';
@@ -25,11 +24,14 @@ import { OverviewTab } from '../components/OverviewTab';
 import { NetWorthTab } from '../components/NetWorthTab';
 import { AccountsTab, CategoriesTab, TransactionsTab } from '../components/Tabs';
 import { DEFAULT_CATEGORY_IDS, ensureDefaults, transactionRepo } from '../repo';
-import { useFinanceData } from '../summary';
+import { totalBalance, useAvailability, useFinanceData } from '../summary';
+import { formatMoney } from '@/core/money';
+import { TransactionDetail } from '../components/TransactionDetail';
+import type { Stored } from '@/core/db/types';
+import type { Transaction } from '../schema';
 import { CurrencyContext } from '../currency';
 import { currenciesOf, filterByCurrency } from '../logic';
-import { AccountCards } from '../components/AccountCards';
-import { HeroSlot } from '@/ui/identity';
+import { HeroFigure, HeroSlot } from '@/ui/identity';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import styles from './finance.module.css';
 
@@ -43,6 +45,10 @@ export default function FinancePage() {
   const [target, setTarget] = useState<TransactionTarget>(null);
   useOpenParam((id) => transactionRepo.get(id), setTarget);
   const wideScreen = useSplitView();
+  // Master–detail (layout `split`): on a wide page a booking opens in the panel beside the list, below that width
+  // in its dialog (a sheet on the phone).
+  const [picked, setPicked] = useState<{ id: string } | 'closed' | null>(null);
+  const advancedItem = useAdvancedMenuItem('finance');
 
   useEffect(() => {
     void ensureDefaults();
@@ -70,6 +76,13 @@ export default function FinancePage() {
   const view = data && currencies.length > 1 ? filterByCurrency(data, currency) : data;
   const rawMonth = params.get('month');
   const month = rawMonth && MONTH_RE.test(rawMonth) ? rawMonth : monthOf(today());
+
+  // The head's one figure: what is available (or the balance while nothing is deducted). The page below never
+  // repeats it; the line under the month says what it is made of.
+  const balance = totalBalance(view);
+  const availability = useAvailability(balance, currency);
+  const deducting = availability?.deducting;
+  const accountCount = view?.accounts.length ?? 0;
 
   const period = params.get('period') === 'year' ? 'year' : 'month';
   const rawYear = Number(params.get('year'));
@@ -99,10 +112,28 @@ export default function FinancePage() {
     }
   };
 
+  const canAdd = !!data && data.accounts.length > 0;
+  const addBooking = () => setTarget({ draft: true });
+  /** An account, but no booking yet. */
+  const firstUse = canAdd && data.txs.length === 0;
+
+  // The panel shows the picked booking, else the newest of the month (the list's first row), so a wide page has
+  // its detail from the start; "Details schließen" gives the list the whole width back.
+  const monthTxs = (view?.txs ?? [])
+    .filter((x) => x.date.slice(0, 7) === month && !x.transferId)
+    .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
+  const detail: Stored<Transaction> | undefined =
+    picked === 'closed'
+      ? undefined
+      : ((picked ? view?.txs.find((x) => x.id === picked.id) : undefined) ?? monthTxs[0]);
+  const openBooking = (tx: Stored<Transaction>) =>
+    wideScreen ? setPicked({ id: tx.id }) : setTarget(tx);
+
   return (
     <>
       <PageHeader
         title={t.finance.title}
+        besideContent
         views={
           <Tabs
             label={t.finance.tabsLabel}
@@ -112,22 +143,31 @@ export default function FinancePage() {
           />
         }
       >
-        <AdvancedToggle moduleId="finance" />
+        {/* While nothing is booked the empty state holds the one filled step (U26). */}
         <PageAction
           short={t.finance.addTransactionShort}
-          onClick={() => setTarget({ draft: true })}
+          variant={
+            firstUse && (tab === 'overview' || tab === 'transactions') ? 'secondary' : 'primary'
+          }
+          onClick={addBooking}
           aria-label={t.finance.addTransaction}
-          disabled={!data || data.accounts.length === 0}
+          disabled={!canAdd}
         >
           <Icon name="plus" size={18} />
           {t.finance.addTransactionShort}
         </PageAction>
-        <StartDataMenu moduleId="finance" />
+        <StartDataMenu moduleId="finance" items={[advancedItem]} />
       </PageHeader>
 
-      {view ? (
-        <HeroSlot area="signature">
-          <AccountCards data={view} />
+      {availability && accountCount > 0 ? (
+        <HeroSlot area="figure">
+          <HeroFigure
+            label={deducting ? t.finance.available : t.finance.balance}
+            value={formatMoney(deducting ? availability.available : availability.balance, currency)}
+            detail={t.finance.headline.accounts(accountCount)}
+            sensitive
+            testId="hero"
+          />
         </HeroSlot>
       ) : null}
 
@@ -173,7 +213,7 @@ export default function FinancePage() {
         </div>
       ) : null}
 
-      {tab === 'transactions' || (tab === 'overview' && period === 'month') ? (
+      {!firstUse && (tab === 'transactions' || (tab === 'overview' && period === 'month')) ? (
         <div className={styles.filter} role="group" aria-label={t.finance.month}>
           <IconButton
             label={t.finance.prevMonth}
@@ -200,22 +240,50 @@ export default function FinancePage() {
 
       {data && view ? (
         <CurrencyContext.Provider value={currency}>
-          {/* Wide screens: the month's bookings sit next to the overview instead of a tab away. */}
+          {/* Wide pages. Overview: the month's bookings sit next to it instead of a tab away. Buchungen: the list at
+              the page width, the picked booking in the panel (master–detail). */}
           <SplitView
-            enabled={wideScreen && tab === 'overview' && period === 'month'}
-            asideLabel={t.finance.tabs.transactions}
+            enabled={
+              wideScreen &&
+              ((tab === 'overview' && period === 'month' && !firstUse) ||
+                (tab === 'transactions' && detail !== undefined))
+            }
+            asideLabel={
+              tab === 'transactions' ? t.finance.ext.detail.label : t.finance.tabs.transactions
+            }
             aside={
-              <Card title={t.finance.tabs.transactions}>
-                <TransactionsTab data={view} month={month} onOpen={setTarget} />
-              </Card>
+              tab === 'transactions' && detail ? (
+                <TransactionDetail
+                  tx={detail}
+                  data={view}
+                  onEdit={() => setTarget(detail)}
+                  onClose={() => setPicked('closed')}
+                />
+              ) : (
+                <section aria-label={t.finance.tabs.transactions}>
+                  <h2 className={styles.asideTitle}>{t.finance.tabs.transactions}</h2>
+                  <TransactionsTab data={view} month={month} onOpen={setTarget} />
+                </section>
+              )
             }
           >
             {tab === 'overview' && period === 'month' ? (
-              <OverviewTab data={view} month={month} narrow={wideScreen} />
+              firstUse ? (
+                // B6: nothing booked yet: no row of zeros and no flat curve, one sentence and one verb.
+                <TransactionsTab data={view} month={month} onOpen={setTarget} onAdd={addBooking} />
+              ) : (
+                <OverviewTab data={view} month={month} narrow={wideScreen} />
+              )
             ) : null}
             {tab === 'overview' && period === 'year' ? <YearView data={view} year={year} /> : null}
             {tab === 'transactions' ? (
-              <TransactionsTab data={view} month={month} onOpen={setTarget} />
+              <TransactionsTab
+                data={view}
+                month={month}
+                onOpen={openBooking}
+                onAdd={canAdd ? addBooking : undefined}
+                selectedId={wideScreen ? detail?.id : undefined}
+              />
             ) : null}
             {tab === 'trend' ? <NetWorthTab data={view} /> : null}
             {tab === 'accounts' ? <AccountsTab data={data} /> : null}

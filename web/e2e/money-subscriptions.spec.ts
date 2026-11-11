@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { moreFields, ready, showAllWidgets } from './helpers';
+import { openEditor, togglePageMoreFields } from './money-helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -27,8 +28,13 @@ test.describe('Subscriptions: tiles, trial, category, price suggestion', () => {
   }) => {
     await addSubscription(page, 'Streaming Plus', '12,99', '2026-10-05');
     await save(page);
-    await expect(page.getByTestId('next-charges-head')).toContainText('Streaming Plus');
-    await expect(page.getByTestId('next-charges-head')).toContainText(/12,99\s€/);
+    // The next charge is the list's first row (sorted by the next charge), with its date and price; the head
+    // carries the monthly sum. The former "Nächste Abbuchungen" block repeated both (finding B2).
+    const first = rows(page).first();
+    await expect(first).toContainText('Streaming Plus');
+    await expect(first).toContainText('Nächste Abbuchung: 5. Okt. 2026');
+    await expect(first).toContainText(/12,99\s€/);
+    await expect(page.getByTestId('total-month')).toHaveText(/12,99\s€/);
 
     const yearly = await addSubscription(page, 'Jahres-Abo', '120,00', '2026-11-01');
     await yearly.getByLabel('Wiederholung').selectOption('yearly');
@@ -63,7 +69,7 @@ test.describe('Subscriptions: tiles, trial, category, price suggestion', () => {
       ),
     ).toBeLessThanOrEqual(1);
     // Category and payment method show in Erweitert.
-    await page.getByRole('switch', { name: 'Mehr Felder anzeigen' }).click();
+    await togglePageMoreFields(page);
     await expect(row).toContainText('Musik');
     await expect(row).toContainText('Visa');
     // The days left are said in the editor, next to the date.
@@ -87,6 +93,7 @@ test.describe('Subscriptions: tiles, trial, category, price suggestion', () => {
       const d = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
       await d.getByLabel('Betrag').fill('14,99');
       await d.getByLabel('Empfänger / Titel').fill('STREAMING PLUS 4711');
+      await moreFields(page);
       await d.getByLabel('Datum').fill(date);
       await d
         .getByRole('dialog')

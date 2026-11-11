@@ -9,7 +9,6 @@ import { groupByTime } from '@/core/time/groups';
 import { t } from '@/strings';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import {
-  AdvancedToggle,
   Button,
   EmptyState,
   GroupedList,
@@ -19,10 +18,14 @@ import {
   ItemRow,
   PageAction,
   PageHeader,
+  SplitView,
   StateBadge,
   Tabs,
+  useAdvancedMenuItem,
   useOpenParam,
+  useSplitView,
 } from '@/ui';
+import { InvoiceDetail } from '../components/InvoiceDetail';
 import { InvoiceEditor, type InvoiceTarget } from '../components/InvoiceEditor';
 import { markOpen } from '../actions';
 import { payWithUndo } from '../quickActions';
@@ -48,6 +51,11 @@ export default function InvoicesPage() {
   // F15: the row's pay button follows the page, not the window (icon below 48 rem of page).
   const narrow = usePageWidthAtLeast(48) === false;
   const navigate = useNavigate();
+  const advancedItem = useAdvancedMenuItem('invoices');
+  // Master–detail (layout `split`): on a wide page an invoice opens in the panel beside the list, below that width
+  // in its dialog (a sheet on the phone).
+  const wide = useSplitView();
+  const [picked, setPicked] = useState<{ id: string } | 'closed' | null>(null);
 
   // `?new=1` (Quick-Add) opens the create dialog; derived from the URL.
   const openTarget = target ?? (params.get('new') ? { draft: true as const } : null);
@@ -58,6 +66,12 @@ export default function InvoicesPage() {
 
   const shown = (invoices ?? []).filter((i) => view === 'all' || i.status === view);
   const emptyOpen = !!invoices && shown.length === 0 && view === 'open';
+  // The panel shows the picked invoice, else the first of the list, so a wide page has its detail from the start.
+  const detail =
+    picked === 'closed'
+      ? undefined
+      : ((picked ? shown.find((i) => i.id === picked.id) : undefined) ?? shown[0]);
+  const openRow = (i: Stored<Invoice>) => (wide ? setPicked({ id: i.id }) : setTarget(i));
 
   function renderRow(i: Stored<Invoice>) {
     const state = dueState(i.dueDate, day, { done: i.status === 'paid' });
@@ -87,7 +101,8 @@ export default function InvoicesPage() {
             aria-hidden="true"
           />
         }
-        onOpen={() => setTarget(i)}
+        current={wide && detail?.id === i.id}
+        onOpen={() => openRow(i)}
         onSwipeRight={i.status === 'open' ? () => void pay(i.id) : undefined}
         swipeRightLabel={t.invoices.markPaid}
         menu={
@@ -178,6 +193,7 @@ export default function InvoicesPage() {
     <>
       <PageHeader
         title={t.invoices.title}
+        besideContent
         views={
           <Tabs
             label={t.invoices.view}
@@ -191,7 +207,6 @@ export default function InvoicesPage() {
           />
         }
       >
-        <AdvancedToggle moduleId="invoices" />
         {/* U26: while the open list is empty, the empty state holds the one filled step. */}
         <PageAction
           short={t.invoices.meta.quickAdd}
@@ -201,38 +216,48 @@ export default function InvoicesPage() {
           <Icon name="plus" size={18} />
           {t.invoices.add}
         </PageAction>
-        <StartDataMenu moduleId="invoices" />
+        <StartDataMenu moduleId="invoices" items={[advancedItem]} />
       </PageHeader>
 
       {invoices ? <InvoicesHead invoices={invoices} /> : null}
 
-      <div className={styles.toolbar}>
-        <div className={styles.srOnly} aria-hidden="true">
-          <span className={styles.statLabel}>{t.invoices.openTotal}</span>
-          <span className={styles.statValue} data-testid="open-total">
-            {openTotalText(invoices ?? [])}
-          </span>
-        </div>
+      {/* The open sum stands in the head; this copy is a hook for tests only. */}
+      <div className={styles.srOnly} aria-hidden="true">
+        <span data-testid="open-total">{openTotalText(invoices ?? [])}</span>
       </div>
 
-      {invoices && shown.length === 0 ? (
-        <EmptyState
-          title={view === 'open' ? t.invoices.empty : t.invoices.emptyPaid}
-          testId="invoices-empty"
-          motif={<SignatureMark id="bill" size={64} />}
-        >
-          {emptyOpen ? (
-            <Button variant="primary" onClick={() => setTarget({ draft: true })}>
-              {t.invoices.add}
-            </Button>
-          ) : null}
-        </EmptyState>
-      ) : null}
-      {view === 'open' ? (
-        <GroupedList listId="invoices" groups={openGroups} label={t.invoices.title} />
-      ) : (
-        <ItemList label={t.invoices.title}>{shown.map((i) => renderRow(i))}</ItemList>
-      )}
+      <SplitView
+        enabled={wide && detail !== undefined}
+        asideLabel={t.invoices.ext.detail.label}
+        aside={
+          detail ? (
+            <InvoiceDetail
+              invoice={detail}
+              onEdit={() => setTarget(detail)}
+              onClose={() => setPicked('closed')}
+            />
+          ) : null
+        }
+      >
+        {invoices && shown.length === 0 ? (
+          <EmptyState
+            title={view === 'open' ? t.invoices.empty : t.invoices.emptyPaid}
+            testId="invoices-empty"
+            motif={<SignatureMark id="bill" size={64} />}
+          >
+            {emptyOpen ? (
+              <Button variant="primary" onClick={() => setTarget({ draft: true })}>
+                {t.invoices.add}
+              </Button>
+            ) : null}
+          </EmptyState>
+        ) : null}
+        {view === 'open' ? (
+          <GroupedList listId="invoices" groups={openGroups} label={t.invoices.title} />
+        ) : (
+          <ItemList label={t.invoices.title}>{shown.map((i) => renderRow(i))}</ItemList>
+        )}
+      </SplitView>
 
       <InvoiceEditor target={openTarget} onClose={closeEditor} onDuplicated={setTarget} />
     </>

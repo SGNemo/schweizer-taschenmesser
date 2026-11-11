@@ -28,27 +28,21 @@
   text-transform: uppercase;
 }
 
-/* Hero + KPI tiles */
-.hero {
-  margin-bottom: var(--space-5);
-}
-.heroLabel {
+/* KPI tiles; the line above them says what the head's figure is made of. */
+.breakdown {
+  margin: 0 0 var(--space-4);
   color: var(--text-muted);
   font-size: var(--text-sm);
-}
-.heroValue {
-  font-size: 3rem;
-  line-height: 1.1;
-  font-weight: var(--weight-semibold);
-  letter-spacing: -0.02em;
+  font-variant-numeric: var(--font-num);
 }
 .negative {
   color: var(--danger);
 }
-.heroNote {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  margin-top: var(--space-1);
+/* Heading of the bookings beside the overview (wide pages). */
+.asideTitle {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
 }
 .kpis {
   display: grid;
@@ -181,20 +175,6 @@
   color: var(--text-muted);
   margin: var(--space-4) 0 var(--space-2);
 }
-.row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  min-height: var(--touch);
-  padding: var(--space-2) var(--space-3);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  text-align: left;
-  color: inherit;
-  cursor: pointer;
-}
 .rowMain {
   flex: 1;
   min-width: 0;
@@ -241,12 +221,16 @@
   color: var(--text-muted);
   font-size: var(--text-sm);
 }
+/* Phone: the three figures stay side by side (content from the first screen); an amount wraps, it is never cut. */
 @media (max-width: 520px) {
-  .heroValue {
-    font-size: 2.5rem;
-  }
   .kpis {
-    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+  .kpis > * {
+    padding: var(--space-3);
+  }
+  .kpiValue {
+    font-size: var(--text-md);
   }
 }
 
@@ -273,19 +257,21 @@
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-2) var(--space-3);
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--surface-raised);
   border-radius: var(--radius-md);
 }
 
-/* Identity v2: account cards in the head, month curve, category ring. */
+/* The account cards (the module's signature) head the "Konten" tab; month curve, category ring. On tone steps a
+   card casts no shadow. */
 .cards {
   display: flex;
   gap: var(--space-3);
   align-items: flex-start;
+  margin-bottom: var(--space-4);
 }
 .cards > * {
   width: 15rem;
+  box-shadow: none;
 }
 .cards > *:nth-child(2) {
   --module-color: var(--module-color-2);
@@ -394,7 +380,9 @@
 .splitBox {
   display: grid;
   gap: var(--space-3);
-  border: 1px solid var(--border);
+  /* A quiet area inside the dialog (tone step), no frame. */
+  border: 0;
+  background: var(--surface-2);
   border-radius: var(--radius-md);
   padding: var(--space-3);
 }

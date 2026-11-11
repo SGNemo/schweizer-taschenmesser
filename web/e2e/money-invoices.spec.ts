@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { moreFields, ready, showAllWidgets } from './helpers';
+import { openEditor } from './money-helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -32,7 +33,7 @@ test.describe('Invoices: part payments, payment data, attachment', () => {
     page,
   }) => {
     await addInvoice(page, 'Stadtwerke', '100,00', '2026-10-05');
-    await page.getByRole('button', { name: /^Stadtwerke/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /^Stadtwerke/ }));
     const dialog = page.getByRole('dialog', { name: 'Rechnung bearbeiten' });
     await dialog.getByLabel('Gezahlte Summe').fill('40,00');
     await dialog.getByRole('button', { name: 'Teilzahlung erfassen' }).click();
@@ -75,7 +76,7 @@ test.describe('Invoices: part payments, payment data, attachment', () => {
     );
 
     await ready(page, '/invoices');
-    await page.getByRole('button', { name: /^Stadtwerke/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /^Stadtwerke/ }));
     const again = page.getByRole('dialog', { name: 'Rechnung bearbeiten' });
     await again.getByLabel('Gezahlte Summe').fill('60,00');
     await again.getByRole('button', { name: 'Teilzahlung erfassen' }).click();
@@ -87,7 +88,7 @@ test.describe('Invoices: part payments, payment data, attachment', () => {
 
   test('a payment above the rest is refused with the rest named', async ({ page }) => {
     await addInvoice(page, 'Stadtwerke', '100,00', '2026-10-05');
-    await page.getByRole('button', { name: /^Stadtwerke/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /^Stadtwerke/ }));
     const dialog = page.getByRole('dialog', { name: 'Rechnung bearbeiten' });
     await dialog.getByLabel('Gezahlte Summe').fill('150,00');
     await dialog.getByRole('button', { name: 'Teilzahlung erfassen' }).click();
@@ -129,7 +130,7 @@ test.describe('Invoices: part payments, payment data, attachment', () => {
 
   test('a photo is attached, previewed and still there after reopening', async ({ page }) => {
     await addInvoice(page, 'Stadtwerke', '89,90', '2026-10-05');
-    await page.getByRole('button', { name: /^Stadtwerke/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /^Stadtwerke/ }));
     const dialog = page.getByRole('dialog', { name: 'Rechnung bearbeiten' });
     await moreFields(page);
     await dialog.locator('input[type="file"]').setInputFiles({
@@ -141,16 +142,24 @@ test.describe('Invoices: part payments, payment data, attachment', () => {
     await expect(dialog.getByText('bleibt auf diesem Gerät')).toBeVisible();
     await save(page);
 
-    await page.getByRole('button', { name: /^Stadtwerke/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /^Stadtwerke/ }));
     const again = page.getByRole('dialog', { name: 'Rechnung bearbeiten' });
     await moreFields(page);
     await expect(again.getByRole('img', { name: 'Vorschau: beleg.png' })).toBeVisible();
   });
 
-  test('the head shows the open sum and pays the next invoice', async ({ page }) => {
+  test('the head shows the open sum; the first row pays the next invoice', async ({ page }) => {
     await addInvoice(page, 'Stadtwerke', '89,90', '2026-10-05');
     await expect(page.getByTestId('invoices-head')).toContainText(/89,90\s€/);
-    await page.getByRole('button', { name: 'Nächste bezahlen: Stadtwerke' }).click();
+    await expect(page.getByTestId('invoices-head')).toContainText('1 Rechnung');
+    // The head has no "Nächste bezahlen" any more (one entry per page): the invoice due first is the first row
+    // of the list, and its own button pays it.
+    await expect(page.getByRole('button', { name: /Nächste bezahlen/ })).toHaveCount(0);
+    await page
+      .getByRole('listitem')
+      .filter({ hasText: 'Stadtwerke' })
+      .getByRole('button', { name: 'Als bezahlt markieren' })
+      .click();
     await expect(page.getByTestId('invoices-head')).toContainText('Nichts offen');
   });
 });

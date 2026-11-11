@@ -7,7 +7,7 @@ import { currencyOf, formatMoneyInput, parseMoney } from '@/core/money';
 import { today } from '@/core/time/dates';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { Button, Dialog, patternStyles, SelectField, TextField } from '@/ui';
+import { Button, Dialog, FormActions, SelectField, TextField } from '@/ui';
 import { transactionRepo } from '../repo';
 import { buildTransfer, transferValid } from '../transfer';
 import type { Transaction } from '../schema';
@@ -159,29 +159,28 @@ function TransferForm({
         />
       </div>
       <TextField label={t.form.note} value={note} onChange={(ev) => setNote(ev.target.value)} />
-      <div className={styles.actions}>
-        {existing ? (
-          <Button
-            variant="danger"
-            onClick={async () => {
-              await deleteWithUndo(() =>
-                transactionRepo.removeMany([existing.out.id, existing.in.id]),
-              );
-              onClose();
-            }}
-          >
-            {t.actions.delete}
-          </Button>
-        ) : (
-          <span />
-        )}
-        <span className={patternStyles.hstack}>
-          <Button onClick={onClose}>{t.actions.cancel}</Button>
-          <Button type="submit" variant="primary">
-            {t.actions.save}
-          </Button>
-        </span>
-      </div>
+      <FormActions
+        start={
+          existing ? (
+            <Button
+              variant="danger"
+              onClick={async () => {
+                await deleteWithUndo(() =>
+                  transactionRepo.removeMany([existing.out.id, existing.in.id]),
+                );
+                onClose();
+              }}
+            >
+              {t.actions.delete}
+            </Button>
+          ) : undefined
+        }
+      >
+        <Button onClick={onClose}>{t.actions.cancel}</Button>
+        <Button type="submit" variant="primary">
+          {t.actions.save}
+        </Button>
+      </FormActions>
     </form>
   );
 }

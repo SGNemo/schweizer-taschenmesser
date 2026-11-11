@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { ready, showAllWidgets } from './helpers';
+import { openEditor, togglePageMoreFields } from './money-helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -16,7 +17,7 @@ test('an account in another currency is shown in its currency and never mixed in
   page,
 }) => {
   await ready(page, '/finance?tab=accounts');
-  await page.getByRole('switch', { name: 'Mehr Felder anzeigen' }).click();
+  await togglePageMoreFields(page);
   await page.getByRole('button', { name: 'Konto hinzufügen' }).click();
   await page.getByLabel('Kontoname').fill('Peso');
   await page.getByLabel('Anfangssaldo').fill('8.500,00');
@@ -68,8 +69,9 @@ test('a subscription in another currency gets its own total next to the euro one
   await dialog.getByLabel('Währung', { exact: true }).selectOption('MXN');
   await save(page);
 
-  // Euro first, then pesos; the two are never added together.
+  // Euro in the head's figure, pesos in the line below it; the two are never added together.
   await expect(page.getByTestId('total-month')).toHaveText(/12,99\s€/);
-  await expect(page.getByTestId('total-month')).toContainText(/MXN|MX\$/);
-  await expect(page.getByTestId('total-month')).toHaveText(/600[.,]00/);
+  await expect(page.getByTestId('total-month')).not.toContainText(/MXN|MX\$/);
+  await expect(page.getByTestId('total-month-other')).toContainText(/MXN|MX\$/);
+  await expect(page.getByTestId('total-month-other')).toHaveText(/600[.,]00/);
 });
