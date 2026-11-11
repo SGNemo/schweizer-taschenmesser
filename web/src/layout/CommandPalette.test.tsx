@@ -23,7 +23,8 @@ import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
 import { useUiStore } from '@/stores/ui';
 import { AnswerView } from './assistant/AnswerView';
-import { CommandPalette, filterCommands, normalize } from './CommandPalette';
+import { readCaptureDraft } from '@/quickCapture/ui/draft';
+import { CommandPalette, filterCommands, normalize, readQuery } from './CommandPalette';
 
 async function patchToolsEnabled(enabled: Record<string, boolean>) {
   await setSettings(TOOLS_SCOPE, { enabled, order: [] });
@@ -101,9 +102,49 @@ describe('command palette', () => {
         <CommandPalette />
       </MemoryRouter>,
     );
+    await user.type(await screen.findByRole('combobox'), '?zzzzz');
+    expect(screen.getAllByRole('option')[0]).toHaveTextContent(`${t.ai.palette.askLocal}: „zzzzz“`);
+  });
+
+  it('free text that is no question goes to quick capture on Enter, never to the assistant', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <CommandPalette />
+      </MemoryRouter>,
+    );
     await user.type(await screen.findByRole('combobox'), 'zzzzz');
-    expect(screen.getAllByRole('option')).toHaveLength(1);
-    expect(screen.getByRole('option')).toHaveTextContent(`${t.ai.palette.askLocal}: „zzzzz“`);
+    const options = screen.getAllByRole('option');
+    expect(options[0]).toHaveTextContent(`${t.palette.capture}: „zzzzz“`);
+    expect(options[1]).toHaveTextContent(t.ai.palette.askLocal); // asking stays one step away
+    expect(screen.getByText(t.palette.questionHint)).toBeInTheDocument();
+    await user.keyboard('{Enter}');
+    expect(screen.queryByTestId('ai-answer')).toBeNull();
+    expect(useUiStore.getState().paletteOpen).toBe(false);
+    expect(useUiStore.getState().quickAddOpen).toBe(true);
+    expect(readCaptureDraft()).toBe('zzzzz');
+    expect(readRecent()).toEqual([]); // typed text is never remembered
+    useUiStore.setState({ quickAddOpen: false });
+  });
+
+  it('"?" at the start or the end, a question word and a phrase the local parser knows ask first', () => {
+    for (const q of ['?zzzzz', 'zzzzz?', 'Was steht heute an', 'offene Rechnungen'])
+      expect(readQuery(q, []).asks, q).toBe(true);
+    expect(readQuery('?  zzzzz', []).text).toBe('zzzzz');
+    for (const q of ['zzzzz', 'Milch kaufen', 'Oma anrufen wegen Sonntag'])
+      expect(readQuery(q, []).asks, q).toBe(false);
+  });
+
+  it('"?" puts the question before a command that shares a word with it', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <CommandPalette />
+      </MemoryRouter>,
+    );
+    await user.type(await screen.findByRole('combobox'), '?einst');
+    expect(screen.getAllByRole('option')[0]).toHaveTextContent(`${t.ai.palette.askLocal}: „einst“`);
+    expect(screen.queryByRole('option', { name: new RegExp(t.palette.capture) })).toBeNull();
   });
 
   it('calculates arithmetic on the spot, before the assistant, without leaving the palette', async () => {
@@ -116,7 +157,7 @@ describe('command palette', () => {
     await user.type(await screen.findByRole('combobox'), '240 + 19%');
     const options = screen.getAllByRole('option');
     expect(options[0]).toHaveTextContent('240 + 19% = 285,6');
-    expect(options[1]).toHaveTextContent(t.ai.palette.askLocal);
+    expect(options[1]).toHaveTextContent(t.ai.palette.askLocal); // an answered line is no entry
     await user.type(screen.getByRole('combobox'), '{Enter}');
     expect(useUiStore.getState().paletteOpen).toBe(true); // copying does not close it
   });
@@ -300,7 +341,7 @@ describe('assistant in the palette', () => {
     );
     await screen.findByRole('combobox');
     expect(screen.queryByRole('option', { name: /offene Rechnungen/ })).toBeNull();
-    await user.type(screen.getByRole('combobox'), 'meine frage{Enter}');
+    await user.type(screen.getByRole('combobox'), 'meine frage?{Enter}');
     expect(localStorage.getItem('tm-recent-search') ?? '').not.toMatch(/offene|frage/);
   });
 

@@ -1,7 +1,10 @@
 package io.github.sgnemo.taschenmesser.securestore
 
 import android.app.Activity
+import android.app.KeyguardManager
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
@@ -50,6 +53,12 @@ class UnsealArgs {
     lateinit var title: String
     lateinit var subtitle: String
     lateinit var cancel: String
+}
+
+@InvokeArg
+class ConfirmArgs {
+    lateinit var title: String
+    lateinit var subtitle: String
 }
 
 @InvokeArg
@@ -299,6 +308,104 @@ class SecureStorePlugin(private val activity: Activity) : Plugin(activity) {
         invoke.resolve()
     }
 
+    /* ---- user presence (no key, nothing stored) ---- */
+
+    /**
+     * Asks the person to prove they are there – fingerprint, face, or the device's PIN/pattern/password –
+     * without any key and without storing anything (the vault's biometric key is not touched). Only Rust
+     * calls this: no plugin command of the webview maps to it.
+     * `status`: "ok", "cancelled" (also: nobody answered in time), "none" (the device has no screen
+     * lock at all) or "unavailable" (it has one the system cannot ask for). Any error is rejected: an
+     * error is never a pass.
+     */
+    @Command
+    fun confirmUser(invoke: Invoke) {
+        val args = invoke.parseArgs(ConfirmArgs::class.java)
+        fun answer(status: String) {
+            val ret = JSObject()
+            ret.put("status", status)
+            invoke.resolve(ret)
+        }
+        val host = activity as? FragmentActivity
+        if (host == null) {
+            invoke.reject("the activity cannot show a prompt")
+            return
+        }
+        // A weak biometric or the device credential: this combination is supported on every API level
+        // (strong + credential is not on Android 9/10).
+        val allowed = BiometricManager.Authenticators.BIOMETRIC_WEAK or
+            BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        val keyguard = activity.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+        if (keyguard == null) {
+            invoke.reject("no keyguard service")
+            return
+        }
+        if (!keyguard.isDeviceSecure) {
+            answer("none")
+            return
+        }
+        if (BiometricManager.from(activity).canAuthenticate(allowed) != BiometricManager.BIOMETRIC_SUCCESS) {
+            // a lock is set, but the system cannot ask for it here: its own answer, so that the
+            // caller can tell it from a failed attempt
+            answer("unavailable")
+            return
+        }
+        activity.runOnUiThread {
+            // Everything in here runs on the main thread: the prompt's callbacks and the timer. The
+            // call is answered exactly once, by whichever comes first.
+            var done = false
+            val timer = Handler(Looper.getMainLooper())
+            fun finish(reply: () -> Unit) {
+                if (done) return
+                done = true
+                timer.removeCallbacksAndMessages(null)
+                reply()
+            }
+            try {
+                // The prompt shows nothing (and calls nothing back) once the activity's state is saved,
+                // e.g. the person left the app in this very moment: that is a dismissal.
+                if (host.isFinishing || host.isDestroyed || host.supportFragmentManager.isStateSaved) {
+                    finish { answer("cancelled") }
+                    return@runOnUiThread
+                }
+                val callback = object : BiometricPrompt.AuthenticationCallback() {
+                    override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                        finish { answer("ok") }
+                    }
+
+                    override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                        when (errorCode) {
+                            BiometricPrompt.ERROR_USER_CANCELED,
+                            BiometricPrompt.ERROR_NEGATIVE_BUTTON,
+                            BiometricPrompt.ERROR_CANCELED -> finish { answer("cancelled") }
+                            else -> finish { invoke.reject(errString.toString()) }
+                        }
+                    }
+                }
+                val prompt = BiometricPrompt(host, ContextCompat.getMainExecutor(activity), callback)
+                // Nobody answered in time: the prompt is taken off the screen and the call ends as a
+                // dismissal, so the caller never waits for good and no stale prompt stays up.
+                timer.postDelayed({
+                    finish { answer("cancelled") }
+                    try {
+                        prompt.cancelAuthentication()
+                    } catch (_: Exception) {
+                    }
+                }, CONFIRM_WAIT_MS)
+                // No negative button: with the device credential allowed the system brings its own way out,
+                // and setting one would throw.
+                val info = BiometricPrompt.PromptInfo.Builder()
+                    .setTitle(args.title)
+                    .setSubtitle(args.subtitle)
+                    .setAllowedAuthenticators(allowed)
+                    .build()
+                prompt.authenticate(info)
+            } catch (e: Exception) {
+                finish { invoke.reject(e.message ?: e.javaClass.simpleName) }
+            }
+        }
+    }
+
     /* ---- screenshot protection ---- */
 
     @Command
@@ -319,6 +426,9 @@ class SecureStorePlugin(private val activity: Activity) : Plugin(activity) {
 
     private companion object {
         const val ANDROID_KEYSTORE = "AndroidKeyStore"
+
+        /** How long the presence prompt waits for the person before it gives up. */
+        const val CONFIRM_WAIT_MS = 120_000L
         const val TRANSFORM = "AES/GCM/NoPadding"
         const val SECRETS_ALIAS = "taschenmesser.secrets.v1"
         const val BIOMETRIC_ALIAS = "taschenmesser.biometric.v1"

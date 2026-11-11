@@ -156,7 +156,7 @@ const HOST_REASONS: [RegExp, NetReason][] = [
     'ai',
   ],
   [
-    /(^|\.)googleapis\.com$|^accounts\.google\.com$|(^|\.)spotify\.com$|(^|\.)scdn\.co$/,
+    /(^|\.)googleapis\.com$|^accounts\.google\.com$|(^|\.)spotify\.com$|(^|\.)scdn\.co$|(^|\.)spotifycdn\.com$/,
     'connector',
   ],
 ];

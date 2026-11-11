@@ -7,6 +7,10 @@ import { getLang } from '@/core/i18n/lang';
 import { getPlatform } from '@/core/platform';
 import { useWriteLabel } from '@/core/shell/writeAvailable';
 import { detectIntent } from '@/core/ai/write/rules/intent';
+import { parseIntent } from '@/core/ai/intent/parser';
+import { today } from '@/core/time/dates';
+import { useCaptureTypes } from '@/quickCapture/ui/useCaptureTypes';
+import { writeCaptureDraft } from '@/quickCapture/ui/draft';
 import { useAiWriteSettings } from '@/core/ai/write/settings';
 import { calculate, calculateExpression, type ExpressionAnswer } from '@/core/calc/phrases';
 import { activeManifests } from '@/core/modules/contributions';
@@ -114,7 +118,34 @@ type Option = { recent?: boolean } & (
   | { kind: 'tool'; key: string; label: string; icon: IconName; answer: ToolAnswer }
   | { kind: 'calc'; key: string; label: string; icon: IconName; copy?: string }
   | { kind: 'ask'; key: string; label: string; icon: IconName; forceModel: boolean }
+  | { kind: 'capture'; key: string; label: string; icon: IconName }
 );
+
+/** A line the calculator or a tool already answered is neither a question nor an entry. */
+const answered = (o: Option): boolean => o.kind === 'calc' || o.kind === 'tool';
+
+/** The typed text without the "?" that only marks it as a question. */
+const ASK_MARK = /^\?+\s*/;
+export const questionText = (query: string): string => query.trim().replace(ASK_MARK, '');
+
+/**
+ * What Enter means for free text: a "?" at the start or the end, a question word, or a phrase the local parser
+ * answers on the device asks; everything else is handed to quick capture. The leading "?" is not part of the question.
+ */
+export function readQuery(
+  query: string,
+  manifests: Parameters<typeof detectIntent>[1],
+): { text: string; asks: boolean; explicit: boolean; intent: ReturnType<typeof detectIntent> } {
+  const trimmed = query.trim();
+  const text = questionText(query);
+  const explicit = text !== trimmed || text.endsWith('?');
+  const intent = detectIntent(text, manifests);
+  const asks =
+    explicit ||
+    intent === 'question' ||
+    (text !== '' && parseIntent(text, { today: today() }).kind === 'intent');
+  return { text, asks, explicit, intent };
+}
 
 function PaletteBody({ onDone }: { onDone: () => void }) {
   const navigate = useNavigate();
@@ -128,6 +159,9 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
   const [writeSettings] = useAiWriteSettings();
   const states = useModuleStates();
   const showPreview = useUiStore((s) => s.showPreview);
+  const write = useWriteLabel();
+  const captureTypes = useCaptureTypes().available;
+  const canCapture = captureTypes.length > 0;
   const { pathname } = useLocation();
   // Inside a module its entries are the default target of a sentence without a module word.
   const preferModule = availableManifests().find(
@@ -463,11 +497,17 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         copy: a.copy,
       });
     }
+    const read = readQuery(query, states ? activeManifests(states) : []);
     const writeIntent =
       aiOn &&
-      query.trim() !== '' &&
+      read.text !== '' &&
       writeSettings?.enabled !== false &&
-      (writeMode || detectIntent(query, states ? activeManifests(states) : []) === 'write');
+      (writeMode || (!read.explicit && read.intent === 'write'));
+    // Free text that is no question goes to quick capture (local, never the assistant): Enter enters it.
+    const capture: Option | undefined =
+      canCapture && read.text !== '' && !read.asks && !writeMode && !list.some(answered)
+        ? { kind: 'capture', key: 'capture', label: t.palette.capture, icon: 'plus' }
+        : undefined;
     if (writeIntent) {
       // An entry first: Enter must not jump to a module that merely shares a word with the sentence.
       list.unshift({
@@ -478,7 +518,19 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         forceModel: false,
       });
     }
-    if (aiOn && query.trim()) {
+    if (capture && !writeIntent) {
+      list.push(capture);
+      // Inside a module the write rules stay one explicit step away ("Mit KI eintragen" / "Satz eintragen").
+      if (aiOn && preferModule && writeSettings?.enabled)
+        list.push({
+          kind: 'ask',
+          key: 'ask-write',
+          label: write.label,
+          icon: write.ai ? 'sparkles' : 'plus',
+          forceModel: false,
+        });
+    }
+    if (aiOn && read.text) {
       if (!writeIntent) {
         list.push({
           kind: 'ask',
@@ -497,6 +549,14 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
           forceModel: true,
         });
       }
+    }
+    // A sentence the write rules read keeps "Eintragen" first; quick capture stays one step below it.
+    if (capture && writeIntent) list.splice(1, 0, capture);
+    // "?" says what is meant: the question comes before commands that merely share a word with it.
+    if (read.explicit && !writeIntent) {
+      const asks = list.filter((o) => o.kind === 'ask');
+      if (asks.length > 0)
+        list.splice(0, list.length, ...asks, ...list.filter((o) => o.kind !== 'ask'));
     }
     // "Einstellung: …" says what is meant: then the settings come first.
     if (normalize(query).startsWith(t.palette.settingsPrefix)) list.unshift(...settingOptions);
@@ -525,7 +585,13 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
     writeSettings?.enabled,
     states,
     exprAnswer,
+    canCapture,
+    preferModule,
+    write.label,
+    write.ai,
   ]);
+
+  const question = questionText(query);
 
   const remember = (entry: RecentEntry) => {
     if (focus.searchHistory) addRecent(entry);
@@ -535,7 +601,14 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
     if (!o) return;
     if (o.kind === 'ask') {
       // Questions are never remembered: people type secrets into search fields.
-      return void submit(query.trim(), o.forceModel, preferModule);
+      return void submit(query.trim().replace(ASK_MARK, ''), o.forceModel, preferModule);
+    }
+    if (o.kind === 'capture') {
+      // Handed over as the capture draft: the sheet shows what it read, and Enter there saves. Never remembered.
+      writeCaptureDraft(question);
+      onDone();
+      useUiStore.getState().setQuickAddOpen(true);
+      return;
     }
     if (o.kind === 'tool') {
       const { run: act, copy } = o.answer;
@@ -567,7 +640,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
     } else if (o.kind === 'command') {
       remember({ kind: 'command', key: o.command.id, label: o.label });
       o.command.run();
-    } else if (o.row.to) {
+    } else if (o.kind === 'hit' && o.row.to) {
       remember({
         kind: 'hit',
         key: `h-${o.row.subtitle ?? ''}-${o.row.id}`,
@@ -646,7 +719,9 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
               {/* A hit from the vault names a document: the reading aid stays off for the whole row, as on the vault page. */}
               <ReadAidGate off={o.kind === 'hit' && isCredentialPath(o.row.to)}>
                 <span className={styles.optionText}>
-                  {o.kind === 'ask' ? `${o.label}: ${quoted(query.trim())}` : o.label}
+                  {o.kind === 'ask' || o.kind === 'capture'
+                    ? `${o.label}: ${quoted(question)}`
+                    : o.label}
                   {o.kind === 'setting' ? (
                     <span className={styles.optionMeta}>{o.hit.path}</span>
                   ) : null}
@@ -663,6 +738,9 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
           ))}
         </ul>
       )}
+      {aiOn && options[0]?.kind === 'capture' ? (
+        <p className={styles.hint}>{t.palette.questionHint}</p>
+      ) : null}
     </>
   );
 }

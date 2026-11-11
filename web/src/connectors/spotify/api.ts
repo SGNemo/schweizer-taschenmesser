@@ -1,4 +1,4 @@
-import { COVER_URL } from '@/core/connectors/coverUrl';
+import { coverCandidates, pickCover } from '@/core/connectors/coverUrl';
 import { z } from 'zod';
 import {
   ConnectorError,
@@ -37,19 +37,12 @@ const playingSchema = z.object({
 
 export const clip = (text: string): string => text.trim().slice(0, MAX_TEXT);
 
-/** Covers come from Spotify's own image host only; anything else is never fetched. */
-export { COVER_URL };
-
-/** The smallest image that is still at least 64 px wide (a widget cover needs no more); else the first. */
-export function pickCover(
-  images: { url: string; width?: number | null }[] | undefined,
-): string | undefined {
-  const ok = (images ?? []).filter((i) => COVER_URL.test(i.url));
-  const sized = ok
-    .filter((i) => (i.width ?? 0) >= 64)
-    .sort((a, b) => (a.width ?? 0) - (b.width ?? 0));
-  return (sized[0] ?? ok[0])?.url;
-}
+type RawImages = { url: string; width?: number | null }[] | null | undefined;
+/** The cover fields of an item: the small default (`coverUrl`, at least 64 px) and every size that passed the host rule. */
+export const coverOf = (images: RawImages) => ({
+  coverUrl: pickCover(images),
+  covers: coverCandidates(images),
+});
 
 /**
  * `GET /me/player/currently-playing` (200 body) → what the line shows. A track gives its first artist,
@@ -74,7 +67,7 @@ export function parseCurrentlyPlaying(json: unknown): NowPlaying | undefined {
     playing: is_playing === true,
     trackUrl: url && OPEN_URL.test(url) ? url : undefined,
     album: album || undefined,
-    coverUrl: pickCover(kind === 'episode' ? item.images : item.album?.images),
+    ...coverOf(kind === 'episode' ? item.images : item.album?.images),
     progressMs: parsed.data.progress_ms ?? undefined,
     durationMs: item.duration_ms,
   };
@@ -198,7 +191,7 @@ export async function listPlaylists(ctx: ConnectorContext): Promise<Playlist[]> 
           id: p.id,
           name: clip(p.name),
           trackCount: p.tracks?.total ?? p.items?.total ?? undefined,
-          coverUrl: pickCover(p.images ?? undefined),
+          ...coverOf(p.images),
           owner: p.owner?.display_name ? clip(p.owner.display_name) : undefined,
         });
     // Only follow a link that stays on the API host, never one the response made up.
@@ -264,13 +257,22 @@ const searchSchema = z.object({
             id: z.string(),
             name: z.string(),
             artists: z.array(z.object({ name: z.string() })).optional(),
+            album: z
+              .object({ name: z.string().nullish(), images: z.array(imageSchema).nullish() })
+              .nullish(),
           })
           .nullable(),
       ),
     })
     .optional(),
   playlists: z
-    .object({ items: z.array(z.object({ id: z.string(), name: z.string() }).nullable()) })
+    .object({
+      items: z.array(
+        z
+          .object({ id: z.string(), name: z.string(), images: z.array(imageSchema).nullish() })
+          .nullable(),
+      ),
+    })
     .optional(),
   albums: z
     .object({
@@ -280,6 +282,7 @@ const searchSchema = z.object({
             id: z.string(),
             name: z.string(),
             artists: z.array(z.object({ name: z.string() })).optional(),
+            images: z.array(imageSchema).nullish(),
           })
           .nullable(),
       ),
@@ -287,7 +290,13 @@ const searchSchema = z.object({
     .optional(),
 });
 
-type Named = { id: string; name: string; artists?: { name: string }[] } | null;
+type Named = {
+  id: string;
+  name: string;
+  artists?: { name: string }[];
+  images?: RawImages;
+  album?: { name?: string | null; images?: RawImages } | null;
+} | null;
 const toItems = (kind: MediaItem['kind'], list: Named[] | undefined): MediaItem[] =>
   (list ?? []).flatMap((x) =>
     x && ID.test(x.id) && x.name.trim()
@@ -297,6 +306,9 @@ const toItems = (kind: MediaItem['kind'], list: Named[] | undefined): MediaItem[
             id: x.id,
             name: clip(x.name),
             subtitle: x.artists?.[0]?.name ? clip(x.artists[0].name) : undefined,
+            // A track shows its album's picture; a playlist or album its own.
+            ...(kind === 'track' && x.album?.name ? { album: clip(x.album.name) } : {}),
+            ...coverOf(kind === 'track' ? x.album?.images : x.images),
           },
         ]
       : [],
@@ -326,6 +338,10 @@ const likedSchema = z.object({
             id: z.string().nullish(),
             name: z.string(),
             artists: z.array(z.object({ name: z.string() })).optional(),
+            duration_ms: z.number().nullish(),
+            album: z
+              .object({ name: z.string().nullish(), images: z.array(imageSchema).nullish() })
+              .nullish(),
           })
           .nullish(),
       })
@@ -347,6 +363,9 @@ export async function likedSongs(ctx: ConnectorContext): Promise<MediaItem[]> {
             id: t.id,
             name: clip(t.name),
             subtitle: t.artists?.[0]?.name ? clip(t.artists[0].name) : undefined,
+            album: t.album?.name ? clip(t.album.name) : undefined,
+            durationMs: t.duration_ms ?? undefined,
+            ...coverOf(t.album?.images),
           },
         ]
       : [];

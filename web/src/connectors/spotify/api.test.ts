@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ConnectorError, type ConnectorContext } from '@/core/connectors/types';
 import {
-  COVER_URL,
   likedSongs,
   listPlaylists,
   play,
@@ -311,9 +310,6 @@ describe('widget data of the reading', () => {
       },
     };
     expect(parseCurrentlyPlaying(odd)!.coverUrl).toBeUndefined();
-    expect(COVER_URL.test('https://i.scdn.co/image/ab67616d')).toBe(true);
-    expect(COVER_URL.test('http://i.scdn.co/image/ab')).toBe(false);
-    expect(COVER_URL.test('https://i.scdn.co.evil.test/image/ab')).toBe(false);
   });
 
   it('an episode has no album; its picture comes from the episode', () => {
