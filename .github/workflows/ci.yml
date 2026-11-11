@@ -521,7 +521,10 @@ jobs:
   web:
     name: Web (lint, types, unit, E2E)
     needs: [changes, licences, web-static, web-unit, web-e2e, web-e2e-rest, e2e-seed, stimulus-budget]
-    if: ${{ always() }}
+    # Always, so that a failed or cancelled part can never read as "skipped = passed" on a pull request. The one
+    # exception is a cancelled rest run: a newer one waits in its group until every job here is done, and this
+    # job would hold it up for as long as it waits for a runner.
+    if: ${{ always() && !(cancelled() && inputs.part == 'rest') }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
