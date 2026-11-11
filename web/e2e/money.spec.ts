@@ -161,8 +161,21 @@ test.describe('Subscriptions', () => {
     await expect(streaming).toContainText('Kündigen bis: 16. Okt. 2026');
     await expect(page.getByRole('button', { name: /Cloud/ })).toContainText('Jährlich');
 
-    // Pausing removes it from the totals
-    await page.getByRole('switch', { name: /Streaming/ }).click();
+    // Pausing removes it from the totals. Desktop: the row's (neutral) switch. Phone: the row has no switch
+    // (one control less per row), "Pausieren" is in the row's menu.
+    const pause = page.getByRole('switch', { name: /Streaming/ });
+    if (await pause.isVisible()) {
+      await expect(pause).toHaveAttribute('data-tone', 'neutral');
+      await pause.click();
+    } else {
+      await expect(pause).toHaveCount(0);
+      await page
+        .getByRole('listitem')
+        .filter({ hasText: 'Streaming' })
+        .getByRole('button', { name: 'Weitere Aktionen' })
+        .click();
+      await page.getByRole('menuitem', { name: 'Pausieren' }).click();
+    }
     await expect(page.getByTestId('total-month')).toHaveText(/8,25\s€/);
 
     await ready(page, '/');

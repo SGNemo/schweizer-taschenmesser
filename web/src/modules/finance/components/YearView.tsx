@@ -21,7 +21,7 @@ export function YearView({ data, year }: { data: FinanceData; year: number }) {
       <div className={styles.kpis}>
         <Card className={styles.kpi}>
           <span className={styles.kpiLabel}>{t.finance.income}</span>
-          <span className={`${styles.kpiValue} ${styles.income}`} data-testid="year-income">
+          <span className={styles.kpiValue} data-testid="year-income">
             {money(sum.income)}
           </span>
         </Card>

@@ -242,13 +242,16 @@ export default function SubscriptionsPage() {
               end={
                 <>
                   <span className={styles.amount}>{formatMoney(s.amountMinor, currencyOf(s))}</span>
-                  <Switch
-                    label={`${s.name}: ${t.subscriptions.active}`}
-                    labelHidden
-                    tone="neutral"
-                    checked={s.active}
-                    onChange={toggle}
-                  />
+                  {/* Desktop only: on the phone "Pausieren" is in the row's menu (one control less per row). */}
+                  <span className={styles.rowSwitch}>
+                    <Switch
+                      label={`${s.name}: ${t.subscriptions.active}`}
+                      labelHidden
+                      tone="neutral"
+                      checked={s.active}
+                      onChange={toggle}
+                    />
+                  </span>
                 </>
               }
             />

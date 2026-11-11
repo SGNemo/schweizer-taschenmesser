@@ -166,7 +166,8 @@
 
 /* Phone: the row keeps its width for the text; the tile stays in the head. */
 @media (max-width: 899px) {
-  .rowTile {
+  .rowTile,
+  .rowSwitch {
     display: none;
   }
 }

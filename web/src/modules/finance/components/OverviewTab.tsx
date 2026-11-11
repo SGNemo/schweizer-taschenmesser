@@ -88,9 +88,10 @@ export function OverviewTab({
       ) : null}
 
       <div className={styles.kpis}>
+        {/* The label says which figure it is; green stays with the "+" amounts in the list (one colour, one job). */}
         <Card className={styles.kpi}>
           <span className={styles.kpiLabel}>{t.finance.income}</span>
-          <span className={`${styles.kpiValue} ${styles.income}`} data-testid="kpi-income">
+          <span className={styles.kpiValue} data-testid="kpi-income">
             {money(sum.income)}
           </span>
           {hasPrevious ? <DeltaLine d={cmp.income} money={money} /> : null}

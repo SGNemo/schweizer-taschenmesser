@@ -72,7 +72,12 @@ function read(): Read {
     figure?.querySelectorAll<HTMLElement>('span, strong, p') ?? [],
   ).filter((el) => shown(el) && el.children.length === 0 && (el.textContent ?? '').trim() !== '');
   const detail = figureSpans.find((el) => getComputedStyle(el).textOverflow === 'ellipsis');
-  const value = figureSpans.find((el) => el !== detail && /\d/.test(el.textContent ?? ''));
+  // The number is the figure's largest text (a hidden value's placeholder counts as well).
+  const value = Array.from(figure?.querySelectorAll<HTMLElement>('span') ?? [])
+    .filter((el) => shown(el) && el !== detail && !detail?.contains(el))
+    .sort(
+      (a, b) => parseFloat(getComputedStyle(b).fontSize) - parseFloat(getComputedStyle(a).fontSize),
+    )[0];
   return {
     contentY,
     headHeight: Math.round(headBox?.height ?? 0),

@@ -3,17 +3,15 @@ import type { Stored } from '@/core/db/types';
 import { formatMoney } from '@/core/money';
 import { formatDay, today } from '@/core/time/dates';
 import { dueState } from '@/core/time/due';
-import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { Button, DetailPanel, NoReadAid, StateBadge } from '@/ui';
+import { Button, DetailPanel, NoReadAid } from '@/ui';
 import { remainingMinor } from '../logic';
-import { invoiceRepo } from '../repo';
 import type { Invoice } from '../schema';
 
 /**
  * The invoice picked in the list, in the panel of the wide page (master–detail): payee, what is still open, the
  * date and the payment data. Paying stays the row's own button; changing it is the dialog behind
- * "Bearbeiten"; copying the payment data stays in the row's menu.
+ * "Bearbeiten"; deleting and copying the payment data stay in the row's menu and in that dialog.
  */
 export function InvoiceDetail({
   invoice: i,
@@ -34,12 +32,11 @@ export function InvoiceDetail({
     open
       ? {
           label: t.invoices.dueDate,
-          value: (
-            <>
-              {formatDay(i.dueDate, 'EEEE, d. MMMM yyyy')}{' '}
-              {state.tone !== 'later' ? <StateBadge tone={state.tone} label={state.label} /> : null}
-            </>
-          ),
+          // The row carries the coloured badge ("war am … fällig"); here the same fact is plain text, once.
+          value:
+            state.tone !== 'later'
+              ? `${formatDay(i.dueDate, 'EEEE, d. MMMM yyyy')} · ${state.label}`
+              : formatDay(i.dueDate, 'EEEE, d. MMMM yyyy'),
         }
       : { label: t.invoices.paidAt, value: formatDay(i.paidAt ?? i.dueDate, 'd. MMMM yyyy') },
     ...(open && rest !== i.amountMinor
@@ -71,15 +68,6 @@ export function InvoiceDetail({
               {e.openBooking}
             </Button>
           ) : null}
-          <Button
-            variant="quietDanger"
-            onClick={() => {
-              onClose();
-              void deleteWithUndo(() => invoiceRepo.remove(i.id));
-            }}
-          >
-            {t.actions.delete}
-          </Button>
         </>
       }
     />

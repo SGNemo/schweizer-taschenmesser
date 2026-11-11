@@ -1,18 +1,17 @@
 import type { Stored } from '@/core/db/types';
 import { formatMoney } from '@/core/money';
 import { formatDay } from '@/core/time/dates';
-import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import { Button, DetailPanel } from '@/ui';
 import { useCurrency } from '../currency';
 import { signed } from '../logic';
-import { transactionRepo } from '../repo';
 import type { Transaction } from '../schema';
 import type { FinanceData } from '../types';
 
 /**
  * The booking picked in the list, in the panel of the wide page (master–detail): what it is, its amount and the
- * few facts that tell it apart. Changing it is the dialog behind "Bearbeiten"; every number here is the booking's own.
+ * few facts that tell it apart. Changing it is the dialog behind "Bearbeiten" (deleting too, or the row's menu); every number here is the
+ * booking's own.
  */
 export function TransactionDetail({
   tx,
@@ -58,15 +57,6 @@ export function TransactionDetail({
         <>
           <Button onClick={onEdit} data-row-edit>
             {t.actions.edit}
-          </Button>
-          <Button
-            variant="quietDanger"
-            onClick={() => {
-              onClose();
-              void deleteWithUndo(() => transactionRepo.remove(tx.id));
-            }}
-          >
-            {t.actions.delete}
           </Button>
         </>
       }
