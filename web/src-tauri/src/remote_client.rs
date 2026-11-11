@@ -107,8 +107,8 @@ pub struct RemoteClient {
 /// what is over without a word. The phone therefore waits before a frame that would not fit: a
 /// long text arrives whole, a little later. The PC reckons when it reads a frame, and a network
 /// that stalls hands it several frames at once: so the phone sends one frame at a time and well
-/// below the PC's rate, which leaves the PC room for frames that bunch up behind a stall of most
-/// of a second.
+/// below the PC's rate, which leaves the PC room for frames that bunch up behind a stall of half
+/// a second. One text at a time per session: the page sends its pieces one after another.
 #[derive(Default)]
 struct Pace {
     /// The session this was reckoned for; another one starts full.
