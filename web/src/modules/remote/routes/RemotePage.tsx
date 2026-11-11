@@ -8,15 +8,20 @@ import { useSettings } from '@/core/settings/settings';
 import { holdKeepAwake } from '@/core/shell/keepAwake';
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
-import { Button, EmptyState, Icon, PageHeader, RowMenu, type IconName } from '@/ui';
+import { Button, EmptyState, Icon, PageHeader, RowMenu, Tabs, type IconName } from '@/ui';
 import { remoteSession, useLastPc, useRemoteView } from '../session';
-import { DEFAULTS, settings, type RemotePrefs } from '../settings';
-import { describe } from '../view';
+import { DEFAULTS, PAD_SPEED, settings, type RemotePrefs } from '../settings';
+import { describe, type RemoteLine } from '../view';
 import styles from '../remote.module.css';
+import { Touchpad } from './Touchpad';
 
 const HOLD_MS = 1000 / HOLD_STEPS_PER_SECOND;
 
+type RemoteTab = 'media' | 'touchpad';
+
 /**
+ * Two views: Medien (default) and Touchpad (`./Touchpad`).
+ *
  * Medien: volume in the lowest row, transport above it, the state as one line; "Ton aus" and "PC
  * sperren" in the menu. One-handed and without looking: big targets in the thumb zone, a short
  * tick on every press (switchable), nothing that moves. The session opens when the page comes to
@@ -25,9 +30,15 @@ const HOLD_MS = 1000 / HOLD_STEPS_PER_SECOND;
 export default function RemotePage() {
   const supported = getPlatform().remote.supported;
   const view = useRemoteView();
-  const [prefs] = useSettings('module.remote', settings.schema, settings.defaults);
-  const { haptics, keepAwake } = { ...DEFAULTS, ...(prefs as RemotePrefs | undefined) };
+  const [prefs, setPrefs] = useSettings('module.remote', settings.schema, settings.defaults);
+  const { haptics, keepAwake, padSpeed, padLegendSeen } = {
+    ...DEFAULTS,
+    ...(prefs as RemotePrefs | undefined),
+  };
   const [menu, setMenu] = useState(false);
+  const [tab, setTab] = useState<RemoteTab>('media');
+  /** The legend was asked for again from the menu (the stored "seen" stays). */
+  const [legendAgain, setLegendAgain] = useState(false);
   const r = t.remote;
 
   const last = useLastPc();
@@ -83,10 +94,60 @@ export default function RemotePage() {
           items={[
             { id: 'mute', label: muted ? r.unmute : r.mute, onSelect: () => press('mute') },
             { id: 'lock', label: r.lock, onSelect: () => press('lock') },
+            ...(tab === 'touchpad'
+              ? [{ id: 'legend', label: r.pad.legendTitle, onSelect: () => setLegendAgain(true) }]
+              : []),
           ]}
         />
       </PageHeader>
+      <Tabs<RemoteTab>
+        label={r.views}
+        value={tab}
+        options={[
+          { value: 'media', label: r.media },
+          { value: 'touchpad', label: r.touchpad },
+        ]}
+        onChange={(next) => {
+          setTab(next);
+          setLegendAgain(false);
+        }}
+      />
 
+      {tab === 'touchpad' ? (
+        <Touchpad
+          view={view}
+          last={last}
+          speed={PAD_SPEED[padSpeed]}
+          tick={tick}
+          // (not before the stored answer is read: a closed legend must not flash up)
+          legend={prefs !== undefined && !padLegendSeen}
+          legendAsked={legendAgain}
+          onLegendClose={() => {
+            setLegendAgain(false);
+            if (!padLegendSeen) void setPrefs({ padLegendSeen: true });
+          }}
+          onMedia={() => setTab('media')}
+        />
+      ) : (
+        <Media line={line} playing={playing} press={press} />
+      )}
+    </div>
+  );
+}
+
+/** The view Medien: the state line and the keys. */
+function Media({
+  line,
+  playing,
+  press,
+}: {
+  line: RemoteLine;
+  playing: boolean;
+  press: (action: RemoteAction, repeat?: boolean) => void;
+}) {
+  const r = t.remote;
+  return (
+    <>
       {/* Screen readers hear the sentences, never every volume step: one region that is always
           live and holds only a sentence to act on (empty while connected). */}
       <p className="sr-only" aria-live="polite" data-testid="remote-announce">
@@ -149,7 +210,7 @@ export default function RemotePage() {
           />
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

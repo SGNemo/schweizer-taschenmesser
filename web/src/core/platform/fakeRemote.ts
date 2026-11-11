@@ -18,6 +18,7 @@ import type {
 
 const E2E_FLAG = 'tm-e2e-remote';
 const FAIL_FLAG = 'tm-e2e-remote-fail';
+const GRANT_FLAG = 'tm-e2e-remote-grant';
 /** The demo PC's name (the phone knows its PC by the name it shows for sync). */
 export const FAKE_PC_NAME = 'PC-Sven';
 const STEP = 2;
@@ -207,6 +208,14 @@ export function createFakeRemote(): RemoteService {
   };
   if (typeof window !== 'undefined')
     (window as unknown as { __tmRemote?: unknown }).__tmRemote = hooks;
+  // A spec about the touchpad says before the app starts what the demo PC grants
+  // (`tm-e2e-remote-grant` = `full`, or `full:unlock` when the PC asks for the phone's unlock).
+  try {
+    const [level, unlock] = (localStorage.getItem(GRANT_FLAG) ?? '').split(':');
+    if (level === 'full') hooks.setGrant('full', unlock === 'unlock');
+  } catch {
+    // Storage blocked: nothing arranged.
+  }
   // A spec that needs the very first open to fail says so before the app starts
   // (`tm-e2e-remote-fail` = `<code>` or `<code>:<count>`).
   try {
