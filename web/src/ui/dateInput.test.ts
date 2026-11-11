@@ -24,6 +24,9 @@ describe('date field text (app format, not the system locale)', () => {
     expect(parseDateInput('3.9.', '2027-01-01')).toBe('2027-09-03');
     expect(parseDateInput('03092026')).toBe('2026-09-03');
     expect(parseDateInput('030926')).toBe('2026-09-03');
+    // Two digits: the year nearest to today, never decades ahead.
+    expect(parseDateInput('3.9.99', '2026-09-29')).toBe('1999-09-03');
+    expect(parseDateInput('3.9.30', '2026-09-29')).toBe('2030-09-03');
   });
 
   it('follows the month-first order of the US region', () => {
@@ -32,6 +35,7 @@ describe('date field text (app format, not the system locale)', () => {
     expect(formatDateInput('2026-09-03')).toBe('09/03/2026');
     expect(parseDateInput('9/3/2026')).toBe('2026-09-03');
     expect(parseDateInput('09032026')).toBe('2026-09-03');
+    expect(parseDateInput('9/3/26', '2026-01-01')).toBe('2026-09-03');
   });
 
   it('always reads the ISO form and refuses what is no date', () => {

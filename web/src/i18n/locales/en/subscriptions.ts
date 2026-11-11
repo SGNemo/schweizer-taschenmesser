@@ -35,10 +35,12 @@ export const subscriptions: Strings['subscriptions'] = {
       context: (n: number, soon: number) => {
         const count = n === 1 ? '1 subscription' : `${n} subscriptions`;
         return soon > 0
-          ? `${soon === 1 ? '1 deadline ends soon' : `${soon} deadlines end soon`} · ${count}`
+          ? `${soon === 1 ? '1 notice period ends soon' : `${soon} notice periods end soon`} · ${count}`
           : count;
       },
-      alsoMonthly: 'also per month',
+      alsoMonthly: 'plus per month',
+      unit: '/ month',
+      paused: (n: number) => `${n} paused`,
     },
     suggest: {
       apply: (amount: string) => `Take over the price: ${amount}`,

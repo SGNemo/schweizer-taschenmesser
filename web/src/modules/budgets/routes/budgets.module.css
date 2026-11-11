@@ -48,6 +48,12 @@
   min-width: 9rem;
   text-align: center;
 }
+/* Phone: ‹ month › and the page's menu beside it fit a 320 px screen. */
+@media (max-width: 899px) {
+  .monthLabel {
+    min-width: 7.5rem;
+  }
+}
 /* First letter only: "octubre de 2026" must not become "Octubre De 2026". */
 .monthLabel::first-letter {
   text-transform: uppercase;

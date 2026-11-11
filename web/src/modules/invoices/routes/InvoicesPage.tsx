@@ -66,11 +66,13 @@ export default function InvoicesPage() {
 
   const shown = (invoices ?? []).filter((i) => view === 'all' || i.status === view);
   const emptyOpen = !!invoices && shown.length === 0 && view === 'open';
-  // The panel shows the picked invoice, else the first of the list, so a wide page has its detail from the start.
+  const timeGroups = groupByTime(shown, (i) => i.dueDate, day);
+  // The panel shows the picked invoice, else the first row as the list shows it (the open view is grouped by time).
+  const firstShown = view === 'open' ? timeGroups[0]?.items[0] : shown[0];
   const detail =
     picked === 'closed'
       ? undefined
-      : ((picked ? shown.find((i) => i.id === picked.id) : undefined) ?? shown[0]);
+      : ((picked ? shown.find((i) => i.id === picked.id) : undefined) ?? firstShown);
   const openRow = (i: Stored<Invoice>) => (wide ? setPicked({ id: i.id }) : setTarget(i));
 
   function renderRow(i: Stored<Invoice>) {
@@ -109,6 +111,7 @@ export default function InvoicesPage() {
           i.status === 'open'
             ? [
                 { id: 'pay', label: t.invoices.markPaid, onSelect: () => void pay(i.id) },
+                { id: 'edit', label: t.actions.edit, onSelect: () => setTarget(i) },
                 ...(hasPayData
                   ? [
                       {
@@ -137,6 +140,7 @@ export default function InvoicesPage() {
               ]
             : [
                 { id: 'open', label: t.invoices.reopen, onSelect: () => void markOpen(i.id) },
+                { id: 'edit', label: t.actions.edit, onSelect: () => setTarget(i) },
                 {
                   id: 'booking',
                   label: t.invoices.ext.openBooking,
@@ -179,7 +183,7 @@ export default function InvoicesPage() {
     );
   }
 
-  const openGroups = groupByTime(shown, (i) => i.dueDate, day).map((g) => ({
+  const openGroups = timeGroups.map((g) => ({
     id: g.id,
     label: t.groups[g.id as keyof typeof t.groups] as string,
     count: g.items.length,
@@ -193,7 +197,8 @@ export default function InvoicesPage() {
     <>
       <PageHeader
         title={t.invoices.title}
-        besideContent
+        // The open view starts with a group heading; the flat lists start with a row that needs its width.
+        besideContent={view === 'open'}
         views={
           <Tabs
             label={t.invoices.view}

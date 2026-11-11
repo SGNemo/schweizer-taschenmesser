@@ -42,8 +42,10 @@ export function InvoiceDetail({
     ...(open && rest !== i.amountMinor
       ? [{ label: e.state.partial, value: e.detail.rest(money(rest), money(i.amountMinor)) }]
       : []),
-    ...(i.reference ? [{ label: e.pay.reference, value: i.reference }] : []),
-    // Account numbers are read digit by digit: no reading aid on them.
+    // Reference and account number are read character by character: no reading aid on them.
+    ...(i.reference
+      ? [{ label: e.pay.reference, value: <NoReadAid>{i.reference}</NoReadAid> }]
+      : []),
     ...(i.iban ? [{ label: e.pay.iban, value: <NoReadAid>{i.iban}</NoReadAid> }] : []),
     ...(i.repeat ? [{ label: t.invoices.repeat, value: t.invoices.repeatOptions[i.repeat] }] : []),
     ...(i.dunningLevel ? [{ label: e.dunning.label, value: e.dunning.level(i.dunningLevel) }] : []),

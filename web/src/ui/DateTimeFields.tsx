@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { humanDateHint, today } from '@/core/time/dates';
 import { tFields } from '@/strings.fields';
 import { IconButton } from './Button';
@@ -47,13 +47,24 @@ function ParsedField({
   invalid: string;
   inputMode: 'numeric' | 'text';
   /** Gets the id of the field's label, to say which field a button beside it belongs to. */
-  picker?: (labelId: string) => React.ReactNode;
+  picker?: (labelId: string, reset: () => void) => React.ReactNode;
 }) {
   const id = useId();
+  const input = useRef<HTMLInputElement>(null);
   // While someone types, the field shows their text; otherwise the stored value in the region's form.
   const [draft, setDraft] = useState<string | null>(null);
   const [error, setError] = useState(false);
   const text = draft ?? format(value);
+  // Text that is no date (or time) must never be saved as the last value that happened to parse on the way
+  // ("3.9.202" after "3.9.20"): while it stands, the form cannot be submitted, by Enter or by "Speichern".
+  const unreadable = draft !== null && draft.trim() !== '' && parse(draft) === undefined;
+  useEffect(() => {
+    input.current?.setCustomValidity(unreadable ? invalid : '');
+  }, [unreadable, invalid]);
+  const reset = () => {
+    setDraft(null);
+    setError(false);
+  };
   const describedBy =
     [hint ? `${id}-hint` : '', error ? `${id}-err` : ''].filter(Boolean).join(' ') || undefined;
   return (
@@ -68,6 +79,7 @@ function ParsedField({
       <div className={styles.row}>
         <input
           {...rest}
+          ref={input}
           id={id}
           className={fieldStyles.control}
           type="text"
@@ -96,7 +108,7 @@ function ParsedField({
             } else setError(true);
           }}
         />
-        {picker?.(`${id}-label`)}
+        {picker?.(`${id}-label`, reset)}
       </div>
       {hint ? (
         <span id={`${id}-hint`} className={fieldStyles.hint}>
@@ -130,18 +142,13 @@ export function DayField({ hint, ...props }: Props) {
       placeholder={datePlaceholder(tx.letters)}
       invalid={`${tx.invalidDate} ${formatDateInput(today())}`}
       inputMode="numeric"
-      picker={(labelId) => (
+      picker={(labelId, reset) => (
         <span className={styles.picker}>
           {/* Named by what it does and described by the field's label: `getByLabel('Datum')` stays the field. */}
           <IconButton
             label={tx.pickDate}
             aria-describedby={labelId}
-            onClick={() => {
-              const el = native.current;
-              if (!el) return;
-              if (typeof el.showPicker === 'function') el.showPicker();
-              else el.focus();
-            }}
+            onClick={() => native.current?.showPicker?.()}
           >
             <Icon name="calendar" />
           </IconButton>
@@ -154,7 +161,10 @@ export function DayField({ hint, ...props }: Props) {
             aria-hidden="true"
             value={props.value}
             onChange={(e) => {
-              if (e.target.value) props.onChange(e.target.value);
+              if (!e.target.value) return;
+              // The picked day replaces whatever text stood in the field, an unreadable one included.
+              reset();
+              props.onChange(e.target.value);
             }}
           />
         </span>

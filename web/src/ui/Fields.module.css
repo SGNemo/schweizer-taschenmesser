@@ -95,11 +95,6 @@
   transform: rotate(45deg) scale(1);
   opacity: 1;
 }
-/* Neutral: a switch in every row of a list is on in grey; the page keeps its one accent for its one action (B7). */
-.track[data-tone='neutral'][aria-checked='true'] {
-  background: var(--calm-ink);
-  border-color: var(--calm-ink);
-}
 /* Locked like a disabled button (AE1): neutral surface, no accent, no opacity. A ticked box keeps its tick. */
 .check input:disabled {
   background: var(--surface-sunken);

@@ -90,7 +90,8 @@ export default function BudgetsPage() {
     <>
       <PageHeader
         title={t.budgets.title}
-        besideContent
+        // The month switch is a short first row; the goals start with cards.
+        besideContent={tab === 'budgets'}
         views={
           <Tabs
             label={t.budgets.tabs}
@@ -131,6 +132,7 @@ export default function BudgetsPage() {
           <HeroFigure
             label={t.budgets.ext.head.free}
             value={formatMoney(free, mainCurrency)}
+            unit={t.budgets.ext.head.unit}
             detail={t.budgets.ext.head.context(inMain.length, overCount)}
             sensitive
             testId="budgets-free"

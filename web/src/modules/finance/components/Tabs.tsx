@@ -35,18 +35,20 @@ import type { Transaction } from '../schema';
 import { categoryIcon } from '../categoryIcon';
 import styles from '../routes/finance.module.css';
 import { SignatureMark } from '@/ui/identity';
-import { AccountCards } from './AccountCards';
 
 export function TransactionsTab({
   data,
   month,
   onOpen,
+  onEdit,
   onAdd,
   selectedId,
 }: {
   data: FinanceData;
   month: string;
   onOpen: (tx: Stored<Transaction>) => void;
+  /** Master–detail: `onOpen` only picks the row then; "Bearbeiten" in the row's menu opens the dialog at once. */
+  onEdit?: (tx: Stored<Transaction>) => void;
   /** Opens a new booking: the one verb of the empty list (B6). */
   onAdd?: () => void;
   /** The booking shown in the detail panel of a wide page: its row is marked. */
@@ -288,6 +290,9 @@ export function TransactionsTab({
                     onSwipeLeft={remove}
                     swipeLeftLabel={t.actions.delete}
                     menu={[
+                      ...(onEdit && !pair
+                        ? [{ id: 'edit', label: t.actions.edit, onSelect: () => onEdit(x) }]
+                        : []),
                       ...(isTr ? [] : data.categories)
                         .filter((c) => c.kind === x.kind && c.id !== x.categoryId)
                         .sort((a, b) => compareText(a.name, b.name))
@@ -344,9 +349,7 @@ export function AccountsTab({ data }: { data: FinanceData }) {
           title={t.finance.noAccounts}
           motif={<SignatureMark id="bankCard" size={64} />}
         />
-      ) : (
-        <AccountCards data={data} />
-      )}
+      ) : null}
       <ItemList label={t.finance.tabs.accounts}>
         {data.accounts.map((a) => (
           <ItemRow

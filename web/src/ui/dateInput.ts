@@ -38,7 +38,7 @@ export function formatDateInput(value: string): string {
 /**
  * What someone typed as a date → `YYYY-MM-DD`, or `undefined` while it is no date. Reads the ISO form, the region's
  * order with any separator ("3.9.26", "03/09/2026", "3 9") and digits without one ("03092026"); a missing year is
- * the current one, a two-digit year lies in this century.
+ * the current one, a two-digit year is the one nearest to today.
  */
 export function parseDateInput(text: string, ref: string = today()): string | undefined {
   const raw = text.trim();
@@ -64,12 +64,14 @@ export function parseDateInput(text: string, ref: string = today()): string | un
   const got: Partial<Record<Part, number>> = {};
   names.forEach((p, i) => (got[p] = Number(pieces[i])));
   const yearText = pieces[names.indexOf('year')] ?? '';
+  const refYear = Number(ref.slice(0, 4));
+  // Two digits mean the year nearest to today ("26" → 2026, "99" → 1999), never a date decades ahead.
+  const nearest = (yy: number) => {
+    const y = Math.floor(refYear / 100) * 100 + yy;
+    return y > refYear + 50 ? y - 100 : y < refYear - 50 ? y + 100 : y;
+  };
   const year =
-    got.year === undefined
-      ? Number(ref.slice(0, 4))
-      : yearText.length <= 2
-        ? 2000 + got.year
-        : got.year;
+    got.year === undefined ? refYear : yearText.length <= 2 ? nearest(got.year) : got.year;
   if (yearText.length === 3 || yearText.length > 4) return undefined;
   const iso = `${String(year).padStart(4, '0')}-${pad2(got.month ?? 0)}-${pad2(got.day ?? 0)}`;
   return DATE_RE.test(iso) && isCalendarDate(iso) ? iso : undefined;

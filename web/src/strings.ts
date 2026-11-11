@@ -3044,6 +3044,8 @@ export const de = {
             : count;
         },
         alsoMonthly: 'außerdem pro Monat',
+        unit: '/ Monat',
+        paused: (n: number) => (n === 1 ? '1 pausiert' : `${n} pausiert`),
       },
       suggest: {
         apply: (amount: string) => `Preis übernehmen: ${amount}`,
@@ -3249,6 +3251,9 @@ export const de = {
     balance: 'Kontostand',
     headline: {
       accounts: (n: number) => (n === 1 ? '1 Konto' : `${n} Konten`),
+      /** The head draws no label: the context line names the figure first. */
+      named: (available: boolean, n: number) =>
+        `${available ? 'verfügbar' : 'Kontostand'} · ${n === 1 ? '1 Konto' : `${n} Konten`}`,
     },
     available: 'Verfügbar',
     tabs: {
@@ -5091,6 +5096,7 @@ export const de = {
       },
       head: {
         free: 'Noch frei',
+        unit: 'frei',
         chip: (name: string, pct: number) => `${name} ${pct} %`,
         /** The important part first: a line cut short on the phone still says the right thing (UI audit B2). */
         context: (n: number, over: number) =>

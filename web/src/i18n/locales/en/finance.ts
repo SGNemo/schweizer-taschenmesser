@@ -2,11 +2,11 @@ import type { Strings } from '@/strings';
 
 export const finance: Strings['finance'] = {
   chartLegend: 'Legend',
-  emptyAction: 'Add your first booking',
+  emptyAction: 'Add your first transaction',
   ext: {
     detail: {
-      label: 'Booking in detail',
-      eyebrow: (day: string) => `Booking · ${day}`,
+      label: 'Transaction in detail',
+      eyebrow: (day: string) => `Transaction · ${day}`,
     },
     weekly: 'Weekly',
     subPrice: {
@@ -144,6 +144,8 @@ export const finance: Strings['finance'] = {
   balance: 'Balance',
   headline: {
     accounts: (n: number) => (n === 1 ? '1 account' : `${n} accounts`),
+    named: (available: boolean, n: number) =>
+      `${available ? 'available' : 'balance'} · ${n === 1 ? '1 account' : `${n} accounts`}`,
   },
   available: 'Available',
   tabs: {

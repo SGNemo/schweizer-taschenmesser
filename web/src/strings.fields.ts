@@ -8,10 +8,7 @@ export const tFields = defineBundle(
     invalidTime: 'Bitte eine Uhrzeit eingeben, zum Beispiel',
     /** Letters of the date placeholder ("TT.MM.JJJJ"). */
     letters: { day: 'T', month: 'M', year: 'J' },
-    detail: 'Details',
     closeDetail: 'Details schließen',
-    /** Head figure of a page without anything to count (the important part comes first). */
-    nothingOpen: 'Nichts offen',
   },
   {
     en: {
@@ -19,9 +16,7 @@ export const tFields = defineBundle(
       invalidDate: 'Please enter a date, for example',
       invalidTime: 'Please enter a time, for example',
       letters: { day: 'D', month: 'M', year: 'Y' },
-      detail: 'Details',
       closeDetail: 'Close details',
-      nothingOpen: 'Nothing open',
     },
   },
 );

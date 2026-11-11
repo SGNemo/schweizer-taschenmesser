@@ -125,7 +125,8 @@ export default function FinancePage() {
   const detail: Stored<Transaction> | undefined =
     picked === 'closed'
       ? undefined
-      : ((picked ? view?.txs.find((x) => x.id === picked.id) : undefined) ?? monthTxs[0]);
+      : // A pick from another month or currency no longer counts: the panel follows the list that is shown.
+        ((picked ? monthTxs.find((x) => x.id === picked.id) : undefined) ?? monthTxs[0]);
   const openBooking = (tx: Stored<Transaction>) =>
     wideScreen ? setPicked({ id: tx.id }) : setTarget(tx);
 
@@ -133,7 +134,8 @@ export default function FinancePage() {
     <>
       <PageHeader
         title={t.finance.title}
-        besideContent
+        // The month switch is a short first row; the other tabs start with wider content.
+        besideContent={tab === 'overview' || tab === 'transactions'}
         views={
           <Tabs
             label={t.finance.tabsLabel}
@@ -164,7 +166,10 @@ export default function FinancePage() {
           <HeroFigure
             label={deducting ? t.finance.available : t.finance.balance}
             value={formatMoney(deducting ? availability.available : availability.balance, currency)}
-            detail={t.finance.headline.accounts(accountCount)}
+            detail={t.finance.headline.named(!!deducting, accountCount)}
+            tone={
+              (deducting ? availability.available : availability.balance) < 0 ? 'danger' : undefined
+            }
             sensitive
             testId="hero"
           />
@@ -281,6 +286,7 @@ export default function FinancePage() {
                 data={view}
                 month={month}
                 onOpen={openBooking}
+                onEdit={setTarget}
                 onAdd={canAdd ? addBooking : undefined}
                 selectedId={wideScreen ? detail?.id : undefined}
               />

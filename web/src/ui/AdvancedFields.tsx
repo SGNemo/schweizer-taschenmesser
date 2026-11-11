@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import { usePageChromeStore } from '@/core/shell/pageChrome';
 import { useAdvanced } from '@/core/settings/comfort';
 import { tAdvanced } from '@/strings.advanced';
@@ -54,6 +54,7 @@ export function AdvancedFields({
 }) {
   const [advanced] = useAdvanced(moduleId);
   const [revealed, setRevealed] = useState(false);
+  const summaryId = useId();
   const tx = tAdvanced.use();
   if (advanced || hasData || revealed) return <>{children}</>;
   return (
@@ -62,12 +63,13 @@ export function AdvancedFields({
         variant="ghost"
         className={buttonStyles.flushStart}
         aria-label={tx.moreFieldsAria}
+        aria-describedby={summary ? summaryId : undefined}
         onClick={() => setRevealed(true)}
       >
         {tx.moreFields}
       </Button>
       {summary ? (
-        <span className={styles.summary} data-testid="more-fields-summary">
+        <span id={summaryId} className={styles.summary} data-testid="more-fields-summary">
           {summary}
         </span>
       ) : null}

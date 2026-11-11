@@ -83,6 +83,35 @@ describe('DayField', () => {
     expect(field).toHaveAttribute('aria-invalid', 'true');
     expect(seen).not.toHaveBeenCalledWith('2026-02-31');
   });
+
+  it('text that stopped being a date blocks the form instead of saving the last readable prefix', async () => {
+    setFormatPref('de-DE');
+    const submit = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit();
+        }}
+      >
+        <Day />
+        <button type="submit">Speichern</button>
+      </form>,
+    );
+    const field = screen.getByLabelText<HTMLInputElement>('Datum');
+    await user.clear(field);
+    // "3.9.20" reads as 2020 on the way; "3.9.202" is no date.
+    await user.type(field, '3.9.202');
+    expect(field.validity.valid).toBe(false);
+    await user.keyboard('{Enter}');
+    await user.click(screen.getByRole('button', { name: 'Speichern' }));
+    expect(submit).not.toHaveBeenCalled();
+    await user.type(field, '6');
+    expect(field.validity.valid).toBe(true);
+    await user.keyboard('{Enter}');
+    expect(submit).toHaveBeenCalledOnce();
+  });
 });
 
 describe('TimeField', () => {
