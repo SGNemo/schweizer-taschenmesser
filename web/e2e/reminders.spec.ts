@@ -17,31 +17,33 @@ async function addReminder(page: Page, title: string) {
  * Moves the clock and waits until the reminder scheduler has checked up to the new time. `runFor` fires its
  * 30-second check many times in a row, and a check still reading the database makes the next ones skip; the last
  * minute could then stay unchecked until the next check 30 real seconds later. Coming back to the app checks at once
- * (`visibilitychange`, as when a person switches back), so nudge until a check has started at or after that time.
+ * (`visibilitychange`, as when a person switches back), so nudge until a check has started at or after that time,
+ * then until the cursor moves once more: a check starts only when the one before it has finished (card included).
  */
 async function advance(page: Page, how: 'runFor' | 'fastForward', ms: number) {
   await page.clock[how](ms);
   const reached = await page.evaluate(() => Date.now());
-  await expect
-    .poll(async () => {
-      await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
-      return page.evaluate(
-        () =>
-          new Promise<number>((resolve, reject) => {
-            const open = indexedDB.open('taschenmesser');
-            open.onerror = () => reject(open.error);
-            open.onsuccess = () => {
-              const req = open.result.transaction('_meta').objectStore('_meta').get('notifyCursor');
-              req.onsuccess = () => {
-                open.result.close();
-                resolve((req.result as { value?: number } | undefined)?.value ?? 0);
-              };
-              req.onerror = () => reject(req.error);
+  const checkedUpTo = async () => {
+    await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+    return page.evaluate(
+      () =>
+        new Promise<number>((resolve, reject) => {
+          const open = indexedDB.open('taschenmesser');
+          open.onerror = () => reject(open.error);
+          open.onsuccess = () => {
+            const req = open.result.transaction('_meta').objectStore('_meta').get('notifyCursor');
+            req.onsuccess = () => {
+              open.result.close();
+              resolve((req.result as { value?: number } | undefined)?.value ?? 0);
             };
-          }),
-      );
-    })
-    .toBeGreaterThanOrEqual(reached);
+            req.onerror = () => reject(req.error);
+          };
+        }),
+    );
+  };
+  await expect.poll(checkedUpTo).toBeGreaterThanOrEqual(reached);
+  const started = await checkedUpTo();
+  await expect.poll(checkedUpTo).toBeGreaterThan(started);
 }
 
 /** The automatic in-app card is off by default; the tests of the card switch it on in the settings. */
