@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     # A job-level block replaces the workflow-level one. `actions: read`: the rest part looks up the last green
-    # manual run of this workflow (read-only).
+    # rest or full run of this workflow (read-only).
     permissions:
       contents: read
       actions: read
@@ -522,7 +522,9 @@ jobs:
   # A part must succeed when the pre-check asked for it and must be skipped when it did not
   # (documentation only, other packages only, draft PR without the E2E part).
   web:
-    name: Web (lint, types, unit, E2E)
+    # In the rest part the check has another name: `Web (lint, types, unit, E2E)` is the required context of a
+    # merge and must only ever come from a run that holds static, unit and smoke E2E.
+    name: ${{ inputs.part == 'rest' && github.ref == 'refs/heads/develop' && 'Web outside the Dev-Preview gate (rest E2E, seed, stimulus)' || 'Web (lint, types, unit, E2E)' }}
     needs: [changes, licences, web-static, web-unit, web-e2e, web-e2e-rest, e2e-seed, stimulus-budget]
     # Always, so that a failed or cancelled part can never read as "skipped = passed" on a pull request. The one
     # exception is a cancelled rest run: a newer one waits in its group until every job here is done, and this
@@ -895,6 +897,8 @@ jobs:
   # of it or the same (a repeated publish repairs a broken one), skip when it is behind. Push runs on develop never
   # overlap (workflow group above), so this is about a re-run of an old run. No release yet or a name without a
   # commit: publish. On another line of history or an API error: the job fails with the reason, it never guesses.
+  # "Re-run failed jobs" keeps a green job of the first attempt and its outputs, so the publish also asks that
+  # this job ran in the same attempt: after a failed publish use "Re-run all jobs", which compares again.
   # No checkout: one API call. dev-preview.yml stays untouched.
   dev-preview-fresh:
     name: Dev-Preview – is this commit newer than the published one?
@@ -904,6 +908,7 @@ jobs:
     timeout-minutes: 3
     outputs:
       publish: ${{ steps.order.outputs.publish }}
+      attempt: ${{ github.run_attempt }}
     steps:
       - name: Is this commit newer than the published Dev-Preview?
         id: order
@@ -950,7 +955,7 @@ jobs:
   dev-preview:
     name: Dev-Preview publish
     needs: [changes, dev-preview-build, dev-preview-fresh, secret-scan, licences, web-static, web-unit, web-e2e, rust]
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.changes.outputs.code == 'true' && needs.dev-preview-fresh.outputs.publish == 'true' }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/develop' && needs.changes.outputs.code == 'true' && needs.dev-preview-fresh.outputs.publish == 'true' && needs.dev-preview-fresh.outputs.attempt == format('{0}', github.run_attempt) }}
     permissions:
       contents: write
     uses: ./.github/workflows/dev-preview.yml
