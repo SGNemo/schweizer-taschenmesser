@@ -34,7 +34,8 @@ concurrency:
   # finishes, Dev-Preview build and publish included, and two publishes never overlap.
   # The one run a newer one cancels is `part: rest` (the jobs outside the Dev-Preview gate of a develop push, own
   # group): it only tests, and the run that replaces it tests everything since the last green one.
-  group: ci-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}${{ inputs.part == 'rest' && '-rest' || '' }}
+  # (`-rest` sits before the event, where no branch name can produce it.)
+  group: ci-${{ github.workflow }}${{ inputs.part == 'rest' && '-rest' || '' }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' || inputs.part == 'rest' }}
 
 jobs:
@@ -61,6 +62,7 @@ jobs:
     outputs:
       since: ${{ steps.diff.outputs.since }}
       stimulus: ${{ steps.diff.outputs.stimulus }}
+      licences: ${{ steps.diff.outputs.licences }}
       windows: ${{ steps.diff.outputs.windows }}
       code: ${{ steps.diff.outputs.code }}
       web: ${{ steps.diff.outputs.web }}
@@ -122,13 +124,27 @@ jobs:
           # run tested all code up to its commit or found none since the green run before it, so no commit is left
           # out, however many rest runs were cancelled in between or started by a documentation push. No such run,
           # an unknown commit or an API error: no range, so everything runs.
-          if [ "$part" = "rest" ]; then
+          # A full manual run looks the same commit up too, but only to name it in a red summary (job `culprits`).
+          green=""
+          if [ "$EVENT" = "workflow_dispatch" ]; then
             green="$(gh api "repos/$REPO/actions/workflows/ci.yml/runs?branch=$REF_NAME&event=workflow_dispatch&status=success&per_page=1" -q '.workflow_runs[0].head_sha // ""' 2>/dev/null)"
             if [ -n "$green" ] && git cat-file -e "$green^{commit}" 2>/dev/null && git merge-base --is-ancestor "$green" "$PUSH_AFTER" 2>/dev/null; then
-              since="$green"
-              echo "Last green manual run tested $green: checking $green..$PUSH_AFTER"
-              # The same commit was green already (a second start for one push): nothing left to test.
-              if [ "$(git rev-parse "$green")" = "$(git rev-parse "$PUSH_AFTER")" ]; then code=false; fi
+              echo "Last green manual run on this branch tested $green."
+            else
+              green=""
+            fi
+          fi
+          if [ "$part" = "rest" ] && [ -n "$green" ]; then
+            since="$green"
+            echo "Checking $green..$PUSH_AFTER"
+            # The same commit was green already (a second start for one push): nothing left to test.
+            if [ "$(git rev-parse "$green")" = "$(git rev-parse "$PUSH_AFTER")" ]; then code=false; fi
+          fi
+          if [ "$part" = "rest" ]; then
+            if [ -n "$since" ]; then
+              echo "Jobs outside the Dev-Preview gate for \`${since:0:7}..${PUSH_AFTER:0:7}\` (everything since the last green manual run)." >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "Jobs outside the Dev-Preview gate for \`${PUSH_AFTER:0:7}\`: no green manual run found, so everything runs." >> "$GITHUB_STEP_SUMMARY"
             fi
           fi
           if [ "$EVENT" = "pull_request" ] && [ -n "$PR_BASE" ] && [ -n "$PR_HEAD" ]; then
@@ -208,11 +224,13 @@ jobs:
             rest=false; seed=false; stimulus=false; windows=false; sync=false; server=false; mcp=false
             shared=false; supporter=false; webhook=false; extension=false; llm=false
           fi
+          # The licence check belongs to the gate; gitleaks and the two docs checks run in both runs.
+          licences=$code
           if [ "$part" = "rest" ]; then
-            web=false; e2e=false; tauri=false
+            web=false; e2e=false; tauri=false; licences=false
           fi
           {
-            echo "since=$since"; echo "stimulus=$stimulus"; echo "windows=$windows"
+            echo "since=${since:-$green}"; echo "stimulus=$stimulus"; echo "windows=$windows"; echo "licences=$licences"
             echo "code=$code"; echo "full=$full"; echo "rest=$rest"; echo "seed=$seed"; echo "shards=$shards"; echo "e2e_profile=$profile"
             echo "web=$web"; echo "e2e=$e2e"; echo "sync=$sync"; echo "server=$server"; echo "mcp=$mcp"
             echo "shared=$shared"; echo "supporter=$supporter"; echo "webhook=$webhook"
@@ -374,7 +392,7 @@ jobs:
   licences:
     name: Licence list is current and every licence is allowed
     needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    if: ${{ !cancelled() && needs.changes.outputs.licences != 'false' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
@@ -512,7 +530,7 @@ jobs:
           CHANGES: ${{ needs.changes.result }}
           WEB: ${{ needs.changes.outputs.web }}
           E2E: ${{ needs.changes.outputs.e2e }}
-          CODE: ${{ needs.changes.outputs.code }}
+          CODE: ${{ needs.changes.outputs.licences }}
           LICENCES: ${{ needs.licences.result }}
           STATIC: ${{ needs.web-static.result }}
           UNIT: ${{ needs.web-unit.result }}
@@ -863,12 +881,12 @@ jobs:
 
   # An older run never turns the preview back: right before the publish, compare this commit with the one the
   # published preview was built from (`+<sha>` at the end of the release name). Publish when this commit is ahead
-  # of it or the same (a repeated publish repairs a broken one), skip when it is behind or on another line.
-  # Push runs on develop never overlap (workflow group above), so this is about a re-run of an old run. No
-  # release yet or a name without a commit: publish. An API error fails the job (re-run it), it never guesses.
+  # of it or the same (a repeated publish repairs a broken one), skip when it is behind. Push runs on develop never
+  # overlap (workflow group above), so this is about a re-run of an old run. No release yet or a name without a
+  # commit: publish. On another line of history or an API error: the job fails with the reason, it never guesses.
   # No checkout: one API call. dev-preview.yml stays untouched.
   dev-preview-fresh:
-    name: Dev-Preview would not go back in time
+    name: Dev-Preview – is this commit newer than the published one?
     needs: [changes, dev-preview-build, secret-scan, licences, web-static, web-unit, web-e2e, rust]
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/ci/develop-load-probe' && needs.changes.outputs.code == 'true' }}
     runs-on: ubuntu-latest
@@ -890,14 +908,20 @@ jobs:
             if [ -z "$built" ]; then
               echo "Release name '$name' carries no commit: publishing."
             else
-              status="$(gh api "repos/$REPO/compare/$built...$SHA" -q .status)"
+              status="$(gh api "repos/$REPO/compare/$built...$SHA" -q .status)" || {
+                echo "::error::Could not compare the published Dev-Preview commit ($built) with this one. If the error above is 404 or 422, the commit in the title of the release dev-preview is not in this repository any more: correct the title (ends in +<commit>), then re-run this job."
+                exit 1
+              }
               echo "Published preview: $built, this run: $SHA, this commit is '$status'."
               case "$status" in
                 ahead|identical) ;;
-                behind|diverged)
+                behind)
                   publish=false
-                  echo "::warning::The published Dev-Preview ($built) is not older than this commit ($status): publish skipped."
-                  echo "Dev-Preview publish skipped: the published preview \`$built\` is not older than this commit ($status)." >> "$GITHUB_STEP_SUMMARY" ;;
+                  echo "::notice::A newer commit ($built) is already published as Dev-Preview; this older run does not replace it."
+                  echo "Dev-Preview: a newer commit (\`$built\`) is already published; this older run does not replace it. Nothing to do." >> "$GITHUB_STEP_SUMMARY" ;;
+                diverged)
+                  echo "::error::The published Dev-Preview commit ($built) is not in the history of develop. Nothing is published until the title of the release dev-preview (ends in +<commit>) names a commit of develop."
+                  exit 1 ;;
                 *) echo "::error::Unexpected compare status '$status'."; exit 1 ;;
               esac
             fi
@@ -925,9 +949,9 @@ jobs:
   # published Dev-Preview; rest: since the last green manual run), because a run can stand for several pushes
   # (a pending run is replaced, a rest run is cancelled by a newer one). Only starts when a job above failed.
   culprits:
-    name: Red on develop – commits since the last green run
-    needs: [changes, secret-scan, docs-budget, docs-pairs, stimulus-budget, licences, web-static, web-unit, web-e2e, web-e2e-rest, web, packages, extension, e2e-sync, e2e-seed, rust, rust-windows, local-llm]
-    if: ${{ failure() && github.ref == 'refs/heads/ci/develop-load-probe' && github.event_name != 'pull_request' }}
+    name: Red on develop – merges that could have broken it
+    needs: [changes, dev-preview-build, dev-preview-fresh, dev-preview, secret-scan, docs-budget, docs-pairs, stimulus-budget, licences, web-static, web-unit, web-e2e, web-e2e-rest, web, packages, extension, e2e-sync, e2e-seed, rust, rust-windows, local-llm]
+    if: ${{ failure() && github.ref == 'refs/heads/ci/develop-load-probe' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -937,15 +961,14 @@ jobs:
       - name: List the merges since the last green run
         env:
           SINCE: ${{ needs.changes.outputs.since }}
-          PART: ${{ inputs.part }}
           EVENT: ${{ github.event_name }}
         run: |
           what="the last published Dev-Preview"
-          if [ "$EVENT" = "workflow_dispatch" ]; then what="the last green manual run (part '${PART:-all}' or a full one)"; fi
+          if [ "$EVENT" = "workflow_dispatch" ]; then what="the last green manual run of CI on this branch"; fi
           {
             echo "### This run is red"
             if [ -n "$SINCE" ] && git cat-file -e "$SINCE^{commit}" 2>/dev/null; then
-              echo "Commits on \`develop\` since $what (\`${SINCE:0:7}\`), newest first. One of them broke it:"
+              echo "Merges into \`develop\` since $what (\`${SINCE:0:7}\`), newest first:"
               echo
               echo '```'
               git log --first-parent --oneline "$SINCE..HEAD"
@@ -958,5 +981,5 @@ jobs:
               echo '```'
             fi
             echo
-            echo "Who fixes it: docs/HOW-TO.md, \"Which checks run when\"."
+            echo "Open the red job above. The chat whose merge broke it fixes it: if one of these is yours, check it first."
           } | tee -a "$GITHUB_STEP_SUMMARY"

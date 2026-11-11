@@ -1,4 +1,4 @@
-name: CI rest (start)
+name: Start CI rest run (develop)
 
 # Starts the second half of the CI of a push to `develop`: every job outside the Dev-Preview gate (rest E2E, seed
 # project, sync E2E, extension, small packages, stimulus budget, local model, Windows shell) as its own run of
@@ -10,6 +10,8 @@ name: CI rest (start)
 # What the rest run tests is decided there (everything since the last green one); the path filter here only keeps
 # a documentation push from cancelling and restarting the rest run of the code push before it. It may let too
 # much through, never too little: a path that is missing here only costs a restart.
+# Not covered by itself: a rest run that was cancelled by hand, or a start that never happened, followed only by
+# documentation pushes. The next code push covers it, or Actions -> CI -> Run workflow (develop, part rest).
 on:
   push:
     branches: [ci/develop-load-probe]
