@@ -219,18 +219,25 @@ describe('page Tastatur', () => {
     );
     expect(fake.parts.hooks.typed()).toEqual([]);
     expect(field().value).toBe('noch da');
-    // connected: the sentence goes, nothing was sent by itself, the next press sends
+    // connected: the sentence goes, nothing was sent by itself
     await until(() => fake.parts.hooks.level() === 'full');
     await until(() => screen.queryByTestId('remote-type-note') === null);
     expect(fake.parts.hooks.typed()).toEqual([]);
-    fireEvent.click(screen.getByTestId('remote-send'));
-    await until(() => fake.parts.hooks.typed().length === 1);
-    expect(fake.parts.hooks.typed()).toEqual(['noch da']);
-    // the connection ends again later: the sentence does not come back without a press
+    // the person does not press, and the connection ends again later: the sentence does not
+    // come back without a press
     await act(async () => fake.parts.hooks.close());
     await wait(20);
     expect(screen.queryByTestId('remote-type-note')).toBeNull();
-  });
+    // a new press says it again, and once connected the next one sends
+    fireEvent.click(screen.getByTestId('remote-send'));
+    expect(screen.getByTestId('remote-type-note')).toBeTruthy();
+    await until(() => fake.parts.hooks.level() === 'full');
+    await until(() => screen.queryByTestId('remote-type-note') === null);
+    fireEvent.click(screen.getByTestId('remote-send'));
+    await until(() => fake.parts.hooks.typed().length === 1);
+    expect(fake.parts.hooks.typed()).toEqual(['noch da']);
+    // (two connects in one test: more room than the default on a busy machine)
+  }, 15_000);
 
   it('what was typed is in no log, no storage and no address afterwards', async () => {
     const said: unknown[] = [];
