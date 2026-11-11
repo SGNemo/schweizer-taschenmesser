@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { moreFields, ready, showAllWidgets } from './helpers';
-import { openEditor, togglePageMoreFields } from './money-helpers';
+import { togglePageMoreFields } from './money-helpers';
 import { primaryActions } from './primaries';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
