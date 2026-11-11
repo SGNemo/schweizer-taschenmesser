@@ -38,11 +38,13 @@ export function createFakeRemoteParts() {
   let grant: RemoteLevel = 'media';
   let unlockRequired = false;
   let known: { grant: RemoteLevel; unlockRequired: boolean } | undefined;
-  let unlock: 'ok' | 'cancel' | 'none' = 'ok';
+  let unlock: 'ok' | 'cancel' | 'none' | 'unavailable' = 'ok';
   let unlocked = false;
   let unlocks = 0;
   const MOUSE = new Set<string>(['left-down', 'left-up', 'right-down', 'right-up']);
   const PRESS = new Set<string>(['left-down', 'right-down']);
+  // refusals after which the shell forgets what the PC said (the next `full` needs Medien first)
+  const FORGETS = new Set<string>(['not-granted', 'paused', 'remote-off']);
   let opens = 0;
   let hold: Promise<void> | undefined;
   let greeting: RemoteCloseReason | undefined;
@@ -69,26 +71,27 @@ export function createFakeRemoteParts() {
         if (known.unlockRequired && !unlocked) {
           unlocks += 1;
           if (unlock === 'cancel') throw new Error('unlock-cancelled');
+          if (unlock === 'unavailable') throw new Error('unlock-unavailable');
           if (unlock === 'none') noLock = true;
           else unlocked = true;
         }
-      }
-      if (level === 'full') {
-        // the PC's word, and it leaves the open session alone: no grant (then the shell forgets
-        // what it knew), or a locked PC
-        if (grant !== 'full') {
-          known = undefined;
-          throw new Error('not-granted');
-        }
-        if (pc.locked) throw new Error('locked');
       }
       opens += 1;
       // like the shell: every attempt has a number, also one that fails
       next += 1;
       const session = next;
+      // the PC's word. Granted nothing: refused (then the shell forgets what it knew). Granted
+      // only media: a `full` ask gets a new media session, see below. A locked PC opens no
+      // mouse session and leaves the open one alone.
+      if (grant === 'off') {
+        known = undefined;
+        throw new Error('not-granted');
+      }
+      if (level === 'full' && grant === 'full' && pc.locked) throw new Error('locked');
       if (hold) await hold;
       if (openError && openErrorsLeft > 0) {
         openErrorsLeft -= 1;
+        if (FORGETS.has(openError)) known = undefined;
         throw new Error(openError);
       }
       // an attempt overtaken by a newer one is not a session
@@ -169,8 +172,11 @@ export function createFakeRemoteParts() {
       grant = level;
       unlockRequired = askUnlock;
     },
-    /** How the phone's own unlock prompt ends: done, dismissed, or the phone has no lock. */
-    setUnlock(answer: 'ok' | 'cancel' | 'none') {
+    /**
+     * How the phone's own unlock prompt ends: done, dismissed, the phone has no lock, or it has
+     * one it cannot ask for.
+     */
+    setUnlock(answer: 'ok' | 'cancel' | 'none' | 'unavailable') {
       unlock = answer;
     },
     /** How often the phone asked for an unlock. */

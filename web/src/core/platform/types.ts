@@ -296,14 +296,19 @@ export interface RemoteOpened {
  * whether it wants the phone unlocked – and the shell remembers that only while the app runs
  * and the pairing stands: after a restart, or when the person lands on the touchpad directly,
  * open `media` first (`media-first`). Whether this device is granted the level and whether the
- * PC is locked is the PC's to say (`not-granted`, `locked`, …): a refused `full` open leaves the
- * open session alone, here and at the PC; after `not-granted`, `paused` or `remote-off` open
+ * PC is locked is the PC's to say. A device granted only media gets a **new media session** for
+ * a `full` ask (`level: 'media'`, a new number; the older session is replaced without an
+ * event) – read `level` of the answer. A refused `full` open (`locked`, …) leaves the open
+ * session alone, here and at the PC; after `not-granted`, `paused` or `remote-off` open
  * `media` again before the next try. When the PC asks for it, the shell unlocks the phone
  * first, natively (fingerprint, face or PIN; once in eight hours; texts fixed in the shell,
  * `lang` picks German or English): `unlock-cancelled`, `unlock-failed`, `unlock-busy` (the
- * prompt is already up). `unlock-needed`: the PC asked for an unlock only in the answer itself
+ * prompt is already up), `unlock-unavailable` (this phone has a screen lock it cannot ask for:
+ * the level is not for this phone, trying again does not help). `unlock-needed`: the PC asked for an unlock only in the answer itself
  * – both sessions are gone; open `media`, then `full` again. While the PC is locked the shell
- * sends no pointer and no button press (a release always goes).
+ * sends no pointer and no button press (a release always goes). The session a `full`
+ * open replaces ends without an event; only if that open fails after the PC already ended it
+ * does its `closed` (no reason) arrive, right before the open rejects.
  */
 export interface RemoteService {
   supported: boolean;

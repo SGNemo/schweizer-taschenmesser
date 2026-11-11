@@ -3,6 +3,8 @@ package io.github.sgnemo.taschenmesser.securestore
 import android.app.Activity
 import android.app.KeyguardManager
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
@@ -342,32 +344,53 @@ class SecureStorePlugin(private val activity: Activity) : Plugin(activity) {
             return
         }
         if (BiometricManager.from(activity).canAuthenticate(allowed) != BiometricManager.BIOMETRIC_SUCCESS) {
-            invoke.reject("the screen lock cannot be asked for right now")
+            // a lock is set, but the system cannot ask for it here: its own answer, so that the
+            // caller can tell it from a failed attempt
+            answer("unavailable")
             return
         }
         activity.runOnUiThread {
+            // Everything in here runs on the main thread: the prompt's callbacks and the timer. The
+            // call is answered exactly once, by whichever comes first.
+            var done = false
+            val timer = Handler(Looper.getMainLooper())
+            fun finish(reply: () -> Unit) {
+                if (done) return
+                done = true
+                timer.removeCallbacksAndMessages(null)
+                reply()
+            }
             try {
                 // The prompt shows nothing (and calls nothing back) once the activity's state is saved,
                 // e.g. the person left the app in this very moment: that is a dismissal.
                 if (host.isFinishing || host.isDestroyed || host.supportFragmentManager.isStateSaved) {
-                    answer("cancelled")
+                    finish { answer("cancelled") }
                     return@runOnUiThread
                 }
                 val callback = object : BiometricPrompt.AuthenticationCallback() {
                     override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                        answer("ok")
+                        finish { answer("ok") }
                     }
 
                     override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                         when (errorCode) {
                             BiometricPrompt.ERROR_USER_CANCELED,
                             BiometricPrompt.ERROR_NEGATIVE_BUTTON,
-                            BiometricPrompt.ERROR_CANCELED -> answer("cancelled")
-                            else -> invoke.reject(errString.toString())
+                            BiometricPrompt.ERROR_CANCELED -> finish { answer("cancelled") }
+                            else -> finish { invoke.reject(errString.toString()) }
                         }
                     }
                 }
                 val prompt = BiometricPrompt(host, ContextCompat.getMainExecutor(activity), callback)
+                // Nobody answered in time: the prompt is taken off the screen and the call ends as a
+                // dismissal, so the caller never waits for good and no stale prompt stays up.
+                timer.postDelayed({
+                    finish { answer("cancelled") }
+                    try {
+                        prompt.cancelAuthentication()
+                    } catch (_: Exception) {
+                    }
+                }, CONFIRM_WAIT_MS)
                 // No negative button: with the device credential allowed the system brings its own way out,
                 // and setting one would throw.
                 val info = BiometricPrompt.PromptInfo.Builder()
@@ -377,7 +400,7 @@ class SecureStorePlugin(private val activity: Activity) : Plugin(activity) {
                     .build()
                 prompt.authenticate(info)
             } catch (e: Exception) {
-                invoke.reject(e.message ?: e.javaClass.simpleName)
+                finish { invoke.reject(e.message ?: e.javaClass.simpleName) }
             }
         }
     }
@@ -402,6 +425,9 @@ class SecureStorePlugin(private val activity: Activity) : Plugin(activity) {
 
     private companion object {
         const val ANDROID_KEYSTORE = "AndroidKeyStore"
+
+        /** How long the presence prompt waits for the person before it gives up. */
+        const val CONFIRM_WAIT_MS = 120_000L
         const val TRANSFORM = "AES/GCM/NoPadding"
         const val SECRETS_ALIAS = "taschenmesser.secrets.v1"
         const val BIOMETRIC_ALIAS = "taschenmesser.biometric.v1"

@@ -23,6 +23,8 @@
 //!   count them against the session); a release always goes, so nothing stays held.
 //! * One session at a time. Opening a new one closes the old one; events of a replaced session
 //!   are dropped here, so the page never sees a late "closed" of a session it already left.
+//!   While a mouse session is being opened, the PC ends the session it replaces before it
+//!   answers: that end is held back and told only if the open fails.
 //! * Never unpairs: an `unknown-device` from the PC is only reported (see the header of
 //!   `input_client.rs`). Whether the device is still paired is what a sync round says.
 //! * Phone only: the commands are registered in the mobile handler and granted in
@@ -49,8 +51,6 @@ const MAX_STEPS: usize = 32;
 const STEP: i32 = 127;
 /// How long one unlock of the phone holds for the mouse level (process memory only).
 const UNLOCK_VALID: Duration = Duration::from_secs(8 * 60 * 60);
-/// How long the phone's prompt may stay unanswered before the attempt counts as failed.
-const PROMPT_WAIT: Duration = Duration::from_secs(120);
 
 /// What the PC said about this device in its last `opened`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -61,6 +61,9 @@ struct Known {
 
 /// The open session: its number, the connection, and the level the PC opened it at.
 type Open = (u64, Arc<InputSession>, Level);
+
+/// A session's end that is held back: its number and the channel of its page.
+type Lost = Option<(u64, Channel<EventDto>)>;
 
 #[derive(Default)]
 pub struct RemoteClient {
@@ -80,11 +83,22 @@ pub struct RemoteClient {
     unlocked: Mutex<Option<SystemTime>>,
     /// The unlock prompt is on screen: a second `open` does not raise another one.
     asking: AtomicBool,
+    /// While an `open` for the mouse level is under way: the number of the session it is about
+    /// to replace (0 = none). The PC ends that one before it answers; its end is held back in
+    /// `lost` until the open is decided.
+    replacing: Arc<AtomicU64>,
+    /// The held-back end: the session's number and the channel of its page.
+    lost: Arc<Mutex<Lost>>,
+    /// Counts the pairings of this run ([`RemoteClient::reset`]): an unlock asked for under an
+    /// older one does not count for the next.
+    pairing: AtomicU64,
 }
 
 impl RemoteClient {
     /// Another PC, or none: the session, what the old PC said and the unlock given for it are gone.
     pub fn reset(&self) {
+        // an unlock prompt that is still up was asked for the old PC
+        self.pairing.fetch_add(1, Ordering::SeqCst);
         // a connect that is still under way is not wanted any more either
         self.newest.fetch_add(1, Ordering::SeqCst);
         if let Ok(mut slot) = self.session.lock() {
@@ -98,6 +112,10 @@ impl RemoteClient {
         }
         if let Ok(mut unlocked) = self.unlocked.lock() {
             *unlocked = None;
+        }
+        self.replacing.store(0, Ordering::SeqCst);
+        if let Ok(mut lost) = self.lost.lock() {
+            *lost = None;
         }
         self.locked.store(false, Ordering::SeqCst);
     }
@@ -156,6 +174,8 @@ fn unlocked_from(status: &str) -> Result<Unlocked, &'static str> {
         "ok" => Ok(Unlocked::Yes),
         "none" => Ok(Unlocked::NoLock),
         "cancelled" => Err("unlock-cancelled"),
+        // a screen lock is set, but this phone cannot ask for it (not a one-off failure)
+        "unavailable" => Err("unlock-unavailable"),
         _ => Err("unlock-failed"),
     }
 }
@@ -416,7 +436,8 @@ fn stored_error(e: String) -> String {
 /// Asks at the phone, natively: fingerprint, face or the phone's PIN, through the secure-store
 /// plugin's presence prompt. It uses no key and stores nothing (the vault's biometric key is not
 /// touched), and no command of the page maps to it. A phone without any screen lock is not
-/// blocked; an error or no answer in time is a failure, never a pass.
+/// blocked; an error is a failure, never a pass, and no answer in two minutes is a dismissal
+/// (the plugin takes its prompt off the screen itself).
 ///
 /// Compiled on every target (the plugin has the same face everywhere), so the desktop's checks
 /// see this code too; only the phone ever calls it.
@@ -430,10 +451,8 @@ async fn native_unlock<R: Runtime>(
         title: title.to_owned(),
         subtitle: subtitle.to_owned(),
     });
-    let answer = tokio::time::timeout(PROMPT_WAIT, asked)
-        .await
-        .map_err(|_| "unlock-failed")?
-        .map_err(|_| "unlock-failed")?;
+    // the plugin ends the prompt itself after two minutes (a dismissal), so this always returns
+    let answer = asked.await.map_err(|_| "unlock-failed")?;
     unlocked_from(&answer.status)
 }
 
@@ -459,6 +478,7 @@ fn since_unlock(state: &RemoteClient) -> Result<Option<Duration>, String> {
 /// session. `Ok(true)` = the PC asks for an unlock and this phone has no screen lock to ask for.
 async fn pass_gate<R: Runtime>(app: &AppHandle<R>, lang: Option<&str>) -> Result<bool, String> {
     let state = app.state::<RemoteClient>();
+    let pairing = state.pairing.load(Ordering::SeqCst);
     let known = *state.known.lock().map_err(|_| "internal")?;
     match gate(known, since_unlock(&state)?) {
         Gate::Go => Ok(false),
@@ -469,7 +489,12 @@ async fn pass_gate<R: Runtime>(app: &AppHandle<R>, lang: Option<&str>) -> Result
                 return Err("unlock-busy".to_owned());
             }
             let _asking = Asking(&state.asking);
-            match native_unlock(app, lang).await? {
+            let answer = native_unlock(app, lang).await?;
+            // unpaired or paired anew while the prompt was up: the answer was for the old PC
+            if state.pairing.load(Ordering::SeqCst) != pairing {
+                return Err("closed".to_owned());
+            }
+            match answer {
                 Unlocked::Yes => {
                     *state.unlocked.lock().map_err(|_| "internal")? = Some(SystemTime::now());
                     Ok(false)
@@ -485,8 +510,10 @@ async fn pass_gate<R: Runtime>(app: &AppHandle<R>, lang: Option<&str>) -> Result
 /// arrive on `on_event`. `lang` picks the language of the phone's unlock prompt.
 ///
 /// A `media` open closes the older session of this device first. A `full` open leaves it alone
-/// until the new session stands (the PC replaces it on its side): a refusal – no grant, a locked
-/// PC, a dismissed unlock – costs Medien nothing, and its events keep coming.
+/// until the new session stands (the PC replaces it on its side): a refusal – a locked PC, a
+/// dismissed unlock – costs Medien nothing, and its events keep coming. A device granted only
+/// media gets a new media session for a `full` ask (the PC opens at the smaller of asked and
+/// granted); `not-granted` is the answer only when it is granted nothing.
 #[tauri::command]
 pub async fn remote_client_open<R: Runtime>(
     app: AppHandle<R>,
@@ -502,6 +529,71 @@ pub async fn remote_client_open<R: Runtime>(
     };
     tauri::async_runtime::spawn_blocking(move || {
         let state = app.state::<RemoteClient>();
+        if level != Level::Full {
+            return open_now(&app, level, no_lock, on_event);
+        }
+        let old = state
+            .session
+            .lock()
+            .map_err(|_| "internal")?
+            .as_ref()
+            .map_or(0, |(id, _, _)| *id);
+        state.replacing.store(old, Ordering::SeqCst);
+        let opened = open_now(&app, level, no_lock, on_event);
+        let _ = state
+            .replacing
+            .compare_exchange(old, 0, Ordering::SeqCst, Ordering::SeqCst);
+        settle_lost(&state, old, opened.is_ok());
+        opened
+    })
+    .await
+    .map_err(|_| "internal".to_owned())?
+}
+
+/// The end of session `old` that was held back while a mouse session was opened in its place.
+/// The open stood: that end was the replacement, nobody hears of it. The open failed: the
+/// session really is gone – it leaves the slot and its page is told now.
+fn settle_lost(state: &RemoteClient, old: u64, opened: bool) {
+    let Ok(mut lost) = state.lost.lock() else {
+        return;
+    };
+    if !matches!(lost.as_ref(), Some((id, _)) if *id == old) {
+        return;
+    }
+    let Some((id, page)) = lost.take() else {
+        return;
+    };
+    drop(lost);
+    if opened {
+        return;
+    }
+    let Ok(mut slot) = state.session.lock() else {
+        return;
+    };
+    // (a newer `open` may have taken its place meanwhile: then the page has left it already)
+    if !matches!(slot.as_ref(), Some((open, _, _)) if *open == id) {
+        return;
+    }
+    if let Some((_, session, _)) = slot.take() {
+        state.live.store(0, Ordering::SeqCst);
+        drop(slot);
+        end(session);
+        let _ = page.send(EventDto::Closed {
+            session: id,
+            reason: None,
+        });
+    }
+}
+
+/// The connect itself (blocking).
+fn open_now<R: Runtime>(
+    app: &AppHandle<R>,
+    level: Level,
+    no_lock: bool,
+    on_event: Channel<EventDto>,
+) -> Result<OpenedDto, String> {
+    {
+        let state = app.state::<RemoteClient>();
         let id = state.newest.fetch_add(1, Ordering::SeqCst) + 1;
         if level != Level::Full {
             // the session this one replaces ends now
@@ -512,11 +604,13 @@ pub async fn remote_client_open<R: Runtime>(
                 end(session);
             }
         }
-        let (hub, addr, name) = crate::lan_client::hub_entry(&app).map_err(stored_error)?;
-        let key = crate::lan_client::stored_key(&app).map_err(stored_error)?;
+        let (hub, addr, name) = crate::lan_client::hub_entry(app).map_err(stored_error)?;
+        let key = crate::lan_client::stored_key(app).map_err(stored_error)?;
         let newest = state.newest.clone();
         let live = state.live.clone();
         let locked = state.locked.clone();
+        let replacing = state.replacing.clone();
+        let lost = state.lost.clone();
         // a state the PC sent right after `opened` must not be overwritten by the older one in it
         let told = Arc::new(AtomicBool::new(false));
         let heard = told.clone();
@@ -538,6 +632,14 @@ pub async fn remote_client_open<R: Runtime>(
                 if let Event::State(pc) = &event {
                     heard.store(true, Ordering::SeqCst);
                     locked.store(pc.locked, Ordering::SeqCst);
+                }
+                // the connection ended while a mouse session is being opened in its place: most
+                // likely the PC replacing it, so the page hears of it only if that open fails
+                if matches!(event, Event::Closed(None)) && replacing.load(Ordering::SeqCst) == id {
+                    if let Ok(mut lost) = lost.lock() {
+                        *lost = Some((id, on_event.clone()));
+                        return;
+                    }
                 }
                 let _ = on_event.send(event_dto(id, event));
             }),
@@ -596,9 +698,7 @@ pub async fn remote_client_open<R: Runtime>(
             no_lock,
             state: state_dto(opened.state),
         })
-    })
-    .await
-    .map_err(|_| "internal".to_owned())?
+    }
 }
 
 /// The open session `session`, or `closed`. The lock is held only to pick it: a write that
@@ -813,6 +913,7 @@ mod tests {
         assert_eq!(unlocked_from("ok"), Ok(Unlocked::Yes));
         assert_eq!(unlocked_from("none"), Ok(Unlocked::NoLock));
         assert_eq!(unlocked_from("cancelled"), Err("unlock-cancelled"));
+        assert_eq!(unlocked_from("unavailable"), Err("unlock-unavailable"));
         for odd in ["", "OK", "invalidated", "missing", "error"] {
             assert_eq!(unlocked_from(odd), Err("unlock-failed"), "{odd:?}");
         }
@@ -832,6 +933,45 @@ mod tests {
         assert!(keep(Level::Full, true, None, true));
     }
 
+    /// A held-back end of session `id` whose page counts what it is told.
+    fn held(client: &RemoteClient, id: u64) -> Arc<AtomicU64> {
+        let told = Arc::new(AtomicU64::new(0));
+        let count = told.clone();
+        let page = Channel::new(move |_| {
+            count.fetch_add(1, Ordering::SeqCst);
+            Ok(())
+        });
+        *client.lost.lock().unwrap() = Some((id, page));
+        told
+    }
+
+    #[test]
+    fn the_end_of_a_replaced_session_is_never_told() {
+        let client = RemoteClient::default();
+        let told = held(&client, 3);
+        settle_lost(&client, 3, true);
+        assert!(client.lost.lock().unwrap().is_none());
+        assert_eq!(told.load(Ordering::SeqCst), 0);
+    }
+
+    #[test]
+    fn a_held_end_is_not_told_for_a_session_the_page_already_left() {
+        let client = RemoteClient::default();
+        // the open failed, but the slot no longer holds session 3 (a newer open took its place)
+        let told = held(&client, 3);
+        settle_lost(&client, 3, false);
+        assert!(client.lost.lock().unwrap().is_none());
+        assert_eq!(told.load(Ordering::SeqCst), 0);
+        // the end of another session is not this open's to settle
+        let told = held(&client, 4);
+        settle_lost(&client, 3, false);
+        assert!(client.lost.lock().unwrap().is_some());
+        assert_eq!(told.load(Ordering::SeqCst), 0);
+        // … and another PC forgets it
+        client.reset();
+        assert!(client.lost.lock().unwrap().is_none());
+    }
+
     #[test]
     fn another_pc_starts_from_nothing() {
         let client = RemoteClient::default();
@@ -840,7 +980,10 @@ mod tests {
         client.locked.store(true, Ordering::SeqCst);
         client.live.store(7, Ordering::SeqCst);
         let before = client.newest.load(Ordering::SeqCst);
+        let pairing = client.pairing.load(Ordering::SeqCst);
         client.reset();
+        // an unlock prompt still on screen was for the old PC: its answer will not count
+        assert_ne!(client.pairing.load(Ordering::SeqCst), pairing);
         assert_eq!(*client.known.lock().unwrap(), None);
         assert!(client.unlocked.lock().unwrap().is_none());
         assert!(!client.locked.load(Ordering::SeqCst));

@@ -636,7 +636,13 @@ fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
             "remote_client.rs takes prompt texts: {text}"
         );
     }
-    assert!(open.contains("if !keep("));
+    // … and what the PC answers is checked in the connect every open goes through
+    assert!(open.contains("open_now(&app, level, no_lock, on_event)"));
+    assert!(!open.contains("InputSession::open"));
+    let connect = &code[code.find("fn open_now").unwrap()..];
+    let connect = &connect[..connect.find("\n}\n").unwrap()];
+    assert!(connect.contains("InputSession::open"));
+    assert!(connect.contains("if !keep("));
     for vault in ["biometric_seal", "biometric_unseal", "biometric_delete"] {
         assert!(!code.contains(vault), "remote_client.rs mentions {vault}");
     }
@@ -654,8 +660,8 @@ fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
         );
     }
     // the key and the hub entry are read, never returned: no DTO carries them
-    assert_eq!(code.matches("stored_key(&app)").count(), 1);
-    assert_eq!(code.matches("hub_entry(&app)").count(), 1);
+    assert_eq!(code.matches("stored_key(").count(), 1);
+    assert_eq!(code.matches("hub_entry(").count(), 1);
     for dto in ["StateDto", "EventDto", "OpenedDto"] {
         let at = code
             .find(&format!("pub struct {dto}"))

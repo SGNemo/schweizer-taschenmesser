@@ -4,18 +4,36 @@ import { createFakeRemoteParts } from './fakeRemote';
 const nothing = () => {};
 
 describe('fake remote: the mouse level behaves like the shell', () => {
-  it('needs a media session first and a grant of the level; nothing is asked or closed otherwise', async () => {
+  it('needs a media session first; a device granted only media gets a new media session for a full ask', async () => {
     const { remote, hooks } = createFakeRemoteParts();
     await expect(remote.open('full', nothing)).rejects.toThrow('media-first');
     const media = await remote.open('media', nothing);
     expect(media).toMatchObject({ level: 'media', grant: 'media', unlockRequired: false });
-    await expect(remote.open('full', nothing)).rejects.toThrow('not-granted');
-    // the media session is still the open one
-    expect(hooks.isOpen()).toBe(true);
+    // the PC opens at the smaller of asked and granted: a new session, the old one is replaced
+    const again = await remote.open('full', nothing);
+    expect(again).toMatchObject({ level: 'media', grant: 'media' });
+    expect(again.session).not.toBe(media.session);
     expect(hooks.level()).toBe('media');
     expect(hooks.unlocks()).toBe(0);
+    await expect(remote.send(media.session, ['mute'])).rejects.toThrow('closed');
+    await remote.send(again.session, ['mute']);
+    await expect(remote.pointer(again.session, 'move', 1, 1)).rejects.toThrow('bad-level');
+  });
+
+  it('refuses a device that is granted nothing, and the shell then knows nothing any more', async () => {
+    const { remote, hooks } = createFakeRemoteParts();
+    const media = await remote.open('media', nothing);
+    hooks.setGrant('off');
+    await expect(remote.open('full', nothing)).rejects.toThrow('not-granted');
+    // the refused open cost the media session nothing
     await remote.send(media.session, ['mute']);
-    // after a refusal the shell knows nothing any more: Medien is opened again before the next try
+    // Medien is opened again before the next try
+    hooks.setGrant('full');
+    await expect(remote.open('full', nothing)).rejects.toThrow('media-first');
+    // the same after a pause or with remote control switched off at the PC
+    await remote.open('media', nothing);
+    hooks.failOpen('paused');
+    await expect(remote.open('full', nothing)).rejects.toThrow('paused');
     await expect(remote.open('full', nothing)).rejects.toThrow('media-first');
   });
 
@@ -28,6 +46,8 @@ describe('fake remote: the mouse level behaves like the shell', () => {
     await expect(remote.open('full', nothing)).rejects.toThrow('unlock-cancelled');
     expect(hooks.level()).toBe('media');
     await remote.send(media.session, ['volume-up']);
+    hooks.setUnlock('unavailable');
+    await expect(remote.open('full', nothing)).rejects.toThrow('unlock-unavailable');
     hooks.setUnlock('ok');
     const full = await remote.open('full', nothing);
     expect(full).toMatchObject({ level: 'full', noLock: false });
@@ -35,7 +55,7 @@ describe('fake remote: the mouse level behaves like the shell', () => {
     // unlocked for this run: no second prompt
     const again = await remote.open('full', nothing);
     expect(again.level).toBe('full');
-    expect(hooks.unlocks()).toBe(2);
+    expect(hooks.unlocks()).toBe(3);
   });
 
   it('a phone without a lock is not blocked, and says so', async () => {
