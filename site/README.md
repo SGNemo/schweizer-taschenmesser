@@ -39,7 +39,7 @@ French and Brazilian Portuguese under `/en`, `/es`, `/fr`, `/pt-br`; code and co
 ```
 astro.config.mjs       site URL (env SITE_URL), i18n de/en/es/fr/pt-br, sitemap
 src/config.js          SITE_URL placeholder, repository links, Ko-fi URL, asset names
-src/i18n/{de,en}.ts    all page texts; src/i18n/index.ts = route table
+src/i18n/{de,en}.ts    all page texts · src/routes.js = route table (also feeds the sitemap's language alternates)
 src/release/latest.json  last known release (updated by the build, committed as fallback)
 src/layouts/Base.astro head, meta, OG, hreflang, header, footer · Legal.astro for the legal pages
 src/catalog/modules.json  module catalogue from the app (npm run gen:modules in web/) · shipped.ts = areas with

@@ -60,9 +60,8 @@
   --accent-hover: #963709;
   --accent-contrast: #ffffff;
   --warning: #8a5a00;
-  /* Identity v3 (web/src/ui/tokens.css, docs/design/MODULE-IDENTITY.md): the module palette, the tints of a
-     module head, the neutral group tint of an area block and the ink of the area patterns.
-     The selectors that turn them into --module-color and --area-pattern live in identity.css. */
+  /* The module palette of the app (web/src/ui/tokens.css) and the neutral group tint; identity.css turns a hue into
+     --module-color. */
   --mod-lime: #6c7a04;
   --mod-moss: #2f6800;
   --mod-fern: #368535;
@@ -74,10 +73,7 @@
   --mod-violet: #9e4f96;
   --mod-orchid: #902d5b;
   --mod-slate: #55636b;
-  --head-tint-0: 40%;
-  --head-tint-1: 12%;
   --group-tint: 6%;
-  --pattern-ink: var(--text);
   /* Site only (rethink round, docs/design/site/README.md "Building blocks"): the reading face, the heavy weight of
      headlines and times, three display sizes, the section rhythm and the two line weights. scripts/tokens.test.mjs
      lists them (SITE_ONLY) and fails when one of them also exists in the app. */
