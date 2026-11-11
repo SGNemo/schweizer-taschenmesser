@@ -8748,7 +8748,7 @@ export const de = {
       busy: 'Der PC kommt gerade nicht nach. Dein Text steht noch im Feld.',
       failed: 'Das kam nicht an. Dein Text steht noch im Feld.',
       partial: 'Nur ein Teil kam am PC an. Sieh am PC nach, bevor du noch einmal sendest.',
-      connecting: 'Die Verbindung steht gleich. Dann noch einmal senden.',
+      connecting: 'Die Verbindung steht gleich. Dann noch einmal drücken.',
     },
     pad: {
       surface: 'Touchpad: Wischen bewegt den Zeiger. Mit TalkBack gehen nur „Links“ und „Rechts“.',

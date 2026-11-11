@@ -53,7 +53,7 @@ export const remote: Strings['remote'] = {
     busy: 'The PC cannot keep up right now. Your text is still in the field.',
     failed: 'That did not arrive. Your text is still in the field.',
     partial: 'Only a part arrived at the PC. Look at the PC before you send again.',
-    connecting: 'Connecting. Then press send once more.',
+    connecting: 'Connecting. Then press once more.',
   },
   pad: {
     surface: 'Touchpad: swiping moves the pointer. With TalkBack only “Left” and “Right” work.',

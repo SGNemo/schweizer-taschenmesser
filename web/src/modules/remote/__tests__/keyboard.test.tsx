@@ -215,7 +215,7 @@ describe('page Tastatur', () => {
     type('noch da');
     fireEvent.click(screen.getByTestId('remote-send'));
     expect(screen.getByTestId('remote-type-note').textContent).toBe(
-      'Die Verbindung steht gleich. Dann noch einmal senden.',
+      'Die Verbindung steht gleich. Dann noch einmal drücken.',
     );
     expect(fake.parts.hooks.typed()).toEqual([]);
     expect(field().value).toBe('noch da');
@@ -226,9 +226,13 @@ describe('page Tastatur', () => {
     fireEvent.click(screen.getByTestId('remote-send'));
     await until(() => fake.parts.hooks.typed().length === 1);
     expect(fake.parts.hooks.typed()).toEqual(['noch da']);
+    // the connection ends again later: the sentence does not come back without a press
+    await act(async () => fake.parts.hooks.close());
+    await wait(20);
+    expect(screen.queryByTestId('remote-type-note')).toBeNull();
   });
 
-  it('what was typed is in no log, no storage and no database afterwards', async () => {
+  it('what was typed is in no log, no storage and no address afterwards', async () => {
     const said: unknown[] = [];
     const spies = (['log', 'info', 'warn', 'error', 'debug'] as const).map((name) =>
       vi.spyOn(console, name).mockImplementation((...args) => void said.push(...args)),
@@ -249,21 +253,6 @@ describe('page Tastatur', () => {
       JSON.stringify({ ...localStorage }) + JSON.stringify({ ...sessionStorage }),
     ).not.toContain('Merkwort');
     expect(window.location.href).not.toContain('Merkwort');
-    for (const { name } of await indexedDB.databases()) {
-      const db = await new Promise<IDBDatabase>((resolve, reject) => {
-        const open = indexedDB.open(name!);
-        open.onsuccess = () => resolve(open.result);
-        open.onerror = () => reject(open.error);
-      });
-      for (const store of [...db.objectStoreNames]) {
-        const rows = await new Promise<unknown[]>((resolve, reject) => {
-          const all = db.transaction(store).objectStore(store).getAll();
-          all.onsuccess = () => resolve(all.result);
-          all.onerror = () => reject(all.error);
-        });
-        expect(JSON.stringify(rows), `${name}/${store}`).not.toContain('Merkwort');
-      }
-      db.close();
-    }
+    // (the databases are read in the browser test: here none is open)
   });
 });

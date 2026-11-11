@@ -360,9 +360,12 @@ test('keyboard: type, read, send – the enter key sends with Enter, "Senden" wi
   await page.screenshot({ path: info.outputPath('remote-9-keyboard-typing.png') });
 
   // "Senden": the line without Enter, and the field is empty again
-  await page.getByTestId('remote-send').click();
+  await page.getByTestId('remote-send').tap();
   await expect(field).toHaveValue('');
   expect(await page.evaluate(() => window.__tmRemote.typed())).toEqual(['Grüße aus Köln 🙂']);
+  // sending keeps the phone's keyboard open: the field still has the focus, no keys yet
+  await expect(field).toBeFocused();
+  await expect(page.getByTestId('remote-keys')).toHaveCount(0);
   expect(await page.evaluate(() => window.__tmRemote.sent())).toEqual([]);
 
   // the keyboard's enter key: the line, then Enter at the PC

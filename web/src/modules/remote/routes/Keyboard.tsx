@@ -61,13 +61,15 @@ export function Keyboard({
   useEffect(() => {
     const screen = window.visualViewport;
     if (!screen || !focused) return;
-    let height = screen.height;
+    let { height, width, scale } = screen;
     const onResize = () => {
-      if (screen.height > height + 100) {
+      // a turned phone or a zoom changes the height too: that is not a closed keyboard
+      const same = screen.width === width && screen.scale === scale;
+      if (same && screen.height > height + 100) {
         field.current?.blur();
         setFocused(false);
       }
-      height = screen.height;
+      ({ height, width, scale } = screen);
     };
     screen.addEventListener('resize', onResize);
     return () => screen.removeEventListener('resize', onResize);
@@ -128,7 +130,13 @@ export function Keyboard({
     </button>
   );
 
-  // a press that only connected: said until the page is connected (then the next press sends)
+  // a press that only connected: said until the page is connected (then the next press sends) –
+  // and not again by itself when the connection ends later
+  const [wasLive, setWasLive] = useState(line.live);
+  if (wasLive !== line.live) {
+    setWasLive(line.live);
+    if (line.live) setAsked(false);
+  }
   const waitNote = asked && !line.live && usable ? k.connecting : note;
 
   return (
