@@ -75,7 +75,8 @@ describe('remote session: text and keys', () => {
     // every piece is whole characters and fits the shell's limit
     for (const piece of pieces) {
       expect(new TextEncoder().encode(piece).length).toBeLessThanOrEqual(2048);
-      expect(piece.isWellFormed()).toBe(true);
+      // no surrogate left alone at a cut
+      expect(Array.from(piece).every((c) => c.length === 2)).toBe(true);
     }
     const { session, hooks } = await ready();
     expect(await done(session.type(long, false))).toBe('sent');
