@@ -196,6 +196,8 @@ Checks wie Paket 2; Handtests in MANUAL-TESTS (Klick, Doppelklick, Rechtsklick, 
 
 ### Prompt – package 4: keyboard and special keys (`feat/remote-keyboard`)
 
+Split in three PRs (one topic each), like package 3: **part 1** `feat/remote-keyboard-host` = `remote-input` keyboard (`src/keyboard.rs`, the keyboard part of `SendInput`, own thread) and the shell sink forwarding `Key` and `Text`. **Part 2** `feat/remote-keyboard-client` = the phone's client: key actions and text in `remote_client_send`/a text command, the seam, the fake. **Part 3** `feat/remote-keyboard` = the page Tastatur, texts, e2e, focus checklist, hand tests.
+
 ```
 # Aufgabe: Fernsteuerung – Text senden und Sondertasten (Paket 4)
 

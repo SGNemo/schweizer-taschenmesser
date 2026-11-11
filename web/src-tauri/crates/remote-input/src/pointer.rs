@@ -1,6 +1,6 @@
-//! The pointer: moves, the two mouse buttons, the wheel. **This is the simulated input of this
-//! crate, and all of it** – the mouse part of `SendInput`, nothing else (no keyboard, no absolute
-//! position, no window message).
+//! The pointer: moves, the two mouse buttons, the wheel. **This is the simulated mouse input of
+//! this crate, and all of it** – the mouse part of `SendInput`, nothing else (no absolute
+//! position, no window message; the keyboard has its own file, `keyboard.rs`).
 //!
 //! It has a thread of its own. The media worker waits for the audio device and the media session,
 //! sometimes for many milliseconds; a pointer that shared its queue would stutter whenever the
