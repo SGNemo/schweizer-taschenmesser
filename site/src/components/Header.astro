@@ -14,10 +14,9 @@ const choices = localesFor(route);
   <div class="wrap bar">
     <a class="brand" href={home}><img src={logo.src} width="26" height="26" alt="" />{s.siteName}</a>
     <nav class="main" aria-label={s.a11y.mainNav}>
-      <a href={`${home === '/' ? '' : home}#features`}>{s.nav.features}</a>
-      <a href={`${home === '/' ? '' : home}#daten`}>{s.nav.privacy}</a>
-      <a href={`${home === '/' ? '' : home}#install`}>{s.nav.install}</a>
-      <a href={`${home === '/' ? '' : home}#support`}>{s.nav.support}</a>
+      {(['modules', 'data', 'install', 'support'] as const).map((r) => (
+        <a href={routes[r][locale]} aria-current={route === r ? 'page' : undefined}>{s.nav[r]}</a>
+      ))}
       <a class="gh-nav" href={REPO_URL} rel="noopener"><Icon name="github" size={18} />{s.nav.github}</a>
     </nav>
     <div class="end">
@@ -44,7 +43,7 @@ const choices = localesFor(route);
 </header>
 
 <style>
-  /* Under 64rem the links are a second row (anchor bar, round 5 W4, no script): the header sticks with a negative
+  /* Under 64rem the links are a second row (no script): the header sticks with a negative
      offset of its first row, so the logo row scrolls away and the links stay. From 64rem everything is one row. */
   .site-header {
     --bar-h: 3.5rem;
@@ -65,7 +64,7 @@ const choices = localesFor(route);
     display: inline-flex;
     align-items: center;
     gap: 0.625rem;
-    font-weight: var(--weight-semibold);
+    font-weight: var(--weight-heavy);
     text-decoration: none;
     height: var(--bar-h);
   }
@@ -91,8 +90,12 @@ const choices = localesFor(route);
     white-space: nowrap;
   }
   nav.main a:hover,
-  .gh:hover {
+  .gh:hover,
+  nav.main a[aria-current] {
     color: var(--text);
+  }
+  nav.main a[aria-current] {
+    font-weight: var(--weight-heavy);
   }
   nav.main a:focus-visible {
     outline-offset: -2px;
@@ -140,7 +143,7 @@ const choices = localesFor(route);
   }
   .lang a {
     padding: 0 0.75rem;
-    min-height: 2.25rem;
+    min-height: var(--touch);
     display: inline-flex;
     align-items: center;
     text-decoration: none;

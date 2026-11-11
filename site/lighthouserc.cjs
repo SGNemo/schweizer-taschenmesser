@@ -5,7 +5,7 @@ module.exports = {
   ci: {
     collect: {
       staticDistDir: './dist',
-      url: ['http://localhost/index.html', 'http://localhost/en.html', 'http://localhost/impressum.html', 'http://localhost/install.html', 'http://localhost/en/install.html'],
+      url: ['http://localhost/index.html', 'http://localhost/en.html', 'http://localhost/impressum.html', 'http://localhost/install.html', 'http://localhost/en/install.html', 'http://localhost/module.html', 'http://localhost/daten.html', 'http://localhost/unterstuetzen.html', 'http://localhost/en/modules.html', 'http://localhost/en/data.html', 'http://localhost/en/support.html'],
       numberOfRuns: 3,
       settings: {
         chromeFlags: '--no-sandbox --headless=new --disable-gpu',

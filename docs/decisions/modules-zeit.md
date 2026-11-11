@@ -1,0 +1,11 @@
+# Decisions – modules and tools – Zeit, ToDos, Uhr
+
+Part of [modules](modules.md). Index of areas: [DECISIONS](../DECISIONS.md).
+
+## Zeit (0.7.0)
+
+- **Erinnerungen** are calendar events of the kind `reminder` (`kind` missing = event, no data migration) with `notify {minutesBefore, enabled}`; paused = `enabled: false` (stays in the tab, off the calendar). Calendar notification source: key `event:<id>:<date>T<time>`, all-day events at `allDayNotifyTime`. Step `0.7.0-reminder` copies `reminders_reminder` (`time` → `startTime`, `active` → `notify.enabled`). The scheduler cursor is time-based and the Android list is rebuilt as a whole, so old `reminder:` keys need no carry-over. The `module.reminders` default time moves to `defaultReminderTime` once.
+- **Assistant:** "Erinnerung" queries the calendar with `kind = reminder`; the quick-capture type `reminder` writes such an event.
+- **ToDos:** `recurrence?` – ticking off keeps the task (history) and creates the next one (with copies of its subtasks, open again, due dates moved along) with the deterministic id `<first id>:<due date>` (`createMany` skips existing ones, so two devices never duplicate); reopening removes the open next one. `someday` keeps tasks out of open views, widget, "Jetzt wichtig" and calendar; open recurring tasks show their later occurrences on the calendar.
+- **File imports:** notes (tags and Keep labels become a final `#tag` line; no ZIP) and ToDos (done tasks off by default, repeats only as note text). [notes](../features/notes-import.md), [todos](../features/import-todos.md)
+- 2026-11-09 **Uhr = a module in Planen, not a tool (`feat/clock-module`, Sven):** „always see the time of my places“ needs a widget on the overview, which only modules have (a tool lives in the panel); places are one synced collection `clock_place` (`label`, `zone`, `order`). The place search is offline: zones from `Intl.supportedValuesOf('timeZone')` plus ~240 German/English city names in `core/time/cities.ts`, typo-tolerant (`core/time/placeSearch.ts`), no geocoding. The zone arithmetic moved from the Zeitzonen tool to `core/time/zones.ts` (shared), the minute timer is the shared `useMinuteNow` (one tick per minute, no seconds). The clock next to the logo stays local and opens the module while it is on; no alarm, timer or meeting planner in it.

@@ -1,0 +1,228 @@
+---
+/**
+ * /daten "Was ins Netz geht": the diagram of what stays with the visitor, the full ledger of connections, what the
+ * AI gets, and what a visitor can check without trusting the page (source, signed updates, checksums). The diagram
+ * is a drawing with a text alternative, not a picture slot: no app picture will replace it.
+ */
+import { REPO_URL, SECURITY_DOCS_URL } from '../config.js';
+import { routes, t, type Locale } from '../i18n';
+import { release } from '../lib/release';
+import Icon from './Icon.astro';
+import Ledger from './Ledger.astro';
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const s = t(locale);
+const p = s.dataPage;
+const files = (['windows', 'android'] as const).map((k) => release.assets[k]).filter((f) => f.sha256);
+---
+<div class="wrap">
+  <header class="page-head top">
+    <div>
+      <h1>{p.h1}</h1>
+      <p class="lead">{p.lead}</p>
+    </div>
+    <div class="map" role="img" aria-label={p.schema.alt}>
+      <div class="inside">
+        <span class="zone">{p.schema.inside}</span>
+        <div class="node"><Icon name="pc" size={22} /><b>{p.schema.pc[0]}</b><span>{p.schema.pc[1]}</span></div>
+        <div class="wire"><span>{p.schema.sync}</span></div>
+        <div class="node optional"><Icon name="server" size={22} /><b>{p.schema.server[0]}</b><span>{p.schema.server[1]}</span></div>
+        <div class="wire"><span>{p.schema.sync}</span></div>
+        <div class="node"><Icon name="phone" size={22} /><b>{p.schema.phone[0]}</b><span>{p.schema.phone[1]}</span></div>
+      </div>
+      <div class="outside">
+        <span class="zone">{p.schema.outside}</span>
+        {p.schema.lines.map(([what, state]) => <p><b>{what}</b><span>{state}</span></p>)}
+      </div>
+    </div>
+  </header>
+
+  <section class="ruled" aria-labelledby="data-table">
+    <h2 id="data-table">{p.table.h}</h2>
+    <p class="muted intro">{p.table.intro}</p>
+    <Ledger locale={locale} />
+  </section>
+
+  <section class="ruled two" aria-labelledby="data-ai">
+    <h2 id="data-ai">{p.ai.h}</h2>
+    <div class="text">{p.ai.p.map((x) => <p>{x}</p>)}</div>
+  </section>
+
+  <section class="ruled" id="pruefen" aria-labelledby="data-check">
+    <h2 id="data-check">{p.check.h}</h2>
+    <p class="muted intro">{p.check.intro}</p>
+    <div class="checks">
+      <dl class="facts">
+        {p.check.items.map(([dt, dd]) => <div><dt>{dt}</dt><dd>{dd}</dd></div>)}
+      </dl>
+      {files.length > 0 && (
+        <div class="sums">
+          <h3>{p.check.sums}</h3>
+          <dl>
+            {files.map((f) => <div><dt>{f.name}</dt><dd><code>{f.sha256}</code></dd></div>)}
+          </dl>
+          <p>{p.check.sumsHint}</p>
+        </div>
+      )}
+    </div>
+    <p class="links">
+      <a class="more" href={REPO_URL} rel="noopener">{p.check.source}<Icon name="external" size={14} /></a>
+      <a class="more" href={SECURITY_DOCS_URL} rel="noopener">{p.check.docs}<Icon name="external" size={14} /></a>
+      <a class="more" href={routes.privacy[locale]}>{p.check.site}</a>
+    </p>
+  </section>
+</div>
+
+<style>
+  .top {
+    align-items: center;
+  }
+  /* The diagram: what is with you (solid line) and what is outside (dashed line). */
+  .map {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .inside,
+  .outside {
+    display: grid;
+    padding: var(--space-3) var(--space-4) var(--space-4);
+    border-radius: var(--radius-md);
+  }
+  .inside {
+    border: var(--rule) solid var(--text);
+    background: var(--surface);
+  }
+  .outside {
+    border: var(--line) dashed var(--border-strong);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-2) var(--space-3);
+  }
+  .zone {
+    grid-column: 1 / -1;
+    margin-bottom: var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-heavy);
+  }
+  .outside .zone {
+    color: var(--text-muted);
+  }
+  .node {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--space-3);
+    align-items: center;
+    padding: var(--space-2) var(--space-3);
+    border: var(--line) solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+  }
+  .node :global(svg) {
+    grid-row: span 2;
+  }
+  .node span,
+  .outside p span {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    line-height: 1.3;
+  }
+  .node.optional {
+    border-style: dashed;
+  }
+  .wire {
+    height: 1.5rem;
+    margin-left: 1.4rem;
+    padding-left: var(--space-3);
+    border-left: var(--line) dashed var(--border-strong);
+    display: flex;
+    align-items: center;
+  }
+  .wire span {
+    font-size: var(--text-meta);
+    color: var(--text-muted);
+  }
+  .outside p {
+    display: grid;
+    align-content: start;
+  }
+  .intro {
+    margin-block: var(--space-2) var(--space-5);
+    max-width: 40rem;
+  }
+  .two {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .text {
+    display: grid;
+    gap: var(--space-3);
+    max-width: 40rem;
+  }
+  .checks {
+    display: grid;
+    gap: var(--space-6);
+  }
+  .facts div {
+    padding-block: var(--space-3);
+    border-top: var(--line) solid var(--border-strong);
+  }
+  .facts dt {
+    font-weight: var(--weight-heavy);
+  }
+  .facts dd,
+  .sums dd {
+    margin: 0;
+    color: var(--text-muted);
+  }
+  .sums {
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+    padding: var(--space-4);
+    border: var(--line) solid var(--border-strong);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+  }
+  .sums h3 {
+    font-size: var(--text-md);
+  }
+  .sums dl {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .sums dt,
+  .sums code {
+    font-family: var(--font-mono);
+    font-size: var(--text-meta);
+  }
+  .sums code {
+    overflow-wrap: anywhere;
+    color: var(--text);
+  }
+  .sums p {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-6);
+    margin-top: var(--space-4);
+    padding-bottom: var(--section);
+  }
+  @media (min-width: 48rem) {
+    .checks {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+  }
+  @media (min-width: 64rem) {
+    .top {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      column-gap: clamp(2rem, 5vw, 5rem);
+    }
+    .two {
+      grid-template-columns: 20rem minmax(0, 1fr);
+      column-gap: clamp(2rem, 5vw, 5rem);
+    }
+  }
+</style>

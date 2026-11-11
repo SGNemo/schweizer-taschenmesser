@@ -1,0 +1,49 @@
+---
+/**
+ * A named picture slot (src/slots.js, docs/design/site/SLOTS.md): fixed aspect ratio per breakpoint, one alt text.
+ * Without pictures the default slot's drawing fills it, as one image for assistive tech (role="img" + alt). Once the
+ * four files src/assets/slots/<name>-{desk,phone}-{light,dark}.png exist, they are shown instead (phone capture
+ * under 48rem, desktop capture above, both themes) and the drawing is not rendered. The ratio stays, so nothing moves.
+ */
+import { getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import { slots } from '../slots.js';
+
+interface Props { name: keyof typeof slots; alt: string; sizes?: string; class?: string }
+const { name, alt, sizes = '(min-width: 48rem) 40rem, 92vw', class: cls } = Astro.props;
+const def = slots[name];
+const all = import.meta.glob<{ default: ImageMetadata }>('../assets/slots/*.png', { eager: true });
+const file = (kind: 'desk' | 'phone', scheme: 'dark' | 'light') => all[`../assets/slots/${name}-${kind}-${scheme}.png`]?.default;
+const SCHEMES = ['dark', 'light'] as const;
+const found = SCHEMES.flatMap((s) => [file('desk', s), file('phone', s)]).filter(Boolean).length;
+if (found !== 0 && found !== 4) throw new Error(`slot "${name}": ${found} of 4 pictures in src/assets/slots (need desk and phone, light and dark)`);
+const set = async (src: ImageMetadata, widths: number[], format: 'avif' | 'webp') =>
+  (await Promise.all(widths.filter((w) => w <= src.width).map(async (w) => `${(await getImage({ src, width: w, format })).src} ${w}w`))).join(', ');
+const pictures = found === 4
+  ? await Promise.all(SCHEMES.map(async (scheme) => {
+      const d = file('desk', scheme)!;
+      const p = file('phone', scheme)!;
+      return {
+        cls: `shot-${scheme}`,
+        phone: { avif: await set(p, [412, 824], 'avif'), webp: await set(p, [412, 824], 'webp') },
+        desk: { avif: await set(d, [640, 960, 1280], 'avif'), webp: await set(d, [640, 960, 1280], 'webp') },
+        fallback: (await getImage({ src: d, width: 960, format: 'webp' })).src,
+      };
+    }))
+  : null;
+---
+<figure class:list={['slot', `ratio-${def.ratio}`, `ratio-sm-${def.ratioPhone}`, cls]} data-slot={name}>
+  {pictures
+    ? <div class="slot-art">
+        {pictures.map((p) => (
+          <picture class={p.cls}>
+            <source media="(max-width: 47.99rem)" type="image/avif" srcset={p.phone.avif} sizes={sizes} />
+            <source media="(max-width: 47.99rem)" type="image/webp" srcset={p.phone.webp} sizes={sizes} />
+            <source type="image/avif" srcset={p.desk.avif} sizes={sizes} />
+            <source type="image/webp" srcset={p.desk.webp} sizes={sizes} />
+            <img src={p.fallback} alt={alt} loading="lazy" decoding="async" />
+          </picture>
+        ))}
+      </div>
+    : <div class="slot-art" role="img" aria-label={alt}><slot /></div>}
+</figure>
