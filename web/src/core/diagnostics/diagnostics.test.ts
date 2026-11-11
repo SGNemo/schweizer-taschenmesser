@@ -208,6 +208,7 @@ describe('diagnostics export', () => {
       status: {
         supported: true,
         enabled: true,
+        notice: true,
         controller: { id: CANARIES.remoteDeviceId, name: CANARIES.remoteDevice, level: 'media' },
         devices: [
           {

@@ -26,6 +26,7 @@ export function createFakeRemoteHostParts() {
   let running = true;
   let supported = true;
   let enabled = false;
+  let notice = true;
   let answer: 'allow' | 'cancel' = 'allow';
   let asked = 0;
   let failNext: string | undefined;
@@ -52,6 +53,7 @@ export function createFakeRemoteHostParts() {
     return {
       supported,
       enabled,
+      notice,
       controller:
         controller && who ? { id: who.id, name: who.name, level: controller.level } : null,
       devices: devices.map((d) => ({ ...d })),
@@ -83,6 +85,12 @@ export function createFakeRemoteHostParts() {
       if (widens(grant, device)) ask();
       Object.assign(device, grant);
       if (controller?.id === id) controller = null;
+    },
+    setNotice: async (on) => {
+      needRunning();
+      // off loosens an option: asked at the PC like every widening
+      if (!on && notice) ask();
+      notice = on;
     },
     end: async () => {
       needRunning();

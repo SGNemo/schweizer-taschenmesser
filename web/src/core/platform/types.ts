@@ -223,6 +223,8 @@ export interface RemoteHostStatus {
   supported: boolean;
   /** The master switch. */
   enabled: boolean;
+  /** A device that starts to control mouse and keyboard is told at the PC (a system notification). */
+  notice: boolean;
   /** Who controls this PC right now. */
   controller?: { id: string; name: string; level: RemoteLevel } | null;
   devices: RemoteHostDevice[];
@@ -231,7 +233,8 @@ export interface RemoteHostStatus {
 /**
  * Desktop only: this PC's own remote-control settings (`src-tauri/src/remote.rs`). No call sends
  * input. Narrowing is immediate; every widening (a higher level, lifting a pause, dropping the
- * unlock request, the master switch) is asked by the PC in a native dialog first – the call
+ * unlock request, the master switch, switching the notification off) is asked by the PC in a
+ * native dialog first – the call
  * resolves after the answer. Errors are short codes: `not-started` (the hub is off), `cancelled`
  * (the person said no), `busy` (a question is already open), `busy-controlled` (not while mouse
  * and keyboard are controlled), `changed` (the grant changed while the question was open),
@@ -242,6 +245,8 @@ export interface RemoteHostService {
   status(): Promise<RemoteHostStatus>;
   setEnabled(enabled: boolean): Promise<void>;
   setDevice(id: string, grant: RemoteHostGrant): Promise<void>;
+  /** The notification when a device starts to control mouse and keyboard. Off is asked at the PC. */
+  setNotice(on: boolean): Promise<void>;
   /** "Fernsteuerung beenden": ends the session and pauses that device. `false`: nobody controlled. */
   end(): Promise<boolean>;
 }

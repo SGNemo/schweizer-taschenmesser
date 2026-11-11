@@ -8,7 +8,7 @@ import { defineBundle } from '@/core/i18n/bundle';
 export const tRemoteHost = defineBundle(
   {
     title: 'Fernsteuerung',
-    help: 'Ein gekoppeltes Handy darf Medien und Lautstärke dieses PCs steuern – nur im Heimnetz und nur, wenn du es hier erlaubst.',
+    help: 'Ein gekoppeltes Handy darf Medien und Lautstärke dieses PCs steuern, auf Wunsch auch Maus und Tastatur – nur im Heimnetz und nur, wenn du es hier erlaubst.',
     keywords: ['Fernbedienung', 'Handy steuert PC', 'Lautstärke', 'Medien', 'Fernsteuern'],
     allow: 'Fernsteuerung erlauben',
     allowHint:
@@ -28,6 +28,12 @@ export const tRemoteHost = defineBundle(
       media: 'Medien und Lautstärke',
       full: 'Medien, Maus und Tastatur',
     },
+    unlock: 'Vor Maus und Tastatur am Handy entsperren',
+    unlockHint:
+      'Das Handy fragt dann einmal in acht Stunden nach Fingerabdruck, Gesicht oder PIN. Eine Bremse, falls es entsperrt herumliegt.',
+    notice: 'Melden, wenn ein Gerät Maus und Tastatur steuert',
+    noticeHint:
+      'Eine ruhige Benachrichtigung von Windows ohne Ton, höchstens einmal in 30 Minuten je Gerät. Das Symbol im Tray zeigt die Fernsteuerung immer an.',
     lastSeen: (when: string) => `Letzter Kontakt: ${when}`,
     neverSeen: 'Noch nie verbunden',
     paused: 'Pausiert',
@@ -55,7 +61,7 @@ export const tRemoteHost = defineBundle(
   {
     en: {
       title: 'Remote control',
-      help: 'A paired phone may control media and volume of this PC – only on your home network and only if you allow it here.',
+      help: 'A paired phone may control media and volume of this PC, and mouse and keyboard if you want – only on your home network and only if you allow it here.',
       keywords: ['Remote', 'Phone controls PC', 'Volume', 'Media', 'Remote control'],
       allow: 'Allow remote control',
       allowHint: 'Off: no device can control this PC. Home-network sync keeps running unchanged.',
@@ -74,6 +80,12 @@ export const tRemoteHost = defineBundle(
         media: 'Media and volume',
         full: 'Media, mouse and keyboard',
       },
+      unlock: 'Unlock at the phone before mouse and keyboard',
+      unlockHint:
+        'The phone then asks for fingerprint, face or PIN once in eight hours. A brake in case it lies around unlocked.',
+      notice: 'Tell me when a device controls mouse and keyboard',
+      noticeHint:
+        'A quiet Windows notification without a sound, at most once in 30 minutes per device. The tray icon always shows remote control.',
       lastSeen: (when: string) => `Last contact: ${when}`,
       neverSeen: 'Never connected yet',
       paused: 'Paused',
