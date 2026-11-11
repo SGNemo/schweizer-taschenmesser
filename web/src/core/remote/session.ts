@@ -123,7 +123,7 @@ const TEXT_PIECE = 400;
  */
 export function textPieces(text: string): string[] {
   // eslint-disable-next-line no-control-regex
-  const clean = Array.from(text.replace(/[\u0000-\u001f\u007f-\u009f]+/g, ' '));
+  const clean = Array.from(text.replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]+/g, ' '));
   const pieces: string[] = [];
   for (let i = 0; i < clean.length; i += TEXT_PIECE)
     pieces.push(clean.slice(i, i + TEXT_PIECE).join(''));

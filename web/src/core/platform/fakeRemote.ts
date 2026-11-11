@@ -139,7 +139,7 @@ export function createFakeRemoteParts() {
       // like the shell: checked whole first, then the session, the level and the lock
       const bytes = new TextEncoder().encode(text).length;
       // eslint-disable-next-line no-control-regex
-      if (bytes === 0 || bytes > 2048 || /[\u0000-\u001f\u007f-\u009f]/.test(text))
+      if (bytes === 0 || bytes > 2048 || /[\u0000-\u001f\u007f-\u009f\u2028\u2029]/.test(text))
         throw new Error('bad-text');
       if (!live || live.session !== session) throw new Error('closed');
       if (live.level !== 'full') throw new Error('bad-level');

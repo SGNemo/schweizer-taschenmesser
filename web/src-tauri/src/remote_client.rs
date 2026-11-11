@@ -352,7 +352,9 @@ const MAX_TEXT: usize = 2048;
 /// The text of one call as the frames to write: each at most [`MAX_TEXT_BYTES`] bytes, cut at a
 /// whole character. Empty, too long, or with a control character in it: refused whole.
 fn text_frames(text: &str) -> Result<Vec<&str>, &'static str> {
-    if text.is_empty() || text.len() > MAX_TEXT || text.chars().any(char::is_control) {
+    // (the two Unicode line breaks count as control characters here: a line break is a key)
+    let control = |c: char| c.is_control() || matches!(c, '\u{2028}' | '\u{2029}');
+    if text.is_empty() || text.len() > MAX_TEXT || text.chars().any(control) {
         return Err("bad-text");
     }
     let mut frames = Vec::new();
@@ -945,6 +947,8 @@ mod tests {
             "a\u{1b}[2J",
             "a\u{7f}",
             "a\u{85}b",
+            "a\u{2028}b",
+            "a\u{2029}b",
         ] {
             assert_eq!(text_frames(bad), Err("bad-text"), "{bad:?}");
         }
