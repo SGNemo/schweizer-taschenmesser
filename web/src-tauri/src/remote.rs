@@ -918,12 +918,22 @@ mod tests {
     struct FakeKeys(Arc<Seen>);
 
     impl remote_input::Keys for FakeKeys {
-        fn key(&mut self, key: remote_input::Key) {
-            self.0.keys.lock().unwrap().push(format!("{key:?}"));
-        }
-        fn text(&mut self, units: &[u16]) {
-            let text = String::from_utf16_lossy(units);
-            self.0.keys.lock().unwrap().push(format!("text {text}"));
+        fn send(&mut self, strokes: &[remote_input::Stroke]) -> usize {
+            use remote_input::Stroke;
+            let units: Vec<u16> = strokes
+                .iter()
+                .filter_map(|s| match s {
+                    Stroke::Unit { unit, up: false } => Some(*unit),
+                    _ => None,
+                })
+                .collect();
+            let said = if units.is_empty() {
+                format!("keys {strokes:?}")
+            } else {
+                format!("text {}", String::from_utf16_lossy(&units))
+            };
+            self.0.keys.lock().unwrap().push(said);
+            strokes.len()
         }
     }
 
@@ -1100,9 +1110,18 @@ mod tests {
             }
             std::thread::sleep(Duration::from_millis(10));
         }
+        let typed = seen.keys.lock().unwrap().clone();
+        assert_eq!(typed[0], "text grüße");
         assert_eq!(
-            *seen.keys.lock().unwrap(),
-            ["text grüße", "Enter", "AltTab"]
+            typed[1],
+            format!("keys {:?}", remote_input::strokes(remote_input::Key::Enter))
+        );
+        assert_eq!(
+            typed[2],
+            format!(
+                "keys {:?}",
+                remote_input::strokes(remote_input::Key::AltTab)
+            )
         );
         sink.apply(Action::Media(Media::PlayPause));
         sink.apply(Action::Media(Media::VolumeDown));
