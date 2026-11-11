@@ -12,6 +12,7 @@ import {
   CurrencyField,
   DateChips,
   Dialog,
+  FormActions,
   SelectField,
   TextArea,
   TextField,
@@ -294,54 +295,53 @@ function Form({
         />
         <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
       </AdvancedFields>
-      <div className={styles.actions}>
-        {existing ? (
+      {/* Not in the foot: on a phone the foot holds delete, cancel and save in one row. */}
+      {existing ? (
+        <div>
           <Button
-            variant="danger"
+            variant="ghost"
             onClick={async () => {
-              await deleteWithUndo(() => invoiceRepo.remove(existing.id));
+              // The same invoice next month (rent, insurance): open again, one month later.
+              const copy = await undoableWithToast(t.actions.duplicated, t.actions.duplicated, () =>
+                invoiceRepo.create({
+                  ...copyData(existing),
+                  status: 'open',
+                  paidAt: undefined,
+                  payments: undefined,
+                  dunningLevel: undefined,
+                  dunnedAt: undefined,
+                  attachment: undefined,
+                  dueDate: addMonthsStr(existing.dueDate, 1),
+                }),
+              );
               onClose();
+              onDuplicated?.(copy);
             }}
           >
-            {t.actions.delete}
+            {t.actions.duplicate}
           </Button>
-        ) : (
-          <span />
-        )}
-        <span className={patternStyles.hstack}>
-          {existing ? (
+        </div>
+      ) : null}
+      <FormActions
+        start={
+          existing ? (
             <Button
-              variant="ghost"
+              variant="danger"
               onClick={async () => {
-                // The same invoice next month (rent, insurance): open again, one month later.
-                const copy = await undoableWithToast(
-                  t.actions.duplicated,
-                  t.actions.duplicated,
-                  () =>
-                    invoiceRepo.create({
-                      ...copyData(existing),
-                      status: 'open',
-                      paidAt: undefined,
-                      payments: undefined,
-                      dunningLevel: undefined,
-                      dunnedAt: undefined,
-                      attachment: undefined,
-                      dueDate: addMonthsStr(existing.dueDate, 1),
-                    }),
-                );
+                await deleteWithUndo(() => invoiceRepo.remove(existing.id));
                 onClose();
-                onDuplicated?.(copy);
               }}
             >
-              {t.actions.duplicate}
+              {t.actions.delete}
             </Button>
-          ) : null}
-          <Button onClick={onClose}>{t.actions.cancel}</Button>
-          <Button type="submit" variant="primary">
-            {t.actions.save}
-          </Button>
-        </span>
-      </div>
+          ) : undefined
+        }
+      >
+        <Button onClick={onClose}>{t.actions.cancel}</Button>
+        <Button type="submit" variant="primary">
+          {t.actions.save}
+        </Button>
+      </FormActions>
     </form>
   );
 }

@@ -26,6 +26,7 @@ async function spend(page: Page, amount: string, category: string, date = '2026-
   const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
   await dialog.getByRole('button', { name: 'Ausgabe', exact: true }).click();
   await dialog.getByLabel('Betrag').fill(amount);
+  await moreFields(page);
   await dialog.getByLabel('Datum').fill(date);
   await dialog.getByLabel('Kategorie').selectOption({ label: category });
   await save(page);
@@ -39,7 +40,10 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await spend(page, '40,00', 'Lebensmittel', '2026-07-10');
     await spend(page, '35,00', 'Lebensmittel', '2026-09-10');
     await open(page, '/budgets');
-    await page.getByRole('button', { name: /Budget (hinzufügen|eintragen)/ }).click();
+    await page
+      .getByRole('button', { name: /Budget (hinzufügen|eintragen)/ })
+      .first() // the head's action (the phone's plus) and, while the list is empty, the empty state's one verb
+      .click();
     const editor = page.getByRole('dialog');
     await editor.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
     await editor.getByLabel('Limit pro Monat').fill('300');
@@ -55,7 +59,10 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await enable(page, 'budgets');
     await spend(page, '20,00', 'Lebensmittel', '2026-08-10'); // 100 € limit: 80 € left in August
     await open(page, '/budgets');
-    await page.getByRole('button', { name: /Budget (hinzufügen|eintragen)/ }).click();
+    await page
+      .getByRole('button', { name: /Budget (hinzufügen|eintragen)/ })
+      .first() // the head's action (the phone's plus) and, while the list is empty, the empty state's one verb
+      .click();
     const editor = page.getByRole('dialog');
     await editor.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
     await editor.getByLabel('Limit pro Monat').fill('100');
@@ -73,7 +80,10 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await enable(page, 'budgets');
     await spend(page, '60,00', 'Lebensmittel', '2026-09-15');
     await open(page, '/budgets');
-    await page.getByRole('button', { name: /Budget (hinzufügen|eintragen)/ }).click();
+    await page
+      .getByRole('button', { name: /Budget (hinzufügen|eintragen)/ })
+      .first() // the head's action (the phone's plus) and, while the list is empty, the empty state's one verb
+      .click();
     const editor = page.getByRole('dialog');
     await editor.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
     await editor.getByLabel('Limit pro Monat').fill('61');
@@ -100,7 +110,10 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await enable(page, 'budgets');
     await spend(page, '1,00', 'Lebensmittel'); // also makes the default categories
     await open(page, '/budgets');
-    await page.getByRole('button', { name: /Budget (hinzufügen|eintragen)/ }).click();
+    await page
+      .getByRole('button', { name: /Budget (hinzufügen|eintragen)/ })
+      .first() // the head's action (the phone's plus) and, while the list is empty, the empty state's one verb
+      .click();
     const editor = page.getByRole('dialog');
     await editor.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
     await editor.getByLabel('Limit pro Monat').fill('120');
@@ -119,7 +132,10 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await enable(page, 'budgets');
     await spend(page, '1,00', 'Lebensmittel');
     await open(page, '/budgets');
-    await page.getByRole('button', { name: /Budget (hinzufügen|eintragen)/ }).click();
+    await page
+      .getByRole('button', { name: /Budget (hinzufügen|eintragen)/ })
+      .first() // the head's action (the phone's plus) and, while the list is empty, the empty state's one verb
+      .click();
     const editor = page.getByRole('dialog');
     await editor.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
     await editor.getByLabel('Limit pro Monat').fill('120');

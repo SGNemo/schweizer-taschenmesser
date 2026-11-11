@@ -22,9 +22,10 @@ import {
   AdvancedFields,
   Button,
   CurrencyField,
+  DayField,
   Dialog,
+  FormActions,
   Icon,
-  patternStyles,
   Segmented,
   SelectField,
   TextArea,
@@ -59,32 +60,36 @@ function Actions({
   onClose: () => void;
 }) {
   return (
-    <div className={styles.actions}>
-      {onDelete ? (
-        <Button
-          variant="danger"
-          onClick={async () => {
-            await onDelete();
-            onClose();
-          }}
-        >
-          {t.actions.delete}
-        </Button>
-      ) : (
-        <span />
-      )}
-      <span className={patternStyles.hstack}>
-        {onDuplicate ? (
+    <>
+      {/* Not in the foot: on a phone the foot holds delete, cancel and save in one row. */}
+      {onDuplicate ? (
+        <div>
           <Button variant="ghost" onClick={() => void onDuplicate()}>
             {t.actions.duplicate}
           </Button>
-        ) : null}
+        </div>
+      ) : null}
+      <FormActions
+        start={
+          onDelete ? (
+            <Button
+              variant="danger"
+              onClick={async () => {
+                await onDelete();
+                onClose();
+              }}
+            >
+              {t.actions.delete}
+            </Button>
+          ) : undefined
+        }
+      >
         <Button onClick={onClose}>{t.actions.cancel}</Button>
         <Button type="submit" variant="primary">
           {t.actions.save}
         </Button>
-      </span>
-    </div>
+      </FormActions>
+    </>
   );
 }
 
@@ -222,30 +227,21 @@ function TransactionForm({
         ]}
         onChange={setKind}
       />
-      <div className={styles.split}>
-        <TextField
-          label={
-            accountCurrency === 'EUR' ? t.money.amount : `${t.money.amount} (${accountCurrency})`
-          }
-          inputMode="decimal"
-          placeholder="0,00"
-          value={amount}
-          onChange={(e) => {
-            setAmount(e.target.value);
-            setError('');
-          }}
-          error={error}
-          required
-          data-autofocus
-        />
-        <TextField
-          label={t.form.date}
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          required
-        />
-      </div>
+      <TextField
+        label={
+          accountCurrency === 'EUR' ? t.money.amount : `${t.money.amount} (${accountCurrency})`
+        }
+        inputMode="decimal"
+        placeholder="0,00"
+        value={amount}
+        onChange={(e) => {
+          setAmount(e.target.value);
+          setError('');
+        }}
+        error={error}
+        required
+        data-autofocus
+      />
       <TextField
         label={t.finance.payee}
         value={payee}
@@ -261,38 +257,25 @@ function TransactionForm({
           }
         }}
       />
-      <div className={styles.split}>
+      {splitRows.length === 0 ? (
         <SelectField
-          label={t.finance.account}
-          value={accountId}
-          onChange={(e) => setChosenAccountId(e.target.value)}
+          label={t.finance.category}
+          value={categoryId}
+          onChange={(e) => {
+            setCategoryId(e.target.value);
+            setAutoFilled(false);
+          }}
         >
-          {data.accounts.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.name}
+          <option value="">{t.finance.noCategory}</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.parentId ? `${parentName(data.categories, c.parentId)} › ${c.name}` : c.name}
             </option>
           ))}
         </SelectField>
-        {splitRows.length === 0 ? (
-          <SelectField
-            label={t.finance.category}
-            value={categoryId}
-            onChange={(e) => {
-              setCategoryId(e.target.value);
-              setAutoFilled(false);
-            }}
-          >
-            <option value="">{t.finance.noCategory}</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.parentId ? `${parentName(data.categories, c.parentId)} › ${c.name}` : c.name}
-              </option>
-            ))}
-          </SelectField>
-        ) : (
-          <p className={styles.muted}>{t.finance.ext.split.parts(splitRows.length)}</p>
-        )}
-      </div>
+      ) : (
+        <p className={styles.muted}>{t.finance.ext.split.parts(splitRows.length)}</p>
+      )}
       {splitRows.length > 0 ? (
         <SplitEditor
           rows={splitRows}
@@ -310,24 +293,52 @@ function TransactionForm({
           {t.finance.ext.duplicateHint(twinNow.payee ?? '', formatDay(twinNow.date, 'P'))}
         </p>
       ) : null}
-      <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
-      <AdvancedFields moduleId="finance" hasData={!!repeat || splitRows.length > 0}>
-        {kind === 'expense' || splitRows.length > 0 ? (
-          <Button
-            variant="ghost"
-            onClick={() =>
-              setSplitRows(
-                splitRows.length > 0
-                  ? []
-                  : [
-                      { categoryId, amount: amount },
-                      { categoryId: '', amount: '' },
-                    ],
-              )
-            }
+      {/* B10, "first what is needed": amount, payee and category are the booking. Day, account, note, split and
+          repeat fold away for a new one (their current values stand beside the button); an existing booking, or one
+          that already left the defaults, shows them all. */}
+      <AdvancedFields
+        moduleId="finance"
+        hasData={!!existing || !!repeat || splitRows.length > 0 || note !== ''}
+        summary={[
+          date === today() ? t.ui.datePresets.today : formatDay(date, 'P'),
+          data.accounts.find((a) => a.id === accountId)?.name ?? '',
+        ]
+          .filter(Boolean)
+          .join(' · ')}
+      >
+        <div className={styles.split}>
+          <DayField label={t.form.date} value={date} onChange={setDate} required />
+          <SelectField
+            label={t.finance.account}
+            value={accountId}
+            onChange={(e) => setChosenAccountId(e.target.value)}
           >
-            {splitRows.length > 0 ? t.finance.ext.split.off : t.finance.ext.split.toggle}
-          </Button>
+            {data.accounts.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </SelectField>
+        </div>
+        <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+        {kind === 'expense' || splitRows.length > 0 ? (
+          <div>
+            <Button
+              variant="ghost"
+              onClick={() =>
+                setSplitRows(
+                  splitRows.length > 0
+                    ? []
+                    : [
+                        { categoryId, amount: amount },
+                        { categoryId: '', amount: '' },
+                      ],
+                )
+              }
+            >
+              {splitRows.length > 0 ? t.finance.ext.split.off : t.finance.ext.split.toggle}
+            </Button>
+          </div>
         ) : null}
         <SelectField
           label={t.finance.repeat}

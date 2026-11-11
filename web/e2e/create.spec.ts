@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enable, ready } from './helpers';
+import { enable, moreFields, ready } from './helpers';
+import { openEditor } from './money-helpers';
 
 /** Creating with fewer steps (docs/product/comfort, package 2). */
 test.beforeEach(async ({ page }) => {
@@ -68,7 +69,7 @@ test('"Duplizieren" copies an invoice one month later and opens the copy', async
   await dialog.getByLabel('Fällig am').fill('2026-10-01');
   await save(page);
 
-  await page.getByRole('button', { name: /^Vermieter/ }).click();
+  await openEditor(page, page.getByRole('button', { name: /^Vermieter/ }));
   await page.getByRole('dialog').getByRole('button', { name: 'Duplizieren' }).click();
   await expect(page.getByText(/Dupliziert/)).toBeVisible();
   await expect(page.getByRole('dialog').getByLabel('Fällig am')).toHaveValue('2026-11-01');
@@ -82,13 +83,18 @@ test('"Duplizieren" on a booking opens a copy dated today; undo removes it', asy
   const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
   await dialog.getByLabel('Betrag').fill('950,00');
   await dialog.getByLabel('Empfänger / Titel').fill('Miete');
+  await moreFields(page);
   await dialog.getByLabel('Datum').fill('2026-09-01');
   await save(page);
 
   await ready(page, '/finance?tab=transactions&month=2026-09');
-  await page.getByRole('listitem').filter({ hasText: 'Miete' }).getByRole('button').first().click();
+  await openEditor(
+    page,
+    page.getByRole('listitem').filter({ hasText: 'Miete' }).getByRole('button').first(),
+  );
   await page.getByRole('dialog').getByRole('button', { name: 'Duplizieren' }).click();
-  await expect(page.getByRole('dialog').getByLabel('Datum')).toHaveValue('2026-09-29');
+  // The date field shows the app's format (German region), not the system's.
+  await expect(page.getByRole('dialog').getByLabel('Datum')).toHaveValue('29.09.2026');
   await expect(page.getByRole('dialog').getByLabel('Betrag')).toHaveValue('950,00');
 });
 

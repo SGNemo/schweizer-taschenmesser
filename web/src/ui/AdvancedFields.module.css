@@ -1,0 +1,13 @@
+/* "Mehr Felder" and, beside it, what the folded fields hold right now. */
+.folded {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+}
+.summary {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

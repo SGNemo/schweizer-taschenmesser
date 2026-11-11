@@ -6,24 +6,6 @@
   gap: var(--space-3);
   margin-bottom: var(--space-4);
 }
-.stats {
-  display: flex;
-  gap: var(--space-6);
-  flex-wrap: wrap;
-  margin-bottom: var(--space-5);
-}
-.stat {
-  display: flex;
-  flex-direction: column;
-}
-.statLabel {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-}
-.statValue {
-  font-size: var(--text-xl);
-  font-weight: var(--weight-semibold);
-}
 .list {
   list-style: none;
   margin: 0;
@@ -134,53 +116,24 @@
   width: 2.5rem;
   height: 2.5rem;
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--module-color, var(--text-muted)) 22%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--module-color, var(--text-muted)) 45%, var(--border));
+  /* Tone step: a quiet plate, no frame; the initials are the mark (the hue lives in the head's icon plate). */
+  background: var(--surface-2);
   color: var(--text);
   font-weight: var(--weight-semibold);
   font-size: var(--text-sm);
   letter-spacing: 0.02em;
 }
 
-.headTiles {
-  display: grid;
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
-}
-
-.headTitle {
-  margin: 0;
-  font-size: var(--text-sm);
+/* The year's sum (and further currencies) in one quiet line; the month stands in the head. */
+.totals {
+  margin: 0 0 var(--space-4);
   color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: var(--font-num);
+}
+.totals b {
+  color: var(--text);
   font-weight: var(--weight-semibold);
-}
-
-.headNothing {
-  margin: 0;
-  color: var(--text-muted);
-}
-
-/* "Als Nächstes": the next charges as service tiles in a row that wraps. */
-.headList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
-  gap: var(--space-3);
-}
-
-.headList li {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--module-color) 8%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--module-color) 22%, var(--border));
-  font-size: var(--text-sm);
-  font-variant-numeric: tabular-nums;
 }
 
 .topList {
@@ -213,52 +166,20 @@
 
 /* Phone: the row keeps its width for the text; the tile stays in the head. */
 @media (max-width: 899px) {
-  .rowTile {
+  .rowTile,
+  .rowSwitch {
     display: none;
   }
 }
 
-/* Head: the month cycle as a ring of shares with its legend (names are text, the ring is decoration). */
-.cycle {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  min-width: 0;
-}
-.cycle strong {
-  font-size: var(--text-xl, 1.5rem);
-  font-variant-numeric: tabular-nums;
-}
-.cycleLegend {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  font-size: var(--text-sm);
-  min-width: 0;
-}
-.cycleLegend li {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-/* Phone: the legend is visually hidden (the ring keeps its text alternative); it stays in the text flow for readers. */
-@media (max-width: 700px) {
-  .cycleLegend {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-}
-
-/* Phone: only the very next charge above the list. */
+/* Phone: the page's "⋯" menu sits at the right edge of the first row (`PageHeader besideContent`). */
 @media (max-width: 899px) {
-  .headList li:nth-child(n + 2) {
-    display: none;
+  .totals {
+    min-height: var(--touch);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0 var(--space-1);
+    padding-inline-end: calc(var(--touch) + var(--space-3));
   }
 }

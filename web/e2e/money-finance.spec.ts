@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { moreFields, ready, showAllWidgets } from './helpers';
+import { togglePageMoreFields } from './money-helpers';
 import { primaryActions } from './primaries';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
@@ -107,6 +108,7 @@ test.describe('Finance: transfers, splits, year, outlook', () => {
     const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
     await dialog.getByLabel('Betrag').fill('800,00');
     await dialog.getByLabel('Empfänger / Titel').fill('Miete');
+    await moreFields(page);
     await dialog.getByLabel('Datum').fill('2026-09-01');
     await moreFields(page);
     await dialog.getByLabel('Wiederholen').selectOption({ label: 'Monatlich' });
@@ -115,7 +117,7 @@ test.describe('Finance: transfers, splits, year, outlook', () => {
     await ready(page, '/finance?tab=overview');
     await expect(page.getByTestId('forecast-end')).toHaveCount(0); // nothing planned until month end
     // The outlook's switch and list are a power view: they appear in Erweitert.
-    await page.getByRole('switch', { name: 'Mehr Felder anzeigen' }).click();
+    await togglePageMoreFields(page);
     await page.getByTestId('forecast-toggle').click();
     await page.getByRole('button', { name: '30 Tage' }).click();
     await expect(page.getByTestId('forecast-lowest')).toContainText('01.10.2026');

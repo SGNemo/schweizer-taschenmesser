@@ -59,10 +59,10 @@
       "links": 14,
       "icons": 29,
       "firstScreenActions": 40,
-      "borders": 3,
+      "borders": 0,
       "shadows": 0,
-      "surfaceLanguages": 1,
-      "colouredAboveFold": 21,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 8,
       "signatureBlocks": 0
     },
     "d1920--calendar": {
@@ -150,15 +150,15 @@
       "signatureBlocks": 0
     },
     "d1920--finance": {
-      "height": 2141,
-      "buttons": 67,
+      "height": 1887,
+      "buttons": 66,
       "links": 14,
       "icons": 69,
       "firstScreenActions": 52,
       "borders": 0,
-      "shadows": 2,
-      "surfaceLanguages": 1,
-      "colouredAboveFold": 3,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 6,
       "signatureBlocks": 0
     },
     "d1920--fitness": {
@@ -403,14 +403,14 @@
     },
     "d1920--subscriptions": {
       "height": 1080,
-      "buttons": 45,
+      "buttons": 44,
       "links": 14,
       "icons": 40,
-      "firstScreenActions": 58,
-      "borders": 15,
+      "firstScreenActions": 57,
+      "borders": 0,
       "shadows": 0,
-      "surfaceLanguages": 1,
-      "colouredAboveFold": 13,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 5,
       "signatureBlocks": 0
     },
     "d1920--timetrack": {
@@ -498,15 +498,15 @@
       "signatureBlocks": 0
     },
     "p412--budgets": {
-      "height": 1369,
+      "height": 1117,
       "buttons": 16,
       "links": 9,
       "icons": 11,
       "firstScreenActions": 21,
-      "borders": 3,
+      "borders": 0,
       "shadows": 0,
-      "surfaceLanguages": 1,
-      "colouredAboveFold": 12,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 6,
       "signatureBlocks": 0
     },
     "p412--calendar": {
@@ -558,14 +558,14 @@
       "signatureBlocks": 0
     },
     "p412--finance": {
-      "height": 2747,
-      "buttons": 16,
+      "height": 2204,
+      "buttons": 15,
       "links": 9,
       "icons": 14,
-      "firstScreenActions": 22,
+      "firstScreenActions": 21,
       "borders": 0,
-      "shadows": 1,
-      "surfaceLanguages": 1,
+      "shadows": 0,
+      "surfaceLanguages": 0,
       "colouredAboveFold": 1,
       "signatureBlocks": 0
     },
@@ -618,8 +618,8 @@
       "signatureBlocks": 0
     },
     "p412--invoices": {
-      "height": 1595,
-      "buttons": 35,
+      "height": 1455,
+      "buttons": 33,
       "links": 9,
       "icons": 30,
       "firstScreenActions": 28,
@@ -786,15 +786,15 @@
       "signatureBlocks": 0
     },
     "p412--subscriptions": {
-      "height": 1961,
-      "buttons": 34,
+      "height": 1301,
+      "buttons": 24,
       "links": 9,
       "icons": 22,
-      "firstScreenActions": 23,
-      "borders": 2,
+      "firstScreenActions": 26,
+      "borders": 0,
       "shadows": 0,
-      "surfaceLanguages": 1,
-      "colouredAboveFold": 5,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 4,
       "signatureBlocks": 0
     },
     "p412--timetrack": {

@@ -108,7 +108,8 @@
 .attachBox {
   display: grid;
   gap: var(--space-2);
-  border: 1px solid var(--border);
+  /* A quiet area inside the dialog (tone step), no frame. */
+  background: var(--surface-2);
   border-radius: var(--radius-md);
   padding: var(--space-3);
 }
@@ -135,11 +136,13 @@
 }
 
 .attachImage {
-  max-width: 100%;
+  /* The box takes the row, the picture keeps its proportions inside it (no frame, no own width cap). */
+  width: 100%;
+  height: auto;
   max-height: 16rem;
   object-fit: contain;
+  object-position: left center;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border);
 }
 
 .attachActions {

@@ -138,6 +138,11 @@
   background: var(--accent);
   border-color: var(--accent);
 }
+/* Neutral: a switch in every row of a list is on in grey; the page keeps its one accent for its one action (B7). */
+.track[data-tone='neutral'][aria-checked='true'] {
+  background: var(--calm-ink);
+  border-color: var(--calm-ink);
+}
 /* Locked like a disabled button (AE1): no accent, no opacity; on and off stay apart by position and fill. */
 .track:disabled {
   background: var(--surface-sunken);

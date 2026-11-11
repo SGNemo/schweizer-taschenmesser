@@ -1,10 +1,12 @@
-import { useState, type ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import { usePageChromeStore } from '@/core/shell/pageChrome';
 import { useAdvanced } from '@/core/settings/comfort';
 import { tAdvanced } from '@/strings.advanced';
 import { Button } from './Button';
 import { Switch } from './Fields';
 import buttonStyles from './Button.module.css';
+import type { RowMenuItem } from './RowMenu';
+import styles from './AdvancedFields.module.css';
 
 /**
  * "Erweitert" switch for a module header: Basis (default) or Erweitert for this module. The choice
@@ -19,6 +21,21 @@ export function AdvancedToggle({ moduleId }: { moduleId: string }) {
 }
 
 /**
+ * The same switch as an entry of the page's "⋯" menu (Identity 4.0, rule 4: the head holds the page's one action
+ * and its menu, no switch): `<StartDataMenu moduleId="…" items={[useAdvancedMenuItem('…')]} />`.
+ */
+export function useAdvancedMenuItem(moduleId: string): RowMenuItem {
+  const [advanced, setAdvanced] = useAdvanced(moduleId);
+  const tx = tAdvanced.use();
+  return {
+    id: 'advanced',
+    label: tx.switchLabel,
+    checked: advanced,
+    onSelect: () => setAdvanced(!advanced),
+  };
+}
+
+/**
  * Rarely used fields of a form. Shown when the module is in the Erweitert view, when one of them
  * already holds data (`hasData`: nothing is ever hidden that is in use), or after "Mehr Felder"
  * in this dialog (that does not change the module's setting). Nothing important lives only here.
@@ -26,26 +43,39 @@ export function AdvancedToggle({ moduleId }: { moduleId: string }) {
 export function AdvancedFields({
   moduleId,
   hasData = false,
+  summary,
   children,
 }: {
   moduleId: string;
   hasData?: boolean;
+  /** While the fields are folded: what they will save as it stands ("Heute · Girokonto"), so nothing is a surprise. */
+  summary?: ReactNode;
   children: ReactNode;
 }) {
   const [advanced] = useAdvanced(moduleId);
   const [revealed, setRevealed] = useState(false);
+  const summaryId = useId();
   const tx = tAdvanced.use();
+  // Once the fields were shown they stay for this form: a field in the middle of an edit never unmounts because
+  // the value that opened the fold was cleared.
+  if (hasData && !revealed) setRevealed(true);
   if (advanced || hasData || revealed) return <>{children}</>;
   return (
-    <div>
+    <div className={styles.folded}>
       <Button
         variant="ghost"
         className={buttonStyles.flushStart}
         aria-label={tx.moreFieldsAria}
+        aria-describedby={summary ? summaryId : undefined}
         onClick={() => setRevealed(true)}
       >
         {tx.moreFields}
       </Button>
+      {summary ? (
+        <span id={summaryId} className={styles.summary} data-testid="more-fields-summary">
+          {summary}
+        </span>
+      ) : null}
     </div>
   );
 }

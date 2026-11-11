@@ -40,10 +40,19 @@ export function TransactionsTab({
   data,
   month,
   onOpen,
+  onEdit,
+  onAdd,
+  selectedId,
 }: {
   data: FinanceData;
   month: string;
   onOpen: (tx: Stored<Transaction>) => void;
+  /** Master–detail: `onOpen` only picks the row then; "Bearbeiten" in the row's menu opens the dialog at once. */
+  onEdit?: (tx: Stored<Transaction>) => void;
+  /** Opens a new booking: the one verb of the empty list (B6). */
+  onAdd?: () => void;
+  /** The booking shown in the detail panel of a wide page: its row is marked. */
+  selectedId?: string;
 }) {
   const currency = useCurrency();
   const [params] = useSearchParams();
@@ -98,7 +107,15 @@ export function TransactionsTab({
           title={t.finance.noTransactions}
           testId="finance-empty"
           motif={<SignatureMark id="bankCard" size={64} />}
-        />
+        >
+          {/* B6: one sentence and one verb, while nothing was ever booked. In an empty month the head's action
+              (the phone's plus) is right there and stays the one entry. */}
+          {onAdd && data.txs.length === 0 ? (
+            <Button variant="primary" onClick={onAdd}>
+              {t.finance.emptyAction}
+            </Button>
+          ) : null}
+        </EmptyState>
         <TransferEditor target={transfer} data={data} onClose={() => setTransfer(null)} />
       </>
     );
@@ -258,6 +275,7 @@ export function TransactionsTab({
                 return (
                   <ItemRow
                     key={x.id}
+                    current={x.id === selectedId}
                     lead={
                       <span className={styles.catIcon} aria-hidden="true">
                         <Icon
@@ -272,6 +290,9 @@ export function TransactionsTab({
                     onSwipeLeft={remove}
                     swipeLeftLabel={t.actions.delete}
                     menu={[
+                      ...(onEdit && !pair
+                        ? [{ id: 'edit', label: t.actions.edit, onSelect: () => onEdit(x) }]
+                        : []),
                       ...(isTr ? [] : data.categories)
                         .filter((c) => c.kind === x.kind && c.id !== x.categoryId)
                         .sort((a, b) => compareText(a.name, b.name))
@@ -329,23 +350,21 @@ export function AccountsTab({ data }: { data: FinanceData }) {
           motif={<SignatureMark id="bankCard" size={64} />}
         />
       ) : null}
-      <ul className={styles.list}>
+      <ItemList label={t.finance.tabs.accounts}>
         {data.accounts.map((a) => (
-          <li key={a.id}>
-            <button type="button" className={styles.row} onClick={() => setTarget(a)}>
-              <span className={styles.rowMain}>
-                <span className={styles.rowTitle}>{a.name}</span>
-                {a.kind ? (
-                  <span className={styles.rowMeta}>{t.finance.ext.accountKind[a.kind]}</span>
-                ) : null}
-              </span>
+          <ItemRow
+            key={a.id}
+            title={a.name}
+            meta={a.kind ? t.finance.ext.accountKind[a.kind] : undefined}
+            onOpen={() => setTarget(a)}
+            end={
               <span className={styles.amount} data-testid={`balance-${a.name}`}>
                 {formatMoney(map.get(a.id) ?? 0, currencyOf(a))}
               </span>
-            </button>
-          </li>
+            }
+          />
         ))}
-      </ul>
+      </ItemList>
       <AccountEditor target={target} onClose={() => setTarget(null)} />
       <TransferEditor target={transfer} data={data} onClose={() => setTransfer(null)} />
     </>
@@ -360,16 +379,17 @@ export function CategoriesTab({ data }: { data: FinanceData }) {
   ];
   const byName = (a: { name: string }, b: { name: string }) => compareText(a.name, b.name);
   const row = (c: FinanceData['categories'][number], child: boolean) => (
-    <li key={c.id} className={child ? styles.childRow : undefined}>
-      <button type="button" className={styles.row} onClick={() => setTarget(c)}>
+    <ItemRow
+      key={c.id}
+      className={child ? styles.childRow : undefined}
+      title={c.name}
+      onOpen={() => setTarget(c)}
+      lead={
         <span className={styles.catIcon} aria-hidden="true">
           <Icon name={categoryIcon(c)} size={16} />
         </span>
-        <span className={styles.rowMain}>
-          <span className={styles.rowTitle}>{c.name}</span>
-        </span>
-      </button>
-    </li>
+      }
+    />
   );
   return (
     <>
@@ -381,7 +401,7 @@ export function CategoriesTab({ data }: { data: FinanceData }) {
         return (
           <section key={g.kind} aria-label={g.title}>
             <h3 className={styles.sectionTitle}>{g.title}</h3>
-            <ul className={styles.list}>
+            <ItemList label={g.title}>
               {tops.flatMap((c) => [
                 row(c, false),
                 ...all
@@ -389,7 +409,7 @@ export function CategoriesTab({ data }: { data: FinanceData }) {
                   .sort(byName)
                   .map((k) => row(k, true)),
               ])}
-            </ul>
+            </ItemList>
             <div className={patternStyles.hstack} style={{ marginTop: 'var(--space-3)' }}>
               <Button onClick={() => setTarget({ draft: true, kind: g.kind })}>
                 <Icon name="plus" size={18} />

@@ -11,6 +11,21 @@
      bar; what is left of the actions (a "⋯" menu, a switch) keeps this row, on the right. */
   justify-content: flex-start;
 }
+/* `besideContent`: the row takes no height; its menu floats at the right edge of the page's first row. Only the
+   menu itself takes clicks, the row below stays reachable. */
+.header[data-in-head='true'][data-beside-content='true'] {
+  position: relative;
+  z-index: var(--z-raised);
+  height: var(--touch);
+  /* Top bar 69 px + head ≤ 144 px + the head's 12 px gap would start the content at 222 px: the row gives 4 px
+     back, so the first row lies at 218 px. */
+  margin-top: calc(-1 * var(--space-1));
+  margin-bottom: calc(-1 * var(--touch));
+  pointer-events: none;
+}
+.header[data-in-head='true'][data-beside-content='true'] .headerEnd > * {
+  pointer-events: auto;
+}
 /* Nothing left (the page's only action was the one the plus took over): no empty row. */
 .header[data-in-head='true']:not(:has(button, a, input, select, label)) {
   display: none;
@@ -124,6 +139,20 @@
   display: flex;
   gap: var(--space-2);
 }
+/* Sheet foot (UI audit 2026-11, B10): in a dialog on the phone the form's actions stay at the lower edge while the
+   fields scroll, so "Speichern" is never below the fold. A hairline tells the foot from the fields. */
+@media (max-width: 899px) {
+  dialog .formActions {
+    position: sticky;
+    inset-block-end: 0;
+    z-index: var(--z-sticky);
+    flex-wrap: nowrap;
+    margin-block-end: calc(-1 * var(--space-2));
+    padding-block: var(--space-2);
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+}
 .form {
   display: flex;
   flex-direction: column;
@@ -163,6 +192,14 @@
 .rows > .item:hover,
 .rows > .item:focus-within {
   background: var(--surface-2);
+}
+/* Master–detail: the row whose entry the detail panel shows. A tone and a weight, no accent (B7). */
+.rows > .current,
+.rows > .current:hover {
+  background: var(--surface-sunken);
+}
+.current :is(.title) {
+  font-weight: var(--weight-semibold);
 }
 .rows > .selected,
 .rows > .selected:hover {

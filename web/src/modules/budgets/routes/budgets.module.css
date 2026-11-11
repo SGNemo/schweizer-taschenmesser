@@ -34,20 +34,13 @@
   font-weight: var(--weight-semibold);
 }
 
-/* The head's envelopes (library block `Envelope`, slot M) and the toolbar's percentage chips. */
-.headEnvelopes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  min-width: 0;
-}
 /* Month navigation: ‹ month › side by side, the same group as in Finanzen. */
 .monthNav {
   display: flex;
   align-items: center;
   gap: var(--space-2);
   flex-wrap: wrap;
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-4);
 }
 .monthLabel {
   font-size: var(--text-lg);
@@ -55,33 +48,17 @@
   min-width: 9rem;
   text-align: center;
 }
+/* Phone: ‹ month › and the page's menu beside it fit a 320 px screen. */
+@media (max-width: 899px) {
+  .monthLabel {
+    min-width: 7.5rem;
+  }
+}
 /* First letter only: "octubre de 2026" must not become "Octubre De 2026". */
 .monthLabel::first-letter {
   text-transform: uppercase;
 }
-/* A budget card on the page: a flap in the corner and a fill level that rises from the bottom (decoration; numbers are text). */
-.envelope {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-}
-.level {
-  position: absolute;
-  inset: auto 0 0 0;
-  z-index: -1;
-  background: color-mix(in srgb, var(--module-color) 22%, transparent);
-}
-.levelOver {
-  background: color-mix(in srgb, var(--danger) 18%, transparent);
-}
-/* Flap: a corner triangle at the top, like the closed flap of an envelope. */
-.flap {
-  position: absolute;
-  top: 0;
-  inset-inline-end: 0;
-  width: 1.5rem;
-  height: 1.5rem;
-  z-index: -1;
-  background: color-mix(in srgb, var(--module-color) 28%, transparent);
-  clip-path: polygon(0 0, 100% 0, 100% 100%);
+/* A goal's two steps under its progress. */
+.goalActions {
+  margin-top: var(--space-2);
 }

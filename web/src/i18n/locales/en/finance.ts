@@ -2,7 +2,12 @@ import type { Strings } from '@/strings';
 
 export const finance: Strings['finance'] = {
   chartLegend: 'Legend',
+  emptyAction: 'Add your first transaction',
   ext: {
+    detail: {
+      label: 'Transaction in detail',
+      eyebrow: (day: string) => `Transaction · ${day}`,
+    },
     weekly: 'Weekly',
     subPrice: {
       title: (name: string, from: string, to: string) =>
@@ -139,6 +144,8 @@ export const finance: Strings['finance'] = {
   balance: 'Balance',
   headline: {
     accounts: (n: number) => (n === 1 ? '1 account' : `${n} accounts`),
+    named: (available: boolean, n: number) =>
+      `${available ? 'Available' : 'Balance'} · ${n === 1 ? '1 account' : `${n} accounts`}`,
   },
   available: 'Available',
   tabs: {
@@ -172,7 +179,6 @@ export const finance: Strings['finance'] = {
   balanceCurve: 'Course through the month',
   categoriesRing: (n: number) => (n === 1 ? '1 category' : `${n} categories`),
   ringTitle: 'Where the money went',
-  cardAvailable: (v: string) => `available ${v}`,
   netWorthTitle: 'Total balance at month end',
   netWorthChange: (amount: string, since: string) => `${amount} since ${since}`,
   netWorthUnchanged: (since: string) => `unchanged since ${since}`,

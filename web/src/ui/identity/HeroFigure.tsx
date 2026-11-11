@@ -14,6 +14,7 @@ export function HeroFigure({
   detail,
   type = 'sans',
   sensitive = false,
+  tone,
   testId,
 }: {
   label?: string;
@@ -22,12 +23,14 @@ export function HeroFigure({
   detail?: string;
   type?: 'sans' | 'thin' | 'mono' | 'serif';
   sensitive?: boolean;
+  /** `danger`: the amount is below zero (red only for exceeded; the minus sign says it in text). */
+  tone?: 'danger';
   testId?: string;
 }) {
   return (
     <div className={styles.figure} data-type={type}>
       {label ? <span className={styles.label}>{label}</span> : null}
-      <span className={styles.value} data-testid={testId}>
+      <span className={styles.value} data-tone={tone} data-testid={testId}>
         {sensitive ? (
           <SensitiveValue className={styles.mask}>
             {value}

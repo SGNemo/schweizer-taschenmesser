@@ -2934,14 +2934,18 @@ export const de = {
       },
       openBooking: 'Buchung ansehen',
       head: {
-        count: (n: number) => (n === 1 ? '1 Rechnung' : `${n} Rechnungen`),
-        next: (payee: string, date: string) => `Nächste: ${payee} am ${date}`,
         nothing: 'Nichts offen',
         open: 'offen',
-        overdue: (n: number) => `${n} überfällig`,
-        nextShort: (payee: string, date: string) => `nächste ${payee}, ${date}`,
-        payNext: 'Nächste bezahlen',
-        payNextName: (payee: string) => `Nächste bezahlen: ${payee}`,
+        /** The important part first: a line cut short on the phone still says the right thing. */
+        context: (n: number, overdue: number) => {
+          const count = n === 1 ? '1 Rechnung' : `${n} Rechnungen`;
+          return overdue > 0 ? `${overdue} überfällig · ${count}` : count;
+        },
+      },
+      detail: {
+        label: 'Rechnung im Detail',
+        eyebrow: 'Rechnung',
+        rest: (rest: string, total: string) => `${rest} offen von ${total}`,
       },
     },
     importDetail: (amount: string, due: string) => `${amount} · fällig ${due}`,
@@ -3035,9 +3039,16 @@ export const de = {
       monthlyShort: (amount: string) => `${amount} / Monat`,
       top: { title: 'Teuerste Abos', perYear: (amount: string) => `${amount} pro Jahr` },
       head: {
-        title: 'Nächste Abbuchungen',
-        nothing: 'Nichts in Sicht',
-        on: (name: string, date: string, amount: string) => `${name}, ${date}: ${amount}`,
+        /** The important part first: a line cut short on the phone still says the right thing. */
+        context: (n: number, soon: number) => {
+          const count = n === 1 ? '1 Abo' : `${n} Abos`;
+          return soon > 0
+            ? `${soon === 1 ? '1 Frist endet bald' : `${soon} Fristen enden bald`} · ${count}`
+            : count;
+        },
+        alsoMonthly: 'außerdem pro Monat',
+        unit: '/ Monat',
+        paused: (n: number) => (n === 1 ? '1 pausiert' : `${n} pausiert`),
       },
       suggest: {
         apply: (amount: string) => `Preis übernehmen: ${amount}`,
@@ -3083,6 +3094,7 @@ export const de = {
     pause: 'Pausieren',
     resume: 'Fortsetzen',
     empty: 'Noch keine Abos.',
+    emptyAction: 'Erstes Abo eintragen',
     perMonth: 'Pro Monat',
     perYear: 'Pro Jahr',
     nextCharge: 'Nächste Abbuchung',
@@ -3101,7 +3113,12 @@ export const de = {
   },
   finance: {
     chartLegend: 'Legende',
+    emptyAction: 'Erste Buchung eintragen',
     ext: {
+      detail: {
+        label: 'Buchung im Detail',
+        eyebrow: (day: string) => `Buchung · ${day}`,
+      },
       weekly: 'Wöchentlich',
       subPrice: {
         title: (name: string, from: string, to: string) =>
@@ -3237,6 +3254,9 @@ export const de = {
     balance: 'Kontostand',
     headline: {
       accounts: (n: number) => (n === 1 ? '1 Konto' : `${n} Konten`),
+      /** The head draws no label: the context line names the figure first. */
+      named: (available: boolean, n: number) =>
+        `${available ? 'Verfügbar' : 'Kontostand'} · ${n === 1 ? '1 Konto' : `${n} Konten`}`,
     },
     available: 'Verfügbar',
     tabs: {
@@ -3276,7 +3296,6 @@ export const de = {
       'Ab dem zweiten Monat mit Buchungen zeigt sich hier, wie sich dein Gesamtstand entwickelt.',
     categoriesRing: (n: number) => (n === 1 ? '1 Kategorie' : `${n} Kategorien`),
     ringTitle: 'Wohin das Geld ging',
-    cardAvailable: (v: string) => `verfügbar ${v}`,
     curveFrom: 'Monatsbeginn',
     curveLabel: (a: string, b: string) => `Kontostand von ${a} auf ${b}`,
     showTable: 'Als Tabelle anzeigen',
@@ -5078,16 +5097,9 @@ export const de = {
         bookings: 'Buchungen ansehen',
       },
       head: {
-        free: 'Noch frei',
         chip: (name: string, pct: number) => `${name} ${pct} %`,
-        context: (n: number, over: number) =>
-          over === 0
-            ? n === 1
-              ? '1 Budget, im Rahmen'
-              : `${n} Budgets, alle im Rahmen`
-            : n === 1
-              ? '1 Budget, darüber'
-              : `${n} Budgets, ${over} darüber`,
+        /** Names the figure (the head draws no label), then what matters; short enough for the phone's head. */
+        context: (over: number) => (over > 0 ? `Frei · ${over} darüber` : 'Frei · im Rahmen'),
         ring: (n: number) => `Verteilung der Ausgaben auf ${n} Budgets`,
       },
       goal: {
@@ -5142,6 +5154,8 @@ export const de = {
     nextMonth: 'Nächster Monat',
     emptyBudgets: 'Noch keine Budgets. Lege ein Monatslimit für eine Ausgabenkategorie fest.',
     emptyGoals: 'Noch keine Sparziele.',
+    emptyBudgetAction: 'Erstes Budget eintragen',
+    emptyGoalAction: 'Erstes Sparziel eintragen',
     spentOf: (spent: string, limit: string) => `${spent} von ${limit}`,
     left: (amount: string) => `noch ${amount}`,
     over: (amount: string) => `${amount} drüber`,

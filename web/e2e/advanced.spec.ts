@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { openTodosMenu, ready } from './helpers';
+import { openPageMenu } from './money-helpers';
 
 /** Basis / Erweitert view (docs/product/comfort): rare fields behind "Mehr Felder" or the module switch. */
 test.beforeEach(async ({ page }) => {
@@ -57,11 +58,12 @@ test('the global setting switches every module; a module switch overrides it', a
   await expect(
     (await openTodosMenu(page)).getByRole('menuitemcheckbox', { name: 'Mehr Felder anzeigen' }),
   ).toHaveAttribute('aria-checked', 'false');
+  // Rechnungen: the switch is an entry of the page's "⋯" menu (Identity 4.0, rule 4), no switch in the head.
   await ready(page, '/invoices');
-  await expect(page.getByRole('switch', { name: 'Mehr Felder anzeigen' })).toHaveAttribute(
-    'aria-checked',
-    'true',
-  );
+  await expect(page.getByRole('switch', { name: 'Mehr Felder anzeigen' })).toHaveCount(0);
+  await expect(
+    (await openPageMenu(page)).getByRole('menuitemcheckbox', { name: 'Mehr Felder anzeigen' }),
+  ).toHaveAttribute('aria-checked', 'true');
 });
 
 test('a field that holds data is never hidden', async ({ page }) => {
@@ -88,15 +90,19 @@ test('finance: accounts and categories sit behind "Erweitert", or show once ther
   await expect(page.getByRole('button', { name: 'Konten' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Kategorien' })).toHaveCount(0);
 
-  const toggle = page.getByRole('switch', { name: 'Mehr Felder anzeigen' });
-  await toggle.click();
-  await expect(toggle).toHaveAttribute('aria-checked', 'true');
+  // The switch is an entry of the page's "⋯" menu; picking it closes the menu.
+  const toggle = async () =>
+    (await openPageMenu(page)).getByRole('menuitemcheckbox', { name: 'Mehr Felder anzeigen' });
+  await (await toggle()).click();
+  await expect(await toggle()).toHaveAttribute('aria-checked', 'true');
+  await page.keyboard.press('Escape');
   await expect(page.getByRole('button', { name: 'Konten' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Kategorien' })).toBeVisible();
 
   // A link to the tab (e.g. from the balance widget) always works, even in Basis.
-  await toggle.click();
-  await expect(toggle).toHaveAttribute('aria-checked', 'false');
+  await (await toggle()).click();
+  await expect(await toggle()).toHaveAttribute('aria-checked', 'false');
+  await page.keyboard.press('Escape');
   await ready(page, '/finance?tab=accounts');
   await expect(page.getByRole('button', { name: 'Konto hinzufügen' })).toBeVisible();
 });

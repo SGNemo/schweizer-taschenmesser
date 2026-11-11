@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { calendarEntry, moreFields, ready, showAllWidgets } from './helpers';
+import { openEditor, togglePageMoreFields } from './money-helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
 test.beforeEach(async ({ page }) => {
@@ -101,7 +102,7 @@ test.describe('Invoices', () => {
 
     // Finance shows the booking and the reduced balance
     await ready(page, '/finance?tab=transactions');
-    await page.getByRole('switch', { name: 'Mehr Felder anzeigen' }).click(); // Konten/Kategorien live in Erweitert
+    await togglePageMoreFields(page); // Konten/Kategorien live in Erweitert
     const row = page.getByRole('listitem').filter({ hasText: /^Stadtwerke/ });
     await expect(row).toContainText('Rechnungen');
     await expect(row).toContainText(/−89,90\s€/);
@@ -160,8 +161,21 @@ test.describe('Subscriptions', () => {
     await expect(streaming).toContainText('Kündigen bis: 16. Okt. 2026');
     await expect(page.getByRole('button', { name: /Cloud/ })).toContainText('Jährlich');
 
-    // Pausing removes it from the totals
-    await page.getByRole('switch', { name: /Streaming/ }).click();
+    // Pausing removes it from the totals. Desktop: the row's (neutral) switch. Phone: the row has no switch
+    // (one control less per row), "Pausieren" is in the row's menu.
+    const pause = page.getByRole('switch', { name: /Streaming/ });
+    if (await pause.isVisible()) {
+      await expect(pause).toHaveAttribute('data-tone', 'neutral');
+      await pause.click();
+    } else {
+      await expect(pause).toHaveCount(0);
+      await page
+        .getByRole('listitem')
+        .filter({ hasText: 'Streaming' })
+        .getByRole('button', { name: 'Weitere Aktionen' })
+        .click();
+      await page.getByRole('menuitem', { name: 'Pausieren' }).click();
+    }
     await expect(page.getByTestId('total-month')).toHaveText(/8,25\s€/);
 
     await ready(page, '/');
@@ -265,7 +279,7 @@ test.describe('Finance', () => {
     await expect(row).toContainText(/−12,00\s€/);
     await expect(row).toContainText('Mobilität');
 
-    await row.getByRole('button', { name: /^Bahn(?!:)/ }).click();
+    await openEditor(page, row.getByRole('button', { name: /^Bahn(?!:)/ }));
     const dialog = page.getByRole('dialog', { name: 'Buchung bearbeiten' });
     await dialog.getByLabel('Betrag').fill('15,50');
     await save(page);
@@ -273,7 +287,7 @@ test.describe('Finance', () => {
       /−15,50\s€/,
     );
 
-    await page.getByRole('button', { name: /^Bahn(?!:)/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /^Bahn(?!:)/ }));
     await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(page.getByText('Keine Buchungen in diesem Monat.')).toBeVisible();
@@ -289,7 +303,7 @@ test.describe('Finance', () => {
       payee: 'Tram',
     });
     await ready(page, '/finance?tab=transactions');
-    await page.getByRole('button', { name: /^Tram(?!:)/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /^Tram(?!:)/ }));
     await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
     await expect(page.getByText('Keine Buchungen in diesem Monat.')).toBeVisible();
     await page.getByRole('button', { name: 'Rückgängig', exact: true }).click();
@@ -301,7 +315,7 @@ test.describe('Finance', () => {
   }) => {
     await addTransaction(page, { kind: 'Einnahme', amount: '100,00', category: 'Gehalt' });
     await ready(page, '/finance?tab=accounts');
-    await page.getByRole('switch', { name: 'Mehr Felder anzeigen' }).click(); // Konten/Kategorien live in Erweitert
+    await togglePageMoreFields(page); // Konten/Kategorien live in Erweitert
     await page.getByRole('button', { name: 'Konto hinzufügen' }).click();
     await page.getByLabel('Kontoname').fill('Sparkonto');
     await page.getByLabel('Anfangssaldo').fill('1.000,00');

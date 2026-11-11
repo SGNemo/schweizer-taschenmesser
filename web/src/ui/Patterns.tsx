@@ -108,10 +108,17 @@ export function PageAction({
 export function PageHeader({
   title,
   views,
+  besideContent = false,
   children,
 }: {
   title: string;
   views?: ReactNode;
+  /**
+   * Phone only: what is left of the actions (the "⋯" menu) takes no row of its own but sits at the right edge of the
+   * page's first row, so the content starts right under the head (Identity 4.0, rule 5: content from y ≤ 220 px).
+   * For pages whose first row is short and starts at the left (a month switch, a group heading, one line of text).
+   */
+  besideContent?: boolean;
   children?: ReactNode;
 }) {
   const hero = useHeroTargets();
@@ -124,7 +131,11 @@ export function PageHeader({
         {views && hero.tabs ? createPortal(views, hero.tabs) : null}
         {children && inHead ? (hero.actions ? createPortal(children, hero.actions) : null) : null}
         {children && !inHead ? (
-          <div className={styles.header} data-in-head="true">
+          <div
+            className={styles.header}
+            data-in-head="true"
+            data-beside-content={besideContent ? 'true' : undefined}
+          >
             <div className={styles.headerEnd}>{headerActions(children)}</div>
           </div>
         ) : null}
@@ -210,10 +221,13 @@ export function Form({
   );
 }
 
-/** Footer of an editor form: `start` (e.g. delete) on the left, `children` (cancel/save) on the right. */
+/**
+ * Footer of an editor form: `start` (e.g. delete) on the left, `children` (cancel/save) on the right. In a dialog on
+ * the phone it is the fixed foot of the sheet: it stays at the lower edge while the fields scroll.
+ */
 export function FormActions({ start, children }: { start?: ReactNode; children: ReactNode }) {
   return (
-    <div className={styles.formActions}>
+    <div className={styles.formActions} data-form-actions="">
       {start ?? <span />}
       <span className={styles.formActionsEnd}>{children}</span>
     </div>
@@ -270,6 +284,7 @@ export function ItemRow({
   menuLabel,
   selectable,
   selected,
+  current,
   onSelectChange,
   done,
   tone,
@@ -298,6 +313,11 @@ export function ItemRow({
   /** Shows a checkbox on the left; `onSelectChange` also reports a Shift-click for ranges. */
   selectable?: boolean;
   selected?: boolean;
+  /**
+   * Master–detail: this row's entry is the one shown in the detail panel (`aria-current` on the row's button; a
+   * sunken tone and a heavier title, no accent).
+   */
+  current?: boolean;
   onSelectChange?: (selected: boolean, extend: boolean) => void;
   /** Done entries are struck through and quiet. */
   done?: boolean;
@@ -353,6 +373,7 @@ export function ItemRow({
         styles.item,
         swipe.enabled ? styles.swipeable : '',
         selected ? styles.selected : '',
+        current ? styles.current : '',
         done ? styles.done : '',
         className ?? '',
       ]
@@ -383,7 +404,13 @@ export function ItemRow({
             {body}
           </a>
         ) : onOpen ? (
-          <button type="button" className={styles.main} data-row onClick={onOpen}>
+          <button
+            type="button"
+            className={styles.main}
+            data-row
+            aria-current={current ? 'true' : undefined}
+            onClick={onOpen}
+          >
             {body}
           </button>
         ) : (

@@ -62,4 +62,6 @@ export { SensitiveValue } from './SensitiveValue';
 
 export { KeyRecorder } from './KeyRecorder';
 export { Keys } from './Keys';
-export { AdvancedFields, AdvancedToggle } from './AdvancedFields';
+export { AdvancedFields, AdvancedToggle, useAdvancedMenuItem } from './AdvancedFields';
+export { DayField, TimeField } from './DateTimeFields';
+export { DetailPanel } from './DetailPanel';

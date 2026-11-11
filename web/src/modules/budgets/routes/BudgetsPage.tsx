@@ -17,12 +17,13 @@ import {
   PageHeader,
   patternStyles,
   Progress,
-  Segmented,
   Stat,
+  Tabs,
+  useAdvancedMenuItem,
   useOpenParam,
 } from '@/ui';
 import { useBudgetData } from '../data';
-import { Envelope, HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
+import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import styles from './budgets.module.css';
 import {
   BudgetEditor,
@@ -80,15 +81,19 @@ export default function BudgetsPage() {
   const free = inMain.reduce((sum, r) => sum + Math.max(0, r.limit - r.spent), 0);
   const overCount = inMain.filter((r) => r.status.tone === 'over').length;
   const canAddBudget = Boolean(financeOn) && categories.some((c) => !taken.has(c.id));
-  // The three fullest budgets: envelopes in the head's slot M (G05), the cards below carry every percentage.
-  const fullest = [...inMain].sort((x, y) => y.status.pct - x.status.pct).slice(0, 3);
+  const advancedItem = useAdvancedMenuItem('budgets');
+  // An empty view holds the one filled step itself (U26); the head's action steps back then.
+  const emptyBudgets = !!data && budgets.length === 0 && Boolean(financeOn);
+  const emptyGoals = !!goals && goals.length === 0;
 
   return (
     <>
       <PageHeader
         title={t.budgets.title}
+        // The month switch is a short first row; the goals start with cards.
+        besideContent={tab === 'budgets'}
         views={
-          <Segmented
+          <Tabs
             label={t.budgets.tabs}
             value={tab}
             options={[
@@ -102,6 +107,7 @@ export default function BudgetsPage() {
         {tab === 'budgets' ? (
           <PageAction
             short={t.nav.plusThings.budget}
+            variant={emptyBudgets && canAddBudget ? 'secondary' : 'primary'}
             disabled={!canAddBudget}
             onClick={() => setBudgetTarget({ draft: true })}
           >
@@ -111,40 +117,25 @@ export default function BudgetsPage() {
         ) : (
           <PageAction
             short={t.budgets.meta.quickAdd}
+            variant={emptyGoals ? 'secondary' : 'primary'}
             onClick={() => setGoalTarget({ draft: true })}
           >
             <Icon name="plus" size={18} />
             {t.budgets.addGoal}
           </PageAction>
         )}
-        <StartDataMenu moduleId="budgets" />
+        <StartDataMenu moduleId="budgets" items={[advancedItem]} />
       </PageHeader>
+      {/* The head's figure. The budgets themselves are the cards below: no second copy of the fullest ones. */}
       {tab === 'budgets' && data && inMain.length > 0 && mainCurrency ? (
-        <>
-          <HeroSlot area="figure">
-            <HeroFigure
-              label={t.budgets.ext.head.free}
-              value={formatMoney(free, mainCurrency)}
-              detail={t.budgets.ext.head.context(inMain.length, overCount)}
-              sensitive
-              testId="budgets-free"
-            />
-          </HeroSlot>
-          <HeroSlot area="signature">
-            <div className={styles.headEnvelopes} data-testid="budget-envelopes">
-              {fullest.map((r) => (
-                <Envelope
-                  key={r.budget.id}
-                  size="M"
-                  fill={r.status.pct / 100}
-                  over={r.status.tone === 'over'}
-                >
-                  {categoryName(r.budget.categoryId)}
-                </Envelope>
-              ))}
-            </div>
-          </HeroSlot>
-        </>
+        <HeroSlot area="figure">
+          <HeroFigure
+            value={formatMoney(free, mainCurrency)}
+            detail={t.budgets.ext.head.context(overCount)}
+            sensitive
+            testId="budgets-free"
+          />
+        </HeroSlot>
       ) : null}
 
       {tab === 'budgets' ? (
@@ -187,7 +178,13 @@ export default function BudgetsPage() {
                   title={t.budgets.emptyBudgets}
                   testId="budgets-empty"
                   motif={<SignatureMark id="envelope" size={64} />}
-                />
+                >
+                  {canAddBudget ? (
+                    <Button variant="primary" onClick={() => setBudgetTarget({ draft: true })}>
+                      {t.budgets.emptyBudgetAction}
+                    </Button>
+                  ) : null}
+                </EmptyState>
               ) : null}
               <ItemList layout="grid" label={t.budgets.tabBudgets}>
                 {rows.map((r) => {
@@ -212,13 +209,7 @@ export default function BudgetsPage() {
                       ? t.budgets.ext.forecast.over(formatMoney(r.projected - r.limit, cur))
                       : undefined;
                   return (
-                    <Card as="li" key={b.id} className={styles.envelope}>
-                      <span
-                        className={`${styles.level} ${s.tone === 'over' ? styles.levelOver : ''}`}
-                        style={{ height: `${Math.min(100, s.pct)}%` }}
-                        aria-hidden="true"
-                      />
-                      <span className={styles.flap} aria-hidden="true" />
+                    <Card as="li" key={b.id}>
                       <div className={patternStyles.row}>
                         <button
                           type="button"
@@ -272,7 +263,11 @@ export default function BudgetsPage() {
             <EmptyState
               title={t.budgets.emptyGoals}
               motif={<SignatureMark id="envelope" size={64} />}
-            />
+            >
+              <Button variant="primary" onClick={() => setGoalTarget({ draft: true })}>
+                {t.budgets.emptyGoalAction}
+              </Button>
+            </EmptyState>
           ) : null}
           <ItemList layout="grid" label={t.budgets.tabGoals}>
             {(goals ?? []).map((g) => {
@@ -336,7 +331,7 @@ export default function BudgetsPage() {
                       </p>
                     );
                   })()}
-                  <div className={patternStyles.row} style={{ marginTop: 'var(--space-2)' }}>
+                  <div className={`${patternStyles.row} ${styles.goalActions}`}>
                     <Button onClick={() => setDepositFor(g)}>{t.budgets.deposit}</Button>
                     <Button variant="ghost" onClick={() => setHistoryFor(g)}>
                       {t.budgets.history}

@@ -23,7 +23,7 @@ import {
   Button,
   CurrencyField,
   Dialog,
-  patternStyles,
+  FormActions,
   SelectField,
   Switch,
   TextArea,
@@ -329,28 +329,27 @@ function Form({
       {existing ? (
         <Switch label={t.subscriptions.active} checked={active} onChange={setActive} />
       ) : null}
-      <div className={styles.actions}>
-        {existing ? (
-          <Button
-            variant="danger"
-            onClick={async () => {
-              await deleteWithUndo(() => subscriptionRepo.remove(existing.id));
-              draft.clear();
-              onClose();
-            }}
-          >
-            {t.actions.delete}
-          </Button>
-        ) : (
-          <span />
-        )}
-        <span className={patternStyles.hstack}>
-          <Button onClick={cancel}>{t.actions.cancel}</Button>
-          <Button type="submit" variant="primary">
-            {t.actions.save}
-          </Button>
-        </span>
-      </div>
+      <FormActions
+        start={
+          existing ? (
+            <Button
+              variant="danger"
+              onClick={async () => {
+                await deleteWithUndo(() => subscriptionRepo.remove(existing.id));
+                draft.clear();
+                onClose();
+              }}
+            >
+              {t.actions.delete}
+            </Button>
+          ) : undefined
+        }
+      >
+        <Button onClick={cancel}>{t.actions.cancel}</Button>
+        <Button type="submit" variant="primary">
+          {t.actions.save}
+        </Button>
+      </FormActions>
     </form>
   );
 }
