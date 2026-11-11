@@ -89,11 +89,12 @@ jobs:
           if [ -n "$range" ] && files="$(git -c core.quotePath=false diff --no-renames --name-only "$range" 2>/dev/null)" && [ -n "$files" ]; then
             # Paths as `ignorable` in ci.yml, but only their text files: docs/ and site/ also hold JS and HTML
             # that the JS/TS analysis reads. --no-renames: a file moved out of analysed code shows its old path.
+            # A path git still quotes (quote, backslash, control character in the name) counts as Rust.
             ignorable='^(docs/|site/|scribble/|CLAUDE\.md$|CONTRIBUTING\.md$|SECURITY\.md$|CHANGELOG(\.de)?\.md$|LICENSE$|\.github/ISSUE_TEMPLATE/|\.github/PULL_REQUEST_TEMPLATE\.md$)'
             text='(\.(md|txt)$|^LICENSE$)'
             if ! printf '%s\n' "$files" | grep -Evq "$ignorable" && ! printf '%s\n' "$files" | grep -Evq "$text"; then
               languages='[]'; why="only documentation text changed ($range)"
-            elif printf '%s\n' "$files" | grep -Eq '(\.rs$|(^|/)Cargo\.(toml|lock)$|(^|/)rust-toolchain(\.toml)?$|(^|/)\.cargo/|^web/src-tauri/|^\.github/workflows/codeql\.yml$)'; then
+            elif printf '%s\n' "$files" | grep -Eq '(^"|\.rs$|(^|/)Cargo\.(toml|lock)$|(^|/)rust-toolchain(\.toml)?$|(^|/)\.cargo/|^web/src-tauri/|^\.github/workflows/codeql\.yml$)'; then
               why="the change touches Rust ($range)"
             else
               languages='["actions","javascript-typescript"]'; why="no Rust file changed ($range)"
