@@ -193,6 +193,12 @@ FS-R10. _Abschnitt ohne Hub:_ Heimnetz-Abgleich aus: der Abschnitt zeigt zwei ku
 
 - **PK4 Ziehen im Zeitraster (≥ 1400 px):** Wochenansicht: Termin ziehen verschiebt (auch auf einen anderen Tag), unteren Rand ziehen ändert die Länge, über leere Fläche ziehen öffnet „Neuer Termin“ mit Beginn/Ende; „Rückgängig“ stellt wieder her; mit Tastatur `Alt+↓` (15 min) und `Alt+Umschalt+↓`; eine Serie lässt sich nicht ziehen (Hinweis). ☐
 
+### Musik
+
+#### Cover (Branch `fix/music-covers`) – nur mit echtem Spotify-Konto prüfbar
+
+- **MU-C1 Cover überall:** (1) Musik öffnen: unter „Deine Playlists“ zeigen Playlists mit eigenem Bild und solche ohne (Vierer-Mosaik) ein Cover; eine leere Playlist zeigt das Noten-Symbol. (2) Eine Playlist öffnen: Bild im Kopf, je Zeile das Albumbild; beim Scrollen springt nichts. (3) Einstellungen → Netzwerk → Verbindungsprotokoll: Einträge für `mosaic.scdn.co` und `image-cdn-…spotifycdn.com` mit Grund „Verbindung“, ohne Pfad. Wenn eine Playlist nur das Symbol zeigt: Namen notieren (von Spotify erzeugte Listen wie Daily Mix sind erwartet). ☐
+
 ### Uhr
 
 #### Uhr (Paket 1, #615) – nur von Hand prüfbar
@@ -872,6 +878,7 @@ FB10. _Bildschirm anlassen:_ Einstellung an: der Bildschirm bleibt an, solange d
 FB11. _TalkBack:_ liest die Zustandszeile bei Sätzen (nicht bei jedem Lautstärkeschritt) und jede Taste mit ihrem Namen. ☐
 FB12. _Benachrichtigung bei Maus und Tastatur (ab der Seite Touchpad prüfbar):_ Touchpad am Handy zum ersten Mal nutzen → am PC erscheint einmal, ohne Ton, „Das Gerät „…“ steuert jetzt Maus und Tastatur. Beenden: Rechtsklick auf das Nemo-Symbol im Tray, dann „Fernsteuerung beenden“.“ (ganz lesbar, auch mit einem langen Gerätenamen – der wird nach 24 Zeichen gekürzt); das Symbol liegt unter ^ (ausgeblendete Symbole) → der Text führt trotzdem hin, Rechtsklick → „Fernsteuerung beenden“ beendet und pausiert das Gerät; Klick auf die Benachrichtigung selbst richtet nichts an; Seite verlassen und gleich wieder öffnen → keine zweite; nur Medien nutzen → nie eine; nach 30 Minuten und erneutem Touchpad → wieder eine. Gerät ohne Namen → „Gerät ohne Namen (xxxx) steuert …“ ohne Anführungszeichen; Systemklänge an → trotzdem kein Ton. Mit dem portablen Exe prüfen, ob Windows die Benachrichtigung unter „Nemo“ führt. ☐
 FB13. _Latenz messen (Dev-Preview am Handy, PC gekoppelt und im selben WLAN, Fernsteuerung „Medien“ für das Handy erlaubt):_ Einstellungen → Entwickler → „Fernbedienung: Latenz messen“. Auf der Messfläche etwa zehn Sekunden mit einem Finger kreisen, loslassen; „Verbindungsaufbau messen“ tippen und warten; die Zeile „Was der Aufruf kosten darf“ sagt „passt hinein“, „knapp“ oder „zu teuer“. „Ergebnis kopieren“ und die Zeile in die Tabelle in `docs/design/remote-control/CONCEPT.md` §3 übertragen (oder dem Chat geben). Zweimal messen: nah am Router (diese Messung entscheidet) und am anderen Ende der Wohnung (zeigt nur, was das WLAN dazutut; dazwischen eine Minute Pause, der Knopf ist so lange gesperrt). Am PC darf dabei nichts passieren außer dem kurzen Tray-Hinweis beim Verbindungsaufbau; kein „Abgebrochen“. ☐
+FB14. _Entsperren am Handy für Maus und Tastatur (ab der Seite Touchpad prüfbar; zuerst: baut die Dev-Preview für Android nach dem Merge von `feat/remote-client-full` überhaupt – das Kotlin der neuen Abfrage ist ungebaut):_ PC verlangt „Am Handy entsperren“ → erstes Tippen aufs Touchpad zeigt die Systemabfrage (Fingerabdruck, Gesicht oder PIN); abbrechen → Medien läuft weiter, kein Touchpad; bestätigen → Touchpad geht, danach acht Stunden keine Abfrage (App neu starten → wieder eine). Handy ohne Bildschirmsperre → Touchpad geht, die Seite sagt, dass das Handy keine Sperre hat. Der Tresor lässt sich danach weiter per Fingerabdruck öffnen. Abfrage zwei Minuten stehen lassen → sie verschwindet von selbst, Medien läuft weiter. PC gesperrt → Touchpad sagt es, Medien läuft weiter. ☐
 
 ### Kalender
 
