@@ -7,7 +7,10 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function addItem(page: Page, name: string, count: string, min: string) {
-  await page.getByRole('button', { name: 'Vorrat hinzufügen' }).first().click();
+  await page
+    .getByRole('button', { name: /Vorrat (hinzufügen|eintragen)/ })
+    .first()
+    .click();
   const dialog = page.getByRole('dialog', { name: 'Vorrat hinzufügen' });
   await dialog.getByLabel('Name', { exact: true }).fill(name);
   await dialog.getByLabel('Vorrat (Anzahl)').fill(count);

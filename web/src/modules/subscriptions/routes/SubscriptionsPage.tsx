@@ -10,11 +10,11 @@ import { t } from '@/strings';
 import {
   AdvancedToggle,
   Badge,
-  Button,
   EmptyState,
   Icon,
   ItemList,
   ItemRow,
+  PageAction,
   PageHeader,
   Switch,
   useOpenParam,
@@ -87,10 +87,13 @@ export default function SubscriptionsPage() {
     <>
       <PageHeader title={t.subscriptions.title}>
         <AdvancedToggle moduleId="subscriptions" />
-        <Button variant="primary" onClick={() => setTarget({ draft: true })}>
+        <PageAction
+          short={t.subscriptions.meta.quickAdd}
+          onClick={() => setTarget({ draft: true })}
+        >
           <Icon name="plus" size={18} />
           {t.subscriptions.add}
-        </Button>
+        </PageAction>
         <StartDataMenu moduleId="subscriptions" />
       </PageHeader>
 

@@ -6,7 +6,6 @@ import { createHoldGate, HOLD_STEPS_PER_SECOND } from '@/core/remote/session';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { useSettings } from '@/core/settings/settings';
 import { holdKeepAwake } from '@/core/shell/keepAwake';
-import { usePageChrome } from '@/core/shell/pageChrome';
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
 import { Button, EmptyState, Icon, PageHeader, RowMenu, type IconName } from '@/ui';
@@ -32,8 +31,6 @@ export default function RemotePage() {
   const r = t.remote;
 
   const last = useLastPc();
-  // nothing to add here, and the round button would sit on "Lauter"
-  usePageChrome({ hideFab: true });
 
   // open while the page is in front, close when it leaves (another app, another page)
   useEffect(() => {

@@ -1,0 +1,104 @@
+---
+/**
+ * /unterstuetzen: Nemo stays free; giving is optional and unlocks colours and a badge only. The five supporter
+ * palettes are shown by their accent (tokens --palette-*, pinned to web/src/ui/supporterThemes.css) next to the name.
+ */
+import { KOFI_URL, SUPPORTER_DOCS_URL } from '../config.js';
+import { t, type Locale } from '../i18n';
+import Icon from './Icon.astro';
+
+interface Props { locale: Locale }
+const p = t(Astro.props.locale).supportPage;
+/** The five supporter palettes of the app, in the app's order; names are proper names, the same in every language. */
+const themes = [
+  ['korallenriff', 'Korallenriff'],
+  ['tiefsee', 'Tiefsee'],
+  ['sand', 'Sand'],
+  ['nordlicht', 'Nordlicht'],
+  ['monochrom', 'Monochrom'],
+] as const;
+---
+<div class="wrap">
+  <header class="page-head">
+    <h1>{p.h1}</h1>
+    <p class="lead">{p.lead}</p>
+  </header>
+
+  <section class="ruled two" aria-labelledby="sup-give">
+    <h2 id="sup-give">{p.give.h}</h2>
+    <div class="text">
+      <p>{p.give.p}</p>
+      <p><a class="btn btn-primary" href={KOFI_URL} rel="noopener"><Icon name="coffee" size={22} />{p.give.button}</a></p>
+      <p class="meta">{p.give.note}</p>
+    </div>
+  </section>
+
+  <section class="ruled two" aria-labelledby="sup-themes">
+    <h2 id="sup-themes">{p.themes.h}</h2>
+    <ul class="themes" aria-label={p.themes.label}>
+      {themes.map(([id, name]) => <li><i class={`sw ${id}`} aria-hidden="true"></i>{name}</li>)}
+    </ul>
+  </section>
+
+  <section class="ruled two last" aria-labelledby="sup-code">
+    <h2 id="sup-code">{p.code.h}</h2>
+    <div class="text">
+      <p>{p.code.p}</p>
+      <p><a class="more" href={SUPPORTER_DOCS_URL} rel="noopener">{p.code.link}<Icon name="external" size={14} /></a></p>
+    </div>
+  </section>
+</div>
+
+<style>
+  .two {
+    display: grid;
+    gap: var(--space-4);
+  }
+  .last {
+    padding-bottom: var(--section);
+  }
+  .text {
+    display: grid;
+    gap: var(--space-4);
+    max-width: 40rem;
+    justify-items: start;
+  }
+  .themes {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-6);
+  }
+  .themes li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .sw {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: var(--radius-sm);
+  }
+  .korallenriff {
+    background: var(--palette-korallenriff);
+  }
+  .tiefsee {
+    background: var(--palette-tiefsee);
+  }
+  .sand {
+    background: var(--palette-sand);
+  }
+  .nordlicht {
+    background: var(--palette-nordlicht);
+  }
+  .monochrom {
+    background: var(--palette-monochrom);
+  }
+  @media (min-width: 64rem) {
+    .two {
+      grid-template-columns: 20rem minmax(0, 1fr);
+      column-gap: clamp(2rem, 5vw, 5rem);
+    }
+  }
+</style>

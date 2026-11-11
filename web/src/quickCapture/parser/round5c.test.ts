@@ -1,5 +1,5 @@
 /**
- * Erstkontakt-Runde, person C (docs/qa/round-5/c/FINDINGS.md): short sentences typed with one
+ * Erstkontakt-Runde, person C (docs/qa/round-5.md, person C): short sentences typed with one
  * thumb. Reference "now": Thursday, 2026-10-29, 10:00 (as the corpus).
  */
 import { describe, expect, it } from 'vitest';

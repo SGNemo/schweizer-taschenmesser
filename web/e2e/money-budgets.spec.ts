@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { backSettled, enable, moreFields, showAllWidgets } from './helpers';
+import { backSettled, enable, moreFields, openMoreFocus, showAllWidgets } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time (day 29 of 30, third quarter). */
 test.beforeEach(async ({ page }) => {
@@ -39,7 +39,7 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await spend(page, '40,00', 'Lebensmittel', '2026-07-10');
     await spend(page, '35,00', 'Lebensmittel', '2026-09-10');
     await open(page, '/budgets');
-    await page.getByRole('button', { name: 'Budget hinzufügen' }).click();
+    await page.getByRole('button', { name: /Budget (hinzufügen|eintragen)/ }).click();
     const editor = page.getByRole('dialog');
     await editor.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
     await editor.getByLabel('Limit pro Monat').fill('300');
@@ -55,7 +55,7 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await enable(page, 'budgets');
     await spend(page, '20,00', 'Lebensmittel', '2026-08-10'); // 100 € limit: 80 € left in August
     await open(page, '/budgets');
-    await page.getByRole('button', { name: 'Budget hinzufügen' }).click();
+    await page.getByRole('button', { name: /Budget (hinzufügen|eintragen)/ }).click();
     const editor = page.getByRole('dialog');
     await editor.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
     await editor.getByLabel('Limit pro Monat').fill('100');
@@ -73,7 +73,7 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await enable(page, 'budgets');
     await spend(page, '60,00', 'Lebensmittel', '2026-09-15');
     await open(page, '/budgets');
-    await page.getByRole('button', { name: 'Budget hinzufügen' }).click();
+    await page.getByRole('button', { name: /Budget (hinzufügen|eintragen)/ }).click();
     const editor = page.getByRole('dialog');
     await editor.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
     await editor.getByLabel('Limit pro Monat').fill('61');
@@ -100,7 +100,7 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await enable(page, 'budgets');
     await spend(page, '1,00', 'Lebensmittel'); // also makes the default categories
     await open(page, '/budgets');
-    await page.getByRole('button', { name: 'Budget hinzufügen' }).click();
+    await page.getByRole('button', { name: /Budget (hinzufügen|eintragen)/ }).click();
     const editor = page.getByRole('dialog');
     await editor.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
     await editor.getByLabel('Limit pro Monat').fill('120');
@@ -113,6 +113,29 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await expect(page.getByTestId('budget-chips')).toHaveCount(0);
   });
 
+  // Identity 4.0 (package 0b-2): the free amount is the one figure of the head's title row; with "Werte ausblenden"
+  // it is hidden there too (the promise itself: e2e/hide-values.spec.ts).
+  test('the figure in the head is hidden with "Werte ausblenden"', async ({ page }) => {
+    await enable(page, 'budgets');
+    await spend(page, '1,00', 'Lebensmittel');
+    await open(page, '/budgets');
+    await page.getByRole('button', { name: /Budget (hinzufügen|eintragen)/ }).click();
+    const editor = page.getByRole('dialog');
+    await editor.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
+    await editor.getByLabel('Limit pro Monat').fill('120');
+    await save(page);
+    const row = page.getByTestId('module-title-row');
+    await expect(row.getByTestId('budgets-free')).toContainText(/119,00\s€/);
+    await open(page, '/settings/barrierefreiheit');
+    await openMoreFocus(page);
+    const toggle = page.getByRole('switch', { name: 'Werte ausblenden' });
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-checked', 'true');
+    await open(page, '/budgets');
+    await expect(row.getByTestId('budgets-free').getByTestId('sensitive-value')).toBeVisible();
+    await expect(row).not.toContainText(/119,00/);
+    expect(await page.getByTestId('module-frame').ariaSnapshot()).not.toMatch(/119,00/);
+  });
   test('a goal with a planned rate says when it is reached', async ({ page }) => {
     await enable(page, 'budgets');
     await open(page, '/budgets?tab=goals&new=1');

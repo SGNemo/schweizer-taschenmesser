@@ -81,9 +81,16 @@ test.describe('Calm display, capture and finding things again', () => {
 
   test('inbox: a vague capture lands in the inbox and is sorted one thing at a time', async ({
     page,
+    isMobile,
   }) => {
     await ready(page, '/');
-    await page.getByRole('button', { name: 'Schnell hinzufügen' }).click();
+    // One entry per device (Identity 4.0): the top bar's "Neu" on the desktop, the plus of the bottom bar on the phone.
+    await page
+      .getByRole('button', {
+        name: isMobile ? 'Neu eintragen' : 'Neu: schnell hinzufügen',
+        exact: true,
+      })
+      .click();
     const box = page.getByRole('textbox', { name: 'Was möchtest du festhalten?' });
     await box.fill('Irgendwas mit Oma klären');
     // Enter only means something once the module states are loaded: the target chip shows that.

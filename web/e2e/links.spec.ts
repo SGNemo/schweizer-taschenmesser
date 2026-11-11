@@ -63,7 +63,7 @@ test('a disabled share target can be switched on right there; an empty share say
 test('Lesezeichen: add a link, open it, reject unsafe addresses', async ({ page }) => {
   await enable(page, 'bookmarks');
   await page.goto('/bookmarks?view=links');
-  await page.getByRole('button', { name: 'Lesezeichen anlegen' }).click();
+  await page.getByRole('button', { name: /Lesezeichen (anlegen|eintragen)/ }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Titel').fill('Sendung');
   await dialog.getByLabel('Adresse (Link)').fill('javascript:alert(1)');
@@ -85,7 +85,10 @@ test('Lesezeichen: add a link, open it, reject unsafe addresses', async ({ page 
 
 test('a calendar place can be shown on the map', async ({ page }) => {
   await page.goto('/calendar');
-  await page.getByRole('button', { name: 'Neuer Termin' }).first().click();
+  await page
+    .getByRole('button', { name: /Neuer Termin|Termin eintragen/ })
+    .first()
+    .click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Titel').fill('Zahnarzt');
   await expect(dialog.getByRole('button', { name: 'Auf der Karte zeigen' })).toHaveCount(0);
@@ -100,7 +103,10 @@ test('a calendar place can be shown on the map', async ({ page }) => {
 test('a birthday can be congratulated over WhatsApp', async ({ page }) => {
   await enable(page, 'people');
   await page.goto('/people');
-  await page.getByRole('button', { name: 'Person hinzufügen' }).first().click();
+  await page
+    .getByRole('button', { name: /Person (hinzufügen|eintragen)/ })
+    .first()
+    .click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Name').fill('Anna');
   await dialog.getByLabel('Geburtsdatum').fill('1985-10-02');

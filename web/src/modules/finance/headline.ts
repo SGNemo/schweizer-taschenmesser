@@ -22,6 +22,7 @@ export default async function headline(ctx: {
     label: t.finance.balance,
     value: formatMoney(total, currency),
     detail: t.finance.headline.accounts(group.length),
+    sensitive: true,
     to: '/finance',
   };
 }

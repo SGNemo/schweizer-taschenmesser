@@ -27,17 +27,7 @@ export const HUES = [
   'orchid',
   'slate',
 ];
-export const HEAD_VARIANTS = [
-  'kennzahl',
-  'zeit',
-  'fortschritt',
-  'cover',
-  'himmel',
-  'regal',
-  'tresor',
-  'schreib',
-  'fokus',
-];
+export const HEAD_VARIANTS = ['standard', 'stage'];
 export const WIDGET_VARIANTS = [
   'kennzahl',
   'zeitleiste',

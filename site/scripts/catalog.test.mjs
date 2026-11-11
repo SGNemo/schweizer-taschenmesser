@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { scenes } from '../src/catalog/scenes.js';
+import { slots } from '../src/slots.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const src = (...p) => readFileSync(path.join(here, '..', 'src', ...p), 'utf8');
@@ -41,25 +41,32 @@ const strings = async (l) => Object.values(await import(`../src/i18n/${l}.ts`))[
 test('every catalogue area has a subtitle and every platform limit a label in German and English', async () => {
   for (const l of LOCALES) {
     const s = await strings(l);
-    for (const a of catalog.areas) assert.equal(typeof s.features.areas[a.id], 'string', `${l}: area "${a.id}"`);
-    for (const m of catalog.modules) if (m.platforms) assert.equal(typeof s.features.modules.only[m.platforms], 'string', `${l}: platforms "${m.platforms}"`);
+    for (const a of catalog.areas) assert.equal(typeof s.modules.areas[a.id], 'string', `${l}: area "${a.id}"`);
+    for (const m of catalog.modules) if (m.platforms) assert.equal(typeof s.modules.only[m.platforms], 'string', `${l}: platforms "${m.platforms}"`);
   }
 });
 
-test('every scene names catalogue areas and a visible module, and has its text and its pictures', async () => {
-  assert.ok(scenes.length >= 3);
-  for (const sc of scenes) {
-    for (const id of sc.areas) assert.ok(areaIds.includes(id), `scene ${sc.shot}: area "${id}"`);
-    const mod = catalog.modules.find((m) => m.id === sc.module);
-    assert.ok(mod, `scene ${sc.shot}: module "${sc.module}" is not in the catalogue`);
-    assert.notEqual(mod.status, 'preview', `scene ${sc.shot}: a preview module is hidden in the app`);
-    for (const l of LOCALES) {
-      const text = (await strings(l)).features.scenes[sc.areas[0]];
-      assert.equal(typeof text?.text, 'string', `${l}: scene text "${sc.areas[0]}"`);
-      assert.equal(typeof text?.alt, 'string', `${l}: scene alt "${sc.areas[0]}"`);
-    }
-    for (const name of [sc.shot, `${sc.shot}-phone`]) {
-      for (const scheme of ['dark', 'light']) assert.ok(existsSync(path.join(here, '..', 'src', 'assets', 'screens', `${name}-${scheme}.png`)), `${name}-${scheme}.png missing (npm run app:screenshots)`);
-    }
+// Picture slots (src/slots.js, docs/design/site/SLOTS.md): every slot has a ratio the stylesheet knows, capture sizes
+// of that ratio, and either no picture at all or all four (desk and phone, light and dark).
+test('every picture slot has a known ratio, matching capture sizes and none or all of its pictures', () => {
+  const css = src('styles', 'global.css');
+  const ratio = (r) => r.split('x').map(Number).reduce((w, h) => w / h);
+  for (const [name, def] of Object.entries(slots)) {
+    assert.ok(css.includes(`.ratio-${def.ratio} .slot-art`), `${name}: ratio ${def.ratio} has no rule in global.css`);
+    assert.ok(css.includes(`.ratio-sm-${def.ratioPhone} .slot-art`), `${name}: phone ratio ${def.ratioPhone} has no rule in global.css`);
+    assert.ok(Math.abs(def.desk[0] / def.desk[1] - ratio(def.ratio)) < 0.01, `${name}: desk capture is not ${def.ratio}`);
+    assert.ok(Math.abs(def.phone[0] / def.phone[1] - ratio(def.ratioPhone)) < 0.01, `${name}: phone capture is not ${def.ratioPhone}`);
+    assert.match(def.app.path, /^\//, `${name}: app path`);
+    const files = ['desk', 'phone'].flatMap((k) => ['light', 'dark'].map((t) => path.join(here, '..', 'src', 'assets', 'slots', `${name}-${k}-${t}.png`)));
+    const found = files.filter((f) => existsSync(f)).length;
+    assert.ok(found === 0 || found === 4, `${name}: ${found} of 4 pictures in src/assets/slots`);
   }
+});
+
+// The module lists say nothing about modules that are not finished: the components read the catalogue only through
+// shipped.ts, which drops preview modules. (Texts in i18n are not scanned; they are reviewed by hand.)
+test('module lists read the catalogue through shipped.ts, which drops preview modules', () => {
+  const shipped = src('catalog', 'shipped.ts');
+  assert.match(shipped, /status !== 'preview'/, 'shipped.ts filters preview modules');
+  for (const file of ['Home.astro', 'ModulesPage.astro']) assert.ok(!/from '\.\.\/catalog\/modules\.json'/.test(src('components', file)), `${file} reads the catalogue through shipped.ts`);
 });

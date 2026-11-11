@@ -34,5 +34,5 @@ Gleiche Methode (aus den E2E-Schritten abgeleitet, keine Stoppuhr), Specs `comfo
 | Zuletzt genutztes Werkzeug | 2 / 3 | 2 / 3 (Zeile oberhalb der Kacheln, ab 5 aktiven Werkzeugen) | #153 |
 | Werkzeug in der Bibliothek finden | scrollen | Suchfeld, 0 Klicks | #153 |
 
-Nicht erreicht: Modul an/aus als Schalter, Drag-and-drop-Reihenfolge, Vorschau-Widget, lösbare Tool-Fenster, Timer als Android-Benachrichtigung (Gründe: `docs/decisions/ui-shell.md`). Zusätzlich offen sind die Handtests M1–M4 (Stumm) in [MANUAL-TESTS.md](../../MANUAL-TESTS.md).
+Nicht erreicht: Modul an/aus als Schalter, Drag-and-drop-Reihenfolge, Vorschau-Widget, lösbare Tool-Fenster, Timer als Android-Benachrichtigung (Gründe: `docs/decisions/ui-shell.md`). Zusätzlich offen sind die Handtests ST-M1–ST-M4 (Stumm) in [MANUAL-TESTS.md](../../MANUAL-TESTS.md).
 

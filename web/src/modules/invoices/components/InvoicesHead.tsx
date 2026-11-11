@@ -33,7 +33,7 @@ export function InvoicesHead({ invoices }: { invoices: Stored<Invoice>[] }) {
       <HeroSlot area="figure">
         <div data-testid="invoices-head">
           {next ? (
-            <HeroFigure value={openTotalText(open)} unit={e.open} detail={detail} />
+            <HeroFigure value={openTotalText(open)} unit={e.open} detail={detail} sensitive />
           ) : (
             <HeroFigure value={e.nothing} />
           )}

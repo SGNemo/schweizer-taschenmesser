@@ -13,8 +13,8 @@ Bereiche nach [MODULE-PLAN](../MODULE-PLAN.md) und `decisions/ui-shell.md`:
 | Bereich | Stand | Quelle |
 |---|---|---|
 | Komfort Module (Pakete 1a–8b) | gemergt (#155–#175); Reste siehe §3 | `comfort/03-results.md`, `07-summary.md` |
-| Komfort Einstellungen/Bibliothek/Werkzeugkasten | gemergt (#132, #150, #151, #153, #168, #169); Handtests M1–M4 offen | `comfort/06-settings-results.md` |
-| Fokus-Funktionen Runde 1 (Pakete 1–4) | gebaut; Handtests F1–F12 offen | `features/focus-aids.md` |
+| Komfort Einstellungen/Bibliothek/Werkzeugkasten | gemergt (#132, #150, #151, #153, #168, #169); Handtests ST-M1–ST-M4 offen | `comfort/06-settings-results.md` |
+| Fokus-Funktionen Runde 1 (Pakete 1–4) | gebaut; Handtests FO-F1–FO-F12 offen | `features/focus-aids.md` |
 | Fokus-Audit 2 | Doku gemergt (#176); **Paket 1 „Defaults“ als PR #177 offen**, Pakete 2–4 folgen auf `feat/focus2-today|reminders|additions` | `focus/11-plan-2.md` |
 | Design „Klar 2“, Visual-Audit, Lesbarkeit | gebaut; Visual #17/#18 offen (#16 durch Logo v2 erledigt) | `design/DESIGN-SPEC.md` §7a, ROADMAP D7/D8 |
 | Modulplan | Pakete 1–6 fertig, **Paket 7 Passwort-Gesundheit offen** | `MODULE-PLAN.md` |
@@ -132,7 +132,7 @@ Paket 1 Defaults (#177, offen), Paket 2 Home/„Heute“-Karte + ruhiges ToDo-La
 - Konflikt: „Jetzt“-Leiste in Modulen (`moduleNow`) gerade gebaut (#171, an), Audit 2 will sie standardmäßig aus (#177).
 - Doppelte Konzepte: Fokusmodus mit Ring-Timer neben der Zeitleiste; drei „Heute“-Listen auf Home (`10-audit-2.md` §5).
 - `googleDrive.stub.ts` Platzhalter; natives Android-Share-Target fehlt; Lesezeichen nur Ansicht der Merkliste; Unterlagen-Dateien weder Sync noch Backup (K3); Löschen in Unterlagen ohne Rückgängig.
-- Handtests: alle Hardware-Gruppen in MANUAL-TESTS offen (D, E, N, C, L, F1–F12, K1–K4, V1–V4, L1–L4, A1–A2, S1–S4, M1–M4, Supporter S1–S8).
+- Handtests: alle Hardware-Gruppen in MANUAL-TESTS offen (DT, EA, N, GV, LT, FO-F1–FO-F12, KO-K1–KO-K4, OP-V1–OP-V4, LS-L1–LS-L4, KA-A1–KA-A2, S1–S4, ST-M1–ST-M4, Supporter SU-S1–SU-S8).
 
 ## 6. Widersprüche in der Doku (für einen Doku-Pflege-Schritt)
 1. STATUS §Nächste Schritte 0 / Z.20: Fokus-Paket 1 „wartet auf Review“ – alle 4 Pakete sind gebaut.

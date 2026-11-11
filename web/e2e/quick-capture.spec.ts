@@ -43,7 +43,7 @@ test('the quick-add button captures an appointment from free text and can undo i
   page,
 }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Schnell hinzufügen' }).click();
+  await page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }).click();
   await expect(input(page)).toBeFocused();
 
   await input(page).fill('morgen 15 Uhr Zahnarzt');

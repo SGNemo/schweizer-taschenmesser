@@ -1,6 +1,6 @@
 # Nachricht von Sven an C
 
-Zum Kopieren. `<LINK>` = Download der Android-Dev-Preview (`Nemo-dev.apk`, siehe [installation.de.md](../../../user/installation.de.md) „Dev-Preview“). Details zu den Hürden liefert der Branch `docs/install-first-run`. **Erst schicken, wenn `fix/demo-c-toast-above-plus` (C06) in der Dev-Preview ist**: vorher verdeckt der Dev-Preview-Hinweis das „+“ aus Aufgabe 1 ([FINDINGS](FINDINGS.md)).
+Zum Kopieren. `<LINK>` = Download der Android-Dev-Preview (`Nemo-dev.apk`, siehe [installation.de.md](../../../user/installation.de.md) „Dev-Preview“). Details zu den Hürden liefert der Branch `docs/install-first-run`. **Erst schicken, wenn `fix/demo-c-toast-above-plus` (C06) in der Dev-Preview ist**: vorher verdeckt der Dev-Preview-Hinweis das „+“ aus Aufgabe 1 ([round-5.md](../../round-5.md)).
 
 ---
 

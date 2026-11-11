@@ -15,8 +15,8 @@ const manifest: ModuleManifest = {
   identity: {
     hue: 'slate',
     widget: 'kennzahl',
-    head: 'schreib',
-    signature: 'none',
+    head: 'standard',
+    signature: 'pattern',
   },
   version: 1,
   get description() {

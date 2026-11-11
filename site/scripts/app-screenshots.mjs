@@ -1,15 +1,18 @@
 /**
- * App screenshots for the website, from the seeded Dev-Preview build of the app (invented test
- * data only, docs/design/site). Writes src/assets/screens/<name>-<scheme>.png, light and dark.
+ * App pictures for the website's picture slots, from the seeded Dev-Preview build of the app (invented test data
+ * only). The slots are the table in src/slots.js (spec: docs/design/site/SLOTS.md): for each slot this writes
+ * src/assets/slots/<name>-{desk,phone}-{light,dark}.png at the slot's capture size, which has the slot's aspect
+ * ratio. As soon as all four files of a slot exist, components/Slot.astro shows them instead of the drawing.
+ * Not run in the rethink round: the pictures come when the app's UI is final.
  *
  *   npm run app:screenshots            (in site/; builds ../web dist-e2e-seed if missing, serves it)
  *   APP_URL=http://localhost:4174 …    use a preview that is already running (web: npm run preview:e2e-seed)
+ *   SCREENS_PAGES=now|plan             limits the slots
  *
- * Pages: home (1280×720, hero), phone (412×915) and the planner on the phone (412×915) and the
- * desktop (1920×1080, the seven-column board; Features highlight); notifications granted so no
- * permission banner shows. `unlock` opens the vault with the seed's demo passphrase for a motif that needs it. The seed's texts are German, so one set serves
- * every site language. The only cosmetic change is the hidden "Dev" badge of the preview flavour;
- * everything else is the real UI.
+ * A slot with `app.clip` is shot as a window of the capture size centred on that element (so the ratio holds); a slot
+ * with `app.todo` still needs a step the screenshot chat has to add (printed as a warning, the whole viewport is
+ * shot until then). Notifications are granted so no permission banner shows. The seed's texts are German, so one
+ * set serves every site language. The only cosmetic change is the hidden "Dev" badge of the preview flavour.
  *
  *   npm run app:screenshots -- --readme   README motifs instead (../docs/assets/screenshots/*.webp):
  *     overview, calendar, finance, tools, settings; desktop 1920×1080 and phone 412×915, light and dark.
@@ -21,31 +24,22 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import sharp from 'sharp';
+import { slots } from '../src/slots.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const web = path.resolve(here, '..', '..', 'web');
-const out = path.resolve(here, '..', 'src', 'assets', 'screens');
+const out = path.resolve(here, '..', 'src', 'assets', 'slots');
 const SEED_TODAY = '2026-09-29'; // reference date of the seed (web/e2e/seed/helpers.ts)
 const SCALE = process.env.SCREENS_SCALE ?? 'medium';
 const chromiumPath = process.env.PLAYWRIGHT_CHROMIUM || '/opt/pw-browsers/chromium';
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
-const PAGES = [
-  { name: 'home', path: '/', viewport: { width: 1280, height: 720 } },
-  { name: 'phone', path: '/', viewport: { width: 412, height: 915 }, mobile: true },
-  // The four scenes of the features section (round 5): one page per area, desktop at 1280 x 800 and the phone.
-  // A 1920 px capture is unreadable at the sizes the page uses; 1280 keeps 14 px app text near 10 px.
-  ...[
-    { name: 'calendar', path: `/calendar?view=week&date=${SEED_TODAY}` },
-    { name: 'finance', path: '/finance?tab=overview' },
-    { name: 'notes', path: '/notes' },
-    // The vault list, unlocked with the seed's demo passphrase (invented entries only).
-    { name: 'accounts', path: '/accounts', unlock: true },
-  ].flatMap((x) => [
-    { ...x, viewport: { width: 1280, height: 800 } },
-    { ...x, name: `${x.name}-phone`, viewport: { width: 412, height: 915 }, mobile: true },
-  ]),
-];
+// One job per slot and viewport kind: `<name>-desk` at the slot's desktop capture size, `<name>-phone` at its phone size.
+const PAGES = Object.entries(slots).flatMap(([name, def]) => [
+  { name: `${name}-desk`, slot: name, ...def.app, viewport: { width: def.desk[0], height: def.desk[1] } },
+  { name: `${name}-phone`, slot: name, ...def.app, viewport: { width: def.phone[0], height: def.phone[1] }, mobile: true },
+]);
+if (!process.argv.includes('--readme')) for (const [name, def] of Object.entries(slots)) if (def.app.todo) console.warn(`slot ${name}: ${def.app.todo} (not automated yet, the viewport is shot as it is)`);
 const README = process.argv.includes('--readme');
 /** README motifs (docs/assets/screenshots): one overview plus modules with a strong identity, the toolbox, settings. */
 const README_PAGES = [
@@ -133,12 +127,6 @@ try {
       await section.getByTestId('seed-status').filter({ hasText: SEED_TODAY }).waitFor({ timeout: 60_000 });
       await page.goto(p.path);
       await page.locator('main').waitFor();
-      if (p.unlock) {
-        // The vault list: unlock with the demo passphrase of the seed (modules/accounts/seed.ts).
-        await page.getByLabel('Master-Passwort').fill('nemo-demo-tresor'); // gitleaks:allow (invented demo value)
-        await page.getByRole('button', { name: 'Entsperren' }).click();
-        await page.getByRole('button', { name: 'Zugang hinzufügen' }).waitFor({ timeout: 30_000 });
-      }
       // The Dev-Preview flavour shows a one-time notice a moment after the shell mounts; wait for it, close it.
       await page.getByRole('button', { name: 'Schließen', exact: true }).first().click({ timeout: 3_000 }).catch(() => {});
       if (p.openToolbox) {
@@ -160,7 +148,17 @@ try {
         console.log(path.relative(process.cwd(), file));
       } else {
         const file = path.join(out, `${p.file}-${scheme}.png`);
-        await page.screenshot({ path: file });
+        // With a clip selector: the viewport-sized cut around the element's centre, so the slot's ratio is kept.
+        const box = p.clip ? await page.locator(p.clip).first().boundingBox() : null;
+        const pageSize = box && (await page.evaluate(() => ({ w: document.documentElement.scrollWidth, h: document.documentElement.scrollHeight })));
+        const within = (v, max) => Math.max(0, Math.min(Math.round(v), Math.max(0, max)));
+        const clip = box && {
+          x: within(box.x + box.width / 2 - p.viewport.width / 2, pageSize.w - p.viewport.width),
+          y: within(box.y + box.height / 2 - p.viewport.height / 2, pageSize.h - p.viewport.height),
+          width: p.viewport.width,
+          height: p.viewport.height,
+        };
+        await page.screenshot(clip ? { path: file, clip } : { path: file });
         console.log(path.relative(process.cwd(), file));
       }
       await context.close();

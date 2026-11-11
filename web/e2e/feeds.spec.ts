@@ -6,7 +6,10 @@ test('Feeds: hinzufügen, gruppieren, doppelte erkennen, bearbeiten, entfernen',
 }) => {
   await enable(page, 'feeds');
   await page.goto('/feeds');
-  await page.getByRole('button', { name: 'Feed hinzufügen' }).first().click();
+  await page
+    .getByRole('button', { name: /Feed (hinzufügen|eintragen)/ })
+    .first()
+    .click();
 
   const dialog = page.getByRole('dialog', { name: 'Feed hinzufügen' });
   await dialog.getByRole('textbox', { name: /Adresse des Feeds/ }).fill('keine adresse');
@@ -26,7 +29,10 @@ test('Feeds: hinzufügen, gruppieren, doppelte erkennen, bearbeiten, entfernen',
   await expect(page.getByText('blog.example.org').first()).toBeVisible();
 
   // The same feed twice is refused.
-  await page.getByRole('button', { name: 'Feed hinzufügen' }).first().click();
+  await page
+    .getByRole('button', { name: /Feed (hinzufügen|eintragen)/ })
+    .first()
+    .click();
   const again = page.getByRole('dialog', { name: 'Feed hinzufügen' });
   await again
     .getByRole('textbox', { name: /Adresse des Feeds/ })

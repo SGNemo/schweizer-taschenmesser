@@ -17,6 +17,7 @@ import {
   IconButton,
   ItemList,
   ItemRow,
+  PageAction,
   PageHeader,
   Segmented,
   StateBadge,
@@ -192,13 +193,14 @@ export default function InvoicesPage() {
       >
         <AdvancedToggle moduleId="invoices" />
         {/* U26: while the open list is empty, the empty state holds the one filled step. */}
-        <Button
+        <PageAction
+          short={t.invoices.meta.quickAdd}
           variant={emptyOpen ? 'secondary' : 'primary'}
           onClick={() => setTarget({ draft: true })}
         >
           <Icon name="plus" size={18} />
           {t.invoices.add}
-        </Button>
+        </PageAction>
         <StartDataMenu moduleId="invoices" />
       </PageHeader>
 

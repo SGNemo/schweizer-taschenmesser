@@ -43,7 +43,7 @@ async function enable(page: Page, ids: string[]) {
 test('pantry: expiry, low stock and the hand-over to the shopping list', async ({ page }) => {
   await enable(page, ['pantry', 'lists']);
   await page.goto('/pantry');
-  await page.getByRole('button', { name: 'Vorrat hinzufügen' }).click();
+  await page.getByRole('button', { name: /Vorrat (hinzufügen|eintragen)/ }).click();
   const dialog = page.getByRole('dialog', { name: 'Vorrat hinzufügen' });
   await dialog.getByLabel('Name', { exact: true }).fill('Milch');
   await dialog.getByLabel('Ort').selectOption('fridge');
@@ -95,7 +95,7 @@ test('pantry: the hand-over also arrives when the app loads slowly (services sta
     await route.continue();
   });
   await page.goto('/pantry');
-  await page.getByRole('button', { name: 'Vorrat hinzufügen' }).click();
+  await page.getByRole('button', { name: /Vorrat (hinzufügen|eintragen)/ }).click();
   const dialog = page.getByRole('dialog', { name: 'Vorrat hinzufügen' });
   await dialog.getByLabel('Name', { exact: true }).fill('Milch');
   await dialog.getByLabel('Ort').selectOption('fridge');
@@ -122,7 +122,7 @@ test('pantry: without the lists module the hand-over says so and offers to switc
 }) => {
   await enable(page, ['pantry']);
   await page.goto('/pantry');
-  await page.getByRole('button', { name: 'Vorrat hinzufügen' }).click();
+  await page.getByRole('button', { name: /Vorrat (hinzufügen|eintragen)/ }).click();
   const dialog = page.getByRole('dialog', { name: 'Vorrat hinzufügen' });
   await dialog.getByLabel('Name', { exact: true }).fill('Butter');
   await dialog.getByLabel('Vorrat (Anzahl)').fill('0');
@@ -143,7 +143,10 @@ test('gift ideas: per person, status and what was spent', async ({ page }) => {
   await enable(page, ['people']);
   await page.goto('/people');
   await expect(page.getByText('Noch keine Personen')).toBeVisible();
-  await page.getByRole('button', { name: 'Person hinzufügen' }).first().click();
+  await page
+    .getByRole('button', { name: /Person (hinzufügen|eintragen)/ })
+    .first()
+    .click();
   const person = page.getByRole('dialog', { name: 'Person hinzufügen' });
   await person.getByLabel('Name', { exact: true }).fill('Anna');
   // A new person has no date preset (it used to be today and was saved as a wrong birthday).

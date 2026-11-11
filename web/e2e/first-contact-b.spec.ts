@@ -5,14 +5,13 @@ import { enable, ready } from './helpers';
 
 /**
  * Round 5, person B (office clerk, Excel, Sparkasse): the three tasks of the first 15 minutes on a
- * fresh installation. Finding ids refer to docs/qa/round-5/b/FINDINGS.md.
+ * fresh installation. Finding ids refer to docs/qa/round-5.md (person B).
  */
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-11-08T10:00:00'));
 });
 
-const sparkasse = () =>
-  readFileSync(resolve(process.cwd(), '../docs/qa/round-5/b/sparkasse-demo.csv'));
+const sparkasse = () => readFileSync(resolve(process.cwd(), 'e2e/fixtures/sparkasse-demo.csv'));
 
 async function importStatement(page: Page) {
   // Straight from the module settings, before the finance page was ever opened (B01).
@@ -43,7 +42,7 @@ test('B01/B03: a Sparkasse file on a fresh app is booked and fills a grocery bud
 
   await enable(page, 'budgets'); // part of the "Finanz-Fokus" profile
   await ready(page, '/budgets');
-  await page.getByRole('button', { name: 'Budget hinzufügen' }).click();
+  await page.getByRole('button', { name: /Budget (hinzufügen|eintragen)/ }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
   await dialog.getByLabel('Limit pro Monat').fill('400');
