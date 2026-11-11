@@ -49,6 +49,7 @@ CF-N11. _Neues Clownfisch-Icon (Branch `design/app-icon`), Windows-Portable:_ Ta
 #### Logo v2 (Branch `design/logo-v2`) – nur auf Geräten prüfbar
 
 Neues Zeichen: orangefarbene Kachel mit weißem Fisch (App-Symbol), Pille „Mark + NEMO“ in der Seitenleiste; Farbe = Akzent-Token (`#b5430c` hell, `#ff9a57` dunkel).
+
 - **LG1 Windows-Taskleiste:** Portable-App starten: Taskleisten-Symbol bei 100 % und 150 % Skalierung, mit heller und dunkler Taskleiste, zeigt die Kachel mit dem Fisch (Bänder und Auge erkennbar, Ecken nicht abgeschnitten); Alt+Tab und Fensterleiste dasselbe. ☐
 - **LG2 Windows-Tray:** Tray-Symbol („Heute“) im Infobereich bei 16 und 24 px erkennbar, helle und dunkle Taskleiste. ☐
 
@@ -87,6 +88,7 @@ EN-E1. _Windows-Portable:_ Einstellungen durchklicken – Kategorien-Leiste link
 #### Hauptthread frei halten (UI-Audit 4.0, Paket 0a-4 Teil 2) – nur auf Windows prüfbar
 
 Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währenddessen verschieben, in der Titelleiste steht nie „Keine Rückmeldung“, und ein Wechsel zu einem anderen Modul zeigt dessen Inhalt statt „…“. Hintergrund und Einordnung je Command: [perf/MAIN-THREAD-COMMANDS-2026-11.md](perf/MAIN-THREAD-COMMANDS-2026-11.md).
+
 - **MT-H6 Einstellungen und „Über Nemo“:** „Mit Windows starten“ ein und aus: der Schalter bleibt nach erneutem Öffnen der Seite auf dem gewählten Stand (Task-Manager → Autostart zeigt Nemo bzw. nicht). „Datenordner öffnen“ öffnet den Explorer. Im Systemmonitor „Task-Manager öffnen“ startet ihn. ☐
 
 ### Modul-Bibliothek
@@ -106,6 +108,7 @@ TR-T3. _Aktualisieren und Abschalten:_ ToDo erledigen → nach dem nächsten Öf
 #### Hauptthread frei halten (UI-Audit 4.0, Paket 0a-4 Teil 2) – nur auf Windows prüfbar
 
 Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währenddessen verschieben, in der Titelleiste steht nie „Keine Rückmeldung“, und ein Wechsel zu einem anderen Modul zeigt dessen Inhalt statt „…“. Hintergrund und Einordnung je Command: [perf/MAIN-THREAD-COMMANDS-2026-11.md](perf/MAIN-THREAD-COMMANDS-2026-11.md).
+
 - **MT-H5 Schnellerfassung mit Zwischenablage:** Einstellung „Zwischenablage beim Öffnen einfügen“ ein, in einem anderen Programm Text kopieren, Schnellerfassung per Tastenkürzel öffnen: der Text steht sofort im Feld. Noch einmal mit einer großen kopierten Excel-Tabelle (Excel offen lassen): das Fenster öffnet sich ohne Hänger. ☐
 
 ### Spracheingabe
@@ -132,6 +135,7 @@ ST-M4. _Desktop:_ Karte in der App erscheint wie sonst; der Ton der Windows-Bena
 #### Zock-Modus (Windows, Vollbild-Spiel) – nur von Hand prüfbar
 
 Vorbereitung: Portable-EXE aus dem Branch/Artefakt; Einstellungen → Benachrichtigungen: Erlaubnis erteilt, „Zock-Modus“ auf „Automatisch“; Lautstärke ca. 50 %. Hintergrund: [features/game-mode.md](features/game-mode.md).
+
 - **Z1 Kein Windows-Ton:** Zock-Modus „Aus“, Fenster im Hintergrund, „Testbenachrichtigung senden“: kommt der Toast ohne Windows-Benachrichtigungston? (Die App setzt keinen Ton; wenn doch einer kommt: melden.) ☐
 - **Z2 Ton bei Fenster im Tray:** „Ton testen“ mit sichtbarem Fenster (alle drei Klänge, Lautstärke 0 = still). Dann Schließen-in-Tray an, Fenster schließen, Erinnerung für in 2 Minuten anlegen vorher, Zock-Modus „Immer“: kommt der Toast ohne Windows-Ton, und danach der App-Ton? Notieren: Verzögerung in Sekunden. ☐
 - **Z3 Vollbild-Spiel:** ein Spiel im Vollbild (Direct3D) starten, Zock-Modus „Automatisch“, Erinnerung für in 2 Minuten: nur der leichte App-Ton, kein Windows-Ton, der Toast wartet im Info-Center oder erscheint (Windows' Spiel-Ruhe kann ihn zurückhalten, das ist ok). Spiel beenden, nächste Erinnerung: normaler Weg, kein App-Ton. ☐
@@ -204,6 +208,7 @@ FS-R10. _Abschnitt ohne Hub:_ Heimnetz-Abgleich aus: der Abschnitt zeigt zwei ku
 #### Uhr (Paket 1, #615) – nur von Hand prüfbar
 
 Vorbereitung: Einstellungen → Darstellung → „In Arbeit anzeigen“, Modul-Bibliothek → „Uhr“ einschalten, zwei Orte eintragen. Hintergrund: [features/clock.md](features/clock.md).
+
 - **UH-U1 Logo-Uhr in der Windows-App:** „Uhrzeit neben dem Logo“ an; Klick auf die Uhrzeit öffnet die Uhr-Seite; Modul aus → die Uhrzeit ist kein Link mehr (kein Hand-Cursor, nichts passiert). Eingeklappte Seitenleiste: „14“/„07“ öffnet ebenfalls die Seite. ☐
 
 ### Tresor
@@ -244,6 +249,7 @@ X14. _Eigene Seiten:_ Auf der Nemo-PWA im Browser schlägt die Erweiterung nicht
 #### Hauptthread frei halten (UI-Audit 4.0, Paket 0a-4 Teil 2) – nur auf Windows prüfbar
 
 Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währenddessen verschieben, in der Titelleiste steht nie „Keine Rückmeldung“, und ein Wechsel zu einem anderen Modul zeigt dessen Inhalt statt „…“. Hintergrund und Einordnung je Command: [perf/MAIN-THREAD-COMMANDS-2026-11.md](perf/MAIN-THREAD-COMMANDS-2026-11.md).
+
 - **MT-H4 Browser-Erweiterung:** Konten → Browser-Erweiterung: „Verbinden“ (Registrierung) zeigt die Browser als eingetragen, der Status bleibt nach einem Seitenwechsel richtig; Brücke aus und wieder ein, danach füllt die Erweiterung auf einer Testseite weiter aus (Klick → Zugangsdaten erscheinen). „Trennen“ entfernt die Einträge wieder. ☐
 
 ### Notizen
@@ -277,6 +283,7 @@ BR-B8. _Merkliste/Notiz:_ „In Merkliste speichern“ (Modul an) legt den Eintr
 #### Hauptthread frei halten (UI-Audit 4.0, Paket 0a-4 Teil 2) – nur auf Windows prüfbar
 
 Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währenddessen verschieben, in der Titelleiste steht nie „Keine Rückmeldung“, und ein Wechsel zu einem anderen Modul zeigt dessen Inhalt statt „…“. Hintergrund und Einordnung je Command: [perf/MAIN-THREAD-COMMANDS-2026-11.md](perf/MAIN-THREAD-COMMANDS-2026-11.md).
+
 - **MT-H7 Browser-Tabs (bleiben auf dem Hauptthread):** in einem Tab vier Seiten nacheinander öffnen, dann dreimal sehr schnell „Zurück“: der Tab steht auf der ersten Seite, „Vor“ dreimal: auf der vierten. Neu laden und Zoom (Strg +/−) reagieren sofort. Hängt das Fenster genau hier, bitte mit Seite und Uhrzeit notieren – das wäre ein Fall für WebView2 selbst. ☐
 
 ### Downloads und Torrent
@@ -317,6 +324,7 @@ TO-D12. _IP und Ausschalten:_ „IP-Adresse anzeigen“ fragt erst auf den Klick
 #### Hauptthread frei halten (UI-Audit 4.0, Paket 0a-4 Teil 2) – nur auf Windows prüfbar
 
 Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währenddessen verschieben, in der Titelleiste steht nie „Keine Rückmeldung“, und ein Wechsel zu einem anderen Modul zeigt dessen Inhalt statt „…“. Hintergrund und Einordnung je Command: [perf/MAIN-THREAD-COMMANDS-2026-11.md](perf/MAIN-THREAD-COMMANDS-2026-11.md).
+
 - **MT-H3 Downloads:** einen großen Download starten, schnell hintereinander Pause → Fortsetzen → Pause klicken: der Eintrag steht am Ende auf „Pausiert“ und zeigt nach „Fortsetzen“ wieder Tempo; Limit setzen und wieder auf 0; „Im Ordner zeigen“; „Aus der Liste entfernen“. Nemo beenden und neu starten: die Liste ist dieselbe wie vorher (kein leerer Stand, kein doppelter Eintrag). Wenn möglich einmal mit einem USB-Stick oder Netzlaufwerk als Zielordner. ☐
 
 ### Dieser PC
@@ -360,6 +368,7 @@ DV-V6. _Live-Kacheln:_ CPU/RAM/Netz aktualisieren alle 3 s ohne Flackern; Mini-V
 #### Hauptthread frei halten (UI-Audit 4.0, Paket 0a-4 Teil 2) – nur auf Windows prüfbar
 
 Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währenddessen verschieben, in der Titelleiste steht nie „Keine Rückmeldung“, und ein Wechsel zu einem anderen Modul zeigt dessen Inhalt statt „…“. Hintergrund und Einordnung je Command: [perf/MAIN-THREAD-COMMANDS-2026-11.md](perf/MAIN-THREAD-COMMANDS-2026-11.md).
+
 - **MT-H1 Löschen in „Dieser PC“ (wichtigster Punkt):** einen Testordner mit ein paar Wegwerf-Dateien scannen, zwei Dateien markieren, „Löschen“: der Plan erscheint, nach der Bestätigung liegen die Dateien im Papierkorb, die Karte zeigt die neue Größe. Dann „Endgültig löschen“ wählen: Nemo fragt ein **zweites Mal** nach; ohne die zweite Bestätigung wird nichts gelöscht. Ein Ordner aus der Sperrliste (z. B. `C:\Windows`) lässt sich weiterhin nicht zum Löschen vormerken. Zweimal schnell auf „Löschen“ klicken: es läuft nur ein Löschvorgang. ☐
 - **MT-H2 „Dieser PC“ blättern:** `C:\` scannen, während und nach dem Scan schnell durch große Ordner klicken (z. B. `Windows` → `WinSxS`), dabei zum Kalender und zurück: die Karte folgt dem zuletzt geklickten Ordner, nichts bleibt hängen. „Im Explorer zeigen“ öffnet den Explorer mit dem markierten Eintrag. „Aufräumen“ zeigt die bekannten Orte (Temp, Browser-Caches). ☐
 
@@ -368,6 +377,7 @@ Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währ
 #### Bildschirmfoto (Windows-App, Handy) – nur von Hand prüfbar
 
 Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: [features/screenshot.md](features/screenshot.md).
+
 - **BF-B1 Windows-App, Fenster:** Portable-EXE, Werkzeug „Bildschirmfoto“ → „Bildschirm aufnehmen“: kommt eine Auswahl (Bildschirm/Fenster)? Ein Fenster wählen: Vorschau erscheint. Kommt stattdessen „… gibt es auf diesem Gerät nicht“ (kein Fehler), ist WebView2 ohne Aufnahme – dann Notiz an den Maintainer (Rust-Aufnahme = neue Abhängigkeit). ☐
 - **BF-B2 Kopieren:** „Kopieren“, dann in Paint/Mail einfügen (Strg+V): das Bild erscheint. ☐
 - **BF-B3 Speichern:** „Speichern“: Windows-Dialog, Datei `bildschirmfoto-JJJJ-MM-TT-HHMM.png` öffnet sich als Bild. ☐
@@ -432,6 +442,7 @@ CF-N12. _Clownfisch-Icon, Android-APK als Update über die bestehende Installati
 #### Logo v2 (Branch `design/logo-v2`) – nur auf Geräten prüfbar
 
 Neues Zeichen: orangefarbene Kachel mit weißem Fisch (App-Symbol), Pille „Mark + NEMO“ in der Seitenleiste; Farbe = Akzent-Token (`#b5430c` hell, `#ff9a57` dunkel).
+
 - **LG3 Android als Update:** `Nemo.apk` über eine bestehende Installation installieren: Daten bleiben, Launcher-Symbol zeigt den neuen Fisch (Kreis, Squircle oder abgerundet je nach Launcher; der Fisch liegt vollständig innerhalb der Maske), Benachrichtigungs-Symbol in der Statusleiste ist der Fisch (einfarbig) mit der Akzentfarbe, Verknüpfungen (Kurzbefehle, Teilen-Ziel) haben den neuen Hintergrund. ☐
 - **LG4 Themed Icon (Android 13+):** „Designte Symbole“ im Launcher an: das Symbol nimmt die Hintergrundfarbe an, der Fisch bleibt mit Bändern und Auge erkennbar. ☐
 
@@ -596,6 +607,7 @@ QR-Q5. _Android-App:_ QR-Lesen braucht Kamera-Berechtigung und eine WebView mit 
 #### Uhr (Paket 1, #615) – nur von Hand prüfbar
 
 Vorbereitung: Einstellungen → Darstellung → „In Arbeit anzeigen“, Modul-Bibliothek → „Uhr“ einschalten, zwei Orte eintragen. Hintergrund: [features/clock.md](features/clock.md).
+
 - **UH-U2 Sortieren mit dem Finger (Android):** Griff lange drücken, Ort ziehen: die Reihenfolge bleibt nach Neustart; Scrollen der Liste verschiebt nichts; „Rückgängig“ im Toast stellt die alte Reihenfolge her. ☐
 
 ### Finanzen
@@ -688,6 +700,7 @@ DT-D16. _Android/PWA:_ „Datenträger“ und „Systeminfo“ erscheinen weder 
 #### Bildschirmfoto (Windows-App, Handy) – nur von Hand prüfbar
 
 Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: [features/screenshot.md](features/screenshot.md).
+
 - **BF-B5 Android:** Werkzeug zeigt nur den Hinweis, keinen Knopf. ☐
 
 #### Rechner-Modi (Branch `feat/calculator-modes`)
@@ -729,6 +742,7 @@ RL-R5. Datenträger-Modul DT-D1–DT-D18 und Keystore/Windows Hello (Schritt 11b
 #### Logo v2 (Branch `design/logo-v2`) – nur auf Geräten prüfbar
 
 Neues Zeichen: orangefarbene Kachel mit weißem Fisch (App-Symbol), Pille „Mark + NEMO“ in der Seitenleiste; Farbe = Akzent-Token (`#b5430c` hell, `#ff9a57` dunkel).
+
 - **LG7 Logo v2.1 (nach dem ersten Dev-Preview-Build):** Windows-Taskleiste bei 100 % und 150 %: der weiße Fisch auf der Akzent-Kachel ist bei 16–24 px als Fisch in einem Stück erkennbar (zwei innere Bänder, kein Lautsprecher-Symbol); Android-Launcher (Kreis/Squircle), Themed Icon und Benachrichtigung zeigen dieselbe Form, nichts angeschnitten. ☐
 
 ### Darstellung
@@ -882,6 +896,7 @@ FB13. _Latenz messen (Dev-Preview am Handy, PC gekoppelt und im selben WLAN, Fer
 FB14. _Entsperren am Handy für Maus und Tastatur (ab der Seite Touchpad prüfbar; zuerst: baut die Dev-Preview für Android nach dem Merge von `feat/remote-client-full` überhaupt – das Kotlin der neuen Abfrage ist ungebaut):_ PC verlangt „Am Handy entsperren“ → erstes Tippen aufs Touchpad zeigt die Systemabfrage (Fingerabdruck, Gesicht oder PIN); abbrechen → Medien läuft weiter, kein Touchpad; bestätigen → Touchpad geht, danach acht Stunden keine Abfrage (App neu starten → wieder eine). Handy ohne Bildschirmsperre → Touchpad geht, die Seite sagt, dass das Handy keine Sperre hat. Der Tresor lässt sich danach weiter per Fingerabdruck öffnen. Abfrage zwei Minuten stehen lassen → sie verschwindet von selbst, Medien läuft weiter. PC gesperrt → Touchpad sagt es, Medien läuft weiter. ☐
 FB15. _Touchpad (braucht die Stufe „Maus und Tastatur“ am PC, Teil 3c):_ Ansicht Touchpad → Legende einmal, nach „Verstanden“ nie wieder. Wischen bewegt den Zeiger flüssig (kein Sprung beim Aufsetzen, kein Nachlaufen); Tippen = Klick, zweimal Tippen = Doppelklick (Ordner öffnet), zwei Finger tippen = Rechtsklick, zwei Finger wischen scrollt in Handy-Richtung, auch seitwärts. „Links“ halten + wischen zieht ein Fenster, loslassen legt es ab. PC während des Ziehens sperren (Win+L) → nichts bleibt gedrückt, Touchpad sagt „PC ist gesperrt“. Erhöhtes Fenster vorn (Task-Manager) → Zeiger bewegt sich, Klicks kommen dort nicht an. Nemos Freigabe-Dialog am PC lässt sich vom Handy aus nicht bestätigen. Zeigergeschwindigkeit in den Modul-Einstellungen wirkt. Handy drehen: Fläche und Streifen liegen nebeneinander und passen ganz auf den Bildschirm. Zwei Minuten liegen lassen, dann tippen → verbindet wieder. Entsperren mit PIN statt Fingerabdruck (die Abfrage verdeckt die App): bestätigen → Touchpad geht; abbrechen → keine zweite Abfrage von selbst. Legende über das Menü wieder aufrufbar. Android-Zurück-Geste vom Rand geht weiter. ☐
 FB17. _Lautstärketasten des Handys (zuerst: baut die Dev-Preview für Android – das Kotlin dazu ist ungebaut):_ Fernbedienung offen und verbunden → Zeile „Lautstärketasten steuern den PC“; Lauter/Leiser am Handy ändert die PC-Lautstärke, das Lautstärke-Fenster von Android erscheint nicht; Taste halten → wenige Schritte je Sekunde. Auf dem Touchpad genauso. Andere Tasten (Zurück, Tastatur) unverändert. Nemo in den Hintergrund oder andere Seite → Tasten regeln sofort wieder das Handy. Am PC „Fernsteuerung beenden“ → Zeile weg, Tasten beim Handy. WLAN kurz aus → nach wenigen Sekunden Tasten beim Handy. Einstellung im Modul aus → Tasten immer beim Handy. ☐
+FB18. _Tastatur (braucht die Stufe „Medien, Maus und Tastatur“ am PC; am PC einen Editor offen):_ Ansicht Tastatur → Feld hat den Fokus, Handy-Tastatur ist offen, nur Feld und „Senden“ sichtbar. „Grüße aus Köln“ tippen (am PC erscheint noch nichts), „Senden“ → Text steht am PC ohne Zeilenumbruch, Feld ist leer. Zweiter Text mit der Eingabetaste der Handy-Tastatur → Text und danach ein Zeilenumbruch. Umlaute und ß, ein Emoji (🙂), ein sehr langes Wort und ein Absatz von etwa 1500 Zeichen (kommt in wenigen Sekunden vollständig und in der richtigen Reihenfolge an). Wortvorschläge und Wischen der Handy-Tastatur gehen. „Tasten zeigen“ → Enter, Rücktaste, Esc, Tab, Fenster wechseln (wechselt einmal zum vorigen Fenster, kein Alt bleibt hängen), Vollbild (im Browser), Pfeile; „Mehr Tasten“ → Leertaste, Pos1, Ende, Bild auf/ab, Entf. PC sperren (Win+L) → Zeile „PC ist gesperrt …“, Text bleibt im Feld, am Sperrbildschirm kommt nichts an. Fenster mit Administratorrechten im Vordergrund → es kommt nichts an (Windows blockt), Nemo meldet keinen Fehler. Danach: App schließen und öffnen → das Feld ist leer; im Fehlerbericht und in den Einstellungen steht nichts vom getippten Text.
 
 ### Kalender
 
@@ -965,6 +980,7 @@ CF-N13. _Clownfisch-Icon im Browser/PWA:_ Favicon im Tab (hell/dunkel), „Zum S
 #### Logo v2 (Branch `design/logo-v2`) – nur auf Geräten prüfbar
 
 Neues Zeichen: orangefarbene Kachel mit weißem Fisch (App-Symbol), Pille „Mark + NEMO“ in der Seitenleiste; Farbe = Akzent-Token (`#b5430c` hell, `#ff9a57` dunkel).
+
 - **LG5 Favicon und PWA:** Tab-Symbol in Chrome/Edge/Firefox bei heller und dunkler Tab-Leiste ist die Kachel mit dem Fisch; PWA installieren: Symbol auf Startbildschirm oder Desktop (maskable: Fisch nicht angeschnitten), Splash beim Start zeigt den Fisch in der Akzentfarbe. ☐
 - **LG6 Seitenleiste und Topbar:** breite Seitenleiste zeigt die Pille (hell und dunkel; Systemschema und App-Thema verschieden: die Pille bleibt lesbar), eingeklappt zeigt sie nur den Fisch in Akzentfarbe, Handy-Topbar unter 416 px nur den Fisch, darüber die Pille. ☐
 
@@ -1182,6 +1198,7 @@ QR-Q4. _Kamera verweigert:_ ruhiger Hinweis, die Kamera bleibt aus, die Datei ge
 #### Uhr (Paket 1, #615) – nur von Hand prüfbar
 
 Vorbereitung: Einstellungen → Darstellung → „In Arbeit anzeigen“, Modul-Bibliothek → „Uhr“ einschalten, zwei Orte eintragen. Hintergrund: [features/clock.md](features/clock.md).
+
 - **UH-U3 Minutenwechsel:** App 2 Minuten offen lassen: Seite, Widget und Logo-Uhr springen gleichzeitig zur vollen Minute; nach Standby/Bildschirm aus stimmt die Zeit sofort wieder. ☐
 - **UH-U4 12-Stunden-Format:** Einstellungen → Sprache & Format → en-US: Seite und Widget zeigen „11:07 PM“ ohne Überlauf am Handy. ☐
 
