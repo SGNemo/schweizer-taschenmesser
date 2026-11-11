@@ -34,7 +34,10 @@ mod pointer;
 mod system;
 mod worker;
 
-pub use keyboard::{Key, KeyAction, Keyboard, Keys, KEYS, QUEUE as KEY_QUEUE, TEXT_UNITS};
+pub use keyboard::{
+    strokes, typed, Code, Key, KeyAction, Keyboard, Keys, Stroke, KEYS, QUEUE as KEY_QUEUE,
+    TEXT_UNITS,
+};
 pub use pointer::{Button, Mouse, Pointer, PointerAction, QUEUE, WHEEL_UNIT};
 pub use system::System;
 pub use worker::{Worker, FRESH_WAIT, STALE};

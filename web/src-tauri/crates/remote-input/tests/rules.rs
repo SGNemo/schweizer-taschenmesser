@@ -139,13 +139,34 @@ fn only_two_files_simulate_input_each_its_own_kind() {
         ]
     );
 
-    // the keyboard: exactly one call site, three flags, and the virtual keys of the fixed list –
-    // Alt only as the one half of Alt+Tab
+    // The keyboard. What is pressed is planned in plain code (`strokes`, `typed`), which
+    // `tests/keyboard.rs` checks on every system; the Windows part below it may only turn one
+    // planned stroke into one event. Linux never compiles that part, so it is read here.
     let keyboard = fs::read_to_string(root().join("src/keyboard.rs")).unwrap();
-    assert_eq!(one_call(&keyboard), 1, "one SendInput call");
-    assert_eq!(types(&keyboard), ["r#type: INPUT_KEYBOARD,"]);
+    let at = keyboard
+        .find("#[cfg(windows)]\nmod imp {")
+        .expect("the Windows part");
+    let (plain, imp) = keyboard.split_at(at);
+    // nothing of the system above it
+    for line in code_lines(plain) {
+        for n in [
+            "windows::",
+            "VK_",
+            "KEYEVENTF",
+            "INPUT",
+            "VIRTUAL_KEY",
+            "unsafe",
+        ] {
+            assert!(
+                !line.contains(n),
+                "keyboard.rs: `{n}` above the Windows part"
+            );
+        }
+    }
+    assert_eq!(one_call(imp), 1, "one SendInput call");
+    assert_eq!(types(imp), ["r#type: INPUT_KEYBOARD,"]);
     assert_eq!(
-        words(&keyboard, "KEYEVENTF_"),
+        words(imp, "KEYEVENTF_"),
         [
             "KEYEVENTF_EXTENDEDKEY",
             "KEYEVENTF_KEYUP",
@@ -153,7 +174,7 @@ fn only_two_files_simulate_input_each_its_own_kind() {
         ]
     );
     assert_eq!(
-        words(&keyboard, "VK_"),
+        words(imp, "VK_"),
         [
             "VK_BACK",
             "VK_DELETE",
@@ -173,16 +194,21 @@ fn only_two_files_simulate_input_each_its_own_kind() {
             "VK_UP",
         ]
     );
-    let alt: Vec<&str> = code_lines(&keyboard)
-        .filter(|l| l.contains("VK_MENU") && l.contains("=>"))
-        .collect();
-    assert_eq!(keyboard.matches("(VK_MENU,").count(), 1);
+    // each virtual key is named twice: in the import and for its one `Code`; Alt is `Code::Alt`
+    for vk in words(imp, "VK_") {
+        assert_eq!(imp.matches(vk.as_str()).count(), 2, "{vk}");
+    }
+    assert!(imp.contains("Code::Alt => (VK_MENU, false),"));
     assert_eq!(
-        alt,
-        ["            Key::AltTab => &[(VK_MENU, false), (VK_TAB, false)],"]
+        code_lines(imp)
+            .filter(|l| l.contains("Code::") && l.contains("=> (VK_"))
+            .count(),
+        16
     );
-    // no virtual key and no flag built from a number, but "none"
-    for line in code_lines(&keyboard) {
+    // No key and no flag by another spelling: none built from a number but "none", no struct
+    // literal, no renamed import, no alias, no field read or written after the event is built,
+    // no inverted flags, no reinterpreting.
+    for line in code_lines(imp) {
         for (built, none) in [
             ("VIRTUAL_KEY(", "VIRTUAL_KEY(0)"),
             ("KEYBD_EVENT_FLAGS(", "KEYBD_EVENT_FLAGS(0)"),
@@ -190,19 +216,35 @@ fn only_two_files_simulate_input_each_its_own_kind() {
             let rest = line.replace(none, "");
             assert!(!rest.contains(built), "keyboard.rs: `{}`", line.trim());
         }
-    }
-    // … and by no other spelling: no struct literal, no field of a flag or key written or
-    // read, no reinterpreting
-    for line in code_lines(&keyboard) {
         for n in [
             "VIRTUAL_KEY {",
             "KEYBD_EVENT_FLAGS {",
             "transmute",
             "from_raw",
             "as *",
+            "type ",
+            ".Anonymous",
+            ".ki",
+            ".wVk",
+            ".wScan",
+            ".dwFlags",
+            "!(",
+            "!KEYEVENTF",
+            "!flags",
+            "^",
+            "<<",
+            "iter::once",
+            "repeat",
+            ".push(",
+            ".extend(",
+            ".insert(",
+            "chain(",
         ] {
             assert!(!line.contains(n), "keyboard.rs: `{n}` in `{}`", line.trim());
         }
+        let renamed =
+            line.contains(" as ") && !line.contains(" as i32") && !line.contains(" as usize");
+        assert!(!renamed, "keyboard.rs: a renamed name in `{}`", line.trim());
         let field = line
             .match_indices(".0")
             .any(|(at, _)| !line[at + 2..].starts_with(|c: char| c.is_ascii_digit()));
@@ -211,20 +253,30 @@ fn only_two_files_simulate_input_each_its_own_kind() {
     // one way into an event: the three fields take what `event` is handed, and `event` is
     // called for a key of the list and for a unit of text, nowhere else
     for field in ["wVk: vk,", "wScan: scan,", "dwFlags: flags,"] {
-        assert_eq!(keyboard.matches(field).count(), 1, "{field}");
+        assert_eq!(imp.matches(field).count(), 1, "{field}");
     }
-    let calls = code_lines(&keyboard)
+    let calls: Vec<&str> = code_lines(imp)
         .filter(|l| l.contains("event(") && !l.contains("fn event("))
-        .count();
-    assert_eq!(calls, 3, "of_key once, text twice");
-    assert_eq!(keyboard.matches("event(vk, 0, flags)").count(), 1);
-    // text is typed as Unicode units only: the unit never becomes a virtual key
+        .map(str::trim)
+        .collect();
     assert_eq!(
-        keyboard
-            .matches("event(VIRTUAL_KEY(0), *u, KEYEVENTF_UNICODE")
-            .count(),
-        2
+        calls,
+        [
+            "event(vk, 0, flags)",
+            "Stroke::Unit { unit, .. } => event(VIRTUAL_KEY(0), unit, flags | KEYEVENTF_UNICODE),"
+        ]
     );
+    // every planned stroke becomes exactly one event, in order: nothing added, nothing dropped
+    assert_eq!(
+        imp.matches(
+            "let inputs: Vec<INPUT> = strokes.iter().map(|stroke| input(*stroke)).collect();"
+        )
+        .count(),
+        1
+    );
+    assert_eq!(imp.matches("SendInput(&inputs,").count(), 1);
+    assert_eq!(imp.matches("input(").count(), 2, "defined once, used once");
+    assert_eq!(imp.matches("Vec<").count(), 1);
     // one list of keys, the public one: sixteen
     let list = &keyboard[keyboard.find("pub enum Key {").unwrap()..];
     let list = &list[..list.find("\n}").unwrap()];
