@@ -67,10 +67,13 @@ describe('Focus settings, folded', () => {
     expect(hide).toBeDisabled();
     await waitFor(() => expect(hide).toBeEnabled());
     expect(hide).toHaveAttribute('aria-checked', 'false');
-    await user.click(screen.getByTestId('focus-more').querySelector('summary')!);
-    await user.click(hide);
-    await waitFor(() => expect(hide).toHaveAttribute('aria-checked', 'true'));
-    expect(await getHideValues()).toBe(true);
-    await setHideValues(false);
+    try {
+      await user.click(screen.getByTestId('focus-more').querySelector('summary')!);
+      await user.click(hide);
+      await waitFor(() => expect(hide).toHaveAttribute('aria-checked', 'true'));
+      expect(await getHideValues()).toBe(true);
+    } finally {
+      await setHideValues(false);
+    }
   });
 });
