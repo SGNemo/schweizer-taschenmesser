@@ -51,28 +51,41 @@ class ScreenModePlugin(private val activity: Activity) : Plugin(activity) {
 
     /** Main thread only. */
     private var volumeKeys = false
-    private var keysWatched = false
+    private var layer: Window.Callback? = null
     private val giveKeysBack = Runnable { volumeKeys = false }
 
+    /** A press of ours whose release has not come yet (main thread only): up, down. */
+    private var upTaken = false
+    private var downTaken = false
+
     /**
-     * Puts a thin layer over the window's callback, once: everything goes on to the callback that
-     * was there, except the two volume keys while the web app holds them.
+     * Puts a thin layer over the window's callback: everything goes on to the callback that was
+     * there, except the two volume keys while the web app holds them. Done once – and again if
+     * something else replaced the window's callback since. `true` = the layer is in place.
      */
-    private fun watchKeys() {
-        if (keysWatched) return
+    private fun watchKeys(): Boolean {
         val window = activity.window
-        val inner = window.callback ?: return
-        window.callback = object : Window.Callback by inner {
+        val inner = window.callback ?: return false
+        if (inner === layer) return true
+        val wrapped = object : Window.Callback by inner {
             override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-                val key = when (event.keyCode) {
-                    KeyEvent.KEYCODE_VOLUME_UP -> "up"
-                    KeyEvent.KEYCODE_VOLUME_DOWN -> "down"
-                    else -> null
+                val up = when (event.keyCode) {
+                    KeyEvent.KEYCODE_VOLUME_UP -> true
+                    KeyEvent.KEYCODE_VOLUME_DOWN -> false
+                    else -> return inner.dispatchKeyEvent(event)
                 }
-                if (key == null || !volumeKeys) return inner.dispatchKeyEvent(event)
-                if (event.action == KeyEvent.ACTION_DOWN) {
+                val down = event.action == KeyEvent.ACTION_DOWN
+                val first = down && event.repeatCount == 0
+                // The lease decides when a key goes down. Its repeats and its release follow
+                // that press whatever the lease says by then: the system never sees half a key.
+                val ours = if (first) volumeKeys else if (up) upTaken else downTaken
+                if (first || !down) {
+                    if (up) upTaken = first && ours else downTaken = first && ours
+                }
+                if (!ours) return inner.dispatchKeyEvent(event)
+                if (down) {
                     val data = JSObject()
-                    data.put("key", key)
+                    data.put("key", if (up) "up" else "down")
                     data.put("repeat", event.repeatCount > 0)
                     trigger("volume-key", data)
                 }
@@ -96,7 +109,9 @@ class ScreenModePlugin(private val activity: Activity) : Plugin(activity) {
                 }
             }
         }
-        keysWatched = true
+        window.callback = wrapped
+        layer = wrapped
+        return true
     }
 
     @Command
@@ -106,8 +121,7 @@ class ScreenModePlugin(private val activity: Activity) : Plugin(activity) {
             try {
                 main.removeCallbacks(giveKeysBack)
                 if (args.enabled) {
-                    watchKeys()
-                    volumeKeys = keysWatched
+                    volumeKeys = watchKeys()
                     if (volumeKeys) main.postDelayed(giveKeysBack, VOLUME_KEYS_LEASE_MS)
                 } else {
                     volumeKeys = false

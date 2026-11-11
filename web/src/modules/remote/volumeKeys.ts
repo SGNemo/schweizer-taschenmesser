@@ -24,10 +24,15 @@ export function useVolumeKeys(enabled: boolean): boolean {
     const keys = getPlatform().display.volumeKeys;
     if (!keys || !enabled) return;
     let over = false;
+    let asked = false;
     const gate = createHoldGate(now);
-    const sync = () => {
+    /** `renew`: the regular look – asks again while the keys are wanted (the lease). */
+    const sync = (renew = false) => {
       const wanted = !over && remoteSession.takesVolumeKeys();
       setHeld(wanted);
+      // the shell hears of a change, and of the renewal – not of every state the PC reports
+      if (wanted === asked && !(renew && wanted)) return;
+      asked = wanted;
       void keys.hold(wanted).catch(() => undefined);
     };
     const stopKeys = keys.onKey((key, repeat) => {
@@ -39,8 +44,8 @@ export function useVolumeKeys(enabled: boolean): boolean {
     });
     // at once on every change of the session, and regularly: the lease is renewed, and the few
     // seconds after a session was last alive run out without an event
-    const stopView = remoteSession.subscribe(sync);
-    const timer = setInterval(sync, RENEW_MS);
+    const stopView = remoteSession.subscribe(() => sync());
+    const timer = setInterval(() => sync(true), RENEW_MS);
     sync();
     return () => {
       over = true;
@@ -48,7 +53,7 @@ export function useVolumeKeys(enabled: boolean): boolean {
       stopView();
       stopKeys();
       setHeld(false);
-      void keys.hold(false).catch(() => undefined);
+      if (asked) void keys.hold(false).catch(() => undefined);
     };
   }, [enabled]);
   return held;

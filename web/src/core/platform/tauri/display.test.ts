@@ -36,6 +36,28 @@ describe('display, Android: the volume keys', () => {
     ]);
   });
 
+  it('sends them one after the other, also when the first is slow or fails', async () => {
+    const order: boolean[] = [];
+    let release: () => void = () => undefined;
+    mocks.invoke.mockImplementationOnce(async (_cmd, args) => {
+      await new Promise<void>((resolve) => (release = resolve));
+      order.push((args as { request: { enabled: boolean } }).request.enabled);
+      throw new Error('gone');
+    });
+    mocks.invoke.mockImplementationOnce(async (_cmd, args) => {
+      order.push((args as { request: { enabled: boolean } }).request.enabled);
+    });
+    const keys = createDisplay('android').volumeKeys!;
+    const taken = keys.hold(true).catch(() => 'failed');
+    const given = keys.hold(false);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(mocks.invoke).toHaveBeenCalledTimes(1);
+    release();
+    expect(await taken).toBe('failed');
+    await given;
+    expect(order).toEqual([true, false]);
+  });
+
   it('passes on only the two keys the plugin names, and stops listening', async () => {
     const keys = createDisplay('android').volumeKeys!;
     const seen: string[] = [];

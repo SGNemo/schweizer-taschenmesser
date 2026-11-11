@@ -14,6 +14,8 @@ const call = (command: string, enabled: boolean) =>
 
 export function createDisplay(kind: PlatformKind): DisplayService {
   if (kind === 'android') {
+    /** The calls for the volume keys, in the order they were made. */
+    let holds: Promise<void> = Promise.resolve();
     const web = createWebDisplay();
     return {
       fullscreenSupported: false,
@@ -34,7 +36,9 @@ export function createDisplay(kind: PlatformKind): DisplayService {
         }
       },
       volumeKeys: {
-        hold: (on) => call('set_volume_keys', on),
+        // one after the other: a "give back" must never be overtaken by an older "take"
+        hold: (on) =>
+          (holds = holds.catch(() => undefined).then(() => call('set_volume_keys', on))),
         onKey(callback) {
           let stopped = false;
           let listener: PluginListener | undefined;

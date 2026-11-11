@@ -108,7 +108,27 @@ describe('the phone’s volume keys', () => {
     expect(fake.key).toBeUndefined();
   });
 
-  it('stay the phone’s own where the PC refuses, and go back a few seconds after a session was lost', async () => {
+  it('the shell hears of changes and renewals, not of every state the PC reports', async () => {
+    await show();
+    const before = fake.held.length;
+    for (let i = 0; i < 20; i++) await act(async () => fake.parts.hooks.setState({ volume: i }));
+    expect(fake.held.length).toBe(before);
+  });
+
+  it('go back to the phone a few seconds after a connection was lost for good', async () => {
+    await show();
+    fake.parts.hooks.failOpen('network', 99);
+    await act(async () => fake.parts.hooks.close());
+    expect(lastHeld()).toBe(true);
+    await until(() => lastHeld() === false);
+    expect(screen.queryByTestId('remote-volume-keys')).toBeNull();
+    // given back once, not again and again
+    const after = fake.held.length;
+    await wait(RENEW_MS + 100);
+    expect(fake.held.length).toBe(after);
+  }, 20_000);
+
+  it('stay the phone’s own once the PC ended the session', async () => {
     await show();
     await act(async () => fake.parts.hooks.close('ended'));
     expect(lastHeld()).toBe(false);
