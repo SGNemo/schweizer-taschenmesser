@@ -48,7 +48,7 @@ test('a standing connection saves only what changed and opens its own files with
     'same flow as desktop; file download is covered there',
   );
   await ready(page, '/todos');
-  await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+  await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
   await page.getByRole('dialog').getByLabel('Titel').fill('Milch kaufen');
   await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
   await expect(page.getByRole('checkbox', { name: 'Milch kaufen' })).toBeVisible();
@@ -90,7 +90,7 @@ test('a connection can show its changes as QR pictures that run, pause and count
 }, info) => {
   test.skip(info.project.name === 'pixel-7', 'same flow as desktop');
   await ready(page, '/todos');
-  await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+  await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
   await page.getByRole('dialog').getByLabel('Titel').fill('Brot kaufen');
   await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
   await expect(page.getByRole('checkbox', { name: 'Brot kaufen' })).toBeVisible();
@@ -123,7 +123,7 @@ test('a connection can show its changes as QR pictures that run, pause and count
 test('a connection can share only chosen lists of a module', async ({ page }, info) => {
   test.skip(info.project.name === 'pixel-7', 'same flow as desktop');
   await ready(page, '/todos');
-  await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+  await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
   await page.getByRole('dialog').getByLabel('Titel').fill('Zelt packen');
   await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
   await expect(page.getByRole('checkbox', { name: 'Zelt packen' })).toBeVisible();

@@ -7,7 +7,7 @@ import { dismissNotices, ready } from './helpers';
  */
 test('saving in one tab keeps the title changed in the other tab', async ({ page, context }) => {
   await ready(page, '/todos?list=inbox');
-  await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+  await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
   await page.getByRole('dialog').getByLabel('Titel').fill('Steuererklärung');
   await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
   await expect(page.getByRole('checkbox', { name: 'Steuererklärung' })).toBeVisible();

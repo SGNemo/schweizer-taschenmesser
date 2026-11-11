@@ -8,6 +8,9 @@ test.describe('Appointment editor: "Erinnern" row (V05)', () => {
     await ready(page, '/calendar?new=1');
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Titel').fill('Zahnarzt');
+    // Folded, the reminder is named beside "Mehr Felder"; the row itself is one click away.
+    await expect(dialog.getByTestId('more-fields-summary')).toContainText('Ohne Erinnerung');
+    await dialog.getByRole('button', { name: 'Mehr Felder anzeigen' }).click();
     const row = dialog.getByRole('group', { name: 'Erinnern' });
     await expect(row.getByRole('button', { name: 'Keine' })).toHaveAttribute(
       'aria-pressed',
@@ -27,6 +30,11 @@ test.describe('Appointment editor: "Erinnern" row (V05)', () => {
     // (`net::ERR_ABORTED`) on slow runners.
     await backSettled(page);
     await page.goto('/calendar?new=1');
+    // The remembered lead applies while the row is still folded: the summary beside "Mehr Felder" names it.
+    await expect(page.getByRole('dialog').getByTestId('more-fields-summary')).toContainText(
+      'Erinnerung: 1 Stunde vorher',
+    );
+    await page.getByRole('dialog').getByRole('button', { name: 'Mehr Felder anzeigen' }).click();
     const again = page.getByRole('dialog').getByRole('group', { name: 'Erinnern' });
     await expect(again.getByRole('button', { name: '1 h' })).toHaveAttribute(
       'aria-pressed',

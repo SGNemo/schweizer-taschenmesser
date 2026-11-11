@@ -217,7 +217,7 @@ test.describe('Planer (week board, package 1)', () => {
   }) => {
     await enablePlanner(page);
     await ready(page, '/todos');
-    await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+    await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Alte Sache gestern 60min');
     await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
     await expect(page.getByRole('button', { name: /Alte Sache/ }).first()).toBeVisible();

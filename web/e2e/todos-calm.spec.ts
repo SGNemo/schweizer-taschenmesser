@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 
 async function addTodo(page: Page, title: string, due?: string) {
   await ready(page, '/todos');
-  await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+  await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
   await page.getByRole('dialog').getByLabel('Titel').fill(title);
   await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
   await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
@@ -66,8 +66,9 @@ test.describe('Calm ToDo page (focus audit 2, package 2b)', () => {
     await ready(page, '/todos');
     await expect(fab).toHaveCount(0);
     await expect(plus).toHaveCount(1);
-    await expect(plus).toHaveAttribute('data-plus', 'module');
-    await expect(plus).toHaveAttribute('aria-label', 'Neu: ToDos');
+    // Identity 4.0: the page declares its one action, the plus carries it.
+    await expect(plus).toHaveAttribute('data-plus', 'page');
+    await expect(plus).toHaveAttribute('aria-label', 'Aufgabe eintragen');
     await ready(page, '/');
     await expect(fab).toHaveCount(0);
     await expect(plus).toHaveAttribute('data-plus', 'capture');
@@ -76,7 +77,10 @@ test.describe('Calm ToDo page (focus audit 2, package 2b)', () => {
       await expect(plus).toBeVisible();
       await ready(page, '/todos');
       await plus.click();
-      // The module's own entry: the add field of the page takes the focus, no second sheet opens.
+      // The page's own entry: its add dialog opens with the cursor in the title, not the capture sheet.
+      await expect(
+        page.getByRole('dialog', { name: 'ToDo hinzufügen' }).getByLabel('Titel'),
+      ).toBeFocused();
       await expect(page.getByRole('dialog', { name: 'Schnell hinzufügen' })).toHaveCount(0);
     }
   });

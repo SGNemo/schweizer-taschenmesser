@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { ready } from './helpers';
 
 async function addTodo(page: Page, title: string) {
-  await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+  await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
   await page.getByRole('dialog').getByLabel('Titel').fill(title);
   await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
   await expect(page.getByRole('checkbox', { name: title })).toBeVisible();
@@ -62,7 +62,7 @@ test.describe('keyboard (desktop)', () => {
 
     await ready(page, '/todos');
     // Typing "n" into a text field writes the letter, it opens no quick-add dialog on top.
-    await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+    await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     const title = page.getByRole('dialog', { name: 'ToDo hinzufügen' }).getByLabel('Titel');
     await title.press('n');
     await expect(title).toHaveValue('n');

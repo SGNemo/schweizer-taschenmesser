@@ -21,7 +21,7 @@ test.describe('ToDos', () => {
     await ready(page, '/todos');
     await expect(page.getByText('Nichts zu tun – gut so.')).toBeVisible();
 
-    await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+    await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Steuererklärung');
     await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
     await expect(page.getByRole('checkbox', { name: 'Steuererklärung' })).toBeVisible();
@@ -55,7 +55,7 @@ test.describe('ToDos', () => {
     // The new list is shown; the filter lives in the "⋯" menu and is named on the page.
     await expect(page.getByTestId('todos-filter')).toContainText('Liste: Haushalt');
 
-    await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+    await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Fenster putzen');
     await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
     await expect(page.getByRole('checkbox', { name: 'Fenster putzen' })).toBeVisible();
@@ -118,7 +118,7 @@ test.describe('Calendar', () => {
   test('creates an event, shows it in all views and aggregates other modules', async ({ page }) => {
     // A task due today and a reminder today
     await ready(page, '/todos');
-    await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+    await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Paket abholen');
     await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
     await page.getByRole('button', { name: /^Paket abholen/ }).click();
@@ -140,7 +140,8 @@ test.describe('Calendar', () => {
     const dialog = page.getByRole('dialog', { name: 'Neuer Termin' });
     await dialog.getByLabel('Titel').fill('Zahnarzt');
     await dialog.getByLabel('Beginn').fill('14:30');
-    await dialog.getByLabel('Ort').fill('Praxis Dr. Meier');
+    await dialog.getByRole('button', { name: 'Mehr Felder anzeigen' }).click();
+    await dialog.getByRole('textbox', { name: 'Ort' }).fill('Praxis Dr. Meier');
     await dialog.getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
 
@@ -220,7 +221,7 @@ test.describe('Dashboard', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
     await ready(page, '/todos');
-    await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+    await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Bericht senden');
     await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
     await page.getByRole('button', { name: /Bericht senden/ }).click();

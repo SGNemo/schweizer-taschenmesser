@@ -160,7 +160,7 @@ test.describe('top bar with a running focus round', () => {
 
   test('search stays a 44 px target and nothing is pushed out of the bar', async ({ page }) => {
     await ready(page, '/todos');
-    await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+    await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Keller aufräumen');
     await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
     await expect(page.getByText('Keller aufräumen').first()).toBeVisible();
@@ -183,7 +183,7 @@ test.describe('ToDos on a wide screen', () => {
 
   test('the list uses the page width, not a 240 px rail column', async ({ page }) => {
     await ready(page, '/todos');
-    await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+    await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page
       .getByRole('dialog')
       .getByLabel('Titel')

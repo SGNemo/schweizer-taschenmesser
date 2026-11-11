@@ -142,7 +142,7 @@ test.describe('Home screen', () => {
       ['Müll rausbringen', '2026-09-29'],
     ] as const) {
       await ready(page, '/todos');
-      await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+      await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
       await page.getByRole('dialog').getByLabel('Titel').fill(title);
       await page
         .getByRole('dialog')
@@ -183,7 +183,7 @@ test.describe('Home screen', () => {
   }) => {
     await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
     await ready(page, '/todos');
-    await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+    await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Alt');
     await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
     await page.getByRole('button', { name: /Alt/ }).click();
@@ -209,7 +209,7 @@ test.describe('Home screen', () => {
   }) => {
     await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
     await ready(page, '/todos');
-    await page.locator('[data-page-action]').or(page.getByTestId('bottom-plus')).first().click();
+    await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Alt');
     await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
     await page.getByRole('button', { name: /Alt/ }).click();

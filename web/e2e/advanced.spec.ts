@@ -38,7 +38,7 @@ test('the module switch "Erweitert" is remembered and shows the fields right awa
   await ready(page, '/calendar?new=1');
   await expect(page.getByRole('dialog').getByLabel('Ende (Datum)')).toBeVisible();
   // another module is unaffected
-  await ready(page, '/todos?new=1');
+  await ready(page, '/todos');
   await expect(
     (await openTodosMenu(page)).getByRole('menuitemcheckbox', { name: 'Mehr Felder anzeigen' }),
   ).toHaveAttribute('aria-checked', 'false');
