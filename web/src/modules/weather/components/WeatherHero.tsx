@@ -16,8 +16,8 @@ import { weatherWarnings } from '../warnings';
 
 /**
  * The weather's head, built from the module frame's slots: the sky behind (by condition and daytime, night switches the ink),
- * the temperature as thin large numerals with "feels like" and the word, the three facts that matter (rain, wind, UV) as chips,
- * everything else as one muted line. A hint above the head when the forecast days call for one.
+ * the temperature as thin large numerals with "feels like" and the word, the three facts that matter (rain, wind, UV) as chips
+ * in the signature slot, everything else as one muted line. A hint above the head when the forecast days call for one.
  */
 export function WeatherHero({ weather }: { weather: WeatherView }) {
   const tx = tWeather.use();
@@ -88,16 +88,19 @@ export function WeatherHero({ weather }: { weather: WeatherView }) {
               .join(' · ')}
             testId="weather-temp"
           />
-          <ul className={styles.keys}>
-            {keys.map((k) => (
-              <li key={k.text} className={styles.key} data-kind={k.kind}>
-                <Icon name={k.icon} size={16} />
-                {k.text}
-              </li>
-            ))}
-          </ul>
           <p className={styles.rest}>{rest.join(' · ')}</p>
         </div>
+      </HeroSlot>
+      {/* The three facts fill the stage's signature slot: with them there the frame draws no mark of its own. */}
+      <HeroSlot area="signature">
+        <ul className={styles.keys} data-testid="weather-keys">
+          {keys.map((k) => (
+            <li key={k.text} className={styles.key} data-kind={k.kind}>
+              <Icon name={k.icon} size={16} />
+              {k.text}
+            </li>
+          ))}
+        </ul>
       </HeroSlot>
       {/* The same line for the phone, in the page under the head (the stage keeps its height there). */}
       {rest.length > 0 ? (

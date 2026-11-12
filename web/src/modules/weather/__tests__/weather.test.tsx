@@ -261,8 +261,8 @@ describe('weather page', () => {
     const days = screen.getByTestId('weather-days').querySelectorAll('li');
     expect(days[0]!.querySelector('[data-kind="rain"]')).toHaveTextContent('Regen 40 %');
     // The head's chips carry an icon each, next to their words.
-    const now = await screen.findByTestId('weather-now');
-    expect(now.querySelectorAll('li svg').length).toBeGreaterThanOrEqual(2);
+    const keys = await screen.findByTestId('weather-keys');
+    expect(keys.querySelectorAll('li svg').length).toBeGreaterThanOrEqual(2);
   });
 
   it('the head: temperature, "fühlt sich an wie", the word, three facts, the rest as one line', async () => {
@@ -274,9 +274,11 @@ describe('weather page', () => {
     await waitFor(() => expect(now).toHaveTextContent('14°'));
     expect(now).toHaveTextContent('fühlt sich an wie 12°');
     expect(now).toHaveTextContent('bedeckt'.replace('bedeckt', 'leicht bewölkt'));
-    expect(now).toHaveTextContent('Regen ab 15 Uhr');
-    expect(now).toHaveTextContent('Wind 14 km/h W');
-    expect(now).toHaveTextContent('UV 3');
+    // The three facts fill the stage's signature slot (the frame then draws no mark of its own).
+    const keys = screen.getByTestId('weather-keys');
+    expect(keys).toHaveTextContent('Regen ab 15 Uhr');
+    expect(keys).toHaveTextContent('Wind 14 km/h W');
+    expect(keys).toHaveTextContent('UV 3');
     expect(now).toHaveTextContent('7° / 15°');
     expect(now).toHaveTextContent('Luftfeuchte 71 %');
     expect(now).toHaveTextContent('Böen 34 km/h');
