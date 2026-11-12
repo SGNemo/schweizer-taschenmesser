@@ -272,11 +272,11 @@ test.describe('documents: master–detail', () => {
 
 test.describe('lists: the add field is the last row', () => {
   test.use({ viewport: DESKTOP, seeded: { scale: 'small', desktop: true, preview: true } });
-  test("the head's action leads to the field below the rows; typing and Enter adds", async ({
+  test('the field lies below the rows; `?new=1` leads to it, typing and Enter adds', async ({
     page,
   }) => {
     await startSeeded(page);
-    await openPage(page, '/lists');
+    await openPage(page, '/lists?new=1');
     const field = page.getByTestId('lists-add').getByRole('textbox').first();
     const below = await page.evaluate(() => {
       const rows = Array.from(document.querySelectorAll('main [data-row]'));
@@ -285,8 +285,9 @@ test.describe('lists: the add field is the last row', () => {
       return add.getBoundingClientRect().top >= last.getBoundingClientRect().bottom - 1;
     });
     expect(below, 'the add row lies below the last row').toBe(true);
-    await page.locator('[data-page-action]').click();
     await expect(field).toBeFocused();
+    // The head's one action is a new list, not a second way to add an item.
+    await expect(page.locator('[data-page-action]')).toHaveText(/Neue Liste/);
     await page.keyboard.type('Zimt');
     await page.keyboard.press('Enter');
     await expect(page.locator('main [data-row]', { hasText: 'Zimt' })).toBeVisible();

@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { enable, openMoreFocus, ready } from './helpers';
+import { openPageMenu } from './money-helpers';
 
 /** Week review and streaks are off by default (calm defaults): switch them on in the settings. */
 async function switchOn(page: Page, names: string[]) {
@@ -24,7 +25,7 @@ test.describe('Visible progress without pressure', () => {
   test('a routine template creates a checklist with small steps', async ({ page }) => {
     await enable(page, 'lists');
     await ready(page, '/lists');
-    await page.getByRole('button', { name: 'Aus Vorlage' }).click();
+    await (await openPageMenu(page)).getByRole('menuitem', { name: 'Aus Vorlage' }).click();
     await page.getByRole('button', { name: 'Morgenroutine' }).click();
     await expect(page.getByText('Liste angelegt.')).toBeVisible();
     await expect(

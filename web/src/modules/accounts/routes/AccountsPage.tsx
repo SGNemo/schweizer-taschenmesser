@@ -193,32 +193,30 @@ function Unlocked() {
           ]}
         />
       </PageHeader>
-      {none ? null : (
-        <div className={styles.filters}>
-          <TextField
-            label={t.accounts.search}
-            labelHidden
-            placeholder={t.accounts.search}
-            type="search"
-            ref={searchBox}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            data-list-search
+      {/* The search stays while the vault is empty: the vault search key leads to it. */}
+      <div className={styles.filters}>
+        <TextField
+          label={t.accounts.search}
+          labelHidden
+          placeholder={t.accounts.search}
+          type="search"
+          ref={searchBox}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        {tags.length > 0 || hasFavorites ? (
+          <Segmented
+            label={t.accounts.groups.label}
+            value={group}
+            onChange={setGroup}
+            options={[
+              { value: 'all', label: t.accounts.groups.all },
+              ...(hasFavorites ? [{ value: '*fav', label: t.accounts.groups.favorites }] : []),
+              ...tags.map((tag) => ({ value: tag, label: tag })),
+            ]}
           />
-          {tags.length > 0 || hasFavorites ? (
-            <Segmented
-              label={t.accounts.groups.label}
-              value={group}
-              onChange={setGroup}
-              options={[
-                { value: 'all', label: t.accounts.groups.all },
-                ...(hasFavorites ? [{ value: '*fav', label: t.accounts.groups.favorites }] : []),
-                ...tags.map((tag) => ({ value: tag, label: tag })),
-              ]}
-            />
-          ) : null}
-        </div>
-      )}
+        ) : null}
+      </div>
       {data.broken.length > 0 ? (
         <div className={styles.banner} role="status">
           <p className={styles.notice}>{t.accounts.undecryptable(data.broken.length)}</p>
