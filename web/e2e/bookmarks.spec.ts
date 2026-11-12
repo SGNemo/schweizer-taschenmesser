@@ -197,9 +197,7 @@ test.describe('Calm Lesezeichen tiles (focus audit 2)', () => {
 });
 
 test.describe('Pinboard (identity, cards, status)', () => {
-  test('the cards view lists items with a status word', async ({
-    page,
-  }) => {
+  test('the cards view lists items with a status word', async ({ page }) => {
     await enable(page, 'bookmarks');
     await add(page, 'Pasta Rezept', 'koch.de/pasta', 'Kochen', 'Buch');
     // Identity 4.0: no signature block under the head (the pinboard is the empty state's motif).

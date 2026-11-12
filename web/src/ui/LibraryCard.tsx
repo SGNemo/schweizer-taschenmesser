@@ -20,6 +20,7 @@ export function LibraryCard({
   badges,
   description,
   hue,
+  plainHead,
   preview,
   children,
 }: {
@@ -31,6 +32,8 @@ export function LibraryCard({
   description: string;
   /** Identity colour of the module or tool: tints the head and the plate (grey in "Ruhig"). */
   hue?: ModuleHue;
+  /** No tint behind the head: the plate alone carries the hue (module library, Identity 4.0: two levels at most). */
+  plainHead?: boolean;
   /** A drawn sketch between the head and the description (`aria-hidden` by itself). */
   preview?: ReactNode;
   /** The actions (switch, buttons); rendered on the right below the description. */
@@ -38,7 +41,7 @@ export function LibraryCard({
 }) {
   return (
     <Card as="li" id={id} className={styles.card} data-testid={testId} data-hue={hue}>
-      <div className={styles.head} data-tinted={hue ? 'true' : undefined}>
+      <div className={styles.head} data-tinted={hue && !plainHead ? 'true' : undefined}>
         {hue ? (
           <HuePlate hue={hue} icon={icon} size="lg" />
         ) : (

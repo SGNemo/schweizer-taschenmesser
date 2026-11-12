@@ -4,7 +4,7 @@ import { settingsPath } from '@/core/settings/registry/paths';
 import { useSettings } from '@/core/settings/settings';
 import { tMusicPage } from '@/strings.musicPage';
 import { tSpotify } from '@/strings.spotify';
-import { Button, Card, EmptyState, PageHeader, PageTitle, Tabs } from '@/ui';
+import { Button, Card, EmptyState, PageTitle, Tabs } from '@/ui';
 import { SignatureMark } from '@/ui/identity';
 import { MusicHero } from '../components/MusicHero';
 import { SideLists } from '../components/SideLists';
@@ -90,18 +90,17 @@ export default function MusicPage() {
 
   return (
     <>
-      {/* The views are the head's tabs; an open playlist is none of them (it is reached from the start view). */}
-      <PageHeader
-        title={tm.name}
-        views={
-          <Tabs
-            label={tm.nav}
-            items={views.map((v) => ({ id: v.id, label: v.label, active: isOn(v.view) }))}
-            onSelect={(id) => setView(views.find((v) => v.id === id)?.view)}
-          />
-        }
-      />
+      <PageTitle title={tm.name} />
       <MusicHero api={api} />
+      {/* The views are tabs at the lower edge of the stage, in the page: inside the head they would lift the stage
+          over its 320 px. An open playlist is none of them (it is reached from the start view). */}
+      <div className={styles.views}>
+        <Tabs
+          label={tm.nav}
+          items={views.map((v) => ({ id: v.id, label: v.label, active: isOn(v.view) }))}
+          onSelect={(id) => setView(views.find((v) => v.id === id)?.view)}
+        />
+      </div>
       <div className={styles.layout}>
         <div className={styles.main} data-testid="music-main">
           {view ? (

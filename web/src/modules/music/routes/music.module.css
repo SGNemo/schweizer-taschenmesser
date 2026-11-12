@@ -168,6 +168,10 @@
   font-weight: var(--weight-semibold);
   text-decoration: none;
 }
+/* The row of the views under the stage (the tabs bring their own hairline). */
+.views {
+  margin-bottom: var(--space-4);
+}
 .layout {
   display: grid;
   gap: var(--space-5);

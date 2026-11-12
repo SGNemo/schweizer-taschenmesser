@@ -125,6 +125,15 @@
   margin: 0;
 }
 
+/* Module library (Identity 4.0): an area is a heading and its cards on the page, no surface of its own, so a card is
+   the first and only level; the tool library keeps `.group` until its own package. */
+.groupPlain {
+  margin-bottom: var(--space-6);
+}
+.groupPlain .groupCount {
+  color: var(--text-muted);
+}
+
 @media (max-width: 599px) {
   /* Phone: the sections
      lose their padding (the card is the unit), and the drawn sketch waits for the detail page: one full card with

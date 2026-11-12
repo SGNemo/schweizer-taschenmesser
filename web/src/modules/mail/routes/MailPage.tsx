@@ -113,28 +113,30 @@ function ThreadList({
           {rows.map((th) => (
             <ItemRow
               key={th.id}
+              // Sender and time share the title line, subject and snippet are two lines at most: a row keeps
+              // its height beside the reading pane (design check G1, G4).
               title={
-                <span className={th.unread ? styles.unreadRow : styles.rowFrom}>
-                  {personName(th.from)}
-                  {th.messageCount > 1 ? ` (${th.messageCount})` : ''}
+                <span className={styles.rowTitle}>
+                  <span className={th.unread ? styles.unreadRow : styles.rowFrom}>
+                    {personName(th.from)}
+                    {th.messageCount > 1 ? ` (${th.messageCount})` : ''}
+                  </span>
+                  <span className={styles.rowWhen}>
+                    {planned.has(th.id) ? (
+                      <span className={styles.planMark} data-testid="mail-in-plan">
+                        {plannerOn ? t.mail.plan.mark : t.mail.plan.todo.mark} ·{' '}
+                      </span>
+                    ) : null}
+                    {shortWhen(th.date)}
+                  </span>
                 </span>
               }
               meta={
-                <>
+                <span className={styles.rowText}>
                   <span className={th.unread ? styles.unreadRow : undefined}>
                     {subjectOf(th.subject)}
                   </span>
                   {th.snippet ? <span className={styles.snippet}> – {th.snippet}</span> : null}
-                </>
-              }
-              end={
-                <span className={styles.meta}>
-                  {planned.has(th.id) ? (
-                    <span className={styles.planMark} data-testid="mail-in-plan">
-                      {plannerOn ? t.mail.plan.mark : t.mail.plan.todo.mark} ·{' '}
-                    </span>
-                  ) : null}
-                  {shortWhen(th.date)}
                 </span>
               }
               onOpen={() => onOpen(th.id)}
@@ -311,9 +313,6 @@ export default function MailPage() {
             {t.mail.write.newMail}
           </PageAction>
         ) : null}
-        <IconButton label={t.mail.page.settings} onClick={() => setPanel(true)}>
-          <Icon name="settings" />
-        </IconButton>
       </PageHeader>
     </>
   );
@@ -473,6 +472,7 @@ export default function MailPage() {
         <div className={styles.search}>
           <TextField
             label={t.mail.page.searchLabel}
+            labelHidden
             hint={t.mail.page.searchHint}
             placeholder={t.mail.page.searchPlaceholder}
             value={draft}
@@ -487,15 +487,17 @@ export default function MailPage() {
           </datalist>
         </div>
         {/* The head's "Neue Mail" is the page's one filled button. */}
-        <Button type="submit">
-          {t.mail.page.searchLabel}
-        </Button>
+        <Button type="submit">{t.mail.page.searchLabel}</Button>
         {query ? (
           <Button onClick={() => update({ q: null })}>{t.mail.page.searchEnd}</Button>
         ) : null}
-        <Button onClick={box.reload} disabled={box.loading}>
-          {t.mail.page.refresh}
-        </Button>
+        <IconButton label={t.mail.page.refresh} onClick={box.reload} disabled={box.loading}>
+          <Icon name="sync" />
+        </IconButton>
+        {/* The list's own settings stand with the list; the head keeps the page's one action and the module's gear. */}
+        <IconButton label={t.mail.page.settings} onClick={() => setPanel(true)}>
+          <Icon name="settings" />
+        </IconButton>
       </form>
 
       {(offerPersonal || (offerPlanAll && onPlan)) && box.threads.length > 0 ? (
