@@ -11,6 +11,7 @@ import {
   Button,
   CurrencyField,
   DateChips,
+  DayField,
   Dialog,
   FormActions,
   SelectField,
@@ -171,23 +172,10 @@ function Form({
           error={error}
           required
         />
-        <TextField
-          label={t.invoices.dueDate}
-          type="date"
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-          required
-        />
+        <DayField label={t.invoices.dueDate} value={dueDate} onChange={setDueDate} required />
       </div>
       <DateChips value={dueDate} onChange={setDueDate} />
-      {isPaid ? (
-        <TextField
-          label={t.invoices.paidAt}
-          type="date"
-          value={paidAt}
-          onChange={(e) => setPaidAt(e.target.value)}
-        />
-      ) : null}
+      {isPaid ? <DayField label={t.invoices.paidAt} value={paidAt} onChange={setPaidAt} /> : null}
       <SelectField
         label={t.invoices.repeat}
         value={repeat}
@@ -279,12 +267,7 @@ function Form({
             ))}
           </SelectField>
           {Number(dunning) > 0 ? (
-            <TextField
-              label={t.invoices.ext.dunning.date}
-              type="date"
-              value={dunnedAt}
-              onChange={(e) => setDunnedAt(e.target.value)}
-            />
+            <DayField label={t.invoices.ext.dunning.date} value={dunnedAt} onChange={setDunnedAt} />
           ) : null}
         </div>
         <AttachmentSection
