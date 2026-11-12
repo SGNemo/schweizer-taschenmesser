@@ -11,8 +11,11 @@ test.describe('Calendar: repeating shifts (QA V04)', () => {
     await dialog.getByLabel('Titel').fill('Frühdienst');
     await dialog.getByLabel('Datum', { exact: true }).fill('2026-11-02');
     await dialog.getByLabel('Beginn').fill('06:00');
-    // The end time and the repeat rule are in the dialog itself, not behind "Mehr Felder".
+    // The end time is in the dialog itself. The repeat rule is one click away (UI audit 2026-11, B10: a new
+    // appointment shows five fields), and what it holds is named beside "Mehr Felder" until then.
     await dialog.getByLabel('Ende', { exact: true }).fill('14:30');
+    await expect(dialog.getByTestId('more-fields-summary')).toContainText('Einmalig');
+    await dialog.getByRole('button', { name: 'Mehr Felder anzeigen' }).click();
     await dialog.getByLabel('Wiederholung').selectOption('weekly');
     await dialog.getByLabel('Alle (Wochen)').fill('2');
     for (const day of ['Mo', 'Di', 'Mi'])

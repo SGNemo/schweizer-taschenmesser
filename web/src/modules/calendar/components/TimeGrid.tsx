@@ -126,7 +126,8 @@ export function TimeGrid({ days, items, onPickDay, onOpenItem, onMoveItem, onCre
     const hourPx = body.scrollHeight / 24;
     const blocks = perDay.flatMap((p) => p.timed);
     const anchor = scrollAnchor(blocks, minutes(nowTime()), days.includes(now));
-    body.scrollTop = (initialScrollMinute(blocks, anchor) / 60) * hourPx;
+    // A little above the hour line: its label is centred on the line and would be cut in half at the top edge.
+    body.scrollTop = Math.max(0, (initialScrollMinute(blocks, anchor) / 60) * hourPx - 10);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the shown range changes
   }, [rangeKey]);
 

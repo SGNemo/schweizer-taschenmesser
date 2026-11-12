@@ -11,3 +11,7 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
+/* The fields revealed by "Mehr Felder": no box of their own, they stay items of the form. */
+.revealed {
+  display: contents;
+}

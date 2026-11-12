@@ -1,7 +1,7 @@
 import type { CalendarItem } from '@/core/modules/types';
 import { formatDay } from '@/core/time/dates';
 import { personName, usePeople } from '@/core/people/people';
-import { EmptyState } from '@/ui';
+import { Button, EmptyState } from '@/ui';
 import { SignatureMark } from '@/ui/identity';
 import { t } from '@/strings';
 import type { HolidayId } from '../holidays';
@@ -13,10 +13,12 @@ interface Props {
   items: CalendarItem[];
   holidays: Map<string, HolidayId>;
   onOpenItem: (item: CalendarItem) => void;
+  /** The empty state's one verb. */
+  onAdd?: () => void;
 }
 
 /** One list for the next days: only days with entries or a holiday, newest decisions on top. */
-export function AgendaView({ items, holidays, onOpenItem }: Props) {
+export function AgendaView({ items, holidays, onOpenItem, onAdd }: Props) {
   const people = usePeople();
   const byDate = groupByDate(items);
   const days = [...new Set([...byDate.keys(), ...holidays.keys()])].sort();
@@ -26,7 +28,9 @@ export function AgendaView({ items, holidays, onOpenItem }: Props) {
         title={t.calendar.agendaEmpty}
         testId="calendar-empty"
         motif={<SignatureMark id="calendarLeaf" size={64} />}
-      />
+      >
+        {onAdd ? <Button onClick={onAdd}>{t.calendar.emptyAction}</Button> : null}
+      </EmptyState>
     );
   return (
     <div className={styles.agendaList}>
@@ -34,7 +38,7 @@ export function AgendaView({ items, holidays, onOpenItem }: Props) {
         const list = byDate.get(d) ?? [];
         const holiday = holidays.get(d);
         return (
-          <section key={d} className={styles.agendaDay} aria-label={formatDay(d, 'EEEE, d. MMMM')}>
+          <section key={d} className={styles.weekDay} aria-label={formatDay(d, 'EEEE, d. MMMM')}>
             <h3 className={styles.agendaHead}>
               {formatDay(d, 'EEEE, d. MMMM')}
               {holiday ? (

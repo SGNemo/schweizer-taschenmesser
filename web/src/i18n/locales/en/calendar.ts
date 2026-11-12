@@ -52,6 +52,8 @@ export const calendar: Strings['calendar'] = {
   },
   weekNoShort: 'Wk',
   agendaEmpty: 'Nothing planned in this period.',
+  inCalendar: (name) => `calendar ${name}`,
+  emptyAction: 'Add an event',
   holidayLabel: 'Public holiday',
   holidayRegions: {
     off: 'Off',
@@ -107,7 +109,7 @@ export const calendar: Strings['calendar'] = {
     today: 'Free today',
     rest: 'Nothing more today',
     next: (when: string, title: string) => `Next: ${when} · ${title}`,
-    none: 'Nothing is planned for the next two weeks.',
+    none: 'Two weeks free.',
   },
   endsAt: (time: string) => `until ${time}`,
   recent: 'As before',
@@ -143,8 +145,10 @@ export const calendar: Strings['calendar'] = {
   reminders: {
     title: 'Reminders',
     add: 'Add reminder',
+    short: 'Reminder',
     edit: 'Edit reminder',
     empty: 'No reminders yet.',
+    emptyAction: 'Add a reminder',
     next: 'Next',
     ended: 'Ended',
     paused: 'Paused',
@@ -189,7 +193,12 @@ export const calendar: Strings['calendar'] = {
     hour: '1 hour before',
     day: '1 day before',
   },
-  tabsLabel: 'View',
+  moreSummary: {
+    once: 'Once',
+    noReminder: 'No reminder',
+    reminder: (lead) => `Reminder: ${lead}`,
+  },
+  tabsLabel: 'Section',
   tabCalendar: 'Calendar',
   tabReminders: 'Reminders',
   kinds: {

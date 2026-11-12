@@ -47,6 +47,8 @@
     /* A keyboard that only shrinks the visual viewport lifts the sheet (core/shell/keyboardInset.ts). */
     margin-bottom: var(--kb-inset, 0px);
     max-height: calc(88dvh - var(--kb-inset, 0px));
+    /* A focused field never lies under the sheet's fixed foot (WCAG 2.4.11). */
+    scroll-padding-block-end: calc(var(--touch) + 2 * var(--space-2) + 1px);
   }
   /* Thumb zone: the main action stays at the bottom edge, bottom right, while the form scrolls. */
   .dialog:not(.full) .footer {

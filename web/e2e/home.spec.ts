@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import { openEditor } from './money-helpers';
 import { enable, mainNav, ready, showAllWidgets, openFoldedGroup } from './helpers';
 
 const CORE = ['todos:next', 'todos:open', 'finance:balance', 'invoices:due', 'subscriptions:next'];
@@ -142,9 +143,13 @@ test.describe('Home screen', () => {
       ['Müll rausbringen', '2026-09-29'],
     ] as const) {
       await ready(page, '/todos');
-      await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill(title);
-      await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
-      await page.getByRole('button', { name: new RegExp(title) }).click();
+      await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
+      await page.getByRole('dialog').getByLabel('Titel').fill(title);
+      await page
+        .getByRole('dialog')
+        .getByRole('button', { name: 'Hinzufügen', exact: true })
+        .click();
+      await openEditor(page, page.getByRole('button', { name: new RegExp(title) }));
       await page.getByLabel('Fällig am').fill(due);
       await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
       await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -179,9 +184,10 @@ test.describe('Home screen', () => {
   }) => {
     await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
     await ready(page, '/todos');
-    await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Alt');
-    await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
-    await page.getByRole('button', { name: /Alt/ }).click();
+    await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
+    await page.getByRole('dialog').getByLabel('Titel').fill('Alt');
+    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await openEditor(page, page.getByRole('button', { name: /Alt/ }));
     await page.getByLabel('Fällig am').fill('2026-09-20');
     await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -204,9 +210,10 @@ test.describe('Home screen', () => {
   }) => {
     await page.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
     await ready(page, '/todos');
-    await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Alt');
-    await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
-    await page.getByRole('button', { name: /Alt/ }).click();
+    await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
+    await page.getByRole('dialog').getByLabel('Titel').fill('Alt');
+    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await openEditor(page, page.getByRole('button', { name: /Alt/ }));
     await page.getByLabel('Fällig am').fill('2026-09-20');
     await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);

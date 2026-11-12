@@ -178,8 +178,9 @@ test('the diagnostics file is shown in full before anything is saved', async ({ 
 
 test('the danger zone asks twice, then wipes this device', async ({ page }) => {
   await ready(page, '/todos?list=inbox');
-  await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Erfundene Aufgabe');
-  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
+  await page.getByRole('dialog').getByLabel('Titel').fill('Erfundene Aufgabe');
+  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
   await expect(page.getByRole('checkbox', { name: 'Erfundene Aufgabe' })).toBeVisible();
 
   await ready(page, '/settings/ueber');

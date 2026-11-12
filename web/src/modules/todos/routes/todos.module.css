@@ -99,6 +99,13 @@
   background: color-mix(in srgb, var(--module-color) 8%, var(--surface));
   color: var(--accent-contrast);
   cursor: pointer;
+  position: relative;
+}
+/* 24 px to look at, 44 px to hit (the rule "touch ≥ 44 px"): the area around the mark belongs to the tick. */
+.check::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
 }
 .check::after {
   content: '';
@@ -220,18 +227,6 @@
 .main {
   min-width: 0;
 }
-@container page (min-width: 84rem) {
-  /* Column flow: a task with its subtasks is one unbreakable block, so columns stay gap-free. */
-  .main > .list {
-    display: block;
-    column-count: 2;
-    column-gap: var(--space-2);
-  }
-  .main > .list > li {
-    break-inside: avoid;
-    margin-bottom: var(--space-2);
-  }
-}
 
 /* "Wartet noch": one quiet line with the "Neu planen" action. */
 .waiting {
@@ -281,85 +276,67 @@
   cursor: pointer;
 }
 
-/* Plan group package 2: Heute card, view bar, board, tags, checklist, project bar. */
+/* The page's first row: what is next today, on a raised tone (Identity 4.0: no frame, no tint). One line with the
+   two buttons at its end; the row keeps the height of a button while the tasks load. */
 .todayCard {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-2) var(--space-4);
   min-width: 0;
-  /* Never wider than the head's column (Sven's phone shot: the card ran past the right edge). */
-  max-width: 100%;
+  min-height: calc(var(--touch) + 2 * var(--space-2));
   box-sizing: border-box;
-  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--surface) 80%, transparent);
-  border: 1px solid color-mix(in srgb, var(--module-color) 30%, var(--border));
+  background: var(--surface-raised);
   color: var(--text);
-}
-.countBox {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 4.5rem;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--module-color) 18%, var(--surface));
-  line-height: 1.1;
-}
-.countBox strong {
-  font-size: var(--text-3xl);
-  font-weight: var(--weight-bold);
-  font-variant-numeric: tabular-nums;
-}
-.countBox span {
-  font-size: var(--text-xs);
 }
 .nextTask {
   display: flex;
-  flex-direction: column;
-  flex: 1 1 14rem;
+  align-items: baseline;
+  gap: var(--space-2);
+  flex: 1 1 0;
   min-width: 0;
 }
 .nextLabel,
 .nextDetail {
+  flex: none;
   font-size: var(--text-sm);
+  color: var(--text-muted);
 }
 .nextTitle {
-  font-size: var(--text-xl, 1.5rem);
-  line-height: 1.2;
+  min-width: 0;
+  font-size: var(--text-md);
   /* C22: one line, shortened; the full title is the button's name and the tooltip. */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.nextLabel,
-.nextDetail {
-  color: var(--text-on-tint);
-}
-/* Narrow page: count, title and the two buttons on a tight card; the title takes what is left. */
+/* Phone: no card (the page's "⋯" menu lies at the right edge of the first line and must not read as the task's
+   own menu): the label and the title in the first line, the buttons below. */
 .todayCard[data-narrow='true'] {
-  flex: 1 1 100%;
-  flex-wrap: nowrap;
-  gap: var(--space-2);
-  padding: var(--space-2);
-}
-.todayCard[data-narrow='true'] .countBox {
-  min-width: 3rem;
-  padding: var(--space-1) var(--space-2);
-}
-.todayCard[data-narrow='true'] .countBox strong {
-  font-size: var(--text-xl);
+  flex-wrap: wrap;
+  padding: 0;
+  background: none;
 }
 .todayCard[data-narrow='true'] .nextTask {
-  flex: 1 1 0;
+  flex: 1 1 100%;
+  align-items: center;
+  min-height: var(--touch);
+  padding-inline-end: calc(var(--touch) + var(--space-2));
 }
-.todayCard[data-narrow='true'] .nextTitle {
-  font-size: var(--text-md);
+/* An empty view with nothing for today: the row is only the room beside the phone's menu, and nothing on a wide page. */
+.todayCard[data-quiet='true'] {
+  background: none;
+  margin-bottom: 0;
 }
-.todayCard[data-narrow='true'] .nextActions {
-  flex-wrap: nowrap;
-  gap: var(--space-1);
+.todayCard[data-quiet='true']:not([data-narrow='true']) {
+  display: none;
+}
+/* Subtasks are indented rows of the same surface: no surface of their own inside a row (two tone levels at most). */
+.main [data-list-surface] [data-list-surface] {
+  background: none;
+  border-radius: 0;
 }
 .nextActions {
   display: flex;
@@ -382,14 +359,16 @@
 .tagChip {
   min-height: var(--touch);
   padding: 0 var(--space-3);
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: var(--radius-full);
-  background: var(--surface);
-  color: var(--text);
+  background: none;
+  color: var(--text-muted);
   cursor: pointer;
 }
+/* A chosen filter is a surface and a weight (B7), never a frame. */
 .tagChip[aria-pressed='true'] {
-  border-color: var(--text);
+  background: var(--surface-raised);
+  color: var(--text);
   font-weight: var(--weight-semibold);
 }
 .boardHint {
@@ -412,25 +391,13 @@
   padding: var(--space-2);
   border: 1px dashed transparent;
   border-radius: var(--radius-lg);
-  background: var(--surface-2);
-}
-/* Column identity: the head of each column is a filled tint, the first (today) in the module colour. */
-.column[data-view='today'] {
-  background: color-mix(in srgb, var(--module-color) 9%, var(--surface));
-}
-.column[data-view='soon'] {
-  background: color-mix(in srgb, var(--module-color-2, var(--module-color)) 7%, var(--surface));
-}
-.column[data-view='done'] {
-  background: var(--surface-2);
+  /* A column is a heading and its cards on the page: no fill of its own (two tone levels at most). */
 }
 .columnTitle {
   display: flex;
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--module-color) 14%, transparent);
   width: fit-content;
   margin: 0;
   font-size: var(--text-base);
@@ -459,9 +426,8 @@
   display: grid;
   gap: var(--space-1);
   padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: var(--surface);
+  background: var(--surface-raised);
   cursor: grab;
 }
 .cardTitle {

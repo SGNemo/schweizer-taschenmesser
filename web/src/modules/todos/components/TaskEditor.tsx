@@ -11,6 +11,7 @@ import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
 import {
   AdvancedFields,
+  FormActions,
   Button,
   Chip,
   Chips,
@@ -18,7 +19,6 @@ import {
   Dialog,
   Icon,
   IconButton,
-  patternStyles,
   SelectField,
   Switch,
   TextArea,
@@ -375,42 +375,40 @@ function EditorForm({
         </div>
       )}
 
-      <div
-        style={{
-          display: 'flex',
-          gap: 'var(--space-2)',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-        }}
-      >
-        <Button
-          variant="danger"
-          onClick={async () => {
-            onClose();
-            await deleteTaskUndoable(task.id);
-          }}
-        >
-          {t.actions.delete}
-        </Button>
-        <span className={patternStyles.hstack}>
-          {isSub || task.done ? null : (
-            <Button
-              variant="ghost"
-              onClick={async () => {
-                await beginFocus(task, focus.focusMinutes);
-                onClose();
-                void navigate(focusPath(task.id));
-              }}
-            >
-              {t.focus.mode.title}
-            </Button>
-          )}
-          <Button onClick={onClose}>{t.actions.cancel}</Button>
-          <Button type="submit" variant="primary">
-            {t.actions.save}
+      {/* The focus round is a way out of the form, not part of its foot: the foot holds delete, cancel and save
+          and stays at the lower edge of the sheet on the phone. */}
+      {isSub || task.done ? null : (
+        <div>
+          <Button
+            variant="ghost"
+            onClick={async () => {
+              await beginFocus(task, focus.focusMinutes);
+              onClose();
+              void navigate(focusPath(task.id));
+            }}
+          >
+            {t.focus.mode.title}
           </Button>
-        </span>
-      </div>
+        </div>
+      )}
+      <FormActions
+        start={
+          <Button
+            variant="danger"
+            onClick={async () => {
+              onClose();
+              await deleteTaskUndoable(task.id);
+            }}
+          >
+            {t.actions.delete}
+          </Button>
+        }
+      >
+        <Button onClick={onClose}>{t.actions.cancel}</Button>
+        <Button type="submit" variant="primary">
+          {t.actions.save}
+        </Button>
+      </FormActions>
     </form>
   );
 }

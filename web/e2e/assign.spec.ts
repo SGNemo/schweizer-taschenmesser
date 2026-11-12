@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openEditor } from './money-helpers';
 import { enable, ready } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
@@ -30,6 +31,8 @@ test.describe('"Für" – a person or client on appointments and ToDos (QA V14)'
     await dialog.getByLabel('Titel').fill('Zahnarzt');
     await dialog.getByLabel('Datum', { exact: true }).fill('2026-09-29');
     await dialog.getByLabel('Beginn').fill('15:00');
+    // A new appointment shows five fields; the person is behind "Mehr Felder" (UI audit 2026-11, B10).
+    await dialog.getByRole('button', { name: 'Mehr Felder anzeigen' }).click();
     await dialog.getByLabel('Für', { exact: true }).selectOption({ label: 'Lena' });
     await dialog.getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -38,6 +41,7 @@ test.describe('"Für" – a person or client on appointments and ToDos (QA V14)'
     await page.getByRole('dialog').getByLabel('Titel').fill('Workshop');
     await page.getByRole('dialog').getByLabel('Datum', { exact: true }).fill('2026-09-29');
     await page.getByRole('dialog').getByLabel('Beginn').fill('10:00');
+    await page.getByRole('dialog').getByRole('button', { name: 'Mehr Felder anzeigen' }).click();
     await page
       .getByRole('dialog')
       .getByLabel('Für', { exact: true })
@@ -70,11 +74,15 @@ test.describe('"Für" – a person or client on appointments and ToDos (QA V14)'
 
     for (const title of ['Zahnarzt anrufen', 'Müll rausbringen']) {
       await ready(page, '/todos');
-      await page.getByLabel('ToDo hinzufügen').fill(title);
-      await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+      await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
+      await page.getByRole('dialog').getByLabel('Titel').fill(title);
+      await page
+        .getByRole('dialog')
+        .getByRole('button', { name: 'Hinzufügen', exact: true })
+        .click();
       await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
     }
-    await page.getByRole('button', { name: /Zahnarzt anrufen/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /Zahnarzt anrufen/ }));
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Für', { exact: true }).selectOption({ label: 'Lena' });
     await dialog.getByRole('button', { name: 'Speichern' }).click();

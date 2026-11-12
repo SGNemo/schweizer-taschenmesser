@@ -136,7 +136,9 @@ test.describe('Calendar polish (UI round 6)', () => {
       /Nächste Erinnerung in 7 Std 30 Min/,
     );
     expect((await frame.boundingBox())!.height).toBe(before);
-    expect(await size('Erinnerungen')).toBe(nav);
+    // The tab names the view: the page repeats no "Erinnerungen" heading and no add button of its own.
+    await expect(main.getByRole('heading', { name: 'Erinnerungen', level: 2 })).toHaveCount(0);
+    await expect(main.getByRole('button', { name: 'Erinnerung hinzufügen' })).toHaveCount(1);
   });
 
   test('U27a: the "Wie zuletzt" chips are one title line with the time below', async ({

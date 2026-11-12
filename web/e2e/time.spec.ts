@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openEditor } from './money-helpers';
 import { moreFields, pickTodosList, ready } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
@@ -8,15 +9,16 @@ test.beforeEach(async ({ page }) => {
 
 async function addTask(page: Page, title: string) {
   await ready(page, '/todos');
-  await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill(title);
-  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
+  await page.getByRole('dialog').getByLabel('Titel').fill(title);
+  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
   await expect(page.getByRole('checkbox', { name: title })).toBeVisible();
 }
 
 test.describe('ToDos: Wiederholung und Irgendwann', () => {
   test('ticking off a recurring task creates the next one', async ({ page }) => {
     await addTask(page, 'Müll rausbringen');
-    await page.getByRole('button', { name: /^Müll rausbringen/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /^Müll rausbringen/ }));
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Fällig am').fill('2026-09-29');
     await moreFields(page);
@@ -40,7 +42,7 @@ test.describe('ToDos: Wiederholung und Irgendwann', () => {
 
   test('"Irgendwann" keeps a task out of the open list until you look for it', async ({ page }) => {
     await addTask(page, 'Dachboden aufräumen');
-    await page.getByRole('button', { name: /Dachboden aufräumen/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /Dachboden aufräumen/ }));
     const dialog = page.getByRole('dialog');
     await moreFields(page);
     await dialog.getByRole('switch', { name: /Irgendwann/ }).click();
@@ -58,6 +60,7 @@ test('a calendar event can notify before it starts', async ({ page }) => {
   const dialog = page.getByRole('dialog', { name: 'Neuer Termin' });
   await dialog.getByLabel('Titel').fill('Zahnarzt');
   await dialog.getByLabel('Beginn').fill('14:30');
+  await dialog.getByRole('button', { name: 'Mehr Felder anzeigen' }).click();
   await dialog.getByRole('button', { name: 'Andere Zeit' }).click();
   await dialog.getByLabel('Benachrichtigen').selectOption({ label: '15 Minuten vorher' });
   await page.getByRole('button', { name: 'Speichern' }).click();

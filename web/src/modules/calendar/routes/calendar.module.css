@@ -33,6 +33,12 @@
 /* Phone: a row of its own that scrolls sideways as a whole, so the switch shows every label in full ("Jahr", not
    "Jah") and the chips never take a row of their own; the right edge fades out like the switch's own scroll. */
 @media (max-width: 899px) {
+  /* The page's "⋯" menu lies at the right edge of the first row (`besideContent`): the month's name ends before it. */
+  .title {
+    /* Beside "‹ Heute ›" on a 412 px phone; a narrower window or a longer title wraps it to its own row. */
+    min-width: 8rem;
+    margin-inline-end: calc(var(--touch) + var(--space-2));
+  }
   .viewRow {
     flex: 1 0 100%;
     flex-wrap: nowrap;
@@ -69,8 +75,8 @@
   width: 100%;
   table-layout: fixed;
   border-collapse: collapse;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  /* Identity 4.0: one raised tone, no frame; the cells are parted by hairlines (top and start edge only). */
+  background: var(--surface-raised);
   border-radius: var(--radius-md);
 }
 .month th {
@@ -78,14 +84,14 @@
   font-size: var(--text-sm);
   color: var(--text-muted);
   font-weight: var(--weight-semibold);
-  border-bottom: 1px solid var(--border);
 }
 .cell {
   vertical-align: top;
   height: 5.5rem;
   min-width: 0;
   padding: var(--space-1);
-  border: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  border-inline-start: 1px solid var(--border);
   overflow: hidden;
 }
 .outside {
@@ -142,15 +148,16 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 1px;
 }
+/* A line is a target of its own: 24 px high (WCAG 2.5.8), the lines lie edge to edge. */
 .line {
   display: flex;
   align-items: center;
   gap: var(--space-1);
   width: 100%;
   min-width: 0;
-  padding: 1px var(--space-1);
+  min-height: 1.5rem;
+  padding: 0 var(--space-1);
   border: 0;
   border-radius: var(--radius-sm);
   background: none;
@@ -164,15 +171,13 @@
 .line:hover {
   background: var(--surface-2);
 }
-.lineOwn {
-  background: var(--accent-soft);
-}
-.lineOwn[style*='--cal'] {
-  background: color-mix(in srgb, var(--cal) 18%, var(--surface));
+/* An own event is told by its weight, its calendar by the mark's colour: no tint per line (Identity 4.0, B4/B7). */
+.lineOwn .lineTitle {
+  font-weight: var(--weight-medium);
 }
 .lineTime {
   flex: none;
-  /* The line sits on a tint of the calendar's colour: only this token is tested for contrast on tints. */
+  /* Today's cell is a tint of the accent: only this token is tested for contrast on tints. */
   color: var(--text-on-tint);
   font-variant-numeric: tabular-nums;
 }
@@ -193,35 +198,9 @@
   width: 6px;
   height: 6px;
   border-radius: var(--radius-full);
-  /* Same quiet tone per kind as the hour-grid blocks (`.tgItem.kind_*`); a calendar colour wins. */
-  background: var(--cal, var(--kind, var(--text-3)));
-}
-.lineMark[data-kind='event'] {
-  --kind: var(--accent);
-}
-.lineMark[data-kind='reminder'] {
-  --kind: var(--text-3);
-}
-.lineMark[data-kind='task'] {
-  --kind: var(--cat-1);
-}
-.lineMark[data-kind='invoice'],
-.lineMark[data-kind='subscription'] {
-  --kind: var(--cat-2);
-}
-.lineMark[data-kind='birthday'] {
-  --kind: var(--cat-3);
-}
-.lineMark[data-kind='cancel'],
-.lineMark[data-kind='end'],
-.lineMark[data-kind='expiry'] {
-  --kind: var(--warning);
-}
-.lineMark[data-kind='plan'] {
-  --kind: var(--module-color, var(--text-3));
-}
-.lineMark[data-kind='external'] {
-  --kind: var(--text-muted);
+  /* Colour only with meaning (Identity 4.0, B7): a mark carries its calendar's colour; every other entry has one
+     grey without a cast. The kind is in the title, the tooltip and the day's list, not in a colour code. */
+  background: var(--cal, var(--calm-ink));
 }
 .dotsMore {
   font-size: var(--text-xs);
@@ -237,7 +216,8 @@
   text-align: left;
   border: 0;
   border-radius: var(--radius-full);
-  padding: 1px var(--space-2);
+  min-height: 1.5rem;
+  padding: 0 var(--space-2);
   font-size: var(--text-xs);
   cursor: pointer;
   background: none;
@@ -264,41 +244,20 @@
   }
 }
 
-/* Kinds (used by dots, badges and the hour-grid blocks; `.tgItem.kind_*` below overrides their look) */
-.kind_event {
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-.kind_reminder {
-  background: var(--surface-2);
-  color: var(--warning);
-}
-.kind_task {
-  background: var(--surface-2);
-  color: var(--text);
-}
-/* Deadlines (U08): an invoice is neutral, cancellation/end/expiry are a quiet warning; red only once overdue. */
-.kind_invoice {
+/* Kind badges of the day lists: neutral chips with the kind in words. A passed or nearing deadline keeps its quiet
+   warning, red only once overdue (U08). */
+.kind_event,
+.kind_reminder,
+.kind_task,
+.kind_invoice,
+.kind_subscription,
+.kind_external,
+.kind_birthday,
+.kind_plan {
   background: var(--surface-2);
   color: var(--text);
 }
-.kind_cancel {
-  background: var(--warning-soft);
-  color: var(--warning-ink);
-}
-.kind_subscription {
-  background: var(--surface-2);
-  color: var(--text);
-}
-.kind_external {
-  background: var(--surface-2);
-  color: var(--text);
-  border: 1px dashed var(--border);
-}
-.kind_birthday {
-  background: var(--accent-soft);
-  color: var(--accent);
-}
+.kind_cancel,
 .kind_end,
 .kind_expiry {
   background: var(--warning-soft);
@@ -307,11 +266,6 @@
 .kind_overdue {
   background: var(--danger-soft);
   color: var(--danger-ink);
-}
-/* The planner's summary chip: its module hue (`data-hue`), the text stays body text. */
-.kind_plan {
-  background: var(--surface-2);
-  color: var(--text);
 }
 .done {
   text-decoration: line-through;
@@ -325,14 +279,9 @@
   gap: var(--space-3);
 }
 .weekDay {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--surface-raised);
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
-}
-.weekDay.todayCell {
-  /* The accent border all around says "today". */
-  border-color: var(--accent);
 }
 .weekDayEmpty {
   display: flex;
@@ -389,7 +338,6 @@ button.itemRow {
 /* Entries of a calendar are capsules in its colour (tint + dot); the kind is an icon, not a colour. */
 .itemRow[style*='--cal'] {
   background: color-mix(in srgb, var(--cal) 12%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--cal) 30%, transparent);
 }
 button.itemRow:hover {
   background: var(--surface-2);
@@ -468,10 +416,9 @@ button.recentChip {
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  flex: 1 1 0;
+  /* Two per row, so a title has room before it is cut (four in a row left about 90 px each on the phone). */
+  flex: 1 1 calc(50% - var(--space-2));
   gap: 0;
-  max-width: 14rem;
-  /* Room for the time; a narrow dialog wraps the chips to a second row instead of squeezing them. */
   min-width: 7rem;
   padding: var(--space-1) var(--space-3);
 }
@@ -500,11 +447,14 @@ button.recentChip {
   flex: 1;
   min-width: 0;
 }
-.actions {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-2);
-  flex-wrap: wrap;
+/* Phone: the day takes a row of its own, start and end share the next (three fields of 113 px cut the date). */
+@media (max-width: 899px) {
+  .split {
+    flex-wrap: wrap;
+  }
+  .splitDay {
+    flex: 1 1 100%;
+  }
 }
 .error {
   color: var(--danger);
@@ -550,8 +500,7 @@ button.recentChip {
   inset: 0;
   display: flex;
   flex-direction: column;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--surface-raised);
   border-radius: var(--radius-md);
   overflow: hidden;
 }
@@ -816,8 +765,7 @@ button.recentChip {
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-4);
-  background: color-mix(in srgb, var(--module-color) 6%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--module-color) 25%, var(--border));
+  background: var(--surface-raised);
   border-radius: var(--radius-lg);
   min-height: 100%;
 }
@@ -864,34 +812,8 @@ button.recentChip {
   border-radius: 50%;
 }
 
-/* Hour-grid blocks look like the month's lines (S03 look in the week): the kind mark (dot) before the time and a faint
-   tint in the kind's quiet tone (a calendar colour wins) instead of a framed surface. Own events keep the accent tint; a
-   daily repeat (medication at 08:00) stays quiet. The kind itself is the mark and the tooltip, never a border. */
-.tgItem.kind_event {
-  --kind: var(--accent);
-  background: var(--accent-soft);
-}
-.tgItem.kind_task {
-  --kind: var(--cat-1);
-}
-.tgItem.kind_invoice,
-.tgItem.kind_subscription {
-  --kind: var(--cat-2);
-}
-.tgItem.kind_birthday {
-  --kind: var(--cat-3);
-}
-.tgItem.kind_cancel,
-.tgItem.kind_end,
-.tgItem.kind_expiry {
-  --kind: var(--warning);
-}
-.tgItem.kind_plan {
-  --kind: var(--module-color, var(--text-3));
-}
-.tgItem.kind_external {
-  --kind: var(--text-muted);
-}
+/* Hour-grid blocks look like the month's lines: the mark before the time, a neutral surface, and a faint tint only
+   for an entry of a named calendar. The kind is the tooltip, never a colour or a border. */
 .tgItem[style*='--cal'] {
   background: color-mix(in srgb, var(--cal) 14%, var(--surface));
 }
@@ -966,9 +888,8 @@ button.recentChip {
 }
 .miniMonth {
   padding: var(--space-2);
-  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: var(--surface);
+  background: var(--surface-raised);
 }
 .miniTitle {
   margin: 0 0 var(--space-1);
@@ -1052,13 +973,17 @@ button.recentChip {
   gap: var(--space-2);
   min-height: var(--touch);
   padding: 0 var(--space-3);
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: var(--radius-full);
-  background: var(--surface);
+  /* A chosen filter is a surface and a weight (B7); a hidden calendar lies flat on the page, struck through. */
+  background: var(--surface-raised);
   color: var(--text);
+  font-weight: var(--weight-medium);
   cursor: pointer;
 }
 .calChip[aria-pressed='false'] {
+  background: none;
+  font-weight: inherit;
   color: var(--text-muted);
   text-decoration: line-through;
 }

@@ -103,9 +103,10 @@
 .missed {
   color: var(--text-muted);
 }
+/* The deadline is one fact of the meta line, in its size and weight: the row's name leads (design check G3). Only a
+   near deadline stands out (`.warn`: warning colour, clock, heavier). */
 .cancelLine {
-  font-size: var(--text-md);
-  font-weight: var(--weight-semibold);
+  font-size: inherit;
 }
 
 /* ---- money group: service tiles (signature), head, top list ---- */

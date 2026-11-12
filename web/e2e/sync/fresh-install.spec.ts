@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { addTask, connect, newDevice, resetServer, serverDump, syncNow } from './helpers';
 import { backSettled, moduleSwitch } from '../helpers';
+import { openEditor } from '../money-helpers';
 
 /**
  * "Fresh install" run for the launch: empty database, setup assistant to the end, sync against the
@@ -118,7 +119,7 @@ test('fresh install: setup, sync, one entry per core module, backup/restore, lan
   }
   await backSettled(page);
   await page.goto('/todos?list=inbox');
-  await page.getByRole('button', { name: /Brot kaufen/ }).click();
+  await openEditor(page, page.getByRole('button', { name: /Brot kaufen/ }));
   await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await backSettled(page);

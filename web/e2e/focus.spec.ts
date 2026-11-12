@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { openEditor } from './money-helpers';
 import { openFoldedGroup, ready } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
@@ -10,8 +11,9 @@ test.beforeEach(async ({ page }) => {
 /** Creates a ToDo through the inline add field of the ToDos page. */
 async function addTodo(page: Page, title: string) {
   await ready(page, '/todos');
-  await page.getByLabel('ToDo hinzufügen').fill(title);
-  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
+  await page.getByRole('dialog').getByLabel('Titel').fill(title);
+  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
   await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
 }
 
@@ -104,7 +106,7 @@ test.describe('Focus and attention aids', () => {
   }) => {
     await addTodo(page, 'Zahnbürsten kaufen');
     await ready(page, '/todos');
-    await page.getByRole('button', { name: /Zahnbürsten kaufen/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /Zahnbürsten kaufen/ }));
     await page.getByRole('button', { name: 'Für heute einplanen' }).click();
     await page.getByRole('button', { name: '15 Min' }).click();
     await page.getByRole('button', { name: 'Speichern' }).click();
@@ -115,7 +117,7 @@ test.describe('Focus and attention aids', () => {
     await expect(page.getByTestId('next-card')).toContainText('Zahnbürsten kaufen');
     await expect(page.getByTestId('next-card')).toContainText('etwa 15 Min');
     await addTodo(page, 'Brief schreiben');
-    await page.getByRole('button', { name: /Brief schreiben/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /Brief schreiben/ }));
     await page.getByRole('button', { name: 'Für heute einplanen' }).click();
     await page.getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -131,7 +133,7 @@ test.describe('Focus and attention aids', () => {
   }) => {
     await addTodo(page, 'Alte Sache');
     await ready(page, '/todos');
-    await page.getByRole('button', { name: /Alte Sache/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /Alte Sache/ }));
     await page.getByLabel('Fällig am').fill('2026-09-01');
     await page.getByRole('button', { name: 'Speichern' }).click();
 
