@@ -387,7 +387,8 @@ test.describe('phone viewport', () => {
     await ready(page, '/notes');
     const list = page.getByRole('navigation', { name: 'Seiten' });
     await expect(list).toBeVisible();
-    await page.getByRole('button', { name: 'Neue Seite' }).click();
+    // Phone: the plus of the bottom bar is the page's entry ("Notiz eintragen").
+    await page.getByTestId('bottom-plus').click();
     await expect(editor(page)).toBeVisible();
     await page.keyboard.type('Unterwegs notiert');
     await expect(page.getByText('Gespeichert')).toBeVisible();

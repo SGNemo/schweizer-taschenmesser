@@ -165,7 +165,7 @@ test.describe('ten paths', () => {
     await enable(page, 'notes');
     await ready(page, '/notes');
     const s = new Steps(page);
-    await s.tap(page.getByRole('button', { name: 'Neue Seite' }));
+    await s.tap(page.getByTestId('bottom-plus'));
     await s.type(page.getByRole('textbox', { name: 'Text der Seite' }), 'Paket abholen');
     // Autosave: no save button. On a phone the list is behind the page, so go back to it.
     const back = page.getByRole('button', { name: 'Zurück zur Liste' });
@@ -331,12 +331,12 @@ test.describe('Back gesture', () => {
     // Notes are a page with autosave now, not a dialog: there is nothing to discard.
     await enable(page, 'notes');
     await ready(page, '/notes');
-    await page.getByRole('button', { name: 'Neue Seite' }).click();
+    await page.getByTestId('bottom-plus').click();
     await page.goBack();
     await expect(page.getByRole('dialog')).toHaveCount(0);
 
     await ready(page, '/notes');
-    await page.getByRole('button', { name: 'Neue Seite' }).click();
+    await page.getByTestId('bottom-plus').click();
     const editor = page.getByRole('textbox', { name: 'Text der Seite' });
     await editor.click();
     await page.keyboard.type('Halber Gedanke');

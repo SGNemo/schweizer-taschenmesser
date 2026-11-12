@@ -54,8 +54,12 @@
   border-bottom: 1px solid var(--border);
   border-radius: var(--radius-sm);
 }
+/* The open page: a recess and a weight, not the accent (B7). */
 .rowActive {
-  background: var(--accent-soft);
+  background: var(--surface-sunken);
+}
+.rowActive .title {
+  font-weight: var(--weight-semibold);
 }
 .main {
   flex: 1;
@@ -115,7 +119,8 @@
   }
 }
 
-/* Cards view: page previews on little sheets (title in serif, up to four lines of text, the notebook colour tints the sheet). */
+/* Cards view: page previews on little sheets (title in serif, up to four lines of text); the notebook is named by its
+   dot and its name, the sheet itself is neutral. */
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
@@ -124,13 +129,12 @@
 .cards .row {
   position: relative;
   align-items: stretch;
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: var(--radius-md);
-  background: var(--surface);
-  background: color-mix(in srgb, var(--strip, var(--surface)) 12%, var(--surface));
+  background: var(--surface-2);
 }
 .cards .rowActive {
-  background: var(--accent-soft);
+  background: var(--surface-sunken);
 }
 .cards .main {
   justify-content: flex-start;
@@ -147,9 +151,9 @@
   -webkit-line-clamp: 4;
 }
 
-/* the list column scrolls: its controls must not be squeezed */
+/* The view switch takes the room of the row; search and menu stay at its end. */
 .viewSwitch {
-  flex: none;
+  min-width: 0;
 }
 
 /*
