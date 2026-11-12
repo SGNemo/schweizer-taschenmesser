@@ -13,14 +13,18 @@ import styles from './SensitiveValue.module.css';
  * Use in a widget: `<SensitiveValue>{formatMoney(x, cur)}</SensitiveValue>`. Wrap only real data, not
  * loading or empty states.
  * `note` is shown below the placeholder only while hidden (e.g. a context line without amounts).
+ * `compact` leaves the visible hint out (the eye and the dots stay, the hint is the button's name): the module head,
+ * where the sentence took the title's room on the phone.
  */
 export function SensitiveValue({
   children,
   note,
+  compact,
   className,
 }: {
   children: ReactNode;
   note?: string;
+  compact?: boolean;
   className?: string;
 }) {
   const hide = useHideValues();
@@ -48,15 +52,18 @@ export function SensitiveValue({
         className={`${styles.mask} ${className ?? ''}`}
         onClick={() => setRevealed(true)}
         aria-label={`${t.widgets.valueHidden}. ${t.widgets.valueReveal}`}
+        title={compact ? t.widgets.valueReveal : undefined}
         data-testid="sensitive-value"
       >
         <Icon name="eyeOff" size={16} />
         <NoReadAid>
           <span aria-hidden="true">••••</span>
         </NoReadAid>
-        <span className={styles.hint} aria-hidden="true">
-          {t.widgets.valueReveal}
-        </span>
+        {compact ? null : (
+          <span className={styles.hint} aria-hidden="true">
+            {t.widgets.valueReveal}
+          </span>
+        )}
       </button>
       {note ? <p className={styles.note}>{note}</p> : null}
     </>

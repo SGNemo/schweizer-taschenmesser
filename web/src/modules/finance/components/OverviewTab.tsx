@@ -2,7 +2,7 @@ import { lazy, Suspense, useState, type ReactNode } from 'react';
 import { formatMoney } from '@/core/money';
 import { useCurrency } from '../currency';
 import { t } from '@/strings';
-import { Button, Card } from '@/ui';
+import { Button, Card, SensitiveValue } from '@/ui';
 import { monthSummary, monthlyTrend } from '../logic';
 import { compareMonths, topCategoryTotals, type Delta } from '../analysis';
 import { ForecastCard } from './ForecastCard';
@@ -79,11 +79,14 @@ export function OverviewTab({
       {/* The head carries the one large figure ("Verfügbar"); this line says what it is made of, once. */}
       {a?.deducting ? (
         <p className={styles.breakdown} data-testid="hero-breakdown">
-          {t.finance.breakdown(
-            money(a.balance),
-            a.useInvoices && a.openInvoices ? money(a.openInvoices) : '',
-            a.useSubs && a.subscriptions ? money(a.subscriptions) : '',
-          )}
+          {/* Its amounts add up to the head's figure, so the line hides with it ("Werte ausblenden"). */}
+          <SensitiveValue>
+            {t.finance.breakdown(
+              money(a.balance),
+              a.useInvoices && a.openInvoices ? money(a.openInvoices) : '',
+              a.useSubs && a.subscriptions ? money(a.subscriptions) : '',
+            )}
+          </SensitiveValue>
         </p>
       ) : null}
 

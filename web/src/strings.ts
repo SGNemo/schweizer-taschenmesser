@@ -1315,7 +1315,7 @@ export const de = {
         'Die Suche zeigt zuerst, was du zuletzt benutzt hast. Der Verlauf bleibt auf diesem Gerät.',
       hideValues: 'Werte ausblenden',
       hideValuesHint:
-        'Beträge in der Kontostand-Karte zeigen ein neutrales Muster. Ein Tipp blendet sie ein, bis du die Ansicht verlässt. Gilt nur auf diesem Gerät.',
+        'Die große Zahl im Kopf der Geld-Seiten, ihre Aufschlüsselung und die Kontostand-Karte zeigen ein neutrales Muster. Listen und Budgets bleiben sichtbar. Ein Tipp blendet ein, bis du die Ansicht verlässt. Gilt nur auf diesem Gerät.',
       more: 'Weitere Einstellungen',
       aids: 'Hilfen',
       aidsOn: (n: number, total: number) => `${n} von ${total} an`,
