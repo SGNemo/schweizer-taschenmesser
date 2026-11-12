@@ -7697,6 +7697,8 @@ export const de = {
       newPrivate: 'Privaten Tab öffnen',
       bookmarks: 'Lesezeichen',
       recent: 'Zuletzt besucht',
+      reopen: 'Tab neu öffnen',
+      reopenHint: (title: string) => `Zuletzt offen: ${title}`,
       none: 'Noch nichts gespeichert.',
     },
     menu: {
@@ -7820,6 +7822,8 @@ export const de = {
       idle: 'Nichts läuft',
       one: '1 läuft',
       many: (n: number) => `${n} laufen`,
+      unit: (n: number) => (n === 1 ? 'läuft' : 'laufen'),
+      short: 'Download',
       context: (speed: string) => `mit ${speed}/s`,
       contextIdle: 'Neue Downloads erscheinen hier.',
     },

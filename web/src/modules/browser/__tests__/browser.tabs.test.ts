@@ -117,3 +117,37 @@ describe('tabs store: a failing native side never leaves an empty frame', () => 
     expect(useBrowserTabs.getState().tabs).toHaveLength(0);
   });
 });
+
+describe('tabs store: "Tab neu öffnen" remembers the tab closed last, never a private one', () => {
+  beforeEach(() => useBrowserTabs.setState({ tabs: [], activeId: null, lastClosed: null }));
+  afterEach(() => setPlatform(undefined));
+
+  it('keeps address and title of a closed tab, forgets on request', async () => {
+    nativeBrowser(() => Promise.resolve());
+    const id = useBrowserTabs.getState().newTab();
+    await useBrowserTabs.getState().go(id, 'https://example.org/');
+    await useBrowserTabs.getState().closeTab(id);
+    expect(useBrowserTabs.getState().lastClosed).toMatchObject({ url: 'https://example.org/' });
+    useBrowserTabs.getState().forgetClosed();
+    expect(useBrowserTabs.getState().lastClosed).toBeNull();
+  });
+
+  it('a private tab and an empty tab leave nothing', async () => {
+    nativeBrowser(() => Promise.resolve());
+    const secret = useBrowserTabs.getState().newTab(true);
+    await useBrowserTabs.getState().go(secret, 'https://private.example.org/');
+    await useBrowserTabs.getState().closeTab(secret);
+    expect(useBrowserTabs.getState().lastClosed).toBeNull();
+    const empty = useBrowserTabs.getState().newTab();
+    await useBrowserTabs.getState().closeTab(empty);
+    expect(useBrowserTabs.getState().lastClosed).toBeNull();
+  });
+
+  it('"Daten löschen" (closeAll) forgets it', async () => {
+    nativeBrowser(() => Promise.resolve());
+    const id = useBrowserTabs.getState().newTab();
+    await useBrowserTabs.getState().go(id, 'https://example.org/');
+    await useBrowserTabs.getState().closeAll();
+    expect(useBrowserTabs.getState().lastClosed).toBeNull();
+  });
+});

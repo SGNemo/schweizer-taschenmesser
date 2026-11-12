@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { resolveInput } from '../lib/omnibox';
+import { reopenTarget } from '../lib/reopen';
 import { SEARCH_ENGINES, engineTemplate, isValidTemplate } from '../lib/searchEngines';
 import { displayUrl, hostOf, isWebUrl, offerName, urlKind } from '../lib/urlPolicy';
 
@@ -53,5 +54,41 @@ describe('urlPolicy', () => {
     expect(displayUrl('https://www.a.test/p/q')).toBe('a.test/p/q');
     expect(offerName('https://a.test/files/mein%20buch.pdf?x=1')).toBe('mein buch.pdf');
     expect(offerName('https://a.test/')).toBe('a.test');
+  });
+});
+
+describe('reopenTarget ("Tab neu öffnen" on the start view)', () => {
+  const closed = { url: 'https://closed.example.org/', title: 'Closed' };
+  const visit = { url: 'https://visit.example.org/', title: 'Visit' };
+  const base = {
+    lastClosed: null,
+    inPrivateTab: false,
+    anyOpen: false,
+    historyOn: true,
+    lastVisit: visit,
+  };
+
+  it('offers the tab closed last before anything from the history', () => {
+    expect(reopenTarget({ ...base, lastClosed: closed, anyOpen: true })).toEqual(closed);
+  });
+
+  it('after a restart (no page open) offers the last page of the history', () => {
+    expect(reopenTarget(base)).toEqual(visit);
+  });
+
+  it('never offers a page of the history while a page is open in some tab', () => {
+    expect(reopenTarget({ ...base, anyOpen: true })).toBeNull();
+  });
+
+  it('offers nothing with the history off, without a visit, or inside a private tab', () => {
+    expect(reopenTarget({ ...base, historyOn: false })).toBeNull();
+    expect(reopenTarget({ ...base, lastVisit: undefined })).toBeNull();
+    expect(reopenTarget({ ...base, lastClosed: closed, inPrivateTab: true })).toBeNull();
+  });
+
+  it('does not offer the closed page while it is open again in a normal tab', () => {
+    expect(
+      reopenTarget({ ...base, lastClosed: closed, anyOpen: true, openUrls: [closed.url] }),
+    ).toBeNull();
   });
 });

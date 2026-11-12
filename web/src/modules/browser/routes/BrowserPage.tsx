@@ -23,8 +23,9 @@ import { ReaderPanel } from '../components/ReaderPanel';
 import { TabOverview } from '../components/TabOverview';
 import { engineTemplate } from '../lib/searchEngines';
 import { resolveInput } from '../lib/omnibox';
-import { AddressBar, HeroSlot, SignatureMark } from '@/ui/identity';
+import { SignatureMark } from '@/ui/identity';
 import { displayUrl, hostOf, isWebUrl, offerName } from '../lib/urlPolicy';
+import { reopenTarget } from '../lib/reopen';
 import { blockruleRepo, bookmarkRepo, historyRepo } from '../repo';
 import { settings, type BrowserPrefs } from '../settings';
 import { useTabPreviews } from '../tabPreviews';
@@ -70,6 +71,22 @@ export default function BrowserPage() {
     const seen = new Set<string>();
     return (visits ?? []).filter((v) => !seen.has(v.url) && !!seen.add(v.url)).slice(0, 6);
   }, [visits]);
+
+  // "Tab neu öffnen" on the start view: the tab closed last in this session, else – only while no page is open in any
+  // tab, which is the state after a restart – the last page of the history (and only while the history is on). Not in
+  // a private tab: it would load a normal page there.
+  const lastClosed = useBrowserTabs((s) => s.lastClosed);
+  const lastVisit = recent[0];
+  const reopen = reopenTarget({
+    lastClosed,
+    inPrivateTab: !!tab?.isPrivate,
+    anyOpen: tabs.some((x) => x.opened),
+    openUrls: tabs.filter((x) => x.opened && !x.isPrivate).map((x) => x.url),
+    historyOn: prefs.history,
+    lastVisit,
+  });
+  // The offer names its page: the list below does not repeat it.
+  const recentRows = reopen ? recent.filter((v) => v.url !== reopen.url) : recent;
 
   const previews = useTabPreviews(tabs, prefs.tabPreview && view === 'tabs');
   const template = engineTemplate(prefs.engine, prefs.customUrl);
@@ -220,12 +237,6 @@ export default function BrowserPage() {
   return (
     <div className={styles.root}>
       <PageTitle title={t.browser.meta.name} />
-      {/* Signature (slot S): decoration only – lock and line, no text, so it never reads as a second address field. */}
-      <HeroSlot area="signature">
-        <span data-testid="address-bar-signature">
-          <AddressBar />
-        </span>
-      </HeroSlot>
       <nav className={styles.tabs} aria-label={t.browser.toolbar.tabs} data-testid="tab-strip">
         {tabs.map((x) => (
           <div key={x.id} className={`${styles.tab} ${x.id === activeId ? styles.tabActive : ''}`}>
@@ -507,12 +518,14 @@ export default function BrowserPage() {
             {visits && visits.length > 0 ? (
               <div className={styles.actions}>
                 <Button
-                  onClick={() =>
+                  onClick={() => {
+                    // A cleared history names no page any more, not as "Zuletzt offen" either.
+                    useBrowserTabs.getState().forgetClosed();
                     void deleteWithUndo(async () => {
                       for (const v of await historyRepo.active().toArray())
                         await historyRepo.remove(v.id);
-                    }, t.browser.history.cleared)
-                  }
+                    }, t.browser.history.cleared);
+                  }}
                 >
                   {t.browser.history.clear}
                 </Button>
@@ -631,6 +644,23 @@ export default function BrowserPage() {
           <div className={styles.panel}>
             <h2>{t.browser.start.title}</h2>
             <p className={styles.muted}>{t.browser.start.body}</p>
+            {/* Tabs live in memory only: after a restart, or after closing the last tab, the page that was open is one
+                click away (never a private tab; with the history off only the tab closed in this session). */}
+            {reopen ? (
+              <div className={styles.reopen} data-testid="browser-reopen">
+                <Button
+                  onClick={() => {
+                    useBrowserTabs.getState().forgetClosed();
+                    void open(reopen.url);
+                  }}
+                >
+                  {t.browser.start.reopen}
+                </Button>
+                <span className={styles.muted}>
+                  {t.browser.start.reopenHint(reopen.title || displayUrl(reopen.url))}
+                </span>
+              </div>
+            ) : null}
             <h3>{t.browser.start.bookmarks}</h3>
             {marks && marks.length === 0 ? (
               <p className={styles.muted}>{t.browser.start.none}</p>
@@ -655,11 +685,11 @@ export default function BrowserPage() {
                 </li>
               ))}
             </ul>
-            {recent.length > 0 ? (
+            {recentRows.length > 0 ? (
               <>
                 <h3>{t.browser.start.recent}</h3>
                 <ItemList label={t.browser.start.recent}>
-                  {recent.map((v) => (
+                  {recentRows.map((v) => (
                     <ItemRow
                       key={v.id}
                       title={v.title || displayUrl(v.url)}

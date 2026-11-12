@@ -1,17 +1,3 @@
-.band {
-  display: grid;
-  gap: var(--space-1);
-  justify-items: start;
-  min-width: 0;
-  max-width: 100%;
-}
-.figure {
-  font-family: var(--font-mono);
-  font-size: var(--text-xl);
-  font-weight: var(--weight-bold);
-  color: var(--text);
-}
-.context {
-  font-size: var(--text-meta);
-  color: var(--text-on-tint);
-}
+/* Nothing left to style: since Identity 4.0 (package 0b-6b) what runs is the head's own figure (`DownloadsPage.tsx`),
+   the arrow band is gone from the page. The file stays because the protected `ui/tokens.test.ts` reads it by name
+   ("head zone" test); the acceptance sweep 0b-8 removes both together. */

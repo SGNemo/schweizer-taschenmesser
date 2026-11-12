@@ -1,53 +1,58 @@
-/* Status tiles inside the settings head: tokens only. Text is `--text`; "needs a look" is a hairline in the accent plus
-   the words of the state, never red and never colour alone. */
+/* Status lines inside the settings head (Identity 4.0, package 0b-6b): each state is one line of text, a link into
+   its category – name, state, context – with no frame and no fill. Tokens only. "Needs a look" is said by the words
+   of the state and a small ink mark before them, never by red and never by colour alone. */
 .tiles {
   list-style: none;
   margin: var(--space-2) 0 0;
   padding: 0;
   display: grid;
-  /* Six states: three by two beside the navigation, never five and one left over. */
+  /* Six states in three columns beside the navigation (the cards of the overview below use the same columns). */
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-3);
+  /* The lines bleed one step into the gap for their hover surface: the gap is two steps, so neighbours never overlap. */
+  gap: 0 var(--space-4);
 }
 .tiles > li {
   min-width: 0;
 }
 .tile {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+  flex-wrap: wrap;
+  align-items: baseline;
+  align-content: flex-start;
+  gap: 0 var(--space-2);
   height: 100%;
   min-height: var(--touch);
-  padding: var(--space-3);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  padding: var(--space-1) var(--space-2);
+  margin-inline: calc(-1 * var(--space-2));
+  border-radius: var(--radius-sm);
   color: var(--text);
   text-decoration: none;
 }
 .tile:hover {
-  border-color: var(--text-3);
-}
-.tile[data-attention='true'] {
-  border-color: var(--accent);
+  background: var(--surface-sunken);
 }
 .name {
   min-width: 0;
-  overflow-wrap: break-word;
-  hyphens: auto;
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  align-self: center;
   gap: var(--space-2);
   color: var(--text-muted);
-  font-size: var(--text-caps);
-  font-weight: var(--weight-semibold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: var(--text-label);
 }
 .status {
-  font-size: var(--text-lg);
+  font-size: var(--text-label);
   font-weight: var(--weight-semibold);
   overflow-wrap: anywhere;
+}
+.tile[data-attention='true'] .status::before {
+  content: '';
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-inline-end: var(--space-1);
+  border-radius: var(--radius-full);
+  background: var(--text);
 }
 .context {
   color: var(--text-3);
@@ -56,24 +61,14 @@
 }
 
 @media (max-width: 899px) {
-  /* Phone: compact tiles (small padding) so the head stays a strip, not a screen of its own. */
+  /* Phone: two columns of lines, so the head stays a strip, not a screen of its own (name and state wrap onto two
+     lines where one is too short). */
   .tiles {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-2);
     margin-top: var(--space-1);
   }
-  .tile {
-    padding: var(--space-2) var(--space-3);
-    gap: 0;
-  }
-  .name {
-    letter-spacing: 0.02em;
-  }
-  .status {
-    font-size: var(--text-label);
-  }
-  /* U55: the context line is never cut (a one-line clamp cut "Deine Daten bleiben a…" in four of six tiles). A line
-     that only describes the category stays off the phone, so the head stays a strip; the list below says it too. */
+  /* U55: the context line is never cut. A line that only describes the category stays off the phone; the list below
+     says it too. */
   .tile[data-generic='true'] .context {
     display: none;
   }

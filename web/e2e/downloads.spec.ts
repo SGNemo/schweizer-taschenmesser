@@ -85,7 +85,12 @@ test('one filled action per page; checksum and folder lines start where the titl
   const primaries = await page
     .locator('main button')
     .evaluateAll((els) => els.filter((e) => /primary/.test(e.className)).map((e) => e.textContent));
-  expect(primaries).toEqual(['Download hinzufügen']);
+  // The page's one action: the head's filled button in a wide window, the plus of the bottom bar below 900 px.
+  const plus = page.getByTestId('bottom-plus');
+  if (await plus.isVisible()) {
+    expect(primaries).toEqual([]);
+    await expect(plus).toHaveAccessibleName('Download eintragen');
+  } else expect(primaries).toEqual(['Download hinzufügen']);
   const done = list(page).getByRole('listitem').nth(1);
   const left = async (text: RegExp | string) =>
     Math.round((await done.getByText(text).first().boundingBox())!.x);
@@ -93,10 +98,11 @@ test('one filled action per page; checksum and folder lines start where the titl
   expect(await left(/SHA-256/)).toBe(title);
 });
 
-test('the band counts what runs, the filter shows the history, the folder button reveals the last job', async ({
+test('the head counts what runs, the filter shows the history, the folder button reveals the last job', async ({
   page,
 }) => {
-  await expect(page.getByTestId('arrow-band')).toContainText('1 läuft');
+  // What runs is the head's figure (Identity 4.0: no band under the head).
+  await expect(page.getByTestId('downloads-running')).toHaveText(/1\s*läuft/);
   const rows = list(page).getByRole('listitem');
   await page.getByRole('button', { name: 'Fertig', exact: true }).click();
   await expect(rows).toHaveCount(1);
@@ -129,7 +135,10 @@ test('pause, resume and remove call the manager; deleting the file asks first', 
 });
 
 test('adding needs a click, warns about HTTP and explains a wrong address', async ({ page }) => {
-  await page.getByRole('button', { name: 'Download hinzufügen' }).first().click();
+  await page
+    .locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible')
+    .first()
+    .click();
   const dialog = page.getByRole('dialog', { name: 'Download hinzufügen' });
   await dialog
     .getByLabel('Adresse (http:// oder https://)')

@@ -28,7 +28,10 @@
    scrolls inside it, the search hits lie over the content. */
 .navCol {
   position: sticky;
-  top: var(--space-4);
+  /* No offset: with one, the column sat a step lower on every page taller than itself and a step higher on a page
+     that is not (the start page since its status tiles are lines), so it jumped on the first click. It starts at the
+     content's top edge on every page and sticks there. */
+  top: 0;
   z-index: var(--z-raised);
   display: flex;
   flex-direction: column;

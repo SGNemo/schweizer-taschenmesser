@@ -5,7 +5,7 @@ import { useUiStore } from '@/stores/ui';
 import type { DriveInfo } from '@/core/platform/disk';
 import type { DiskIo } from '@/core/platform/system';
 import { t } from '@/strings';
-import { EmptyState, PageHeader, patternStyles, Segmented, Skeleton } from '@/ui';
+import { EmptyState, PageHeader, Skeleton, Tabs } from '@/ui';
 import SystemTab from '../components/SystemTab';
 import { DiskHead } from '../components/DiskHead';
 import { DriveCard } from '../components/DriveCard';
@@ -30,15 +30,17 @@ export default function ThisPcPage() {
   return (
     <>
       <DiskHead drives={list.drives} />
-      <PageHeader title={t.disk.title} />
-      <div className={patternStyles.gapBottom}>
-        <Segmented
-          label={t.disk.tabsLabel}
-          value={tab}
-          options={TABS.map((k) => ({ value: k, label: t.disk.tabs[k] }))}
-          onChange={(k) => setParams(k === 'drives' ? {} : { tab: k }, { replace: true })}
-        />
-      </div>
+      <PageHeader
+        title={t.disk.title}
+        views={
+          <Tabs
+            label={t.disk.tabsLabel}
+            value={tab}
+            options={TABS.map((k) => ({ value: k, label: t.disk.tabs[k] }))}
+            onChange={(k) => setParams(k === 'drives' ? {} : { tab: k }, { replace: true })}
+          />
+        }
+      />
       {tab === 'system' ? <SystemTab /> : <DrivesTab {...list} />}
     </>
   );

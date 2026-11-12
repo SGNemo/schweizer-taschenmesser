@@ -79,6 +79,8 @@ export const browser: Strings['browser'] = {
     newPrivate: 'Open a private tab',
     bookmarks: 'Bookmarks',
     recent: 'Recently visited',
+    reopen: 'Reopen tab',
+    reopenHint: (title: string) => `Last open: ${title}`,
     none: 'Nothing saved yet.',
   },
   menu: {
