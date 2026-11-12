@@ -38,7 +38,7 @@ test.describe('Time tracking (plan group, new module)', () => {
     await enable(page, 'timetrack');
     await addJob(page, 'Website', '60');
     await page.goto('/timetrack?new=1');
-    const dialog = page.getByRole('dialog', { name: 'Eintrag hinzufügen' });
+    const dialog = page.getByRole('dialog', { name: 'Zeiteintrag eintragen' });
     await dialog.getByLabel('Beginn').fill('08:00');
     await dialog.getByLabel('Ende', { exact: true }).fill('10:30');
     await dialog.getByRole('button', { name: 'Speichern' }).click();

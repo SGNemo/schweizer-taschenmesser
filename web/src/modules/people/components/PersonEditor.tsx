@@ -4,7 +4,16 @@ import type { Stored } from '@/core/db/types';
 import { formatMoneyInput, parseMoney } from '@/core/money';
 import { pad2 } from '@/core/time/dates';
 import { t } from '@/strings';
-import { AdvancedFields, Button, Checkbox, Dialog, Form, FormActions, TextField } from '@/ui';
+import {
+  AdvancedFields,
+  Button,
+  Checkbox,
+  DayField,
+  Dialog,
+  Form,
+  FormActions,
+  TextField,
+} from '@/ui';
 import { deletePerson, personRepo } from '../repo';
 import { personSchema, type Person } from '../schema';
 import { deleteWithUndo } from '@/core/undo/withToast';
@@ -82,6 +91,7 @@ function Fields({
     existing?.giftBudgetCents === undefined ? '' : formatMoneyInput(existing.giftBudgetCents),
   );
   const [error, setError] = useState('');
+  const [dateError, setDateError] = useState('');
   const [extraError, setExtraError] = useState('');
 
   async function save() {
@@ -106,7 +116,7 @@ function Fields({
       remindDaysBefore: leadDays,
       giftBudgetCents: cents,
     });
-    if (!parsed.success) return setError(t.people.invalidDate);
+    if (!parsed.success) return setDateError(t.people.invalidDate);
     if (existing)
       await personRepo.update(existing.id, changedFields(opened ?? existing, parsed.data));
     else await personRepo.create(parsed.data);
@@ -118,7 +128,11 @@ function Fields({
       <TextField
         label={t.people.name}
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        onChange={(e) => {
+          setName(e.target.value);
+          setError('');
+        }}
+        error={error}
         required
         data-autofocus
       />
@@ -129,15 +143,14 @@ function Fields({
       />
       {hasBirthday ? (
         <>
-          <TextField
+          <DayField
             label={t.people.birthdayDate}
-            type="date"
             value={date}
-            onChange={(e) => {
-              setDate(e.target.value);
-              setError('');
+            onChange={(value) => {
+              setDate(value);
+              setDateError('');
             }}
-            error={error}
+            hint={dateError || undefined}
             required
           />
           <Checkbox

@@ -4,7 +4,16 @@ import type { Stored } from '@/core/db/types';
 import { today } from '@/core/time/dates';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { Button, Dialog, Form, FormActions, SelectField, TextField } from '@/ui';
+import {
+  Button,
+  DayField,
+  Dialog,
+  Form,
+  FormActions,
+  SelectField,
+  TextField,
+  TimeField,
+} from '@/ui';
 import { sessionRepo } from '../repo';
 import { sessionSchema, type Job, type Session } from '../schema';
 
@@ -96,39 +105,21 @@ function Fields({
           </option>
         ))}
       </SelectField>
-      <TextField
+      <DayField
         label={t.timetrack.form.date}
-        type="date"
         value={date}
-        onChange={(e) => setDate(e.target.value)}
+        onChange={setDate}
         required
         data-autofocus
       />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
-        <TextField
-          label={t.timetrack.form.start}
-          type="time"
-          value={start}
-          onChange={(e) => setStart(e.target.value)}
-          required
-        />
+        <TimeField label={t.timetrack.form.start} value={start} onChange={setStart} required />
         {running ? null : (
-          <TextField
-            label={t.timetrack.form.end}
-            type="time"
-            value={end}
-            onChange={(e) => setEnd(e.target.value)}
-            required
-          />
+          <TimeField label={t.timetrack.form.end} value={end} onChange={setEnd} required />
         )}
       </div>
       {running ? null : (
-        <TextField
-          label={t.timetrack.form.endDate}
-          type="date"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-        />
+        <DayField label={t.timetrack.form.endDate} value={endDate} onChange={setEndDate} />
       )}
       <TextField
         label={t.timetrack.form.breakMin}

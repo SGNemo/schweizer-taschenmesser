@@ -147,7 +147,7 @@ test('gift ideas: per person, status and what was spent', async ({ page }) => {
     .getByRole('button', { name: /Person (hinzufügen|eintragen)/ })
     .first()
     .click();
-  const person = page.getByRole('dialog', { name: 'Person hinzufügen' });
+  const person = page.getByRole('dialog', { name: 'Person eintragen' });
   await person.getByLabel('Name', { exact: true }).fill('Anna');
   // A new person has no date preset (it used to be today and was saved as a wrong birthday).
   await person.getByRole('checkbox', { name: 'Geburtstag eintragen' }).uncheck();

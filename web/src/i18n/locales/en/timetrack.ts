@@ -22,7 +22,7 @@ export const timetrack: Strings['timetrack'] = {
   },
   title: 'Time tracking',
   tabs: { label: 'View', today: 'Today', report: 'Report', jobs: 'Projects' },
-  add: 'Add entry',
+  add: 'Add time entry',
   edit: 'Edit entry',
   start: 'Start',
   stop: 'Stop',

@@ -4514,7 +4514,7 @@ export const de = {
     detailLabel: 'Person im Detail',
     emptyAction: 'Erste Person eintragen',
     title: 'Personen',
-    add: 'Person hinzufügen',
+    add: 'Person eintragen',
     edit: 'Person bearbeiten',
     name: 'Name',
     hasBirthday: 'Geburtstag eintragen',
@@ -7988,7 +7988,7 @@ export const de = {
     },
     title: 'Zeiterfassung',
     tabs: { label: 'Ansicht', today: 'Heute', report: 'Auswertung', jobs: 'Projekte' },
-    add: 'Eintrag hinzufügen',
+    add: 'Zeiteintrag eintragen',
     edit: 'Eintrag bearbeiten',
     start: 'Start',
     stop: 'Stopp',
@@ -8090,8 +8090,8 @@ export const de = {
     empty: 'Noch keine Gewohnheiten.',
     emptyHint:
       'Fang klein an: zum Beispiel „Wasser trinken“ mit einer Zahl und einer Erinnerung im Zeitfenster.',
-    add: 'Gewohnheit hinzufügen',
-    addFirst: 'Erste Gewohnheit',
+    add: 'Gewohnheit eintragen',
+    addFirst: 'Erste Gewohnheit eintragen',
     edit: 'Gewohnheit bearbeiten',
     form: {
       name: 'Name',

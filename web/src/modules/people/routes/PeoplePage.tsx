@@ -99,12 +99,28 @@ function markGiven(id: string) {
 }
 
 /** Right side of a gift row: status badge, the one-tap "Verschenkt" and the link. */
-function GiftEnd({ gift: g }: { gift: Stored<Gift> }) {
+function GiftBadge({ gift: g }: { gift: Stored<Gift> }) {
+  return (
+    <Badge tone={g.status === 'idea' ? 'accent' : 'neutral'}>
+      {t.people.gift.statuses[g.status]}
+    </Badge>
+  );
+}
+
+function GiftEnd({ gift }: { gift: Stored<Gift> }) {
   return (
     <span className={patternStyles.hstackTight}>
-      <Badge tone={g.status === 'idea' ? 'accent' : 'neutral'}>
-        {t.people.gift.statuses[g.status]}
-      </Badge>
+      <GiftBadge gift={gift} />
+      <GiftActions gift={gift} />
+    </span>
+  );
+}
+
+/** What can be done with a gift from its row. In the narrow panel these lie under the row's text, not beside it. */
+function GiftActions({ gift: g }: { gift: Stored<Gift> }) {
+  if (g.status === 'given' && !g.url) return null;
+  return (
+    <span className={patternStyles.hstackTight}>
       {g.status !== 'given' ? (
         <Button
           size="sm"
@@ -423,6 +439,29 @@ function PersonBody({
   const next = b ? nextBirthday(b, day) : undefined;
   const age = b && next ? ageOn(b, next) : undefined;
   const sum = totals(gifts);
+  const ideaActions = (idea: (typeof ideas)[number], index: number) => (
+    <span className={patternStyles.hstackTight}>
+      <Button
+        size="sm"
+        onClick={() =>
+          void giftRepo
+            .create({
+              personId: person.id,
+              title: idea.title,
+              status: 'idea',
+              ...(idea.url ? { url: idea.url } : {}),
+              ...(idea.priceCents !== undefined ? { priceCents: idea.priceCents } : {}),
+            })
+            .then(() => removeIdea(index))
+        }
+      >
+        {t.people.inbox.take(person.name)}
+      </Button>
+      <Button size="sm" onClick={() => void removeIdea(index)}>
+        {t.people.inbox.dismiss}
+      </Button>
+    </span>
+  );
   return (
     <>
       <p>
@@ -472,32 +511,10 @@ function PersonBody({
                 key={`${idea.title}|${idea.url ?? ''}`}
                 title={idea.title}
                 meta={idea.url}
-                end={
-                  <span className={patternStyles.hstackTight}>
-                    <Button
-                      size="sm"
-                      onClick={() =>
-                        void giftRepo
-                          .create({
-                            personId: person.id,
-                            title: idea.title,
-                            status: 'idea',
-                            ...(idea.url ? { url: idea.url } : {}),
-                            ...(idea.priceCents !== undefined
-                              ? { priceCents: idea.priceCents }
-                              : {}),
-                          })
-                          .then(() => removeIdea(index))
-                      }
-                    >
-                      {t.people.inbox.take(person.name)}
-                    </Button>
-                    <Button size="sm" onClick={() => void removeIdea(index)}>
-                      {t.people.inbox.dismiss}
-                    </Button>
-                  </span>
-                }
-              />
+                {...(inPanel ? {} : { end: ideaActions(idea, index) })}
+              >
+                {inPanel ? <div className={styles.rowFoot}>{ideaActions(idea, index)}</div> : null}
+              </ItemRow>
             ))}
           </ItemList>
         </section>
@@ -526,10 +543,16 @@ function PersonBody({
               .filter(Boolean)
               .join(' · ')}
             onOpen={() => setGift(g)}
-            end={<GiftEnd gift={g} />}
+            end={inPanel ? <GiftBadge gift={g} /> : <GiftEnd gift={g} />}
             onSwipeRight={g.status !== 'given' ? () => markGiven(g.id) : undefined}
             swipeRightLabel={t.people.giftGivenAction}
-          />
+          >
+            {inPanel ? (
+              <div className={styles.rowFoot}>
+                <GiftActions gift={g} />
+              </div>
+            ) : null}
+          </ItemRow>
         ))}
       </ItemList>
       <GiftEditor target={gift} personId={person.id} onClose={() => setGift(null)} />

@@ -47,7 +47,7 @@ test('open gifts of all people in one list; "Verschenkt" is one click and undoab
     ['Ben', 'Schal'],
   ] as const) {
     await ready(page, '/people?new=1');
-    const dialog = page.getByRole('dialog', { name: 'Person hinzufügen' });
+    const dialog = page.getByRole('dialog', { name: 'Person eintragen' });
     await dialog.getByLabel('Name', { exact: true }).fill(name);
     await dialog.getByLabel('Geburtsdatum').fill('1990-10-03');
     await dialog.getByRole('button', { name: 'Speichern' }).click();

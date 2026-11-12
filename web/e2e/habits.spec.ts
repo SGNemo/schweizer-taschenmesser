@@ -11,7 +11,7 @@ test.describe('Habits (plan group, new module)', () => {
   }) => {
     await enable(page, 'habits');
     await page.goto('/habits?new=1');
-    const dialog = page.getByRole('dialog', { name: 'Gewohnheit hinzufügen' });
+    const dialog = page.getByRole('dialog', { name: 'Gewohnheit eintragen' });
     await dialog.getByRole('button', { name: 'Wasser trinken' }).click();
     await expect(dialog.getByLabel('Erinnerung')).toHaveValue('window');
     await dialog.getByRole('button', { name: 'Speichern' }).click();
