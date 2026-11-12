@@ -14,7 +14,12 @@ export const timetrack: Strings['timetrack'] = {
     },
   },
   entryShort: 'Time entry',
-  detail: { label: 'Time entry in detail', time: 'Time', breakTime: 'Break' },
+  detail: {
+    label: 'Time entry in detail',
+    time: 'Time',
+    breakTime: 'Break',
+    jobToday: 'Project today in total',
+  },
   title: 'Time tracking',
   tabs: { label: 'View', today: 'Today', report: 'Report', jobs: 'Projects' },
   add: 'Add entry',

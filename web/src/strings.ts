@@ -7980,7 +7980,12 @@ export const de = {
     },
     /** The noun on the phone's plus ("Zeiteintrag eintragen") and the detail panel of the wide page. */
     entryShort: 'Zeiteintrag',
-    detail: { label: 'Zeiteintrag im Detail', time: 'Zeit', breakTime: 'Pause' },
+    detail: {
+      label: 'Zeiteintrag im Detail',
+      time: 'Zeit',
+      breakTime: 'Pause',
+      jobToday: 'Projekt heute gesamt',
+    },
     title: 'Zeiterfassung',
     tabs: { label: 'Ansicht', today: 'Heute', report: 'Auswertung', jobs: 'Projekte' },
     add: 'Eintrag hinzufügen',

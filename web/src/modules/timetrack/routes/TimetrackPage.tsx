@@ -205,7 +205,6 @@ export default function TimetrackPage() {
                       detail.note ??
                       t.timetrack.noJob
                     }
-                    figure={duration(sessionMinutes(detail, nowMs))}
                     facts={[
                       {
                         label: t.timetrack.detail.time,
@@ -216,6 +215,19 @@ export default function TimetrackPage() {
                             {
                               label: t.timetrack.detail.breakTime,
                               value: duration(detail.breakMin),
+                            },
+                          ]
+                        : []),
+                      // The row says how long this entry was; the panel adds what the project took today.
+                      ...(detail.jobId
+                        ? [
+                            {
+                              label: t.timetrack.detail.jobToday,
+                              value: duration(
+                                todays
+                                  .filter((s) => s.jobId === detail.jobId)
+                                  .reduce((sum, s) => sum + sessionMinutes(s, nowMs), 0),
+                              ),
                             },
                           ]
                         : []),
