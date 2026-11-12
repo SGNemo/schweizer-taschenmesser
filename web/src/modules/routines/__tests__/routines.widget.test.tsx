@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { today } from '@/core/time/dates';
+import { useUiStore } from '@/stores/ui';
 import { routineRepo } from '../repo';
 import RoutinesWidget from '../widgets/RoutinesWidget';
 
@@ -43,6 +44,12 @@ describe('routines widget', () => {
     view();
     const box = await screen.findByRole('checkbox', { name: 'Bad putzen · Mia' });
     await userEvent.click(box);
+    // The same toast as on the page: what was done and whose turn it is then.
+    await waitFor(() =>
+      expect(useUiStore.getState().toasts.map((x) => x.message)).toContain(
+        'Bad putzen erledigt. Als Nächstes: Ben.',
+      ),
+    );
     await waitFor(async () => {
       const r = await routineRepo.get(typeof id === 'string' ? id : id.id);
       expect(r?.turn).toBe(1);

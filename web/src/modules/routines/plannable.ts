@@ -10,6 +10,12 @@ import { t } from '@/strings';
 import { DEFAULT_MINUTES, donePatch, whoseTurn } from './logic';
 import { routineRepo } from './repo';
 
+/** `<id>:<due day>` → its parts (the day is the last ten characters). */
+const split = (key: string): { id: string; due: string } => {
+  const at = key.lastIndexOf(':');
+  return at < 0 ? { id: key, due: '' } : { id: key.slice(0, at), due: key.slice(at + 1) };
+};
+
 const source: PlannableSource = {
   async list(ctx) {
     const due = await routineRepo.table
@@ -18,7 +24,8 @@ const source: PlannableSource = {
       .filter(notDeleted)
       .toArray();
     return due.map((r): PlannableItem => ({
-      id: r.id,
+      // One item per turn (`<id>:<due day>`): a pin or "Nicht planen" of this turn never carries over to the next.
+      id: `${r.id}:${r.dueDate}`,
       kind: 'routine',
       title: t.routines.planTitle(r.name, whoseTurn(r)),
       to: `/routines?open=${encodeURIComponent(r.id)}`,
@@ -28,12 +35,16 @@ const source: PlannableSource = {
       createdAt: r.createdAt,
     }));
   },
-  async onDone(id) {
+  async onDone(key) {
+    const { id, due } = split(key);
     const r = await routineRepo.get(id);
-    if (r) await routineRepo.update(id, donePatch(r, today()));
+    // A turn that was ticked elsewhere meanwhile is over: nothing to do for it.
+    if (r && r.dueDate === due) await routineRepo.update(id, donePatch(r, today()));
   },
-  async onEstimate(id, minutes) {
-    await routineRepo.update(id, { minutes: Math.max(1, Math.min(1440, Math.round(minutes))) });
+  async onEstimate(key, minutes) {
+    await routineRepo.update(split(key).id, {
+      minutes: Math.max(1, Math.min(1440, Math.round(minutes))),
+    });
   },
 };
 

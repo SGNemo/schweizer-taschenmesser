@@ -3,9 +3,11 @@ import { validateManifest } from '@/core/modules/registry';
 import manifest from '../manifest';
 import {
   donePatch,
+  editPatch,
   firstDue,
   groupByRoom,
   isDue,
+  newRoutine,
   nextDue,
   openEnded,
   parsePeople,
@@ -60,8 +62,15 @@ describe('interval', () => {
     expect(nextDue(make(), '2026-10-10')).toBe('2026-10-13');
   });
 
-  it('done early (before its day): the routine still moves on past today', () => {
-    expect(nextDue(make(), '2026-09-27')).toBe('2026-09-29');
+  it('done early (before its day): the routine moves a whole round on, it does not come back on the same day', () => {
+    const r = make({ dueDate: '2026-09-29', people: ['Mia', 'Ben'] });
+    const patch = donePatch(r, '2026-09-27');
+    expect(patch).toMatchObject({ dueDate: '2026-10-06', turn: 1, lastDoneOn: '2026-09-27' });
+    // A second early tick moves on again: nobody is skipped on a day that never came.
+    expect(donePatch({ ...r, ...patch }, '2026-09-27')).toMatchObject({
+      dueDate: '2026-10-13',
+      turn: 0,
+    });
   });
 
   it('monthly and every few days follow the core rule', () => {
@@ -153,5 +162,71 @@ describe('lists', () => {
       ['Küche', 1],
       ['', 1],
     ]);
+  });
+});
+
+describe('editor', () => {
+  const formOf = (r: Routine) => ({
+    name: r.name,
+    room: r.room ?? '',
+    repeat: r.repeat,
+    people: r.people.join(', '),
+    dueDate: r.dueDate,
+    minutes: r.minutes,
+    note: r.note ?? '',
+  });
+
+  it('a new routine is due on the day that was set, also a day in the past, and the rule counts from it', () => {
+    const r = newRoutine({ ...formOf(make()), name: ' Flur wischen ', dueDate: '2026-09-20' });
+    expect(routineSchema.parse(r)).toMatchObject({
+      name: 'Flur wischen',
+      startDate: '2026-09-20',
+      dueDate: '2026-09-20',
+      turn: 0,
+    });
+  });
+
+  it('saving without a change writes nothing', () => {
+    const r = make({ room: 'Bad', people: ['Mia', 'Ben'], turn: 1, minutes: 30, note: 'x' });
+    expect(editPatch(r, formOf(r))).toEqual({});
+  });
+
+  it('a due routine stays due when only its room or note is corrected: day, anchor and turn are not written', () => {
+    const r = make({ dueDate: '2026-09-26', people: ['Mia', 'Ben'], turn: 1 });
+    const patch = editPatch(r, { ...formOf(r), room: 'Bad', note: 'mit Essigreiniger' });
+    expect(patch).toEqual({ room: 'Bad', note: 'mit Essigreiniger' });
+    expect(isDue({ ...r, ...patch }, '2026-09-29')).toBe(true);
+  });
+
+  it('a changed "Nächstes Mal" is taken as typed and becomes the rule\'s first day', () => {
+    const r = make();
+    expect(editPatch(r, { ...formOf(r), dueDate: '2026-10-02' })).toEqual({
+      dueDate: '2026-10-02',
+      startDate: '2026-10-02',
+    });
+  });
+
+  it('a changed rule counts from the day the routine is due next; the day itself stays', () => {
+    const r = make({ startDate: '2026-01-31', dueDate: '2026-09-30' });
+    expect(editPatch(r, { ...formOf(r), repeat: { freq: 'monthly', interval: 1 } })).toEqual({
+      repeat: { freq: 'monthly', interval: 1 },
+      startDate: '2026-09-30',
+    });
+    // An end typed elsewhere is no change of the rule.
+    expect(editPatch(r, { ...formOf(r), repeat: { ...r.repeat, until: '2027-01-01' } })).toEqual(
+      {},
+    );
+  });
+
+  it('changed names keep whoever was next while the name is still there', () => {
+    const r = make({ people: ['Mia', 'Ben', 'Kim'], turn: 1 });
+    expect(editPatch(r, { ...formOf(r), people: 'Kim, Ben' })).toEqual({
+      people: ['Kim', 'Ben'],
+      turn: 1,
+    });
+    expect(editPatch(r, { ...formOf(r), people: 'Mia, Kim' })).toEqual({
+      people: ['Mia', 'Kim'],
+      turn: 0,
+    });
   });
 });

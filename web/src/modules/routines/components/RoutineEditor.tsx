@@ -14,7 +14,7 @@ import {
   TextArea,
   TextField,
 } from '@/ui';
-import { firstDue, openEnded, parsePeople, type StoredRoutine } from '../logic';
+import { editPatch, newRoutine, type StoredRoutine } from '../logic';
 import { routineRepo } from '../repo';
 
 export type RoutineTarget = StoredRoutine | { draft: true } | null;
@@ -69,30 +69,21 @@ function Fields({
 
   async function save() {
     if (!name.trim()) return setError(t.form.required);
-    const names = parsePeople(people);
-    const rule = openEnded(repeat);
     const mins = Math.round(Number(minutes.replace(',', '.')));
-    // The rule counts from the day the user set as the next one; a day in the past moves on to the rule's next.
-    const startDate = dueDate || day;
-    const data = {
-      name: name.trim(),
-      room: room.trim() || undefined,
-      repeat: rule,
-      startDate,
-      dueDate: firstDue({ repeat: rule, startDate }, day),
-      people: names,
-      // Whoever was next stays next while their name is still there.
-      turn: existing
-        ? Math.max(
-            0,
-            names.indexOf(existing.people[existing.turn % (existing.people.length || 1)] ?? ''),
-          )
-        : 0,
+    const form = {
+      name,
+      room,
+      repeat,
+      people,
+      dueDate: dueDate || day,
       minutes: Number.isFinite(mins) && mins >= 1 ? Math.min(1440, mins) : undefined,
-      note: note.trim() || undefined,
+      note,
     };
-    if (existing) await routineRepo.update(existing.id, data);
-    else await routineRepo.create(data);
+    if (existing) {
+      // Only what was changed here is written (`editPatch`): a due routine stays due, a tick made meanwhile stays.
+      const patch = editPatch(existing, form);
+      if (Object.keys(patch).length > 0) await routineRepo.update(existing.id, patch);
+    } else await routineRepo.create(newRoutine(form));
     onClose();
   }
 

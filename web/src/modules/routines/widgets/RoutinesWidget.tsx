@@ -15,6 +15,17 @@ export default function RoutinesWidget() {
   const due = sortRoutines(all ?? [], day).filter((r) => isDue(r, day));
   // What a tick replaced, kept until the toast is gone, so "Rückgängig" restores it exactly.
   const before = new Map(due.map((r) => [r.id, turnState(r)]));
+  const titleOf = (r: (typeof due)[number]) => {
+    const who = whoseTurn(r);
+    return who ? `${r.name} · ${who}` : r.name;
+  };
+  // The same toast as on the page: what was done and whose turn it is then.
+  const toasts = new Map(
+    due.map((r) => [
+      titleOf(r),
+      t.routines.doneToast(r.name, whoseTurn({ people: r.people, turn: donePatch(r, day).turn })),
+    ]),
+  );
   return (
     <ChecklistWidget
       loading={!all}
@@ -23,11 +34,8 @@ export default function RoutinesWidget() {
         all && all.length > 0 ? undefined : { label: t.routines.add, to: '/routines?new=1' }
       }
       summary={due.length ? t.routines.widgetSummary(due.length, all?.length ?? 0) : undefined}
-      entries={due.map((r) => {
-        const who = whoseTurn(r);
-        return { key: r.id, title: who ? `${r.name} · ${who}` : r.name, checked: false };
-      })}
-      doneMessage={(title) => t.routines.doneToast(title.split(' · ')[0] ?? title)}
+      entries={due.map((r) => ({ key: r.id, title: titleOf(r), checked: false }))}
+      doneMessage={(title) => toasts.get(title) ?? t.routines.done}
       onToggle={async (id, checked) => {
         const r = due.find((x) => x.id === id);
         if (checked && r) await routineRepo.update(id, donePatch(r, day));

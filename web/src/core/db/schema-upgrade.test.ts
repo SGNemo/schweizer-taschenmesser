@@ -54,7 +54,7 @@ describe('database upgrades', () => {
   it('has fixtures for the versions that were released', () => {
     expect(versions.map(([v]) => v)).toEqual([
       1, 2, 3, 4, 5, 7, 8, 12, 13, 14, 16, 17, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 33, 34,
-      35,
+      35, 36,
     ]);
     expect(snapshot.version).toBeGreaterThan(Math.max(...versions.map(([v]) => v)));
   });

@@ -41,17 +41,17 @@ test('"Erledigt" hands the routine to the next name, and "Rückgängig" gives it
   await expect(dialog).toHaveCount(0);
 
   const row = page.getByRole('listitem').filter({ hasText: 'Müll rausbringen' });
-  await expect(row).toContainText('dran: Mia');
+  await expect(row).toContainText('an der Reihe: Mia');
   await row.getByRole('button', { name: 'Müll rausbringen: Erledigt' }).click();
-  await expect(page.getByText('Müll rausbringen erledigt. Nächstes Mal: Ben.')).toBeVisible();
+  await expect(page.getByText('Müll rausbringen erledigt. Als Nächstes: Ben.')).toBeVisible();
   // Nothing is due any more; the routine waits under "Alle nach Raum" with the next name.
   await expect(page.getByTestId('routines-nothing-due')).toBeVisible();
   await page.getByRole('button', { name: 'Alle nach Raum' }).click();
-  await expect(row).toContainText('dran: Ben');
+  await expect(row).toContainText('an der Reihe: Ben');
   await expect(row).toContainText('Di., 6. Okt.');
 
   await page.getByRole('button', { name: 'Rückgängig' }).click();
-  await expect(row).toContainText('dran: Mia');
+  await expect(row).toContainText('an der Reihe: Mia');
   await page.getByRole('button', { name: 'Dran', exact: true }).click();
   await expect(row).toContainText('dran');
 });

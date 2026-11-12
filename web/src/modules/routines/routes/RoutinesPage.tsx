@@ -70,7 +70,11 @@ export default function RoutinesPage() {
             {dueNow ? (
               <Badge>{t.routines.due}</Badge>
             ) : (
-              <span>{relativeDayLabel(r.dueDate, day)}</span>
+              <span>
+                {/* Said for screen readers: the date is the next time, not the last. */}
+                <span className="sr-only">{t.routines.fields.dueDate}: </span>
+                {relativeDayLabel(r.dueDate, day)}
+              </span>
             )}
             <Button
               size="sm"

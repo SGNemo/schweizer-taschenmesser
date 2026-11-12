@@ -30,7 +30,7 @@ export function nextDue(r: Pick<Routine, 'repeat' | 'startDate'>, today: string)
   return nextOccurrence(openEnded(r.repeat), r.startDate, today) ?? addDaysStr(today, 1);
 }
 
-/** The first due day of a new or edited routine: its first day, or the rule's next day once that has passed. */
+/** A due day for seed data: the rule's first day, or its next day on or after `today` once that has passed. */
 export function firstDue(r: Pick<Routine, 'repeat' | 'startDate'>, today: string): string {
   return r.startDate >= today ? r.startDate : nextDue(r, addDaysStr(today, -1));
 }
@@ -40,7 +40,8 @@ type TurnState = Pick<Routine, 'dueDate' | 'turn' | 'lastDoneOn' | 'lastDoneBy'>
 /** "Erledigt": the next day, the next name, and who did it when. */
 export function donePatch(r: Routine, today: string): TurnState {
   return {
-    dueDate: nextDue(r, today),
+    // Done before its day, the routine still moves a whole round on (the turn it was done for is over).
+    dueDate: nextDue(r, r.dueDate > today ? r.dueDate : today),
     turn: r.people.length ? (r.turn + 1) % r.people.length : 0,
     lastDoneOn: today,
     lastDoneBy: whoseTurn(r),
@@ -92,3 +93,67 @@ export function parsePeople(text: string): string[] {
 }
 
 export type StoredRoutine = Stored<Routine>;
+
+/** What the editor holds when "Speichern" is pressed. */
+export interface RoutineForm {
+  name: string;
+  room: string;
+  repeat: Recurrence;
+  /** The names field as typed. */
+  people: string;
+  /** "Nächstes Mal" (`YYYY-MM-DD`). */
+  dueDate: string;
+  minutes?: number;
+  note: string;
+}
+
+const sameRule = (a: Recurrence, b: Recurrence): boolean =>
+  JSON.stringify(openEnded(a)) === JSON.stringify(openEnded(b));
+
+/** A new routine: due on the day the user set (a day in the past is simply due now), the rule counts from it. */
+export function newRoutine(form: RoutineForm): Routine {
+  return {
+    name: form.name.trim(),
+    room: form.room.trim() || undefined,
+    repeat: openEnded(form.repeat),
+    startDate: form.dueDate,
+    dueDate: form.dueDate,
+    people: parsePeople(form.people),
+    turn: 0,
+    minutes: form.minutes,
+    note: form.note.trim() || undefined,
+  };
+}
+
+/**
+ * The fields an edit really changed. A routine that is due stays due when only its name or room is corrected,
+ * and whatever happened to it while the dialog was open (a tick in the widget, in the plan, on another device)
+ * is not written back: day, anchor and turn are only touched when the user changed them here.
+ */
+export function editPatch(existing: Routine, form: RoutineForm): Partial<Routine> {
+  const patch: Partial<Routine> = {};
+  const name = form.name.trim();
+  if (name !== existing.name) patch.name = name;
+  const room = form.room.trim() || undefined;
+  if (room !== existing.room) patch.room = room;
+  const ruleChanged = !sameRule(form.repeat, existing.repeat);
+  if (ruleChanged) patch.repeat = openEnded(form.repeat);
+  if (form.dueDate !== existing.dueDate) {
+    // The day the user typed, as it is; the rule counts from it.
+    patch.dueDate = form.dueDate;
+    patch.startDate = form.dueDate;
+  } else if (ruleChanged) {
+    // A new rhythm counts from the day the routine is due next.
+    patch.startDate = existing.dueDate;
+  }
+  const people = parsePeople(form.people);
+  if (people.join('\n') !== existing.people.join('\n')) {
+    patch.people = people;
+    // Whoever was next stays next while their name is still there.
+    patch.turn = Math.max(0, people.indexOf(whoseTurn(existing) ?? ''));
+  }
+  if (form.minutes !== existing.minutes) patch.minutes = form.minutes;
+  const note = form.note.trim() || undefined;
+  if (note !== existing.note) patch.note = note;
+  return patch;
+}

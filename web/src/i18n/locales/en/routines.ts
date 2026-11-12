@@ -4,22 +4,22 @@ export const routines: Strings['routines'] = {
   meta: {
     name: 'Routines',
     description:
-      'Cleaning plan and household routines: what is due in which room how often, and whose turn it is. Calm: “due” instead of a backlog, no streaks, no red.',
+      'Cleaning plan and household routines: what is due in which room how often, and whose turn it is. No backlog.',
     quickAdd: 'Routine',
     widget: 'Due today',
   },
   add: 'Add routine',
   addFirst: 'Add your first routine',
   edit: 'Edit routine',
-  empty: 'No routines yet. One is enough to start.',
+  empty: 'No routines yet.',
   nothingDue: 'Nothing is due today.',
   due: 'due',
   dueGroup: 'Due today',
   done: 'Done',
   doneFor: (name: string) => `${name}: done`,
   doneToast: (name: string, next?: string) =>
-    next ? `${name} done. Next time: ${next}.` : `${name} done.`,
-  turnOf: (name: string) => `turn: ${name}`,
+    next ? `${name} done. ${next}’s turn next.` : `${name} done.`,
+  turnOf: (name: string) => `${name}’s turn`,
   noRoom: 'No room',
   figureDetail: (n: number) => (n === 1 ? 'of 1 routine' : `of ${n} routines`),
   widgetSummary: (due: number, total: number) =>

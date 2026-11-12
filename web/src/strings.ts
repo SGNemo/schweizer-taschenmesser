@@ -8900,22 +8900,22 @@ export const de = {
     meta: {
       name: 'Routinen',
       description:
-        'Putzplan und Haushalts-Routinen: was in welchem Raum wie oft dran ist und wer an der Reihe ist. Ruhig: „dran“ statt Rückstand, keine Serien, kein Rot.',
+        'Putzplan und Haushalts-Routinen: was in welchem Raum wie oft dran ist und wer an der Reihe ist. Ohne Rückstand.',
       quickAdd: 'Routine',
       widget: 'Heute dran',
     },
     add: 'Routine eintragen',
     addFirst: 'Erste Routine eintragen',
     edit: 'Routine bearbeiten',
-    empty: 'Noch keine Routinen. Eine reicht für den Anfang.',
+    empty: 'Noch keine Routinen.',
     nothingDue: 'Heute ist nichts dran.',
     due: 'dran',
     dueGroup: 'Heute dran',
     done: 'Erledigt',
     doneFor: (name: string) => `${name}: Erledigt`,
     doneToast: (name: string, next?: string) =>
-      next ? `${name} erledigt. Nächstes Mal: ${next}.` : `${name} erledigt.`,
-    turnOf: (name: string) => `dran: ${name}`,
+      next ? `${name} erledigt. Als Nächstes: ${next}.` : `${name} erledigt.`,
+    turnOf: (name: string) => `an der Reihe: ${name}`,
     noRoom: 'Ohne Raum',
     figureDetail: (n: number) => (n === 1 ? 'von 1 Routine' : `von ${n} Routinen`),
     widgetSummary: (due: number, total: number) =>
