@@ -157,9 +157,11 @@
 .starts .tile:hover {
   background: var(--surface-2);
 }
-/* Phone: the dial starts right under the head (content from y ≤ 220 px), not a row lower. */
+/* Phone: the dial starts right under the head and "Start" at the dial's top edge (content from y ≤ 220 px); the
+   dial is never drawn under the head's lower edge. */
 @media (max-width: 899px) {
   .timerHead {
-    margin-top: calc(-1 * var(--space-5) - var(--space-hair));
+    margin-top: calc(-1 * var(--space-3));
+    align-items: flex-start;
   }
 }
