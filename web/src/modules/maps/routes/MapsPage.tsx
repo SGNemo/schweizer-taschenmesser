@@ -285,6 +285,8 @@ export default function MapsPage() {
 
   // "Ort hinzufügen": focus the search once the map tab (and its field) has rendered.
   const [focusSearch, setFocusSearch] = useState(false);
+  // "Ort eintragen" was pressed: the next hit of the search opens the form with that place, not only the map.
+  const [adding, setAdding] = useState(false);
   useEffect(() => {
     if (!focusSearch || tab !== 'map' || !searchInput.current) return;
     searchInput.current.focus();
@@ -457,6 +459,16 @@ export default function MapsPage() {
     setQuery('');
     setSelected({ lat: h.lat, lon: h.lon, label: h.label, ...(h.bbox ? { bbox: h.bbox } : {}) });
     setMapView({ lat: h.lat, lon: h.lon, zoom: 16 });
+    if (adding) {
+      setAdding(false);
+      setPlaceTarget({
+        draft: true,
+        lat: h.lat,
+        lon: h.lon,
+        name: h.label.split(',')[0]!.trim(),
+        address: h.label,
+      });
+    }
   }
 
   /** Only on click and after its notice: the own map of the selected area starts to build. */
@@ -537,10 +549,12 @@ export default function MapsPage() {
   /** Opens the place in the device's map app (geo: on Android, OpenStreetMap elsewhere). */
   const navigateTo = (p: Stored<Place>) =>
     openUrl(placeLink(isAndroid() ? 'geo' : 'osm', { lat: p.lat, lon: p.lon, label: p.name }));
-  /** "Ort hinzufügen": places come from the map (search or a tap), so it opens the map with the search ready. */
+  /** "Ort eintragen": places come from the map, so it opens the map with the search ready; the hit picked there
+   *  opens the form right away (2 clicks + 2 × Enter instead of a third click on "Als Ort speichern"). */
   const addPlace = () => {
     setTab('map');
     setFocusSearch(true);
+    setAdding(true);
   };
   const placeMenu = (p: Stored<Place>): RowMenuItem[] => [
     // "Navigieren" moved from every row into the menu (U14); a swipe to the right keeps it one gesture.
@@ -616,7 +630,10 @@ export default function MapsPage() {
             label={t.maps.tabs.label}
             value={tab}
             options={TABS.map((v) => ({ value: v, label: t.maps.tabs[v] }))}
-            onChange={setTab}
+            onChange={(next) => {
+              setAdding(false);
+              setTab(next);
+            }}
           />
         }
       >

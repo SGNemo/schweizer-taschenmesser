@@ -542,4 +542,37 @@ test.describe('Karten & Orte', () => {
     await expect(page.getByTestId('map-selection')).toContainText('Amselweg');
     await expect(page.getByTestId('tile-map')).toBeVisible();
   });
+  test('„Ort eintragen“: 2 clicks and 2 × Enter from the list to the saved place', async ({
+    page,
+  }) => {
+    await mockOsm(page);
+    await enable(page, 'maps');
+    await ready(page, '/maps');
+    // Click 1: the one action of the page (desktop: in the head; phone: the plus of the bottom bar).
+    await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
+    const search = page.getByLabel('Ort oder Adresse suchen');
+    await expect(search).toBeFocused();
+    await page.keyboard.insertText('Schlossplatz Erlangen');
+    await page.keyboard.press('Enter');
+    // Click 2: the hit. The form opens with the place, without a detour over "Als Ort speichern".
+    await page
+      .getByTestId('map-hits')
+      .getByText(/Schlossplatz, Erlangen/)
+      .click();
+    const dialog = page.getByRole('dialog', { name: 'Ort eintragen' });
+    await expect(dialog.getByLabel('Name')).toHaveValue('Schlossplatz');
+    await expect(dialog.getByLabel('Name')).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(dialog).toHaveCount(0);
+    await expect(page.getByTestId('map-marker')).toHaveAttribute('aria-label', 'Schlossplatz');
+    // A hit picked without "Ort eintragen" before only shows the place, as before.
+    await search.fill('Schlossplatz Erlangen');
+    await search.press('Enter');
+    await page
+      .getByTestId('map-hits')
+      .getByText(/Schlossplatz, Erlangen/)
+      .click();
+    await expect(page.getByTestId('map-selection')).toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+  });
 });
