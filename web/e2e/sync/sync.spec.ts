@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { moduleSwitch, openNavArea } from '../helpers';
+import { openEditor } from '../money-helpers';
 import {
   addTask,
   connect,
@@ -44,7 +45,7 @@ test.describe('two devices', () => {
     await expect(a.page.getByRole('checkbox', { name: 'Milch kaufen' })).toBeChecked();
 
     // A deletes it, B no longer shows it
-    await a.page.getByRole('button', { name: /Milch kaufen/ }).click();
+    await openEditor(a.page, a.page.getByRole('button', { name: /Milch kaufen/ }));
     await a.page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
     await expect(a.page.getByRole('dialog')).toHaveCount(0);
     await syncNow(a.page);
@@ -71,7 +72,7 @@ test.describe('two devices', () => {
     await expect(b.page.getByRole('checkbox', { name: 'Brot' })).toBeChecked();
 
     await a.page.goto('/todos?list=inbox');
-    await a.page.getByRole('button', { name: /Brot/ }).click();
+    await openEditor(a.page, a.page.getByRole('button', { name: /Brot/ }));
     await a.page.getByRole('dialog').getByLabel('Titel').fill('Vollkornbrot');
     await a.page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
     await expect(a.page.getByRole('dialog')).toHaveCount(0);
@@ -534,13 +535,13 @@ test.describe('devices and conflicts', () => {
 
     // B renames it while offline, A renames it later and syncs first
     await b.context.setOffline(true);
-    await b.page.getByRole('button', { name: /Konfliktaufgabe/ }).click();
+    await openEditor(b.page, b.page.getByRole('button', { name: /Konfliktaufgabe/ }));
     await b.page.getByRole('dialog').getByLabel('Titel').fill('Titel von B');
     await b.page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
     await expect(b.page.getByRole('dialog')).toHaveCount(0);
 
     await a.page.goto('/todos?list=inbox');
-    await a.page.getByRole('button', { name: /Konfliktaufgabe/ }).click();
+    await openEditor(a.page, a.page.getByRole('button', { name: /Konfliktaufgabe/ }));
     await a.page.getByRole('dialog').getByLabel('Titel').fill('Titel von A');
     await a.page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
     await expect(a.page.getByRole('dialog')).toHaveCount(0);
