@@ -20,7 +20,7 @@ test.describe('ToDos: views and board (plan group)', () => {
     await add(page, 'Regal aufbauen');
 
     await page.getByRole('button', { name: 'Irgendwann', exact: true }).click();
-    await expect(page.getByText('Regal aufbauen', { exact: true })).toBeVisible();
+    await expect(page.getByText('Regal aufbauen', { exact: true }).first()).toBeVisible();
 
     await page.getByRole('button', { name: 'Board', exact: true }).click();
     const someday = page.getByRole('region', { name: 'Irgendwann' });

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openEditor } from './money-helpers';
 import { enable, ready } from './helpers';
 
 /** UI round 6 (docs/qa/round-6), branch fix/ui6-modules-plan: the findings that only a real layout shows. */
@@ -18,7 +19,7 @@ async function editTodo(
   title: string,
   edit: (dialog: ReturnType<Page['getByRole']>) => Promise<void>,
 ) {
-  await page.getByRole('button', { name: new RegExp(`^${title}`) }).click();
+  await openEditor(page, page.getByRole('button', { name: new RegExp(`^${title}`) }));
   const dialog = page.getByRole('dialog');
   await edit(dialog);
   await dialog.getByRole('button', { name: 'Speichern' }).click();

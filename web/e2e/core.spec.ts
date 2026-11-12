@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openEditor } from './money-helpers';
 import {
   calendarEntry,
   moreFields,
@@ -27,7 +28,7 @@ test.describe('ToDos', () => {
     await expect(page.getByRole('checkbox', { name: 'Steuererklärung' })).toBeVisible();
 
     // Edit: priority, due date, subtask
-    await page.getByRole('button', { name: /Steuererklärung/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /Steuererklärung/ }));
     const dialog = page.getByRole('dialog', { name: 'Aufgabe bearbeiten' });
     await dialog.getByLabel('Priorität').selectOption('3');
     await dialog.getByLabel('Fällig am').fill('2026-09-30');
@@ -65,7 +66,7 @@ test.describe('ToDos', () => {
     await page.getByTestId('todos-filter').getByRole('button', { name: 'Alle offenen' }).click();
     await expect(page.getByRole('checkbox', { name: 'Fenster putzen' })).toBeVisible();
 
-    await page.getByRole('button', { name: /Fenster putzen/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /Fenster putzen/ }));
     await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
     await expect(page.getByRole('checkbox', { name: 'Fenster putzen' })).toHaveCount(0);
   });
@@ -121,7 +122,7 @@ test.describe('Calendar', () => {
     await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Paket abholen');
     await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
-    await page.getByRole('button', { name: /^Paket abholen/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /^Paket abholen/ }));
     await page.getByLabel('Fällig am').fill('2026-09-29');
     await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
@@ -224,7 +225,7 @@ test.describe('Dashboard', () => {
     await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Bericht senden');
     await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
-    await page.getByRole('button', { name: /Bericht senden/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /Bericht senden/ }));
     await page.getByLabel('Fällig am').fill('2026-09-29');
     await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed

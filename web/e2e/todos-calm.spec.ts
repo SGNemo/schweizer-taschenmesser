@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openEditor } from './money-helpers';
 import { openTodosMenu, pickTodosList, ready } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
@@ -13,7 +14,7 @@ async function addTodo(page: Page, title: string, due?: string) {
   await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
   await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
   if (due) {
-    await page.getByRole('button', { name: new RegExp(title) }).click();
+    await openEditor(page, page.getByRole('button', { name: new RegExp(title) }));
     await page.getByLabel('Fällig am').fill(due);
     await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);

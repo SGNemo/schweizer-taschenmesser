@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { openEditor } from './money-helpers';
 import { openFoldedGroup, ready } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
@@ -105,7 +106,7 @@ test.describe('Focus and attention aids', () => {
   }) => {
     await addTodo(page, 'Zahnbürsten kaufen');
     await ready(page, '/todos');
-    await page.getByRole('button', { name: /Zahnbürsten kaufen/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /Zahnbürsten kaufen/ }));
     await page.getByRole('button', { name: 'Für heute einplanen' }).click();
     await page.getByRole('button', { name: '15 Min' }).click();
     await page.getByRole('button', { name: 'Speichern' }).click();
@@ -116,7 +117,7 @@ test.describe('Focus and attention aids', () => {
     await expect(page.getByTestId('next-card')).toContainText('Zahnbürsten kaufen');
     await expect(page.getByTestId('next-card')).toContainText('etwa 15 Min');
     await addTodo(page, 'Brief schreiben');
-    await page.getByRole('button', { name: /Brief schreiben/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /Brief schreiben/ }));
     await page.getByRole('button', { name: 'Für heute einplanen' }).click();
     await page.getByRole('button', { name: 'Speichern' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -132,7 +133,7 @@ test.describe('Focus and attention aids', () => {
   }) => {
     await addTodo(page, 'Alte Sache');
     await ready(page, '/todos');
-    await page.getByRole('button', { name: /Alte Sache/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /Alte Sache/ }));
     await page.getByLabel('Fällig am').fill('2026-09-01');
     await page.getByRole('button', { name: 'Speichern' }).click();
 

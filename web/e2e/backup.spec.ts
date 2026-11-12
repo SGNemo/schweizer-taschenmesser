@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
+import { openEditor } from './money-helpers';
 
 async function addTask(page: Page, title: string) {
   await page.goto('/todos?list=inbox');
@@ -11,7 +12,7 @@ async function addTask(page: Page, title: string) {
 
 async function deleteTask(page: Page, title: string) {
   await page.goto('/todos?list=inbox');
-  await page.getByRole('button', { name: new RegExp(title) }).click();
+  await openEditor(page, page.getByRole('button', { name: new RegExp(title) }));
   await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0); // write finished
 }

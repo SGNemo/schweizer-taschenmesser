@@ -1688,6 +1688,8 @@ export const de = {
     planned: 'Geplant für',
     planToday: 'Für heute einplanen',
     planClear: 'Nicht einplanen',
+    /** The detail panel of the wide page (master–detail). */
+    detail: { label: 'Aufgabe im Detail', starts: 'Beginnt am' },
     subtasks: 'Unteraufgaben',
     addSubtask: 'Unteraufgabe hinzufügen',
     editTask: 'Aufgabe bearbeiten',

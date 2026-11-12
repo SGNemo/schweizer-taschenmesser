@@ -18,7 +18,7 @@ Identity rules: [design/MODULE-IDENTITY.md](../design/MODULE-IDENTITY.md). One s
 - **Views, not states:** `views.ts` (`viewOf`, `movePatch`, `overdueTasks`): Heute (due/planned ≤ today) · Demnächst (dated later, or `startDate` in the future) · Irgendwann (`someday` flag **or** no date) · Erledigt. The page shows them as chips next to "Alle" (the grouped list, default) and "Board" (`components/BoardView.tsx`, same four columns). Only `someday` is stored; moving a card writes the dates (`movePatch`), "Erledigt" goes through `setDone` so repeats keep working.
 - **Board:** drag a card onto a column or use its "⋯" menu ("Verschieben nach …", the keyboard/touch way); "Morgen" is one click on cards in Heute. Every move is one undoable change.
 - **New task fields (`manifest.version 4`, no data rewrite):** `startDate` (hidden from the plain list and Heute until then), `tags` (`tags.ts`, free words without `#`, filter chips under "Mehr Felder"), `checklist` (lines inside a task), `links` (`note|mail|invoice|event` + id + title; other modules fill it through `todo.requested`'s `link`, the task opens `<module>?open=<id>`). Lists get `kind: 'project'` (progress bar done/all).
-- **Head:** figure = today's count (`todayFigure`); first row `components/TodayCard.tsx`; one entry: `AddTaskDialog`.
+- **Head:** figure = today's count (`todayFigure`); first row `TodayCard`; one entry `AddTaskDialog`; wide page: `TaskDetail` beside the list.
 - **Calm rules kept:** "Alle auf heute" appears only in the plain wording (calm mode keeps "Neu planen"); no streak or guilt text was added.
 - **Not built:** drag reorder inside the plain list (`order` stays manual via the editor), AI `postpone`/`tag` actions, widget changes (`next` already has tick and "Später").
 

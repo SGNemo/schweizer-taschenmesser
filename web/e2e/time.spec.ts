@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openEditor } from './money-helpers';
 import { moreFields, pickTodosList, ready } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
@@ -17,7 +18,7 @@ async function addTask(page: Page, title: string) {
 test.describe('ToDos: Wiederholung und Irgendwann', () => {
   test('ticking off a recurring task creates the next one', async ({ page }) => {
     await addTask(page, 'Müll rausbringen');
-    await page.getByRole('button', { name: /^Müll rausbringen/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /^Müll rausbringen/ }));
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Fällig am').fill('2026-09-29');
     await moreFields(page);
@@ -41,7 +42,7 @@ test.describe('ToDos: Wiederholung und Irgendwann', () => {
 
   test('"Irgendwann" keeps a task out of the open list until you look for it', async ({ page }) => {
     await addTask(page, 'Dachboden aufräumen');
-    await page.getByRole('button', { name: /Dachboden aufräumen/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /Dachboden aufräumen/ }));
     const dialog = page.getByRole('dialog');
     await moreFields(page);
     await dialog.getByRole('switch', { name: /Irgendwann/ }).click();

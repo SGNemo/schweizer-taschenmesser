@@ -123,6 +123,7 @@ export const todos: Strings['todos'] = {
   planned: 'Planned for',
   planToday: 'Plan for today',
   planClear: 'Don’t plan',
+  detail: { label: 'Task in detail', starts: 'Starts on' },
   subtasks: 'Subtasks',
   addSubtask: 'Add subtask',
   editTask: 'Edit task',

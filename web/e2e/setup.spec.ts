@@ -96,7 +96,7 @@ test('an existing installation never shows the assistant by itself, but it start
   await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
   await page.getByRole('dialog').getByLabel('Titel').fill('Erfundene Aufgabe');
   await page.keyboard.press('Enter');
-  await expect(page.getByText('Erfundene Aufgabe')).toBeVisible();
+  await expect(page.getByText('Erfundene Aufgabe').first()).toBeVisible();
   const name = await dbName(page);
   await page.evaluate(
     (n) =>
@@ -131,7 +131,7 @@ test('an existing installation never shows the assistant by itself, but it start
   await wizard(page).getByRole('button', { name: 'Einrichtung beenden' }).click();
   await overlayGone(page);
   await page.goto('/todos');
-  await expect(page.getByText('Erfundene Aufgabe')).toBeVisible();
+  await expect(page.getByText('Erfundene Aufgabe').first()).toBeVisible();
 });
 
 test('full run: every step can be skipped, the summary lists them, "Fertig" completes', async ({

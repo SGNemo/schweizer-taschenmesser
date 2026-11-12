@@ -87,6 +87,29 @@ test.describe('click paths: one click, a title, Enter', () => {
       ).toBeVisible();
     });
 
+    test('ToDos is master–detail on a wide page: a row shows the task in the panel, "Bearbeiten" opens its dialog', async ({
+      page,
+    }) => {
+      await startSeeded(page);
+      await openPage(page, '/todos');
+      // The first row is shown from the start, and marked in the list.
+      const panel = page.getByTestId('task-detail');
+      await expect(panel).toBeVisible();
+      await expect(page.locator('main [data-row][aria-current="true"]')).toHaveCount(1);
+      // Another row: the panel follows, no dialog opens.
+      const second = page.locator('main [data-row]').nth(1);
+      const title = (await second.locator('span').first().innerText()).trim();
+      await second.click();
+      await expect(panel.getByRole('heading', { level: 2 })).toHaveText(title);
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      await panel.getByRole('button', { name: 'Bearbeiten' }).click();
+      await expect(page.getByRole('dialog', { name: 'Aufgabe bearbeiten' })).toBeVisible();
+      await page.keyboard.press('Escape');
+      // The board has no panel: its four columns take the page.
+      await openPage(page, '/todos?view=board');
+      await expect(page.getByTestId('task-detail')).toHaveCount(0);
+    });
+
     test('"Neuer Termin" in the head, a title, Enter: the appointment is in the month', async ({
       page,
     }) => {

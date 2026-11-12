@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openEditor } from './money-helpers';
 import { enable, ready } from './helpers';
 
 /** Deterministic "today": Tuesday 2026-09-29, 10:00 local time. */
@@ -81,7 +82,7 @@ test.describe('"Für" – a person or client on appointments and ToDos (QA V14)'
         .click();
       await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
     }
-    await page.getByRole('button', { name: /Zahnarzt anrufen/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /Zahnarzt anrufen/ }));
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Für', { exact: true }).selectOption({ label: 'Lena' });
     await dialog.getByRole('button', { name: 'Speichern' }).click();

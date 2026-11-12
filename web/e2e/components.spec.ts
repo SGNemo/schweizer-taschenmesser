@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openEditor } from './money-helpers';
 import { ready } from './helpers';
 
 async function addTodo(page: Page, title: string) {
@@ -23,7 +24,7 @@ test.describe('undo', () => {
     test.skip(info.project.name === 'pixel-7', 'keyboard shortcut is a desktop feature');
     await ready(page, '/todos');
     await addTodo(page, 'Altpapier rausstellen');
-    await page.getByRole('button', { name: /Altpapier rausstellen/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /Altpapier rausstellen/ }));
     await page
       .getByRole('dialog', { name: 'Aufgabe bearbeiten' })
       .getByRole('button', { name: 'Löschen' })

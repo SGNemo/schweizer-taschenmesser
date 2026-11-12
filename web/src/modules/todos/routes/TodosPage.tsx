@@ -30,11 +30,14 @@ import {
   Tabs,
   Progress,
   RowMenu,
+  SplitView,
   type RowMenuItem,
   useAdvancedMenuItem,
   useOpenParam,
+  useSplitView,
 } from '@/ui';
 import { AddTaskDialog } from '../components/AddTaskDialog';
+import { TaskDetail } from '../components/TaskDetail';
 import { BoardView } from '../components/BoardView';
 import { InboxSorter } from '../components/InboxSorter';
 import { TodayCard } from '../components/TodayCard';
@@ -95,6 +98,9 @@ interface RowProps {
   streaks?: Map<string, Streak>;
   onToggle: (task: StoredTask, done: boolean) => void;
   onOpen: (task: StoredTask) => void;
+  /** Master–detail (wide page): the id of the task shown in the panel, and the way into its dialog. */
+  currentId?: string;
+  onEdit?: (task: StoredTask) => void;
 }
 
 function TaskRow({
@@ -111,6 +117,8 @@ function TaskRow({
   streaks,
   onToggle,
   onOpen,
+  currentId,
+  onEdit,
 }: RowProps) {
   // A short check-mark pop after a tick (≤ 250 ms; the global motion rules switch it off when reduced).
   const [popped, setPopped] = useState(false);
@@ -160,6 +168,7 @@ function TaskRow({
     <ItemRow
       title={task.title}
       done={task.done}
+      current={currentId === task.id}
       tone={tone === 'overdue' && !waiting ? 'overdue' : tone === 'today' ? 'today' : undefined}
       // U02: an open subtask under a done parent keeps its plain title (see `.subOpen`).
       className={sub ? `${styles.sub} ${task.done ? '' : styles.subOpen}` : undefined}
@@ -169,6 +178,10 @@ function TaskRow({
       onSwipeLeft={task.done ? undefined : () => postpone(task, day)}
       swipeLeftLabel={t.focus.next.later}
       menu={[
+        // On a wide page the row shows the task in the panel: its dialog is also one entry here.
+        ...(onEdit
+          ? [{ id: 'edit', label: t.actions.edit, onSelect: () => onEdit(task) } as RowMenuItem]
+          : []),
         ...(task.done ? [] : [...todayItem, laterItem, ...dueMenu]),
         ...(task.done ? [] : prioMenu),
         {
@@ -317,6 +330,8 @@ function TaskRow({
               streaks={streaks}
               onToggle={onToggle}
               onOpen={onOpen}
+              currentId={currentId}
+              onEdit={onEdit}
             />
           ))}
         </ItemList>
@@ -359,6 +374,10 @@ export default function TodosPage() {
   const [editing, setEditing] = useState<StoredTask | null>(null);
   useOpenParam((id) => taskRepo.get(id), setEditing);
   const [listTarget, setListTarget] = useState<Stored<TodoList> | 'new' | null>(null);
+  // Master–detail (layout `split`): on a wide page a task opens in the panel beside the list, below that width
+  // in its dialog (a sheet on the phone). The board has no panel: its four columns take the page.
+  const wide = useSplitView();
+  const [picked, setPicked] = useState<{ id: string } | 'closed' | null>(null);
   const [sorting, setSorting] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const advancedItem = useAdvancedMenuItem('todos');
@@ -486,6 +505,19 @@ export default function TodosPage() {
     setParams(next, { replace: true });
   }
 
+  const split = wide && pageView !== 'board';
+  // The panel shows the picked task, else the first row as the list shows it (open tasks by time, then done ones).
+  const firstShown = useMemo(() => {
+    const open = top.filter((x) => !x.done);
+    return groupByTime(open, (x) => x.dueDate, day)[0]?.items[0] ?? top.find((x) => x.done);
+  }, [top, day]);
+  const detail = !split
+    ? undefined
+    : picked === 'closed'
+      ? undefined
+      : ((picked ? visible.find((x) => x.id === picked.id) : undefined) ?? firstShown);
+  const openRow = (task: StoredTask) => (split ? setPicked({ id: task.id }) : setEditing(task));
+
   const streaks = useMemo(
     () => (focus.streaks && tasks ? streaksOf(tasks, day) : undefined),
     [focus.streaks, tasks, day],
@@ -506,7 +538,9 @@ export default function TodosPage() {
         inPlan={pageView === 'soon' && plannerOn}
         streaks={streaks}
         onToggle={toggle}
-        onOpen={setEditing}
+        onOpen={openRow}
+        currentId={detail?.id}
+        onEdit={split ? setEditing : undefined}
       />
     );
     const timed = groupByTime(open, (x) => x.dueDate, day).map((g) => ({
@@ -548,7 +582,19 @@ export default function TodosPage() {
         ]
       : timed;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [top, children, tasks, day, selected, focus.calmAttention, lists, pageView, plannerOn]);
+  }, [
+    top,
+    children,
+    tasks,
+    day,
+    selected,
+    focus.calmAttention,
+    lists,
+    pageView,
+    plannerOn,
+    split,
+    detail?.id,
+  ]);
   const inboxOpen = useMemo(
     () =>
       ((tasks ?? []) as StoredTask[])
@@ -769,35 +815,56 @@ export default function TodosPage() {
             </div>
           ) : null}
 
-          {isEmpty ? (
-            <EmptyState
-              title={t.todos.empty}
-              testId="todos-empty"
-              motif={<SignatureMark id="todayCard" size={64} />}
-            >
-              {/* B6: the motif, one sentence, one verb. */}
-              <Button
-                variant="primary"
-                onClick={() => setAdding({ title: '' })}
-                data-testid="todos-empty-add"
+          <SplitView
+            enabled={split && detail !== undefined}
+            asideLabel={t.todos.detail.label}
+            aside={
+              detail ? (
+                <TaskDetail
+                  task={detail}
+                  listName={listName(detail.listId)}
+                  person={personName(people, detail.personId)}
+                  subtasks={(tasks ?? []).filter((x) => x.parentId === detail.id)}
+                  day={day}
+                  onEdit={() => setEditing(detail)}
+                  onFocus={
+                    detail.done || detail.parentId ? undefined : () => void startFocus(detail.id)
+                  }
+                  onClose={() => setPicked('closed')}
+                />
+              ) : null
+            }
+          >
+            {isEmpty ? (
+              <EmptyState
+                title={t.todos.empty}
+                testId="todos-empty"
+                motif={<SignatureMark id="todayCard" size={64} />}
               >
-                {t.todos.emptyAction}
-              </Button>
-            </EmptyState>
-          ) : null}
-          {pageView === 'board' ? (
-            <BoardView
-              tasks={top}
-              day={day}
-              onOpen={setEditing}
-              onMove={moveTo}
-              onTomorrow={(x) => postpone(x, day)}
-              planner={plannerOn}
-            />
-          ) : null}
-          {pageView !== 'board' && top.length > 0 ? (
-            <GroupedList listId={`todos-${selected}`} groups={groups} label={t.todos.title} />
-          ) : null}
+                {/* B6: the motif, one sentence, one verb. */}
+                <Button
+                  variant="primary"
+                  onClick={() => setAdding({ title: '' })}
+                  data-testid="todos-empty-add"
+                >
+                  {t.todos.emptyAction}
+                </Button>
+              </EmptyState>
+            ) : null}
+            {pageView === 'board' ? (
+              <BoardView
+                tasks={top}
+                day={day}
+                onOpen={setEditing}
+                onMove={moveTo}
+                onTomorrow={(x) => postpone(x, day)}
+                planner={plannerOn}
+              />
+            ) : null}
+            {pageView !== 'board' && top.length > 0 ? (
+              <GroupedList listId={`todos-${selected}`} groups={groups} label={t.todos.title} />
+            ) : null}
+          </SplitView>
         </div>
       </div>
 
