@@ -37,7 +37,16 @@
   display: grid;
   border-radius: var(--radius-lg);
   background: var(--surface-raised);
-  overflow: hidden;
+}
+/* No `overflow: hidden` on the surface (it would cut the row's "⋯" menu): the outer rows are rounded instead. */
+.card:first-child {
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.card:last-child {
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+.card:only-child {
+  border-radius: var(--radius-lg);
 }
 .card {
   display: grid;

@@ -5,6 +5,7 @@ import { today } from '@/core/time/dates';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import {
+  AdvancedFields,
   Button,
   DayField,
   Dialog,
@@ -118,22 +119,28 @@ function Fields({
           <TimeField label={t.timetrack.form.end} value={end} onChange={setEnd} required />
         )}
       </div>
-      {running ? null : (
-        <DayField label={t.timetrack.form.endDate} value={endDate} onChange={setEndDate} />
-      )}
-      <TextField
-        label={t.timetrack.form.breakMin}
-        type="number"
-        inputMode="numeric"
-        min={0}
-        value={breakMin}
-        onChange={(e) => setBreakMin(e.target.value)}
-      />
       <TextField
         label={t.timetrack.form.note}
         value={note}
         onChange={(e) => setNote(e.target.value)}
       />
+      {/* First what is needed: project, day, from, to, note. A break and an end on another day are rare. */}
+      <AdvancedFields
+        moduleId="timetrack"
+        hasData={(breakMin !== '' && breakMin !== '0') || (!!endDate && endDate !== date)}
+      >
+        {running ? null : (
+          <DayField label={t.timetrack.form.endDate} value={endDate} onChange={setEndDate} />
+        )}
+        <TextField
+          label={t.timetrack.form.breakMin}
+          type="number"
+          inputMode="numeric"
+          min={0}
+          value={breakMin}
+          onChange={(e) => setBreakMin(e.target.value)}
+        />
+      </AdvancedFields>
       {error ? <p role="alert">{error}</p> : null}
       <FormActions
         start={

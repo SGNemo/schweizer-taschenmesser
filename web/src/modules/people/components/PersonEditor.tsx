@@ -3,6 +3,7 @@ import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { formatMoneyInput, parseMoney } from '@/core/money';
 import { pad2 } from '@/core/time/dates';
+import { today } from '@/core/time/now';
 import { t } from '@/strings';
 import {
   AdvancedFields,
@@ -97,7 +98,10 @@ function Fields({
   async function save() {
     // A text of only spaces passes the field's `required` but not the schema: say so (QA X34).
     if (!name.trim()) return setError(t.form.required);
-    const [y, m, d] = date.split('-').map(Number);
+    const [typedYear, m, d] = date.split('-').map(Number);
+    // "15.3.70" reads as the year nearest to today (2070): nobody is born in a coming year.
+    const thisYear = Number(today().slice(0, 4));
+    const y = typedYear !== undefined && typedYear > thisYear ? typedYear - 100 : typedYear;
     setExtraError('');
     const cents = budget.trim() === '' ? undefined : parseMoney(budget);
     const leadDays = lead.trim() === '' ? undefined : Number(lead);
@@ -151,6 +155,8 @@ function Fields({
               setDateError('');
             }}
             error={dateError || undefined}
+            // A birth date needs no "vor n Tagen" line under it.
+            hint=""
             required
           />
           <Checkbox

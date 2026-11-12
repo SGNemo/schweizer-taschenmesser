@@ -5,7 +5,16 @@
   flex-direction: column;
   border-radius: var(--radius-lg);
   background: var(--surface-raised);
-  overflow: hidden;
+}
+/* No `overflow: hidden` on the surface (it would cut the row's "⋯" menu): the outer rows are rounded instead. */
+.list > :first-child {
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.list > :last-child {
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+.list > :only-child {
+  border-radius: var(--radius-lg);
 }
 .list > * + * {
   border-top: 1px solid var(--border);

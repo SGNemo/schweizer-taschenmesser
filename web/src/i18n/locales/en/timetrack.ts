@@ -52,6 +52,7 @@ export const timetrack: Strings['timetrack'] = {
   },
   job: {
     add: 'Add project',
+    short: 'Project',
     edit: 'Edit project',
     name: 'Name',
     client: 'Client',

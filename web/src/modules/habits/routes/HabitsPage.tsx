@@ -17,7 +17,9 @@ import {
   Tabs,
   useOpenParam,
   useSplitView,
+  useAdvancedMenuItem,
 } from '@/ui';
+import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import { HeroFigure, HeroSlot } from '@/ui/identity';
 import { GoalCard } from '../components/GoalCard';
 import { GoalEditor, type GoalTarget } from '../components/GoalEditor';
@@ -45,6 +47,7 @@ export default function HabitsPage() {
   const [target, setTarget] = useState<GoalTarget>(null);
   // Master–detail (layout `split`): on a wide page the picked goal's history lies in the panel beside today's list.
   const wide = useSplitView();
+  const advancedItem = useAdvancedMenuItem('habits');
   const [picked, setPicked] = useState<string | 'closed' | null>(null);
   useOpenParam(
     (id) => goalRepo.get(id),
@@ -112,6 +115,7 @@ export default function HabitsPage() {
           <Icon name="plus" size={18} />
           {t.habits.add}
         </PageAction>
+        <StartDataMenu moduleId="habits" items={[advancedItem]} />
       </PageHeader>
       {goals && planned.length > 0 ? (
         <HeroSlot area="figure">

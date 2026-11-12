@@ -11,6 +11,7 @@ import {
   DetailPanel,
   EmptyState,
   Icon,
+  IconButton,
   ItemList,
   ItemRow,
   PageAction,
@@ -20,8 +21,10 @@ import {
   categoryColor,
   useMediaQuery,
   useOpenParam,
+  useAdvancedMenuItem,
   useSplitView,
 } from '@/ui';
+import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import { IdlePrompt } from '../components/IdlePrompt';
 import { JobEditor, type JobTarget } from '../components/JobEditor';
@@ -50,6 +53,7 @@ export default function TimetrackPage() {
   const [session, setSession] = useState<SessionTarget>(null);
   const [job, setJob] = useState<JobTarget>(null);
   const wide = useSplitView();
+  const advancedItem = useAdvancedMenuItem('timetrack');
   const [picked, setPicked] = useState<string | 'closed' | null>(null);
   useOpenParam(
     (id) => sessionRepo.get(id),
@@ -117,14 +121,27 @@ export default function TimetrackPage() {
       >
         {/* C29: Start/Stopp is the page's one filled action; adding a past entry is the page's entry (the plus on
             the phone), not filled. */}
-        <PageAction
-          short={t.timetrack.entryShort}
-          variant="secondary"
-          onClick={() => setSession('new')}
-        >
-          <Icon name="plus" size={18} />
-          {t.timetrack.add}
-        </PageAction>
+        {/* One entry per view: "Projekte" adds a project, the two others a past entry. */}
+        {view === 'jobs' ? (
+          <PageAction
+            short={t.timetrack.job.short}
+            variant="secondary"
+            onClick={() => setJob('new')}
+          >
+            <Icon name="plus" size={18} />
+            {t.timetrack.job.add}
+          </PageAction>
+        ) : (
+          <PageAction
+            short={t.timetrack.entryShort}
+            variant="secondary"
+            onClick={() => setSession('new')}
+          >
+            <Icon name="plus" size={18} />
+            {t.timetrack.add}
+          </PageAction>
+        )}
+        <StartDataMenu moduleId="timetrack" items={[advancedItem]} />
       </PageHeader>
       <HeroSlot area="figure">
         <HeroFigure
@@ -219,7 +236,7 @@ export default function TimetrackPage() {
                           ]
                         : []),
                       // The row says how long this entry was; the panel adds what the project took today.
-                      ...(detail.jobId
+                      ...(detail.jobId && jobMap.has(detail.jobId)
                         ? [
                             {
                               label: t.timetrack.detail.jobToday,
@@ -231,7 +248,7 @@ export default function TimetrackPage() {
                             },
                           ]
                         : []),
-                      ...(detail.jobId && detail.note
+                      ...(detail.jobId && jobMap.has(detail.jobId) && detail.note
                         ? [{ label: t.form.note, value: detail.note }]
                         : []),
                     ]}
@@ -262,6 +279,18 @@ export default function TimetrackPage() {
                       }
                       current={detail?.id === s.id}
                       onOpen={() => (wide ? setPicked(s.id) : setSession(s))}
+                      // Beside the panel a row only picks: correcting an entry stays one click (and the E key).
+                      actions={
+                        wide ? (
+                          <IconButton
+                            label={`${t.timetrack.edit}: ${j?.name ?? s.note ?? t.timetrack.noJob}`}
+                            data-row-edit
+                            onClick={() => setSession(s)}
+                          >
+                            <Icon name="edit" size={16} />
+                          </IconButton>
+                        ) : undefined
+                      }
                     />
                   );
                 })}
@@ -281,10 +310,6 @@ export default function TimetrackPage() {
 
       {view === 'jobs' ? (
         <>
-          <Button variant="secondary" onClick={() => setJob('new')}>
-            <Icon name="plus" size={18} />
-            {t.timetrack.job.add}
-          </Button>
           <ItemList>
             {[...(jobs ?? []), ...(archived ?? [])].map((j) => {
               const client = (clients ?? []).find((c) => c.id === j.clientId);

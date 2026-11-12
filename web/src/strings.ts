@@ -8017,7 +8017,9 @@ export const de = {
       note: 'Notiz',
     },
     job: {
-      add: 'Projekt hinzufügen',
+      add: 'Projekt eintragen',
+      /** The noun on the phone's plus while "Projekte" is shown. */
+      short: 'Projekt',
       edit: 'Projekt bearbeiten',
       name: 'Name',
       client: 'Kunde',
@@ -8088,8 +8090,6 @@ export const de = {
     detail: { label: 'Gewohnheit im Detail' },
     tabs: { label: 'Ansicht', today: 'Heute', history: 'Verlauf', archive: 'Archiv' },
     empty: 'Noch keine Gewohnheiten.',
-    emptyHint:
-      'Fang klein an: zum Beispiel „Wasser trinken“ mit einer Zahl und einer Erinnerung im Zeitfenster.',
     add: 'Gewohnheit eintragen',
     addFirst: 'Erste Gewohnheit eintragen',
     edit: 'Gewohnheit bearbeiten',
@@ -8719,8 +8719,6 @@ export const de = {
     add: 'Ort hinzufügen',
     addFirst: 'Ersten Ort hinzufügen',
     empty: 'Noch keine Orte',
-    emptyHint:
-      'Trag einen Ort ein, zum Beispiel wo Familie oder Kolleg*innen leben. Seine Uhrzeit steht dann hier und auf der Übersicht.',
     full: (n: number) =>
       `Es sind ${n} Orte eingetragen, mehr passen nicht. Entferne einen, um einen neuen einzutragen.`,
     list: 'Deine Orte',

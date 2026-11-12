@@ -76,19 +76,45 @@ export default function PeoplePage() {
   // Master–detail (layout `split`): on a wide page the person lies in the panel beside the list; below that width
   // the person is a page of its own, as before.
   const wide = useSplitView();
+  // The view outlives the way into a person's page and back (the head keeps its tabs there too).
+  const [view, setView] = useState<PeopleView>('people');
   return person && !wide ? (
     <PersonDetail
       person={person}
       gifts={(gifts ?? []).filter((g) => g.personId === person.id)}
       onBack={() => setParams({})}
+      onView={(v) => {
+        setView(v);
+        setParams({});
+      }}
     />
   ) : (
     <PeopleList
       people={people}
       gifts={gifts}
       wide={wide}
+      view={view}
+      setView={setView}
       selectedId={wide ? (person?.id ?? null) : null}
       onOpen={(id) => setParams({ person: id }, { replace: wide })}
+      onClosePanel={() => setParams({}, { replace: true })}
+    />
+  );
+}
+
+type PeopleView = 'people' | 'gifts';
+
+/** The two views of the page; a person's own page (below the split width) shows them too and leads back. */
+function PeopleTabs({ value, onChange }: { value: PeopleView; onChange: (v: PeopleView) => void }) {
+  return (
+    <Tabs
+      label={t.people.viewLabel}
+      value={value}
+      options={[
+        { value: 'people' as const, label: t.people.viewPeople },
+        { value: 'gifts' as const, label: t.people.viewGifts },
+      ]}
+      onChange={onChange}
     />
   );
 }
@@ -148,6 +174,9 @@ function PeopleList({
   wide,
   selectedId,
   onOpen,
+  view,
+  setView,
+  onClosePanel,
 }: {
   people: Stored<Person>[] | undefined;
   gifts: Stored<Gift>[] | undefined;
@@ -156,12 +185,24 @@ function PeopleList({
   /** The person picked on a wide page (from the URL). */
   selectedId: string | null;
   onOpen: (id: string) => void;
+  view: PeopleView;
+  setView: (v: PeopleView) => void;
+  /** The panel was closed: the URL forgets the person (a narrower window must not jump to that person's page). */
+  onClosePanel: () => void;
 }) {
   const [query, setQuery] = useState('');
-  const [view, setView] = useState<'people' | 'gifts'>('people');
   const [target, setTarget] = useState<PersonTarget>(null);
   const [params, setParams] = useSearchParams();
   const [closed, setClosed] = useState(false);
+  // A person picked from outside (a search hit, a link) is shown: the panel opens on the list of people.
+  const [seen, setSeen] = useState(selectedId);
+  if (seen !== selectedId) {
+    setSeen(selectedId);
+    if (selectedId) {
+      setClosed(false);
+      setView('people');
+    }
+  }
   const advancedItem = useAdvancedMenuItem('people');
   const day = today();
 
@@ -209,18 +250,8 @@ function PeopleList({
     <>
       <PageHeader
         title={t.people.title}
-        views={
-          <Tabs
-            label={t.people.viewLabel}
-            value={view}
-            options={[
-              { value: 'people' as const, label: t.people.viewPeople },
-              { value: 'gifts' as const, label: t.people.viewGifts },
-            ]}
-            onChange={setView}
-          />
-        }
-        besideContent={!isEmpty}
+        views={<PeopleTabs value={view} onChange={setView} />}
+        besideContent={!isEmpty && view === 'people'}
       >
         {/* While nobody is there the empty state owns the filled button of the view. */}
         <PageAction
@@ -311,7 +342,10 @@ function PeopleList({
                 key={detail.id}
                 person={detail}
                 gifts={(gifts ?? []).filter((g) => g.personId === detail.id)}
-                onClose={() => setClosed(true)}
+                onClose={() => {
+                  setClosed(true);
+                  onClosePanel();
+                }}
               />
             ) : null
           }
@@ -398,10 +432,12 @@ function PersonDetail({
   person,
   gifts,
   onBack,
+  onView,
 }: {
   person: Stored<Person>;
   gifts: Stored<Gift>[];
   onBack: () => void;
+  onView: (v: PeopleView) => void;
 }) {
   const [editing, setEditing] = useState<PersonTarget>(null);
   const day = today();
@@ -409,7 +445,7 @@ function PersonDetail({
   return (
     <>
       {b ? <NextBirthdayHead name={person.name} label={whenLabel(daysUntil(b, day))} /> : null}
-      <PageHeader title={person.name}>
+      <PageHeader title={person.name} views={<PeopleTabs value="people" onChange={onView} />}>
         <Button onClick={onBack}>{t.people.back}</Button>
         <Button onClick={() => setEditing(person)}>
           <Icon name="edit" size={18} />
