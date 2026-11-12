@@ -61,7 +61,7 @@ const manifest: ModuleManifest = {
   defaultEnabled: false,
   maturity: 'preview',
   seed: { version: 1, dependsOn: [] },
-  layout: 'content',
+  layout: 'reading',
   area: 'knowledge',
   order: 90,
   contributions: {

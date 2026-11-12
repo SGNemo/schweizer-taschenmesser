@@ -12,26 +12,14 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
   gap: var(--grid-gap, var(--space-4));
-  /* The board the cards are pinned to: a faintly tinted surface with a hairline. */
-  padding: var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--module-color) 6%, var(--surface-2, var(--surface)));
 }
-/* The pinboard from the library at slot M: three cards, about 120 px high beside the figure (G06); on the phone one card
-   on its board (G02): the board stays, only the second and third note step back. */
-.pinboard {
-  display: inline-grid;
-  zoom: 1.5;
+/* The page's first row. Phone: the page's "⋯" menu sits at its right edge (`PageHeader besideContent`). */
+.search {
+  margin-bottom: var(--space-3);
 }
 @media (max-width: 899px) {
-  .pinboard {
-    zoom: 1;
-  }
-  .pinboard [data-signature='pinboard'] {
-    width: 5rem;
-  }
-  .pinboard [data-signature='pinboard'] > i:nth-child(n + 2) {
-    display: none;
+  .search {
+    min-height: var(--touch);
+    padding-inline-end: calc(var(--touch) + var(--space-3));
   }
 }

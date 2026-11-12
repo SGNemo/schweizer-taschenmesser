@@ -1,37 +1,4 @@
-/* Lead story: the newest source as a big card in the newspaper's serif; the rest stands in columns below. */
-.lead {
+.form {
   display: grid;
-  gap: var(--space-1);
-  margin: var(--space-4) 0;
-  padding: var(--space-4) var(--space-5);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--module-color) 8%, var(--surface));
-  color: var(--text);
-  text-decoration: none;
-}
-.lead:hover .leadTitle {
-  text-decoration: underline;
-}
-.kicker {
-  color: var(--text-muted);
-  font-size: var(--text-xs);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.leadTitle {
-  font-family: var(--font-serif);
-  font-size: var(--text-2xl);
-  font-weight: var(--weight-bold);
-  line-height: 1.15;
-  overflow-wrap: anywhere;
-}
-.leadMeta {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  overflow-wrap: anywhere;
-}
-/* The columns come from `GroupedList columns`; its group heads stay in the app's sans (serif only for the lead). */
-.heads li {
-  list-style: none;
+  gap: var(--space-3);
 }

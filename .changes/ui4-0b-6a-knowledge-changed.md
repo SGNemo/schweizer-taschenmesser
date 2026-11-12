@@ -1,0 +1,40 @@
+---
+type: changed
+area: bookmarks
+breaking: false
+pr: 759
+de: Die Merkliste beginnt gleich mit der Suche und der Liste, die leeren Karten unter dem Kopf sind weg. Merkliste und Lesezeichen sind Reiter.
+en: The saved list starts right with the search and the list; the empty cards under the head are gone. Saved list and bookmarks are tabs.
+---
+---
+type: changed
+area: notes
+breaking: false
+pr: 759
+de: „Neue Seite“ steht jetzt oben im Kopf, am Handy ist es das Plus. „Liste · Karten“ steht ganz oben in der Seitenliste, die ohne Rahmen und Tönung ruhiger ist.
+en: “New page” is now at the top of the page, on the phone it is the plus. “List · Cards” is at the top of the page list, which is calmer without frames and tints.
+---
+---
+type: changed
+area: feeds
+breaking: false
+pr: 759
+de: Feeds zeigt deine Quellen als eine ruhige Liste nach Gruppen. Die große Karte „Zuletzt hinzugefügt“ ist weg, der Feed steht weiter in seiner Gruppe.
+en: Feeds shows your sources as one calm list by group. The large “Recently added” card is gone; the feed is still in its group.
+---
+---
+type: changed
+area: mail
+breaking: false
+pr: 759
+de: E-Mail zeigt oben die Zahl der ungelesenen Mails. Eine Zeile zeigt Absender und Zeit, darunter höchstens zwei Zeilen Text. „Aktualisieren“ ist jetzt der Pfeil-Kreis neben der Suche.
+en: Mail shows the number of unread mails at the top. A row shows sender and time, with at most two lines of text below. “Refresh” is now the round arrow beside the search.
+---
+---
+type: changed
+area: ui
+breaking: false
+pr: 759
+de: Die Modul-Bibliothek ist ruhiger, die Karten liegen ohne getönte Flächen direkt auf der Seite, die Schalter sind neutral. Auch Chat, Feeds und Musik haben keine Rahmen mehr.
+en: The module library is calmer, its cards lie on the page without tinted surfaces, and the switches are neutral. Chat, feeds and music lost their frames too.
+---

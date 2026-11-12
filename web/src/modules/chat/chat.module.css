@@ -6,37 +6,6 @@
 .layout[data-after-hint] {
   margin-top: var(--space-4);
 }
-.list {
-  display: grid;
-  gap: var(--space-2);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.threadBtn {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  width: 100%;
-  min-height: var(--touch);
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  color: var(--text);
-  text-align: left;
-  cursor: pointer;
-}
-.threadBtn:hover {
-  background: var(--surface-2);
-}
-.threadTitle {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .head {
   display: flex;
   align-items: center;
@@ -55,20 +24,19 @@
   gap: var(--space-3);
   margin: var(--space-4) 0;
 }
-/* Speech bubbles: the answer sits on the left with a small corner at the lower left, your message on the right in the accent tint. */
+/* Speech bubbles on tone steps: the answer sits on the left as a raised surface with a small corner at the lower left,
+   your message on the right as a recess (told by side and tone, not by the accent). */
 .msg {
   display: grid;
   gap: var(--space-1);
   max-width: min(100%, 48rem);
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border);
   border-radius: var(--radius-lg) var(--radius-lg) var(--radius-lg) var(--radius-sm);
-  background: var(--surface);
+  background: var(--surface-raised);
 }
 .user {
   margin-left: auto;
-  background: var(--accent-soft);
-  border-color: transparent;
+  background: var(--surface-sunken);
   border-radius: var(--radius-lg) var(--radius-lg) var(--radius-sm) var(--radius-lg);
 }
 .msgHead {
@@ -123,7 +91,7 @@
   display: grid;
   gap: var(--space-2);
   padding: var(--space-3);
-  border: 1px solid var(--border-strong);
+  /* It floats over the messages: the one small lift of the page. */
   border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: var(--shadow-1);
@@ -168,14 +136,4 @@
 .modules {
   display: grid;
   gap: var(--space-1);
-}
-/* The bubble pair from the library at slot S: about 88 px high in the head (G07), 48 px on the phone (G02). */
-.bubbles {
-  display: inline-grid;
-  zoom: 1.45;
-}
-@media (max-width: 899px) {
-  .bubbles {
-    zoom: 0.8;
-  }
 }

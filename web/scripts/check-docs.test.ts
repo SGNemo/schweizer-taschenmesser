@@ -4,7 +4,13 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
-import { BUDGET, chatsProblems, isHardBudget, statusWarnings } from './check-docs.mjs';
+import {
+  BUDGET,
+  chatsProblems,
+  isHardBudget,
+  statusRuleProblems,
+  statusWarnings,
+} from './check-docs.mjs';
 
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), 'check-docs.mjs');
 
@@ -60,6 +66,22 @@ describe('statusWarnings', () => {
 
   it('skips the branch check when the clone has no remote branches', () => {
     expect(statusWarnings('Läuft: `fix/gone`', null)).toEqual([]);
+  });
+});
+
+describe('statusRuleProblems', () => {
+  it('passes a docs-only change of STATUS.md and a feature change without it', () => {
+    expect(statusRuleProblems(['docs/STATUS.md', 'docs/decisions/meta.md'])).toEqual([]);
+    expect(statusRuleProblems(['web/src/a.ts', 'docs/HOW-TO.md', '.changes/a.md'])).toEqual([]);
+    expect(statusRuleProblems(null)).toEqual([]);
+  });
+
+  it('fails when STATUS.md changes beside a file outside docs/', () => {
+    expect(statusRuleProblems(['docs/STATUS.md', 'web/src/a.ts'])).toEqual([
+      expect.stringMatching(
+        /STATUS\.md changed together with 1 file\(s\) outside docs\/ \(e\.g\. web\/src\/a\.ts\)/,
+      ),
+    ]);
   });
 });
 

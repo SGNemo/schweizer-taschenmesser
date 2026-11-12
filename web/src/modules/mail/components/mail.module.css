@@ -1,12 +1,13 @@
 .toolbar {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: var(--space-2) var(--space-3);
   margin-block: var(--space-3);
 }
 .search {
-  flex: 1 1 16rem;
+  /* Narrow enough that field, "Suchen" and the refresh button share one row in the 20 rem list column. */
+  flex: 1 1 12rem;
   min-width: 0;
 }
 .picker {
@@ -25,10 +26,37 @@
   gap: var(--space-2) var(--space-3);
   margin-block: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--surface-2);
   font-size: var(--text-sm);
+}
+/* A row of the list: sender and time on the title line, subject and snippet below in two lines at most. */
+.rowTitle {
+  display: flex;
+  width: 100%;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.rowTitle > :first-child {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rowWhen {
+  flex: none;
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  font-weight: normal;
+  font-variant-numeric: var(--font-num);
+}
+.rowText {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .rowFrom {
   font-weight: var(--weight-medium);
@@ -44,10 +72,9 @@
   flex-direction: column;
   gap: var(--space-3);
 }
-.message {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
+/* The messages of a thread are rows of one surface: a hairline between them, no frame. */
+.message + .message {
+  border-top: 1px solid var(--border);
 }
 .messageHead {
   display: flex;
@@ -98,7 +125,7 @@
 }
 .frame {
   width: 100%;
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: var(--radius-sm);
   background: var(--surface);
 }
@@ -186,7 +213,6 @@
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background: var(--surface-2);
 }
@@ -238,9 +264,8 @@
   background: var(--surface-2);
 }
 .labelBtn[aria-current='true'] {
-  /* The open folder is a filled chip (fill and weight, not an edge bar). */
-  background: color-mix(in srgb, var(--module-color) 18%, var(--surface));
-  border-radius: var(--radius-full);
+  /* The open folder is a recess and a weight (no tint, no edge bar). */
+  background: var(--surface-sunken);
   font-weight: var(--weight-semibold);
 }
 .labelCount {
@@ -251,12 +276,28 @@
 .listCol {
   min-width: 0;
 }
+/* Beside the reading pane the list is 20 to 26 rem wide: the row's hover actions ("In den Plan", "⋯") lie over the
+   end of the row instead of holding a column free, so sender, time and text keep the row's width (they show on hover
+   and on focus, as everywhere). */
+/* Only where a pointer hovers: on a touch screen the actions always show and would cover the time. */
+@media (hover: hover) {
+  .listCol li:has([data-row-actions]) {
+    position: relative;
+  }
+  .listCol [data-row-actions] {
+    position: absolute;
+    top: var(--space-1);
+    right: var(--space-1);
+    border-radius: var(--radius-md);
+    background: var(--surface-raised);
+  }
+}
+
 .reading {
   min-width: 0;
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
-  background: var(--surface);
-  box-shadow: var(--shadow-1);
+  background: var(--surface-raised);
   min-height: 12rem;
 }
 

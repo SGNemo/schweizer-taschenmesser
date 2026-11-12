@@ -19,6 +19,7 @@ import {
   ItemList,
   ItemRow,
   EmptyState,
+  PageAction,
   PageHeader,
   SelectField,
   Skeleton,
@@ -109,28 +110,30 @@ function ThreadList({
           {rows.map((th) => (
             <ItemRow
               key={th.id}
+              // Sender and time share the title line, subject and snippet are two lines at most: a row keeps
+              // its height beside the reading pane (design check G1, G4).
               title={
-                <span className={th.unread ? styles.unreadRow : styles.rowFrom}>
-                  {personName(th.from)}
-                  {th.messageCount > 1 ? ` (${th.messageCount})` : ''}
+                <span className={styles.rowTitle}>
+                  <span className={th.unread ? styles.unreadRow : styles.rowFrom}>
+                    {personName(th.from)}
+                    {th.messageCount > 1 ? ` (${th.messageCount})` : ''}
+                  </span>
+                  <span className={styles.rowWhen}>
+                    {planned.has(th.id) ? (
+                      <span className={styles.planMark} data-testid="mail-in-plan">
+                        {plannerOn ? t.mail.plan.mark : t.mail.plan.todo.mark} ·{' '}
+                      </span>
+                    ) : null}
+                    {shortWhen(th.date)}
+                  </span>
                 </span>
               }
               meta={
-                <>
+                <span className={styles.rowText}>
                   <span className={th.unread ? styles.unreadRow : undefined}>
                     {subjectOf(th.subject)}
                   </span>
                   {th.snippet ? <span className={styles.snippet}> – {th.snippet}</span> : null}
-                </>
-              }
-              end={
-                <span className={styles.meta}>
-                  {planned.has(th.id) ? (
-                    <span className={styles.planMark} data-testid="mail-in-plan">
-                      {plannerOn ? t.mail.plan.mark : t.mail.plan.todo.mark} ·{' '}
-                    </span>
-                  ) : null}
-                  {shortWhen(th.date)}
                 </span>
               }
               onOpen={() => onOpen(th.id)}
@@ -297,17 +300,21 @@ export default function MailPage() {
       <InboxHead unread={summary && summary.total > 0 ? summary.unread : undefined} />
       <PageHeader title={t.mail.meta.name}>
         {canWrite && account ? (
-          <Button
+          <PageAction
+            short={t.mail.write.short}
             onClick={() =>
               setCompose({ state: emptyCompose(), title: t.mail.write.compose.titleNew, account })
             }
           >
+            <Icon name="plus" size={18} />
             {t.mail.write.newMail}
-          </Button>
+          </PageAction>
         ) : null}
-        <IconButton label={t.mail.page.settings} onClick={() => setPanel(true)}>
-          <Icon name="settings" />
-        </IconButton>
+        {/* In the head, so the panel (it alone clears the mail cache) opens in every state of the page: no account,
+            loading, an open mail in a narrow window. Named in words: the gear beside it is the module's. */}
+        <Button variant="ghost" onClick={() => setPanel(true)}>
+          {t.mail.page.settings}
+        </Button>
       </PageHeader>
     </>
   );
@@ -332,6 +339,7 @@ export default function MailPage() {
       <>
         {header}
         <Skeleton height="8rem" />
+        <MailSettingsPanel open={panel} onClose={() => setPanel(false)} />
       </>
     );
 
@@ -467,6 +475,7 @@ export default function MailPage() {
         <div className={styles.search}>
           <TextField
             label={t.mail.page.searchLabel}
+            labelHidden
             hint={t.mail.page.searchHint}
             placeholder={t.mail.page.searchPlaceholder}
             value={draft}
@@ -480,15 +489,14 @@ export default function MailPage() {
             ))}
           </datalist>
         </div>
-        <Button type="submit" variant="primary">
-          {t.mail.page.searchLabel}
-        </Button>
+        {/* The head's "Neue Mail" is the page's one filled button. */}
+        <Button type="submit">{t.mail.page.searchLabel}</Button>
         {query ? (
           <Button onClick={() => update({ q: null })}>{t.mail.page.searchEnd}</Button>
         ) : null}
-        <Button onClick={box.reload} disabled={box.loading}>
-          {t.mail.page.refresh}
-        </Button>
+        <IconButton label={t.mail.page.refresh} onClick={box.reload} disabled={box.loading}>
+          <Icon name="sync" />
+        </IconButton>
       </form>
 
       {(offerPersonal || (offerPlanAll && onPlan)) && box.threads.length > 0 ? (

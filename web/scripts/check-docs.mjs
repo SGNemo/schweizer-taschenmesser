@@ -9,7 +9,7 @@
  *   5. Freshness: CHATS.md table rows that list an open PR, say "merged"/"gemergt" or repeat another row; STATUS.md lines
  *      with "PR offen" or a backticked branch that `git branch -r` no longer lists.
  * Tokens are estimated as bytes / 4 (no tokenizer needed). Budgets live in docs/meta/DOCS-GUIDE.md.
- * Exit 1 (always): image rule, CHATS.md row rule, CHATS.md/STATUS.md over budget (they must not grow back),
+ * Exit 1 (always): image rule, CHATS.md row rule, STATUS.md changed beside files outside docs/ (local only), CHATS.md/STATUS.md over budget (they must not grow back),
  * start context over budget once START_CONTEXT_HARD is on. Everything else warns (exit 0; `--strict` exits 1).
  * `--root <dir>` checks another tree (tests).
  */
@@ -143,6 +143,36 @@ export function statusWarnings(text, remoteBranches, exists = () => false) {
   return out;
 }
 
+/**
+ * docs/STATUS.md may change only in a PR of its own (docs only): every feature PR wrote into the same
+ * lines, so parallel PRs conflicted on every merge (decisions/meta-ci-docs.md). `changed` = the files this
+ * branch changed since it left `develop`.
+ */
+export function statusRuleProblems(changed) {
+  if (!changed?.includes('docs/STATUS.md')) return [];
+  const other = changed.filter((f) => !f.startsWith('docs/'));
+  if (other.length === 0) return [];
+  return [
+    `docs/STATUS.md changed together with ${other.length} file(s) outside docs/ (e.g. ${other[0]}) – take the STATUS change out; it goes into a docs(status) PR of its own`,
+  ];
+}
+
+/** Files changed on this branch since its merge base with `origin/develop`; null when that cannot be told. */
+export function changedSinceDevelop(cwd) {
+  const git = (...args) =>
+    execFileSync('git', args, {
+      cwd,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+  try {
+    const base = git('merge-base', 'origin/develop', 'HEAD');
+    return git('diff', '--name-only', base, 'HEAD').split('\n').filter(Boolean);
+  } catch {
+    return null; // shallow CI checkout, no remote: nothing to compare
+  }
+}
+
 /** Remote branch names (without the remote prefix), or null when the clone has none besides base refs. */
 export function remoteBranches(cwd) {
   let names;
@@ -274,6 +304,7 @@ function main(argv) {
   // 5. freshness of the running logs
   const chats = join(repo, 'docs/CHATS.md');
   if (existsSync(chats)) fatal.push(...chatsProblems(readFileSync(chats, 'utf8')));
+  if (rootArg < 0) fatal.push(...statusRuleProblems(changedSinceDevelop(repo)));
   const status = join(repo, 'docs/STATUS.md');
   if (existsSync(status)) {
     const remotes = remoteBranches(repo);
