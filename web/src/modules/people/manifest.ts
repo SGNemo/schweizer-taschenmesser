@@ -17,6 +17,7 @@ const manifest: ModuleManifest = {
     hue2: 'violet',
     widget: 'faellig',
     head: 'standard',
+    tabs: true,
     signature: 'avatarRing',
   },
   version: 2,
@@ -64,7 +65,7 @@ const manifest: ModuleManifest = {
   defaultEnabled: false,
   maturity: 'stable',
   seed: { version: 2, dependsOn: [] },
-  layout: 'wide',
+  layout: 'split',
   order: 100,
   area: 'plan',
   contributions: {
