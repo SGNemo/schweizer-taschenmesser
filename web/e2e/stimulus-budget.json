@@ -390,7 +390,7 @@
       "signatureBlocks": 0
     },
     "d1920--settings-module": {
-      "height": 1384,
+      "height": 1650,
       "buttons": 11,
       "links": 52,
       "icons": 60,
@@ -766,7 +766,7 @@
       "buttons": 62,
       "links": 6,
       "icons": 11,
-      "firstScreenActions": 27,
+      "firstScreenActions": 33,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
@@ -778,7 +778,7 @@
       "buttons": 5,
       "links": 29,
       "icons": 32,
-      "firstScreenActions": 15,
+      "firstScreenActions": 17,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
