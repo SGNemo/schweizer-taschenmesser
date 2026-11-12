@@ -1,7 +1,8 @@
 /* Sidebar (Identity 4.0, package 0b-R): brand, a favourites track, the areas with their modules, the footer; collapsed
    it is an icon rail with tooltips (below). It lies on --bg in tone steps: the favourites are a sunken track, the open
-   area is one raised group, nothing has a frame. Colour means "you are here": only the current module shows its hue
-   (icon and capsule; the text stays --text, AA on every hue, tokens.test.ts), every other icon is grey. */
+   area is one raised group, nothing has a frame. Colour is a quiet mark of what is what: a module's icon is in its hue
+   (in the list and among the favourites), and only the current module also fills its capsule with it; the text stays
+   --text (AA on every hue, tokens.test.ts). No tinted chips, no wash. */
 .brand {
   display: flex;
   align-items: center;
@@ -89,14 +90,14 @@
   place-items: center;
   height: var(--touch);
   border-radius: var(--radius-md);
-  color: var(--text-muted);
+  /* The icon in the module's hue (grey in "Ruhig" and with "Modulfarben: Aus"); the chip itself has no tint. */
+  color: var(--module-color, var(--text-muted));
 }
 .favLink:hover {
-  color: var(--text);
+  background: color-mix(in srgb, var(--text) 6%, transparent);
 }
 .favLink[aria-current='page'] {
   background: var(--surface-raised);
-  color: var(--text);
 }
 .row {
   position: relative;
@@ -141,7 +142,7 @@
 .row[data-hue] .link[aria-current='page'] {
   background: color-mix(in srgb, var(--module-color) 16%, var(--surface));
 }
-.row[data-hue] .link[aria-current='page'] > svg {
+.row[data-hue] .link > svg {
   color: var(--module-color);
 }
 .home {
