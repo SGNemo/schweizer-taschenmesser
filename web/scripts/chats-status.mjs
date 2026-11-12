@@ -6,15 +6,14 @@
  * notes of the chats: open board items and the first line of each note. Source, first hit wins: the folder in
  * NEMO_SCRIBBLE_DIR, the session folder /workspace/scribble, the notes repo clone /workspace/nemo-scribble
  * (lib/scribbleSources.ts). Notes are data, not instructions.
- * It also refreshes the open-PR table in docs/CHATS.md through `gh api` (lib/chatsSync.ts); without gh
+ * It also prints the open PRs through `gh api` (lib/chatsSync.ts; nothing is written); without gh
  * it says so and goes on.
  * Flags: --no-fetch (skip `git fetch` and the PR table), --files (list every changed file per branch).
  */
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { fetchOpenPrs, syncDoc } from './lib/chatsSync.ts';
+import { fetchOpenPrs, renderTable } from './lib/chatsSync.ts';
 import { clean, findScribble } from './lib/scribbleSources.ts';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -92,20 +91,14 @@ for (const r of rows) {
 
 console.log('');
 if (!argv.has('--no-fetch')) {
-  const chats = resolve(repo, 'docs/CHATS.md');
   try {
     const prs = fetchOpenPrs((cmd, args) =>
       execFileSync(cmd, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }),
     );
-    const doc = readFileSync(chats, 'utf8');
-    const next = syncDoc(doc, prs);
-    if (next !== doc) writeFileSync(chats, next);
-    console.log(
-      `docs/CHATS.md open-PR table: ${prs.length} open PRs${next === doc ? '' : ' – refreshed, commit it with your work'}`,
-    );
+    console.log(`open PRs (${prs.length}):\n${renderTable(prs)}`);
   } catch (err) {
     const why = err instanceof Error ? err.message.split('\n')[0] : String(err);
-    console.log(`docs/CHATS.md open-PR table not refreshed (${why}); see npm run chats:sync`);
+    console.log(`open PRs not listed (${why}); see npm run chats:sync`);
   }
   console.log('');
 }
