@@ -279,6 +279,15 @@ BR-B8. _Merkliste/Notiz:_ „In Merkliste speichern“ (Modul an) legt den Eintr
 Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währenddessen verschieben, in der Titelleiste steht nie „Keine Rückmeldung“, und ein Wechsel zu einem anderen Modul zeigt dessen Inhalt statt „…“. Hintergrund und Einordnung je Command: [perf/MAIN-THREAD-COMMANDS-2026-11.md](perf/MAIN-THREAD-COMMANDS-2026-11.md).
 - **MT-H7 Browser-Tabs (bleiben auf dem Hauptthread):** in einem Tab vier Seiten nacheinander öffnen, dann dreimal sehr schnell „Zurück“: der Tab steht auf der ersten Seite, „Vor“ dreimal: auf der vierten. Neu laden und Zoom (Strg +/−) reagieren sofort. Hängt das Fenster genau hier, bitte mit Seite und Uhrzeit notieren – das wäre ein Fall für WebView2 selbst. ☐
 
+#### Identity 4.0: Wissen (UI-Audit 4.0, Paket 0b-6a) – nur auf Windows prüfbar
+
+- **W6-1 E-Mail, drei Spalten:** Fenster mindestens 1400 px breit, E-Mail öffnen (echtes Konto oder Testdaten): links die Ordner, in der Mitte die Liste, rechts „Wähle eine Mail aus der Liste.“ Nichts hat einen Rahmen oder Schatten; der offene Ordner ist grau hinterlegt und fett. Oben rechts im Kopf steht „n ungelesen · Posteingang“ (bei 0 ungelesenen nichts). ☐
+- **W6-2 E-Mail, Zeile und Lesen:** Eine Zeile zeigt Absender und Uhrzeit in einer Zeile, darunter höchstens zwei Zeilen Betreff und Text. Eine Mail anklicken: sie erscheint rechts, die Liste bleibt stehen; mehrere Nachrichten eines Threads sind nur durch eine Linie getrennt. Im „⋯“ der Zeile steht „In den Plan“ (oder „Als ToDo“). ☐
+- **W6-3 E-Mail, ein Einstieg:** Mit echtem Konto mit Senderecht: „Neue Mail“ ist der einzige gefüllte Knopf der Seite und öffnet das Schreibfenster. Neben dem Suchfeld: „Suchen“ (neutral), ein Pfeil-Kreis (Aktualisieren, lädt die Liste neu) und ein Zahnrad (öffnet „Mail-Einstellungen“). ☐
+- **W6-4 E-Mail, schmal:** Fenster auf etwa 1000 px ziehen: nur noch die Liste mit einer Ordner-Auswahl darüber; eine Mail ersetzt die Liste, „Zurück“ führt zur Liste. Nichts läuft seitlich über. ☐
+- **W6-5 Notizen im Fenster:** „Neue Seite“ steht oben rechts im Kopf (Strg+N geht weiter). Liste und Seite liegen auf einer Fläche, die offene Seite ist in der Liste grau hinterlegt und fett; Karten-Ansicht: neutrale Blätter, das Notizbuch steht als Punkt mit Namen dabei. ☐
+- **W6-6 Musik mit Spotify:** Mit verbundenem Konto: die Reiter „Start · Suchen · Lieblingssongs · Zuletzt gespielt · Warteschlange“ stehen unter der Bühne; ein Klick wechselt die Ansicht, in einer geöffneten Playlist ist kein Reiter markiert. Cover und Warteschlange haben keinen Schatten. ☐
+
 ### Downloads und Torrent
 
 #### Datenträger, Systeminfo (diese Runde) – nur auf echtem Windows prüfbar

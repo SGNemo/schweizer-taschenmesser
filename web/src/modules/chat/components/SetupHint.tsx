@@ -4,7 +4,8 @@ import { isAiConfigured, useAiConfig } from '@/core/ai/config';
 import { useLocalModel } from '@/core/ai/local/state';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { t } from '@/strings';
-import { Button, Card } from '@/ui';
+import { useHeroControls } from '@/core/shell/heroContext';
+import { Button, Card, PHONE_QUERY, useMediaQuery } from '@/ui';
 import styles from '../chat.module.css';
 
 /**
@@ -27,6 +28,10 @@ export function useChatSetup(): { needed: boolean; canDownload: boolean } | unde
 /** Shown in the chat until a local model is downloaded or a provider is usable; then it is the page's one action. */
 export function SetupHint({ setup }: { setup: ReturnType<typeof useChatSetup> }) {
   const navigate = useNavigate();
+  // Phone, inside the shell: the plus of the bottom bar is the one filled button of the screen, so this one steps back
+  // (the same rule as `EmptyState`, design check F2).
+  const inShell = !!useHeroControls();
+  const phone = useMediaQuery(PHONE_QUERY);
   if (!setup?.needed) return null;
   const { canDownload } = setup;
   const c = t.chat.setup;
@@ -36,7 +41,7 @@ export function SetupHint({ setup }: { setup: ReturnType<typeof useChatSetup> })
         <h2>{c.title}</h2>
         <p>{canDownload ? c.bodyLocal : c.bodyProviders}</p>
         <Button
-          variant="primary"
+          variant={inShell && phone ? 'secondary' : 'primary'}
           onClick={() => void navigate(settingsPath('ki', canDownload ? 'ai-local' : 'ai'))}
         >
           {canDownload ? c.openLocal : c.openProviders}
