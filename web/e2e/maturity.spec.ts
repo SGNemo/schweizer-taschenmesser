@@ -57,10 +57,12 @@ test('by default a preview tool, module and section are nowhere to be found', as
   await page.keyboard.press('Escape');
 
   await ready(page, '/settings/verbindungen');
-  await expect(page.locator('section[aria-labelledby="localapi"]')).toHaveCount(0);
-  await expect(page.locator('section[aria-labelledby="network"]')).toHaveCount(0);
-  await expect(page.getByTestId('connector-spotify')).toHaveCount(0);
+  // The sections load on demand: wait for the stable ones first, otherwise "count 0" holds before
+  // anything rendered. The network log is stable (sections.tsx), so it is there; the Local API is preview.
   await expect(page.getByTestId('connector-google')).toBeVisible();
+  await expect(page.locator('section[aria-labelledby="network"]')).toBeVisible();
+  await expect(page.locator('section[aria-labelledby="localapi"]')).toHaveCount(0);
+  await expect(page.getByTestId('connector-spotify')).toHaveCount(0);
 });
 
 test('the switch lists them with the badge "In Arbeit" and changes no saved choice', async ({
