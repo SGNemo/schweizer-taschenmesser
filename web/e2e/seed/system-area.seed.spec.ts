@@ -1,5 +1,7 @@
+import { expect } from '@playwright/test';
+import { measurePage, surfaceMetrics } from '../../scripts/lib/stimulusBudget';
 import { test } from './helpers';
-import { DESKTOP, startSeeded } from './guards';
+import { DESKTOP, openPage, PHONE, startSeeded } from './guards';
 import { checkPlanPage, type PageRule } from './planArea';
 
 /**
@@ -31,3 +33,75 @@ for (const theme of process.env.PLAN_SHOTS ? (['light', 'dark'] as const) : (['l
     });
   });
 }
+
+test.describe('settings start page: the states are lines', () => {
+  for (const phone of [false, true]) {
+    test.describe(phone ? 'phone' : 'desktop', () => {
+      test.use(
+        phone
+          ? {
+              viewport: PHONE,
+              isMobile: true,
+              hasTouch: true,
+              seeded: { scale: 'medium', preview: true },
+            }
+          : { viewport: DESKTOP, seeded: { scale: 'medium', desktop: true, preview: true } },
+      );
+      test('six status lines and three overview lines: no frame, nothing cut, a lower head', async ({
+        page,
+      }) => {
+        test.setTimeout(120_000);
+        await startSeeded(page, { phone });
+        await openPage(page, '/settings');
+        const read = await page.evaluate(() => {
+          const lines = Array.from(
+            document.querySelectorAll<HTMLElement>(
+              '[data-testid="settings-status"] a, [data-testid="settings-overview"] a',
+            ),
+          ).filter((el) => el.getBoundingClientRect().height > 0);
+          const framed = lines.filter((el) => {
+            const s = getComputedStyle(el);
+            return (
+              parseFloat(s.borderTopWidth) + parseFloat(s.borderBottomWidth) > 0 ||
+              s.boxShadow !== 'none'
+            );
+          });
+          const cut = lines
+            .flatMap((el) => Array.from(el.querySelectorAll('span')))
+            .filter((e) => e.children.length === 0 && e.scrollWidth > e.clientWidth + 1)
+            .map((e) => e.textContent ?? '');
+          return {
+            lines: lines.length,
+            heights: lines.map((el) => Math.round(el.getBoundingClientRect().height)),
+            framed: framed.length,
+            cut,
+            head: Math.round(
+              document.querySelector('[data-testid="settings-head"]')?.getBoundingClientRect()
+                .height ?? 0,
+            ),
+            sideways: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+          };
+        });
+        console.log(`settings start ${phone ? 'phone' : 'desktop'}: ${JSON.stringify(read)}`);
+        // The phone lists the categories instead of the three overview lines.
+        expect.soft(read.lines, 'status and overview lines').toBe(phone ? 6 : 9);
+        expect.soft(read.framed, 'lines with a frame or a shadow').toBe(0);
+        expect.soft(read.cut, 'cut text').toEqual([]);
+        for (const h of read.heights) {
+          expect.soft(h, 'a line is a touch target').toBeGreaterThanOrEqual(44);
+          // Name and state on one line, the context below it in one or two small lines.
+          expect.soft(h, 'a line stays a line').toBeLessThanOrEqual(104);
+        }
+        // The head was 368 px (desktop) and 338 px (phone) with the tiles.
+        expect.soft(read.head, 'height of the status head').toBeLessThanOrEqual(phone ? 360 : 300);
+        expect.soft(read.sideways, 'sideways overflow').toBe(false);
+        const m = surfaceMetrics(await page.evaluate(measurePage));
+        expect.soft(m.shadows, 'shadows in main').toBe(0);
+        if (process.env.PLAN_SHOTS)
+          await page.screenshot({
+            path: `${process.env.PLAN_SHOTS}/${phone ? 'phone' : 'desktop'}-light-settings.png`,
+          });
+      });
+    });
+  }
+});

@@ -17,7 +17,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  align-content: center;
+  align-content: flex-start;
   gap: 0 var(--space-2);
   height: 100%;
   min-height: var(--touch);
@@ -60,9 +60,10 @@
 }
 
 @media (max-width: 899px) {
-  /* Phone: one column of lines, so the head stays a strip, not a screen of its own. */
+  /* Phone: two columns of lines, so the head stays a strip, not a screen of its own (name and state wrap onto two
+     lines where one is too short). */
   .tiles {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     margin-top: var(--space-1);
   }
   /* U55: the context line is never cut. A line that only describes the category stays off the phone; the list below

@@ -19,6 +19,7 @@ const manifest: ModuleManifest = {
     hue: 'slate',
     widget: 'fortschritt',
     head: 'standard',
+    tabs: true,
     signature: 'gauges',
     type: 'mono',
   },
