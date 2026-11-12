@@ -24,6 +24,7 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 |  | Abos | Abos und wiederkehrende Zahlungen | standardmäßig an |
 |  | Budgets & Sparziele | Monatslimits je Ausgabenkategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt | bei Neuinstallationen an |
 | **Haushalt** | Listen | Einkauf, Packlisten und Checklisten | bei Neuinstallationen an |
+|  | Routinen | Putzplan und Haushalts-Routinen | bei Neuinstallationen an |
 |  | Vorräte | Was ist im Kühlschrank, im Vorratsschrank und im Tiefkühler? | optional |
 |  | Fitness | Training und Essen grob festhalten | Vorschau |
 | **Wissen** | Merkliste | Links, Lesestoff, Filme, Orte und Ideen merken | optional |
@@ -37,7 +38,7 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 |  | Passwörter | Passwort-Tresor | optional |
 | **System** | Dieser PC | Laufwerke mit Scan der größten Ordner und Systeminfo (Prozessor, Speicher, Akku, Netzwerk) | optional, nur Windows-App |
 |  | Downloads | Lädt Dateien herunter | bei Neuinstallationen an, nur Windows-App |
-|  | Fernbedienung | Steuere Medien, Lautstärke, Maus und Tastatur deines PCs vom Handy aus ([Anleitung](remote-control.de.md)) | Vorschau, nur Android-App |
+|  | Fernbedienung | Steuere Medien, Lautstärke, Maus und Tastatur deines PCs vom Handy aus | Vorschau, nur Android-App |
 
 „Bei Neuinstallationen an“: eingeschaltet, wenn du Nemo neu installierst. Eine Installation, die es schon gab, bleibt, wie sie ist; dort schaltest du das Modul in der Modul-Bibliothek ein.
 

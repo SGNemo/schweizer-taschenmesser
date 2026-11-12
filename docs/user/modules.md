@@ -24,6 +24,7 @@ In the **module library** you turn modules on and off (when turning one off: kee
 |  | Subscriptions | Subscriptions and recurring payments | on by default |
 |  | Budgets & savings goals | Monthly limits per expense category (from Finances) and savings goals with deposits and progress | on for new installations |
 | **Household** | Lists | Shopping, packing lists and checklists | on for new installations |
+|  | Routines | Cleaning plan and household routines | on for new installations |
 |  | Pantry | What’s in the fridge, the cupboard and the freezer? | optional |
 |  | Fitness | Keep a rough log of training and food | preview |
 | **Knowledge** | Saved | Save links, reading, films, places and ideas | optional |
@@ -37,7 +38,7 @@ In the **module library** you turn modules on and off (when turning one off: kee
 |  | Passwords | Password vault | optional |
 | **System** | This PC | Drives with a scan of the biggest folders and system info (processor, memory, battery, network) | optional, Windows app only |
 |  | Downloads | Downloads files | on for new installations, Windows app only |
-|  | Remote | Control media, volume, mouse and keyboard of your PC from your phone ([guide](remote-control.md)) | preview, Android app only |
+|  | Remote | Control media, volume, mouse and keyboard of your PC from your phone | preview, Android app only |
 
 “On for new installations”: switched on when you install Nemo fresh. An installation that already existed stays as it is; there you turn the module on in the module library.
 
