@@ -127,7 +127,10 @@ function Fields({
       {/* First what is needed: project, day, from, to, note. A break and an end on another day are rare. */}
       <AdvancedFields
         moduleId="timetrack"
-        hasData={(breakMin !== '' && breakMin !== '0') || (!!endDate && endDate !== date)}
+        // An error on save may be about the end day (an entry over midnight): the fields show then.
+        hasData={
+          (breakMin !== '' && breakMin !== '0') || (!!endDate && endDate !== date) || !!error
+        }
       >
         {running ? null : (
           <DayField label={t.timetrack.form.endDate} value={endDate} onChange={setEndDate} />

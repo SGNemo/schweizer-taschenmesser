@@ -78,6 +78,16 @@ export default function PeoplePage() {
   const wide = useSplitView();
   // The view outlives the way into a person's page and back (the head keeps its tabs there too).
   const [view, setView] = useState<PeopleView>('people');
+  const [closed, setClosed] = useState(false);
+  // A person picked from outside (a search hit, a link) is shown: on a wide page the panel opens on the list of people.
+  const [seen, setSeen] = useState(person?.id);
+  if (seen !== person?.id) {
+    setSeen(person?.id);
+    if (person && wide) {
+      setClosed(false);
+      setView('people');
+    }
+  }
   return person && !wide ? (
     <PersonDetail
       person={person}
@@ -95,6 +105,8 @@ export default function PeoplePage() {
       wide={wide}
       view={view}
       setView={setView}
+      closed={closed}
+      setClosed={setClosed}
       selectedId={wide ? (person?.id ?? null) : null}
       onOpen={(id) => setParams({ person: id }, { replace: wide })}
       onClosePanel={() => setParams({}, { replace: true })}
@@ -176,6 +188,8 @@ function PeopleList({
   onOpen,
   view,
   setView,
+  closed,
+  setClosed,
   onClosePanel,
 }: {
   people: Stored<Person>[] | undefined;
@@ -187,22 +201,15 @@ function PeopleList({
   onOpen: (id: string) => void;
   view: PeopleView;
   setView: (v: PeopleView) => void;
+  closed: boolean;
+  setClosed: (closed: boolean) => void;
   /** The panel was closed: the URL forgets the person (a narrower window must not jump to that person's page). */
   onClosePanel: () => void;
 }) {
   const [query, setQuery] = useState('');
   const [target, setTarget] = useState<PersonTarget>(null);
   const [params, setParams] = useSearchParams();
-  const [closed, setClosed] = useState(false);
-  // A person picked from outside (a search hit, a link) is shown: the panel opens on the list of people.
-  const [seen, setSeen] = useState(selectedId);
-  if (seen !== selectedId) {
-    setSeen(selectedId);
-    if (selectedId) {
-      setClosed(false);
-      setView('people');
-    }
-  }
+
   const advancedItem = useAdvancedMenuItem('people');
   const day = today();
 
@@ -241,7 +248,7 @@ function PeopleList({
       : ((selectedId ? shown.find((p) => p.id === selectedId) : undefined) ?? shown[0]);
   const pick = (id: string) => {
     // From "Offene Geschenke" too: the person's panel belongs to the list of people.
-    setView('people');
+    if (wide) setView('people');
     setClosed(false);
     onOpen(id);
   };

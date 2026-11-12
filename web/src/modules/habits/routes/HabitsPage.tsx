@@ -97,6 +97,8 @@ export default function HabitsPage() {
     <>
       <PageHeader
         title={t.habits.title}
+        // Phone: the "⋯" menu lies beside the day line or the goal chips, not on a row of its own.
+        besideContent={view !== 'archive' && !!goals && goals.length > 0}
         views={
           <Tabs
             label={t.habits.tabs.label}

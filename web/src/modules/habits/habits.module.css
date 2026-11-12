@@ -219,5 +219,12 @@
   .dayLine,
   .viewBar {
     margin-top: calc(-1 * var(--space-1));
+    /* The page's "⋯" menu lies at the right edge of this first row (`besideContent`). */
+    margin-inline-end: calc(var(--touch) + var(--space-2));
+  }
+  .dayLine {
+    min-height: var(--touch);
+    display: flex;
+    align-items: center;
   }
 }
