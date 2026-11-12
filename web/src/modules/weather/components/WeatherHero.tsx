@@ -88,19 +88,22 @@ export function WeatherHero({ weather }: { weather: WeatherView }) {
               .join(' · ')}
             testId="weather-temp"
           />
-          <p className={styles.rest}>{rest.join(' · ')}</p>
         </div>
       </HeroSlot>
-      {/* The three facts fill the stage's signature slot: with them there the frame draws no mark of its own. */}
+      {/* The three facts and the line of further values fill the stage's signature slot: with them there the frame
+          draws no mark of its own, and they start right after the short temperature block. */}
       <HeroSlot area="signature">
-        <ul className={styles.keys} data-testid="weather-keys">
-          {keys.map((k) => (
-            <li key={k.text} className={styles.key} data-kind={k.kind}>
-              <Icon name={k.icon} size={16} />
-              {k.text}
-            </li>
-          ))}
-        </ul>
+        <div className={styles.heroFacts} data-testid="weather-facts">
+          <ul className={styles.keys} data-testid="weather-keys">
+            {keys.map((k) => (
+              <li key={k.text} className={styles.key} data-kind={k.kind}>
+                <Icon name={k.icon} size={16} />
+                {k.text}
+              </li>
+            ))}
+          </ul>
+          <p className={styles.rest}>{rest.join(' · ')}</p>
+        </div>
       </HeroSlot>
       {/* The same line for the phone, in the page under the head (the stage keeps its height there). */}
       {rest.length > 0 ? (
