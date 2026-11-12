@@ -244,8 +244,14 @@
 }
 .groupAction {
   flex-shrink: 0;
-  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--text-muted);
   font-weight: var(--weight-medium);
+}
+.groupSummary:hover .groupAction {
+  color: var(--text);
 }
 .groupBody {
   padding-bottom: var(--space-2);

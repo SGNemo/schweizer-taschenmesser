@@ -41,8 +41,7 @@
   gap: var(--space-2);
 }
 .fold {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--surface-raised);
   border-radius: var(--radius-lg);
 }
 .foldSummary {
@@ -69,21 +68,40 @@
   grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
   gap: var(--space-2);
 }
+/* A module is a tile on a raised tone (Identity 4.0): no frame; the hue lives in the plate. */
 .listLink {
   display: flex;
   align-items: center;
   gap: var(--space-3);
   min-height: var(--touch);
-  padding: var(--space-3);
-  background: var(--surface);
-  border: 1px solid color-mix(in srgb, var(--module-color) 30%, var(--border));
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-raised);
   border-radius: var(--radius-md);
   color: var(--text);
   text-decoration: none;
 }
 .listLink:hover {
-  border-color: var(--accent);
+  background: var(--surface-2);
 }
 .listName {
   font-weight: var(--weight-medium);
+}
+/* One column (phone): the tiles are the rows of one surface, parted by hairlines. */
+@container page (max-width: 36rem) {
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-lg);
+    background: var(--surface-raised);
+  }
+  .list > li + li {
+    border-top: 1px solid var(--border);
+  }
+  .listLink {
+    padding-inline: var(--space-1);
+    border-radius: var(--radius-sm);
+    background: none;
+  }
 }

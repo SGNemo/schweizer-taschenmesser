@@ -7,9 +7,9 @@ import { tSettingsV3 } from '@/strings.settingsV3';
 import type { IconName } from '@/ui';
 import { CATEGORY_LOOK, STATUS_LOOK } from '../categoryLook';
 import { ModuleRouteHead } from '../ModuleSettingsPage';
-import { PageHead } from '../PageHead';
 import { StatusHead } from '../StatusHead';
 import { useSettingsSections } from '../useSections';
+import { SettingsTitle } from './SettingsTitle';
 
 /** `decodeURIComponent` that keeps a malformed escape as it is (a typed `/settings/module/%` must not crash the head). */
 function safeDecode(segment: string): string {
@@ -21,8 +21,8 @@ function safeDecode(segment: string): string {
 }
 
 /**
- * Head of the open settings page (moved out of `SettingsLayout` unchanged; settings v3.1 variant B keeps it compact –
- * a state figure belongs in the tab's `StatusCard`, not here): "Status" on the landing page, the category's own head on a category, the module's on its page. */
+ * Head of the open settings page: "Status" on the landing page (`StatusHead`); on a category and on a module's page
+ * the title line of Identity 4.0 (`SettingsTitle`). A state figure belongs in the tab's `StatusCard`, not here. */
 export function SettingsHead() {
   const { pathname } = useLocation();
   const v3 = tSettingsV3.use();
@@ -36,7 +36,7 @@ export function SettingsHead() {
   // An unknown category, or a known one without visible sections (vault off, preview hidden): a "not found" page, no category head.
   if (!isCategoryId(segment) || !visibleCategoryIds(sections).includes(segment))
     return (
-      <PageHead
+      <SettingsTitle
         {...STATUS_LOOK}
         icon="settings"
         eyebrow={v3.eyebrow}
@@ -46,7 +46,7 @@ export function SettingsHead() {
     );
   const c = categoryDef(segment);
   return (
-    <PageHead
+    <SettingsTitle
       {...CATEGORY_LOOK[segment]}
       icon={c.icon as IconName}
       eyebrow={v3.eyebrow}

@@ -327,10 +327,13 @@ export function SettingsIndex() {
   if (legacy) return <Navigate to={legacy} replace />;
   return (
     <div className={styles.overview}>
-      {wide ? null : <QuickBar />}
+      {/* Identity 4.0 (package 0b-E): the quick switches live on this page only, never above a tab. On the desktop
+          they come first (the categories are the column beside them); on the phone the categories come first. */}
+      {wide ? <QuickBar /> : null}
       {/* On the phone the category list below says the same (title, one line, state); the cards would only repeat it. */}
       {wide ? <SettingsOverview /> : null}
       {wide ? null : <CategoryNav list />}
+      {wide ? null : <QuickBar />}
     </div>
   );
 }
@@ -637,7 +640,6 @@ export function SettingsLayout() {
     <>
       {wide ? null : <SettingsSearch />}
       {wide ? null : <SettingsHead />}
-      {wide ? <QuickBar /> : null}
       {wide ? (
         <div className={`${styles.split} ${showToc ? styles.splitToc : ''}`}>
           <div className={styles.navCol}>

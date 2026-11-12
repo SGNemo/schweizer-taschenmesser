@@ -167,10 +167,10 @@
   height: 2.5rem;
   border-radius: var(--radius-md);
 }
+/* The category list of the phone: rows of one raised surface, hairlines between them only (Identity 4.0). */
 .list,
 .navGroup ul.list {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--surface-raised);
   border-radius: var(--radius-lg);
   overflow: hidden;
 }
@@ -257,13 +257,25 @@
 .nav .status {
   margin-left: auto;
 }
+/* The quick switches of the start page: one group on a raised tone, no frame (Identity 4.0). */
 .quick {
   display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+}
+.quickTitle {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-medium);
+}
+.quickItems {
+  display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2) var(--space-4);
-  margin-bottom: var(--space-3);
-  /* As wide as the page: five switches fit one row on a desktop instead of wrapping into three. */
-  max-width: none;
+  gap: var(--space-3) var(--space-4);
 }
 .quickItem {
   display: flex;

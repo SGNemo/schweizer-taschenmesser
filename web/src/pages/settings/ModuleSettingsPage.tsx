@@ -16,11 +16,10 @@ import { tSettingsV3 } from '@/strings.settingsV3';
 import { useUiStore } from '@/stores/ui';
 import { tComfort } from '@/strings.comfort';
 import { Badge, Button, EmptyState, HuePlate, SettingRow, SettingsGroup } from '@/ui';
-import { Signature } from '@/ui/identity';
 import { FieldRow } from './ModuleSection';
 import { STATUS_LOOK } from './categoryLook';
 import { hasModulePage } from './hasModulePage';
-import { PageHead } from './PageHead';
+import { SettingsTitle } from './components/SettingsTitle';
 import styles from './ModuleSettingsPage.module.css';
 import settingsStyles from './settings.module.css';
 
@@ -48,16 +47,14 @@ function ModuleHead({ manifest }: { manifest: ModuleManifest }) {
   const o = tSettings2.use().modulePage;
   const v3 = tSettingsV3.use();
   return (
-    <PageHead
+    <SettingsTitle
       hue={manifest.identity.hue}
-      hue2={manifest.identity.hue2}
       area={manifest.area ?? 'system'}
       icon={manifest.icon}
       eyebrow={v3.modulesEyebrow}
       title={manifest.name}
       titleId={`module-${manifest.id}`}
       description={manifest.description}
-      decoration={<Signature id={manifest.identity.signature} size="S" />}
       testId="module-settings-head"
       actions={
         <Link to={`/library#module-${manifest.id}`} className={styles.libraryLink}>
@@ -71,7 +68,7 @@ function ModuleHead({ manifest }: { manifest: ModuleManifest }) {
 /** The head of a module route that has no module page (unknown, off, loading): the settings title, nothing more. */
 function PlainHead() {
   return (
-    <PageHead
+    <SettingsTitle
       {...STATUS_LOOK}
       icon="settings"
       eyebrow={tSettingsV3.use().modulesEyebrow}
