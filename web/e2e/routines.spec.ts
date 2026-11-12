@@ -42,7 +42,7 @@ test('"Erledigt" hands the routine to the next name, and "Rückgängig" gives it
 
   const row = page.getByRole('listitem').filter({ hasText: 'Müll rausbringen' });
   await expect(row).toContainText('an der Reihe: Mia');
-  await row.getByRole('button', { name: 'Müll rausbringen: Erledigt' }).click();
+  await row.getByRole('button', { name: 'Erledigt: Müll rausbringen' }).click();
   await expect(page.getByText('Müll rausbringen erledigt. Als Nächstes: Ben.')).toBeVisible();
   // Nothing is due any more; the routine waits under "Alle nach Raum" with the next name.
   await expect(page.getByTestId('routines-nothing-due')).toBeVisible();

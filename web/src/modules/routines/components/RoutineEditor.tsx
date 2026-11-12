@@ -70,18 +70,25 @@ function Fields({
   async function save() {
     if (!name.trim()) return setError(t.form.required);
     const mins = Math.round(Number(minutes.replace(',', '.')));
+    // An emptied field clears the duration; text that is no number leaves it as it was.
+    const duration =
+      minutes.trim() === ''
+        ? undefined
+        : Number.isFinite(mins) && mins >= 1
+          ? Math.min(1440, mins)
+          : existing?.minutes;
     const form = {
       name,
       room,
       repeat,
       people,
       dueDate: dueDate || day,
-      minutes: Number.isFinite(mins) && mins >= 1 ? Math.min(1440, mins) : undefined,
+      minutes: duration,
       note,
     };
     if (existing) {
       // Only what was changed here is written (`editPatch`): a due routine stays due, a tick made meanwhile stays.
-      const patch = editPatch(existing, form);
+      const patch = editPatch(existing, form, (await routineRepo.get(existing.id)) ?? existing);
       if (Object.keys(patch).length > 0) await routineRepo.update(existing.id, patch);
     } else await routineRepo.create(newRoutine(form));
     onClose();
@@ -135,6 +142,7 @@ function Fields({
         />
         <DayField
           label={t.routines.fields.dueDate}
+          hint={dueDate < day ? t.routines.fields.dueDatePast : undefined}
           value={dueDate}
           onChange={setDueDate}
           required

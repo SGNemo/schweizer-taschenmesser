@@ -107,8 +107,17 @@ export interface RoutineForm {
   note: string;
 }
 
-const sameRule = (a: Recurrence, b: Recurrence): boolean =>
-  JSON.stringify(openEnded(a)) === JSON.stringify(openEnded(b));
+/** The rule as a comparable text: its fields in a fixed order, weekdays sorted, nothing for "not set". */
+const ruleKey = (r: Recurrence): string =>
+  [
+    r.freq,
+    r.interval ?? 1,
+    [...(r.byWeekday ?? [])].sort((a, b) => a - b).join(','),
+    r.byMonthDay ?? '',
+    r.monthOfYear ?? '',
+  ].join('|');
+
+const sameRule = (a: Recurrence, b: Recurrence): boolean => ruleKey(a) === ruleKey(b);
 
 /** A new routine: due on the day the user set (a day in the past is simply due now), the rule counts from it. */
 export function newRoutine(form: RoutineForm): Routine {
@@ -130,7 +139,12 @@ export function newRoutine(form: RoutineForm): Routine {
  * and whatever happened to it while the dialog was open (a tick in the widget, in the plan, on another device)
  * is not written back: day, anchor and turn are only touched when the user changed them here.
  */
-export function editPatch(existing: Routine, form: RoutineForm): Partial<Routine> {
+export function editPatch(
+  existing: Routine,
+  form: RoutineForm,
+  /** The row as it is stored right now (it may have been ticked since the dialog opened). */
+  live: Pick<Routine, 'people' | 'turn'> = existing,
+): Partial<Routine> {
   const patch: Partial<Routine> = {};
   const name = form.name.trim();
   if (name !== existing.name) patch.name = name;
@@ -149,8 +163,12 @@ export function editPatch(existing: Routine, form: RoutineForm): Partial<Routine
   const people = parsePeople(form.people);
   if (people.join('\n') !== existing.people.join('\n')) {
     patch.people = people;
-    // Whoever was next stays next while their name is still there.
-    patch.turn = Math.max(0, people.indexOf(whoseTurn(existing) ?? ''));
+    // Whoever is next right now stays next while their name is still there (a corrected capital letter counts as the same name).
+    const next = whoseTurn(live)?.toLocaleLowerCase();
+    patch.turn = Math.max(
+      0,
+      people.findIndex((p) => p.toLocaleLowerCase() === next),
+    );
   }
   if (form.minutes !== existing.minutes) patch.minutes = form.minutes;
   const note = form.note.trim() || undefined;

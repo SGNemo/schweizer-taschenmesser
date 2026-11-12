@@ -16,9 +16,9 @@ export const routines: Strings['routines'] = {
   due: 'due',
   dueGroup: 'Due today',
   done: 'Done',
-  doneFor: (name: string) => `${name}: done`,
+  doneFor: (name: string) => `Done: ${name}`,
   doneToast: (name: string, next?: string) =>
-    next ? `${name} done. ${next}’s turn next.` : `${name} done.`,
+    next ? `Done: ${name}. ${next}’s turn next.` : `Done: ${name}.`,
   turnOf: (name: string) => `${name}’s turn`,
   noRoom: 'No room',
   figureDetail: (n: number) => (n === 1 ? 'of 1 routine' : `of ${n} routines`),
@@ -34,6 +34,7 @@ export const routines: Strings['routines'] = {
     peopleHint:
       'Separate names with commas, in the order of the round. Leave empty if nobody is named.',
     dueDate: 'Next time',
+    dueDatePast: 'A day in the past means: due now.',
     minutes: 'Duration in minutes',
     moreSummary: 'Names, next time, duration, note',
   },

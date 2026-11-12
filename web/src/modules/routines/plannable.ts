@@ -10,7 +10,7 @@ import { t } from '@/strings';
 import { DEFAULT_MINUTES, donePatch, whoseTurn } from './logic';
 import { routineRepo } from './repo';
 
-/** `<id>:<due day>` → its parts (the day is the last ten characters). */
+/** `<id>:<due day>` → its parts, split at the last colon. */
 const split = (key: string): { id: string; due: string } => {
   const at = key.lastIndexOf(':');
   return at < 0 ? { id: key, due: '' } : { id: key.slice(0, at), due: key.slice(at + 1) };

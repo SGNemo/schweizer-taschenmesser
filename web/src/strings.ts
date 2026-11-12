@@ -8912,7 +8912,7 @@ export const de = {
     due: 'dran',
     dueGroup: 'Heute dran',
     done: 'Erledigt',
-    doneFor: (name: string) => `${name}: Erledigt`,
+    doneFor: (name: string) => `Erledigt: ${name}`,
     doneToast: (name: string, next?: string) =>
       next ? `${name} erledigt. Als Nächstes: ${next}.` : `${name} erledigt.`,
     turnOf: (name: string) => `an der Reihe: ${name}`,
@@ -8930,6 +8930,7 @@ export const de = {
       peopleHint:
         'Namen mit Komma trennen, in der Reihenfolge der Runde. Leer lassen, wenn niemand genannt wird.',
       dueDate: 'Nächstes Mal',
+      dueDatePast: 'Ein Tag in der Vergangenheit heißt: jetzt dran.',
       minutes: 'Dauer in Minuten',
       moreSummary: 'Namen, nächstes Mal, Dauer, Notiz',
     },

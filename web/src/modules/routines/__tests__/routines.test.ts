@@ -229,4 +229,29 @@ describe('editor', () => {
       turn: 0,
     });
   });
+
+  it('a tick made while the dialog was open counts: the turn is taken from the stored row', () => {
+    const opened = make({ people: ['Mia', 'Ben', 'Kim'], turn: 0 });
+    // Meanwhile Mia ticked it elsewhere: Ben is next now.
+    const live = { people: opened.people, turn: 1 };
+    expect(editPatch(opened, { ...formOf(opened), people: 'Ben, Kim, Mia' }, live)).toEqual({
+      people: ['Ben', 'Kim', 'Mia'],
+      turn: 0,
+    });
+  });
+
+  it('a corrected capital letter in a name keeps the turn; an equal rule in another order is no change', () => {
+    const r = make({ people: ['mia', 'Ben'], turn: 1 });
+    expect(editPatch(r, { ...formOf(r), people: 'Mia, ben' })).toEqual({
+      people: ['Mia', 'ben'],
+      turn: 1,
+    });
+    const days = make({ repeat: { freq: 'weekly', interval: 1, byWeekday: [1, 4] } });
+    expect(
+      editPatch(days, {
+        ...formOf(days),
+        repeat: { byWeekday: [4, 1], interval: 1, freq: 'weekly' },
+      }),
+    ).toEqual({});
+  });
 });
