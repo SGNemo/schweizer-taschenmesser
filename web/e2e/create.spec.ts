@@ -72,7 +72,7 @@ test('"Duplizieren" copies an invoice one month later and opens the copy', async
   await openEditor(page, page.getByRole('button', { name: /^Vermieter/ }));
   await page.getByRole('dialog').getByRole('button', { name: 'Duplizieren' }).click();
   await expect(page.getByText(/Dupliziert/)).toBeVisible();
-  await expect(page.getByRole('dialog').getByLabel('Fällig am')).toHaveValue('2026-11-01');
+  await expect(page.getByRole('dialog').getByLabel('Fällig am')).toHaveValue('01.11.2026');
   await expect(page.getByRole('dialog').getByLabel('Betrag')).toHaveValue('1200,00');
   await save(page);
   await expect(page.getByRole('listitem').filter({ hasText: 'Vermieter' })).toHaveCount(2);

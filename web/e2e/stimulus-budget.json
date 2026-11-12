@@ -618,11 +618,11 @@
       "signatureBlocks": 0
     },
     "p412--invoices": {
-      "height": 1455,
+      "height": 1157,
       "buttons": 33,
       "links": 9,
       "icons": 30,
-      "firstScreenActions": 28,
+      "firstScreenActions": 38,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
