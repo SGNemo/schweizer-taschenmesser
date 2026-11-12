@@ -227,7 +227,11 @@ export function PageList(p: PageListProps) {
           title={t.notes.empty}
           testId="notes-empty"
           motif={<SignatureMark id="notePaper" size={64} />}
-        />
+        >
+          <Button variant="primary" onClick={p.onNewPage}>
+            {t.notes.newPage}
+          </Button>
+        </EmptyState>
       ) : null}
 
       <div

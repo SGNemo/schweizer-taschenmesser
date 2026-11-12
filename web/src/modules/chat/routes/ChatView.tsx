@@ -7,6 +7,7 @@ import { now } from '@/core/time/now';
 import { t } from '@/strings';
 import {
   Badge,
+  Button,
   Checkbox,
   EmptyState,
   Icon,
@@ -90,6 +91,9 @@ export default function ChatPage() {
     [threads, messages, query, archived],
   );
 
+  // Nothing here at all (not: a search without a hit, or an empty archive).
+  const isEmpty = !!threads && threads.length === 0;
+
   if (!aiOn) {
     return (
       <>
@@ -118,7 +122,7 @@ export default function ChatPage() {
         {/* One filled action per page (C23): while the setup hint shows, it is that one and this steps back. */}
         <PageAction
           short={t.nav.plusThings.chat}
-          variant={setup?.needed ? 'secondary' : 'primary'}
+          variant={setup?.needed || isEmpty ? 'secondary' : 'primary'}
           onClick={() => void create()}
         >
           <Icon name="plus" size={18} />
@@ -141,12 +145,18 @@ export default function ChatPage() {
           onChange={(e) => setArchived(e.target.checked)}
         />
         {threads && shown.length === 0 ? (
-          // Title and motif only: „Neuer Chat“ in the toolbar is the page's one verb (C23).
+          // No chat yet: one verb. While the set-up hint shows, that one is the next step and this stays a title.
           <EmptyState
             title={c.empty}
             testId="chat-empty"
             motif={<SignatureMark id="bubble" size={64} />}
-          />
+          >
+            {isEmpty && !setup?.needed ? (
+              <Button variant="primary" onClick={() => void create()}>
+                {c.newChat}
+              </Button>
+            ) : null}
+          </EmptyState>
         ) : (
           <ItemList label={c.title}>
             {shown.map((x) => (
