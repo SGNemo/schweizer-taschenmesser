@@ -151,6 +151,8 @@ export default function PlannerPage() {
   // `?week=` (the calendar's „Plan“ entry) lands on the board, which always starts today.
   useEffect(() => {
     if (params.get('new')) {
+      // the entry row comes with the board (it is the last row under it)
+      if (!board) return;
       addRef.current?.querySelector('input')?.focus();
       setParams({}, { replace: true });
       return;
@@ -743,62 +745,65 @@ export default function PlannerPage() {
         />
       ) : null}
 
-      {/* One tree whether the board is read or not: the entry row is never built anew under the typing hand. */}
-      <SplitView
-        enabled={wide && shownDay !== undefined}
-        asideLabel={t.planner.board.dayPanel}
-        aside={shownDay ? renderDay(shownDay) : null}
-      >
-        {!board ? null : wide ? (
-          // The week as a list: one row per day with what is free and how full it is; the picked day is marked.
-          <ul className={styles.week} aria-label={t.planner.board.label}>
-            {board.days.map((d) => (
-              <li key={d.date}>
-                <button
-                  type="button"
-                  className={styles.weekDay}
-                  data-row
-                  data-testid={`week-${d.date}`}
-                  aria-current={d.date === shownDay?.date ? 'true' : undefined}
-                  onClick={() => setPickedDay(d.date)}
-                >
-                  <span className={styles.dayName}>{formatDay(d.date, 'EEE d.')}</span>
-                  <span className={styles.capacity}>{capacityLabel(d)}</span>
-                  {!d.off ? (
-                    <span className={styles.bar} aria-hidden="true">
-                      <Progress
-                        value={d.planned}
-                        max={Math.max(d.usable, 1)}
-                        label={t.planner.board.load(compact(d.planned), compact(d.usable))}
-                      />
-                    </span>
-                  ) : null}
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div>
-            <div className={styles.strip} role="group" aria-label={t.planner.board.strip}>
+      {/* The entry row is the last row under the week, so it comes with the board: it is built once, at its place,
+          and never moves or is built anew under the typing hand (U01). */}
+      {board ? (
+        <SplitView
+          enabled={wide && shownDay !== undefined}
+          asideLabel={t.planner.board.dayPanel}
+          aside={shownDay ? renderDay(shownDay) : null}
+        >
+          {wide ? (
+            // The week as a list: one row per day with what is free and how full it is; the picked day is marked.
+            <ul className={styles.week} aria-label={t.planner.board.label}>
               {board.days.map((d) => (
-                <button
-                  key={d.date}
-                  type="button"
-                  className={styles.stripChip}
-                  aria-pressed={d.date === shownDay?.date}
-                  onClick={() => setPickedDay(d.date)}
-                >
-                  <span>{dayName(d.date)}</span>
-                  <span>{capacityShort(d)}</span>
-                </button>
+                <li key={d.date}>
+                  <button
+                    type="button"
+                    className={styles.weekDay}
+                    data-row
+                    data-testid={`week-${d.date}`}
+                    aria-current={d.date === shownDay?.date ? 'true' : undefined}
+                    onClick={() => setPickedDay(d.date)}
+                  >
+                    <span className={styles.dayName}>{formatDay(d.date, 'EEE d.')}</span>
+                    <span className={styles.capacity}>{capacityLabel(d)}</span>
+                    {!d.off ? (
+                      <span className={styles.bar} aria-hidden="true">
+                        <Progress
+                          value={d.planned}
+                          max={Math.max(d.usable, 1)}
+                          label={t.planner.board.load(compact(d.planned), compact(d.usable))}
+                        />
+                      </span>
+                    ) : null}
+                  </button>
+                </li>
               ))}
+            </ul>
+          ) : (
+            <div>
+              <div className={styles.strip} role="group" aria-label={t.planner.board.strip}>
+                {board.days.map((d) => (
+                  <button
+                    key={d.date}
+                    type="button"
+                    className={styles.stripChip}
+                    aria-pressed={d.date === shownDay?.date}
+                    onClick={() => setPickedDay(d.date)}
+                  >
+                    <span>{dayName(d.date)}</span>
+                    <span>{capacityShort(d)}</span>
+                  </button>
+                ))}
+              </div>
+              {shownDay ? renderDay(shownDay) : null}
             </div>
-            {shownDay ? renderDay(shownDay) : null}
-          </div>
-        )}
-        {board ? waitingBlock : null}
-        {entryRow}
-      </SplitView>
+          )}
+          {waitingBlock}
+          {entryRow}
+        </SplitView>
+      ) : null}
 
       <DaySheet
         day={board?.days.find((d) => d.date === sheetDate)}

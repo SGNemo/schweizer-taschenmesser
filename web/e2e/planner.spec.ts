@@ -55,6 +55,16 @@ async function enter(page: Page, text: string) {
 
 const today = (page: Page) => page.getByTestId('day-2026-11-09');
 
+/**
+ * A day of the week. Beside the week list (wide page, 0b-4b) one day is open in the panel: the day is chosen in
+ * the list first. On the phone the strip does that, and the tests there press it themselves.
+ */
+async function day(page: Page, date: string) {
+  const row = page.getByTestId(`week-${date}`);
+  if (await row.isVisible()) await row.click();
+  return page.getByTestId(`day-${date}`);
+}
+
 test.describe('Planer (week board, package 1)', () => {
   // The board tests read seven columns side by side; the phone shows one day (its own test below).
   test.beforeEach(({ isMobile }, info) => {
@@ -71,8 +81,8 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(page.getByText('Eingetragen · Frist Do', { exact: false })).toBeVisible();
     // 120 minutes become two sessions of one hour on different days.
     await expect(page.getByText('Steuer · Teil 1/2')).toBeVisible();
-    await expect(page.getByText('Steuer · Teil 2/2')).toBeVisible();
-    await expect(today(page)).toContainText('Frist Do');
+    await expect(await day(page, '2026-11-10')).toContainText('Steuer · Teil 2/2');
+    await expect(await day(page, '2026-11-09')).toContainText('Frist Do');
     await expect(page.getByTestId('planner-head')).toContainText('2 h 12 frei heute');
     // Four columns a row at 1280 px, seven from 95rem of page width; no row runs past its column, nothing scrolls sideways.
     const measure = () =>
@@ -99,7 +109,7 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(today(page)).toContainText('neu, nach Priorität');
   });
 
-  test('board titles break between words, never inside one or cut, from 1280 to 1920 (N01)', async ({
+  test('day titles break between words, never inside one or cut, from 1280 to 1920 (N01)', async ({
     page,
   }) => {
     await enablePlanner(page);
@@ -116,7 +126,9 @@ test.describe('Planer (week board, package 1)', () => {
     const broken = () =>
       page.evaluate(() => {
         const out: string[] = [];
-        for (const el of Array.from(document.querySelectorAll('[data-board-title]'))) {
+        for (const el of Array.from(
+          document.querySelectorAll('[data-testid="day-2026-11-09"] li span[title]'),
+        )) {
           const box = el.getBoundingClientRect();
           const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
           for (let node = walker.nextNode(); node; node = walker.nextNode()) {
@@ -134,7 +146,7 @@ test.describe('Planer (week board, package 1)', () => {
         }
         return out;
       });
-    await expect(page.locator('[data-board-title]')).toHaveCount(3);
+    await expect(today(page).locator('li span[title]')).toHaveCount(3);
     await expect.poll(broken).toEqual([]);
     // Also between the two: below 95rem of page width the board stays at four a row.
     for (const width of [1600, 1440, 1280]) {
@@ -207,7 +219,7 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(sheet.getByTestId('day-available')).toHaveText('frei');
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('planner-head')).toContainText('Heute ist frei.');
-    await expect(page.getByTestId('day-2026-11-10')).toContainText('Blogpost');
+    await expect(await day(page, '2026-11-10')).toContainText('Blogpost');
     await page.getByRole('button', { name: 'Rückgängig' }).last().click();
     await expect(page.getByTestId('planner-head')).not.toContainText('Heute ist frei.');
   });
@@ -232,7 +244,7 @@ test.describe('Planer (week board, package 1)', () => {
     await page.getByRole('dialog').getByTestId('day-off').click();
     await page.keyboard.press('Escape');
     await expect(page.getByTestId('planner-head')).toContainText('Heute ist frei.');
-    await expect(page.getByTestId('day-2026-11-10')).toContainText('Alte Sache');
+    await expect(await day(page, '2026-11-10')).toContainText('Alte Sache');
     // The ToDo page follows: not in Heute, the head counts nothing for today, no „Alle auf heute“.
     await page.goto('/todos?view=today');
     // Nothing on today: the first row is there, the head shows no figure (no zero), the empty view says it once.
@@ -271,7 +283,7 @@ test.describe('Planer (week board, package 1)', () => {
     // Später: the thing's own date becomes tomorrow; in Bald the ToDo page says where the planner put it.
     await today(page).getByRole('button', { name: 'Aktionen für Angebot' }).click();
     await page.getByRole('menuitem', { name: 'Später' }).click();
-    await expect(page.getByTestId('day-2026-11-10')).toContainText('Angebot');
+    await expect(await day(page, '2026-11-10')).toContainText('Angebot');
     await ready(page, '/todos?view=soon');
     await expect(page.getByTestId('in-plan').first()).toHaveText('im Plan: Di');
     await expect(page.getByRole('button', { name: 'Neu planen' })).toHaveCount(0);
@@ -352,7 +364,7 @@ test.describe('Planer (calendar chip, prefix, sentences – package 2)', () => {
     await ready(page, '/planner');
     await enter(page, 'Steuer 2 Std bis Do');
     await enter(page, 'Keller 30min');
-    await expect(page.getByText('Steuer · Teil 2/2')).toBeVisible();
+    await expect(await day(page, '2026-11-10')).toContainText('Steuer · Teil 2/2');
     const days = new Set(
       (await rows(page, 'planner_assignment'))
         .filter((r) => r.deletedAt === null)
@@ -405,7 +417,7 @@ test.describe('Planer (calendar chip, prefix, sentences – package 2)', () => {
     await enablePlanner(page);
     await ready(page, '/planner');
     await enter(page, 'Blogpost 90min');
-    const thursday = page.getByTestId('day-2026-11-12');
+    const thursday = await day(page, '2026-11-12');
     await expect(thursday).toContainText('frei von');
     const requests: string[] = [];
     const origin = new URL(page.url()).origin;
@@ -441,7 +453,7 @@ test.describe('Planer (calendar chip, prefix, sentences – package 2)', () => {
     await expect(page.getByTestId('ai-on')).toBeVisible();
     await ready(page, '/planner');
     await enter(page, 'Blogpost 90min');
-    const friday = page.getByTestId('day-2026-11-13');
+    const friday = await day(page, '2026-11-13');
     await expect(friday).toContainText('frei von');
     const requests: string[] = [];
     const origin = new URL(page.url()).origin;
@@ -734,7 +746,7 @@ test.describe('Planer (time windows, templates – package 5)', () => {
     await dialog.getByRole('button', { name: 'Passt so' }).click();
     await expect(page.getByText('Ruh dich aus – der Plan rückt ruhig weiter.')).toBeVisible();
     await expect(page.getByTestId('planner-head')).toContainText('Heute ist frei.');
-    await expect(page.getByTestId('day-2026-11-10')).toContainText('Blogpost');
+    await expect(await day(page, '2026-11-10')).toContainText('Blogpost');
     await page.getByRole('button', { name: 'Rückgängig' }).last().click();
     await expect(page.getByTestId('planner-head')).not.toContainText('Heute ist frei.');
   });

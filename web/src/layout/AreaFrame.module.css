@@ -218,10 +218,13 @@
   background: var(--module-color);
   color: var(--surface);
 }
-/* Design check K7: a stage shows no default signature. The stage's backdrop is the module's picture already, and
-   the tile with a surface and a ring looked like a button and is none. A page's own content in the slot stays. */
-.stage .signature[data-default='true'] {
-  display: none;
+/* Design check K7: until the page fills the slot, the stage draws its default signature without a surface. The
+   tile with a surface and a ring looked like a button and is none; the mark alone is a drawing. */
+.stage .signature[data-default='true'] [data-signature] {
+  width: auto;
+  height: auto;
+  background: none;
+  box-shadow: none;
 }
 :global(:root[data-theme='dark']) .stage .plate {
   color: var(--bg);
@@ -313,6 +316,10 @@
      its size, so its controls stay ≥ 44 px. */
   .signature[data-default='true'] {
     zoom: 0.7;
+  }
+  /* the stage's bare mark: icon size, so the stage with data keeps room under its 320 px (K3) */
+  .stage .signature[data-default='true'] {
+    zoom: 0.6;
   }
 
   .signature {
