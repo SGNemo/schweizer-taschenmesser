@@ -85,7 +85,7 @@ Colour carries meaning and is **always paired with an icon or a text label**; ti
 | navigation area            | `--area-color` (= a `--cat-*`) via `data-area` | area name next to it        | icon and tile of the active area (rail, bottom bar), module library blocks |
 | module identity            | `--module-color` (= a `--mod-*`) via `data-hue` | module icon + title next to it | icon chip and 4 px left edge on widget cards, module frame and the calendar's today column; active nav icon; first chart series. Off: "Modulfarben" / "Ruhig" → grey |
 
-- No decoration colours: links in widgets are neutral (`--text-muted`, underlined); accent = primary action, the open tab, "today". No accent in the app frame (package 0b-R): the current module is a capsule in its hue with the icon in it, Übersicht, Bibliothek and Einstellungen the same capsule in grey; the area colour is the active tile of the rail and the bottom bar.
+- No decoration colours: links in widgets are neutral (`--text-muted`, underlined); accent = primary action, the open tab, "today". No accent in the app frame (package 0b-R): a module's icon is in its hue, the current module is a capsule in that hue, Übersicht, Bibliothek and Einstellungen the same capsule in grey; the area colour is the active tile of the rail and the bottom bar.
 - Calendar blocks/chips are neutral (`--surface-2`, own events `--accent-soft`); the kind shows as a 3 px left stripe (`--kind`) and in the title/tooltip. Birthdays/invoices/subscriptions use category stripes, deadlines (`cancel`, `end`, `expiry`) `--warning`, never red.
 - **"Ruhig" colour mode** (Einstellungen → Darstellung → Farben, `data-color='calm'`): `--cat-*`, `--success`, `--warning`, `--info` become muted; only overdue and today keep colour.
 
