@@ -85,9 +85,10 @@ describe('ChatPage', () => {
     view();
     const hint = await screen.findByTestId('chat-setup-hint');
     expect(within(hint).getByRole('button', { name: c.setup.openLocal })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: new RegExp(c.newChat) }).className).not.toMatch(
-      /primary/,
-    );
+    const newChat = screen.getByRole('button', { name: new RegExp(c.newChat) });
+    expect(newChat.className).not.toMatch(/primary/);
+    // Without an AI a chat could not answer: the action (and with it the phone's plus) is disabled.
+    expect(newChat).toBeDisabled();
   });
 
   it('points to the local model download until a model or provider is set up', async () => {
