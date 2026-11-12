@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { backSettled, enable, moreFields } from './helpers';
+import { openPageMenu } from './money-helpers';
 import { primaryActions } from './primaries';
 
 test.beforeEach(async ({ page }) => {
@@ -86,7 +87,7 @@ test('Packliste: pack, reset, copy as template, checklist and delete', async ({ 
   await tick(page.getByRole('checkbox', { name: 'Ladekabel' }));
   await expect(page.getByTestId('lists-progress')).toContainText('Alles gepackt!');
 
-  await page.getByRole('button', { name: 'Als Vorlage kopieren' }).click();
+  await (await openPageMenu(page)).getByRole('menuitem', { name: 'Als Vorlage kopieren' }).click();
   await expect(page.getByRole('button', { name: 'Kopie von Urlaub' })).toHaveAttribute(
     'aria-current',
     'page',
@@ -94,16 +95,16 @@ test('Packliste: pack, reset, copy as template, checklist and delete', async ({ 
   await expect(page.getByTestId('lists-progress')).toContainText('0 von 2 gepackt');
 
   await page.getByRole('button', { name: 'Urlaub', exact: true }).click();
-  await page.getByRole('button', { name: 'Alles zurücksetzen' }).click();
+  await (await openPageMenu(page)).getByRole('menuitem', { name: 'Alles zurücksetzen' }).click();
   await expect(page.getByTestId('lists-progress')).toContainText('0 von 2 gepackt');
 
   // Delete the copy through the editor; the shopping list cannot be deleted.
   await page.getByRole('button', { name: 'Kopie von Urlaub' }).click();
-  await page.getByRole('button', { name: 'Liste bearbeiten' }).click();
+  await (await openPageMenu(page)).getByRole('menuitem', { name: 'Liste bearbeiten' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Liste löschen' }).click();
   await expect(page.getByRole('button', { name: 'Kopie von Urlaub' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Einkauf', exact: true }).click();
-  await page.getByRole('button', { name: 'Liste bearbeiten' }).click();
+  await (await openPageMenu(page)).getByRole('menuitem', { name: 'Liste bearbeiten' }).click();
   await expect(page.getByRole('dialog').getByRole('button', { name: 'Liste löschen' })).toHaveCount(
     0,
   );

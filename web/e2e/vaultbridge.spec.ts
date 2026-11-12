@@ -1,3 +1,4 @@
+import { openPageMenu } from './money-helpers';
 import { expect, test, type Page } from '@playwright/test';
 import { moduleSwitch, showPreview } from './helpers';
 
@@ -59,7 +60,7 @@ async function send(page: Page, op: string, body: object = {}, origin = ORIGIN):
 }
 
 async function enableBridge(page: Page) {
-  await page.getByRole('button', { name: 'Browser-Erweiterung' }).click();
+  await (await openPageMenu(page)).getByRole('menuitem', { name: /^Browser-Erweiterung/ }).click();
   const dialog = page.getByRole('dialog', { name: 'Browser-Erweiterung verbinden' });
   await dialog.getByLabel('Verbindung zur Browser-Erweiterung aktivieren').click();
   await expect(dialog.getByText('Bereit.')).toBeVisible();
