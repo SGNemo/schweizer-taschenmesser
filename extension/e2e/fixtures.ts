@@ -23,6 +23,12 @@ export interface Env {
   popup(): Promise<Page>;
 }
 
+/** "Browser-Erweiterung" is an entry of the page's "⋯" menu on Passwörter, no button in the head. */
+export async function openExtensionDialog(app: Page) {
+  await app.getByRole('button', { name: 'Weitere Aktionen' }).first().click();
+  await app.getByRole('menuitem', { name: /^Browser-Erweiterung/ }).click();
+}
+
 async function setUpVault(app: Page) {
   await app.clock.setFixedTime(new Date('2026-09-29T10:00:00'));
   await app.goto('http://localhost:4173/library');
@@ -38,7 +44,7 @@ async function setUpVault(app: Page) {
   await expect(app.getByRole('button', { name: 'Zugang hinzufügen' })).toBeVisible({
     timeout: 20_000,
   });
-  await app.getByRole('button', { name: 'Browser-Erweiterung', exact: true }).click();
+  await openExtensionDialog(app);
   const dialog = app.getByRole('dialog', { name: 'Browser-Erweiterung verbinden' });
   await dialog.getByLabel('Verbindung zur Browser-Erweiterung aktivieren').click();
   await expect(dialog.getByText('Bereit.')).toBeVisible();
