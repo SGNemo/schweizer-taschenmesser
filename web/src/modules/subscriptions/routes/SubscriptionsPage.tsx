@@ -164,106 +164,113 @@ export default function SubscriptionsPage() {
           </Button>
         </EmptyState>
       ) : null}
-      <ItemList label={t.subscriptions.title}>
-        {subs?.map((s) => {
-          const charge = s.active ? nextCharge(s, day) : undefined;
-          const cancel = s.active ? nextCancelDeadline(s, day) : undefined;
-          const missed = s.active ? missedDeadline(s, day) : undefined;
-          const soon = cancel ? cancelTone(cancel.deadline, day) : undefined;
-          const increase = recentIncrease(s.priceHistory ?? [], day);
-          const status = subscriptionStatus(s, day);
-          const plainMonthly =
-            s.recurrence.freq === 'monthly' && (s.recurrence.interval ?? 1) === 1;
-          const facts = [
-            describeRecurrence(s.recurrence),
-            charge
-              ? `${t.subscriptions.nextCharge}: ${formatDay(charge, 'd. MMM yyyy')}`
-              : s.active
-                ? t.subscriptions.ended
-                : t.subscriptions.paused,
-            s.recurrence.until
-              ? t.subscriptions.cancelledBadge(formatDay(s.recurrence.until, 'd. MMM yyyy'))
-              : '',
-            increase ? t.subscriptions.priceUp(changePercent(increase)) : '',
-            plainMonthly
-              ? ''
-              : t.subscriptions.ext.monthlyShort(formatMoney(monthlyEquivalent(s), currencyOf(s))),
-            // Category and payment method are power details: they show in Erweitert.
-            advanced && s.category ? t.subscriptions.ext.category[s.category] : '',
-            advanced ? (s.paymentMethod ?? '') : '',
-          ].filter(Boolean);
-          const toggle = (active: boolean) =>
-            void changeWithUndo(() => subscriptionRepo.update(s.id, { active }));
-          const remove = () => void deleteWithUndo(() => subscriptionRepo.remove(s.id));
-          return (
-            <ItemRow
-              key={s.id}
-              title={s.name}
-              lead={
-                <span className={styles.rowTile}>
-                  <ServiceTile name={s.name} />
-                </span>
-              }
-              className={s.active ? undefined : styles.inactive}
-              meta={
-                <>
-                  {/* Status badges sit in the meta line: the amount column stays put (U56). */}
-                  {!s.active ? <Badge>{t.subscriptions.paused}</Badge> : null}
-                  {status === 'trial' ? (
-                    <Badge tone="info">{t.subscriptions.ext.trial.chip}</Badge>
-                  ) : null}
-                  {status === 'ended' ? <Badge>{t.subscriptions.ext.status.ended}</Badge> : null}
-                  {!s.active || status === 'trial' || status === 'ended' ? ' ' : null}
-                  {facts.join(' · ')}
-                  {missed ? (
-                    <span className={styles.missed} title={tDeadline.get().missedNote}>
-                      {' · '}
-                      {tDeadline.get().missedOn(formatDay(missed.deadline, 'd. MMM yyyy'))}
-                    </span>
-                  ) : null}
-                  {cancel ? (
-                    <span
-                      className={`${styles.cancelLine} ${soon?.tone === 'soon' ? styles.warn : ''}`}
-                      data-tone={soon?.tone}
-                    >
-                      {' · '}
-                      {soon?.tone === 'soon' ? <Icon name="clock" size={14} /> : null}
-                      {t.subscriptions.cancelBy}: {formatDay(cancel.deadline, 'd. MMM yyyy')}
-                      {soon?.tone === 'soon' ? ` · ${relativeDays(soon.days)}` : null}
-                    </span>
-                  ) : null}
-                </>
-              }
-              onOpen={() => setTarget(s)}
-              onSwipeLeft={remove}
-              swipeLeftLabel={t.actions.delete}
-              menu={[
-                {
-                  id: 'active',
-                  label: s.active ? t.subscriptions.pause : t.subscriptions.resume,
-                  onSelect: () => toggle(!s.active),
-                },
-                { id: 'delete', label: t.actions.delete, danger: true, onSelect: remove },
-              ]}
-              end={
-                <>
-                  <span className={styles.amount}>{formatMoney(s.amountMinor, currencyOf(s))}</span>
-                  {/* Desktop only: on the phone "Pausieren" is in the row's menu (one control less per row). */}
-                  <span className={styles.rowSwitch}>
-                    <Switch
-                      label={`${s.name}: ${t.subscriptions.active}`}
-                      labelHidden
-                      tone="neutral"
-                      checked={s.active}
-                      onChange={toggle}
-                    />
+      {/* No list surface without rows: an empty one drew a bare strip below the empty state (design check G6). */}
+      {empty || !subs?.length ? null : (
+        <ItemList label={t.subscriptions.title}>
+          {subs.map((s) => {
+            const charge = s.active ? nextCharge(s, day) : undefined;
+            const cancel = s.active ? nextCancelDeadline(s, day) : undefined;
+            const missed = s.active ? missedDeadline(s, day) : undefined;
+            const soon = cancel ? cancelTone(cancel.deadline, day) : undefined;
+            const increase = recentIncrease(s.priceHistory ?? [], day);
+            const status = subscriptionStatus(s, day);
+            const plainMonthly =
+              s.recurrence.freq === 'monthly' && (s.recurrence.interval ?? 1) === 1;
+            const facts = [
+              describeRecurrence(s.recurrence),
+              charge
+                ? `${t.subscriptions.nextCharge}: ${formatDay(charge, 'd. MMM yyyy')}`
+                : s.active
+                  ? t.subscriptions.ended
+                  : t.subscriptions.paused,
+              s.recurrence.until
+                ? t.subscriptions.cancelledBadge(formatDay(s.recurrence.until, 'd. MMM yyyy'))
+                : '',
+              increase ? t.subscriptions.priceUp(changePercent(increase)) : '',
+              plainMonthly
+                ? ''
+                : t.subscriptions.ext.monthlyShort(
+                    formatMoney(monthlyEquivalent(s), currencyOf(s)),
+                  ),
+              // Category and payment method are power details: they show in Erweitert.
+              advanced && s.category ? t.subscriptions.ext.category[s.category] : '',
+              advanced ? (s.paymentMethod ?? '') : '',
+            ].filter(Boolean);
+            const toggle = (active: boolean) =>
+              void changeWithUndo(() => subscriptionRepo.update(s.id, { active }));
+            const remove = () => void deleteWithUndo(() => subscriptionRepo.remove(s.id));
+            return (
+              <ItemRow
+                key={s.id}
+                title={s.name}
+                lead={
+                  <span className={styles.rowTile}>
+                    <ServiceTile name={s.name} />
                   </span>
-                </>
-              }
-            />
-          );
-        })}
-      </ItemList>
+                }
+                className={s.active ? undefined : styles.inactive}
+                meta={
+                  <>
+                    {/* Status badges sit in the meta line: the amount column stays put (U56). */}
+                    {!s.active ? <Badge>{t.subscriptions.paused}</Badge> : null}
+                    {status === 'trial' ? (
+                      <Badge tone="info">{t.subscriptions.ext.trial.chip}</Badge>
+                    ) : null}
+                    {status === 'ended' ? <Badge>{t.subscriptions.ext.status.ended}</Badge> : null}
+                    {!s.active || status === 'trial' || status === 'ended' ? ' ' : null}
+                    {facts.join(' · ')}
+                    {missed ? (
+                      <span className={styles.missed} title={tDeadline.get().missedNote}>
+                        {' · '}
+                        {tDeadline.get().missedOn(formatDay(missed.deadline, 'd. MMM yyyy'))}
+                      </span>
+                    ) : null}
+                    {cancel ? (
+                      <span
+                        className={`${styles.cancelLine} ${soon?.tone === 'soon' ? styles.warn : ''}`}
+                        data-tone={soon?.tone}
+                      >
+                        {' · '}
+                        {soon?.tone === 'soon' ? <Icon name="clock" size={14} /> : null}
+                        {t.subscriptions.cancelBy}: {formatDay(cancel.deadline, 'd. MMM yyyy')}
+                        {soon?.tone === 'soon' ? ` · ${relativeDays(soon.days)}` : null}
+                      </span>
+                    ) : null}
+                  </>
+                }
+                onOpen={() => setTarget(s)}
+                onSwipeLeft={remove}
+                swipeLeftLabel={t.actions.delete}
+                menu={[
+                  {
+                    id: 'active',
+                    label: s.active ? t.subscriptions.pause : t.subscriptions.resume,
+                    onSelect: () => toggle(!s.active),
+                  },
+                  { id: 'delete', label: t.actions.delete, danger: true, onSelect: remove },
+                ]}
+                end={
+                  <>
+                    <span className={styles.amount}>
+                      {formatMoney(s.amountMinor, currencyOf(s))}
+                    </span>
+                    {/* Desktop only: on the phone "Pausieren" is in the row's menu (one control less per row). */}
+                    <span className={styles.rowSwitch}>
+                      <Switch
+                        label={`${s.name}: ${t.subscriptions.active}`}
+                        labelHidden
+                        tone="neutral"
+                        checked={s.active}
+                        onChange={toggle}
+                      />
+                    </span>
+                  </>
+                }
+              />
+            );
+          })}
+        </ItemList>
+      )}
 
       <SubscriptionEditor
         target={openTarget}

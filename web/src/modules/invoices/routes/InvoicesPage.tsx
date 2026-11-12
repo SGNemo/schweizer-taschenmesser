@@ -90,15 +90,29 @@ export default function InvoicesPage() {
       .join(' · ');
     const hasPayData = Boolean(i.iban || i.reference);
     const urgent = i.status === 'open' && (state.tone === 'overdue' || state.tone === 'today');
+    const badge =
+      i.status === 'open' && state.tone !== 'later' ? (
+        <StateBadge tone={state.tone} label={state.label} />
+      ) : null;
     return (
       <ItemRow
         key={i.id}
         title={i.payee}
         tone={urgent ? (state.tone as 'overdue' | 'today') : undefined}
         meta={
-          i.status === 'paid'
-            ? `${t.invoices.paidAt}: ${formatDay(i.paidAt ?? i.dueDate, 'd. MMM yyyy')}${i.reference ? ` · ${i.reference}` : ''}`
-            : `${t.invoices.dueDate}: ${formatDay(i.dueDate, 'EEE, d. MMM')}${i.reference ? ` · ${i.reference}` : ''}${i.repeat ? ` · ${t.invoices.repeatMeta(t.invoices.repeatOptions[i.repeat])}` : ''}${extra ? ` · ${extra}` : ''}`
+          i.status === 'paid' ? (
+            `${t.invoices.paidAt}: ${formatDay(i.paidAt ?? i.dueDate, 'd. MMM yyyy')}${i.reference ? ` · ${i.reference}` : ''}`
+          ) : narrow ? (
+            // Phone (design check G4): one meta line. The state says when it is due ("war am 17. Sep. fällig",
+            // "in 2 Tagen"), so it stands here instead of in a second row of its own; the reference and the
+            // repeat are in the entry's dialog.
+            <>
+              {badge ?? formatDay(i.dueDate, 'EEE, d. MMM')}
+              {extra ? ` · ${extra}` : ''}
+            </>
+          ) : (
+            `${t.invoices.dueDate}: ${formatDay(i.dueDate, 'EEE, d. MMM')}${i.reference ? ` · ${i.reference}` : ''}${i.repeat ? ` · ${t.invoices.repeatMeta(t.invoices.repeatOptions[i.repeat])}` : ''}${extra ? ` · ${extra}` : ''}`
+          )
         }
         lead={
           <span
@@ -166,9 +180,7 @@ export default function InvoicesPage() {
         }
         end={
           <>
-            {i.status === 'open' && state.tone !== 'later' ? (
-              <StateBadge tone={state.tone} label={state.label} />
-            ) : null}
+            {narrow ? null : badge}
             <span className={styles.amount}>
               {formatMoney(i.status === 'open' ? remainingMinor(i) : i.amountMinor, i.currency)}
             </span>

@@ -22,6 +22,7 @@ import {
   AdvancedFields,
   Button,
   CurrencyField,
+  DayField,
   Dialog,
   FormActions,
   SelectField,
@@ -215,16 +216,15 @@ function Form({
           hint={monthly ? t.subscriptions.monthlyCost(formatMoney(monthly, currency)) : undefined}
           required
         />
-        <TextField
+        <DayField
           label={t.subscriptions.firstCharge}
-          type="date"
           value={startDate}
-          onChange={(e) => {
+          onChange={(value) => {
             // A monthly rule that followed the old day keeps following the first-charge date.
             const oldDay = Number(startDate.slice(8, 10));
             if (recurrence.freq === 'monthly' && recurrence.byMonthDay === oldDay)
               setRecurrence({ ...recurrence, byMonthDay: undefined });
-            setStartDate(e.target.value);
+            setStartDate(value);
           }}
           required
         />
@@ -294,11 +294,10 @@ function Form({
       >
         <CurrencyField label={t.money.currency} value={currency} onChange={setCurrency} />
         <NoticeField days={notice} months={noticeMonths} onChange={setNotice} max={365} />
-        <TextField
+        <DayField
           label={t.subscriptions.ext.trial.label}
-          type="date"
           value={trialEndsOn}
-          onChange={(e) => setTrialEndsOn(e.target.value)}
+          onChange={setTrialEndsOn}
           hint={
             trialEndsOn && trialDaysLeft({ trialEndsOn }, today()) !== undefined
               ? t.subscriptions.ext.trial.daysLeft(trialDaysLeft({ trialEndsOn }, today())!)
