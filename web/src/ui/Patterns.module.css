@@ -82,6 +82,9 @@
     overflow-x: auto;
     scrollbar-width: none;
     border-radius: var(--radius-full);
+  }
+  /* The fade says "more to the right": only while the row really overflows. */
+  .segment[data-overflow='true'] {
     mask-image: linear-gradient(90deg, #000 calc(100% - 2rem), transparent);
   }
 }
@@ -274,6 +277,20 @@
   .rows .main + * {
     margin-left: auto;
   }
+}
+/* Master–detail: beside the detail panel the list is narrow whatever the window is (a 1280-px laptop leaves it
+   about 590 px), and the phone's rule above follows the window, not the list. The text of a row keeps 9 rem there;
+   only if status, amount and actions leave it less do they drop to a second line. */
+.splitMain .rows .row {
+  flex-wrap: wrap;
+  row-gap: var(--space-1);
+}
+.splitMain .rows .main {
+  flex: 1 1 9rem;
+  min-width: 9rem;
+}
+.splitMain .rows .main + * {
+  margin-left: auto;
 }
 .static {
   cursor: default;
@@ -675,6 +692,12 @@ button.chip[aria-pressed='true'] {
 .rows > .swipeable:focus-within > .row {
   background: var(--surface-2);
 }
+/* The sliding row is opaque (it covers the action layer), so it repeats the tone of the panel's row. */
+.rows > .current.swipeable > .row,
+.rows > .current.swipeable:hover > .row,
+.rows > .current.swipeable:focus-within > .row {
+  background: var(--surface-sunken);
+}
 .reveal {
   position: absolute;
   inset: 0;
@@ -701,6 +724,12 @@ button.chip[aria-pressed='true'] {
 }
 .item[data-tone='today'] {
   background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+/* The row the detail panel shows keeps its mark on an urgent row too: the sunken tone wins over the fill (the
+   badge and the group heading still say "overdue"). */
+.rows > .current[data-tone],
+.rows > .current[data-tone]:hover {
+  background: var(--surface-sunken);
 }
 /* Done rows keep the reading-aid emphasis as quiet as the rest of the row. */
 .done [data-rr] {

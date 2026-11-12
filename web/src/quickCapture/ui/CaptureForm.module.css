@@ -63,10 +63,12 @@
   font: inherit;
   cursor: pointer;
 }
+/* The chosen target is a surface and a weight, not the accent (B7: the accent is the main action and the open tab),
+   like a chosen `Chip`. */
 .type[aria-checked='true'] {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-  color: var(--accent);
+  background: var(--surface-sunken);
+  border-color: var(--border-strong);
+  color: var(--text);
   font-weight: var(--weight-semibold);
 }
 .hint {

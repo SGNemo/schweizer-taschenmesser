@@ -55,6 +55,9 @@ export default function InvoicesPage() {
   // Master–detail (layout `split`): on a wide page an invoice opens in the panel beside the list, below that width
   // in its dialog (a sheet on the phone).
   const wide = useSplitView();
+  // Beside the detail panel the list has about 60 % of the page: below 80 rem of page the pay button is the icon
+  // there too, so status, amount and button stay on the row's first line (a 1280-px laptop).
+  const roomy = usePageWidthAtLeast(80) !== false;
   const [picked, setPicked] = useState<{ id: string } | 'closed' | null>(null);
 
   // `?new=1` (Quick-Add) opens the create dialog; derived from the URL.
@@ -170,7 +173,7 @@ export default function InvoicesPage() {
               {formatMoney(i.status === 'open' ? remainingMinor(i) : i.amountMinor, i.currency)}
             </span>
             {i.status === 'open' ? (
-              narrow ? (
+              narrow || (wide && detail !== undefined && !roomy) ? (
                 <IconButton label={t.invoices.markPaid} onClick={() => void pay(i.id)}>
                   <Icon name="check" />
                 </IconButton>

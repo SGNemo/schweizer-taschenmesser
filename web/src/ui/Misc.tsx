@@ -1,10 +1,23 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  Children,
+  cloneElement,
+  isValidElement,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
+import { useHeroControls } from '@/core/shell/heroContext';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Button } from './Button';
 import { Icon } from './icons';
 import { Logo } from './Logo';
+import { useMediaQuery } from './useMediaQuery';
 import styles from './Misc.module.css';
+
+/** The phone's window (`PHONE_QUERY` in `./Patterns`, repeated here: Patterns must not be imported from this file). */
+const PHONE = '(max-width: 899px)';
 
 export function Badge({
   children,
@@ -69,6 +82,20 @@ export function EmptyState({
   testId?: string;
   children?: ReactNode;
 }) {
+  // One filled accent per screen (DESIGN-SPEC § 1.2): on the phone the plus in the bottom bar is that one, so a
+  // filled button of the empty state steps back to `secondary` there. On the desktop the page does the reverse
+  // (`PageAction variant="secondary"` while its empty state holds the filled step). Only inside the app shell:
+  // a page without the bottom bar keeps its filled button.
+  const inShell = !!useHeroControls();
+  const phone = useMediaQuery(PHONE);
+  const content =
+    inShell && phone
+      ? Children.map(children, (child) =>
+          isValidElement<{ variant?: string }>(child) && child.props.variant === 'primary'
+            ? cloneElement(child, { variant: 'secondary' })
+            : child,
+        )
+      : children;
   return (
     <div
       className={compact ? `${styles.empty} ${styles.emptyCompact}` : styles.empty}
@@ -86,7 +113,7 @@ export function EmptyState({
       ) : (
         <h2 className={styles.emptyTitle}>{title}</h2>
       )}
-      {children}
+      {content}
     </div>
   );
 }

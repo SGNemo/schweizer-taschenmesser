@@ -32,7 +32,7 @@ export function HeroFigure({
       {label ? <span className={styles.label}>{label}</span> : null}
       <span className={styles.value} data-tone={tone} data-testid={testId}>
         {sensitive ? (
-          <SensitiveValue className={styles.mask}>
+          <SensitiveValue className={styles.mask} compact>
             {value}
             {unit ? <small className={styles.unit}>{unit}</small> : null}
           </SensitiveValue>
