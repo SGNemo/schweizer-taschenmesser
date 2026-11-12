@@ -8305,6 +8305,8 @@ export const de = {
       strip: 'Tage',
       dayPanel: 'Gewählter Tag',
       todayIs: (day: string) => `Heute · ${day}`,
+      todayShort: 'Heute',
+      things: (n: number) => (n === 1 ? '1 Ding' : `${n} Dinge`),
     },
     day: {
       available: 'Verfügbar',

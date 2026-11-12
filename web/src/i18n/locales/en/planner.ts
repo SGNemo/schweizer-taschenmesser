@@ -72,6 +72,8 @@ export const planner: Strings['planner'] = {
     strip: 'Days',
     dayPanel: 'Selected day',
     todayIs: (day: string) => `Today · ${day}`,
+    todayShort: 'Today',
+    things: (n: number) => (n === 1 ? '1 thing' : `${n} things`),
   },
   day: {
     available: 'Available',

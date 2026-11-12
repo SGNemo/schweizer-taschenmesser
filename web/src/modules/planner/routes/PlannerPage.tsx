@@ -115,6 +115,8 @@ export default function PlannerPage() {
   // A model reading the user discarded or stopped: the same sentence, sent again, skips the model.
   const declinedRef = useRef<string | undefined>(undefined);
   const addRef = useRef<HTMLFormElement>(null);
+  // The field is the page's last row: what the planner answers under it is brought into view.
+  const answerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const moduleStates = useModuleStates();
   const mailOn = !!getManifest('mail') && moduleStates?.mail === true;
@@ -136,6 +138,11 @@ export default function PlannerPage() {
   // Until they are known every source counts as able (no jump for ToDo rows); `markDone` checks again.
   const canDone = (moduleId: string) => abilities?.[moduleId]?.done ?? true;
   const canAssign = (moduleId: string) => abilities?.[moduleId]?.assign ?? true;
+
+  const answered = !!pending || !!ask || !!sayLine;
+  useEffect(() => {
+    if (answered) answerRef.current?.scrollIntoView?.({ block: 'nearest' });
+  }, [answered]);
 
   const titles = data?.titles ?? {};
   const board = data?.board;
@@ -593,7 +600,7 @@ export default function PlannerPage() {
   const nothingPlanned = board !== undefined && board.days.every((d) => d.rows.length === 0);
   const shownDay = board?.days.find((d) => d.date === pickedDay) ?? board?.days[0];
 
-  // What waits for free time lies under the week; the entry row is the page's last row (rule 4: one entry, and for
+  // The entry row is the last row under the week (rule 4: one entry, and for
   // the planner it is the field you type or speak into).
   const waitingBlock =
     waiting.length > 0 ? (
@@ -688,30 +695,32 @@ export default function PlannerPage() {
         {t.planner.add.hint}
       </p>
       {/* What the planner understood, or asks back, lies right under the field it answers. */}
-      {sayLine ? (
-        <p className={styles.say} role="status" data-testid="plan-say">
-          {sayLine}
-        </p>
-      ) : null}
-      {ask ? (
-        <div className={styles.say} role="group" aria-label={t.planner.say.askLabel}>
-          <span>{t.planner.say.ask(ask.options[0]!.title, ask.options[1]!.title)}</span>
-          {ask.options.map((o) => (
-            <Button key={o.key} size="sm" onClick={() => void showPreview(ask.ops(o.key), true)}>
-              {o.title}
-            </Button>
-          ))}
-        </div>
-      ) : null}
-      {pending ? (
-        <PlanPreview
-          data={pending.data}
-          nameOf={nameOf}
-          busy={busy}
-          onApply={() => void apply()}
-          onDiscard={discard}
-        />
-      ) : null}
+      <div ref={answerRef}>
+        {sayLine ? (
+          <p className={styles.say} role="status" data-testid="plan-say">
+            {sayLine}
+          </p>
+        ) : null}
+        {ask ? (
+          <div className={styles.say} role="group" aria-label={t.planner.say.askLabel}>
+            <span>{t.planner.say.ask(ask.options[0]!.title, ask.options[1]!.title)}</span>
+            {ask.options.map((o) => (
+              <Button key={o.key} size="sm" onClick={() => void showPreview(ask.ops(o.key), true)}>
+                {o.title}
+              </Button>
+            ))}
+          </div>
+        ) : null}
+        {pending ? (
+          <PlanPreview
+            data={pending.data}
+            nameOf={nameOf}
+            busy={busy}
+            onApply={() => void apply()}
+            onDiscard={discard}
+          />
+        ) : null}
+      </div>
     </>
   );
 
@@ -770,7 +779,11 @@ export default function PlannerPage() {
                     current={d.date === shownDay?.date}
                     onOpen={() => setPickedDay(d.date)}
                     title={<span data-testid={`week-${d.date}`}>{dayTitle(d)}</span>}
-                    meta={capacityLabel(d)}
+                    meta={
+                      d.rows.length > 0
+                        ? `${capacityLabel(d)} · ${t.planner.board.things(d.rows.length)}`
+                        : capacityLabel(d)
+                    }
                     end={
                       !d.off ? (
                         <span className={styles.weekBar} aria-hidden="true">
@@ -795,9 +808,10 @@ export default function PlannerPage() {
                     type="button"
                     className={styles.stripChip}
                     aria-pressed={d.date === shownDay?.date}
+                    aria-current={d.isToday ? 'date' : undefined}
                     onClick={() => setPickedDay(d.date)}
                   >
-                    <span>{dayName(d.date)}</span>
+                    <span>{d.isToday ? t.planner.board.todayShort : dayName(d.date)}</span>
                     <span>{capacityShort(d)}</span>
                   </button>
                 ))}
@@ -805,8 +819,8 @@ export default function PlannerPage() {
               {shownDay ? renderDay(shownDay) : null}
             </div>
           )}
-          {waitingBlock}
           {entryRow}
+          {waitingBlock}
         </SplitView>
       ) : null}
 

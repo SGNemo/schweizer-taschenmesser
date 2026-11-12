@@ -46,7 +46,7 @@ test.describe('plan area, Planer and Karten on tone steps (package 0b-4b, part 2
       await expect(
         page.locator('main [aria-current="true"]').getByTestId(id.replace('day-', 'week-')),
       ).toBeVisible();
-      // Rule 4: the inline field lies under the week and what waits, not above them.
+      // Rule 4: the inline field lies under the week, not above it.
       const field = await page.getByLabel('Eintragen oder sagen').boundingBox();
       const week = await page.locator('main ul[aria-label="Woche"]').boundingBox();
       expect(field!.y).toBeGreaterThan(week!.y + week!.height);
