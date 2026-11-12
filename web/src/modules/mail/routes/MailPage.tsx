@@ -80,10 +80,7 @@ function ThreadList({
   titleOf,
   invoices,
   onInvoice,
-  beside,
 }: {
-  /** The list stands beside the reading pane (three columns): no standing row button, the text keeps the width. */
-  beside: boolean;
   threads: CachedThreadView[];
   onOpen: (id: string) => void;
   /** Quick actions of one row (in den Plan, read/unread, archive). */
@@ -144,7 +141,7 @@ function ThreadList({
               // A quiet button only where the pointer hovers (PC); on touch it is in ⋯ and a swipe,
               // so a phone row never carries a standing button.
               actions={
-                hover && !beside && onPlan && !planned.has(th.id) ? (
+                hover && onPlan && !planned.has(th.id) ? (
                   <Button
                     size="sm"
                     variant="ghost"
@@ -565,7 +562,6 @@ export default function MailPage() {
         </EmptyState>
       ) : (
         <ThreadList
-          beside={wide}
           threads={shown}
           onOpen={(id) => {
             setStartInvoice(undefined);
