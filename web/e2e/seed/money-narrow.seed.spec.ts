@@ -174,3 +174,34 @@ test.describe('plan lists beside the detail panel', () => {
     });
   }
 });
+
+// Package 0b-4b, part 2: the Planer is master–detail too (the week as a list, the picked day beside it).
+test.describe('Planer beside its day panel', () => {
+  test.use({ seeded: { scale: 'medium', desktop: true, preview: true } });
+
+  for (const width of WIDTHS) {
+    test(`the week keeps its text at ${width} px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: HEIGHT });
+      await startSeeded(page);
+      await openPage(page, '/planner');
+      await settle(page);
+      await expect(page.locator('main aside')).toBeVisible();
+      const r = await page.evaluate(read);
+      if (SHOTS) {
+        mkdirSync(SHOTS, { recursive: true });
+        await page.screenshot({ path: join(SHOTS, `planner-${width}.png`) });
+      }
+      expect.soft(r.sideways, 'the page scrolls sideways').toBe(false);
+      expect(r.rows.length, 'rows').toBeGreaterThan(0);
+      for (const row of r.rows) {
+        expect
+          .soft(row.text, `text of "${row.title}" is ${row.text} px wide`)
+          .toBeGreaterThanOrEqual(TEXT_MIN);
+        expect
+          .soft(row.height, `row "${row.title}" is ${row.height} px high`)
+          .toBeLessThanOrEqual(ROW_MAX);
+      }
+      expect.soft(r.current, "one row is the panel's day").toHaveLength(1);
+    });
+  }
+});

@@ -29,17 +29,14 @@
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-4);
-  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--surface-2);
 }
 /* The tint follows the rating (good / unpleasant); the word and icon next to it say the same. */
 .now[data-rating='good'] {
-  border-color: color-mix(in srgb, var(--success) 40%, var(--border));
   background: linear-gradient(var(--success-soft), var(--success-soft)), var(--surface-2);
 }
 .now[data-rating='poor'] {
-  border-color: color-mix(in srgb, var(--warning) 40%, var(--border));
   background: linear-gradient(var(--warning-soft), var(--warning-soft)), var(--surface-2);
 }
 .nowMain {
@@ -260,6 +257,21 @@
   color: var(--text);
   font-size: var(--text-meta);
 }
+/* Phone (design check K3, stage ≤ 320 px): the long line of further values lies in the page, right under the head. */
+.restBelow {
+  display: none;
+}
+@media (max-width: 899px) {
+  .heroBlock .rest {
+    display: none;
+  }
+  .restBelow {
+    display: block;
+    margin: 0 0 var(--space-3);
+    color: var(--text-muted);
+    font-size: var(--text-meta);
+  }
+}
 .warn {
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
@@ -364,13 +376,19 @@
   gap: var(--space-1);
   padding: var(--space-3) var(--space-2);
   border-radius: var(--radius-md);
-  background: var(--surface);
-  box-shadow: var(--shadow-1);
+  /* Identity 4.0: a raised tone step, no shadow. */
+  background: var(--surface-raised);
   text-align: center;
 }
+/* The current hour: one tone step down and its time in the strong ink (no frame). */
 .hourCard[data-now='true'] {
-  outline: 2px solid var(--module-color);
-  outline-offset: -2px;
+  background: var(--surface-sunken);
+  /* a line, not a shadow (B7): the tone step alone is no cue for the current hour */
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+.hourCard[data-now='true'] .hourTime {
+  color: var(--text);
+  font-weight: var(--weight-semibold);
 }
 .hourTime {
   color: var(--text-3);

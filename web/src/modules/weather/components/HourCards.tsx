@@ -28,6 +28,7 @@ export function HourCards({ hours }: { hours: readonly HourRow[] }) {
             key={h.time}
             className={styles.hourCard}
             data-now={i === 0 ? 'true' : undefined}
+            aria-current={i === 0 ? 'time' : undefined}
             data-rating={rateHour(h)}
           >
             <span className={styles.hourTime}>

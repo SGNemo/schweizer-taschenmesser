@@ -30,7 +30,7 @@ describe('maps widget', () => {
     const f = vi.fn();
     vi.stubGlobal('fetch', f);
     view();
-    expect(await screen.findByRole('link', { name: 'Ort speichern' })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: 'Ort eintragen' })).toHaveAttribute(
       'href',
       '/maps?new=1',
     );
