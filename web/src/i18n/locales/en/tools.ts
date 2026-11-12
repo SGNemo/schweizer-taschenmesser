@@ -41,6 +41,10 @@ export const tools: Strings['tools'] = {
     up: (name: string) => `Move ${name} up`,
     down: (name: string) => `Move ${name} down`,
     open: (name: string) => `Open ${name}`,
+    openShort: 'Open',
+    rowMenu: (name: string) => `Actions for ${name}`,
+    moved: (name: string, place: number, total: number) =>
+      `${name} is now number ${place} of ${total} in the toolbar.`,
   },
   calc: {
     percentOf: (percent: string, base: string, value: string) =>

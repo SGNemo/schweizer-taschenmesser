@@ -60,7 +60,7 @@ test('toolbox: the tool used last is one tap away above the list', async ({ page
   await expect(recent.getByRole('button', { name: /Timer/ })).toBeVisible();
 });
 
-test('settings: tool order by keyboard drag and by the arrow buttons', async ({ page }) => {
+test('settings: tool order by keyboard drag and by the row menu', async ({ page }) => {
   await ready(page, '/settings/werkzeuge');
   const rows = page.locator('[id^="tools--"]');
   await expect(rows.first()).toBeVisible();
@@ -76,11 +76,12 @@ test('settings: tool order by keyboard drag and by the arrow buttons', async ({ 
   await page.keyboard.press('Space');
   await expect(rows.first()).toHaveAttribute('id', second!);
   await expect(rows.nth(1)).toHaveAttribute('id', first!);
-  // the arrow buttons still work and persist
+  // the moves in the row's menu still work and persist
   await rows
     .nth(1)
-    .getByRole('button', { name: /weiter nach oben/ })
+    .getByRole('button', { name: /^Aktionen für/ })
     .click();
+  await page.getByRole('menuitem', { name: /weiter nach oben/ }).click();
   await expect(rows.first()).toHaveAttribute('id', first!);
   await page.waitForTimeout(500); // let the write reach IndexedDB before reloading
   await page.reload();
