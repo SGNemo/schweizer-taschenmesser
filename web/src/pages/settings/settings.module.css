@@ -333,3 +333,18 @@
 .plainList > li {
   justify-content: space-between;
 }
+/* A model with its licence and its model card: each link is a target of its own (44 px), side by side where there is
+   room, below each other on the phone; no two hit areas overlap. */
+.licence {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--space-4);
+}
+.licenceLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}

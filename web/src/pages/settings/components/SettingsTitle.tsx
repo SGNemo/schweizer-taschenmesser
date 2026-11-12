@@ -18,7 +18,7 @@ export interface SettingsTitleProps {
   description?: string;
   /** A link at the end of the line under the title. */
   actions?: ReactNode;
-  /** Phone: the eyebrow is the way back ("‹ Einstellungen"), so the page needs no back row of its own. */
+  /** Phone: the way back takes the plate's place beside the title (44 px), so the page needs no back row of its own. */
   back?: { to: string; label: string };
   testId?: string;
 }
@@ -49,16 +49,15 @@ export function SettingsTitle({
       data-testid={testId}
     >
       <div className={styles.row}>
-        <HuePlate hue={hue} icon={icon} />
+        {back ? (
+          <Link to={back.to} className={styles.back} aria-label={back.label}>
+            <Icon name="chevronLeft" />
+          </Link>
+        ) : (
+          <HuePlate hue={hue} icon={icon} />
+        )}
         <div className={styles.block}>
-          {back ? (
-            <Link to={back.to} className={styles.back}>
-              <Icon name="chevronLeft" size={16} />
-              <span className={styles.eyebrow}>{back.label}</span>
-            </Link>
-          ) : (
-            <p className={styles.eyebrow}>{eyebrow}</p>
-          )}
+          <p className={styles.eyebrow}>{eyebrow}</p>
           <h1 id={titleId} className={styles.title}>
             {title}
           </h1>

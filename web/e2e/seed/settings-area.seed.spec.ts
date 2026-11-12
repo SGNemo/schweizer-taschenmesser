@@ -68,6 +68,8 @@ interface Read {
   small: string[];
   shift: number;
   sideways: boolean;
+  /** The middle of the title answers as the title (no link's hit area lies over it). */
+  titleFree: boolean;
 }
 
 /** Runs in the page. */
@@ -135,6 +137,13 @@ function read(): Read {
     small,
     shift: (window as unknown as { __shift?: number }).__shift ?? 0,
     sideways: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    titleFree: (() => {
+      const h1 = main.querySelector('h1');
+      if (!h1) return false;
+      const b = h1.getBoundingClientRect();
+      const at = document.elementFromPoint(b.left + 12, b.top + b.height / 2);
+      return !!at && (at === h1 || h1.contains(at));
+    })(),
   };
 }
 
@@ -190,6 +199,7 @@ async function check(page: Page, phone: boolean, theme: string) {
       .soft(r.headHeight ?? 9999, `${path}: head height`)
       .toBeLessThanOrEqual(phone ? HEAD_MAX.phone : HEAD_MAX.desktop);
     expect.soft(r.h1, `${path}: one h1`).toBe(1);
+    expect.soft(r.titleFree, `${path}: nothing lies over the title`).toBe(true);
     expect.soft(r.quickBar, `${path}: no quick switches above a tab`).toBe(false);
     // Rule 1: tone steps.
     expect

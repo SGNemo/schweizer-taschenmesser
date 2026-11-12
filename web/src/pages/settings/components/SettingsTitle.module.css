@@ -39,30 +39,19 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* The way back as the eyebrow (phone): the same small caps in the text ink, a link with a 44 px target. The link
-   itself clips nothing (the label inside it does), so its hit strip stays whole. */
+/* The way back (phone): a 44 px target of its own in the plate's place, beside the title and never over it. */
 .back {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-hair);
-  max-width: 100%;
-  color: var(--text);
-  text-decoration: none;
-}
-.back .eyebrow {
-  color: inherit;
-}
-/* The strip starts just above the label and reaches down over the title (the sticky search lies above the head and
-   would cover the upper half of a centred strip; the title below is no target of its own). */
-.back::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: calc(-1 * var(--space-1));
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: var(--touch);
   height: var(--touch);
-  min-width: var(--touch);
+  margin-inline-start: calc(-1 * var(--space-2));
+  border-radius: var(--radius-md);
+  color: var(--text);
+}
+.back:hover {
+  background: var(--surface-2);
 }
 /* The line under the title: the description, and a link at its end where there is room. */
 .below {

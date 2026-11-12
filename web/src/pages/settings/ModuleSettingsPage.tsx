@@ -86,9 +86,12 @@ function LibraryLink({ manifest }: { manifest: ModuleManifest }) {
 
 /** The head of a module route that has no module page (unknown, off, loading): the settings title, nothing more. */
 function PlainHead() {
+  const wide = useMediaQuery(WIDE_QUERY);
+  const o = tSettings2.use().modulePage;
   return (
     <SettingsTitle
       {...STATUS_LOOK}
+      back={wide ? undefined : { to: settingsPath('module'), label: o.all }}
       icon="settings"
       eyebrow={tSettingsV3.use().modulesEyebrow}
       title={t.settings.title}

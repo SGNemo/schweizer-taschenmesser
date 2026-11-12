@@ -485,8 +485,8 @@ const TAB_SKELETON_AFTER_MS = 300;
  * its own values, so they used to arrive one after the other and each pushed everything below it down (layout shift
  * up to 0.41 on "Über Nemo", 0.35 on "Darstellung" on the phone). The body stays out of sight behind the skeleton
  * until no section waits for its code any more, plus a short settle for the stored values; after that it is never
- * hidden again (a part that loads later appears in place, as before). A tab whose code is already there shows at
- * once; a section that hangs is cut off after `TAB_WAIT_MAX_MS`, so it can hide nothing but itself.
+ * hidden again (a part that loads later appears in place, as before). A tab whose code is already there waits
+ * only the settle; a section that hangs is cut off after `TAB_WAIT_MAX_MS`, so it can hide nothing but itself.
  */
 function TabBody({ children }: { children: ReactNode }) {
   const [shown, setShown] = useState(false);
@@ -494,36 +494,46 @@ function TabBody({ children }: { children: ReactNode }) {
   const waiting = useRef(0);
   const alive = useRef(true);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const counter = useMemo(
-    () => ({
+  const counter = useMemo(() => {
+    const settle = () => {
+      if (!alive.current) return;
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => {
+        if (waiting.current === 0) setShown(true);
+      }, TAB_SETTLE_MS);
+    };
+    return {
       add: () => {
         waiting.current += 1;
         clearTimeout(timer.current);
       },
       done: () => {
         waiting.current -= 1;
-        if (waiting.current > 0 || !alive.current) return;
-        clearTimeout(timer.current);
-        timer.current = setTimeout(() => {
-          if (waiting.current === 0) setShown(true);
-        }, TAB_SETTLE_MS);
+        if (waiting.current === 0) settle();
       },
-    }),
-    [],
-  );
+      settle,
+    };
+  }, []);
   useLayoutEffect(() => {
     alive.current = true;
-    // The fallbacks of the sections have registered by now (child effects run first): nothing waits = show at once.
-    if (waiting.current === 0) setShown(true);
-    const cap = setTimeout(() => setShown(true), TAB_WAIT_MAX_MS);
-    const late = setTimeout(() => setSlow(true), TAB_SKELETON_AFTER_MS);
+    // The fallbacks of the sections have registered by now (child effects run first). Nothing waits for its code
+    // (a tab visited before): only the stored values are still read, so the short settle is all there is to wait.
+    if (waiting.current === 0) counter.settle();
     return () => {
       alive.current = false;
       clearTimeout(timer.current);
+    };
+  }, [counter]);
+  // The upper bound and the late skeleton only matter while the tab is not shown yet.
+  useEffect(() => {
+    if (shown) return;
+    const cap = setTimeout(() => setShown(true), TAB_WAIT_MAX_MS);
+    const late = setTimeout(() => setSlow(true), TAB_SKELETON_AFTER_MS);
+    return () => {
       clearTimeout(cap);
       clearTimeout(late);
     };
-  }, []);
+  }, [shown]);
   return (
     <PendingSections.Provider value={counter}>
       {shown ? null : (

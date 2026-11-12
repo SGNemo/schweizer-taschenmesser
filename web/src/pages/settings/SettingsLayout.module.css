@@ -202,10 +202,6 @@
     height: var(--touch);
     transform: translateY(-50%);
   }
-  /* A list of such links (model licences): each entry gets the room of its strip, so two strips never overlap. */
-  .category li:has(> a:not([class])) {
-    padding-block: var(--space-3);
-  }
 }
 .search {
   position: relative;
