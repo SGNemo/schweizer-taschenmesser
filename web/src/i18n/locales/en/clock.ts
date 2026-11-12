@@ -15,8 +15,6 @@ export const clock: Strings['clock'] = {
   add: 'Add place',
   addFirst: 'Add the first place',
   empty: 'No places yet',
-  emptyHint:
-    'Add a place, for example where family or colleagues live. Its time then shows here and on the overview.',
   full: (n) => `${n} places are added, no more fit. Remove one to add a new one.`,
   list: 'Your places',
   search: {

@@ -13,12 +13,11 @@ export const habits: Strings['habits'] = {
     },
   },
   title: 'Habits',
+  detail: { label: 'Habit in detail' },
   tabs: { label: 'View', today: 'Today', history: 'History', archive: 'Archive' },
   empty: 'No habits yet.',
-  emptyHint:
-    'Start small: for example "Drink water" with a number and a reminder in a time window.',
   add: 'Add habit',
-  addFirst: 'First habit',
+  addFirst: 'Add your first habit',
   edit: 'Edit habit',
   form: {
     name: 'Name',

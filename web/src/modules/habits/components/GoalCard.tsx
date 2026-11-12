@@ -23,6 +23,8 @@ export function GoalCard({
   day,
   weekStart,
   onEdit,
+  current = false,
+  onPick,
 }: {
   goal: StoredGoal;
   entry: Entry | undefined;
@@ -30,6 +32,9 @@ export function GoalCard({
   day: string;
   weekStart: 1 | 7;
   onEdit: () => void;
+  /** Master–detail (wide page): this goal is the one shown in the panel, and the way to show it there. */
+  current?: boolean;
+  onPick?: () => void;
 }) {
   const [popped, setPopped] = useState(false);
   const [menu, setMenu] = useState(false);
@@ -95,20 +100,41 @@ export function GoalCard({
         : '';
 
   return (
-    <li className={`${styles.card} ${rest ? styles.cardRest : ''}`} data-testid="habit-card">
+    <li
+      className={`${styles.card} ${rest ? styles.cardRest : ''} ${current ? styles.cardCurrent : ''}`}
+      data-testid="habit-card"
+    >
       <span className={`${styles.ringHue} ${popped ? styles.pop : ''}`}>
         <Ring percent={percent} size="md" label={goal.name}>
           {isCount ? count : count >= 1 ? '✓' : ''}
         </Ring>
       </span>
-      <div>
-        <p className={styles.name}>{goal.name}</p>
-        <p className={styles.meta}>
-          {[progressText, week ? t.habits.today.weekProgress(week.done, week.of) : '']
-            .filter(Boolean)
-            .join(' · ')}
-        </p>
-      </div>
+      {onPick ? (
+        // Wide page: the name and its line are the row's button, it shows the goal's history in the panel.
+        <button
+          type="button"
+          className={styles.pick}
+          data-row
+          aria-current={current ? 'true' : undefined}
+          onClick={onPick}
+        >
+          <span className={styles.name}>{goal.name}</span>
+          <span className={styles.meta}>
+            {[progressText, week ? t.habits.today.weekProgress(week.done, week.of) : '']
+              .filter(Boolean)
+              .join(' · ')}
+          </span>
+        </button>
+      ) : (
+        <div>
+          <p className={styles.name}>{goal.name}</p>
+          <p className={styles.meta}>
+            {[progressText, week ? t.habits.today.weekProgress(week.done, week.of) : '']
+              .filter(Boolean)
+              .join(' · ')}
+          </p>
+        </div>
+      )}
       <div className={styles.actions}>
         {isCount ? (
           // U09: a card action is a quiet everyday tap; the page head keeps the one filled button.
