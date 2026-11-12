@@ -6,6 +6,7 @@ import { tDraft } from '@/strings.draft';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import {
   Button,
+  DayField,
   Dialog,
   FileField,
   Form,
@@ -140,21 +141,15 @@ function Fields({
         />
       </Split>
       <Split>
-        <TextField
-          label={t.vault.startDate}
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-        />
-        <TextField
+        <DayField label={t.vault.startDate} value={startDate} onChange={setStartDate} />
+        <DayField
           label={t.vault.endDate}
-          type="date"
           value={endDate}
-          onChange={(e) => {
-            setEndDate(e.target.value);
+          onChange={(next) => {
+            setEndDate(next);
             setDateError('');
           }}
-          error={dateError}
+          error={dateError || undefined}
         />
       </Split>
       <NoticeField days={notice} months={noticeMonths} onChange={setNotice} max={730} />

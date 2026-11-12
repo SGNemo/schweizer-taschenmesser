@@ -10,6 +10,8 @@ import { openPage, startSeeded } from './guards';
  * high, because the row may only wrap below a window width while the panel takes its share at every width. Per
  * width and page: the text of every row keeps at least 9 rem, no row is higher than 120 px, nothing
  * scrolls sideways; and the row the panel shows carries a visible mark on an urgent row too (finding G2).
+ * Unterlagen (package 0b-5) is master–detail too: its rows are folders (cards with status and buttons below the
+ * text), so the same floor for the text holds and a folder has its own height limit.
  *
  * `MONEY_NARROW_SHOTS=<dir>` also writes a picture per width (for the pull request).
  */
@@ -19,6 +21,8 @@ const HEIGHT = 800;
 const TEXT_MIN = 144;
 /** The tallest row at the 9-rem floor: a title of two lines above a meta line that wraps to three. */
 const ROW_MAX = 120;
+/** A folder of Unterlagen: title, three lines of small print, status and buttons below. */
+const FOLDER_MAX = 240;
 const SHOTS = process.env.MONEY_NARROW_SHOTS;
 
 interface Read {
@@ -91,17 +95,27 @@ test.describe('money lists beside the detail panel', () => {
       await page.locator('main li [data-row]').first().click();
       await expect(page.locator('main aside')).toBeVisible();
       const finance = await page.evaluate(read);
+      // Unterlagen shows the first folder in the panel from the start.
+      await openPage(page, '/vault');
+      await settle(page);
+      const vault = await page.evaluate(read);
       if (SHOTS) {
         mkdirSync(SHOTS, { recursive: true });
+        await page.screenshot({ path: join(SHOTS, `vault-${width}.png`) });
+        await openPage(page, '/finance?tab=transactions');
+        await settle(page);
+        await page.locator('main li [data-row]').first().click();
+        await expect(page.locator('main aside')).toBeVisible();
         await page.screenshot({ path: join(SHOTS, `finance-${width}.png`) });
         await openPage(page, '/invoices');
         await settle(page);
         await page.screenshot({ path: join(SHOTS, `invoices-${width}.png`) });
       }
 
-      for (const [name, r] of [
-        ['/invoices', invoices],
-        ['/finance', finance],
+      for (const [name, r, rowMax] of [
+        ['/invoices', invoices, ROW_MAX],
+        ['/finance', finance, ROW_MAX],
+        ['/vault', vault, FOLDER_MAX],
       ] as const) {
         expect(r.panel, `${name}: the detail panel is shown`).toBe(true);
         expect.soft(r.sideways, `${name}: the page scrolls sideways`).toBe(false);
@@ -112,7 +126,7 @@ test.describe('money lists beside the detail panel', () => {
             .toBeGreaterThanOrEqual(TEXT_MIN);
           expect
             .soft(row.height, `${name}: row "${row.title}" is ${row.height} px high`)
-            .toBeLessThanOrEqual(ROW_MAX);
+            .toBeLessThanOrEqual(rowMax);
         }
         expect.soft(r.current, `${name}: one row is the panel's entry`).toHaveLength(1);
         expect

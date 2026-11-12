@@ -20,6 +20,8 @@ interface Props {
   /** Called with the stored form once the text is a date or time, and with `''` when the field was emptied. */
   onChange: (value: string) => void;
   hint?: string;
+  /** A message of the form about this value ("the end lies before the start"); shown like a field error. */
+  error?: string;
   required?: boolean;
   labelHidden?: boolean;
   'data-autofocus'?: boolean;
@@ -31,6 +33,7 @@ function ParsedField({
   value,
   onChange,
   hint,
+  error: formError,
   required,
   labelHidden,
   format,
@@ -65,8 +68,10 @@ function ParsedField({
     setDraft(null);
     setError(false);
   };
+  // The field's own message (text that is no date) comes before the form's.
+  const message = error ? invalid : formError;
   const describedBy =
-    [hint ? `${id}-hint` : '', error ? `${id}-err` : ''].filter(Boolean).join(' ') || undefined;
+    [hint ? `${id}-hint` : '', message ? `${id}-err` : ''].filter(Boolean).join(' ') || undefined;
   return (
     <div className={fieldStyles.field}>
       <label
@@ -88,7 +93,7 @@ function ParsedField({
           placeholder={placeholder}
           value={text}
           required={required}
-          aria-invalid={error ? true : undefined}
+          aria-invalid={message ? true : undefined}
           aria-describedby={describedBy}
           onChange={(e) => {
             const next = e.target.value;
@@ -115,9 +120,9 @@ function ParsedField({
           {hint}
         </span>
       ) : null}
-      {error ? (
+      {message ? (
         <span id={`${id}-err`} className={fieldStyles.error} role="alert">
-          {invalid}
+          {message}
         </span>
       ) : null}
     </div>

@@ -314,11 +314,13 @@ test.describe('passwords on the phone: the entry dialog keeps its foot (B10)', (
     const save = dialog.getByRole('button', { name: 'Speichern' });
     for (const top of [0, 9999]) {
       await dialog.evaluate((el, y) => el.scrollTo(0, y), top);
-      const box = (await save.boundingBox())!;
-      expect(box.y, `"Speichern" on screen at scroll ${top}`).toBeGreaterThan(0);
-      expect(box.y + box.height, `"Speichern" on screen at scroll ${top}`).toBeLessThanOrEqual(
-        PHONE.height,
-      );
+      // The sheet slides in: the foot is where it stays once that is over.
+      await expect
+        .poll(async () => {
+          const box = (await save.boundingBox())!;
+          return box.y > 0 && box.y + box.height <= PHONE.height;
+        }, `"Speichern" on screen at scroll ${top}`)
+        .toBe(true);
     }
     // Nothing of the form is marked by the reading aid.
     expect(await page.locator('[data-rs]').count()).toBe(0);

@@ -3,7 +3,16 @@ import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { Button, Dialog, Form, FormActions, SelectField, TextArea, TextField } from '@/ui';
+import {
+  Button,
+  DayField,
+  Dialog,
+  Form,
+  FormActions,
+  SelectField,
+  TextArea,
+  TextField,
+} from '@/ui';
 import { nextOrder } from '../logic';
 import { deleteList, listRepo } from '../repo';
 import { KINDS, SHOPPING_LIST_ID, type List, type ListKind } from '../schema';
@@ -115,12 +124,7 @@ function Fields({
             value={place}
             onChange={(e) => setPlace(e.target.value)}
           />
-          <TextField
-            label={t.lists.tripDate}
-            type="date"
-            value={tripDate}
-            onChange={(e) => setTripDate(e.target.value)}
-          />
+          <DayField label={t.lists.tripDate} value={tripDate} onChange={setTripDate} />
         </>
       ) : null}
       <TextArea
