@@ -93,10 +93,11 @@ test('one filled action per page; checksum and folder lines start where the titl
   expect(await left(/SHA-256/)).toBe(title);
 });
 
-test('the band counts what runs, the filter shows the history, the folder button reveals the last job', async ({
+test('the head counts what runs, the filter shows the history, the folder button reveals the last job', async ({
   page,
 }) => {
-  await expect(page.getByTestId('arrow-band')).toContainText('1 läuft');
+  // What runs is the head's figure (Identity 4.0: no band under the head).
+  await expect(page.getByTestId('downloads-running')).toHaveText(/1\s*läuft/);
   const rows = list(page).getByRole('listitem');
   await page.getByRole('button', { name: 'Fertig', exact: true }).click();
   await expect(rows).toHaveCount(1);
@@ -106,7 +107,9 @@ test('the band counts what runs, the filter shows the history, the folder button
   await expect(page.getByText('Nichts in dieser Ansicht.')).toBeVisible();
   await page.getByRole('button', { name: 'Alle', exact: true }).click();
   await expect(rows).toHaveCount(3);
-  await page.getByTestId('show-folder').click();
+  // The way to the target folder is in the page's "⋯" menu (one action in the head).
+  await page.getByRole('button', { name: 'Weitere Optionen' }).click();
+  await page.getByRole('menuitem', { name: 'Zielordner zeigen' }).click();
   expect(await calls(page)).toEqual(['reveal:3']);
 });
 

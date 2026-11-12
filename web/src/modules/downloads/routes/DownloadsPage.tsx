@@ -13,16 +13,18 @@ import {
   IconButton,
   ItemList,
   ItemRow,
+  PageAction,
   PageHeader,
   Progress,
+  RowMenu,
   Segmented,
   TextField,
 } from '@/ui';
-import { HeroSlot } from '@/ui/identity';
+import { formatNumber } from '@/core/i18n/format';
+import { HeroFigure, HeroSlot } from '@/ui/identity';
 import { MEANINGS } from '@/ui/semantics';
 import type { IconName } from '@/ui/icons';
 import { DownloadsEmpty } from '../components/DownloadsEmpty';
-import { DownloadsBand } from '../components/DownloadsBand';
 import {
   bandSummary,
   etaSeconds,
@@ -57,6 +59,7 @@ export default function DownloadsPage() {
     ensureWatching();
   }, []);
 
+  const [menuOpen, setMenuOpen] = useState(false);
   // The speed limit of the setting applies to everything while the page (or the widget) is open.
   useEffect(() => {
     if (platform.supported) void platform.setLimit(Math.round(prefs.limitKb * 1024));
@@ -93,40 +96,47 @@ export default function DownloadsPage() {
 
   return (
     <>
-      <HeroSlot area="signature">
-        <DownloadsBand
-          figure={
-            summary.running === 0
-              ? t.downloads.band.idle
-              : summary.running === 1
-                ? t.downloads.band.one
-                : t.downloads.band.many(summary.running)
-          }
-          context={
-            summary.running > 0
-              ? `${summary.percent} % · ${t.downloads.band.context(formatBytes(summary.speedBps))}`
-              : t.downloads.band.contextIdle
-          }
-          percent={summary.running > 0 ? summary.percent : 0}
-        />
-      </HeroSlot>
-      <PageHeader title={t.downloads.meta.name} />
-      <p className={styles.hint}>{t.downloads.hint}</p>
-      <div className={styles.bar}>
-        <Button variant="primary" onClick={() => setAdding('')}>
+      {/* The head's one figure: what runs right now, with its progress as the context line. Nothing runs: no figure
+          and no zero. */}
+      {summary.running > 0 ? (
+        <HeroSlot area="figure">
+          <HeroFigure
+            label={t.downloads.meta.name}
+            value={formatNumber(summary.running)}
+            unit={t.downloads.band.unit(summary.running)}
+            detail={`${summary.percent} % · ${t.downloads.band.context(formatBytes(summary.speedBps))}`}
+            testId="downloads-running"
+          />
+        </HeroSlot>
+      ) : null}
+      <PageHeader title={t.downloads.meta.name}>
+        {/* The page's one entry; an empty page's own button is filled instead. */}
+        <PageAction
+          short={t.downloads.band.short}
+          variant={jobs && jobs.length === 0 ? 'secondary' : 'primary'}
+          onClick={() => setAdding('')}
+        >
+          <Icon name="plus" size={18} />
           {t.downloads.add.button}
-        </Button>
+        </PageAction>
         {latest ? (
-          <Button
-            onClick={() => void platform.reveal(latest.id)}
-            title={t.downloads.folder.help}
-            data-testid="show-folder"
-          >
-            <Icon name="external" size={18} />
-            {t.downloads.folder.show}
-          </Button>
+          <RowMenu
+            label={t.downloads.band.more}
+            open={menuOpen}
+            onOpenChange={setMenuOpen}
+            items={[
+              {
+                id: 'show-folder',
+                label: t.downloads.folder.show,
+                onSelect: () => void platform.reveal(latest.id),
+              },
+            ]}
+          />
         ) : null}
-        {all.length > 0 ? (
+      </PageHeader>
+      <p className={styles.hint}>{t.downloads.hint}</p>
+      {all.length > 0 ? (
+        <div className={styles.bar}>
           <Segmented
             label={t.downloads.filter.label}
             value={filter}
@@ -138,11 +148,16 @@ export default function DownloadsPage() {
             ]}
             onChange={(v) => setFilter(v as JobFilter)}
           />
-        ) : null}
-      </div>
+        </div>
+      ) : null}
 
       {jobs && jobs.length === 0 ? (
-        <DownloadsEmpty title={t.downloads.empty.title}>{t.downloads.empty.body}</DownloadsEmpty>
+        <DownloadsEmpty title={t.downloads.empty.title}>
+          <p>{t.downloads.empty.body}</p>
+          <Button variant="primary" onClick={() => setAdding('')}>
+            {t.downloads.add.button}
+          </Button>
+        </DownloadsEmpty>
       ) : null}
 
       {jobs && jobs.length > 0 && shown.length === 0 ? (

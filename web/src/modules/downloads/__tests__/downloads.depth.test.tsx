@@ -1,7 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { DownloadsBand } from '../components/DownloadsBand';
 import { bandSummary, etaSeconds, formatEta, matchesFilter } from '../lib/format';
 
 const j = (over: Partial<Parameters<typeof bandSummary>[0][number]> = {}) => ({
@@ -51,27 +49,6 @@ describe('filters and remaining time', () => {
     expect(formatEta(30)).toMatch(/30/);
     expect(formatEta(120)).toMatch(/2/);
     expect(formatEta(3600 + 300)).toMatch(/1.*5/);
-  });
-});
-
-describe('DownloadsBand (signature, library ArrowBand in slot M)', () => {
-  it('shows the figure and its context as text; the band itself is decoration', () => {
-    render(<DownloadsBand figure="2 laufen" context="64 % · mit 3 MB/s" percent={64} />);
-    const band = screen.getByTestId('arrow-band');
-    expect(band).toHaveTextContent('2 laufen');
-    expect(band).toHaveTextContent('64 %');
-    const arrow = band.querySelector('[data-signature="arrowProgress"]') as HTMLElement;
-    expect(arrow.getAttribute('aria-hidden')).toBe('true');
-    expect(arrow.dataset.size).toBe('M');
-    expect((arrow.firstElementChild as HTMLElement).style.width).toBe('64%');
-  });
-
-  it('keeps the fill inside the band', () => {
-    render(<DownloadsBand figure="x" context="y" percent={180} />);
-    const fill = screen
-      .getByTestId('arrow-band')
-      .querySelector('[data-signature="arrowProgress"] > i') as HTMLElement;
-    expect(fill.style.width).toBe('100%');
   });
 });
 
