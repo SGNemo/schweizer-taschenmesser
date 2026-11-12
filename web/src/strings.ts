@@ -7056,7 +7056,7 @@ export const de = {
     },
     tabs: { label: 'Ansicht', places: 'Orte', routes: 'Routen', map: 'Karte' },
     empty: { places: 'Noch keine Orte.', routes: 'Noch keine Routen.' },
-    add: { place: 'Ort hinzufügen', route: 'Route hinzufügen' },
+    add: { place: 'Ort eintragen', route: 'Route eintragen' },
     placesBar: {
       search: 'Orte durchsuchen',
       all: 'Alle',
@@ -8302,6 +8302,7 @@ export const de = {
       noTimeShort: 'belegt',
       load: (planned: string, usable: string) => `${planned} von ${usable} geplant`,
       strip: 'Tage',
+      dayPanel: 'Gewählter Tag',
     },
     day: {
       available: 'Verfügbar',

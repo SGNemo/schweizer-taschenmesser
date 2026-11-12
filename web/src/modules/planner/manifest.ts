@@ -74,7 +74,7 @@ const manifest: ModuleManifest = {
   defaultEnabled: false,
   maturity: 'stable',
   seed: { version: 2, dependsOn: ['todos'] },
-  layout: 'full',
+  layout: 'split',
   order: 15,
   area: 'plan',
   requires: ['todos'],

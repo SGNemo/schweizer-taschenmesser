@@ -99,6 +99,10 @@ export function WeatherHero({ weather }: { weather: WeatherView }) {
           <p className={styles.rest}>{rest.join(' · ')}</p>
         </div>
       </HeroSlot>
+      {/* The same line for the phone, in the page under the head (the stage keeps its height there). */}
+      <p className={`${styles.rest} ${styles.restBelow}`} aria-hidden="true">
+        {rest.join(' · ')}
+      </p>
     </>
   );
 }

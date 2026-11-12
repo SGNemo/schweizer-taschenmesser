@@ -218,6 +218,11 @@
   background: var(--module-color);
   color: var(--surface);
 }
+/* Design check K7: a stage shows no default signature. The stage's backdrop is the module's picture already, and
+   the tile with a surface and a ring looked like a button and is none. A page's own content in the slot stays. */
+.stage .signature[data-default='true'] {
+  display: none;
+}
 :global(:root[data-theme='dark']) .stage .plate {
   color: var(--bg);
 }
@@ -309,6 +314,7 @@
   .signature[data-default='true'] {
     zoom: 0.7;
   }
+
   .signature {
     flex-basis: auto;
   }

@@ -70,6 +70,7 @@ export const planner: Strings['planner'] = {
     noTimeShort: 'busy',
     load: (planned: string, usable: string) => `${planned} of ${usable} planned`,
     strip: 'Days',
+    dayPanel: 'Chosen day',
   },
   day: {
     available: 'Available',

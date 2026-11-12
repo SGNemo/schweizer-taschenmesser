@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Dialog, IconButton, Icon, ItemList, ItemRow, TextField } from '@/ui';
+import { Button, Dialog, IconButton, Icon, ItemList, ItemRow, TextField, TimeField } from '@/ui';
 import { validWindow, windowText } from '@/core/plan/windows';
 import {
   addBlocker,
@@ -89,20 +89,10 @@ export function DaySheet({
       <p className={styles.capacity}>{capacityLabel(day)}</p>
       <form className={styles.blockerForm} onSubmit={submitWindow} data-testid="day-window">
         <div className={styles.timeField}>
-          <TextField
-            label={t.planner.day.windowFrom}
-            type="time"
-            value={from}
-            onChange={(e) => setWinFrom(e.target.value)}
-          />
+          <TimeField label={t.planner.day.windowFrom} value={from} onChange={setWinFrom} />
         </div>
         <div className={styles.timeField}>
-          <TextField
-            label={t.planner.day.windowTo}
-            type="time"
-            value={to}
-            onChange={(e) => setWinTo(e.target.value)}
-          />
+          <TimeField label={t.planner.day.windowTo} value={to} onChange={setWinTo} />
         </div>
         <Button
           type="submit"
@@ -168,20 +158,14 @@ export function DaySheet({
         {day.window ? (
           <>
             <div className={styles.timeField}>
-              <TextField
+              <TimeField
                 label={t.planner.day.blockerFrom}
-                type="time"
                 value={blockFrom}
-                onChange={(e) => setBlockFrom(e.target.value)}
+                onChange={setBlockFrom}
               />
             </div>
             <div className={styles.timeField}>
-              <TextField
-                label={t.planner.day.blockerTo}
-                type="time"
-                value={blockTo}
-                onChange={(e) => setBlockTo(e.target.value)}
-              />
+              <TimeField label={t.planner.day.blockerTo} value={blockTo} onChange={setBlockTo} />
             </div>
           </>
         ) : null}

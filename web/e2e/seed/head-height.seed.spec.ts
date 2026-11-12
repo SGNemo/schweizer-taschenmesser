@@ -185,3 +185,61 @@ for (const theme of SHOTS ? (['light', 'dark'] as const) : (['light'] as const))
     });
   });
 }
+
+// Design check of packages 0b-1 to 0b-3, finding K3 (package 0b-4b, part 2): the loop above measures the weather
+// stage without a place, the empty stage. With weather data the stage carried 394 px on the phone. Measured here
+// with a place and an invented forecast: the stage keeps its limit, and the phone's module row stays off the sun.
+test.describe('weather stage with weather data (K3)', () => {
+  test.setTimeout(120_000);
+  for (const phone of [false, true]) {
+    test.describe(phone ? 'phone' : 'desktop', () => {
+      test.use(
+        phone
+          ? {
+              viewport: PHONE,
+              isMobile: true,
+              hasTouch: true,
+              seeded: { scale: 'small', preview: true },
+            }
+          : { viewport: DESKTOP, seeded: { scale: 'small', desktop: true, preview: true } },
+      );
+      test(`the stage with a forecast is ≤ ${STAGE} px`, async ({ page }) => {
+        const { mockWeather, pickWeatherPlace } = await import('../weather-mock');
+        await mockWeather(page);
+        await startSeeded(page, { phone });
+        expect(await pickWeatherPlace(page), 'a place was picked').toBe(true);
+        await openPage(page, '/weather');
+        await expect(page.getByTestId('weather-temp')).toBeVisible();
+        await page.waitForTimeout(600);
+        const head = await page.evaluate(readHead);
+        expect(head?.variant).toBe('stage');
+        expect(head?.height, `stage height with data (limit ${STAGE} px)`).toBeLessThanOrEqual(
+          STAGE,
+        );
+        expect(head?.outside, 'nothing in the stage leaves its box').toEqual([]);
+        // The module row (phone) and the sun do not share a place.
+        const overlap = await page.evaluate(() => {
+          const row = document.querySelector('nav[data-module-row]')?.getBoundingClientRect();
+          const sun = document
+            .querySelector('[data-testid="module-frame"] [data-sky] span')
+            ?.getBoundingClientRect();
+          if (!row || !sun || row.height === 0 || sun.height === 0) return false;
+          return !(
+            sun.bottom <= row.top ||
+            sun.top >= row.bottom ||
+            sun.right <= row.left ||
+            sun.left >= row.right
+          );
+        });
+        if (SHOTS) {
+          mkdirSync(SHOTS, { recursive: true });
+          await page.screenshot({
+            path: join(SHOTS, `${phone ? 'phone' : 'desktop'}-weather-data.png`),
+          });
+        }
+        expect(overlap, 'the module row lies across the sun').toBe(false);
+        console.log(`weather stage with data ${phone ? 'phone' : 'desktop'}: ${head?.height}`);
+      });
+    });
+  }
+});
