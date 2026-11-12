@@ -10,7 +10,7 @@ Goal: a new chat starts with ≈ 2 000 tokens (hard budget 2 600, so there is ro
 | Where is X / interfaces / data flow | `docs/ARCHITECTURE-MAP.md`; long design notes → `docs/architecture/<topic>.md` |
 | Why (decision) | one bullet in `docs/decisions/<area>.md` (what – why, date, sources); `docs/DECISIONS.md` is the index of areas |
 | How (command, recipe, gotcha) | `docs/HOW-TO.md` index → `docs/howto/<topic>.md` |
-| Status, open, limits, next steps | `docs/STATUS.md` (state only, at most one line per PR, no log; German parts stay German); hardware checklists → `docs/MANUAL-TESTS.md`; ideas → `docs/ROADMAP.md` |
+| Status, open, limits, next steps | `docs/STATUS.md` (state only, no log; edited only in a `docs(status)` PR of its own, never beside code: `check:docs` fails on that; German parts stay German); hardware checklists → `docs/MANUAL-TESTS.md`; ideas → `docs/ROADMAP.md` |
 | Running chats, what waits on the maintainer, hotspots | `docs/CHATS.md` (open items only, one screen; rules on top of the file) |
 | Notes between chats | private notes repo (root `CLAUDE.md` step 2), never this repo |
 | Finished working documents (package prompts, round logs, mockups, audit tools) | deleted in the PR that closes the round; decisions live in `docs/decisions/`, the rest in the git history |
