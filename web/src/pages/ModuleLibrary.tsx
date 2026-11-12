@@ -202,7 +202,7 @@ export function ModuleLibrary() {
         return (
           <section
             key={g.id}
-            className={library.group}
+            className={library.groupPlain}
             data-area={g.area}
             aria-labelledby={`lib-${g.id}`}
           >
@@ -224,6 +224,7 @@ export function ModuleLibrary() {
                     name={m.name}
                     description={m.description}
                     hue={m.identity.hue}
+                    plainHead
                     preview={
                       <WidgetMiniature
                         variant={m.identity.widget}
@@ -261,6 +262,7 @@ export function ModuleLibrary() {
                         card's foot has the same two rows. */}
                     <span className={library.switchRow}>
                       <Switch
+                        tone="neutral"
                         label={text.toggle(m.name)}
                         checked={enabled}
                         disabled={!states}

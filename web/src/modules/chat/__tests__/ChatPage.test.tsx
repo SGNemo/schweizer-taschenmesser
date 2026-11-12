@@ -63,10 +63,18 @@ describe('ChatPage', () => {
     expect(screen.getByRole('searchbox').closest('[data-after-hint]')).not.toBeNull();
   });
 
-  it('starts with an empty state and one way to begin: the toolbar, not a second button (C23)', async () => {
+  it('starts with an empty state that holds the one filled button; the head steps back (Identity 4.0, was C23)', async () => {
     view();
-    expect(await screen.findByText(c.empty)).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: new RegExp(c.newChat) })).toHaveLength(1);
+    const empty = await screen.findByTestId('chat-empty');
+    expect(within(empty).getByText(c.empty)).toBeInTheDocument();
+    const buttons = screen.getAllByRole('button', { name: new RegExp(c.newChat) });
+    expect(buttons).toHaveLength(2);
+    // One filled button on the view: the empty state's; "Neuer Chat" in the head is secondary meanwhile.
+    expect(buttons.filter((b) => b.getAttribute('data-variant') === 'primary')).toHaveLength(1);
+    expect(within(empty).getByRole('button', { name: c.newChat })).toHaveAttribute(
+      'data-variant',
+      'primary',
+    );
   });
 
   it('steps „Neuer Chat“ back while the setup hint is the one action (C23)', async () => {

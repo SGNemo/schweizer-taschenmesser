@@ -53,6 +53,7 @@ export const bookmarks: Strings['bookmarks'] = {
   noGroup: 'No group',
   linksEmpty: 'No bookmarks yet. Add links you need often – grouped by their first tag.',
   empty: 'Nothing saved yet.',
+  emptyAction: 'Add saved item',
   emptyFiltered: 'Nothing found.',
   open: 'Open link',
   done: 'Done',

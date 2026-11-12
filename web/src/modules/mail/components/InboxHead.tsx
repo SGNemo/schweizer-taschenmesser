@@ -1,40 +1,29 @@
+import { formatNumber } from '@/core/i18n/format';
 import { t } from '@/strings';
-import { HeroSlot, Signature, Stamp } from '@/ui/identity';
-import styles from './InboxHead.module.css';
+import { HeroFigure, HeroSlot } from '@/ui/identity';
 
 /**
- * The stamp beside the title (`schreib`, identity v3.1): the unread count on the stamp, the inbox line next to it as
- * real text (the stamp is decoration). Outside the head (tests) it renders as it is.
+ * The head's one figure of the mail page (Identity 4.0): the unread count of the inbox, named by its unit and its
+ * context line. Nothing is unread: no figure and no zero. No mail text. Outside the head (tests) it renders as it is.
  */
-export function InboxStamp({ unread }: { unread: number }) {
+export function InboxFigure({ unread }: { unread: number }) {
+  if (unread <= 0) return null;
   return (
-    <div className={styles.stamp} data-testid="mail-stamp">
-      <Stamp>{unread}</Stamp>
-      <p className={styles.text}>
-        <span className={styles.title}>{t.mail.head.inbox}</span>
-        <span className={styles.context}>{t.mail.head.unread(unread)}</span>
-      </p>
-    </div>
+    <HeroFigure
+      label={t.mail.meta.name}
+      value={formatNumber(unread)}
+      unit={t.mail.head.unreadUnit}
+      detail={t.mail.head.inbox}
+      testId="mail-stamp"
+    />
   );
 }
 
-/**
- * Head of the mail page: the stamp with the count and the envelope. Identity 4.0: both are the page's signature block,
- * which lies in the page under the standard head (the title row takes a plain figure only). No mail text.
- */
+/** Head of the mail page: the unread figure in the title row. The stamp is the empty state's motif. */
 export function InboxHead({ unread }: { unread?: number }) {
-  return (
-    <>
-      {unread !== undefined ? (
-        <HeroSlot area="signature">
-          <InboxStamp unread={unread} />
-        </HeroSlot>
-      ) : null}
-      <HeroSlot area="signature">
-        <span className={styles.envelope} data-testid="mail-envelope">
-          <Signature id="envelope" size="S" />
-        </span>
-      </HeroSlot>
-    </>
-  );
+  return unread ? (
+    <HeroSlot area="figure">
+      <InboxFigure unread={unread} />
+    </HeroSlot>
+  ) : null;
 }

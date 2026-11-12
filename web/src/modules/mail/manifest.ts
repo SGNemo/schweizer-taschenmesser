@@ -79,7 +79,7 @@ const manifest: ModuleManifest = {
   maturity: 'preview',
   defaultEnabled: false,
   seed: { version: 3, dependsOn: [] },
-  layout: 'full',
+  layout: 'split',
   area: 'knowledge',
   automation: () => import('./automation'),
   contributions: {

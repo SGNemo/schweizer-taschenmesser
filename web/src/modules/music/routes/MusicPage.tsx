@@ -4,7 +4,7 @@ import { settingsPath } from '@/core/settings/registry/paths';
 import { useSettings } from '@/core/settings/settings';
 import { tMusicPage } from '@/strings.musicPage';
 import { tSpotify } from '@/strings.spotify';
-import { Button, Card, EmptyState, Icon, PageTitle } from '@/ui';
+import { Button, Card, EmptyState, PageTitle, Tabs } from '@/ui';
 import { SignatureMark } from '@/ui/identity';
 import { MusicHero } from '../components/MusicHero';
 import { SideLists } from '../components/SideLists';
@@ -79,16 +79,12 @@ export default function MusicPage() {
         ? api.act(() => np.source.play!(np.ctx, item, [...list]))
         : Promise.resolve(false),
   };
-  const views: {
-    view?: View;
-    label: string;
-    icon: 'home' | 'search' | 'heart' | 'clock' | 'menu';
-  }[] = [
-    { label: tm.start, icon: 'home' },
-    { view: { type: 'search' }, label: tx.tabSearch, icon: 'search' },
-    { view: { type: 'liked' }, label: tx.tabLiked, icon: 'heart' },
-    { view: { type: 'recent' }, label: tx.navRecent, icon: 'clock' },
-    { view: { type: 'queue' }, label: tx.navQueue, icon: 'menu' },
+  const views: { id: string; view?: View; label: string }[] = [
+    { id: 'start', label: tm.start },
+    { id: 'search', view: { type: 'search' }, label: tx.tabSearch },
+    { id: 'liked', view: { type: 'liked' }, label: tx.tabLiked },
+    { id: 'recent', view: { type: 'recent' }, label: tx.navRecent },
+    { id: 'queue', view: { type: 'queue' }, label: tx.navQueue },
   ];
   const isOn = (v?: View) => (v ? view?.type === v.type && !('id' in v) : !view);
 
@@ -96,20 +92,15 @@ export default function MusicPage() {
     <>
       <PageTitle title={tm.name} />
       <MusicHero api={api} />
-      <nav className={styles.toolbar} aria-label={tm.nav}>
-        {views.map((v) => (
-          <button
-            key={v.label}
-            type="button"
-            className={styles.chip}
-            aria-pressed={isOn(v.view)}
-            onClick={() => setView(v.view)}
-          >
-            <Icon name={v.icon} size={16} />
-            {v.label}
-          </button>
-        ))}
-      </nav>
+      {/* The views are tabs at the lower edge of the stage, in the page: inside the head they would lift the stage
+          over its 320 px. An open playlist is none of them (it is reached from the start view). */}
+      <div className={styles.views}>
+        <Tabs
+          label={tm.nav}
+          items={views.map((v) => ({ id: v.id, label: v.label, active: isOn(v.view) }))}
+          onSelect={(id) => setView(views.find((v) => v.id === id)?.view)}
+        />
+      </div>
       <div className={styles.layout}>
         <div className={styles.main} data-testid="music-main">
           {view ? (

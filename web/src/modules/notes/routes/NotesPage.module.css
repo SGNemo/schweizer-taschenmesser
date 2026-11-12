@@ -2,9 +2,9 @@
   display: flex;
   height: calc(100dvh - var(--space-7) * 2);
   min-height: 24rem;
-  border: 1px solid var(--border);
+  /* One raised surface for list and page; a hairline parts the two columns. */
   border-radius: var(--radius-lg);
-  background: var(--surface);
+  background: var(--surface-raised);
   overflow: hidden;
 }
 .list {
@@ -30,26 +30,15 @@
 }
 .focus {
   border-radius: 0;
-  border-width: 0;
 }
 @media (max-width: 899px) {
   .root {
     flex-direction: column;
-    border: 0;
     border-radius: 0;
+    background: none;
   }
   .list {
     flex: 1;
     border-right: 0;
-  }
-}
-/* The note paper from the library at slot S: about 160 px wide beside the title (G08), 56 px high on the phone (G02). */
-.paper {
-  display: inline-grid;
-  zoom: 0.9;
-}
-@media (max-width: 899px) {
-  .paper {
-    zoom: 0.78;
   }
 }

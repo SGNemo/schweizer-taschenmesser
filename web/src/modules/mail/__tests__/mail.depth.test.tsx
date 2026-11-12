@@ -1,21 +1,21 @@
 // @vitest-environment jsdom
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { InboxStamp } from '../components/InboxHead';
+import { InboxFigure } from '../components/InboxHead';
 import { readSearches, rememberSearch, suggestionsFor } from '../searchHistory';
 
-describe('InboxStamp (head figure)', () => {
-  it('shows the unread count as real text beside the stamp; the stamp is decoration', () => {
-    render(<InboxStamp unread={3} />);
-    const stamp = screen.getByTestId('mail-stamp');
-    expect(stamp).toHaveTextContent('3 ungelesene Threads');
-    expect(stamp).toHaveTextContent('Posteingang');
-    expect(stamp.querySelector('[data-signature="stamp"][aria-hidden="true"]')).not.toBeNull();
+describe('InboxFigure (head figure)', () => {
+  it('shows the unread count with its unit and the inbox as context, as real text', () => {
+    render(<InboxFigure unread={3} />);
+    const figure = screen.getByTestId('mail-stamp');
+    expect(figure).toHaveTextContent('3');
+    expect(figure).toHaveTextContent('ungelesen');
+    expect(screen.getByText('Posteingang')).toBeInTheDocument();
   });
 
-  it('says so in words when nothing is unread', () => {
-    render(<InboxStamp unread={0} />);
-    expect(screen.getByTestId('mail-stamp')).toHaveTextContent('Alles gelesen');
+  it('draws no figure and no zero when nothing is unread', () => {
+    render(<InboxFigure unread={0} />);
+    expect(screen.queryByTestId('mail-stamp')).toBeNull();
   });
 });
 
