@@ -17,13 +17,13 @@
 }
 .card {
   position: relative;
-  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: var(--surface);
+  background: var(--surface-raised);
 }
+/* The open tab: a recess and a weight (no frame, no edge in the module colour). */
 .active {
-  border-color: var(--module-color);
-  box-shadow: inset 0 3px 0 var(--module-color);
+  background: var(--surface-sunken);
+  font-weight: var(--weight-semibold);
 }
 .pick {
   display: flex;
@@ -44,7 +44,7 @@
   height: 5.5rem;
   overflow: hidden;
   border-radius: var(--radius-sm);
-  background: var(--head-tint-1, var(--surface-2));
+  background: var(--surface-2);
 }
 .image {
   width: 100%;

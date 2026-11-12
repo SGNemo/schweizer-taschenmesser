@@ -18,17 +18,19 @@
   min-height: var(--touch);
   max-width: 14rem;
   padding: 0 var(--space-2) 0 var(--space-3);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
+  background: none;
   border-radius: var(--radius-sm);
   color: inherit;
   font: inherit;
   cursor: pointer;
 }
-/* The active tab is a filled chip (the fill, not an edge bar, carries the module colour); text stays --text. */
-.tabActive {
-  background: color-mix(in srgb, var(--module-color) 22%, var(--surface));
-  border-radius: var(--radius-full);
+.tab:hover {
+  background: var(--surface-2);
+}
+/* The open tab is a recess and a weight (Identity 4.0: no frame, no tint). */
+.tabActive,
+.tabActive:hover {
+  background: var(--surface-sunken);
   font-weight: var(--weight-semibold);
 }
 .tabTitle {
@@ -66,13 +68,11 @@
 .area {
   flex: 1;
   min-height: 24rem;
-  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   overflow: auto;
-  padding: var(--space-4);
 }
+/* The web page (a native view lies over this box): the box is only its place. */
 .native {
-  padding: 0;
   overflow: hidden;
 }
 .panel {
@@ -126,15 +126,15 @@
   width: 100%;
   min-height: var(--touch);
   padding: var(--space-2);
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: var(--radius-md);
-  background: var(--surface);
+  background: var(--surface-raised);
   color: var(--text);
   font: inherit;
   cursor: pointer;
 }
 .tile:hover {
-  border-color: var(--module-color);
+  background: var(--surface-2);
 }
 .tileMark {
   display: grid;
@@ -142,7 +142,7 @@
   width: 2.75rem;
   height: 2.75rem;
   border-radius: var(--radius-md);
-  background: var(--head-tint-1, var(--surface-2));
+  background: var(--surface-sunken);
   font-family: var(--font-mono);
   font-size: var(--text-xl);
   font-weight: var(--weight-bold);
@@ -158,4 +158,11 @@
   text-align: center;
   overflow-wrap: break-word;
   font-size: var(--text-sm);
+}
+/* "Tab neu öffnen" with the page it would open, on the start view. */
+.reopen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
 }

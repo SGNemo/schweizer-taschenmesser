@@ -40,6 +40,13 @@ interface TabsState {
   /** Open `url` in the tab: creates the webview on first use, otherwise navigates. `allowHttp` = user confirmed. */
   go(id: number, url: string, allowHttp?: boolean): Promise<void>;
   closeTab(id: number): Promise<void>;
+  /**
+   * The page of the tab closed last in this session (never a private one, memory only): the start view offers it as
+   * "Tab neu öffnen". "Daten löschen" forgets it.
+   */
+  lastClosed: { url: string; title: string } | null;
+  /** The start view reopened it (or the user cleared the data). */
+  forgetClosed(): void;
   closeAll(): Promise<void>;
   zoomBy(id: number, delta: number | 'reset'): Promise<void>;
   togglePause(host: string): void;
@@ -211,10 +218,22 @@ export const useBrowserTabs = create<TabsState>((set, get) => ({
         .catch(() => undefined);
     lastHistory.delete(id);
     const rest = tabs.filter((x) => x.id !== id);
-    set({ tabs: rest, activeId: activeId === id ? (rest[rest.length - 1]?.id ?? null) : activeId });
+    set({
+      tabs: rest,
+      activeId: activeId === id ? (rest[rest.length - 1]?.id ?? null) : activeId,
+      // A private tab leaves no trace, not even this one.
+      ...(tab.opened && !tab.isPrivate && tab.url
+        ? { lastClosed: { url: tab.url, title: tab.title } }
+        : {}),
+    });
   },
   async closeAll() {
     for (const tab of get().tabs) await get().closeTab(tab.id);
+    set({ lastClosed: null });
+  },
+  lastClosed: null,
+  forgetClosed() {
+    set({ lastClosed: null });
   },
   async zoomBy(id, delta) {
     const tab = get().tabs.find((x) => x.id === id);

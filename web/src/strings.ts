@@ -7687,6 +7687,7 @@ export const de = {
       newPrivate: 'Privaten Tab öffnen',
       bookmarks: 'Lesezeichen',
       recent: 'Zuletzt besucht',
+      reopenHint: (title: string) => `Zuletzt offen: ${title}`,
       none: 'Noch nichts gespeichert.',
     },
     menu: {

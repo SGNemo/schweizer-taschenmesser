@@ -23,7 +23,7 @@ import { ReaderPanel } from '../components/ReaderPanel';
 import { TabOverview } from '../components/TabOverview';
 import { engineTemplate } from '../lib/searchEngines';
 import { resolveInput } from '../lib/omnibox';
-import { AddressBar, HeroSlot, SignatureMark } from '@/ui/identity';
+import { SignatureMark } from '@/ui/identity';
 import { displayUrl, hostOf, isWebUrl, offerName } from '../lib/urlPolicy';
 import { blockruleRepo, bookmarkRepo, historyRepo } from '../repo';
 import { settings, type BrowserPrefs } from '../settings';
@@ -70,6 +70,14 @@ export default function BrowserPage() {
     const seen = new Set<string>();
     return (visits ?? []).filter((v) => !seen.has(v.url) && !!seen.add(v.url)).slice(0, 6);
   }, [visits]);
+
+  // "Tab neu öffnen" on the start view: the tab closed last in this session, else the last page of the history (what
+  // was open before a restart). Not in a private tab: it would load a normal page there.
+  const lastClosed = useBrowserTabs((s) => s.lastClosed);
+  const lastVisit = recent[0];
+  const reopen = tab?.isPrivate
+    ? null
+    : (lastClosed ?? (lastVisit ? { url: lastVisit.url, title: lastVisit.title } : null));
 
   const previews = useTabPreviews(tabs, prefs.tabPreview && view === 'tabs');
   const template = engineTemplate(prefs.engine, prefs.customUrl);
@@ -220,12 +228,6 @@ export default function BrowserPage() {
   return (
     <div className={styles.root}>
       <PageTitle title={t.browser.meta.name} />
-      {/* Signature (slot S): decoration only – lock and line, no text, so it never reads as a second address field. */}
-      <HeroSlot area="signature">
-        <span data-testid="address-bar-signature">
-          <AddressBar />
-        </span>
-      </HeroSlot>
       <nav className={styles.tabs} aria-label={t.browser.toolbar.tabs} data-testid="tab-strip">
         {tabs.map((x) => (
           <div key={x.id} className={`${styles.tab} ${x.id === activeId ? styles.tabActive : ''}`}>
@@ -631,6 +633,23 @@ export default function BrowserPage() {
           <div className={styles.panel}>
             <h2>{t.browser.start.title}</h2>
             <p className={styles.muted}>{t.browser.start.body}</p>
+            {/* Tabs live in memory only: after a restart, or after closing the last tab, the page that was open is one
+                click away (never a private tab; with the history off only the tab closed in this session). */}
+            {reopen ? (
+              <div className={styles.reopen} data-testid="browser-reopen">
+                <Button
+                  onClick={() => {
+                    useBrowserTabs.getState().forgetClosed();
+                    void open(reopen.url);
+                  }}
+                >
+                  {t.browser.failed.reopen}
+                </Button>
+                <span className={styles.muted}>
+                  {t.browser.start.reopenHint(reopen.title || displayUrl(reopen.url))}
+                </span>
+              </div>
+            ) : null}
             <h3>{t.browser.start.bookmarks}</h3>
             {marks && marks.length === 0 ? (
               <p className={styles.muted}>{t.browser.start.none}</p>
