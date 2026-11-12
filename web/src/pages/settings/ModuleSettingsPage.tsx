@@ -15,12 +15,21 @@ import { tSettings2 } from '@/strings.settings2';
 import { tSettingsV3 } from '@/strings.settingsV3';
 import { useUiStore } from '@/stores/ui';
 import { tComfort } from '@/strings.comfort';
-import { Badge, Button, EmptyState, HuePlate, SettingRow, SettingsGroup } from '@/ui';
-import { Signature } from '@/ui/identity';
+import {
+  Badge,
+  Button,
+  EmptyState,
+  HuePlate,
+  ListSurface,
+  SettingRow,
+  SettingsGroup,
+  useMediaQuery,
+} from '@/ui';
 import { FieldRow } from './ModuleSection';
 import { STATUS_LOOK } from './categoryLook';
 import { hasModulePage } from './hasModulePage';
-import { PageHead } from './PageHead';
+import { WIDE_QUERY } from './wide';
+import { SettingsTitle } from './components/SettingsTitle';
 import styles from './ModuleSettingsPage.module.css';
 import settingsStyles from './settings.module.css';
 
@@ -47,32 +56,43 @@ function useChangedCounts(
 function ModuleHead({ manifest }: { manifest: ModuleManifest }) {
   const o = tSettings2.use().modulePage;
   const v3 = tSettingsV3.use();
+  // Phone: the button beside the title leads back to the list of modules (no back row above the page).
+  const wide = useMediaQuery(WIDE_QUERY);
   return (
-    <PageHead
+    <SettingsTitle
       hue={manifest.identity.hue}
-      hue2={manifest.identity.hue2}
       area={manifest.area ?? 'system'}
       icon={manifest.icon}
       eyebrow={v3.modulesEyebrow}
       title={manifest.name}
       titleId={`module-${manifest.id}`}
       description={manifest.description}
-      decoration={<Signature id={manifest.identity.signature} size="S" />}
+      back={wide ? undefined : { to: settingsPath('module'), label: o.all }}
       testId="module-settings-head"
-      actions={
-        <Link to={`/library#module-${manifest.id}`} className={styles.libraryLink}>
-          {o.library}
-        </Link>
-      }
+      // Phone: the link to the library is the last row of the page, so the head stays two lines.
+      actions={wide ? <LibraryLink manifest={manifest} /> : undefined}
     />
+  );
+}
+
+/** "In der Bibliothek ansehen": beside the description on the desktop, the page's last row on the phone. */
+function LibraryLink({ manifest }: { manifest: ModuleManifest }) {
+  const o = tSettings2.use().modulePage;
+  return (
+    <Link to={`/library#module-${manifest.id}`} className={styles.libraryLink}>
+      {o.library}
+    </Link>
   );
 }
 
 /** The head of a module route that has no module page (unknown, off, loading): the settings title, nothing more. */
 function PlainHead() {
+  const wide = useMediaQuery(WIDE_QUERY);
+  const o = tSettings2.use().modulePage;
   return (
-    <PageHead
+    <SettingsTitle
       {...STATUS_LOOK}
+      back={wide ? undefined : { to: settingsPath('module'), label: o.all }}
       icon="settings"
       eyebrow={tSettingsV3.use().modulesEyebrow}
       title={t.settings.title}
@@ -103,7 +123,9 @@ export function ModuleSettingsPage() {
   if (!manifest || !states[manifest.id] || !hasModulePage(manifest)) {
     return (
       <EmptyState compact title={o.notFound}>
-        <Link to={settingsPath('module')}>{o.all}</Link>
+        <Link to={settingsPath('module')} className={styles.emptyLink}>
+          {o.all}
+        </Link>
       </EmptyState>
     );
   }
@@ -116,6 +138,7 @@ function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
   const { schema, defaults, fields } = manifest.settings;
   const [values, patch] = useSettings(`module.${manifest.id}`, schema, defaults);
   const toast = useUiStore((st) => st.toast);
+  const wide = useMediaQuery(WIDE_QUERY);
   if (!values) return null;
   const v = values as Record<string, unknown>;
   const sectionId = `module-${manifest.id}`;
@@ -188,6 +211,7 @@ function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
           </SettingsGroup>
         );
       })}
+      {wide ? null : <LibraryLink manifest={manifest} />}
     </section>
   );
 }
@@ -205,7 +229,7 @@ export function ModuleList() {
         {o.listTitle}
       </h2>
       <p className={styles.listHint}>{o.listHint}</p>
-      <ul className={styles.list}>
+      <ListSurface>
         {manifests.map((m) => (
           <li key={m.id}>
             <Link
@@ -224,7 +248,7 @@ export function ModuleList() {
             </Link>
           </li>
         ))}
-      </ul>
+      </ListSurface>
     </section>
   );
 }

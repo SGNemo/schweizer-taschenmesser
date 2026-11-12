@@ -2,6 +2,7 @@
 import { LOCAL_MODELS, modelCardUrl } from '@/core/ai/local/catalogue';
 import { t } from '@/strings';
 import { SettingsGroup } from '@/ui';
+import styles from './settings.module.css';
 
 export function ModelLicensesSection() {
   return (
@@ -12,14 +13,22 @@ export function ModelLicensesSection() {
     >
       <ul>
         {LOCAL_MODELS.map((m) => (
-          <li key={m.id}>
+          <li key={m.id} className={styles.licence}>
             <strong>{m.label}</strong>
-            {' · '}
-            <a href={m.license.url} target="_blank" rel="noreferrer noopener">
+            <a
+              href={m.license.url}
+              target="_blank"
+              rel="noreferrer noopener"
+              className={styles.licenceLink}
+            >
               {m.license.name}
             </a>
-            {' · '}
-            <a href={modelCardUrl(m)} target="_blank" rel="noreferrer noopener">
+            <a
+              href={modelCardUrl(m)}
+              target="_blank"
+              rel="noreferrer noopener"
+              className={styles.licenceLink}
+            >
               huggingface.co/{m.repo}
             </a>
           </li>
