@@ -261,12 +261,12 @@
       "height": 1080,
       "buttons": 49,
       "links": 19,
-      "icons": 55,
+      "icons": 54,
       "firstScreenActions": 67,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
-      "colouredAboveFold": 9,
+      "colouredAboveFold": 10,
       "signatureBlocks": 0
     },
     "d1920--music": {
@@ -319,14 +319,14 @@
     },
     "d1920--planner": {
       "height": 1080,
-      "buttons": 44,
+      "buttons": 32,
       "links": 19,
-      "icons": 53,
-      "firstScreenActions": 62,
+      "icons": 40,
+      "firstScreenActions": 50,
       "borders": 0,
-      "shadows": 5,
-      "surfaceLanguages": 1,
-      "colouredAboveFold": 13,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 7,
       "signatureBlocks": 0
     },
     "d1920--remote": {
@@ -455,9 +455,9 @@
       "links": 22,
       "icons": 84,
       "firstScreenActions": 40,
-      "borders": 1,
-      "shadows": 25,
-      "surfaceLanguages": 2,
+      "borders": 0,
+      "shadows": 1,
+      "surfaceLanguages": 1,
       "colouredAboveFold": 12,
       "signatureBlocks": 0
     },
@@ -654,15 +654,15 @@
       "signatureBlocks": 0
     },
     "p412--maps": {
-      "height": 1210,
+      "height": 1013,
       "buttons": 33,
       "links": 14,
-      "icons": 27,
-      "firstScreenActions": 37,
+      "icons": 26,
+      "firstScreenActions": 46,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
-      "colouredAboveFold": 5,
+      "colouredAboveFold": 9,
       "signatureBlocks": 0
     },
     "p412--music": {
@@ -714,15 +714,15 @@
       "signatureBlocks": 0
     },
     "p412--planner": {
-      "height": 1051,
+      "height": 967,
       "buttons": 17,
       "links": 14,
       "icons": 13,
       "firstScreenActions": 30,
       "borders": 0,
-      "shadows": 1,
-      "surfaceLanguages": 1,
-      "colouredAboveFold": 7,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 2,
       "signatureBlocks": 0
     },
     "p412--reminders": {
@@ -834,14 +834,14 @@
       "signatureBlocks": 34
     },
     "p412--weather": {
-      "height": 3046,
+      "height": 3018,
       "buttons": 6,
       "links": 17,
       "icons": 57,
       "firstScreenActions": 20,
-      "borders": 1,
-      "shadows": 25,
-      "surfaceLanguages": 2,
+      "borders": 0,
+      "shadows": 1,
+      "surfaceLanguages": 1,
       "colouredAboveFold": 3,
       "signatureBlocks": 0
     }

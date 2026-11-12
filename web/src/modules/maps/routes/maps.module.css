@@ -131,7 +131,7 @@
   box-shadow: inset 0 0 0 1px var(--border-strong);
 }
 
-/* Place rows lead with a pin plate in the module colour. */
+/* Place rows lead with a pin plate: a neutral tone step (the module colour stays with the head and the action). */
 .plate {
   display: inline-flex;
   align-items: center;
@@ -139,7 +139,7 @@
   width: 2.25rem;
   height: 2.25rem;
   border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--module-color) 16%, var(--surface));
+  background: var(--surface-sunken);
   color: var(--text);
 }
 
