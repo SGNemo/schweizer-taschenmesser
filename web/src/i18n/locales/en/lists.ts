@@ -66,6 +66,7 @@ export const lists: Strings['lists'] = {
   note: 'Note (optional)',
   addItem: 'Add item',
   inBasket: (done: number, total: number) => `${done} of ${total} in the basket`,
+  basketEmpty: 'Nothing in the basket yet',
   placeholder: {
     shopping: 'e.g. 2 milk',
     packing: 'e.g. sun cream',

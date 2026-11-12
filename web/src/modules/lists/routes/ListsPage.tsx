@@ -86,13 +86,17 @@ export default function ListsPage() {
   }, []);
 
   // `?new=1` (Quick-Add, the "+ Neu" menu) focuses the add field.
-  // The field is the last row of a list, so it exists only once the lists are loaded: the parameter waits for it.
-  const loaded = (lists?.length ?? 0) > 0;
-  useEffect(() => {
+  /** The add field is the list's last row; the "⋯" entry and `?new=1` lead to it on a long list. */
+  const focusAdd = () => {
     const input = form.current?.querySelector('input');
-    if (params.get('new') && loaded && input) {
-      input.scrollIntoView({ block: 'center' });
-      input.focus({ preventScroll: true });
+    input?.scrollIntoView({ block: 'center' });
+    input?.focus({ preventScroll: true });
+  };
+  // The field lies below the rows, so the parameter waits until lists and items are there.
+  const loaded = (lists?.length ?? 0) > 0 && items !== undefined;
+  useEffect(() => {
+    if (params.get('new') && loaded && form.current) {
+      focusAdd();
       const next = new URLSearchParams(params);
       next.delete('new');
       setParams(next, { replace: true });
@@ -264,12 +268,6 @@ export default function ListsPage() {
   );
 
   const openCount = shown.filter((i) => !i.done).length;
-  /** The add field is the list's last row; on a long list this entry (and `?new=1`) leads to it. */
-  const focusAdd = () => {
-    const input = form.current?.querySelector('input');
-    input?.scrollIntoView({ block: 'center' });
-    input?.focus({ preventScroll: true });
-  };
   const clearBought = () => {
     if (!current) return;
     const id = current.id;
@@ -336,7 +334,8 @@ export default function ListsPage() {
     <>
       <PageHeader
         title={t.lists.title}
-        besideContent={shown.length > 0 || !!tripLine}
+        // While the items load the menu already sits where it will be (no jump on the phone).
+        besideContent={!items || shown.length > 0 || !!tripLine}
         views={
           lists && current ? (
             <Tabs
@@ -381,8 +380,10 @@ export default function ListsPage() {
                   {' · '}
                   <span>{t.lists.sumBasket(formatMoney(sums.doneCents))}</span>
                 </>
+              ) : // The head's figure is the open count; this line adds what is in the basket.
+              doneCount === 0 ? (
+                t.lists.basketEmpty
               ) : (
-                // The head's figure is the open count; this line adds what is in the basket.
                 t.lists.inBasket(doneCount, shown.length)
               )}
             </ListSummary>

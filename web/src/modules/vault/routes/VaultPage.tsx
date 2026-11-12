@@ -112,9 +112,11 @@ export default function VaultPage() {
   const counts = countByCategory(docs ?? []);
   const groups = (docs ?? []).map((d) => stateGroup(statusOf(d, day)));
   const none = !!docs && docs.length === 0;
-  // The panel shows the document that was picked; nothing of a document is shown before that (provider, dates and
-  // the note are not for whoever happens to look at the screen when the page opens).
+  // The panel shows the document that was picked; before that the page shows no note and no full detail (they are
+  // not for whoever happens to look at the screen when the page opens). A pick ends when its folder leaves the
+  // list (filter, search, delete): the panel never opens again by itself.
   const detail = picked ? shown.find((d) => d.id === picked) : undefined;
+  if (picked && docs && !detail) setPicked(null);
 
   return (
     <>

@@ -2,6 +2,6 @@
 type: changed
 area: ui
 breaking: false
-de: Listen, Vorräte, Fitness, Unterlagen, Passwörter sind ruhiger. Das Feld für neue Einträge ist die letzte Zeile der Liste; „Aus Vorlage“, „Wie letztes Mal“ und die Passwort-Werkzeuge sind im „⋯“-Menü.
-en: Lists, pantry, fitness, documents, passwords are tidier. The field for new items is the list's last row; "From template", "Same as last time" and the password tools are in the "⋯" menu.
+de: Listen, Vorräte, Fitness, Unterlagen und Passwörter sind ruhiger: Seltenes liegt im „⋯“-Menü, neue Einträge tippst du in die letzte Zeile der Liste, am großen Bildschirm öffnet eine Unterlage daneben.
+en: Lists, pantry, fitness, documents and passwords are tidier: occasional actions are in the "⋯" menu, new items are typed into the list's last row, on a large screen a document opens beside the list.
 ---

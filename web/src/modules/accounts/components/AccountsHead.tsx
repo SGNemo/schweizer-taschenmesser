@@ -30,31 +30,39 @@ function useMinutesToLock(active: boolean): number | undefined {
 }
 
 /**
+ * The browser extension is a channel into the open vault: while it is connected, the page says so beside the state.
+ * Mounted only while the vault is open, so a locked page reads nothing about the bridge.
+ */
+function BridgeLine() {
+  const bridge = useBridgeConfig();
+  if (!getPlatform().vaultBridge.supported || bridge?.enabled !== true) return null;
+  return (
+    <p className={styles.sub} data-testid="bridge-state">
+      {t.accounts.head.bridgeOn}
+    </p>
+  );
+}
+
+/**
  * Head of the vault (`tresor`, identity v3.1): the door from the signature library at slot size S, the state beside
  * it in the same slot as plain text (one line on the phone too) and, while unlocked, when the idle lock fires and the
  * button that locks at once. Shows nothing about the content.
  */
 export function AccountsHead({ unlocked }: { unlocked: boolean }) {
   const min = useMinutesToLock(unlocked);
-  // The browser extension is a channel into the open vault: while it is on, the page says so beside the state.
-  const bridge = useBridgeConfig();
-  const bridgeOn = getPlatform().vaultBridge.supported && bridge?.enabled === true;
   return (
     <HeroSlot area="signature">
       <Signature id="vaultDoor" size="S" />
-      <p className={styles.text} data-testid="vault-door" data-state={unlocked ? 'open' : 'shut'}>
-        <span className={styles.state}>
+      {/* Each line is its own paragraph: a screen reader reads three sentences, not one. */}
+      <div className={styles.text} data-testid="vault-door" data-state={unlocked ? 'open' : 'shut'}>
+        <p className={styles.state}>
           {unlocked ? t.accounts.head.unlocked : t.accounts.head.locked}
-        </span>
+        </p>
         {unlocked && min !== undefined ? (
-          <span className={styles.sub}>{t.accounts.head.autoLock(min)}</span>
+          <p className={styles.sub}>{t.accounts.head.autoLock(min)}</p>
         ) : null}
-        {unlocked && bridgeOn ? (
-          <span className={styles.sub} data-testid="bridge-state">
-            {t.accounts.head.bridgeOn}
-          </span>
-        ) : null}
-      </p>
+        {unlocked ? <BridgeLine /> : null}
+      </div>
       {/* Locking is one click from anywhere on the page, beside the state it changes: never inside a menu. */}
       {unlocked ? (
         <Button size="sm" onClick={lockVault}>

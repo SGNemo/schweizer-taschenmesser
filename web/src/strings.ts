@@ -5296,6 +5296,7 @@ export const de = {
     note: 'Notiz (optional)',
     addItem: 'Eintrag hinzufügen',
     inBasket: (done: number, total: number) => `${done} von ${total} im Korb`,
+    basketEmpty: 'Noch nichts im Korb',
     placeholder: {
       shopping: 'z. B. 2 Milch',
       packing: 'z. B. Sonnencreme',

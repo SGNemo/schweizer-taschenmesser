@@ -4,12 +4,14 @@
   margin: 0;
 }
 .state {
+  margin: 0;
   color: var(--text);
   font-family: var(--font-mono, monospace);
   font-size: var(--text-lg);
   font-weight: var(--weight-bold);
 }
 .sub {
+  margin: 0;
   color: var(--text-on-tint);
   font-size: var(--text-sm);
 }
