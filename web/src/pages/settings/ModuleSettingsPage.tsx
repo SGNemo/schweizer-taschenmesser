@@ -20,6 +20,7 @@ import {
   Button,
   EmptyState,
   HuePlate,
+  ListSurface,
   SettingRow,
   SettingsGroup,
   useMediaQuery,
@@ -228,7 +229,7 @@ export function ModuleList() {
         {o.listTitle}
       </h2>
       <p className={styles.listHint}>{o.listHint}</p>
-      <ul className={styles.list}>
+      <ListSurface className={styles.list}>
         {manifests.map((m) => (
           <li key={m.id}>
             <Link
@@ -247,7 +248,7 @@ export function ModuleList() {
             </Link>
           </li>
         ))}
-      </ul>
+      </ListSurface>
     </section>
   );
 }

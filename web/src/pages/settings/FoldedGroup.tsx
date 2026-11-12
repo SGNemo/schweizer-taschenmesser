@@ -1,6 +1,5 @@
 import { useState, type ReactNode } from 'react';
 import { t } from '@/strings';
-import { Icon } from '@/ui';
 import styles from './settings.module.css';
 
 /**
@@ -43,11 +42,9 @@ export function FoldedGroup({
     >
       <summary className={styles.groupSummary} aria-expanded={open}>
         <span className={styles.groupLine}>{value === '' ? title : g.line(title, value)}</span>
-        {/* Neutral ink and an arrow (Identity 4.0, B7): the whole line opens, the accent stays with the main action. */}
-        <span className={styles.groupAction}>
-          {open ? g.done : g.change}
-          <Icon name={open ? 'chevronUp' : 'chevronDown'} size={16} />
-        </span>
+        {/* Neutral ink (Identity 4.0, B7): the whole line opens, the accent stays with the main action. The word
+            says the state ("Ändern" / "Fertig"); no arrow beside it (five more icons per tab for nothing new). */}
+        <span className={styles.groupAction}>{open ? g.done : g.change}</span>
       </summary>
       <div className={styles.groupBody}>{children}</div>
     </details>

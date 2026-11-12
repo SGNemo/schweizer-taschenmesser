@@ -243,9 +243,6 @@
 }
 .groupAction {
   flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
   color: var(--text-muted);
   font-weight: var(--weight-medium);
 }

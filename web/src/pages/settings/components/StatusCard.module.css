@@ -56,8 +56,7 @@
   background: var(--surface-sunken);
   color: var(--text-muted);
 }
-.card[data-tone='ok'] .icon,
-.card[data-tone='attention'] .icon {
+.card[data-tone='ok'] .icon {
   background: var(--accent-soft);
   color: var(--accent);
 }
