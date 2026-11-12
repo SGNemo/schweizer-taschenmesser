@@ -5273,7 +5273,6 @@ export const de = {
     >,
     note: 'Notiz (optional)',
     addItem: 'Eintrag hinzufügen',
-    short: 'Eintrag',
     openOf: (open: number, total: number) => `${open} von ${total} offen`,
     placeholder: {
       shopping: 'z. B. 2 Milch',

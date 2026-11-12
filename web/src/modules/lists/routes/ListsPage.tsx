@@ -262,15 +262,8 @@ export default function ListsPage() {
   );
 
   const openCount = shown.filter((i) => !i.done).length;
-  /** The page's one action and `?new=1`: the add field, the last row of the list. */
-  const focusAdd = () => {
-    const input = form.current?.querySelector('input');
-    input?.scrollIntoView({ block: 'center' });
-    input?.focus({ preventScroll: true });
-  };
   const pageMenu = current
     ? [
-        { id: 'new-list', label: t.lists.newList, onSelect: () => setListTarget('new') },
         { id: 'templates', label: t.lists.routines.title, onSelect: () => setTemplates(true) },
         { id: 'edit-list', label: t.lists.editList, onSelect: () => setListTarget(current) },
         ...(toBuy.length > 0
@@ -337,12 +330,13 @@ export default function ListsPage() {
           ) : undefined
         }
       >
-        {/* Rule 4: the list's add field is the entry; the head's action (the plus on the phone) leads to it. */}
-        <PageAction short={t.lists.short} onClick={focusAdd}>
+        {/* Rule 4: items are added in the list's last row; the head's action (the plus on the phone) is a new
+            list, as `e2e/mobile-layout.spec.ts` pins it. */}
+        <PageAction short={t.nav.plusThings.list} onClick={() => setListTarget('new')}>
           <Icon name="plus" size={18} />
-          {t.lists.addItem}
+          {t.lists.newList}
         </PageAction>
-        {/* Everything occasional: a new list, templates, editing, sharing, clearing a packing list. */}
+        {/* Everything occasional: templates, editing, sharing, clearing a packing list. */}
         <StartDataMenu moduleId="lists" items={pageMenu} />
       </PageHeader>
       {lists && current && isShopping ? (
