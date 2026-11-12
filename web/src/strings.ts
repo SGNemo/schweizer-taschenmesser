@@ -4510,6 +4510,9 @@ export const de = {
         remindTimeHelp: 'Format HH:mm',
       },
     },
+    /** The detail panel of the wide page, and the one verb of the empty list. */
+    detailLabel: 'Person im Detail',
+    emptyAction: 'Erste Person eintragen',
     title: 'Personen',
     add: 'Person hinzufügen',
     edit: 'Person bearbeiten',

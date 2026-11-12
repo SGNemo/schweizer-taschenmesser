@@ -17,6 +17,8 @@ export const people: Strings['people'] = {
       remindTimeHelp: 'Format HH:mm',
     },
   },
+  detailLabel: 'Person in detail',
+  emptyAction: 'Add your first person',
   title: 'People',
   add: 'Add person',
   edit: 'Edit person',

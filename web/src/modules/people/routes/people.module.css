@@ -1,0 +1,11 @@
+/* The page's first row (search, or the one line of an empty gift view): on the phone the page's "⋯" menu lies at its
+   right edge (`besideContent`), so the row ends before it and keeps the menu's height. */
+.firstRow {
+  margin: 0 0 var(--space-4);
+}
+@media (max-width: 899px) {
+  .firstRow {
+    min-height: var(--touch);
+    padding-inline-end: calc(var(--touch) + var(--space-2));
+  }
+}
