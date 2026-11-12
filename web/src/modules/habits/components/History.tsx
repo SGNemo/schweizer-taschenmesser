@@ -130,7 +130,8 @@ export function GoalHistory({
                 <span>{weekdayShort(i + 1)}</span>
                 <span className={styles.bar} aria-hidden="true">
                   <span
-                    className={styles.barFill}
+                    // Beside today's list the bars are quiet: seven bars in the module colour would be a second eye-catcher.
+                    className={compact ? `${styles.barFill} ${styles.barCalm}` : styles.barFill}
                     style={{ width: `${Math.round((share ?? 0) * 100)}%`, display: 'block' }}
                   />
                 </span>

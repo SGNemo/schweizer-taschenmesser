@@ -183,6 +183,9 @@
   height: 100%;
   background: var(--module-color);
 }
+.barCalm {
+  background: var(--calm-ink);
+}
 .days {
   display: flex;
   flex-wrap: wrap;
