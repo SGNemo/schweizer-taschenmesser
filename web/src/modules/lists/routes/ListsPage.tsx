@@ -86,16 +86,18 @@ export default function ListsPage() {
   }, []);
 
   // `?new=1` (Quick-Add, the "+ Neu" menu) focuses the add field.
+  // The field is the last row of a list, so it exists only once the lists are loaded: the parameter waits for it.
+  const loaded = (lists?.length ?? 0) > 0;
   useEffect(() => {
-    if (params.get('new')) {
-      const input = form.current?.querySelector('input');
-      input?.scrollIntoView({ block: 'center' });
-      input?.focus({ preventScroll: true });
+    const input = form.current?.querySelector('input');
+    if (params.get('new') && loaded && input) {
+      input.scrollIntoView({ block: 'center' });
+      input.focus({ preventScroll: true });
       const next = new URLSearchParams(params);
       next.delete('new');
       setParams(next, { replace: true });
     }
-  }, [params, setParams]);
+  }, [params, setParams, loaded]);
 
   // A search hit links here with ?open=<id> of a list or an item: show that list.
   useOpenParam(

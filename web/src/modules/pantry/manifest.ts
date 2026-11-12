@@ -18,6 +18,7 @@ const manifest: ModuleManifest = {
     widget: 'kacheln',
     head: 'standard',
     signature: 'shelf',
+    tabs: true,
   },
   version: 3,
   get description() {
