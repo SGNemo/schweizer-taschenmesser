@@ -109,12 +109,13 @@ function seed(ctx: SeedContext): SeedRows {
   return { day: days, item: items };
 }
 
-/** Every planner source with seed rows (`plannable.ts` of todos, invoices, subscriptions, fitness). */
+/** Every planner source with seed rows (`plannable.ts` of todos, invoices, subscriptions, fitness, routines). */
 const SEED_SOURCES: readonly (readonly [string, string])[] = [
   ['todos', 'task'],
   ['invoices', 'invoice'],
   ['subscriptions', 'subscription'],
   ['fitness', 'session'],
+  ['routines', 'routine'],
 ];
 
 /**

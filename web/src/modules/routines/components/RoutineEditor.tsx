@@ -38,6 +38,7 @@ export function RoutineEditor({
       open={target !== null}
       onClose={onClose}
       title={existing ? t.routines.edit : t.routines.add}
+      askAfterTyping
     >
       {target ? (
         <Fields key={existing?.id ?? 'new'} existing={existing} rooms={rooms} onClose={onClose} />

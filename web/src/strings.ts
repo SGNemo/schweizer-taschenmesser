@@ -8927,7 +8927,8 @@ export const de = {
       namePlaceholder: 'z. B. Bad putzen',
       room: 'Raum',
       people: 'Wer wechselt sich ab',
-      peopleHint: 'Namen mit Komma trennen, in der Reihenfolge der Runde. Leer lassen, wenn niemand genannt wird.',
+      peopleHint:
+        'Namen mit Komma trennen, in der Reihenfolge der Runde. Leer lassen, wenn niemand genannt wird.',
       dueDate: 'Nächstes Mal',
       minutes: 'Dauer in Minuten',
       moreSummary: 'Namen, nächstes Mal, Dauer, Notiz',

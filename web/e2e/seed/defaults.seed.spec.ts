@@ -53,17 +53,18 @@ const moduleSwitch = (page: Page, id: string) =>
 
 test.use({ viewport: DESKTOP });
 
-test('a new desktop installation shows lists, budgets and downloads, and writes no module row', async ({
+test('a new desktop installation shows lists, budgets, downloads and routines, and writes no module row', async ({
   page,
 }) => {
   await fresh(page, { set: true, desktop: true });
-  for (const id of ['lists', 'budgets', 'downloads'])
+  // Set 5 (module package H-b): routines joined the set.
+  for (const id of ['lists', 'budgets', 'downloads', 'routines'])
     await expect(page.getByTestId(`module-${id}`).getByRole('switch'), id).toBeChecked();
   // In the navigation too: the areas the audit found invisible on a standard installation.
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
   for (const area of ['Haushalt', 'Geld', 'System'])
     await expect(nav.getByText(area, { exact: true }).first(), area).toBeVisible();
-  expect(await stored(page)).toEqual({ meta: 4, rows: 0 });
+  expect(await stored(page)).toEqual({ meta: 5, rows: 0 });
 });
 
 test('a new installation in the browser gets lists and budgets; downloads does not exist there', async ({
