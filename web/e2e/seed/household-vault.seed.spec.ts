@@ -11,7 +11,9 @@ import { DESKTOP, openPage, PHONE, startSeeded } from './guards';
  * blocks `vault-doc` and `pantry-label` keep their frame and frame nothing inside), the views are `Tabs`, the head
  * holds one filled action, the first content starts at y ≤ 220 px on the phone, rows are at least 48 px high on the
  * phone and 44 px on the desktop, and nothing runs out sideways. The passwords page is measured locked and open; it
- * never carries a reading-aid mark (`[data-rs]`), and neither does the documents page.
+ * never carries a reading-aid mark (`[data-rs]`), and neither does the documents page. Further cases: the documents
+ * page is master–detail on a wide window and stays readable on a 1280-px laptop, the add field of a list is its last
+ * row, and the entry dialog of the passwords keeps its foot on screen on the phone (finding B10).
  *
  * `HV_SHOTS=<dir>` also writes a picture of every first screen in both themes (for the pull request).
  */
@@ -166,9 +168,11 @@ async function check(page: Page, phone: boolean, theme: string) {
     expect.soft(r.filled, `${path}: filled buttons on the page`).toBeLessThanOrEqual(1);
     if (phone) {
       expect.soft(r.headControls, `${path}: the phone's head holds no action`).toEqual([]);
+      // The plus is the page's action; on the passwords page it stays the plain capture (the vault is no target of
+      // the plus: `modules/accounts/__tests__/exclusion.test.ts`).
       await expect
-        .soft(page.getByTestId('bottom-plus'), `${path}: the plus is the page's action`)
-        .toHaveAccessibleName(/\S+ eintragen$/);
+        .soft(page.getByTestId('bottom-plus'), `${path}: the plus`)
+        .toHaveAccessibleName(path === '/accounts' ? 'Neu eintragen' : /\S+ eintragen$/);
       // Rule 5: the page starts on the first screen (the open passwords page starts with its search field).
       expect.soft(r.contentY, `${path}: first content below the head`).not.toBeNull();
       expect
@@ -221,3 +225,101 @@ for (const theme of SHOTS ? (['light', 'dark'] as const) : (['light'] as const))
     });
   });
 }
+
+test.describe('documents: master–detail', () => {
+  test.describe('wide window', () => {
+    test.use({ viewport: DESKTOP, seeded: { scale: 'medium', desktop: true, preview: true } });
+    test('a folder shows in the panel, "Bearbeiten" opens its dialog', async ({ page }) => {
+      await startSeeded(page);
+      await openPage(page, '/vault');
+      const panel = page.getByTestId('document-detail');
+      // The first folder is shown from the start and marked in the list.
+      await expect(panel).toBeVisible();
+      await expect(page.locator('main [aria-current="true"]')).toHaveCount(1);
+      await page.locator('main [data-row]', { hasText: 'Handyvertrag' }).first().click();
+      await expect(panel.getByRole('heading', { name: 'Handyvertrag' })).toBeVisible();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      await panel.getByRole('button', { name: 'Bearbeiten' }).click();
+      await expect(page.getByRole('dialog', { name: 'Unterlage bearbeiten' })).toBeVisible();
+      // The privacy sentence stays on screen beside the panel.
+      await expect(page.getByTestId('vault-local')).toBeVisible();
+    });
+  });
+
+  test.describe('1280-px laptop', () => {
+    test.use({
+      viewport: { width: 1280, height: 720 },
+      seeded: { scale: 'medium', desktop: true, preview: true },
+    });
+    test('titles keep their room beside the panel, nothing runs out sideways', async ({ page }) => {
+      await startSeeded(page);
+      await openPage(page, '/vault');
+      await page.waitForTimeout(400);
+      const seen = await page.evaluate(() => ({
+        sideways: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        // Width of the narrowest folder title: a title squeezed to a few letters per line is far below this.
+        narrowest: Math.min(
+          ...Array.from(document.querySelectorAll('main [data-signature-block] [data-row]')).map(
+            (el) => el.getBoundingClientRect().width,
+          ),
+        ),
+      }));
+      expect(seen.sideways).toBe(false);
+      expect(seen.narrowest).toBeGreaterThanOrEqual(160);
+    });
+  });
+});
+
+test.describe('lists: the add field is the last row', () => {
+  test.use({ viewport: DESKTOP, seeded: { scale: 'small', desktop: true, preview: true } });
+  test("the head's action leads to the field below the rows; typing and Enter adds", async ({
+    page,
+  }) => {
+    await startSeeded(page);
+    await openPage(page, '/lists');
+    const field = page.getByTestId('lists-add').getByRole('textbox').first();
+    const below = await page.evaluate(() => {
+      const rows = Array.from(document.querySelectorAll('main [data-row]'));
+      const add = document.querySelector('[data-testid="lists-add"]')!;
+      const last = rows[rows.length - 1]!;
+      return add.getBoundingClientRect().top >= last.getBoundingClientRect().bottom - 1;
+    });
+    expect(below, 'the add row lies below the last row').toBe(true);
+    await page.locator('[data-page-action]').click();
+    await expect(field).toBeFocused();
+    await page.keyboard.type('Zimt');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('main [data-row]', { hasText: 'Zimt' })).toBeVisible();
+  });
+});
+
+test.describe('passwords on the phone: the entry dialog keeps its foot (B10)', () => {
+  test.use({
+    viewport: PHONE,
+    isMobile: true,
+    hasTouch: true,
+    seeded: { scale: 'small', preview: true },
+  });
+  test('"Speichern" stays on screen while the fields scroll', async ({ page }) => {
+    await startSeeded(page, { phone: true });
+    await openPage(page, '/accounts');
+    await closeNotice(page);
+    await unlock(page);
+    await page.getByRole('button', { name: 'Zugang hinzufügen' }).tap();
+    const dialog = page.getByRole('dialog', { name: 'Zugang hinzufügen' });
+    await expect(dialog).toBeVisible();
+    const foot = dialog.locator('[data-form-actions]');
+    await expect(foot).toHaveCSS('position', 'sticky');
+    const save = dialog.getByRole('button', { name: 'Speichern' });
+    for (const top of [0, 9999]) {
+      await dialog.evaluate((el, y) => el.scrollTo(0, y), top);
+      const box = (await save.boundingBox())!;
+      expect(box.y, `"Speichern" on screen at scroll ${top}`).toBeGreaterThan(0);
+      expect(box.y + box.height, `"Speichern" on screen at scroll ${top}`).toBeLessThanOrEqual(
+        PHONE.height,
+      );
+    }
+    // Nothing of the form is marked by the reading aid.
+    expect(await page.locator('[data-rs]').count()).toBe(0);
+  });
+});
