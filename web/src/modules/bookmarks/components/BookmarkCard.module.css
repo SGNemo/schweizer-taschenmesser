@@ -3,8 +3,7 @@
   display: flex;
   flex-direction: column;
   border-radius: var(--radius-md);
-  background: var(--surface);
-  box-shadow: var(--shadow-1);
+  background: var(--surface-raised);
 }
 /* a card is pinned: a small pin in the hue at the top edge */
 .card::before {
@@ -18,7 +17,6 @@
   margin-left: -0.375rem;
   border-radius: var(--radius-full);
   background: var(--module-color);
-  box-shadow: 0 0 0 2px var(--surface);
 }
 .media {
   overflow: hidden;
@@ -26,7 +24,7 @@
   display: grid;
   place-items: center;
   height: 6rem;
-  background: var(--head-tint-1, var(--surface-2, var(--bg)));
+  background: var(--surface-2);
 }
 .image {
   width: 100%;

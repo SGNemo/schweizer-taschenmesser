@@ -10,8 +10,7 @@ import { useUiStore } from '@/stores/ui';
 import { now } from '@/core/time/now';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { PageTitle, useMediaQuery, useOpenParam } from '@/ui';
-import { HeroSlot, NotePaper } from '@/ui/identity';
+import { Icon, PageAction, PageHeader, useMediaQuery, useOpenParam } from '@/ui';
 import { usePageWidthAtLeast } from '@/ui/pageWidth';
 import { ExportDialog, type ExportScope } from '../components/ExportDialog';
 import { ImportDialog } from '../components/ImportDialog';
@@ -24,7 +23,6 @@ import { TabBar } from '../components/TabBar';
 import { TrashDialog } from '../components/TrashDialog';
 import {
   displayTitle,
-  excerpt,
   isScratch,
   type NotebookFilter,
   SCRATCH_ID,
@@ -323,20 +321,27 @@ export default function NotesPage() {
     else void el.requestFullscreen?.().catch(() => undefined);
   };
 
+  const newPage = () => {
+    setTemplate(null);
+    open({ kind: 'new' });
+  };
   // A stored page is shown once the list has loaded (the pane keeps the text it opened with).
   const waiting = sel?.kind !== 'new' && notes === undefined;
   const loadingPane = waiting || (sel?.kind === 'note' && !current);
   return (
     <>
-      <PageTitle title={t.notes.title} />
-      {/* Signature (slot S): the library's note paper with the first line of the scratch pad (own page only). */}
-      <HeroSlot area="signature">
-        <span className={styles.paper} data-testid="note-paper">
-          <NotePaper>
-            {scratchNote ? excerpt({ title: t.notes.scratch, body: scratchNote.body }, 60) : null}
-          </NotePaper>
-        </span>
-      </HeroSlot>
+      {/* The page's one entry: the head's button on the desktop, the plus of the bottom bar on the phone. */}
+      <PageHeader title={t.notes.title}>
+        <PageAction
+          short={t.notes.meta.quickAdd}
+          // No page yet: the empty state of the list holds the filled button.
+          variant={notes && !notes.some((n) => !isScratch(n)) ? 'secondary' : 'primary'}
+          onClick={newPage}
+        >
+          <Icon name="plus" size={18} />
+          {t.notes.newPage}
+        </PageAction>
+      </PageHeader>
       <div
         className={focusMode ? `${styles.root} ${styles.focus}` : styles.root}
         data-writing={focusMode || undefined}
@@ -356,10 +361,7 @@ export default function NotesPage() {
             showOpenList={!wide}
             onOpen={(p) => (p.id === 'scratch' ? open({ kind: 'scratch' }) : openPage(p))}
             onCloseTab={closeTab}
-            onNewPage={() => {
-              setTemplate(null);
-              open({ kind: 'new' });
-            }}
+            onNewPage={newPage}
             onNewFromTemplate={(id: TemplateId) => {
               const made = buildTemplate(id);
               open({ kind: 'new' });

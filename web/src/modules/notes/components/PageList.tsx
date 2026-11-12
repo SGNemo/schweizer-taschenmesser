@@ -101,10 +101,19 @@ export function PageList(p: PageListProps) {
   return (
     <nav className={styles.list} aria-label={t.notes.pages}>
       <div className={styles.head}>
-        <Button variant="primary" onClick={p.onNewPage} title={t.notes.shortcutNew}>
-          <Icon name="plus" size={18} />
-          {t.notes.newPage}
-        </Button>
+        {/* The page's entry ("Neue Seite") is the head's action and the plus of the phone; this row holds the list's own
+            controls. */}
+        <div className={styles.viewSwitch}>
+          <Segmented
+            label={t.notes.view.label}
+            value={p.view}
+            options={[
+              { value: 'list', label: t.notes.view.list },
+              { value: 'cards', label: t.notes.view.cards },
+            ]}
+            onChange={(v) => p.onView(v === 'cards' ? 'cards' : 'list')}
+          />
+        </div>
         {showSearch ? null : (
           <IconButton label={t.notes.search} onClick={() => setSearchOpen(true)}>
             <Icon name="search" size={18} />
@@ -206,18 +215,6 @@ export function PageList(p: PageListProps) {
         </FolderTabs>
       </div>
 
-      <div className={styles.viewSwitch}>
-        <Segmented
-          label={t.notes.view.label}
-          value={p.view}
-          options={[
-            { value: 'list', label: t.notes.view.list },
-            { value: 'cards', label: t.notes.view.cards },
-          ]}
-          onChange={(v) => p.onView(v === 'cards' ? 'cards' : 'list')}
-        />
-      </div>
-
       {pages && rest.length === 0 && (query.trim() || filter !== 'all') ? (
         <EmptyState
           title={t.notes.emptyFiltered}
@@ -230,7 +227,11 @@ export function PageList(p: PageListProps) {
           title={t.notes.empty}
           testId="notes-empty"
           motif={<SignatureMark id="notePaper" size={64} />}
-        />
+        >
+          <Button variant="primary" onClick={p.onNewPage}>
+            {t.notes.newPage}
+          </Button>
+        </EmptyState>
       ) : null}
 
       <div

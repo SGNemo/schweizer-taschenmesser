@@ -10,13 +10,12 @@
   align-items: center;
   flex: none;
   max-width: 14rem;
-  border: 1px solid transparent;
-  border-bottom: 0;
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 }
+/* The open page's tab: a recess and a weight, no frame. */
 .active {
-  background: var(--surface-2);
-  border-color: var(--border);
+  background: var(--surface-sunken);
+  font-weight: var(--weight-semibold);
 }
 .label {
   min-height: var(--touch);

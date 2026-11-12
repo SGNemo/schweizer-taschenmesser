@@ -226,6 +226,7 @@ export const mail: Strings['mail'] = {
   },
   write: {
     newMail: 'New mail',
+    short: 'Mail',
     archive: 'Archive',
     trash: 'Move to trash',
     more: 'More actions',
@@ -340,6 +341,7 @@ export const mail: Strings['mail'] = {
   },
   head: {
     inbox: 'Inbox',
+    unreadUnit: 'unread',
     unread: (n: number) =>
       n === 0 ? 'All read' : n === 1 ? `1 unread thread` : `${n} unread threads`,
   },

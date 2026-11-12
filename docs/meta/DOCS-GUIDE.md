@@ -10,7 +10,7 @@ Goal: a new chat starts with ≈ 2 000 tokens (hard budget 2 600, so there is ro
 | Where is X / interfaces / data flow | `docs/ARCHITECTURE-MAP.md`; long design notes → `docs/architecture/<topic>.md` |
 | Why (decision) | one bullet in `docs/decisions/<area>.md` (what – why, date, sources); `docs/DECISIONS.md` is the index of areas |
 | How (command, recipe, gotcha) | `docs/HOW-TO.md` index → `docs/howto/<topic>.md` |
-| Status, open, limits, next steps | `docs/STATUS.md` (state only, at most one line per PR, no log; German parts stay German); hardware checklists → `docs/MANUAL-TESTS.md`; ideas → `docs/ROADMAP.md` |
+| Status, open, limits, next steps | `docs/STATUS.md` (state only, no log; edited only in a `docs(status)` PR of its own, never beside code: `check:docs` fails on that; German parts stay German); hardware checklists → `docs/MANUAL-TESTS.md`; ideas → `docs/ROADMAP.md` |
 | Running chats, what waits on the maintainer, hotspots | `docs/CHATS.md` (open items only, one screen; rules on top of the file) |
 | Notes between chats | private notes repo (root `CLAUDE.md` step 2), never this repo |
 | Finished working documents (package prompts, round logs, mockups, audit tools) | deleted in the PR that closes the round; decisions live in `docs/decisions/`, the rest in the git history |
@@ -27,7 +27,7 @@ Goal: a new chat starts with ≈ 2 000 tokens (hard budget 2 600, so there is ro
 | Exempt (never auto-loaded) | `docs/user/`, `archive/`, `security/`, `perf/`, `features/`, `meta/`, `AI-IMPORT.md` (+ `.de.md`), `MANUAL-TESTS.md`, `ROADMAP.md`, `CHANGELOG.md` |
 A file over budget is split by topic (index + `<dir>/<topic>.md`), not trimmed by dropping content.
 
-**Blocking (exit 1):** `CHATS.md` and `STATUS.md` over budget (they must not grow back); a `CHATS.md` table row that says "merged"/"gemergt" or repeats another row (the generated open-PR block, `chats:sync`, is skipped for both); images (below). Start context over budget warns until root `CLAUDE.md` is back under 2 600, then `START_CONTEXT_HARD` in the script turns it blocking. **Warning:** a `STATUS.md` line with "PR offen" or a backticked branch (`feat/…`, `fix/…`, …) that `git branch -r` does not list (skipped in a clone without other remote branches, e.g. CI).
+**Blocking (exit 1):** `CHATS.md` and `STATUS.md` over budget (they must not grow back); a `CHATS.md` table row that lists an open PR (`chats:sync` prints that list), says "merged"/"gemergt" or repeats another row; images (below). Start context over budget warns until root `CLAUDE.md` is back under 2 600, then `START_CONTEXT_HARD` in the script turns it blocking. **Warning:** a `STATUS.md` line with "PR offen" or a backticked branch (`feat/…`, `fix/…`, …) that `git branch -r` does not list (skipped in a clone without other remote branches, e.g. CI).
 
 ## Style
 - All docs English (source language); German only as `*.de.md` translations of user docs and README, plus the German parts named in STATUS/MANUAL-TESTS/legal. Chat docs: bullets, tables, paths; one fact once (link instead of copying); no history, no "this PR", no general knowledge.

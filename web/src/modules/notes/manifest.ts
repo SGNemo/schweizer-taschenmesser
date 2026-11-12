@@ -65,7 +65,7 @@ const manifest: ModuleManifest = {
   defaultEnabled: false,
   maturity: 'stable',
   seed: { version: 4, dependsOn: [] },
-  layout: 'full',
+  layout: 'split',
   order: 80,
   area: 'knowledge',
   contributions: {

@@ -1,9 +1,8 @@
 {
   "version": 1,
   "what": "<Segmented> in the `views` slot of a page header in src/modules/**/*.tsx",
-  "total": 2,
+  "total": 1,
   "files": {
-    "modules/bookmarks/routes/BookmarksPage.tsx": 1,
     "modules/maps/routes/MapsPage.tsx": 1
   }
 }

@@ -4156,6 +4156,7 @@ export const de = {
     linksEmpty:
       'Noch keine Lesezeichen. Lege Links an, die du oft brauchst – gruppiert über den ersten Tag.',
     empty: 'Noch nichts gemerkt.',
+    emptyAction: 'Merkzettel eintragen',
     emptyFiltered: 'Nichts gefunden.',
     open: 'Link öffnen',
     done: 'Erledigt',
@@ -7491,6 +7492,7 @@ export const de = {
     },
     write: {
       newMail: 'Neue Mail',
+      short: 'Mail',
       archive: 'Archivieren',
       trash: 'In den Papierkorb',
       more: 'Weitere Aktionen',
@@ -7609,6 +7611,7 @@ export const de = {
     },
     head: {
       inbox: 'Posteingang',
+      unreadUnit: 'ungelesen',
       unread: (n: number) =>
         n === 0 ? 'Alles gelesen' : n === 1 ? '1 ungelesener Thread' : `${n} ungelesene Threads`,
     },

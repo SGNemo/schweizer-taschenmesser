@@ -1,8 +1,8 @@
-/* Drawn widget shapes for the library (identity v3). Tokens only; the colour is the hue of the surrounding
-   `data-hue` (--module-color), in "Ruhig" it is grey like everything else. Boxes and bars, never text or numbers. */
+/* Drawn widget shapes for the library. Tokens only; neutral tone steps (Identity 4.0: the module's colour stays with
+   the plate beside its name, the sketch is ink and a recess). Boxes and bars, never text or numbers. */
 .mini {
-  --mini-ink: color-mix(in srgb, var(--module-color, var(--text-3)) 55%, var(--surface));
-  --mini-soft: color-mix(in srgb, var(--module-color, var(--text-3)) 16%, var(--surface));
+  --mini-ink: var(--text-3);
+  --mini-soft: var(--surface-sunken);
   display: flex;
   flex-direction: column;
   gap: var(--space-2);

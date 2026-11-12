@@ -114,7 +114,11 @@ test('Lesezeichen: links as tiles, grouped by the first tag', async ({ page }) =
   await enable(page, 'bookmarks');
   await open(page, '/bookmarks?view=links');
   await expect(page.getByText('Noch keine Lesezeichen')).toBeVisible();
-  await page.getByRole('button', { name: /Lesezeichen (anlegen|eintragen)/ }).click();
+  // An empty page: the head's action and the empty state's button open the same dialog.
+  await page
+    .getByRole('button', { name: /Lesezeichen (anlegen|eintragen)/ })
+    .first()
+    .click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Titel').fill('Bahn');
   await dialog.getByLabel('Adresse (Link)').fill('https://bahn.example.org');
