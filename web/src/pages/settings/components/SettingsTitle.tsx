@@ -23,8 +23,6 @@ export interface SettingsTitleProps {
   back?: { to: string; label: string };
   /** The description is never cut after two lines (it explains what the page's switches do). */
   wholeDescription?: boolean;
-  /** A context line of the page's own under the description (the tool page's counts). */
-  children?: ReactNode;
   testId?: string;
 }
 
@@ -44,7 +42,6 @@ export function SettingsTitle({
   actions,
   back,
   wholeDescription,
-  children,
   testId,
 }: SettingsTitleProps) {
   // The button shows a chevron only: its name says that it leads back, and where to ("Zurück: Einstellungen").
@@ -82,7 +79,6 @@ export function SettingsTitle({
           {actions ? <div className={styles.actions}>{actions}</div> : null}
         </div>
       ) : null}
-      {children}
     </header>
   );
 }

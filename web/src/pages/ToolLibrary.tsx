@@ -72,17 +72,17 @@ export function ToolLibrary() {
         description={s.intro}
         wholeDescription
         testId="tools-head"
-      >
-        {/* The head's context line: how many are on, of how many (no big figures, B2). */}
-        <ul className={own.figures} aria-label={v3.figures.label} data-testid="tools-figures">
-          <li>
-            <strong>{activeIds.length}</strong> {v3.figures.active}
-          </li>
-          <li>
-            <strong>{tools?.all.length ?? 0}</strong> {v3.figures.available}
-          </li>
-        </ul>
-      </SettingsTitle>
+      />
+      {/* The page's context line: how many are on, of how many (no big figures, B2). Below the head, so the head
+          stays within its height on the phone with the whole intro. */}
+      <ul className={own.figures} aria-label={v3.figures.label} data-testid="tools-figures">
+        <li>
+          <strong>{activeIds.length}</strong> {v3.figures.active}
+        </li>
+        <li>
+          <strong>{tools?.all.length ?? 0}</strong> {v3.figures.available}
+        </li>
+      </ul>
       <Toolbar>
         <div role="search" className={library.toolbarSearch}>
           <TextField
