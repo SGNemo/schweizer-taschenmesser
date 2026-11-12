@@ -257,12 +257,19 @@
   color: var(--text);
   font-size: var(--text-meta);
 }
+/* The facts in the stage's signature slot: the chips, the line of further values under them. */
+.heroFacts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
 /* Phone (design check K3, stage ≤ 320 px): the long line of further values lies in the page, right under the head. */
 .restBelow {
   display: none;
 }
 @media (max-width: 899px) {
-  .heroBlock .rest {
+  .heroFacts .rest {
     display: none;
   }
   .restBelow {

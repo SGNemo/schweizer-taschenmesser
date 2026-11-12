@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { PHISH, SHOP } from './pages';
-import { expect, test, type Env } from './fixtures';
+import { expect, openExtensionDialog, test, type Env } from './fixtures';
 import type { Page } from '@playwright/test';
 
 /** First contact: the popup shows a code, the user confirms it in the app. */
@@ -99,7 +99,7 @@ test.describe('registration', () => {
     await pair(env);
     const { page } = await register(env);
     await env.app.bringToFront();
-    await env.app.getByRole('button', { name: 'Browser-Erweiterung', exact: true }).click();
+    await openExtensionDialog(env.app);
     await env.app.getByLabel('Verbindung zur Browser-Erweiterung aktivieren').click(); // off: nothing listens
     await env.app.keyboard.press('Escape');
     await page.bringToFront();

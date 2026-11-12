@@ -186,6 +186,8 @@
 /* List layout: the rows lie on a `ListSurface` (tone step, hairlines between the rows: ui/ListSurface). The
    surface's padding is restated here because `.list` above resets it and the two stylesheets have no fixed order. */
 .rows {
+  /* the tone of the row the detail panel shows (see `.current` below) */
+  --row-current: var(--surface-sunken);
   gap: 0;
   padding: var(--space-1) var(--space-2);
 }
@@ -196,10 +198,27 @@
 .rows > .item:focus-within {
   background: var(--surface-2);
 }
-/* Master–detail: the row whose entry the detail panel shows. A tone and a weight, no accent (B7). */
+/* Master–detail: the row whose entry the detail panel shows. A tone and a weight, no accent (B7): the sunken tone
+   on a light surface. In the dark theme that token is darker than the page and made the row a black box, so the
+   tone is a step lighter there (mixed from the text colour; 4 % keeps the row's meta text at AA, 8 % did not). */
 .rows > .current,
 .rows > .current:hover {
-  background: var(--surface-sunken);
+  background: var(--row-current);
+  border-radius: var(--radius-md);
+}
+:global(:root[data-theme='dark']) .rows {
+  --row-current: color-mix(in srgb, var(--text) 4%, var(--surface-raised));
+}
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme='light'])) .rows {
+    --row-current: color-mix(in srgb, var(--text) 4%, var(--surface-raised));
+  }
+}
+/* Rows under a row (subtasks) lie on the row's own surface: no second surface inside it. */
+.item .rows {
+  padding: 0;
+  background: none;
+  border-radius: 0;
 }
 .current :is(.title) {
   font-weight: var(--weight-semibold);
@@ -683,20 +702,36 @@ button.chip[aria-pressed='true'] {
   /* Only the sideways action layer is clipped; a row menu may open upwards or downwards over it. */
   clip-path: inset(-100vh 0);
 }
+/* The sliding row is opaque (it covers the action layer): it repeats the tone it lies on, the list surface, and
+   the rounding of its row. */
 .swipeable > .row {
   position: relative;
-  background: var(--surface);
+  background: var(--surface-raised);
+  border-radius: inherit;
   touch-action: pan-y;
 }
 .rows > .swipeable:hover > .row,
 .rows > .swipeable:focus-within > .row {
   background: var(--surface-2);
 }
-/* The sliding row is opaque (it covers the action layer), so it repeats the tone of the panel's row. */
+/* Rows under a row (subtasks) repeat the tone of the row they lie in: hovered, or the panel's row. */
+.rows > .item:hover,
+.rows > .item:focus-within {
+  --row-under: var(--surface-2);
+}
+.rows > .current,
+.rows > .current:hover,
+.rows > .current:focus-within {
+  --row-under: var(--row-current);
+}
+.item .rows > .swipeable > .row {
+  background: var(--row-under, var(--surface-raised));
+}
+/* … and the tone of the panel's row. */
 .rows > .current.swipeable > .row,
 .rows > .current.swipeable:hover > .row,
 .rows > .current.swipeable:focus-within > .row {
-  background: var(--surface-sunken);
+  background: var(--row-current);
 }
 .reveal {
   position: absolute;
@@ -725,11 +760,22 @@ button.chip[aria-pressed='true'] {
 .item[data-tone='today'] {
   background: color-mix(in srgb, var(--accent) 7%, transparent);
 }
-/* The row the detail panel shows keeps its mark on an urgent row too: the sunken tone wins over the fill (the
+/* The opaque sliding row and the rows under it repeat the fill (same mix, on the list surface). */
+.item[data-tone] {
+  --row-under: color-mix(in srgb, var(--danger) 6%, var(--surface-raised));
+}
+.item[data-tone='today'] {
+  --row-under: color-mix(in srgb, var(--accent) 7%, var(--surface-raised));
+}
+.rows > .item[data-tone].swipeable > .row {
+  background: var(--row-under);
+}
+/* The row the detail panel shows keeps its mark on an urgent row too: its tone wins over the fill (the
    badge and the group heading still say "overdue"). */
 .rows > .current[data-tone],
 .rows > .current[data-tone]:hover {
-  background: var(--surface-sunken);
+  --row-under: var(--row-current);
+  background: var(--row-current);
 }
 /* Done rows keep the reading-aid emphasis as quiet as the rest of the row. */
 .done [data-rr] {
