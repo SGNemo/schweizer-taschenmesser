@@ -231,8 +231,9 @@
     opacity: 0.7;
   }
 }
+/* The word ends before the pin's hit area, so a click there never lands on the pin by accident. */
 .link:has(+ .pin) {
-  padding-right: 2.25rem;
+  padding-right: calc(var(--touch) + var(--space-1));
 }
 .footer {
   padding-top: var(--space-2);
@@ -257,6 +258,9 @@
   }
   .pin::after {
     content: none;
+  }
+  .link:has(+ .pin) {
+    padding-right: 2.25rem;
   }
   .favLink {
     height: 2.25rem;
@@ -354,8 +358,8 @@ li[data-area] .railLink[aria-current='page'] {
   color: var(--text);
 }
 
-/* A screen that can be touched: the area heads and the favourite pins get the full hit size too (after the compact
-   rules above, which never apply there). */
+/* A screen that can be touched: the favourite pins get the full hit size (area heads and favourites are 44 px by
+   default; after the compact rules above, which never apply there). */
 @media (any-pointer: coarse) {
   .pin::after {
     content: none;

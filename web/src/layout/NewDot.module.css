@@ -8,6 +8,7 @@
 }
 .floating {
   position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
+  /* Clear of the icon's outline. */
+  top: 0.625rem;
+  right: 0.625rem;
 }

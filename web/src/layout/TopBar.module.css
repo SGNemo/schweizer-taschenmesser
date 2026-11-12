@@ -152,12 +152,10 @@
     background: var(--bg);
     backdrop-filter: none;
   }
-  .searchBtn {
-    max-width: 28rem;
-  }
   /* Everything after the search is one group at the right edge (focus chip, "Neu", tools, chips, bell, sync),
      flush with the page head's action. */
   .searchBtn {
+    max-width: 28rem;
     margin-right: auto;
   }
   .desktopOnly {
