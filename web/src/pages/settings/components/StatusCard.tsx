@@ -4,8 +4,8 @@ import styles from './StatusCard.module.css';
 
 /**
  * The one state card of a settings tab (settings identity v3.1): the state in words first, an optional figure or icon
- * on the left, one action on the right. Tinted in the tab's hue (`--tab-color` from the category page); a tab has
- * at most one tinted card, any further one passes `tinted={false}`. Colour never carries the state alone.
+ * on the left, one action on the right. A raised tone since Identity 4.0 (no frame, no tint; `tinted` is kept as a
+ * hook for the tab's first card). Colour never carries the state alone.
  */
 export function StatusCard({
   icon,

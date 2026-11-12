@@ -4,14 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
-import {
-  BUDGET,
-  chatsProblems,
-  isHardBudget,
-  statusWarnings,
-  tokens,
-  withoutGenerated,
-} from './check-docs.mjs';
+import { BUDGET, chatsProblems, isHardBudget, statusWarnings } from './check-docs.mjs';
 
 const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), 'check-docs.mjs');
 
@@ -43,10 +36,10 @@ describe('chatsProblems', () => {
     expect(chatsProblems(text)).toEqual(['docs/CHATS.md:7: same row as line 5 – keep one']);
   });
 
-  it('skips the generated open-PR block (open PRs by construction), line numbers stay right', () => {
-    const gen = `<!-- generated:open-prs -->\n| [#5](u) | \`fix/x\` | fix: merged rows | |\n| [#5](u) | \`fix/x\` | fix: merged rows | |\n<!-- /generated:open-prs -->\n`;
-    expect(chatsProblems(`${gen}${CHATS}| #9 | Thing | merged |\n`)).toEqual([
-      expect.stringMatching(/CHATS\.md:11: row about a merged PR/),
+  it('flags a row of the open-PR list (the list is printed, never committed)', () => {
+    const row = '| [#5](https://github.com/o/r/pull/5) Draft | `fix/x` | fix: merged rows |\n';
+    expect(chatsProblems(`${CHATS}${row}`)).toEqual([
+      expect.stringMatching(/CHATS\.md:7: row of the open-PR list/),
     ]);
   });
 });
@@ -75,18 +68,6 @@ describe('budgets', () => {
     expect(isHardBudget('docs/CHATS.md')).toBe(true);
     expect(isHardBudget('docs/STATUS.md')).toBe(true);
     expect(isHardBudget('docs/HOW-TO.md')).toBe(false);
-  });
-
-  it('the generated open-PR block does not count against the CHATS.md budget', () => {
-    const rows = '| [#1](https://github.com/o/r/pull/1) | `feat/a` | a long title | |\n'.repeat(
-      500,
-    );
-    const text = `# Chats\n\n<!-- generated:open-prs -->\n${rows}<!-- /generated:open-prs -->\n\nProse.\n`;
-    expect(tokens(text)).toBeGreaterThan(8000);
-    // Only the kept empty lines remain (one byte per row).
-    expect(tokens(withoutGenerated(text))).toBeLessThan(150);
-    expect(withoutGenerated(text).split('\n')).toHaveLength(text.split('\n').length);
-    expect(withoutGenerated('# no block\n')).toBe('# no block\n');
   });
 
   it('start context is hard once the switch is on', () => {

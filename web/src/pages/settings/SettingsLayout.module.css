@@ -167,10 +167,10 @@
   height: 2.5rem;
   border-radius: var(--radius-md);
 }
+/* The category list of the phone: rows of one raised surface, hairlines between them only (Identity 4.0). */
 .list,
 .navGroup ul.list {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--surface-raised);
   border-radius: var(--radius-lg);
   overflow: hidden;
 }
@@ -187,15 +187,21 @@
 .category a {
   overflow-wrap: anywhere;
 }
-.back {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  min-height: var(--touch);
-  align-self: flex-start;
-  color: var(--accent);
-  text-decoration: none;
-  font-weight: var(--weight-medium);
+/* Touch: a plain text link of a tab is 44 px to hit (Identity 4.0; they were 20–26 px). */
+@media (pointer: coarse) {
+  /* A hit strip, so the text flows as before (a link inside a sentence stays inside its line). */
+  .category a:not([class]) {
+    position: relative;
+  }
+  .category a:not([class])::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: var(--touch);
+    transform: translateY(-50%);
+  }
 }
 .search {
   position: relative;
@@ -257,13 +263,25 @@
 .nav .status {
   margin-left: auto;
 }
+/* The quick switches of the start page: one group on a raised tone, no frame (Identity 4.0). */
 .quick {
   display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+}
+.quickTitle {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-medium);
+}
+.quickItems {
+  display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2) var(--space-4);
-  margin-bottom: var(--space-3);
-  /* As wide as the page: five switches fit one row on a desktop instead of wrapping into three. */
-  max-width: none;
+  gap: var(--space-3) var(--space-4);
 }
 .quickItem {
   display: flex;
@@ -325,34 +343,44 @@
 }
 
 /* Second level of the open category: the groups as pills above the content. */
+/* The groups of a category are tabs (Identity 4.0): the look of `ui/Tabs` – an underline on a hairline, no filled
+   pill. The markup stays a list of links with `aria-current="location"` (the guard `ui6-home-settings.seed` pins it). */
 .subnav {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1);
+  gap: 0 var(--space-4);
+  border-bottom: 1px solid var(--border);
 }
 .subLink {
+  position: relative;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: var(--touch);
-  padding: 0 var(--space-3);
-  border-radius: var(--radius-full);
+  min-width: var(--touch);
   color: var(--text-muted);
-  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
   text-decoration: none;
+  white-space: nowrap;
 }
 .subLink:hover {
   color: var(--text);
-  background: var(--surface-2);
 }
-/* U54: the current group reads as chosen: text colour, a filled pill and a hairline, not colour alone. */
+/* The current group: the accent and an underline on the hairline, as in every tab row. */
 .subLink[aria-current] {
-  color: var(--text);
-  font-weight: var(--weight-semibold);
-  background: var(--surface-2);
-  box-shadow: inset 0 0 0 1px var(--border-strong);
+  color: var(--accent);
+}
+.subLink[aria-current]::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--accent);
 }
 
 /* Breadcrumb in the content. */
@@ -441,8 +469,7 @@
 
 /* "Erweitert": the rarely needed sections of a category behind one fold. */
 .advanced {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--surface-raised);
   border-radius: var(--radius-lg);
 }
 .advancedSummary {
@@ -473,4 +500,27 @@
   flex-direction: column;
   gap: var(--space-2);
   min-width: 0;
+}
+/* The one link of a "not found" state: 44 px to hit. */
+.emptyLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+}
+/* The sections of a tab: out of sight until all of them are there. */
+.tabBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+/* While it waits it takes no room and shows nothing, but it is laid out (a deep link and the layout guards measure
+   it); `inert` and `aria-hidden` on the element keep it out of the tab order and the accessibility tree. */
+.tabBody[data-shown='false'] {
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+}
+.tabWait {
+  min-height: 100dvh;
 }

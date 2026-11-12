@@ -1,0 +1,96 @@
+/* Title line of a settings tab (Identity 4.0, rule 2): no card and no tint; sizes are the module head's tokens. */
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  margin-bottom: var(--space-4);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--head-row);
+  min-width: 0;
+}
+.block {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.eyebrow {
+  margin: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: var(--text-caps);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.title {
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--text-h1);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The way back (phone): a 44 px target of its own in the plate's place, beside the title and never over it. */
+.back {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: var(--touch);
+  height: var(--touch);
+  margin-inline-start: calc(-1 * var(--space-2));
+  border-radius: var(--radius-md);
+  color: var(--text);
+}
+.back:hover {
+  background: var(--surface-2);
+}
+/* The line under the title: the description, and a link at its end where there is room. */
+.below {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 var(--space-4);
+  min-width: 0;
+}
+.actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.description {
+  flex: 1 1 16rem;
+  min-width: 0;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-label);
+  /* Two lines at most under the title (a module's description can be long): the head keeps its height. */
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+@media (max-width: 899px) {
+  .head {
+    margin-bottom: var(--space-3);
+  }
+  /* A long module or category name wraps on the phone instead of being cut. */
+  .title {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+.description[data-whole='true'] {
+  display: block;
+  overflow: visible;
+}

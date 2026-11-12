@@ -147,6 +147,8 @@ test('appearance: the group opens from the keyboard', async ({ page }, info) => 
   test.skip(isPhone(info), 'keyboard');
   await ready(page, '/settings/darstellung');
   const group = page.getByTestId('appearance-group-motion');
+  // The tab shows its sections in one piece; a hidden summary takes no focus.
+  await expect(group.locator('summary')).toBeVisible();
   await group.locator('summary').focus();
   await page.keyboard.press('Enter');
   await expect(group.locator('summary')).toHaveAttribute('aria-expanded', 'true');
