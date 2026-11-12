@@ -199,6 +199,8 @@ function PeopleList({
       ? undefined
       : ((selectedId ? shown.find((p) => p.id === selectedId) : undefined) ?? shown[0]);
   const pick = (id: string) => {
+    // From "Offene Geschenke" too: the person's panel belongs to the list of people.
+    setView('people');
     setClosed(false);
     onOpen(id);
   };
@@ -433,6 +435,8 @@ function PersonBody({
 }) {
   const [inbox] = useSettings(INBOX_SCOPE, inboxSchema, { ideas: [] });
   const ideas = inbox?.ideas ?? [];
+  // In the panel the person's name is the h2; the sections lie one level below it.
+  const Heading = inPanel ? 'h3' : 'h2';
   const [gift, setGift] = useState<GiftTarget>(null);
   const day = today();
   const b = person.birthday;
@@ -503,7 +507,7 @@ function PersonBody({
       ) : null}
       {ideas.length > 0 ? (
         <section aria-label={t.people.inbox.title} data-testid="gift-inbox">
-          <h2>{t.people.inbox.title}</h2>
+          <Heading>{t.people.inbox.title}</Heading>
           <p>{t.people.inbox.hint}</p>
           <ItemList label={t.people.inbox.title}>
             {ideas.map((idea, index) => (
@@ -519,7 +523,7 @@ function PersonBody({
           </ItemList>
         </section>
       ) : null}
-      <h2>{t.people.giftsHeading}</h2>
+      <Heading>{t.people.giftsHeading}</Heading>
       <Button variant={inPanel ? 'secondary' : 'primary'} onClick={() => setGift({ draft: true })}>
         <Icon name="plus" size={18} />
         {t.people.addGift}

@@ -150,7 +150,7 @@ function Fields({
               setDate(value);
               setDateError('');
             }}
-            hint={dateError || undefined}
+            error={dateError || undefined}
             required
           />
           <Checkbox

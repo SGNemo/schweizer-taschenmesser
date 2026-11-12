@@ -55,6 +55,15 @@ for (const theme of process.env.PLAN_SHOTS ? (['light', 'dark'] as const) : (['l
           await expect(page.getByRole('dialog'), path).toBeVisible();
           await page.keyboard.press('Escape');
         }
+        // A row of "Offene Geschenke" leads to its person: the list of people with that person's panel.
+        await openPage(page, '/people');
+        await page
+          .getByRole('link', { name: 'Offene Geschenke' })
+          .or(page.getByRole('button', { name: 'Offene Geschenke' }))
+          .first()
+          .click();
+        await page.locator('main li [data-row]').first().click();
+        await expect(page.getByTestId('person-detail')).toBeVisible();
       });
     });
 

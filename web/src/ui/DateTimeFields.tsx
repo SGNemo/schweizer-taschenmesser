@@ -20,6 +20,8 @@ interface Props {
   /** Called with the stored form once the text is a date or time, and with `''` when the field was emptied. */
   onChange: (value: string) => void;
   hint?: string;
+  /** An error the form found on save (the field's own "not a date" message wins while the text is unreadable). */
+  error?: string;
   required?: boolean;
   labelHidden?: boolean;
   'data-autofocus'?: boolean;
@@ -31,6 +33,7 @@ function ParsedField({
   value,
   onChange,
   hint,
+  error: formError,
   required,
   labelHidden,
   format,
@@ -53,7 +56,8 @@ function ParsedField({
   const input = useRef<HTMLInputElement>(null);
   // While someone types, the field shows their text; otherwise the stored value in the region's form.
   const [draft, setDraft] = useState<string | null>(null);
-  const [error, setError] = useState(false);
+  const [unread, setError] = useState(false);
+  const error = unread || !!formError;
   const text = draft ?? format(value);
   // Text that is no date (or time) must never be saved as the last value that happened to parse on the way
   // ("3.9.202" after "3.9.20"): while it stands, the form cannot be submitted, by Enter or by "Speichern".
@@ -117,7 +121,7 @@ function ParsedField({
       ) : null}
       {error ? (
         <span id={`${id}-err`} className={fieldStyles.error} role="alert">
-          {invalid}
+          {unread ? invalid : formError}
         </span>
       ) : null}
     </div>

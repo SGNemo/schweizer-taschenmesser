@@ -41,9 +41,7 @@ describe('Time tracking page', () => {
     expect(step.className).toMatch(/primary/);
     expect(screen.queryByText('Nichts läuft.')).toBeNull();
     expect(screen.queryByText('Heute noch keine Zeit erfasst.')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Zeit eintragen' }).className).not.toMatch(
-      /primary/,
-    );
+    expect(screen.getByRole('button', { name: 'Zeit eintragen' }).className).not.toMatch(/primary/);
   });
 
   it('with a project the idle line and the day list are back', async () => {

@@ -55,7 +55,7 @@
 }
 /* The goal shown in the detail panel: a quiet surface, never colour alone (`aria-current` on its button). */
 .cardCurrent {
-  background: var(--surface-2);
+  background: var(--surface-sunken);
 }
 .pick {
   display: grid;

@@ -77,6 +77,8 @@ export function GoalHistory({
   const last30 = rate(goal, map, addDaysStr(day, -29), day);
   const per = perWeekday(goal, map, addDaysStr(day, -180), day);
   const run = longestRun(goal, map, addDaysStr(day, -365), day);
+  // In the detail panel the goal's name is the h2; the sections lie one level below it.
+  const Heading = compact ? 'h3' : 'h2';
   return (
     <>
       {compact ? null : (
@@ -108,7 +110,7 @@ export function GoalHistory({
       )}
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>{t.habits.history.last30}</h2>
+        <Heading className={styles.sectionTitle}>{t.habits.history.last30}</Heading>
         <p data-testid="habit-rate">
           {last30
             ? goal.period === 'week'
@@ -121,7 +123,7 @@ export function GoalHistory({
 
       {goal.period === 'day' ? (
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>{t.habits.history.perWeekday}</h2>
+          <Heading className={styles.sectionTitle}>{t.habits.history.perWeekday}</Heading>
           <ul className={styles.weekdays}>
             {per.map((share, i) => (
               <li key={i} className={styles.weekdayRow}>
