@@ -85,4 +85,10 @@ describe('reopenTarget ("Tab neu öffnen" on the start view)', () => {
     expect(reopenTarget({ ...base, lastVisit: undefined })).toBeNull();
     expect(reopenTarget({ ...base, lastClosed: closed, inPrivateTab: true })).toBeNull();
   });
+
+  it('does not offer the closed page while it is open again in a normal tab', () => {
+    expect(
+      reopenTarget({ ...base, lastClosed: closed, anyOpen: true, openUrls: [closed.url] }),
+    ).toBeNull();
+  });
 });

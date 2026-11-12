@@ -81,6 +81,7 @@ export default function BrowserPage() {
     lastClosed,
     inPrivateTab: !!tab?.isPrivate,
     anyOpen: tabs.some((x) => x.opened),
+    openUrls: tabs.filter((x) => x.opened && !x.isPrivate).map((x) => x.url),
     historyOn: prefs.history,
     lastVisit,
   });

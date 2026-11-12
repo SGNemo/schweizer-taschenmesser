@@ -11,8 +11,8 @@ type: changed
 area: downloads
 breaking: false
 pr: 768
-de: Downloads zeigt oben rechts, was gerade läuft. „Download hinzufügen“ und „Zielordner zeigen“ stehen daneben.
-en: Downloads shows at the top right what is running. “Add download” and “Show target folder” are beside it.
+de: Downloads zeigt oben rechts, was gerade läuft.
+en: Downloads shows at the top right what is running.
 ---
 ---
 type: changed
