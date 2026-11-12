@@ -1,7 +1,7 @@
 {
   "version": 1,
   "what": "max-width declarations in src/modules/**/*.module.css outside @media and @container",
-  "total": 28,
+  "total": 27,
   "files": {
     "modules/accounts/accounts.module.css": 1,
     "modules/bookmarks/routes/reader.module.css": 1,
@@ -17,7 +17,6 @@
     "modules/downloads/routes/DownloadsPage.module.css": 1,
     "modules/finance/components/columnMapping.module.css": 1,
     "modules/maps/components/TileMap.module.css": 1,
-    "modules/maps/routes/maps.module.css": 1,
     "modules/music/components/Spotify.module.css": 1,
     "modules/music/routes/music.module.css": 2,
     "modules/notes/components/TabBar.module.css": 1,

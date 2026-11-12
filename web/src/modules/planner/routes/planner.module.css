@@ -6,7 +6,7 @@
   display: flex;
   gap: var(--space-2);
   align-items: flex-end;
-  margin: var(--space-3) 0 var(--space-1);
+  margin: var(--space-4) 0 var(--space-1);
 }
 /* S09: the hint under the row, where the field's own hint sat; the buttons align with the input's bottom edge. */
 .addHint {
@@ -30,18 +30,14 @@
   }
 }
 
-.board {
-  display: grid;
-  /* Four days a row (4 + 3) on a normal desktop; seven side by side from 95rem of page width, where a column keeps
-     ~210 px – room for a long German word in a title (N01); narrower, seven columns would end titles in „…“. */
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-2);
-  align-items: start;
+/* Identity 4.0 (package 0b-4b): the week is a list on one raised surface, the picked day lies beside it (wide) or
+   under the strip of chips (narrow). No frame, no shadow; today is named in the day's line. */
+.week {
+  margin-bottom: var(--space-4);
 }
-@container page (min-width: 95rem) {
-  .board {
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-  }
+.weekBar {
+  display: block;
+  width: 8rem;
 }
 .column {
   display: flex;
@@ -49,17 +45,17 @@
   gap: var(--space-2);
   min-width: 0;
   padding: var(--space-2);
-  background: var(--surface);
+  background: var(--surface-raised);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-1);
 }
-.column[data-today='true'] {
-  outline: 2px solid var(--module-color);
-  outline-offset: -2px;
+/* Beside the week (master–detail) the day is no card of its own: its list is the one surface in the panel. */
+.column[data-panel='true'],
+.column[data-panel='true'][data-off='true'] {
+  padding: 0;
+  background: none;
 }
 .column[data-off='true'] {
   background: var(--surface-2);
-  box-shadow: none;
 }
 
 .dayButton {
@@ -100,45 +96,7 @@
   accent-color: var(--module-color);
 }
 
-/* N01: a board column is ~210 px at 1920. The row gives its title the room – slim gap and padding, a smaller box,
-   no 10 rem floor on the main button, the ⋯ menu floats over the row end on hover devices – and a title takes at
-   most two lines, broken between words; a word wider than the column ends in „…“ instead of breaking inside. */
-.boardRow {
-  position: relative;
-}
-.boardRow > div {
-  gap: var(--space-2);
-  padding-inline: var(--space-1);
-}
-.boardRow [data-row] {
-  min-width: 0;
-}
-@media (hover: hover) {
-  /* A smaller box only with a pointer; a touch screen keeps the 24 px box. */
-  .boardRow .check {
-    width: 1.125rem;
-    height: 1.125rem;
-  }
-  .boardRow [data-row-actions] {
-    position: absolute;
-    inset-block-start: 0;
-    inset-inline-end: 0;
-    background: var(--surface);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-1);
-  }
-}
-.boardTitle {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  overflow: hidden;
-  overflow-wrap: normal;
-  word-break: normal;
-  hyphens: manual;
-  text-overflow: ellipsis;
-}
+/* The minutes of a row: figures in the meta line. */
 .minutes {
   color: var(--text-3);
   font-size: var(--text-meta);
@@ -177,19 +135,20 @@
   min-height: var(--touch);
   padding: var(--space-1) var(--space-2);
   color: inherit;
-  background: var(--surface-2);
+  background: var(--surface-raised);
   border: 0;
   border-radius: var(--radius-md);
   cursor: pointer;
   font-size: var(--text-meta);
   font-variant-numeric: var(--font-num);
 }
-/* The chosen day: a tint, not the full hue (AA on both themes), plus weight and a hairline in the hue. */
+/* The chosen day: one tone step down and the strong weight (no frame, no hue). */
 .stripChip[aria-pressed='true'] {
   color: var(--text);
-  background: color-mix(in srgb, var(--module-color) 18%, var(--surface));
-  box-shadow: inset 0 0 0 1px var(--module-color);
+  background: var(--surface-sunken);
   font-weight: var(--weight-semibold);
+  /* B7, as the shared chip: a line, not a shadow */
+  box-shadow: inset 0 0 0 1px var(--border-strong);
 }
 
 .waiting {

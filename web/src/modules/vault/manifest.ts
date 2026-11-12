@@ -18,6 +18,7 @@ const manifest: ModuleManifest = {
     widget: 'kennzahl',
     head: 'standard',
     signature: 'folderTab',
+    tabs: true,
   },
   version: 3,
   get description() {
@@ -53,7 +54,7 @@ const manifest: ModuleManifest = {
   defaultEnabled: false,
   maturity: 'stable',
   seed: { version: 1, dependsOn: [] },
-  layout: 'wide',
+  layout: 'split',
   order: 150,
   area: 'vault',
   contributions: {

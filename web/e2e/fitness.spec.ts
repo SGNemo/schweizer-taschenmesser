@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { strToU8, zipSync } from 'fflate';
+import { openPageMenu } from './money-helpers';
 import { backSettled, calendarEntry, enable, ready, showAllWidgets, showPreview } from './helpers';
 
 /**
@@ -71,11 +72,18 @@ test('a session: logged in the form, counted in the widget, shown in the calenda
 
   // "Wie letztes Mal" repeats it for today with one tap (toast with undo).
   await page.goto('/fitness');
-  await page.getByRole('button', { name: 'Wie letztes Mal: Bankdrücken' }).click();
+  // Identity 4.0, package 0b-5: an entry of the page's "⋯" menu (two taps), toast with undo.
+  await (
+    await openPageMenu(page)
+  )
+    .getByRole('menuitem', { name: 'Wie letztes Mal: Bankdrücken' })
+    .click();
   await expect(page.getByText('Für heute eingetragen: Bankdrücken')).toBeVisible();
   await expect(page.getByTestId('fitness-week')).toContainText('2');
   // Today has its session now: no second copy by a second tap.
-  await expect(page.getByRole('button', { name: /Wie letztes Mal/ })).toHaveCount(0);
+  await expect(
+    (await openPageMenu(page)).getByRole('menuitem', { name: /Wie letztes Mal/ }),
+  ).toHaveCount(0);
 });
 
 test('kcal by quick capture adds up to the day sum, past the goal only in words', async ({
@@ -100,7 +108,7 @@ test('kcal by quick capture adds up to the day sum, past the goal only in words'
 
   // A goal below the sum: said in words, no overrun mark.
   await page.goto('/fitness?view=food');
-  await page.getByRole('button', { name: 'Tagesziel' }).click();
+  await (await openPageMenu(page)).getByRole('menuitem', { name: 'Tagesziel' }).click();
   await page.getByRole('dialog').getByLabel('kcal pro Tag').fill('900');
   await page.getByRole('dialog').getByRole('button', { name: 'Speichern', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -113,7 +121,7 @@ test('kcal by quick capture adds up to the day sum, past the goal only in words'
 
 test('the goal can be worked out; weight, height and age are never stored', async ({ page }) => {
   await page.goto('/fitness?view=food');
-  await page.getByRole('button', { name: 'Tagesziel' }).click();
+  await (await openPageMenu(page)).getByRole('menuitem', { name: 'Tagesziel' }).click();
   const dialog = page.getByRole('dialog', { name: 'Tagesziel kcal' });
   await dialog.getByRole('button', { name: 'Ausrechnen' }).click();
   await dialog.getByLabel('Gewicht in kg').fill('80');
@@ -187,7 +195,7 @@ test('a template: saved from the form, filled into a new session with one tap', 
   if (await discard.count()) await discard.first().click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Einheit eintragen' }).click();
+  await page.getByRole('button', { name: 'Einheit eintragen', exact: true }).click();
   dialog = page.getByRole('dialog', { name: 'Einheit eintragen' });
   await dialog.getByRole('button', { name: 'Vorlage Einheit übernehmen' }).click();
   await expect(dialog.getByRole('combobox', { name: 'Übung' })).toHaveValue('Rudern');
@@ -250,10 +258,13 @@ test('the catalogue: picked by group with its pictogram, the plate week fills', 
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
   // Sunday 2026-11-08 is the last plate of the week (Monday start): full now.
+  // The plates lie in the tab "Woche" since Identity 4.0 (they were the head's signature).
+  await page.getByRole('button', { name: 'Woche', exact: true }).click();
   const plates = page.getByTestId('fitness-plates');
   await expect(plates).toHaveAttribute('aria-label', 'Diese Woche trainiert: Sonntag');
   await expect(plates.locator('[data-state="done"]')).toHaveCount(1);
   // The row shows the pull-up pictogram.
+  await page.getByRole('button', { name: 'Training', exact: true }).click();
   await expect(page.locator('svg[data-pattern="pullup"]').first()).toBeVisible();
 });
 

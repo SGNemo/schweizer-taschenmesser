@@ -3,9 +3,8 @@
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface-2);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
   font-variant-numeric: var(--font-num);
 }
 .head {

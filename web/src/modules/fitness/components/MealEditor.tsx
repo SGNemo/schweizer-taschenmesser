@@ -4,7 +4,16 @@ import type { Stored } from '@/core/db/types';
 import { nowTime, today } from '@/core/time/dates';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { AdvancedFields, Button, Dialog, Form, FormActions, TextField } from '@/ui';
+import {
+  AdvancedFields,
+  Button,
+  DayField,
+  Dialog,
+  Form,
+  FormActions,
+  TextField,
+  TimeField,
+} from '@/ui';
 import { kcalText } from '../data';
 import { foodSuggestions } from '../logic';
 import { mealRepo } from '../repo';
@@ -122,19 +131,8 @@ function Fields({
           onChange={(e) => setKcal(e.target.value)}
           required
         />
-        <TextField
-          label={t.fitness.form.date}
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          required
-        />
-        <TextField
-          label={t.fitness.form.time}
-          type="time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-        />
+        <DayField label={t.fitness.form.date} value={date} onChange={setDate} required />
+        <TimeField label={t.fitness.form.time} value={time} onChange={setTime} />
       </div>
       <AdvancedFields
         moduleId="fitness"

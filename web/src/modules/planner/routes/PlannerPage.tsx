@@ -24,9 +24,10 @@ import {
   RowMenu,
   TextField,
   type RowMenuItem,
+  SplitView,
+  useSplitView,
 } from '@/ui';
-import { HeroFigure, HeroSlot, SignatureMark, WeekBars } from '@/ui/identity';
-import { usePageWidthAtLeast } from '@/ui/pageWidth';
+import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import {
   addFromField,
   applyOps,
@@ -57,8 +58,6 @@ import styles from './planner.module.css';
 
 /** Days on the board: a rolling week from today (the widget and the phone strip start there too). */
 const SPAN = BOARD_DAYS;
-/** From this page width (rem) the seven columns stand side by side; below, one day per screen. */
-const WIDE_REM = 60;
 
 /** Device-local (`_meta`): the Monday of the week whose „Woche prüfen“ line was clicked away. */
 export const WEEK_CHECK_KEY = 'planner.weekCheck.dismissed';
@@ -88,7 +87,9 @@ function Part({ k, of }: { k: number; of: number }) {
 
 export default function PlannerPage() {
   const data = useBoard(SPAN);
-  const wide = usePageWidthAtLeast(WIDE_REM) ?? true;
+  // Master–detail (layout `split`, package 0b-4b): on a wide page the week is a list and the picked day lies in the
+  // panel beside it; below that width the week is a strip of chips above the picked day.
+  const wide = useSplitView();
   const [params, setParams] = useSearchParams();
   const [text, setText] = useState('');
   const hintId = useId();
@@ -114,6 +115,8 @@ export default function PlannerPage() {
   // A model reading the user discarded or stopped: the same sentence, sent again, skips the model.
   const declinedRef = useRef<string | undefined>(undefined);
   const addRef = useRef<HTMLFormElement>(null);
+  // The field is the page's last row: what the planner answers under it is brought into view.
+  const answerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const moduleStates = useModuleStates();
   const mailOn = !!getManifest('mail') && moduleStates?.mail === true;
@@ -136,6 +139,11 @@ export default function PlannerPage() {
   const canDone = (moduleId: string) => abilities?.[moduleId]?.done ?? true;
   const canAssign = (moduleId: string) => abilities?.[moduleId]?.assign ?? true;
 
+  const answered = !!pending || !!ask || !!sayLine;
+  useEffect(() => {
+    if (answered) answerRef.current?.scrollIntoView?.({ block: 'nearest' });
+  }, [answered]);
+
   const titles = data?.titles ?? {};
   const board = data?.board;
   const todayDay = board?.days[0];
@@ -150,6 +158,8 @@ export default function PlannerPage() {
   // `?week=` (the calendar's „Plan“ entry) lands on the board, which always starts today.
   useEffect(() => {
     if (params.get('new')) {
+      // the entry row comes with the board (it is the last row under it)
+      if (!board) return;
       addRef.current?.querySelector('input')?.focus();
       setParams({}, { replace: true });
       return;
@@ -489,20 +499,13 @@ export default function PlannerPage() {
       <ItemRow
         key={row.unitId}
         title={
-          // N01: in the seven-column board a title takes at most two lines and ends at a word, never inside one.
-          <span
-            title={wide ? `${row.title} – ${reason}` : reason}
-            className={wide ? styles.boardTitle : undefined}
-            data-board-title={wide || undefined}
-          >
+          <span title={reason}>
             {row.title}
             {row.of > 1 ? <Part k={row.k} of={row.of} /> : null}
           </span>
         }
         titleFull
-        className={wide ? styles.boardRow : undefined}
-        // The minutes lead the meta line (a column is too narrow for a trailing figure), the deadline
-        // follows, the reason only while „Warum hier?“ is on.
+        // The minutes lead the meta line, the deadline follows, the reason only while „Warum hier?“ is on.
         meta={
           <span>
             <span className={styles.minutes}>
@@ -531,16 +534,14 @@ export default function PlannerPage() {
         }
         menu={rowMenu(row, day.date, reason)}
         menuLabel={t.planner.row.menu(row.title)}
-        // Swipes only in the one-day layout: a swipeable row clips sideways, and in a narrow column the
-        // ⋯ menu is wider than the row.
         onSwipeRight={
-          !wide && row.entry && canDone(row.entry.moduleId)
+          row.entry && canDone(row.entry.moduleId)
             ? () => void markDone(row.entry!, titles)
             : undefined
         }
         swipeRightLabel={t.planner.row.done}
         onSwipeLeft={
-          !wide && row.entry && canAssign(row.entry.moduleId)
+          row.entry && canAssign(row.entry.moduleId)
             ? () => void later(row.entry!, titles)
             : undefined
         }
@@ -549,17 +550,24 @@ export default function PlannerPage() {
     );
   };
 
+  /** A day's name; today says so in words (the head's „frei heute“ belongs to that row). */
+  const dayTitle = (day: BoardDay) =>
+    day.isToday
+      ? t.planner.board.todayIs(formatDay(day.date, 'EEE d.'))
+      : formatDay(day.date, 'EEE d.');
+
   const renderDay = (day: BoardDay) => (
     <section
       key={day.date}
       className={styles.column}
+      data-panel={wide || undefined}
       data-today={day.isToday}
       data-off={day.off}
       data-testid={`day-${day.date}`}
       aria-label={formatDay(day.date, 'EEEE, d. MMMM')}
     >
       <button type="button" className={styles.dayButton} onClick={() => setSheetDate(day.date)}>
-        <span className={styles.dayName}>{formatDay(day.date, 'EEE d.')}</span>
+        <span className={styles.dayName}>{dayTitle(day)}</span>
         <span className={styles.capacity}>{capacityLabel(day)}</span>
         {!day.off ? (
           <span className={styles.bar}>
@@ -592,53 +600,66 @@ export default function PlannerPage() {
   const nothingPlanned = board !== undefined && board.days.every((d) => d.rows.length === 0);
   const shownDay = board?.days.find((d) => d.date === pickedDay) ?? board?.days[0];
 
-  return (
+  // The entry row is the last row under the week (rule 4: one entry, and for
+  // the planner it is the field you type or speak into).
+  const waitingBlock =
+    waiting.length > 0 ? (
+      <div className={styles.waiting}>
+        <GroupedList
+          listId="planner"
+          groups={[
+            {
+              // Folded by default (Q4 a); a new id, so an old „closed“ choice is not read as „open“.
+              id: 'wait',
+              defaultClosed: true,
+              label: t.planner.wait.title,
+              count: waiting.length,
+              detail: t.planner.wait.calm,
+              // The overload figure once the group is open: neutral text, no tone (CONCEPT §7).
+              ...(overflow > 0
+                ? {
+                    action: (
+                      <p className={styles.reason} data-testid="planner-overload">
+                        {overloadText(overflow)}
+                      </p>
+                    ),
+                  }
+                : {}),
+              children: (
+                <ItemList>
+                  {waiting.map((w) => {
+                    const reason =
+                      w.reason === 'excluded'
+                        ? t.planner.row.excludedState
+                        : explainWait({ reason: w.reason, bumpedBy: w.bumpedBy }, nameOf);
+                    return (
+                      <ItemRow
+                        key={w.unitId}
+                        title={
+                          <span>
+                            {w.title}
+                            {w.of > 1 ? <Part k={w.k} of={w.of} /> : null}
+                          </span>
+                        }
+                        titleFull
+                        // The reason only behind „Warum hier?“, like on the board (U12).
+                        // A row without a menu (no entry) keeps its reason in sight.
+                        meta={why === w.unitId || !w.entry ? reason : undefined}
+                        end={<span className={styles.minutes}>{compact(w.minutes)}</span>}
+                        menu={rowMenu(w, undefined, reason)}
+                        menuLabel={t.planner.row.menu(w.title)}
+                      />
+                    );
+                  })}
+                </ItemList>
+              ),
+            },
+          ]}
+        />
+      </div>
+    ) : null;
+  const entryRow = (
     <>
-      <PageHeader title={t.planner.title} />
-      {/* U01: the figure has no caps label, the frame's placeholder for a `kennzahl` head has one. Until the board is
-          read the page holds the row itself, in the figure's own shape, so the entry row below never moves. */}
-      <HeroSlot area="figure">
-        {todayDay ? (
-          <HeroFigure value={headValue} detail={headDetail} type="thin" testId="planner-head" />
-        ) : (
-          <div className={styles.headPending} aria-hidden="true" data-testid="planner-head-pending">
-            <HeroFigure value={'\u00a0'} detail={'\u00a0'} type="thin" />
-          </div>
-        )}
-      </HeroSlot>
-      {/* U01: under a standard head the signature lies in the page above the entry row (`AreaFrame` `.below`, hidden
-          while empty), and the frame's figure hold covers only a stage. Until the board is read the page holds the
-          bars' room itself, unseen; without it the entry row moved down by that room when the board arrived. */}
-      <HeroSlot area="signature">
-        {board ? (
-          <WeekBars
-            fill={board.days.map((d) => (d.usable > 0 ? Math.min(1, d.planned / d.usable) : 0))}
-          />
-        ) : (
-          <div
-            className={styles.headPending}
-            aria-hidden="true"
-            data-testid="planner-signature-pending"
-          >
-            <WeekBars fill={[]} />
-          </div>
-        )}
-      </HeroSlot>
-
-      {showWeekLink ? (
-        <p className={styles.weekLink} data-testid="week-check-link">
-          <button type="button" className={styles.weekLinkText} onClick={() => setChecking(true)}>
-            {t.planner.weekLink.label}
-          </button>
-          <IconButton
-            label={t.planner.weekLink.dismiss}
-            onClick={() => void setMeta(WEEK_CHECK_KEY, monday)}
-          >
-            <Icon name="close" size={16} />
-          </IconButton>
-        </p>
-      ) : null}
-
       <form
         ref={addRef}
         onSubmit={add}
@@ -673,30 +694,63 @@ export default function PlannerPage() {
       <p id={hintId} className={styles.addHint}>
         {t.planner.add.hint}
       </p>
+      {/* What the planner understood, or asks back, lies right under the field it answers. */}
+      <div ref={answerRef}>
+        {sayLine ? (
+          <p className={styles.say} role="status" data-testid="plan-say">
+            {sayLine}
+          </p>
+        ) : null}
+        {ask ? (
+          <div className={styles.say} role="group" aria-label={t.planner.say.askLabel}>
+            <span>{t.planner.say.ask(ask.options[0]!.title, ask.options[1]!.title)}</span>
+            {ask.options.map((o) => (
+              <Button key={o.key} size="sm" onClick={() => void showPreview(ask.ops(o.key), true)}>
+                {o.title}
+              </Button>
+            ))}
+          </div>
+        ) : null}
+        {pending ? (
+          <PlanPreview
+            data={pending.data}
+            nameOf={nameOf}
+            busy={busy}
+            onApply={() => void apply()}
+            onDiscard={discard}
+          />
+        ) : null}
+      </div>
+    </>
+  );
 
-      {sayLine ? (
-        <p className={styles.say} role="status" data-testid="plan-say">
-          {sayLine}
+  return (
+    <>
+      <PageHeader title={t.planner.title} />
+      {/* U01: the figure has no caps label, the frame's placeholder for a `kennzahl` head has one. Until the board is
+          read the page holds the row itself, in the figure's own shape, so the head keeps its height. */}
+      <HeroSlot area="figure">
+        {todayDay ? (
+          <HeroFigure value={headValue} detail={headDetail} type="thin" testId="planner-head" />
+        ) : (
+          <div className={styles.headPending} aria-hidden="true" data-testid="planner-head-pending">
+            <HeroFigure value={'\u00a0'} detail={'\u00a0'} type="thin" />
+          </div>
+        )}
+      </HeroSlot>
+
+      {showWeekLink ? (
+        <p className={styles.weekLink} data-testid="week-check-link">
+          <button type="button" className={styles.weekLinkText} onClick={() => setChecking(true)}>
+            {t.planner.weekLink.label}
+          </button>
+          <IconButton
+            label={t.planner.weekLink.dismiss}
+            onClick={() => void setMeta(WEEK_CHECK_KEY, monday)}
+          >
+            <Icon name="close" size={16} />
+          </IconButton>
         </p>
-      ) : null}
-      {ask ? (
-        <div className={styles.say} role="group" aria-label={t.planner.say.askLabel}>
-          <span>{t.planner.say.ask(ask.options[0]!.title, ask.options[1]!.title)}</span>
-          {ask.options.map((o) => (
-            <Button key={o.key} size="sm" onClick={() => void showPreview(ask.ops(o.key), true)}>
-              {o.title}
-            </Button>
-          ))}
-        </div>
-      ) : null}
-      {pending ? (
-        <PlanPreview
-          data={pending.data}
-          nameOf={nameOf}
-          busy={busy}
-          onApply={() => void apply()}
-          onDiscard={discard}
-        />
       ) : null}
 
       {nothingPlanned && waiting.length === 0 ? (
@@ -707,86 +761,67 @@ export default function PlannerPage() {
         />
       ) : null}
 
+      {/* The entry row is the last row under the week, so it comes with the board: it is built once, at its place,
+          and never moves or is built anew under the typing hand (U01). */}
       {board ? (
-        wide ? (
-          <div className={styles.board} role="group" aria-label={t.planner.board.label}>
-            {board.days.map(renderDay)}
-          </div>
-        ) : (
-          <div>
-            <div className={styles.strip} role="group" aria-label={t.planner.board.strip}>
-              {board.days.map((d) => (
-                <button
-                  key={d.date}
-                  type="button"
-                  className={styles.stripChip}
-                  aria-pressed={d.date === shownDay?.date}
-                  onClick={() => setPickedDay(d.date)}
-                >
-                  <span>{dayName(d.date)}</span>
-                  <span>{capacityShort(d)}</span>
-                </button>
-              ))}
-            </div>
-            {shownDay ? renderDay(shownDay) : null}
-          </div>
-        )
-      ) : null}
-
-      {waiting.length > 0 ? (
-        <div className={styles.waiting}>
-          <GroupedList
-            listId="planner"
-            groups={[
-              {
-                // Folded by default (Q4 a); a new id, so an old „closed“ choice is not read as „open“.
-                id: 'wait',
-                defaultClosed: true,
-                label: t.planner.wait.title,
-                count: waiting.length,
-                detail: t.planner.wait.calm,
-                // The overload figure once the group is open: neutral text, no tone (CONCEPT §7).
-                ...(overflow > 0
-                  ? {
-                      action: (
-                        <p className={styles.reason} data-testid="planner-overload">
-                          {overloadText(overflow)}
-                        </p>
-                      ),
+        <SplitView
+          enabled={wide && shownDay !== undefined}
+          asideLabel={t.planner.board.dayPanel}
+          aside={shownDay ? renderDay(shownDay) : null}
+        >
+          {wide ? (
+            // The week as a list: one row per day with what is free and how full it is; the picked day is marked.
+            <div className={styles.week}>
+              <ItemList label={t.planner.board.label}>
+                {board.days.map((d) => (
+                  <ItemRow
+                    key={d.date}
+                    current={d.date === shownDay?.date}
+                    onOpen={() => setPickedDay(d.date)}
+                    title={<span data-testid={`week-${d.date}`}>{dayTitle(d)}</span>}
+                    meta={
+                      d.rows.length > 0
+                        ? `${capacityLabel(d)} · ${t.planner.board.things(d.rows.length)}`
+                        : capacityLabel(d)
                     }
-                  : {}),
-                children: (
-                  <ItemList>
-                    {waiting.map((w) => {
-                      const reason =
-                        w.reason === 'excluded'
-                          ? t.planner.row.excludedState
-                          : explainWait({ reason: w.reason, bumpedBy: w.bumpedBy }, nameOf);
-                      return (
-                        <ItemRow
-                          key={w.unitId}
-                          title={
-                            <span>
-                              {w.title}
-                              {w.of > 1 ? <Part k={w.k} of={w.of} /> : null}
-                            </span>
-                          }
-                          titleFull
-                          // The reason only behind „Warum hier?“, like on the board (U12).
-                          // A row without a menu (no entry) keeps its reason in sight.
-                          meta={why === w.unitId || !w.entry ? reason : undefined}
-                          end={<span className={styles.minutes}>{compact(w.minutes)}</span>}
-                          menu={rowMenu(w, undefined, reason)}
-                          menuLabel={t.planner.row.menu(w.title)}
-                        />
-                      );
-                    })}
-                  </ItemList>
-                ),
-              },
-            ]}
-          />
-        </div>
+                    end={
+                      !d.off ? (
+                        <span className={styles.weekBar} aria-hidden="true">
+                          <Progress
+                            value={d.planned}
+                            max={Math.max(d.usable, 1)}
+                            label={t.planner.board.load(compact(d.planned), compact(d.usable))}
+                          />
+                        </span>
+                      ) : undefined
+                    }
+                  />
+                ))}
+              </ItemList>
+            </div>
+          ) : (
+            <div>
+              <div className={styles.strip} role="group" aria-label={t.planner.board.strip}>
+                {board.days.map((d) => (
+                  <button
+                    key={d.date}
+                    type="button"
+                    className={styles.stripChip}
+                    aria-pressed={d.date === shownDay?.date}
+                    aria-current={d.isToday ? 'date' : undefined}
+                    onClick={() => setPickedDay(d.date)}
+                  >
+                    <span>{d.isToday ? t.planner.board.todayShort : dayName(d.date)}</span>
+                    <span>{capacityShort(d)}</span>
+                  </button>
+                ))}
+              </div>
+              {shownDay ? renderDay(shownDay) : null}
+            </div>
+          )}
+          {entryRow}
+          {waitingBlock}
+        </SplitView>
       ) : null}
 
       <DaySheet

@@ -10,17 +10,17 @@ import { useSearchParams } from 'react-router';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import {
-  Badge,
   Button,
   EmptyState,
   Icon,
   ItemList,
   ItemRow,
   PageHeader,
+  RowMenu,
+  Segmented,
   SplitView,
   TextField,
   useSplitView,
-  FolderTabs,
 } from '@/ui';
 import { BridgeDialog, PairingDialog } from '../components/BridgeDialog';
 import { AuditDialog } from '../components/AuditDialog';
@@ -29,7 +29,6 @@ import { EntryDetail, EntryPanel } from '../components/EntryDetail';
 import { MonogramTile } from '../components/MonogramTile';
 import { AccountsHead } from '../components/AccountsHead';
 import { SignatureMark } from '@/ui/identity';
-import { useBridgeConfig } from '@/core/vaultbridge/config';
 import { EntryForm, type EntryTarget } from '../components/EntryForm';
 import { GeneratorDialog } from '../components/GeneratorDialog';
 import { LockScreen } from '../components/LockScreen';
@@ -38,7 +37,7 @@ import { ToolsDialog } from '../components/ToolsDialog';
 import { useEntries, useHeaderState } from '../hooks';
 import { useSession } from '../session';
 import { preloadStrength } from '../strength';
-import { deleteEntry, lockVault, type DecryptedEntry } from '../vault';
+import { deleteEntry, type DecryptedEntry } from '../vault';
 import styles from '../accounts.module.css';
 
 const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -85,14 +84,10 @@ export default function AccountsPage() {
   return (
     <>
       {header.state === 'ready' ? <AccountsHead unlocked={session.status === 'unlocked'} /> : null}
-      <PageHeader title={t.accounts.title}>
-        {session.status === 'unlocked' ? (
-          <Button onClick={lockVault}>
-            <Icon name="lock" size={18} />
-            {t.accounts.lock.lockNow}
-          </Button>
-        ) : null}
-      </PageHeader>
+      {/* The open vault brings its own head: the one action and the "⋯" menu. */}
+      {header.state === 'ready' && session.status === 'unlocked' ? null : (
+        <PageHeader title={t.accounts.title} />
+      )}
       {header.state === 'none' ? <SetupScreen /> : null}
       {header.state === 'corrupt' ? <p role="alert">{t.accounts.lock.corrupt}</p> : null}
       {header.state === 'ready' && session.status === 'locked' ? <LockScreen /> : null}
@@ -131,7 +126,6 @@ function Unlocked() {
   const [audit, setAudit] = useState(false);
   const [emergency, setEmergency] = useState(false);
   const [group, setGroup] = useState('all');
-  const bridgeConfig = useBridgeConfig();
   const searchBox = useRef<HTMLInputElement>(null);
   // `?find=n` (vault search key): focus the search field.
   const find = params.get('find');
@@ -152,52 +146,75 @@ function Unlocked() {
   const hasFavorites = (data?.entries ?? []).some((e) => e.data.favorite);
   const detail = data?.entries.find((e) => e.id === detailId) ?? null;
 
-  if (!data) return null;
+  const [menu, setMenu] = useState(false);
+  if (!data) return <PageHeader title={t.accounts.title} />;
+  const none = data.entries.length === 0;
   return (
     <>
-      <div
-        className={`${styles.inline} ${styles.toolbar}`}
-        style={{ marginBottom: 'var(--space-4)' }}
-      >
+      <PageHeader title={t.accounts.title}>
+        {/* A plain button, never the page action of other modules: the phone's plus stays the plain capture on this page
+            (`exclusion.test.ts`). While the vault is empty, the empty state holds the one filled step. */}
+        <Button variant={none ? 'secondary' : 'primary'} onClick={() => setForm({ draft: true })}>
+          <Icon name="plus" size={18} />
+          {t.accounts.add}
+        </Button>
+        {/* Occasional tools: one menu instead of a row of buttons. Locking stays one click, beside the state. */}
+        <RowMenu
+          label={t.onboarding.pageMenu}
+          open={menu}
+          onOpenChange={setMenu}
+          items={[
+            {
+              id: 'generator',
+              label: t.accounts.generator.newPassword,
+              onSelect: () => setGenerator(true),
+            },
+            { id: 'audit', label: t.accounts.audit.open, onSelect: () => setAudit(true) },
+            { id: 'tools', label: t.accounts.tools.open, onSelect: () => setTools(true) },
+            {
+              id: 'emergency',
+              label: t.accounts.emergency.open,
+              onSelect: () => setEmergency(true),
+            },
+            ...(getPlatform().vaultBridge.supported
+              ? [
+                  {
+                    id: 'bridge',
+                    label: t.accounts.bridge.open,
+                    onSelect: () => setBridge(true),
+                  },
+                ]
+              : []),
+          ]}
+        />
+      </PageHeader>
+      {/* The search stays while the vault is empty: the vault search key leads to it. */}
+      <div className={styles.filters}>
         <TextField
           label={t.accounts.search}
+          labelHidden
+          placeholder={t.accounts.search}
           type="search"
           ref={searchBox}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <Button variant="primary" onClick={() => setForm({ draft: true })}>
-          <Icon name="plus" size={18} />
-          {t.accounts.add}
-        </Button>
-        <Button onClick={() => setGenerator(true)}>{t.accounts.generator.newPassword}</Button>
-        <Button onClick={() => setTools(true)}>{t.accounts.tools.open}</Button>
-        <Button onClick={() => setAudit(true)}>{t.accounts.audit.open}</Button>
-        <Button onClick={() => setEmergency(true)}>{t.accounts.emergency.open}</Button>
-        {getPlatform().vaultBridge.supported ? (
-          <>
-            <Button onClick={() => setBridge(true)}>{t.accounts.bridge.open}</Button>
-            <Badge tone={bridgeConfig?.enabled ? 'success' : 'neutral'}>
-              {bridgeConfig?.enabled ? t.accounts.head.bridgeOn : t.accounts.head.bridgeOff}
-            </Badge>
-          </>
+        {tags.length > 0 || hasFavorites ? (
+          <Segmented
+            label={t.accounts.groups.label}
+            value={group}
+            onChange={setGroup}
+            options={[
+              { value: 'all', label: t.accounts.groups.all },
+              ...(hasFavorites ? [{ value: '*fav', label: t.accounts.groups.favorites }] : []),
+              ...tags.map((tag) => ({ value: tag, label: tag })),
+            ]}
+          />
         ) : null}
       </div>
-      {tags.length > 0 || hasFavorites ? (
-        <FolderTabs
-          label={t.accounts.groups.label}
-          value={group}
-          onChange={setGroup}
-          tabs={[
-            { id: 'all', label: t.accounts.groups.all },
-            ...(hasFavorites ? [{ id: '*fav', label: t.accounts.groups.favorites }] : []),
-            ...tags.map((tag) => ({ id: tag, label: tag })),
-          ]}
-        />
-      ) : null}
       {data.broken.length > 0 ? (
         <div className={styles.banner} role="status">
-          <p>{t.accounts.undecryptable(data.broken.length)}</p>
+          <p className={styles.notice}>{t.accounts.undecryptable(data.broken.length)}</p>
           <Button
             variant="danger"
             onClick={() => void Promise.all(data.broken.map((b) => deleteEntry(b.id)))}
@@ -207,7 +224,7 @@ function Unlocked() {
         </div>
       ) : null}
       <SplitView
-        enabled={panel}
+        enabled={panel && !none}
         asideLabel={t.accounts.detail}
         aside={
           detail ? (
@@ -227,22 +244,30 @@ function Unlocked() {
       >
         {shown.length === 0 ? (
           <EmptyState
-            title={data.entries.length === 0 ? t.accounts.empty : t.accounts.emptyFiltered}
+            title={none ? t.accounts.empty : t.accounts.emptyFiltered}
             testId="accounts-empty"
             motif={<SignatureMark id="vaultDoor" size={64} />}
-          />
-        ) : null}
-        <ItemList label={t.accounts.title}>
-          {shown.map((e) => (
-            <ItemRow
-              key={e.id}
-              title={e.data.title}
-              lead={<MonogramTile title={e.data.title} />}
-              meta={e.data.username || undefined}
-              onOpen={() => setDetailId(e.id)}
-            />
-          ))}
-        </ItemList>
+          >
+            {none ? (
+              <Button variant="primary" onClick={() => setForm({ draft: true })}>
+                {t.accounts.addFirst}
+              </Button>
+            ) : null}
+          </EmptyState>
+        ) : (
+          <ItemList label={t.accounts.title}>
+            {shown.map((e) => (
+              <ItemRow
+                key={e.id}
+                title={e.data.title}
+                lead={<MonogramTile title={e.data.title} />}
+                meta={e.data.username || undefined}
+                current={panel && detailId === e.id}
+                onOpen={() => setDetailId(e.id)}
+              />
+            ))}
+          </ItemList>
+        )}
       </SplitView>
       <EntryDetail
         entry={panel ? null : detail}

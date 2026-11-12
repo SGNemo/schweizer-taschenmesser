@@ -17,7 +17,7 @@ import {
   ItemRow,
   PageAction,
   PageHeader,
-  Segmented,
+  Tabs,
   TextField,
   useOpenParam,
   type RowMenuItem,
@@ -608,25 +608,11 @@ export default function MapsPage() {
 
   return (
     <>
-      {places ? (
-        <MapsHead
-          count={places.length}
-          last={lastPlace(places)?.name}
-          tiles={PLACE_CATEGORIES.map((c) => ({
-            key: c,
-            label: t.maps.categories[c],
-            count: places.filter((p) => p.category === c).length,
-          }))
-            .filter((x) => x.count > 0)
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 4)
-            .map((x) => ({ key: x.key, value: String(x.count), label: x.label }))}
-        />
-      ) : null}
+      {places ? <MapsHead count={places.length} last={lastPlace(places)?.name} /> : null}
       <PageHeader
         title={t.maps.meta.name}
         views={
-          <Segmented
+          <Tabs
             label={t.maps.tabs.label}
             value={tab}
             options={TABS.map((v) => ({ value: v, label: t.maps.tabs[v] }))}
@@ -667,6 +653,8 @@ export default function MapsPage() {
             <div className={styles.placesBar}>
               <TextField
                 label={t.maps.placesBar.search}
+                labelHidden
+                placeholder={t.maps.placesBar.search}
                 value={placeQuery}
                 onChange={(e) => setPlaceQuery(e.target.value)}
                 type="search"
@@ -732,21 +720,25 @@ export default function MapsPage() {
 
       {tab === 'routes' ? (
         routes && routes.length === 0 ? (
-          <EmptyState title={t.maps.empty.routes} motif={<SignatureMark id="pin" size={64} />} />
+          <EmptyState title={t.maps.empty.routes} motif={<SignatureMark id="pin" size={64} />}>
+            <Button onClick={() => setRouteTarget({ draft: true })}>{t.maps.add.route}</Button>
+          </EmptyState>
         ) : (
-          <ItemList>
-            {(routes ?? []).map((r) => (
-              <ItemRow
-                key={r.id}
-                title={r.name}
-                meta={`${t.maps.modes[r.mode]} · ${r.from.label} → ${r.to.label} · ${t.maps.route.distance(dist(r.from, r.to))}`}
-                lead={<Icon name={MODE_ICON[r.mode]} size={20} />}
-                onOpen={() => setRouteTarget(r)}
-                menu={routeMenu(r)}
-                menuLabel={t.maps.meta.name}
-              />
-            ))}
-          </ItemList>
+          <div className={styles.routesTop}>
+            <ItemList>
+              {(routes ?? []).map((r) => (
+                <ItemRow
+                  key={r.id}
+                  title={r.name}
+                  meta={`${t.maps.modes[r.mode]} · ${r.from.label} → ${r.to.label} · ${t.maps.route.distance(dist(r.from, r.to))}`}
+                  lead={<Icon name={MODE_ICON[r.mode]} size={20} />}
+                  onOpen={() => setRouteTarget(r)}
+                  menu={routeMenu(r)}
+                  menuLabel={t.maps.meta.name}
+                />
+              ))}
+            </ItemList>
+          </div>
         )
       ) : null}
 

@@ -4426,6 +4426,7 @@ export const de = {
     add: 'Vorrat hinzufügen',
     edit: 'Vorrat bearbeiten',
     empty: 'Noch keine Vorräte. Lege an, was im Kühlschrank oder Vorratsschrank steht.',
+    addFirst: 'Ersten Vorrat eintragen',
     name: 'Name',
     place: 'Ort',
     places: {
@@ -5302,6 +5303,8 @@ export const de = {
     >,
     note: 'Notiz (optional)',
     addItem: 'Eintrag hinzufügen',
+    inBasket: (done: number, total: number) => `${done} von ${total} im Korb`,
+    basketEmpty: 'Noch nichts im Korb',
     placeholder: {
       shopping: 'z. B. 2 Milch',
       packing: 'z. B. Sonnencreme',
@@ -5367,7 +5370,6 @@ export const de = {
       hot: 'Warm: Sonnencreme und Sonnenhut nicht vergessen.',
       cold: 'Kalt: warme Kleidung und Handschuhe einpacken.',
     },
-    more: 'Mehr',
     suggestionsToggle: (n: number) => `Schon mal gekauft (${n})`,
     recurringBadge: 'Wiederkehrend',
     category: 'Kategorie (optional)',
@@ -5411,7 +5413,7 @@ export const de = {
     add: 'Unterlage hinzufügen',
     edit: 'Unterlage bearbeiten',
     category: 'Kategorie',
-    allCategories: 'Alle',
+    allCategories: 'Alle Kategorien',
     categories: {
       identity: 'Ausweise',
       insurance: 'Versicherung',
@@ -5459,7 +5461,14 @@ export const de = {
     emptyFiltered: 'Nichts gefunden.',
     widgetEmpty: 'Keine Fristen in Sicht.',
     figureLabel: 'Ablage',
-    stateTabs: 'Nach Zustand filtern',
+    stateTabs: 'Ansichten',
+    labelCount: (label: string, n: number) => `${label} ${n}`,
+    allStates: 'Alle',
+    addFirst: 'Erste Unterlage eintragen',
+    detail: {
+      label: 'Unterlage',
+      bare: 'Noch ohne Anbieter, Datum und Datei.',
+    },
     stateGroups: {
       expired: 'Abgelaufen',
       due: 'Frist in Sicht',
@@ -5515,6 +5524,7 @@ export const de = {
       },
     },
     pickEntry: 'Zugang auswählen',
+    addFirst: 'Ersten Zugang eintragen',
     detail: 'Details',
     title: 'Passwörter',
     setup: {
@@ -5576,7 +5586,6 @@ export const de = {
           ? 'Sperrt automatisch in unter einer Minute'
           : `Sperrt automatisch in etwa ${min} Min.`,
       bridgeOn: 'Browser-Erweiterung: an',
-      bridgeOff: 'Browser-Erweiterung: aus',
     },
     groups: { label: 'Gruppen', all: 'Alle', favorites: 'Favoriten' },
     audit: {
@@ -7033,7 +7042,7 @@ export const de = {
       name: 'Karten & Orte',
       description:
         'Orte und Wege, die du oft brauchst: Karte, Ortssuche, gespeicherte Routen. Öffnet auch deine Karten-App.',
-      quickAdd: 'Karten & Orte: Ort speichern',
+      quickAdd: 'Karten & Orte: Ort eintragen',
     },
     settings: {
       tileUrl: 'Kartenkacheln (Adresse)',
@@ -7061,9 +7070,10 @@ export const de = {
     },
     tabs: { label: 'Ansicht', places: 'Orte', routes: 'Routen', map: 'Karte' },
     empty: { places: 'Noch keine Orte.', routes: 'Noch keine Routen.' },
-    add: { place: 'Ort hinzufügen', route: 'Route hinzufügen' },
+    add: { place: 'Ort eintragen', route: 'Route eintragen' },
     placesBar: {
       search: 'Orte durchsuchen',
+      unit: (n: number) => (n === 1 ? 'Ort' : 'Orte'),
       all: 'Alle',
       sortLabel: 'Sortierung',
       recent: 'Zuletzt',
@@ -7077,10 +7087,10 @@ export const de = {
     widget: {
       title: 'Orte & Routen',
       empty: 'Noch keine Orte oder Routen.',
-      addPlace: 'Ort speichern',
+      addPlace: 'Ort eintragen',
     },
     place: {
-      titleAdd: 'Ort speichern',
+      titleAdd: 'Ort eintragen',
       titleEdit: 'Ort bearbeiten',
       name: 'Name',
       address: 'Adresse',
@@ -7102,7 +7112,7 @@ export const de = {
     },
     modes: { walk: 'Zu Fuß', bike: 'Fahrrad', car: 'Auto', transit: 'Bus & Bahn' },
     route: {
-      titleAdd: 'Route speichern',
+      titleAdd: 'Route eintragen',
       titleEdit: 'Route bearbeiten',
       name: 'Name',
       mode: 'Unterwegs mit',
@@ -8305,7 +8315,7 @@ export const de = {
       replan: 'Neu verteilen',
     },
     board: {
-      label: 'Wochenbrett',
+      label: 'Woche',
       freeOf: (free: string, usable: string) => `${free} frei von ${usable}`,
       off: 'frei',
       full: 'voll',
@@ -8313,6 +8323,10 @@ export const de = {
       noTimeShort: 'belegt',
       load: (planned: string, usable: string) => `${planned} von ${usable} geplant`,
       strip: 'Tage',
+      dayPanel: 'Gewählter Tag',
+      todayIs: (day: string) => `Heute · ${day}`,
+      todayShort: 'Heute',
+      things: (n: number) => (n === 1 ? '1 Ding' : `${n} Dinge`),
     },
     day: {
       available: 'Verfügbar',
@@ -8330,8 +8344,8 @@ export const de = {
       dayOn: 'Zeit wieder einplanen',
       calendar: 'Aus dem Kalender',
       window: 'Zeitfenster',
-      windowFrom: 'Von',
-      windowTo: 'Bis',
+      windowFrom: 'Zeitfenster von',
+      windowTo: 'Zeitfenster bis',
       windowSet: 'Fenster setzen',
       windowDefault: 'Wie üblich',
       windowLine: (window: string, own: boolean) =>
@@ -8339,8 +8353,8 @@ export const de = {
           ? `Zeitfenster ${window} – nur an diesem Tag.`
           : `Zeitfenster ${window} – wie in den Einstellungen.`,
       noWindow: 'Ohne Zeitfenster: die Dinge des Tages haben keine Uhrzeit.',
-      blockerFrom: 'Von',
-      blockerTo: 'Bis',
+      blockerFrom: 'Blocker von',
+      blockerTo: 'Blocker bis',
     },
     row: {
       part: (k: number, of: number) => `Teil ${k}/${of}`,
@@ -8531,6 +8545,8 @@ export const de = {
       today: 'Heute',
     },
     empty: {
+      trainingAdd: 'Erste Einheit eintragen',
+      foodAdd: 'Erste Mahlzeit eintragen',
       training: 'Noch nichts eingetragen. Eine Einheit reicht.',
       trainingHint: 'Auch in der Schnellerfassung: „training Bankdrücken 3×8 60“.',
       food: 'Noch keine Mahlzeit eingetragen.',

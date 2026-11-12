@@ -1,3 +1,4 @@
+import { openPageMenu } from './money-helpers';
 import { expect, test, type Page } from '@playwright/test';
 import { backSettled, moduleSwitch, pickTool } from './helpers';
 
@@ -171,7 +172,11 @@ test('search finds entries only in the unlocked vault', async ({ page }) => {
 
 test('Bitwarden CSV import adds entries; the export needs a confirmation', async ({ page }) => {
   await setUp(page);
-  await page.getByRole('button', { name: 'Import, Export & Sicherheit' }).click();
+  await (
+    await openPageMenu(page)
+  )
+    .getByRole('menuitem', { name: 'Import, Export & Sicherheit' })
+    .click();
   const tools = page.getByRole('dialog', { name: 'Import, Export & Sicherheit' });
 
   const csv = [
@@ -191,7 +196,11 @@ test('Bitwarden CSV import adds entries; the export needs a confirmation', async
   await page.keyboard.press('Escape');
   await expect(page.getByRole('listitem').filter({ hasText: 'Importiertes Konto' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Import, Export & Sicherheit' }).click();
+  await (
+    await openPageMenu(page)
+  )
+    .getByRole('menuitem', { name: 'Import, Export & Sicherheit' })
+    .click();
   const exportButton = page
     .getByRole('dialog', { name: 'Import, Export & Sicherheit' })
     .getByRole('button', { name: /Als Bitwarden-CSV exportieren/ });
@@ -216,7 +225,7 @@ test('the vault locks itself after the configured inactivity', async ({ page }) 
 
 test('generate a password and save it as an account in one go', async ({ page }) => {
   await setUp(page);
-  await page.getByRole('button', { name: 'Neues Passwort' }).click();
+  await (await openPageMenu(page)).getByRole('menuitem', { name: 'Neues Passwort' }).click();
   const generator = page.getByRole('dialog', { name: 'Neues Passwort' });
   const generated = (await generator.getByTestId('generated').textContent()) ?? '';
   expect(generated).toHaveLength(20);
@@ -239,7 +248,7 @@ test('generate a password and save it as an account in one go', async ({ page })
 test('the vault search key focuses the search, but only while unlocked', async ({ page }) => {
   await setUp(page);
   const search = page.getByLabel('Suchen', { exact: false }).first();
-  await page.getByRole('button', { name: 'Neues Passwort' }).focus(); // somewhere else
+  await page.getByRole('button', { name: 'Zugang hinzufügen' }).focus(); // somewhere else
   await page.evaluate(() => window.dispatchEvent(new Event('tm-vault-search')));
   await expect(page).toHaveURL(/\/accounts\?find=\d+/);
   await expect(search).toBeFocused();
@@ -249,7 +258,7 @@ test('the vault search key focuses the search, but only while unlocked', async (
   const before = page.url();
   await page.evaluate(() => window.dispatchEvent(new Event('tm-vault-search')));
   expect(page.url()).toBe(before);
-  await expect(page.getByRole('button', { name: 'Neues Passwort' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Zugang hinzufügen' })).toHaveCount(0);
 });
 
 test('the anonymous persona is handed to the vault form: filled in, saved encrypted, nothing in the address', async ({

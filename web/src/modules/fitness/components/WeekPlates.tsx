@@ -5,7 +5,8 @@ import type { Session } from '../schema';
 import styles from '../fitness.module.css';
 
 /**
- * The head's signature (package 4): the week as seven weight plates, Monday to Sunday (or the user's week
+ * The module's drawing of the week, shown in the tab "Woche" (it was the head's signature before Identity 4.0):
+ * the week as seven weight plates, Monday to Sunday (or the user's week
  * start). A day with training is a full plate, a day with only a plan an outline, others a faint ring.
  * Still, no count that grows, no streak, no colour for „missed“; the label says it in words.
  */

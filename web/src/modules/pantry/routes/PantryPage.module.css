@@ -60,10 +60,6 @@
   width: 2.5rem;
   flex: none;
 }
-/* Air between the filter and the first shelf heading. */
-.filters {
-  margin-bottom: var(--space-5);
-}
 .endCol {
   display: flex;
   align-items: center;
@@ -75,11 +71,11 @@
   gap: var(--space-1) var(--space-2);
   align-items: center;
 }
-/* One compact pill: minus, plus; each button keeps its 44 px hit area. */
+/* One compact pill on a quiet tone, no frame of its own (the label's hairline is the only one): minus, plus; each
+   button keeps its 44 px hit area. */
 .stepper {
   display: inline-flex;
   align-items: center;
-  border: 1px solid var(--border-strong);
   border-radius: var(--radius-full);
   background: var(--surface-2);
 }
@@ -93,4 +89,10 @@
 /* Tighter than the default tile: the hole takes the top edge, the rest is small print. */
 .label.label.label {
   padding: var(--space-4) var(--space-3) var(--space-2);
+}
+/* The phone's "⋯" menu floats at the right edge of the first row. */
+@media (max-width: 899px) {
+  .first {
+    padding-inline-end: calc(var(--touch) + var(--space-2));
+  }
 }

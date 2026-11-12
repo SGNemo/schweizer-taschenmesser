@@ -1,3 +1,4 @@
+import { openPageMenu } from './money-helpers';
 import { expect, test, type Page } from '@playwright/test';
 import { moduleSwitch, showPreview } from './helpers';
 
@@ -27,6 +28,8 @@ async function setUp(page: Page) {
   await expect(page.getByRole('button', { name: 'Zugang hinzufügen' })).toBeVisible({
     timeout: 20_000,
   });
+  // The extension is off by default: the open page shows no line about it.
+  await expect(page.getByTestId('bridge-state')).toHaveCount(0);
 }
 
 interface Reply {
@@ -59,7 +62,7 @@ async function send(page: Page, op: string, body: object = {}, origin = ORIGIN):
 }
 
 async function enableBridge(page: Page) {
-  await page.getByRole('button', { name: 'Browser-Erweiterung' }).click();
+  await (await openPageMenu(page)).getByRole('menuitem', { name: /^Browser-Erweiterung/ }).click();
   const dialog = page.getByRole('dialog', { name: 'Browser-Erweiterung verbinden' });
   await dialog.getByLabel('Verbindung zur Browser-Erweiterung aktivieren').click();
   await expect(dialog.getByText('Bereit.')).toBeVisible();
@@ -168,8 +171,11 @@ test('an unconfirmed or wrong extension gets no data, and locking ends the sessi
   await pair(page);
   expect((await send(page, 'genParams')).ok).toBe(true);
 
+  // The open page says that the extension is connected, beside the lock state; the locked page says nothing of it.
+  await expect(page.getByTestId('bridge-state')).toHaveText('Browser-Erweiterung: an');
   await page.getByRole('button', { name: 'Sperren' }).click();
   await expect(page.getByRole('button', { name: 'Entsperren' })).toBeVisible();
+  await expect(page.getByTestId('bridge-state')).toHaveCount(0);
   expect(await send(page, 'status')).toMatchObject({ ok: true, data: { state: 'locked' } });
   const afterLock = await send(page, 'match', { pageOrigin: 'https://example.com' });
   expect(afterLock).toMatchObject({ ok: false, error: 'locked' });

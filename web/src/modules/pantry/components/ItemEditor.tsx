@@ -5,6 +5,7 @@ import { t } from '@/strings';
 import {
   AdvancedFields,
   Button,
+  DayField,
   Dialog,
   Form,
   FormActions,
@@ -131,12 +132,7 @@ function Fields({
           maxLength={12}
         />
       </Split>
-      <TextField
-        label={t.pantry.expires}
-        type="date"
-        value={expires}
-        onChange={(e) => setExpires(e.target.value)}
-      />
+      <DayField label={t.pantry.expires} value={expires} onChange={setExpires} />
       <AdvancedFields moduleId="pantry" hasData={!!minCount || !!note || !!ean}>
         <TextField
           label={t.pantry.minCount}

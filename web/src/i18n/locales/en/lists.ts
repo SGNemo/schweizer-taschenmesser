@@ -65,6 +65,8 @@ export const lists: Strings['lists'] = {
   >,
   note: 'Note (optional)',
   addItem: 'Add item',
+  inBasket: (done: number, total: number) => `${done} of ${total} in the basket`,
+  basketEmpty: 'Nothing in the basket yet',
   placeholder: {
     shopping: 'e.g. 2 milk',
     packing: 'e.g. sun cream',
@@ -129,7 +131,6 @@ export const lists: Strings['lists'] = {
     hot: 'Warm: do not forget sun cream and a hat.',
     cold: 'Cold: pack warm clothes and gloves.',
   },
-  more: 'More',
   suggestionsToggle: (n: number) => `Bought before (${n})`,
   recurringBadge: 'Recurring',
   category: 'Category (optional)',

@@ -248,7 +248,7 @@ test.describe('Karten & Orte', () => {
       // Identity 4.0: the phone's one action is the plus of the bottom bar.
       await expect(page.getByTestId('bottom-plus')).toHaveAccessibleName('Ort eintragen');
       await expect.poll(() => primaryActions(page)).toEqual([]);
-    } else await expect.poll(() => primaryActions(page)).toEqual(['Ort hinzufügen']);
+    } else await expect.poll(() => primaryActions(page)).toEqual(['Ort eintragen']);
     await expect(page.getByRole('button', { name: 'Zu Schloss navigieren' })).toHaveCount(0);
     const placeRow = page.getByRole('listitem').filter({ hasText: 'Schloss' });
     await placeRow.getByRole('button', { name: 'Karten & Orte' }).click();
@@ -259,7 +259,7 @@ test.describe('Karten & Orte', () => {
       // Identity 4.0: the phone's one action is the plus of the bottom bar.
       await expect(page.getByTestId('bottom-plus')).toHaveAccessibleName('Route eintragen');
       await expect.poll(() => primaryActions(page)).toEqual([]);
-    } else await expect.poll(() => primaryActions(page)).toEqual(['Route hinzufügen']);
+    } else await expect.poll(() => primaryActions(page)).toEqual(['Route eintragen']);
     await page.getByRole('button', { name: 'Karte', exact: true }).click();
     await expect(page.getByTestId('tile-map')).toBeVisible();
     expect((await primaryActions(page)).length).toBeLessThanOrEqual(1);
