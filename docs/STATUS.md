@@ -1,6 +1,6 @@
 # Status – Nemo
 
-Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` zeigt darauf). Alles danach liegt auf `develop` (Dev-Preview) und steht in `.changes/` → [CHANGELOG](../CHANGELOG.md). Offene PRs und was auf Sven wartet: [CHATS.md](CHATS.md). Diese Datei hält nur den Stand; Verlauf steht im Changelog, in Git und im Archiv ([bis 2026-11-10](archive/2026-11/STATUS-log-until-2026-11-10.md), [bis 0.3.1](archive/2026-10/STATUS-done-until-0.3.1.md)). Pro PR höchstens eine Zeile, und nur wenn sich der Stand ändert: laufende Runde anpassen oder eine Zeile unter „Abgeschlossene Runden“.
+Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` zeigt darauf). Alles danach liegt auf `develop` (Dev-Preview) und steht in `.changes/` → [CHANGELOG](../CHANGELOG.md). Offene PRs und was auf Sven wartet: [CHATS.md](CHATS.md). Diese Datei hält nur den Stand; Verlauf steht im Changelog, in Git und im Archiv ([bis 2026-11-10](archive/2026-11/STATUS-log-until-2026-11-10.md), [bis 0.3.1](archive/2026-10/STATUS-done-until-0.3.1.md)). Feature-PRs fassen diese Datei nicht an (jeder PR schrieb in dieselben Zeilen, das gab bei jedem Merge einen Konflikt): geändert wird sie nur in einem eigenen `docs(status)`-PR, wenn eine Runde beginnt, endet oder der Stand nachgezogen wird. Was ein PR gebracht hat, steht in seiner Änderungsnotiz und seinem Entscheidungs-Bullet.
 
 ## Nächste eine Sache
 
