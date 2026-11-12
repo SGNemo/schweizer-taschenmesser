@@ -40,7 +40,7 @@ export const focus: Strings['focus'] = {
     searchHistoryHint: 'Search shows what you used last first. The history stays on this device.',
     hideValues: 'Hide amounts',
     hideValuesHint:
-      'Amounts in the balance card show a neutral pattern. A tap reveals them until you leave the view. This device only.',
+      'The large figure in the head of the money pages, its breakdown and the balance card show a neutral pattern. Lists and budgets stay visible. A tap reveals them until you leave the view. This device only.',
     more: 'More settings',
     aids: 'Aids',
     aidsOn: (n: number, total: number) => `${n} of ${total} on`,

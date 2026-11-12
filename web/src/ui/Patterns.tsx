@@ -1,5 +1,5 @@
 /** Small layout building blocks shared by the module pages (headers, filters, lists, forms). */
-import { Children, useEffect, useState, type ReactNode } from 'react';
+import { Children, useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { t } from '@/strings';
 import { useSubmitOnce } from '@/core/forms/submitOnce';
@@ -167,8 +167,25 @@ export function Segmented<T extends string>({
   options: readonly { value: T; label: string }[];
   onChange: (value: T) => void;
 }) {
+  const box = useRef<HTMLDivElement>(null);
+  const labels = options.map((o) => o.label).join('|');
+  // The edge fade of the phone's row says "more to the right", so it is drawn only while the row overflows
+  // (`.segment[data-overflow]`); on a row that fits it faded the last option for nothing.
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const mark = () => {
+      el.dataset.overflow = el.scrollWidth > el.clientWidth + 1 ? 'true' : 'false';
+    };
+    mark();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(mark);
+    ro.observe(el);
+    return () => ro.disconnect();
+    // The labels decide the row's width (a language switch changes them without resizing the box).
+  }, [labels]);
   return (
-    <div className={styles.segment} role="group" aria-label={label}>
+    <div ref={box} className={styles.segment} role="group" aria-label={label}>
       {options.map((o) => (
         <button
           key={o.value}
