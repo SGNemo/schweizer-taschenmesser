@@ -22,8 +22,9 @@ test.describe('Habits (plan group, new module)', () => {
     await card.getByRole('button', { name: '+1 Wasser trinken' }).click();
     await card.getByRole('button', { name: '+1 Wasser trinken' }).click();
     await expect(card.getByText('2 von 8 Gläser')).toBeVisible();
-    // The head ring names the goal too (text, not only colour).
-    await expect(page.getByTestId('habit-rings')).toContainText('Wasser trinken');
+    // The rings row under the head is gone (0b-4b): the row itself names the goal in text, not only by its ring.
+    await expect(card).toContainText('Wasser trinken');
+    await expect(page.getByTestId('habit-rings')).toHaveCount(0);
   });
 
   test('the history view shows the year grid with a legend in words', async ({ page }) => {

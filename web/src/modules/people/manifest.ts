@@ -17,6 +17,7 @@ const manifest: ModuleManifest = {
     hue2: 'violet',
     widget: 'faellig',
     head: 'standard',
+    tabs: true,
     signature: 'avatarRing',
   },
   version: 2,
