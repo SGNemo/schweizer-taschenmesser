@@ -5,7 +5,7 @@ export const maps: Strings['maps'] = {
     name: 'Maps & places',
     description:
       'Places and routes you need often: map, place search, saved routes. Also opens your map app.',
-    quickAdd: 'Maps & places: save a place',
+    quickAdd: 'Maps & places: add a place',
   },
   settings: {
     tileUrl: 'Map tiles (address)',
@@ -46,9 +46,9 @@ export const maps: Strings['maps'] = {
     last: (name: string) => `Last saved: ${name}`,
     pinHint: 'No place saved yet.',
   },
-  widget: { title: 'Places & routes', empty: 'No places or routes yet.', addPlace: 'Save a place' },
+  widget: { title: 'Places & routes', empty: 'No places or routes yet.', addPlace: 'Add a place' },
   place: {
-    titleAdd: 'Save a place',
+    titleAdd: 'Add a place',
     titleEdit: 'Edit place',
     name: 'Name',
     address: 'Address',
@@ -70,7 +70,7 @@ export const maps: Strings['maps'] = {
   },
   modes: { walk: 'On foot', bike: 'Bicycle', car: 'Car', transit: 'Bus & train' },
   route: {
-    titleAdd: 'Save a route',
+    titleAdd: 'Add a route',
     titleEdit: 'Edit route',
     name: 'Name',
     mode: 'Travelling by',

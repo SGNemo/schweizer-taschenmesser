@@ -7028,7 +7028,7 @@ export const de = {
       name: 'Karten & Orte',
       description:
         'Orte und Wege, die du oft brauchst: Karte, Ortssuche, gespeicherte Routen. Öffnet auch deine Karten-App.',
-      quickAdd: 'Karten & Orte: Ort speichern',
+      quickAdd: 'Karten & Orte: Ort eintragen',
     },
     settings: {
       tileUrl: 'Kartenkacheln (Adresse)',
@@ -7072,10 +7072,10 @@ export const de = {
     widget: {
       title: 'Orte & Routen',
       empty: 'Noch keine Orte oder Routen.',
-      addPlace: 'Ort speichern',
+      addPlace: 'Ort eintragen',
     },
     place: {
-      titleAdd: 'Ort speichern',
+      titleAdd: 'Ort eintragen',
       titleEdit: 'Ort bearbeiten',
       name: 'Name',
       address: 'Adresse',
@@ -7097,7 +7097,7 @@ export const de = {
     },
     modes: { walk: 'Zu Fuß', bike: 'Fahrrad', car: 'Auto', transit: 'Bus & Bahn' },
     route: {
-      titleAdd: 'Route speichern',
+      titleAdd: 'Route eintragen',
       titleEdit: 'Route bearbeiten',
       name: 'Name',
       mode: 'Unterwegs mit',
@@ -8294,7 +8294,7 @@ export const de = {
       replan: 'Neu verteilen',
     },
     board: {
-      label: 'Wochenbrett',
+      label: 'Woche',
       freeOf: (free: string, usable: string) => `${free} frei von ${usable}`,
       off: 'frei',
       full: 'voll',
@@ -8320,8 +8320,8 @@ export const de = {
       dayOn: 'Zeit wieder einplanen',
       calendar: 'Aus dem Kalender',
       window: 'Zeitfenster',
-      windowFrom: 'Von',
-      windowTo: 'Bis',
+      windowFrom: 'Zeitfenster von',
+      windowTo: 'Zeitfenster bis',
       windowSet: 'Fenster setzen',
       windowDefault: 'Wie üblich',
       windowLine: (window: string, own: boolean) =>
@@ -8329,8 +8329,8 @@ export const de = {
           ? `Zeitfenster ${window} – nur an diesem Tag.`
           : `Zeitfenster ${window} – wie in den Einstellungen.`,
       noWindow: 'Ohne Zeitfenster: die Dinge des Tages haben keine Uhrzeit.',
-      blockerFrom: 'Von',
-      blockerTo: 'Bis',
+      blockerFrom: 'Blocker von',
+      blockerTo: 'Blocker bis',
     },
     row: {
       part: (k: number, of: number) => `Teil ${k}/${of}`,

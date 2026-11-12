@@ -89,7 +89,7 @@ test.describe('Planer (week board, package 1)', () => {
     const measure = () =>
       page.evaluate(() => {
         const main = document.querySelector('main')!;
-        const week = document.querySelector('[aria-label="Wochenbrett"]')!;
+        const week = document.querySelector('[aria-label="Woche"]')!;
         const rows = Array.from(document.querySelectorAll('[data-testid^="day-"] li'));
         return {
           days: week.querySelectorAll('[data-testid^="week-"]').length,
@@ -712,8 +712,8 @@ test.describe('Planer (time windows, templates – package 5)', () => {
     const sheet = page.getByRole('dialog');
     await expect(sheet).toContainText('Ohne Zeitfenster');
     const form = sheet.getByTestId('day-window');
-    await form.getByLabel('Von').fill('09:00');
-    await form.getByLabel('Bis').fill('12:00');
+    await form.getByLabel('Zeitfenster von').fill('09:00');
+    await form.getByLabel('Zeitfenster bis').fill('12:00');
     await form.getByRole('button', { name: 'Fenster setzen' }).click();
     await expect(sheet).toContainText('Zeitfenster 09:00–12:00 – nur an diesem Tag.');
     // Minutes stay the truth: the window changes nothing about what is planned.
