@@ -56,7 +56,7 @@ function useChangedCounts(
 function ModuleHead({ manifest }: { manifest: ModuleManifest }) {
   const o = tSettings2.use().modulePage;
   const v3 = tSettingsV3.use();
-  // Phone: the eyebrow is the way back to the list of modules (no back row above the page).
+  // Phone: the button beside the title leads back to the list of modules (no back row above the page).
   const wide = useMediaQuery(WIDE_QUERY);
   return (
     <SettingsTitle
@@ -229,7 +229,7 @@ export function ModuleList() {
         {o.listTitle}
       </h2>
       <p className={styles.listHint}>{o.listHint}</p>
-      <ListSurface className={styles.list}>
+      <ListSurface>
         {manifests.map((m) => (
           <li key={m.id}>
             <Link

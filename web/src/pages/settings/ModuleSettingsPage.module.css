@@ -62,8 +62,9 @@
 }
 /* The modules are the rows of one raised surface (`ListSurface`, Identity 4.0): no frame, a hairline between the
    rows, the hue in the plate alone. One column on every width: a list to read down, not a wall of tiles. */
-.list {
-  margin-top: var(--space-3);
+/* The gap above the list is the hint's (the surface sets its own margin; two modules would race for it). */
+.listHint {
+  margin-bottom: var(--space-3);
 }
 /* One line per module on the desktop (44 px: plate, name, its state at the end); on a narrow column the state goes
    under the name. */

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import type { AreaId, ModuleHue } from '@/core/modules/types';
+import { tSettingsV3 } from '@/strings.settingsV3';
 import { HuePlate, Icon, type IconName } from '@/ui';
 import styles from './SettingsTitle.module.css';
 
@@ -40,6 +41,8 @@ export function SettingsTitle({
   back,
   testId,
 }: SettingsTitleProps) {
+  // The button shows a chevron only: its name says that it leads back, and where to ("Zurück: Einstellungen").
+  const backTo = tSettingsV3.use().backTo;
   return (
     <header
       className={styles.head}
@@ -50,7 +53,7 @@ export function SettingsTitle({
     >
       <div className={styles.row}>
         {back ? (
-          <Link to={back.to} className={styles.back} aria-label={back.label}>
+          <Link to={back.to} className={styles.back} aria-label={backTo(back.label)}>
             <Icon name="chevronLeft" />
           </Link>
         ) : (

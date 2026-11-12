@@ -686,7 +686,7 @@ export function CategoryPage() {
       onChange={noteUse}
       onClick={noteUse}
     >
-      {/* Phone: the way back is the eyebrow of the title line (`SettingsHead`), no row of its own. */}
+      {/* Phone: the way back is the button beside the title (`SettingsHead`), no row of its own. */}
       {wide ? <Breadcrumb items={crumbsFor(category, current)} /> : null}
       {wide ? <SubNav id={category} /> : null}
       <TabBody key={category}>

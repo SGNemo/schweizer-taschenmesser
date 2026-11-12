@@ -43,6 +43,7 @@ export function SettingsHead() {
         icon="settings"
         eyebrow={v3.eyebrow}
         title={t.settings.title}
+        back={wide ? undefined : { to: '/settings', label: t.settings.back }}
         testId="settings-head-missing"
       />
     );
