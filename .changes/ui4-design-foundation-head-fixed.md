@@ -9,6 +9,6 @@ en: With "Hide amounts" on, the page title stays readable on the phone, and the 
 type: fixed
 area: ui
 breaking: false
-de: Am Handy ist die letzte Auswahl einer Umschaltleiste nicht mehr ausgeblichen, leere Seiten zeigen nur noch einen gefüllten Knopf, und das gewählte Ziel der Schnellerfassung ist ruhig statt orange markiert.
+de: Am Handy ist die letzte Auswahl einer Umschaltleiste nicht mehr ausgeblichen, leere Seiten zeigen nur einen gefüllten Knopf, und das Ziel der Schnellerfassung ist ruhig statt orange markiert.
 en: On the phone the last option of a switch row is no longer faded, empty pages show only one filled button, and the chosen target of quick capture is marked calmly instead of in orange.
 ---
