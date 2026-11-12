@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 import { measurePage, surfaceMetrics } from '../../scripts/lib/stimulusBudget';
-import { openToolbox } from '../helpers';
+import { pickTool } from '../helpers';
 import { test } from './helpers';
 import { DESKTOP, openPage, PHONE, startSeeded } from './guards';
 
@@ -126,31 +126,23 @@ async function check(page: Page, phone: boolean) {
   );
   await expect(page.locator('main h1')).toHaveCount(1);
 
-  // Every tool in the panel: no shadow; the only frame is the persona's stamp.
+  // Every tool that is on, in the panel: no shadow; the only frame is the persona's stamp.
+  const names = await page
+    .locator('main [data-testid^="tool-"]')
+    .filter({ has: page.locator('[role="switch"][aria-checked="true"]') })
+    .locator('[data-card-name]')
+    .allInnerTexts();
+  expect(names.length, 'tools that are on').toBeGreaterThanOrEqual(10);
   await page.goto('/');
-  const dialog = await openToolbox(page);
-  const names = await dialog
-    .getByRole('navigation')
-    .first()
-    .getByRole('button')
-    .evaluateAll((els) =>
-      els.map((e) => (e.getAttribute('aria-label') ?? (e as HTMLElement).innerText).trim()),
-    );
-  let opened = 0;
-  for (let i = 0; i < names.length; i++) {
-    const list = await openToolbox(page);
-    const button = list.getByRole('navigation').first().getByRole('button').nth(i);
-    if (!(await button.isVisible().catch(() => false))) continue;
-    await button.click();
-    await page.waitForTimeout(350);
+  for (const name of names) {
+    await pickTool(page, name.trim());
+    await page.waitForTimeout(300);
     const p = await page.evaluate(readPanel);
-    expect.soft(p.shadows, `${names[i]}: shadows in the panel`).toEqual([]);
+    expect.soft(p.shadows, `${name}: shadows in the panel`).toEqual([]);
     expect
-      .soft(p.frames.length, `${names[i]}: frames in the panel (${p.frames.join(', ')})`)
+      .soft(p.frames.length, `${name}: frames in the panel (${p.frames.join(', ')})`)
       .toBeLessThanOrEqual(1);
-    opened += 1;
   }
-  expect(opened, 'tools opened in the panel').toBeGreaterThanOrEqual(10);
 }
 
 test.describe('tools on tone steps (Identity 4.0, package 0b-E part E-2)', () => {
