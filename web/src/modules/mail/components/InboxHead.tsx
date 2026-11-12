@@ -9,7 +9,7 @@ export function InboxFigure({ unread }: { unread: number }) {
   if (unread <= 0) return null;
   return (
     <HeroFigure
-      label={t.mail.head.inbox}
+      label={t.mail.meta.name}
       value={String(unread)}
       unit={t.mail.head.unreadUnit}
       detail={t.mail.head.inbox}

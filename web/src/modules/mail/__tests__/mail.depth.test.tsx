@@ -10,7 +10,7 @@ describe('InboxFigure (head figure)', () => {
     const figure = screen.getByTestId('mail-stamp');
     expect(figure).toHaveTextContent('3');
     expect(figure).toHaveTextContent('ungelesen');
-    expect(figure).toHaveTextContent('Posteingang');
+    expect(screen.getByText('Posteingang')).toBeInTheDocument();
   });
 
   it('draws no figure and no zero when nothing is unread', () => {
