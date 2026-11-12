@@ -55,7 +55,7 @@ export const people: Strings['people'] = {
     string
   >,
   search: 'Search people',
-  empty: 'No people yet. Add birthdays and gift ideas.',
+  empty: 'No people yet.',
   emptyFiltered: 'Nothing found.',
   back: 'All people',
   deleted: 'Person deleted.',

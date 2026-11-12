@@ -4549,7 +4549,7 @@ export const de = {
       string
     >,
     search: 'Personen durchsuchen',
-    empty: 'Noch keine Personen. Lege Geburtstage und Geschenkideen an.',
+    empty: 'Noch keine Personen.',
     emptyFiltered: 'Nichts gefunden.',
     back: 'Alle Personen',
     deleted: 'Person gelöscht.',
@@ -7978,17 +7978,17 @@ export const de = {
           'Läuft die Zeit und du warst so lange nicht am Gerät, fragt die App nach – sie ändert nie etwas von selbst.',
       },
     },
-    /** The noun on the phone's plus ("Zeiteintrag eintragen") and the detail panel of the wide page. */
-    entryShort: 'Zeiteintrag',
+    /** The noun on the phone's plus ("Zeit eintragen") and the detail panel of the wide page. */
+    entryShort: 'Zeit',
     detail: {
       label: 'Zeiteintrag im Detail',
-      time: 'Zeit',
+      time: 'Von – bis',
       breakTime: 'Pause',
-      jobToday: 'Projekt heute gesamt',
+      jobToday: 'Projekt heute',
     },
     title: 'Zeiterfassung',
     tabs: { label: 'Ansicht', today: 'Heute', report: 'Auswertung', jobs: 'Projekte' },
-    add: 'Zeiteintrag eintragen',
+    add: 'Zeit eintragen',
     edit: 'Eintrag bearbeiten',
     start: 'Start',
     stop: 'Stopp',

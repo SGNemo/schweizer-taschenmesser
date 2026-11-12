@@ -41,7 +41,7 @@ describe('Time tracking page', () => {
     expect(step.className).toMatch(/primary/);
     expect(screen.queryByText('Nichts läuft.')).toBeNull();
     expect(screen.queryByText('Heute noch keine Zeit erfasst.')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Zeiteintrag eintragen' }).className).not.toMatch(
+    expect(screen.getByRole('button', { name: 'Zeit eintragen' }).className).not.toMatch(
       /primary/,
     );
   });

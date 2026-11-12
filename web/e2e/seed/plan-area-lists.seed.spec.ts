@@ -75,7 +75,7 @@ for (const theme of process.env.PLAN_SHOTS ? (['light', 'dark'] as const) : (['l
         console.log(`plan lists phone ${theme}: ${JSON.stringify(seen)}`);
         // Zeiterfassung: the plus adds a past entry, "Start" stays the page's own button.
         await openPage(page, '/timetrack');
-        await expect(page.getByTestId('bottom-plus')).toHaveAccessibleName('Zeiteintrag eintragen');
+        await expect(page.getByTestId('bottom-plus')).toHaveAccessibleName('Zeit eintragen');
       });
     });
   });

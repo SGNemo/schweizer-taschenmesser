@@ -19,7 +19,7 @@ export const habits: Strings['habits'] = {
   emptyHint:
     'Start small: for example "Drink water" with a number and a reminder in a time window.',
   add: 'Add habit',
-  addFirst: 'Add first habit',
+  addFirst: 'Add your first habit',
   edit: 'Edit habit',
   form: {
     name: 'Name',
