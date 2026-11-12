@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { now } from '@/core/time/now';
+import { Button, Icon } from '@/ui';
 import { HeroSlot, Signature } from '@/ui/identity';
 import { t } from '@/strings';
 import { getAutoLockDeadline } from '../autolock';
+import { lockVault } from '../vault';
 import styles from './AccountsHead.module.css';
 
 /** Whole minutes (rounded up) until the idle lock fires; undefined when it is not armed. */
@@ -27,7 +29,8 @@ function useMinutesToLock(active: boolean): number | undefined {
 
 /**
  * Head of the vault (`tresor`, identity v3.1): the door from the signature library at slot size S, the state beside
- * it in the same slot as plain text (one line on the phone too) and, while unlocked, when the idle lock fires. Shows nothing about the content.
+ * it in the same slot as plain text (one line on the phone too) and, while unlocked, when the idle lock fires and the
+ * button that locks at once. Shows nothing about the content.
  */
 export function AccountsHead({ unlocked }: { unlocked: boolean }) {
   const min = useMinutesToLock(unlocked);
@@ -42,6 +45,13 @@ export function AccountsHead({ unlocked }: { unlocked: boolean }) {
           <span className={styles.sub}>{t.accounts.head.autoLock(min)}</span>
         ) : null}
       </p>
+      {/* Locking is one click from anywhere on the page, beside the state it changes: never inside a menu. */}
+      {unlocked ? (
+        <Button size="sm" onClick={lockVault}>
+          <Icon name="lock" size={16} />
+          {t.accounts.lock.lockNow}
+        </Button>
+      ) : null}
     </HeroSlot>
   );
 }

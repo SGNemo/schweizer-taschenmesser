@@ -65,6 +65,8 @@ export const lists: Strings['lists'] = {
   >,
   note: 'Note (optional)',
   addItem: 'Add item',
+  short: 'Item',
+  openOf: (open: number, total: number) => `${open} of ${total} open`,
   placeholder: {
     shopping: 'e.g. 2 milk',
     packing: 'e.g. sun cream',

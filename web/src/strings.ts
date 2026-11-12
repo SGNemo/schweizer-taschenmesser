@@ -4399,6 +4399,7 @@ export const de = {
     add: 'Vorrat hinzufügen',
     edit: 'Vorrat bearbeiten',
     empty: 'Noch keine Vorräte. Lege an, was im Kühlschrank oder Vorratsschrank steht.',
+    addFirst: 'Ersten Vorrat eintragen',
     name: 'Name',
     place: 'Ort',
     places: {
@@ -5272,6 +5273,8 @@ export const de = {
     >,
     note: 'Notiz (optional)',
     addItem: 'Eintrag hinzufügen',
+    short: 'Eintrag',
+    openOf: (open: number, total: number) => `${open} von ${total} offen`,
     placeholder: {
       shopping: 'z. B. 2 Milch',
       packing: 'z. B. Sonnencreme',
@@ -5429,7 +5432,13 @@ export const de = {
     emptyFiltered: 'Nichts gefunden.',
     widgetEmpty: 'Keine Fristen in Sicht.',
     figureLabel: 'Ablage',
-    stateTabs: 'Nach Zustand filtern',
+    stateTabs: 'Ansichten',
+    stateTab: (label: string, n: number) => `${label} ${n}`,
+    addFirst: 'Erste Unterlage eintragen',
+    detail: {
+      label: 'Unterlage',
+      bare: 'Noch ohne Anbieter, Datum und Datei.',
+    },
     stateGroups: {
       expired: 'Abgelaufen',
       due: 'Frist in Sicht',
@@ -5485,6 +5494,7 @@ export const de = {
       },
     },
     pickEntry: 'Zugang auswählen',
+    addFirst: 'Ersten Zugang eintragen',
     detail: 'Details',
     title: 'Passwörter',
     setup: {
@@ -8485,6 +8495,8 @@ export const de = {
       today: 'Heute',
     },
     empty: {
+      trainingAdd: 'Erste Einheit eintragen',
+      foodAdd: 'Erste Mahlzeit eintragen',
       training: 'Noch nichts eingetragen. Eine Einheit reicht.',
       trainingHint: 'Auch in der Schnellerfassung: „training Bankdrücken 3×8 60“.',
       food: 'Noch keine Mahlzeit eingetragen.',

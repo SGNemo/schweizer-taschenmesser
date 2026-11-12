@@ -32,6 +32,7 @@ export const accounts: Strings['accounts'] = {
     },
   },
   pickEntry: 'Choose a login',
+  addFirst: 'Add your first login',
   detail: 'Details',
   title: 'Passwords',
   setup: {

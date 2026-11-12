@@ -16,7 +16,7 @@ import {
   ItemRow,
   PageAction,
   PageHeader,
-  Segmented,
+  Tabs,
   useOpenParam,
 } from '@/ui';
 import { HeroFigure, HeroSlot } from '@/ui/identity';
@@ -24,7 +24,6 @@ import { GoalDialog } from '../components/GoalDialog';
 import { MealEditor, type MealTarget } from '../components/MealEditor';
 import { SessionEditor, type SessionTarget } from '../components/SessionEditor';
 import { ExercisePicto } from '../components/ExercisePicto';
-import { WeekPlates } from '../components/WeekPlates';
 import { WeekView } from '../components/WeekView';
 import { patternOf } from '../catalog';
 import {
@@ -51,7 +50,6 @@ import {
 } from '../logic';
 import { mealRepo, sessionRepo } from '../repo';
 import type { Session } from '../schema';
-import styles from '../fitness.module.css';
 
 type View = 'training' | 'food' | 'week';
 /** How far back the lists and the week view go; older entries stay stored. */
@@ -167,6 +165,8 @@ export default function FitnessPage() {
     await undoableWithToast(done, done, () => sessionRepo.create(repeatSession(last, day)));
   }
 
+  const noSessions = !!sessions && sessions.length === 0;
+  const noMeals = !!meals && meals.length === 0;
   const views: readonly View[] = prefs?.nutrition
     ? ['training', 'food', 'week']
     : ['training', 'week'];
@@ -174,10 +174,13 @@ export default function FitnessPage() {
     <>
       <PageHeader
         title={t.fitness.meta.name}
+        // Each view starts with a short row at the left (a group heading, the week switch): the phone's "⋯" menu
+        // lies beside it. An empty view keeps the menu in its own row.
+        besideContent={view === 'week' || (view === 'food' ? !noMeals : !noSessions)}
         views={
           // The tabs depend on the preferences („Essen“ only with calorie tracking), so they wait for them.
           prefs && view ? (
-            <Segmented
+            <Tabs
               label={t.fitness.tabs.label}
               value={view}
               options={views.map((v) => ({ value: v, label: t.fitness.tabs[v] }))}
@@ -187,18 +190,42 @@ export default function FitnessPage() {
         }
       >
         {!view ? null : view !== 'food' ? (
-          <PageAction short={t.nav.plusThings.session} onClick={() => setSession('new')}>
+          <PageAction
+            short={t.nav.plusThings.session}
+            variant={view === 'training' && noSessions ? 'secondary' : 'primary'}
+            onClick={() => setSession('new')}
+          >
             <Icon name="plus" size={18} />
             {t.fitness.addSession}
           </PageAction>
         ) : (
-          <PageAction short={t.nav.plusThings.meal} onClick={() => setMeal('new')}>
+          <PageAction
+            short={t.nav.plusThings.meal}
+            variant={noMeals ? 'secondary' : 'primary'}
+            onClick={() => setMeal('new')}
+          >
             <Icon name="plus" size={18} />
             {t.fitness.addMeal}
           </PageAction>
         )}
-        {/* ⋯: Importieren (Strong, Hevy, Cronometer) and the setup, as on the other module pages. */}
-        <StartDataMenu moduleId="fitness" />
+        {/* ⋯: what is occasional (repeat the last session, the calorie goal), then Importieren and the setup. */}
+        <StartDataMenu
+          moduleId="fitness"
+          items={[
+            ...(view !== 'food' && canRepeat && last
+              ? [
+                  {
+                    id: 'repeat',
+                    label: t.fitness.repeat(sessionTitle(last)),
+                    onSelect: () => void repeatLast(),
+                  },
+                ]
+              : []),
+            ...(view === 'food'
+              ? [{ id: 'goal', label: t.fitness.goal.open, onSelect: () => setGoalOpen(true) }]
+              : []),
+          ]}
+        />
       </PageHeader>
       {sessions && meals && view && view !== 'week' ? (
         <HeroSlot area="figure">
@@ -221,12 +248,6 @@ export default function FitnessPage() {
           )}
         </HeroSlot>
       ) : null}
-      {sessions && view && view !== 'week' ? (
-        <HeroSlot area="signature">
-          <WeekPlates day={day} weekStart={weekStart} sessions={sessions} />
-        </HeroSlot>
-      ) : null}
-
       {!prefs || !view ? null : view === 'week' ? (
         <WeekView
           day={day}
@@ -238,17 +259,12 @@ export default function FitnessPage() {
         />
       ) : view === 'training' ? (
         <>
-          {canRepeat && last ? (
-            <div className={styles.toolbar}>
-              <Button variant="secondary" onClick={() => void repeatLast()}>
-                <Icon name="repeat" size={18} />
-                {t.fitness.repeat(sessionTitle(last))}
-              </Button>
-            </div>
-          ) : null}
-          {sessions && sessions.length === 0 ? (
+          {noSessions ? (
             <EmptyState title={t.fitness.empty.training} testId="fitness-empty">
               <p>{t.fitness.empty.trainingHint}</p>
+              <Button variant="primary" onClick={() => setSession('new')}>
+                {t.fitness.empty.trainingAdd}
+              </Button>
             </EmptyState>
           ) : null}
           {sessions && sessions.length > 0 ? (
@@ -289,15 +305,12 @@ export default function FitnessPage() {
         </>
       ) : (
         <>
-          <div className={styles.toolbar}>
-            <Button variant="secondary" onClick={() => setGoalOpen(true)}>
-              <Icon name="target" size={18} />
-              {t.fitness.goal.open}
-            </Button>
-          </div>
-          {meals && meals.length === 0 ? (
+          {noMeals ? (
             <EmptyState title={t.fitness.empty.food} testId="fitness-food-empty">
               <p>{t.fitness.empty.foodHint}</p>
+              <Button variant="primary" onClick={() => setMeal('new')}>
+                {t.fitness.empty.foodAdd}
+              </Button>
             </EmptyState>
           ) : null}
           {meals && meals.length > 0 ? (

@@ -1,25 +1,29 @@
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  align-items: flex-end;
-  margin: var(--space-4) 0;
-}
+/* The add field is the last row of the list: no label, a quiet button, the list's own surface. */
 .add {
   display: flex;
-  flex: 1 1 18rem;
   gap: var(--space-2);
-  align-items: flex-end;
+  align-items: center;
+  min-height: var(--row-h);
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--border);
 }
 .add > :first-child {
   flex: 1;
   min-width: 0;
 }
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  align-items: center;
+.add > :nth-child(2):not(button) {
+  flex: 0 1 10rem;
+  min-width: 0;
+}
+/* A packing list or checklist: its rows and the add row on one raised tone. */
+.sheet {
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  overflow: hidden;
+}
+.sheet ul {
+  background: transparent;
+  box-shadow: none;
 }
 .progress {
   margin-bottom: var(--space-4);
@@ -44,16 +48,12 @@
   gap: var(--space-2);
   align-items: center;
 }
-.sums {
-  margin: 0 0 var(--space-3);
-  font-variant-numeric: var(--font-num);
-}
 .suggest {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
   align-items: center;
-  margin-bottom: var(--space-3);
+  margin-top: var(--space-3);
 }
 
 /* The shopping list is a receipt: paper under a hairline, a jagged lower edge, prices in mono. */
@@ -61,7 +61,7 @@
   --zig: 0.5rem;
   padding: var(--space-2) var(--space-3) calc(var(--space-3) + var(--zig));
   border-top: 1px solid var(--border);
-  background: var(--surface);
+  background: var(--surface-raised);
   -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% /
     var(--zig) 100%;
   mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / var(--zig)

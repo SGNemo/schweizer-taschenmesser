@@ -31,6 +31,8 @@ export const fitness: Strings['fitness'] = {
     today: 'Today',
   },
   empty: {
+    trainingAdd: 'Log your first session',
+    foodAdd: 'Log your first meal',
     training: 'Nothing logged yet. One session is enough.',
     trainingHint: 'Quick capture works too: “workout bench press 3×8 60”.',
     food: 'No meal logged yet.',

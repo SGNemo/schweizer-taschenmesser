@@ -89,7 +89,7 @@ export function StrengthMeter({
         aria-valuenow={score}
         aria-valuetext={t.accounts.strength.levels[score]}
       >
-        <div className={styles.meterFill} style={{ width: `${(score + 1) * 20}%` }} />
+        <div className={styles.meterFill} style={{ ['--fill' as string]: (score + 1) / 5 }} />
       </div>
       {warningText ? <span>{warningText}</span> : null}
     </div>

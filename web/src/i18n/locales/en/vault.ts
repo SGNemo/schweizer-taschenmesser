@@ -67,7 +67,13 @@ export const vault: Strings['vault'] = {
   emptyFiltered: 'Nothing found.',
   widgetEmpty: 'No deadlines in sight.',
   figureLabel: 'Filing',
-  stateTabs: 'Filter by state',
+  stateTabs: 'Views',
+  stateTab: (label: string, n: number) => `${label} ${n}`,
+  addFirst: 'Add your first document',
+  detail: {
+    label: 'Document',
+    bare: 'No provider, date or file yet.',
+  },
   stateGroups: {
     expired: 'Expired',
     due: 'Deadline ahead',

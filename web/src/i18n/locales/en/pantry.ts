@@ -21,6 +21,7 @@ export const pantry: Strings['pantry'] = {
   add: 'Add pantry item',
   edit: 'Edit pantry item',
   empty: 'No pantry items yet. Add what’s in your fridge or cupboard.',
+  addFirst: 'Add your first item',
   name: 'Name',
   place: 'Place',
   places: {

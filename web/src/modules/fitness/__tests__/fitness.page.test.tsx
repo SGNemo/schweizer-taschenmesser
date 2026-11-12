@@ -55,7 +55,7 @@ describe('fitness page while the settings are still loading', () => {
     slowSettings();
     const page = watch('/fitness?view=food');
     expect(
-      await screen.findByRole('button', { name: 'Training', pressed: true }),
+      await screen.findByRole('button', { name: 'Training', current: 'page' }),
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Essen' })).toBeNull();
     expect(page.shown('Essen')).toBe(false);
@@ -65,7 +65,9 @@ describe('fitness page while the settings are still loading', () => {
   it('opens the food view directly when calorie tracking is on', async () => {
     slowSettings();
     const page = watch('/fitness?view=food');
-    expect(await screen.findByRole('button', { name: 'Essen', pressed: true })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('button', { name: 'Essen', current: 'page' }),
+    ).toBeInTheDocument();
     expect(await screen.findByText('Brot')).toBeInTheDocument();
     expect(page.shown('Kniebeuge')).toBe(false);
   });
