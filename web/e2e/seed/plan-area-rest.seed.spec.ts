@@ -52,6 +52,22 @@ test.describe('plan area, Planer and Karten on tone steps (package 0b-4b, part 2
       expect(field!.y).toBeGreaterThan(week!.y + week!.height);
     });
 
+    test('Wetter: the stage draws its default signature without a surface (design check K7)', async ({
+      page,
+    }) => {
+      await startSeeded(page);
+      await openPage(page, '/weather');
+      const mark = page.locator(
+        '[data-testid="module-signature"][data-default="true"] [data-signature]',
+      );
+      await expect(mark).toBeVisible();
+      const drawn = await mark.evaluate((el) => {
+        const s = getComputedStyle(el);
+        return { background: s.backgroundColor, shadow: s.boxShadow };
+      });
+      expect(drawn).toEqual({ background: 'rgba(0, 0, 0, 0)', shadow: 'none' });
+    });
+
     test('Karten: an empty list of routes offers its one step', async ({ page }) => {
       await startSeeded(page);
       await openPage(page, '/maps?view=routes');

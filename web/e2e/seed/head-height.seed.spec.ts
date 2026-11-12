@@ -223,7 +223,8 @@ test.describe('weather stage with weather data (K3)', () => {
           const sun = document
             .querySelector('[data-testid="module-frame"] [data-sky] span')
             ?.getBoundingClientRect();
-          if (!row || !sun || row.height === 0 || sun.height === 0) return false;
+          if (!sun || sun.height === 0) return 'no sun';
+          if (!row || row.height === 0) return 'no module row';
           return !(
             sun.bottom <= row.top ||
             sun.top >= row.bottom ||
@@ -237,7 +238,8 @@ test.describe('weather stage with weather data (K3)', () => {
             path: join(SHOTS, `${phone ? 'phone' : 'desktop'}-weather-data.png`),
           });
         }
-        expect(overlap, 'the module row lies across the sun').toBe(false);
+        // The phone has a module row: both must be found, or the check says nothing. Desktop has none.
+        expect(overlap, 'the module row lies across the sun').toBe(phone ? false : 'no module row');
         console.log(`weather stage with data ${phone ? 'phone' : 'desktop'}: ${head?.height}`);
       });
     });

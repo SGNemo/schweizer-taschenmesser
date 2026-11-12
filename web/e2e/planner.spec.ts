@@ -66,7 +66,7 @@ async function day(page: Page, date: string) {
 }
 
 test.describe('Planer (week board, package 1)', () => {
-  // The board tests read seven columns side by side; the phone shows one day (its own test below).
+  // These tests read the week list with the day panel beside it; the phone shows the strip (its own test below).
   test.beforeEach(({ isMobile }, info) => {
     test.skip(isMobile && !info.title.startsWith('phone:'), 'wide board only');
   });
@@ -151,7 +151,7 @@ test.describe('Planer (week board, package 1)', () => {
       });
     await expect(today(page).locator('li span[title]')).toHaveCount(3);
     await expect.poll(broken).toEqual([]);
-    // Also between the two: below 95rem of page width the board stays at four a row.
+    // Also at the widths between: the panel is narrower there.
     for (const width of [1600, 1440, 1280]) {
       await page.setViewportSize({ width, height: 900 });
       await expect.poll(broken).toEqual([]);

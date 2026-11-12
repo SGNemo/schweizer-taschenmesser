@@ -719,7 +719,7 @@ export default function PlannerPage() {
     <>
       <PageHeader title={t.planner.title} />
       {/* U01: the figure has no caps label, the frame's placeholder for a `kennzahl` head has one. Until the board is
-          read the page holds the row itself, in the figure's own shape, so the entry row below never moves. */}
+          read the page holds the row itself, in the figure's own shape, so the head keeps its height. */}
       <HeroSlot area="figure">
         {todayDay ? (
           <HeroFigure value={headValue} detail={headDetail} type="thin" testId="planner-head" />

@@ -96,9 +96,7 @@
   accent-color: var(--module-color);
 }
 
-/* N01: a board column is ~210 px at 1920. The row gives its title the room – slim gap and padding, a smaller box,
-   no 10 rem floor on the main button, the ⋯ menu floats over the row end on hover devices – and a title takes at
-   most two lines, broken between words; a word wider than the column ends in „…“ instead of breaking inside. */
+/* The minutes of a row: figures in the meta line. */
 .minutes {
   color: var(--text-3);
   font-size: var(--text-meta);
