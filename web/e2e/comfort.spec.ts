@@ -48,8 +48,9 @@ test('rescheduling an appointment: open, "Morgen", save = 3 clicks', async ({ pa
     .first()
     .click(); // click 1: open
   await page.getByRole('dialog').getByRole('button', { name: 'Morgen', exact: true }).click(); // click 2
+  // The date field writes the app's format (`DayField`).
   await expect(page.getByRole('dialog').getByLabel('Datum', { exact: true })).toHaveValue(
-    '2026-09-30',
+    '30.09.2026',
   );
   await save(page); // click 3
   await ready(page, '/calendar?view=day&date=2026-09-30');

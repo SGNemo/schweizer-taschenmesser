@@ -173,6 +173,13 @@ test.describe('click paths: one click, a title, Enter', () => {
       expect(await visibleFields(page), 'visible fields of a new appointment').toBeLessThanOrEqual(
         5,
       );
+      // The day is written in the app's format and has a row of its own: nothing of it is cut.
+      const dayField = dialog.getByLabel('Datum', { exact: true });
+      await expect(dayField).toHaveValue('29.09.2026');
+      expect(
+        await dayField.evaluate((el: HTMLInputElement) => el.scrollWidth <= el.clientWidth),
+        'the date fits its field',
+      ).toBe(true);
       // Every field open: the sheet is longer than the screen now.
       await dialog.getByRole('button', { name: 'Mehr Felder anzeigen' }).tap();
       await expect(dialog.getByRole('textbox', { name: 'Ort' })).toBeVisible();

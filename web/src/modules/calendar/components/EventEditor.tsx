@@ -22,6 +22,7 @@ import {
   Button,
   Checkbox,
   DateChips,
+  DayField,
   Dialog,
   FormActions,
   Icon,
@@ -29,6 +30,7 @@ import {
   Switch,
   TextArea,
   TextField,
+  TimeField,
   patternStyles,
   useFormDraft,
 } from '@/ui';
@@ -246,7 +248,6 @@ function Form({
               key={`${s.title}|${s.startTime}|${s.endTime}`}
               variant="secondary"
               className={styles.recentChip}
-              aria-label={`${s.title} ${s.startTime}–${s.endTime}`}
               title={s.title}
               onClick={() => {
                 setTitle(s.title);
@@ -255,7 +256,8 @@ function Form({
               }}
             >
               {/* One title line with an ellipsis, the time as a meta line below (U27a). */}
-              <span className={styles.recentTitle}>{s.title}</span>
+              {/* The chip's name is its content (WCAG 2.5.3): title, a space, the time. */}
+              <span className={styles.recentTitle}>{s.title}</span>{' '}
               <span className={styles.recentTime}>{`${s.startTime}–${s.endTime}`}</span>
             </Button>
           ))}
@@ -270,28 +272,15 @@ function Form({
       />
       {reminder ? null : <Switch label={t.calendar.allDay} checked={allDay} onChange={setAllDay} />}
       <div className={styles.split}>
-        <TextField
-          label={t.form.date}
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          required
-        />
+        {/* Day and time in the app's format (`DayField`/`TimeField`); on the phone the day has a row of its own. */}
+        <div className={styles.splitDay}>
+          <DayField label={t.form.date} value={startDate} onChange={setStartDate} required />
+        </div>
         {allDay ? null : (
-          <TextField
-            label={t.calendar.start}
-            type="time"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-          />
+          <TimeField label={t.calendar.start} value={startTime} onChange={setStartTime} />
         )}
         {allDay || reminder ? null : (
-          <TextField
-            label={t.calendar.end}
-            type="time"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-          />
+          <TimeField label={t.calendar.end} value={endTime} onChange={setEndTime} />
         )}
       </div>
       <DateChips
@@ -411,11 +400,10 @@ function Form({
         ) : null}
         {reminder ? null : (
           <div className={styles.split}>
-            <TextField
+            <DayField
               label={`${t.calendar.end} (${t.form.date})`}
-              type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={setEndDate}
             />
           </div>
         )}

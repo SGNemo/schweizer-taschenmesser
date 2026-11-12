@@ -416,10 +416,9 @@ button.recentChip {
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  flex: 1 1 0;
+  /* Two per row, so a title has room before it is cut (four in a row left about 90 px each on the phone). */
+  flex: 1 1 calc(50% - var(--space-2));
   gap: 0;
-  max-width: 14rem;
-  /* Room for the time; a narrow dialog wraps the chips to a second row instead of squeezing them. */
   min-width: 7rem;
   padding: var(--space-1) var(--space-3);
 }
@@ -447,6 +446,15 @@ button.recentChip {
 .split > * {
   flex: 1;
   min-width: 0;
+}
+/* Phone: the day takes a row of its own, start and end share the next (three fields of 113 px cut the date). */
+@media (max-width: 899px) {
+  .split {
+    flex-wrap: wrap;
+  }
+  .splitDay {
+    flex: 1 1 100%;
+  }
 }
 .error {
   color: var(--danger);

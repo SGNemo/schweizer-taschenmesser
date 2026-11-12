@@ -99,6 +99,13 @@
   background: color-mix(in srgb, var(--module-color) 8%, var(--surface));
   color: var(--accent-contrast);
   cursor: pointer;
+  position: relative;
+}
+/* 24 px to look at, 44 px to hit (the rule "touch ≥ 44 px"): the area around the mark belongs to the tick. */
+.check::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
 }
 .check::after {
   content: '';

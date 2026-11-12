@@ -1811,7 +1811,7 @@ export const de = {
       today: 'Heute frei',
       rest: 'Heute nichts mehr',
       next: (when: string, title: string) => `Als Nächstes: ${when} · ${title}`,
-      none: 'In den nächsten zwei Wochen ist nichts eingetragen.',
+      none: 'Zwei Wochen frei.',
     },
     endsAt: (time: string) => `bis ${time}`,
     recent: 'Wie zuletzt',
