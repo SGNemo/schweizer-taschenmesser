@@ -40,7 +40,7 @@
   min-width: 0;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
-  border: 1px solid var(--border);
+  background: var(--surface-raised);
 }
 .fact dt {
   color: var(--text-muted);
@@ -70,7 +70,7 @@
   font-weight: var(--weight-semibold);
 }
 .choicesFrame {
-  border: 1px solid var(--border);
+  background: var(--surface-raised);
   border-radius: var(--radius-md);
   overflow: hidden;
 }

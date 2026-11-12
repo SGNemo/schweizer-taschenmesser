@@ -75,19 +75,29 @@ function ProfileSwitch() {
   );
 }
 
-/** One row of switches at the top of Settings: theme, density, reading aid without opening a category. */
+/**
+ * The quick switches of the settings start page: theme, density, reading aid, profile and "Ruhe" without opening a
+ * category. One named group on a raised tone (Identity 4.0); it is on `/settings` only, each switch has its own row
+ * in a tab and a command in the palette.
+ */
 export function QuickBar() {
+  const title = tComfort.use().quick.title;
   return (
     <section
       className={styles.quick}
-      aria-label={tComfort.get().quick.title}
+      aria-labelledby="settings-quick-title"
       data-testid="quick-bar"
     >
-      {QUICK_SETTINGS.filter((q) => IN_BAR.includes(q.id)).map((q) => (
-        <QuickSwitch key={q.id} setting={q} />
-      ))}
-      <ProfileSwitch />
-      <MuteSwitch />
+      <h2 id="settings-quick-title" className={styles.quickTitle}>
+        {title}
+      </h2>
+      <div className={styles.quickItems}>
+        {QUICK_SETTINGS.filter((q) => IN_BAR.includes(q.id)).map((q) => (
+          <QuickSwitch key={q.id} setting={q} />
+        ))}
+        <ProfileSwitch />
+        <MuteSwitch />
+      </div>
     </section>
   );
 }

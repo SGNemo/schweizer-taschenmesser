@@ -8,6 +8,8 @@ export const tSettingsV3 = defineBundle(
   {
     eyebrow: 'Einstellungen',
     modulesEyebrow: 'Einstellungen · Module',
+    /** Name of the phone's back button beside a tab's title (it shows a chevron only). */
+    backTo: (target: string) => `Zurück: ${target}`,
     statusEyebrow: 'Status',
     statusLabel: 'Wichtigste Zustände',
     tiles: {
@@ -40,6 +42,7 @@ export const tSettingsV3 = defineBundle(
     en: {
       eyebrow: 'Settings',
       modulesEyebrow: 'Settings · Modules',
+      backTo: (target: string) => `Back: ${target}`,
       statusEyebrow: 'Status',
       statusLabel: 'Most important states',
       tiles: {
