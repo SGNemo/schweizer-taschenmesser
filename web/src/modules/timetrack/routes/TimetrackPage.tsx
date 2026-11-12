@@ -110,6 +110,9 @@ export default function TimetrackPage() {
     <>
       <PageHeader
         title={t.timetrack.title}
+        // Phone: the "⋯" menu lies beside the status line or the report's range, not on a row of its own. A running
+        // card and the project rows reach the right edge: there the menu keeps its row.
+        besideContent={!running && view !== 'jobs'}
         views={
           <Tabs
             label={t.timetrack.tabs.label}
