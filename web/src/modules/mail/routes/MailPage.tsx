@@ -310,6 +310,11 @@ export default function MailPage() {
             {t.mail.write.newMail}
           </PageAction>
         ) : null}
+        {/* In the head, so the panel (it alone clears the mail cache) opens in every state of the page: no account,
+            loading, an open mail in a narrow window. Named in words: the gear beside it is the module's. */}
+        <Button variant="ghost" onClick={() => setPanel(true)}>
+          {t.mail.page.settings}
+        </Button>
       </PageHeader>
     </>
   );
@@ -490,10 +495,6 @@ export default function MailPage() {
         ) : null}
         <IconButton label={t.mail.page.refresh} onClick={box.reload} disabled={box.loading}>
           <Icon name="sync" />
-        </IconButton>
-        {/* The list's own settings stand with the list; the head keeps the page's one action and the module's gear. */}
-        <IconButton label={t.mail.page.settings} onClick={() => setPanel(true)}>
-          <Icon name="settings" />
         </IconButton>
       </form>
 

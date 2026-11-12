@@ -1,10 +1,3 @@
-/* The list's first row. Phone: the page's "⋯" menu sits at its right edge (`PageHeader besideContent`), so the first
-   group head ends before it. */
-@media (max-width: 899px) {
-  .heads [data-group]:first-child > h2 {
-    padding-inline-end: calc(var(--touch) + var(--space-3));
-  }
-}
 .form {
   display: grid;
   gap: var(--space-3);

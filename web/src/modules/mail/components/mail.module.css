@@ -6,8 +6,8 @@
   margin-block: var(--space-3);
 }
 .search {
-  /* Narrow enough that field, "Suchen" and the two icon buttons share one row in the 20 rem list column. */
-  flex: 1 1 9rem;
+  /* Narrow enough that field, "Suchen" and the refresh button share one row in the 20 rem list column. */
+  flex: 1 1 12rem;
   min-width: 0;
 }
 .picker {
@@ -279,15 +279,18 @@
 /* Beside the reading pane the list is 20 to 26 rem wide: the row's hover actions ("In den Plan", "⋯") lie over the
    end of the row instead of holding a column free, so sender, time and text keep the row's width (they show on hover
    and on focus, as everywhere). */
-.listCol li:has([data-row-actions]) {
-  position: relative;
-}
-.listCol [data-row-actions] {
-  position: absolute;
-  top: var(--space-1);
-  right: var(--space-1);
-  border-radius: var(--radius-md);
-  background: var(--surface-raised);
+/* Only where a pointer hovers: on a touch screen the actions always show and would cover the time. */
+@media (hover: hover) {
+  .listCol li:has([data-row-actions]) {
+    position: relative;
+  }
+  .listCol [data-row-actions] {
+    position: absolute;
+    top: var(--space-1);
+    right: var(--space-1);
+    border-radius: var(--radius-md);
+    background: var(--surface-raised);
+  }
 }
 
 .reading {

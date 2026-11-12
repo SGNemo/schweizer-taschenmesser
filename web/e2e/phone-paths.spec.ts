@@ -385,10 +385,7 @@ test.describe('Keyboard', () => {
     page,
   }) => {
     await ready(page, '/todos');
-    await page
-      .locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible')
-      .first()
-      .click();
+    await page.getByTestId('bottom-plus').click();
     const field = page.getByRole('dialog', { name: 'Neue Aufgabe' }).getByLabel('Titel');
     await field.click();
     // Emulate a browser that does not resize the page for the keyboard: only visualViewport shrinks.

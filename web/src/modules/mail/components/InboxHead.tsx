@@ -1,3 +1,4 @@
+import { formatNumber } from '@/core/i18n/format';
 import { t } from '@/strings';
 import { HeroFigure, HeroSlot } from '@/ui/identity';
 
@@ -10,7 +11,7 @@ export function InboxFigure({ unread }: { unread: number }) {
   return (
     <HeroFigure
       label={t.mail.meta.name}
-      value={String(unread)}
+      value={formatNumber(unread)}
       unit={t.mail.head.unreadUnit}
       detail={t.mail.head.inbox}
       testId="mail-stamp"

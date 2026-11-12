@@ -1,6 +1,6 @@
 # Knowledge, media, services – what each module owns
 
-Index: [HOW-TO](../HOW-TO.md). Rules: [MODULE-IDENTITY](../design/MODULE-IDENTITY.md). Signatures are local components of each module (decoration, `aria-hidden`, text stays real); they are not in `@/ui/identity` yet (proposal below). **Since package 0b-6a (Identity 4.0)** Notizen, Merkliste, E-Mail, Chat and Feeds draw no signature under the head any more: the mark is the motif of the empty state and of the widget; E-Mail shows the unread count as the head's figure (`mail/components/InboxHead.tsx`), Musik keeps its stage with the views as `Tabs` below it ([decision](../decisions/ui-shell-identity-40-areas.md)).
+Index: [HOW-TO](../HOW-TO.md). Rules: [MODULE-IDENTITY](../design/MODULE-IDENTITY.md). Signatures are local components of each module (decoration, `aria-hidden`, text stays real); they are not in `@/ui/identity` yet (proposal below). **Since package 0b-6a (Identity 4.0)** Notizen, Merkliste, E-Mail, Chat and Feeds draw no signature under the head any more: the mark is the motif of the empty state and of the widget; E-Mail shows the unread count as the head's figure (`mail/components/InboxHead.tsx`), Musik keeps its stage with the views as `Tabs` below it ([decision](../decisions/ui-shell-identity-40-knowledge.md)).
 
 | Module | Signature (in the head via `HeroSlot`) | Where | Settings (module section) |
 |---|---|---|---|

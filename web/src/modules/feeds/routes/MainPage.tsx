@@ -98,7 +98,7 @@ export default function MainPage() {
 
   return (
     <>
-      <PageHeader title={s.title} besideContent>
+      <PageHeader title={s.title}>
         <PageAction
           short={t.nav.plusThings.feed}
           variant={isEmpty ? 'secondary' : 'primary'}
@@ -141,7 +141,7 @@ export default function MainPage() {
         </EmptyState>
       ) : null}
       {groups.length > 0 ? (
-        <div className={styles.heads}>
+        <div>
           <GroupedList
             listId="feeds"
             label={s.listLabel}

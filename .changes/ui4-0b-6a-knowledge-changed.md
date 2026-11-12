@@ -11,16 +11,24 @@ type: changed
 area: notes
 breaking: false
 pr: 759
-de: „Neue Seite“ steht jetzt oben im Kopf, am Handy ist es das Plus. Die Seitenliste ist ruhiger, ohne Rahmen und Tönung.
-en: “New page” is now at the top of the page, on the phone it is the plus. The page list is calmer, without frames and tints.
+de: „Neue Seite“ steht jetzt oben im Kopf, am Handy ist es das Plus. „Liste · Karten“ steht ganz oben in der Seitenliste, die ohne Rahmen und Tönung ruhiger ist.
+en: “New page” is now at the top of the page, on the phone it is the plus. “List · Cards” is at the top of the page list, which is calmer without frames and tints.
+---
+---
+type: changed
+area: feeds
+breaking: false
+pr: 759
+de: Feeds zeigt deine Quellen als eine ruhige Liste nach Gruppen. Die große Karte „Zuletzt hinzugefügt“ ist weg, der Feed steht weiter in seiner Gruppe.
+en: Feeds shows your sources as one calm list by group. The large “Recently added” card is gone; the feed is still in its group.
 ---
 ---
 type: changed
 area: mail
 breaking: false
 pr: 759
-de: E-Mail zeigt die Zahl der ungelesenen Mails oben im Kopf. Eine Zeile der Liste zeigt Absender und Zeit, darunter höchstens zwei Zeilen Text.
-en: Mail shows the number of unread mails in the head. A row of the list shows sender and time, with at most two lines of text below.
+de: E-Mail zeigt die Zahl der ungelesenen Mails oben im Kopf. Eine Zeile der Liste zeigt Absender und Zeit, darunter höchstens zwei Zeilen Text. „Aktualisieren“ ist jetzt ein Knopf mit Pfeil-Kreis neben der Suche.
+en: Mail shows the number of unread mails in the head. A row of the list shows sender and time, with at most two lines of text below. “Refresh” is now a round-arrow button beside the search.
 ---
 ---
 type: changed
