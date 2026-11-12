@@ -95,7 +95,7 @@ Default order: saved positions first, then the manifest order (no spreading by s
 
 ## Sidebar, scrollbars, overview head
 
-- **Sidebar** (`layout/Sidebar`): brand row, favourites bar, area blocks with a neutral tint and labels in `--text`, module icons in their hue, the active entry as a tinted capsule; collapsed to a rail where the **area colour** lives (with the bottom navigation). Low pointer screens (≤ 1100 px high): 36 px rows, 2 px group padding, 36 px favourites, so every area and module fits 1920 × 1080 without scrolling (overflow spec).
+- **Sidebar** (`layout/Sidebar`; Identity 4.0, package 0b-R): on `--bg` in tone steps, no frame, no wash. Brand row; favourites as a sunken track of grey icons, the current one a raised chip; a folded area is its head row, the open one a raised group; icons grey, only the current module shows its hue (icon and 16 % capsule, text `--text`); Übersicht, Bibliothek and Einstellungen are current as a raised capsule without accent. Collapsed to a rail where the **area colour** lives (with the bottom navigation). Guard: `e2e/seed/frame.seed.spec.ts`. Low pointer screens (≤ 1100 px high): 36 px rows, 2 px group padding, 36 px favourites, 28 px area heads, so every area and module fits 1920 × 1080 without scrolling (overflow spec).
 - **Scrollbars:** thin, transparent until hover/scroll (`core/shell/scrollbars.ts`); the sidebar list uses `ui/OverlayScroll`.
 - **Overview head** (`home/OverviewHead`): greeting by the hour, date, weather line, calm tools; "Jetzt wichtig" cards; day cards on a time rail.
 

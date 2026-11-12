@@ -3,11 +3,13 @@
   width: 0.5rem;
   height: 0.5rem;
   border-radius: var(--radius-full);
-  background: var(--accent);
+  /* Ink, not the accent: the accent is the page's main action and its open tab (B7). */
+  background: var(--text);
 }
 .floating {
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
-  box-shadow: 0 0 0 2px var(--surface);
+  /* Set off from the icon under it by a ring in the rail's ground. */
+  outline: 2px solid var(--bg);
 }

@@ -55,9 +55,10 @@
   container: search / inline-size;
   min-height: var(--touch);
   padding: 0 var(--space-3);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-full);
-  background: var(--surface);
+  /* A sunken surface without a frame, in the radius of the buttons next to it (Identity 4.0, package 0b-R). */
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
   color: var(--text-muted);
   cursor: pointer;
   text-align: left;
@@ -79,14 +80,13 @@
   }
 }
 .searchBtn:hover {
-  border-color: var(--accent);
+  background: var(--surface-raised);
+  color: var(--text);
 }
 .kbd {
   margin-left: auto;
   font-size: var(--text-xs);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0 var(--space-2);
+  padding: 0 var(--space-1);
 }
 .tools {
   display: inline-flex;
@@ -143,11 +143,20 @@
   }
 }
 @media (min-width: 900px) {
+  /* Desktop: the bar stands over the page, nothing scrolls behind it, so it is the page's ground. Its inline padding
+     is the page's gutter: the search starts at the page's left edge and the last control ends at its right edge. */
   .topbar {
     padding-top: var(--space-3);
+    padding-inline: var(--page-gutter);
+    background: var(--bg);
+    backdrop-filter: none;
   }
   .searchBtn {
     max-width: 28rem;
+  }
+  /* "Neu" opens the group at the right edge (tools, chips, bell, sync), flush with the page head's action. */
+  .create {
+    margin-left: auto;
   }
   .desktopOnly {
     display: inline-flex;
@@ -169,8 +178,8 @@
   min-height: var(--touch);
   padding: 0 var(--space-3);
   border-radius: var(--radius-full);
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--surface-2);
+  color: var(--text);
   font-weight: var(--weight-semibold);
   text-decoration: none;
 }
