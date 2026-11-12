@@ -1,28 +1,22 @@
 #!/usr/bin/env node
 /**
- * `npm run chats:sync`: rewrites the generated open-PR block of docs/CHATS.md (lib/chatsSync.ts).
+ * `npm run chats:sync`: prints the open pull requests as one table (lib/chatsSync.ts). Nothing is written:
+ * the table is not part of docs/CHATS.md any more, because a snapshot committed by every branch conflicted
+ * on nearly every merge.
  * Source of the open PRs, first match wins:
  *   --from <file>        JSON from a file (e.g. the GitHub MCP `list_pull_requests` answer, state open, perPage 100)
  *   stdin (pipe/file)    JSON on stdin, e.g. `gh api 'repos/SGNemo/schweizer-taschenmesser/pulls?state=open&per_page=100' | npm run chats:sync`
  *   otherwise            fetched with `gh api` (REST)
- * The list must be complete: a PR missing from it counts as closed and loses its row.
- * Flags: --doc <file> (default docs/CHATS.md), --check (exit 1 when the block is stale, writes nothing).
- * Run it before your PR's last commit; on a merge conflict in the block, take either side and run it again.
  */
 import { execFileSync } from 'node:child_process';
-import { fstatSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fstatSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { parseArgs } from './lib/args.ts';
-import { fetchOpenPrs, isCurrent, normalizePrs, syncDoc } from './lib/chatsSync.ts';
+import { fetchOpenPrs, normalizePrs, renderTable } from './lib/chatsSync.ts';
 
-const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const args = parseArgs(process.argv.slice(2));
 // npm runs scripts in web/; paths are meant relative to where the user called npm.
 const cwd = process.env.INIT_CWD ?? process.cwd();
-const docPath =
-  typeof args.doc === 'string' ? resolve(cwd, args.doc) : resolve(repo, 'docs/CHATS.md');
-
 /** True when stdin carries data (a pipe or a redirected file), not a terminal or /dev/null. */
 function stdinHasData() {
   try {
@@ -50,19 +44,7 @@ async function openPrs() {
 
 try {
   const prs = await openPrs();
-  const doc = readFileSync(docPath, 'utf8');
-  if (args.check) {
-    if (isCurrent(doc, prs)) {
-      console.log(`chats:sync: block is current (${prs.length} open PRs)`);
-    } else {
-      console.error(`chats:sync: the open-PR block in ${docPath} is stale; run npm run chats:sync`);
-      process.exit(1);
-    }
-  } else {
-    const next = syncDoc(doc, prs);
-    if (next !== doc) writeFileSync(docPath, next);
-    console.log(`chats:sync: ${prs.length} open PRs ${next === doc ? '(no change)' : 'written'}`);
-  }
+  console.log(`Open PRs (${prs.length}):\n\n${renderTable(prs)}`);
 } catch (err) {
   console.error(`chats:sync: ${err instanceof Error ? err.message : String(err)}`);
   process.exit(2);

@@ -1,15 +1,12 @@
 /**
- * `npm run chats:sync`: the generated block of docs/CHATS.md, written from the open pull requests.
+ * `npm run chats:sync`: the open pull requests as one table, printed, never written into a file.
  * Pure functions, no network: the caller hands in the PR list as JSON. Erasable TypeScript.
  *
- * The block sits between `<!-- generated:open-prs -->` and `<!-- /generated:open-prs -->` and holds
- * one table: ready PRs (they wait for the maintainer), then drafts (running work). Every cell is
- * generated except "Zu tun", which a person writes; it survives a sync, keyed by the PR number.
- * A PR that is no longer in the list loses its row (and its "Zu tun" text).
+ * The table used to be a generated block of docs/CHATS.md that every branch committed. Each branch then
+ * carried its own snapshot of the same lines, so nearly every PR conflicted with `develop` in that file.
+ * State that GitHub already holds is read from GitHub when someone asks for it (decisions/meta-ci-docs.md).
  */
 
-export const START = '<!-- generated:open-prs -->';
-export const END = '<!-- /generated:open-prs -->';
 export const REPO = 'SGNemo/schweizer-taschenmesser';
 const REPO_URL = `https://github.com/${REPO}/pull/`;
 const PAGE = 100;
@@ -69,44 +66,20 @@ export function normalizePrs(input: unknown): OpenPr[] {
   return prs.sort((a, b) => b.number - a.number);
 }
 
-/** Splits a Markdown table row into trimmed cells; `\|` stays inside its cell. */
-export function cells(row: string): string[] {
-  const inner = row.trim().replace(/^\|/, '').replace(/\|$/, '');
-  return inner.split(/(?<!\\)\|/).map((c) => c.trim());
-}
-
-/** Labels that say nothing about what waits (kept out of the table to stay inside the page budget). */
+/** Labels that say nothing about what waits (kept out of the table to keep it short). */
 const QUIET_LABELS = new Set(['no-changelog', 'dependencies', 'javascript']);
 
 const escapeCell = (s: string) => s.replace(/\r?\n/g, ' ').replace(/\|/g, '\\|').trim();
 
-/** Locates the block; throws when the markers are missing, doubled or out of order. */
-function locate(doc: string): { from: number; to: number } {
-  const from = doc.indexOf(START);
-  const to = doc.indexOf(END);
-  if (from < 0 || to < 0 || to < from || doc.indexOf(START, from + 1) >= 0)
-    throw new Error(`open-PR block: need exactly one ${START} … ${END} block`);
-  return { from: from + START.length, to };
-}
-
-/** "Zu tun" text per PR number, read from the current block (the last cell of each PR row). */
-export function readTodos(doc: string): Map<number, string> {
-  const { from, to } = locate(doc);
-  const todos = new Map<number, string>();
-  for (const line of doc.slice(from, to).split('\n')) {
-    if (!line.trim().startsWith('|')) continue;
-    const row = cells(line);
-    const m = /^\[#(\d+)\]/.exec(row[0] ?? '');
-    const todo = row[row.length - 1];
-    if (m && todo) todos.set(Number(m[1]), todo);
-  }
-  return todos;
-}
-
-function table(prs: OpenPr[], todos: Map<number, string>): string {
+/**
+ * The open PRs as a Markdown table: ready PRs first (they wait for the maintainer), then drafts
+ * (running work), marked as such. `_keine_` when nothing is open.
+ */
+export function renderTable(prs: OpenPr[]): string {
   if (prs.length === 0) return '_keine_';
-  const head = '| PR | Branch | Titel | Zu tun |\n| --- | --- | --- | --- |';
-  const rows = prs.map((pr) =>
+  const ordered = [...prs.filter((p) => !p.draft), ...prs.filter((p) => p.draft)];
+  const head = '| PR | Branch | Titel |\n| --- | --- | --- |';
+  const rows = ordered.map((pr) =>
     [
       `[#${pr.number}](${REPO_URL}${pr.number})${pr.draft ? ' Draft' : ''}`,
       `\`${escapeCell(pr.head)}\``,
@@ -114,47 +87,7 @@ function table(prs: OpenPr[], todos: Map<number, string>): string {
         escapeCell(pr.title),
         ...pr.labels.filter((l) => !QUIET_LABELS.has(l)).map((l) => `\`${escapeCell(l)}\``),
       ].join(' '),
-      todos.get(pr.number) ?? '',
     ].join(' | '),
   );
-  return [head, ...rows.map((r) => `| ${r} |`.replace(/ {2}\|/g, ' |'))].join('\n');
-}
-
-/**
- * The block's inner text (between the markers) for this PR list: one table, ready PRs first (they wait
- * for the maintainer), then drafts (running work), marked as such. One table, not two, so the block has
- * no repeated header row and stays cheap inside the CHATS.md budget.
- */
-export function renderBlock(prs: OpenPr[], todos: Map<number, string>): string {
-  const ordered = [...prs.filter((p) => !p.draft), ...prs.filter((p) => p.draft)];
-  return ['', table(ordered, todos), ''].join('\n');
-}
-
-/** The whole document with a freshly generated block; "Zu tun" cells carried over by PR number. */
-export function syncDoc(doc: string, prs: OpenPr[]): string {
-  const { from, to } = locate(doc);
-  return doc.slice(0, from) + renderBlock(prs, readTodos(doc)) + doc.slice(to);
-}
-
-/**
- * True when the block already says what a sync would write. Compared cell by cell, so a Markdown
- * formatter padding the table does not count as stale.
- */
-export function isCurrent(doc: string, prs: OpenPr[]): boolean {
-  const shape = (text: string) => {
-    const { from, to } = locate(text);
-    return text
-      .slice(from, to)
-      .split('\n')
-      .map((l) => l.trim())
-      .filter(Boolean)
-      .map((l) =>
-        l.startsWith('|')
-          ? cells(l)
-              .map((c) => (/^-+$/.test(c) ? '-' : c))
-              .join('|')
-          : l,
-      );
-  };
-  return JSON.stringify(shape(doc)) === JSON.stringify(shape(syncDoc(doc, prs)));
+  return [head, ...rows.map((r) => `| ${r} |`)].join('\n');
 }
