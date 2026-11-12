@@ -3,7 +3,7 @@
   display: grid;
   place-items: center;
   padding: var(--space-4);
-  border: 1px dashed var(--border-strong);
+  background: var(--surface-sunken);
   border-radius: var(--radius-md);
   color: var(--text-2);
   text-align: center;

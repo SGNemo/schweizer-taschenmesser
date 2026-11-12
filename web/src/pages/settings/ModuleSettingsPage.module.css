@@ -41,8 +41,7 @@
   gap: var(--space-2);
 }
 .fold {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--surface-raised);
   border-radius: var(--radius-lg);
 }
 .foldSummary {
@@ -61,29 +60,49 @@
   font-size: var(--text-lg);
   font-weight: var(--weight-semibold);
 }
-.list {
-  list-style: none;
-  margin: var(--space-3) 0 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
-  gap: var(--space-2);
+/* The modules are the rows of one raised surface (`ListSurface`, Identity 4.0): no frame, a hairline between the
+   rows, the hue in the plate alone. One column on every width: a list to read down, not a wall of tiles. */
+/* The gap above the list is the hint's (the surface sets its own margin; two modules would race for it). */
+.listHint {
+  margin-bottom: var(--space-3);
 }
+/* One line per module on the desktop (44 px: plate, name, its state at the end); on a narrow column the state goes
+   under the name. */
 .listLink {
   display: flex;
   align-items: center;
   gap: var(--space-3);
   min-height: var(--touch);
-  padding: var(--space-3);
-  background: var(--surface);
-  border: 1px solid color-mix(in srgb, var(--module-color) 30%, var(--border));
-  border-radius: var(--radius-md);
+  padding: var(--space-hair) var(--space-1);
+  border-radius: var(--radius-sm);
   color: var(--text);
   text-decoration: none;
 }
 .listLink:hover {
-  border-color: var(--accent);
+  background: var(--surface-2);
+}
+.listLink .headText {
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+@container page (max-width: 36rem) {
+  .listLink {
+    padding-block: var(--space-2);
+  }
+  .listLink .headText {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
 }
 .listName {
   font-weight: var(--weight-medium);
+}
+/* The one link of a "not found" state: 44 px to hit. */
+.emptyLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
 }

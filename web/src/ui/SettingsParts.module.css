@@ -18,11 +18,11 @@
   font-size: var(--text-sm);
   margin-top: calc(var(--space-2) * -1);
 }
+/* A group of settings is one raised tone (Identity 4.0): no frame, hairlines only between its rows. */
 .card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--surface-raised);
   border-radius: var(--radius-lg);
-  padding: var(--space-2) var(--space-4);
+  padding: var(--space-1) var(--space-4);
 }
 .plain {
   border-top: 1px solid var(--border);
@@ -31,7 +31,6 @@
    the page between hairlines, told apart by its heading and the space above it – no stack of cards. */
 [data-groups='plain'] .card {
   background: none;
-  border: 0;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   border-radius: 0;
@@ -46,7 +45,8 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  min-height: 3.5rem;
+  /* One line: 44 px on the desktop, 48 px on the phone (`--row-h`); a row with a description grows with its text. */
+  min-height: var(--row-h);
   padding: var(--space-2) 0;
   border-bottom: 1px solid var(--border);
   scroll-margin-top: var(--space-5);
@@ -108,6 +108,19 @@
   .control {
     flex: 1;
     justify-content: flex-start;
+  }
+}
+/* A lone switch stays beside its text on a narrow column too (Identity 4.0, row height): text left, switch right, one
+   line. Wider controls (segments, fields, several buttons) still go below the text. */
+@container page (max-width: 36rem) {
+  .row:not(.stacked):has(> .control > :only-child [role='switch']) {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .row:not(.stacked):has(> .control > :only-child [role='switch']) > .control {
+    flex: none;
+    justify-content: flex-end;
   }
 }
 /* Deep-link target: a short accent outline (opacity only, static under reduced motion). */
