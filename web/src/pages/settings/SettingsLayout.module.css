@@ -507,17 +507,16 @@
   align-items: center;
   min-height: var(--touch);
 }
-/* The sections of a tab: out of sight (and out of the layout's height) until all of them are there. */
+/* The sections of a tab: out of sight until all of them are there. */
 .tabBody {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
   min-width: 0;
 }
+/* Not rendered at all while it waits: nothing of it is in the layout, the tab order or the accessibility tree. */
 .tabBody[data-shown='false'] {
-  height: 0;
-  overflow: hidden;
-  visibility: hidden;
+  display: none;
 }
 .tabWait {
   min-height: 100dvh;
