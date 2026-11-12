@@ -17,22 +17,27 @@
   flex: none;
   min-height: var(--touch);
   padding: 0 var(--space-3);
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: var(--radius-full);
-  background: var(--surface);
-  color: var(--text);
+  background: none;
+  color: var(--text-muted);
   cursor: pointer;
 }
+/* A chosen filter is a surface and a weight (B7), never a frame. */
 .chip[aria-pressed='true'] {
-  border-color: var(--text);
+  background: var(--surface-raised);
+  color: var(--text);
   font-weight: var(--weight-semibold);
 }
 .cards {
   list-style: none;
   margin: 0;
   padding: 0;
+  /* Identity 4.0: the goals of today are rows of one raised surface, parted by hairlines. */
   display: grid;
-  gap: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  overflow: hidden;
 }
 .card {
   display: grid;
@@ -41,12 +46,28 @@
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--shape-soft, var(--radius-md));
-  background: var(--surface);
+}
+.card + .card {
+  border-top: 1px solid var(--border);
 }
 .cardRest {
   background: var(--surface-2);
+}
+/* The goal shown in the detail panel: a quiet surface, never colour alone (`aria-current` on its button). */
+.cardCurrent {
+  background: var(--surface-2);
+}
+.pick {
+  display: grid;
+  min-height: var(--touch);
+  align-content: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
 }
 .name {
   margin: 0;
@@ -71,20 +92,6 @@
   50% {
     transform: scale(1.12);
   }
-}
-.headRings {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-.headRing {
-  display: grid;
-  justify-items: center;
-  gap: var(--space-1);
-  max-width: 5rem;
-  font-size: var(--text-xs);
-  color: var(--text);
-  text-align: center;
 }
 .section {
   margin-top: var(--space-5);
@@ -192,4 +199,16 @@
   width: 6rem;
   height: 2rem;
   stroke: currentColor;
+}
+/* The date above today's list. On the phone it is the first line under the head (content from y ≤ 220 px). */
+.dayLine {
+  margin: 0 0 var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+@media (max-width: 899px) {
+  .dayLine,
+  .viewBar {
+    margin-top: calc(-1 * var(--space-1));
+  }
 }

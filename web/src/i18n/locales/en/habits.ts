@@ -13,6 +13,7 @@ export const habits: Strings['habits'] = {
     },
   },
   title: 'Habits',
+  detail: { label: 'Habit in detail' },
   tabs: { label: 'View', today: 'Today', history: 'History', archive: 'Archive' },
   empty: 'No habits yet.',
   emptyHint:

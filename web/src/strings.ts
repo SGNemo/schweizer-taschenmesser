@@ -7978,6 +7978,9 @@ export const de = {
           'Läuft die Zeit und du warst so lange nicht am Gerät, fragt die App nach – sie ändert nie etwas von selbst.',
       },
     },
+    /** The noun on the phone's plus ("Zeiteintrag eintragen") and the detail panel of the wide page. */
+    entryShort: 'Zeiteintrag',
+    detail: { label: 'Zeiteintrag im Detail', time: 'Zeit', breakTime: 'Pause' },
     title: 'Zeiterfassung',
     tabs: { label: 'Ansicht', today: 'Heute', report: 'Auswertung', jobs: 'Projekte' },
     add: 'Eintrag hinzufügen',
@@ -8076,6 +8079,8 @@ export const de = {
       },
     },
     title: 'Gewohnheiten',
+    /** The detail panel of the wide page. */
+    detail: { label: 'Gewohnheit im Detail' },
     tabs: { label: 'Ansicht', today: 'Heute', history: 'Verlauf', archive: 'Archiv' },
     empty: 'Noch keine Gewohnheiten.',
     emptyHint:

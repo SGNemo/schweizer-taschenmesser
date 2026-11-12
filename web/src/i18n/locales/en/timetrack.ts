@@ -13,6 +13,8 @@ export const timetrack: Strings['timetrack'] = {
         'If the timer runs and you were away from the device this long, the app asks – it never changes anything by itself.',
     },
   },
+  entryShort: 'Time entry',
+  detail: { label: 'Time entry in detail', time: 'Time', breakTime: 'Break' },
   title: 'Time tracking',
   tabs: { label: 'View', today: 'Today', report: 'Report', jobs: 'Projects' },
   add: 'Add entry',

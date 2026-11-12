@@ -20,14 +20,16 @@
   gap: var(--space-2);
   min-height: var(--touch);
   padding: 0 var(--space-3);
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: var(--radius-full);
-  background: var(--surface);
-  color: var(--text);
+  background: none;
+  color: var(--text-muted);
   cursor: pointer;
 }
+/* A chosen filter is a surface and a weight (B7), never a frame. */
 .chip[aria-pressed='true'] {
-  border-color: var(--text);
+  background: var(--surface-raised);
+  color: var(--text);
   font-weight: var(--weight-semibold);
 }
 .dot {
@@ -50,9 +52,8 @@
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--shape-soft, var(--radius-md));
-  background: var(--surface);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
 }
 .runningName {
   margin: 0;
@@ -114,9 +115,8 @@
 .idle {
   padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--shape-soft, var(--radius-md));
-  background: var(--surface-2);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
 }
 .idle h2 {
   margin: 0 0 var(--space-1);
@@ -145,14 +145,21 @@
   gap: var(--space-2);
   min-height: var(--touch);
   padding: var(--space-2) var(--space-4);
-  border: 1px solid color-mix(in srgb, var(--module-color) 30%, var(--border));
+  /* Tone steps: a raised tile, the project is told by its dot and its name. */
+  border: 0;
   border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--module-color) 7%, var(--surface));
+  background: var(--surface-raised);
   color: var(--text);
   font-family: inherit;
   font-weight: var(--weight-medium);
   cursor: pointer;
 }
 .starts .tile:hover {
-  background: color-mix(in srgb, var(--module-color) 16%, var(--surface));
+  background: var(--surface-2);
+}
+/* Phone: the dial starts right under the head (content from y ≤ 220 px), not a row lower. */
+@media (max-width: 899px) {
+  .timerHead {
+    margin-top: calc(-1 * var(--space-5) - var(--space-hair));
+  }
 }
