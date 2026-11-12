@@ -90,3 +90,7 @@
     overflow-wrap: anywhere;
   }
 }
+.description[data-whole='true'] {
+  display: block;
+  overflow: visible;
+}

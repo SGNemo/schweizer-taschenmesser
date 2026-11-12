@@ -21,6 +21,8 @@ export interface SettingsTitleProps {
   actions?: ReactNode;
   /** Phone: the way back takes the plate's place beside the title (44 px), so the page needs no back row of its own. */
   back?: { to: string; label: string };
+  /** The description is never cut after two lines (it explains what the page's switches do). */
+  wholeDescription?: boolean;
   testId?: string;
 }
 
@@ -39,6 +41,7 @@ export function SettingsTitle({
   description,
   actions,
   back,
+  wholeDescription,
   testId,
 }: SettingsTitleProps) {
   // The button shows a chevron only: its name says that it leads back, and where to ("Zurück: Einstellungen").
@@ -68,7 +71,11 @@ export function SettingsTitle({
       </div>
       {description || actions ? (
         <div className={styles.below}>
-          {description ? <p className={styles.description}>{description}</p> : null}
+          {description ? (
+            <p className={styles.description} data-whole={wholeDescription ? 'true' : undefined}>
+              {description}
+            </p>
+          ) : null}
           {actions ? <div className={styles.actions}>{actions}</div> : null}
         </div>
       ) : null}
