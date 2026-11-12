@@ -3,7 +3,17 @@ import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { formatMoneyInput, parseMoney } from '@/core/money';
 import { t } from '@/strings';
-import { Button, Dialog, Form, FormActions, SelectField, Split, TextArea, TextField } from '@/ui';
+import {
+  Button,
+  DayField,
+  Dialog,
+  Form,
+  FormActions,
+  SelectField,
+  Split,
+  TextArea,
+  TextField,
+} from '@/ui';
 import { safeUrl } from '../logic';
 import { giftRepo } from '../repo';
 import { GIFT_STATUSES, type Gift, type GiftStatus } from '../schema';
@@ -100,12 +110,7 @@ function Fields({
           value={occasion}
           onChange={(e) => setOccasion(e.target.value)}
         />
-        <TextField
-          label={t.people.gift.date}
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
+        <DayField label={t.people.gift.date} value={date} onChange={setDate} />
       </Split>
       <Split>
         <TextField

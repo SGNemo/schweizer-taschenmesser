@@ -1,8 +1,23 @@
 /* Uhr: one row per place – handle, name with zone and context line, the time large, ⋯. Nothing moves but the drag. */
+/* Identity 4.0: the places are rows of one raised surface, parted by hairlines (no frame per row). */
 .list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+}
+/* No `overflow: hidden` on the surface (it would cut the row's "⋯" menu): the outer rows are rounded instead. */
+.list > :first-child {
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.list > :last-child {
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+.list > :only-child {
+  border-radius: var(--radius-lg);
+}
+.list > * + * {
+  border-top: 1px solid var(--border);
 }
 .row {
   display: grid;
@@ -11,9 +26,6 @@
   gap: var(--space-2);
   min-height: var(--touch);
   padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
 }
 .body {
   min-width: 0;
@@ -66,16 +78,17 @@
   align-items: center;
   column-gap: var(--space-3);
   padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: var(--radius-md);
-  background: var(--surface);
+  /* A quiet area inside the dialog, no frame. */
+  background: var(--surface-2);
   color: var(--text);
   font: inherit;
   text-align: start;
   cursor: pointer;
 }
 .hit:hover {
-  border-color: var(--border-strong);
+  background: var(--surface-sunken);
 }
 .hitName {
   grid-area: name;

@@ -1975,6 +1975,10 @@ export const de = {
       up: (name: string) => `${name} nach oben`,
       down: (name: string) => `${name} nach unten`,
       open: (name: string) => `${name} öffnen`,
+      openShort: 'Öffnen',
+      rowMenu: (name: string) => `Aktionen für ${name}`,
+      moved: (name: string, place: number, total: number) =>
+        `${name} steht jetzt an Stelle ${place} von ${total} in der Werkzeugleiste.`,
     },
     calc: {
       percentOf: (percent: string, base: string, value: string) =>
@@ -4511,8 +4515,11 @@ export const de = {
         remindTimeHelp: 'Format HH:mm',
       },
     },
+    /** The detail panel of the wide page, and the one verb of the empty list. */
+    detailLabel: 'Person im Detail',
+    emptyAction: 'Erste Person eintragen',
     title: 'Personen',
-    add: 'Person hinzufügen',
+    add: 'Person eintragen',
     edit: 'Person bearbeiten',
     name: 'Name',
     hasBirthday: 'Geburtstag eintragen',
@@ -4547,7 +4554,7 @@ export const de = {
       string
     >,
     search: 'Personen durchsuchen',
-    empty: 'Noch keine Personen. Lege Geburtstage und Geschenkideen an.',
+    empty: 'Noch keine Personen.',
     emptyFiltered: 'Nichts gefunden.',
     back: 'Alle Personen',
     deleted: 'Person gelöscht.',
@@ -7978,9 +7985,17 @@ export const de = {
           'Läuft die Zeit und du warst so lange nicht am Gerät, fragt die App nach – sie ändert nie etwas von selbst.',
       },
     },
+    /** The noun on the phone's plus ("Zeit eintragen") and the detail panel of the wide page. */
+    entryShort: 'Zeit',
+    detail: {
+      label: 'Zeiteintrag im Detail',
+      time: 'Von – bis',
+      breakTime: 'Pause',
+      jobToday: 'Projekt heute',
+    },
     title: 'Zeiterfassung',
     tabs: { label: 'Ansicht', today: 'Heute', report: 'Auswertung', jobs: 'Projekte' },
-    add: 'Eintrag hinzufügen',
+    add: 'Zeit eintragen',
     edit: 'Eintrag bearbeiten',
     start: 'Start',
     stop: 'Stopp',
@@ -8009,7 +8024,9 @@ export const de = {
       note: 'Notiz',
     },
     job: {
-      add: 'Projekt hinzufügen',
+      add: 'Projekt eintragen',
+      /** The noun on the phone's plus while "Projekte" is shown. */
+      short: 'Projekt',
       edit: 'Projekt bearbeiten',
       name: 'Name',
       client: 'Kunde',
@@ -8076,12 +8093,12 @@ export const de = {
       },
     },
     title: 'Gewohnheiten',
+    /** The detail panel of the wide page. */
+    detail: { label: 'Gewohnheit im Detail' },
     tabs: { label: 'Ansicht', today: 'Heute', history: 'Verlauf', archive: 'Archiv' },
     empty: 'Noch keine Gewohnheiten.',
-    emptyHint:
-      'Fang klein an: zum Beispiel „Wasser trinken“ mit einer Zahl und einer Erinnerung im Zeitfenster.',
-    add: 'Gewohnheit hinzufügen',
-    addFirst: 'Erste Gewohnheit',
+    add: 'Gewohnheit eintragen',
+    addFirst: 'Erste Gewohnheit eintragen',
     edit: 'Gewohnheit bearbeiten',
     form: {
       name: 'Name',
@@ -8709,8 +8726,6 @@ export const de = {
     add: 'Ort hinzufügen',
     addFirst: 'Ersten Ort hinzufügen',
     empty: 'Noch keine Orte',
-    emptyHint:
-      'Trag einen Ort ein, zum Beispiel wo Familie oder Kolleg*innen leben. Seine Uhrzeit steht dann hier und auf der Übersicht.',
     full: (n: number) =>
       `Es sind ${n} Orte eingetragen, mehr passen nicht. Entferne einen, um einen neuen einzutragen.`,
     list: 'Deine Orte',

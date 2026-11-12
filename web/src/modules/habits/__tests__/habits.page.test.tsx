@@ -46,9 +46,9 @@ describe('Habits page', () => {
   it('puts the one filled step into the empty state; the head button steps back (U26)', async () => {
     draw();
     const empty = await screen.findByTestId('habits-empty');
-    const first = within(empty).getByRole('button', { name: 'Erste Gewohnheit' });
+    const first = within(empty).getByRole('button', { name: 'Erste Gewohnheit eintragen' });
     expect(first.className).toMatch(/primary/);
-    expect(screen.getByRole('button', { name: 'Gewohnheit hinzufügen' }).className).not.toMatch(
+    expect(screen.getByRole('button', { name: 'Gewohnheit eintragen' }).className).not.toMatch(
       /primary/,
     );
     await userEvent.click(first);
@@ -70,7 +70,7 @@ describe('Habits page', () => {
     const primaries = screen
       .getAllByRole('button')
       .filter((b) => /(^|\s)\S*primary\S*/.test(b.className));
-    expect(primaries.map((b) => b.textContent)).toEqual(['Gewohnheit hinzufügen']);
+    expect(primaries.map((b) => b.textContent)).toEqual(['Gewohnheit eintragen']);
   });
 
   it('a tap on +1 counts one glass; the menu takes it back and sets a rest day', async () => {

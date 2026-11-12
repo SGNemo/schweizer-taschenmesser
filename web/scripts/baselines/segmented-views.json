@@ -1,11 +1,9 @@
 {
   "version": 1,
   "what": "<Segmented> in the `views` slot of a page header in src/modules/**/*.tsx",
-  "total": 4,
+  "total": 2,
   "files": {
     "modules/fitness/routes/FitnessPage.tsx": 1,
-    "modules/habits/routes/HabitsPage.tsx": 1,
-    "modules/maps/routes/MapsPage.tsx": 1,
-    "modules/timetrack/routes/TimetrackPage.tsx": 1
+    "modules/maps/routes/MapsPage.tsx": 1
   }
 }

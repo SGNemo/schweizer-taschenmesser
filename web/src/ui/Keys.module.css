@@ -5,9 +5,9 @@
 }
 .kbd {
   padding: 0 var(--space-2);
-  border: 1px solid var(--border-strong);
+  /* A key cap is a recess in the surface (Identity 4.0, tone steps): no frame. */
   border-radius: var(--radius-sm);
-  background: var(--surface-2);
+  background: var(--surface-sunken);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   white-space: nowrap;
