@@ -7,8 +7,8 @@ import type { Recurrence } from '@/core/recurrence/types';
 export interface RoutineTemplate {
   repeat: Recurrence;
   /**
-   * Days from today to the first time. Never 0 and never the same day twice among the weekly ones: taking
-   * several templates must not open the page with a row of "dran" (FOCUS: stimulus load).
+   * Days from today to the first time. Never 0, and no two templates share it: taking several must not open
+   * the page with a row of "dran" (FOCUS: stimulus load).
    */
   firstIn: number;
   minutes: number;

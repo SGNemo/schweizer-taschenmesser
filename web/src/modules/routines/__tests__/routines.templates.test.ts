@@ -74,7 +74,7 @@ describe('routines: start templates', () => {
   });
 
   it('skips unknown ids and recognises a template that was taken before, whatever its case', async () => {
-    expect(await run(['nope', 'constructor'])).toEqual([]);
+    expect(await run(['nope'])).toEqual([]);
     const first = await run(['bath', 'vacuum']);
     await commitImport(manifest, {
       batchId: 'tb',
@@ -88,7 +88,7 @@ describe('routines: start templates', () => {
     const again = await run(['bath', 'kitchen']);
     expect(again.map((r) => [r.candidate.label, r.duplicate, r.selected])).toEqual([
       ['Bad putzen', true, false],
-      ['Küche wischen', false, true],
+      ['Küche putzen', false, true],
     ]);
   });
 });

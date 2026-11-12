@@ -1,7 +1,7 @@
 import type { ImportCandidate, ImporterRuntime } from '@/core/importer/types';
-import { describeRecurrence } from '@/core/recurrence/describe';
 import { addDaysStr, formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
+import { templateDetail } from './onboarding';
 import { routineRepo } from './repo';
 import type { Routine } from './schema';
 import { ROUTINE_TEMPLATES, type RoutineTemplateId } from './templates';
@@ -33,9 +33,7 @@ const runtime: ImporterRuntime = {
           collection: 'routine',
           data,
           label: name,
-          detail: [room, describeRecurrence(repeat), s.first(formatDay(first, 'EEE, d. MMM'))]
-            .filter(Boolean)
-            .join(' · '),
+          detail: `${templateDetail(id)} · ${s.first(formatDay(first, 'EEE, d. MMM'))}`,
           dedupeKey: keyOf(name),
         };
       });

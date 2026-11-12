@@ -63,7 +63,7 @@ const manifest: ModuleManifest = {
   order: 92,
   area: 'household',
   contributions: {
-    // Nothing to import: a routine is typed in a few seconds (name, Enter).
+    // Start templates to tick; no text importer: a routine is typed in a few seconds (name, Enter).
     onboarding,
     quickAdd: [
       {

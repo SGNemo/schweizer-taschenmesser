@@ -1,7 +1,14 @@
 import type { OnboardingDef } from '@/core/importer/types';
 import { describeRecurrence } from '@/core/recurrence/describe';
 import { t } from '@/strings';
-import { ROUTINE_TEMPLATES, ROUTINE_TEMPLATE_IDS } from './templates';
+import { ROUTINE_TEMPLATES, ROUTINE_TEMPLATE_IDS, type RoutineTemplateId } from './templates';
+
+/** "Bad · Wöchentlich": what the list of templates and the preview both say about one. */
+export function templateDetail(id: RoutineTemplateId): string {
+  const room = t.onboarding.routines.items[id].room;
+  const rhythm = describeRecurrence(ROUTINE_TEMPLATES[id].repeat);
+  return room ? `${room} · ${rhythm}` : rhythm;
+}
 
 /** Start data: typical routines to tick. None is pre-ticked: the household decides what it keeps. */
 export const onboarding: OnboardingDef = {
@@ -22,9 +29,7 @@ export const onboarding: OnboardingDef = {
           return t.onboarding.routines.items[id].name;
         },
         get detail() {
-          const room = t.onboarding.routines.items[id].room;
-          const rhythm = describeRecurrence(ROUTINE_TEMPLATES[id].repeat);
-          return room ? `${room} · ${rhythm}` : rhythm;
+          return templateDetail(id);
         },
       })),
     },
