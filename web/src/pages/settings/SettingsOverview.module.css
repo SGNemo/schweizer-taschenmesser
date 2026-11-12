@@ -1,4 +1,4 @@
-/* Overview cards: tokens only. Status is text; the accent marks "needs a look", never red. */
+/* Overview lines: tokens only. Status is text; "needs a look" is an ink mark and the words, never red. */
 .wrap {
   container: settings-overview / inline-size;
 }
@@ -11,7 +11,7 @@
      line up with the tiles above; below 50 rem two columns (container query below), wide enough for
      "Benachrichtigungen" on one line. */
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-3);
+  gap: 0 var(--space-3);
   padding-inline: var(--space-5);
 }
 /* U03: a narrower settings column (about 1600 px windows and below) has two columns, so a card stays wide enough
@@ -22,27 +22,36 @@
   }
 }
 .card {
+  /* One line per state, like the status lines of the head above: name, state, context; no frame, no fill. */
   display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  min-height: 6rem;
+  flex-wrap: wrap;
+  align-items: baseline;
+  align-content: center;
+  gap: 0 var(--space-2);
+  min-height: var(--touch);
   height: 100%;
-  padding: var(--space-3) var(--space-4);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  padding: var(--space-1) var(--space-2);
+  margin-inline: calc(-1 * var(--space-2));
+  border-radius: var(--radius-sm);
   color: var(--text);
   text-decoration: none;
 }
 .card:hover {
-  border-color: var(--accent);
+  background: var(--surface-sunken);
 }
-.card[data-attention='true'] {
-  border-color: var(--accent);
+.card[data-attention='true'] .status::before {
+  content: '';
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-inline-end: var(--space-1);
+  border-radius: var(--radius-full);
+  background: var(--text);
 }
 .head {
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  align-self: center;
   min-width: 0;
   gap: var(--space-2);
   color: var(--text-muted);
@@ -50,25 +59,16 @@
 .icon {
   display: grid;
   place-items: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: var(--radius-md);
-  background: var(--accent-soft);
-  color: var(--accent);
 }
 .title {
-  flex: 1;
   min-width: 0;
-  /* U03: no hyphenation; a word breaks only as a last resort when it cannot fit the card at all (the grid above keeps
-     the cards wide enough for "Benachrichtigungen"). */
+  /* U03: no hyphenation; a word breaks only as a last resort when it cannot fit at all. */
   overflow-wrap: break-word;
   hyphens: manual;
   font-size: var(--text-label);
-  font-weight: var(--weight-semibold);
-  color: var(--text);
 }
 .status {
-  font-size: var(--text-lg);
+  font-size: var(--text-label);
   font-weight: var(--weight-semibold);
 }
 .context {
@@ -77,19 +77,10 @@
 }
 
 @media (max-width: 899px) {
-  /* Phone: two columns, the context line is clipped to one line (the category list below says the rest). */
+  /* Phone: one column of lines. */
   .grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-2);
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
     padding-inline: 0;
-  }
-  .status {
-    font-size: var(--text-label);
-  }
-  .context {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
   }
 }
