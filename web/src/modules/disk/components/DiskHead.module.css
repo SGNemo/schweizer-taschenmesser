@@ -1,39 +1,4 @@
-/* Head of "Dieser PC" (identity v3.1 G01): text on the band is --text / --text-on-tint only (F03). */
-.figure {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  min-width: 0;
-}
-.context {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-1) var(--space-2);
-  margin: 0;
-  font-size: var(--text-sm);
-  color: var(--text-on-tint);
-}
-/* One ring per drive, in the module hue; wraps inside the slot (M) instead of overflowing it. */
-.rings {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3) var(--space-5);
-  max-width: 100%;
-}
-.ring {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-1);
-  min-width: 4.5rem;
-}
-.ringName {
-  font-size: var(--text-meta);
-  color: var(--text-on-tint);
-  text-align: center;
-  overflow-wrap: anywhere;
-}
+/* Nothing left to style: since Identity 4.0 (package 0b-6b) the head of "Dieser PC" is the frame's own figure
+   (`DiskHead.tsx`); the ring strip and the context line are gone (the drive cards say both). The file stays because
+   the protected `ui/tokens.test.ts` reads it by name ("head zone" test); the acceptance sweep 0b-8 removes both
+   together. */

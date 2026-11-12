@@ -49,8 +49,8 @@ function Head({ children }: { children: ReactNode }) {
   );
 }
 
-describe('Dieser PC head (identity v3.1 G01)', () => {
-  it('speaks of the system drive, says "fast voll" on a warning badge and keeps every ring in the hue', () => {
+describe('Dieser PC head (Identity 4.0)', () => {
+  it('shows one figure, the used space of the system drive, named by the drive; nothing under the head', () => {
     const drives = [drive('D:\\', 2000, 1300), drive('C:\\', 476.8, 38.2, true)];
     render(
       <Head>
@@ -60,27 +60,19 @@ describe('Dieser PC head (identity v3.1 G01)', () => {
     const figure = screen.getByTestId('figure');
     expect(figure).toHaveTextContent('C:\\ (System)');
     expect(screen.getByTestId('disk-head-used')).toHaveTextContent('438,6');
-    const context = screen.getByTestId('disk-head-context');
-    expect(context).toHaveTextContent(t.disk.free('38,2 GB'));
-    expect(context).toHaveTextContent(t.disk.head.state.full!);
-    expect(context).toHaveTextContent(t.disk.head.neverScanned);
-    const rings = screen.getByTestId('disk-head-rings');
-    expect(rings.querySelectorAll('li')).toHaveLength(2);
-    // the state is a word, never the ring colour
-    for (const r of rings.querySelectorAll('[data-level]'))
-      expect(r.getAttribute('data-level')).toBe('ok');
+    // The ring strip and the context line are gone: the drive cards say total, free space, state and last scan.
+    expect(screen.getByTestId('signature')).toBeEmptyDOMElement();
+    expect(screen.getByTestId('extra')).toBeEmptyDOMElement();
   });
 
-  it('draws the library gauges shape before the first reading', () => {
+  it('draws nothing before the first reading', () => {
     render(
       <Head>
         <DiskHead drives={null} />
       </Head>,
     );
     expect(screen.getByTestId('figure')).toBeEmptyDOMElement();
-    expect(
-      screen.getByTestId('signature').querySelector('[data-signature="gauges"]'),
-    ).not.toBeNull();
+    expect(screen.getByTestId('signature')).toBeEmptyDOMElement();
   });
 
   it('picks the system drive, else the first one', () => {

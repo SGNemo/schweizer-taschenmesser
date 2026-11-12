@@ -12,8 +12,8 @@ import { checkPlanPage, type PageRule } from './planArea';
  */
 const PAGES: PageRule[] = [
   { path: '/browser', colouredMax: 10, tabsMin: 0, figure: false, action: false },
-  { path: '/disk', colouredMax: 10, tabsMin: 2, figure: false, action: false },
-  { path: '/disk/scan', colouredMax: 10, tabsMin: 2, figure: false, action: false },
+  { path: '/disk', colouredMax: 10, tabsMin: 2, figure: true, action: false },
+  { path: '/disk/scan', colouredMax: 10, tabsMin: 0, figure: false, action: false },
   { path: '/downloads', colouredMax: 10, tabsMin: 0, figure: false, action: true },
 ];
 
