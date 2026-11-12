@@ -62,7 +62,7 @@ export const planner: Strings['planner'] = {
     replan: 'Redistribute',
   },
   board: {
-    label: 'Week board',
+    label: 'Week',
     freeOf: (free: string, usable: string) => `${free} free of ${usable}`,
     off: 'off',
     full: 'full',
@@ -70,6 +70,10 @@ export const planner: Strings['planner'] = {
     noTimeShort: 'busy',
     load: (planned: string, usable: string) => `${planned} of ${usable} planned`,
     strip: 'Days',
+    dayPanel: 'Selected day',
+    todayIs: (day: string) => `Today · ${day}`,
+    todayShort: 'Today',
+    things: (n: number) => (n === 1 ? '1 thing' : `${n} things`),
   },
   day: {
     available: 'Available',
@@ -87,8 +91,8 @@ export const planner: Strings['planner'] = {
     dayOn: 'Plan time again',
     calendar: 'From the calendar',
     window: 'Time window',
-    windowFrom: 'From',
-    windowTo: 'To',
+    windowFrom: 'Window from',
+    windowTo: 'Window to',
     windowSet: 'Set window',
     windowDefault: 'As usual',
     windowLine: (window: string, own: boolean) =>
@@ -96,8 +100,8 @@ export const planner: Strings['planner'] = {
         ? `Time window ${window} – this day only.`
         : `Time window ${window} – as in the settings.`,
     noWindow: 'No time window: the things of the day have no time.',
-    blockerFrom: 'From',
-    blockerTo: 'To',
+    blockerFrom: 'Blocker from',
+    blockerTo: 'Blocker to',
   },
   row: {
     part: (k: number, of: number) => `Part ${k}/${of}`,

@@ -175,7 +175,7 @@ describe('Karten & Orte page', () => {
     open();
     expect(await screen.findByText('Noch keine Orte.')).toBeTruthy();
     // The toolbar's primary and the empty state both offer the next step (round 6, U14).
-    expect(screen.getAllByRole('button', { name: 'Ort hinzufügen' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: 'Ort eintragen' }).length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole('button', { name: 'Routen' }));
     expect(await screen.findByText('Noch keine Routen.')).toBeTruthy();
     expect(requests).toEqual([]);
@@ -281,7 +281,7 @@ describe('Karten & Orte page', () => {
 
   it('a route needs a start and a destination', async () => {
     open('/maps?view=routes');
-    fireEvent.click(await screen.findByRole('button', { name: 'Route hinzufügen' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Route eintragen' }));
     const dialog = await screen.findByRole('dialog');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Speichern' }));
     expect(await within(dialog).findByText('Wähle Start und Ziel.')).toBeTruthy();

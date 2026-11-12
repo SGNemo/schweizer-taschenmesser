@@ -104,18 +104,6 @@
   overflow-y: auto;
 }
 
-/* Head (G11): the pin plate beside the category tiles in slot M. */
-.headShelf {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
-}
-.headTiles {
-  flex: 1 1 18rem;
-  min-width: 0;
-  max-width: 26rem;
-}
 .placesBar {
   display: grid;
   gap: var(--space-2);
@@ -129,18 +117,21 @@
 .catChip {
   min-height: var(--touch);
   padding: 0 var(--space-3);
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: var(--radius-full);
-  background: var(--surface);
+  /* Identity 4.0: a filter chip is a tone step, the chosen one a step lower with the strong weight (no frame). */
+  background: var(--surface-raised);
   color: var(--text);
   cursor: pointer;
 }
 .catChip[aria-pressed='true'] {
-  border-color: var(--text);
+  background: var(--surface-sunken);
   font-weight: var(--weight-semibold);
+  /* B7, as the shared chip: a line, not a shadow */
+  box-shadow: inset 0 0 0 1px var(--border-strong);
 }
 
-/* Place rows lead with a pin plate in the module colour. */
+/* Place rows lead with a pin plate: a neutral tone step (the module colour stays with the head and the action). */
 .plate {
   display: inline-flex;
   align-items: center;
@@ -148,6 +139,16 @@
   width: 2.25rem;
   height: 2.25rem;
   border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--module-color) 16%, var(--surface));
+  background: var(--surface-sunken);
   color: var(--text);
+}
+
+/* Phone: the page's content starts right under the head (≤ 220 px), not a gap lower. */
+@media (max-width: 899px) {
+  .placesBar {
+    margin-top: calc(-1 * var(--space-1));
+  }
+  .routesTop {
+    margin-top: calc(-1 * var(--space-3));
+  }
 }

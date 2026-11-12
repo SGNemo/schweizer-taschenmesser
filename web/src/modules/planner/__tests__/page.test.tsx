@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { findModel } from '@/core/ai/local/catalogue';
@@ -55,7 +55,7 @@ beforeEach(async () => {
 afterEach(() => setNow());
 
 describe('planner page', () => {
-  it('shows the head figure, seven columns, rows with minutes and parts, a blocker, the waiting group', async () => {
+  it('shows the week as a list of seven days, the picked day with minutes and parts, a blocker, the waiting group', async () => {
     const a = await taskRepo.create({
       listId: 'inbox',
       title: 'Steuer',
@@ -100,12 +100,20 @@ describe('planner page', () => {
     });
     draw();
     // (The head figure renders into the frame's hero slot, which only exists inside the shell: e2e covers it.)
-    const board = await screen.findByRole('group', { name: 'Wochenbrett' });
-    expect(board.querySelectorAll('section')).toHaveLength(7);
+    // Package 0b-4b: one day at a time. Outside the shell (no page width) the week is the strip of seven chips above
+    // the picked day; on a wide page the same days are a list beside it (e2e/seed/plan-area-rest.seed.spec.ts).
+    const strip = await screen.findByRole('group', { name: 'Tage' });
+    const chips = within(strip).getAllByRole('button');
+    expect(chips).toHaveLength(7);
+    expect(chips[0]).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByTestId('day-2026-11-09')).toHaveTextContent('2 h 12 frei von 3 h 12');
     expect(screen.getByText('Teil 1 von 2')).toHaveClass('sr-only');
-    expect(screen.getByText('Zahnarzt')).toBeInTheDocument();
+    // Another day is one click away: its blocker shows then.
+    expect(screen.queryByText('Zahnarzt')).toBeNull();
+    fireEvent.click(chips[1]!);
     expect(screen.getByTestId('day-2026-11-10')).toHaveTextContent('1 h 24 frei von 2 h 24');
+    expect(screen.getByText('Zahnarzt')).toBeInTheDocument();
+    fireEvent.click(chips[0]!);
     // „Nicht planen“ things sit in the waiting group with a way back.
     expect(screen.getByText('Wartet auf freie Zeit')).toBeInTheDocument();
     expect(screen.getByText('Keller')).toBeInTheDocument();
