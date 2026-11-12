@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { getPlatform } from '@/core/platform';
 import type { NotificationPermissionState } from '@/core/notifications/service';
-import { getFocusSettings, patchFocusSettings, useFocusSettings } from '@/core/settings/focus';
+import { patchFocusSettings, useFocusSettings } from '@/core/settings/focus';
 import { t } from '@/strings';
 import { Button, Checkbox, SelectField, Segmented } from '@/ui';
 import styles from '../routes/calendar.module.css';
@@ -21,45 +21,20 @@ export const leadLabel = (m: number): string =>
 
 /**
  * "Erinnern: keine · 1 h · 1 Tag" for an appointment with a time. A choice can be remembered
- * (synced `focus.eventLead`); it only preselects the chip in this editor, nothing is switched on
+ * (synced `focus.eventLead`); the editor applies it to a new appointment (`EventEditor`), so it only preselects the chip, nothing is switched on
  * for other appointments. A calm hint appears when the system permission is missing.
  */
-export function LeadRow({
-  value,
-  onChange,
-  isNew,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  isNew: boolean;
-}) {
+export function LeadRow({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const [focus] = useFocusSettings();
   const [permission, setPermission] = useState<NotificationPermissionState>(() =>
     getPlatform().notifications.permission(),
   );
   const [other, setOther] = useState(false);
-  const [touched, setTouched] = useState(false);
   const n = t.calendar.notify;
-
-  useEffect(() => {
-    if (!isNew || touched) return;
-    let alive = true;
-    void getFocusSettings().then((f) => {
-      if (alive && f.eventLead !== null) onChange(String(f.eventLead));
-    });
-    return () => {
-      alive = false;
-    };
-    // Only the first load of the remembered choice; later edits are the user's.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const quick = (QUICK as readonly string[]).includes(value);
   const showSelect = other || !quick;
-  const set = (v: string) => {
-    setTouched(true);
-    onChange(v);
-  };
+  const set = onChange;
   const missing = permission === 'default' || permission === 'denied';
   return (
     <div className={styles.leadRow} data-testid="lead-row">

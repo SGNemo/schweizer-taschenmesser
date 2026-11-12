@@ -114,8 +114,9 @@ export async function syncNow(page: Page): Promise<void> {
 
 export async function addTask(page: Page, title: string): Promise<void> {
   await page.goto('/todos');
-  await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill(title);
-  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
+  await page.getByRole('dialog').getByLabel('Titel').fill(title);
+  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
   await expect(page.getByRole('checkbox', { name: title })).toBeVisible();
   // The write is finished when the entry shows up; wait for the outbox to include it.
   await expect.poll(() => outboxCount(page)).toBeGreaterThan(0);

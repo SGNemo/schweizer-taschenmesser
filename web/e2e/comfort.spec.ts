@@ -48,8 +48,9 @@ test('rescheduling an appointment: open, "Morgen", save = 3 clicks', async ({ pa
     .first()
     .click(); // click 1: open
   await page.getByRole('dialog').getByRole('button', { name: 'Morgen', exact: true }).click(); // click 2
+  // The date field writes the app's format (`DayField`).
   await expect(page.getByRole('dialog').getByLabel('Datum', { exact: true })).toHaveValue(
-    '2026-09-30',
+    '30.09.2026',
   );
   await save(page); // click 3
   await ready(page, '/calendar?view=day&date=2026-09-30');
@@ -115,8 +116,9 @@ test('a to-do goes to tomorrow from the row menu (2 clicks) and ticking off stay
   page,
 }) => {
   await ready(page, '/todos');
-  await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Brot kaufen');
-  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
+  await page.getByRole('dialog').getByLabel('Titel').fill('Brot kaufen');
+  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
   const row = page.getByRole('listitem').filter({ hasText: 'Brot kaufen' });
   await expect(row).toBeVisible();
 
@@ -142,8 +144,9 @@ test('a to-do is duplicated from the row menu (2 clicks) and the copy is open', 
   page,
 }) => {
   await ready(page, '/todos');
-  await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill('Steuer ordnen');
-  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
+  await page.getByRole('dialog').getByLabel('Titel').fill('Steuer ordnen');
+  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
   const rows = page.getByRole('listitem').filter({ hasText: 'Steuer ordnen' });
   await expect(rows).toHaveCount(1);
 

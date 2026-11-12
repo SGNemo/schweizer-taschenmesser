@@ -217,12 +217,13 @@ test.describe('Planer (week board, package 1)', () => {
   }) => {
     await enablePlanner(page);
     await ready(page, '/todos');
-    const add = page.getByRole('textbox', { name: 'ToDo hinzufügen' });
-    await add.fill('Alte Sache gestern 60min');
-    await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
+    await page.getByRole('dialog').getByLabel('Titel').fill('Alte Sache gestern 60min');
+    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
     await expect(page.getByRole('button', { name: /Alte Sache/ }).first()).toBeVisible();
     // Without the plan the overdue thing is on today.
-    await expect(page.getByTestId('today-count').locator('strong')).toHaveText('1');
+    // The count of today is the head's figure, named by its context line ("heute · etwa 60 Min").
+    await expect(page.getByTestId('today-count')).toHaveText('1');
     // Today off: the planner puts the overdue thing on Tuesday.
     await page.goto('/planner');
     await today(page)
@@ -234,10 +235,16 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(page.getByTestId('day-2026-11-10')).toContainText('Alte Sache');
     // The ToDo page follows: not in Heute, the head counts nothing for today, no „Alle auf heute“.
     await page.goto('/todos?view=today');
-    await expect(page.getByTestId('today-count').locator('strong')).toHaveText('0');
+    // Nothing on today: the first row is there, the head shows no figure (no zero), the empty view says it once.
+    await expect(page.getByTestId('today-card')).toBeAttached();
+    await expect(page.getByTestId('today-count')).toHaveCount(0);
+    await expect(page.getByTestId('todos-empty')).toContainText('Nichts zu tun');
     await expect(page.getByRole('button', { name: /Alte Sache/ })).toHaveCount(0);
     await page.goto('/todos');
     await expect(page.getByRole('button', { name: /Alte Sache/ }).first()).toBeVisible();
+    // The list shows the task again, and the head still counts nothing for today (the plan put it on Tuesday).
+    await expect(page.getByTestId('today-card')).toBeVisible();
+    await expect(page.getByTestId('today-count')).toHaveCount(0);
     await expect(page.getByTestId('all-today')).toHaveCount(0);
   });
 

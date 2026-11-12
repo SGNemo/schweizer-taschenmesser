@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { copyData } from '@/core/db/copy';
 import type { Stored } from '@/core/db/types';
@@ -9,7 +9,6 @@ import { usePageChrome } from '@/core/shell/pageChrome';
 import { useWriteAvailable, useWriteLabel } from '@/core/shell/writeAvailable';
 import { useModuleStates } from '@/core/modules/activation';
 import { dayName } from '@/core/plan/explain';
-import { useAdvanced } from '@/core/settings/comfort';
 import { useFocusSettings } from '@/core/settings/focus';
 import { useSettings } from '@/core/settings/settings';
 import { formatDay, relativeDayLabel, today } from '@/core/time/dates';
@@ -18,23 +17,27 @@ import { groupByTime } from '@/core/time/groups';
 import { DATE_PRESETS, presetDate } from '@/core/time/quickShift';
 import { changeWithUndo, deleteWithUndo, undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { tAdvanced } from '@/strings.advanced';
 import { useUiStore } from '@/stores/ui';
 import {
   Button,
   EmptyState,
   GroupedList,
   ItemList,
+  Icon,
   ItemRow,
+  PageAction,
   PageHeader,
   Tabs,
   Progress,
   RowMenu,
-  TextField,
+  SplitView,
   type RowMenuItem,
+  useAdvancedMenuItem,
   useOpenParam,
+  useSplitView,
 } from '@/ui';
-import { HeroSlot } from '@/ui/identity';
+import { AddTaskDialog } from '../components/AddTaskDialog';
+import { TaskDetail } from '../components/TaskDetail';
 import { BoardView } from '../components/BoardView';
 import { InboxSorter } from '../components/InboxSorter';
 import { TodayCard } from '../components/TodayCard';
@@ -95,6 +98,9 @@ interface RowProps {
   streaks?: Map<string, Streak>;
   onToggle: (task: StoredTask, done: boolean) => void;
   onOpen: (task: StoredTask) => void;
+  /** Master–detail (wide page): the id of the task shown in the panel, and the way into its dialog. */
+  currentId?: string;
+  onEdit?: (task: StoredTask) => void;
 }
 
 function TaskRow({
@@ -111,6 +117,8 @@ function TaskRow({
   streaks,
   onToggle,
   onOpen,
+  currentId,
+  onEdit,
 }: RowProps) {
   // A short check-mark pop after a tick (≤ 250 ms; the global motion rules switch it off when reduced).
   const [popped, setPopped] = useState(false);
@@ -122,17 +130,19 @@ function TaskRow({
     label: t.focus.next.later,
     onSelect: () => postpone(task, day),
   };
-  // U21: on the phone the row's "Auf heute" button gives way to the title; the menu always offers it.
-  const todayItem: RowMenuItem[] = waiting
-    ? [
-        {
-          id: 'today',
-          label: t.todos.moveToday,
-          onSelect: () => moveDue(task, presetDate('today', day)),
-        },
-      ]
-    : [];
-  const dueMenu: RowMenuItem[] = DATE_PRESETS.map((p) => ({
+  // "Auf heute" is the first entry of the row's menu (the phone's sheet) for every task that is not due today yet:
+  // one tap after "⋯" (UI audit 2026-11, click path "ToDo auf heute"). Swiping stays.
+  const todayItem: RowMenuItem[] =
+    task.dueDate !== day
+      ? [
+          {
+            id: 'today',
+            label: t.todos.moveToday,
+            onSelect: () => moveDue(task, presetDate('today', day)),
+          },
+        ]
+      : [];
+  const dueMenu: RowMenuItem[] = DATE_PRESETS.filter((p) => p !== 'today').map((p) => ({
     id: `due-${p}`,
     group: t.todos.due,
     label: t.ui.datePresets[p],
@@ -158,6 +168,7 @@ function TaskRow({
     <ItemRow
       title={task.title}
       done={task.done}
+      current={currentId === task.id}
       tone={tone === 'overdue' && !waiting ? 'overdue' : tone === 'today' ? 'today' : undefined}
       // U02: an open subtask under a done parent keeps its plain title (see `.subOpen`).
       className={sub ? `${styles.sub} ${task.done ? '' : styles.subOpen}` : undefined}
@@ -167,6 +178,10 @@ function TaskRow({
       onSwipeLeft={task.done ? undefined : () => postpone(task, day)}
       swipeLeftLabel={t.focus.next.later}
       menu={[
+        // On a wide page the row shows the task in the panel: its dialog is also one entry here.
+        ...(onEdit
+          ? [{ id: 'edit', label: t.actions.edit, onSelect: () => onEdit(task) } as RowMenuItem]
+          : []),
         ...(task.done ? [] : [...todayItem, laterItem, ...dueMenu]),
         ...(task.done ? [] : prioMenu),
         {
@@ -315,6 +330,8 @@ function TaskRow({
               streaks={streaks}
               onToggle={onToggle}
               onOpen={onOpen}
+              currentId={currentId}
+              onEdit={onEdit}
             />
           ))}
         </ItemList>
@@ -351,37 +368,43 @@ export default function TodosPage() {
   const plannerOn = useModuleStates()?.planner === true;
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
-  // A shared title (`/todos?new=1&title=…`, from the share page) prefills the create field.
-  const [title, setTitle] = useState(() => params.get('title') ?? '');
+  // The page's one entry: the head's action, the plus on the phone, `?new=1` (quick add) and a shared title
+  // (`/todos?new=1&title=…`, from the share page) all open the same small dialog.
+  const [adding, setAdding] = useState<{ title: string } | null>(null);
   const [editing, setEditing] = useState<StoredTask | null>(null);
   useOpenParam((id) => taskRepo.get(id), setEditing);
   const [listTarget, setListTarget] = useState<Stored<TodoList> | 'new' | null>(null);
+  // Master–detail (layout `split`): on a wide page a task opens in the panel beside the list, below that width
+  // in its dialog (a sheet on the phone). The board has no panel: its four columns take the page.
+  const wide = useSplitView();
+  const [picked, setPicked] = useState<{ id: string } | 'closed' | null>(null);
   const [sorting, setSorting] = useState(false);
-  const addRef = useRef<HTMLFormElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [advanced, setAdvanced] = useAdvanced('todos');
-  const tx = tAdvanced.use();
+  const advancedItem = useAdvancedMenuItem('todos');
+  const advanced = advancedItem.checked === true;
   const writeAvailable = useWriteAvailable('todos');
   const writeLabel = useWriteLabel();
   const openWrite = useUiStore((s) => s.openWritePalette);
   const toast = useUiStore((s) => s.toast);
-  // The page has its own add field: no round "+" button, and the AI entry lives in the "⋯" menu.
+  // The AI entry lives in the page's "⋯" menu.
   usePageChrome({ writeInMenu: true });
 
   useEffect(() => {
     if (lists && lists.length === 0) void ensureInbox(t.todos.inbox);
   }, [lists]);
 
-  // `?new=1` (Quick-Add) focuses the create field.
-  useEffect(() => {
+  // `?new=1` (Quick-Add) opens the dialog; derived from the URL, as the calendar does it.
+  const fromUrl = params.get('new') ? { title: params.get('title') ?? '' } : null;
+  const addTarget = adding ?? fromUrl;
+  const closeAdd = () => {
+    setAdding(null);
     if (params.get('new')) {
-      addRef.current?.querySelector('input')?.focus();
       const next = new URLSearchParams(params);
       next.delete('new');
       next.delete('title');
       setParams(next, { replace: true });
     }
-  }, [params, setParams]);
+  };
 
   const day = today();
   const rawView = params.get('view');
@@ -445,8 +468,7 @@ export default function TodosPage() {
     : [];
   const editingLive = editing ? ((tasks ?? []).find((x) => x.id === editing.id) ?? null) : null;
 
-  async function add(e: FormEvent) {
-    e.preventDefault();
+  async function add(title: string) {
     if (!title.trim() || !targetListId) return;
     const typed = readQuickAdd(title, new Date(now()));
     // One line of feedback; Ctrl+Z still takes it back (no second "Rückgängig" next to the next action's).
@@ -467,9 +489,6 @@ export default function TodosPage() {
       }),
     );
     toast(t.todos.added);
-    setTitle('');
-    // The next entry follows right away: the field keeps the focus (and the keyboard stays up).
-    addRef.current?.querySelector('input')?.focus();
   }
 
   function setParam(key: 'view' | 'tag', value: string | null) {
@@ -485,6 +504,19 @@ export default function TodosPage() {
     else next.set('list', id);
     setParams(next, { replace: true });
   }
+
+  const split = wide && pageView !== 'board';
+  // The panel shows the picked task, else the first row as the list shows it (open tasks by time, then done ones).
+  const firstShown = useMemo(() => {
+    const open = top.filter((x) => !x.done);
+    return groupByTime(open, (x) => x.dueDate, day)[0]?.items[0] ?? top.find((x) => x.done);
+  }, [top, day]);
+  const detail = !split
+    ? undefined
+    : picked === 'closed'
+      ? undefined
+      : ((picked ? visible.find((x) => x.id === picked.id) : undefined) ?? firstShown);
+  const openRow = (task: StoredTask) => (split ? setPicked({ id: task.id }) : setEditing(task));
 
   const streaks = useMemo(
     () => (focus.streaks && tasks ? streaksOf(tasks, day) : undefined),
@@ -506,7 +538,9 @@ export default function TodosPage() {
         inPlan={pageView === 'soon' && plannerOn}
         streaks={streaks}
         onToggle={toggle}
-        onOpen={setEditing}
+        onOpen={openRow}
+        currentId={detail?.id}
+        onEdit={split ? setEditing : undefined}
       />
     );
     const timed = groupByTime(open, (x) => x.dueDate, day).map((g) => ({
@@ -548,7 +582,19 @@ export default function TodosPage() {
         ]
       : timed;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [top, children, tasks, day, selected, focus.calmAttention, lists, pageView, plannerOn]);
+  }, [
+    top,
+    children,
+    tasks,
+    day,
+    selected,
+    focus.calmAttention,
+    lists,
+    pageView,
+    plannerOn,
+    split,
+    detail?.id,
+  ]);
   const inboxOpen = useMemo(
     () =>
       ((tasks ?? []) as StoredTask[])
@@ -597,6 +643,7 @@ export default function TodosPage() {
     });
   }
 
+  const isEmpty = !!tasks && top.length === 0 && pageView !== 'board';
   const startItems = useStartDataItems('todos');
   const pageMenu: RowMenuItem[] = [
     {
@@ -636,13 +683,7 @@ export default function TodosPage() {
           },
         ]
       : []),
-    {
-      id: 'advanced',
-      group: t.todos.moreOptions,
-      label: tx.switchLabel,
-      checked: advanced,
-      onSelect: () => setAdvanced(!advanced),
-    },
+    { ...advancedItem, group: t.todos.moreOptions },
     ...(writeAvailable
       ? [
           {
@@ -672,7 +713,18 @@ export default function TodosPage() {
             onChange={(v) => setParam('view', v === 'list' ? null : v)}
           />
         }
+        besideContent
       >
+        {/* While nothing is there the empty state owns the filled button of the view. */}
+        <PageAction
+          short={t.todos.addShort}
+          variant={isEmpty ? 'secondary' : 'primary'}
+          disabled={!targetListId}
+          onClick={() => setAdding({ title: '' })}
+        >
+          <Icon name="plus" size={18} />
+          {t.todos.newTask}
+        </PageAction>
         <RowMenu
           label={t.todos.moreOptions}
           open={menuOpen}
@@ -680,6 +732,22 @@ export default function TodosPage() {
           items={pageMenu}
         />
       </PageHeader>
+
+      {/* The first row of the page: what is next today. On the phone the page's "⋯" menu lies beside it
+          (`besideContent`), so the row is always there and keeps its height while the tasks load. An empty view
+          says "nothing" once, in its empty state: the row then keeps only its room (`quiet`). */}
+      <TodayCard
+        tasks={tasks}
+        day={day}
+        focusMinutes={focus.focusMinutes}
+        planner={plannerOn}
+        quiet={isEmpty}
+        onStart={(x) => void startFocus(x.id)}
+        onLater={(x) => {
+          const full = tasks?.find((y) => y.id === x.id);
+          if (full) postpone(full, day);
+        }}
+      />
 
       {selected !== ALL ? (
         <p className={styles.filterNote} data-testid="todos-filter">
@@ -692,42 +760,9 @@ export default function TodosPage() {
         </p>
       ) : null}
 
-      {/* The card is the fokus head's "one thing" (extra: full width on the phone, so the title can shorten); the frame
-          draws the todayCard mark in the S slot beside it. */}
-      {tasks ? (
-        <HeroSlot>
-          <TodayCard
-            tasks={tasks}
-            day={day}
-            focusMinutes={focus.focusMinutes}
-            planner={plannerOn}
-            onStart={(x) => void startFocus(x.id)}
-            onLater={(x) => {
-              const full = tasks.find((y) => y.id === x.id);
-              if (full) postpone(full, day);
-            }}
-          />
-        </HeroSlot>
-      ) : null}
-
       <PersonFilter usedIds={(tasks ?? []).flatMap((x) => (x.personId ? [x.personId] : []))} />
       <div className={styles.layout}>
         <div className={styles.main}>
-          <form ref={addRef} onSubmit={add} className={styles.add} data-keep-visible>
-            <div className={styles.grow}>
-              <TextField
-                label={t.todos.add}
-                placeholder={t.todos.addPlaceholder}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
-            {/* C29: the head's "Anfangen" is the one filled action of the page. */}
-            <Button type="submit" disabled={!targetListId}>
-              {t.actions.add}
-            </Button>
-          </form>
-
           {/* Tags are an advanced feature: the chips show in "Mehr Felder" mode or while a tag filters. */}
           {tagList.length > 0 && (advanced || tag) ? (
             <div className={styles.tagBar} role="group" aria-label={t.todos.tags.filter}>
@@ -780,37 +815,66 @@ export default function TodosPage() {
             </div>
           ) : null}
 
-          {tasks && top.length === 0 && pageView !== 'board' ? (
-            <EmptyState
-              title={t.todos.empty}
-              testId="todos-empty"
-              motif={<SignatureMark id="todayCard" size={64} />}
-            >
-              {/* U26: one next step – the add field above takes the first thing. */}
-              <Button
-                onClick={() => addRef.current?.querySelector('input')?.focus()}
-                data-testid="todos-empty-add"
+          <SplitView
+            enabled={split && detail !== undefined}
+            asideLabel={t.todos.detail.label}
+            aside={
+              detail ? (
+                <TaskDetail
+                  task={detail}
+                  listName={listName(detail.listId)}
+                  person={personName(people, detail.personId)}
+                  subtasks={(tasks ?? []).filter((x) => x.parentId === detail.id)}
+                  day={day}
+                  onEdit={() => setEditing(detail)}
+                  onFocus={
+                    detail.done || detail.parentId ? undefined : () => void startFocus(detail.id)
+                  }
+                  onClose={() => setPicked('closed')}
+                />
+              ) : null
+            }
+          >
+            {isEmpty ? (
+              <EmptyState
+                title={t.todos.empty}
+                testId="todos-empty"
+                motif={<SignatureMark id="todayCard" size={64} />}
               >
-                {t.todos.emptyAction}
-              </Button>
-            </EmptyState>
-          ) : null}
-          {pageView === 'board' ? (
-            <BoardView
-              tasks={top}
-              day={day}
-              onOpen={setEditing}
-              onMove={moveTo}
-              onTomorrow={(x) => postpone(x, day)}
-              planner={plannerOn}
-            />
-          ) : null}
-          {pageView !== 'board' && top.length > 0 ? (
-            <GroupedList listId={`todos-${selected}`} groups={groups} label={t.todos.title} />
-          ) : null}
+                {/* B6: the motif, one sentence, one verb. */}
+                <Button
+                  variant="primary"
+                  onClick={() => setAdding({ title: '' })}
+                  data-testid="todos-empty-add"
+                >
+                  {t.todos.emptyAction}
+                </Button>
+              </EmptyState>
+            ) : null}
+            {pageView === 'board' ? (
+              <BoardView
+                tasks={top}
+                day={day}
+                onOpen={setEditing}
+                onMove={moveTo}
+                onTomorrow={(x) => postpone(x, day)}
+                planner={plannerOn}
+              />
+            ) : null}
+            {pageView !== 'board' && top.length > 0 ? (
+              <GroupedList listId={`todos-${selected}`} groups={groups} label={t.todos.title} />
+            ) : null}
+          </SplitView>
         </div>
       </div>
 
+      <AddTaskDialog
+        open={addTarget !== null}
+        initialTitle={addTarget?.title}
+        ready={!!targetListId}
+        onAdd={add}
+        onClose={closeAdd}
+      />
       <InboxSorter
         open={sorting}
         tasks={inboxOpen}

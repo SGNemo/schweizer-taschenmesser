@@ -1,13 +1,13 @@
 {
   "version": 1,
   "what": "max-width declarations in src/modules/**/*.module.css outside @media and @container",
-  "total": 33,
+  "total": 31,
   "files": {
     "modules/accounts/accounts.module.css": 1,
     "modules/bookmarks/routes/reader.module.css": 1,
     "modules/browser/components/ReaderPanel.module.css": 1,
     "modules/browser/routes/BrowserPage.module.css": 3,
-    "modules/calendar/routes/calendar.module.css": 3,
+    "modules/calendar/routes/calendar.module.css": 2,
     "modules/chat/chat.module.css": 1,
     "modules/disk/components/Breadcrumb.module.css": 1,
     "modules/disk/components/DiskHead.module.css": 1,
@@ -25,7 +25,6 @@
     "modules/music/routes/music.module.css": 2,
     "modules/notes/components/TabBar.module.css": 1,
     "modules/notes/editor/Editor.module.css": 4,
-    "modules/todos/routes/todos.module.css": 1,
     "modules/weather/components/WeatherChart.module.css": 1,
     "modules/weather/routes/weather.module.css": 1
   }

@@ -6,8 +6,9 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function add(page: Page, title: string) {
-  await page.getByLabel('ToDo hinzufügen').fill(title);
-  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
+  await page.getByRole('dialog').getByLabel('Titel').fill(title);
+  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
   await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
 }
 
@@ -19,7 +20,7 @@ test.describe('ToDos: views and board (plan group)', () => {
     await add(page, 'Regal aufbauen');
 
     await page.getByRole('button', { name: 'Irgendwann', exact: true }).click();
-    await expect(page.getByText('Regal aufbauen', { exact: true })).toBeVisible();
+    await expect(page.getByText('Regal aufbauen', { exact: true }).first()).toBeVisible();
 
     await page.getByRole('button', { name: 'Board', exact: true }).click();
     const someday = page.getByRole('region', { name: 'Irgendwann' });

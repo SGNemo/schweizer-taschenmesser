@@ -1,7 +1,7 @@
 import { changedFields } from '@/core/db/patch';
 import { useState, type FormEvent } from 'react';
 import type { Stored } from '@/core/db/types';
-import { Button, Dialog, patternStyles, Switch, TextField } from '@/ui';
+import { Button, Dialog, FormActions, patternStyles, Switch, TextField } from '@/ui';
 import { t } from '@/strings';
 import { deleteList, listRepo } from '../repo';
 import type { TodoList } from '../schema';
@@ -83,34 +83,26 @@ function ListForm({
       <Switch label={t.todos.project} checked={project} onChange={setProject} />
       <p className={patternStyles.muted}>{t.todos.projectHint}</p>
       {existing ? <p className={patternStyles.muted}>{t.todos.deleteListHint}</p> : null}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          gap: 'var(--space-2)',
-          flexWrap: 'wrap',
-        }}
+      <FormActions
+        start={
+          existing ? (
+            <Button
+              variant="danger"
+              onClick={async () => {
+                await deleteList(existing.id);
+                onClose();
+              }}
+            >
+              {t.todos.deleteList}
+            </Button>
+          ) : undefined
+        }
       >
-        {existing ? (
-          <Button
-            variant="danger"
-            onClick={async () => {
-              await deleteList(existing.id);
-              onClose();
-            }}
-          >
-            {t.todos.deleteList}
-          </Button>
-        ) : (
-          <span />
-        )}
-        <span className={patternStyles.hstack}>
-          <Button onClick={() => onClose()}>{t.actions.cancel}</Button>
-          <Button type="submit" variant="primary">
-            {t.actions.save}
-          </Button>
-        </span>
-      </div>
+        <Button onClick={() => onClose()}>{t.actions.cancel}</Button>
+        <Button type="submit" variant="primary">
+          {t.actions.save}
+        </Button>
+      </FormActions>
     </form>
   );
 }

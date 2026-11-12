@@ -92,7 +92,8 @@ test('a calendar place can be shown on the map', async ({ page }) => {
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Titel').fill('Zahnarzt');
   await expect(dialog.getByRole('button', { name: 'Auf der Karte zeigen' })).toHaveCount(0);
-  await dialog.getByLabel('Ort').fill('Musterstraße 1, Beispielstadt');
+  await dialog.getByRole('button', { name: 'Mehr Felder anzeigen' }).click();
+  await dialog.getByRole('textbox', { name: 'Ort' }).fill('Musterstraße 1, Beispielstadt');
   const popup = page.context().waitForEvent('page');
   await dialog.getByRole('button', { name: 'Auf der Karte zeigen' }).click();
   const url = new URL((await popup).url());

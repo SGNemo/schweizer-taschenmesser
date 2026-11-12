@@ -1,9 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openEditor } from './money-helpers';
 import { ready } from './helpers';
 
 async function addTodo(page: Page, title: string) {
-  await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).fill(title);
-  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
+  await page.getByRole('dialog').getByLabel('Titel').fill(title);
+  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
   await expect(page.getByRole('checkbox', { name: title })).toBeVisible();
 }
 
@@ -22,7 +24,7 @@ test.describe('undo', () => {
     test.skip(info.project.name === 'pixel-7', 'keyboard shortcut is a desktop feature');
     await ready(page, '/todos');
     await addTodo(page, 'Altpapier rausstellen');
-    await page.getByRole('button', { name: /Altpapier rausstellen/ }).click();
+    await openEditor(page, page.getByRole('button', { name: /Altpapier rausstellen/ }));
     await page
       .getByRole('dialog', { name: 'Aufgabe bearbeiten' })
       .getByRole('button', { name: 'Löschen' })
@@ -60,8 +62,12 @@ test.describe('keyboard (desktop)', () => {
     await page.keyboard.press('Escape');
 
     await ready(page, '/todos');
-    await page.getByRole('textbox', { name: 'ToDo hinzufügen' }).press('n');
-    await expect(page.getByRole('dialog')).toHaveCount(0);
+    // Typing "n" into a text field writes the letter, it opens no quick-add dialog on top.
+    await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
+    const title = page.getByRole('dialog', { name: 'Neue Aufgabe' }).getByLabel('Titel');
+    await title.press('n');
+    await expect(title).toHaveValue('n');
+    await expect(page.getByRole('dialog')).toHaveCount(1);
   });
 
   test('G then a letter jumps to an area, J/K walk the rows', async ({ page }) => {

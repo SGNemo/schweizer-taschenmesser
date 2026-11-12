@@ -38,7 +38,7 @@ test('the module switch "Erweitert" is remembered and shows the fields right awa
   await ready(page, '/calendar?new=1');
   await expect(page.getByRole('dialog').getByLabel('Ende (Datum)')).toBeVisible();
   // another module is unaffected
-  await ready(page, '/todos?new=1');
+  await ready(page, '/todos');
   await expect(
     (await openTodosMenu(page)).getByRole('menuitemcheckbox', { name: 'Mehr Felder anzeigen' }),
   ).toHaveAttribute('aria-checked', 'false');
@@ -79,7 +79,8 @@ test('a field that holds data is never hidden', async ({ page }) => {
     .getByRole('button', { name: /Konferenz/ })
     .first()
     .click();
-  await expect(page.getByRole('dialog').getByLabel('Ende (Datum)')).toHaveValue('2026-10-01');
+  // The date field writes the app's format (`DayField`).
+  await expect(page.getByRole('dialog').getByLabel('Ende (Datum)')).toHaveValue('01.10.2026');
 });
 
 test('finance: accounts and categories sit behind "Erweitert", or show once there is more than the defaults', async ({

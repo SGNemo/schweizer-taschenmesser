@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openEditor } from './money-helpers';
 import { enable, ready } from './helpers';
 
 /** UI round 6 (docs/qa/round-6), branch fix/ui6-modules-plan: the findings that only a real layout shows. */
@@ -7,8 +8,9 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function addTodo(page: Page, title: string) {
-  await page.getByLabel('ToDo hinzufügen').fill(title);
-  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
+  await page.getByRole('dialog').getByLabel('Titel').fill(title);
+  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
   await expect(page.getByRole('checkbox', { name: title })).toBeVisible();
 }
 
@@ -17,7 +19,7 @@ async function editTodo(
   title: string,
   edit: (dialog: ReturnType<Page['getByRole']>) => Promise<void>,
 ) {
-  await page.getByRole('button', { name: new RegExp(`^${title}`) }).click();
+  await openEditor(page, page.getByRole('button', { name: new RegExp(`^${title}`) }));
   const dialog = page.getByRole('dialog');
   await edit(dialog);
   await dialog.getByRole('button', { name: 'Speichern' }).click();

@@ -1573,14 +1573,19 @@ export const de = {
     },
     title: 'ToDos',
     add: 'ToDo hinzufügen',
+    /** The head's action on the desktop. */
+    newTask: 'Neue Aufgabe',
+    /** The noun on the phone's plus ("Aufgabe eintragen"). */
+    addShort: 'Aufgabe',
     addPlaceholder: 'Neue Aufgabe …',
+    addHint: 'Datum und Dauer kannst du mitschreiben, zum Beispiel „morgen 15 min“.',
     markedDone: 'Als erledigt markiert.',
     markedOpen: 'Wieder geöffnet.',
     taskDeleted: 'ToDo gelöscht.',
     changed: 'ToDo geändert.',
     noDue: 'Ohne Datum',
     empty: 'Nichts zu tun – gut so.',
-    emptyAction: 'Eine Sache eintragen',
+    emptyAction: 'Aufgabe eintragen',
     someday: 'Irgendwann',
     views: {
       label: 'Ansicht',
@@ -1627,6 +1632,8 @@ export const de = {
     projectProgress: (done: number, total: number) => `${done} von ${total} erledigt`,
     todayCard: {
       label: 'Heute',
+      /** The context line under the head's number names it: "heute" or "heute · etwa 45 Min". */
+      detail: (minutes: number) => (minutes > 0 ? `heute · etwa ${minutes} Min` : 'heute'),
       count: (n: number) => (n === 0 ? 'Nichts offen' : n === 1 ? '1 Aufgabe' : `${n} Aufgaben`),
       minutes: (m: number) => `etwa ${m} Min`,
       next: (title: string) => `Als Nächstes: ${title}`,
@@ -1681,6 +1688,8 @@ export const de = {
     planned: 'Geplant für',
     planToday: 'Für heute einplanen',
     planClear: 'Nicht einplanen',
+    /** The detail panel of the wide page (master–detail). */
+    detail: { label: 'Aufgabe im Detail', starts: 'Beginnt am' },
     subtasks: 'Unteraufgaben',
     addSubtask: 'Unteraufgabe hinzufügen',
     editTask: 'Aufgabe bearbeiten',
@@ -1742,6 +1751,10 @@ export const de = {
     },
     weekNoShort: 'KW',
     agendaEmpty: 'In diesem Zeitraum ist nichts geplant.',
+    /** A month line names its calendar in words (tooltip, screen reader). */
+    inCalendar: (name: string) => `Kalender ${name}`,
+    /** The one verb of an empty day or an empty agenda. */
+    emptyAction: 'Termin eintragen',
     holidayLabel: 'Feiertag',
     holidayRegions: {
       off: 'Aus',
@@ -1798,7 +1811,7 @@ export const de = {
       today: 'Heute frei',
       rest: 'Heute nichts mehr',
       next: (when: string, title: string) => `Als Nächstes: ${when} · ${title}`,
-      none: 'In den nächsten zwei Wochen ist nichts eingetragen.',
+      none: 'Zwei Wochen frei.',
     },
     endsAt: (time: string) => `bis ${time}`,
     recent: 'Wie zuletzt',
@@ -1834,8 +1847,11 @@ export const de = {
     reminders: {
       title: 'Erinnerungen',
       add: 'Erinnerung hinzufügen',
+      /** The noun on the phone's plus ("Erinnerung eintragen"). */
+      short: 'Erinnerung',
       edit: 'Erinnerung bearbeiten',
       empty: 'Noch keine Erinnerungen.',
+      emptyAction: 'Erinnerung eintragen',
       next: 'Nächste',
       ended: 'Beendet',
       paused: 'Pausiert',
@@ -1883,7 +1899,13 @@ export const de = {
       hour: '1 Stunde vorher',
       day: '1 Tag vorher',
     },
-    tabsLabel: 'Ansicht',
+    /** Beside "Mehr Felder" in the dialog of a new appointment: what the folded fields will save. */
+    moreSummary: {
+      once: 'Einmalig',
+      noReminder: 'Ohne Erinnerung',
+      reminder: (lead: string) => `Erinnerung: ${lead}`,
+    },
+    tabsLabel: 'Bereich',
     tabCalendar: 'Kalender',
     tabReminders: 'Erinnerungen',
     kinds: {
