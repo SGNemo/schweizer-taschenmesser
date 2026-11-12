@@ -11,7 +11,7 @@ test.describe('Habits (plan group, new module)', () => {
   }) => {
     await enable(page, 'habits');
     await page.goto('/habits?new=1');
-    const dialog = page.getByRole('dialog', { name: 'Gewohnheit hinzufügen' });
+    const dialog = page.getByRole('dialog', { name: 'Gewohnheit eintragen' });
     await dialog.getByRole('button', { name: 'Wasser trinken' }).click();
     await expect(dialog.getByLabel('Erinnerung')).toHaveValue('window');
     await dialog.getByRole('button', { name: 'Speichern' }).click();
@@ -22,8 +22,9 @@ test.describe('Habits (plan group, new module)', () => {
     await card.getByRole('button', { name: '+1 Wasser trinken' }).click();
     await card.getByRole('button', { name: '+1 Wasser trinken' }).click();
     await expect(card.getByText('2 von 8 Gläser')).toBeVisible();
-    // The head ring names the goal too (text, not only colour).
-    await expect(page.getByTestId('habit-rings')).toContainText('Wasser trinken');
+    // The rings row under the head is gone (0b-4b): the row itself names the goal in text, not only by its ring.
+    await expect(card).toContainText('Wasser trinken');
+    await expect(page.getByTestId('habit-rings')).toHaveCount(0);
   });
 
   test('the history view shows the year grid with a legend in words', async ({ page }) => {

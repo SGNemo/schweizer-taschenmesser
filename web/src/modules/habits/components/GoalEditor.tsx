@@ -4,7 +4,16 @@ import type { Stored } from '@/core/db/types';
 import { weekdayShort } from '@/core/recurrence/describe';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { AdvancedFields, Button, Dialog, Form, FormActions, SelectField, TextField } from '@/ui';
+import {
+  AdvancedFields,
+  Button,
+  Dialog,
+  Form,
+  FormActions,
+  SelectField,
+  TextField,
+  TimeField,
+} from '@/ui';
 import { entryRepo, goalRepo } from '../repo';
 import { goalSchema, type Goal } from '../schema';
 import styles from '../habits.module.css';
@@ -179,27 +188,12 @@ function Fields({
         <option value="window">{t.habits.form.reminderWindow}</option>
       </SelectField>
       {remKind === 'time' ? (
-        <TextField
-          label={t.habits.form.at}
-          type="time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-        />
+        <TimeField label={t.habits.form.at} value={time} onChange={setTime} />
       ) : null}
       {remKind === 'window' ? (
         <div className={styles.split}>
-          <TextField
-            label={t.habits.form.from}
-            type="time"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-          />
-          <TextField
-            label={t.habits.form.to}
-            type="time"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-          />
+          <TimeField label={t.habits.form.from} value={from} onChange={setFrom} />
+          <TimeField label={t.habits.form.to} value={to} onChange={setTo} />
           <TextField
             label={t.habits.form.every}
             type="number"

@@ -100,23 +100,26 @@ export function Report({
             {t.timetrack.report[p]}
           </button>
         ))}
-        <Button
-          variant="secondary"
-          size="sm"
-          aria-label={t.timetrack.report.prev}
-          onClick={() => setAnchor((a) => shiftPeriod(period, a, -1))}
-        >
-          <Icon name="chevronLeft" size={18} />
-        </Button>
-        <span>{range}</span>
-        <Button
-          variant="secondary"
-          size="sm"
-          aria-label={t.timetrack.report.next}
-          onClick={() => setAnchor((a) => shiftPeriod(period, a, 1))}
-        >
-          <Icon name="chevronRight" size={18} />
-        </Button>
+        {/* One group that never breaks: the arrow after the range must not land on a line of its own. */}
+        <span className={styles.rangeStep}>
+          <Button
+            variant="secondary"
+            size="sm"
+            aria-label={t.timetrack.report.prev}
+            onClick={() => setAnchor((a) => shiftPeriod(period, a, -1))}
+          >
+            <Icon name="chevronLeft" size={18} />
+          </Button>
+          <span>{range}</span>
+          <Button
+            variant="secondary"
+            size="sm"
+            aria-label={t.timetrack.report.next}
+            onClick={() => setAnchor((a) => shiftPeriod(period, a, 1))}
+          >
+            <Icon name="chevronRight" size={18} />
+          </Button>
+        </span>
       </div>
       {r.minutes === 0 ? (
         <p>{t.timetrack.report.none}</p>

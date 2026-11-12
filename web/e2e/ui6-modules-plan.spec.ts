@@ -77,7 +77,7 @@ test('U21: on the phone a waiting row gives its width to the title; "Auf heute" 
 test('U09: the habits page has one filled button', async ({ page }) => {
   await enable(page, 'habits');
   await ready(page, '/habits?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Gewohnheit hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Gewohnheit eintragen' });
   await dialog.getByRole('button', { name: 'Wasser trinken' }).click();
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);

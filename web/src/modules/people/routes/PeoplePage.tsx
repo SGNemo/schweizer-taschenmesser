@@ -10,9 +10,9 @@ import { formatDay, today } from '@/core/time/dates';
 import { changeWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import {
-  AdvancedToggle,
   Badge,
   Button,
+  DetailPanel,
   EmptyState,
   Icon,
   IconButton,
@@ -21,9 +21,12 @@ import {
   PageAction,
   PageHeader,
   patternStyles,
-  Segmented,
+  SplitView,
+  Tabs,
   TextField,
+  useAdvancedMenuItem,
   useOpenParam,
+  useSplitView,
 } from '@/ui';
 import { NextBirthdayHead, PersonRing } from '../components/PersonRing';
 import { GiftEditor, type GiftTarget } from '../components/GiftEditor';
@@ -45,6 +48,7 @@ import { inboxSchema, removeIdea, SCOPE as INBOX_SCOPE } from '../inbox';
 import { giftRepo, personRepo } from '../repo';
 import { useSettings } from '@/core/settings/settings';
 import type { Gift, Person } from '../schema';
+import styles from './people.module.css';
 
 const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
@@ -69,14 +73,61 @@ export default function PeoplePage() {
     // The person is gone (deleted on another device): back to the list.
     setParams({}, { replace: true });
   }
-  return person ? (
+  // Master–detail (layout `split`): on a wide page the person lies in the panel beside the list; below that width
+  // the person is a page of its own, as before.
+  const wide = useSplitView();
+  // The view outlives the way into a person's page and back (the head keeps its tabs there too).
+  const [view, setView] = useState<PeopleView>('people');
+  const [closed, setClosed] = useState(false);
+  // A person picked from outside (a search hit, a link) is shown: on a wide page the panel opens on the list of people.
+  const [seen, setSeen] = useState(person?.id);
+  if (seen !== person?.id) {
+    setSeen(person?.id);
+    if (person && wide) {
+      setClosed(false);
+      setView('people');
+    }
+  }
+  return person && !wide ? (
     <PersonDetail
       person={person}
       gifts={(gifts ?? []).filter((g) => g.personId === person.id)}
       onBack={() => setParams({})}
+      onView={(v) => {
+        setView(v);
+        setParams({});
+      }}
     />
   ) : (
-    <PeopleList people={people} gifts={gifts} onOpen={(id) => setParams({ person: id })} />
+    <PeopleList
+      people={people}
+      gifts={gifts}
+      wide={wide}
+      view={view}
+      setView={setView}
+      closed={closed}
+      setClosed={setClosed}
+      selectedId={wide ? (person?.id ?? null) : null}
+      onOpen={(id) => setParams({ person: id }, { replace: wide })}
+      onClosePanel={() => setParams({}, { replace: true })}
+    />
+  );
+}
+
+type PeopleView = 'people' | 'gifts';
+
+/** The two views of the page; a person's own page (below the split width) shows them too and leads back. */
+function PeopleTabs({ value, onChange }: { value: PeopleView; onChange: (v: PeopleView) => void }) {
+  return (
+    <Tabs
+      label={t.people.viewLabel}
+      value={value}
+      options={[
+        { value: 'people' as const, label: t.people.viewPeople },
+        { value: 'gifts' as const, label: t.people.viewGifts },
+      ]}
+      onChange={onChange}
+    />
   );
 }
 
@@ -86,12 +137,28 @@ function markGiven(id: string) {
 }
 
 /** Right side of a gift row: status badge, the one-tap "Verschenkt" and the link. */
-function GiftEnd({ gift: g }: { gift: Stored<Gift> }) {
+function GiftBadge({ gift: g }: { gift: Stored<Gift> }) {
+  return (
+    <Badge tone={g.status === 'idea' ? 'accent' : 'neutral'}>
+      {t.people.gift.statuses[g.status]}
+    </Badge>
+  );
+}
+
+function GiftEnd({ gift }: { gift: Stored<Gift> }) {
   return (
     <span className={patternStyles.hstackTight}>
-      <Badge tone={g.status === 'idea' ? 'accent' : 'neutral'}>
-        {t.people.gift.statuses[g.status]}
-      </Badge>
+      <GiftBadge gift={gift} />
+      <GiftActions gift={gift} />
+    </span>
+  );
+}
+
+/** What can be done with a gift from its row. In the narrow panel these lie under the row's text, not beside it. */
+function GiftActions({ gift: g }: { gift: Stored<Gift> }) {
+  if (g.status === 'given' && !g.url) return null;
+  return (
+    <span className={patternStyles.hstackTight}>
       {g.status !== 'given' ? (
         <Button
           size="sm"
@@ -116,16 +183,34 @@ function GiftEnd({ gift: g }: { gift: Stored<Gift> }) {
 function PeopleList({
   people,
   gifts,
+  wide,
+  selectedId,
   onOpen,
+  view,
+  setView,
+  closed,
+  setClosed,
+  onClosePanel,
 }: {
   people: Stored<Person>[] | undefined;
   gifts: Stored<Gift>[] | undefined;
+  /** The page is wide enough for the detail panel. */
+  wide: boolean;
+  /** The person picked on a wide page (from the URL). */
+  selectedId: string | null;
   onOpen: (id: string) => void;
+  view: PeopleView;
+  setView: (v: PeopleView) => void;
+  closed: boolean;
+  setClosed: (closed: boolean) => void;
+  /** The panel was closed: the URL forgets the person (a narrower window must not jump to that person's page). */
+  onClosePanel: () => void;
 }) {
   const [query, setQuery] = useState('');
-  const [view, setView] = useState<'people' | 'gifts'>('people');
   const [target, setTarget] = useState<PersonTarget>(null);
   const [params, setParams] = useSearchParams();
+
+  const advancedItem = useAdvancedMenuItem('people');
   const day = today();
 
   const openTarget = target ?? (params.get('new') ? { draft: true as const } : null);
@@ -155,15 +240,36 @@ function PeopleList({
     [people, q, day],
   );
 
+  const isEmpty = !!people && people.length === 0;
+  // The panel shows the picked person, else the first of the list (the next birthday).
+  const detail =
+    !wide || closed || view !== 'people'
+      ? undefined
+      : ((selectedId ? shown.find((p) => p.id === selectedId) : undefined) ?? shown[0]);
+  const pick = (id: string) => {
+    // From "Offene Geschenke" too: the person's panel belongs to the list of people.
+    if (wide) setView('people');
+    setClosed(false);
+    onOpen(id);
+  };
+
   return (
     <>
-      <PageHeader title={t.people.title}>
-        <AdvancedToggle moduleId="people" />
-        <PageAction short={t.people.meta.quickAdd} onClick={() => setTarget({ draft: true })}>
+      <PageHeader
+        title={t.people.title}
+        views={<PeopleTabs value={view} onChange={setView} />}
+        besideContent={!isEmpty && view === 'people'}
+      >
+        {/* While nobody is there the empty state owns the filled button of the view. */}
+        <PageAction
+          short={t.people.meta.quickAdd}
+          variant={isEmpty ? 'secondary' : 'primary'}
+          onClick={() => setTarget({ draft: true })}
+        >
           <Icon name="plus" size={18} />
           {t.people.add}
         </PageAction>
-        <StartDataMenu moduleId="people" />
+        <StartDataMenu moduleId="people" items={[advancedItem]} />
       </PageHeader>
       {soonest ? (
         <NextBirthdayHead
@@ -178,23 +284,11 @@ function PeopleList({
             .join(' · ')}
         />
       ) : null}
-      {/* U47: the switch keeps the page's 16 px step to the search below (like Karten & Orte). */}
-      {pending.length > 0 || view === 'gifts' ? (
-        <div className={patternStyles.gapBottom}>
-          <Segmented
-            label={t.people.viewLabel}
-            value={view}
-            options={[
-              { value: 'people' as const, label: t.people.viewPeople },
-              { value: 'gifts' as const, label: t.people.viewGifts },
-            ]}
-            onChange={setView}
-          />
-        </div>
-      ) : null}
       {view === 'gifts' ? (
         <>
-          {pending.length === 0 ? <p>{t.people.giftsNoneOpen}</p> : null}
+          {pending.length === 0 ? (
+            <p className={styles.firstRow}>{t.people.giftsNoneOpen}</p>
+          ) : null}
           <ItemList label={t.people.viewGifts}>
             {pending.map(({ gift: g, person: p }) => (
               <ItemRow
@@ -208,7 +302,7 @@ function PeopleList({
                 ]
                   .filter(Boolean)
                   .join(' · ')}
-                onOpen={() => onOpen(p.id)}
+                onOpen={() => pick(p.id)}
                 onSwipeRight={() => markGiven(g.id)}
                 swipeRightLabel={t.people.giftGivenAction}
                 end={<GiftEnd gift={g} />}
@@ -222,57 +316,121 @@ function PeopleList({
           title={t.people.empty}
           testId="people-empty"
           motif={<SignatureMark id="avatarRing" size={64} />}
-        />
+        >
+          <Button variant="primary" onClick={() => setTarget({ draft: true })}>
+            {t.people.emptyAction}
+          </Button>
+        </EmptyState>
       ) : null}
       {view === 'people' && people && people.length > 0 ? (
-        <TextField
-          label={t.people.search}
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+        // The first row of the page: on the phone the page's "⋯" menu lies at its right edge (`besideContent`).
+        <div className={styles.firstRow}>
+          <TextField
+            label={t.people.search}
+            labelHidden
+            placeholder={t.people.search}
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            data-list-search
+          />
+        </div>
       ) : null}
       {view === 'people' && people && people.length > 0 && shown.length === 0 ? (
         <p>{t.people.emptyFiltered}</p>
       ) : null}
       {view === 'people' ? (
-        <ItemList layout="grid" label={t.people.title}>
-          {shown.map((p) => {
-            const b = p.birthday;
-            const next = b ? nextBirthday(b, day) : undefined;
-            const age = b && next ? ageOn(b, next) : undefined;
-            const gifting = open.get(p.id) ?? 0;
-            return (
-              <ItemRow
-                key={p.id}
-                title={p.name}
-                lead={
-                  <PersonRing name={p.name} days={b ? daysUntil(b, day) : undefined} size={2.25} />
-                }
-                // U47: the line breaks between phrases only ("in 75 / Tagen" read as two facts).
-                meta={metaLine([
-                  next ? formatDay(next, 'EEE, d. MMMM') : undefined,
-                  age !== undefined ? t.people.turns(age) : undefined,
-                  b ? whenLabel(daysUntil(b, day)) : undefined,
-                  gifting ? t.people.giftsOpen(gifting) : undefined,
-                ])}
-                onOpen={() => onOpen(p.id)}
-                end={
-                  b ? (
-                    <IconButton
-                      label={t.people.congratulate(p.name)}
-                      onClick={() => congratulate(p)}
-                    >
-                      <Icon name="external" size={18} />
-                    </IconButton>
-                  ) : undefined
-                }
+        <SplitView
+          enabled={detail !== undefined}
+          asideLabel={t.people.detailLabel}
+          aside={
+            detail ? (
+              <PersonPanel
+                key={detail.id}
+                person={detail}
+                gifts={(gifts ?? []).filter((g) => g.personId === detail.id)}
+                onClose={() => {
+                  setClosed(true);
+                  onClosePanel();
+                }}
               />
-            );
-          })}
-        </ItemList>
+            ) : null
+          }
+        >
+          <ItemList label={t.people.title}>
+            {shown.map((p) => {
+              const b = p.birthday;
+              const next = b ? nextBirthday(b, day) : undefined;
+              const age = b && next ? ageOn(b, next) : undefined;
+              const gifting = open.get(p.id) ?? 0;
+              return (
+                <ItemRow
+                  key={p.id}
+                  title={p.name}
+                  lead={
+                    <PersonRing
+                      name={p.name}
+                      days={b ? daysUntil(b, day) : undefined}
+                      size={2.25}
+                    />
+                  }
+                  // U47: the line breaks between phrases only ("in 75 / Tagen" read as two facts).
+                  meta={metaLine([
+                    next ? formatDay(next, 'EEE, d. MMMM') : undefined,
+                    age !== undefined ? t.people.turns(age) : undefined,
+                    b ? whenLabel(daysUntil(b, day)) : undefined,
+                    gifting ? t.people.giftsOpen(gifting) : undefined,
+                  ])}
+                  current={detail?.id === p.id}
+                  onOpen={() => pick(p.id)}
+                  end={
+                    b ? (
+                      <IconButton
+                        label={t.people.congratulate(p.name)}
+                        onClick={() => congratulate(p)}
+                      >
+                        <Icon name="external" size={18} />
+                      </IconButton>
+                    ) : undefined
+                  }
+                />
+              );
+            })}
+          </ItemList>
+        </SplitView>
       ) : null}
       <PersonEditor target={openTarget} onClose={closeEditor} />
+    </>
+  );
+}
+
+/** The person in the panel of a wide page: the same content as the person's own page, in a `DetailPanel`. */
+function PersonPanel({
+  person,
+  gifts,
+  onClose,
+}: {
+  person: Stored<Person>;
+  gifts: Stored<Gift>[];
+  onClose: () => void;
+}) {
+  const [editing, setEditing] = useState<PersonTarget>(null);
+  return (
+    <>
+      <DetailPanel
+        testId="person-detail"
+        eyebrow={t.people.meta.quickAdd}
+        title={person.name}
+        onClose={onClose}
+        actions={
+          <Button onClick={() => setEditing(person)} data-row-edit>
+            {t.people.edit}
+          </Button>
+        }
+      >
+        <PersonBody person={person} gifts={gifts} inPanel />
+      </DetailPanel>
+      <PersonEditor target={editing} onClose={() => setEditing(null)} onDeleted={onClose} />
     </>
   );
 }
@@ -281,30 +439,78 @@ function PersonDetail({
   person,
   gifts,
   onBack,
+  onView,
 }: {
   person: Stored<Person>;
   gifts: Stored<Gift>[];
   onBack: () => void;
+  onView: (v: PeopleView) => void;
 }) {
-  const [inbox] = useSettings(INBOX_SCOPE, inboxSchema, { ideas: [] });
-  const ideas = inbox?.ideas ?? [];
   const [editing, setEditing] = useState<PersonTarget>(null);
-  const [gift, setGift] = useState<GiftTarget>(null);
   const day = today();
   const b = person.birthday;
-  const next = b ? nextBirthday(b, day) : undefined;
-  const age = b && next ? ageOn(b, next) : undefined;
-  const sum = totals(gifts);
   return (
     <>
       {b ? <NextBirthdayHead name={person.name} label={whenLabel(daysUntil(b, day))} /> : null}
-      <PageHeader title={person.name}>
+      <PageHeader title={person.name} views={<PeopleTabs value="people" onChange={onView} />}>
         <Button onClick={onBack}>{t.people.back}</Button>
         <Button onClick={() => setEditing(person)}>
           <Icon name="edit" size={18} />
           {t.people.edit}
         </Button>
       </PageHeader>
+      <PersonBody person={person} gifts={gifts} />
+      <PersonEditor target={editing} onClose={() => setEditing(null)} onDeleted={onBack} />
+    </>
+  );
+}
+
+/** What a person holds: the birthday line, ways to congratulate, tags, note, budget, gift ideas and gifts. */
+function PersonBody({
+  person,
+  gifts,
+  inPanel = false,
+}: {
+  person: Stored<Person>;
+  gifts: Stored<Gift>[];
+  /** In the panel of the wide page the head owns the one filled button: "Geschenk hinzufügen" is not filled. */
+  inPanel?: boolean;
+}) {
+  const [inbox] = useSettings(INBOX_SCOPE, inboxSchema, { ideas: [] });
+  const ideas = inbox?.ideas ?? [];
+  // In the panel the person's name is the h2; the sections lie one level below it.
+  const Heading = inPanel ? 'h3' : 'h2';
+  const [gift, setGift] = useState<GiftTarget>(null);
+  const day = today();
+  const b = person.birthday;
+  const next = b ? nextBirthday(b, day) : undefined;
+  const age = b && next ? ageOn(b, next) : undefined;
+  const sum = totals(gifts);
+  const ideaActions = (idea: (typeof ideas)[number], index: number) => (
+    <span className={patternStyles.hstackTight}>
+      <Button
+        size="sm"
+        onClick={() =>
+          void giftRepo
+            .create({
+              personId: person.id,
+              title: idea.title,
+              status: 'idea',
+              ...(idea.url ? { url: idea.url } : {}),
+              ...(idea.priceCents !== undefined ? { priceCents: idea.priceCents } : {}),
+            })
+            .then(() => removeIdea(index))
+        }
+      >
+        {t.people.inbox.take(person.name)}
+      </Button>
+      <Button size="sm" onClick={() => void removeIdea(index)}>
+        {t.people.inbox.dismiss}
+      </Button>
+    </span>
+  );
+  return (
+    <>
       <p>
         {[
           next ? formatDay(next, 'EEE, d. MMMM') : t.people.noBirthday,
@@ -344,7 +550,7 @@ function PersonDetail({
       ) : null}
       {ideas.length > 0 ? (
         <section aria-label={t.people.inbox.title} data-testid="gift-inbox">
-          <h2>{t.people.inbox.title}</h2>
+          <Heading>{t.people.inbox.title}</Heading>
           <p>{t.people.inbox.hint}</p>
           <ItemList label={t.people.inbox.title}>
             {ideas.map((idea, index) => (
@@ -352,38 +558,16 @@ function PersonDetail({
                 key={`${idea.title}|${idea.url ?? ''}`}
                 title={idea.title}
                 meta={idea.url}
-                end={
-                  <span className={patternStyles.hstackTight}>
-                    <Button
-                      size="sm"
-                      onClick={() =>
-                        void giftRepo
-                          .create({
-                            personId: person.id,
-                            title: idea.title,
-                            status: 'idea',
-                            ...(idea.url ? { url: idea.url } : {}),
-                            ...(idea.priceCents !== undefined
-                              ? { priceCents: idea.priceCents }
-                              : {}),
-                          })
-                          .then(() => removeIdea(index))
-                      }
-                    >
-                      {t.people.inbox.take(person.name)}
-                    </Button>
-                    <Button size="sm" onClick={() => void removeIdea(index)}>
-                      {t.people.inbox.dismiss}
-                    </Button>
-                  </span>
-                }
-              />
+                {...(inPanel ? {} : { end: ideaActions(idea, index) })}
+              >
+                {inPanel ? <div className={styles.rowFoot}>{ideaActions(idea, index)}</div> : null}
+              </ItemRow>
             ))}
           </ItemList>
         </section>
       ) : null}
-      <h2>{t.people.giftsHeading}</h2>
-      <Button variant="primary" onClick={() => setGift({ draft: true })}>
+      <Heading>{t.people.giftsHeading}</Heading>
+      <Button variant={inPanel ? 'secondary' : 'primary'} onClick={() => setGift({ draft: true })}>
         <Icon name="plus" size={18} />
         {t.people.addGift}
       </Button>
@@ -406,13 +590,18 @@ function PersonDetail({
               .filter(Boolean)
               .join(' · ')}
             onOpen={() => setGift(g)}
-            end={<GiftEnd gift={g} />}
+            end={inPanel ? <GiftBadge gift={g} /> : <GiftEnd gift={g} />}
             onSwipeRight={g.status !== 'given' ? () => markGiven(g.id) : undefined}
             swipeRightLabel={t.people.giftGivenAction}
-          />
+          >
+            {inPanel ? (
+              <div className={styles.rowFoot}>
+                <GiftActions gift={g} />
+              </div>
+            ) : null}
+          </ItemRow>
         ))}
       </ItemList>
-      <PersonEditor target={editing} onClose={() => setEditing(null)} onDeleted={onBack} />
       <GiftEditor target={gift} personId={person.id} onClose={() => setGift(null)} />
     </>
   );

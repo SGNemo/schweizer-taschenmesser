@@ -88,7 +88,6 @@ export default function ClockPage() {
 
       {places && list.length === 0 ? (
         <EmptyState title={t.clock.empty} testId="clock-empty">
-          <p>{t.clock.emptyHint}</p>
           <Button variant="primary" onClick={() => setAdding(true)}>
             {t.clock.addFirst}
           </Button>

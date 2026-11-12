@@ -3,8 +3,18 @@ import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { formatMoneyInput, parseMoney } from '@/core/money';
 import { pad2 } from '@/core/time/dates';
+import { today } from '@/core/time/now';
 import { t } from '@/strings';
-import { AdvancedFields, Button, Checkbox, Dialog, Form, FormActions, TextField } from '@/ui';
+import {
+  AdvancedFields,
+  Button,
+  Checkbox,
+  DayField,
+  Dialog,
+  Form,
+  FormActions,
+  TextField,
+} from '@/ui';
 import { deletePerson, personRepo } from '../repo';
 import { personSchema, type Person } from '../schema';
 import { deleteWithUndo } from '@/core/undo/withToast';
@@ -82,12 +92,16 @@ function Fields({
     existing?.giftBudgetCents === undefined ? '' : formatMoneyInput(existing.giftBudgetCents),
   );
   const [error, setError] = useState('');
+  const [dateError, setDateError] = useState('');
   const [extraError, setExtraError] = useState('');
 
   async function save() {
     // A text of only spaces passes the field's `required` but not the schema: say so (QA X34).
     if (!name.trim()) return setError(t.form.required);
-    const [y, m, d] = date.split('-').map(Number);
+    const [typedYear, m, d] = date.split('-').map(Number);
+    // "15.3.70" reads as the year nearest to today (2070): nobody is born in a coming year.
+    const thisYear = Number(today().slice(0, 4));
+    const y = typedYear !== undefined && typedYear > thisYear ? typedYear - 100 : typedYear;
     setExtraError('');
     const cents = budget.trim() === '' ? undefined : parseMoney(budget);
     const leadDays = lead.trim() === '' ? undefined : Number(lead);
@@ -106,7 +120,7 @@ function Fields({
       remindDaysBefore: leadDays,
       giftBudgetCents: cents,
     });
-    if (!parsed.success) return setError(t.people.invalidDate);
+    if (!parsed.success) return setDateError(t.people.invalidDate);
     if (existing)
       await personRepo.update(existing.id, changedFields(opened ?? existing, parsed.data));
     else await personRepo.create(parsed.data);
@@ -118,7 +132,11 @@ function Fields({
       <TextField
         label={t.people.name}
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        onChange={(e) => {
+          setName(e.target.value);
+          setError('');
+        }}
+        error={error}
         required
         data-autofocus
       />
@@ -129,15 +147,16 @@ function Fields({
       />
       {hasBirthday ? (
         <>
-          <TextField
+          <DayField
             label={t.people.birthdayDate}
-            type="date"
             value={date}
-            onChange={(e) => {
-              setDate(e.target.value);
-              setError('');
+            onChange={(value) => {
+              setDate(value);
+              setDateError('');
             }}
-            error={error}
+            error={dateError || undefined}
+            // A birth date needs no "vor n Tagen" line under it.
+            hint=""
             required
           />
           <Checkbox

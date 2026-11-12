@@ -17,6 +17,8 @@ export const people: Strings['people'] = {
       remindTimeHelp: 'Format HH:mm',
     },
   },
+  detailLabel: 'Person in detail',
+  emptyAction: 'Add your first person',
   title: 'People',
   add: 'Add person',
   edit: 'Edit person',
@@ -53,7 +55,7 @@ export const people: Strings['people'] = {
     string
   >,
   search: 'Search people',
-  empty: 'No people yet. Add birthdays and gift ideas.',
+  empty: 'No people yet.',
   emptyFiltered: 'Nothing found.',
   back: 'All people',
   deleted: 'Person deleted.',

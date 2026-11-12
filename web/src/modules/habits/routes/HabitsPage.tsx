@@ -1,26 +1,30 @@
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { useWeekStart } from '@/core/settings/core';
-import { addDaysStr, today } from '@/core/time/dates';
+import { addDaysStr, formatDay, today } from '@/core/time/dates';
 import { changeWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import {
   Button,
+  DetailPanel,
   EmptyState,
   Icon,
   ItemList,
   ItemRow,
   PageAction,
   PageHeader,
-  Segmented,
+  SplitView,
+  Tabs,
   useOpenParam,
+  useSplitView,
+  useAdvancedMenuItem,
 } from '@/ui';
+import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import { HeroFigure, HeroSlot } from '@/ui/identity';
 import { GoalCard } from '../components/GoalCard';
 import { GoalEditor, type GoalTarget } from '../components/GoalEditor';
 import { HabitsMotif } from '../components/HabitsMotif';
-import { HabitRings } from '../components/HabitRings';
-import { History } from '../components/History';
+import { GoalHistory, History } from '../components/History';
 import { useEntries, useGoals } from '../data';
 import { dayProgress, isScheduled } from '../logic';
 import { archiveGoal, goalRepo } from '../repo';
@@ -41,6 +45,10 @@ export default function HabitsPage() {
   const entries = useEntries(addDaysStr(day, -371));
   const weekStart = useWeekStart();
   const [target, setTarget] = useState<GoalTarget>(null);
+  // Master–detail (layout `split`): on a wide page the picked goal's history lies in the panel beside today's list.
+  const wide = useSplitView();
+  const advancedItem = useAdvancedMenuItem('habits');
+  const [picked, setPicked] = useState<string | 'closed' | null>(null);
   useOpenParam(
     (id) => goalRepo.get(id),
     (g) => setTarget(g),
@@ -80,12 +88,19 @@ export default function HabitsPage() {
   };
 
   const planned = (goals ?? []).filter((g) => isScheduled(g, day));
+  // The panel shows the picked goal, else the first of today's list.
+  const detail =
+    !wide || picked === 'closed' || view !== 'today'
+      ? undefined
+      : (planned.find((g) => g.id === picked) ?? planned[0]);
   return (
     <>
       <PageHeader
         title={t.habits.title}
+        // Phone: the "⋯" menu lies beside the day line or the goal chips, not on a row of its own.
+        besideContent={view !== 'archive' && !!goals && goals.length > 0}
         views={
-          <Segmented
+          <Tabs
             label={t.habits.tabs.label}
             value={view}
             options={VIEWS.map((v) => ({ value: v, label: t.habits.tabs[v] }))}
@@ -102,6 +117,7 @@ export default function HabitsPage() {
           <Icon name="plus" size={18} />
           {t.habits.add}
         </PageAction>
+        <StartDataMenu moduleId="habits" items={[advancedItem]} />
       </PageHeader>
       {goals && planned.length > 0 ? (
         <HeroSlot area="figure">
@@ -109,19 +125,14 @@ export default function HabitsPage() {
             label={t.habits.tabs.today}
             value={String(planned.filter((g) => dayProgress(g, todayMap.get(g.id)) >= 1).length)}
             unit={`/ ${planned.length}`}
+            // The standard head draws no label: the context line names the number.
+            detail={t.habits.tabs.today}
             testId="habit-done"
           />
         </HeroSlot>
       ) : null}
-      {goals ? (
-        <HeroSlot area="signature">
-          <HabitRings goals={goals} today={todayMap} day={day} />
-        </HeroSlot>
-      ) : null}
-
       {goals && goals.length === 0 && view !== 'archive' ? (
         <EmptyState title={t.habits.empty} testId="habits-empty" motif={<HabitsMotif />}>
-          <p>{t.habits.emptyHint}</p>
           <Button variant="primary" onClick={() => setTarget('new')}>
             {t.habits.addFirst}
           </Button>
@@ -132,19 +143,50 @@ export default function HabitsPage() {
         planned.length === 0 ? (
           <p>{t.habits.today.nothing}</p>
         ) : (
-          <ul className={styles.cards}>
-            {planned.map((g) => (
-              <GoalCard
-                key={g.id}
-                goal={g}
-                entry={todayMap.get(g.id)}
-                map={byGoal.get(g.id) ?? new Map()}
-                day={day}
-                weekStart={weekStart}
-                onEdit={() => setTarget(g)}
-              />
-            ))}
-          </ul>
+          <SplitView
+            enabled={detail !== undefined}
+            asideLabel={t.habits.detail.label}
+            aside={
+              detail ? (
+                <DetailPanel
+                  testId="habit-detail"
+                  eyebrow={t.habits.meta.quickAdd}
+                  title={detail.name}
+                  onClose={() => setPicked('closed')}
+                  actions={
+                    <Button onClick={() => setTarget(detail)} data-row-edit>
+                      {t.actions.edit}
+                    </Button>
+                  }
+                >
+                  <GoalHistory
+                    goal={detail}
+                    entries={entries ?? []}
+                    weekStart={weekStart}
+                    compact
+                  />
+                </DetailPanel>
+              ) : null
+            }
+          >
+            {/* The day the list is about; on the phone it is the page's first line. */}
+            <p className={styles.dayLine}>{formatDay(day, 'EEEE, d. MMMM')}</p>
+            <ul className={styles.cards} aria-label={t.habits.tabs.today}>
+              {planned.map((g) => (
+                <GoalCard
+                  key={g.id}
+                  goal={g}
+                  entry={todayMap.get(g.id)}
+                  map={byGoal.get(g.id) ?? new Map()}
+                  day={day}
+                  weekStart={weekStart}
+                  onEdit={() => setTarget(g)}
+                  current={detail?.id === g.id}
+                  onPick={wide ? () => setPicked(g.id) : undefined}
+                />
+              ))}
+            </ul>
+          </SplitView>
         )
       ) : null}
 
