@@ -77,7 +77,10 @@ test('settings: tool order by keyboard drag and by the row menu', async ({ page 
   await expect(rows.first()).toHaveAttribute('id', second!);
   await expect(rows.nth(1)).toHaveAttribute('id', first!);
   // the moves in the row's menu still work and persist
-  await rows.nth(1).getByRole('button', { name: /^Aktionen für/ }).click();
+  await rows
+    .nth(1)
+    .getByRole('button', { name: /^Aktionen für/ })
+    .click();
   await page.getByRole('menuitem', { name: /weiter nach oben/ }).click();
   await expect(rows.first()).toHaveAttribute('id', first!);
   await page.waitForTimeout(500); // let the write reach IndexedDB before reloading
