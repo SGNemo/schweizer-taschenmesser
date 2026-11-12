@@ -10,7 +10,6 @@ export function MapsHead({ count, last }: { count: number; last?: string }) {
   return (
     <HeroSlot area="figure">
       <HeroFigure
-        label={t.maps.tabs.places}
         value={String(count)}
         unit={t.maps.placesBar.unit(count)}
         detail={last ? t.maps.placesBar.last(last) : t.maps.placesBar.pinHint}

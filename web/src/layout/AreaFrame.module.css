@@ -225,6 +225,8 @@
   height: auto;
   background: none;
   box-shadow: none;
+  /* the plate's ink was chosen for its filled surface; the bare mark is drawn in the text colour */
+  color: var(--text);
 }
 :global(:root[data-theme='dark']) .stage .plate {
   color: var(--bg);

@@ -31,6 +31,7 @@ export function DaySheet({
   onClose: () => void;
 }) {
   const [label, setLabel] = useState('');
+  const [blockerRound, setBlockerRound] = useState(0);
   const [minutes, setMinutes] = useState('60');
   const [blockFrom, setBlockFrom] = useState('');
   const [blockTo, setBlockTo] = useState('');
@@ -63,6 +64,8 @@ export function DaySheet({
         setLabel('');
         setBlockFrom('');
         setBlockTo('');
+        // a time field keeps what was typed until it loses the focus: built anew, both are empty again
+        setBlockerRound((n) => n + 1);
       }
     });
   };
@@ -159,13 +162,19 @@ export function DaySheet({
           <>
             <div className={styles.timeField}>
               <TimeField
+                key={`from-${blockerRound}`}
                 label={t.planner.day.blockerFrom}
                 value={blockFrom}
                 onChange={setBlockFrom}
               />
             </div>
             <div className={styles.timeField}>
-              <TimeField label={t.planner.day.blockerTo} value={blockTo} onChange={setBlockTo} />
+              <TimeField
+                key={`to-${blockerRound}`}
+                label={t.planner.day.blockerTo}
+                value={blockTo}
+                onChange={setBlockTo}
+              />
             </div>
           </>
         ) : null}

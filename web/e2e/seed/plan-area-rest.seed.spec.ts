@@ -58,7 +58,7 @@ test.describe('plan area, Planer and Karten on tone steps (package 0b-4b, part 2
       await startSeeded(page);
       await openPage(page, '/weather');
       const mark = page.locator(
-        '[data-testid="module-signature"][data-default="true"] [data-signature]',
+        '[data-testid="module-signature"][data-default="true"] span[data-signature]',
       );
       await expect(mark).toBeVisible();
       const drawn = await mark.evaluate((el) => {
