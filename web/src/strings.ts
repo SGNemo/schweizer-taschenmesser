@@ -6708,7 +6708,7 @@ export const de = {
     },
     routines: {
       label: 'Typische Routinen',
-      hint: 'Ankreuzen, was im Haushalt wiederkehrt. Die Routinen starten verteilt über die nächsten Tage; Rhythmus, Raum und wer an der Reihe ist lassen sich danach ändern.',
+      hint: 'Ankreuzen, was im Haushalt wiederkehrt. Die Routinen starten verteilt über die nächsten Tage und Wochen; Rhythmus, Raum und wer an der Reihe ist, lassen sich danach ändern.',
       first: (day: string) => `erstes Mal ${day}`,
       items: {
         bath: { name: 'Bad putzen', room: 'Bad' },

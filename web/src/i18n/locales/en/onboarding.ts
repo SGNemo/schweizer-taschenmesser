@@ -387,7 +387,7 @@ export const onboarding: Strings['onboarding'] = {
   },
   routines: {
     label: 'Typical routines',
-    hint: 'Tick what comes round in your household. The routines start spread over the coming days; you can change rhythm, room and whose turn it is afterwards.',
+    hint: 'Tick what comes round in your household. The routines start spread over the coming days and weeks; you can change rhythm, room and whose turn it is afterwards.',
     first: (day: string) => `first time ${day}`,
     items: {
       bath: { name: 'Clean the bathroom', room: 'Bathroom' },
