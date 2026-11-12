@@ -20,7 +20,7 @@ interface Props {
   /** Called with the stored form once the text is a date or time, and with `''` when the field was emptied. */
   onChange: (value: string) => void;
   hint?: string;
-  /** A message of the form about this value ("the end lies before the start"); shown like a field error. */
+  /** An error the form found on save (the field's own "not a date" message wins while the text is unreadable). */
   error?: string;
   required?: boolean;
   labelHidden?: boolean;
@@ -56,7 +56,8 @@ function ParsedField({
   const input = useRef<HTMLInputElement>(null);
   // While someone types, the field shows their text; otherwise the stored value in the region's form.
   const [draft, setDraft] = useState<string | null>(null);
-  const [error, setError] = useState(false);
+  const [unread, setError] = useState(false);
+  const error = unread || !!formError;
   const text = draft ?? format(value);
   // Text that is no date (or time) must never be saved as the last value that happened to parse on the way
   // ("3.9.202" after "3.9.20"): while it stands, the form cannot be submitted, by Enter or by "Speichern".
@@ -68,10 +69,8 @@ function ParsedField({
     setDraft(null);
     setError(false);
   };
-  // The field's own message (text that is no date) comes before the form's.
-  const message = error ? invalid : formError;
   const describedBy =
-    [hint ? `${id}-hint` : '', message ? `${id}-err` : ''].filter(Boolean).join(' ') || undefined;
+    [hint ? `${id}-hint` : '', error ? `${id}-err` : ''].filter(Boolean).join(' ') || undefined;
   return (
     <div className={fieldStyles.field}>
       <label
@@ -93,7 +92,7 @@ function ParsedField({
           placeholder={placeholder}
           value={text}
           required={required}
-          aria-invalid={message ? true : undefined}
+          aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           onChange={(e) => {
             const next = e.target.value;
@@ -120,9 +119,9 @@ function ParsedField({
           {hint}
         </span>
       ) : null}
-      {message ? (
+      {error ? (
         <span id={`${id}-err`} className={fieldStyles.error} role="alert">
-          {message}
+          {unread ? invalid : formError}
         </span>
       ) : null}
     </div>

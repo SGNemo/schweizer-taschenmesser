@@ -4,7 +4,17 @@ import type { Stored } from '@/core/db/types';
 import { today } from '@/core/time/dates';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { Button, Dialog, Form, FormActions, SelectField, TextField } from '@/ui';
+import {
+  AdvancedFields,
+  Button,
+  DayField,
+  Dialog,
+  Form,
+  FormActions,
+  SelectField,
+  TextField,
+  TimeField,
+} from '@/ui';
 import { sessionRepo } from '../repo';
 import { sessionSchema, type Job, type Session } from '../schema';
 
@@ -96,53 +106,44 @@ function Fields({
           </option>
         ))}
       </SelectField>
-      <TextField
+      <DayField
         label={t.timetrack.form.date}
-        type="date"
         value={date}
-        onChange={(e) => setDate(e.target.value)}
+        onChange={setDate}
         required
         data-autofocus
       />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
-        <TextField
-          label={t.timetrack.form.start}
-          type="time"
-          value={start}
-          onChange={(e) => setStart(e.target.value)}
-          required
-        />
+        <TimeField label={t.timetrack.form.start} value={start} onChange={setStart} required />
         {running ? null : (
-          <TextField
-            label={t.timetrack.form.end}
-            type="time"
-            value={end}
-            onChange={(e) => setEnd(e.target.value)}
-            required
-          />
+          <TimeField label={t.timetrack.form.end} value={end} onChange={setEnd} required />
         )}
       </div>
-      {running ? null : (
-        <TextField
-          label={t.timetrack.form.endDate}
-          type="date"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-        />
-      )}
-      <TextField
-        label={t.timetrack.form.breakMin}
-        type="number"
-        inputMode="numeric"
-        min={0}
-        value={breakMin}
-        onChange={(e) => setBreakMin(e.target.value)}
-      />
       <TextField
         label={t.timetrack.form.note}
         value={note}
         onChange={(e) => setNote(e.target.value)}
       />
+      {/* First what is needed: project, day, from, to, note. A break and an end on another day are rare. */}
+      <AdvancedFields
+        moduleId="timetrack"
+        // An error on save may be about the end day (an entry over midnight): the fields show then.
+        hasData={
+          (breakMin !== '' && breakMin !== '0') || (!!endDate && endDate !== date) || !!error
+        }
+      >
+        {running ? null : (
+          <DayField label={t.timetrack.form.endDate} value={endDate} onChange={setEndDate} />
+        )}
+        <TextField
+          label={t.timetrack.form.breakMin}
+          type="number"
+          inputMode="numeric"
+          min={0}
+          value={breakMin}
+          onChange={(e) => setBreakMin(e.target.value)}
+        />
+      </AdvancedFields>
       {error ? <p role="alert">{error}</p> : null}
       <FormActions
         start={

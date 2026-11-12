@@ -2,22 +2,29 @@ import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { useNow } from '@/core/focus/useNow';
 import { formatMoney } from '@/core/money';
-import { addDaysStr, today } from '@/core/time/dates';
+import { addDaysStr, formatDay, today } from '@/core/time/dates';
 import { changeWithUndo } from '@/core/undo/withToast';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import {
   Button,
+  DetailPanel,
   EmptyState,
   Icon,
+  IconButton,
   ItemList,
   ItemRow,
+  PageAction,
   PageHeader,
-  Segmented,
+  SplitView,
+  Tabs,
   categoryColor,
   useMediaQuery,
   useOpenParam,
+  useAdvancedMenuItem,
+  useSplitView,
 } from '@/ui';
+import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import { IdlePrompt } from '../components/IdlePrompt';
 import { JobEditor, type JobTarget } from '../components/JobEditor';
@@ -45,6 +52,9 @@ export default function TimetrackPage() {
   const sessions = useSessions(addDaysStr(day, -70));
   const [session, setSession] = useState<SessionTarget>(null);
   const [job, setJob] = useState<JobTarget>(null);
+  const wide = useSplitView();
+  const advancedItem = useAdvancedMenuItem('timetrack');
+  const [picked, setPicked] = useState<string | 'closed' | null>(null);
   useOpenParam(
     (id) => sessionRepo.get(id),
     (s) => setSession(s),
@@ -82,6 +92,13 @@ export default function TimetrackPage() {
     useUiStore.getState().toast(t.timetrack.startedToast(name));
   }
 
+  // Master–detail (layout `split`): on a wide page the picked entry of today lies in the panel beside the list,
+  // below that width a row opens the dialog.
+  const detail =
+    !wide || picked === 'closed' || view !== 'today'
+      ? undefined
+      : (todays.find((s) => s.id === picked) ?? todays[0]);
+
   // U10: without a project the page says one thing (the empty state); idle line and day list follow the first project.
   const noJobs = !!jobs && jobs.length === 0;
   const runJob = running?.jobId ? jobMap.get(running.jobId) : undefined;
@@ -93,8 +110,11 @@ export default function TimetrackPage() {
     <>
       <PageHeader
         title={t.timetrack.title}
+        // Phone: the "⋯" menu lies beside the status line or the report's range, not on a row of its own. A running
+        // card and the project rows reach the right edge: there the menu keeps its row.
+        besideContent={!running && view !== 'jobs'}
         views={
-          <Segmented
+          <Tabs
             label={t.timetrack.tabs.label}
             value={view}
             options={VIEWS.map((v) => ({ value: v, label: t.timetrack.tabs[v] }))}
@@ -102,11 +122,29 @@ export default function TimetrackPage() {
           />
         }
       >
-        {/* C29: Start/Stopp in the head is the page's one filled action; adding a past entry is secondary. */}
-        <Button onClick={() => setSession('new')}>
-          <Icon name="plus" size={18} />
-          {t.timetrack.add}
-        </Button>
+        {/* C29: Start/Stopp is the page's one filled action; adding a past entry is the page's entry (the plus on
+            the phone), not filled. */}
+        {/* One entry per view: "Projekte" adds a project, the two others a past entry. */}
+        {view === 'jobs' ? (
+          <PageAction
+            short={t.timetrack.job.short}
+            variant="secondary"
+            onClick={() => setJob('new')}
+          >
+            <Icon name="plus" size={18} />
+            {t.timetrack.job.add}
+          </PageAction>
+        ) : (
+          <PageAction
+            short={t.timetrack.entryShort}
+            variant="secondary"
+            onClick={() => setSession('new')}
+          >
+            <Icon name="plus" size={18} />
+            {t.timetrack.add}
+          </PageAction>
+        )}
+        <StartDataMenu moduleId="timetrack" items={[advancedItem]} />
       </PageHeader>
       <HeroSlot area="figure">
         <HeroFigure
@@ -174,26 +212,93 @@ export default function TimetrackPage() {
               <p>{t.timetrack.noSessions}</p>
             )
           ) : (
-            <ItemList>
-              {todays.map((s) => {
-                const j = s.jobId ? jobMap.get(s.jobId) : undefined;
-                return (
-                  <ItemRow
-                    key={s.id}
-                    title={j?.name ?? s.note ?? t.timetrack.noJob}
-                    meta={`${s.startTime} – ${s.endTime ?? '…'} · ${duration(sessionMinutes(s, nowMs))}`}
-                    lead={
-                      <span
-                        className={styles.dot}
-                        style={{ background: categoryColor(j?.tone ?? 0) }}
-                        aria-hidden="true"
-                      />
+            <SplitView
+              enabled={detail !== undefined}
+              asideLabel={t.timetrack.detail.label}
+              aside={
+                detail ? (
+                  <DetailPanel
+                    testId="session-detail"
+                    eyebrow={formatDay(detail.date, 'EEEE, d. MMMM')}
+                    title={
+                      (detail.jobId ? jobMap.get(detail.jobId)?.name : undefined) ??
+                      detail.note ??
+                      t.timetrack.noJob
                     }
-                    onOpen={() => setSession(s)}
+                    facts={[
+                      {
+                        label: t.timetrack.detail.time,
+                        value: `${detail.startTime} – ${detail.endTime ?? t.timetrack.running}`,
+                      },
+                      ...(detail.breakMin
+                        ? [
+                            {
+                              label: t.timetrack.detail.breakTime,
+                              value: duration(detail.breakMin),
+                            },
+                          ]
+                        : []),
+                      // The row says how long this entry was; the panel adds what the project took today.
+                      ...(detail.jobId && jobMap.has(detail.jobId)
+                        ? [
+                            {
+                              label: t.timetrack.detail.jobToday,
+                              value: duration(
+                                todays
+                                  .filter((s) => s.jobId === detail.jobId)
+                                  .reduce((sum, s) => sum + sessionMinutes(s, nowMs), 0),
+                              ),
+                            },
+                          ]
+                        : []),
+                      ...(detail.jobId && jobMap.has(detail.jobId) && detail.note
+                        ? [{ label: t.form.note, value: detail.note }]
+                        : []),
+                    ]}
+                    onClose={() => setPicked('closed')}
+                    actions={
+                      <Button onClick={() => setSession(detail)} data-row-edit>
+                        {t.actions.edit}
+                      </Button>
+                    }
                   />
-                );
-              })}
-            </ItemList>
+                ) : null
+              }
+            >
+              <ItemList label={t.timetrack.tabs.today}>
+                {todays.map((s) => {
+                  const j = s.jobId ? jobMap.get(s.jobId) : undefined;
+                  return (
+                    <ItemRow
+                      key={s.id}
+                      title={j?.name ?? s.note ?? t.timetrack.noJob}
+                      meta={`${s.startTime} – ${s.endTime ?? '…'} · ${duration(sessionMinutes(s, nowMs))}`}
+                      lead={
+                        <span
+                          className={styles.dot}
+                          style={{ background: categoryColor(j?.tone ?? 0) }}
+                          aria-hidden="true"
+                        />
+                      }
+                      current={detail?.id === s.id}
+                      onOpen={() => (wide ? setPicked(s.id) : setSession(s))}
+                      // Beside the panel a row only picks: correcting an entry stays one click (and the E key).
+                      actions={
+                        wide ? (
+                          <IconButton
+                            label={`${t.timetrack.edit}: ${j?.name ?? s.note ?? t.timetrack.noJob}`}
+                            data-row-edit
+                            onClick={() => setSession(s)}
+                          >
+                            <Icon name="edit" size={16} />
+                          </IconButton>
+                        ) : undefined
+                      }
+                    />
+                  );
+                })}
+              </ItemList>
+            </SplitView>
           )}
         </>
       ) : null}
@@ -208,10 +313,6 @@ export default function TimetrackPage() {
 
       {view === 'jobs' ? (
         <>
-          <Button variant="secondary" onClick={() => setJob('new')}>
-            <Icon name="plus" size={18} />
-            {t.timetrack.job.add}
-          </Button>
           <ItemList>
             {[...(jobs ?? []), ...(archived ?? [])].map((j) => {
               const client = (clients ?? []).find((c) => c.id === j.clientId);

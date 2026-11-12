@@ -52,7 +52,7 @@ test('a person from the search opens its detail page', async ({ page }, info) =>
   test.skip(info.project.name === 'pixel-7', 'the palette shortcut is a desktop feature');
   await enable(page, 'people');
   await ready(page, '/people?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Person hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Person eintragen' });
   await dialog.getByLabel('Name', { exact: true }).fill('Frieda Beispiel');
   await dialog.getByLabel('Geburtsdatum').fill('1950-05-05');
   await dialog.getByRole('button', { name: 'Speichern' }).click();

@@ -138,3 +138,39 @@ test.describe('money lists beside the detail panel', () => {
     });
   }
 });
+
+// Package 0b-4b, part 1: the master–detail pages of the plan area keep the same floor at the same widths.
+test.describe('plan lists beside the detail panel', () => {
+  test.use({ seeded: { scale: 'medium', desktop: true, preview: true } });
+
+  for (const width of WIDTHS) {
+    test(`Personen, Gewohnheiten and Zeiterfassung keep their text at ${width} px`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: HEIGHT });
+      await startSeeded(page);
+      for (const path of ['/people', '/habits', '/timetrack']) {
+        await openPage(page, path);
+        await settle(page);
+        // All three show their first row in the panel from the start.
+        await expect(page.locator('main aside')).toBeVisible();
+        const r = await page.evaluate(read);
+        if (SHOTS) {
+          mkdirSync(SHOTS, { recursive: true });
+          await page.screenshot({ path: join(SHOTS, `${path.slice(1)}-${width}.png`) });
+        }
+        expect.soft(r.sideways, `${path}: the page scrolls sideways`).toBe(false);
+        expect(r.rows.length, `${path}: rows`).toBeGreaterThan(0);
+        for (const row of r.rows) {
+          expect
+            .soft(row.text, `${path}: text of "${row.title}" is ${row.text} px wide`)
+            .toBeGreaterThanOrEqual(TEXT_MIN);
+          expect
+            .soft(row.height, `${path}: row "${row.title}" is ${row.height} px high`)
+            .toBeLessThanOrEqual(ROW_MAX);
+        }
+        expect.soft(r.current, `${path}: one row is the panel's entry`).toHaveLength(1);
+      }
+    });
+  }
+});

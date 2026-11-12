@@ -7,8 +7,8 @@ test.beforeEach(async ({ page }) => {
 
 async function addJob(page: Page, name: string, rate: string) {
   await page.goto('/timetrack?view=jobs');
-  await page.getByRole('button', { name: 'Projekt hinzufügen' }).click();
-  const dialog = page.getByRole('dialog', { name: 'Projekt hinzufügen' });
+  await page.getByRole('button', { name: 'Projekt eintragen' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Projekt eintragen' });
   await dialog.getByLabel('Name', { exact: true }).fill(name);
   await dialog.getByLabel('Stundensatz (€)').fill(rate);
   await dialog.getByRole('button', { name: 'Speichern' }).click();
@@ -38,7 +38,7 @@ test.describe('Time tracking (plan group, new module)', () => {
     await enable(page, 'timetrack');
     await addJob(page, 'Website', '60');
     await page.goto('/timetrack?new=1');
-    const dialog = page.getByRole('dialog', { name: 'Eintrag hinzufügen' });
+    const dialog = page.getByRole('dialog', { name: 'Zeit eintragen' });
     await dialog.getByLabel('Beginn').fill('08:00');
     await dialog.getByLabel('Ende', { exact: true }).fill('10:30');
     await dialog.getByRole('button', { name: 'Speichern' }).click();
