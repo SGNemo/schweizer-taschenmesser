@@ -85,6 +85,9 @@ for (const theme of process.env.PLAN_SHOTS ? (['light', 'dark'] as const) : (['l
         // Zeiterfassung: the plus adds a past entry, "Start" stays the page's own button.
         await openPage(page, '/timetrack');
         await expect(page.getByTestId('bottom-plus')).toHaveAccessibleName('Zeit eintragen');
+        // One entry per view: on "Projekte" the plus adds a project.
+        await openPage(page, '/timetrack?view=jobs');
+        await expect(page.getByTestId('bottom-plus')).toHaveAccessibleName('Projekt eintragen');
       });
     });
   });

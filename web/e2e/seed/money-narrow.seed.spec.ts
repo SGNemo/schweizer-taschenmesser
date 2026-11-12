@@ -136,8 +136,7 @@ test.describe('plan lists beside the detail panel', () => {
       for (const path of ['/people', '/habits', '/timetrack']) {
         await openPage(page, path);
         await settle(page);
-        // Zeiterfassung shows the entry that was picked; the two others show their first row from the start.
-        if (path === '/timetrack') await page.locator('main li [data-row]').first().click();
+        // All three show their first row in the panel from the start.
         await expect(page.locator('main aside')).toBeVisible();
         const r = await page.evaluate(read);
         if (SHOTS) {
