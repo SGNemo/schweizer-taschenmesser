@@ -57,7 +57,7 @@ test.describe('desktop layout', () => {
   test('a new page keeps its title, can be found and deleted with undo', async ({ page }) => {
     await enable(page, 'notes');
     await ready(page, '/notes');
-    await page.getByRole('button', { name: 'Neue Seite' }).click();
+    await page.locator('[data-page-action]').click();
     await expect(editor(page)).toBeVisible(); // the editor loads lazily
     await page.getByLabel('Titel der Seite').fill('Gartenplan');
     await page.keyboard.press('Enter');
@@ -75,12 +75,13 @@ test.describe('desktop layout', () => {
     await expect(list.getByText('Gartenplan')).toHaveCount(0);
   });
 
-  test('a template fills a new page; the cards view shows the previews; the head carries the paper', async ({
+  test('a template fills a new page; the cards view shows the previews; no paper under the head', async ({
     page,
   }) => {
     await enable(page, 'notes');
     await ready(page, '/notes');
-    await expect(page.getByTestId('note-paper')).toBeAttached();
+    // Identity 4.0: no signature block under the head (the note paper is the empty state's motif).
+    await expect(page.getByTestId('note-paper')).toHaveCount(0);
     await page.getByRole('button', { name: 'Vorlagen und Sortierung' }).click();
     await page.getByRole('menuitem', { name: 'Besprechung' }).click();
     await expect(editor(page)).toContainText('Beschlüsse');
@@ -112,7 +113,7 @@ test.describe('notebook (pages, notebooks, tabs, history, trash)', () => {
 
   /** Creates a page with a title and text and waits until autosave has stored it (the list shows the text). */
   async function addPage(page: Page, title: string, text: string) {
-    await page.getByRole('button', { name: 'Neue Seite' }).click();
+    await page.locator('[data-page-action]').click();
     await expect(editor(page)).toBeVisible(); // the editor loads lazily
     await page.getByLabel('Titel der Seite').fill(title);
     await page.keyboard.press('Enter');
@@ -246,7 +247,7 @@ test.describe('notebook (links, search, export, import, to-do)', () => {
   test.skip(({ isMobile }) => isMobile, 'list and page side by side');
   const rows = (page: Page) => page.getByTestId('note-row');
   async function addPage(page: Page, title: string, text: string) {
-    await page.getByRole('button', { name: 'Neue Seite' }).click();
+    await page.locator('[data-page-action]').click();
     await expect(editor(page)).toBeVisible(); // the editor loads lazily
     await page.getByLabel('Titel der Seite').fill(title);
     await page.keyboard.press('Enter');
