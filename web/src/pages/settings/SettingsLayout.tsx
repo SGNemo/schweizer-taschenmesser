@@ -506,7 +506,12 @@ function TabBody({ children }: { children: ReactNode }) {
   }, [counter]);
   return (
     <PendingSections.Provider value={counter}>
-      {shown ? null : <Skeleton />}
+      {shown ? null : (
+        // As tall as the screen: a short page would let the sticky category column slip (16 px) until the tab is there.
+        <div className={styles.tabWait}>
+          <Skeleton />
+        </div>
+      )}
       <div className={styles.tabBody} data-shown={shown} aria-busy={!shown}>
         {children}
       </div>

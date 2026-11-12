@@ -512,3 +512,6 @@
   overflow: hidden;
   visibility: hidden;
 }
+.tabWait {
+  min-height: 100dvh;
+}
