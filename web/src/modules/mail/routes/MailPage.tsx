@@ -339,6 +339,7 @@ export default function MailPage() {
       <>
         {header}
         <Skeleton height="8rem" />
+        <MailSettingsPanel open={panel} onClose={() => setPanel(false)} />
       </>
     );
 

@@ -141,49 +141,47 @@ export default function MainPage() {
         </EmptyState>
       ) : null}
       {groups.length > 0 ? (
-        <div>
-          <GroupedList
-            listId="feeds"
-            label={s.listLabel}
-            groups={groups.map((g) => ({
-              id: g.category || '_none',
-              label: g.category || (grouped ? s.ungrouped : s.allFeeds),
-              count: g.feeds.length,
-              children: (
-                <ItemList>
-                  {g.feeds.map((feed) => (
-                    <ItemRow
-                      key={feed.id}
-                      title={feed.title}
-                      meta={hostOf(feed.url)}
-                      href={feed.siteUrl || feed.url}
-                      menuLabel={s.rowMenu(feed.title)}
-                      menu={[
-                        {
-                          id: 'edit',
-                          label: s.edit,
-                          onSelect: () =>
-                            setDraft({
-                              id: feed.id,
-                              title: feed.title,
-                              url: feed.url,
-                              category: feed.category,
-                            }),
-                        },
-                        {
-                          id: 'delete',
-                          label: s.remove,
-                          danger: true,
-                          onSelect: () => void deleteWithUndo(() => feedRepo.remove(feed.id)),
-                        },
-                      ]}
-                    />
-                  ))}
-                </ItemList>
-              ),
-            }))}
-          />
-        </div>
+        <GroupedList
+          listId="feeds"
+          label={s.listLabel}
+          groups={groups.map((g) => ({
+            id: g.category || '_none',
+            label: g.category || (grouped ? s.ungrouped : s.allFeeds),
+            count: g.feeds.length,
+            children: (
+              <ItemList>
+                {g.feeds.map((feed) => (
+                  <ItemRow
+                    key={feed.id}
+                    title={feed.title}
+                    meta={hostOf(feed.url)}
+                    href={feed.siteUrl || feed.url}
+                    menuLabel={s.rowMenu(feed.title)}
+                    menu={[
+                      {
+                        id: 'edit',
+                        label: s.edit,
+                        onSelect: () =>
+                          setDraft({
+                            id: feed.id,
+                            title: feed.title,
+                            url: feed.url,
+                            category: feed.category,
+                          }),
+                      },
+                      {
+                        id: 'delete',
+                        label: s.remove,
+                        danger: true,
+                        onSelect: () => void deleteWithUndo(() => feedRepo.remove(feed.id)),
+                      },
+                    ]}
+                  />
+                ))}
+              </ItemList>
+            ),
+          }))}
+        />
       ) : null}
       <Dialog
         open={draft !== null}
