@@ -72,12 +72,13 @@ export default function BrowserPage() {
   }, [visits]);
 
   // "Tab neu öffnen" on the start view: the tab closed last in this session, else the last page of the history (what
-  // was open before a restart). Not in a private tab: it would load a normal page there.
+  // was open before a restart; only while the history is on). Not in a private tab: it would load a normal page there.
   const lastClosed = useBrowserTabs((s) => s.lastClosed);
   const lastVisit = recent[0];
   const reopen = tab?.isPrivate
     ? null
-    : (lastClosed ?? (lastVisit ? { url: lastVisit.url, title: lastVisit.title } : null));
+    : (lastClosed ??
+      (prefs.history && lastVisit ? { url: lastVisit.url, title: lastVisit.title } : null));
 
   const previews = useTabPreviews(tabs, prefs.tabPreview && view === 'tabs');
   const template = engineTemplate(prefs.engine, prefs.customUrl);

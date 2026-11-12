@@ -289,6 +289,17 @@ Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währ
 - **W6-5 Notizen im Fenster:** „Neue Seite“ steht oben rechts im Kopf (Strg+N geht weiter). Liste und Seite liegen auf einer Fläche, die offene Seite ist in der Liste grau hinterlegt und fett; Karten-Ansicht: neutrale Blätter, das Notizbuch steht als Punkt mit Namen dabei. ☐
 - **W6-6 Musik mit Spotify:** Mit verbundenem Konto: die Reiter „Start · Suchen · Lieblingssongs · Zuletzt gespielt · Warteschlange“ stehen unter der Bühne; ein Klick wechselt die Ansicht, in einer geöffneten Playlist ist kein Reiter markiert. Cover und Warteschlange haben keinen Schatten. ☐
 
+#### Identity 4.0: System und Browser (UI-Audit 4.0, Paket 0b-6b) – nur in der Windows-App prüfbar
+
+- **S6-1 Browser, Startansicht:** Browser öffnen, ohne Tab: unter dem Kopf steht gleich die Tab-Leiste mit „+“, darunter die Adresszeile; keine Rahmen um die Seite, Lesezeichen-Kacheln als helle Flächen. ☐
+- **S6-2 Browser, „Tab neu öffnen“ in der Sitzung:** Eine Seite öffnen (z. B. `example.org`), den Tab schließen: auf der Startansicht steht „Tab neu öffnen“ und daneben „Zuletzt offen: …“ mit dem Titel der Seite. Klick: die Seite lädt wieder in einem Tab. ☐
+- **S6-3 Browser, nach Neustart:** Mit eingeschaltetem Verlauf eine Seite öffnen, Nemo beenden und neu starten, Browser öffnen: „Tab neu öffnen“ bietet die zuletzt besuchte Seite an. Mit ausgeschaltetem Verlauf (Einstellungen → Browser) steht nach dem Neustart kein Angebot da. ☐
+- **S6-4 Browser, privat:** Einen privaten Tab öffnen, eine Seite laden, den Tab schließen: „Tab neu öffnen“ nennt diese Seite nicht. In einem leeren privaten Tab steht kein „Tab neu öffnen“. Nach „Daten löschen“ ist das Angebot weg. ☐
+- **S6-5 Browser, Tabs:** Zwei Tabs öffnen: der offene Tab ist grau hinterlegt und fett, der andere ohne Fläche; in der Tab-Übersicht ebenso, ohne farbigen Rand. Die Webseite selbst liegt ohne Rahmen in der Fläche und folgt dem Fenster beim Vergrößern. ☐
+- **S6-6 Dieser PC:** Oben rechts im Kopf steht der belegte Platz des Systemlaufwerks mit dem Laufwerksnamen darunter; darunter keine Ring-Leiste mehr. „Laufwerke · System“ sind Reiter am Kopf; „System“ zeigt die Live-Werte, „Laufwerke“ die Karten mit „Scannen“. Ein Scan startet wie bisher; Löschen fragt wie bisher (Plan, bei großen oder endgültigen Löschungen die zweite Bestätigung). ☐
+- **S6-7 Downloads:** Läuft ein Download, steht oben rechts „1 läuft“ mit Prozent und Tempo; läuft keiner, steht dort nichts. „Download hinzufügen“ ist der eine gefüllte Knopf im Kopf; „Zielordner zeigen“ steht im „⋯“ daneben und öffnet den Ordner des letzten Downloads. Der Satz „Dateien landen nur im gewählten Ordner. Nemo öffnet oder startet sie nie.“ steht weiter über der Liste. ☐
+- **S6-8 Einstellungen, Startseite:** Einstellungen öffnen: im Kopf stehen sechs Zeilen (Sicherheit, Sync, Backup, Updates, KI, Speicher) in drei Spalten, je Name und Zustand in einer Zeile, darunter klein der Kontext; ohne Rahmen. Jede Zeile führt in ihren Reiter. Darunter „Schnell umschalten“, dann drei gleiche Zeilen für Darstellung, Benachrichtigungen und Module. ☐
+
 ### Downloads und Torrent
 
 #### Datenträger, Systeminfo (diese Runde) – nur auf echtem Windows prüfbar
