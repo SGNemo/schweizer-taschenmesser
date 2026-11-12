@@ -17,7 +17,7 @@ import {
   PageAction,
   PageHeader,
   RowMenu,
-  Segmented,
+  Tabs,
   TextField,
   useOpenParam,
   type RowMenuItem,
@@ -45,7 +45,7 @@ import {
   type SortMode,
 } from '../settings';
 import { KINDS } from '../schema';
-import { HeroFigure, HeroSlot, Pinboard, SignatureMark } from '@/ui/identity';
+import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import { useStartDataItems } from '@/core/importer/StartDataMenu';
 import styles from './bookmarks.module.css';
 
@@ -224,6 +224,8 @@ export default function BookmarksPage() {
     },
     ...startItems.map((i) => ({ ...i, group: t.bookmarks.moreOptions })),
   ];
+  // Nothing saved yet: the empty state holds the one filled button, the head's action steps back.
+  const isEmpty = !!items && (linksView ? links.length === 0 && !filter.query : items.length === 0);
   const activeFilters = [
     filter.view !== 'open' ? t.bookmarks.views[filter.view] : '',
     filter.kind !== 'all' ? t.bookmarks.kinds[filter.kind]! : '',
@@ -232,11 +234,6 @@ export default function BookmarksPage() {
 
   return (
     <>
-      <HeroSlot area="signature">
-        <span className={styles.pinboard} data-testid="pinboard">
-          <Pinboard size="M" />
-        </span>
-      </HeroSlot>
       {items && items.length > 0 ? (
         <HeroSlot area="figure">
           <HeroFigure
@@ -250,8 +247,9 @@ export default function BookmarksPage() {
       ) : null}
       <PageHeader
         title={t.bookmarks.title}
+        besideContent
         views={
-          <Segmented
+          <Tabs
             label={t.bookmarks.tabsLabel}
             value={linksView ? 'links' : 'list'}
             options={[
@@ -264,6 +262,7 @@ export default function BookmarksPage() {
       >
         <PageAction
           short={linksView ? t.nav.plusThings.link : t.bookmarks.meta.quickAdd}
+          variant={isEmpty ? 'secondary' : 'primary'}
           onClick={() => setTarget(linksView ? { draft: true, kind: 'link' } : { draft: true })}
         >
           <Icon name="plus" size={18} />
@@ -276,12 +275,21 @@ export default function BookmarksPage() {
           items={pageMenu}
         />
       </PageHeader>
-      <TextField
-        label={t.bookmarks.search}
-        type="search"
-        value={filter.query}
-        onChange={(e) => setFilter({ ...filter, query: e.target.value })}
-      />
+      {/* The page's first row: on the phone the "⋯" menu lies beside it (`besideContent`). An empty page has nothing
+          to search; its row is the menu alone. */}
+      <div className={styles.search}>
+        {isEmpty ? null : (
+          <TextField
+            label={t.bookmarks.search}
+            labelHidden
+            placeholder={t.bookmarks.search}
+            type="search"
+            data-list-search
+            value={filter.query}
+            onChange={(e) => setFilter({ ...filter, query: e.target.value })}
+          />
+        )}
+      </div>
       {!linksView && activeFilters.length > 0 ? (
         <p className={styles.note} data-testid="bookmarks-filter">
           {t.bookmarks.showing(activeFilters.join(' · '))}
@@ -301,7 +309,13 @@ export default function BookmarksPage() {
               title={t.bookmarks.linksEmpty}
               testId="bookmarks-empty"
               motif={<SignatureMark id="pinboard" size={64} />}
-            />
+            >
+              {filter.query ? null : (
+                <Button variant="primary" onClick={() => setTarget({ draft: true, kind: 'link' })}>
+                  {t.bookmarks.addLink}
+                </Button>
+              )}
+            </EmptyState>
           ) : null}
           {links.map(([group, list]) => (
             <section key={group || '-'} aria-label={group || t.bookmarks.noGroup}>
@@ -328,7 +342,13 @@ export default function BookmarksPage() {
           title={items.length === 0 ? t.bookmarks.empty : t.bookmarks.emptyFiltered}
           testId="bookmarks-empty"
           motif={<SignatureMark id="pinboard" size={64} />}
-        />
+        >
+          {items.length === 0 ? (
+            <Button variant="primary" onClick={() => setTarget({ draft: true })}>
+              {t.bookmarks.emptyAction}
+            </Button>
+          ) : null}
+        </EmptyState>
       ) : null}
       {linksView || shown.length === 0 ? null : (
         <GroupedList listId={`bookmarks-${grouping}`} groups={groups} label={t.bookmarks.title} />

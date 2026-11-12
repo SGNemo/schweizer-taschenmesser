@@ -197,12 +197,13 @@ test.describe('Calm Lesezeichen tiles (focus audit 2)', () => {
 });
 
 test.describe('Pinboard (identity, cards, status)', () => {
-  test('the head carries the pinboard; the cards view lists items with a status word', async ({
+  test('the cards view lists items with a status word', async ({
     page,
   }) => {
     await enable(page, 'bookmarks');
     await add(page, 'Pasta Rezept', 'koch.de/pasta', 'Kochen', 'Buch');
-    await expect(page.getByTestId('pinboard')).toBeAttached();
+    // Identity 4.0: no signature block under the head (the pinboard is the empty state's motif).
+    await expect(page.getByTestId('pinboard')).toHaveCount(0);
     const menu = await openBookmarksMenu(page);
     await menu.getByRole('menuitemcheckbox', { name: 'Pinnwand' }).click();
     const card = page.getByTestId('bookmark-card').filter({ hasText: 'Pasta Rezept' });

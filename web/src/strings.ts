@@ -4152,6 +4152,7 @@ export const de = {
     linksEmpty:
       'Noch keine Lesezeichen. Lege Links an, die du oft brauchst – gruppiert über den ersten Tag.',
     empty: 'Noch nichts gemerkt.',
+    emptyAction: 'Merkzettel eintragen',
     emptyFiltered: 'Nichts gefunden.',
     open: 'Link öffnen',
     done: 'Erledigt',
