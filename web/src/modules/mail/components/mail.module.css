@@ -25,7 +25,6 @@
   gap: var(--space-2) var(--space-3);
   margin-block: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--surface-2);
   font-size: var(--text-sm);
@@ -44,10 +43,9 @@
   flex-direction: column;
   gap: var(--space-3);
 }
-.message {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
+/* The messages of a thread are rows of one surface: a hairline between them, no frame. */
+.message + .message {
+  border-top: 1px solid var(--border);
 }
 .messageHead {
   display: flex;
@@ -98,7 +96,7 @@
 }
 .frame {
   width: 100%;
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: var(--radius-sm);
   background: var(--surface);
 }
@@ -186,7 +184,6 @@
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background: var(--surface-2);
 }
@@ -238,9 +235,8 @@
   background: var(--surface-2);
 }
 .labelBtn[aria-current='true'] {
-  /* The open folder is a filled chip (fill and weight, not an edge bar). */
-  background: color-mix(in srgb, var(--module-color) 18%, var(--surface));
-  border-radius: var(--radius-full);
+  /* The open folder is a recess and a weight (no tint, no edge bar). */
+  background: var(--surface-sunken);
   font-weight: var(--weight-semibold);
 }
 .labelCount {
@@ -255,8 +251,7 @@
   min-width: 0;
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
-  background: var(--surface);
-  box-shadow: var(--shadow-1);
+  background: var(--surface-raised);
   min-height: 12rem;
 }
 

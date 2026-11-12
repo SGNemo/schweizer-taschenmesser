@@ -19,6 +19,7 @@ import {
   ItemList,
   ItemRow,
   EmptyState,
+  PageAction,
   PageHeader,
   SelectField,
   Skeleton,
@@ -79,7 +80,10 @@ function ThreadList({
   titleOf,
   invoices,
   onInvoice,
+  beside,
 }: {
+  /** The list stands beside the reading pane (three columns): no standing row button, the text keeps the width. */
+  beside: boolean;
   threads: CachedThreadView[];
   onOpen: (id: string) => void;
   /** Quick actions of one row (in den Plan, read/unread, archive). */
@@ -138,7 +142,7 @@ function ThreadList({
               // A quiet button only where the pointer hovers (PC); on touch it is in ⋯ and a swipe,
               // so a phone row never carries a standing button.
               actions={
-                hover && onPlan && !planned.has(th.id) ? (
+                hover && !beside && onPlan && !planned.has(th.id) ? (
                   <Button
                     size="sm"
                     variant="ghost"
@@ -297,13 +301,15 @@ export default function MailPage() {
       <InboxHead unread={summary && summary.total > 0 ? summary.unread : undefined} />
       <PageHeader title={t.mail.meta.name}>
         {canWrite && account ? (
-          <Button
+          <PageAction
+            short={t.mail.write.short}
             onClick={() =>
               setCompose({ state: emptyCompose(), title: t.mail.write.compose.titleNew, account })
             }
           >
+            <Icon name="plus" size={18} />
             {t.mail.write.newMail}
-          </Button>
+          </PageAction>
         ) : null}
         <IconButton label={t.mail.page.settings} onClick={() => setPanel(true)}>
           <Icon name="settings" />
@@ -480,7 +486,8 @@ export default function MailPage() {
             ))}
           </datalist>
         </div>
-        <Button type="submit" variant="primary">
+        {/* The head's "Neue Mail" is the page's one filled button. */}
+        <Button type="submit">
           {t.mail.page.searchLabel}
         </Button>
         {query ? (
@@ -556,6 +563,7 @@ export default function MailPage() {
         </EmptyState>
       ) : (
         <ThreadList
+          beside={wide}
           threads={shown}
           onOpen={(id) => {
             setStartInvoice(undefined);
