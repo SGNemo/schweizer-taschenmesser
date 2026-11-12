@@ -266,7 +266,7 @@
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
-      "colouredAboveFold": 10,
+      "colouredAboveFold": 2,
       "signatureBlocks": 0
     },
     "d1920--music": {
@@ -662,7 +662,7 @@
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
-      "colouredAboveFold": 9,
+      "colouredAboveFold": 1,
       "signatureBlocks": 0
     },
     "p412--music": {
