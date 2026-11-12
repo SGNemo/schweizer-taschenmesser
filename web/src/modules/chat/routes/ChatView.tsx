@@ -5,8 +5,18 @@ import { useAiOn } from '@/core/ai/switch';
 import { useSettings } from '@/core/settings/settings';
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
-import { Badge, Checkbox, EmptyState, Icon, PageAction, PageHeader, TextField } from '@/ui';
-import { Bubble, HeroSlot, SignatureMark } from '@/ui/identity';
+import {
+  Badge,
+  Checkbox,
+  EmptyState,
+  Icon,
+  ItemList,
+  ItemRow,
+  PageAction,
+  PageHeader,
+  TextField,
+} from '@/ui';
+import { SignatureMark } from '@/ui/identity';
 import { SetupHint, useChatSetup } from '../components/SetupHint';
 import { ThreadView } from '../components/ThreadView';
 import { expiredThreads, searchThreads, sortThreads } from '../logic';
@@ -104,12 +114,6 @@ export default function ChatPage() {
 
   return (
     <>
-      {/* Signature (slot S): the library's bubble pair, no text of any chat. */}
-      <HeroSlot area="signature">
-        <span className={styles.bubbles} data-testid="bubble-signature">
-          <Bubble size="M" />
-        </span>
-      </HeroSlot>
       <PageHeader title={c.title}>
         {/* One filled action per page (C23): while the setup hint shows, it is that one and this steps back. */}
         <PageAction
@@ -144,23 +148,21 @@ export default function ChatPage() {
             motif={<SignatureMark id="bubble" size={64} />}
           />
         ) : (
-          <ul className={styles.list}>
+          <ItemList label={c.title}>
             {shown.map((x) => (
-              <li key={x.id}>
-                <button
-                  type="button"
-                  className={styles.threadBtn}
-                  onClick={() => setParams({ t: x.id })}
-                >
-                  {x.pinned ? <Icon name="pin" size={16} /> : null}
-                  <span className={styles.threadTitle}>{x.title}</span>
+              <ItemRow
+                key={x.id}
+                title={x.title}
+                lead={x.pinned ? <Icon name="pin" size={16} /> : undefined}
+                end={
                   <Badge tone="neutral">
                     {x.engine === 'local' ? c.engineLocal : c.engineRouter}
                   </Badge>
-                </button>
-              </li>
+                }
+                onOpen={() => setParams({ t: x.id })}
+              />
             ))}
-          </ul>
+          </ItemList>
         )}
       </div>
     </>
