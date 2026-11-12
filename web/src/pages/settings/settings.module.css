@@ -61,7 +61,7 @@
   padding: 0;
 }
 .provider {
-  border: 1px solid var(--border);
+  background: var(--surface-raised);
   border-radius: var(--radius-md);
   padding: var(--space-3);
   display: grid;
@@ -157,9 +157,8 @@
   flex-direction: column;
   gap: var(--space-1);
   padding: var(--space-3);
-  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: var(--surface);
+  background: var(--surface-raised);
 }
 .modelHead {
   display: flex;
@@ -200,9 +199,8 @@
   max-height: 50vh;
   overflow: auto;
   padding: var(--space-3);
-  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: var(--surface);
+  background: var(--surface-raised);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   white-space: pre-wrap;
@@ -227,6 +225,7 @@
   border-top: 0;
 }
 .groupSummary {
+  padding-block: var(--space-2);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -244,8 +243,11 @@
 }
 .groupAction {
   flex-shrink: 0;
-  color: var(--accent);
+  color: var(--text-muted);
   font-weight: var(--weight-medium);
+}
+.groupSummary:hover .groupAction {
+  color: var(--text);
 }
 .groupBody {
   padding-bottom: var(--space-2);
@@ -299,8 +301,7 @@
 .sampleChip {
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-full);
-  border: 1px solid var(--border);
-  background: var(--surface);
+  background: var(--surface-raised);
   font-size: var(--text-sm);
 }
 .sampleChip[data-warn] {
@@ -328,4 +329,19 @@
 }
 .plainList > li {
   justify-content: space-between;
+}
+/* A model with its licence and its model card: each link is a target of its own (44 px), side by side where there is
+   room, below each other on the phone; no two hit areas overlap. */
+.licence {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--space-4);
+}
+.licenceLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }

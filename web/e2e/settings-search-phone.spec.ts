@@ -12,7 +12,8 @@ const boxes = (page: Page) =>
   });
 
 test('the settings search never hangs in the air below a folded top bar', async ({ page }) => {
-  await ready(page, '/settings/darstellung');
+  // A long tab: "Darstellung" is shorter than two screens since its head became one line (package 0b-E).
+  await ready(page, '/settings/allgemein');
   const bar = page.locator('[data-topbar]');
   const scrollTo = (y: number) => page.evaluate((top) => window.scrollTo(0, top), y);
   // The category's sections load lazily: scroll once the page is taller than the screen.

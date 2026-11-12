@@ -82,7 +82,8 @@ test('phone: the categories are the first level, the back link returns to the li
   await expect(page).toHaveURL(/\/settings\/darstellung$/);
   await openAppearanceGroup(page, 'theme');
   await expect(page.getByRole('group', { name: 'Farbschema' })).toBeVisible();
-  await page.getByRole('link', { name: 'Einstellungen', exact: true }).click();
+  // The way back is the button beside the title (a chevron, named for where it leads).
+  await page.getByRole('link', { name: 'Zurück: Einstellungen', exact: true }).click();
   await expect(page).toHaveURL(/\/settings$/);
   await page.goBack();
   await expect(page).toHaveURL(/\/settings\/darstellung$/);
