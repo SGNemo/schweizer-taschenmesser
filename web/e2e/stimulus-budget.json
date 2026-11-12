@@ -353,6 +353,18 @@
       "colouredAboveFold": 1,
       "signatureBlocks": 0
     },
+    "d1920--routines": {
+      "height": 1080,
+      "buttons": 26,
+      "links": 14,
+      "icons": 30,
+      "firstScreenActions": 39,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 2,
+      "signatureBlocks": 0
+    },
     "d1920--settings": {
       "height": 1110,
       "buttons": 21,
@@ -731,6 +743,18 @@
       "links": 15,
       "icons": 33,
       "firstScreenActions": 38,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 1,
+      "signatureBlocks": 0
+    },
+    "p412--routines": {
+      "height": 915,
+      "buttons": 15,
+      "links": 9,
+      "icons": 12,
+      "firstScreenActions": 23,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,

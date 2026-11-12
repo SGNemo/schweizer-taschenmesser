@@ -6,6 +6,7 @@ import budgets from '@/modules/budgets/manifest';
 import downloads from '@/modules/downloads/manifest';
 import finance from '@/modules/finance/manifest';
 import lists from '@/modules/lists/manifest';
+import routines from '@/modules/routines/manifest';
 import todos from '@/modules/todos/manifest';
 import { createTestDb } from '@/test-utils';
 import { diffSelection, PROFILES, resolveProfile } from '@/core/setup/profiles';
@@ -269,6 +270,33 @@ describe('default set of a fresh installation', () => {
     expect(await enableModuleIfUnset(lists, db)).toBe(true);
     expect(await enableModuleIfUnset(lists, db)).toBe(false);
     expect(await loadStoredModuleState('lists', db)).toMatchObject({ enabled: true });
+  });
+
+  // Set 5 (module package H-b): routines join the set of installations from then on.
+  it('8a: a fresh installation notes set 5 and shows routines without a row', async () => {
+    await markFreshDefaults(true, db);
+    expect(await meta(db, DEFAULTS_VERSION_KEY)).toBe(5);
+    expect(await loadModuleStates([...DESKTOP, routines], db)).toMatchObject({ routines: true });
+    expect(await rows(db)).toEqual([]);
+  });
+
+  it('8b: a device that started with set 4 is never raised: after the update routines stay off, and nothing is written', async () => {
+    await db.table('_meta').put({ key: DEFAULTS_VERSION_KEY, value: 4 });
+    // The app starts again after the update (it has data now, and even a "fresh" start changes nothing).
+    await markFreshDefaults(false, db);
+    await markFreshDefaults(true, db);
+    expect(await meta(db, DEFAULTS_VERSION_KEY)).toBe(4);
+    expect(await loadModuleStates([...DESKTOP, routines], db)).toMatchObject({
+      lists: true,
+      budgets: true,
+      routines: false,
+    });
+    expect(await rows(db)).toEqual([]);
+  });
+
+  it('8c: an installation from before the sets gets no routines either', async () => {
+    await markFreshDefaults(false, db);
+    expect(await loadModuleStates([...DESKTOP, routines], db)).toMatchObject({ routines: false });
   });
 
   it('the test builds keep the set off unless a context switches it on', async () => {

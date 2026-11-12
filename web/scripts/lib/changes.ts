@@ -56,6 +56,7 @@ export const AREAS: Record<string, Label> = {
   music: { de: 'Musik', en: 'Music' },
   notes: { de: 'Notizen', en: 'Notes' },
   pantry: { de: 'Vorrat', en: 'Pantry' },
+  routines: { de: 'Routinen', en: 'Routines' },
   people: { de: 'Personen', en: 'People' },
   planner: { de: 'Planer', en: 'Planner' },
   subscriptions: { de: 'Abos', en: 'Subscriptions' },

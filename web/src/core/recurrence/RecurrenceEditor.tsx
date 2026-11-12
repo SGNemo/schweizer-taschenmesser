@@ -32,6 +32,8 @@ interface Props {
    * the first-charge date already says the day). A rule that pins another day keeps the list.
    */
   followStartDay?: boolean;
+  /** Hide the "Ende" choice (things that never end by their rule: household routines). */
+  noEnd?: boolean;
 }
 
 /** True when the rule has no pinned day, or pins the day `startDate` already has. */
@@ -44,7 +46,14 @@ function ends(r: Recurrence): 'never' | 'until' | 'count' {
 }
 
 /** Form control for a recurrence rule (shared by reminders, calendar, subscriptions …). */
-export function RecurrenceEditor({ value, onChange, startDate, required, followStartDay }: Props) {
+export function RecurrenceEditor({
+  value,
+  onChange,
+  startDate,
+  required,
+  followStartDay,
+  noEnd,
+}: Props) {
   const set = (patch: Partial<Recurrence>) => value && onChange({ ...value, ...patch });
 
   function changeFreq(freq: string) {
@@ -135,47 +144,49 @@ export function RecurrenceEditor({ value, onChange, startDate, required, followS
             </fieldset>
           ) : null}
 
-          <div className={styles.row}>
-            <div className={styles.grow}>
-              <SelectField
-                label={t.recurrence.ends}
-                value={ends(value)}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  set({
-                    until: v === 'until' ? startDate : undefined,
-                    count: v === 'count' ? 10 : undefined,
-                  });
-                }}
-              >
-                <option value="never">{t.recurrence.endsNever}</option>
-                <option value="until">{t.recurrence.endsOn}</option>
-                <option value="count">{t.recurrence.endsAfter}</option>
-              </SelectField>
+          {noEnd ? null : (
+            <div className={styles.row}>
+              <div className={styles.grow}>
+                <SelectField
+                  label={t.recurrence.ends}
+                  value={ends(value)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    set({
+                      until: v === 'until' ? startDate : undefined,
+                      count: v === 'count' ? 10 : undefined,
+                    });
+                  }}
+                >
+                  <option value="never">{t.recurrence.endsNever}</option>
+                  <option value="until">{t.recurrence.endsOn}</option>
+                  <option value="count">{t.recurrence.endsAfter}</option>
+                </SelectField>
+              </div>
+              {value.until ? (
+                <div className={styles.grow}>
+                  <TextField
+                    label={t.recurrence.endDate}
+                    type="date"
+                    min={startDate}
+                    value={value.until}
+                    onChange={(e) => e.target.value && set({ until: e.target.value })}
+                  />
+                </div>
+              ) : null}
+              {value.count ? (
+                <div className={styles.grow}>
+                  <TextField
+                    label={t.recurrence.count}
+                    type="number"
+                    min={1}
+                    value={value.count}
+                    onChange={(e) => set({ count: Math.max(1, Number(e.target.value) || 1) })}
+                  />
+                </div>
+              ) : null}
             </div>
-            {value.until ? (
-              <div className={styles.grow}>
-                <TextField
-                  label={t.recurrence.endDate}
-                  type="date"
-                  min={startDate}
-                  value={value.until}
-                  onChange={(e) => e.target.value && set({ until: e.target.value })}
-                />
-              </div>
-            ) : null}
-            {value.count ? (
-              <div className={styles.grow}>
-                <TextField
-                  label={t.recurrence.count}
-                  type="number"
-                  min={1}
-                  value={value.count}
-                  onChange={(e) => set({ count: Math.max(1, Number(e.target.value) || 1) })}
-                />
-              </div>
-            ) : null}
-          </div>
+          )}
         </>
       ) : null}
     </div>

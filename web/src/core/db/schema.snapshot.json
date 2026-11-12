@@ -1,5 +1,5 @@
 {
-  "version": 36,
+  "version": 37,
   "stores": {
     "_aiCache": "key, createdAt",
     "_aiUsage": "++id, at",
@@ -57,6 +57,7 @@
     "planner_assignment": "id, updatedAt, date, itemKey",
     "planner_day": "id, updatedAt, date",
     "planner_item": "id, updatedAt",
+    "routines_routine": "id, updatedAt, dueDate",
     "subscriptions_subscription": "id, updatedAt, startDate",
     "timetrack_client": "id, updatedAt, order",
     "timetrack_job": "id, updatedAt, clientId, order",

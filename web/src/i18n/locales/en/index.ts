@@ -77,6 +77,7 @@ import { planner } from './planner';
 import { fitness } from './fitness';
 import { clock } from './clock';
 import { remote } from './remote';
+import { routines } from './routines';
 
 export const en: Strings = {
   appName: 'Nemo',
@@ -157,4 +158,5 @@ export const en: Strings = {
   fitness,
   clock,
   remote,
+  routines,
 };

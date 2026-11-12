@@ -8896,6 +8896,43 @@ export const de = {
       retry: 'Die Verbindung kam nicht zustande.',
     },
   },
+  routines: {
+    meta: {
+      name: 'Routinen',
+      description:
+        'Putzplan und Haushalts-Routinen: was in welchem Raum wie oft dran ist und wer an der Reihe ist. Ruhig: „dran“ statt Rückstand, keine Serien, kein Rot.',
+      quickAdd: 'Routine',
+      widget: 'Heute dran',
+    },
+    add: 'Routine eintragen',
+    addFirst: 'Erste Routine eintragen',
+    edit: 'Routine bearbeiten',
+    empty: 'Noch keine Routinen. Eine reicht für den Anfang.',
+    nothingDue: 'Heute ist nichts dran.',
+    due: 'dran',
+    dueGroup: 'Heute dran',
+    done: 'Erledigt',
+    doneFor: (name: string) => `${name}: Erledigt`,
+    doneToast: (name: string, next?: string) =>
+      next ? `${name} erledigt. Nächstes Mal: ${next}.` : `${name} erledigt.`,
+    turnOf: (name: string) => `dran: ${name}`,
+    noRoom: 'Ohne Raum',
+    figureDetail: (n: number) => (n === 1 ? 'von 1 Routine' : `von ${n} Routinen`),
+    widgetSummary: (due: number, total: number) =>
+      `${due} dran · ${total === 1 ? '1 Routine' : `${total} Routinen`}`,
+    planTitle: (name: string, who?: string) => (who ? `${name} (${who})` : name),
+    views: { label: 'Ansichten', due: 'Dran', all: 'Alle nach Raum' },
+    fields: {
+      name: 'Was',
+      namePlaceholder: 'z. B. Bad putzen',
+      room: 'Raum',
+      people: 'Wer wechselt sich ab',
+      peopleHint: 'Namen mit Komma trennen, in der Reihenfolge der Runde. Leer lassen, wenn niemand genannt wird.',
+      dueDate: 'Nächstes Mal',
+      minutes: 'Dauer in Minuten',
+      moreSummary: 'Namen, nächstes Mal, Dauer, Notiz',
+    },
+  },
 } as const;
 
 /** Shape every translation must have: same keys, strings for strings, same function signatures. */

@@ -381,6 +381,30 @@
       }
     },
     {
+      "id": "routines",
+      "area": "household",
+      "status": "optional",
+      "fresh": true,
+      "platforms": null,
+      "icon": "repeat",
+      "hue": "cobalt",
+      "hue2": null,
+      "head": "standard",
+      "widget": "checkliste",
+      "name": {
+        "de": "Routinen",
+        "en": "Routines"
+      },
+      "short": {
+        "de": "Putzplan und Haushalts-Routinen",
+        "en": "Cleaning plan and household routines"
+      },
+      "description": {
+        "de": "Putzplan und Haushalts-Routinen: was in welchem Raum wie oft dran ist und wer an der Reihe ist. Ruhig: „dran“ statt Rückstand, keine Serien, kein Rot.",
+        "en": "Cleaning plan and household routines: what is due in which room how often, and whose turn it is. Calm: “due” instead of a backlog, no streaks, no red."
+      }
+    },
+    {
       "id": "pantry",
       "area": "household",
       "status": "optional",
@@ -708,12 +732,12 @@
         "en": "Remote"
       },
       "short": {
-        "de": "Steuere Medien und Lautstärke deines PCs vom Handy aus",
-        "en": "Control media and volume of your PC from your phone"
+        "de": "Steuere Medien, Lautstärke, Maus und Tastatur deines PCs vom Handy aus",
+        "en": "Control media, volume, mouse and keyboard of your PC from your phone"
       },
       "description": {
-        "de": "Steuere Medien und Lautstärke deines PCs vom Handy aus – im Heimnetz, sobald du es am PC erlaubt hast.",
-        "en": "Control media and volume of your PC from your phone – on your home network, once you allowed it at the PC."
+        "de": "Steuere Medien, Lautstärke, Maus und Tastatur deines PCs vom Handy aus – im Heimnetz, sobald du es am PC erlaubt hast.",
+        "en": "Control media, volume, mouse and keyboard of your PC from your phone – on your home network, once you allowed it at the PC."
       }
     }
   ],
