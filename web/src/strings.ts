@@ -6706,6 +6706,23 @@ export const de = {
         ],
       },
     },
+    routines: {
+      label: 'Typische Routinen',
+      hint: 'Ankreuzen, was im Haushalt wiederkehrt. Die Routinen starten verteilt über die nächsten Tage und Wochen; Rhythmus, Raum und wer an der Reihe ist, lassen sich danach ändern.',
+      first: (day: string) => `erstes Mal ${day}`,
+      items: {
+        bath: { name: 'Bad putzen', room: 'Bad' },
+        vacuum: { name: 'Staubsaugen', room: '' },
+        kitchen: { name: 'Küche putzen', room: 'Küche' },
+        laundry: { name: 'Wäsche waschen', room: '' },
+        plants: { name: 'Pflanzen gießen', room: '' },
+        floors: { name: 'Böden wischen', room: '' },
+        bedding: { name: 'Bettwäsche wechseln', room: 'Schlafzimmer' },
+        dust: { name: 'Staub wischen', room: '' },
+        fridge: { name: 'Kühlschrank auswischen', room: 'Küche' },
+        windows: { name: 'Fenster putzen', room: '' },
+      },
+    },
     papers: {
       label: 'Wichtige Papiere',
       hint: 'Dokumente, die man schnell finden will',

@@ -82,3 +82,36 @@ test('calm: no red on the page, and a routine that waited is simply "dran"', asy
   });
   expect(red).toBe(0);
 });
+
+test('start templates: ticked routines land on the page, and none of them is due on the first day', async ({
+  page,
+}) => {
+  await enable(page, 'routines');
+  await ready(page, '/routines');
+  await page.getByRole('button', { name: 'Weitere Aktionen' }).first().click();
+  await page.getByRole('menuitem', { name: 'Importieren' }).click();
+  const dialog = page.getByRole('dialog', { name: /Importieren/ });
+  await dialog.getByRole('button', { name: /Typische Routinen/ }).click();
+  // Nothing is ticked for the user.
+  await expect(dialog.getByRole('checkbox', { checked: true })).toHaveCount(0);
+  await dialog.getByRole('checkbox', { name: /Bad putzen/ }).check();
+  await dialog.getByRole('checkbox', { name: /Fenster putzen/ }).check();
+  await dialog.getByRole('button', { name: 'Vorschau anzeigen' }).click();
+  await expect(dialog.getByText('2 Einträge erkannt')).toBeVisible();
+  // The preview says when each one comes round first.
+  await expect(
+    dialog.getByText(/Bad · wöchentlich · erstes Mal Mi\., 30\. Sept?\.?/i),
+  ).toBeVisible();
+  await dialog.getByRole('button', { name: '2 Einträge importieren' }).click();
+  await expect(dialog.getByRole('status')).toHaveText('2 Einträge wurden importiert.');
+  await dialog.getByRole('button', { name: 'Schließen' }).last().click();
+
+  // A calm start: the page shows "0 dran", both routines wait under "Alle nach Raum".
+  await expect(page.getByTestId('routines-due')).toContainText('0');
+  await expect(page.getByTestId('routines-nothing-due')).toBeVisible();
+  await page.getByRole('button', { name: 'Alle nach Raum' }).click();
+  await expect(page.getByRole('listitem').filter({ hasText: 'Bad putzen' })).toContainText(
+    'Morgen',
+  );
+  await expect(page.getByRole('listitem').filter({ hasText: 'Fenster putzen' })).toBeVisible();
+});

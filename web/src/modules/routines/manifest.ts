@@ -1,8 +1,8 @@
 import { t } from '@/strings';
-import { noOnboarding } from '@/core/importer/types';
 import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
+import { onboarding } from './onboarding';
 import { routineSchema } from './schema';
 import { settings } from './settings';
 
@@ -63,8 +63,8 @@ const manifest: ModuleManifest = {
   order: 92,
   area: 'household',
   contributions: {
-    // Nothing to import: a routine is typed in a few seconds (name, Enter).
-    onboarding: noOnboarding,
+    // Start templates to tick; no text importer: a routine is typed in a few seconds (name, Enter).
+    onboarding,
     quickAdd: [
       {
         id: 'new',
