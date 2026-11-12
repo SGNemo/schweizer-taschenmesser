@@ -212,7 +212,7 @@ test.describe('Planer (week board, package 1)', () => {
     await enter(page, 'Blogpost 90min');
     await expect(today(page)).toContainText('Blogpost');
     await today(page)
-      .getByRole('button', { name: /^Mo\.? 9\./ })
+      .getByRole('button', { name: /^Heute · Mo\.? 9\./ })
       .click();
     const sheet = page.getByRole('dialog');
     await expect(sheet.getByTestId('day-available')).toHaveText('4 h');
@@ -242,7 +242,7 @@ test.describe('Planer (week board, package 1)', () => {
     // Today off: the planner puts the overdue thing on Tuesday.
     await page.goto('/planner');
     await today(page)
-      .getByRole('button', { name: /^Mo\.? 9\./ })
+      .getByRole('button', { name: /^Heute · Mo\.? 9\./ })
       .click();
     await page.getByRole('dialog').getByTestId('day-off').click();
     await page.keyboard.press('Escape');
@@ -707,7 +707,7 @@ test.describe('Planer (time windows, templates – package 5)', () => {
     await enter(page, 'Keller 30min');
     await expect(today(page)).toContainText('Keller');
     await today(page)
-      .getByRole('button', { name: /^Mo\.? 9\./ })
+      .getByRole('button', { name: /^Heute · Mo\.? 9\./ })
       .click();
     const sheet = page.getByRole('dialog');
     await expect(sheet).toContainText('Ohne Zeitfenster');
