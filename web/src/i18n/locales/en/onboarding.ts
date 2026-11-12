@@ -385,6 +385,23 @@ export const onboarding: Strings['onboarding'] = {
       ],
     },
   },
+  routines: {
+    label: 'Typical routines',
+    hint: 'Tick what comes round in your household. You can change rhythm, room and whose turn it is afterwards.',
+    first: (day: string) => `first time ${day}`,
+    items: {
+      bath: { name: 'Clean the bathroom', room: 'Bathroom' },
+      vacuum: { name: 'Vacuum', room: '' },
+      kitchen: { name: 'Wipe the kitchen', room: 'Kitchen' },
+      laundry: { name: 'Do the laundry', room: '' },
+      plants: { name: 'Water the plants', room: '' },
+      floors: { name: 'Mop the floors', room: '' },
+      bedding: { name: 'Change the bed linen', room: 'Bedroom' },
+      dust: { name: 'Dust', room: '' },
+      fridge: { name: 'Wipe out the fridge', room: 'Kitchen' },
+      windows: { name: 'Clean the windows', room: '' },
+    },
+  },
   papers: {
     label: 'Important papers',
     hint: 'Documents you want to find fast',
