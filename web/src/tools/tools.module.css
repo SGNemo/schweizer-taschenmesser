@@ -93,8 +93,7 @@
   width: 100%;
   height: auto;
   display: block;
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
+  background: var(--surface-sunken);
   border-radius: var(--radius-md);
   touch-action: none;
 }

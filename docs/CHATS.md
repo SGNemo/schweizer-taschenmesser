@@ -29,11 +29,11 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 8. Merkliste und Unterlagen mit demselben Kopf lassen? Akzent-Varianten statt festem 25°-Abstand der Modulfarben? (#485)
 9. „Open questions“ in den PR-Texten von #656 (`disk_delete` nur per Attribut `async`?), #632, #490, #492.
 10. Designkontrolle 0b-1 bis 0b-3 (#750): vier Fragen im Bericht ([DESIGN-CHECK](design/ui-audit-2026-11/DESIGN-CHECK-0b-1-3.md)) und welche „sofort“-Befunde als Fix-PRs kommen (alle neun Themen; zuerst G1, Rechnungen bei 1280 px).
-11. #758 (0b-E, Teil E-1 Einstellungen): abnehmen; offen im PR-Text: Suchfeld der Einstellungen am Handy (der erste Abschnitt beginnt bei 284–313 statt 220 px) so lassen? (ja) Danach E-2 Werkzeuge starten.
+11. #763 (0b-E, Teil E-2 Werkzeuge): abnehmen.
 
 **Handgriffe:**
 
-- PRs: #606 mergen, wenn grün; #753 abnehmen (8 Ratschen-Treffer im PR-Text, Label gesetzt; Teil 2 Planer, Karten, Wetter folgt als eigener PR); #758 abnehmen (danach E-2 Werkzeuge als eigener PR); #542 vor dem Launch entscheiden (Dev-Preview- und Dev-Keystore-Teil offen; Repo-Secrets bis dahin unverändert).
+- PRs: #606 mergen, wenn grün; #542 vor dem Launch entscheiden (Dev-Preview- und Dev-Keystore-Teil offen; Repo-Secrets bis dahin unverändert).
 - `ci.yml`-Patch aus #653 einspielen (`GITHUB_TOKEN` nur am Ratschen-Schritt statt im Job-`env` von `stimulus-budget`).
 - Dezember: `nemo-merge` (`meta/agents-v3/nemo-merge.json`) anlegen, Probelauf `ratchet.mjs --pr` mit Wegwerf-PR, Treffer von #640/#642 ansehen (`decisions/meta.md`).
 - Agenten v3.1: `ant apply` der sieben, `--prune` der 16 alten, dann `claude-lock.json` committen ([SETUP](meta/agents-v3/SETUP.md) §2a).

@@ -18,7 +18,7 @@
 .highlight {
   margin: 0;
   padding: var(--space-3);
-  border: 1px solid var(--border);
+  background: var(--surface-sunken);
   border-radius: var(--radius-md);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: var(--text-sm);
@@ -45,7 +45,7 @@
   gap: var(--space-3);
 }
 .hit {
-  border: 1px solid var(--border);
+  background: var(--surface-sunken);
   border-radius: var(--radius-md);
   padding: var(--space-3);
   display: flex;

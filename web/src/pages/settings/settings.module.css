@@ -345,3 +345,8 @@
   max-width: 100%;
   overflow-wrap: anywhere;
 }
+/* A tool in Einstellungen → Werkzeugkasten: the shared row, parted from the next by a hairline. */
+.toolItem {
+  border-bottom: 1px solid var(--border);
+  scroll-margin-top: var(--space-5);
+}
