@@ -5,26 +5,20 @@ import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
 import { tLibraryV3 } from '@/strings.libraryV3';
-import {
-  Badge,
-  Button,
-  Icon,
-  IconButton,
-  LibraryCard,
-  Segmented,
-  Switch,
-  TextField,
-  Toolbar,
-  useHashTarget,
-} from '@/ui';
-import { PageHead } from './settings/PageHead';
+import { Button, ListSurface, Segmented, TextField, Toolbar, useHashTarget } from '@/ui';
+import { SettingsTitle } from './settings/components/SettingsTitle';
+import { ToolRow } from './tools/ToolRow';
 import library from './library/Library.module.css';
+import own from './tools/ToolLibrary.module.css';
 import styles from './Page.module.css';
 
 const s = t.tools.library;
 const GROUPS = ['basis', 'extra', 'dev'] as const;
 
-/** `/tools`: switch tools on or off and set the order of the toolbar. */
+/**
+ * `/tools`: switch tools on or off and set the order of the toolbar. Rows on one surface per group (Identity 4.0);
+ * the same row as in Einstellungen → Werkzeugkasten (`ToolRow`).
+ */
 export function ToolLibrary() {
   const tools = useTools();
   const openTools = useUiStore((st) => st.openTools);
@@ -51,17 +45,17 @@ export function ToolLibrary() {
 
   return (
     <>
-      <PageHead
+      <SettingsTitle
         hue="slate"
         area="system"
         icon="wrench"
         eyebrow={v3.toolsEyebrow}
         title={s.title}
         description={s.intro}
-        size="tall"
         testId="tools-head"
       >
-        <ul className={library.figures} aria-label={v3.figures.label} data-testid="tools-figures">
+        {/* The head's context line: how many are on, of how many (no big figures, B2). */}
+        <ul className={own.figures} aria-label={v3.figures.label} data-testid="tools-figures">
           <li>
             <strong>{activeIds.length}</strong> {v3.figures.active}
           </li>
@@ -69,7 +63,7 @@ export function ToolLibrary() {
             <strong>{tools?.all.length ?? 0}</strong> {v3.figures.available}
           </li>
         </ul>
-      </PageHead>
+      </SettingsTitle>
       <Toolbar>
         <div role="search" className={library.toolbarSearch}>
           <TextField
@@ -123,15 +117,10 @@ export function ToolLibrary() {
         const inGroup = (tools?.all ?? []).filter((x) => x.group === group && matches(x));
         if (inGroup.length === 0) return null;
         return (
-          <section
-            key={group}
-            aria-labelledby={`tools-${group}`}
-            className={library.group}
-            data-area="system"
-          >
-            <h2 id={`tools-${group}`} className={library.groupHead}>
+          <section key={group} aria-labelledby={`tools-${group}`} className={own.group}>
+            <h2 id={`tools-${group}`} className={own.groupHead}>
               {s.groups[group]}
-              <span className={library.groupCount}>
+              <span className={own.groupCount}>
                 {v3.section(
                   (tools?.all ?? []).filter((x) => x.group === group && activeIds.includes(x.id))
                     .length,
@@ -139,62 +128,44 @@ export function ToolLibrary() {
                 )}
               </span>
             </h2>
-            <ul className={library.cards}>
+            <ListSurface>
               {inGroup.map((tool) => {
                 const on = activeIds.includes(tool.id);
                 const index = activeIds.indexOf(tool.id);
                 return (
-                  <LibraryCard
+                  <li
                     key={tool.id}
                     id={`tool-${tool.id}`}
-                    testId={`tool-${tool.id}`}
-                    icon={tool.icon}
-                    name={tool.name}
-                    description={tool.description}
-                    hue={tool.identity.hue}
-                    badges={
-                      // U32: the badges always sit in their own row under the name, so the heads of one row are
-                      // equally tall (a wrapping "Auch ohne Internet" made them 66 or 96 px).
-                      <span className={library.badgeRow}>
-                        <Badge>{tool.offline ? s.offline : s.online}</Badge>
-                        {tool.maturity === 'preview' ? (
-                          <Badge>{t.settings.maturity.badge}</Badge>
-                        ) : null}
-                      </span>
-                    }
+                    data-testid={`tool-${tool.id}`}
+                    data-hue={tool.identity.hue}
+                    className={own.item}
                   >
-                    <Switch
-                      label={s.enable(tool.name)}
-                      checked={on}
+                    <ToolRow
+                      tool={tool}
+                      on={on}
+                      plate="lg"
+                      switchLabel={s.enable(tool.name)}
                       disabled={!tools}
-                      onChange={(checked) => {
+                      onToggle={(checked) => {
                         setHeld((h) => new Set(h).add(tool.id));
                         void tools?.setEnabled(tool.id, checked);
                       }}
+                      open={{ label: s.open(tool.name), run: () => openTools(tool.id) }}
+                      move={{
+                        up:
+                          index > 0
+                            ? { label: s.up(tool.name), run: () => void tools?.move(tool.id, -1) }
+                            : undefined,
+                        down:
+                          index >= 0 && index < activeIds.length - 1
+                            ? { label: s.down(tool.name), run: () => void tools?.move(tool.id, 1) }
+                            : undefined,
+                      }}
                     />
-                    {on ? (
-                      <>
-                        <Button onClick={() => openTools(tool.id)}>{s.open(tool.name)}</Button>
-                        <IconButton
-                          label={s.up(tool.name)}
-                          disabled={index <= 0}
-                          onClick={() => void tools?.move(tool.id, -1)}
-                        >
-                          <Icon name="chevronUp" />
-                        </IconButton>
-                        <IconButton
-                          label={s.down(tool.name)}
-                          disabled={index >= activeIds.length - 1}
-                          onClick={() => void tools?.move(tool.id, 1)}
-                        >
-                          <Icon name="chevronDown" />
-                        </IconButton>
-                      </>
-                    ) : null}
-                  </LibraryCard>
+                  </li>
                 );
               })}
-            </ul>
+            </ListSurface>
           </section>
         );
       })}

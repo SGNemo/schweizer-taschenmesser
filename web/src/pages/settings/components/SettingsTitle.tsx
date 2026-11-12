@@ -21,6 +21,8 @@ export interface SettingsTitleProps {
   actions?: ReactNode;
   /** Phone: the way back takes the plate's place beside the title (44 px), so the page needs no back row of its own. */
   back?: { to: string; label: string };
+  /** A context line of the page's own under the description (the tool page's counts). */
+  children?: ReactNode;
   testId?: string;
 }
 
@@ -39,6 +41,7 @@ export function SettingsTitle({
   description,
   actions,
   back,
+  children,
   testId,
 }: SettingsTitleProps) {
   // The button shows a chevron only: its name says that it leads back, and where to ("Zurück: Einstellungen").
@@ -72,6 +75,7 @@ export function SettingsTitle({
           {actions ? <div className={styles.actions}>{actions}</div> : null}
         </div>
       ) : null}
+      {children}
     </header>
   );
 }
