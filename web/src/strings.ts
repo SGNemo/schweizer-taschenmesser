@@ -7059,6 +7059,7 @@ export const de = {
     add: { place: 'Ort eintragen', route: 'Route eintragen' },
     placesBar: {
       search: 'Orte durchsuchen',
+      unit: (n: number) => (n === 1 ? 'Ort' : 'Orte'),
       all: 'Alle',
       sortLabel: 'Sortierung',
       recent: 'Zuletzt',
@@ -8303,6 +8304,7 @@ export const de = {
       load: (planned: string, usable: string) => `${planned} von ${usable} geplant`,
       strip: 'Tage',
       dayPanel: 'Gewählter Tag',
+      todayIs: (day: string) => `Heute · ${day}`,
     },
     day: {
       available: 'Verfügbar',

@@ -71,6 +71,7 @@ export const planner: Strings['planner'] = {
     load: (planned: string, usable: string) => `${planned} of ${usable} planned`,
     strip: 'Days',
     dayPanel: 'Selected day',
+    todayIs: (day: string) => `Today · ${day}`,
   },
   day: {
     available: 'Available',

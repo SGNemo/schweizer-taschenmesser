@@ -383,6 +383,8 @@
 /* The current hour: one tone step down and its time in the strong ink (no frame). */
 .hourCard[data-now='true'] {
   background: var(--surface-sunken);
+  /* a line, not a shadow (B7): the tone step alone is no cue for the current hour */
+  box-shadow: inset 0 0 0 1px var(--border-strong);
 }
 .hourCard[data-now='true'] .hourTime {
   color: var(--text);

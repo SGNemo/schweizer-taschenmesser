@@ -33,44 +33,11 @@
 /* Identity 4.0 (package 0b-4b): the week is a list on one raised surface, the picked day lies beside it (wide) or
    under the strip of chips (narrow). No frame, no shadow; today is named in the day's line. */
 .week {
-  list-style: none;
-  margin: 0 0 var(--space-4);
-  padding: 0;
-  border-radius: var(--radius-lg);
-  background: var(--surface-raised);
+  margin-bottom: var(--space-4);
 }
-.week > li + li {
-  border-top: 1px solid var(--border);
-}
-.week > li:first-child .weekDay {
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-}
-.week > li:last-child .weekDay {
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-}
-.weekDay {
-  display: grid;
-  grid-template-columns: 5.5rem minmax(0, 1fr) minmax(4rem, 10rem);
-  align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  min-height: var(--touch);
-  padding: var(--space-2) var(--space-4);
-  color: inherit;
-  text-align: start;
-  background: none;
-  border: 0;
-  cursor: pointer;
-}
-.weekDay:hover {
-  background: var(--surface-2);
-}
-/* The day shown in the panel: a quiet tone step (`aria-current` on the button, the strong weight on its name). */
-.weekDay[aria-current='true'] {
-  background: var(--surface-sunken);
-}
-.weekDay[aria-current='true'] .dayName {
-  font-weight: var(--weight-bold);
+.weekBar {
+  display: block;
+  width: 8rem;
 }
 .column {
   display: flex;
@@ -80,6 +47,12 @@
   padding: var(--space-2);
   background: var(--surface-raised);
   border-radius: var(--radius-lg);
+}
+/* Beside the week (master–detail) the day is no card of its own: its list is the one surface in the panel. */
+.column[data-panel='true'],
+.column[data-panel='true'][data-off='true'] {
+  padding: 0;
+  background: none;
 }
 .column[data-off='true'] {
   background: var(--surface-2);
@@ -164,7 +137,7 @@
   min-height: var(--touch);
   padding: var(--space-1) var(--space-2);
   color: inherit;
-  background: var(--surface-2);
+  background: var(--surface-raised);
   border: 0;
   border-radius: var(--radius-md);
   cursor: pointer;
@@ -176,6 +149,8 @@
   color: var(--text);
   background: var(--surface-sunken);
   font-weight: var(--weight-semibold);
+  /* B7, as the shared chip: a line, not a shadow */
+  box-shadow: inset 0 0 0 1px var(--border-strong);
 }
 
 .waiting {

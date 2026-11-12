@@ -127,6 +127,8 @@
 .catChip[aria-pressed='true'] {
   background: var(--surface-sunken);
   font-weight: var(--weight-semibold);
+  /* B7, as the shared chip: a line, not a shadow */
+  box-shadow: inset 0 0 0 1px var(--border-strong);
 }
 
 /* Place rows lead with a pin plate in the module colour. */

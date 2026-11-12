@@ -74,6 +74,16 @@
     right: var(--space-4);
     width: 2.25rem;
   }
+  /* the cloud follows the sun into the title row's end: it no longer runs under the figure's lines */
+  .sky:not(.compact) .cloud {
+    top: calc(var(--space-2) + 1.25rem);
+    right: var(--space-3);
+    width: 4.5rem;
+    height: 1.5rem;
+    box-shadow:
+      1.1rem -0.5rem 0 0.2rem var(--sky-cloud),
+      -0.3rem -0.3rem 0 0.05rem var(--sky-cloud);
+  }
 }
 .compact .sun {
   width: 1.4rem;

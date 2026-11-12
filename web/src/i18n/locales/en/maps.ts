@@ -36,6 +36,7 @@ export const maps: Strings['maps'] = {
   add: { place: 'Add a place', route: 'Add a route' },
   placesBar: {
     search: 'Search places',
+    unit: (n: number) => (n === 1 ? 'place' : 'places'),
     all: 'All',
     sortLabel: 'Sort',
     recent: 'Recent',

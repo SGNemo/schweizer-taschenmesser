@@ -543,17 +543,24 @@ export default function PlannerPage() {
     );
   };
 
+  /** A day's name; today says so in words (the head's „frei heute“ belongs to that row). */
+  const dayTitle = (day: BoardDay) =>
+    day.isToday
+      ? t.planner.board.todayIs(formatDay(day.date, 'EEE d.'))
+      : formatDay(day.date, 'EEE d.');
+
   const renderDay = (day: BoardDay) => (
     <section
       key={day.date}
       className={styles.column}
+      data-panel={wide || undefined}
       data-today={day.isToday}
       data-off={day.off}
       data-testid={`day-${day.date}`}
       aria-label={formatDay(day.date, 'EEEE, d. MMMM')}
     >
       <button type="button" className={styles.dayButton} onClick={() => setSheetDate(day.date)}>
-        <span className={styles.dayName}>{formatDay(day.date, 'EEE d.')}</span>
+        <span className={styles.dayName}>{dayTitle(day)}</span>
         <span className={styles.capacity}>{capacityLabel(day)}</span>
         {!day.off ? (
           <span className={styles.bar}>
@@ -755,32 +762,30 @@ export default function PlannerPage() {
         >
           {wide ? (
             // The week as a list: one row per day with what is free and how full it is; the picked day is marked.
-            <ul className={styles.week} aria-label={t.planner.board.label}>
-              {board.days.map((d) => (
-                <li key={d.date}>
-                  <button
-                    type="button"
-                    className={styles.weekDay}
-                    data-row
-                    data-testid={`week-${d.date}`}
-                    aria-current={d.date === shownDay?.date ? 'true' : undefined}
-                    onClick={() => setPickedDay(d.date)}
-                  >
-                    <span className={styles.dayName}>{formatDay(d.date, 'EEE d.')}</span>
-                    <span className={styles.capacity}>{capacityLabel(d)}</span>
-                    {!d.off ? (
-                      <span className={styles.bar} aria-hidden="true">
-                        <Progress
-                          value={d.planned}
-                          max={Math.max(d.usable, 1)}
-                          label={t.planner.board.load(compact(d.planned), compact(d.usable))}
-                        />
-                      </span>
-                    ) : null}
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <div className={styles.week}>
+              <ItemList label={t.planner.board.label}>
+                {board.days.map((d) => (
+                  <ItemRow
+                    key={d.date}
+                    current={d.date === shownDay?.date}
+                    onOpen={() => setPickedDay(d.date)}
+                    title={<span data-testid={`week-${d.date}`}>{dayTitle(d)}</span>}
+                    meta={capacityLabel(d)}
+                    end={
+                      !d.off ? (
+                        <span className={styles.weekBar} aria-hidden="true">
+                          <Progress
+                            value={d.planned}
+                            max={Math.max(d.usable, 1)}
+                            label={t.planner.board.load(compact(d.planned), compact(d.usable))}
+                          />
+                        </span>
+                      ) : undefined
+                    }
+                  />
+                ))}
+              </ItemList>
+            </div>
           ) : (
             <div>
               <div className={styles.strip} role="group" aria-label={t.planner.board.strip}>
