@@ -212,8 +212,11 @@ test.describe('Weather module', () => {
     const frame = page.getByTestId('module-frame');
     await expect(frame.getByTestId('sky')).toBeAttached();
     await expect(frame.getByTestId('weather-now')).toContainText('fühlt sich an wie 12°');
-    await expect(frame.getByTestId('weather-now')).toContainText('Regen ab 15 Uhr');
-    await expect(frame.getByTestId('weather-now')).toContainText('Wind 14 km/h');
+    // The facts fill the stage's signature slot; the frame's default mark is not drawn beside them.
+    const slot = frame.getByTestId('module-signature');
+    await expect(slot.getByTestId('weather-keys')).toContainText('Regen ab 15 Uhr');
+    await expect(slot.getByTestId('weather-keys')).toContainText('Wind 14 km/h');
+    await expect(slot.locator('span[data-signature]')).toHaveCount(0);
     const preview = page.getByTestId('weather-preview');
     await expect(preview.getByTestId('weather-hours').locator('li')).toHaveCount(24);
     await expect(preview.getByTestId('weather-days').locator('li')).toHaveCount(7);

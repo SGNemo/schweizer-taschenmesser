@@ -261,8 +261,8 @@ describe('weather page', () => {
     const days = screen.getByTestId('weather-days').querySelectorAll('li');
     expect(days[0]!.querySelector('[data-kind="rain"]')).toHaveTextContent('Regen 40 %');
     // The head's chips carry an icon each, next to their words.
-    const now = await screen.findByTestId('weather-now');
-    expect(now.querySelectorAll('li svg').length).toBeGreaterThanOrEqual(2);
+    const keys = await screen.findByTestId('weather-keys');
+    expect(keys.querySelectorAll('li svg').length).toBeGreaterThanOrEqual(2);
   });
 
   it('the head: temperature, "fühlt sich an wie", the word, three facts, the rest as one line', async () => {
@@ -274,16 +274,21 @@ describe('weather page', () => {
     await waitFor(() => expect(now).toHaveTextContent('14°'));
     expect(now).toHaveTextContent('fühlt sich an wie 12°');
     expect(now).toHaveTextContent('bedeckt'.replace('bedeckt', 'leicht bewölkt'));
-    expect(now).toHaveTextContent('Regen ab 15 Uhr');
-    expect(now).toHaveTextContent('Wind 14 km/h W');
-    expect(now).toHaveTextContent('UV 3');
-    expect(now).toHaveTextContent('7° / 15°');
-    expect(now).toHaveTextContent('Luftfeuchte 71 %');
-    expect(now).toHaveTextContent('Böen 34 km/h');
-    expect(now).toHaveTextContent('Bewölkung 80 %');
-    expect(now).toHaveTextContent('1015 hPa');
-    expect(now).toHaveTextContent('Sonne 07:32–18:21');
-    expect(now).toHaveTextContent(/Beste Zeit: \d\d–\d\d Uhr/);
+    // The three facts fill the stage's signature slot (the frame then draws no mark of its own).
+    const slot = screen.getByTestId('module-signature');
+    expect(slot).not.toHaveAttribute('data-default');
+    const keys = within(slot).getByTestId('weather-keys');
+    const facts = within(slot).getByTestId('weather-facts');
+    expect(keys).toHaveTextContent('Regen ab 15 Uhr');
+    expect(keys).toHaveTextContent('Wind 14 km/h W');
+    expect(keys).toHaveTextContent('UV 3');
+    expect(facts).toHaveTextContent('7° / 15°');
+    expect(facts).toHaveTextContent('Luftfeuchte 71 %');
+    expect(facts).toHaveTextContent('Böen 34 km/h');
+    expect(facts).toHaveTextContent('Bewölkung 80 %');
+    expect(facts).toHaveTextContent('1015 hPa');
+    expect(facts).toHaveTextContent('Sonne 07:32–18:21');
+    expect(facts).toHaveTextContent(/Beste Zeit: \d\d–\d\d Uhr/);
     // Chart: a picture with a label, rain bars and the wind line are in it.
     const chart = screen.getByTestId('weather-chart');
     expect(chart.querySelector('svg')?.getAttribute('role')).toBe('img');
