@@ -200,18 +200,18 @@
 }
 /* Master–detail: the row whose entry the detail panel shows. A tone and a weight, no accent (B7): the sunken tone
    on a light surface. In the dark theme that token is darker than the page and made the row a black box, so the
-   tone is a step lighter there (mixed from the text colour). */
+   tone is a step lighter there (mixed from the text colour; 4 % keeps the row's meta text at AA, 8 % did not). */
 .rows > .current,
 .rows > .current:hover {
   background: var(--row-current);
   border-radius: var(--radius-md);
 }
 :global(:root[data-theme='dark']) .rows {
-  --row-current: color-mix(in srgb, var(--text) 8%, var(--surface-raised));
+  --row-current: color-mix(in srgb, var(--text) 4%, var(--surface-raised));
 }
 @media (prefers-color-scheme: dark) {
   :global(:root:not([data-theme='light'])) .rows {
-    --row-current: color-mix(in srgb, var(--text) 8%, var(--surface-raised));
+    --row-current: color-mix(in srgb, var(--text) 4%, var(--surface-raised));
   }
 }
 /* Rows under a row (subtasks) lie on the row's own surface: no second surface inside it. */
