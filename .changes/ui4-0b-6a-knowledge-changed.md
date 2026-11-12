@@ -27,8 +27,8 @@ type: changed
 area: mail
 breaking: false
 pr: 759
-de: E-Mail zeigt die Zahl der ungelesenen Mails oben im Kopf. Eine Zeile der Liste zeigt Absender und Zeit, darunter höchstens zwei Zeilen Text. „Aktualisieren“ ist jetzt ein Knopf mit Pfeil-Kreis neben der Suche.
-en: Mail shows the number of unread mails in the head. A row of the list shows sender and time, with at most two lines of text below. “Refresh” is now a round-arrow button beside the search.
+de: E-Mail zeigt oben die Zahl der ungelesenen Mails. Eine Zeile zeigt Absender und Zeit, darunter höchstens zwei Zeilen Text. „Aktualisieren“ ist jetzt der Pfeil-Kreis neben der Suche.
+en: Mail shows the number of unread mails at the top. A row shows sender and time, with at most two lines of text below. “Refresh” is now the round arrow beside the search.
 ---
 ---
 type: changed
