@@ -5295,7 +5295,7 @@ export const de = {
     >,
     note: 'Notiz (optional)',
     addItem: 'Eintrag hinzufügen',
-    openOf: (open: number, total: number) => `${open} von ${total} offen`,
+    inBasket: (done: number, total: number) => `${done} von ${total} im Korb`,
     placeholder: {
       shopping: 'z. B. 2 Milch',
       packing: 'z. B. Sonnencreme',
@@ -5361,7 +5361,6 @@ export const de = {
       hot: 'Warm: Sonnencreme und Sonnenhut nicht vergessen.',
       cold: 'Kalt: warme Kleidung und Handschuhe einpacken.',
     },
-    more: 'Mehr',
     suggestionsToggle: (n: number) => `Schon mal gekauft (${n})`,
     recurringBadge: 'Wiederkehrend',
     category: 'Kategorie (optional)',
@@ -5405,7 +5404,7 @@ export const de = {
     add: 'Unterlage hinzufügen',
     edit: 'Unterlage bearbeiten',
     category: 'Kategorie',
-    allCategories: 'Alle',
+    allCategories: 'Alle Kategorien',
     categories: {
       identity: 'Ausweise',
       insurance: 'Versicherung',
@@ -5454,7 +5453,8 @@ export const de = {
     widgetEmpty: 'Keine Fristen in Sicht.',
     figureLabel: 'Ablage',
     stateTabs: 'Ansichten',
-    stateTab: (label: string, n: number) => `${label} ${n}`,
+    labelCount: (label: string, n: number) => `${label} ${n}`,
+    allStates: 'Alle',
     addFirst: 'Erste Unterlage eintragen',
     detail: {
       label: 'Unterlage',
@@ -5577,7 +5577,6 @@ export const de = {
           ? 'Sperrt automatisch in unter einer Minute'
           : `Sperrt automatisch in etwa ${min} Min.`,
       bridgeOn: 'Browser-Erweiterung: an',
-      bridgeOff: 'Browser-Erweiterung: aus',
     },
     groups: { label: 'Gruppen', all: 'Alle', favorites: 'Favoriten' },
     audit: {

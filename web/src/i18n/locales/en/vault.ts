@@ -19,7 +19,7 @@ export const vault: Strings['vault'] = {
   add: 'Add document',
   edit: 'Edit document',
   category: 'Category',
-  allCategories: 'All',
+  allCategories: 'All categories',
   categories: {
     identity: 'IDs',
     insurance: 'Insurance',
@@ -68,7 +68,8 @@ export const vault: Strings['vault'] = {
   widgetEmpty: 'No deadlines in sight.',
   figureLabel: 'Filing',
   stateTabs: 'Views',
-  stateTab: (label: string, n: number) => `${label} ${n}`,
+  labelCount: (label: string, n: number) => `${label} ${n}`,
+  allStates: 'All',
   addFirst: 'Add your first document',
   detail: {
     label: 'Document',

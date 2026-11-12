@@ -29,7 +29,6 @@ import { EntryDetail, EntryPanel } from '../components/EntryDetail';
 import { MonogramTile } from '../components/MonogramTile';
 import { AccountsHead } from '../components/AccountsHead';
 import { SignatureMark } from '@/ui/identity';
-import { useBridgeConfig } from '@/core/vaultbridge/config';
 import { EntryForm, type EntryTarget } from '../components/EntryForm';
 import { GeneratorDialog } from '../components/GeneratorDialog';
 import { LockScreen } from '../components/LockScreen';
@@ -127,7 +126,6 @@ function Unlocked() {
   const [audit, setAudit] = useState(false);
   const [emergency, setEmergency] = useState(false);
   const [group, setGroup] = useState('all');
-  const bridgeConfig = useBridgeConfig();
   const searchBox = useRef<HTMLInputElement>(null);
   // `?find=n` (vault search key): focus the search field.
   const find = params.get('find');
@@ -182,10 +180,7 @@ function Unlocked() {
               ? [
                   {
                     id: 'bridge',
-                    // The label says whether the extension is connected; the dialog switches it.
-                    label: bridgeConfig?.enabled
-                      ? t.accounts.head.bridgeOn
-                      : t.accounts.head.bridgeOff,
+                    label: t.accounts.bridge.open,
                     onSelect: () => setBridge(true),
                   },
                 ]

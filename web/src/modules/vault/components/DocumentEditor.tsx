@@ -141,7 +141,14 @@ function Fields({
         />
       </Split>
       <Split>
-        <DayField label={t.vault.startDate} value={startDate} onChange={setStartDate} />
+        <DayField
+          label={t.vault.startDate}
+          value={startDate}
+          onChange={(next) => {
+            setStartDate(next);
+            setDateError('');
+          }}
+        />
         <DayField
           label={t.vault.endDate}
           value={endDate}
@@ -149,7 +156,7 @@ function Fields({
             setEndDate(next);
             setDateError('');
           }}
-          error={dateError || undefined}
+          error={dateError}
         />
       </Split>
       <NoticeField days={notice} months={noticeMonths} onChange={setNotice} max={730} />

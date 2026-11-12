@@ -264,8 +264,25 @@ export default function ListsPage() {
   );
 
   const openCount = shown.filter((i) => !i.done).length;
+  /** The add field is the list's last row; on a long list this entry (and `?new=1`) leads to it. */
+  const focusAdd = () => {
+    const input = form.current?.querySelector('input');
+    input?.scrollIntoView({ block: 'center' });
+    input?.focus({ preventScroll: true });
+  };
+  const clearBought = () => {
+    if (!current) return;
+    const id = current.id;
+    void undoableWithToast(t.lists.cleared(doneCount), t.lists.cleared(doneCount), () =>
+      clearDone(id),
+    );
+  };
   const pageMenu = current
     ? [
+        { id: 'add-item', label: t.lists.addItem, onSelect: focusAdd },
+        ...(isShopping && doneCount > 0
+          ? [{ id: 'clear-bought', label: t.lists.clearBought(doneCount), onSelect: clearBought }]
+          : []),
         { id: 'templates', label: t.lists.routines.title, onSelect: () => setTemplates(true) },
         { id: 'edit-list', label: t.lists.editList, onSelect: () => setListTarget(current) },
         ...(toBuy.length > 0
@@ -319,7 +336,7 @@ export default function ListsPage() {
     <>
       <PageHeader
         title={t.lists.title}
-        besideContent
+        besideContent={shown.length > 0 || !!tripLine}
         views={
           lists && current ? (
             <Tabs
@@ -350,8 +367,13 @@ export default function ListsPage() {
       ) : null}
       {lists && current ? (
         <>
-          {/* The first row of the page: on the phone the "⋯" menu lies beside it (`besideContent`). */}
-          {isShopping ? (
+          {/* The first row of the page: on the phone the "⋯" menu lies beside it (`besideContent`). An empty list
+              has no such line; its empty state says it. */}
+          {shown.length === 0 ? (
+            tripLine ? (
+              <ListSummary>{tripLine}</ListSummary>
+            ) : null
+          ) : isShopping ? (
             <ListSummary testId="lists-sums" note={sums.priced > 0 ? t.lists.sumNote : undefined}>
               {sums.priced > 0 ? (
                 <>
@@ -360,7 +382,8 @@ export default function ListsPage() {
                   <span>{t.lists.sumBasket(formatMoney(sums.doneCents))}</span>
                 </>
               ) : (
-                t.lists.openOf(openCount, shown.length)
+                // The head's figure is the open count; this line adds what is in the basket.
+                t.lists.inBasket(doneCount, shown.length)
               )}
             </ListSummary>
           ) : (
@@ -370,19 +393,13 @@ export default function ListsPage() {
                   isPacking
                     ? t.lists.progressPacked(stats.done, stats.total)
                     : t.lists.progress(stats.done, stats.total),
-                  stats.complete && stats.total > 0
-                    ? isPacking
-                      ? t.lists.completePacked
-                      : t.lists.complete
-                    : '',
+                  stats.complete ? (isPacking ? t.lists.completePacked : t.lists.complete) : '',
                   tripLine ?? '',
                 ]
                   .filter(Boolean)
                   .join(' · ')}
               </ListSummary>
-              {stats.total > 0 ? (
-                <Progress value={stats.done} max={stats.total} label={current.name} />
-              ) : null}
+              <Progress value={stats.done} max={stats.total} label={current.name} />
             </div>
           )}
           {isPacking && current.place && current.tripDate ? (
@@ -454,17 +471,15 @@ export default function ListsPage() {
               ))}
             </datalist>
           </div>
-          {suggestions.length > 0 || (isShopping && doneCount > 0) ? (
+          {suggestions.length > 0 ? (
             <section aria-label={t.lists.suggestions} className={styles.suggest}>
-              {suggestions.length > 0 ? (
-                <Button
-                  variant="ghost"
-                  aria-expanded={showSuggestions}
-                  onClick={() => setShowSuggestions((v) => !v)}
-                >
-                  {t.lists.suggestionsToggle(suggestions.length)}
-                </Button>
-              ) : null}
+              <Button
+                variant="ghost"
+                aria-expanded={showSuggestions}
+                onClick={() => setShowSuggestions((v) => !v)}
+              >
+                {t.lists.suggestionsToggle(suggestions.length)}
+              </Button>
               {(showSuggestions ? suggestions : []).map((name) => (
                 <Button
                   key={name}
@@ -474,22 +489,15 @@ export default function ListsPage() {
                   + {name}
                 </Button>
               ))}
-              {/* After shopping: one tap clears what is in the basket (shown only then). */}
-              {isShopping && doneCount > 0 ? (
-                <Button
-                  variant="ghost"
-                  onClick={() =>
-                    void undoableWithToast(
-                      t.lists.cleared(doneCount),
-                      t.lists.cleared(doneCount),
-                      () => clearDone(current.id),
-                    )
-                  }
-                >
-                  {t.lists.clearBought(doneCount)}
-                </Button>
-              ) : null}
             </section>
+          ) : null}
+          {/* After shopping: one tap clears what is in the basket (shown only then; also in the "⋯" menu). */}
+          {isShopping && doneCount > 0 ? (
+            <div className={styles.suggest}>
+              <Button variant="ghost" onClick={clearBought}>
+                {t.lists.clearBought(doneCount)}
+              </Button>
+            </div>
           ) : null}
         </>
       ) : null}

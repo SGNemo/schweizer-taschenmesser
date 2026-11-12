@@ -79,7 +79,7 @@ export default function VaultPage() {
   // Master–detail (layout `split`): on a wide page a document shows in the panel beside the folders, below that
   // width the folder opens its dialog (a sheet on the phone).
   const wide = useSplitView();
-  const [picked, setPicked] = useState<{ id: string } | 'closed' | null>(null);
+  const [picked, setPicked] = useState<string | null>(null);
   const [target, setTarget] = useState<DocumentTarget>(null);
   useOpenParam((id) => documentRepo.get(id), setTarget);
   const [params, setParams] = useSearchParams();
@@ -112,11 +112,9 @@ export default function VaultPage() {
   const counts = countByCategory(docs ?? []);
   const groups = (docs ?? []).map((d) => stateGroup(statusOf(d, day)));
   const none = !!docs && docs.length === 0;
-  // The panel shows the picked document, else the first folder of the list.
-  const detail =
-    picked === 'closed'
-      ? undefined
-      : ((picked ? shown.find((d) => d.id === picked.id) : undefined) ?? shown[0]);
+  // The panel shows the document that was picked; nothing of a document is shown before that (provider, dates and
+  // the note are not for whoever happens to look at the screen when the page opens).
+  const detail = picked ? shown.find((d) => d.id === picked) : undefined;
 
   return (
     <>
@@ -128,10 +126,10 @@ export default function VaultPage() {
             label={t.vault.stateTabs}
             value={state}
             options={[
-              { value: 'all' as const, label: t.vault.allCategories },
+              { value: 'all' as const, label: t.vault.allStates },
               ...STATE_GROUPS.map((g) => ({
                 value: g,
-                label: t.vault.stateTab(
+                label: t.vault.labelCount(
                   t.vault.stateGroups[g],
                   groups.filter((x) => x === g).length,
                 ),
@@ -175,7 +173,7 @@ export default function VaultPage() {
               { value: 'all' as const, label: t.vault.allCategories },
               ...CATEGORIES.filter((c) => (counts[c] ?? 0) > 0 || c === category).map((c) => ({
                 value: c,
-                label: t.vault.stateTab(t.vault.categories[c] ?? c, counts[c] ?? 0),
+                label: t.vault.labelCount(t.vault.categories[c] ?? c, counts[c] ?? 0),
               })),
             ]}
           />
@@ -195,7 +193,7 @@ export default function VaultPage() {
               day={day}
               hasFile={files?.has(detail.id) ?? false}
               onEdit={() => setTarget(detail)}
-              onClose={() => setPicked('closed')}
+              onClose={() => setPicked(null)}
             />
           ) : null
         }
@@ -227,7 +225,7 @@ export default function VaultPage() {
                   signatureBlock="vault-doc"
                   title={d.title}
                   current={wide && detail?.id === d.id}
-                  onOpen={() => (wide ? setPicked({ id: d.id }) : setTarget(d))}
+                  onOpen={() => (wide ? setPicked(d.id) : setTarget(d))}
                   meta={metaLine([
                     t.vault.categories[d.category],
                     d.provider,

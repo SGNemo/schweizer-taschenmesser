@@ -43,7 +43,7 @@ interface Read {
   rowHeights: number[];
   sideways: boolean;
   titleCut: boolean;
-  /** Reading-aid marks on the page. */
+  /** Reading-aid marks in `main`. */
   readMarks: number;
   /** Signature blocks: id and whether the element has a name a screen reader can say (its row's title). */
   blocks: { id: string; named: boolean }[];
@@ -93,7 +93,8 @@ function read(): Read {
       .map((el) => Math.round((el.closest('li') ?? el).getBoundingClientRect().height)),
     sideways: document.documentElement.scrollWidth > document.documentElement.clientWidth,
     titleCut: !!h1 && h1.scrollWidth > h1.clientWidth,
-    readMarks: document.querySelectorAll('[data-rs]').length,
+    // Like `readaid.seed.spec.ts`: the page itself, head included (the sidebar is the shell's).
+    readMarks: main.querySelectorAll('[data-rs]').length,
     blocks: Array.from(main.querySelectorAll('[data-signature-block]')).map((el) => ({
       id: el.getAttribute('data-signature-block') ?? '',
       named: (el.querySelector('[data-row]')?.textContent ?? '').trim() !== '',
@@ -116,6 +117,11 @@ async function unlock(page: Page) {
 }
 
 async function check(page: Page, phone: boolean, theme: string) {
+  // The reading aid is on at full cover: a mark on the vault pages would show.
+  await page.addInitScript(() => {
+    localStorage.setItem('tm-read-aid', '1');
+    localStorage.setItem('tm-read-cover', '100');
+  });
   await startSeeded(page, { phone });
   const seen: Record<string, unknown> = {};
   const shot = async (name: string) => {
@@ -140,6 +146,11 @@ async function check(page: Page, phone: boolean, theme: string) {
       await unlock(page);
       await page.waitForTimeout(400);
     }
+    // Locking stays one tap on the open passwords page, on the phone too (never inside a menu).
+    if (path === '/accounts')
+      await expect
+        .soft(page.locator('main').getByRole('button', { name: 'Sperren' }), 'lock button in sight')
+        .toBeInViewport();
     const r = await page.evaluate(read);
     const m = surfaceMetrics(await page.evaluate(measurePage));
     seen[path] = {
@@ -180,10 +191,10 @@ async function check(page: Page, phone: boolean, theme: string) {
         .toBeLessThanOrEqual(CONTENT_Y_PHONE);
     } else {
       expect.soft(r.primaries, `${path}: exactly one filled action in the head`).toHaveLength(1);
-      // The filled action and the "⋯" menu; the passwords page also keeps "Jetzt sperren" in sight.
+      // The filled action and the "⋯" menu, nothing else.
       expect
         .soft(r.headControls.length, `${path}: ${r.headControls.join(' | ')}`)
-        .toBeLessThanOrEqual(path === '/accounts' ? 3 : 2);
+        .toBeLessThanOrEqual(2);
       await expect
         .soft(page.locator('[data-testid="module-actions"] [role="switch"]'), `${path}: no switch`)
         .toHaveCount(0);
@@ -233,10 +244,11 @@ test.describe('documents: master–detail', () => {
       await startSeeded(page);
       await openPage(page, '/vault');
       const panel = page.getByTestId('document-detail');
-      // The first folder is shown from the start and marked in the list.
-      await expect(panel).toBeVisible();
-      await expect(page.locator('main [aria-current="true"]')).toHaveCount(1);
+      // Nothing of a document is shown before one is picked.
+      await expect(panel).toHaveCount(0);
+      await expect(page.locator('main [aria-current="true"]')).toHaveCount(0);
       await page.locator('main [data-row]', { hasText: 'Handyvertrag' }).first().click();
+      await expect(page.locator('main [aria-current="true"]')).toHaveCount(1);
       await expect(panel.getByRole('heading', { name: 'Handyvertrag' })).toBeVisible();
       await expect(page.getByRole('dialog')).toHaveCount(0);
       await panel.getByRole('button', { name: 'Bearbeiten' }).click();
@@ -254,6 +266,8 @@ test.describe('documents: master–detail', () => {
     test('titles keep their room beside the panel, nothing runs out sideways', async ({ page }) => {
       await startSeeded(page);
       await openPage(page, '/vault');
+      await page.locator('main [data-row]').first().click();
+      await expect(page.getByTestId('document-detail')).toBeVisible();
       await page.waitForTimeout(400);
       const seen = await page.evaluate(() => ({
         sideways: document.documentElement.scrollWidth > document.documentElement.clientWidth,
@@ -302,6 +316,10 @@ test.describe('passwords on the phone: the entry dialog keeps its foot (B10)', (
     seeded: { scale: 'small', preview: true },
   });
   test('"Speichern" stays on screen while the fields scroll', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('tm-read-aid', '1');
+      localStorage.setItem('tm-read-cover', '100');
+    });
     await startSeeded(page, { phone: true });
     await openPage(page, '/accounts');
     await closeNotice(page);
@@ -323,6 +341,6 @@ test.describe('passwords on the phone: the entry dialog keeps its foot (B10)', (
         .toBe(true);
     }
     // Nothing of the form is marked by the reading aid.
-    expect(await page.locator('[data-rs]').count()).toBe(0);
+    expect(await dialog.locator('[data-rs]').count()).toBe(0);
   });
 });

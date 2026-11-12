@@ -212,7 +212,7 @@ export default function FitnessPage() {
         <StartDataMenu
           moduleId="fitness"
           items={[
-            ...(view !== 'food' && canRepeat && last
+            ...(view === 'training' && canRepeat && last
               ? [
                   {
                     id: 'repeat',

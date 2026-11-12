@@ -95,9 +95,11 @@ test.describe('money lists beside the detail panel', () => {
       await page.locator('main li [data-row]').first().click();
       await expect(page.locator('main aside')).toBeVisible();
       const finance = await page.evaluate(read);
-      // Unterlagen shows the first folder in the panel from the start.
+      // Unterlagen shows the folder that was picked.
       await openPage(page, '/vault');
       await settle(page);
+      await page.locator('main li [data-row]').first().click();
+      await expect(page.locator('main aside')).toBeVisible();
       const vault = await page.evaluate(read);
       if (SHOTS) {
         mkdirSync(SHOTS, { recursive: true });
