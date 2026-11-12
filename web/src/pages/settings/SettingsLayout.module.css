@@ -189,11 +189,22 @@
 }
 /* Touch: a plain text link of a tab is 44 px to hit (Identity 4.0; they were 20–26 px). */
 @media (pointer: coarse) {
+  /* A hit strip, so the text flows as before (a link inside a sentence stays inside its line). */
   .category a:not([class]) {
-    display: inline-flex;
-    align-items: center;
-    max-width: 100%;
-    min-height: var(--touch);
+    position: relative;
+  }
+  .category a:not([class])::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: var(--touch);
+    transform: translateY(-50%);
+  }
+  /* A list of such links (model licences): each entry gets the room of its strip, so two strips never overlap. */
+  .category li:has(> a:not([class])) {
+    padding-block: var(--space-3);
   }
 }
 .search {

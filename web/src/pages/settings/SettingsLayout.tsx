@@ -55,7 +55,7 @@ import { useSettingsSections } from './useSections';
 import styles from './SettingsLayout.module.css';
 
 /** Desktop two-column layout from this width; below it the categories are a list (first level). */
-const MASTER_DETAIL_QUERY = '(min-width: 900px)';
+import { WIDE_QUERY as MASTER_DETAIL_QUERY } from './wide';
 /** Third column (table of contents) from this width. */
 const TOC_QUERY = '(min-width: 1440px)';
 /** How long a deep-linked settings section stays highlighted. */
@@ -414,6 +414,8 @@ function useDeepLink(ready: boolean) {
     const present = () => {
       const anchor = document.getElementById(sectionId);
       if (!anchor) return false;
+      // A tab keeps its sections out of sight until all of them are there (`TabBody`): nothing to scroll to yet.
+      if (anchor.closest('[data-shown="false"]')) return false;
       // The head's h1 is there before the body: wait for the body section; any other anchor is ready as soon as it exists.
       return (
         !(pathname.startsWith('/settings/module/') && anchor.tagName === 'H1') ||
@@ -424,7 +426,12 @@ function useDeepLink(ready: boolean) {
       observer = new MutationObserver(() => {
         if (present() && apply()) observer?.disconnect();
       });
-      observer.observe(document.body, { childList: true, subtree: true });
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['data-shown'],
+      });
     } else {
       apply();
     }
@@ -468,49 +475,60 @@ function PendingSection() {
 
 /** After the last section's code has arrived its stored values still load (a few ms): the tab waits this long. */
 const TAB_SETTLE_MS = 120;
+/** Whatever still waits after this long, the tab is shown: a section that hangs must never hide the others. */
+const TAB_WAIT_MAX_MS = 1500;
+/** A wait shorter than this shows nothing at all (no skeleton flashing up on every tab switch). */
+const TAB_SKELETON_AFTER_MS = 300;
 
 /**
  * The sections of a tab, shown in one piece (Identity 4.0, package 0b-E): every section is its own chunk and reads
  * its own values, so they used to arrive one after the other and each pushed everything below it down (layout shift
  * up to 0.41 on "Über Nemo", 0.35 on "Darstellung" on the phone). The body stays out of sight behind the skeleton
  * until no section waits for its code any more, plus a short settle for the stored values; after that it is never
- * hidden again (a part that loads later appears in place, as before).
+ * hidden again (a part that loads later appears in place, as before). A tab whose code is already there shows at
+ * once; a section that hangs is cut off after `TAB_WAIT_MAX_MS`, so it can hide nothing but itself.
  */
 function TabBody({ children }: { children: ReactNode }) {
   const [shown, setShown] = useState(false);
+  const [slow, setSlow] = useState(false);
   const waiting = useRef(0);
+  const alive = useRef(true);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const counter = useMemo(() => {
-    const settle = () => {
-      clearTimeout(timer.current);
-      timer.current = setTimeout(() => {
-        if (waiting.current === 0) setShown(true);
-      }, TAB_SETTLE_MS);
-    };
-    return {
+  const counter = useMemo(
+    () => ({
       add: () => {
         waiting.current += 1;
         clearTimeout(timer.current);
       },
       done: () => {
         waiting.current -= 1;
-        if (waiting.current === 0) settle();
+        if (waiting.current > 0 || !alive.current) return;
+        clearTimeout(timer.current);
+        timer.current = setTimeout(() => {
+          if (waiting.current === 0) setShown(true);
+        }, TAB_SETTLE_MS);
       },
-      settle,
+    }),
+    [],
+  );
+  useLayoutEffect(() => {
+    alive.current = true;
+    // The fallbacks of the sections have registered by now (child effects run first): nothing waits = show at once.
+    if (waiting.current === 0) setShown(true);
+    const cap = setTimeout(() => setShown(true), TAB_WAIT_MAX_MS);
+    const late = setTimeout(() => setSlow(true), TAB_SKELETON_AFTER_MS);
+    return () => {
+      alive.current = false;
+      clearTimeout(timer.current);
+      clearTimeout(cap);
+      clearTimeout(late);
     };
   }, []);
-  // The fallbacks of the sections have registered by now (child effects run first): nothing waiting = settle now.
-  useLayoutEffect(() => {
-    if (waiting.current === 0) counter.settle();
-    return () => clearTimeout(timer.current);
-  }, [counter]);
   return (
     <PendingSections.Provider value={counter}>
       {shown ? null : (
         // As tall as the screen: a short page would let the sticky category column slip (16 px) until the tab is there.
-        <div className={styles.tabWait}>
-          <Skeleton />
-        </div>
+        <div className={styles.tabWait}>{slow ? <Skeleton /> : null}</div>
       )}
       <div className={styles.tabBody} data-shown={shown} aria-busy={!shown}>
         {children}

@@ -9,10 +9,8 @@ import { CATEGORY_LOOK, STATUS_LOOK } from '../categoryLook';
 import { ModuleRouteHead } from '../ModuleSettingsPage';
 import { StatusHead } from '../StatusHead';
 import { useSettingsSections } from '../useSections';
+import { WIDE_QUERY } from '../wide';
 import { SettingsTitle } from './SettingsTitle';
-
-/** From here on the settings are two columns (the same value as `SettingsLayout`). */
-const WIDE_QUERY = '(min-width: 900px)';
 
 /** `decodeURIComponent` that keeps a malformed escape as it is (a typed `/settings/module/%` must not crash the head). */
 function safeDecode(segment: string): string {

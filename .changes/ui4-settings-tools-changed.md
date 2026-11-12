@@ -2,8 +2,8 @@
 type: changed
 area: settings
 breaking: false
-de: Die Einstellungen sind ruhiger – jeder Reiter hat eine schlichte Titelzeile, „Schnell umschalten“ steht nur noch auf der Startseite, Listen und Gruppen kommen ohne Rahmen aus.
-en: Settings are calmer – every tab has a plain title line, the quick switches are on the start page only, and lists and groups no longer have frames.
+de: Die Einstellungen sind ruhiger – eine schlichte Titelzeile je Reiter, „Schnell umschalten“ nur noch auf der Startseite der Einstellungen (und in der Suche), Listen und Gruppen ohne Rahmen.
+en: Settings are calmer – a plain title line per tab, the quick switches on the settings start page only (and in the search), lists and groups without frames.
 ---
 ---
 type: fixed

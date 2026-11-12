@@ -52,9 +52,9 @@ export function SettingsTitle({
         <HuePlate hue={hue} icon={icon} />
         <div className={styles.block}>
           {back ? (
-            <Link to={back.to} className={`${styles.eyebrow} ${styles.back}`}>
+            <Link to={back.to} className={styles.back}>
               <Icon name="chevronLeft" size={16} />
-              {back.label}
+              <span className={styles.eyebrow}>{back.label}</span>
             </Link>
           ) : (
             <p className={styles.eyebrow}>{eyebrow}</p>

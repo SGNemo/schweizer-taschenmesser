@@ -27,6 +27,7 @@ import {
 import { FieldRow } from './ModuleSection';
 import { STATUS_LOOK } from './categoryLook';
 import { hasModulePage } from './hasModulePage';
+import { WIDE_QUERY } from './wide';
 import { SettingsTitle } from './components/SettingsTitle';
 import styles from './ModuleSettingsPage.module.css';
 import settingsStyles from './settings.module.css';
@@ -55,7 +56,7 @@ function ModuleHead({ manifest }: { manifest: ModuleManifest }) {
   const o = tSettings2.use().modulePage;
   const v3 = tSettingsV3.use();
   // Phone: the eyebrow is the way back to the list of modules (no back row above the page).
-  const wide = useMediaQuery('(min-width: 900px)');
+  const wide = useMediaQuery(WIDE_QUERY);
   return (
     <SettingsTitle
       hue={manifest.identity.hue}
@@ -133,7 +134,7 @@ function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
   const { schema, defaults, fields } = manifest.settings;
   const [values, patch] = useSettings(`module.${manifest.id}`, schema, defaults);
   const toast = useUiStore((st) => st.toast);
-  const wide = useMediaQuery('(min-width: 900px)');
+  const wide = useMediaQuery(WIDE_QUERY);
   if (!values) return null;
   const v = values as Record<string, unknown>;
   const sectionId = `module-${manifest.id}`;

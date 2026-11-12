@@ -40,7 +40,11 @@ const a = t.about;
  */
 let aboutInfoOnce: Promise<AboutInfo | undefined> | undefined;
 function useAboutInfo(): AboutInfo | undefined {
-  aboutInfoOnce ??= getAboutInfo().catch(() => undefined);
+  aboutInfoOnce ??= getAboutInfo().catch(() => {
+    // A failed read is not kept: the next visit of the tab asks again.
+    aboutInfoOnce = undefined;
+    return undefined;
+  });
   return use(aboutInfoOnce);
 }
 
