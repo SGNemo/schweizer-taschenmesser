@@ -1,7 +1,7 @@
 {
   "version": 1,
   "what": "max-width declarations in src/modules/**/*.module.css outside @media and @container",
-  "total": 30,
+  "total": 28,
   "files": {
     "modules/accounts/accounts.module.css": 1,
     "modules/bookmarks/routes/reader.module.css": 1,
@@ -10,12 +10,10 @@
     "modules/calendar/routes/calendar.module.css": 2,
     "modules/chat/chat.module.css": 1,
     "modules/disk/components/Breadcrumb.module.css": 1,
-    "modules/disk/components/DiskHead.module.css": 1,
     "modules/disk/components/Duplicates.module.css": 1,
     "modules/disk/components/ScanView.module.css": 1,
     "modules/disk/components/TreemapView.module.css": 1,
     "modules/disk/routes/DrivesPage.module.css": 1,
-    "modules/downloads/components/DownloadsBand.module.css": 1,
     "modules/downloads/routes/DownloadsPage.module.css": 1,
     "modules/finance/components/columnMapping.module.css": 1,
     "modules/maps/components/TileMap.module.css": 1,
