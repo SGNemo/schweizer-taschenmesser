@@ -39,13 +39,34 @@ const a = t.about;
  * the rest of "Über Nemo" down (layout shift 0.18 on the desktop, 0.41 on the phone). `undefined` = not readable.
  */
 let aboutInfoOnce: Promise<AboutInfo | undefined> | undefined;
+let aboutInfoMissing = false;
+/** Longer than this and the section shows without the facts ("…"), as it did while they loaded. */
+const ABOUT_WAIT_MS = 1000;
+
+function readAboutInfo(): Promise<AboutInfo | undefined> {
+  aboutInfoOnce ??= Promise.race([
+    getAboutInfo(),
+    new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), ABOUT_WAIT_MS)),
+  ])
+    .catch(() => undefined)
+    .then((info) => {
+      aboutInfoMissing = info === undefined;
+      return info;
+    });
+  return aboutInfoOnce;
+}
+
 function useAboutInfo(): AboutInfo | undefined {
-  aboutInfoOnce ??= getAboutInfo().catch(() => {
-    // A failed read is not kept: the next visit of the tab asks again.
-    aboutInfoOnce = undefined;
-    return undefined;
-  });
-  return use(aboutInfoOnce);
+  const info = use(readAboutInfo());
+  // A read that failed or took too long stays as it is while the tab is open (no retry in a loop); leaving the tab
+  // drops it, so the next visit asks again.
+  useEffect(
+    () => () => {
+      if (aboutInfoMissing) aboutInfoOnce = undefined;
+    },
+    [],
+  );
+  return info;
 }
 
 function Value({ children, testId }: { children: ReactNode; testId?: string }) {
