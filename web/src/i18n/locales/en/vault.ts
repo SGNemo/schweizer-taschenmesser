@@ -19,7 +19,7 @@ export const vault: Strings['vault'] = {
   add: 'Add document',
   edit: 'Edit document',
   category: 'Category',
-  allCategories: 'All',
+  allCategories: 'All categories',
   categories: {
     identity: 'IDs',
     insurance: 'Insurance',
@@ -67,7 +67,14 @@ export const vault: Strings['vault'] = {
   emptyFiltered: 'Nothing found.',
   widgetEmpty: 'No deadlines in sight.',
   figureLabel: 'Filing',
-  stateTabs: 'Filter by state',
+  stateTabs: 'Views',
+  labelCount: (label: string, n: number) => `${label} ${n}`,
+  allStates: 'All',
+  addFirst: 'Add your first document',
+  detail: {
+    label: 'Document',
+    bare: 'No provider, date or file yet.',
+  },
   stateGroups: {
     expired: 'Expired',
     due: 'Deadline ahead',

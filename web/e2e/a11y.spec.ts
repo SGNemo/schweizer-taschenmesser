@@ -254,7 +254,11 @@ for (const scheme of ['light', 'dark'] as const) {
       await page.keyboard.press('Escape');
       await audit(page, `accounts list (${scheme})`);
 
-      await page.getByRole('button', { name: 'Import, Export & Sicherheit' }).click();
+      // Identity 4.0, package 0b-5: the tools are entries of the page's "⋯" menu; the open menu is audited too.
+      await page.getByRole('button', { name: 'Weitere Aktionen' }).first().click();
+      await expect(page.getByRole('menu')).toBeVisible();
+      await audit(page, `accounts menu (${scheme})`);
+      await page.getByRole('menuitem', { name: 'Import, Export & Sicherheit' }).click();
       await expect(page.getByRole('dialog', { name: 'Import, Export & Sicherheit' })).toBeVisible();
       await audit(page, `accounts tools (${scheme})`);
       await page.keyboard.press('Escape');

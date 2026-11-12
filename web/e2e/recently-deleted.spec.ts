@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { enable, ready } from './helpers';
+import { openEditor } from './money-helpers';
 
 async function createAndDelete(page: Page, title: string) {
   await ready(page, '/vault?new=1');
@@ -7,11 +8,14 @@ async function createAndDelete(page: Page, title: string) {
   await dialog.getByLabel('Titel').fill(title);
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await page
-    .getByRole('listitem')
-    .filter({ hasText: title })
-    .getByRole('button', { name: new RegExp(`^${title}`) })
-    .click();
+  // Master–detail: on a wide page the folder shows in the panel and "Bearbeiten" opens the dialog.
+  await openEditor(
+    page,
+    page
+      .getByRole('listitem')
+      .filter({ hasText: title })
+      .getByRole('button', { name: new RegExp(`^${title}`) }),
+  );
   await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }

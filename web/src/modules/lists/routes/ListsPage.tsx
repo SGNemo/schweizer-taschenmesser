@@ -21,7 +21,6 @@ import {
   GroupedList,
   IconButton,
   ItemList,
-  RowMenu,
   ItemRow,
   PageAction,
   PageHeader,
@@ -44,7 +43,7 @@ import {
   totals,
 } from '../logic';
 import { TripWeather } from '../components/TripWeather';
-import { ReceiptSignature, SuitcaseSignature } from '../components/ListSignature';
+import { ListFigure, ListSummary } from '../components/ListSignature';
 import {
   addItem,
   clearDone,
@@ -78,7 +77,6 @@ export default function ListsPage() {
   const [templates, setTemplates] = useState(false);
   const [category, setCategory] = useState('');
   const moduleStates = useModuleStates();
-  const [moreOpen, setMoreOpen] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const toast = useUiStore((x) => x.toast);
   const form = useRef<HTMLFormElement>(null);
@@ -88,14 +86,22 @@ export default function ListsPage() {
   }, []);
 
   // `?new=1` (Quick-Add, the "+ Neu" menu) focuses the add field.
+  /** The add field is the list's last row; the "⋯" entry and `?new=1` lead to it on a long list. */
+  const focusAdd = () => {
+    const input = form.current?.querySelector('input');
+    input?.scrollIntoView({ block: 'center' });
+    input?.focus({ preventScroll: true });
+  };
+  // The field lies below the rows, so the parameter waits until lists and items are there.
+  const loaded = (lists?.length ?? 0) > 0 && items !== undefined;
   useEffect(() => {
-    if (params.get('new')) {
-      form.current?.querySelector('input')?.focus();
+    if (params.get('new') && loaded && form.current) {
+      focusAdd();
       const next = new URLSearchParams(params);
       next.delete('new');
       setParams(next, { replace: true });
     }
-  }, [params, setParams]);
+  }, [params, setParams, loaded]);
 
   // A search hit links here with ?open=<id> of a list or an item: show that list.
   useOpenParam(
@@ -215,12 +221,6 @@ export default function ListsPage() {
   }
 
   const groups = groupItems(shown, isShopping ? 'section' : 'category');
-  const receiptDetail = [
-    sums.priced > 0 ? t.lists.sumOpen(formatMoney(sums.openCents)) : '',
-    isShopping && groups.length > 0 ? t.lists.sectionsCount(groups.length) : '',
-  ]
-    .filter(Boolean)
-    .join(' · ');
   const groupLabel = (id: string) =>
     isShopping ? (id ? t.lists.sections[id]! : t.lists.noSection) : id || t.lists.sections.other!;
 
@@ -267,150 +267,148 @@ export default function ListsPage() {
     />
   );
 
+  const openCount = shown.filter((i) => !i.done).length;
+  const clearBought = () => {
+    if (!current) return;
+    const id = current.id;
+    void undoableWithToast(t.lists.cleared(doneCount), t.lists.cleared(doneCount), () =>
+      clearDone(id),
+    );
+  };
+  const pageMenu = current
+    ? [
+        { id: 'add-item', label: t.lists.addItem, onSelect: focusAdd },
+        ...(isShopping && doneCount > 0
+          ? [{ id: 'clear-bought', label: t.lists.clearBought(doneCount), onSelect: clearBought }]
+          : []),
+        { id: 'templates', label: t.lists.routines.title, onSelect: () => setTemplates(true) },
+        { id: 'edit-list', label: t.lists.editList, onSelect: () => setListTarget(current) },
+        ...(toBuy.length > 0
+          ? [
+              {
+                id: 'buy-missing',
+                label: t.lists.buyMissing(toBuy.length),
+                onSelect: () => void sendToBuy(),
+              },
+            ]
+          : []),
+        ...(isShopping && doneCount > 0 && moduleStates?.pantry === true
+          ? [
+              {
+                id: 'to-pantry',
+                label: t.lists.toPantry(doneCount),
+                onSelect: () => void toPantry(),
+              },
+            ]
+          : []),
+        ...(!isShopping
+          ? [
+              ...(doneCount > 0
+                ? [
+                    {
+                      id: 'reset',
+                      label: t.lists.reset,
+                      onSelect: () =>
+                        void undoableWithToast(t.lists.resetDone, t.lists.resetDone, () =>
+                          resetList(current.id),
+                        ),
+                    },
+                  ]
+                : []),
+              {
+                id: 'duplicate',
+                label: t.lists.duplicate,
+                onSelect: () =>
+                  void undoableWithToast(t.lists.duplicated, t.lists.duplicated, async () => {
+                    const id = await duplicateList(current.id);
+                    setParams({ list: id }, { replace: true });
+                  }),
+              },
+            ]
+          : []),
+        { id: 'share', label: t.lists.share, onSelect: () => void share() },
+      ]
+    : [];
+
   return (
     <>
-      <PageHeader title={t.lists.title}>
-        <Button onClick={() => setTemplates(true)}>{t.lists.routines.title}</Button>
+      <PageHeader
+        title={t.lists.title}
+        // While the items load the menu already sits where it will be (no jump on the phone).
+        besideContent={!items || shown.length > 0 || !!tripLine}
+        views={
+          lists && current ? (
+            <Tabs
+              label={t.lists.tabsLabel}
+              items={sorted.map((l) => ({ id: l.id, label: l.name, active: l.id === current.id }))}
+              onSelect={(id) => {
+                setParams({ list: id }, { replace: true });
+              }}
+            />
+          ) : undefined
+        }
+      >
+        {/* Rule 4: items are added in the list's last row; the head's action (the plus on the phone) is a new
+            list, as `e2e/mobile-layout.spec.ts` pins it. */}
         <PageAction short={t.nav.plusThings.list} onClick={() => setListTarget('new')}>
           <Icon name="plus" size={18} />
           {t.lists.newList}
         </PageAction>
-        <StartDataMenu moduleId="lists" />
+        {/* Everything occasional: templates, editing, sharing, clearing a packing list. */}
+        <StartDataMenu moduleId="lists" items={pageMenu} />
       </PageHeader>
       {lists && current && isShopping ? (
-        <ReceiptSignature
+        <ListFigure
           name={current.name}
-          open={shown.filter((i) => !i.done).length}
-          detail={receiptDetail}
-          lines={shown
-            .filter((i) => !i.done)
-            .map((i) => ({
-              name: i.name,
-              ...(i.priceCents !== undefined ? { price: formatMoney(i.priceCents) } : {}),
-            }))}
+          open={openCount}
+          detail={groups.length > 0 ? t.lists.sectionsCount(groups.length) : undefined}
         />
-      ) : null}
-      {lists && current && isPacking && stats.total > 0 ? (
-        <SuitcaseSignature done={stats.done} total={stats.total} line={tripLine} />
       ) : null}
       {lists && current ? (
         <>
-          <Tabs
-            label={t.lists.tabsLabel}
-            items={sorted.map((l) => ({ id: l.id, label: l.name, active: l.id === current.id }))}
-            onSelect={(id) => {
-              setParams({ list: id }, { replace: true });
-            }}
-          />
-          <div className={styles.toolbar}>
-            <form ref={form} onSubmit={add} className={styles.add}>
-              <TextField
-                label={t.lists.addItem}
-                labelHidden
-                placeholder={t.lists.placeholder[current.kind]}
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                autoComplete="off"
-                data-list-search
-              />
-              <Button type="submit">{t.actions.add}</Button>
-              {isPacking ? (
-                <TextField
-                  label={t.lists.categoryNow}
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  list="lists-categories"
-                  autoComplete="off"
-                />
-              ) : null}
-            </form>
-            <datalist id="lists-categories">
-              {categories.map((c) => (
-                <option key={c} value={c} />
-              ))}
-            </datalist>
-            <div className={styles.actions}>
-              {current.kind === 'shopping' ? (
-                <Button
-                  disabled={doneCount === 0}
-                  onClick={() =>
-                    void undoableWithToast(
-                      t.lists.cleared(doneCount),
-                      t.lists.cleared(doneCount),
-                      () => clearDone(current.id),
-                    )
-                  }
-                >
-                  {t.lists.clearBought(doneCount)}
-                </Button>
-              ) : (
+          {/* The first row of the page: on the phone the "⋯" menu lies beside it (`besideContent`). An empty list
+              has no such line; its empty state says it. */}
+          {shown.length === 0 ? (
+            tripLine ? (
+              <ListSummary>{tripLine}</ListSummary>
+            ) : null
+          ) : isShopping ? (
+            <ListSummary testId="lists-sums" note={sums.priced > 0 ? t.lists.sumNote : undefined}>
+              {sums.priced > 0 ? (
                 <>
-                  <Button
-                    disabled={doneCount === 0}
-                    onClick={() =>
-                      void undoableWithToast(t.lists.resetDone, t.lists.resetDone, () =>
-                        resetList(current.id),
-                      )
-                    }
-                  >
-                    {t.lists.reset}
-                  </Button>
-                  <Button
-                    onClick={() =>
-                      void undoableWithToast(t.lists.duplicated, t.lists.duplicated, async () => {
-                        const id = await duplicateList(current.id);
-                        setParams({ list: id }, { replace: true });
-                      })
-                    }
-                  >
-                    {t.lists.duplicate}
-                  </Button>
+                  <span>{t.lists.sumOpen(formatMoney(sums.openCents))}</span>
+                  {' · '}
+                  <span>{t.lists.sumBasket(formatMoney(sums.doneCents))}</span>
                 </>
+              ) : // The head's figure is the open count; this line adds what is in the basket.
+              doneCount === 0 ? (
+                t.lists.basketEmpty
+              ) : (
+                t.lists.inBasket(doneCount, shown.length)
               )}
-              {toBuy.length > 0 ? (
-                <Button onClick={() => void sendToBuy()}>{t.lists.buyMissing(toBuy.length)}</Button>
-              ) : null}
-              <RowMenu
-                label={t.lists.more}
-                open={moreOpen}
-                onOpenChange={setMoreOpen}
-                items={[
-                  ...(isShopping && doneCount > 0 && moduleStates?.pantry === true
-                    ? [
-                        {
-                          id: 'to-pantry',
-                          label: t.lists.toPantry(doneCount),
-                          onSelect: () => void toPantry(),
-                        },
-                      ]
-                    : []),
-                  { id: 'share', label: t.lists.share, onSelect: () => void share() },
-                ]}
-              />
-              <IconButton label={t.lists.editList} onClick={() => setListTarget(current)}>
-                <Icon name="edit" />
-              </IconButton>
+            </ListSummary>
+          ) : (
+            <div className={styles.progress} data-testid="lists-progress">
+              <ListSummary>
+                {[
+                  isPacking
+                    ? t.lists.progressPacked(stats.done, stats.total)
+                    : t.lists.progress(stats.done, stats.total),
+                  stats.complete ? (isPacking ? t.lists.completePacked : t.lists.complete) : '',
+                  tripLine ?? '',
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </ListSummary>
+              <Progress value={stats.done} max={stats.total} label={current.name} />
             </div>
-          </div>
+          )}
           {isPacking && current.place && current.tripDate ? (
             <TripWeather
               key={`${current.id}|${current.place}|${current.tripDate}`}
               place={current.place}
               tripDate={current.tripDate}
             />
-          ) : null}
-          {current.kind !== 'shopping' && stats.total > 0 ? (
-            <div className={styles.progress} data-testid="lists-progress">
-              <p>
-                {current.kind === 'packing'
-                  ? t.lists.progressPacked(stats.done, stats.total)
-                  : t.lists.progress(stats.done, stats.total)}
-                {stats.complete
-                  ? ` · ${current.kind === 'packing' ? t.lists.completePacked : t.lists.complete}`
-                  : ''}
-              </p>
-              <Progress value={stats.done} max={stats.total} label={current.name} />
-            </div>
           ) : null}
           {items && shown.length === 0 ? (
             <EmptyState
@@ -424,35 +422,11 @@ export default function ListsPage() {
               }
             />
           ) : null}
-          {isShopping && sums.priced > 0 ? (
-            <p className={styles.sums} data-testid="lists-sums">
-              <span>{t.lists.sumOpen(formatMoney(sums.openCents))}</span>
-              {' · '}
-              <span>{t.lists.sumBasket(formatMoney(sums.doneCents))}</span>
-              <span className={styles.quantity}> ({t.lists.sumNote})</span>
-            </p>
-          ) : null}
-          {suggestions.length > 0 ? (
-            <section aria-label={t.lists.suggestions} className={styles.suggest}>
-              <Button aria-expanded={showSuggestions} onClick={() => setShowSuggestions((v) => !v)}>
-                {t.lists.suggestionsToggle(suggestions.length)}
-              </Button>
-              {(showSuggestions ? suggestions : []).map((name) => (
-                <Button
-                  key={name}
-                  onClick={() => void addItem(current.id, name, current.kind)}
-                  aria-label={t.lists.suggestAdd(name)}
-                >
-                  + {name}
-                </Button>
-              ))}
-            </section>
-          ) : null}
           <div
-            className={isShopping && shown.length > 0 ? styles.paper : undefined}
+            className={isShopping ? styles.paper : styles.sheet}
             data-testid={isShopping && shown.length > 0 ? 'receipt-paper' : undefined}
           >
-            {groups.length === 1 && groups[0]!.id === '' ? (
+            {shown.length === 0 ? null : groups.length === 1 && groups[0]!.id === '' ? (
               <ItemList label={current.name}>{shown.map(renderRow)}</ItemList>
             ) : (
               <GroupedList
@@ -466,7 +440,66 @@ export default function ListsPage() {
                 }))}
               />
             )}
+            {/* Rule 4: the add field stays, as the quiet last row of the list. */}
+            <form ref={form} onSubmit={add} className={styles.add} data-testid="lists-add">
+              <TextField
+                label={t.lists.addItem}
+                labelHidden
+                placeholder={t.lists.placeholder[current.kind]}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                autoComplete="off"
+                data-list-search
+              />
+              {isPacking ? (
+                <TextField
+                  label={t.lists.categoryNow}
+                  labelHidden
+                  placeholder={t.lists.categoryNow}
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  list="lists-categories"
+                  autoComplete="off"
+                />
+              ) : null}
+              <Button type="submit" variant="ghost">
+                {t.actions.add}
+              </Button>
+            </form>
+            <datalist id="lists-categories">
+              {categories.map((c) => (
+                <option key={c} value={c} />
+              ))}
+            </datalist>
           </div>
+          {suggestions.length > 0 ? (
+            <section aria-label={t.lists.suggestions} className={styles.suggest}>
+              <Button
+                variant="ghost"
+                aria-expanded={showSuggestions}
+                onClick={() => setShowSuggestions((v) => !v)}
+              >
+                {t.lists.suggestionsToggle(suggestions.length)}
+              </Button>
+              {(showSuggestions ? suggestions : []).map((name) => (
+                <Button
+                  key={name}
+                  onClick={() => void addItem(current.id, name, current.kind)}
+                  aria-label={t.lists.suggestAdd(name)}
+                >
+                  + {name}
+                </Button>
+              ))}
+            </section>
+          ) : null}
+          {/* After shopping: one tap clears what is in the basket (shown only then; also in the "⋯" menu). */}
+          {isShopping && doneCount > 0 ? (
+            <div className={styles.suggest}>
+              <Button variant="ghost" onClick={clearBought}>
+                {t.lists.clearBought(doneCount)}
+              </Button>
+            </div>
+          ) : null}
         </>
       ) : null}
       <Dialog open={templates} onClose={() => setTemplates(false)} title={t.lists.routines.title}>

@@ -12,8 +12,7 @@
   margin: 0;
   padding: var(--space-3);
   border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: var(--surface-2, var(--surface));
+  background: var(--surface-2);
 }
 .meter {
   display: grid;
@@ -26,10 +25,17 @@
   background: var(--border);
   overflow: hidden;
 }
+/* The bar scales from the left edge (motion: transform only). */
 .meterFill {
+  width: 100%;
   height: 100%;
   background: var(--accent);
-  transition: width 150ms;
+  transform: scaleX(var(--fill, 0));
+  transform-origin: left;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+:global([dir='rtl']) .meterFill {
+  transform-origin: right;
 }
 @media (prefers-reduced-motion: reduce) {
   .meterFill {
@@ -44,13 +50,11 @@
 .inline > :first-child {
   flex: 1;
 }
-/* Search plus several buttons: wraps on narrow screens instead of widening the page. */
-.toolbar {
-  flex-wrap: wrap;
-}
-.toolbar > :first-child {
-  flex: 1 1 12rem;
-  min-width: 0;
+/* Search and the group filter: one quiet block above the list. */
+.filters {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 .detail {
   display: grid;
@@ -93,8 +97,8 @@
   font-family: var(--font-mono, ui-monospace, monospace);
   word-break: break-all;
   padding: var(--space-3);
-  border: 1px solid var(--border);
   border-radius: var(--radius-md);
+  background: var(--surface-2);
 }
 .grid {
   display: grid;
@@ -106,9 +110,12 @@
   font-size: var(--text-sm);
 }
 .banner {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
   padding: var(--space-3);
-  border: 1px solid var(--border);
   border-radius: var(--radius-md);
+  background: var(--surface-raised);
   margin-bottom: var(--space-4);
 }
 

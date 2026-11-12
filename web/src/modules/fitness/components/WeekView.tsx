@@ -6,6 +6,7 @@ import { Button, Icon, IconButton, ItemList, ItemRow } from '@/ui';
 import { kcalText } from '../data';
 import { weekDays, weekOf } from '../logic';
 import type { Meal, Session } from '../schema';
+import { WeekPlates } from './WeekPlates';
 import styles from '../fitness.module.css';
 
 /**
@@ -75,6 +76,8 @@ export function WeekView({
           </Button>
         ) : null}
       </div>
+      {/* The module's drawing of the running week (it lay in the head before Identity 4.0). */}
+      {offset === 0 ? <WeekPlates day={day} weekStart={weekStart} sessions={sessions} /> : null}
       <p className={styles.hint} data-testid="fitness-week-total">
         {w.total}: {line(total)}
       </p>
