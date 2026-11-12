@@ -21,6 +21,8 @@ export interface SettingsTitleProps {
   actions?: ReactNode;
   /** Phone: the way back takes the plate's place beside the title (44 px), so the page needs no back row of its own. */
   back?: { to: string; label: string };
+  /** The description is never cut after two lines (it explains what the page's switches do). */
+  wholeDescription?: boolean;
   /** A context line of the page's own under the description (the tool page's counts). */
   children?: ReactNode;
   testId?: string;
@@ -41,6 +43,7 @@ export function SettingsTitle({
   description,
   actions,
   back,
+  wholeDescription,
   children,
   testId,
 }: SettingsTitleProps) {
@@ -71,7 +74,11 @@ export function SettingsTitle({
       </div>
       {description || actions ? (
         <div className={styles.below}>
-          {description ? <p className={styles.description}>{description}</p> : null}
+          {description ? (
+            <p className={styles.description} data-whole={wholeDescription ? 'true' : undefined}>
+              {description}
+            </p>
+          ) : null}
           {actions ? <div className={styles.actions}>{actions}</div> : null}
         </div>
       ) : null}

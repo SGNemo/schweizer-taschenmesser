@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import type { ToolManifest } from '@/core/tools/types';
 import { t } from '@/strings';
 import { Badge, Button, HuePlate, RowMenu, Switch, type RowMenuItem } from '@/ui';
@@ -38,12 +38,23 @@ export function ToolRow({
   plate = 'md',
 }: ToolRowProps) {
   const [menu, setMenu] = useState(false);
+  const rowId = useId();
   const s = t.tools.library;
+  // After a move the focus goes back to this row's menu button (the chosen entry is gone with the menu), so the
+  // next move is one key away, as it was with the arrow buttons.
+  const andRefocus = (run: () => void) => () => {
+    run();
+    requestAnimationFrame(() =>
+      document.getElementById(rowId)?.querySelector<HTMLElement>('button[aria-haspopup]')?.focus(),
+    );
+  };
   const items: RowMenuItem[] = [];
-  if (on && move?.up) items.push({ id: 'up', label: move.up.label, onSelect: move.up.run });
-  if (on && move?.down) items.push({ id: 'down', label: move.down.label, onSelect: move.down.run });
+  if (on && move?.up)
+    items.push({ id: 'up', label: move.up.label, onSelect: andRefocus(move.up.run) });
+  if (on && move?.down)
+    items.push({ id: 'down', label: move.down.label, onSelect: andRefocus(move.down.run) });
   return (
-    <div className={styles.row}>
+    <div className={styles.row} id={rowId}>
       {/* The grip only for a tool that is on; its place stays, so the plates of a list stand in one line. */}
       {handle ? <span className={styles.handle}>{on ? handle : null}</span> : null}
       <HuePlate hue={tool.identity.hue} icon={tool.icon} size={plate} />
@@ -61,11 +72,11 @@ export function ToolRow({
       <div className={styles.actions}>
         {on && open ? (
           <Button onClick={open.run} aria-label={open.label}>
-            {t.settings.linkRow.open}
+            {s.openShort}
           </Button>
         ) : null}
         {items.length > 0 ? (
-          <RowMenu label={t.ui.rowMenu} items={items} open={menu} onOpenChange={setMenu} />
+          <RowMenu label={s.rowMenu(tool.name)} items={items} open={menu} onOpenChange={setMenu} />
         ) : null}
         <Switch
           label={switchLabel}

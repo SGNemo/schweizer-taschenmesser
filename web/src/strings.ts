@@ -1975,6 +1975,10 @@ export const de = {
       up: (name: string) => `${name} nach oben`,
       down: (name: string) => `${name} nach unten`,
       open: (name: string) => `${name} öffnen`,
+      openShort: 'Öffnen',
+      rowMenu: (name: string) => `Aktionen für ${name}`,
+      moved: (name: string, place: number, total: number) =>
+        `${name} steht jetzt an Stelle ${place} von ${total} in der Werkzeugleiste.`,
     },
     calc: {
       percentOf: (percent: string, base: string, value: string) =>

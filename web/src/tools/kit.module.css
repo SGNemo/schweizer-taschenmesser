@@ -58,7 +58,8 @@
   min-height: 2.75rem;
   min-width: 0;
   padding: var(--space-2);
-  border: 0;
+  /* Invisible here; forced colours (Windows high contrast) draw it, so a key keeps its edge there. */
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
   /* A key is a recess in the panel (Identity 4.0, tone steps): no frame, no shadow; pressing still answers. */
   background: var(--surface-sunken);
@@ -398,4 +399,17 @@
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--module-color) 9%, var(--surface));
   overflow-wrap: anywhere;
+}
+
+/* Forced colours (Windows high contrast) replace every background: an invisible edge keeps the shapes there. */
+.display,
+.side,
+.card,
+.mat,
+.idCard,
+.section,
+.chip,
+.code,
+.file {
+  border: 1px solid transparent;
 }

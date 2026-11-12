@@ -22,6 +22,7 @@ const GROUPS = ['basis', 'extra', 'dev'] as const;
 export function ToolLibrary() {
   const tools = useTools();
   const openTools = useUiStore((st) => st.openTools);
+  const toast = useUiStore((st) => st.toast);
   const activeIds = tools?.active.map((x) => x.id) ?? [];
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'active' | 'off'>('all');
@@ -39,6 +40,23 @@ export function ToolLibrary() {
     if (filter === 'off') return !activeIds.includes(x.id);
     return true;
   };
+  /**
+   * One place up or down in the toolbar: the tool changes places with the next tool that is on. (`tools.move` swaps
+   * with the neighbour in the list of all tools; when that one is off, nothing visible happened.)
+   */
+  const moveInToolbar = (id: string, dir: -1 | 1) => {
+    if (!tools) return;
+    const other = activeIds[activeIds.indexOf(id) + dir];
+    if (!other) return;
+    const order = tools.all.map((x) => x.id);
+    const a = order.indexOf(id);
+    const b = order.indexOf(other);
+    [order[a], order[b]] = [order[b]!, order[a]!];
+    void tools.reorder(order);
+    // The page is grouped, not in the toolbar's order: say where the tool stands now.
+    const name = tools.all.find((x) => x.id === id)?.name ?? '';
+    toast(s.moved(name, activeIds.indexOf(other) + 1, activeIds.length));
+  };
   const anyMatch = (tools?.all ?? []).some(matches);
   // `/tools#tool-<id>` scrolls to that tool and marks it.
   useHashTarget(tools !== undefined);
@@ -52,6 +70,7 @@ export function ToolLibrary() {
         eyebrow={v3.toolsEyebrow}
         title={s.title}
         description={s.intro}
+        wholeDescription
         testId="tools-head"
       >
         {/* The head's context line: how many are on, of how many (no big figures, B2). */}
@@ -154,11 +173,11 @@ export function ToolLibrary() {
                       move={{
                         up:
                           index > 0
-                            ? { label: s.up(tool.name), run: () => void tools?.move(tool.id, -1) }
+                            ? { label: s.up(tool.name), run: () => moveInToolbar(tool.id, -1) }
                             : undefined,
                         down:
                           index >= 0 && index < activeIds.length - 1
-                            ? { label: s.down(tool.name), run: () => void tools?.move(tool.id, 1) }
+                            ? { label: s.down(tool.name), run: () => moveInToolbar(tool.id, 1) }
                             : undefined,
                       }}
                     />
