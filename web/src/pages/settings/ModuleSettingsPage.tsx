@@ -15,7 +15,15 @@ import { tSettings2 } from '@/strings.settings2';
 import { tSettingsV3 } from '@/strings.settingsV3';
 import { useUiStore } from '@/stores/ui';
 import { tComfort } from '@/strings.comfort';
-import { Badge, Button, EmptyState, HuePlate, SettingRow, SettingsGroup } from '@/ui';
+import {
+  Badge,
+  Button,
+  EmptyState,
+  HuePlate,
+  SettingRow,
+  SettingsGroup,
+  useMediaQuery,
+} from '@/ui';
 import { FieldRow } from './ModuleSection';
 import { STATUS_LOOK } from './categoryLook';
 import { hasModulePage } from './hasModulePage';
@@ -46,6 +54,8 @@ function useChangedCounts(
 function ModuleHead({ manifest }: { manifest: ModuleManifest }) {
   const o = tSettings2.use().modulePage;
   const v3 = tSettingsV3.use();
+  // Phone: the eyebrow is the way back to the list of modules (no back row above the page).
+  const wide = useMediaQuery('(min-width: 900px)');
   return (
     <SettingsTitle
       hue={manifest.identity.hue}
@@ -55,13 +65,21 @@ function ModuleHead({ manifest }: { manifest: ModuleManifest }) {
       title={manifest.name}
       titleId={`module-${manifest.id}`}
       description={manifest.description}
+      back={wide ? undefined : { to: settingsPath('module'), label: o.all }}
       testId="module-settings-head"
-      actions={
-        <Link to={`/library#module-${manifest.id}`} className={styles.libraryLink}>
-          {o.library}
-        </Link>
-      }
+      // Phone: the link to the library is the last row of the page, so the head stays two lines.
+      actions={wide ? <LibraryLink manifest={manifest} /> : undefined}
     />
+  );
+}
+
+/** "In der Bibliothek ansehen": beside the description on the desktop, the page's last row on the phone. */
+function LibraryLink({ manifest }: { manifest: ModuleManifest }) {
+  const o = tSettings2.use().modulePage;
+  return (
+    <Link to={`/library#module-${manifest.id}`} className={styles.libraryLink}>
+      {o.library}
+    </Link>
   );
 }
 
@@ -100,7 +118,9 @@ export function ModuleSettingsPage() {
   if (!manifest || !states[manifest.id] || !hasModulePage(manifest)) {
     return (
       <EmptyState compact title={o.notFound}>
-        <Link to={settingsPath('module')}>{o.all}</Link>
+        <Link to={settingsPath('module')} className={styles.emptyLink}>
+          {o.all}
+        </Link>
       </EmptyState>
     );
   }
@@ -113,6 +133,7 @@ function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
   const { schema, defaults, fields } = manifest.settings;
   const [values, patch] = useSettings(`module.${manifest.id}`, schema, defaults);
   const toast = useUiStore((st) => st.toast);
+  const wide = useMediaQuery('(min-width: 900px)');
   if (!values) return null;
   const v = values as Record<string, unknown>;
   const sectionId = `module-${manifest.id}`;
@@ -185,6 +206,7 @@ function ModuleSettingsBody({ manifest }: { manifest: ModuleManifest }) {
           </SettingsGroup>
         );
       })}
+      {wide ? null : <LibraryLink manifest={manifest} />}
     </section>
   );
 }

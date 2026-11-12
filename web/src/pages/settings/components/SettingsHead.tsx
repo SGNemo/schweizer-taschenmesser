@@ -4,12 +4,15 @@ import { visibleCategoryIds } from '@/core/settings/registry/registry';
 import { isCategoryId } from '@/core/settings/registry/types';
 import { t } from '@/strings';
 import { tSettingsV3 } from '@/strings.settingsV3';
-import type { IconName } from '@/ui';
+import { useMediaQuery, type IconName } from '@/ui';
 import { CATEGORY_LOOK, STATUS_LOOK } from '../categoryLook';
 import { ModuleRouteHead } from '../ModuleSettingsPage';
 import { StatusHead } from '../StatusHead';
 import { useSettingsSections } from '../useSections';
 import { SettingsTitle } from './SettingsTitle';
+
+/** From here on the settings are two columns (the same value as `SettingsLayout`). */
+const WIDE_QUERY = '(min-width: 900px)';
 
 /** `decodeURIComponent` that keeps a malformed escape as it is (a typed `/settings/module/%` must not crash the head). */
 function safeDecode(segment: string): string {
@@ -27,6 +30,7 @@ export function SettingsHead() {
   const { pathname } = useLocation();
   const v3 = tSettingsV3.use();
   const sections = useSettingsSections();
+  const wide = useMediaQuery(WIDE_QUERY);
   const moduleId = /^\/settings\/module\/([^/]+)/.exec(pathname)?.[1];
   if (moduleId) return <ModuleRouteHead moduleId={safeDecode(moduleId)} />;
   const segment = /^\/settings\/([^/]+)/.exec(pathname)?.[1];
@@ -52,6 +56,7 @@ export function SettingsHead() {
       eyebrow={v3.eyebrow}
       title={c.title}
       description={c.description}
+      back={wide ? undefined : { to: '/settings', label: t.settings.back }}
       testId={`settings-head-${segment}`}
     />
   );

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
+import { Link } from 'react-router';
 import type { AreaId, ModuleHue } from '@/core/modules/types';
-import { HuePlate, type IconName } from '@/ui';
+import { HuePlate, Icon, type IconName } from '@/ui';
 import styles from './SettingsTitle.module.css';
 
 export interface SettingsTitleProps {
@@ -15,8 +16,10 @@ export interface SettingsTitleProps {
   titleId?: string;
   /** One calm line under the title. */
   description?: string;
-  /** A link or button at the end of the title row. */
+  /** A link at the end of the line under the title. */
   actions?: ReactNode;
+  /** Phone: the eyebrow is the way back ("‹ Einstellungen"), so the page needs no back row of its own. */
+  back?: { to: string; label: string };
   testId?: string;
 }
 
@@ -34,6 +37,7 @@ export function SettingsTitle({
   titleId,
   description,
   actions,
+  back,
   testId,
 }: SettingsTitleProps) {
   return (
@@ -47,14 +51,25 @@ export function SettingsTitle({
       <div className={styles.row}>
         <HuePlate hue={hue} icon={icon} />
         <div className={styles.block}>
-          <p className={styles.eyebrow}>{eyebrow}</p>
+          {back ? (
+            <Link to={back.to} className={`${styles.eyebrow} ${styles.back}`}>
+              <Icon name="chevronLeft" size={16} />
+              {back.label}
+            </Link>
+          ) : (
+            <p className={styles.eyebrow}>{eyebrow}</p>
+          )}
           <h1 id={titleId} className={styles.title}>
             {title}
           </h1>
         </div>
-        {actions ? <div className={styles.actions}>{actions}</div> : null}
       </div>
-      {description ? <p className={styles.description}>{description}</p> : null}
+      {description || actions ? (
+        <div className={styles.below}>
+          {description ? <p className={styles.description}>{description}</p> : null}
+          {actions ? <div className={styles.actions}>{actions}</div> : null}
+        </div>
+      ) : null}
     </header>
   );
 }

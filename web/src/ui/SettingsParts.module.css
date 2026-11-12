@@ -110,6 +110,19 @@
     justify-content: flex-start;
   }
 }
+/* A lone switch stays beside its text on a narrow column too (Identity 4.0, row height): text left, switch right, one
+   line. Wider controls (segments, fields, several buttons) still go below the text. */
+@container page (max-width: 36rem) {
+  .row:not(.stacked):has(> .control > :only-child [role='switch']) {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .row:not(.stacked):has(> .control > :only-child [role='switch']) > .control {
+    flex: none;
+    justify-content: flex-end;
+  }
+}
 /* Deep-link target: a short accent outline (opacity only, static under reduced motion). */
 [data-highlight='true'].row::after,
 .group[data-highlight='true']::after {

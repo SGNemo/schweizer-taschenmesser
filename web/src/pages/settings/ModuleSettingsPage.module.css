@@ -105,3 +105,9 @@
     background: none;
   }
 }
+/* The one link of a "not found" state: 44 px to hit. */
+.emptyLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+}

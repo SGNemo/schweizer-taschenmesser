@@ -1,4 +1,14 @@
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  createContext,
+  Suspense,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import { Link, Navigate, NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router';
 import { advancedOpen, readAdvancedOpen, writeAdvancedOpen } from '@/core/settings/foldState';
 import { isChanged } from '@/core/settings/changed';
@@ -322,6 +332,7 @@ export function CategoryNav({ list }: { list?: boolean }) {
 /** `/settings`: the overview cards on the desktop, the category list on phones; old `#anchor` links are mapped. */
 export function SettingsIndex() {
   const wide = useMediaQuery(MASTER_DETAIL_QUERY);
+  const ready = useSettingsSections().length > 0;
   const { hash } = useLocation();
   const legacy = legacyTarget(hash);
   if (legacy) return <Navigate to={legacy} replace />;
@@ -333,7 +344,8 @@ export function SettingsIndex() {
       {/* On the phone the category list below says the same (title, one line, state); the cards would only repeat it. */}
       {wide ? <SettingsOverview /> : null}
       {wide ? null : <CategoryNav list />}
-      {wide ? null : <QuickBar />}
+      {/* After the list is there: the group below it must not be pushed down when the categories arrive. */}
+      {wide || !ready ? null : <QuickBar />}
     </div>
   );
 }
@@ -441,6 +453,67 @@ function useChanged(plan?: ResetPlan): boolean {
   return plan?.defaults ? changed : false;
 }
 
+/** Counts the sections of the open tab whose code is still loading (see `TabBody`). */
+const PendingSections = createContext<{ add: () => void; done: () => void } | null>(null);
+
+/** The fallback of a section that is still loading: nothing to see, it only tells the tab that it waits. */
+function PendingSection() {
+  const pending = useContext(PendingSections);
+  useLayoutEffect(() => {
+    pending?.add();
+    return () => pending?.done();
+  }, [pending]);
+  return null;
+}
+
+/** After the last section's code has arrived its stored values still load (a few ms): the tab waits this long. */
+const TAB_SETTLE_MS = 120;
+
+/**
+ * The sections of a tab, shown in one piece (Identity 4.0, package 0b-E): every section is its own chunk and reads
+ * its own values, so they used to arrive one after the other and each pushed everything below it down (layout shift
+ * up to 0.41 on "Über Nemo", 0.35 on "Darstellung" on the phone). The body stays out of sight behind the skeleton
+ * until no section waits for its code any more, plus a short settle for the stored values; after that it is never
+ * hidden again (a part that loads later appears in place, as before).
+ */
+function TabBody({ children }: { children: ReactNode }) {
+  const [shown, setShown] = useState(false);
+  const waiting = useRef(0);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const counter = useMemo(() => {
+    const settle = () => {
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => {
+        if (waiting.current === 0) setShown(true);
+      }, TAB_SETTLE_MS);
+    };
+    return {
+      add: () => {
+        waiting.current += 1;
+        clearTimeout(timer.current);
+      },
+      done: () => {
+        waiting.current -= 1;
+        if (waiting.current === 0) settle();
+      },
+      settle,
+    };
+  }, []);
+  // The fallbacks of the sections have registered by now (child effects run first): nothing waiting = settle now.
+  useLayoutEffect(() => {
+    if (waiting.current === 0) counter.settle();
+    return () => clearTimeout(timer.current);
+  }, [counter]);
+  return (
+    <PendingSections.Provider value={counter}>
+      {shown ? null : <Skeleton />}
+      <div className={styles.tabBody} data-shown={shown} aria-busy={!shown}>
+        {children}
+      </div>
+    </PendingSections.Provider>
+  );
+}
+
 /** One section on a category page: maturity mark, scope line, the section, then the reset row (only when something differs). */
 function SectionFrame({ s }: { s: SettingsSectionDef }) {
   const changed = useChanged(s.reset);
@@ -454,7 +527,7 @@ function SectionFrame({ s }: { s: SettingsSectionDef }) {
         </p>
       ) : null}
       {scope ? <ScopeLabel scope={scope} /> : null}
-      <Suspense fallback={null}>{s.render()}</Suspense>
+      <Suspense fallback={<PendingSection />}>{s.render()}</Suspense>
       {s.reset && changed ? (
         <div className={styles.changedRow}>
           <Badge>{c.badge}</Badge>
@@ -544,7 +617,9 @@ export function CategoryPage() {
   if (!known || own.length === 0)
     return (
       <EmptyState compact title={t.settings.notFoundTitle}>
-        <Link to="/settings">{t.settings.back}</Link>
+        <Link to="/settings" className={styles.emptyLink}>
+          {t.settings.back}
+        </Link>
       </EmptyState>
     );
   // Old links `/settings/module#module-<id>[--field]` arrive on the module's own page.
@@ -578,21 +653,17 @@ export function CategoryPage() {
       onChange={noteUse}
       onClick={noteUse}
     >
-      {wide ? (
-        <Breadcrumb items={crumbsFor(category, current)} />
-      ) : (
-        <Link to="/settings" className={styles.back}>
-          <Icon name="chevronLeft" />
-          {t.settings.back}
-        </Link>
-      )}
+      {/* Phone: the way back is the eyebrow of the title line (`SettingsHead`), no row of its own. */}
+      {wide ? <Breadcrumb items={crumbsFor(category, current)} /> : null}
       {wide ? <SubNav id={category} /> : null}
-      {basic.map((s) => (
-        <SectionFrame key={s.id} s={s} />
-      ))}
-      {fold ? <AdvancedFold category={category} sections={advanced} /> : null}
-      {fold ? null : advanced.map((s) => <SectionFrame key={s.id} s={s} />)}
-      {category === 'module' ? <ModuleList /> : null}
+      <TabBody key={category}>
+        {basic.map((s) => (
+          <SectionFrame key={s.id} s={s} />
+        ))}
+        {fold ? <AdvancedFold category={category} sections={advanced} /> : null}
+        {fold ? null : advanced.map((s) => <SectionFrame key={s.id} s={s} />)}
+        {category === 'module' ? <ModuleList /> : null}
+      </TabBody>
     </div>
   );
 }
@@ -613,14 +684,7 @@ export function ModuleSettingsRoute() {
   ];
   return (
     <div className={styles.category}>
-      {wide ? (
-        <Breadcrumb items={crumbs} />
-      ) : (
-        <Link to="/settings/module" className={styles.back}>
-          <Icon name="chevronLeft" />
-          {o.modulePage.all}
-        </Link>
-      )}
+      {wide ? <Breadcrumb items={crumbs} /> : null}
       <ModuleSettingsPage />
     </div>
   );

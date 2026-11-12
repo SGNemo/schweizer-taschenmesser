@@ -39,6 +39,37 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* The way back as the eyebrow (phone): the same small caps, a link with a 44 px target. */
+.back {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-hair);
+  max-width: 100%;
+  text-decoration: none;
+}
+.back::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: var(--touch);
+  min-width: var(--touch);
+  transform: translateY(-50%);
+}
+.back:hover {
+  color: var(--text);
+}
+/* The line under the title: the description, and a link at its end where there is room. */
+.below {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 var(--space-4);
+  min-width: 0;
+}
 .actions {
   flex: none;
   display: flex;
@@ -46,9 +77,16 @@
   gap: var(--space-2);
 }
 .description {
+  flex: 1 1 16rem;
+  min-width: 0;
   margin: 0;
   color: var(--text-muted);
   font-size: var(--text-label);
+  /* Two lines at most under the title (a module's description can be long): the head keeps its height. */
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 @media (max-width: 899px) {
   .head {

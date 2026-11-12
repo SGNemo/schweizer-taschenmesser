@@ -187,15 +187,14 @@
 .category a {
   overflow-wrap: anywhere;
 }
-.back {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  min-height: var(--touch);
-  align-self: flex-start;
-  color: var(--accent);
-  text-decoration: none;
-  font-weight: var(--weight-medium);
+/* Touch: a plain text link of a tab is 44 px to hit (Identity 4.0; they were 20–26 px). */
+@media (pointer: coarse) {
+  .category a:not([class]) {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    min-height: var(--touch);
+  }
 }
 .search {
   position: relative;
@@ -337,34 +336,44 @@
 }
 
 /* Second level of the open category: the groups as pills above the content. */
+/* The groups of a category are tabs (Identity 4.0): the look of `ui/Tabs` – an underline on a hairline, no filled
+   pill. The markup stays a list of links with `aria-current="location"` (the guard `ui6-home-settings.seed` pins it). */
 .subnav {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1);
+  gap: 0 var(--space-4);
+  border-bottom: 1px solid var(--border);
 }
 .subLink {
+  position: relative;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: var(--touch);
-  padding: 0 var(--space-3);
-  border-radius: var(--radius-full);
+  min-width: var(--touch);
   color: var(--text-muted);
-  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
   text-decoration: none;
+  white-space: nowrap;
 }
 .subLink:hover {
   color: var(--text);
-  background: var(--surface-2);
 }
-/* U54: the current group reads as chosen: text colour, a filled pill and a hairline, not colour alone. */
+/* The current group: the accent and an underline on the hairline, as in every tab row. */
 .subLink[aria-current] {
-  color: var(--text);
-  font-weight: var(--weight-semibold);
-  background: var(--surface-2);
-  box-shadow: inset 0 0 0 1px var(--border-strong);
+  color: var(--accent);
+}
+.subLink[aria-current]::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--accent);
 }
 
 /* Breadcrumb in the content. */
@@ -453,8 +462,7 @@
 
 /* "Erweitert": the rarely needed sections of a category behind one fold. */
 .advanced {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--surface-raised);
   border-radius: var(--radius-lg);
 }
 .advancedSummary {
@@ -485,4 +493,22 @@
   flex-direction: column;
   gap: var(--space-2);
   min-width: 0;
+}
+/* The one link of a "not found" state: 44 px to hit. */
+.emptyLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+}
+/* The sections of a tab: out of sight (and out of the layout's height) until all of them are there. */
+.tabBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.tabBody[data-shown='false'] {
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
 }

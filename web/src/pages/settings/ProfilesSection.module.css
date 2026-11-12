@@ -10,7 +10,6 @@
   align-items: flex-end;
   gap: var(--space-3);
   padding: var(--space-3);
-  background: var(--bg);
-  border: 1px solid var(--border);
+  background: var(--surface-raised);
   border-radius: var(--radius-md);
 }
