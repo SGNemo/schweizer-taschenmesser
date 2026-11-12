@@ -32,6 +32,7 @@ export const accounts: Strings['accounts'] = {
     },
   },
   pickEntry: 'Choose a login',
+  addFirst: 'Add your first login',
   detail: 'Details',
   title: 'Passwords',
   setup: {
@@ -91,7 +92,6 @@ export const accounts: Strings['accounts'] = {
         ? 'Locks automatically in under a minute'
         : `Locks automatically in about ${min} min`,
     bridgeOn: 'Browser extension: on',
-    bridgeOff: 'Browser extension: off',
   },
   groups: { label: 'Groups', all: 'All', favorites: 'Favourites' },
   audit: {

@@ -9,12 +9,14 @@ import {
   AdvancedFields,
   Button,
   Checkbox,
+  DayField,
   Dialog,
   Form,
   FormActions,
   Icon,
   IconButton,
   TextField,
+  TimeField,
 } from '@/ui';
 import { builtInExercises } from '../data';
 import { CatalogPicker } from './CatalogPicker';
@@ -263,14 +265,13 @@ function Fields({
         </div>
       ) : null}
       <div className={styles.split}>
-        <TextField
+        <DayField
           label={t.fitness.form.date}
-          type="date"
           value={date}
-          onChange={(e) => {
-            setDate(e.target.value);
+          onChange={(next) => {
+            setDate(next);
             // A new session on a later day is a plan, unless the user says otherwise.
-            if (!existing && e.target.value > today()) {
+            if (!existing && next > today()) {
               togglePlanned(true);
               setAutoPlanned(true);
             } else if (autoPlanned) {
@@ -301,12 +302,11 @@ function Fields({
         }}
       />
       {planned ? (
-        <TextField
+        <TimeField
           label={t.fitness.form.time}
           hint={t.fitness.planned.timeHint}
-          type="time"
           value={time}
-          onChange={(e) => setTime(e.target.value)}
+          onChange={setTime}
         />
       ) : null}
       <p className={styles.groupLabel}>{t.fitness.form.exercises}</p>
@@ -410,14 +410,7 @@ function Fields({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
-        {planned ? null : (
-          <TextField
-            label={t.fitness.form.time}
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-          />
-        )}
+        {planned ? null : <TimeField label={t.fitness.form.time} value={time} onChange={setTime} />}
         <TextField
           label={t.fitness.form.note}
           value={note}

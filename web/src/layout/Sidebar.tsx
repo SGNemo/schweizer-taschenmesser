@@ -20,7 +20,7 @@ interface Props {
 }
 
 /**
- * The favourites as a compact bar of icon chips in the module hues (identity v3); the current module has a ring.
+ * The favourites as a sunken track of grey icon chips; the current module's chip is raised (Identity 4.0, 0b-R).
  * They are set with the pin on a module's row below, or in Settings → Darstellung → Favoriten.
  */
 function FavouriteBar({ items }: { items: NavItem[] }) {
@@ -113,7 +113,7 @@ export function areaOpen(id: string, active: boolean, open: string[], closed: st
   return open.includes(id) || active;
 }
 
-/** One area as a quiet block (tinted in the area colour) with its modules; the head folds it. */
+/** One area: a head that folds it; the open one is a raised group with its modules. */
 function AreaGroup({ area, shown, active }: { area: NavArea; shown: string[]; active: boolean }) {
   const closed = !useUiStore((s) => areaOpen(area.id, active, s.openAreas, s.closedAreas));
   const toggle = useUiStore((s) => s.toggleAreaOpen);

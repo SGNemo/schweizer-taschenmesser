@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { enable, ready } from './helpers';
+import { openEditor } from './money-helpers';
 
 test.describe('Unterlagen: delete with undo, draft kept (B09)', () => {
   test('delete asks nothing, offers "Rückgängig" and the file comes back with the record', async ({
@@ -20,7 +21,8 @@ test.describe('Unterlagen: delete with undo, draft kept (B09)', () => {
     const row = item.getByRole('button', { name: /^Mietvertrag/ });
     await expect(item).toContainText('miete.txt');
 
-    await row.click();
+    // Master–detail: on a wide page the folder shows in the panel and "Bearbeiten" opens the dialog.
+    await openEditor(page, row);
     await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
     // no confirmation dialog: the record is gone and the toast offers the way back
     await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -44,14 +46,14 @@ test.describe('Unterlagen: delete with undo, draft kept (B09)', () => {
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toHaveCount(0);
 
-    await page.getByRole('button', { name: /Unterlage (hinzufügen|eintragen)/ }).click();
+    await page.getByRole('button', { name: /^Unterlage (hinzufügen|eintragen)$/ }).click();
     dialog = page.getByRole('dialog');
     await expect(dialog.getByTestId('draft-restored')).toBeVisible();
     await expect(dialog.getByLabel('Titel')).toHaveValue('Versicherung');
     await expect(dialog.getByLabel('Notiz')).toHaveValue('Police Nr. 4711, Anruf am Montag');
 
     await dialog.getByRole('button', { name: 'Abbrechen' }).click();
-    await page.getByRole('button', { name: /Unterlage (hinzufügen|eintragen)/ }).click();
+    await page.getByRole('button', { name: /^Unterlage (hinzufügen|eintragen)$/ }).click();
     dialog = page.getByRole('dialog');
     await expect(dialog.getByLabel('Titel')).toHaveValue('');
     await expect(dialog.getByTestId('draft-restored')).toHaveCount(0);

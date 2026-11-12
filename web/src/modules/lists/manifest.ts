@@ -18,6 +18,7 @@ const manifest: ModuleManifest = {
     widget: 'checkliste',
     head: 'standard',
     signature: 'receipt',
+    tabs: true,
   },
   version: 2,
   get description() {

@@ -18,6 +18,10 @@
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   background: color-mix(in srgb, var(--module-color) 12%, var(--surface));
 }
+/* The folder shown in the detail panel: one sunken tone inside its frame (the frame stays, it is the signature). */
+.doc.doc:has([aria-current='true']) {
+  background: var(--surface-sunken);
+}
 /* Title and meta get the whole width; status and actions wrap below instead of squeezing the text to one letter per line. */
 .doc.doc > div {
   flex-wrap: wrap;
@@ -30,7 +34,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin: 0 0 var(--space-4);
+  margin: 0 0 var(--space-3);
   font-size: var(--text-meta);
   color: var(--text-2);
 }
@@ -40,4 +44,16 @@
 /* Dates in the card meta stay in one piece ("30. Aug. 2026"), the line breaks between the parts. */
 .nowrap {
   white-space: nowrap;
+}
+/* Search and the category filter: one quiet block above the folders. */
+.filters {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+/* The phone's "⋯" menu floats at the right edge of the first row: the search field ends before it. */
+@media (max-width: 899px) {
+  .first {
+    padding-inline-end: calc(var(--touch) + var(--space-2));
+  }
 }

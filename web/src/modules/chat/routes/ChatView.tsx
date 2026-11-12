@@ -123,6 +123,9 @@ export default function ChatPage() {
         <PageAction
           short={t.nav.plusThings.chat}
           variant={setup?.needed || isEmpty ? 'secondary' : 'primary'}
+          // No AI yet: a new chat could not answer, so the set-up hint is the one step (on the phone the plus is the
+          // page's action and would be a second filled button beside the hint).
+          disabled={setup?.needed === true}
           onClick={() => void create()}
         >
           <Icon name="plus" size={18} />

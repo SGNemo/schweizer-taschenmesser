@@ -4426,6 +4426,7 @@ export const de = {
     add: 'Vorrat hinzufügen',
     edit: 'Vorrat bearbeiten',
     empty: 'Noch keine Vorräte. Lege an, was im Kühlschrank oder Vorratsschrank steht.',
+    addFirst: 'Ersten Vorrat eintragen',
     name: 'Name',
     place: 'Ort',
     places: {
@@ -5302,6 +5303,8 @@ export const de = {
     >,
     note: 'Notiz (optional)',
     addItem: 'Eintrag hinzufügen',
+    inBasket: (done: number, total: number) => `${done} von ${total} im Korb`,
+    basketEmpty: 'Noch nichts im Korb',
     placeholder: {
       shopping: 'z. B. 2 Milch',
       packing: 'z. B. Sonnencreme',
@@ -5367,7 +5370,6 @@ export const de = {
       hot: 'Warm: Sonnencreme und Sonnenhut nicht vergessen.',
       cold: 'Kalt: warme Kleidung und Handschuhe einpacken.',
     },
-    more: 'Mehr',
     suggestionsToggle: (n: number) => `Schon mal gekauft (${n})`,
     recurringBadge: 'Wiederkehrend',
     category: 'Kategorie (optional)',
@@ -5411,7 +5413,7 @@ export const de = {
     add: 'Unterlage hinzufügen',
     edit: 'Unterlage bearbeiten',
     category: 'Kategorie',
-    allCategories: 'Alle',
+    allCategories: 'Alle Kategorien',
     categories: {
       identity: 'Ausweise',
       insurance: 'Versicherung',
@@ -5459,7 +5461,14 @@ export const de = {
     emptyFiltered: 'Nichts gefunden.',
     widgetEmpty: 'Keine Fristen in Sicht.',
     figureLabel: 'Ablage',
-    stateTabs: 'Nach Zustand filtern',
+    stateTabs: 'Ansichten',
+    labelCount: (label: string, n: number) => `${label} ${n}`,
+    allStates: 'Alle',
+    addFirst: 'Erste Unterlage eintragen',
+    detail: {
+      label: 'Unterlage',
+      bare: 'Noch ohne Anbieter, Datum und Datei.',
+    },
     stateGroups: {
       expired: 'Abgelaufen',
       due: 'Frist in Sicht',
@@ -5515,6 +5524,7 @@ export const de = {
       },
     },
     pickEntry: 'Zugang auswählen',
+    addFirst: 'Ersten Zugang eintragen',
     detail: 'Details',
     title: 'Passwörter',
     setup: {
@@ -5576,7 +5586,6 @@ export const de = {
           ? 'Sperrt automatisch in unter einer Minute'
           : `Sperrt automatisch in etwa ${min} Min.`,
       bridgeOn: 'Browser-Erweiterung: an',
-      bridgeOff: 'Browser-Erweiterung: aus',
     },
     groups: { label: 'Gruppen', all: 'Alle', favorites: 'Favoriten' },
     audit: {
@@ -8532,6 +8541,8 @@ export const de = {
       today: 'Heute',
     },
     empty: {
+      trainingAdd: 'Erste Einheit eintragen',
+      foodAdd: 'Erste Mahlzeit eintragen',
       training: 'Noch nichts eingetragen. Eine Einheit reicht.',
       trainingHint: 'Auch in der Schnellerfassung: „training Bankdrücken 3×8 60“.',
       food: 'Noch keine Mahlzeit eingetragen.',

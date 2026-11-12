@@ -4,7 +4,6 @@
   width: 2.5rem;
   height: 2.5rem;
   place-items: center;
-  border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--module-color) 12%, var(--surface));
   color: var(--text);

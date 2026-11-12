@@ -14,8 +14,8 @@ import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import { SignatureMark } from '@/ui/identity';
 import { t } from '@/strings';
 import {
-  AdvancedToggle,
   Badge,
+  Button,
   EmptyState,
   Icon,
   IconButton,
@@ -23,7 +23,8 @@ import {
   ItemRow,
   PageAction,
   PageHeader,
-  Segmented,
+  Tabs,
+  useAdvancedMenuItem,
   useOpenParam,
 } from '@/ui';
 import { ItemEditor, type ItemTarget } from '../components/ItemEditor';
@@ -125,16 +126,38 @@ export default function PantryPage() {
   );
 
   const expiryLine = (i: NonNullable<typeof items>[number]) => expiryText(i, day, soonDays);
+  const advancedItem = useAdvancedMenuItem('pantry');
+  const none = !!items && items.length === 0;
 
   return (
     <>
-      <PageHeader title={t.pantry.title}>
-        <AdvancedToggle moduleId="pantry" />
-        <PageAction short={t.pantry.meta.quickAdd} onClick={() => setTarget({ draft: true })}>
+      <PageHeader
+        title={t.pantry.title}
+        // The page starts with a shelf heading: on the phone the "⋯" menu lies beside it.
+        besideContent={shown.length > 0}
+        views={
+          <Tabs
+            label={t.pantry.filter}
+            value={filter}
+            options={[
+              { value: 'all' as const, label: t.pantry.filters.all },
+              { value: 'expiring' as const, label: t.pantry.filters.expiring },
+              { value: 'restock' as const, label: t.pantry.filters.restock },
+            ]}
+            onChange={setFilter}
+          />
+        }
+      >
+        {/* While the pantry is empty, the empty state holds the one filled step. */}
+        <PageAction
+          short={t.pantry.meta.quickAdd}
+          variant={none ? 'secondary' : 'primary'}
+          onClick={() => setTarget({ draft: true })}
+        >
           <Icon name="plus" size={18} />
           {t.pantry.add}
         </PageAction>
-        {/* Scan and "restock all" are occasional: they sit in the ⋯ menu, one primary stays visible. */}
+        {/* Scan, "restock all" and "Mehr Felder anzeigen" are occasional: they sit in the ⋯ menu. */}
         <StartDataMenu
           moduleId="pantry"
           items={[
@@ -148,29 +171,25 @@ export default function PantryPage() {
                 ]
               : []),
             { id: 'scan', label: t.pantry.scan.open, onSelect: () => setScanning(true) },
+            advancedItem,
           ]}
         />
       </PageHeader>
       <PantryHead counts={counts} />
-      <NowStrip modules={['pantry']} />{' '}
-      <div className={lamp.filters}>
-        <Segmented
-          label={t.pantry.filter}
-          value={filter}
-          options={[
-            { value: 'all' as const, label: t.pantry.filters.all },
-            { value: 'expiring' as const, label: t.pantry.filters.expiring },
-            { value: 'restock' as const, label: t.pantry.filters.restock },
-          ]}
-          onChange={setFilter}
-        />
+      {/* When it shows, it is the page's first row: on the phone it ends before the "⋯" menu beside it. */}
+      <div className={lamp.first}>
+        <NowStrip modules={['pantry']} />
       </div>
-      {items && items.length === 0 ? (
+      {none ? (
         <EmptyState
           title={t.pantry.empty}
           testId="pantry-empty"
           motif={<SignatureMark id="shelf" size={64} />}
-        />
+        >
+          <Button variant="primary" onClick={() => setTarget({ draft: true })}>
+            {t.pantry.addFirst}
+          </Button>
+        </EmptyState>
       ) : null}
       {items && items.length > 0 && shown.length === 0 ? (
         <p className={styles.lead}>{t.pantry.noMatch}</p>

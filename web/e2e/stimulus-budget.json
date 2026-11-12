@@ -240,9 +240,9 @@
       "icons": 47,
       "firstScreenActions": 55,
       "borders": 0,
-      "shadows": 1,
-      "surfaceLanguages": 1,
-      "colouredAboveFold": 7,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 4,
       "signatureBlocks": 0
     },
     "d1920--mail": {
@@ -299,10 +299,10 @@
       "links": 13,
       "icons": 61,
       "firstScreenActions": 74,
-      "borders": 14,
+      "borders": 0,
       "shadows": 0,
-      "surfaceLanguages": 1,
-      "colouredAboveFold": 25,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 21,
       "signatureBlocks": 14
     },
     "d1920--people": {
@@ -442,7 +442,7 @@
       "buttons": 65,
       "links": 12,
       "icons": 25,
-      "firstScreenActions": 57,
+      "firstScreenActions": 63,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
@@ -573,7 +573,7 @@
       "height": 4854,
       "buttons": 69,
       "links": 8,
-      "icons": 76,
+      "icons": 68,
       "firstScreenActions": 26,
       "borders": 0,
       "shadows": 0,
@@ -648,9 +648,9 @@
       "icons": 31,
       "firstScreenActions": 28,
       "borders": 0,
-      "shadows": 1,
-      "surfaceLanguages": 1,
-      "colouredAboveFold": 6,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 3,
       "signatureBlocks": 0
     },
     "p412--maps": {
@@ -695,10 +695,10 @@
       "links": 8,
       "icons": 45,
       "firstScreenActions": 34,
-      "borders": 14,
+      "borders": 0,
       "shadows": 0,
-      "surfaceLanguages": 1,
-      "colouredAboveFold": 16,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 13,
       "signatureBlocks": 14
     },
     "p412--people": {
@@ -826,11 +826,11 @@
       "buttons": 56,
       "links": 7,
       "icons": 11,
-      "firstScreenActions": 25,
+      "firstScreenActions": 28,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
-      "colouredAboveFold": 4,
+      "colouredAboveFold": 7,
       "signatureBlocks": 34
     },
     "p412--weather": {
