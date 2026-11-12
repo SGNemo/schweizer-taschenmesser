@@ -8,7 +8,8 @@
   display: grid;
   /* Six states in three columns beside the navigation (the cards of the overview below use the same columns). */
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0 var(--space-3);
+  /* The lines bleed one step into the gap for their hover surface: the gap is two steps, so neighbours never overlap. */
+  gap: 0 var(--space-4);
 }
 .tiles > li {
   min-width: 0;

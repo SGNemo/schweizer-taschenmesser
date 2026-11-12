@@ -16,7 +16,6 @@ import {
   PageAction,
   PageHeader,
   Progress,
-  RowMenu,
   Segmented,
   TextField,
 } from '@/ui';
@@ -59,7 +58,6 @@ export default function DownloadsPage() {
     ensureWatching();
   }, []);
 
-  const [menuOpen, setMenuOpen] = useState(false);
   // The speed limit of the setting applies to everything while the page (or the widget) is open.
   useEffect(() => {
     if (platform.supported) void platform.setLimit(Math.round(prefs.limitKb * 1024));
@@ -119,19 +117,16 @@ export default function DownloadsPage() {
           <Icon name="plus" size={18} />
           {t.downloads.add.button}
         </PageAction>
+        {/* One click to the target folder, as before: a neutral button beside the page's one filled action. */}
         {latest ? (
-          <RowMenu
-            label={t.downloads.band.more}
-            open={menuOpen}
-            onOpenChange={setMenuOpen}
-            items={[
-              {
-                id: 'show-folder',
-                label: t.downloads.folder.show,
-                onSelect: () => void platform.reveal(latest.id),
-              },
-            ]}
-          />
+          <Button
+            onClick={() => void platform.reveal(latest.id)}
+            title={t.downloads.folder.help}
+            data-testid="show-folder"
+          >
+            <Icon name="external" size={18} />
+            {t.downloads.folder.show}
+          </Button>
         ) : null}
       </PageHeader>
       <p className={styles.hint}>{t.downloads.hint}</p>

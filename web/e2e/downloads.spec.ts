@@ -112,9 +112,7 @@ test('the head counts what runs, the filter shows the history, the folder button
   await expect(page.getByText('Nichts in dieser Ansicht.')).toBeVisible();
   await page.getByRole('button', { name: 'Alle', exact: true }).click();
   await expect(rows).toHaveCount(3);
-  // The way to the target folder is in the page's "⋯" menu (one action in the head).
-  await page.getByRole('button', { name: 'Weitere Optionen' }).click();
-  await page.getByRole('menuitem', { name: 'Zielordner zeigen' }).click();
+  await page.getByTestId('show-folder').click();
   expect(await calls(page)).toEqual(['reveal:3']);
 });
 

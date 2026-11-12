@@ -11,7 +11,8 @@
      line up with the tiles above; below 50 rem two columns (container query below), wide enough for
      "Benachrichtigungen" on one line. */
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0 var(--space-3);
+  /* The lines bleed one step into the gap for their hover surface: the gap is two steps, so neighbours never overlap. */
+  gap: 0 var(--space-4);
   padding-inline: var(--space-5);
 }
 /* U03: a narrower settings column (about 1600 px windows and below) has two columns, so a card stays wide enough
@@ -74,13 +75,4 @@
 .context {
   color: var(--text-3);
   font-size: var(--text-meta);
-}
-
-@media (max-width: 899px) {
-  /* Phone: one column of lines. */
-  .grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0;
-    padding-inline: 0;
-  }
 }

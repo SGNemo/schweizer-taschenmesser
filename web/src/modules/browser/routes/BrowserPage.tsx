@@ -25,6 +25,7 @@ import { engineTemplate } from '../lib/searchEngines';
 import { resolveInput } from '../lib/omnibox';
 import { SignatureMark } from '@/ui/identity';
 import { displayUrl, hostOf, isWebUrl, offerName } from '../lib/urlPolicy';
+import { reopenTarget } from '../lib/reopen';
 import { blockruleRepo, bookmarkRepo, historyRepo } from '../repo';
 import { settings, type BrowserPrefs } from '../settings';
 import { useTabPreviews } from '../tabPreviews';
@@ -71,14 +72,20 @@ export default function BrowserPage() {
     return (visits ?? []).filter((v) => !seen.has(v.url) && !!seen.add(v.url)).slice(0, 6);
   }, [visits]);
 
-  // "Tab neu öffnen" on the start view: the tab closed last in this session, else the last page of the history (what
-  // was open before a restart; only while the history is on). Not in a private tab: it would load a normal page there.
+  // "Tab neu öffnen" on the start view: the tab closed last in this session, else – only while no page is open in any
+  // tab, which is the state after a restart – the last page of the history (and only while the history is on). Not in
+  // a private tab: it would load a normal page there.
   const lastClosed = useBrowserTabs((s) => s.lastClosed);
   const lastVisit = recent[0];
-  const reopen = tab?.isPrivate
-    ? null
-    : (lastClosed ??
-      (prefs.history && lastVisit ? { url: lastVisit.url, title: lastVisit.title } : null));
+  const reopen = reopenTarget({
+    lastClosed,
+    inPrivateTab: !!tab?.isPrivate,
+    anyOpen: tabs.some((x) => x.opened),
+    historyOn: prefs.history,
+    lastVisit,
+  });
+  // The offer names its page: the list below does not repeat it.
+  const recentRows = reopen ? recent.filter((v) => v.url !== reopen.url) : recent;
 
   const previews = useTabPreviews(tabs, prefs.tabPreview && view === 'tabs');
   const template = engineTemplate(prefs.engine, prefs.customUrl);
@@ -510,12 +517,14 @@ export default function BrowserPage() {
             {visits && visits.length > 0 ? (
               <div className={styles.actions}>
                 <Button
-                  onClick={() =>
+                  onClick={() => {
+                    // A cleared history names no page any more, not as "Zuletzt offen" either.
+                    useBrowserTabs.getState().forgetClosed();
                     void deleteWithUndo(async () => {
                       for (const v of await historyRepo.active().toArray())
                         await historyRepo.remove(v.id);
-                    }, t.browser.history.cleared)
-                  }
+                    }, t.browser.history.cleared);
+                  }}
                 >
                   {t.browser.history.clear}
                 </Button>
@@ -644,7 +653,7 @@ export default function BrowserPage() {
                     void open(reopen.url);
                   }}
                 >
-                  {t.browser.failed.reopen}
+                  {t.browser.start.reopen}
                 </Button>
                 <span className={styles.muted}>
                   {t.browser.start.reopenHint(reopen.title || displayUrl(reopen.url))}
@@ -675,11 +684,11 @@ export default function BrowserPage() {
                 </li>
               ))}
             </ul>
-            {recent.length > 0 ? (
+            {recentRows.length > 0 ? (
               <>
                 <h3>{t.browser.start.recent}</h3>
                 <ItemList label={t.browser.start.recent}>
-                  {recent.map((v) => (
+                  {recentRows.map((v) => (
                     <ItemRow
                       key={v.id}
                       title={v.title || displayUrl(v.url)}

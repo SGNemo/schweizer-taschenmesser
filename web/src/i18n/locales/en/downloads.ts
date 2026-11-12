@@ -45,7 +45,6 @@ export const downloads: Strings['downloads'] = {
     one: '1 running',
     many: (n: number) => `${n} running`,
     unit: () => 'running',
-    more: 'More options',
     short: 'Download',
     context: (speed: string) => `at ${speed}/s`,
     contextIdle: 'New downloads appear here.',

@@ -16,7 +16,7 @@ const PAGES: PageRule[] = [
   { path: '/browser', colouredMax: 10, tabsMin: 0, figure: false, action: false },
   { path: '/disk', colouredMax: 10, tabsMin: 2, figure: true, action: false },
   { path: '/disk/scan', colouredMax: 10, tabsMin: 0, figure: false, action: false },
-  { path: '/downloads', colouredMax: 10, tabsMin: 0, figure: false, action: true },
+  { path: '/downloads', colouredMax: 10, tabsMin: 0, figure: true, action: true },
 ];
 
 for (const theme of process.env.PLAN_SHOTS ? (['light', 'dark'] as const) : (['light'] as const)) {
@@ -93,7 +93,7 @@ test.describe('settings start page: the states are lines', () => {
           expect.soft(h, 'a line stays a line').toBeLessThanOrEqual(104);
         }
         // The head was 368 px (desktop) and 338 px (phone) with the tiles.
-        expect.soft(read.head, 'height of the status head').toBeLessThanOrEqual(phone ? 360 : 300);
+        expect.soft(read.head, 'height of the status head').toBeLessThanOrEqual(phone ? 300 : 300);
         expect.soft(read.sideways, 'sideways overflow').toBe(false);
         const m = surfaceMetrics(await page.evaluate(measurePage));
         expect.soft(m.shadows, 'shadows in main').toBe(0);
