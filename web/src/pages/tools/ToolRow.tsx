@@ -4,6 +4,12 @@ import { t } from '@/strings';
 import { Badge, Button, HuePlate, RowMenu, Switch, type RowMenuItem } from '@/ui';
 import styles from './ToolRow.module.css';
 
+/** One move in the toolbar; `run` resolves once the new order is written (the focus returns after that). */
+export interface ToolMove {
+  label: string;
+  run: () => Promise<unknown>;
+}
+
 export interface ToolRowProps {
   tool: ToolManifest;
   on: boolean;
@@ -14,7 +20,7 @@ export interface ToolRowProps {
   /** "<Name> öffnen": shown while the tool is on. */
   open?: { label: string; run: () => void };
   /** Order in the toolbar, in the row's "⋯" menu while the tool is on; a missing direction is the list's end. */
-  move?: { up?: { label: string; run: () => void }; down?: { label: string; run: () => void } };
+  move?: { up?: ToolMove; down?: ToolMove };
   /** A drag handle (`SortableList`), before the plate. */
   handle?: ReactNode;
   /** Size of the plate: the tool page shows it large. */
@@ -41,12 +47,12 @@ export function ToolRow({
   const rowId = useId();
   const s = t.tools.library;
   // After a move the focus goes back to this row's menu button (the chosen entry is gone with the menu), so the
-  // next move is one key away, as it was with the arrow buttons.
-  const andRefocus = (run: () => void) => () => {
-    run();
-    requestAnimationFrame(() =>
-      document.getElementById(rowId)?.querySelector<HTMLElement>('button[aria-haspopup]')?.focus(),
-    );
+  // next move is one key away, as it was with the arrow buttons. Only once the new order is written and drawn:
+  // the row's node moves in the list then, and a node that moves loses the focus it had.
+  const andRefocus = (run: () => Promise<unknown>) => () => {
+    const focus = () =>
+      document.getElementById(rowId)?.querySelector<HTMLElement>('button[aria-haspopup]')?.focus();
+    void run().then(() => requestAnimationFrame(() => requestAnimationFrame(focus)));
   };
   const items: RowMenuItem[] = [];
   if (on && move?.up)

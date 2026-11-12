@@ -44,18 +44,23 @@ export function ToolLibrary() {
    * One place up or down in the toolbar: the tool changes places with the next tool that is on. (`tools.move` swaps
    * with the neighbour in the list of all tools; when that one is off, nothing visible happened.)
    */
-  const moveInToolbar = (id: string, dir: -1 | 1) => {
+  const moveInToolbar = async (id: string, dir: -1 | 1) => {
     if (!tools) return;
     const other = activeIds[activeIds.indexOf(id) + dir];
     if (!other) return;
-    const order = tools.all.map((x) => x.id);
+    const before = tools.all.map((x) => x.id);
+    const order = [...before];
     const a = order.indexOf(id);
     const b = order.indexOf(other);
     [order[a], order[b]] = [order[b]!, order[a]!];
-    void tools.reorder(order);
-    // The page is grouped, not in the toolbar's order: say where the tool stands now.
     const name = tools.all.find((x) => x.id === id)?.name ?? '';
-    toast(s.moved(name, activeIds.indexOf(other) + 1, activeIds.length));
+    const place = activeIds.indexOf(other) + 1;
+    await tools.reorder(order);
+    // The page is grouped, not in the toolbar's order: say where the tool stands now (once it is written).
+    toast(s.moved(name, place, activeIds.length), {
+      label: t.ui.undo,
+      run: () => void tools.reorder(before),
+    });
   };
   const anyMatch = (tools?.all ?? []).some(matches);
   // `/tools#tool-<id>` scrolls to that tool and marks it.

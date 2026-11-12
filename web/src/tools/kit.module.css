@@ -410,6 +410,7 @@
 .section,
 .chip,
 .code,
-.file {
+.file,
+.die {
   border: 1px solid transparent;
 }
