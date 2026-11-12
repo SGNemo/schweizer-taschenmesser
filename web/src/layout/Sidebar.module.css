@@ -125,14 +125,16 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Hover is a wash of the ink, so it shows on the page's ground and on the raised group alike, in both themes. */
 .link:hover {
-  background: var(--surface-2);
+  background: color-mix(in srgb, var(--text) 6%, transparent);
   color: var(--text);
 }
 /* The current entry is a filled capsule with a heavier word. A module's capsule and icon take its hue; Übersicht,
-   Bibliothek and Einstellungen are a raised surface (the accent is the page's main action and its open tab, B7). */
+   Bibliothek and Einstellungen take the same capsule in grey (the accent is the page's main action and its open
+   tab, B7), which also keeps "current" apart from the raised surface of an open area. */
 .link[aria-current='page'] {
-  background: var(--surface-raised);
+  background: color-mix(in srgb, var(--text-3) 16%, var(--surface));
   color: var(--text);
   font-weight: var(--weight-semibold);
 }
@@ -175,7 +177,7 @@
   cursor: pointer;
 }
 .groupHead:hover {
-  background: var(--surface-2);
+  background: color-mix(in srgb, var(--text) 6%, transparent);
 }
 .chevron {
   display: grid;
@@ -221,7 +223,7 @@
   opacity: 1;
 }
 .pin:hover {
-  background: var(--surface-2);
+  background: color-mix(in srgb, var(--text) 6%, transparent);
   color: var(--text);
 }
 @media (hover: none) {
@@ -308,8 +310,9 @@
   background: var(--surface-2);
   color: var(--text);
 }
+/* Übersicht, Bibliothek, Einstellungen: the tile of the calm colour mode, a grey as strong as an area's tint. */
 .railLink[aria-current='page'] {
-  background: var(--surface-raised);
+  background: color-mix(in srgb, var(--text-3) 18%, var(--surface));
   color: var(--text);
 }
 li[data-area] .railLink[aria-current='page'] {

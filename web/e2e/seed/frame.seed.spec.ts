@@ -17,7 +17,10 @@ async function start(page: Page, sidebar: 'wide' | 'narrow') {
   await startSeeded(page);
 }
 
-/** Elements of the frame with a border on all four sides or a box shadow; the shared "Neu" button keeps its outline. */
+/**
+ * Elements of the frame with a border on all four sides, a box shadow or a background image (a wash); the shared
+ * "Neu" button keeps its outline.
+ */
 function framesAndShadows(scope: string): string[] {
   const found: string[] = [];
   for (const root of document.querySelectorAll(scope))
@@ -35,13 +38,15 @@ function framesAndShadows(scope: string): string[] {
       if (sides.length === 4 && !el.matches('button[class*="btn"], button[class*="btn"] *'))
         found.push(`frame: ${name}`);
       if (s.boxShadow !== 'none') found.push(`shadow: ${name}`);
+      if (s.backgroundImage !== 'none') found.push(`wash: ${name}`);
     }
   return found;
 }
 
 /**
  * Texts under 4.5:1 and icons of links and buttons under 3:1, each against the surface composed of every background
- * under it. Colours are painted onto a canvas, so `color-mix()` and translucent fills count as the browser draws them.
+ * under it. Colours are painted onto a canvas, so `color-mix()` and translucent fills count as the browser draws them
+ * (an element's `opacity` is not applied: the pins, faded until the row is hovered, are measured at full ink).
  */
 function lowContrast(scope: string): string[] {
   const canvas = document.createElement('canvas');

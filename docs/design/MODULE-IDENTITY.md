@@ -70,7 +70,7 @@ Every id in `SIGNATURES` has a **mark** (`SignatureMark`, 24-grid line drawing i
 - `--text-on-tint`: the one quiet ink on a tinted head or widget zone (light `--text` 84 % over the surface, dark 94 %; ≥ 4.5:1 on the 40 % tint of every hue). `--text-muted`/`--text-3` never on the band.
 - `--font-serif`, `--weight-light`: the type accents; no bare `font-weight` number or font stack outside `tokens.css` (`tokens.test.ts` ratchet, module files listed until their package cleans them).
 - `--head-h-tall`/`--head-h-compact` (phone values), `--card-pad` (cards and the widget head zone), `--focus` on the default (orange) accent hue in both themes – it stays orange under the teal/coral/lagoon accents, so a ring never blends into the accent it surrounds –, `--slot-s`/`--slot-m`/`--slot-extra` (slot sizes), `[data-hue2]` → `--module-color-2`.
-- `--widget-tint` 14 %, `--pattern-head` 0.06 (dark 0.03), `--pattern-widget` 0.04 (dark 0.02; light lines on a dark tint stand out more, AE2), `--group-tint` 6 % (neutral on `--text-3` in sidebar and library).
+- `--widget-tint` 14 %, `--pattern-head` 0.06 (dark 0.03), `--pattern-widget` 0.04 (dark 0.02; light lines on a dark tint stand out more, AE2), `--group-tint` 6 % (neutral on `--text-3` in the library).
 - **"Ruhig" and "Modulfarben: Aus"** flatten the hues to grey, lower the tints and set `--area-pattern: none` (not painted). Shape and signature stay.
 
 ## Widgets
@@ -95,7 +95,7 @@ Default order: saved positions first, then the manifest order (no spreading by s
 
 ## Sidebar, scrollbars, overview head
 
-- **Sidebar** (`layout/Sidebar`; Identity 4.0, package 0b-R): on `--bg` in tone steps, no frame, no wash. Brand row; favourites as a sunken track of grey icons, the current one a raised chip; a folded area is its head row, the open one a raised group; icons grey, only the current module shows its hue (icon and 16 % capsule, text `--text`); Übersicht, Bibliothek and Einstellungen are current as a raised capsule without accent. Collapsed to a rail where the **area colour** lives (with the bottom navigation). Guard: `e2e/seed/frame.seed.spec.ts`. Low pointer screens (≤ 1100 px high): 36 px rows, 2 px group padding, 36 px favourites, 28 px area heads, so every area and module fits 1920 × 1080 without scrolling (overflow spec).
+- **Sidebar** (`layout/Sidebar`; Identity 4.0, package 0b-R): on `--bg` in tone steps, no frame, no wash. Brand row; favourites as a sunken track of grey icons, the current one a raised chip; a folded area is its head row, the open one a raised group; icons grey, only the current module shows its hue (icon and 16 % capsule, text `--text`); Übersicht, Bibliothek and Einstellungen are current as the same capsule in grey, without accent. Collapsed to a rail where the **area colour** lives (with the bottom navigation). Guard: `e2e/seed/frame.seed.spec.ts`. Low pointer screens (≤ 1100 px high): 36 px rows, 2 px group padding, 36 px favourites, 28 px area heads, so every area and module fits 1920 × 1080 without scrolling (overflow spec).
 - **Scrollbars:** thin, transparent until hover/scroll (`core/shell/scrollbars.ts`); the sidebar list uses `ui/OverlayScroll`.
 - **Overview head** (`home/OverviewHead`): greeting by the hour, date, weather line, calm tools; "Jetzt wichtig" cards; day cards on a time rail.
 

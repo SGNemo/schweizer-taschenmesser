@@ -50,15 +50,16 @@
   flex: 1;
   /* May shrink below its text so long labels (other languages) never push the bar wider. */
   /* Never narrower than a round 44 px button: with a focus chip, badge and icons next to it the
-     label goes (container query below) and the magnifier stays, instead of an empty oval. */
+     label goes (container query below) and the magnifier stays, instead of an empty field. */
   min-width: var(--touch);
   container: search / inline-size;
   min-height: var(--touch);
   padding: 0 var(--space-3);
-  /* A sunken surface without a frame, in the radius of the buttons next to it (Identity 4.0, package 0b-R). */
+  /* A quiet surface without a frame, in the radius of the buttons next to it (Identity 4.0, package 0b-R);
+     --surface-2 is a visible step from the bar's ground in both themes. */
   border: 0;
   border-radius: var(--radius-md);
-  background: var(--surface-sunken);
+  background: var(--surface-2);
   color: var(--text-muted);
   cursor: pointer;
   text-align: left;
@@ -80,7 +81,7 @@
   }
 }
 .searchBtn:hover {
-  background: var(--surface-raised);
+  background: color-mix(in srgb, var(--text) 8%, var(--surface-2));
   color: var(--text);
 }
 .kbd {
@@ -154,9 +155,10 @@
   .searchBtn {
     max-width: 28rem;
   }
-  /* "Neu" opens the group at the right edge (tools, chips, bell, sync), flush with the page head's action. */
-  .create {
-    margin-left: auto;
+  /* Everything after the search is one group at the right edge (focus chip, "Neu", tools, chips, bell, sync),
+     flush with the page head's action. */
+  .searchBtn {
+    margin-right: auto;
   }
   .desktopOnly {
     display: inline-flex;
