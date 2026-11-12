@@ -514,9 +514,12 @@
   gap: var(--space-4);
   min-width: 0;
 }
-/* Not rendered at all while it waits: nothing of it is in the layout, the tab order or the accessibility tree. */
+/* While it waits it takes no room and shows nothing, but it is laid out (a deep link and the layout guards measure
+   it); `inert` and `aria-hidden` on the element keep it out of the tab order and the accessibility tree. */
 .tabBody[data-shown='false'] {
-  display: none;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
 }
 .tabWait {
   min-height: 100dvh;

@@ -49,7 +49,7 @@ export function ToolRow({
       <HuePlate hue={tool.identity.hue} icon={tool.icon} size={plate} />
       <div className={styles.text}>
         <span className={styles.name}>
-          {tool.name}
+          <span data-card-name>{tool.name}</span>
           {tool.maturity === 'preview' ? <Badge>{t.settings.maturity.badge}</Badge> : null}
         </span>
         <span className={styles.description}>
