@@ -84,24 +84,27 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(await day(page, '2026-11-10')).toContainText('Steuer · Teil 2/2');
     await expect(await day(page, '2026-11-09')).toContainText('Frist Do');
     await expect(page.getByTestId('planner-head')).toContainText('2 h 12 frei heute');
-    // Four columns a row at 1280 px, seven from 95rem of page width; no row runs past its column, nothing scrolls sideways.
+    // The week is one list of seven days with the picked day beside it (0b-4b); no row runs past its panel and
+    // nothing scrolls sideways, from 1280 to 1920.
     const measure = () =>
       page.evaluate(() => {
         const main = document.querySelector('main')!;
-        const board = document.querySelector('[aria-label="Wochenbrett"]')!;
+        const week = document.querySelector('[aria-label="Wochenbrett"]')!;
         const rows = Array.from(document.querySelectorAll('[data-testid^="day-"] li'));
         return {
-          columns: getComputedStyle(board).gridTemplateColumns.split(' ').length,
+          days: week.querySelectorAll('[data-testid^="week-"]').length,
           main: main.scrollWidth - main.clientWidth,
           rows: rows.filter((li) => li.scrollWidth > li.clientWidth + 1).length,
         };
       });
-    expect(await measure()).toEqual({ columns: 4, main: 0, rows: 0 });
-    // 1600: still four a row (seven columns would leave a title ~100 px, N01); 1920: seven.
-    await page.setViewportSize({ width: 1600, height: 900 });
-    await expect.poll(measure).toEqual({ columns: 4, main: 0, rows: 0 });
-    await page.setViewportSize({ width: 1920, height: 1080 });
-    await expect.poll(measure).toEqual({ columns: 7, main: 0, rows: 0 });
+    expect(await measure()).toEqual({ days: 7, main: 0, rows: 0 });
+    for (const [width, height] of [
+      [1600, 900],
+      [1920, 1080],
+    ] as const) {
+      await page.setViewportSize({ width, height });
+      await expect.poll(measure).toEqual({ days: 7, main: 0, rows: 0 });
+    }
     // The reason sits behind „Warum hier?“ (a Thursday deadline is no pressure yet on Monday: placed by priority).
     await expect(today(page)).not.toContainText('neu, nach Priorität');
     await today(page).getByRole('button', { name: 'Aktionen für Steuer' }).first().click();
