@@ -31,7 +31,7 @@ import { isWidgetVisible, widgetMaturity } from './maturity';
 import { availableManifests } from '@/core/modules/available';
 import { allManifests } from '@/core/modules/registry';
 import type { Maturity, WidgetDef, WidgetSize, WidgetVariant } from '@/core/modules/types';
-import { moduleSettingsPath } from '@/pages/settings/useSections';
+import { moduleSettingsPath } from '@/pages/settings/modulePath';
 import { t } from '@/strings';
 import { tComfort } from '@/strings.comfort';
 import { tCockpit } from '@/strings.cockpit';
