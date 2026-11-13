@@ -87,6 +87,7 @@ export function AttentionStrip({ covers, items: given }: Props = {}) {
   const live = useLiveAttention((s) => s.bySource);
   const [focus] = useFocusSettings();
   const [open, setOpen] = useState(false);
+  const mask = useAmountMask();
   const listId = useId();
   const ranked = [...core, ...rankAttention([...(items ?? []), ...Object.values(live).flat()])];
   const covered = covers ? coveredIds(covers, ranked) : undefined;
@@ -95,7 +96,6 @@ export function AttentionStrip({ covers, items: given }: Props = {}) {
 
   const { visible, waiting } = foldAttention(all, focus.calmAttention);
   const { phrases, more } = foldPhrases(waiting);
-  const mask = useAmountMask();
   return (
     <section className={styles.strip} aria-label={t.attention.title} data-testid="attention">
       {visible.length > 0 ? <h2 className={styles.heading}>{t.attention.title}</h2> : null}
