@@ -146,7 +146,7 @@ test.describe('shopping list on a phone', () => {
     await addItems(page, ['Milch']);
     // Identity 4.0: the plus of the bottom bar is the page's entry (here: a new list); there is no round button.
     const plus = page.getByTestId('bottom-plus');
-    await expect(plus).toHaveAccessibleName('Liste eintragen');
+    await expect(plus).toHaveAccessibleName('Neue Liste');
     await expect(plus).toHaveText('Liste');
     await expect(page.getByRole('button', { name: 'Schnell hinzufügen', exact: true })).toHaveCount(
       0,

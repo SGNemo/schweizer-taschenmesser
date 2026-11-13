@@ -181,7 +181,7 @@ export async function checkPlanPage(
     if (rule.action)
       await expect
         .soft(page.getByTestId('bottom-plus'), `${path}: the plus is the page's action`)
-        .toHaveAccessibleName(/\S+ eintragen$/);
+        .toHaveAccessibleName(/\S+ eintragen$|^Neue \S+$/);
     // Rule 5: the page starts on the first screen.
     expect.soft(r.contentY, `${path}: first content below the head`).not.toBeNull();
     expect

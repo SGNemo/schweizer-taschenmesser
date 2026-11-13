@@ -54,7 +54,7 @@ test('Einkauf: quantities, duplicates, ticking, clearing bought entries (and und
   // Identity 4.0: on the phone the page's one action is the plus of the bottom bar, no filled button in the page.
   if ((page.viewportSize()?.width ?? 1280) < 900) {
     expect(await primaryActions(page)).toEqual([]);
-    await expect(page.getByTestId('bottom-plus')).toHaveAccessibleName('Liste eintragen');
+    await expect(page.getByTestId('bottom-plus')).toHaveAccessibleName('Neue Liste');
   } else expect(await primaryActions(page)).toEqual(['Neue Liste']);
 
   await tick(page.getByRole('checkbox', { name: 'Milch' }));

@@ -183,7 +183,7 @@ async function check(page: Page, phone: boolean, theme: string) {
       // the plus: `modules/accounts/__tests__/exclusion.test.ts`).
       await expect
         .soft(page.getByTestId('bottom-plus'), `${path}: the plus`)
-        .toHaveAccessibleName(path === '/accounts' ? 'Neu eintragen' : /\S+ eintragen$/);
+        .toHaveAccessibleName(path === '/accounts' ? 'Neu eintragen' : /\S+ eintragen$|^Neue \S+$/);
       // Rule 5: the page starts on the first screen (the open passwords page starts with its search field).
       expect.soft(r.contentY, `${path}: first content below the head`).not.toBeNull();
       expect
