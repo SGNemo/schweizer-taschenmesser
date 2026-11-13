@@ -10,8 +10,8 @@ en: “Important now” shows everything overdue or due today; the rest waits in
 type: changed
 area: home
 breaking: false
-de: „Ruhig“ zeigt „Jetzt wichtig“ und die Heute-Karte mit den Terminen des Tages in einer Lesespalte. „Heute · Morgen · diese Woche“ lässt sich unter „Anpassen“ dazuholen.
-en: “Calm” shows “Important now” and the Today card with the day’s appointments in one reading column. “Today · Tomorrow · this week” can be added under “Customise”.
+de: „Ruhig“ zeigt „Jetzt wichtig“ und die Heute-Karte mit den Terminen des Tages in einer Lesespalte. „Heute · Morgen · diese Woche“ lässt sich unter „Anpassen“ → „Karten“ dazuholen.
+en: “Calm” shows “Important now” and the Today card with the day’s appointments in one reading column. “Today · Tomorrow · this week” can be added under “Customise” → “Cards”.
 ---
 ---
 type: changed

@@ -49,9 +49,8 @@ const source: AttentionSource = async ({ today }) => {
             title: t.attention.todosToday(due),
             to: '/todos',
             rank: 2,
+            // No `coveredBy`: the "Heute" card lists the planned ToDos and the next one, not every ToDo due today.
             due: 'today' as const,
-            // The "Heute" card lists the ToDos of the day; the agenda does not.
-            coveredBy: ['today'] as const,
           },
         ]
       : []),

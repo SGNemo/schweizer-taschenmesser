@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { Link } from 'react-router';
+import { useAmountMask } from '@/core/focus/maskAmounts';
 import { useCalendarItems } from '@/core/modules/contributions';
 import { allManifests } from '@/core/modules/registry';
 import type { CalendarItem } from '@/core/modules/types';
@@ -13,6 +14,8 @@ const hueOf = (source: string) => allManifests.find((m) => m.id === source)?.ide
 
 /** One entry on the time rail: time, a dot in the module's hue (or the outside calendar's colour), the title. */
 function Row({ item, withDay }: { item: CalendarItem; withDay?: boolean }) {
+  // An open invoice's entry names its amount ("Stadtwerke · 87,40 €"): dots while "Werte ausblenden" is on.
+  const mask = useAmountMask();
   const time = item.allDay || !item.time ? t.calendar.allDay : item.time;
   return (
     <li data-hue={hueOf(item.source)}>
@@ -26,7 +29,7 @@ function Row({ item, withDay }: { item: CalendarItem; withDay?: boolean }) {
           aria-hidden="true"
           style={item.color ? ({ '--dot': item.color } as CSSProperties) : undefined}
         />
-        <span className={styles.what}>{item.title}</span>
+        <span className={styles.what}>{mask(item.title)}</span>
       </Link>
     </li>
   );
@@ -35,19 +38,17 @@ function Row({ item, withDay }: { item: CalendarItem; withDay?: boolean }) {
 function Day({
   title,
   caption,
-  accent,
   testId,
   children,
 }: {
   title: string;
   caption: string;
-  accent?: boolean;
   testId: string;
   children: ReactNode;
 }) {
   return (
     <div className={styles.day} data-testid={testId}>
-      <h3 className={styles.group} data-accent={accent ? '' : undefined}>
+      <h3 className={styles.group}>
         {title} <small className={styles.caption}>{caption}</small>
       </h3>
       <ul className={styles.list}>{children}</ul>
@@ -84,7 +85,6 @@ export function AgendaBlock({ items: given }: { items?: readonly CalendarItem[] 
               <Day
                 title={t.home.agenda.today}
                 caption={formatDay(day, short)}
-                accent
                 testId="agenda-today"
               >
                 {agenda.today.map((i) => (

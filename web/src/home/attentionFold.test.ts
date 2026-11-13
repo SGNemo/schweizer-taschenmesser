@@ -2,13 +2,14 @@ import { describe, expect, it } from 'vitest';
 import type { AttentionItem } from '@/core/modules/types';
 import {
   AGENDA_KEY,
+  activeCovers,
   coveredIds,
   foldAttention,
   foldPhrases,
   isAgendaVisible,
   neverFolds,
 } from './attentionFold';
-import { CALM_STAND_IN, DEFAULT_LAYOUT, TODAY_KEY, type HomeLayout } from './layout';
+import { DEFAULT_LAYOUT, type HomeLayout } from './layout';
 
 const item = (
   id: string,
@@ -98,53 +99,54 @@ describe('foldPhrases: at most two phrases in the folded line', () => {
     expect(out.phrases).toHaveLength(2);
     expect(out.more).toBe(true);
   });
-  it('keeps kinds apart: two modules, two phrases', () => {
+  it('counts one summary once, also across two modules ("Abo mit neuem Preis")', () => {
     const price = (id: string) =>
       item(id, 'warning', { foldSummary: (count) => `${count} Abos mit neuem Preis` });
     const out = foldPhrases([
       price('subscriptions:price:1'),
       price('finance:subscription-price:2'),
     ]);
-    expect(out.phrases).toEqual(['1 Abos mit neuem Preis', '1 Abos mit neuem Preis']);
+    expect(out.phrases).toEqual(['2 Abos mit neuem Preis']);
   });
   it('is empty for nothing', () => {
     expect(foldPhrases([])).toEqual({ phrases: [], more: false });
   });
 });
 
-describe('coveredIds: the strip leaves out what a block on the page lists itself', () => {
+describe('activeCovers + coveredIds: the strip leaves out what a block on the page lists itself', () => {
   const next = item('calendar:next', 'accent', { ...today, coveredBy: ['agenda', 'today'] });
-  const todos = item('todos:today', 'accent', { ...today, coveredBy: ['today'] });
+  const todos = item('todos:today', 'accent', today);
   const invoice = item('invoices:today', 'accent', today);
   const items = [next, todos, invoice];
-  const withToday = [TODAY_KEY, 'weather:today'];
+  const left = (covers: ReturnType<typeof activeCovers>) => [...coveredIds(covers, items)];
 
   it('calendar:next + agenda on (detailed) → not in the strip', () => {
-    expect([...coveredIds(layout(), 'all', items, withToday)]).toEqual(['calendar:next']);
+    expect(activeCovers(layout(), 'all', true)).toEqual(['agenda']);
+    expect(left(activeCovers(layout(), 'all', true))).toEqual(['calendar:next']);
   });
-  it('calendar:next + agenda off → in the strip', () => {
-    expect([...coveredIds(layout({ hidden: [AGENDA_KEY] }), 'all', items, withToday)]).toEqual([]);
+  it('calendar:next + agenda off and no "Heute" card → in the strip', () => {
+    expect(left(activeCovers(layout({ hidden: [AGENDA_KEY] }), 'all', false))).toEqual([]);
   });
-  it('todos:today stays in the detailed strip (the agenda lists no ToDos) and leaves the calm one', () => {
-    expect(coveredIds(layout(), 'all', items, withToday).has('todos:today')).toBe(false);
-    expect([...coveredIds(layout(), 'calm', items, withToday)].sort()).toEqual([
-      'calendar:next',
-      'todos:today',
-    ]);
+  it('agenda off but the "Heute" card on the page: the card names the appointment, so the strip does not', () => {
+    expect(activeCovers(layout({ hidden: [AGENDA_KEY] }), 'all', true)).toEqual(['today']);
+    expect(left(activeCovers(layout(), 'calm', true))).toEqual(['calendar:next']);
   });
-  it('calm without the "Heute" card (the month card stands in) → nothing covers "today"', () => {
-    expect([...coveredIds(layout(), 'calm', items, [CALM_STAND_IN])]).toEqual([]);
-    // Hidden by the person: not among the available keys either.
-    expect([
-      ...coveredIds(layout({ hidden: [TODAY_KEY] }), 'calm', items, [CALM_STAND_IN]),
-    ]).toEqual([]);
+  it('calm without the "Heute" card (the month card stands in, or the card shows its "off" hint) → nothing covered', () => {
+    expect(activeCovers(layout(), 'calm', false)).toEqual([]);
   });
-  it('an entry without coveredBy is never left out', () => {
-    expect(coveredIds(layout(), 'calm', items, withToday).has('invoices:today')).toBe(false);
+  it('the agenda pinned into the calm view lists the day: the card does not', () => {
+    expect(activeCovers(layout({ pinned: [AGENDA_KEY] }), 'calm', true)).toEqual(['agenda']);
+  });
+  it('an entry without coveredBy is never left out: ToDos due today and invoices stay', () => {
+    for (const covers of [['agenda'], ['today']] as const)
+      expect(
+        coveredIds(covers, items).has('todos:today') ||
+          coveredIds(covers, items).has('invoices:today'),
+      ).toBe(false);
   });
   it('named price: only visibility is known, not what a block cuts off its list', () => {
     // The "Heute" card may list fewer appointments than the day has; the entry is left out all the same.
-    expect(coveredIds(layout(), 'calm', [next], withToday).has('calendar:next')).toBe(true);
+    expect(coveredIds(['today'], [next]).has('calendar:next')).toBe(true);
   });
 });
 

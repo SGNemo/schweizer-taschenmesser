@@ -1,12 +1,13 @@
 import type { AttentionCover, AttentionItem } from '@/core/modules/types';
-import { TODAY_KEY, type HomeLayout } from './layout';
+import type { HomeViewChoice } from '@/stores/ui';
+import type { HomeLayout } from './layout';
 
 /** Key of the "Jetzt wichtig" strip in the layout's hidden list. */
 export const ATTENTION_KEY = 'core:attention';
 /** Key of the "Heute · Morgen · diese Woche" block: in `hidden` it is off, in `pinned` it also shows in the calm view. */
 export const AGENDA_KEY = 'core:agenda';
 
-export type HomeView = 'calm' | 'all';
+export type HomeView = HomeViewChoice;
 
 /**
  * The agenda block is on the page: in the detailed view unless hidden, in the calm view only when pinned
@@ -35,15 +36,12 @@ export function foldAttention(
   return { visible: items.filter(neverFolds), waiting: items.filter((i) => !neverFolds(i)) };
 }
 
-/** The kind of an entry: its id up to the second colon (`budgets:warn:b1` → `budgets:warn`). */
-const kindOf = (id: string): string => id.split(':').slice(0, 2).join(':');
-
 /** At most this many phrases stand in the folded line; the rest shows when it is opened. */
 export const FOLD_PHRASES = 2;
 
 /**
  * The phrases of the folded line, in the order of the entries: entries with a `foldSummary` are counted per
- * kind ("2 Budgets fast aufgebraucht"), an entry without one speaks with its title. `more` says that
+ * summary ("2 Budgets fast aufgebraucht"), an entry without one speaks with its title. `more` says that
  * further phrases were left out.
  */
 export function foldPhrases(
@@ -52,7 +50,8 @@ export function foldPhrases(
 ): { phrases: string[]; more: boolean } {
   const groups = new Map<string, { n: number; first: AttentionItem }>();
   for (const i of waiting) {
-    const key = i.foldSummary ? kindOf(i.id) : i.id;
+    // One kind = one summary: two modules that say the same ("Abo mit neuem Preis") are counted together.
+    const key = i.foldSummary ? `summary:${i.foldSummary(1)}` : i.id;
     const g = groups.get(key);
     if (g) g.n += 1;
     else groups.set(key, { n: 1, first: i });
@@ -62,24 +61,30 @@ export function foldPhrases(
 }
 
 /**
- * Ids the strip leaves out because a block on the same page lists the thing itself (the strip counts, the
- * cards list). Only the blocks' visibility is known here: the agenda (`isAgendaVisible`) covers `'agenda'`,
- * the "Heute" card covers `'today'` in the calm view – not the month card that stands in for it, and not in
- * the detailed view, where the card is one widget among many. What a block cuts off its own list is not
- * known (`home/` imports no module): an entry of today beyond that cut is left out here all the same, the
- * named price of the small version.
- * `available` = keys of the widgets that can be shown (module on, not hidden by the person).
+ * The blocks on the page that list single things themselves: the agenda when it is shown, else the "Heute" card when
+ * it is on the page and lists something (it then names the day's appointments, `todos/widgets/NextWidget`). One rule
+ * for the strip (`coveredIds`) and the card (`OverviewBlocksContext`), so they never disagree.
+ * `cardShown` = the "Heute" card is among the cards drawn and not switched to its "off" hint.
  */
-export function coveredIds(
+export function activeCovers(
   layout: HomeLayout,
   view: HomeView,
+  cardShown: boolean,
+): AttentionCover[] {
+  if (isAgendaVisible(layout, view)) return ['agenda'];
+  return cardShown ? ['today'] : [];
+}
+
+/**
+ * Ids the strip leaves out because a block on the same page lists the thing itself (the strip counts, the blocks
+ * list). Only visibility is known here, not what a block cuts off its own list (`home/` imports no module): an entry
+ * of today beyond that cut is left out all the same, the named price of the small version.
+ */
+export function coveredIds(
+  covers: readonly AttentionCover[],
   items: readonly AttentionItem[],
-  available: readonly string[] = [],
 ): Set<string> {
-  const on: AttentionCover[] = [];
-  if (isAgendaVisible(layout, view)) on.push('agenda');
-  if (view === 'calm' && available.includes(TODAY_KEY)) on.push('today');
   return new Set(
-    items.filter((i) => i.coveredBy?.some((c) => on.includes(c)) === true).map((i) => i.id),
+    items.filter((i) => i.coveredBy?.some((c) => covers.includes(c)) === true).map((i) => i.id),
   );
 }

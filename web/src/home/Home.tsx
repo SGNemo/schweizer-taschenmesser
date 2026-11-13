@@ -17,11 +17,12 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Suspense, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { useModuleStates } from '@/core/modules/activation';
 import { useAttentionItems, useCalendarItems } from '@/core/modules/contributions';
 import { useSetupState } from '@/core/setup/hooks';
+import { useFocusSettings } from '@/core/settings/focus';
 import { today } from '@/core/time/dates';
 import { lazyComponent } from '@/core/modules/lazy';
 import { OverviewBlocksContext } from '@/core/modules/overviewBlocks';
@@ -56,11 +57,17 @@ import { widgetsOf } from './AutoWidget';
 import { AgendaBlock } from './AgendaBlock';
 import { agendaRange } from './agenda';
 import { AttentionStrip } from './AttentionStrip';
-import { AGENDA_KEY, ATTENTION_KEY, isAgendaVisible, type HomeView } from './attentionFold';
+import {
+  activeCovers,
+  AGENDA_KEY,
+  ATTENTION_KEY,
+  isAgendaVisible,
+  type HomeView,
+} from './attentionFold';
 import { CockpitStats } from './CockpitStats';
 import { OverviewHead } from './OverviewHead';
 import { ResumeCard } from './ResumeCard';
-import { usePackedGrid } from './masonry';
+import { SETTLE_CAP_MS, usePackedGrid } from './masonry';
 
 import styles from './Home.module.css';
 import {
@@ -74,6 +81,7 @@ import {
   orderWidgets,
   resetLayout,
   toggleHidden,
+  TODAY_KEY,
   togglePinned,
   updateLayout,
   useHomeLayout,
@@ -167,7 +175,9 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
   // What is on the page beside the widgets (never while editing: the edit mode shows the cards only).
   const view: HomeView = calm ? 'calm' : 'all';
   const agendaOn = !editing && isAgendaVisible(layout, view);
-  const blocks = useMemo(() => (agendaOn ? (['agenda'] as const) : []), [agendaOn]);
+  // The "Heute" card lists something unless "Jetzt dran" and the day plan are both off (then it shows a hint).
+  const [focus] = useFocusSettings();
+  const cardLists = focus.nextOne || focus.dayPlan;
   // The blocks under the head load on their own (layout, "Jetzt wichtig", the agenda's days). Drawn one by one each
   // would push the others down; they appear together once all that will show have their data (same shared queries
   // as the blocks use, nothing is read twice).
@@ -177,12 +187,19 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
   const stripOn = !editing && !layout.hidden.includes(ATTENTION_KEY);
   // The welcome card of an empty app lies above them: its answer (shown or not) is waited for too.
   const setup = useSetupState();
+  // Capped like the cards' first paint: a source that never answers must not keep the whole page empty.
+  const [waited, setWaited] = useState(false);
+  useEffect(() => {
+    const id = window.setTimeout(() => setWaited(true), SETTLE_CAP_MS);
+    return () => window.clearTimeout(id);
+  }, []);
   const blocksReady =
     layoutRead &&
     states !== undefined &&
-    (cockpit || setup !== undefined) &&
-    (!stripOn || attention !== undefined) &&
-    (!agendaOn || agendaItems !== undefined);
+    (waited ||
+      ((cockpit || setup !== undefined) &&
+        (!stripOn || attention !== undefined) &&
+        (!agendaOn || agendaItems !== undefined)));
   const shown = !blocksReady
     ? []
     : editing
@@ -192,6 +209,11 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
             !layout.hidden.includes(e.key) && (!calm || isCalmVisible(e.key, layout, available)),
         );
   const folded = calm && blocksReady ? ordered.length - hiddenByUser.length - shown.length : 0;
+  // One answer to "which block lists what", read by the strip and by the "Heute" card (never while editing:
+  // the edit mode shows the cards only).
+  const cardShown = cardLists && shown.some((e) => e.key === TODAY_KEY);
+  const covers = useMemo(() => activeCovers(layout, view, cardShown), [layout, view, cardShown]);
+  const blocks = editing ? undefined : covers;
   // No duplicate between head and widgets: the short weather line stands in the head only while no weather
   // card is on the page ("Ausführlich": the widget; "Ruhig": the head, unless the card is pinned).
   const calmView = homeView === 'calm' && !cockpit;
@@ -316,9 +338,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
         </>
       )}
       {cockpit && !editing && layout.stats ? <CockpitStats /> : null}
-      {blocksReady && stripOn ? (
-        <AttentionStrip layout={layout} view={view} available={available} items={attention} />
-      ) : null}
+      {blocksReady && stripOn ? <AttentionStrip covers={covers} items={attention} /> : null}
       {blocksReady && agendaOn ? <AgendaBlock items={agendaItems} /> : null}
 
       {states && availableManifests().every((m) => !states[m.id]) ? (
@@ -330,8 +350,10 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
           </Button>
         </EmptyState>
       ) : states && entries.length === 0 ? (
-        <EmptyState compact title={t.home.noWidgets} testId="home-no-cards">
-          <Link to="/library">{t.home.toLibrary}</Link>
+        <EmptyState title={t.home.noWidgets} testId="home-no-cards">
+          <Button variant="primary" onClick={() => void navigate('/library')}>
+            {t.home.toLibrary}
+          </Button>
         </EmptyState>
       ) : (
         <DndContext

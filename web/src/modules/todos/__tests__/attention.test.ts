@@ -35,11 +35,11 @@ describe('todos attention', () => {
     ]);
   });
 
-  it('only "due today" carries due: it never folds, and the "Heute" card covers it; the waiting ones fold', async () => {
+  it('only "due today" carries due: it never folds and no block covers it; the waiting ones fold', async () => {
     const items = await attention({ today: TODAY });
     expect(items.map((i) => [i.id, i.due, i.coveredBy])).toEqual([
       ['todos:waiting', undefined, undefined],
-      ['todos:today', 'today', ['today']],
+      ['todos:today', 'today', undefined],
     ]);
   });
 });

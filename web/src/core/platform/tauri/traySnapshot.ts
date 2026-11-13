@@ -8,6 +8,7 @@
  * `calendarItems` and `attention` contributions), never amounts, the vault or note contents.
  * Refreshed on every change to those tables (Dexie live query) and every 5 minutes (time passes).
  */
+import { AMOUNT_IN_TEXT } from '@/core/focus/maskAmounts';
 import { invoke } from '@tauri-apps/api/core';
 import { liveQuery } from 'dexie';
 import { loadModuleStates } from '@/core/modules/activation';
@@ -38,8 +39,7 @@ export interface TrayLine {
 }
 
 /** Money never goes into the tray, also not inside a title ("Strom 54,30 €" → "Strom"). */
-const AMOUNT =
-  /(?:[€$£]|\b(?:EUR|CHF|USD|Euro)\b)\s?[-+]?\d[\d.,'’ ]*|[-+]?\d[\d.,'’]*\s?(?:[€$£]|\b(?:EUR|CHF|USD|Euro|Franken)\b)/gi;
+const AMOUNT = AMOUNT_IN_TEXT;
 
 export function trayTitle(title: string): string {
   const clean = title.replace(AMOUNT, ' ').replace(/\s+/g, ' ').trim();

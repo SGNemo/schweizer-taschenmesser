@@ -228,6 +228,16 @@ for (const [device, viewport] of [
       await expect(page.getByTestId('widget-finance:balance')).toBeVisible();
       await expect(page.getByTestId('widget-finance:balance')).not.toContainText(amount);
       await expect(page.getByTestId('widget-finance:month')).not.toContainText(amount);
+      // Amounts inside a line (a card's context, an invoice's entry "Stadtwerke · 87,40 €") become dots too.
+      for (const block of ['attention', 'agenda'])
+        await expect(page.getByTestId(block)).not.toContainText(amount);
+      await page
+        .getByRole('group', { name: 'Übersicht' })
+        .getByRole('button', { name: 'Ruhig' })
+        .click();
+      await expect(page.getByTestId('widget-todos:next')).toBeVisible();
+      await expect(page.getByTestId('widget-todos:next')).not.toContainText(amount);
+      await expect(page.getByTestId('attention')).not.toContainText(amount);
     });
   });
 }

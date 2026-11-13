@@ -51,7 +51,8 @@ describe('AttentionStrip (classic: calm mode off)', () => {
     const link = await screen.findByRole('link', { name: /2 Rechnungen überfällig/ });
     expect(link.getAttribute('href')).toBe('/invoices');
     expect(link.getAttribute('data-tone')).toBe('danger');
-    expect(screen.getByText('897,89 €')).toBeTruthy();
+    // "Werte ausblenden" is read first (amounts stay dots until then); off by default.
+    expect(await screen.findByText('897,89 €')).toBeTruthy();
   });
   it('merges items that widgets publish live (e.g. a full drive)', async () => {
     useLiveAttention
@@ -193,19 +194,18 @@ describe('AttentionStrip (calm, the default)', () => {
         coveredBy: ['agenda', 'today'],
       },
     ];
-    const layout = { order: [], hidden: [], sizes: {}, pinned: [] };
-    // Detailed view, agenda on: the agenda lists the appointment.
+    // The agenda is on the page and lists the appointment.
     const on = render(
       <MemoryRouter>
-        <AttentionStrip layout={layout} view="all" />
+        <AttentionStrip covers={['agenda']} />
       </MemoryRouter>,
     );
     await waitFor(() => expect(on.container.firstChild).toBeNull());
     on.unmount();
-    // Agenda hidden: the strip names it.
+    // No block lists it: the strip names it.
     render(
       <MemoryRouter>
-        <AttentionStrip layout={{ ...layout, hidden: ['core:agenda'] }} view="all" />
+        <AttentionStrip covers={[]} />
       </MemoryRouter>,
     );
     expect(await screen.findByRole('link', { name: /Friseur/ })).toBeTruthy();
@@ -282,4 +282,28 @@ describe('AttentionStrip cards (identity v3)', () => {
       'lime',
     );
   });
+});
+
+it('"Werte ausblenden" turns the amounts of a card into dots, the words stay', async () => {
+  await db.table('_settings').clear();
+  await patchFocusSettings({ calmAttention: false });
+  await db.table('_meta').put({ key: 'focus.hideValues', value: true });
+  useLiveAttention.setState({ bySource: {} });
+  useUpdateStore.setState({ state: { phase: 'idle' } });
+  items.value = [
+    {
+      id: 'budgets:warn:b',
+      tone: 'warning',
+      icon: 'piggy',
+      title: 'Wohnen: 96 % des Budgets verbraucht',
+      detail: 'noch 35,00 €',
+      to: '/budgets',
+    },
+  ];
+  draw();
+  const card = await screen.findByRole('link', { name: /Wohnen/ });
+  await waitFor(() => expect(card.textContent).toContain('noch ••••'));
+  expect(card.textContent).not.toMatch(/35,00/);
+  await db.table('_meta').delete('focus.hideValues');
+  cleanup();
 });

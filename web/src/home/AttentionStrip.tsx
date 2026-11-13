@@ -2,14 +2,14 @@ import { useId, useState } from 'react';
 import { Link } from 'react-router';
 import { rankAttention, useAttentionItems } from '@/core/modules/contributions';
 import { useLiveAttention } from '@/core/modules/liveAttention';
-import type { AttentionItem } from '@/core/modules/types';
+import type { AttentionCover, AttentionItem } from '@/core/modules/types';
+import { useAmountMask } from '@/core/focus/maskAmounts';
 import { useFocusSettings } from '@/core/settings/focus';
 import { useUpdateStore } from '@/core/update/controller';
 import { t } from '@/strings';
 import { Icon } from '@/ui';
 import { moduleOfPath, splitFigure } from './attentionCard';
-import { coveredIds, foldAttention, foldPhrases, type HomeView } from './attentionFold';
-import type { HomeLayout } from './layout';
+import { coveredIds, foldAttention, foldPhrases } from './attentionFold';
 import styles from './AttentionStrip.module.css';
 
 /** Core items that do not belong to a module. */
@@ -37,7 +37,9 @@ function useCoreItems(): AttentionItem[] {
  * `danger` (overdue / exceeded only) reddens the figure, the words say the same.
  */
 function Card({ item: i }: { item: AttentionItem }) {
-  const { figure, label } = splitFigure(i.title);
+  // "Werte ausblenden": amounts in a title or context line ("noch 1,02 €", a new price) become dots.
+  const mask = useAmountMask();
+  const { figure, label } = splitFigure(mask(i.title));
   return (
     <Link
       to={i.to}
@@ -57,18 +59,15 @@ function Card({ item: i }: { item: AttentionItem }) {
           ) : null}
           <span className={styles.label}>{label}</span>
         </span>
-        {i.detail ? <span className={styles.detail}>{i.detail}</span> : null}
+        {i.detail ? <span className={styles.detail}>{mask(i.detail)}</span> : null}
       </span>
     </Link>
   );
 }
 
 interface Props {
-  /** The overview's layout and view: entries a block on the page lists itself are left out (`coveredIds`). */
-  layout?: HomeLayout;
-  view?: HomeView;
-  /** Keys of the widgets that can be shown. */
-  available?: readonly string[];
+  /** Blocks on the page that list single things themselves (`activeCovers`): their entries are left out. */
+  covers?: readonly AttentionCover[];
   /**
    * The entries, when the page has read them already (same shared query): the strip then stands in the page's
    * first paint instead of one step later, which would push the cards below it.
@@ -81,7 +80,7 @@ interface Props {
  * waits in one line, "Kann warten · n", that opens the folded cards below the strip (`foldAttention`). With the focus setting
  * "ruhiges Jetzt wichtig" off every entry is a card.
  */
-export function AttentionStrip({ layout, view = 'all', available, items: given }: Props = {}) {
+export function AttentionStrip({ covers, items: given }: Props = {}) {
   const own = useAttentionItems();
   const items = given ?? own;
   const core = useCoreItems();
@@ -90,12 +89,13 @@ export function AttentionStrip({ layout, view = 'all', available, items: given }
   const [open, setOpen] = useState(false);
   const listId = useId();
   const ranked = [...core, ...rankAttention([...(items ?? []), ...Object.values(live).flat()])];
-  const covered = layout ? coveredIds(layout, view, ranked, available) : undefined;
+  const covered = covers ? coveredIds(covers, ranked) : undefined;
   const all = covered ? ranked.filter((i) => !covered.has(i.id)) : ranked;
   if (all.length === 0) return null;
 
   const { visible, waiting } = foldAttention(all, focus.calmAttention);
   const { phrases, more } = foldPhrases(waiting);
+  const mask = useAmountMask();
   return (
     <section className={styles.strip} aria-label={t.attention.title} data-testid="attention">
       {visible.length > 0 ? <h2 className={styles.heading}>{t.attention.title}</h2> : null}
@@ -121,7 +121,7 @@ export function AttentionStrip({ layout, view = 'all', available, items: given }
               <span className={styles.foldText}>
                 <span className={styles.foldTitle}>{t.attention.canWait(waiting.length)}</span>
                 {' · '}
-                {phrases.join(', ')}
+                {mask(phrases.join(', '))}
                 {more ? ' …' : ''}
                 {' · '}
                 {t.attention.canWaitNote}
