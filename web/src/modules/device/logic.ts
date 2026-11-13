@@ -26,6 +26,7 @@ export function nextBackup(
   if (!hasPassphrase) return { state: 'no-passphrase' };
   // The runner's own rule: a failed or missing run is tried again at the next check.
   if (!last?.ok || isDue(config, last, at)) return { state: 'due' };
+  // `isDue` is the runner's rule (a missing or failed run is due); `last?.ok` only narrows the type here.
   return { state: 'planned', at: last.at + INTERVAL_MS[config.interval] };
 }
 

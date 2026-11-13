@@ -57,7 +57,4 @@ export const device: Strings['device'] = {
     openContext: 'What went where is listed in the settings',
     blockedContext: 'Nemo sends nothing until you allow it again',
   },
-  widget: {
-    hint: (backup: string, sync: string) => `${backup} · Sync: ${sync}`,
-  },
 };

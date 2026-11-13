@@ -9055,9 +9055,6 @@ export const de = {
       openContext: 'Was wohin ging, steht in den Einstellungen',
       blockedContext: 'Nemo sendet nichts, bis du es wieder erlaubst',
     },
-    widget: {
-      hint: (backup: string, sync: string) => `${backup} · Sync: ${sync}`,
-    },
   },
 } as const;
 

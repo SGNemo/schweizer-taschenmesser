@@ -8,12 +8,18 @@ export const DEVICE_STATUS_PATH = '/device';
 export const needingLook = (lines: readonly StatusLine[]): StatusLine[] =>
   lines.filter((l) => l.attention);
 
+/** A state with its line's name in front, unless the state already names it ("Letztes Backup fehlgeschlagen"). */
+export const withTitle = (line: Pick<StatusLine, 'title' | 'status'>): string =>
+  line.status.toLowerCase().includes(line.title.toLowerCase())
+    ? line.status
+    : `${line.title}: ${line.status}`;
+
 /** "Nichts Dringendes" or what needs a look, as one sentence: the one line's own state, or a count. */
 export function summaryText(lines: readonly StatusLine[]): string {
   const look = needingLook(lines);
   const s = t.device.summary;
   if (look.length === 0) return s.ok;
-  if (look.length === 1) return `${look[0]!.title}: ${look[0]!.status}`;
+  if (look.length === 1) return withTitle(look[0]!);
   return s.look(look.length);
 }
 

@@ -61,11 +61,11 @@ export function useNextBackupLine(): StatusLine | undefined {
   const d = t.device.nextBackup;
   const supported = getPlatform().isNative;
   const next = useRead<NextBackup>(async () => {
-    // Only whether a passphrase is stored, never its value.
+    // Only a yes/no leaves the core (`hasAutoPassphrase`); a keystore that cannot be read keeps the line as it was.
     const [config, last, hasPassphrase] = await Promise.all([
       loadAutoConfig(),
       loadAutoLast(),
-      supported ? hasAutoPassphrase() : Promise.resolve(false),
+      supported ? hasAutoPassphrase().catch(() => true) : Promise.resolve(false),
     ]);
     return nextBackup(supported, config, last, hasPassphrase, now());
   });

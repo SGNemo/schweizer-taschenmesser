@@ -173,6 +173,8 @@ describe('page Gerätestatus', () => {
     });
     expect(screen.getByTestId('device-next-backup')).toHaveTextContent('14.11.2026');
     expect(screen.getByTestId('overview-backup')).toHaveTextContent('Gesichert');
+    // Only whether a passphrase exists reaches the page, never the value.
+    expect(document.body.textContent).not.toContain('a stored passphrase');
   });
 
   it('the summary names what needs a look, and the network block is said in words', async () => {
