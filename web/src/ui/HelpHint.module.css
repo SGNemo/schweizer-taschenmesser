@@ -30,7 +30,7 @@
 
 .bubble {
   position: absolute;
-  z-index: 30;
+  z-index: var(--z-hint);
   top: calc(100% + var(--space-1));
   left: 50%;
   margin-left: calc(min(18rem, 80vw) / -2);

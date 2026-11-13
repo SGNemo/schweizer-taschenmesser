@@ -90,8 +90,8 @@
   /* `split` (master–detail, DESIGN-SPEC § 2): the detail panel next to the list (`SplitView`). */
   --split-detail: clamp(22rem, 30%, 30rem);
   --page-gutter: clamp(1rem, 0.5rem + 1.5vw, 2.5rem);
-  /* Module head (layout/AreaFrame, ui/HeadSurface): the two height classes (phone values below) and the signature
-     slot sizes S and M (`SIGNATURE_SLOTS`; L is the whole content column), plus the least room the extra slot keeps. */
+  /* Module head (layout/AreaFrame, ui/HeadSurface): the two height classes (phone values below), the signature slot
+     size S (L is the whole content column) and the least room the extra slot keeps. */
   --head-h-tall: 12.5rem;
   --head-h-compact: 6rem;
   /* Identity 4.0: the title row of a module head and the padding above it (phone values below). With the 44 px tabs
@@ -99,7 +99,6 @@
   --head-row: 3.5rem;
   --head-pad: var(--space-3);
   --slot-s: 4rem;
-  --slot-m: 36rem;
   --slot-l-min: 20rem;
   --slot-extra: 12rem;
 
@@ -115,7 +114,7 @@
   --z-raised: 5;
   --z-sticky: 10;
   --z-nav: 15;
-  --z-fab: 20;
+  --z-overlay: 20;
   --z-hint: 30;
   --z-toast: 60;
   --z-skip: 100;

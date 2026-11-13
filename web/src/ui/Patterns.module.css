@@ -99,9 +99,10 @@
   white-space: nowrap;
   cursor: pointer;
 }
-/* Touch devices get the full 44 px target (track 40 px for the mouse): the button looks 36 px and
-   its hit strip reaches over the 4 px track padding (C09; the padding alone took no taps). */
-@media (pointer: coarse) {
+/* Any touch screen gets the full 44 px target (track 40 px for a mouse alone): the button looks 36 px and
+   its hit strip reaches over the 4 px track padding (C09; the padding alone took no taps). `any-pointer`, like the
+   sidebar's exception: a touch laptop's primary pointer is fine, but a finger reaches the options too (0b-8, F4). */
+@media (any-pointer: coarse) {
   .segment button {
     position: relative;
     min-height: calc(var(--touch) - 2 * var(--space-1));
