@@ -91,7 +91,7 @@
   --split-detail: clamp(22rem, 30%, 30rem);
   --page-gutter: clamp(1rem, 0.5rem + 1.5vw, 2.5rem);
   /* Module head (layout/AreaFrame, ui/HeadSurface): the two height classes (phone values below), the signature slot
-     size S, the least width of L (the whole content column) and the least room the extra slot keeps. */
+     size S (L is the whole content column) and the least room the extra slot keeps. */
   --head-h-tall: 12.5rem;
   --head-h-compact: 6rem;
   /* Identity 4.0: the title row of a module head and the padding above it (phone values below). With the 44 px tabs
