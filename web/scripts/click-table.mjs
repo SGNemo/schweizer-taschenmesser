@@ -20,7 +20,7 @@ const load = (l, d) => {
 const s = (ms) => (ms / 1000).toFixed(1);
 const cell = (x, capped) =>
   x ? `${s(x.first)} / ${s(x.done)}${x.capped || capped ? '+' : ''}` : '–';
-const devices = { desktop: 'Desktop', phone: 'Handy' };
+const devices = { desktop: 'desktop', phone: 'phone' };
 const data = Object.fromEntries(Object.keys(devices).map((d) => [d, load(label, d)]));
 const rates = [...new Set(Object.values(data).flatMap((r) => Object.keys(r)))].sort(
   (a, b) => parseFloat(a) - parseFloat(b),
@@ -30,13 +30,13 @@ const ids = [
 ];
 const order = (id) => (id === 'overview' ? 0 : id === 'settings' ? 1 : id === 'library' ? 2 : 3);
 ids.sort((a, b) => order(a) - order(b) || a.localeCompare(b));
-const name = (id) => (id.endsWith('+') ? `${id.slice(0, -1)} (Dialog)` : id);
+const name = (id) => (id.endsWith('+') ? `${id.slice(0, -1)} (dialog)` : id);
 
 if (args.includes('--diff')) {
   const other = args[args.indexOf('--diff') + 1];
   const before = Object.fromEntries(Object.keys(devices).map((d) => [d, load(other, d)]));
   const cols = Object.keys(devices).flatMap((d) => rates.map((r) => [d, r]));
-  console.log(`| Ziel | ${cols.map(([d, r]) => `${devices[d]} ${r}`).join(' | ')} |`);
+  console.log(`| target | ${cols.map(([d, r]) => `${devices[d]} ${r}`).join(' | ')} |`);
   console.log(`|---|${cols.map(() => '---|').join('')}`);
   for (const id of ids) {
     const row = cols.map(([d, r]) => {
@@ -49,7 +49,7 @@ if (args.includes('--diff')) {
 } else if (args.includes('--causes')) {
   const rate = rates.at(-1);
   console.log(
-    `| Ziel | Gerät | fertig (s) | Dateien nachgeladen (Anzahl, KB) | DB-Lesungen (Anfragen, Zeilen) | Hauptthread (ms) | Ladezustand sichtbar (ms) |`,
+    `| target | device | done (s) | files after the click | DB reads (requests, rows) | main thread (ms) | loading state shown (ms) |`,
   );
   console.log('|---|---|---|---|---|---|---|');
   for (const id of ids)
@@ -58,14 +58,12 @@ if (args.includes('--diff')) {
       if (!x?.first) continue;
       const f = x.first;
       console.log(
-        `| ${name(id)} | ${devices[d]} | ${s(f.done)} | ${f.chunks}, ${f.chunkKb} | ${f.idbOps}, ${f.idbRows} | ${f.taskMs} | ${f.loadingMs} |`,
+        `| ${name(id)} | ${devices[d]} | ${s(f.done)} | ${f.chunks} | ${f.idbOps}, ${f.idbRows} | ${f.taskMs} | ${f.loadingMs} |`,
       );
     }
 } else {
   const cols = Object.keys(devices).flatMap((d) => rates.map((r) => [d, r]));
-  console.log(
-    `| Ziel | ${cols.map(([d, r]) => `${devices[d]} ${r} 1. Besuch | 2. Besuch`).join(' | ')} |`,
-  );
+  console.log(`| target | ${cols.map(([d, r]) => `${devices[d]} ${r} 1st | 2nd`).join(' | ')} |`);
   console.log(`|---|${cols.map(() => '---|---|').join('')}`);
   for (const id of ids) {
     const row = cols.map(([d, r]) => {
