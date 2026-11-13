@@ -70,8 +70,9 @@ export function nextRelevantDate(d: D, today: string): string | undefined {
 const RANK: Record<Status, number> = {
   'act-now': 0,
   expired: 1,
-  missed: 2,
-  soon: 3,
+  soon: 2,
+  // No badge and nothing to do: after everything that says it is near.
+  missed: 3,
   ok: 4,
   'open-ended': 5,
 };
@@ -92,7 +93,7 @@ export function filterDocuments<T extends VaultDocument>(
     );
 }
 
-/** Act now first, then expired, soon, ok (by the relevant date), open-ended last; ties alphabetical. */
+/** Act now first, then expired, soon, a passed deadline, ok (by the relevant date), open-ended last; ties alphabetical. */
 export function sortDocuments<T extends VaultDocument>(docs: readonly T[], today: string): T[] {
   return [...docs].sort((a, b) => {
     const sa = statusOf(a, today);
@@ -228,6 +229,10 @@ export function nearKey(
   if (state === 'soon') return kind === 'cancel' ? 'cancelSoon' : 'endSoon';
   return undefined;
 }
+
+/** The badge tone of those words: a deadline this week in accent, the rest "have a look"; never red. */
+export const nearTone = (near: NonNullable<ReturnType<typeof nearKey>>): 'accent' | 'warning' =>
+  near === 'cancelNow' ? 'accent' : 'warning';
 
 /** One row of the "Fristen" timeline: a document and the date that matters next. */
 export interface DeadlineRow<T> {

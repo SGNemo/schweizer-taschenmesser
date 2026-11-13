@@ -2,7 +2,7 @@ import type { Stored } from '@/core/db/types';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Badge, Button, DatedTimeline, EmptyState, type DatedRow } from '@/ui';
-import { canRenew, deadlineRows, nearKey, type DeadlineRow } from '../logic';
+import { canRenew, deadlineRows, nearKey, nearTone, type DeadlineRow } from '../logic';
 import type { VaultDocument } from '../schema';
 import styles from './Deadlines.module.css';
 
@@ -16,7 +16,7 @@ type Doc = Stored<VaultDocument>;
 function kindOf(r: DeadlineRow<Doc>) {
   const k = t.vault.timeline.kinds;
   const near = nearKey(r.state, r.kind);
-  if (near) return <Badge tone={near === 'cancelNow' ? 'accent' : 'warning'}>{k[near]}</Badge>;
+  if (near) return <Badge tone={nearTone(near)}>{k[near]}</Badge>;
   if (r.state === 'missed') return k.missed;
   return r.kind === 'cancel' ? k.cancel : k.end;
 }
@@ -55,6 +55,7 @@ export function DeadlineTimeline({
       <button
         type="button"
         className={styles.timelineTitle}
+        data-doc-title={r.doc.id}
         aria-current={current === r.doc.id ? 'true' : undefined}
         onClick={() => onOpen(r.doc)}
       >

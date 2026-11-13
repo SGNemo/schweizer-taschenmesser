@@ -5430,7 +5430,7 @@ export const de = {
     noticeHint: 'Leer lassen, wenn es keine Frist gibt (z. B. bei Ausweisen oder Garantien).',
     invalid: 'Bitte die Angaben prüfen (das Ende darf nicht vor dem Beginn liegen).',
     endLabel: 'Ende',
-    deadlineLabel: 'Kündigen bis',
+    deadlineLabel: 'Kündbar bis',
     endsOn: (title: string, category: string) =>
       category === 'warranty'
         ? `Garantie endet: ${title}`
@@ -5454,7 +5454,7 @@ export const de = {
       proposed: 'Vorschlag: noch einmal dieselbe Laufzeit. Das Datum lässt sich ändern.',
       noStart: 'Ohne Beginn gibt es keinen Vorschlag: bitte das neue Ende eintragen.',
       startMoves: (from: string) => `Der Beginn wird auf den ${from} gesetzt.`,
-      stillPast: 'Dieses Datum liegt noch in der Vergangenheit: bitte anpassen.',
+      stillPast: 'Dieses Datum liegt schon in der Vergangenheit.',
       gone: 'Die Unterlage gibt es nicht mehr.',
       notLater: 'Das neue Ende muss nach dem bisherigen liegen.',
       save: 'Verlängerung speichern',

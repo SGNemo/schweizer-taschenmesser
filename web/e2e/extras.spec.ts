@@ -174,7 +174,7 @@ test('Unterlagen: cancellation deadline is flagged and on the calendar', async (
   await save(page);
   // The folder itself; "Verlängert: Handyvertrag" beside it is the row's own button (module package T-a).
   const row = page.locator('main [data-row]', { hasText: 'Handyvertrag' });
-  await expect(row).toContainText('Kündigen bis');
+  await expect(row).toContainText('Kündbar bis');
   await expect(page.getByText('Kündbar bis · diese Woche')).toBeVisible();
 
   await open(page, '/calendar?view=week&date=2026-10-02');

@@ -36,7 +36,7 @@ export const vault: Strings['vault'] = {
   noticeHint: 'Leave empty if there is no deadline (e.g. for IDs or warranties).',
   invalid: 'Please check the details (the end can’t be before the start).',
   endLabel: 'End',
-  deadlineLabel: 'Cancel by',
+  deadlineLabel: 'Cancellable until',
   endsOn: (title: string, category: string) =>
     category === 'warranty'
       ? `Warranty ends: ${title}`
@@ -60,7 +60,7 @@ export const vault: Strings['vault'] = {
     proposed: 'Proposal: the same term once more. You can change the date.',
     noStart: 'Without a start there is no proposal: please enter the new end.',
     startMoves: (from: string) => `The start will move to ${from}.`,
-    stillPast: 'This date is still in the past: please adjust it.',
+    stillPast: 'This date is already in the past.',
     gone: 'The document no longer exists.',
     notLater: 'The new end must be after the current one.',
     save: 'Save renewal',

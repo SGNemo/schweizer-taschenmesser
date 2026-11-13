@@ -14,7 +14,8 @@ import { buildDiagnostics, renderDiagnostics } from './export';
  * Negative list for the picture preview of Unterlagen (module package T-a): while a preview is on screen, nothing
  * of it is anywhere but in memory. A diagnostics report holds neither the document's title, the file name nor the
  * object URL; the object URL is in no table (so in no sync operation, reminder or backup) and in no stored key
- * (so not in the palette's recent entries); showing it adds no row and no key.
+ * (so not in the palette's recent entries); showing it adds no row and no key. The object URL is a stand-in here:
+ * what carries the proof is that every table and every stored key is the same before and after.
  */
 const TITLE = 'KANARIENVOGEL-Reisepass';
 const FILE = 'kanarienvogel-ausweis.png';

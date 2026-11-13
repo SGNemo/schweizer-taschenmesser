@@ -1,6 +1,6 @@
 import { tDeadline } from '@/strings.deadline';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router';
 import { blobKeys, getBlob, pruneBlobs } from '@/core/blobs';
 import { getPlatform } from '@/core/platform';
@@ -38,6 +38,7 @@ import {
   filterDocuments,
   formatSize,
   nearKey,
+  nearTone,
   safeFileName,
   sortDocuments,
   statusOf,
@@ -80,6 +81,31 @@ export default function VaultPage() {
   const [view, setView] = useState<View>('documents');
   // The id only: the dialog works on the row as the list holds it now.
   const [renewing, setRenewing] = useState<string | null>(null);
+  // The row "Verlängert" was pressed in. After a renewal its button is gone (the new term is far away), so the
+  // focus goes to the row's own title instead of nowhere.
+  const renewRow = useRef<{ id: string; end?: string; row: Element | null }>(undefined);
+  const renewed = useRef(false);
+  const startRenew = (d: { id: string; endDate?: string; expiresOn?: string }) => {
+    renewRow.current = {
+      id: d.id,
+      end: endOf(d),
+      row: document.activeElement?.closest('li') ?? null,
+    };
+    renewed.current = false;
+    setRenewing(d.id);
+  };
+  useEffect(() => {
+    if (renewing || !renewed.current || !renewRow.current) return;
+    const { id, end, row } = renewRow.current;
+    // On the rail the row moves across "Heute" and is drawn anew: its title is found by the document.
+    const title =
+      document.querySelector<HTMLElement>(`[data-doc-title="${id}"]`) ??
+      (row?.isConnected ? row.querySelector<HTMLElement>('button') : null);
+    title?.focus();
+    // Until the list shows the new term the row may still be drawn anew: then once more.
+    const now = docs?.find((d) => d.id === id);
+    if (!now || endOf(now) !== end) renewed.current = false;
+  }, [renewing, docs]);
   // Master–detail (layout `split`): on a wide page a document shows in the panel beside the folders, below that
   // width the folder opens its dialog (a sheet on the phone).
   const wide = useSplitView();
@@ -208,7 +234,7 @@ export default function VaultPage() {
             day={day}
             current={wide ? detail?.id : undefined}
             onOpen={(d) => (wide ? setPicked(d.id) : setTarget(d))}
-            onRenew={(d) => setRenewing(d.id)}
+            onRenew={startRenew}
           />
         ) : null}
         {view === 'documents' || none ? (
@@ -262,15 +288,14 @@ export default function VaultPage() {
                           {near ? (
                             // The rail's words and tones; never red (red stays for overdue money). A passed
                             // cancellation deadline has no badge: the small print names it with its date.
-                            <Badge tone={near === 'cancelNow' ? 'accent' : 'warning'}>
-                              {t.vault.timeline.kinds[near]}
-                            </Badge>
+                            // `timeline.kinds` holds the words both views share.
+                            <Badge tone={nearTone(near)}>{t.vault.timeline.kinds[near]}</Badge>
                           ) : null}
                           {canRenew(d, state, day) ? (
                             <Button
                               size="sm"
                               aria-label={t.vault.renewAria(d.title)}
-                              onClick={() => setRenewing(d.id)}
+                              onClick={() => startRenew(d)}
                             >
                               {t.vault.renew}
                             </Button>
@@ -294,7 +319,13 @@ export default function VaultPage() {
           </>
         ) : null}
       </SplitView>
-      <RenewDialog doc={renewDoc ?? null} onClose={() => setRenewing(null)} />
+      <RenewDialog
+        doc={renewDoc ?? null}
+        onClose={() => setRenewing(null)}
+        onSaved={() => {
+          renewed.current = true;
+        }}
+      />
       <DocumentEditor target={openTarget} onClose={closeEditor} />
     </>
   );

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { addDaysStr, formatDay, today } from '@/core/time/dates';
 import { changeWithUndo } from '@/core/undo/withToast';
@@ -19,25 +19,63 @@ import type { VaultDocument } from '../schema';
 export function RenewDialog({
   doc,
   onClose,
+  onSaved,
 }: {
   doc: Stored<VaultDocument> | null;
   onClose: () => void;
+  /** Called after the renewal was written, before the dialog closes. */
+  onSaved?: () => void;
 }) {
+  // One write per dialog. The lock lives here, not in the form: the write changes the term, the form below starts
+  // afresh for it, and a second Enter in that moment must not renew the next term on top.
+  const writing = useRef(false);
+  const lock = () => {
+    if (writing.current) return false;
+    writing.current = true;
+    return true;
+  };
+  const unlock = () => {
+    writing.current = false;
+  };
+  const close = () => {
+    unlock();
+    onClose();
+  };
   return (
     <Dialog
       open={doc !== null}
-      onClose={onClose}
+      onClose={close}
       title={doc ? t.vault.renewAria(doc.title) : t.vault.renewDialog.title}
     >
       {/* A new term from elsewhere (start or end) starts the dialog afresh: field and hint never describe two different terms. */}
       {doc ? (
-        <Fields key={`${doc.id}:${doc.startDate}:${endOf(doc)}`} doc={doc} onClose={onClose} />
+        <Fields
+          key={`${doc.id}:${doc.startDate}:${endOf(doc)}`}
+          doc={doc}
+          onClose={close}
+          onSaved={onSaved}
+          lock={lock}
+          unlock={unlock}
+        />
       ) : null}
     </Dialog>
   );
 }
 
-function Fields({ doc, onClose }: { doc: Stored<VaultDocument>; onClose: () => void }) {
+function Fields({
+  doc,
+  onClose,
+  onSaved,
+  lock,
+  unlock,
+}: {
+  doc: Stored<VaultDocument>;
+  onClose: () => void;
+  onSaved?: () => void;
+  /** Takes the dialog's one write; false while another one runs. */
+  lock: () => boolean;
+  unlock: () => void;
+}) {
   const r = t.vault.renewDialog;
   const end = endOf(doc)!;
   const proposal = renewedEnd(doc);
@@ -47,14 +85,18 @@ function Fields({ doc, onClose }: { doc: Stored<VaultDocument>; onClose: () => v
 
   async function save() {
     if (!value || value <= end) return setError(r.notLater);
+    if (!lock()) return;
     try {
       await changeWithUndo(
         () => documentRepo.update(doc.id, renewPatch(doc, value)),
         t.vault.renewed(doc.title, formatDay(value, 'd. MMM yyyy')),
       );
+      onSaved?.();
+      // Closing gives the lock back: the dialog is gone before anything can be sent again.
       onClose();
     } catch {
       // Deleted meanwhile (another device): nothing to renew.
+      unlock();
       setError(r.gone);
     }
   }
@@ -69,7 +111,7 @@ function Fields({ doc, onClose }: { doc: Stored<VaultDocument>; onClose: () => v
         : undefined;
 
   return (
-    <Form onSubmit={() => void save()}>
+    <Form onSubmit={save}>
       <p>
         {r.until(long(end))}
         {/* Said before it happens: the start is the new term's first day afterwards. */}

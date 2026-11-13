@@ -77,7 +77,9 @@ describe('Unterlagen: view "Fristen"', () => {
     await seed();
     page();
     fireEvent.click(await screen.findByRole('button', { name: 'Fristen' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Verlängert: Hausrat' }));
+    const opener = await screen.findByRole('button', { name: 'Verlängert: Hausrat' });
+    opener.focus();
+    fireEvent.click(opener);
     const dialog = await screen.findByRole('dialog', { name: 'Verlängert: Hausrat' });
     // Said before it happens: the old end, and that the start moves to the new term.
     expect(
@@ -96,12 +98,19 @@ describe('Unterlagen: view "Fristen"', () => {
     );
     const before = (await documentRepo.active().toArray()).find((d) => d.title === 'Hausrat')!;
     expect(before.endDate).toBe('2026-09-25');
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Verlängerung speichern' }));
+    // Enter twice in a row: one renewal, never the next term on top.
+    const form = dialog.querySelector('form')!;
+    fireEvent.submit(form);
+    fireEvent.submit(form);
     await waitFor(async () => {
       const after = (await documentRepo.active().toArray()).find((d) => d.title === 'Hausrat')!;
       expect(after.endDate).toBe('2027-09-20');
       expect(after.startDate).toBe('2026-09-26');
     });
+    // The row's "Verlängert" is gone with the new term: the focus is on the row's title, not nowhere.
+    await waitFor(() => expect(document.activeElement?.textContent).toBe('Hausrat'));
+    const settled = (await documentRepo.active().toArray()).find((d) => d.title === 'Hausrat')!;
+    expect([settled.startDate, settled.endDate]).toEqual(['2026-09-26', '2027-09-20']);
     // "Rückgängig" gives back the old term as a whole: end and start.
     await undoLast();
     const back = (await documentRepo.active().toArray()).find((d) => d.title === 'Hausrat')!;

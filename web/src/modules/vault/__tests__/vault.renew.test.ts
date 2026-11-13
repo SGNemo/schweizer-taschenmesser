@@ -8,6 +8,7 @@ import {
   RENEWABLE,
   renewedEnd,
   renewPatch,
+  sortDocuments,
 } from '../logic';
 import type { VaultDocument } from '../schema';
 
@@ -91,6 +92,21 @@ describe('renewal: one more term of the same length', () => {
     expect(canRenew({ category: 'contract' }, 'open-ended', TODAY)).toBe(false);
     // A paper without a deadline is still "soon" on its last day: the end has come.
     expect(canRenew({ category: 'identity', endDate: TODAY }, 'soon', TODAY)).toBe(true);
+  });
+
+  it('folders sort by what their badges say: this week, run out, soon; a passed deadline after them', () => {
+    const TODAY = '2026-09-29';
+    const sorted = sortDocuments(
+      [
+        doc({ title: 'missed', endDate: '2026-12-31', noticeDays: 120 }),
+        doc({ title: 'soon', endDate: '2026-11-01' }),
+        doc({ title: 'ok', endDate: '2028-01-01' }),
+        doc({ title: 'expired', endDate: '2026-09-01' }),
+        doc({ title: 'now', endDate: '2026-11-01', noticeDays: 30 }),
+      ],
+      TODAY,
+    ).map((d) => d.title);
+    expect(sorted).toEqual(['now', 'expired', 'soon', 'missed', 'ok']);
   });
 
   it('the same words say what is near in both views; a passed deadline is not among them', () => {
