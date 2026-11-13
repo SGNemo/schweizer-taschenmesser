@@ -1,5 +1,5 @@
 import { NowStrip } from '@/core/modules/NowStrip';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { useAdvanced } from '@/core/settings/comfort';
 import { DEFAULT_CURRENCY } from '@/core/money';
@@ -69,11 +69,18 @@ export default function FinancePage() {
         : true,
   );
   // Accounts in several currencies: one currency at a time, nothing is converted or mixed.
-  const currencies = data ? currenciesOf(data.accounts) : [DEFAULT_CURRENCY];
+  const currencies = useMemo(
+    () => (data ? currenciesOf(data.accounts) : [DEFAULT_CURRENCY]),
+    [data],
+  );
   const rawCur = params.get('cur');
   const currency =
     rawCur && currencies.includes(rawCur) ? rawCur : (currencies[0] ?? DEFAULT_CURRENCY);
-  const view = data && currencies.length > 1 ? filterByCurrency(data, currency) : data;
+  // One filtered copy per data read and currency: a new object on every render made every figure below recompute.
+  const view = useMemo(
+    () => (data && currencies.length > 1 ? filterByCurrency(data, currency) : data),
+    [data, currencies, currency],
+  );
   const rawMonth = params.get('month');
   const month = rawMonth && MONTH_RE.test(rawMonth) ? rawMonth : monthOf(today());
 
