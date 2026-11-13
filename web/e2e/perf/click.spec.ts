@@ -357,6 +357,7 @@ async function run(page: Page, phone: boolean, label: string) {
       for (const t of targets(phone)) {
         const slot = (raw[t.id] ??= { first: [], second: [] });
         if (slot.note) continue;
+        const began = Date.now();
         await page.goto(t.start);
         await settle(page);
         if (t.kind === 'page') {
@@ -399,6 +400,10 @@ async function run(page: Page, phone: boolean, label: string) {
           slot.second.push(await measure(page, cdp, 'click', 'go'));
           await page.keyboard.press('Escape');
         }
+        const last = (x: Sample[]) => x.at(-1);
+        console.log(
+          `${label} ${rate}x run ${r + 1} ${t.id}: ${last(slot.first)?.done ?? '-'}${last(slot.first)?.capped ? '+' : ''} / ${last(slot.second)?.done ?? '-'}${last(slot.second)?.capped ? '+' : ''} ms (${Math.round((Date.now() - began) / 1000)} s)`,
+        );
       }
     }
     results[`${rate}x`] = Object.fromEntries(
