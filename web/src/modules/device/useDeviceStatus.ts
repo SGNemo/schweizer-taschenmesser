@@ -1,4 +1,4 @@
-import { useDeviceLines, type StatusLine } from '@/core/status/lines';
+import { anyLoading, useDeviceLines, useSettled, type StatusLine } from '@/core/status/lines';
 import { needingLook } from '@/core/status/summary';
 import { t } from '@/strings';
 import {
@@ -20,12 +20,15 @@ const present = (lines: (StatusLine | undefined)[]): StatusLine[] =>
 
 /**
  * Everything the page shows, in four groups. The head counts every line of the page that needs a look (the four core
- * lines, plus a backup without its passphrase and a hub that is not reachable).
+ * lines, plus a backup without its passphrase and a hub that is not reachable). `ready` turns true once the first
+ * reads of all lines are back (or after `STATUS_WAIT_MS`): the page shows its head and lines then, all at once, so
+ * they never fill in one by one and no line says "Kein Backup" before the last backup is read.
  */
 export function useDeviceStatus(): {
   groups: StatusGroup[];
   /** The lines of the page that need a look. */
   look: StatusLine[];
+  ready: boolean;
 } {
   const core = useDeviceLines();
   const g = t.device.groups;
@@ -39,5 +42,11 @@ export function useDeviceStatus(): {
       lines: present([core.updates, useAutostartLine(), useNetworkLine()]),
     },
   ];
-  return { groups, look: needingLook(groups.flatMap((g) => g.lines)) };
+  const all = groups.flatMap((g) => g.lines);
+  const ready = useSettled(!anyLoading(all));
+  // A line whose read hangs past the wait and has no words yet stays out; the rest shows (with its fallback words).
+  const shown = groups
+    .map((g) => ({ ...g, lines: g.lines.filter((l) => !(l.loading && !l.status)) }))
+    .filter((g) => g.lines.length > 0);
+  return { groups: shown, look: needingLook(all), ready };
 }

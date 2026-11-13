@@ -2,7 +2,7 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  z-index: var(--z-fab);
+  z-index: var(--z-overlay);
   display: flex;
   justify-content: center;
   background: var(--overlay);

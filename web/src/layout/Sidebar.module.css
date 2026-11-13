@@ -357,6 +357,11 @@ li[data-area] .railLink[aria-current='page'] {
     transition-delay: var(--dur-slow);
   }
 }
+/* Escape hid the name (`useRailTipEscape`): it stays hidden until the pointer leaves or the focus moves on. */
+.railLink[data-tip-off]::after {
+  opacity: 0;
+  transition: none;
+}
 /* "Modulfarben: Aus" leaves the area colours as they are (they are categories), so the rail greys its icons itself;
    in "Ruhig" the area colour is a grey already. */
 :global(:root[data-module-colors='off']) li[data-area] .railLink {

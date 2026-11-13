@@ -5,6 +5,10 @@
  * the settings line, which speaks for these four, does not.) A line carries a word for the state, one calm context
  * line and a link to where the thing is set; never a server address, a token, a key, a path or an IP, and nothing
  * here switches anything.
+ *
+ * A line whose first read has not come back carries `loading` (its words are not the state yet, so "Kein Backup" never
+ * stands there before the last backup is read): a list shows its lines once none of them loads (`useSettled`), so they
+ * appear together instead of one by one.
  */
 import { useEffect, useState } from 'react';
 import { loadLastBackup, type LastBackup } from '@/core/backup/lastBackup';
@@ -32,8 +36,60 @@ export interface StatusLine {
   /** `true` = the context line only explains the state or the category (no date, number or setting of its own): the
    *  settings head leaves it out on the phone (U55). */
   generic?: boolean;
+  /** `true` while the line's first read has not come back: its words are not the state yet (empty, or a fallback). */
+  loading?: boolean;
   testId: string;
 }
+
+/**
+ * The value of one read per mount, and whether it came back (`done` also when it failed: a failed read keeps the
+ * line's fallback words, it never holds a list back). No read (`undefined`: not on this platform) = done at once.
+ */
+export function useRead<T>(read: (() => Promise<T>) | undefined): {
+  value: T | undefined;
+  done: boolean;
+} {
+  const on = read !== undefined;
+  const [state, setState] = useState<{ value: T | undefined; done: boolean }>({
+    value: undefined,
+    done: !on,
+  });
+  useEffect(() => {
+    if (!read) return;
+    // The read finishes later; an unmounted view (or a finished test) must not get the state update.
+    let live = true;
+    void read().then(
+      (value) => live && setState({ value, done: true }),
+      () => live && setState({ value: undefined, done: true }),
+    );
+    return () => {
+      live = false;
+    };
+    // The readers are stable per platform; only "exists here" can differ.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [on]);
+  return state;
+}
+
+/** How long a list waits at most for its lines' first reads before it shows what it has (a read that hangs). */
+export const STATUS_WAIT_MS = 1500;
+
+/** `true` once `ready` was true or `STATUS_WAIT_MS` have passed since mount; it never turns back to `false`. */
+export function useSettled(ready: boolean, waitMs = STATUS_WAIT_MS): boolean {
+  const [waited, setWaited] = useState(false);
+  const [settled, setSettled] = useState(ready);
+  if (ready && !settled) setSettled(true);
+  useEffect(() => {
+    if (settled) return;
+    const timer = setTimeout(() => setWaited(true), waitMs);
+    return () => clearTimeout(timer);
+  }, [settled, waitMs]);
+  return settled || waited;
+}
+
+/** `true` while a line of the list still loads. */
+export const anyLoading = (lines: readonly (StatusLine | undefined)[]): boolean =>
+  lines.some((l) => l?.loading === true);
 
 export function useSyncLine(): StatusLine {
   const o = tSettings2.use().overview;
@@ -69,28 +125,20 @@ export function useSyncLine(): StatusLine {
   };
 }
 
-/** The newest backup of this device (`undefined` while it loads and where there is none). */
-export function useLastBackup(): LastBackup | undefined {
-  const [last, setLast] = useState<LastBackup>();
-  useEffect(() => {
-    // The read finishes later; an unmounted view (or a finished test) must not get the state update.
-    let live = true;
-    void loadLastBackup().then((v) => live && setLast(v));
-    return () => {
-      live = false;
-    };
-  }, []);
-  return last;
-}
-
 export function useBackupLine(): StatusLine {
   const v3 = tSettingsV3.use();
-  const last = useLastBackup();
-  return {
+  // `undefined` after the read = this device has no backup yet; before it, the line says nothing.
+  const { value: last, done } = useRead<LastBackup | undefined>(loadLastBackup);
+  const base = {
     id: 'backup',
     to: settingsPath('sync', 'backup'),
     icon: 'cloud',
     title: v3.tiles.backup,
+    testId: 'overview-backup',
+  } as const;
+  if (!done) return { ...base, status: '', context: '', attention: false, loading: true };
+  return {
+    ...base,
     status: !last ? v3.backup.none : last.ok ? v3.backup.done : v3.backup.failed,
     context: !last
       ? v3.backup.noneContext
@@ -99,7 +147,6 @@ export function useBackupLine(): StatusLine {
         : v3.backup.tried(formatTimestamp(last.at)),
     generic: !last,
     attention: last?.ok === false,
-    testId: 'overview-backup',
   };
 }
 
@@ -107,16 +154,7 @@ export function useUpdatesLine(): StatusLine {
   const o = tSettings2.use().overview;
   const v3 = tSettingsV3.use();
   const available = useUpdateStore((u) => u.state.phase === 'available');
-  const [version, setVersion] = useState('');
-  useEffect(() => {
-    let live = true;
-    void getPlatform()
-      .app.version()
-      .then((v) => live && setVersion(v));
-    return () => {
-      live = false;
-    };
-  }, []);
+  const { value: version, done } = useRead(() => getPlatform().app.version());
   return {
     id: 'updates',
     to: '/settings/updates',
@@ -126,6 +164,8 @@ export function useUpdatesLine(): StatusLine {
     context: version ? o.updates.version(version) : categoryDef('updates').description,
     generic: !version,
     attention: available,
+    // The state word is known at once; only the context waits for the version (the list waits for it too).
+    loading: !done || undefined,
     testId: 'overview-updates',
   };
 }
@@ -134,18 +174,12 @@ export function useUpdatesLine(): StatusLine {
 export function useStorageLine(): StatusLine {
   const o = tSettings2.use().overview;
   const v3 = tSettingsV3.use();
-  const [used, setUsed] = useState<number | null>();
-  useEffect(() => {
-    if (typeof navigator === 'undefined' || !navigator.storage?.estimate) return;
-    let live = true;
-    void navigator.storage.estimate().then(
-      (e) => live && setUsed(e.usage ?? null),
-      () => live && setUsed(null),
-    );
-    return () => {
-      live = false;
-    };
-  }, []);
+  const estimate =
+    typeof navigator !== 'undefined' && navigator.storage?.estimate
+      ? () => navigator.storage.estimate()
+      : undefined;
+  const { value, done } = useRead(estimate);
+  const used = value?.usage;
   const mb = used ? used / (1024 * 1024) : 0;
   const size = `${formatNumber(mb, { maximumFractionDigits: mb < 10 ? 1 : 0 })} MB`;
   return {
@@ -157,6 +191,7 @@ export function useStorageLine(): StatusLine {
     context: o.storage.context,
     generic: true,
     attention: false,
+    loading: !done || undefined,
     testId: 'overview-storage',
   };
 }

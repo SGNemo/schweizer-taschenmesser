@@ -8,15 +8,15 @@ export interface FolderTab {
   count?: number;
   /** A small mark in front of the label (an icon). */
   icon?: ReactNode;
-  /** The tab's own colour (a CSS colour, e.g. `categoryColor(tone)`): its fill. Without one the module hue tints the tab. */
+  /** The tab's own colour (a CSS colour, e.g. `categoryColor(tone)`): the colour of its `icon`, which names the thing. */
   color?: string;
 }
 
 /**
- * Folder tabs: a row of tab-shaped buttons that stick out of the surface below, the chosen one filled. It is a filter
- * (a group of buttons with `aria-pressed`, named after their labels), not a page switcher. The fill, the shape and the
- * weight carry the state, colour is never alone. `folder` adds the folder body under the tabs (a hairline bar the chosen
- * tab merges into); `children` are extra controls at the end of the row (an add button).
+ * Folder tabs: a row of tab-shaped buttons on a hairline, the chosen one a recess with a heavier weight. It is a filter
+ * (a group of buttons with `aria-pressed`, named after their labels), not a page switcher. Surface and weight carry the
+ * state, colour is never alone (a tab's own colour only tints its icon). `folder` adds the folder body under the tabs;
+ * `children` are extra controls at the end of the row (an add button).
  */
 export function FolderTabs({
   label,
