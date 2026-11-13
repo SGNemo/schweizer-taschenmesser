@@ -119,3 +119,32 @@ test('phone: pausing is in the dialog, deleting is the swipe and the dialog (0b-
   await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
   await expect(row).toHaveCount(0);
 });
+
+test('0b-8 G8: the dialog asks only how often; interval and end wait behind "Mehr Felder"', async ({
+  page,
+}) => {
+  await ready(page, '/subscriptions?new=1');
+  const dialog = page.getByRole('dialog', { name: 'Abo hinzufügen' });
+  await expect(dialog.getByLabel('Wiederholung')).toBeVisible();
+  await expect(dialog.getByLabel('Alle (Monate)')).toHaveCount(0);
+  await expect(dialog.getByLabel('Ende', { exact: true })).toHaveCount(0);
+  await dialog.getByRole('button', { name: /Mehr Felder/ }).click();
+  await dialog.getByLabel('Alle (Monate)').fill('3');
+  await dialog.getByLabel('Name').fill('Quartals-Abo');
+  await dialog.getByLabel('Betrag').fill('30');
+  await save(page);
+  // An abo with an interval of its own shows that field at once when it opens again (nothing in use is hidden).
+  await page.getByRole('button', { name: /Quartals-Abo/ }).click();
+  await expect(page.getByRole('dialog').getByLabel('Alle (Monate)')).toHaveValue('3');
+});
+
+test('"Gekündigt zum" says the first allowed day when an earlier one is typed', async ({
+  page,
+}) => {
+  await addStreaming(page);
+  await page.getByRole('button', { name: /Streaming/ }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel('Gekündigt zum (optional)').fill('01.09.2026');
+  await dialog.getByLabel('Gekündigt zum (optional)').blur();
+  await expect(dialog.getByRole('alert')).toContainText('Frühestens am 15.10.2026.');
+});

@@ -14,9 +14,6 @@ use crate::{models::*, Error, Result};
 #[cfg(windows)]
 mod hello;
 
-/// Sealed vault keys are filed apart from ordinary secrets.
-const BIO_PREFIX: &str = "bio:";
-
 /// Credential Manager service name: the app identifier, so the Dev-Preview (identifier + `.dev`)
 /// never reads or overwrites the secrets of the stable app. For the stable app the identifier is
 /// exactly `SERVICE`, i.e. nothing changes for existing entries.

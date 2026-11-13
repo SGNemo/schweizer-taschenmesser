@@ -27,6 +27,14 @@ interface Props {
   'data-autofocus'?: boolean;
 }
 
+interface DayProps extends Props {
+  /**
+   * First allowed day (`YYYY-MM-DD`). An earlier day, typed or stored, is not reported and blocks the form like
+   * unreadable text ("Frühestens am 01.10.2026."); the system's calendar starts there.
+   */
+  min?: string;
+}
+
 /** Shared body: a text field that shows `format(value)` and reports `parse(text)`. */
 function ParsedField({
   label,
@@ -42,10 +50,13 @@ function ParsedField({
   invalid,
   inputMode,
   picker,
+  check,
   ...rest
 }: Props & {
   format: (value: string) => string;
   parse: (text: string) => string | undefined;
+  /** A readable value that is still not allowed (a day before `min`): the message, or undefined when it is fine. */
+  check?: (value: string) => string | undefined;
   placeholder: string;
   invalid: string;
   inputMode: 'numeric' | 'text';
@@ -57,14 +68,19 @@ function ParsedField({
   // While someone types, the field shows their text; otherwise the stored value in the region's form.
   const [draft, setDraft] = useState<string | null>(null);
   const [unread, setError] = useState(false);
-  const error = unread || !!formError;
   const text = draft ?? format(value);
   // Text that is no date (or time) must never be saved as the last value that happened to parse on the way
   // ("3.9.202" after "3.9.20"): while it stands, the form cannot be submitted, by Enter or by "Speichern".
-  const unreadable = draft !== null && draft.trim() !== '' && parse(draft) === undefined;
+  const parsedDraft = draft !== null && draft.trim() !== '' ? parse(draft) : undefined;
+  const unreadable = draft !== null && draft.trim() !== '' && parsedDraft === undefined;
+  // A readable value outside the allowed range (typed, or stored and then left behind by its limit) blocks too.
+  const outside = check?.(draft !== null && draft.trim() !== '' ? (parsedDraft ?? '') : value);
+  const problem = unreadable ? invalid : outside && (draft === null || parsedDraft) ? outside : '';
+  // A stored value says so at once; typed text only once the field is left (no message mid-typing).
+  const error = unread || !!formError || (!!outside && draft === null);
   useEffect(() => {
-    input.current?.setCustomValidity(unreadable ? invalid : '');
-  }, [unreadable, invalid]);
+    input.current?.setCustomValidity(problem);
+  }, [problem]);
   const reset = () => {
     setDraft(null);
     setError(false);
@@ -99,13 +115,15 @@ function ParsedField({
             setDraft(next);
             setError(false);
             const parsed = parse(next);
-            if (parsed) onChange(parsed);
+            if (parsed && !check?.(parsed)) onChange(parsed);
             else if (next.trim() === '' && !required) onChange('');
           }}
           onBlur={() => {
             if (draft === null) return;
             const empty = draft.trim() === '';
-            if (parse(draft) || (empty && !required)) setDraft(null);
+            const parsed = parse(draft);
+            if (parsed && check?.(parsed)) setError(true);
+            else if (parsed || (empty && !required)) setDraft(null);
             else if (empty) {
               // A required field never stays empty behind the user's back: the last value returns.
               setDraft(null);
@@ -121,7 +139,7 @@ function ParsedField({
       ) : null}
       {error ? (
         <span id={`${id}-err`} className={fieldStyles.error} role="alert">
-          {unread ? invalid : formError}
+          {unread && unreadable ? invalid : problem || formError}
         </span>
       ) : null}
     </div>
@@ -138,12 +156,17 @@ const CAN_PICK =
  * ("3.9.", "03092026", the ISO form), and the button opens the system's calendar. The value is `YYYY-MM-DD`.
  * Without a `hint` it says what the date means ("Montag, in 6 Tagen").
  */
-export function DayField({ hint, ...props }: Props) {
+export function DayField({ hint, min, ...props }: DayProps) {
   const tx = tFields.use();
   const native = useRef<HTMLInputElement>(null);
   return (
     <ParsedField
       {...props}
+      check={
+        min
+          ? (day) => (day !== '' && day < min ? tx.tooEarly(formatDateInput(min)) : undefined)
+          : undefined
+      }
       hint={hint ?? (props.value ? humanDateHint(props.value) : undefined)}
       format={formatDateInput}
       parse={parseDateInput}
@@ -174,9 +197,10 @@ export function DayField({ hint, ...props }: Props) {
               type="date"
               tabIndex={-1}
               aria-hidden="true"
+              min={min}
               value={props.value}
               onChange={(e) => {
-                if (!e.target.value) return;
+                if (!e.target.value || (min && e.target.value < min)) return;
                 // The picked day replaces whatever text stood in the field, an unreadable one included.
                 reset();
                 props.onChange(e.target.value);

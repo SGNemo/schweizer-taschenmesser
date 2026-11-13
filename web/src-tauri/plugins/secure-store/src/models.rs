@@ -25,10 +25,17 @@ pub fn validate_name(name: &str) -> Result<(), String> {
 /// plugin's commands refuse them, so the webview can neither read nor replace them.
 pub const RUST_ONLY_PREFIX: &str = "lan-client:";
 
-/// What the webview's commands may name (everything `validate_name` accepts, minus Rust-only entries).
+/// Prefix under which the desktop backend files sealed vault keys (`desktop.rs`). Only the
+/// `biometric_*` commands may reach these entries (they take the bare name and add the prefix in
+/// Rust); through `get`/`set`/`delete` the webview could read the vault key without the Windows
+/// Hello prompt, or replace/delete it.
+pub const BIO_PREFIX: &str = "bio:";
+
+/// What the webview's commands may name (everything `validate_name` accepts, minus Rust-only
+/// entries and the sealed vault keys).
 pub fn validate_webview_name(name: &str) -> Result<(), String> {
     validate_name(name)?;
-    if name.starts_with(RUST_ONLY_PREFIX) {
+    if name.starts_with(RUST_ONLY_PREFIX) || name.starts_with(BIO_PREFIX) {
         return Err("reserved name".into());
     }
     Ok(())
@@ -153,6 +160,21 @@ mod tests {
         assert!(
             validate_name("lan-client:hub").is_ok(),
             "Rust itself still may"
+        );
+    }
+
+    #[test]
+    fn the_webview_cannot_name_sealed_vault_keys() {
+        assert!(validate_webview_name("bio:vault-dek:3f2a-91").is_err());
+        assert!(validate_webview_name("bio:x").is_err());
+        assert!(
+            validate_webview_name("vault-dek:3f2a-91").is_ok(),
+            "the bare seal name stays valid"
+        );
+        assert!(validate_webview_name("biography").is_ok());
+        assert!(
+            validate_name("bio:vault-dek:3f2a-91").is_ok(),
+            "the biometric backend files it there"
         );
     }
 
