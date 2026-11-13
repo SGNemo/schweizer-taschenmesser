@@ -13,7 +13,7 @@ export interface FolderTab {
 }
 
 /**
- * Folder tabs: a row of tab-shaped buttons on a hairline, the chosen one a raised tone step on it. It is a filter
+ * Folder tabs: a row of tab-shaped buttons on a hairline, the chosen one a recess with a heavier weight. It is a filter
  * (a group of buttons with `aria-pressed`, named after their labels), not a page switcher. Surface and weight carry the
  * state, colour is never alone (a tab's own colour only tints its icon). `folder` adds the folder body under the tabs;
  * `children` are extra controls at the end of the row (an add button).
