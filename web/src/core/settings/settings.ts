@@ -1,8 +1,9 @@
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useState } from 'react';
 import { z } from 'zod';
 import { createRepo } from '@/core/db/repo';
 import { ENVELOPE_KEYS } from '@/core/db/types';
 import { sameValue } from './changed';
+import { useSharedLiveQuery } from '@/core/modules/sharedQuery';
 
 /** One record per scope ("core", "module.<id>", "dashboard"); values are top-level fields. */
 export const settingsRepo = createRepo('_settings', z.looseObject({}));
@@ -18,7 +19,14 @@ export async function getSettings<S extends z.ZodObject>(
   schema: S,
   defaults: z.input<S>,
 ): Promise<z.output<S>> {
-  const row = await settingsRepo.get(scope);
+  return parseSettings(schema, defaults, await settingsRepo.get(scope));
+}
+
+function parseSettings<S extends z.ZodObject>(
+  schema: S,
+  defaults: z.input<S>,
+  row: Record<string, unknown> | undefined,
+): z.output<S> {
   const parsed = schema.safeParse({ ...defaults, ...valuesOf(row) });
   return parsed.success ? parsed.data : schema.parse(defaults);
 }
@@ -100,7 +108,21 @@ async function writeSettings(
 
 /** Live settings values plus a patch function. `undefined` until first read. */
 export function useSettings<S extends z.ZodObject>(scope: string, schema: S, defaults: z.input<S>) {
-  const values = useLiveQuery(() => getSettings(scope, schema, defaults), [scope]);
+  // One query per scope for every component that reads it (a page mounts the same scope many times); each
+  // caller parses with its own schema. `null` = no row yet.
+  const row = useSharedLiveQuery(
+    `settings|${scope}`,
+    async () => (await settingsRepo.get(scope)) ?? null,
+  );
+  // Parsed once per row read: the result keeps its identity until the row changes, like a live query's
+  // (callers pass inline defaults, so a memo on them would hand out a new object on every render).
+  const [parsed, setParsed] = useState<{ row: unknown; values: z.output<S> }>();
+  let current = parsed;
+  if (row !== undefined && current?.row !== row) {
+    current = { row, values: parseSettings(schema, defaults, row ?? undefined) };
+    setParsed(current);
+  }
+  const values = row === undefined ? undefined : current?.values;
   return [
     values,
     (patch: Partial<z.input<S>>) => setSettings(scope, patch, defaults as Record<string, unknown>),

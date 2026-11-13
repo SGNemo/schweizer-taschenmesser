@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAiOn } from '@/core/ai/switch';
 import { isEntryUsable, useAiConfig } from '@/core/ai/config';
-import { useUsageRows } from '@/core/ai/usage';
+import { useTokensSince } from '@/core/ai/usage';
 import { formatNumber } from '@/core/i18n/format';
 import { useModuleStates } from '@/core/modules/activation';
 import { categoryDef } from '@/core/settings/registry/categories';
@@ -49,12 +49,10 @@ export function useSettingsStatus(): StatusTile[] | undefined {
 
   const aiOn = useAiOn();
   const config = useAiConfig();
-  const rows = useUsageRows();
   const providers = config ? config.providers.filter(isEntryUsable).length : 0;
+  // Today's calls only, by the `at` index (the whole usage table was read here before).
   const since = new Date(now()).setHours(0, 0, 0, 0);
-  const tokens = (rows ?? [])
-    .filter((r) => r.at >= since)
-    .reduce((n, r) => n + r.inputTokens + r.outputTokens, 0);
+  const tokens = useTokensSince(since) ?? 0;
   const aiStatus = !aiOn ? o.ai.off : providers === 0 ? o.ai.none : o.ai.providers(providers);
   const aiContext =
     !aiOn || providers === 0

@@ -3,7 +3,7 @@
  * (`_meta`, never synced, not in the backup) – tokens belong to this computer. Tokens are shown once
  * and stored only as SHA-256 hash (256 random bits, so no slow hash is needed).
  */
-import { useLiveQuery } from 'dexie-react-hooks';
+import { useSharedLiveQuery } from '@/core/modules/sharedQuery';
 import { z } from 'zod';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { rwTransaction } from '@/core/db/tx';
@@ -71,7 +71,7 @@ export async function updateConfig(
 }
 
 export function useLocalApiConfig(): LocalApiConfig | undefined {
-  return useLiveQuery(() => loadConfig(), []);
+  return useSharedLiveQuery('localApiConfig', () => loadConfig());
 }
 
 export const isExpired = (token: ApiToken, at: number = now()): boolean =>
