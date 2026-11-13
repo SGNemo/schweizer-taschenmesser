@@ -5,11 +5,12 @@ import { tDeadline } from '@/strings.deadline';
 import { Button, DetailPanel } from '@/ui';
 import { cancelDeadline, endOf, formatSize, statusOf } from '../logic';
 import type { VaultDocument } from '../schema';
+import { canPreview, FilePreview } from './FilePreview';
 
 /**
  * The document picked in the list, in the panel of the wide page (master–detail): what the folder's small print
- * says, as a list of facts, and the note. Changing it is the dialog behind "Bearbeiten"; renewing and downloading
- * stay the folder's own buttons and are not repeated here.
+ * says, as a list of facts, and the note; a picture that was filed shows only after a tap on "Vorschau zeigen".
+ * Changing it is the dialog behind "Bearbeiten"; renewing and downloading stay the row's own buttons.
  */
 export function DocumentDetail({
   doc: d,
@@ -75,6 +76,9 @@ export function DocumentDetail({
       }
     >
       {facts.length === 0 ? <p>{t.vault.detail.bare}</p> : null}
+      {hasFile && d.fileName && canPreview(d.fileType) ? (
+        <FilePreview key={d.id} id={d.id} fileName={d.fileName} />
+      ) : null}
     </DetailPanel>
   );
 }

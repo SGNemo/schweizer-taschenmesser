@@ -24,28 +24,28 @@ import {
   useSplitView,
 } from '@/ui';
 import { SignatureMark } from '@/ui/identity';
+import { DeadlineTimeline } from '../components/DeadlineTimeline';
 import { DocumentDetail } from '../components/DocumentDetail';
 import { DocumentEditor, type DocumentTarget } from '../components/DocumentEditor';
+import { RenewDialog } from '../components/RenewDialog';
 import { VaultHead } from '../components/VaultHead';
-import { changeWithUndo } from '@/core/undo/withToast';
 import {
   cancelDeadline,
+  canRenew,
   countByCategory,
   endOf,
   filterDocuments,
   formatSize,
-  RENEWABLE,
-  renewedEnd,
   safeFileName,
   sortDocuments,
-  STATE_GROUPS,
-  stateGroup,
   statusOf,
-  type StateGroup,
 } from '../logic';
 import { documentRepo, keepBlobIds } from '../repo';
 import styles from './VaultPage.module.css';
-import { CATEGORIES, type DocCategory } from '../schema';
+import { CATEGORIES, type DocCategory, type VaultDocument } from '../schema';
+import type { Stored } from '@/core/db/types';
+
+type View = 'documents' | 'deadlines';
 
 async function download(id: string, name: string) {
   const blob = await getBlob(id);
@@ -75,7 +75,9 @@ export default function VaultPage() {
   const files = useLiveQuery(async () => new Set(await blobKeys()), []);
   const [category, setCategory] = useState<DocCategory | 'all'>('all');
   const [query, setQuery] = useState('');
-  const [state, setState] = useState<StateGroup | 'all'>('all');
+  // "Ablage" files by folder; "Fristen" lays every date on one rail.
+  const [view, setView] = useState<View>('documents');
+  const [renewing, setRenewing] = useState<Stored<VaultDocument> | null>(null);
   // Master–detail (layout `split`): on a wide page a document shows in the panel beside the folders, below that
   // width the folder opens its dialog (a sheet on the phone).
   const wide = useSplitView();
@@ -99,23 +101,17 @@ export default function VaultPage() {
   }, [keep]);
 
   const shown = useMemo(
-    () =>
-      sortDocuments(
-        filterDocuments(docs ?? [], { category, query }).filter(
-          (d) => state === 'all' || stateGroup(statusOf(d, day)) === state,
-        ),
-        day,
-      ),
-    [docs, category, query, state, day],
+    () => sortDocuments(filterDocuments(docs ?? [], { category, query }), day),
+    [docs, category, query, day],
   );
 
   const counts = countByCategory(docs ?? []);
-  const groups = (docs ?? []).map((d) => stateGroup(statusOf(d, day)));
   const none = !!docs && docs.length === 0;
   // The panel shows the document that was picked; before that the page shows no note and no full detail (they are
   // not for whoever happens to look at the screen when the page opens). A pick ends when its folder leaves the
   // list (filter, search, delete): the panel never opens again by itself.
-  const detail = picked ? shown.find((d) => d.id === picked) : undefined;
+  const listed = view === 'deadlines' ? (docs ?? []) : shown;
+  const detail = picked ? listed.find((d) => d.id === picked) : undefined;
   if (picked && docs && !detail) setPicked(null);
 
   return (
@@ -124,20 +120,15 @@ export default function VaultPage() {
         title={t.vault.title}
         besideContent={!none}
         views={
+          // Two views, no counts on them: what needs a look is the one line under the figure (FOCUS checklist 9).
           <Tabs
-            label={t.vault.stateTabs}
-            value={state}
+            label={t.vault.views.label}
+            value={view}
             options={[
-              { value: 'all' as const, label: t.vault.allStates },
-              ...STATE_GROUPS.map((g) => ({
-                value: g,
-                label: t.vault.labelCount(
-                  t.vault.stateGroups[g],
-                  groups.filter((x) => x === g).length,
-                ),
-              })),
+              { value: 'documents' as const, label: t.vault.views.documents },
+              { value: 'deadlines' as const, label: t.vault.views.deadlines },
             ]}
-            onChange={setState}
+            onChange={setView}
           />
         }
       >
@@ -153,7 +144,7 @@ export default function VaultPage() {
         <StartDataMenu moduleId="vault" />
       </PageHeader>
       <VaultHead docs={docs ?? []} day={day} />
-      {none ? null : (
+      {none || view === 'deadlines' ? null : (
         <div className={styles.filters}>
           {/* The first row of the page: on the phone the "⋯" menu lies beside it (`besideContent`). */}
           <div className={styles.first}>
@@ -181,7 +172,12 @@ export default function VaultPage() {
           />
         </div>
       )}
-      <p className={styles.privacy} data-testid="vault-local">
+      <p
+        className={styles.privacy}
+        data-testid="vault-local"
+        // In "Fristen" no search row lies above it: this line is the first row beside the phone's "⋯" menu.
+        data-first={view === 'deadlines' || undefined}
+      >
         <Icon name="lock" size={16} />
         <span>{t.vault.privacyLine}</span>
       </p>
@@ -200,101 +196,104 @@ export default function VaultPage() {
           ) : null
         }
       >
-        {docs && shown.length === 0 ? (
-          <EmptyState
-            title={none ? t.vault.empty : t.vault.emptyFiltered}
-            testId="vault-empty"
-            motif={<SignatureMark id="folderTab" size={64} />}
-          >
-            {none ? (
-              <Button variant="primary" onClick={() => setTarget({ draft: true })}>
-                {t.vault.addFirst}
-              </Button>
-            ) : null}
-          </EmptyState>
+        {view === 'deadlines' && !none ? (
+          <DeadlineTimeline
+            docs={docs ?? []}
+            day={day}
+            current={wide ? detail?.id : undefined}
+            onOpen={(d) => (wide ? setPicked(d.id) : setTarget(d))}
+            onRenew={setRenewing}
+          />
         ) : null}
-        {shown.length > 0 ? (
-          <ItemList layout="grid" label={t.vault.title}>
-            {shown.map((d) => {
-              const state = statusOf(d, day);
-              const end = endOf(d);
-              const deadline = cancelDeadline(d);
-              const hasFile = files?.has(d.id) ?? false;
-              return (
-                <ItemRow
-                  key={d.id}
-                  className={styles.doc}
-                  signatureBlock="vault-doc"
-                  title={d.title}
-                  current={wide && detail?.id === d.id}
-                  onOpen={() => (wide ? setPicked(d.id) : setTarget(d))}
-                  meta={metaLine([
-                    t.vault.categories[d.category],
-                    d.provider,
-                    end
-                      ? dated(`${t.vault.endLabel}: ${formatDay(end, 'd. MMM yyyy')}`)
-                      : undefined,
-                    deadline && state === 'missed'
-                      ? dated(tDeadline.get().missedOn(formatDay(deadline, 'd. MMM yyyy')))
-                      : deadline && state !== 'expired'
-                        ? dated(`${t.vault.deadlineLabel}: ${relativeDayLabel(deadline, day)}`)
-                        : undefined,
-                    d.fileName
-                      ? `${d.fileName}${d.fileSize !== undefined ? ` (${formatSize(d.fileSize)})` : ''}${hasFile ? '' : ` · ${t.vault.fileElsewhere}`}`
-                      : undefined,
-                  ])}
-                  end={
-                    <>
-                      {state === 'ok' || state === 'open-ended' ? null : (
-                        <Badge
-                          tone={
-                            state === 'expired'
-                              ? 'danger'
-                              : state === 'act-now' || state === 'missed' || state === 'soon'
-                                ? 'warning'
-                                : 'neutral'
-                          }
-                        >
-                          {state === 'missed' ? tDeadline.get().missed : t.vault.status[state]}
-                        </Badge>
-                      )}
-                      {RENEWABLE.includes(d.category) &&
-                      renewedEnd(d) &&
-                      (state === 'act-now' || state === 'missed' || state === 'expired') ? (
-                        <Button
-                          size="sm"
-                          aria-label={t.vault.renewAria(d.title)}
-                          onClick={() =>
-                            void changeWithUndo(
-                              () =>
-                                documentRepo.update(d.id, {
-                                  endDate: renewedEnd(d),
-                                  expiresOn: undefined,
-                                }),
-                              t.vault.renewed(d.title, formatDay(renewedEnd(d)!, 'd. MMM yyyy')),
-                            )
-                          }
-                        >
-                          {t.vault.renew}
-                        </Button>
-                      ) : null}
-                      {hasFile && d.fileName ? (
-                        <Button
-                          variant="ghost"
-                          aria-label={`${t.vault.download}: ${d.title}`}
-                          onClick={() => void download(d.id, d.fileName!)}
-                        >
-                          <Icon name="download" size={18} />
-                        </Button>
-                      ) : null}
-                    </>
-                  }
-                />
-              );
-            })}
-          </ItemList>
+        {view === 'documents' || none ? (
+          <>
+            {docs && shown.length === 0 ? (
+              <EmptyState
+                title={none ? t.vault.empty : t.vault.emptyFiltered}
+                testId="vault-empty"
+                motif={<SignatureMark id="folderTab" size={64} />}
+              >
+                {none ? (
+                  <Button variant="primary" onClick={() => setTarget({ draft: true })}>
+                    {t.vault.addFirst}
+                  </Button>
+                ) : null}
+              </EmptyState>
+            ) : null}
+            {shown.length > 0 ? (
+              <ItemList layout="grid" label={t.vault.title}>
+                {shown.map((d) => {
+                  const state = statusOf(d, day);
+                  const end = endOf(d);
+                  const deadline = cancelDeadline(d);
+                  const hasFile = files?.has(d.id) ?? false;
+                  return (
+                    <ItemRow
+                      key={d.id}
+                      className={styles.doc}
+                      signatureBlock="vault-doc"
+                      title={d.title}
+                      current={wide && detail?.id === d.id}
+                      onOpen={() => (wide ? setPicked(d.id) : setTarget(d))}
+                      meta={metaLine([
+                        t.vault.categories[d.category],
+                        d.provider,
+                        end
+                          ? dated(`${t.vault.endLabel}: ${formatDay(end, 'd. MMM yyyy')}`)
+                          : undefined,
+                        deadline && state === 'missed'
+                          ? dated(tDeadline.get().missedOn(formatDay(deadline, 'd. MMM yyyy')))
+                          : deadline && state !== 'expired'
+                            ? dated(`${t.vault.deadlineLabel}: ${relativeDayLabel(deadline, day)}`)
+                            : undefined,
+                        d.fileName
+                          ? `${d.fileName}${d.fileSize !== undefined ? ` (${formatSize(d.fileSize)})` : ''}${hasFile ? '' : ` · ${t.vault.fileElsewhere}`}`
+                          : undefined,
+                      ])}
+                      end={
+                        <>
+                          {state === 'ok' || state === 'open-ended' ? null : (
+                            <Badge
+                              tone={
+                                state === 'expired'
+                                  ? 'danger'
+                                  : state === 'act-now' || state === 'missed' || state === 'soon'
+                                    ? 'warning'
+                                    : 'neutral'
+                              }
+                            >
+                              {state === 'missed' ? tDeadline.get().missed : t.vault.status[state]}
+                            </Badge>
+                          )}
+                          {canRenew(d, state) ? (
+                            <Button
+                              size="sm"
+                              aria-label={t.vault.renewAria(d.title)}
+                              onClick={() => setRenewing(d)}
+                            >
+                              {t.vault.renew}
+                            </Button>
+                          ) : null}
+                          {hasFile && d.fileName ? (
+                            <Button
+                              variant="ghost"
+                              aria-label={`${t.vault.download}: ${d.title}`}
+                              onClick={() => void download(d.id, d.fileName!)}
+                            >
+                              <Icon name="download" size={18} />
+                            </Button>
+                          ) : null}
+                        </>
+                      }
+                    />
+                  );
+                })}
+              </ItemList>
+            ) : null}
+          </>
         ) : null}
       </SplitView>
+      <RenewDialog doc={renewing} onClose={() => setRenewing(null)} />
       <DocumentEditor target={openTarget} onClose={closeEditor} />
     </>
   );

@@ -211,6 +211,32 @@
   height: 2px;
   background: var(--accent);
 }
+/* Days instead of hours (`DatedTimeline` on a module page): a wider first column, actions at the row's end. */
+.timeline[data-dated] .tlRow {
+  grid-template-columns: 7.5rem 1fr;
+  align-items: center;
+  min-height: var(--touch);
+}
+.timeline[data-dated] .tlBody {
+  align-items: center;
+}
+.timeline[data-dated] .nowTime {
+  width: 7.5rem;
+}
+.tlEnd {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+/* Narrow: the day stands above its row instead of beside it, so the title keeps the width. */
+@media (max-width: 599px) {
+  .timeline[data-dated] .tlRow {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding-block: var(--space-2);
+  }
+}
 .dayHead {
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
