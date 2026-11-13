@@ -18,8 +18,9 @@
   border-bottom: 0;
 }
 /* A tab (Identity 4.0, 0b-8): 44 px to hit, no frame, no fill; the hairline below is the folder's edge. The chosen tab
-   is a recess with heavier ink, like the open page of the list (B7: a surface and a weight, never colour alone); the
-   tabs mostly lie on a raised surface, where a raised tab would not show. */
+   is a recess with heavier ink and an ink line on the hairline (B7: a surface and a weight, never colour alone). The
+   recess is a tint of the ink, not a surface token: the row lies on a raised surface on the desktop and on --bg on
+   the phone, and --surface-sunken would vanish on --bg. */
 .tab {
   display: inline-flex;
   gap: var(--space-2);
@@ -29,7 +30,7 @@
   margin-bottom: -1px;
   padding: var(--space-2) var(--space-4);
   border: 0;
-  border-bottom: 1px solid transparent;
+  border-bottom: 2px solid transparent;
   border-radius: var(--radius-md) var(--radius-md) 0 0;
   background: none;
   color: var(--text-muted);
@@ -45,9 +46,8 @@
   color: var(--text);
 }
 .tab[aria-pressed='true'] {
-  z-index: 1;
-  border-bottom-color: var(--text);
-  background: var(--surface-sunken);
+  border-bottom: 2px solid var(--text);
+  background: color-mix(in srgb, var(--text) 7%, transparent);
   color: var(--text);
   font-weight: var(--weight-semibold);
 }
