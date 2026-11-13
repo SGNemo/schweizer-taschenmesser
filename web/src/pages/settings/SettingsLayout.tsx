@@ -52,6 +52,7 @@ import { SettingsOverview } from './SettingsOverview';
 import { SettingsToc } from './SettingsToc';
 import { ScopeLabel } from './SettingExtras';
 import { useSettingsSections } from './useSections';
+import { useSettingsStatus } from './useSettingsStatus';
 import styles from './SettingsLayout.module.css';
 
 /** Desktop two-column layout from this width; below it the categories are a list (first level). */
@@ -332,7 +333,10 @@ export function CategoryNav({ list }: { list?: boolean }) {
 /** `/settings`: the overview cards on the desktop, the category list on phones; old `#anchor` links are mapped. */
 export function SettingsIndex() {
   const wide = useMediaQuery(MASTER_DETAIL_QUERY);
-  const ready = useSettingsSections().length > 0;
+  // The status lines above come with their own reads (sync, backup, updates): on the phone the list below waits for
+  // them, or it would be drawn first and pushed down when they arrive (seed guard `status-loading`).
+  const statusKnown = useSettingsStatus() !== undefined;
+  const ready = useSettingsSections().length > 0 && (wide || statusKnown);
   const { hash } = useLocation();
   const legacy = legacyTarget(hash);
   if (legacy) return <Navigate to={legacy} replace />;
@@ -343,7 +347,7 @@ export function SettingsIndex() {
       {wide ? <QuickBar /> : null}
       {/* On the phone the category list below says the same (title, one line, state); the cards would only repeat it. */}
       {wide ? <SettingsOverview /> : null}
-      {wide ? null : <CategoryNav list />}
+      {wide || !ready ? null : <CategoryNav list />}
       {/* After the list is there: the group below it must not be pushed down when the categories arrive. */}
       {wide || !ready ? null : <QuickBar />}
     </div>

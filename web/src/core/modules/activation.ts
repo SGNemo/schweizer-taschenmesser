@@ -1,4 +1,3 @@
-import { useLiveQuery } from 'dexie-react-hooks';
 import { z } from 'zod';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { createCollectionRepo, createRepo } from '@/core/db/repo';
@@ -14,6 +13,7 @@ import {
   type DefaultsOverlay,
 } from './defaults';
 import type { ModuleManifest } from './types';
+import { useSharedLiveQuery } from './sharedQuery';
 
 const moduleStateSchema = z.object({
   enabled: z.boolean(),
@@ -110,8 +110,9 @@ export async function loadStoredModuleState(
 }
 
 /** Live module states; `undefined` until the first read has completed. */
+/** Live module states; every component shares one query (it is read in many places on every page). */
 export function useModuleStates(): ModuleStates | undefined {
-  return useLiveQuery(() => loadModuleStates(), []);
+  return useSharedLiveQuery('moduleStates', () => loadModuleStates());
 }
 
 export async function enableModule(
