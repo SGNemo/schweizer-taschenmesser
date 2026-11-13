@@ -8,7 +8,6 @@ import { formatDay, relativeDayLabel, today } from '@/core/time/dates';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import { t } from '@/strings';
 import {
-  Badge,
   Button,
   EmptyState,
   Icon,
@@ -24,6 +23,7 @@ import {
   useSplitView,
 } from '@/ui';
 import { SignatureMark } from '@/ui/identity';
+import { DeadlineKind } from '../components/DeadlineKind';
 import { DeadlineTimeline } from '../components/DeadlineTimeline';
 import { DocumentDetail } from '../components/DocumentDetail';
 import { DocumentEditor, type DocumentTarget } from '../components/DocumentEditor';
@@ -256,14 +256,16 @@ export default function VaultPage() {
                       ])}
                       end={
                         <>
-                          {state === 'ok' || state === 'open-ended' ? null : (
-                            <Badge
-                              // Never red: what has run out asks for a look (red stays for overdue money).
-                              tone="warning"
-                            >
-                              {state === 'missed' ? tDeadline.get().missed : t.vault.status[state]}
-                            </Badge>
-                          )}
+                          {/* The same words as on the rail of "Fristen". */}
+                          {end ? (
+                            <DeadlineKind
+                              state={state}
+                              kind={deadline && deadline >= day ? 'cancel' : 'end'}
+                              date={deadline && deadline >= day ? deadline : end}
+                              day={day}
+                              folder
+                            />
+                          ) : null}
                           {canRenew(d, state, day) ? (
                             <Button
                               size="sm"

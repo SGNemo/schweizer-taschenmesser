@@ -52,13 +52,17 @@ export function FilePreview({ id, fileName }: { id: string; fileName: string }) 
         <Button
           size="sm"
           aria-expanded={url !== undefined}
-          aria-busy={busy || undefined}
-          disabled={busy}
-          onClick={() => (url ? setUrl(undefined) : void show())}
+          // Not `disabled`: the button keeps the keyboard focus while the file is read; a tap then does nothing.
+          aria-disabled={busy || undefined}
+          onClick={() => {
+            if (busy) return;
+            if (url) setUrl(undefined);
+            else void show();
+          }}
         >
           {url ? t.vault.preview.hide : t.vault.preview.show}
         </Button>
-        {note ? <p role="status">{note}</p> : null}
+        {busy || note ? <p role="status">{busy ? t.vault.preview.loading : note}</p> : null}
         {url ? <img src={url} alt={t.vault.preview.alt(fileName)} /> : null}
       </div>
     </NoReadAid>

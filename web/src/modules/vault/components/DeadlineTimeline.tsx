@@ -1,27 +1,13 @@
 import type { Stored } from '@/core/db/types';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Badge, Button, DatedTimeline, EmptyState, type DatedRow } from '@/ui';
-import { canRenew, deadlineRows, type DeadlineRow } from '../logic';
+import { Button, DatedTimeline, EmptyState, type DatedRow } from '@/ui';
+import { canRenew, deadlineRows } from '../logic';
 import type { VaultDocument } from '../schema';
+import { DeadlineKind } from './DeadlineKind';
 import styles from './Deadlines.module.css';
 
 type Doc = Stored<VaultDocument>;
-
-/**
- * What a row's date is, in words; the day itself stands at the start of the row. What is near or over says so in
- * its own words on a badge (never by the colour alone). The tone says "have a look" (warning, accent for a
- * deadline this week), never "you failed": no red.
- */
-function kindOf(r: DeadlineRow<Doc>) {
-  const k = t.vault.timeline.kinds;
-  if (r.state === 'expired') return <Badge tone="warning">{k.expired}</Badge>;
-  if (r.state === 'missed') return k.missed;
-  if (r.state === 'act-now') return <Badge tone="accent">{k.cancelNow}</Badge>;
-  if (r.state === 'soon')
-    return <Badge tone="warning">{r.kind === 'cancel' ? k.cancelSoon : k.endSoon}</Badge>;
-  return r.kind === 'cancel' ? k.cancel : k.end;
-}
 
 /**
  * The "Fristen" view: every document with a date on one rail, what has run out above "Heute", what comes below
@@ -45,7 +31,11 @@ export function DeadlineTimeline({
   const { rows, older } = deadlineRows(docs, day);
   if (rows.length === 0)
     return (
-      <EmptyState title={t.vault.timeline.empty} testId="vault-timeline-empty">
+      // Dated documents that all ran out long ago are not "no date": the title says what is true.
+      <EmptyState
+        title={older > 0 ? t.vault.timeline.noneAhead : t.vault.timeline.empty}
+        testId="vault-timeline-empty"
+      >
         <p>{older > 0 ? t.vault.timeline.older(older) : t.vault.timeline.emptyHint}</p>
       </EmptyState>
     );
@@ -63,7 +53,7 @@ export function DeadlineTimeline({
         {r.doc.title}
       </button>
     ),
-    kind: kindOf(r),
+    kind: <DeadlineKind state={r.state} kind={r.kind} date={r.date} day={day} />,
     end: canRenew(r.doc, r.state, day) ? (
       <Button size="sm" aria-label={t.vault.renewAria(r.doc.title)} onClick={() => onRenew(r.doc)}>
         {t.vault.renew}
