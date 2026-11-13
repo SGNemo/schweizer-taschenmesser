@@ -5445,25 +5445,62 @@ export const de = {
     fileElsewhere: 'Datei nur auf einem anderen Gerät',
     removeFile: 'Datei entfernen',
     tooLarge: (max: string) => `Die Datei ist zu groß (höchstens ${max}).`,
-    renew: 'Verlängert +1 Jahr',
-    renewAria: (title: string) => `${title}: Verlängert +1 Jahr`,
+    renew: 'Verlängert',
+    renewAria: (title: string) => `Verlängert: ${title}`,
+    renewDialog: {
+      title: 'Verlängert',
+      until: (date: string) => `Bisher bis ${date}.`,
+      newEnd: 'Neues Ende',
+      proposed: 'Vorschlag: noch einmal dieselbe Laufzeit. Das Datum lässt sich ändern.',
+      noStart: 'Ohne Beginn gibt es keinen Vorschlag: bitte das neue Ende eintragen.',
+      startMoves: (from: string) => `Der Beginn wird auf den ${from} gesetzt.`,
+      stillPast: 'Dieses Datum liegt in der Vergangenheit.',
+      gone: 'Die Unterlage gibt es nicht mehr.',
+      notLater: 'Das neue Ende muss nach dem bisherigen liegen.',
+      save: 'Verlängerung speichern',
+    },
+    views: { label: 'Ansichten', documents: 'Ablage', deadlines: 'Fristen' },
+    timeline: {
+      label: 'Fristen und Ablauf',
+      today: 'Heute',
+      empty: 'Keine Unterlage hat ein Datum.',
+      emptyHint: 'Ein Ende oder Ablaufdatum in einer Unterlage legt sie hierher.',
+      noneAhead: 'Gerade steht keine Frist an.',
+      older: (n: number) =>
+        n === 1
+          ? '1 Unterlage ist seit mehr als 90 Tagen abgelaufen und steht nicht auf der Zeitleiste. Sie steht weiter in der Ablage.'
+          : `${n} Unterlagen sind seit mehr als 90 Tagen abgelaufen und stehen nicht auf der Zeitleiste. Sie stehen weiter in der Ablage.`,
+      kinds: {
+        cancel: 'Kündigungsfrist endet',
+        cancelIn: (days: number) =>
+          days <= 0
+            ? 'Kündigungsfrist endet heute'
+            : days === 1
+              ? 'Kündigungsfrist endet morgen'
+              : `Kündigungsfrist endet in ${days} Tagen`,
+        cancelSoon: 'Kündigungsfrist endet bald',
+        end: 'Läuft ab',
+        endSoon: 'Läuft bald ab',
+        expired: 'Abgelaufen',
+        missed: 'Laufzeitende · Kündigungsfrist vorbei',
+      },
+    },
+    preview: {
+      show: 'Vorschau zeigen',
+      hide: 'Vorschau ausblenden',
+      alt: (name: string) => `Vorschau: ${name}`,
+      loading: 'Vorschau wird geladen …',
+      missing: 'Die Datei liegt nicht auf diesem Gerät.',
+      noPicture: 'Für diese Datei gibt es keine Vorschau.',
+    },
     renewed: (title: string, date: string) => `„${title}“ läuft jetzt bis ${date}.`,
     download: 'Herunterladen',
     search: 'Unterlagen durchsuchen',
-    status: {
-      expired: 'Abgelaufen',
-      'act-now': 'Jetzt kündigen',
-      soon: 'Bald',
-      ok: '',
-      'open-ended': '',
-    } as Record<string, string>,
     empty: 'Noch keine Unterlagen.',
     emptyFiltered: 'Nichts gefunden.',
     widgetEmpty: 'Keine Fristen in Sicht.',
     figureLabel: 'Ablage',
-    stateTabs: 'Ansichten',
     labelCount: (label: string, n: number) => `${label} ${n}`,
-    allStates: 'Alle',
     addFirst: 'Erste Unterlage eintragen',
     detail: {
       label: 'Unterlage',

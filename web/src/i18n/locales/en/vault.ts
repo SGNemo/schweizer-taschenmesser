@@ -36,7 +36,7 @@ export const vault: Strings['vault'] = {
   noticeHint: 'Leave empty if there is no deadline (e.g. for IDs or warranties).',
   invalid: 'Please check the details (the end can’t be before the start).',
   endLabel: 'End',
-  deadlineLabel: 'Cancel by',
+  deadlineLabel: 'Last day to cancel',
   endsOn: (title: string, category: string) =>
     category === 'warranty'
       ? `Warranty ends: ${title}`
@@ -51,25 +51,62 @@ export const vault: Strings['vault'] = {
   fileElsewhere: 'File only on another device',
   removeFile: 'Remove file',
   tooLarge: (max: string) => `The file is too large (at most ${max}).`,
-  renew: 'Renewed +1 year',
-  renewAria: (title: string) => `${title}: Renewed +1 year`,
+  renew: 'Renewed',
+  renewAria: (title: string) => `Renewed: ${title}`,
+  renewDialog: {
+    title: 'Renewed',
+    until: (date: string) => `Until now: ${date}.`,
+    newEnd: 'New end',
+    proposed: 'Proposal: the same term once more. You can change the date.',
+    noStart: 'Without a start there is no proposal: please enter the new end.',
+    startMoves: (from: string) => `The start will move to ${from}.`,
+    stillPast: 'This date is in the past.',
+    gone: 'The document no longer exists.',
+    notLater: 'The new end must be after the current one.',
+    save: 'Save renewal',
+  },
+  views: { label: 'Views', documents: 'Filing', deadlines: 'Deadlines' },
+  timeline: {
+    label: 'Deadlines and expiry',
+    today: 'Today',
+    empty: 'No document has a date.',
+    emptyHint: 'An end or expiry date in a document puts it here.',
+    noneAhead: 'No deadline is coming up right now.',
+    older: (n: number) =>
+      n === 1
+        ? '1 document expired more than 90 days ago and is not on the timeline. It is still under Filing.'
+        : `${n} documents expired more than 90 days ago and are not on the timeline. They are still under Filing.`,
+    kinds: {
+      cancel: 'Last day to cancel',
+      cancelIn: (days: number) =>
+        days <= 0
+          ? 'Last day to cancel: today'
+          : days === 1
+            ? 'Last day to cancel: tomorrow'
+            : `Last day to cancel: in ${days} days`,
+      cancelSoon: 'Last day to cancel: soon',
+      end: 'Expires',
+      endSoon: 'Expires soon',
+      expired: 'Expired',
+      missed: 'End of term · cancellation deadline passed',
+    },
+  },
+  preview: {
+    show: 'Show preview',
+    hide: 'Hide preview',
+    alt: (name: string) => `Preview: ${name}`,
+    loading: 'Loading the preview …',
+    missing: 'The file is not on this device.',
+    noPicture: 'There is no preview for this file.',
+  },
   renewed: (title: string, date: string) => `“${title}” now runs until ${date}.`,
   download: 'Download',
   search: 'Search documents',
-  status: {
-    expired: 'Expired',
-    'act-now': 'Cancel now',
-    soon: 'Soon',
-    ok: '',
-    'open-ended': '',
-  } as Record<string, string>,
   empty: 'No documents yet.',
   emptyFiltered: 'Nothing found.',
   widgetEmpty: 'No deadlines in sight.',
   figureLabel: 'Filing',
-  stateTabs: 'Views',
   labelCount: (label: string, n: number) => `${label} ${n}`,
-  allStates: 'All',
   addFirst: 'Add your first document',
   detail: {
     label: 'Document',

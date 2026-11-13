@@ -53,7 +53,8 @@
 }
 /* The phone's "⋯" menu floats at the right edge of the first row: the search field ends before it. */
 @media (max-width: 899px) {
-  .first {
+  .first,
+  .privacy[data-first] {
     padding-inline-end: calc(var(--touch) + var(--space-2));
   }
 }
