@@ -77,7 +77,7 @@ pub(crate) async fn biometric_delete<R: Runtime>(
     request: NameRequest,
 ) -> Result<()> {
     webview_name(&request.name)?;
-    app.secure_store().biometric_delete(request)
+    app.secure_store().biometric_delete(request).await
 }
 
 #[command]
