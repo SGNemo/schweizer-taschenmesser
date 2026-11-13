@@ -7,18 +7,25 @@ import { createContext, useContext, useSyncExternalStore } from 'react';
  */
 export interface PageWidthStore {
   get(): number | undefined;
+  /** Pixel size of 1 rem when the width was last set (read once per resize, not on every render). */
+  rem(): number;
   set(width: number): void;
   subscribe(listener: () => void): () => void;
 }
 
 export function createPageWidthStore(): PageWidthStore {
   let width: number | undefined;
+  let rem = 16;
   const listeners = new Set<() => void>();
   return {
     get: () => width,
+    rem: () => rem,
     set(next) {
       if (next === width) return;
       width = next;
+      // The root size can change with the window (media queries), so it is read again on every new width; a
+      // read during render forced a style recalculation for every consumer (docs/perf/CLICK-TO-CONTENT-2026-11.md).
+      rem = remPx();
       for (const l of listeners) l();
     },
     subscribe(listener) {
@@ -44,7 +51,7 @@ export function usePageWidthAtLeast(rem: number): boolean | undefined {
     store?.subscribe ?? never,
     () => {
       const w = store?.get();
-      return w ? w >= rem * remPx() : undefined;
+      return w && store ? w >= rem * store.rem() : undefined;
     },
     () => undefined,
   );
