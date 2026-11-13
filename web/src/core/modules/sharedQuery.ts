@@ -96,6 +96,18 @@ function release(key: string): void {
 export const sharedQueryCount = (): number => registry.size;
 
 /**
+ * Stops every shared query (tests: `vitest.setup.ts` after each test). A query lingering from the last test would
+ * hand the next one its value for a moment, while that test already cleared the tables.
+ */
+export function resetSharedQueries(): void {
+  for (const entry of registry.values()) {
+    if (entry.timer !== undefined) clearTimeout(entry.timer);
+    entry.stop?.unsubscribe();
+  }
+  registry.clear();
+}
+
+/**
  * `prepare` (optional) finishes before the query first runs. Use it for the lazy `import()`s the
  * querier awaits: a live query whose first run awaits a module that is still being fetched does not
  * track the table reads after that await (the zone is lost on a native await of a pending import), so
