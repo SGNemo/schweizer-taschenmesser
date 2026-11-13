@@ -60,7 +60,9 @@ describe('parseMoney', () => {
 describe('formatting', () => {
   it('formats euros the German way', () => {
     expect(formatMoney(123456).replace(/\s/g, ' ')).toBe('1.234,56 €');
-    expect(formatMoney(-500).replace(/\s/g, ' ')).toBe('-5,00 €');
+    expect(formatMoney(-500).replace(/\s/g, ' ')).toBe('\u22125,00 €');
+    expect(formatMoneyAxis(-50000)).toBe('\u2212500');
+    expect(parseMoney(formatMoney(-500), { allowNegative: true })).toBe(-500);
     expect(formatMoneyAxis(120000)).toBe('1.200');
   });
 
