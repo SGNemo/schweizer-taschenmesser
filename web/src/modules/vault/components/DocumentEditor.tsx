@@ -178,6 +178,7 @@ function Fields({
         onRemove={() => setFile('remove')}
         removeLabel={t.vault.removeFile}
       />
+      {/* Below the wide layout a folder opens this dialog, not the panel: the preview is reached here. */}
       {existing?.fileName && file === undefined && canPreview(existing.fileType) ? (
         <FilePreview id={existing.id} fileName={existing.fileName} />
       ) : null}

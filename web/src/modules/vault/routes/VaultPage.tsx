@@ -42,8 +42,7 @@ import {
 } from '../logic';
 import { documentRepo, keepBlobIds } from '../repo';
 import styles from './VaultPage.module.css';
-import { CATEGORIES, type DocCategory, type VaultDocument } from '../schema';
-import type { Stored } from '@/core/db/types';
+import { CATEGORIES, type DocCategory } from '../schema';
 
 type View = 'documents' | 'deadlines';
 
@@ -77,7 +76,8 @@ export default function VaultPage() {
   const [query, setQuery] = useState('');
   // "Ablage" files by folder; "Fristen" lays every date on one rail.
   const [view, setView] = useState<View>('documents');
-  const [renewing, setRenewing] = useState<Stored<VaultDocument> | null>(null);
+  // The id only: the dialog works on the row as the list holds it now.
+  const [renewing, setRenewing] = useState<string | null>(null);
   // Master–detail (layout `split`): on a wide page a document shows in the panel beside the folders, below that
   // width the folder opens its dialog (a sheet on the phone).
   const wide = useSplitView();
@@ -196,13 +196,13 @@ export default function VaultPage() {
           ) : null
         }
       >
-        {view === 'deadlines' && !none ? (
+        {docs && view === 'deadlines' && !none ? (
           <DeadlineTimeline
-            docs={docs ?? []}
+            docs={docs}
             day={day}
             current={wide ? detail?.id : undefined}
             onOpen={(d) => (wide ? setPicked(d.id) : setTarget(d))}
-            onRenew={setRenewing}
+            onRenew={(d) => setRenewing(d.id)}
           />
         ) : null}
         {view === 'documents' || none ? (
@@ -254,22 +254,17 @@ export default function VaultPage() {
                         <>
                           {state === 'ok' || state === 'open-ended' ? null : (
                             <Badge
-                              tone={
-                                state === 'expired'
-                                  ? 'danger'
-                                  : state === 'act-now' || state === 'missed' || state === 'soon'
-                                    ? 'warning'
-                                    : 'neutral'
-                              }
+                              // Never red: what has run out asks for a look (red stays for overdue money).
+                              tone="warning"
                             >
                               {state === 'missed' ? tDeadline.get().missed : t.vault.status[state]}
                             </Badge>
                           )}
-                          {canRenew(d, state) ? (
+                          {canRenew(d, state, day) ? (
                             <Button
                               size="sm"
                               aria-label={t.vault.renewAria(d.title)}
-                              onClick={() => setRenewing(d)}
+                              onClick={() => setRenewing(d.id)}
                             >
                               {t.vault.renew}
                             </Button>
@@ -293,7 +288,10 @@ export default function VaultPage() {
           </>
         ) : null}
       </SplitView>
-      <RenewDialog doc={renewing} onClose={() => setRenewing(null)} />
+      <RenewDialog
+        doc={(renewing && docs?.find((d) => d.id === renewing)) || null}
+        onClose={() => setRenewing(null)}
+      />
       <DocumentEditor target={openTarget} onClose={closeEditor} />
     </>
   );

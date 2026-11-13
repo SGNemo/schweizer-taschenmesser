@@ -85,6 +85,7 @@ async function check(page: Page, phone: boolean, theme: string) {
   await openPage(page, '/');
   const overview = (await page.locator('main').textContent()) ?? '';
   for (const paper of PAPERS) expect(overview, paper).not.toContain(paper);
+  // The widget is on the overview only where the user placed it; `vault.widget.test.tsx` pins its counts-only body.
   const widget = page.getByTestId('widget-vault:expiring');
   if (await widget.count()) {
     const text = (await widget.textContent()) ?? '';

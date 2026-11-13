@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { blobKeys, putBlob } from '@/core/blobs';
 import { db } from '@/core/db/db';
 import { setNow } from '@/core/time/now';
+import { undoLast } from '@/core/undo';
 import { FilePreview, canPreview } from '../components/FilePreview';
 import { documentRepo } from '../repo';
 import VaultPage from '../routes/VaultPage';
@@ -78,7 +79,12 @@ describe('Unterlagen: view "Fristen"', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Fristen' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Verlängert: Hausrat' }));
     const dialog = await screen.findByRole('dialog', { name: 'Verlängert: Hausrat' });
-    expect(within(dialog).getByText('Bisher bis 25. September 2026.')).toBeTruthy();
+    // Said before it happens: the old end, and that the start moves to the new term.
+    expect(
+      within(dialog).getByText(
+        'Bisher bis 25. September 2026. Der Beginn wird auf den 26. September 2026 gesetzt.',
+      ),
+    ).toBeTruthy();
     const field = within(dialog).getByLabelText(/Neues Ende/) as HTMLInputElement;
     // 1 Oct 2025 – 25 Sep 2026 is no whole number of months: the same 360 days once more.
     expect(field.value).not.toBe('');
@@ -90,6 +96,10 @@ describe('Unterlagen: view "Fristen"', () => {
       expect(after.endDate).toBe('2027-09-20');
       expect(after.startDate).toBe('2026-09-26');
     });
+    // "Rückgängig" gives back the old term as a whole: end and start.
+    await undoLast();
+    const back = (await documentRepo.active().toArray()).find((d) => d.title === 'Hausrat')!;
+    expect([back.startDate, back.endDate]).toEqual(['2025-10-01', '2026-09-25']);
   });
 
   it('without a start nothing is proposed, and an end that is not later is refused', async () => {
@@ -168,6 +178,24 @@ describe('file preview: only after a tap, kept nowhere', () => {
     expect(await blobKeys()).toEqual(['doc-1']);
     expect({ ...localStorage }).toEqual(storage);
     expect(sessionStorage.length).toBe(0);
+  });
+
+  it('a file that is no picture here gets no preview, whatever the synced record says', async () => {
+    await putBlob('doc-2', new Blob(['<svg/>'], { type: 'image/svg+xml' }));
+    const view = render(<FilePreview id="doc-2" fileName="ausweis.png" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Vorschau zeigen' }));
+    expect(await screen.findByText('Für diese Datei gibt es keine Vorschau.')).toBeTruthy();
+    expect(URL.createObjectURL).not.toHaveBeenCalled();
+    expect(view.container.querySelector('img')).toBeNull();
+  });
+
+  it('left before the file was read: no object URL is made afterwards', async () => {
+    await putBlob('doc-1', new Blob(['x'], { type: 'image/png' }));
+    const view = render(<FilePreview id="doc-1" fileName="ausweis.png" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Vorschau zeigen' }));
+    view.unmount();
+    await new Promise((r) => setTimeout(r, 50));
+    expect(URL.createObjectURL).not.toHaveBeenCalled();
   });
 
   it('says so when the file lies on another device', async () => {

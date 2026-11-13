@@ -5454,6 +5454,9 @@ export const de = {
       proposed: (from: string) =>
         `Vorschlag: noch einmal dieselbe Laufzeit, ab ${from}. Das Datum lässt sich ändern.`,
       noStart: 'Ohne Beginn gibt es keinen Vorschlag: bitte das neue Ende eintragen.',
+      startMoves: (from: string) => `Der Beginn wird auf den ${from} gesetzt.`,
+      stillPast: 'Der Vorschlag liegt noch in der Vergangenheit: bitte anpassen.',
+      gone: 'Die Unterlage gibt es nicht mehr.',
       notLater: 'Das neue Ende muss nach dem bisherigen liegen.',
       save: 'Verlängerung speichern',
     },
@@ -5462,11 +5465,19 @@ export const de = {
       label: 'Fristen und Ablauf',
       today: 'Heute',
       empty: 'Keine Unterlage hat ein Datum.',
+      emptyHint: 'Ein Ende oder Ablaufdatum in einer Unterlage legt sie hierher.',
+      older: (n: number) =>
+        n === 1
+          ? '1 ältere abgelaufene Unterlage steht in der Ablage.'
+          : `${n} ältere abgelaufene Unterlagen stehen in der Ablage.`,
       kinds: {
-        cancel: 'Kündigungsfrist',
-        end: 'Ablauf',
+        cancel: 'Kündigen bis',
+        cancelNow: 'Jetzt kündigen',
+        cancelSoon: 'Bald kündigen',
+        end: 'Läuft ab',
+        endSoon: 'Läuft bald ab',
         expired: 'Abgelaufen',
-        missed: 'Ablauf · Kündigungsfrist vorbei',
+        missed: 'Laufzeitende · Kündigungsfrist vorbei',
       },
     },
     preview: {
@@ -5474,6 +5485,7 @@ export const de = {
       hide: 'Vorschau ausblenden',
       alt: (name: string) => `Vorschau: ${name}`,
       missing: 'Die Datei liegt nicht auf diesem Gerät.',
+      noPicture: 'Für diese Datei gibt es keine Vorschau.',
     },
     renewed: (title: string, date: string) => `„${title}“ läuft jetzt bis ${date}.`,
     download: 'Herunterladen',
@@ -5489,9 +5501,7 @@ export const de = {
     emptyFiltered: 'Nichts gefunden.',
     widgetEmpty: 'Keine Fristen in Sicht.',
     figureLabel: 'Ablage',
-    stateTabs: 'Ansichten',
     labelCount: (label: string, n: number) => `${label} ${n}`,
-    allStates: 'Alle',
     addFirst: 'Erste Unterlage eintragen',
     detail: {
       label: 'Unterlage',

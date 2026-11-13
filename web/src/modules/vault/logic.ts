@@ -27,9 +27,8 @@ export function cancelDeadline(d: D): string | undefined {
 
 export type Status = 'expired' | 'act-now' | 'missed' | 'soon' | 'ok' | 'open-ended';
 
-/** The three states the head's folder tabs count and filter by: expired, a deadline in sight, fine. */
+/** The three states the head's line and the widget count: expired, a deadline in sight, fine. */
 export type StateGroup = 'expired' | 'due' | 'ok';
-export const STATE_GROUPS: readonly StateGroup[] = ['expired', 'due', 'ok'];
 export function stateGroup(s: Status): StateGroup {
   // A passed cancellation deadline is no deadline "in sight" any more: the term simply runs on.
   return s === 'expired' ? 'expired' : s === 'act-now' || s === 'soon' ? 'due' : 'ok';
@@ -133,27 +132,46 @@ export const RENEWABLE: readonly DocCategory[] = [
   'other',
 ];
 
-/** "Verlängert" is offered once the end has come or the cancellation deadline is here or gone. */
-export function canRenew(d: Pick<VaultDocument, 'category'>, state: Status): boolean {
-  return (
-    RENEWABLE.includes(d.category) &&
-    (state === 'expired' || state === 'act-now' || state === 'missed')
-  );
+/** Days before the end from which a contract whose cancellation deadline has passed offers "Verlängert". */
+export const RENEW_MISSED_DAYS = 30;
+
+/**
+ * "Verlängert" is offered once the end has come or the cancellation deadline is here. A contract whose deadline
+ * has passed runs on: it offers the button only for the last weeks of its term, not for months on end (the user
+ * may have cancelled in time; there is no state for that).
+ */
+export function canRenew(
+  d: Pick<VaultDocument, 'category' | 'endDate' | 'expiresOn'>,
+  state: Status,
+  today: string,
+): boolean {
+  if (!RENEWABLE.includes(d.category)) return false;
+  if (state === 'expired' || state === 'act-now') return true;
+  const end = endOf(d);
+  return state === 'missed' && !!end && daysBetween(today, end) <= RENEW_MISSED_DAYS;
 }
 
-/** Whole months from `from` to `to` when `to` is exactly that many months later; otherwise undefined. */
-function wholeMonths(from: string, to: string): number | undefined {
-  const n =
-    (Number(to.slice(0, 4)) - Number(from.slice(0, 4))) * 12 +
-    Number(to.slice(5, 7)) -
+/** Last day of a term of `n` months that starts on `from` (BGB § 188: a day the last month lacks is its last day). */
+function termEnd(from: string, n: number): string {
+  const after = addMonthsStr(from, n);
+  const clamped = Number(after.slice(8)) < Number(from.slice(8));
+  return clamped ? after : addDaysStr(after, -1);
+}
+
+/** The whole months a term from `from` to `end` (inclusive) lasts; undefined when it is no whole number. */
+function wholeMonths(from: string, end: string): number | undefined {
+  const guess =
+    (Number(end.slice(0, 4)) - Number(from.slice(0, 4))) * 12 +
+    Number(end.slice(5, 7)) -
     Number(from.slice(5, 7));
-  return n >= 1 && addMonthsStr(from, n) === to ? n : undefined;
+  return [guess, guess + 1].find((n) => n >= 1 && termEnd(from, n) === end);
 }
 
 /**
  * The end date "Verlängert" proposes: one more term of the same length. The term runs from `startDate` to the end
- * inclusive; in whole months when it is that (1 Jan – 31 Dec → 31 Dec of the next year, 1 Feb – 28 Feb → 31 Mar),
- * otherwise in days. Without a start (a passport, the vehicle inspection: only an end) nothing is proposed.
+ * inclusive; in whole months when it is that (1 Jan – 31 Dec → 31 Dec of the next year, 1 Feb – 28 Feb → 31 Mar,
+ * 29 Feb 2024 – 28 Feb 2025 → 28 Feb 2026), otherwise in days. Without a start (a passport, the vehicle
+ * inspection: only an end) nothing is proposed.
  */
 export function renewedEnd(
   d: Pick<VaultDocument, 'startDate' | 'endDate' | 'expiresOn'>,
@@ -161,11 +179,8 @@ export function renewedEnd(
   const end = endOf(d);
   if (!end || !d.startDate || d.startDate > end) return undefined;
   const next = addDaysStr(end, 1);
-  const months = wholeMonths(d.startDate, next);
-  const after = months
-    ? addMonthsStr(next, months)
-    : addDaysStr(next, daysBetween(d.startDate, next));
-  return addDaysStr(after, -1);
+  const months = wholeMonths(d.startDate, end);
+  return months ? termEnd(next, months) : addDaysStr(next, daysBetween(d.startDate, next) - 1);
 }
 
 /**
@@ -193,12 +208,19 @@ export interface DeadlineRow<T> {
   kind: 'cancel' | 'end';
 }
 
-/** Every document with a date, oldest first: what has run out, then what comes. Undated ones are left out. */
+/** Days an expired document without an action stays on the rail; older ones are only counted. */
+export const PAST_DAYS = 90;
+
+/**
+ * Every document with a date, oldest first: what has run out, then what comes. Undated ones are left out. What
+ * ran out more than `PAST_DAYS` ago and offers no "Verlängert" (an old warranty) is counted in `older` instead:
+ * the past must not grow for years and push "Heute" off the screen.
+ */
 export function deadlineRows<T extends VaultDocument>(
   docs: readonly T[],
   today: string,
-): DeadlineRow<T>[] {
-  return docs
+): { rows: DeadlineRow<T>[]; older: number } {
+  const all = docs
     .flatMap((doc): DeadlineRow<T>[] => {
       const date = nextRelevantDate(doc, today);
       if (!date) return [];
@@ -213,6 +235,11 @@ export function deadlineRows<T extends VaultDocument>(
       ];
     })
     .sort((a, b) => a.date.localeCompare(b.date) || compareText(a.doc.title, b.doc.title));
+  const old = (r: DeadlineRow<T>) =>
+    r.state === 'expired' &&
+    daysBetween(r.date, today) > PAST_DAYS &&
+    !canRenew(r.doc, r.state, today);
+  return { rows: all.filter((r) => !old(r)), older: all.filter(old).length };
 }
 
 /** Number of documents per category (for the folder tabs). */

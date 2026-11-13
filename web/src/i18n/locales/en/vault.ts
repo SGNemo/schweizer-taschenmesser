@@ -60,19 +60,30 @@ export const vault: Strings['vault'] = {
     proposed: (from: string) =>
       `Proposal: the same term once more, from ${from}. You can change the date.`,
     noStart: 'Without a start there is no proposal: please enter the new end.',
+    startMoves: (from: string) => `The start is set to ${from}.`,
+    stillPast: 'The proposal is still in the past: please adjust it.',
+    gone: 'The document no longer exists.',
     notLater: 'The new end must be after the current one.',
     save: 'Save renewal',
   },
-  views: { label: 'Views', documents: 'Filed', deadlines: 'Deadlines' },
+  views: { label: 'Views', documents: 'Filing', deadlines: 'Deadlines' },
   timeline: {
     label: 'Deadlines and expiry',
     today: 'Today',
     empty: 'No document has a date.',
+    emptyHint: 'An end or expiry date in a document puts it here.',
+    older: (n: number) =>
+      n === 1
+        ? '1 older expired document is under Filing.'
+        : `${n} older expired documents are under Filing.`,
     kinds: {
-      cancel: 'Cancellation deadline',
-      end: 'Expiry',
+      cancel: 'Cancel by',
+      cancelNow: 'Cancel now',
+      cancelSoon: 'Cancel soon',
+      end: 'Expires',
+      endSoon: 'Expires soon',
       expired: 'Expired',
-      missed: 'Expiry · cancellation deadline passed',
+      missed: 'End of term · cancellation deadline passed',
     },
   },
   preview: {
@@ -80,6 +91,7 @@ export const vault: Strings['vault'] = {
     hide: 'Hide preview',
     alt: (name: string) => `Preview: ${name}`,
     missing: 'The file is not on this device.',
+    noPicture: 'There is no preview for this file.',
   },
   renewed: (title: string, date: string) => `“${title}” now runs until ${date}.`,
   download: 'Download',
@@ -95,9 +107,7 @@ export const vault: Strings['vault'] = {
   emptyFiltered: 'Nothing found.',
   widgetEmpty: 'No deadlines in sight.',
   figureLabel: 'Filing',
-  stateTabs: 'Views',
   labelCount: (label: string, n: number) => `${label} ${n}`,
-  allStates: 'All',
   addFirst: 'Add your first document',
   detail: {
     label: 'Document',

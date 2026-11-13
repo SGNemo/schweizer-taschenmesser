@@ -7,6 +7,7 @@ en: Finance: the CSV export opens in Excel with intact umlauts and amounts as nu
 ---
 
 ---
+
 type: fixed
 area: finance
 breaking: false
@@ -15,6 +16,7 @@ en: Finance: the bank statement import from the setup assistant offers a current
 ---
 
 ---
+
 type: changed
 area: finance
 breaking: false
@@ -23,6 +25,7 @@ en: Finance: the bank import suggests a category for well-known shops, rent, ene
 ---
 
 ---
+
 type: changed
 area: finance
 breaking: false
@@ -31,6 +34,7 @@ en: Finance: “Export as CSV” now sits right above the bookings instead of be
 ---
 
 ---
+
 type: added
 area: finance
 breaking: false
@@ -39,6 +43,7 @@ en: New overview card “This month”: free until month end, what is still to p
 ---
 
 ---
+
 type: fixed
 area: home
 breaking: false
@@ -47,6 +52,7 @@ en: Overview: with ToDos switched off (“Finance focus” profile) the calm vie
 ---
 
 ---
+
 type: added
 area: finance
 breaking: false

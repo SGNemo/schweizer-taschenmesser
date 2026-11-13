@@ -58,30 +58,3 @@
     padding-inline-end: calc(var(--touch) + var(--space-2));
   }
 }
-/* A title on the "Fristen" rail: text that opens its document, with a full touch target. */
-.timelineTitle {
-  min-height: var(--touch);
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  font-weight: var(--weight-semibold);
-  text-align: start;
-  cursor: pointer;
-}
-.timelineTitle:hover,
-.timelineTitle[aria-current='true'] {
-  text-decoration: underline;
-}
-/* The picture of a filed document, shown only after a tap. */
-.preview {
-  display: grid;
-  gap: var(--space-2);
-  justify-items: start;
-}
-.preview > img {
-  max-width: 100%;
-  max-height: 24rem;
-  border-radius: var(--radius-sm);
-}

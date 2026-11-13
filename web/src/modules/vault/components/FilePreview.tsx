@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getBlob } from '@/core/blobs';
 import { t } from '@/strings';
 import { Button, NoReadAid } from '@/ui';
-import styles from '../routes/VaultPage.module.css';
+import styles from './Deadlines.module.css';
 
 /** Only pictures have a preview: the app shows no documents in frames (content security policy). */
 export const canPreview = (fileType: string | undefined): boolean =>
@@ -12,10 +12,20 @@ export const canPreview = (fileType: string | undefined): boolean =>
  * The picture of a filed document, only after a tap: a passport is not for whoever happens to look at the screen.
  * It lives in memory while it is shown (an object URL, revoked when hidden or left) and is written nowhere: not
  * to a setting, a draft, the sync, the backup, the search or a report. The reading aid never touches it.
+ *
+ * `fileType` of the record is synced, the file is not: what decides is the type of the file that lies here.
  */
 export function FilePreview({ id, fileName }: { id: string; fileName: string }) {
   const [url, setUrl] = useState<string>();
-  const [missing, setMissing] = useState(false);
+  const [note, setNote] = useState('');
+  // Left before the file was read (the panel closed, another folder picked): no URL is made afterwards.
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
   useEffect(
     () => () => {
       if (url) URL.revokeObjectURL(url);
@@ -24,8 +34,11 @@ export function FilePreview({ id, fileName }: { id: string; fileName: string }) 
   );
 
   async function show() {
-    const blob = await getBlob(id);
-    if (!blob) return setMissing(true);
+    setNote('');
+    const blob = await getBlob(id).catch(() => undefined);
+    if (!alive.current) return;
+    if (!blob) return setNote(t.vault.preview.missing);
+    if (!canPreview(blob.type)) return setNote(t.vault.preview.noPicture);
     setUrl(URL.createObjectURL(blob));
   }
 
@@ -39,7 +52,7 @@ export function FilePreview({ id, fileName }: { id: string; fileName: string }) 
         >
           {url ? t.vault.preview.hide : t.vault.preview.show}
         </Button>
-        {missing ? <p role="status">{t.vault.preview.missing}</p> : null}
+        {note ? <p role="status">{note}</p> : null}
         {url ? <img src={url} alt={t.vault.preview.alt(fileName)} /> : null}
       </div>
     </NoReadAid>

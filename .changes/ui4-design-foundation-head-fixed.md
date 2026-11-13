@@ -5,7 +5,9 @@ breaking: false
 de: Mit „Werte ausblenden“ bleibt der Seitentitel am Handy lesbar, und die Zeile unter der großen Zahl in Finanzen verrät deren Betrag nicht mehr.
 en: With "Hide amounts" on, the page title stays readable on the phone, and the line below the large figure in Finanzen no longer gives its amount away.
 ---
+
 ---
+
 type: fixed
 area: ui
 breaking: false

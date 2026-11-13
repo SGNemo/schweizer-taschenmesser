@@ -223,7 +223,7 @@
 .timeline[data-dated] .nowTime {
   width: 7.5rem;
 }
-.tlEnd {
+.timeline[data-dated] .tlEnd {
   display: inline-flex;
   flex-wrap: wrap;
   gap: var(--space-2);

@@ -1,0 +1,33 @@
+/* A title on the "Fristen" rail: text that opens its document, with a full touch target. */
+.timelineTitle {
+  min-height: var(--touch);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: var(--weight-semibold);
+  text-align: start;
+  cursor: pointer;
+}
+.timelineTitle:hover,
+.timelineTitle[aria-current='true'] {
+  text-decoration: underline;
+}
+/* What ran out long ago is only counted: one quiet line under the rail. */
+.older {
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-meta);
+  color: var(--text-2);
+}
+/* The picture of a filed document, shown only after a tap. */
+.preview {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+.preview > img {
+  max-inline-size: 100%;
+  max-block-size: 24rem;
+  border-radius: var(--radius-sm);
+}

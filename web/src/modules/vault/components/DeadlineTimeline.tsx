@@ -4,21 +4,23 @@ import { t } from '@/strings';
 import { Badge, Button, DatedTimeline, EmptyState, type DatedRow } from '@/ui';
 import { canRenew, deadlineRows, type DeadlineRow } from '../logic';
 import type { VaultDocument } from '../schema';
-import styles from '../routes/VaultPage.module.css';
+import styles from './Deadlines.module.css';
 
 type Doc = Stored<VaultDocument>;
 
 /**
- * What a row's date is, in a word; the day itself stands at the start of the row. What is near or over carries the
- * word on a badge. The tone says "have a look" (warning, accent for a deadline this week), never "you failed": no red.
+ * What a row's date is, in words; the day itself stands at the start of the row. What is near or over says so in
+ * its own words on a badge (never by the colour alone). The tone says "have a look" (warning, accent for a
+ * deadline this week), never "you failed": no red.
  */
 function kindOf(r: DeadlineRow<Doc>) {
   const k = t.vault.timeline.kinds;
   if (r.state === 'expired') return <Badge tone="warning">{k.expired}</Badge>;
   if (r.state === 'missed') return k.missed;
-  const label = r.kind === 'cancel' ? k.cancel : k.end;
-  if (r.state === 'act-now') return <Badge tone="accent">{label}</Badge>;
-  return r.state === 'soon' ? <Badge tone="warning">{label}</Badge> : label;
+  if (r.state === 'act-now') return <Badge tone="accent">{k.cancelNow}</Badge>;
+  if (r.state === 'soon')
+    return <Badge tone="warning">{r.kind === 'cancel' ? k.cancelSoon : k.endSoon}</Badge>;
+  return r.kind === 'cancel' ? k.cancel : k.end;
 }
 
 /**
@@ -40,9 +42,13 @@ export function DeadlineTimeline({
   onOpen: (doc: Doc) => void;
   onRenew: (doc: Doc) => void;
 }) {
-  const rows = deadlineRows(docs, day);
-  if (rows.length === 0)
-    return <EmptyState title={t.vault.timeline.empty} testId="vault-timeline-empty" />;
+  const { rows, older } = deadlineRows(docs, day);
+  if (rows.length === 0 && older === 0)
+    return (
+      <EmptyState title={t.vault.timeline.empty} testId="vault-timeline-empty">
+        <p>{t.vault.timeline.emptyHint}</p>
+      </EmptyState>
+    );
   const dated: DatedRow[] = rows.map((r) => ({
     key: r.doc.id,
     when: formatDay(r.date, 'd. MMM yyyy'),
@@ -58,7 +64,7 @@ export function DeadlineTimeline({
       </button>
     ),
     kind: kindOf(r),
-    end: canRenew(r.doc, r.state) ? (
+    end: canRenew(r.doc, r.state, day) ? (
       <Button size="sm" aria-label={t.vault.renewAria(r.doc.title)} onClick={() => onRenew(r.doc)}>
         {t.vault.renew}
       </Button>
@@ -67,6 +73,7 @@ export function DeadlineTimeline({
   return (
     <div data-testid="vault-timeline">
       <DatedTimeline label={t.vault.timeline.label} rows={dated} marker={t.vault.timeline.today} />
+      {older > 0 ? <p className={styles.older}>{t.vault.timeline.older(older)}</p> : null}
     </div>
   );
 }
