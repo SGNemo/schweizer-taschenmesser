@@ -221,6 +221,10 @@ KS-4. _Abbruch:_ Beim Hello-Fenster „Abbrechen" → Tresor bleibt gesperrt, Pa
 KS-5. _Deaktivieren:_ „Biometrisches Entsperren deaktivieren" → beim nächsten Sperren kein Hello-Fenster mehr; der Eintrag `bio:vault-dek:…` ist aus dem Credential Manager verschwunden. ☐
 KS-6. _Ohne Hello (kein PIN/Gesicht eingerichtet):_ Abschnitt zeigt „Nicht verfügbar…", nichts bricht. ☐
 KS-13. _Siegel nur über Hello (`fix/secure-store-bio-prefix`):_ Dev-Build (`npm run tauri -- dev`), biometrisches Entsperren aktiv, Tresor gesperrt. In den DevTools (F12) `window.__TAURI_INTERNALS__.invoke('plugin:secure-store|get', { request: { name: 'bio:vault-dek:<id>' } })` (`<id>` aus dem Credential-Manager-Eintrag) → Fehler „reserved name", kein Schlüssel; dasselbe mit `set` und `delete`, der Eintrag bleibt unverändert. Danach „Mit Biometrie entsperren" → Hello-Fenster, Tresor offen. ☐
+KS-14. _Hello-Bindung, neu aktivieren (`feat/secure-store-hello-bound-dek`):_ Biometrisches Entsperren aus- und wieder einschalten → Windows Hello fragt (ggf. zweimal) und das Fenster liegt **vor** der App. Sperren → „Mit Biometrie entsperren" → ein Hello-Fenster, Tresor offen. Abbrechen → Tresor bleibt zu, nächster Versuch klappt. ☐
+KS-15. _Umstieg von der alten Version:_ Mit einer Version vor diesem PR biometrisches Entsperren aktivieren, dann auf die neue Version updaten → erstes Entsperren mit Hello fragt (ggf. zweimal) und öffnet den Tresor; ab dem zweiten Mal nur noch eine Abfrage. ☐
+KS-16. _Schlüssel ohne Hello unbrauchbar:_ In PowerShell `cmdkey /list | findstr bio:` zeigt den Eintrag; der gespeicherte Wert beginnt mit `h1:` (z. B. per `Get-StoredCredential` aus dem Modul CredentialManager) und ist nicht der Schlüssel. ☐
+KS-17. _Hello zurückgesetzt:_ Windows-Hello-PIN entfernen und neu einrichten (Einstellungen → Konten → Anmeldeoptionen) → „Mit Biometrie entsperren" meldet „nicht mehr gültig", Master-Passwort öffnet, Neu-Aktivieren klappt. ☐
 
 #### Launch-Review: Handtests (aus STATUS verschoben, 2026-11-10; Bericht [security/LAUNCH-REVIEW-2026-10-06.md](security/LAUNCH-REVIEW-2026-10-06.md))
 
