@@ -520,6 +520,10 @@ button.chip[aria-pressed='true'] {
   display: flex;
   flex-direction: column;
 }
+/* SplitView without its panel: the wrappers stay (the main content keeps its elements and its focus), without layout. */
+.splitOff {
+  display: contents;
+}
 .splitAside {
   position: relative;
   min-width: 0;
