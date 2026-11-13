@@ -53,8 +53,8 @@ test('"Gekündigt zum": charges stop on that date and the totals follow', async 
   await page.getByRole('dialog').getByLabel('Gekündigt zum (optional)').fill('2026-10-20');
   await save(page);
   const row = page.getByRole('button', { name: /Streaming/ });
-  await expect(row).toContainText('Gekündigt zum 20. Okt. 2026');
-  await expect(row).toContainText('Nächste Abbuchung: 15. Okt. 2026');
+  await expect(row).toContainText(/Gekündigt zum 20\. Okt\./);
+  await expect(row).toContainText(/Nächste Abbuchung: 15\. Okt\./);
   await expect(page.getByTestId('total-month')).toHaveText(/9,99\s€/); // still charged once
 
   // after the date nothing is charged any more
@@ -77,7 +77,10 @@ test('a cancellation date before the first charge cannot be saved (browser valid
 
 test('the row menu pauses a subscription (2 clicks) and the delete swipe action is undoable', async ({
   page,
+  isMobile,
 }) => {
+  // The phone's row has no "⋯" (0b-8 G4: its entries are in the dialog and the swipe); see the next test.
+  test.skip(isMobile, 'desktop row menu');
   await addStreaming(page);
   // The head also lists the next charges as items, so pick the row that has the actions button.
   const row = page
@@ -98,6 +101,23 @@ test('the row menu pauses a subscription (2 clicks) and the delete swipe action 
   await expect(row).toHaveCount(0);
   await page.getByRole('button', { name: 'Rückgängig', exact: true }).click();
   await expect(row).toHaveCount(1);
+});
+
+test('phone: pausing is in the dialog, deleting is the swipe and the dialog (0b-8 G4, no "⋯" per row)', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(!isMobile, 'phone rows');
+  await addStreaming(page);
+  const row = page.getByRole('listitem').filter({ hasText: 'Streaming' });
+  await expect(row.getByRole('button', { name: 'Weitere Aktionen' })).toHaveCount(0);
+  await page.getByRole('button', { name: /Streaming/ }).click();
+  await page.getByRole('dialog').getByRole('switch', { name: 'Aktiv' }).click();
+  await save(page);
+  await expect(row).toContainText('Pausiert');
+  await page.getByRole('button', { name: /Streaming/ }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
+  await expect(row).toHaveCount(0);
 });
 
 test('0b-8 G8: the dialog asks only how often; interval and end wait behind "Mehr Felder"', async ({

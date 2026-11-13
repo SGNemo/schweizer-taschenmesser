@@ -138,6 +138,7 @@ test.describe('Invoices', () => {
 test.describe('Subscriptions', () => {
   test('totals per month and year, next charge, cancellation deadline, pausing', async ({
     page,
+    isMobile,
   }) => {
     await ready(page, '/subscriptions?new=1');
     let dialog = page.getByRole('dialog', { name: 'Abo hinzufügen' });
@@ -160,24 +161,23 @@ test.describe('Subscriptions', () => {
     await expect(page.getByTestId('total-month')).toHaveText(/21,24\s€/);
     await expect(page.getByTestId('total-year')).toHaveText(/254,88\s€/);
     const streaming = page.getByRole('button', { name: /Streaming/ });
-    await expect(streaming).toContainText('Nächste Abbuchung: 15. Okt. 2026');
-    await expect(streaming).toContainText('Kündigen bis: 16. Okt. 2026');
+    // The phone's one meta line (design check G4): the day without the year, a deadline only while it is near.
+    await expect(streaming).toContainText(/Nächste Abbuchung: 15\. Okt\./);
+    if (!isMobile) await expect(streaming).toContainText('Kündigen bis: 16. Okt. 2026');
     await expect(page.getByRole('button', { name: /Cloud/ })).toContainText('Jährlich');
 
     // Pausing removes it from the totals. Desktop: the row's (neutral) switch. Phone: the row has no switch
-    // (one control less per row), "Pausieren" is in the row's menu.
+    // (one control less per row) and no "⋯" (0b-8 G4): "Aktiv" is in the dialog.
     const pause = page.getByRole('switch', { name: /Streaming/ });
     if (await pause.isVisible()) {
       await expect(pause).toHaveAttribute('data-tone', 'neutral');
       await pause.click();
     } else {
       await expect(pause).toHaveCount(0);
-      await page
-        .getByRole('listitem')
-        .filter({ hasText: 'Streaming' })
-        .getByRole('button', { name: 'Weitere Aktionen' })
-        .click();
-      await page.getByRole('menuitem', { name: 'Pausieren' }).click();
+      // Phone (0b-8 G4): no "⋯" per row; "Aktiv" is in the dialog.
+      await page.getByRole('button', { name: /Streaming/ }).click();
+      await page.getByRole('dialog').getByRole('switch', { name: 'Aktiv' }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
     }
     await expect(page.getByTestId('total-month')).toHaveText(/8,25\s€/);
 
