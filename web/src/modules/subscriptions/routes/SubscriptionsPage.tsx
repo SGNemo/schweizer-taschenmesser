@@ -75,6 +75,7 @@ export default function SubscriptionsPage() {
 
   const sums = totalsByCurrency(subs ?? [], day);
   const [advanced] = useAdvanced('subscriptions');
+  const compact = narrow && !advanced;
   const top = advanced ? topExpensive(subs ?? [], day, 3) : [];
 
   const advancedItem = useAdvancedMenuItem('subscriptions');
@@ -213,7 +214,7 @@ export default function SubscriptionsPage() {
                 }
                 className={s.active ? undefined : styles.inactive}
                 meta={
-                  narrow && !advanced ? (
+                  compact ? (
                     // Phone (G4): the status, the rule only when it is not plain monthly (the amount is per that
                     // rule), the next charge as a date, a cancellation and a price rise, and a cancellation deadline
                     // only while it is near. A passed deadline and the monthly equivalent are in the dialog;
@@ -289,14 +290,21 @@ export default function SubscriptionsPage() {
                 onOpen={() => setTarget(s)}
                 onSwipeLeft={remove}
                 swipeLeftLabel={t.actions.delete}
-                menu={[
-                  {
-                    id: 'active',
-                    label: s.active ? t.subscriptions.pause : t.subscriptions.resume,
-                    onSelect: () => toggle(!s.active),
-                  },
-                  { id: 'delete', label: t.actions.delete, danger: true, onSelect: remove },
-                ]}
+                // Phone (G4): no "⋯" per row. With one meta line more rows share the first screen, and a menu button
+                // on each would raise the actions there; its entries are shortcuts: "Aktiv" is in the dialog, deleting
+                // is the swipe and the dialog's "Löschen".
+                menu={
+                  compact
+                    ? undefined
+                    : [
+                        {
+                          id: 'active',
+                          label: s.active ? t.subscriptions.pause : t.subscriptions.resume,
+                          onSelect: () => toggle(!s.active),
+                        },
+                        { id: 'delete', label: t.actions.delete, danger: true, onSelect: remove },
+                      ]
+                }
                 end={
                   <>
                     <span className={styles.amount}>
