@@ -38,17 +38,20 @@ export async function getDeviceKey(database: TaschenmesserDB = defaultDb): Promi
 }
 
 export function createDeviceKeyStore(database: TaschenmesserDB = defaultDb): SecretStore {
+  async function get(name: string): Promise<string | undefined> {
+    const row = await rows<string>(database).get(ROW_PREFIX + name);
+    if (!row) return undefined;
+    try {
+      return dec.decode(await open(await getDeviceKey(database), aad(name), row.value));
+    } catch {
+      return undefined; // key lost/replaced (e.g. site data cleared partly): treat as not set
+    }
+  }
   return {
     protection: 'device-key',
-    async get(name) {
-      const row = await rows<string>(database).get(ROW_PREFIX + name);
-      if (!row) return undefined;
-      try {
-        return dec.decode(await open(await getDeviceKey(database), aad(name), row.value));
-      } catch {
-        return undefined; // key lost/replaced (e.g. site data cleared partly): treat as not set
-      }
-    },
+    get,
+    // The value already lives in this web view here; `has` only keeps the answer to a yes/no.
+    has: async (name) => Boolean(await get(name)),
     async set(name, value) {
       const token = await seal(await getDeviceKey(database), aad(name), enc.encode(value));
       await rows<string>(database).put({ key: ROW_PREFIX + name, value: token });

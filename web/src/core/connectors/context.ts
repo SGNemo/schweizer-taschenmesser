@@ -80,6 +80,7 @@ export function createContext(
     fetchPublic,
     secrets: {
       get: (name) => platform.secrets.get(connectorSecret(def.id, name)),
+      has: (name) => platform.secrets.has(connectorSecret(def.id, name)),
       set: (name, value) => platform.secrets.set(connectorSecret(def.id, name), value),
       delete: (name) => platform.secrets.delete(connectorSecret(def.id, name)),
     },

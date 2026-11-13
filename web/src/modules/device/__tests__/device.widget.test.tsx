@@ -49,7 +49,7 @@ describe('device widget (catalogue type: status)', () => {
     setPlatform({
       ...web,
       isNative: true,
-      secrets: { ...web.secrets, get: async () => undefined },
+      secrets: { ...web.secrets, has: async () => false },
     });
     await db.table('_meta').put({
       key: 'backup.auto.config',
@@ -66,7 +66,8 @@ describe('device widget (catalogue type: status)', () => {
       ...web,
       kind: 'desktop',
       isNative: true,
-      secrets: { ...web.secrets, get: async () => 'canary-passphrase' },
+      // the canary stays: should anything read the passphrase again, it must still not show
+      secrets: { ...web.secrets, get: async () => 'canary-passphrase', has: async () => true },
       lanHub: {
         ...web.lanHub,
         supported: true,

@@ -807,3 +807,26 @@ fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
         }
     }
 }
+
+/// `has` tells the page only whether a secret is stored: it is a command of the shared
+/// `secure-store:default` (desktop and Android) and refuses Rust-only names like every other
+/// command. The bool-only answer is pinned in the plugin (`models.rs`).
+#[test]
+fn secret_presence_is_a_registered_command_of_the_page() {
+    let plugin = format!("{}/plugins/secure-store", env!("CARGO_MANIFEST_DIR"));
+    // Windows checkouts have CRLF line ends, like `source` above.
+    let file = |f: &str| {
+        fs::read_to_string(format!("{plugin}/{f}"))
+            .unwrap()
+            .replace("\r\n", "\n")
+    };
+    assert!(file("build.rs").contains("\"has\","));
+    assert!(file("permissions/default.toml").contains("\"allow-has\","));
+    assert!(file("src/lib.rs").contains("commands::has,"));
+    assert!(read("capabilities/default.json").contains("\"secure-store:default\""));
+    let commands = file("src/commands.rs");
+    let has = &commands[commands.find("async fn has<").unwrap()..];
+    let has = &has[..has.find("\n}\n").unwrap()];
+    assert!(has.contains("webview_name(&request.name)?"));
+    assert!(has.contains("-> Result<HasResponse>"));
+}
