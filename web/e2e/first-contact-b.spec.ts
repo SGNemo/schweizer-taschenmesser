@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import { enable, ready } from './helpers';
+import { openPageMenu } from './money-helpers';
 
 /**
  * Round 5, person B (office clerk, Excel, Sparkasse): the three tasks of the first 15 minutes on a
@@ -57,11 +58,13 @@ test('B01/B03: a Sparkasse file on a fresh app is booked and fills a grocery bud
   ).toBeVisible();
 });
 
-test('B02/B07: the export sits next to the bookings and opens in Excel', async ({ page }) => {
+test('B02/B07: the export of the bookings opens in Excel', async ({ page }) => {
   await importStatement(page);
   await ready(page, '/finance?tab=transactions');
+  await expect(page.getByText(/Lebensmittel · Girokonto/).first()).toBeVisible();
   const download = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Als CSV exportieren' }).click();
+  // 0b-8 G7: an entry of the page's "⋯" menu, no button row of its own.
+  await (await openPageMenu(page)).getByRole('menuitem', { name: 'Als CSV exportieren' }).click();
   const file = await (await download).path();
   const bytes = readFileSync(file);
   expect([...bytes.subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
