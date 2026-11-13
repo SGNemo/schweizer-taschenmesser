@@ -141,7 +141,9 @@ impl<R: Runtime> SecureStore<R> {
     }
 
     /// Never prompts and does not wait for an open Hello prompt (no `with_hello` turn); a missing
-    /// Hello key is ignored.
+    /// Hello key is ignored. Not serialized against seal/unseal: if a hidden prompt of a seal or
+    /// migration is answered after this ran, that seal comes back (Hello-bound, shown as enabled).
+    /// The app removes only after an unseal or from the unlocked Tools dialog.
     pub async fn biometric_delete(&self, request: NameRequest) -> Result<()> {
         let name = request.name;
         #[cfg(windows)]

@@ -22,7 +22,7 @@ No critical finding. Production dependency audits are clean (`npm audit --omit=d
 | N3 | medium | sync | Vault `check` is an offline guessing oracle; passphrase minimum 8 (S6) | S |
 | N4 | medium | sync | Server responses are not validated on the client (malicious server → stuck or corrupted sync) | S |
 | V1 | medium | vault | "Alle Daten löschen" leaves the biometric seal of the vault DEK in the OS store | S |
-| V2 | medium | vault | Windows Hello is a consent gate only: the DEK is stored readable in Credential Manager (documented design limit) | L |
+| V2 | medium | vault | Windows Hello is a consent gate only: the DEK is stored readable in Credential Manager (documented design limit) *(done 2026-11: Hello-bound seal)* | L |
 | V5 | medium | backup | Backup import writes record values unvalidated, no file size cap | M *(V5 done, [PR #417](https://github.com/SGNemo/schweizer-taschenmesser/pull/417))* |
 | T1 | medium | tauri | CSP lacks `base-uri`, `object-src`, `form-action`, `frame-src`; `connect-src` any host (S12) | S |
 | T2 | medium | android | `allowBackup` / cleartext of the generated manifest never asserted (S15) | S (CI) *(T2 done: allowBackup off, cleartext only reported, [PR #417](https://github.com/SGNemo/schweizer-taschenmesser/pull/417))* |
@@ -193,7 +193,7 @@ Verified OK: PKCE S256, 24-byte state, one-shot loopback listener, constant resp
 | X1, X3, X5, X6, X7, X8 | Fixed (`ipc.rs` SQOS flag; shared rate bucket for `secret`/`compare`/`create`/`update`, one session per extension, untrusted submits ignored; opaque origins; lint; OTP ignore). X1 needs the Windows hand test. |
 | X2, X4, X9 | Open: X2 and X4 need a larger change (documented in VAULT-EXTENSION.md), X9 documented. |
 | N1–N8, N10 | Fixed (encryption preselected, passphrase ≥ 12, drift bound client + server with the `clock` error, Zod-validated responses, push endpoint block list, proxy deadline, docs, backup mode 0600). N9, N11, N12 open (docs/server ops). |
-| V1, V3, V6, V7, V8, V11 | Fixed. V2 (Hello wrapping), V4 (Android clipboard flag), V5 (backup row validation), V9, V10 open. *(V5, V10, T2 and N11 done: [PR #417](https://github.com/SGNemo/schweizer-taschenmesser/pull/417))* |
+| V1, V2, V3, V6, V7, V8, V11 | Fixed (V2 residual: raw entry until the first Hello unlock after the update). V4 (Android clipboard flag), V5 (backup row validation), V9, V10 open. *(V5, V10, T2 and N11 done: [PR #417](https://github.com/SGNemo/schweizer-taschenmesser/pull/417))* |
 | T1, T3, T4 | Fixed. T2 (Android manifest assertion) still needs the CI step on a real `tauri android init` run; T5–T8 open. |
 | L1, L2 | Fixed. L3–L7 info only. |
 | A1, A2, A3, A4, A6 | Fixed. A5 (re-hash model at load) open. |
