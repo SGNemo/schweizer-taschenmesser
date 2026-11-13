@@ -814,7 +814,12 @@ fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
 #[test]
 fn secret_presence_is_a_registered_command_of_the_page() {
     let plugin = format!("{}/plugins/secure-store", env!("CARGO_MANIFEST_DIR"));
-    let file = |f: &str| fs::read_to_string(format!("{plugin}/{f}")).unwrap();
+    // Windows checkouts have CRLF line ends, like `source` above.
+    let file = |f: &str| {
+        fs::read_to_string(format!("{plugin}/{f}"))
+            .unwrap()
+            .replace("\r\n", "\n")
+    };
     assert!(file("build.rs").contains("\"has\","));
     assert!(file("permissions/default.toml").contains("\"allow-has\","));
     assert!(file("src/lib.rs").contains("commands::has,"));
