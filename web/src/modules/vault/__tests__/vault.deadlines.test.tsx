@@ -131,6 +131,16 @@ describe('Unterlagen: view "Fristen"', () => {
     // Enter twice in a row: one renewal, never the next term on top. (The form that starts afresh for the new term:
     // "one write per Verlängert" below.)
     const form = dialog.querySelector('form')!;
+    // Each focus on the title, and whether the rail had already moved the row below "Heute" at that moment.
+    const focused: boolean[] = [];
+    const log = (e: FocusEvent) => {
+      if ((e.target as HTMLElement).textContent !== 'Hausrat') return;
+      const rows = Array.from(
+        screen.getByRole('list', { name: 'Fristen und Ablauf' }).querySelectorAll('li'),
+      ).map((li) => li.textContent ?? '');
+      focused.push(rows.indexOf('Heute') < rows.findIndex((text) => text.includes('Hausrat')));
+    };
+    document.addEventListener('focusin', log);
     fireEvent.submit(form);
     fireEvent.submit(form);
     await waitFor(async () => {
@@ -140,6 +150,12 @@ describe('Unterlagen: view "Fristen"', () => {
     });
     // The row's "Verlängert" is gone with the new term: the focus is on the row's title, not nowhere.
     await waitFor(() => expect(document.activeElement?.textContent).toBe('Hausrat'));
+    // The dialog closed only once the rail showed the new term (the row had moved below "Heute"), and the title
+    // got the focus once, after that move: a screen reader hears it once. (In the browser a row moved under the
+    // focus drops it, and setting it again read the title twice.)
+    await new Promise((r) => setTimeout(r, 50));
+    document.removeEventListener('focusin', log);
+    expect(focused).toEqual([true]);
     const settled = (await documentRepo.active().toArray()).find((d) => d.title === 'Hausrat')!;
     expect([settled.startDate, settled.endDate]).toEqual(['2026-09-26', '2027-09-20']);
     // "Rückgängig" gives back the old term as a whole: end and start.
