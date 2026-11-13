@@ -216,6 +216,7 @@ KS-3. _Windows Hello:_ Accounts → Tresor anlegen/entsperren → „Import, Exp
 KS-4. _Abbruch:_ Beim Hello-Fenster „Abbrechen" → Tresor bleibt gesperrt, Passwortfeld und Button „Mit Biometrie entsperren" sind da. ☐
 KS-5. _Deaktivieren:_ „Biometrisches Entsperren deaktivieren" → beim nächsten Sperren kein Hello-Fenster mehr; der Eintrag `bio:vault-dek:…` ist aus dem Credential Manager verschwunden. ☐
 KS-6. _Ohne Hello (kein PIN/Gesicht eingerichtet):_ Abschnitt zeigt „Nicht verfügbar…", nichts bricht. ☐
+KS-13. _Siegel nur über Hello (`fix/secure-store-bio-prefix`):_ Dev-Build (`npm run tauri -- dev`), biometrisches Entsperren aktiv, Tresor gesperrt. In den DevTools (F12) `window.__TAURI_INTERNALS__.invoke('plugin:secure-store|get', { request: { name: 'bio:vault-dek:<id>' } })` (`<id>` aus dem Credential-Manager-Eintrag) → Fehler „reserved name", kein Schlüssel; dasselbe mit `set` und `delete`, der Eintrag bleibt unverändert. Danach „Mit Biometrie entsperren" → Hello-Fenster, Tresor offen. ☐
 
 #### Launch-Review: Handtests (aus STATUS verschoben, 2026-11-10; Bericht [security/LAUNCH-REVIEW-2026-10-06.md](security/LAUNCH-REVIEW-2026-10-06.md))
 
