@@ -98,7 +98,8 @@ describe('Unterlagen: view "Fristen"', () => {
     );
     const before = (await documentRepo.active().toArray()).find((d) => d.title === 'Hausrat')!;
     expect(before.endDate).toBe('2026-09-25');
-    // Enter twice in a row: one renewal, never the next term on top.
+    // Enter twice in a row: one renewal, never the next term on top. (Two submits of the same form; the form
+    // that starts afresh for the new term is held by the dialog's own lock, which this does not reach.)
     const form = dialog.querySelector('form')!;
     fireEvent.submit(form);
     fireEvent.submit(form);

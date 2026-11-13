@@ -82,29 +82,29 @@ export default function VaultPage() {
   // The id only: the dialog works on the row as the list holds it now.
   const [renewing, setRenewing] = useState<string | null>(null);
   // The row "Verlängert" was pressed in. After a renewal its button is gone (the new term is far away), so the
-  // focus goes to the row's own title instead of nowhere.
+  // focus goes to the row's own button (its title) instead of nowhere: once, when the list shows the new term.
   const renewRow = useRef<{ id: string; end?: string; row: Element | null }>(undefined);
   const renewed = useRef(false);
-  const startRenew = (d: { id: string; endDate?: string; expiresOn?: string }) => {
-    renewRow.current = {
-      id: d.id,
-      end: endOf(d),
-      row: document.activeElement?.closest('li') ?? null,
-    };
+  const startRenew = (d: { id: string; endDate?: string; expiresOn?: string }, from?: Element) => {
+    renewRow.current = { id: d.id, end: endOf(d), row: from?.closest('li') ?? null };
     renewed.current = false;
     setRenewing(d.id);
   };
   useEffect(() => {
     if (renewing || !renewed.current || !renewRow.current) return;
     const { id, end, row } = renewRow.current;
-    // On the rail the row moves across "Heute" and is drawn anew: its title is found by the document.
-    const title =
-      document.querySelector<HTMLElement>(`[data-doc-title="${id}"]`) ??
-      (row?.isConnected ? row.querySelector<HTMLElement>('button') : null);
-    title?.focus();
-    // Until the list shows the new term the row may still be drawn anew: then once more.
     const now = docs?.find((d) => d.id === id);
-    if (!now || endOf(now) !== end) renewed.current = false;
+    // Still the old term: the row will be drawn anew when the new one arrives. Until then the dialog has given
+    // the focus back to where it came from.
+    if (now && endOf(now) === end) return;
+    renewed.current = false;
+    // On the rail the row moves across "Heute" and is drawn anew: its title is found by the document's id
+    // (compared as a value, never put into a selector: an imported id may hold any character).
+    const title =
+      Array.from(document.querySelectorAll<HTMLElement>('[data-doc-title]')).find(
+        (el) => el.dataset.docTitle === id,
+      ) ?? (row?.isConnected ? row.querySelector<HTMLElement>('[data-row]') : null);
+    title?.focus();
   }, [renewing, docs]);
   // Master–detail (layout `split`): on a wide page a document shows in the panel beside the folders, below that
   // width the folder opens its dialog (a sheet on the phone).
@@ -234,7 +234,7 @@ export default function VaultPage() {
             day={day}
             current={wide ? detail?.id : undefined}
             onOpen={(d) => (wide ? setPicked(d.id) : setTarget(d))}
-            onRenew={startRenew}
+            onRenew={(d) => startRenew(d)}
           />
         ) : null}
         {view === 'documents' || none ? (
@@ -295,7 +295,7 @@ export default function VaultPage() {
                             <Button
                               size="sm"
                               aria-label={t.vault.renewAria(d.title)}
-                              onClick={() => startRenew(d)}
+                              onClick={(e) => startRenew(d, e.currentTarget)}
                             >
                               {t.vault.renew}
                             </Button>

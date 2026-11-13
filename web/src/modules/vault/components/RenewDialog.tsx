@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { addDaysStr, formatDay, today } from '@/core/time/dates';
 import { changeWithUndo } from '@/core/undo/withToast';
@@ -37,14 +37,16 @@ export function RenewDialog({
   const unlock = () => {
     writing.current = false;
   };
-  const close = () => {
-    unlock();
-    onClose();
-  };
+  // The lock comes back only once the dialog is closed for good (not while it is closing: the form below may
+  // already show the next term).
+  const open = doc !== null;
+  useEffect(() => {
+    if (!open) writing.current = false;
+  }, [open]);
   return (
     <Dialog
       open={doc !== null}
-      onClose={close}
+      onClose={onClose}
       title={doc ? t.vault.renewAria(doc.title) : t.vault.renewDialog.title}
     >
       {/* A new term from elsewhere (start or end) starts the dialog afresh: field and hint never describe two different terms. */}
@@ -52,7 +54,7 @@ export function RenewDialog({
         <Fields
           key={`${doc.id}:${doc.startDate}:${endOf(doc)}`}
           doc={doc}
-          onClose={close}
+          onClose={onClose}
           onSaved={onSaved}
           lock={lock}
           unlock={unlock}
@@ -92,7 +94,6 @@ function Fields({
         t.vault.renewed(doc.title, formatDay(value, 'd. MMM yyyy')),
       );
       onSaved?.();
-      // Closing gives the lock back: the dialog is gone before anything can be sent again.
       onClose();
     } catch {
       // Deleted meanwhile (another device): nothing to renew.

@@ -60,7 +60,7 @@ export const vault: Strings['vault'] = {
     proposed: 'Proposal: the same term once more. You can change the date.',
     noStart: 'Without a start there is no proposal: please enter the new end.',
     startMoves: (from: string) => `The start will move to ${from}.`,
-    stillPast: 'This date is already in the past.',
+    stillPast: 'This date is already in the past. You can change it here.',
     gone: 'The document no longer exists.',
     notLater: 'The new end must be after the current one.',
     save: 'Save renewal',

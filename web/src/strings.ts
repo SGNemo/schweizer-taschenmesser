@@ -5454,7 +5454,7 @@ export const de = {
       proposed: 'Vorschlag: noch einmal dieselbe Laufzeit. Das Datum lässt sich ändern.',
       noStart: 'Ohne Beginn gibt es keinen Vorschlag: bitte das neue Ende eintragen.',
       startMoves: (from: string) => `Der Beginn wird auf den ${from} gesetzt.`,
-      stillPast: 'Dieses Datum liegt schon in der Vergangenheit.',
+      stillPast: 'Dieses Datum liegt schon in der Vergangenheit. Es lässt sich hier ändern.',
       gone: 'Die Unterlage gibt es nicht mehr.',
       notLater: 'Das neue Ende muss nach dem bisherigen liegen.',
       save: 'Verlängerung speichern',
