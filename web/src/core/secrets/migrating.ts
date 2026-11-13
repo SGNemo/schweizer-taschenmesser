@@ -6,6 +6,7 @@ import type { SecretStore } from './types';
  *    into the keystore and deletes the old copy,
  *  - `set` writes to the keystore; if that fails the secret is still saved (in the legacy store) rather
  *    than lost – the next `get` moves it over,
+ *  - `has` answers from the keystore, else from the legacy store; it only reads (the next `get` moves),
  *  - `delete` removes it everywhere.
  */
 export function createMigratingStore(primary: SecretStore, legacy: SecretStore): SecretStore {
@@ -28,6 +29,14 @@ export function createMigratingStore(primary: SecretStore, legacy: SecretStore):
         console.warn('[secrets] could not move a secret into the keystore yet', e);
       }
       return old;
+    },
+    async has(name) {
+      try {
+        if (await primary.has(name)) return true;
+      } catch (e) {
+        console.warn('[secrets] keystore check failed', e);
+      }
+      return legacy.has(name);
     },
     async set(name, value) {
       try {

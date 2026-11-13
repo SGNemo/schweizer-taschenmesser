@@ -49,6 +49,18 @@ export function createDeviceKeyStore(database: TaschenmesserDB = defaultDb): Sec
         return undefined; // key lost/replaced (e.g. site data cleared partly): treat as not set
       }
     },
+    async has(name) {
+      const row = await rows<string>(database).get(ROW_PREFIX + name);
+      if (!row) return false;
+      try {
+        const plain = await open(await getDeviceKey(database), aad(name), row.value);
+        const present = plain.byteLength > 0;
+        plain.fill(0);
+        return present;
+      } catch {
+        return false; // same as `get`: a value that cannot be opened counts as not set
+      }
+    },
     async set(name, value) {
       const token = await seal(await getDeviceKey(database), aad(name), enc.encode(value));
       await rows<string>(database).put({ key: ROW_PREFIX + name, value: token });

@@ -1,6 +1,6 @@
 import type { ConnectorDef } from '@/core/connectors/types';
 import IcsSettings from './Settings';
-import { loadSubscriptions } from './subscriptions';
+import { hasSubscriptions, loadSubscriptions } from './subscriptions';
 import { syncIcs } from './sync';
 import { t } from '@/strings';
 
@@ -21,7 +21,7 @@ const connector: ConnectorDef = {
   authType: 'none',
   platforms: ['web', 'desktop', 'android'],
   features: [],
-  isConfigured: async (ctx) => (await loadSubscriptions(ctx)).length > 0,
+  isConfigured: (ctx) => hasSubscriptions(ctx),
   settings: IcsSettings,
   secretNames: ['subscriptions'],
   calendar: {

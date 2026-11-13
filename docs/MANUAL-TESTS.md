@@ -89,6 +89,10 @@ EN-E1. _Windows-Portable:_ Einstellungen durchklicken – Kategorien-Leiste link
 Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währenddessen verschieben, in der Titelleiste steht nie „Keine Rückmeldung“, und ein Wechsel zu einem anderen Modul zeigt dessen Inhalt statt „…“. Hintergrund und Einordnung je Command: [perf/MAIN-THREAD-COMMANDS-2026-11.md](perf/MAIN-THREAD-COMMANDS-2026-11.md).
 - **MT-H6 Einstellungen und „Über Nemo“:** „Mit Windows starten“ ein und aus: der Schalter bleibt nach erneutem Öffnen der Seite auf dem gewählten Stand (Task-Manager → Autostart zeigt Nemo bzw. nicht). „Datenordner öffnen“ öffnet den Explorer. Im Systemmonitor „Task-Manager öffnen“ startet ihn. ☐
 
+#### Geheimnis nur abfragen, nicht lesen (`fix/secret-store-has`) – nur auf Windows prüfbar
+
+- **SH1 Backup-Passphrase da/fehlt:** Portable-Exe. Einstellungen → Backup → Automatische Backups an, ohne Passphrase: Karte und „Gerätestatus“ (Nächstes Backup) sagen „Passphrase fehlt“. Passphrase setzen: beide zeigen den nächsten Termin, nach Neustart der App ebenso. Unter Konnektoren zeigt ein Dienst mit eigener Client-ID diese weiterhin als hinterlegt. ☐
+
 ### Modul-Bibliothek
 
 #### Bibliotheken in Identität v3 (Paket 2) – nur von Hand prüfbar
@@ -527,6 +531,10 @@ EN-E2. _Android:_ Einstellungen öffnet die Kategorien-Liste, eine Kategorie öf
 #### Einstellungen in Identität v3 (Paket 1) – nur von Hand prüfbar
 
 - **SV1 Handy, zwei Ebenen:** Einstellungen: Status-Kopf mit sechs Kacheln, darunter Karten und die gruppierte Liste; eine Kategorie antippen zeigt ihren Kopf mit „Einstellungen“ als Rücksprung, Android-Zurück führt zur Liste. ☐
+
+#### Geheimnis nur abfragen, nicht lesen (`fix/secret-store-has`) – nur auf Android prüfbar
+
+- **SH2 Backup-Passphrase und ICS-Kalender:** APK. Automatische Backups an, ohne Passphrase: „Gerätestatus“ sagt „Passphrase fehlt“; Passphrase setzen: nächster Termin steht da, auch nach App-Neustart. Konnektor ICS: ohne Adresse „nicht eingerichtet“, mit einer Adresse eingerichtet. ☐
 
 #### Handtests aus gemergten PRs (aus CHATS.md gesammelt, 2026-11-10)
 

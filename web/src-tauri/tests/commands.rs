@@ -807,3 +807,38 @@ fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
         }
     }
 }
+
+/// `has` tells the page only whether a secret is stored: it is a command of the shared
+/// `secure-store:default` (desktop and Android) and its answer is the bool-only `HasResponse`.
+#[test]
+fn secret_presence_answers_a_bool_only() {
+    let plugin = format!("{}/plugins/secure-store", env!("CARGO_MANIFEST_DIR"));
+    let file = |f: &str| fs::read_to_string(format!("{plugin}/{f}")).unwrap();
+    assert!(file("build.rs").contains("\"has\","));
+    assert!(file("permissions/default.toml").contains("\"allow-has\","));
+    assert!(file("src/lib.rs").contains("commands::has,"));
+    assert!(read("capabilities/default.json").contains("\"secure-store:default\""));
+    let commands = file("src/commands.rs");
+    let has = &commands[commands.find("async fn has<").unwrap()..];
+    let has = &has[..has.find("\n}\n").unwrap()];
+    assert!(has.contains("webview_name(&request.name)?"));
+    assert!(has.contains("-> Result<HasResponse>"));
+    let models = file("src/models.rs");
+    let dto = &models[models.find("pub struct HasResponse").unwrap()..];
+    let dto = &dto[..dto.find("\n}\n").unwrap()];
+    assert_eq!(dto.matches("pub ").count(), 2, "HasResponse has one field");
+    assert!(dto.contains("pub present: bool,"));
+    for (f, name) in [
+        ("src/desktop.rs", "pub fn has("),
+        ("src/mobile.rs", "pub fn has("),
+    ] {
+        let src = file(f);
+        let body = &src[src.find(name).unwrap()..];
+        let body = &body[..body.find("\n    }\n").unwrap()];
+        assert!(body.contains("-> Result<HasResponse>"), "{f}");
+        assert!(
+            !body.contains("log::") && !body.contains("println!"),
+            "{f} logs"
+        );
+    }
+}

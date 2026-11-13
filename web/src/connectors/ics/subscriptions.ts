@@ -26,6 +26,11 @@ export async function loadSubscriptions(ctx: ConnectorContext): Promise<IcsSubsc
   }
 }
 
+/** Whether any address is saved; only a yes/no (an empty list is never stored, see `saveSubscriptions`). */
+export function hasSubscriptions(ctx: ConnectorContext): Promise<boolean> {
+  return ctx.secrets.has(SECRET);
+}
+
 export async function saveSubscriptions(
   ctx: ConnectorContext,
   list: IcsSubscription[],

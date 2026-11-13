@@ -169,7 +169,7 @@ describe('page Gerätestatus', () => {
     ]);
     const desktop = platformOf('desktop');
     await show('desktop', {
-      secrets: { ...desktop.secrets, get: async () => 'a stored passphrase' },
+      secrets: { ...desktop.secrets, has: async () => true },
     });
     expect(screen.getByTestId('device-next-backup')).toHaveTextContent('14.11.2026');
     expect(screen.getByTestId('overview-backup')).toHaveTextContent('Gesichert');
@@ -224,7 +224,7 @@ describe('page Gerätestatus', () => {
         }),
       },
       // No passphrase stored (only whether one exists is read).
-      secrets: { ...desktop.secrets, get: async () => undefined },
+      secrets: { ...desktop.secrets, has: async () => false },
     });
     expect(screen.getByTestId('device-hub')).toHaveTextContent('Nicht erreichbar');
     expect(screen.getByTestId('device-hub')).toHaveAttribute('data-attention', 'true');

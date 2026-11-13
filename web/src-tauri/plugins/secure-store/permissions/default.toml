@@ -4,6 +4,7 @@ permissions = [
   "allow-available",
   "allow-set",
   "allow-get",
+  "allow-has",
   "allow-delete",
   "allow-biometric-seal",
   "allow-biometric-unseal",
