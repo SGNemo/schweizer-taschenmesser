@@ -57,6 +57,7 @@ export const AREAS: Record<string, Label> = {
   notes: { de: 'Notizen', en: 'Notes' },
   pantry: { de: 'Vorrat', en: 'Pantry' },
   routines: { de: 'Routinen', en: 'Routines' },
+  device: { de: 'Gerätestatus', en: 'Device status' },
   people: { de: 'Personen', en: 'People' },
   planner: { de: 'Planer', en: 'Planner' },
   subscriptions: { de: 'Abos', en: 'Subscriptions' },

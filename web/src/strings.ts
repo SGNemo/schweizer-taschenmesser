@@ -8961,6 +8961,64 @@ export const de = {
       moreSummary: 'Namen, nächstes Mal, Dauer, Notiz',
     },
   },
+  device: {
+    meta: {
+      name: 'Gerätestatus',
+      description:
+        'Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite. Nur Anzeige, nichts verlässt das Gerät.',
+    },
+    summary: {
+      ok: 'Alles in Ordnung',
+      look: (n: number) => `${n} Punkte brauchen einen Blick`,
+      settingsContext: 'Sync, Backup, Updates und Speicher auf einer Seite',
+    },
+    page: {
+      figureDetail: 'Nur Anzeige. Geändert wird in den Einstellungen, jede Zeile führt dorthin.',
+      pc: 'Prozessor, Arbeitsspeicher und Netzwerk zeigt „Dieser PC“ im Reiter „System“.',
+      pcOpen: 'Dieser PC öffnen',
+      pcLibrary: '„Dieser PC“ in der Bibliothek einschalten',
+    },
+    groups: { backup: 'Sicherung', sync: 'Abgleich', storage: 'Speicher', app: 'App' },
+    nextBackup: {
+      title: 'Nächstes Backup',
+      plannedContext: 'Automatisch, solange Nemo läuft',
+      due: 'Steht an',
+      dueContext: 'Läuft, sobald Nemo das nächste Mal prüft',
+      off: 'Nicht geplant',
+      offContext: 'Automatische Backups sind aus',
+      manual: 'Von Hand',
+      manualContext: 'Im Browser sicherst du als Datei, wann du willst',
+    },
+    hub: {
+      title: 'Heimnetz',
+      state: { listening: 'Aktiv', off: 'Aus', failed: 'Nicht erreichbar' },
+      devices: (n: number) => (n === 1 ? '1 Gerät gekoppelt' : `${n} Geräte gekoppelt`),
+      offContext: 'Dieser PC gleicht nicht im Heimnetz ab',
+      failedContext: 'Eingeschaltet, lauscht aber gerade nicht',
+    },
+    drive: {
+      title: 'Laufwerk',
+      free: (size: string) => `${size} frei`,
+      context: (size: string) => `von ${size} auf dem Systemlaufwerk`,
+    },
+    autostart: {
+      title: 'Autostart',
+      on: 'An',
+      off: 'Aus',
+      onContext: 'Nemo startet mit dem PC',
+      offContext: 'Nemo startet, wenn du es öffnest',
+    },
+    network: {
+      title: 'Netzwerk',
+      open: 'Erlaubt',
+      blocked: 'Gesperrt',
+      openContext: 'Was wohin ging, steht in den Einstellungen',
+      blockedContext: 'Nemo sendet nichts, bis du es wieder erlaubst',
+    },
+    widget: {
+      hint: (backup: string, sync: string) => `Backup: ${backup} · Sync: ${sync}`,
+    },
+  },
 } as const;
 
 /** Shape every translation must have: same keys, strings for strings, same function signatures. */

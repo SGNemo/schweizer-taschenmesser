@@ -1,6 +1,5 @@
-import { Link } from 'react-router';
+import { StatusLineLink } from '@/core/status/StatusLineLink';
 import { tSettingsV3 } from '@/strings.settingsV3';
-import { Icon } from '@/ui';
 import { STATUS_LOOK } from './categoryLook';
 import { PageHead } from './PageHead';
 import { useSettingsStatus } from './useSettingsStatus';
@@ -26,20 +25,7 @@ export function StatusHead({ title }: { title: string }) {
         <ul className={styles.tiles} data-testid="settings-status">
           {tiles.map((tile) => (
             <li key={tile.id}>
-              <Link
-                to={tile.to}
-                className={styles.tile}
-                data-testid={tile.testId}
-                data-attention={tile.attention}
-                data-generic={tile.generic || undefined}
-              >
-                <span className={styles.name}>
-                  <Icon name={tile.icon} />
-                  {tile.title}
-                </span>
-                <span className={styles.status}>{tile.status}</span>
-                <span className={styles.context}>{tile.context}</span>
-              </Link>
+              <StatusLineLink line={tile} hideGenericOnPhone />
             </li>
           ))}
         </ul>
