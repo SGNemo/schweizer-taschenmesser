@@ -77,7 +77,7 @@ export function DocumentDetail({
     >
       {facts.length === 0 ? <p>{t.vault.detail.bare}</p> : null}
       {hasFile && d.fileName && canPreview(d.fileType) ? (
-        <FilePreview key={d.id} id={d.id} fileName={d.fileName} />
+        <FilePreview key={`${d.id}:${d.fileName}:${d.fileSize}`} id={d.id} fileName={d.fileName} />
       ) : null}
     </DetailPanel>
   );

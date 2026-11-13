@@ -29,8 +29,10 @@ export function RenewDialog({
       onClose={onClose}
       title={doc ? t.vault.renewAria(doc.title) : t.vault.renewDialog.title}
     >
-      {/* A new end from elsewhere starts the dialog afresh: field and hint never describe two different terms. */}
-      {doc ? <Fields key={`${doc.id}:${endOf(doc)}`} doc={doc} onClose={onClose} /> : null}
+      {/* A new term from elsewhere (start or end) starts the dialog afresh: field and hint never describe two different terms. */}
+      {doc ? (
+        <Fields key={`${doc.id}:${doc.startDate}:${endOf(doc)}`} doc={doc} onClose={onClose} />
+      ) : null}
     </Dialog>
   );
 }
