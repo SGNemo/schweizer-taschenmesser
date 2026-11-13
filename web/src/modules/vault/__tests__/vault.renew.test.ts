@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   canRenew,
   countByCategory,
+  dateKind,
   deadlineRows,
+  nearKey,
   RENEWABLE,
   renewedEnd,
   renewPatch,
@@ -78,13 +80,29 @@ describe('renewal: one more term of the same length', () => {
     expect(RENEWABLE).toEqual(['identity', 'insurance', 'contract', 'health', 'other']);
     expect(canRenew({ category: 'identity', ...past }, 'expired', TODAY)).toBe(true);
     expect(canRenew({ category: 'contract', ...far }, 'act-now', TODAY)).toBe(true);
-    expect(canRenew({ category: 'contract', ...far }, 'soon', TODAY)).toBe(false);
+    // A cancellation deadline some weeks away is no call to renew yet.
+    expect(canRenew({ category: 'contract', ...far, noticeDays: 60 }, 'soon', TODAY)).toBe(false);
+    // A paper without a deadline (a passport) is renewed before it runs out: as long as it reads "Läuft bald ab".
+    expect(canRenew({ category: 'identity', endDate: '2026-11-20' }, 'soon', TODAY)).toBe(true);
+    expect(canRenew({ category: 'warranty', endDate: '2026-11-20' }, 'soon', TODAY)).toBe(false);
     expect(canRenew({ category: 'contract', ...far }, 'ok', TODAY)).toBe(false);
     expect(canRenew({ category: 'warranty', ...past }, 'expired', TODAY)).toBe(false);
     expect(canRenew({ category: 'tax', ...past }, 'expired', TODAY)).toBe(false);
     expect(canRenew({ category: 'contract' }, 'open-ended', TODAY)).toBe(false);
     // A paper without a deadline is still "soon" on its last day: the end has come.
     expect(canRenew({ category: 'identity', endDate: TODAY }, 'soon', TODAY)).toBe(true);
+  });
+
+  it('the same words say what is near in both views; a passed deadline is not among them', () => {
+    expect(nearKey('expired', 'end')).toBe('expired');
+    expect(nearKey('act-now', 'cancel')).toBe('cancelNow');
+    expect(nearKey('soon', 'cancel')).toBe('cancelSoon');
+    expect(nearKey('soon', 'end')).toBe('endSoon');
+    expect(nearKey('missed', 'end')).toBeUndefined();
+    expect(nearKey('ok', 'cancel')).toBeUndefined();
+    expect(dateKind({ endDate: '2026-12-31', noticeDays: 30 }, '2026-09-29')).toBe('cancel');
+    expect(dateKind({ endDate: '2026-12-31', noticeDays: 30 }, '2026-12-15')).toBe('end');
+    expect(dateKind({ endDate: '2026-12-31' }, '2026-09-29')).toBe('end');
   });
 
   it('what ran out more than 90 days ago is history: no button any more', () => {

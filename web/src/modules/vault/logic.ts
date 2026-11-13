@@ -138,13 +138,13 @@ const RENEW_MISSED_DAYS = 30;
 const PAST_DAYS = 90;
 
 /**
- * "Verlängert" is offered around the end: from the day the cancellation deadline is a week away or the end has
- * come, until `PAST_DAYS` after the end. A contract whose deadline has passed runs on: it offers the button only
+ * "Verlängert" is offered around the end: from the day the cancellation deadline is a week away, a paper without
+ * a deadline reads "Läuft bald ab" (`EXPIRY_SOON_DAYS`) or the end has come, until `PAST_DAYS` after the end. A contract whose deadline has passed runs on: it offers the button only
  * for the last weeks of its term, not for months on end (the user may have cancelled in time; there is no state
  * for that). What ran out long ago is history, not a call to act.
  */
 export function canRenew(
-  d: Pick<VaultDocument, 'category' | 'endDate' | 'expiresOn'>,
+  d: Pick<VaultDocument, 'category'> & D,
   state: Status,
   today: string,
 ): boolean {
@@ -153,7 +153,9 @@ export function canRenew(
   const left = daysBetween(today, end);
   if (state === 'expired') return -left <= PAST_DAYS;
   if (state === 'missed') return left <= RENEW_MISSED_DAYS;
-  // The end day itself still counts as "soon" for a paper without a deadline: the end has come.
+  // A paper without a cancellation deadline (a passport, the vehicle inspection) is renewed before it runs out:
+  // the button shows as long as it reads "Läuft bald ab".
+  if (state === 'soon' && cancelDeadline(d) === undefined) return true;
   return state === 'act-now' || left === 0;
 }
 
@@ -205,13 +207,35 @@ export function renewPatch(
   };
 }
 
+export type DateKind = 'cancel' | 'end';
+
+/** What the date that matters next is: the last day to cancel while it lies ahead, otherwise the end. */
+export function dateKind(d: D, today: string): DateKind {
+  const deadline = cancelDeadline(d);
+  return deadline !== undefined && deadline >= today ? 'cancel' : 'end';
+}
+
+/**
+ * Which words say that a document is near or over, the same in both views ("Ablage" and "Fristen"); undefined
+ * when nothing is near. A passed cancellation deadline is not among them: the term simply runs on.
+ */
+export function nearKey(
+  state: Status,
+  kind: DateKind,
+): 'expired' | 'cancelNow' | 'cancelSoon' | 'endSoon' | undefined {
+  if (state === 'expired') return 'expired';
+  if (state === 'act-now') return 'cancelNow';
+  if (state === 'soon') return kind === 'cancel' ? 'cancelSoon' : 'endSoon';
+  return undefined;
+}
+
 /** One row of the "Fristen" timeline: a document and the date that matters next. */
 export interface DeadlineRow<T> {
   doc: T;
   date: string;
   state: Status;
   /** What the date is: the last day to cancel, or the end. */
-  kind: 'cancel' | 'end';
+  kind: DateKind;
 }
 
 /**
@@ -227,15 +251,7 @@ export function deadlineRows<T extends VaultDocument>(
     .flatMap((doc): DeadlineRow<T>[] => {
       const date = nextRelevantDate(doc, today);
       if (!date) return [];
-      const deadline = cancelDeadline(doc);
-      return [
-        {
-          doc,
-          date,
-          state: statusOf(doc, today),
-          kind: deadline !== undefined && deadline >= today ? 'cancel' : 'end',
-        },
-      ];
+      return [{ doc, date, state: statusOf(doc, today), kind: dateKind(doc, today) }];
     })
     .sort((a, b) => a.date.localeCompare(b.date) || compareText(a.doc.title, b.doc.title));
   const old = (r: DeadlineRow<T>) =>

@@ -33,9 +33,11 @@ import {
   cancelDeadline,
   canRenew,
   countByCategory,
+  dateKind,
   endOf,
   filterDocuments,
   formatSize,
+  nearKey,
   safeFileName,
   sortDocuments,
   statusOf,
@@ -231,6 +233,7 @@ export default function VaultPage() {
                   const end = endOf(d);
                   const deadline = cancelDeadline(d);
                   const hasFile = files?.has(d.id) ?? false;
+                  const near = nearKey(state, dateKind(d, day));
                   return (
                     <ItemRow
                       key={d.id}
@@ -256,14 +259,13 @@ export default function VaultPage() {
                       ])}
                       end={
                         <>
-                          {state === 'ok' || state === 'open-ended' ? null : (
-                            <Badge
-                              // Never red: what has run out asks for a look (red stays for overdue money).
-                              tone="warning"
-                            >
-                              {state === 'missed' ? tDeadline.get().missed : t.vault.status[state]}
+                          {near ? (
+                            // The rail's words and tones; never red (red stays for overdue money). A passed
+                            // cancellation deadline has no badge: the small print names it with its date.
+                            <Badge tone={near === 'cancelNow' ? 'accent' : 'warning'}>
+                              {t.vault.timeline.kinds[near]}
                             </Badge>
-                          )}
+                          ) : null}
                           {canRenew(d, state, day) ? (
                             <Button
                               size="sm"

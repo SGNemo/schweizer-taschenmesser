@@ -2,7 +2,7 @@ import type { Stored } from '@/core/db/types';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Badge, Button, DatedTimeline, EmptyState, type DatedRow } from '@/ui';
-import { canRenew, deadlineRows, type DeadlineRow } from '../logic';
+import { canRenew, deadlineRows, nearKey, type DeadlineRow } from '../logic';
 import type { VaultDocument } from '../schema';
 import styles from './Deadlines.module.css';
 
@@ -15,11 +15,9 @@ type Doc = Stored<VaultDocument>;
  */
 function kindOf(r: DeadlineRow<Doc>) {
   const k = t.vault.timeline.kinds;
-  if (r.state === 'expired') return <Badge tone="warning">{k.expired}</Badge>;
+  const near = nearKey(r.state, r.kind);
+  if (near) return <Badge tone={near === 'cancelNow' ? 'accent' : 'warning'}>{k[near]}</Badge>;
   if (r.state === 'missed') return k.missed;
-  if (r.state === 'act-now') return <Badge tone="accent">{k.cancelNow}</Badge>;
-  if (r.state === 'soon')
-    return <Badge tone="warning">{r.kind === 'cancel' ? k.cancelSoon : k.endSoon}</Badge>;
   return r.kind === 'cancel' ? k.cancel : k.end;
 }
 

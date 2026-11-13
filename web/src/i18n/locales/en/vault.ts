@@ -95,13 +95,6 @@ export const vault: Strings['vault'] = {
   renewed: (title: string, date: string) => `“${title}” now runs until ${date}.`,
   download: 'Download',
   search: 'Search documents',
-  status: {
-    expired: 'Expired',
-    'act-now': 'Cancel now',
-    soon: 'Soon',
-    ok: '',
-    'open-ended': '',
-  } as Record<string, string>,
   empty: 'No documents yet.',
   emptyFiltered: 'Nothing found.',
   widgetEmpty: 'No deadlines in sight.',

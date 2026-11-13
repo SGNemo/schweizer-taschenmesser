@@ -5489,13 +5489,6 @@ export const de = {
     renewed: (title: string, date: string) => `„${title}“ läuft jetzt bis ${date}.`,
     download: 'Herunterladen',
     search: 'Unterlagen durchsuchen',
-    status: {
-      expired: 'Abgelaufen',
-      'act-now': 'Jetzt kündigen',
-      soon: 'Bald',
-      ok: '',
-      'open-ended': '',
-    } as Record<string, string>,
     empty: 'Noch keine Unterlagen.',
     emptyFiltered: 'Nichts gefunden.',
     widgetEmpty: 'Keine Fristen in Sicht.',
