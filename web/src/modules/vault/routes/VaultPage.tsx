@@ -4,11 +4,10 @@ import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from '
 import { useSearchParams } from 'react-router';
 import { blobKeys, getBlob, pruneBlobs } from '@/core/blobs';
 import { getPlatform } from '@/core/platform';
-import { formatDay, relativeDayLabel, today } from '@/core/time/dates';
+import { formatDay, today } from '@/core/time/dates';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import { t } from '@/strings';
 import {
-  Badge,
   Button,
   EmptyState,
   Icon,
@@ -24,6 +23,7 @@ import {
   useSplitView,
 } from '@/ui';
 import { SignatureMark } from '@/ui/identity';
+import { DeadlineKind } from '../components/DeadlineKind';
 import { DeadlineTimeline } from '../components/DeadlineTimeline';
 import { DocumentDetail } from '../components/DocumentDetail';
 import { DocumentEditor, type DocumentTarget } from '../components/DocumentEditor';
@@ -33,12 +33,10 @@ import {
   cancelDeadline,
   canRenew,
   countByCategory,
-  dateKind,
   endOf,
   filterDocuments,
   formatSize,
-  nearKey,
-  nearTone,
+  nextRelevantDate,
   safeFileName,
   sortDocuments,
   statusOf,
@@ -90,22 +88,6 @@ export default function VaultPage() {
     renewed.current = false;
     setRenewing(d.id);
   };
-  useEffect(() => {
-    if (renewing || !renewed.current || !renewRow.current) return;
-    const { id, end, row } = renewRow.current;
-    const now = docs?.find((d) => d.id === id);
-    // Still the old term: the row will be drawn anew when the new one arrives. Until then the dialog has given
-    // the focus back to where it came from.
-    if (now && endOf(now) === end) return;
-    renewed.current = false;
-    // On the rail the row moves across "Heute" and is drawn anew: its title is found by the document's id
-    // (compared as a value, never put into a selector: an imported id may hold any character).
-    const title =
-      Array.from(document.querySelectorAll<HTMLElement>('[data-doc-title]')).find(
-        (el) => el.dataset.docTitle === id,
-      ) ?? (row?.isConnected ? row.querySelector<HTMLElement>('[data-row]') : null);
-    title?.focus();
-  }, [renewing, docs]);
   // Master–detail (layout `split`): on a wide page a document shows in the panel beside the folders, below that
   // width the folder opens its dialog (a sheet on the phone).
   const wide = useSplitView();
@@ -145,6 +127,22 @@ export default function VaultPage() {
   // and does not come back by itself.
   const renewDoc = renewing ? docs?.find((d) => d.id === renewing && endOf(d)) : undefined;
   if (renewing && docs && !renewDoc) setRenewing(null);
+  useEffect(() => {
+    if (renewing || !renewed.current || !renewRow.current) return;
+    const { id, end, row } = renewRow.current;
+    const now = docs?.find((d) => d.id === id);
+    // Still the old term: the row will be drawn anew when the new one arrives. Until then the dialog has given
+    // the focus back to where it came from.
+    if (now && endOf(now) === end) return;
+    renewed.current = false;
+    // On the rail the row moves across "Heute" and is drawn anew: its title is found by the document's id
+    // (compared as a value, never put into a selector: an imported id may hold any character).
+    const title =
+      Array.from(document.querySelectorAll<HTMLElement>('[data-doc-title]')).find(
+        (el) => el.dataset.docTitle === id,
+      ) ?? (row?.isConnected ? row.querySelector<HTMLElement>('[data-row]') : null);
+    title?.focus();
+  }, [renewing, docs]);
 
   return (
     <>
@@ -258,8 +256,9 @@ export default function VaultPage() {
                   const state = statusOf(d, day);
                   const end = endOf(d);
                   const deadline = cancelDeadline(d);
+                  // The cancellation deadline still lies ahead: it is the date that matters next.
+                  const ahead = !!deadline && deadline >= day;
                   const hasFile = files?.has(d.id) ?? false;
-                  const near = nearKey(state, dateKind(d, day));
                   return (
                     <ItemRow
                       key={d.id}
@@ -277,7 +276,9 @@ export default function VaultPage() {
                         deadline && state === 'missed'
                           ? dated(tDeadline.get().missedOn(formatDay(deadline, 'd. MMM yyyy')))
                           : deadline && state !== 'expired'
-                            ? dated(`${t.vault.deadlineLabel}: ${relativeDayLabel(deadline, day)}`)
+                            ? dated(
+                                `${t.vault.deadlineLabel}: ${formatDay(deadline, 'd. MMM yyyy')}`,
+                              )
                             : undefined,
                         d.fileName
                           ? `${d.fileName}${d.fileSize !== undefined ? ` (${formatSize(d.fileSize)})` : ''}${hasFile ? '' : ` · ${t.vault.fileElsewhere}`}`
@@ -285,11 +286,15 @@ export default function VaultPage() {
                       ])}
                       end={
                         <>
-                          {near ? (
-                            // The rail's words and tones; never red (red stays for overdue money). A passed
-                            // cancellation deadline has no badge: the small print names it with its date.
-                            // `timeline.kinds` holds the words both views share.
-                            <Badge tone={nearTone(near)}>{t.vault.timeline.kinds[near]}</Badge>
+                          {/* The same words as on the rail of "Fristen". */}
+                          {end ? (
+                            <DeadlineKind
+                              state={state}
+                              kind={ahead ? 'cancel' : 'end'}
+                              date={nextRelevantDate(d, day) ?? end}
+                              day={day}
+                              folder
+                            />
                           ) : null}
                           {canRenew(d, state, day) ? (
                             <Button

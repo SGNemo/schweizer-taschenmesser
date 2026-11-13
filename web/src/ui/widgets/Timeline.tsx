@@ -92,7 +92,7 @@ export interface DatedRow {
   /** The formatted day ("31. Dez. 2026"). */
   when: string;
   title: ReactNode;
-  /** Small tag behind the title ("Kündigen bis", "Abgelaufen"). */
+  /** Small tag behind the title ("Läuft ab", "Abgelaufen"). */
   kind?: ReactNode;
   /** The day lies before today: the row is muted and stands above the marker. */
   past?: boolean;

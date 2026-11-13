@@ -216,24 +216,6 @@ export function dateKind(d: D, today: string): DateKind {
   return deadline !== undefined && deadline >= today ? 'cancel' : 'end';
 }
 
-/**
- * Which words say that a document is near or over, the same in both views ("Ablage" and "Fristen"); undefined
- * when nothing is near. A passed cancellation deadline is not among them: the term simply runs on.
- */
-export function nearKey(
-  state: Status,
-  kind: DateKind,
-): 'expired' | 'cancelNow' | 'cancelSoon' | 'endSoon' | undefined {
-  if (state === 'expired') return 'expired';
-  if (state === 'act-now') return 'cancelNow';
-  if (state === 'soon') return kind === 'cancel' ? 'cancelSoon' : 'endSoon';
-  return undefined;
-}
-
-/** The badge tone of those words: a deadline this week in accent, the rest "have a look"; never red. */
-export const nearTone = (near: NonNullable<ReturnType<typeof nearKey>>): 'accent' | 'warning' =>
-  near === 'cancelNow' ? 'accent' : 'warning';
-
 /** One row of the "Fristen" timeline: a document and the date that matters next. */
 export interface DeadlineRow<T> {
   doc: T;

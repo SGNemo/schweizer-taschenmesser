@@ -4,7 +4,6 @@ import {
   countByCategory,
   dateKind,
   deadlineRows,
-  nearKey,
   RENEWABLE,
   renewedEnd,
   renewPatch,
@@ -109,13 +108,7 @@ describe('renewal: one more term of the same length', () => {
     expect(sorted).toEqual(['now', 'expired', 'soon', 'missed', 'ok']);
   });
 
-  it('the same words say what is near in both views; a passed deadline is not among them', () => {
-    expect(nearKey('expired', 'end')).toBe('expired');
-    expect(nearKey('act-now', 'cancel')).toBe('cancelNow');
-    expect(nearKey('soon', 'cancel')).toBe('cancelSoon');
-    expect(nearKey('soon', 'end')).toBe('endSoon');
-    expect(nearKey('missed', 'end')).toBeUndefined();
-    expect(nearKey('ok', 'cancel')).toBeUndefined();
+  it('the date that matters next is the last day to cancel while it lies ahead, otherwise the end', () => {
     expect(dateKind({ endDate: '2026-12-31', noticeDays: 30 }, '2026-09-29')).toBe('cancel');
     expect(dateKind({ endDate: '2026-12-31', noticeDays: 30 }, '2026-12-15')).toBe('end');
     expect(dateKind({ endDate: '2026-12-31' }, '2026-09-29')).toBe('end');
