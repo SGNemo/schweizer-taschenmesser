@@ -43,9 +43,12 @@ import { useAdvanced } from '@/core/settings/comfort';
 import { tDeadline } from '@/strings.deadline';
 import styles from './subscriptions.module.css';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
+import { usePageWidthAtLeast } from '@/ui/pageWidth';
 
 export default function SubscriptionsPage() {
   const day = today();
+  // Phone (design check G4): one short meta line per row; the rest is in the entry's dialog.
+  const narrow = usePageWidthAtLeast(48) === false;
   const subs = useLiveQuery(
     async () => sortSubscriptions(await subscriptionRepo.active().toArray(), today()),
     [],
@@ -210,33 +213,78 @@ export default function SubscriptionsPage() {
                 }
                 className={s.active ? undefined : styles.inactive}
                 meta={
-                  <>
-                    {/* Status badges sit in the meta line: the amount column stays put (U56). */}
-                    {!s.active ? <Badge>{t.subscriptions.paused}</Badge> : null}
-                    {status === 'trial' ? (
-                      <Badge tone="info">{t.subscriptions.ext.trial.chip}</Badge>
-                    ) : null}
-                    {status === 'ended' ? <Badge>{t.subscriptions.ext.status.ended}</Badge> : null}
-                    {!s.active || status === 'trial' || status === 'ended' ? ' ' : null}
-                    {facts.join(' · ')}
-                    {missed ? (
-                      <span className={styles.missed} title={tDeadline.get().missedNote}>
-                        {' · '}
-                        {tDeadline.get().missedOn(formatDay(missed.deadline, 'd. MMM yyyy'))}
-                      </span>
-                    ) : null}
-                    {cancel ? (
-                      <span
-                        className={`${styles.cancelLine} ${soon?.tone === 'soon' ? styles.warn : ''}`}
-                        data-tone={soon?.tone}
-                      >
-                        {' · '}
-                        {soon?.tone === 'soon' ? <Icon name="clock" size={14} /> : null}
-                        {t.subscriptions.cancelBy}: {formatDay(cancel.deadline, 'd. MMM yyyy')}
-                        {soon?.tone === 'soon' ? ` · ${relativeDays(soon.days)}` : null}
-                      </span>
-                    ) : null}
-                  </>
+                  narrow && !advanced ? (
+                    // Phone (G4): the status, the rule only when it is not plain monthly (the amount is per that
+                    // rule), the next charge as a date, a cancellation and a price rise, and a cancellation deadline
+                    // only while it is near. A passed deadline and the monthly equivalent are in the dialog;
+                    // "Erweitert" keeps the full line.
+                    <>
+                      {!s.active ? <Badge>{t.subscriptions.paused}</Badge> : null}
+                      {status === 'trial' ? (
+                        <Badge tone="info">{t.subscriptions.ext.trial.chip}</Badge>
+                      ) : null}
+                      {status === 'ended' ? (
+                        <Badge>{t.subscriptions.ext.status.ended}</Badge>
+                      ) : null}
+                      {(!s.active || status === 'trial' || status === 'ended') &&
+                      (charge || !plainMonthly) &&
+                      s.active
+                        ? ' '
+                        : null}
+                      {s.active && !plainMonthly ? describeRecurrence(s.recurrence) : null}
+                      {s.active && !plainMonthly && charge ? ' · ' : null}
+                      {charge ? (
+                        <>
+                          <span className="sr-only">{t.subscriptions.nextCharge}: </span>
+                          {formatDay(charge, 'd. MMM')}
+                        </>
+                      ) : null}
+                      {s.recurrence.until
+                        ? ` · ${t.subscriptions.cancelledBadge(formatDay(s.recurrence.until, 'd. MMM'))}`
+                        : null}
+                      {increase ? ` · ${t.subscriptions.priceUp(changePercent(increase))}` : null}
+                      {cancel && soon?.tone === 'soon' ? (
+                        <span
+                          className={`${styles.cancelLine} ${styles.warn}`}
+                          data-tone={soon.tone}
+                        >
+                          {' · '}
+                          <Icon name="clock" size={14} />
+                          {t.subscriptions.cancelBy} {formatDay(cancel.deadline, 'd. MMM')}
+                        </span>
+                      ) : null}
+                    </>
+                  ) : (
+                    <>
+                      {/* Status badges sit in the meta line: the amount column stays put (U56). */}
+                      {!s.active ? <Badge>{t.subscriptions.paused}</Badge> : null}
+                      {status === 'trial' ? (
+                        <Badge tone="info">{t.subscriptions.ext.trial.chip}</Badge>
+                      ) : null}
+                      {status === 'ended' ? (
+                        <Badge>{t.subscriptions.ext.status.ended}</Badge>
+                      ) : null}
+                      {!s.active || status === 'trial' || status === 'ended' ? ' ' : null}
+                      {facts.join(' · ')}
+                      {missed ? (
+                        <span className={styles.missed} title={tDeadline.get().missedNote}>
+                          {' · '}
+                          {tDeadline.get().missedOn(formatDay(missed.deadline, 'd. MMM yyyy'))}
+                        </span>
+                      ) : null}
+                      {cancel ? (
+                        <span
+                          className={`${styles.cancelLine} ${soon?.tone === 'soon' ? styles.warn : ''}`}
+                          data-tone={soon?.tone}
+                        >
+                          {' · '}
+                          {soon?.tone === 'soon' ? <Icon name="clock" size={14} /> : null}
+                          {t.subscriptions.cancelBy}: {formatDay(cancel.deadline, 'd. MMM yyyy')}
+                          {soon?.tone === 'soon' ? ` · ${relativeDays(soon.days)}` : null}
+                        </span>
+                      ) : null}
+                    </>
+                  )
                 }
                 onOpen={() => setTarget(s)}
                 onSwipeLeft={remove}

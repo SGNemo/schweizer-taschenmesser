@@ -67,7 +67,10 @@ test.describe('Invoices', () => {
   test('creates an invoice, shows it on dashboard and calendar', async ({ page }) => {
     await addInvoice(page, 'Stadtwerke', '89,90', '2026-10-05');
     await expect(page.getByTestId('open-total')).toHaveText(/89,90\s€/);
-    await expect(page.getByRole('button', { name: /^Stadtwerke/ })).toContainText('Fällig am');
+    // Desktop says "Fällig am …"; the phone's one meta line (design check G4) only the day.
+    await expect(page.getByRole('button', { name: /^Stadtwerke/ })).toContainText(
+      /Fällig am|5\. Okt\./,
+    );
 
     await ready(page, '/');
     await expect(page.getByTestId('widget-invoices:due')).toContainText('Stadtwerke');
@@ -135,6 +138,7 @@ test.describe('Invoices', () => {
 test.describe('Subscriptions', () => {
   test('totals per month and year, next charge, cancellation deadline, pausing', async ({
     page,
+    isMobile,
   }) => {
     await ready(page, '/subscriptions?new=1');
     let dialog = page.getByRole('dialog', { name: 'Abo hinzufügen' });
@@ -157,8 +161,9 @@ test.describe('Subscriptions', () => {
     await expect(page.getByTestId('total-month')).toHaveText(/21,24\s€/);
     await expect(page.getByTestId('total-year')).toHaveText(/254,88\s€/);
     const streaming = page.getByRole('button', { name: /Streaming/ });
-    await expect(streaming).toContainText('Nächste Abbuchung: 15. Okt. 2026');
-    await expect(streaming).toContainText('Kündigen bis: 16. Okt. 2026');
+    // The phone's one meta line (design check G4): the day without the year, a deadline only while it is near.
+    await expect(streaming).toContainText(/Nächste Abbuchung: 15\. Okt\./);
+    if (!isMobile) await expect(streaming).toContainText('Kündigen bis: 16. Okt. 2026');
     await expect(page.getByRole('button', { name: /Cloud/ })).toContainText('Jährlich');
 
     // Pausing removes it from the totals. Desktop: the row's (neutral) switch. Phone: the row has no switch

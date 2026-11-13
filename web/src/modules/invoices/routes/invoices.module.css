@@ -116,7 +116,7 @@
 
 .sectionTitle {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--text-md);
 }
 
 .paymentList {
@@ -183,5 +183,13 @@
 @container page (max-width: 40rem) {
   .plate {
     display: none;
+  }
+}
+
+/* Phone (design check G4): the payee keeps one line beside the amount; the full name is the row's tooltip, its
+   accessible name and the dialog's first field. */
+@media (max-width: 899px) {
+  .row {
+    --clamp-lines: 1;
   }
 }

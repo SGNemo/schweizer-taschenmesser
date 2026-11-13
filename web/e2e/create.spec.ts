@@ -25,7 +25,8 @@ test('an invoice from one line of text: "r 89,90 Swisscom 31.10." and Enter', as
   await ready(page, '/invoices');
   const row = page.getByRole('listitem').filter({ hasText: 'Swisscom' });
   await expect(row).toContainText('89,90');
-  await expect(row).toContainText('Fällig am');
+  // Desktop says "Fällig am 31. Okt."; the phone's one meta line (design check G4) only the day.
+  await expect(row).toContainText(/Fällig am|31\. Okt\./);
 });
 
 test('a note with the "n " prefix lands in the notes without choosing a type', async ({ page }) => {

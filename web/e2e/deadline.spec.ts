@@ -26,7 +26,10 @@ test.describe('Deadlines (B08, V15)', () => {
     await expect(page.getByText(/Frist vorbei: 1 Unterlage/).first()).toBeVisible();
   });
 
-  test('subscription: notice in months, "Kündigen bis" large, no 31-day grid', async ({ page }) => {
+  test('subscription: notice in months, "Kündigen bis" large, no 31-day grid', async ({
+    page,
+    isMobile,
+  }) => {
     await ready(page, '/subscriptions?new=1');
     const dialog = page.getByRole('dialog', { name: 'Abo hinzufügen' });
     await dialog.getByLabel('Name').fill('Jahreszeitung');
@@ -43,8 +46,9 @@ test.describe('Deadlines (B08, V15)', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0);
 
     // the deadline of the first charge is behind us: calm note, the next reachable one is named
+    // (the row on the phone is one short line, design check G4: the passed deadline is said in the dialog)
     const row = page.getByRole('button', { name: /Jahreszeitung/ });
-    await expect(row).toContainText('Frist vorbei am 1. Sep. 2026');
+    if (!isMobile) await expect(row).toContainText('Frist vorbei am 1. Sep. 2026');
 
     await page.getByRole('button', { name: /Jahreszeitung/ }).click();
     const edit = page.getByRole('dialog', { name: 'Abo bearbeiten' });

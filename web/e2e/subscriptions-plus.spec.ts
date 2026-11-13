@@ -53,8 +53,8 @@ test('"Gekündigt zum": charges stop on that date and the totals follow', async 
   await page.getByRole('dialog').getByLabel('Gekündigt zum (optional)').fill('2026-10-20');
   await save(page);
   const row = page.getByRole('button', { name: /Streaming/ });
-  await expect(row).toContainText('Gekündigt zum 20. Okt. 2026');
-  await expect(row).toContainText('Nächste Abbuchung: 15. Okt. 2026');
+  await expect(row).toContainText(/Gekündigt zum 20\. Okt\./);
+  await expect(row).toContainText(/Nächste Abbuchung: 15\. Okt\./);
   await expect(page.getByTestId('total-month')).toHaveText(/9,99\s€/); // still charged once
 
   // after the date nothing is charged any more
