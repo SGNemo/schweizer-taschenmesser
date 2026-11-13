@@ -66,6 +66,7 @@ describe('device widget (catalogue type: status)', () => {
       ...web,
       kind: 'desktop',
       isNative: true,
+      // the canary stays: should anything read the passphrase again, it must still not show
       secrets: { ...web.secrets, get: async () => 'canary-passphrase', has: async () => true },
       lanHub: {
         ...web.lanHub,

@@ -91,7 +91,7 @@ Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währ
 
 #### Geheimnis nur abfragen, nicht lesen (`fix/secret-store-has`) – nur auf Windows prüfbar
 
-- **SH1 Backup-Passphrase da/fehlt:** Portable-Exe. Einstellungen → Backup → Automatische Backups an, ohne Passphrase: Karte und „Gerätestatus“ (Nächstes Backup) sagen „Passphrase fehlt“. Passphrase setzen: beide zeigen den nächsten Termin, nach Neustart der App ebenso. Unter Konnektoren zeigt ein Dienst mit eigener Client-ID diese weiterhin als hinterlegt. ☐
+- **SH1 Backup-Passphrase da/fehlt:** Portable-Exe. Einstellungen → Backup → Automatische Backups an, ohne Passphrase: Hinweis unter dem Passwortfeld „Mindestens 8 Zeichen …“, Gerätestatus → Nächstes Backup „Passphrase fehlt“. Passphrase speichern: Hinweis „Passwort gespeichert …“, Gerätestatus zeigt den Termin; nach Neustart der App beides unverändert. Konnektor mit eigener Client-ID (z. B. Spotify): nach Neustart zeigt das Feld Client-ID weiter `••••••••`. ☐
 
 ### Modul-Bibliothek
 
@@ -534,7 +534,7 @@ EN-E2. _Android:_ Einstellungen öffnet die Kategorien-Liste, eine Kategorie öf
 
 #### Geheimnis nur abfragen, nicht lesen (`fix/secret-store-has`) – nur auf Android prüfbar
 
-- **SH2 Backup-Passphrase und ICS-Kalender:** APK. Automatische Backups an, ohne Passphrase: „Gerätestatus“ sagt „Passphrase fehlt“; Passphrase setzen: nächster Termin steht da, auch nach App-Neustart. Konnektor ICS: ohne Adresse „nicht eingerichtet“, mit einer Adresse eingerichtet. ☐
+- **SH2 Backup-Passphrase und ICS-Kalender:** APK. Automatische Backups an, ohne Passphrase: Gerätestatus → Nächstes Backup „Passphrase fehlt“; Passphrase speichern: Termin steht da, Hinweis unter dem Feld „Passwort gespeichert …“, beides auch nach App-Neustart. Konnektor ICS: eine Adresse hinzufügen → „Verbunden“; letzte Adresse entfernen → „Nicht verbunden“. ☐
 
 #### Handtests aus gemergten PRs (aus CHATS.md gesammelt, 2026-11-10)
 
