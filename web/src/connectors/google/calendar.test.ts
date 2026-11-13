@@ -30,6 +30,7 @@ function ctxWith(handler: (call: Call) => Response): { ctx: ConnectorContext; ca
       fetchPublic: fetchFn,
       secrets: {
         get: async () => undefined,
+        has: async () => false,
         set: async () => undefined,
         delete: async () => undefined,
       },

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
-import { setPlatform, type PlatformService } from '@/core/platform';
+import { getPlatform, setPlatform, type PlatformService } from '@/core/platform';
 import { createWebPlatform } from '@/core/platform/web';
 import { setNow } from '@/core/time/now';
 import { externalRepo } from '@/modules/calendar/repo';
@@ -11,6 +11,7 @@ import {
   connectOAuth,
   describeError,
   disconnect,
+  hasClient,
   saveClient,
   selectCalendars,
   syncCalendars,
@@ -66,6 +67,7 @@ function installPlatform() {
     secrets: {
       protection: 'device-key',
       get: async (name) => secrets.get(name),
+      has: async (name) => Boolean(secrets.get(name)),
       set: async (name, value) => void secrets.set(name, value),
       delete: async (name) => void secrets.delete(name),
     },
@@ -227,6 +229,16 @@ describe('connectOAuth', () => {
     expect(status.state).toBe('error');
     expect(status.message).toBe(describeError(new ConnectorError('no-browser')));
     expect(secrets.has('oauth:testco:refresh')).toBe(false);
+  });
+
+  it('tells whether a client id is saved without reading any secret', async () => {
+    const platform = getPlatform();
+    const get = vi.fn();
+    setPlatform({ ...platform, secrets: { ...platform.secrets, get } });
+    expect(await hasClient('testco')).toBe(false);
+    await saveClient('testco', { clientId: 'client-abc-123', clientSecret: 'shh' });
+    expect(await hasClient('testco')).toBe(true);
+    expect(get).not.toHaveBeenCalled();
   });
 
   it('asks for the client id first', async () => {

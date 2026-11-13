@@ -89,6 +89,10 @@ EN-E1. _Windows-Portable:_ Einstellungen durchklicken – Kategorien-Leiste link
 Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währenddessen verschieben, in der Titelleiste steht nie „Keine Rückmeldung“, und ein Wechsel zu einem anderen Modul zeigt dessen Inhalt statt „…“. Hintergrund und Einordnung je Command: [perf/MAIN-THREAD-COMMANDS-2026-11.md](perf/MAIN-THREAD-COMMANDS-2026-11.md).
 - **MT-H6 Einstellungen und „Über Nemo“:** „Mit Windows starten“ ein und aus: der Schalter bleibt nach erneutem Öffnen der Seite auf dem gewählten Stand (Task-Manager → Autostart zeigt Nemo bzw. nicht). „Datenordner öffnen“ öffnet den Explorer. Im Systemmonitor „Task-Manager öffnen“ startet ihn. ☐
 
+#### Geheimnis nur abfragen, nicht lesen (`fix/secret-store-has`) – nur auf Windows prüfbar
+
+- **SH1 Backup-Passphrase da/fehlt:** Portable-Exe. Einstellungen → Sync & Backup → Backup → „Automatisch sichern“ an, ohne Passphrase: Hinweis unter dem Passwortfeld „Mindestens 8 Zeichen …“, Gerätestatus → Nächstes Backup „Passphrase fehlt“. Passphrase speichern: Hinweis „Passwort gespeichert …“, Gerätestatus zeigt den Termin; nach Neustart der App beides unverändert. Konnektor mit eigener Client-ID (z. B. Spotify): nach Neustart zeigt das Feld Client-ID weiter `••••••••`. ☐
+
 ### Modul-Bibliothek
 
 #### Bibliotheken in Identität v3 (Paket 2) – nur von Hand prüfbar
@@ -528,6 +532,10 @@ EN-E2. _Android:_ Einstellungen öffnet die Kategorien-Liste, eine Kategorie öf
 #### Einstellungen in Identität v3 (Paket 1) – nur von Hand prüfbar
 
 - **SV1 Handy, zwei Ebenen:** Einstellungen: Status-Kopf mit sechs Kacheln, darunter Karten und die gruppierte Liste; eine Kategorie antippen zeigt ihren Kopf mit „Einstellungen“ als Rücksprung, Android-Zurück führt zur Liste. ☐
+
+#### Geheimnis nur abfragen, nicht lesen (`fix/secret-store-has`) – nur auf Android prüfbar
+
+- **SH2 Backup-Passphrase und ICS-Kalender:** APK. Einstellungen → Sync & Backup → Backup → „Automatisch sichern“ an, ohne Passphrase: Gerätestatus → Nächstes Backup „Passphrase fehlt“; Passphrase speichern: Termin steht da, Hinweis unter dem Feld „Passwort gespeichert …“, beides auch nach App-Neustart. Konnektor ICS: eine erreichbare ICS-Adresse hinzufügen → „Verbunden“; letzte Adresse entfernen → „Nicht verbunden“. ☐
 
 #### Handtests aus gemergten PRs (aus CHATS.md gesammelt, 2026-11-10)
 

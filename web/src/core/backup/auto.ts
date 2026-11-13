@@ -122,7 +122,7 @@ export async function setAutoPassphrase(
 export async function hasAutoPassphrase(
   secrets: SecretStore = getPlatform().secrets,
 ): Promise<boolean> {
-  return Boolean(await secrets.get(AUTO_PASSPHRASE_SECRET));
+  return secrets.has(AUTO_PASSPHRASE_SECRET);
 }
 
 export function isDue(config: AutoBackupConfig, last: AutoBackupLast | undefined, at: number) {

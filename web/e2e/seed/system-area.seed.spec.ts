@@ -53,6 +53,8 @@ test.describe('settings start page: the states are lines', () => {
         test.setTimeout(120_000);
         await startSeeded(page, { phone });
         await openPage(page, '/settings');
+        // The status lines come once the module states and their first reads are known (0b-8, C4).
+        await expect(page.getByTestId('settings-status')).toHaveAttribute('aria-busy', 'false');
         const read = await page.evaluate(() => {
           const lines = Array.from(
             document.querySelectorAll<HTMLElement>(

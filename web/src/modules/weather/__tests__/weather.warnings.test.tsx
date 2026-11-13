@@ -57,6 +57,15 @@ describe('severe-weather hints', () => {
     expect(items.every((i) => i.tone === 'warning' && i.to === '/weather')).toBe(true);
   });
 
+  it("only today's warning is due today; tomorrow's carries no due", async () => {
+    await primeForecast([day(TODAY, { max: 34 }), day('2026-10-20', { gust: 80 })]);
+    const due = Object.fromEntries((await attention({ today: TODAY })).map((i) => [i.id, i.due]));
+    expect(due).toEqual({
+      [`weather:heat:${TODAY}`]: 'today',
+      'weather:wind:2026-10-20': undefined,
+    });
+  });
+
   it('stays empty without a place, without a cached forecast of that place and for an ordinary day', async () => {
     expect(await attention({ today: TODAY })).toEqual([]);
     await primeForecast([day(TODAY)]);
