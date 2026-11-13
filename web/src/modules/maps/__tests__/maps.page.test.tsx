@@ -248,7 +248,11 @@ describe('Karten & Orte page', () => {
     fireEvent.click(within(card).getByRole('button', { name: 'Als Ort speichern' }));
     const name = await screen.findByLabelText('Name');
     expect(name).toHaveValue('Schlossplatz');
-    fireEvent.click(screen.getByRole('button', { name: 'Speichern' }));
+    fireEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', {
+        name: /^(Speichern|.+ eintragen)$/,
+      }),
+    );
     await waitFor(async () => expect(await placeRepo.active().count()).toBe(1));
     const saved = (await placeRepo.active().toArray())[0]!;
     expect(saved).toMatchObject({ name: 'Schlossplatz', lat: 49.5981, lon: 11.0044 });
@@ -268,7 +272,7 @@ describe('Karten & Orte page', () => {
     fireEvent.change(within(to).getByLabelText('Gespeicherter Ort'), {
       target: { value: (await placeRepo.active().toArray())[0]!.id },
     });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Speichern' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }));
     await waitFor(async () => expect(await routeRepo.active().count()).toBe(1));
     const r = (await routeRepo.active().toArray())[0]!;
     expect(r).toMatchObject({
@@ -283,7 +287,7 @@ describe('Karten & Orte page', () => {
     open('/maps?view=routes');
     fireEvent.click(await screen.findByRole('button', { name: 'Route eintragen' }));
     const dialog = await screen.findByRole('dialog');
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Speichern' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }));
     expect(await within(dialog).findByText('Wähle Start und Ziel.')).toBeTruthy();
     expect(await routeRepo.active().count()).toBe(0);
   });

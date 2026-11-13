@@ -109,7 +109,11 @@ describe('Habits page', () => {
   it('creates the water goal from the template, with a reminder window', async () => {
     draw('/habits?new=1');
     await userEvent.click(await screen.findByRole('button', { name: 'Wasser trinken' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Speichern' }));
+    await userEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', {
+        name: /^(Speichern|.+ eintragen)$/,
+      }),
+    );
     await waitFor(async () => {
       const [goal] = await goalRepo.active().toArray();
       expect(goal).toMatchObject({

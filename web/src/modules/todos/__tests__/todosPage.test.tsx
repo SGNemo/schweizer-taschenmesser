@@ -183,7 +183,7 @@ describe('ToDos add dialog from a link (`?new=1&title=…`)', () => {
     const dialog = await screen.findByRole('dialog', { name: 'Aufgabe eintragen' });
     const field = within(dialog).getByRole('textbox', { name: 'Titel' });
     expect(field).toHaveValue('Blumen gießen');
-    const save = within(dialog).getByRole('button', { name: 'Hinzufügen' });
+    const save = within(dialog).getByRole('button', { name: 'Aufgabe eintragen' });
     await waitFor(() => expect(save).toBeEnabled());
     await userEvent.click(save);
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
@@ -221,7 +221,7 @@ describe('ToDos add dialog from a link (`?new=1&title=…`)', () => {
     draw('/todos?new=1&title=Erste');
     const dialog = await screen.findByRole('dialog', { name: 'Aufgabe eintragen' });
     // The page creates the inbox right after it has read the (empty) lists; then saving is possible.
-    const save = within(dialog).getByRole('button', { name: 'Hinzufügen' });
+    const save = within(dialog).getByRole('button', { name: 'Aufgabe eintragen' });
     await waitFor(() => expect(save).toBeEnabled());
     await userEvent.click(save);
     await waitFor(async () =>

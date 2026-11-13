@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, configure, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, configure, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -72,8 +72,8 @@ describe('vault: entry handed over by a tool', () => {
     const user = userEvent.setup();
     offerVaultEntry(entry);
     page('/accounts?handoff=1');
-    await screen.findByRole('dialog', { name: t.accounts.add });
-    await user.click(screen.getByRole('button', { name: t.actions.save }));
+    const dialog = await screen.findByRole('dialog', { name: t.accounts.add });
+    await user.click(within(dialog).getByRole('button', { name: t.accounts.add }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: t.accounts.add })).toBeNull());
     const saved = (await decryptAll()).filter(isReadable);
     expect(saved).toHaveLength(1);
