@@ -4,6 +4,7 @@ import {
   useSettled,
   useSyncLine,
   useUpdatesLine,
+  type StatusLine,
 } from '@/core/status/lines';
 import { needingLook, summaryText, withTitle } from '@/core/status/summary';
 import { Skeleton, StatusWidget } from '@/ui';
@@ -23,7 +24,7 @@ export default function DeviceWidget() {
   const ready = useSettled(!anyLoading(read));
   if (!ready) return <Skeleton width="60%" height="1.25rem" />;
   // A read that hangs past the wait has no words: it is left out, not counted as "all well" or as a point.
-  const counted = read.filter((l) => l !== undefined && !(l.loading && !l.status));
+  const counted = read.filter((l): l is StatusLine => l !== undefined && !(l.loading && !l.status));
   const look = needingLook(counted).length > 0;
   return (
     <StatusWidget
