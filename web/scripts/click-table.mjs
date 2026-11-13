@@ -71,7 +71,7 @@ if (args.includes('--diff')) {
     const row = cols.map(([d, r]) => {
       const x = data[d][r]?.[id];
       if (!x) return '– | –';
-      if (x.note) return `${x.note} | `;
+      if (x.note && !x.first) return `${x.note} | `;
       return `${cell(x.first)} | ${cell(x.second)}`;
     });
     console.log(`| ${name(id)} | ${row.join(' | ')} |`);

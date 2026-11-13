@@ -365,7 +365,13 @@ async function run(page: Page, phone: boolean, label: string) {
     await cdp.send('Emulation.setCPUThrottlingRate', { rate });
     const raw: Record<
       string,
-      { first: Sample[]; second: Sample[]; note?: string; profile?: Record<string, number>[] }
+      {
+        first: Sample[];
+        second: Sample[];
+        note?: string;
+        open?: string;
+        profile?: Record<string, number>[];
+      }
     > = {};
     for (let r = 0; r < RUNS; r++) {
       for (const t of targets(phone)) {
@@ -410,7 +416,15 @@ async function run(page: Page, phone: boolean, label: string) {
           }
           slot.first.push(firstRun);
           await page.keyboard.press('Escape');
-          await expect(dialog).toHaveCount(0, { timeout: 10_000 });
+          // A dialog that asks before it closes (a draft): the first visit counts, the second is left out.
+          const closed = await dialog.waitFor({ state: 'detached', timeout: 10_000 }).then(
+            () => true,
+            () => false,
+          );
+          if (!closed) {
+            slot.open = `dialog stays open on Escape (${text})`;
+            continue;
+          }
           await settle(page);
           await action.evaluate((el) => el.setAttribute('data-ctc', 'go'));
           slot.second.push(await measure(page, cdp, 'click', 'go'));
@@ -425,7 +439,14 @@ async function run(page: Page, phone: boolean, label: string) {
     results[`${rate}x`] = Object.fromEntries(
       Object.entries(raw).map(([id, v]) => [
         id,
-        v.note ? { note: v.note } : { first: summarise(v.first), second: summarise(v.second) },
+        v.note
+          ? { note: v.note }
+          : {
+              first: summarise(v.first),
+              ...(v.second.length ? { second: summarise(v.second) } : {}),
+              ...(v.open ? { note: v.open } : {}),
+              ...(v.profile ? { profile: v.profile } : {}),
+            },
       ]),
     );
     mkdirSync(OUT, { recursive: true });
