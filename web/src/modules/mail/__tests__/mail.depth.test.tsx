@@ -7,7 +7,7 @@ import { readSearches, rememberSearch, suggestionsFor } from '../searchHistory';
 describe('InboxFigure (head figure)', () => {
   it('shows the unread count with its unit and the inbox as context, as real text', () => {
     render(<InboxFigure unread={3} />);
-    const figure = screen.getByTestId('mail-stamp');
+    const figure = screen.getByTestId('mail-unread');
     expect(figure).toHaveTextContent('3');
     expect(figure).toHaveTextContent('ungelesen');
     expect(screen.getByText('Posteingang')).toBeInTheDocument();
@@ -15,7 +15,7 @@ describe('InboxFigure (head figure)', () => {
 
   it('draws no figure and no zero when nothing is unread', () => {
     render(<InboxFigure unread={0} />);
-    expect(screen.queryByTestId('mail-stamp')).toBeNull();
+    expect(screen.queryByTestId('mail-unread')).toBeNull();
   });
 });
 

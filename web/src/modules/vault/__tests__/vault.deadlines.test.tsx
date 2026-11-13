@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, useLocation } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { blobKeys, putBlob } from '@/core/blobs';
 import { db } from '@/core/db/db';
@@ -16,6 +16,36 @@ const page = () =>
       <VaultPage />
     </MemoryRouter>,
   );
+
+/** The page at an address, with the address as it is now written beside it. */
+function Where() {
+  const { search } = useLocation();
+  return <output data-testid="search">{search}</output>;
+}
+const pageAt = (url: string) =>
+  render(
+    <MemoryRouter initialEntries={[url]}>
+      <VaultPage />
+      <Where />
+    </MemoryRouter>,
+  );
+
+/** Holds every `documentRepo.update` until `release()`; `landed` says when to let the write itself through. */
+function holdWrites(landed: 'before' | 'after') {
+  const original = documentRepo.update.bind(documentRepo);
+  let open!: () => void;
+  const gate = new Promise<void>((resolve) => (open = resolve));
+  const spy = vi.spyOn(documentRepo, 'update').mockImplementation(async (...args) => {
+    if (landed === 'after') {
+      await gate;
+      return original(...args);
+    }
+    const result = await original(...args);
+    await gate;
+    return result;
+  });
+  return { spy, release: () => open() };
+}
 
 beforeEach(async () => {
   setNow(() => new Date(2026, 8, 29, 10, 0).getTime());
@@ -98,9 +128,19 @@ describe('Unterlagen: view "Fristen"', () => {
     );
     const before = (await documentRepo.active().toArray()).find((d) => d.title === 'Hausrat')!;
     expect(before.endDate).toBe('2026-09-25');
-    // Enter twice in a row: one renewal, never the next term on top. (Two submits of the same form; the form
-    // that starts afresh for the new term is held by the dialog's own lock, which this does not reach.)
+    // Enter twice in a row: one renewal, never the next term on top. (The form that starts afresh for the new term:
+    // "one write per Verlängert" below.)
     const form = dialog.querySelector('form')!;
+    // Each focus on the title, and whether the rail had already moved the row below "Heute" at that moment.
+    const focused: boolean[] = [];
+    const log = (e: FocusEvent) => {
+      if ((e.target as HTMLElement).textContent !== 'Hausrat') return;
+      const rows = Array.from(
+        screen.getByRole('list', { name: 'Fristen und Ablauf' }).querySelectorAll('li'),
+      ).map((li) => li.textContent ?? '');
+      focused.push(rows.indexOf('Heute') < rows.findIndex((text) => text.includes('Hausrat')));
+    };
+    document.addEventListener('focusin', log);
     fireEvent.submit(form);
     fireEvent.submit(form);
     await waitFor(async () => {
@@ -110,6 +150,12 @@ describe('Unterlagen: view "Fristen"', () => {
     });
     // The row's "Verlängert" is gone with the new term: the focus is on the row's title, not nowhere.
     await waitFor(() => expect(document.activeElement?.textContent).toBe('Hausrat'));
+    // The dialog closed only once the rail showed the new term (the row had moved below "Heute"), and the title
+    // got the focus once, after that move: a screen reader hears it once. (In the browser a row moved under the
+    // focus drops it, and setting it again read the title twice.)
+    await new Promise((r) => setTimeout(r, 50));
+    document.removeEventListener('focusin', log);
+    expect(focused).toEqual([true]);
     const settled = (await documentRepo.active().toArray()).find((d) => d.title === 'Hausrat')!;
     expect([settled.startDate, settled.endDate]).toEqual(['2026-09-26', '2027-09-20']);
     // "Rückgängig" gives back the old term as a whole: end and start.
@@ -279,6 +325,98 @@ describe('Unterlagen: one vocabulary, and a dialog that follows its row', () => 
       expect(now).not.toBe(first);
     });
     expect(within(dialog).getByText(/^Bisher bis 27\. September 2026\./)).toBeTruthy();
+  });
+});
+
+describe('Unterlagen: the view stays in the address', () => {
+  it('"Fristen" is written into the address and comes back after a reload; "Ablage" is the address without it', async () => {
+    await seed();
+    const first = pageAt('/vault');
+    fireEvent.click(await screen.findByRole('button', { name: 'Fristen' }));
+    await screen.findByRole('list', { name: 'Fristen und Ablauf' });
+    expect(screen.getByTestId('search').textContent).toBe('?view=deadlines');
+    first.unmount();
+    // A reload: the same address, a new page.
+    pageAt('/vault?view=deadlines');
+    expect(await screen.findByRole('list', { name: 'Fristen und Ablauf' })).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: 'Fristen' }).getAttribute('aria-current'),
+    ).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Ablage' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('list', { name: 'Fristen und Ablauf' })).toBeNull(),
+    );
+    expect(screen.getByTestId('search').textContent).toBe('');
+  });
+
+  it('an unknown view is "Ablage", and closing a new document keeps the view', async () => {
+    await seed();
+    const first = pageAt('/vault?view=whatever');
+    expect(await screen.findByRole('searchbox')).toBeTruthy();
+    first.unmount();
+    pageAt('/vault?view=deadlines&new=1');
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Abbrechen' }));
+    await waitFor(() => expect(screen.getByTestId('search').textContent).toBe('?view=deadlines'));
+    expect(await screen.findByRole('list', { name: 'Fristen und Ablauf' })).toBeTruthy();
+  });
+});
+
+describe('Unterlagen: one write per "Verlängert"', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('the form drawn anew for the new term while the dialog closes writes nothing on top', async () => {
+    await seed();
+    const { spy, release } = holdWrites('before');
+    page();
+    fireEvent.click(await screen.findByRole('button', { name: 'Fristen' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Verlängert: Hausrat' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Verlängert: Hausrat' });
+    const form = dialog.querySelector('form')!;
+    fireEvent.submit(form);
+    // The write has landed, the dialog has not closed yet: the form starts afresh for the new term.
+    await waitFor(() =>
+      expect(within(dialog).getByText(/^Bisher bis 20\. September 2027\./)).toBeTruthy(),
+    );
+    const rebuilt = dialog.querySelector('form')!;
+    expect(rebuilt).not.toBe(form);
+    fireEvent.submit(rebuilt);
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Verlängerung speichern' }));
+    release();
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: /Verlängert/ })).toBeNull());
+    expect(spy).toHaveBeenCalledTimes(1);
+    const doc = (await documentRepo.active().toArray()).find((d) => d.title === 'Hausrat')!;
+    expect([doc.startDate, doc.endDate]).toEqual(['2026-09-26', '2027-09-20']);
+  });
+
+  it('closed and opened again while the write runs: no second write, and the late write closes nothing', async () => {
+    await seed();
+    const { spy, release } = holdWrites('after');
+    page();
+    fireEvent.click(await screen.findByRole('button', { name: 'Fristen' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Verlängert: Hausrat' }));
+    let dialog = await screen.findByRole('dialog', { name: 'Verlängert: Hausrat' });
+    fireEvent.submit(dialog.querySelector('form')!);
+    await waitFor(() => expect(spy).toHaveBeenCalledTimes(1));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Abbrechen' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: /Verlängert/ })).toBeNull());
+    // Opened again at once: the old term is still what is stored.
+    fireEvent.click(screen.getByRole('button', { name: 'Verlängert: Hausrat' }));
+    dialog = await screen.findByRole('dialog', { name: 'Verlängert: Hausrat' });
+    fireEvent.submit(dialog.querySelector('form')!);
+    expect(spy).toHaveBeenCalledTimes(1);
+    release();
+    // The first write lands: the dialog open now stays and starts afresh for the new term.
+    await waitFor(() =>
+      expect(within(dialog).getByText(/^Bisher bis 20\. September 2027\./)).toBeTruthy(),
+    );
+    expect(screen.getByRole('dialog', { name: 'Verlängert: Hausrat' })).toBeTruthy();
+    expect(spy).toHaveBeenCalledTimes(1);
+    const doc = (await documentRepo.active().toArray()).find((d) => d.title === 'Hausrat')!;
+    expect([doc.startDate, doc.endDate]).toEqual(['2026-09-26', '2027-09-20']);
+    // That opening has a write of its own: the next term, on purpose.
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Abbrechen' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: /Verlängert/ })).toBeNull());
   });
 });
 

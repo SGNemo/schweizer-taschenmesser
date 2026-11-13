@@ -283,21 +283,23 @@ export default function MapsPage() {
     void requireNotice('maps').then(() => setReady(true));
   }, [tab, ready]);
 
-  // "Ort hinzufügen": focus the search once the map tab (and its field) has rendered.
-  const [focusSearch, setFocusSearch] = useState(false);
+  // "Ort hinzufügen": focus the search once the map tab (and its field) has rendered and its one-time notice is read;
+  // a notice that opened after the focus would take the words typed into the search.
+  // Pending until then; checked after every render (the tab, the notice and the address each bring one).
+  const focusSearch = useRef(false);
   // "Ort eintragen" was pressed: the next hit of the search opens the form with that place, not only the map.
   const [adding, setAdding] = useState(false);
   useEffect(() => {
-    if (!focusSearch || tab !== 'map' || !searchInput.current) return;
+    if (!focusSearch.current || tab !== 'map' || !ready || !searchInput.current) return;
     searchInput.current.focus();
-    setFocusSearch(false);
-  }, [focusSearch, tab]);
+    focusSearch.current = false;
+  });
 
   // `?new=1` (Quick-Add): the map tab with the search field ready.
   useEffect(() => {
     if (!params.get('new')) return;
+    focusSearch.current = true;
     setParams({ view: 'map' }, { replace: true });
-    setTimeout(() => searchInput.current?.focus(), 50);
   }, [params, setParams]);
 
   // `?q=` (from an appointment's location): the map tab with the words in the search field – the
@@ -305,8 +307,8 @@ export default function MapsPage() {
   useEffect(() => {
     const q = params.get('q');
     if (!q) return;
+    focusSearch.current = true;
     setParams({ view: 'map' }, { replace: true });
-    setTimeout(() => searchInput.current?.focus(), 50);
   }, [params, setParams]);
 
   useOpenParam(
@@ -552,8 +554,8 @@ export default function MapsPage() {
   /** "Ort eintragen": places come from the map, so it opens the map with the search ready; the hit picked there
    *  opens the form right away (2 clicks + 2 × Enter instead of a third click on "Als Ort speichern"). */
   const addPlace = () => {
+    focusSearch.current = true;
     setTab('map');
-    setFocusSearch(true);
     setAdding(true);
   };
   const placeMenu = (p: Stored<Place>): RowMenuItem[] => [

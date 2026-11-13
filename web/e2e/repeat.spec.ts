@@ -18,11 +18,22 @@ async function addRent(page: Page) {
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
-test('paying a repeating invoice brings the next one; undo takes it away', async ({ page }) => {
+test('paying a repeating invoice brings the next one; undo takes it away', async ({
+  page,
+  isMobile,
+}) => {
+  // The phone's row has one meta line (design check G4): the state or the date, the repeat is in the dialog.
+  const repeats = async () => {
+    if (!isMobile) return expect(rows.first()).toContainText('↻ Monatlich');
+    await openEditor(page, rows.first().getByRole('button', { name: /^Vermieter/ }));
+    await expect(page.getByRole('dialog').getByLabel('Wiederholen')).toHaveValue('monthly');
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+  };
   await addRent(page);
   const rows = page.getByRole('listitem').filter({ hasText: 'Vermieter' });
   await expect(rows).toHaveCount(1);
-  await expect(rows.first()).toContainText('↻ Monatlich');
+  await repeats();
 
   await rows
     .first()
@@ -32,11 +43,12 @@ test('paying a repeating invoice brings the next one; undo takes it away', async
   await expect(page.getByText('Als bezahlt markiert.')).toBeVisible();
   await expect(rows).toHaveCount(1); // the paid one moved to "Bezahlt", the next is open
   await expect(rows.first()).toContainText('1. Nov.');
-  await expect(rows.first()).toContainText('↻ Monatlich');
+  await repeats();
 
   await page.getByRole('button', { name: 'Rückgängig', exact: true }).click();
   await expect(rows).toHaveCount(1);
-  await expect(rows.first()).toContainText('1. Okt.');
+  // 1 Oct. is due in two days: the phone names the state instead of the date.
+  await expect(rows.first()).toContainText(isMobile ? 'in 2 Tagen' : '1. Okt.');
 });
 
 test('the repeat is kept when the invoice is edited', async ({ page }) => {
