@@ -175,7 +175,8 @@ test('Unterlagen: cancellation deadline is flagged and on the calendar', async (
   // The folder itself; "Verlängert: Handyvertrag" beside it is the row's own button (module package T-a).
   const row = page.locator('main [data-row]', { hasText: 'Handyvertrag' });
   await expect(row).toContainText('Kündigen bis');
-  await expect(page.getByText('Jetzt kündigen')).toBeVisible();
+  // 90 days before 31 Dec is 2 Oct, three days after the test day: the folder names the deadline and the day.
+  await expect(page.getByText('Kündigungsfrist endet in 3 Tagen')).toBeVisible();
 
   await open(page, '/calendar?view=week&date=2026-10-02');
   await expect(calendarEntry(page, /Kündigungsfrist: 1 Unterlage/)).toBeVisible();
@@ -262,7 +263,7 @@ test('Unterlagen: metadata, local file and expiry', async ({ page }) => {
 
   const row = page.getByRole('button', { name: /^Reisepass/ });
   await expect(row).toContainText('pass.txt');
-  await expect(page.getByText('Bald', { exact: true })).toBeVisible();
+  await expect(page.getByText('Läuft bald ab', { exact: true })).toBeVisible();
 
   // The file survives a reload and can be downloaded with its content.
   await page.reload();

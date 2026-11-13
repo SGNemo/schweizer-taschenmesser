@@ -20,7 +20,7 @@ test.describe('Deadlines (B08, V15)', () => {
     // The folder itself; "Verlängert: Zeitschrift" beside it is the row's own button (module package T-a).
     const row = page.locator('main [data-row]', { hasText: 'Zeitschrift' });
     await expect(row).toContainText('Frist vorbei am 31. Aug. 2026');
-    await expect(row).not.toContainText('Jetzt kündigen');
+    await expect(row).not.toContainText('Kündigungsfrist endet');
 
     await ready(page, '/calendar?view=week&date=2026-08-31');
     await expect(page.getByText(/Frist vorbei: 1 Unterlage/).first()).toBeVisible();

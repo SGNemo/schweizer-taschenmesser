@@ -20,6 +20,7 @@ export function FilePreview({ id, fileName }: { id: string; fileName: string }) 
   const [note, setNote] = useState('');
   // One read at a time: a second tap while the file is read would make a second URL nobody gives back.
   const [busy, setBusy] = useState(false);
+  const reading = useRef(false);
   // Left before the file was read (the panel closed, another folder picked): no URL is made afterwards.
   const alive = useRef(true);
   useEffect(() => {
@@ -36,9 +37,13 @@ export function FilePreview({ id, fileName }: { id: string; fileName: string }) 
   );
 
   async function show() {
+    // Two taps in one go see the same `busy`: the ref is what lets only one read start.
+    if (reading.current) return;
+    reading.current = true;
     setNote('');
     setBusy(true);
     const blob = await getBlob(id).catch(() => undefined);
+    reading.current = false;
     if (!alive.current) return;
     setBusy(false);
     if (!blob) return setNote(t.vault.preview.missing);
@@ -52,13 +57,18 @@ export function FilePreview({ id, fileName }: { id: string; fileName: string }) 
         <Button
           size="sm"
           aria-expanded={url !== undefined}
-          aria-busy={busy || undefined}
-          disabled={busy}
-          onClick={() => (url ? setUrl(undefined) : void show())}
+          // Not `disabled`: the button keeps the keyboard focus while the file is read; a tap then does nothing.
+          aria-disabled={busy || undefined}
+          onClick={() => {
+            if (busy) return;
+            if (url) setUrl(undefined);
+            else void show();
+          }}
         >
           {url ? t.vault.preview.hide : t.vault.preview.show}
         </Button>
-        {note ? <p role="status">{note}</p> : null}
+        {/* Always there, so a screen reader hears the text when it changes. */}
+        <p role="status">{busy ? t.vault.preview.loading : note}</p>
         {url ? <img src={url} alt={t.vault.preview.alt(fileName)} /> : null}
       </div>
     </NoReadAid>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { addDaysStr, formatDay, today } from '@/core/time/dates';
 import { changeWithUndo } from '@/core/undo/withToast';
@@ -44,6 +44,9 @@ function Fields({ doc, onClose }: { doc: Stored<VaultDocument>; onClose: () => v
   const [value, setValue] = useState(proposal ?? '');
   const [error, setError] = useState('');
   const long = (date: string) => formatDay(date, 'd. MMMM yyyy');
+  const ids = useId();
+  // A proposal that can be confirmed as it stands: it exists and does not lie behind us.
+  const ready = proposal !== undefined && proposal >= today();
 
   async function save() {
     if (!value || value <= end) return setError(r.notLater);
@@ -59,18 +62,19 @@ function Fields({ doc, onClose }: { doc: Stored<VaultDocument>; onClose: () => v
     }
   }
 
-  // What the field holds decides the hint: a date still behind us says so, the untouched proposal says what it is.
-  const hint = !proposal
-    ? r.noStart
-    : value && value < today()
+  // What the field holds decides the hint: a date behind us says so, the untouched proposal says what it is.
+  const hint =
+    value && value < today()
       ? r.stillPast
-      : value === proposal
-        ? r.proposed
-        : undefined;
+      : !proposal
+        ? r.noStart
+        : value === proposal
+          ? r.proposed
+          : undefined;
 
   return (
     <Form onSubmit={() => void save()}>
-      <p>
+      <p id={`${ids}-was`}>
         {r.until(long(end))}
         {/* Said before it happens: the start is the new term's first day afterwards. */}
         {doc.startDate ? ` ${r.startMoves(long(addDaysStr(end, 1)))}` : null}
@@ -85,12 +89,23 @@ function Fields({ doc, onClose }: { doc: Stored<VaultDocument>; onClose: () => v
         hint={hint}
         error={error}
         required
-        // Nothing proposed: the date is what is missing. A proposal only waits for its confirmation below.
-        data-autofocus={proposal ? undefined : true}
+        // Nothing proposed, or a proposal that still lies in the past: the date is what needs a look first.
+        data-autofocus={ready ? undefined : true}
       />
+      {/* Read with the save button only (`aria-describedby` reads hidden text): the field above already says it. */}
+      <p id={`${ids}-new`} hidden>
+        {value ? `${r.newEnd}: ${long(value)}` : ''}
+      </p>
       <FormActions>
         <Button onClick={onClose}>{t.actions.cancel}</Button>
-        <Button type="submit" variant="primary" data-autofocus={proposal ? true : undefined}>
+        <Button
+          type="submit"
+          variant="primary"
+          // A proposal that holds only waits for its confirmation. What is confirmed is read with the button: the
+          // old end, the move of the start and the proposed date.
+          data-autofocus={ready ? true : undefined}
+          aria-describedby={`${ids}-was ${ids}-new`}
+        >
           {r.save}
         </Button>
       </FormActions>

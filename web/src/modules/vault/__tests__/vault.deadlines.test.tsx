@@ -129,8 +129,106 @@ describe('Unterlagen: view "Fristen"', () => {
     expect(
       await within(dialog).findByText('Das neue Ende muss nach dem bisherigen liegen.'),
     ).toBeTruthy();
+    // Also without a start: a date behind us is what the hint says first.
+    fireEvent.change(field, { target: { value: '25.09.2026' } });
+    fireEvent.blur(field);
+    expect(
+      await within(dialog).findByText('Dieses Datum liegt in der Vergangenheit.'),
+    ).toBeTruthy();
     const doc = (await documentRepo.active().toArray()).find((d) => d.title === 'Impfpass')!;
     expect(doc.endDate).toBe('2026-09-20');
+  });
+});
+
+describe('Unterlagen: one vocabulary, and a dialog that follows its row', () => {
+  it('near dates say the day or "bald" in words, on the rail and on the folder alike', async () => {
+    await documentRepo.create({
+      title: 'Handy',
+      category: 'contract',
+      endDate: '2026-12-31',
+      noticeDays: 90,
+    } as never);
+    await documentRepo.create({
+      title: 'Strom',
+      category: 'contract',
+      endDate: '2026-11-25',
+      noticeDays: 30,
+    } as never);
+    await documentRepo.create({
+      title: 'Reisepass',
+      category: 'identity',
+      endDate: '2026-11-06',
+    } as never);
+    page();
+    // "Ablage": the folders carry the same words as the rail; nothing reads as an order.
+    await screen.findByText('Kündigungsfrist endet in 3 Tagen');
+    expect(screen.getByText('Kündigungsfrist endet bald')).toBeTruthy();
+    expect(screen.getByText('Läuft bald ab')).toBeTruthy();
+    expect(screen.queryByText('Jetzt kündigen')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Fristen' }));
+    const rail = await screen.findByRole('list', { name: 'Fristen und Ablauf' });
+    expect(within(rail).getByText('Kündigungsfrist endet in 3 Tagen')).toBeTruthy();
+    expect(within(rail).getByText('Kündigungsfrist endet bald')).toBeTruthy();
+    expect(within(rail).getByText('Läuft bald ab')).toBeTruthy();
+  });
+
+  it('when everything dated ran out long ago, the empty rail says so instead of "no date"', async () => {
+    await documentRepo.create({
+      title: 'Alte Garantie',
+      category: 'warranty',
+      endDate: '2025-01-31',
+    } as never);
+    page();
+    fireEvent.click(await screen.findByRole('button', { name: 'Fristen' }));
+    expect(await screen.findByText('Gerade steht keine Frist an.')).toBeTruthy();
+    expect(screen.queryByText('Keine Unterlage hat ein Datum.')).toBeNull();
+    expect(screen.getByText(/^1 Unterlage ist seit mehr als 90 Tagen abgelaufen/)).toBeTruthy();
+  });
+
+  it('a proposal that still lies in the past puts the first focus on the date, not on saving', async () => {
+    // A month that ended 40 days ago: one more month is still behind us.
+    await documentRepo.create({
+      title: 'Probeabo',
+      category: 'contract',
+      startDate: '2026-07-21',
+      endDate: '2026-08-20',
+    } as never);
+    page();
+    fireEvent.click(await screen.findByRole('button', { name: 'Fristen' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Verlängert: Probeabo' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Verlängert: Probeabo' });
+    const field = within(dialog).getByLabelText(/Neues Ende/) as HTMLInputElement;
+    await waitFor(() => expect(document.activeElement).toBe(field));
+    expect(within(dialog).getByText('Dieses Datum liegt in der Vergangenheit.')).toBeTruthy();
+  });
+
+  it('the dialog closes when its document is deleted elsewhere', async () => {
+    await seed();
+    page();
+    fireEvent.click(await screen.findByRole('button', { name: 'Fristen' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Verlängert: Hausrat' }));
+    await screen.findByRole('dialog', { name: 'Verlängert: Hausrat' });
+    const doc = (await documentRepo.active().toArray()).find((d) => d.title === 'Hausrat')!;
+    await documentRepo.remove(doc.id);
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: /Verlängert/ })).toBeNull());
+    expect((await documentRepo.active().toArray()).map((d) => d.title)).not.toContain('Hausrat');
+  });
+
+  it('the dialog starts afresh when the term changes elsewhere: the field shows the new proposal', async () => {
+    await seed();
+    page();
+    fireEvent.click(await screen.findByRole('button', { name: 'Fristen' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Verlängert: Hausrat' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Verlängert: Hausrat' });
+    const first = (within(dialog).getByLabelText(/Neues Ende/) as HTMLInputElement).value;
+    const doc = (await documentRepo.active().toArray()).find((d) => d.title === 'Hausrat')!;
+    // Another device corrects the term to a whole year that ended on 27 Sep.
+    await documentRepo.update(doc.id, { startDate: '2025-09-28', endDate: '2026-09-27' });
+    await waitFor(() => {
+      const now = (within(dialog).getByLabelText(/Neues Ende/) as HTMLInputElement).value;
+      expect(now).not.toBe(first);
+    });
+    expect(within(dialog).getByText(/^Bisher bis 27\. September 2026\./)).toBeTruthy();
   });
 });
 
@@ -203,7 +301,8 @@ describe('file preview: only after a tap, kept nowhere', () => {
     const button = screen.getByRole('button', { name: 'Vorschau zeigen' });
     fireEvent.click(button);
     // While the file is read the button takes no second tap.
-    expect((button as HTMLButtonElement).disabled).toBe(true);
+    expect(button.getAttribute('aria-disabled')).toBe('true');
+    expect(screen.getByRole('status').textContent).toBe('Vorschau wird geladen …');
     fireEvent.click(button);
     await screen.findByAltText('Vorschau: ausweis.png');
     expect(URL.createObjectURL).toHaveBeenCalledTimes(1);

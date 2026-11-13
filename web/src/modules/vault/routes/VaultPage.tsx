@@ -4,11 +4,10 @@ import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router';
 import { blobKeys, getBlob, pruneBlobs } from '@/core/blobs';
 import { getPlatform } from '@/core/platform';
-import { formatDay, relativeDayLabel, today } from '@/core/time/dates';
+import { formatDay, today } from '@/core/time/dates';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import { t } from '@/strings';
 import {
-  Badge,
   Button,
   EmptyState,
   Icon,
@@ -24,6 +23,7 @@ import {
   useSplitView,
 } from '@/ui';
 import { SignatureMark } from '@/ui/identity';
+import { DeadlineKind } from '../components/DeadlineKind';
 import { DeadlineTimeline } from '../components/DeadlineTimeline';
 import { DocumentDetail } from '../components/DocumentDetail';
 import { DocumentEditor, type DocumentTarget } from '../components/DocumentEditor';
@@ -36,6 +36,7 @@ import {
   endOf,
   filterDocuments,
   formatSize,
+  nextRelevantDate,
   safeFileName,
   sortDocuments,
   statusOf,
@@ -230,6 +231,8 @@ export default function VaultPage() {
                   const state = statusOf(d, day);
                   const end = endOf(d);
                   const deadline = cancelDeadline(d);
+                  // The cancellation deadline still lies ahead: it is the date that matters next.
+                  const ahead = !!deadline && deadline >= day;
                   const hasFile = files?.has(d.id) ?? false;
                   return (
                     <ItemRow
@@ -248,7 +251,9 @@ export default function VaultPage() {
                         deadline && state === 'missed'
                           ? dated(tDeadline.get().missedOn(formatDay(deadline, 'd. MMM yyyy')))
                           : deadline && state !== 'expired'
-                            ? dated(`${t.vault.deadlineLabel}: ${relativeDayLabel(deadline, day)}`)
+                            ? dated(
+                                `${t.vault.deadlineLabel}: ${formatDay(deadline, 'd. MMM yyyy')}`,
+                              )
                             : undefined,
                         d.fileName
                           ? `${d.fileName}${d.fileSize !== undefined ? ` (${formatSize(d.fileSize)})` : ''}${hasFile ? '' : ` · ${t.vault.fileElsewhere}`}`
@@ -256,14 +261,16 @@ export default function VaultPage() {
                       ])}
                       end={
                         <>
-                          {state === 'ok' || state === 'open-ended' ? null : (
-                            <Badge
-                              // Never red: what has run out asks for a look (red stays for overdue money).
-                              tone="warning"
-                            >
-                              {state === 'missed' ? tDeadline.get().missed : t.vault.status[state]}
-                            </Badge>
-                          )}
+                          {/* The same words as on the rail of "Fristen". */}
+                          {end ? (
+                            <DeadlineKind
+                              state={state}
+                              kind={ahead ? 'cancel' : 'end'}
+                              date={nextRelevantDate(d, day) ?? end}
+                              day={day}
+                              folder
+                            />
+                          ) : null}
                           {canRenew(d, state, day) ? (
                             <Button
                               size="sm"

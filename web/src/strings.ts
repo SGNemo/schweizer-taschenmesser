@@ -5454,7 +5454,7 @@ export const de = {
       proposed: 'Vorschlag: noch einmal dieselbe Laufzeit. Das Datum lässt sich ändern.',
       noStart: 'Ohne Beginn gibt es keinen Vorschlag: bitte das neue Ende eintragen.',
       startMoves: (from: string) => `Der Beginn wird auf den ${from} gesetzt.`,
-      stillPast: 'Dieses Datum liegt noch in der Vergangenheit: bitte anpassen.',
+      stillPast: 'Dieses Datum liegt in der Vergangenheit.',
       gone: 'Die Unterlage gibt es nicht mehr.',
       notLater: 'Das neue Ende muss nach dem bisherigen liegen.',
       save: 'Verlängerung speichern',
@@ -5465,14 +5465,20 @@ export const de = {
       today: 'Heute',
       empty: 'Keine Unterlage hat ein Datum.',
       emptyHint: 'Ein Ende oder Ablaufdatum in einer Unterlage legt sie hierher.',
+      noneAhead: 'Gerade steht keine Frist an.',
       older: (n: number) =>
         n === 1
-          ? '1 Unterlage ist seit mehr als 90 Tagen abgelaufen und hier ausgeblendet. Sie steht weiter in der Ablage.'
-          : `${n} Unterlagen sind seit mehr als 90 Tagen abgelaufen und hier ausgeblendet. Sie stehen weiter in der Ablage.`,
+          ? '1 Unterlage ist seit mehr als 90 Tagen abgelaufen und steht nicht auf der Zeitleiste. Sie steht weiter in der Ablage.'
+          : `${n} Unterlagen sind seit mehr als 90 Tagen abgelaufen und stehen nicht auf der Zeitleiste. Sie stehen weiter in der Ablage.`,
       kinds: {
-        cancel: 'Kündbar bis',
-        cancelNow: 'Kündbar bis · diese Woche',
-        cancelSoon: 'Kündbar bis · bald',
+        cancel: 'Kündigungsfrist endet',
+        cancelIn: (days: number) =>
+          days <= 0
+            ? 'Kündigungsfrist endet heute'
+            : days === 1
+              ? 'Kündigungsfrist endet morgen'
+              : `Kündigungsfrist endet in ${days} Tagen`,
+        cancelSoon: 'Kündigungsfrist endet bald',
         end: 'Läuft ab',
         endSoon: 'Läuft bald ab',
         expired: 'Abgelaufen',
@@ -5483,19 +5489,13 @@ export const de = {
       show: 'Vorschau zeigen',
       hide: 'Vorschau ausblenden',
       alt: (name: string) => `Vorschau: ${name}`,
+      loading: 'Vorschau wird geladen …',
       missing: 'Die Datei liegt nicht auf diesem Gerät.',
       noPicture: 'Für diese Datei gibt es keine Vorschau.',
     },
     renewed: (title: string, date: string) => `„${title}“ läuft jetzt bis ${date}.`,
     download: 'Herunterladen',
     search: 'Unterlagen durchsuchen',
-    status: {
-      expired: 'Abgelaufen',
-      'act-now': 'Jetzt kündigen',
-      soon: 'Bald',
-      ok: '',
-      'open-ended': '',
-    } as Record<string, string>,
     empty: 'Noch keine Unterlagen.',
     emptyFiltered: 'Nichts gefunden.',
     widgetEmpty: 'Keine Fristen in Sicht.',
