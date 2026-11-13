@@ -154,12 +154,21 @@ test('the generator fills the password field and the strength meter reacts', asy
   await expect(dialog.getByTestId('strength')).toHaveAttribute('data-score', /^[34]$/);
 });
 
-test('search finds entries only in the unlocked vault', async ({ page }) => {
+test('search finds entries only in the unlocked vault', async ({ page, isMobile }) => {
+  // The detail view opens after saving, once the decrypted list holds the new entry (a moment after the form
+  // closed). On the phone it is a dialog: wait for it, then close it; an Escape before it opened would leave it open.
+  const closeDetail = async (title: string) => {
+    if (!isMobile) return page.keyboard.press('Escape');
+    const detail = page.getByRole('dialog', { name: title });
+    await expect(detail).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(detail).toHaveCount(0);
+  };
   await setUp(page);
   await addEntry(page, { title: 'Alpha Shop' });
-  await page.keyboard.press('Escape'); // the detail view opens after saving
+  await closeDetail('Alpha Shop');
   await addEntry(page, { title: 'Beta Bank' });
-  await page.keyboard.press('Escape');
+  await closeDetail('Beta Bank');
   // The detail view closes with an in-app Back; typing before it pops lets the pop reset the search.
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await backSettled(page);

@@ -67,7 +67,7 @@
   height: 1.5rem;
   margin: 0;
   border: 1px solid var(--border-strong);
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: var(--surface);
   cursor: pointer;
   transition: transform var(--dur-fast) var(--ease-out);

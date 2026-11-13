@@ -64,10 +64,13 @@ async function addTransaction(
 }
 
 test.describe('Invoices', () => {
-  test('creates an invoice, shows it on dashboard and calendar', async ({ page }) => {
+  test('creates an invoice, shows it on dashboard and calendar', async ({ page, isMobile }) => {
     await addInvoice(page, 'Stadtwerke', '89,90', '2026-10-05');
     await expect(page.getByTestId('open-total')).toHaveText(/89,90\s€/);
-    await expect(page.getByRole('button', { name: /^Stadtwerke/ })).toContainText('Fällig am');
+    // The phone's row has one meta line: the date without its label (design check G4).
+    await expect(page.getByRole('button', { name: /^Stadtwerke/ })).toContainText(
+      isMobile ? 'Mo., 5. Okt.' : 'Fällig am: Mo., 5. Okt.',
+    );
 
     await ready(page, '/');
     await expect(page.getByTestId('widget-invoices:due')).toContainText('Stadtwerke');

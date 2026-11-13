@@ -14,47 +14,54 @@ import styles from './StatusPage.module.css';
  */
 export default function StatusPage() {
   const d = t.device;
-  const { groups, look } = useDeviceStatus();
+  const { groups, look, ready } = useDeviceStatus();
   // CPU, memory and network live in "Dieser PC" → System (desktop only); this page points there instead of repeating them.
   const desktop = getPlatform().kind === 'desktop';
   const diskOn = useModuleStates()?.disk === true;
   return (
     <>
       <PageHeader title={d.meta.name} />
-      <HeroSlot area="figure">
-        {/* One short figure: calm words while all is well, else how many lines need a look and which. */}
-        <HeroFigure
-          value={look.length === 0 ? d.summary.ok : String(look.length)}
-          unit={look.length === 0 ? undefined : d.page.figureUnit(look.length)}
-          // All well: the words say it. Otherwise the names of the lines that need a look (short, never cut).
-          detail={look.length === 0 ? undefined : look.map((l) => l.title).join(', ')}
-          testId="device-summary"
-        />
-      </HeroSlot>
-      <div className={styles.page} data-testid="device-status">
-        {groups.map((group) => (
-          // The line names say what each group is; the space between groups is enough (no heading on top).
-          <ul
-            key={group.id}
-            aria-label={group.title}
-            className={styles.lines}
-            data-testid={`device-group-${group.id}`}
-          >
-            {group.lines.map((line) => (
-              <li key={line.id}>
-                <StatusLineLink line={line} layout="columns" />
-              </li>
+      {/* Head and lines wait for the first reads and then come together (no line fills in, no "Kein Backup" first). */}
+      {ready ? (
+        <HeroSlot area="figure">
+          {/* One short figure: calm words while all is well, else how many lines need a look and which. */}
+          <HeroFigure
+            value={look.length === 0 ? d.summary.ok : String(look.length)}
+            unit={look.length === 0 ? undefined : d.page.figureUnit(look.length)}
+            // All well: the words say it. Otherwise the names of the lines that need a look (short, never cut).
+            detail={look.length === 0 ? undefined : look.map((l) => l.title).join(', ')}
+            testId="device-summary"
+          />
+        </HeroSlot>
+      ) : null}
+      <div className={styles.page} data-testid="device-status" aria-busy={!ready}>
+        {ready ? (
+          <>
+            {groups.map((group) => (
+              // The line names say what each group is; the space between groups is enough (no heading on top).
+              <ul
+                key={group.id}
+                aria-label={group.title}
+                className={styles.lines}
+                data-testid={`device-group-${group.id}`}
+              >
+                {group.lines.map((line) => (
+                  <li key={line.id}>
+                    <StatusLineLink line={line} layout="columns" />
+                  </li>
+                ))}
+              </ul>
             ))}
-          </ul>
-        ))}
-        <p className={styles.more}>{d.page.note}</p>
-        {desktop ? (
-          <p className={styles.more} data-testid="device-pc">
-            {d.page.pc}{' '}
-            <Link to={diskOn ? '/disk?tab=system' : '/library'}>
-              {diskOn ? d.page.pcOpen : d.page.pcLibrary}
-            </Link>
-          </p>
+            <p className={styles.more}>{d.page.note}</p>
+            {desktop ? (
+              <p className={styles.more} data-testid="device-pc">
+                {d.page.pc}{' '}
+                <Link to={diskOn ? '/disk?tab=system' : '/library'}>
+                  {diskOn ? d.page.pcOpen : d.page.pcLibrary}
+                </Link>
+              </p>
+            ) : null}
+          </>
         ) : null}
       </div>
     </>

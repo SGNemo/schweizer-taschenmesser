@@ -127,6 +127,8 @@ test.describe('UI round 6 – desktop 1920', () => {
   }) => {
     await start(page, '/settings');
     await expect(page.getByTestId('settings-overview')).toBeVisible();
+    // The status lines come once the module states and their first reads are known (0b-8, C4).
+    await expect(page.getByTestId('settings-status')).toHaveAttribute('aria-busy', 'false');
     expect(await wordBreaks(page, '#main')).toEqual([]);
     const tiles = await page
       .getByTestId('settings-status')
