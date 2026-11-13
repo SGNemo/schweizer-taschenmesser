@@ -155,3 +155,7 @@ Finance and mail may need more than the two-day frame; if so they become a packa
 | settings 1st / 2nd | ☐ | ☐ |
 | overview | ☐ | ☐ |
 | dialogs | ☐ | ☐ |
+
+## Guard (step 3)
+
+`web/e2e/seed/click-content.seed.spec.ts` (seed project, desktop and phone, ~4 min each): overview, settings, library, todos, calendar, finance and the todos/finance entry dialogs at CPU 4×, median of 3 runs of `done`. Targets agreed 2026-11-13: page ≤ 1.0 s on the first visit, ≤ 0.5 s on the second, entry dialog ≤ 0.3 s, each × 1.5 for CI load. Pages slower today have their measured value as `CEILING` in the spec: lower it when a fix lands, remove it at the target, never raise it. The probe is shared with `measure:click` (`web/e2e/perf/clickProbe.ts`).
