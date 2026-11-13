@@ -21,6 +21,7 @@ import { Suspense, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { useModuleStates } from '@/core/modules/activation';
 import { useAttentionItems, useCalendarItems } from '@/core/modules/contributions';
+import { useHideValuesSetting } from '@/core/focus/hideValues';
 import { useSetupState } from '@/core/setup/hooks';
 import { useFocusSettings } from '@/core/settings/focus';
 import { today } from '@/core/time/dates';
@@ -187,6 +188,9 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
   const stripOn = !editing && !layout.hidden.includes(ATTENTION_KEY);
   // The welcome card of an empty app lies above them: its answer (shown or not) is waited for too.
   const setup = useSetupState();
+  // "Werte ausblenden" is read before the first paint: amounts are dots until it is known (fail closed), and
+  // nobody should see them turn into figures a moment later.
+  const hideValuesRead = useHideValuesSetting() !== undefined;
   // Capped like the cards' first paint: a source that never answers must not keep the whole page empty.
   const [waited, setWaited] = useState(false);
   useEffect(() => {
@@ -198,6 +202,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
     states !== undefined &&
     (waited ||
       ((cockpit || setup !== undefined) &&
+        hideValuesRead &&
         (!stripOn || attention !== undefined) &&
         (!agendaOn || agendaItems !== undefined)));
   const shown = !blocksReady

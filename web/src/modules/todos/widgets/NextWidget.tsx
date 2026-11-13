@@ -135,7 +135,8 @@ export default function NextWidget() {
       {settings.timeToNext && until ? (
         <p className={styles.until} data-testid="today-until">
           <strong>{untilText(until.minutes)}</strong>
-          {` · ${until.item.time} ${mask(until.item.title)}`}
+          {` · ${until.item.time} `}
+          {mask(until.item.title)}
         </p>
       ) : null}
 
@@ -166,7 +167,7 @@ export default function NextWidget() {
       {settings.nextOne && !noTasks ? (
         next ? (
           <div className={styles.card} data-testid="next-card">
-            <span className={styles.title}>{next.title}</span>
+            <span className={styles.title}>{mask(next.title)}</span>
             <span className={styles.meta}>
               {[
                 listName(next.listId),
@@ -224,7 +225,7 @@ export default function NextWidget() {
                 return (
                   <li key={p.id} className={styles.row}>
                     <Checkbox
-                      label={full.title}
+                      label={mask(full.title)}
                       checked={false}
                       onChange={() => toggle(p.id, true)}
                     />

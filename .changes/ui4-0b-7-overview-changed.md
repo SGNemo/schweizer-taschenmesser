@@ -20,3 +20,10 @@ breaking: false
 de: Eine Kündigungsfrist, die heute endet, steht unter „Jetzt wichtig“ als eigener Eintrag und wird nie eingeklappt.
 en: A notice period that ends today is an entry of its own under “Important now” and is never folded away.
 ---
+---
+type: changed
+area: home
+breaking: false
+de: „Werte ausblenden“ verdeckt auf der Übersicht jetzt auch Beträge in Zeilen, etwa bei Rechnungen, Budgets und neuen Preisen.
+en: “Hide values” now also hides amounts inside lines on the overview, such as invoices, budgets and new prices.
+---

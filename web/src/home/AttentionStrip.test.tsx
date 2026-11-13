@@ -300,10 +300,19 @@ it('"Werte ausblenden" turns the amounts of a card into dots, the words stay', a
       to: '/budgets',
     },
   ];
-  draw();
-  const card = await screen.findByRole('link', { name: /Wohnen/ });
-  await waitFor(() => expect(card.textContent).toContain('noch ••••'));
-  expect(card.textContent).not.toMatch(/35,00/);
-  await db.table('_meta').delete('focus.hideValues');
-  cleanup();
+  try {
+    draw();
+    const card = await screen.findByRole('link', { name: /Wohnen/ });
+    await waitFor(() => expect(card.textContent).toContain('noch ••••'));
+    expect(card.textContent).not.toMatch(/35,00/);
+    // A screen reader hears "Ausgeblendet", not the dots.
+    const dots = Array.from(card.querySelectorAll('[aria-hidden="true"]')).filter(
+      (el) => el.textContent === '••••',
+    );
+    expect(dots).toHaveLength(1);
+    expect(card.textContent).toContain('Ausgeblendet');
+  } finally {
+    await db.table('_meta').delete('focus.hideValues');
+    cleanup();
+  }
 });

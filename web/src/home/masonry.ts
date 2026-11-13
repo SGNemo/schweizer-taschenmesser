@@ -76,10 +76,10 @@ export function usePackedGrid<T extends HTMLElement>(keys: string, enabled = tru
     };
     if (!settled.has(grid)) {
       grid.setAttribute('data-settling', 'true');
+      // The cap also settles a grid that never gets a card (a calm view without the "Heute" card), so the
+      // "Mehr anzeigen" row below it shows; cards that arrive before it are waited for (`settleWhenLoaded`).
       cap = window.setTimeout(settle, SETTLE_CAP_MS);
-      // No card to wait for (a calm view without the "Heute" card): nothing to hide.
-      if (children().length === 0) settle();
-      else settleWhenLoaded();
+      settleWhenLoaded();
     }
     // A body that swaps its skeleton for the empty state may keep the card's height (the size class's minimum),
     // so content changes re-check too, once per frame.

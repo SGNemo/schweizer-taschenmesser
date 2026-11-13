@@ -39,7 +39,7 @@ function useCoreItems(): AttentionItem[] {
 function Card({ item: i }: { item: AttentionItem }) {
   // "Werte ausblenden": amounts in a title or context line ("noch 1,02 €", a new price) become dots.
   const mask = useAmountMask();
-  const { figure, label } = splitFigure(mask(i.title));
+  const { figure, label } = splitFigure(i.title);
   return (
     <Link
       to={i.to}
@@ -57,7 +57,7 @@ function Card({ item: i }: { item: AttentionItem }) {
               <b className={styles.figure}>{figure}</b>{' '}
             </>
           ) : null}
-          <span className={styles.label}>{label}</span>
+          <span className={styles.label}>{mask(label)}</span>
         </span>
         {i.detail ? <span className={styles.detail}>{mask(i.detail)}</span> : null}
       </span>
