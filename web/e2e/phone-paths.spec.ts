@@ -137,8 +137,8 @@ test.describe('ten paths', () => {
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await ready(page, '/');
     const s = new Steps(page);
-    // The home screen already shows it ("Jetzt wichtig"): nothing to tap.
-    await expect(page.getByRole('region', { name: 'Jetzt wichtig' })).toContainText('Zahnarzt');
+    // The home screen already shows it (the "Heute" card names the day's appointments): nothing to tap.
+    await expect(page.getByTestId('widget-todos:next')).toContainText('Zahnarzt');
     await record(info, '3 Termin heute ansehen', s.n);
   });
 

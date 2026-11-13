@@ -23,6 +23,9 @@ const source: AttentionSource = async ({ today }) => {
       title: t.fitness.planned.attention(s.time!, sessionTitle(s)),
       to: `/fitness?open=${encodeURIComponent(s.id)}`,
       rank: 8,
+      due: 'today' as const,
+      // The session is a calendar entry of today: the agenda and the "Heute" card list it.
+      coveredBy: ['agenda', 'today'] as const,
     }));
 };
 

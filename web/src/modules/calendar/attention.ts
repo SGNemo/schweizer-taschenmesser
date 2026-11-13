@@ -21,6 +21,9 @@ const source: AttentionSource = async ({ today }) => {
           detail: t.attention.eventAt(next.time!),
           to: '/calendar',
           rank: 3,
+          due: 'today' as const,
+          // Both blocks list today's appointments: the agenda and the "Heute" card.
+          coveredBy: ['agenda', 'today'] as const,
         },
       ]
     : [];

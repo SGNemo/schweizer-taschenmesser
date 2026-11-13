@@ -1,5 +1,5 @@
-/* Head of the overview (identity v3): greeting, date and weather on the left, a calm tools row on the right. It wraps instead of
-   cutting off; below 40 rem the tools go under the greeting. */
+/* Head of the overview (identity 4.0): greeting, date and weather on the left, a calm tools row on the right. The greeting has
+   the measure of a module page's title (28/600, 22/600 on a phone). Below 40 rem the tools go under the greeting, in one row. */
 .head {
   display: flex;
   flex-wrap: wrap;
@@ -14,9 +14,9 @@
 }
 .greeting {
   margin: 0;
-  font-size: var(--text-3xl);
-  font-weight: var(--weight-bold);
-  letter-spacing: -0.02em;
+  font-size: var(--text-h1);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.015em;
   line-height: 1.15;
 }
 .meta {
@@ -67,11 +67,29 @@
   justify-content: flex-end;
   gap: var(--space-2);
 }
+/* Phone: the tools stay one row (the "Cockpit" button shows its icon only), and the date is plain text again, so the
+   head is three short lines. */
 @media (max-width: 40rem) {
-  .greeting {
-    font-size: var(--text-2xl);
+  .head {
+    gap: var(--space-2) var(--space-5);
+    margin-bottom: var(--space-4);
+  }
+  .date {
+    min-height: 0;
   }
   .tools {
     justify-content: flex-start;
+  }
+  .tools[data-compact] {
+    flex-wrap: nowrap;
+    width: 100%;
+  }
+  /* View switch first, then "Cockpit"; the pencil sits at the right end of the row. */
+  .tools[data-compact] > :first-child {
+    order: 1;
+  }
+  .tools[data-compact] > :last-child {
+    order: 2;
+    margin-inline-start: auto;
   }
 }

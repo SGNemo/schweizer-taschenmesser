@@ -9,6 +9,26 @@ export function packedRows(height: number, gap: number): number {
   return Math.max(1, Math.ceil(height + gap));
 }
 
+/** Longest time the cards wait for each other before they show (a card that never loads must not hide the rest). */
+export const SETTLE_CAP_MS = 1500;
+
+/** Grids that have shown their cards once: a re-pack (another view, a new card) never hides them again. */
+const settled = new WeakSet<HTMLElement>();
+
+/**
+ * True while a card of the first screen still shows a loading skeleton. Cards are as high as their content
+ * (identity 4.0, no minimum height per size class), so each one that loads would push the ones below it.
+ */
+export function firstScreenLoading(
+  cards: readonly HTMLElement[],
+  fold: number,
+  skeleton: string,
+): boolean {
+  return cards.some(
+    (el) => el.getBoundingClientRect().top < fold && el.querySelector(skeleton) !== null,
+  );
+}
+
 /**
  * U19/U39 (UI round 6): packs the overview grid without holes. A card that grew taller than its size class
  * used to stretch the shared row tracks, and every shorter card beside it left a hole below. Here each card
@@ -19,9 +39,12 @@ export function packedRows(height: number, gap: number): number {
  * Measurements only write CSS variables and attributes (no React state), so a card that loads later only
  * re-packs; its own height never depends on its span (`align-items: start`), so there is no resize loop.
  * `enabled = false` (the overview's edit mode) leaves the grid unpacked: there the cards sit in the saved order on
- * the size-class rows, so dragging and the keyboard (dnd-kit picks targets by position) move a card where it looks.
+ * plain rows, so dragging and the keyboard (dnd-kit picks targets by position) move a card where it looks.
+ * First load: the grid carries `data-settling` (its cards are laid out but not painted, `Home.module.css`) until the
+ * cards of the first screen have their content or `SETTLE_CAP_MS` have passed, so they appear once, at their own
+ * heights, instead of growing one after the other.
  */
-export function usePackedGrid<T extends HTMLElement>(keys: string, enabled = true) {
+export function usePackedGrid<T extends HTMLElement>(keys: string, enabled = true, ready = true) {
   // A callback ref: a grid element that mounts again (same keys) is packed again.
   const [grid, setGrid] = useState<T | null>(null);
   useLayoutEffect(() => {
@@ -41,6 +64,25 @@ export function usePackedGrid<T extends HTMLElement>(keys: string, enabled = tru
       measure(el);
       observer.observe(el);
     }
+    let cap = 0;
+    const settle = () => {
+      window.clearTimeout(cap);
+      settled.add(grid);
+      grid.removeAttribute('data-settling');
+    };
+    const settleWhenLoaded = () => {
+      if (!grid.hasAttribute('data-settling') || children().length === 0) return;
+      if (!firstScreenLoading(children(), window.innerHeight, `.${misc.skeleton}`)) settle();
+    };
+    if (!settled.has(grid)) {
+      grid.setAttribute('data-settling', 'true');
+      // The cap also settles a grid that never gets a card (a calm view without the "Heute" card), so the
+      // "Mehr anzeigen" row below it shows; cards that arrive before it are waited for (`settleWhenLoaded`).
+      cap = window.setTimeout(settle, SETTLE_CAP_MS);
+      // The page has what it shows and there is no card (a calm view without the "Heute" card): nothing to hold.
+      if (ready && children().length === 0) settle();
+      else settleWhenLoaded();
+    }
     // A body that swaps its skeleton for the empty state may keep the card's height (the size class's minimum),
     // so content changes re-check too, once per frame.
     let frame = 0;
@@ -49,6 +91,7 @@ export function usePackedGrid<T extends HTMLElement>(keys: string, enabled = tru
       frame = requestAnimationFrame(() => {
         frame = 0;
         for (const el of children()) measure(el);
+        settleWhenLoaded();
       });
     });
     mutations.observe(grid, { childList: true, subtree: true });
@@ -57,8 +100,10 @@ export function usePackedGrid<T extends HTMLElement>(keys: string, enabled = tru
       observer.disconnect();
       mutations.disconnect();
       cancelAnimationFrame(frame);
+      window.clearTimeout(cap);
+      grid.removeAttribute('data-settling');
       grid.removeAttribute('data-packed');
     };
-  }, [enabled, grid, keys]);
+  }, [enabled, grid, keys, ready]);
   return setGrid;
 }

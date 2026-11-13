@@ -7,6 +7,8 @@ export const homeEdit: Strings['homeEdit'] = {
   unpin: (title: string) => `Remove ${title}`,
   pinned: 'Added',
   pinNote: 'Added cards stay visible in the calm view.',
+  agendaCalm: '“Today · Tomorrow · this week” in “Calm” too',
+  agendaCalmHint: 'Otherwise the Today card shows the day’s appointments in “Calm”.',
   customize: 'Customise',
   done: 'Done',
   hide: 'Hide',

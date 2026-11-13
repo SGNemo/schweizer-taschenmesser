@@ -20,8 +20,8 @@
   min-width: 0;
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-1);
+  /* Identity 4.0: a tone step, no shadow. */
+  background: var(--surface-raised);
 }
 @media (max-width: 899px) {
   .day {
@@ -37,10 +37,7 @@
   font-size: var(--text-sm);
   font-weight: var(--weight-bold);
 }
-/* "Heute" is told apart by the accent ink, not by colour alone: it is also the first card and says so. */
-.group[data-accent] {
-  color: var(--accent);
-}
+/* "Heute" is the first card and says so; no accent ink (one accent, one job: the page's primary action). */
 .caption {
   font-size: var(--text-meta);
   font-weight: var(--weight-medium);
@@ -79,7 +76,7 @@
   height: 0.625rem;
   border-radius: 50%;
   background: var(--dot);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dot) 20%, var(--surface));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dot) 20%, var(--surface-raised));
 }
 .what {
   min-width: 0;

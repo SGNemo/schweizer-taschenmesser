@@ -97,7 +97,7 @@ describe('AgendaBlock (day cards on a time rail)', () => {
     calendar.value = [];
     draw();
     expect(screen.getByText(/steht nichts an/)).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Termin anlegen' }).getAttribute('href')).toBe(
+    expect(screen.getByRole('link', { name: 'Termin eintragen' }).getAttribute('href')).toBe(
       '/calendar?new=1',
     );
   });

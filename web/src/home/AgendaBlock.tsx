@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { Link } from 'react-router';
+import { useAmountMask } from '@/core/focus/maskAmounts';
 import { useCalendarItems } from '@/core/modules/contributions';
 import { allManifests } from '@/core/modules/registry';
 import type { CalendarItem } from '@/core/modules/types';
@@ -13,6 +14,8 @@ const hueOf = (source: string) => allManifests.find((m) => m.id === source)?.ide
 
 /** One entry on the time rail: time, a dot in the module's hue (or the outside calendar's colour), the title. */
 function Row({ item, withDay }: { item: CalendarItem; withDay?: boolean }) {
+  // An open invoice's entry names its amount ("Stadtwerke · 87,40 €"): dots while "Werte ausblenden" is on.
+  const mask = useAmountMask();
   const time = item.allDay || !item.time ? t.calendar.allDay : item.time;
   return (
     <li data-hue={hueOf(item.source)}>
@@ -26,7 +29,7 @@ function Row({ item, withDay }: { item: CalendarItem; withDay?: boolean }) {
           aria-hidden="true"
           style={item.color ? ({ '--dot': item.color } as CSSProperties) : undefined}
         />
-        <span className={styles.what}>{item.title}</span>
+        <span className={styles.what}>{mask(item.title)}</span>
       </Link>
     </li>
   );
@@ -35,19 +38,17 @@ function Row({ item, withDay }: { item: CalendarItem; withDay?: boolean }) {
 function Day({
   title,
   caption,
-  accent,
   testId,
   children,
 }: {
   title: string;
   caption: string;
-  accent?: boolean;
   testId: string;
   children: ReactNode;
 }) {
   return (
     <div className={styles.day} data-testid={testId}>
-      <h3 className={styles.group} data-accent={accent ? '' : undefined}>
+      <h3 className={styles.group}>
         {title} <small className={styles.caption}>{caption}</small>
       </h3>
       <ul className={styles.list}>{children}</ul>
@@ -57,13 +58,15 @@ function Day({
 
 /**
  * "Heute · Morgen · diese Woche": the appointments, reminders and due dates of the next days at a glance, as up to three day
- * cards side by side (stacked on a narrow page), each with a time rail. Shown in the calm and the detailed overview alike.
+ * cards side by side (stacked on a narrow page), each with a time rail. Shown in the detailed overview; in the calm one only when pinned (`isAgendaVisible`).
  * Renders nothing before the data is there; days without entries are not shown, an empty week says so in one line and names
  * the one next step.
  */
-export function AgendaBlock() {
+export function AgendaBlock({ items: given }: { items?: readonly CalendarItem[] } = {}) {
   const day = today();
-  const items = useCalendarItems(agendaRange(day));
+  // The page hands the days over when it has read them (same shared query), so the block is in its first paint.
+  const own = useCalendarItems(agendaRange(day));
+  const items = given ?? own;
   const homeView = useUiStore((s) => s.homeView);
   if (!items) return null;
   const agenda = buildAgenda(items, day, LIMITS[homeView]);
@@ -82,7 +85,6 @@ export function AgendaBlock() {
               <Day
                 title={t.home.agenda.today}
                 caption={formatDay(day, short)}
-                accent
                 testId="agenda-today"
               >
                 {agenda.today.map((i) => (

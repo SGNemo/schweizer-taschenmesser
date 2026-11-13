@@ -34,8 +34,9 @@ test.describe('Heute card (focus audit 2, package 2)', () => {
     await expect(card.getByTestId('today-until')).toContainText('in 1 Std 30 Min');
     await expect(card.getByTestId('today-until')).toContainText('11:30 Zahnarzt');
     await expect(card.getByTestId('next-card')).toContainText('Formular ausfüllen');
-    // The appointments sit in the block above the cards, not in the card.
-    await expect(page.getByTestId('agenda-today')).toContainText('Zahnarzt');
+    // "Ruhig" has no agenda: the card's first line names the appointment, and the card does not list it again.
+    await expect(page.getByTestId('agenda')).toHaveCount(0);
+    await expect(card.getByTestId('today-appointments')).toHaveCount(0);
     // The three former blocks are not repeated beside it.
     await expect(page.getByTestId('widget-calendar:next')).toHaveCount(0);
     await expect(page.getByTestId('widget-calendar:today')).toHaveCount(0);
@@ -49,7 +50,8 @@ test.describe('Heute card (focus audit 2, package 2)', () => {
     await expect(toggle).toHaveAttribute('aria-checked', 'false');
     await ready(page, '/');
     await expect(page.getByTestId('today-until')).toHaveCount(0);
-    await expect(page.getByTestId('agenda-today')).toContainText('Zahnarzt');
+    // Without the clock line the card lists the appointment among the day's ones.
+    await expect(page.getByTestId('today-appointments')).toContainText('Zahnarzt');
   });
 
   test('"Anfangen" is the one main button and starts the focus screen; "Später" is quiet', async ({

@@ -33,7 +33,10 @@ describe('"Preis erhöht" under Jetzt wichtig', () => {
     await add();
     const [item, ...rest] = await attention({ today: '2026-10-02' });
     expect(rest).toEqual([]);
-    expect(item).toMatchObject({ tone: 'accent', to: '/subscriptions' });
+    // Information, nothing to do today: the calm tone, and it folds on the overview (no `due`).
+    expect(item).toMatchObject({ tone: 'warning', to: '/subscriptions' });
+    expect(item!.due).toBeUndefined();
+    expect(item!.foldSummary?.(2)).toBe('2 Abos mit neuem Preis');
     expect(item!.title).toContain('Netflix');
     expect(item!.title).toContain('14,99');
     expect(item!.title).toContain('12,99');

@@ -6,6 +6,8 @@ Examples to copy from. Rules: [FOCUS-GUIDELINES.md](FOCUS-GUIDELINES.md) (text r
 |---|---|---|
 | Next step card | "Jetzt dran: Formular ausfüllen" · "Anfangen · 10 Min" · "Später" · "Etwas anderes" | "Du solltest jetzt …" |
 | Several things waiting | "Wartet noch · 5 Dinge" · "Nichts davon muss jetzt sein." | "5 Aufgaben überfällig!" |
+| Folded line of "Jetzt wichtig" (overview) | "Kann warten · 4 · 2 Budgets fast aufgebraucht, 1 Vorrat abgelaufen … · nichts davon muss heute sein." · en: "Can wait · 4 · 2 budgets almost used up, 1 pantry item expired … · none of this is due today." | "Bald dran" (does not fit expired things) · "4 weitere Warnungen" |
+| Deadline that ends today | "1 Kündigungsfrist endet heute" · en: "1 notice period ends today" | "Letzte Chance!" |
 | Old ToDo | "offen seit letzter Woche" · "geplant für Mo., 21. Sep." | "Überfällig seit 12 Tagen" |
 | Date passed (due lists, widgets) | "war am Di. fällig" · "war am 17. Sep. fällig" · Vorräte "MHD war Mo." | "seit 3 Tagen" · "seit gestern" |
 | Money deadline passed | "Rechnung offen · 12,00 € · Frist war am 21. Sep." | "Du hast die Frist verpasst" |

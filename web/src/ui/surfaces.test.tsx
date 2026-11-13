@@ -157,16 +157,14 @@ describe('Tabs', () => {
 
 describe('shadows in ui/ (Identity 4.0: only floating things cast one)', () => {
   // The stylesheets of `ui/` that may still write `--shadow-1`, with what casts it. A file that is not listed here
-  // must not use it; an entry goes when its package removes the shadow (the head went with 0b-2; signature blocks
-  // and widget bodies: the area packages and 0b-7).
+  // must not use it; an entry goes when its package removes the shadow (the head went with 0b-2, the widget body
+  // "notiz" and the round sky swatch with 0b-7; signature blocks: the area packages).
   const ALLOWED: Record<string, string> = {
     'Fields.module.css': 'switch thumb (lies on its track)',
     'SelectionBar.module.css': 'sticky selection bar (floats over the list)',
     'identity/BankCard.module.css': 'signature block',
     'identity/CalendarLeaf.module.css': 'signature block',
-    'identity/Sky.module.css': 'signature block',
     'identity/blocks.module.css': 'signature blocks',
-    'widgets/Bodies.module.css': 'widget body "notiz" (package 0b-7)',
   };
   it('no other stylesheet of ui/ uses --shadow-1', () => {
     const files = (readdirSync(__dirname, { recursive: true }) as string[])

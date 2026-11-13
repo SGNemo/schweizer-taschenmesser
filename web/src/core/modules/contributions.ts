@@ -139,10 +139,13 @@ export function useCalendarItems(range: DateRange): CalendarItem[] | undefined {
 }
 
 const TONE_ORDER: Record<AttentionItem['tone'], number> = { danger: 0, accent: 1, warning: 2 };
-export const ATTENTION_LIMIT = 6;
 
-/** Danger first, then accent, then warning; by rank and title inside a tone; capped. */
-export function rankAttention(items: readonly AttentionItem[], limit = ATTENTION_LIMIT) {
+/**
+ * Danger first, then accent, then warning; by rank and title inside a tone. Not capped: the overview shows
+ * everything that is overdue or due today and counts the rest in "Kann warten · n", so a cut here would make
+ * that number wrong. A caller with little room passes its own `limit` (`NowStrip`).
+ */
+export function rankAttention(items: readonly AttentionItem[], limit = Number.POSITIVE_INFINITY) {
   return [...items]
     .sort(
       (a, b) =>

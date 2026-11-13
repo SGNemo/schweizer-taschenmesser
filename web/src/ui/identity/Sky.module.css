@@ -63,7 +63,6 @@
   width: 3.5rem;
   aspect-ratio: 1;
   border-radius: var(--radius-full);
-  box-shadow: var(--shadow-1);
 }
 /* Phone (design check K3): the stage's module row runs over the full width under the title row. Sun and moon lie
    in the free right end of the title row, smaller, so the row never crosses them. */

@@ -17,10 +17,16 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Suspense, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { useModuleStates } from '@/core/modules/activation';
+import { useAttentionItems, useCalendarItems } from '@/core/modules/contributions';
+import { useHideValuesSetting } from '@/core/focus/hideValues';
+import { useSetupState } from '@/core/setup/hooks';
+import { useFocusSettings } from '@/core/settings/focus';
+import { today } from '@/core/time/dates';
 import { lazyComponent } from '@/core/modules/lazy';
+import { OverviewBlocksContext } from '@/core/modules/overviewBlocks';
 import { isWidgetVisible, widgetMaturity } from './maturity';
 import { availableManifests } from '@/core/modules/available';
 import { allManifests } from '@/core/modules/registry';
@@ -32,7 +38,6 @@ import { tCockpit } from '@/strings.cockpit';
 import { enterCockpit } from '@/layout/useCockpit';
 import { HOME_VIEWS, useUiStore } from '@/stores/ui';
 import { SignatureMark } from '@/ui/identity';
-import { SetupLink } from '@/layout/setup/SetupLink';
 import { ChecklistCard } from '@/layout/setup/ChecklistCard';
 import { WelcomeCard } from '@/layout/setup/WelcomeCard';
 import {
@@ -51,11 +56,19 @@ import {
 } from '@/ui';
 import { widgetsOf } from './AutoWidget';
 import { AgendaBlock } from './AgendaBlock';
+import { agendaRange } from './agenda';
 import { AttentionStrip } from './AttentionStrip';
+import {
+  activeCovers,
+  AGENDA_KEY,
+  ATTENTION_KEY,
+  isAgendaVisible,
+  type HomeView,
+} from './attentionFold';
 import { CockpitStats } from './CockpitStats';
 import { OverviewHead } from './OverviewHead';
 import { ResumeCard } from './ResumeCard';
-import { usePackedGrid } from './masonry';
+import { SETTLE_CAP_MS, usePackedGrid } from './masonry';
 
 import styles from './Home.module.css';
 import {
@@ -69,6 +82,7 @@ import {
   orderWidgets,
   resetLayout,
   toggleHidden,
+  TODAY_KEY,
   togglePinned,
   updateLayout,
   useHomeLayout,
@@ -112,12 +126,8 @@ const allEntries = (): Entry[] =>
     }),
   );
 
-/** Key of the "Jetzt wichtig" strip in the layout's hidden list. */
-const ATTENTION_KEY = 'core:attention';
-/** Key of the "Heute · Morgen · diese Woche" block in the layout's hidden list. */
-const AGENDA_KEY = 'core:agenda';
-
-const SIZE_CLASS: Record<WidgetSize, string> = { s: styles.s!, m: styles.m!, l: styles.l! };
+/** Size classes are widths; `s` is one column and needs no class. */
+const SIZE_CLASS: Record<WidgetSize, string> = { s: '', m: styles.m!, l: styles.l! };
 
 /**
  * The overview. With `cockpit` it is the cockpit's widget wall: own layout scope, no greeting,
@@ -163,15 +173,68 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
   const hiddenByUser = ordered.filter((e) => layout.hidden.includes(e.key));
   // Keys the calm view may show; a Heute card the user hid lets the month card stand in.
   const available = ordered.filter((e) => !layout.hidden.includes(e.key)).map((e) => e.key);
-  const shown = editing
-    ? ordered
-    : ordered.filter(
-        (e) => !layout.hidden.includes(e.key) && (!calm || isCalmVisible(e.key, layout, available)),
-      );
-  const folded = calm ? ordered.length - hiddenByUser.length - shown.length : 0;
+  // What is on the page beside the widgets (never while editing: the edit mode shows the cards only).
+  const view: HomeView = calm ? 'calm' : 'all';
+  const agendaOn = !editing && isAgendaVisible(layout, view);
+  // The "Heute" card lists something unless "Jetzt dran" and the day plan are both off (then it shows a hint).
+  const [focus] = useFocusSettings();
+  const cardLists = focus.nextOne || focus.dayPlan;
+  // The blocks under the head load on their own (layout, "Jetzt wichtig", the agenda's days). Drawn one by one each
+  // would push the others down; they appear together once all that will show have their data (same shared queries
+  // as the blocks use, nothing is read twice).
+  const attention = useAttentionItems();
+  const day = today();
+  const agendaItems = useCalendarItems(agendaRange(day));
+  const stripOn = !editing && !layout.hidden.includes(ATTENTION_KEY);
+  // The welcome card of an empty app lies above them: its answer (shown or not) is waited for too.
+  const setup = useSetupState();
+  // "Werte ausblenden" is read before the first paint: amounts are dots until it is known (fail closed), and
+  // nobody should see them turn into figures a moment later.
+  const hideValuesRead = useHideValuesSetting() !== undefined;
+  // Capped like the cards' first paint: a source that never answers must not keep the whole page empty.
+  const [waited, setWaited] = useState(false);
+  useEffect(() => {
+    const id = window.setTimeout(() => setWaited(true), SETTLE_CAP_MS);
+    return () => window.clearTimeout(id);
+  }, []);
+  const blocksReady =
+    layoutRead &&
+    states !== undefined &&
+    (waited ||
+      ((cockpit || setup !== undefined) &&
+        hideValuesRead &&
+        (!stripOn || attention !== undefined) &&
+        (!agendaOn || agendaItems !== undefined)));
+  const shown = !blocksReady
+    ? []
+    : editing
+      ? ordered
+      : ordered.filter(
+          (e) =>
+            !layout.hidden.includes(e.key) && (!calm || isCalmVisible(e.key, layout, available)),
+        );
+  const folded = calm && blocksReady ? ordered.length - hiddenByUser.length - shown.length : 0;
+  // One answer to "which block lists what", read by the strip and by the "Heute" card (never while editing:
+  // the edit mode shows the cards only).
+  const cardShown = cardLists && shown.some((e) => e.key === TODAY_KEY);
+  const covers = useMemo(() => activeCovers(layout, view, cardShown), [layout, view, cardShown]);
+  const blocks = editing ? undefined : covers;
+  // No duplicate between head and widgets: the short weather line stands in the head only while no weather
+  // card is on the page ("Ausführlich": the widget; "Ruhig": the head, unless the card is pinned).
+  const calmView = homeView === 'calm' && !cockpit;
+  const weatherCard = ordered.some(
+    (e) =>
+      e.moduleId === 'weather' &&
+      !layout.hidden.includes(e.key) &&
+      (!calmView || isCalmVisible(e.key, layout, available)),
+  );
   // Packed (no holes) except while editing: reordering picks targets by position, so there the grid keeps the
   // saved order on plain rows.
-  const gridRef = usePackedGrid<HTMLDivElement>(shown.map((e) => e.key).join('|'), !editing);
+  const gridRef = usePackedGrid<HTMLDivElement>(
+    shown.map((e) => e.key).join('|'),
+    !editing,
+    blocksReady,
+  );
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
@@ -216,7 +279,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
     ) : null;
 
   return (
-    <>
+    <div className={[styles.frame, calm ? styles.calm : ''].join(' ')} data-view={view}>
       {cockpit ? (
         editing ? (
           <div className={styles.cockpitTools} data-testid="cockpit-edit-tools">
@@ -229,7 +292,8 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
         ) : null
       ) : (
         <OverviewHead
-          weather={!!states?.weather}
+          weather={layoutRead && !!states?.weather && !weatherCard}
+          compactTools={!editing}
           tools={
             entries.length > 0 ? (
               <>
@@ -241,7 +305,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
                     data-testid="cockpit-enter"
                   >
                     <Icon name="maximize" size={18} />
-                    {tx.enter}
+                    <span className={styles.toolLabel}>{tx.enter}</span>
                   </Button>
                 )}
                 {editing ? null : (
@@ -283,17 +347,23 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
         </>
       )}
       {cockpit && !editing && layout.stats ? <CockpitStats /> : null}
-      {!editing && !layout.hidden.includes(ATTENTION_KEY) ? <AttentionStrip /> : null}
-      {!editing && !layout.hidden.includes(AGENDA_KEY) ? <AgendaBlock /> : null}
+      {blocksReady && stripOn ? <AttentionStrip covers={covers} items={attention} /> : null}
+      {blocksReady && agendaOn ? <AgendaBlock items={agendaItems} /> : null}
 
       {states && availableManifests().every((m) => !states[m.id]) ? (
-        <EmptyState title={t.home.emptyTitle}>
+        // Empty states of the overview: the motif, one sentence and one verb (the next step).
+        <EmptyState title={t.home.emptyTitle} testId="home-empty">
           <p>{t.home.emptyText}</p>
-          <Link to="/library">{t.home.toLibrary}</Link>
-          <SetupLink />
+          <Button variant="primary" onClick={() => void navigate('/library')}>
+            {t.home.toLibrary}
+          </Button>
         </EmptyState>
       ) : states && entries.length === 0 ? (
-        <p className={styles.hint}>{t.home.noWidgets}</p>
+        <EmptyState title={t.home.noWidgets} testId="home-no-cards">
+          <Button variant="primary" onClick={() => void navigate('/library')}>
+            {t.home.toLibrary}
+          </Button>
+        </EmptyState>
       ) : (
         <DndContext
           sensors={sensors}
@@ -305,40 +375,42 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
           }}
         >
           {editing ? <p className={styles.hint}>{t.homeEdit.pinNote}</p> : null}
-          <SortableContext items={shown.map((e) => e.key)} strategy={rectSortingStrategy}>
-            <div
-              ref={gridRef}
-              className={[
-                styles.grid,
-                editing ? styles.editing : '',
-                cockpit ? styles.cockpit : '',
-                cockpit && layout.dense ? styles.dense : '',
-                calm && shown.length === 1 ? styles.single : '',
-              ].join(' ')}
-              data-testid={cockpit ? 'cockpit-grid' : 'home-grid'}
-            >
-              {shown.map((e) => (
-                <SortableWidget
-                  key={e.key}
-                  entry={e}
-                  editing={editing}
-                  size={effectiveSize(e, e.key, layout)}
-                  hidden={layout.hidden.includes(e.key)}
-                  pinned={layout.pinned.includes(e.key)}
-                  onTogglePinned={() => void updateLayout(togglePinned(layout, e.key), scope)}
-                  onToggleHidden={() =>
-                    void updateLayout({ hidden: toggleHidden(layout, e.key) }, scope)
-                  }
-                  onSize={(size) =>
-                    void updateLayout(
-                      { sizes: withSize(layout, e.key, size, e.defaultSize) },
-                      scope,
-                    )
-                  }
-                />
-              ))}
-            </div>
-          </SortableContext>
+          <OverviewBlocksContext.Provider value={blocks}>
+            <SortableContext items={shown.map((e) => e.key)} strategy={rectSortingStrategy}>
+              <div
+                ref={gridRef}
+                className={[
+                  styles.grid,
+                  editing ? styles.editing : '',
+                  cockpit ? styles.cockpit : '',
+                  cockpit && layout.dense ? styles.dense : '',
+                  calm && shown.length === 1 ? styles.single : '',
+                ].join(' ')}
+                data-testid={cockpit ? 'cockpit-grid' : 'home-grid'}
+              >
+                {shown.map((e) => (
+                  <SortableWidget
+                    key={e.key}
+                    entry={e}
+                    editing={editing}
+                    size={effectiveSize(e, e.key, layout)}
+                    hidden={layout.hidden.includes(e.key)}
+                    pinned={layout.pinned.includes(e.key)}
+                    onTogglePinned={() => void updateLayout(togglePinned(layout, e.key), scope)}
+                    onToggleHidden={() =>
+                      void updateLayout({ hidden: toggleHidden(layout, e.key) }, scope)
+                    }
+                    onSize={(size) =>
+                      void updateLayout(
+                        { sizes: withSize(layout, e.key, size, e.defaultSize) },
+                        scope,
+                      )
+                    }
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </OverviewBlocksContext.Provider>
         </DndContext>
       )}
 
@@ -386,6 +458,17 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
               }
             />
           </li>
+          {cockpit ? null : (
+            <li>
+              <Switch
+                label={t.homeEdit.agendaCalm}
+                hint={t.homeEdit.agendaCalmHint}
+                checked={layout.pinned.includes(AGENDA_KEY)}
+                disabled={layout.hidden.includes(AGENDA_KEY)}
+                onChange={() => void updateLayout(togglePinned(layout, AGENDA_KEY), scope)}
+              />
+            </li>
+          )}
           <li>
             <Switch
               label={t.attention.title}
@@ -436,7 +519,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
       >
         <p>{t.homeEdit.resetText}</p>
       </Dialog>
-    </>
+    </div>
   );
 }
 

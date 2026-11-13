@@ -8,7 +8,7 @@ import { loadBudgetRows } from './data';
 
 /**
  * Budgets over their limit (danger) and, calmer, budgets that reached their warning threshold
- * (accent: information, not an alarm). Needs the finance module for the spending.
+ * (warning = "almost full", DESIGN-SPEC § 4a; nothing to do today, so it folds). Needs the finance module for the spending.
  */
 const source: AttentionSource = async ({ today }) => {
   const { rows, categories } = await loadBudgetRows(monthOf(today), today, true);
@@ -33,9 +33,10 @@ const source: AttentionSource = async ({ today }) => {
       return [
         {
           id: `budgets:warn:${b.id}`,
-          tone: 'accent' as const,
+          tone: 'warning' as const,
           icon: 'piggy' as const,
           title: t.budgets.ext.warn.title(name(b.categoryId), r.status.pct),
+          foldSummary: t.attention.budgetsWarnFold,
           detail: t.budgets.left(formatMoney(r.status.remaining, currencyOf(b))),
           to: '/budgets',
           rank: 5,
