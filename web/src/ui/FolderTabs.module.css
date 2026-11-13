@@ -10,14 +10,15 @@
   align-items: flex-end;
   gap: var(--space-1);
   padding-left: var(--space-3);
-  border-bottom: 1px solid var(--border-strong);
+  border-bottom: 1px solid var(--border);
 }
 /* With a folder body below, the body draws the line. */
 .folder .tabs {
   margin-bottom: -1px;
   border-bottom: 0;
 }
-/* A tab: 44 px to hit, sticks out of the surface; the chosen one is filled and merges into the line below it. */
+/* A tab (Identity 4.0, 0b-8): 44 px to hit, no frame, no fill; the hairline below is the folder's edge. The chosen tab
+   is a raised tone step that sits on the line, with heavier ink (B7: a surface and a weight, never colour alone). */
 .tab {
   display: inline-flex;
   gap: var(--space-2);
@@ -26,11 +27,11 @@
   max-width: 100%;
   margin-bottom: -1px;
   padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--border-strong);
-  border-bottom: 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
   border-radius: var(--radius-md) var(--radius-md) 0 0;
-  background: color-mix(in srgb, var(--tab, var(--module-color)) 12%, var(--surface));
-  color: var(--text);
+  background: none;
+  color: var(--text-muted);
   font: inherit;
   font-size: var(--text-sm);
   overflow-wrap: anywhere;
@@ -40,16 +41,19 @@
   margin-bottom: 0;
 }
 .tab:hover {
-  background: color-mix(in srgb, var(--tab, var(--module-color)) 20%, var(--surface));
+  background: var(--surface-2);
+  color: var(--text);
 }
-/* Chosen: plain surface (joins the folder) or, for a tab with its own colour, a stronger fill; always heavier text. */
 .tab[aria-pressed='true'] {
   z-index: 1;
-  background: var(--surface);
+  border-bottom-color: var(--surface-raised);
+  background: var(--surface-raised);
+  color: var(--text);
   font-weight: var(--weight-semibold);
 }
-.tab[aria-pressed='true'][data-tinted] {
-  background: color-mix(in srgb, var(--tab) 26%, var(--surface));
+/* A tab with its own colour (a notebook) shows it on its icon: the colour names the thing beside its name. */
+.tab[data-tinted] > svg {
+  color: var(--tab);
 }
 .num {
   font-variant-numeric: tabular-nums;
@@ -57,7 +61,7 @@
 }
 .body {
   height: 0.5rem;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  background: var(--surface);
+  border-top: 1px solid var(--border);
+  background: var(--surface-raised);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
 }

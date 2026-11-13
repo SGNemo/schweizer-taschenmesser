@@ -70,6 +70,7 @@ export function PageAction({
   disabled,
   variant = 'primary',
   'aria-label': ariaLabel,
+  title,
   testId,
   children,
 }: {
@@ -78,6 +79,8 @@ export function PageAction({
   disabled?: boolean;
   variant?: 'primary' | 'secondary';
   'aria-label'?: string;
+  /** Tooltip on the desktop button, e.g. its keyboard shortcut ("Neue Seite (Alt+N)"). */
+  title?: string;
   testId?: string;
   children: ReactNode;
 }) {
@@ -91,6 +94,7 @@ export function PageAction({
       onClick={onClick}
       disabled={disabled}
       aria-label={ariaLabel}
+      title={title}
       data-testid={testId}
       data-page-action
     >
