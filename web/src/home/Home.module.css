@@ -295,9 +295,3 @@
     white-space: nowrap;
   }
 }
-
-/* Place of "Jetzt wichtig" or the agenda while their sources are read (about one row of cards). */
-.blockPlaceholder {
-  height: 4.5rem;
-  margin-bottom: var(--space-5);
-}

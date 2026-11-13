@@ -179,10 +179,9 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
   // The "Heute" card lists something unless "Jetzt dran" and the day plan are both off (then it shows a hint).
   const [focus] = useFocusSettings();
   const cardLists = focus.nextOne || focus.dayPlan;
-  // The blocks under the head load on their own (layout, "Jetzt wichtig", the agenda's days). The cards no longer
-  // wait for "Jetzt wichtig" and the agenda (those read every module's sources): the page builds up as data
-  // arrives, and the two blocks hold their place with a quiet placeholder meanwhile (UI audit 0b-8,
-  // docs/perf/CLICK-TO-CONTENT-2026-11.md). Same shared queries as the blocks use, nothing is read twice.
+  // The blocks under the head load on their own (layout, "Jetzt wichtig", the agenda's days). Drawn one by one each
+  // would push the others down; they appear together once all that will show have their data (same shared queries
+  // as the blocks use, nothing is read twice). The cards' code loads meanwhile (below), not after.
   const attention = useAttentionItems();
   const day = today();
   const agendaItems = useCalendarItems(agendaRange(day));
@@ -202,6 +201,13 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
     layoutRead &&
     states !== undefined &&
     (waited || ((cockpit || setup !== undefined) && hideValuesRead));
+  // While the blocks above are read, the cards' code is fetched already: when they may show, they render at once
+  // instead of starting their own loads one after another (docs/perf/CLICK-TO-CONTENT-2026-11.md).
+  useEffect(() => {
+    if (blocksReady) return;
+    for (const e of ordered)
+      if (!layout.hidden.includes(e.key)) void e.component().catch(() => undefined);
+  }, [blocksReady, ordered, layout.hidden]);
   const shown = !blocksReady
     ? []
     : editing
@@ -344,20 +350,8 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
         </>
       )}
       {cockpit && !editing && layout.stats ? <CockpitStats /> : null}
-      {blocksReady && stripOn ? (
-        attention === undefined ? (
-          <BlockPlaceholder testId="attention-loading" />
-        ) : (
-          <AttentionStrip covers={covers} items={attention} />
-        )
-      ) : null}
-      {blocksReady && agendaOn ? (
-        agendaItems === undefined ? (
-          <BlockPlaceholder testId="agenda-loading" />
-        ) : (
-          <AgendaBlock items={agendaItems} />
-        )
-      ) : null}
+      {blocksReady && stripOn ? <AttentionStrip covers={covers} items={attention} /> : null}
+      {blocksReady && agendaOn ? <AgendaBlock items={agendaItems} /> : null}
 
       {states && availableManifests().every((m) => !states[m.id]) ? (
         // Empty states of the overview: the motif, one sentence and one verb (the next step).
@@ -549,15 +543,6 @@ interface WidgetProps {
   onTogglePinned: () => void;
   onToggleHidden: () => void;
   onSize: (size: WidgetSize) => void;
-}
-
-/** The place of a block whose data is still being read: a quiet, fixed-height bar, so the cards below stay put. */
-function BlockPlaceholder({ testId }: { testId: string }) {
-  return (
-    <div className={styles.blockPlaceholder} aria-hidden="true" data-testid={testId}>
-      <Skeleton height="100%" />
-    </div>
-  );
 }
 
 function SortableWidget({
