@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useMemo, useState, type ReactNode } from 'react';
 import { formatMoney } from '@/core/money';
 import { useCurrency } from '../currency';
 import { t } from '@/strings';
@@ -67,12 +67,19 @@ export function OverviewTab({
   const money = (minor: number) => formatMoney(minor, currency);
   const balance = totalBalance(data);
   const a = useAvailability(balance, currency);
-  const sum = monthSummary(data.txs, month);
-  const byCategory = topCategoryTotals(data.txs, month, data.categories);
-  const cmp = compareMonths(data.txs, month);
-  const hasPrevious = data.txs.some((x) => x.date.slice(0, 7) < month);
-  const trend = monthlyTrend(data.txs, month, 6);
-  const curve = monthBalanceSeries(data.accounts, data.txs, month, today());
+  // Every figure below walks all bookings: once per data read and month, not on every render.
+  const day = today();
+  const { sum, byCategory, cmp, hasPrevious, trend, curve } = useMemo(
+    () => ({
+      sum: monthSummary(data.txs, month),
+      byCategory: topCategoryTotals(data.txs, month, data.categories),
+      cmp: compareMonths(data.txs, month),
+      hasPrevious: data.txs.some((x) => x.date.slice(0, 7) < month),
+      trend: monthlyTrend(data.txs, month, 6),
+      curve: monthBalanceSeries(data.accounts, data.txs, month, day),
+    }),
+    [data, month, day],
+  );
 
   return (
     <>
