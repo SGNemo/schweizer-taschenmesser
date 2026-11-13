@@ -110,7 +110,7 @@ test.describe('Invoices', () => {
     await expect(row).toContainText('Rechnungen');
     await expect(row).toContainText(/−89,90\s€/);
     await page.getByRole('button', { name: 'Konten', exact: true }).click();
-    await expect(page.getByTestId('balance-Girokonto')).toHaveText(/-89,90\s€/);
+    await expect(page.getByTestId('balance-Girokonto')).toHaveText(/\u221289,90\s€/);
 
     // Reopen → expense disappears
     await ready(page, '/invoices');

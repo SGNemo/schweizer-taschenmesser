@@ -160,6 +160,16 @@ export function numberFormat(options: Intl.NumberFormatOptions = {}): Intl.Numbe
   return f;
 }
 
+/** U+2212, the one minus sign every negative amount shows (never the hyphen `Intl` prints). */
+export const MINUS = '\u2212';
+
+/** `format.format(n)` with the typographic minus: -5 → "−5,00 €" instead of "-5,00 €". */
+export const formatWithMinus = (format: Intl.NumberFormat, n: number): string =>
+  format
+    .formatToParts(n)
+    .map((part) => (part.type === 'minusSign' ? MINUS : part.value))
+    .join('');
+
 /** A number in the current format locale, e.g. 1234.5 → "1.234,5" / "1,234.5". */
 export const formatNumber = (n: number, options?: Intl.NumberFormatOptions): string =>
   numberFormat(options).format(n);
