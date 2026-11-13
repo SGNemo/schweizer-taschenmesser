@@ -426,6 +426,13 @@ PL3. _Tastatur (Windows):_ Graph anklicken oder mit Tab erreichen, Pfeiltasten v
 - **PF1 Portable-Exe, große Datenmenge:** Dev-Preview-Build, Einstellungen → Entwickler → Testdaten „Groß“ laden (die Skala `xl` gibt es nur in `npm run measure:data`). Übersicht öffnen, Kalender, Budgets, Finanzen öffnen, in der Befehlspalette „tankstelle“ suchen: Zeiten notieren (Stoppuhr), Speicher im Task-Manager. ☐
 - **PF3 Festplatte-Modul (Rust):** „Dieser PC“ → Löschen-Plan und Details eines großen Ordners: bleibt das Fenster bedienbar (Ziel: ja)? Zeiten in die Baseline eintragen. ☐
 
+#### Klick bis Inhalt (0b-8 Performance, [perf/CLICK-TO-CONTENT-2026-11.md](perf/CLICK-TO-CONTENT-2026-11.md))
+
+Dev-Preview-Exe, Einstellungen → Entwickler → Testdaten „Mittel“, alle Module an. Gemessen wird mit der Handy-Stoppuhr oder einer Bildschirmaufnahme (30 fps reichen): vom Klick bis die Überschrift steht („erster Inhalt“) und bis nichts mehr nachrückt („fertig“: Zahlen, Zeilen, Widgets stehen, kein „…“, keine grauen Platzhalter). Jeden Punkt zweimal: direkt nach dem App-Start (erster Besuch) und noch einmal nach einem Wechsel zur Übersicht (zweiter Besuch). Werte in den Bericht (Tabelle „Geräte“) eintragen.
+- **PF-K1 Module:** je Modul die App neu starten und es in der Seitenleiste öffnen: Finanzen, Kalender, ToDos, Notizen, Budgets, Gerätestatus. Notieren: erster Inhalt, fertig. Fällt ein Modul mit über 1 s „fertig“ auf, den Namen dazuschreiben. ☐
+- **PF-K2 Einstellungen, Bibliothek, Übersicht:** nach dem Start Einstellungen öffnen, dann Module-Bibliothek, dann von ToDos zurück zur Übersicht: je erster Inhalt und fertig; dazu, ob die Status-Zeilen der Einstellungen springen (sechs → drei Zeilen). ☐
+- **PF-K3 Eintragen-Dialoge:** auf Finanzen, ToDos und Kalender den Haupt-Knopf („… eintragen“) drücken: Zeit bis der Dialog steht und das erste Feld den Cursor hat; zweimal je Seite. ☐
+
 ## Android
 
 Nur am Android-Handy (APK, Dev-Preview-APK oder PWA in Chrome).
@@ -745,6 +752,13 @@ AP4. _Android:_ die Zeilen mit „Kopieren“ und „Neu würfeln“ sind gut tr
 #### Datenebene: Messung auf Geräten (Phase 1, [perf/DATA-BASELINE-2026-11-03.md](perf/DATA-BASELINE-2026-11-03.md))
 
 - **PF2 Android-Gerät, große Datenmenge:** wie PF1 auf einem echten Gerät (oder Emulator): Start bis zur Übersicht, Modul öffnen, Suche, Schnellerfassung; Backup erstellen und wiederherstellen. Messwerte der Emulation (4× CPU) stehen in der Baseline. ☐
+
+#### Klick bis Inhalt (0b-8 Performance, [perf/CLICK-TO-CONTENT-2026-11.md](perf/CLICK-TO-CONTENT-2026-11.md))
+
+Dev-Preview-APK auf dem eigenen Handy, Testdaten „Mittel“, Messung wie bei PF-K1 (Bildschirmaufnahme des Handys, dann Bild für Bild). Die Web-Ansicht von Android ist langsamer als Chromium im Container; diese Werte entscheiden, ob die Zielwerte auf dem Handy halten.
+- **PF-K4 Module:** App frisch starten, über „Bereiche“ Finanzen öffnen; neu starten, ToDos; neu starten, Kalender; neu starten, Notizen. Je erster Inhalt und fertig; dann je einmal zurück zur Übersicht und wieder hinein (zweiter Besuch). ☐
+- **PF-K5 Einstellungen und Übersicht:** nach dem Start Einstellungen öffnen (erster Inhalt, fertig, springen die Status-Zeilen?); aus ToDos zurück zur Übersicht (bis alle Widgets stehen). ☐
+- **PF-K6 Eintragen über den Plus-Knopf:** auf ToDos und Finanzen den Plus-Knopf: Zeit bis das Blatt steht und die Tastatur offen ist; zweimal je Seite. ☐
 
 ## Beide Geräte: zusammen oder je einmal
 
