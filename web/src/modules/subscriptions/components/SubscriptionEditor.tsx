@@ -239,20 +239,21 @@ function Form({
           </Button>
         </p>
       ) : null}
+      {/* How often; the interval ("Alle (Monate)") and "Ende" are under "Mehr Felder" (design check G8). */}
       <RecurrenceEditor
         value={recurrence}
         onChange={(r) => r && setRecurrence(r)}
         startDate={startDate}
         required
         followStartDay
+        parts="basic"
       />
       {existing ? (
-        <TextField
+        <DayField
           label={t.subscriptions.cancelledTo}
-          type="date"
           value={recurrence.until ?? ''}
-          onChange={(e) => {
-            setRecurrence({ ...recurrence, until: e.target.value || undefined, count: undefined });
+          onChange={(value) => {
+            setRecurrence({ ...recurrence, until: value || undefined, count: undefined });
           }}
           hint={t.subscriptions.cancelledToHint}
           min={startDate}
@@ -284,6 +285,9 @@ function Form({
       <AdvancedFields
         moduleId="subscriptions"
         hasData={
+          (recurrence.interval ?? 1) > 1 ||
+          !!recurrence.count ||
+          (!existing && !!recurrence.until) ||
           notice !== undefined ||
           !!note ||
           currencyOf(existing) !== 'EUR' ||
@@ -292,6 +296,13 @@ function Form({
           !!paymentMethod
         }
       >
+        <RecurrenceEditor
+          value={recurrence}
+          onChange={(r) => r && setRecurrence(r)}
+          startDate={startDate}
+          required
+          parts="more"
+        />
         <CurrencyField label={t.money.currency} value={currency} onChange={setCurrency} />
         <NoticeField days={notice} months={noticeMonths} onChange={setNotice} max={365} />
         <DayField

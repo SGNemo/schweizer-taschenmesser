@@ -16,7 +16,7 @@ Binding rules: [MODULE-IDENTITY](../design/MODULE-IDENTITY.md). Index: [HOW-TO](
 
 ## UI
 
-Row: recurrence, next charge, monthly equivalent for non-monthly rules, price rise, status chip (Probezeit, Pausiert, Beendet). **Erweitert**: category and payment method in the row, "Teuerste Abos" (top three), and the editor fields trial end / category / payment method. The trial gets a reminder (`trialRemindDaysBefore`, default 3 days) and a calendar item.
+Row: recurrence, next charge, monthly equivalent for non-monthly rules, price rise, status chip (Probezeit, Pausiert, Beendet). Dialog: name, amount, first charge and how often (`RecurrenceEditor parts="basic"`); the interval ("Alle (Monate)") and "Ende" are under "Mehr Felder" (`parts="more"`, shown at once when the rule uses them); "Gekündigt zum" is a `DayField` with `min` = first charge. **Erweitert**: category and payment method in the row, "Teuerste Abos" (top three), and the editor fields trial end / category / payment method. The trial gets a reminder (`trialRemindDaysBefore`, default 3 days) and a calendar item.
 
 ## Finance link (finance → `subscriptions/public.ts` only)
 
