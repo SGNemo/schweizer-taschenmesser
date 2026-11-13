@@ -102,6 +102,7 @@ function install() {
     secrets: {
       protection: 'device-key',
       get: async (name) => secrets.get(name),
+      has: async (name) => Boolean(secrets.get(name)),
       set: async (name, value) => void secrets.set(name, value),
       delete: async (name) => void secrets.delete(name),
     },

@@ -48,6 +48,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::available,
             commands::set,
             commands::get,
+            commands::has,
             commands::delete,
             commands::biometric_seal,
             commands::biometric_unseal,

@@ -96,7 +96,12 @@ function ctxWith(replies: (Response | Error)[], opts: { tokens?: string[] } = {}
     }) as typeof fetch,
     accessToken,
     fetchPublic: async () => new Response(),
-    secrets: { get: async () => undefined, set: async () => {}, delete: async () => {} },
+    secrets: {
+      get: async () => undefined,
+      has: async () => false,
+      set: async () => {},
+      delete: async () => {},
+    },
     redact: (text) => text.replaceAll('AT-1', '***'),
   };
   return { ctx, calls, accessToken };
@@ -447,7 +452,12 @@ describe('play bodies', () => {
     }) as typeof fetch,
     accessToken: async () => 'AT',
     fetchPublic: async () => new Response(),
-    secrets: { get: async () => undefined, set: async () => {}, delete: async () => {} },
+    secrets: {
+      get: async () => undefined,
+      has: async () => false,
+      set: async () => {},
+      delete: async () => {},
+    },
     redact: (t) => t,
   };
 

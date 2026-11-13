@@ -27,6 +27,16 @@ pub(crate) async fn get<R: Runtime>(
     app.secure_store().get(request)
 }
 
+/// Only whether a non-empty secret is stored: the answer is a `bool`, never the value or its length.
+#[command]
+pub(crate) async fn has<R: Runtime>(
+    app: AppHandle<R>,
+    request: NameRequest,
+) -> Result<HasResponse> {
+    webview_name(&request.name)?;
+    app.secure_store().has(request)
+}
+
 #[command]
 pub(crate) async fn delete<R: Runtime>(app: AppHandle<R>, request: NameRequest) -> Result<()> {
     webview_name(&request.name)?;

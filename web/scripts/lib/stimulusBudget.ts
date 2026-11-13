@@ -324,8 +324,15 @@ export function measurePage(): {
     probe.style.color = rootStyle.getPropertyValue(name).trim();
     return getComputedStyle(probe).color;
   };
-  const plain = new Set([rgb('--bg'), rgb('--surface'), 'rgba(0, 0, 0, 0)', 'transparent']);
-  const surface2 = rgb('--surface-2');
+  // The page, its surfaces and their tone steps are neutral in both themes. In the dark theme the tone steps
+  // are a cool grey whose saturation lies above the threshold below, so they are named here, not measured.
+  const plain = new Set([
+    ...['--bg', '--surface', '--surface-2', '--surface-raised', '--surface-sunken']
+      .filter((name) => rootStyle.getPropertyValue(name).trim() !== '')
+      .map(rgb),
+    'rgba(0, 0, 0, 0)',
+    'transparent',
+  ]);
   const neutralInk = new Set(['--text', '--text-muted', '--text-3', '--text-on-tint'].map(rgb));
   probe.remove();
   const parse = (c: string) => {
@@ -398,13 +405,7 @@ export function measurePage(): {
     );
     if (ownText && saturation(s.color) > 0.25 && !neutralInk.has(s.color)) colouredText++;
     const bg = parse(s.backgroundColor);
-    if (
-      !plain.has(s.backgroundColor) &&
-      s.backgroundColor !== surface2 &&
-      bg &&
-      bg.a > 0.05 &&
-      saturation(s.backgroundColor) > 0.12
-    )
+    if (!plain.has(s.backgroundColor) && bg && bg.a > 0.05 && saturation(s.backgroundColor) > 0.12)
       colouredSurfaces++;
   }
   const signatureBlockList = Array.from(document.querySelectorAll('[data-signature-block]'))

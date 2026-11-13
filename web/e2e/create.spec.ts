@@ -14,7 +14,10 @@ async function save(page: Page) {
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
-test('an invoice from one line of text: "r 89,90 Swisscom 31.10." and Enter', async ({ page }) => {
+test('an invoice from one line of text: "r 89,90 Swisscom 31.10." and Enter', async ({
+  page,
+  isMobile,
+}) => {
   await enable(page, 'invoices');
   await page.goto('/');
   await page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }).click();
@@ -25,8 +28,9 @@ test('an invoice from one line of text: "r 89,90 Swisscom 31.10." and Enter', as
   await ready(page, '/invoices');
   const row = page.getByRole('listitem').filter({ hasText: 'Swisscom' });
   await expect(row).toContainText('89,90');
-  // Desktop says "Fällig am 31. Okt."; the phone's one meta line (design check G4) only the day.
-  await expect(row).toContainText(/Fällig am|31\. Okt\./);
+  await expect(row).toContainText('Sa., 31. Okt.');
+  // The phone's row has one meta line: the date without its label (design check G4).
+  if (!isMobile) await expect(row).toContainText('Fällig am: Sa., 31. Okt.');
 });
 
 test('a note with the "n " prefix lands in the notes without choosing a type', async ({ page }) => {

@@ -147,13 +147,17 @@
 .syncError {
   color: var(--danger);
 }
-.spin {
+/* No endless spin (DESIGN-SPEC § 9): one pulse when a sync ends well (transform only, 0 under reduced motion). */
+.syncIcon,
+.pulse {
   display: grid;
-  animation: spin 1s linear infinite;
 }
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+.pulse {
+  animation: syncPulse var(--dur-slow) var(--ease-out) 1;
+}
+@keyframes syncPulse {
+  50% {
+    transform: scale(1.15);
   }
 }
 

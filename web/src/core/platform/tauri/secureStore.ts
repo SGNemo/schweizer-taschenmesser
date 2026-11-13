@@ -26,6 +26,10 @@ export function createNativeStore(): SecretStore {
       const res = await call<{ value?: string | null }>('get', { name });
       return res.value ?? undefined;
     },
+    async has(name) {
+      // Rust/Kotlin answer only a yes/no; the value stays in the OS keystore.
+      return (await call<{ present: boolean }>('has', { name })).present === true;
+    },
     async set(name, value) {
       await call('set', { name, value });
     },
