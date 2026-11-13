@@ -99,12 +99,13 @@ test.describe('UI round 6 – desktop 1920', () => {
     await expect(grid).toHaveAttribute('data-packed', 'true');
   });
 
-  test('U49: the calm overview ends flush with the day cards', async ({ page }) => {
+  test('U49: the calm overview ends flush with the "Heute" card', async ({ page }) => {
     await start(page, '/');
-    // The seeded calm view shows the one "Heute" card (no pins); wait for it before measuring.
+    // The seeded calm view shows the one "Heute" card (no pins); wait for it before measuring. Since package 0b-7
+    // "Ruhig" has no agenda (strip + "Heute" card + pins): the strip ends where the card ends.
     const widgets = page.locator('[data-testid="home-grid"] > [data-testid^="widget-"]');
     await expect(widgets).toHaveCount(1);
-    const agenda = await page.getByTestId('agenda').boundingBox();
+    await expect(page.getByTestId('agenda')).toHaveCount(0);
     const strip = page.locator('section[aria-label="Jetzt wichtig"] > ul').first();
     await expect(strip).toBeVisible();
     const list = await strip.boundingBox();
@@ -112,10 +113,10 @@ test.describe('UI round 6 – desktop 1920', () => {
       .locator(':scope > li')
       .evaluateAll((els) => els.map((e) => e.getBoundingClientRect().right));
     const grid = await page.getByTestId('home-grid').boundingBox();
-    expect(agenda && list && grid).toBeTruthy();
-    // The cards share the full width: the last one ends where the day cards end.
+    expect(list && grid).toBeTruthy();
+    // The cards share the full width: the last one ends where the card below ends.
     expect(cards.length).toBeGreaterThan(0);
-    expect(Math.abs(Math.max(...cards) - agenda!.x - agenda!.width)).toBeLessThan(2);
+    expect(Math.abs(Math.max(...cards) - grid!.x - grid!.width)).toBeLessThan(2);
     // The single calm card takes the full width.
     const w = await widgets.first().boundingBox();
     expect(Math.abs(w!.width - grid!.width)).toBeLessThan(2);
