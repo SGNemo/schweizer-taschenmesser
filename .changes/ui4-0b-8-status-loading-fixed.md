@@ -12,6 +12,6 @@ type: fixed
 area: device
 breaking: false
 pr: 793
-de: Gerätestatus: Ein Heimnetz-Abgleich, den Windows wegen eines öffentlichen oder anderen Netzes zurückhält, steht nicht mehr als „Aus“ da, sondern nennt den Grund.
-en: Device status: home-network sync held back by Windows because of a public or different network no longer reads “Off” but names the reason.
+de: Gerätestatus: Ein Heimnetz-Abgleich, den Windows wegen eines öffentlichen, anderen oder fehlenden Heimnetzes zurückhält, steht nicht mehr als „Aus“ da, sondern nennt den Grund.
+en: Device status: home-network sync held back by Windows because of a public, different or missing home network no longer reads “Off” but names the reason.
 ---

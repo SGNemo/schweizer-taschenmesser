@@ -237,6 +237,7 @@ describe('page Gerätestatus', () => {
   for (const [reason, status, context] of [
     ['public-network', 'Windows blockiert den Abgleich', tLanSync.de.blockedLine],
     ['no-home', tLanSync.de.onlyHome, tLanSync.de.onlyHomeLine],
+    ['no-network', tLanSync.de.noNetwork, tLanSync.de.noNetworkLine],
   ] as const)
     it(`a hub held off by the network (${reason}) does not read like "Aus": its own context line, in the settings' words, no mark`, async () => {
       const desktop = platformOf('desktop');

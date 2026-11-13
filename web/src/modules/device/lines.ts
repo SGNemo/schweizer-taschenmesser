@@ -100,21 +100,23 @@ export function useLanHubLine(): StatusLine | undefined {
   );
   if (!done) return pending('hub', 'wifi', '/settings/sync', d.title);
   if (!hub) return undefined;
-  // A hub that Windows holds off (public network, another network than at pairing) is not "Aus": it says why, in
+  // A hub that the network holds off (public network, another network than at pairing, no home network) is not "Aus": it says why, in
   // the words of the settings' section "Im Heimnetz", and carries no mark (nothing broke; the section shows the way).
   const [status, context] =
     hub.state === 'public-network'
       ? [withoutStop(l.blocked), l.blockedLine]
       : hub.state === 'no-home'
         ? [l.onlyHome, l.onlyHomeLine]
-        : [
-            d.state[hub.state],
-            hub.state === 'listening'
-              ? d.devices(hub.devices)
-              : hub.state === 'failed'
-                ? d.failedContext
-                : d.offContext,
-          ];
+        : hub.state === 'no-network'
+          ? [l.noNetwork, l.noNetworkLine]
+          : [
+              d.state[hub.state],
+              hub.state === 'listening'
+                ? d.devices(hub.devices)
+                : hub.state === 'failed'
+                  ? d.failedContext
+                  : d.offContext,
+            ];
   return line('hub', 'wifi', '/settings/sync', d.title, status, context, hub.state === 'failed');
 }
 

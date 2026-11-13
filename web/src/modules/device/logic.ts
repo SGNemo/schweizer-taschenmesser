@@ -35,16 +35,18 @@ export const mainDrive = (drives: readonly DriveInfo[]): DriveInfo | undefined =
   drives.find((d) => d.isSystem && d.totalBytes > 0);
 
 /**
- * What the page says about the home-network hub, never its port, address or a device name. `public-network` and
- * `no-home` = switched on, but held off by the network it is in (Windows calls it public; another network than the
- * one it was paired in): not "off", and nothing broke.
+ * What the page says about the home-network hub, never its port, address or a device name. `public-network`,
+ * `no-home` and `no-network` = switched on, but held off by the network it is in (Windows calls it public; another
+ * network than the one it was paired in; no home network at all): not "off", and nothing broke.
  */
-export type HubState = 'listening' | 'off' | 'failed' | 'public-network' | 'no-home';
+export type HubState = 'listening' | 'off' | 'failed' | 'public-network' | 'no-home' | 'no-network';
 export const hubState = (status: Pick<LanHubStatus, 'state' | 'reason'>): HubState =>
   status.state === 'listening'
     ? 'listening'
     : status.state === 'failed'
       ? 'failed'
-      : status.reason === 'public-network' || status.reason === 'no-home'
+      : status.reason === 'public-network' ||
+          status.reason === 'no-home' ||
+          status.reason === 'no-network'
         ? status.reason
         : 'off';
