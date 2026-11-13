@@ -24,9 +24,9 @@ export function nextBackup(
   if (!supported) return { state: 'manual' };
   if (!config.enabled) return { state: 'off' };
   if (!hasPassphrase) return { state: 'no-passphrase' };
-  // The runner's own rule: a failed or missing run is tried again at the next check.
+  // `isDue` is the runner's rule (a missing or failed run is tried again at the next check);
+  // `!last?.ok` narrows the type.
   if (!last?.ok || isDue(config, last, at)) return { state: 'due' };
-  // `isDue` is the runner's rule (a missing or failed run is due); `last?.ok` only narrows the type here.
   return { state: 'planned', at: last.at + INTERVAL_MS[config.interval] };
 }
 

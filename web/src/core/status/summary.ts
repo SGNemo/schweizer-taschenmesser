@@ -8,11 +8,14 @@ export const DEVICE_STATUS_PATH = '/device';
 export const needingLook = (lines: readonly StatusLine[]): StatusLine[] =>
   lines.filter((l) => l.attention);
 
-/** A state with its line's name in front, unless the state already names it ("Letztes Backup fehlgeschlagen"). */
-export const withTitle = (line: Pick<StatusLine, 'title' | 'status'>): string =>
-  line.status.toLowerCase().includes(line.title.toLowerCase())
-    ? line.status
-    : `${line.title}: ${line.status}`;
+/**
+ * A state with its line's name in front, unless the state already names it ("Letztes Backup fehlgeschlagen",
+ * "Update verfügbar" under "Updates": the name is compared without a plural "s", which holds in German and English).
+ */
+export function withTitle(line: Pick<StatusLine, 'title' | 'status'>): string {
+  const stem = line.title.toLowerCase().replace(/s$/, '');
+  return line.status.toLowerCase().includes(stem) ? line.status : `${line.title}: ${line.status}`;
+}
 
 /** "Nichts Dringendes" or what needs a look, as one sentence: the one line's own state, or a count. */
 export function summaryText(lines: readonly StatusLine[]): string {

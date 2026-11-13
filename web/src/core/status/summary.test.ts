@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { StatusLine } from './lines';
-import { DEVICE_STATUS_PATH, deviceStatusLine, needingLook, summaryText } from './summary';
+import {
+  DEVICE_STATUS_PATH,
+  deviceStatusLine,
+  needingLook,
+  summaryText,
+  withTitle,
+} from './summary';
 
 const line = (id: string, attention: boolean): StatusLine => ({
   id,
@@ -38,5 +44,16 @@ describe('summary of the device lines', () => {
     });
     expect(DEVICE_STATUS_PATH).toBe('/device');
     expect(deviceStatusLine([line('sync', true)]).attention).toBe(true);
+  });
+
+  it('names a line only once: "Update verfügbar" under "Updates", "Letztes Backup fehlgeschlagen" under "Backup"', () => {
+    expect(withTitle({ title: 'Updates', status: 'Update verfügbar' })).toBe('Update verfügbar');
+    expect(withTitle({ title: 'Updates', status: 'Update available' })).toBe('Update available');
+    expect(withTitle({ title: 'Backup', status: 'Letztes Backup fehlgeschlagen' })).toBe(
+      'Letztes Backup fehlgeschlagen',
+    );
+    expect(withTitle({ title: 'Sync', status: 'Fehler beim Abgleich' })).toBe(
+      'Sync: Fehler beim Abgleich',
+    );
   });
 });

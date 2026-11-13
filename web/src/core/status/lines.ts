@@ -2,8 +2,9 @@
  * The state of this device as lines: sync, backup, updates, storage. One source for every place that shows it: the
  * status lines of the settings start page and the page of the module "Gerätestatus" read these hooks, so a line never
  * says one thing here and another there. (The page's head also counts the page's own lines, so it can name a point
- * the settings line, which speaks for these four, does not.) A line carries a word for the state, one calm context line and a link to where the thing is set;
- * never a server address, a token, a key, a path or an IP, and nothing here switches anything.
+ * the settings line, which speaks for these four, does not.) A line carries a word for the state, one calm context
+ * line and a link to where the thing is set; never a server address, a token, a key, a path or an IP, and nothing
+ * here switches anything.
  */
 import { useEffect, useState } from 'react';
 import { loadLastBackup, type LastBackup } from '@/core/backup/lastBackup';
