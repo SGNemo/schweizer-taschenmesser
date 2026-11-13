@@ -5,8 +5,8 @@ import type { Stored } from '@/core/db/types';
 import type { VaultDocument } from '../schema';
 
 /**
- * Head of the documents (Identity 4.0): the count with one context line that names what needs a look. The states
- * are the page's tabs. Counts only; no title, file or date reaches the head.
+ * Head of the documents (Identity 4.0): the count with one context line that names what needs a look. What needs
+ * a look is this line; the page's tabs are its two views. Counts only; no title, file or date reaches the head.
  */
 export function VaultHead({ docs, day }: { docs: Stored<VaultDocument>[]; day: string }) {
   if (docs.length === 0) return null;
