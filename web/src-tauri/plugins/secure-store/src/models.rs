@@ -161,7 +161,10 @@ mod tests {
         assert!(!is_present(None));
         assert!(!is_present(Some("")));
         assert!(is_present(Some("a-long-test-passphrase")));
-        assert!(is_present(Some(" ")), "whitespace is a value; callers trim before they store");
+        assert!(
+            is_present(Some(" ")),
+            "whitespace is a value; callers trim before they store"
+        );
     }
 
     #[test]
