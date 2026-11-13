@@ -18,9 +18,9 @@
   border-bottom: 0;
 }
 /* A tab (Identity 4.0, 0b-8): 44 px to hit, no frame, no fill; the hairline below is the folder's edge. The chosen tab
-   is a recess with heavier ink and an ink line on the hairline (B7: a surface and a weight, never colour alone). The
-   recess is a tint of the ink, not a surface token: the row lies on a raised surface on the desktop and on --bg on
-   the phone, and --surface-sunken would vanish on --bg. */
+   is a quiet area (`--surface-2`) with heavier ink and a 2 px ink line on the hairline (B7: a surface and a weight,
+   never colour alone). On the phone the row lies on --bg, where the surface is faint: the line and the weight carry
+   the state there. A tint of the ink would count as colour (`e2e/seed/calm-colour.seed.spec.ts`). */
 .tab {
   display: inline-flex;
   gap: var(--space-2);
@@ -47,7 +47,7 @@
 }
 .tab[aria-pressed='true'] {
   border-bottom: 2px solid var(--text);
-  background: color-mix(in srgb, var(--text) 7%, transparent);
+  background: var(--surface-2);
   color: var(--text);
   font-weight: var(--weight-semibold);
 }
