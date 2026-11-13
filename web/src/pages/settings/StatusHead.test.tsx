@@ -20,7 +20,8 @@ describe('settings status head', () => {
     );
     expect(screen.getByRole('heading', { level: 1, name: 'Einstellungen' })).toBeVisible();
     const list = screen.getByTestId('settings-status');
-    const links = within(list).getAllByRole('link');
+    // The lines come once the module states and the first reads are known.
+    const links = await within(list).findAllByRole('link');
     expect(links).toHaveLength(6);
     const ids = ['security', 'sync', 'backup', 'updates', 'ai', 'storage'].map(
       (id) => `overview-${id}`,
@@ -39,6 +40,40 @@ describe('settings status head', () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
     });
   });
+
+  // 0b-8, C4: while the module states load, the head showed six lines and jumped to three.
+  for (const [set, count] of [
+    [6, 3],
+    [5, 6],
+  ] as const)
+    it(`set ${set}: the lines come at once, ${count} of them, never a different number first, never "Kein Backup" before the read`, async () => {
+      await db.table('_meta').put({ key: DEFAULTS_VERSION_KEY, value: set });
+      await db.table('_meta').put({ key: 'backup.file.last', value: { at: 1_800_000_000_000 } });
+      const counts: number[] = [];
+      const texts: string[] = [];
+      const record = () => {
+        const list = document.querySelector('[data-testid="settings-status"]');
+        counts.push(list?.querySelectorAll('a').length ?? 0);
+        texts.push(list?.textContent ?? '');
+      };
+      const observer = new MutationObserver(record);
+      observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+      render(
+        <MemoryRouter>
+          <StatusHead title="Einstellungen" />
+        </MemoryRouter>,
+      );
+      record();
+      expect(screen.getByTestId('settings-status')).toHaveAttribute('aria-busy', 'true');
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 150));
+      });
+      observer.disconnect();
+      await db.table('_meta').delete('backup.file.last');
+      expect(screen.getByTestId('settings-status')).toHaveAttribute('aria-busy', 'false');
+      expect(new Set(counts.filter((n) => n > 0))).toEqual(new Set([count]));
+      expect(texts.join(' ')).not.toContain('Kein Backup');
+    });
 
   // Module package S-b: only a device that has "Gerätestatus" switched on sees one line instead of the four.
   it('with the module device on: sync, backup, updates and storage are one line that leads to /device; security and AI stay', async () => {
