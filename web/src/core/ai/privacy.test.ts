@@ -485,3 +485,14 @@ it('quick capture code imports nothing of the assistant; "Mit KI eintragen" (qui
     /data-testid="quick-add-ai"\s+onClick=\{\(\) => \{[^}]*\bopenWritePalette\(\);/,
   );
 });
+
+it('module package S-b: the device status has no aiSchema, so no prompt and no chat context ever names it', () => {
+  const device = visibleManifests.find((m) => m.id === 'device');
+  expect(device).toBeDefined();
+  expect(device?.aiSchema).toBeUndefined();
+  expect(Object.keys(device?.dataSchema.collections ?? { x: 1 })).toEqual([]);
+  expect(aiModules(visibleManifests).map((m) => m.id)).not.toContain('device');
+  expect(contextModules(visibleManifests).map((m) => m.id)).not.toContain('device');
+  expect(writableModules(visibleManifests).map((m) => m.id)).not.toContain('device');
+  expect(buildSystemPrompt(visibleManifests)).not.toMatch(/Gerätestatus|Device status|"device"/);
+});

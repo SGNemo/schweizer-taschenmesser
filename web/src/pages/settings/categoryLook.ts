@@ -22,7 +22,8 @@ export const CATEGORY_LOOK: Readonly<Record<SettingsCategoryId, CategoryLook>> =
   darstellung: { hue: 'orchid', area: 'system' },
   barrierefreiheit: { hue: 'teal', area: 'system' },
   module: { hue: 'sky', area: 'system' },
-  werkzeuge: { hue: 'moss', area: 'system' },
+  // fern since module package S-b: `moss` is the hue of the module `device` in the area System.
+  werkzeuge: { hue: 'fern', area: 'system' },
   benachrichtigungen: { hue: 'indigo', area: 'system' },
   sicherheit: { hue: 'slate', area: 'system' },
   sync: { hue: 'ocean', area: 'system' },

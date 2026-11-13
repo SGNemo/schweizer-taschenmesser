@@ -2,7 +2,7 @@ import { t } from '@/strings';
 import type { StatusLine } from './lines';
 
 /** Route of the page "Gerätestatus" (module `device`); the core names it so the settings can lead there. */
-export const DEVICE_STATUS_PATH = '/status';
+export const DEVICE_STATUS_PATH = '/device';
 
 /** The lines that need a look, in the order given. */
 export const needingLook = (lines: readonly StatusLine[]): StatusLine[] =>
@@ -25,7 +25,7 @@ export function deviceStatusLine(lines: readonly StatusLine[]): StatusLine {
   return {
     id: 'device',
     to: DEVICE_STATUS_PATH,
-    icon: 'monitor',
+    icon: 'activity',
     title: t.device.meta.name,
     status: summaryText(lines),
     context: t.device.summary.settingsContext,

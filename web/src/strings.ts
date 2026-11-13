@@ -8970,10 +8970,11 @@ export const de = {
     summary: {
       ok: 'Alles in Ordnung',
       look: (n: number) => `${n} Punkte brauchen einen Blick`,
-      settingsContext: 'Sync, Backup, Updates und Speicher auf einer Seite',
+      settingsContext: 'Sync, Backup, Updates, Speicher',
     },
     page: {
-      figureDetail: 'Nur Anzeige. Geändert wird in den Einstellungen, jede Zeile führt dorthin.',
+      figureUnit: (n: number) => (n === 1 ? 'braucht einen Blick' : 'brauchen einen Blick'),
+      note: 'Nur Anzeige: Jede Zeile führt in die Einstellungen, dort wird geändert.',
       pc: 'Prozessor, Arbeitsspeicher und Netzwerk zeigt „Dieser PC“ im Reiter „System“.',
       pcOpen: 'Dieser PC öffnen',
       pcLibrary: '„Dieser PC“ in der Bibliothek einschalten',

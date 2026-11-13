@@ -11,10 +11,17 @@ import styles from './StatusLineLink.module.css';
 export function StatusLineLink({
   line,
   hideGenericOnPhone = false,
+  layout = 'inline',
 }: {
   line: StatusLine;
   /** The settings head shows two columns of lines on the phone and drops a context that only explains (U55). */
   hideGenericOnPhone?: boolean;
+  /**
+   * `inline` (settings head): name, state and context flow in one line and wrap where the column ends.
+   * `columns` (a list of lines under each other): names, states and contexts stand in three columns, so a list reads
+   * like a table; on the phone the context takes the second line of every row.
+   */
+  layout?: 'inline' | 'columns';
 }) {
   return (
     <Link
@@ -22,6 +29,7 @@ export function StatusLineLink({
       className={styles.line}
       data-testid={line.testId}
       data-attention={line.attention}
+      data-layout={layout}
       data-generic={(hideGenericOnPhone && line.generic) || undefined}
     >
       <span className={styles.name}>

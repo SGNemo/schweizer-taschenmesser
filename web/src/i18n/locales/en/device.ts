@@ -9,10 +9,11 @@ export const device: Strings['device'] = {
   summary: {
     ok: 'All good',
     look: (n: number) => `${n} things need a look`,
-    settingsContext: 'Sync, backup, updates and storage on one page',
+    settingsContext: 'Sync, backup, updates, storage',
   },
   page: {
-    figureDetail: 'Display only. Changes are made in the settings, every line leads there.',
+    figureUnit: (n: number) => (n === 1 ? 'needs a look' : 'need a look'),
+    note: 'Display only: every line leads to the settings, where it is changed.',
     pc: 'Processor, memory and network are shown by “This PC” on the tab “System”.',
     pcOpen: 'Open This PC',
     pcLibrary: 'Switch on “This PC” in the library',

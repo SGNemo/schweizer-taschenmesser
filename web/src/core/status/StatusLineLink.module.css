@@ -46,7 +46,26 @@
   overflow-wrap: anywhere;
 }
 
+.line[data-layout='columns'] {
+  display: grid;
+  grid-template-columns: minmax(0, 11rem) minmax(0, 14rem) minmax(0, 1fr);
+  /* The name carries an icon, so the three cells share their middle, not a baseline. */
+  align-items: center;
+  align-content: center;
+  gap: 0 var(--space-4);
+  height: auto;
+}
+
 @media (max-width: 899px) {
+  /* Phone: name and state share the first line, the context has the second one in every row. */
+  .line[data-layout='columns'] {
+    grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+    gap: 0 var(--space-2);
+  }
+  .line[data-layout='columns'] .context {
+    grid-column: 1 / -1;
+  }
+
   /* U55: the context line is never cut. Where the caller asks for it, a line that only describes the category stays
      off the phone. */
   .line[data-generic='true'] .context {

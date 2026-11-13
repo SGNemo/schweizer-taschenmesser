@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { noOnboarding } from '@/core/importer/types';
-import { DEVICE_STATUS_PATH } from '@/core/status/summary';
 import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { t } from '@/strings';
 
@@ -19,7 +18,7 @@ const manifest: ModuleManifest = {
   },
   icon: 'activity',
   identity: {
-    hue: 'teal',
+    hue: 'moss',
     widget: 'status',
     head: 'standard',
     signature: 'dial',
@@ -30,7 +29,9 @@ const manifest: ModuleManifest = {
   },
   routes: [
     {
-      path: DEVICE_STATUS_PATH,
+      // The same path as `DEVICE_STATUS_PATH` in core/status/summary.ts (pinned by the exclusion test); written out
+      // here so the manifest, which loads at the start, pulls in nothing of the status code.
+      path: '/device',
       get label() {
         return t.device.meta.name;
       },

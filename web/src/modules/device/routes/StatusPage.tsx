@@ -9,12 +9,12 @@ import { useDeviceStatus } from '../useDeviceStatus';
 import styles from './StatusPage.module.css';
 
 /**
- * `/status`: how this device is doing, as lines in four groups. Display only: every line is a link to the settings
+ * `/device`: how this device is doing, as lines in four groups. Display only: every line is a link to the settings
  * page where the thing is set; nothing is switched here. The phone shows the same page without the desktop's lines.
  */
 export default function StatusPage() {
   const d = t.device;
-  const { groups, summary } = useDeviceStatus();
+  const { groups, look, counted } = useDeviceStatus();
   // CPU, memory and network live in "Dieser PC" → System (desktop only); this page points there instead of repeating them.
   const desktop = getPlatform().kind === 'desktop';
   const diskOn = useModuleStates()?.disk === true;
@@ -22,7 +22,13 @@ export default function StatusPage() {
     <>
       <PageHeader title={d.meta.name} />
       <HeroSlot area="figure">
-        <HeroFigure value={summary} detail={d.page.figureDetail} testId="device-summary" />
+        {/* One short figure: calm words while all is well, else how many lines need a look and which. */}
+        <HeroFigure
+          value={look.length === 0 ? d.summary.ok : String(look.length)}
+          unit={look.length === 0 ? undefined : d.page.figureUnit(look.length)}
+          detail={(look.length === 0 ? counted : look).map((l) => l.title).join(', ')}
+          testId="device-summary"
+        />
       </HeroSlot>
       <div className={styles.page} data-testid="device-status">
         {groups.map((group) => (
@@ -33,12 +39,13 @@ export default function StatusPage() {
             <ul className={styles.lines}>
               {group.lines.map((line) => (
                 <li key={line.id}>
-                  <StatusLineLink line={line} />
+                  <StatusLineLink line={line} layout="columns" />
                 </li>
               ))}
             </ul>
           </section>
         ))}
+        <p className={styles.more}>{d.page.note}</p>
         {desktop ? (
           <p className={styles.more} data-testid="device-pc">
             {d.page.pc}{' '}

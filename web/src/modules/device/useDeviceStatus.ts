@@ -1,5 +1,5 @@
 import { useDeviceLines, type StatusLine } from '@/core/status/lines';
-import { summaryText, needingLook } from '@/core/status/summary';
+import { needingLook } from '@/core/status/summary';
 import { t } from '@/strings';
 import {
   useAutostartLine,
@@ -19,7 +19,13 @@ const present = (lines: (StatusLine | undefined)[]): StatusLine[] =>
   lines.filter((l): l is StatusLine => l !== undefined);
 
 /** Everything the page shows, in four groups; the summary speaks about the four core lines. */
-export function useDeviceStatus(): { groups: StatusGroup[]; summary: string; look: number } {
+export function useDeviceStatus(): {
+  groups: StatusGroup[];
+  /** The lines the summary counts (the same four the settings show). */
+  counted: StatusLine[];
+  /** Those of them that need a look. */
+  look: StatusLine[];
+} {
   const core = useDeviceLines();
   const g = t.device.groups;
   const groups: StatusGroup[] = [
@@ -33,5 +39,5 @@ export function useDeviceStatus(): { groups: StatusGroup[]; summary: string; loo
     },
   ];
   const counted = [core.sync, core.backup, core.updates, core.storage];
-  return { groups, summary: summaryText(counted), look: needingLook(counted).length };
+  return { groups, counted, look: needingLook(counted) };
 }

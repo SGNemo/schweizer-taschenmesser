@@ -25,3 +25,9 @@
   color: var(--text-muted);
   font-size: var(--text-label);
 }
+/* The pointer to "Dieser PC" is a link in a sentence: it gets the height of a touch target all the same. */
+.more a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+}
