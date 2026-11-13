@@ -129,6 +129,12 @@ describe('Unterlagen: view "Fristen"', () => {
     expect(
       await within(dialog).findByText('Das neue Ende muss nach dem bisherigen liegen.'),
     ).toBeTruthy();
+    // Also without a start: a date behind us is what the hint says first.
+    fireEvent.change(field, { target: { value: '25.09.2026' } });
+    fireEvent.blur(field);
+    expect(
+      await within(dialog).findByText('Dieses Datum liegt in der Vergangenheit.'),
+    ).toBeTruthy();
     const doc = (await documentRepo.active().toArray()).find((d) => d.title === 'Impfpass')!;
     expect(doc.endDate).toBe('2026-09-20');
   });
@@ -196,7 +202,7 @@ describe('Unterlagen: one vocabulary, and a dialog that follows its row', () => 
     expect(within(dialog).getByText('Dieses Datum liegt in der Vergangenheit.')).toBeTruthy();
   });
 
-  it('the dialog ends without a write when its document is deleted elsewhere', async () => {
+  it('the dialog closes when its document is deleted elsewhere', async () => {
     await seed();
     page();
     fireEvent.click(await screen.findByRole('button', { name: 'Fristen' }));

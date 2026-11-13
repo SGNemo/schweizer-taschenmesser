@@ -77,14 +77,14 @@ export const vault: Strings['vault'] = {
         ? '1 document expired more than 90 days ago and is not on the timeline. It is still under Filing.'
         : `${n} documents expired more than 90 days ago and are not on the timeline. They are still under Filing.`,
     kinds: {
-      cancel: 'Cancellation deadline ends',
+      cancel: 'Last day to cancel',
       cancelIn: (days: number) =>
         days <= 0
-          ? 'Cancellation deadline ends today'
+          ? 'Last day to cancel: today'
           : days === 1
-            ? 'Cancellation deadline ends tomorrow'
-            : `Cancellation deadline ends in ${days} days`,
-      cancelSoon: 'Cancellation deadline ends soon',
+            ? 'Last day to cancel: tomorrow'
+            : `Last day to cancel: in ${days} days`,
+      cancelSoon: 'Last day to cancel is soon',
       end: 'Expires',
       endSoon: 'Expires soon',
       expired: 'Expired',

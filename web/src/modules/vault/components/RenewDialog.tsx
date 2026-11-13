@@ -92,7 +92,8 @@ function Fields({ doc, onClose }: { doc: Stored<VaultDocument>; onClose: () => v
         // Nothing proposed, or a proposal that still lies in the past: the date is what needs a look first.
         data-autofocus={ready ? undefined : true}
       />
-      <p id={`${ids}-new`} className="sr-only">
+      {/* Read with the save button only (`aria-describedby` reads hidden text): the field above already says it. */}
+      <p id={`${ids}-new`} hidden>
         {value ? `${r.newEnd}: ${long(value)}` : ''}
       </p>
       <FormActions>
