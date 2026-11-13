@@ -59,6 +59,7 @@ export const vault: Strings['vault'] = {
     newEnd: 'New end',
     proposed: 'Proposal: the same term once more. You can change the date.',
     noStart: 'Without a start there is no proposal: please enter the new end.',
+    newPaper: 'Renewed before it runs out: the new end is on the new document.',
     startMoves: (from: string) => `The start will move to ${from}.`,
     stillPast: 'This date is in the past.',
     gone: 'The document no longer exists.',

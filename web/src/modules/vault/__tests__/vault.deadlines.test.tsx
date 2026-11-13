@@ -118,6 +118,46 @@ describe('Unterlagen: view "Fristen"', () => {
     expect([back.startDate, back.endDate]).toEqual(['2025-10-01', '2026-09-25']);
   });
 
+  it('a passport renewed before it runs out: no proposal, it starts today, the focus lands on its folder', async () => {
+    await documentRepo.create({
+      title: 'Pass',
+      category: 'identity',
+      startDate: '2016-11-07',
+      endDate: '2026-11-06',
+    } as never);
+    page();
+    // "Ablage": the folder offers "Verlängert" while it reads "Läuft bald ab".
+    const opener = await screen.findByRole('button', { name: 'Verlängert: Pass' });
+    fireEvent.click(opener);
+    const dialog = await screen.findByRole('dialog', { name: 'Verlängert: Pass' });
+    expect(
+      within(dialog).getByText(
+        'Bisher bis 6. November 2026. Der Beginn wird auf den 29. September 2026 gesetzt.',
+      ),
+    ).toBeTruthy();
+    const field = within(dialog).getByLabelText(/Neues Ende/) as HTMLInputElement;
+    // A new paper: its end is on it, not a sum of terms.
+    expect(field.value).toBe('');
+    expect(
+      within(dialog).getByText(
+        'Vor dem Ablauf verlängert: das neue Ende steht auf dem neuen Dokument.',
+      ),
+    ).toBeTruthy();
+    await waitFor(() => expect(document.activeElement).toBe(field));
+    fireEvent.change(field, { target: { value: '28.09.2036' } });
+    fireEvent.blur(field);
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Verlängerung speichern' }));
+    await waitFor(async () => {
+      const doc = (await documentRepo.active().toArray()).find((d) => d.title === 'Pass')!;
+      expect([doc.startDate, doc.endDate]).toEqual(['2026-09-29', '2036-09-28']);
+    });
+    // The folder's "Verlängert" is gone with the new term: the focus is on the folder itself.
+    await waitFor(() =>
+      expect((document.activeElement as HTMLElement | null)?.dataset.row).toBeDefined(),
+    );
+    expect(document.activeElement?.textContent).toContain('Pass');
+  });
+
   it('without a start nothing is proposed, and an end that is not later is refused', async () => {
     await seed();
     page();

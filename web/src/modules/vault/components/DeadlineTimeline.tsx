@@ -47,7 +47,7 @@ export function DeadlineTimeline({
       <button
         type="button"
         className={styles.timelineTitle}
-        data-doc-title={r.doc.id}
+        data-doc-id={r.doc.id}
         aria-current={current === r.doc.id ? 'true' : undefined}
         onClick={() => onOpen(r.doc)}
       >

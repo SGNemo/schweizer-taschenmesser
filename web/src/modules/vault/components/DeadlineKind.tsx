@@ -1,7 +1,7 @@
 import { daysBetween } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Badge } from '@/ui';
-import type { Status } from '../logic';
+import type { DateKind, Status } from '../logic';
 
 /**
  * What a document's next date is, in words: the one vocabulary of "Fristen" and "Ablage". What is near or over
@@ -18,7 +18,7 @@ export function DeadlineKind({
 }: {
   state: Status;
   /** What `date` is: the last day to cancel, or the end. */
-  kind: 'cancel' | 'end';
+  kind: DateKind;
   date: string;
   day: string;
   /**

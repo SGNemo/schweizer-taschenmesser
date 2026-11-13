@@ -1,10 +1,10 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { Stored } from '@/core/db/types';
-import { addDaysStr, formatDay, today } from '@/core/time/dates';
+import { formatDay, today } from '@/core/time/dates';
 import { changeWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import { Button, DayField, Dialog, Form, FormActions } from '@/ui';
-import { endOf, renewedEnd, renewPatch } from '../logic';
+import { endOf, renewedEarly, renewedEnd, renewPatch } from '../logic';
 import { documentRepo } from '../repo';
 import type { VaultDocument } from '../schema';
 
@@ -80,20 +80,23 @@ function Fields({
 }) {
   const r = t.vault.renewDialog;
   const end = endOf(doc)!;
-  const proposal = renewedEnd(doc);
+  const day = today();
+  const proposal = renewedEnd(doc, day);
+  // The new term's first day: today for a paper renewed before it runs out, otherwise the day after the old end.
+  const newStart = renewPatch(doc, end, day).startDate;
   const [value, setValue] = useState(proposal ?? '');
   const [error, setError] = useState('');
   const long = (date: string) => formatDay(date, 'd. MMMM yyyy');
   const ids = useId();
   // A proposal that can be confirmed as it stands: it exists and does not lie behind us.
-  const ready = proposal !== undefined && proposal >= today();
+  const ready = proposal !== undefined && proposal >= day;
 
   async function save() {
     if (!value || value <= end) return setError(r.notLater);
     if (!lock()) return;
     try {
       await changeWithUndo(
-        () => documentRepo.update(doc.id, renewPatch(doc, value)),
+        () => documentRepo.update(doc.id, renewPatch(doc, value, day)),
         t.vault.renewed(doc.title, formatDay(value, 'd. MMM yyyy')),
       );
       onSaved?.();
@@ -107,10 +110,12 @@ function Fields({
 
   // What the field holds decides the hint: a date behind us says so, the untouched proposal says what it is.
   const hint =
-    value && value < today()
+    value && value < day
       ? r.stillPast
       : !proposal
-        ? r.noStart
+        ? doc.startDate && renewedEarly(doc, day)
+          ? r.newPaper
+          : r.noStart
         : value === proposal
           ? r.proposed
           : undefined;
@@ -120,7 +125,7 @@ function Fields({
       <p id={`${ids}-was`}>
         {r.until(long(end))}
         {/* Said before it happens: the start is the new term's first day afterwards. */}
-        {doc.startDate ? ` ${r.startMoves(long(addDaysStr(end, 1)))}` : null}
+        {newStart ? ` ${r.startMoves(long(newStart))}` : null}
       </p>
       <DayField
         label={r.newEnd}

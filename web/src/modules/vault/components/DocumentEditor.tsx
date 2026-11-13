@@ -181,7 +181,7 @@ function Fields({
       {/* Below the wide layout a folder opens this dialog, not the panel: the preview is reached here. */}
       {existing?.fileName && file === undefined && canPreview(existing.fileType) ? (
         <FilePreview
-          key={`${existing.id}:${existing.fileName}:${existing.fileSize}`}
+          key={`${existing.id}:${existing.fileName}:${existing.fileSize}:${existing.updatedAt}`}
           id={existing.id}
           fileName={existing.fileName}
         />
