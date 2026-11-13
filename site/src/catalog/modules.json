@@ -400,8 +400,8 @@
         "en": "Cleaning plan and household routines"
       },
       "description": {
-        "de": "Putzplan und Haushalts-Routinen: was in welchem Raum wie oft dran ist und wer an der Reihe ist. Ruhig: „dran“ statt Rückstand, keine Serien, kein Rot.",
-        "en": "Cleaning plan and household routines: what is due in which room how often, and whose turn it is. Calm: “due” instead of a backlog, no streaks, no red."
+        "de": "Putzplan und Haushalts-Routinen: was in welchem Raum wie oft dran ist und wer an der Reihe ist. Ohne Rückstand.",
+        "en": "Cleaning plan and household routines: what is due in which room how often, and whose turn it is. No backlog."
       }
     },
     {
@@ -666,6 +666,30 @@
       "description": {
         "de": "Spotify auf einer Seite: was läuft, Steuern, Zuletzt gespielt, deine Playlists mit Cover, Suche und Warteschlange. Nemo spielt selbst nichts ab und speichert keine Titel.",
         "en": "Spotify on one page: what plays, controls, recently played, your playlists with covers, search and the queue. Nemo plays nothing itself and stores no tracks."
+      }
+    },
+    {
+      "id": "device",
+      "area": "system",
+      "status": "optional",
+      "fresh": true,
+      "platforms": null,
+      "icon": "activity",
+      "hue": "teal",
+      "hue2": null,
+      "head": "standard",
+      "widget": "status",
+      "name": {
+        "de": "Gerätestatus",
+        "en": "Device status"
+      },
+      "short": {
+        "de": "Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite",
+        "en": "Backup, sync, storage and updates of this device on one page"
+      },
+      "description": {
+        "de": "Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite. Nur Anzeige, nichts verlässt das Gerät.",
+        "en": "Backup, sync, storage and updates of this device on one page. Display only, nothing leaves the device."
       }
     },
     {

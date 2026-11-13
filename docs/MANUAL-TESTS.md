@@ -301,6 +301,18 @@ Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währ
 - **S6-7 Downloads:** Läuft ein Download, steht oben rechts „1 läuft“ mit Prozent und Tempo; läuft keiner, steht dort nichts. „Download hinzufügen“ ist der eine gefüllte Knopf oben rechts; „Zielordner zeigen“ steht als neutraler Knopf daneben und öffnet mit einem Klick den Ordner des letzten Downloads. Der Satz „Dateien landen nur im gewählten Ordner. Nemo öffnet oder startet sie nie.“ steht weiter über der Liste. ☐
 - **S6-8 Einstellungen, Startseite:** Einstellungen öffnen: im Kopf stehen sechs Zeilen (Sicherheit, Sync, Backup, Updates, KI, Speicher) in drei Spalten, je Name und Zustand in einer Zeile, darunter klein der Kontext; ohne Rahmen. Jede Zeile führt in ihre Kategorie. Darunter „Schnell umschalten“, dann (im breiten Fenster) drei gleiche Zeilen für Darstellung, Benachrichtigungen und Module. Beim Klick auf eine Kategorie links bleibt die Kategorien-Spalte an ihrem Platz. ☐
 
+#### Gerätestatus (UI-Audit 4.0, Modul-Paket S-b) – Desktop-Zeilen nur in der Windows-App, Handy am echten Gerät
+
+- **GS-1 Neuinstallation:** Nemo frisch installieren (Windows und Android): in der Navigation steht „System“ mit „Gerätestatus“; am Handy: Mehr → System landet direkt auf der Seite. ☐
+- **GS-2 Bestandsgerät:** Ein Gerät, das vor diesem Update installiert war, nach dem Update öffnen: „Gerätestatus“ ist nicht von selbst an; die Einstellungs-Startseite zeigt weiter sechs Zeilen. In der Bibliothek einschalten: die Einstellungen zeigen danach Sicherheit, Gerätestatus, KI. ☐
+- **GS-3 Autostart:** Einstellungen → Schnellerfassung → „Mit Windows starten“ einschalten, Gerätestatus öffnen: Zeile „Autostart · An“; ausschalten, Seite neu öffnen: „Aus“. Ein Klick auf die Zeile führt zu dieser Einstellung. ☐
+- **GS-4 Laufwerk:** Zeile „Laufwerk“ nennt freien und gesamten Platz des Systemlaufwerks (Vergleich mit dem Explorer), ohne Laufwerksbuchstaben oder Namen. ☐
+- **GS-5 Heimnetz:** Mit eingerichtetem Heimnetz-Hub: „Heimnetz · Aktiv · n Geräte gekoppelt“; ohne: „Aus“. Nirgends auf der Seite stehen Port, IP-Adresse oder Gerätenamen. ☐
+- **GS-6 Backup:** Automatische Backups einschalten und eines anlegen: „Backup · Gesichert“ mit Zeit, „Nächstes Backup“ mit dem Tag danach; ausschalten: „Nicht geplant“. Ohne gespeicherte Passphrase: „Passphrase fehlt“ mit Punkt, oben „1 braucht einen Blick“. ☐
+- **GS-7 Updates und Netzwerk:** Liegt ein Update vor, steht „Update verfügbar“ mit Punkt davor und oben „1 braucht einen Blick“. Einstellungen → Verbindungen → „Netzwerk sperren“: Zeile „Netzwerk · Gesperrt“, ohne Punkt. ☐
+- **GS-8 Verweis:** Unter den Zeilen steht der Satz zu „Dieser PC“; der Link öffnet den Reiter „System“ (ist „Dieser PC“ aus: die Bibliothek). Am Handy fehlt der Satz. ☐
+- **GS-9 Handy:** Am Android-Gerät: Backup, Sync, Speicher, App; keine Zeilen Heimnetz, Laufwerk, Autostart, kein Akku; jede Zeile lässt sich mit dem Daumen treffen. ☐
+
 ### Downloads und Torrent
 
 #### Datenträger, Systeminfo (diese Runde) – nur auf echtem Windows prüfbar

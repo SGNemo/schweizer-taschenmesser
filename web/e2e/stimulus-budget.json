@@ -101,6 +101,18 @@
       "colouredAboveFold": 1,
       "signatureBlocks": 0
     },
+    "d1920--device": {
+      "height": 1080,
+      "buttons": 14,
+      "links": 20,
+      "icons": 31,
+      "firstScreenActions": 33,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 0,
+      "signatureBlocks": 0
+    },
     "d1920--disk": {
       "height": 1460,
       "buttons": 24,
@@ -557,6 +569,18 @@
       "colouredAboveFold": 0,
       "signatureBlocks": 0
     },
+    "p412--device": {
+      "height": 915,
+      "buttons": 5,
+      "links": 11,
+      "icons": 16,
+      "firstScreenActions": 15,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 0,
+      "signatureBlocks": 0
+    },
     "p412--feeds": {
       "height": 915,
       "buttons": 15,
@@ -764,7 +788,7 @@
     "p412--settings": {
       "height": 2403,
       "buttons": 15,
-      "links": 26,
+      "links": 23,
       "icons": 47,
       "firstScreenActions": 20,
       "borders": 0,

@@ -1,0 +1,24 @@
+/* Gerätestatus: groups of status lines on the page's ground. Tokens only; no frame, no shadow, no colour. */
+.page {
+  display: grid;
+  gap: var(--space-5);
+}
+.lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.lines > li {
+  min-width: 0;
+}
+.more {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-label);
+}
+/* The pointer to "Dieser PC" is a link in a sentence: it gets the height of a touch target all the same. */
+.more a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+}

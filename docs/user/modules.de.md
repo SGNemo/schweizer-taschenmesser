@@ -36,7 +36,8 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 |  | Musik | Spotify auf einer Seite | Vorschau |
 | **Tresor** | Unterlagen | Ausweise, Verträge, Versicherungen und Garantien mit Ende, Kündigungsfrist und angehängter Datei | optional |
 |  | Passwörter | Passwort-Tresor | optional |
-| **System** | Dieser PC | Laufwerke mit Scan der größten Ordner und Systeminfo (Prozessor, Speicher, Akku, Netzwerk) | optional, nur Windows-App |
+| **System** | Gerätestatus | Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite | bei Neuinstallationen an |
+|  | Dieser PC | Laufwerke mit Scan der größten Ordner und Systeminfo (Prozessor, Speicher, Akku, Netzwerk) | optional, nur Windows-App |
 |  | Downloads | Lädt Dateien herunter | bei Neuinstallationen an, nur Windows-App |
 |  | Fernbedienung | Steuere Medien, Lautstärke, Maus und Tastatur deines PCs vom Handy aus | Vorschau, nur Android-App |
 

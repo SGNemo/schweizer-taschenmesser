@@ -53,18 +53,18 @@ const moduleSwitch = (page: Page, id: string) =>
 
 test.use({ viewport: DESKTOP });
 
-test('a new desktop installation shows lists, budgets, downloads and routines, and writes no module row', async ({
+test('a new desktop installation shows lists, budgets, downloads, routines and device status, and writes no module row', async ({
   page,
 }) => {
   await fresh(page, { set: true, desktop: true });
-  // Set 5 (module package H-b): routines joined the set.
-  for (const id of ['lists', 'budgets', 'downloads', 'routines'])
+  // Set 5 (module package H-b): routines joined the set. Set 6 (module package S-b): device status.
+  for (const id of ['lists', 'budgets', 'downloads', 'routines', 'device'])
     await expect(page.getByTestId(`module-${id}`).getByRole('switch'), id).toBeChecked();
   // In the navigation too: the areas the audit found invisible on a standard installation.
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
   for (const area of ['Haushalt', 'Geld', 'System'])
     await expect(nav.getByText(area, { exact: true }).first(), area).toBeVisible();
-  expect(await stored(page)).toEqual({ meta: 5, rows: 0 });
+  expect(await stored(page)).toEqual({ meta: 6, rows: 0 });
 });
 
 test('a new installation in the browser gets lists and budgets; downloads does not exist there', async ({
@@ -74,6 +74,8 @@ test('a new installation in the browser gets lists and budgets; downloads does n
   await expect(moduleSwitch(page, 'lists')).toBeChecked();
   await expect(moduleSwitch(page, 'budgets')).toBeChecked();
   await expect(page.getByTestId('module-downloads')).toHaveCount(0);
+  // Set 6: device status exists on every platform, so the area System is there without the desktop app.
+  await expect(moduleSwitch(page, 'device')).toBeChecked();
 });
 
 test('the test builds themselves keep the set off: lists and budgets are off as before', async ({

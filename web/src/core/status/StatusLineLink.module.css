@@ -1,0 +1,74 @@
+/* A status line (Identity 4.0, package 0b-6b; shared since S-b): one line of text, a link – name, state, context –
+   with no frame and no fill. Tokens only. "Needs a look" is an ink mark and the words, never red. */
+.line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  align-content: flex-start;
+  gap: 0 var(--space-2);
+  height: 100%;
+  min-height: var(--touch);
+  padding: var(--space-1) var(--space-2);
+  margin-inline: calc(-1 * var(--space-2));
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  text-decoration: none;
+}
+.line:hover {
+  background: var(--surface-sunken);
+}
+.name {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  gap: var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--text-label);
+}
+.status {
+  font-size: var(--text-label);
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}
+.line[data-attention='true'] .status::before {
+  content: '';
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-inline-end: var(--space-1);
+  border-radius: var(--radius-full);
+  background: var(--text);
+}
+.context {
+  color: var(--text-3);
+  font-size: var(--text-meta);
+  overflow-wrap: anywhere;
+}
+
+.line[data-layout='columns'] {
+  display: grid;
+  grid-template-columns: minmax(0, 11rem) minmax(0, 14rem) minmax(0, 1fr);
+  /* The name carries an icon, so the three cells share their middle, not a baseline. */
+  align-items: center;
+  align-content: center;
+  gap: 0 var(--space-4);
+  height: auto;
+}
+
+@media (max-width: 899px) {
+  /* Phone: name and state share the first line, the context has the second one in every row. */
+  .line[data-layout='columns'] {
+    grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+    gap: 0 var(--space-2);
+  }
+  .line[data-layout='columns'] .context {
+    grid-column: 1 / -1;
+  }
+
+  /* U55: the context line is never cut. Where the caller asks for it, a line that only describes the category stays
+     off the phone. */
+  .line[data-generic='true'] .context {
+    display: none;
+  }
+}

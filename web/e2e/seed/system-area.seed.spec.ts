@@ -47,7 +47,7 @@ test.describe('settings start page: the states are lines', () => {
             }
           : { viewport: DESKTOP, seeded: { scale: 'medium', desktop: true, preview: true } },
       );
-      test('six status lines and three overview lines: no frame, nothing cut, a lower head', async ({
+      test('status lines and three overview lines: no frame, nothing cut, a lower head', async ({
         page,
       }) => {
         test.setTimeout(120_000);
@@ -83,8 +83,10 @@ test.describe('settings start page: the states are lines', () => {
           };
         });
         console.log(`settings start ${phone ? 'phone' : 'desktop'}: ${JSON.stringify(read)}`);
-        // The phone lists the categories instead of the three overview lines.
-        expect.soft(read.lines, 'status and overview lines').toBe(phone ? 6 : 9);
+        // The phone lists the categories instead of the three overview lines. The seed switches every module on, so
+        // "Gerätestatus" (module package S-b) is on: sync, backup, updates and storage are one line that leads to its
+        // page, which leaves security, Gerätestatus and AI (three status lines instead of six).
+        expect.soft(read.lines, 'status and overview lines').toBe(phone ? 3 : 6);
         expect.soft(read.framed, 'lines with a frame or a shadow').toBe(0);
         expect.soft(read.cut, 'cut text').toEqual([]);
         for (const h of read.heights) {
