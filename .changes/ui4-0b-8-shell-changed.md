@@ -2,8 +2,8 @@
 type: changed
 area: ui
 breaking: false
-de: Die Sync-Anzeige dreht sich nicht mehr, solange abgeglichen wird; sie pulsiert einmal, wenn der Abgleich fertig ist. Listen erscheinen ohne Einblenden.
-en: The sync indicator no longer spins while syncing; it pulses once when the sync is done. Lists appear without a fade-in.
+de: Die Sync-Anzeige dreht sich nicht mehr, solange abgeglichen wird; sie pulsiert einmal, wenn ein Abgleich etwas geändert hat. Listen erscheinen ohne Einblenden.
+en: The sync indicator no longer spins while syncing; it pulses once when a sync changed something. Lists appear without a fade-in.
 ---
 type: changed
 area: ui
