@@ -1,21 +1,19 @@
-//! Desktop: `keyring` (Credential Manager on Windows) for secrets; Windows Hello as the consent gate
-//! in front of the sealed vault key. Elsewhere the biometric gate reports `unsupported`.
+//! Desktop: `keyring` (Credential Manager on Windows) for secrets; the sealed vault key is wrapped
+//! under a Windows Hello key (`desktop/sealed.rs`, `desktop/hello.rs`). Elsewhere the biometric gate
+//! reports `unsupported`.
 
-use base64::{engine::general_purpose::STANDARD, Engine};
 use keyring::{Entry, Error as KeyringError};
 use serde::de::DeserializeOwned;
 use std::sync::OnceLock;
-#[cfg(windows)]
-use tauri::Manager;
 use tauri::{plugin::PluginApi, AppHandle, Runtime};
 
 use crate::{models::*, Error, Result};
 
 #[cfg(windows)]
 mod hello;
-
-/// Sealed vault keys are filed apart from ordinary secrets.
-const BIO_PREFIX: &str = "bio:";
+// Used by the Windows build and the tests; elsewhere the biometric commands stop at `unsupported`.
+#[cfg_attr(not(windows), allow(dead_code))]
+mod sealed;
 
 /// Credential Manager service name: the app identifier, so the Dev-Preview (identifier + `.dev`)
 /// never reads or overwrites the secrets of the stable app. For the stable app the identifier is
@@ -97,41 +95,42 @@ impl<R: Runtime> SecureStore<R> {
         remove(&request.name)
     }
 
+    // The request's `title`/`subtitle`/`cancel` are not used on Windows: `KeyCredentialManager` shows
+    // its own generic prompt (see `desktop/hello.rs`). Android uses them.
     pub async fn biometric_seal(&self, request: SealRequest) -> Result<()> {
         if !biometric_available() {
             return Err(Error::Unsupported);
         }
-        // The secret must be valid base64 (it is the raw vault key); store it as given.
-        STANDARD
-            .decode(&request.secret)
-            .map_err(|_| Error::Invalid("secret is not base64".into()))?;
+        // Checked before any prompt; the wrapped form is small, the raw secret must fit as well.
         validate_value(&request.secret).map_err(Error::Invalid)?;
-        let name = format!("{BIO_PREFIX}{}", request.name);
-        entry(&name)?
-            .set_password(&request.secret)
-            .map_err(|e| Error::Keystore(e.to_string()))
+        let name = request.name;
+        let secret = zeroize::Zeroizing::new(request.secret);
+        with_hello(move |hello| {
+            let slot = KeyringSlot::bio(&name);
+            sealed::seal(hello, &slot, &hello_key(&name), &slot.0, &secret)
+        })
+        .await
     }
 
     pub async fn biometric_unseal(&self, request: UnsealRequest) -> Result<UnsealResponse> {
         if !biometric_available() {
             return Err(Error::Unsupported);
         }
-        let name = format!("{BIO_PREFIX}{}", request.name);
-        if read(&name)?.is_none() {
-            return Ok(UnsealResponse {
-                status: "missing".into(),
-                secret: None,
-            });
-        }
-        if !self.verify_user(&request.title, &request.subtitle).await? {
-            return Ok(UnsealResponse {
-                status: "cancelled".into(),
-                secret: None,
-            });
-        }
+        let name = request.name;
+        let unsealed = with_hello(move |hello| {
+            let slot = KeyringSlot::bio(&name);
+            sealed::unseal(hello, &slot, &hello_key(&name), &slot.0)
+        })
+        .await?;
+        let (status, secret) = match unsealed {
+            sealed::Unsealed::Ok(secret) => ("ok", Some(secret.to_string())),
+            sealed::Unsealed::Cancelled => ("cancelled", None),
+            sealed::Unsealed::Missing => ("missing", None),
+            sealed::Unsealed::Invalidated => ("invalidated", None),
+        };
         Ok(UnsealResponse {
-            status: "ok".into(),
-            secret: read(&name)?,
+            status: status.into(),
+            secret,
         })
     }
 
@@ -141,8 +140,26 @@ impl<R: Runtime> SecureStore<R> {
         })
     }
 
-    pub fn biometric_delete(&self, request: NameRequest) -> Result<()> {
-        remove(&format!("{BIO_PREFIX}{}", request.name))
+    /// Never prompts and does not wait for an open Hello prompt (no `with_hello` turn); a missing
+    /// Hello key is ignored. Not serialized against seal/unseal: if a hidden prompt of a seal or
+    /// migration is answered after this ran, that seal comes back (Hello-bound, shown as enabled).
+    /// The app removes only after an unseal or from the unlocked Tools dialog.
+    pub async fn biometric_delete(&self, request: NameRequest) -> Result<()> {
+        let name = request.name;
+        #[cfg(windows)]
+        {
+            tauri::async_runtime::spawn_blocking(move || {
+                sealed::delete(
+                    &hello::WindowsHello,
+                    &KeyringSlot::bio(&name),
+                    &hello_key(&name),
+                )
+            })
+            .await
+            .map_err(|e| Error::Biometric(e.to_string()))?
+        }
+        #[cfg(not(windows))]
+        remove(&format!("{BIO_PREFIX}{name}"))
     }
 
     /// The phone's "prove you are there" prompt; no desktop caller exists.
@@ -154,27 +171,58 @@ impl<R: Runtime> SecureStore<R> {
     pub fn set_secure_window(&self, _request: SecureWindowRequest) -> Result<()> {
         Err(Error::Unsupported)
     }
+}
 
-    #[cfg(windows)]
-    async fn verify_user(&self, title: &str, subtitle: &str) -> Result<bool> {
-        let hwnd = self
-            .0
-            .get_webview_window("main")
-            .and_then(|w| w.hwnd().ok())
-            .map(|h| h.0 as isize)
-            .ok_or_else(|| Error::Biometric("no main window".into()))?;
-        let message = format!("{title} – {subtitle}");
-        tauri::async_runtime::spawn_blocking(move || hello::verify(hwnd, &message))
-            .await
-            .map_err(|e| Error::Biometric(e.to_string()))?
-            .map_err(Error::Biometric)
-    }
+/// The keyring entry `bio:<name>` that holds the wrapped vault key.
+struct KeyringSlot(String);
 
-    #[cfg(not(windows))]
-    async fn verify_user(&self, _title: &str, _subtitle: &str) -> Result<bool> {
-        let _ = &self.0;
-        Err(Error::Unsupported)
+impl KeyringSlot {
+    fn bio(name: &str) -> Self {
+        Self(format!("{BIO_PREFIX}{name}"))
     }
+}
+
+impl sealed::Slot for KeyringSlot {
+    fn read(&self) -> Result<Option<String>> {
+        read(&self.0)
+    }
+    fn write(&self, value: &str) -> Result<()> {
+        validate_value(value).map_err(Error::Invalid)?;
+        entry(&self.0)?
+            .set_password(value)
+            .map_err(|e| Error::Keystore(e.to_string()))
+    }
+    fn remove(&self) -> Result<()> {
+        remove(&self.0)
+    }
+}
+
+/// Name of the Hello key credential: per app identifier (the Dev-Preview gets its own) and seal name.
+fn hello_key(name: &str) -> String {
+    format!("{}/{name}", service())
+}
+
+/// Hello calls block until the person answers: run them (and the keyring calls between) off the
+/// async runtime, one at a time (a double click must not interleave two seals of the same key). While
+/// a prompt is open (also one hidden behind the window), a second unlock waits for it.
+#[cfg(windows)]
+async fn with_hello<T: Send + 'static>(
+    f: impl FnOnce(&dyn sealed::HelloKeys) -> Result<T> + Send + 'static,
+) -> Result<T> {
+    static ONE_AT_A_TIME: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    tauri::async_runtime::spawn_blocking(move || {
+        let _turn = ONE_AT_A_TIME.lock().unwrap_or_else(|e| e.into_inner());
+        f(&hello::WindowsHello)
+    })
+    .await
+    .map_err(|e| Error::Biometric(e.to_string()))?
+}
+
+#[cfg(not(windows))]
+async fn with_hello<T: Send + 'static>(
+    _f: impl FnOnce(&dyn sealed::HelloKeys) -> Result<T> + Send + 'static,
+) -> Result<T> {
+    Err(Error::Unsupported)
 }
 
 #[cfg(windows)]

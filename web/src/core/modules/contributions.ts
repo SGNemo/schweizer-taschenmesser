@@ -176,16 +176,18 @@ export async function collectAttention(
   return rankAttention(lists.flat());
 }
 
-/** Live attention items; `undefined` while loading. */
-export function useAttentionItems(): AttentionItem[] | undefined {
+/**
+ * Live attention items; `undefined` while loading. `only` limits the sources to these modules (a module page's
+ * "Jetzt" row needs its own, not the code and queries of every module).
+ */
+export function useAttentionItems(only?: readonly string[]): AttentionItem[] | undefined {
   const states = useModuleStates();
-  const ids = activeManifests(states)
-    .map((m) => m.id)
-    .join(',');
+  const sources = activeManifests(states).filter((m) => !only || only.includes(m.id));
+  const ids = sources.map((m) => m.id).join(',');
   return useSharedLiveQuery(
     `attention|${ids}|${states === undefined}`,
-    async () => (states ? collectAttention(today(), activeManifests(states)) : undefined),
-    preload('attention', activeManifests(states)),
+    async () => (states ? collectAttention(today(), sources) : undefined),
+    preload('attention', sources),
   );
 }
 

@@ -1,5 +1,5 @@
 import { NowStrip } from '@/core/modules/NowStrip';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { useAdvanced } from '@/core/settings/comfort';
 import { DEFAULT_CURRENCY } from '@/core/money';
@@ -49,6 +49,14 @@ export default function FinancePage() {
   // in its dialog (a sheet on the phone).
   const [picked, setPicked] = useState<{ id: string } | null>(null);
   const advancedItem = useAdvancedMenuItem('finance');
+  // "Als CSV exportieren" (G7): an entry of the page's "⋯" menu on "Buchungen", no button row of its own; it exports
+  // what the list shows, so the list hands over its export.
+  const exportRun = useRef<(() => Promise<void>) | null>(null);
+  const [canExport, setCanExport] = useState(false);
+  const takeExport = useCallback((run: (() => Promise<void>) | null) => {
+    exportRun.current = run;
+    setCanExport(run !== null);
+  }, []);
 
   useEffect(() => {
     void ensureDefaults();
@@ -69,11 +77,18 @@ export default function FinancePage() {
         : true,
   );
   // Accounts in several currencies: one currency at a time, nothing is converted or mixed.
-  const currencies = data ? currenciesOf(data.accounts) : [DEFAULT_CURRENCY];
+  const currencies = useMemo(
+    () => (data ? currenciesOf(data.accounts) : [DEFAULT_CURRENCY]),
+    [data],
+  );
   const rawCur = params.get('cur');
   const currency =
     rawCur && currencies.includes(rawCur) ? rawCur : (currencies[0] ?? DEFAULT_CURRENCY);
-  const view = data && currencies.length > 1 ? filterByCurrency(data, currency) : data;
+  // One filtered copy per data read and currency: a new object on every render made every figure below recompute.
+  const view = useMemo(
+    () => (data && currencies.length > 1 ? filterByCurrency(data, currency) : data),
+    [data, currencies, currency],
+  );
   const rawMonth = params.get('month');
   const month = rawMonth && MONTH_RE.test(rawMonth) ? rawMonth : monthOf(today());
 
@@ -156,7 +171,21 @@ export default function FinancePage() {
           <Icon name="plus" size={18} />
           {t.finance.addTransactionShort}
         </PageAction>
-        <StartDataMenu moduleId="finance" items={[advancedItem]} />
+        <StartDataMenu
+          moduleId="finance"
+          items={
+            tab === 'transactions' && canExport
+              ? [
+                  {
+                    id: 'export-csv',
+                    label: t.finance.ext.export.button,
+                    onSelect: () => void exportRun.current?.(),
+                  },
+                  advancedItem,
+                ]
+              : [advancedItem]
+          }
+        />
       </PageHeader>
 
       {tab === 'trend' ? (
@@ -299,10 +328,20 @@ export default function FinancePage() {
                 onEdit={wideScreen ? setTarget : undefined}
                 onAdd={canAdd ? addBooking : undefined}
                 selectedId={wideScreen ? detail?.id : undefined}
+                onExport={takeExport}
               />
             ) : null}
-            {tab === 'trend' ? <NetWorthTab data={view} all={data} /> : null}
-            {tab === 'accounts' ? <AccountsTab data={data} /> : null}
+            {/* Tabs with an amount column keep a reading measure: the amount stays near its name (G-b). */}
+            {tab === 'trend' ? (
+              <div className={styles.measure}>
+                <NetWorthTab data={view} all={data} />
+              </div>
+            ) : null}
+            {tab === 'accounts' ? (
+              <div className={styles.measure}>
+                <AccountsTab data={data} />
+              </div>
+            ) : null}
             {tab === 'categories' ? <CategoriesTab data={data} /> : null}
           </SplitView>
           <TransactionEditor

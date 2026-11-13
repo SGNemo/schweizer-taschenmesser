@@ -15,20 +15,29 @@ import { NoReadAid } from '@/ui';
 import { PageContainer, PageFallback } from '@/layout/PageContainer';
 import { Home } from '@/home/Home';
 import { NotFound } from '@/pages/NotFound';
-import {
-  CategoryPage,
-  ModuleSettingsRoute,
-  SettingsIndex,
-  SettingsLayout,
-} from '@/pages/settings/SettingsLayout';
 import { lazyOnline } from '@/core/net/OnlineChunk';
 
 import { ModuleErrorBoundary } from '@/layout/ModuleErrorBoundary';
 
 // Pages that a start rarely needs load on first visit (still precached, so they work offline; without a
-// service worker and offline, `lazyOnline` shows a calm note instead of an error screen). Settings stay
-// in the start bundle: offline client-side navigation into them must work without a worker
-// (docs/perf/COLD-START-2026-10.md).
+// service worker and offline, `lazyOnline` shows a calm note instead of an error screen).
+// Settings load the same way but right after the start too (`preloadSettings`): out of the start bundle
+// (about 60 KB gzip, docs/perf/CLICK-TO-CONTENT-2026-11.md), and offline client-side navigation into them
+// still works without a worker once the app has been open a moment.
+const loadSettings = () => import('@/pages/settings/SettingsLayout');
+export const preloadSettings = (): void => void loadSettings().catch(() => undefined);
+const SettingsLayout = lazyOnline<object>(() =>
+  loadSettings().then((m) => ({ default: m.SettingsLayout })),
+);
+const SettingsIndex = lazyOnline<object>(() =>
+  loadSettings().then((m) => ({ default: m.SettingsIndex })),
+);
+const ModuleSettingsRoute = lazyOnline<object>(() =>
+  loadSettings().then((m) => ({ default: m.ModuleSettingsRoute })),
+);
+const CategoryPage = lazyOnline<object>(() =>
+  loadSettings().then((m) => ({ default: m.CategoryPage })),
+);
 const ModuleLibrary = lazyOnline<object>(() =>
   import('@/pages/ModuleLibrary').then((m) => ({ default: m.ModuleLibrary })),
 );
@@ -182,13 +191,13 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
           path: 'settings',
           element: (
             <PageContainer key="Settings" variant="wide">
-              <SettingsLayout />
+              {page(<SettingsLayout />)}
             </PageContainer>
           ),
           children: [
-            { index: true, element: <SettingsIndex /> },
-            { path: 'module/:moduleId', element: <ModuleSettingsRoute /> },
-            { path: ':category', element: <CategoryPage /> },
+            { index: true, element: page(<SettingsIndex />) },
+            { path: 'module/:moduleId', element: page(<ModuleSettingsRoute />) },
+            { path: ':category', element: page(<CategoryPage />) },
           ],
         },
         ...(ComponentSheet
@@ -229,6 +238,17 @@ export function AppRoutes() {
   const routes = useMemo(() => (states ? buildRoutes(states) : null), [states]);
   // Routes are only known once module states are loaded; avoids a redirect flash on deep links.
   const element = useRoutes(routes ?? []);
+  // Settings code after the first paint, when the browser is idle (or after 2 s at the latest).
+  useEffect(() => {
+    if (!routes) return;
+    const idle = window.requestIdleCallback?.bind(window);
+    if (idle) {
+      const id = idle(preloadSettings, { timeout: 2000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = window.setTimeout(preloadSettings, 500);
+    return () => window.clearTimeout(id);
+  }, [routes]);
   return routes ? (
     <LoadedModuleStates.Provider value={states}>{element}</LoadedModuleStates.Provider>
   ) : (

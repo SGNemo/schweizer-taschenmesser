@@ -9,3 +9,4 @@
 | [MAIN-THREAD-COMMANDS-2026-11.md](MAIN-THREAD-COMMANDS-2026-11.md) | 2026-11-10 | every Tauri command: sync or async, can it block the main thread (yes / no / unchecked), what moved off it (UI audit 0a-4) |
 | [CI-2026-11.md](CI-2026-11.md) | 2026-11-10 | CI round 3: wait and run time per job over 1000 runs, push → green, runner load, waste, flaky tests by file:line, levers; repeat with `node scripts/ci/measure.mjs` |
 | [CI-2026-11-PACKAGES.md](CI-2026-11-PACKAGES.md) | 2026-11-10 | hand-over prompts for the larger CI levers (order, model, what only the maintainer can do) |
+| [CLICK-TO-CONTENT-2026-11.md](CLICK-TO-CONTENT-2026-11.md) | 2026-11-13 | click to first and finished content per route, settings, library, overview and entry dialogs (desktop/phone, CPU 4×/6×), causes per large item, start bundle; `npm run measure:click` |

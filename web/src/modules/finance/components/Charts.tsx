@@ -14,11 +14,11 @@ import { useCurrency } from '../currency';
 import { useMediaQuery } from '@/ui';
 import { t } from '@/strings';
 import type { CategoryTotal, MonthPoint } from '../logic';
+import type { CSSProperties } from 'react';
 import styles from '../routes/finance.module.css';
 
 const AXIS_TEXT = { fill: 'var(--text-muted)', fontSize: 12 } as const;
 const BAR = 16; // ≤ 24px thick bars
-const ROW = 40;
 
 /** Long category names are cut in the axis; the tooltip and table carry the full text. */
 const shorten = (s: string) => (s.length > 16 ? `${s.slice(0, 15)}…` : s);
@@ -46,7 +46,11 @@ export function CategoryBars({ rows }: { rows: CategoryTotal[] }) {
   const currency = useCurrency();
   const motion = !useMediaQuery('(prefers-reduced-motion: reduce)');
   return (
-    <div style={{ height: rows.length * ROW + 8 }} data-testid="chart-categories">
+    <div
+      className={styles.barsBox}
+      style={{ '--bars': rows.length } as CSSProperties}
+      data-testid="chart-categories"
+    >
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           layout="vertical"
@@ -138,7 +142,7 @@ export function TrendColumns({ points }: { points: MonthPoint[] }) {
           </li>
         ))}
       </ul>
-      <div style={{ height: 232 }}>
+      <div className={styles.trendBox}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={points}

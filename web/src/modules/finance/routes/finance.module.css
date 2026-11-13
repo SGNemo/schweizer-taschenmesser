@@ -113,7 +113,7 @@
 .seriesSwatch {
   width: 10px;
   height: 10px;
-  border-radius: 2px;
+  border-radius: var(--radius-full);
 }
 .tooltip {
   background: var(--surface);
@@ -136,7 +136,7 @@
 .lineKey {
   width: 12px;
   height: 3px;
-  border-radius: 2px;
+  border-radius: var(--radius-full);
   flex: none;
 }
 .tooltipValue {
@@ -263,9 +263,6 @@
   height: 11rem;
   display: block;
 }
-.curveFill {
-  fill: color-mix(in srgb, var(--module-color) 16%, transparent);
-}
 .curveLine {
   fill: none;
   stroke: var(--module-color);
@@ -314,7 +311,7 @@
 .swatch {
   width: 0.7rem;
   height: 0.7rem;
-  border-radius: 3px;
+  border-radius: var(--radius-full);
   flex: none;
 }
 .visuals {
@@ -480,4 +477,27 @@
     align-items: center;
     min-height: var(--touch);
   }
+}
+
+/*
+ * "Verlauf" and "Konten" list a name and its amount: on a wide page they keep the reading measure, so the amount does
+ * not drift a page width away from its name (design review of G-b). The page width itself stays `split` (Buchungen
+ * needs it beside the panel); only a wide page narrows the two tabs.
+ */
+@container page (min-width: 64rem) {
+  .measure {
+    max-width: var(--page-reading);
+  }
+}
+
+/* Chart boxes: the bars grow with their rows (`--bars`, set by the chart; 40 px a row), the trend has a fixed height. */
+.barsBox {
+  height: calc(var(--bars, 1) * 40px + 8px);
+}
+.trendBox {
+  height: 232px;
+}
+/* The "+ Kategorie" row under a group of categories. */
+.groupFoot {
+  margin-top: var(--space-3);
 }
