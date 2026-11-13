@@ -388,7 +388,9 @@ test('identity v3: capture and measure', async ({ browser }) => {
           await page.waitForTimeout(300);
           await page.getByLabel('Master-Passwort').fill(MASTER);
           await page.getByRole('button', { name: 'Entsperren' }).click();
-          await expect(page.getByRole('button', { name: 'Zugang eintragen' })).toBeVisible({
+          await expect(
+            page.getByRole('button', { name: 'Zugang eintragen', exact: true }),
+          ).toBeVisible({
             timeout: 30_000,
           });
           await page.waitForTimeout(WAIT);

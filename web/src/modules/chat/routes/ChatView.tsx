@@ -122,7 +122,6 @@ export default function ChatPage() {
         {/* One filled action per page (C23): while the setup hint shows, it is that one and this steps back. */}
         <PageAction
           short={t.nav.plusThings.chat}
-          plusName={c.newChat}
           variant={setup?.needed || isEmpty ? 'secondary' : 'primary'}
           // No AI yet: a new chat could not answer, so the set-up hint is the one step (on the phone the plus is the
           // page's action and would be a second filled button beside the hint).

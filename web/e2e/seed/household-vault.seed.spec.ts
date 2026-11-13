@@ -324,7 +324,7 @@ test.describe('passwords on the phone: the entry dialog keeps its foot (B10)', (
     await openPage(page, '/accounts');
     await closeNotice(page);
     await unlock(page);
-    await page.getByRole('button', { name: 'Zugang eintragen' }).tap();
+    await page.getByRole('button', { name: 'Zugang eintragen', exact: true }).tap();
     const dialog = page.getByRole('dialog', { name: 'Zugang eintragen' });
     await expect(dialog).toBeVisible();
     const foot = dialog.locator('[data-form-actions]');

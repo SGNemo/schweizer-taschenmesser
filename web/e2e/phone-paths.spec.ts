@@ -91,7 +91,10 @@ async function addTodoPlain(page: Page, title: string) {
   await ready(page, '/todos');
   await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
   await page.getByRole('dialog').getByLabel('Titel').fill(title);
-  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click(); // enabled once the lists are loaded
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+    .click(); // enabled once the lists are loaded
   await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
 }
 
@@ -230,10 +233,10 @@ test.describe('ten paths', () => {
     await page.getByLabel('Master-Passwort', { exact: true }).fill('Mein-Master-Passwort-1');
     await page.getByLabel('Master-Passwort wiederholen').fill('Mein-Master-Passwort-1');
     await page.getByRole('button', { name: 'Tresor erstellen' }).click();
-    await expect(page.getByRole('button', { name: 'Zugang eintragen' })).toBeVisible({
+    await expect(page.getByRole('button', { name: 'Zugang eintragen', exact: true })).toBeVisible({
       timeout: 30_000,
     });
-    await page.getByRole('button', { name: 'Zugang eintragen' }).click();
+    await page.getByRole('button', { name: 'Zugang eintragen', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Zugang eintragen' });
     await dialog.getByLabel('Name', { exact: true }).fill('Beispiel-Shop');
     await dialog.getByLabel('Benutzername').fill('alice');

@@ -121,7 +121,10 @@ test('a to-do goes to tomorrow from the row menu (2 clicks) and ticking off stay
   await ready(page, '/todos');
   await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
   await page.getByRole('dialog').getByLabel('Titel').fill('Brot kaufen');
-  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+    .click();
   const row = page.getByRole('listitem').filter({ hasText: 'Brot kaufen' });
   await expect(row).toBeVisible();
 
@@ -149,7 +152,10 @@ test('a to-do is duplicated from the row menu (2 clicks) and the copy is open', 
   await ready(page, '/todos');
   await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
   await page.getByRole('dialog').getByLabel('Titel').fill('Steuer ordnen');
-  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+    .click();
   const rows = page.getByRole('listitem').filter({ hasText: 'Steuer ordnen' });
   await expect(rows).toHaveCount(1);
 

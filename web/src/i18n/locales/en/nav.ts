@@ -41,7 +41,6 @@ export const nav: Strings['nav'] = {
     session: 'Session',
     meal: 'Meal',
     feed: 'Feed',
-    page: 'Page',
   },
   tools: 'Tools',
   favouritesFull: 'You can have at most 5 favourites. Remove another one first.',

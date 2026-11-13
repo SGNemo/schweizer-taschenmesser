@@ -234,7 +234,10 @@ test.describe('Planer (week board, package 1)', () => {
     await ready(page, '/todos');
     await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Alte Sache gestern 60min');
-    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+      .click();
     await expect(page.getByRole('button', { name: /Alte Sache/ }).first()).toBeVisible();
     // Without the plan the overdue thing is on today.
     // The count of today is the head's figure, named by its context line ("heute · etwa 60 Min").

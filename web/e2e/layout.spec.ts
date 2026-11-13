@@ -216,7 +216,9 @@ test.describe('wide screens (1920x1080)', () => {
     await page.getByLabel('Master-Passwort', { exact: true }).fill('Demo-Master-Passwort-1'); // gitleaks:allow
     await page.getByLabel('Master-Passwort wiederholen').fill('Demo-Master-Passwort-1'); // gitleaks:allow
     await page.getByRole('button', { name: 'Tresor erstellen' }).click();
-    await page.getByRole('button', { name: 'Zugang eintragen' }).click({ timeout: 30_000 });
+    await page
+      .getByRole('button', { name: 'Zugang eintragen', exact: true })
+      .click({ timeout: 30_000 });
     const form = page.getByRole('dialog', { name: 'Zugang eintragen' });
     await form.getByLabel('Name', { exact: true }).fill('Demo-Shop example.org');
     await form.getByLabel('Passwort', { exact: true }).fill('demo-passwort-000'); // gitleaks:allow

@@ -25,7 +25,7 @@ async function setUp(page: Page) {
   await page.getByLabel('Master-Passwort', { exact: true }).fill(MASTER);
   await page.getByLabel('Master-Passwort wiederholen').fill(MASTER);
   await page.getByRole('button', { name: 'Tresor erstellen' }).click();
-  await expect(page.getByRole('button', { name: 'Zugang eintragen' })).toBeVisible({
+  await expect(page.getByRole('button', { name: 'Zugang eintragen', exact: true })).toBeVisible({
     timeout: 20_000,
   });
   // The extension is off by default: the open page shows no line about it.

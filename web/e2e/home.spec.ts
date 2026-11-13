@@ -147,7 +147,7 @@ test.describe('Home screen', () => {
       await page.getByRole('dialog').getByLabel('Titel').fill(title);
       await page
         .getByRole('dialog')
-        .getByRole('button', { name: 'Hinzufügen', exact: true })
+        .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
         .click();
       await openEditor(page, page.getByRole('button', { name: new RegExp(title) }));
       await page.getByLabel('Fällig am').fill(due);
@@ -189,7 +189,10 @@ test.describe('Home screen', () => {
     await ready(page, '/todos');
     await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Alt');
-    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+      .click();
     await openEditor(page, page.getByRole('button', { name: /Alt/ }));
     await page.getByLabel('Fällig am').fill('2026-09-20');
     await page
@@ -218,7 +221,10 @@ test.describe('Home screen', () => {
     await ready(page, '/todos');
     await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Alt');
-    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+      .click();
     await openEditor(page, page.getByRole('button', { name: /Alt/ }));
     await page.getByLabel('Fällig am').fill('2026-09-20');
     await page

@@ -81,7 +81,7 @@ test.describe('"Für" – a person or client on appointments and ToDos (QA V14)'
       await page.getByRole('dialog').getByLabel('Titel').fill(title);
       await page
         .getByRole('dialog')
-        .getByRole('button', { name: 'Hinzufügen', exact: true })
+        .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
         .click();
       await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
     }

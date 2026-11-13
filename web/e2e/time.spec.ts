@@ -11,7 +11,10 @@ async function addTask(page: Page, title: string) {
   await ready(page, '/todos');
   await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
   await page.getByRole('dialog').getByLabel('Titel').fill(title);
-  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+    .click();
   await expect(page.getByRole('checkbox', { name: title })).toBeVisible();
 }
 
@@ -63,7 +66,7 @@ test('a calendar event can notify before it starts', async ({ page }) => {
   await dialog.getByRole('button', { name: 'Mehr Felder anzeigen' }).click();
   await dialog.getByRole('button', { name: 'Andere Zeit' }).click();
   await dialog.getByLabel('Benachrichtigen').selectOption({ label: '15 Minuten vorher' });
-  await page.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: 'Termin eintragen' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
   await ready(page, '/calendar?view=day&date=2026-09-29');

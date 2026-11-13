@@ -15,7 +15,10 @@ async function addTodo(page: Page, title: string, due: string) {
   await ready(page, '/todos');
   await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
   await page.getByRole('dialog').getByLabel('Titel').fill(title);
-  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+    .click();
   await page.getByRole('button', { name: new RegExp(title) }).click();
   // ToDos is master–detail: on a wide page the row shows the task in the panel, "Bearbeiten" opens its dialog.
   const edit = page.locator('[data-detail-panel]').getByRole('button', { name: 'Bearbeiten' });

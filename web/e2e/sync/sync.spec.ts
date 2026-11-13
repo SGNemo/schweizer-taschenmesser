@@ -429,10 +429,12 @@ test.describe('password vault', () => {
     await a.page.getByLabel('Master-Passwort', { exact: true }).fill(MASTER);
     await a.page.getByLabel('Master-Passwort wiederholen').fill(MASTER);
     await a.page.getByRole('button', { name: 'Tresor erstellen' }).click();
-    await expect(a.page.getByRole('button', { name: 'Zugang eintragen' })).toBeVisible({
-      timeout: 20_000,
-    });
-    await a.page.getByRole('button', { name: 'Zugang eintragen' }).click();
+    await expect(a.page.getByRole('button', { name: 'Zugang eintragen', exact: true })).toBeVisible(
+      {
+        timeout: 20_000,
+      },
+    );
+    await a.page.getByRole('button', { name: 'Zugang eintragen', exact: true }).click();
     const form = a.page.getByRole('dialog', { name: 'Zugang eintragen' });
     await form.getByLabel('Name', { exact: true }).fill(TITLE);
     await form.getByLabel('Passwort', { exact: true }).fill(PASSWORD);

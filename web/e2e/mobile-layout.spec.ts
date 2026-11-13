@@ -165,7 +165,10 @@ test.describe('top bar with a running focus round', () => {
     await ready(page, '/todos');
     await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Keller aufräumen');
-    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+      .click();
     await expect(page.getByText('Keller aufräumen').first()).toBeVisible();
     await ready(page, '/');
     await page
@@ -191,7 +194,10 @@ test.describe('ToDos on a wide screen', () => {
       .getByRole('dialog')
       .getByLabel('Titel')
       .fill('Ein recht langer Titel für eine Aufgabe');
-    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+      .click();
     const title = page.getByText('Ein recht langer Titel für eine Aufgabe').first();
     await expect(title).toBeVisible();
     // The page has no add field any more (Identity 4.0): the row itself shows the width of the list.

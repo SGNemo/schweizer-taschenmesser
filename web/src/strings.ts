@@ -148,7 +148,6 @@ export const de = {
       session: 'Einheit',
       meal: 'Mahlzeit',
       feed: 'Feed',
-      page: 'Seite',
     },
     tools: 'Werkzeuge',
     favouritesFull: 'Es sind höchstens 5 Favoriten möglich. Entferne zuerst einen anderen.',

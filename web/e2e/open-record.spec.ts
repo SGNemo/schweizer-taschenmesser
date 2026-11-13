@@ -20,7 +20,10 @@ test('searching for a to-do opens its edit dialog: Ctrl+K, text, click the hit',
   await ready(page, '/todos');
   await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
   await page.getByRole('dialog').getByLabel('Titel').fill('Garantie Waschmaschine');
-  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+    .click();
   await expect(
     page.getByRole('listitem').filter({ hasText: 'Garantie Waschmaschine' }),
   ).toBeVisible();

@@ -24,7 +24,10 @@ test.describe('ToDos', () => {
 
     await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Steuererklärung');
-    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+      .click();
     await expect(page.getByRole('checkbox', { name: 'Steuererklärung' })).toBeVisible();
 
     // Edit: priority, due date, subtask
@@ -58,7 +61,10 @@ test.describe('ToDos', () => {
 
     await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Fenster putzen');
-    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+      .click();
     await expect(page.getByRole('checkbox', { name: 'Fenster putzen' })).toBeVisible();
 
     await pickTodosList(page, 'Eingang');
@@ -121,7 +127,10 @@ test.describe('Calendar', () => {
     await ready(page, '/todos');
     await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Paket abholen');
-    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+      .click();
     await openEditor(page, page.getByRole('button', { name: /^Paket abholen/ }));
     await page.getByLabel('Fällig am').fill('2026-09-29');
     await page
@@ -236,7 +245,10 @@ test.describe('Dashboard', () => {
     await ready(page, '/todos');
     await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Bericht senden');
-    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+      .click();
     await openEditor(page, page.getByRole('button', { name: /Bericht senden/ }));
     await page.getByLabel('Fällig am').fill('2026-09-29');
     await page

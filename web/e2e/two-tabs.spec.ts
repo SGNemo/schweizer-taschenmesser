@@ -10,7 +10,10 @@ test('saving in one tab keeps the title changed in the other tab', async ({ page
   await ready(page, '/todos?list=inbox');
   await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
   await page.getByRole('dialog').getByLabel('Titel').fill('Steuererklärung');
-  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+    .click();
   await expect(page.getByRole('checkbox', { name: 'Steuererklärung' })).toBeVisible();
   await openEditor(page, page.getByRole('button', { name: /Steuererklärung/ }));
   const editorA = page.getByRole('dialog');

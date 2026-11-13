@@ -66,7 +66,6 @@ export const PHONE_QUERY = '(max-width: 899px)';
  */
 export function PageAction({
   short,
-  plusName,
   onClick,
   disabled,
   variant = 'primary',
@@ -76,8 +75,6 @@ export function PageAction({
   children,
 }: {
   short: string;
-  /** The plus's name instead of "<short> eintragen", for things one creates to write in ("Neue Liste"); contains `short`. */
-  plusName?: string;
   onClick: () => void;
   disabled?: boolean;
   variant?: 'primary' | 'secondary';
@@ -89,7 +86,7 @@ export function PageAction({
 }) {
   const inShell = !!useHeroControls();
   const phone = useMediaQuery(PHONE_QUERY);
-  usePageAction({ short, name: plusName, onClick, disabled }, inShell);
+  usePageAction({ short, onClick, disabled }, inShell);
   if (inShell && phone) return null;
   return (
     <Button

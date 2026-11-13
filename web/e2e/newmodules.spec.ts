@@ -162,7 +162,7 @@ test('gift ideas: per person, status and what was spent', async ({ page }) => {
   await dialog.getByLabel('Anlass (optional)').fill('Geburtstag');
   await dialog.getByLabel('Preis in € (optional)').fill('19,90');
   await dialog.getByLabel('Link (optional)').fill('javascript:alert(1)');
-  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
+  await dialog.getByRole('button', { name: 'Geschenkidee hinzufügen' }).click();
   await expect(dialog).toBeHidden();
 
   const gifts = page.getByRole('list', { name: 'Geschenke' });

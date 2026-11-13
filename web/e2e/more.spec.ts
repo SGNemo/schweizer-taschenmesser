@@ -58,10 +58,7 @@ test('open gifts of all people in one list; "Verschenkt" is one click and undoab
       .click();
     await page.getByRole('button', { name: 'Geschenkidee hinzufügen' }).first().click();
     await page.getByRole('dialog').getByLabel('Idee', { exact: true }).fill(gift);
-    await page
-      .getByRole('dialog')
-      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
-      .click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Geschenkidee hinzufügen' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
   }
 

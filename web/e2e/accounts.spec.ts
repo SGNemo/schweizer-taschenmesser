@@ -23,13 +23,13 @@ async function setUp(page: Page) {
   await page.getByLabel('Master-Passwort', { exact: true }).fill(MASTER);
   await page.getByLabel('Master-Passwort wiederholen').fill(MASTER);
   await page.getByRole('button', { name: 'Tresor erstellen' }).click(); // Argon2id, 64 MiB
-  await expect(page.getByRole('button', { name: 'Zugang eintragen' })).toBeVisible({
+  await expect(page.getByRole('button', { name: 'Zugang eintragen', exact: true })).toBeVisible({
     timeout: 20_000,
   });
 }
 
 async function addEntry(page: Page, fields: Record<string, string> = {}) {
-  await page.getByRole('button', { name: 'Zugang eintragen' }).click();
+  await page.getByRole('button', { name: 'Zugang eintragen', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Zugang eintragen' });
   await dialog.getByLabel('Name', { exact: true }).fill(fields.title ?? SECRET_TITLE);
   await dialog.getByLabel('Benutzername').fill(fields.username ?? 'alice');
@@ -134,14 +134,14 @@ test('the lock screen is ready to type into: the master password field has the f
   await expect(page.getByLabel('Master-Passwort')).toBeFocused();
   await page.keyboard.type(MASTER);
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('button', { name: 'Zugang eintragen' })).toBeVisible({
+  await expect(page.getByRole('button', { name: 'Zugang eintragen', exact: true })).toBeVisible({
     timeout: 20_000,
   });
 });
 
 test('the generator fills the password field and the strength meter reacts', async ({ page }) => {
   await setUp(page);
-  await page.getByRole('button', { name: 'Zugang eintragen' }).click();
+  await page.getByRole('button', { name: 'Zugang eintragen', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Zugang eintragen' });
   await dialog.getByLabel('Passwort', { exact: true }).fill('passwort');
   await expect(dialog.getByTestId('strength')).toHaveAttribute('data-score', /^[01]$/);
@@ -257,7 +257,7 @@ test('generate a password and save it as an account in one go', async ({ page })
 test('the vault search key focuses the search, but only while unlocked', async ({ page }) => {
   await setUp(page);
   const search = page.getByLabel('Suchen', { exact: false }).first();
-  await page.getByRole('button', { name: 'Zugang eintragen' }).focus(); // somewhere else
+  await page.getByRole('button', { name: 'Zugang eintragen', exact: true }).focus(); // somewhere else
   await page.evaluate(() => window.dispatchEvent(new Event('tm-vault-search')));
   await expect(page).toHaveURL(/\/accounts\?find=\d+/);
   await expect(search).toBeFocused();
@@ -267,7 +267,7 @@ test('the vault search key focuses the search, but only while unlocked', async (
   const before = page.url();
   await page.evaluate(() => window.dispatchEvent(new Event('tm-vault-search')));
   expect(page.url()).toBe(before);
-  await expect(page.getByRole('button', { name: 'Zugang eintragen' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Zugang eintragen', exact: true })).toHaveCount(0);
 });
 
 test('the anonymous persona is handed to the vault form: filled in, saved encrypted, nothing in the address', async ({
@@ -313,7 +313,7 @@ test('the anonymous persona is handed to the vault form: filled in, saved encryp
   await page.goto('/accounts?handoff=1');
   await page.getByLabel('Master-Passwort', { exact: true }).fill(MASTER);
   await page.getByRole('button', { name: 'Entsperren' }).click();
-  await expect(page.getByRole('button', { name: 'Zugang eintragen' })).toBeVisible({
+  await expect(page.getByRole('button', { name: 'Zugang eintragen', exact: true })).toBeVisible({
     timeout: 20_000,
   });
   await expect(page.getByRole('dialog', { name: 'Zugang eintragen' })).toHaveCount(0);

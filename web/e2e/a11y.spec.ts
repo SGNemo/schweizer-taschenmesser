@@ -221,12 +221,14 @@ for (const scheme of ['light', 'dark'] as const) {
       await page.getByLabel('Master-Passwort', { exact: true }).fill(MASTER);
       await page.getByLabel('Master-Passwort wiederholen').fill(MASTER);
       await page.getByRole('button', { name: 'Tresor erstellen' }).click();
-      await expect(page.getByRole('button', { name: 'Zugang eintragen' })).toBeVisible({
-        timeout: 20_000,
-      });
+      await expect(page.getByRole('button', { name: 'Zugang eintragen', exact: true })).toBeVisible(
+        {
+          timeout: 20_000,
+        },
+      );
       await audit(page, `accounts empty (${scheme})`);
 
-      await page.getByRole('button', { name: 'Zugang eintragen' }).click();
+      await page.getByRole('button', { name: 'Zugang eintragen', exact: true }).click();
       const form = page.getByRole('dialog', { name: 'Zugang eintragen' });
       await form.getByLabel('Name', { exact: true }).fill('Beispiel');
       await form.getByLabel('Passwort', { exact: true }).fill('ein-ganz-normales-passwort-1');
