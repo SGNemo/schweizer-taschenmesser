@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import { t } from '@/strings';
 import { Badge } from '../Misc';
@@ -81,6 +82,57 @@ function TimelineRows({ rows }: { rows: ReturnType<typeof buildTimeline> }) {
           </li>
         ),
       )}
+    </ol>
+  );
+}
+
+/** One row of a `DatedTimeline`: a day instead of a time of day. */
+export interface DatedRow {
+  key: string;
+  /** The formatted day ("31. Dez. 2026"). */
+  when: string;
+  title: ReactNode;
+  /** Small tag behind the title ("Kündigen bis", "Abgelaufen"). */
+  kind?: ReactNode;
+  /** The day lies before today: the row is muted and stands above the marker. */
+  past?: boolean;
+  /** Actions of the row, at its end. */
+  end?: ReactNode;
+}
+
+/**
+ * The timeline of the widget catalogue over days instead of hours, for a module page: the same rail, the marker
+ * ("Heute") between what has passed and what comes. Rows arrive in order; the page decides what a row says.
+ */
+export function DatedTimeline({
+  label,
+  rows,
+  marker,
+}: {
+  label: string;
+  rows: readonly DatedRow[];
+  marker: string;
+}) {
+  const firstAhead = rows.findIndex((r) => !r.past);
+  const at = firstAhead === -1 ? rows.length : firstAhead;
+  const row = (r: DatedRow) => (
+    <li key={r.key} className={styles.tlRow} data-past={r.past || undefined}>
+      <span className={styles.tlTime}>{r.when}</span>
+      <span className={styles.tlBody}>
+        {r.title}
+        {r.kind ? <span className={styles.tlKind}>{r.kind}</span> : null}
+        {r.end ? <span className={styles.tlEnd}>{r.end}</span> : null}
+      </span>
+    </li>
+  );
+  return (
+    <ol className={styles.timeline} data-dated aria-label={label}>
+      {rows.slice(0, at).map(row)}
+      <li className={styles.nowRow}>
+        <span className={styles.nowTime}>{marker}</span>
+        <span className={styles.nowLine} aria-hidden="true" />
+      </li>
+      {rows.slice(at).map(row)}
     </ol>
   );
 }
