@@ -654,10 +654,10 @@
       "signatureBlocks": 0
     },
     "p412--invoices": {
-      "height": 1157,
-      "buttons": 33,
+      "height": 978,
+      "buttons": 27,
       "links": 9,
-      "icons": 30,
+      "icons": 24,
       "firstScreenActions": 38,
       "borders": 0,
       "shadows": 0,
@@ -834,11 +834,11 @@
       "signatureBlocks": 0
     },
     "p412--subscriptions": {
-      "height": 1301,
-      "buttons": 24,
+      "height": 915,
+      "buttons": 15,
       "links": 9,
-      "icons": 22,
-      "firstScreenActions": 26,
+      "icons": 13,
+      "firstScreenActions": 23,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
