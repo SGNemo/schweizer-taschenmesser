@@ -77,6 +77,9 @@ export default function InvoicesPage() {
     picked === 'closed'
       ? undefined
       : ((picked ? shown.find((i) => i.id === picked.id) : undefined) ?? firstShown);
+  const firstOpenId = (
+    view === 'open' ? timeGroups[0]?.items[0] : shown.find((i) => i.status === 'open')
+  )?.id;
   const openRow = (i: Stored<Invoice>) => (wide ? setPicked({ id: i.id }) : setTarget(i));
 
   function renderRow(i: Stored<Invoice>) {
@@ -98,6 +101,7 @@ export default function InvoicesPage() {
       <ItemRow
         key={i.id}
         title={i.payee}
+        className={styles.row}
         tone={urgent ? (state.tone as 'overdue' | 'today') : undefined}
         meta={
           i.status === 'paid' ? (
@@ -185,7 +189,10 @@ export default function InvoicesPage() {
               {formatMoney(i.status === 'open' ? remainingMinor(i) : i.amountMinor, i.currency)}
             </span>
             {i.status === 'open' ? (
-              narrow || (wide && detail !== undefined && !roomy) ? (
+              // Phone (G4): only the first open row keeps its pay button (the next one to pay); the others pay
+              // from the swipe and the row's menu, so the name keeps one line beside the amount.
+              narrow && i.id !== firstOpenId ? null : narrow ||
+                (wide && detail !== undefined && !roomy) ? (
                 <IconButton label={t.invoices.markPaid} onClick={() => void pay(i.id)}>
                   <Icon name="check" />
                 </IconButton>

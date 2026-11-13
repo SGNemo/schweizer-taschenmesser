@@ -220,6 +220,11 @@ KS-3. _Windows Hello:_ Accounts → Tresor anlegen/entsperren → „Import, Exp
 KS-4. _Abbruch:_ Beim Hello-Fenster „Abbrechen" → Tresor bleibt gesperrt, Passwortfeld und Button „Mit Biometrie entsperren" sind da. ☐
 KS-5. _Deaktivieren:_ „Biometrisches Entsperren deaktivieren" → beim nächsten Sperren kein Hello-Fenster mehr; der Eintrag `bio:vault-dek:…` ist aus dem Credential Manager verschwunden. ☐
 KS-6. _Ohne Hello (kein PIN/Gesicht eingerichtet):_ Abschnitt zeigt „Nicht verfügbar…", nichts bricht. ☐
+KS-13. _Siegel nur über Hello (`fix/secure-store-bio-prefix`):_ Dev-Build (`npm run tauri -- dev`), biometrisches Entsperren aktiv, Tresor gesperrt. In den DevTools (F12) `window.__TAURI_INTERNALS__.invoke('plugin:secure-store|get', { request: { name: 'bio:vault-dek:<id>' } })` (`<id>` aus dem Credential-Manager-Eintrag) → Fehler „reserved name", kein Schlüssel; dasselbe mit `set` und `delete`, der Eintrag bleibt unverändert. Danach „Mit Biometrie entsperren" → Hello-Fenster, Tresor offen. ☐
+KS-14. _Hello-Bindung, neu aktivieren (`feat/secure-store-hello-bound-dek`):_ Biometrisches Entsperren aus- und wieder einschalten → Windows Hello fragt (Anzahl der Abfragen notieren: 1 oder 2), das Fenster liegt **vor** der App (falls nicht sichtbar: Alt+Tab bzw. Taskleiste – dann als Fehler notieren; auch ein „hängendes“ Entsperren bedeutet meist ein verdecktes Hello-Fenster). Sperren → „Mit Biometrie entsperren" → ein Hello-Fenster, Tresor offen. **Noch einmal** sperren und entsperren → wieder offen (prüft, dass Hello gleich signiert). Abbrechen → Tresor bleibt zu, nächster Versuch klappt. ☐
+KS-15. _Umstieg von der alten Version:_ Alles mit der **Dev-Preview** (sie hat eigene Daten, die stabile Version sieht diese Einträge nicht). Vor dem Merge dieses PRs: Dev-Preview starten, biometrisches Entsperren aktivieren, App schließen (PR schon gemergt: KS-15 entfällt, nur KS-14 und KS-16 prüfen). Nach dem Merge: Dev-Preview aktualisieren (erscheint nach dem Lauf auf `develop`) → das erste Hello-Fenster **abbrechen**, KS-16 ausführen (Wert noch ohne `h1:`), dann „Mit Biometrie entsperren" → Windows fragt 1- bis 2-mal (notieren), Tresor offen; ab dem zweiten Mal nur noch eine Abfrage. ☐
+KS-16. _Gespeicherter Wert ist nicht der Schlüssel:_ PowerShell als normaler Nutzer öffnen. `Set-ExecutionPolicy -Scope Process Bypass` (gilt nur für dieses Fenster), dann `Install-Module CredentialManager -Scope CurrentUser` (Modul aus der PowerShell Gallery; Rückfrage „nicht vertrauenswürdiges Repository" mit J bestätigen; danach mit `Uninstall-Module CredentialManager` wieder entfernbar). `cmdkey /list | findstr bio:` → aus der Zeile `Ziel: LegacyGeneric:target=…` **nur den Text nach `target=`** kopieren (Dev-Preview: endet auf `.dev`), dann `(Get-StoredCredential -Target '<kopierter Text>').GetNetworkCredential().Password` → der Wert beginnt mit `h1:` (im Zwischenschritt von KS-15 dagegen noch ohne `h1:`). ☐
+KS-17. _Hello zurückgesetzt:_ **Nur mit einem Test-Windows-Konto oder in einer VM** – ein PIN-Reset löscht alle Hello-Schlüssel des Kontos (auch Passkeys anderer Apps). Im Test-Konto: Einstellungen → Konten → Anmeldeoptionen → PIN → „Ich habe meine PIN vergessen" und neue PIN setzen → „Mit Biometrie entsperren" meldet „nicht mehr gültig", Master-Passwort öffnet, Neu-Aktivieren klappt. ☐
 
 #### Launch-Review: Handtests (aus STATUS verschoben, 2026-11-10; Bericht [security/LAUNCH-REVIEW-2026-10-06.md](security/LAUNCH-REVIEW-2026-10-06.md))
 
@@ -429,6 +434,13 @@ PL3. _Tastatur (Windows):_ Graph anklicken oder mit Tab erreichen, Pfeiltasten v
 
 - **PF1 Portable-Exe, große Datenmenge:** Dev-Preview-Build, Einstellungen → Entwickler → Testdaten „Groß“ laden (die Skala `xl` gibt es nur in `npm run measure:data`). Übersicht öffnen, Kalender, Budgets, Finanzen öffnen, in der Befehlspalette „tankstelle“ suchen: Zeiten notieren (Stoppuhr), Speicher im Task-Manager. ☐
 - **PF3 Festplatte-Modul (Rust):** „Dieser PC“ → Löschen-Plan und Details eines großen Ordners: bleibt das Fenster bedienbar (Ziel: ja)? Zeiten in die Baseline eintragen. ☐
+
+#### Klick bis Inhalt (0b-8 Performance, [perf/CLICK-TO-CONTENT-2026-11.md](perf/CLICK-TO-CONTENT-2026-11.md))
+
+Dev-Preview-Exe, Einstellungen → Entwickler → Testdaten „Mittel“, alle Module an. Gemessen wird mit der Handy-Stoppuhr oder einer Bildschirmaufnahme (30 fps reichen): vom Klick bis die Überschrift steht („erster Inhalt“) und bis nichts mehr nachrückt („fertig“: Zahlen, Zeilen, Widgets stehen, kein „…“, keine grauen Platzhalter). Jeden Punkt zweimal: direkt nach dem App-Start (erster Besuch) und noch einmal nach einem Wechsel zur Übersicht (zweiter Besuch). Werte in den Bericht (Tabelle „Geräte“) eintragen.
+- **PF-K1 Module:** je Modul die App neu starten und es in der Seitenleiste öffnen: Finanzen, Kalender, ToDos, Notizen, Budgets, Gerätestatus. Notieren: erster Inhalt, fertig. Fällt ein Modul mit über 1 s „fertig“ auf, den Namen dazuschreiben. ☐
+- **PF-K2 Einstellungen, Bibliothek, Übersicht:** nach dem Start Einstellungen öffnen, dann Module-Bibliothek, dann von ToDos zurück zur Übersicht: je erster Inhalt und fertig; dazu, ob die Status-Zeilen der Einstellungen springen (sechs → drei Zeilen). ☐
+- **PF-K3 Eintragen-Dialoge:** auf Finanzen, ToDos und Kalender den Haupt-Knopf („… eintragen“) drücken: Zeit bis der Dialog steht und das erste Feld den Cursor hat; zweimal je Seite. ☐
 
 ## Android
 
@@ -753,6 +765,13 @@ AP4. _Android:_ die Zeilen mit „Kopieren“ und „Neu würfeln“ sind gut tr
 #### Datenebene: Messung auf Geräten (Phase 1, [perf/DATA-BASELINE-2026-11-03.md](perf/DATA-BASELINE-2026-11-03.md))
 
 - **PF2 Android-Gerät, große Datenmenge:** wie PF1 auf einem echten Gerät (oder Emulator): Start bis zur Übersicht, Modul öffnen, Suche, Schnellerfassung; Backup erstellen und wiederherstellen. Messwerte der Emulation (4× CPU) stehen in der Baseline. ☐
+
+#### Klick bis Inhalt (0b-8 Performance, [perf/CLICK-TO-CONTENT-2026-11.md](perf/CLICK-TO-CONTENT-2026-11.md))
+
+Dev-Preview-APK auf dem eigenen Handy, Testdaten „Mittel“, Messung wie bei PF-K1 (Bildschirmaufnahme des Handys, dann Bild für Bild). Die Web-Ansicht von Android ist langsamer als Chromium im Container; diese Werte entscheiden, ob die Zielwerte auf dem Handy halten.
+- **PF-K4 Module:** App frisch starten, über „Bereiche“ Finanzen öffnen; neu starten, ToDos; neu starten, Kalender; neu starten, Notizen. Je erster Inhalt und fertig; dann je einmal zurück zur Übersicht und wieder hinein (zweiter Besuch). ☐
+- **PF-K5 Einstellungen und Übersicht:** nach dem Start Einstellungen öffnen (erster Inhalt, fertig, springen die Status-Zeilen?); aus ToDos zurück zur Übersicht (bis alle Widgets stehen). ☐
+- **PF-K6 Eintragen über den Plus-Knopf:** auf ToDos und Finanzen den Plus-Knopf: Zeit bis das Blatt steht und die Tastatur offen ist; zweimal je Seite. ☐
 
 ## Beide Geräte: zusammen oder je einmal
 

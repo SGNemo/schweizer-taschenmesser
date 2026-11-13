@@ -2,7 +2,8 @@ use tauri::{command, AppHandle, Runtime};
 
 use crate::{models::*, Error, Result, SecureStoreExt};
 
-/// The webview never reaches Rust-only entries (`RUST_ONLY_PREFIX`).
+/// The webview never reaches Rust-only entries (`RUST_ONLY_PREFIX`) nor, through `get`/`set`/`delete`,
+/// the sealed vault keys (`BIO_PREFIX`; the `biometric_*` commands add it in Rust).
 fn webview_name(name: &str) -> Result<()> {
     validate_webview_name(name).map_err(Error::Invalid)
 }
@@ -76,7 +77,7 @@ pub(crate) async fn biometric_delete<R: Runtime>(
     request: NameRequest,
 ) -> Result<()> {
     webview_name(&request.name)?;
-    app.secure_store().biometric_delete(request)
+    app.secure_store().biometric_delete(request).await
 }
 
 #[command]

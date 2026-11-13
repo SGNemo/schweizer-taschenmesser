@@ -6251,14 +6251,18 @@ name = "tauri-plugin-secure-store"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
+ "chacha20poly1305",
+ "getrandom 0.3.4",
  "keyring",
  "serde",
  "serde_json",
+ "sha2",
  "tauri",
  "tauri-plugin",
  "thiserror 2.0.21",
  "windows 0.61.3",
  "windows-future 0.2.1",
+ "zeroize",
 ]
 
 [[package]]

@@ -1,5 +1,5 @@
 import { compareText } from '@/core/i18n/format';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { currencyOf, formatMoney, parseMoney } from '@/core/money';
 import { getPlatform } from '@/core/platform';
@@ -43,6 +43,7 @@ export function TransactionsTab({
   onEdit,
   onAdd,
   selectedId,
+  onExport,
 }: {
   data: FinanceData;
   month: string;
@@ -53,6 +54,11 @@ export function TransactionsTab({
   onAdd?: () => void;
   /** The booking shown in the detail panel of a wide page: its row is marked. */
   selectedId?: string;
+  /**
+   * The page's "⋯" menu exports what this list shows (G7): the list keeps the filter state, so it hands the page
+   * the export of its current rows, or `null` while there is nothing to export.
+   */
+  onExport?: (run: (() => Promise<void>) | null) => void;
 }) {
   const currency = useCurrency();
   const [params] = useSearchParams();
@@ -99,6 +105,24 @@ export function TransactionsTab({
     (id) => (id ? category.get(id) : undefined),
   ).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
   const filtering = searching || kind !== 'all' || narrowed;
+  const exportCsv = async () => {
+    const e = t.finance.ext.export;
+    const csv = bookingsCsv(
+      inMonth,
+      (id) => account.get(id) ?? '',
+      (id) => (id ? (category.get(id) ?? '') : ''),
+      { header: e.header, expense: e.expense, income: e.income, transfer: e.transfer },
+      { decimal: decimalSeparator() === ',' ? ',' : '.', bom: true },
+    );
+    const name = `${e.file}-${filtering ? 'filter' : month}.csv`;
+    if ((await getPlatform().saveFile({ fileName: name, data: csv, mime: 'text/csv' })) === 'saved')
+      useUiStore.getState().toast(e.done);
+  };
+  // The export always takes the rows of this moment (search, kind, month, the filters of "Mehr").
+  useEffect(() => {
+    onExport?.(inMonth.length > 0 ? exportCsv : null);
+  });
+  useEffect(() => () => onExport?.(null), [onExport]);
   if (data.txs.length === 0 || (inMonth.length === 0 && !filtering))
     return (
       <>
@@ -120,20 +144,6 @@ export function TransactionsTab({
       </>
     );
 
-  async function exportCsv() {
-    const e = t.finance.ext.export;
-    const csv = bookingsCsv(
-      inMonth,
-      (id) => account.get(id) ?? '',
-      (id) => (id ? (category.get(id) ?? '') : ''),
-      { header: e.header, expense: e.expense, income: e.income, transfer: e.transfer },
-      { decimal: decimalSeparator() === ',' ? ',' : '.', bom: true },
-    );
-    const name = `${e.file}-${searching || narrowed ? 'filter' : month}.csv`;
-    if ((await getPlatform().saveFile({ fileName: name, data: csv, mime: 'text/csv' })) === 'saved')
-      useUiStore.getState().toast(e.done);
-  }
-
   const days = [...new Set(inMonth.map((x) => x.date))];
   const dayFormat = searching ? 'EEEE, d. MMMM yyyy' : 'EEEE, d. MMMM';
   return (
@@ -144,19 +154,15 @@ export function TransactionsTab({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
       />
-      {/* The export sits next to the list it exports; the filters stay in the "Erweitert" layer. */}
-      <div className={styles.toolbarRow}>
-        {advanced || narrowed || more ? (
+      {/* The filters stay in the "Erweitert" layer; the export of what the list shows is in the page's "⋯" menu (G7). */}
+      {advanced || narrowed || more ? (
+        <div className={styles.toolbarRow}>
           <Button variant="ghost" aria-expanded={more} onClick={() => setMore(!more)}>
             {t.finance.ext.filter.more}
             {narrowed ? ' •' : ''}
           </Button>
-        ) : null}
-        <Button variant="ghost" onClick={() => void exportCsv()} disabled={inMonth.length === 0}>
-          <Icon name="download" size={18} />
-          {t.finance.ext.export.button}
-        </Button>
-      </div>
+        </div>
+      ) : null}
       {more ? (
         <div className={styles.filterBox}>
           <div className={styles.toolbarRow}>
@@ -410,7 +416,7 @@ export function CategoriesTab({ data }: { data: FinanceData }) {
                   .map((k) => row(k, true)),
               ])}
             </ItemList>
-            <div className={patternStyles.hstack} style={{ marginTop: 'var(--space-3)' }}>
+            <div className={`${patternStyles.hstack} ${styles.groupFoot}`}>
               <Button onClick={() => setTarget({ draft: true, kind: g.kind })}>
                 <Icon name="plus" size={18} />
                 {t.finance.addCategory}

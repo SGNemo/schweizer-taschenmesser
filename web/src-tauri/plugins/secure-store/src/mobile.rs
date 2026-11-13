@@ -80,7 +80,7 @@ impl<R: Runtime> SecureStore<R> {
             .map_err(Into::into)
     }
 
-    pub fn biometric_delete(&self, request: NameRequest) -> Result<()> {
+    pub async fn biometric_delete(&self, request: NameRequest) -> Result<()> {
         validate_name(&request.name).map_err(Error::Invalid)?;
         self.0
             .run_mobile_plugin::<Value>("biometricDelete", request)

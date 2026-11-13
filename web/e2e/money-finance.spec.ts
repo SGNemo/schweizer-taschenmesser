@@ -46,7 +46,7 @@ test.describe('Finance: transfers, splits, year, outlook', () => {
     await save(page);
 
     await ready(page, '/finance?tab=accounts');
-    await expect(page.getByTestId('balance-Girokonto')).toHaveText(/-250,00\s€/);
+    await expect(page.getByTestId('balance-Girokonto')).toHaveText(/\u2212250,00\s€/);
     await expect(page.getByTestId('balance-Sparkonto')).toHaveText(/1\.250,00\s€/);
 
     await ready(page, '/finance?tab=overview');
