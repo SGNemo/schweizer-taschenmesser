@@ -5,9 +5,7 @@ breaking: false
 de: Im Planer-Feld liest in der Windows-App ein lokales Modell Sätze, die die festen Regeln nicht verstehen – nur auf dem Gerät, immer erst als Vorschau.
 en: In the planner's field, the Windows app lets a local model read German plan sentences the fixed rules cannot – on the device only, always as a preview first.
 ---
-
 ---
-
 type: added
 area: todos
 breaking: false

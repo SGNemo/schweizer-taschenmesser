@@ -6,9 +6,7 @@ pr: 746
 de: Der Kalender ist ruhiger, ohne Rahmen und mit weniger Farbe. Ein neuer Termin fragt zuerst nur nach Titel, Tag und Zeit, der Rest steht hinter „Mehr Felder“.
 en: The calendar is calmer, without frames and with less colour. A new event first asks only for title, day and time; the rest is behind “More fields”.
 ---
-
 ---
-
 type: changed
 area: todos
 breaking: false
