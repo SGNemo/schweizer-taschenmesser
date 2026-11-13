@@ -172,6 +172,8 @@ export interface ConnectorContext {
   /** Small per-connector secrets (never synced). */
   secrets: {
     get(name: string): Promise<string | undefined>;
+    /** Only whether a non-empty value is stored; use it for "is it set?" instead of `get`. */
+    has(name: string): Promise<boolean>;
     set(name: string, value: string): Promise<void>;
     delete(name: string): Promise<void>;
   };

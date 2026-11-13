@@ -125,19 +125,36 @@ for (const vp of VIEWPORTS) {
       await page.goto('/');
       await expect(page.locator('main h1')).toBeVisible();
       await expect(page.getByTestId(/^widget-/).first()).toBeVisible();
-      const boxes = await page.evaluate(() =>
-        [...document.querySelectorAll<HTMLElement>('[data-testid^="widget-"]')].map((el) => ({
-          top: Math.round(el.getBoundingClientRect().top + window.scrollY),
-          height: Math.round(el.getBoundingClientRect().height),
-          span: getComputedStyle(el).gridRowStart,
-        })),
-      );
-      const seen = new Map<string, number>();
-      for (const b of boxes) {
-        const key = `${b.top}/${b.span}`;
-        if (seen.has(key)) expect(b.height, `band ${key}`).toBe(seen.get(key));
-        else seen.set(key, b.height);
-      }
+      // Cards are as high as their content (package 0b-7) and their span follows their height one rendering step
+      // later (ResizeObserver, `home/masonry.ts`): a card whose data arrives late grows first and re-packs in the
+      // next frame. Measure the shown grid after a frame and until it is at rest; a band that stays uneven fails.
+      await expect(page.locator('[data-settling]')).toHaveCount(0);
+      await expect(async () => {
+        const boxes = await page.evaluate(
+          () =>
+            new Promise<{ top: number; height: number; span: string }[]>((resolve) =>
+              requestAnimationFrame(() =>
+                setTimeout(() =>
+                  resolve(
+                    [...document.querySelectorAll<HTMLElement>('[data-testid^="widget-"]')].map(
+                      (el) => ({
+                        top: Math.round(el.getBoundingClientRect().top + window.scrollY),
+                        height: Math.round(el.getBoundingClientRect().height),
+                        span: getComputedStyle(el).gridRowStart,
+                      }),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        );
+        const seen = new Map<string, number>();
+        for (const b of boxes) {
+          const key = `${b.top}/${b.span}`;
+          if (seen.has(key)) expect(b.height, `band ${key}`).toBe(seen.get(key));
+          else seen.set(key, b.height);
+        }
+      }).toPass({ timeout: 5_000 });
     });
 
     test('the calendar month grid uses the available height and width', async ({ page }) => {

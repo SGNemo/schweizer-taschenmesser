@@ -13,6 +13,7 @@ import {
 const secrets = {
   protection: 'device-key' as const,
   get: async () => undefined,
+  has: async () => false,
   set: async () => undefined,
   delete: async () => undefined,
 };

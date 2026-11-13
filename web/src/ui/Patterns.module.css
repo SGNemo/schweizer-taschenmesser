@@ -99,9 +99,10 @@
   white-space: nowrap;
   cursor: pointer;
 }
-/* Touch devices get the full 44 px target (track 40 px for the mouse): the button looks 36 px and
-   its hit strip reaches over the 4 px track padding (C09; the padding alone took no taps). */
-@media (pointer: coarse) {
+/* Any touch screen gets the full 44 px target (track 40 px for a mouse alone): the button looks 36 px and
+   its hit strip reaches over the 4 px track padding (C09; the padding alone took no taps). `any-pointer`, like the
+   sidebar's exception: a touch laptop's primary pointer is fine, but a finger reaches the options too (0b-8, F4). */
+@media (any-pointer: coarse) {
   .segment button {
     position: relative;
     min-height: calc(var(--touch) - 2 * var(--space-1));
@@ -519,6 +520,10 @@ button.chip[aria-pressed='true'] {
   display: flex;
   flex-direction: column;
 }
+/* SplitView without its panel: the wrappers stay (the main content keeps its elements and its focus), without layout. */
+.splitOff {
+  display: contents;
+}
 .splitAside {
   position: relative;
   min-width: 0;
@@ -528,44 +533,6 @@ button.chip[aria-pressed='true'] {
   position: absolute;
   inset: 0;
   overflow-y: auto;
-}
-
-/* Lists and card grids fade in with a tiny stagger (first six items only). */
-.list > *,
-.grid > * {
-  animation: itemIn var(--dur) var(--ease-out) both;
-}
-.list > :nth-child(2),
-.grid > :nth-child(2) {
-  animation-delay: 30ms;
-}
-.list > :nth-child(3),
-.grid > :nth-child(3) {
-  animation-delay: 60ms;
-}
-.list > :nth-child(4),
-.grid > :nth-child(4) {
-  animation-delay: 90ms;
-}
-.list > :nth-child(5),
-.grid > :nth-child(5) {
-  animation-delay: 120ms;
-}
-.list > :nth-child(n + 6),
-.grid > :nth-child(n + 6) {
-  animation-delay: 150ms;
-}
-@keyframes itemIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .list > *,
-  .grid > * {
-    animation-delay: 0ms;
-  }
 }
 
 /* Layout utilities for module pages (replace one-off inline styles). */

@@ -35,6 +35,7 @@ function mock(handler: (url: URL, call: number) => Response) {
     fetchPublic: fetchFn,
     secrets: {
       get: async () => undefined,
+      has: async () => false,
       set: async () => undefined,
       delete: async () => undefined,
     },
