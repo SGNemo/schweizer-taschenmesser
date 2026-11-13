@@ -274,8 +274,9 @@
   }
 }
 
-/* Rail (collapsed): the brand tile, then quiet grey icons in 44 px tiles. Colour means "you are here": only the active
-   area shows its hue (icon and tile). The name is the accessible name and a tooltip drawn from it. */
+/* Rail (collapsed): the brand tile, then the icons in 44 px tiles. An area's icon is in the area's colour, a quiet
+   mark of what is what (grey in "Ruhig" and with "Modulfarben: Aus"); only the active area also fills its tile with
+   it. Übersicht, Bibliothek and Einstellungen stay grey. The name is the accessible name and a tooltip drawn from it. */
 /* The tile fills the rail's content box, like the nav tiles below it (2.75rem; the pixel grid: AppShell.module.css). */
 .brandTile {
   display: block;
@@ -315,6 +316,9 @@
   background: var(--surface-2);
   color: var(--text);
 }
+li[data-area] .railLink {
+  color: var(--area-color);
+}
 /* Übersicht, Bibliothek, Einstellungen: the tile of the calm colour mode, a grey as strong as an area's tint. */
 .railLink[aria-current='page'] {
   background: color-mix(in srgb, var(--text-3) 18%, var(--surface));
@@ -353,7 +357,12 @@ li[data-area] .railLink[aria-current='page'] {
     transition-delay: var(--dur-slow);
   }
 }
-/* "Ruhig" / "Modulfarben: Aus": the area colour is a grey there, so the active icon takes the text colour. */
+/* "Modulfarben: Aus" leaves the area colours as they are (they are categories), so the rail greys its icons itself;
+   in "Ruhig" the area colour is a grey already. */
+:global(:root[data-module-colors='off']) li[data-area] .railLink {
+  color: var(--text-muted);
+}
+/* "Ruhig" / "Modulfarben: Aus": the active icon takes the text colour. */
 :global(:root[data-color='calm']) li[data-area] .railLink[aria-current='page'],
 :global(:root[data-module-colors='off']) li[data-area] .railLink[aria-current='page'] {
   color: var(--text);
