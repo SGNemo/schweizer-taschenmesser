@@ -67,8 +67,9 @@ pub enum Unsealed {
 }
 
 /// Seals `secret_b64` under the Hello key `key`. `aad` binds the blob to its entry name.
-/// Cancelled or failed after the Hello key may have been replaced: entry and key are removed, so the
-/// result is always either "sealed" or "not enrolled", never a seal that can no longer be opened.
+/// Any cancel or failure removes entry and key, so the result is always "sealed" or "not enrolled",
+/// never a seal that can no longer be opened. The app only seals when not enrolled (enable, vault
+/// setup), so nothing working is lost by that.
 pub fn seal(
     hello: &dyn HelloKeys,
     slot: &dyn Slot,
@@ -87,7 +88,8 @@ pub fn seal(
         Err(e) => Err(e),
     };
     if result.is_err() {
-        delete(hello, slot, key)?;
+        // Best effort: the caller must still see the original answer (e.g. `cancelled`).
+        let _ = delete(hello, slot, key);
     }
     result
 }

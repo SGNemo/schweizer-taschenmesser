@@ -140,14 +140,24 @@ impl<R: Runtime> SecureStore<R> {
         })
     }
 
+    /// Never prompts and does not wait for an open Hello prompt (no `with_hello` turn); a missing
+    /// Hello key is ignored.
     pub async fn biometric_delete(&self, request: NameRequest) -> Result<()> {
-        if !biometric_available() {
-            // Nothing can have been sealed here; still clear a stray entry.
-            return remove(&format!("{BIO_PREFIX}{}", request.name));
-        }
         let name = request.name;
-        with_hello(move |hello| sealed::delete(hello, &KeyringSlot::bio(&name), &hello_key(&name)))
+        #[cfg(windows)]
+        {
+            tauri::async_runtime::spawn_blocking(move || {
+                sealed::delete(
+                    &hello::WindowsHello,
+                    &KeyringSlot::bio(&name),
+                    &hello_key(&name),
+                )
+            })
             .await
+            .map_err(|e| Error::Biometric(e.to_string()))?
+        }
+        #[cfg(not(windows))]
+        remove(&format!("{BIO_PREFIX}{name}"))
     }
 
     /// The phone's "prove you are there" prompt; no desktop caller exists.
@@ -191,7 +201,8 @@ fn hello_key(name: &str) -> String {
 }
 
 /// Hello calls block until the person answers: run them (and the keyring calls between) off the
-/// async runtime, one at a time (a double click must not interleave two seals of the same key).
+/// async runtime, one at a time (a double click must not interleave two seals of the same key). While
+/// a prompt is open (also one hidden behind the window), a second unlock waits for it.
 #[cfg(windows)]
 async fn with_hello<T: Send + 'static>(
     f: impl FnOnce(&dyn sealed::HelloKeys) -> Result<T> + Send + 'static,
