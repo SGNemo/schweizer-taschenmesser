@@ -49,6 +49,45 @@ describe('SplitView focus (0b-8)', () => {
     expect(document.activeElement).toBe(row);
   });
 
+  it('when the row is gone (deleted from the panel), the focus goes to the first control of the list', () => {
+    function Deleting() {
+      const [rows, setRows] = useState(['a', 'b']);
+      const [open, setOpen] = useState<string | undefined>();
+      return (
+        <SplitView
+          enabled={open !== undefined}
+          asideLabel="Detail"
+          aside={
+            <button
+              type="button"
+              onClick={() => {
+                setRows((r) => r.filter((x) => x !== open));
+                setOpen(undefined);
+              }}
+            >
+              delete
+            </button>
+          }
+        >
+          {rows.map((r) => (
+            <button key={r} type="button" onClick={() => setOpen(r)}>
+              row {r}
+            </button>
+          ))}
+        </SplitView>
+      );
+    }
+    render(<Deleting />);
+    const b = screen.getByRole('button', { name: 'row b' });
+    b.focus();
+    act(() => b.click());
+    const del = screen.getByRole('button', { name: 'delete' });
+    del.focus();
+    act(() => del.click());
+    expect(screen.queryByRole('button', { name: 'row b' })).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'row a' }));
+  });
+
   it('a focus outside the panel is left alone when it closes', () => {
     render(
       <>

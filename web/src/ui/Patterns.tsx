@@ -478,6 +478,9 @@ export function useSplitView(query?: string): boolean {
   return query === undefined && page !== undefined ? page : viewport;
 }
 
+const FOCUSABLE =
+  'a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])';
+
 /**
  * Main content plus a side panel. With `enabled` false only the main content shows, so the
  * panel is a structural decision (never merely hidden, never a duplicate in the DOM).
@@ -485,7 +488,7 @@ export function useSplitView(query?: string): boolean {
  * Focus (0b-8): the main content keeps its elements when the panel opens or closes (the wrappers stay and only lose
  * their layout, `display: contents`), so the row that opened the panel keeps the focus. When the panel closes while
  * the focus is in it, the focus goes back to where it last was in the main content (else the current row, else the
- * main content itself) instead of falling to the page.
+ * first focusable element there) instead of falling to the page.
  */
 export function SplitView({
   children,
@@ -512,11 +515,14 @@ export function SplitView({
     if (!lost || (active !== null && active !== document.body)) return;
     const main = mainRef.current;
     if (!main) return;
+    // The wrapper itself is `display: contents` now and takes no focus: fall back to the current row, else the first
+    // focusable element of the main content (an entry deleted from the panel leaves no row behind).
     const last = lastInMain.current;
-    const current = main.querySelector<HTMLElement>('[aria-current="true"], [aria-current="page"]');
-    const target = last?.isConnected ? last : (current ?? main);
-    if (target === main && !main.hasAttribute('tabindex')) main.tabIndex = -1;
-    target.focus({ preventScroll: true });
+    const target = last?.isConnected
+      ? last
+      : (main.querySelector<HTMLElement>('[aria-current="true"], [aria-current="page"]') ??
+        main.querySelector<HTMLElement>(FOCUSABLE));
+    target?.focus({ preventScroll: true });
   }, [enabled]);
   return (
     <div className={enabled ? styles.splitView : styles.splitOff}>
