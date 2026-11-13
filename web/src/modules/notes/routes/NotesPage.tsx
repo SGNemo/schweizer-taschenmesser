@@ -337,6 +337,7 @@ export default function NotesPage() {
           // No page yet: the empty state of the list holds the filled button.
           variant={notes && !notes.some((n) => !isScratch(n)) ? 'secondary' : 'primary'}
           onClick={newPage}
+          title={t.notes.shortcutNew}
         >
           <Icon name="plus" size={18} />
           {t.notes.newPage}

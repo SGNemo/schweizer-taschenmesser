@@ -453,3 +453,23 @@ describe('signature-blocks.json', () => {
     expect(writers).toEqual(['src/ui/Patterns.tsx']);
   });
 });
+
+it('the tone steps --surface-raised and --surface-sunken are plain surfaces, also as a cool dark grey', () => {
+  const root = document.documentElement.style;
+  root.setProperty('--surface-raised', 'rgb(27, 33, 38)');
+  root.setProperty('--surface-sunken', 'rgb(12, 15, 18)');
+  try {
+    const steps = mount(
+      `<div ${box(200, 80, 10)} style="background-color: rgb(27, 33, 38);"></div><div ${box(200, 80, 10)} style="background-color: rgb(12, 15, 18);"></div>`,
+    );
+    expect(steps.colouredSurfaces).toBe(0);
+    // The same saturation in a grey that is no token still counts.
+    const other = mount(
+      `<div ${box(200, 80, 10)} style="background-color: rgb(28, 33, 39);"></div>`,
+    );
+    expect(other.colouredSurfaces).toBe(1);
+  } finally {
+    root.removeProperty('--surface-raised');
+    root.removeProperty('--surface-sunken');
+  }
+});

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router';
 import { setFavourite, useStoredFavourites } from '@/core/settings/nav';
 import { areaOfPath, type NavArea, type NavItem, type NavTree } from '@/core/modules/areas';
@@ -178,12 +179,42 @@ function RailLink({
         className={styles.railLink}
         aria-current={active ? 'page' : undefined}
         aria-label={label}
+        data-rail-link
       >
         <Icon name={icon} />
         {dot ? <NewDot floating /> : null}
       </Link>
     </li>
   );
+}
+
+/**
+ * Escape hides the name of the rail icon under the pointer or the focus (WCAG 1.4.13: a tooltip can be dismissed
+ * without moving pointer or focus); it comes back when the pointer leaves the icon or the focus moves on.
+ */
+function useRailTipEscape(on: boolean) {
+  useEffect(() => {
+    if (!on) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      const focused = document.activeElement?.closest<HTMLElement>('[data-rail-link]');
+      const hovered = [...document.querySelectorAll<HTMLElement>('[data-rail-link]')].filter((el) =>
+        el.matches(':hover'),
+      );
+      for (const el of new Set([...(focused ? [focused] : []), ...hovered])) {
+        el.dataset.tipOff = '';
+        const back = () => {
+          delete el.dataset.tipOff;
+          el.removeEventListener('pointerleave', back);
+          el.removeEventListener('blur', back);
+        };
+        el.addEventListener('pointerleave', back);
+        el.addEventListener('blur', back);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [on]);
 }
 
 export function Sidebar({ tree, rail, canExpand }: Props) {
@@ -195,6 +226,7 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
   const activeArea = areaOfPath(tree, pathname)?.id;
   const clockOn = useClockOn();
   const favouritesReady = useStoredFavourites().ready;
+  useRailTipEscape(rail);
 
   const link = (
     <a
@@ -258,6 +290,7 @@ export function Sidebar({ tree, rail, canExpand }: Props) {
                 type="button"
                 className={styles.railLink}
                 aria-label={t.nav.expandSidebar}
+                data-rail-link
                 onClick={() => setSidebar('wide')}
               >
                 <Icon name="panelOpen" />

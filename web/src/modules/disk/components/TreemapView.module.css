@@ -21,7 +21,7 @@
 }
 .tip {
   position: absolute;
-  z-index: 2;
+  z-index: var(--z-raised);
   max-width: min(22rem, 90%);
   pointer-events: none;
   padding: var(--space-2) var(--space-3);

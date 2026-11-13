@@ -388,8 +388,11 @@ test.describe('phone viewport', () => {
     await ready(page, '/notes');
     const list = page.getByRole('navigation', { name: 'Seiten' });
     await expect(list).toBeVisible();
-    // Phone: the plus of the bottom bar is the page's entry ("Notiz eintragen").
-    await page.getByTestId('bottom-plus').click();
+    // Phone: the plus of the bottom bar is the page's entry ("Notiz eintragen"). Until the page has registered it, the
+    // plus is the general capture ("Neu: Notizen"); a tap in that moment opens the capture sheet instead.
+    const plus = page.getByTestId('bottom-plus');
+    await expect(plus).toHaveAccessibleName('Notiz eintragen');
+    await plus.click();
     await expect(editor(page)).toBeVisible();
     await page.keyboard.type('Unterwegs notiert');
     await expect(page.getByText('Gespeichert')).toBeVisible();

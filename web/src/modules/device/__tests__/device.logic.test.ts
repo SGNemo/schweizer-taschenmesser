@@ -80,4 +80,14 @@ describe('home-network hub', () => {
     expect(hubState({ state: 'failed' })).toBe('failed');
     expect(hubState({ state: 'off' })).toBe('off');
   });
+  it('held off by the network is not "off": a public network, another network than at pairing and no home network keep their reason', () => {
+    expect(hubState({ state: 'off', reason: 'public-network' })).toBe('public-network');
+    expect(hubState({ state: 'off', reason: 'no-home' })).toBe('no-home');
+    expect(hubState({ state: 'off', reason: 'no-network' })).toBe('no-network');
+    for (const reason of ['nothing-wanted', 'unreadable', null, undefined] as const)
+      expect(hubState({ state: 'off', reason }), String(reason)).toBe('off');
+    // A hub that listens or failed says so, whatever reason is left over.
+    expect(hubState({ state: 'listening', reason: 'public-network' })).toBe('listening');
+    expect(hubState({ state: 'failed', reason: 'no-home' })).toBe('failed');
+  });
 });

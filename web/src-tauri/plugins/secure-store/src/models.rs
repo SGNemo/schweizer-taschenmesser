@@ -101,10 +101,17 @@ pub struct UnsealResponse {
     pub secret: Option<String>,
 }
 
+/// Answer of `has` and `biometric_has`: a yes/no only – never the value, its length or a hint of it.
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HasResponse {
     pub present: bool,
+}
+
+/// `has`: a stored value counts only when it is not empty – the same answer the web view would
+/// get from `get` (`value ?? undefined` and a truthy check), without handing the value over.
+pub fn is_present(value: Option<&str>) -> bool {
+    value.is_some_and(|v| !v.is_empty())
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -146,6 +153,33 @@ mod tests {
         assert!(
             validate_name("lan-client:hub").is_ok(),
             "Rust itself still may"
+        );
+    }
+
+    #[test]
+    fn has_counts_only_non_empty_values() {
+        assert!(!is_present(None));
+        assert!(!is_present(Some("")));
+        assert!(is_present(Some("a-long-test-passphrase")));
+        assert!(
+            is_present(Some(" ")),
+            "whitespace is a value; callers trim before they store"
+        );
+    }
+
+    #[test]
+    fn the_has_answer_carries_a_bool_and_nothing_else() {
+        for present in [true, false] {
+            let json = serde_json::to_value(HasResponse { present }).unwrap();
+            assert_eq!(json, serde_json::json!({ "present": present }));
+        }
+        // a stray value from the Android side is dropped on the way back, never passed on
+        let parsed: HasResponse =
+            serde_json::from_value(serde_json::json!({ "present": true, "value": "secret" }))
+                .unwrap();
+        assert_eq!(
+            serde_json::to_value(parsed).unwrap(),
+            serde_json::json!({ "present": true })
         );
     }
 

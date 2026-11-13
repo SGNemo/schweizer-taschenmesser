@@ -26,23 +26,29 @@ export function RenewDialog({
   /** Called after the renewal was written, before the dialog closes. */
   onSaved?: () => void;
 }) {
-  // One write per dialog. The lock lives here, not in the form: the write changes the term, the form below starts
-  // afresh for it, and a second Enter in that moment must not renew the next term on top.
-  const writing = useRef(false);
-  const lock = () => {
-    if (writing.current) return false;
-    writing.current = true;
-    return true;
-  };
-  const unlock = () => {
-    writing.current = false;
-  };
-  // The lock comes back only once the dialog is closed for good (not while it is closing: the form below may
-  // already show the next term).
+  // One write per opening. The lock lives here, not in the form: the write changes the term, the form below starts
+  // afresh for it, and a second Enter in that moment must not renew the next term on top. Every open and every
+  // close starts a new session: a write from an earlier one never closes, or reports into, the dialog open now,
+  // and no second write starts while one is still running, whichever session it came from.
+  const write = useRef({ session: 0, running: false, spent: -1 });
   const open = doc !== null;
   useEffect(() => {
-    if (!open) writing.current = false;
+    write.current.session += 1;
   }, [open]);
+  /** Takes this session's one write; null while a write runs or once this session has written. */
+  const lock = () => {
+    const w = write.current;
+    if (w.running || w.spent === w.session) return null;
+    w.running = true;
+    return w.session;
+  };
+  /** Ends a write; true when the session it was taken in is still the open one. */
+  const release = (session: number, written: boolean) => {
+    const w = write.current;
+    w.running = false;
+    if (written) w.spent = session;
+    return session === w.session;
+  };
   return (
     <Dialog
       open={doc !== null}
@@ -57,7 +63,7 @@ export function RenewDialog({
           onClose={onClose}
           onSaved={onSaved}
           lock={lock}
-          unlock={unlock}
+          release={release}
         />
       ) : null}
     </Dialog>
@@ -69,14 +75,15 @@ function Fields({
   onClose,
   onSaved,
   lock,
-  unlock,
+  release,
 }: {
   doc: Stored<VaultDocument>;
   onClose: () => void;
   onSaved?: () => void;
-  /** Takes the dialog's one write; false while another one runs. */
-  lock: () => boolean;
-  unlock: () => void;
+  /** Takes the dialog's one write: its session, or null while another one runs or this one is spent. */
+  lock: () => number | null;
+  /** Ends the write; true while the dialog is still in the session the write was taken in. */
+  release: (session: number, written: boolean) => boolean;
 }) {
   const r = t.vault.renewDialog;
   const end = endOf(doc)!;
@@ -93,19 +100,22 @@ function Fields({
 
   async function save() {
     if (!value || value <= end) return setError(r.notLater);
-    if (!lock()) return;
+    const session = lock();
+    if (session === null) return;
     try {
       await changeWithUndo(
         () => documentRepo.update(doc.id, renewPatch(doc, value, day)),
         t.vault.renewed(doc.title, formatDay(value, 'd. MMM yyyy')),
       );
-      onSaved?.();
-      onClose();
     } catch {
       // Deleted meanwhile (another device): nothing to renew.
-      unlock();
-      setError(r.gone);
+      if (release(session, false)) setError(r.gone);
+      return;
     }
+    // Closed (and maybe opened again) while it was written: the toast says it, the dialog open now is left alone.
+    if (!release(session, true)) return;
+    onSaved?.();
+    onClose();
   }
 
   // What the field holds decides the hint: a date behind us says so, the untouched proposal says what it is.
