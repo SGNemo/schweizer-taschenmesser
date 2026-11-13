@@ -136,6 +136,22 @@ describe('sidebar', () => {
     expect(useUiStore.getState().sidebar).toBe('wide');
   });
 
+  it('Escape hides the name of the focused rail icon until the focus moves on (WCAG 1.4.13)', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter initialEntries={['/finance']}>
+        <Sidebar tree={tree} rail canExpand />
+      </MemoryRouter>,
+    );
+    const geld = screen.getByRole('link', { name: 'Geld' });
+    geld.focus();
+    await user.keyboard('{Escape}');
+    expect(geld).toHaveAttribute('data-tip-off');
+    expect(geld).toHaveFocus();
+    await user.tab();
+    expect(geld).not.toHaveAttribute('data-tip-off');
+  });
+
   it('a rail forced by the viewport offers no expand button', () => {
     render(
       <MemoryRouter>
