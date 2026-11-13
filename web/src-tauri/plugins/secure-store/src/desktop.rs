@@ -95,6 +95,8 @@ impl<R: Runtime> SecureStore<R> {
         remove(&request.name)
     }
 
+    // The request's `title`/`subtitle`/`cancel` are not used on Windows: `KeyCredentialManager` shows
+    // its own generic prompt (see `desktop/hello.rs`). Android uses them.
     pub async fn biometric_seal(&self, request: SealRequest) -> Result<()> {
         if !biometric_available() {
             return Err(Error::Unsupported);
@@ -138,11 +140,14 @@ impl<R: Runtime> SecureStore<R> {
         })
     }
 
-    pub fn biometric_delete(&self, request: NameRequest) -> Result<()> {
-        remove(&format!("{BIO_PREFIX}{}", request.name))?;
-        #[cfg(windows)]
-        sealed::HelloKeys::delete(&hello::WindowsHello, &hello_key(&request.name));
-        Ok(())
+    pub async fn biometric_delete(&self, request: NameRequest) -> Result<()> {
+        if !biometric_available() {
+            // Nothing can have been sealed here; still clear a stray entry.
+            return remove(&format!("{BIO_PREFIX}{}", request.name));
+        }
+        let name = request.name;
+        with_hello(move |hello| sealed::delete(hello, &KeyringSlot::bio(&name), &hello_key(&name)))
+            .await
     }
 
     /// The phone's "prove you are there" prompt; no desktop caller exists.
@@ -186,14 +191,18 @@ fn hello_key(name: &str) -> String {
 }
 
 /// Hello calls block until the person answers: run them (and the keyring calls between) off the
-/// async runtime.
+/// async runtime, one at a time (a double click must not interleave two seals of the same key).
 #[cfg(windows)]
 async fn with_hello<T: Send + 'static>(
     f: impl FnOnce(&dyn sealed::HelloKeys) -> Result<T> + Send + 'static,
 ) -> Result<T> {
-    tauri::async_runtime::spawn_blocking(move || f(&hello::WindowsHello))
-        .await
-        .map_err(|e| Error::Biometric(e.to_string()))?
+    static ONE_AT_A_TIME: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    tauri::async_runtime::spawn_blocking(move || {
+        let _turn = ONE_AT_A_TIME.lock().unwrap_or_else(|e| e.into_inner());
+        f(&hello::WindowsHello)
+    })
+    .await
+    .map_err(|e| Error::Biometric(e.to_string()))?
 }
 
 #[cfg(not(windows))]

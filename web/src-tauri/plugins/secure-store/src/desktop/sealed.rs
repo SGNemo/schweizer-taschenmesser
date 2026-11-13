@@ -40,8 +40,9 @@ pub enum Ask<T> {
 
 /// Windows Hello key credentials (`KeyCredentialManager`); a fake in the tests.
 pub trait HelloKeys {
-    /// Creates (or replaces) the key credential `key`; asks the person to verify.
-    fn create(&self, key: &str) -> Result<Ask<()>>;
+    /// Creates (or replaces) the key credential `key` and signs `data` with the new key; asks the
+    /// person to verify (Windows may show one or two prompts).
+    fn create_and_sign(&self, key: &str, data: &[u8]) -> Result<Ask<Vec<u8>>>;
     /// Signs `data` with the key credential `key`; asks the person to verify.
     fn sign(&self, key: &str, data: &[u8]) -> Result<Ask<Vec<u8>>>;
     /// Removes the key credential; a missing one is not an error.
@@ -66,6 +67,8 @@ pub enum Unsealed {
 }
 
 /// Seals `secret_b64` under the Hello key `key`. `aad` binds the blob to its entry name.
+/// Cancelled or failed after the Hello key may have been replaced: entry and key are removed, so the
+/// result is always either "sealed" or "not enrolled", never a seal that can no longer be opened.
 pub fn seal(
     hello: &dyn HelloKeys,
     slot: &dyn Slot,
@@ -78,13 +81,15 @@ pub fn seal(
             .decode(secret_b64)
             .map_err(|_| Error::Invalid("secret is not base64".into()))?,
     );
-    match hello.create(key)? {
-        Ask::Done(()) => {}
-        Ask::Cancelled => return Err(Error::Cancelled),
-        Ask::Missing => return Err(Error::Biometric("Hello key could not be created".into())),
+    let result = match wrap_new(hello, key, aad, &secret) {
+        Ok(Some(value)) => slot.write(&value),
+        Ok(None) => Err(Error::Cancelled),
+        Err(e) => Err(e),
+    };
+    if result.is_err() {
+        delete(hello, slot, key)?;
     }
-    let value = wrap_with(hello, key, aad, &secret)?.ok_or(Error::Cancelled)?;
-    slot.write(&value)
+    result
 }
 
 pub fn unseal(hello: &dyn HelloKeys, slot: &dyn Slot, key: &str, aad: &str) -> Result<Unsealed> {
@@ -103,7 +108,7 @@ pub fn unseal(hello: &dyn HelloKeys, slot: &dyn Slot, key: &str, aad: &str) -> R
         Ask::Cancelled => return Ok(Unsealed::Cancelled),
         Ask::Missing => return invalidate(hello, slot, key),
     };
-    let cipher = ChaCha20Poly1305::new(&wrapping_key(&signature));
+    let cipher = ChaCha20Poly1305::new(Key::from_slice(&*wrapping_key(&signature)));
     match cipher.decrypt(
         Nonce::from_slice(&nonce),
         Payload {
@@ -124,7 +129,8 @@ pub fn delete(hello: &dyn HelloKeys, slot: &dyn Slot, key: &str) -> Result<()> {
 }
 
 /// A raw key from before the Hello binding: creating the Hello key is the verification; the entry is
-/// then replaced by the wrapped form. Cancelled anywhere = nothing changed, the raw entry stays.
+/// then replaced by the wrapped form. Cancelled = the raw entry stays as it was (no Hello key
+/// existed for it, so nothing that worked is lost).
 fn migrate(
     hello: &dyn HelloKeys,
     slot: &dyn Slot,
@@ -135,30 +141,25 @@ fn migrate(
     let Ok(secret) = STANDARD.decode(raw).map(Zeroizing::new) else {
         return invalidate(hello, slot, key);
     };
-    match hello.create(key)? {
-        Ask::Done(()) => {}
-        Ask::Cancelled => return Ok(Unsealed::Cancelled),
-        Ask::Missing => return Err(Error::Biometric("Hello key could not be created".into())),
-    }
-    let Some(value) = wrap_with(hello, key, aad, &secret)? else {
+    let Some(value) = wrap_new(hello, key, aad, &secret)? else {
         return Ok(Unsealed::Cancelled);
     };
     slot.write(&value)?;
     Ok(Unsealed::Ok(b64(secret)))
 }
 
-/// `None` when the person cancels the signing prompt.
-fn wrap_with(hello: &dyn HelloKeys, key: &str, aad: &str, secret: &[u8]) -> Result<Option<String>> {
+/// Creates the Hello key, has it sign a fresh challenge and wraps `secret`. `None` = cancelled.
+fn wrap_new(hello: &dyn HelloKeys, key: &str, aad: &str, secret: &[u8]) -> Result<Option<String>> {
     let mut challenge = [0u8; CHALLENGE_LEN];
     let mut nonce = [0u8; NONCE_LEN];
     getrandom::fill(&mut challenge).map_err(|e| Error::Keystore(e.to_string()))?;
     getrandom::fill(&mut nonce).map_err(|e| Error::Keystore(e.to_string()))?;
-    let signature = match hello.sign(key, &challenge)? {
+    let signature = match hello.create_and_sign(key, &challenge)? {
         Ask::Done(sig) => Zeroizing::new(sig),
         Ask::Cancelled => return Ok(None),
-        Ask::Missing => return Err(Error::Biometric("Hello key vanished".into())),
+        Ask::Missing => return Err(Error::Biometric("Hello key could not be created".into())),
     };
-    let ciphertext = ChaCha20Poly1305::new(&wrapping_key(&signature))
+    let ciphertext = ChaCha20Poly1305::new(Key::from_slice(&*wrapping_key(&signature)))
         .encrypt(
             Nonce::from_slice(&nonce),
             Payload {
@@ -174,13 +175,14 @@ fn wrap_with(hello: &dyn HelloKeys, key: &str, aad: &str, secret: &[u8]) -> Resu
     Ok(Some(format!("{PREFIX}{}", STANDARD.encode(blob))))
 }
 
-fn wrapping_key(signature: &[u8]) -> Key {
+/// The cipher wipes its own key copy on drop (`ZeroizeOnDrop`); this one is wiped by `Zeroizing`.
+fn wrapping_key(signature: &[u8]) -> Zeroizing<[u8; 32]> {
     let mut h = Sha256::new();
     h.update(KDF_DOMAIN);
     h.update((signature.len() as u32).to_be_bytes());
     h.update(signature);
     let mut digest = h.finalize();
-    let key = *Key::from_slice(&digest);
+    let key = Zeroizing::new(digest.into());
     digest.zeroize();
     key
 }
@@ -236,16 +238,23 @@ mod tests {
         }
     }
 
+    impl FakeHello {
+        /// Same name, new private key (like a PIN reset or another enrolment).
+        fn recreate(&self) {
+            let n = self.next.get();
+            self.next.set(n + 1);
+            *self.private.borrow_mut() = Some([n; 8]);
+        }
+    }
+
     impl HelloKeys for FakeHello {
-        fn create(&self, _key: &str) -> Result<Ask<()>> {
+        fn create_and_sign(&self, key: &str, data: &[u8]) -> Result<Ask<Vec<u8>>> {
             self.prompts.set(self.prompts.get() + 1);
             if self.cancel_create.get() {
                 return Ok(Ask::Cancelled);
             }
-            let n = self.next.get();
-            self.next.set(n + 1);
-            *self.private.borrow_mut() = Some([n; 8]);
-            Ok(Ask::Done(()))
+            self.recreate();
+            self.sign(key, data)
         }
         fn sign(&self, _key: &str, data: &[u8]) -> Result<Ask<Vec<u8>>> {
             self.prompts.set(self.prompts.get() + 1);
@@ -321,6 +330,22 @@ mod tests {
     }
 
     #[test]
+    fn a_cancelled_reseal_leaves_nothing_half_sealed() {
+        let (h, s) = (FakeHello::new(), MemSlot::default());
+        seal(&h, &s, K, AAD, DEK).unwrap();
+        h.cancel_sign.set(true); // new key created, then the signing prompt is cancelled
+        assert!(matches!(seal(&h, &s, K, AAD, DEK), Err(Error::Cancelled)));
+        h.cancel_sign.set(false);
+        assert_eq!(
+            s.read().unwrap(),
+            None,
+            "not enrolled, instead of a seal that cannot open"
+        );
+        assert!(h.private.borrow().is_none(), "no orphaned Hello key");
+        assert_eq!(unseal(&h, &s, K, AAD).unwrap(), Unsealed::Missing);
+    }
+
+    #[test]
     fn seal_rejects_non_base64() {
         let (h, s) = (FakeHello::new(), MemSlot::default());
         assert!(matches!(
@@ -360,7 +385,7 @@ mod tests {
     fn a_recreated_hello_key_invalidates_the_entry() {
         let (h, s) = (FakeHello::new(), MemSlot::default());
         seal(&h, &s, K, AAD, DEK).unwrap();
-        h.create(K).unwrap(); // e.g. PIN reset: same name, new private key
+        h.recreate(); // e.g. PIN reset: same name, new private key
         assert_eq!(unseal(&h, &s, K, AAD).unwrap(), Unsealed::Invalidated);
         assert_eq!(s.read().unwrap(), None);
     }
