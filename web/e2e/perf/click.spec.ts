@@ -42,6 +42,8 @@ interface Sample {
   chunkKb: number;
   idbOps: number;
   idbRows: number;
+  /** Most read stores of this visit, "store×requests". */
+  idbTop?: string[];
   /** Main-thread time between click and the end of the measurement (CDP `TaskDuration`, `ScriptDuration`). */
   taskMs: number;
   scriptMs: number;
@@ -57,6 +59,7 @@ function probe() {
     pending: 0,
     ops: 0,
     rows: 0,
+    stores: {} as Record<string, number>,
   };
   (window as unknown as { __ctc: typeof s }).__ctc = s;
   const inScope = (n: Node | null) => {
@@ -73,7 +76,12 @@ function probe() {
       const req = original.apply(this, a);
       // Pending and last answer always (the wait before a click needs them); requests and rows only after a click.
       const counted = !!s.t0;
-      if (counted) s.ops++;
+      if (counted) {
+        s.ops++;
+        const store =
+          this instanceof IDBIndex ? this.objectStore.name : (this as IDBObjectStore).name;
+        s.stores[store] = (s.stores[store] ?? 0) + 1;
+      }
       s.pending++;
       const end = () => {
         s.pending--;
@@ -153,6 +161,7 @@ function inPage(page: Page, action: 'nav' | 'click', arg: string): Promise<Sampl
               pending: number;
               ops: number;
               rows: number;
+              stores: Record<string, number>;
             };
           }
         ).__ctc;
@@ -175,6 +184,7 @@ function inPage(page: Page, action: 'nav' | 'click', arg: string): Promise<Sampl
           );
         };
         s.ops = s.rows = 0;
+        s.stores = {};
         s.lastMut = s.lastIdb = 0;
         const t0 = performance.now();
         s.t0 = t0;
@@ -219,6 +229,10 @@ function inPage(page: Page, action: 'nav' | 'click', arg: string): Promise<Sampl
               chunkKb: 0,
               idbOps: s.ops,
               idbRows: s.rows,
+              idbTop: Object.entries(s.stores)
+                .sort((x, y) => y[1] - x[1])
+                .slice(0, 6)
+                .map(([k, v]) => `${k}×${v}`),
               loadingMs: Math.round(loadingMs + (loadingSince ? now - loadingSince : 0)),
             });
           } else requestAnimationFrame(frame);
