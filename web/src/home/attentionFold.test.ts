@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { AttentionItem } from '@/core/modules/types';
 import {
   AGENDA_KEY,
@@ -10,6 +10,15 @@ import {
   neverFolds,
 } from './attentionFold';
 import { DEFAULT_LAYOUT, type HomeLayout } from './layout';
+import weatherAttention from '@/modules/weather/attention';
+
+// The weather source reads its warnings from the cached forecast; here they are given directly.
+vi.mock('@/modules/weather/warningsToday', () => ({
+  warningsNow: async (today: string) => [
+    { kind: 'storm', date: today },
+    { kind: 'wind', date: '2026-10-20', value: 80 },
+  ],
+}));
 
 const item = (
   id: string,
@@ -50,6 +59,11 @@ describe('foldAttention: danger and due never fold, everything else does', () =>
     );
     expect(out.visible.map((i) => i.id)).toEqual(['vault:act-today']);
     expect(out.waiting.map((i) => i.id)).toEqual(['vault:act']);
+  });
+  it('a weather warning for today is a card; the warning for tomorrow folds', async () => {
+    const out = foldAttention(await weatherAttention({ today: '2026-10-19' }), true);
+    expect(out.visible.map((i) => i.id)).toEqual(['weather:storm:2026-10-19']);
+    expect(out.waiting.map((i) => i.id)).toEqual(['weather:wind:2026-10-20']);
   });
   it('the setting "ruhiges Jetzt wichtig" off → every entry is a card', () => {
     const all = [item('d', 'danger'), item('a', 'accent'), item('w', 'warning')];

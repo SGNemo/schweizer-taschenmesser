@@ -32,7 +32,8 @@
   color: var(--text);
   font-weight: var(--weight-semibold);
 }
-/* Active marker: a small bar above the icon, in the area's colour (identity v3). */
+/* Active marker: a small bar above the icon, in the area's colour (identity v3; design check K6, answer 2026-11-11).
+   Übersicht has no area: its marker is the text ink, no accent in the app frame (package 0b-R). */
 .link[aria-current='page']::before {
   content: '';
   position: absolute;
@@ -40,10 +41,10 @@
   width: 28px;
   height: 3px;
   border-radius: var(--radius-full);
-  background: var(--area-color, var(--accent));
+  background: var(--area-color, var(--text));
 }
 .link[aria-current='page'] > svg {
-  color: var(--area-color, var(--accent));
+  color: var(--area-color, var(--text));
 }
 .label {
   max-width: 100%;
@@ -85,7 +86,7 @@
   }
 }
 
-/* Area colour on the icon only; the active area keeps the accent. */
+/* Area colour on every area's icon; the active area keeps it too (rule above), never the accent. */
 .link[data-area]:not([aria-current='page']) > svg {
   color: var(--area-color);
 }

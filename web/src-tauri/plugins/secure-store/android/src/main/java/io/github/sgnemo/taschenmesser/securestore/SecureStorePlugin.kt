@@ -73,6 +73,7 @@ class SecureWindowArgs {
  *  - `biometricSeal/Unseal`: the vault's data key encrypted with a *different* Keystore key that
  *    requires a strong biometric for every use (BiometricPrompt + CryptoObject). Enrolling a new
  *    fingerprint invalidates that key, and the sealed value is then dropped.
+ *  - `has`: yes/no only (never the value),
  *  - `setSecureWindow`: FLAG_SECURE (no screenshots / blank app-switcher preview).
  *
  * Nothing here is verified by unit tests (needs a device) – see the manual checklist in CLAUDE.md.
@@ -156,6 +157,30 @@ class SecureStorePlugin(private val activity: Activity) : Plugin(activity) {
                 cipher.updateAAD(args.name.toByteArray())
                 ret.put("value", String(cipher.doFinal(ct)))
             }
+            invoke.resolve(ret)
+        } catch (e: Exception) {
+            invoke.reject(e.message ?: e.javaClass.simpleName)
+        }
+    }
+
+    /** Only whether a non-empty value is stored (same answer as `get`); the value never leaves Kotlin. */
+    @Command
+    fun has(invoke: Invoke) {
+        try {
+            val args = invoke.parseArgs(NameArgs::class.java)
+            val ret = JSObject()
+            val stored = prefs.getString("s:${args.name}", null)
+            var present = false
+            if (stored != null) {
+                val (iv, ct) = stored.split(":", limit = 2).map { unb64(it) }
+                val cipher = Cipher.getInstance(TRANSFORM)
+                cipher.init(Cipher.DECRYPT_MODE, secretKey(SECRETS_ALIAS, false), GCMParameterSpec(128, iv))
+                cipher.updateAAD(args.name.toByteArray())
+                val plain = cipher.doFinal(ct)
+                present = plain.isNotEmpty()
+                plain.fill(0.toByte())
+            }
+            ret.put("present", present)
             invoke.resolve(ret)
         } catch (e: Exception) {
             invoke.reject(e.message ?: e.javaClass.simpleName)

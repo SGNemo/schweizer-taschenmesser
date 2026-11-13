@@ -206,7 +206,7 @@ test.describe('mail (demo mails)', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/mail');
     await expect(page.getByTestId('mail-columns')).toBeVisible();
-    await expect(page.getByTestId('mail-stamp')).toContainText('ungelesen');
+    await expect(page.getByTestId('mail-unread')).toContainText('ungelesen');
     await expect(page.getByRole('navigation', { name: 'Ordner' })).toBeVisible();
     await page.getByText('Ihre Rechnung für Oktober').click();
     await expect(page.getByTitle(/Inhalt der Mail/)).toBeVisible();

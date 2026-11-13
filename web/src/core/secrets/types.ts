@@ -11,6 +11,11 @@
 export interface SecretStore {
   readonly protection: 'device-key' | 'os-keystore';
   get(name: string): Promise<string | undefined>;
+  /**
+   * `true` when a non-empty value is stored under `name` (exactly when `get` would return one). Only a yes/no: the
+   * value never leaves the store, not even its length. Use this wherever the question is "is it set?".
+   */
+  has(name: string): Promise<boolean>;
   set(name: string, value: string): Promise<void>;
   delete(name: string): Promise<void>;
 }

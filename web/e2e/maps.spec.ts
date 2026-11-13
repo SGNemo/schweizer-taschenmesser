@@ -547,6 +547,10 @@ test.describe('Karten & Orte', () => {
   }) => {
     await mockOsm(page);
     await enable(page, 'maps');
+    // The map's one-time notice was read on an earlier visit (the first visit: next test).
+    await page.goto('/maps?view=map');
+    await page.getByRole('dialog').getByRole('button', { name: 'Verstanden' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
     await ready(page, '/maps');
     // Click 1: the one action of the page (desktop: in the head; phone: the plus of the bottom bar).
     await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
@@ -574,5 +578,22 @@ test.describe('Karten & Orte', () => {
       .click();
     await expect(page.getByTestId('map-selection')).toBeVisible();
     await expect(page.getByRole('dialog')).toHaveCount(0);
+  });
+  test('„Ort eintragen“ on the first visit: the notice first, then the search has the focus', async ({
+    page,
+  }) => {
+    await mockOsm(page);
+    await enable(page, 'maps');
+    await page.goto('/maps');
+    await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
+    const notice = page.getByRole('dialog');
+    await expect(notice.getByTestId('notice-dialog')).toBeVisible();
+    const search = page.getByLabel('Ort oder Adresse suchen');
+    await expect(search).not.toBeFocused();
+    await notice.getByRole('button', { name: 'Verstanden' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(search).toBeFocused();
+    await page.keyboard.insertText('Schlossplatz Erlangen');
+    await expect(search).toHaveValue('Schlossplatz Erlangen');
   });
 });

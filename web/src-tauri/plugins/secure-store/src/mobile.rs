@@ -41,6 +41,12 @@ impl<R: Runtime> SecureStore<R> {
         self.0.run_mobile_plugin("get", request).map_err(Into::into)
     }
 
+    /// Kotlin answers `{ present }` only; the value stays on the Kotlin side.
+    pub fn has(&self, request: NameRequest) -> Result<HasResponse> {
+        validate_name(&request.name).map_err(Error::Invalid)?;
+        self.0.run_mobile_plugin("has", request).map_err(Into::into)
+    }
+
     pub fn delete(&self, request: NameRequest) -> Result<()> {
         validate_name(&request.name).map_err(Error::Invalid)?;
         self.0

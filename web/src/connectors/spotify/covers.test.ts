@@ -28,7 +28,12 @@ function ctxWith(body: unknown) {
     fetch: (async () => new Response(JSON.stringify(body), { status: 200 })) as typeof fetch,
     accessToken: async () => 'AT-1',
     fetchPublic: async () => new Response(),
-    secrets: { get: async () => undefined, set: async () => {}, delete: async () => {} },
+    secrets: {
+      get: async () => undefined,
+      has: async () => false,
+      set: async () => {},
+      delete: async () => {},
+    },
     redact: (text) => text,
   };
   return ctx;

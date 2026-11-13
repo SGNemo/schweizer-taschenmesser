@@ -44,7 +44,8 @@ import {
 } from '../logic';
 import { documentRepo, keepBlobIds } from '../repo';
 import styles from './VaultPage.module.css';
-import { CATEGORIES, type DocCategory } from '../schema';
+import { CATEGORIES, type DocCategory, type VaultDocument } from '../schema';
+import type { Stored } from '@/core/db/types';
 
 type View = 'documents' | 'deadlines';
 
@@ -76,18 +77,24 @@ export default function VaultPage() {
   const files = useLiveQuery(async () => new Set(await blobKeys()), []);
   const [category, setCategory] = useState<DocCategory | 'all'>('all');
   const [query, setQuery] = useState('');
-  // "Ablage" files by folder; "Fristen" lays every date on one rail.
-  const [view, setView] = useState<View>('documents');
   // The id only: the dialog works on the row as the list holds it now.
   const [renewing, setRenewing] = useState<string | null>(null);
   // The row "Verlängert" was pressed in. After a renewal its button is gone with the new term, so the focus goes
   // to the row's own button (its title) instead of nowhere: once, right after the dialog has closed.
-  const renewal = useRef<{ id: string; row: Element | null; saved: boolean; focused: boolean }>(
+  const renewal = useRef<{ id: string; row: Element | null; end?: string; saved: boolean }>(
     undefined,
   );
-  const startRenew = (d: { id: string }, from?: Element) => {
-    renewal.current = { id: d.id, row: from?.closest('li') ?? null, saved: false, focused: false };
+  const startRenew = (d: Stored<VaultDocument>, from?: Element) => {
+    renewal.current = { id: d.id, row: from?.closest('li') ?? null, end: endOf(d), saved: false };
     setRenewing(d.id);
+  };
+  // Written, and waiting for the list to show it. The dialog stays open until then, so the list re-sorts while the
+  // focus is still in the dialog: the title is announced once, never moved away under the focus and set again.
+  const [settling, setSettling] = useState<{ id: string; end?: string } | null>(null);
+  const closeRenew = () => {
+    const r = renewal.current;
+    if (r?.saved) setSettling({ id: r.id, end: r.end });
+    else setRenewing(null);
   };
   // Master–detail (layout `split`): on a wide page a document shows in the panel beside the folders, below that
   // width the folder opens its dialog (a sheet on the phone).
@@ -97,11 +104,33 @@ export default function VaultPage() {
   useOpenParam((id) => documentRepo.get(id), setTarget);
   const [params, setParams] = useSearchParams();
   const day = today();
+  // "Ablage" files by folder; "Fristen" lays every date on one rail. The view lives in the address, so a reload or
+  // a link comes back to it (FOCUS checklist 5); "Ablage" is the address without one.
+  const view: View = params.get('view') === 'deadlines' ? 'deadlines' : 'documents';
+  const setView = (next: View) =>
+    setParams(
+      (p) => {
+        const q = new URLSearchParams(p);
+        if (next === 'deadlines') q.set('view', next);
+        else q.delete('view');
+        return q;
+      },
+      { replace: true },
+    );
 
   const openTarget = target ?? (params.get('new') ? { draft: true as const } : null);
   const closeEditor = () => {
     setTarget(null);
-    if (params.get('new')) setParams({}, { replace: true });
+    // Only "new" ends with the editor: the view stays.
+    if (params.get('new'))
+      setParams(
+        (p) => {
+          const q = new URLSearchParams(p);
+          q.delete('new');
+          return q;
+        },
+        { replace: true },
+      );
   };
 
   // Files of documents that were deleted on another device are dead weight here.
@@ -128,26 +157,36 @@ export default function VaultPage() {
   // and does not come back by itself.
   const renewDoc = renewing ? docs?.find((d) => d.id === renewing && endOf(d)) : undefined;
   if (renewing && docs && !renewDoc) setRenewing(null);
+  if (settling && docs) {
+    const now = docs.find((d) => d.id === settling.id);
+    if (!now || endOf(now) !== settling.end) {
+      setSettling(null);
+      setRenewing(null);
+    }
+  }
+  useEffect(() => {
+    if (!settling) return;
+    // The write has landed; should the list not follow (another device changed it back meanwhile), close anyway.
+    const late = setTimeout(() => {
+      setSettling(null);
+      setRenewing(null);
+    }, 1500);
+    return () => clearTimeout(late);
+  }, [settling]);
   useEffect(() => {
     const r = renewal.current;
-    if (renewing || !r?.saved) return;
+    if (renewing || !r) return;
+    renewal.current = undefined;
+    if (!r.saved) return;
     // The row's own button: on the rail its title (found by comparing ids, never by a selector built from one: an
-    // imported id may hold any character), in a folder the row the click came from.
-    const title = () =>
+    // imported id may hold any character), in a folder the row the click came from. The native dialog gave the
+    // focus back to "Verlängert", which the new term took away: nothing was announced before this.
+    const title =
       Array.from(document.querySelectorAll<HTMLElement>('[data-doc-id]')).find(
         (el) => el.dataset.docId === r.id,
       ) ?? (r.row?.isConnected ? r.row.querySelector<HTMLElement>('[data-row]') : null);
-    if (!r.focused) {
-      // Right after the close, before the list shows the new term: one announcement, not the gone button first.
-      r.focused = true;
-      title()?.focus();
-      return;
-    }
-    // The list has changed once since: a row drawn anew (the rail moves it across "Heute") lost the focus, and
-    // only then it is set again. Either way this renewal is done.
-    renewal.current = undefined;
-    if (!document.activeElement || document.activeElement === document.body) title()?.focus();
-  }, [renewing, docs]);
+    title?.focus();
+  }, [renewing]);
 
   return (
     <>
@@ -329,7 +368,7 @@ export default function VaultPage() {
       </SplitView>
       <RenewDialog
         doc={renewDoc ?? null}
-        onClose={() => setRenewing(null)}
+        onClose={closeRenew}
         onSaved={() => {
           if (renewal.current) renewal.current.saved = true;
         }}

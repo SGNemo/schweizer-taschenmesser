@@ -79,7 +79,12 @@ test.describe('phone', () => {
         opacity: '1',
       });
     }
-    // Scrolling down still folds it with the slide (the route change only skipped the animation once).
+    // Scrolling down still folds it with the slide (the route change only skipped the animation once). The calm
+    // overview of a fresh profile fits one screen (package 0b-7): show its folded cards so there is something to read.
+    await page.getByRole('button', { name: /^Mehr anzeigen/ }).click();
+    await expect
+      .poll(() => page.evaluate(() => document.body.scrollHeight - innerHeight))
+      .toBeGreaterThan(600);
     for (let i = 0; i < 4; i++) await page.evaluate(() => window.scrollBy(0, 150));
     await expect(bar).toHaveAttribute('data-collapsed', 'true');
     await expect(bar).not.toHaveAttribute('data-instant', 'true');

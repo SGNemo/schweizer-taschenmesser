@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react';
 import { useFocusSettings } from '@/core/settings/focus';
 import { now, today } from '@/core/time/now';
 import { t } from '@/strings';
@@ -72,6 +80,8 @@ export interface CaptureFormProps {
   idFor?: Partial<Record<CaptureType, string>>;
   onSaved: (saved: SavedCapture) => void;
   onCancel?: () => void;
+  /** Further ways in (quick add: free text, the other forms): above the actions, which stay the sheet's foot (K4). */
+  beforeActions?: ReactNode;
 }
 
 const typeLabel = (type: CaptureType, kind: CaptureFields['kind']): string =>
@@ -112,6 +122,7 @@ export function CaptureForm({
   oneEntry,
   bookChip = true,
   onOpenFull,
+  beforeActions,
   idFor,
   onSaved,
   onCancel,
@@ -687,6 +698,7 @@ export function CaptureForm({
           </div>
         )}
 
+        {beforeActions}
         {confirming && type && !multi ? (
           <div className={styles.draft} data-testid="capture-draft">
             <p className={styles.hint}>{t.quickCapture.financeConfirm}</p>

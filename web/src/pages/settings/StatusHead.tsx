@@ -6,7 +6,7 @@ import { useSettingsStatus } from './useSettingsStatus';
 import styles from './StatusHead.module.css';
 
 /**
- * Head of `/settings` (variant "Status"): the six states that matter most as figure tiles, each a jump
+ * Head of `/settings` (variant "Status"): the six states that matter most as lines, each a jump
  * into its category. Every tile says what the state means in one line; the accent marks "needs a look".
  */
 export function StatusHead({ title }: { title: string }) {
@@ -22,8 +22,9 @@ export function StatusHead({ title }: { title: string }) {
       testId="settings-head"
     >
       <section aria-label={v3.statusLabel}>
-        <ul className={styles.tiles} data-testid="settings-status">
-          {tiles.map((tile) => (
+        {/* Empty until the states are known: the lines come together, never six that turn into three. */}
+        <ul className={styles.tiles} data-testid="settings-status" aria-busy={!tiles}>
+          {(tiles ?? []).map((tile) => (
             <li key={tile.id}>
               <StatusLineLink line={tile} hideGenericOnPhone />
             </li>
