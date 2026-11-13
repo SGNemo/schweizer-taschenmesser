@@ -302,6 +302,7 @@ export default function MailPage() {
         {canWrite && account ? (
           <PageAction
             short={t.mail.write.short}
+            plusName={t.mail.write.newMail}
             onClick={() =>
               setCompose({ state: emptyCompose(), title: t.mail.write.compose.titleNew, account })
             }

@@ -18,7 +18,10 @@ async function addEvent(page: Page, title: string, time: string) {
   await ready(page, '/calendar?new=1');
   await page.getByLabel('Titel').fill(title);
   await page.getByLabel('Beginn').fill(time);
-  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+    .click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 

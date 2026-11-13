@@ -200,7 +200,7 @@ function BudgetFields({
       >
         <Button onClick={onClose}>{t.actions.cancel}</Button>
         <Button type="submit" variant="primary" disabled={!categoryId}>
-          {t.actions.save}
+          {existing ? t.actions.save : t.budgets.addBudget}
         </Button>
       </FormActions>
     </Form>
@@ -380,7 +380,7 @@ function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onCl
       >
         <Button onClick={onClose}>{t.actions.cancel}</Button>
         <Button type="submit" variant="primary">
-          {t.actions.save}
+          {existing ? t.actions.save : t.budgets.addGoal}
         </Button>
       </FormActions>
     </Form>

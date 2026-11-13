@@ -23,7 +23,7 @@ test.describe('Appointment editor: "Erinnern" row (V05)', () => {
     await expect(dialog.getByTestId('lead-permission-hint')).toBeVisible();
     await dialog.getByLabel('Als Vorgabe merken').click();
     await expect(dialog.getByLabel('Als Vorgabe merken')).toBeChecked();
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
 
     // Closing the dialog is a pending back traversal; navigating before it settles aborts the load

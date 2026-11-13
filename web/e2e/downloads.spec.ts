@@ -90,7 +90,7 @@ test('one filled action per page; checksum and folder lines start where the titl
   if (await plus.isVisible()) {
     expect(primaries).toEqual([]);
     await expect(plus).toHaveAccessibleName('Download eintragen');
-  } else expect(primaries).toEqual(['Download hinzufügen']);
+  } else expect(primaries).toEqual(['Download eintragen']);
   const done = list(page).getByRole('listitem').nth(1);
   const left = async (text: RegExp | string) =>
     Math.round((await done.getByText(text).first().boundingBox())!.x);
@@ -139,7 +139,7 @@ test('adding needs a click, warns about HTTP and explains a wrong address', asyn
     .locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible')
     .first()
     .click();
-  const dialog = page.getByRole('dialog', { name: 'Download hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Download eintragen' });
   await dialog
     .getByLabel('Adresse (http:// oder https://)')
     .fill('http://mirror.example.org/a.iso');
@@ -178,7 +178,7 @@ test('a download offered by a web page waits for a click in the manager', async 
   ).toBeVisible();
   expect(await calls(page)).toEqual([]);
   await page.getByRole('button', { name: 'Im Download-Manager öffnen' }).click();
-  const dialog = page.getByRole('dialog', { name: 'Download hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Download eintragen' });
   await expect(dialog.getByLabel('Adresse (http:// oder https://)')).toHaveValue(
     'https://example.org/files/beispiel-datei.zip',
   );
@@ -256,8 +256,8 @@ test('adding a torrent: magnet link → file list → choose files and folder �
   page,
 }) => {
   await turnOnTorrent(page);
-  await page.getByRole('button', { name: 'Torrent hinzufügen' }).click();
-  const dialog = page.getByRole('dialog', { name: 'Torrent hinzufügen' });
+  await page.getByRole('button', { name: 'Torrent eintragen' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Torrent eintragen' });
   await dialog.getByLabel('Magnet-Link').fill('https://example.org/not-a-magnet');
   await dialog.getByRole('button', { name: 'Dateien ansehen' }).click();
   await expect(dialog.getByRole('alert')).toContainText('Das ist kein Magnet-Link.');
@@ -278,8 +278,8 @@ test('a .torrent file is chosen in the system dialog; the public IP is only aske
   page,
 }) => {
   await turnOnTorrent(page);
-  await page.getByRole('button', { name: 'Torrent hinzufügen' }).click();
-  const dialog = page.getByRole('dialog', { name: 'Torrent hinzufügen' });
+  await page.getByRole('button', { name: 'Torrent eintragen' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Torrent eintragen' });
   await dialog.getByRole('button', { name: '.torrent-Datei öffnen' }).click();
   await expect(dialog.getByText(/beispiel\.torrent/)).toBeVisible();
   await dialog.getByRole('button', { name: 'Dateien ansehen' }).click();
@@ -305,7 +305,7 @@ test('a magnet link the app was started with waits for the torrent part, then pr
   // Nothing was added or started by itself.
   expect(await torrentCalls(page)).toEqual([]);
   await turnOnTorrent(page);
-  const dialog = page.getByRole('dialog', { name: 'Torrent hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Torrent eintragen' });
   await expect(dialog.getByLabel('Magnet-Link')).toHaveValue(magnet);
   await audit(page, 'prefilled dialog');
   expect((await torrentCalls(page)).some((c) => c.startsWith('add:'))).toBe(false);

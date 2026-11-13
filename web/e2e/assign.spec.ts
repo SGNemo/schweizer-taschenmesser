@@ -22,7 +22,7 @@ test.describe('"Für" – a person or client on appointments and ToDos (QA V14)'
       const person = page.getByRole('dialog');
       await person.getByLabel('Name', { exact: true }).fill(name);
       await person.getByRole('checkbox', { name: 'Geburtstag eintragen' }).uncheck();
-      await person.getByRole('button', { name: 'Speichern' }).click();
+      await person.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
       await expect(page.getByRole('dialog')).toHaveCount(0);
     }
 
@@ -34,7 +34,7 @@ test.describe('"Für" – a person or client on appointments and ToDos (QA V14)'
     // A new appointment shows five fields; the person is behind "Mehr Felder" (UI audit 2026-11, B10).
     await dialog.getByRole('button', { name: 'Mehr Felder anzeigen' }).click();
     await dialog.getByLabel('Für', { exact: true }).selectOption({ label: 'Lena' });
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
 
     await ready(page, '/calendar?new=1');
@@ -46,7 +46,10 @@ test.describe('"Für" – a person or client on appointments and ToDos (QA V14)'
       .getByRole('dialog')
       .getByLabel('Für', { exact: true })
       .selectOption({ label: 'Müller GmbH' });
-    await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
 
     // Day view: both entries, the name next to the title.
@@ -69,7 +72,7 @@ test.describe('"Für" – a person or client on appointments and ToDos (QA V14)'
     const person = page.getByRole('dialog');
     await person.getByLabel('Name', { exact: true }).fill('Lena');
     await person.getByRole('checkbox', { name: 'Geburtstag eintragen' }).uncheck();
-    await person.getByRole('button', { name: 'Speichern' }).click();
+    await person.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
 
     for (const title of ['Zahnarzt anrufen', 'Müll rausbringen']) {
@@ -85,7 +88,7 @@ test.describe('"Für" – a person or client on appointments and ToDos (QA V14)'
     await openEditor(page, page.getByRole('button', { name: /Zahnarzt anrufen/ }));
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Für', { exact: true }).selectOption({ label: 'Lena' });
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(page.getByText('für Lena')).toBeVisible();
 

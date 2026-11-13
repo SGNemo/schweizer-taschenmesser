@@ -324,12 +324,12 @@ test.describe('passwords on the phone: the entry dialog keeps its foot (B10)', (
     await openPage(page, '/accounts');
     await closeNotice(page);
     await unlock(page);
-    await page.getByRole('button', { name: 'Zugang hinzufügen' }).tap();
-    const dialog = page.getByRole('dialog', { name: 'Zugang hinzufügen' });
+    await page.getByRole('button', { name: 'Zugang eintragen' }).tap();
+    const dialog = page.getByRole('dialog', { name: 'Zugang eintragen' });
     await expect(dialog).toBeVisible();
     const foot = dialog.locator('[data-form-actions]');
     await expect(foot).toHaveCSS('position', 'sticky');
-    const save = dialog.getByRole('button', { name: 'Speichern' });
+    const save = dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ });
     for (const top of [0, 9999]) {
       await dialog.evaluate((el, y) => el.scrollTo(0, y), top);
       // The sheet slides in: the foot is where it stays once that is over.

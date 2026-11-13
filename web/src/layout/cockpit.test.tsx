@@ -153,7 +153,7 @@ describe('cockpit mode', () => {
     expect(bar).toHaveAttribute('data-open', 'true');
     await user.click(screen.getByRole('button', { name: /Suchen/ }));
     expect(useUiStore.getState().paletteOpen).toBe(true);
-    await user.click(screen.getByRole('button', { name: 'Neu: schnell hinzufügen' }));
+    await user.click(screen.getByRole('button', { name: 'Neu: etwas eintragen' }));
     expect(useUiStore.getState().quickAddOpen).toBe(true);
     await user.click(screen.getByTestId('cockpit-exit'));
     expect(useUiStore.getState().cockpit).toBe(false);

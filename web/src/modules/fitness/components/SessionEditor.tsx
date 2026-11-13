@@ -436,7 +436,7 @@ function Fields({
       >
         <Button onClick={onClose}>{t.actions.cancel}</Button>
         <Button type="submit" variant="primary">
-          {t.actions.save}
+          {existing ? t.actions.save : t.fitness.addSession}
         </Button>
       </FormActions>
     </Form>

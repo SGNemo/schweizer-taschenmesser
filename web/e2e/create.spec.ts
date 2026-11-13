@@ -10,7 +10,10 @@ test.beforeEach(async ({ page }) => {
 const input = (page: Page) => page.getByRole('textbox', { name: 'Was möchtest du festhalten?' });
 
 async function save(page: Page) {
-  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+    .click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
@@ -20,7 +23,7 @@ test('an invoice from one line of text: "r 89,90 Swisscom 31.10." and Enter', as
 }) => {
   await enable(page, 'invoices');
   await page.goto('/');
-  await page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }).click();
+  await page.getByRole('button', { name: /Neu: etwas eintragen|Neu eintragen/ }).click();
   await input(page).fill('r 89,90 Swisscom 31.10.');
   await expect(page.getByTestId('capture-chips')).toContainText('Rechnungen');
   await input(page).press('Enter');
@@ -36,7 +39,7 @@ test('an invoice from one line of text: "r 89,90 Swisscom 31.10." and Enter', as
 test('a note with the "n " prefix lands in the notes without choosing a type', async ({ page }) => {
   await enable(page, 'notes');
   await page.goto('/');
-  await page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }).click();
+  await page.getByRole('button', { name: /Neu: etwas eintragen|Neu eintragen/ }).click();
   await input(page).fill('n Idee für den Garten');
   await expect(page.getByTestId('capture-chips')).toContainText('Notizen');
   await input(page).press('Enter');
@@ -49,14 +52,14 @@ test('a repeat booking takes category and account of the last booking of the pay
   page,
 }) => {
   await ready(page, '/finance?new=1');
-  let dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
+  let dialog = page.getByRole('dialog', { name: 'Buchung eintragen' });
   await dialog.getByLabel('Betrag').fill('45,00');
   await dialog.getByLabel('Empfänger / Titel').fill('Migros');
   await dialog.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
   await save(page);
 
   await ready(page, '/finance?new=1');
-  dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
+  dialog = page.getByRole('dialog', { name: 'Buchung eintragen' });
   await dialog.getByLabel('Betrag').fill('12,00');
   await dialog.getByLabel('Empfänger / Titel').fill('migros');
   await expect(dialog.getByLabel('Kategorie')).toHaveValue(/.+/);
@@ -85,7 +88,7 @@ test('"Duplizieren" copies an invoice one month later and opens the copy', async
 
 test('"Duplizieren" on a booking opens a copy dated today; undo removes it', async ({ page }) => {
   await ready(page, '/finance?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Buchung eintragen' });
   await dialog.getByLabel('Betrag').fill('950,00');
   await dialog.getByLabel('Empfänger / Titel').fill('Miete');
   await moreFields(page);

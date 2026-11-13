@@ -350,7 +350,11 @@ export default function ListsPage() {
       >
         {/* Rule 4: items are added in the list's last row; the head's action (the plus on the phone) is a new
             list, as `e2e/mobile-layout.spec.ts` pins it. */}
-        <PageAction short={t.nav.plusThings.list} onClick={() => setListTarget('new')}>
+        <PageAction
+          short={t.nav.plusThings.list}
+          plusName={t.lists.newList}
+          onClick={() => setListTarget('new')}
+        >
           <Icon name="plus" size={18} />
           {t.lists.newList}
         </PageAction>

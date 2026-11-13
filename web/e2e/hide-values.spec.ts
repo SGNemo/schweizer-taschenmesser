@@ -10,11 +10,11 @@ test.describe('Werte ausblenden', () => {
     page,
   }) => {
     await ready(page, '/finance?tab=accounts');
-    await page.getByRole('button', { name: 'Konto hinzufügen' }).click();
+    await page.getByRole('button', { name: 'Konto eintragen' }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Kontoname').fill('Girokonto');
     await dialog.getByLabel('Anfangssaldo').fill('1234,56');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
 
     await ready(page, '/');
@@ -55,11 +55,11 @@ test.describe('Werte ausblenden', () => {
     page,
   }) => {
     await ready(page, '/finance?tab=accounts');
-    await page.getByRole('button', { name: 'Konto hinzufügen' }).click();
+    await page.getByRole('button', { name: 'Konto eintragen' }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Kontoname').fill('Girokonto');
     await dialog.getByLabel('Anfangssaldo').fill('1234,56');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
 
     await ready(page, '/finance');

@@ -283,7 +283,7 @@ export default function MapsPage() {
     void requireNotice('maps').then(() => setReady(true));
   }, [tab, ready]);
 
-  // "Ort hinzufügen": focus the search once the map tab (and its field) has rendered and its one-time notice is read;
+  // "Ort eintragen": focus the search once the map tab (and its field) has rendered and its one-time notice is read;
   // a notice that opened after the focus would take the words typed into the search.
   // Pending until then; checked after every render (the tab, the notice and the address each bring one).
   const focusSearch = useRef(false);

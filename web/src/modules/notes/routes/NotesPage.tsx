@@ -333,7 +333,8 @@ export default function NotesPage() {
       {/* The page's one entry: the head's button on the desktop, the plus of the bottom bar on the phone. */}
       <PageHeader title={t.notes.title}>
         <PageAction
-          short={t.notes.meta.quickAdd}
+          short={t.nav.plusThings.page}
+          plusName={t.notes.newPage}
           // No page yet: the empty state of the list holds the filled button.
           variant={notes && !notes.some((n) => !isScratch(n)) ? 'secondary' : 'primary'}
           onClick={newPage}

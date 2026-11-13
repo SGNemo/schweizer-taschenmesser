@@ -9,7 +9,10 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function save(page: Page) {
-  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+    .click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
@@ -18,7 +21,7 @@ test('an account in another currency is shown in its currency and never mixed in
 }) => {
   await ready(page, '/finance?tab=accounts');
   await togglePageMoreFields(page);
-  await page.getByRole('button', { name: 'Konto hinzufügen' }).click();
+  await page.getByRole('button', { name: 'Konto eintragen' }).click();
   await page.getByLabel('Kontoname').fill('Peso');
   await page.getByLabel('Anfangssaldo').fill('8.500,00');
   await page.getByLabel('Währung', { exact: true }).selectOption('MXN');
@@ -54,14 +57,14 @@ test('a subscription in another currency gets its own total next to the euro one
   page,
 }) => {
   await ready(page, '/subscriptions?new=1');
-  let dialog = page.getByRole('dialog', { name: 'Abo hinzufügen' });
+  let dialog = page.getByRole('dialog', { name: 'Abo eintragen' });
   await dialog.getByLabel('Name').fill('Streaming');
   await dialog.getByLabel('Betrag').fill('12,99');
   await dialog.getByLabel('Abbuchung am').fill('2026-10-15');
   await save(page);
 
   await ready(page, '/subscriptions?new=1');
-  dialog = page.getByRole('dialog', { name: 'Abo hinzufügen' });
+  dialog = page.getByRole('dialog', { name: 'Abo eintragen' });
   await dialog.getByLabel('Name').fill('Gym Cancún');
   await dialog.getByLabel('Betrag').fill('600,00');
   await dialog.getByLabel('Abbuchung am').fill('2026-10-01');

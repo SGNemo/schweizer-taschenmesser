@@ -11,7 +11,7 @@ export const aiLabels: Strings['aiLabels'] = {
     'calendar.create': 'Add event',
     'calendar.update': 'Change event',
     'calendar.delete': 'Delete event',
-    'example.create': 'Add entry',
+    'example.create': 'Add example',
     'example.delete': 'Delete entry',
     'finance.create': 'Add transaction',
     'finance.update': 'Change transaction',

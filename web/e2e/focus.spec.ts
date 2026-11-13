@@ -33,7 +33,7 @@ test.describe('Focus and attention aids', () => {
     // One thing only: no sidebar, no bottom navigation, no quick-add button.
     await expect(page.getByRole('navigation', { name: 'Hauptnavigation' })).toHaveCount(0);
     await expect(
-      page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }),
+      page.getByRole('button', { name: /Neu: etwas eintragen|Neu eintragen/ }),
     ).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Fertig' }).click();
@@ -178,7 +178,7 @@ test.describe('Focus and attention aids', () => {
     page,
   }) => {
     await ready(page, '/');
-    await page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }).click();
+    await page.getByRole('button', { name: /Neu: etwas eintragen|Neu eintragen/ }).click();
     const input = page.getByRole('textbox', { name: 'Was möchtest du festhalten?' });
     await input.fill('t Formular ausfüllen 15 min');
     await expect(page.getByTestId('capture-chips')).toContainText('etwa 15 Min');

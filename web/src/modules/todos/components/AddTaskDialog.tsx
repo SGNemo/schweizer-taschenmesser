@@ -60,7 +60,7 @@ export function AddTaskDialog({
           <FormActions>
             <Button onClick={onClose}>{t.actions.cancel}</Button>
             <Button type="submit" variant="primary" disabled={!ready}>
-              {t.actions.add}
+              {t.todos.newTask}
             </Button>
           </FormActions>
         </Form>

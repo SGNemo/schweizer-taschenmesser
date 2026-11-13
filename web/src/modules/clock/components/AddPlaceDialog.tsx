@@ -10,7 +10,7 @@ import { formatZoneTime } from '../view';
 import styles from '../clock.module.css';
 
 /**
- * "Ort hinzufügen": type a city or a zone, pick a hit, done. Offline (`core/time/placeSearch`); the place starts with
+ * "Ort eintragen": type a city or a zone, pick a hit, done. Offline (`core/time/placeSearch`); the place starts with
  * the city's name, renaming comes after (⋯ → Umbenennen).
  */
 export function AddPlaceDialog({ open, onClose }: { open: boolean; onClose: () => void }) {

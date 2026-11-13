@@ -10,6 +10,8 @@ import { create } from 'zustand';
 export interface PageActionState {
   /** The thing the action adds, as a short noun ("Buchung"): the plus shows it and is named "<noun> eintragen". */
   short: string;
+  /** The plus's accessible name when "<noun> eintragen" reads wrong ("Neue Liste" for a thing one creates to write in); it contains `short`. */
+  name?: string;
   run: () => void;
   disabled: boolean;
 }
@@ -21,7 +23,7 @@ export const usePageActionStore = create<{
 
 /** Declares the page's action for as long as the caller is mounted (`enabled` false: declares nothing). */
 export function usePageAction(
-  action: { short: string; onClick: () => void; disabled?: boolean },
+  action: { short: string; name?: string; onClick: () => void; disabled?: boolean },
   enabled = true,
 ): void {
   const set = usePageActionStore((s) => s.set);
@@ -30,15 +32,15 @@ export function usePageAction(
   useEffect(() => {
     handler.current = action.onClick;
   });
-  const { short } = action;
+  const { short, name } = action;
   const disabled = action.disabled ?? false;
   useEffect(() => {
     if (!enabled) return;
-    const mine: PageActionState = { short, disabled, run: () => handler.current() };
+    const mine: PageActionState = { short, name, disabled, run: () => handler.current() };
     set(mine);
     return () => {
       // Only clear what is still ours: the next page may already have declared its own.
       if (usePageActionStore.getState().action === mine) set(undefined);
     };
-  }, [set, enabled, short, disabled]);
+  }, [set, enabled, short, name, disabled]);
 }

@@ -36,7 +36,7 @@ async function rows(page: Page, table: string): Promise<Record<string, unknown>[
 
 async function capture(page: Page, text: string) {
   await page.goto('/');
-  await page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }).click();
+  await page.getByRole('button', { name: /Neu: etwas eintragen|Neu eintragen/ }).click();
   await page.getByRole('textbox', { name: 'Was möchtest du festhalten?' }).fill(text);
   await expect(page.getByText('Ziel: Fitness')).toBeVisible();
   await page.getByRole('button', { name: 'Speichern', exact: true }).click();
@@ -55,7 +55,7 @@ test('a session: logged in the form, counted in the widget, shown in the calenda
   await dialog.getByLabel('Wdh.').fill('8');
   await dialog.getByLabel('kg', { exact: true }).fill('60');
   await dialog.getByLabel('Dauer in Minuten').fill('45');
-  await dialog.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
   await expect(page.getByTestId('fitness-week')).toContainText('1');
@@ -110,7 +110,10 @@ test('kcal by quick capture adds up to the day sum, past the goal only in words'
   await page.goto('/fitness?view=food');
   await (await openPageMenu(page)).getByRole('menuitem', { name: 'Tagesziel' }).click();
   await page.getByRole('dialog').getByLabel('kcal pro Tag').fill('900');
-  await page.getByRole('dialog').getByRole('button', { name: 'Speichern', exact: true }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+    .click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   // The head says it the same calm way.
   await expect(page.locator('main').getByText('1.000 kcal · Ziel 900')).toBeVisible();
@@ -132,7 +135,7 @@ test('the goal can be worked out; weight, height and age are never stored', asyn
   await expect(dialog.getByTestId('fitness-estimate')).toHaveText('Etwa 2.750 kcal pro Tag');
   await dialog.getByRole('button', { name: 'Übernehmen' }).click();
   await expect(dialog.getByLabel('kcal pro Tag')).toHaveValue('2750');
-  await dialog.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
   const settings = (await rows(page, '_settings')).find((r) => r.id === 'module.fitness');
@@ -157,7 +160,7 @@ test('a planned session: on the overview with its time, counted only once done, 
   await dialog.getByLabel('Sätze').fill('4');
   await dialog.getByLabel('Geplant, noch nicht gemacht').check();
   await dialog.getByLabel('Uhrzeit').fill('18:00');
-  await dialog.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
   // Planned: listed under „Geplant“, not counted.
@@ -258,7 +261,7 @@ test('the catalogue: picked by group with its pictogram, the plate week fills', 
   await expect(picker).toHaveCount(0);
   await expect(dialog.getByRole('combobox', { name: 'Übung' })).toHaveValue('Klimmzüge');
   await dialog.getByLabel('Sätze').fill('3');
-  await dialog.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
   // Sunday 2026-11-08 is the last plate of the week (Monday start): full now.

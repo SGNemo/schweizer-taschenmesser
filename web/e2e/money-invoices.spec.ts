@@ -9,13 +9,16 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function save(page: Page) {
-  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+    .click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
 async function addInvoice(page: Page, payee: string, amount: string, due: string) {
   await ready(page, '/invoices?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Rechnung hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Rechnung eintragen' });
   await dialog.getByLabel('Empfänger', { exact: true }).fill(payee);
   await dialog.getByLabel('Betrag').fill(amount);
   await dialog.getByLabel('Fällig am').fill(due);
@@ -97,7 +100,7 @@ test.describe('Invoices: part payments, payment data, attachment', () => {
 
   test('an IBAN with a typo gets a calm hint; a valid one does not', async ({ page }) => {
     await ready(page, '/invoices?new=1');
-    const dialog = page.getByRole('dialog', { name: 'Rechnung hinzufügen' });
+    const dialog = page.getByRole('dialog', { name: 'Rechnung eintragen' });
     await moreFields(page);
     const iban = dialog.getByLabel('IBAN des Empfängers');
     await iban.fill('DE89 3704 0044 0532 0130 01');
@@ -109,7 +112,7 @@ test.describe('Invoices: part payments, payment data, attachment', () => {
   test('payment data are copied as one block from the row menu', async ({ page, context }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
     await ready(page, '/invoices?new=1');
-    const dialog = page.getByRole('dialog', { name: 'Rechnung hinzufügen' });
+    const dialog = page.getByRole('dialog', { name: 'Rechnung eintragen' });
     await dialog.getByLabel('Empfänger', { exact: true }).fill('Stadtwerke');
     await dialog.getByLabel('Betrag').fill('89,90');
     await dialog.getByLabel('Fällig am').fill('2026-10-05');

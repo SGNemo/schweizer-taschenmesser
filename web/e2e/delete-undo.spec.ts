@@ -15,7 +15,7 @@ test.describe('Unterlagen: delete with undo, draft kept (B09)', () => {
       mimeType: 'text/plain',
       buffer: Buffer.from('Vertrag'),
     });
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     const item = page.getByRole('listitem').filter({ hasText: 'Mietvertrag' });
     const row = item.getByRole('button', { name: /^Mietvertrag/ });

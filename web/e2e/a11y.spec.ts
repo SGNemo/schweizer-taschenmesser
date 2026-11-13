@@ -221,13 +221,13 @@ for (const scheme of ['light', 'dark'] as const) {
       await page.getByLabel('Master-Passwort', { exact: true }).fill(MASTER);
       await page.getByLabel('Master-Passwort wiederholen').fill(MASTER);
       await page.getByRole('button', { name: 'Tresor erstellen' }).click();
-      await expect(page.getByRole('button', { name: 'Zugang hinzufügen' })).toBeVisible({
+      await expect(page.getByRole('button', { name: 'Zugang eintragen' })).toBeVisible({
         timeout: 20_000,
       });
       await audit(page, `accounts empty (${scheme})`);
 
-      await page.getByRole('button', { name: 'Zugang hinzufügen' }).click();
-      const form = page.getByRole('dialog', { name: 'Zugang hinzufügen' });
+      await page.getByRole('button', { name: 'Zugang eintragen' }).click();
+      const form = page.getByRole('dialog', { name: 'Zugang eintragen' });
       await form.getByLabel('Name', { exact: true }).fill('Beispiel');
       await form.getByLabel('Passwort', { exact: true }).fill('ein-ganz-normales-passwort-1');
       await form.getByLabel('Einmalcode (TOTP)').fill('JBSWY3DPEHPK3PXP');
@@ -247,7 +247,7 @@ for (const scheme of ['light', 'dark'] as const) {
         )
         .toBe(0);
       await audit(page, `accounts form + generator (${scheme})`);
-      await form.getByRole('button', { name: 'Speichern' }).click();
+      await form.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
 
       // a dialog on phones, the side panel ("Details") from 1200 px
       const detail = page

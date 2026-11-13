@@ -14,7 +14,7 @@ test.describe('Deadlines (B08, V15)', () => {
     // 4 calendar months before 31 Dec → deadline 2026-08-31, already behind us. The calendar shows counts, never a title (C04).
     await dialog.getByRole('spinbutton', { name: 'Kündigungsfrist' }).fill('4');
     await dialog.getByLabel('Einheit').selectOption('months');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
 
     // The folder itself; "Verlängert: Zeitschrift" beside it is the row's own button (module package T-a).
@@ -31,7 +31,7 @@ test.describe('Deadlines (B08, V15)', () => {
     isMobile,
   }) => {
     await ready(page, '/subscriptions?new=1');
-    const dialog = page.getByRole('dialog', { name: 'Abo hinzufügen' });
+    const dialog = page.getByRole('dialog', { name: 'Abo eintragen' });
     await dialog.getByLabel('Name').fill('Jahreszeitung');
     await dialog.getByLabel('Betrag').fill('120');
     await dialog.getByLabel('Abbuchung am').fill('2026-12-01');
@@ -42,7 +42,7 @@ test.describe('Deadlines (B08, V15)', () => {
     // 3 calendar months before the charge; the 2026 deadline (1 Sep) is behind us, the next is 2027
     await expect(dialog.getByTestId('cancel-by')).toContainText('Kündigen bis');
     await expect(dialog.getByTestId('cancel-by')).toContainText('1. Sep. 2027');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
 
     // the deadline of the first charge is behind us: calm note, the next reachable one is named

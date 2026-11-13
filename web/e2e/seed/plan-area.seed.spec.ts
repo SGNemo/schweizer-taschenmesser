@@ -66,7 +66,7 @@ test.describe('click paths: one click, a title, Enter', () => {
   test.describe('desktop', () => {
     test.use({ viewport: DESKTOP, seeded: { scale: 'small', desktop: true, preview: true } });
 
-    test('"Neue Aufgabe" in the head, a title, Enter: the task is in the list', async ({
+    test('"Aufgabe eintragen" in the head, a title, Enter: the task is in the list', async ({
       page,
     }) => {
       await startSeeded(page);
@@ -75,7 +75,7 @@ test.describe('click paths: one click, a title, Enter', () => {
       await expect(page.locator('main form')).toHaveCount(0);
       // Click 1 of at most 2.
       await page.locator('[data-page-action]').click();
-      const dialog = page.getByRole('dialog', { name: 'Neue Aufgabe' });
+      const dialog = page.getByRole('dialog', { name: 'Aufgabe eintragen' });
       await expect(dialog).toBeVisible();
       expect(await visibleFields(page), 'visible fields of a new task').toBe(1);
       // The title has the focus: typing and Enter is all that is left.
@@ -110,13 +110,13 @@ test.describe('click paths: one click, a title, Enter', () => {
       await expect(page.getByTestId('task-detail')).toHaveCount(0);
     });
 
-    test('"Neuer Termin" in the head, a title, Enter: the appointment is in the month', async ({
+    test('"Termin eintragen" in the head, a title, Enter: the appointment is in the month', async ({
       page,
     }) => {
       await startSeeded(page);
       await openPage(page, '/calendar?view=day');
       await page.locator('[data-page-action]').click();
-      const dialog = page.getByRole('dialog', { name: 'Neuer Termin' });
+      const dialog = page.getByRole('dialog', { name: 'Termin eintragen' });
       await expect(dialog).toBeVisible();
       expect(await visibleFields(page), 'visible fields of a new appointment').toBeLessThanOrEqual(
         5,
@@ -143,7 +143,7 @@ test.describe('click paths: one click, a title, Enter', () => {
       await openPage(page, '/todos');
       await expect(page.getByTestId('bottom-plus')).toHaveAccessibleName('Aufgabe eintragen');
       await page.getByTestId('bottom-plus').tap();
-      const dialog = page.getByRole('dialog', { name: 'Neue Aufgabe' });
+      const dialog = page.getByRole('dialog', { name: 'Aufgabe eintragen' });
       await expect(dialog).toBeVisible();
       await dialog.getByLabel('Titel').fill('Wächter-Aufgabe am Handy');
       await page.keyboard.press('Enter');
@@ -168,7 +168,7 @@ test.describe('click paths: one click, a title, Enter', () => {
       await openPage(page, '/calendar');
       await expect(page.getByTestId('bottom-plus')).toHaveAccessibleName('Termin eintragen');
       await page.getByTestId('bottom-plus').tap();
-      const dialog = page.getByRole('dialog', { name: 'Neuer Termin' });
+      const dialog = page.getByRole('dialog', { name: 'Termin eintragen' });
       await expect(dialog).toBeVisible();
       expect(await visibleFields(page), 'visible fields of a new appointment').toBeLessThanOrEqual(
         5,
@@ -185,7 +185,7 @@ test.describe('click paths: one click, a title, Enter', () => {
       await expect(dialog.getByRole('textbox', { name: 'Ort' })).toBeVisible();
       const foot = dialog.locator('[data-form-actions]');
       await expect(foot).toHaveCSS('position', 'sticky');
-      const save = dialog.getByRole('button', { name: 'Speichern' });
+      const save = dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ });
       for (const top of [0, 9999]) {
         await dialog.evaluate((el, y) => el.scrollTo(0, y), top);
         const box = (await save.boundingBox())!;

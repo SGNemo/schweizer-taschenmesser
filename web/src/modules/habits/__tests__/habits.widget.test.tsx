@@ -28,7 +28,7 @@ afterEach(() => {
 describe('habits widget', () => {
   it('shows an empty state with an action', async () => {
     draw();
-    expect(await screen.findByRole('link', { name: 'Gewohnheit anlegen' })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: 'Gewohnheit eintragen' })).toHaveAttribute(
       'href',
       '/habits?new=1',
     );

@@ -392,7 +392,7 @@ test.describe('Planer (calendar chip, prefix, sentences – package 2)', () => {
     await sw.click();
     await expect(sw).toHaveAttribute('aria-checked', 'false');
     await ready(page, '/calendar?view=month&date=2026-11-09');
-    await expect(page.getByRole('button', { name: 'Neuer Termin' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Termin eintragen' })).toBeVisible();
     await expect(page.getByRole('button', { name: /^Plan · / })).toHaveCount(0);
   });
 

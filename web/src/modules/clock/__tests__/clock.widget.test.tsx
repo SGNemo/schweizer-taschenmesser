@@ -26,7 +26,7 @@ describe('clock widget', () => {
 
   it('shows an empty state with an action when there is no place', async () => {
     view();
-    expect(await screen.findByRole('link', { name: /Ort hinzufügen/ })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: /Ort eintragen/ })).toHaveAttribute(
       'href',
       '/clock?new=1',
     );

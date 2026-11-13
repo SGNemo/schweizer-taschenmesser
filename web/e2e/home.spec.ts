@@ -77,7 +77,7 @@ test.describe('Home screen', () => {
   test('empty widgets offer a next step', async ({ page }) => {
     await ready(page, '/');
     await expect(
-      page.getByTestId('widget-todos:open').getByRole('link', { name: 'Aufgabe anlegen' }),
+      page.getByTestId('widget-todos:open').getByRole('link', { name: 'Aufgabe eintragen' }),
     ).toBeVisible();
   });
 
@@ -151,7 +151,10 @@ test.describe('Home screen', () => {
         .click();
       await openEditor(page, page.getByRole('button', { name: new RegExp(title) }));
       await page.getByLabel('Fällig am').fill(due);
-      await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+      await page
+        .getByRole('dialog')
+        .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+        .click();
       await expect(page.getByRole('dialog')).toHaveCount(0);
     }
 
@@ -189,7 +192,10 @@ test.describe('Home screen', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
     await openEditor(page, page.getByRole('button', { name: /Alt/ }));
     await page.getByLabel('Fällig am').fill('2026-09-20');
-    await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await ready(page, '/');
     await expect(page.getByRole('region', { name: 'Jetzt wichtig' })).toBeVisible();
@@ -215,7 +221,10 @@ test.describe('Home screen', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
     await openEditor(page, page.getByRole('button', { name: /Alt/ }));
     await page.getByLabel('Fällig am').fill('2026-09-20');
-    await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     for (const scheme of ['light', 'dark'] as const) {
       for (const density of ['normal', 'compact']) {

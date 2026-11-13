@@ -9,13 +9,16 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function save(page: Page) {
-  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+    .click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
 async function addSubscription(page: Page, name: string, amount: string, first: string) {
   await ready(page, '/subscriptions?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Abo hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Abo eintragen' });
   await dialog.getByLabel('Name').fill(name);
   await dialog.getByLabel('Betrag').fill(amount);
   await dialog.getByLabel('Abbuchung am').fill(first);
@@ -94,7 +97,7 @@ test.describe('Subscriptions: tiles, trial, category, price suggestion', () => {
     // Two bookings of the same new price (the two newest agree).
     for (const date of ['2026-08-05', '2026-09-05']) {
       await ready(page, '/finance?new=1');
-      const d = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
+      const d = page.getByRole('dialog', { name: 'Buchung eintragen' });
       await d.getByLabel('Betrag').fill('14,99');
       await d.getByLabel('Empfänger / Titel').fill('STREAMING PLUS 4711');
       await moreFields(page);

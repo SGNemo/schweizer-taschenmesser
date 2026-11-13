@@ -50,7 +50,7 @@ test('B01/B03: a Sparkasse file on a fresh app is booked and fills a grocery bud
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
   await dialog.getByLabel('Limit pro Monat').fill('400');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   // Rewe 54,37 + Bäckerei 6,80 in November.
   await expect(
@@ -85,7 +85,7 @@ test('B06: after importing older bookings the balance can be set to what the ban
     .click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel(/Kontostand heute laut Bank/).fill('1.250,00');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByTestId('balance-Girokonto')).toHaveText(/1\.250,00\s€/);
 });

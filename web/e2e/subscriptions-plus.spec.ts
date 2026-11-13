@@ -7,13 +7,16 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function save(page: Page) {
-  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+    .click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
 async function addStreaming(page: Page, first = '2026-10-15') {
   await ready(page, '/subscriptions?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Abo hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Abo eintragen' });
   await dialog.getByLabel('Name').fill('Streaming');
   await dialog.getByLabel('Betrag').fill('9,99');
   await dialog.getByLabel('Abbuchung am').fill(first);
@@ -71,7 +74,10 @@ test('a cancellation date before the first charge cannot be saved (browser valid
   await addStreaming(page);
   await page.getByRole('button', { name: /Streaming/ }).click();
   await page.getByRole('dialog').getByLabel('Gekündigt zum (optional)').fill('2026-09-01');
-  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+    .click();
   await expect(page.getByRole('dialog')).toBeVisible();
 });
 
@@ -124,7 +130,7 @@ test('0b-8 G8: the dialog asks only how often; interval and end wait behind "Meh
   page,
 }) => {
   await ready(page, '/subscriptions?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Abo hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Abo eintragen' });
   await expect(dialog.getByLabel('Wiederholung')).toBeVisible();
   await expect(dialog.getByLabel('Alle (Monate)')).toHaveCount(0);
   await expect(dialog.getByLabel('Ende', { exact: true })).toHaveCount(0);

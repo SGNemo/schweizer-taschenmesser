@@ -57,7 +57,6 @@ export const onboarding: Strings['onboarding'] = {
     'nothing-selected': 'Nothing selected.',
     fallback: 'That didn’t work.',
   } as Record<string, string>,
-  add: 'Add',
   required: 'Please fill in.',
 
   mail: {

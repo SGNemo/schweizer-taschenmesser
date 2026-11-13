@@ -39,7 +39,6 @@ export const notes: Strings['notes'] = {
     listTitle: 'New list',
     listBody: '- [ ] \n- [ ] \n- [ ] ',
   },
-  add: 'Add note',
   edit: 'Edit note',
   body: 'Text',
   pin: 'Pin to top',

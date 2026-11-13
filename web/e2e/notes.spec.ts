@@ -132,7 +132,7 @@ test.describe('notebook (pages, notebooks, tabs, history, trash)', () => {
     await dialog.getByLabel('Name').fill('Arbeit');
     await dialog.getByRole('button', { name: 'Farbe 2' }).click();
     await dialog.getByRole('button', { name: 'Ziel' }).click();
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     const chip = (name: RegExp) => page.getByRole('button', { name });
     await expect(chip(/^Arbeit · 0/)).toHaveAttribute('aria-pressed', 'true');
 

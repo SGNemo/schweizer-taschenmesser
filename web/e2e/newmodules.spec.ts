@@ -44,14 +44,14 @@ test('pantry: expiry, low stock and the hand-over to the shopping list', async (
   await enable(page, ['pantry', 'lists']);
   await page.goto('/pantry');
   await page.getByRole('button', { name: /^Vorrat (hinzufügen|eintragen)$/ }).click();
-  const dialog = page.getByRole('dialog', { name: 'Vorrat hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Vorrat eintragen' });
   await dialog.getByLabel('Name', { exact: true }).fill('Milch');
   await dialog.getByLabel('Ort').selectOption('fridge');
   await dialog.getByLabel('Vorrat (Anzahl)').fill('1');
   await moreFields(page);
   await dialog.getByLabel('Nachkaufen ab (Anzahl, optional)').fill('1');
   await dialog.getByLabel('Haltbar bis (optional)').fill('2026-09-30');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(dialog).toBeHidden();
 
   const fridge = page.getByRole('region', { name: 'Kühlschrank' });
@@ -96,13 +96,13 @@ test('pantry: the hand-over also arrives when the app loads slowly (services sta
   });
   await page.goto('/pantry');
   await page.getByRole('button', { name: /^Vorrat (hinzufügen|eintragen)$/ }).click();
-  const dialog = page.getByRole('dialog', { name: 'Vorrat hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Vorrat eintragen' });
   await dialog.getByLabel('Name', { exact: true }).fill('Milch');
   await dialog.getByLabel('Ort').selectOption('fridge');
   await dialog.getByLabel('Vorrat (Anzahl)').fill('1');
   await moreFields(page);
   await dialog.getByLabel('Nachkaufen ab (Anzahl, optional)').fill('1');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(dialog).toBeHidden();
 
   const row = page
@@ -123,10 +123,10 @@ test('pantry: without the lists module the hand-over says so and offers to switc
   await enable(page, ['pantry']);
   await page.goto('/pantry');
   await page.getByRole('button', { name: /^Vorrat (hinzufügen|eintragen)$/ }).click();
-  const dialog = page.getByRole('dialog', { name: 'Vorrat hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Vorrat eintragen' });
   await dialog.getByLabel('Name', { exact: true }).fill('Butter');
   await dialog.getByLabel('Vorrat (Anzahl)').fill('0');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(dialog).toBeHidden();
   await page.getByRole('button', { name: 'Auf die Einkaufsliste' }).click();
   await expect(page.getByText('braucht es das Modul „Listen“')).toBeVisible();
@@ -151,7 +151,7 @@ test('gift ideas: per person, status and what was spent', async ({ page }) => {
   await person.getByLabel('Name', { exact: true }).fill('Anna');
   // A new person has no date preset (it used to be today and was saved as a wrong birthday).
   await person.getByRole('checkbox', { name: 'Geburtstag eintragen' }).uncheck();
-  await person.getByRole('button', { name: 'Speichern' }).click();
+  await person.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(person).toBeHidden();
   await page.getByRole('button', { name: /^Anna(?! per WhatsApp)/ }).click();
   await expect(page.getByRole('heading', { name: 'Anna' })).toBeVisible();
@@ -162,7 +162,7 @@ test('gift ideas: per person, status and what was spent', async ({ page }) => {
   await dialog.getByLabel('Anlass (optional)').fill('Geburtstag');
   await dialog.getByLabel('Preis in € (optional)').fill('19,90');
   await dialog.getByLabel('Link (optional)').fill('javascript:alert(1)');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(dialog).toBeHidden();
 
   const gifts = page.getByRole('list', { name: 'Geschenke' });
@@ -179,7 +179,7 @@ test('gift ideas: per person, status and what was spent', async ({ page }) => {
     .selectOption('bought');
   await page
     .getByRole('dialog', { name: 'Geschenkidee bearbeiten' })
-    .getByRole('button', { name: 'Speichern' })
+    .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
     .click();
   await expect(page.getByTestId('gifts-total')).toContainText(
     '1 Geschenke gekauft oder verschenkt für 19,90',

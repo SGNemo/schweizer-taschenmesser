@@ -154,7 +154,7 @@ test('capture layout screenshots', async ({ browser }) => {
     await page.waitForTimeout(300);
     await page.getByLabel('Master-Passwort').fill(MASTER);
     await page.getByRole('button', { name: 'Entsperren' }).click();
-    await expect(page.getByRole('button', { name: 'Zugang hinzufügen' })).toBeVisible({
+    await expect(page.getByRole('button', { name: 'Zugang eintragen' })).toBeVisible({
       timeout: 30_000,
     });
     await page.screenshot({ path: `${OUT}/${vp.name}--accounts.png` });

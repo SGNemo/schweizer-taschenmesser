@@ -36,10 +36,10 @@ test('searching for a to-do opens its edit dialog: Ctrl+K, text, click the hit',
 test('a deep link to a booking opens its dialog', async ({ page }, info) => {
   test.skip(info.project.name === 'pixel-7', 'the palette shortcut is a desktop feature');
   await ready(page, '/finance?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Buchung eintragen' });
   await dialog.getByLabel('Betrag').fill('33,00');
   await dialog.getByLabel('Empfänger / Titel').fill('Tierarzt Muster');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
   await ready(page, '/');
@@ -55,7 +55,7 @@ test('a person from the search opens its detail page', async ({ page }, info) =>
   const dialog = page.getByRole('dialog', { name: 'Person eintragen' });
   await dialog.getByLabel('Name', { exact: true }).fill('Frieda Beispiel');
   await dialog.getByLabel('Geburtsdatum').fill('1950-05-05');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
   await ready(page, '/');

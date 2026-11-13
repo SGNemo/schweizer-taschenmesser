@@ -16,7 +16,7 @@ test.beforeEach(async ({ page }) => {
 
 async function addPlace(page: Page, query: string, hit: string) {
   await page.goto('/clock?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Ort hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Ort eintragen' });
   await dialog.getByLabel('Stadt oder Zeitzone').fill(query);
   await dialog.getByTestId('clock-hit').filter({ hasText: hit }).first().click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -53,7 +53,7 @@ test('a place gets its own name; removing it can be undone', async ({ page }) =>
   await page.getByRole('menuitem', { name: 'Umbenennen' }).click();
   const dialog = page.getByRole('dialog', { name: 'Ort umbenennen' });
   await dialog.getByLabel('Name').fill('Tante Ines');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(row).toContainText('Tante Ines');
 
   await row.getByRole('button', { name: 'Aktionen für Tante Ines' }).click();
@@ -93,7 +93,10 @@ test.describe('phone (412 px)', () => {
       .getByRole('dialog')
       .getByLabel('Name')
       .fill('Ferienwohnung der Familie am Kap der Guten Hoffnung');
-    await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     await expect(page.getByTestId('clock-place')).toHaveCount(2);
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,

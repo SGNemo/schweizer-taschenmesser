@@ -68,7 +68,7 @@ test.describe('Spotify connector', () => {
     await ready(page, '/settings/verbindungen');
     const card = page.getByTestId('connector-spotify');
     await card.getByLabel('Client-ID').fill('client-invented-123');
-    await card.getByRole('button', { name: 'Speichern' }).click();
+    await card.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(card.getByPlaceholder('••••••••')).toBeVisible();
     await card.getByRole('button', { name: 'Verbinden' }).click();
 
@@ -119,7 +119,7 @@ test.describe('Spotify connector', () => {
     await ready(page, '/settings/verbindungen');
     const card = page.getByTestId('connector-spotify');
     await card.getByLabel('Client-ID').fill('client-invented-123');
-    await card.getByRole('button', { name: 'Speichern' }).click();
+    await card.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await card.getByRole('button', { name: 'Verbinden' }).click();
     await expect(page).toHaveURL(/\/settings\/verbindungen/);
     await expect(page.getByTestId('connector-spotify').getByText('Nicht verbunden')).toBeVisible();

@@ -11,7 +11,7 @@ test.describe('Drafts in Termin- and Abo-Dialog', () => {
 
     // reopened inside the app (the draft lives in memory, a page reload drops it)
     await page
-      .getByRole('button', { name: /Neuer Termin|Termin eintragen/ })
+      .getByRole('button', { name: /Termin eintragen/ })
       .first()
       .click();
     dialog = page.getByRole('dialog');
@@ -20,7 +20,7 @@ test.describe('Drafts in Termin- and Abo-Dialog', () => {
 
     await dialog.getByRole('button', { name: 'Abbrechen' }).click();
     await page
-      .getByRole('button', { name: /Neuer Termin|Termin eintragen/ })
+      .getByRole('button', { name: /Termin eintragen/ })
       .first()
       .click();
     await expect(page.getByRole('dialog').getByLabel('Titel')).toHaveValue('');

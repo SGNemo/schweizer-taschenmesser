@@ -22,7 +22,7 @@ async function editTodo(
   await openEditor(page, page.getByRole('button', { name: new RegExp(`^${title}`) }));
   const dialog = page.getByRole('dialog');
   await edit(dialog);
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
@@ -79,7 +79,7 @@ test('U09: the habits page has one filled button', async ({ page }) => {
   await ready(page, '/habits?new=1');
   const dialog = page.getByRole('dialog', { name: 'Gewohnheit eintragen' });
   await dialog.getByRole('button', { name: 'Wasser trinken' }).click();
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByTestId('habit-card')).toHaveCount(1);
   const filled = await page

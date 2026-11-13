@@ -101,7 +101,7 @@ export const lists: Strings['lists'] = {
   widgetEmpty: 'Nothing to buy.',
   widgetAction: 'Add item',
   packingEmpty: 'No packing list in progress.',
-  packingAction: 'Create packing list',
+  packingAction: 'New packing list',
   figureUnit: 'left',
   sectionsCount: (n: number) => (n === 1 ? '1 store section' : `${n} store sections`),
   sections: {

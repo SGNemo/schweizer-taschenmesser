@@ -11,13 +11,16 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function save(page: Page) {
-  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+    .click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
 async function addInvoice(page: Page, payee: string, due: string) {
   await ready(page, '/invoices?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Rechnung hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Rechnung eintragen' });
   await dialog.getByLabel('Empfänger', { exact: true }).fill(payee);
   await dialog.getByLabel('Betrag').fill('50,00');
   await dialog.getByLabel('Fällig am').fill(due);
@@ -59,7 +62,7 @@ test('rescheduling an appointment: open, "Morgen", save = 3 clicks', async ({ pa
 
 test('snoozing a reminder from the list: "⋯" then "In 1 Std" = 2 clicks', async ({ page }) => {
   await page.goto('/calendar?tab=reminders&new=1');
-  const dialog = page.getByRole('dialog', { name: 'Erinnerung hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Erinnerung eintragen' });
   await dialog.getByLabel('Titel').fill('Müll rausstellen');
   await dialog.getByLabel('Datum', { exact: true }).fill('2026-09-29');
   await dialog.getByLabel('Beginn').fill('10:30');
@@ -80,7 +83,7 @@ test('snoozing a reminder from the list: "⋯" then "In 1 Std" = 2 clicks', asyn
 test('right-click on a reminder opens the same menu', async ({ page, isMobile }) => {
   test.skip(isMobile, 'long press is the touch equivalent of the contextmenu event');
   await page.goto('/calendar?tab=reminders&new=1');
-  const dialog = page.getByRole('dialog', { name: 'Erinnerung hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Erinnerung eintragen' });
   await dialog.getByLabel('Titel').fill('Blumen gießen');
   await dialog.getByLabel('Datum', { exact: true }).fill('2026-09-30');
   await dialog.getByLabel('Beginn').fill('08:00');
@@ -93,7 +96,7 @@ test('changing the category of a booking: "⋯" then the category = 2 clicks, un
   page,
 }) => {
   await ready(page, '/finance?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Buchung eintragen' });
   await dialog.getByLabel('Betrag').fill('12,00');
   await dialog.getByLabel('Kategorie').selectOption({ label: 'Mobilität' });
   await dialog.getByLabel('Empfänger / Titel').fill('Bahn');

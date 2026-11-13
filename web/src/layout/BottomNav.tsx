@@ -38,7 +38,7 @@ export function usePlusTarget(): PlusTarget {
   if (manifest && action)
     return {
       label: action.short,
-      name: t.nav.plusThing(action.short),
+      name: action.name ?? t.nav.plusThing(action.short),
       kind: 'page',
       disabled: action.disabled,
       run: action.run,

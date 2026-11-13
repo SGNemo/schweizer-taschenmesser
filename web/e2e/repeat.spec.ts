@@ -9,12 +9,12 @@ test.beforeEach(async ({ page }) => {
 
 async function addRent(page: Page) {
   await ready(page, '/invoices?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Rechnung hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Rechnung eintragen' });
   await dialog.getByLabel('Empfänger', { exact: true }).fill('Vermieter');
   await dialog.getByLabel('Betrag').fill('1200,00');
   await dialog.getByLabel('Fällig am').fill('2026-10-01');
   await dialog.getByLabel('Wiederholen').selectOption('monthly');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 

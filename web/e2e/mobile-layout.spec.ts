@@ -130,7 +130,10 @@ test.describe('shopping list on a phone', () => {
     const row = page.getByRole('list', { name: 'Einkauf' }).getByRole('listitem').first();
     await row.getByRole('button', { name: 'Eintrag bearbeiten' }).click();
     await page.getByLabel('Menge (optional)').fill('12 große Packungen aus dem Großhandel');
-    await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     const main = row.getByRole('button', { name: /Haferflocken/ });
     await expect(row.getByText(/Großhandel/)).toBeVisible();
     expect((await main.boundingBox())!.width).toBeGreaterThanOrEqual(140);

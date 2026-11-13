@@ -40,11 +40,11 @@ test('game mode on: a due reminder arrives silently', async ({ page }) => {
     .click();
 
   await page.goto('/calendar?tab=reminders&new=1');
-  const dialog = page.getByRole('dialog', { name: 'Erinnerung hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Erinnerung eintragen' });
   await dialog.getByLabel('Titel').fill('Tabletten nehmen');
   await dialog.getByLabel('Datum').fill('2026-09-29');
   await dialog.getByLabel('Beginn').fill('20:00');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
   const notes = () =>

@@ -18,7 +18,7 @@ async function add(page: Page, title: string, url: string, tags = '', kind = '')
   if (tags || kind) await moreFields(page);
   if (kind) await dialog.getByLabel('Art').selectOption({ label: kind });
   if (tags) await dialog.getByLabel('Tags').fill(tags);
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(dialog).toHaveCount(0);
 }
 
@@ -77,7 +77,7 @@ test.describe('Calm Merkliste page (focus audit 2)', () => {
     await menu.getByRole('menuitem', { name: 'Bearbeiten' }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Titel').fill('Pasta Rezept neu');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(dialog).toHaveCount(0);
     await expect(rowOf(page, 'Pasta Rezept neu')).toBeVisible();
   });
@@ -183,7 +183,7 @@ test.describe('Calm Lesezeichen tiles (focus audit 2)', () => {
     await menu.getByRole('menuitem', { name: 'Bearbeiten' }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Titel').fill('Bahn neu');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(dialog).toHaveCount(0);
     await tile(page, 'Bahn neu').getByRole('button', { name: 'Weitere Aktionen' }).click();
     await page

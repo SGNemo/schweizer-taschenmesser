@@ -104,7 +104,7 @@ test.describe('mail (demo mails)', () => {
     // prefilled from the mail text; the preview shows what would be saved, nothing is saved yet
     await expect(dialog.getByRole('textbox')).toHaveValue(/Stadtwerke Musterstadt 84,30 €/);
     await expect(dialog.getByTestId('capture-chips')).toContainText('84,30');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(dialog).toHaveCount(0);
     // the way back from the thread
     await expect(page.getByTestId('mail-linked')).toContainText('Rechnung: Stadtwerke Musterstadt');

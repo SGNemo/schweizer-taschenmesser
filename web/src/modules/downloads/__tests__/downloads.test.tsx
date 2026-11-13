@@ -56,7 +56,7 @@ describe('downloads module', () => {
 
   it('widget: empty state offers to add a download', async () => {
     view();
-    expect(await screen.findByRole('link', { name: /Download hinzufügen/ })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: /Download eintragen/ })).toBeInTheDocument();
   });
 
   it('widget: shows running and waiting jobs with context, not finished ones', async () => {

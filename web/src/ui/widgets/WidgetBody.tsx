@@ -7,7 +7,7 @@ import styles from './Widgets.module.css';
 export interface WidgetEmpty {
   /** Text of the empty state; without it an empty widget renders its (empty) children. */
   empty?: string;
-  /** Next step offered by the empty state, e.g. "Termin anlegen" → `/calendar?new=1`. */
+  /** Next step offered by the empty state, e.g. "Termin eintragen" → `/calendar?new=1`. */
   emptyAction?: { label: string; to: string };
 }
 

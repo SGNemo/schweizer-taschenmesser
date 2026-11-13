@@ -16,7 +16,10 @@ async function addTodo(page: Page, title: string, due?: string) {
   if (due) {
     await openEditor(page, page.getByRole('button', { name: new RegExp(title) }));
     await page.getByLabel('Fällig am').fill(due);
-    await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
   }
 }
@@ -80,9 +83,9 @@ test.describe('Calm ToDo page (focus audit 2, package 2b)', () => {
       await plus.click();
       // The page's own entry: its add dialog opens with the cursor in the title, not the capture sheet.
       await expect(
-        page.getByRole('dialog', { name: 'Neue Aufgabe' }).getByLabel('Titel'),
+        page.getByRole('dialog', { name: 'Aufgabe eintragen' }).getByLabel('Titel'),
       ).toBeFocused();
-      await expect(page.getByRole('dialog', { name: 'Schnell hinzufügen' })).toHaveCount(0);
+      await expect(page.getByRole('dialog', { name: 'Neu eintragen' })).toHaveCount(0);
     }
   });
 

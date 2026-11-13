@@ -23,7 +23,7 @@ test.describe('ToDos: Wiederholung und Irgendwann', () => {
     await dialog.getByLabel('Fällig am').fill('2026-09-29');
     await moreFields(page);
     await dialog.getByLabel('Wiederholung').selectOption('weekly');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(page.getByRole('button', { name: /^Müll rausbringen/ })).toContainText('↻');
 
@@ -46,7 +46,7 @@ test.describe('ToDos: Wiederholung und Irgendwann', () => {
     const dialog = page.getByRole('dialog');
     await moreFields(page);
     await dialog.getByRole('switch', { name: /Irgendwann/ }).click();
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect(page.getByRole('checkbox', { name: 'Dachboden aufräumen' })).toHaveCount(0);
 
@@ -57,7 +57,7 @@ test.describe('ToDos: Wiederholung und Irgendwann', () => {
 
 test('a calendar event can notify before it starts', async ({ page }) => {
   await ready(page, '/calendar?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Neuer Termin' });
+  const dialog = page.getByRole('dialog', { name: 'Termin eintragen' });
   await dialog.getByLabel('Titel').fill('Zahnarzt');
   await dialog.getByLabel('Beginn').fill('14:30');
   await dialog.getByRole('button', { name: 'Mehr Felder anzeigen' }).click();

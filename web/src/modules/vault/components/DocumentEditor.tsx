@@ -205,7 +205,7 @@ function Fields({
       >
         <Button onClick={cancel}>{t.actions.cancel}</Button>
         <Button type="submit" variant="primary">
-          {t.actions.save}
+          {existing ? t.actions.save : t.vault.add}
         </Button>
       </FormActions>
     </Form>
