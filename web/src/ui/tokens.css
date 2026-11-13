@@ -57,7 +57,9 @@
   --space-6: 2rem;
   --space-7: 3rem;
 
-  /* sm: chips in rows, kbd · md: buttons, inputs, nav items · lg: cards, widgets, panels · xl: dialogs, sheets */
+  /* xs: small marks and colour swatches (legend, kind square), never a control · sm: chips in rows, kbd · md: buttons,
+     inputs, nav items · lg: cards, widgets, panels · xl: dialogs, sheets */
+  --radius-xs: 3px;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
