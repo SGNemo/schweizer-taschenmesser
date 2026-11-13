@@ -29,8 +29,8 @@ const OUT = process.env.CLICK_OUT ?? 'node_modules/.cache/click';
 const LABEL = process.env.CLICK_LABEL ?? 'run';
 const ONLY = process.env.CLICK_ONLY?.split(',');
 const KINDS = (process.env.CLICK_KINDS ?? 'page,dialog').split(',');
-/** `CLICK_PROFILE=1`: CPU profile of every first page visit, self time per file (`profile` in the JSON). */
-const PROFILE = process.env.CLICK_PROFILE === '1';
+/** `CLICK_PROFILE=1`: CPU profile of every first page visit, self time per file (`profile` in the JSON); `fn`: per function. */
+const PROFILE = process.env.CLICK_PROFILE === 'fn' ? 'fn' : process.env.CLICK_PROFILE === '1';
 const QUIET = 600;
 const CAP = 15_000;
 
@@ -309,16 +309,18 @@ function selfTimeByFile(profile: {
     const dt = (profile.timeDeltas?.[i] ?? 0) / 1000;
     const url = node?.callFrame.url ?? '';
     const name = node?.callFrame.functionName ?? '';
-    const key = url
+    const file = url
       ? url.replace(/^.*\/assets\//, '').replace(/-[\w-]{8}\.js$/, '')
       : `(${name || '?'})`;
-    if (key === '((idle))' || key === '(idle)' || key === '(program)') return;
+    // CLICK_PROFILE=fn: per function (useful with an unminified build, see docs/perf/CLICK-TO-CONTENT-2026-11.md).
+    const key = PROFILE === 'fn' && url ? `${file}:${name || '(anonymous)'}` : file;
+    if (file === '((idle))' || file === '(idle)' || file === '(program)') return;
     out[key] = (out[key] ?? 0) + dt;
   });
   return Object.fromEntries(
     Object.entries(out)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 8)
+      .slice(0, PROFILE === 'fn' ? 15 : 8)
       .map(([k, v]) => [k, Math.round(v)]),
   );
 }
