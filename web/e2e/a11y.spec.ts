@@ -132,7 +132,7 @@ const PAGES = [
   ['accounts (set up)', '/accounts'],
   ['pantry', '/pantry'],
   ['routines', '/routines'],
-  ['device', '/status'],
+  ['device', '/device'],
   ['people', '/people'],
   ['lists', '/lists'],
   ['maps', '/maps'],

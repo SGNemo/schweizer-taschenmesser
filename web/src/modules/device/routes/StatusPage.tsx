@@ -14,7 +14,7 @@ import styles from './StatusPage.module.css';
  */
 export default function StatusPage() {
   const d = t.device;
-  const { groups, look, counted } = useDeviceStatus();
+  const { groups, look } = useDeviceStatus();
   // CPU, memory and network live in "Dieser PC" → System (desktop only); this page points there instead of repeating them.
   const desktop = getPlatform().kind === 'desktop';
   const diskOn = useModuleStates()?.disk === true;
@@ -26,7 +26,8 @@ export default function StatusPage() {
         <HeroFigure
           value={look.length === 0 ? d.summary.ok : String(look.length)}
           unit={look.length === 0 ? undefined : d.page.figureUnit(look.length)}
-          detail={(look.length === 0 ? counted : look).map((l) => l.title).join(', ')}
+          // All well: the words say it. Otherwise the names of the lines that need a look (short, never cut).
+          detail={look.length === 0 ? undefined : look.map((l) => l.title).join(', ')}
           testId="device-summary"
         />
       </HeroSlot>
