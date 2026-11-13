@@ -12,7 +12,7 @@ export const home: Strings['home'] = {
     tomorrow: 'Tomorrow',
     week: 'This week',
     empty: 'Nothing is coming up in the next few days.',
-    emptyAction: 'Add an event',
+    emptyAction: 'Add event',
     all: 'All events',
   },
 };

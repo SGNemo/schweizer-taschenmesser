@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
@@ -82,9 +82,16 @@ describe('AttentionStrip (calm, the default)', () => {
   });
   afterEach(cleanup);
 
-  it('keeps today and everything overdue visible, folds the rest into "Wartet noch"', async () => {
+  it('keeps today and everything overdue visible, folds the rest into "Kann warten"', async () => {
     items.value = [
-      { id: 'a', tone: 'accent', icon: 'checklist', title: '2 ToDos heute fällig', to: '/todos' },
+      {
+        id: 'a',
+        tone: 'accent',
+        icon: 'checklist',
+        title: '2 ToDos heute fällig',
+        to: '/todos',
+        due: 'today',
+      },
       {
         id: 'b',
         tone: 'danger',
@@ -93,19 +100,115 @@ describe('AttentionStrip (calm, the default)', () => {
         to: '/invoices',
       },
       { id: 'c', tone: 'warning', icon: 'checklist', title: '8 ToDos warten', to: '/todos' },
+      // Accent without `due` (a deadline of the coming days): only what is not due folds, whatever its tone.
+      { id: 'd', tone: 'accent', icon: 'file', title: '1 Frist läuft bald ab', to: '/vault' },
     ];
     const { container } = draw();
     const waiting = await screen.findByTestId('attention-waiting');
-    expect(waiting).toHaveTextContent('Wartet noch · 1');
-    expect(waiting).toHaveTextContent('Nichts davon muss jetzt sein.');
-    expect(waiting.hasAttribute('open')).toBe(false);
-    // The "today" chip is outside the folded block.
+    expect(waiting).toHaveTextContent('Kann warten · 2');
+    expect(waiting).toHaveTextContent('nichts davon muss heute sein.');
+    expect(waiting.getAttribute('aria-expanded')).toBe('false');
+    const folded = screen.getByTestId('attention-waiting-list');
+    expect(folded.hasAttribute('hidden')).toBe(true);
+    // The "today" card is outside the folded block.
     const today = screen.getByRole('link', { name: /2 ToDos heute fällig/ });
-    expect(waiting.contains(today)).toBe(false);
-    // Overdue money is not folded away (QA B18/B08); it keeps its red edge (colour plus icon plus text).
+    expect(folded.contains(today)).toBe(false);
+    // Overdue money is not folded away (QA B18/B08); it keeps its red hairline (colour plus icon plus text).
     const overdue = screen.getByRole('link', { name: /2 Rechnungen überfällig/ });
-    expect(waiting.contains(overdue)).toBe(false);
+    expect(folded.contains(overdue)).toBe(false);
     expect(container.querySelector('[data-tone="danger"]')?.textContent).toContain('überfällig');
+    // Only entries without `due` are folded: the accent one of the coming days and the warning one.
+    expect(Array.from(folded.querySelectorAll('a')).map((x) => x.getAttribute('href'))).toEqual([
+      '/vault',
+      '/todos',
+    ]);
+  });
+
+  it('opens the folded cards with the line and names at most two of them in it', async () => {
+    const budget = (id: string) => ({
+      id: `budgets:warn:${id}`,
+      tone: 'warning',
+      icon: 'piggy',
+      title: `${id}: 96 % des Budgets verbraucht`,
+      to: '/budgets',
+      rank: 1,
+      foldSummary: (n: number) => `${n} Budgets fast aufgebraucht`,
+    });
+    items.value = [
+      budget('Abos'),
+      budget('Wohnen'),
+      { id: 'p', tone: 'warning', icon: 'package', title: '1 Vorrat abgelaufen', to: '/pantry' },
+      {
+        id: 'q',
+        tone: 'warning',
+        icon: 'package',
+        title: '2 Vorräte gehen zur Neige',
+        to: '/pantry',
+      },
+    ];
+    draw();
+    const line = await screen.findByTestId('attention-waiting');
+    expect(line.textContent).toBe(
+      'Kann warten · 4 · 2 Budgets fast aufgebraucht, 1 Vorrat abgelaufen … · nichts davon muss heute sein.',
+    );
+    fireEvent.click(line);
+    expect(line.getAttribute('aria-expanded')).toBe('true');
+    const folded = screen.getByTestId('attention-waiting-list');
+    expect(folded.hasAttribute('hidden')).toBe(false);
+    expect(folded.querySelectorAll('a')).toHaveLength(4);
+  });
+
+  it('shows every overdue and due entry, also more than six, and no line when nothing waits', async () => {
+    items.value = [
+      ...Array.from({ length: 5 }, (_, i) => ({
+        id: `d${i}`,
+        tone: 'danger',
+        icon: 'receipt',
+        title: `Rechnung ${i} überfällig`,
+        to: '/invoices',
+      })),
+      ...Array.from({ length: 2 }, (_, i) => ({
+        id: `t${i}`,
+        tone: 'accent',
+        icon: 'dumbbell',
+        title: `Heute 1${i}:00 · Training`,
+        to: '/fitness',
+        due: 'today',
+      })),
+    ];
+    draw();
+    expect(await screen.findAllByRole('link')).toHaveLength(7);
+    expect(screen.queryByTestId('attention-waiting')).toBeNull();
+  });
+
+  it('leaves out an entry that a block on the page lists itself', async () => {
+    items.value = [
+      {
+        id: 'calendar:next',
+        tone: 'accent',
+        icon: 'calendar',
+        title: 'Friseur',
+        to: '/calendar',
+        due: 'today',
+        coveredBy: ['agenda', 'today'],
+      },
+    ];
+    const layout = { order: [], hidden: [], sizes: {}, pinned: [] };
+    // Detailed view, agenda on: the agenda lists the appointment.
+    const on = render(
+      <MemoryRouter>
+        <AttentionStrip layout={layout} view="all" />
+      </MemoryRouter>,
+    );
+    await waitFor(() => expect(on.container.firstChild).toBeNull());
+    on.unmount();
+    // Agenda hidden: the strip names it.
+    render(
+      <MemoryRouter>
+        <AttentionStrip layout={{ ...layout, hidden: ['core:agenda'] }} view="all" />
+      </MemoryRouter>,
+    );
+    expect(await screen.findByRole('link', { name: /Friseur/ })).toBeTruthy();
   });
 
   it('shows only the folded line when nothing needs action today', async () => {
@@ -174,6 +277,9 @@ describe('AttentionStrip cards (identity v3)', () => {
     const update = await screen.findByRole('link', { name: /Update verfügbar/ });
     expect(update.getAttribute('data-hue')).toBeNull();
     expect(container.querySelectorAll('b').length).toBe(0);
-    expect(screen.getByRole('link', { name: /Freizeit/ }).getAttribute('data-hue')).toBe('lime');
+    // With the setting off the entry is a card (it waits behind the line until the setting is read).
+    expect((await screen.findByRole('link', { name: /Freizeit/ })).getAttribute('data-hue')).toBe(
+      'lime',
+    );
   });
 });
