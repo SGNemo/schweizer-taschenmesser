@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   canRenew,
   countByCategory,
+  dateKind,
   deadlineRows,
   RENEWABLE,
   renewedEnd,
   renewPatch,
+  sortDocuments,
 } from '../logic';
 import type { VaultDocument } from '../schema';
 
@@ -15,48 +17,52 @@ const doc = (over: Partial<VaultDocument>): VaultDocument => ({
   ...over,
 });
 
+/** A day after every end in these cases: the renewal of a term that has run (or a contract, which goes on). */
+const AFTER = '9999-12-31';
+const proposed = (d: Parameters<typeof renewedEnd>[0]) => renewedEnd(d, AFTER);
+
 describe('renewal: one more term of the same length', () => {
   it('a year from 1 Jan to 31 Dec ends on 31 Dec of the next year', () => {
-    expect(renewedEnd({ startDate: '2026-01-01', endDate: '2026-12-31' })).toBe('2027-12-31');
+    expect(proposed({ startDate: '2026-01-01', endDate: '2026-12-31' })).toBe('2027-12-31');
   });
 
   it('a month from 1 Feb to 28 Feb ends on 31 Mar (whole months, not 28 days)', () => {
-    expect(renewedEnd({ startDate: '2027-02-01', endDate: '2027-02-28' })).toBe('2027-03-31');
+    expect(proposed({ startDate: '2027-02-01', endDate: '2027-02-28' })).toBe('2027-03-31');
   });
 
   it('leap years: a year that ends on 29 Feb ends on 28 Feb the year after, and the other way round', () => {
-    expect(renewedEnd({ startDate: '2027-03-01', endDate: '2028-02-29' })).toBe('2029-02-28');
-    expect(renewedEnd({ startDate: '2027-03-01', endDate: '2028-02-29' })).not.toBe('2029-03-01');
-    expect(renewedEnd({ startDate: '2023-03-01', endDate: '2024-02-29' })).toBe('2025-02-28');
-    expect(renewedEnd({ startDate: '2027-02-28', endDate: '2028-02-27' })).toBe('2029-02-27');
+    expect(proposed({ startDate: '2027-03-01', endDate: '2028-02-29' })).toBe('2029-02-28');
+    expect(proposed({ startDate: '2027-03-01', endDate: '2028-02-29' })).not.toBe('2029-03-01');
+    expect(proposed({ startDate: '2023-03-01', endDate: '2024-02-29' })).toBe('2025-02-28');
+    expect(proposed({ startDate: '2027-02-28', endDate: '2028-02-27' })).toBe('2029-02-27');
   });
 
   it('two years stay two years; the legacy end field counts as the end', () => {
-    expect(renewedEnd({ startDate: '2024-07-15', endDate: '2026-07-14' })).toBe('2028-07-14');
-    expect(renewedEnd({ startDate: '2026-01-01', expiresOn: '2026-06-30' })).toBe('2026-12-31');
+    expect(proposed({ startDate: '2024-07-15', endDate: '2026-07-14' })).toBe('2028-07-14');
+    expect(proposed({ startDate: '2026-01-01', expiresOn: '2026-06-30' })).toBe('2026-12-31');
   });
 
   it('a term that is no whole number of months moves by its days', () => {
     // 10 Jan – 24 Jan inclusive = 15 days → the next 15 days end on 8 Feb.
-    expect(renewedEnd({ startDate: '2026-01-10', endDate: '2026-01-24' })).toBe('2026-02-08');
+    expect(proposed({ startDate: '2026-01-10', endDate: '2026-01-24' })).toBe('2026-02-08');
     // A single day.
-    expect(renewedEnd({ startDate: '2026-05-05', endDate: '2026-05-05' })).toBe('2026-05-06');
+    expect(proposed({ startDate: '2026-05-05', endDate: '2026-05-05' })).toBe('2026-05-06');
   });
 
   it('proposes nothing without a start (a passport, the vehicle inspection) or without an end', () => {
-    expect(renewedEnd({ endDate: '2026-12-31' })).toBeUndefined();
-    expect(renewedEnd({ expiresOn: '2026-06-01' })).toBeUndefined();
-    expect(renewedEnd({ startDate: '2026-01-01' })).toBeUndefined();
-    expect(renewedEnd({})).toBeUndefined();
+    expect(proposed({ endDate: '2026-12-31' })).toBeUndefined();
+    expect(proposed({ expiresOn: '2026-06-01' })).toBeUndefined();
+    expect(proposed({ startDate: '2026-01-01' })).toBeUndefined();
+    expect(proposed({})).toBeUndefined();
   });
 
   it('the patch moves the start to the new term, so the next renewal is one term again', () => {
     const first = { startDate: '2026-01-01', endDate: '2026-12-31' };
-    const patch = renewPatch(first, renewedEnd(first)!);
+    const patch = renewPatch(first, proposed(first)!, AFTER);
     expect(patch).toEqual({ startDate: '2027-01-01', endDate: '2027-12-31', expiresOn: undefined });
-    expect(renewedEnd(patch)).toBe('2028-12-31');
+    expect(proposed(patch)).toBe('2028-12-31');
     // Without a start none is invented; the legacy field is replaced by the new end.
-    expect(renewPatch({ expiresOn: '2026-06-01' }, '2036-06-01')).toEqual({
+    expect(renewPatch({ expiresOn: '2026-06-01' }, '2036-06-01', AFTER)).toEqual({
       startDate: undefined,
       endDate: '2036-06-01',
       expiresOn: undefined,
@@ -65,10 +71,10 @@ describe('renewal: one more term of the same length', () => {
 
   it('a start on a day the last month lacks: the term still counts in whole months', () => {
     // A year from a leap day ends on 28 Feb; the next year ends on 28 Feb again (not on 1 Mar).
-    expect(renewedEnd({ startDate: '2024-02-29', endDate: '2025-02-28' })).toBe('2026-02-28');
+    expect(proposed({ startDate: '2024-02-29', endDate: '2025-02-28' })).toBe('2026-02-28');
     // A month from 31 Jan ends on 28 Feb; the next month is March (not 28 days).
-    expect(renewedEnd({ startDate: '2026-01-31', endDate: '2026-02-28' })).toBe('2026-03-31');
-    expect(renewedEnd({ startDate: '2026-08-31', endDate: '2026-09-30' })).toBe('2026-10-31');
+    expect(proposed({ startDate: '2026-01-31', endDate: '2026-02-28' })).toBe('2026-03-31');
+    expect(proposed({ startDate: '2026-08-31', endDate: '2026-09-30' })).toBe('2026-10-31');
   });
 
   it('is offered for what is renewed, around its end', () => {
@@ -78,13 +84,56 @@ describe('renewal: one more term of the same length', () => {
     expect(RENEWABLE).toEqual(['identity', 'insurance', 'contract', 'health', 'other']);
     expect(canRenew({ category: 'identity', ...past }, 'expired', TODAY)).toBe(true);
     expect(canRenew({ category: 'contract', ...far }, 'act-now', TODAY)).toBe(true);
-    expect(canRenew({ category: 'contract', ...far }, 'soon', TODAY)).toBe(false);
+    // A cancellation deadline some weeks away is no call to renew yet.
+    expect(canRenew({ category: 'contract', ...far, noticeDays: 60 }, 'soon', TODAY)).toBe(false);
+    // A paper without a deadline (a passport) is renewed before it runs out: as long as it reads "Läuft bald ab".
+    expect(canRenew({ category: 'identity', endDate: '2026-11-20' }, 'soon', TODAY)).toBe(true);
+    expect(canRenew({ category: 'warranty', endDate: '2026-11-20' }, 'soon', TODAY)).toBe(false);
     expect(canRenew({ category: 'contract', ...far }, 'ok', TODAY)).toBe(false);
     expect(canRenew({ category: 'warranty', ...past }, 'expired', TODAY)).toBe(false);
     expect(canRenew({ category: 'tax', ...past }, 'expired', TODAY)).toBe(false);
     expect(canRenew({ category: 'contract' }, 'open-ended', TODAY)).toBe(false);
     // A paper without a deadline is still "soon" on its last day: the end has come.
     expect(canRenew({ category: 'identity', endDate: TODAY }, 'soon', TODAY)).toBe(true);
+  });
+
+  it('a paper without a deadline renewed before its end is a new paper: no proposal, it starts today', () => {
+    const passport = { startDate: '2016-11-01', endDate: '2026-10-31' };
+    // In its last weeks: no sum of terms is proposed, the new end is on the paper.
+    expect(renewedEnd(passport, '2026-09-29')).toBeUndefined();
+    expect(renewPatch(passport, '2036-09-28', '2026-09-29')).toEqual({
+      startDate: '2026-09-29',
+      endDate: '2036-09-28',
+      expiresOn: undefined,
+    });
+    // On or after its end it goes on as before.
+    expect(renewedEnd(passport, '2026-10-31')).toBe('2036-10-31');
+    expect(renewPatch(passport, '2036-10-31', '2026-11-02').startDate).toBe('2026-11-01');
+    // A contract with a deadline goes on from its end, whenever it is renewed.
+    const contract = { startDate: '2026-01-01', endDate: '2026-12-31', noticeDays: 30 };
+    expect(renewedEnd(contract, '2026-11-25')).toBe('2027-12-31');
+    expect(renewPatch(contract, '2027-12-31', '2026-11-25').startDate).toBe('2027-01-01');
+  });
+
+  it('folders sort by what their badges say: this week, run out, soon; a passed deadline after them', () => {
+    const TODAY = '2026-09-29';
+    const sorted = sortDocuments(
+      [
+        doc({ title: 'missed', endDate: '2026-12-31', noticeDays: 120 }),
+        doc({ title: 'soon', endDate: '2026-11-01' }),
+        doc({ title: 'ok', endDate: '2028-01-01' }),
+        doc({ title: 'expired', endDate: '2026-09-01' }),
+        doc({ title: 'now', endDate: '2026-11-01', noticeDays: 30 }),
+      ],
+      TODAY,
+    ).map((d) => d.title);
+    expect(sorted).toEqual(['now', 'expired', 'soon', 'missed', 'ok']);
+  });
+
+  it('the date that matters next is the last day to cancel while it lies ahead, otherwise the end', () => {
+    expect(dateKind({ endDate: '2026-12-31', noticeDays: 30 }, '2026-09-29')).toBe('cancel');
+    expect(dateKind({ endDate: '2026-12-31', noticeDays: 30 }, '2026-12-15')).toBe('end');
+    expect(dateKind({ endDate: '2026-12-31' }, '2026-09-29')).toBe('end');
   });
 
   it('what ran out more than 90 days ago is history: no button any more', () => {

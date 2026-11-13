@@ -1,6 +1,6 @@
 import { tDeadline } from '@/strings.deadline';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router';
 import { blobKeys, getBlob, pruneBlobs } from '@/core/blobs';
 import { getPlatform } from '@/core/platform';
@@ -33,6 +33,7 @@ import {
   cancelDeadline,
   canRenew,
   countByCategory,
+  dateKind,
   endOf,
   filterDocuments,
   formatSize,
@@ -79,6 +80,15 @@ export default function VaultPage() {
   const [view, setView] = useState<View>('documents');
   // The id only: the dialog works on the row as the list holds it now.
   const [renewing, setRenewing] = useState<string | null>(null);
+  // The row "Verlängert" was pressed in. After a renewal its button is gone with the new term, so the focus goes
+  // to the row's own button (its title) instead of nowhere: once, right after the dialog has closed.
+  const renewal = useRef<{ id: string; row: Element | null; saved: boolean; focused: boolean }>(
+    undefined,
+  );
+  const startRenew = (d: { id: string }, from?: Element) => {
+    renewal.current = { id: d.id, row: from?.closest('li') ?? null, saved: false, focused: false };
+    setRenewing(d.id);
+  };
   // Master–detail (layout `split`): on a wide page a document shows in the panel beside the folders, below that
   // width the folder opens its dialog (a sheet on the phone).
   const wide = useSplitView();
@@ -118,6 +128,26 @@ export default function VaultPage() {
   // and does not come back by itself.
   const renewDoc = renewing ? docs?.find((d) => d.id === renewing && endOf(d)) : undefined;
   if (renewing && docs && !renewDoc) setRenewing(null);
+  useEffect(() => {
+    const r = renewal.current;
+    if (renewing || !r?.saved) return;
+    // The row's own button: on the rail its title (found by comparing ids, never by a selector built from one: an
+    // imported id may hold any character), in a folder the row the click came from.
+    const title = () =>
+      Array.from(document.querySelectorAll<HTMLElement>('[data-doc-id]')).find(
+        (el) => el.dataset.docId === r.id,
+      ) ?? (r.row?.isConnected ? r.row.querySelector<HTMLElement>('[data-row]') : null);
+    if (!r.focused) {
+      // Right after the close, before the list shows the new term: one announcement, not the gone button first.
+      r.focused = true;
+      title()?.focus();
+      return;
+    }
+    // The list has changed once since: a row drawn anew (the rail moves it across "Heute") lost the focus, and
+    // only then it is set again. Either way this renewal is done.
+    renewal.current = undefined;
+    if (!document.activeElement || document.activeElement === document.body) title()?.focus();
+  }, [renewing, docs]);
 
   return (
     <>
@@ -207,7 +237,7 @@ export default function VaultPage() {
             day={day}
             current={wide ? detail?.id : undefined}
             onOpen={(d) => (wide ? setPicked(d.id) : setTarget(d))}
-            onRenew={(d) => setRenewing(d.id)}
+            onRenew={(d) => startRenew(d)}
           />
         ) : null}
         {view === 'documents' || none ? (
@@ -231,8 +261,6 @@ export default function VaultPage() {
                   const state = statusOf(d, day);
                   const end = endOf(d);
                   const deadline = cancelDeadline(d);
-                  // The cancellation deadline still lies ahead: it is the date that matters next.
-                  const ahead = !!deadline && deadline >= day;
                   const hasFile = files?.has(d.id) ?? false;
                   return (
                     <ItemRow
@@ -265,7 +293,7 @@ export default function VaultPage() {
                           {end ? (
                             <DeadlineKind
                               state={state}
-                              kind={ahead ? 'cancel' : 'end'}
+                              kind={dateKind(d, day)}
                               date={nextRelevantDate(d, day) ?? end}
                               day={day}
                               folder
@@ -275,7 +303,7 @@ export default function VaultPage() {
                             <Button
                               size="sm"
                               aria-label={t.vault.renewAria(d.title)}
-                              onClick={() => setRenewing(d.id)}
+                              onClick={(e) => startRenew(d, e.currentTarget)}
                             >
                               {t.vault.renew}
                             </Button>
@@ -299,7 +327,13 @@ export default function VaultPage() {
           </>
         ) : null}
       </SplitView>
-      <RenewDialog doc={renewDoc ?? null} onClose={() => setRenewing(null)} />
+      <RenewDialog
+        doc={renewDoc ?? null}
+        onClose={() => setRenewing(null)}
+        onSaved={() => {
+          if (renewal.current) renewal.current.saved = true;
+        }}
+      />
       <DocumentEditor target={openTarget} onClose={closeEditor} />
     </>
   );

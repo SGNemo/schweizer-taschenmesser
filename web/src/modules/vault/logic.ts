@@ -70,8 +70,9 @@ export function nextRelevantDate(d: D, today: string): string | undefined {
 const RANK: Record<Status, number> = {
   'act-now': 0,
   expired: 1,
-  missed: 2,
-  soon: 3,
+  soon: 2,
+  // No badge and nothing to do: after everything that says it is near.
+  missed: 3,
   ok: 4,
   'open-ended': 5,
 };
@@ -92,7 +93,7 @@ export function filterDocuments<T extends VaultDocument>(
     );
 }
 
-/** Act now first, then expired, soon, ok (by the relevant date), open-ended last; ties alphabetical. */
+/** Act now first, then expired, soon, a passed deadline, ok (by the relevant date), open-ended last; ties alphabetical. */
 export function sortDocuments<T extends VaultDocument>(docs: readonly T[], today: string): T[] {
   return [...docs].sort((a, b) => {
     const sa = statusOf(a, today);
@@ -138,13 +139,14 @@ const RENEW_MISSED_DAYS = 30;
 const PAST_DAYS = 90;
 
 /**
- * "Verlängert" is offered around the end: from the day the cancellation deadline is a week away or the end has
- * come, until `PAST_DAYS` after the end. A contract whose deadline has passed runs on: it offers the button only
- * for the last weeks of its term, not for months on end (the user may have cancelled in time; there is no state
- * for that). What ran out long ago is history, not a call to act.
+ * "Verlängert" is offered around the end: from the day the cancellation deadline is a week away, or while a paper
+ * without a deadline reads "Läuft bald ab" (`EXPIRY_SOON_DAYS`), until `PAST_DAYS` after the end. A contract
+ * whose deadline has passed runs on: it offers the button only for the last weeks of its term, not for months on
+ * end (the user may have cancelled in time; there is no state for that). What ran out long ago is history, not a
+ * call to act.
  */
 export function canRenew(
-  d: Pick<VaultDocument, 'category' | 'endDate' | 'expiresOn'>,
+  d: Pick<VaultDocument, 'category'> & D,
   state: Status,
   today: string,
 ): boolean {
@@ -153,8 +155,10 @@ export function canRenew(
   const left = daysBetween(today, end);
   if (state === 'expired') return -left <= PAST_DAYS;
   if (state === 'missed') return left <= RENEW_MISSED_DAYS;
-  // The end day itself still counts as "soon" for a paper without a deadline: the end has come.
-  return state === 'act-now' || left === 0;
+  // A paper without a cancellation deadline (a passport, the vehicle inspection) is renewed before it runs out:
+  // the button shows as long as it reads "Läuft bald ab".
+  if (state === 'soon' && cancelDeadline(d) === undefined) return true;
+  return state === 'act-now';
 }
 
 /** Last day of a term of `n` months that starts on `from` (BGB § 188: a day the last month lacks is its last day). */
@@ -173,17 +177,27 @@ function wholeMonths(from: string, end: string): number | undefined {
   return [guess, guess + 1].find((n) => n >= 1 && termEnd(from, n) === end);
 }
 
+type R = Pick<VaultDocument, 'startDate' | 'endDate' | 'expiresOn' | 'noticeDays' | 'noticeMonths'>;
+
+/**
+ * A paper without a cancellation deadline renewed before its end (a passport in its last weeks): a new paper that
+ * starts now, not the old term going on. Nothing is proposed (its new end is on the paper, not a sum), and the new
+ * term starts today. A contract with a deadline goes on from its end, whenever it is renewed.
+ */
+export const renewedEarly = (d: R, today: string): boolean => {
+  const end = endOf(d);
+  return !!end && today < end && cancelDeadline(d) === undefined;
+};
+
 /**
  * The end date "Verlängert" proposes: one more term of the same length. The term runs from `startDate` to the end
  * inclusive; in whole months when it is that (1 Jan – 31 Dec → 31 Dec of the next year, 1 Feb – 28 Feb → 31 Mar,
  * 29 Feb 2024 – 28 Feb 2025 → 28 Feb 2026), otherwise in days. Without a start (a passport, the vehicle
  * inspection: only an end) nothing is proposed.
  */
-export function renewedEnd(
-  d: Pick<VaultDocument, 'startDate' | 'endDate' | 'expiresOn'>,
-): string | undefined {
+export function renewedEnd(d: R, today: string): string | undefined {
   const end = endOf(d);
-  if (!end || !d.startDate || d.startDate > end) return undefined;
+  if (!end || !d.startDate || d.startDate > end || renewedEarly(d, today)) return undefined;
   const next = addDaysStr(end, 1);
   const months = wholeMonths(d.startDate, end);
   return months ? termEnd(next, months) : addDaysStr(next, daysBetween(d.startDate, next) - 1);
@@ -194,15 +208,25 @@ export function renewedEnd(
  * renewal proposes one term again, not two). A document without a start keeps none.
  */
 export function renewPatch(
-  d: Pick<VaultDocument, 'startDate' | 'endDate' | 'expiresOn'>,
+  d: R,
   newEnd: string,
+  today: string,
 ): Pick<VaultDocument, 'startDate' | 'endDate' | 'expiresOn'> {
   const end = endOf(d);
   return {
-    startDate: d.startDate && end ? addDaysStr(end, 1) : d.startDate,
+    startDate:
+      d.startDate && end ? (renewedEarly(d, today) ? today : addDaysStr(end, 1)) : d.startDate,
     endDate: newEnd,
     expiresOn: undefined,
   };
+}
+
+export type DateKind = 'cancel' | 'end';
+
+/** What the date that matters next is: the last day to cancel while it lies ahead, otherwise the end. */
+export function dateKind(d: D, today: string): DateKind {
+  const deadline = cancelDeadline(d);
+  return deadline !== undefined && deadline >= today ? 'cancel' : 'end';
 }
 
 /** One row of the "Fristen" timeline: a document and the date that matters next. */
@@ -211,7 +235,7 @@ export interface DeadlineRow<T> {
   date: string;
   state: Status;
   /** What the date is: the last day to cancel, or the end. */
-  kind: 'cancel' | 'end';
+  kind: DateKind;
 }
 
 /**
@@ -227,15 +251,7 @@ export function deadlineRows<T extends VaultDocument>(
     .flatMap((doc): DeadlineRow<T>[] => {
       const date = nextRelevantDate(doc, today);
       if (!date) return [];
-      const deadline = cancelDeadline(doc);
-      return [
-        {
-          doc,
-          date,
-          state: statusOf(doc, today),
-          kind: deadline !== undefined && deadline >= today ? 'cancel' : 'end',
-        },
-      ];
+      return [{ doc, date, state: statusOf(doc, today), kind: dateKind(doc, today) }];
     })
     .sort((a, b) => a.date.localeCompare(b.date) || compareText(a.doc.title, b.doc.title));
   const old = (r: DeadlineRow<T>) =>

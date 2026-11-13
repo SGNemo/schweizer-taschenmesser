@@ -77,7 +77,9 @@ describe('Unterlagen: view "Fristen"', () => {
     await seed();
     page();
     fireEvent.click(await screen.findByRole('button', { name: 'Fristen' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Verlängert: Hausrat' }));
+    const opener = await screen.findByRole('button', { name: 'Verlängert: Hausrat' });
+    opener.focus();
+    fireEvent.click(opener);
     const dialog = await screen.findByRole('dialog', { name: 'Verlängert: Hausrat' });
     // Said before it happens: the old end, and that the start moves to the new term.
     expect(
@@ -96,16 +98,64 @@ describe('Unterlagen: view "Fristen"', () => {
     );
     const before = (await documentRepo.active().toArray()).find((d) => d.title === 'Hausrat')!;
     expect(before.endDate).toBe('2026-09-25');
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Verlängerung speichern' }));
+    // Enter twice in a row: one renewal, never the next term on top. (Two submits of the same form; the form
+    // that starts afresh for the new term is held by the dialog's own lock, which this does not reach.)
+    const form = dialog.querySelector('form')!;
+    fireEvent.submit(form);
+    fireEvent.submit(form);
     await waitFor(async () => {
       const after = (await documentRepo.active().toArray()).find((d) => d.title === 'Hausrat')!;
       expect(after.endDate).toBe('2027-09-20');
       expect(after.startDate).toBe('2026-09-26');
     });
+    // The row's "Verlängert" is gone with the new term: the focus is on the row's title, not nowhere.
+    await waitFor(() => expect(document.activeElement?.textContent).toBe('Hausrat'));
+    const settled = (await documentRepo.active().toArray()).find((d) => d.title === 'Hausrat')!;
+    expect([settled.startDate, settled.endDate]).toEqual(['2026-09-26', '2027-09-20']);
     // "Rückgängig" gives back the old term as a whole: end and start.
     await undoLast();
     const back = (await documentRepo.active().toArray()).find((d) => d.title === 'Hausrat')!;
     expect([back.startDate, back.endDate]).toEqual(['2025-10-01', '2026-09-25']);
+  });
+
+  it('a passport renewed before it runs out: no proposal, it starts today, the focus lands on its folder', async () => {
+    await documentRepo.create({
+      title: 'Pass',
+      category: 'identity',
+      startDate: '2016-11-07',
+      endDate: '2026-11-06',
+    } as never);
+    page();
+    // "Ablage": the folder offers "Verlängert" while it reads "Läuft bald ab".
+    const opener = await screen.findByRole('button', { name: 'Verlängert: Pass' });
+    fireEvent.click(opener);
+    const dialog = await screen.findByRole('dialog', { name: 'Verlängert: Pass' });
+    expect(
+      within(dialog).getByText(
+        'Bisher bis 6. November 2026. Der Beginn wird auf den 29. September 2026 gesetzt.',
+      ),
+    ).toBeTruthy();
+    const field = within(dialog).getByLabelText(/Neues Ende/) as HTMLInputElement;
+    // A new paper: its end is on it, not a sum of terms.
+    expect(field.value).toBe('');
+    expect(
+      within(dialog).getByText(
+        'Vor dem Ablauf verlängert: das neue Ende steht auf dem neuen Dokument.',
+      ),
+    ).toBeTruthy();
+    await waitFor(() => expect(document.activeElement).toBe(field));
+    fireEvent.change(field, { target: { value: '28.09.2036' } });
+    fireEvent.blur(field);
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Verlängerung speichern' }));
+    await waitFor(async () => {
+      const doc = (await documentRepo.active().toArray()).find((d) => d.title === 'Pass')!;
+      expect([doc.startDate, doc.endDate]).toEqual(['2026-09-29', '2036-09-28']);
+    });
+    // The folder's "Verlängert" is gone with the new term: the focus is on the folder itself.
+    await waitFor(() =>
+      expect((document.activeElement as HTMLElement | null)?.dataset.row).toBeDefined(),
+    );
+    expect(document.activeElement?.textContent).toContain('Pass');
   });
 
   it('without a start nothing is proposed, and an end that is not later is refused', async () => {
