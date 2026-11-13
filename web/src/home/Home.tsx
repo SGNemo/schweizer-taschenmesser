@@ -181,7 +181,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
   const cardLists = focus.nextOne || focus.dayPlan;
   // The blocks under the head load on their own (layout, "Jetzt wichtig", the agenda's days). Drawn one by one each
   // would push the others down; they appear together once all that will show have their data (same shared queries
-  // as the blocks use, nothing is read twice). The cards' code loads meanwhile (below), not after.
+  // as the blocks use, nothing is read twice).
   const attention = useAttentionItems();
   const day = today();
   const agendaItems = useCalendarItems(agendaRange(day));
@@ -200,14 +200,11 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
   const blocksReady =
     layoutRead &&
     states !== undefined &&
-    (waited || ((cockpit || setup !== undefined) && hideValuesRead));
-  // While the blocks above are read, the cards' code is fetched already: when they may show, they render at once
-  // instead of starting their own loads one after another (docs/perf/CLICK-TO-CONTENT-2026-11.md).
-  useEffect(() => {
-    if (blocksReady) return;
-    for (const e of ordered)
-      if (!layout.hidden.includes(e.key)) void e.component().catch(() => undefined);
-  }, [blocksReady, ordered, layout.hidden]);
+    (waited ||
+      ((cockpit || setup !== undefined) &&
+        hideValuesRead &&
+        (!stripOn || attention !== undefined) &&
+        (!agendaOn || agendaItems !== undefined)));
   const shown = !blocksReady
     ? []
     : editing
