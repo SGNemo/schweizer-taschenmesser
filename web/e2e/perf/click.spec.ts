@@ -399,11 +399,13 @@ async function run(page: Page, phone: boolean, label: string) {
             slot.note = 'no main action';
             continue;
           }
+          // Read before the click: a main action that navigates (chat: "KI-Anbieter einrichten") takes the button away.
+          const text = (await action.textContent({ timeout: 5_000 }))?.trim();
           await action.evaluate((el) => el.setAttribute('data-ctc', 'go'));
           const firstRun = await measure(page, cdp, 'click', 'go');
           const dialog = page.getByRole('dialog');
           if (!(await dialog.isVisible())) {
-            slot.note = `main action opens no dialog (${(await action.textContent())?.trim()})`;
+            slot.note = `main action opens no dialog (${text})`;
             continue;
           }
           slot.first.push(firstRun);

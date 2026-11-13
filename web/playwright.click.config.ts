@@ -16,6 +16,8 @@ export default defineConfig({
   expect: { timeout: 30_000 },
   reporter: 'list',
   use: {
+    // A locator call must not wait for the whole 6 h test timeout.
+    actionTimeout: 15_000,
     ...devices['Desktop Chrome'],
     locale: 'de-DE',
     baseURL: 'http://localhost:4174',
