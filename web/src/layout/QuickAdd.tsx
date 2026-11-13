@@ -54,6 +54,7 @@ export function QuickAdd() {
                 // Free text for any module; on the phone the keyboard's own dictation works in the field.
                 <Button
                   variant="ghost"
+                  className={styles.write}
                   data-testid="quick-add-ai"
                   onClick={() => {
                     setOpen(false);

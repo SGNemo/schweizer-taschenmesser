@@ -26,9 +26,13 @@
   background: var(--surface-2);
 }
 
-/* The form types as a folded second way into the quick-add dialog (one way first, the rest on demand). */
+/* The further ways into the quick-add sheet sit in the form's column above its actions (the column's gap spaces them):
+   free text as a quiet button at its own width, the form types folded (one way first, the rest on demand). */
+.write {
+  align-self: flex-start;
+}
 .others {
-  margin-top: var(--space-3);
+  margin: 0;
 }
 .others > summary {
   min-height: var(--touch);
