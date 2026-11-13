@@ -1,5 +1,5 @@
 /** Small layout building blocks shared by the module pages (headers, filters, lists, forms). */
-import { Children, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Children, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { t } from '@/strings';
 import { useSubmitOnce } from '@/core/forms/submitOnce';
@@ -479,8 +479,13 @@ export function useSplitView(query?: string): boolean {
 }
 
 /**
- * Main content plus a side panel. With `enabled` false only the main content renders, so the
+ * Main content plus a side panel. With `enabled` false only the main content shows, so the
  * panel is a structural decision (never merely hidden, never a duplicate in the DOM).
+ *
+ * Focus (0b-8): the main content keeps its elements when the panel opens or closes (the wrappers stay and only lose
+ * their layout, `display: contents`), so the row that opened the panel keeps the focus. When the panel closes while
+ * the focus is in it, the focus goes back to where it last was in the main content (else the current row, else the
+ * main content itself) instead of falling to the page.
  */
 export function SplitView({
   children,
@@ -493,14 +498,50 @@ export function SplitView({
   asideLabel: string;
   enabled: boolean;
 }) {
-  if (!enabled) return <>{children}</>;
+  const mainRef = useRef<HTMLDivElement>(null);
+  const lastInMain = useRef<HTMLElement | null>(null);
+  const inAside = useRef(false);
+  const wasEnabled = useRef(enabled);
+  useLayoutEffect(() => {
+    const was = wasEnabled.current;
+    wasEnabled.current = enabled;
+    if (enabled || !was) return;
+    const lost = inAside.current;
+    inAside.current = false;
+    const active = document.activeElement;
+    if (!lost || (active !== null && active !== document.body)) return;
+    const main = mainRef.current;
+    if (!main) return;
+    const last = lastInMain.current;
+    const current = main.querySelector<HTMLElement>('[aria-current="true"], [aria-current="page"]');
+    const target = last?.isConnected ? last : (current ?? main);
+    if (target === main && !main.hasAttribute('tabindex')) main.tabIndex = -1;
+    target.focus({ preventScroll: true });
+  }, [enabled]);
   return (
-    <div className={styles.splitView}>
-      <div className={styles.splitMain}>{children}</div>
-      <aside className={styles.splitAside} aria-label={asideLabel}>
-        {/* Absolutely positioned so the panel never makes the row taller than the main content. */}
-        <div className={styles.splitAsideInner}>{aside}</div>
-      </aside>
+    <div className={enabled ? styles.splitView : styles.splitOff}>
+      <div
+        ref={mainRef}
+        className={enabled ? styles.splitMain : styles.splitOff}
+        onFocusCapture={(e) => {
+          inAside.current = false;
+          if (e.target instanceof HTMLElement) lastInMain.current = e.target;
+        }}
+      >
+        {children}
+      </div>
+      {enabled ? (
+        <aside
+          className={styles.splitAside}
+          aria-label={asideLabel}
+          onFocusCapture={() => {
+            inAside.current = true;
+          }}
+        >
+          {/* Absolutely positioned so the panel never makes the row taller than the main content. */}
+          <div className={styles.splitAsideInner}>{aside}</div>
+        </aside>
+      ) : null}
     </div>
   );
 }
