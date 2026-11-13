@@ -21,7 +21,7 @@ import { availableManifests } from '@/core/modules/available';
 import { ModuleIdentityContext } from '@/core/modules/identityContext';
 import { t } from '@/strings';
 import { PAGE_SLOW_MS, PAGE_STUCK_MS } from './PageLoadingCard';
-import { moduleSettingsPath } from '@/pages/settings/useSections';
+import { moduleSettingsPath } from '@/pages/settings/modulePath';
 import { tComfort } from '@/strings.comfort';
 import { HeadSurface, Icon, PHONE_QUERY, SettingsLink, SubNav, useMediaQuery } from '@/ui';
 import {

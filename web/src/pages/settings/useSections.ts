@@ -2,12 +2,10 @@ import { useRemoteHost } from '@/core/remote/host';
 import { useAutomationSettings } from '@/core/automation/settings';
 import { useMemo } from 'react';
 import { useAiOn } from '@/core/ai/switch';
-import { hasStartData } from '@/core/dataapi/onboarding';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { loadModuleStates, type ModuleStates } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
 import { getPlatform } from '@/core/platform';
-import { settingsPath } from '@/core/settings/registry/paths';
 import { validateSections, visibleSections } from '@/core/settings/registry/registry';
 import type { SettingsContext, SettingsSectionDef } from '@/core/settings/registry/types';
 import { useLocalApiConfig } from '@/core/localapi/config';
@@ -20,21 +18,11 @@ import { createElement } from 'react';
 import { blockOf } from '@/core/settings/moduleBlocks';
 import { ModuleSection } from './sectionChunks';
 import { CORE_SECTIONS } from './sections';
+import { hasSection, moduleSettingsPath } from './modulePath';
 
 const MODULE_ORDER = 100;
 
-/** Does the module have a settings section (settings fields or start data)? */
-const hasSection = (m: ReturnType<typeof availableManifests>[number]) =>
-  m.settings.fields.length > 0 || hasStartData(m);
-
-/** `/settings/<category>#module-<id>` for a module that has settings, else undefined. */
-export function moduleSettingsPath(
-  m: ReturnType<typeof availableManifests>[number],
-): string | undefined {
-  return hasSection(m)
-    ? settingsPath(m.settings.category ?? 'module', `module-${m.id}`)
-    : undefined;
-}
+export { moduleSettingsPath };
 
 /** Sections contributed by module manifests: one per module with settings or start data. */
 export function moduleSections(
