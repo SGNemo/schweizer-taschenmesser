@@ -100,5 +100,8 @@ export function useSettingsStatus(): StatusTile[] | undefined {
       deviceStatusLine([device.sync, device.backup, device.updates, device.storage]),
       ai,
     ];
-  return [security, device.sync, device.backup, device.updates, ai, device.storage];
+  // A line whose read hung past the wait has no words yet: it stays out rather than standing there empty.
+  return [security, device.sync, device.backup, device.updates, ai, device.storage].filter(
+    (l) => !(l.loading && !l.status),
+  );
 }
