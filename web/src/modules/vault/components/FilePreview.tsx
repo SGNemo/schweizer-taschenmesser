@@ -18,6 +18,8 @@ export const canPreview = (fileType: string | undefined): boolean =>
 export function FilePreview({ id, fileName }: { id: string; fileName: string }) {
   const [url, setUrl] = useState<string>();
   const [note, setNote] = useState('');
+  // One read at a time: a second tap while the file is read would make a second URL nobody gives back.
+  const [busy, setBusy] = useState(false);
   // Left before the file was read (the panel closed, another folder picked): no URL is made afterwards.
   const alive = useRef(true);
   useEffect(() => {
@@ -35,8 +37,10 @@ export function FilePreview({ id, fileName }: { id: string; fileName: string }) 
 
   async function show() {
     setNote('');
+    setBusy(true);
     const blob = await getBlob(id).catch(() => undefined);
     if (!alive.current) return;
+    setBusy(false);
     if (!blob) return setNote(t.vault.preview.missing);
     if (!canPreview(blob.type)) return setNote(t.vault.preview.noPicture);
     setUrl(URL.createObjectURL(blob));
@@ -48,6 +52,8 @@ export function FilePreview({ id, fileName }: { id: string; fileName: string }) 
         <Button
           size="sm"
           aria-expanded={url !== undefined}
+          aria-busy={busy || undefined}
+          disabled={busy}
           onClick={() => (url ? setUrl(undefined) : void show())}
         >
           {url ? t.vault.preview.hide : t.vault.preview.show}

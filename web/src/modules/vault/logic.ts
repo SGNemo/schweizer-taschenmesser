@@ -133,22 +133,28 @@ export const RENEWABLE: readonly DocCategory[] = [
 ];
 
 /** Days before the end from which a contract whose cancellation deadline has passed offers "Verlängert". */
-export const RENEW_MISSED_DAYS = 30;
+const RENEW_MISSED_DAYS = 30;
+/** Days an expired document stays on the rail and keeps "Verlängert"; older ones are only counted. */
+const PAST_DAYS = 90;
 
 /**
- * "Verlängert" is offered once the end has come or the cancellation deadline is here. A contract whose deadline
- * has passed runs on: it offers the button only for the last weeks of its term, not for months on end (the user
- * may have cancelled in time; there is no state for that).
+ * "Verlängert" is offered around the end: from the day the cancellation deadline is a week away or the end has
+ * come, until `PAST_DAYS` after the end. A contract whose deadline has passed runs on: it offers the button only
+ * for the last weeks of its term, not for months on end (the user may have cancelled in time; there is no state
+ * for that). What ran out long ago is history, not a call to act.
  */
 export function canRenew(
   d: Pick<VaultDocument, 'category' | 'endDate' | 'expiresOn'>,
   state: Status,
   today: string,
 ): boolean {
-  if (!RENEWABLE.includes(d.category)) return false;
-  if (state === 'expired' || state === 'act-now') return true;
   const end = endOf(d);
-  return state === 'missed' && !!end && daysBetween(today, end) <= RENEW_MISSED_DAYS;
+  if (!end || !RENEWABLE.includes(d.category)) return false;
+  const left = daysBetween(today, end);
+  if (state === 'expired') return -left <= PAST_DAYS;
+  if (state === 'missed') return left <= RENEW_MISSED_DAYS;
+  // The end day itself still counts as "soon" for a paper without a deadline: the end has come.
+  return state === 'act-now' || left === 0;
 }
 
 /** Last day of a term of `n` months that starts on `from` (BGB § 188: a day the last month lacks is its last day). */
@@ -208,13 +214,10 @@ export interface DeadlineRow<T> {
   kind: 'cancel' | 'end';
 }
 
-/** Days an expired document without an action stays on the rail; older ones are only counted. */
-export const PAST_DAYS = 90;
-
 /**
  * Every document with a date, oldest first: what has run out, then what comes. Undated ones are left out. What
- * ran out more than `PAST_DAYS` ago and offers no "Verlängert" (an old warranty) is counted in `older` instead:
- * the past must not grow for years and push "Heute" off the screen.
+ * ran out more than `PAST_DAYS` ago is counted in `older` instead: the past must not grow for years and push
+ * "Heute" off the screen.
  */
 export function deadlineRows<T extends VaultDocument>(
   docs: readonly T[],
@@ -236,9 +239,7 @@ export function deadlineRows<T extends VaultDocument>(
     })
     .sort((a, b) => a.date.localeCompare(b.date) || compareText(a.doc.title, b.doc.title));
   const old = (r: DeadlineRow<T>) =>
-    r.state === 'expired' &&
-    daysBetween(r.date, today) > PAST_DAYS &&
-    !canRenew(r.doc, r.state, today);
+    r.state === 'expired' && daysBetween(r.date, today) > PAST_DAYS;
   return { rows: all.filter((r) => !old(r)), older: all.filter(old).length };
 }
 

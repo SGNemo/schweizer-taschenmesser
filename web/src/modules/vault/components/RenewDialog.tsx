@@ -29,7 +29,8 @@ export function RenewDialog({
       onClose={onClose}
       title={doc ? t.vault.renewAria(doc.title) : t.vault.renewDialog.title}
     >
-      {doc ? <Fields key={doc.id} doc={doc} onClose={onClose} /> : null}
+      {/* A new end from elsewhere starts the dialog afresh: field and hint never describe two different terms. */}
+      {doc ? <Fields key={`${doc.id}:${endOf(doc)}`} doc={doc} onClose={onClose} /> : null}
     </Dialog>
   );
 }
@@ -56,11 +57,14 @@ function Fields({ doc, onClose }: { doc: Stored<VaultDocument>; onClose: () => v
     }
   }
 
+  // What the field holds decides the hint: a date still behind us says so, the untouched proposal says what it is.
   const hint = !proposal
     ? r.noStart
-    : value === proposal && proposal < today()
+    : value && value < today()
       ? r.stillPast
-      : r.proposed(long(addDaysStr(end, 1)));
+      : value === proposal
+        ? r.proposed
+        : undefined;
 
   return (
     <Form onSubmit={() => void save()}>

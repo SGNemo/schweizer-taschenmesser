@@ -5451,11 +5451,10 @@ export const de = {
       title: 'Verlängert',
       until: (date: string) => `Bisher bis ${date}.`,
       newEnd: 'Neues Ende',
-      proposed: (from: string) =>
-        `Vorschlag: noch einmal dieselbe Laufzeit, ab ${from}. Das Datum lässt sich ändern.`,
+      proposed: 'Vorschlag: noch einmal dieselbe Laufzeit. Das Datum lässt sich ändern.',
       noStart: 'Ohne Beginn gibt es keinen Vorschlag: bitte das neue Ende eintragen.',
       startMoves: (from: string) => `Der Beginn wird auf den ${from} gesetzt.`,
-      stillPast: 'Der Vorschlag liegt noch in der Vergangenheit: bitte anpassen.',
+      stillPast: 'Dieses Datum liegt noch in der Vergangenheit: bitte anpassen.',
       gone: 'Die Unterlage gibt es nicht mehr.',
       notLater: 'Das neue Ende muss nach dem bisherigen liegen.',
       save: 'Verlängerung speichern',
@@ -5468,12 +5467,12 @@ export const de = {
       emptyHint: 'Ein Ende oder Ablaufdatum in einer Unterlage legt sie hierher.',
       older: (n: number) =>
         n === 1
-          ? '1 ältere abgelaufene Unterlage steht in der Ablage.'
-          : `${n} ältere abgelaufene Unterlagen stehen in der Ablage.`,
+          ? '1 Unterlage ist seit mehr als 90 Tagen abgelaufen und hier ausgeblendet. Sie steht weiter in der Ablage.'
+          : `${n} Unterlagen sind seit mehr als 90 Tagen abgelaufen und hier ausgeblendet. Sie stehen weiter in der Ablage.`,
       kinds: {
-        cancel: 'Kündigen bis',
-        cancelNow: 'Jetzt kündigen',
-        cancelSoon: 'Bald kündigen',
+        cancel: 'Kündbar bis',
+        cancelNow: 'Kündbar bis · diese Woche',
+        cancelSoon: 'Kündbar bis · bald',
         end: 'Läuft ab',
         endSoon: 'Läuft bald ab',
         expired: 'Abgelaufen',

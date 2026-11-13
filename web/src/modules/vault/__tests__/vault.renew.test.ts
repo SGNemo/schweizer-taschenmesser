@@ -71,16 +71,29 @@ describe('renewal: one more term of the same length', () => {
     expect(renewedEnd({ startDate: '2026-08-31', endDate: '2026-09-30' })).toBe('2026-10-31');
   });
 
-  it('is offered for what is renewed, once the end or the deadline has come', () => {
+  it('is offered for what is renewed, around its end', () => {
     const TODAY = '2026-09-29';
     const far = { endDate: '2026-12-31' };
+    const past = { endDate: '2026-09-20' };
     expect(RENEWABLE).toEqual(['identity', 'insurance', 'contract', 'health', 'other']);
-    expect(canRenew({ category: 'identity', ...far }, 'expired', TODAY)).toBe(true);
+    expect(canRenew({ category: 'identity', ...past }, 'expired', TODAY)).toBe(true);
     expect(canRenew({ category: 'contract', ...far }, 'act-now', TODAY)).toBe(true);
     expect(canRenew({ category: 'contract', ...far }, 'soon', TODAY)).toBe(false);
     expect(canRenew({ category: 'contract', ...far }, 'ok', TODAY)).toBe(false);
-    expect(canRenew({ category: 'warranty', ...far }, 'expired', TODAY)).toBe(false);
-    expect(canRenew({ category: 'tax', ...far }, 'expired', TODAY)).toBe(false);
+    expect(canRenew({ category: 'warranty', ...past }, 'expired', TODAY)).toBe(false);
+    expect(canRenew({ category: 'tax', ...past }, 'expired', TODAY)).toBe(false);
+    expect(canRenew({ category: 'contract' }, 'open-ended', TODAY)).toBe(false);
+    // A paper without a deadline is still "soon" on its last day: the end has come.
+    expect(canRenew({ category: 'identity', endDate: TODAY }, 'soon', TODAY)).toBe(true);
+  });
+
+  it('what ran out more than 90 days ago is history: no button any more', () => {
+    const TODAY = '2026-09-29';
+    expect(canRenew({ category: 'contract', endDate: '2026-07-01' }, 'expired', TODAY)).toBe(true);
+    expect(canRenew({ category: 'contract', endDate: '2026-06-30' }, 'expired', TODAY)).toBe(false);
+    expect(canRenew({ category: 'identity', expiresOn: '2024-05-01' }, 'expired', TODAY)).toBe(
+      false,
+    );
   });
 
   it('a contract whose deadline has passed offers it only in the last 30 days of its term', () => {
@@ -117,17 +130,19 @@ describe('deadline timeline rows', () => {
     expect(older).toBe(0);
   });
 
-  it('what ran out long ago and has no action is counted, not listed; what can be renewed stays', () => {
+  it('what ran out more than 90 days ago is counted, not listed, whatever its category', () => {
     const { rows, older } = deadlineRows(
       [
         doc({ title: 'Alte Garantie', category: 'warranty', endDate: '2025-01-31' }),
         doc({ title: 'Garantie', category: 'warranty', endDate: '2026-08-30' }),
         doc({ title: 'Alter Pass', category: 'identity', endDate: '2024-05-01' }),
+        doc({ title: 'Alter Vertrag', endDate: '2026-06-30' }),
+        doc({ title: 'Vertrag', endDate: '2026-07-01' }),
       ],
       TODAY,
     );
-    expect(rows.map((r) => r.doc.title)).toEqual(['Alter Pass', 'Garantie']);
-    expect(older).toBe(1);
+    expect(rows.map((r) => r.doc.title)).toEqual(['Vertrag', 'Garantie']);
+    expect(older).toBe(3);
   });
 
   it('counts documents per category', () => {

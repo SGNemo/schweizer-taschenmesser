@@ -113,6 +113,10 @@ export default function VaultPage() {
   const listed = view === 'deadlines' ? (docs ?? []) : shown;
   const detail = picked ? listed.find((d) => d.id === picked) : undefined;
   if (picked && docs && !detail) setPicked(null);
+  // The row "Verlängert" was opened for, as stored now. Gone or without an end (another device): the dialog ends
+  // and does not come back by itself.
+  const renewDoc = renewing ? docs?.find((d) => d.id === renewing && endOf(d)) : undefined;
+  if (renewing && docs && !renewDoc) setRenewing(null);
 
   return (
     <>
@@ -288,10 +292,7 @@ export default function VaultPage() {
           </>
         ) : null}
       </SplitView>
-      <RenewDialog
-        doc={(renewing && docs?.find((d) => d.id === renewing)) || null}
-        onClose={() => setRenewing(null)}
-      />
+      <RenewDialog doc={renewDoc ?? null} onClose={() => setRenewing(null)} />
       <DocumentEditor target={openTarget} onClose={closeEditor} />
     </>
   );

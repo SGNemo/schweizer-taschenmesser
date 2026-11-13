@@ -43,10 +43,10 @@ export function DeadlineTimeline({
   onRenew: (doc: Doc) => void;
 }) {
   const { rows, older } = deadlineRows(docs, day);
-  if (rows.length === 0 && older === 0)
+  if (rows.length === 0)
     return (
       <EmptyState title={t.vault.timeline.empty} testId="vault-timeline-empty">
-        <p>{t.vault.timeline.emptyHint}</p>
+        <p>{older > 0 ? t.vault.timeline.older(older) : t.vault.timeline.emptyHint}</p>
       </EmptyState>
     );
   const dated: DatedRow[] = rows.map((r) => ({
@@ -72,8 +72,9 @@ export function DeadlineTimeline({
   }));
   return (
     <div data-testid="vault-timeline">
-      <DatedTimeline label={t.vault.timeline.label} rows={dated} marker={t.vault.timeline.today} />
+      {/* The oldest first: what is hidden stands above the rail, where the past begins. */}
       {older > 0 ? <p className={styles.older}>{t.vault.timeline.older(older)}</p> : null}
+      <DatedTimeline label={t.vault.timeline.label} rows={dated} marker={t.vault.timeline.today} />
     </div>
   );
 }

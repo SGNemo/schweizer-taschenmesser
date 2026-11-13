@@ -189,6 +189,20 @@ describe('file preview: only after a tap, kept nowhere', () => {
     expect(view.container.querySelector('img')).toBeNull();
   });
 
+  it('two taps while the file is read make one picture, and every URL is given back', async () => {
+    await putBlob('doc-1', new Blob(['x'], { type: 'image/png' }));
+    const view = render(<FilePreview id="doc-1" fileName="ausweis.png" />);
+    const button = screen.getByRole('button', { name: 'Vorschau zeigen' });
+    fireEvent.click(button);
+    // While the file is read the button takes no second tap.
+    expect((button as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(button);
+    await screen.findByAltText('Vorschau: ausweis.png');
+    expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
+    view.unmount();
+    expect(URL.revokeObjectURL).toHaveBeenCalledTimes(1);
+  });
+
   it('left before the file was read: no object URL is made afterwards', async () => {
     await putBlob('doc-1', new Blob(['x'], { type: 'image/png' }));
     const view = render(<FilePreview id="doc-1" fileName="ausweis.png" />);

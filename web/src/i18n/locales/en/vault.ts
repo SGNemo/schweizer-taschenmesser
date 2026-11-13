@@ -57,11 +57,10 @@ export const vault: Strings['vault'] = {
     title: 'Renewed',
     until: (date: string) => `Until now: ${date}.`,
     newEnd: 'New end',
-    proposed: (from: string) =>
-      `Proposal: the same term once more, from ${from}. You can change the date.`,
+    proposed: 'Proposal: the same term once more. You can change the date.',
     noStart: 'Without a start there is no proposal: please enter the new end.',
-    startMoves: (from: string) => `The start is set to ${from}.`,
-    stillPast: 'The proposal is still in the past: please adjust it.',
+    startMoves: (from: string) => `The start will move to ${from}.`,
+    stillPast: 'This date is still in the past: please adjust it.',
     gone: 'The document no longer exists.',
     notLater: 'The new end must be after the current one.',
     save: 'Save renewal',
@@ -74,12 +73,12 @@ export const vault: Strings['vault'] = {
     emptyHint: 'An end or expiry date in a document puts it here.',
     older: (n: number) =>
       n === 1
-        ? '1 older expired document is under Filing.'
-        : `${n} older expired documents are under Filing.`,
+        ? '1 document expired more than 90 days ago and is hidden here. It is still under Filing.'
+        : `${n} documents expired more than 90 days ago and are hidden here. They are still under Filing.`,
     kinds: {
-      cancel: 'Cancel by',
-      cancelNow: 'Cancel now',
-      cancelSoon: 'Cancel soon',
+      cancel: 'Cancellable until',
+      cancelNow: 'Cancellable until · this week',
+      cancelSoon: 'Cancellable until · soon',
       end: 'Expires',
       endSoon: 'Expires soon',
       expired: 'Expired',

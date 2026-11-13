@@ -14,9 +14,9 @@
 .timelineTitle[aria-current='true'] {
   text-decoration: underline;
 }
-/* What ran out long ago is only counted: one quiet line under the rail. */
+/* What ran out long ago is only counted: one quiet line above the rail. */
 .older {
-  margin: var(--space-3) 0 0;
+  margin: 0 0 var(--space-3);
   font-size: var(--text-meta);
   color: var(--text-2);
 }
