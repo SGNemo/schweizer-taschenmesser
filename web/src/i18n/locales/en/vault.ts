@@ -36,7 +36,7 @@ export const vault: Strings['vault'] = {
   noticeHint: 'Leave empty if there is no deadline (e.g. for IDs or warranties).',
   invalid: 'Please check the details (the end can’t be before the start).',
   endLabel: 'End',
-  deadlineLabel: 'Cancel by',
+  deadlineLabel: 'Last day to cancel',
   endsOn: (title: string, category: string) =>
     category === 'warranty'
       ? `Warranty ends: ${title}`
@@ -84,7 +84,7 @@ export const vault: Strings['vault'] = {
           : days === 1
             ? 'Last day to cancel: tomorrow'
             : `Last day to cancel: in ${days} days`,
-      cancelSoon: 'Last day to cancel is soon',
+      cancelSoon: 'Last day to cancel: soon',
       end: 'Expires',
       endSoon: 'Expires soon',
       expired: 'Expired',

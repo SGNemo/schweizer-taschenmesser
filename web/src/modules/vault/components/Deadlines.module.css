@@ -31,3 +31,7 @@
   max-block-size: 24rem;
   border-radius: var(--radius-sm);
 }
+/* The status line is always there (a screen reader hears its text change); empty, it takes no row of the grid. */
+.preview > [role='status']:empty {
+  position: absolute;
+}
