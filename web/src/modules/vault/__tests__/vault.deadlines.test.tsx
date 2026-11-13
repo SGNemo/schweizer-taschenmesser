@@ -88,6 +88,12 @@ describe('Unterlagen: view "Fristen"', () => {
     const field = within(dialog).getByLabelText(/Neues Ende/) as HTMLInputElement;
     // 1 Oct 2025 – 25 Sep 2026 is no whole number of months: the same 360 days once more.
     expect(field.value).not.toBe('');
+    // A proposal waits for its confirmation: the first focus is the button that writes it.
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        within(dialog).getByRole('button', { name: 'Verlängerung speichern' }),
+      ),
+    );
     const before = (await documentRepo.active().toArray()).find((d) => d.title === 'Hausrat')!;
     expect(before.endDate).toBe('2026-09-25');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Verlängerung speichern' }));
@@ -110,6 +116,8 @@ describe('Unterlagen: view "Fristen"', () => {
     const dialog = await screen.findByRole('dialog', { name: 'Verlängert: Impfpass' });
     const field = within(dialog).getByLabelText(/Neues Ende/) as HTMLInputElement;
     expect(field.value).toBe('');
+    // Nothing proposed: the date is what is missing, so the field has the first focus.
+    await waitFor(() => expect(document.activeElement).toBe(field));
     expect(
       within(dialog).getByText(
         'Ohne Beginn gibt es keinen Vorschlag: bitte das neue Ende eintragen.',

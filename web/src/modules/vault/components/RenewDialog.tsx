@@ -83,10 +83,12 @@ function Fields({ doc, onClose }: { doc: Stored<VaultDocument>; onClose: () => v
         hint={hint}
         error={error}
         required
+        // Nothing proposed: the date is what is missing. A proposal only waits for its confirmation below.
+        data-autofocus={proposal ? undefined : true}
       />
       <FormActions>
         <Button onClick={onClose}>{t.actions.cancel}</Button>
-        <Button type="submit" variant="primary">
+        <Button type="submit" variant="primary" data-autofocus={proposal ? true : undefined}>
           {r.save}
         </Button>
       </FormActions>
