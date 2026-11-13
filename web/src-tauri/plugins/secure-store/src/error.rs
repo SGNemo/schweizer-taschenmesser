@@ -13,6 +13,9 @@ pub enum Error {
     Keystore(String),
     #[error("biometric verification failed: {0}")]
     Biometric(String),
+    /// The person declined the OS prompt; the frontend compares the exact text (`secureStore.ts`).
+    #[error("cancelled")]
+    Cancelled,
     #[cfg(target_os = "android")]
     #[error(transparent)]
     PluginInvoke(#[from] tauri::plugin::mobile::PluginInvokeError),
