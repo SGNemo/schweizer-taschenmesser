@@ -152,6 +152,59 @@ Lücke im Plan: kein Paket nahm die Seitenleiste (`layout/Sidebar.tsx`, `Sidebar
 - **Stopp:** Ende von 4.0; MODULE-IDENTITY „4.0“ wird von „Entwurf“ zu „gültig“.
 - **Wortlaut-Durchgang (K5 der Designkontrolle, [DESIGN-CHECK](DESIGN-CHECK-0b-1-3.md); Svens Antwort vom 2026-11-11, hierher gelegt am 2026-11-12):** die Hauptaktion einer Seite heißt überall „<Ding> eintragen“, wie der Plus am Handy schon heißt – Kopf-Knopf, Dialogtitel, Knopf des Leerzustands und der Speichern-Knopf eines Eintragen-Dialogs, de und en. Ein Durchgang über die ganze App, nicht je Bereich: `strings.ts` führt „hinzufügen“ 60-mal, die e2e-Specs 147-mal in 60 Dateien, darunter geschützte Zusage-Specs (Ratschen-Treffer, im PR-Text nennen). „Hinzufügen“ bleibt, wo etwas zu einer bestehenden Sache kommt (Teilzahlung, Anhang, Ort, Kalender, Zone). Bis dahin benennen neue Pakete ihre Hauptaktion gleich so ([Entscheidung](../../decisions/ui-shell-identity-40-areas.md)).
 
+- **Liste aller offenen Punkte (Schritt 0, 2026-11-13):** jeder Punkt, der auf 0b-8 zeigt, am Code von `develop` (03e24fb35) geprüft – keiner ist erledigt, nichts gestrichen. Themen so geschnitten, dass sich die Chats keine Dateien teilen; Ausnahmen in der Zeile. D (Wortlaut) schreibt `strings.ts` und die Kataloge, die alle anderen Themen auch berühren: D läuft als letztes Thema vor E. Aufwand: S ≤ ½ Chat-Tag, M ≈ 1, L > 1.
+
+| Nr. | Quelle | Seite/Datei | was | Thema | Aufwand |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 0b-8 · F6 | `invoices.module.css:119`, `subscriptions.module.css:157`, `budgets.module.css:21`, `finance.module.css:116, :139, :317`, `finance/components/Tabs.tsx:413`, `Charts.tsx:49, :141`, `budgets/components/Editors.tsx:495, :498` | feste Werte (`font-size: 1rem`, Radien 2/3 px, Inline-Layout) durch Tokens und Klassen ersetzen | C1 | S |
+| 2 | 0b-8 · G9 | `finance/components/OverviewTab.tsx`, `MonthCurve.tsx:68–71` | Kontostand steht zweimal (Zeile und Fuß der Kurve): Fuß ohne Betrag; solange er bleibt, verdeckt „Werte ausblenden“ ihn (heute nicht) | C1 | S |
+| 3 | 0b-8 · G7 | `finance/components/Tabs.tsx:123, :155` | „Als CSV exportieren“ als eigene Knopfzeile → ins „⋯“-Menü der Seite; der Export hängt am Filterzustand des Reiters | C1 | S |
+| 4 | 0b-8 · G8 | `subscriptions/components/SubscriptionEditor.tsx:242`, `core/recurrence/RecurrenceEditor.tsx:151–173` | Abo-Dialog: Intervall und „Ende“ hinter „Mehr Felder“; `RecurrenceEditor` nutzen auch Kalender und ToDos (Option, kein Umbau für alle) | C1 | M |
+| 5 | 0b-8 · G4 | `subscriptions/routes/*` | Abo-Zeilen am Handy 78–120 px gegen 48: Angaben je Zeile kürzen | C1 | M |
+| 6 | 0b-8 · G4 | `invoices/routes/*` | Rechnungs-Zeilen am Handy 82–107 px: der Name bricht neben Betrag und zwei Knöpfen | C1 | S |
+| 7 | 0b-8 · „Gekündigt zum“ | `SubscriptionEditor.tsx:251` (`TextField type="date"`), `ui/DateTimeFields.tsx:16` | natives Datumsfeld → `DayField` mit Mindestdatum (`min` fehlt in `Props`) | C1 | S |
+| 8 | STATUS · G-b | `finance` (Reiter Verlauf, Konten) | Lesemaß für Reiter mit Betragsspalte | C1 | S |
+| 9 | STATUS · G-b | `core/money.ts` (`formatMoney`), Geld-Module | ein Minuszeichen in allen Geldbeträgen (heute Bindestrich aus `Intl` neben eigenem „−“) | C1 | M |
+| 10 | STATUS · G-b | `finance/components/MonthCurve.tsx:19` | Monatskurve der Übersicht: Fläche ohne Nullpunkt (`lo = Math.min(...)`) | C1 | S |
+| 11 | 0b-8 · F4, E-1 | `ui/Patterns.module.css:91–113` | `Segmented` mit Maus 32 px ohne Trefferstreifen (Touch 36 + 8 = 44): Ausnahme in `howto/design-rules.md` oder 44 px (Frage 2 im PR) | C2 | S |
+| 12 | 0b-8 · F5 | `ui/tokens.css:102, :118`, `layout/CockpitPanel.module.css:5`, `howto/design-rules.md` | `--slot-m` ungenutzt (`--head-tint-0` liest nur `tokens.test.ts`); `--z-fab` nach dem entfallenen FAB; `--text-3` neben `--text-3xl`; vier Flächen in zwei Namensschemata → Flächen-Tabelle | C2 | M |
+| 13 | 0b-8 · F6 | `ui/Fields.module.css:70`, `ui/HelpHint.module.css:33` | Radius 7 px, `z-index: 30` → `--radius-*`, `--z-hint` | C2 | S |
+| 14 | 0b-8 · K6 | `layout/BottomNav.module.css:88`, DESIGN-SPEC § 4b und Tabelle der Farben | Bottom-Bar aktiv: Bereichsfarbe bleibt (Svens Antwort 2026-11-11), Kommentar und Spec sagen „Akzent“ | C2 | S |
+| 15 | 0b-8 · K4 | `quickCapture/ui/CaptureForm.tsx:704`, `layout/QuickAdd.tsx` | Aktionen der Schnellerfassung als Fuß des Blatts; heute folgen darunter zwei weitere Einstiege | C2 | S |
+| 16 | decisions · knowledge (0b-6a) | `ui/FolderTabs.*`, `notes/components/PageList.*` | `FolderTabs` des Notizbuchs: Haarlinie und Notizbuchfarbe | C2 | S |
+| 17 | decisions · knowledge (0b-6a) | `ui/Patterns.tsx` (`PageAction`), `notes` | Tastenhinweis von „Neue Seite“: `PageAction` nimmt kein `title`, `notes.shortcutNew` ist ungenutzt | C2 | S |
+| 18 | decisions · knowledge (0b-6b, 0b-6a) | `downloads/components/DownloadsBand.module.css`, `disk/components/DiskHead.module.css`, `mail/components/InboxHead.module.css`, `ui/tokens.test.ts` (geschützt) | leere Dateien und ihre Einträge im Test gemeinsam entfernen (Ratschen-Treffer) | C2 | S |
+| 19 | decisions · plan (0b-4b) | `ui/Patterns.tsx` (`SplitView`) | Fokus geht verloren, wenn das Panel auf- oder zugeht | C2 | M |
+| 20 | decisions · overview, #784 | `ui/Patterns.module.css`, `layout/PageContainer.module.css` | Einblend-Animationen `pageIn`/`itemIn` | C2 | S |
+| 21 | STATUS · G-b | `layout/Sidebar.tsx:153` | Tooltip der eingeklappten Seitenleiste schließt nicht mit Escape | C2 | S |
+| 22 | PACKAGES 0b-R · App-Rahmen | `layout/SyncBadge.tsx:27`, `AppShell.module.css:150–155` | Sync-Anzeige dreht sich endlos (`.spin`), DESIGN-SPEC :24 sagt „no endless spin“ | C2 | S |
+| 23 | 0b-8 · T-a | `vault/routes/VaultPage.tsx:80` | Ansicht „Ablage“/„Fristen“ in der Adresse (`?view=`), heute `useState` | C3 | S |
+| 24 | 0b-8 · T-a | `VaultPage.tsx`, Liste | nach „Verlängert“ hört ein Screenreader den Titel ggf. zweimal (Umsortieren nimmt den Fokus): im Browser prüfen | C3 | S |
+| 25 | 0b-8 · T-a | `vault.deadlines.test.tsx`, Dialog „Verlängert“ | Test der Schreibsperre für das neu aufgebaute Formular; Schließen + Wiederöffnen während eines Schreibens lässt ein spätes Schließen durch | C3 | M |
+| 26 | 0b-8 · S-b | `pages/settings/useSettingsStatus.ts:28` | Status-Zeilen springen von sechs auf drei, solange `useModuleStates()` lädt | C4 | S |
+| 27 | 0b-8 · S-b | `core/status/lines.ts` (`useBackupLine`), `modules/device` | `/device` füllt die Zeilen einzeln, „Kein Backup“ blitzt vor der ersten Lesung | C4 | M |
+| 28 | 0b-8 · S-b | `modules/device/logic.ts:39–40`, `lines.ts:94` | Hub mit `reason: 'public-network'`/`'no-home'` liest sich wie „Aus“: eigene Kontextzeile ohne Markierung | C4 | S |
+| 29 | 0b-8 · S-b | `core/platform/**`, `core/backup/auto.ts:122–125`, `pages/settings/AutoBackupCard.tsx`, `modules/device/lines.ts` | `SecretStore.has` (oder Abfrage in Rust), damit `hasAutoPassphrase` die Passphrase nicht in die Web-Ansicht holt; teilt Dateien mit C4: nach C4 | C6 | M |
+| 30 | #784 Frage 1 | `modules/weather/attention.ts` | heutige Wetterwarnungen bekommen `due: 'today'` (heute gefaltet unter „nichts davon muss heute sein“) | C5 | S |
+| 31 | #784 Frage 2 | `web/scripts/lib/stimulusBudget.ts:327` | Tonstufen (`--surface-raised`/`-sunken`, `--surface-2`) als neutral zählen (dunkel heute 38/14 statt 17/2) | C5 | S |
+| 32 | 0b-8 · Performance | alle Routen, `docs/perf/` | Klick bis erster/fertiger Inhalt messen, Ursachen ordnen, Zielwerte mit Sven, Wächter; > 1 Tag → eigenes Perf-Paket | B | L |
+| 33 | 0b-8 · S-b | Start-Bundle, Einstellungen | 96 Anfragen beim Start statt 91 (Grenze 93): Einstellungen aus dem Start-Bundle statt Baseline heben | B | M |
+| 34 | 0b-8 · Wortlaut, decisions · areas, E-1 | `strings.ts`, `i18n/locales/en`, e2e (147 Stellen in 60 Specs, z. T. geschützt) | Hauptaktion überall „<Ding> eintragen“; „hinzufügen“ nur, wo etwas zu Bestehendem kommt | D | L |
+| 35 | decisions · overview, #784 | Widgets (`ui/widgets`, Modul-Widgets) | eigene Leerzustände der Widgets („Aufgabe anlegen“) im Wortlaut-Durchgang | D | S |
+| 36 | decisions · knowledge (0b-6a, 0b-6b) | `strings.ts` + Kataloge | ungenutzte Texte `feeds.lead`, `mail.head.unread`, `downloads.band.idle/one/many/contextIdle`, `disk.head.of/lastScan/neverScanned` löschen | D | S |
+| 37 | decisions · knowledge (0b-6b) | `downloads` (Plus unter 900 px), `strings.ts:7850, :7896` | Plus-Name „Download eintragen“ (heute „Download hinzufügen“) | D | S |
+| 38 | PACKAGES 0b-4b | `strings.ts:8799, :8807` (Uhr) | „Ort hinzufügen“: Ausnahme „Ort“ der Regel greift wohl – nur bestätigen | D | S |
+| 39 | 0b-8 · Umfang, REPORT | `docs/design/ui-audit-2026-11/tools/audit-tour.spec.ts:302, :487, :500` | Werkzeug korrigieren: Animationen ohne Kappung (`slice(0, 10)`), `__cls` auch vor Modul-Dialogen und Schnellerfassung zurücksetzen | E | S |
+| 40 | 0b-8 · Umfang, Abnahme | alle 29 Module × 2 Geräte × 2 Themes, MEASURES | Audit-Tour neu, vorher/nachher, M1–M10 (≥ 8 erfüllt, kein „nicht“), Klickwege, Reizbudget unter 0b-1, Council | E | L |
+| 41 | decisions · plan (0b-4a) | Kalender | Monat mit Kalenderfarben: „farbig über dem Falz ≤ 10“ gilt nicht, neu messen | E | S |
+| 42 | AE3 | Plakette, Kapsel, Bühne, Bibliothek (dunkel) | Modul-Tönungen im Dunkeln ansehen; nur wenn stumpf: Frage an Sven mit Musterbild | E | S |
+| 43 | E-1/E-2 | `e2e/stimulus.spec.ts` (geschützt) | übrige Einstellungs-Reiter und `/tools` in die Ratsche aufnehmen | E | S |
+| 44 | MODULE-IDENTITY :164 | `docs/design/MODULE-IDENTITY.md` | „4.0“ von „Entwurf“ zu „gültig“ (Stopp von 0b-8) | E | S |
+| 45 | decisions · knowledge (0b-6a) | `mail/components/InboxHead.tsx:17`, `mail.depth.test.tsx`, `e2e/seed/mail.seed.spec.ts:209` (geschützt) | Test-Id `mail-stamp` heißt nach dem entfallenen Stempel. **offen**, Vorschlag: mit Nr. 18 in C2 (selbe Komponente, Ratschen-Treffer) | offen | S |
+| 46 | decisions · knowledge (0b-6a) | CSS der Wissens- und System-Module | feste Werte, die der Design-System-Durchgang dort fand (F6). **offen**, Vorschlag: C2 (keine Datei anderer Themen) | offen | S |
+
+Nach 0b-8, nicht in der Liste: Website Runde 5 (AE6), neue Bildschirmfotos (CHATS), zweite Modul-Welle (REPORT), ggf. das Perf-Paket aus Nr. 32.
+
 ## Modul-Pakete (Frage 2 A – je ein Stopp-Paket direkt nach dem Bereichs-Paket)
 
 Fest seit dem 2026-11-09; Herkunft und Regeln je Kandidat stehen in REPORT „Bereiche“ (Tabellen Geld, Haushalt, Tresor, System). H-b und S-b sind neue Module (`routines`, `device`), damit Haushalt und System die Funktion tragen, die Frage 2 A beschließt – nach den Modul-Paketen sind es 29 Module (27 heute); 0b-8 misst den Stand, der dann gilt. **Einschalten:** beide kommen mit `defaultEnabled: false` und `maturity: 'stable'` und gehören zu einem neuen Default-Stand (PACKAGE-0 „H-a“; entschieden 2026-11-12: `routines` = **Stand 5**, `device` = **Stand 6**, weil ein Gerät seinen Stand nie wechselt und ein nachträglich erweiterter Stand 5 `device` ungefragt einschaltete): Neuinstallationen ab dann zeigen sie, Bestandsinstallationen – auch solche mit Stand 4 – nie ungefragt, sondern über die Bibliothek; `defaults.version` wird nie hochgezogen (Test „Stand-4-Gerät nach Update → keine neuen Module“). Jedes Paket: eigener Branch + PR + Council, Change-Note de + en, Widget aus dem Katalog, `contributions.onboarding`, Seed-Daten, FOCUS-Checkliste; keine Modul-Importe untereinander.
