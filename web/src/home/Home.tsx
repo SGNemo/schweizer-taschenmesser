@@ -230,7 +230,11 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
   );
   // Packed (no holes) except while editing: reordering picks targets by position, so there the grid keeps the
   // saved order on plain rows.
-  const gridRef = usePackedGrid<HTMLDivElement>(shown.map((e) => e.key).join('|'), !editing);
+  const gridRef = usePackedGrid<HTMLDivElement>(
+    shown.map((e) => e.key).join('|'),
+    !editing,
+    blocksReady,
+  );
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),

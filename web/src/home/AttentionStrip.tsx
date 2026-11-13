@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { rankAttention, useAttentionItems } from '@/core/modules/contributions';
 import { useLiveAttention } from '@/core/modules/liveAttention';
 import type { AttentionCover, AttentionItem } from '@/core/modules/types';
-import { useAmountMask } from '@/core/focus/maskAmounts';
+import { maskAmounts, useAmountMask } from '@/core/focus/maskAmounts';
 import { useFocusSettings } from '@/core/settings/focus';
 import { useUpdateStore } from '@/core/update/controller';
 import { t } from '@/strings';
@@ -39,7 +39,10 @@ function useCoreItems(): AttentionItem[] {
 function Card({ item: i }: { item: AttentionItem }) {
   // "Werte ausblenden": amounts in a title or context line ("noch 1,02 €", a new price) become dots.
   const mask = useAmountMask();
-  const { figure, label } = splitFigure(i.title);
+  // A leading count is the big figure; a leading amount ("12,50 CHF offen") is not split off, so the mask sees it.
+  const split = splitFigure(i.title);
+  const { figure, label } =
+    split.figure && maskAmounts(i.title).startsWith(split.figure) ? split : { label: i.title };
   return (
     <Link
       to={i.to}

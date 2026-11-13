@@ -313,7 +313,7 @@ export default function NextWidget() {
             <ul className={styles.rows}>
               {options.map((o) => (
                 <li key={o.id} className={styles.row}>
-                  <span>{o.title}</span>
+                  <span>{mask(o.title)}</span>
                   <Button
                     onClick={() => {
                       void undoableWithToast(t.focus.plan.planned, t.focus.plan.planned, () =>

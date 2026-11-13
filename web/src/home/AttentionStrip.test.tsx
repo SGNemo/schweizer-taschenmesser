@@ -311,6 +311,15 @@ it('"Werte ausblenden" turns the amounts of a card into dots, the words stay', a
     );
     expect(dots).toHaveLength(1);
     expect(card.textContent).toContain('Ausgeblendet');
+    cleanup();
+    // A leading amount is no big figure: it is hidden with the rest of the title.
+    items.value = [
+      { id: 'x:y', tone: 'warning', icon: 'repeat', title: '12,50 CHF offen', to: '/finance' },
+    ];
+    draw();
+    const own = await screen.findByRole('link', { name: /offen/ });
+    await waitFor(() => expect(own.textContent).not.toMatch(/12,50/));
+    expect(own.querySelector('b')).toBeNull();
   } finally {
     await db.table('_meta').delete('focus.hideValues');
     cleanup();

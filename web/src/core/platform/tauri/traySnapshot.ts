@@ -39,7 +39,6 @@ export interface TrayLine {
 }
 
 /** Money never goes into the tray, also not inside a title ("Strom 54,30 €" → "Strom"). */
-
 export function trayTitle(title: string): string {
   const clean = title.replace(AMOUNT_IN_TEXT, ' ').replace(/\s+/g, ' ').trim();
   return clean.length > TRAY_TITLE_CHARS

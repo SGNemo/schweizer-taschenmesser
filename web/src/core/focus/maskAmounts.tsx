@@ -4,7 +4,7 @@ import { useHideValues } from './hideValues';
 
 const SPACE = '[\\s\\u00a0\\u202f]';
 const DIGITS = "\\d[\\d.,'’]*";
-/** More digit groups after a space ("1 017,84"): three digits each, so a count after an amount is not taken. */
+/** More digit groups after a space ("1 017,84 €"), only before a currency: a count after an amount is not taken. */
 const GROUPS = `(?:${SPACE}\\d{3}[\\d.,'’]*)*`;
 const CODE = '(?:EUR|CHF|USD|Euro|Franken)';
 
@@ -14,7 +14,7 @@ const CODE = '(?:EUR|CHF|USD|Euro|Franken)';
  * only started where no digit stands before it, so a long number is read once.
  */
 export const AMOUNT_IN_TEXT = new RegExp(
-  `(?:[€$£]|\\b(?:EUR|CHF|USD|Euro)\\b)${SPACE}?[-+]?${DIGITS}${GROUPS}` +
+  `(?:[€$£]|\\b(?:EUR|CHF|USD|Euro)(?![A-Za-z]))${SPACE}?[-+]?${DIGITS}` +
     `|(?<![\\d.,'’])[-+]?${DIGITS}${GROUPS}${SPACE}?(?:[€$£]|${CODE}(?![A-Za-z]))`,
   'gi',
 );

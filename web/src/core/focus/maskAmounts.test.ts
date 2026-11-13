@@ -22,6 +22,8 @@ describe('maskAmounts', () => {
     const line = '2 Rechnungen heute fällig · 13:00 · 96 %';
     expect(maskAmounts(line)).toBe(line);
     expect(maskAmounts('CHF 12.99 2 Abos')).toBe(`${H} 2 Abos`);
+    expect(maskAmounts('CHF 12.99 200 Abos')).toBe(`${H} 200 Abos`);
+    expect(maskAmounts('EUR12 und CHF12')).toBe(`${H} und ${H}`);
     expect(maskAmounts('Raum 12 Europa')).toBe('Raum 12 Europa');
   });
   it('reads a long digit run once (no slow backtracking on a strange title)', () => {

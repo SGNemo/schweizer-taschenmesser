@@ -44,7 +44,7 @@ export function firstScreenLoading(
  * cards of the first screen have their content or `SETTLE_CAP_MS` have passed, so they appear once, at their own
  * heights, instead of growing one after the other.
  */
-export function usePackedGrid<T extends HTMLElement>(keys: string, enabled = true) {
+export function usePackedGrid<T extends HTMLElement>(keys: string, enabled = true, ready = true) {
   // A callback ref: a grid element that mounts again (same keys) is packed again.
   const [grid, setGrid] = useState<T | null>(null);
   useLayoutEffect(() => {
@@ -79,7 +79,9 @@ export function usePackedGrid<T extends HTMLElement>(keys: string, enabled = tru
       // The cap also settles a grid that never gets a card (a calm view without the "Heute" card), so the
       // "Mehr anzeigen" row below it shows; cards that arrive before it are waited for (`settleWhenLoaded`).
       cap = window.setTimeout(settle, SETTLE_CAP_MS);
-      settleWhenLoaded();
+      // The page has what it shows and there is no card (a calm view without the "Heute" card): nothing to hold.
+      if (ready && children().length === 0) settle();
+      else settleWhenLoaded();
     }
     // A body that swaps its skeleton for the empty state may keep the card's height (the size class's minimum),
     // so content changes re-check too, once per frame.
@@ -102,6 +104,6 @@ export function usePackedGrid<T extends HTMLElement>(keys: string, enabled = tru
       grid.removeAttribute('data-settling');
       grid.removeAttribute('data-packed');
     };
-  }, [enabled, grid, keys]);
+  }, [enabled, grid, keys, ready]);
   return setGrid;
 }
