@@ -71,8 +71,8 @@ function platformOf(kind: PlatformKind): PlatformService {
   };
 }
 
-async function show(kind: PlatformKind) {
-  setPlatform(platformOf(kind));
+async function show(kind: PlatformKind, over: Partial<PlatformService> = {}) {
+  setPlatform({ ...platformOf(kind), ...over });
   const view = render(
     <MemoryRouter>
       <StatusPage />
@@ -167,7 +167,10 @@ describe('page Gerätestatus', () => {
       { key: 'backup.auto.config', value: { enabled: true, interval: 'daily', keep: 7 } },
       { key: 'backup.auto.last', value: { at, ok: true } },
     ]);
-    await show('desktop');
+    const desktop = platformOf('desktop');
+    await show('desktop', {
+      secrets: { ...desktop.secrets, get: async () => 'a stored passphrase' },
+    });
     expect(screen.getByTestId('device-next-backup')).toHaveTextContent('14.11.2026');
     expect(screen.getByTestId('overview-backup')).toHaveTextContent('Gesichert');
   });
@@ -199,5 +202,31 @@ describe('page Gerätestatus', () => {
     expect(text).not.toMatch(/https?:\/\/|[A-Z]:\\/);
     for (const a of view.container.querySelectorAll('a'))
       expect(a.getAttribute('href')).toMatch(/^\/(settings|library|disk)\b/);
+  });
+
+  it('a hub that is on but not reachable and an automatic backup without its passphrase carry the mark, in words', async () => {
+    await db.table('_meta').put({
+      key: 'backup.auto.config',
+      value: { enabled: true, interval: 'daily', keep: 7 },
+    });
+    const desktop = platformOf('desktop');
+    await show('desktop', {
+      lanHub: {
+        ...desktop.lanHub,
+        status: async () => ({
+          running: true,
+          state: 'failed',
+          blocked: false,
+          pairingOpen: false,
+          devices: 1,
+        }),
+      },
+      // No passphrase stored (only whether one exists is read).
+      secrets: { ...desktop.secrets, get: async () => undefined },
+    });
+    expect(screen.getByTestId('device-hub')).toHaveTextContent('Nicht erreichbar');
+    expect(screen.getByTestId('device-hub')).toHaveAttribute('data-attention', 'true');
+    expect(screen.getByTestId('device-next-backup')).toHaveTextContent('Passphrase fehlt');
+    expect(screen.getByTestId('device-next-backup')).toHaveAttribute('data-attention', 'true');
   });
 });

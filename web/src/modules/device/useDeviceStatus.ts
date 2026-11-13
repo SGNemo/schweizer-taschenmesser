@@ -18,12 +18,13 @@ export interface StatusGroup {
 const present = (lines: (StatusLine | undefined)[]): StatusLine[] =>
   lines.filter((l): l is StatusLine => l !== undefined);
 
-/** Everything the page shows, in four groups; the summary speaks about the four core lines. */
+/**
+ * Everything the page shows, in four groups. The head counts every line of the page that needs a look (the four core
+ * lines, plus a backup without its passphrase and a hub that is not reachable).
+ */
 export function useDeviceStatus(): {
   groups: StatusGroup[];
-  /** The lines the summary counts (the same four the settings show). */
-  counted: StatusLine[];
-  /** Those of them that need a look. */
+  /** The lines of the page that need a look. */
   look: StatusLine[];
 } {
   const core = useDeviceLines();
@@ -38,6 +39,5 @@ export function useDeviceStatus(): {
       lines: present([core.updates, useAutostartLine(), useNetworkLine()]),
     },
   ];
-  const counted = [core.sync, core.backup, core.updates, core.storage];
-  return { groups, counted, look: needingLook(counted) };
+  return { groups, look: needingLook(groups.flatMap((g) => g.lines)) };
 }

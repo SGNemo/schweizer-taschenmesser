@@ -17,7 +17,7 @@ describe('summary of the device lines', () => {
   it('is calm while nothing needs a look', () => {
     const lines = [line('sync', false), line('backup', false)];
     expect(needingLook(lines)).toEqual([]);
-    expect(summaryText(lines)).toBe('Alles in Ordnung');
+    expect(summaryText(lines)).toBe('Nichts Dringendes');
   });
   it('names the one line in its own words, and counts from two on', () => {
     expect(summaryText([line('sync', true), line('backup', false)])).toBe(
@@ -32,7 +32,7 @@ describe('summary of the device lines', () => {
     expect(calm).toMatchObject({
       to: DEVICE_STATUS_PATH,
       title: 'Gerätestatus',
-      status: 'Alles in Ordnung',
+      status: 'Nichts Dringendes',
       attention: false,
       testId: 'overview-device',
     });

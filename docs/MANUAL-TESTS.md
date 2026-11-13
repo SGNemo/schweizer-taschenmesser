@@ -308,10 +308,10 @@ Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währ
 - **GS-3 Autostart:** Einstellungen → Schnellerfassung → „Mit Windows starten“ einschalten, Gerätestatus öffnen: Zeile „Autostart · An“; ausschalten, Seite neu öffnen: „Aus“. Ein Klick auf die Zeile führt zu dieser Einstellung. ☐
 - **GS-4 Laufwerk:** Zeile „Laufwerk“ nennt freien und gesamten Platz des Systemlaufwerks (Vergleich mit dem Explorer), ohne Laufwerksbuchstaben oder Namen. ☐
 - **GS-5 Heimnetz:** Mit eingerichtetem Heimnetz-Hub: „Heimnetz · Aktiv · n Geräte gekoppelt“; ohne: „Aus“. Nirgends auf der Seite stehen Port, IP-Adresse oder Gerätenamen. ☐
-- **GS-6 Backup:** Automatische Backups einschalten und eines anlegen: „Backup · Gesichert“ mit Zeit, „Nächstes Backup“ mit dem Tag danach; ausschalten: „Nicht geplant“. ☐
+- **GS-6 Backup:** Automatische Backups einschalten und eines anlegen: „Backup · Gesichert“ mit Zeit, „Nächstes Backup“ mit dem Tag danach; ausschalten: „Nicht geplant“. Ohne gespeicherte Passphrase: „Passphrase fehlt“ mit Punkt, oben „1 braucht einen Blick“. ☐
 - **GS-7 Updates und Netzwerk:** Liegt ein Update vor, steht „Update verfügbar“ mit Punkt davor und oben „1 braucht einen Blick“. Einstellungen → Verbindungen → „Netzwerk sperren“: Zeile „Netzwerk · Gesperrt“, ohne Punkt. ☐
 - **GS-8 Verweis:** Unter den Zeilen steht der Satz zu „Dieser PC“; der Link öffnet den Reiter „System“ (ist „Dieser PC“ aus: die Bibliothek). Am Handy fehlt der Satz. ☐
-- **GS-9 Handy:** Am Android-Gerät: Sicherung, Abgleich, Speicher, App; keine Zeilen Heimnetz, Laufwerk, Autostart, kein Akku; jede Zeile lässt sich mit dem Daumen treffen. ☐
+- **GS-9 Handy:** Am Android-Gerät: Backup, Sync, Speicher, App; keine Zeilen Heimnetz, Laufwerk, Autostart, kein Akku; jede Zeile lässt sich mit dem Daumen treffen. ☐
 
 ### Downloads und Torrent
 

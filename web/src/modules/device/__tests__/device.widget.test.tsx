@@ -23,9 +23,9 @@ async function view(size: 's' | 'l' = 's') {
 afterEach(() => useSyncStatus.setState({ phase: 'off', server: undefined }));
 
 describe('device widget (catalogue type: status)', () => {
-  it('says "Alles in Ordnung" while nothing needs a look; it has no link of its own (the header leads to the page)', async () => {
+  it('says "Nichts Dringendes" while nothing needs a look; it has no link of its own (the header leads to the page)', async () => {
     await view();
-    expect(screen.getByText('Alles in Ordnung')).toBeInTheDocument();
+    expect(screen.getByText('Nichts Dringendes')).toBeInTheDocument();
     expect(screen.queryByRole('link')).toBeNull();
   });
 
@@ -33,7 +33,7 @@ describe('device widget (catalogue type: status)', () => {
     useSyncStatus.setState({ phase: 'error', server: 'sync.canary-server.example' });
     const out = await view('l');
     expect(screen.getByText('Sync: Fehler beim Abgleich')).toBeInTheDocument();
-    expect(screen.getByText(/^Backup: .+ · Sync: Fehler beim Abgleich$/)).toBeInTheDocument();
+    expect(screen.getByText(/^Kein Backup · Sync: Fehler beim Abgleich$/)).toBeInTheDocument();
     expect(out.container.innerHTML).not.toContain('canary-server');
   });
 });

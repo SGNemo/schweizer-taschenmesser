@@ -2,11 +2,12 @@
  * The lines only this page shows: next backup, home-network hub, drive, autostart, network block. Read-only: each
  * hook asks the platform or the core for a state and names the settings page where it is set. A line that does not
  * exist on this platform is `undefined` (the page filters by `getPlatform().kind`; `manifest.platforms` is for the
- * whole module). None of them carries "needs a look": the summary counts the four core lines only, so the page, the
- * widget and the settings always say the same.
+ * whole module). Two of them can need a look: an automatic backup without its passphrase and a hub that is switched
+ * on but not reachable; the page's head counts them, the widget and the settings count the four core lines.
+ * The drive line reads the drive list (sizes of the mounted drives, what "Dieser PC" shows); it scans nothing.
  */
 import { useEffect, useState } from 'react';
-import { loadAutoConfig, loadAutoLast } from '@/core/backup/auto';
+import { hasAutoPassphrase, loadAutoConfig, loadAutoLast } from '@/core/backup/auto';
 import { formatTimestamp } from '@/core/i18n/format';
 import { useNetLog } from '@/core/net/netlog';
 import { getPlatform } from '@/core/platform';
@@ -44,6 +45,7 @@ const line = (
   title: string,
   status: string,
   context: string,
+  attention = false,
 ): StatusLine => ({
   id,
   icon,
@@ -51,7 +53,7 @@ const line = (
   title,
   status,
   context,
-  attention: false,
+  attention,
   testId: `device-${id}`,
 });
 
@@ -59,8 +61,13 @@ export function useNextBackupLine(): StatusLine | undefined {
   const d = t.device.nextBackup;
   const supported = getPlatform().isNative;
   const next = useRead<NextBackup>(async () => {
-    const [config, last] = await Promise.all([loadAutoConfig(), loadAutoLast()]);
-    return nextBackup(supported, config, last, now());
+    // Only whether a passphrase is stored, never its value.
+    const [config, last, hasPassphrase] = await Promise.all([
+      loadAutoConfig(),
+      loadAutoLast(),
+      supported ? hasAutoPassphrase() : Promise.resolve(false),
+    ]);
+    return nextBackup(supported, config, last, hasPassphrase, now());
   });
   if (!next) return undefined;
   const [status, context] =
@@ -68,10 +75,20 @@ export function useNextBackupLine(): StatusLine | undefined {
       ? [d.manual, d.manualContext]
       : next.state === 'off'
         ? [d.off, d.offContext]
-        : next.state === 'due'
-          ? [d.due, d.dueContext]
-          : [formatTimestamp(next.at), d.plannedContext];
-  return line('next-backup', 'cloud', settingsPath('sync', 'backup'), d.title, status, context);
+        : next.state === 'no-passphrase'
+          ? [d.noPassphrase, d.noPassphraseContext]
+          : next.state === 'due'
+            ? [d.due, d.dueContext]
+            : [formatTimestamp(next.at), d.plannedContext];
+  return line(
+    'next-backup',
+    'calendarDays',
+    settingsPath('sync', 'backup'),
+    d.title,
+    status,
+    context,
+    next.state === 'no-passphrase',
+  );
 }
 
 export function useLanHubLine(): StatusLine | undefined {
@@ -94,7 +111,15 @@ export function useLanHubLine(): StatusLine | undefined {
       : hub.state === 'failed'
         ? d.failedContext
         : d.offContext;
-  return line('hub', 'wifi', '/settings/sync', d.title, d.state[hub.state], context);
+  return line(
+    'hub',
+    'wifi',
+    '/settings/sync',
+    d.title,
+    d.state[hub.state],
+    context,
+    hub.state === 'failed',
+  );
 }
 
 export function useDriveLine(): StatusLine | undefined {

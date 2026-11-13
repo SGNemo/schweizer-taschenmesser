@@ -51,7 +51,7 @@ describe('settings status head', () => {
     const device = await screen.findByTestId('overview-device');
     expect(device).toHaveAttribute('href', '/device');
     expect(device).toHaveTextContent('Gerätestatus');
-    expect(device).toHaveTextContent('Alles in Ordnung');
+    expect(device).toHaveTextContent('Nichts Dringendes');
     const links = within(screen.getByTestId('settings-status')).getAllByRole('link');
     expect(links.map((l) => l.getAttribute('data-testid'))).toEqual([
       'overview-security',

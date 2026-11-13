@@ -33,18 +33,19 @@ export default function StatusPage() {
       </HeroSlot>
       <div className={styles.page} data-testid="device-status">
         {groups.map((group) => (
-          <section key={group.id} aria-labelledby={`device-${group.id}`} className={styles.group}>
-            <h2 id={`device-${group.id}`} className={styles.heading}>
-              {group.title}
-            </h2>
-            <ul className={styles.lines}>
-              {group.lines.map((line) => (
-                <li key={line.id}>
-                  <StatusLineLink line={line} layout="columns" />
-                </li>
-              ))}
-            </ul>
-          </section>
+          // The line names say what each group is; the space between groups is enough (no heading on top).
+          <ul
+            key={group.id}
+            aria-label={group.title}
+            className={styles.lines}
+            data-testid={`device-group-${group.id}`}
+          >
+            {group.lines.map((line) => (
+              <li key={line.id}>
+                <StatusLineLink line={line} layout="columns" />
+              </li>
+            ))}
+          </ul>
         ))}
         <p className={styles.more}>{d.page.note}</p>
         {desktop ? (

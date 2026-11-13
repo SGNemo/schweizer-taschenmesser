@@ -41,13 +41,14 @@ describe('device module is closed to every outside reader', () => {
       expect(availableManifestsFor(kind), kind).toContain(manifest);
   });
 
-  it('is the only module of the area System on the phone and in the browser', () => {
-    for (const kind of ['web'] as const)
+  it('is a module of the area System on the phone and in the browser, so the area exists there', () => {
+    for (const kind of ['android', 'web'] as const)
       expect(
         availableManifestsFor(kind)
           .filter((m) => m.area === 'system' && !m.retired)
           .map((m) => m.id),
-      ).toEqual(['device']);
+        kind,
+      ).toContain('device');
   });
 
   it('is a valid manifest', () => {

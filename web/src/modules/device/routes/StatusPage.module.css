@@ -3,15 +3,6 @@
   display: grid;
   gap: var(--space-5);
 }
-.group {
-  min-width: 0;
-}
-.heading {
-  margin: 0 0 var(--space-1);
-  color: var(--text-muted);
-  font-size: var(--text-meta);
-  font-weight: var(--weight-semibold);
-}
 .lines {
   list-style: none;
   margin: 0;

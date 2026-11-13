@@ -9002,21 +9002,21 @@ export const de = {
     meta: {
       name: 'Gerätestatus',
       description:
-        'Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite. Nur Anzeige, nichts verlässt das Gerät.',
+        'Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite. Nur Anzeige, die Seite sendet nichts.',
     },
     summary: {
-      ok: 'Alles in Ordnung',
+      ok: 'Nichts Dringendes',
       look: (n: number) => `${n} Punkte brauchen einen Blick`,
       settingsContext: 'Sync, Backup, Updates, Speicher',
     },
     page: {
       figureUnit: (n: number) => (n === 1 ? 'braucht einen Blick' : 'brauchen einen Blick'),
-      note: 'Nur Anzeige: Jede Zeile führt in die Einstellungen, dort wird geändert.',
-      pc: 'Prozessor, Arbeitsspeicher und Netzwerk zeigt „Dieser PC“ im Reiter „System“.',
-      pcOpen: 'Dieser PC öffnen',
+      note: 'Nur Anzeige: Jede Zeile führt zur passenden Einstellung.',
+      pc: 'Prozessor, Arbeitsspeicher und Netzwerkverkehr zeigt „Dieser PC“ im Reiter „System“.',
+      pcOpen: '„Dieser PC“ öffnen',
       pcLibrary: '„Dieser PC“ in der Bibliothek einschalten',
     },
-    groups: { backup: 'Sicherung', sync: 'Abgleich', storage: 'Speicher', app: 'App' },
+    groups: { backup: 'Backup', sync: 'Sync', storage: 'Speicher', app: 'App' },
     nextBackup: {
       title: 'Nächstes Backup',
       plannedContext: 'Automatisch, solange Nemo läuft',
@@ -9024,6 +9024,8 @@ export const de = {
       dueContext: 'Läuft, sobald Nemo das nächste Mal prüft',
       off: 'Nicht geplant',
       offContext: 'Automatische Backups sind aus',
+      noPassphrase: 'Passphrase fehlt',
+      noPassphraseContext: 'Ohne Passphrase läuft kein automatisches Backup',
       manual: 'Von Hand',
       manualContext: 'Im Browser sicherst du als Datei, wann du willst',
     },
@@ -9032,7 +9034,7 @@ export const de = {
       state: { listening: 'Aktiv', off: 'Aus', failed: 'Nicht erreichbar' },
       devices: (n: number) => (n === 1 ? '1 Gerät gekoppelt' : `${n} Geräte gekoppelt`),
       offContext: 'Dieser PC gleicht nicht im Heimnetz ab',
-      failedContext: 'Eingeschaltet, lauscht aber gerade nicht',
+      failedContext: 'Eingeschaltet, aber gerade nicht erreichbar',
     },
     drive: {
       title: 'Laufwerk',
@@ -9054,7 +9056,7 @@ export const de = {
       blockedContext: 'Nemo sendet nichts, bis du es wieder erlaubst',
     },
     widget: {
-      hint: (backup: string, sync: string) => `Backup: ${backup} · Sync: ${sync}`,
+      hint: (backup: string, sync: string) => `${backup} · Sync: ${sync}`,
     },
   },
 } as const;

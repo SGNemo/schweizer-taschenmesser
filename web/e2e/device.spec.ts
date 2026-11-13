@@ -16,8 +16,8 @@ test('the page: four groups of lines, each a link into the settings, nothing to 
   await ready(page, '/device');
   await expect(page.locator('main h1')).toHaveText('Gerätestatus');
   const root = page.getByTestId('device-status');
-  for (const group of ['Sicherung', 'Abgleich', 'Speicher', 'App'])
-    await expect(root.getByRole('heading', { level: 2, name: group })).toBeVisible();
+  for (const group of ['Backup', 'Sync', 'Speicher', 'App'])
+    await expect(root.getByRole('list', { name: group })).toBeVisible();
   // The browser has no hub, drive or autostart: the same page with backup, sync, storage, updates and network.
   await expect(lines(page)).toHaveCount(6);
   for (const id of ['overview-backup', 'overview-sync', 'overview-storage', 'overview-updates'])
@@ -28,7 +28,7 @@ test('the page: four groups of lines, each a link into the settings, nothing to 
     expect(href).toMatch(/^\/settings\//);
   await expect(root.getByRole('button')).toHaveCount(0);
   await expect(root.getByRole('switch')).toHaveCount(0);
-  await expect(page.getByTestId('device-summary')).toContainText('Alles in Ordnung');
+  await expect(page.getByTestId('device-summary')).toContainText('Nichts Dringendes');
   await expect(page.getByText(/Akku|Batterie/)).toHaveCount(0);
   // A line leads to where the thing is set.
   await root.getByTestId('overview-sync').click();

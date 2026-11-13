@@ -4,18 +4,18 @@ export const device: Strings['device'] = {
   meta: {
     name: 'Device status',
     description:
-      'Backup, sync, storage and updates of this device on one page. Display only, nothing leaves the device.',
+      'Backup, sync, storage and updates of this device on one page. Display only; this page sends nothing.',
   },
   summary: {
-    ok: 'All good',
+    ok: 'Nothing urgent',
     look: (n: number) => `${n} things need a look`,
     settingsContext: 'Sync, backup, updates, storage',
   },
   page: {
     figureUnit: (n: number) => (n === 1 ? 'needs a look' : 'need a look'),
-    note: 'Display only: every line leads to the settings, where it is changed.',
-    pc: 'Processor, memory and network are shown by “This PC” on the tab “System”.',
-    pcOpen: 'Open This PC',
+    note: 'Display only: every line leads to its setting.',
+    pc: 'Processor, memory and network traffic are shown by “This PC” on the tab “System”.',
+    pcOpen: 'Open “This PC”',
     pcLibrary: 'Switch on “This PC” in the library',
   },
   groups: { backup: 'Backup', sync: 'Sync', storage: 'Storage', app: 'App' },
@@ -26,6 +26,8 @@ export const device: Strings['device'] = {
     dueContext: 'Runs the next time Nemo checks',
     off: 'Not planned',
     offContext: 'Automatic backups are off',
+    noPassphrase: 'Passphrase missing',
+    noPassphraseContext: 'Without a passphrase no automatic backup runs',
     manual: 'By hand',
     manualContext: 'In the browser you save a file whenever you like',
   },
@@ -34,7 +36,7 @@ export const device: Strings['device'] = {
     state: { listening: 'Active', off: 'Off', failed: 'Not reachable' },
     devices: (n: number) => (n === 1 ? '1 device paired' : `${n} devices paired`),
     offContext: 'This PC does not sync on the home network',
-    failedContext: 'Switched on, but not listening right now',
+    failedContext: 'On, but not reachable right now',
   },
   drive: {
     title: 'Drive',
@@ -56,6 +58,6 @@ export const device: Strings['device'] = {
     blockedContext: 'Nemo sends nothing until you allow it again',
   },
   widget: {
-    hint: (backup: string, sync: string) => `Backup: ${backup} · Sync: ${sync}`,
+    hint: (backup: string, sync: string) => `${backup} · Sync: ${sync}`,
   },
 };

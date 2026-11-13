@@ -8,7 +8,7 @@ export const DEVICE_STATUS_PATH = '/device';
 export const needingLook = (lines: readonly StatusLine[]): StatusLine[] =>
   lines.filter((l) => l.attention);
 
-/** "Alles in Ordnung" or what needs a look, as one sentence: the one line's own state, or a count. */
+/** "Nichts Dringendes" or what needs a look, as one sentence: the one line's own state, or a count. */
 export function summaryText(lines: readonly StatusLine[]): string {
   const look = needingLook(lines);
   const s = t.device.summary;

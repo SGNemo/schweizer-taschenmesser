@@ -8,28 +8,30 @@ const on = { ...DEFAULT_AUTO_CONFIG, enabled: true };
 
 describe('next automatic backup', () => {
   it('is "by hand" where the platform has no automatic backup, whatever is stored', () => {
-    expect(nextBackup(false, on, { at: AT, ok: true }, AT)).toEqual({ state: 'manual' });
+    expect(nextBackup(false, on, { at: AT, ok: true }, true, AT)).toEqual({ state: 'manual' });
   });
   it('is off while the switch is off', () => {
-    expect(nextBackup(true, DEFAULT_AUTO_CONFIG, { at: AT, ok: true }, AT)).toEqual({
+    expect(nextBackup(true, DEFAULT_AUTO_CONFIG, { at: AT, ok: true }, true, AT)).toEqual({
       state: 'off',
     });
   });
   it('is one interval after the last good run', () => {
-    expect(nextBackup(true, on, { at: AT, ok: true }, AT + 1000)).toEqual({
+    expect(nextBackup(true, on, { at: AT, ok: true }, true, AT + 1000)).toEqual({
       state: 'planned',
       at: AT + INTERVAL_MS.daily,
     });
     expect(
-      nextBackup(true, { ...on, interval: 'weekly' }, { at: AT, ok: true }, AT + 1000),
+      nextBackup(true, { ...on, interval: 'weekly' }, { at: AT, ok: true }, true, AT + 1000),
     ).toEqual({ state: 'planned', at: AT + INTERVAL_MS.weekly });
   });
   it('is due without a run, after a failed run and once the interval is over (same rule as the runner)', () => {
-    expect(nextBackup(true, on, undefined, AT)).toEqual({ state: 'due' });
-    expect(nextBackup(true, on, { at: AT, ok: false, error: 'write-failed' }, AT + 1)).toEqual({
+    expect(nextBackup(true, on, undefined, true, AT)).toEqual({ state: 'due' });
+    expect(
+      nextBackup(true, on, { at: AT, ok: false, error: 'write-failed' }, true, AT + 1),
+    ).toEqual({
       state: 'due',
     });
-    expect(nextBackup(true, on, { at: AT, ok: true }, AT + INTERVAL_MS.daily)).toEqual({
+    expect(nextBackup(true, on, { at: AT, ok: true }, true, AT + INTERVAL_MS.daily)).toEqual({
       state: 'due',
     });
   });
@@ -50,13 +52,23 @@ const drive = (over: Partial<DriveInfo>): DriveInfo => ({
   ...over,
 });
 
+describe('automatic backup without its passphrase', () => {
+  it('says so instead of promising a run the runner skips (never "due" or a date)', () => {
+    expect(nextBackup(true, on, { at: AT, ok: true }, false, AT + 1000)).toEqual({
+      state: 'no-passphrase',
+    });
+    expect(nextBackup(true, on, undefined, false, AT)).toEqual({ state: 'no-passphrase' });
+    // Switched off or in the browser, the passphrase does not matter.
+    expect(nextBackup(true, DEFAULT_AUTO_CONFIG, undefined, false, AT)).toEqual({ state: 'off' });
+    expect(nextBackup(false, on, undefined, false, AT)).toEqual({ state: 'manual' });
+  });
+});
+
 describe('the drive the page speaks about', () => {
-  it('is the system drive, else the first fixed one, else none', () => {
+  it('is the system drive, else none (the line says "system drive")', () => {
     const system = drive({ root: 'C:\\', isSystem: true });
     expect(mainDrive([drive({}), system])).toBe(system);
-    const fixed = drive({});
-    expect(mainDrive([drive({ kind: 'removable' }), fixed])).toBe(fixed);
-    expect(mainDrive([drive({ kind: 'network' })])).toBeUndefined();
+    expect(mainDrive([drive({})])).toBeUndefined();
     expect(mainDrive([drive({ isSystem: true, totalBytes: 0 })])).toBeUndefined();
     expect(mainDrive([])).toBeUndefined();
   });
