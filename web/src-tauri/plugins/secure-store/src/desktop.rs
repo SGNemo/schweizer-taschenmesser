@@ -86,7 +86,7 @@ impl<R: Runtime> SecureStore<R> {
         })
     }
 
-    /// The value is read inside Rust and dropped here; only the yes/no leaves.
+    /// The value is read inside Rust and dropped here (not wiped, like `get`); only the yes/no leaves.
     pub fn has(&self, request: NameRequest) -> Result<HasResponse> {
         Ok(HasResponse {
             present: is_present(read(&request.name)?.as_deref()),
