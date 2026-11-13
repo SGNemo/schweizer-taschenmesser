@@ -76,8 +76,6 @@ export default function VaultPage() {
   const files = useLiveQuery(async () => new Set(await blobKeys()), []);
   const [category, setCategory] = useState<DocCategory | 'all'>('all');
   const [query, setQuery] = useState('');
-  // "Ablage" files by folder; "Fristen" lays every date on one rail.
-  const [view, setView] = useState<View>('documents');
   // The id only: the dialog works on the row as the list holds it now.
   const [renewing, setRenewing] = useState<string | null>(null);
   // The row "Verlängert" was pressed in. After a renewal its button is gone with the new term, so the focus goes
@@ -97,11 +95,33 @@ export default function VaultPage() {
   useOpenParam((id) => documentRepo.get(id), setTarget);
   const [params, setParams] = useSearchParams();
   const day = today();
+  // "Ablage" files by folder; "Fristen" lays every date on one rail. The view lives in the address, so a reload or
+  // a link comes back to it (FOCUS checklist 5); "Ablage" is the address without one.
+  const view: View = params.get('view') === 'deadlines' ? 'deadlines' : 'documents';
+  const setView = (next: View) =>
+    setParams(
+      (p) => {
+        const q = new URLSearchParams(p);
+        if (next === 'deadlines') q.set('view', next);
+        else q.delete('view');
+        return q;
+      },
+      { replace: true },
+    );
 
   const openTarget = target ?? (params.get('new') ? { draft: true as const } : null);
   const closeEditor = () => {
     setTarget(null);
-    if (params.get('new')) setParams({}, { replace: true });
+    // Only "new" ends with the editor: the view stays.
+    if (params.get('new'))
+      setParams(
+        (p) => {
+          const q = new URLSearchParams(p);
+          q.delete('new');
+          return q;
+        },
+        { replace: true },
+      );
   };
 
   // Files of documents that were deleted on another device are dead weight here.
