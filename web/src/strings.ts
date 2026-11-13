@@ -298,7 +298,7 @@ export const de = {
     title: 'Übersicht',
     emptyTitle: 'Noch keine Module aktiv',
     emptyText: 'Aktiviere Module in der Bibliothek, um hier Karten zu sehen.',
-    toLibrary: 'Zur Bibliothek',
+    toLibrary: 'Module auswählen',
     noWidgets: 'Die aktiven Module bieten keine Karten an.',
     agenda: {
       title: 'Heute · Morgen · diese Woche',

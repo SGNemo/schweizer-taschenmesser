@@ -74,6 +74,7 @@ export default function NextWidget() {
   const listAppointments = blocks !== undefined && !blocks.includes('agenda');
   const untilShown = settings.timeToNext ? until?.item : undefined;
   const dayRows = listAppointments ? appointments.shown.filter((a) => a !== untilShown) : [];
+  const noTasks = all.length === 0;
   const openCount = all.filter((x) => !x.done && !x.someday && !x.parentId).length;
   const showPlan = settings.dayPlan && size !== 's';
   const review = useMemo(
@@ -124,7 +125,8 @@ export default function NextWidget() {
     <WidgetBody
       // The day's appointments belong to the card's first paint: without them it would grow a moment later.
       loading={!tasks || items === undefined}
-      isEmpty={all.length === 0}
+      // Appointments of today are content too: without a single ToDo the card still names them.
+      isEmpty={noTasks && dayRows.length === 0 && !untilShown}
       empty={t.focus.next.empty}
       emptyAction={{ label: t.focus.next.emptyAction, to: '/todos?new=1' }}
     >
@@ -153,7 +155,13 @@ export default function NextWidget() {
         </Link>
       ) : null}
 
-      {settings.nextOne ? (
+      {noTasks ? (
+        <p className={styles.hint}>
+          {t.focus.next.empty} <Link to="/todos?new=1">{t.focus.next.emptyAction}</Link>
+        </p>
+      ) : null}
+
+      {settings.nextOne && !noTasks ? (
         next ? (
           <div className={styles.card} data-testid="next-card">
             <span className={styles.title}>{next.title}</span>
@@ -205,7 +213,7 @@ export default function NextWidget() {
         )
       ) : null}
 
-      {showPlan ? (
+      {showPlan && !noTasks ? (
         <div className={styles.plan} data-testid="day-plan">
           {planRows.length > 0 ? (
             <ul className={styles.rows}>

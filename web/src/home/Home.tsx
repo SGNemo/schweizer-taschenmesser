@@ -36,7 +36,6 @@ import { tCockpit } from '@/strings.cockpit';
 import { enterCockpit } from '@/layout/useCockpit';
 import { HOME_VIEWS, useUiStore } from '@/stores/ui';
 import { SignatureMark } from '@/ui/identity';
-import { SetupLink } from '@/layout/setup/SetupLink';
 import { ChecklistCard } from '@/layout/setup/ChecklistCard';
 import { WelcomeCard } from '@/layout/setup/WelcomeCard';
 import {
@@ -318,18 +317,22 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
       )}
       {cockpit && !editing && layout.stats ? <CockpitStats /> : null}
       {blocksReady && stripOn ? (
-        <AttentionStrip layout={layout} view={view} available={available} />
+        <AttentionStrip layout={layout} view={view} available={available} items={attention} />
       ) : null}
-      {blocksReady && agendaOn ? <AgendaBlock /> : null}
+      {blocksReady && agendaOn ? <AgendaBlock items={agendaItems} /> : null}
 
       {states && availableManifests().every((m) => !states[m.id]) ? (
-        <EmptyState title={t.home.emptyTitle}>
+        // Empty states of the overview: the motif, one sentence and one verb (the next step).
+        <EmptyState title={t.home.emptyTitle} testId="home-empty">
           <p>{t.home.emptyText}</p>
-          <Link to="/library">{t.home.toLibrary}</Link>
-          <SetupLink />
+          <Button variant="primary" onClick={() => void navigate('/library')}>
+            {t.home.toLibrary}
+          </Button>
         </EmptyState>
       ) : states && entries.length === 0 ? (
-        <p className={styles.hint}>{t.home.noWidgets}</p>
+        <EmptyState compact title={t.home.noWidgets} testId="home-no-cards">
+          <Link to="/library">{t.home.toLibrary}</Link>
+        </EmptyState>
       ) : (
         <DndContext
           sensors={sensors}

@@ -42,7 +42,7 @@ test.describe('module library', () => {
     }
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Noch keine Module aktiv' })).toBeVisible();
-    await page.getByRole('link', { name: 'Zur Bibliothek' }).click();
+    await page.getByRole('button', { name: 'Module auswählen' }).click();
     await expect(page).toHaveURL(/\/library$/);
   });
 

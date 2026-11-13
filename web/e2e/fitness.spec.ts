@@ -148,7 +148,7 @@ test('the goal can be worked out; weight, height and age are never stored', asyn
     expect(stored).not.toContain(value);
 });
 
-test('a planned session: in „Jetzt wichtig“ with its time, counted only once done, the week in rows', async ({
+test('a planned session: on the overview with its time, counted only once done, the week in rows', async ({
   page,
 }) => {
   await page.goto('/fitness?new=session');
@@ -164,8 +164,12 @@ test('a planned session: in „Jetzt wichtig“ with its time, counted only once
   await expect(page.getByText('Geplant', { exact: true })).toBeVisible();
   await expect(page.getByTestId('fitness-week')).toContainText('0');
 
+  // The "Heute" card of the overview names it with its time; "Jetzt wichtig" does not repeat it.
   await ready(page, '/');
-  await expect(page.getByText('Heute 18:00 · Training: Kniebeuge')).toBeVisible();
+  const today = page.getByTestId('widget-todos:next');
+  await expect(today).toContainText('18:00');
+  await expect(today).toContainText('Kniebeuge');
+  await expect(page.getByText('Heute 18:00 · Training: Kniebeuge')).toHaveCount(0);
 
   await ready(page, '/fitness');
   await page.getByRole('button', { name: 'Erledigt: Kniebeuge' }).click();

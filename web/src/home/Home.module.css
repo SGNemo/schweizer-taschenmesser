@@ -23,9 +23,9 @@
   /* Fills gaps left by wider widgets so there are no empty holes. */
   grid-auto-flow: row dense;
 }
-/* First load (`masonry.ts`): the cards are laid out but not painted until the ones of the first screen have their
+/* First load (`masonry.ts`): the grid is laid out but not painted until the ones of the first screen have their
    content, so they appear once at their own heights. No motion: they are simply there. */
-.grid[data-settling] > .widget,
+.grid[data-settling],
 .grid[data-settling] ~ .moreRow {
   visibility: hidden;
 }

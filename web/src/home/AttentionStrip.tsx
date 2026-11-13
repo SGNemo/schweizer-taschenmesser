@@ -69,6 +69,11 @@ interface Props {
   view?: HomeView;
   /** Keys of the widgets that can be shown. */
   available?: readonly string[];
+  /**
+   * The entries, when the page has read them already (same shared query): the strip then stands in the page's
+   * first paint instead of one step later, which would push the cards below it.
+   */
+  items?: readonly AttentionItem[];
 }
 
 /**
@@ -76,8 +81,9 @@ interface Props {
  * waits in one line, "Kann warten · n", that opens the folded cards below the strip (`foldAttention`). With the focus setting
  * "ruhiges Jetzt wichtig" off every entry is a card.
  */
-export function AttentionStrip({ layout, view = 'all', available }: Props = {}) {
-  const items = useAttentionItems();
+export function AttentionStrip({ layout, view = 'all', available, items: given }: Props = {}) {
+  const own = useAttentionItems();
+  const items = given ?? own;
   const core = useCoreItems();
   const live = useLiveAttention((s) => s.bySource);
   const [focus] = useFocusSettings();

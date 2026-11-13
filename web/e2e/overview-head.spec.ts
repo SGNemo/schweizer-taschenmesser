@@ -3,8 +3,8 @@ import { ready, showAllWidgets } from './helpers';
 import { mockWeather } from './weather-mock';
 
 /**
- * Identity v3 overview head (docs/design/MODULE-IDENTITY.md): greeting by the hour, date, calm tools, "Jetzt wichtig" cards
- * without an edge stripe, "Heute · Morgen · diese Woche" as day cards, the widget frame in "Ruhig", reading aid, less motion.
+ * Overview head (docs/design/MODULE-IDENTITY.md, identity 4.0): greeting by the hour, date, calm tools, "Jetzt wichtig" cards
+ * without an edge stripe, "Heute · Morgen · diese Woche" as day cards, the widget frame as a tone step, reading aid, less motion.
  */
 test.beforeEach(async ({ page }) => {
   // Tuesday 2026-09-29, 08:30 local time.
@@ -59,8 +59,6 @@ test.describe('Overview head', () => {
   test('shows a short weather line next to the date once a place is chosen, and none before', async ({
     page,
   }) => {
-    // Weather is a preview module: the setting that shows it comes first, as in e2e/weather.spec.ts.
-    await showAllWidgets(page);
     await mockWeather(page);
     await ready(page, '/');
     const head = page.getByTestId('overview-head');
@@ -80,6 +78,16 @@ test.describe('Overview head', () => {
     const line = page.getByTestId('overview-head').getByRole('link', { name: /^Wetter: 14°/ });
     await expect(line).toBeVisible();
     await expect(line).toHaveAttribute('href', '/weather');
+
+    // The detailed view shows the weather card, so the head does not say it a second time.
+    await page
+      .getByRole('group', { name: 'Übersicht' })
+      .getByRole('button', { name: 'Ausführlich' })
+      .click();
+    await expect(page.getByTestId('widget-weather:today')).toBeVisible();
+    await expect(
+      page.getByTestId('overview-head').getByRole('link', { name: /^Wetter:/ }),
+    ).toHaveCount(0);
   });
 
   test('keeps Cockpit, Ruhig/Ausführlich and Anpassen together in the head, inside the window', async ({
@@ -100,6 +108,8 @@ test.describe('Overview head', () => {
     page,
   }) => {
     await addTodo(page, 'Müll rausbringen', '2026-09-29');
+    // The detailed view: in "Ruhig" the "Heute" card lists the day's ToDos and the strip leaves the count out.
+    await showAllWidgets(page);
     await ready(page, '/');
     const card = page
       .getByRole('region', { name: 'Jetzt wichtig' })
@@ -128,6 +138,8 @@ test.describe('Overview head', () => {
     await addEvent(page, 'Zahnarzt', '2026-09-29', '14:00');
     await addEvent(page, 'Elternabend', '2026-09-30', '19:00');
     await addEvent(page, 'Chor', '2026-10-02', '18:30');
+    // The block belongs to the detailed view ("Ruhig" shows it only when pinned).
+    await showAllWidgets(page);
     await ready(page, '/');
     const [today, tomorrow, week] = await Promise.all(
       ['agenda-today', 'agenda-tomorrow', 'agenda-week'].map((id) =>
@@ -149,19 +161,34 @@ test.describe('Overview head', () => {
     await expect(entry.locator('[aria-hidden="true"]')).toHaveCount(1);
   });
 
-  test('the widget frame is tinted and patterned, and "Ruhig" takes the tint down and the pattern away', async ({
+  test('the widget frame is a tone step: no tinted head, no pattern behind the text and no shadow', async ({
     page,
   }) => {
     await ready(page, '/');
     const card = page.getByTestId('widget-todos:next').locator('section').first();
     await expect(card).toBeVisible();
-    const pattern = () => card.evaluate((el) => getComputedStyle(el, '::before').opacity);
-    expect(Number(await pattern())).toBeGreaterThan(0);
-
-    await page.evaluate(() => {
-      document.documentElement.dataset.color = 'calm';
+    const look = await card.evaluate((el) => {
+      const root = getComputedStyle(document.documentElement);
+      const probe = document.createElement('span');
+      probe.style.color = root.getPropertyValue('--surface-raised');
+      document.body.append(probe);
+      const raised = getComputedStyle(probe).color;
+      probe.remove();
+      const head = el.firstElementChild!;
+      return {
+        raised,
+        card: getComputedStyle(el).backgroundColor,
+        shadow: getComputedStyle(el).boxShadow,
+        head: getComputedStyle(head).backgroundColor,
+        pattern: getComputedStyle(el, '::before').content,
+        image: getComputedStyle(el).backgroundImage,
+      };
     });
-    await expect.poll(pattern).toBe('0');
+    expect(look.card).toBe(look.raised);
+    expect(look.shadow).toBe('none');
+    expect(look.head).toBe('rgba(0, 0, 0, 0)');
+    expect(look.pattern).toBe('none');
+    expect(look.image).toBe('none');
   });
 
   test('has no permanent motion, also with less motion asked for', async ({ page }) => {

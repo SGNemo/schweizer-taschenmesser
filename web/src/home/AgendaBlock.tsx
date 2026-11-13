@@ -57,13 +57,15 @@ function Day({
 
 /**
  * "Heute · Morgen · diese Woche": the appointments, reminders and due dates of the next days at a glance, as up to three day
- * cards side by side (stacked on a narrow page), each with a time rail. Shown in the calm and the detailed overview alike.
+ * cards side by side (stacked on a narrow page), each with a time rail. Shown in the detailed overview; in the calm one only when pinned (`isAgendaVisible`).
  * Renders nothing before the data is there; days without entries are not shown, an empty week says so in one line and names
  * the one next step.
  */
-export function AgendaBlock() {
+export function AgendaBlock({ items: given }: { items?: readonly CalendarItem[] } = {}) {
   const day = today();
-  const items = useCalendarItems(agendaRange(day));
+  // The page hands the days over when it has read them (same shared query), so the block is in its first paint.
+  const own = useCalendarItems(agendaRange(day));
+  const items = given ?? own;
   const homeView = useUiStore((s) => s.homeView);
   if (!items) return null;
   const agenda = buildAgenda(items, day, LIMITS[homeView]);
