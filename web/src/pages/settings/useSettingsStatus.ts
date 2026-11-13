@@ -5,7 +5,7 @@ import { useUsageRows } from '@/core/ai/usage';
 import { formatNumber } from '@/core/i18n/format';
 import { useModuleStates } from '@/core/modules/activation';
 import { categoryDef } from '@/core/settings/registry/categories';
-import { useDeviceLines, type StatusLine } from '@/core/status/lines';
+import { anyLoading, useDeviceLines, useSettled, type StatusLine } from '@/core/status/lines';
 import { deviceStatusLine } from '@/core/status/summary';
 import { now } from '@/core/time/now';
 import { loadAccountsSettings } from '@/modules/accounts/autolock';
@@ -20,8 +20,11 @@ export type StatusTile = StatusLine;
  * the lines of `core/status` (the page "Gerätestatus" shows the same ones). While the module `device` is switched on
  * on this device, those four are one line that leads to its page (module package S-b: no state twice); with the
  * module off, which is every installation that did not start with it, the head is as it was.
+ *
+ * `undefined` until the module states are known and the lines' first reads are back (or `STATUS_WAIT_MS` passed):
+ * the head would otherwise show six lines and jump to three, or say "Kein Backup" before the last backup is read.
  */
-export function useSettingsStatus(): StatusTile[] {
+export function useSettingsStatus(): StatusTile[] | undefined {
   const o = tSettings2.use().overview;
   const v3 = tSettingsV3.use();
 
@@ -40,6 +43,9 @@ export function useSettingsStatus(): StatusTile[] {
   }, [vaultOn]);
 
   const device = useDeviceLines();
+  const settled = useSettled(
+    !anyLoading([device.sync, device.backup, device.updates, device.storage]),
+  );
 
   const aiOn = useAiOn();
   const config = useAiConfig();
@@ -86,6 +92,8 @@ export function useSettingsStatus(): StatusTile[] {
     testId: 'overview-ai',
   };
 
+  // Six lines or three depend on the module states: nothing before they are known (no jump from six to three).
+  if (!states || !settled) return undefined;
   if (deviceOn)
     return [
       security,

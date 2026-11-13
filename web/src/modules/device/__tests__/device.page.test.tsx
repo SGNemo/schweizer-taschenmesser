@@ -5,11 +5,13 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { setNetworkBlocked } from '@/core/net/netlog';
 import { setPlatform } from '@/core/platform';
+import { STATUS_WAIT_MS } from '@/core/status/lines';
 import type { DriveInfo } from '@/core/platform/disk';
 import { createWebPlatform } from '@/core/platform/web';
 import type { PlatformKind, PlatformService } from '@/core/platform/types';
 import { useSyncStatus } from '@/core/sync/status';
 import { setNow } from '@/core/time/now';
+import { tLanSync } from '@/strings.lanSync';
 import StatusPage from '../routes/StatusPage';
 import DeviceWidget from '../widgets/DeviceWidget';
 
@@ -230,5 +232,158 @@ describe('page Gerätestatus', () => {
     expect(screen.getByTestId('device-hub')).toHaveAttribute('data-attention', 'true');
     expect(screen.getByTestId('device-next-backup')).toHaveTextContent('Passphrase fehlt');
     expect(screen.getByTestId('device-next-backup')).toHaveAttribute('data-attention', 'true');
+  });
+
+  for (const [reason, status, context] of [
+    ['public-network', 'Windows blockiert den Abgleich', tLanSync.de.blockedLine],
+    ['no-home', tLanSync.de.onlyHome, tLanSync.de.onlyHomeLine],
+  ] as const)
+    it(`a hub held off by the network (${reason}) does not read like "Aus": its own context line, in the settings' words, no mark`, async () => {
+      const desktop = platformOf('desktop');
+      await show('desktop', {
+        lanHub: {
+          ...desktop.lanHub,
+          status: async () => ({
+            running: false,
+            state: 'off',
+            reason,
+            blocked: reason === 'public-network',
+            pairingOpen: false,
+            devices: 1,
+          }),
+        },
+      });
+      const hub = screen.getByTestId('device-hub');
+      expect(hub.querySelectorAll('span')[1]).toHaveTextContent(status);
+      expect(hub.querySelectorAll('span')[2]).toHaveTextContent(context);
+      expect(hub).not.toHaveTextContent(/\bAus\b/);
+      expect(hub).not.toHaveTextContent('gleicht nicht im Heimnetz ab');
+      expect(hub).toHaveAttribute('data-attention', 'false');
+      // Display only: it leads to the section, it never switches; nothing counts it as a point (the widget says the
+      // head's sentence; the head's figure needs the module frame).
+      expect(hub).toHaveAttribute('href', '/settings/sync');
+      expect(screen.getByText('Nichts Dringendes')).toBeInTheDocument();
+    });
+
+  it('a hub that is simply off still says "Aus"', async () => {
+    const desktop = platformOf('desktop');
+    await show('desktop', {
+      lanHub: {
+        ...desktop.lanHub,
+        status: async () => ({
+          running: false,
+          state: 'off',
+          reason: 'nothing-wanted',
+          blocked: false,
+          pairingOpen: false,
+          devices: 0,
+        }),
+      },
+    });
+    expect(screen.getByTestId('device-hub')).toHaveTextContent('Aus');
+    expect(screen.getByTestId('device-hub')).toHaveTextContent(
+      'Dieser PC gleicht nicht im Heimnetz ab',
+    );
+  });
+});
+
+describe('page Gerätestatus while it loads', () => {
+  /** A desktop whose hub answers only when the test says so. */
+  function slowHub() {
+    let answer: () => void = () => undefined;
+    const desktop = platformOf('desktop');
+    const status = desktop.lanHub.status;
+    const gate = new Promise<void>((resolve) => (answer = resolve));
+    setPlatform({
+      ...desktop,
+      lanHub: { ...desktop.lanHub, status: async () => (await gate, status()) },
+    });
+    return () => answer();
+  }
+
+  it('head and lines come together once the first reads are back; never "Kein Backup" before the backup is read', async () => {
+    // This device has a backup: "Kein Backup" must never stand on the page, not even for a moment.
+    await db
+      .table('_meta')
+      .put({ key: 'backup.file.last', value: { at: new Date(2026, 10, 12, 18, 0).getTime() } });
+    const answer = slowHub();
+    // What the page shows at each change: never a line before the rest.
+    const seen: string[][] = [];
+    const record = () =>
+      seen.push(
+        Array.from(document.querySelectorAll('[data-testid="device-status"] a[data-testid]')).map(
+          (a) => `${a.getAttribute('data-testid')}:${a.textContent}`,
+        ),
+      );
+    const observer = new MutationObserver(record);
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    render(
+      <MemoryRouter>
+        <StatusPage />
+      </MemoryRouter>,
+    );
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+    // Everything else is read; the hub is not: nothing shows yet, the list says it is busy.
+    expect(screen.getByTestId('device-status')).toHaveAttribute('aria-busy', 'true');
+    expect(within(screen.getByTestId('device-status')).queryAllByRole('link')).toEqual([]);
+    expect(document.body.textContent).not.toContain('Kein Backup');
+    await act(async () => {
+      answer();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    observer.disconnect();
+    expect(screen.getByTestId('device-status')).toHaveAttribute('aria-busy', 'false');
+    expect(ids()).toHaveLength(9);
+    // The first state with any line already had all nine.
+    const firstWithLines = seen.find((s) => s.length > 0)!;
+    expect(firstWithLines).toHaveLength(9);
+    expect(seen.flat().join(' ')).not.toContain('Kein Backup');
+    expect(screen.getByTestId('overview-backup')).not.toHaveTextContent('Kein Backup');
+  });
+
+  it('a read that never comes back holds the page only for a moment: the other lines show without it', async () => {
+    const desktop = platformOf('desktop');
+    setPlatform({
+      ...desktop,
+      lanHub: { ...desktop.lanHub, status: () => new Promise(() => undefined) },
+    });
+    render(
+      <MemoryRouter>
+        <StatusPage />
+        <DeviceWidget />
+      </MemoryRouter>,
+    );
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+    expect(within(screen.getByTestId('device-status')).queryAllByRole('link')).toEqual([]);
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, STATUS_WAIT_MS));
+    });
+    expect(ids()).not.toContain('device-hub');
+    expect(ids()).toContain('overview-backup');
+    expect(screen.getByTestId('overview-backup')).toHaveTextContent('Kein Backup');
+    // The widget waited as long, then speaks without the hub.
+    expect(screen.getByText('Nichts Dringendes')).toBeInTheDocument();
+  });
+
+  it('the widget says nothing before its reads are back, then one sentence', async () => {
+    const answer = slowHub();
+    render(
+      <MemoryRouter>
+        <DeviceWidget />
+      </MemoryRouter>,
+    );
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+    expect(document.body.textContent).toBe('');
+    await act(async () => {
+      answer();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+    expect(document.body.textContent).toContain('Nichts Dringendes');
   });
 });

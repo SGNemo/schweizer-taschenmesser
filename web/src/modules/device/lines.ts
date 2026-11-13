@@ -5,38 +5,23 @@
  * whole module). Two of them can need a look: an automatic backup without its passphrase and a hub that is switched
  * on but not reachable; the page's head and the widget count them, the settings line counts the four core lines.
  * The drive line reads the drive list (sizes of the mounted drives, what "Dieser PC" shows); it scans nothing.
+ * While a read that exists here has not come back, a hook returns a line with `loading` (no words yet), so the page
+ * can wait for it; a read that fails or finds nothing leaves no line.
  */
-import { useEffect, useState } from 'react';
 import { hasAutoPassphrase, loadAutoConfig, loadAutoLast } from '@/core/backup/auto';
 import { formatTimestamp } from '@/core/i18n/format';
 import { useNetLog } from '@/core/net/netlog';
 import { getPlatform } from '@/core/platform';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { formatBytes } from '@/core/settings/storageInfo';
-import type { StatusLine } from '@/core/status/lines';
+import { useRead, type StatusLine } from '@/core/status/lines';
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
+import { tLanSync } from '@/strings.lanSync';
 import { hubState, mainDrive, nextBackup, type HubState, type NextBackup } from './logic';
 
-/** Resolves once per mount; `undefined` while loading, on a platform without the thing, and when the read fails. */
-function useRead<T>(read: (() => Promise<T>) | undefined): T | undefined {
-  const [value, setValue] = useState<T>();
-  const on = read !== undefined;
-  useEffect(() => {
-    if (!read) return;
-    let live = true;
-    void read().then(
-      (v) => live && setValue(v),
-      () => undefined,
-    );
-    return () => {
-      live = false;
-    };
-    // The readers are stable per platform; only "exists here" can differ.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [on]);
-  return value;
-}
+/** A title of the settings ("Windows blockiert den Abgleich.") as a state word: without its full stop. */
+const withoutStop = (text: string): string => text.replace(/\.$/, '');
 
 const line = (
   id: string,
@@ -57,10 +42,16 @@ const line = (
   testId: `device-${id}`,
 });
 
+/** The line while its read is on the way: no state yet, nothing marked. */
+const pending = (id: string, icon: StatusLine['icon'], to: string, title: string): StatusLine => ({
+  ...line(id, icon, to, title, '', ''),
+  loading: true,
+});
+
 export function useNextBackupLine(): StatusLine | undefined {
   const d = t.device.nextBackup;
   const supported = getPlatform().isNative;
-  const next = useRead<NextBackup>(async () => {
+  const { value: next, done } = useRead<NextBackup>(async () => {
     // Only a yes/no leaves the core (`hasAutoPassphrase`); a keystore that cannot be read keeps the line as it was.
     const [config, last, hasPassphrase] = await Promise.all([
       loadAutoConfig(),
@@ -69,6 +60,8 @@ export function useNextBackupLine(): StatusLine | undefined {
     ]);
     return nextBackup(supported, config, last, hasPassphrase, now());
   });
+  const to = settingsPath('sync', 'backup');
+  if (!done) return pending('next-backup', 'calendarDays', to, d.title);
   if (!next) return undefined;
   const [status, context] =
     next.state === 'manual'
@@ -83,7 +76,7 @@ export function useNextBackupLine(): StatusLine | undefined {
   return line(
     'next-backup',
     'calendarDays',
-    settingsPath('sync', 'backup'),
+    to,
     d.title,
     status,
     context,
@@ -93,9 +86,10 @@ export function useNextBackupLine(): StatusLine | undefined {
 
 export function useLanHubLine(): StatusLine | undefined {
   const d = t.device.hub;
+  const l = tLanSync.use();
   const platform = getPlatform();
   const here = platform.kind === 'desktop' && platform.lanHub.supported;
-  const hub = useRead<{ state: HubState; devices: number }>(
+  const { value: hub, done } = useRead<{ state: HubState; devices: number }>(
     here
       ? async () => {
           // Only the state word and a count leave this call: never the port, the QR payload or a device's name.
@@ -104,37 +98,41 @@ export function useLanHubLine(): StatusLine | undefined {
         }
       : undefined,
   );
+  if (!done) return pending('hub', 'wifi', '/settings/sync', d.title);
   if (!hub) return undefined;
-  const context =
-    hub.state === 'listening'
-      ? d.devices(hub.devices)
-      : hub.state === 'failed'
-        ? d.failedContext
-        : d.offContext;
-  return line(
-    'hub',
-    'wifi',
-    '/settings/sync',
-    d.title,
-    d.state[hub.state],
-    context,
-    hub.state === 'failed',
-  );
+  // A hub that Windows holds off (public network, another network than at pairing) is not "Aus": it says why, in
+  // the words of the settings' section "Im Heimnetz", and carries no mark (nothing broke; the section shows the way).
+  const [status, context] =
+    hub.state === 'public-network'
+      ? [withoutStop(l.blocked), l.blockedLine]
+      : hub.state === 'no-home'
+        ? [l.onlyHome, l.onlyHomeLine]
+        : [
+            d.state[hub.state],
+            hub.state === 'listening'
+              ? d.devices(hub.devices)
+              : hub.state === 'failed'
+                ? d.failedContext
+                : d.offContext,
+          ];
+  return line('hub', 'wifi', '/settings/sync', d.title, status, context, hub.state === 'failed');
 }
 
 export function useDriveLine(): StatusLine | undefined {
   const d = t.device.drive;
   const platform = getPlatform();
   const here = platform.kind === 'desktop' && platform.disk.supported;
-  const drive = useRead(
+  const to = settingsPath('allgemein', 'storage');
+  const { value: drive, done } = useRead(
     here ? async () => mainDrive(await platform.disk.listDrives()) ?? null : undefined,
   );
+  if (!done) return pending('drive', 'disk', to, d.title);
   if (!drive) return undefined;
   // Sizes only: no drive letter, label, model or folder.
   return line(
     'drive',
     'disk',
-    settingsPath('allgemein', 'storage'),
+    to,
     d.title,
     d.free(formatBytes(drive.freeBytes)),
     d.context(formatBytes(drive.totalBytes)),
@@ -145,16 +143,11 @@ export function useAutostartLine(): StatusLine | undefined {
   const d = t.device.autostart;
   const platform = getPlatform();
   const here = platform.kind === 'desktop' && platform.desktop.supported;
-  const on = useRead(here ? () => platform.desktop.autostart() : undefined);
+  const to = settingsPath('schnellerfassung', 'quickcapture', 'autostart');
+  const { value: on, done } = useRead(here ? () => platform.desktop.autostart() : undefined);
+  if (!done) return pending('autostart', 'play', to, d.title);
   if (on === undefined) return undefined;
-  return line(
-    'autostart',
-    'play',
-    settingsPath('schnellerfassung', 'quickcapture', 'autostart'),
-    d.title,
-    on ? d.on : d.off,
-    on ? d.onContext : d.offContext,
-  );
+  return line('autostart', 'play', to, d.title, on ? d.on : d.off, on ? d.onContext : d.offContext);
 }
 
 export function useNetworkLine(): StatusLine {
