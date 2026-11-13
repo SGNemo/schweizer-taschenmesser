@@ -59,4 +59,33 @@ describe('device widget (catalogue type: status)', () => {
     expect(screen.getByText('Nächstes Backup: Passphrase fehlt')).toBeInTheDocument();
     expect(screen.queryByText('Nichts Dringendes')).toBeNull();
   });
+
+  it('shows no hub port, pairing code, device name or passphrase, whatever the platform hands over', async () => {
+    const web = createWebPlatform();
+    setPlatform({
+      ...web,
+      kind: 'desktop',
+      isNative: true,
+      secrets: { ...web.secrets, get: async () => 'canary-passphrase' },
+      lanHub: {
+        ...web.lanHub,
+        supported: true,
+        status: async () => ({
+          running: true,
+          state: 'failed',
+          blocked: false,
+          port: 47123,
+          pairingOpen: true,
+          qr: 'NEMO1:canary-qr',
+          pending: { attempt: 1, name: 'Canary-Handy', code: '424242' },
+          devices: 2,
+        }),
+      },
+    });
+    const out = await view('l');
+    // The hub's mark arrives in words; nothing it carried does.
+    expect(screen.getByText('Heimnetz: Nicht erreichbar')).toBeInTheDocument();
+    for (const canary of ['canary-passphrase', '47123', 'canary-qr', 'Canary-Handy', '424242'])
+      expect(out.container.innerHTML, canary).not.toContain(canary);
+  });
 });

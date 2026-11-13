@@ -3,7 +3,7 @@
  * hook asks the platform or the core for a state and names the settings page where it is set. A line that does not
  * exist on this platform is `undefined` (the page filters by `getPlatform().kind`; `manifest.platforms` is for the
  * whole module). Two of them can need a look: an automatic backup without its passphrase and a hub that is switched
- * on but not reachable; the page's head counts them, the widget and the settings count the four core lines.
+ * on but not reachable; the page's head and the widget count them, the settings line counts the four core lines.
  * The drive line reads the drive list (sizes of the mounted drives, what "Dieser PC" shows); it scans nothing.
  */
 import { useEffect, useState } from 'react';
