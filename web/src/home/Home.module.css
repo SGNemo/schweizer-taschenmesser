@@ -1,35 +1,42 @@
+.frame {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto;
+  min-width: 0;
+}
+/* "Ruhig" (identity 4.0): head, strip and the "Heute" card share one reading column, centred like a `reading` page. It is
+   the `page` container of everything inside, so the grid counts its columns by this width. */
+.calm {
+  container: page / inline-size;
+  width: 100%;
+  max-width: var(--page-reading);
+  margin-inline: auto;
+}
 .grid {
-  /* Row quantum of the size classes' minimum heights. From 44 rem on the grid is packed (`masonry.ts`, 1 px rows); the
-     cockpit's dense grid has two columns from 36 rem, but is packed only from 44 rem too. */
-  --widget-unit: 5.5rem;
   display: grid;
   gap: var(--grid-gap);
   grid-template-columns: minmax(0, 1fr);
-  /* Identity v3.1 (F09): rows are the quantum, cards do not stretch to the row; each size class has its own
-     minimum height (below), a card that needs more grows on its own; nothing is ever clipped. */
-  grid-auto-rows: minmax(var(--widget-unit), auto);
+  /* Identity 4.0: a card is as high as its content; no minimum height per size class (it left empty bodies). Before the
+     grid is packed the rows follow the cards. */
+  grid-auto-rows: auto;
   align-items: start;
   /* Fills gaps left by wider widgets so there are no empty holes. */
   grid-auto-flow: row dense;
+}
+/* First load (`masonry.ts`): the cards are laid out but not painted until the ones of the first screen have their
+   content, so they appear once at their own heights. No motion: they are simply there. */
+.grid[data-settling] > .widget,
+.grid[data-settling] ~ .moreRow {
+  visibility: hidden;
 }
 /* The column count follows the width of the page container (also in a narrow window). */
 @container page (min-width: 44rem) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  /* Size classes = row spans for the flow and a minimum height per size; on one column (phone) cards take their content height. */
-  .s {
-    grid-row: span 2;
-    min-height: calc(2 * var(--widget-unit) + var(--grid-gap));
-  }
+  /* Size classes are widths only: `m` spans two columns, `l` see below. */
   .m {
     grid-column: span 2;
-    grid-row: span 3;
-    min-height: calc(3 * var(--widget-unit) + 2 * var(--grid-gap));
-  }
-  .l {
-    grid-row: span 4;
-    min-height: calc(4 * var(--widget-unit) + 3 * var(--grid-gap));
   }
   /* U19: packed (`masonry.ts`): 1 px rows without a gap; each card spans its own height plus the gap below it
      (`--rows`), so a tall card no longer stretches a shared row and leaves holes beside it. */
@@ -41,12 +48,6 @@
   .grid[data-packed] > .widget {
     grid-row: span var(--rows, 2);
     margin-bottom: var(--grid-gap);
-  }
-  /* U39: a card that only says "nothing here yet" takes its one line, not the size class's minimum height. It
-     shrinks once its data has loaded (a loading card keeps the minimum: letting skeletons shrink too measured far
-     worse in the seeded overview, see the PR). */
-  .grid[data-packed] > .widget[data-empty] {
-    min-height: 0;
   }
 }
 /* Print reflows to the paper's width: the spans measured for the screen would overlap there, so print uses plain rows. */
@@ -85,7 +86,6 @@
 /* Cockpit: a little tighter; "dense" packs one column more at every step and a fifth from 120 rem. */
 .cockpit {
   --grid-gap: var(--space-3);
-  --widget-unit: 5rem;
 }
 .dense {
   --grid-gap: var(--space-2);
@@ -129,20 +129,14 @@
   display: flex;
   flex-direction: column;
 }
-/* The card fills the size class's height. */
-.widget > section {
-  flex: 1 1 auto;
-  min-height: 100%;
-}
 .head {
   display: flex;
   align-items: center;
   gap: var(--space-2);
   margin-bottom: var(--space-3);
 }
-/* Widget frame (identity v3): the head zone is tinted in the module's hue, the module's icon sits on a tinted plate and a faint area
-   pattern lies behind the content. "Ruhig" and "Modulfarben: Aus" lower the tint and drop the pattern through the tokens
-   (`--widget-tint`, `--pattern-widget`). The widget variant (`data-widget`, from the manifest's `identity.widget`) shapes the frame. */
+/* Widget frame (identity 4.0): the card is a tone step (`Card`, `--surface-raised`) without a tinted head, a pattern or a
+   wash behind the text. The module shows in the icon plate and in the signature mark at the end of the head. */
 .chip {
   display: inline-grid;
   place-items: center;
@@ -150,47 +144,8 @@
   width: 1.75rem;
   height: 1.75rem;
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--module-color) 18%, var(--surface));
+  background: color-mix(in srgb, var(--module-color) 14%, var(--surface-raised));
   color: var(--module-color);
-}
-.widget[data-hue] > section {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-}
-/* The pattern sits between the card's background and its content (negative z-index inside the isolated card). */
-.widget[data-hue] > section::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image: var(--area-pattern, none);
-  background-size: var(--area-pattern-size, auto);
-  opacity: var(--pattern-widget);
-}
-.widget[data-hue] .head {
-  margin: calc(-1 * var(--card-pad)) calc(-1 * var(--card-pad)) var(--space-3);
-  padding: var(--space-3) var(--card-pad);
-  background: color-mix(in srgb, var(--module-color) var(--widget-tint), var(--surface));
-}
-/* himmel: the card itself is a soft sky wash from the top, no head band and no pattern. */
-.widget[data-widget='himmel'] > section {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--module-color) calc(var(--widget-tint) * 1.6), var(--surface)),
-    var(--surface) 70%
-  );
-}
-.widget[data-widget='himmel'] .head,
-.widget[data-widget='cover'] .head {
-  background: transparent;
-}
-/* The timeline has its dots, the cover its picture: no pattern behind them. */
-.widget[data-widget='himmel'] > section::before,
-.widget[data-widget='cover'] > section::before,
-.widget[data-widget='zeitleiste'] > section::before {
-  display: none;
 }
 .title {
   flex: 1;
@@ -327,4 +282,16 @@
   font-family: inherit;
   text-align: left;
   cursor: pointer;
+}
+
+/* Phone: the "Cockpit" button of the head shows its icon only; the word stays its name. */
+@media (max-width: 40rem) {
+  .toolLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }

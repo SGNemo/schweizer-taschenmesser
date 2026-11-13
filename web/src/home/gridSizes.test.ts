@@ -11,32 +11,22 @@ function rule(selector: string, from = 0): string {
 }
 
 describe('home grid size classes', () => {
-  it('rows snap to one unit; cards keep the height of their size class instead of stretching to the row (identity v3.1, F09)', () => {
+  it('a card is as high as its content: no row quantum and no minimum height per size class (identity 4.0)', () => {
     const grid = rule('.grid');
-    expect(grid).toContain('grid-auto-rows: minmax(var(--widget-unit), auto)');
+    expect(grid).toContain('grid-auto-rows: auto');
     expect(grid).toContain('align-items: start');
     expect(grid).not.toContain('align-items: stretch');
-    const from = css.indexOf('@container page (min-width: 44rem)');
-    expect(rule('.s', from)).toContain(
-      'min-height: calc(2 * var(--widget-unit) + var(--grid-gap))',
-    );
-    expect(rule('.m', from)).toContain(
-      'min-height: calc(3 * var(--widget-unit) + 2 * var(--grid-gap))',
-    );
-    expect(rule('.l', from)).toContain(
-      'min-height: calc(4 * var(--widget-unit) + 3 * var(--grid-gap))',
-    );
+    expect(css).not.toContain('--widget-unit');
+    expect(css).not.toMatch(/\.(s|m|l)\s*\{[^}]*min-height/);
   });
 
-  it('size classes are fixed row spans from two columns on', () => {
-    const wide = css.slice(css.indexOf('@container page (min-width: 44rem)'));
-    expect(rule('.s', css.indexOf('@container page (min-width: 44rem)'))).toContain('span 2');
-    expect(rule('.m', css.indexOf('@container page (min-width: 44rem)'))).toContain(
-      'grid-row: span 3',
+  it('size classes are widths: m spans two columns, l the row (two columns from three on); the packed grid sets the rows', () => {
+    const from = css.indexOf('@container page (min-width: 44rem)');
+    expect(rule('.m', from)).toContain('grid-column: span 2');
+    expect(rule('.l')).toContain('grid-column: 1 / -1');
+    expect(rule('.l', css.indexOf('@container page (min-width: 70rem)'))).toContain(
+      'grid-column: span 2',
     );
-    expect(rule('.l', css.indexOf('@container page (min-width: 44rem)'))).toContain(
-      'grid-row: span 4',
-    );
-    expect(wide).toBeTruthy();
+    expect(rule('.grid[data-packed] > .widget', from)).toContain('grid-row: span var(--rows, 2)');
   });
 });

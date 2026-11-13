@@ -5,6 +5,7 @@ import { resetSkipped, skipSuggestion, useSkippedToday } from '@/core/focus/stat
 import { useNow } from '@/core/focus/useNow';
 import { useModuleStates } from '@/core/modules/activation';
 import { useCalendarItems } from '@/core/modules/contributions';
+import { useOverviewBlocks } from '@/core/modules/overviewBlocks';
 import { useFocusSettings } from '@/core/settings/focus';
 import { addDaysStr, formatDay, today } from '@/core/time/dates';
 import { now, pad2 } from '@/core/time/now';
@@ -56,7 +57,7 @@ export default function NextWidget() {
   // (while the planner is off its marks are cleaned away anyway).
   const states = useModuleStates();
   const plannerOn = states === undefined || states.planner === true;
-  const { next, plan, planRows, until } = buildToday({
+  const { next, plan, planRows, until, appointments } = buildToday({
     tasks: all,
     items: items ?? [],
     day,
@@ -67,6 +68,12 @@ export default function NextWidget() {
     // The planner's order counts only while the planner is on (CONCEPT §2: inactive = the mark is ignored).
     planMarks: plannerOn,
   });
+  // The day's appointments are listed here only while the overview's agenda block is not on the page (the calm
+  // view): nothing stands on the overview twice. The one the "in 20 Min" line names is not repeated.
+  const blocks = useOverviewBlocks();
+  const listAppointments = blocks !== undefined && !blocks.includes('agenda');
+  const untilShown = settings.timeToNext ? until?.item : undefined;
+  const dayRows = listAppointments ? appointments.shown.filter((a) => a !== untilShown) : [];
   const openCount = all.filter((x) => !x.done && !x.someday && !x.parentId).length;
   const showPlan = settings.dayPlan && size !== 's';
   const review = useMemo(
@@ -115,7 +122,8 @@ export default function NextWidget() {
 
   return (
     <WidgetBody
-      loading={!tasks}
+      // The day's appointments belong to the card's first paint: without them it would grow a moment later.
+      loading={!tasks || items === undefined}
       isEmpty={all.length === 0}
       empty={t.focus.next.empty}
       emptyAction={{ label: t.focus.next.emptyAction, to: '/todos?new=1' }}
@@ -125,6 +133,24 @@ export default function NextWidget() {
           <strong>{untilText(until.minutes)}</strong>
           {` · ${until.item.time} ${until.item.title}`}
         </p>
+      ) : null}
+
+      {dayRows.length > 0 ? (
+        <ul className={styles.dayRows} data-testid="today-appointments">
+          {dayRows.map((a) => (
+            <li key={`${a.source}:${a.id}`} className={styles.row}>
+              <Link to={a.to ?? '/calendar'} className={styles.dayLink}>
+                {a.title}
+              </Link>
+              <span className={styles.est}>{a.allDay || !a.time ? t.calendar.allDay : a.time}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {listAppointments && appointments.hidden > 0 ? (
+        <Link to="/calendar" className={styles.allLink}>
+          {t.home.agenda.all}
+        </Link>
       ) : null}
 
       {settings.nextOne ? (

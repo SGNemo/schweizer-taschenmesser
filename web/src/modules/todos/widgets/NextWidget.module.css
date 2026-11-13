@@ -98,3 +98,20 @@
   align-items: center;
   min-height: var(--touch);
 }
+/* Today's appointments on the card (calm overview, where the agenda block is not on the page). */
+.dayRows {
+  composes: rows;
+  margin-bottom: var(--space-3);
+}
+.dayLink {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  min-height: var(--touch);
+  color: inherit;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.dayLink:hover {
+  text-decoration: underline;
+}
