@@ -22,6 +22,7 @@ import {
 import { TransactionEditor, type TransactionTarget } from '../components/Editors';
 import { OverviewTab } from '../components/OverviewTab';
 import { NetWorthTab } from '../components/NetWorthTab';
+import { netWorthSeries } from '../netWorth';
 import { AccountsTab, CategoriesTab, TransactionsTab } from '../components/Tabs';
 import { DEFAULT_CATEGORY_IDS, ensureDefaults, transactionRepo } from '../repo';
 import { totalBalance, useAvailability, useFinanceData } from '../summary';
@@ -133,6 +134,12 @@ export default function FinancePage() {
   const addBooking = () => setTarget({ draft: true });
   /** An account, but no booking yet. */
   const firstUse = canAdd && data.txs.length === 0;
+  // "Verlauf" needs two month ends for a curve; until then its empty state holds the one filled step.
+  const trendPoints = useMemo(
+    () => (tab === 'trend' && view ? netWorthSeries(view.accounts, view.txs, today(), 12) : []),
+    [tab, view],
+  );
+  const trendEmpty = tab === 'trend' && !!view && trendPoints.length < 2;
 
   // The panel shows the booking that was picked in the list (any row the list can show: a search hit from another
   // month, a filtered row). Nothing is picked by default: the list knows its rows, the page does not.
@@ -158,11 +165,13 @@ export default function FinancePage() {
           />
         }
       >
-        {/* While nothing is booked the empty state holds the one filled step (U26). */}
+        {/* While nothing is booked, or "Verlauf" has no curve yet, the empty state holds the one filled step (U26). */}
         <PageAction
           short={t.finance.addTransactionShort}
           variant={
-            firstUse && (tab === 'overview' || tab === 'transactions') ? 'secondary' : 'primary'
+            (firstUse && (tab === 'overview' || tab === 'transactions')) || trendEmpty
+              ? 'secondary'
+              : 'primary'
           }
           onClick={addBooking}
           disabled={!canAdd}
@@ -333,7 +342,7 @@ export default function FinancePage() {
             {/* Tabs with an amount column keep a reading measure: the amount stays near its name (G-b). */}
             {tab === 'trend' ? (
               <div className={styles.measure}>
-                <NetWorthTab data={view} all={data} />
+                <NetWorthTab data={view} all={data} points={trendPoints} />
               </div>
             ) : null}
             {tab === 'accounts' ? (
