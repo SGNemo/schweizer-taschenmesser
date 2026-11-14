@@ -25,6 +25,11 @@
 .link:hover {
   background: var(--surface-2);
 }
+/* The current place (M8 follow-up of 0b-8): a sunken tone and the weight, like a chosen chip. */
+.link[aria-current='page'] {
+  background: var(--surface-sunken);
+  font-weight: var(--weight-semibold);
+}
 
 /* The further ways into the quick-add sheet sit in the form's column above its actions (the column's gap spaces them):
    free text as a quiet button at its own width, the form types folded (one way first, the rest on demand). */

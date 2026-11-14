@@ -20,14 +20,15 @@
   gap: var(--space-2);
   min-height: 28px;
 }
+/* What the text was read as: a tone step like `Chip`, no frame (Identity 4.0; follow-up 14 of 0b-8). */
 .chip {
   display: inline-flex;
   align-items: center;
   min-height: 28px;
   padding: 0 var(--space-3);
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: var(--radius-full);
-  background: var(--surface);
+  background: var(--surface-2);
   color: var(--text-muted);
   font-size: var(--text-sm);
 }
@@ -44,9 +45,10 @@
   position: absolute;
   inset: calc((28px - var(--touch)) / 2) 0;
 }
+/* A chip that asks for a look (a date in the past, …): the warning tone, its words say why. */
 .warn {
-  border-color: var(--warning, var(--accent));
-  color: var(--text);
+  background: var(--warning-soft);
+  color: var(--warning-ink);
 }
 .types {
   display: flex;
@@ -56,18 +58,18 @@
 .type {
   min-height: var(--touch);
   padding: 0 var(--space-3);
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: var(--radius-md);
-  background: var(--surface);
+  background: var(--surface-2);
   color: var(--text);
   font: inherit;
   cursor: pointer;
 }
-/* The chosen target is a surface and a weight, not the accent (B7: the accent is the main action and the open tab),
-   like a chosen `Chip`. */
+/* The chosen target is a surface, a ring and a weight, not the accent (B7: the accent is the main action and the open
+   tab), like a chosen `Chip`; the others are tone steps without a frame (follow-up 14 of 0b-8). */
 .type[aria-checked='true'] {
   background: var(--surface-sunken);
-  border-color: var(--border-strong);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
   color: var(--text);
   font-weight: var(--weight-semibold);
 }
@@ -95,13 +97,14 @@
   border-top: 1px solid var(--border);
   background: var(--surface);
 }
+/* The booking to confirm and each line of a batch: a sunken tone step, no frame (follow-up 14 of 0b-8). */
 .draft {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-3);
-  border: 1px solid var(--border);
   border-radius: var(--radius-md);
+  background: var(--surface-sunken);
 }
 .draft strong {
   font-size: var(--text-lg, 1.125rem);
@@ -141,8 +144,12 @@ textarea.input {
   justify-content: space-between;
   gap: 0 var(--space-2);
   padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
-  border: 1px solid var(--border);
   border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+/* On the sunken line a chip steps up again, so it stays a shape of its own. */
+.row .chip {
+  background: var(--surface);
 }
 /* One line per entry where it fits: the title left, its target as words on the right (Kopf leer, Nachlese). */
 .rowTitle {

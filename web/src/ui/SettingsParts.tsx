@@ -5,6 +5,7 @@ import { t } from '@/strings';
 import { Button } from './Button';
 import { Dialog } from './Dialog';
 import { HelpHint } from './HelpHint';
+import { Icon } from './icons';
 import styles from './SettingsParts.module.css';
 
 /**
@@ -95,12 +96,16 @@ export function SettingsGroup({
   );
 }
 
-/** Destructive actions, set apart from the normal rows. */
+/**
+ * Destructive actions, set apart from the normal rows: a sunken tone step under a heading with the warning icon
+ * (Identity 4.0, no frame; follow-up 14 of 0b-8). The danger colour stays on the heading and the actions' buttons.
+ */
 export function DangerZone({ id, children }: { id?: string; children: ReactNode }) {
   const titleId = useId();
   return (
     <section id={id} className={styles.danger} aria-labelledby={titleId}>
       <h3 id={titleId} className={styles.dangerTitle}>
+        <Icon name="alert" size={16} />
         {t.settings.danger.title}
       </h3>
       {children}

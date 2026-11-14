@@ -62,11 +62,28 @@ export function usePlusTarget(): PlusTarget {
   };
 }
 
+/** Paths that live under "Mehr" without an area of their own (`MoreSheet`): the library and the settings. */
+const MORE_PATHS = ['/library', '/settings'];
+
+/**
+ * Whether the current page is reached through "Mehr" (M8 follow-up of 0b-8): a module of an area beyond the bar's
+ * slots, the library or the settings. Then "Mehr" shows the place, in the area's colour when there is one.
+ */
+export function moreHolds(tree: NavTree, pathname: string): { active: boolean; area?: string } {
+  const area = areaOfPath(tree, pathname);
+  if (area) {
+    const inBar = tree.areas.slice(0, BOTTOM_AREA_SLOTS).some((a) => a.id === area.id);
+    return inBar ? { active: false } : { active: true, area: area.id };
+  }
+  return { active: MORE_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`)) };
+}
+
 /** Phone: Übersicht · area 1 · plus · area 2 · Mehr (DESIGN-SPEC § 2). The plus is the screen's one filled action. */
 export function BottomNav({ tree, onMore }: { tree: NavTree; onMore: () => void }) {
   const { pathname } = useLocation();
   const activeArea = areaOfPath(tree, pathname)?.id;
   const plus = usePlusTarget();
+  const more = moreHolds(tree, pathname);
   const areas = tree.areas.slice(0, BOTTOM_AREA_SLOTS).map((a) => ({
     key: a.id,
     to: a.to,
@@ -114,7 +131,15 @@ export function BottomNav({ tree, onMore }: { tree: NavTree; onMore: () => void 
         <span className={styles.label}>{plus.label}</span>
       </button>
       {areas.slice(1).map(link)}
-      <button type="button" className={styles.link} onClick={onMore}>
+      {/* A button that opens the sheet, not the page itself: `aria-current="true"` ("the current one of this set"). */}
+      <button
+        type="button"
+        className={styles.link}
+        onClick={onMore}
+        data-area={more.area}
+        aria-current={more.active ? 'true' : undefined}
+        data-testid="bottom-more"
+      >
         <Icon name="more" />
         <span className={styles.label}>{t.nav.more}</span>
       </button>
