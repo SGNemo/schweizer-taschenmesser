@@ -36,6 +36,8 @@ export interface HeadSurfaceProps {
   testId?: string;
   'aria-label'?: string;
   tabIndex?: number;
+  /** The surface is laid out while its content is still read (`aria-busy`; the module frame's first-read hold). */
+  busy?: boolean;
   /** Extra `data-*` hooks of the caller (e.g. `data-tool` on a tool stage). */
   data?: Record<`data-${string}`, string | undefined>;
   children: ReactNode;
@@ -66,6 +68,7 @@ export function HeadSurface({
   testId,
   'aria-label': ariaLabel,
   tabIndex,
+  busy,
   data,
   children,
 }: HeadSurfaceProps) {
@@ -86,6 +89,7 @@ export function HeadSurface({
       data-testid={testId}
       aria-label={ariaLabel}
       tabIndex={tabIndex}
+      aria-busy={busy || undefined}
       style={style}
       {...data}
     >
