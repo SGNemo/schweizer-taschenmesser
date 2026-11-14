@@ -762,11 +762,11 @@
       "signatureBlocks": 0
     },
     "p412--fitness": {
-      "height": 4854,
+      "height": 4210,
       "buttons": 69,
       "links": 8,
       "icons": 68,
-      "firstScreenActions": 26,
+      "firstScreenActions": 30,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
