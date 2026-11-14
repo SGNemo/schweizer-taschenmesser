@@ -21,7 +21,7 @@
  *     `stimulus-raise SGNemo/schweizer-taschenmesser#<n> <hash> <signature>` carries a valid Ed25519 signature
  *     of RATCHET_PUBLIC_KEY over `stimulus-raise SGNemo/schweizer-taschenmesser#<n> <hash>` (until
  *     PROXY_APPROVAL_UNTIL also: a comment by MAINTAINER_LOGIN with that line first and `Reason: …` second,
- *     see proxyApproval; in CI it turns the hits green like the label). Anything unclear
+ *     see proxyApproval, proxy-2026-11; in CI it turns the hits green like the label). Anything unclear
  *     (no key, no network, unreadable history) ends with exit ≠ 0.
  */
 import { execFileSync } from 'node:child_process';
@@ -43,8 +43,10 @@ export const LABEL = 'stimulus-raise';
  * approves the hits. Agents that act with the maintainer's token post as this account: that is the intended
  * proxy. Only comments created in [FROM, UNTIL) count, and only while the run is before UNTIL; then only the
  * signature is valid again. Never for hits on this script itself (the trust root). A follow-up pull request
- * removes this block (`proxyApproval`, `proxyReason`, the three constants and their two uses).
+ * removes every line or block marked `proxy-2026-11` (`git grep -n proxy-2026-11`). In `--pr` the proxy is read
+ * only when RATCHET_PUBLIC_KEY loads (no key: nothing is mergeable at all).
  */
+// proxy-2026-11 (constants up to SELF)
 export const MAINTAINER_LOGIN = 'SGNemo';
 export const PROXY_APPROVAL_FROM = '2026-11-14T00:00:00Z';
 export const PROXY_APPROVAL_UNTIL = '2026-11-22T00:00:00Z';
@@ -1040,8 +1042,8 @@ export function isApproval(body, { pr, hash, key, repo = REPO }) {
 }
 
 /**
- * Temporary proxy approval: the reason (one line, at most 500 characters, control characters and the
- * markup characters `<>&`@` made visible) if `comment` approves exactly this hash, else null. Counts only
+ * proxy-2026-11 (up to proxyOpen). Temporary proxy approval: the reason (one line, at most 500 characters, control and format characters
+ * and the markup characters `<>&`@` made visible) if `comment` approves exactly this hash, else null. Counts only
  * while `now` is before `until`, for a comment created in [from, until) and never edited, by `login` as a
  * plain user (case-insensitive, as GitHub logins are), whose first line is exactly the approval message and
  * whose second line is `Reason: <text with a letter>`.
@@ -1075,7 +1077,10 @@ export function proxyApproval(
   if (!m || !/\p{L}/u.test(m[1])) return null;
   const reason = m[1]
     .trim()
-    .replace(/\p{Cc}|\p{Zl}|\p{Zp}|[<>&`@]/gu, (c) => `[U+${c.codePointAt(0).toString(16)}]`);
+    .replace(
+      /\p{Cc}|\p{Cf}|\p{Zl}|\p{Zp}|[<>&`@]/gu,
+      (c) => `[U+${c.codePointAt(0).toString(16)}]`,
+    );
   return reason.length > 500 ? `${reason.slice(0, 500)}…` : reason;
 }
 /**
@@ -1083,7 +1088,7 @@ export function proxyApproval(
  * closed and whenever a hit is on this script itself: a change of the trust root needs the signature).
  */
 export function proxyReason(comments, { hits, pr, hash, repo = REPO, now = Date.now() }) {
-  if (hits.some((h) => h.split(' ')[1] === SELF)) return undefined;
+  if (!proxyOpen(hits, now)) return undefined;
   for (const c of comments) {
     const reason = proxyApproval(c, { pr, hash, repo, now });
     if (reason !== null) return reason;
@@ -1249,7 +1254,7 @@ export async function runCi({
   if (env.GITHUB_STEP_SUMMARY)
     appendFileSync(
       env.GITHUB_STEP_SUMMARY,
-      `${table}\n\nInformation only: the approval hash comes from \`ratchet.mjs --pr\` in its \`develop\` version; a proxy approval read here uses this run's hash, the merge rule decides.\n`,
+      `${table}\n\nInformation only: the approval hash comes from \`ratchet.mjs --pr\` in its \`develop\` version; a proxy approval read here uses this run's hash, the merge rule decides (proxy-2026-11).\n`,
     );
   if (!hits.length) return 0;
   const slug = env.GITHUB_REPOSITORY || REPO;
@@ -1273,6 +1278,7 @@ export async function runCi({
       );
       return 0;
     }
+    // proxy-2026-11 (this if block)
     if (/^[1-9]\d*$/.test(env.PR_NUMBER) && proxyOpen(hits, now)) {
       const pr = Number(env.PR_NUMBER);
       const hash = hashOf(hits);
@@ -1351,7 +1357,7 @@ export async function runPr({
 
   if (hits.length) {
     const message = approvalMessage(pr, hash, slug);
-    const proxy = proxyOpen(hits, now);
+    const proxy = proxyOpen(hits, now); // proxy-2026-11 (and every use of proxy/reason below)
     let approved = false;
     let reason;
     if (key) {
@@ -1368,7 +1374,7 @@ export async function runPr({
       );
     else {
       problems.push(
-        'hits without a validly signed approval comment (or a proxy approval comment) for this hash',
+        `hits without a validly signed approval comment${proxy ? ' (or a proxy approval comment)' : ''} for this hash`,
       );
       if (proxy)
         out(

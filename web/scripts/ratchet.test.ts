@@ -1036,6 +1036,7 @@ const checkOf = (extra: object = {}) => ({
   ...extra,
 });
 const ENV = { GITHUB_TOKEN: 'placeholder-token' };
+// proxy-2026-11
 /** Inside and after the window of the temporary proxy approval. */
 const DURING = Date.parse('2026-11-15T12:00:00Z');
 const AFTER = Date.parse(PROXY_APPROVAL_UNTIL);
@@ -1397,6 +1398,7 @@ describe('--pr (merge rule) with recorded API answers', () => {
     ).toBe(0);
     expect(await cli(['--pr', 'x'], deps({ pull: {} }))).toBe(2);
   });
+  // proxy-2026-11
   it('proxy approval: maintainer, this hash and a reason → mergeable, the reason is printed', async () => {
     const p = pullRequest(true);
     const work = p.clone();
@@ -1419,6 +1421,7 @@ describe('--pr (merge rule) with recorded API answers', () => {
     );
     expect(late.code).toBe(1);
   });
+  // proxy-2026-11
   it('proxy approval: wrong author, wrong hash, no reason, or an old hash after a new push → not mergeable', async () => {
     const p = pullRequest(true);
     const work = p.clone();
@@ -1468,6 +1471,7 @@ describe('--pr (merge rule) with recorded API answers', () => {
     expect(hashIn(again.text)).not.toBe(hash);
     expect(again.code).toBe(1);
   });
+  // proxy-2026-11
   it('proxy approval needs the green Web check like every approval', async () => {
     const p = pullRequest(true);
     const work = p.clone();
@@ -1487,6 +1491,7 @@ describe('--pr (merge rule) with recorded API answers', () => {
   });
 });
 
+// proxy-2026-11
 describe('proxyApproval', () => {
   const at = { pr: 7, hash: HASH, now: DURING };
   const line = `stimulus-raise ${REPO}#7 ${HASH}`;
@@ -1494,6 +1499,7 @@ describe('proxyApproval', () => {
     expect(proxyApproval(proxyComment(`${line}\r\nReason: first\nsecond`), at)).toBe('first');
     expect(proxyApproval(proxyComment(`${line}  \nReason:ok`), at)).toBe('ok');
     expect(proxyApproval(proxyComment(`${line}\nReason: why\u0007`), at)).toBe('why[U+7]');
+    expect(proxyApproval(proxyComment(`${line}\nReason: a\u202eb`), at)).toBe('a[U+202e]b');
     expect(proxyApproval(proxyComment(`${line}\nReason: a <!-- \`@x`), at)).toBe(
       'a [U+3c]!-- [U+60][U+40]x',
     );
@@ -1578,6 +1584,7 @@ describe('--base --head (CI feedback)', () => {
     });
     expect(r.code).toBe(0);
   });
+  // proxy-2026-11
   it('hits with a proxy approval comment for this hash: green while the window is open', async () => {
     const h = history(true);
     const hash = hashOf(collectHits(h.repo, h.base, h.head));
