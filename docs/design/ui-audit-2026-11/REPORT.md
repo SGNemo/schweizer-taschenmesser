@@ -53,13 +53,13 @@ Neu gemessen auf `develop` 34c2de10c mit 29 Modulen, 2 Geräten × 2 Themes × S
 
 **Prüfpunkte der Liste:** Zeile 41 (Kalender-Monat) – über dem Falz 28 farbige Flächen (Chroma 19), fast alle Kalenderfarben und „heute“; die Grenze „≤ 10“ gilt dort nicht, die Ratsche hält den Wert. Zeile 42 (AE3) – Plaketten, Kapsel, Bühne und Bibliothek im dunklen Theme angesehen: nicht stumpf, keine Frage an Sven. Zeile 43 – offen (Folgepunkt 16). Datenschutz: Passwörter gesperrt, Gerätestatus ohne Adressen, Beträge im Kopf `sensitive` („Werte ausblenden“ für Finanzen, Rechnungen und Vermögen in `e2e/hide-values.spec.ts`; Abos und Budgets ohne e2e, Folgepunkt 18).
 
-**Folgepunkte** (nach Wirkung für Nutzer; Fehler als eigene Fix-PRs, nicht in diesem Paket):
+**Folgepunkte** (nach Wirkung für Nutzer; Fehler als eigene Fix-PRs, nicht in diesem Paket; jeder Fix, der eine geschützte Spec oder Werkzeug-Datei ändert, ist ein Ratschen-Treffer mit signiertem Kommentar):
 
 1. **Fehler – Layout-Sprung beim ersten Öffnen:** Wetter (Hinweis über dem Kopf kommt nach den Daten), Listen (Zeilen nach dem Eintragen-Feld), Chat am Handy (Block über dem Verlauf). Fix-PR offen.
-2. **Fehler – Palette:** „Neu eintragen: „…““ ist vorausgewählt; Enter auf einen genauen Titeltreffer legt einen zweiten Eintrag an. Treffer zuerst; eine Frage an den Assistenten (mit eingerichtetem Modell „Assistent fragen“, `CommandPalette.tsx:536–550`) darf nie die Enter-Vorgabe werden.
-3. **Fehler – Listen:** Leerzustand ohne Verb, Feld am unteren Rand; am Handy bricht der Stift eines abgehakten Artikels in eine eigene Zeile; zwei Einstiege („Neue Liste“ im Kopf, „Hinzufügen“ am Feld).
+2. **Fehler – Palette:** „Neu eintragen: „…““ ist vorausgewählt; Enter auf einen genauen Titeltreffer legt einen zweiten Eintrag an. Treffer vor „Neu eintragen“; für freien Text ohne „?“ und ohne Schreib-Absicht bleibt eine Frage an den Assistenten nie die Enter-Vorgabe (`CommandPalette.tsx:533–551`, Test `CommandPalette.test.tsx:109`).
+3. **Fehler – Listen:** Leerzustand ohne Verb, Feld am unteren Rand; am Handy bricht der Stift eines abgehakten Artikels in eine eigene Zeile; zwei Einstiege („Neue Liste“ im Kopf, „Hinzufügen“ am Feld; „Neue Liste“ ist in `e2e/mobile-layout.spec.ts:149` und `e2e/seed/household-vault.seed.spec.ts:304` festgeschrieben: Ratschen-Treffer, signierter Kommentar).
 4. **Kalender am Handy:** „Kalender“ dreimal (h1, Modul-Zeile, Reiter) – M8.
-5. **Wortlaut:** Finanzen „Buchung“, Notizen „Neue Seite“, Listen „Hinzufügen“; Ort „eintragen“ (Uhr) und „hinzufügen“ (Wetter) – M7.
+5. **Wortlaut:** Finanzen „Buchung“, Notizen „Neue Seite“, Listen „Hinzufügen“; Ort „eintragen“ (Uhr) und „hinzufügen“ (Wetter) – M7; „Buchung“ steht in `e2e/shell.spec.ts:183–184` (Ratschen-Treffer, signierter Kommentar).
 6. **Dialoge:** Unterlage 11 Felder, Fitness 9 – Pflichtfelder zuerst, Rest hinter „Mehr Felder“ – M7.
 7. **Gerätestatus:** die Figur sagt „Nichts Dringendes“, während „Kein Backup“ und „Sync · Aus“ darunter stehen – das eine Offene ruhig benennen (nie rot); am Desktop Zeilen ohne Listenfläche.
 8. **Rechnungen am Handy:** Namen auf etwa zehn Zeichen gekürzt („Stadtwerke…“), zwei Zeilen desselben Empfängers sind nicht zu unterscheiden.
@@ -69,9 +69,9 @@ Neu gemessen auf `develop` 34c2de10c mit 29 Modulen, 2 Geräten × 2 Themes × S
 12. **Leerzustände:** ToDos oben, die anderen mittig.
 13. **Einzelne Rahmen:** Einstellungen → Sync, Verbindungen, Entwickler, Über; Übersicht „Ausführlich“; Schnellerfassung.
 14. **Handy-Zeilen über 48 px:** Karten-Zeilen Vorräte 98, Unterlagen 106, Merkliste 83, Fitness 77.
-15. **Backup herunterladen:** bleibt 3–4 Klicks; ein direkter Knopf auf Gerätestatus?
+15. **Backup herunterladen:** bleibt 3–4 Klicks; ein Knopf auf Gerätestatus nur mit derselben Passwort-Empfehlung wie in den Einstellungen – er führt zum Export-Dialog, nie unverschlüsselt in einem Klick.
 16. **Zeile 43 (Ratschen-Treffer, signierter Kommentar):** die übrigen Einstellungs-Reiter und `/tools` in `e2e/screenshots/stimulus.spec.ts`/`stimulusPages.ts`; dabei die veralteten Kommentare `e2e/seed/planArea.ts:171`, `money-area.seed.spec.ts:141`, `calm-colour.seed.spec.ts:28` (Svens Antwort 3 zu #796).
-17. **Chroma für die Ratsche (Ratschen-Treffer):** (max − min) / 255 statt der Sättigung in `scripts/lib/stimulusBudget.ts` (Svens Frage 1 zu #796, gemessen: hell und dunkel gleich); der Vergleich mit 0b-1 bleibt bis dahin auf der Sättigung, sonst 0b-1 mit Chroma nachrechnen.
+17. **Chroma für die Ratsche (Ratschen-Treffer, signierter Kommentar):** (max − min) / 255 statt der Sättigung in `scripts/lib/stimulusBudget.ts` (Svens Frage 1 zu #796, gemessen: hell und dunkel gleich); der Vergleich mit 0b-1 bleibt bis dahin auf der Sättigung, sonst 0b-1 mit Chroma nachrechnen.
 18. **Werkzeug und Handtests:** Tour nur auf Deutsch (en-Wortlaut ungeprüft); ein Durchgang mit „Werte ausblenden“ für die Köpfe von Abos und Budgets; Tastatur, Screenreader, 200 % Zoom, WebView2 und Android als Handtest.
 
 
