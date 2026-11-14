@@ -79,9 +79,11 @@
 }
 /* U06: "Zurück" / "Weiter" stay at the bottom edge of the wizard while the step scrolls under them (desktop and
    phone): a bar on the surface with a hairline on top, across the dialog's full width. */
+/* A phone keyboard that only shrinks the visual viewport covers the screen's bottom edge: the bar stays above it
+   (`--kb-inset`, core/shell/keyboardInset.ts; 0 with a browser that resizes the page, so nothing moves there). */
 .footer {
   position: sticky;
-  inset-block-end: 0;
+  inset-block-end: var(--kb-inset, 0px);
   z-index: var(--z-raised);
   display: flex;
   justify-content: space-between;
