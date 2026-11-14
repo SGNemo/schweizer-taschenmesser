@@ -753,7 +753,7 @@
       "height": 2204,
       "buttons": 15,
       "links": 9,
-      "icons": 14,
+      "icons": 12,
       "firstScreenActions": 21,
       "borders": 0,
       "shadows": 0,
@@ -882,7 +882,7 @@
       "signatureBlocks": 0
     },
     "p412--pantry": {
-      "height": 2203,
+      "height": 1959,
       "buttons": 58,
       "links": 8,
       "icons": 45,
