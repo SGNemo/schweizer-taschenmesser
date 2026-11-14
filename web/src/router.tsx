@@ -25,7 +25,7 @@ import { ModuleErrorBoundary } from '@/layout/ModuleErrorBoundary';
 // (about 60 KB gzip, docs/perf/CLICK-TO-CONTENT-2026-11.md), and offline client-side navigation into them
 // still works without a worker once the app has been open a moment.
 const loadSettings = () => import('@/pages/settings/SettingsLayout');
-export const preloadSettings = (): void => void loadSettings().catch(() => undefined);
+
 const SettingsLayout = lazyOnline<object>(() =>
   loadSettings().then((m) => ({ default: m.SettingsLayout })),
 );
@@ -38,6 +38,13 @@ const ModuleSettingsRoute = lazyOnline<object>(() =>
 const CategoryPage = lazyOnline<object>(() =>
   loadSettings().then((m) => ({ default: m.CategoryPage })),
 );
+export const preloadSettings = (): void =>
+  void Promise.all([
+    SettingsLayout.preload(),
+    SettingsIndex.preload(),
+    ModuleSettingsRoute.preload(),
+    CategoryPage.preload(),
+  ]);
 const ModuleLibrary = lazyOnline<object>(() =>
   import('@/pages/ModuleLibrary').then((m) => ({ default: m.ModuleLibrary })),
 );
