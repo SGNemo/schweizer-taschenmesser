@@ -145,7 +145,7 @@ function BudgetFields({
         ))}
       </SelectField>
       <TextField
-        label={t.budgets.limit}
+        label={t.budgets.limit[period]}
         inputMode="decimal"
         placeholder="0,00"
         value={limit}
