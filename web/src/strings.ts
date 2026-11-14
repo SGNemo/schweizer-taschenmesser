@@ -1563,7 +1563,7 @@ export const de = {
       /** With the planner on: its preview of „Rest verteilen“ instead of moving everything to tomorrow. */
       wrapRest: 'Rest verteilen',
       /** With the planner on: no count of what is left, one calm line. */
-      wrapRestLine: 'Was heute offen ist, kann auf die nächsten Tage.',
+      wrapRestLine: 'Was heute offen ist, lässt sich auf die nächsten Tage verteilen.',
       wrapDone: 'Auf morgen geschoben. Schönen Abend!',
       wrapClear: 'Alles für heute erledigt. Schönen Abend!',
     },

@@ -196,14 +196,20 @@ export default function PlannerPage() {
   /** „Rest verteilen“: the ops of `moveAll(today, tomorrow)` as a preview; nothing moves before „Übernehmen“. */
   function showRest() {
     if (!board) return;
-    const ops = restToTomorrow({ today: data?.today ?? today(), items: instructionItems(board) });
-    // Only what is nailed to today (or nothing) is left: nothing to spread, so no preview that would say otherwise.
+    return previewRest(
+      restToTomorrow({ today: data?.today ?? today(), items: instructionItems(board) }),
+      false,
+    );
+  }
+
+  /** The rest preview – unless only what is nailed to today (or nothing) is left: then one calm line, no preview. */
+  function previewRest(ops: PlanOp[], fromField: boolean) {
     if (!ops.some((o) => o.op === 'earliest')) {
       setPending(undefined);
       setSayLine(t.planner.rest.nothing);
       return;
     }
-    return showPreview(ops, false, undefined, true);
+    return showPreview(ops, fromField, undefined, true);
   }
 
   /** Shows what `ops` would do; nothing is stored until „Übernehmen“. `local` = the model read the sentence. */
@@ -336,12 +342,16 @@ export default function PlannerPage() {
         return;
       }
       if (said.kind === 'ops') {
+        // „Rest verteilen“ typed: the same preview (or calm line) as the evening link.
+        if (said.stage !== 1 && isRestSentence(value)) {
+          await previewRest(said.ops, true);
+          return;
+        }
         // The sentence stays in the field until „Übernehmen“: „Verwerfen“ keeps what was typed.
         await showPreview(
           said.ops,
           true,
           said.stage === 1 ? { sentence: value, rules: said.rules } : undefined,
-          said.stage !== 1 && isRestSentence(value),
         );
         return;
       }

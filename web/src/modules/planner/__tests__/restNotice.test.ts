@@ -15,7 +15,7 @@ const always = () => true;
 describe('restNotices', () => {
   it('is off by default', () => {
     expect(DEFAULT_FOCUS.restReminder).toBe(false);
-    expect(restNotices(range, DEFAULT_FOCUS, always)).toEqual([]);
+    expect(restNotices(range, DEFAULT_FOCUS, always, () => false)).toEqual([]);
   });
 
   it('switched on: one per day at 20:00, soft, no count, opens the preview', () => {
@@ -65,7 +65,9 @@ describe('restNotices', () => {
   });
 
   it('inside the person’s own quiet hours it is left out, never moved to the morning', () => {
-    expect(restNotices(range, { ...on, quietFrom: '19:00', quietTo: '07:00' }, always)).toEqual([]);
+    expect(
+      restNotices(range, { ...on, quietFrom: '19:00', quietTo: '07:00' }, always, () => false),
+    ).toEqual([]);
     expect(
       restNotices(range, { ...on, quietHours: false, quietFrom: '19:00' }, always, () => false),
     ).toHaveLength(3);
