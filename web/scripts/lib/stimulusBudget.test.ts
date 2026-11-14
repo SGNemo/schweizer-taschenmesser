@@ -454,22 +454,85 @@ describe('signature-blocks.json', () => {
   });
 });
 
-it('the tone steps --surface-raised and --surface-sunken are plain surfaces, also as a cool dark grey', () => {
+it('the tone steps are plain by name, even when tinted; a cool dark grey that is no token is no colour', () => {
   const root = document.documentElement.style;
-  root.setProperty('--surface-raised', 'rgb(27, 33, 38)');
-  root.setProperty('--surface-sunken', 'rgb(12, 15, 18)');
+  // Tinted on purpose (chroma 0.12 and 0.09, over the threshold): only the name keeps them out.
+  root.setProperty('--surface-raised', 'rgb(30, 40, 60)');
+  root.setProperty('--surface-sunken', 'rgb(12, 20, 35)');
   try {
     const steps = mount(
-      `<div ${box(200, 80, 10)} style="background-color: rgb(27, 33, 38);"></div><div ${box(200, 80, 10)} style="background-color: rgb(12, 15, 18);"></div>`,
+      `<div ${box(200, 80, 10)} style="background-color: rgb(30, 40, 60);"></div><div ${box(200, 80, 10)} style="background-color: rgb(12, 20, 35);"></div>`,
     );
     expect(steps.colouredSurfaces).toBe(0);
-    // The same saturation in a grey that is no token still counts.
+    // A cool dark grey that is no token is no colour either: chroma (39 − 28) / 255 = 0.04. The audit's
+    // saturation (0.28) counted it; a dark tint with real chroma still counts.
     const other = mount(
-      `<div ${box(200, 80, 10)} style="background-color: rgb(28, 33, 39);"></div>`,
+      `<div ${box(200, 80, 10)} style="background-color: rgb(28, 33, 39);"></div><div ${box(200, 80, 10)} style="background-color: rgb(20, 30, 60);"></div>`,
     );
     expect(other.colouredSurfaces).toBe(1);
   } finally {
     root.removeProperty('--surface-raised');
     root.removeProperty('--surface-sunken');
   }
+});
+
+it('chroma is not looser than the saturation it replaced, for every colour from max 102 (text) / 128 (surface)', () => {
+  // The old formula: saturation (max − min) / max > 0.25 (text), > 0.12 (surface). chroma = saturation × max / 255,
+  // so the new thresholds 0.10 / 0.06 count every colour the old one counted once max ≥ 102 / 128. Every such
+  // colour on a 17-step grid through measurePage(), in batches; the darkest boundary colours by hand below.
+  const OLD_TEXT = 0.25;
+  const OLD_SURFACE = 0.12;
+  const sat = (r: number, g: number, b: number) => {
+    const max = Math.max(r, g, b);
+    return max === 0 ? 0 : (max - Math.min(r, g, b)) / max;
+  };
+  const text: string[] = [];
+  const surface: string[] = [];
+  for (let r = 0; r <= 255; r += 17)
+    for (let g = 0; g <= 255; g += 17)
+      for (let b = 0; b <= 255; b += 17) {
+        const max = Math.max(r, g, b);
+        if (max >= 102 && sat(r, g, b) > OLD_TEXT) text.push(`rgb(${r}, ${g}, ${b})`);
+        if (max >= 128 && sat(r, g, b) > OLD_SURFACE) surface.push(`rgb(${r}, ${g}, ${b})`);
+      }
+  // The two boundaries themselves: the darkest colours just over the old thresholds.
+  text.push('rgb(102, 76, 76)');
+  surface.push('rgb(128, 112, 112)', 'rgb(112, 112, 128)');
+  const count = (list: string[], kind: 'text' | 'surface') => {
+    let n = 0;
+    for (let i = 0; i < list.length; i += 500) {
+      const html = list
+        .slice(i, i + 500)
+        .map((c) =>
+          kind === 'text'
+            ? `<p ${box(200, 20, 10)} style="color: ${c};">a</p>`
+            : `<i ${box(200, 20, 10)} style="background-color: ${c};"></i>`,
+        )
+        .join('');
+      const m = mount(html);
+      n += kind === 'text' ? m.colouredText : m.colouredSurfaces;
+    }
+    return n;
+  };
+  expect(text.length).toBeGreaterThan(2000);
+  expect(count(text, 'text')).toBe(text.length);
+  expect(count(surface, 'surface')).toBe(surface.length);
+});
+
+it('below those brightnesses, a channel spread up to 25 / 15 is no longer counted (the dark-theme fix), deep inks still are', () => {
+  // The band the change gives up on purpose, pinned so that a later threshold change shows here: near-black ink and
+  // dark near-grey fills the saturation counted. A deep ink and a dark tint with real chroma stay counted.
+  const gone = mount(
+    `<p ${box(200, 20, 10)} style="color: rgb(27, 15, 6);">a</p>
+     <p ${box(200, 20, 10)} style="color: rgb(90, 65, 65);">a</p>
+     <p ${box(200, 20, 10)} style="color: rgb(50, 25, 25);">a</p>
+     <i ${box(200, 20, 10)} style="background-color: rgb(40, 30, 30);"></i>
+     <i ${box(200, 20, 10)} style="background-color: rgb(41, 55, 49);"></i>`,
+  );
+  expect([gone.colouredText, gone.colouredSurfaces]).toEqual([0, 0]);
+  const kept = mount(
+    `<p ${box(200, 20, 10)} style="color: rgb(20, 40, 90);">a</p>
+     <i ${box(200, 20, 10)} style="background-color: rgb(20, 30, 60);"></i>`,
+  );
+  expect([kept.colouredText, kept.colouredSurfaces]).toEqual([1, 1]);
 });

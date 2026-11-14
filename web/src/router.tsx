@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, type ReactElement, type ReactNode } from 'react';
 import { Navigate, useParams, useRoutes, type RouteObject } from 'react-router';
-import { lazyComponent } from '@/core/modules/lazy';
+import { lazyComponent, preloadComponent } from '@/core/modules/lazy';
 import { useModuleStates, type ModuleStates } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
 import { areaTarget, buildNavTree, type NavArea } from '@/core/modules/areas';
@@ -25,7 +25,7 @@ import { ModuleErrorBoundary } from '@/layout/ModuleErrorBoundary';
 // (about 60 KB gzip, docs/perf/CLICK-TO-CONTENT-2026-11.md), and offline client-side navigation into them
 // still works without a worker once the app has been open a moment.
 const loadSettings = () => import('@/pages/settings/SettingsLayout');
-export const preloadSettings = (): void => void loadSettings().catch(() => undefined);
+
 const SettingsLayout = lazyOnline<object>(() =>
   loadSettings().then((m) => ({ default: m.SettingsLayout })),
 );
@@ -38,6 +38,13 @@ const ModuleSettingsRoute = lazyOnline<object>(() =>
 const CategoryPage = lazyOnline<object>(() =>
   loadSettings().then((m) => ({ default: m.CategoryPage })),
 );
+export const preloadSettings = (): void =>
+  void Promise.all([
+    SettingsLayout.preload(),
+    SettingsIndex.preload(),
+    ModuleSettingsRoute.preload(),
+    CategoryPage.preload(),
+  ]);
 const ModuleLibrary = lazyOnline<object>(() =>
   import('@/pages/ModuleLibrary').then((m) => ({ default: m.ModuleLibrary })),
 );
@@ -233,22 +240,50 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
   ];
 }
 
+/** Runs the loaders one at a time in idle slots (a 2 s timeout each, so a busy page still gets them); stops on cleanup. */
+function preloadWhenIdle(loaders: readonly (() => void)[]): () => void {
+  // e2e hook: tests of the loading card need page code that is not there yet.
+  if ((window as unknown as { __tmNoPreload?: boolean }).__tmNoPreload) return () => undefined;
+  let next = 0;
+  let cancel: (() => void) | undefined;
+  const step = () => {
+    const load = loaders[next++];
+    if (!load) return;
+    load();
+    schedule();
+  };
+  const schedule = () => {
+    const idle = window.requestIdleCallback?.bind(window);
+    if (idle) {
+      const id = idle(step, { timeout: 2000 });
+      cancel = () => window.cancelIdleCallback(id);
+    } else {
+      const id = window.setTimeout(step, 300);
+      cancel = () => window.clearTimeout(id);
+    }
+  };
+  schedule();
+  return () => cancel?.();
+}
+
 export function AppRoutes() {
   const states = useModuleStates();
   const routes = useMemo(() => (states ? buildRoutes(states) : null), [states]);
   // Routes are only known once module states are loaded; avoids a redirect flash on deep links.
   const element = useRoutes(routes ?? []);
-  // Settings code after the first paint, when the browser is idle (or after 2 s at the latest).
+  // After the first paint, while the browser is idle: the settings code (or after 2 s at the latest), then the page
+  // code of every switched-on module, one per idle slot. A first click in the side bar then finds its page loaded
+  // instead of showing the loading card while it fetches and parses (docs/perf/CLICK-TO-CONTENT-2026-11.md).
   useEffect(() => {
-    if (!routes) return;
-    const idle = window.requestIdleCallback?.bind(window);
-    if (idle) {
-      const id = idle(preloadSettings, { timeout: 2000 });
-      return () => window.cancelIdleCallback(id);
-    }
-    const id = window.setTimeout(preloadSettings, 500);
-    return () => window.clearTimeout(id);
-  }, [routes]);
+    if (!states) return;
+    const loaders = [
+      preloadSettings,
+      ...availableManifests()
+        .filter((m) => states[m.id])
+        .flatMap((m) => m.routes.map((r) => () => void preloadComponent(r.component))),
+    ];
+    return preloadWhenIdle(loaders);
+  }, [states]);
   return routes ? (
     <LoadedModuleStates.Provider value={states}>{element}</LoadedModuleStates.Provider>
   ) : (

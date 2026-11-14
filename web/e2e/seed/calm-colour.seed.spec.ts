@@ -89,11 +89,11 @@ function keptColour({ band, markMax }: { band: number; markMax: number }): Kept 
         }
       : null;
   };
-  const saturation = (c: string) => {
+  // Chroma and its thresholds as in `measurePage` (text > 0.10, surface > 0.06; #854).
+  const chroma = (c: string) => {
     const p = parse(c);
     if (!p || p.a < 0.05) return 0;
-    const max = Math.max(p.r, p.g, p.b);
-    return max === 0 ? 0 : (max - Math.min(p.r, p.g, p.b)) / max;
+    return (Math.max(p.r, p.g, p.b) - Math.min(p.r, p.g, p.b)) / 255;
   };
   const hue = (c: string): number | null => {
     const p = parse(c);
@@ -128,17 +128,12 @@ function keptColour({ band, markMax }: { band: number; markMax: number }): Kept 
     const ownText = Array.from(el.childNodes).some(
       (n) => n.nodeType === 3 && (n.textContent ?? '').trim() !== '',
     );
-    if (ownText && saturation(s.color) > 0.25 && !neutralInk.has(s.color)) {
+    if (ownText && chroma(s.color) > 0.1 && !neutralInk.has(s.color)) {
       if (isKept(s.color)) kept++;
       else others.push(`text ${name(el)} ${s.color}`);
     }
     const bg = parse(s.backgroundColor);
-    if (
-      !plain.has(s.backgroundColor) &&
-      bg &&
-      bg.a > 0.05 &&
-      saturation(s.backgroundColor) > 0.12
-    ) {
+    if (!plain.has(s.backgroundColor) && bg && bg.a > 0.05 && chroma(s.backgroundColor) > 0.06) {
       if (isKept(s.backgroundColor)) kept++;
       else if (inkFills.has(s.backgroundColor) && r.width <= markMax && r.height <= markMax)
         inkMarks++;
