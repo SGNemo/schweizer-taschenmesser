@@ -92,6 +92,13 @@ async function closeDialogs(page: Page) {
   }
 }
 
+/** Every backup path ends the same way: the password (typed text is free, a click into the field counts), then the
+ *  recommended encrypted export. Until follow-up 16 the paths stopped at the first export button. */
+async function encryptedExport(c: Counter, scope: Locator) {
+  await c.fill(scope.getByLabel('Passwort für das Backup'), 'ein-langes-passwort', 'Passwort');
+  await c.click(scope.getByRole('button', { name: 'Verschlüsselt exportieren' }), 'Verschlüsselt exportieren');
+}
+
 type Flow = (c: Counter, page: Page, phone: boolean) => Promise<void>;
 
 /** Navigate to a module the way the shell offers it: favourite, sidebar (area + module) or bottom nav + tab. */
@@ -295,9 +302,7 @@ const FLOWS: Record<string, Flow> = {
     if (phone) { await c.click(page.getByRole('button', { name: /^Mehr$/ }), 'Mehr'); await c.click(page.getByRole('link', { name: /^Einstellungen/ }), 'Einstellungen'); }
     else await c.click(page.getByTestId('sidebar').getByRole('link', { name: /^Einstellungen/ }), 'Einstellungen');
     await c.click(page.locator('main').getByRole('link', { name: /^Sync & Backup/ }), 'Sync & Backup');
-    const dl = page.locator('main').getByRole('button', { name: /Backup herunterladen|Verschlüsselt exportieren/ });
-    await c.click(dl, 'Backup');
-    c.notes.push(`dialog buttons: ${await page.locator('dialog[open] button, [role="dialog"] button').allInnerTexts().then((t) => t.join('/')).catch(() => '-')}`);
+    await encryptedExport(c, page.locator('main'));
   },
   'H3 Status ansehen – Gerätestatus (S-b)': async (c, page, phone) => {
     await c.start('/');
@@ -311,8 +316,7 @@ const FLOWS: Record<string, Flow> = {
     await c.start('/');
     await goModule(c, page, phone, /System/, 'Gerätestatus');
     await c.click(page.locator('main').getByRole('link', { name: /Backup/ }).first(), 'Zeile Backup');
-    const dl = page.locator('main').getByRole('button', { name: /Backup herunterladen|Verschlüsselt exportieren/ });
-    await c.click(dl, 'Backup');
+    await encryptedExport(c, page.locator('main'));
     c.notes.push(`after: ${new URL(page.url()).pathname}`);
   },
   // Follow-up 16 of 0b-8: the button on Gerätestatus opens the export form in a dialog; the path ends on the
@@ -321,10 +325,7 @@ const FLOWS: Record<string, Flow> = {
     await c.start('/');
     await goModule(c, page, phone, /System/, 'Gerätestatus');
     await c.click(page.getByTestId('device-backup-export'), 'Knopf Backup herunterladen');
-    const dlg = page.getByRole('dialog', { name: 'Backup herunterladen' });
-    await c.fill(dlg.getByLabel('Passwort für das Backup'), 'ein-langes-passwort', 'Passwort');
-    await c.click(dlg.getByRole('button', { name: 'Verschlüsselt exportieren' }), 'Verschlüsselt exportieren');
-    c.notes.push(`dialog buttons: ${await dlg.getByRole('button').allInnerTexts().then((t) => t.join('/')).catch(() => '-')}`);
+    await encryptedExport(c, page.getByRole('dialog', { name: 'Backup herunterladen' }));
   },
 };
 
