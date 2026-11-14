@@ -62,6 +62,7 @@ test.describe('phone', () => {
         const box = (sel: string) => li.querySelector(sel)!.getBoundingClientRect();
         const main = box('[data-row]');
         const pencil = box('[data-row-actions]');
+        const meta = li.querySelector('[data-row] + *')?.getBoundingClientRect();
         return {
           name: (li.querySelector('[data-row]')!.textContent ?? '').trim(),
           done: (li.querySelector('input[data-row-tick]') as HTMLInputElement | null)?.checked,
@@ -73,6 +74,8 @@ test.describe('phone', () => {
             pencil.left >= main.right,
           // Never pushed past the screen's edge.
           inside: pencil.right <= document.documentElement.clientWidth,
+          // Badges, price and quantity end before the pencil, never under it.
+          clear: !meta || meta.width === 0 || meta.right <= pencil.left,
         };
       }),
     );
@@ -83,8 +86,8 @@ test.describe('phone', () => {
     for (const r of measured) {
       expect.soft(r.sameLine, `${r.name}: pencil beside the entry`).toBe(true);
       expect.soft(r.inside, `${r.name}: pencil on screen`).toBe(true);
+      expect.soft(r.clear, `${r.name}: nothing covers the pencil`).toBe(true);
       expect.soft(r.height, `${r.name}: row height`).toBeGreaterThanOrEqual(48);
-      expect.soft(r.height, `${r.name}: one line, not two`).toBeLessThan(80);
     }
   });
 

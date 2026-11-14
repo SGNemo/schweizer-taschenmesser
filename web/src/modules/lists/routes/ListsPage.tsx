@@ -439,7 +439,8 @@ export default function ListsPage() {
                 />
               }
             >
-              {/* M10: an empty state names its next step. "Artikel" only on a shopping list; other lists keep "Eintrag". */}
+              {/* M10: an empty state names its next step. "Artikel eintragen" on a shopping list; the other lists reuse
+                  `addItem`, the label of the "⋯" entry and of the field itself (a known exception to "<Ding> eintragen"). */}
               <Button onClick={focusAdd}>
                 {isShopping ? t.lists.emptyAction : t.lists.addItem}
               </Button>
