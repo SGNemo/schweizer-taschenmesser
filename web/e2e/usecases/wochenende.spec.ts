@@ -45,9 +45,9 @@ const MAX: Record<string, Record<Metric | 'seconds', number>> = {
   // prettier-ignore
   'B Kopf leeren: zwölf Dinge auf einmal · pixel-7': { taps: 2, keys: 280, screens: 0, dialogs: 1, detours: 3, seconds: 132 },
   // prettier-ignore
-  'C Wochenende einteilen · desktop-chrome': { taps: 23, keys: 9, screens: 1, dialogs: 2, detours: 0, seconds: 33 },
+  'C Wochenende einteilen · desktop-chrome': { taps: 23, keys: 9, screens: 1, dialogs: 2, detours: 1, seconds: 38 },
   // prettier-ignore
-  'C Wochenende einteilen · pixel-7': { taps: 23, keys: 9, screens: 1, dialogs: 2, detours: 0, seconds: 35 },
+  'C Wochenende einteilen · pixel-7': { taps: 23, keys: 9, screens: 1, dialogs: 2, detours: 1, seconds: 40 },
   // prettier-ignore
   'D Arbeitszeit nachtragen · desktop-chrome': { taps: 6, keys: 20, screens: 2, dialogs: 1, detours: 0, seconds: 18 },
   // prettier-ignore
@@ -279,6 +279,26 @@ async function planOf(page: Page) {
   });
 }
 
+/**
+ * The number of rows a locator finds once the planner run has settled: two reads 400 ms apart agree (a run
+ * may still add or move rows after the page shows them; a fixed wait would be flaky under load).
+ */
+async function settledCount(loc: Locator): Promise<number> {
+  let last = -1;
+  await expect
+    .poll(
+      async () => {
+        const now = await loc.count();
+        const same = now === last;
+        last = now;
+        return same;
+      },
+      { intervals: [400], timeout: 15_000 },
+    )
+    .toBe(true);
+  return last;
+}
+
 /** A module link in the sidebar; a folded area group is opened first (one more tap). */
 async function sideLink(page: Page, m: Meter, name: string, group: string) {
   const link = page.getByRole('link', { name, exact: true });
@@ -461,18 +481,21 @@ test('C Wochenende einteilen', async ({ page, isMobile }, info) => {
   const sunday = page.getByRole('dialog');
   await stepTo(m, sunday, '4 h');
   await m.tap(sunday.getByRole('button', { name: 'Schließen' }).first());
-  await page.waitForTimeout(1500);
+  // W10: Sunday got time, but does it get things? Nothing moves onto it (rule 6): the weekend plan the person
+  // meant does not happen – a detour (the person has to move things by hand or know „alles neu mischen“).
+  const sundayRows = await settledCount(page.locator(`[data-testid="day-${SUNDAY}"] li`));
+  if (sundayRows === 0) m.detour();
   // „Erst Pflicht, dann Freizeit, dann Haushalt“ has no place: neither a day part nor an order hint exists, so
   // the order inside the day stays priority → age (counted in ANALYSIS, not here).
   const plan = await planOf(page);
-  facts(info, 'C', plan);
+  facts(info, 'C', { ...plan, sundayRows });
   await record(info, m, name);
 });
 
 test('D Arbeitszeit nachtragen', async ({ page, isMobile }, info) => {
   const name = 'D Arbeitszeit nachtragen';
   test.skip(isMobile, 'measured on the PC (the phone path is the same dialog)');
-  await prepare(page, ['todos', 'planner']);
+  await prepare(page, []);
   const m = new Meter(page, false);
   // Zeiterfassung is off on a new install: library, switch, then the module.
   await m.nav(page.getByRole('link', { name: 'Modul-Bibliothek' }), /Modul-Bibliothek/);
@@ -581,7 +604,8 @@ test('E Mail: Persönlich, Suche, Rechnung, Antwort in den Plan', async ({
 
 test('F Abend: Rest auf andere Tage', async ({ page, isMobile }, info) => {
   const name = 'F Abend: Rest auf andere Tage';
-  // Saturday 21:00: four things planned for today are still open; Sunday got 4 h (path C).
+  // Saturday 21:00: four open things on an empty install; the run puts three on today (limit of three main
+  // items) and one on Monday; Sunday has its default 0, so „Später“ lands on Monday.
   await page.clock.setFixedTime(new Date(`${SATURDAY}T21:00:00`));
   await prepare(
     page,
@@ -593,7 +617,7 @@ test('F Abend: Rest auf andere Tage', async ({ page, isMobile }, info) => {
   const m = new Meter(page, isMobile);
   await m.go('/planner');
   await expect(page.getByTestId('planner-head')).toBeVisible();
-  await page.waitForTimeout(1500);
+  await settledCount(page.locator(`[data-testid="day-${SATURDAY}"] li`));
   const before = await planOf(page);
   // „per Klick automatisch aufteilen“: the only run button is „Neu verteilen“ in the ⋯ menu.
   await m.tap(page.getByRole('button', { name: 'Weitere Optionen' }));
@@ -608,20 +632,22 @@ test('F Abend: Rest auf andere Tage', async ({ page, isMobile }, info) => {
   const nothing = page.getByText('Am Plan ändert sich nichts.');
   await expect(apply.or(nothing).first()).toBeVisible();
   m.dialog();
-  if (await apply.isVisible()) await m.tap(apply);
-  await page.waitForTimeout(1000);
+  if (await apply.isVisible()) {
+    await m.tap(apply);
+    await expect(apply).toBeHidden();
+  }
+  const today = page.locator(`[data-testid="day-${SATURDAY}"] li`);
+  const stuck = await settledCount(today);
   const afterRun = await planOf(page);
   // The evening is over, but the run still uses today's free time: what stays on today is a detour, and the
   // person moves each thing by hand („Später“ = earliest tomorrow).
-  const today = page.locator(`[data-testid="day-${SATURDAY}"] li`);
-  const stuck = await today.count();
   if (stuck > 0) {
     m.detour();
     for (let i = 0; i < stuck; i += 1) {
       const row = page.locator(`[data-testid="day-${SATURDAY}"] li`).first();
       await m.tap(row.getByRole('button', { name: /^Aktionen für/ }));
       await m.tap(page.getByRole('menuitem', { name: 'Später' }));
-      await page.waitForTimeout(600);
+      await expect(today).toHaveCount(stuck - i - 1);
     }
   }
   await expect(page.locator(`[data-testid="day-${SATURDAY}"] li`)).toHaveCount(0);
@@ -708,9 +734,13 @@ test('H Schlaf: Abendgrenze für den Plan', async ({ page, isMobile }, info) => 
   await m.tap(page.locator('main h1'));
   await m.type(page.getByLabel('Zeitfenster Sonntag'), '10-23');
   await m.tap(page.locator('main h1'));
-  // A window gives times but is no limit: what does not fit before 23:00 still stays on the day without a
-  // time (windows.ts). Counted as a detour: the plan does not respect „nothing after 23:00“.
-  m.detour();
-  facts(info, 'H', { window: await sat.inputValue() });
+  // The window is saved …
+  await page.reload();
+  await expect(page.getByLabel('Zeitfenster Samstag')).toHaveValue('10:00–23:00');
+  // … but it gives times and is no limit: what does not fit before 23:00 still stays on the day without a time
+  // (windows.ts). A detour while no „Tagesende“ exists that the plan respects (F6 adds it).
+  const dayEnd = await page.getByLabel(/Tagesende/).count();
+  if (dayEnd === 0) m.detour();
+  facts(info, 'H', { window: await sat.inputValue(), dayEnd });
   await record(info, m, name);
 });
