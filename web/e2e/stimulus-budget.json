@@ -389,6 +389,30 @@
       "colouredAboveFold": 2,
       "signatureBlocks": 0
     },
+    "d1920--settings-allgemein": {
+      "height": 4356,
+      "buttons": 38,
+      "links": 37,
+      "icons": 37,
+      "firstScreenActions": 52,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 4,
+      "signatureBlocks": 0
+    },
+    "d1920--settings-barrierefreiheit": {
+      "height": 1238,
+      "buttons": 57,
+      "links": 32,
+      "icons": 36,
+      "firstScreenActions": 57,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 3,
+      "signatureBlocks": 0
+    },
     "d1920--settings-benachrichtigungen": {
       "height": 2164,
       "buttons": 58,
@@ -413,6 +437,42 @@
       "colouredAboveFold": 14,
       "signatureBlocks": 0
     },
+    "d1920--settings-einrichtung": {
+      "height": 1110,
+      "buttons": 18,
+      "links": 26,
+      "icons": 35,
+      "firstScreenActions": 43,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 4,
+      "signatureBlocks": 0
+    },
+    "d1920--settings-entwickler": {
+      "height": 1463,
+      "buttons": 16,
+      "links": 26,
+      "icons": 37,
+      "firstScreenActions": 40,
+      "borders": 1,
+      "shadows": 0,
+      "surfaceLanguages": 1,
+      "colouredAboveFold": 4,
+      "signatureBlocks": 0
+    },
+    "d1920--settings-ki": {
+      "height": 2641,
+      "buttons": 40,
+      "links": 34,
+      "icons": 42,
+      "firstScreenActions": 48,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 6,
+      "signatureBlocks": 0
+    },
     "d1920--settings-module": {
       "height": 1650,
       "buttons": 11,
@@ -423,6 +483,90 @@
       "shadows": 0,
       "surfaceLanguages": 0,
       "colouredAboveFold": 17,
+      "signatureBlocks": 0
+    },
+    "d1920--settings-schnellerfassung": {
+      "height": 1110,
+      "buttons": 14,
+      "links": 26,
+      "icons": 37,
+      "firstScreenActions": 39,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 4,
+      "signatureBlocks": 0
+    },
+    "d1920--settings-sicherheit": {
+      "height": 1110,
+      "buttons": 22,
+      "links": 26,
+      "icons": 37,
+      "firstScreenActions": 47,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 4,
+      "signatureBlocks": 0
+    },
+    "d1920--settings-sync": {
+      "height": 2558,
+      "buttons": 18,
+      "links": 26,
+      "icons": 39,
+      "firstScreenActions": 38,
+      "borders": 1,
+      "shadows": 0,
+      "surfaceLanguages": 1,
+      "colouredAboveFold": 5,
+      "signatureBlocks": 0
+    },
+    "d1920--settings-ueber": {
+      "height": 5266,
+      "buttons": 29,
+      "links": 57,
+      "icons": 37,
+      "firstScreenActions": 50,
+      "borders": 1,
+      "shadows": 0,
+      "surfaceLanguages": 1,
+      "colouredAboveFold": 5,
+      "signatureBlocks": 0
+    },
+    "d1920--settings-updates": {
+      "height": 1993,
+      "buttons": 13,
+      "links": 26,
+      "icons": 36,
+      "firstScreenActions": 37,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 3,
+      "signatureBlocks": 0
+    },
+    "d1920--settings-verbindungen": {
+      "height": 5150,
+      "buttons": 28,
+      "links": 37,
+      "icons": 42,
+      "firstScreenActions": 47,
+      "borders": 1,
+      "shadows": 0,
+      "surfaceLanguages": 1,
+      "colouredAboveFold": 4,
+      "signatureBlocks": 0
+    },
+    "d1920--settings-werkzeuge": {
+      "height": 1593,
+      "buttons": 39,
+      "links": 26,
+      "icons": 60,
+      "firstScreenActions": 59,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 18,
       "signatureBlocks": 0
     },
     "d1920--subscriptions": {
@@ -459,6 +603,18 @@
       "shadows": 0,
       "surfaceLanguages": 0,
       "colouredAboveFold": 7,
+      "signatureBlocks": 0
+    },
+    "d1920--tools": {
+      "height": 1526,
+      "buttons": 38,
+      "links": 9,
+      "icons": 38,
+      "firstScreenActions": 41,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 16,
       "signatureBlocks": 0
     },
     "d1920--vault": {
@@ -797,6 +953,30 @@
       "colouredAboveFold": 1,
       "signatureBlocks": 0
     },
+    "p412--settings-allgemein": {
+      "height": 5598,
+      "buttons": 32,
+      "links": 6,
+      "icons": 12,
+      "firstScreenActions": 12,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 0,
+      "signatureBlocks": 0
+    },
+    "p412--settings-barrierefreiheit": {
+      "height": 1677,
+      "buttons": 51,
+      "links": 9,
+      "icons": 11,
+      "firstScreenActions": 19,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 0,
+      "signatureBlocks": 0
+    },
     "p412--settings-benachrichtigungen": {
       "height": 2425,
       "buttons": 45,
@@ -821,6 +1001,42 @@
       "colouredAboveFold": 8,
       "signatureBlocks": 0
     },
+    "p412--settings-einrichtung": {
+      "height": 1147,
+      "buttons": 12,
+      "links": 6,
+      "icons": 10,
+      "firstScreenActions": 16,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 1,
+      "signatureBlocks": 0
+    },
+    "p412--settings-entwickler": {
+      "height": 2101,
+      "buttons": 10,
+      "links": 6,
+      "icons": 12,
+      "firstScreenActions": 14,
+      "borders": 1,
+      "shadows": 0,
+      "surfaceLanguages": 1,
+      "colouredAboveFold": 1,
+      "signatureBlocks": 0
+    },
+    "p412--settings-ki": {
+      "height": 2998,
+      "buttons": 34,
+      "links": 6,
+      "icons": 17,
+      "firstScreenActions": 14,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 2,
+      "signatureBlocks": 0
+    },
     "p412--settings-module": {
       "height": 2045,
       "buttons": 5,
@@ -831,6 +1047,90 @@
       "shadows": 0,
       "surfaceLanguages": 0,
       "colouredAboveFold": 5,
+      "signatureBlocks": 0
+    },
+    "p412--settings-schnellerfassung": {
+      "height": 1259,
+      "buttons": 8,
+      "links": 6,
+      "icons": 12,
+      "firstScreenActions": 12,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 1,
+      "signatureBlocks": 0
+    },
+    "p412--settings-sicherheit": {
+      "height": 915,
+      "buttons": 16,
+      "links": 6,
+      "icons": 12,
+      "firstScreenActions": 14,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 0,
+      "signatureBlocks": 0
+    },
+    "p412--settings-sync": {
+      "height": 3233,
+      "buttons": 12,
+      "links": 6,
+      "icons": 14,
+      "firstScreenActions": 11,
+      "borders": 1,
+      "shadows": 0,
+      "surfaceLanguages": 1,
+      "colouredAboveFold": 0,
+      "signatureBlocks": 0
+    },
+    "p412--settings-ueber": {
+      "height": 6869,
+      "buttons": 23,
+      "links": 24,
+      "icons": 12,
+      "firstScreenActions": 11,
+      "borders": 1,
+      "shadows": 0,
+      "surfaceLanguages": 1,
+      "colouredAboveFold": 1,
+      "signatureBlocks": 0
+    },
+    "p412--settings-updates": {
+      "height": 2816,
+      "buttons": 7,
+      "links": 6,
+      "icons": 11,
+      "firstScreenActions": 11,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 0,
+      "signatureBlocks": 0
+    },
+    "p412--settings-verbindungen": {
+      "height": 7727,
+      "buttons": 21,
+      "links": 8,
+      "icons": 16,
+      "firstScreenActions": 11,
+      "borders": 1,
+      "shadows": 0,
+      "surfaceLanguages": 1,
+      "colouredAboveFold": 0,
+      "signatureBlocks": 0
+    },
+    "p412--settings-werkzeuge": {
+      "height": 3137,
+      "buttons": 33,
+      "links": 6,
+      "icons": 35,
+      "firstScreenActions": 23,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 7,
       "signatureBlocks": 0
     },
     "p412--subscriptions": {
@@ -867,6 +1167,18 @@
       "shadows": 0,
       "surfaceLanguages": 0,
       "colouredAboveFold": 1,
+      "signatureBlocks": 0
+    },
+    "p412--tools": {
+      "height": 2553,
+      "buttons": 32,
+      "links": 5,
+      "icons": 30,
+      "firstScreenActions": 21,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 8,
       "signatureBlocks": 0
     },
     "p412--vault": {
