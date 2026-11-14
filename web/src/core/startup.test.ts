@@ -108,7 +108,15 @@ describe('decideFreshStart', () => {
     expect((await meta().get(FRESH_START_KEY))?.value).toBe(true);
     await setSettings('ui.example', { on: true });
     expect(await decideFreshStart()).toBe(true);
-    await ensureSetupState(); // stores the setup state
+    await ensureSetupState(); // stores the setup state and drops the noted answer
+    expect(await decideFreshStart()).toBe(false);
+    expect(await meta().get(FRESH_START_KEY)).toBeUndefined();
+  });
+
+  it('a lost setup state after the first start is judged by the data again (an update from before the assistant)', async () => {
+    await initCore();
+    await setSettings('ui.example', { on: true });
+    await meta().delete(SETUP_STATE_KEY);
     expect(await decideFreshStart()).toBe(false);
   });
 

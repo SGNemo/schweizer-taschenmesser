@@ -9,7 +9,7 @@ import { initialState, readSetupState, SETUP_STATE_KEY, type SetupState } from '
 const SECRET_KEYS = ['syncConfig', 'aiConfig'];
 const GENERAL = ['_modules', '_settings', '_imports'];
 
-/** Device-local answer to "is this a fresh installation?", noted once until the setup state exists. */
+/** Device-local answer to "is this a fresh installation?", noted at the first start until the setup state is stored. */
 export const FRESH_START_KEY = 'start.fresh';
 
 function dataTables(manifests: readonly ModuleManifest[]): string[] {
@@ -82,6 +82,12 @@ export async function ensureSetupState(
   const state = hasData
     ? { ...initialState('dismissed'), checklistHidden: true }
     : initialState('notStarted');
-  await database.table('_meta').put({ key: SETUP_STATE_KEY, value: state });
+  // The noted first-start answer has done its job once the setup state exists: an app whose setup state is
+  // lost later is judged by its data again.
+  const meta = database.table('_meta');
+  await rwTransaction(database, [meta], async () => {
+    await meta.put({ key: SETUP_STATE_KEY, value: state });
+    await meta.delete(FRESH_START_KEY);
+  });
   return state;
 }
