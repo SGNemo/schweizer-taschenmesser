@@ -289,7 +289,7 @@ export default function ListsPage() {
   // An empty list's next step is its first entry (follow-up (a) of 0b-8): the field's own button carries the verb and
   // is the page's filled action on the desktop; "Neue Liste" steps back. On the phone the plus stays "Neue Liste"
   // (decided), so the field's button is outlined there. One way in: no second button in the empty state.
-  // Only once the list is painted (`read`): before that the head keeps its usual emphasis.
+  // Only once the list is painted (`read`) and its items are in: before that the head keeps its usual emphasis.
   const isEmpty = !!current && read && items !== undefined && shown.length === 0;
   const submitVariant = !isEmpty ? 'ghost' : phone ? 'secondary' : 'primary';
   // In every state: the phone keeps the field wide with the short verb (the placeholder says what goes in).
@@ -445,7 +445,7 @@ export default function ListsPage() {
             />
           ) : null}
           {isEmpty ? (
-            // M10: the next step is the field right below, with its button "Artikel eintragen". The wrapper keeps
+            // M10: the next step is the field right below, with its verb button (`submitLabel`). The wrapper keeps
             // the empty state from taking the page's free height (it pushed the field to the bottom edge).
             <div className={styles.emptyHold}>
               <EmptyState
