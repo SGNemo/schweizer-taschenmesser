@@ -140,7 +140,7 @@ export function areaTarget(area: NavArea): string {
 export const isUnder = (pathname: string, to: string) =>
   pathname === to || pathname.startsWith(`${to}/`);
 
-/** The area an enabled module path belongs to (longest prefix match), if any. */
+/** The area an enabled module path belongs to (the first area with an item at or above the path), if any. */
 export function areaOfPath(tree: NavTree, pathname: string): NavArea | undefined {
   return tree.areas.find((a) => a.items.some((i) => isUnder(pathname, i.to)));
 }

@@ -165,7 +165,8 @@
   scroll-margin-top: var(--space-5);
 }
 /* Sunken inside a raised card (the default); a zone that sits on the page itself (`on="page"`) steps up instead,
-   unless a settings group card around it is raised (not on a settings tab, where groups lie on the page). */
+   unless a settings group card around it is raised (not on a settings tab, where groups lie on the page). The three
+   rules below win by weight and order: keep them together. */
 .danger[data-on='page'] {
   background: var(--surface-raised);
 }
