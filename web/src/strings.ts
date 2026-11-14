@@ -367,7 +367,7 @@ export const de = {
       persona: ['Persona', 'Wegwerf-Mail', 'Fake-Daten', 'Anmeldung', 'Testdaten'],
       notifications: ['Push', 'Erlaubnis', 'Erinnerung'],
       'browser-extension': ['Brave', 'Chrome', 'Autofill'],
-      sync: ['Server', 'Token', 'Geräte', 'Ende-zu-Ende', 'Passphrase'],
+      sync: ['Server', 'Token', 'Geräte', 'Ende-zu-Ende', 'Passwortsatz', 'Passphrase'],
       backup: ['Export', 'Import', 'Sicherung', 'Wiederherstellen', 'Automatisch'],
       'ai-switch': [
         'KI aus',
@@ -3476,7 +3476,7 @@ export const de = {
     connected: (host: string) => `Verbunden mit ${host}`,
     encryptedBadge: 'Verschlüsselt',
     plainBadge: 'Unverschlüsselt',
-    lastSync: 'Zuletzt synchronisiert',
+    lastSync: 'Zuletzt abgeglichen',
     never: 'noch nicht',
     pending: (n: number) =>
       n === 0 ? 'Alles gesendet' : n === 1 ? '1 Änderung wartet' : `${n} Änderungen warten`,
@@ -5853,7 +5853,7 @@ export const de = {
   },
   help: {
     label: 'Hilfe',
-    sync: 'Der Sync-Server ist dein eigener kleiner Server, der die Daten mehrerer Geräte abgleicht. Auf Wunsch werden die Daten Ende-zu-Ende verschlüsselt: Der Server sieht dann nur unlesbare Werte, und die Passphrase kennen nur deine Geräte.',
+    sync: 'Der Sync-Server ist dein eigener kleiner Server, der die Daten mehrerer Geräte abgleicht. Auf Wunsch werden die Daten Ende-zu-Ende verschlüsselt: Der Server sieht dann nur unlesbare Werte, und den Passwortsatz kennen nur deine Geräte.',
     aiLocal:
       'Ein kleines Sprachmodell läuft nur auf diesem Gerät und versteht Sätze, die die festen Regeln nicht kennen – ohne Token, ohne Internet. Es wird erst nach deiner Zustimmung heruntergeladen (Größe, Quelle und Prüfsumme siehst du vorher) und prüft den Download selbst.',
     aiWrite:
