@@ -338,6 +338,40 @@ describe('music page', () => {
     expect(screen.getByTestId('music-start')).toBeTruthy();
   });
 
+  it('a failed player read lets head and page show before the 1.5 s bound (0b-8)', async () => {
+    await connect();
+    const offline = () => {
+      throw new TypeError('Failed to fetch');
+    };
+    playerState = offline;
+    router = (c) => (c.path.startsWith('/me/player/devices') ? offline() : undefined);
+    const started = performance.now();
+    await renderPage();
+    await waitFor(() => expect(sent('GET', '/me/player/devices')).toHaveLength(1));
+    await waitFor(() => expect(screen.getByTestId('page')).not.toHaveAttribute('data-held'));
+    // Released by the failed reads themselves, not by the bound (`STATUS_WAIT_MS` = 1.5 s).
+    expect(performance.now() - started).toBeLessThan(1500);
+    expect(screen.getByTestId('music-now')).toHaveTextContent('Jetztlied');
+  });
+
+  it("the player's second round of reads never holds the page again (0b-8)", async () => {
+    await connect();
+    await renderPage();
+    const page = screen.getByTestId('page');
+    await waitFor(() => expect(page).not.toHaveAttribute('data-held'));
+    const rounds = sent('GET', '/me/player').filter((c) => c.path === '/me/player').length;
+    // The next round's state read stays pending: pausing changes what plays, so the player reads again.
+    playerState = () => new Promise<Response>(() => undefined) as unknown as Response;
+    fireEvent.click(screen.getByTestId('player-toggle'));
+    await waitFor(() =>
+      expect(sent('GET', '/me/player').filter((c) => c.path === '/me/player').length).toBe(
+        rounds + 1,
+      ),
+    );
+    expect(page).not.toHaveAttribute('data-held');
+    expect(screen.getByTestId('module-frame').className).not.toMatch(/held/);
+  });
+
   it('not connected: the calm next step shows once the status is read, without waiting', async () => {
     await renderPage();
     await screen.findByTestId('music-empty');
