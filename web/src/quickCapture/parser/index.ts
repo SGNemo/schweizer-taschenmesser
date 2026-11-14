@@ -113,8 +113,9 @@ const BY_DAY = word(
   String.raw`(?:bis|spätestens)\s+(?:(?:zum\s+|am\s+)?(?:montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|sonnabend|morgen|übermorgen|heute)|\d{1,2}\.\d{1,2}\.?)`,
 );
 /** A start before „bis <Tag>“ makes it a span („Fr 18 Uhr bis So Hütte“, „Konferenz 10.11. 9 Uhr bis 12.11.“): an event. */
-const SPAN_START =
-  /\d{1,2}(?::\d{2})?\s*uhr|\d{1,2}:\d{2}|\d{1,2}\.\d{1,2}\.|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|sonnabend|morgen|heute/i;
+const SPAN_START = word(
+  String.raw`\d{1,2}(?::\d{2})?\s*uhr|\d{1,2}:\d{2}|\d{1,2}\.\d{1,2}\.|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|sonnabend|morgen|heute`,
+);
 /** „bis So“ as a deadline: only when nothing before it already names a day or a time. */
 function byDayDeadline(t: string): boolean {
   const m = BY_DAY.exec(t);

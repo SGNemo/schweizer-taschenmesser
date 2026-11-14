@@ -338,7 +338,8 @@ export default function PlannerPage() {
             : t.planner.head.full;
   // U13: the detail line names the next step – today's first thing. W13: with time today and nothing on it, a calm
   // line – unless the whole board is empty, where the empty state already says it.
-  const boardEmpty = board?.days.every((d) => d.rows.length === 0) ?? true;
+  const boardEmpty =
+    (board?.days.every((d) => d.rows.length === 0) ?? true) && !board?.waiting.length;
   const headDetail = !todayDay
     ? undefined
     : !todayDay.off && todayDay.rows[0]

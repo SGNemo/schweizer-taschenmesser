@@ -393,4 +393,5 @@ export const CORPUS: CorpusCase[] = [
   },
   { from: 'WE-W04', text: 'Konferenz 10.11. 9 Uhr bis 12.11.', type: 'event', date: '2026-11-10' },
   { from: 'WE-W04', text: 'Seminar Mo 9 Uhr bis Mi', type: 'event', date: '2026-11-02' },
+  { from: 'WE-W04', text: 'Montage Regal bis Sonntag 18 Uhr', type: 'todo', date: '2026-11-01' },
 ];
