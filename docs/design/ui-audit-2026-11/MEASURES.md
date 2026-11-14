@@ -5,23 +5,23 @@ Drei Teile: **Nachher – Abnahme 0b-8** (Vorher → Nachher, 2026-11-14), **Nac
 ## Nachher – Abnahme 0b-8 (2026-11-14)
 
 - **Stand:** `develop` 34c2de10c (alle Pakete bis 0b-7, 0b-E, 0b-R, die Modul-Pakete und die 0b-8-Themen B, C1–C6, D gemergt), 29 Module (neu: Uhr erstmals, Routinen, Gerätestatus). Seed `medium`, alle Module an, Desktop posiert als Windows-App wie im Audit. Acht Läufe: 1920×1080 und 412×915, hell und dunkel, Seed und leer.
-- **Werkzeug korrigiert** ([tools/audit-tour.spec.ts](tools/audit-tour.spec.ts), Zeile 39 der 0b-8-Liste): Animationen ohne Kappung bei 10; `__cls` vor jedem Modul-Dialog und der Schnellerfassung auf 0 (vorher nur vor Palette und Werkzeug-Panel); Uhr, Routinen und Gerätestatus in der Tour; Haupt-Dialog über „<Ding> eintragen“; Chroma-Maß neben der Sättigung. **Kopf px:** der Messpunkt des Audits (`[data-size]`) findet den 4.0-Kopf nicht; die Kopfhöhen der Modulseiten stammen aus einem zweiten Durchgang mit `main [data-head]` (seitdem im Werkzeug). Vergleich: [tools/compare.mjs](tools/compare.mjs).
-- **Messlücke:** am Handy öffnet die Tour keinen Modul-Dialog mehr (die Hauptaktion ist das Plus der Bottom-Bar, nicht mehr ein Knopf in `#main`); Dialoge sind nur am Desktop gemessen.
+- **Werkzeug korrigiert** ([tools/audit-tour.spec.ts](tools/audit-tour.spec.ts), Zeile 39 der 0b-8-Liste): Animationen ohne Kappung bei 10; `__cls` vor jedem Modul-Dialog und der Schnellerfassung auf 0 (vorher nur vor Palette und Werkzeug-Panel); Uhr, Routinen und Gerätestatus in der Tour; Haupt-Dialog über „<Ding> eintragen“; Chroma-Maß neben der Sättigung; nach dem Council: Tonstufen zählen in „getönt“ als neutral, Handy-Dialoge und Handy-Schnellerfassung über das Plus der Bottom-Bar, Kopf über `main [data-head]`, Fremd-Anfragen und WebSockets gesperrt. **Kopf px:** der Messpunkt des Audits (`[data-size]`) fand den 4.0-Kopf nicht; die Kopfhöhen der Desktop-Modulseiten stammen aus einem zweiten Durchgang mit `main [data-head]`. **Handy (Seed, hell und dunkel)** ist mit dem korrigierten Werkzeug ein zweites Mal gelaufen; die Handy-Zahlen hier stammen aus diesem Lauf. Vergleich: [tools/compare.mjs](tools/compare.mjs).
+- **Nicht vergleichbar:** „Inhalt ab y“ des Audits auf Bibliothek, Werkzeugen und Einstellungen (93/169/174) maß Elemente in der Kopfkarte – dort steht „n/v“, und diese Seiten fehlen in den Medianen. **„getönt“ dunkel (Desktop):** die Sättigung zählt die kühlen Grautöne der Tonstufen, deshalb 281 → 573; hell sind es 65 (Spalte „nachher hell“). **Messlücken:** Tour nur auf Deutsch; Desktop-Dialoge im Lauf vor der Korrektur.
 - **„Farbe Fläche“ im Dunkeln:** die Sättigung (max − min) / max wertet die leicht kühlen Grautöne des dunklen Themes als Farbe; deshalb steigt die Summe dunkel (870 → 995), während Chroma (max − min) / 255 hell und dunkel gleich zählt (Desktop 243 / 254, Handy 100 / 99, Tabelle „Sättigung vs. Chroma“). Antwort auf Svens Frage 1 zu #796: Chroma trägt in beiden Themes; Vorschlag für die Ratsche als Follow-up.
-- **Layout-Sprung (Befund, eigener Fix-PR):** Wetter 0,62 (Desktop) / 0,86 (Handy) beim ersten Öffnen – der Hinweis über dem Kopf kommt nach den Daten und schiebt Kopf und Seite um 140–160 px; Listen 0,32 / 0,64 – die Zeilen erscheinen nach dem Eintragen-Feld; Chat am Handy 0,07–0,11 – ein Block erscheint über dem Verlauf. In zwei bis vier Läufen und in einer eigenen Nachmessung, unabhängig vom Theme. Sonst keine Seite mit CLS ≥ 0,05; Dialoge, Palette, Werkzeug-Panel und Schnellerfassung 0.
+- **Layout-Sprung (Befund, eigener Fix-PR):** Wetter 0,62 (Desktop) / 0,86 (Handy) beim ersten Öffnen – der Hinweis über dem Kopf kommt nach den Daten und schiebt Kopf und Seite um 140–160 px; Listen 0,32 / 0,64 – die Zeilen erscheinen nach dem Eintragen-Feld; Chat am Handy 0,07–0,11 – ein Block erscheint über dem Verlauf. Nicht in jedem Lauf (Wetter: Desktop hell, Handy dunkel; Listen: Desktop hell, Handy hell; Chat: drei von vier Handy-Läufen), in einer eigenen Nachmessung je Theme bestätigt. Einrichtung Schritt 12/13 am Handy hell 0,07 und Musik am Handy hell 0,12 (je ein Lauf). **Handy-Dialoge** (über das Plus, 19 Module): alle ohne Sprung, Unterlage und Fitness 805 px hoch bei 915 px Fenster, Termin 784, Routine 744. Sonst keine Seite mit CLS ≥ 0,05; Dialoge, Palette, Werkzeug-Panel und Schnellerfassung 0.
 - **axe:** in allen acht Läufen keine Verletzung „serious“/„critical“. **Überlauf:** keiner.
 - **Bewegung:** auf jeder Seite genau eine Animation (`pageCrossfade` beim Seitenwechsel); die Einblendung je Zeile (`itemIn`) ist weg. Die Einrichtungsschritte melden `transition: all` mit 0,01 ms (Reduced-Motion-Wert, keine sichtbare Bewegung).
-- **Rahmen:** nur noch in den zwei Signatur-Blöcken (Vorräte 14, Unterlagen 34) und je einer auf Einstellungen → Sync, Verbindungen, Entwickler, Über, Übersicht „Ausführlich“ und Schnellerfassung. **Schatten:** einer (Wetter-Bühne).
+- **Rahmen:** nur noch in den zwei Signatur-Blöcken (Vorräte 14, Unterlagen 34) und je einer auf Einstellungen → Sync, Verbindungen, Entwickler, Über und Übersicht „Ausführlich“, dazu einer in der Schnellerfassung. **Schatten:** einer (Wetter-Bühne).
 
 ### Kurzfassung vorher → nachher
 
 | Lauf | Kennzahl | Aktionen | davon Chrome | Inhalt ab y | Kopf px | Farbe Text | Farbe Fläche | Verläufe | Schriftgrößen |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Desktop 1920 dunkel, Seed | Median (Seiten in beiden Läufen) | 35 → 30 | 16 → 8 | 368 → 265 | 163 → 84 | 4 → 1 | 17 → 20 | 2 → 0 | 7 |
+| Desktop 1920 dunkel, Seed | Median (Seiten in beiden Läufen) | 35 → 30 | 16 → 8 | 543 → 258 | 163 → 84 | 4 → 1 | 17 → 20 | 2 → 0 | 7 |
 | Desktop 1920 dunkel, Seed | Summe | 1715 → 1487 | 809 → 477 | – | – | 204 → 86 | 870 → 995 | 110 → 32 | 339 → 338 |
-| Handy 412 dunkel, Seed | Median (Seiten in beiden Läufen) | 14 | 11 → 8 | 356 → 319 | 208 → 96 | 2 → 1 | 5 → 6 | 2 → 0 | 7 |
+| Handy 412 dunkel, Seed | Median (Seiten in beiden Läufen) | 14 | 11 → 8 | 642 → 282 | 208 → 96 | 2 → 1 | 5 → 6 | 2 → 0 | 7 |
 | Handy 412 dunkel, Seed | Summe | 638 → 722 | 490 → 449 | – | – | 103 → 45 | 313 → 375 | 83 → 22 | 290 → 310 |
-| Desktop 1920 dunkel, leer | Median (Seiten in beiden Läufen) | 18 → 12 | 14 → 7 | 174 → 265 | 163 → 84 | 2 → 1 | 10 → 6 | 2 → 0 | 6 |
+| Desktop 1920 dunkel, leer | Median (Seiten in beiden Läufen) | 18 → 12 | 14 → 7 | 415 → 256 | 163 → 84 | 2 → 1 | 10 → 6 | 2 → 0 | 6 |
 | Desktop 1920 dunkel, leer | Summe | 1183 → 861 | 729 → 386 | – | – | 160 → 56 | 604 → 646 | 77 → 11 | 290 |
 
 ### Reizlast vorher → nachher – Desktop 1920 dunkel, Seed
@@ -57,26 +57,26 @@ Drei Teile: **Nachher – Abnahme 0b-8** (Vorher → Nachher, 2026-11-14), **Nac
 | clock | neu 14 | neu 14 | – | neu 69 | neu 1 | neu 3 | neu 0 | neu 6 |
 | routines | neu 12 | neu 6 | neu 250 | neu 117 | neu 2 | neu 3 | neu 0 | neu 7 |
 | device | neu 8 | neu 1 | neu 154 | neu 69 | neu 0 | neu 1 | neu 0 | neu 5 |
-| library | 17 → 20 | 6 | 93 | 223 | 1 → 0 | 56 → 70 | 3 | 7 |
-| library-vault | 4 | 4 | 145 | 133 | 0 | 11 → 13 | 2 → 1 | 6 |
-| tools | 24 → 23 | 4 | 93 → 185 | 207 → 84 | 1 → 0 | 22 → 19 | 1 → 0 | 7 → 5 |
-| settings | 36 → 34 | 12 | 174 → 93 | 368 → 200 | 4 → 0 | 19 → 26 | 1 | 6 → 5 |
-| settings-einrichtung | 35 → 25 | 19 → 8 | 174 → 294 | 133 → 84 | 5 → 1 | 19 → 20 | 2 → 1 | 7 → 8 |
-| settings-allgemein | 45 → 37 | 18 → 9 | 174 → 265 | 133 → 84 | 5 → 1 | 17 → 20 | 1 → 0 | 6 → 7 |
-| settings-darstellung | 67 → 58 | 46 → 36 | 174 → 265 | 133 → 84 | 22 → 5 | 34 → 56 | 1 → 0 | 6 → 7 |
-| settings-barrierefreiheit | 42 → 39 | 23 → 19 | 174 → 357 | 133 → 84 | 9 → 0 | 18 → 27 | 1 → 0 | 7 → 8 |
-| settings-module | 47 → 33 | 13 → 2 | 174 → 357 | 133 → 84 | 5 → 0 | 35 → 33 | 1 → 0 | 7 → 8 |
-| settings-werkzeuge | 64 → 41 | 48 → 24 | 174 → 357 | 133 → 84 | 4 → 0 | 30 → 33 | 1 → 0 | 6 → 7 |
-| settings-benachrichtigungen | 44 → 35 | 23 → 13 | 174 → 331 | 133 → 84 | 8 → 1 | 20 → 29 | 1 → 0 | 7 → 8 |
-| settings-sicherheit | 41 → 31 | 25 → 14 | 174 → 331 | 133 → 84 | 7 → 0 | 17 → 22 | 1 → 0 | 5 → 6 |
-| settings-sync | 32 → 24 | 16 → 7 | 174 → 331 | 133 → 84 | 4 → 0 | 18 → 22 | 1 → 0 | 7 → 8 |
-| settings-ki | 40 → 31 | 16 → 6 | 174 → 265 | 133 → 84 | 6 → 2 | 20 → 25 | 1 → 0 | 7 → 8 |
-| settings-verbindungen | 38 → 31 | 14 → 5 | 174 → 265 | 133 → 84 | 4 → 1 | 17 → 25 | 1 → 0 | 7 → 8 |
-| settings-schnellerfassung | 33 → 23 | 17 → 6 | 174 → 294 | 133 → 84 | 4 → 0 | 18 → 24 | 1 → 0 | 8 → 9 |
-| settings-updates | 29 → 19 | 13 → 2 | 174 → 331 | 133 → 84 | 4 → 0 | 17 → 20 | 1 → 0 | 6 → 7 |
-| settings-entwickler | 34 → 24 | 18 → 7 | 174 → 331 | 133 → 84 | 5 → 1 | 17 → 19 | 1 → 0 | 7 → 8 |
-| settings-ueber | 42 → 32 | 13 → 2 | 174 → 265 | 133 → 84 | 5 → 2 | 17 → 19 | 1 → 0 | 5 → 7 |
-| settings-module-finance | 38 → 28 | 21 → 10 | 174 → 326 | 173 → 108 | 5 → 0 | 20 → 24 | 2 → 0 | 5 → 6 |
+| library | 17 → 20 | 6 | n/v → 93 | 223 | 1 → 0 | 56 → 70 | 3 | 7 |
+| library-vault | 4 | 4 | n/v → 145 | 133 | 0 | 11 → 13 | 2 → 1 | 6 |
+| tools | 24 → 23 | 4 | n/v → 185 | 207 → 84 | 1 → 0 | 22 → 19 | 1 → 0 | 7 → 5 |
+| settings | 36 → 34 | 12 | n/v → 93 | 368 → 200 | 4 → 0 | 19 → 26 | 1 | 6 → 5 |
+| settings-einrichtung | 35 → 25 | 19 → 8 | n/v → 294 | 133 → 84 | 5 → 1 | 19 → 20 | 2 → 1 | 7 → 8 |
+| settings-allgemein | 45 → 37 | 18 → 9 | n/v → 265 | 133 → 84 | 5 → 1 | 17 → 20 | 1 → 0 | 6 → 7 |
+| settings-darstellung | 67 → 58 | 46 → 36 | n/v → 265 | 133 → 84 | 22 → 5 | 34 → 56 | 1 → 0 | 6 → 7 |
+| settings-barrierefreiheit | 42 → 39 | 23 → 19 | n/v → 357 | 133 → 84 | 9 → 0 | 18 → 27 | 1 → 0 | 7 → 8 |
+| settings-module | 47 → 33 | 13 → 2 | n/v → 357 | 133 → 84 | 5 → 0 | 35 → 33 | 1 → 0 | 7 → 8 |
+| settings-werkzeuge | 64 → 41 | 48 → 24 | n/v → 357 | 133 → 84 | 4 → 0 | 30 → 33 | 1 → 0 | 6 → 7 |
+| settings-benachrichtigungen | 44 → 35 | 23 → 13 | n/v → 331 | 133 → 84 | 8 → 1 | 20 → 29 | 1 → 0 | 7 → 8 |
+| settings-sicherheit | 41 → 31 | 25 → 14 | n/v → 331 | 133 → 84 | 7 → 0 | 17 → 22 | 1 → 0 | 5 → 6 |
+| settings-sync | 32 → 24 | 16 → 7 | n/v → 331 | 133 → 84 | 4 → 0 | 18 → 22 | 1 → 0 | 7 → 8 |
+| settings-ki | 40 → 31 | 16 → 6 | n/v → 265 | 133 → 84 | 6 → 2 | 20 → 25 | 1 → 0 | 7 → 8 |
+| settings-verbindungen | 38 → 31 | 14 → 5 | n/v → 265 | 133 → 84 | 4 → 1 | 17 → 25 | 1 → 0 | 7 → 8 |
+| settings-schnellerfassung | 33 → 23 | 17 → 6 | n/v → 294 | 133 → 84 | 4 → 0 | 18 → 24 | 1 → 0 | 8 → 9 |
+| settings-updates | 29 → 19 | 13 → 2 | n/v → 331 | 133 → 84 | 4 → 0 | 17 → 20 | 1 → 0 | 6 → 7 |
+| settings-entwickler | 34 → 24 | 18 → 7 | n/v → 331 | 133 → 84 | 5 → 1 | 17 → 19 | 1 → 0 | 7 → 8 |
+| settings-ueber | 42 → 32 | 13 → 2 | n/v → 265 | 133 → 84 | 5 → 2 | 17 → 19 | 1 → 0 | 5 → 7 |
+| settings-module-finance | 38 → 28 | 21 → 10 | n/v → 326 | 173 → 108 | 5 → 0 | 20 → 24 | 2 → 0 | 5 → 6 |
 | übersicht-ruhig | 25 → 22 | 8 → 7 | 240 → 221 | – | 5 → 2 | 14 → 12 | 3 | 5 |
 | übersicht-ausführlich | 34 → 32 | 6 → 5 | 240 → 221 | 72 | 5 → 2 | 28 → 34 | 3 → 0 | 6 |
 
@@ -103,32 +103,32 @@ Drei Teile: **Nachher – Abnahme 0b-8** (Vorher → Nachher, 2026-11-14), **Nac
 | notes | 27 | 27 | – | 133 → 93 | 2 → 0 | 11 → 8 | 2 → 0 | 6 |
 | chat | 11 → 9 | 10 → 8 | 356 → 174 | 159 → 93 | 1 | 9 → 4 | 2 → 0 | 5 → 7 |
 | feeds | 17 → 21 | 11 → 9 | 690 → 278 | 306 → 93 | 1 → 0 | 11 → 4 | 2 → 0 | 9 → 8 |
-| music | 22 → 23 | 22 → 21 | 710 → 603 | 208 → 140 | 0 → 1 | 5 → 2 | 2 → 1 | 6 → 7 |
+| music | 22 → 23 | 22 → 21 | 710 → 603 | 208 → 204 | 0 → 1 | 5 → 2 | 2 → 1 | 6 → 7 |
 | vault | 18 → 19 | 17 → 13 | 817 → 396 | 307 → 141 | 1 → 4 | 13 → 10 | 2 → 0 | 7 → 8 |
 | accounts | 5 → 4 | 5 → 4 | – | 141 → 93 | 1 → 0 | 3 | 2 → 0 | 5 → 6 |
 | clock | neu 21 | neu 21 | – | neu 93 | neu 0 | neu 2 | neu 0 | neu 8 |
 | routines | neu 14 | neu 8 | neu 266 | neu 141 | neu 1 | neu 2 | neu 0 | neu 8 |
 | device | neu 6 | neu 0 | neu 130 | neu 49 | neu 0 | neu 1 | neu 0 | neu 5 |
-| library | 9 | 6 | 93 | 232 | 1 → 0 | 6 | 1 | 7 |
-| library-vault | 4 | 4 | 145 | 209 | 0 | 11 → 13 | 2 → 1 | 6 |
-| tools | 8 → 13 | 4 | 93 → 217 | 212 → 120 | 1 → 0 | 6 → 10 | 1 → 0 | 7 → 5 |
-| settings | 19 → 10 | 12 → 1 | 169 | 338 → 248 | 4 → 0 | 1 → 8 | 1 | 5 |
-| settings-einrichtung | 6 → 8 | 6 → 8 | 169 → 306 | 137 → 96 | 2 → 1 | 3 → 2 | 2 → 1 | 7 → 8 |
-| settings-allgemein | 7 | 7 | 169 → 319 | 113 → 72 | 2 → 0 | 0 → 2 | 1 → 0 | 5 → 6 |
-| settings-darstellung | 19 → 26 | 19 → 26 | 169 → 319 | 113 → 72 | 14 → 4 | 12 → 27 | 1 → 0 | 6 → 7 |
-| settings-barrierefreiheit | 9 → 11 | 9 → 11 | 169 → 390 | 113 → 72 | 3 → 0 | 1 → 4 | 1 → 0 | 6 → 7 |
-| settings-module | 7 → 9 | 3 | 169 → 368 | 113 → 72 | 2 → 0 | 4 → 7 | 1 → 0 | 7 → 8 |
-| settings-werkzeuge | 14 → 15 | 14 → 15 | 169 → 368 | 113 → 72 | 1 → 0 | 7 | 1 → 0 | 6 → 7 |
-| settings-benachrichtigungen | 6 | 6 | 169 → 319 | 113 → 72 | 3 → 1 | 3 → 6 | 1 → 0 | 7 → 8 |
-| settings-sicherheit | 7 → 8 | 7 → 8 | 169 → 319 | 137 → 72 | 3 → 0 | 0 → 2 | 1 → 0 | 5 → 6 |
-| settings-sync | 5 | 5 | 169 → 319 | 113 → 72 | 1 → 0 | 2 → 3 | 1 → 0 | 7 → 8 |
-| settings-ki | 6 | 6 | 169 → 319 | 113 → 72 | 3 → 1 | 3 → 6 | 1 → 0 | 7 → 8 |
-| settings-verbindungen | 3 | 3 | 169 → 380 | 113 → 72 | 1 → 0 | 0 → 6 | 1 → 0 | 7 → 8 |
-| settings-schnellerfassung | 5 → 6 | 5 → 6 | 169 → 282 | 113 → 72 | 1 → 0 | 1 → 5 | 1 → 0 | 7 → 8 |
-| settings-updates | 3 | 3 | 169 → 319 | 113 → 72 | 1 → 0 | 1 → 2 | 1 → 0 | 6 → 7 |
-| settings-entwickler | 6 → 7 | 6 → 7 | 169 → 319 | 113 → 72 | 2 → 1 | 1 → 2 | 1 → 0 | 6 → 7 |
-| settings-ueber | 3 | 3 | 169 → 290 | 113 → 72 | 2 → 1 | 1 | 1 → 0 | 5 → 6 |
-| settings-module-finance | 5 → 8 | 5 → 8 | 169 → 314 | 249 → 96 | 1 → 0 | 4 → 6 | 2 → 0 | 5 → 6 |
+| library | 9 | 6 | n/v → 93 | 232 | 1 → 0 | 6 | 1 | 7 |
+| library-vault | 4 | 4 | n/v → 145 | 209 | 0 | 11 → 13 | 2 → 1 | 6 |
+| tools | 8 → 13 | 4 | n/v → 217 | 212 → 120 | 1 → 0 | 6 → 10 | 1 → 0 | 7 → 5 |
+| settings | 19 → 10 | 12 → 1 | n/v → 169 | 338 → 248 | 4 → 0 | 1 → 8 | 1 | 5 |
+| settings-einrichtung | 6 → 8 | 6 → 8 | n/v → 306 | 137 → 96 | 2 → 1 | 3 → 2 | 2 → 1 | 7 → 8 |
+| settings-allgemein | 7 | 7 | n/v → 319 | 113 → 72 | 2 → 0 | 0 → 2 | 1 → 0 | 5 → 6 |
+| settings-darstellung | 19 → 26 | 19 → 26 | n/v → 319 | 113 → 72 | 14 → 4 | 12 → 27 | 1 → 0 | 6 → 7 |
+| settings-barrierefreiheit | 9 → 11 | 9 → 11 | n/v → 390 | 113 → 72 | 3 → 0 | 1 → 4 | 1 → 0 | 6 → 7 |
+| settings-module | 7 → 9 | 3 | n/v → 368 | 113 → 72 | 2 → 0 | 4 → 7 | 1 → 0 | 7 → 8 |
+| settings-werkzeuge | 14 → 15 | 14 → 15 | n/v → 368 | 113 → 72 | 1 → 0 | 7 | 1 → 0 | 6 → 7 |
+| settings-benachrichtigungen | 6 | 6 | n/v → 319 | 113 → 72 | 3 → 1 | 3 → 6 | 1 → 0 | 7 → 8 |
+| settings-sicherheit | 7 → 8 | 7 → 8 | n/v → 319 | 137 → 72 | 3 → 0 | 0 → 2 | 1 → 0 | 5 → 6 |
+| settings-sync | 5 | 5 | n/v → 319 | 113 → 72 | 1 → 0 | 2 → 3 | 1 → 0 | 7 → 8 |
+| settings-ki | 6 | 6 | n/v → 319 | 113 → 72 | 3 → 1 | 3 → 6 | 1 → 0 | 7 → 8 |
+| settings-verbindungen | 3 | 3 | n/v → 380 | 113 → 72 | 1 → 0 | 0 → 6 | 1 → 0 | 7 → 8 |
+| settings-schnellerfassung | 5 → 6 | 5 → 6 | n/v → 282 | 113 → 72 | 1 → 0 | 1 → 5 | 1 → 0 | 7 → 8 |
+| settings-updates | 3 | 3 | n/v → 319 | 113 → 72 | 1 → 0 | 1 → 2 | 1 → 0 | 6 → 7 |
+| settings-entwickler | 6 → 7 | 6 → 7 | n/v → 319 | 113 → 72 | 2 → 1 | 1 → 2 | 1 → 0 | 6 → 7 |
+| settings-ueber | 3 | 3 | n/v → 290 | 113 → 72 | 2 → 1 | 1 | 1 → 0 | 5 → 6 |
+| settings-module-finance | 5 → 8 | 5 → 8 | n/v → 314 | 249 → 96 | 1 → 0 | 4 → 6 | 2 → 0 | 5 → 6 |
 | übersicht-ruhig | 14 → 15 | 5 | 365 → 284 | – | 3 → 1 | 9 → 11 | 3 | 5 |
 | übersicht-ausführlich | 15 | 5 → 4 | 365 → 240 | 72 | 3 → 1 | 10 → 17 | 3 → 0 | 5 |
 
@@ -165,26 +165,26 @@ Drei Teile: **Nachher – Abnahme 0b-8** (Vorher → Nachher, 2026-11-14), **Nac
 | clock | neu 3 | neu 3 | – | neu 69 | neu 1 | neu 2 | neu 0 | neu 6 |
 | routines | neu 6 | neu 6 | – | neu 117 | neu 2 | neu 2 | neu 0 | neu 4 |
 | device | neu 8 | neu 1 | neu 154 | neu 69 | neu 0 | neu 1 | neu 0 | neu 5 |
-| library | 17 → 20 | 6 | 93 | 223 | 1 → 0 | 56 → 70 | 3 | 7 |
-| library-vault | 4 | 4 | 145 | 133 | 0 | 11 → 13 | 2 → 1 | 6 |
-| tools | 24 → 23 | 4 | 93 → 185 | 207 → 84 | 1 → 0 | 22 → 19 | 1 → 0 | 7 → 5 |
-| settings | 36 → 34 | 12 | 174 → 93 | 368 → 200 | 4 → 0 | 19 → 26 | 1 | 6 → 5 |
-| settings-einrichtung | 35 → 25 | 19 → 8 | 174 → 294 | 133 → 84 | 5 → 1 | 20 → 21 | 2 → 1 | 7 → 8 |
-| settings-allgemein | 45 → 37 | 18 → 9 | 174 → 265 | 133 → 84 | 5 → 1 | 17 → 20 | 1 → 0 | 6 → 7 |
-| settings-darstellung | 67 → 58 | 46 → 36 | 174 → 265 | 133 → 84 | 22 → 5 | 34 → 56 | 1 → 0 | 6 → 7 |
-| settings-barrierefreiheit | 42 → 39 | 23 → 19 | 174 → 357 | 133 → 84 | 9 → 0 | 18 → 27 | 1 → 0 | 7 → 8 |
-| settings-module | 47 → 33 | 13 → 2 | 174 → 357 | 133 → 84 | 5 → 0 | 35 → 33 | 1 → 0 | 7 → 8 |
-| settings-werkzeuge | 64 → 41 | 48 → 24 | 174 → 357 | 133 → 84 | 4 → 0 | 30 → 33 | 1 → 0 | 6 → 7 |
-| settings-benachrichtigungen | 44 → 35 | 23 → 13 | 174 → 331 | 133 → 84 | 8 → 1 | 20 → 29 | 1 → 0 | 7 → 8 |
-| settings-sicherheit | 41 → 31 | 25 → 14 | 174 → 331 | 133 → 84 | 7 → 0 | 17 → 22 | 1 → 0 | 5 → 6 |
-| settings-sync | 32 → 24 | 16 → 7 | 174 → 331 | 133 → 84 | 4 → 0 | 18 → 22 | 1 → 0 | 7 → 8 |
-| settings-ki | 40 → 31 | 16 → 6 | 174 → 265 | 133 → 84 | 6 → 2 | 20 → 25 | 1 → 0 | 7 → 8 |
-| settings-verbindungen | 38 → 31 | 14 → 5 | 174 → 265 | 133 → 84 | 4 → 1 | 17 → 25 | 1 → 0 | 7 → 8 |
-| settings-schnellerfassung | 33 → 23 | 17 → 6 | 174 → 294 | 133 → 84 | 4 → 0 | 18 → 24 | 1 → 0 | 8 → 9 |
-| settings-updates | 29 → 19 | 13 → 2 | 174 → 331 | 133 → 84 | 4 → 0 | 17 → 20 | 1 → 0 | 6 → 7 |
-| settings-entwickler | 34 → 24 | 18 → 7 | 174 → 331 | 133 → 84 | 5 → 2 | 17 → 20 | 1 → 0 | 7 → 8 |
-| settings-ueber | 42 → 32 | 13 → 2 | 174 → 265 | 133 → 84 | 5 → 2 | 17 → 19 | 1 → 0 | 5 → 7 |
-| settings-module-finance | 38 → 28 | 21 → 10 | 174 → 326 | 173 → 108 | 5 → 0 | 20 → 24 | 2 → 0 | 5 → 6 |
+| library | 17 → 20 | 6 | n/v → 93 | 223 | 1 → 0 | 56 → 70 | 3 | 7 |
+| library-vault | 4 | 4 | n/v → 145 | 133 | 0 | 11 → 13 | 2 → 1 | 6 |
+| tools | 24 → 23 | 4 | n/v → 185 | 207 → 84 | 1 → 0 | 22 → 19 | 1 → 0 | 7 → 5 |
+| settings | 36 → 34 | 12 | n/v → 93 | 368 → 200 | 4 → 0 | 19 → 26 | 1 | 6 → 5 |
+| settings-einrichtung | 35 → 25 | 19 → 8 | n/v → 294 | 133 → 84 | 5 → 1 | 20 → 21 | 2 → 1 | 7 → 8 |
+| settings-allgemein | 45 → 37 | 18 → 9 | n/v → 265 | 133 → 84 | 5 → 1 | 17 → 20 | 1 → 0 | 6 → 7 |
+| settings-darstellung | 67 → 58 | 46 → 36 | n/v → 265 | 133 → 84 | 22 → 5 | 34 → 56 | 1 → 0 | 6 → 7 |
+| settings-barrierefreiheit | 42 → 39 | 23 → 19 | n/v → 357 | 133 → 84 | 9 → 0 | 18 → 27 | 1 → 0 | 7 → 8 |
+| settings-module | 47 → 33 | 13 → 2 | n/v → 357 | 133 → 84 | 5 → 0 | 35 → 33 | 1 → 0 | 7 → 8 |
+| settings-werkzeuge | 64 → 41 | 48 → 24 | n/v → 357 | 133 → 84 | 4 → 0 | 30 → 33 | 1 → 0 | 6 → 7 |
+| settings-benachrichtigungen | 44 → 35 | 23 → 13 | n/v → 331 | 133 → 84 | 8 → 1 | 20 → 29 | 1 → 0 | 7 → 8 |
+| settings-sicherheit | 41 → 31 | 25 → 14 | n/v → 331 | 133 → 84 | 7 → 0 | 17 → 22 | 1 → 0 | 5 → 6 |
+| settings-sync | 32 → 24 | 16 → 7 | n/v → 331 | 133 → 84 | 4 → 0 | 18 → 22 | 1 → 0 | 7 → 8 |
+| settings-ki | 40 → 31 | 16 → 6 | n/v → 265 | 133 → 84 | 6 → 2 | 20 → 25 | 1 → 0 | 7 → 8 |
+| settings-verbindungen | 38 → 31 | 14 → 5 | n/v → 265 | 133 → 84 | 4 → 1 | 17 → 25 | 1 → 0 | 7 → 8 |
+| settings-schnellerfassung | 33 → 23 | 17 → 6 | n/v → 294 | 133 → 84 | 4 → 0 | 18 → 24 | 1 → 0 | 8 → 9 |
+| settings-updates | 29 → 19 | 13 → 2 | n/v → 331 | 133 → 84 | 4 → 0 | 17 → 20 | 1 → 0 | 6 → 7 |
+| settings-entwickler | 34 → 24 | 18 → 7 | n/v → 331 | 133 → 84 | 5 → 2 | 17 → 20 | 1 → 0 | 7 → 8 |
+| settings-ueber | 42 → 32 | 13 → 2 | n/v → 265 | 133 → 84 | 5 → 2 | 17 → 19 | 1 → 0 | 5 → 7 |
+| settings-module-finance | 38 → 28 | 21 → 10 | n/v → 326 | 173 → 108 | 5 → 0 | 20 → 24 | 2 → 0 | 5 → 6 |
 | übersicht-ruhig | 13 → 12 | 10 → 9 | 216 → 197 | – | 3 → 1 | 3 → 6 | 0 | 5 → 4 |
 | übersicht-ausführlich | 27 | 8 | 216 → 197 | 48 | 3 → 1 | 16 → 19 | 0 | 5 → 6 |
 
@@ -243,16 +243,16 @@ Animationen vorher bei 10 gekappt (`≥ 10`), nachher ohne Kappung.
 | settings-entwickler | 1 | 6 → 0 | 1 → 2 | 5 → 1 | 1 |
 | settings-ueber | 2 → 1 | 5 → 0 | 3 → 4 | 6 → 1 | 1 |
 | settings-module-finance | 2 → 0 | 6 → 0 | 2 → 4 | 6 → 1 | 1 |
-| übersicht-ruhig | neu 0 | neu 0 | neu 5 | neu 3 | neu 1 |
-| übersicht-ausführlich | neu 1 | neu 0 | neu 49 | neu 38 | neu 1 |
+| übersicht-ruhig | 0 | 9 → 0 | 1 → 5 | 4 → 3 | 1 |
+| übersicht-ausführlich | 1 | 41 → 0 | 34 → 49 | 36 → 38 | 1 |
 
-| Größe | Summe vorher → nachher | Seiten > 0 vorher → nachher |
-| --- | --- | --- |
-| Rahmen (rundum) | 204 → 52 | 27 → 6 |
-| Schatten | 386 → 1 | 45 → 1 |
-| getönt | 246 → 519 | 46 |
-| --surface-2 | 637 → 464 | 46 → 40 |
-| Animationen | 174 → 46 | 46 |
+| Größe | Summe vorher → nachher (dunkel) | Seiten > 0 vorher → nachher | nachher hell |
+| --- | --- | --- | --- |
+| Rahmen (rundum) | 205 → 53 | 28 → 7 | 53 |
+| Schatten | 436 → 1 | 47 → 1 | 1 |
+| getönt | 281 → 573 | 48 | 65 |
+| --surface-2 | 677 → 505 | 48 → 42 | 520 |
+| Animationen | 176 → 48 | 48 | 51 |
 
 ### Handy: Zeilenhöhen vorher → nachher – 412 dunkel, Seed
 
@@ -385,37 +385,37 @@ Definitionen (aus `audit-tour.spec.ts` `measure()`, je Ansicht im Element `#main
 
 | Seite | Aktionen | davon Chrome | Inhalt ab y | Kopf px | Primär | Farbe Text | Farbe Fläche | Verläufe | Farbe Icon | Wörter | Zeichen | Schriftgrößen | Gewichte | CLS |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| calendar | 58 | 23 | 334 | 141 | 0 | 2 | 21 | 0 | 1 | 97 | 296 | 6 | 3 | 0 |
+| calendar | 58 | 23 | 334 | 141 | 0 | 2 | 21 | 0 | 1 | 97 | 296 | 6 | 3 | 0.00 |
 | planner | 27 | 21 | 328 | 93 | 1 | 2 | 14 | 0 | 1 | 128 | 656 | 8 | 4 | 0 |
-| todos | 46 | 19 | 218 | 141 | 0 | 1 | 17 | 0 | 1 | 100 | 585 | 7 | 4 | 0 |
-| habits | 21 | 13 | 266 | 141 | 0 | 1 | 2 | 0 | 1 | 47 | 273 | 7 | 4 | 0.00 |
+| todos | 46 | 19 | 218 | 141 | 0 | 1 | 17 | 0 | 1 | 100 | 585 | 7 | 4 | 0.00 |
+| habits | 21 | 13 | 266 | 141 | 0 | 1 | 2 | 0 | 1 | 47 | 273 | 7 | 4 | 0 |
 | timetrack | 18 | 17 | 345 | 141 | 1 | 2 | 10 | 0 | 2 | 39 | 240 | 7 | 4 | 0 |
 | weather | 11 | 11 | 105 | 278 | 0 | 1 | 33 | 4 | 4 | 217 | 1040 | 9 | 5 | 0.86 |
-| maps | 38 | 22 | 434 | 141 | 0 | 1 | 26 | 0 | 1 | 78 | 569 | 8 | 4 | 0 |
-| people | 31 | 13 | 282 | 141 | 0 | 1 | 2 | 9 | 1 | 157 | 746 | 8 | 4 | 0.04 |
-| fitness | 19 | 12 | 266 | 141 | 0 | 1 | 5 | 0 | 6 | 127 | 508 | 8 | 4 | 0.00 |
-| finance | 12 | 12 | 343 | 141 | 0 | 1 | 6 | 1 | 1 | 72 | 401 | 6 | 4 | 0.00 |
+| maps | 38 | 22 | 434 | 141 | 0 | 1 | 26 | 0 | 1 | 78 | 569 | 8 | 4 | 0.03 |
+| people | 31 | 13 | 282 | 141 | 0 | 1 | 2 | 9 | 1 | 157 | 746 | 8 | 4 | 0 |
+| fitness | 19 | 12 | 266 | 141 | 0 | 1 | 5 | 0 | 6 | 127 | 508 | 8 | 4 | 0 |
+| finance | 12 | 12 | 343 | 141 | 0 | 1 | 6 | 1 | 1 | 72 | 401 | 6 | 4 | 0 |
 | invoices | 26 | 11 | 266 | 141 | 0 | 4 | 10 | 0 | 4 | 87 | 499 | 8 | 4 | 0.00 |
 | subscriptions | 14 | 5 | 234 | 93 | 0 | 3 | 11 | 0 | 3 | 117 | 617 | 8 | 3 | 0 |
 | budgets | 14 | 9 | 274 | 141 | 0 | 2 | 10 | 0 | 1 | 87 | 368 | 6 | 4 | 0.00 |
 | lists | 27 | 12 | 342 | 141 | 0 | 1 | 9 | 0 | 1 | 61 | 305 | 8 | 4 | 0 |
-| pantry | 29 | 8 | 259 | 141 | 0 | 4 | 13 | 0 | 1 | 74 | 369 | 8 | 4 | 0.00 |
+| pantry | 29 | 8 | 259 | 141 | 0 | 4 | 13 | 0 | 1 | 74 | 369 | 8 | 4 | 0 |
 | bookmarks | 31 | 10 | 322 | 141 | 0 | 1 | 2 | 0 | 1 | 100 | 658 | 8 | 4 | 0 |
 | notes | 27 | 27 | – | 93 | 0 | 0 | 8 | 0 | 4 | 126 | 863 | 6 | 3 | 0 |
 | chat | 9 | 8 | 174 | 93 | 1 | 1 | 4 | 0 | 1 | 45 | 326 | 7 | 3 | 0 |
 | feeds | 21 | 9 | 278 | 93 | 0 | 0 | 4 | 0 | 1 | 38 | 321 | 8 | 4 | 0 |
-| music | 23 | 21 | 603 | 140 | 0 | 1 | 2 | 1 | 1 | 30 | 203 | 7 | 3 | 0.03 |
+| music | 23 | 21 | 603 | 204 | 0 | 1 | 2 | 1 | 1 | 30 | 203 | 7 | 3 | 0.03 |
 | vault | 19 | 13 | 396 | 141 | 0 | 4 | 10 | 0 | 1 | 95 | 590 | 8 | 4 | 0 |
 | accounts | 4 | 4 | – | 93 | 1 | 0 | 3 | 0 | 0 | 16 | 130 | 6 | 4 | 0 |
 | clock | 21 | 21 | – | 93 | 0 | 0 | 2 | 0 | 1 | 64 | 332 | 8 | 4 | 0 |
-| routines | 14 | 8 | 266 | 141 | 0 | 1 | 2 | 0 | 0 | 55 | 286 | 8 | 4 | 0.00 |
+| routines | 14 | 8 | 266 | 141 | 0 | 1 | 2 | 0 | 0 | 55 | 286 | 8 | 4 | 0 |
 | device | 6 | 0 | 130 | 49 | 0 | 0 | 1 | 0 | 1 | 64 | 404 | 5 | 3 | 0 |
 | library | 9 | 6 | 93 | 232 | 0 | 0 | 6 | 1 | 3 | 95 | 647 | 7 | 3 | 0 |
 | library-vault | 4 | 4 | 145 | 209 | 0 | 0 | 13 | 1 | 1 | 53 | 379 | 6 | 3 | 0 |
 | tools | 13 | 4 | 217 | 120 | 0 | 0 | 10 | 0 | 5 | 102 | 688 | 5 | 3 | 0 |
-| settings | 10 | 1 | 169 | 248 | 0 | 0 | 8 | 1 | 6 | 66 | 537 | 5 | 2 | 0.01 |
+| settings | 10 | 1 | 169 | 248 | 0 | 0 | 8 | 1 | 6 | 66 | 537 | 5 | 2 | 0 |
 | settings-einrichtung | 8 | 8 | 306 | 96 | 1 | 1 | 2 | 1 | 0 | 43 | 318 | 8 | 3 | 0 |
-| settings-allgemein | 7 | 7 | 319 | 72 | 0 | 0 | 2 | 0 | 0 | 79 | 518 | 6 | 3 | 0.00 |
+| settings-allgemein | 7 | 7 | 319 | 72 | 0 | 0 | 2 | 0 | 0 | 79 | 518 | 6 | 3 | 0 |
 | settings-darstellung | 26 | 26 | 319 | 72 | 0 | 4 | 27 | 0 | 0 | 299 | 1954 | 7 | 4 | 0 |
 | settings-barrierefreiheit | 11 | 11 | 390 | 72 | 0 | 0 | 4 | 0 | 0 | 114 | 808 | 7 | 3 | 0 |
 | settings-module | 9 | 3 | 368 | 72 | 0 | 0 | 7 | 0 | 6 | 64 | 512 | 8 | 3 | 0 |
@@ -429,8 +429,8 @@ Definitionen (aus `audit-tour.spec.ts` `measure()`, je Ansicht im Element `#main
 | settings-updates | 3 | 3 | 319 | 72 | 0 | 0 | 2 | 0 | 0 | 100 | 696 | 7 | 3 | 0 |
 | settings-entwickler | 7 | 7 | 319 | 72 | 1 | 1 | 2 | 0 | 0 | 83 | 595 | 7 | 3 | 0 |
 | settings-ueber | 3 | 3 | 290 | 72 | 0 | 1 | 1 | 0 | 1 | 45 | 355 | 6 | 4 | 0 |
-| settings-module-finance | 8 | 8 | 314 | 96 | 0 | 0 | 6 | 0 | 0 | 133 | 966 | 6 | 3 | 0.00 |
-| übersicht-ruhig | 15 | 5 | 284 | – | 0 | 1 | 11 | 3 | 4 | 77 | 424 | 5 | 4 | 0.02 |
+| settings-module-finance | 8 | 8 | 314 | 96 | 0 | 0 | 6 | 0 | 0 | 133 | 966 | 6 | 3 | 0 |
+| übersicht-ruhig | 15 | 5 | 284 | – | 0 | 1 | 11 | 3 | 4 | 77 | 424 | 5 | 4 | 0 |
 | übersicht-ausführlich | 15 | 4 | 240 | 72 | 0 | 1 | 17 | 0 | 3 | 79 | 460 | 5 | 4 | 0 |
 
 ### Reizlast über dem Falz – 1920x1080-dark, empty
@@ -739,7 +739,7 @@ Definitionen (aus `audit-tour.spec.ts` `measure()`, je Ansicht im Element `#main
 | notes | 93 | – | – |
 | chat | 93 | 174 | 1 · 59 · 59–59 |
 | feeds | 93 | 278 | 6 · 57 · 56–57 |
-| music | 140 | 603 | – |
+| music | 204 | 603 | – |
 | vault | 141 | 396 | 34 · 106 · 84–150 |
 | accounts | 93 | – | – |
 | clock | 93 | – | – |
@@ -772,9 +772,9 @@ Definitionen (aus `audit-tour.spec.ts` `measure()`, je Ansicht im Element `#main
 
 | Seite | Läufe mit CLS ≥ 0,05 |
 | --- | --- |
-| page-weather | D-light/seed 0.62, P-dark/seed 0.86 |
+| page-weather | D-light/seed 0.62, P-dark/seed 0.86, P-light/seed 0.86 |
 | page-lists | D-light/seed 0.32, P-light/seed 0.64 |
-| page-chat | P-dark/empty 0.11, P-light/seed 0.06, P-light/empty 0.10 |
+| page-chat | P-dark/empty 0.11, P-light/empty 0.10 |
 
 ### Handy: kleine Ziele (< 40 px) und abgeschnittener Text – 412 dunkel, Seed
 
@@ -785,6 +785,7 @@ Definitionen (aus `audit-tour.spec.ts` `measure()`, je Ansicht im Element `#main
 | page-calendar--v-plan | 0 |  | 1 | _detail_cxqqv_31 | Heute: Stadtwerke Musterstadt bezahlen. Das reicht für heute. |
 | page-calendar--v-arbeit | 0 |  | 31 | _cellLabel_1979e_129 | Vertragsende: 1 Unterlage; _cellLabel_1979e_129 | Kündigungsfrist: Streaming Plus |
 | page-calendar--v-familie | 0 |  | 31 | _cellLabel_1979e_129 | Vertragsende: 1 Unterlage; _cellLabel_1979e_129 | Kündigungsfrist: Streaming Plus |
+| dialog-calendar | 0 |  | 1 | _recentTitle_1979e_425 | Zahnarzt Dr. Beispiel |
 | page-planner | 2 | 24×24 _check_9n1q8_91 | Termin vereinbaren 9; 24×24 _check_9n1q8_91 | Bücher aussortieren 22 | 1 | _detail_cxqqv_31 | Heute: Stadtwerke Musterstadt bezahlen. Das reicht für heute. |
 | page-todos | 9 | 24×24 _check_aw6sk_88 | Recherche 16; 24×24 _check_aw6sk_88 | Bücher aussortieren 18 | 0 |  |
 | page-invoices | 0 |  | 4 | _title_s8esv_224 | Stadtwerke Musterstadt; _title_s8esv_224 | Internet & Telefon Küstennetz |
