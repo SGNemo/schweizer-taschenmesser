@@ -281,7 +281,9 @@ async function planOf(page: Page) {
 
 /**
  * The number of rows a locator finds once the planner run has settled: two reads 400 ms apart agree (a run
- * may still add or move rows after the page shows them; a fixed wait would be flaky under load).
+ * may still add or move rows after the page shows them; a fixed wait would be flaky under load). 400 ms covers
+ * the run's debounce (50 ms) and a run on this small plan; a run that has not started yet reads as settled too,
+ * so a path whose target is „rows appear“ should wait for them (`toHaveCount`) instead of counting 0 as final.
  */
 async function settledCount(loc: Locator): Promise<number> {
   let last = -1;

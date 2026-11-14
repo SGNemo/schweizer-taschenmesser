@@ -30,7 +30,7 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 9. „Open questions“ in den PR-Texten von #656 (`disk_delete` nur per Attribut `async`?), #632, #490, #492.
 10. Designkontrolle 0b-1 bis 0b-3 (#750): vier Fragen im Bericht ([DESIGN-CHECK](design/ui-audit-2026-11/DESIGN-CHECK-0b-1-3.md)) und welche „sofort“-Befunde als Fix-PRs kommen (alle neun Themen; zuerst G1, Rechnungen bei 1280 px).
 11. #759 (0b-6a Wissen + Bibliothek): vier Ratschen-Treffer freigeben. (ja; die drei Fragen sind beantwortet, siehe Entscheidung; danach Fix-PR „Chat-Plus ohne KI gesperrt“ und 0b-6b)
-12. Wochenende retten: Paket 1 (`fix/plan-weekend-quick`) starten – Prompts in [usecases/wochenende/PACKAGES.md](design/usecases/wochenende/PACKAGES.md), Reihenfolge 1 → 6, 7 parallel nach 1, zuletzt 8.
+12. Wochenende retten: Paket 1 (`fix/plan-weekend-quick`) starten – Prompts in [usecases/wochenende/PACKAGES.md](design/usecases/wochenende/PACKAGES.md), Reihenfolge 1 → 6 nacheinander, 7 nach 5 parallel zu 6, zuletzt 8.
 
 **Handgriffe:**
 
