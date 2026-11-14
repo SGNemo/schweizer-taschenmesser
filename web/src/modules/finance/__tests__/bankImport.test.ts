@@ -308,3 +308,24 @@ describe('the first import into an account that starts at 0', () => {
     expect(again.result.notes.some((n) => n.includes('Kontostand heute laut Bank'))).toBe(false);
   });
 });
+
+describe('B10 (round 5): the preview names the skipped rows', () => {
+  it('line, payee and reason; the rest as a count', async () => {
+    const { skippedNote } = await import('../importer');
+    expect(
+      skippedNote({
+        skipped: 5,
+        skippedRows: [
+          { line: 6, reason: 'amount', value: '1e3', label: 'Max Beispiel' },
+          { line: 7, reason: 'date', value: '31.02.26', label: 'Tankstelle Süd' },
+          { line: 9, reason: 'zero', value: '0,00', label: '' },
+        ],
+      }),
+    ).toBe(
+      '5 Zeilen wurden übersprungen – Zeile 6 (Max Beispiel): Betrag „1e3“ nicht lesbar; Zeile 7 (Tankstelle Süd): Datum „31.02.26“ nicht lesbar; Zeile 9: Betrag 0 und 2 weitere.',
+    );
+    expect(skippedNote({ skipped: 1 })).toBe(
+      '1 Zeile ohne gültiges Datum oder Betrag wurde übersprungen.',
+    );
+  });
+});

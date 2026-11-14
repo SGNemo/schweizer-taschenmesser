@@ -35,13 +35,13 @@ export const tLegal = defineBundle(
       },
       sync: {
         title: 'Sync mit deinem eigenen Server',
-        what: 'Änderungen deiner Einträge und Einstellungen (Sammlung, Eintrags-Id, Feldname, Zeitstempel, Wert). Mit Passphrase werden die Werte Ende-zu-Ende verschlüsselt; Sammlung, Id, Feld und Zeitstempel bleiben für den Server lesbar. Zugangsdaten, Schlüssel und lokale Stände werden nie übertragen.',
+        what: 'Änderungen deiner Einträge und Einstellungen (Sammlung, Eintrags-Id, Feldname, Zeitstempel, Wert). Mit Passwortsatz werden die Werte Ende-zu-Ende verschlüsselt; Sammlung, Id, Feld und Zeitstempel bleiben für den Server lesbar. Zugangsdaten, Schlüssel und lokale Stände werden nie übertragen.',
         to: 'Der Server, dessen Adresse du selbst einträgst und betreibst. Kein Dienst des Betreibers von Nemo.',
         when: 'Nur nach dem Verbinden unter Sync & Backup: beim Start, etwa jede Minute, bei Änderungen.',
       },
       push: {
         title: 'Web-Push-Erinnerungen (optional)',
-        what: 'Titel, Text und Link der Erinnerungen der nächsten zwei Wochen sowie die Push-Adresse deines Browsers. Mit Passphrase verschlüsselt.',
+        what: 'Titel, Text und Link der Erinnerungen der nächsten zwei Wochen sowie die Push-Adresse deines Browsers. Mit Passwortsatz verschlüsselt.',
         to: 'Dein Sync-Server und von dort der Push-Dienst deines Browser-Herstellers (z. B. Google, Mozilla, Apple, Microsoft).',
         when: 'Nur wenn du Push-Erinnerungen einschaltest.',
       },
