@@ -22,7 +22,10 @@ export function withTitle(line: Pick<StatusLine, 'title' | 'status'>): string {
  * data). Never a point, never red; only the words change.
  */
 export const calmPoint = (lines: readonly StatusLine[]): StatusLine | undefined =>
-  needingLook(lines).length === 0 ? lines.find((l) => l.missing && !l.loading) : undefined;
+  // Only the backup line: the words below ("Noch kein Backup") name it, whatever other line might set `missing`.
+  needingLook(lines).length === 0
+    ? lines.find((l) => l.id === 'backup' && l.missing && !l.loading)
+    : undefined;
 
 /**
  * "Nichts Dringendes", "Noch kein Backup" or what needs a look, as one sentence: the one line's own state, or a count.

@@ -30,7 +30,8 @@ export default function DeviceWidget() {
   const calm = calmPoint(counted);
   return (
     <StatusWidget
-      icon={look ? 'alert' : 'ok'}
+      // No backup yet: the backup line's own icon, not the tick of "all well" (still neutral, never a warning).
+      icon={look ? 'alert' : calm ? calm.icon : 'ok'}
       state={summaryText(counted)}
       hint={[backup, sync]
         .filter((l) => counted.includes(l) && l !== calm)
