@@ -3,6 +3,7 @@ import type { NavArea } from '@/core/modules/areas';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Dialog, Icon } from '@/ui';
+import { isUnder } from './BottomNav';
 import styles from './SheetList.module.css';
 
 /** "Mehr": areas that did not fit the bottom bar, then tools, library and settings. */
@@ -17,9 +18,10 @@ export function MoreSheet({
 }) {
   const openTools = useUiStore((s) => s.openTools);
   const { pathname } = useLocation();
-  // The place the bar's "Mehr" stands for is marked here too (M8 follow-up of 0b-8).
-  const here = (to: string, items: { to: string }[] = [{ to }]) =>
-    items.some((i) => pathname === i.to || pathname.startsWith(`${i.to}/`)) ? 'page' : undefined;
+  // The place the bar's "Mehr" stands for is marked here too (M8 follow-up of 0b-8), with the bar's matching (an
+  // area by its modules, as `areaOfPath`). The entry is the current location, not the page itself.
+  const here = (paths: string[]) =>
+    paths.some((to) => isUnder(pathname, to)) ? ('location' as const) : undefined;
   return (
     <Dialog open={open} onClose={onClose} title={t.nav.more}>
       <ul className={styles.list}>
@@ -29,7 +31,7 @@ export function MoreSheet({
               to={a.to}
               className={styles.link}
               onClick={onClose}
-              aria-current={here(a.to, a.items)}
+              aria-current={here(a.items.map((i) => i.to))}
             >
               <Icon name={a.icon} />
               {a.label}
@@ -54,7 +56,7 @@ export function MoreSheet({
             to="/library"
             className={styles.link}
             onClick={onClose}
-            aria-current={here('/library')}
+            aria-current={here(['/library'])}
           >
             <Icon name="grid" />
             {t.nav.library}
@@ -65,7 +67,7 @@ export function MoreSheet({
             to="/settings"
             className={styles.link}
             onClick={onClose}
-            aria-current={here('/settings')}
+            aria-current={here(['/settings'])}
           >
             <Icon name="settings" />
             {t.nav.settings}

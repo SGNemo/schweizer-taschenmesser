@@ -22,11 +22,14 @@
   text-decoration: none;
   cursor: pointer;
 }
-.link:hover {
-  background: var(--surface-2);
+/* Hover only where a pointer hovers: on a phone a tap leaves it behind and it would look like the current entry. */
+@media (hover: hover) {
+  .link:hover:not([aria-current]) {
+    background: var(--surface-2);
+  }
 }
 /* The current place (M8 follow-up of 0b-8): a sunken tone and the weight, like a chosen chip. */
-.link[aria-current='page'] {
+.link[aria-current] {
   background: var(--surface-sunken);
   font-weight: var(--weight-semibold);
 }

@@ -97,7 +97,7 @@ export function SettingsGroup({
 }
 
 /**
- * Destructive actions, set apart from the normal rows: a sunken tone step under a heading with the warning icon
+ * Destructive actions, set apart from the normal rows: a raised tone step under a heading with the warning icon
  * (Identity 4.0, no frame; follow-up 14 of 0b-8). The danger colour stays on the heading and the actions' buttons.
  */
 export function DangerZone({ id, children }: { id?: string; children: ReactNode }) {

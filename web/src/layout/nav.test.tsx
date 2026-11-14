@@ -261,7 +261,10 @@ describe('bottom navigation', () => {
         <MoreSheet open onClose={() => undefined} areas={[household]} />
       </MemoryRouter>,
     );
-    expect(screen.getByRole('link', { name: 'Haushalt' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Haushalt' })).toHaveAttribute(
+      'aria-current',
+      'location',
+    );
     expect(screen.getByRole('link', { name: t.nav.settings })).not.toHaveAttribute('aria-current');
   });
 

@@ -26,7 +26,8 @@
   align-items: center;
   min-height: 28px;
   padding: 0 var(--space-3);
-  border: 0;
+  /* Invisible edge: drawn in forced colours, where the tone step is gone. */
+  border: 1px solid transparent;
   border-radius: var(--radius-full);
   background: var(--surface-2);
   color: var(--text-muted);
@@ -58,7 +59,7 @@
 .type {
   min-height: var(--touch);
   padding: 0 var(--space-3);
-  border: 0;
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
   background: var(--surface-2);
   color: var(--text);
@@ -72,6 +73,12 @@
   box-shadow: inset 0 0 0 1px var(--border-strong);
   color: var(--text);
   font-weight: var(--weight-semibold);
+}
+/* Forced colours drop the ring: the chosen target keeps a drawn edge. */
+@media (forced-colors: active) {
+  .type[aria-checked='true'] {
+    border-color: Highlight;
+  }
 }
 .hint {
   margin: 0;

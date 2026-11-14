@@ -158,9 +158,18 @@
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
+  /* Invisible edge: drawn in forced colours, where the tone step is gone. */
+  border: 1px solid transparent;
   border-radius: var(--radius-lg);
-  background: var(--surface-sunken);
+  background: var(--surface-raised);
   scroll-margin-top: var(--space-5);
+}
+/* Inside a raised group card the step goes the other way; on a settings tab the groups sit on the page, raised wins. */
+.card .danger {
+  background: var(--surface-sunken);
+}
+[data-groups='plain'] .danger {
+  background: var(--surface-raised);
 }
 .dangerTitle {
   display: flex;

@@ -63,7 +63,11 @@ export function usePlusTarget(): PlusTarget {
 }
 
 /** Paths that live under "Mehr" without an area of their own (`MoreSheet`): the library and the settings. */
-const MORE_PATHS = ['/library', '/settings'];
+export const MORE_PATHS = ['/library', '/settings'];
+
+/** Whether `pathname` is `to` or lies below it. */
+export const isUnder = (pathname: string, to: string) =>
+  pathname === to || pathname.startsWith(`${to}/`);
 
 /**
  * Whether the current page is reached through "Mehr" (M8 follow-up of 0b-8): a module of an area beyond the bar's
@@ -75,7 +79,7 @@ export function moreHolds(tree: NavTree, pathname: string): { active: boolean; a
     const inBar = tree.areas.slice(0, BOTTOM_AREA_SLOTS).some((a) => a.id === area.id);
     return inBar ? { active: false } : { active: true, area: area.id };
   }
-  return { active: MORE_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`)) };
+  return { active: MORE_PATHS.some((p) => isUnder(pathname, p)) };
 }
 
 /** Phone: Übersicht · area 1 · plus · area 2 · Mehr (DESIGN-SPEC § 2). The plus is the screen's one filled action. */
