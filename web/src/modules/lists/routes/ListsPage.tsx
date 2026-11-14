@@ -289,7 +289,8 @@ export default function ListsPage() {
   // An empty list's next step is its first entry (follow-up (a) of 0b-8): the field's own button carries the verb and
   // is the page's filled action on the desktop; "Neue Liste" steps back. On the phone the plus stays "Neue Liste"
   // (decided), so the field's button is outlined there. One way in: no second button in the empty state.
-  const isEmpty = items !== undefined && shown.length === 0;
+  // Only once the list is painted (`read`): before that the head keeps its usual emphasis.
+  const isEmpty = !!current && read && shown.length === 0;
   const submitVariant = !isEmpty ? 'ghost' : phone ? 'secondary' : 'primary';
   // The phone keeps the field wide: the short verb there, the placeholder says what goes in.
   const submitLabel = isShopping && !phone ? t.lists.emptyAction : t.lists.addSubmit;
