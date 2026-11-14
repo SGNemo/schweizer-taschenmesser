@@ -236,7 +236,8 @@ export interface ModuleIdentity {
    * below it need the connection, what plays, the player and the start view. The frame lays the notice, the head and
    * the page out unpainted until the page says those reads are back (`useHeadReady`), at most 1.5 s, so nothing that
    * arrives with them pushes down what is already on the screen. Hook: `layout/firstReadHold.ts`. Guards:
-   * `e2e/seed/open-shift.seed.spec.ts`, `open-shift-music.seed.spec.ts`.
+   * `e2e/seed/open-shift.seed.spec.ts`, `open-shift-music.seed.spec.ts`; hold times: `open-hold.seed.spec.ts`. Was
+   * `notice` for the weather until 2026-11.
    */
   firstRead?: boolean;
 }

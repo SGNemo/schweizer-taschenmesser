@@ -20,13 +20,16 @@ import NowPlayingWidget from '../widgets/NowPlayingWidget';
 import type * as Settled from '@/core/status/settled';
 
 /** The frame's hold bound (`STATUS_WAIT_MS`), raised in one test so only the reads themselves can release the hold. */
-const holdBound = vi.hoisted(() => ({ ms: 1500 }));
-vi.mock('@/core/status/settled', async (importOriginal) => ({
-  ...(await importOriginal<typeof Settled>()),
-  get STATUS_WAIT_MS() {
-    return holdBound.ms;
-  },
-}));
+const holdBound = vi.hoisted(() => ({ ms: undefined as number | undefined }));
+vi.mock('@/core/status/settled', async (importOriginal) => {
+  const original = await importOriginal<typeof Settled>();
+  return {
+    ...original,
+    get STATUS_WAIT_MS() {
+      return holdBound.ms ?? original.STATUS_WAIT_MS;
+    },
+  };
+});
 
 const PLAYING = {
   is_playing: true,
@@ -365,7 +368,7 @@ describe('music page', () => {
       });
       expect(screen.getByTestId('music-now')).toHaveTextContent('Jetztlied');
     } finally {
-      holdBound.ms = 1500;
+      holdBound.ms = undefined;
     }
   });
 

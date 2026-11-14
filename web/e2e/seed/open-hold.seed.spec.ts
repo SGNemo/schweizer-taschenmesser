@@ -180,7 +180,11 @@ for (const [device, viewport] of [
         await after();
 
         const runs = [];
-        for (const run of ['first visit', 'second visit', 'slow (1.5 s, CPU 4×)']) {
+        for (const run of [
+          'first visit',
+          'second visit',
+          p.hosts.length ? 'slow (1.5 s, CPU 4×)' : 'slow (CPU 4×)',
+        ]) {
           if (run.startsWith('slow')) await slowDown(page, p.hosts);
           if (run !== 'second visit' && 'fresh' in p) await p.fresh(page);
           const started = Date.now();
