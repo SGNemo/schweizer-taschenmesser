@@ -1,7 +1,18 @@
 import { useState, type FormEvent } from 'react';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
-import { Button, Dialog, IconButton, Icon, ItemList, ItemRow, TextField, TimeField } from '@/ui';
+import {
+  Button,
+  Chip,
+  Chips,
+  Dialog,
+  IconButton,
+  Icon,
+  ItemList,
+  ItemRow,
+  TextField,
+  TimeField,
+} from '@/ui';
 import { validWindow, windowText } from '@/core/plan/windows';
 import {
   addBlocker,
@@ -15,6 +26,9 @@ import {
 import type { BoardDay } from '../board';
 import { capacityLabel, compact } from './capacity';
 import styles from '../routes/planner.module.css';
+
+/** One tap for the usual amounts (W09, use case „Wochenende retten“); −/+ stays for fine steps. */
+export const QUICK_AVAILABLE = [0, 120, 240, 360, 720] as const;
 
 /**
  * The sheet of one day: available time in 30-minute steps, the optional time window (package 5:
@@ -89,6 +103,18 @@ export function DaySheet({
           </IconButton>
         </span>
       </div>
+      <Chips label={t.planner.day.quickLabel}>
+        {QUICK_AVAILABLE.map((min) => (
+          <Chip
+            key={min}
+            label={
+              min === 0 ? t.planner.day.none : min === 720 ? t.planner.day.wholeDay : compact(min)
+            }
+            selected={day.availableMin === min}
+            onClick={() => void setAvailable(day.date, min, titles)}
+          />
+        ))}
+      </Chips>
       <p className={styles.capacity}>{capacityLabel(day)}</p>
       <form className={styles.blockerForm} onSubmit={submitWindow} data-testid="day-window">
         <div className={styles.timeField}>

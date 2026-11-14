@@ -1131,6 +1131,9 @@ export const de = {
       bookIncome: 'Als Einnahme buchen',
       bookLine: (action: string, line: string) => `${action}: ${line}`,
       calmHint: 'Eine Zeile = ein Eintrag. Sortiert wird später.',
+      /** Above the rows when they go to more than one place: „ToDo 9 · Termin 3“ (typed order stays). */
+      kinds: (parts: string[]) => parts.join(' · '),
+      kindsLabel: 'Wohin die Zeilen gehen',
       dunningMatch: (payee: string, due: string) =>
         `Mahnung zu Rechnung ${payee}, fällig ${due} · vermerken`,
       dunningCheck: (payee: string) => `Mahnung ${payee} prüfen`,
@@ -8366,6 +8369,7 @@ export const de = {
       dayOff: 'Heute ist frei.',
       over: (min: string) => `${min} mehr als planbar`,
       first: (title: string) => `Heute: ${title}. Das reicht für heute.`,
+      nothing: 'Noch nichts geplant.',
       nextFree: (day: string, free: string) => `Heute ist frei. ${day}: ${free} frei.`,
       context: (n: number, planned: string) =>
         `${n === 1 ? '1 Ding' : `${n} Dinge`} · ${planned} geplant`,
@@ -8399,6 +8403,9 @@ export const de = {
       blockerPlaceholder: 'Werkstatt',
       blockerMinutes: 'Dauer',
       removeBlocker: (label: string) => `${label} entfernen`,
+      quickLabel: 'Verfügbare Zeit schnell wählen',
+      none: 'keine Zeit',
+      wholeDay: 'ganzer Tag',
       dayOff: 'Tag frei',
       dayOn: 'Zeit wieder einplanen',
       calendar: 'Aus dem Kalender',

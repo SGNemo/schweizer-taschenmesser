@@ -360,4 +360,27 @@ export const CORPUS: CorpusCase[] = [
     type: 'todo',
     title: 'Mahnung Stadtwerke prüfen',
   },
+  // Use case „Wochenende retten“ (W04): „bis/spätestens <Tag>“ is a deadline for a thing to do, even with a
+  // time; a time span („bis 18 Uhr“), an appointment or a leisure slot stays an event.
+  {
+    from: 'WE-W04',
+    text: 'Team-Sachen lesen bis So 18:00',
+    type: 'todo',
+    date: '2026-11-01',
+    time: '18:00',
+    title: 'Team-Sachen lesen',
+  },
+  { from: 'WE-W04', text: 'Team-Sachen lesen bis Sonntag', type: 'todo', date: '2026-11-01' },
+  {
+    from: 'WE-W04',
+    text: 'spätestens Montag Bericht schicken',
+    type: 'todo',
+    date: '2026-11-02',
+    title: 'Bericht schicken',
+  },
+  { from: 'WE-W04', text: 'Termin bis 18 Uhr', type: 'event', time: '18:00' },
+  { from: 'WE-W04', text: 'Mo 9:30 Teamrunde', type: 'event', date: '2026-11-02', time: '09:30' },
+  { from: 'WE-W04', text: 'Fr 20 Uhr Kino mit Anna', type: 'event', date: '2026-10-30' },
+  { from: 'WE-W04', text: 'Sa 14 Uhr Fußball', type: 'event', date: '2026-10-31', time: '14:00' },
+  { from: 'WE-W04', text: 'Miete bis 20.11. 850 €', type: 'invoice', amountMinor: 85000 },
 ];
