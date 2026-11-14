@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { openAppearanceGroup, ready, settingsSearch } from './helpers';
+import { openAppearanceGroup, ready } from './helpers';
+import { settingsSearch } from './settingsSearch';
 
 /**
  * The time next to the Nemo logo: right of the wordmark in the sidebar head, "14"/"07" under the mark of the

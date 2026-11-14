@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enable, openFoldedGroup, ready, openAppearanceGroup, settingsSearch } from './helpers';
+import { enable, openFoldedGroup, ready, openAppearanceGroup } from './helpers';
+import { settingsSearch } from './settingsSearch';
 
 const isPhone = (info: { project: { name: string } }) => info.project.name === 'pixel-7';
 const categoryNav = (page: Page) =>

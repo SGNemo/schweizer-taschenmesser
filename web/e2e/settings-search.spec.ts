@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ready, settingsSearch } from './helpers';
+import { ready } from './helpers';
+import { settingsSearch } from './settingsSearch';
 
 const box = async (page: Page) => {
   const field = await settingsSearch(page);

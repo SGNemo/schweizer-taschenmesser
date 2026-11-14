@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-import { ready, settingsSearch } from './helpers';
+import { ready } from './helpers';
+import { settingsSearch } from './settingsSearch';
 
 /**
  * Phone settings: the search is an icon in the title line (0b-E); its field sits flush under the top bar while the

@@ -1,11 +1,6 @@
 import { expect, test } from '@playwright/test';
-import {
-  enableExample,
-  ready,
-  showAllWidgets,
-  openAppearanceGroup,
-  settingsSearch,
-} from './helpers';
+import { enableExample, ready, showAllWidgets, openAppearanceGroup } from './helpers';
+import { settingsSearch } from './settingsSearch';
 
 const isPhone = (info: { project: { name: string } }) => info.project.name === 'pixel-7';
 

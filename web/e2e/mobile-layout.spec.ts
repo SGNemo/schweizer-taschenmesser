@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enable, ready, settingsSearch } from './helpers';
+import { enable, ready } from './helpers';
+import { settingsSearch } from './settingsSearch';
 
 /** QA package P2: nothing is cut off or covered on a phone; one tick area per list row; one notice at a time. */
 test.beforeEach(async ({ page }) => {

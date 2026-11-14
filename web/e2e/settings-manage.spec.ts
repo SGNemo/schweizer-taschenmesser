@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
-import { ready, settingsSearch } from './helpers';
+import { ready } from './helpers';
+import { settingsSearch } from './settingsSearch';
 
 const isPhone = (info: { project: { name: string } }) => info.project.name === 'pixel-7';
 const dark = 'html[data-theme="dark"]';
