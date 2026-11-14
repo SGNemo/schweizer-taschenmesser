@@ -9009,6 +9009,8 @@ export const de = {
     },
     summary: {
       ok: 'Nichts Dringendes',
+      /** Nothing needs a look, but this device has no backup yet: said calmly, never as a point (FOCUS-GUIDELINES). */
+      noBackup: 'Noch kein Backup',
       look: (n: number) => `${n} Punkte brauchen einen Blick`,
       settingsContext: 'Sync, Backup, Updates, Speicher',
     },

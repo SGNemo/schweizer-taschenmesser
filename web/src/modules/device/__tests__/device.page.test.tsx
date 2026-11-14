@@ -263,7 +263,8 @@ describe('page Gerätestatus', () => {
       // Display only: it leads to the section, it never switches; nothing counts it as a point (the widget says the
       // head's sentence; the head's figure needs the module frame).
       expect(hub).toHaveAttribute('href', '/settings/sync');
-      expect(screen.getByText('Nichts Dringendes')).toBeInTheDocument();
+      // No backup in this fixture: the calm words for that, never a count.
+      expect(screen.getByText('Noch kein Backup')).toBeInTheDocument();
     });
 
   it('a hub that is simply off still says "Aus"', async () => {
@@ -366,8 +367,8 @@ describe('page Gerätestatus while it loads', () => {
     expect(ids()).not.toContain('device-hub');
     expect(ids()).toContain('overview-backup');
     expect(screen.getByTestId('overview-backup')).toHaveTextContent('Kein Backup');
-    // The widget waited as long, then speaks without the hub.
-    expect(screen.getByText('Nichts Dringendes')).toBeInTheDocument();
+    // The widget waited as long, then speaks without the hub (no backup here: said calmly).
+    expect(screen.getByText('Noch kein Backup')).toBeInTheDocument();
   });
 
   it('the widget says nothing before its reads are back, then one sentence', async () => {
@@ -385,6 +386,6 @@ describe('page Gerätestatus while it loads', () => {
       answer();
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
-    expect(document.body.textContent).toContain('Nichts Dringendes');
+    expect(document.body.textContent).toContain('Noch kein Backup');
   });
 });

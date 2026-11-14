@@ -86,7 +86,9 @@ describe('settings status head', () => {
     const device = await screen.findByTestId('overview-device');
     expect(device).toHaveAttribute('href', '/device');
     expect(device).toHaveTextContent('Gerätestatus');
-    expect(device).toHaveTextContent('Nichts Dringendes');
+    // No backup on this device yet: the summary says so calmly, still no mark.
+    expect(device).toHaveTextContent('Noch kein Backup');
+    expect(device).toHaveAttribute('data-attention', 'false');
     const links = within(screen.getByTestId('settings-status')).getAllByRole('link');
     expect(links.map((l) => l.getAttribute('data-testid'))).toEqual([
       'overview-security',
