@@ -165,12 +165,10 @@ describe('page Gerätestatus', () => {
       'password',
     );
     // The encrypted file is the filled action; the readable one is the second button, as in the settings.
-    const [encrypted, plain] = within(dialog)
-      .getAllByRole('button')
-      .filter((b) => b.closest('[data-testid="backup-export-dialog"]'));
+    const [encrypted, plain] = within(dialog).getAllByRole('button');
     expect(encrypted).toHaveTextContent('Verschlüsselt exportieren');
     expect(encrypted).toHaveAttribute('data-variant', 'primary');
-    expect(plain).toHaveTextContent('Backup herunterladen');
+    expect(plain).toHaveTextContent('Ohne Passwort herunterladen');
     expect(plain).toHaveAttribute('data-variant', 'secondary');
     // Without a password the encrypted export says why and saves nothing.
     await act(async () => {

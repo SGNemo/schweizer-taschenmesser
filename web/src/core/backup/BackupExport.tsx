@@ -20,11 +20,13 @@ import styles from './BackupExport.module.css';
  * form, so the recommendation is worded once and a readable file is never one click from a status page.
  */
 export function BackupExportForm({
-  primary = false,
+  inDialog = false,
   onSaved,
 }: {
-  /** The encrypted export is the filled action (the dialog); settings keep it secondary (their filled action is "Verbinden"). */
-  primary?: boolean;
+  /** In the dialog the encrypted export is the filled action, the password field takes the focus and the readable
+   *  file says "without password" (the dialog is opened by "Backup herunterladen"; the same words on the readable
+   *  file would invite the wrong click). Settings keep both secondary: their filled action is "Verbinden". */
+  inDialog?: boolean;
   /** Called after a file was saved (not when the save dialog was cancelled). */
   onSaved?: () => void;
 }) {
@@ -40,26 +42,34 @@ export function BackupExportForm({
   }
 
   async function exportPlain() {
-    const result = await downloadTextFile(
-      backupFileName(),
-      await serializeSealedBackup(await createBackup(), { readable: true }),
-    );
-    if (result === 'saved') await saved(t.backup.exported);
+    setBusy(true);
+    try {
+      const result = await downloadTextFile(
+        backupFileName(),
+        await serializeSealedBackup(await createBackup(), { readable: true }),
+      );
+      if (result === 'saved') await saved(t.backup.exported);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function exportEncrypted() {
     setError(undefined);
     if (pass.length < MIN_BACKUP_PASSPHRASE_LENGTH) return setError(t.backup.passphraseTooShort);
     setBusy(true);
-    const file = await encryptBackup(await createBackup(), pass);
-    const result = await downloadTextFile(
-      encryptedBackupFileName(),
-      serializeEncryptedBackup(file),
-    );
-    setBusy(false);
-    if (result === 'saved') {
-      setPass('');
-      await saved(t.backup.encryptedExported);
+    try {
+      const file = await encryptBackup(await createBackup(), pass);
+      const result = await downloadTextFile(
+        encryptedBackupFileName(),
+        serializeEncryptedBackup(file),
+      );
+      if (result === 'saved') {
+        setPass('');
+        await saved(t.backup.encryptedExported);
+      }
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -72,7 +82,7 @@ export function BackupExportForm({
         hint={t.backup.exportPassphraseHint}
         type="password"
         autoComplete="new-password"
-        data-autofocus={primary || undefined}
+        data-autofocus={inDialog || undefined}
         value={pass}
         onChange={(e) => setPass(e.target.value)}
       />
@@ -83,13 +93,15 @@ export function BackupExportForm({
       ) : null}
       <div className={styles.actions}>
         <Button
-          variant={primary ? 'primary' : 'secondary'}
+          variant={inDialog ? 'primary' : 'secondary'}
           disabled={busy}
           onClick={() => void exportEncrypted()}
         >
           {t.backup.encryptedExport}
         </Button>
-        <Button onClick={() => void exportPlain()}>{t.backup.export}</Button>
+        <Button disabled={busy} onClick={() => void exportPlain()}>
+          {inDialog ? t.backup.exportPlain : t.backup.export}
+        </Button>
       </div>
       <p className={styles.muted}>{t.backup.plainHint}</p>
     </>
@@ -99,9 +111,9 @@ export function BackupExportForm({
 /** The same form in a dialog (Gerätestatus): opened by a click, closes after a saved file. */
 export function BackupExportDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
-    <Dialog open={open} onClose={onClose} title={t.backup.export}>
+    <Dialog open={open} onClose={onClose} title={t.backup.exportTitle}>
       <div className={styles.form} data-testid="backup-export-dialog">
-        <BackupExportForm primary onSaved={onClose} />
+        <BackupExportForm inDialog onSaved={onClose} />
       </div>
     </Dialog>
   );

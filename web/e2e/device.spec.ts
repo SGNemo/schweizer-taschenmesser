@@ -68,14 +68,14 @@ test('a backup from the page: one button opens the export form, the password is 
   let downloads = 0;
   page.on('download', () => downloads++);
   await open.click();
-  const dialog = page.getByRole('dialog', { name: 'Backup herunterladen' });
+  const dialog = page.getByRole('dialog', { name: 'Backup sichern' });
   await expect(dialog).toContainText('Empfohlen: mit Passwort sichern.');
   const pass = dialog.getByLabel('Passwort für das Backup');
   await expect(pass).toBeFocused();
   expect(downloads).toBe(0); // never a file in one click
   const encrypted = dialog.getByRole('button', { name: 'Verschlüsselt exportieren' });
   await expect(encrypted).toHaveAttribute('data-variant', 'primary');
-  await expect(dialog.getByRole('button', { name: 'Backup herunterladen' })).toHaveAttribute(
+  await expect(dialog.getByRole('button', { name: 'Ohne Passwort herunterladen' })).toHaveAttribute(
     'data-variant',
     'secondary',
   );

@@ -3578,6 +3578,9 @@ export const de = {
     intro:
       'Sichere alle Daten als Datei oder spiele ein Backup wieder ein. Zugangsdaten (Sync-Token, Schlüssel) sind nie im Backup enthalten.',
     export: 'Backup herunterladen',
+    /** Dialog title on Gerätestatus and its readable-file button: never the opener's words again. */
+    exportTitle: 'Backup sichern',
+    exportPlain: 'Ohne Passwort herunterladen',
     exported: 'Backup heruntergeladen.',
     file: 'Backup-Datei',
     mode: 'Wiederherstellung',
