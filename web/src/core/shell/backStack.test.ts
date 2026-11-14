@@ -104,6 +104,17 @@ describe('backStack', () => {
     expect(page).toHaveBeenCalledTimes(1);
   });
 
+  it('after stepping over a stale marker, tells the page once, on the entry below', async () => {
+    const at: string[] = [];
+    onPageBack(() => void at.push(`${location.pathname}${history.state?.tmBack ? '+marker' : ''}`));
+    pushBack('a', () => undefined);
+    history.pushState({ idx: 5 }, '', '/next'); // the router moved on while "a" was open
+    releaseBack('a'); // marker left below
+    history.back(); // the user's Back lands on the stale marker
+    await settle();
+    expect(at).toEqual(['/']);
+  });
+
   it('steps over a marker nobody owns any more', async () => {
     pushBack('a', () => undefined);
     // The router moved on while "a" was open, then "a" closed: marker below, not on top.

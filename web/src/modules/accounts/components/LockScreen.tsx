@@ -22,7 +22,9 @@ export function LockScreen() {
   // `data-autofocus` is read by Dialog only; the lock screen is a page, so it focuses its field itself:
   // on mount, and on a Back to this page that comes before the page left had rendered (a router
   // transition on a busy device keeps this screen mounted). Closing a sheet leaves the focus alone.
-  const path = useRef(useLocation().pathname);
+  // The route this screen was shown for (the browser URL can already be the next page's).
+  const routePath = useLocation().pathname;
+  const path = useRef(routePath);
   useEffect(() => {
     const focusField = () => root.current?.querySelector<HTMLElement>('[data-autofocus]')?.focus();
     focusField();

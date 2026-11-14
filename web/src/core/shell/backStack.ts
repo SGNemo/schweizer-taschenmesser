@@ -32,7 +32,7 @@ let listening = false;
 let restore: { state: unknown; url: string } | null = null;
 /** Our own re-announcement of the restored location; not a user's Back. */
 let announcing = false;
-/** Told about a user's Back that closed nothing (it went to the page below), not about our own pops. */
+/** Told about a user's history step (Back or Forward) that closed nothing, not about our own pops. */
 const pageBack = new Set<() => void>();
 
 function markerOnTop(): string | undefined {
@@ -100,9 +100,14 @@ function onPop(e: Event): void {
   }
   const top = stack[stack.length - 1];
   if (!top) {
-    // Landed on a marker nobody owns any more (see above): step over it.
-    if (markerOnTop()) back();
-    for (const listener of pageBack) listener();
+    const notify = () => {
+      for (const listener of pageBack) listener();
+    };
+    // Landed on a marker nobody owns any more (see above): step over it, then tell the page.
+    if (markerOnTop()) {
+      back();
+      waiting.push(notify);
+    } else notify();
     return;
   }
   const result = top.close();
@@ -122,9 +127,9 @@ function listen(): void {
 }
 
 /**
- * Calls `listener` when the user's Back leads to the page below (nothing open was closed). Not on
- * our own `history.back()` after a sheet closed by button, nor on a re-announced URL. Returns the
- * unsubscribe function.
+ * Calls `listener` when the user's Back (or Forward) leads to another page and closed nothing open;
+ * after a stale marker was stepped over, once that has settled. Not on our own `history.back()`
+ * after a sheet closed by button, nor on a re-announced URL. Returns the unsubscribe function.
  */
 export function onPageBack(listener: () => void): () => void {
   listen();
@@ -163,6 +168,7 @@ export function backDepth(): number {
 /** Test helper: forget everything and detach the listener. */
 export function resetBackStack(): void {
   stack = [];
+  pageBack.clear();
   swallow = 0;
   waiting = [];
   restore = null;
