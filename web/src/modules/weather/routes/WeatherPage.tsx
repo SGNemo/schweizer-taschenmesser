@@ -3,7 +3,7 @@ import { now } from '@/core/time/now';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { useHeadReady } from '@/core/shell/heroContext';
 import { dayRows, hourRows, placeNowIso } from '@/core/weather/logic';
-import { useWeatherSettings } from '@/core/weather/settings';
+import { isWeatherActive, useWeatherSettings } from '@/core/weather/settings';
 import { tWeather } from '@/strings.weather';
 import { tWeatherPage } from '@/strings.weatherPage';
 import { Button, Card, EmptyState, PageTitle } from '@/ui';
@@ -35,7 +35,7 @@ export default function WeatherPage() {
   const { index, places, weather, loading } = useViewedForecast(requested);
   // The hint above the head comes with the forecast: the frame paints head and page once the first read is back
   // (`identity.firstRead`, at most 0.6 s), so the hint never pushes them down (0b-8). Nothing to wait for when
-  // `loading` is false (no place, fetching off, offline, the request failed): no forecast will come.
+  // `loading` is false (no place, switched off, offline, or the request answered or failed): no forecast will come.
   // `late`: the frame stopped waiting first (a slow network); a hint that comes later goes under the head instead.
   const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
   const late = useHeadReady(!!settings && (!!weather || !loading));
@@ -87,8 +87,15 @@ export default function WeatherPage() {
       </div>
       {!weather ? (
         <p className={styles.loading} role="status">
-          {/* Nothing is coming: offline says so; online the request failed (it is asked again later). */}
-          {loading ? tx.previewLoading : offline ? tp.offline : tx.unavailable}
+          {/* Nothing is coming: switched off or offline says so (the settings link is in the foot); otherwise
+              the request failed (it is asked again later). */}
+          {loading
+            ? tx.previewLoading
+            : !isWeatherActive(settings)
+              ? tp.switchedOff
+              : offline
+                ? tp.offline
+                : tx.unavailable}
         </p>
       ) : (
         <div className={styles.layout} data-testid="weather-preview">

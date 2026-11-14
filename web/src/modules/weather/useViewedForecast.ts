@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { now } from '@/core/time/now';
 import { fetchForecast, type Forecast } from '@/core/weather/api';
 import { useWeatherRequest, type WeatherView } from '@/core/weather/useWeather';
-import { useWeatherSettings, type ExtraPlace } from '@/core/weather/settings';
+import { isWeatherActive, useWeatherSettings, type ExtraPlace } from '@/core/weather/settings';
 
 const LIFETIME_MS = 30 * 60 * 1000;
 /** Forecasts of the extra places, per session only (the main place keeps its persistent cache). */
@@ -31,6 +31,9 @@ export function useViewedForecast(requested: number): ViewedForecast {
   const [fetched, setFetched] = useState<{ key: string; at: number; forecast: Forecast }>();
   const [failed, setFailed] = useState<string>();
   const targetKey = target ? keyOf(target) : undefined;
+  // Like the main place: nothing is asked while weather is switched off or the device is offline.
+  const online = typeof navigator === 'undefined' || navigator.onLine !== false;
+  const active = !!settings && isWeatherActive(settings) && online;
   // Another place shown: a failure of an earlier visit no longer counts (coming back asks again).
   const [shownKey, setShownKey] = useState(targetKey);
   if (shownKey !== targetKey) {
@@ -39,7 +42,7 @@ export function useViewedForecast(requested: number): ViewedForecast {
   }
 
   useEffect(() => {
-    if (!target || !targetKey) return;
+    if (!target || !targetKey || !active) return;
     const hit = memory.get(targetKey);
     if (hit && now() - hit.at < LIFETIME_MS) return;
     let alive = true;
@@ -55,7 +58,7 @@ export function useViewedForecast(requested: number): ViewedForecast {
     return () => {
       alive = false;
     };
-  }, [target, targetKey]);
+  }, [target, targetKey, active]);
 
   const places = settings && settings.place ? [settings.place, ...extra.map((p) => p.label)] : [];
   if (!target) return { index, places, weather: main, loading: coming };
@@ -72,6 +75,6 @@ export function useViewedForecast(requested: number): ViewedForecast {
           stale: now() - hit.at >= LIFETIME_MS,
         }
       : undefined,
-    loading: !hit && failed !== targetKey,
+    loading: !hit && active && failed !== targetKey,
   };
 }

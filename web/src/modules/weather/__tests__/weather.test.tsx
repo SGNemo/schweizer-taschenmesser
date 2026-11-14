@@ -367,6 +367,20 @@ describe('weather page', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Gerade nicht erreichbar');
   });
 
+  it('switched off with a place: says so and asks nothing, also for an extra place (0b-8)', async () => {
+    at1205();
+    const fetchSpy = ok(previewBody);
+    vi.stubGlobal('fetch', fetchSpy);
+    await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
+    await addExtraPlace('Zürich, Schweiz', 47.37, 8.54);
+    await setWeatherEnabled(false);
+    renderPage('/weather?place=1');
+    expect(await screen.findByRole('status')).toHaveTextContent('Das Wetter ist ausgeschaltet');
+    expect(screen.queryByTestId('weather-now-pending')).toBeNull();
+    expect(screen.getByRole('link', { name: /Einstellungen/ })).toBeTruthy();
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
   it('an extra place that failed is asked again when you come back to it (0b-8)', async () => {
     at1205();
     let extraCalls = 0;
