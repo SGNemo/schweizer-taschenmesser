@@ -205,7 +205,7 @@ describe('import dates (D17, round 5)', () => {
       [clock, clock],
       [clock - day, clock - day],
       [clock - day, clock - day],
-      [clock - day, clock],
+      [clock - day, clock - 1],
     ]);
   });
 

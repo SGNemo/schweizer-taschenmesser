@@ -191,9 +191,10 @@ export const batchStatus = (batch: ImportBatch): BatchStatus =>
   batch.status ?? (batch.undoneAt ? 'undone' : 'committed');
 
 /**
- * Removes what the batch created – but only records nobody has touched since (all field stamps
- * are still the creation stamp, `untouchedSinceCreated`; imported dates do not count as a change) – and restores the previous values of records it changed, if they still hold the
- * imported values. Edited records stay; their number is reported. Deletions are tombstones and sync.
+ * Removes what the batch created – but only records nobody has touched since (the rule, which
+ * ignores imported dates: `untouchedSinceCreated`) – and restores the previous values of records
+ * it changed, if they still hold the imported values. Edited records stay; their number is
+ * reported. Deletions are tombstones and sync.
  */
 export async function undoImport(
   manifest: ModuleManifest,

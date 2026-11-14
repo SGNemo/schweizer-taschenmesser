@@ -92,6 +92,23 @@ describe('D17 (round 5): imported dates', () => {
     expect(await undoImport(todos, batch.id)).toEqual({ removed: 1, kept: 0 });
   });
 
+  it('a future or "now" modified date still counts as untouched for undo', async () => {
+    const rows = await buildPreview(todos, runtime, [
+      {
+        ...task('Zukunft'),
+        dates: { createdAt: clock - 86_400_000, updatedAt: clock + 86_400_000 },
+      },
+      { ...task('Jetzt'), dates: { createdAt: clock - 86_400_000, updatedAt: clock } },
+    ]);
+    const batch = await commitImport(todos, {
+      batchId: 'bf',
+      importerId: 'text',
+      source: 'Text',
+      rows,
+    });
+    expect(await undoImport(todos, batch.id)).toEqual({ removed: 2, kept: 0 });
+  });
+
   it('undo keeps a record that was edited after the import', async () => {
     const rows = await buildPreview(todos, runtime, [
       { ...task('Alt'), dates: { createdAt: clock - 86_400_000 } },

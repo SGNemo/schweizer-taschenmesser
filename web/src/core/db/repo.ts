@@ -14,7 +14,7 @@ import { tableName } from './schema';
 import { getDeviceContext, type DeviceContext } from './device';
 import { recordWrite, type UndoStep } from './recorder';
 import { hasWriteListener, signalWrite, type WriteSignal } from './writeHook';
-import { maxHlc } from './hlc';
+import { maxHlc, parseHlc } from './hlc';
 import { ENVELOPE_KEYS, type Stored } from './types';
 import { deepEqual, randomId } from './util';
 
@@ -79,13 +79,16 @@ function envelopeTimes(ts: number, at?: ImportDates): { createdAt: number; updat
     typeof v === 'number' && Number.isFinite(v) && v > 0 && v <= ts;
   if (!at || !ok(at.createdAt)) return { createdAt: ts, updatedAt: ts };
   const createdAt = Math.floor(at.createdAt);
-  // Missing = never changed since created; out of range (future, clock skew) = now.
+  // Missing = never changed since created. An imported change date stays below the creation
+  // stamp's wall time (≤ now − 1 ms), else import undo would read the row as edited
+  // (`untouchedSinceCreated`); out of range (future, clock skew) = just before now.
+  const latest = Math.max(createdAt, ts - 1);
   const updatedAt =
     at.updatedAt === undefined
       ? createdAt
       : ok(at.updatedAt)
-        ? Math.max(createdAt, Math.floor(at.updatedAt))
-        : ts;
+        ? Math.min(latest, Math.max(createdAt, Math.floor(at.updatedAt)))
+        : latest;
   return { createdAt, updatedAt };
 }
 
@@ -103,7 +106,7 @@ export function untouchedSinceCreated(row: {
 }): boolean {
   const stamps = [...new Set(Object.values(row._f))];
   if (stamps.length !== 1) return false;
-  return row.updatedAt === row.createdAt || row.updatedAt < Number(stamps[0]!.slice(0, 13));
+  return row.updatedAt === row.createdAt || row.updatedAt < parseHlc(stamps[0]!).wall;
 }
 
 export interface RepoOptions {
