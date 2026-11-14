@@ -101,7 +101,6 @@ export default function InvoicesPage() {
       <ItemRow
         key={i.id}
         title={i.payee}
-        className={styles.row}
         tone={urgent ? (state.tone as 'overdue' | 'today') : undefined}
         meta={
           i.status === 'paid' ? (
@@ -110,7 +109,11 @@ export default function InvoicesPage() {
             // Phone (design check G4): one meta line. The state says when it is due ("war am 17. Sep. fällig",
             // "in 2 Tagen"), so it stands here instead of in a second row of its own; the reference and the
             // repeat are in the entry's dialog.
+            // 0b-8 follow-up 4: the amount opens this line instead of standing beside the name, so the payee has
+            // the row's width ("Stadtwerke…" before).
             <>
+              <span className={styles.amount}>{formatMoney(remainingMinor(i), i.currency)}</span>
+              {' · '}
               {badge ?? formatDay(i.dueDate, 'EEE, d. MMM')}
               {extra ? ` · ${extra}` : ''}
             </>
@@ -185,9 +188,11 @@ export default function InvoicesPage() {
         end={
           <>
             {narrow ? null : badge}
-            <span className={styles.amount}>
-              {formatMoney(i.status === 'open' ? remainingMinor(i) : i.amountMinor, i.currency)}
-            </span>
+            {narrow && i.status === 'open' ? null : (
+              <span className={styles.amount}>
+                {formatMoney(i.status === 'open' ? remainingMinor(i) : i.amountMinor, i.currency)}
+              </span>
+            )}
             {i.status === 'open' ? (
               // Phone (G4): only the first open row keeps its pay button (the next one to pay); the others pay
               // from the swipe and the row's menu, so the name keeps one line beside the amount.

@@ -34,12 +34,6 @@
   flex-direction: column;
   gap: var(--space-3);
 }
-.row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
 .main {
   flex: 1;
   min-width: 10rem;
@@ -72,6 +66,8 @@
   font-weight: var(--weight-semibold);
 }
 .amount {
+  /* Also at the start of the quiet meta line on the phone: the amount keeps the text colour there. */
+  color: var(--text);
   font-weight: var(--weight-semibold);
   font-variant-numeric: tabular-nums;
 }
@@ -186,10 +182,6 @@
   }
 }
 
-/* Phone (design check G4): the payee keeps one line beside the amount; the full name is the row's tooltip, its
-   accessible name and the dialog's first field. */
-@media (max-width: 899px) {
-  .row {
-    --clamp-lines: 1;
-  }
-}
+/* Phone (0b-8 follow-up 4): one line beside amount, pay button and menu cut "Stadtwerke Musterstadt" to
+   "Stadtwerke…". The amount now opens the meta line (InvoicesPage) and the payee keeps the app's two lines
+   (`--clamp-lines: 2`), so a long name wraps instead of ending after ten characters. */
