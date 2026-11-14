@@ -240,11 +240,12 @@ async function measure(page: Page, root: 'main' | 'dialog', phone: boolean) {
       for (const el of leafs) for (const n of Array.from(el.childNodes)) if (n.nodeType === Node.TEXT_NODE) { const t = n.textContent!.trim(); if (t) { textChars += t.length; words += t.split(/\s+/).length; } }
 
       // 2. Consistency: head, type, icons, spacing, weights, surfaces.
-      const band = document.querySelector<HTMLElement>('[data-testid="module-frame"] [data-size], header [data-size], [data-size]');
+      // 4.0 (0b-2): the module head is `[data-head]` (standard or stage); library, tools and settings keep a head card.
+      const band = document.querySelector<HTMLElement>('main [data-head], [data-testid="module-frame"] [data-size], header [data-size], [data-size]');
       const h1 = scope.querySelector('h1') ?? document.querySelector('h1');
       const h1s = h1 ? getComputedStyle(h1) : null;
       const headEl = band ?? document.querySelector<HTMLElement>('[class*="band"]');
-      const head = headEl ? { height: Math.round(headEl.getBoundingClientRect().height), size: headEl.getAttribute('data-size'), hue: headEl.getAttribute('data-hue'), area: headEl.getAttribute('data-area') } : null;
+      const head = headEl ? { height: Math.round(headEl.getBoundingClientRect().height), size: headEl.getAttribute('data-size') ?? headEl.getAttribute('data-head'), hue: headEl.getAttribute('data-hue'), area: headEl.getAttribute('data-area') } : null;
       const h2 = new Map<string, number>();
       for (const el of Array.from(scope.querySelectorAll<HTMLElement>('h2, h3')).filter(visible)) {
         const s = getComputedStyle(el);

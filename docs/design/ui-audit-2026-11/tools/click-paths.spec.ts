@@ -213,7 +213,13 @@ const FLOWS: Record<string, Flow> = {
     else await c.key('Control+k');
     await c.type('Schmierzettel');
     await page.waitForTimeout(500);
-    await c.key('ArrowDown');
+    // 0b-8: press ↓ until the note is the active option („Neu eintragen“ and „Frage stellen“ come first).
+    const dlg = page.locator('dialog[open], [role="dialog"]').last();
+    for (let i = 0; i < 5; i++) {
+      await c.key('ArrowDown');
+      const active = await dlg.locator('[aria-selected="true"], [data-active="true"]').first().innerText().catch(() => '');
+      if (/Schmierzettel/.test(active) && !/eintragen|Frage/.test(active)) break;
+    }
     await c.key('Enter');
     c.notes.push(`lands on ${new URL(page.url()).pathname}`);
   },
@@ -243,12 +249,16 @@ const FLOWS: Record<string, Flow> = {
     await c.start('/');
     if (phone) { await c.click(page.getByRole('button', { name: /^Mehr$/ }), 'Mehr'); await c.click(page.getByRole('link', { name: /^Einstellungen/ }), 'Einstellungen'); }
     else await c.click(page.getByTestId('sidebar').getByRole('link', { name: /^Einstellungen/ }), 'Einstellungen');
-    await c.click(page.locator('main').getByRole('button', { name: /^Dunkel$/ }), 'Dunkel');
+    await c.click(page.locator('main').getByRole('radio', { name: /^Dunkel/ }).or(page.locator('main').getByRole('button', { name: /^Dunkel$/ })), 'Dunkel');
   },
   'E2 Einstellung ändern – Hell (Kategorie)': async (c, page) => {
     await c.start('/settings');
     await c.click(page.locator('main').getByRole('link', { name: /^Darstellung/ }), 'Darstellung');
-    await c.click(page.locator('main').getByRole('button', { name: /^Hell$/ }), 'Hell');
+    // 4.0 (0b-E): the theme sits behind „Ändern“ in the row „Thema: …“.
+    const hell = () => page.getByRole('radio', { name: /^Hell/ }).or(page.getByRole('button', { name: /^Hell$/ })).filter({ visible: true });
+    if (!(await hell().first().isVisible().catch(() => false)))
+      await c.click(page.locator('main').getByText('Ändern', { exact: true }).first(), 'Ändern (Thema)');
+    await c.click(hell(), 'Hell');
   },
   'F1 Tag planen – Planer': async (c, page, phone) => {
     await c.start('/');
@@ -286,6 +296,14 @@ const FLOWS: Record<string, Flow> = {
     const dl = page.locator('main').getByRole('button', { name: /Backup herunterladen|Verschlüsselt exportieren/ });
     await c.click(dl, 'Backup');
     c.notes.push(`dialog buttons: ${await page.locator('dialog[open] button, [role="dialog"] button').allInnerTexts().then((t) => t.join('/')).catch(() => '-')}`);
+  },
+  'H2 Backup herunterladen – über Gerätestatus (S-b)': async (c, page, phone) => {
+    await c.start('/');
+    await goModule(c, page, phone, /System/, 'Gerätestatus');
+    await c.click(page.locator('main').getByRole('link', { name: /Backup/ }).first(), 'Zeile Backup');
+    const dl = page.locator('main').getByRole('button', { name: /Backup herunterladen|Verschlüsselt exportieren/ });
+    await c.click(dl, 'Backup');
+    c.notes.push(`after: ${new URL(page.url()).pathname}`);
   },
 };
 

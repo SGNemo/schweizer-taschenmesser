@@ -3,13 +3,16 @@
  * "Before" = the tables of the audit (the generated part of the old MEASURES.md, passed as a file);
  * "after" = the facts of a new tour (`audit-tour.spec.ts`). Same definitions on both sides, except the
  * two corrections of 0b-8 (animations without the cap of 10, CLS of dialogs reset before each dialog).
- * Usage (web/): node ../docs/design/ui-audit-2026-11/tools/compare.mjs <before.md> [.screens/ui-audit]
+ * Usage (web/): node ../docs/design/ui-audit-2026-11/tools/compare.mjs ../docs/design/ui-audit-2026-11/MEASURES.md [.screens/ui-audit]
  */
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 const [beforeFile, root = '.screens/ui-audit'] = process.argv.slice(2);
-const md = readFileSync(beforeFile, 'utf8').split('\n');
+// A MEASURES.md with both parts: read only the audit's tables (from the heading „## Vorher“ on).
+const all = readFileSync(beforeFile, 'utf8').split('\n');
+const from = all.findIndex((l) => l.startsWith('## Vorher'));
+const md = from >= 0 ? all.slice(from) : all;
 
 /** Rows of the table under the heading that starts with `title`, keyed by the first cell. */
 function tableAfter(title) {

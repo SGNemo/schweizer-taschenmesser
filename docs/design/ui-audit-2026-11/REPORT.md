@@ -4,11 +4,50 @@ Branch `review/ui-audit-2026-11`, nur Doku (Audit-Ordner `docs/design/ui-audit-2
 
 ## Kurzfassung
 
+- **Abnahme 0b-8 (2026-11-14):** Checkliste 7 × erfüllt, 3 × teils, 0 × nicht (Audit 1 / 6 / 3); Reizbudget in jeder Summe unter dem Stand von 0b-1. Noch nicht abgenommen: „≥ 8 × erfüllt“ hängt an M5 (drei Layout-Sprünge beim ersten Öffnen, eigener Fix-PR). Abschnitt [Abnahme 0b-8](#abnahme-0b-8-2026-11-14).
 - **Council (drei Opus-Delegierte, frischer Kontext):** die App heute modern **5 / 5 / 6**, ruhig **4 / 4 / 6** von 10; Votum **4.0 / 4.0 / 3.2** (Advocate, Architect, Guardian). Danach fünfzehn Runden auf Bericht und Plan, zuletzt **6,2 / 7,0 / 6,1** (Runde 16, die letzte dieser Serie) – die Chronik je Runde steht in [LEDGER.md](LEDGER.md). **Was gilt:** 4.0 ist beschlossen, der Plan steht in PACKAGES.md; **alle vier Freigaben sind erteilt (3 und 4 in der Signatur-Form nach Runde 15); 0a-1a beginnt, sobald eine Council-Runde ohne Blocker endet** (die Noten sind seit Runde 12 gefallen, weil jede Runde tiefere Lücken in der Ratschen- und Default-Stand-Mechanik fand; Runde 16 fand keinen Blocker mehr in der Mechanik selbst, nur in Begleittexten und Details – was jetzt steht, hat noch kein Council gesehen: Schlüssel nur über `openssl`, Signatur mit PR-Nummer, G-b in `finance`, Status-Kacheln bleiben, Vorrang nur nach Sichtbarkeit; findet die nächste Runde Blocker, gilt: Fix, ein Reviewer bestätigt, sonst entscheidest du). Einig im Kern: was „nicht modern“ wirkt, kommt nicht aus Farben oder Tokens, sondern aus dem **Gerüst** – Navigation dreifach, Kopfband füllt den Falz und wiederholt Zahlen, drei bis vier Einstiege zum Eintragen, zwei Flächensprachen (Schatten-Karten neben gerahmten Kacheln).
 - **Messung:** Modern-Checkliste 1 × erfüllt, 6 × teils, 3 × nicht; die drei „nicht“ (Tiefe durch Schatten, Dichte/Falz, Einstiege) sind Systemfragen. Klickwege: Eintragen 1 Klick + Enter, Suchen Strg+K + ↓ + Enter, lang sind Status-Wege (Backup 3–4 Klicks mit Scrollen) und lange Dialoge (Unterlage 9 Felder, Termin 8 Felder/950 px).
 - **Bereiche:** Haushalt, Wissen, Tresor und System sind bei einer Standardinstallation **nicht in der Navigation** (nur 6 Module an), System nie am Handy. Erst Sichtbarkeit, dann je Bereich 2–4 Kandidaten (unten).
 - **Empfehlung: 4.0, in der Reihenfolge Wächter zuerst.** 4.0 ändert das Gerüst, vier Identitätsregeln (Kopf-Silhouetten, Sub-Navigations-Zone, Band-Geometrie, getönte Widget-Kopfzone) und sechs Spec-Regeln (Tonstufen statt Schatten, neutrales „+ Neu“, „Jetzt wichtig“ zeigt Dringendes und Heutiges, Rest in „Kann warten · n“, Bottom-Bar mit Plus, kein FAB, Seitenrahmen ohne Sub-Tabs); Palette, Marken, Widget-Katalog und die gerahmten Signatur-Blöcke bleiben – Zeilen und Details im Absatz „4.0 = Gerüstwechsel“. Paket 0a (Wächter + Lade-Robustheit inkl. der Rust-Maßnahme gegen den Hänger, kein Umbau, ≈ 8–10 Chat-Tage) startet in jedem Fall; **du hast 4.0 beschlossen** (2026-11-09, Fragen 1–4 je Option A) – der Plan in PACKAGES.md gilt wie geschrieben; 0b beginnt erst, wenn 0a inklusive `e2e-seed` grün, der Handtest erledigt und 0a vom Council abgenommen ist. Neu sind Flächenmodell, Kopf-Logik, Navigation in einer Ebene am Desktop (am Handy bleiben drei Zeilen – Bottom-Bar, Modul-Zeile, Tabs –, der Kopf aus Titelzeile, Modul-Zeile und Tabs wird 134 statt 243–344 px, die Bottom-Bar bleibt), ein Eintragen-Einstieg, Dichte je Gerät; die 3.2-Politur wird Teil davon, nicht Alternative. Zielform als Bild: vier Seiten (Finanzen, ToDos, Übersicht ausführlich und ruhig), Desktop und Handy, hell und dunkel, vorher/nachher – [mockups/README.md](mockups/README.md).
 - **Kontrollpunkt „…“:** vermutlich (Annahme, nicht im Code belegt) blockiert das Öffnen eines Browser-Tabs kurz die ganze Desktop-App, und ein währenddessen abgesetzter Chunk-Request bleibt offen (ein Rennen, Maßnahme 0 prüft es) – das „…“ einer Modulseite wartet dann ohne Zeitlimit und ohne Fehlerkarte; ein 10-Minuten-Handtest klärt es, dazu vier Maßnahmen mit Kosten (Abschnitt „Lade-Robustheit“, Umsetzung in PACKAGE-0).
+
+
+## Abnahme 0b-8 (2026-11-14)
+
+Neu gemessen auf `develop` 34c2de10c mit 29 Modulen, 2 Geräten × 2 Themes × Seed/leer, mit dem korrigierten Werkzeug (Zahlen und Grenzen: [MEASURES „Nachher“](MEASURES.md#nachher--abnahme-0b-8-2026-11-14)). Die Tabellen weiter unten („Klickwege“, „Checkliste“) sind der Stand des Audits und bleiben als Vorher stehen.
+
+- **Checkliste:** 7 × erfüllt, 3 × teils, 0 × nicht (Audit: 1 / 6 / 3). **Abnahme „≥ 8 × erfüllt“: noch nicht** – M5 fehlt nur wegen dreier Layout-Sprünge beim ersten Öffnen (Wetter, Listen, Chat am Handy), die der eigene Fix-PR behebt; danach diese drei Seiten nachmessen. „Kein ‚nicht‘“: erfüllt.
+- **Reizbudget-Ratsche unter dem Stand von 0b-1** (`e2e/stimulus-budget.json` nach #664 gegen `develop`, CI-Werte, 69 gemeinsame Seiten × Gerät): Knöpfe 3 106 → 2 992, Links 1 589 → 1 334, Icons 3 288 → 2 911, Aktionen im ersten Bildschirm 3 191 → 3 050, Rahmen 246 → 2, Schatten 187 → 2, Flächensprachen 100 → 4, Farbe über dem Falz 711 → 337, Signatur-Blöcke 96 → 96 (Toleranz 0, gewollt), Seitenhöhe −10 %: **erfüllt.** Gestiegen sind einzelne Seiten: Aktionen im ersten Bildschirm auf 16 Seiten (meist Handy, weil kürzere Köpfe und Zeilen mehr Zeilen über den Falz holen), Knöpfe auf Gewohnheiten und Zeiterfassung, Farbe auf Finanzen (5 → 6), ToDos (3 → 5) und Unterlagen am Handy (2 → 7).
+
+| # | Merkmal | Nachher (Beleg aus MEASURES „Nachher“) | Audit → 0b-8 |
+| --- | --- | --- | --- |
+| M1 | Flächen statt Rahmen | Rahmen rundum 204 → 52 (Desktop dunkel, Seed); 48 davon in den zwei gewollten Signatur-Blöcken (Unterlagen 34, Vorräte 14), sonst je einer auf vier Einstellungs-Reitern, Übersicht „Ausführlich“, Schnellerfassung | teils → **erfüllt** |
+| M2 | Tiefe durch Tönung | Schatten 386 → 1 (Wetter-Bühne); Ebenen über Tonstufen (`--surface-raised`/`-sunken`), `--surface-2` 637 → 464 | nicht → **erfüllt** |
+| M3 | Große, ruhige Typografie | ein h1 auf allen 29 Modulseiten (28/600 Inter, Handy 22/600), keine Serif- oder Mono-Titel mehr; Lesemaß und `split` für Listen- und Betragsseiten; **aber** weiter 5–9 Schriftgrößen je Ansicht (Median 7, Summe 339 → 338), z. B. 12 und 13 px sowie 14, 15 und 16 px nebeneinander | teils → **teils** |
+| M4 | Wenige Akzente | eine gefüllte Hauptaktion je Modulseite am Desktop (0 bei Wetter, Browser, Mail, Musik, Dieser PC, Gerätestatus), am Handy keine (das Plus der Bottom-Bar); „Neu“ oben neutral; farbiger Text 204 → 86, Darstellung 22 → 5; farbige Flächen tragen Daten (Kalenderfarben, Plaketten, Wetter) | teils → **erfüllt** |
+| M5 | Bewegung nur als Antwort | eine Animation je Seite (`pageCrossfade`), keine Einblendung je Zeile; Transitions `transform`; CLS sonst überall < 0,05, Dialoge 0; **aber** Wetter 0,62 / 0,86, Listen 0,32 / 0,64, Chat Handy 0,07–0,11 beim ersten Öffnen | teils → **teils** (→ erfüllt mit dem Fix-PR) |
+| M6 | Dichte je Gerät | Kopf Desktop 69–117 px (Bühne 132–174), Handy 49–141 (Bühne 140–278) statt 211–363 / 159–364; Inhalt ab y Desktop 154–491 (Median der Modulseiten 258, Audit 546), Handy 130–603 (Median 278, Audit 661); Master–Detail auf Finanzen, Kalender, Rechnungen, Notizen, Mail, Passwörter, Disk-Scan | nicht → **erfüllt** |
+| M7 | Ein Weg zum Eintragen | ein Einstieg je Bildschirm („<Ding> eintragen“ im Kopf bzw. Plus am Handy), Termin 8 → 5 Felder (950 → 651 px), Abo „Mehr Felder“; **aber** Unterlage 9 → 11 Felder (819 px) und Fitness 9 Felder zeigen alles auf einmal | nicht → **teils** |
+| M8 | Navigation in einer Ebene | Desktop ohne Modul-Reihe unter dem Kopf, nur der aktive Bereich offen; Handy eine Modul-Zeile; kein Ort doppelt | teils → **erfüllt** |
+| M9 | Gesten am Handy | Bottom-Bar 5 mit Plus in der Daumenzone, kein FAB mehr (keine Überdeckung), Wischen auf Zeilen, Sheets mit Griff | erfüllt (Grundlagen) / teils → **erfüllt** |
+| M10 | Leere und Ladezustände | Leerzustand mit Motiv und „<Ding> eintragen“ auf allen Modulen (0b-7, D); Laden zeigt Kopf und Karte mit Zeitlimit und Fehlerkarte (0a-4), Status-Zeilen erst nach der ersten Lesung (C4) | teils → **erfüllt** |
+
+**Klickwege nachher** (Klicks · Tasten · Bildschirme · Dialoge, Scroll in Klammern; `tools/click-paths.spec.ts`, Locators auf „<Ding> eintragen“ umgestellt; Desktop | Handy):
+
+| Handlung | Audit | 0b-8 | Lesart |
+| --- | --- | --- | --- |
+| ToDo / Ausgabe – Schnellerfassung | 1 · 1 · 0 · 1 \| 1 · 1 · 0 · 1 | gleich | weiter der kürzeste Weg |
+| ToDo – im Modul | 2 · 1 · 1 · 0 \| 3 · 1 · 2 · 0 | 2 · 1 · 1 · 1 \| 3 · 1 · 2 · 1 | wie am Mockup geschätzt: Formular statt Inline-Feld |
+| Einkauf – Listen | 3 · 1 · 1 · 0 \| 2 · 1 · 1 · 0 | 3 · 1 · 1 · 0 \| 3 · 1 · 1 · 1 | Handy über „Mehr“ (Frage 3 A, wie geschätzt) |
+| Vorrat – Dialog | 4 · 0 · 1 · 1 \| 4 · 0 · 2 · 1 | 4 · 0 · 1 · 1 \| 5 · 0 · 2 · 2 | Handy: „Mehr“-Sheet dazwischen |
+| Buchung, Notiz, Unterlage, Rechnung, Erledigen, Notiz finden, Modul wechseln, Planer | – | gleich wie im Audit | – |
+| Suchen – Palette zum Treffer | 0 · 3 · 1 · 1 \| 1 · 2 · 1 · 1 | 0 · 4 · 1 · 1 \| 1 · 3 · 1 · 1 | **ein ↓ mehr:** „Neu eintragen“ und „Frage stellen“ stehen über dem Treffer (Follow-up) |
+| Dunkel – Einstellungen-Start | 2 · 0 · 1 · 0 \| 3 · 0 · 1 · 1 | gleich (Handy mit Scroll) | – |
+| Hell – über Darstellung | Desktop 2 (Dichte), Handy fehlgeschlagen | 3 · 0 · 1 · 0 \| 3 · 0 · 1 · 0 | hinter „Ändern“, auf beiden Geräten gleich |
+| Backup – über Einstellungen | 3 · 0 · 2 · 0 (1) \| 4 · 0 · 2 · 1 (2) | gleich | – |
+| Backup – über Gerätestatus (neu, S-b) | – | 4 · 0 · 2 · 0 \| 4 · 0 · 2 · 1 | ohne Scrollen; die Zeile „Backup“ führt zur Einstellung |
+
+**Prüfpunkte der Liste:** Zeile 41 (Kalender-Monat) – über dem Falz 28 farbige Flächen (Chroma 19), fast alle Kalenderfarben und „heute“; die Grenze „≤ 10“ gilt dort nicht, die Ratsche hält den Wert. Zeile 42 (AE3) – Plaketten, Kapsel, Bühne und Bibliothek im dunklen Theme angesehen (`1920x1080-dark/seed/page-library.png`, Köpfe): nicht stumpf, keine Frage an Sven. Zeile 43 (übrige Einstellungs-Reiter und `/tools` in die Ratsche) – geschützte Datei, eigener PR.
 
 
 ## Methode
