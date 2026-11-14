@@ -179,5 +179,22 @@ test.describe('Invoices on the phone', () => {
       (el) => el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1,
     );
     expect(clipped).toBe(false);
+    await expect(page.locator('main [data-row]').first()).toContainText('87,40 €');
+
+    // Paid (view "Bezahlt"): the same layout; "Wieder öffnen" is in the row's menu.
+    await page.getByRole('button', { name: 'Als bezahlt markieren' }).first().click();
+    await page.getByRole('button', { name: 'Bezahlt', exact: true }).click();
+    const paid = page.locator('main [data-row]').first();
+    await expect(paid).toContainText('87,40 €');
+    const paidClipped = await paid
+      .locator(':scope > span')
+      .first()
+      .evaluate(
+        (el) => el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1,
+      );
+    expect(paidClipped).toBe(false);
+    await expect(
+      page.locator('main li').getByRole('button', { name: 'Wieder öffnen' }),
+    ).toHaveCount(0);
   });
 });

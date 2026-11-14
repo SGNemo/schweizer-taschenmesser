@@ -181,7 +181,3 @@
     display: none;
   }
 }
-
-/* Phone (0b-8 follow-up 4): one line beside amount, pay button and menu cut "Stadtwerke Musterstadt" to
-   "Stadtwerke…". The amount now opens the meta line (InvoicesPage) and the payee keeps the app's two lines
-   (`--clamp-lines: 2`), so a long name wraps instead of ending after ten characters. */
