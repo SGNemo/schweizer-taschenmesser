@@ -373,7 +373,7 @@ test('A Erster Start bis Planer', async ({ page, isMobile }, info) => {
   await record(info, m, name);
 });
 
-/** Sven's morning, one line each, as he would type it (Gaming is a break, not a task). */
+/** The person's morning, one line each, as typed (gaming is meant as a break, not a task). */
 const DUMP = [
   'Arbeitszeit eintragen',
   'WhatsApp antworten',

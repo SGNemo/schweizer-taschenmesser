@@ -11,7 +11,7 @@ Decisions: [TARGET.md](TARGET.md) §5 answered 2026-11-14 with the recommended o
 | 3   | „Rest verteilen“ in the evening                           | `feat/plan-rest-evening`          | `modules/planner/actions.ts` (`restToTomorrow` = the ops of `moveAll`), `core/plan/instructions.ts` (sentence), head link, `widgets/WeekWidget.tsx`, `todos/widgets/NextWidget.tsx` (bus), optional notification                            | `core/events` types (one event, additive)                | `council`     | F 9 → 2 taps, detours 1 → 0, today empty                                                              |
 | 4   | Day parts, „Als Pause“, estimates on the row              | `feat/plan-day-parts`             | planner item row `part?` + migration, `core/plan/{types,engine,windows,explain}.ts`, row ⋯ („Vormittag/Nachmittag/Abend“, „Als Pause“, „dauert 15 Min“), parser „Pause …“/„Freizeit …“ lines                                                | `core/plan/**` (engine)                                  | `council`     | C order asserted, „Zocken“ as a 2-h break in the afternoon in 5 taps; B unchanged                     |
 | 5   | Deadline time, reminders „einmal“, trigger words          | `feat/plan-due-time`              | `core/modules/types.ts` (`due.time?`), planner item `due.time` + todos `dueTime` + calendar `once` (migrations), `modules/calendar/notifications.ts`, parser (W06 by trigger words), row texts                                              | `core/modules/types.ts` (contract, additive)             | `council`     | G detours 1 → 0; B detours 2 → 1; reminders from capture/field never repeat                           |
-| 6   | „Tagesende“                                               | `feat/plan-day-end`               | `modules/planner/settings.ts`, `core/plan/{capacity,explain}.ts`, `DaySetup.tsx` (row for the three days), planner head line                                                                                                                | `core/plan/**` (engine)                                  | `council`     | H 3 → 1 tap, detours 1 → 0; a unit past the end moves to the next day                                 |
+| 6   | „Tagesende“                                               | `feat/plan-day-end`               | `modules/planner/{settings,schema,migrations}.ts`, `core/plan/{types,capacity,windows,explain}.ts`, `DaySetup.tsx` (link for the three days), planner head line                                                                             | `core/plan/**` (engine)                                  | `council`     | H 3 → 2 taps, detours 1 → 0; a unit past the end moves to the next day                                |
 | 7   | „Antworten: …“ checklist, „Beantwortet?“ on mail rows     | `feat/mail-answered`              | `quickCapture/parser` + todos adapter (checklist line), `connectors/google/gmail.ts` (`lastLabelIds`), `modules/mail/**` (device flag, row hint, setting), bus event, `docs/legal/{DATA-FLOWS,data-flows-hinweise}.md` + `strings.legal.ts` | `core/events` (one event `todo.doneRequested`, additive) | `council`     | E +1 tap („Erledigt“, with undo); one line → one ToDo with three items                                |
 | 8   | Nachmessen                                                | `qa/usecase-wochenende-remeasure` | `web/e2e/usecases/wochenende.spec.ts` (`MAX` to the measured target, assertions), `ANALYSIS.md`/`TARGET.md` (one „measured after“ table)                                                                                                    | none                                                     | `review-loop` | every figure of TARGET §4 met, or the difference named with its reason                                |
 
@@ -95,7 +95,7 @@ Zielbild TARGET.md F3 (mittel), Reibung W18, W19; FOCUS-GUIDELINES „Notificati
 ## Pflichtliste
 - `restToTomorrow` = die ops von `moveAll(heute, morgen)`: heute verfügbar 0, jede offene Einheit von heute `earliest = morgen`; festgenagelte Einheiten und harte Fristen von heute bleiben. Vorschau („Verschoben · Sa → Mo …“) → „Übernehmen“; Rückgängig-Hinweis „Auf die nächsten Tage verteilt. · Rückgängig“. Unit-Test: deterministisch, Fixpunkt danach.
 - Planer-Feld versteht „Rest verteilen“, „Rest auf morgen“.
-- Erreichbar: stiller Textlink im Planer-Kopf ab 17:00 (Schalter `focus.eveningWrapUp`), Textaktion im Widget „Wochenlast“ ab 17:00, „Tag abschließen“ im ToDo-Widget ruft bei aktivem Planer über `plan.restRequested` (Event-Bus, kein Modul-Import) statt „Auf morgen schieben“.
+- Erreichbar: stiller Textlink im Planer-Kopf ab 17:00 (Schalter `focus.eveningWrapUp`), Textaktion im Widget „Wochenlast“ ab 17:00, „Tag abschließen“ im ToDo-Widget ruft bei aktivem Planer über `plan.restRequested` (Event-Bus, kein Modul-Import) statt „Auf morgen schieben“ – und öffnet dieselbe Vorschau, nichts bewegt sich vor „Übernehmen“ (e2e-Test für diesen Weg).
 - Optionale Benachrichtigung „Rest verteilen?“ um 20:00 (vor der Ruhezeit): `soft: true`, über `collectDue`, Schalter in „Ruhige Erinnerungen“, Standard **aus**, höchstens einmal am Tag, nie wiederholt, keine Zahl.
 - Mess-Skript Pfad F über den Kopf-Link oder das Widget; Assertion: heute leer danach. `MAX` nicht senken.
 
@@ -105,7 +105,7 @@ Verteilen ohne Tipp, Änderungen an Engine-Regel 6 (nichts rückt von selbst), T
 ## Abnahme
 - `npm run check`, `test`, `check:i18n`, `e2e` grün; wochenende-, kopf-leer-Skript und `e2e/planner.spec.ts` grün; Benachrichtigung: Unit-Test Standard aus, einmal am Tag, 20:00 außerhalb der Ruhezeit.
 - Zahlen: F 9 → 2 Taps, 1 → 0 Umwege; Fokus-Checkliste 1–9; Entfernt: „Auf morgen schieben“ bei aktivem Planer.
-- Docs: Entscheidungs-Bullet in docs/decisions/plan.md (Op und Ereignis), `.changes/`, STATUS im eigenen PR, Hotspot-Zeile raus.
+- Docs: FOCUS-WORDING eine Zeile (so / nicht so) für den neuen Satz; Entscheidungs-Bullet in docs/decisions/plan.md (Op und Ereignis), `.changes/`, STATUS im eigenen PR, Hotspot-Zeile raus.
 
 ## Skills
 `council` über den Diff (Guardian: nichts verschiebt sich ohne Tipp, Rückgängig stellt alles her, Benachrichtigung aus und gedrosselt; Advocate: ein ruhiger Satz, keine Zahl des Liegengebliebenen; Architect: ops wie `moveAll`, deterministisch, Ereignis additiv, kein Modul-Import), dann `full stop`.
@@ -127,7 +127,7 @@ Entscheidung Q2 a, Zielbild TARGET.md F2 (mittel), Reibung W05, W11, W12; planne
 - Planer-intern: `part?: 'morning' | 'afternoon' | 'evening'` und `asBreakOn?: 'YYYY-MM-DD'` (+ Länge) an der eigenen Planer-Zeile (`manifest.version` + eine Migration) und `part?` an `PlanItem`/`PlanBlocker` in `core/plan`. **Kein** Feld in `contributions.plannable`.
 - Engine-Vergleich im Tag: Stufe (festgenagelt, Frist, Rest – wie heute) → Abschnitt (ohne Abschnitt zuerst, dann Vormittag, Nachmittag, Abend) → die heutigen Schlüssel. Tage wählt die Engine wie bisher; ein Abschnitt ändert nie den Tag. Mit Zeitfenster: drei gleiche Drittel, eine Einheit bekommt Zeit in ihrem Drittel; passt sie dort nicht, den nächsten freien Platz später im Fenster, sonst keine Zeit (wie heute). Fixtures: Determinismus, Fixpunkt, „Abschnitt ändert nie den Tag“, Drittel-Überlauf; `explain` DE + EN.
 - Zeile ⋯: „Vormittag · Nachmittag · Abend · Ohne“, „Als Pause · 1 h · 2 h · 3 h“ (`asBreakOn`: die Engine plant das Ding an diesem Tag nie als Einheit und macht daraus einen Blocker dieser Länge; Rückgängig; Fixture „Pause ist nie eine Einheit und blockt ihre Länge“), „dauert 5/15/30/60 Min“ (die bestehenden Werte; unter 30 Min ist es schon kein Hauptding). Planer-Feld: „Duschen nachmittags“, „Bude abends“, „Duschen 15 Min“.
-- Schnellerfassung: Zeilen, die mit „Pause“ oder „Freizeit“ beginnen, werden bei aktivem Planer ein Blocker, sonst ein ToDo. Ein bloßes „Zocken“ bleibt ein ToDo – die App rät nicht, was Freizeit ist.
+- Schnellerfassung: Zeilen, die mit „Pause“ oder „Freizeit“ beginnen, werden bei aktivem Planer ein Blocker, sonst ein ToDo: Tag = getipptes Datum ?? heute, Länge = getippte Spanne oder Dauer ?? 1 Std, `from`/`to` nur, wenn getippt; geschrieben über das bestehende Planer-Ziel der Schnellerfassung (`quickCapture/targets/adapters.ts`) in die Blocker des Tages, ein Rückgängig; je Fall eine Korpus-Zeile. Ein bloßes „Zocken“ bleibt ein ToDo – die App rät nicht, was Freizeit ist.
 - Eine Pause zeigt ihre eigene Länge wie jeder Blocker; keine Summe, keine Bewertung, keine Freizeit-Summe über Tage, kein Widget.
 - Gegen-Szenarien im PR: Werktag mit Bürozeiten (Vormittag für Fokusarbeit), ohne Mail, Planer aus.
 - Mess-Skript Pfad C: Abschnitte und „Als Pause“, Reihenfolge per Assertion; Pfad B unverändert; `MAX` nicht senken.
@@ -154,24 +154,24 @@ Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Q
 Branch `feat/plan-due-time` von frischem `develop` – nach dem Merge von Paket 4. Vorher eine Zeile in docs/CHATS.md „Hotspots“: `core/modules/types.ts` (Vertrag `plannable`, additiv). Vorgegebene Session-Branches ignorieren.
 
 ## Ausgangslage
-Entscheidung Q4 a (nur Selbstgesetztes, einmal zur Uhrzeit, nie wiederholt; „1 Std vorher“ nur auf Wunsch), Zielbild TARGET.md F4 (mittel), Reibung W06, W21. Lies `core/modules/types.ts` (`PlannableItem.due`), `modules/planner/schema.ts:43` (`due: {date, hard}`), `modules/todos/{schema,migrations,manifest,plannable}.ts`, `modules/calendar/{schema,migrations,manifest,notifications}.ts` (Z. 78: Wiederholungsreihe für jede `kind: 'reminder'`), `core/notifications/policy.ts`, `quickCapture/targets/adapters.ts:52` (heute „Uhrzeit: …“ als Notiz), docs/features/repeat-reminders.md, docs/legal/DATA-FLOWS.md Zeile `push`.
+Entscheidung Q4 a (nur Selbstgesetztes, einmal zur Uhrzeit, nie wiederholt; „1 Std vorher“ nur auf Wunsch), Zielbild TARGET.md F4 (mittel), Reibung W06, W21. Lies `core/modules/types.ts` (`PlannableItem.due`), `modules/planner/schema.ts:43` (`due: {date, hard}`), `modules/todos/{schema,migrations,manifest,plannable}.ts`, `modules/calendar/{schema,migrations,manifest,notifications}.ts` (`repeatSeries` für jede `kind: 'reminder'`), `core/notifications/policy.ts`, `quickCapture/targets/adapters.ts:52` (heute „Uhrzeit: …“ als Notiz), docs/features/repeat-reminders.md, docs/legal/DATA-FLOWS.md Zeile `push`.
 
 ## Pflichtliste
 - Vertrag additiv `due.time?: 'HH:mm'`; Planer-Zeile `due.time` und ToDo `dueTime?` (je `manifest.version` + Migration). Die Engine plant weiter nach Tag (unverändert, Test).
 - Zeile „Frist So 18:00“, danach „Frist war So 18:00“ (Glossar), nie rot. ToDo-Seite zeigt die Uhrzeit. Parser und Planer-Feld schreiben die Uhrzeit in `dueTime` statt in die Notiz.
 - Kalender-Feld `once?` an Ereignissen (`manifest.version` + Migration); `notifications.ts` sendet dafür genau eine Benachrichtigung zur Uhrzeit – keine Vorab-Erinnerung (`extraMinutes`), keine gestaffelte Stufe, keine Wiederholung (Test mit `focus.staggered` und `followUp` an); die Zeile zeigt „einmal“. Jede Erinnerung aus Schnellerfassung oder Planer-Feld trägt `once`; Erinnerungen aus dem Kalender-Dialog behalten die globale Regel. `limits.test.ts`/`policy.test.ts` unverändert grün, neuer Test „once wiederholt nie“.
 - W06: eine Zeile mit Tag und Uhrzeit wird nur mit Auslösewort Erinnerung – „erinnere mich“ (besteht), „falls nötig“, „ggf.“; kein Raten nach Verben. Korpus mit Gegenzeilen („Fr 20 Uhr Kino mit Anna“, „Sa 14 Uhr Fußball“, „Mo 9:30 Teamrunde“ bleiben Termine), ganzer Korpus-Diff im PR.
-- Opt-in je Frist „Erinnern: 1 Std vorher“ (Standard aus, ToDo-Feld `dueRemind?`): die ToDos senden sie selbst aus `dueDate` + `dueTime` (eigene `notifications.ts`, keine gespeicherte Kalenderzeile, kein Modul-Import), einmal; erledigt, gelöscht oder verschoben → keine Benachrichtigung (Test). Kein neuer Datenfluss: diese Erinnerungen laufen wie jede Erinnerung über die Zeile `push` (Titel und Notiz, nur mit eingeschaltetem Push).
+- Opt-in je Frist „Erinnern: 1 Std vorher“ (Standard aus, ToDo-Feld `dueRemind?`): die ToDos senden sie selbst aus `dueDate` + `dueTime` (eigene `notifications.ts`, keine gespeicherte Kalenderzeile, kein Modul-Import), einmal; erledigt, gelöscht oder verschoben → keine Benachrichtigung (Test); unabhängig vom Schalter der Morgen-Übersicht `focus.todoDigest` (Test mit ausgeschalteter Übersicht). Kein neuer Datenfluss: diese Erinnerungen laufen wie jede Erinnerung über die Zeile `push` (Titel und Notiz, nur mit eingeschaltetem Push).
 - Titel: der getippte Text ohne Datum, Uhrzeit und „erinnere mich“ (wie heute); „falls nötig“/„ggf.“ bleiben im Titel. Kein Gesundheitsbezug: kein Feld, keine Kategorie, keine Ableitung aus dem Titel (Korpus-Test: „Mo 7:30 krankmelden falls nötig“ → Erinnerung „krankmelden falls nötig“ Mo 07:30, `once`, sonst nichts).
 - Mess-Skript Pfade B und G; `MAX` nicht senken.
 
 ## Nicht in diesem Paket
-Stundengenaue Planung, neue Benachrichtigungsarten, Änderungen an der globalen Wiederholung oder an `core/notifications/policy.ts`.
+Stundengenaue Planung, neue **automatische** Benachrichtigungsarten (der „1 Std vorher“-Hinweis ist selbst gesetzt: nicht `soft`, einmal; Stumm und Stundengrenze gelten), Änderungen an der globalen Wiederholung oder an `core/notifications/policy.ts`.
 
 ## Abnahme
 - `npm run check`, `test`, `check:i18n`, `e2e` grün; Migrations-Tests (Planer, ToDos, Kalender); Korpus; wochenende-, kopf-leer-Skript, `e2e/reminders.spec.ts` grün.
 - Zahlen: G Umwege 1 → 0 (die Montagszeile wird durch „falls nötig“ eine Erinnerung; das Skript prüft zusätzlich `dueTime` = 18:00 am ToDo), B Umwege 2 → 1; Erinnerungen aus Pfad G wiederholen nie; Fokus-Checkliste 1–9; Entfernt: Notizzeile „Uhrzeit: …“ bei Fristen.
-- Docs: docs/features/repeat-reminders.md ein Satz, Entscheidungs-Bullet nur bei Abweichung, `.changes/`, STATUS im eigenen PR, Hotspot-Zeile raus.
+- Docs: FOCUS-WORDING eine Zeile (so / nicht so) für den neuen Satz; docs/features/repeat-reminders.md ein Satz, Entscheidungs-Bullet nur bei Abweichung, `.changes/`, STATUS im eigenen PR, Hotspot-Zeile raus.
 
 ## Skills
 `council` (Guardian: keine Gesundheitsdaten, Erinnerung nur auf Wunsch und einmal, keine neue Datenweitergabe; Advocate: ruhige Texte, nie rot, „einmal“ sichtbar; Architect: Vertrag additiv, drei Migrationen, Zeiten `HH:mm` lokal über `core/time`, keine Modul-Importe), dann `full stop`.
@@ -187,23 +187,24 @@ Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Q
 Branch `feat/plan-day-end` von frischem `develop` – nach dem Merge von Paket 5 (Paket 7 darf parallel laufen). Vorher eine Zeile in docs/CHATS.md „Hotspots“: `core/plan/**`. Vorgegebene Session-Branches ignorieren.
 
 ## Ausgangslage
-Entscheidung Q3 a, Zielbild TARGET.md F6 (mittel, Fokus-Checkliste besonders streng), Reibung W22. Lies `modules/planner/settings.ts` (Z. 33–72), `core/plan/{capacity,windows,engine,explain}.ts` (`placeInWindow` ist ein Nachlauf, `windows.ts:91`), `DaySetup.tsx` (Paket 2), `core/notifications/policy.ts` (`applyQuiet` schiebt `soft` aus der Ruhezeit an deren Ende – deshalb **keine** Benachrichtigung).
+Entscheidung Q3 a, Zielbild TARGET.md F6 (mittel, Fokus-Checkliste besonders streng), Reibung W22. Lies `modules/planner/settings.ts` (Z. 33–72), `core/plan/{capacity,windows,engine,explain}.ts` (`placeInWindow` ist ein Nachlauf, `windows.ts` `placeInWindow`), `DaySetup.tsx` (Paket 2), `core/notifications/policy.ts` (`applyQuiet` schiebt `soft` aus der Ruhezeit an deren Ende – deshalb **keine** Benachrichtigung).
 
 ## Pflichtliste
 - Einstellungen je Gruppe (Mo–Fr, Sa, So) „Tagesbeginn“ und „Tagesende“, optional, Standard leer.
-- Mechanik in einem Durchgang: `raw = min(available, Minuten von Start bis Tagesende) − blockers` mit Start = Tagesbeginn ?? Fensterbeginn ?? 00:00, in `capacity.ts`; `windows.ts` kappt das Fensterende auf das Tagesende, damit keine Sitzung danach eine Uhrzeit bekommt. Was nicht passt, geht wie jede Überlast weiter (Grund „passt nicht vor dem Tagesende“, DE + EN). Ohne Einstellung: alles wie heute (Test). Fixtures: „Einheit nach dem Tagesende wandert“, „Fensterende nach dem Tagesende“, Fixpunkt.
+- Mechanik in einem Durchgang: `raw = min(available, Minuten von Start bis Tagesende) − blockers` mit Start = Tagesbeginn ?? Fensterbeginn, für heute der spätere Wert aus Start und der aktuellen Uhrzeit (als ausdrückliche Engine-Eingabe, nie eine Uhr in der Engine); ohne Tagesbeginn und Fenster greift der Deckel nur heute; „0:00“ heißt Tagesende 24:00 (1440), in `capacity.ts`; `windows.ts` kappt das Fensterende auf das Tagesende, damit keine Sitzung danach eine Uhrzeit bekommt. Was nicht passt, geht wie jede Überlast weiter (Grund „passt nicht vor dem Tagesende“, DE + EN). Ohne Einstellung: alles wie heute (Test). Fixtures: „Einheit nach dem Tagesende wandert“, „Fensterende nach dem Tagesende“, Fixpunkt.
 - Im Blatt „Tage einteilen“ Schritt 2 ein stiller Textlink „Tagesende festlegen“ (eingeklappt, „keins“ vorgewählt; aufgeklappt „23:00 · 0:00 · keins“) – setzt es nur für die drei gezeigten Tage: `dayEnd?` an der Planer-Tageszeile und an `PlanDay` (`manifest.version` + Migration, `db:bump` falls nötig), Rückgängig nimmt es mit zurück.
 - Keine Benachrichtigung: ab 30 Min vor dem Tagesende sagt der Planer-Kopf „Bald ist Tagesende.“ (nur in der App, Schalter `focus.eveningWrapUp`).
 - Keine Schlafdaten, keine Zählung, kein Verlauf, keine Wörter wie „zu spät“; die Gewohnheit „Ins Bett bis …“ wird nur in der Nutzerdoku erwähnt (kein Code).
-- Mess-Skript Pfad H über das Blatt; Assertion: eine Einheit nach dem Tagesende geht auf den nächsten Tag; der Umweg in H wird am Zustand gezählt. `MAX` nicht senken.
+- Mess-Skript Pfad H über das Blatt; Assertion in einem Zustand, in dem der Deckel greift (heute am Abend oder mit Tagesbeginn): eine Einheit nach dem Tagesende geht auf den nächsten Tag; der Umweg in H wird am Zustand gezählt. `MAX` nicht senken.
+- Hinweistext des Schalters `focus.eveningWrapUp` (DE + EN) um „… und kurz vor dem Tagesende ein ruhiger Hinweis im Planer“ ergänzen.
 
 ## Nicht in diesem Paket
 Gewohnheiten-Code, Schlaf-Tracking, Benachrichtigungen, Änderungen an der Ruhezeit 22–07.
 
 ## Abnahme
 - `npm run check`, `test`, `check:i18n`, `e2e` grün; Engine-Fixtures; wochenende-, kopf-leer-Skript, `e2e/planner.spec.ts` grün.
-- Zahlen: H 3 → 1 Tap, 1 → 0 Umwege; Fokus-Checkliste 1–9 (streng, im PR begründet); Entfernt: Fenster-Eingabe auf der Einstellungsseite als einziger Weg.
-- Docs: CONCEPT §3 eine Zeile, Nutzerdoku DE + EN, `.changes/`, STATUS im eigenen PR, Hotspot-Zeile raus.
+- Zahlen: H 3 → 2 Taps (aufklappen, wählen), 1 → 0 Umwege; Fokus-Checkliste 1–9 (streng, im PR begründet); Entfernt: Fenster-Eingabe auf der Einstellungsseite als einziger Weg.
+- Docs: FOCUS-WORDING eine Zeile (so / nicht so) für den neuen Satz; CONCEPT §3 eine Zeile, Nutzerdoku DE + EN, `.changes/`, STATUS im eigenen PR, Hotspot-Zeile raus.
 
 ## Skills
 `council` (Guardian: keine Schlaf- oder Gesundheitsdaten; Advocate: kein Tadel, nur ein Kopfsatz, ruhig; Architect: Deckel in `capacity.ts`, ein Durchgang, deterministisch, Fixpunkt, Einstellung additiv), dann `full stop`.
@@ -224,7 +225,7 @@ Zielbild TARGET.md F5 (a und b, zwei Commits), Reibung W17; docs/legal/DATA-FLOW
 ## Pflichtliste
 - (a) Zeile „Antworten: Anna, Vermieter, Team“ (nur mit Wort und Doppelpunkt) → ein ToDo „Antworten“ mit drei Checklistenpunkten. Korpus-Test.
 - (b) `summarize` liefert zusätzlich `lastLabelIds` (Labels der letzten Nachricht). Das Kennzeichen wird **nur** im Listenpfad von `useMailbox` berechnet und geschrieben (die Person öffnet oder aktualisiert die Liste); der Hintergrund-Check `notifyService` (`pollAll` → `saveHeaders`) schreibt es nie (Test auf genau diesem Pfad). Dann bekommt ein Thread, der „In den Plan“ ging und dessen letzte Nachricht `SENT` trägt, ein Kennzeichen nur im gerätelokalen Mail-Cache (`local: true`, `dataApi: false`; nie synchronisiert, nie Feld am ToDo oder an der Plan-Zeile, nie an eine KI). Die Mail-Zeile zeigt „Beantwortet? · Erledigt“; „Erledigt“ schickt `todo.doneRequested` (nur die ToDo-Id) über den Bus, die ToDos schließen es, Hinweis „Erledigt · Rückgängig“. Nichts schließt von selbst. Einstellung „Beantwortet anzeigen“ in den Mail-Einstellungen (nur Anzeige, Standard an). Test: Form der synchronisierten ToDo-Zeile unverändert; Kennzeichen nicht aus `notifyService`.
-- DATA-FLOWS `google`, data-flows-hinweise „Mail → ToDo“ und `strings.legal.ts` (DE/EN): „ob die letzte Nachricht von dir ist (nur auf dem Gerät)“; `core/legal/legal.test.ts` grün.
+- DATA-FLOWS `google`, data-flows-hinweise „Mail → ToDo“ und `strings.legal.ts` (DE/EN): „ob die letzte Nachricht von dir ist (nur auf dem Gerät)“; `core/legal/legal.test.ts` grün; die Checkliste in `docs/legal/data-flows-website.md` abgleichen (Website, README, `docs/user/security*.md` DE + EN).
 - Mess-Skript Pfad E: Seed-Thread mit eigener letzter Nachricht (Seed-Version erhöhen) → 1 Tap mit Rückgängig. `MAX` nicht senken.
 
 ## Nicht in diesem Paket
@@ -233,7 +234,7 @@ WhatsApp (kein Connector, kein Link), Antwort-Entwürfe, gemeinsamer OAuth-Clien
 ## Abnahme
 - `npm run check`, `test`, `check:i18n`, `e2e` grün; `USECASE_SEED_URL=… npx playwright test e2e/usecases/wochenende.spec.ts e2e/usecases/kopf-leer.spec.ts --project=desktop-chrome`; Seed-Registry-Test; `core/mail/isolation.test.ts` grün.
 - Zahlen: E „Erledigt“ 1 Tap mit Rückgängig; eine Zeile → ein ToDo mit drei Punkten; Fokus-Checkliste 1–9.
-- Docs: DATA-FLOWS, data-flows-hinweise, `.changes/`, STATUS im eigenen PR.
+- Docs: FOCUS-WORDING eine Zeile (so / nicht so) für den neuen Satz; DATA-FLOWS, data-flows-hinweise, `.changes/`, STATUS im eigenen PR.
 
 ## Skills
 `council` (Guardian: nur ein gerätelokales Kennzeichen, kein Inhalt, nie aus dem Hintergrund, Datenschutz-Aussagen stimmen, nie automatisch erledigt; Advocate: eine Frage, Rückgängig; Architect: letzte Nachricht statt Vereinigung, Bus statt Import, kein neuer Scope, Seed deterministisch), dann `full stop`.
