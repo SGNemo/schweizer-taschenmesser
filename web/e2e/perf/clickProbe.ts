@@ -20,6 +20,14 @@ export interface Sample {
   /** Main-thread time between click and the end of the measurement (CDP `TaskDuration`, `ScriptDuration`). */
   taskMs: number;
   scriptMs: number;
+  /** Layout and style recalculation in that time (CDP `LayoutDuration`/`RecalcStyleDuration`, ms; counts). */
+  layoutMs?: number;
+  styleMs?: number;
+  layouts?: number;
+  styles?: number;
+  /** DOM size at `done`: elements in the document and inside `main`. */
+  nodes?: number;
+  mainNodes?: number;
   loadingMs: number;
 }
 
@@ -118,6 +126,17 @@ export async function measure(
   sample.chunkKb = Math.round((await Promise.all(files)).reduce((a, b) => a + b, 0) / 1024);
   sample.taskMs = Math.round(((after.TaskDuration ?? 0) - (before.TaskDuration ?? 0)) * 1000);
   sample.scriptMs = Math.round(((after.ScriptDuration ?? 0) - (before.ScriptDuration ?? 0)) * 1000);
+  const delta = (k: string) => (after[k] ?? 0) - (before[k] ?? 0);
+  sample.layoutMs = Math.round(delta('LayoutDuration') * 1000);
+  sample.styleMs = Math.round(delta('RecalcStyleDuration') * 1000);
+  sample.layouts = delta('LayoutCount');
+  sample.styles = delta('RecalcStyleCount');
+  const size = await page.evaluate(() => ({
+    nodes: document.getElementsByTagName('*').length,
+    mainNodes: document.querySelector('main')?.getElementsByTagName('*').length ?? 0,
+  }));
+  sample.nodes = size.nodes;
+  sample.mainNodes = size.mainNodes;
   return sample;
 }
 
