@@ -1,6 +1,15 @@
 # Messungen – UI-Audit 2026-11 und Abnahme 0b-8
 
-Drei Teile: **Nachher – Abnahme 0b-8** (Vorher → Nachher, 2026-11-14), **Nachher – volle Tabellen** und **Vorher – Audit 2026-11** (die Tabellen des Audits, unverändert). Bewertung der Checkliste und Klickwege: [REPORT „Abnahme 0b-8“](REPORT.md#abnahme-0b-8-2026-11-14).
+Vier Teile: **Abschlussmessung 2** (nach den Fix-PRs, 2026-11-14), **Nachher – Abnahme 0b-8** (Vorher → Nachher, 2026-11-14), **Nachher – volle Tabellen** und **Vorher – Audit 2026-11** (die Tabellen des Audits, unverändert). Bewertung der Checkliste und Klickwege: [REPORT „Abschlussmessung 2“](REPORT.md#abschlussmessung-2-2026-11-14) und [„Abnahme 0b-8“](REPORT.md#abnahme-0b-8-2026-11-14).
+
+## Abschlussmessung 2 (2026-11-14)
+
+- **Stand:** `develop` ac84bc30f = der Stand der ersten Messung plus die Fix-PRs #830 (Wetter, Listen, Chat ohne Sprung), #835 (Kalender-Reiter „Termine“ am Handy, Gerätestatus „Noch kein Backup“), #834 (Palette: genauer Treffer zuerst), #839 (leere Liste mit „Artikel eintragen“), #841 (Musik ohne Sprung). Dasselbe Werkzeug wie im ersten Teil (Stand `develop`, Klickweg C1 mit der Korrektur aus #840), acht Läufe wie dort, zweiter unabhängiger Durchgang (der erste lief auf b1450a61, vor #841).
+- **Layout-Sprung:** keine Seite mit CLS ≥ 0,05 in einem der acht Läufe. Höchster Wert je Lauf: Desktop dunkel Seed 0,012 (Finanzen-Filter), leer 0,016 (Übersicht „Ausführlich“); Desktop hell Seed 0,004, leer 0,006 (Personen); Handy dunkel Seed 0,006 (Finanzen), leer 0,018 (Personen); Handy hell Seed 0,002, leer 0,022 (Routinen). Wetter, Listen, Chat und Musik in allen Läufen ≤ 0,0005. Der erste Durchgang (b1450a61) hatte nur Musik über 0,05 (hell, 0,14 / 0,12), der Fix kam mit #841 (dort zusätzlich in der eigenen Seed-Spec, erster und zweiter Besuch, Desktop und Handy).
+- **axe:** in allen acht Läufen 0 Verletzungen „serious“/„critical“.
+- **Klickwege** (beide Durchgänge gleich): Suchen – Palette zum Treffer Desktop 0 · 2 · 1 · 1, Handy 1 · 1 · 1 · 1 (vorher 0 · 4 / 1 · 3: der genaue Treffer steht oben, Enter öffnet ihn); Status ansehen 2 Klicks; alle anderen Wege wie im ersten Teil.
+- **Reizlast über dem Falz:** innerhalb von ± 4 je Summe gleich dem ersten Teil (Desktop dunkel Seed identisch; Handy dunkel Seed Aktionen 722 → 726, Farbe Fläche 375 → 376). **Kopf px:** Median Desktop 69, Handy 93 (erster Teil 84 / 96: dort stammten die Desktop-Köpfe aus einem zweiten Durchgang mit einem früheren Stand der Kopf-Suche; ua-2 und dieser Lauf geben dieselben Werte, Spanne 36 px Einstellungs-Unterseiten bis 314 px Musik-Bühne).
+- **Ratsche gegen 0b-1** (`e2e/stimulus-budget.json` nach #664 gegen `develop` 0f88dc4e3, CI-Werte, 69 gemeinsame Seiten × Gerät): Knöpfe 3 106 → 2 992, Links 1 589 → 1 334, Icons 3 288 → 2 911, Aktionen im ersten Bildschirm 3 191 → 3 050, Rahmen 246 → 2, Schatten 187 → 2, Flächensprachen 100 → 4, Farbe über dem Falz 711 → 339, Signatur-Blöcke 96 → 96, Seitenhöhe 148 192 → 132 980 px (−10 %). Seit der ersten Messung: ToDos Desktop Farbe 5 → 7 (CI-Wert nach dem geparkten Zeiger, #824), Listen Handy Höhe 2 081 → 1 682 (#839).
 
 ## Nachher – Abnahme 0b-8 (2026-11-14)
 
