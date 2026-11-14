@@ -106,7 +106,12 @@ export function untouchedSinceCreated(row: {
 }): boolean {
   const stamps = [...new Set(Object.values(row._f))];
   if (stamps.length !== 1) return false;
-  return row.updatedAt === row.createdAt || row.updatedAt < parseHlc(stamps[0]!).wall;
+  if (row.updatedAt === row.createdAt) return true;
+  try {
+    return row.updatedAt < parseHlc(stamps[0]!).wall;
+  } catch {
+    return false; // a malformed stamp: doubtful, so the record is kept
+  }
 }
 
 export interface RepoOptions {

@@ -240,5 +240,8 @@ describe('untouchedSinceCreated', () => {
     expect(untouchedSinceCreated(restored)).toBe(false);
     // The same row straight from an import with its own dates is untouched.
     expect(untouchedSinceCreated({ ...restored, updatedAt: clock - 10 })).toBe(true);
+    expect(
+      untouchedSinceCreated({ ...restored, updatedAt: clock - 10, _f: { title: 'kaputt' } }),
+    ).toBe(false);
   });
 });
