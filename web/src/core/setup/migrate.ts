@@ -10,6 +10,7 @@ import { rwTransaction } from '@/core/db/tx';
 import { batchStatus } from '@/core/importer/batches';
 import type { ImportBatch } from '@/core/importer/types';
 import { now } from '@/core/time/now';
+import { readSetupState } from './state';
 
 export const MIGRATE_STEP_ID = 'core.migrate';
 export const MIGRATE_STATE_KEY = 'migrate.state';
@@ -225,13 +226,16 @@ export async function installationIsEmpty(): Promise<boolean> {
 }
 
 /**
- * Once offered on this device, the step stays until it is answered – the first own entry must not
+ * Once offered in a started setup on this device, the step stays until it is answered – the first own entry must not
  * change the step count without an action ("2 von 10" → "2 von 9", round 5 A11).
  */
 export async function migrateStepApplies(database: TaschenmesserDB = defaultDb): Promise<boolean> {
   if (hasMigrateChoice(await readMigrateState(database))) return true;
   if ((await meta(database).get(MIGRATE_OFFERED_KEY))?.value === true) return true;
   if (!(await installationIsEmpty())) return false;
-  await meta(database).put({ key: MIGRATE_OFFERED_KEY, value: true });
+  // Remembered only once the setup is under way (the hidden checklist also asks on a fresh start).
+  const setup = await readSetupState(database);
+  if (setup && setup.status !== 'notStarted')
+    await meta(database).put({ key: MIGRATE_OFFERED_KEY, value: true });
   return true;
 }

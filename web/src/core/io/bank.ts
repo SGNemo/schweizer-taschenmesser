@@ -58,6 +58,8 @@ export class BankFormatError extends Error {
 }
 
 const oneLine = (s: string) => s.replace(/\s+/g, ' ').trim();
+/** A purpose text can run to 140 characters; the preview names a row, it does not quote it. */
+const short = (s: string) => (s.length > 40 ? `${s.slice(0, 39)}…` : s);
 
 /** Normalized header names (see `normalizeHeader`) of the columns we read, with known variants. */
 export interface BankColumnNames {
@@ -190,7 +192,9 @@ export function parseBankCsvWith(text: string, layout: BankCsvLayout): BankParse
         line: located.lines[index] ?? index + 1,
         reason,
         value: oneLine(value),
-        label: oneLine(pick(rec, c.payee) || pick(rec, layout.payeeOut) || pick(rec, c.purpose)),
+        label: short(
+          oneLine(pick(rec, c.payee) || pick(rec, layout.payeeOut) || pick(rec, c.purpose)),
+        ),
       });
   };
   for (let index = located.headerIndex + 1; index < located.rows.length; index++) {

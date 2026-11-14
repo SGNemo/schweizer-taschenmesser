@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { allSetupSteps, applicableSteps } from './registry';
 import { buildChecklist } from './checklist';
-import { initialState } from './state';
+import { initialState, markStepDone } from './state';
 import {
   chooseOrigin,
   EMPTY_MIGRATE,
@@ -144,7 +144,14 @@ describe('step registration', () => {
     expect(await has()).toBe(true);
   });
 
+  it('a fresh install that never started the setup does not keep the step', async () => {
+    expect(await has()).toBe(true);
+    await addOwnNote();
+    expect(await has()).toBe(false);
+  });
+
   it('A11 (round 5): once offered, the first own entry does not change the step count', async () => {
+    await markStepDone('core.profiles');
     expect(await has()).toBe(true);
     const before = (await applicableSteps(allSetupSteps, ctx)).length;
     await addOwnNote();
