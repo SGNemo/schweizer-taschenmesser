@@ -3293,7 +3293,8 @@ export const de = {
     },
     available: 'Verfügbar',
     tabs: {
-      overview: 'Übersicht',
+      /** The month view ("Übersicht" is the home in the bottom bar; "Verlauf" holds several months). */
+      overview: 'Monat',
       transactions: 'Buchungen',
       trend: 'Verlauf',
       accounts: 'Konten',

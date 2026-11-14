@@ -150,7 +150,7 @@ export const finance: Strings['finance'] = {
   },
   available: 'Available',
   tabs: {
-    overview: 'Overview',
+    overview: 'Month',
     transactions: 'Transactions',
     trend: 'History',
     accounts: 'Accounts',

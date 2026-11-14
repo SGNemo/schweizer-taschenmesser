@@ -2,8 +2,8 @@
 type: changed
 area: finance
 breaking: false
-de: Finanzen sagt oben „Buchung eintragen“ wie die anderen Bereiche; am Handy ist der Vergleich zum Vormonat kürzer: Pfeil und Betrag.
-en: Finance now says "Add transaction" at the top like the other areas; on the phone the comparison with last month is shorter: arrow and amount.
+de: Finanzen sagt oben „Buchung eintragen“ wie die anderen Bereiche; der erste Reiter heißt „Monat“; am Handy ist der Vergleich zum Vormonat kürzer.
+en: Finance now says "Add transaction" at the top like the other areas; the first tab is called "Month"; on the phone the comparison with last month is shorter.
 ---
 
 ---
