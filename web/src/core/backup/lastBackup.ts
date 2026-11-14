@@ -19,12 +19,24 @@ export interface LastBackup {
 const meta = (database: TaschenmesserDB) =>
   database.table<{ key: string; value: unknown }, string>('_meta');
 
+// Bumped after every recorded file backup, so open status lines read again (a backup saved from the Gerätestatus
+// dialog must not leave "Noch kein Backup" on the page behind it). Memory only, nothing stored.
+let version = 0;
+const listeners = new Set<() => void>();
+export function subscribeLastBackup(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+export const lastBackupVersion = (): number => version;
+
 /** Call after a backup file was saved (not when the save dialog was cancelled). */
 export async function recordFileBackup(
   database: TaschenmesserDB = defaultDb,
   at: number = now(),
 ): Promise<void> {
   await meta(database).put({ key: FILE_KEY, value: { at } });
+  version++;
+  for (const listener of listeners) listener();
 }
 
 export async function loadLastBackup(

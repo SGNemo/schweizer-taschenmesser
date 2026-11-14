@@ -54,7 +54,7 @@ export const planner: Strings['planner'] = {
     dayOff: 'Today is off.',
     over: (min: string) => `${min} more than fits`,
     first: (title: string) => `Today: ${title}. That's enough for today.`,
-    nextFree: (day: string, free: string) => `Today is free. ${day}: ${free} free.`,
+    nothing: 'Nothing planned for today yet.',
     context: (n: number, planned: string) =>
       `${n === 1 ? '1 thing' : `${n} things`} · ${planned} planned`,
     week: (week: string) => `Week ${week}`,
@@ -87,6 +87,8 @@ export const planner: Strings['planner'] = {
     blockerPlaceholder: 'Workshop',
     blockerMinutes: 'Duration',
     removeBlocker: (label: string) => `Remove ${label}`,
+    quickLabel: 'Pick the available time',
+    wholeDay: 'whole day',
     dayOff: 'Day off',
     dayOn: 'Plan time again',
     calendar: 'From the calendar',

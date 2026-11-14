@@ -165,11 +165,10 @@ export default function FinancePage() {
             firstUse && (tab === 'overview' || tab === 'transactions') ? 'secondary' : 'primary'
           }
           onClick={addBooking}
-          aria-label={t.finance.addTransaction}
           disabled={!canAdd}
         >
           <Icon name="plus" size={18} />
-          {t.finance.addTransactionShort}
+          {t.finance.addTransaction}
         </PageAction>
         <StartDataMenu
           moduleId="finance"

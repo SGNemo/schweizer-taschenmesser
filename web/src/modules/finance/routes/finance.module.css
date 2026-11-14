@@ -51,6 +51,7 @@
   font-weight: var(--weight-semibold);
 }
 .kpis {
+  container: kpis / inline-size;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-3);
@@ -434,6 +435,38 @@
 .delta {
   font-size: var(--text-sm);
   color: var(--text-2);
+}
+/* Wide row: the full sentence per card. Narrow row (phone): arrow and amount in one line, the month named once below. */
+.deltaShort,
+.deltaNote {
+  display: none;
+}
+.nowrap {
+  white-space: nowrap;
+}
+@container kpis (max-width: 40rem) {
+  /* The rules of the global `.sr-only`, which cannot be applied by a container query. */
+  .deltaFull {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .deltaShort {
+    display: inline;
+  }
+  .deltaNote {
+    display: block;
+    grid-column: 1 / -1;
+    /* A caption of the cards, not a block of its own: closer than the grid's gap. */
+    margin: calc(-1 * var(--space-1)) 0 0;
+    padding: 0;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+  }
 }
 
 .toolbarRow {

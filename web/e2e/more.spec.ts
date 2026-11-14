@@ -42,6 +42,11 @@ test('open gifts of all people in one list; "Verschenkt" is one click and undoab
   page,
 }) => {
   await enable(page, 'people');
+  // Empty: the first view names what it lists, and no bare list surface sits under the empty state.
+  await ready(page, '/people');
+  await expect(page.getByRole('button', { name: 'Geburtstage', exact: true })).toBeVisible();
+  await expect(page.getByTestId('people-empty')).toBeVisible();
+  await expect(page.locator('main [data-list-surface]')).toHaveCount(0);
   for (const [name, gift] of [
     ['Anna', 'Kochbuch'],
     ['Ben', 'Schal'],

@@ -36,9 +36,7 @@
   text-align: center;
   padding: var(--space-7) var(--space-4);
   color: var(--text-muted);
-  /* In a flex-column page the empty state takes the free height and centres itself. */
-  flex: 1;
-  justify-content: center;
+  /* At the top of the content, never centred in the free height (decisions/ui-components.md, empty states). */
 }
 .emptyMark {
   display: grid;
@@ -63,7 +61,6 @@
 /* Inside a dashboard widget: small mark, one line, no extra height. */
 .emptyCompact {
   flex-direction: row;
-  justify-content: flex-start;
   flex-wrap: wrap;
   text-align: left;
   padding: var(--space-2) 0;

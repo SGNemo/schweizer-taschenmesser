@@ -34,13 +34,13 @@ test.describe('Finance: transfers, splits, year, outlook', () => {
 
     // C23: the empty bookings page offers one verb; transfers live on "Konten".
     await ready(page, '/finance?tab=accounts');
-    // One primary on "Konten": the toolbar's "Buchung"; "Konto eintragen" is secondary (round 6, U13).
+    // One primary on "Konten": the head's "Buchung eintragen"; "Konto eintragen" is secondary (round 6, U13).
     await expect(page.getByRole('button', { name: 'Konto eintragen' })).toBeVisible();
     // Identity 4.0: on the phone the page's one action is the plus of the bottom bar, no filled button in the page.
     if ((page.viewportSize()?.width ?? 1280) < 900) {
       expect(await primaryActions(page)).toEqual([]);
       await expect(page.getByTestId('bottom-plus')).toHaveAccessibleName('Buchung eintragen');
-    } else expect(await primaryActions(page)).toEqual(['Buchung']);
+    } else expect(await primaryActions(page)).toEqual(['Buchung eintragen']);
     await page.getByRole('button', { name: 'Umbuchung', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Umbuchung' });
     await dialog.getByLabel('Von Konto').selectOption({ label: 'Girokonto' });

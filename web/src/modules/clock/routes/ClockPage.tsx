@@ -17,7 +17,7 @@ import {
   SortableList,
   useOpenParam,
 } from '@/ui';
-import { HeroFigure, HeroSlot } from '@/ui/identity';
+import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import { AddPlaceDialog } from '../components/AddPlaceDialog';
 import { RenameDialog } from '../components/RenameDialog';
 import { MAX_PLACES, listPlaces, placeRepo, reorderPlaces, type StoredPlace } from '../repo';
@@ -87,7 +87,11 @@ export default function ClockPage() {
       </HeroSlot>
 
       {places && list.length === 0 ? (
-        <EmptyState title={t.clock.empty} testId="clock-empty">
+        <EmptyState
+          title={t.clock.empty}
+          testId="clock-empty"
+          motif={<SignatureMark id="dial" size={64} />}
+        >
           <Button variant="primary" onClick={() => setAdding(true)}>
             {t.clock.addFirst}
           </Button>

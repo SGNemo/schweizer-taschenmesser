@@ -118,7 +118,17 @@ test.describe('Invoices', () => {
     // Reopen → expense disappears
     await ready(page, '/invoices');
     await page.getByRole('button', { name: 'Bezahlt', exact: true }).click();
-    await page.getByRole('button', { name: 'Wieder öffnen' }).click();
+    // On the phone "Wieder öffnen" is in the row's menu (0b-8 follow-up 4: the payee keeps the row's width).
+    if ((page.viewportSize()?.width ?? 0) < 768) {
+      await page
+        .locator('main li')
+        .getByRole('button', { name: 'Weitere Aktionen' })
+        .first()
+        .click();
+      await page.getByRole('menuitem', { name: 'Wieder öffnen' }).click();
+    } else {
+      await page.getByRole('button', { name: 'Wieder öffnen' }).click();
+    }
     await expect(page.getByText('Noch keine bezahlten Rechnungen.')).toBeVisible();
     await expect.poll(() => liveTransactionCount(page)).toBe(0);
     await ready(page, '/finance?tab=transactions');
@@ -332,7 +342,7 @@ test.describe('Finance', () => {
     await expect(page.getByTestId('balance-Sparkonto')).toHaveText(/1\.000,00\s€/);
     await expect(page.getByTestId('balance-Girokonto')).toHaveText(/100,00\s€/);
 
-    await page.getByRole('button', { name: 'Übersicht', exact: true }).click();
+    await page.getByRole('button', { name: 'Monat', exact: true }).click();
     await expect(page.getByTestId('hero')).toHaveText(/1\.100,00\s€/);
 
     await page.getByRole('button', { name: 'Kategorien', exact: true }).click();
