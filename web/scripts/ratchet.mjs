@@ -19,7 +19,9 @@
  *     Exit 0 only if the live head equals `--head` (when given), the check run "Web (lint, types, unit, E2E)"
  *     of the `pull_request` run of ci.yml on that head succeeded, and there are no hits or a comment
  *     `stimulus-raise SGNemo/schweizer-taschenmesser#<n> <hash> <signature>` carries a valid Ed25519 signature
- *     of RATCHET_PUBLIC_KEY over `stimulus-raise SGNemo/schweizer-taschenmesser#<n> <hash>`. Anything unclear
+ *     of RATCHET_PUBLIC_KEY over `stimulus-raise SGNemo/schweizer-taschenmesser#<n> <hash>` (until
+ *     PROXY_APPROVAL_UNTIL also: a comment by MAINTAINER_LOGIN with that line first and a reason below, see
+ *     proxyApproval; in CI it turns the hits green like the label). Anything unclear
  *     (no key, no network, unreadable history) ends with exit ≠ 0.
  */
 import { execFileSync } from 'node:child_process';
@@ -35,6 +37,15 @@ export const REPO = 'SGNemo/schweizer-taschenmesser';
  */
 export const RATCHET_PUBLIC_KEY = 'MCowBQYDK2VwAyEAY0kk4IV+hYV464o2tgrPyVps5jwszeQLq9IIuKvA/vI=';
 export const LABEL = 'stimulus-raise';
+/**
+ * Temporary proxy approval (Sven, 2026-11-14, for one week): besides the signature, a PR comment by this
+ * account whose first line is exactly the approval message and which gives a reason below it approves the
+ * hits. Agents that act with the maintainer's token post as this account: that is the intended proxy. It ends
+ * by itself at PROXY_APPROVAL_UNTIL (later comments and later runs no longer count), after which only the
+ * signature is valid again; the follow-up pull request removes this block. Empty = no proxy approval.
+ */
+export const MAINTAINER_LOGIN = 'SGNemo';
+export const PROXY_APPROVAL_UNTIL = '2026-11-22T00:00:00Z';
 export const WEB_CHECK = 'Web (lint, types, unit, E2E)';
 export const CI_WORKFLOW = '.github/workflows/ci.yml';
 export const BASE_BRANCH = 'develop';
@@ -1025,6 +1036,45 @@ export function isApproval(body, { pr, hash, key, repo = REPO }) {
   }
 }
 
+/**
+ * Temporary proxy approval: the reason (one line, control characters made visible, at most 500 characters) if
+ * `comment` approves exactly this hash, else null. Counts only while `now` and the comment's creation and last
+ * edit are before `until`, only for `login` as a plain user (case-insensitive, GitHub logins are), only when
+ * the first line is exactly the approval message and at least one later line carries a letter.
+ */
+export function proxyApproval(
+  comment,
+  {
+    pr,
+    hash,
+    repo = REPO,
+    now = Date.now(),
+    until = PROXY_APPROVAL_UNTIL,
+    login = MAINTAINER_LOGIN,
+  },
+) {
+  const end = Date.parse(String(until ?? ''));
+  if (!login || !Number.isFinite(end) || !(now < end)) return null;
+  const user = comment?.user;
+  if (typeof user?.login !== 'string' || user.login.toLowerCase() !== login.toLowerCase())
+    return null;
+  if (user.type !== undefined && user.type !== 'User') return null;
+  for (const at of [comment.created_at, comment.updated_at ?? comment.created_at]) {
+    const t = Date.parse(String(at ?? ''));
+    if (!Number.isFinite(t) || !(t < end)) return null;
+  }
+  if (typeof comment.body !== 'string') return null;
+  const [first, ...rest] = comment.body.replace(/\r\n?/g, '\n').split('\n');
+  if (first.trimEnd() !== approvalMessage(pr, hash, repo)) return null;
+  const reason = rest
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .join(' ')
+    .replace(/\p{Cc}|\p{Zl}|\p{Zp}/gu, (c) => `<U+${c.codePointAt(0).toString(16)}>`);
+  if (!/\p{L}/u.test(reason)) return null;
+  return reason.length > 500 ? `${reason.slice(0, 500)}…` : reason;
+}
+
 // ---------------------------------------------------------------------------------------------------------
 // git and GitHub (read only)
 // ---------------------------------------------------------------------------------------------------------
@@ -1171,6 +1221,7 @@ export async function runCi({
   repo = gitRepo(),
   env = process.env,
   fetchImpl = fetch,
+  now = Date.now(),
   out = console.log,
 }) {
   const hits = collectHits(repo, base, head);
@@ -1199,16 +1250,34 @@ export async function runCi({
     );
     if (labels.some((l) => l?.name === LABEL)) {
       out(
-        `Label "${LABEL}" is on the pull request: green for CI. The merge still needs the signed comment.`,
+        `Label "${LABEL}" is on the pull request: green for CI. The merge still needs the approval comment.`,
       );
       return 0;
     }
+    if (/^[1-9]\d*$/.test(env.PR_NUMBER) && now < Date.parse(PROXY_APPROVAL_UNTIL)) {
+      const pr = Number(env.PR_NUMBER);
+      const hash = hashOf(hits);
+      const comments = await githubAll(
+        fetchImpl,
+        env.GITHUB_TOKEN,
+        `/repos/${slug}/issues/${pr}/comments`,
+      );
+      const reason = comments
+        .map((c) => proxyApproval(c, { pr, hash, repo: slug, now }))
+        .find((r) => r !== null);
+      if (reason !== undefined) {
+        out(
+          `Proxy approval comment for hash ${hash} (until ${PROXY_APPROVAL_UNTIL}): green for CI. Reason: ${reason}`,
+        );
+        return 0;
+      }
+    }
   } catch (e) {
-    out(`Could not read the labels (${e.message}); hits stay red.`);
+    out(`Could not read the labels or comments (${e.message}); hits stay red.`);
     return 1;
   }
   out(
-    `Hits without the label "${LABEL}". Next step: name every hit in the pull request text and wait for the maintainer (only he sets the label, by hand), or take the change back. Lowering a budget and new guard files are free.`,
+    `Hits without the label "${LABEL}" or an approval comment for hash ${hashOf(hits)}. Next step: name every hit in the pull request text and wait for the maintainer's approval (docs/howto/ci-ratchet-signing.md), or take the change back. Lowering a budget and new guard files are free.`,
   );
   return 1;
 }
@@ -1222,6 +1291,7 @@ export async function runPr({
   fetchImpl = fetch,
   publicKey = RATCHET_PUBLIC_KEY,
   slug = REPO,
+  now = Date.now(),
   out = console.log,
 }) {
   const problems = [];
@@ -1264,16 +1334,32 @@ export async function runPr({
 
   if (hits.length) {
     const message = approvalMessage(pr, hash, slug);
+    const proxyOpen = now < Date.parse(PROXY_APPROVAL_UNTIL);
     let approved = false;
+    let reason;
     if (key) {
       const comments = await githubAll(fetchImpl, token, `/repos/${slug}/issues/${pr}/comments`);
       approved = comments.some((c) => isApproval(c?.body, { pr, hash, key, repo: slug }));
+      if (!approved && proxyOpen)
+        reason = comments
+          .map((c) => proxyApproval(c, { pr, hash, repo: slug, now }))
+          .find((r) => r !== null);
     }
     out(`\nHash: ${hash}`);
     out(`Message: ${message}`);
     if (approved) out('Approval: a comment with a valid signature over this message exists.');
+    else if (reason !== undefined)
+      out(
+        `Approval: proxy comment by ${MAINTAINER_LOGIN} (temporary, until ${PROXY_APPROVAL_UNTIL}).\nReason: ${reason}`,
+      );
     else {
-      problems.push('hits without a validly signed approval comment for this hash');
+      problems.push(
+        'hits without a validly signed approval comment (or a proxy approval comment) for this hash',
+      );
+      if (proxyOpen)
+        out(
+          `Proxy approval (temporary, until ${PROXY_APPROVAL_UNTIL}): a comment by ${MAINTAINER_LOGIN} whose first line is exactly the message above, then at least one line with the reason. Or the signature:`,
+        );
       out('Sign it (asks for the passphrase, prints the signature):');
       out(
         `  printf '%s' '${message}' > /tmp/ratchet-msg.txt && openssl pkeyutl -sign -rawin -inkey ~/.nemo/ratchet.pem -in /tmp/ratchet-msg.txt -out /tmp/ratchet-sig.bin && openssl base64 -A -in /tmp/ratchet-sig.bin; echo`,
