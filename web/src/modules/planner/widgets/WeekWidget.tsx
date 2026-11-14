@@ -67,7 +67,8 @@ export default function WeekWidget() {
   const clock = useNow(60_000, focus.eveningWrapUp);
   const days = data?.board.days ?? [];
   const hasPlan = days.some((d) => d.planned > 0);
-  const rest = restOffered(focus.eveningWrapUp, clock, days[0]);
+  // Not on the smallest card (as the ToDo widget's evening card): its two rows stay alone there.
+  const rest = size !== 's' && restOffered(focus.eveningWrapUp, clock, days[0]);
   return (
     <>
       <ProgressList

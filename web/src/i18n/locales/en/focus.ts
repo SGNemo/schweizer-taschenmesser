@@ -65,7 +65,8 @@ export const focus: Strings['focus'] = {
     weekCheckHint:
       'On Mondays the planner shows one quiet line that leads to the week sheet. An × hides it for the week; the sheet is always in the ⋯ menu.',
     eveningWrapUp: '“Wrap up the day” in the evening',
-    eveningWrapUpHint: 'From late afternoon, you can move what’s left to tomorrow with one tap.',
+    eveningWrapUpHint:
+      'From late afternoon, you can move what’s left to tomorrow with one tap. With the planner, a preview first shows where the rest goes.',
   },
   reminders: {
     title: 'Calm reminders',
@@ -110,7 +111,7 @@ export const focus: Strings['focus'] = {
     repeatMaxOption: (n: number) => `${n}×`,
     todoDigest: 'To-dos in the morning',
     todoDigestHint: 'One note per day listing today’s to-dos. No separate note for each task.',
-    restReminder: '“Move the rest on?” in the evening',
+    restReminder: '“Spread the rest?” in the evening',
     restReminderHint:
       'At 8 pm a quiet note when the planner still holds something for today. Once a day, never repeated; nothing moves before your tap.',
     digestTime: 'Summary time',
@@ -243,7 +244,8 @@ export const focus: Strings['focus'] = {
     wrapTitle: 'Wrap up the day',
     wrapLeft: (n: number) => (n === 1 ? 'One thing is still open.' : `${n} things are still open.`),
     wrapAction: 'Move to tomorrow',
-    wrapRest: 'Move the rest on',
+    wrapRest: 'Spread the rest',
+    wrapRestLine: 'What is still open today can go to the next few days.',
     wrapDone: 'Moved to tomorrow. Have a nice evening!',
     wrapClear: 'Everything for today is done. Have a nice evening!',
   },

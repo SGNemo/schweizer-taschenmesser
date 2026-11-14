@@ -96,6 +96,9 @@ export const focusSettingsSchema = z.object({
 });
 export type FocusSettings = z.infer<typeof focusSettingsSchema>;
 
+/** Evenings start at this hour (local): „Tag abschließen“ and the planner's „Rest verteilen“ (`eveningWrapUp`). */
+export const EVENING_HOUR = 17;
+
 export const DEFAULT_FOCUS: FocusSettings = {
   nextOne: true,
   dayPlan: true,

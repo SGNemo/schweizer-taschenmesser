@@ -9,6 +9,8 @@ export interface PreviewData {
   lines: string[];
   /** Where the reading came from when it was not the rules („Vom lokalen Modell gelesen – bitte prüfen.“). */
   note?: string;
+  /** No counts beside the groups („Rest verteilen“ never counts what was left). */
+  noCounts?: boolean;
   diff: PlanDiff;
 }
 
@@ -66,6 +68,7 @@ export function PlanPreview({
             id: 'moved',
             label: p.moved,
             count: moved.length,
+            countHidden: data.noCounts === true,
             children: (
               <ItemList>
                 {moved.map((m) => (
@@ -89,6 +92,7 @@ export function PlanPreview({
             id: 'added',
             label: p.added,
             count: added.length,
+            countHidden: data.noCounts === true,
             children: (
               <ItemList>
                 {added.map((a) => (
@@ -105,6 +109,7 @@ export function PlanPreview({
             id: 'waits',
             label: p.waits,
             count: waits.length,
+            countHidden: data.noCounts === true,
             children: (
               <ItemList>
                 {waits.map((w) => (

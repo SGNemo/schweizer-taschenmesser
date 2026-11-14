@@ -19,7 +19,7 @@ describe('restNotices', () => {
   });
 
   it('switched on: one per day at 20:00, soft, no count, opens the preview', () => {
-    const out = restNotices(range, on, always);
+    const out = restNotices(range, on, always, () => false);
     expect(out.map((n) => n.key)).toEqual([
       'planner:rest:2026-11-14',
       'planner:rest:2026-11-15',
@@ -38,14 +38,24 @@ describe('restNotices', () => {
   });
 
   it('only on a day that still holds something', () => {
-    const out = restNotices(range, on, (d) => d === '2026-11-15');
+    const out = restNotices(
+      range,
+      on,
+      (d) => d === '2026-11-15',
+      () => false,
+    );
     expect(out.map((n) => n.key)).toEqual(['planner:rest:2026-11-15']);
   });
 
   it('20:00 lies outside the default quiet hours, so the policy keeps it where it is', () => {
     const at = toEpoch('2026-11-14', REST_REMINDER_TIME);
     expect(inQuiet(at, { from: DEFAULT_FOCUS.quietFrom, to: DEFAULT_FOCUS.quietTo })).toBe(false);
-    const [n] = restNotices(range, on, (d) => d === '2026-11-14');
+    const [n] = restNotices(
+      range,
+      on,
+      (d) => d === '2026-11-14',
+      () => false,
+    );
     const kept = applyPolicy(
       [n!],
       { quiet: { from: DEFAULT_FOCUS.quietFrom, to: DEFAULT_FOCUS.quietTo }, maxPerHour: 3 },
@@ -57,7 +67,15 @@ describe('restNotices', () => {
   it('inside the person’s own quiet hours it is left out, never moved to the morning', () => {
     expect(restNotices(range, { ...on, quietFrom: '19:00', quietTo: '07:00' }, always)).toEqual([]);
     expect(
-      restNotices(range, { ...on, quietHours: false, quietFrom: '19:00' }, always),
+      restNotices(range, { ...on, quietHours: false, quietFrom: '19:00' }, always, () => false),
     ).toHaveLength(3);
+  });
+
+  it('a running „Stumm“ pause leaves it out instead of moving it to the morning', () => {
+    expect(restNotices(range, on, always, () => true)).toEqual([]);
+  });
+
+  it('stays on this device (no Web Push upload)', () => {
+    for (const n of restNotices(range, on, always, () => false)) expect(n.local).toBe(true);
   });
 });

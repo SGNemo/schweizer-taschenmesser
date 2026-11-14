@@ -785,7 +785,8 @@ test.describe('Planer (package 3 of „Wochenende retten“: „Rest verteilen�
     await expect(page).toHaveURL(/\/planner/);
     const preview = page.getByTestId('plan-preview');
     await expect(preview).toContainText('Was heute offen ist, geht auf die nächsten Tage.');
-    await expect(preview).not.toContainText(/\d+ Dinge/);
+    // No count of what was left anywhere in it (group heads included).
+    await expect(preview).not.toContainText(/\d/);
     // Nothing moved yet.
     await expect(today(page).locator('li')).toHaveCount(rows);
     await preview.getByRole('button', { name: 'Übernehmen' }).click();

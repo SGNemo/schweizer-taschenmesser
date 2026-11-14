@@ -196,12 +196,14 @@ export default function PlannerPage() {
   /** „Rest verteilen“: the ops of `moveAll(today, tomorrow)` as a preview; nothing moves before „Übernehmen“. */
   function showRest() {
     if (!board) return;
-    return showPreview(
-      restToTomorrow({ today: data?.today ?? today(), items: instructionItems(board) }),
-      false,
-      undefined,
-      true,
-    );
+    const ops = restToTomorrow({ today: data?.today ?? today(), items: instructionItems(board) });
+    // Only what is nailed to today (or nothing) is left: nothing to spread, so no preview that would say otherwise.
+    if (!ops.some((o) => o.op === 'earliest')) {
+      setPending(undefined);
+      setSayLine(t.planner.rest.nothing);
+      return;
+    }
+    return showPreview(ops, false, undefined, true);
   }
 
   /** Shows what `ops` would do; nothing is stored until „Übernehmen“. `local` = the model read the sentence. */
@@ -225,6 +227,7 @@ export default function PlannerPage() {
         data: {
           lines,
           ...(local ? { note: t.planner.say.localRead } : {}),
+          ...(rest ? { noCounts: true } : {}),
           diff: out.result.diff,
         },
         fromField,
@@ -795,7 +798,7 @@ export default function PlannerPage() {
         </p>
       ) : null}
 
-      {showWeekLink ? (
+      {showWeekLink && !showRestLink ? (
         <p className={styles.weekLink} data-testid="week-check-link">
           <button type="button" className={styles.weekLinkText} onClick={() => setChecking(true)}>
             {t.planner.weekLink.label}

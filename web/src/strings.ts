@@ -1345,7 +1345,7 @@ export const de = {
         'Montags steht im Planer eine stille Zeile, die zum Wochenzettel führt. Ein × blendet sie für die Woche aus; über ⋯ ist der Zettel immer da.',
       eveningWrapUp: '„Tag abschließen“ am Abend',
       eveningWrapUpHint:
-        'Ab dem späten Nachmittag lässt sich Übriges mit einem Tipp auf morgen schieben.',
+        'Ab dem späten Nachmittag lässt sich Übriges mit einem Tipp auf morgen schieben. Mit dem Planer zeigt erst eine Vorschau, wohin der Rest geht.',
     },
     reminders: {
       title: 'Ruhige Erinnerungen',
@@ -1562,6 +1562,8 @@ export const de = {
       wrapAction: 'Auf morgen schieben',
       /** With the planner on: its preview of „Rest verteilen“ instead of moving everything to tomorrow. */
       wrapRest: 'Rest verteilen',
+      /** With the planner on: no count of what is left, one calm line. */
+      wrapRestLine: 'Was heute offen ist, kann auf die nächsten Tage.',
       wrapDone: 'Auf morgen geschoben. Schönen Abend!',
       wrapClear: 'Alles für heute erledigt. Schönen Abend!',
     },
@@ -8586,7 +8588,9 @@ export const de = {
       line: 'Was heute offen ist, geht auf die nächsten Tage.',
       done: 'Auf die nächsten Tage verteilt.',
       notifyTitle: 'Rest verteilen?',
-      notifyBody: 'Was heute offen ist, kann auf die nächsten Tage. Ein Tipp zeigt die Vorschau.',
+      notifyBody:
+        'Was heute offen ist, lässt sich auf die nächsten Tage verteilen. Ein Tipp zeigt die Vorschau.',
+      nothing: 'Für heute bleibt nur, was fest auf heute liegt.',
     },
     daySetup: {
       open: 'Tage einteilen',

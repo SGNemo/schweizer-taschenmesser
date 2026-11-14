@@ -270,7 +270,11 @@ export default function NextWidget() {
           <span className={styles.planTitle}>{t.focus.progress.wrapTitle}</span>
           {left.length > 0 ? (
             <>
-              <p className={styles.hint}>{t.focus.progress.wrapLeft(left.length)}</p>
+              <p className={styles.hint}>
+                {restInPlan
+                  ? t.focus.progress.wrapRestLine
+                  : t.focus.progress.wrapLeft(left.length)}
+              </p>
               <div className={styles.actions}>
                 {restInPlan ? (
                   <Button onClick={() => void askPlanner()}>{t.focus.progress.wrapRest}</Button>

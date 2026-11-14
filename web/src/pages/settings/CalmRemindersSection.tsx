@@ -26,7 +26,7 @@ type BoolKey = {
 export function CalmRemindersSection() {
   const [v, patch] = useFocusSettings();
   const s = t.focus.reminders;
-  // „Rest verteilen?“ belongs to the planner: offered only while it is on (like „Woche prüfen“).
+  // „Rest verteilen?“ belongs to the planner: offered only while it is on.
   const plannerOn = useModuleStates()?.planner === true;
   const toggle = (key: BoolKey, label: string, hint: string) => (
     <SettingRow id={`calm-reminders--${key}`} label={label} description={hint}>
