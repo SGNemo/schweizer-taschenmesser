@@ -23,9 +23,10 @@
   /* Fills gaps left by wider widgets so there are no empty holes. */
   grid-auto-flow: row dense;
 }
-/* First load (`masonry.ts`): the grid is laid out but not painted until the ones of the first screen have their
-   content, so they appear once at their own heights. No motion: they are simply there. */
-.grid[data-settling],
+/* Build-up (`masonry.ts`): a card that mounts is laid out but not painted until every card of its step has its
+   content, so they appear together at their own heights; nothing inside may set `visibility: visible`. The row
+   below the grid waits for the grid. No motion: they are simply there. */
+.grid > [data-wait],
 .grid[data-settling] ~ .moreRow {
   visibility: hidden;
 }
