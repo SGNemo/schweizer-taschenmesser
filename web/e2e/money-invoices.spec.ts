@@ -166,3 +166,35 @@ test.describe('Invoices: part payments, payment data, attachment', () => {
     await expect(page.getByTestId('invoices-head')).toContainText('Nichts offen');
   });
 });
+
+test.describe('Invoices on the phone', () => {
+  test.use({ viewport: { width: 412, height: 915 }, hasTouch: true, isMobile: true });
+
+  // 0b-8 follow-up 4: beside amount, pay button and menu one line cut the payee to "Stadtwerke…".
+  test('a long payee wraps instead of being cut beside the pay button', async ({ page }) => {
+    await addInvoice(page, 'Stadtwerke Musterstadt Wasser', '87,40', '2026-10-01');
+    const title = page.locator('main [data-row]').first().locator(':scope > span').first();
+    await expect(title).toContainText('Stadtwerke Musterstadt Wasser');
+    const clipped = await title.evaluate(
+      (el) => el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1,
+    );
+    expect(clipped).toBe(false);
+    await expect(page.locator('main [data-row]').first()).toContainText('87,40 €');
+
+    // Paid (view "Bezahlt"): the same layout; "Wieder öffnen" is in the row's menu.
+    await page.getByRole('button', { name: 'Als bezahlt markieren' }).first().click();
+    await page.getByRole('button', { name: 'Bezahlt', exact: true }).click();
+    const paid = page.locator('main [data-row]').first();
+    await expect(paid).toContainText('87,40 €');
+    const paidClipped = await paid
+      .locator(':scope > span')
+      .first()
+      .evaluate(
+        (el) => el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1,
+      );
+    expect(paidClipped).toBe(false);
+    await expect(
+      page.locator('main li').getByRole('button', { name: 'Wieder öffnen' }),
+    ).toHaveCount(0);
+  });
+});
