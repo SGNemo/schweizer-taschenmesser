@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { STATUS_WAIT_MS } from '@/core/status/settled';
 import { useFirstReadHold } from './firstReadHold';
 
-describe('first-read hold (0b-8, identity.notice and identity.firstRead)', () => {
+describe('first-read hold (0b-8, identity.firstRead)', () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });

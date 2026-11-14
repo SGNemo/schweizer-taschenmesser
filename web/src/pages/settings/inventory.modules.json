@@ -104,7 +104,7 @@
     "fields": {
       "warnAtPercent": {
         "type": "number",
-        "label": "Warnen ab (Prozent des Budgets)",
+        "label": "Warnen ab (Prozent des Limits)",
         "default": 80
       },
       "showForecast": {

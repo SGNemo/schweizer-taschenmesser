@@ -136,4 +136,22 @@ describe('the field’s deadline phrase', async () => {
     expect(nextWeekday('2026-11-09', 1)).toBe('2026-11-09');
     expect(nextWeekday('2026-11-09', 7)).toBe('2026-11-15');
   });
+
+  it('a due phrase wins over a clock time in the rest: ToDo date and planner deadline are the same day (W20)', async () => {
+    const { readField } = await import('../dueWords');
+    // Saturday 08:30: „18:00“ alone would read as today; „bis So“ names Sunday.
+    const sat = new Date('2026-11-14T08:30:00');
+    const r = readField('Team-Sachen lesen bis So 18:00', sat, '2026-11-14', true);
+    expect(r.hardDue).toBe('2026-11-15');
+    expect(r.fields.date).toBe('2026-11-15');
+    expect(r.fields.title).toBe('Team-Sachen lesen');
+    expect(r.fields.time).toBe('18:00');
+    // Without a phrase nothing changes: a plain line keeps the parser's own reading.
+    expect(readField('Müll runterbringen', sat, '2026-11-14', true).hardDue).toBeUndefined();
+    // „bis 12.11.“: the parser's date is the deadline.
+    expect(readField('Miete bis 20.11.', sat, '2026-11-14', true)).toMatchObject({
+      hardDue: '2026-11-20',
+      fields: { date: '2026-11-20' },
+    });
+  });
 });

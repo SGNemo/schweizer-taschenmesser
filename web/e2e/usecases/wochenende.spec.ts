@@ -309,15 +309,15 @@ async function sideLink(page: Page, m: Meter, name: string, group: string) {
   return link;
 }
 
-/** Steps the day sheet's „Mehr Zeit“ until the value reads `target`; every tap counts. */
-async function stepTo(m: Meter, sheet: Locator, target: string) {
-  const value = sheet.getByTestId('day-available');
-  for (let i = 0; i < 24 && (await value.innerText()) !== target; i += 1) {
-    const before = await value.innerText();
-    await m.tap(sheet.getByRole('button', { name: 'Mehr Zeit' }));
-    await expect(value).not.toHaveText(before);
-  }
-  await expect(value).toHaveText(target);
+/** The day sheet's quick pick for the available time (one tap, W09); `label` as the chip reads („6 h“). */
+async function pickAvailable(m: Meter, sheet: Locator, label: string) {
+  await m.tap(
+    sheet.getByRole('group', { name: 'Verfügbare Zeit schnell wählen' }).getByRole('button', {
+      name: label,
+      exact: true,
+    }),
+  );
+  await expect(sheet.getByTestId('day-available')).toHaveText(label);
 }
 
 const openPlannerDay = async (page: Page, m: Meter, mobile: boolean, label: RegExp) => {
@@ -369,6 +369,8 @@ test('A Erster Start bis Planer', async ({ page, isMobile }, info) => {
     await m.nav(await sideLink(page, m, 'Planer', 'Planen'), /Planer/);
   }
   await expect(page.getByTestId('planner-head')).toBeVisible();
+  // W13: an empty board with time today never says „Heute ist frei“ beside „… frei heute“.
+  await expect(page.getByTestId('planner-head')).not.toContainText('Heute ist frei');
   facts(info, 'A', { plannerInNavAfterSetup: plannerInNav > 0, ...(await planOf(page)) });
   await record(info, m, name);
 });
@@ -399,6 +401,8 @@ test('B Kopf leeren: zwölf Dinge auf einmal', async ({ page, isMobile }, info) 
   const input = page.getByRole('textbox', { name: 'Was möchtest du festhalten?' }).last();
   await m.type(input, DUMP.join('\n'));
   await expect(page.getByTestId('capture-rows')).toContainText('Schlafrhythmus fixen');
+  // W07: the lines go to more than one place – said above the rows, in the order the kinds first appear.
+  await expect(page.getByTestId('capture-kinds')).toHaveText(/^ToDo \d+ · Termin \d+$/);
   const kinds = await page
     .getByTestId('capture-rows')
     .evaluate((list) => (list as HTMLElement).innerText.split('\n').filter(Boolean));
@@ -468,10 +472,10 @@ test('C Wochenende einteilen', async ({ page, isMobile }, info) => {
   const m = new Meter(page, isMobile);
   await m.go('/planner');
   await expect(page.getByTestId('planner-head')).toBeVisible();
-  // Saturday: 2 h by default → about 6 h. The day sheet steps 30 min per tap.
+  // Saturday: 2 h by default → 6 h with one quick pick (W09; before: 8 × „Mehr Zeit“).
   await openPlannerDay(page, m, isMobile, isMobile ? /^Heute/ : /^Heute · Sa/);
   const sheet = page.getByRole('dialog');
-  await stepTo(m, sheet, '6 h');
+  await pickAvailable(m, sheet, '6 h');
   // The break: a blocker „Zocken“ of 2 h (without a time window it has no time of day).
   await m.type(sheet.getByLabel('Was blockt die Zeit?'), 'Zocken');
   await m.type(sheet.getByLabel('Dauer'), '120');
@@ -481,7 +485,7 @@ test('C Wochenende einteilen', async ({ page, isMobile }, info) => {
   // Sunday is „frei“ (0 min) by default: about 4 h.
   await openPlannerDay(page, m, isMobile, /^So/);
   const sunday = page.getByRole('dialog');
-  await stepTo(m, sunday, '4 h');
+  await pickAvailable(m, sunday, '4 h');
   await m.tap(sunday.getByRole('button', { name: 'Schließen' }).first());
   // W10: Sunday got time, but does it get things? Nothing moves onto it (rule 6): the weekend plan the person
   // meant does not happen – a detour (the person has to move things by hand or know „alles neu mischen“).

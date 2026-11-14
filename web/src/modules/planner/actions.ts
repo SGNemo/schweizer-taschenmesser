@@ -14,13 +14,13 @@ import { spanMin, windowText, type TimeWindow } from '@/core/plan/windows';
 import { now, today } from '@/core/time/now';
 import { undoEntry } from '@/core/undo';
 import type { EventMap } from '@/core/events/events';
-import { parseCapture, type CaptureFields } from '@/quickCapture/parser';
+import type { CaptureFields } from '@/quickCapture/parser';
 import { saveCapture, type SavedCapture } from '@/quickCapture/targets';
 import type { PlanOp } from '@/core/plan/instructions';
 import { setSettings } from '@/core/settings/settings';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { extractDuePhrase } from './dueWords';
+import { readField } from './dueWords';
 import { dayRepo, itemKeyOf, itemRepo, putRow } from './repo';
 import type { PlanDayRow, PlanItemRow } from './schema';
 import { overloadLine } from './overload';
@@ -176,15 +176,10 @@ async function itemPatch(
 /** The one field: a ToDo through the quick-capture target; „bis Do“ or „Frist“ makes the planner item's due hard. */
 export async function addFromField(text: string, titles: Record<string, string>): Promise<boolean> {
   // The phrase is German, like the quick-capture parser (CONCEPT §6c); elsewhere the ⋯ action sets a deadline.
-  const phrase =
-    getLang() === 'de' ? extractDuePhrase(text, today()) : { text, hasDueWord: false as const };
-  const parsed = parseCapture(phrase.text, { now: new Date(now()), defaultType: 'todo' });
-  const hardDue = phrase.date ?? (phrase.hasDueWord ? parsed.fields.date : undefined);
-  // The deadline is the ToDo's date too, so the ToDo page shows it.
-  if (hardDue && !parsed.fields.date) parsed.fields.date = hardDue;
+  const { fields, hardDue } = readField(text, new Date(now()), today(), getLang() === 'de');
   const lead = hardDue ? t.planner.toast.addedWithDue(dayName(hardDue)) : t.planner.toast.added;
   return act(t.planner.toast.added, lead, titles, async () => {
-    const saved = await saveCapture('todo', parsed.fields);
+    const saved = await saveCapture('todo', fields);
     if (hardDue)
       await putRow(itemRepo, itemKeyOf(saved.moduleId, saved.id), {
         source: { module: saved.moduleId, id: saved.id },

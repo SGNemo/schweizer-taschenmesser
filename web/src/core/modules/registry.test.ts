@@ -90,9 +90,13 @@ describe('module registry', () => {
       { hue2: base.identity.hue },
       { type: 'comic' },
       { shape: 'blob' },
+      // The frame's flags (U01, 0b-8) are true or false.
+      { tabs: 'yes' },
+      { firstRead: 1 },
     ])
       expect(bad(patch), JSON.stringify(patch)).toHaveLength(1);
     expect(bad({ hue2: 'sky', type: 'thin', shape: 'round' })).toEqual([]);
+    expect(bad({ tabs: true, firstRead: false })).toEqual([]);
     // A widget may name its own shape; an unknown one is refused.
     const widgets = (variant: string) =>
       base.widgets.map((w) => ({ ...w, variant: variant as never }));

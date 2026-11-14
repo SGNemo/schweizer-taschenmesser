@@ -82,6 +82,7 @@ export const finance: Strings['finance'] = {
     compare: {
       vsPrevious: (change: string) => `${change} vs. last month`,
       unchanged: 'Same as last month',
+      note: 'Arrows: change vs. last month',
       none: 'No previous month to compare',
     },
     forecast: {
@@ -149,7 +150,7 @@ export const finance: Strings['finance'] = {
   },
   available: 'Available',
   tabs: {
-    overview: 'Overview',
+    overview: 'Month',
     transactions: 'Transactions',
     trend: 'History',
     accounts: 'Accounts',
