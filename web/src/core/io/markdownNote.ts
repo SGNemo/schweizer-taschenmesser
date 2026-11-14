@@ -1,3 +1,5 @@
+import type { ImportDates } from '@/core/db/repo';
+
 /**
  * Markdown notes (Obsidian vaults, any `.md` file): optional front matter with `title` / `tags`, the
  * first heading as title, otherwise the file name. The text stays raw Markdown; `[[Wikilinks]]` are
@@ -12,6 +14,10 @@ export interface ParsedNote {
   pinned?: boolean;
   /** Top-level folder of a folder/ZIP import (Obsidian vault); becomes a notebook. */
   folder?: string;
+  /** Epoch ms from the front matter (`created:`, else `date:`); see `noteDates` for the file date. */
+  createdAt?: number;
+  /** Epoch ms from the front matter (`modified:`, else `updated:`). */
+  updatedAt?: number;
 }
 
 export interface PickedText {
@@ -40,6 +46,8 @@ function cleanTag(raw: string): string {
 interface FrontMatter {
   title?: string;
   tags: string[];
+  created?: number;
+  modified?: number;
   /** Text after the closing line. */
   rest: string;
 }
@@ -56,7 +64,13 @@ function splitFrontMatter(text: string): FrontMatter {
     if (!/^\s*(?:$|[\w-]+\s*:|-\s)/.test(lines[i]!)) return { tags: [], rest: text };
   }
   const fm: FrontMatter = { tags: [], rest: lines.slice(end + 1).join('\n') };
+  const dates: Record<string, number | undefined> = {};
   for (let i = 1; i < end; i++) {
+    const d = /^(created|date|modified|updated)\s*:\s*(.*)$/i.exec(lines[i]!);
+    if (d) {
+      dates[d[1]!.toLowerCase()] ??= parseNoteDate(d[2]!);
+      continue;
+    }
     const m = /^(title|tags?)\s*:\s*(.*)$/i.exec(lines[i]!);
     if (!m) continue;
     const key = m[1]!.toLowerCase();
@@ -84,7 +98,45 @@ function splitFrontMatter(text: string): FrontMatter {
       if (tag) fm.tags.push(tag);
     }
   }
+  fm.created = dates.created ?? dates.date;
+  fm.modified = dates.modified ?? dates.updated;
   return fm;
+}
+
+const DATE =
+  /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?)?\s*(Z|[+-]\d{2}:?\d{2})?$/;
+
+/**
+ * A front matter date (`2025-12-01`, `2025-12-01 09:30`, `2025-12-01T09:30:00+01:00`) as epoch ms;
+ * without a zone it is local time. Anything else (or an impossible date) is `undefined`.
+ */
+export function parseNoteDate(raw: string): number | undefined {
+  const m = DATE.exec(unquote(raw));
+  if (!m) return undefined;
+  const [y, mo, d, h = '0', mi = '0', sec = '0'] = m.slice(1, 7);
+  const parts = [y, mo, d, h, mi, sec].map(Number) as [
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+  ];
+  const local = new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5]);
+  // 2025-02-31 rolls over to March: not a real date.
+  if (
+    local.getMonth() !== parts[1] - 1 ||
+    local.getDate() !== parts[2] ||
+    parts[3] > 23 ||
+    parts[4] > 59 ||
+    parts[5] > 59
+  )
+    return undefined;
+  if (!m[7]) return local.getTime();
+  const zoned = Date.parse(
+    `${y}-${mo}-${d}T${h.padStart(2, '0')}:${mi.padStart(2, '0')}:${sec.padStart(2, '0')}${m[7]}`,
+  );
+  return Number.isFinite(zoned) ? zoned : undefined;
 }
 
 function inlineTags(body: string): string[] {
@@ -156,7 +208,13 @@ export function parseMarkdownNote(raw: string, fileName = ''): ParsedNote | unde
       .trim();
 
   const tags = unique([...fm.tags, ...inlineTags(body)]);
-  const note: ParsedNote = { title, body: withTagLine(body, fm.tags), tags };
+  const note: ParsedNote = {
+    title,
+    body: withTagLine(body, fm.tags),
+    tags,
+    ...(fm.created !== undefined ? { createdAt: fm.created } : {}),
+    ...(fm.modified !== undefined ? { updatedAt: fm.modified } : {}),
+  };
   return note.title.trim() === '' && note.body.trim() === '' ? undefined : note;
 }
 
@@ -175,4 +233,23 @@ export function parseMarkdownNotes(files: PickedText[]): MarkdownNotesResult {
     else empty++;
   }
   return { notes, empty };
+}
+
+/**
+ * The dates an imported note keeps: the front matter first, the file's own date (ZIP entry, file
+ * system) for whatever is missing – but never a `createdAt` after a known `modified:` (a copied
+ * file is often younger than its text). `undefined` when nothing is known (pasted text).
+ */
+export function noteDates(
+  note: Pick<ParsedNote, 'createdAt' | 'updatedAt'>,
+  fileDate?: number,
+): ImportDates | undefined {
+  const updatedAt = note.updatedAt ?? fileDate;
+  const createdAt =
+    note.createdAt ??
+    (note.updatedAt !== undefined && fileDate !== undefined
+      ? Math.min(note.updatedAt, fileDate)
+      : (note.updatedAt ?? fileDate));
+  if (createdAt === undefined) return undefined;
+  return updatedAt === undefined ? { createdAt } : { createdAt, updatedAt };
 }
