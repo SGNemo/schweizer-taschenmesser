@@ -48,9 +48,30 @@ async function buildApp(channel: string): Promise<{ names: string[]; text: strin
   return { names: files, text: files.map((f) => readFileSync(f, 'utf8')).join('\n') };
 }
 
+/**
+ * Chunk name without directory and content hash. `vite.config.ts` sets no file-name pattern, so
+ * Vite 8 / Rolldown uses `[name]-[hash].ext` with an 8-character base64url hash (`[A-Za-z0-9_-]`).
+ * The hash is random-looking text and can spell "seed" (`settings-small-DvYCsEed.js`, PR #837).
+ */
+const chunkName = (path: string): string =>
+  path
+    .split(/[\\/]/)
+    .pop()!
+    .replace(/-[\w-]{8}\.(js|css)$/, '');
+
 const dirs: string[] = [];
 afterAll(() => {
   for (const d of dirs) rmSync(d, { recursive: true, force: true });
+});
+
+describe('chunkName', () => {
+  it('ignores "seed" inside the content hash but not in the name', () => {
+    expect(chunkName('/out/assets/settings-small-DvYCsEed.js')).toBe('settings-small');
+    expect(chunkName('C:\\out\\assets\\index-a_b-c1D2.css')).toBe('index');
+    expect(/seed/i.test(chunkName('/out/assets/settings-small-DvYCsEed.js'))).toBe(false);
+    expect(/seed/i.test(chunkName('/out/assets/seed-abc12345.js'))).toBe(true);
+    expect(/seed/i.test(chunkName('/out/assets/devSeed-Ab_-9xYz.js'))).toBe(true);
+  });
 });
 
 describe('Dev-Preview flag', () => {
@@ -58,7 +79,7 @@ describe('Dev-Preview flag', () => {
     const { names, text } = await buildApp('');
     for (const marker of MARKERS)
       expect(text, `stable build contains "${marker}"`).not.toContain(marker);
-    expect(names.filter((n) => /seed/i.test(n))).toEqual([]);
+    expect(names.filter((n) => /seed/i.test(chunkName(n)))).toEqual([]);
     for (const marker of NEVER_SHIPPED)
       expect(text, `stable build contains the supporter test key`).not.toContain(marker);
   });
