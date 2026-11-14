@@ -369,6 +369,8 @@ test('A Erster Start bis Planer', async ({ page, isMobile }, info) => {
     await m.nav(await sideLink(page, m, 'Planer', 'Planen'), /Planer/);
   }
   await expect(page.getByTestId('planner-head')).toBeVisible();
+  // W13: an empty board with time today never says „Heute ist frei“ beside „… frei heute“.
+  await expect(page.getByTestId('planner-head')).not.toContainText('Heute ist frei');
   facts(info, 'A', { plannerInNavAfterSetup: plannerInNav > 0, ...(await planOf(page)) });
   await record(info, m, name);
 });
@@ -399,6 +401,8 @@ test('B Kopf leeren: zwölf Dinge auf einmal', async ({ page, isMobile }, info) 
   const input = page.getByRole('textbox', { name: 'Was möchtest du festhalten?' }).last();
   await m.type(input, DUMP.join('\n'));
   await expect(page.getByTestId('capture-rows')).toContainText('Schlafrhythmus fixen');
+  // W07: the lines go to more than one place – said above the rows, in the order the kinds first appear.
+  await expect(page.getByTestId('capture-kinds')).toHaveText(/^ToDo \d+ · Termin \d+$/);
   const kinds = await page
     .getByTestId('capture-rows')
     .evaluate((list) => (list as HTMLElement).innerText.split('\n').filter(Boolean));

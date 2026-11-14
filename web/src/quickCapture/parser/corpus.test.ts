@@ -43,7 +43,7 @@ function misses(c: CorpusCase): string[] {
 }
 
 // Ratchet: raise this when the parser gets better, never lower it.
-const MIN_HITS = 63;
+const MIN_HITS = 66;
 
 describe('parser corpus (QA sentences)', () => {
   it('reports the hit rate', () => {

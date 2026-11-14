@@ -114,7 +114,6 @@ export const quickCapture: Strings['quickCapture'] = {
     bookLine: (action: string, line: string) => `${action}: ${line}`,
     calmHint: 'One line = one entry. Sorting comes later.',
     kinds: (parts: string[]) => parts.join(' · '),
-    kindsLabel: 'Where the lines go',
     dunningMatch: (payee: string, due: string) =>
       `Reminder for invoice ${payee}, due ${due} · note it`,
     dunningCheck: (payee: string) => `Check reminder ${payee}`,

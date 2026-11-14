@@ -112,6 +112,14 @@ const DEADLINE = word(String.raw`abgeben|abgabe|einreichen|abschicken|hochladen|
 const BY_DAY = word(
   String.raw`(?:bis|spätestens)\s+(?:(?:zum\s+|am\s+)?(?:montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|sonnabend|morgen|übermorgen|heute)|\d{1,2}\.\d{1,2}\.?)`,
 );
+/** A start before „bis <Tag>“ makes it a span („Fr 18 Uhr bis So Hütte“, „Konferenz 10.11. 9 Uhr bis 12.11.“): an event. */
+const SPAN_START =
+  /\d{1,2}(?::\d{2})?\s*uhr|\d{1,2}:\d{2}|\d{1,2}\.\d{1,2}\.|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|sonnabend|morgen|heute/i;
+/** „bis So“ as a deadline: only when nothing before it already names a day or a time. */
+function byDayDeadline(t: string): boolean {
+  const m = BY_DAY.exec(t);
+  return !!m && !SPAN_START.test(t.slice(0, m.index));
+}
 /** "bis 5.11.", "fällig am": a payment target when an amount is there. */
 const DUE_HINT = word(String.raw`bis|fällig|zahlbar`);
 const PRIORITY_RE = /(?<![\p{L}\d])!(hoch|wichtig|dringend|mittel|niedrig)(?![\p{L}\d])/iu;
@@ -218,7 +226,7 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
     spendPast: SPEND_PAST.test(scan.t),
     pay: PAY.test(scan.t),
     deadline: DEADLINE.test(scan.t),
-    byDay: BY_DAY.test(scan.t),
+    byDay: byDayDeadline(scan.t),
     dueHint: DUE_HINT.test(scan.t),
   };
 

@@ -14,6 +14,6 @@ en: In quick capture "bis Sonntag" makes a to-do with a deadline instead of an e
 type: changed
 area: planner
 breaking: false
-de: Im Tagesblatt wählst du die verfügbare Zeit mit einem Tipp; ein leerer Planer sagt „Noch nichts geplant.“
-en: In the day sheet you pick the available time with one tap; an empty planner says "Nothing planned yet."
+de: Im Tagesblatt wählst du die verfügbare Zeit mit einem Tipp; ohne Plan für heute sagt der Planer „Für heute noch nichts geplant.“
+en: In the day sheet you pick the available time with one tap; with nothing planned today the planner says "Nothing planned for today yet."
 ---

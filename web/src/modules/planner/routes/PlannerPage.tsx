@@ -336,18 +336,18 @@ export default function PlannerPage() {
           : todayDay.usable === 0
             ? t.planner.head.noTime
             : t.planner.head.full;
-  // U13: the detail line names the next step – today's first thing, or the next day with free time.
-  const nextFree = board?.days.slice(1).find((d) => !d.off && d.free > 0);
+  // U13: the detail line names the next step – today's first thing. W13: with time today and nothing on it, a calm
+  // line – unless the whole board is empty, where the empty state already says it.
+  const boardEmpty = board?.days.every((d) => d.rows.length === 0) ?? true;
   const headDetail = !todayDay
     ? undefined
     : !todayDay.off && todayDay.rows[0]
       ? t.planner.head.first(todayDay.rows[0].title)
       : !todayDay.off && todayDay.usable > 0
-        ? // W13: time today, nothing planned yet – never „Heute ist frei“ beside „… frei heute“.
-          t.planner.head.nothing
-        : todayDay.off && nextFree
-          ? t.planner.head.nextFree(dayName(nextFree.date), compact(nextFree.free))
-          : `${t.planner.head.context(board!.todayCount, compact(todayDay.planned))} · ${t.planner.head.week(formatDay(todayDay.date, 'II'))}`;
+        ? boardEmpty
+          ? undefined
+          : t.planner.head.nothing
+        : `${t.planner.head.context(board!.todayCount, compact(todayDay.planned))} · ${t.planner.head.week(formatDay(todayDay.date, 'II'))}`;
 
   const pageMenu: RowMenuItem[] = [
     {

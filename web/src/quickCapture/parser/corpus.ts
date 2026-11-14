@@ -383,4 +383,14 @@ export const CORPUS: CorpusCase[] = [
   { from: 'WE-W04', text: 'Fr 20 Uhr Kino mit Anna', type: 'event', date: '2026-10-30' },
   { from: 'WE-W04', text: 'Sa 14 Uhr Fußball', type: 'event', date: '2026-10-31', time: '14:00' },
   { from: 'WE-W04', text: 'Miete bis 20.11. 850 €', type: 'invoice', amountMinor: 85000 },
+  // A start before „bis“ makes a span, not a deadline: stays an event (review of package 1).
+  {
+    from: 'WE-W04',
+    text: 'Fr 18 Uhr bis So Hütte',
+    type: 'event',
+    date: '2026-10-30',
+    time: '18:00',
+  },
+  { from: 'WE-W04', text: 'Konferenz 10.11. 9 Uhr bis 12.11.', type: 'event', date: '2026-11-10' },
+  { from: 'WE-W04', text: 'Seminar Mo 9 Uhr bis Mi', type: 'event', date: '2026-11-02' },
 ];

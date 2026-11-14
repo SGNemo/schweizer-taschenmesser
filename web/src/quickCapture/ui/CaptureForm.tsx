@@ -579,11 +579,7 @@ export function CaptureForm({
 
         {multi && kinds.length > 1 ? (
           // More than one place: say it above the rows, so a line that is no ToDo is seen first (W07).
-          <p
-            className={styles.hint}
-            aria-label={t.quickCapture.multi.kindsLabel}
-            data-testid="capture-kinds"
-          >
+          <p className={styles.hint} data-testid="capture-kinds">
             {t.quickCapture.multi.kinds(kinds)}
           </p>
         ) : null}
