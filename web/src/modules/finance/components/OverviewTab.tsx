@@ -76,6 +76,9 @@ export function OverviewTab({
     }),
     [data, month, day],
   );
+  // The breakdown line above the figures depends on "Verfügbar" (open invoices, subscriptions): the page waits for it
+  // (a few reads) instead of pushing the figures and charts down when it arrives (layout shift).
+  if (a === undefined) return null;
 
   return (
     <>
