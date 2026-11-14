@@ -62,6 +62,9 @@ async function start(page: Page) {
   await page.addInitScript(() => {
     localStorage.setItem('tm-show-preview', '1');
     localStorage.setItem('__tmPlatformKind', 'desktop');
+    // No idle preloading of page code: these checks need a page whose code has not arrived yet
+    // (before the preload is done, a module switched on later, a stale page after an update).
+    (window as unknown as { __tmNoPreload?: boolean }).__tmNoPreload = true;
   });
   await bootDev(page);
   await page.goto('/settings/entwickler');

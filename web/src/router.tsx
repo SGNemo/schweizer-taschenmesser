@@ -242,6 +242,8 @@ export function buildRoutes(states: ModuleStates): RouteObject[] {
 
 /** Runs the loaders one at a time in idle slots (a 2 s timeout each, so a busy page still gets them); stops on cleanup. */
 function preloadWhenIdle(loaders: readonly (() => void)[]): () => void {
+  // e2e hook: tests of the loading card need page code that is not there yet.
+  if ((window as unknown as { __tmNoPreload?: boolean }).__tmNoPreload) return () => undefined;
   let next = 0;
   let cancel: (() => void) | undefined;
   const step = () => {
