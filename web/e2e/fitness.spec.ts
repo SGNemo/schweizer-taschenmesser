@@ -6,6 +6,8 @@ import { backSettled, calendarEntry, enable, ready, showAllWidgets, showPreview 
 /**
  * Sets, reps and weight of the first exercises in the session row. On the phone the row names only count and
  * minutes (0b-8 follow-up 15: the details made it two to four lines); there the row must not carry them.
+ * The page decides by its own width (`usePageWidthAtLeast(48)`); both projects here have no sidebar beside it
+ * on the phone (412 px) and a wide page on the desktop, so the viewport picks the same branch.
  */
 async function expectRowDetail(page: Page, detail: RegExp) {
   if ((page.viewportSize()?.width ?? 0) < 768) {
