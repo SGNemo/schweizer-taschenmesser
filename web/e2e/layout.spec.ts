@@ -128,6 +128,8 @@ for (const vp of VIEWPORTS) {
       // Cards are as high as their content (package 0b-7) and their span follows their height one rendering step
       // later (ResizeObserver, `home/masonry.ts`): a card whose data arrives late grows first and re-packs in the
       // next frame. Measure the shown grid after a frame and until it is at rest; a band that stays uneven fails.
+      // The overview builds up in steps (`masonry.ts`): at rest when no card waits and the grid no longer settles.
+      await expect(page.locator('[data-testid="home-grid"] > [data-wait]')).toHaveCount(0);
       await expect(page.locator('[data-settling]')).toHaveCount(0);
       await expect(async () => {
         const boxes = await page.evaluate(

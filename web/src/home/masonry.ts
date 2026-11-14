@@ -20,7 +20,17 @@ const seen = new WeakSet<HTMLElement>();
 /** Columns of a grid as laid out right now (its `grid-template-columns` tracks); at least one. */
 export function gridColumns(grid: HTMLElement): number {
   const tracks = getComputedStyle(grid).gridTemplateColumns.trim();
-  return tracks && tracks !== 'none' ? tracks.split(/\s+/).length : 1;
+  // Not laid out (no tracks resolved, e.g. inside a hidden ancestor): one column, so the first step stays small.
+  if (!tracks || tracks === 'none' || tracks.includes('(')) return 1;
+  return tracks.split(/\s+/).length;
+}
+
+/**
+ * The cards the overview mounts: while it builds up, the first step (`first` cards, the column count; nothing while
+ * that is unknown) when a second step holds more than one more row; else all of them.
+ */
+export function stagedCards<T>(shown: readonly T[], first: number, built: boolean): readonly T[] {
+  return !built && shown.length > 2 * first ? shown.slice(0, first) : shown;
 }
 
 /** True while one of the cards still shows a loading skeleton (its code or its data is not there yet). */
@@ -50,6 +60,8 @@ export function usePackedGrid<T extends HTMLElement>(
   enabled = true,
   ready = true,
   onShown?: () => void,
+  // false once the page has built up: a card that mounts later (another view, a new card) shows at once, as before.
+  holdNew = true,
 ) {
   // A callback ref: a grid element that mounts again (same keys) is packed again.
   const [grid, setGrid] = useState<T | null>(null);
@@ -58,7 +70,14 @@ export function usePackedGrid<T extends HTMLElement>(
     shownRef.current = onShown;
   });
   useLayoutEffect(() => {
-    if (!enabled || !grid || typeof ResizeObserver === 'undefined') return;
+    if (!grid) return;
+    if (!enabled || typeof ResizeObserver === 'undefined') {
+      // Edit mode shows every card at once: they count as taken in, so leaving it holds none of them back. Without
+      // a ResizeObserver nothing is measured or held: the page counts as shown.
+      for (const el of Array.from(grid.children)) seen.add(el as HTMLElement);
+      if (enabled) shownRef.current?.();
+      return;
+    }
     const measure = (el: HTMLElement) => {
       const empty = el.querySelector(`.${misc.emptyCompact}`) !== null;
       if (empty !== el.hasAttribute('data-empty')) el.toggleAttribute('data-empty', empty);
@@ -75,7 +94,7 @@ export function usePackedGrid<T extends HTMLElement>(
       observer.observe(el);
       if (!seen.has(el)) {
         seen.add(el);
-        el.setAttribute('data-wait', '');
+        if (holdNew) el.setAttribute('data-wait', '');
       }
     }
     const waiting = () => children().filter((el) => el.hasAttribute('data-wait'));
@@ -130,6 +149,6 @@ export function usePackedGrid<T extends HTMLElement>(
       grid.removeAttribute('aria-busy');
       grid.removeAttribute('data-packed');
     };
-  }, [enabled, grid, keys, ready]);
+  }, [enabled, grid, keys, ready, holdNew]);
   return setGrid;
 }

@@ -3,7 +3,14 @@ import { createElement, type ReactNode } from 'react';
 import { act, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import misc from '@/ui/Misc.module.css';
-import { gridColumns, packedRows, SETTLE_CAP_MS, stillLoading, usePackedGrid } from './masonry';
+import {
+  gridColumns,
+  packedRows,
+  SETTLE_CAP_MS,
+  stagedCards,
+  stillLoading,
+  usePackedGrid,
+} from './masonry';
 
 describe('packed overview grid (U19)', () => {
   it('spans a card over its own height plus the gap below, in 1 px rows', () => {
@@ -31,6 +38,16 @@ describe('build-up helpers', () => {
     grid.remove();
     expect(gridColumns(document.createElement('div'))).toBe(1);
   });
+  it('mounts the first step only while a second one holds more than one more row', () => {
+    const cards = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+    expect(stagedCards(cards, 3, false)).toEqual(['a', 'b', 'c']);
+    // Column count not read yet: nothing yet.
+    expect(stagedCards(cards, 0, false)).toEqual([]);
+    // Few cards ("Ruhig"): one step.
+    expect(stagedCards(cards.slice(0, 6), 3, false)).toEqual(cards.slice(0, 6));
+    // Built (or the edit mode was open): everything, never staged again.
+    expect(stagedCards(cards, 3, true)).toEqual(cards);
+  });
   it('has a cap, so a card that never loads cannot hide the others', () => {
     expect(SETTLE_CAP_MS).toBeGreaterThan(0);
     expect(SETTLE_CAP_MS).toBeLessThanOrEqual(2000);
@@ -44,12 +61,14 @@ describe('build-up: cards of a step show together, once', () => {
     loading: string[];
     ready?: boolean;
     onShown?: () => void;
+    holdNew?: boolean;
   }): ReactNode {
     const ref = usePackedGrid<HTMLDivElement>(
       props.keys.join('|'),
       true,
       props.ready ?? true,
       props.onShown,
+      props.holdNew ?? true,
     );
     return createElement(
       'div',
@@ -136,6 +155,14 @@ describe('build-up: cards of a step show together, once', () => {
     act(() => vi.advanceTimersByTime(SETTLE_CAP_MS - 10));
     expect(waits(getByTestId('grid'))).toEqual(['a', 'b']);
     act(() => vi.advanceTimersByTime(20));
+    expect(waits(getByTestId('grid'))).toEqual([]);
+  });
+
+  it('once built, a card that mounts later (another view) shows at once', () => {
+    const { getByTestId, rerender } = render(
+      createElement(Grid, { keys: ['a'], loading: [], holdNew: false }),
+    );
+    rerender(createElement(Grid, { keys: ['a', 'b'], loading: ['b'], holdNew: false }));
     expect(waits(getByTestId('grid'))).toEqual([]);
   });
 });

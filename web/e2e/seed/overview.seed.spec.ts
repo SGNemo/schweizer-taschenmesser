@@ -293,9 +293,13 @@ test.describe('overview – build-up under load', () => {
         history.pushState({}, '', '/');
         dispatchEvent(new PopStateEvent('popstate'));
       });
-      await expect(page.locator('[data-testid="home-grid"] > [data-wait]')).toHaveCount(0, {
+      // Built up: the grid has its cards, none waits and the grid no longer settles.
+      const grid = page.getByTestId('home-grid');
+      await expect(grid.locator('> [data-testid^="widget-"]').first()).toBeVisible({
         timeout: 30_000,
       });
+      await expect(grid.locator('> [data-wait]')).toHaveCount(0, { timeout: 30_000 });
+      await expect(grid).not.toHaveAttribute('data-settling', /.*/, { timeout: 30_000 });
       await settled(page);
       const cls = await page.evaluate(() => (window as unknown as { __cls: number }).__cls);
       await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });

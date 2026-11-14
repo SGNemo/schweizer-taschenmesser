@@ -68,7 +68,7 @@ import {
 import { CockpitStats } from './CockpitStats';
 import { OverviewHead } from './OverviewHead';
 import { ResumeCard } from './ResumeCard';
-import { gridColumns, SETTLE_CAP_MS, usePackedGrid } from './masonry';
+import { gridColumns, SETTLE_CAP_MS, stagedCards, usePackedGrid } from './masonry';
 
 import styles from './Home.module.css';
 import {
@@ -239,7 +239,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
   // A second step only pays when it holds more than one more row: with few cards ("Ruhig", one column) waiting for
   // the first ones before mounting the rest only adds a round trip.
   const staged = !built && shown.length > 2 * firstStep;
-  const mounted = staged ? shown.slice(0, firstStep) : shown;
+  const mounted = stagedCards(shown, firstStep, built);
   // Packed (no holes) except while editing: reordering picks targets by position, so there the grid keeps the
   // saved order on plain rows.
   const packRef = usePackedGrid<HTMLDivElement>(
@@ -247,14 +247,16 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
     !editing,
     blocksReady && (!staged || firstStep > 0),
     () => setBuilt(true),
+    !built,
   );
-  // The column count is read once, when the grid mounts (it stands, empty, before the first card).
+  // The column count is read once the saved layout is applied (the cockpit's dense grid has one column more); the
+  // grid stands, empty, before the first card.
   const gridRef = useCallback(
     (el: HTMLDivElement | null) => {
       packRef(el);
-      if (el) setFirstStep((n) => n || gridColumns(el));
+      if (el && layoutRead) setFirstStep((n) => n || gridColumns(el));
     },
-    [packRef],
+    [packRef, layoutRead],
   );
 
   const sensors = useSensors(
@@ -435,7 +437,8 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
         </DndContext>
       )}
 
-      {calm && folded > 0 ? (
+      {/* Not between the two steps: the second would push it down. */}
+      {calm && folded > 0 && !staged ? (
         <div className={styles.moreRow} data-testid="home-calm-more">
           <Button variant="secondary" onClick={() => setHomeView('all')}>
             {t.homeEdit.showMore(folded)}
