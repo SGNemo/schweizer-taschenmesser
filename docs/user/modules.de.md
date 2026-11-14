@@ -22,7 +22,7 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 | **Geld** | Finanzen | Konten, Einnahmen und Ausgaben mit Kategorien | standardmäßig an |
 |  | Rechnungen | Offene Rechnungen mit Betrag, Empfänger und Fälligkeit | standardmäßig an |
 |  | Abos | Abos und wiederkehrende Zahlungen | standardmäßig an |
-|  | Budgets & Sparziele | Monatslimits je Ausgabenkategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt | bei Neuinstallationen an |
+|  | Budgets & Sparziele | Ausgabenlimits je Kategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt | bei Neuinstallationen an |
 | **Haushalt** | Listen | Einkauf, Packlisten und Checklisten | bei Neuinstallationen an |
 |  | Routinen | Putzplan und Haushalts-Routinen | bei Neuinstallationen an |
 |  | Vorräte | Was ist im Kühlschrank, im Vorratsschrank und im Tiefkühler? | optional |
@@ -56,7 +56,7 @@ Besonderheiten der Module, die oben nur eine kurze Zeile haben:
 - **Notizen:** mit festem **Zettel** oben für Zwischendurch.
 - **Listen:** Einkauf mit „2 Milch“, Packlisten mit Fortschritt und Vorlagen, Checklisten.
 - **Personen:** Geburtstage jährlich im Kalender, mit Alter, Erinnerung und WhatsApp-Gruß; Geschenkideen je Person mit Preis, Link und Stand.
-- **Budgets & Sparziele:** Monatslimits je Finanz-Kategorie, Sparziele mit Einzahlungen.
+- **Budgets & Sparziele:** Ausgabenlimits je Finanz-Kategorie (pro Monat, Quartal oder Jahr), Sparziele mit Einzahlungen.
 - **Planer** (Vorschau): Planänderungen wie „Donnerstag frei“ sagst du im Feld auf der Planer-Seite; eine Vorschau zeigt erst, was sich verschiebt.
 - **Karten & Orte** (Vorschau): gespeicherte Orte und Routen, Karte mit Ortssuche, Öffnen in deiner Karten-App; die Karte lädt nur, wenn du sie öffnest.
 - **Unterlagen:** Titel, Kategorie, Anbieter, Beginn, Ende, Kündigungsfrist und Notiz werden wie alles andere synchronisiert; die **Dateien bleiben nur auf dem

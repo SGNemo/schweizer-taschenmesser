@@ -8,7 +8,6 @@ export const budgets: Strings['budgets'] = {
       quarter: 'Quarter',
       year: 'Year',
       quarterLabel: (q: number, year: number) => `Q${q} ${year}`,
-      perPeriod: (period: string) => `per ${period}`,
     },
     carry: {
       label: 'Carry the rest over to the next period',
@@ -63,7 +62,7 @@ export const budgets: Strings['budgets'] = {
   meta: {
     name: 'Budgets & savings goals',
     description:
-      'Spending limits per category (from Finances) for a month, quarter or year and savings goals with deposits and progress.',
+      'Spending limits per category (from Finances) and savings goals with deposits and progress.',
     route: 'Budgets',
     widget: 'Budgets & savings goals',
     quickAdd: 'Savings goal',

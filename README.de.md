@@ -53,7 +53,7 @@ Nemo ist eine Sammlung kleiner Module für den Alltag. Was du brauchst, schaltes
 | **Geld** | Finanzen | Konten, Einnahmen und Ausgaben mit Kategorien | standardmäßig an |
 |  | Rechnungen | Offene Rechnungen mit Betrag, Empfänger und Fälligkeit | standardmäßig an |
 |  | Abos | Abos und wiederkehrende Zahlungen | standardmäßig an |
-|  | Budgets & Sparziele | Monatslimits je Ausgabenkategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt | bei Neuinstallationen an |
+|  | Budgets & Sparziele | Ausgabenlimits je Kategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt | bei Neuinstallationen an |
 | **Haushalt** | Listen | Einkauf, Packlisten und Checklisten | bei Neuinstallationen an |
 |  | Routinen | Putzplan und Haushalts-Routinen | bei Neuinstallationen an |
 |  | Vorräte | Was ist im Kühlschrank, im Vorratsschrank und im Tiefkühler? | optional |

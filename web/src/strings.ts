@@ -5139,7 +5139,6 @@ export const de = {
         quarter: 'Quartal',
         year: 'Jahr',
         quarterLabel: (q: number, year: number) => `Q${q} ${year}`,
-        perPeriod: (period: string) => `pro ${period}`,
       },
       carry: {
         label: 'Rest in den nächsten Zeitraum übernehmen',
@@ -5196,7 +5195,7 @@ export const de = {
     meta: {
       name: 'Budgets & Sparziele',
       description:
-        'Ausgabenlimits je Kategorie (aus den Finanzen) für Monat, Quartal oder Jahr und Sparziele mit Einzahlungen und Fortschritt.',
+        'Ausgabenlimits je Kategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt.',
       route: 'Budgets',
       widget: 'Budgets & Sparziele',
       quickAdd: 'Sparziel',
