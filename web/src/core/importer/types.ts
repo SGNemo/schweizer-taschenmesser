@@ -102,7 +102,8 @@ export type ImportInput =
       kind: 'file';
       text: string;
       fileName: string;
-      files?: { name: string; text: string }[];
+      /** `modifiedAt` = file or ZIP entry date (epoch ms), when known. */
+      files?: { name: string; text: string; modifiedAt?: number }[];
       /** Files of an unpacked archive that are not text (images, PDFs): not stored, only reported. */
       binary?: number;
       extras?: Record<string, string>;
@@ -304,7 +305,7 @@ export interface ImportReportCounts {
 /** Files that are already chosen and read (the "import from another app" flow): the wizard starts at the preview. */
 export interface ImportPreset {
   importerId: string;
-  files: { name: string; text: string }[];
+  files: { name: string; text: string; modifiedAt?: number }[];
   /** Non-text files of an unpacked archive, only reported. */
   binary?: number;
   /** Shared by the parts of one multi-part import. */
