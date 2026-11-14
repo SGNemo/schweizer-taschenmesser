@@ -29,7 +29,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/overview-desktop-dark.webp">
-    <img src="docs/assets/screenshots/overview-desktop-light.webp" alt="Nemo overview on a desktop with made-up sample data, in the calm view “Ruhig”: a sidebar with favourites and folded areas, a strip “Important now” with three cards and a line of what can wait, and one card “Today” with the next appointment, today’s events and one suggested task to start with" width="900">
+    <img src="docs/assets/screenshots/overview-desktop-light.webp" alt="Nemo overview on a desktop with made-up sample data, in the calm view “Ruhig”: a sidebar with favourites and areas, a strip “Important now” with three cards, and a card “Today” with the next appointment, today’s events and one suggested task to start with" width="900">
   </picture>
 </p>
 
@@ -113,14 +113,14 @@ All pictures show made-up sample data in the German interface; the app also spea
     <td width="50%">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/calendar-desktop-dark.webp">
-        <img src="docs/assets/screenshots/calendar-desktop-light.webp" alt="Calendar in week view with events from several modules, a busy-hours grid with today’s column marked, and an agenda panel for the selected day on the right">
+        <img src="docs/assets/screenshots/calendar-desktop-light.webp" alt="Calendar in week view with events from several modules, an hour grid with today’s column marked, and an agenda panel for the selected day on the right">
       </picture>
       <br><sub>Calendar: week view with the day’s agenda</sub>
     </td>
     <td width="50%">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/finance-desktop-dark.webp">
-        <img src="docs/assets/screenshots/finance-desktop-light.webp" alt="Finances overview for September with the available balance in the head, income, expenses and result for the month, a line chart of the balance, a donut chart of where the money went and the latest transactions on the right">
+        <img src="docs/assets/screenshots/finance-desktop-light.webp" alt="Finances overview for September with the available balance in the header, income, expenses and result for the month, a line chart of the balance, a donut chart of where the money went and the latest transactions on the right">
       </picture>
       <br><sub>Finances: month overview with balance and transactions</sub>
     </td>
@@ -136,9 +136,9 @@ All pictures show made-up sample data in the German interface; the app also spea
     <td width="50%">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/settings-desktop-dark.webp">
-        <img src="docs/assets/screenshots/settings-desktop-light.webp" alt="Settings overview: a status head with security, device status and AI, quick switches for colour scheme, density, reading aid, profile and quiet time, and the list of categories on the left">
+        <img src="docs/assets/screenshots/settings-desktop-light.webp" alt="Settings overview: a status header with security, device status and AI, quick switches for colour scheme, density, reading aid, profile and quiet time, and the list of categories on the left">
       </picture>
-      <br><sub>Settings: status at a glance, then the categories</sub>
+      <br><sub>Settings: status at a glance, categories on the left</sub>
     </td>
   </tr>
 </table>

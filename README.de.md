@@ -29,7 +29,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/overview-desktop-dark.webp">
-    <img src="docs/assets/screenshots/overview-desktop-light.webp" alt="Nemo-Übersicht auf dem Desktop mit erfundenen Beispieldaten, in der ruhigen Ansicht „Ruhig“: eine Seitenleiste mit Favoriten und zugeklappten Bereichen, die Leiste „Jetzt wichtig“ mit drei Karten und einer Zeile, was warten kann, und eine Karte „Heute“ mit dem nächsten Termin, den Terminen von heute und einer vorgeschlagenen Aufgabe zum Anfangen" width="900">
+    <img src="docs/assets/screenshots/overview-desktop-light.webp" alt="Nemo-Übersicht auf dem Desktop mit erfundenen Beispieldaten, in der Ansicht „Ruhig“: eine Seitenleiste mit Favoriten und Bereichen, die Leiste „Jetzt wichtig“ mit drei Karten und eine Karte „Heute“ mit dem nächsten Termin, den Terminen von heute und einer vorgeschlagenen Aufgabe zum Anfangen" width="900">
   </picture>
 </p>
 
@@ -138,7 +138,7 @@ Alle Bilder zeigen erfundene Beispieldaten in der deutschen Oberfläche; die App
         <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/settings-desktop-dark.webp">
         <img src="docs/assets/screenshots/settings-desktop-light.webp" alt="Einstellungsübersicht: ein Statuskopf mit Sicherheit, Gerätestatus und KI, Schnellschalter für Farbschema, Dichte, Lesehilfe, Profil und Ruhe und links die Liste der Kategorien">
       </picture>
-      <br><sub>Einstellungen: der Status auf einen Blick, dann die Kategorien</sub>
+      <br><sub>Einstellungen: der Status auf einen Blick, links die Kategorien</sub>
     </td>
   </tr>
 </table>
