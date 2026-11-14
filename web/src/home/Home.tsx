@@ -236,7 +236,9 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
   const [built, setBuilt] = useState(false);
   // The edit mode shows every card at once; afterwards the page does not build up again.
   if (editing && !built) setBuilt(true);
-  const staged = !built;
+  // A second step only pays when it holds more than one more row: with few cards ("Ruhig", one column) waiting for
+  // the first ones before mounting the rest only adds a round trip.
+  const staged = !built && shown.length > 2 * firstStep;
   const mounted = staged ? shown.slice(0, firstStep) : shown;
   // Packed (no holes) except while editing: reordering picks targets by position, so there the grid keeps the
   // saved order on plain rows.
