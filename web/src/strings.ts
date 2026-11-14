@@ -5314,6 +5314,7 @@ export const de = {
       checklist: 'Neuer Eintrag',
     } as Record<string, string>,
     empty: 'Diese Liste ist leer.',
+    emptyAction: 'Artikel eintragen',
     editItem: 'Eintrag bearbeiten',
     itemName: 'Name',
     quantity: 'Menge (optional)',
