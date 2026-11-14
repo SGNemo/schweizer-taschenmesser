@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
 import { DEFAULTS_ERA_KEY } from '@/core/focus/defaults';
+import { DEFAULTS_VERSION_KEY } from '@/core/modules/defaults';
 import { setSettings } from '@/core/settings/settings';
 import type * as Detect from '@/core/setup/detect';
 import { ensureSetupState } from '@/core/setup/detect';
@@ -26,7 +27,7 @@ beforeEach(async () => {
   useUiStore.setState({ homeView: 'calm' });
 });
 afterEach(() => {
-  vi.unstubAllGlobals();
+  Reflect.deleteProperty(navigator, 'storage');
 });
 
 describe('first start: a fresh app keeps the calm overview (initCore)', () => {
@@ -36,7 +37,7 @@ describe('first start: a fresh app keeps the calm overview (initCore)', () => {
       await setSettings('ui.example', { on: true });
       return true;
     });
-    vi.stubGlobal('navigator', { ...navigator, storage: { persist } });
+    Object.defineProperty(navigator, 'storage', { value: { persist }, configurable: true });
     await initCore();
     expect(persist).toHaveBeenCalled();
     expect(useUiStore.getState().homeView).toBe('calm');
@@ -60,6 +61,19 @@ describe('first start: a fresh app keeps the calm overview (initCore)', () => {
     await setSettings('ui.example', { on: true });
     await initCore();
     expect(useUiStore.getState().homeView).toBe('calm');
+    // The entry made meanwhile counts as data: the assistant does not appear by itself.
+    expect((await meta().get(SETUP_STATE_KEY))?.value).toMatchObject({ status: 'dismissed' });
+  });
+
+  it('notes the default set of modules before the setup state', async () => {
+    let defaultsAtSetup: unknown = 'not reached';
+    const actual = (await vi.importActual<typeof Detect>('@/core/setup/detect')).ensureSetupState;
+    vi.mocked(ensureSetupState).mockImplementationOnce(async (...args) => {
+      defaultsAtSetup = (await meta().get(DEFAULTS_VERSION_KEY))?.value;
+      return actual(...args);
+    });
+    await initCore();
+    expect(typeof defaultsAtSetup).toBe('number');
   });
 
   it('an app with data and no era marker is an existing installation: the detailed view, as before', async () => {

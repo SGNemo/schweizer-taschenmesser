@@ -22,10 +22,12 @@ export async function initCore(): Promise<void> {
   // A really empty app (no setup state, no data) is a fresh installation: it gets the calm defaults. Read before
   // anything is awaited: the page renders alongside and may write its first settings while the browser answers.
   const fresh = !(await readSetupState()) && !(await appHasData());
-  // The defaults era comes before the setup state: a first start that ends between the two (the page is left at
-  // once) must not let the next start read its own setup state as an existing installation. For a fresh app the
-  // era writes only its marker in `_meta`, which `appHasData` does not count, so the setup state decides as before.
+  // Everything that depends on "fresh" comes before the setup state: a first start that ends after it (the app is
+  // closed at once) must not let the next start read its own setup state as an existing installation. For a fresh
+  // app both steps write only `_meta` markers, which `appHasData` does not count, so the setup state decides as before.
   await applyDefaultsEra(fresh, (view) => useUiStore.getState().setHomeView(view));
+  // The same fresh installation notes its default set of modules (device-local, never a synced row).
+  await markFreshDefaults(fresh);
   // Decides `dismissed` (installation with data) vs `notStarted` before any module work writes.
   await ensureSetupState();
   try {
@@ -33,8 +35,6 @@ export async function initCore(): Promise<void> {
   } catch {
     // Best effort only.
   }
-  // The same fresh installation notes its default set of modules (device-local, never a synced row).
-  await markFreshDefaults(fresh);
   // Dev-Preview: an empty app is no longer filled by itself; the welcome card offers
   // "Mit Testdaten ansehen" next to "Einrichtung starten" (A10, round 5), so a tester sees the setup.
   const states = await loadModuleStates();
