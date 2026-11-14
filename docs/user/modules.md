@@ -8,38 +8,38 @@ In the **module library** you turn modules on and off (when turning one off: kee
 
 <!-- modules:start -->
 
-| Area | Module | What it does | Status |
-|---|---|---|---|
-| **Plan** | Calendar | Events in month, week and day view | on by default |
-|  | Planner | Spreads your open to-dos over the coming days | optional |
-|  | To-dos | Tasks in lists with priorities, due date and subtasks | on by default |
-|  | Habits | Daily and weekly goals with rings | optional |
-|  | Time tracking | Start and stop with one click, projects and clients with colour and hourly rate | optional |
-|  | Weather | A page of its own for the weather at your place | on by default |
-|  | Clock | Add places and always see their time | preview |
-|  | Maps & places | Places and routes you need often | preview |
-|  | People | Never forget a birthday again and collect gifts per person | optional |
-| **Money** | Finances | Accounts, income and expenses with categories | on by default |
-|  | Invoices | Open invoices with amount, payee and due date | on by default |
-|  | Subscriptions | Subscriptions and recurring payments | on by default |
-|  | Budgets & savings goals | Monthly limits per expense category (from Finances) and savings goals with deposits and progress | on for new installations |
-| **Household** | Lists | Shopping, packing lists and checklists | on for new installations |
-|  | Routines | Cleaning plan and household routines | on for new installations |
-|  | Pantry | What’s in the fridge, the cupboard and the freezer? | optional |
-|  | Fitness | Keep a rough log of training and food | preview |
-| **Knowledge** | Saved | Save links, reading, films, places and ideas | optional |
-|  | Notes | Notebook with formatted text (Markdown), a fixed scratchpad always at the top, pinning and search | optional |
-|  | Chat | Conversations with the built-in local model or your providers | preview |
-|  | Browser | Simple browser with tabs, bookmarks and a private mode | preview, Windows and Android apps only |
-|  | Feeds | Your subscribed feeds (news, blogs, podcasts) in one place, sorted by group | optional |
-|  | Mail | Inbox, search and reading mail | preview, Windows app only |
-|  | Music | Spotify on one page | preview |
-| **Vault** | Documents | IDs, contracts, insurance and warranties with end date, notice period and an attached file | optional |
-|  | Passwords | Password vault | optional |
-| **System** | Device status | Backup, sync, storage and updates of this device on one page | on for new installations |
-|  | This PC | Drives with a scan of the biggest folders and system info (processor, memory, battery, network) | optional, Windows app only |
-|  | Downloads | Downloads files | on for new installations, Windows app only |
-|  | Remote | Control media, volume, mouse and keyboard of your PC from your phone | preview, Android app only |
+| Area          | Module                  | What it does                                                                                      | Status                                     |
+| ------------- | ----------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| **Plan**      | Calendar                | Events in month, week and day view                                                                | on by default                              |
+|               | Planner                 | Spreads your open to-dos over the coming days                                                     | optional                                   |
+|               | To-dos                  | Tasks in lists with priorities, due date and subtasks                                             | on by default                              |
+|               | Habits                  | Daily and weekly goals with rings                                                                 | optional                                   |
+|               | Time tracking           | Start and stop with one click, projects and clients with colour and hourly rate                   | optional                                   |
+|               | Weather                 | A page of its own for the weather at your place                                                   | on by default                              |
+|               | Clock                   | Add places and always see their time                                                              | preview                                    |
+|               | Maps & places           | Places and routes you need often                                                                  | preview                                    |
+|               | People                  | Never forget a birthday again and collect gifts per person                                        | optional                                   |
+| **Money**     | Finances                | Accounts, income and expenses with categories                                                     | on by default                              |
+|               | Invoices                | Open invoices with amount, payee and due date                                                     | on by default                              |
+|               | Subscriptions           | Subscriptions and recurring payments                                                              | on by default                              |
+|               | Budgets & savings goals | Monthly limits per expense category (from Finances) and savings goals with deposits and progress  | on for new installations                   |
+| **Household** | Lists                   | Shopping, packing lists and checklists                                                            | on for new installations                   |
+|               | Routines                | Cleaning plan and household routines                                                              | on for new installations                   |
+|               | Pantry                  | What’s in the fridge, the cupboard and the freezer?                                               | optional                                   |
+|               | Fitness                 | Keep a rough log of training and food                                                             | preview                                    |
+| **Knowledge** | Saved                   | Save links, reading, films, places and ideas                                                      | optional                                   |
+|               | Notes                   | Notebook with formatted text (Markdown), a fixed scratchpad always at the top, pinning and search | optional                                   |
+|               | Chat                    | Conversations with the built-in local model or your providers                                     | preview                                    |
+|               | Browser                 | Simple browser with tabs, bookmarks and a private mode                                            | preview, Windows and Android apps only     |
+|               | Feeds                   | Your subscribed feeds (news, blogs, podcasts) in one place, sorted by group                       | optional                                   |
+|               | Mail                    | Inbox, search and reading mail                                                                    | preview, Windows app only                  |
+|               | Music                   | Spotify on one page                                                                               | preview                                    |
+| **Vault**     | Documents               | IDs, contracts, insurance and warranties with end date, notice period and an attached file        | optional                                   |
+|               | Passwords               | Password vault                                                                                    | optional                                   |
+| **System**    | Device status           | Backup, sync, storage and updates of this device on one page                                      | on for new installations                   |
+|               | This PC                 | Drives with a scan of the biggest folders and system info (processor, memory, battery, network)   | optional, Windows app only                 |
+|               | Downloads               | Downloads files                                                                                   | on for new installations, Windows app only |
+|               | Remote                  | Control media, volume, mouse and keyboard of your PC from your phone                              | preview, Android app only                  |
 
 “On for new installations”: switched on when you install Nemo fresh. An installation that already existed stays as it is; there you turn the module on in the module library.
 
@@ -57,7 +57,7 @@ Highlights of the modules that start with a short line above:
 - **Lists:** shopping with “2 milk”, packing lists with progress and templates, checklists.
 - **People:** birthdays yearly in the calendar, with age, reminder and WhatsApp greeting; gift ideas per person with price, link and status.
 - **Budgets & savings goals:** monthly limits per finance category, savings goals with deposits.
-- **Planner** (preview): plan changes like “Donnerstag frei” are said in the field on the planner page (German sentences; a preview shows what moves before anything changes).
+- **Planner** (preview): plan changes like “Donnerstag frei” are said in the field on the planner page (German sentences; a preview shows what moves before anything changes). “Plan my days” (welcome card, empty planner or ⋯) takes in three steps what is coming up and how much time you have today and on the next two days; after the preview, “Apply” enters it all with one undo.
 - **Maps & places** (preview): saved places and routes, a map with place search, open in your map app; the map only loads when you open it.
 - **Documents:** title, category, provider, start, end, notice period and note are synced like everything else; the **files stay only on the
   device** where they were added (not synced, not in the backup, max. 10 MB per file).
