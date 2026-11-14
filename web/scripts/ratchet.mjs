@@ -43,8 +43,8 @@ export const LABEL = 'stimulus-raise';
  * approves the hits. Agents that act with the maintainer's token post as this account: that is the intended
  * proxy. Only comments created in [FROM, UNTIL) count, and only while the run is before UNTIL; then only the
  * signature is valid again. Never for hits on this script itself (the trust root). A follow-up pull request
- * removes what every `proxy-2026-11` marker points at (`git grep -n proxy-2026-11`, also in the test), then
- * `npm run check` and the ratchet tests must pass. In `--pr` the proxy is read
+ * is `git revert -m 1` of this change's merge commit (code and docs, the decision bullet stays); the
+ * `proxy-2026-11` markers only show where it reaches. Then `npm run check` and the ratchet tests. In `--pr` the proxy is read
  * only when RATCHET_PUBLIC_KEY loads (no key: nothing is mergeable at all).
  */
 // proxy-2026-11 (constants up to SELF)
@@ -1299,11 +1299,12 @@ export async function runCi({
       }
     }
   } catch (e) {
-    out(`Could not read the labels or comments (${e.message}); hits stay red.`);
+    out(`Could not read the labels or comments (${e.message}); hits stay red.`); // proxy-2026-11
     return 1;
   }
+  // proxy-2026-11: the comment clause in this text.
   out(
-    `Hits without the label "${LABEL}" or an approval comment for hash ${hashOf(hits)}. Next step: name every hit in the pull request text and wait for the maintainer's approval (docs/howto/ci-ratchet-signing.md), or take the change back. Lowering a budget and new guard files are free.`,
+    `Hits without the label "${LABEL}"${proxyOpen(hits, now) ? ` or a proxy approval comment for hash ${hashOf(hits)}` : ''}. Next step: name every hit in the pull request text and wait for the maintainer's approval (docs/howto/ci-ratchet-signing.md), or take the change back. Lowering a budget and new guard files are free.`,
   );
   return 1;
 }
