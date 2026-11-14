@@ -28,7 +28,8 @@ test('the page: four groups of lines, each a link into the settings, nothing to 
     expect(href).toMatch(/^\/settings\//);
   await expect(root.getByRole('button')).toHaveCount(0);
   await expect(root.getByRole('switch')).toHaveCount(0);
-  await expect(page.getByTestId('device-summary')).toContainText('Nichts Dringendes');
+  // A fresh browser has no backup yet: the summary names it calmly (0b-8, maintainer's answer 3).
+  await expect(page.getByTestId('device-summary')).toContainText('Noch kein Backup');
   await expect(page.getByText(/Akku|Batterie/)).toHaveCount(0);
   // A line leads to where the thing is set.
   await root.getByTestId('overview-sync').click();

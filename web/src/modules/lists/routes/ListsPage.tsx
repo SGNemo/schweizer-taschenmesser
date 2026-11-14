@@ -242,6 +242,7 @@ export default function ListsPage() {
       title={i.name}
       titleFull
       done={i.done}
+      className={styles.itemRow}
       lead={
         <Checkbox
           label={i.name}
@@ -437,7 +438,13 @@ export default function ListsPage() {
                   size={64}
                 />
               }
-            />
+            >
+              {/* M10: an empty state names its next step. "Artikel eintragen" on a shopping list; the other lists reuse
+                  `addItem`, the label of the "⋯" entry and of the field itself (a known exception to "<Ding> eintragen"). */}
+              <Button onClick={focusAdd}>
+                {isShopping ? t.lists.emptyAction : t.lists.addItem}
+              </Button>
+            </EmptyState>
           ) : null}
           <div
             className={isShopping ? styles.paper : styles.sheet}

@@ -58,7 +58,14 @@ function Tile({
  * The start view, never empty: what you played last (a row of covers; a tap plays it) and your playlists as a cover grid (a tap
  * opens it). Each part says in one sentence what is missing when a feature is not switched on, and where to switch it on.
  */
-export function StartView({ api }: { api: PlayerApi }) {
+export function StartView({
+  api,
+  onRead,
+}: {
+  api: PlayerApi;
+  /** Called once both parts are read, answered or failed (0b-8: the page waits for them). */
+  onRead?: () => void;
+}) {
   const tx = tSpotify.use();
   const tm = tMusicPage.use();
   const { source, ctx, features } = api.np;
@@ -81,6 +88,11 @@ export function StartView({ api }: { api: PlayerApi }) {
       alive = false;
     };
   }, [source, ctx, hasHistory, hasPlaylists, api.version]);
+
+  const read = (!hasHistory || recent !== undefined) && (!hasPlaylists || playlists !== undefined);
+  useEffect(() => {
+    if (read) onRead?.();
+  }, [read, onRead]);
 
   const open = (v: View) => api.open(v);
   return (

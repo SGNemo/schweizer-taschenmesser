@@ -169,7 +169,7 @@ export default function CalendarPage() {
     setParams(p, { replace: true });
   };
 
-  // The two views of the page are tabs at the head's lower edge; month, week … choose the range inside "Kalender".
+  // The two views of the page are tabs at the head's lower edge; month, week … choose the range inside "Termine".
   const tabs = (
     <Tabs
       label={t.calendar.tabsLabel}

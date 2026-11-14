@@ -42,7 +42,7 @@ import {
 } from '@/core/modules/types';
 import { useFigureHold } from './figureHold';
 import { readHeadRoom, writeHeadRoom } from './headRoom';
-import { useNoticeHold } from './noticeHold';
+import { useFirstReadHold } from './firstReadHold';
 import { PageContainer, PageFallback } from './PageContainer';
 import { DefaultSignature } from './signatures';
 import { useModuleHeadline } from './useModuleHeadline';
@@ -156,8 +156,11 @@ export function AreaFrame({
   const id = manifest?.identity;
   // 0b-8: the entry page of a module whose hint above the head waits for a read (`identity.notice`, the weather) is
   // painted once that read is back, so the hint never pushes the head and the page down (first visit: CLS 0.6–0.9).
-  const [noticeHeld, settle] = useNoticeHold(
-    framed && id?.notice && manifest && pathname === `/${manifest.id}` ? pathname : undefined,
+  // The same hold for an entry page whose stage and page are built from their first reads (`identity.firstRead`, music).
+  const [firstReadHeld, settle] = useFirstReadHold(
+    framed && (id?.notice || id?.firstRead) && manifest && pathname === `/${manifest.id}`
+      ? pathname
+      : undefined,
   );
   const controls = useMemo<HeroControls>(
     () => ({
@@ -281,11 +284,11 @@ export function AreaFrame({
     <HeroContext.Provider value={framed ? targets : undefined}>
       <HeroControlsContext.Provider value={framed ? controls : undefined}>
         {framed ? (
-          <div className={`${styles.notice} ${noticeHeld ? styles.held : ''}`} ref={setNotice} />
+          <div className={`${styles.notice} ${firstReadHeld ? styles.held : ''}`} ref={setNotice} />
         ) : null}
         {framed && !stage ? (
           <header
-            className={`${styles.head} ${noticeHeld ? styles.held : ''}`}
+            className={`${styles.head} ${firstReadHeld ? styles.held : ''}`}
             data-head="standard"
             data-hue={id?.hue}
             data-hue2={id?.hue2}
@@ -306,7 +309,7 @@ export function AreaFrame({
           <HeadSurface
             as="header"
             bleed
-            className={`${styles.stage} ${noticeHeld ? styles.held : ''}`}
+            className={`${styles.stage} ${firstReadHeld ? styles.held : ''}`}
             hue={id?.hue}
             hue2={id?.hue2}
             area={area?.id}
@@ -349,7 +352,7 @@ export function AreaFrame({
             </div>
           </HeadSurface>
         ) : null}
-        <PageContainer variant={variant} hue={hue} held={noticeHeld}>
+        <PageContainer variant={variant} hue={hue} held={firstReadHeld}>
           {framed && !stage ? (
             // Under a standard head: what a page still brings for the signature slot and its strips lies in the
             // page (the area packages decide what stays), never in the head.

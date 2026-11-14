@@ -76,3 +76,30 @@
   font-family: var(--font-mono);
   color: var(--text-muted);
 }
+
+/* Phone: a row stays one line, the pencil beside the entry (0b-8). The end part (badges, price, quantity) wraps
+   inside its own column instead of pushing the pencil onto a second line; the title keeps the most room. `li.` lifts
+   these rules over the shared `.rows` phone rules (`ui/Patterns.module.css`); the row is found by its `[data-row]`,
+   not by its place in ItemRow. Below 400 px or with large text all of this is off and the shared wrap stays: one
+   line would not fit there. */
+@media (min-width: 25rem) and (max-width: 40rem) {
+  :root:not([data-text-size='large']):not([data-text-size='xlarge'])
+    li.itemRow
+    > :has(> [data-row]) {
+    flex-wrap: nowrap;
+  }
+  :root:not([data-text-size='large']):not([data-text-size='xlarge']) li.itemRow [data-row] {
+    flex: 1 1 6rem;
+    min-width: 6rem;
+  }
+  :root:not([data-text-size='large']):not([data-text-size='xlarge']) li.itemRow .meta {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 8rem;
+    justify-content: flex-end;
+    row-gap: var(--space-1);
+  }
+  :root:not([data-text-size='large']):not([data-text-size='xlarge']) li.itemRow .quantity {
+    white-space: nowrap;
+  }
+}

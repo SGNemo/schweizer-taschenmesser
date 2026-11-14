@@ -22,7 +22,7 @@ export function PageContainer({
   variant?: PageLayout;
   /** Module pages: the module's hue (`manifest.identity`), read by the header, charts and empty states via `--module-color`. */
   hue?: ModuleHue;
-  /** Laid out but not painted (and busy) while the frame waits for the page's first read (`layout/noticeHold`). */
+  /** Laid out but not painted (and busy) while the frame waits for the page's first read (`layout/firstReadHold`). */
   held?: boolean;
   children: ReactNode;
 }) {
