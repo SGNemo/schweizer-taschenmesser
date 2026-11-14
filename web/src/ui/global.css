@@ -101,6 +101,22 @@ a {
 a:hover {
   text-decoration-color: currentColor;
 }
+/* Touch (any touch screen, like `Segmented`): a plain link inside running text is 44 px to hit without growing – a
+   hit strip over its line, so the sentence flows as before (0b-E; design-rules "Touch targets"). A link with a class of
+   its own sizes its own target. */
+@media (any-pointer: coarse) {
+  :where(p, li, dd, figcaption) > a:not([class]) {
+    position: relative;
+  }
+  :where(p, li, dd, figcaption) > a:not([class])::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 50%;
+    height: var(--touch);
+    transform: translateY(-50%);
+  }
+}
 ::selection {
   background: var(--accent-soft);
   color: var(--text);

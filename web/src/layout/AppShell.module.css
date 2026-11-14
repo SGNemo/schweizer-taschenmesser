@@ -63,6 +63,7 @@
     grid-template-columns: minmax(0, 1fr);
   }
   .shell[data-cockpit='true'] .main {
+    --frame-bleed-end: initial;
     padding: var(--space-3) var(--space-3) var(--space-4);
   }
   .col {
@@ -98,6 +99,11 @@
     min-height: 0;
     overflow-y: auto;
     padding: var(--space-5) var(--page-gutter) var(--space-6);
+    /* Right edge flush with the top bar's (0b-R): a classic scrollbar (Windows) always keeps its gutter, short page
+       or long, and comes off the right padding; overlay scrollbars measure 0 (core/shell/scrollbars.ts). */
+    scrollbar-gutter: stable;
+    --frame-bleed-end: max(0px, calc(var(--page-gutter) - var(--scrollbar-w, 0px)));
+    padding-right: var(--frame-bleed-end);
   }
 }
 

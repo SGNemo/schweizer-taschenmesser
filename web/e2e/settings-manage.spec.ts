@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
-import { ready } from './helpers';
+import { ready, settingsSearch } from './helpers';
 
 const isPhone = (info: { project: { name: string } }) => info.project.name === 'pixel-7';
 const dark = 'html[data-theme="dark"]';
@@ -147,6 +147,6 @@ test('the new sections are listed under "Verwalten" and found by the search', as
     ).toBeVisible();
   }
   await ready(page, '/settings');
-  await page.getByRole('searchbox', { name: 'Einstellungen durchsuchen' }).fill('Voreinstellung');
+  await (await settingsSearch(page)).fill('Voreinstellung');
   await expect(page.getByRole('link', { name: /Profile/ }).first()).toBeVisible();
 });

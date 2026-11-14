@@ -23,10 +23,9 @@ import { UpdateBanner } from './UpdateBanner';
 import { SeedBanner } from './devTools';
 import { QuickAdd } from './QuickAdd';
 import { ShortcutSheet } from './ShortcutSheet';
-import { availableManifests } from '@/core/modules/available';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
-import { watchScrolling } from '@/core/shell/scrollbars';
+import { watchScrollbarWidth, watchScrolling } from '@/core/shell/scrollbars';
 import { watchKeyboard } from '@/core/shell/keyboardInset';
 import { BottomNav, BOTTOM_AREA_SLOTS } from './BottomNav';
 import { MoreSheet } from './MoreSheet';
@@ -64,6 +63,8 @@ export function AppShell() {
   useEffect(() => watchKeyboard(), []);
   // Scrollbars appear while an area scrolls (core/shell/scrollbars.ts).
   useEffect(() => watchScrolling(), []);
+  // A classic scrollbar's width, so the content keeps the top bar's right edge (core/shell/scrollbars.ts).
+  useEffect(() => watchScrollbarWidth(), []);
 
   // Dev-Preview builds say so once per start (a module flag survives StrictMode's double effect).
   useEffect(() => {
@@ -74,10 +75,6 @@ export function AppShell() {
   const [moreOpen, setMoreOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  // The active module's hue tints the thin stripe at the sidebar's edge (identity v2).
-  const activeHue = availableManifests().find(
-    (m) => location.pathname === `/${m.id}` || location.pathname.startsWith(`/${m.id}/`),
-  )?.identity.hue;
   useNativeShare();
   useLaunchOpen();
   useShortcuts();
@@ -159,7 +156,7 @@ export function AppShell() {
       </a>
 
       {focusing ? null : (
-        <aside className={styles.sidebar} data-hue={activeHue} data-testid="sidebar">
+        <aside className={styles.sidebar} data-testid="sidebar">
           <Sidebar tree={tree} rail={rail} canExpand={wide} />
         </aside>
       )}

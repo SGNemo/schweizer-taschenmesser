@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { enable, ready } from './helpers';
+import { enable, ready, settingsSearch } from './helpers';
 
 /** QA package P2: nothing is cut off or covered on a phone; one tick area per list row; one notice at a time. */
 test.beforeEach(async ({ page }) => {
@@ -260,6 +260,7 @@ test.describe('Settings on a phone', () => {
 
   test('the sticky settings search stays below the top bar', async ({ page }) => {
     await ready(page, '/settings/darstellung');
+    await settingsSearch(page);
     await page.mouse.wheel(0, 600);
     await page.waitForTimeout(300);
     const bar = (await page.locator('header').first().boundingBox())!;

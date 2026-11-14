@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ready } from './helpers';
+import { ready, settingsSearch } from './helpers';
 
 const isPhone = (info: { project: { name: string } }) => info.project.name === 'pixel-7';
 
@@ -88,7 +88,7 @@ test('Tastenkürzel: the fixed shortcuts are listed and cannot be mistaken for t
 
 test('the new sections are found by the search', async ({ page }) => {
   await ready(page, '/settings');
-  const search = page.getByRole('searchbox', { name: 'Einstellungen durchsuchen' });
+  const search = await settingsSearch(page);
   await search.fill('Speicherplatz');
   await expect(page.getByRole('link', { name: /Speicher/ }).first()).toBeVisible();
   await search.fill('Sehhilfe');

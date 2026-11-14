@@ -20,6 +20,8 @@ export interface PageHeadProps {
   size?: 'tall' | 'compact';
   /** Buttons and links at the right of the eyebrow row. */
   actions?: ReactNode;
+  /** One icon button at the end of the eyebrow row (the settings search on the phone). */
+  tool?: ReactNode;
   /** Decoration at the right (a signature in small); hidden from assistive tech. */
   decoration?: ReactNode;
   /** Tiles or figures under the title. */
@@ -44,6 +46,7 @@ export function PageHead({
   description,
   size = 'compact',
   actions,
+  tool,
   decoration,
   children,
   testId,
@@ -72,6 +75,7 @@ export function PageHead({
           {decoration}
         </div>
       ) : null}
+      {tool ? <div className={styles.tool}>{tool}</div> : null}
       {actions ? <div className={styles.actions}>{actions}</div> : null}
       {children ? <div className={styles.body}>{children}</div> : null}
     </HeadSurface>

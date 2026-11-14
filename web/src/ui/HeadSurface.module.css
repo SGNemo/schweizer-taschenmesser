@@ -23,7 +23,8 @@
 .bleed {
   flex: none;
   align-self: stretch;
-  margin: 0 calc(-1 * var(--frame-bleed-x, 0px)) var(--space-4);
+  margin: 0 calc(-1 * var(--frame-bleed-end, var(--frame-bleed-x, 0px))) var(--space-4)
+    calc(-1 * var(--frame-bleed-x, 0px));
   border-radius: 0 0 var(--hero-radius) var(--hero-radius);
 }
 /* A head inside a page (settings, libraries, tools): a rounded card, nothing bleeds past the container. */
