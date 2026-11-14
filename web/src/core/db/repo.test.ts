@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { setNow } from '@/core/time/now';
 import { createTestDb } from '@/test-utils';
 import type { TaschenmesserDB } from './db';
-import { createRepo, type Repo } from './repo';
+import { createRepo, type Repo, untouchedSinceCreated } from './repo';
 
 const schema = z.object({
   title: z.string().min(1),
@@ -165,5 +165,62 @@ describe('local repos', () => {
     const normal = await repo.create({ title: 'synced', done: false });
     expect(await db.table('_outbox').count()).toBe(1);
     expect((await db.table('_outbox').toArray())[0]).toMatchObject({ id: normal.id });
+  });
+});
+
+describe('import dates (D17, round 5)', () => {
+  const day = 86_400_000;
+
+  it('createMany keeps the dates of the source in the envelope, the stamps stay "now"', async () => {
+    const [r] = await repo.createMany([
+      {
+        data: { title: 'alt', done: false },
+        at: { createdAt: clock - 30 * day, updatedAt: clock - 2 * day },
+      },
+    ]);
+    expect(r!.createdAt).toBe(clock - 30 * day);
+    expect(r!.updatedAt).toBe(clock - 2 * day);
+    // Sync and last-write-wins see a fresh write: every stamp carries today's wall time.
+    for (const stamp of Object.values(r!._f)) expect(Number(stamp.slice(0, 13))).toBe(clock);
+    expect(await db.table('_outbox').count()).toBe(1);
+  });
+
+  it('out-of-range dates fall back to now; updatedAt never before createdAt', async () => {
+    const rows = await repo.createMany([
+      { data: { title: 'future', done: false }, at: { createdAt: clock + day } },
+      { data: { title: 'nan', done: false }, at: { createdAt: Number.NaN } },
+      { data: { title: 'only created', done: false }, at: { createdAt: clock - day } },
+      {
+        data: { title: 'swapped', done: false },
+        at: { createdAt: clock - day, updatedAt: clock - 5 * day },
+      },
+    ]);
+    expect(rows.map((r) => [r.createdAt, r.updatedAt])).toEqual([
+      [clock, clock],
+      [clock, clock],
+      [clock - day, clock - day],
+      [clock - day, clock - day],
+    ]);
+  });
+
+  it('an edit keeps the imported createdAt and moves updatedAt to now', async () => {
+    const [r] = await repo.createMany([
+      { data: { title: 'alt', done: false }, at: { createdAt: clock - day } },
+    ]);
+    clock += 1000;
+    const u = await repo.update(r!.id, { title: 'neu' });
+    expect([u.createdAt, u.updatedAt]).toEqual([clock - 1000 - day, clock]);
+  });
+});
+
+describe('untouchedSinceCreated', () => {
+  it('true right after creating (also with imported dates), false after an edit', async () => {
+    const [r] = await repo.createMany([
+      { data: { title: 'a', done: false }, at: { createdAt: clock - 1000, updatedAt: clock - 10 } },
+    ]);
+    expect(untouchedSinceCreated(r!)).toBe(true);
+    clock += 1;
+    const u = await repo.update(r!.id, { done: true });
+    expect(untouchedSinceCreated(u)).toBe(false);
   });
 });

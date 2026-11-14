@@ -37,7 +37,7 @@ export interface Repo<T> {
    * already exists (also as a tombstone) is skipped – the call is idempotent. Validation happens
    * before anything is written, so one invalid item rejects the whole batch.
    */
-  createMany(items: { data: T; id?: string }[]): Promise<Stored<T>[]>;
+  createMany(items: { data: T; id?: string; at?: ImportDates }[]): Promise<Stored<T>[]>;
   update(id: string, patch: Partial<T>): Promise<Stored<T>>;
   /** Create with a fixed id, or replace all data fields of the existing record. */
   upsert(id: string, data: T): Promise<Stored<T>>;
@@ -60,6 +60,40 @@ const envelope = new Set<string>(ENVELOPE_KEYS);
 
 function dataOf(record: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(Object.entries(record).filter(([k]) => !envelope.has(k)));
+}
+
+/**
+ * Dates an import brings along (a note's `created:` / `modified:`): only the local envelope
+ * `createdAt` / `updatedAt` take them. Field stamps (`_f`, HLC) stay "now", so sync and
+ * last-write-wins see a fresh write. Out-of-range values fall back to now (never in the future,
+ * `updatedAt` never before `createdAt`). Other devices derive both from the stamps (`mergeOps`).
+ */
+export interface ImportDates {
+  createdAt: number;
+  updatedAt?: number;
+}
+
+/** The envelope times for a new row: `at` within (0, ts], `updatedAt` within [createdAt, ts]. */
+export function envelopeTimes(
+  ts: number,
+  at?: ImportDates,
+): { createdAt: number; updatedAt: number } {
+  const ok = (v: number | undefined): v is number =>
+    typeof v === 'number' && Number.isFinite(v) && v > 0 && v <= ts;
+  if (!at || !ok(at.createdAt)) return { createdAt: ts, updatedAt: ts };
+  const createdAt = Math.floor(at.createdAt);
+  const updatedAt = ok(at.updatedAt) ? Math.max(createdAt, Math.floor(at.updatedAt)) : createdAt;
+  return { createdAt, updatedAt };
+}
+
+/**
+ * Nobody touched the record since it was created: every field still carries the creation stamp
+ * (an edit, a remote change, a delete or a restore stamps a newer one). Independent of imported
+ * envelope dates, unlike `updatedAt === createdAt`.
+ */
+export function untouchedSinceCreated(row: { _f: Record<string, string> }): boolean {
+  const stamps = new Set(Object.values(row._f));
+  return stamps.size <= 1;
 }
 
 export interface RepoOptions {
@@ -100,17 +134,17 @@ export function createRepo<T extends Record<string, unknown>>(
   }
 
   /** Pure row builders: no I/O, so they can never break a Dexie transaction. */
-  function buildCreated(ctx: DeviceContext, data: T, id: string): Row {
+  function buildCreated(ctx: DeviceContext, data: T, id: string, at?: ImportDates): Row {
     const values = parse(data);
-    const ts = now();
+    const { createdAt, updatedAt } = envelopeTimes(now(), at);
     const stamp = ctx.clock.tick();
     const _f: Record<string, string> = { deletedAt: stamp };
     for (const k of Object.keys(values)) _f[k] = stamp;
     return {
       ...values,
       id,
-      createdAt: ts,
-      updatedAt: ts,
+      createdAt,
+      updatedAt,
       deviceId: ctx.deviceId,
       deletedAt: null,
       _f,
@@ -249,7 +283,7 @@ export function createRepo<T extends Record<string, unknown>>(
         const created: Row[] = [];
         items.forEach((item, i) => {
           if (existing[i]) return;
-          created.push(buildCreated(ctx, item.data, ids[i]!));
+          created.push(buildCreated(ctx, item.data, ids[i]!, item.at));
         });
         await saveAll(created);
         return created;

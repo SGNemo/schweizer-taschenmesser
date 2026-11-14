@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import type { MailFinding } from '@/core/connectors/types';
+import type { ImportDates } from '@/core/db/repo';
 /**
  * Start-data importers. A module declares them in `contributions.onboarding`; the generic wizard
  * (`OnboardingWizard`) shows them, runs the chosen one, previews the result and only after the user's
@@ -136,6 +137,8 @@ export interface ImportCandidate {
   detail?: string;
   /** Stable key for duplicate detection against stored records and within the import. */
   dedupeKey: string;
+  /** Dates of the source (a note's `created:`), kept as the record's local envelope times. */
+  dates?: ImportDates;
   /** Reminder for the user, shown as a badge (e.g. "Betrag unsicher"). */
   warning?: string;
   /**
