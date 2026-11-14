@@ -127,7 +127,8 @@ test.describe('mail (demo mails)', () => {
     await expect(row).toHaveCount(0);
     await page.getByText('Wochenende?').first().click();
     await expect(page.getByTestId('mail-plan-thread')).toHaveCount(0);
-    await expect(page.getByText(/^(Im Plan|Als ToDo da)$/)).toBeVisible();
+    // In the page, not the toast that may still say „Im Plan“ from the tap above.
+    await expect(page.locator('main').getByText(/^(Im Plan|Als ToDo da)$/)).toBeVisible();
     // The ToDo carries the way back: a mail link, never an address.
     await page.goto('/todos');
     await expect(page.getByText('Anna Beispiel · Wochenende?').first()).toBeVisible();

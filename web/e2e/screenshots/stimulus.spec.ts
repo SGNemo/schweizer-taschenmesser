@@ -128,6 +128,10 @@ test('stimulus inventory', async ({ browser }) => {
           .first()
           .click()
           .catch(() => {});
+      // The pointer stays where an earlier click left it (a notice, the weather place). Over a row it puts the
+      // neutral hover tone on it, which hides the row's own fill: the to-dos' "today" row measured 6 or 7 by where
+      // the last click was. Park it in the top left corner (the side bar, outside `main`) before measuring.
+      await page.mouse.move(0, 0);
       await settle(page, `${vp.name}--${target.name}`);
       const m = await page.evaluate(() => {
         const vis = (e: Element) => {
