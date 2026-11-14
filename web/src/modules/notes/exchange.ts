@@ -1,5 +1,5 @@
 import { markdownToPlain, plainToMarkdown } from './editor/markdown';
-import { parseMarkdownNote, type ParsedNote } from '@/core/io/markdownNote';
+import { noteDates, parseMarkdownNote, type ParsedNote } from '@/core/io/markdownNote';
 import { isHiddenPath } from '@/importers/files';
 import { placeOf, stripAttachments, withFolderTag } from '@/importers/obsidian/parse';
 import { displayTitle, isScratch } from './logic';
@@ -57,6 +57,8 @@ export interface ImportFile {
   /** Path as the browser reports it (`Ordner/Datei.md`); a plain file name when no folder was picked. */
   path: string;
   text: string;
+  /** `File.lastModified`, when known: the fallback for the note's dates (D17). */
+  modifiedAt?: number;
 }
 
 export interface ImportedPage {
@@ -64,6 +66,8 @@ export interface ImportedPage {
   folder: string | null;
   title: string;
   body: string;
+  /** Front matter `created:`/`date:`, else the file date (epoch ms). */
+  dates?: { createdAt: number; updatedAt?: number };
 }
 
 /** Files the notes import reads as pages. */
@@ -116,7 +120,13 @@ export function parseImport(files: readonly ImportFile[]): {
     const place = placeOf(segments.slice(vault ? 1 : 0, -1));
     const note = withFolderTag(parsed, place.tag);
     const body = /\.txt$/i.test(base) ? plainToMarkdown(note.body) : note.body;
-    pages.push({ folder: place.folder ?? null, title: note.title, body });
+    const dates = noteDates(note, file.modifiedAt);
+    pages.push({
+      folder: place.folder ?? null,
+      title: note.title,
+      body,
+      ...(dates ? { dates } : {}),
+    });
   }
   return { pages, skipped };
 }
