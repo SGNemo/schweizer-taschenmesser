@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router';
 import { bus } from '@/core/events';
 import { useModuleStates } from '@/core/modules/activation';
 import { whenServicesSettled } from '@/core/modules/servicesReady';
+import { useSettled } from '@/core/status/settled';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import type { Stored } from '@/core/db/types';
 import { useUiStore } from '@/stores/ui';
@@ -92,16 +93,6 @@ export default function ListsPage() {
     input?.scrollIntoView({ block: 'center' });
     input?.focus({ preventScroll: true });
   };
-  // The field lies below the rows, so the parameter waits until lists and items are there.
-  const loaded = (lists?.length ?? 0) > 0 && items !== undefined;
-  useEffect(() => {
-    if (params.get('new') && loaded && form.current) {
-      focusAdd();
-      const next = new URLSearchParams(params);
-      next.delete('new');
-      setParams(next, { replace: true });
-    }
-  }, [params, setParams, loaded]);
 
   // A search hit links here with ?open=<id> of a list or an item: show that list.
   useOpenParam(
@@ -149,9 +140,19 @@ export default function ListsPage() {
   // 0b-8: the list (rows, the add field as its last row, the suggestions) is painted once its items and, for a
   // shopping list, its history are read, so the rows never arrive above an add field that is already there. Once
   // shown it stays (a tab switch keeps the page while the new list is read).
-  const [readOnce, setReadOnce] = useState(false);
-  const read = readOnce || (!!current && items !== undefined && historyRead?.list === current.id);
-  if (read && !readOnce) setReadOnce(true);
+  // Bounded like the status lines (`useSettled`, 1.5 s): a read that hangs still shows the field. It never turns back.
+  const read = useSettled(!!current && items !== undefined && historyRead?.list === current.id);
+  // `?new=1` (Quick-Add, the "+ Neu" menu) focuses the add field. The field is painted with the rows (`read`), so the
+  // parameter waits for that, not only for the items.
+  const loaded = read && (lists?.length ?? 0) > 0 && items !== undefined;
+  useEffect(() => {
+    if (params.get('new') && loaded && form.current) {
+      focusAdd();
+      const next = new URLSearchParams(params);
+      next.delete('new');
+      setParams(next, { replace: true });
+    }
+  }, [params, setParams, loaded]);
   const suggestions = useMemo(
     () =>
       isShopping

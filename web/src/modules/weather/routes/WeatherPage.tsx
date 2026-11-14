@@ -3,7 +3,7 @@ import { now } from '@/core/time/now';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { useHeadReady } from '@/core/shell/heroContext';
 import { dayRows, hourRows, placeNowIso } from '@/core/weather/logic';
-import { useWeatherSettings } from '@/core/weather/settings';
+import { isWeatherActive, useWeatherSettings } from '@/core/weather/settings';
 import { tWeather } from '@/strings.weather';
 import { tWeatherPage } from '@/strings.weatherPage';
 import { Button, Card, EmptyState, PageTitle } from '@/ui';
@@ -32,8 +32,13 @@ export default function WeatherPage() {
   const [settings] = useWeatherSettings();
   const { index, places, weather, loading } = useViewedForecast(requested);
   // The hint above the head comes with the forecast: the frame paints head and page once the first read is back
-  // (`identity.notice`, at most 1.5 s), so the hint never pushes them down (0b-8).
-  useHeadReady(!!settings && (!settings.place || !!weather || !loading));
+  // (`identity.notice`, at most 1.5 s), so the hint never pushes them down (0b-8). Nothing to wait for when fetching is
+  // off or the device is offline: no forecast will come, so the page paints at once.
+  const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
+  useHeadReady(
+    !!settings &&
+      (!settings.place || !!weather || !loading || !isWeatherActive(settings) || offline),
+  );
 
   if (!settings) return null;
   const title = (weather?.place ?? settings.place ?? '').split(',')[0] || tx.title;
