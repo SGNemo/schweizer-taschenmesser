@@ -137,8 +137,9 @@ export function AppShell() {
   }, [tree, location.pathname]);
 
   // Move focus to the main region on navigation (screen readers / keyboard users); in the cockpit
-  // the panel takes focus itself.
-  useEffect(() => {
+  // the panel takes focus itself. A layout effect, so a page's own focus (`?new=1` focuses the
+  // create field) still comes after it when the page renders at once (code already loaded).
+  useLayoutEffect(() => {
     if (!cockpit) document.getElementById('main')?.focus({ preventScroll: true });
   }, [location.pathname, cockpit]);
 
