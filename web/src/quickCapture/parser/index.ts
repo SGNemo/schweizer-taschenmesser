@@ -104,6 +104,23 @@ const DUNNING = word(
 const PAY = word(String.raw`zahlen|bezahlen|überweisen`);
 /** Words that make a dated sentence a deadline (a ToDo), even with a clock time. */
 const DEADLINE = word(String.raw`abgeben|abgabe|einreichen|abschicken|hochladen|deadline|frist`);
+/**
+ * „bis So 18:00“, „spätestens Montag“: a deadline for a thing to do, not an appointment at that time (W04,
+ * use case „Wochenende retten“). Only „bis/spätestens“ right before a day; „bis 18 Uhr“ stays a time span.
+ * Short weekdays are already written out at this point („bis Sonntag“).
+ */
+const BY_DAY = word(
+  String.raw`(?:bis|spätestens)\s+(?:(?:zum\s+|am\s+)?(?:montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|sonnabend|morgen|übermorgen|heute)|\d{1,2}\.\d{1,2}\.?)`,
+);
+/** A start before „bis <Tag>“ makes it a span („Fr 18 Uhr bis So Hütte“, „Konferenz 10.11. 9 Uhr bis 12.11.“): an event. */
+const SPAN_START = word(
+  String.raw`\d{1,2}(?::\d{2})?\s*uhr|\d{1,2}:\d{2}|\d{1,2}\.\d{1,2}\.|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|sonnabend|morgen|heute`,
+);
+/** „bis So“ as a deadline: only when nothing before it already names a day or a time. */
+function byDayDeadline(t: string): boolean {
+  const m = BY_DAY.exec(t);
+  return !!m && !SPAN_START.test(t.slice(0, m.index));
+}
 /** "bis 5.11.", "fällig am": a payment target when an amount is there. */
 const DUE_HINT = word(String.raw`bis|fällig|zahlbar`);
 const PRIORITY_RE = /(?<![\p{L}\d])!(hoch|wichtig|dringend|mittel|niedrig)(?![\p{L}\d])/iu;
@@ -115,7 +132,7 @@ const PRIORITY: Record<string, 1 | 2 | 3> = {
   niedrig: 1,
 };
 const DANGLING =
-  /^(?:um|am|an|den|dem|bis|ab|für|und|zu|dass|,|;|:|-|–)+\s+|\s+(?:um|am|an|den|dem|bis|ab|für|und|zu|,|;|:|-|–)+$/iu;
+  /^(?:um|am|an|den|dem|bis|spätestens|ab|für|und|zu|dass|,|;|:|-|–)+\s+|\s+(?:um|am|an|den|dem|bis|spätestens|ab|für|und|zu|,|;|:|-|–)+$/iu;
 
 function cleanTitle(raw: string): string {
   let t = raw.replace(/\s+/g, ' ').trim();
@@ -210,6 +227,7 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
     spendPast: SPEND_PAST.test(scan.t),
     pay: PAY.test(scan.t),
     deadline: DEADLINE.test(scan.t),
+    byDay: byDayDeadline(scan.t),
     dueHint: DUE_HINT.test(scan.t),
   };
 
@@ -309,6 +327,7 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
     score(scores, 'invoice', 90);
   if (kw.birthday && hasDate && !hasTime && !recurrence) score(scores, 'birthday', 93);
   if (kw.deadline && !money && !recurrence) score(scores, 'todo', 96);
+  else if (kw.byDay && !money && !recurrence && !kw.reminder) score(scores, 'todo', 96);
   if (hasDate && hasTime && !recurrence) score(scores, 'event', 85);
   else if (!hasDate && hasTime && !recurrence) score(scores, 'event', 70);
   else if (hasDate && !hasTime && !recurrence && !money) {
