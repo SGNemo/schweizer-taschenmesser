@@ -5202,7 +5202,7 @@ export const de = {
     },
     title: 'Budgets & Sparziele',
     tabs: 'Bereich',
-    tabBudgets: 'Monat',
+    tabBudgets: 'Limits',
     listBudgets: 'Budgets',
     tabGoals: 'Sparziele',
     addBudget: 'Budget eintragen',
