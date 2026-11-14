@@ -1,16 +1,21 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
+import { BackupExportDialog } from '@/core/backup/BackupExport';
 import { useModuleStates } from '@/core/modules/activation';
 import { getPlatform } from '@/core/platform';
 import { StatusLineLink } from '@/core/status/StatusLineLink';
 import { t } from '@/strings';
-import { PageHeader } from '@/ui';
+import { Button, PageHeader } from '@/ui';
 import { HeroFigure, HeroSlot } from '@/ui/identity';
 import { useDeviceStatus } from '../useDeviceStatus';
 import styles from './StatusPage.module.css';
 
 /**
- * `/device`: how this device is doing, as lines in four groups. Display only: every line is a link to the settings
- * page where the thing is set; nothing is switched here. The phone shows the same page without the desktop's lines.
+ * `/device`: how this device is doing, as lines in four groups. Every line is a link to the settings page where the
+ * thing is set; nothing is switched here. The one action is "Backup herunterladen" under the backup lines (follow-up
+ * 16 of 0b-8): it opens the settings' export form in a dialog (password recommended, readable file only as the
+ * second button there), never a file in one click, and it stays calm (secondary, no colour, no reminder).
+ * The phone shows the same page without the desktop's lines.
  */
 export default function StatusPage() {
   const d = t.device;
@@ -18,6 +23,7 @@ export default function StatusPage() {
   // CPU, memory and network live in "Dieser PC" → System (desktop only); this page points there instead of repeating them.
   const desktop = getPlatform().kind === 'desktop';
   const diskOn = useModuleStates()?.disk === true;
+  const [exporting, setExporting] = useState(false);
   return (
     <>
       <PageHeader title={d.meta.name} />
@@ -53,6 +59,13 @@ export default function StatusPage() {
                     <StatusLineLink line={line} layout="columns" />
                   </li>
                 ))}
+                {group.id === 'backup' ? (
+                  <li className={styles.action}>
+                    <Button onClick={() => setExporting(true)} data-testid="device-backup-export">
+                      {t.backup.export}
+                    </Button>
+                  </li>
+                ) : null}
               </ul>
             ))}
             <p className={styles.more}>{d.page.note}</p>
@@ -67,6 +80,7 @@ export default function StatusPage() {
           </>
         ) : null}
       </div>
+      <BackupExportDialog open={exporting} onClose={() => setExporting(false)} />
     </>
   );
 }

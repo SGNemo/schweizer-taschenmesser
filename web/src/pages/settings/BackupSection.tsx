@@ -1,21 +1,7 @@
 import { useEffect, useState } from 'react';
-import {
-  backupCounts,
-  backupFileName,
-  createBackup,
-  type Backup,
-  type ImportMode,
-} from '@/core/backup/backup';
-import { downloadTextFile } from '@/core/backup/download';
-import { recordFileBackup } from '@/core/backup/lastBackup';
-import {
-  MIN_BACKUP_PASSPHRASE_LENGTH,
-  encryptBackup,
-  encryptedBackupFileName,
-  readBackupText,
-  serializeEncryptedBackup,
-  serializeSealedBackup,
-} from '@/core/backup/encrypted';
+import { BackupExportForm } from '@/core/backup/BackupExport';
+import { backupCounts, type Backup, type ImportMode } from '@/core/backup/backup';
+import { readBackupText } from '@/core/backup/encrypted';
 import { planRestore, restoreBackup, type RestorePlan } from '@/core/backup/restore';
 import { SafetyBackupError, createSafetyBackup } from '@/core/backup/safety';
 import { verifyBackup, type VerifyReport } from '@/core/backup/verify';
@@ -30,14 +16,12 @@ import { Button, Card, Dialog, FileField, TextField } from '@/ui';
 import { AutoBackupCard } from './AutoBackupCard';
 import { MoveCard } from './MoveCard';
 import { PlanView, VerifyReportView } from './BackupParts';
-import { Actions, Step } from './ConnectParts';
+import { Step } from './ConnectParts';
 import styles from './settings.module.css';
 
 export function BackupSection() {
   const c = tSettingsConnect.use().backup;
   const toast = useUiStore((s) => s.toast);
-  const [exportPass, setExportPass] = useState('');
-  const [exportError, setExportError] = useState<string | undefined>();
 
   const [text, setText] = useState<string | undefined>();
   const [pass, setPass] = useState('');
@@ -51,35 +35,6 @@ export function BackupSection() {
   const [report, setReport] = useState<VerifyReport | undefined>();
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
-
-  async function exportPlain() {
-    const result = await downloadTextFile(
-      backupFileName(),
-      await serializeSealedBackup(await createBackup(), { readable: true }),
-    );
-    if (result === 'saved') {
-      toast(t.backup.exported);
-      await recordFileBackup().catch(() => undefined); // only the status head reads it
-    }
-  }
-
-  async function exportEncrypted() {
-    setExportError(undefined);
-    if (exportPass.length < MIN_BACKUP_PASSPHRASE_LENGTH)
-      return setExportError(t.backup.passphraseTooShort);
-    setBusy(true);
-    const file = await encryptBackup(await createBackup(), exportPass);
-    const result = await downloadTextFile(
-      encryptedBackupFileName(),
-      serializeEncryptedBackup(file),
-    );
-    setBusy(false);
-    if (result === 'saved') {
-      await recordFileBackup().catch(() => undefined); // only the status head reads it
-      setExportPass('');
-      toast(t.backup.encryptedExported);
-    }
-  }
 
   function reset() {
     setBackup(undefined);
@@ -163,29 +118,8 @@ export function BackupSection() {
         <div className={styles.form}>
           <p className={styles.muted}>{t.backup.intro}</p>
           <Step n={1} title={c.stepSave} hint={c.stepSaveHint}>
-            <p className={styles.muted}>{t.backup.exportHint}</p>
-            <p className={styles.muted}>{t.backup.filesNote}</p>
-            <TextField
-              label={t.backup.exportPassphrase}
-              hint={t.backup.exportPassphraseHint}
-              type="password"
-              autoComplete="new-password"
-              value={exportPass}
-              onChange={(e) => setExportPass(e.target.value)}
-            />
-            {exportError ? (
-              <p role="alert" className={styles.error}>
-                {exportError}
-              </p>
-            ) : null}
-            <Actions>
-              {/* Secondary since settings identity v3.1: the tab's one filled action is "Verbinden" (Sync). */}
-              <Button disabled={busy} onClick={() => void exportEncrypted()}>
-                {t.backup.encryptedExport}
-              </Button>
-              <Button onClick={() => void exportPlain()}>{t.backup.export}</Button>
-            </Actions>
-            <p className={styles.muted}>{t.backup.plainHint}</p>
+            {/* Secondary since settings identity v3.1: the tab's one filled action is "Verbinden" (Sync). */}
+            <BackupExportForm />
           </Step>
           <Step n={2} title={c.stepRestore} hint={c.stepRestoreHint}>
             <FileField

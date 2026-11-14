@@ -315,6 +315,17 @@ const FLOWS: Record<string, Flow> = {
     await c.click(dl, 'Backup');
     c.notes.push(`after: ${new URL(page.url()).pathname}`);
   },
+  // Follow-up 16 of 0b-8: the button on Gerätestatus opens the export form in a dialog; the path ends on the
+  // encrypted export (the recommended one), the password is typed text (free).
+  'H4 Backup herunterladen – Knopf auf Gerätestatus (Folgepunkt 16)': async (c, page, phone) => {
+    await c.start('/');
+    await goModule(c, page, phone, /System/, 'Gerätestatus');
+    await c.click(page.getByTestId('device-backup-export'), 'Knopf Backup herunterladen');
+    const dlg = page.getByRole('dialog', { name: 'Backup herunterladen' });
+    await c.fill(dlg.getByLabel('Passwort für das Backup'), 'ein-langes-passwort', 'Passwort');
+    await c.click(dlg.getByRole('button', { name: 'Verschlüsselt exportieren' }), 'Verschlüsselt exportieren');
+    c.notes.push(`dialog buttons: ${await dlg.getByRole('button').allInnerTexts().then((t) => t.join('/')).catch(() => '-')}`);
+  },
 };
 
 const RUNS = (process.env.UA_RUNS ?? 'd,p').split(',');

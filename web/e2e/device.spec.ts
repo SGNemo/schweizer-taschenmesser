@@ -3,7 +3,7 @@ import { enable, mainNav, openNavArea, ready } from './helpers';
 
 /**
  * Gerätestatus (UI audit 2026-11, module package S-b): one page says how this device is doing, on the phone too;
- * it only shows (every line is a link into the settings), the settings point to it only while the module is on,
+ * it switches nothing (every line is a link into the settings; the one action downloads a backup), the settings point to it only while the module is on,
  * and neither prints an address, a port or a path.
  */
 const isPhone = (page: Page) => (page.viewportSize()?.width ?? 1280) < 900;
@@ -26,7 +26,8 @@ test('the page: four groups of lines, each a link into the settings, nothing to 
   await expect(root.getByTestId('device-network')).toContainText('Erlaubt');
   for (const href of await lines(page).evaluateAll((as) => as.map((a) => a.getAttribute('href'))))
     expect(href).toMatch(/^\/settings\//);
-  await expect(root.getByRole('button')).toHaveCount(0);
+  // Nothing to switch; the one button is "Backup herunterladen" (0b-8 follow-up 16, next test).
+  await expect(root.getByRole('button')).toHaveText(['Backup herunterladen']);
   await expect(root.getByRole('switch')).toHaveCount(0);
   // A fresh browser has no backup yet: the summary names it calmly (0b-8, maintainer's answer 3).
   await expect(page.getByTestId('device-summary')).toContainText('Noch kein Backup');
@@ -52,6 +53,40 @@ test('backup and sync status are two clicks away: System, then the page (phone: 
   await expect(page).toHaveURL(/\/device$/);
   await expect(page.getByTestId('overview-backup')).toBeVisible();
   await expect(page.getByTestId('overview-sync')).toBeVisible();
+});
+
+test('a backup from the page: one button opens the export form, the password is recommended, the file comes from the dialog', async ({
+  page,
+}) => {
+  await enable(page, 'device');
+  await ready(page, '/device');
+  const open = page
+    .getByTestId('device-group-backup')
+    .getByRole('button', { name: 'Backup herunterladen' });
+  // Calm: not the filled colour, no warning words around it.
+  await expect(open).toHaveAttribute('data-variant', 'secondary');
+  let downloads = 0;
+  page.on('download', () => downloads++);
+  await open.click();
+  const dialog = page.getByRole('dialog', { name: 'Backup herunterladen' });
+  await expect(dialog).toContainText('Empfohlen: mit Passwort sichern.');
+  const pass = dialog.getByLabel('Passwort für das Backup');
+  await expect(pass).toBeFocused();
+  expect(downloads).toBe(0); // never a file in one click
+  const encrypted = dialog.getByRole('button', { name: 'Verschlüsselt exportieren' });
+  await expect(encrypted).toHaveAttribute('data-variant', 'primary');
+  await expect(dialog.getByRole('button', { name: 'Backup herunterladen' })).toHaveAttribute(
+    'data-variant',
+    'secondary',
+  );
+
+  await pass.fill('ein-langes-passwort');
+  const download = page.waitForEvent('download');
+  await encrypted.click();
+  expect((await download).suggestedFilename()).toMatch(/^nemo-backup-.*\.json$/);
+  await expect(dialog).toHaveCount(0);
+  // The page now knows a backup exists: the summary no longer says "Noch kein Backup".
+  await expect(page.getByTestId('device-summary')).not.toContainText('Noch kein Backup');
 });
 
 test('the settings keep their six status lines; with the module on, four of them are one line that leads to the page', async ({

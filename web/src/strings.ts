@@ -9007,7 +9007,7 @@ export const de = {
     meta: {
       name: 'Gerätestatus',
       description:
-        'Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite. Nur Anzeige, die Seite sendet nichts.',
+        'Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite, dazu ein Backup zum Herunterladen. Die Seite sendet nichts.',
     },
     summary: {
       ok: 'Nichts Dringendes',
@@ -9018,7 +9018,7 @@ export const de = {
     },
     page: {
       figureUnit: (n: number) => (n === 1 ? 'braucht einen Blick' : 'brauchen einen Blick'),
-      note: 'Nur Anzeige: Jede Zeile führt zur passenden Einstellung.',
+      note: 'Jede Zeile führt zur passenden Einstellung.',
       pc: 'Prozessor, Arbeitsspeicher und Netzwerkverkehr zeigt „Dieser PC“ im Reiter „System“.',
       pcOpen: '„Dieser PC“ öffnen',
       pcLibrary: '„Dieser PC“ in der Bibliothek einschalten',

@@ -10,8 +10,13 @@
  * stands there before the last backup is read): a list shows its lines once none of them loads (`useSettled`), so they
  * appear together instead of one by one.
  */
-import { useEffect, useState } from 'react';
-import { loadLastBackup, type LastBackup } from '@/core/backup/lastBackup';
+import { useEffect, useState, useSyncExternalStore } from 'react';
+import {
+  lastBackupVersion,
+  loadLastBackup,
+  subscribeLastBackup,
+  type LastBackup,
+} from '@/core/backup/lastBackup';
 import { formatNumber, formatTimestamp } from '@/core/i18n/format';
 import { getPlatform } from '@/core/platform';
 import { categoryDef } from '@/core/settings/registry/categories';
@@ -48,7 +53,11 @@ export interface StatusLine {
  * The value of one read per mount, and whether it came back (`done` also when it failed: a failed read keeps the
  * line's fallback words, it never holds a list back). No read (`undefined`: not on this platform) = done at once.
  */
-export function useRead<T>(read: (() => Promise<T>) | undefined): {
+export function useRead<T>(
+  read: (() => Promise<T>) | undefined,
+  /** A new key reads again; the last value stays until the new one is back (no line falls back to "loading"). */
+  key: unknown = 0,
+): {
   value: T | undefined;
   done: boolean;
 } {
@@ -68,9 +77,9 @@ export function useRead<T>(read: (() => Promise<T>) | undefined): {
     return () => {
       live = false;
     };
-    // The readers are stable per platform; only "exists here" can differ.
+    // The readers are stable per platform; only "exists here" and the caller's key can differ.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [on]);
+  }, [on, key]);
   return state;
 }
 
@@ -118,7 +127,8 @@ export function useSyncLine(): StatusLine {
 export function useBackupLine(): StatusLine {
   const v3 = tSettingsV3.use();
   // `undefined` after the read = this device has no backup yet; before it, the line says nothing.
-  const { value: last, done } = useRead<LastBackup | undefined>(loadLastBackup);
+  const recorded = useSyncExternalStore(subscribeLastBackup, lastBackupVersion);
+  const { value: last, done } = useRead<LastBackup | undefined>(loadLastBackup, recorded);
   const base = {
     id: 'backup',
     to: settingsPath('sync', 'backup'),
