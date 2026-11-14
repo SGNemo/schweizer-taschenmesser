@@ -214,10 +214,11 @@ const FLOWS: Record<string, Flow> = {
     await c.type('Schmierzettel');
     await page.waitForTimeout(500);
     // 0b-8: press ↓ until the note is the active option („Neu eintragen“ and „Frage stellen“ come first).
-    const dlg = page.locator('dialog[open], [role="dialog"]').last();
     for (let i = 0; i < 5; i++) {
       await c.key('ArrowDown');
-      const active = await dlg.locator('[aria-selected="true"], [data-active="true"]').first().innerText().catch(() => '');
+      // The active option is the one the combobox names in `aria-activedescendant` (CommandPalette).
+      const id = await page.locator('[role="combobox"][aria-activedescendant]').first().getAttribute('aria-activedescendant').catch(() => null);
+      const active = id ? await page.locator(`[id="${id}"]`).innerText().catch(() => '') : '';
       if (/Schmierzettel/.test(active) && !/eintragen|Frage/.test(active)) break;
     }
     await c.key('Enter');

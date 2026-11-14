@@ -2,7 +2,8 @@
  * UI audit 2026-11, acceptance sweep 0b-8: before/after tables for MEASURES.md.
  * "Before" = the tables of the audit (the generated part of the old MEASURES.md, passed as a file);
  * "after" = the facts of a new tour (`audit-tour.spec.ts`). Same definitions on both sides, except the
- * two corrections of 0b-8 (animations without the cap of 10, CLS of dialogs reset before each dialog).
+ * corrections of 0b-8 listed in MEASURES „Werkzeug korrigiert“ (animations without the cap, CLS reset before each dialog,
+ * the head as `main [data-head]`, tone steps neutral in „getönt“).
  * Usage (web/): node ../docs/design/ui-audit-2026-11/tools/compare.mjs ../docs/design/ui-audit-2026-11/MEASURES.md [.screens/ui-audit]
  */
 import { existsSync, readFileSync } from 'node:fs';
