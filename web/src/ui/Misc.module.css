@@ -36,9 +36,7 @@
   text-align: center;
   padding: var(--space-7) var(--space-4);
   color: var(--text-muted);
-  /* One place on every page (0b-8, follow-up 13): at the top of the content, under the head and its tabs, where
-     the first entry will appear – never centred in the free height (on a tall desktop that put the next step
-     400 px below the head; the phone always showed it at the top). */
+  /* At the top of the content, never centred in the free height (decisions/ui-components.md, empty states). */
 }
 .emptyMark {
   display: grid;
