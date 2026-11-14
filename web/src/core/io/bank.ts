@@ -5,7 +5,7 @@
  */
 import { parseMoney } from '@/core/money';
 import { parseLooseAmount } from './amount';
-import { normalizeHeader, parseCsv, type Delimiter } from './csv';
+import { normalizeHeader, parseCsv, parseCsvLines, type Delimiter } from './csv';
 import { parseDateInput } from './dates';
 import { looksLikeOfx, parseOfx } from './ofx';
 import { looksLikeQif, parseQif } from './qif';
@@ -32,8 +32,24 @@ export interface BankParseResult {
   transactions: BankTransaction[];
   /** Rows / entries that could not be read (for the "N Zeilen übersprungen" note). */
   skipped: number;
+  /** The first skipped CSV rows, named in the preview (round 5 B10). Never more than `SKIPPED_NAMED`. */
+  skippedRows?: SkippedBankRow[];
   format: BankFormat;
 }
+
+export type SkipReason = 'date' | 'amount' | 'zero' | 'pending';
+
+export interface SkippedBankRow {
+  /** File line (1-based) the row starts on. */
+  line: number;
+  reason: SkipReason;
+  /** The cell that was not readable (date or amount), as in the file. */
+  value: string;
+  /** Payee or purpose, so the row can be found without a line count. */
+  label: string;
+}
+
+export const SKIPPED_NAMED = 3;
 
 export class BankFormatError extends Error {
   constructor(readonly code: 'unknown-format' | 'no-columns') {
@@ -115,6 +131,8 @@ const DELIMITERS: readonly Delimiter[] = [';', ',', '\t'];
 /** A CSV file split into rows with the row that holds the column names. */
 export interface LocatedHeader {
   rows: string[][];
+  /** File line (1-based) of each row. */
+  lines: number[];
   delimiter: Delimiter;
   /** Index into `rows`. Banks put account info above the header, so it is not always 0. */
   headerIndex: number;
@@ -129,11 +147,11 @@ export function locateHeader(
   only?: Delimiter,
 ): LocatedHeader | undefined {
   for (const delimiter of only ? [only] : DELIMITERS) {
-    const rows = parseCsv(text, { delimiter });
+    const { rows, lines } = parseCsvLines(text, { delimiter });
     const limit = Math.min(rows.length, HEADER_SEARCH_ROWS);
     for (let i = 0; i < limit; i++) {
       const keys = new Set(rows[i]!.map(normalizeHeader).filter(Boolean));
-      if (accept(keys)) return { rows, delimiter, headerIndex: i };
+      if (accept(keys)) return { rows, lines, delimiter, headerIndex: i };
     }
   }
   return undefined;
@@ -164,24 +182,41 @@ export function parseBankCsvWith(text: string, layout: BankCsvLayout): BankParse
   const pending = new Set(layout.pendingValues ?? []);
   const transactions: BankTransaction[] = [];
   let skipped = 0;
-  for (const cells of located.rows.slice(located.headerIndex + 1)) {
+  const skippedRows: SkippedBankRow[] = [];
+  const skip = (index: number, rec: Record<string, string>, reason: SkipReason, value: string) => {
+    skipped += 1;
+    if (skippedRows.length < SKIPPED_NAMED)
+      skippedRows.push({
+        line: located.lines[index] ?? index + 1,
+        reason,
+        value: oneLine(value),
+        label: oneLine(pick(rec, c.payee) || pick(rec, layout.payeeOut) || pick(rec, c.purpose)),
+      });
+  };
+  for (let index = located.headerIndex + 1; index < located.rows.length; index++) {
+    const cells = located.rows[index]!;
     const rec: Record<string, string> = {};
     keys.forEach((key, i) => {
       if (key && !(key in rec)) rec[key] = (cells[i] ?? '').trim();
     });
-    const date = parseDateInput(pick(rec, c.date));
+    const rawDate = pick(rec, c.date);
+    const date = parseDateInput(rawDate);
     const raw = pick(rec, c.amount);
     const amountMinor =
       parseMoney(raw, {
         allowNegative: true,
         ...(layout.decimal ? { decimal: layout.decimal } : {}),
       }) ?? parseLooseAmount(raw);
-    if (!date || amountMinor === undefined || amountMinor === 0) {
-      skipped += 1;
+    if (!date) {
+      skip(index, rec, 'date', rawDate);
+      continue;
+    }
+    if (amountMinor === undefined || amountMinor === 0) {
+      skip(index, rec, amountMinor === 0 ? 'zero' : 'amount', raw);
       continue;
     }
     if (pending.size > 0 && pending.has(normalizeHeader(pick(rec, c.status)))) {
-      skipped += 1;
+      skip(index, rec, 'pending', pick(rec, c.status));
       continue;
     }
     const accountIban = pick(rec, c.account).replace(/\s/g, '');
@@ -201,7 +236,7 @@ export function parseBankCsvWith(text: string, layout: BankCsvLayout): BankParse
       ...(accountIban ? { accountIban } : {}),
     });
   }
-  return { transactions, skipped, format: 'csv' };
+  return { transactions, skipped, ...(skipped > 0 ? { skippedRows } : {}), format: 'csv' };
 }
 
 /** Bank CSV in the usual layouts of the German banks (generic column names). */

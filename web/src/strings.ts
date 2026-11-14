@@ -6528,6 +6528,17 @@ export const de = {
         n === 1
           ? '1 Zeile ohne gültiges Datum oder Betrag wurde übersprungen.'
           : `${n} Zeilen ohne gültiges Datum oder Betrag wurden übersprungen.`,
+      /** Round 5 B10: the skipped rows by line, reason and payee (at most three named). */
+      bankSkippedNamed: (n: number, rows: string, more: number) =>
+        `${n === 1 ? '1 Zeile wurde' : `${n} Zeilen wurden`} übersprungen – ${rows}${more > 0 ? ` und ${more} weitere` : ''}.`,
+      bankSkippedRow: (line: number, label: string, why: string) =>
+        `Zeile ${line}${label ? ` (${label})` : ''}: ${why}`,
+      bankSkipWhy: {
+        date: (v: string) => (v ? `Datum „${v}“ nicht lesbar` : 'kein Datum'),
+        amount: (v: string) => (v ? `Betrag „${v}“ nicht lesbar` : 'kein Betrag'),
+        zero: 'Betrag 0',
+        pending: 'noch vorgemerkt, nicht gebucht',
+      },
       bankTruncated: (n: number) => `Es werden nur die ersten ${n} Buchungen angezeigt.`,
       bankDetected: (name: string) => `Erkannt: ${name}`,
       bankRemembered: 'Erkannt: deine gemerkte Spaltenzuordnung',
