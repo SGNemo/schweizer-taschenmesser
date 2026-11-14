@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Button, Dialog, TextField } from '@/ui';
@@ -14,19 +14,31 @@ import {
 import { recordFileBackup } from './lastBackup';
 import styles from './BackupExport.module.css';
 
-const FORM_ID = 'backup-export-form';
-
 /** State and parts of the form; the settings lay them out inline, the dialog puts the buttons into its footer. */
-function useBackupExport(inDialog: boolean, onSaved?: () => void) {
+function useBackupExport(dialog?: { open: boolean; formId: string; onSaved: () => void }) {
+  const inDialog = dialog !== undefined;
   const toast = useUiStore((s) => s.toast);
   const [pass, setPass] = useState('');
   const [error, setError] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
+  // A closed dialog keeps no password in memory.
+  if (dialog && !dialog.open && (pass || error)) {
+    setPass('');
+    setError(undefined);
+  }
+  // A save that ends after its dialog was replaced by a new opening must not close the new one.
+  const live = useRef(true);
+  useEffect(
+    () => () => {
+      live.current = false;
+    },
+    [],
+  );
 
   async function saved(message: string) {
     await recordFileBackup().catch(() => undefined); // only the status lines read it
     toast(message);
-    onSaved?.();
+    if (live.current) dialog?.onSaved();
   }
 
   async function exportPlain() {
@@ -88,7 +100,7 @@ function useBackupExport(inDialog: boolean, onSaved?: () => void) {
         variant={inDialog ? 'primary' : 'secondary'}
         disabled={busy}
         {...(inDialog
-          ? { type: 'submit' as const, form: FORM_ID }
+          ? { type: 'submit' as const, form: dialog.formId }
           : { onClick: () => void exportEncrypted() })}
       >
         {t.backup.encryptedExport}
@@ -108,7 +120,7 @@ function useBackupExport(inDialog: boolean, onSaved?: () => void) {
  * Settings keep both buttons secondary: their filled action is "Verbinden".
  */
 export function BackupExportForm() {
-  const { fields, actions } = useBackupExport(false);
+  const { fields, actions } = useBackupExport();
   return (
     <>
       {fields}
@@ -124,8 +136,8 @@ export function BackupExportForm() {
  * would invite the wrong click), and the buttons sit in the footer, above the phone's keyboard. Closes after a saved file.
  */
 export function BackupExportDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  // Every opening starts empty (no password kept from the last one); the dialog itself stays mounted while it
-  // closes, so the native close hands the focus back to the button.
+  // Every opening is a new form (a late save of the last one cannot close it); the dialog itself stays mounted while
+  // it closes, so the native close hands the focus back to the button.
   const [session, setSession] = useState(0);
   const [wasOpen, setWasOpen] = useState(open);
   if (open !== wasOpen) {
@@ -136,11 +148,12 @@ export function BackupExportDialog({ open, onClose }: { open: boolean; onClose: 
 }
 
 function ExportDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { fields, actions, exportEncrypted } = useBackupExport(true, onClose);
+  const formId = useId();
+  const { fields, actions, exportEncrypted } = useBackupExport({ open, formId, onSaved: onClose });
   return (
     <Dialog open={open} onClose={onClose} title={t.backup.exportTitle} footer={actions}>
       <form
-        id={FORM_ID}
+        id={formId}
         className={styles.form}
         data-testid="backup-export-dialog"
         onSubmit={(e) => {

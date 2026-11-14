@@ -143,9 +143,7 @@ describe('page Gerätestatus', () => {
     expect(buttons[0]).toHaveAttribute('data-variant', 'secondary');
     // Right after the backup lines, outside their list (it is no status line).
     expect(within(screen.getByTestId('device-group-backup')).queryByRole('button')).toBeNull();
-    expect(screen.getByTestId('device-group-backup').nextElementSibling).toContainElement(
-      buttons[0]!,
-    );
+    expect(screen.getByTestId('device-group-backup').nextElementSibling).toBe(buttons[0]);
     expect(within(page).queryAllByRole('switch')).toEqual([]);
     expect(within(page).queryAllByRole('checkbox')).toEqual([]);
   });

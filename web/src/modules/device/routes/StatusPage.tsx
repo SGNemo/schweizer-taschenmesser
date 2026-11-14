@@ -67,11 +67,9 @@ export default function StatusPage() {
               return (
                 <div key={group.id} className={styles.group}>
                   {list}
-                  <div>
-                    <Button onClick={() => setExporting(true)} data-testid="device-backup-export">
-                      {t.backup.export}
-                    </Button>
-                  </div>
+                  <Button onClick={() => setExporting(true)} data-testid="device-backup-export">
+                    {t.backup.export}
+                  </Button>
                 </div>
               );
             })}
