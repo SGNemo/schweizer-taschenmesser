@@ -120,7 +120,10 @@ async function goModule(c: Counter, page: Page, phone: boolean, area: RegExp, mo
   await c.click(link, `module ${module}`);
 }
 
-const quickAdd = (page: Page) => page.getByRole('button', { name: /schnell hinzufügen|^\+?\s*Neu$/i }).filter({ visible: true }).first();
+// 0b-8: the desktop entry is „Neu: etwas eintragen“ in the top bar, the phone's is the plus of the bottom bar.
+const quickAdd = (page: Page) => page.getByRole('button', { name: /Neu: etwas eintragen|schnell hinzufügen|^\+?\s*Neu$/i }).or(page.getByTestId('bottom-plus')).filter({ visible: true }).first();
+/** The page's main action: „<Ding> eintragen“ since the 0b-8 wording pass (before: „… hinzufügen“). */
+const mainAction = (page: Page, thing: string) => page.locator('main, [data-testid="module-frame"], [data-bottom-bar]').getByRole('button', { name: new RegExp(`^${thing} (eintragen|hinzufügen)$`) });
 
 const FLOWS: Record<string, Flow> = {
   'A1 ToDo eintragen – Schnellerfassung': async (c, page) => {
@@ -132,7 +135,10 @@ const FLOWS: Record<string, Flow> = {
   'A2 ToDo eintragen – im Modul': async (c, page, phone) => {
     await c.start('/');
     await goModule(c, page, phone, /Planen/, 'ToDos');
-    const field = page.locator('main').getByRole('textbox').first();
+    // 4.0: no inline field on ToDos any more; the main action opens the form.
+    const inline = page.locator('main').getByRole('textbox').first();
+    if (!(await inline.isVisible().catch(() => false))) await c.click(mainAction(page, 'Aufgabe'), 'Aufgabe eintragen');
+    const field = page.locator('dialog[open], [role="dialog"]').last().getByRole('textbox').or(inline).first();
     await c.fill(field, 'Fenster putzen', 'ToDo field');
     await c.key('Enter');
   },
@@ -145,13 +151,13 @@ const FLOWS: Record<string, Flow> = {
   'A4 Buchung eintragen – im Modul': async (c, page, phone) => {
     await c.start('/');
     await goModule(c, page, phone, /Geld/, 'Finanzen');
-    await c.click(page.locator('main').getByRole('button', { name: /^Buchung hinzufügen$|^Buchung$/ }), 'Buchung hinzufügen');
+    await c.click(mainAction(page, 'Buchung'), 'Buchung eintragen');
     const dlg = page.locator('dialog[open], [role="dialog"]').last();
     const fields = dlg.locator('input:not([type=hidden]):not([type=checkbox])');
     await c.fill(fields.nth(0), 'Supermarkt', 'field 1');
     await c.key('Tab');
     await c.type('23,50');
-    await c.click(dlg.getByRole('button', { name: /^Speichern$/ }), 'Speichern');
+    await c.click(dlg.getByRole('button', { name: /^(Speichern|Buchung eintragen)$/ }), 'Speichern');
   },
   'A5 Einkauf eintragen – Listen': async (c, page, phone) => {
     await c.start('/');
@@ -163,26 +169,26 @@ const FLOWS: Record<string, Flow> = {
   'A6 Vorrat eintragen – Dialog': async (c, page, phone) => {
     await c.start('/');
     await goModule(c, page, phone, /Haushalt/, 'Vorräte');
-    await c.click(page.locator('main').getByRole('button', { name: /Vorrat hinzufügen/ }), 'Vorrat hinzufügen');
+    await c.click(mainAction(page, 'Vorrat'), 'Vorrat eintragen');
     const dlg = page.locator('dialog[open], [role="dialog"]').last();
     await c.fill(dlg.locator('input:not([type=hidden])').first(), 'Reis', 'name');
-    await c.click(dlg.getByRole('button', { name: /^Speichern$/ }), 'Speichern');
+    await c.click(dlg.getByRole('button', { name: /^(Speichern|Vorrat eintragen)$/ }), 'Speichern');
   },
   'A7 Notiz anlegen': async (c, page, phone) => {
     await c.start('/');
     await goModule(c, page, phone, /Wissen/, 'Notizen');
-    await c.click(page.locator('main').getByRole('button', { name: /^Neue Seite$/ }), 'Neue Seite');
+    await c.click(page.locator('main, [data-testid="module-frame"], [data-bottom-bar]').getByRole('button', { name: /^Neue Seite$/ }), 'Neue Seite');
     await c.type('Einkauf Wochenende');
     c.notes.push(`after: ${new URL(page.url()).pathname}${new URL(page.url()).search}`);
   },
   'A8 Unterlage anlegen – Tresor': async (c, page, phone) => {
     await c.start('/');
     await goModule(c, page, phone, /Tresor/, 'Unterlagen');
-    await c.click(page.locator('main').getByRole('button', { name: /Unterlage hinzufügen/ }), 'Unterlage hinzufügen');
+    await c.click(mainAction(page, 'Unterlage'), 'Unterlage eintragen');
     const dlg = page.locator('dialog[open], [role="dialog"]').last();
     await c.fill(dlg.locator('input:not([type=hidden])').first(), 'Mietvertrag', 'title');
     c.notes.push(`fields: ${await dlg.locator('input:not([type=hidden]), select, textarea').count()}`);
-    await c.click(dlg.getByRole('button', { name: /^Speichern$/ }), 'Speichern');
+    await c.click(dlg.getByRole('button', { name: /^(Speichern|Unterlage eintragen)$/ }), 'Speichern');
   },
   'B1 Erledigen – ToDo in der Liste': async (c, page, phone) => {
     await c.start('/');
@@ -265,12 +271,12 @@ const FLOWS: Record<string, Flow> = {
   'G1 Rechnung anlegen': async (c, page, phone) => {
     await c.start('/');
     await goModule(c, page, phone, /Geld/, 'Rechnungen');
-    await c.click(page.locator('main').getByRole('button', { name: /Rechnung hinzufügen/ }), 'Rechnung hinzufügen');
+    await c.click(mainAction(page, 'Rechnung'), 'Rechnung eintragen');
     const dlg = page.locator('dialog[open], [role="dialog"]').last();
     await c.fill(dlg.locator('input:not([type=hidden])').first(), 'Stadtwerke', 'payee');
     await c.key('Tab');
     await c.type('88,10');
-    await c.click(dlg.getByRole('button', { name: /^Speichern$/ }), 'Speichern');
+    await c.click(dlg.getByRole('button', { name: /^(Speichern|Rechnung eintragen)$/ }), 'Speichern');
   },
   'H1 Backup herunterladen': async (c, page, phone) => {
     await c.start('/');
