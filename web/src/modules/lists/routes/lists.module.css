@@ -25,6 +25,11 @@
   background: transparent;
   box-shadow: none;
 }
+/* An empty list: the empty state keeps its own height (it takes the free height of a flex column otherwise), so the
+   add field follows right below it. */
+.emptyHold {
+  flex: none;
+}
 .progress {
   margin-bottom: var(--space-4);
 }

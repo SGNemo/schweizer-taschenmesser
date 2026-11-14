@@ -291,8 +291,8 @@ export default function ListsPage() {
   // (decided), so the field's button is outlined there. One way in: no second button in the empty state.
   const isEmpty = items !== undefined && shown.length === 0;
   const submitVariant = !isEmpty ? 'ghost' : phone ? 'secondary' : 'primary';
-  // Named store sections only: entries without a section are no "Ladenbereich".
-  const sectionCount = groups.filter((g) => g.id !== '').length;
+  // The phone keeps the field wide: the short verb there, the placeholder says what goes in.
+  const submitLabel = isShopping && !phone ? t.lists.emptyAction : t.lists.addSubmit;
   const clearBought = () => {
     if (!current) return;
     const id = current.id;
@@ -393,7 +393,7 @@ export default function ListsPage() {
         <ListFigure
           name={current.name}
           open={openCount}
-          detail={sectionCount > 0 ? t.lists.sectionsCount(sectionCount) : undefined}
+          detail={groups.length > 0 ? t.lists.sectionsCount(groups.length) : undefined}
         />
       ) : null}
       {lists && current && !read ? <div aria-busy="true" data-testid="lists-reading" /> : null}
@@ -446,7 +446,7 @@ export default function ListsPage() {
           {isEmpty ? (
             // M10: the next step is the field right below, with its button "Artikel eintragen". The wrapper keeps
             // the empty state from taking the page's free height (it pushed the field to the bottom edge).
-            <div>
+            <div className={styles.emptyHold}>
               <EmptyState
                 title={t.lists.empty}
                 testId="lists-empty"
@@ -500,7 +500,7 @@ export default function ListsPage() {
                 />
               ) : null}
               <Button type="submit" variant={submitVariant}>
-                {isShopping ? t.lists.emptyAction : t.lists.addSubmit}
+                {submitLabel}
               </Button>
             </form>
             <datalist id="lists-categories">

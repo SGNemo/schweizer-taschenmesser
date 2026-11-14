@@ -5,8 +5,8 @@ import { DESKTOP, openPage, PHONE, startSeeded } from './guards';
 /**
  * Lists after 0b-8 follow-up 3 (`docs/design/ui-audit-2026-11/REPORT.md`, "Abnahme 0b-8"):
  * 1. An empty list's next step is its first entry (M10, follow-up (a) of "Abschlussmessung 2"): one way in – the add
- *    field right under the empty state, its button with the verb ("Artikel eintragen" on a shopping list, "Eintragen"
- *    on the others). On the desktop that button is the filled one and "Neue Liste" steps back; on the phone the plus
+ *    field right under the empty state, its button with the verb ("Artikel eintragen" on a desktop shopping list,
+ *    "Eintragen" on the others and on the phone). On the desktop that button is the filled one and "Neue Liste" steps back; on the phone the plus
  *    stays "Neue Liste" (decided) and the button is outlined. No head figure ("0 offen · 1 Ladenbereich").
  * 2. On the phone a row keeps its pencil on the same line as the entry, ticked rows included (before, a row with price
  *    and quantity broke the pencil onto a second line and was twice as high).
@@ -61,23 +61,28 @@ test.describe('desktop', () => {
     await startSeeded(page);
     await openPage(page, '/lists');
     const look = await page.evaluate(() => {
-      const box = document.querySelector('main input[data-row-tick]:checked')!;
-      const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
-      const probe = document.createElement('i');
-      probe.style.color = accent;
-      document.body.append(probe);
-      const accentRgb = getComputedStyle(probe).color;
-      probe.remove();
+      const box = document.querySelector('main input[data-row-tick]:checked');
+      const rgb = (token: string) => {
+        const probe = document.createElement('i');
+        probe.style.color = `var(${token})`;
+        document.body.append(probe);
+        const color = getComputedStyle(probe).color;
+        probe.remove();
+        return color;
+      };
       const price = [...document.querySelectorAll('[data-testid="receipt-paper"] li span')].find(
         (el) => /€/.test(el.textContent ?? '') && el.children.length === 0,
       );
       return {
-        fill: getComputedStyle(box).backgroundColor,
-        accentRgb,
+        fill: box ? getComputedStyle(box).backgroundColor : null,
+        accent: rgb('--accent'),
+        grey: rgb('--calm-ink'),
         font: price ? getComputedStyle(price).fontFamily : '',
       };
     });
-    expect(look.fill).not.toBe(look.accentRgb);
+    expect(look.fill, 'the seed has a ticked row').not.toBeNull();
+    expect(look.fill).not.toBe(look.accent);
+    expect(look.fill).toBe(look.grey);
     expect(look.font, 'the seed has a priced row').not.toBe('');
     expect(look.font).not.toMatch(/mono/i);
   });
