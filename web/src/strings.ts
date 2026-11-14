@@ -1923,6 +1923,13 @@ export const de = {
       external: 'Extern',
       plan: 'Plan',
       training: 'Training',
+      gift: 'Geschenk',
+      trial: 'Probezeit',
+    } as Record<string, string>,
+    /** Badge of a deadline whose day passed, one word per kind (not "Ablauf · Überfällig"). */
+    overdueKinds: {
+      invoice: 'Rechnung überfällig',
+      expiry: 'Abgelaufen',
     } as Record<string, string>,
     planLink: 'Plan',
     external: {
@@ -2549,6 +2556,7 @@ export const de = {
       keywords: 'Bild, Foto, verkleinern, zuschneiden, JPG, PNG, WebP',
       description:
         'Bilder verkleinern, zuschneiden und in PNG, JPG oder WebP umwandeln – alles auf deinem Gerät.',
+      file: 'Bild',
       pick: 'Bild auswählen',
       source: (w: number, h: number, size: string) => `Original: ${w} × ${h} Pixel, ${size}`,
       format: 'Format',
@@ -2578,6 +2586,8 @@ export const de = {
       merge: 'Zusammenfügen',
       pages: 'Seiten',
       rotate: 'Drehen',
+      fileMany: 'PDF-Dateien',
+      fileOne: 'PDF-Datei',
       pickMany: 'PDF-Dateien auswählen',
       pickOne: 'PDF-Datei auswählen',
       files: 'Reihenfolge',

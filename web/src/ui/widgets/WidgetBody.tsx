@@ -11,7 +11,11 @@ export interface WidgetEmpty {
   emptyAction?: { label: string; to: string };
 }
 
-/** Shared loading and empty state of all widget types. */
+/**
+ * Shared loading and empty state of all widget types. The empty state sits in a `data-empty` box (`display: contents`,
+ * no box of its own), so a container (the overview grid) can find an empty widget body without importing the empty
+ * state's class (U39).
+ */
 export function WidgetBody({
   loading,
   isEmpty,
@@ -29,13 +33,15 @@ export function WidgetBody({
     );
   if (isEmpty && empty)
     return (
-      <EmptyState compact title={empty}>
-        {emptyAction ? (
-          <Link className={miscStyles.emptyAction} to={emptyAction.to}>
-            {emptyAction.label}
-          </Link>
-        ) : null}
-      </EmptyState>
+      <div className={styles.emptyBody} data-empty="">
+        <EmptyState compact title={empty}>
+          {emptyAction ? (
+            <Link className={miscStyles.emptyAction} to={emptyAction.to}>
+              {emptyAction.label}
+            </Link>
+          ) : null}
+        </EmptyState>
+      </div>
     );
   return <>{children}</>;
 }
