@@ -288,27 +288,28 @@ function PeopleList({
         <>
           {pending.length === 0 ? (
             <p className={styles.firstRow}>{t.people.giftsNoneOpen}</p>
-          ) : null}
-          <ItemList label={t.people.viewGifts}>
-            {pending.map(({ gift: g, person: p }) => (
-              <ItemRow
-                key={g.id}
-                title={g.title}
-                meta={[
-                  p.name,
-                  g.occasion,
-                  g.date ? formatDay(g.date, 'dd.MM.yyyy') : undefined,
-                  g.priceCents !== undefined ? formatMoney(g.priceCents) : undefined,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-                onOpen={() => pick(p.id)}
-                onSwipeRight={() => markGiven(g.id)}
-                swipeRightLabel={t.people.giftGivenAction}
-                end={<GiftEnd gift={g} />}
-              />
-            ))}
-          </ItemList>
+          ) : (
+            <ItemList label={t.people.viewGifts}>
+              {pending.map(({ gift: g, person: p }) => (
+                <ItemRow
+                  key={g.id}
+                  title={g.title}
+                  meta={[
+                    p.name,
+                    g.occasion,
+                    g.date ? formatDay(g.date, 'dd.MM.yyyy') : undefined,
+                    g.priceCents !== undefined ? formatMoney(g.priceCents) : undefined,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                  onOpen={() => pick(p.id)}
+                  onSwipeRight={() => markGiven(g.id)}
+                  swipeRightLabel={t.people.giftGivenAction}
+                  end={<GiftEnd gift={g} />}
+                />
+              ))}
+            </ItemList>
+          )}
         </>
       ) : null}
       {view === 'people' && people && people.length === 0 ? (
@@ -339,7 +340,8 @@ function PeopleList({
       {view === 'people' && people && people.length > 0 && shown.length === 0 ? (
         <p>{t.people.emptyFiltered}</p>
       ) : null}
-      {view === 'people' ? (
+      {/* No list without a row: an empty list surface draws a bare strip under the empty state (phone). */}
+      {view === 'people' && shown.length > 0 ? (
         <SplitView
           enabled={detail !== undefined}
           asideLabel={t.people.detailLabel}

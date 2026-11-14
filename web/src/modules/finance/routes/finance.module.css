@@ -51,6 +51,7 @@
   font-weight: var(--weight-semibold);
 }
 .kpis {
+  container: kpis / inline-size;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-3);
@@ -435,6 +436,38 @@
   font-size: var(--text-sm);
   color: var(--text-2);
 }
+/* Wide row: the full sentence per card. Narrow row (phone): arrow and amount in one line, the month named once below. */
+.deltaShort,
+.deltaNote {
+  display: none;
+}
+.nowrap {
+  white-space: nowrap;
+}
+@container kpis (max-width: 40rem) {
+  /* The rules of the global `.sr-only`, which cannot be applied by a container query. */
+  .deltaFull {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .deltaShort {
+    display: inline;
+  }
+  .deltaNote {
+    display: block;
+    grid-column: 1 / -1;
+    /* A caption of the cards, not a block of its own: closer than the grid's gap. */
+    margin: calc(-1 * var(--space-1)) 0 0;
+    padding: 0;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+  }
+}
 
 .toolbarRow {
   display: flex;
@@ -496,6 +529,137 @@
 }
 .trendBox {
   height: 232px;
+}
+/* The bar charts (Charts.tsx), drawn as boxes; the 0 line of the grid is the month axis: axis text at the size of the former chart (12 px), bars grow in by
+   transform only (the global reduced-motion rule stops it). */
+.plotBox {
+  position: relative;
+}
+.tipLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.barRows {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+.barRow {
+  display: grid;
+  grid-template-columns: 124px minmax(0, 1fr);
+  align-items: center;
+  height: 40px;
+}
+.barName {
+  padding-inline-end: 8px;
+  line-height: 1;
+  text-align: end;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+}
+/* The room right of the plot (88 px) holds the amount at the tip of the longest bar. */
+.barPlot {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding-inline-end: 88px;
+  border-inline-start: 1px solid var(--border);
+}
+.picked .barPlot {
+  background: var(--surface-2);
+  background-clip: content-box;
+}
+.bar {
+  flex: none;
+  height: 16px;
+  border-radius: 0 4px 4px 0;
+  background: var(--viz-1);
+  transform-origin: left;
+  animation: growX 240ms var(--ease-out);
+}
+.barValue {
+  flex: none;
+  margin-inline-start: 5px;
+  font-size: var(--text-xs);
+  color: var(--text);
+  white-space: nowrap;
+}
+.picked .bar,
+.picked .column {
+  opacity: 0.8;
+}
+.yAxis {
+  position: absolute;
+  inset: 8px auto 30px 0;
+  width: 52px;
+}
+.yAxis span,
+.columnLabel {
+  position: absolute;
+  font-size: var(--text-xs);
+  line-height: 1;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.yAxis span {
+  right: 8px;
+  transform: translateY(50%);
+}
+/* The highest step is not centred on its line but hangs below it, inside the plot. */
+.yAxis .topTick {
+  transform: none;
+  top: 0;
+}
+.columnsPlot {
+  position: absolute;
+  inset: 8px 4px 30px 52px;
+  display: flex;
+}
+.gridLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--border);
+}
+.columnBand {
+  position: relative;
+  flex: 1 1 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+}
+.columnBand.picked {
+  background: var(--surface-2);
+}
+.column {
+  width: 14px;
+  border-radius: 4px 4px 0 0;
+  transform-origin: bottom;
+  animation: growY 240ms var(--ease-out);
+}
+.columnLabel {
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 8px;
+  text-align: center;
+}
+@keyframes growX {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes growY {
+  from {
+    transform: scaleY(0);
+  }
 }
 /* The "+ Kategorie" row under a group of categories. */
 .groupFoot {

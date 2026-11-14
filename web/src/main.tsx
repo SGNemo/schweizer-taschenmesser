@@ -10,6 +10,7 @@ import { initPlatform } from '@/core/platform';
 import { startUpdateChecks } from '@/core/update/controller';
 import { startNotificationScheduler } from '@/core/notifications/scheduler';
 import { initCore } from '@/core/startup';
+import { decideFreshStart } from '@/core/setup/detect';
 import { startLocalApi } from '@/core/localapi/service';
 import { startQuickCaptureDesktop } from '@/quickCapture/desktop';
 import { isToolWindow } from '@/core/tools/window';
@@ -50,6 +51,10 @@ void Promise.all([initPlatform(), initLang(hasExistingData)]).then(async () => {
     );
     return;
   }
+  // "Fresh installation?" is decided before the page can write anything (a first to-do would count as
+  // data); a failure surfaces in `initCore` below.
+  const start = decideFreshStart();
+  await start.catch(() => undefined);
   root.render(
     <StrictMode>
       <RootErrorBoundary>
@@ -57,7 +62,7 @@ void Promise.all([initPlatform(), initLang(hasExistingData)]).then(async () => {
       </RootErrorBoundary>
     </StrictMode>,
   );
-  void initCore()
+  void initCore(start)
     .then(() => {
       // A detached tool window (`/tool/:id`) needs the database, not a second set of background services.
       if (isToolWindow()) return;

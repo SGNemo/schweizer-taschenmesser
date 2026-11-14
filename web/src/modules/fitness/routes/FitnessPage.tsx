@@ -20,7 +20,7 @@ import {
   useAdvancedMenuItem,
   useOpenParam,
 } from '@/ui';
-import { HeroFigure, HeroSlot } from '@/ui/identity';
+import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import { GoalDialog } from '../components/GoalDialog';
 import { MealEditor, type MealTarget } from '../components/MealEditor';
 import { SessionEditor, type SessionTarget } from '../components/SessionEditor';
@@ -263,7 +263,11 @@ export default function FitnessPage() {
       ) : view === 'training' ? (
         <>
           {noSessions ? (
-            <EmptyState title={t.fitness.empty.training} testId="fitness-empty">
+            <EmptyState
+              title={t.fitness.empty.training}
+              testId="fitness-empty"
+              motif={<SignatureMark id="dumbbell" size={64} />}
+            >
               <p>{t.fitness.empty.trainingHint}</p>
               <Button variant="primary" onClick={() => setSession('new')}>
                 {t.fitness.empty.trainingAdd}
@@ -309,7 +313,11 @@ export default function FitnessPage() {
       ) : (
         <>
           {noMeals ? (
-            <EmptyState title={t.fitness.empty.food} testId="fitness-food-empty">
+            <EmptyState
+              title={t.fitness.empty.food}
+              testId="fitness-food-empty"
+              motif={<SignatureMark id="dumbbell" size={64} />}
+            >
               <p>{t.fitness.empty.foodHint}</p>
               <Button variant="primary" onClick={() => setMeal('new')}>
                 {t.fitness.empty.foodAdd}

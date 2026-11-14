@@ -154,13 +154,11 @@ export function AreaFrame({
   const [titleText, setTitleText] = useState<string>();
   const framed = !!area && !isFocusPath(pathname);
   const id = manifest?.identity;
-  // 0b-8: the entry page of a module whose hint above the head waits for a read (`identity.notice`, the weather) is
-  // painted once that read is back, so the hint never pushes the head and the page down (first visit: CLS 0.6–0.9).
-  // The same hold for an entry page whose stage and page are built from their first reads (`identity.firstRead`, music).
+  // 0b-8: the entry page of a module whose hint above the head or whose stage waits for its first reads
+  // (`identity.firstRead`: the weather's hint, the music stage) is painted once those reads are back, so nothing that
+  // arrives with them pushes the head and the page down (weather's first visit before: CLS 0.6–0.9).
   const [firstReadHeld, settle] = useFirstReadHold(
-    framed && (id?.notice || id?.firstRead) && manifest && pathname === `/${manifest.id}`
-      ? pathname
-      : undefined,
+    framed && id?.firstRead && manifest && pathname === `/${manifest.id}` ? pathname : undefined,
   );
   const controls = useMemo<HeroControls>(
     () => ({

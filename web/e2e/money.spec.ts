@@ -118,7 +118,17 @@ test.describe('Invoices', () => {
     // Reopen → expense disappears
     await ready(page, '/invoices');
     await page.getByRole('button', { name: 'Bezahlt', exact: true }).click();
-    await page.getByRole('button', { name: 'Wieder öffnen' }).click();
+    // On the phone "Wieder öffnen" is in the row's menu (0b-8 follow-up 4: the payee keeps the row's width).
+    if ((page.viewportSize()?.width ?? 0) < 768) {
+      await page
+        .locator('main li')
+        .getByRole('button', { name: 'Weitere Aktionen' })
+        .first()
+        .click();
+      await page.getByRole('menuitem', { name: 'Wieder öffnen' }).click();
+    } else {
+      await page.getByRole('button', { name: 'Wieder öffnen' }).click();
+    }
     await expect(page.getByText('Noch keine bezahlten Rechnungen.')).toBeVisible();
     await expect.poll(() => liveTransactionCount(page)).toBe(0);
     await ready(page, '/finance?tab=transactions');
@@ -268,7 +278,7 @@ test.describe('Finance', () => {
     await addTransaction(page, { kind: 'Ausgabe', amount: '45,50', category: 'Lebensmittel' });
     await ready(page, '/finance');
     const chart = page.getByTestId('chart-categories');
-    await expect(chart.locator('svg.recharts-surface')).toBeVisible();
+    await expect(chart.getByText(/45,50\s€/)).toBeVisible();
     // Point at the row of the bar (the chart resolves the hovered category from the pointer).
     await chart.hover({ position: { x: 300, y: 24 } });
     const tip = page.getByTestId('chart-tooltip');
@@ -332,7 +342,7 @@ test.describe('Finance', () => {
     await expect(page.getByTestId('balance-Sparkonto')).toHaveText(/1\.000,00\s€/);
     await expect(page.getByTestId('balance-Girokonto')).toHaveText(/100,00\s€/);
 
-    await page.getByRole('button', { name: 'Übersicht', exact: true }).click();
+    await page.getByRole('button', { name: 'Monat', exact: true }).click();
     await expect(page.getByTestId('hero')).toHaveText(/1\.100,00\s€/);
 
     await page.getByRole('button', { name: 'Kategorien', exact: true }).click();

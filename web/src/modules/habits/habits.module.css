@@ -206,12 +206,6 @@
   stroke: var(--module-color);
 }
 
-/* The empty-state motif (EmptyState `motif`): three still, dashed rings, grey like every motif. */
-.emptyRings {
-  width: 6rem;
-  height: 2rem;
-  stroke: currentColor;
-}
 /* The date above today's list. On the phone it is the first line under the head (content from y ≤ 220 px). */
 .dayLine {
   margin: 0 0 var(--space-2);
