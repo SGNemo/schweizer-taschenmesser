@@ -5,6 +5,7 @@ import { t } from '@/strings';
 import { tDraft } from '@/strings.draft';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import {
+  AdvancedFields,
   Button,
   DayField,
   Dialog,
@@ -123,6 +124,8 @@ function Fields({
         required
         data-autofocus
       />
+      {/* Basis (0b-8 follow-up 7): title, kind and the date the deadlines follow; the rest is behind "Mehr Felder"
+          and opens by itself once one of those fields holds something. */}
       <Split>
         <SelectField
           label={t.vault.category}
@@ -135,21 +138,6 @@ function Fields({
             </option>
           ))}
         </SelectField>
-        <TextField
-          label={t.vault.provider}
-          value={provider}
-          onChange={(e) => setProvider(e.target.value)}
-        />
-      </Split>
-      <Split>
-        <DayField
-          label={t.vault.startDate}
-          value={startDate}
-          onChange={(next) => {
-            setStartDate(next);
-            setDateError('');
-          }}
-        />
         <DayField
           label={t.vault.endDate}
           value={endDate}
@@ -160,8 +148,6 @@ function Fields({
           error={dateError}
         />
       </Split>
-      <NoticeField days={notice} months={noticeMonths} onChange={setNotice} max={730} />
-      <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
       <FileField
         label={t.vault.file}
         hint={t.vault.localOnly}
@@ -178,6 +164,28 @@ function Fields({
         onRemove={() => setFile('remove')}
         removeLabel={t.vault.removeFile}
       />
+      <AdvancedFields
+        moduleId="vault"
+        hasData={Boolean(provider || startDate || notice !== undefined || note || dateError)}
+      >
+        <Split>
+          <TextField
+            label={t.vault.provider}
+            value={provider}
+            onChange={(e) => setProvider(e.target.value)}
+          />
+          <DayField
+            label={t.vault.startDate}
+            value={startDate}
+            onChange={(next) => {
+              setStartDate(next);
+              setDateError('');
+            }}
+          />
+        </Split>
+        <NoticeField days={notice} months={noticeMonths} onChange={setNotice} max={730} />
+        <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      </AdvancedFields>
       {/* Below the wide layout a folder opens this dialog, not the panel: the preview is reached here. */}
       {existing?.fileName && file === undefined && canPreview(existing.fileType) ? (
         <FilePreview

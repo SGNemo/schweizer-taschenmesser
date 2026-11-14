@@ -1,7 +1,15 @@
 import { expect, test, type Page } from '@playwright/test';
 import { strToU8, zipSync } from 'fflate';
 import { openPageMenu } from './money-helpers';
-import { backSettled, calendarEntry, enable, ready, showAllWidgets, showPreview } from './helpers';
+import {
+  backSettled,
+  calendarEntry,
+  enable,
+  moreFields,
+  ready,
+  showAllWidgets,
+  showPreview,
+} from './helpers';
 
 /**
  * Fitness (package 1, docs/features/fitness.md): a session shows up in the widget and the calendar,
@@ -48,7 +56,9 @@ test('a session: logged in the form, counted in the widget, shown in the calenda
 }) => {
   await page.goto('/fitness?new=session');
   const dialog = page.getByRole('dialog', { name: 'Einheit eintragen' });
-  // Yesterday, so „Wie letztes Mal“ is offered for today below.
+  // Yesterday, so „Wie letztes Mal“ is offered for today below. Day and duration are behind „Mehr Felder“.
+  await expect(dialog).toBeVisible();
+  await moreFields(page);
   await dialog.getByLabel('Datum').fill('2026-11-07');
   await dialog.getByRole('combobox', { name: 'Übung' }).fill('Bankdrücken');
   await dialog.getByLabel('Sätze').fill('3');
@@ -158,6 +168,7 @@ test('a planned session: on the overview with its time, counted only once done, 
   const dialog = page.getByRole('dialog', { name: 'Einheit eintragen' });
   await dialog.getByRole('combobox', { name: 'Übung' }).fill('Kniebeuge');
   await dialog.getByLabel('Sätze').fill('4');
+  await moreFields(page);
   await dialog.getByLabel('Geplant, noch nicht gemacht').check();
   await dialog.getByLabel('Uhrzeit').fill('18:00');
   await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();

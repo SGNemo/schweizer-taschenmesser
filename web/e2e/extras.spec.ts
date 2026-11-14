@@ -173,6 +173,7 @@ test('Unterlagen: cancellation deadline is flagged and on the calendar', async (
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Titel').fill('Handyvertrag');
   await dialog.getByLabel('Ende / Ablauf').fill('2026-12-31');
+  await moreFields(page);
   await dialog.getByRole('spinbutton', { name: 'Kündigungsfrist' }).fill('90');
   await save(page);
   // The folder itself; "Verlängert: Handyvertrag" beside it is the row's own button (module package T-a).

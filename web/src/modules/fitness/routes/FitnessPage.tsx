@@ -17,6 +17,7 @@ import {
   PageAction,
   PageHeader,
   Tabs,
+  useAdvancedMenuItem,
   useOpenParam,
 } from '@/ui';
 import { HeroFigure, HeroSlot } from '@/ui/identity';
@@ -129,6 +130,7 @@ export default function FitnessPage() {
     await undoableWithToast(done, done, () => sessionRepo.update(s.id, doneToday(day)));
   }
 
+  const advancedItem = useAdvancedMenuItem('fitness');
   const sessionRow = (s: Stored<Session>) => (
     <ItemRow
       key={s.id}
@@ -224,6 +226,7 @@ export default function FitnessPage() {
             ...(view === 'food'
               ? [{ id: 'goal', label: t.fitness.goal.open, onSelect: () => setGoalOpen(true) }]
               : []),
+            advancedItem,
           ]}
         />
       </PageHeader>
