@@ -15,11 +15,12 @@ import { now, today } from '@/core/time/now';
 import { undoEntry } from '@/core/undo';
 import type { EventMap } from '@/core/events/events';
 import type { CaptureFields } from '@/quickCapture/parser';
-import { saveCapture, type SavedCapture } from '@/quickCapture/targets';
+import { saveCapture, saveCaptures, targetFor, type SavedCapture } from '@/quickCapture/targets';
 import type { PlanOp } from '@/core/plan/instructions';
 import { setSettings } from '@/core/settings/settings';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
+import type { SetupThing } from './daySetup';
 import { readField } from './dueWords';
 import { dayRepo, itemKeyOf, itemRepo, putRow } from './repo';
 import type { PlanDayRow, PlanItemRow } from './schema';
@@ -256,6 +257,50 @@ async function dayPatch(date: string, patch: Partial<PlanDayRow>): Promise<void>
 }
 
 export const AVAILABLE_STEP = 30;
+
+/**
+ * „Übernehmen“ of „Tage einteilen“: the chosen minutes of the shown days (day rows only, never the weekday
+ * settings), the dump's things as ToDos through the quick-capture targets (one batch, all or nothing; „bis So“
+ * makes the planner item's deadline hard, as in the field) and the run – one undoable action, one toast
+ * „Eingeplant: Sa, So, Mo · Rückgängig“. A day that was not touched keeps what it had. `reshuffle` (a day gained
+ * time, W10): the run distributes anew, so the day takes things – the sheet's preview showed every move.
+ */
+export function applyDaySetup(
+  days: readonly { date: string; min: number }[],
+  things: readonly SetupThing[],
+  shown: readonly string[],
+  titles: Record<string, string>,
+  reshuffle = false,
+) {
+  const lead = t.planner.toast.planned(shown.map(dayName).join(', '));
+  return act(
+    lead,
+    lead,
+    titles,
+    async () => {
+      for (const d of days)
+        await dayPatch(d.date, { availableMin: Math.max(0, Math.min(1440, d.min)) });
+      if (things.length === 0) return;
+      // Ids in line order: ToDos saved in the same millisecond tie on their age and the engine then
+      // breaks the tie by id – sorted, the plan keeps the order the preview showed.
+      const ids = things.map(() => randomId()).sort();
+      await saveCaptures(
+        things.map((th, i) => ({ type: 'todo' as const, fields: th.fields, id: ids[i] })),
+        things.map((th) => th.fields.title).join('\n'),
+      );
+      const moduleId = targetFor('todo').moduleId;
+      for (const [i, th] of things.entries()) {
+        if (!th.hardDue) continue;
+        await putRow(itemRepo, itemKeyOf(moduleId, ids[i]!), {
+          source: { module: moduleId, id: ids[i]! },
+          due: { date: th.hardDue, hard: true },
+          order: 0,
+        });
+      }
+    },
+    { leadOnly: true, reshuffle },
+  );
+}
 
 export const setAvailable = (date: string, min: number, titles: Record<string, string>) =>
   act(

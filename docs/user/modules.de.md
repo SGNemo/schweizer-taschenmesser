@@ -57,7 +57,7 @@ Besonderheiten der Module, die oben nur eine kurze Zeile haben:
 - **Listen:** Einkauf mit „2 Milch“, Packlisten mit Fortschritt und Vorlagen, Checklisten.
 - **Personen:** Geburtstage jährlich im Kalender, mit Alter, Erinnerung und WhatsApp-Gruß; Geschenkideen je Person mit Preis, Link und Stand.
 - **Budgets & Sparziele:** Ausgabenlimits je Finanz-Kategorie (pro Monat, Quartal oder Jahr), Sparziele mit Einzahlungen.
-- **Planer** (Vorschau): Planänderungen wie „Donnerstag frei“ sagst du im Feld auf der Planer-Seite; eine Vorschau zeigt erst, was sich verschiebt.
+- **Planer** (Vorschau): Planänderungen wie „Donnerstag frei“ sagst du im Feld auf der Planer-Seite; eine Vorschau zeigt erst, was sich verschiebt. „Tage einteilen“ (Willkommenskarte, leerer Planer oder ⋯) nimmt in drei Schritten auf, was ansteht und wie viel Zeit du heute und an den zwei nächsten Tagen hast; nach der Vorschau trägt „Übernehmen“ alles mit einem Rückgängig ein.
 - **Karten & Orte** (Vorschau): gespeicherte Orte und Routen, Karte mit Ortssuche, Öffnen in deiner Karten-App; die Karte lädt nur, wenn du sie öffnest.
 - **Unterlagen:** Titel, Kategorie, Anbieter, Beginn, Ende, Kündigungsfrist und Notiz werden wie alles andere synchronisiert; die **Dateien bleiben nur auf dem
   Gerät**, auf dem sie hinzugefügt wurden (nicht synchronisiert, nicht im Backup, max. 10 MB je Datei).

@@ -43,7 +43,9 @@ import {
 } from '../actions';
 import type { BoardDay, BoardRow, WaitingRow } from '../board';
 import { capacityLabel, capacityShort, compact } from '../components/capacity';
+import { DaySetup } from '../components/DaySetup';
 import { DaySheet } from '../components/DaySheet';
+import { SETUP_DAYS } from '../daySetup';
 import { PlanPreview, type PreviewData } from '../components/PlanPreview';
 import { WeekCheck } from '../components/WeekCheck';
 import { BOARD_DAYS } from '../calendar';
@@ -96,6 +98,8 @@ export default function PlannerPage() {
   const [sheetDate, setSheetDate] = useState<string | undefined>();
   // `?check=1` (the lists' „Woche prüfen im Planer“ link, a tap of the user) opens the week sheet.
   const [checking, setChecking] = useState(() => params.get('check') === '1');
+  // `?start=1` (the welcome card's „Tage einteilen“, a tap of the user) opens the three-step sheet.
+  const [settingUp, setSettingUp] = useState(() => params.get('start') === '1');
   const [menuOpen, setMenuOpen] = useState(false);
   // The day shown in the one-day layout; `?day=` (the calendar's plan chip) picks it.
   const [pickedDay, setPickedDay] = useState<string | undefined>(
@@ -170,7 +174,8 @@ export default function PlannerPage() {
         .querySelector(`[data-testid="day-${day}"]`)
         ?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
       setParams({}, { replace: true });
-    } else if (params.get('week') || params.get('check')) setParams({}, { replace: true });
+    } else if (params.get('week') || params.get('check') || params.get('start'))
+      setParams({}, { replace: true });
   }, [params, setParams, board]);
 
   /** Shows what `ops` would do; nothing is stored until „Übernehmen“. `local` = the model read the sentence. */
@@ -357,6 +362,7 @@ export default function PlannerPage() {
       onSelect: () => void showPreview([{ op: 'replan', reshuffle: false }]),
     },
     { id: 'check', label: t.planner.check.title, onSelect: () => setChecking(true) },
+    { id: 'days', label: t.planner.daySetup.open, onSelect: () => setSettingUp(true) },
   ];
 
   // „Woche prüfen · 2 Schritte“: Mondays only, only with the switch on, until it is clicked away for this week.
@@ -762,7 +768,13 @@ export default function PlannerPage() {
           title={t.planner.empty}
           testId="planner-empty"
           motif={<SignatureMark id="weekBars" size={64} />}
-        />
+        >
+          {/* Its one action (TARGET F1): the three-step sheet instead of the stepper as the first way. Secondary:
+              „Eintragen“ under the week stays the page's one filled button. */}
+          <Button onClick={() => setSettingUp(true)} data-testid="planner-days-setup">
+            {t.planner.daySetup.open}
+          </Button>
+        </EmptyState>
       ) : null}
 
       {/* The entry row is the last row under the week, so it comes with the board: it is built once, at its place,
@@ -833,6 +845,13 @@ export default function PlannerPage() {
         titles={titles}
         onClose={() => setSheetDate(undefined)}
       />
+      {settingUp && board ? (
+        <DaySetup
+          days={board.days.slice(0, SETUP_DAYS)}
+          titles={titles}
+          onClose={() => setSettingUp(false)}
+        />
+      ) : null}
       {checking && board ? (
         <WeekCheck
           days={board.days}

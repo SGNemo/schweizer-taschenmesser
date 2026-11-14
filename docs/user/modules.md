@@ -57,7 +57,7 @@ Highlights of the modules that start with a short line above:
 - **Lists:** shopping with “2 milk”, packing lists with progress and templates, checklists.
 - **People:** birthdays yearly in the calendar, with age, reminder and WhatsApp greeting; gift ideas per person with price, link and status.
 - **Budgets & savings goals:** spending limits per finance category (per month, quarter or year), savings goals with deposits.
-- **Planner** (preview): plan changes like “Donnerstag frei” are said in the field on the planner page (German sentences; a preview shows what moves before anything changes).
+- **Planner** (preview): plan changes like “Donnerstag frei” are said in the field on the planner page (German sentences; a preview shows what moves before anything changes). “Plan my days” (welcome card, empty planner or ⋯) takes in three steps what is coming up and how much time you have today and on the next two days; after the preview, “Apply” enters it all with one undo.
 - **Maps & places** (preview): saved places and routes, a map with place search, open in your map app; the map only loads when you open it.
 - **Documents:** title, category, provider, start, end, notice period and note are synced like everything else; the **files stay only on the
   device** where they were added (not synced, not in the backup, max. 10 MB per file).

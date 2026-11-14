@@ -515,13 +515,17 @@ export function withOps(
   return { days, items, settings, reshuffle };
 }
 
-/** A dry run for the preview: reads like a run, writes nothing, returns what the engine would do with `ops`. */
+/**
+ * A dry run for the preview: reads like a run, writes nothing, returns what the engine would do with `ops`.
+ * `extra` = things not stored yet („Tage einteilen“: the dump's lines), planned as if they were there.
+ */
 export async function previewPlanner(
   deps: RunDeps,
   ops: readonly PlanOp[],
+  extra: readonly PlanItem[] = [],
 ): Promise<PreviewOutcome> {
   const inputs = await buildInputs(deps, plannerRepos(deps.database));
-  const next = withOps(inputs, ops);
+  const next = withOps({ ...inputs, items: [...inputs.items, ...extra] }, ops);
   const result = plan({
     today: deps.today,
     days: next.days,
