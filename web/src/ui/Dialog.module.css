@@ -31,10 +31,10 @@
   animation: none;
 }
 .dialog[open] {
-  animation: pop var(--dur) var(--ease-out);
+  animation: pop var(--dur-fast) var(--ease-out);
 }
 .dialog[open]::backdrop {
-  animation: fade var(--dur) linear;
+  animation: fade var(--dur-fast) linear;
 }
 /* Phones: every dialog is a bottom sheet with a grab handle, keyboard-safe and 88 vh at most. */
 @media (max-width: 899px) {
