@@ -5316,6 +5316,8 @@ export const de = {
     } as Record<string, string>,
     empty: 'Diese Liste ist leer.',
     emptyAction: 'Artikel eintragen',
+    /** The add field's button on a packing list or checklist (a shopping list says `emptyAction`). */
+    addSubmit: 'Eintragen',
     editItem: 'Eintrag bearbeiten',
     itemName: 'Name',
     quantity: 'Menge (optional)',

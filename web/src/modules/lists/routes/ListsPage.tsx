@@ -25,9 +25,11 @@ import {
   ItemRow,
   PageAction,
   PageHeader,
+  PHONE_QUERY,
   Progress,
   Tabs,
   TextField,
+  useMediaQuery,
   useOpenParam,
 } from '@/ui';
 import { ItemEditor } from '../components/ItemEditor';
@@ -81,6 +83,7 @@ export default function ListsPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const toast = useUiStore((x) => x.toast);
   const form = useRef<HTMLFormElement>(null);
+  const phone = useMediaQuery(PHONE_QUERY);
 
   useEffect(() => {
     void ensureShoppingList();
@@ -249,6 +252,8 @@ export default function ListsPage() {
           labelHidden
           checked={i.done}
           onChange={(e) => tick(i, e.target.checked)}
+          // Ticked in grey, as in ToDos: the accent stays for the page's one action.
+          tone="neutral"
           data-row-tick
         />
       }
@@ -281,6 +286,13 @@ export default function ListsPage() {
   );
 
   const openCount = shown.filter((i) => !i.done).length;
+  // An empty list's next step is its first entry (follow-up (a) of 0b-8): the field's own button carries the verb and
+  // is the page's filled action on the desktop; "Neue Liste" steps back. On the phone the plus stays "Neue Liste"
+  // (decided), so the field's button is outlined there. One way in: no second button in the empty state.
+  const isEmpty = items !== undefined && shown.length === 0;
+  const submitVariant = !isEmpty ? 'ghost' : phone ? 'secondary' : 'primary';
+  // Named store sections only: entries without a section are no "Ladenbereich".
+  const sectionCount = groups.filter((g) => g.id !== '').length;
   const clearBought = () => {
     if (!current) return;
     const id = current.id;
@@ -290,7 +302,8 @@ export default function ListsPage() {
   };
   const pageMenu = current
     ? [
-        { id: 'add-item', label: t.lists.addItem, onSelect: focusAdd },
+        // On an empty list the field stands right under the empty state: no second way to it.
+        ...(isEmpty ? [] : [{ id: 'add-item', label: t.lists.addItem, onSelect: focusAdd }]),
         ...(isShopping && doneCount > 0
           ? [{ id: 'clear-bought', label: t.lists.clearBought(doneCount), onSelect: clearBought }]
           : []),
@@ -367,6 +380,7 @@ export default function ListsPage() {
           short={t.nav.plusThings.list}
           plusName={t.lists.newList}
           onClick={() => setListTarget('new')}
+          variant={isEmpty ? 'secondary' : 'primary'}
         >
           <Icon name="plus" size={18} />
           {t.lists.newList}
@@ -374,11 +388,12 @@ export default function ListsPage() {
         {/* Everything occasional: templates, editing, sharing, clearing a packing list. */}
         <StartDataMenu moduleId="lists" items={pageMenu} />
       </PageHeader>
-      {lists && current && read && isShopping ? (
+      {/* An empty list has no figure: "0 offen" says nothing the empty state does not say better. */}
+      {lists && current && read && isShopping && !isEmpty ? (
         <ListFigure
           name={current.name}
           open={openCount}
-          detail={groups.length > 0 ? t.lists.sectionsCount(groups.length) : undefined}
+          detail={sectionCount > 0 ? t.lists.sectionsCount(sectionCount) : undefined}
         />
       ) : null}
       {lists && current && !read ? <div aria-busy="true" data-testid="lists-reading" /> : null}
@@ -428,23 +443,21 @@ export default function ListsPage() {
               tripDate={current.tripDate}
             />
           ) : null}
-          {items && shown.length === 0 ? (
-            <EmptyState
-              title={t.lists.empty}
-              testId="lists-empty"
-              motif={
-                <SignatureMark
-                  id={current.kind === 'shopping' ? 'receipt' : 'todayCard'}
-                  size={64}
-                />
-              }
-            >
-              {/* M10: an empty state names its next step. "Artikel eintragen" on a shopping list; the other lists reuse
-                  `addItem`, the label of the "⋯" entry and of the field itself (a known exception to "<Ding> eintragen"). */}
-              <Button onClick={focusAdd}>
-                {isShopping ? t.lists.emptyAction : t.lists.addItem}
-              </Button>
-            </EmptyState>
+          {isEmpty ? (
+            // M10: the next step is the field right below, with its button "Artikel eintragen". The wrapper keeps
+            // the empty state from taking the page's free height (it pushed the field to the bottom edge).
+            <div>
+              <EmptyState
+                title={t.lists.empty}
+                testId="lists-empty"
+                motif={
+                  <SignatureMark
+                    id={current.kind === 'shopping' ? 'receipt' : 'todayCard'}
+                    size={64}
+                  />
+                }
+              />
+            </div>
           ) : null}
           <div
             className={isShopping ? styles.paper : styles.sheet}
@@ -486,8 +499,8 @@ export default function ListsPage() {
                   autoComplete="off"
                 />
               ) : null}
-              <Button type="submit" variant="ghost">
-                {t.actions.add}
+              <Button type="submit" variant={submitVariant}>
+                {isShopping ? t.lists.emptyAction : t.lists.addSubmit}
               </Button>
             </form>
             <datalist id="lists-categories">

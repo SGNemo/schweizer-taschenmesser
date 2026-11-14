@@ -4,8 +4,10 @@ import { DESKTOP, openPage, PHONE, startSeeded } from './guards';
 
 /**
  * Lists after 0b-8 follow-up 3 (`docs/design/ui-audit-2026-11/REPORT.md`, "Abnahme 0b-8"):
- * 1. An empty list's empty state names its next step (M10): a button that focuses the add field, the list's last row
- *    ("Artikel eintragen" on a shopping list, "Eintrag hinzufügen" on the others).
+ * 1. An empty list's next step is its first entry (M10, follow-up (a) of "Abschlussmessung 2"): one way in – the add
+ *    field right under the empty state, its button with the verb ("Artikel eintragen" on a shopping list, "Eintragen"
+ *    on the others). On the desktop that button is the filled one and "Neue Liste" steps back; on the phone the plus
+ *    stays "Neue Liste" (decided) and the button is outlined. No head figure ("0 offen · 1 Ladenbereich").
  * 2. On the phone a row keeps its pencil on the same line as the entry, ticked rows included (before, a row with price
  *    and quantity broke the pencil onto a second line and was twice as high).
  */
@@ -21,26 +23,63 @@ async function openEmptyList(page: Page, kind: 'Einkauf' | 'Checkliste') {
   await expect(page.getByTestId('lists-empty')).toBeVisible();
 }
 
-async function emptyStateLeadsToField(page: Page, name: string) {
-  const button = page.getByTestId('lists-empty').getByRole('button', { name });
+async function emptyStateLeadsToField(page: Page, name: string, phone: boolean) {
+  // One way in: the empty state holds no button of its own.
+  await expect(page.getByTestId('lists-empty').getByRole('button')).toHaveCount(0);
+  await expect(page.getByTestId('lists-open')).toHaveCount(0);
+  const add = page.getByTestId('lists-add');
+  const button = add.getByRole('button', { name });
   await expect(button).toBeVisible();
-  // Not a second filled button: "Neue Liste" in the head stays the page's one primary action.
-  await expect(button).not.toHaveAttribute('data-variant', 'primary');
-  await button.click();
-  const field = page.getByTestId('lists-add').getByRole('textbox').first();
-  await expect(field).toBeFocused();
+  await expect(button).toHaveAttribute('data-variant', phone ? 'secondary' : 'primary');
+  if (!phone)
+    await expect(page.locator('[data-page-action]')).toHaveAttribute('data-variant', 'secondary');
+  const field = add.getByRole('textbox').first();
   await expect(field).toBeInViewport();
+  // The field follows the empty state, not the bottom edge of the window.
+  const gap = await page.evaluate(() => {
+    const empty = document.querySelector('[data-testid="lists-empty"]')!.getBoundingClientRect();
+    const form = document.querySelector('[data-testid="lists-add"]')!.getBoundingClientRect();
+    return form.top - empty.bottom;
+  });
+  expect(gap).toBeLessThan(80);
+  await field.fill('Milch');
+  await button.click();
+  await expect(page.getByTestId('lists-empty')).toHaveCount(0);
+  await expect(add.getByRole('button', { name })).toHaveAttribute('data-variant', 'ghost');
 }
 
 test.describe('desktop', () => {
   test.use({ viewport: DESKTOP, seeded: { scale: 'small', desktop: true, preview: true } });
 
-  test('an empty list names its next step and the button focuses the add field', async ({
-    page,
-  }) => {
+  test('an empty list has one way in: the add field and its filled button', async ({ page }) => {
     await startSeeded(page);
     await openEmptyList(page, 'Einkauf');
-    await emptyStateLeadsToField(page, 'Artikel eintragen');
+    await emptyStateLeadsToField(page, 'Artikel eintragen', false);
+  });
+
+  test('a ticked entry is grey, not the accent, and prices are not in mono', async ({ page }) => {
+    await startSeeded(page);
+    await openPage(page, '/lists');
+    const look = await page.evaluate(() => {
+      const box = document.querySelector('main input[data-row-tick]:checked')!;
+      const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+      const probe = document.createElement('i');
+      probe.style.color = accent;
+      document.body.append(probe);
+      const accentRgb = getComputedStyle(probe).color;
+      probe.remove();
+      const price = [...document.querySelectorAll('[data-testid="receipt-paper"] li span')].find(
+        (el) => /€/.test(el.textContent ?? '') && el.children.length === 0,
+      );
+      return {
+        fill: getComputedStyle(box).backgroundColor,
+        accentRgb,
+        font: price ? getComputedStyle(price).fontFamily : '',
+      };
+    });
+    expect(look.fill).not.toBe(look.accentRgb);
+    expect(look.font, 'the seed has a priced row').not.toBe('');
+    expect(look.font).not.toMatch(/mono/i);
   });
 });
 
@@ -91,12 +130,9 @@ test.describe('phone', () => {
     }
   });
 
-  test('an empty list names its next step and the button focuses the add field', async ({
-    page,
-  }) => {
+  test('an empty list has one way in: the add field and its button', async ({ page }) => {
     await startSeeded(page, { phone: true });
-    // Not a shopping list: its entries are "Einträge", as in the "⋯" menu and the field's label.
     await openEmptyList(page, 'Checkliste');
-    await emptyStateLeadsToField(page, 'Eintrag hinzufügen');
+    await emptyStateLeadsToField(page, 'Eintragen', true);
   });
 });
