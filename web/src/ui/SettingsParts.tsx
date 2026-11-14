@@ -5,6 +5,7 @@ import { t } from '@/strings';
 import { Button } from './Button';
 import { Dialog } from './Dialog';
 import { HelpHint } from './HelpHint';
+import { Icon } from './icons';
 import styles from './SettingsParts.module.css';
 
 /**
@@ -95,12 +96,28 @@ export function SettingsGroup({
   );
 }
 
-/** Destructive actions, set apart from the normal rows. */
-export function DangerZone({ id, children }: { id?: string; children: ReactNode }) {
+/**
+ * Destructive actions, set apart from the normal rows: a tone step under a heading with the warning icon
+ * (Identity 4.0, no frame; follow-up 14 of 0b-8). The danger colour stays on the heading and the actions' buttons.
+ */
+export function DangerZone({
+  id,
+  on = 'raised',
+  children,
+}: {
+  id?: string;
+  /**
+   * What it lies on: a raised card (sunken step, the default) or the page itself (raised step; inside a raised
+   * settings group card outside a settings tab it falls back to sunken).
+   */
+  on?: 'raised' | 'page';
+  children: ReactNode;
+}) {
   const titleId = useId();
   return (
-    <section id={id} className={styles.danger} aria-labelledby={titleId}>
+    <section id={id} className={styles.danger} data-on={on} aria-labelledby={titleId}>
       <h3 id={titleId} className={styles.dangerTitle}>
+        <Icon name="alert" size={16} />
         {t.settings.danger.title}
       </h3>
       {children}

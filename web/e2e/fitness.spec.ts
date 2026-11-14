@@ -12,6 +12,21 @@ import {
 } from './helpers';
 
 /**
+ * Sets, reps and weight of the first exercises in the session row. On the phone the row names only count and
+ * minutes (0b-8 follow-up 15: the details made it two to four lines); there the row must not carry them.
+ * The page decides by its own width (`usePageWidthAtLeast(48)`); both projects here have no sidebar beside it
+ * on the phone (412 px) and a wide page on the desktop, so the viewport picks the same branch.
+ */
+async function expectRowDetail(page: Page, detail: RegExp) {
+  if ((page.viewportSize()?.width ?? 0) < 768) {
+    await expect(page.locator('main').getByText(detail)).toHaveCount(0);
+    await expect(page.locator('main [data-row]').first()).toContainText(/\d+ Übung/);
+  } else {
+    await expect(page.getByText(detail)).toBeVisible();
+  }
+}
+
+/**
  * Fitness (package 1, docs/features/fitness.md): a session shows up in the widget and the calendar,
  * a `kcal` capture adds to today's sum, the goal calculator keeps no body data. Desktop and pixel-7.
  */
@@ -70,7 +85,7 @@ test('a session: logged in the form, counted in the widget, shown in the calenda
 
   await expect(page.getByTestId('fitness-week')).toContainText('1');
   await expect(page.getByRole('button', { name: /Bankdrücken/ }).first()).toBeVisible();
-  await expect(page.getByText(/Bankdrücken 3 × 8 · 60 kg/)).toBeVisible();
+  await expectRowDetail(page, /Bankdrücken 3 × 8 · 60 kg/);
 
   await ready(page, '/');
   const widget = page.getByTestId('widget-fitness:week');
@@ -250,7 +265,7 @@ test('import from another app: a Strong export is recognised, previewed and land
   await backSettled(page);
 
   await ready(page, '/fitness');
-  await expect(page.getByText(/Bankdrücken \(Langhantel\) 2 × 8 · 60 kg/)).toBeVisible();
+  await expectRowDetail(page, /Bankdrücken \(Langhantel\) 2 × 8 · 60 kg/);
   // The page's ⋯ menu offers the import too.
   await page.getByRole('button', { name: 'Weitere Aktionen' }).click();
   await expect(page.getByRole('menuitem', { name: /Importieren/ })).toBeVisible();
@@ -326,7 +341,7 @@ test('import from MyFitnessPal: the export ZIP brings a day of exercise and a me
   await backSettled(page);
 
   await ready(page, '/fitness');
-  await expect(page.getByText(/Squats, Barbell 3 × 5 · 80 kg/)).toBeVisible();
+  await expectRowDetail(page, /Squats, Barbell 3 × 5 · 80 kg/);
   // The weight from Measurement-Summary is nowhere.
   await expect(page.getByText(/81[,.]4/)).toHaveCount(0);
 });

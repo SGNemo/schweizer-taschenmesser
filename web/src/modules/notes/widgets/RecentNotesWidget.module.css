@@ -1,9 +1,11 @@
-/* A little sheet of paper: the scratch pad's first lines in serif on a lightly tinted surface. */
+/* A little sheet of paper: the scratch pad's first lines in serif on a lightly tinted surface, a tone step without a
+   frame (Identity 4.0; follow-up 14 of 0b-8). */
 .sheet {
   display: grid;
   gap: var(--space-1);
   padding: var(--space-3);
-  border: 1px solid var(--border);
+  /* Invisible edge: drawn in forced colours, where the tint is gone. */
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--module-color) 8%, var(--surface));
   color: var(--text);

@@ -158,12 +158,28 @@
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--danger);
+  /* Invisible edge: drawn in forced colours, where the tone step is gone. */
+  border: 1px solid transparent;
   border-radius: var(--radius-lg);
-  background: var(--surface);
+  background: var(--surface-sunken);
   scroll-margin-top: var(--space-5);
 }
+/* Sunken inside a raised card (the default); a zone that sits on the page itself (`on="page"`) steps up instead,
+   unless a settings group card around it is raised (not on a settings tab, where groups lie on the page). The three
+   rules below win by weight and order: keep them together. */
+.danger[data-on='page'] {
+  background: var(--surface-raised);
+}
+.card .danger[data-on='page'] {
+  background: var(--surface-sunken);
+}
+[data-groups='plain'] .card .danger[data-on='page'] {
+  background: var(--surface-raised);
+}
 .dangerTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   color: var(--danger);
   font-size: var(--text-label);
   font-weight: var(--weight-semibold);
