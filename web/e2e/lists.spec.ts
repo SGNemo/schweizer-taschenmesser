@@ -130,6 +130,6 @@ test('Lesezeichen: links as tiles, grouped by the first tag', async ({ page }) =
   await save(page);
   await expect(page.getByRole('heading', { name: 'Reisen' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Bahn bahn.example.org' })).toBeVisible();
-  await page.getByRole('button', { name: 'Merkliste', exact: true }).click();
+  await page.getByRole('button', { name: 'Merkzettel', exact: true }).click();
   await expect(page.getByRole('link', { name: /Bahn Link/ })).toBeVisible();
 });
