@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
 import { DEFAULTS_ERA_KEY } from '@/core/focus/defaults';
 import { setSettings } from '@/core/settings/settings';
+import type * as Detect from '@/core/setup/detect';
 import { ensureSetupState } from '@/core/setup/detect';
 import { SETUP_STATE_KEY } from '@/core/setup/state';
 import { useUiStore } from '@/stores/ui';
@@ -13,7 +14,7 @@ vi.mock('@/core/settings/history', () => ({ startHistory: () => () => {} }));
 vi.mock('@/core/settings/profiles', () => ({ startProfileScheduler: () => () => {} }));
 vi.mock('@/core/automation/start', () => ({ startAutomation: () => () => {} }));
 vi.mock('@/core/setup/detect', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/core/setup/detect')>();
+  const actual = await importOriginal<typeof Detect>();
   return { ...actual, ensureSetupState: vi.fn(actual.ensureSetupState) };
 });
 
@@ -44,9 +45,7 @@ describe('first start: a fresh app keeps the calm overview (initCore)', () => {
 
   it('stores the defaults era before the setup state, so a start left in between is not read as an old app', async () => {
     let eraAtSetup: unknown = 'not reached';
-    const actual = (
-      await vi.importActual<typeof import('@/core/setup/detect')>('@/core/setup/detect')
-    ).ensureSetupState;
+    const actual = (await vi.importActual<typeof Detect>('@/core/setup/detect')).ensureSetupState;
     vi.mocked(ensureSetupState).mockImplementationOnce(async (...args) => {
       eraAtSetup = (await meta().get(DEFAULTS_ERA_KEY))?.value;
       return actual(...args);
