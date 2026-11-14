@@ -141,7 +141,11 @@ describe('page Gerätestatus', () => {
     const buttons = within(page).queryAllByRole('button');
     expect(buttons.map((b) => b.textContent)).toEqual(['Backup herunterladen']);
     expect(buttons[0]).toHaveAttribute('data-variant', 'secondary');
-    expect(within(screen.getByTestId('device-group-backup')).getByRole('button')).toBe(buttons[0]);
+    // Right after the backup lines, outside their list (it is no status line).
+    expect(within(screen.getByTestId('device-group-backup')).queryByRole('button')).toBeNull();
+    expect(screen.getByTestId('device-group-backup').nextElementSibling).toContainElement(
+      buttons[0]!,
+    );
     expect(within(page).queryAllByRole('switch')).toEqual([]);
     expect(within(page).queryAllByRole('checkbox')).toEqual([]);
   });
@@ -164,15 +168,20 @@ describe('page Gerätestatus', () => {
       'type',
       'password',
     );
-    // The encrypted file is the filled action; the readable one is the second button, as in the settings.
-    const [encrypted, plain] = within(dialog).getAllByRole('button');
+    // The encrypted file is the filled action; the readable one is the second button, as in the settings. Both sit
+    // in the dialog's footer (above the phone's keyboard).
+    const encrypted = screen.getByRole('button', { name: 'Verschlüsselt exportieren' });
+    const plain = screen.getByRole('button', { name: 'Ohne Passwort herunterladen' });
+    expect(dialog).not.toContainElement(encrypted);
+    expect(encrypted).toHaveAttribute('type', 'submit');
+    expect(encrypted).toHaveAttribute('form', dialog.id);
     expect(encrypted).toHaveTextContent('Verschlüsselt exportieren');
     expect(encrypted).toHaveAttribute('data-variant', 'primary');
     expect(plain).toHaveTextContent('Ohne Passwort herunterladen');
     expect(plain).toHaveAttribute('data-variant', 'secondary');
     // Without a password the encrypted export says why and saves nothing.
     await act(async () => {
-      encrypted!.click();
+      encrypted.click();
     });
     expect(within(dialog).getByRole('alert')).toHaveTextContent('mindestens 8 Zeichen');
     expect(saves).toBe(0);

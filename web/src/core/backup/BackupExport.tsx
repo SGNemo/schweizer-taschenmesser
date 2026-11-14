@@ -14,22 +14,10 @@ import {
 import { recordFileBackup } from './lastBackup';
 import styles from './BackupExport.module.css';
 
-/**
- * "Backup herunterladen" as one form: the password recommendation, the password field, "Verschlüsselt exportieren"
- * and the readable file as the second choice. Settings → Sync & Backup and the Gerätestatus dialog show this same
- * form, so the recommendation is worded once and a readable file is never one click from a status page.
- */
-export function BackupExportForm({
-  inDialog = false,
-  onSaved,
-}: {
-  /** In the dialog the encrypted export is the filled action, the password field takes the focus and the readable
-   *  file says "without password" (the dialog is opened by "Backup herunterladen"; the same words on the readable
-   *  file would invite the wrong click). Settings keep both secondary: their filled action is "Verbinden". */
-  inDialog?: boolean;
-  /** Called after a file was saved (not when the save dialog was cancelled). */
-  onSaved?: () => void;
-}) {
+const FORM_ID = 'backup-export-form';
+
+/** State and parts of the form; the settings lay them out inline, the dialog puts the buttons into its footer. */
+function useBackupExport(inDialog: boolean, onSaved?: () => void) {
   const toast = useUiStore((s) => s.toast);
   const [pass, setPass] = useState('');
   const [error, setError] = useState<string | undefined>();
@@ -73,7 +61,7 @@ export function BackupExportForm({
     }
   }
 
-  return (
+  const fields = (
     <>
       <p className={styles.muted}>{t.backup.exportHint}</p>
       <p className={styles.muted}>{t.backup.filesNote}</p>
@@ -91,30 +79,78 @@ export function BackupExportForm({
           {error}
         </p>
       ) : null}
-      <div className={styles.actions}>
-        <Button
-          variant={inDialog ? 'primary' : 'secondary'}
-          disabled={busy}
-          onClick={() => void exportEncrypted()}
-        >
-          {t.backup.encryptedExport}
-        </Button>
-        <Button disabled={busy} onClick={() => void exportPlain()}>
-          {inDialog ? t.backup.exportPlain : t.backup.export}
-        </Button>
-      </div>
+    </>
+  );
+  const actions = (
+    <>
+      {/* In the dialog the encrypted export submits the form: Enter or the phone's "Go" key in the password field. */}
+      <Button
+        variant={inDialog ? 'primary' : 'secondary'}
+        disabled={busy}
+        {...(inDialog
+          ? { type: 'submit' as const, form: FORM_ID }
+          : { onClick: () => void exportEncrypted() })}
+      >
+        {t.backup.encryptedExport}
+      </Button>
+      <Button disabled={busy} onClick={() => void exportPlain()}>
+        {inDialog ? t.backup.exportPlain : t.backup.export}
+      </Button>
+    </>
+  );
+  return { fields, actions, exportEncrypted };
+}
+
+/**
+ * "Backup herunterladen" as one form: the password recommendation, the password field, "Verschlüsselt exportieren"
+ * and the readable file as the second choice. Settings → Sync & Backup and the Gerätestatus dialog show this same
+ * form, so the recommendation is worded once and a readable file is never one click from a status page.
+ * Settings keep both buttons secondary: their filled action is "Verbinden".
+ */
+export function BackupExportForm() {
+  const { fields, actions } = useBackupExport(false);
+  return (
+    <>
+      {fields}
+      <div className={styles.actions}>{actions}</div>
       <p className={styles.muted}>{t.backup.plainHint}</p>
     </>
   );
 }
 
-/** The same form in a dialog (Gerätestatus): opened by a click, closes after a saved file. */
+/**
+ * The same form in a dialog (Gerätestatus), titled "Backup sichern": the encrypted export is the filled action, the
+ * password field takes the focus, the readable file says "Ohne Passwort herunterladen" (the opener's own words on it
+ * would invite the wrong click), and the buttons sit in the footer, above the phone's keyboard. Closes after a saved file.
+ */
 export function BackupExportDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  // Every opening starts empty (no password kept from the last one); the dialog itself stays mounted while it
+  // closes, so the native close hands the focus back to the button.
+  const [session, setSession] = useState(0);
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setSession((n) => n + 1);
+  }
+  return <ExportDialog key={session} open={open} onClose={onClose} />;
+}
+
+function ExportDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { fields, actions, exportEncrypted } = useBackupExport(true, onClose);
   return (
-    <Dialog open={open} onClose={onClose} title={t.backup.exportTitle}>
-      <div className={styles.form} data-testid="backup-export-dialog">
-        <BackupExportForm inDialog onSaved={onClose} />
-      </div>
+    <Dialog open={open} onClose={onClose} title={t.backup.exportTitle} footer={actions}>
+      <form
+        id={FORM_ID}
+        className={styles.form}
+        data-testid="backup-export-dialog"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void exportEncrypted();
+        }}
+      >
+        {fields}
+        <p className={styles.muted}>{t.backup.plainHint}</p>
+      </form>
     </Dialog>
   );
 }

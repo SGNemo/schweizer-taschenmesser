@@ -60,9 +60,7 @@ test('a backup from the page: one button opens the export form, the password is 
 }) => {
   await enable(page, 'device');
   await ready(page, '/device');
-  const open = page
-    .getByTestId('device-group-backup')
-    .getByRole('button', { name: 'Backup herunterladen' });
+  const open = page.getByRole('button', { name: 'Backup herunterladen' });
   // Calm: not the filled colour, no warning words around it.
   await expect(open).toHaveAttribute('data-variant', 'secondary');
   let downloads = 0;
@@ -82,9 +80,10 @@ test('a backup from the page: one button opens the export form, the password is 
 
   await pass.fill('ein-langes-passwort');
   const download = page.waitForEvent('download');
-  await encrypted.click();
+  await pass.press('Enter'); // Enter (the phone's "Go") in the password field is the encrypted export
   expect((await download).suggestedFilename()).toMatch(/^nemo-backup-.*\.json$/);
   await expect(dialog).toHaveCount(0);
+  await expect(open).toBeFocused(); // the focus goes back to the button
   // The page now knows a backup exists: the summary no longer says "Noch kein Backup".
   await expect(page.getByTestId('device-summary')).not.toContainText('Noch kein Backup');
 });

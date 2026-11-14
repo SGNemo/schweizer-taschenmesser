@@ -72,7 +72,8 @@ export function useRead<T>(
     let live = true;
     void read().then(
       (value) => live && setState({ value, done: true }),
-      () => live && setState({ value: undefined, done: true }),
+      // A failed re-read keeps what the last read found (never back to "Noch kein Backup").
+      () => live && setState((last) => ({ value: last.value, done: true })),
     );
     return () => {
       live = false;

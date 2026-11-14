@@ -46,28 +46,35 @@ export default function StatusPage() {
       <div className={styles.page} data-testid="device-status" aria-busy={!ready}>
         {ready ? (
           <>
-            {groups.map((group) => (
+            {groups.map((group) => {
               // The line names say what each group is; the space between groups is enough (no heading on top).
-              <ul
-                key={group.id}
-                aria-label={group.title}
-                className={styles.lines}
-                data-testid={`device-group-${group.id}`}
-              >
-                {group.lines.map((line) => (
-                  <li key={line.id}>
-                    <StatusLineLink line={line} layout="columns" />
-                  </li>
-                ))}
-                {group.id === 'backup' ? (
-                  <li className={styles.action}>
+              const list = (
+                <ul
+                  key={group.id}
+                  aria-label={group.title}
+                  className={styles.lines}
+                  data-testid={`device-group-${group.id}`}
+                >
+                  {group.lines.map((line) => (
+                    <li key={line.id}>
+                      <StatusLineLink line={line} layout="columns" />
+                    </li>
+                  ))}
+                </ul>
+              );
+              if (group.id !== 'backup') return list;
+              // The button follows the backup lines in the same group (not a list item: it is no status line).
+              return (
+                <div key={group.id} className={styles.group}>
+                  {list}
+                  <div>
                     <Button onClick={() => setExporting(true)} data-testid="device-backup-export">
                       {t.backup.export}
                     </Button>
-                  </li>
-                ) : null}
-              </ul>
-            ))}
+                  </div>
+                </div>
+              );
+            })}
             <p className={styles.more}>{d.page.note}</p>
             {desktop ? (
               <p className={styles.more} data-testid="device-pc">

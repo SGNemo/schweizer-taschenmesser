@@ -11,9 +11,14 @@
 .lines > li {
   min-width: 0;
 }
-/* "Backup herunterladen" sits under the backup lines, at the start of the column, calm like a line. */
-.action {
-  padding-block-start: var(--space-2);
+/* The backup lines and "Backup herunterladen" under them, at the start of the column, calm like a line. */
+.group {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+.group > ul {
+  justify-self: stretch;
 }
 .more {
   margin: 0;
