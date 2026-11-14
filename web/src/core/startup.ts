@@ -25,9 +25,12 @@ export async function initCore(): Promise<void> {
     // Best effort only.
   }
   // A really empty app (no setup state, no data) is a fresh installation: it gets the calm defaults.
-  const fresh = !(await readSetupState()) && !(await appHasData());
-  // First: decides `dismissed` (installation with data) vs `notStarted` before anything writes.
-  await ensureSetupState();
+  const setupRead = await readSetupState();
+  const hasData = setupRead ? undefined : await appHasData();
+  const fresh = !setupRead && !hasData;
+  // First: decides `dismissed` (installation with data) vs `notStarted` before anything writes; it
+  // takes the answer read above, as a page may have written its own defaults since.
+  await ensureSetupState(undefined, undefined, hasData);
   await applyDefaultsEra(fresh, (view) => useUiStore.getState().setHomeView(view));
   // The same fresh installation notes its default set of modules (device-local, never a synced row).
   await markFreshDefaults(fresh);
