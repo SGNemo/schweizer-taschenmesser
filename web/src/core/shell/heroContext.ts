@@ -51,13 +51,14 @@ export function useHeroTargets(): HeroTargets | undefined {
  * What the page tells the frame (never the other way round): a `HeroSlot` claims its area for as long as it is
  * mounted, so the frame stops drawing its own default there (the signature, the headline figure); `PageTitle` hands
  * over the title text, so the eyebrow can name the module when the page's title is another one; a page whose hint above
- * the head waits for a read (`identity.notice`) says when that read is back (`useHeadReady`).
+ * the head waits for a read (`identity.notice`), or whose stage is built from its first reads (`identity.firstRead`),
+ * says when those reads are back (`useHeadReady`).
  */
 export interface HeroControls {
   /** Claims `area`; returns the release. */
   claim(area: HeroArea): () => void;
   setTitle(text: string | undefined): void;
-  /** The page's first read is back (`identity.notice`): the frame shows the notice, the head and the page. */
+  /** The page's first reads are back (`identity.notice`, `firstRead`): the frame shows the notice, head and page. */
   settle(): void;
 }
 
@@ -68,9 +69,9 @@ export function useHeroControls(): HeroControls | undefined {
 }
 
 /**
- * For the entry page of a module with `identity.notice`: `ready` once the read its hint above the head depends on is
- * back, with or without a hint (0b-8). Runs before paint, so the hint, the head and the page appear in one frame and
- * the hint never pushes the head down. Outside a frame it does nothing.
+ * For the entry page of a module with `identity.notice` or `identity.firstRead`: `ready` once the reads its hint above
+ * the head or its stage depend on are back, with or without a hint (0b-8). Runs before paint, so the hint, the head and
+ * the page appear in one frame and nothing pushes the head or the page down. Outside a frame it does nothing.
  */
 export function useHeadReady(ready: boolean): void {
   const controls = useHeroControls();
