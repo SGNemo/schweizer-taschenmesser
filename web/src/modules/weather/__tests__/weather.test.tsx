@@ -459,7 +459,7 @@ describe('weather page', () => {
 });
 
 describe('more places', () => {
-  it('chips for the main place and extras; "Ort hinzufügen" searches and adds; × removes; three at most', async () => {
+  it('chips for the main place and extras; "Ort eintragen" searches and adds; × removes; three at most', async () => {
     setNow(() => new Date(2026, 9, 19, 12, 5).getTime());
     vi.stubGlobal(
       'fetch',

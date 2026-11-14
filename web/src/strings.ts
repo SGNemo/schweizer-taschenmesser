@@ -1131,6 +1131,8 @@ export const de = {
       bookIncome: 'Als Einnahme buchen',
       bookLine: (action: string, line: string) => `${action}: ${line}`,
       calmHint: 'Eine Zeile = ein Eintrag. Sortiert wird später.',
+      /** Above the rows when they go to more than one place: „ToDo 9 · Termin 3“ (typed order stays). */
+      kinds: (parts: string[]) => parts.join(' · '),
       dunningMatch: (payee: string, due: string) =>
         `Mahnung zu Rechnung ${payee}, fällig ${due} · vermerken`,
       dunningCheck: (payee: string) => `Mahnung ${payee} prüfen`,
@@ -3223,6 +3225,8 @@ export const de = {
       compare: {
         vsPrevious: (change: string) => `${change} zum Vormonat`,
         unchanged: 'Wie im Vormonat',
+        /** Phone: the cards show arrow and amount only; this line names what they compare with, once. */
+        note: 'Pfeile: Änderung zum Vormonat',
         none: 'Kein Vormonat zum Vergleichen',
       },
       forecast: {
@@ -3291,7 +3295,8 @@ export const de = {
     },
     available: 'Verfügbar',
     tabs: {
-      overview: 'Übersicht',
+      /** The month view ("Übersicht" is the home in the bottom bar; "Verlauf" holds several months). */
+      overview: 'Monat',
       transactions: 'Buchungen',
       trend: 'Verlauf',
       accounts: 'Konten',
@@ -8366,7 +8371,7 @@ export const de = {
       dayOff: 'Heute ist frei.',
       over: (min: string) => `${min} mehr als planbar`,
       first: (title: string) => `Heute: ${title}. Das reicht für heute.`,
-      nextFree: (day: string, free: string) => `Heute ist frei. ${day}: ${free} frei.`,
+      nothing: 'Für heute noch nichts geplant.',
       context: (n: number, planned: string) =>
         `${n === 1 ? '1 Ding' : `${n} Dinge`} · ${planned} geplant`,
       week: (week: string) => `KW ${week}`,
@@ -8399,6 +8404,8 @@ export const de = {
       blockerPlaceholder: 'Werkstatt',
       blockerMinutes: 'Dauer',
       removeBlocker: (label: string) => `${label} entfernen`,
+      quickLabel: 'Verfügbare Zeit schnell wählen',
+      wholeDay: 'ganzer Tag',
       dayOff: 'Tag frei',
       dayOn: 'Zeit wieder einplanen',
       calendar: 'Aus dem Kalender',
