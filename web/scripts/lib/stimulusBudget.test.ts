@@ -463,13 +463,57 @@ it('the tone steps --surface-raised and --surface-sunken are plain surfaces, als
       `<div ${box(200, 80, 10)} style="background-color: rgb(27, 33, 38);"></div><div ${box(200, 80, 10)} style="background-color: rgb(12, 15, 18);"></div>`,
     );
     expect(steps.colouredSurfaces).toBe(0);
-    // The same saturation in a grey that is no token still counts.
+    // A cool dark grey that is no token is no colour either: chroma (39 − 28) / 255 = 0.04. The audit's
+    // saturation (0.28) counted it; a dark tint with real chroma still counts.
     const other = mount(
-      `<div ${box(200, 80, 10)} style="background-color: rgb(28, 33, 39);"></div>`,
+      `<div ${box(200, 80, 10)} style="background-color: rgb(28, 33, 39);"></div><div ${box(200, 80, 10)} style="background-color: rgb(20, 30, 60);"></div>`,
     );
     expect(other.colouredSurfaces).toBe(1);
   } finally {
     root.removeProperty('--surface-raised');
     root.removeProperty('--surface-sunken');
   }
+});
+
+it('chroma is never looser than the saturation it replaced, for the same colour', () => {
+  // The old formula: saturation (max − min) / max > 0.25 (text), > 0.12 (surface). chroma = saturation × max / 255,
+  // so the new thresholds 0.10 / 0.06 count every colour the old one counted once max ≥ 102 / 128. Every such
+  // colour on a 15-step grid through measurePage(), in batches; the darkest boundary colours by hand below.
+  const OLD_TEXT = 0.25;
+  const OLD_SURFACE = 0.12;
+  const sat = (r: number, g: number, b: number) => {
+    const max = Math.max(r, g, b);
+    return max === 0 ? 0 : (max - Math.min(r, g, b)) / max;
+  };
+  const text: string[] = [];
+  const surface: string[] = [];
+  for (let r = 0; r <= 255; r += 15)
+    for (let g = 0; g <= 255; g += 15)
+      for (let b = 0; b <= 255; b += 15) {
+        const max = Math.max(r, g, b);
+        if (max >= 102 && sat(r, g, b) > OLD_TEXT) text.push(`rgb(${r}, ${g}, ${b})`);
+        if (max >= 128 && sat(r, g, b) > OLD_SURFACE) surface.push(`rgb(${r}, ${g}, ${b})`);
+      }
+  // The two boundaries themselves: the darkest colours just over the old thresholds.
+  text.push('rgb(102, 76, 76)');
+  surface.push('rgb(128, 112, 112)');
+  const count = (list: string[], kind: 'text' | 'surface') => {
+    let n = 0;
+    for (let i = 0; i < list.length; i += 500) {
+      const html = list
+        .slice(i, i + 500)
+        .map((c) =>
+          kind === 'text'
+            ? `<p ${box(200, 20, 10)} style="color: ${c};">a</p>`
+            : `<i ${box(200, 20, 10)} style="background-color: ${c};"></i>`,
+        )
+        .join('');
+      const m = mount(html);
+      n += kind === 'text' ? m.colouredText : m.colouredSurfaces;
+    }
+    return n;
+  };
+  expect(text.length).toBeGreaterThan(3000);
+  expect(count(text, 'text')).toBe(text.length);
+  expect(count(surface, 'surface')).toBe(surface.length);
 });
