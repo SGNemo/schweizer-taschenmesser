@@ -30,7 +30,7 @@ test('an account in another currency is shown in its currency and never mixed in
   await expect(page.getByTestId('balance-Peso')).toContainText(/MXN|MX\$/);
 
   // Two currencies: the overview shows one at a time (euro first), with a switch.
-  await page.getByRole('button', { name: 'Übersicht', exact: true }).click();
+  await page.getByRole('button', { name: 'Monat', exact: true }).click();
   const group = page.getByRole('group', { name: 'Währung' });
   await expect(group.getByRole('button', { name: 'EUR' })).toBeVisible();
   await expect(page.getByTestId('hero')).not.toContainText(/MXN|MX\$/);

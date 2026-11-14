@@ -3223,6 +3223,8 @@ export const de = {
       compare: {
         vsPrevious: (change: string) => `${change} zum Vormonat`,
         unchanged: 'Wie im Vormonat',
+        /** Phone: the cards show arrow and amount only; this line names what they compare with, once. */
+        note: 'Pfeile: Änderung zum Vormonat',
         none: 'Kein Vormonat zum Vergleichen',
       },
       forecast: {
@@ -3291,7 +3293,8 @@ export const de = {
     },
     available: 'Verfügbar',
     tabs: {
-      overview: 'Übersicht',
+      /** The month view ("Übersicht" is the home in the bottom bar; "Verlauf" holds several months). */
+      overview: 'Monat',
       transactions: 'Buchungen',
       trend: 'Verlauf',
       accounts: 'Konten',

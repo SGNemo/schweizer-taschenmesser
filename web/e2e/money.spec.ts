@@ -332,7 +332,7 @@ test.describe('Finance', () => {
     await expect(page.getByTestId('balance-Sparkonto')).toHaveText(/1\.000,00\s€/);
     await expect(page.getByTestId('balance-Girokonto')).toHaveText(/100,00\s€/);
 
-    await page.getByRole('button', { name: 'Übersicht', exact: true }).click();
+    await page.getByRole('button', { name: 'Monat', exact: true }).click();
     await expect(page.getByTestId('hero')).toHaveText(/1\.100,00\s€/);
 
     await page.getByRole('button', { name: 'Kategorien', exact: true }).click();
