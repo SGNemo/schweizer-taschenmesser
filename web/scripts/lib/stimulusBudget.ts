@@ -297,12 +297,14 @@ export function summaryMarkdown(
  *   colouredSurfaces   visible elements above the fold with a background of chroma > 0.06 (no surface token)
  *   signatureBlockList every element marked `data-signature-block`: size and framed elements inside
  * Colour is chroma (max − min) / 255, not the audit's saturation (max − min) / max: the saturation read the cool
- * greys of the dark theme as colour, chroma counts both themes alike (MEASURES.md, "Sättigung vs. Chroma").
+ * greys of the dark theme as colour; chroma counts the themes far closer (audit 243 / 254, MEASURES.md "Sättigung vs.
+ * Chroma"; at 0.06 locally 414 light / 487 dark).
  * Compared with the saturation it replaced (text > 0.25, surface > 0.12; chroma = saturation × max / 255): not
  * looser for any colour whose brightest channel is at least 102 (text) or 128 (surface). Darker colours with a
  * channel spread of at most 25 (text) / 15 (surface) are no longer counted, e.g. rgb(27, 15, 6) or rgb(50, 25, 25)
  * ink (that is the dark-theme fix); the budget measures the light theme only. Both sides are fixture tests.
- * An unweighted sRGB proxy, not perceived colourfulness: pale tints from max ≈ 240 count.
+ * An unweighted sRGB proxy, not perceived colourfulness: pale tints from max ≈ 240 count; a semi-transparent colour
+ * is scored unblended; a colour space `parse` cannot read (`oklch()`, `lab()`) counts as no colour (follow-up).
  */
 export function measurePage(): {
   borders: number;
@@ -334,8 +336,9 @@ export function measurePage(): {
   // Chroma thresholds; never raise them (a raise counts less colour). See the comment at the top.
   const CHROMA_TEXT = 0.1;
   const CHROMA_SURFACE = 0.06;
-  // The page, its surfaces and their tone steps, and the inks, are neutral by name, whatever their chroma (the
-  // closest today: --text-muted, light, 0.086), so that a token tinted later is not counted as colour.
+  // Neutral by name, whatever their chroma: the surface tokens in `plain` (for backgrounds), the inks in
+  // `neutralInk` (for text); the closest today are --text-muted and --text-3, light, 0.086. A token tinted later
+  // is so not counted as colour.
   const plain = new Set([
     ...['--bg', '--surface', '--surface-2', '--surface-raised', '--surface-sunken']
       .filter((name) => rootStyle.getPropertyValue(name).trim() !== '')
