@@ -290,9 +290,9 @@ export default function ListsPage() {
   // is the page's filled action on the desktop; "Neue Liste" steps back. On the phone the plus stays "Neue Liste"
   // (decided), so the field's button is outlined there. One way in: no second button in the empty state.
   // Only once the list is painted (`read`): before that the head keeps its usual emphasis.
-  const isEmpty = !!current && read && shown.length === 0;
+  const isEmpty = !!current && read && items !== undefined && shown.length === 0;
   const submitVariant = !isEmpty ? 'ghost' : phone ? 'secondary' : 'primary';
-  // The phone keeps the field wide: the short verb there, the placeholder says what goes in.
+  // In every state: the phone keeps the field wide with the short verb (the placeholder says what goes in).
   const submitLabel = isShopping && !phone ? t.lists.emptyAction : t.lists.addSubmit;
   const clearBought = () => {
     if (!current) return;
