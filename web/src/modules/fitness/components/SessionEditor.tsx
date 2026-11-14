@@ -364,20 +364,13 @@ function Fields({
           setAutoPlanned(false);
         }}
       />
-      {planned ? (
-        <TimeField
-          label={t.fitness.form.time}
-          hint={t.fitness.planned.timeHint}
-          value={time}
-          onChange={setTime}
-        />
-      ) : null}
       {/* Basis (0b-8 follow-up 7): the exercises and "Geplant" (it feeds "Jetzt wichtig" and the plan, so it stays out
           of the fold). Day and duration fold with the rare fields; the line beside "Mehr Felder" names the day, and
           another day, a plan, a duration or the "Übung oder Dauer" error opens them by itself. */}
       <AdvancedFields
         moduleId="fitness"
         hasData={Boolean(
+          title ||
           existing?.title ||
           existing?.note ||
           existing?.time ||
@@ -416,6 +409,14 @@ function Fields({
             onChange={(e) => setDuration(e.target.value)}
           />
         </div>
+        {planned ? (
+          <TimeField
+            label={t.fitness.form.time}
+            hint={t.fitness.planned.timeHint}
+            value={time}
+            onChange={setTime}
+          />
+        ) : null}
         <TextField
           label={t.fitness.form.title}
           hint={t.fitness.form.titleHint}

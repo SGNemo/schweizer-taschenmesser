@@ -11,5 +11,5 @@ type: changed
 area: fitness
 breaking: false
 de: „Einheit eintragen“ beginnt mit den Übungen und „Geplant“; Datum und Dauer stehen unter „Mehr Felder“, daneben steht der Tag, zum Beispiel „Heute“.
-en: "Add session" starts with the exercises and "Planned"; date and duration are under "More fields", with the day shown beside it, for example "Today".
+en: "Add session" starts with the exercises and "Planned"; date and duration are under "More fields", which shows the day, for example "Today".
 ---

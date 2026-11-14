@@ -168,8 +168,9 @@ test('a planned session: on the overview with its time, counted only once done, 
   const dialog = page.getByRole('dialog', { name: 'Einheit eintragen' });
   await dialog.getByRole('combobox', { name: 'Übung' }).fill('Kniebeuge');
   await dialog.getByLabel('Sätze').fill('4');
-  await moreFields(page);
+  // "Geplant" stays beside the exercises (it feeds "Jetzt wichtig"); ticking it opens the day behind "Mehr Felder".
   await dialog.getByLabel('Geplant, noch nicht gemacht').check();
+  await expect(dialog.getByLabel('Datum')).toBeVisible();
   await dialog.getByLabel('Uhrzeit').fill('18:00');
   await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
