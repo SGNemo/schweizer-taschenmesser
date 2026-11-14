@@ -60,7 +60,7 @@ test('the search is a 44 px icon in the title line; a tap puts the cursor in the
     const box = (await toggle.boundingBox())!;
     expect(box.width, path).toBeGreaterThanOrEqual(44);
     expect(box.height, path).toBeGreaterThanOrEqual(44);
-    // In the head, never over the title (beside it, or at the end of the status head's eyebrow row).
+    // In the head, never over the title (beside it, or at the end of the status head's title row).
     const h1 = (await page.locator('main h1').boundingBox())!;
     const apart =
       box.x >= h1.x + h1.width - 1 ||
@@ -88,4 +88,6 @@ test('the search is a 44 px icon in the title line; a tap puts the cursor in the
   await page.getByRole('search').getByRole('link').first().click();
   await expect(page).toHaveURL(/\/settings\/darstellung#/);
   await expect(field).toHaveCount(0);
+  // The focus lands on the icon of the new head, not on <body>.
+  await expect(page.getByTestId('settings-search-toggle')).toBeFocused();
 });

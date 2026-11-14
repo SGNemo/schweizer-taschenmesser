@@ -14,7 +14,7 @@ import styles from './StatusHead.module.css';
 export function StatusHead({ title }: { title: string }) {
   const v3 = tSettingsV3.use();
   const tiles = useSettingsStatus();
-  // Phone: the search icon at the end of the eyebrow row (empty on the desktop).
+  // Phone: the search icon at the end of the title row (empty on the desktop).
   const search = useContext(SettingsSearchSlot);
   return (
     <PageHead

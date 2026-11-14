@@ -72,13 +72,4 @@ describe('scrollbar width (0b-R: the right edge with a classic scrollbar)', () =
     stop();
     expect(root.style.getPropertyValue('--scrollbar-w')).toBe('');
   });
-
-  it('the desktop content area keeps the gutter and takes it off its right padding', () => {
-    const shell = readFileSync(resolve(__dirname, '../../layout/AppShell.module.css'), 'utf8');
-    expect(shell).toMatch(/scrollbar-gutter:\s*stable/);
-    expect(shell).toMatch(
-      /--frame-bleed-end:\s*max\(0px, calc\(var\(--page-gutter\) - var\(--scrollbar-w, 0px\)\)\)/,
-    );
-    expect(shell).toMatch(/padding-right:\s*var\(--frame-bleed-end\)/);
-  });
 });

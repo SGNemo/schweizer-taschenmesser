@@ -20,7 +20,7 @@ export interface PageHeadProps {
   size?: 'tall' | 'compact';
   /** Buttons and links at the right of the eyebrow row. */
   actions?: ReactNode;
-  /** One icon button at the end of the eyebrow row (the settings search on the phone). */
+  /** One icon button at the end of the title row (the settings search on the phone). */
   tool?: ReactNode;
   /** Decoration at the right (a signature in small); hidden from assistive tech. */
   decoration?: ReactNode;

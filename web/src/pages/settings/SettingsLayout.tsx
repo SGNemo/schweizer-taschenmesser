@@ -780,6 +780,19 @@ export function SettingsLayout() {
     setSearchOpen(false);
     toggle.current?.focus();
   };
+  // A hit closes the field behind the jump; the focus goes to the icon in the new head (it renders with the page),
+  // never to <body>, and the page stays where the jump put it.
+  const searchDone = () => {
+    setSearchOpen(false);
+    requestAnimationFrame(() => toggle.current?.focus({ preventScroll: true }));
+  };
+  // Opened on the phone, it never reopens by itself after a turn to the desktop width and back (reset while
+  // rendering, React's pattern for state that follows a prop).
+  const [wasWide, setWasWide] = useState(wide);
+  if (wasWide !== wide) {
+    setWasWide(wide);
+    if (wide) setSearchOpen(false);
+  }
   return (
     <>
       {wide ? null : (
@@ -804,11 +817,7 @@ export function SettingsLayout() {
         </SettingsSearchSlot.Provider>
       )}
       {!wide && searchOpen ? (
-        <SettingsSearch
-          id={SEARCH_ID}
-          onDone={() => setSearchOpen(false)}
-          onEmptyEscape={closeSearch}
-        />
+        <SettingsSearch id={SEARCH_ID} onDone={searchDone} onEmptyEscape={closeSearch} />
       ) : null}
       {wide ? (
         <div className={`${styles.split} ${showToc ? styles.splitToc : ''}`}>
