@@ -4,6 +4,8 @@
   display: grid;
   gap: var(--space-1);
   padding: var(--space-3);
+  /* Invisible edge: drawn in forced colours, where the tint is gone. */
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--module-color) 8%, var(--surface));
   color: var(--text);

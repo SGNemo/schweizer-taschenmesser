@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router';
-import { areaOfPath, type NavTree } from '@/core/modules/areas';
+import { areaOfPath, isUnder, type NavTree } from '@/core/modules/areas';
 import { availableManifests } from '@/core/modules/available';
 import { usePageActionStore } from '@/core/shell/pageAction';
 import { t } from '@/strings';
@@ -64,10 +64,6 @@ export function usePlusTarget(): PlusTarget {
 
 /** Paths that live under "Mehr" without an area of their own (`MoreSheet`): the library and the settings. */
 export const MORE_PATHS = ['/library', '/settings'];
-
-/** Whether `pathname` is `to` or lies below it. */
-export const isUnder = (pathname: string, to: string) =>
-  pathname === to || pathname.startsWith(`${to}/`);
 
 /**
  * Whether the current page is reached through "Mehr" (M8 follow-up of 0b-8): a module of an area beyond the bar's

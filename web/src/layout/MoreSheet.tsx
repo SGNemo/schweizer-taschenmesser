@@ -1,9 +1,8 @@
 import { Link, useLocation } from 'react-router';
-import type { NavArea } from '@/core/modules/areas';
+import { isUnder, type NavArea } from '@/core/modules/areas';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Dialog, Icon } from '@/ui';
-import { isUnder } from './BottomNav';
 import styles from './SheetList.module.css';
 
 /** "Mehr": areas that did not fit the bottom bar, then tools, library and settings. */

@@ -9,6 +9,6 @@ en: On the phone, "More" in the bottom bar now shows where you are when you open
 type: changed
 area: ui
 breaking: false
-de: Gefahrenzone in den Einstellungen, Schmierzettel auf der Übersicht und die Schnellerfassung kommen ohne Rahmen aus und heben sich mit einem ruhigen Grauton ab.
-en: The danger zone in the settings, the scratch pad on the overview and quick capture no longer use frames; they stand apart with a calm grey shade instead.
+de: Gefahrenzone in den Einstellungen, Schmierzettel auf der Übersicht und die Schnellerfassung kommen ohne Rahmen aus und heben sich ruhig durch einen Farbton ab.
+en: The danger zone in the settings, the scratch pad on the overview and quick capture no longer use frames; they stand apart with a calm shade instead.
 ---

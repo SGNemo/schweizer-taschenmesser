@@ -66,8 +66,9 @@
   font: inherit;
   cursor: pointer;
 }
-/* The chosen target is a surface, a ring and a weight, not the accent (B7: the accent is the main action and the open
-   tab), like a chosen `Chip`; the others are tone steps without a frame (follow-up 14 of 0b-8). */
+/* The chosen target is a ring and a weight (the sunken surface shows only in the dark theme), not the accent (B7: the
+   accent is the main action and the open tab), like a chosen `Chip`; the others are tone steps without a frame
+   (follow-up 14 of 0b-8). */
 .type[aria-checked='true'] {
   background: var(--surface-sunken);
   box-shadow: inset 0 0 0 1px var(--border-strong);
@@ -110,6 +111,7 @@
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-3);
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
   background: var(--surface-sunken);
 }
@@ -151,11 +153,12 @@ textarea.input {
   justify-content: space-between;
   gap: 0 var(--space-2);
   padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
   background: var(--surface-sunken);
 }
-/* On the sunken line a chip steps up again, so it stays a shape of its own. */
-.row .chip {
+/* On the sunken line the action chip steps up again, so it stays a shape of its own. */
+.row .chipAction {
   background: var(--surface);
 }
 /* One line per entry where it fits: the title left, its target as words on the right (Kopf leer, Nachlese). */
