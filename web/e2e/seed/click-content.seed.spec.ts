@@ -19,13 +19,13 @@ const RATE = 4;
 const MARGIN = 1.5;
 const TARGET = { first: 1000, second: 500, dialog: 300 } as const;
 
-/** Slower than the target today (ms, 4×, `develop` 2026-11-13; the larger of desktop and phone). */
+/** Slower than the target today (ms, 4×, `develop` 4f1706d 2026-11-14, median of 5; the larger of desktop and phone). */
 const CEILING: Readonly<Record<string, Partial<Record<'first' | 'second' | 'dialog', number>>>> = {
-  overview: { first: 1400, second: 900 },
+  overview: { first: 1050, second: 900 },
   settings: { second: 900 },
-  calendar: { first: 1900, second: 1000 },
-  finance: { first: 2600, second: 1850 },
-  'finance+': { dialog: 600 },
+  calendar: { first: 900, second: 650 },
+  finance: { first: 1400, second: 1100 },
+  'finance+': { dialog: 500 },
 };
 
 const budget = (id: string, kind: 'first' | 'second' | 'dialog') =>
