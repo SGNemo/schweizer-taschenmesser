@@ -620,37 +620,24 @@ test('F Abend: Rest auf andere Tage', async ({ page, isMobile }, info) => {
   await expect(page.getByTestId('planner-head')).toBeVisible();
   await settledCount(page.locator(`[data-testid="day-${SATURDAY}"] li`));
   const before = await planOf(page);
-  // „per Klick automatisch aufteilen“: the only run button is „Neu verteilen“ in the ⋯ menu.
-  await m.tap(page.getByRole('button', { name: 'Weitere Optionen' }));
-  await m.tap(
-    page
-      .getByRole('menuitem', { name: 'Neu verteilen' })
-      .or(page.getByRole('button', { name: 'Neu verteilen' }))
-      .first(),
-  );
-  // The run shows a preview first (inline); here it says nothing changes – today's free minutes still count.
+  // Package 3 (TARGET F3): after 17:00 the head offers one quiet link „Rest verteilen“ – the ops of „alles von heute
+  // auf morgen“; the preview shows the moves, „Übernehmen“ takes them, nothing moved before.
+  await m.tap(page.getByTestId('rest-link').getByRole('button', { name: 'Rest verteilen' }));
   const apply = page.getByRole('button', { name: 'Übernehmen' });
-  const nothing = page.getByText('Am Plan ändert sich nichts.');
-  await expect(apply.or(nothing).first()).toBeVisible();
+  await expect(page.getByTestId('plan-preview')).toContainText(
+    'Was heute offen ist, geht auf die nächsten Tage.',
+  );
   m.dialog();
-  if (await apply.isVisible()) {
-    await m.tap(apply);
-    await expect(apply).toBeHidden();
-  }
+  // Nothing has moved yet: today still holds its rows while the preview is open.
+  await expect(page.locator(`[data-testid="day-${SATURDAY}"] li`)).not.toHaveCount(0);
+  await m.tap(apply);
+  await expect(apply).toBeHidden();
+  await expect(page.getByText('Auf die nächsten Tage verteilt.')).toBeVisible();
   const today = page.locator(`[data-testid="day-${SATURDAY}"] li`);
   const stuck = await settledCount(today);
   const afterRun = await planOf(page);
-  // The evening is over, but the run still uses today's free time: what stays on today is a detour, and the
-  // person moves each thing by hand („Später“ = earliest tomorrow).
-  if (stuck > 0) {
-    m.detour();
-    for (let i = 0; i < stuck; i += 1) {
-      const row = page.locator(`[data-testid="day-${SATURDAY}"] li`).first();
-      await m.tap(row.getByRole('button', { name: /^Aktionen für/ }));
-      await m.tap(page.getByRole('menuitem', { name: 'Später' }));
-      await expect(today).toHaveCount(stuck - i - 1);
-    }
-  }
+  // Anything still on today would be a detour (the person would move it by hand).
+  if (stuck > 0) m.detour();
   await expect(page.locator(`[data-testid="day-${SATURDAY}"] li`)).toHaveCount(0);
   facts(info, 'F', { before, afterRun, stuckOnToday: stuck });
   await record(info, m, name);

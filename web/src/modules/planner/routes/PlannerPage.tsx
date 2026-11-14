@@ -4,7 +4,13 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { getMeta, setMeta } from '@/core/db/metaKv';
 import { getLang } from '@/core/i18n/lang';
 import { dayName, explainAssignment, explainWait } from '@/core/plan/explain';
-import type { Instruction, PlanOp } from '@/core/plan/instructions';
+import {
+  isRestSentence,
+  restToTomorrow,
+  type Instruction,
+  type PlanOp,
+} from '@/core/plan/instructions';
+import { useNow } from '@/core/focus/useNow';
 import { useModuleStates } from '@/core/modules/activation';
 import { getManifest } from '@/core/modules/registry';
 import { useFocusSettings } from '@/core/settings/focus';
@@ -46,6 +52,7 @@ import { capacityLabel, capacityShort, compact } from '../components/capacity';
 import { DaySetup } from '../components/DaySetup';
 import { DaySheet } from '../components/DaySheet';
 import { SETUP_DAYS } from '../daySetup';
+import { restOffered } from '../rest';
 import { PlanPreview, type PreviewData } from '../components/PlanPreview';
 import { WeekCheck } from '../components/WeekCheck';
 import { BOARD_DAYS } from '../calendar';
@@ -73,6 +80,8 @@ interface Pending {
   fromField: boolean;
   /** The model's reading of this sentence; `rules` = what the rules made of it (stands on „Verwerfen“). */
   local?: { sentence: string; rules: Instruction };
+  /** „Rest verteilen“: one calm sentence above the moves and in the toast, never a count of what was left. */
+  rest?: boolean;
 }
 
 /** „Teil 1/2“ for the eye, „Teil 1 von 2“ for the screen reader. */
@@ -174,21 +183,44 @@ export default function PlannerPage() {
         .querySelector(`[data-testid="day-${day}"]`)
         ?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
       setParams({}, { replace: true });
+    } else if (params.get('rest')) {
+      // `?rest=1` (the widgets, „Tag abschließen“ over the bus): the preview of „Rest verteilen“, once the board is there.
+      if (!board) return;
+      setParams({}, { replace: true });
+      void showRest();
     } else if (params.get('week') || params.get('check') || params.get('start'))
       setParams({}, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `showRest` reads the board this effect waits for
   }, [params, setParams, board]);
 
+  /** „Rest verteilen“: the ops of `moveAll(today, tomorrow)` as a preview; nothing moves before „Übernehmen“. */
+  function showRest() {
+    if (!board) return;
+    return showPreview(
+      restToTomorrow({ today: data?.today ?? today(), items: instructionItems(board) }),
+      false,
+      undefined,
+      true,
+    );
+  }
+
   /** Shows what `ops` would do; nothing is stored until „Übernehmen“. `local` = the model read the sentence. */
-  async function showPreview(ops: PlanOp[], fromField = false, local?: Pending['local']) {
+  async function showPreview(
+    ops: PlanOp[],
+    fromField = false,
+    local?: Pending['local'],
+    rest = false,
+  ) {
     setAsk(undefined);
     setSayLine(undefined);
     try {
       const out = await previewUser(ops);
       const titleOf = (key: string) => titles[key] ?? out.titles[key] ?? key;
-      const lines = opLines(ops, titleOf, data?.today ?? today());
+      const lines = rest ? [t.planner.rest.line] : opLines(ops, titleOf, data?.today ?? today());
       setPending({
         ops,
-        lead: lines[0] ?? t.planner.ops.replan,
+        lead: rest ? t.planner.rest.done : (lines[0] ?? t.planner.ops.replan),
+        ...(rest ? { rest: true } : {}),
         // A sentence the local model read says so above the lines: its reading is checked here, by the user.
         data: {
           lines,
@@ -208,7 +240,7 @@ export default function PlannerPage() {
     if (!pending) return;
     setBusy(true);
     try {
-      await applyOps(pending.ops, pending.lead, titles);
+      await applyOps(pending.ops, pending.lead, titles, pending.rest === true);
       if (pending.fromField) setText('');
       setPending(undefined);
     } finally {
@@ -306,6 +338,7 @@ export default function PlannerPage() {
           said.ops,
           true,
           said.stage === 1 ? { sentence: value, rules: said.rules } : undefined,
+          said.stage !== 1 && isRestSentence(value),
         );
         return;
       }
@@ -373,6 +406,11 @@ export default function PlannerPage() {
     isoWeekday(data.today) === 1 &&
     dismissedWeek !== undefined &&
     dismissedWeek !== monday;
+
+  // „Rest verteilen“ in the evening (F3): a quiet link from 17:00 under `focus.eveningWrapUp`, only while today
+  // holds something open; never a count. The clock is read once a minute.
+  const clock = useNow(60_000, focus.eveningWrapUp);
+  const showRestLink = !pending && restOffered(focus.eveningWrapUp, clock, todayDay);
 
   /** The three biggest things of the shown week (all their sessions together). */
   const biggest = (() => {
@@ -748,6 +786,14 @@ export default function PlannerPage() {
           </div>
         )}
       </HeroSlot>
+
+      {showRestLink ? (
+        <p className={styles.weekLink} data-testid="rest-link">
+          <button type="button" className={styles.weekLinkText} onClick={() => void showRest()}>
+            {t.planner.rest.link}
+          </button>
+        </p>
+      ) : null}
 
       {showWeekLink ? (
         <p className={styles.weekLink} data-testid="week-check-link">

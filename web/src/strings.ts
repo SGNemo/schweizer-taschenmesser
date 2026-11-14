@@ -1392,6 +1392,9 @@ export const de = {
       todoDigest: 'ToDos am Morgen',
       todoDigestHint:
         'Ein Hinweis pro Tag, der die ToDos für heute nennt. Keine Einzelhinweise je Aufgabe.',
+      restReminder: '„Rest verteilen?“ am Abend',
+      restReminderHint:
+        'Um 20 Uhr ein leiser Hinweis, wenn im Planer für heute noch etwas steht. Einmal am Tag, nie wiederholt; verteilt wird erst nach deinem Tipp.',
       digestTime: 'Uhrzeit der Übersicht',
       inAppGroup: 'Karte in der App',
       on: 'An',
@@ -1557,6 +1560,8 @@ export const de = {
       wrapLeft: (n: number) =>
         n === 1 ? 'Eine Sache ist noch offen.' : `${n} Sachen sind noch offen.`,
       wrapAction: 'Auf morgen schieben',
+      /** With the planner on: its preview of „Rest verteilen“ instead of moving everything to tomorrow. */
+      wrapRest: 'Rest verteilen',
       wrapDone: 'Auf morgen geschoben. Schönen Abend!',
       wrapClear: 'Alles für heute erledigt. Schönen Abend!',
     },
@@ -8576,6 +8581,13 @@ export const de = {
       back: 'Zum Planer',
     },
     empty: 'Noch nichts geplant. Eine Sache reicht.',
+    rest: {
+      link: 'Rest verteilen',
+      line: 'Was heute offen ist, geht auf die nächsten Tage.',
+      done: 'Auf die nächsten Tage verteilt.',
+      notifyTitle: 'Rest verteilen?',
+      notifyBody: 'Was heute offen ist, kann auf die nächsten Tage. Ein Tipp zeigt die Vorschau.',
+    },
     daySetup: {
       open: 'Tage einteilen',
       title: 'Tage einteilen',

@@ -229,6 +229,13 @@ export const planner: Strings['planner'] = {
     back: 'To the planner',
   },
   empty: 'Nothing planned yet. One thing is enough.',
+  rest: {
+    link: 'Move the rest on',
+    line: 'What is still open today goes to the next days.',
+    done: 'Moved on to the next days.',
+    notifyTitle: 'Move the rest on?',
+    notifyBody: 'What is still open today can go to the next days. A tap shows the preview.',
+  },
   daySetup: {
     open: 'Plan my days',
     title: 'Plan my days',

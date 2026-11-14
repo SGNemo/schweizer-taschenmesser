@@ -110,6 +110,9 @@ export const focus: Strings['focus'] = {
     repeatMaxOption: (n: number) => `${n}×`,
     todoDigest: 'To-dos in the morning',
     todoDigestHint: 'One note per day listing today’s to-dos. No separate note for each task.',
+    restReminder: '“Move the rest on?” in the evening',
+    restReminderHint:
+      'At 8 pm a quiet note when the planner still holds something for today. Once a day, never repeated; nothing moves before your tap.',
     digestTime: 'Summary time',
     inAppGroup: 'Card in the app',
     on: 'On',
@@ -240,6 +243,7 @@ export const focus: Strings['focus'] = {
     wrapTitle: 'Wrap up the day',
     wrapLeft: (n: number) => (n === 1 ? 'One thing is still open.' : `${n} things are still open.`),
     wrapAction: 'Move to tomorrow',
+    wrapRest: 'Move the rest on',
     wrapDone: 'Moved to tomorrow. Have a nice evening!',
     wrapClear: 'Everything for today is done. Have a nice evening!',
   },

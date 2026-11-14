@@ -43,6 +43,7 @@ import {
   type RunOutcome,
 } from './run';
 import { getPlannerSettings } from './prefs';
+import { REST_PATH } from './rest';
 
 let chain: Promise<unknown> = Promise.resolve();
 let stopped = false;
@@ -275,11 +276,14 @@ export default function start(): () => void {
       .then((m) => m.addRequested(req))
       .then(() => undefined, logError('planner.request')),
   );
+  // The ToDo widget's evening action: the planner opens its own preview of the evening ops (nothing moves yet).
+  const offRest = bus.on('plan.restRequested', (req) => req.open(REST_PATH));
   const offDisabling = bus.on('module.disabling', async ({ moduleId, policy }) => {
     if (moduleId !== MODULE_ID) return;
     stopped = true;
     active = false;
     offRequested();
+    offRest();
     clearTimeout(timer);
     clearTimeout(midnight);
     sub?.unsubscribe();
@@ -302,6 +306,7 @@ export default function start(): () => void {
     if (typeof document !== 'undefined')
       document.removeEventListener('visibilitychange', onVisible);
     offRequested();
+    offRest();
     offDisabling();
   };
 }
