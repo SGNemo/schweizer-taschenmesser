@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router';
+import { onPageBack } from '@/core/shell/backStack';
 import { t } from '@/strings';
 import { Button, Form, Icon, TextField } from '@/ui';
 import {
@@ -17,9 +19,18 @@ export function LockScreen() {
   const [bio, setBio] = useState<BiometricStatus>();
   const prompted = useRef(false);
   const root = useRef<HTMLDivElement>(null);
-  // `data-autofocus` is read by Dialog only; the lock screen is a page, so it focuses its field itself.
+  // `data-autofocus` is read by Dialog only; the lock screen is a page, so it focuses its field itself:
+  // on mount, and on a Back to this page that comes before the page left had rendered (a router
+  // transition on a busy device keeps this screen mounted). Closing a sheet leaves the focus alone.
+  // The route this screen was shown for (the browser URL can already be the next page's).
+  const routePath = useLocation().pathname;
+  const path = useRef(routePath);
   useEffect(() => {
-    root.current?.querySelector<HTMLElement>('[data-autofocus]')?.focus();
+    const focusField = () => root.current?.querySelector<HTMLElement>('[data-autofocus]')?.focus();
+    focusField();
+    return onPageBack(() => {
+      if (window.location.pathname === path.current) focusField();
+    });
   }, []);
 
   async function unlockWithBiometric() {

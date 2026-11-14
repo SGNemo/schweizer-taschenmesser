@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { formatMoney } from '@/core/money';
 import { useCurrency } from '../currency';
 import { t } from '@/strings';
@@ -11,14 +11,10 @@ import { totalBalance, useAvailability } from '../summary';
 import { monthBalanceSeries } from '../balanceSeries';
 import { CategoryRing } from './CategoryRing';
 import { MonthCurve } from './MonthCurve';
+// Plain elements, a few kB: loaded with the overview, so the cards never wait on a chunk or change height.
+import { CategoryBars as Charts, CategoryTable, TrendColumns as Trend, TrendTable } from './Charts';
 import { today } from '@/core/time/dates';
 import styles from '../routes/finance.module.css';
-
-// Recharts is heavy: load it only when the overview is shown.
-const Charts = lazy(() => import('./Charts').then((m) => ({ default: m.CategoryBars })));
-const Trend = lazy(() => import('./Charts').then((m) => ({ default: m.TrendColumns })));
-const CategoryTable = lazy(() => import('./Charts').then((m) => ({ default: m.CategoryTable })));
-const TrendTable = lazy(() => import('./Charts').then((m) => ({ default: m.TrendTable })));
 
 function ChartCard({ title, chart, table }: { title: string; chart: ReactNode; table: ReactNode }) {
   const [asTable, setAsTable] = useState(false);
@@ -35,7 +31,7 @@ function ChartCard({ title, chart, table }: { title: string; chart: ReactNode; t
           {asTable ? t.finance.chartShort : t.finance.tableShort}
         </Button>
       </div>
-      <Suspense fallback={<p role="status">…</p>}>{asTable ? table : chart}</Suspense>
+      {asTable ? table : chart}
     </Card>
   );
 }
@@ -96,6 +92,9 @@ export function OverviewTab({
     }),
     [data, month, day],
   );
+  // The breakdown line above the figures depends on "Verfügbar" (open invoices, subscriptions): the page waits for it
+  // (a few reads) instead of pushing the figures and charts down when it arrives (layout shift).
+  if (a === undefined) return null;
 
   return (
     <>

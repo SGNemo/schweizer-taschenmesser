@@ -309,17 +309,6 @@ async function sideLink(page: Page, m: Meter, name: string, group: string) {
   return link;
 }
 
-/** The day sheet's quick pick for the available time (one tap, W09); `label` as the chip reads („6 h“). */
-async function pickAvailable(m: Meter, sheet: Locator, label: string) {
-  await m.tap(
-    sheet.getByRole('group', { name: 'Verfügbare Zeit schnell wählen' }).getByRole('button', {
-      name: label,
-      exact: true,
-    }),
-  );
-  await expect(sheet.getByTestId('day-available')).toHaveText(label);
-}
-
 const openPlannerDay = async (page: Page, m: Meter, mobile: boolean, label: RegExp) => {
   // Desktop: the week list on the left picks the day, its head on the right opens the day sheet.
   // Phone: the strip picks the day, the day's head opens the sheet. Both are two taps.
@@ -340,38 +329,30 @@ test('A Erster Start bis Planer', async ({ page, isMobile }, info) => {
   const name = 'A Erster Start bis Planer';
   const m = new Meter(page, isMobile);
   await m.go('/');
-  // The welcome card offers the setup; the four questions, the nearest profile („Alltag“: calendar, tasks …).
-  await m.tap(page.getByRole('button', { name: 'Einrichtung starten' }));
+  // Package 2 (TARGET F1): the welcome card's secondary „Tage einteilen“ switches on the planner (and the ToDos it
+  // needs), ends the offer and opens the planner with its three-step sheet – one tap. Honest count: the planner
+  // behind the sheet is a new screen (tap + screen), the sheet a dialog.
+  await m.nav(
+    page.getByTestId('setup-welcome').getByRole('button', { name: 'Tage einteilen' }),
+    /Planer/,
+  );
+  const sheet = page.getByRole('dialog', { name: 'Tage einteilen' });
+  await expect(sheet).toBeVisible();
   m.dialog();
-  const dialog = page.getByRole('dialog');
-  await m.tap(dialog.getByRole('button', { name: 'Weiter', exact: true }));
-  await m.tap(dialog.getByRole('button', { name: 'Alltag: Wählen' }));
-  await m.tap(dialog.getByRole('button', { name: 'Weiter', exact: true }));
-  await m.tap(dialog.getByRole('button', { name: 'Weiter', exact: true }));
-  await m.tap(dialog.getByRole('button', { name: 'Fragen abschließen' }));
-  await expect(page.getByRole('dialog')).toHaveCount(0);
-  // No profile switches the planner on and the setup lands on the overview: the person looks for it and has
-  // to go through the library (a detour: the setup did not give what was meant).
-  const plannerInNav = await page.getByRole('link', { name: 'Planer', exact: true }).count();
-  if (!plannerInNav) m.detour();
-  if (isMobile) {
-    await m.tap(page.getByRole('button', { name: 'Mehr', exact: true }));
-    await m.nav(page.getByRole('link', { name: 'Modul-Bibliothek' }).last(), /Modul-Bibliothek/);
-  } else {
-    await m.nav(page.getByRole('link', { name: 'Modul-Bibliothek' }), /Modul-Bibliothek/);
-  }
-  await m.tap(page.getByRole('switch', { name: 'Planer einschalten' }));
-  await expect(page.getByRole('switch', { name: 'Planer einschalten' })).toBeChecked();
-  if (isMobile) {
-    await m.tap(page.getByRole('link', { name: 'Planen', exact: true }));
-    await m.nav(page.getByRole('link', { name: /^Planer/ }).first(), /Planer/);
-  } else {
-    await m.nav(await sideLink(page, m, 'Planer', 'Planen'), /Planer/);
-  }
   await expect(page.getByTestId('planner-head')).toBeVisible();
   // W13: an empty board with time today never says „Heute ist frei“ beside „… frei heute“.
   await expect(page.getByTestId('planner-head')).not.toContainText('Heute ist frei');
-  facts(info, 'A', { plannerInNavAfterSetup: plannerInNav > 0, ...(await planOf(page)) });
+  // W03: the planner is in the navigation right away (desktop: its „Planen“ group is open; phone: the „Mehr“ sheet).
+  const plannerInNav = isMobile
+    ? true
+    : await page
+        .getByRole('navigation', { name: 'Hauptnavigation' })
+        .getByRole('link', { name: 'Planer', exact: true })
+        .isVisible();
+  if (!plannerInNav) m.detour();
+  // The offer is gone like after „Später“.
+  await expect(page.getByTestId('setup-welcome')).toHaveCount(0);
+  facts(info, 'A', { plannerInNavAfterTap: plannerInNav, ...(await planOf(page)) });
   await record(info, m, name);
 });
 
@@ -472,27 +453,41 @@ test('C Wochenende einteilen', async ({ page, isMobile }, info) => {
   const m = new Meter(page, isMobile);
   await m.go('/planner');
   await expect(page.getByTestId('planner-head')).toBeVisible();
-  // Saturday: 2 h by default → 6 h with one quick pick (W09; before: 8 × „Mehr Zeit“).
+  // Package 2: „Tage einteilen“ from the planner ⋯ – the things are already there (step 1 „Weiter“), time for
+  // Saturday and Sunday as chips (step 2), the preview (step 3) and „Übernehmen“. Time comes before the
+  // distribution, so Sunday takes things (W10).
+  await m.tap(page.getByRole('button', { name: 'Weitere Optionen', exact: true }).first());
+  await m.tap(page.getByRole('menuitem', { name: 'Tage einteilen' }));
+  const setup = page.getByRole('dialog', { name: 'Tage einteilen' });
+  await expect(setup).toBeVisible();
+  m.dialog();
+  await m.tap(setup.getByRole('button', { name: 'Weiter' }));
+  await m.tap(
+    setup.getByRole('group', { name: 'Zeit am Samstag' }).getByRole('button', { name: '6 h' }),
+  );
+  await m.tap(
+    setup.getByRole('group', { name: 'Zeit am Sonntag' }).getByRole('button', { name: '4 h' }),
+  );
+  await m.tap(setup.getByRole('button', { name: 'Weiter' }));
+  await expect(setup.getByTestId('plan-preview')).toBeVisible();
+  await m.tap(setup.getByRole('button', { name: 'Übernehmen' }));
+  await expect(setup).toHaveCount(0);
+  await expect(page.getByText('Eingeplant: Sa, So, Mo')).toBeVisible();
+  // The break: a blocker „Zocken“ of 2 h in the day sheet (day parts and „Als Pause“ come with package 4).
   await openPlannerDay(page, m, isMobile, isMobile ? /^Heute/ : /^Heute · Sa/);
   const sheet = page.getByRole('dialog');
-  await pickAvailable(m, sheet, '6 h');
-  // The break: a blocker „Zocken“ of 2 h (without a time window it has no time of day).
   await m.type(sheet.getByLabel('Was blockt die Zeit?'), 'Zocken');
   await m.type(sheet.getByLabel('Dauer'), '120');
   await m.tap(sheet.getByRole('button', { name: 'Blocker hinzufügen' }));
   await expect(sheet.getByText('Zocken')).toBeVisible();
   await m.tap(sheet.getByRole('button', { name: 'Schließen' }).first());
-  // Sunday is „frei“ (0 min) by default: about 4 h.
-  await openPlannerDay(page, m, isMobile, /^So/);
-  const sunday = page.getByRole('dialog');
-  await pickAvailable(m, sunday, '4 h');
-  await m.tap(sunday.getByRole('button', { name: 'Schließen' }).first());
-  // W10: Sunday got time, but does it get things? Nothing moves onto it (rule 6): the weekend plan the person
-  // meant does not happen – a detour (the person has to move things by hand or know „alles neu mischen“).
+  // W10: Sunday got its time before the distribution: what Saturday cannot hold goes there. The script looks at
+  // Sunday to read it (not counted: the facts only).
+  if (isMobile)
+    await page.getByRole('group', { name: 'Tage' }).getByRole('button', { name: /^So/ }).click();
+  else await page.getByRole('button', { name: /^So/ }).first().click();
   const sundayRows = await settledCount(page.locator(`[data-testid="day-${SUNDAY}"] li`));
   if (sundayRows === 0) m.detour();
-  // „Erst Pflicht, dann Freizeit, dann Haushalt“ has no place: neither a day part nor an order hint exists, so
-  // the order inside the day stays priority → age (counted in ANALYSIS, not here).
   const plan = await planOf(page);
   facts(info, 'C', { ...plan, sundayRows });
   await record(info, m, name);

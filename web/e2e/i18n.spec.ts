@@ -114,3 +114,31 @@ test.describe('unsupported system language', () => {
     await expect(languageSelect(page, 'Language')).toHaveValue('system');
   });
 });
+
+test('a switch in another window keeps the dialog open here until it is closed (round 5 D13)', async ({
+  page,
+  context,
+}) => {
+  await ready(page, '/');
+  await page
+    .getByTestId('setup-welcome')
+    .getByRole('button', { name: 'Einrichtung starten' })
+    .click();
+  const wizard = page.getByRole('dialog', { name: 'Einrichtung' });
+  await expect(wizard.getByText('Frage 1 von 4')).toBeVisible();
+
+  const other = await context.newPage();
+  await ready(other, '/settings/allgemein');
+  await languageSelect(other, 'Sprache').selectOption('en');
+  await expect(other.locator('html')).toHaveAttribute('lang', 'en');
+
+  // The first window keeps its dialog (and its language) while the dialog is open …
+  await page.waitForTimeout(300);
+  await expect(wizard.getByText('Frage 1 von 4')).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'de');
+  // … and follows as soon as it is closed.
+  await page.keyboard.press('Escape');
+  await wizard.getByRole('button', { name: 'Später fortsetzen' }).click();
+  await expect(wizard).toBeHidden();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+});

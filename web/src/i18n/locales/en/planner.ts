@@ -229,6 +229,23 @@ export const planner: Strings['planner'] = {
     back: 'To the planner',
   },
   empty: 'Nothing planned yet. One thing is enough.',
+  daySetup: {
+    open: 'Plan my days',
+    title: 'Plan my days',
+    stepOf: (n: number) => `Step ${n} of 3`,
+    thingsTitle: 'What is coming up?',
+    thingsLabel: 'One line per thing',
+    thingsHint: 'For example “Tidy the flat” or “Report by Sun”. Leaving it empty is fine too.',
+    things: (n: number) => (n === 1 ? '1 thing is added' : `${n} things are added`),
+    timeTitle: 'How much time do you have?',
+    timeIntro: 'Only for these three days.',
+    timeOn: (day: string) => `Time on ${day}`,
+    noTime: 'no time',
+    current: (value: string) => `So far ${value}`,
+    previewTitle: 'This is your plan',
+    next: 'Next',
+    back: 'Back',
+  },
   chip: {
     title: (planned: string, n: number) =>
       `Plan · ${planned} · ${n === 1 ? '1 thing' : `${n} things`}`,

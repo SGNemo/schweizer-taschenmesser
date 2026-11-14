@@ -5,6 +5,7 @@ import {
   neutralizeCsvCell,
   normalizeHeader,
   parseCsv,
+  parseCsvLines,
   toCsv,
 } from './csv';
 
@@ -100,5 +101,13 @@ describe('formula neutralisation', () => {
     const rows = [['=1+1', '-5.00']];
     expect(toCsv(rows)).toBe("'=1+1,-5.00\r\n");
     expect(toCsv(rows, ',', { neutralize: false })).toBe('=1+1,-5.00\r\n');
+  });
+});
+
+describe('parseCsvLines', () => {
+  it('reports the file line each row starts on (blank lines, quoted line breaks)', () => {
+    const { rows, lines } = parseCsvLines('a;b\n\n"x\ny";1\nc;2\r\nd;3', { delimiter: ';' });
+    expect(rows.map((r) => r[0])).toEqual(['a', 'x\ny', 'c', 'd']);
+    expect(lines).toEqual([1, 3, 5, 6]);
   });
 });

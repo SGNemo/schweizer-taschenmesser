@@ -92,6 +92,7 @@ function errorText(e: unknown): string {
     if (e.code === 'module-off') return t.quickCapture.errors.moduleOff(e.detail ?? '');
     if (e.code === 'invalid') return t.quickCapture.errors.invalid;
     if (e.code === 'currency') return t.quickCapture.errors.currency(e.detail ?? '');
+    if (e.code === 'full' && e.detail) return e.detail;
   }
   return t.quickCapture.errors.failed;
 }

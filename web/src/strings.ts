@@ -367,7 +367,7 @@ export const de = {
       persona: ['Persona', 'Wegwerf-Mail', 'Fake-Daten', 'Anmeldung', 'Testdaten'],
       notifications: ['Push', 'Erlaubnis', 'Erinnerung'],
       'browser-extension': ['Brave', 'Chrome', 'Autofill'],
-      sync: ['Server', 'Token', 'Geräte', 'Ende-zu-Ende', 'Passphrase'],
+      sync: ['Server', 'Token', 'Geräte', 'Ende-zu-Ende', 'Passwortsatz', 'Passphrase'],
       backup: ['Export', 'Import', 'Sicherung', 'Wiederherstellen', 'Automatisch'],
       'ai-switch': [
         'KI aus',
@@ -620,6 +620,7 @@ export const de = {
     welcomeText:
       'Möchtest du die App Schritt für Schritt einrichten? Du kannst das auch später in den Einstellungen tun.',
     welcomeLater: 'Später',
+    welcomePlanDays: 'Tage einteilen',
     dialogTitle: 'Einrichtung',
     stepOf: (n: number, total: number) => `Schritt ${n} von ${total}`,
     progressLabel: 'Fortschritt der Einrichtung',
@@ -1923,6 +1924,13 @@ export const de = {
       external: 'Extern',
       plan: 'Plan',
       training: 'Training',
+      gift: 'Geschenk',
+      trial: 'Probezeit',
+    } as Record<string, string>,
+    /** Badge of a deadline whose day passed, one word per kind (not "Ablauf · Überfällig"). */
+    overdueKinds: {
+      invoice: 'Rechnung überfällig',
+      expiry: 'Abgelaufen',
     } as Record<string, string>,
     planLink: 'Plan',
     external: {
@@ -2549,6 +2557,7 @@ export const de = {
       keywords: 'Bild, Foto, verkleinern, zuschneiden, JPG, PNG, WebP',
       description:
         'Bilder verkleinern, zuschneiden und in PNG, JPG oder WebP umwandeln – alles auf deinem Gerät.',
+      file: 'Bild',
       pick: 'Bild auswählen',
       source: (w: number, h: number, size: string) => `Original: ${w} × ${h} Pixel, ${size}`,
       format: 'Format',
@@ -2578,6 +2587,8 @@ export const de = {
       merge: 'Zusammenfügen',
       pages: 'Seiten',
       rotate: 'Drehen',
+      fileMany: 'PDF-Dateien',
+      fileOne: 'PDF-Datei',
       pickMany: 'PDF-Dateien auswählen',
       pickOne: 'PDF-Datei auswählen',
       files: 'Reihenfolge',
@@ -3476,7 +3487,7 @@ export const de = {
     connected: (host: string) => `Verbunden mit ${host}`,
     encryptedBadge: 'Verschlüsselt',
     plainBadge: 'Unverschlüsselt',
-    lastSync: 'Zuletzt synchronisiert',
+    lastSync: 'Zuletzt abgeglichen',
     never: 'noch nicht',
     pending: (n: number) =>
       n === 0 ? 'Alles gesendet' : n === 1 ? '1 Änderung wartet' : `${n} Änderungen warten`,
@@ -3583,6 +3594,9 @@ export const de = {
     intro:
       'Sichere alle Daten als Datei oder spiele ein Backup wieder ein. Zugangsdaten (Sync-Token, Schlüssel) sind nie im Backup enthalten.',
     export: 'Backup herunterladen',
+    /** Dialog title on Gerätestatus and its readable-file button: never the opener's words again. */
+    exportTitle: 'Backup sichern',
+    exportPlain: 'Ohne Passwort herunterladen',
     exported: 'Backup heruntergeladen.',
     file: 'Backup-Datei',
     mode: 'Wiederherstellung',
@@ -3967,6 +3981,8 @@ export const de = {
       noTarget: 'Dazu habe ich keinen passenden Eintrag gefunden.',
       willDelete: 'Wird gelöscht',
       noChange: 'Dabei würde sich nichts ändern.',
+      full: (module: string) =>
+        `In „${module}“ ist kein Platz mehr. Entferne dort erst einen Eintrag.`,
       question: 'Rückfrage',
       choose: 'Bitte wählen',
       done: (n: number) => (n === 1 ? '1 Änderung gespeichert.' : `${n} Änderungen gespeichert.`),
@@ -4400,12 +4416,13 @@ export const de = {
       folder: 'Ordner wählen',
       filesLabel: 'Einzelne Dateien',
       folderLabel: 'Ganzer Ordner',
-      hint: '.md- und .txt-Dateien. Ein Ordner wird zum Notizbuch, seine Dateien zu Seiten. Ein Obsidian-Export (oder ein Ordner mit mehreren Unterordnern) wird je Unterordner ein Notizbuch; tiefere Ordner werden ein Schlagwort.',
+      hint: '.md- und .txt-Dateien. Ein Ordner wird zum Notizbuch, seine Dateien zu Seiten. Ein Obsidian-Export (oder ein Ordner mit mehreren Unterordnern) wird je Unterordner ein Notizbuch; tiefere Ordner werden ein Schlagwort. Seiten behalten ihr Datum (created:/modified: oder das Dateidatum).',
       none: 'Keine passenden Dateien gefunden.',
       confirm: 'Importieren',
       summary: (pages: number, books: number) =>
         `${pages === 1 ? '1 Seite' : `${pages} Seiten`}${books ? `, ${books === 1 ? '1 Notizbuch' : `${books} Notizbücher`}` : ''} gefunden.`,
-      done: (n: number) => (n === 1 ? '1 Seite importiert.' : `${n} Seiten importiert.`),
+      done: (n: number) =>
+        `${n === 1 ? '1 Seite' : `${n} Seiten`} importiert – nach ihrem eigenen Datum einsortiert.`,
       duplicates: (n: number) =>
         n === 1
           ? '1 doppelte Seite wird übersprungen.'
@@ -5322,6 +5339,8 @@ export const de = {
     } as Record<string, string>,
     empty: 'Diese Liste ist leer.',
     emptyAction: 'Artikel eintragen',
+    /** The add field's button on a packing list or checklist, and on the phone (desktop shopping list: `emptyAction`). */
+    addSubmit: 'Eintragen',
     editItem: 'Eintrag bearbeiten',
     itemName: 'Name',
     quantity: 'Menge (optional)',
@@ -5854,7 +5873,7 @@ export const de = {
   },
   help: {
     label: 'Hilfe',
-    sync: 'Der Sync-Server ist dein eigener kleiner Server, der die Daten mehrerer Geräte abgleicht. Auf Wunsch werden die Daten Ende-zu-Ende verschlüsselt: Der Server sieht dann nur unlesbare Werte, und die Passphrase kennen nur deine Geräte.',
+    sync: 'Der Sync-Server ist dein eigener kleiner Server, der die Daten mehrerer Geräte abgleicht. Auf Wunsch werden die Daten Ende-zu-Ende verschlüsselt: Der Server sieht dann nur unlesbare Werte, und den Passwortsatz kennen nur deine Geräte.',
     aiLocal:
       'Ein kleines Sprachmodell läuft nur auf diesem Gerät und versteht Sätze, die die festen Regeln nicht kennen – ohne Token, ohne Internet. Es wird erst nach deiner Zustimmung heruntergeladen (Größe, Quelle und Prüfsumme siehst du vorher) und prüft den Download selbst.',
     aiWrite:
@@ -6529,6 +6548,17 @@ export const de = {
         n === 1
           ? '1 Zeile ohne gültiges Datum oder Betrag wurde übersprungen.'
           : `${n} Zeilen ohne gültiges Datum oder Betrag wurden übersprungen.`,
+      /** Round 5 B10: the skipped rows by line, reason and payee (at most three named). */
+      bankSkippedNamed: (n: number, rows: string, more: number) =>
+        `${n === 1 ? '1 Zeile wurde' : `${n} Zeilen wurden`} übersprungen – ${rows}${more > 0 ? ` und ${more} weitere` : ''}.`,
+      bankSkippedRow: (line: number, label: string, why: string) =>
+        `Zeile ${line}${label ? ` (${label})` : ''}: ${why}`,
+      bankSkipWhy: {
+        date: (v: string) => (v ? `Datum „${v}“ nicht lesbar` : 'kein Datum'),
+        amount: (v: string) => (v ? `Betrag „${v}“ nicht lesbar` : 'kein Betrag'),
+        zero: 'Betrag 0',
+        pending: 'noch vorgemerkt, nicht gebucht',
+      },
       bankTruncated: (n: number) => `Es werden nur die ersten ${n} Buchungen angezeigt.`,
       bankDetected: (name: string) => `Erkannt: ${name}`,
       bankRemembered: 'Erkannt: deine gemerkte Spaltenzuordnung',
@@ -6615,7 +6645,7 @@ export const de = {
     notes: {
       file: 'Markdown, Obsidian, Evernote oder Google Keep',
       fileHint:
-        'Wähle .md-Dateien (z. B. aus deinem Obsidian-Ordner, mehrere auf einmal), eine ZIP-Datei mit einem Notizordner, eine Evernote-Datei (.enex) oder die .json-Dateien aus dem Google-Takeout (Keep). Titel, Checklisten und #Tags werden übernommen, Ordner werden zu Notizbüchern. Anhänge (Bilder, Dateien) kann Nemo in Notizen nicht speichern; sie werden im Bericht gezählt.',
+        'Wähle .md-Dateien (z. B. aus deinem Obsidian-Ordner, mehrere auf einmal), eine ZIP-Datei mit einem Notizordner, eine Evernote-Datei (.enex) oder die .json-Dateien aus dem Google-Takeout (Keep). Titel, Checklisten und #Tags werden übernommen, Ordner werden zu Notizbüchern. Markdown-Notizen behalten ihr Datum (created:/modified: oder das Dateidatum). Anhänge (Bilder, Dateien) kann Nemo in Notizen nicht speichern; sie werden im Bericht gezählt.',
       text: 'Markdown einfügen',
       textHint: 'Der eingefügte Text wird eine Notiz; eine erste Überschrift wird zum Titel.',
       textLabel: 'Markdown-Text',
@@ -8547,6 +8577,23 @@ export const de = {
       back: 'Zum Planer',
     },
     empty: 'Noch nichts geplant. Eine Sache reicht.',
+    daySetup: {
+      open: 'Tage einteilen',
+      title: 'Tage einteilen',
+      stepOf: (n: number) => `Schritt ${n} von 3`,
+      thingsTitle: 'Was steht an?',
+      thingsLabel: 'Eine Zeile je Ding',
+      thingsHint: 'Zum Beispiel „Bude aufräumen“ oder „Bericht bis So“. Leer lassen geht auch.',
+      things: (n: number) => (n === 1 ? '1 Ding kommt dazu' : `${n} Dinge kommen dazu`),
+      timeTitle: 'Wie viel Zeit hast du?',
+      timeIntro: 'Gilt nur für diese drei Tage.',
+      timeOn: (day: string) => `Zeit am ${day}`,
+      noTime: 'keine Zeit',
+      current: (value: string) => `Bisher ${value}`,
+      previewTitle: 'So sieht dein Plan aus',
+      next: 'Weiter',
+      back: 'Zurück',
+    },
     chip: {
       title: (planned: string, n: number) =>
         `Plan · ${planned} · ${n === 1 ? '1 Ding' : `${n} Dinge`}`,
@@ -8815,6 +8862,7 @@ export const de = {
     empty: 'Noch keine Orte',
     full: (n: number) =>
       `Es sind ${n} Orte eingetragen, mehr passen nicht. Entferne einen, um einen neuen einzutragen.`,
+    fullCapture: (n: number) => `Die Uhr hat schon ${n} Orte. Entferne einen auf der Uhr-Seite.`,
     list: 'Deine Orte',
     search: {
       title: 'Ort eintragen',
@@ -9015,7 +9063,7 @@ export const de = {
     meta: {
       name: 'Gerätestatus',
       description:
-        'Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite. Nur Anzeige, die Seite sendet nichts.',
+        'Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite, dazu ein Backup zum Herunterladen. Die Seite sendet nichts.',
     },
     summary: {
       ok: 'Nichts Dringendes',
@@ -9026,7 +9074,7 @@ export const de = {
     },
     page: {
       figureUnit: (n: number) => (n === 1 ? 'braucht einen Blick' : 'brauchen einen Blick'),
-      note: 'Nur Anzeige: Jede Zeile führt zur passenden Einstellung.',
+      note: 'Jede Zeile führt zur passenden Einstellung.',
       pc: 'Prozessor, Arbeitsspeicher und Netzwerkverkehr zeigt „Dieser PC“ im Reiter „System“.',
       pcOpen: '„Dieser PC“ öffnen',
       pcLibrary: '„Dieser PC“ in der Bibliothek einschalten',
