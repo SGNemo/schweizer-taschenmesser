@@ -355,8 +355,26 @@ function Fields({
           </Button>
         ) : null}
       </div>
-      {/* Basis (0b-8 follow-up 7): the exercises. Day, duration and "Geplant" fold with the rare fields; the line beside
-          "Mehr Felder" says which day the session gets, and a session on another day or a plan opens them by itself. */}
+      <Checkbox
+        label={t.fitness.planned.toggle}
+        description={t.fitness.planned.toggleHint}
+        checked={planned}
+        onChange={(e) => {
+          togglePlanned(e.target.checked);
+          setAutoPlanned(false);
+        }}
+      />
+      {planned ? (
+        <TimeField
+          label={t.fitness.form.time}
+          hint={t.fitness.planned.timeHint}
+          value={time}
+          onChange={setTime}
+        />
+      ) : null}
+      {/* Basis (0b-8 follow-up 7): the exercises and "Geplant" (it feeds "Jetzt wichtig" and the plan, so it stays out
+          of the fold). Day and duration fold with the rare fields; the line beside "Mehr Felder" names the day, and
+          another day, a plan, a duration or the "Übung oder Dauer" error opens them by itself. */}
       <AdvancedFields
         moduleId="fitness"
         hasData={Boolean(
@@ -365,7 +383,8 @@ function Fields({
           existing?.time ||
           date !== today() ||
           planned ||
-          duration,
+          duration ||
+          error === t.fitness.form.emptySession,
         )}
         summary={relativeDayLabel(date, today())}
       >
@@ -397,23 +416,6 @@ function Fields({
             onChange={(e) => setDuration(e.target.value)}
           />
         </div>
-        <Checkbox
-          label={t.fitness.planned.toggle}
-          description={t.fitness.planned.toggleHint}
-          checked={planned}
-          onChange={(e) => {
-            togglePlanned(e.target.checked);
-            setAutoPlanned(false);
-          }}
-        />
-        {planned ? (
-          <TimeField
-            label={t.fitness.form.time}
-            hint={t.fitness.planned.timeHint}
-            value={time}
-            onChange={setTime}
-          />
-        ) : null}
         <TextField
           label={t.fitness.form.title}
           hint={t.fitness.form.titleHint}

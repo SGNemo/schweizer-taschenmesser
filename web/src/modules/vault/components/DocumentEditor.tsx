@@ -100,6 +100,7 @@ function Fields({
     onClose();
   };
 
+  const noticeInBasis = category === 'contract' || category === 'insurance';
   const shownFile =
     file instanceof File
       ? `${file.name} (${formatSize(file.size)})`
@@ -148,6 +149,11 @@ function Fields({
           error={dateError}
         />
       </Split>
+      {/* A contract or an insurance is filed for its cancellation deadline ("Jetzt wichtig", calendar): there the
+          notice period stays in Basis; for a passport or a receipt it waits behind "Mehr Felder". */}
+      {noticeInBasis ? (
+        <NoticeField days={notice} months={noticeMonths} onChange={setNotice} max={730} />
+      ) : null}
       <FileField
         label={t.vault.file}
         hint={t.vault.localOnly}
@@ -166,7 +172,7 @@ function Fields({
       />
       <AdvancedFields
         moduleId="vault"
-        hasData={Boolean(provider || startDate || notice !== undefined || note || dateError)}
+        hasData={Boolean(provider || startDate || (notice !== undefined && !noticeInBasis) || note)}
       >
         <Split>
           <TextField
@@ -183,7 +189,9 @@ function Fields({
             }}
           />
         </Split>
-        <NoticeField days={notice} months={noticeMonths} onChange={setNotice} max={730} />
+        {noticeInBasis ? null : (
+          <NoticeField days={notice} months={noticeMonths} onChange={setNotice} max={730} />
+        )}
         <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
       </AdvancedFields>
       {/* Below the wide layout a folder opens this dialog, not the panel: the preview is reached here. */}
