@@ -208,7 +208,7 @@ test.describe('Budgets & Sparziele', () => {
 
     await open(page, '/budgets');
     await page
-      .getByRole('button', { name: /Budget (hinzufügen|eintragen)/ })
+      .getByRole('button', { name: /Limit (hinzufügen|eintragen)/ })
       .first() // the head's action (the phone's plus) and, while the list is empty, the empty state's one verb
       .click();
     const editor = page.getByRole('dialog');

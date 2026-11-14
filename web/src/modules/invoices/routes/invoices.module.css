@@ -34,12 +34,6 @@
   flex-direction: column;
   gap: var(--space-3);
 }
-.row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
 .main {
   flex: 1;
   min-width: 10rem;
@@ -72,6 +66,8 @@
   font-weight: var(--weight-semibold);
 }
 .amount {
+  /* Also at the start of the quiet meta line on the phone: the amount keeps the text colour there. */
+  color: var(--text);
   font-weight: var(--weight-semibold);
   font-variant-numeric: tabular-nums;
 }
@@ -183,13 +179,5 @@
 @container page (max-width: 40rem) {
   .plate {
     display: none;
-  }
-}
-
-/* Phone (design check G4): the payee keeps one line beside the amount; the full name is the row's tooltip, its
-   accessible name and the dialog's first field. */
-@media (max-width: 899px) {
-  .row {
-    --clamp-lines: 1;
   }
 }
