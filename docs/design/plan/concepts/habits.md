@@ -8,12 +8,12 @@ Routines take time the planner does not know about: a day with 3 h free and a 30
 
 ## Smallest useful step
 
-One optional field on the goal: „Zeit im Plan freihalten“ – „keine · 15 · 30 · 60 Min“ (free entry 5–240), default „keine“. Only goals with a value block time, and only on their scheduled days (period `day`: every day or the chosen weekdays). The planner's day sheet lists them with the other blockers („Spazieren gehen · 30 Min“, the habits icon, no tick box); the board's free figure already counts them. A rest day entered on the habits page removes that day's block. Weekly goals („3× pro Woche“) never block: there is no day to put them on.
+One optional field on the goal: „Zeit im Plan freihalten“ – „keine · 15 · 30 · 60 Min“ (free entry 5–240), default „keine“. Only goals with a value block time, and only on their scheduled days (period `day`: every day or the chosen weekdays). The planner's day sheet lists them with the other blockers („Spazieren gehen · 30 Min“, the habits icon, no tick box); the board's free figure already counts them. Archived goals never block. A rest day (settable for today only, `GoalCard.tsx`) removes today's block. Weekly goals („3× pro Woche“) never block: there is no day to put them on.
 
 ## Data flow
 
 - Habits: `goalSchema.minutes?` (int 5–240) + `manifest.version` + migration (additive, old goals unchanged); editor field in `GoalEditor.tsx`.
-- Contract: `PlannableSource.blocks?(ctx: { today; until }): Promise<{ date: string; id: string; label: string; min: number }[]>` in `core/modules/types.ts`; habits ships a `plannable` source whose `list()` returns `[]` and whose `blocks()` returns the blocks. The planner merges them in `modules/planner/days.ts` next to `calendarBlockers` and includes them in the run's input snapshot (`services.ts` `inputSnapshot`), so a changed goal replans.
+- Contract: `PlannableSource.blocks?(ctx: { today; until }): Promise<{ date: string; id: string; label: string; min: number }[]>` in `core/modules/types.ts`; habits ships a `plannable` source whose `list()` returns `[]` and whose `blocks()` returns the blocks. A collector `collectPlanBlocks(ctx, manifests)` (+ a live hook like `useCalendarItems`) in `core/modules/contributions.ts`; `planDays()` in `modules/planner/days.ts` is pure and takes the blocks as an input next to `calendar`, so every caller passes them: `run.ts` `buildInputs`, `board.ts` `buildBoard`, `useBoard.ts`; the run's input snapshot (`services.ts` `inputSnapshot`) includes them, so a changed goal replans. `DayBlocker` gets a source marker (`own | calendar | habit`): only `own` shows the remove button in `DaySheet.tsx`.
 - No bus event (a read, not a request). A block never has a time window (no `from`/`to`): habits do not say when.
 - Habit reminders, `habits.goal.open` and streaks stay exactly as they are.
 
@@ -23,7 +23,7 @@ One optional field on the goal: „Zeit im Plan freihalten“ – „keine · 15
 
 ## Stimulus and dependencies
 
-Adds one optional field in the goal editor (behind „Erweitert“ if the editor has that layer). Hotspot `core/modules/types.ts`: after Wochenende package 5 and after WR1. Touches `modules/planner/days.ts` and `services.ts`: after the last Wochenende package that touches them (6).
+Adds one optional field in the goal editor (behind „Erweitert“ if the editor has that layer). Hotspot `core/modules/types.ts`: after Wochenende package 5 and after WR1. Touches `modules/planner/{days,run,board,useBoard,services}.ts` and `DaySheet.tsx`: after the last Wochenende package that touches them (6).
 
 ## Not now
 

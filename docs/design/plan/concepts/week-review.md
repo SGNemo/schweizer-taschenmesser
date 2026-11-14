@@ -9,11 +9,11 @@ A quiet look back at the start of the week, where the week is planned anyway: �
 ## Smallest useful step
 
 One line on top of the „Woche prüfen“ sheet, only while `focus.weekReview` is on:
-„Letzte Woche: 9 Dinge erledigt · 28 h erfasst · 5 Tage gegangen“ (at most three parts, ≤ 68 characters, the rest dropped silently). Nothing on the board, no new head link, no notification. The „Jetzt dran“ widget shows the **same** collected line instead of its own ToDo-only sentence (one source, one wording); its tone texts („Eine ruhigere Woche. Das darf sein.“) stay for a week without any part.
+„Letzte Woche: 9 Dinge erledigt · 28 h erfasst · 5 Tage gegangen“ (at most three parts, ≤ 68 characters, the rest dropped silently). Nothing on the board, no new head link, no notification. The „Jetzt dran“ widget shows the **same** collected line for its own range (rolling 7 days incl. today, title „Diese Woche“ unchanged) instead of its ToDo-only sentence: one source, one wording. Its comparison texts `weekMore`, `weekSame`, `weekLess`, `weekBest` go (they compare ToDos only and would contradict a line with hours and habits); `weekNone` stays as the one calm text when no module has a part. Tests that change: `modules/todos/progress.test.ts` (`weekReview`), `e2e/progress.spec.ts` (`week-review`).
 
 ## Data flow
 
-- New lazy contribution `weekLine?: () => Promise<{ default: WeekLineSource }>` with `WeekLineSource = (ctx: { from: string; to: string }) => Promise<{ text: string; order: number } | undefined>`; collector `collectWeekLines(ctx, manifests)` in `core/modules/contributions.ts` (a failing source is skipped, like `collectHeadlines`). Week = the last ISO week (Mon–Sun), dates `YYYY-MM-DD`.
+- New lazy contribution `weekLine?: () => Promise<{ default: WeekLineSource }>` with `WeekLineSource = (ctx: { from: string; to: string }) => Promise<{ text: string; order: number } | undefined>`; collector `collectWeekLines(ctx, manifests)` in `core/modules/contributions.ts` (a failing source is skipped, like `collectHeadlines`). The caller picks the range: the sheet passes the last ISO week (Mon–Sun, „Letzte Woche: …“), the widget its rolling 7 days („Diese Woche“); dates `YYYY-MM-DD`.
 - Each module counts only its own data and formats its own part (`t.<module>.weekLine(...)`, numbers via `core/i18n/format`): ToDos „9 Dinge erledigt“ (top-level, `completedAt` in the week), time tracking „28 h erfasst“ (finished sessions minus breaks), habits „Spazieren gehen an 5 Tagen“ (the goal with the most done days; rest days neither count nor show). A module with nothing to say returns `undefined` – never „0 …“.
 - No bus event: nothing is requested from another module. `accounts`: no `weekLine` (`exclusion.test.ts` already pins its contribution keys).
 
@@ -23,7 +23,7 @@ One line on top of the „Woche prüfen“ sheet, only while `focus.weekReview` 
 
 ## Stimulus and dependencies
 
-Adds one line on an opened sheet, removes one in the widget: net 0 on the overview. Hotspot `core/modules/types.ts` (new contribution type) – one chat at a time, so after Wochenende package 5. No other dependency on „Wochenende retten“.
+Adds one line on an opened sheet, removes one in the widget: net 0 on the overview. Hotspot `core/modules/types.ts` (new contribution type) – one chat at a time, so after Wochenende package 5; `NextWidget.tsx` is also touched by Wochenende package 3. The concept packages start after Wochenende package 6 (see PACKAGES.md).
 
 ## Not now
 

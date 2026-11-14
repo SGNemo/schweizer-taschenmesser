@@ -8,11 +8,11 @@ Estimates are guesses; only 4 of 55 seeded ToDos have one, and the plan falls ba
 
 ## Smallest useful step (TT1)
 
-„Zeit erfassen“ in the ⋯ menu of a plan row and as a quiet secondary action on the planner's focus screen – **only while time tracking is on** (no hint to switch it on). It emits `timetrack.start.requested { title, sourceRef: '<module>:<id>' }` (the source thing's key, not the session unit, so all parts of a thing add up); time tracking starts a session „Ohne Projekt“ with the title as note and stores `ref` (internal, never shown, never in the data API, like finance's `sourceRef`). A session that is still running is stopped first – time tracking's existing one-click rule (`startSession` in `modules/timetrack/repo.ts`); the toast names the new one.
+„Zeit erfassen“ in the ⋯ menu of a plan row and as a quiet secondary action on the planner's focus screen – **only while time tracking is on** (no hint to switch it on). It emits `timetrack.start.requested { title, sourceRef: '<module>:<id>' }` (the source thing's key, not the session unit, so all parts of a thing add up); time tracking starts a session „Ohne Projekt“ with the title as `from` and `note` (as for the calendar; its own toast, the planner adds none) and stores `ref` (internal, never shown, never in the data API, like finance's `sourceRef`) **only when it has the form `<module>:<id>`** – the calendar's bare event id (`EventEditor.tsx`) is not stored, so `ref` holds one key format. A session that is still running is stopped first – time tracking's existing one-click rule (`startSession` in `modules/timetrack/repo.ts`); the toast names the new one.
 
 ## Next step (TT2)
 
-New lazy contribution `actuals?: () => Promise<{ default: ActualsSource }>` with `ActualsSource = (refs: string[]) => Promise<Record<string, number>>` (finished minutes per ref, breaks removed); time tracking delivers it. The planner shows „bisher 50 Min erfasst“ in a row's „Warum hier?“ detail and, in the estimate editor, a chip „50 Min übernehmen“ next to the existing steps – a tap is the only way it changes `estimateMin`. Never „50 von 30 Min“, never „über der Schätzung“, no colour.
+New lazy contribution `actuals?: () => Promise<{ default: ActualsSource }>` with `ActualsSource = (refs: string[]) => Promise<Record<string, number>>` (finished minutes per ref, breaks removed); time tracking delivers it. The planner shows „bisher 50 Min erfasst“ in a row's „Warum hier?“ detail and, in the row ⋯ „dauert 5/15/30/60 Min“ entry (Wochenende package 4) a chip „50 Min übernehmen“ – a tap is the only write, through the source's `onEstimate` (todos, routines, fitness); hidden for sources without it. Never „50 von 30 Min“, never „über der Schätzung“, no colour.
 
 ## Data flow
 
@@ -20,11 +20,11 @@ Bus for the start (request into time tracking, nothing when it is off); contribu
 
 ## Focus checklist
 
-1 Stimulus: TT1 one ⋯ entry + one secondary action on the focus screen; TT2 one detail line + one chip in an editor the user opened. · 2 Off: both appear only with time tracking on; TT2 hint behind planner setting `actualsHint` (default on once time tracking is on, off switch in the planner settings). · 3 Next step: „Anfangen“ stays the primary action of the focus screen. · 4 Calm: wording above, no comparison. · 5 Interruption: the session lives in time tracking (survives reload). · 6 Tests: bus → session with `ref`; action hidden with the module off; sums per ref; chip writes only on tap. · 7 Readability: text only. · 8 Clicks: plan row → running session 5 → 2 taps (⋯, „Zeit erfassen“) instead of switching module, „Neu“, typing the title. · 9 Removed: TT1 makes retyping the plan title into time tracking redundant; TT2 replaces guessing in the estimate editor.
+1 Stimulus: TT1 one ⋯ entry + one secondary action on the focus screen; TT2 one detail line + one chip in an editor the user opened. · 2 Off: both appear only with time tracking on; TT2 hint behind planner setting `actualsHint` (static default on, shown and effective only while time tracking is on). · 3 Next step: „Anfangen“ stays the primary action of the focus screen. · 4 Calm: wording above, no comparison. · 5 Interruption: the session lives in time tracking (survives reload). · 6 Tests: bus → session with `ref`; action hidden with the module off; sums per ref; chip writes only on tap. · 7 Readability: text only. · 8 Clicks: plan row → running session 5 → 2 taps (⋯, „Zeit erfassen“) instead of switching module, „Neu“, typing the title. · 9 Removed: TT1 makes retyping the plan title into time tracking redundant; TT2 replaces guessing the duration.
 
 ## Stimulus and dependencies
 
-TT1 touches `modules/planner/**` (row ⋯, focus screen) – after the last Wochenende package on the board (6). TT2 after TT1 and after H1 (hotspot). W14 auto-enable: not in any package.
+TT1 touches `modules/planner/**` (row ⋯, focus screen) – after the last Wochenende package on the board (6). TT2 after TT1 and after H1 (hotspot) and after Wochenende package 4 (the „dauert …“ entry). W14 auto-enable: not in any package.
 
 ## Not now
 

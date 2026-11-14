@@ -13,7 +13,7 @@ One flag per plan item: „Braucht Kopf“ (⋯ on the row, toggle; default off;
 - orders a day's sessions so flagged ones come first (after pinned order and hard deadlines, which still win);
 - places at most `heavyPerDay` flagged sessions per day (default 2, 1–3) – a further one waits for the next day with room, reason „ein ruhigerer Tag passt besser“; a hard deadline overrides the limit.
 
-With day parts (package 4) „first“ means the first part of the day; without them, the order in the day. No energy diary, no mood or sleep data, no daily check-in, no score.
+With day parts (package 4: in-day order stage → part → keys) a part the user set always wins: „Braucht Kopf“ orders only **within** a part and never assigns one; without parts, the order in the day. No energy diary, no mood or sleep data, no daily check-in, no score.
 
 ## Data flow
 
@@ -21,7 +21,7 @@ Planner-internal: `planner_item.heavy?: boolean` + `manifest.version` + migratio
 
 ## Focus checklist
 
-1 Stimulus: one ⋯ entry, one icon in the row detail of flagged things only. · 2 Off: „Schweres zuerst“ (off by default); with it off the flag is stored but changes nothing (said in the hint). · 3 Next step: unchanged; the first session of the day tends to be the important one. · 4 Calm: no „zu viel Schweres“, no colour; the wait reason is neutral. · 5 Interruption: stored, synced, undo with every run. · 6 Tests: engine fixtures (order, limit, deadline beats limit, setting off = today's plan unchanged), migration. · 7 Readability: icon + text. · 8 Clicks: 2 (⋯, „Braucht Kopf“). · 9 Removed: manual pinning of hard things to a morning (the common workaround) becomes unnecessary.
+1 Stimulus: one ⋯ entry, one icon in the row detail of flagged things only. · 2 Off: „Schweres zuerst“ (off by default); with it off the flag is stored but changes nothing (said in the hint). · 3 Next step: unchanged; the first session of the day tends to be the important one. · 4 Calm: no „zu viel Schweres“, no colour; the wait reason is neutral. · 5 Interruption: stored, synced, undo with every run. · 6 Tests: engine fixtures (order, limit, deadline beats limit, user part wins, setting off = today's plan unchanged), migration; e2e for the switch. · 7 Readability: icon + text. · 8 Clicks: 2 (⋯, „Braucht Kopf“). · 9 Removed: manual pinning of hard things to a morning (the common workaround) becomes unnecessary.
 
 ## Stimulus and dependencies
 
