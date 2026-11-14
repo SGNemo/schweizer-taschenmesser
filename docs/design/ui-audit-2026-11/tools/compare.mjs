@@ -32,6 +32,12 @@ const facts = (vp, part) => {
 };
 const num = (v) => (v === undefined || v === null || v === '–' || v === '' ? null : Number(String(v).replace(',', '.')));
 const name = (k) => k.replace('page-', '').replace('overview-all', 'übersicht-ausführlich').replace('overview-calm', 'übersicht-ruhig');
+// The audit's tables name the overview rows in two ways (`übersicht-…` in the stimulus tables, `overview-…` in the others).
+const rawName = (k) => k.replace('page-', '');
+const find = (rows, k) => rows.get(name(k)) ?? rows.get(rawName(k));
+// „Inhalt ab y“ of the audit on library, tools and settings measured elements inside the head card (93/169/174):
+// not comparable, left out of the medians.
+const NO_Y = (k) => /^page-(library|tools|settings)/.test(k);
 const pages = (f) => Object.entries(f).filter(([k, v]) => ((k.startsWith('page-') && !k.includes('--')) || k === 'overview-all' || k === 'overview-calm') && v && v.stimulus);
 const arrow = (a, b) => (a === null && b === null ? '–' : a === null ? `neu ${fmt(b)}` : b === null ? `${fmt(a)} → –` : a === b ? fmt(a) : `${fmt(a)} → ${fmt(b)}`);
 const fmt = (n) => (n === null || n === undefined ? '–' : Number.isInteger(n) ? String(n) : n.toFixed(2));
@@ -50,8 +56,13 @@ for (const [vp, part, label] of [['1920x1080-dark', 'seed', 'Desktop 1920 dunkel
   const rows = [];
   const cols = STIM.map(() => ({ b: [], a: [] }));
   for (const [k, v] of pages(after)) {
-    const b = before.get(name(k));
-    rows.push([name(k), ...STIM.map(([h, get], i) => { const x = b ? num(b[h]) : null; const y = get(v) ?? null; if (b) { cols[i].b.push(x); cols[i].a.push(y); } return arrow(x, y); })]);
+    const b = find(before, k);
+    rows.push([name(k), ...STIM.map(([h, get], i) => {
+      const skip = h === 'Inhalt ab y' && NO_Y(k);
+      const x = b && !skip ? num(b[h]) : null; const y = get(v) ?? null;
+      if (b && !skip) { cols[i].b.push(x); cols[i].a.push(y); }
+      return skip && b ? `n/v → ${fmt(y)}` : arrow(x, y);
+    })]);
   }
   table(['Seite', ...STIM.map(([h]) => h)], rows);
   summary.push([label, 'Median (Seiten in beiden Läufen)', ...cols.map((c) => arrow(median(c.b), median(c.a)))]);
@@ -67,12 +78,15 @@ if (d) {
   const cols = F.map(() => ({ b: [], a: [] }));
   const rows = [];
   for (const [k, v] of pages(d)) {
-    const b = before.get(name(k));
+    const b = find(before, k);
     rows.push([name(k), ...F.map(([h, get], i) => { const x = b ? num(b[h]) : null; const y = get(v); if (b) { cols[i].b.push(x); cols[i].a.push(y); } return h === 'Animationen' && x === 10 ? `≥ 10 → ${y}` : arrow(x, y); })]);
   }
   table(['Seite', ...F.map(([h]) => h)], rows);
   out.push('');
-  table(['Größe', 'Summe vorher → nachher', 'Seiten > 0 vorher → nachher'], F.map(([h], i) => [h, arrow(sum(cols[i].b), sum(cols[i].a)), arrow(cols[i].b.filter((x) => x > 0).length, cols[i].a.filter((x) => x > 0).length)]));
+  // „getönt“ uses the saturation of the audit and counts the dark tone steps (cool greys) as tint; the light run is the honest one.
+  const L = facts('1920x1080-light', 'seed');
+  const lightSum = (i) => (L ? sum(pages(L).map(([, v]) => F[i][1](v))) : null);
+  table(['Größe', 'Summe vorher → nachher (dunkel)', 'Seiten > 0 vorher → nachher', 'nachher hell'], F.map(([h], i) => [h, arrow(sum(cols[i].b), sum(cols[i].a)), arrow(cols[i].b.filter((x) => x > 0).length, cols[i].a.filter((x) => x > 0).length), fmt(lightSum(i))]));
 }
 
 const p = facts('412x915-dark', 'seed');
@@ -81,7 +95,7 @@ if (p) {
   out.push('\n### Handy: Zeilenhöhen vorher → nachher – 412 dunkel, Seed\n');
   const rows = [];
   for (const [k, v] of pages(p)) {
-    const b = before.get(name(k));
+    const b = find(before, k);
     const r = v.rows.n ? `${v.rows.n} · ${v.rows.median} · ${v.rows.min}–${v.rows.max}` : '–';
     rows.push([name(k), b?.['Zeilen (n · Median · min–max)'] ?? '–', r]);
   }

@@ -297,6 +297,12 @@ const FLOWS: Record<string, Flow> = {
     await c.click(dl, 'Backup');
     c.notes.push(`dialog buttons: ${await page.locator('dialog[open] button, [role="dialog"] button').allInnerTexts().then((t) => t.join('/')).catch(() => '-')}`);
   },
+  'H3 Status ansehen – Gerätestatus (S-b)': async (c, page, phone) => {
+    await c.start('/');
+    await goModule(c, page, phone, /System/, 'Gerätestatus');
+    await expect(page.locator('main').getByText(/^Backup/).first()).toBeVisible();
+    c.notes.push(`lands on ${new URL(page.url()).pathname}`);
+  },
   'H2 Backup herunterladen – über Gerätestatus (S-b)': async (c, page, phone) => {
     await c.start('/');
     await goModule(c, page, phone, /System/, 'Gerätestatus');
@@ -315,7 +321,8 @@ for (const run of RUNS) {
     const vp = phone ? { width: 412, height: 915 } : { width: 1920, height: 1080 };
     const context = await browser.newContext({ viewport: vp, isMobile: phone, hasTouch: phone, deviceScaleFactor: 1, colorScheme: 'dark' });
     const page = await context.newPage();
-    await page.route(/^https?:\/\/(?!localhost)/, (route) => route.abort());
+    await page.route(/^https?:\/\/(?!localhost(:\d+)?\/)/, (route) => route.abort());
+    await page.routeWebSocket(/^wss?:\/\/(?!localhost(:\d+)?\/)/, (ws) => ws.close());
     await mockWeather(page);
     await page.addInitScript((d) => { localStorage.setItem('tm-show-preview', '1'); if (d) localStorage.setItem('__tmPlatformKind', 'desktop'); }, !phone);
     await bootDev(page);

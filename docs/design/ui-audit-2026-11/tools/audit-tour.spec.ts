@@ -132,7 +132,8 @@ async function newContext(
     colorScheme: scheme,
   });
   const page = await context.newPage();
-  await page.route(/^https?:\/\/(?!localhost)/, (route) => route.abort());
+  await page.route(/^https?:\/\/(?!localhost(:\d+)?\/)/, (route) => route.abort());
+  await page.routeWebSocket(/^wss?:\/\/(?!localhost(:\d+)?\/)/, (ws) => ws.close());
   await mockWeather(page);
   await page.addInitScript((isDesktop) => {
     localStorage.setItem('tm-show-preview', '1');
@@ -241,7 +242,8 @@ async function measure(page: Page, root: 'main' | 'dialog', phone: boolean) {
 
       // 2. Consistency: head, type, icons, spacing, weights, surfaces.
       // 4.0 (0b-2): the module head is `[data-head]` (standard or stage); library, tools and settings keep a head card.
-      const band = document.querySelector<HTMLElement>('main [data-head], [data-testid="module-frame"] [data-size], header [data-size], [data-size]');
+      // Two queries: a selector list returns the first match in document order, not the first selector.
+      const band = document.querySelector<HTMLElement>('main [data-head]') ?? document.querySelector<HTMLElement>('[data-testid="module-frame"] [data-size], header [data-size], [data-size]');
       const h1 = scope.querySelector('h1') ?? document.querySelector('h1');
       const h1s = h1 ? getComputedStyle(h1) : null;
       const headEl = band ?? document.querySelector<HTMLElement>('[class*="band"]');
@@ -273,6 +275,8 @@ async function measure(page: Page, root: 'main' | 'dialog', phone: boolean) {
         }
         const pb = parseRgb(s.backgroundColor);
         if (s.backgroundColor === surface2) surface2Count++;
+        // 0b-8: tone steps are plain (in the dark theme their cool grey has a saturation above 0.12).
+        else if (toneSteps.has(s.backgroundColor)) neutralFills++;
         else if (!bgs.has(s.backgroundColor) && pb && pb.a > 0.05 && saturation(s.backgroundColor) > 0.12 && !el.matches('button, input, select, [role="tab"]')) tinted++;
         else if (!bgs.has(s.backgroundColor) && pb && pb.a > 0.05 && !el.matches('button, input, select, [role="tab"]')) neutralFills++;
         if (s.borderTopLeftRadius !== '0px' && r.width > 80) radii.set(s.borderTopLeftRadius, (radii.get(s.borderTopLeftRadius) ?? 0) + 1);
@@ -452,6 +456,22 @@ async function tour(page: Page, vp: Vp, dir: string, seed: boolean) {
     await settle(page);
     const names: string[] = await page.locator('main button, main a[href]').evaluateAll((els) => els.slice(0, 60).map((e) => (e.getAttribute('aria-label') || (e as HTMLElement).innerText || '').trim())).catch(() => []);
     let opened = false;
+    // 0b-8: on the phone the page's main action is the plus of the bottom bar (Identity 4.0), not a button in `#main`.
+    const plus = page.getByTestId('bottom-plus');
+    if (vp.mobile && (await plus.isVisible().catch(() => false)) && (await plus.getAttribute('data-plus')) !== 'capture') {
+      const name = (await plus.getAttribute('aria-label')) ?? 'plus';
+      await page.evaluate(() => { (window as unknown as { __cls: number }).__cls = 0; });
+      await plus.click({ timeout: 5000 }).catch(() => {});
+      await page.waitForTimeout(WAIT);
+      const dlg = page.locator('dialog[open], [role="dialog"]').last();
+      if ((await dlg.count()) && (await dlg.isVisible().catch(() => false))) {
+        opened = true;
+        await page.screenshot({ path: `${dir}/dialog-${m.id}.png` });
+        facts[`dialog-${m.id}`] = { trigger: `plus: ${name}`, title: await dlg.locator('h2').first().innerText({ timeout: 2000 }).catch(() => null), box: await dlg.boundingBox(), fields: await dlg.locator('input:not([type=hidden]), select, textarea').count(), buttons: await dlg.locator('button').count(), ...(await measure(page, 'dialog', true)) };
+      }
+      await closeDialogs(page);
+      if (page.url().replace(/[?#].*$/, '') !== new URL(m.path, page.url()).pathname) { await page.goto(m.path); await settle(page); }
+    }
     for (let i = 0; i < names.length && !opened; i++) {
       const name = names[i]!;
       if (!ADD.test(name) || /importieren|einrichtung|kalender verwalten|nachkaufen|satz eintragen/i.test(name)) continue;
@@ -485,9 +505,10 @@ async function tour(page: Page, vp: Vp, dir: string, seed: boolean) {
   }
 
   // Quick capture ("+ Neu" / FAB).
-  await page.goto('/todos');
+  // Desktop: „Neu“ in the top bar; phone: the plus of the bottom bar on the overview (it is the capture there).
+  await page.goto(vp.mobile ? '/' : '/todos');
   await settle(page);
-  const btn = page.getByRole('button', { name: /Neu: etwas eintragen|Neu: schnell|Schnell hinzufügen/ }).first();
+  const btn = vp.mobile ? page.getByTestId('bottom-plus') : page.getByRole('button', { name: /Neu: etwas eintragen|Neu: schnell|Schnell hinzufügen/ }).first();
   if (await btn.count()) {
     await page.evaluate(() => { (window as unknown as { __cls: number }).__cls = 0; });
     await btn.click().catch(() => {});
