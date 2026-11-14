@@ -314,6 +314,22 @@ for (const scheme of ['light', 'dark'] as const) {
       await audit(page, `wizard result (${scheme})`);
     });
 
+    test('planner: „Tage einteilen“ in its three steps', async ({ page }) => {
+      await page.goto('/planner?start=1');
+      const sheet = page.getByRole('dialog', { name: 'Tage einteilen' });
+      await expect(sheet.getByLabel('Eine Zeile je Ding')).toBeVisible();
+      await audit(page, `day setup things (${scheme})`);
+      await sheet.getByLabel('Eine Zeile je Ding').fill('Duschen\nBude aufräumen');
+      await sheet.getByRole('button', { name: 'Weiter' }).click();
+      await expect(sheet.getByText('Wie viel Zeit hast du?')).toBeVisible();
+      await audit(page, `day setup time (${scheme})`);
+      await sheet.getByRole('group').first().getByRole('button', { name: '4 h' }).click();
+      await sheet.getByRole('button', { name: 'Weiter' }).click();
+      await expect(sheet.getByTestId('plan-preview')).toBeVisible();
+      await audit(page, `day setup preview (${scheme})`);
+      await page.keyboard.press('Escape');
+    });
+
     test('dialogs: command palette, quick add, create forms', async ({ page }) => {
       await page.goto('/');
       await page.locator('header button', { hasText: 'Suchen' }).click();

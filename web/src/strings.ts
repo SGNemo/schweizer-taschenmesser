@@ -620,6 +620,7 @@ export const de = {
     welcomeText:
       'Möchtest du die App Schritt für Schritt einrichten? Du kannst das auch später in den Einstellungen tun.',
     welcomeLater: 'Später',
+    welcomePlanDays: 'Tage einteilen',
     dialogTitle: 'Einrichtung',
     stepOf: (n: number, total: number) => `Schritt ${n} von ${total}`,
     progressLabel: 'Fortschritt der Einrichtung',
@@ -8546,6 +8547,23 @@ export const de = {
       back: 'Zum Planer',
     },
     empty: 'Noch nichts geplant. Eine Sache reicht.',
+    daySetup: {
+      open: 'Tage einteilen',
+      title: 'Tage einteilen',
+      stepOf: (n: number) => `Schritt ${n} von 3`,
+      thingsTitle: 'Was steht an?',
+      thingsLabel: 'Eine Zeile je Ding',
+      thingsHint: 'Zum Beispiel „Bude aufräumen“ oder „Bericht bis So“. Leer lassen geht auch.',
+      things: (n: number) => (n === 1 ? '1 Ding kommt dazu' : `${n} Dinge kommen dazu`),
+      timeTitle: 'Wie viel Zeit hast du?',
+      timeIntro: 'Gilt nur für diese drei Tage.',
+      timeOn: (day: string) => `Zeit am ${day}`,
+      noTime: 'keine Zeit',
+      current: (value: string) => `Bisher ${value}`,
+      previewTitle: 'So sieht dein Plan aus',
+      next: 'Weiter',
+      back: 'Zurück',
+    },
     chip: {
       title: (planned: string, n: number) =>
         `Plan · ${planned} · ${n === 1 ? '1 Ding' : `${n} Dinge`}`,
