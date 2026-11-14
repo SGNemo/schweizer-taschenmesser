@@ -18,7 +18,7 @@ export const aiSchema: ModuleAiSchema = {
     create: {
       kind: 'create',
       collection: 'place',
-      label: 'Ort eintragen',
+      label: 'Ort hinzufügen',
       description: 'Ort zur Uhr hinzufügen; zone = IANA-Zeitzone (z. B. Asia/Tokyo)',
       fields: ['label', 'zone'],
       required: ['label'],

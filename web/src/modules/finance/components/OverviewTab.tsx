@@ -48,16 +48,20 @@ function ChartCard({ title, chart, table }: { title: string; chart: ReactNode; t
 function DeltaLine({ d, money }: { d: Delta; money: (m: number) => string }) {
   if (d.diffMinor === 0)
     return <span className={styles.delta}>{t.finance.ext.compare.unchanged}</span>;
-  const amount = `${d.diffMinor > 0 ? '▲ +' : '▼ −'}${money(Math.abs(d.diffMinor))}`;
+  const arrow = d.diffMinor > 0 ? '▲' : '▼';
+  const amount = `${d.diffMinor > 0 ? '+' : '−'}${money(Math.abs(d.diffMinor))}`;
   const percent =
     d.percent === undefined || d.percent === 0
       ? ''
       : ` (${d.percent > 0 ? '+' : '−'}${Math.abs(d.percent)} %)`;
   return (
     <span className={styles.delta}>
-      <span className={styles.deltaFull}>{t.finance.ext.compare.vsPrevious(amount + percent)}</span>
+      <span className={styles.deltaFull}>
+        {t.finance.ext.compare.vsPrevious(`${arrow} ${amount}${percent}`)}
+      </span>
+      {/* Wraps after the arrow when a long amount does not fit the card; the amount itself never breaks. */}
       <span className={styles.deltaShort} aria-hidden="true">
-        {amount}
+        {arrow} <span className={styles.nowrap}>{amount}</span>
       </span>
     </span>
   );
@@ -133,7 +137,7 @@ export function OverviewTab({
           </span>
           {hasPrevious ? <DeltaLine d={cmp.net} money={money} /> : null}
         </Card>
-        {hasPrevious ? (
+        {hasPrevious && [cmp.income, cmp.expense, cmp.net].some((d) => d.diffMinor !== 0) ? (
           <p className={styles.deltaNote} aria-hidden="true">
             {t.finance.ext.compare.note}
           </p>

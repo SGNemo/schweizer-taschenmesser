@@ -2,10 +2,12 @@
 type: changed
 area: finance
 breaking: false
-de: Finanzen sagt im Kopf „Buchung eintragen“ wie die anderen Module; am Handy passen die Vergleiche zum Vormonat in eine Zeile.
-en: Finance says "Add transaction" in the header like the other modules; on the phone the comparisons with last month fit on one line.
+de: Finanzen sagt oben „Buchung eintragen“ wie die anderen Bereiche; am Handy steht der Vergleich zum Vormonat in einer Zeile.
+en: Finance now says "Add transaction" at the top like the other areas; on the phone the comparison with last month fits on one line.
 ---
+
 ---
+
 type: changed
 area: weather
 breaking: false

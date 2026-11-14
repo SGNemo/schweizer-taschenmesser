@@ -441,7 +441,11 @@
 .deltaNote {
   display: none;
 }
+.nowrap {
+  white-space: nowrap;
+}
 @container kpis (max-width: 40rem) {
+  /* The rules of the global `.sr-only`, which cannot be applied by a container query. */
   .deltaFull {
     position: absolute;
     width: 1px;
@@ -453,12 +457,12 @@
   }
   .deltaShort {
     display: inline;
-    white-space: nowrap;
   }
   .deltaNote {
     display: block;
     grid-column: 1 / -1;
-    margin: 0;
+    /* A caption of the cards, not a block of its own: closer than the grid's gap. */
+    margin: calc(-1 * var(--space-1)) 0 0;
     padding: 0;
     font-size: var(--text-sm);
     color: var(--text-2);
