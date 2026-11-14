@@ -1,6 +1,6 @@
 # Module identity v3.1 – rules for every module
 
-> **Identity 4.0 (UI audit 2026-11) changes the module head and the navigation around it:** the section [Identity 4.0 – draft](#identity-40--draft) at the end replaces "Frame – who owns what", "Head variants" and the `head` column of the mapping below for the module frame. Palette, signatures, widgets, sidebar and the stripe rule stay as written here.
+> **Identity 4.0 (UI audit 2026-11) changes the module head and the navigation around it:** the section [Identity 4.0](#identity-40) at the end replaces "Frame – who owns what", "Head variants" and the `head` column of the mapping below for the module frame. Palette, signatures, widgets, sidebar and the stripe rule stay as written here.
 
 Binding for every module and for new ones. Origin: [identity-v3/](identity-v3/) (diagnosis, concept, mockups), audit and fix packages: [identity-v3-audit/](identity-v3-audit/01-findings.md) (v3.1 = the foundation fix package; sheets `identity-v3/shots/frame-v31-*.jpg`). Decisions: [ui-shell](../decisions/ui-shell.md) "Module identity v3" and "Identity v3.1". It extends [DESIGN-SPEC](DESIGN-SPEC.md) and [FOCUS-GUIDELINES](FOCUS-GUIDELINES.md).
 
@@ -159,9 +159,9 @@ Not module pages, so no band: `pages/settings/PageHead` on `ui/HeadSurface` as a
 
 **Choices:** a checkbox that needs an explanation takes `description` (title in the name, detail as `aria-describedby`); a group of them sits in `ChoiceList` (framed, one hairline between rows) instead of one long sentence per box.
 
-## Identity 4.0 – draft
+## Identity 4.0
 
-In force in the code since package 0b-2 (UI audit 2026-11, [PACKAGES](ui-audit-2026-11/PACKAGES.md), rules 2–4); "draft" until the acceptance sweep 0b-8 makes it "valid". Decision: [ui-shell](../decisions/ui-shell.md) "Identity 4.0 head and navigation".
+In force in the code since package 0b-2 (UI audit 2026-11, [PACKAGES](ui-audit-2026-11/PACKAGES.md), rules 2–4); **valid** since the acceptance sweep 0b-8 (2026-11-14, [REPORT „Abschlussmessung 2“](ui-audit-2026-11/REPORT.md#abschlussmessung-2-2026-11-14): 8 × erfüllt, 2 × teils, 0 × nicht). Decision: [ui-shell](../decisions/ui-shell.md) "Identity 4.0 head and navigation".
 
 **Frame.** `layout/AreaFrame` wraps every module page in a head and the `PageContainer`:
 

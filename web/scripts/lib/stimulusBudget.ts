@@ -293,8 +293,13 @@ export function summaryMarkdown(
  *   shadows            elements of `main` (at least 40 × 24 px) with a blurred or offset `box-shadow` outside
  *                      `dialog`, `[role=menu]`, `[popover]` and toasts (`[role=status]`); rings do not count
  *                      (the audit tour split the segments at `),` and so read ring + shadow as a ring)
- *   colouredText       visible elements above the fold with own text in a saturated, non-neutral colour
- *   colouredSurfaces   visible elements above the fold with a saturated background (not `--surface-2`)
+ *   colouredText       visible elements above the fold with own text in a non-neutral colour, chroma > 0.10
+ *   colouredSurfaces   visible elements above the fold with a background of chroma > 0.06 (no surface token)
+ * Colour is chroma (max − min) / 255, not the audit's saturation (max − min) / max: the saturation read the cool
+ * greys of the dark theme as colour, chroma counts both themes alike (MEASURES.md, "Sättigung vs. Chroma").
+ * Never looser than the saturation it replaced (text > 0.25, surface > 0.12): chroma = saturation × max / 255,
+ * so every colour the saturation counted is still counted when its brightest channel is at least 102 (text) or
+ * 128 (surface); `CHROMA_TEXT`/`CHROMA_SURFACE` below, the proof is a fixture test.
  *   signatureBlockList every element marked `data-signature-block`: size and framed elements inside
  */
 export function measurePage(): {
@@ -324,8 +329,10 @@ export function measurePage(): {
     probe.style.color = rootStyle.getPropertyValue(name).trim();
     return getComputedStyle(probe).color;
   };
-  // The page, its surfaces and their tone steps are neutral in both themes. In the dark theme the tone steps
-  // are a cool grey whose saturation lies above the threshold below, so they are named here, not measured.
+  // Chroma thresholds; never raise them (a raise counts less colour). See the comment at the top.
+  const CHROMA_TEXT = 0.1;
+  const CHROMA_SURFACE = 0.06;
+  // The page, its surfaces and their tone steps are neutral in both themes; they are named here, not measured.
   const plain = new Set([
     ...['--bg', '--surface', '--surface-2', '--surface-raised', '--surface-sunken']
       .filter((name) => rootStyle.getPropertyValue(name).trim() !== '')
@@ -349,11 +356,10 @@ export function measurePage(): {
         }
       : null;
   };
-  const saturation = (c: string) => {
+  const chroma = (c: string) => {
     const p = parse(c);
     if (!p || p.a < 0.05) return 0;
-    const max = Math.max(p.r, p.g, p.b);
-    return max === 0 ? 0 : (max - Math.min(p.r, p.g, p.b)) / max;
+    return (Math.max(p.r, p.g, p.b) - Math.min(p.r, p.g, p.b)) / 255;
   };
   const framed = (el: Element) => {
     const r = el.getBoundingClientRect();
@@ -403,9 +409,14 @@ export function measurePage(): {
     const ownText = Array.from(el.childNodes).some(
       (n) => n.nodeType === 3 && (n.textContent ?? '').trim() !== '',
     );
-    if (ownText && saturation(s.color) > 0.25 && !neutralInk.has(s.color)) colouredText++;
+    if (ownText && chroma(s.color) > CHROMA_TEXT && !neutralInk.has(s.color)) colouredText++;
     const bg = parse(s.backgroundColor);
-    if (!plain.has(s.backgroundColor) && bg && bg.a > 0.05 && saturation(s.backgroundColor) > 0.12)
+    if (
+      !plain.has(s.backgroundColor) &&
+      bg &&
+      bg.a > 0.05 &&
+      chroma(s.backgroundColor) > CHROMA_SURFACE
+    )
       colouredSurfaces++;
   }
   const signatureBlockList = Array.from(document.querySelectorAll('[data-signature-block]'))
