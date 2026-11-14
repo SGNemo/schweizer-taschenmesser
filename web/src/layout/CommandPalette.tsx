@@ -563,7 +563,9 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
     else list.push(...settingOptions);
     // An entry whose title is exactly the typed text is what is meant: it comes before "Neu eintragen",
     // so Enter opens it instead of creating a second one. "?" and write sentences keep their order.
-    const exact = capture && !writeIntent ? normalize(read.text) : '';
+    // Inner spaces are collapsed too ("Zahnarzt  Termin" is the same title).
+    const squash = (text: string) => normalize(text).replace(/\s+/g, ' ');
+    const exact = capture && !writeIntent ? squash(read.text) : '';
     const exactHits: Option[] = [];
     for (const row of hits) {
       const hit: Option = {
@@ -573,7 +575,7 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         icon: 'search',
         row,
       };
-      if (exact && row.to && normalize(row.title) === exact) exactHits.push(hit);
+      if (exact && row.to && squash(row.title) === exact) exactHits.push(hit);
       else list.push(hit);
     }
     if (capture && exactHits.length > 0) list.splice(list.indexOf(capture), 0, ...exactHits);
