@@ -37,7 +37,7 @@ interface ProfileNode {
   callFrame: { url: string; functionName: string };
   hitCount?: number;
 }
-/** Self time per file of a CDP CPU profile (ms, sampled), the largest first; `(program)`/`(idle)` left out. */
+/** Self time per file of a CDP CPU profile (ms, sampled), the largest first; native time, GC and idle as `=…` totals. */
 function selfTimeByFile(profile: {
   nodes: ProfileNode[];
   samples?: number[];
@@ -45,6 +45,8 @@ function selfTimeByFile(profile: {
 }): Record<string, number> {
   const byNode = new Map(profile.nodes.map((n) => [n.id, n]));
   const out: Record<string, number> = {};
+  /** `=js`, `=program`, `=garbage collector`, `=idle`: where the sampled time went, summed. */
+  const totals: Record<string, number> = {};
   (profile.samples ?? []).forEach((id, i) => {
     const node = byNode.get(id);
     const dt = (profile.timeDeltas?.[i] ?? 0) / 1000;
@@ -55,15 +57,22 @@ function selfTimeByFile(profile: {
       : `(${name || '?'})`;
     // CLICK_PROFILE=fn: per function (useful with an unminified build, see docs/perf/CLICK-TO-CONTENT-2026-11.md).
     const key = PROFILE === 'fn' && url ? `${file}:${name || '(anonymous)'}` : file;
-    if (file === '((idle))' || file === '(idle)' || file === '(program)') return;
+    // Native time (layout, style, paint, parsing) is "(program)"; it is kept apart as a total, like GC and idle.
+    if (!url && ['(idle)', '(program)', '(garbage collector)', '(root)'].includes(name)) {
+      const k = `=${name.replace(/[()]/g, '')}`;
+      totals[k] = (totals[k] ?? 0) + dt;
+      return;
+    }
+    totals['=js'] = (totals['=js'] ?? 0) + dt;
     out[key] = (out[key] ?? 0) + dt;
   });
-  return Object.fromEntries(
-    Object.entries(out)
+  return Object.fromEntries([
+    ...Object.entries(totals).map(([k, v]) => [k, Math.round(v)] as const),
+    ...Object.entries(out)
       .sort((a, b) => b[1] - a[1])
       .slice(0, PROFILE === 'fn' ? 15 : 8)
-      .map(([k, v]) => [k, Math.round(v)]),
-  );
+      .map(([k, v]) => [k, Math.round(v)] as const),
+  ]);
 }
 
 interface Target {
