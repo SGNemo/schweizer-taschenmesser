@@ -12,6 +12,8 @@ Part of [core](core.md). Index of areas: [DECISIONS](../DECISIONS.md).
 - **Modules are manifest-driven and isolated (event bus + manifest contributions; only read-only `public.ts` exceptions).** Modules can be switched on/off and stay independent; enforced by ESLint and `registry.test.ts`. Source: architecture.md "Isolation".
 - **Subscriptions are forecasts, never auto-booked transactions.** Source: architecture.md "Money & finance".
 - **Local-only collections (`CollectionDef.local`, `_blobs`)**: news articles, feed state, vault files never enter outbox/sync/backup. Source: architecture.md "News module", "Extra modules".
+- **Import dates (2026-11-14, round 5 D17): `createMany` items may carry `at: { createdAt, updatedAt? }`, kept only in the local envelope.** An imported note keeps its `created:`/`date:` (else the ZIP entry or file date) as `createdAt` and `modified:` as `updatedAt`, so "Zuletzt geändert" sorts it among older notes. Envelope keys, field stamps (`_f`, HLC = now), outbox and LWW stay unchanged; dates outside (0, now] fall back to now, `updatedAt` ≥ `createdAt`. Import undo tests "untouched" by the field stamps (`untouchedSinceCreated`) instead of `updatedAt === createdAt`. Limit: other devices derive both times from the stamps (`mergeOps`), so they show the import time; carrying the date to them would need a data field (not done). Source: `core/db/repo.ts` `envelopeTimes`, `core/importer/batches.ts`.
+
 ## AI
 
 - **Never send user data to the model.** Only instructions, compact `aiSchema` of enabled modules, the date and the question; results are computed locally, no second call. Guarded by `privacy.test.ts` for every adapter. Source: architecture.md "AI assistant"; CLAUDE.md rules.
