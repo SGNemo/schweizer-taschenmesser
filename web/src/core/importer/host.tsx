@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { getManifest } from '@/core/modules/registry';
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, type ComponentProps } from 'react';
 import { lazyOnline } from '@/core/net/OnlineChunk';
 import { useAppImport } from './appImportStore';
+import type { OnboardingWizard as Wizard } from './OnboardingWizard';
 import type { ImportPreset } from './types';
 
 /** One wizard run: a module and, when files were chosen before, what to read in it. */
@@ -10,7 +11,7 @@ import type { ImportPreset } from './types';
 const AppImportHost = lazy(() => import('./appImport').then((m) => ({ default: m.AppImportHost })));
 // The wizard (~17 KB gzip) is not part of the start: it is fetched in an idle slot after the start (so the first
 // open renders at once, without React's fallback throttle) or, at the latest, when a run opens.
-const OnboardingWizard = lazyOnline(() =>
+const OnboardingWizard = lazyOnline<ComponentProps<typeof Wizard>>(() =>
   import('./OnboardingWizard').then((m) => ({ default: m.OnboardingWizard })),
 );
 
