@@ -17,3 +17,17 @@ export function rwTransaction<R>(
   ).transaction.bind(database);
   return run('rw', tables, fn);
 }
+
+/** Like `rwTransaction`, read-only: one consistent view over `tables` (writers wait until it ends). */
+export function readTransaction<R>(
+  database: TaschenmesserDB,
+  tables: unknown[],
+  fn: () => Promise<R>,
+): Promise<R> {
+  const run = (
+    database as unknown as {
+      transaction(mode: 'r', tables: unknown[], scope: () => Promise<R>): Promise<R>;
+    }
+  ).transaction.bind(database);
+  return run('r', tables, fn);
+}
