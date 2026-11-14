@@ -238,7 +238,7 @@ test.describe('booking dialog: three fields, one click and Enter', () => {
       await openPage(page, '/finance?tab=transactions');
       // Click 1 of at most 2: the page's one action.
       await page.locator('[data-page-action]').click();
-      const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
+      const dialog = page.getByRole('dialog', { name: 'Buchung eintragen' });
       await expect(dialog).toBeVisible();
       expect(await visibleFields(page), 'visible fields of a new booking').toBe(3);
       // What the folded fields will save stands beside "Mehr Felder".
@@ -264,7 +264,7 @@ test.describe('booking dialog: three fields, one click and Enter', () => {
       await startSeeded(page, { phone: true });
       await openPage(page, '/finance');
       await page.getByTestId('bottom-plus').tap();
-      const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
+      const dialog = page.getByRole('dialog', { name: 'Buchung eintragen' });
       await expect(dialog).toBeVisible();
       expect(await visibleFields(page), 'visible fields of a new booking').toBe(3);
       // Every field open: the sheet is longer than the screen now.
@@ -275,7 +275,7 @@ test.describe('booking dialog: three fields, one click and Enter', () => {
       await expect(dialog.getByRole('button', { name: 'Kalender öffnen' })).toBeVisible();
       const foot = dialog.locator('[data-form-actions]');
       await expect(foot).toHaveCSS('position', 'sticky');
-      const save = dialog.getByRole('button', { name: 'Speichern' });
+      const save = dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ });
       for (const top of [0, 9999]) {
         await dialog.evaluate((el, y) => el.scrollTo(0, y), top);
         const box = (await save.boundingBox())!;

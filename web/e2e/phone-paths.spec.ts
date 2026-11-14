@@ -91,7 +91,10 @@ async function addTodoPlain(page: Page, title: string) {
   await ready(page, '/todos');
   await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
   await page.getByRole('dialog').getByLabel('Titel').fill(title);
-  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click(); // enabled once the lists are loaded
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+    .click(); // enabled once the lists are loaded
   await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
 }
 
@@ -106,7 +109,7 @@ test.describe('ten paths', () => {
     await expect(plus).toHaveAccessibleName('Aufgabe eintragen');
     await expect(plus).toBeEnabled();
     await s.tap(plus);
-    const field = page.getByRole('dialog', { name: 'Neue Aufgabe' }).getByLabel('Titel');
+    const field = page.getByRole('dialog', { name: 'Aufgabe eintragen' }).getByLabel('Titel');
     // The sheet opens with the cursor in the title: typing needs no tap of its own.
     await expect(field).toBeFocused();
     await s.type(field, 'Wäsche falten');
@@ -133,7 +136,10 @@ test.describe('ten paths', () => {
     await ready(page, '/calendar?new=1');
     await page.getByLabel('Titel').fill('Zahnarzt');
     await page.getByLabel('Beginn').fill('11:30');
-    await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await ready(page, '/');
     const s = new Steps(page);
@@ -145,11 +151,11 @@ test.describe('ten paths', () => {
   test('4 Erinnerung erledigen', async ({ page }, info) => {
     await page.clock.install({ time: new Date('2026-09-29T19:59:00') });
     await page.goto('/calendar?tab=reminders&new=1');
-    const dialog = page.getByRole('dialog', { name: 'Erinnerung hinzufügen' });
+    const dialog = page.getByRole('dialog', { name: 'Erinnerung eintragen' });
     await dialog.getByLabel('Titel').fill('Tabletten nehmen');
     await dialog.getByLabel('Datum').fill('2026-09-29');
     await dialog.getByLabel('Beginn').fill('20:00');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.clock.fastForward(90_000);
     const s = new Steps(page);
@@ -200,13 +206,13 @@ test.describe('ten paths', () => {
       .getByRole('button', { name: /Vorrat (hinzufügen|eintragen)/ })
       .first()
       .click();
-    const dialog = page.getByRole('dialog', { name: 'Vorrat hinzufügen' });
+    const dialog = page.getByRole('dialog', { name: 'Vorrat eintragen' });
     await dialog.getByLabel('Name', { exact: true }).fill('Milch');
     await dialog.getByLabel('Vorrat (Anzahl)').fill('1');
     const more = dialog.getByRole('button', { name: 'Mehr Felder anzeigen' });
     if (await more.count()) await more.click();
     await dialog.getByLabel('Nachkaufen ab (Anzahl, optional)').fill('2');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     const s = new Steps(page);
     await s.tap(page.getByRole('button', { name: 'Auf die Einkaufsliste' }));
@@ -227,15 +233,15 @@ test.describe('ten paths', () => {
     await page.getByLabel('Master-Passwort', { exact: true }).fill('Mein-Master-Passwort-1');
     await page.getByLabel('Master-Passwort wiederholen').fill('Mein-Master-Passwort-1');
     await page.getByRole('button', { name: 'Tresor erstellen' }).click();
-    await expect(page.getByRole('button', { name: 'Zugang hinzufügen' })).toBeVisible({
+    await expect(page.getByRole('button', { name: 'Zugang eintragen', exact: true })).toBeVisible({
       timeout: 30_000,
     });
-    await page.getByRole('button', { name: 'Zugang hinzufügen' }).click();
-    const dialog = page.getByRole('dialog', { name: 'Zugang hinzufügen' });
+    await page.getByRole('button', { name: 'Zugang eintragen', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Zugang eintragen' });
     await dialog.getByLabel('Name', { exact: true }).fill('Beispiel-Shop');
     await dialog.getByLabel('Benutzername').fill('alice');
     await dialog.getByLabel('Passwort', { exact: true }).fill('geheim-4711'); // gitleaks:allow (test fixture)
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     // The new entry opens its detail by itself; close it to start from the list.
     await page
       .getByRole('dialog', { name: 'Beispiel-Shop' })
@@ -386,7 +392,7 @@ test.describe('Keyboard', () => {
   }) => {
     await ready(page, '/todos');
     await page.getByTestId('bottom-plus').click();
-    const field = page.getByRole('dialog', { name: 'Neue Aufgabe' }).getByLabel('Titel');
+    const field = page.getByRole('dialog', { name: 'Aufgabe eintragen' }).getByLabel('Titel');
     await field.click();
     // Emulate a browser that does not resize the page for the keyboard: only visualViewport shrinks.
     await page.evaluate(() => {

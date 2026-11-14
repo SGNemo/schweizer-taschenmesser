@@ -14,7 +14,7 @@ test.describe('Habits (plan group, new module)', () => {
     const dialog = page.getByRole('dialog', { name: 'Gewohnheit eintragen' });
     await dialog.getByRole('button', { name: 'Wasser trinken' }).click();
     await expect(dialog.getByLabel('Erinnerung')).toHaveValue('window');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
 
     const card = page.getByTestId('habit-card');
@@ -31,7 +31,10 @@ test.describe('Habits (plan group, new module)', () => {
     await enable(page, 'habits');
     await page.goto('/habits?new=1');
     await page.getByRole('dialog').getByRole('button', { name: 'Dehnen' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     await page.getByRole('button', { name: 'Verlauf', exact: true }).click();
     await expect(
       page.getByRole('img', { name: 'Das letzte Jahr, eine Spalte pro Woche' }),

@@ -11,7 +11,10 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function save(page: Page) {
-  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+    .click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
@@ -66,12 +69,12 @@ test('Lesezeichen: add a link, open it, reject unsafe addresses', async ({ page 
   // An empty page: the empty state holds the filled entry, the head's (or the bottom bar's plus) steps back (0b-6a).
   await page
     .getByTestId('bookmarks-empty')
-    .getByRole('button', { name: 'Lesezeichen anlegen' })
+    .getByRole('button', { name: 'Lesezeichen eintragen' })
     .click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Titel').fill('Sendung');
   await dialog.getByLabel('Adresse (Link)').fill('javascript:alert(1)');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(dialog.getByText('gültige http(s)-Adresse')).toBeVisible();
   await dialog.getByLabel('Adresse (Link)').fill('dhl.example');
   await moreFields(page);
@@ -90,7 +93,7 @@ test('Lesezeichen: add a link, open it, reject unsafe addresses', async ({ page 
 test('a calendar place can be shown on the map', async ({ page }) => {
   await page.goto('/calendar');
   await page
-    .getByRole('button', { name: /Neuer Termin|Termin eintragen/ })
+    .getByRole('button', { name: /Termin eintragen/ })
     .first()
     .click();
   const dialog = page.getByRole('dialog');

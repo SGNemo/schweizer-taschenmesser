@@ -52,7 +52,7 @@ test.describe('Screenshot tool', () => {
     await expect(preview).toHaveAttribute('alt', /320 × 200 Pixel/);
 
     const download = page.waitForEvent('download');
-    await sheet.getByRole('button', { name: 'Speichern' }).click();
+    await sheet.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     expect((await download).suggestedFilename()).toBe('bildschirmfoto-2026-09-29-1000.png');
 
     await sheet.getByRole('button', { name: 'Verwerfen' }).click();

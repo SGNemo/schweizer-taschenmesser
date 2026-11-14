@@ -17,13 +17,16 @@ async function open(page: Page, url: string) {
 }
 
 async function save(page: Page) {
-  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+    .click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
 async function spend(page: Page, amount: string, category: string, date = '2026-09-20') {
   await open(page, '/finance?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Buchung eintragen' });
   await dialog.getByRole('button', { name: 'Ausgabe', exact: true }).click();
   await dialog.getByLabel('Betrag').fill(amount);
   await moreFields(page);

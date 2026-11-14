@@ -104,7 +104,9 @@ Examples of what a person types into **Schnell erfassen**, the **AI bar** ("Eint
 | Darstellung | Appearance | Apariencia | Apparence | Aparência |
 | Farbschema / Akzent | Colour scheme / accent | Esquema de color / acento | Thème de couleurs / accent | Esquema de cores / destaque |
 | Rückgängig | Undo | Deshacer | Annuler | Desfazer |
-| Anlegen / Hinzufügen | Add | Añadir | Ajouter | Adicionar |
+| <Ding> eintragen (a page's main action: head, plus, dialog, empty state, save) | Add <thing> | – | – | – |
+| Hinzufügen (joins something existing: part, attachment, calendar, zone) | Add | Añadir | Ajouter | Adicionar |
+| Neue Liste / Neue Seite (things one creates to write in) | New list / New page | – | – | – |
 | Löschen | Delete | Eliminar | Supprimer | Excluir |
 | Fällig / überfällig | Due / overdue | Vence / vencido | À échéance / en retard | Vence / atrasado |
 | Abbuchung | Charge | Cargo | Prélèvement | Cobrança |

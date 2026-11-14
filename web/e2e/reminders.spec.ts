@@ -4,11 +4,11 @@ import { openFoldedGroup, ready } from './helpers';
 /** Creates a reminder for 20:00 on 2026-09-29 through the calendar's reminder dialog. */
 async function addReminder(page: Page, title: string) {
   await page.goto('/calendar?tab=reminders&new=1');
-  const dialog = page.getByRole('dialog', { name: 'Erinnerung hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Erinnerung eintragen' });
   await dialog.getByLabel('Titel').fill(title);
   await dialog.getByLabel('Datum').fill('2026-09-29');
   await dialog.getByLabel('Beginn').fill('20:00');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByRole('button', { name: new RegExp(title) })).toBeVisible();
 }

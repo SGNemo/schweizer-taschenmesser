@@ -6,12 +6,12 @@ test.use({ viewport: { width: 1600, height: 1000 } });
 
 async function createEvent(page: Page) {
   await ready(page, '/calendar?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Neuer Termin' });
+  const dialog = page.getByRole('dialog', { name: 'Termin eintragen' });
   await dialog.getByLabel('Titel').fill('Ziehtest');
   await dialog.getByLabel('Datum', { exact: true }).fill('2026-11-03');
   await dialog.getByLabel('Beginn').fill('10:00');
   await dialog.getByLabel('Ende', { exact: true }).fill('11:00');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   // The editor closes with an in-app URL change (its Back entry pops); a goto in that gap can be aborted.
   await backSettled(page);
@@ -75,7 +75,7 @@ test.describe('Calendar: dragging in the hour grid (plan group)', () => {
     await page.mouse.down();
     await page.mouse.move(box.x + 40, y + 60, { steps: 5 });
     await page.mouse.up();
-    const dialog = page.getByRole('dialog', { name: 'Neuer Termin' });
+    const dialog = page.getByRole('dialog', { name: 'Termin eintragen' });
     await expect(dialog.getByLabel('Beginn')).toHaveValue('14:00');
     await expect(dialog.getByLabel('Ende', { exact: true })).not.toHaveValue('');
   });

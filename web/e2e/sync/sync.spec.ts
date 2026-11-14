@@ -74,7 +74,10 @@ test.describe('two devices', () => {
     await a.page.goto('/todos?list=inbox');
     await openEditor(a.page, a.page.getByRole('button', { name: /Brot/ }));
     await a.page.getByRole('dialog').getByLabel('Titel').fill('Vollkornbrot');
-    await a.page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await a.page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     await expect(a.page.getByRole('dialog')).toHaveCount(0);
     await syncNow(a.page);
 
@@ -142,7 +145,7 @@ test.describe('two devices', () => {
     await dialog.getByLabel('Empfänger', { exact: true }).fill('Stadtwerke');
     await dialog.getByLabel('Betrag').fill('89,90');
     await dialog.getByLabel('Fällig am').fill('2030-01-05');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(a.page.getByRole('dialog')).toHaveCount(0);
     await a.page.getByRole('button', { name: 'Als bezahlt markieren' }).click();
     await expect(a.page.getByText('Als bezahlt markiert.')).toBeVisible();
@@ -426,15 +429,17 @@ test.describe('password vault', () => {
     await a.page.getByLabel('Master-Passwort', { exact: true }).fill(MASTER);
     await a.page.getByLabel('Master-Passwort wiederholen').fill(MASTER);
     await a.page.getByRole('button', { name: 'Tresor erstellen' }).click();
-    await expect(a.page.getByRole('button', { name: 'Zugang hinzufügen' })).toBeVisible({
-      timeout: 20_000,
-    });
-    await a.page.getByRole('button', { name: 'Zugang hinzufügen' }).click();
-    const form = a.page.getByRole('dialog', { name: 'Zugang hinzufügen' });
+    await expect(a.page.getByRole('button', { name: 'Zugang eintragen', exact: true })).toBeVisible(
+      {
+        timeout: 20_000,
+      },
+    );
+    await a.page.getByRole('button', { name: 'Zugang eintragen', exact: true }).click();
+    const form = a.page.getByRole('dialog', { name: 'Zugang eintragen' });
     await form.getByLabel('Name', { exact: true }).fill(TITLE);
     await form.getByLabel('Passwort', { exact: true }).fill(PASSWORD);
-    await form.getByRole('button', { name: 'Speichern' }).click();
-    await expect(a.page.getByRole('dialog', { name: 'Zugang hinzufügen' })).toHaveCount(0);
+    await form.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
+    await expect(a.page.getByRole('dialog', { name: 'Zugang eintragen' })).toHaveCount(0);
     await expect.poll(() => outboxCount(a.page)).toBeGreaterThan(0);
 
     await connect(a.page);
@@ -537,13 +542,19 @@ test.describe('devices and conflicts', () => {
     await b.context.setOffline(true);
     await openEditor(b.page, b.page.getByRole('button', { name: /Konfliktaufgabe/ }));
     await b.page.getByRole('dialog').getByLabel('Titel').fill('Titel von B');
-    await b.page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await b.page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     await expect(b.page.getByRole('dialog')).toHaveCount(0);
 
     await a.page.goto('/todos?list=inbox');
     await openEditor(a.page, a.page.getByRole('button', { name: /Konfliktaufgabe/ }));
     await a.page.getByRole('dialog').getByLabel('Titel').fill('Titel von A');
-    await a.page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await a.page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     await expect(a.page.getByRole('dialog')).toHaveCount(0);
     await syncNow(a.page);
 

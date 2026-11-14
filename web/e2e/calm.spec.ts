@@ -87,7 +87,7 @@ test.describe('Calm display, capture and finding things again', () => {
     // One entry per device (Identity 4.0): the top bar's "Neu" on the desktop, the plus of the bottom bar on the phone.
     await page
       .getByRole('button', {
-        name: isMobile ? 'Neu eintragen' : 'Neu: schnell hinzufügen',
+        name: isMobile ? 'Neu eintragen' : 'Neu: etwas eintragen',
         exact: true,
       })
       .click();

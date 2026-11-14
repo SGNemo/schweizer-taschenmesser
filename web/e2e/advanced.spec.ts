@@ -72,7 +72,7 @@ test('a field that holds data is never hidden', async ({ page }) => {
   await dialog.getByLabel('Titel').fill('Konferenz');
   await dialog.getByRole('button', { name: 'Mehr Felder anzeigen' }).click();
   await dialog.getByLabel('Ende (Datum)').fill('2026-10-01');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(dialog).toHaveCount(0);
   await ready(page, '/calendar?view=day&date=2026-09-29');
   await page
@@ -105,5 +105,5 @@ test('finance: accounts and categories sit behind "Erweitert", or show once ther
   await expect(await toggle()).toHaveAttribute('aria-checked', 'false');
   await page.keyboard.press('Escape');
   await ready(page, '/finance?tab=accounts');
-  await expect(page.getByRole('button', { name: 'Konto hinzufügen' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Konto eintragen' })).toBeVisible();
 });

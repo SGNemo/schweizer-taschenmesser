@@ -22,7 +22,7 @@ it('a payee of only spaces says "Bitte ausfüllen" and saves nothing', async () 
   );
   await userEvent.type(screen.getByLabelText('Empfänger'), '   ');
   await userEvent.type(screen.getByLabelText('Betrag'), '49,90');
-  await userEvent.click(screen.getByRole('button', { name: 'Speichern' }));
+  await userEvent.click(screen.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }));
   expect((await screen.findByRole('alert')).textContent).toContain('Bitte ausfüllen');
   expect(await invoiceRepo.active().count()).toBe(0);
 });

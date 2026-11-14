@@ -357,7 +357,7 @@ function Form({
       >
         <Button onClick={cancel}>{t.actions.cancel}</Button>
         <Button type="submit" variant="primary">
-          {t.actions.save}
+          {existing ? t.actions.save : t.subscriptions.add}
         </Button>
       </FormActions>
     </form>

@@ -20,7 +20,7 @@ describe('feeds widget', () => {
 
   it('shows an empty state with an action when there is no data', async () => {
     view();
-    expect(await screen.findByRole('link', { name: 'Feed hinzufügen' })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: 'Feed eintragen' })).toHaveAttribute(
       'href',
       '/feeds?new=1',
     );

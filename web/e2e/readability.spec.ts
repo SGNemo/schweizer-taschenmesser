@@ -14,13 +14,16 @@ const html = (page: Page, attr: string) =>
   page.evaluate((a) => document.documentElement.getAttribute(a), attr);
 
 async function save(page: Page) {
-  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+    .click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
 async function addInvoice(page: Page, payee: string, amount: string, due: string) {
   await ready(page, '/invoices?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Rechnung hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Rechnung eintragen' });
   await dialog.getByLabel('Empfänger', { exact: true }).fill(payee);
   await dialog.getByLabel('Betrag').fill(amount);
   await dialog.getByLabel('Fällig am').fill(due);
@@ -113,7 +116,10 @@ test.describe('Reading aid, colour mode and grouping', () => {
     await ready(page, '/todos');
     await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Fenster putzen');
-    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+      .click();
     await expect(page.locator('[data-group="none"]')).toContainText('Fenster putzen');
     await expect(page.getByRole('button', { name: 'Ohne Datum einklappen' })).toBeVisible();
   });

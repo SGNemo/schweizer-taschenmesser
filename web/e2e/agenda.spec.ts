@@ -12,7 +12,7 @@ async function addEvent(page: Page, title: string, date: string, time: string) {
   await dialog.getByLabel('Titel').fill(title);
   await dialog.getByLabel('Datum', { exact: true }).fill(date);
   await dialog.getByLabel('Beginn').fill(time);
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 

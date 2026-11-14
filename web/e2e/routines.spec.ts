@@ -37,7 +37,7 @@ test('"Erledigt" hands the routine to the next name, and "Rückgängig" gives it
   await dialog.getByLabel('Was').fill('Müll rausbringen');
   await dialog.getByRole('button', { name: 'Mehr Felder anzeigen' }).click();
   await dialog.getByLabel('Wer wechselt sich ab').fill('Mia, Ben');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(dialog).toHaveCount(0);
 
   const row = page.getByRole('listitem').filter({ hasText: 'Müll rausbringen' });
@@ -61,7 +61,7 @@ test('calm: no red on the page, and a routine that waited is simply "dran"', asy
   await ready(page, '/routines?new=1');
   const dialog = page.getByRole('dialog', { name: 'Routine eintragen' });
   await dialog.getByLabel('Was').fill('Fenster putzen');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(dialog).toHaveCount(0);
   // Three weeks later the routine was never ticked: it is "dran", nothing more.
   await page.clock.setFixedTime(new Date('2026-10-20T10:00:00'));

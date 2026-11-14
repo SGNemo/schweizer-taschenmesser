@@ -132,7 +132,7 @@ test.describe('notebook (pages, notebooks, tabs, history, trash)', () => {
     await dialog.getByLabel('Name').fill('Arbeit');
     await dialog.getByRole('button', { name: 'Farbe 2' }).click();
     await dialog.getByRole('button', { name: 'Ziel' }).click();
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     const chip = (name: RegExp) => page.getByRole('button', { name });
     await expect(chip(/^Arbeit · 0/)).toHaveAttribute('aria-pressed', 'true');
 
@@ -388,10 +388,10 @@ test.describe('phone viewport', () => {
     await ready(page, '/notes');
     const list = page.getByRole('navigation', { name: 'Seiten' });
     await expect(list).toBeVisible();
-    // Phone: the plus of the bottom bar is the page's entry ("Notiz eintragen"). Until the page has registered it, the
+    // Phone: the plus of the bottom bar is the page's entry ("Neue Seite"). Until the page has registered it, the
     // plus is the general capture ("Neu: Notizen"); a tap in that moment opens the capture sheet instead.
     const plus = page.getByTestId('bottom-plus');
-    await expect(plus).toHaveAccessibleName('Notiz eintragen');
+    await expect(plus).toHaveAccessibleName('Neue Seite');
     await plus.click();
     await expect(editor(page)).toBeVisible();
     await page.keyboard.type('Unterwegs notiert');

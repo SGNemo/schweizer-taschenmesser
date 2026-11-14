@@ -130,7 +130,10 @@ test.describe('shopping list on a phone', () => {
     const row = page.getByRole('list', { name: 'Einkauf' }).getByRole('listitem').first();
     await row.getByRole('button', { name: 'Eintrag bearbeiten' }).click();
     await page.getByLabel('Menge (optional)').fill('12 große Packungen aus dem Großhandel');
-    await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     const main = row.getByRole('button', { name: /Haferflocken/ });
     await expect(row.getByText(/Großhandel/)).toBeVisible();
     expect((await main.boundingBox())!.width).toBeGreaterThanOrEqual(140);
@@ -143,7 +146,7 @@ test.describe('shopping list on a phone', () => {
     await addItems(page, ['Milch']);
     // Identity 4.0: the plus of the bottom bar is the page's entry (here: a new list); there is no round button.
     const plus = page.getByTestId('bottom-plus');
-    await expect(plus).toHaveAccessibleName('Liste eintragen');
+    await expect(plus).toHaveAccessibleName('Neue Liste');
     await expect(plus).toHaveText('Liste');
     await expect(page.getByRole('button', { name: 'Schnell hinzufügen', exact: true })).toHaveCount(
       0,
@@ -162,7 +165,10 @@ test.describe('top bar with a running focus round', () => {
     await ready(page, '/todos');
     await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Keller aufräumen');
-    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+      .click();
     await expect(page.getByText('Keller aufräumen').first()).toBeVisible();
     await ready(page, '/');
     await page
@@ -188,7 +194,10 @@ test.describe('ToDos on a wide screen', () => {
       .getByRole('dialog')
       .getByLabel('Titel')
       .fill('Ein recht langer Titel für eine Aufgabe');
-    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+      .click();
     const title = page.getByText('Ein recht langer Titel für eine Aufgabe').first();
     await expect(title).toBeVisible();
     // The page has no add field any more (Identity 4.0): the row itself shows the width of the list.

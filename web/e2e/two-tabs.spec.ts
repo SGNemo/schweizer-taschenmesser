@@ -10,7 +10,10 @@ test('saving in one tab keeps the title changed in the other tab', async ({ page
   await ready(page, '/todos?list=inbox');
   await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
   await page.getByRole('dialog').getByLabel('Titel').fill('Steuererklärung');
-  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+    .click();
   await expect(page.getByRole('checkbox', { name: 'Steuererklärung' })).toBeVisible();
   await openEditor(page, page.getByRole('button', { name: /Steuererklärung/ }));
   const editorA = page.getByRole('dialog');
@@ -22,12 +25,15 @@ test('saving in one tab keeps the title changed in the other tab', async ({ page
   await ready(tabB, '/todos?list=inbox');
   await openEditor(tabB, tabB.getByRole('button', { name: /Steuererklärung/ }));
   await tabB.getByRole('dialog').getByLabel('Titel').fill('Steuern 2026');
-  await tabB.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await tabB
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+    .click();
   await expect(tabB.getByRole('dialog')).toHaveCount(0);
 
   // Tab A (still open since before): change the priority only and save.
   await editorA.getByLabel('Priorität').selectOption({ label: 'Hoch' });
-  await editorA.getByRole('button', { name: 'Speichern' }).click();
+  await editorA.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
   await tabB.reload();

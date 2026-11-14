@@ -37,7 +37,7 @@ describe('Time tracking page', () => {
   it('the empty page says one thing with one filled step; idle and day texts wait for a project (U10)', async () => {
     draw();
     const empty = await screen.findByTestId('timetrack-empty');
-    const step = within(empty).getByRole('button', { name: 'Projekt anlegen' });
+    const step = within(empty).getByRole('button', { name: 'Projekt eintragen' });
     expect(step.className).toMatch(/primary/);
     expect(screen.queryByText('Nichts läuft.')).toBeNull();
     expect(screen.queryByText('Heute noch keine Zeit erfasst.')).toBeNull();

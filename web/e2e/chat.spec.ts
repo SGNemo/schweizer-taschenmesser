@@ -54,7 +54,7 @@ async function setUp(page: Page) {
   await section.getByLabel('Anbieter hinzufügen').selectOption({ label: 'Claude (Anthropic)' });
   const provider = section.getByTestId('provider-anthropic');
   await provider.getByLabel('API-Schlüssel').fill('sk-ant-e2e-key'); // gitleaks:allow (fixture)
-  await provider.getByRole('button', { name: 'Speichern' }).click();
+  await provider.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(provider.getByText('Gespeichert.')).toBeVisible();
 }
 

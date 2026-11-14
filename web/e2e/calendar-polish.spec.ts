@@ -103,14 +103,12 @@ test.describe('Calendar polish (UI round 6)', () => {
     expect(t.width).toBeGreaterThan(250);
   });
 
-  test('U15: an empty calendar offers "Neuer Termin" once', async ({ page }) => {
+  test('U15: an empty calendar offers "Termin eintragen" once', async ({ page }) => {
     await page.clock.install({ time: new Date('2026-11-03T10:00:00') });
     await ready(page, '/calendar?view=month&date=2026-11-03');
     await expect(page.getByTestId('calendar-free')).toBeVisible();
     // Once on either device: the head's button on the desktop, the plus of the bottom bar on the phone.
-    await expect(page.getByRole('button', { name: /Neuer Termin|Termin eintragen/ })).toHaveCount(
-      1,
-    );
+    await expect(page.getByRole('button', { name: /Termin eintragen/ })).toHaveCount(1);
   });
 
   test('U16 + U17: one heading size, and the head keeps its height on the reminders tab', async ({
@@ -138,7 +136,7 @@ test.describe('Calendar polish (UI round 6)', () => {
     expect((await frame.boundingBox())!.height).toBe(before);
     // The tab names the view: the page repeats no "Erinnerungen" heading and no add button of its own.
     await expect(main.getByRole('heading', { name: 'Erinnerungen', level: 2 })).toHaveCount(0);
-    await expect(main.getByRole('button', { name: 'Erinnerung hinzufügen' })).toHaveCount(1);
+    await expect(main.getByRole('button', { name: 'Erinnerung eintragen' })).toHaveCount(1);
   });
 
   test('U27a: the "Wie zuletzt" chips are one title line with the time below', async ({
@@ -149,7 +147,7 @@ test.describe('Calendar polish (UI round 6)', () => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await fill(page);
     await page.goto('/calendar?view=month&date=2026-11-03');
-    await page.locator('main').getByRole('button', { name: 'Neuer Termin' }).click();
+    await page.locator('main').getByRole('button', { name: 'Termin eintragen' }).click();
     const group = page.getByRole('dialog').getByRole('group', { name: 'Wie zuletzt' });
     const chips = group.getByRole('button');
     await expect(chips).toHaveCount(4);

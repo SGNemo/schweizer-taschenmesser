@@ -192,7 +192,7 @@ export default function MainPage() {
           <>
             <Button onClick={close}>{t.actions.cancel}</Button>
             <Button variant="primary" type="submit" form="feed-form">
-              {t.actions.save}
+              {draft?.id ? t.actions.save : s.add}
             </Button>
           </>
         }

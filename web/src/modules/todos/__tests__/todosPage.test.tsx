@@ -165,7 +165,7 @@ describe('ToDos empty page (U26)', () => {
     expect(within(empty).getAllByRole('button')).toHaveLength(1);
     expect(screen.queryByRole('textbox')).toBeNull();
     await userEvent.click(within(empty).getByRole('button', { name: 'Aufgabe eintragen' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Neue Aufgabe' });
+    const dialog = await screen.findByRole('dialog', { name: 'Aufgabe eintragen' });
     await userEvent.type(
       within(dialog).getByRole('textbox', { name: 'Titel' }),
       'Erste Sache{Enter}',
@@ -180,10 +180,10 @@ describe('ToDos empty page (U26)', () => {
 describe('ToDos add dialog from a link (`?new=1&title=…`)', () => {
   it('opens with the shared title, saves it once and does not open again', async () => {
     draw('/todos?new=1&title=Blumen%20gie%C3%9Fen');
-    const dialog = await screen.findByRole('dialog', { name: 'Neue Aufgabe' });
+    const dialog = await screen.findByRole('dialog', { name: 'Aufgabe eintragen' });
     const field = within(dialog).getByRole('textbox', { name: 'Titel' });
     expect(field).toHaveValue('Blumen gießen');
-    const save = within(dialog).getByRole('button', { name: 'Hinzufügen' });
+    const save = within(dialog).getByRole('button', { name: 'Aufgabe eintragen' });
     await waitFor(() => expect(save).toBeEnabled());
     await userEvent.click(save);
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
@@ -196,7 +196,7 @@ describe('ToDos add dialog from a link (`?new=1&title=…`)', () => {
 
   it('"Abbrechen" is the explicit way out: the dialog closes without a question and nothing is saved', async () => {
     draw('/todos?new=1&title=Nicht%20verlieren');
-    const dialog = await screen.findByRole('dialog', { name: 'Neue Aufgabe' });
+    const dialog = await screen.findByRole('dialog', { name: 'Aufgabe eintragen' });
     await userEvent.click(within(dialog).getByRole('button', { name: 'Abbrechen' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(screen.queryByRole('alertdialog')).toBeNull();
@@ -205,7 +205,7 @@ describe('ToDos add dialog from a link (`?new=1&title=…`)', () => {
 
   it('Escape asks before a shared title is dropped, and "Weiter bearbeiten" keeps it', async () => {
     draw('/todos?new=1&title=Nicht%20verlieren');
-    const dialog = await screen.findByRole('dialog', { name: 'Neue Aufgabe' });
+    const dialog = await screen.findByRole('dialog', { name: 'Aufgabe eintragen' });
     const field = within(dialog).getByRole('textbox', { name: 'Titel' });
     expect(field).toHaveValue('Nicht verlieren');
     // Esc reaches the dialog as the native `cancel` event (jsdom does not raise it by itself).
@@ -219,9 +219,9 @@ describe('ToDos add dialog from a link (`?new=1&title=…`)', () => {
   it('waits for the inbox: without a list the button is disabled, then it saves', async () => {
     await db.table('todos_list').clear();
     draw('/todos?new=1&title=Erste');
-    const dialog = await screen.findByRole('dialog', { name: 'Neue Aufgabe' });
+    const dialog = await screen.findByRole('dialog', { name: 'Aufgabe eintragen' });
     // The page creates the inbox right after it has read the (empty) lists; then saving is possible.
-    const save = within(dialog).getByRole('button', { name: 'Hinzufügen' });
+    const save = within(dialog).getByRole('button', { name: 'Aufgabe eintragen' });
     await waitFor(() => expect(save).toBeEnabled());
     await userEvent.click(save);
     await waitFor(async () =>

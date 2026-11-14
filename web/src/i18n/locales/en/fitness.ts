@@ -4,8 +4,8 @@ export const fitness: Strings['fitness'] = {
   meta: {
     name: 'Fitness',
     description: 'Keep a rough log of training and food: sessions, sets, weights and kcal.',
-    quickAddSession: 'Fitness: log a session',
-    quickAddMeal: 'Fitness: log a meal',
+    quickAddSession: 'Fitness: add a session',
+    quickAddMeal: 'Fitness: add a meal',
     widget: 'Fitness',
     settings: {
       nutrition: 'Track calories',
@@ -18,8 +18,8 @@ export const fitness: Strings['fitness'] = {
     },
   },
   tabs: { label: 'View', training: 'Training', food: 'Food', week: 'Week' },
-  addSession: 'Log a session',
-  addMeal: 'Log a meal',
+  addSession: 'Add session',
+  addMeal: 'Add meal',
   editSession: 'Edit session',
   editMeal: 'Edit meal',
   repeat: (title) => `Same as last time: ${title}`,
@@ -31,8 +31,8 @@ export const fitness: Strings['fitness'] = {
     today: 'Today',
   },
   empty: {
-    trainingAdd: 'Log your first session',
-    foodAdd: 'Log your first meal',
+    trainingAdd: 'Add your first session',
+    foodAdd: 'Add your first meal',
     training: 'Nothing logged yet. One session is enough.',
     trainingHint: 'Quick capture works too: “workout bench press 3×8 60”.',
     food: 'No meal logged yet.',

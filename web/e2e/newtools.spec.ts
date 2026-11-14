@@ -105,7 +105,7 @@ test('image tool: shrinks and converts a picture on the device, then saves it', 
   await expect(sheet.getByTestId('image-result')).toContainText('JPG');
 
   const download = page.waitForEvent('download');
-  await sheet.getByRole('button', { name: 'Speichern' }).click();
+  await sheet.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   expect((await download).suggestedFilename()).toBe('rot-klein.jpg');
 });
 

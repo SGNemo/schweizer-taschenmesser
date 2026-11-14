@@ -21,7 +21,7 @@ export const bookmarks: Strings['bookmarks'] = {
     },
   },
   title: 'Saved',
-  add: 'Save',
+  add: 'Add saved item',
   edit: 'Edit saved item',
   url: 'Address (link)',
   urlInvalid: 'Please enter a valid http(s) address.',

@@ -10,13 +10,16 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function save(page: Page) {
-  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+    .click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
 async function addAccount(page: Page, name: string, opening: string) {
   await ready(page, '/finance?tab=accounts');
-  await page.getByRole('button', { name: 'Konto hinzufügen' }).click();
+  await page.getByRole('button', { name: 'Konto eintragen' }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Kontoname').fill(name);
   await dialog.getByLabel('Anfangssaldo').fill(opening);
@@ -31,8 +34,8 @@ test.describe('Finance: transfers, splits, year, outlook', () => {
 
     // C23: the empty bookings page offers one verb; transfers live on "Konten".
     await ready(page, '/finance?tab=accounts');
-    // One primary on "Konten": the toolbar's "Buchung"; "Konto hinzufügen" is secondary (round 6, U13).
-    await expect(page.getByRole('button', { name: 'Konto hinzufügen' })).toBeVisible();
+    // One primary on "Konten": the toolbar's "Buchung"; "Konto eintragen" is secondary (round 6, U13).
+    await expect(page.getByRole('button', { name: 'Konto eintragen' })).toBeVisible();
     // Identity 4.0: on the phone the page's one action is the plus of the bottom bar, no filled button in the page.
     if ((page.viewportSize()?.width ?? 1280) < 900) {
       expect(await primaryActions(page)).toEqual([]);
@@ -58,12 +61,12 @@ test.describe('Finance: transfers, splits, year, outlook', () => {
     await ready(page, '/finance?tab=trend');
     await expect(page.getByTestId('net-worth-empty')).toContainText('Noch zu wenig Verlauf');
     await page.getByTestId('net-worth-empty').getByRole('button').click();
-    await expect(page.getByRole('dialog', { name: 'Buchung hinzufügen' })).toBeVisible();
+    await expect(page.getByRole('dialog', { name: 'Buchung eintragen' })).toBeVisible();
   });
 
   test('a booking can be split over two categories', async ({ page }) => {
     await ready(page, '/finance?new=1');
-    const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
+    const dialog = page.getByRole('dialog', { name: 'Buchung eintragen' });
     await dialog.getByLabel('Betrag').fill('50,00');
     await dialog.getByLabel('Empfänger / Titel').fill('Drogerie');
     await moreFields(page);
@@ -85,12 +88,12 @@ test.describe('Finance: transfers, splits, year, outlook', () => {
 
   test('a split that does not add up is not saved', async ({ page }) => {
     await ready(page, '/finance?new=1');
-    const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
+    const dialog = page.getByRole('dialog', { name: 'Buchung eintragen' });
     await dialog.getByLabel('Betrag').fill('50,00');
     await moreFields(page);
     await dialog.getByRole('button', { name: 'Auf mehrere Kategorien aufteilen' }).click();
     await dialog.getByLabel('Betrag').nth(1).fill('10,00');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(dialog).toBeVisible();
     await expect(dialog.getByRole('alert')).toContainText('zu verteilen');
   });
@@ -105,7 +108,7 @@ test.describe('Finance: transfers, splits, year, outlook', () => {
 
   test('the outlook lists a repeating booking and a horizon switch', async ({ page }) => {
     await ready(page, '/finance?new=1');
-    const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
+    const dialog = page.getByRole('dialog', { name: 'Buchung eintragen' });
     await dialog.getByLabel('Betrag').fill('800,00');
     await dialog.getByLabel('Empfänger / Titel').fill('Miete');
     await moreFields(page);

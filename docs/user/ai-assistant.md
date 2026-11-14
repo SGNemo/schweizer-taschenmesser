@@ -5,7 +5,7 @@
 ## Search and AI assistant
 
 Ctrl+K (phone: the search field at the top) opens the search: jump, search across all modules and ask questions.
-Free text that is no question goes to "Quick add" on Enter; put "?" at the start or the end to ask it as a question.
+Free text that is no question goes to "New entry" on Enter; put "?" at the start or the end to ask it as a question.
 
 - **Local, free of charge:** the app understands simple questions itself, such as "What's on today?", "events tomorrow", "open invoices",
   "overdue tasks", "account balance", "What do my subscriptions cost?", "How much do I still have to pay?", "search dentist".
@@ -23,7 +23,7 @@ Free text that is no question goes to "Quick add" on Enter; put "?" at the start
   API keys stay encrypted in this device's database (not synced, not in the backup).
 - **Costs at a glance:** identical questions on the same day come from the cache (0 tokens); usage per answer and in total is shown in the answer
   and in the settings.
-- **Creating only with confirmation:** if the AI suggests a new entry, the app shows it first; it is saved after "Create".
+- **Adding only with confirmation:** if the AI suggests a new entry, the app shows it first; it is saved after "Add".
 
 ## Adding entries with AI
 

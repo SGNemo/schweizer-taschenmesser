@@ -104,7 +104,7 @@ export const calendar: Strings['calendar'] = {
   view: 'View',
   prev: 'Back',
   next: 'Next',
-  newEvent: 'New event',
+  newEvent: 'Add event',
   headFree: {
     today: 'Free today',
     rest: 'Nothing more today',

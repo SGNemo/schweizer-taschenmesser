@@ -21,7 +21,7 @@ describe('people widget', () => {
 
   it('shows an empty state with an action when there is no data', async () => {
     view();
-    expect(await screen.findByRole('link', { name: /anlegen/ })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: 'Person eintragen' })).toHaveAttribute(
       'href',
       '/people?new=1',
     );

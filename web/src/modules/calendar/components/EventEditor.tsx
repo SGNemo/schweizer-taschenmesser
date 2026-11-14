@@ -516,7 +516,11 @@ function Form({
       >
         <Button onClick={cancel}>{t.actions.cancel}</Button>
         <Button type="submit" variant="primary">
-          {t.actions.save}
+          {existing
+            ? t.actions.save
+            : kind === 'reminder'
+              ? t.calendar.reminders.add
+              : t.calendar.newEvent}
         </Button>
       </FormActions>
     </form>
