@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router';
 import { t } from '@/strings';
 import { Button, Form, Icon, TextField } from '@/ui';
 import {
@@ -17,10 +18,15 @@ export function LockScreen() {
   const [bio, setBio] = useState<BiometricStatus>();
   const prompted = useRef(false);
   const root = useRef<HTMLDivElement>(null);
-  // `data-autofocus` is read by Dialog only; the lock screen is a page, so it focuses its field itself.
+  // `data-autofocus` is read by Dialog only; the lock screen is a page, so it focuses its field itself:
+  // when it appears and whenever a navigation lands on it while it stays mounted. The router renders
+  // navigations as transitions, so leaving for a page whose code is not loaded yet and coming back
+  // before it rendered never unmounts this screen nor changes the shown path; the focus would stay on
+  // the link or the "Mehr" button that started it.
+  const location = useLocation();
   useEffect(() => {
     root.current?.querySelector<HTMLElement>('[data-autofocus]')?.focus();
-  }, []);
+  }, [location]);
 
   async function unlockWithBiometric() {
     setError('');
