@@ -60,6 +60,10 @@ test.describe('Finance: transfers, splits, year, outlook', () => {
   test('the history tab shows a calm empty state without enough data', async ({ page }) => {
     await ready(page, '/finance?tab=trend');
     await expect(page.getByTestId('net-worth-empty')).toContainText('Noch zu wenig Verlauf');
+    // One primary per view: the empty state holds the filled step, the head's action steps back (round 6).
+    // On the phone the plus of the bottom bar is the one action, no filled button in the page.
+    const phone = (page.viewportSize()?.width ?? 1280) < 900;
+    await expect.poll(() => primaryActions(page)).toEqual(phone ? [] : ['Buchung eintragen']);
     await page.getByTestId('net-worth-empty').getByRole('button').click();
     await expect(page.getByRole('dialog', { name: 'Buchung eintragen' })).toBeVisible();
   });
