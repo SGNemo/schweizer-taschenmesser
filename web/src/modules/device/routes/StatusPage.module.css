@@ -11,6 +11,15 @@
 .lines > li {
   min-width: 0;
 }
+/* The backup lines and "Backup herunterladen" under them, at the start of the column, calm like a line. */
+.group {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+.group > ul {
+  justify-self: stretch;
+}
 .more {
   margin: 0;
   color: var(--text-muted);

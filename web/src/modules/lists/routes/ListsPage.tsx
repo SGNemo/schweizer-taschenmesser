@@ -25,9 +25,11 @@ import {
   ItemRow,
   PageAction,
   PageHeader,
+  PHONE_QUERY,
   Progress,
   Tabs,
   TextField,
+  useMediaQuery,
   useOpenParam,
 } from '@/ui';
 import { ItemEditor } from '../components/ItemEditor';
@@ -81,6 +83,7 @@ export default function ListsPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const toast = useUiStore((x) => x.toast);
   const form = useRef<HTMLFormElement>(null);
+  const phone = useMediaQuery(PHONE_QUERY);
 
   useEffect(() => {
     void ensureShoppingList();
@@ -249,6 +252,8 @@ export default function ListsPage() {
           labelHidden
           checked={i.done}
           onChange={(e) => tick(i, e.target.checked)}
+          // Ticked in grey, as in ToDos: the accent stays for the page's one action.
+          tone="neutral"
           data-row-tick
         />
       }
@@ -281,6 +286,14 @@ export default function ListsPage() {
   );
 
   const openCount = shown.filter((i) => !i.done).length;
+  // An empty list's next step is its first entry (follow-up (a) of 0b-8): the field's own button carries the verb and
+  // is the page's filled action on the desktop; "Neue Liste" steps back. On the phone the plus stays "Neue Liste"
+  // (decided), so the field's button is outlined there. One way in: no second button in the empty state.
+  // Only once the list is painted (`read`) and its items are in: before that the head keeps its usual emphasis.
+  const isEmpty = !!current && read && items !== undefined && shown.length === 0;
+  const submitVariant = !isEmpty ? 'ghost' : phone ? 'secondary' : 'primary';
+  // In every state: the phone keeps the field wide with the short verb (the placeholder says what goes in).
+  const submitLabel = isShopping && !phone ? t.lists.emptyAction : t.lists.addSubmit;
   const clearBought = () => {
     if (!current) return;
     const id = current.id;
@@ -290,7 +303,8 @@ export default function ListsPage() {
   };
   const pageMenu = current
     ? [
-        { id: 'add-item', label: t.lists.addItem, onSelect: focusAdd },
+        // On an empty list the field stands right under the empty state: no second way to it.
+        ...(isEmpty ? [] : [{ id: 'add-item', label: t.lists.addItem, onSelect: focusAdd }]),
         ...(isShopping && doneCount > 0
           ? [{ id: 'clear-bought', label: t.lists.clearBought(doneCount), onSelect: clearBought }]
           : []),
@@ -367,6 +381,7 @@ export default function ListsPage() {
           short={t.nav.plusThings.list}
           plusName={t.lists.newList}
           onClick={() => setListTarget('new')}
+          variant={isEmpty ? 'secondary' : 'primary'}
         >
           <Icon name="plus" size={18} />
           {t.lists.newList}
@@ -374,7 +389,8 @@ export default function ListsPage() {
         {/* Everything occasional: templates, editing, sharing, clearing a packing list. */}
         <StartDataMenu moduleId="lists" items={pageMenu} />
       </PageHeader>
-      {lists && current && read && isShopping ? (
+      {/* An empty list has no figure: "0 offen" says nothing the empty state does not say better. */}
+      {lists && current && read && isShopping && !isEmpty ? (
         <ListFigure
           name={current.name}
           open={openCount}
@@ -428,23 +444,21 @@ export default function ListsPage() {
               tripDate={current.tripDate}
             />
           ) : null}
-          {items && shown.length === 0 ? (
-            <EmptyState
-              title={t.lists.empty}
-              testId="lists-empty"
-              motif={
-                <SignatureMark
-                  id={current.kind === 'shopping' ? 'receipt' : 'todayCard'}
-                  size={64}
-                />
-              }
-            >
-              {/* M10: an empty state names its next step. "Artikel eintragen" on a shopping list; the other lists reuse
-                  `addItem`, the label of the "⋯" entry and of the field itself (a known exception to "<Ding> eintragen"). */}
-              <Button onClick={focusAdd}>
-                {isShopping ? t.lists.emptyAction : t.lists.addItem}
-              </Button>
-            </EmptyState>
+          {isEmpty ? (
+            // M10: the next step is the field right below, with its verb button (`submitLabel`). The wrapper keeps
+            // the empty state from taking the page's free height (it pushed the field to the bottom edge).
+            <div className={styles.emptyHold}>
+              <EmptyState
+                title={t.lists.empty}
+                testId="lists-empty"
+                motif={
+                  <SignatureMark
+                    id={current.kind === 'shopping' ? 'receipt' : 'todayCard'}
+                    size={64}
+                  />
+                }
+              />
+            </div>
           ) : null}
           <div
             className={isShopping ? styles.paper : styles.sheet}
@@ -486,8 +500,8 @@ export default function ListsPage() {
                   autoComplete="off"
                 />
               ) : null}
-              <Button type="submit" variant="ghost">
-                {t.actions.add}
+              <Button type="submit" variant={submitVariant}>
+                {submitLabel}
               </Button>
             </form>
             <datalist id="lists-categories">

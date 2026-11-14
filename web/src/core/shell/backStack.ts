@@ -32,6 +32,8 @@ let listening = false;
 let restore: { state: unknown; url: string } | null = null;
 /** Our own re-announcement of the restored location; not a user's Back. */
 let announcing = false;
+/** Told about a user's history step (Back or Forward) that closed nothing, not about our own pops. */
+const pageBack = new Set<() => void>();
 
 function markerOnTop(): string | undefined {
   const state = history.state as Record<string, unknown> | null;
@@ -98,8 +100,14 @@ function onPop(e: Event): void {
   }
   const top = stack[stack.length - 1];
   if (!top) {
-    // Landed on a marker nobody owns any more (see above): step over it.
-    if (markerOnTop()) back();
+    const notify = () => {
+      for (const listener of pageBack) listener();
+    };
+    // Landed on a marker nobody owns any more (see above): step over it, then tell the page.
+    if (markerOnTop()) {
+      back();
+      waiting.push(notify);
+    } else notify();
     return;
   }
   const result = top.close();
@@ -111,12 +119,27 @@ function onPop(e: Event): void {
   stack = stack.filter((e) => e !== top);
 }
 
-/** Registers an open element. A second call with the same id only replaces its close handler. */
-export function pushBack(id: string, close: () => BackResult): void {
+function listen(): void {
   if (!listening && typeof window !== 'undefined') {
     window.addEventListener('popstate', onPop);
     listening = true;
   }
+}
+
+/**
+ * Calls `listener` when the user's Back (or Forward) leads to another page and closed nothing open;
+ * after a stale marker was stepped over, once that has settled. Not on our own `history.back()`
+ * after a sheet closed by button, nor on a re-announced URL. Returns the unsubscribe function.
+ */
+export function onPageBack(listener: () => void): () => void {
+  listen();
+  pageBack.add(listener);
+  return () => void pageBack.delete(listener);
+}
+
+/** Registers an open element. A second call with the same id only replaces its close handler. */
+export function pushBack(id: string, close: () => BackResult): void {
+  listen();
   const known = stack.find((e) => e.id === id);
   if (known) {
     known.close = close;
@@ -145,6 +168,7 @@ export function backDepth(): number {
 /** Test helper: forget everything and detach the listener. */
 export function resetBackStack(): void {
   stack = [];
+  pageBack.clear();
   swallow = 0;
   waiting = [];
   restore = null;

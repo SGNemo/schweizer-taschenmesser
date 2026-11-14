@@ -140,7 +140,7 @@ export const de = {
     /** The thing a page's action adds, where the module has no such noun yet (the text under the plus). */
     plusThings: {
       list: 'Liste',
-      budget: 'Budget',
+      budget: 'Limit',
       link: 'Lesezeichen',
       chat: 'Chat',
       place: 'Ort',
@@ -3583,6 +3583,9 @@ export const de = {
     intro:
       'Sichere alle Daten als Datei oder spiele ein Backup wieder ein. Zugangsdaten (Sync-Token, Schlüssel) sind nie im Backup enthalten.',
     export: 'Backup herunterladen',
+    /** Dialog title on Gerätestatus and its readable-file button: never the opener's words again. */
+    exportTitle: 'Backup sichern',
+    exportPlain: 'Ohne Passwort herunterladen',
     exported: 'Backup heruntergeladen.',
     file: 'Backup-Datei',
     mode: 'Wiederherstellung',
@@ -4571,7 +4574,8 @@ export const de = {
     giftsOpen: (n: number) => (n === 1 ? '1 Geschenk offen' : `${n} Geschenke offen`),
     giftsHeading: 'Geschenke',
     viewLabel: 'Ansicht',
-    viewPeople: 'Alle',
+    /** Names what the list shows (everyone, next birthday first); never the h1 "Personen" (M8). */
+    viewPeople: 'Geburtstage',
     viewGifts: 'Offene Geschenke',
     giftsNoneOpen: 'Keine offenen Geschenkideen. Alles verschenkt.',
     giftGivenAction: 'Verschenkt',
@@ -5143,11 +5147,10 @@ export const de = {
         quarter: 'Quartal',
         year: 'Jahr',
         quarterLabel: (q: number, year: number) => `Q${q} ${year}`,
-        perPeriod: (period: string) => `pro ${period}`,
       },
       carry: {
         label: 'Rest in den nächsten Zeitraum übernehmen',
-        hint: 'Was übrig bleibt, erweitert das nächste Budget; was zu viel war, verkleinert es (höchstens um ein Budget).',
+        hint: 'Was übrig bleibt, erweitert das nächste Limit; was zu viel war, verkleinert es (höchstens um ein Limit).',
         plus: (amount: string) => `inkl. ${amount} Übertrag`,
         minus: (amount: string) => `abzüglich ${amount} Übertrag`,
       },
@@ -5157,13 +5160,13 @@ export const de = {
         title: (name: string, percent: number) => `${name}: ${percent} % des Budgets verbraucht`,
       },
       forecast: {
-        over: (amount: string) => `Im bisherigen Tempo: etwa ${amount} über dem Budget`,
+        over: (amount: string) => `Im bisherigen Tempo: etwa ${amount} über dem Limit`,
       },
       history: {
         title: 'Verlauf',
         period: 'Zeitraum',
         spent: 'Ausgaben',
-        limit: 'Budget',
+        limit: 'Limit',
         bookings: 'Buchungen ansehen',
       },
       head: {
@@ -5189,18 +5192,18 @@ export const de = {
       },
       widget: { addExpense: 'Ausgabe +' },
       settings: {
-        warnAtPercent: 'Warnen ab (Prozent des Budgets)',
+        warnAtPercent: 'Warnen ab (Prozent des Limits)',
         warnAtPercentHelp:
-          'Ab diesem Anteil zeigt ein Budget „fast aufgebraucht“. Rot wird nur, was das Budget überschreitet.',
+          'Ab diesem Anteil zeigt ein Limit „fast aufgebraucht“. Rot wird nur, was das Limit überschreitet.',
         showForecast: 'Prognose bis Zeitraumende zeigen',
         showForecastHelp:
-          'Eine Zeile je Budget: wo die Ausgaben im bisherigen Tempo landen, inklusive geplanter wiederkehrender Buchungen.',
+          'Eine Zeile je Limit: wo die Ausgaben im bisherigen Tempo landen, inklusive geplanter wiederkehrender Buchungen.',
       },
     },
     meta: {
       name: 'Budgets & Sparziele',
       description:
-        'Monatslimits je Ausgabenkategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt.',
+        'Ausgabenlimits je Kategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt.',
       route: 'Budgets',
       widget: 'Budgets & Sparziele',
       quickAdd: 'Sparziel',
@@ -5208,24 +5211,25 @@ export const de = {
     title: 'Budgets & Sparziele',
     tabs: 'Bereich',
     tabBudgets: 'Limits',
-    listBudgets: 'Budgets',
+    listBudgets: 'Limits',
     tabGoals: 'Sparziele',
-    addBudget: 'Budget eintragen',
-    editBudget: 'Budget bearbeiten',
+    addBudget: 'Limit eintragen',
+    editBudget: 'Limit bearbeiten',
     addGoal: 'Sparziel eintragen',
     editGoal: 'Sparziel bearbeiten',
     category: 'Kategorie',
     unknownCategory: 'Gelöschte Kategorie',
-    limit: 'Limit pro Monat',
+    /** The amount field names the period picked below it. */
+    limit: { month: 'Limit pro Monat', quarter: 'Limit pro Quartal', year: 'Limit pro Jahr' },
     needFinance: 'Budgets brauchen das Modul „Finanzen“.',
     needFinanceHint:
       'Aktiviere es in der Modul-Bibliothek – die Ausgaben je Kategorie kommen von dort.',
     month: 'Monat',
     prevMonth: 'Vorheriger Monat',
     nextMonth: 'Nächster Monat',
-    emptyBudgets: 'Noch keine Budgets. Lege ein Monatslimit für eine Ausgabenkategorie fest.',
+    emptyBudgets: 'Noch keine Limits. Lege fest, wie viel du in einer Kategorie ausgeben willst.',
     emptyGoals: 'Noch keine Sparziele.',
-    emptyBudgetAction: 'Erstes Budget eintragen',
+    emptyBudgetAction: 'Erstes Limit eintragen',
     emptyGoalAction: 'Erstes Sparziel eintragen',
     spentOf: (spent: string, limit: string) => `${spent} von ${limit}`,
     left: (amount: string) => `noch ${amount}`,
@@ -5321,6 +5325,8 @@ export const de = {
     } as Record<string, string>,
     empty: 'Diese Liste ist leer.',
     emptyAction: 'Artikel eintragen',
+    /** The add field's button on a packing list or checklist, and on the phone (desktop shopping list: `emptyAction`). */
+    addSubmit: 'Eintragen',
     editItem: 'Eintrag bearbeiten',
     itemName: 'Name',
     quantity: 'Menge (optional)',
@@ -9014,7 +9020,7 @@ export const de = {
     meta: {
       name: 'Gerätestatus',
       description:
-        'Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite. Nur Anzeige, die Seite sendet nichts.',
+        'Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite, dazu ein Backup zum Herunterladen. Die Seite sendet nichts.',
     },
     summary: {
       ok: 'Nichts Dringendes',
@@ -9025,7 +9031,7 @@ export const de = {
     },
     page: {
       figureUnit: (n: number) => (n === 1 ? 'braucht einen Blick' : 'brauchen einen Blick'),
-      note: 'Nur Anzeige: Jede Zeile führt zur passenden Einstellung.',
+      note: 'Jede Zeile führt zur passenden Einstellung.',
       pc: 'Prozessor, Arbeitsspeicher und Netzwerkverkehr zeigt „Dieser PC“ im Reiter „System“.',
       pcOpen: '„Dieser PC“ öffnen',
       pcLibrary: '„Dieser PC“ in der Bibliothek einschalten',

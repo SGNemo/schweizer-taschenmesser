@@ -254,7 +254,7 @@
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
-      "colouredAboveFold": 4,
+      "colouredAboveFold": 2,
       "signatureBlocks": 0
     },
     "d1920--mail": {
@@ -842,7 +842,7 @@
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
-      "colouredAboveFold": 3,
+      "colouredAboveFold": 1,
       "signatureBlocks": 0
     },
     "p412--maps": {

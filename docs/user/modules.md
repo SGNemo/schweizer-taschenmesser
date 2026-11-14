@@ -22,7 +22,7 @@ In the **module library** you turn modules on and off (when turning one off: kee
 | **Money** | Finances | Accounts, income and expenses with categories | on by default |
 |  | Invoices | Open invoices with amount, payee and due date | on by default |
 |  | Subscriptions | Subscriptions and recurring payments | on by default |
-|  | Budgets & savings goals | Monthly limits per expense category (from Finances) and savings goals with deposits and progress | on for new installations |
+|  | Budgets & savings goals | Spending limits per category (from Finances) and savings goals with deposits and progress | on for new installations |
 | **Household** | Lists | Shopping, packing lists and checklists | on for new installations |
 |  | Routines | Cleaning plan and household routines | on for new installations |
 |  | Pantry | What’s in the fridge, the cupboard and the freezer? | optional |
@@ -56,7 +56,7 @@ Highlights of the modules that start with a short line above:
 - **Notes:** with a pinned **scratchpad** at the top for quick jots.
 - **Lists:** shopping with “2 milk”, packing lists with progress and templates, checklists.
 - **People:** birthdays yearly in the calendar, with age, reminder and WhatsApp greeting; gift ideas per person with price, link and status.
-- **Budgets & savings goals:** monthly limits per finance category, savings goals with deposits.
+- **Budgets & savings goals:** spending limits per finance category (per month, quarter or year), savings goals with deposits.
 - **Planner** (preview): plan changes like “Donnerstag frei” are said in the field on the planner page (German sentences; a preview shows what moves before anything changes).
 - **Maps & places** (preview): saved places and routes, a map with place search, open in your map app; the map only loads when you open it.
 - **Documents:** title, category, provider, start, end, notice period and note are synced like everything else; the **files stay only on the
