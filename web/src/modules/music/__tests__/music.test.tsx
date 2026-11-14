@@ -17,6 +17,16 @@ import { AreaFrame } from '@/layout/AreaFrame';
 import { useUiStore } from '@/stores/ui';
 import MusicPage from '../routes/MusicPage';
 import NowPlayingWidget from '../widgets/NowPlayingWidget';
+import type * as Settled from '@/core/status/settled';
+
+/** The frame's hold bound (`STATUS_WAIT_MS`), raised in one test so only the reads themselves can release the hold. */
+const holdBound = vi.hoisted(() => ({ ms: 1500 }));
+vi.mock('@/core/status/settled', async (importOriginal) => ({
+  ...(await importOriginal<typeof Settled>()),
+  get STATUS_WAIT_MS() {
+    return holdBound.ms;
+  },
+}));
 
 const PLAYING = {
   is_playing: true,
@@ -345,13 +355,18 @@ describe('music page', () => {
     };
     playerState = offline;
     router = (c) => (c.path.startsWith('/me/player/devices') ? offline() : undefined);
-    const started = performance.now();
-    await renderPage();
-    await waitFor(() => expect(sent('GET', '/me/player/devices')).toHaveLength(1));
-    await waitFor(() => expect(screen.getByTestId('page')).not.toHaveAttribute('data-held'));
-    // Released by the failed reads themselves, not by the bound (`STATUS_WAIT_MS` = 1.5 s).
-    expect(performance.now() - started).toBeLessThan(1500);
-    expect(screen.getByTestId('music-now')).toHaveTextContent('Jetztlied');
+    // No bound within this test: only the failed reads can release the hold.
+    holdBound.ms = 60_000;
+    try {
+      await renderPage();
+      await waitFor(() => expect(sent('GET', '/me/player/devices')).toHaveLength(1));
+      await waitFor(() => expect(screen.getByTestId('page')).not.toHaveAttribute('data-held'), {
+        timeout: 3000,
+      });
+      expect(screen.getByTestId('music-now')).toHaveTextContent('Jetztlied');
+    } finally {
+      holdBound.ms = 1500;
+    }
   });
 
   it("the player's second round of reads never holds the page again (0b-8)", async () => {

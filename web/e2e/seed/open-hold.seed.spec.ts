@@ -5,12 +5,17 @@ import { DESKTOP, PHONE, startSeeded } from './guards';
 
 /**
  * How long Wetter, Listen, Chat and Musik hold what waits for their first reads (0b-8 follow-up d), measured, not
- * judged: the frame's hold (`[data-held]`, weather and music) and the pages' own row holds (`lists-reading`,
- * `chat-reading`), from the first marker in the page to the last one gone, plus when that end lies after the navigation
- * started and the layout shift of the whole open. Three runs per page and device: the first visit after seeding, a
- * second load, and a slow one whose network answers (open-meteo, Spotify) arrive only after 1.5 s, on a 4× slower CPU
- * (lists and chat read nothing over the network; the slow CPU is what slows their reads). Logged as one line per run;
- * the only check is the CLS limit of `open-shift*.seed.spec.ts` on the first two runs.
+ * judged. Per run two numbers: `held`, from the first hold marker in the page to the last one gone – the frame's hold
+ * (`[data-held]`, weather and music) or the pages' own row holds (`lists-reading`, `chat-reading`, which appear only
+ * once the list or the chat setup is known); and `shown`, wall-clock time from `page.goto` until the page's main part
+ * is there with no marker left (boot, code, reads and hold together; the seed fixture fixes the page clock, so this is
+ * timed from the test). Plus the layout shift of the whole open. Three runs per page and device: the first visit (weather
+ * without a cached forecast), a second load, and a slow one whose answers of the mocked services (open-meteo, Spotify)
+ * arrive only after 1.5 s, on a 4× slower CPU (lists and chat read nothing over the network; the slow CPU is what slows
+ * their reads). The lines go to the console and the test's annotations.
+ *
+ * Measurement only, not a CI gate (`open-shift*.seed.spec.ts` guard the CLS): it runs only with `MEASURE_HOLD=1`,
+ * e.g. `MEASURE_HOLD=1 npx playwright test --project=seed-dev e2e/seed/open-hold.seed.spec.ts --workers=1`.
  */
 const CLS_MAX = 0.05;
 const SLOW_ANSWER_MS = 1500;
@@ -70,7 +75,7 @@ async function watch(page: Page) {
 }
 
 /** Waits until no marker is left and `main` has stopped changing, then reads hold and shift. */
-async function measure(page: Page, label: string) {
+async function measure(page: Page, label: string, shown: number) {
   await expect(page.locator(MARKERS)).toHaveCount(0, { timeout: 15_000 });
   let last = '';
   for (let same = 0, i = 0; i < 40 && same < 4; i++) {
@@ -94,20 +99,22 @@ async function measure(page: Page, label: string) {
       held: h.from === undefined ? 0 : h.to === undefined ? null : Math.round(h.to - h.from),
     };
   });
-  console.log(`HOLD ${label}: held ${r.held ?? '–'} ms, CLS ${r.cls.toFixed(4)}`);
-  for (const m of r.moved) console.log(`  moved ${m}`);
+  const line = `held ${r.held ?? '–'} ms, shown after ${shown} ms, CLS ${r.cls.toFixed(4)}${r.moved.map((m) => `; moved ${m}`).join('')}`;
+  console.log(`HOLD ${label}: ${line}`);
+  test.info().annotations.push({ type: `hold ${label}`, description: line });
   return r;
 }
 
-/** Network answers of the page's services come only after `SLOW_ANSWER_MS`; CPU 4× slower (Chromium only). */
-async function slowDown(page: Page) {
+/**
+ * The answers of the hosts the page mocks come only after `SLOW_ANSWER_MS` (only those: a delayed route falls back to
+ * the mock, never to a real host); CPU 4× slower (Chromium only).
+ */
+async function slowDown(page: Page, hosts: readonly string[]) {
   const late = (route: Parameters<Parameters<Page['route']>[1]>[0]) =>
     new Promise<void>((done) =>
       setTimeout(() => void route.fallback().then(done, done), SLOW_ANSWER_MS),
     );
-  for (const host of ['**://api.open-meteo.com/**', '**://air-quality-api.open-meteo.com/**'])
-    await page.route(host, late);
-  await page.route('https://api.spotify.com/**', late);
+  for (const host of hosts) await page.route(host, late);
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
 }
@@ -120,7 +127,8 @@ const PAGES = {
       await mockWeather(page);
       return async () => expect(await pickWeatherPlace(page), 'a place was picked').toBe(true);
     },
-    ready: (page: Page) => page.getByTestId('weather-temp'),
+    ready: '[data-testid="weather-temp"]',
+    hosts: ['**://api.open-meteo.com/**', '**://air-quality-api.open-meteo.com/**'],
     // The forecast is cached on the device for 30 minutes: without it the page waits for the network.
     fresh: (page: Page) =>
       page.evaluate(() =>
@@ -130,12 +138,14 @@ const PAGES = {
   lists: {
     path: '/lists',
     prepare: async () => async () => {},
-    ready: (page: Page) => page.getByTestId('lists-add'),
+    ready: '[data-testid="lists-add"]',
+    hosts: [],
   },
   chat: {
     path: '/chat',
     prepare: async () => async () => {},
-    ready: (page: Page) => page.locator('main h1').first(),
+    ready: 'main h1',
+    hosts: [],
   },
   music: {
     path: '/music',
@@ -143,7 +153,8 @@ const PAGES = {
       await mockSpotify(page);
       return () => seedConnected(page, ['show', 'control', 'playlists', 'library', 'history']);
     },
-    ready: (page: Page) => page.getByTestId('music-main'),
+    ready: '[data-testid="music-main"]',
+    hosts: ['https://api.spotify.com/**', 'https://accounts.spotify.com/api/token'],
   },
 } as const;
 
@@ -153,6 +164,7 @@ for (const [device, viewport] of [
 ] as const) {
   const phone = device === 'phone';
   test.describe(`hold time when a page opens – ${device}`, () => {
+    test.skip(!process.env.MEASURE_HOLD, 'measurement only: MEASURE_HOLD=1');
     test.use({
       viewport,
       ...(phone ? { isMobile: true, hasTouch: true } : {}),
@@ -169,11 +181,18 @@ for (const [device, viewport] of [
 
         const runs = [];
         for (const run of ['first visit', 'second visit', 'slow (1.5 s, CPU 4×)']) {
-          if (run.startsWith('slow')) await slowDown(page);
+          if (run.startsWith('slow')) await slowDown(page, p.hosts);
           if (run !== 'second visit' && 'fresh' in p) await p.fresh(page);
+          const started = Date.now();
           await page.goto(p.path);
-          await expect(p.ready(page)).toBeVisible({ timeout: 15_000 });
-          runs.push(await measure(page, `${name} ${device}, ${run}`));
+          await page.waitForFunction(
+            ([ready, markers]) =>
+              !!document.querySelector(ready) && !document.querySelector(markers),
+            [p.ready, MARKERS] as const,
+            { polling: 16, timeout: 15_000 },
+          );
+          const shown = Date.now() - started;
+          runs.push(await measure(page, `${name} ${device}, ${run}`, shown));
         }
         expect(runs[0]!.cls, 'layout shift, first visit').toBeLessThanOrEqual(CLS_MAX);
         expect(runs[1]!.cls, 'layout shift, second visit').toBeLessThanOrEqual(CLS_MAX);

@@ -121,7 +121,6 @@ export function validateManifest(m: ModuleManifest): string[] {
     for (const key of ['tabs', 'firstRead'] as const)
       if (id[key] !== undefined && typeof id[key] !== 'boolean')
         errors.push(`identity.${key} must be true or false`);
-    if ('notice' in id) errors.push('identity.notice became identity.firstRead (rename it)');
   }
   for (const r of m.routes) {
     if (r.layout && !PAGE_LAYOUTS.includes(r.layout))

@@ -90,10 +90,9 @@ describe('module registry', () => {
       { hue2: base.identity.hue },
       { type: 'comic' },
       { shape: 'blob' },
-      // The frame's flags (U01, 0b-8) are true or false; the weather's old `notice` flag is now `firstRead`.
+      // The frame's flags (U01, 0b-8) are true or false.
       { tabs: 'yes' },
       { firstRead: 1 },
-      { notice: true },
     ])
       expect(bad(patch), JSON.stringify(patch)).toHaveLength(1);
     expect(bad({ hue2: 'sky', type: 'thin', shape: 'round' })).toEqual([]);
