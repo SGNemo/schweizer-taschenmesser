@@ -44,8 +44,9 @@ describe('first start: a fresh app keeps the calm overview (initCore)', () => {
 
   it('stores the defaults era before the setup state, so a start left in between is not read as an old app', async () => {
     let eraAtSetup: unknown = 'not reached';
-    const actual = (await vi.importActual<typeof import('@/core/setup/detect')>('@/core/setup/detect'))
-      .ensureSetupState;
+    const actual = (
+      await vi.importActual<typeof import('@/core/setup/detect')>('@/core/setup/detect')
+    ).ensureSetupState;
     vi.mocked(ensureSetupState).mockImplementationOnce(async (...args) => {
       eraAtSetup = (await meta().get(DEFAULTS_ERA_KEY))?.value;
       return actual(...args);
