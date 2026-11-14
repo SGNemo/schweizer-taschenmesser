@@ -135,12 +135,54 @@ describe('page Gerätestatus', () => {
     expect(screen.queryByText(/CPU|Prozessorlast|Akku/)).toBeNull();
   });
 
-  it('shows states only: nothing is a switch or a button', async () => {
+  it('switches nothing: the one button is "Backup herunterladen" under the backup lines, calm (not filled)', async () => {
     await show('desktop');
     const page = screen.getByTestId('device-status');
-    expect(within(page).queryAllByRole('button')).toEqual([]);
+    const buttons = within(page).queryAllByRole('button');
+    expect(buttons.map((b) => b.textContent)).toEqual(['Backup herunterladen']);
+    expect(buttons[0]).toHaveAttribute('data-variant', 'secondary');
+    // Right after the backup lines, outside their list (it is no status line).
+    expect(within(screen.getByTestId('device-group-backup')).queryByRole('button')).toBeNull();
+    expect(screen.getByTestId('device-group-backup').nextElementSibling).toBe(buttons[0]);
     expect(within(page).queryAllByRole('switch')).toEqual([]);
     expect(within(page).queryAllByRole('checkbox')).toEqual([]);
+  });
+
+  it('"Backup herunterladen" opens the export form with the password recommendation; no file in one click', async () => {
+    let saves = 0;
+    await show('web', {
+      saveFile: async () => {
+        saves++;
+        return 'saved';
+      },
+    } as Partial<PlatformService>);
+    await act(async () => {
+      screen.getByTestId('device-backup-export').click();
+    });
+    expect(saves).toBe(0);
+    const dialog = screen.getByTestId('backup-export-dialog');
+    expect(dialog).toHaveTextContent('Empfohlen: mit Passwort sichern.');
+    expect(within(dialog).getByLabelText('Passwort für das Backup')).toHaveAttribute(
+      'type',
+      'password',
+    );
+    // The encrypted file is the filled action; the readable one is the second button, as in the settings. Both sit
+    // in the dialog's footer (above the phone's keyboard).
+    const encrypted = screen.getByRole('button', { name: 'Verschlüsselt exportieren' });
+    const plain = screen.getByRole('button', { name: 'Ohne Passwort herunterladen' });
+    expect(dialog).not.toContainElement(encrypted);
+    expect(encrypted).toHaveAttribute('type', 'submit');
+    expect(encrypted).toHaveAttribute('form', dialog.id);
+    expect(encrypted).toHaveTextContent('Verschlüsselt exportieren');
+    expect(encrypted).toHaveAttribute('data-variant', 'primary');
+    expect(plain).toHaveTextContent('Ohne Passwort herunterladen');
+    expect(plain).toHaveAttribute('data-variant', 'secondary');
+    // Without a password the encrypted export says why and saves nothing.
+    await act(async () => {
+      encrypted.click();
+    });
+    expect(within(dialog).getByRole('alert')).toHaveTextContent('mindestens 8 Zeichen');
+    expect(saves).toBe(0);
   });
 
   it('phone and browser: the same page with sync, storage, backup, updates and network; no hub, drive, autostart or battery', async () => {

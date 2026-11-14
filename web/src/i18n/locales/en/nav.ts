@@ -33,7 +33,7 @@ export const nav: Strings['nav'] = {
   plusModule: (module: string) => `New: ${module}`,
   plusThings: {
     list: 'List',
-    budget: 'Budget',
+    budget: 'Limit',
     link: 'Bookmark',
     chat: 'Chat',
     place: 'Place',
