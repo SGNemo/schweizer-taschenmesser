@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { setPlatform, type BiometricService, type UnsealResult } from '@/core/platform';
@@ -57,11 +56,7 @@ describe('lock screen with biometrics', () => {
     await createVault(MASTER, FAST);
     await enableBiometricUnlock(MASTER);
     lockVault();
-    render(
-      <MemoryRouter>
-        <LockScreen />
-      </MemoryRouter>,
-    );
+    render(<LockScreen />);
     await waitFor(() => expect(getSession().status).toBe('unlocked'));
   });
 
@@ -70,11 +65,7 @@ describe('lock screen with biometrics', () => {
     await enableBiometricUnlock(MASTER);
     lockVault();
     bio.state.answer = 'cancelled';
-    render(
-      <MemoryRouter>
-        <LockScreen />
-      </MemoryRouter>,
-    );
+    render(<LockScreen />);
     const retry = await screen.findByRole('button', { name: b.unlock });
     expect(getSession().status).toBe('locked');
     bio.state.answer = 'ok';
@@ -85,20 +76,12 @@ describe('lock screen with biometrics', () => {
   it('shows no biometric button when nothing is enrolled or the device has none', async () => {
     await createVault(MASTER, FAST);
     lockVault();
-    const { unmount } = render(
-      <MemoryRouter>
-        <LockScreen />
-      </MemoryRouter>,
-    );
+    const { unmount } = render(<LockScreen />);
     await screen.findByLabelText(t.accounts.lock.password);
     expect(screen.queryByRole('button', { name: b.unlock })).toBeNull();
     unmount();
     bio.state.available = false;
-    render(
-      <MemoryRouter>
-        <LockScreen />
-      </MemoryRouter>,
-    );
+    render(<LockScreen />);
     await screen.findByLabelText(t.accounts.lock.password);
     expect(screen.queryByRole('button', { name: b.unlock })).toBeNull();
   });
@@ -108,11 +91,7 @@ describe('lock screen with biometrics', () => {
     await enableBiometricUnlock(MASTER);
     lockVault();
     bio.state.sealed.set([...bio.state.sealed.keys()][0]!, new Uint8Array(32)); // wrong key
-    render(
-      <MemoryRouter>
-        <LockScreen />
-      </MemoryRouter>,
-    );
+    render(<LockScreen />);
     expect(await screen.findByText(b.invalid)).toBeInTheDocument();
     // The message is set first; the button goes once the seal status was read again (async).
     await waitFor(() => expect(screen.queryByRole('button', { name: b.unlock })).toBeNull()); // seal was removed
@@ -124,11 +103,7 @@ describe('lock screen with biometrics', () => {
     await enableBiometricUnlock(MASTER);
     lockVault();
     bio.state.answer = 'throw';
-    render(
-      <MemoryRouter>
-        <LockScreen />
-      </MemoryRouter>,
-    );
+    render(<LockScreen />);
     expect(await screen.findByText(b.invalid)).toBeInTheDocument();
     expect(getSession().status).toBe('locked');
     const user = userEvent.setup();
