@@ -168,6 +168,16 @@ export const onboarding: Strings['onboarding'] = {
       n === 1
         ? '1 line without a valid date or amount was skipped.'
         : `${n} lines without a valid date or amount were skipped.`,
+    bankSkippedNamed: (n: number, rows: string, more: number) =>
+      `${n === 1 ? '1 line was' : `${n} lines were`} skipped – ${rows}${more > 0 ? ` and ${more} more` : ''}.`,
+    bankSkippedRow: (line: number, label: string, why: string) =>
+      `line ${line}${label ? ` (${label})` : ''}: ${why}`,
+    bankSkipWhy: {
+      date: (v: string) => (v ? `date “${v}” not readable` : 'no date'),
+      amount: (v: string) => (v ? `amount “${v}” not readable` : 'no amount'),
+      zero: 'amount 0',
+      pending: 'still pending, not booked',
+    },
     bankTruncated: (n: number) => `Only the first ${n} transactions are shown.`,
     bankDetected: (name: string) => `Recognised: ${name}`,
     bankRemembered: 'Recognised: your saved column assignment',

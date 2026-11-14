@@ -228,7 +228,7 @@ export function LanHubSection({ tinted = true }: { tinted?: boolean }) {
         items={[
           {
             label: l.lastSynced,
-            value: lastSyncedText(sync.lastSyncAt, l),
+            value: lastSyncedText(sync.lastSyncAt, l, sync.lastResult),
             testId: 'lan-last-sync',
           },
           ...(sync.pending > 0
@@ -353,9 +353,14 @@ function hubBanner(
 const groupCode = (code: string): string =>
   code.length === 6 ? `${code.slice(0, 3)} ${code.slice(3)}` : code;
 
-function lastSyncedText(at: number | undefined, l: Texts): string {
+function lastSyncedText(
+  at: number | undefined,
+  l: Texts,
+  last?: { applied: number; pushed: number },
+): string {
   if (!at) return l.never;
-  return now() - at < 60_000 ? l.justNow : formatDateTime(at);
+  const when = now() - at < 60_000 ? l.justNow : formatDateTime(at);
+  return last ? l.lastSyncedWith(when, last.applied + last.pushed) : when;
 }
 
 function Ask(props: {

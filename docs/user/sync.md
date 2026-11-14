@@ -6,8 +6,8 @@
 
 The Windows app can be the sync point itself. Phone and PC sync as soon as both are on the same Wi-Fi and Nemo runs on the PC.
 
-1. **PC:** _Settings → Sync → Pair a device_. A QR code appears (the first time Windows asks whether Nemo may be reachable on private networks: choose _Allow_). If Windows treats your network as public, Nemo shows no code but the way to switch it to _Private_; the code then appears by itself.
-2. **Phone:** _Settings → Sync → Pair with PC_, allow the camera, scan the code.
+1. **PC:** _Settings → Sync & backup → Pair a device_. A QR code appears (the first time Windows asks whether Nemo may be reachable on private networks: choose _Allow_). If Windows treats your network as public, Nemo shows no code but the way to switch it to _Private_; the code then appears by itself.
+2. **Phone:** _Settings → Sync & backup → Pair with PC_, allow the camera, scan the code.
 3. Both show the same 6-digit code. On the PC: _Pair_.
 
 Nothing is typed. The data stays end-to-end encrypted; the PC only listens on your home network (never on public networks) and only paired devices get in. On the PC you see the paired devices and can unpair each one; _More settings_ has _Renew key_ and _Turn off home-network sync_. The phone syncs when the app is opened or comes to the front; syncing with the app fully closed is not built yet. If the PC gets a new address on your home network (for example after a new router), the phone keeps waiting: unpair on the phone and pair again.
@@ -89,7 +89,7 @@ _Settings → Notifications → Enable push_ (the app must be connected to the s
 
 ## Connecting in the app
 
-_Settings → Sync_: enter server address and token, optionally turn on **end-to-end encryption** with
+_Settings → Sync & backup_: enter server address and token, optionally turn on **end-to-end encryption** with
 a passphrase (at least 12 characters, ideally several words); encryption is preselected on the first
 connection. The app then syncs on start, every minute, after local
 changes and when it comes back online/visible; the status is shown in the settings and as an icon at the top.

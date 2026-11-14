@@ -20,6 +20,7 @@ import {
   useOpenParam,
 } from '@/ui';
 import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
+import { usePageWidthAtLeast } from '@/ui/pageWidth';
 import { GoalDialog } from '../components/GoalDialog';
 import { MealEditor, type MealTarget } from '../components/MealEditor';
 import { SessionEditor, type SessionTarget } from '../components/SessionEditor';
@@ -129,6 +130,9 @@ export default function FitnessPage() {
     await undoableWithToast(done, done, () => sessionRepo.update(s.id, doneToday(day)));
   }
 
+  // Phone (0b-8 follow-up 15): the row names count and minutes only; the first exercises with sets and weights made
+  // the meta two to four lines (rows 77–119 px). They stay in the entry's dialog and in the wide list.
+  const narrow = usePageWidthAtLeast(48) === false;
   const sessionRow = (s: Stored<Session>) => (
     <ItemRow
       key={s.id}
@@ -138,7 +142,7 @@ export default function FitnessPage() {
         s.exercises.length ? t.fitness.list.exercises(s.exercises.length) : '',
         sessionMinutes(s) ? formatMinutes(sessionMinutes(s), { compact: true }) : '',
         ...s.exercises
-          .slice(0, 2)
+          .slice(0, narrow ? 0 : 2)
           .map((e) => [e.name, exerciseDetail(e)].filter(Boolean).join(' ')),
       ]
         .filter(Boolean)

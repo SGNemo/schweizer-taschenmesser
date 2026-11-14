@@ -168,3 +168,37 @@ describe('parseBankFile / bankDedupeKey', () => {
     expect(bankDedupeKey(a)).toBe(bankDedupeKey(b));
   });
 });
+
+describe('B10 (round 5): skipped rows are named by line, reason and payee', () => {
+  const row = (date: string, payee: string, amount: string) =>
+    `"DE00123456780000000001";"${date}";"${date}";"KARTENZAHLUNG";"Einkauf";"";"";"";"";"";"";"${payee}";"DE00999999990000000002";"TESTDEFFXXX";"${amount}";"EUR";"Umsatz gebucht"`;
+
+  it('counts file lines (blank lines included) and keeps the cell as written', () => {
+    const text = [
+      HEADER,
+      row('05.11.26', 'Stadtwerke', '-78,00'),
+      '',
+      row('28.10.26', 'Max Beispiel', '1e3'),
+      row('31.02.26', 'Tankstelle Süd', '-60,00'),
+    ].join('\r\n');
+    const r = parseBankCsv(text);
+    expect(r.skipped).toBe(2);
+    expect(r.skippedRows).toEqual([
+      { line: 4, reason: 'amount', value: '1e3', label: 'Max Beispiel' },
+      { line: 5, reason: 'date', value: '31.02.26', label: 'Tankstelle Süd' },
+    ]);
+  });
+
+  it('names at most three rows, the count stays complete', () => {
+    const bad = Array.from({ length: 5 }, (_, i) => row('kaputt', `Laden ${i}`, '-1,00'));
+    const r = parseBankCsv([HEADER, ...bad].join('\n'));
+    expect(r.skipped).toBe(5);
+    expect(r.skippedRows?.map((x) => x.line)).toEqual([2, 3, 4]);
+  });
+
+  it('a clean file carries no list', () => {
+    expect(parseBankCsv([HEADER, row('05.11.26', 'A', '-1,00')].join('\n')).skippedRows).toBe(
+      undefined,
+    );
+  });
+});

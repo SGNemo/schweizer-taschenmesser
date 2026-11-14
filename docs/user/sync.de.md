@@ -6,8 +6,8 @@
 
 Die Windows-App kann selbst der Abgleich-Punkt sein. Handy und PC gleichen sich ab, sobald beide im selben WLAN sind und Nemo auf dem PC läuft.
 
-1. **PC:** _Einstellungen → Synchronisation → Gerät koppeln_. Ein QR-Code erscheint (beim ersten Mal fragt Windows, ob Nemo in privaten Netzen erreichbar sein darf: _Zulassen_). Hält Windows dein Netz für öffentlich, zeigt Nemo statt des Codes den Weg zu _Privat_; danach erscheint der Code von selbst.
-2. **Handy:** _Einstellungen → Synchronisation → Mit PC koppeln_, Kamera erlauben, Code scannen.
+1. **PC:** _Einstellungen → Sync & Backup → Gerät koppeln_. Ein QR-Code erscheint (beim ersten Mal fragt Windows, ob Nemo in privaten Netzen erreichbar sein darf: _Zulassen_). Hält Windows dein Netz für öffentlich, zeigt Nemo statt des Codes den Weg zu _Privat_; danach erscheint der Code von selbst.
+2. **Handy:** _Einstellungen → Sync & Backup → Mit PC koppeln_, Kamera erlauben, Code scannen.
 3. Beide zeigen denselben 6-stelligen Code. Am PC: _Koppeln_.
 
 Nichts wird eingetippt. Die Daten bleiben Ende-zu-Ende verschlüsselt; der PC hört nur im Heimnetz zu (nie in öffentlichen Netzen), und nur gekoppelte Geräte kommen herein. Am PC siehst du die gekoppelten Geräte und kannst jedes lösen; unter _Weitere Einstellungen_ gibt es _Schlüssel erneuern_ und _Abgleich im Heimnetz ausschalten_. Das Handy gleicht ab, wenn die App geöffnet wird oder nach vorne kommt; Abgleich bei ganz geschlossener App ist noch nicht gebaut. Bekommt der PC im Heimnetz eine neue Adresse (etwa nach einem neuen Router), wartet das Handy weiter: am Handy die Kopplung lösen und neu koppeln.
@@ -89,14 +89,14 @@ _Einstellungen → Benachrichtigungen → Push aktivieren_ (die App muss mit dem
 
 ## In der App verbinden
 
-_Einstellungen → Synchronisation_: Server-Adresse und Token eingeben, optional **Ende-zu-Ende-Verschlüsselung** mit
-einer Passphrase (mind. 12 Zeichen, am besten mehrere Wörter) einschalten; die Verschlüsselung ist beim ersten Verbinden
+_Einstellungen → Sync & Backup_: Server-Adresse und Token eingeben, optional **Ende-zu-Ende-Verschlüsselung** mit
+einem Passwortsatz (mind. 12 Zeichen, am besten mehrere Wörter) einschalten; die Verschlüsselung ist beim ersten Verbinden
 vorausgewählt. Danach synchronisiert die App beim Start, jede Minute, nach lokalen
 Änderungen und wenn sie wieder online/sichtbar wird; der Status steht in den Einstellungen und als Symbol oben.
 
-- **Verschlüsselung:** Werte werden auf dem Gerät mit AES-256-GCM verschlüsselt (Schlüssel aus der Passphrase mit
+- **Verschlüsselung:** Werte werden auf dem Gerät mit AES-256-GCM verschlüsselt (Schlüssel aus dem Passwortsatz mit
   Argon2id, 64 MiB Speicher, 3 Durchgänge; die Parameter stehen mit dem Salt auf dem Server). Der Server sieht Sammlung, Datensatz-ID, Feldname und Zeitstempel – **nicht** die Inhalte.
-  Weitere Geräte treten mit derselben Passphrase bei. Ohne Passphrase sind die Daten **nicht** wiederherstellbar.
+  Weitere Geräte treten mit demselben Passwortsatz bei. Ohne Passwortsatz sind die Daten **nicht** wiederherstellbar.
   Verschlüsselung lässt sich nur auf einem leeren Server einschalten; enthält der Server schon Klartext-Daten, bietet
   die App an, ihn zurückzusetzen (das löscht alle Serverdaten; die Geräte laden ihre Daten danach erneut hoch).
 - **Zugangsdaten** (Token, Schlüssel) bleiben lokal in der Datenbank des Browsers, werden nie synchronisiert und nie

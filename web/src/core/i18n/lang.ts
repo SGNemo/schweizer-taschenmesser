@@ -121,7 +121,11 @@ export function setLangLoader(loader: (lang: Lang) => Promise<void>): void {
   prepare = loader;
 }
 
+/** A language from another tab that waits until this tab's open dialog is closed (D13). */
+let waiting: Lang | undefined;
+
 function apply(next: Lang): void {
+  waiting = undefined;
   current = next;
   if (typeof document !== 'undefined') document.documentElement.lang = next;
   listeners.forEach((l) => l());
@@ -191,10 +195,38 @@ async function followOtherTab(e: StorageEvent): Promise<void> {
   pref = next;
   try {
     await prepare(lang);
-    apply(lang);
+    applyWhenNoDialog(lang);
   } catch {
     // The texts cannot load right now: this tab keeps its language until the next start.
   }
+}
+
+/** An open modal (`ui/Dialog` is a native `<dialog>`) in this tab. */
+const dialogOpen = (): boolean => document.querySelector('dialog[open]') !== null;
+
+/**
+ * A switch re-mounts the UI (`App.tsx`), which would close a dialog the person is working in
+ * (round 5 D13: the import dialog closed when the other window switched). The other tab's choice
+ * therefore waits until no dialog is open here; the newest choice wins, a local switch cancels it.
+ */
+function applyWhenNoDialog(lang: Lang): void {
+  if (typeof MutationObserver === 'undefined' || !dialogOpen()) return apply(lang);
+  const observing = waiting !== undefined;
+  waiting = lang;
+  if (observing) return;
+  const observer = new MutationObserver(() => {
+    if (waiting !== undefined && dialogOpen()) return;
+    observer.disconnect();
+    const next = waiting;
+    if (next !== undefined && next !== current) apply(next);
+    else waiting = undefined;
+  });
+  observer.observe(document.body, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    attributeFilter: ['open'],
+  });
 }
 
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function')

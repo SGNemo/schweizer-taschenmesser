@@ -193,6 +193,46 @@ describe('language preference', () => {
   });
 });
 
+describe('D13 (round 5): a switch in another tab keeps an open dialog here', () => {
+  beforeEach(() => setLang('de'));
+
+  it('waits until the dialog is closed; the newest choice wins', async () => {
+    const loaded: string[] = [];
+    setLangLoader(async (lang) => void loaded.push(lang));
+    const dialog = document.createElement('dialog');
+    dialog.setAttribute('open', '');
+    document.body.append(dialog);
+    try {
+      const other = (newValue: string) =>
+        window.dispatchEvent(new StorageEvent('storage', { key: 'tm-lang', newValue }));
+      other('en');
+      await vi.waitFor(() => expect(loaded).toEqual(['en']));
+      expect(getLang()).toBe('de');
+      other('de');
+      other('en');
+      await vi.waitFor(() => expect(loaded).toHaveLength(3));
+      expect(getLang()).toBe('de');
+      dialog.removeAttribute('open');
+      await vi.waitFor(() => expect(getLang()).toBe('en'));
+    } finally {
+      dialog.remove();
+      setLangLoader(loadCatalog);
+    }
+  });
+
+  it('a switch in this tab is not held back', () => {
+    const dialog = document.createElement('dialog');
+    dialog.setAttribute('open', '');
+    document.body.append(dialog);
+    try {
+      setLang('en');
+      expect(getLang()).toBe('en');
+    } finally {
+      dialog.remove();
+    }
+  });
+});
+
 describe('localized texts', () => {
   beforeEach(() => setLang('de'));
 
