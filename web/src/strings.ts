@@ -1905,7 +1905,8 @@ export const de = {
       reminder: (lead: string) => `Erinnerung: ${lead}`,
     },
     tabsLabel: 'Bereich',
-    tabCalendar: 'Kalender',
+    /** Not "Kalender": h1 and the active module pill already say that (M8, UI audit 2026-11). */
+    tabCalendar: 'Termine',
     tabReminders: 'Erinnerungen',
     kinds: {
       event: 'Termin',
@@ -9009,6 +9010,8 @@ export const de = {
     },
     summary: {
       ok: 'Nichts Dringendes',
+      /** Nothing needs a look, but this device has no backup yet: said calmly, never as a point (FOCUS-GUIDELINES). */
+      noBackup: 'Noch kein Backup',
       look: (n: number) => `${n} Punkte brauchen einen Blick`,
       settingsContext: 'Sync, Backup, Updates, Speicher',
     },
