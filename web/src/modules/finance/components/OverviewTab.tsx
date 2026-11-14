@@ -40,17 +40,27 @@ function ChartCard({ title, chart, table }: { title: string; chart: ReactNode; t
   );
 }
 
-/** "▲ 120,00 € (+8 %) zum Vormonat": arrow and sign as text, no colour of its own (more spending is not "bad" by itself). */
+/**
+ * "▲ +120,00 € (+8 %) zum Vormonat": arrow and sign as text, no colour of its own (more spending is not "bad" by
+ * itself). A percent that rounds to 0 says nothing next to an amount and is left out. In a narrow row (phone) the card
+ * shows "▲ +120,00 €" in one line and the full sentence stays for screen readers; `DeltaNote` names the month once.
+ */
 function DeltaLine({ d, money }: { d: Delta; money: (m: number) => string }) {
-  const text =
-    d.diffMinor === 0
-      ? t.finance.ext.compare.unchanged
-      : t.finance.ext.compare.vsPrevious(
-          `${d.diffMinor > 0 ? '▲ +' : '▼ −'}${money(Math.abs(d.diffMinor))}${
-            d.percent === undefined ? '' : ` (${d.percent > 0 ? '+' : ''}${d.percent} %)`
-          }`,
-        );
-  return <span className={styles.delta}>{text}</span>;
+  if (d.diffMinor === 0)
+    return <span className={styles.delta}>{t.finance.ext.compare.unchanged}</span>;
+  const amount = `${d.diffMinor > 0 ? '▲ +' : '▼ −'}${money(Math.abs(d.diffMinor))}`;
+  const percent =
+    d.percent === undefined || d.percent === 0
+      ? ''
+      : ` (${d.percent > 0 ? '+' : '−'}${Math.abs(d.percent)} %)`;
+  return (
+    <span className={styles.delta}>
+      <span className={styles.deltaFull}>{t.finance.ext.compare.vsPrevious(amount + percent)}</span>
+      <span className={styles.deltaShort} aria-hidden="true">
+        {amount}
+      </span>
+    </span>
+  );
 }
 
 /** `narrow`: the overview shares the row with a side panel, so the charts stay in one column. */
@@ -123,6 +133,11 @@ export function OverviewTab({
           </span>
           {hasPrevious ? <DeltaLine d={cmp.net} money={money} /> : null}
         </Card>
+        {hasPrevious ? (
+          <p className={styles.deltaNote} aria-hidden="true">
+            {t.finance.ext.compare.note}
+          </p>
+        ) : null}
       </div>
 
       <div className={`${styles.visuals} ${narrow ? styles.visualsOne : ''}`}>

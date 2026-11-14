@@ -126,7 +126,7 @@ export function TransactionsTab({
   if (data.txs.length === 0 || (inMonth.length === 0 && !filtering))
     return (
       <>
-        {/* C23: one verb – the toolbar's "Buchung"; import and setup sit in the page's ⋯ menu, transfers on "Konten". */}
+        {/* C23: one verb – the head's "Buchung eintragen"; import and setup sit in the page's ⋯ menu, transfers on "Konten". */}
         <EmptyState
           title={t.finance.noTransactions}
           testId="finance-empty"
@@ -338,7 +338,7 @@ export function AccountsTab({ data }: { data: FinanceData }) {
   return (
     <>
       <div className={patternStyles.gapBottom + ' ' + patternStyles.hstack}>
-        {/* Secondary: the page's primary is "Buchung" in the toolbar (one primary per view). */}
+        {/* Secondary: the page's primary is "Buchung eintragen" in the head (one primary per view). */}
         <Button onClick={() => setTarget({ draft: true, order: data.accounts.length })}>
           <Icon name="plus" size={18} />
           {t.finance.addAccount}
