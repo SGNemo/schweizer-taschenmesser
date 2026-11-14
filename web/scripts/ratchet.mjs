@@ -1082,7 +1082,8 @@ export function proxyApproval(
       /\p{Cc}|\p{Cf}|\p{Zl}|\p{Zp}|[<>&`@]/gu,
       (c) => `[U+${c.codePointAt(0).toString(16)}]`,
     );
-  return reason.length > 500 ? `${reason.slice(0, 500)}…` : reason;
+  const chars = Array.from(reason);
+  return chars.length > 500 ? `${chars.slice(0, 500).join('')}…` : reason;
 }
 /**
  * The reason of the first valid proxy approval among `comments`, or undefined (also once the window is
@@ -1359,7 +1360,7 @@ export async function runPr({
 
   if (hits.length) {
     const message = approvalMessage(pr, hash, slug);
-    const proxy = proxyOpen(hits, now); // proxy-2026-11
+    const proxy = !!key && proxyOpen(hits, now); // proxy-2026-11
     let approved = false;
     let reason; // proxy-2026-11
     if (key) {
