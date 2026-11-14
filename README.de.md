@@ -29,7 +29,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/overview-desktop-dark.webp">
-    <img src="docs/assets/screenshots/overview-desktop-light.webp" alt="Nemo-Übersicht auf dem Desktop mit erfundenen Beispieldaten, in der Ansicht „Ruhig“: eine Seitenleiste mit Favoriten und Bereichen, die Leiste „Jetzt wichtig“ mit drei Karten und eine Karte „Heute“ mit dem nächsten Termin, den Terminen von heute und einer vorgeschlagenen Aufgabe zum Anfangen" width="900">
+    <img src="docs/assets/screenshots/overview-desktop-light.webp" alt="Nemo-Übersicht auf dem Desktop mit erfundenen Beispieldaten, in der Ansicht „Ruhig“: eine Seitenleiste mit Favoriten und Bereichen, die Leiste „Jetzt wichtig“ mit drei Karten und einem Hinweis, was warten kann, und eine Karte „Heute“ mit dem nächsten Termin, den Terminen von heute und einer vorgeschlagenen Aufgabe zum Anfangen" width="900">
   </picture>
 </p>
 
@@ -120,7 +120,7 @@ Alle Bilder zeigen erfundene Beispieldaten in der deutschen Oberfläche; die App
     <td width="50%">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/finance-desktop-dark.webp">
-        <img src="docs/assets/screenshots/finance-desktop-light.webp" alt="Finanzübersicht für September mit dem verfügbaren Betrag im Kopf, Einnahmen, Ausgaben und Ergebnis des Monats, einem Liniendiagramm des Kontostands, einem Ringdiagramm, wohin das Geld ging, und rechts den letzten Buchungen">
+        <img src="docs/assets/screenshots/finance-desktop-light.webp" alt="Finanzübersicht für September mit dem verfügbaren Betrag im Kopfbereich, Einnahmen, Ausgaben und Ergebnis des Monats, einem Liniendiagramm des Kontostands, einem Ringdiagramm, wohin das Geld ging, und rechts den letzten Buchungen">
       </picture>
       <br><sub>Finanzen: Monatsübersicht mit Kontostand und Buchungen</sub>
     </td>

@@ -29,7 +29,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/overview-desktop-dark.webp">
-    <img src="docs/assets/screenshots/overview-desktop-light.webp" alt="Nemo overview on a desktop with made-up sample data, in the calm view “Ruhig”: a sidebar with favourites and areas, a strip “Important now” with three cards, and a card “Today” with the next appointment, today’s events and one suggested task to start with" width="900">
+    <img src="docs/assets/screenshots/overview-desktop-light.webp" alt="Nemo overview on a desktop with made-up sample data, in the calm view “Ruhig”: a sidebar with favourites and areas, a strip “Important now” with three cards and a note of what can wait, and a card “Today” with the next appointment, today’s events and one suggested task to start with" width="900">
   </picture>
 </p>
 
