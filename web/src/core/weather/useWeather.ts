@@ -45,7 +45,9 @@ export function useWeather(needsPreview = false): WeatherView | undefined {
 /**
  * `useWeather` plus whether a forecast is still on its way (`coming`): weather is on, nothing is shown yet, the
  * device is online, a request runs or is about to, and none has failed for this place in this mount. False once the
- * request failed, offline or switched off, so a page does not wait for a forecast that will not come (0b-8).
+ * request failed, offline or switched off, so a page does not wait for a forecast that will not come (0b-8). It
+ * assumes this mount joined the running request (it does whenever it would fetch): a request another mount started
+ * alone does not re-render this one.
  */
 export function useWeatherRequest(needsPreview = false): {
   view: WeatherView | undefined;

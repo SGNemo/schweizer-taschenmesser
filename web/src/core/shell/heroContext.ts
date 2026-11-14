@@ -91,7 +91,7 @@ export function useHeadReady(ready: boolean): boolean {
 /**
  * While `on`, the stage keeps the room it took on the last visit of this route (U01), so a head whose figure and facts
  * still wait for a late read (a slow network after the first-read hold, 0b-8) does not grow when they arrive.
- * Outside a frame it does nothing.
+ * One flag per frame, not a count: one user per page (the weather's pending head). Outside a frame it does nothing.
  */
 export function useKeepHeadRoom(on: boolean): void {
   const controls = useHeroControls();

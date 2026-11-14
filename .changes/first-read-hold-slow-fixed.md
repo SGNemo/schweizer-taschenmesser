@@ -2,8 +2,8 @@
 type: fixed
 area: weather
 breaking: false
-de: Bei langsamem Netz erscheint Wetter nach spätestens 0,6 s; ein später Unwetter-Hinweis steht dann unter dem Kopf über den Stunden, damit nichts verrutscht.
-en: On a slow network, Weather appears within 0.6 s; a late severe-weather hint then shows below the header, above the hours, so nothing shifts.
+de: Bei langsamem Netz steht die Wetterseite nach spätestens 0,6 s; ein später Unwetter-Hinweis erscheint oben über den Stunden, damit nichts verrutscht.
+en: On a slow network, the Weather page is in place within 0.6 s; a late severe-weather hint appears at the top, above the hours, so nothing shifts.
 ---
 ---
 type: fixed

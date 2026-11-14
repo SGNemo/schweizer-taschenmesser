@@ -31,6 +31,12 @@ export function useViewedForecast(requested: number): ViewedForecast {
   const [fetched, setFetched] = useState<{ key: string; at: number; forecast: Forecast }>();
   const [failed, setFailed] = useState<string>();
   const targetKey = target ? keyOf(target) : undefined;
+  // Another place shown: a failure of an earlier visit no longer counts (coming back asks again).
+  const [shownKey, setShownKey] = useState(targetKey);
+  if (shownKey !== targetKey) {
+    setShownKey(targetKey);
+    setFailed(undefined);
+  }
 
   useEffect(() => {
     if (!target || !targetKey) return;
