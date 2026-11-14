@@ -620,6 +620,7 @@ export const de = {
     welcomeText:
       'Möchtest du die App Schritt für Schritt einrichten? Du kannst das auch später in den Einstellungen tun.',
     welcomeLater: 'Später',
+    welcomePlanDays: 'Tage einteilen',
     dialogTitle: 'Einrichtung',
     stepOf: (n: number, total: number) => `Schritt ${n} von ${total}`,
     progressLabel: 'Fortschritt der Einrichtung',
@@ -3980,6 +3981,8 @@ export const de = {
       noTarget: 'Dazu habe ich keinen passenden Eintrag gefunden.',
       willDelete: 'Wird gelöscht',
       noChange: 'Dabei würde sich nichts ändern.',
+      full: (module: string) =>
+        `In „${module}“ ist kein Platz mehr. Entferne dort erst einen Eintrag.`,
       question: 'Rückfrage',
       choose: 'Bitte wählen',
       done: (n: number) => (n === 1 ? '1 Änderung gespeichert.' : `${n} Änderungen gespeichert.`),
@@ -4413,12 +4416,13 @@ export const de = {
       folder: 'Ordner wählen',
       filesLabel: 'Einzelne Dateien',
       folderLabel: 'Ganzer Ordner',
-      hint: '.md- und .txt-Dateien. Ein Ordner wird zum Notizbuch, seine Dateien zu Seiten. Ein Obsidian-Export (oder ein Ordner mit mehreren Unterordnern) wird je Unterordner ein Notizbuch; tiefere Ordner werden ein Schlagwort.',
+      hint: '.md- und .txt-Dateien. Ein Ordner wird zum Notizbuch, seine Dateien zu Seiten. Ein Obsidian-Export (oder ein Ordner mit mehreren Unterordnern) wird je Unterordner ein Notizbuch; tiefere Ordner werden ein Schlagwort. Seiten behalten ihr Datum (created:/modified: oder das Dateidatum).',
       none: 'Keine passenden Dateien gefunden.',
       confirm: 'Importieren',
       summary: (pages: number, books: number) =>
         `${pages === 1 ? '1 Seite' : `${pages} Seiten`}${books ? `, ${books === 1 ? '1 Notizbuch' : `${books} Notizbücher`}` : ''} gefunden.`,
-      done: (n: number) => (n === 1 ? '1 Seite importiert.' : `${n} Seiten importiert.`),
+      done: (n: number) =>
+        `${n === 1 ? '1 Seite' : `${n} Seiten`} importiert – nach ihrem eigenen Datum einsortiert.`,
       duplicates: (n: number) =>
         n === 1
           ? '1 doppelte Seite wird übersprungen.'
@@ -6641,7 +6645,7 @@ export const de = {
     notes: {
       file: 'Markdown, Obsidian, Evernote oder Google Keep',
       fileHint:
-        'Wähle .md-Dateien (z. B. aus deinem Obsidian-Ordner, mehrere auf einmal), eine ZIP-Datei mit einem Notizordner, eine Evernote-Datei (.enex) oder die .json-Dateien aus dem Google-Takeout (Keep). Titel, Checklisten und #Tags werden übernommen, Ordner werden zu Notizbüchern. Anhänge (Bilder, Dateien) kann Nemo in Notizen nicht speichern; sie werden im Bericht gezählt.',
+        'Wähle .md-Dateien (z. B. aus deinem Obsidian-Ordner, mehrere auf einmal), eine ZIP-Datei mit einem Notizordner, eine Evernote-Datei (.enex) oder die .json-Dateien aus dem Google-Takeout (Keep). Titel, Checklisten und #Tags werden übernommen, Ordner werden zu Notizbüchern. Markdown-Notizen behalten ihr Datum (created:/modified: oder das Dateidatum). Anhänge (Bilder, Dateien) kann Nemo in Notizen nicht speichern; sie werden im Bericht gezählt.',
       text: 'Markdown einfügen',
       textHint: 'Der eingefügte Text wird eine Notiz; eine erste Überschrift wird zum Titel.',
       textLabel: 'Markdown-Text',
@@ -8573,6 +8577,23 @@ export const de = {
       back: 'Zum Planer',
     },
     empty: 'Noch nichts geplant. Eine Sache reicht.',
+    daySetup: {
+      open: 'Tage einteilen',
+      title: 'Tage einteilen',
+      stepOf: (n: number) => `Schritt ${n} von 3`,
+      thingsTitle: 'Was steht an?',
+      thingsLabel: 'Eine Zeile je Ding',
+      thingsHint: 'Zum Beispiel „Bude aufräumen“ oder „Bericht bis So“. Leer lassen geht auch.',
+      things: (n: number) => (n === 1 ? '1 Ding kommt dazu' : `${n} Dinge kommen dazu`),
+      timeTitle: 'Wie viel Zeit hast du?',
+      timeIntro: 'Gilt nur für diese drei Tage.',
+      timeOn: (day: string) => `Zeit am ${day}`,
+      noTime: 'keine Zeit',
+      current: (value: string) => `Bisher ${value}`,
+      previewTitle: 'So sieht dein Plan aus',
+      next: 'Weiter',
+      back: 'Zurück',
+    },
     chip: {
       title: (planned: string, n: number) =>
         `Plan · ${planned} · ${n === 1 ? '1 Ding' : `${n} Dinge`}`,
@@ -8841,6 +8862,7 @@ export const de = {
     empty: 'Noch keine Orte',
     full: (n: number) =>
       `Es sind ${n} Orte eingetragen, mehr passen nicht. Entferne einen, um einen neuen einzutragen.`,
+    fullCapture: (n: number) => `Die Uhr hat schon ${n} Orte. Entferne einen auf der Uhr-Seite.`,
     list: 'Deine Orte',
     search: {
       title: 'Ort eintragen',

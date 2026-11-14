@@ -262,7 +262,7 @@ export const onboarding: Strings['onboarding'] = {
   notes: {
     file: 'Markdown, Obsidian, Evernote or Google Keep',
     fileHint:
-      'Choose .md files (e.g. from your Obsidian folder, several at once), a ZIP file with a notes folder, an Evernote file (.enex) or the .json files from Google Takeout (Keep). Titles, checklists and #tags are kept, folders become notebooks. Nemo cannot store attachments (images, files) in notes; they are counted in the report.',
+      'Choose .md files (e.g. from your Obsidian folder, several at once), a ZIP file with a notes folder, an Evernote file (.enex) or the .json files from Google Takeout (Keep). Titles, checklists and #tags are kept, folders become notebooks. Markdown notes keep their date (created:/modified: or the file date). Nemo cannot store attachments (images, files) in notes; they are counted in the report.',
     text: 'Paste Markdown',
     textHint: 'The pasted text becomes one note; a first heading becomes the title.',
     textLabel: 'Markdown text',

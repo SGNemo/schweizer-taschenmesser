@@ -57,6 +57,11 @@ export interface CaptureTarget {
   /** Two-stage save: the entry is written by another target first (see `CaptureVia`). */
   via?: CaptureVia;
   /**
+   * At most `count` live rows in the collection: `saveCapture` counts before writing and throws
+   * `CaptureError('full', text())` (the clock's 12 places).
+   */
+  maxActive?: { count: number; text: () => string };
+  /**
    * Notes something on an existing record instead of creating one (a payment reminder on its open
    * invoice). Re-reads the record and throws `CaptureError('stale')` when it is gone or settled; the
    * returned `undo` takes back only what it wrote and never removes the record.
@@ -70,12 +75,14 @@ export type CaptureErrorCode =
   | 'unknown-target'
   | 'currency'
   /** `amend`: the record is gone or settled since the preview. */
-  | 'stale';
+  | 'stale'
+  /** `maxActive`: the collection is full; `detail` is the sentence to show. */
+  | 'full';
 
 export class CaptureError extends Error {
   constructor(
     readonly code: CaptureErrorCode,
-    /** Module name for `module-off`, currency code for `currency`. */
+    /** Module name for `module-off`, currency code for `currency`, the text for `full`. */
     readonly detail?: string,
   ) {
     super(code);
