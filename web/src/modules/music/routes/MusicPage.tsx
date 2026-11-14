@@ -32,12 +32,12 @@ export default function MusicPage() {
   const [view, setView] = useState<View>();
   // 0b-8: the stage (cover, player) and the start view below it are built from the connection's first reads; the frame
   // paints head and page once they are back (`identity.firstRead`, at most 1.5 s), so nothing moves when they arrive.
-  // Not connected: nothing to wait for once the status is read.
+  // Not connected: nothing to wait for once the status is read. A tab chosen while held (shortcut) replaces the start view.
   const [playerRead, setPlayerRead] = useState(false);
   const [startRead, setStartRead] = useState(false);
   const onPlayerRead = useCallback(() => setPlayerRead(true), []);
   const onStartRead = useCallback(() => setStartRead(true), []);
-  useHeadReady(known && (!np || (np.firstRead && playerRead && startRead)));
+  useHeadReady(known && (!np || (np.firstRead && playerRead && (startRead || view !== undefined))));
   const [version, setVersion] = useState(0);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);

@@ -28,6 +28,18 @@ async function watchShifts(page: Page) {
       const id = n.getAttribute('data-testid');
       return `${n.tagName.toLowerCase()}${id ? `[${id}]` : ''}.${String(n.className).split(' ')[0] ?? ''}`;
     };
+    const held: { from?: number; to?: number } = {};
+    (window as unknown as { __held: typeof held }).__held = held;
+    new MutationObserver(() => {
+      const on = !!document.querySelector('[data-held]');
+      if (on && held.from === undefined) held.from = performance.now();
+      if (!on && held.from !== undefined && held.to === undefined) held.to = performance.now();
+    }).observe(document, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ['data-held'],
+    });
     try {
       new PerformanceObserver((list) => {
         for (const e of list.getEntries() as unknown as {
@@ -79,10 +91,20 @@ function report(label: string, result: { cls: number; shifts: Shift[] }) {
 }
 
 /** Opens `/music` and waits for the player and the page below the stage. */
-async function openMusic(page: Page) {
+async function openMusic(page: Page, label: string) {
   await page.goto('/music');
   await expect(page.getByTestId('music-now')).toBeVisible();
   await expect(page.getByTestId('music-main')).toBeVisible();
+  // How long the frame held the page unpainted (cap 1.5 s), measured in the page from the first `[data-held]` to its
+  // removal: logged only, so a drift towards the cap shows in the CI output.
+  await expect(page.locator('[data-held]')).toHaveCount(0);
+  const held = await page.evaluate(() => {
+    const w = window as unknown as { __held?: { from?: number; to?: number } };
+    return w.__held?.from !== undefined && w.__held.to !== undefined
+      ? Math.round(w.__held.to - w.__held.from)
+      : null;
+  });
+  console.log(`${label}: held ${held ?? '–'} ms`);
 }
 
 for (const [device, viewport] of [
@@ -104,11 +126,11 @@ for (const [device, viewport] of [
       await startSeeded(page, { phone });
       await seedConnected(page, ['show', 'control', 'playlists', 'library', 'history']);
 
-      await openMusic(page);
+      await openMusic(page, `/music ${device}, first visit`);
       const first = await settledShift(page);
       report(`/music ${device}, first visit`, first);
 
-      await openMusic(page);
+      await openMusic(page, `/music ${device}, second visit`);
       const second = await settledShift(page);
       report(`/music ${device}, second visit`, second);
 
