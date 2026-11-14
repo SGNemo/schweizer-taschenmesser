@@ -23,6 +23,8 @@ import {
   PROTECTED,
   PROXY_APPROVAL_UNTIL,
   proxyApproval,
+  proxyOpen,
+  proxyReason,
   RATCHET_PUBLIC_KEY,
   REPO,
   routeSlug,
@@ -1399,7 +1401,7 @@ describe('--pr (merge rule) with recorded API answers', () => {
     const p = pullRequest(true);
     const work = p.clone();
     const hash = hashIn((await run(work, { pull: pullOf(p.head), ...green(p.head) })).text);
-    const body = `stimulus-raise ${REPO}#7 ${hash}\nOne more button on finance, approved in chat.`;
+    const body = `stimulus-raise ${REPO}#7 ${hash}\nReason: One more button on finance, approved in chat.`;
     const r = await run(
       work,
       { pull: pullOf(p.head), comments: [proxyComment(body)], ...green(p.head) },
@@ -1423,15 +1425,19 @@ describe('--pr (merge rule) with recorded API answers', () => {
     const hash = hashIn((await run(work, { pull: pullOf(p.head), ...green(p.head) })).text);
     const line = `stimulus-raise ${REPO}#7 ${hash}`;
     for (const comment of [
-      proxyComment(`${line}\nreason`, { user: { login: 'someone-else', type: 'User' } }),
-      proxyComment(`${line}\nreason`, { user: { login: MAINTAINER_LOGIN, type: 'Bot' } }),
-      proxyComment(`stimulus-raise ${REPO}#7 ${'cd'.repeat(32)}\nreason`),
-      proxyComment(`stimulus-raise ${REPO}#8 ${hash}\nreason`),
+      proxyComment(`${line}\nReason: ok`, { user: { login: 'someone-else', type: 'User' } }),
+      proxyComment(`${line}\nReason: ok`, { user: { login: MAINTAINER_LOGIN, type: 'Bot' } }),
+      proxyComment(`stimulus-raise ${REPO}#7 ${'cd'.repeat(32)}\nReason: ok`),
+      proxyComment(`stimulus-raise ${REPO}#8 ${hash}\nReason: ok`),
       proxyComment(line),
       proxyComment(`${line}\n   \n 42 `),
-      proxyComment(`ok\n${line}\nreason`),
-      proxyComment(`${line}\nreason`, { created_at: PROXY_APPROVAL_UNTIL }),
-      proxyComment(`${line}\nreason`, { updated_at: PROXY_APPROVAL_UNTIL }),
+      proxyComment(`ok\n${line}\nReason: ok`),
+      proxyComment(`${line}\nReason: ok`, { created_at: PROXY_APPROVAL_UNTIL }),
+      proxyComment(`${line}\nReason: ok`, { created_at: '2026-11-13T23:59:59Z' }),
+      proxyComment(`${line}\nReason: ok`, { updated_at: '2026-11-15T11:00:00Z' }), // edited
+      proxyComment(`${line}\nwaiting for Sven's OK`), // a request, not an approval
+      proxyComment(`${line}\n\nReason: ok`),
+      proxyComment(`${line}\nReason: 42`),
     ]) {
       const r = await run(
         work,
@@ -1441,7 +1447,7 @@ describe('--pr (merge rule) with recorded API answers', () => {
       expect(r.code, JSON.stringify(comment)).toBe(1);
     }
     // A push that changes the hits: the comment for the old hash no longer counts.
-    const comments = [proxyComment(`${line}\nreason`)];
+    const comments = [proxyComment(`${line}\nReason: ok`)];
     const before = await run(
       work,
       { pull: pullOf(p.head), comments, ...green(p.head) },
@@ -1466,7 +1472,7 @@ describe('--pr (merge rule) with recorded API answers', () => {
     const p = pullRequest(true);
     const work = p.clone();
     const hash = hashIn((await run(work, { pull: pullOf(p.head), ...green(p.head) })).text);
-    const comments = [proxyComment(`stimulus-raise ${REPO}#7 ${hash}\nreason`)];
+    const comments = [proxyComment(`stimulus-raise ${REPO}#7 ${hash}\nReason: ok`)];
     const r = await run(
       work,
       {
@@ -1485,19 +1491,37 @@ describe('proxyApproval', () => {
   const at = { pr: 7, hash: HASH, now: DURING };
   const line = `stimulus-raise ${REPO}#7 ${HASH}`;
   it('returns the reason as one visible line, null otherwise', () => {
-    expect(proxyApproval(proxyComment(`${line}\r\nfirst\n\nsecond`), at)).toBe('first second');
-    expect(proxyApproval(proxyComment(`${line}  \nok`), at)).toBe('ok');
-    expect(proxyApproval(proxyComment(`${line}\nwhy\u0007`), at)).toBe('why<U+7>');
-    expect(proxyApproval(proxyComment(`${line}\n${'x'.repeat(600)}`), at)).toHaveLength(501);
-    expect(proxyApproval(proxyComment(`${line}\nok`, { user: { login: 'sgnemo' } }), at)).toBe(
+    expect(proxyApproval(proxyComment(`${line}\r\nReason: first\nsecond`), at)).toBe('first');
+    expect(proxyApproval(proxyComment(`${line}  \nReason:ok`), at)).toBe('ok');
+    expect(proxyApproval(proxyComment(`${line}\nReason: why\u0007`), at)).toBe('why[U+7]');
+    expect(proxyApproval(proxyComment(`${line}\nReason: a <!-- \`@x`), at)).toBe(
+      'a [U+3c]!-- [U+60][U+40]x',
+    );
+    expect(proxyApproval(proxyComment(`${line}\nReason: ${'x'.repeat(600)}`), at)).toHaveLength(
+      501,
+    );
+    const ok = `${line}\nReason: ok`;
+    expect(proxyApproval(proxyComment(ok, { user: { login: 'sgnemo', type: 'User' } }), at)).toBe(
       'ok',
     );
-    expect(proxyApproval(proxyComment(`${line}\nok`, { created_at: undefined }), at)).toBeNull();
-    expect(proxyApproval({ body: `${line}\nok` }, at)).toBeNull();
-    expect(proxyApproval(proxyComment(`${line}\nok`), { ...at, until: '' })).toBeNull();
-    expect(proxyApproval(proxyComment(`${line}\nok`), { ...at, login: '' })).toBeNull();
-    expect(proxyApproval(proxyComment(`x${line}\nok`), at)).toBeNull();
+    expect(proxyApproval(proxyComment(ok, { user: { login: MAINTAINER_LOGIN } }), at)).toBeNull();
+    expect(proxyApproval(proxyComment(ok, { updated_at: undefined }), at)).toBe('ok');
+    expect(proxyApproval(proxyComment(ok, { created_at: undefined }), at)).toBeNull();
+    expect(proxyApproval({ body: ok }, at)).toBeNull();
+    expect(proxyApproval(proxyComment(ok), { ...at, until: '' })).toBeNull();
+    expect(proxyApproval(proxyComment(ok), { ...at, login: '' })).toBeNull();
+    expect(proxyApproval(proxyComment(`x${ok}`), at)).toBeNull();
     expect(proxyApproval(null, at)).toBeNull();
+  });
+  it('never for a hit on the script itself: the trust root needs the signature', () => {
+    const ok = proxyComment(`${line}\nReason: ok`);
+    const own = ['protected web/scripts/ratchet.mjs a→b'];
+    expect(proxyReason([ok], { hits: own, pr: 7, hash: HASH, now: DURING })).toBeUndefined();
+    expect(proxyOpen(own, DURING)).toBe(false);
+    const other = ['protected web/scripts/ratchet.test.ts a→b'];
+    expect(proxyReason([ok], { hits: other, pr: 7, hash: HASH, now: DURING })).toBe('ok');
+    expect(proxyOpen(other, DURING)).toBe(true);
+    expect(proxyOpen(other, AFTER)).toBe(false);
   });
 });
 
@@ -1557,12 +1581,12 @@ describe('--base --head (CI feedback)', () => {
   it('hits with a proxy approval comment for this hash: green while the window is open', async () => {
     const h = history(true);
     const hash = hashOf(collectHits(h.repo, h.base, h.head));
-    const comments = [proxyComment(`stimulus-raise ${REPO}#7 ${hash}\nreason`)];
+    const comments = [proxyComment(`stimulus-raise ${REPO}#7 ${hash}\nReason: ok`)];
     const open = await ci(h, { comments }, { PR_NUMBER: '7' }, DURING);
     expect(open.code).toBe(0);
-    expect(open.text).toContain('Reason: reason');
+    expect(open.text).toContain('Reason: ok');
     expect((await ci(h, { comments }, { PR_NUMBER: '7' }, AFTER)).code).toBe(1);
-    const wrong = [proxyComment(`stimulus-raise ${REPO}#7 ${'cd'.repeat(32)}\nreason`)];
+    const wrong = [proxyComment(`stimulus-raise ${REPO}#7 ${'cd'.repeat(32)}\nReason: ok`)];
     expect((await ci(h, { comments: wrong }, { PR_NUMBER: '7' }, DURING)).code).toBe(1);
     expect((await ci(h, { comments, fail: /comments/ }, { PR_NUMBER: '7' }, DURING)).code).toBe(1);
   });
