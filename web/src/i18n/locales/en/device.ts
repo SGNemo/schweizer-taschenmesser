@@ -8,6 +8,7 @@ export const device: Strings['device'] = {
   },
   summary: {
     ok: 'Nothing urgent',
+    noBackup: 'No backup yet',
     look: (n: number) => `${n} things need a look`,
     settingsContext: 'Sync, backup, updates, storage',
   },

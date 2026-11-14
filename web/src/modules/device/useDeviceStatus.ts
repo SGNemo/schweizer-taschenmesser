@@ -1,5 +1,5 @@
 import { anyLoading, useDeviceLines, useSettled, type StatusLine } from '@/core/status/lines';
-import { needingLook } from '@/core/status/summary';
+import { calmPoint, needingLook } from '@/core/status/summary';
 import { t } from '@/strings';
 import {
   useAutostartLine,
@@ -28,6 +28,8 @@ export function useDeviceStatus(): {
   groups: StatusGroup[];
   /** The lines of the page that need a look. */
   look: StatusLine[];
+  /** `true` = nothing needs a look, but there is no backup yet: the head says so calmly. */
+  noBackup: boolean;
   ready: boolean;
 } {
   const core = useDeviceLines();
@@ -48,5 +50,5 @@ export function useDeviceStatus(): {
   const shown = groups
     .map((g) => ({ ...g, lines: g.lines.filter((l) => !(l.loading && !l.status)) }))
     .filter((g) => g.lines.length > 0);
-  return { groups: shown, look: needingLook(all), ready };
+  return { groups: shown, look: needingLook(all), noBackup: calmPoint(all) !== undefined, ready };
 }

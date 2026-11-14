@@ -36,6 +36,9 @@ export interface StatusLine {
   /** `true` = the context line only explains the state or the category (no date, number or setting of its own): the
    *  settings head leaves it out on the phone (U55). */
   generic?: boolean;
+  /** `true` = there is nothing yet that only exists once made (no backup on this device): no point that needs a look,
+   *  but the only state with a risk of losing data, so the summary names it calmly instead of "Nichts Dringendes". */
+  missing?: boolean;
   /** `true` while the line's first read has not come back: its words are not the state yet (empty, or a fallback). */
   loading?: boolean;
   testId: string;
@@ -133,6 +136,7 @@ export function useBackupLine(): StatusLine {
         ? (last.kind === 'file' ? v3.backup.fileAt : v3.backup.at)(formatTimestamp(last.at))
         : v3.backup.tried(formatTimestamp(last.at)),
     generic: !last,
+    missing: !last,
     attention: last?.ok === false,
   };
 }
