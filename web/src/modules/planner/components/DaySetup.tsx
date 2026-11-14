@@ -51,12 +51,16 @@ export function DaySetup({
   const s = t.planner.daySetup;
   const [step, setStep] = useState<Step>(1);
   const [text, setText] = useState(readSetupDraft);
+  // Set by the first keystroke: only typing renews the draft (a reopened sheet does not touch its age).
+  const [edited, setEdited] = useState(false);
   // Chosen minutes per date; a day without a choice keeps what it has.
   const [chosen, setChosen] = useState<Record<string, number>>({});
   const [preview, setPreview] = useState<{ data: PreviewData; things: SetupThing[] }>();
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => writeSetupDraft(text), [text]);
+  useEffect(() => {
+    if (edited) writeSetupDraft(text);
+  }, [text, edited]);
 
   const reshuffle = gainsTime(days, chosen);
   const changes = days
@@ -94,6 +98,11 @@ export function DaySetup({
 
   async function apply() {
     if (!preview) return;
+    // Nothing typed and no day changed: nothing to enter, no toast that says otherwise.
+    if (preview.things.length === 0 && changes.length === 0 && !reshuffle) {
+      onClose();
+      return;
+    }
     setBusy(true);
     try {
       const ok = await applyDaySetup(
@@ -146,7 +155,10 @@ export function DaySetup({
               hint={s.thingsHint}
               rows={6}
               value={text}
-              onChange={(e) => setText(e.target.value)}
+              onChange={(e) => {
+                setEdited(true);
+                setText(e.target.value);
+              }}
               data-autofocus
             />
           </>

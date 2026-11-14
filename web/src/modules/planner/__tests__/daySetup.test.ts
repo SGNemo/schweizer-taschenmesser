@@ -119,6 +119,15 @@ describe('the dump', () => {
 });
 
 describe('preview and „Übernehmen“', () => {
+  it('the saved ToDos keep the line order in their ids (an age tie is broken by id, as in the preview)', async () => {
+    await on();
+    const lines = Array.from({ length: 12 }, (_, i) => `Ding ${i + 1}`);
+    await applyDaySetup([], setupThings(lines.join('\n'), SAT, true), [SAT], {});
+    await runsSettled();
+    const tasks = (await taskRepo.active().toArray()).sort((a, b) => a.id.localeCompare(b.id));
+    expect(tasks.map((x) => x.title)).toEqual(lines);
+  });
+
   it('the preview plans the new things on the days with time and stores nothing', async () => {
     await on();
     const things = setupThings('Duschen\nBude aufräumen', SAT, true);

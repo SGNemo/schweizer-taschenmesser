@@ -281,7 +281,9 @@ export function applyDaySetup(
       for (const d of days)
         await dayPatch(d.date, { availableMin: Math.max(0, Math.min(1440, d.min)) });
       if (things.length === 0) return;
-      const ids = things.map(() => randomId());
+      // Ids in line order: ToDos saved in the same millisecond tie on their age and the engine then
+      // breaks the tie by id – sorted, the plan keeps the order the preview showed.
+      const ids = things.map(() => randomId()).sort();
       await saveCaptures(
         things.map((th, i) => ({ type: 'todo' as const, fields: th.fields, id: ids[i] })),
         things.map((th) => th.fields.title).join('\n'),
