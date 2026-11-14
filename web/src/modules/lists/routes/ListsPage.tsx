@@ -38,6 +38,7 @@ import { ListEditor, type ListTarget } from '../components/ListEditor';
 import {
   groupItems,
   listAsText,
+  namedSectionCount,
   PACKING_TEMPLATES,
   progress,
   sortItems,
@@ -394,7 +395,11 @@ export default function ListsPage() {
         <ListFigure
           name={current.name}
           open={openCount}
-          detail={groups.length > 0 ? t.lists.sectionsCount(groups.length) : undefined}
+          detail={
+            namedSectionCount(groups) > 0
+              ? t.lists.sectionsCount(namedSectionCount(groups))
+              : undefined
+          }
         />
       ) : null}
       {lists && current && !read ? <div aria-busy="true" data-testid="lists-reading" /> : null}
