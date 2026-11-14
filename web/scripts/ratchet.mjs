@@ -19,7 +19,9 @@
  *     Exit 0 only if the live head equals `--head` (when given), the check run "Web (lint, types, unit, E2E)"
  *     of the `pull_request` run of ci.yml on that head succeeded, and there are no hits or a comment
  *     `stimulus-raise SGNemo/schweizer-taschenmesser#<n> <hash> <signature>` carries a valid Ed25519 signature
- *     of RATCHET_PUBLIC_KEY over `stimulus-raise SGNemo/schweizer-taschenmesser#<n> <hash>`. Anything unclear
+ *     of RATCHET_PUBLIC_KEY over `stimulus-raise SGNemo/schweizer-taschenmesser#<n> <hash>` (until
+ *     PROXY_APPROVAL_UNTIL also: a comment by MAINTAINER_LOGIN with that line first and `Reason: …` second,
+ *     see proxyApproval, proxy-2026-11; in CI it turns the hits green like the label). Anything unclear
  *     (no key, no network, unreadable history) ends with exit ≠ 0.
  */
 import { execFileSync } from 'node:child_process';
@@ -35,6 +37,21 @@ export const REPO = 'SGNemo/schweizer-taschenmesser';
  */
 export const RATCHET_PUBLIC_KEY = 'MCowBQYDK2VwAyEAY0kk4IV+hYV464o2tgrPyVps5jwszeQLq9IIuKvA/vI=';
 export const LABEL = 'stimulus-raise';
+/**
+ * Temporary proxy approval (Sven, 2026-11-14, for one week): besides the signature, an unedited PR comment by
+ * this account whose first line is exactly the approval message and whose second line starts with `Reason:`
+ * approves the hits. Agents that act with the maintainer's token post as this account: that is the intended
+ * proxy. Only comments created in [FROM, UNTIL) count, and only while the run is before UNTIL; then only the
+ * signature is valid again. Never for hits on this script itself (the trust root). A follow-up pull request
+ * is `git revert -m 1` of this change's merge commit (code and docs, the decision bullet stays); the
+ * `proxy-2026-11` markers only show where it reaches. Then `npm run check` and the ratchet tests. In `--pr` the proxy is read
+ * only when RATCHET_PUBLIC_KEY loads (no key: nothing is mergeable at all).
+ */
+// proxy-2026-11 (constants up to SELF)
+export const MAINTAINER_LOGIN = 'SGNemo';
+export const PROXY_APPROVAL_FROM = '2026-11-14T00:00:00Z';
+export const PROXY_APPROVAL_UNTIL = '2026-11-22T00:00:00Z';
+const SELF = 'web/scripts/ratchet.mjs';
 export const WEB_CHECK = 'Web (lint, types, unit, E2E)';
 export const CI_WORKFLOW = '.github/workflows/ci.yml';
 export const BASE_BRANCH = 'develop';
@@ -1025,6 +1042,65 @@ export function isApproval(body, { pr, hash, key, repo = REPO }) {
   }
 }
 
+/**
+ * proxy-2026-11 (up to proxyOpen). Temporary proxy approval: the reason (one line, at most 500 characters, control and format characters
+ * and the markup characters `<>&`@` made visible) if `comment` approves exactly this hash, else null. Counts only
+ * while `now` is before `until`, for a comment created in [from, until) and never edited, by `login` as a
+ * plain user (case-insensitive, as GitHub logins are), whose first line is exactly the approval message and
+ * whose second line is `Reason: <text with a letter>`.
+ */
+export function proxyApproval(
+  comment,
+  {
+    pr,
+    hash,
+    repo = REPO,
+    now = Date.now(),
+    from = PROXY_APPROVAL_FROM,
+    until = PROXY_APPROVAL_UNTIL,
+    login = MAINTAINER_LOGIN,
+  },
+) {
+  const start = Date.parse(String(from ?? ''));
+  const end = Date.parse(String(until ?? ''));
+  if (!login || !Number.isFinite(start) || !Number.isFinite(end) || !(now < end)) return null;
+  const user = comment?.user;
+  if (user?.type !== 'User' || typeof user.login !== 'string') return null;
+  if (user.login.toLowerCase() !== login.toLowerCase()) return null;
+  // Another account with write access can edit this account's comment: an edited one never counts.
+  const created = Date.parse(String(comment.created_at ?? ''));
+  if (!(created >= start && created < end)) return null;
+  if (comment.updated_at != null && comment.updated_at !== comment.created_at) return null;
+  if (typeof comment.body !== 'string') return null;
+  const [first, second = ''] = comment.body.replace(/\r\n?/g, '\n').split('\n');
+  if (first.trimEnd() !== approvalMessage(pr, hash, repo)) return null;
+  const m = /^Reason:\s*(.*)$/.exec(second.trim());
+  if (!m || !/\p{L}/u.test(m[1])) return null;
+  const reason = m[1]
+    .trim()
+    .replace(
+      /\p{Cc}|\p{Cf}|\p{Zl}|\p{Zp}|[<>&`@]/gu,
+      (c) => `[U+${c.codePointAt(0).toString(16)}]`,
+    );
+  const chars = Array.from(reason);
+  return chars.length > 500 ? `${chars.slice(0, 500).join('')}…` : reason;
+}
+/**
+ * The reason of the first valid proxy approval among `comments`, or undefined (also once the window is
+ * closed and whenever a hit is on this script itself: a change of the trust root needs the signature).
+ */
+export function proxyReason(comments, { hits, pr, hash, repo = REPO, now = Date.now() }) {
+  if (!proxyOpen(hits, now)) return undefined;
+  for (const c of comments) {
+    const reason = proxyApproval(c, { pr, hash, repo, now });
+    if (reason !== null) return reason;
+  }
+  return undefined;
+}
+/** Whether a proxy approval could count for these hits right now (no API call needed otherwise). */
+export const proxyOpen = (hits, now = Date.now()) =>
+  now < Date.parse(PROXY_APPROVAL_UNTIL) && !hits.some((h) => h.split(' ')[1] === SELF);
+
 // ---------------------------------------------------------------------------------------------------------
 // git and GitHub (read only)
 // ---------------------------------------------------------------------------------------------------------
@@ -1171,15 +1247,17 @@ export async function runCi({
   repo = gitRepo(),
   env = process.env,
   fetchImpl = fetch,
+  now = Date.now(), // proxy-2026-11
   out = console.log,
 }) {
   const hits = collectHits(repo, base, head);
   const table = hitTable(hits);
   out(table);
+  // proxy-2026-11: the clause after the semicolon below.
   if (env.GITHUB_STEP_SUMMARY)
     appendFileSync(
       env.GITHUB_STEP_SUMMARY,
-      `${table}\n\nInformation only: the approval hash comes from \`ratchet.mjs --pr\` in its \`develop\` version.\n`,
+      `${table}\n\nInformation only: the approval hash comes from \`ratchet.mjs --pr\` in its \`develop\` version; a proxy approval read here uses this run's hash, the merge rule decides.\n`,
     );
   if (!hits.length) return 0;
   const slug = env.GITHUB_REPOSITORY || REPO;
@@ -1199,16 +1277,34 @@ export async function runCi({
     );
     if (labels.some((l) => l?.name === LABEL)) {
       out(
-        `Label "${LABEL}" is on the pull request: green for CI. The merge still needs the signed comment.`,
+        `Label "${LABEL}" is on the pull request: green for CI. The merge still needs the approval comment.`,
       );
       return 0;
     }
+    // proxy-2026-11 (this if block)
+    if (/^[1-9]\d*$/.test(env.PR_NUMBER) && proxyOpen(hits, now)) {
+      const pr = Number(env.PR_NUMBER);
+      const hash = hashOf(hits);
+      const comments = await githubAll(
+        fetchImpl,
+        env.GITHUB_TOKEN,
+        `/repos/${slug}/issues/${pr}/comments`,
+      );
+      const reason = proxyReason(comments, { hits, pr, hash, repo: slug, now });
+      if (reason !== undefined) {
+        out(
+          `Proxy approval comment for hash ${hash} (until ${PROXY_APPROVAL_UNTIL}): green for CI. Reason: ${reason}`,
+        );
+        return 0;
+      }
+    }
   } catch (e) {
-    out(`Could not read the labels (${e.message}); hits stay red.`);
+    out(`Could not read the labels or comments (${e.message}); hits stay red.`); // proxy-2026-11
     return 1;
   }
+  // proxy-2026-11: the comment clause in this text.
   out(
-    `Hits without the label "${LABEL}". Next step: name every hit in the pull request text and wait for the maintainer (only he sets the label, by hand), or take the change back. Lowering a budget and new guard files are free.`,
+    `Hits without the label "${LABEL}"${proxyOpen(hits, now) ? ` or a proxy approval comment for hash ${hashOf(hits)}` : ''}. Next step: name every hit in the pull request text and wait for the maintainer's approval (docs/howto/ci-ratchet-signing.md), or take the change back. Lowering a budget and new guard files are free.`,
   );
   return 1;
 }
@@ -1222,6 +1318,7 @@ export async function runPr({
   fetchImpl = fetch,
   publicKey = RATCHET_PUBLIC_KEY,
   slug = REPO,
+  now = Date.now(), // proxy-2026-11
   out = console.log,
 }) {
   const problems = [];
@@ -1264,16 +1361,32 @@ export async function runPr({
 
   if (hits.length) {
     const message = approvalMessage(pr, hash, slug);
+    const proxy = !!key && proxyOpen(hits, now); // proxy-2026-11
     let approved = false;
+    let reason; // proxy-2026-11
     if (key) {
       const comments = await githubAll(fetchImpl, token, `/repos/${slug}/issues/${pr}/comments`);
       approved = comments.some((c) => isApproval(c?.body, { pr, hash, key, repo: slug }));
+      // proxy-2026-11
+      if (!approved && proxy) reason = proxyReason(comments, { hits, pr, hash, repo: slug, now });
     }
     out(`\nHash: ${hash}`);
     out(`Message: ${message}`);
     if (approved) out('Approval: a comment with a valid signature over this message exists.');
+    // proxy-2026-11 (this branch)
+    else if (reason !== undefined)
+      out(
+        `Approval: proxy comment by ${MAINTAINER_LOGIN} (temporary, until ${PROXY_APPROVAL_UNTIL}).\nReason: ${reason}`,
+      );
     else {
-      problems.push('hits without a validly signed approval comment for this hash');
+      // proxy-2026-11: the proxy clause in this text and the hint below.
+      problems.push(
+        `hits without a validly signed approval comment${proxy ? ' (or a proxy approval comment)' : ''} for this hash`,
+      );
+      if (proxy)
+        out(
+          `Proxy approval (temporary, until ${PROXY_APPROVAL_UNTIL}): an unedited comment by ${MAINTAINER_LOGIN} whose first line is exactly the message above and whose second line is \`Reason: …\`. Or the signature:`,
+        );
       out('Sign it (asks for the passphrase, prints the signature):');
       out(
         `  printf '%s' '${message}' > /tmp/ratchet-msg.txt && openssl pkeyutl -sign -rawin -inkey ~/.nemo/ratchet.pem -in /tmp/ratchet-msg.txt -out /tmp/ratchet-sig.bin && openssl base64 -A -in /tmp/ratchet-sig.bin; echo`,

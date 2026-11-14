@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { useAiOn } from '@/core/ai/switch';
 import { useSettings } from '@/core/settings/settings';
+import { useSettled } from '@/core/status/settled';
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
 import {
@@ -32,6 +33,9 @@ export default function ChatPage() {
   const [prefs] = useSettings('module.chat', settings.schema, settings.defaults);
   const aiOn = useAiOn();
   const setup = useChatSetup();
+  // 0b-8: the set-up hint lies above the chat and needs two reads (AI config, local model); the chat is painted once
+  // they are back (at most 1.5 s), so the hint never pushes the search and the list down.
+  const setupRead = useSettled(setup !== undefined);
   const threads = useLiveQuery(() => threadRepo.active().toArray(), []);
   const messages = useLiveQuery(() => messageRepo.active().toArray(), []);
   const [query, setQuery] = useState('');
@@ -111,7 +115,11 @@ export default function ChatPage() {
     return (
       <>
         <SetupHint setup={setup} />
-        <ThreadView threadId={selected} onBack={() => setParams({}, { replace: true })} />
+        {setupRead ? (
+          <ThreadView threadId={selected} onBack={() => setParams({}, { replace: true })} />
+        ) : (
+          <div aria-busy="true" data-testid="chat-reading" />
+        )}
       </>
     );
   }
@@ -134,51 +142,55 @@ export default function ChatPage() {
         </PageAction>
       </PageHeader>
       <SetupHint setup={setup} />
-      <div className={styles.layout} data-after-hint={setup?.needed ? '' : undefined}>
-        <TextField
-          label={c.search}
-          labelHidden
-          placeholder={c.search}
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        <Checkbox
-          label={c.showArchived}
-          checked={archived}
-          onChange={(e) => setArchived(e.target.checked)}
-        />
-        {threads && shown.length === 0 ? (
-          // No chat yet: one verb. While the set-up hint shows, that one is the next step and this stays a title.
-          <EmptyState
-            title={c.empty}
-            testId="chat-empty"
-            motif={<SignatureMark id="bubble" size={64} />}
-          >
-            {isEmpty && !setup?.needed ? (
-              <Button variant="primary" onClick={() => void create()}>
-                {c.newChat}
-              </Button>
-            ) : null}
-          </EmptyState>
-        ) : (
-          <ItemList label={c.title}>
-            {shown.map((x) => (
-              <ItemRow
-                key={x.id}
-                title={x.title}
-                lead={x.pinned ? <Icon name="pin" size={16} /> : undefined}
-                end={
-                  <Badge tone="neutral">
-                    {x.engine === 'local' ? c.engineLocal : c.engineRouter}
-                  </Badge>
-                }
-                onOpen={() => setParams({ t: x.id })}
-              />
-            ))}
-          </ItemList>
-        )}
-      </div>
+      {setupRead ? (
+        <div className={styles.layout} data-after-hint={setup?.needed ? '' : undefined}>
+          <TextField
+            label={c.search}
+            labelHidden
+            placeholder={c.search}
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <Checkbox
+            label={c.showArchived}
+            checked={archived}
+            onChange={(e) => setArchived(e.target.checked)}
+          />
+          {threads && shown.length === 0 ? (
+            // No chat yet: one verb. While the set-up hint shows, that one is the next step and this stays a title.
+            <EmptyState
+              title={c.empty}
+              testId="chat-empty"
+              motif={<SignatureMark id="bubble" size={64} />}
+            >
+              {isEmpty && !setup?.needed ? (
+                <Button variant="primary" onClick={() => void create()}>
+                  {c.newChat}
+                </Button>
+              ) : null}
+            </EmptyState>
+          ) : (
+            <ItemList label={c.title}>
+              {shown.map((x) => (
+                <ItemRow
+                  key={x.id}
+                  title={x.title}
+                  lead={x.pinned ? <Icon name="pin" size={16} /> : undefined}
+                  end={
+                    <Badge tone="neutral">
+                      {x.engine === 'local' ? c.engineLocal : c.engineRouter}
+                    </Badge>
+                  }
+                  onOpen={() => setParams({ t: x.id })}
+                />
+              ))}
+            </ItemList>
+          )}
+        </div>
+      ) : (
+        <div aria-busy="true" data-testid="chat-reading" />
+      )}
     </>
   );
 }

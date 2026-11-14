@@ -120,7 +120,10 @@ async function goModule(c: Counter, page: Page, phone: boolean, area: RegExp, mo
   await c.click(link, `module ${module}`);
 }
 
-const quickAdd = (page: Page) => page.getByRole('button', { name: /schnell hinzufügen|^\+?\s*Neu$/i }).filter({ visible: true }).first();
+// 0b-8: the desktop entry is „Neu: etwas eintragen“ in the top bar, the phone's is the plus of the bottom bar.
+const quickAdd = (page: Page) => page.getByRole('button', { name: /Neu: etwas eintragen|schnell hinzufügen|^\+?\s*Neu$/i }).or(page.getByTestId('bottom-plus')).filter({ visible: true }).first();
+/** The page's main action: „<Ding> eintragen“ since the 0b-8 wording pass (before: „… hinzufügen“). */
+const mainAction = (page: Page, thing: string) => page.locator('main, [data-testid="module-frame"], [data-bottom-bar]').getByRole('button', { name: new RegExp(`^${thing} (eintragen|hinzufügen)$`) });
 
 const FLOWS: Record<string, Flow> = {
   'A1 ToDo eintragen – Schnellerfassung': async (c, page) => {
@@ -132,7 +135,10 @@ const FLOWS: Record<string, Flow> = {
   'A2 ToDo eintragen – im Modul': async (c, page, phone) => {
     await c.start('/');
     await goModule(c, page, phone, /Planen/, 'ToDos');
-    const field = page.locator('main').getByRole('textbox').first();
+    // 4.0: no inline field on ToDos any more; the main action opens the form.
+    const inline = page.locator('main').getByRole('textbox').first();
+    if (!(await inline.isVisible().catch(() => false))) await c.click(mainAction(page, 'Aufgabe'), 'Aufgabe eintragen');
+    const field = page.locator('dialog[open], [role="dialog"]').last().getByRole('textbox').or(inline).first();
     await c.fill(field, 'Fenster putzen', 'ToDo field');
     await c.key('Enter');
   },
@@ -145,13 +151,13 @@ const FLOWS: Record<string, Flow> = {
   'A4 Buchung eintragen – im Modul': async (c, page, phone) => {
     await c.start('/');
     await goModule(c, page, phone, /Geld/, 'Finanzen');
-    await c.click(page.locator('main').getByRole('button', { name: /^Buchung hinzufügen$|^Buchung$/ }), 'Buchung hinzufügen');
+    await c.click(mainAction(page, 'Buchung'), 'Buchung eintragen');
     const dlg = page.locator('dialog[open], [role="dialog"]').last();
     const fields = dlg.locator('input:not([type=hidden]):not([type=checkbox])');
     await c.fill(fields.nth(0), 'Supermarkt', 'field 1');
     await c.key('Tab');
     await c.type('23,50');
-    await c.click(dlg.getByRole('button', { name: /^Speichern$/ }), 'Speichern');
+    await c.click(dlg.getByRole('button', { name: /^(Speichern|Buchung eintragen)$/ }), 'Speichern');
   },
   'A5 Einkauf eintragen – Listen': async (c, page, phone) => {
     await c.start('/');
@@ -163,26 +169,26 @@ const FLOWS: Record<string, Flow> = {
   'A6 Vorrat eintragen – Dialog': async (c, page, phone) => {
     await c.start('/');
     await goModule(c, page, phone, /Haushalt/, 'Vorräte');
-    await c.click(page.locator('main').getByRole('button', { name: /Vorrat hinzufügen/ }), 'Vorrat hinzufügen');
+    await c.click(mainAction(page, 'Vorrat'), 'Vorrat eintragen');
     const dlg = page.locator('dialog[open], [role="dialog"]').last();
     await c.fill(dlg.locator('input:not([type=hidden])').first(), 'Reis', 'name');
-    await c.click(dlg.getByRole('button', { name: /^Speichern$/ }), 'Speichern');
+    await c.click(dlg.getByRole('button', { name: /^(Speichern|Vorrat eintragen)$/ }), 'Speichern');
   },
   'A7 Notiz anlegen': async (c, page, phone) => {
     await c.start('/');
     await goModule(c, page, phone, /Wissen/, 'Notizen');
-    await c.click(page.locator('main').getByRole('button', { name: /^Neue Seite$/ }), 'Neue Seite');
+    await c.click(page.locator('main, [data-testid="module-frame"], [data-bottom-bar]').getByRole('button', { name: /^Neue Seite$/ }), 'Neue Seite');
     await c.type('Einkauf Wochenende');
     c.notes.push(`after: ${new URL(page.url()).pathname}${new URL(page.url()).search}`);
   },
   'A8 Unterlage anlegen – Tresor': async (c, page, phone) => {
     await c.start('/');
     await goModule(c, page, phone, /Tresor/, 'Unterlagen');
-    await c.click(page.locator('main').getByRole('button', { name: /Unterlage hinzufügen/ }), 'Unterlage hinzufügen');
+    await c.click(mainAction(page, 'Unterlage'), 'Unterlage eintragen');
     const dlg = page.locator('dialog[open], [role="dialog"]').last();
     await c.fill(dlg.locator('input:not([type=hidden])').first(), 'Mietvertrag', 'title');
     c.notes.push(`fields: ${await dlg.locator('input:not([type=hidden]), select, textarea').count()}`);
-    await c.click(dlg.getByRole('button', { name: /^Speichern$/ }), 'Speichern');
+    await c.click(dlg.getByRole('button', { name: /^(Speichern|Unterlage eintragen)$/ }), 'Speichern');
   },
   'B1 Erledigen – ToDo in der Liste': async (c, page, phone) => {
     await c.start('/');
@@ -207,7 +213,15 @@ const FLOWS: Record<string, Flow> = {
     else await c.key('Control+k');
     await c.type('Schmierzettel');
     await page.waitForTimeout(500);
-    await c.key('ArrowDown');
+    // 0b-8: press ↓ until the note is the active option (before #834 „Neu eintragen“ and „Frage stellen“ came first;
+    // since #834 an exact title is the first option, so no ↓ at all).
+    for (let i = 0; i < 6; i++) {
+      if (i > 0) await c.key('ArrowDown');
+      // The active option is the one the combobox names in `aria-activedescendant` (CommandPalette).
+      const id = await page.locator('[role="combobox"][aria-activedescendant]').first().getAttribute('aria-activedescendant').catch(() => null);
+      const active = id ? await page.locator(`[id="${id}"]`).innerText().catch(() => '') : '';
+      if (/Schmierzettel/.test(active) && !/eintragen|Frage/.test(active)) break;
+    }
     await c.key('Enter');
     c.notes.push(`lands on ${new URL(page.url()).pathname}`);
   },
@@ -237,12 +251,16 @@ const FLOWS: Record<string, Flow> = {
     await c.start('/');
     if (phone) { await c.click(page.getByRole('button', { name: /^Mehr$/ }), 'Mehr'); await c.click(page.getByRole('link', { name: /^Einstellungen/ }), 'Einstellungen'); }
     else await c.click(page.getByTestId('sidebar').getByRole('link', { name: /^Einstellungen/ }), 'Einstellungen');
-    await c.click(page.locator('main').getByRole('button', { name: /^Dunkel$/ }), 'Dunkel');
+    await c.click(page.locator('main').getByRole('radio', { name: /^Dunkel/ }).or(page.locator('main').getByRole('button', { name: /^Dunkel$/ })), 'Dunkel');
   },
   'E2 Einstellung ändern – Hell (Kategorie)': async (c, page) => {
     await c.start('/settings');
     await c.click(page.locator('main').getByRole('link', { name: /^Darstellung/ }), 'Darstellung');
-    await c.click(page.locator('main').getByRole('button', { name: /^Hell$/ }), 'Hell');
+    // 4.0 (0b-E): the theme sits behind „Ändern“ in the row „Thema: …“.
+    const hell = () => page.getByRole('radio', { name: /^Hell/ }).or(page.getByRole('button', { name: /^Hell$/ })).filter({ visible: true });
+    if (!(await hell().first().isVisible().catch(() => false)))
+      await c.click(page.locator('main').getByText('Ändern', { exact: true }).first(), 'Ändern (Thema)');
+    await c.click(hell(), 'Hell');
   },
   'F1 Tag planen – Planer': async (c, page, phone) => {
     await c.start('/');
@@ -265,12 +283,12 @@ const FLOWS: Record<string, Flow> = {
   'G1 Rechnung anlegen': async (c, page, phone) => {
     await c.start('/');
     await goModule(c, page, phone, /Geld/, 'Rechnungen');
-    await c.click(page.locator('main').getByRole('button', { name: /Rechnung hinzufügen/ }), 'Rechnung hinzufügen');
+    await c.click(mainAction(page, 'Rechnung'), 'Rechnung eintragen');
     const dlg = page.locator('dialog[open], [role="dialog"]').last();
     await c.fill(dlg.locator('input:not([type=hidden])').first(), 'Stadtwerke', 'payee');
     await c.key('Tab');
     await c.type('88,10');
-    await c.click(dlg.getByRole('button', { name: /^Speichern$/ }), 'Speichern');
+    await c.click(dlg.getByRole('button', { name: /^(Speichern|Rechnung eintragen)$/ }), 'Speichern');
   },
   'H1 Backup herunterladen': async (c, page, phone) => {
     await c.start('/');
@@ -280,6 +298,22 @@ const FLOWS: Record<string, Flow> = {
     const dl = page.locator('main').getByRole('button', { name: /Backup herunterladen|Verschlüsselt exportieren/ });
     await c.click(dl, 'Backup');
     c.notes.push(`dialog buttons: ${await page.locator('dialog[open] button, [role="dialog"] button').allInnerTexts().then((t) => t.join('/')).catch(() => '-')}`);
+  },
+  'H3 Status ansehen – Gerätestatus (S-b)': async (c, page, phone) => {
+    await c.start('/');
+    await goModule(c, page, phone, /System/, 'Gerätestatus');
+    // S-b promise: backup and sync status in two clicks.
+    await expect(page.locator('main').getByText(/^Backup/).first()).toBeVisible();
+    await expect(page.locator('main').getByText(/^Sync/).first()).toBeVisible();
+    c.notes.push(`lands on ${new URL(page.url()).pathname}`);
+  },
+  'H2 Backup herunterladen – über Gerätestatus (S-b)': async (c, page, phone) => {
+    await c.start('/');
+    await goModule(c, page, phone, /System/, 'Gerätestatus');
+    await c.click(page.locator('main').getByRole('link', { name: /Backup/ }).first(), 'Zeile Backup');
+    const dl = page.locator('main').getByRole('button', { name: /Backup herunterladen|Verschlüsselt exportieren/ });
+    await c.click(dl, 'Backup');
+    c.notes.push(`after: ${new URL(page.url()).pathname}`);
   },
 };
 
@@ -291,7 +325,8 @@ for (const run of RUNS) {
     const vp = phone ? { width: 412, height: 915 } : { width: 1920, height: 1080 };
     const context = await browser.newContext({ viewport: vp, isMobile: phone, hasTouch: phone, deviceScaleFactor: 1, colorScheme: 'dark' });
     const page = await context.newPage();
-    await page.route(/^https?:\/\/(?!localhost)/, (route) => route.abort());
+    await page.route(/^https?:\/\/(?!localhost(:\d+)?\/)/, (route) => route.abort());
+    await page.routeWebSocket(/^wss?:\/\/(?!localhost(:\d+)?\/)/, (ws) => ws.close());
     await mockWeather(page);
     await page.addInitScript((d) => { localStorage.setItem('tm-show-preview', '1'); if (d) localStorage.setItem('__tmPlatformKind', 'desktop'); }, !phone);
     await bootDev(page);

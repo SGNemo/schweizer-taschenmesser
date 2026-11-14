@@ -23,7 +23,14 @@ const OPEN_APP = 'spotify:';
  * music plays on. Without an active device the head offers a way out instead of a dead end: the devices to play on, the Spotify app,
  * the web player, and the Premium note. Everything is read when the page opens and after each action; nothing is kept.
  */
-export function NowPlayer({ api }: { api: PlayerApi }) {
+export function NowPlayer({
+  api,
+  onRead,
+}: {
+  api: PlayerApi;
+  /** Called once the player's state and devices of a round are back, answered or failed (0b-8: the page waits). */
+  onRead?: () => void;
+}) {
   const tx = tSpotify.use();
   const tm = tMusicPage.use();
   const { np } = api;
@@ -39,18 +46,14 @@ export function NowPlayer({ api }: { api: PlayerApi }) {
 
   useEffect(() => {
     let alive = true;
-    source
-      .state?.(ctx)
-      .then((s) => alive && setPlayer(s ?? 'none'))
-      .catch(() => undefined);
-    source
-      .devices?.(ctx)
-      .then((d) => alive && setDevices(d))
-      .catch(() => undefined);
+    const state = source.state?.(ctx).then((s) => void (alive && setPlayer(s ?? 'none')));
+    const list = source.devices?.(ctx).then((d) => void (alive && setDevices(d)));
+    // A failure changes nothing on the screen; either way the page may show the player now.
+    void Promise.allSettled([state, list]).then(() => alive && onRead?.());
     return () => {
       alive = false;
     };
-  }, [source, ctx, current?.title, current?.playing, api.version]);
+  }, [source, ctx, current?.title, current?.playing, api.version, onRead]);
 
   const position = useProgress(
     current?.progressMs,

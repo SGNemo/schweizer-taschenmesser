@@ -14,7 +14,7 @@ import styles from './StatusPage.module.css';
  */
 export default function StatusPage() {
   const d = t.device;
-  const { groups, look, ready } = useDeviceStatus();
+  const { groups, look, noBackup, ready } = useDeviceStatus();
   // CPU, memory and network live in "Dieser PC" → System (desktop only); this page points there instead of repeating them.
   const desktop = getPlatform().kind === 'desktop';
   const diskOn = useModuleStates()?.disk === true;
@@ -24,9 +24,12 @@ export default function StatusPage() {
       {/* Head and lines wait for the first reads and then come together (no line fills in, no "Kein Backup" first). */}
       {ready ? (
         <HeroSlot area="figure">
-          {/* One short figure: calm words while all is well, else how many lines need a look and which. */}
+          {/* One short figure: calm words while all is well (or while only the backup is missing: said, never red),
+              else how many lines need a look and which. */}
           <HeroFigure
-            value={look.length === 0 ? d.summary.ok : String(look.length)}
+            value={
+              look.length > 0 ? String(look.length) : noBackup ? d.summary.noBackup : d.summary.ok
+            }
             unit={look.length === 0 ? undefined : d.page.figureUnit(look.length)}
             // All well: the words say it. Otherwise the names of the lines that need a look (short, never cut).
             detail={look.length === 0 ? undefined : look.map((l) => l.title).join(', ')}

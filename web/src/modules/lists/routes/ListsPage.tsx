@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router';
 import { bus } from '@/core/events';
 import { useModuleStates } from '@/core/modules/activation';
 import { whenServicesSettled } from '@/core/modules/servicesReady';
+import { useSettled } from '@/core/status/settled';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import type { Stored } from '@/core/db/types';
 import { useUiStore } from '@/stores/ui';
@@ -92,16 +93,6 @@ export default function ListsPage() {
     input?.scrollIntoView({ block: 'center' });
     input?.focus({ preventScroll: true });
   };
-  // The field lies below the rows, so the parameter waits until lists and items are there.
-  const loaded = (lists?.length ?? 0) > 0 && items !== undefined;
-  useEffect(() => {
-    if (params.get('new') && loaded && form.current) {
-      focusAdd();
-      const next = new URLSearchParams(params);
-      next.delete('new');
-      setParams(next, { replace: true });
-    }
-  }, [params, setParams, loaded]);
 
   // A search hit links here with ?open=<id> of a list or an item: show that list.
   useOpenParam(
@@ -137,10 +128,31 @@ export default function ListsPage() {
   const isShopping = current?.kind === 'shopping';
   const isPacking = current?.kind === 'packing';
   const sums = totals(shown);
-  const history = useLiveQuery(
-    async () => (current && isShopping ? await historyOf(current.id) : []),
+  // Tagged with the list it was read for: a re-read keeps the last answer until the new one is there.
+  const historyRead = useLiveQuery(
+    async () => ({
+      list: current?.id,
+      names: current && isShopping ? await historyOf(current.id) : [],
+    }),
     [current?.id, isShopping, items],
   );
+  const history = historyRead?.names;
+  // 0b-8: the list (rows, the add field as its last row, the suggestions) is painted once its items and, for a
+  // shopping list, its history are read, so the rows never arrive above an add field that is already there. Once
+  // shown it stays (a tab switch keeps the page while the new list is read).
+  // Bounded like the status lines (`useSettled`, 1.5 s): a read that hangs still shows the field. It never turns back.
+  const read = useSettled(!!current && items !== undefined && historyRead?.list === current.id);
+  // `?new=1` (Quick-Add, the "+ Neu" menu) focuses the add field. The field is painted with the rows (`read`), so the
+  // parameter waits for that, not only for the items.
+  const loaded = read && (lists?.length ?? 0) > 0 && items !== undefined;
+  useEffect(() => {
+    if (params.get('new') && loaded && form.current) {
+      focusAdd();
+      const next = new URLSearchParams(params);
+      next.delete('new');
+      setParams(next, { replace: true });
+    }
+  }, [params, setParams, loaded]);
   const suggestions = useMemo(
     () =>
       isShopping
@@ -230,6 +242,7 @@ export default function ListsPage() {
       title={i.name}
       titleFull
       done={i.done}
+      className={styles.itemRow}
       lead={
         <Checkbox
           label={i.name}
@@ -361,14 +374,15 @@ export default function ListsPage() {
         {/* Everything occasional: templates, editing, sharing, clearing a packing list. */}
         <StartDataMenu moduleId="lists" items={pageMenu} />
       </PageHeader>
-      {lists && current && isShopping ? (
+      {lists && current && read && isShopping ? (
         <ListFigure
           name={current.name}
           open={openCount}
           detail={groups.length > 0 ? t.lists.sectionsCount(groups.length) : undefined}
         />
       ) : null}
-      {lists && current ? (
+      {lists && current && !read ? <div aria-busy="true" data-testid="lists-reading" /> : null}
+      {lists && current && read ? (
         <>
           {/* The first row of the page: on the phone the "⋯" menu lies beside it (`besideContent`). An empty list
               has no such line; its empty state says it. */}
@@ -424,7 +438,13 @@ export default function ListsPage() {
                   size={64}
                 />
               }
-            />
+            >
+              {/* M10: an empty state names its next step. "Artikel eintragen" on a shopping list; the other lists reuse
+                  `addItem`, the label of the "⋯" entry and of the field itself (a known exception to "<Ding> eintragen"). */}
+              <Button onClick={focusAdd}>
+                {isShopping ? t.lists.emptyAction : t.lists.addItem}
+              </Button>
+            </EmptyState>
           ) : null}
           <div
             className={isShopping ? styles.paper : styles.sheet}

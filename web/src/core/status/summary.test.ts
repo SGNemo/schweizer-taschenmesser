@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { StatusLine } from './lines';
 import {
+  calmPoint,
   DEVICE_STATUS_PATH,
   deviceStatusLine,
   needingLook,
@@ -55,5 +56,25 @@ describe('summary of the device lines', () => {
     expect(withTitle({ title: 'Sync', status: 'Fehler beim Abgleich' })).toBe(
       'Sync: Fehler beim Abgleich',
     );
+  });
+  it('names a missing backup calmly, never as a point (0b-8)', () => {
+    const missing = { ...line('backup', false), missing: true };
+    expect(summaryText([line('sync', false), missing])).toBe('Noch kein Backup');
+    expect(calmPoint([missing])).toBe(missing);
+    expect(deviceStatusLine([missing]).attention).toBe(false);
+  });
+  it('waits for the backup read before it names a missing backup', () => {
+    const reading = { ...line('backup', false), missing: true, loading: true };
+    expect(summaryText([reading])).toBe('Nichts Dringendes');
+  });
+  it('a line that needs a look wins over the missing backup', () => {
+    const missing = { ...line('backup', false), missing: true };
+    expect(summaryText([line('sync', true), missing])).toBe('Sync: Fehler beim Abgleich');
+    expect(calmPoint([line('sync', true), missing])).toBeUndefined();
+  });
+  it('only the backup line can be the calm point', () => {
+    const other = { ...line('sync', false), missing: true };
+    expect(calmPoint([other])).toBeUndefined();
+    expect(summaryText([other])).toBe('Nichts Dringendes');
   });
 });

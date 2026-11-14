@@ -19,21 +19,26 @@ let stopAutomation: (() => void) | undefined;
 export async function initCore(): Promise<void> {
   // The change history listens from the very start, so a change made while the app is still waking up counts too.
   if (!stopHistory && typeof localStorage !== 'undefined') stopHistory = startHistory();
+  // A really empty app (no setup state, no data) is a fresh installation: it gets the calm defaults. Read before
+  // anything is awaited: the page renders alongside and may write its first settings while the browser answers.
+  // `appHasData` reads in one transaction, so a page writing its own default meanwhile waits for it.
+  const setupRead = await readSetupState();
+  const hasData = setupRead ? undefined : await appHasData();
+  const fresh = !setupRead && !hasData;
+  // Everything that depends on "fresh" comes before the setup state: a first start that ends after it (the app is
+  // closed at once) must not let the next start read its own setup state as an existing installation. For a fresh
+  // app both steps write only `_meta` markers, which `appHasData` does not count, so the setup state decides as before.
+  await applyDefaultsEra(fresh, (view) => useUiStore.getState().setHomeView(view));
+  // The same fresh installation notes its default set of modules (device-local, never a synced row).
+  await markFreshDefaults(fresh);
+  // Decides `dismissed` (installation with data) vs `notStarted` before any module work writes; it takes
+  // the answer read above, as a page may have written its own defaults (the to-do list) since.
+  await ensureSetupState(undefined, undefined, hasData);
   try {
     await navigator.storage?.persist?.();
   } catch {
     // Best effort only.
   }
-  // A really empty app (no setup state, no data) is a fresh installation: it gets the calm defaults.
-  const setupRead = await readSetupState();
-  const hasData = setupRead ? undefined : await appHasData();
-  const fresh = !setupRead && !hasData;
-  // First: decides `dismissed` (installation with data) vs `notStarted` before anything writes; it
-  // takes the answer read above, as a page may have written its own defaults since.
-  await ensureSetupState(undefined, undefined, hasData);
-  await applyDefaultsEra(fresh, (view) => useUiStore.getState().setHomeView(view));
-  // The same fresh installation notes its default set of modules (device-local, never a synced row).
-  await markFreshDefaults(fresh);
   // Dev-Preview: an empty app is no longer filled by itself; the welcome card offers
   // "Mit Testdaten ansehen" next to "Einrichtung starten" (A10, round 5), so a tester sees the setup.
   const states = await loadModuleStates();

@@ -30,7 +30,14 @@ const calm = (): boolean => {
  * Without a cover the module hue stays. While nothing plays the cover field shows the song played last (only with the feature
  * "Verlauf"; no tint then, the head stays calm); without it the icon.
  */
-export function MusicHero({ api }: { api: PlayerApi }) {
+export function MusicHero({
+  api,
+  onPlayerRead,
+}: {
+  api: PlayerApi;
+  /** The player's first reads (state, devices) are back (0b-8, `NowPlayer` `onRead`). */
+  onPlayerRead?: () => void;
+}) {
   const { np } = api;
   const tm = tMusicPage.use();
   const { source, ctx, features, current } = np;
@@ -82,11 +89,11 @@ export function MusicHero({ api }: { api: PlayerApi }) {
       </HeroSlot>
       {phone ? (
         <div className={styles.phonePlayer} data-testid="music-player-page">
-          <NowPlayer api={api} />
+          <NowPlayer api={api} onRead={onPlayerRead} />
         </div>
       ) : (
         <HeroSlot area="figure">
-          <NowPlayer api={api} />
+          <NowPlayer api={api} onRead={onPlayerRead} />
         </HeroSlot>
       )}
     </>

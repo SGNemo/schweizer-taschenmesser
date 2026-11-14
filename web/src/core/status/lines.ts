@@ -36,6 +36,9 @@ export interface StatusLine {
   /** `true` = the context line only explains the state or the category (no date, number or setting of its own): the
    *  settings head leaves it out on the phone (U55). */
   generic?: boolean;
+  /** `true` = there is nothing yet that only exists once made (no backup on this device): no point that needs a look,
+   *  but the only state with a risk of losing data, so the summary names it calmly instead of "Nichts Dringendes". */
+  missing?: boolean;
   /** `true` while the line's first read has not come back: its words are not the state yet (empty, or a fallback). */
   loading?: boolean;
   testId: string;
@@ -71,21 +74,8 @@ export function useRead<T>(read: (() => Promise<T>) | undefined): {
   return state;
 }
 
-/** How long a list waits at most for its lines' first reads before it shows what it has (a read that hangs). */
-export const STATUS_WAIT_MS = 1500;
-
-/** `true` once `ready` was true or `STATUS_WAIT_MS` have passed since mount; it never turns back to `false`. */
-export function useSettled(ready: boolean, waitMs = STATUS_WAIT_MS): boolean {
-  const [waited, setWaited] = useState(false);
-  const [settled, setSettled] = useState(ready);
-  if (ready && !settled) setSettled(true);
-  useEffect(() => {
-    if (settled) return;
-    const timer = setTimeout(() => setWaited(true), waitMs);
-    return () => clearTimeout(timer);
-  }, [settled, waitMs]);
-  return settled || waited;
-}
+// The bound of a first read lives in `./settled` (light, also for pages that wait for one read before they paint).
+export { STATUS_WAIT_MS, useSettled } from './settled';
 
 /** `true` while a line of the list still loads. */
 export const anyLoading = (lines: readonly (StatusLine | undefined)[]): boolean =>
@@ -146,6 +136,7 @@ export function useBackupLine(): StatusLine {
         ? (last.kind === 'file' ? v3.backup.fileAt : v3.backup.at)(formatTimestamp(last.at))
         : v3.backup.tried(formatTimestamp(last.at)),
     generic: !last,
+    missing: !last,
     attention: last?.ok === false,
   };
 }
