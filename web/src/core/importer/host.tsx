@@ -2,12 +2,15 @@ import { create } from 'zustand';
 import { getManifest } from '@/core/modules/registry';
 import { lazy, Suspense } from 'react';
 import { useAppImport } from './appImportStore';
-import { OnboardingWizard } from './OnboardingWizard';
 import type { ImportPreset } from './types';
 
 /** One wizard run: a module and, when files were chosen before, what to read in it. */
 // The dialog (source detection, unpacking) is only fetched when someone opens it.
 const AppImportHost = lazy(() => import('./appImport').then((m) => ({ default: m.AppImportHost })));
+// The wizard (~17 KB gzip) is not part of the start: it is fetched when a run opens.
+const OnboardingWizard = lazy(() =>
+  import('./OnboardingWizard').then((m) => ({ default: m.OnboardingWizard })),
+);
 
 export interface HostItem {
   moduleId: string;
@@ -68,15 +71,17 @@ export function OnboardingHost() {
   return (
     <>
       {manifest ? (
-        <OnboardingWizard
-          // A new part is a new wizard: its own state, its own batch id.
-          key={`${moduleId}-${queue.length}`}
-          manifest={manifest}
-          open
-          onClose={close}
-          preset={preset ?? undefined}
-          part={total > 1 ? { index: total - queue.length, total } : undefined}
-        />
+        <Suspense fallback={null}>
+          <OnboardingWizard
+            // A new part is a new wizard: its own state, its own batch id.
+            key={`${moduleId}-${queue.length}`}
+            manifest={manifest}
+            open
+            onClose={close}
+            preset={preset ?? undefined}
+            part={total > 1 ? { index: total - queue.length, total } : undefined}
+          />
+        </Suspense>
       ) : null}
       {appImportOpen ? (
         <Suspense fallback={null}>

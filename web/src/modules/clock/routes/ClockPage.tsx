@@ -7,16 +7,8 @@ import { localZone } from '@/core/time/placeSearch';
 import { useMinuteNow } from '@/core/time/useMinuteNow';
 import { changeWithUndo, undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import {
-  Button,
-  EmptyState,
-  Icon,
-  PageAction,
-  PageHeader,
-  RowMenu,
-  SortableList,
-  useOpenParam,
-} from '@/ui';
+import { Button, EmptyState, Icon, PageAction, PageHeader, RowMenu, useOpenParam } from '@/ui';
+import { SortableList } from '@/ui/SortableList';
 import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import { AddPlaceDialog } from '../components/AddPlaceDialog';
 import { RenameDialog } from '../components/RenameDialog';

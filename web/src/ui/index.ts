@@ -49,7 +49,7 @@ export {
   patternStyles,
 } from './Patterns';
 export { SelectionBar } from './SelectionBar';
-export { SortableList, moveId } from './SortableList';
+// `SortableList` (drag and drop, @dnd-kit) is imported from '@/ui/SortableList' so the barrel keeps it out of the start.
 export { RowMenu, type RowMenuItem } from './RowMenu';
 export { DateChips } from './DateChips';
 export { useMediaQuery } from './useMediaQuery';
