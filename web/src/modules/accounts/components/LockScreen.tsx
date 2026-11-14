@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router';
+import { onPageBack } from '@/core/shell/backStack';
 import { t } from '@/strings';
 import { Button, Form, Icon, TextField } from '@/ui';
 import {
@@ -18,20 +20,15 @@ export function LockScreen() {
   const prompted = useRef(false);
   const root = useRef<HTMLDivElement>(null);
   // `data-autofocus` is read by Dialog only; the lock screen is a page, so it focuses its field itself:
-  // when it appears, and when "Back" returns to it while it never left the screen. The router renders
-  // navigations as transitions: a Back that comes before the next page rendered (busy device) leaves
-  // this screen mounted, its path never changes in React, and that update can wait on the abandoned
-  // one; the focus would stay on the link or the "Mehr" button that started it. So the browser's own
-  // `popstate` is the signal. With a sheet still open the field is inert and the sheet keeps its focus.
+  // on mount, and on a Back to this page that comes before the page left had rendered (a router
+  // transition on a busy device keeps this screen mounted). Closing a sheet leaves the focus alone.
+  const path = useRef(useLocation().pathname);
   useEffect(() => {
     const focusField = () => root.current?.querySelector<HTMLElement>('[data-autofocus]')?.focus();
     focusField();
-    const path = window.location.pathname;
-    const onPop = () => {
-      if (window.location.pathname === path) focusField();
-    };
-    window.addEventListener('popstate', onPop);
-    return () => window.removeEventListener('popstate', onPop);
+    return onPageBack(() => {
+      if (window.location.pathname === path.current) focusField();
+    });
   }, []);
 
   async function unlockWithBiometric() {
