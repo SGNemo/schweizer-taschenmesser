@@ -168,9 +168,9 @@ export function runUser(
 }
 
 /**
- * The preview of a sentence, of „Neu verteilen“ or of „Tage einteilen“ (`extra`: things not stored yet): a dry
- * run on the current inputs, queued like a run (so it never reads half of a write), writing nothing. Throws
- * `PlannerOffError` while switched off.
+ * The preview of a sentence or of „Neu verteilen“: a dry run on the current inputs, queued like a run
+ * (so it never reads half of a write), writing nothing. Throws `PlannerOffError` while switched off.
+ * `extra`: plan items not stored yet (the day setup sheet's unsaved lines).
  */
 export function previewUser(
   ops: readonly PlanOp[],
