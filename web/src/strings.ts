@@ -1905,7 +1905,8 @@ export const de = {
       reminder: (lead: string) => `Erinnerung: ${lead}`,
     },
     tabsLabel: 'Bereich',
-    tabCalendar: 'Kalender',
+    /** Not "Kalender": h1 and the active module pill already say that (M8, UI audit 2026-11). */
+    tabCalendar: 'Termine',
     tabReminders: 'Erinnerungen',
     kinds: {
       event: 'Termin',

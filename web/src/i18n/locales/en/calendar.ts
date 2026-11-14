@@ -199,7 +199,7 @@ export const calendar: Strings['calendar'] = {
     reminder: (lead) => `Reminder: ${lead}`,
   },
   tabsLabel: 'Section',
-  tabCalendar: 'Calendar',
+  tabCalendar: 'Events',
   tabReminders: 'Reminders',
   kinds: {
     event: 'Event',
