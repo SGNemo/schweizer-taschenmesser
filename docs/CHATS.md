@@ -30,7 +30,7 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 9. „Open questions“ in den PR-Texten von #656 (`disk_delete` nur per Attribut `async`?), #632, #490, #492.
 10. Designkontrolle 0b-1 bis 0b-3 (#750): vier Fragen im Bericht ([DESIGN-CHECK](design/ui-audit-2026-11/DESIGN-CHECK-0b-1-3.md)) und welche „sofort“-Befunde als Fix-PRs kommen (alle neun Themen; zuerst G1, Rechnungen bei 1280 px).
 11. #759 (0b-6a Wissen + Bibliothek): vier Ratschen-Treffer freigeben. (ja; die drei Fragen sind beantwortet, siehe Entscheidung; danach Fix-PR „Chat-Plus ohne KI gesperrt“ und 0b-6b)
-12. Übersicht baut sich auf (`docs/overview-build-up`): Variante K – erste Karten nach ~1 s statt ~2 s, nichts springt – und drei Detailfragen? (K; erster Schritt = Spaltenzahl; Rest in einem Schritt je Bild; leer statt Skeleton)
+12. Übersicht baut sich auf (`docs/overview-build-up`): Variante K – erste Karten nach ~1 s statt ~2 s (Desktop „Ausführlich“, Prototyp mit 3 Karten), nichts springt – und drei Detailfragen? (K; Deckel 1,5 s; Rest in einem Schritt, sobald alle fertig; leer statt Skeleton)
 
 **Handgriffe:**
 
