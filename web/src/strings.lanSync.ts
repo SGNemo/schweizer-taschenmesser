@@ -65,6 +65,11 @@ export const tLanSync = defineBundle(
     never: 'noch nie',
     notYetSynced: 'Noch nicht abgeglichen',
     changes: (n: number) => (n === 1 ? '1 Änderung' : `${n} Änderungen`),
+    /** Round 5 D18: "14:32 · 14 Änderungen" – when, and what the last cycle moved. */
+    lastSyncedWith: (when: string, n: number) =>
+      n === 0
+        ? `${when} · nichts Neues`
+        : `${when} · ${n === 1 ? '1 Änderung' : `${n} Änderungen`}`,
     devices: 'Gekoppelte Geräte',
     devicesNone: 'Noch kein Gerät gekoppelt.',
     lastSeen: (date: string) => `Zuletzt gesehen ${date}`,
@@ -87,7 +92,7 @@ export const tLanSync = defineBundle(
     // pairing dialog
     pairTitle: 'Gerät koppeln',
     pairSteps:
-      'Öffne Nemo auf dem Handy: Einstellungen → Synchronisation → „Mit PC koppeln“, dann den Code scannen.',
+      'Öffne Nemo auf dem Handy: Einstellungen → Sync & Backup → „Mit PC koppeln“, dann den Code scannen.',
     qrAlt: 'QR-Code zum Koppeln',
     preparing: 'Wird vorbereitet …',
     firewall:
@@ -107,7 +112,7 @@ export const tLanSync = defineBundle(
     // phone (device paired with a PC)
     introPhone: 'Gleiche im Heimnetz mit deinem PC ab.',
     introPhoneLine:
-      'Auf dem PC: Einstellungen → Synchronisation → „Gerät koppeln“. Dann hier den Code scannen.',
+      'Auf dem PC: Einstellungen → Sync & Backup → „Gerät koppeln“. Dann hier den Code scannen.',
     pairWithPc: 'Mit PC koppeln',
     otherPath:
       'Dieses Gerät gleicht über einen eigenen Server ab. Trenne es dort zuerst, um es mit deinem PC zu koppeln.',
@@ -223,6 +228,8 @@ export const tLanSync = defineBundle(
       never: 'never',
       notYetSynced: 'Not yet synced',
       changes: (n: number) => (n === 1 ? '1 change' : `${n} changes`),
+      lastSyncedWith: (when: string, n: number) =>
+        n === 0 ? `${when} · nothing new` : `${when} · ${n === 1 ? '1 change' : `${n} changes`}`,
       devices: 'Paired devices',
       devicesNone: 'No device paired yet.',
       lastSeen: (date: string) => `Last seen ${date}`,
@@ -243,7 +250,8 @@ export const tLanSync = defineBundle(
       turnOff: 'Turn off home-network sync',
       turnOffHint: 'The PC stops listening. Your data and paired devices stay.',
       pairTitle: 'Pair a device',
-      pairSteps: 'Open Nemo on your phone: Settings → Sync → “Pair with PC”, then scan the code.',
+      pairSteps:
+        'Open Nemo on your phone: Settings → Sync & backup → “Pair with PC”, then scan the code.',
       qrAlt: 'QR code for pairing',
       preparing: 'Getting ready …',
       firewall:
@@ -261,7 +269,8 @@ export const tLanSync = defineBundle(
       close: 'Close',
       done: 'Done',
       introPhone: 'Sync with your PC on your home network.',
-      introPhoneLine: 'On the PC: Settings → Sync → “Pair a device”. Then scan the code here.',
+      introPhoneLine:
+        'On the PC: Settings → Sync & backup → “Pair a device”. Then scan the code here.',
       pairWithPc: 'Pair with PC',
       otherPath:
         'This device syncs through your own server. Disconnect it there first to pair it with your PC.',

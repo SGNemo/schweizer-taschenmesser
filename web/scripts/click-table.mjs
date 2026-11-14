@@ -3,7 +3,8 @@
  * Markdown tables from `npm run measure:click` (e2e/perf/click.spec.ts), for docs/perf/CLICK-TO-CONTENT-*.md.
  *
  *   node scripts/click-table.mjs [label]            times: per target first content / done, first and second visit
- *   node scripts/click-table.mjs [label] --causes   cause trail of the first visit (desktop and phone, slowest rate)
+ *   node scripts/click-table.mjs [label] --causes   cause trail of the first visit (desktop and phone, slowest rate;
+ *                                                    `--rate 4x` picks another), with layout/style time and DOM size
  *   node scripts/click-table.mjs <a> --diff <b>     done of the first visit, label a against b (before/after)
  *
  * Reads node_modules/.cache/click/<label>-{desktop,phone}.json (CLICK_OUT overrides the folder).
@@ -47,18 +48,18 @@ if (args.includes('--diff')) {
     console.log(`| ${name(id)} | ${row.join(' | ')} |`);
   }
 } else if (args.includes('--causes')) {
-  const rate = rates.at(-1);
+  const rate = args.includes('--rate') ? args[args.indexOf('--rate') + 1] : rates.at(-1);
   console.log(
-    `| target | device | done (s) | files after the click | DB reads (requests, rows) | main thread (ms) | loading state shown (ms) |`,
+    `| target | device | done (s) | files after the click | DB reads (requests, rows) | main thread (ms) | layout / style (ms) | DOM nodes (main) | loading state shown (ms) |`,
   );
-  console.log('|---|---|---|---|---|---|---|');
+  console.log('|---|---|---|---|---|---|---|---|---|');
   for (const id of ids)
     for (const d of Object.keys(devices)) {
       const x = data[d][rate]?.[id];
       if (!x?.first) continue;
       const f = x.first;
       console.log(
-        `| ${name(id)} | ${devices[d]} | ${s(f.done)} | ${f.chunks} | ${f.idbOps}, ${f.idbRows} | ${f.taskMs} | ${f.loadingMs} |`,
+        `| ${name(id)} | ${devices[d]} | ${s(f.done)} | ${f.chunks} | ${f.idbOps}, ${f.idbRows} | ${f.taskMs} | ${f.layoutMs ?? '–'} / ${f.styleMs ?? '–'} | ${f.nodes ?? '–'} (${f.mainNodes ?? '–'}) | ${f.loadingMs} |`,
       );
     }
 } else {

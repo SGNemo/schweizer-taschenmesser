@@ -32,6 +32,7 @@ import { now, today } from '@/core/time/now';
 import { forgetUndo, undoable, type UndoEntry } from '@/core/undo';
 import { assignmentRepo, dayRepo, itemRepo, MODULE_ID } from './repo';
 import type { PlanOp } from '@/core/plan/instructions';
+import type { PlanItem } from '@/core/plan/types';
 import {
   LAST_RUN_KEY,
   previewPlanner,
@@ -169,11 +170,15 @@ export function runUser(
 /**
  * The preview of a sentence or of „Neu verteilen“: a dry run on the current inputs, queued like a run
  * (so it never reads half of a write), writing nothing. Throws `PlannerOffError` while switched off.
+ * `extra`: plan items not stored yet (the day setup sheet's unsaved lines).
  */
-export function previewUser(ops: readonly PlanOp[]): Promise<PreviewOutcome> {
+export function previewUser(
+  ops: readonly PlanOp[],
+  extra: readonly PlanItem[] = [],
+): Promise<PreviewOutcome> {
   return enqueue(async () => {
     if (await switchedOff()) throw new PlannerOffError();
-    return previewPlanner(await depsNow(false), ops);
+    return previewPlanner(await depsNow(false), ops, extra);
   });
 }
 

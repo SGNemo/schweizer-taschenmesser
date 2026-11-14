@@ -5,7 +5,7 @@ import { DEFAULTS_ERA_KEY } from '@/core/focus/defaults';
 import { DEFAULTS_VERSION_KEY } from '@/core/modules/defaults';
 import { setSettings } from '@/core/settings/settings';
 import type * as Detect from '@/core/setup/detect';
-import { ensureSetupState } from '@/core/setup/detect';
+import { decideFreshStart, ensureSetupState, FRESH_START_KEY } from '@/core/setup/detect';
 import { SETUP_STATE_KEY } from '@/core/setup/state';
 import { useUiStore } from '@/stores/ui';
 import { initCore } from './startup';
@@ -81,5 +81,49 @@ describe('first start: a fresh app keeps the calm overview (initCore)', () => {
     await initCore();
     expect(useUiStore.getState().homeView).toBe('all');
     expect((await meta().get(SETUP_STATE_KEY))?.value).toMatchObject({ status: 'dismissed' });
+  });
+
+  it('an entry written after "fresh" was decided (before the first render) does not count', async () => {
+    const start = decideFreshStart();
+    await start;
+    await setSettings('ui.example', { on: true }); // the user's first entry, while the start-up is still running
+    await initCore(start);
+    expect(useUiStore.getState().homeView).toBe('calm');
+    expect(localStorage.getItem('tm-home-view')).toBeNull();
+    expect((await meta().get(SETUP_STATE_KEY))?.value).toMatchObject({ status: 'notStarted' });
+  });
+
+  it('a first start reloaded before the era marker keeps "fresh" for the next start, entries made meanwhile', async () => {
+    await decideFreshStart(); // first start: decided, then the page reloads before anything else is stored
+    await setSettings('ui.example', { on: true });
+    await initCore();
+    expect(useUiStore.getState().homeView).toBe('calm');
+    expect((await meta().get(SETUP_STATE_KEY))?.value).toMatchObject({ status: 'notStarted' });
+  });
+});
+
+describe('decideFreshStart', () => {
+  it('notes the answer once; the setup state decides once it exists', async () => {
+    expect(await decideFreshStart()).toBe(true);
+    expect((await meta().get(FRESH_START_KEY))?.value).toBe(true);
+    await setSettings('ui.example', { on: true });
+    expect(await decideFreshStart()).toBe(true);
+    await ensureSetupState(); // stores the setup state and drops the noted answer
+    expect(await decideFreshStart()).toBe(false);
+    expect(await meta().get(FRESH_START_KEY)).toBeUndefined();
+  });
+
+  it('a lost setup state after the first start is judged by the data again (an update from before the assistant)', async () => {
+    await initCore();
+    await setSettings('ui.example', { on: true });
+    await meta().delete(SETUP_STATE_KEY);
+    expect(await decideFreshStart()).toBe(false);
+  });
+
+  it('an app with data is not fresh, and stays so', async () => {
+    await setSettings('ui.example', { on: true });
+    expect(await decideFreshStart()).toBe(false);
+    await db.table('_settings').clear();
+    expect(await decideFreshStart()).toBe(false);
   });
 });

@@ -2,8 +2,11 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useEffect } from 'react';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { db } from '@/core/db/db';
+import { loadModuleStates } from '@/core/modules/activation';
+import { useUiStore } from '@/stores/ui';
 import { backDepth, resetBackStack } from '@/core/shell/backStack';
 import { readSetupState, SETUP_STATE_KEY, markStepDone } from '@/core/setup/state';
 import type { SetupStepDef, SetupStepProps } from '@/core/setup/types';
@@ -207,6 +210,16 @@ describe('setup wizard', () => {
   });
 });
 
+/** The card navigates („Tage einteilen“): it lives inside the router, like on the overview. */
+const inRouter = () => (
+  <MemoryRouter initialEntries={['/']}>
+    <Routes>
+      <Route path="/" element={<WelcomeCard />} />
+      <Route path="/planner" element={<p data-testid="planner-route">Planer</p>} />
+    </Routes>
+  </MemoryRouter>
+);
+
 describe('welcome card', () => {
   it('"Später" dismisses for good and the card does not come back', async () => {
     await db.table('_meta').put({
@@ -220,12 +233,12 @@ describe('welcome card', () => {
       },
     });
     const user = userEvent.setup();
-    const { unmount } = render(<WelcomeCard />);
+    const { unmount } = render(inRouter());
     await user.click(await screen.findByRole('button', { name: s.welcomeLater }));
     await waitFor(() => expect(screen.queryByTestId('setup-welcome')).toBeNull());
     expect((await readSetupState())?.status).toBe('dismissed');
     unmount();
-    render(<WelcomeCard />);
+    render(inRouter());
     await new Promise((r) => setTimeout(r, 50));
     expect(screen.queryByTestId('setup-welcome')).toBeNull();
   });
@@ -241,7 +254,7 @@ describe('welcome card', () => {
         checklistHidden: false,
       },
     });
-    render(<WelcomeCard />);
+    render(inRouter());
     await new Promise((r) => setTimeout(r, 50));
     expect(screen.queryByTestId('setup-welcome')).toBeNull();
   });
@@ -257,9 +270,36 @@ describe('welcome card', () => {
         checklistHidden: false,
       },
     });
-    render(<WelcomeCard />);
+    render(inRouter());
     const card = await screen.findByTestId('setup-welcome');
     expect(screen.queryByTestId('read-hint')).toBeNull();
-    expect(card.querySelectorAll('button')).toHaveLength(2);
+    // „Einrichtung starten“ (the one primary), „Tage einteilen“, „Später“.
+    expect(card.querySelectorAll('button')).toHaveLength(3);
+    expect(card.querySelectorAll('[data-variant="primary"]')).toHaveLength(1);
+  });
+
+  it('„Tage einteilen“ switches on the planner and the ToDos, ends the offer and opens the planner sheet', async () => {
+    await db.table('_meta').put({
+      key: SETUP_STATE_KEY,
+      value: {
+        status: 'notStarted',
+        doneSteps: [],
+        skippedSteps: [],
+        version: 1,
+        checklistHidden: false,
+      },
+    });
+    await db.table('_modules').clear();
+    const user = userEvent.setup();
+    render(inRouter());
+    await user.click(await screen.findByRole('button', { name: s.welcomePlanDays }));
+    await screen.findByTestId('planner-route');
+    expect((await readSetupState())?.status).toBe('dismissed');
+    const states = await loadModuleStates();
+    expect(states.planner).toBe(true);
+    expect(states.todos).toBe(true);
+    // Only what the planner needs: the ToDos are on by default, so only the planner's row was written.
+    expect((await db.table('_modules').toArray()).map((r) => r.id)).toEqual(['planner']);
+    expect(useUiStore.getState().openAreas).toContain('plan');
   });
 });

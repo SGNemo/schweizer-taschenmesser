@@ -588,12 +588,12 @@
         "en": "Budgets & savings goals"
       },
       "short": {
-        "de": "Monatslimits je Ausgabenkategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt",
-        "en": "Monthly limits per expense category (from Finances) and savings goals with deposits and progress"
+        "de": "Ausgabenlimits je Kategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt",
+        "en": "Spending limits per category (from Finances) and savings goals with deposits and progress"
       },
       "description": {
-        "de": "Monatslimits je Ausgabenkategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt.",
-        "en": "Monthly limits per expense category (from Finances) and savings goals with deposits and progress."
+        "de": "Ausgabenlimits je Kategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt.",
+        "en": "Spending limits per category (from Finances) and savings goals with deposits and progress."
       }
     },
     {
@@ -675,7 +675,7 @@
       "fresh": true,
       "platforms": null,
       "icon": "activity",
-      "hue": "teal",
+      "hue": "moss",
       "hue2": null,
       "head": "standard",
       "widget": "status",
@@ -688,8 +688,8 @@
         "en": "Backup, sync, storage and updates of this device on one page"
       },
       "description": {
-        "de": "Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite. Nur Anzeige, nichts verlässt das Gerät.",
-        "en": "Backup, sync, storage and updates of this device on one page. Display only, nothing leaves the device."
+        "de": "Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite. Nur Anzeige, die Seite sendet nichts.",
+        "en": "Backup, sync, storage and updates of this device on one page. Display only; this page sends nothing."
       }
     },
     {

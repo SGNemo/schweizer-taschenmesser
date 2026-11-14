@@ -173,6 +173,8 @@ test('Unterlagen: cancellation deadline is flagged and on the calendar', async (
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Titel').fill('Handyvertrag');
   await dialog.getByLabel('Ende / Ablauf').fill('2026-12-31');
+  // A contract keeps its notice period beside the end date, without "Mehr Felder".
+  await dialog.getByLabel('Kategorie').selectOption({ label: 'Verträge' });
   await dialog.getByRole('spinbutton', { name: 'Kündigungsfrist' }).fill('90');
   await save(page);
   // The folder itself; "Verlängert: Handyvertrag" beside it is the row's own button (module package T-a).
@@ -208,7 +210,7 @@ test.describe('Budgets & Sparziele', () => {
 
     await open(page, '/budgets');
     await page
-      .getByRole('button', { name: /Budget (hinzufügen|eintragen)/ })
+      .getByRole('button', { name: /Limit (hinzufügen|eintragen)/ })
       .first() // the head's action (the phone's plus) and, while the list is empty, the empty state's one verb
       .click();
     const editor = page.getByRole('dialog');

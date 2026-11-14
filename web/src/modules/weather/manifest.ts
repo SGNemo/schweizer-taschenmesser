@@ -23,7 +23,7 @@ const manifest: ModuleManifest = {
     type: 'thin',
     shape: 'round',
     // The severe-weather hint above the head comes with the forecast: head and page wait for it (0b-8).
-    notice: true,
+    firstRead: true,
   },
   version: 1,
   get description() {

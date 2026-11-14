@@ -203,9 +203,9 @@
       "links": 99,
       "icons": 174,
       "firstScreenActions": 52,
-      "borders": 1,
+      "borders": 0,
       "shadows": 0,
-      "surfaceLanguages": 1,
+      "surfaceLanguages": 0,
       "colouredAboveFold": 19,
       "signatureBlocks": 0
     },
@@ -254,7 +254,7 @@
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
-      "colouredAboveFold": 4,
+      "colouredAboveFold": 2,
       "signatureBlocks": 0
     },
     "d1920--mail": {
@@ -455,9 +455,9 @@
       "links": 26,
       "icons": 37,
       "firstScreenActions": 40,
-      "borders": 1,
+      "borders": 0,
       "shadows": 0,
-      "surfaceLanguages": 1,
+      "surfaceLanguages": 0,
       "colouredAboveFold": 5,
       "signatureBlocks": 0
     },
@@ -527,9 +527,9 @@
       "links": 57,
       "icons": 37,
       "firstScreenActions": 50,
-      "borders": 1,
+      "borders": 0,
       "shadows": 0,
-      "surfaceLanguages": 1,
+      "surfaceLanguages": 0,
       "colouredAboveFold": 8,
       "signatureBlocks": 0
     },
@@ -750,10 +750,10 @@
       "signatureBlocks": 0
     },
     "p412--finance": {
-      "height": 2204,
+      "height": 2186,
       "buttons": 15,
       "links": 9,
-      "icons": 14,
+      "icons": 12,
       "firstScreenActions": 21,
       "borders": 0,
       "shadows": 0,
@@ -762,11 +762,11 @@
       "signatureBlocks": 0
     },
     "p412--fitness": {
-      "height": 4854,
+      "height": 4210,
       "buttons": 69,
       "links": 8,
       "icons": 68,
-      "firstScreenActions": 26,
+      "firstScreenActions": 30,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
@@ -791,9 +791,9 @@
       "links": 86,
       "icons": 143,
       "firstScreenActions": 24,
-      "borders": 1,
+      "borders": 0,
       "shadows": 0,
-      "surfaceLanguages": 1,
+      "surfaceLanguages": 0,
       "colouredAboveFold": 9,
       "signatureBlocks": 0
     },
@@ -842,7 +842,7 @@
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
-      "colouredAboveFold": 3,
+      "colouredAboveFold": 1,
       "signatureBlocks": 0
     },
     "p412--maps": {
@@ -882,7 +882,7 @@
       "signatureBlocks": 0
     },
     "p412--pantry": {
-      "height": 2203,
+      "height": 1959,
       "buttons": 58,
       "links": 8,
       "icons": 45,
@@ -978,11 +978,11 @@
       "signatureBlocks": 0
     },
     "p412--settings-benachrichtigungen": {
-      "height": 2425,
+      "height": 2349,
       "buttons": 45,
       "links": 6,
       "icons": 10,
-      "firstScreenActions": 13,
+      "firstScreenActions": 16,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
@@ -990,11 +990,11 @@
       "signatureBlocks": 0
     },
     "p412--settings-darstellung": {
-      "height": 1356,
+      "height": 1280,
       "buttons": 62,
       "links": 6,
       "icons": 11,
-      "firstScreenActions": 33,
+      "firstScreenActions": 37,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
@@ -1014,14 +1014,14 @@
       "signatureBlocks": 0
     },
     "p412--settings-entwickler": {
-      "height": 2101,
+      "height": 2025,
       "buttons": 10,
       "links": 6,
-      "icons": 12,
+      "icons": 14,
       "firstScreenActions": 14,
-      "borders": 1,
+      "borders": 0,
       "shadows": 0,
-      "surfaceLanguages": 1,
+      "surfaceLanguages": 0,
       "colouredAboveFold": 1,
       "signatureBlocks": 0
     },
@@ -1038,11 +1038,11 @@
       "signatureBlocks": 0
     },
     "p412--settings-module": {
-      "height": 2045,
+      "height": 2032,
       "buttons": 5,
       "links": 29,
       "icons": 32,
-      "firstScreenActions": 17,
+      "firstScreenActions": 19,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
@@ -1086,14 +1086,14 @@
       "signatureBlocks": 0
     },
     "p412--settings-ueber": {
-      "height": 6869,
+      "height": 6793,
       "buttons": 23,
       "links": 24,
-      "icons": 12,
+      "icons": 14,
       "firstScreenActions": 11,
-      "borders": 1,
+      "borders": 0,
       "shadows": 0,
-      "surfaceLanguages": 1,
+      "surfaceLanguages": 0,
       "colouredAboveFold": 2,
       "signatureBlocks": 0
     },
@@ -1122,11 +1122,11 @@
       "signatureBlocks": 0
     },
     "p412--settings-werkzeuge": {
-      "height": 3137,
+      "height": 3061,
       "buttons": 33,
       "links": 6,
       "icons": 35,
-      "firstScreenActions": 23,
+      "firstScreenActions": 27,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,

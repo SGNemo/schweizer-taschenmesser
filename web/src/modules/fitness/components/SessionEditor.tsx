@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { changedFields } from '@/core/db/patch';
 import type { Stored } from '@/core/db/types';
-import { nowTime, today } from '@/core/time/dates';
+import { nowTime, relativeDayLabel, today } from '@/core/time/dates';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
@@ -264,51 +264,6 @@ function Fields({
           ))}
         </div>
       ) : null}
-      <div className={styles.split}>
-        <DayField
-          label={t.fitness.form.date}
-          value={date}
-          onChange={(next) => {
-            setDate(next);
-            // A new session on a later day is a plan, unless the user says otherwise.
-            if (!existing && next > today()) {
-              togglePlanned(true);
-              setAutoPlanned(true);
-            } else if (autoPlanned) {
-              // Back to today or earlier: the automatic tick goes again (a tick the user set stays).
-              setPlanned(false);
-              setAutoPlanned(false);
-              setTime(nowTime());
-            }
-          }}
-          required
-        />
-        <TextField
-          label={t.fitness.form.duration}
-          type="number"
-          inputMode="numeric"
-          min={1}
-          value={duration}
-          onChange={(e) => setDuration(e.target.value)}
-        />
-      </div>
-      <Checkbox
-        label={t.fitness.planned.toggle}
-        description={t.fitness.planned.toggleHint}
-        checked={planned}
-        onChange={(e) => {
-          togglePlanned(e.target.checked);
-          setAutoPlanned(false);
-        }}
-      />
-      {planned ? (
-        <TimeField
-          label={t.fitness.form.time}
-          hint={t.fitness.planned.timeHint}
-          value={time}
-          onChange={setTime}
-        />
-      ) : null}
       <p className={styles.groupLabel}>{t.fitness.form.exercises}</p>
       <datalist id={listId}>
         {names.map((n) => (
@@ -400,10 +355,68 @@ function Fields({
           </Button>
         ) : null}
       </div>
+      <Checkbox
+        label={t.fitness.planned.toggle}
+        description={t.fitness.planned.toggleHint}
+        checked={planned}
+        onChange={(e) => {
+          togglePlanned(e.target.checked);
+          setAutoPlanned(false);
+        }}
+      />
+      {/* Basis (0b-8 follow-up 7): the exercises and "Geplant" (it feeds "Jetzt wichtig" and the plan, so it stays out
+          of the fold). Day and duration fold with the rare fields; the line beside "Mehr Felder" names the day, and
+          another day, a plan, a duration or the "Übung oder Dauer" error opens them by itself. */}
       <AdvancedFields
         moduleId="fitness"
-        hasData={Boolean(existing?.title || existing?.note || existing?.time)}
+        hasData={Boolean(
+          title ||
+          existing?.title ||
+          existing?.note ||
+          existing?.time ||
+          date !== today() ||
+          planned ||
+          duration ||
+          error === t.fitness.form.emptySession,
+        )}
+        summary={relativeDayLabel(date, today())}
       >
+        <div className={styles.split}>
+          <DayField
+            label={t.fitness.form.date}
+            value={date}
+            onChange={(next) => {
+              setDate(next);
+              // A new session on a later day is a plan, unless the user says otherwise.
+              if (!existing && next > today()) {
+                togglePlanned(true);
+                setAutoPlanned(true);
+              } else if (autoPlanned) {
+                // Back to today or earlier: the automatic tick goes again (a tick the user set stays).
+                setPlanned(false);
+                setAutoPlanned(false);
+                setTime(nowTime());
+              }
+            }}
+            required
+          />
+          <TextField
+            label={t.fitness.form.duration}
+            type="number"
+            inputMode="numeric"
+            min={1}
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+          />
+        </div>
+        {planned ? (
+          <TimeField
+            label={t.fitness.form.time}
+            hint={t.fitness.planned.timeHint}
+            value={time}
+            onChange={setTime}
+          />
+        ) : null}
         <TextField
           label={t.fitness.form.title}
           hint={t.fitness.form.titleHint}

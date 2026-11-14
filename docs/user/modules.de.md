@@ -22,7 +22,7 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 | **Geld** | Finanzen | Konten, Einnahmen und Ausgaben mit Kategorien | standardmäßig an |
 |  | Rechnungen | Offene Rechnungen mit Betrag, Empfänger und Fälligkeit | standardmäßig an |
 |  | Abos | Abos und wiederkehrende Zahlungen | standardmäßig an |
-|  | Budgets & Sparziele | Monatslimits je Ausgabenkategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt | bei Neuinstallationen an |
+|  | Budgets & Sparziele | Ausgabenlimits je Kategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt | bei Neuinstallationen an |
 | **Haushalt** | Listen | Einkauf, Packlisten und Checklisten | bei Neuinstallationen an |
 |  | Routinen | Putzplan und Haushalts-Routinen | bei Neuinstallationen an |
 |  | Vorräte | Was ist im Kühlschrank, im Vorratsschrank und im Tiefkühler? | optional |
@@ -56,8 +56,8 @@ Besonderheiten der Module, die oben nur eine kurze Zeile haben:
 - **Notizen:** mit festem **Zettel** oben für Zwischendurch.
 - **Listen:** Einkauf mit „2 Milch“, Packlisten mit Fortschritt und Vorlagen, Checklisten.
 - **Personen:** Geburtstage jährlich im Kalender, mit Alter, Erinnerung und WhatsApp-Gruß; Geschenkideen je Person mit Preis, Link und Stand.
-- **Budgets & Sparziele:** Monatslimits je Finanz-Kategorie, Sparziele mit Einzahlungen.
-- **Planer** (Vorschau): Planänderungen wie „Donnerstag frei“ sagst du im Feld auf der Planer-Seite; eine Vorschau zeigt erst, was sich verschiebt.
+- **Budgets & Sparziele:** Ausgabenlimits je Finanz-Kategorie (pro Monat, Quartal oder Jahr), Sparziele mit Einzahlungen.
+- **Planer** (Vorschau): Planänderungen wie „Donnerstag frei“ sagst du im Feld auf der Planer-Seite; eine Vorschau zeigt erst, was sich verschiebt. „Tage einteilen“ (Willkommenskarte, leerer Planer oder ⋯) nimmt in drei Schritten auf, was ansteht und wie viel Zeit du heute und an den zwei nächsten Tagen hast; nach der Vorschau trägt „Übernehmen“ alles mit einem Rückgängig ein.
 - **Karten & Orte** (Vorschau): gespeicherte Orte und Routen, Karte mit Ortssuche, Öffnen in deiner Karten-App; die Karte lädt nur, wenn du sie öffnest.
 - **Unterlagen:** Titel, Kategorie, Anbieter, Beginn, Ende, Kündigungsfrist und Notiz werden wie alles andere synchronisiert; die **Dateien bleiben nur auf dem
   Gerät**, auf dem sie hinzugefügt wurden (nicht synchronisiert, nicht im Backup, max. 10 MB je Datei).
@@ -68,7 +68,7 @@ Besonderheiten der Module, die oben nur eine kurze Zeile haben:
   weitere (Einheiten, Datumsrechner, Zeitzonen, Würfel, Anonyme Persona, Text, Bilder, PDF und **Entwickler** mit Base64/URL, JSON, UUID, Hash) schaltest du
   unter „Werkzeuge verwalten“ ein. In der Suche (Strg+K) wird eine Rechnung wie „240 + 19 %“ sofort gerechnet, „Werkzeug: …“ öffnet ein
   Werkzeug. Den früheren Notizzettel findest du jetzt als **Zettel** oben in den Notizen (dein alter Text wird einmal übernommen).
-- **Import in Notizen:** „Importieren“ auf der Karte der Notizen (Modul-Bibliothek) liest Markdown-Dateien (z. B. aus einem Obsidian-Ordner, auch mehrere auf einmal, oder eingefügten Text) und Google-Keep-Exporte (die `.json`-Dateien aus dem Google-Takeout). Du siehst zuerst eine Vorschau und nimmst Häkchen weg, was du nicht willst; schon vorhandene Notizen sind markiert. Titel kommen aus dem Kopfbereich, der ersten Überschrift oder dem Dateinamen; Tags bleiben als `#Tags` im Text, Keep-Checklisten werden zu Aufgabenlisten, Keep-Notizen im Papierkorb oder Archiv bleiben draußen. ZIP-Dateien bitte vorher entpacken.
+- **Import in Notizen:** „Importieren“ auf der Karte der Notizen (Modul-Bibliothek) liest Markdown-Dateien (z. B. aus einem Obsidian-Ordner, auch mehrere auf einmal, oder eingefügten Text) und Google-Keep-Exporte (die `.json`-Dateien aus dem Google-Takeout). Du siehst zuerst eine Vorschau und nimmst Häkchen weg, was du nicht willst; schon vorhandene Notizen sind markiert. Titel kommen aus dem Kopfbereich, der ersten Überschrift oder dem Dateinamen; Tags bleiben als `#Tags` im Text, Keep-Checklisten werden zu Aufgabenlisten, Keep-Notizen im Papierkorb oder Archiv bleiben draußen. Auch eine ZIP-Datei mit einem Notizordner geht. Markdown-Notizen behalten ihr Datum (`created:`/`date:` und `modified:` im Kopfbereich, sonst das Dateidatum); auf anderen synchronisierten Geräten zeigen sie das Importdatum.
 - **Dieser PC** (nur Windows-App): Laufwerke analysieren und aufräumen, im Tab „System“ Prozessor, Speicher, Akku, Grafik und Netzwerk.
 - **Gewohnheiten** (Planen, standardmäßig aus): Ziele mit Ringen – ein Haken oder eine Zahl wie „8 Gläser“ –, Pausentage, die nie gegen dich zählen, ein Jahresraster und Erinnerungen im Zeitfenster, die aufhören, sobald das Tagesziel erreicht ist (Vorlage „Wasser trinken“). Das ist ein neues Modul; der alte Habit-Tracker von 0.3.x bleibt stillgelegt; seine alten Daten werden nicht ins neue Modul übernommen, bleiben aber in der Datenbank und in jedem Backup.
 - **Zeiterfassung** (Planen, standardmäßig aus): ein Klick auf ein Projekt startet die Uhr, Pause und Stopp, manuelle Einträge, Projekte mit Farbe, Kunde und Stundensatz, Wochen- und Monatsauswertung mit Betrag (je Eintrag auf ganze Cent gerundet) und CSV-Export. Warst du bei laufender Uhr weg, fragt die App nach – Zeit behalten, als Pause abziehen oder dort stoppen, wo du weg warst – und ändert nie etwas von selbst. Im Termin startet „Zeit erfassen“ die Uhr. Das ist ein neues Modul; die alte Zeiterfassung von 0.3.x bleibt stillgelegt; ihre alten Daten werden nicht ins neue Modul übernommen, bleiben aber in der Datenbank und in jedem Backup.

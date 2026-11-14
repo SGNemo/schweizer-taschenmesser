@@ -6,6 +6,8 @@ export const backup: Strings['backup'] = {
   intro:
     'Save all your data as a file or restore a backup. Credentials (sync token, keys) are never included in a backup.',
   export: 'Download backup',
+  exportTitle: 'Save a backup',
+  exportPlain: 'Download without password',
   exported: 'Backup downloaded.',
   file: 'Backup file',
   mode: 'Restore',

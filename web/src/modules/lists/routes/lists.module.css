@@ -25,6 +25,11 @@
   background: transparent;
   box-shadow: none;
 }
+/* An empty list: the empty state keeps its own height (it takes the free height of a flex column otherwise), so the
+   add field follows right below it. */
+.emptyHold {
+  flex: none;
+}
 .progress {
   margin-bottom: var(--space-4);
 }
@@ -56,7 +61,8 @@
   margin-top: var(--space-3);
 }
 
-/* The shopping list is a receipt: paper under a hairline, a jagged lower edge, prices in mono. */
+/* The shopping list is a receipt: paper under a hairline, a jagged lower edge. Prices and quantities in the text
+   face with tabular figures like every amount (follow-up 3 of 0b-8: no mono). */
 .paper {
   --zig: 0.5rem;
   padding: var(--space-2) var(--space-3) calc(var(--space-3) + var(--zig));
@@ -73,7 +79,6 @@
   box-shadow: none;
 }
 .paper .quantity {
-  font-family: var(--font-mono);
   color: var(--text-muted);
 }
 

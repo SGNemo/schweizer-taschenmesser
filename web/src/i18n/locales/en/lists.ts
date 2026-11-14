@@ -74,6 +74,7 @@ export const lists: Strings['lists'] = {
   } as Record<string, string>,
   empty: 'This list is empty.',
   emptyAction: 'Add item',
+  addSubmit: 'Add',
   editItem: 'Edit item',
   itemName: 'Name',
   quantity: 'Quantity (optional)',
