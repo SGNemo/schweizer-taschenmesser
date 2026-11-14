@@ -213,9 +213,10 @@ const FLOWS: Record<string, Flow> = {
     else await c.key('Control+k');
     await c.type('Schmierzettel');
     await page.waitForTimeout(500);
-    // 0b-8: press ↓ until the note is the active option („Neu eintragen“ and „Frage stellen“ come first).
-    for (let i = 0; i < 5; i++) {
-      await c.key('ArrowDown');
+    // 0b-8: press ↓ until the note is the active option (before #834 „Neu eintragen“ and „Frage stellen“ came first;
+    // since #834 an exact title is the first option, so no ↓ at all).
+    for (let i = 0; i < 6; i++) {
+      if (i > 0) await c.key('ArrowDown');
       // The active option is the one the combobox names in `aria-activedescendant` (CommandPalette).
       const id = await page.locator('[role="combobox"][aria-activedescendant]').first().getAttribute('aria-activedescendant').catch(() => null);
       const active = id ? await page.locator(`[id="${id}"]`).innerText().catch(() => '') : '';
