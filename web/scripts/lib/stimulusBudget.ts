@@ -295,12 +295,13 @@ export function summaryMarkdown(
  *                      (the audit tour split the segments at `),` and so read ring + shadow as a ring)
  *   colouredText       visible elements above the fold with own text in a non-neutral colour, chroma > 0.10
  *   colouredSurfaces   visible elements above the fold with a background of chroma > 0.06 (no surface token)
+ *   signatureBlockList every element marked `data-signature-block`: size and framed elements inside
  * Colour is chroma (max − min) / 255, not the audit's saturation (max − min) / max: the saturation read the cool
  * greys of the dark theme as colour, chroma counts both themes alike (MEASURES.md, "Sättigung vs. Chroma").
- * Never looser than the saturation it replaced (text > 0.25, surface > 0.12): chroma = saturation × max / 255,
- * so every colour the saturation counted is still counted when its brightest channel is at least 102 (text) or
- * 128 (surface); `CHROMA_TEXT`/`CHROMA_SURFACE` below, the proof is a fixture test.
- *   signatureBlockList every element marked `data-signature-block`: size and framed elements inside
+ * Compared with the saturation it replaced (text > 0.25, surface > 0.12; chroma = saturation × max / 255): not
+ * looser for any colour whose brightest channel is at least 102 (text) or 128 (surface). Darker colours near grey
+ * are no longer counted (that is the dark-theme fix; near-black ink such as rgb(27, 15, 6) drops out with them);
+ * the budget measures the light theme only. Both sides are fixture tests.
  */
 export function measurePage(): {
   borders: number;
@@ -332,7 +333,8 @@ export function measurePage(): {
   // Chroma thresholds; never raise them (a raise counts less colour). See the comment at the top.
   const CHROMA_TEXT = 0.1;
   const CHROMA_SURFACE = 0.06;
-  // The page, its surfaces and their tone steps are neutral in both themes; they are named here, not measured.
+  // The page, its surfaces and their tone steps, and the inks, are neutral by name. Today every one of them lies
+  // below the chroma thresholds; the names stay so that a token tinted later is not counted as colour.
   const plain = new Set([
     ...['--bg', '--surface', '--surface-2', '--surface-raised', '--surface-sunken']
       .filter((name) => rootStyle.getPropertyValue(name).trim() !== '')
