@@ -11,9 +11,9 @@ import {
   IconButton,
   RowMenu,
   Segmented,
-  SortableList,
   TextField,
 } from '@/ui';
+import { SortableList } from '@/ui/SortableList';
 import type { IconName } from '@/ui/icons';
 import {
   countByNotebook,

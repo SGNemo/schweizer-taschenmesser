@@ -81,6 +81,14 @@ slower one than the first "before" above). CPU-only rows: median of 10 runs, int
   and migrations only, ~3 KB), the quick bar (`umrechnen 5 km`, `timer 10m` use `tools/*/logic.ts`, which stays in a
   precached chunk; no tool view loads for them).
 
+## Follow-up 2026-11-14 (`perf/cold-start-rests`)
+- Done: `OnboardingWizard` loads when a run opens (`core/importer/host.tsx`); `SortableList` left the `@/ui`
+  barrel (callers import `@/ui/SortableList`); `qrcode-generator` was already lazy since #766 (settings sections).
+  Critical path 697.3 → 692.0 KB gzip, 82 → 86 requests (Rolldown splits the shared pieces into small chunks).
+- Still on the start: @dnd-kit (~14 KB gzip) through `home/Home.tsx` and `layout/setup/steps/DashboardStep.tsx`
+  (both import it directly); @noble (~14 KB) through `core/supporter/status.ts` → `verify.ts` (sync code check
+  in `useSupporter`, mounted by `layout/SupporterEffects.tsx`). Proposals in the PR text.
+
 ## What loads on first use (precache split)
 Rule `web/scripts/lib/precacheSplit.ts`: everything reachable from the entries without stepping through a dynamic
 import into an online root stays precached. Online roots: `src/tools/*/View.tsx` (each `Tool.tsx` is a thin
