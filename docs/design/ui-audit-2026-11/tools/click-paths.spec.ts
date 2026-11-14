@@ -300,7 +300,9 @@ const FLOWS: Record<string, Flow> = {
   'H3 Status ansehen – Gerätestatus (S-b)': async (c, page, phone) => {
     await c.start('/');
     await goModule(c, page, phone, /System/, 'Gerätestatus');
+    // S-b promise: backup and sync status in two clicks.
     await expect(page.locator('main').getByText(/^Backup/).first()).toBeVisible();
+    await expect(page.locator('main').getByText(/^Sync/).first()).toBeVisible();
     c.notes.push(`lands on ${new URL(page.url()).pathname}`);
   },
   'H2 Backup herunterladen – über Gerätestatus (S-b)': async (c, page, phone) => {

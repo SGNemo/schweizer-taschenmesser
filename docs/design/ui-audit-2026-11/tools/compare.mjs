@@ -83,10 +83,10 @@ if (d) {
   }
   table(['Seite', ...F.map(([h]) => h)], rows);
   out.push('');
-  // „getönt“ uses the saturation of the audit and counts the dark tone steps (cool greys) as tint; the light run is the honest one.
+  // „getönt“ uses the saturation of the audit and is not readable in the dark theme; the light value (all pages) counts.
   const L = facts('1920x1080-light', 'seed');
   const lightSum = (i) => (L ? sum(pages(L).map(([, v]) => F[i][1](v))) : null);
-  table(['Größe', 'Summe vorher → nachher (dunkel)', 'Seiten > 0 vorher → nachher', 'nachher hell'], F.map(([h], i) => [h, arrow(sum(cols[i].b), sum(cols[i].a)), arrow(cols[i].b.filter((x) => x > 0).length, cols[i].a.filter((x) => x > 0).length), fmt(lightSum(i))]));
+  table(['Größe', 'Summe vorher → nachher (dunkel)', 'Seiten > 0 vorher → nachher', 'nachher hell (alle Seiten)'], F.map(([h], i) => [h, arrow(sum(cols[i].b), sum(cols[i].a)), arrow(cols[i].b.filter((x) => x > 0).length, cols[i].a.filter((x) => x > 0).length), fmt(lightSum(i))]));
 }
 
 const p = facts('412x915-dark', 'seed');

@@ -243,7 +243,7 @@ async function measure(page: Page, root: 'main' | 'dialog', phone: boolean) {
       // 2. Consistency: head, type, icons, spacing, weights, surfaces.
       // 4.0 (0b-2): the module head is `[data-head]` (standard or stage); library, tools and settings keep a head card.
       // Two queries: a selector list returns the first match in document order, not the first selector.
-      const band = document.querySelector<HTMLElement>('main [data-head]') ?? document.querySelector<HTMLElement>('[data-testid="module-frame"] [data-size], header [data-size], [data-size]');
+      const band = ['main [data-head]', '[data-testid="module-frame"] [data-size]', 'header [data-size]', '[data-size]'].reduce<HTMLElement | null>((found, sel) => found ?? document.querySelector<HTMLElement>(sel), null);
       const h1 = scope.querySelector('h1') ?? document.querySelector('h1');
       const h1s = h1 ? getComputedStyle(h1) : null;
       const headEl = band ?? document.querySelector<HTMLElement>('[class*="band"]');
@@ -470,7 +470,7 @@ async function tour(page: Page, vp: Vp, dir: string, seed: boolean) {
         facts[`dialog-${m.id}`] = { trigger: `plus: ${name}`, title: await dlg.locator('h2').first().innerText({ timeout: 2000 }).catch(() => null), box: await dlg.boundingBox(), fields: await dlg.locator('input:not([type=hidden]), select, textarea').count(), buttons: await dlg.locator('button').count(), ...(await measure(page, 'dialog', true)) };
       }
       await closeDialogs(page);
-      if (page.url().replace(/[?#].*$/, '') !== new URL(m.path, page.url()).pathname) { await page.goto(m.path); await settle(page); }
+      if (new URL(page.url()).pathname !== new URL(m.path, page.url()).pathname) { await page.goto(m.path); await settle(page); }
     }
     for (let i = 0; i < names.length && !opened; i++) {
       const name = names[i]!;
@@ -488,7 +488,7 @@ async function tour(page: Page, vp: Vp, dir: string, seed: boolean) {
         facts[`dialog-${m.id}`] = { trigger: name, title: await dlg.locator('h2').first().innerText({ timeout: 2000 }).catch(() => null), box: await dlg.boundingBox(), fields: await dlg.locator('input:not([type=hidden]), select, textarea').count(), buttons: await dlg.locator('button').count(), ...(await measure(page, 'dialog', !!vp.mobile)) };
       }
       await closeDialogs(page);
-      if (!opened && page.url().replace(/[?#].*$/, '') !== new URL(m.path, page.url()).pathname) { await page.goto(m.path); await settle(page); }
+      if (!opened && new URL(page.url()).pathname !== new URL(m.path, page.url()).pathname) { await page.goto(m.path); await settle(page); }
     }
     if (!opened) facts[`dialog-${m.id}`] = { trigger: null };
   }
