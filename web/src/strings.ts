@@ -5219,7 +5219,7 @@ export const de = {
     month: 'Monat',
     prevMonth: 'Vorheriger Monat',
     nextMonth: 'Nächster Monat',
-    emptyBudgets: 'Noch keine Limits. Lege fest, wie viel eine Ausgabenkategorie kosten darf.',
+    emptyBudgets: 'Noch keine Limits. Lege fest, wie viel du in einer Kategorie ausgeben willst.',
     emptyGoals: 'Noch keine Sparziele.',
     emptyBudgetAction: 'Erstes Limit eintragen',
     emptyGoalAction: 'Erstes Sparziel eintragen',

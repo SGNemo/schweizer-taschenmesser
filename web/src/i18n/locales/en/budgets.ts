@@ -84,7 +84,7 @@ export const budgets: Strings['budgets'] = {
   month: 'Month',
   prevMonth: 'Previous month',
   nextMonth: 'Next month',
-  emptyBudgets: 'No limits yet. Set how much an expense category may cost.',
+  emptyBudgets: 'No limits yet. Set how much you want to spend in a category.',
   emptyGoals: 'No savings goals yet.',
   emptyBudgetAction: 'Add your first limit',
   emptyGoalAction: 'Add your first savings goal',

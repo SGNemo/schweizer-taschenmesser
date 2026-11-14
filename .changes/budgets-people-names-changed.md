@@ -2,8 +2,8 @@
 type: changed
 area: budgets
 breaking: false
-de: Auf der Budget-Seite heißt der Betrag jetzt durchgehend „Limit“, etwa „Limit eintragen“, und nennt den gewählten Zeitraum: „Limit pro Monat“, „pro Quartal“ oder „pro Jahr“.
-en: On the Budgets page the amount is now called a limit throughout, e.g. "Add limit", and names the chosen period: "Limit per month", "per quarter" or "per year".
+de: Auf der Budget-Seite heißt es jetzt durchgehend „Limit“ (etwa „Limit eintragen“), und der Betrag nennt den gewählten Zeitraum: „Limit pro Monat“, „pro Quartal“ oder „pro Jahr“.
+en: On the Budgets page it now says "limit" throughout (e.g. "Add limit"), and the amount names the chosen period: "Limit per month", "per quarter" or "per year".
 ---
 
 ---
