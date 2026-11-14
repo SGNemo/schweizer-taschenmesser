@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, type ReactElement, type ReactNode } from 'react';
 import { Navigate, useParams, useRoutes, type RouteObject } from 'react-router';
-import { lazyComponent } from '@/core/modules/lazy';
+import { lazyComponent, preloadComponent } from '@/core/modules/lazy';
 import { useModuleStates, type ModuleStates } from '@/core/modules/activation';
 import { availableManifests } from '@/core/modules/available';
 import { areaTarget, buildNavTree, type NavArea } from '@/core/modules/areas';
@@ -271,7 +271,7 @@ export function AppRoutes() {
       preloadSettings,
       ...availableManifests()
         .filter((m) => states[m.id])
-        .flatMap((m) => m.routes.map((r) => () => void r.component().catch(() => undefined))),
+        .flatMap((m) => m.routes.map((r) => () => void preloadComponent(r.component))),
     ];
     return preloadWhenIdle(loaders);
   }, [states]);
