@@ -11,6 +11,10 @@
      nothing slides, and lists and cards appear without an entrance of their own (0b-8). */
   animation: pageCrossfade var(--dur-fast) linear;
 }
+/* While the frame waits for the page's first read (`layout/noticeHold`): laid out, not painted. */
+.page[data-held] {
+  visibility: hidden;
+}
 @keyframes pageCrossfade {
   from {
     opacity: 0;

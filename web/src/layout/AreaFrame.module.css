@@ -12,6 +12,11 @@
 .notice:empty + :is(.head, .stage) {
   margin-top: calc(-1 * var(--frame-bleed-top, 0px));
 }
+/* While the frame waits for the page's first read (`identity.notice`, `noticeHold.ts`): laid out, not painted, so the
+   hint that comes with the read pushes nothing that was already on the screen (0b-8). */
+.held {
+  visibility: hidden;
+}
 
 /* ---- Standard head ---- */
 .head {

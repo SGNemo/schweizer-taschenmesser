@@ -71,21 +71,8 @@ export function useRead<T>(read: (() => Promise<T>) | undefined): {
   return state;
 }
 
-/** How long a list waits at most for its lines' first reads before it shows what it has (a read that hangs). */
-export const STATUS_WAIT_MS = 1500;
-
-/** `true` once `ready` was true or `STATUS_WAIT_MS` have passed since mount; it never turns back to `false`. */
-export function useSettled(ready: boolean, waitMs = STATUS_WAIT_MS): boolean {
-  const [waited, setWaited] = useState(false);
-  const [settled, setSettled] = useState(ready);
-  if (ready && !settled) setSettled(true);
-  useEffect(() => {
-    if (settled) return;
-    const timer = setTimeout(() => setWaited(true), waitMs);
-    return () => clearTimeout(timer);
-  }, [settled, waitMs]);
-  return settled || waited;
-}
+// The bound of a first read lives in `./settled` (light, also for pages that wait for one read before they paint).
+export { STATUS_WAIT_MS, useSettled } from './settled';
 
 /** `true` while a line of the list still loads. */
 export const anyLoading = (lines: readonly (StatusLine | undefined)[]): boolean =>

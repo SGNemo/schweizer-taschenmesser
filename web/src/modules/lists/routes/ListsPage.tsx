@@ -137,10 +137,21 @@ export default function ListsPage() {
   const isShopping = current?.kind === 'shopping';
   const isPacking = current?.kind === 'packing';
   const sums = totals(shown);
-  const history = useLiveQuery(
-    async () => (current && isShopping ? await historyOf(current.id) : []),
+  // Tagged with the list it was read for: a re-read keeps the last answer until the new one is there.
+  const historyRead = useLiveQuery(
+    async () => ({
+      list: current?.id,
+      names: current && isShopping ? await historyOf(current.id) : [],
+    }),
     [current?.id, isShopping, items],
   );
+  const history = historyRead?.names;
+  // 0b-8: the list (rows, the add field as its last row, the suggestions) is painted once its items and, for a
+  // shopping list, its history are read, so the rows never arrive above an add field that is already there. Once
+  // shown it stays (a tab switch keeps the page while the new list is read).
+  const [readOnce, setReadOnce] = useState(false);
+  const read = readOnce || (!!current && items !== undefined && historyRead?.list === current.id);
+  if (read && !readOnce) setReadOnce(true);
   const suggestions = useMemo(
     () =>
       isShopping
@@ -361,14 +372,15 @@ export default function ListsPage() {
         {/* Everything occasional: templates, editing, sharing, clearing a packing list. */}
         <StartDataMenu moduleId="lists" items={pageMenu} />
       </PageHeader>
-      {lists && current && isShopping ? (
+      {lists && current && read && isShopping ? (
         <ListFigure
           name={current.name}
           open={openCount}
           detail={groups.length > 0 ? t.lists.sectionsCount(groups.length) : undefined}
         />
       ) : null}
-      {lists && current ? (
+      {lists && current && !read ? <div aria-busy="true" data-testid="lists-reading" /> : null}
+      {lists && current && read ? (
         <>
           {/* The first row of the page: on the phone the "⋯" menu lies beside it (`besideContent`). An empty list
               has no such line; its empty state says it. */}

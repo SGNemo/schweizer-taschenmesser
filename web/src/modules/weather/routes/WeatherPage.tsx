@@ -1,6 +1,7 @@
 import { Link, useSearchParams } from 'react-router';
 import { now } from '@/core/time/now';
 import { settingsPath } from '@/core/settings/registry/paths';
+import { useHeadReady } from '@/core/shell/heroContext';
 import { dayRows, hourRows, placeNowIso } from '@/core/weather/logic';
 import { useWeatherSettings } from '@/core/weather/settings';
 import { tWeather } from '@/strings.weather';
@@ -30,6 +31,9 @@ export default function WeatherPage() {
   const requested = Number(params.get('place') ?? 0) || 0;
   const [settings] = useWeatherSettings();
   const { index, places, weather, loading } = useViewedForecast(requested);
+  // The hint above the head comes with the forecast: the frame paints head and page once the first read is back
+  // (`identity.notice`, at most 1.5 s), so the hint never pushes them down (0b-8).
+  useHeadReady(!!settings && (!settings.place || !!weather || !loading));
 
   if (!settings) return null;
   const title = (weather?.place ?? settings.place ?? '').split(',')[0] || tx.title;
