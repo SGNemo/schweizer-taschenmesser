@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { now } from '@/core/time/now';
 import { fetchForecast, type Forecast } from '@/core/weather/api';
-import { useWeather, type WeatherView } from '@/core/weather/useWeather';
+import { useWeatherRequest, type WeatherView } from '@/core/weather/useWeather';
 import { useWeatherSettings, type ExtraPlace } from '@/core/weather/settings';
 
 const LIFETIME_MS = 30 * 60 * 1000;
@@ -14,6 +14,7 @@ export interface ViewedForecast {
   index: number;
   places: string[];
   weather: WeatherView | undefined;
+  /** A forecast is still on its way: false once its request failed, offline or switched off (nothing will come). */
   loading: boolean;
 }
 
@@ -23,11 +24,12 @@ export interface ViewedForecast {
  */
 export function useViewedForecast(requested: number): ViewedForecast {
   const [settings] = useWeatherSettings();
-  const main = useWeather(true);
+  const { view: main, coming } = useWeatherRequest(true);
   const extra = settings?.extra ?? [];
   const index = requested >= 1 && requested <= extra.length ? requested : 0;
   const target = index > 0 ? extra[index - 1] : undefined;
   const [fetched, setFetched] = useState<{ key: string; at: number; forecast: Forecast }>();
+  const [failed, setFailed] = useState<string>();
   const targetKey = target ? keyOf(target) : undefined;
 
   useEffect(() => {
@@ -41,14 +43,16 @@ export function useViewedForecast(requested: number): ViewedForecast {
         memory.set(targetKey, entry);
         if (alive) setFetched({ key: targetKey, ...entry });
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (alive) setFailed(targetKey);
+      });
     return () => {
       alive = false;
     };
   }, [target, targetKey]);
 
   const places = settings && settings.place ? [settings.place, ...extra.map((p) => p.label)] : [];
-  if (!target) return { index, places, weather: main, loading: !main && !!settings?.place };
+  if (!target) return { index, places, weather: main, loading: coming };
   const remembered = targetKey ? memory.get(targetKey) : undefined;
   const hit = fetched?.key === targetKey ? fetched : remembered;
   return {
@@ -62,6 +66,6 @@ export function useViewedForecast(requested: number): ViewedForecast {
           stale: now() - hit.at >= LIFETIME_MS,
         }
       : undefined,
-    loading: !hit,
+    loading: !hit && failed !== targetKey,
   };
 }

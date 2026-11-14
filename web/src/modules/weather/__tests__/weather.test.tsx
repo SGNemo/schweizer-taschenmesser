@@ -352,6 +352,19 @@ describe('weather page', () => {
     expect(screen.queryByTestId('weather-now-pending')).toBeNull();
   });
 
+  it('a failed request: no head waiting with dashes, the way to the settings stays (0b-8)', async () => {
+    at1205();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('down', { status: 503 })),
+    );
+    await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
+    renderPage();
+    await screen.findByRole('link', { name: /Einstellungen/ });
+    await waitFor(() => expect(screen.queryByTestId('weather-now-pending')).toBeNull());
+    expect(screen.getByTestId('weather-preview-credit')).toBeTruthy();
+  });
+
   it('no hint for an ordinary week', async () => {
     at1205();
     vi.stubGlobal('fetch', ok(previewBody));

@@ -13,14 +13,21 @@ import styles from '../routes/weather.module.css';
 import { dec } from './parts';
 import { lineBuilders } from './lines';
 import { WarningNotice } from './WarningNotice';
-import { weatherWarnings } from '../warnings';
+import type { WeatherWarning } from '../warnings';
 
 /**
  * The weather's head, built from the module frame's slots: the sky behind (by condition and daytime, night switches the ink),
  * the temperature as thin large numerals with "feels like" and the word, the three facts that matter (rain, wind, UV) as chips
  * in the signature slot, everything else as one muted line. A hint above the head when the forecast days call for one.
  */
-export function WeatherHero({ weather, late = false }: { weather: WeatherView; late?: boolean }) {
+export function WeatherHero({
+  weather,
+  warnings,
+}: {
+  weather: WeatherView;
+  /** The hints for above the head (`weatherWarnings`); empty when they came late and sit in the page instead. */
+  warnings: WeatherWarning[];
+}) {
   const tx = tWeather.use();
   const tp = tWeatherPage.use();
   const { forecast, stale, at } = weather;
@@ -63,16 +70,13 @@ export function WeatherHero({ weather, late = false }: { weather: WeatherView; l
     first?.sunrise && first.sunset ? tx.sunSpan(first.sunrise, first.sunset) : undefined,
     best ? tx.bestTime(best.from, best.to) : undefined,
   ].filter(Boolean);
-  const warnings = weatherWarnings(days);
 
   return (
     <>
       <HeroSlot area="backdrop">
         <Sky kind={skyKind(forecast.group, night)} />
       </HeroSlot>
-      {/* Late (the frame painted before the forecast, a slow network): the hint goes under the forecast instead
-          (`WeatherPage`), so it pushes nothing down; above the head again from the next visit on. */}
-      {warnings.length > 0 && !late ? (
+      {warnings.length > 0 ? (
         <HeroSlot area="notice">
           <WarningNotice warnings={warnings} today={nowIso.slice(0, 10)} />
         </HeroSlot>
@@ -123,14 +127,14 @@ export function WeatherHero({ weather, late = false }: { weather: WeatherView; l
  * the frame's default.
  */
 export function WeatherHeroPending() {
-  const tx = tWeather.use();
   // The stage keeps the room of the last visit (U01) until the forecast fills it: on the phone the chips wrap.
   useKeepHeadRoom(true);
   return (
     <>
       <HeroSlot area="figure">
         <div className={styles.heroBlock} data-testid="weather-now-pending" aria-hidden="true">
-          <HeroFigure type="thin" value="–" detail={tx.previewLoading} />
+          {/* The line under the figure keeps its place; "Wird geladen" is said once, in the page. */}
+          <HeroFigure type="thin" value="–" detail={'\u00a0'} />
         </div>
       </HeroSlot>
       <HeroSlot area="signature">

@@ -39,6 +39,18 @@ function request(key: string, lat: number, lon: number): Promise<Forecast> {
  * `needsPreview`: the preview is open, so a cached value without preview data is asked for once more.
  */
 export function useWeather(needsPreview = false): WeatherView | undefined {
+  return useWeatherRequest(needsPreview).view;
+}
+
+/**
+ * `useWeather` plus whether a forecast is still on its way (`coming`): weather is on, nothing is shown yet, the
+ * device is online, a request runs or is about to, and none has failed for this place in this mount. False once the
+ * request failed, offline or switched off, so a page does not wait for a forecast that will not come (0b-8).
+ */
+export function useWeatherRequest(needsPreview = false): {
+  view: WeatherView | undefined;
+  coming: boolean;
+} {
   const [settings] = useWeatherSettings();
   const [fetched, setFetched] = useState<{ key: string; forecast: Forecast; at: number }>();
   const active = !!settings && isWeatherActive(settings);
@@ -49,6 +61,7 @@ export function useWeather(needsPreview = false): WeatherView | undefined {
   const cached = useMemo(() => (active ? readCache() : undefined), [active, key]);
 
   const hit = fetched?.key === key ? fetched : cached?.key === key ? cached : undefined;
+  const [failedKey, setFailedKey] = useState<string>();
 
   // One request per place (and preview need) per mount: a re-render that only swaps the cached object must not ask again.
   // The answer is kept even if the effect re-ran meanwhile; only an unmounted hook stops listening.
@@ -75,9 +88,22 @@ export function useWeather(needsPreview = false): WeatherView | undefined {
       .catch(() => {
         asked.current = undefined;
         noteTried({ key, at: now() });
+        if (mounted.current) setFailedKey(key);
       });
   }, [active, key, lat, lon, hit, needsPreview]);
 
-  if (!active || !hit) return undefined;
-  return { place, forecast: hit.forecast, at: hit.at, stale: !isFresh(hit, key, now()) };
+  const online = typeof navigator === 'undefined' || navigator.onLine !== false;
+  if (!active || !hit)
+    return {
+      view: undefined,
+      coming:
+        active &&
+        !!place &&
+        failedKey !== key &&
+        (inflight?.key === key || shouldFetch(hit, key, now(), online, readTried(), needsPreview)),
+    };
+  return {
+    view: { place, forecast: hit.forecast, at: hit.at, stale: !isFresh(hit, key, now()) },
+    coming: false,
+  };
 }

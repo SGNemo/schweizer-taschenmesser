@@ -171,6 +171,9 @@ export function AreaFrame({
   const roomKey = routeKey && stage ? `${routeKey}@${phone ? 'phone' : 'wide'}` : undefined;
   // The hold restarts for every route (and layout), so the room is measured only once that route's page is there.
   const [figureHold, setPageLoading] = useFigureHold(roomKey);
+  // A page whose head still waits for a late read keeps the room too (`useKeepHeadRoom`); its own flag, so it never
+  // clears the chunk's loading or the other way round.
+  const [keptRoom, setKeptRoom] = useState(false);
   const controls = useMemo<HeroControls>(
     () => ({
       claim: (area) => {
@@ -180,19 +183,19 @@ export function AreaFrame({
       setTitle: setTitleText,
       settle,
       late: firstReadLate,
-      keepRoom: setPageLoading,
+      keepRoom: setKeptRoom,
     }),
-    [settle, firstReadLate, setPageLoading],
+    [settle, firstReadLate],
   );
   const remembered = useMemo(() => (roomKey ? readHeadRoom(roomKey) : undefined), [roomKey]);
-  const holdRoom = figureHold && !!remembered;
+  const holdRoom = (figureHold || keptRoom) && !!remembered;
   const stageRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = stageRef.current;
-    if (figureHold || !framed || !roomKey || !el) return;
+    if (figureHold || keptRoom || !framed || !roomKey || !el) return;
     const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
     writeHeadRoom(roomKey, el.getBoundingClientRect().height / rem);
-  }, [figureHold, framed, roomKey]);
+  }, [figureHold, keptRoom, framed, roomKey]);
   // Dialogs opened inside the page wear the module's identity in their head (S02, `ui/Dialog`).
   const dialogIdentity = useMemo(
     () =>
@@ -284,11 +287,7 @@ export function AreaFrame({
     <HeroContext.Provider value={framed ? targets : undefined}>
       <HeroControlsContext.Provider value={framed ? controls : undefined}>
         {framed ? (
-          <div
-            className={`${styles.notice} ${firstReadHeld ? styles.held : ''}`}
-            ref={setNotice}
-            aria-busy={firstReadHeld || undefined}
-          />
+          <div className={`${styles.notice} ${firstReadHeld ? styles.held : ''}`} ref={setNotice} />
         ) : null}
         {framed && !stage ? (
           <header

@@ -7,7 +7,9 @@ import { FIRST_READ_HOLD_MS } from '@/core/status/settled';
  * nothing to wait for) from the first paint until the page calls `settle` or `FIRST_READ_HOLD_MS` have passed (a read
  * that hangs, a slow network), counted again for every key. While it holds, the frame lays the notice, the head and the
  * page out without painting them. `late` is true once the bound ended the hold before the page settled; it stays true
- * for that key (that visit), so the page keeps its late layout even when the reads come back afterwards.
+ * for that key (that visit), so the page keeps its late layout even when the reads come back afterwards – also for
+ * another `?place=` of the weather, and on a slow machine whose normal reads take longer than the bound (no shift
+ * either way; the next visit is on time again).
  */
 export function useFirstReadHold(
   key: string | undefined,

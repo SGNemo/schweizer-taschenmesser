@@ -41,12 +41,20 @@ export function NowPlayer({
   const [seekTo, setSeekTo] = useState<number>();
   const [volume, setVolume] = useState<number>();
   const [failed, setFailed] = useState(false);
+  const [stateFailed, setStateFailed] = useState(false);
   const id = trackIdOf(current?.trackUrl);
   const hearts = useSavedTracks(np, id ? [id] : []);
 
   useEffect(() => {
     let alive = true;
-    const state = source.state?.(ctx).then((s) => void (alive && setPlayer(s ?? 'none')));
+    const state = source.state?.(ctx).then(
+      (s) => void (alive && setPlayer(s ?? 'none')),
+      // A failed read: the rows kept for it go (as before 0b-8); the next round may read it again.
+      (e: unknown) => {
+        if (alive) setStateFailed(true);
+        throw e;
+      },
+    );
     const list = source.devices?.(ctx).then((d) => void (alive && setDevices(d)));
     // A failure changes nothing on the screen; either way the page may show the player now.
     void Promise.allSettled([state, list]).then(() => alive && onRead?.());
@@ -62,8 +70,9 @@ export function NowPlayer({
     np.readAt,
   );
   const state = player && player !== 'none' ? player : undefined;
-  // The player's state is still on its way (`state` answers `undefined` until then; a source without it never asks).
-  const unread = player === undefined && !!source.state;
+  // The player's state is still on its way (`state` answers `undefined` until then; a source without it never asks,
+  // and a failed read gives up).
+  const unread = player === undefined && !!source.state && !stateFailed;
 
   async function act(action: () => Promise<void>) {
     setFailed(false);
@@ -251,8 +260,9 @@ export function NowPlayer({
 
       <div className={styles.nowRow}>
         {canControl && source.setVolume && (state?.volume !== undefined || unread) ? (
-          // Until the player is read the slider is there, disabled, so the row keeps its height (0b-8).
-          <label className={styles.volume}>
+          // Until the player is read the slider is there, disabled and hidden from screen readers (no value to say
+          // yet), so the row keeps its height (0b-8).
+          <label className={styles.volume} aria-hidden={unread || undefined}>
             <Icon name="volume" size={18} />
             <span className="sr-only">{tx.volume}</span>
             <input

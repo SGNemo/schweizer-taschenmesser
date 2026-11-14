@@ -34,10 +34,10 @@ export default function WeatherPage() {
   const [settings] = useWeatherSettings();
   const { index, places, weather, loading } = useViewedForecast(requested);
   // The hint above the head comes with the forecast: the frame paints head and page once the first read is back
-  // (`identity.firstRead`, at most 0.6 s; after that `late`, below), so the hint never pushes them down (0b-8). Nothing to wait for when fetching is
-  // off or the device is offline: no forecast will come, so the page paints at once.
+  // (`identity.firstRead`, at most 0.6 s), so the hint never pushes them down (0b-8). Nothing to wait for when
+  // fetching is off, the device is offline or the request failed: no forecast will come, so the page paints at once.
+  // `late`: the frame stopped waiting first (a slow network); a hint that comes later goes under the head instead.
   const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
-  // Late (the frame stopped waiting at 0.6 s, a slow network): a hint that comes with the forecast goes under it.
   const late = useHeadReady(
     !!settings &&
       (!settings.place || !!weather || !loading || !isWeatherActive(settings) || offline),
@@ -70,17 +70,24 @@ export default function WeatherPage() {
   const hours = weather ? hourRows(weather.forecast, nowIso) : [];
   const days = weather ? dayRows(weather.forecast, nowIso.slice(0, 10)) : [];
   const ready = !!weather?.forecast.hours && !!weather.forecast.days;
-  const lateWarnings = late && weather ? weatherWarnings(days) : [];
+  const warnings = weather ? weatherWarnings(days) : [];
 
   return (
     <>
       <PageTitle title={title} />
       {weather ? (
-        <WeatherHero weather={weather} late={late} />
+        <WeatherHero weather={weather} warnings={late ? [] : warnings} />
       ) : loading ? (
         <WeatherHeroPending />
       ) : null}
       <PlaceChips index={index} places={places} />
+      {/* A hint that came after the frame stopped waiting sits where the loading line was, under the head: nothing
+          painted is below it yet, so it pushes nothing, and it stays in sight on the phone. */}
+      <div aria-live="polite" data-testid="weather-late-warning">
+        {late && warnings.length > 0 ? (
+          <WarningNotice warnings={warnings} today={nowIso.slice(0, 10)} />
+        ) : null}
+      </div>
       {!weather ? (
         <p className={styles.loading} role="status">
           {loading ? tx.previewLoading : tp.offline}
@@ -114,12 +121,6 @@ export default function WeatherPage() {
           </aside>
         </div>
       )}
-      {/* A late hint is announced where it pushes nothing that was painted: under the forecast. */}
-      <div aria-live="polite" data-testid="weather-late-warning">
-        {lateWarnings.length > 0 ? (
-          <WarningNotice warnings={lateWarnings} today={nowIso.slice(0, 10)} />
-        ) : null}
-      </div>
       {/* The foot comes with the forecast: under a loading line it would be pushed down when the forecast arrives. */}
       {weather || !loading ? (
         <>

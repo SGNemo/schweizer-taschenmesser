@@ -382,9 +382,15 @@ describe('music page', () => {
     await renderPage();
     // The frame stops waiting at its bound; the player's state is still on its way.
     await waitFor(() => expect(screen.getByTestId('page')).not.toHaveAttribute('data-held'));
-    const volume = screen.getByRole('slider', { name: 'Lautstärke' });
-    expect(volume).toBeDisabled();
-    expect(volume.closest('label')).toHaveTextContent('–');
+    // Hidden from screen readers until there is a value to say; disabled, so it sends nothing.
+    const slider = () =>
+      document.querySelector<HTMLInputElement>('input[aria-label="Lautstärke"]')!;
+    expect(slider()).toBeDisabled();
+    expect(slider().closest('label')).toHaveAttribute('aria-hidden', 'true');
+    expect(slider().closest('label')).toHaveTextContent('–');
+    fireEvent.pointerUp(slider());
+    fireEvent.keyUp(slider(), { key: 'ArrowUp' });
+    expect(sent('PUT', '/me/player/volume')).toEqual([]);
     answer(
       json({
         device: { name: 'Küche', volume_percent: 40 },
@@ -396,6 +402,19 @@ describe('music page', () => {
     expect(screen.getByRole('slider', { name: 'Lautstärke' }).closest('label')).toHaveTextContent(
       '40 %',
     );
+  });
+
+  it('a failed player read drops the rows kept for it (0b-8)', async () => {
+    await connect();
+    playerState = () => {
+      throw new TypeError('Failed to fetch');
+    };
+    await renderPage();
+    await waitFor(() => expect(screen.getByTestId('page')).not.toHaveAttribute('data-held'));
+    await waitFor(() =>
+      expect(document.querySelector('input[aria-label="Lautstärke"]')).toBeNull(),
+    );
+    expect(screen.getByTestId('music-now')).toHaveTextContent('Jetztlied');
   });
 
   it("the player's second round of reads never holds the page again (0b-8)", async () => {

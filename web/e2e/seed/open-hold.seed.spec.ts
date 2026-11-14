@@ -14,7 +14,9 @@ import { DESKTOP, PHONE, startSeeded } from './guards';
  * arrive only after 1.5 s, on a 4× slower CPU (lists and chat read nothing over the network; the slow CPU is what slows
  * their reads). The lines go to the console and the test's annotations. Every run holds the CLS at ≤ 0.05: after
  * the frame's bound (`FIRST_READ_HOLD_MS`) weather paints a head of its final form and puts a late severe-weather hint
- * under the forecast; music keeps the player's rows at their height until the player is read.
+ * under the head; music keeps the player's rows at their height until the player is read. Not covered: a slow first
+ * visit ever (no stage room stored yet, U01): the slow run is the third visit, so the weather's pending head keeps the
+ * stored room (measured by hand without it: phone CLS 0.043, the fact chips wrapping into a second row).
  */
 const CLS_MAX = 0.05;
 const SLOW_ANSWER_MS = 1500;
@@ -195,7 +197,7 @@ for (const [device, viewport] of [
           );
           const shown = Date.now() - started;
           runs.push(await measure(page, `${name} ${device}, ${run}`, shown));
-          // The mocked week has a thunderstorm: the hint stays (#791), under the forecast when it came late.
+          // The mocked week has a thunderstorm: the hint stays (#791), under the head when it came late.
           if (name === 'weather') {
             const hint = run.startsWith('slow')
               ? page.getByTestId('weather-late-warning').getByTestId('weather-warning')
