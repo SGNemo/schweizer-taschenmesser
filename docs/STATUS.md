@@ -4,7 +4,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
-UI-Audit 4.0 weiterführen: Paket 0b-4 (Planen), dann 0b-5 bis 0b-8. Plan, Ledger und Pakete: [design/ui-audit-2026-11/](design/ui-audit-2026-11/PACKAGES.md).
+UI-Audit 4.0 ist abgenommen: Identity 4.0 gilt seit 0b-8 (2026-11-14, [REPORT „Abschlussmessung 2“](design/ui-audit-2026-11/REPORT.md#abschlussmessung-2-2026-11-14): 8 × erfüllt, 2 × teils, 0 × nicht). Als Nächstes neue Bilder für README und Social Preview (Prompt in #845), dann die Folgepunkte dort.
 
 ## Laufende Runden
 
