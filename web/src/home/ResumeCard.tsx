@@ -5,7 +5,7 @@ import { useFocusSession } from '@/core/focus/state';
 import { useFocusSettings } from '@/core/settings/focus';
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
-import { Button } from '@/ui';
+import { Button, useCardActionVariant } from '@/ui';
 import styles from './ResumeCard.module.css';
 
 /**
@@ -13,6 +13,8 @@ import styles from './ResumeCard.module.css';
  * was (and a focus round that is still open). A question, never an alarm; "Nein, danke" ends it.
  */
 export function ResumeCard() {
+  // Phone: the plus owns the one filled accent (decision #856).
+  const backVariant = useCardActionVariant();
   const [settings] = useFocusSettings();
   const ctx = useResumeContext();
   const session = useFocusSession();
@@ -37,7 +39,7 @@ export function ResumeCard() {
       </div>
       <div className={styles.actions}>
         <Button
-          variant="primary"
+          variant={backVariant}
           onClick={() => {
             void dismissContext();
             void navigate(target);

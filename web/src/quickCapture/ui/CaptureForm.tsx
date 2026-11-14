@@ -39,6 +39,7 @@ import {
   type ReminderRow,
 } from './batch';
 import { previewChips } from './chips';
+import { visibleTypes } from './typeFold';
 import { clearCaptureDraft, readCaptureDraft, writeCaptureDraft } from './draft';
 import { clearReopenDraft, peekReopenDraft, reopenCapture } from './reopen';
 import { resolveTarget } from './resolve';
@@ -154,6 +155,8 @@ export function CaptureForm({
   const [lookups, setLookups] = useState<Record<string, LookupResult>>({});
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  // „Mehr (n)“ opened: every type chip in view until the sheet closes (decision #856).
+  const [typesOpen, setTypesOpen] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   // The booking toast outlives the sheet: its undo must know whether the sheet is still there.
   const mounted = useRef(true);
@@ -341,6 +344,8 @@ export function CaptureForm({
     setConfirming(false);
     setError('');
   };
+
+  const shownTypes = visibleTypes(available, type, typesOpen);
 
   const pick = (next: CaptureType) => {
     setOverride(next);
@@ -681,20 +686,35 @@ export function CaptureForm({
         ) : null}
 
         {multi ? null : (
-          <div className={styles.types} role="radiogroup" aria-label={t.quickCapture.title}>
-            {available.map((a) => (
+          <div className={styles.types}>
+            {/* Five fixed chips and one for the selected type; the rest behind „Mehr (n)“ (decision #856). */}
+            <div className={styles.typeGroup} role="radiogroup" aria-label={t.quickCapture.title}>
+              {shownTypes.shown.map((a) => (
+                <button
+                  key={a}
+                  type="button"
+                  role="radio"
+                  aria-checked={a === type}
+                  tabIndex={tabSwitchesType ? -1 : 0}
+                  className={styles.type}
+                  onClick={() => pick(a)}
+                >
+                  {typeLabel(a, fields.kind)}
+                </button>
+              ))}
+            </div>
+            {shownTypes.hidden > 0 ? (
               <button
-                key={a}
                 type="button"
-                role="radio"
-                aria-checked={a === type}
-                tabIndex={tabSwitchesType ? -1 : 0}
                 className={styles.type}
-                onClick={() => pick(a)}
+                aria-expanded={false}
+                tabIndex={tabSwitchesType ? -1 : 0}
+                onClick={() => setTypesOpen(true)}
+                data-testid="capture-more-types"
               >
-                {typeLabel(a, fields.kind)}
+                {t.quickCapture.moreTypes(shownTypes.hidden)}
               </button>
-            ))}
+            ) : null}
           </div>
         )}
 

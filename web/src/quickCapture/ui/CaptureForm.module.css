@@ -53,6 +53,10 @@
   flex-wrap: wrap;
   gap: var(--space-2);
 }
+/* The radiogroup's chips and „Mehr (n)“ wrap as one row. */
+.typeGroup {
+  display: contents;
+}
 .type {
   min-height: var(--touch);
   padding: 0 var(--space-3);

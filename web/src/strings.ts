@@ -1095,6 +1095,8 @@ export const de = {
     chooseType: 'Bitte wähle, wohin der Eintrag soll.',
     inboxHint: (target: string) => `Landet in „${target}“. Sortieren geht später.`,
     fullFormHint: 'Strg+Enter öffnet das ganze Formular.',
+    /** Unfolds the type chips past the first six (decision #856); n = how many are folded. */
+    moreTypes: (n: number) => `Mehr (${n})`,
     financeConfirm: 'Finanzeinträge werden nur nach Bestätigung gebucht.',
     saved: (name: string) => `Gespeichert in ${name}`,
     undo: 'Rückgängig',
