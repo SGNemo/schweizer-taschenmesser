@@ -73,6 +73,7 @@ export const lists: Strings['lists'] = {
     checklist: 'New item',
   } as Record<string, string>,
   empty: 'This list is empty.',
+  emptyAction: 'Add an item',
   editItem: 'Edit item',
   itemName: 'Name',
   quantity: 'Quantity (optional)',

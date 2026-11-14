@@ -76,3 +76,22 @@
   font-family: var(--font-mono);
   color: var(--text-muted);
 }
+
+/* Phone: a row stays one line, the pencil beside the entry (0b-8). The end part (badges, price, quantity) wraps
+   inside its own column instead of pushing the pencil onto a second line; the title keeps the most room.
+   `li.` lifts these rules over the shared row's phone rules (`ui/Patterns.module.css`). */
+@media (max-width: 40rem) {
+  li.itemRow > :last-child {
+    flex-wrap: nowrap;
+  }
+  li.itemRow [data-row] {
+    flex: 1 1 6rem;
+    min-width: 6rem;
+  }
+  li.itemRow .meta {
+    flex: 0 1 auto;
+    max-width: 8rem;
+    justify-content: flex-end;
+    row-gap: var(--space-1);
+  }
+}

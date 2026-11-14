@@ -242,6 +242,7 @@ export default function ListsPage() {
       title={i.name}
       titleFull
       done={i.done}
+      className={styles.itemRow}
       lead={
         <Checkbox
           label={i.name}
@@ -437,7 +438,10 @@ export default function ListsPage() {
                   size={64}
                 />
               }
-            />
+            >
+              {/* M10: the empty state names its next step; the field is the list's last row (far below on a desktop). */}
+              <Button onClick={focusAdd}>{t.lists.emptyAction}</Button>
+            </EmptyState>
           ) : null}
           <div
             className={isShopping ? styles.paper : styles.sheet}
