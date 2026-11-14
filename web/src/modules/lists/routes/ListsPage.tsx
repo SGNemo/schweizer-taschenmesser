@@ -439,8 +439,10 @@ export default function ListsPage() {
                 />
               }
             >
-              {/* M10: the empty state names its next step; the field is the list's last row (far below on a desktop). */}
-              <Button onClick={focusAdd}>{t.lists.emptyAction}</Button>
+              {/* M10: an empty state names its next step. "Artikel" only on a shopping list; other lists keep "Eintrag". */}
+              <Button onClick={focusAdd}>
+                {isShopping ? t.lists.emptyAction : t.lists.addItem}
+              </Button>
             </EmptyState>
           ) : null}
           <div
