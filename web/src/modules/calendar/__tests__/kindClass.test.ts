@@ -2,7 +2,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { CalendarItem } from '@/core/modules/types';
-import { kindClass } from '../components/ItemRow';
+import { t } from '@/strings';
+import { badgeLabel, kindClass } from '../components/ItemRow';
 
 const TODAY = '2026-09-29';
 const item = (kind: string, date: string, done = false): CalendarItem => ({
@@ -56,5 +57,15 @@ describe('calendar kind badges (U08: red only when overdue)', () => {
       expect(rule(`.kind_${kind}`)).toMatch(/--warning/);
     }
     expect(rule('.kind_overdue')).toMatch(/--danger/);
+  });
+
+  it('names an overdue deadline in one word per kind and every kind any module sends', () => {
+    expect(badgeLabel(item('expiry', '2026-09-28'), TODAY)).toBe(t.calendar.overdueKinds.expiry);
+    expect(badgeLabel(item('invoice', '2026-09-20'), TODAY)).toBe(t.calendar.overdueKinds.invoice);
+    expect(badgeLabel(item('expiry', '2026-10-05'), TODAY)).toBe(t.calendar.kinds.expiry);
+    for (const kind of ['gift', 'trial', 'training']) {
+      expect(t.calendar.kinds[kind]).toBeTruthy();
+      expect(rule(`.kind_${kind}`)).not.toBe('');
+    }
   });
 });

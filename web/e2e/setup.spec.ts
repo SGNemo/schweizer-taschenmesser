@@ -266,9 +266,11 @@ test('an empty module page links to the assistant, which opens on the start-data
 /** Everything that leaves the page (not the app's own origin, not data:/blob:). */
 function watchNetwork(page: Page) {
   const external: string[] = [];
+  // The project's baseURL (playwright.config.ts), not a fixed port: the seed project serves on another one.
+  const own = new URL(test.info().project.use.baseURL!).origin;
   page.on('request', (r) => {
     const url = r.url();
-    if (!/^(data:|blob:|http:\/\/localhost:4173)/.test(url)) external.push(url);
+    if (!/^(data:|blob:)/.test(url) && new URL(url).origin !== own) external.push(url);
   });
   return external;
 }

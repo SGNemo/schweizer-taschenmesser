@@ -6,7 +6,7 @@ import { dumpDb, repairDb, replaceWithEmptyDb, type DbProblem } from '@/core/db/
 import { keepBrokenCopy, restoreIntoFreshDb } from '@/core/db/recovery';
 import { NoReadAid } from '@/core/text/ReadableText';
 import { tDiag } from '@/strings.diagnostics';
-import { Button, Card, Logo, TextField, DoubleConfirmDialog } from '@/ui';
+import { Button, Card, DoubleConfirmDialog, FileField, Logo, TextField } from '@/ui';
 import styles from './RecoveryScreen.module.css';
 
 /** Dexie repeats the error name inside its message; show the text after the last "<name>:" only. */
@@ -27,7 +27,6 @@ export function RecoveryScreen({ problem }: { problem: DbProblem }) {
   const [pass, setPass] = useState('');
   const [needPass, setNeedPass] = useState(false);
   const [confirm, setConfirm] = useState(false);
-  const file = useRef<HTMLInputElement>(null);
   const pending = useRef<string | undefined>(undefined);
 
   const restart = () => void setTimeout(() => location.reload(), 600);
@@ -113,24 +112,22 @@ export function RecoveryScreen({ problem }: { problem: DbProblem }) {
               onChange={(e) => setPass(e.target.value)}
             />
           )}
-          <div className={styles.row}>
-            <input
-              ref={file}
-              type="file"
-              accept=".json,application/json"
-              hidden
-              data-testid="recovery-file"
-              onChange={(e) => void onFile(e.target.files?.[0])}
-            />
-            <Button disabled={busy} onClick={() => file.current?.click()}>
-              {r.restore}
-            </Button>
-            {needPass && (
+          {/* The card title already names the step: the field label is for screen readers only. */}
+          <FileField
+            id="recovery-file"
+            label={r.restore}
+            labelHidden
+            accept=".json,application/json"
+            disabled={busy}
+            onFiles={(files) => void onFile(files[0])}
+          />
+          {needPass && (
+            <div className={styles.row}>
               <Button disabled={busy || !pass} onClick={() => void restore(pending.current!, pass)}>
                 {r.restore}
               </Button>
-            )}
-          </div>
+            </div>
+          )}
         </Card>
         <Card title={r.reset}>
           <p className={styles.hint}>{r.resetHint}</p>

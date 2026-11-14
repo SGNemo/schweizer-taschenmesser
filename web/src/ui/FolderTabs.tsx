@@ -4,7 +4,7 @@ import styles from './FolderTabs.module.css';
 export interface FolderTab {
   id: string;
   label: string;
-  /** Shown next to the label (hidden when 0 or missing); put counts into `label` when 0 must show. */
+  /** Shown next to the label, 0 included (U53: "Sonstiges" without a number read as broken); leave it out for no count. */
   count?: number;
   /** A small mark in front of the label (an icon). */
   icon?: ReactNode;
@@ -16,7 +16,8 @@ export interface FolderTab {
  * Folder tabs: a row of tab-shaped buttons on a hairline, the chosen one a recess with a heavier weight. It is a filter
  * (a group of buttons with `aria-pressed`, named after their labels), not a page switcher. Surface and weight carry the
  * state, colour is never alone (a tab's own colour only tints its icon). `folder` adds the folder body under the tabs;
- * `children` are extra controls at the end of the row (an add button).
+ * `children` are extra controls at the end of the row (an add button). `nowrap` keeps the tabs on one line that
+ * scrolls sideways instead of wrapping into several rows (U22: three rows of notebook tabs on a phone).
  */
 export function FolderTabs({
   label,
@@ -24,6 +25,7 @@ export function FolderTabs({
   value,
   onChange,
   folder,
+  nowrap,
   testId,
   children,
 }: {
@@ -32,6 +34,7 @@ export function FolderTabs({
   value: string;
   onChange: (id: string) => void;
   folder?: boolean;
+  nowrap?: boolean;
   testId?: string;
   children?: ReactNode;
 }) {
@@ -42,7 +45,7 @@ export function FolderTabs({
       aria-label={label}
       data-testid={testId}
     >
-      <div className={styles.tabs}>
+      <div className={nowrap ? `${styles.tabs} ${styles.nowrap}` : styles.tabs}>
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -55,7 +58,7 @@ export function FolderTabs({
           >
             {tab.icon}
             <span>{tab.label}</span>
-            {tab.count ? <span className={styles.num}>{tab.count}</span> : null}
+            {tab.count !== undefined ? <span className={styles.num}>{tab.count}</span> : null}
           </button>
         ))}
         {children}

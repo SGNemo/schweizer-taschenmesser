@@ -22,10 +22,31 @@ describe('FolderTabs', () => {
     expect(screen.getByRole('button', { name: /Alle/ })).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('shows a count next to the label only when it is above zero', () => {
-    render(<FolderTabs label="Kategorie" tabs={tabs} value="all" onChange={() => undefined} />);
+  it('shows a given count next to the label, 0 included, and none when it is left out (U53)', () => {
+    render(
+      <FolderTabs
+        label="Kategorie"
+        tabs={[...tabs, { id: 'c', label: 'Sonstiges' }]}
+        value="all"
+        onChange={() => undefined}
+      />,
+    );
     expect(screen.getByRole('button', { name: /Alle\s*5/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Ausweise' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Ausweise\s*0/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sonstiges' })).toBeInTheDocument();
+  });
+
+  it('keeps the tabs on one scrolling line with `nowrap` (U22)', () => {
+    const { container, rerender } = render(
+      <FolderTabs label="Kategorie" tabs={tabs} value="all" onChange={() => undefined} />,
+    );
+    const row = () => container.querySelector('[role="group"] > div') as HTMLElement;
+    const plain = row().className;
+    rerender(
+      <FolderTabs label="Kategorie" tabs={tabs} value="all" onChange={() => undefined} nowrap />,
+    );
+    expect(row().className).not.toBe(plain);
+    expect(row().className).toContain(plain);
   });
 
   it('reports the clicked tab and renders extra controls at the end of the row', async () => {

@@ -347,7 +347,8 @@
   color: var(--text-3);
   font-size: var(--text-meta);
 }
-.done .title {
+/* Only the done row's own title: an open subtask nested in a done row (its `children`) keeps a plain title (U02). */
+.done > .row .title {
   color: var(--text-3);
   text-decoration: line-through;
 }
@@ -745,7 +746,7 @@ button.chip[aria-pressed='true'] {
   background: var(--row-current);
 }
 /* Done rows keep the reading-aid emphasis as quiet as the rest of the row. */
-.done [data-rr] {
+.done > .row [data-rr] {
   color: inherit;
 }
 
