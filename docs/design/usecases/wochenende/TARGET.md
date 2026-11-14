@@ -131,7 +131,7 @@ Expected figures with F1–F6 at the recommended sizes (same model; the script's
 
 The difference that matters most is not the seconds but the **detours 7 → 0**: every line lands as meant, Sunday takes things, the evening empties today.
 
-## 5. Fragen an Sven (Empfehlung zuerst) – STOPP vor PACKAGES.md
+## 5. Fragen an Sven (Empfehlung zuerst) – answered 2026-11-14: Q1 a, Q2 a, Q3 a, Q4 a; decisions in [`docs/decisions/features-wochenende.md`](../../../decisions/features-wochenende.md), packages in [PACKAGES.md](PACKAGES.md)
 
 1. **Einstieg „Tage einteilen“:** (a) **Blatt in drei Schritten, erreichbar über die Willkommenskarte und den leeren Planer** _(Empfehlung: ohne Modulwissen, baut nur Bestehendes zusammen)_ · (b) nur ein Profil „Tage einteilen“ in der Einrichtung · (c) nur Chips im Tagesblatt und ein besserer Kopfsatz.
 2. **Reihenfolge am Tag:** (a) **Tagesabschnitte Vormittag/Nachmittag/Abend, optional je Ding, Pause als Blocker** _(Empfehlung: sagt „erst Pflicht, nach der Pause Haushalt“ ohne Uhrzeit, Planer bleibt Tagesplaner)_ · (b) nur Reihenfolge-Hinweise („zuerst“, „danach“) · (c) Uhrzeiten über Zeitfenster.
