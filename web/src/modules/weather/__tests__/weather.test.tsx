@@ -319,6 +319,39 @@ describe('weather page', () => {
     expect(warn).toHaveTextContent('keine amtliche Warnung');
   });
 
+  it('a slow forecast: after the hold the head keeps its form, and a late hint goes under the forecast (0b-8)', async () => {
+    at1205();
+    const windy = {
+      ...previewBody,
+      daily: {
+        ...previewBody.daily,
+        wind_gusts_10m_max: dayDates.map((_, i) => (i === 2 ? 78 : 35)),
+      },
+    };
+    // The answer comes after the frame's bound (`FIRST_READ_HOLD_MS`, 0.6 s).
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        () =>
+          new Promise<Response>((resolve) =>
+            setTimeout(() => resolve(new Response(JSON.stringify(windy), { status: 200 })), 900),
+          ),
+      ),
+    );
+    await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
+    renderPage();
+    // Painted before the forecast: the head of its final form, with dashes.
+    expect(await screen.findByTestId('weather-now-pending')).toBeTruthy();
+    await waitFor(() => expect(screen.getByTestId('page')).not.toHaveAttribute('data-held'));
+    expect(screen.getByTestId('weather-now-pending')).toBeTruthy();
+    const late = screen.getByTestId('weather-late-warning');
+    expect(late).toHaveAttribute('aria-live', 'polite');
+    const warn = await within(late).findByTestId('weather-warning', {}, { timeout: 3000 });
+    expect(warn).toHaveTextContent('Sturmböen bis 78 km/h');
+    expect(screen.getAllByTestId('weather-warning')).toHaveLength(1);
+    expect(screen.queryByTestId('weather-now-pending')).toBeNull();
+  });
+
   it('no hint for an ordinary week', async () => {
     at1205();
     vi.stubGlobal('fetch', ok(previewBody));

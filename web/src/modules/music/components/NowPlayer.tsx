@@ -62,6 +62,8 @@ export function NowPlayer({
     np.readAt,
   );
   const state = player && player !== 'none' ? player : undefined;
+  // The player's state is still on its way (`state` answers `undefined` until then; a source without it never asks).
+  const unread = player === undefined && !!source.state;
 
   async function act(action: () => Promise<void>) {
     setFailed(false);
@@ -169,7 +171,14 @@ export function NowPlayer({
       ) : (
         <h2 className={styles.nowTitle}>{tx.nothingPlaying}</h2>
       )}
-      {state?.device ? <p className={styles.nowMeta}>{tx.onDevice(state.device)}</p> : null}
+      {state?.device ? (
+        <p className={styles.nowMeta}>{tx.onDevice(state.device)}</p>
+      ) : unread ? (
+        // The device line keeps its place until the player is read (a slow network after the page's hold, 0b-8).
+        <p className={styles.nowMeta} aria-hidden="true">
+          {'\u00a0'}
+        </p>
+      ) : null}
 
       {current && position !== undefined && current.durationMs ? (
         <div className={styles.seek}>
@@ -241,7 +250,8 @@ export function NowPlayer({
       )}
 
       <div className={styles.nowRow}>
-        {canControl && source.setVolume && state?.volume !== undefined ? (
+        {canControl && source.setVolume && (state?.volume !== undefined || unread) ? (
+          // Until the player is read the slider is there, disabled, so the row keeps its height (0b-8).
           <label className={styles.volume}>
             <Icon name="volume" size={18} />
             <span className="sr-only">{tx.volume}</span>
@@ -250,12 +260,15 @@ export function NowPlayer({
               aria-label={tx.volume}
               min={0}
               max={100}
-              value={volume ?? state.volume}
+              value={volume ?? state?.volume ?? 0}
+              disabled={state?.volume === undefined}
               onChange={(e) => setVolume(Number(e.target.value))}
               onPointerUp={commitVolume}
               onKeyUp={commitVolume}
             />
-            <span className={styles.time}>{volume ?? state.volume} %</span>
+            <span className={styles.time}>
+              {state?.volume === undefined ? '–' : `${volume ?? state.volume} %`}
+            </span>
           </label>
         ) : null}
         {canControl && source.transfer && source.devices ? (

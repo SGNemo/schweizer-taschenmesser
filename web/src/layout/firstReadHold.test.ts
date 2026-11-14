@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { STATUS_WAIT_MS } from '@/core/status/settled';
+import { FIRST_READ_HOLD_MS } from '@/core/status/settled';
 import { useFirstReadHold } from './firstReadHold';
 
 describe('first-read hold (0b-8, identity.firstRead)', () => {
@@ -22,11 +22,24 @@ describe('first-read hold (0b-8, identity.firstRead)', () => {
     expect(result.current[0]).toBe(true);
     act(() => result.current[1]());
     expect(result.current[0]).toBe(false);
+    // Settled in time: not late, and the bound no longer changes that.
+    act(() => vi.advanceTimersByTime(FIRST_READ_HOLD_MS));
+    expect(result.current[2]).toBe(false);
+  });
+
+  it('is late once the bound ended the hold, and stays late when the read comes after (slow network)', () => {
+    const { result } = renderHook(() => useFirstReadHold('/weather'));
+    expect(result.current[2]).toBe(false);
+    act(() => vi.advanceTimersByTime(FIRST_READ_HOLD_MS));
+    expect(result.current[0]).toBe(false);
+    expect(result.current[2]).toBe(true);
+    act(() => result.current[1]());
+    expect(result.current[2]).toBe(true);
   });
 
   it('shows head and page after the bound when the read hangs', () => {
     const { result } = renderHook(() => useFirstReadHold('/weather'));
-    act(() => vi.advanceTimersByTime(STATUS_WAIT_MS - 1));
+    act(() => vi.advanceTimersByTime(FIRST_READ_HOLD_MS - 1));
     expect(result.current[0]).toBe(true);
     act(() => vi.advanceTimersByTime(1));
     expect(result.current[0]).toBe(false);
@@ -41,5 +54,6 @@ describe('first-read hold (0b-8, identity.firstRead)', () => {
     expect(result.current[0]).toBe(false);
     rerender({ key: '/weather' });
     expect(result.current[0]).toBe(true);
+    expect(result.current[2]).toBe(false);
   });
 });

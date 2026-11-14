@@ -4,18 +4,17 @@ import { test } from './helpers';
 import { DESKTOP, PHONE, startSeeded } from './guards';
 
 /**
- * How long Wetter, Listen, Chat and Musik hold what waits for their first reads (0b-8 follow-up d), measured, not
- * judged. Per run two numbers: `held`, from the first hold marker in the page to the last one gone – the frame's hold
+ * How long Wetter, Listen, Chat and Musik hold what waits for their first reads (0b-8 follow-up d), and that no open
+ * makes them jump, a slow network included. Per run two numbers: `held`, from the first hold marker in the page to the last one gone – the frame's hold
  * (`[data-held]`, weather and music) or the pages' own row holds (`lists-reading`, `chat-reading`, which appear only
  * once the list or the chat setup is known); and `shown`, wall-clock time from `page.goto` until the page's main part
  * is there with no marker left (boot, code, reads and hold together; the seed fixture fixes the page clock, so this is
  * timed from the test). Plus the layout shift of the whole open. Three runs per page and device: the first visit (weather
  * without a cached forecast), a second load, and a slow one whose answers of the mocked services (open-meteo, Spotify)
  * arrive only after 1.5 s, on a 4× slower CPU (lists and chat read nothing over the network; the slow CPU is what slows
- * their reads). The lines go to the console and the test's annotations.
- *
- * Measurement only, not a CI gate (`open-shift*.seed.spec.ts` guard the CLS): it runs only with `MEASURE_HOLD=1`,
- * e.g. `MEASURE_HOLD=1 npx playwright test --project=seed-dev e2e/seed/open-hold.seed.spec.ts --workers=1`.
+ * their reads). The lines go to the console and the test's annotations. Every run holds the CLS at ≤ 0.05: after
+ * the frame's bound (`FIRST_READ_HOLD_MS`) weather paints a head of its final form and puts a late severe-weather hint
+ * under the forecast; music keeps the player's rows at their height until the player is read.
  */
 const CLS_MAX = 0.05;
 const SLOW_ANSWER_MS = 1500;
@@ -164,7 +163,6 @@ for (const [device, viewport] of [
 ] as const) {
   const phone = device === 'phone';
   test.describe(`hold time when a page opens – ${device}`, () => {
-    test.skip(!process.env.MEASURE_HOLD, 'measurement only: MEASURE_HOLD=1');
     test.use({
       viewport,
       ...(phone ? { isMobile: true, hasTouch: true } : {}),
@@ -197,9 +195,17 @@ for (const [device, viewport] of [
           );
           const shown = Date.now() - started;
           runs.push(await measure(page, `${name} ${device}, ${run}`, shown));
+          // The mocked week has a thunderstorm: the hint stays (#791), under the forecast when it came late.
+          if (name === 'weather') {
+            const hint = run.startsWith('slow')
+              ? page.getByTestId('weather-late-warning').getByTestId('weather-warning')
+              : page.getByTestId('weather-warning');
+            await expect(hint).toBeVisible();
+          }
         }
         expect(runs[0]!.cls, 'layout shift, first visit').toBeLessThanOrEqual(CLS_MAX);
         expect(runs[1]!.cls, 'layout shift, second visit').toBeLessThanOrEqual(CLS_MAX);
+        expect(runs[2]!.cls, 'layout shift, slow answers').toBeLessThanOrEqual(CLS_MAX);
       });
     }
   });

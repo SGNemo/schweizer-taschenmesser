@@ -4,6 +4,7 @@ import { compassIndex } from '@/core/weather/air';
 import { bestWindow, hourRows, placeNowIso, dayRows } from '@/core/weather/logic';
 import type { WeatherView } from '@/core/weather/useWeather';
 import { now } from '@/core/time/now';
+import { useKeepHeadRoom } from '@/core/shell/heroContext';
 import { tWeather } from '@/strings.weather';
 import { tWeatherPage } from '@/strings.weatherPage';
 import { Icon, type IconName } from '@/ui';
@@ -19,7 +20,7 @@ import { weatherWarnings } from '../warnings';
  * the temperature as thin large numerals with "feels like" and the word, the three facts that matter (rain, wind, UV) as chips
  * in the signature slot, everything else as one muted line. A hint above the head when the forecast days call for one.
  */
-export function WeatherHero({ weather }: { weather: WeatherView }) {
+export function WeatherHero({ weather, late = false }: { weather: WeatherView; late?: boolean }) {
   const tx = tWeather.use();
   const tp = tWeatherPage.use();
   const { forecast, stale, at } = weather;
@@ -69,7 +70,9 @@ export function WeatherHero({ weather }: { weather: WeatherView }) {
       <HeroSlot area="backdrop">
         <Sky kind={skyKind(forecast.group, night)} />
       </HeroSlot>
-      {warnings.length > 0 ? (
+      {/* Late (the frame painted before the forecast, a slow network): the hint goes under the forecast instead
+          (`WeatherPage`), so it pushes nothing down; above the head again from the next visit on. */}
+      {warnings.length > 0 && !late ? (
         <HeroSlot area="notice">
           <WarningNotice warnings={warnings} today={nowIso.slice(0, 10)} />
         </HeroSlot>
@@ -109,6 +112,38 @@ export function WeatherHero({ weather }: { weather: WeatherView }) {
       {rest.length > 0 ? (
         <p className={`${styles.rest} ${styles.restBelow}`}>{rest.join(' · ')}</p>
       ) : null}
+    </>
+  );
+}
+
+/**
+ * The head while the first forecast is still on its way after the frame stopped waiting (a slow network, 0b-8): the
+ * same blocks as `WeatherHero` – the figure with its line, the row of chips and the line of further values – with
+ * dashes, in the stage's room of the last visit, so the head keeps its height when the forecast arrives. The sky stays
+ * the frame's default.
+ */
+export function WeatherHeroPending() {
+  const tx = tWeather.use();
+  // The stage keeps the room of the last visit (U01) until the forecast fills it: on the phone the chips wrap.
+  useKeepHeadRoom(true);
+  return (
+    <>
+      <HeroSlot area="figure">
+        <div className={styles.heroBlock} data-testid="weather-now-pending" aria-hidden="true">
+          <HeroFigure type="thin" value="–" detail={tx.previewLoading} />
+        </div>
+      </HeroSlot>
+      <HeroSlot area="signature">
+        <div className={styles.heroFacts} aria-hidden="true">
+          <ul className={styles.keys}>
+            <li className={styles.key}>–</li>
+          </ul>
+          <p className={styles.rest}>–</p>
+        </div>
+      </HeroSlot>
+      <p className={`${styles.rest} ${styles.restBelow}`} aria-hidden="true">
+        –
+      </p>
     </>
   );
 }

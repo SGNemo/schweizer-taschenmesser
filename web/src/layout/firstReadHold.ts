@@ -1,26 +1,29 @@
 import { useCallback, useEffect, useState } from 'react';
-import { STATUS_WAIT_MS } from '@/core/status/settled';
+import { FIRST_READ_HOLD_MS } from '@/core/status/settled';
 
 /**
  * The hold of an entry page with `identity.firstRead` (0b-8): its hint above the head (the weather's severe-weather
- * hint) or its stage and page (music) are built from its first reads: true for `key` (the route;
- * `undefined` = nothing to wait for) from the first paint until the page calls `settle` or `STATUS_WAIT_MS` have
- * passed (a read that hangs, a slow network), counted again for every key. While it holds, the frame lays the notice,
- * the head and the page out without painting them, so nothing that arrives with those reads pushes down what was
- * already on the screen.
+ * hint) or its stage and page (music) are built from its first reads: `held` for `key` (the route; `undefined` =
+ * nothing to wait for) from the first paint until the page calls `settle` or `FIRST_READ_HOLD_MS` have passed (a read
+ * that hangs, a slow network), counted again for every key. While it holds, the frame lays the notice, the head and the
+ * page out without painting them. `late` is true once the bound ended the hold before the page settled; it stays true
+ * for that key (that visit), so the page keeps its late layout even when the reads come back afterwards.
  */
-export function useFirstReadHold(key: string | undefined): [held: boolean, settle: () => void] {
-  const [state, setState] = useState({ key, done: false });
+export function useFirstReadHold(
+  key: string | undefined,
+): [held: boolean, settle: () => void, late: boolean] {
+  const [state, setState] = useState({ key, done: false, late: false });
   // A new route holds again in the same render.
-  if (state.key !== key) setState({ key, done: false });
+  if (state.key !== key) setState({ key, done: false, late: false });
   const settle = useCallback(() => setState((s) => (s.done ? s : { ...s, done: true })), []);
   useEffect(() => {
     if (!key) return;
     const timer = setTimeout(
-      () => setState((s) => (s.key === key && !s.done ? { ...s, done: true } : s)),
-      STATUS_WAIT_MS,
+      () => setState((s) => (s.key === key && !s.done ? { ...s, done: true, late: true } : s)),
+      FIRST_READ_HOLD_MS,
     );
     return () => clearTimeout(timer);
   }, [key]);
-  return [!!key && !(state.key === key && state.done), settle];
+  const current = state.key === key;
+  return [!!key && !(current && state.done), settle, !!key && current && state.late];
 }
