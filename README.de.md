@@ -29,7 +29,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/overview-desktop-dark.webp">
-    <img src="docs/assets/screenshots/overview-desktop-light.webp" alt="Nemo-Übersicht auf dem Desktop mit erfundenen Beispieldaten: eine Seitenleiste mit Favoriten und Bereichen, die Leiste „Jetzt wichtig“ mit sechs Karten, heute, morgen und diese Woche in drei Spalten und eine vorgeschlagene Aufgabe zum Anfangen" width="900">
+    <img src="docs/assets/screenshots/overview-desktop-light.webp" alt="Nemo-Übersicht auf dem Desktop mit erfundenen Beispieldaten, in der Ansicht „Ruhig“: eine Seitenleiste mit Favoriten und Bereichen, die Leiste „Jetzt wichtig“ mit drei Karten und einem Hinweis, was warten kann, und eine Karte „Heute“ mit dem nächsten Termin, den Terminen von heute und einer vorgeschlagenen Aufgabe zum Anfangen" width="900">
   </picture>
 </p>
 
@@ -113,14 +113,14 @@ Alle Bilder zeigen erfundene Beispieldaten in der deutschen Oberfläche; die App
     <td width="50%">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/calendar-desktop-dark.webp">
-        <img src="docs/assets/screenshots/calendar-desktop-light.webp" alt="Kalender in der Wochenansicht mit farbigen Terminen aus mehreren Modulen und einer Agenda für den gewählten Tag, unter einem blauen Kalenderkopf">
+        <img src="docs/assets/screenshots/calendar-desktop-light.webp" alt="Kalender in der Wochenansicht mit Terminen aus mehreren Modulen, einem Stundenraster mit markierter Spalte für heute und rechts einer Agenda für den gewählten Tag">
       </picture>
       <br><sub>Kalender: Wochenansicht mit der Agenda des Tages</sub>
     </td>
     <td width="50%">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/finance-desktop-dark.webp">
-        <img src="docs/assets/screenshots/finance-desktop-light.webp" alt="Finanzübersicht mit zwei Kontokarten, Kontostand, Einnahmen, Ausgaben und Ergebnis des Monats, einem Liniendiagramm des Kontostands und den letzten Buchungen">
+        <img src="docs/assets/screenshots/finance-desktop-light.webp" alt="Finanzübersicht für September mit dem verfügbaren Betrag im Kopfbereich, Einnahmen, Ausgaben und Ergebnis des Monats, einem Liniendiagramm des Kontostands, einem Ringdiagramm, wohin das Geld ging, und rechts den letzten Buchungen">
       </picture>
       <br><sub>Finanzen: Monatsübersicht mit Kontostand und Buchungen</sub>
     </td>
@@ -129,16 +129,16 @@ Alle Bilder zeigen erfundene Beispieldaten in der deutschen Oberfläche; die App
     <td width="50%">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/tools-desktop-dark.webp">
-        <img src="docs/assets/screenshots/tools-desktop-light.webp" alt="Der Werkzeugkasten über der Übersicht geöffnet: links eine Liste der Werkzeuge, rechts der Rechner mit Zahlenblock und Reitern für Standard, Wissenschaftlich und mehr">
+        <img src="docs/assets/screenshots/tools-desktop-light.webp" alt="Der Werkzeugkasten über der Übersicht geöffnet: links eine Liste der Werkzeuge, rechts der Rechner mit Zahlenblock und Reitern für Standard, Wissenschaftlich, Programmierer und mehr">
       </picture>
       <br><sub>Werkzeugkasten: der Rechner, eines von vielen kleinen Werkzeugen</sub>
     </td>
     <td width="50%">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/settings-desktop-dark.webp">
-        <img src="docs/assets/screenshots/settings-desktop-light.webp" alt="Einstellungsübersicht mit sechs Statuskacheln für Sicherheit, Sync, Backup, Updates, KI und Speicher, Schnellschaltern für Farbschema, Dichte und Lesehilfe und einer Liste der Kategorien">
+        <img src="docs/assets/screenshots/settings-desktop-light.webp" alt="Einstellungsübersicht: ein Statuskopf mit Sicherheit, Gerätestatus und KI, Schnellschalter für Farbschema, Dichte, Lesehilfe, Profil und Ruhe und links die Liste der Kategorien">
       </picture>
-      <br><sub>Einstellungen: der Status auf einen Blick, dann die Kategorien</sub>
+      <br><sub>Einstellungen: der Status auf einen Blick, links die Kategorien</sub>
     </td>
   </tr>
 </table>
@@ -146,15 +146,15 @@ Alle Bilder zeigen erfundene Beispieldaten in der deutschen Oberfläche; die App
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/overview-phone-dark.webp">
-    <img src="docs/assets/screenshots/overview-phone-light.webp" alt="Die Übersicht auf dem Handy: die Leiste „Jetzt wichtig“ als zwei Spalten mit Karten, darunter die Termine von heute, unten eine Navigationsleiste" width="220">
+    <img src="docs/assets/screenshots/overview-phone-light.webp" alt="Die Übersicht auf dem Handy in der ruhigen Ansicht: die Leiste „Jetzt wichtig“ mit drei Karten und einer Zeile, was warten kann, darunter die Karte „Heute“ mit den Terminen von heute, unten eine Navigationsleiste" width="220">
   </picture>
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/calendar-phone-dark.webp">
-    <img src="docs/assets/screenshots/calendar-phone-light.webp" alt="Der Kalender auf dem Handy: ein Kopf mit dem heutigen Datum und einem Streifen der belegten Stunden, Reiter, ein Umschalter für Monat, Woche, Tag, Agenda und Jahr und der erste Tag der Woche mit seinen Terminen" width="220">
+    <img src="docs/assets/screenshots/calendar-phone-light.webp" alt="Der Kalender auf dem Handy: der Modulkopf mit Reitern für die Planen-Module, ein Wochenumschalter, ein Umschalter für Monat, Woche, Tag, Agenda und Jahr und die Termine der Woche als Liste" width="220">
   </picture>
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/tools-phone-dark.webp">
-    <img src="docs/assets/screenshots/tools-phone-light.webp" alt="Der Rechner auf dem Handy, im Vollbild, mit Zahlenblock und Verlauf" width="220">
+    <img src="docs/assets/screenshots/tools-phone-light.webp" alt="Der Rechner auf dem Handy, im Vollbild, mit Reitern, Zahlenblock und leerem Verlauf" width="220">
   </picture>
 </p>
 
