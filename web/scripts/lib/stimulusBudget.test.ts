@@ -454,7 +454,7 @@ describe('signature-blocks.json', () => {
   });
 });
 
-it('the tone steps --surface-raised and --surface-sunken are plain surfaces, also as a cool dark grey', () => {
+it('the tone steps are plain by name, even when tinted; a cool dark grey that is no token is no colour', () => {
   const root = document.documentElement.style;
   // Tinted on purpose (chroma 0.12 and 0.09, over the threshold): only the name keeps them out.
   root.setProperty('--surface-raised', 'rgb(30, 40, 60)');
@@ -497,7 +497,7 @@ it('chroma is not looser than the saturation it replaced, for every colour from 
       }
   // The two boundaries themselves: the darkest colours just over the old thresholds.
   text.push('rgb(102, 76, 76)');
-  surface.push('rgb(128, 112, 112)');
+  surface.push('rgb(128, 112, 112)', 'rgb(112, 112, 128)');
   const count = (list: string[], kind: 'text' | 'surface') => {
     let n = 0;
     for (let i = 0; i < list.length; i += 500) {
@@ -519,12 +519,13 @@ it('chroma is not looser than the saturation it replaced, for every colour from 
   expect(count(surface, 'surface')).toBe(surface.length);
 });
 
-it('below those brightnesses, colours near grey are no longer counted (the dark-theme fix), deep inks still are', () => {
+it('below those brightnesses, a channel spread up to 25 / 15 is no longer counted (the dark-theme fix), deep inks still are', () => {
   // The band the change gives up on purpose, pinned so that a later threshold change shows here: near-black ink and
   // dark near-grey fills the saturation counted. A deep ink and a dark tint with real chroma stay counted.
   const gone = mount(
     `<p ${box(200, 20, 10)} style="color: rgb(27, 15, 6);">a</p>
      <p ${box(200, 20, 10)} style="color: rgb(90, 65, 65);">a</p>
+     <p ${box(200, 20, 10)} style="color: rgb(50, 25, 25);">a</p>
      <i ${box(200, 20, 10)} style="background-color: rgb(40, 30, 30);"></i>
      <i ${box(200, 20, 10)} style="background-color: rgb(41, 55, 49);"></i>`,
   );
