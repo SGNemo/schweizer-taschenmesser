@@ -28,13 +28,15 @@
   border: 0;
   cursor: pointer;
 }
-.link[aria-current='page'] {
+.link[aria-current] {
   color: var(--text);
   font-weight: var(--weight-semibold);
 }
 /* Active marker: a small bar above the icon, in the area's colour (identity v3; design check K6, answer 2026-11-11).
-   Übersicht has no area: its marker is the text ink, no accent in the app frame (package 0b-R). */
-.link[aria-current='page']::before {
+   Übersicht has no area: its marker is the text ink, no accent in the app frame (package 0b-R). "Mehr" carries it for
+   the places behind it: in the area's colour for a module of a further area, in the text ink for library and
+   settings (M8 follow-up of 0b-8). */
+.link[aria-current]::before {
   content: '';
   position: absolute;
   top: 6px;
@@ -43,7 +45,7 @@
   border-radius: var(--radius-full);
   background: var(--area-color, var(--text));
 }
-.link[aria-current='page'] > svg {
+.link[aria-current] > svg {
   color: var(--area-color, var(--text));
 }
 .label {
@@ -87,6 +89,6 @@
 }
 
 /* Area colour on every area's icon; the active area keeps it too (rule above), never the accent. */
-.link[data-area]:not([aria-current='page']) > svg {
+.link[data-area]:not([aria-current]) > svg {
   color: var(--area-color);
 }

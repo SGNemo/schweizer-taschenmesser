@@ -93,6 +93,7 @@ function errorText(e: unknown): string {
     if (e.code === 'module-off') return t.quickCapture.errors.moduleOff(e.detail ?? '');
     if (e.code === 'invalid') return t.quickCapture.errors.invalid;
     if (e.code === 'currency') return t.quickCapture.errors.currency(e.detail ?? '');
+    if (e.code === 'full' && e.detail) return e.detail;
   }
   return t.quickCapture.errors.failed;
 }
@@ -274,6 +275,16 @@ export function CaptureForm({
       place,
     ],
   );
+  // „ToDo 9 · Termin 3“: what the rows turn into, in the order the kinds first appear (W07).
+  const kinds = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const r of rows)
+      if (r.type) {
+        const label = typeLabel(r.type, r.fields.kind);
+        counts.set(label, (counts.get(label) ?? 0) + 1);
+      }
+    return [...counts].map(([label, n]) => `${label} ${n}`);
+  }, [rows]);
   const rowTypes = batchTypes(available);
 
   // Reminder lines look for their open invoice while the person types; the result only changes text.
@@ -572,6 +583,12 @@ export function CaptureForm({
           </p>
         )}
 
+        {multi && kinds.length > 1 ? (
+          // More than one place: say it above the rows, so a line that is no ToDo is seen first (W07).
+          <p className={styles.hint} data-testid="capture-kinds">
+            {t.quickCapture.multi.kinds(kinds)}
+          </p>
+        ) : null}
         {multi ? (
           <ul
             className={styles.rows}

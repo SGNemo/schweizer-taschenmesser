@@ -19,6 +19,7 @@ import {
   SplitView,
   Tabs,
   TextField,
+  useAdvancedMenuItem,
   useOpenParam,
   useSplitView,
 } from '@/ui';
@@ -188,6 +189,7 @@ export default function VaultPage() {
     title?.focus();
   }, [renewing]);
 
+  const advancedItem = useAdvancedMenuItem('vault');
   return (
     <>
       <PageHeader
@@ -215,7 +217,7 @@ export default function VaultPage() {
           <Icon name="plus" size={18} />
           {t.vault.add}
         </PageAction>
-        <StartDataMenu moduleId="vault" />
+        <StartDataMenu moduleId="vault" items={[advancedItem]} />
       </PageHeader>
       <VaultHead docs={docs ?? []} day={day} />
       {none || view === 'deadlines' ? null : (

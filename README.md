@@ -53,7 +53,7 @@ Nemo is a set of small modules for everyday life. You turn on what you need in t
 | **Money** | Finances | Accounts, income and expenses with categories | on by default |
 |  | Invoices | Open invoices with amount, payee and due date | on by default |
 |  | Subscriptions | Subscriptions and recurring payments | on by default |
-|  | Budgets & savings goals | Monthly limits per expense category (from Finances) and savings goals with deposits and progress | on for new installations |
+|  | Budgets & savings goals | Spending limits per category (from Finances) and savings goals with deposits and progress | on for new installations |
 | **Household** | Lists | Shopping, packing lists and checklists | on for new installations |
 |  | Routines | Cleaning plan and household routines | on for new installations |
 |  | Pantry | What’s in the fridge, the cupboard and the freezer? | optional |

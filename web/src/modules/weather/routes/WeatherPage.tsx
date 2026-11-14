@@ -32,7 +32,7 @@ export default function WeatherPage() {
   const [settings] = useWeatherSettings();
   const { index, places, weather, loading } = useViewedForecast(requested);
   // The hint above the head comes with the forecast: the frame paints head and page once the first read is back
-  // (`identity.notice`, at most 1.5 s), so the hint never pushes them down (0b-8). Nothing to wait for when fetching is
+  // (`identity.firstRead`, at most 1.5 s), so the hint never pushes them down (0b-8). Nothing to wait for when fetching is
   // off or the device is offline: no forecast will come, so the page paints at once.
   const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
   useHeadReady(

@@ -45,12 +45,15 @@ export function PlanPreview({
   busy,
   onApply,
   onDiscard,
+  discardLabel,
 }: {
   data: PreviewData;
   nameOf: (unitId: string) => string;
   busy?: boolean;
   onApply: () => void;
   onDiscard: () => void;
+  /** „Zurück“ where the preview is a step of a sheet („Tage einteilen“); „Verwerfen“ otherwise. */
+  discardLabel?: string;
 }) {
   const p = t.planner.preview;
   const moved = data.diff.moved;
@@ -136,7 +139,7 @@ export function PlanPreview({
           {p.apply}
         </Button>
         <Button variant="ghost" onClick={onDiscard} disabled={busy}>
-          {p.discard}
+          {discardLabel ?? p.discard}
         </Button>
       </div>
     </section>

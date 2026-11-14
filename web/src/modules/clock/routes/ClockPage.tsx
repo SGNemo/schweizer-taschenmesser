@@ -7,17 +7,9 @@ import { localZone } from '@/core/time/placeSearch';
 import { useMinuteNow } from '@/core/time/useMinuteNow';
 import { changeWithUndo, undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import {
-  Button,
-  EmptyState,
-  Icon,
-  PageAction,
-  PageHeader,
-  RowMenu,
-  SortableList,
-  useOpenParam,
-} from '@/ui';
-import { HeroFigure, HeroSlot } from '@/ui/identity';
+import { Button, EmptyState, Icon, PageAction, PageHeader, RowMenu, useOpenParam } from '@/ui';
+import { SortableList } from '@/ui/SortableList';
+import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import { AddPlaceDialog } from '../components/AddPlaceDialog';
 import { RenameDialog } from '../components/RenameDialog';
 import { MAX_PLACES, listPlaces, placeRepo, reorderPlaces, type StoredPlace } from '../repo';
@@ -87,7 +79,11 @@ export default function ClockPage() {
       </HeroSlot>
 
       {places && list.length === 0 ? (
-        <EmptyState title={t.clock.empty} testId="clock-empty">
+        <EmptyState
+          title={t.clock.empty}
+          testId="clock-empty"
+          motif={<SignatureMark id="dial" size={64} />}
+        >
           <Button variant="primary" onClick={() => setAdding(true)}>
             {t.clock.addFirst}
           </Button>
