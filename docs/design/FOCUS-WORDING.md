@@ -12,6 +12,7 @@ Examples to copy from. Rules: [FOCUS-GUIDELINES.md](FOCUS-GUIDELINES.md) (text r
 | Date passed (due lists, widgets) | "war am Di. fällig" · "war am 17. Sep. fällig" · Vorräte "MHD war Mo." | "seit 3 Tagen" · "seit gestern" |
 | Money deadline passed | "Rechnung offen · 12,00 € · Frist war am 21. Sep." | "Du hast die Frist verpasst" |
 | Replan | "Neu planen" · "Auf die nächsten Tage verteilt." (+ Rückgängig) | "Aufräumen" |
+| Rest of the day (evening) | "Rest verteilen" · "Was heute offen ist, geht auf die nächsten Tage." · "Rest verteilen?" | "3 Sachen liegen geblieben" · "Du hast heute nicht alles geschafft" |
 | Done | "Erledigt." · "Gut gemacht." (sparsam) | "Super!!! Weiter so!" |
 | Done today | "Erledigt heute: 3" · "Gut dabei" | "Nur 3 geschafft" |
 | Empty, all done | "Alles erledigt. Zeit für etwas Schönes." | "Keine Aufgaben vorhanden" |
