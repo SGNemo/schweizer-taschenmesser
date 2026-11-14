@@ -119,9 +119,7 @@ describe('build-up: cards of a step show together, once', () => {
   });
 
   it('a later step waits on its own; cards already shown never wait again', async () => {
-    const { getByTestId, rerender } = render(
-      createElement(Grid, { keys: ['a'], loading: [] }),
-    );
+    const { getByTestId, rerender } = render(createElement(Grid, { keys: ['a'], loading: [] }));
     const grid = getByTestId('grid');
     expect(waits(grid)).toEqual([]);
     rerender(createElement(Grid, { keys: ['a', 'b', 'c'], loading: ['c'] }));
