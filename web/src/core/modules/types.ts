@@ -237,6 +237,13 @@ export interface ModuleIdentity {
    * `e2e/seed/open-shift.seed.spec.ts`.
    */
   notice?: boolean;
+  /**
+   * The module's entry page builds its stage and the page below it from reads that come after the first paint (music:
+   * the connection, what plays, the player and the start view): the frame holds the head and the page as for `notice`
+   * until the page says those reads are back (`useHeadReady`), at most 1.5 s, so nothing moves when they arrive (0b-8).
+   * Guard: `e2e/seed/open-shift-music.seed.spec.ts`.
+   */
+  firstRead?: boolean;
 }
 
 export type WidgetSize = 's' | 'm' | 'l';

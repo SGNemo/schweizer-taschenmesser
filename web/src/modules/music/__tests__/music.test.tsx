@@ -321,6 +321,29 @@ describe('music page', () => {
     expect(frame).toHaveAttribute('data-head', 'stage');
   });
 
+  it('head and page wait for the first reads, so nothing moves when they arrive (0b-8)', async () => {
+    await connect();
+    let answer: (r: Response) => void = () => undefined;
+    const pending = new Promise<Response>((resolve) => (answer = resolve));
+    // The fake platform hands back what `player` returns: a pending answer holds the first reading back.
+    player = () => pending as unknown as Response;
+    await renderPage();
+    const page = screen.getByTestId('page');
+    await waitFor(() => expect(sent('GET', '/me/player/currently-playing')).toHaveLength(1));
+    expect(page).toHaveAttribute('data-held', 'true');
+    expect(screen.getByTestId('module-frame').className).toMatch(/held/);
+    answer(json(PLAYING));
+    await waitFor(() => expect(page).not.toHaveAttribute('data-held'));
+    expect(screen.getByTestId('music-now')).toHaveTextContent('Jetztlied');
+    expect(screen.getByTestId('music-start')).toBeTruthy();
+  });
+
+  it('not connected: the calm next step shows once the status is read, without waiting', async () => {
+    await renderPage();
+    await screen.findByTestId('music-empty');
+    await waitFor(() => expect(screen.getByTestId('page')).not.toHaveAttribute('data-held'));
+  });
+
   it('the start view is never empty: recently played and your playlists as covers', async () => {
     await connect();
     router = (c) =>

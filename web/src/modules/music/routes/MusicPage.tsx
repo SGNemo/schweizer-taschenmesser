@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { useSettings } from '@/core/settings/settings';
+import { useHeadReady } from '@/core/shell/heroContext';
 import { tMusicPage } from '@/strings.musicPage';
 import { tSpotify } from '@/strings.spotify';
 import { Button, Card, EmptyState, PageTitle, Tabs } from '@/ui';
@@ -13,7 +14,7 @@ import { StartView } from '../components/StartView';
 import { trackIdOf, type PlayerApi, type View } from '../components/types';
 import { useShortcuts } from '../useShortcuts';
 import { settings as moduleSettings, settingsSchema, type MusicPrefs } from '../settings';
-import { useNowPlaying } from '../useNowPlaying';
+import { useNowPlayingStatus } from '../useNowPlaying';
 import styles from './music.module.css';
 
 const CONNECTIONS = settingsPath('verbindungen');
@@ -27,8 +28,16 @@ const CONNECTIONS = settingsPath('verbindungen');
 export default function MusicPage() {
   const tx = tSpotify.use();
   const tm = tMusicPage.use();
-  const np = useNowPlaying();
+  const { np, known } = useNowPlayingStatus();
   const [view, setView] = useState<View>();
+  // 0b-8: the stage (cover, player) and the start view below it are built from the connection's first reads; the frame
+  // paints head and page once they are back (`identity.firstRead`, at most 1.5 s), so nothing moves when they arrive.
+  // Not connected: nothing to wait for once the status is read.
+  const [playerRead, setPlayerRead] = useState(false);
+  const [startRead, setStartRead] = useState(false);
+  const onPlayerRead = useCallback(() => setPlayerRead(true), []);
+  const onStartRead = useCallback(() => setStartRead(true), []);
+  useHeadReady(known && (!np || (np.firstRead && playerRead && startRead)));
   const [version, setVersion] = useState(0);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
@@ -91,7 +100,7 @@ export default function MusicPage() {
   return (
     <>
       <PageTitle title={tm.name} />
-      <MusicHero api={api} />
+      <MusicHero api={api} onPlayerRead={onPlayerRead} />
       {/* The views are tabs at the lower edge of the stage, in the page: inside the head they would lift the stage
           over its 320 px. An open playlist is none of them (it is reached from the start view). */}
       <div className={styles.views}>
@@ -108,7 +117,7 @@ export default function MusicPage() {
               <SourceView api={api} view={view} />
             </Card>
           ) : (
-            <StartView api={api} />
+            <StartView api={api} onRead={onStartRead} />
           )}
         </div>
         <aside className={styles.aside}>

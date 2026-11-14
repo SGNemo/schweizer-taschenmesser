@@ -156,8 +156,11 @@ export function AreaFrame({
   const id = manifest?.identity;
   // 0b-8: the entry page of a module whose hint above the head waits for a read (`identity.notice`, the weather) is
   // painted once that read is back, so the hint never pushes the head and the page down (first visit: CLS 0.6–0.9).
+  // The same hold for an entry page whose stage and page are built from their first reads (`identity.firstRead`, music).
   const [noticeHeld, settle] = useNoticeHold(
-    framed && id?.notice && manifest && pathname === `/${manifest.id}` ? pathname : undefined,
+    framed && (id?.notice || id?.firstRead) && manifest && pathname === `/${manifest.id}`
+      ? pathname
+      : undefined,
   );
   const controls = useMemo<HeroControls>(
     () => ({
