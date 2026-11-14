@@ -24,6 +24,8 @@ export const aiSchema: ModuleAiSchema = {
       required: ['label'],
       // Never plain „uhr“: create keywords match by word prefix, and „um 14 Uhr“ is a calendar time.
       parse: { keywords: ['weltuhr', 'zeitzone'] },
+      // = `MAX_PLACES` (plain data: `check:modules` loads this file alone; `clock.ai.test.ts` pins it).
+      maxActive: 12,
       examples: [{ input: 'Füge Tokio zur Weltuhr hinzu', output: { label: 'Tokio' } }],
     },
   },

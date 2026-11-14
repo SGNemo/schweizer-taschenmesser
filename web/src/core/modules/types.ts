@@ -344,6 +344,8 @@ export interface AiActionDef {
   examples: AiActionExample[];
   /** Hints for the free rule parser (stage 0, no tokens). Plain data; the parser lives in core. */
   parse?: AiActionParseHints;
+  /** `create` only: at most this many live rows; the preview then shows `error: 'full'` and writes nothing. */
+  maxActive?: number;
 }
 
 /** Which part of a sentence fills which field. Each role maps to a field of `AiActionDef.fields`; `estimate` = an effort in minutes („2 Std“). */
