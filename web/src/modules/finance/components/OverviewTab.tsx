@@ -43,13 +43,15 @@ function ChartCard({ title, chart, table }: { title: string; chart: ReactNode; t
 /**
  * "▲ +120,00 € (+8 %) zum Vormonat": arrow and sign as text, no colour of its own (more spending is not "bad" by
  * itself). A percent that rounds to 0 says nothing next to an amount and is left out. In a narrow row (phone) the card
- * shows "▲ +120,00 €" in one line and the full sentence stays for screen readers; `DeltaNote` names the month once.
+ * shows "▲ 120,00 €" (the arrow is the sign) and the full sentence stays for screen readers; the note under the cards
+ * names the month once.
  */
 function DeltaLine({ d, money }: { d: Delta; money: (m: number) => string }) {
   if (d.diffMinor === 0)
     return <span className={styles.delta}>{t.finance.ext.compare.unchanged}</span>;
   const arrow = d.diffMinor > 0 ? '▲' : '▼';
-  const amount = `${d.diffMinor > 0 ? '+' : '−'}${money(Math.abs(d.diffMinor))}`;
+  const value = money(Math.abs(d.diffMinor));
+  const amount = `${d.diffMinor > 0 ? '+' : '−'}${value}`;
   const percent =
     d.percent === undefined || d.percent === 0
       ? ''
@@ -61,7 +63,7 @@ function DeltaLine({ d, money }: { d: Delta; money: (m: number) => string }) {
       </span>
       {/* Wraps after the arrow when a long amount does not fit the card; the amount itself never breaks. */}
       <span className={styles.deltaShort} aria-hidden="true">
-        {arrow} <span className={styles.nowrap}>{amount}</span>
+        {arrow} <span className={styles.nowrap}>{value}</span>
       </span>
     </span>
   );
