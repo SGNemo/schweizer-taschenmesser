@@ -284,6 +284,8 @@ const place: CaptureTarget = {
     // (`addPlace` then continues after it; only the relative order matters).
     return { label: hit.name, zone: hit.zone, order: Math.floor(now() / 1000) };
   },
+  // = `MAX_PLACES` in `modules/clock/repo.ts` (no module import here; `clock.targets.test.ts` pins it).
+  maxActive: { count: 12, text: () => t.clock.fullCapture(12) },
 };
 
 const subscriptions: CaptureTarget = {

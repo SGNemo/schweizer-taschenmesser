@@ -112,6 +112,9 @@ export async function saveCapture(
   }
 
   const repo = createCollectionRepo(manifest, target.collection, opts.database);
+  if (target.maxActive && (await repo.active().count()) >= target.maxActive.count) {
+    throw new CaptureError('full', target.maxActive.text());
+  }
   if (opts.id) {
     const done = await createIfAbsent(repo, opts.id, data);
     if (!done.written)

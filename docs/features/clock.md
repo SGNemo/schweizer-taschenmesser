@@ -17,7 +17,7 @@ Places whose time is always in view: tiles on the overview, a list page, offline
 
 ## Follow-ups from package 1
 
-1. **Limit of 12 places only in the dialog.** Quick capture and the AI can add a 13th place: an adapter's `build` is synchronous and `aiCreateDefaults` cannot refuse. → [01-followups](../product/clock/01-followups.md).
+1. ~~**Limit of 12 places only in the dialog.**~~ Done: quick capture and the AI stop at 12 too (`maxActive`, `fix/clock-followups`).
 2. **Unknown zone from the AI ("JST") is refused, not corrected.** Defaults never replace a given field (`core/ai/write/prepare.ts`). Recommendation: keep it (clean refusal, no wrong data); listed in 01 as "not in this package".
 3. **Hand tests** (Windows/Android): [MANUAL-TESTS](../MANUAL-TESTS.md) "Uhr (Paket 1)".
 

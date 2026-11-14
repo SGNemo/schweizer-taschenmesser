@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
+import { MAX_PLACES } from '@/modules/clock/repo';
 import { setNow } from '@/core/time/now';
 import { parseCapture } from '../parser';
-import { CaptureError, availableTypes, saveCapture } from './index';
+import { CaptureError, TARGETS, availableTypes, saveCapture } from './index';
 
 const ON = { clock: true };
 
@@ -35,5 +36,25 @@ describe('clock capture target („uhr <Stadt>“)', () => {
     await expect(
       saveCapture('place', { title: 'Tokio' }, { states: { clock: false } }),
     ).rejects.toMatchObject({ code: 'module-off' });
+  });
+
+  it('stops at the page limit: the 13th place is refused, nothing written, undo of an earlier one untouched', async () => {
+    expect(TARGETS.place.maxActive?.count).toBe(MAX_PLACES);
+    const first = await saveCapture('place', { title: 'Tokio' }, { states: ON });
+    for (let i = 1; i < MAX_PLACES; i++) {
+      await saveCapture('place', { title: 'Berlin' }, { states: ON });
+    }
+    const err = await saveCapture('place', { title: 'Lima' }, { states: ON }).catch((e) => e);
+    expect(err).toBeInstanceOf(CaptureError);
+    expect(err).toMatchObject({
+      code: 'full',
+      detail: expect.stringContaining(String(MAX_PLACES)),
+    });
+    expect(await db.table('clock_place').count()).toBe(MAX_PLACES);
+    // The earlier save's undo still works, and makes room again.
+    await first.undo();
+    await expect(saveCapture('place', { title: 'Lima' }, { states: ON })).resolves.toMatchObject({
+      type: 'place',
+    });
   });
 });

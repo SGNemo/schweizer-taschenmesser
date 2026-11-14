@@ -3980,6 +3980,8 @@ export const de = {
       noTarget: 'Dazu habe ich keinen passenden Eintrag gefunden.',
       willDelete: 'Wird gelöscht',
       noChange: 'Dabei würde sich nichts ändern.',
+      full: (module: string) =>
+        `In „${module}“ ist kein Platz mehr. Entferne dort erst einen Eintrag.`,
       question: 'Rückfrage',
       choose: 'Bitte wählen',
       done: (n: number) => (n === 1 ? '1 Änderung gespeichert.' : `${n} Änderungen gespeichert.`),
@@ -8841,6 +8843,7 @@ export const de = {
     empty: 'Noch keine Orte',
     full: (n: number) =>
       `Es sind ${n} Orte eingetragen, mehr passen nicht. Entferne einen, um einen neuen einzutragen.`,
+    fullCapture: (n: number) => `Die Uhr hat schon ${n} Orte. Entferne einen auf der Uhr-Seite.`,
     list: 'Deine Orte',
     search: {
       title: 'Ort eintragen',

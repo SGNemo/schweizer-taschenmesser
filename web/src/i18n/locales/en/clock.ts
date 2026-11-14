@@ -16,6 +16,7 @@ export const clock: Strings['clock'] = {
   addFirst: 'Add the first place',
   empty: 'No places yet',
   full: (n) => `${n} places are added, no more fit. Remove one to add a new one.`,
+  fullCapture: (n) => `The clock already has ${n} places. Remove one on the clock page.`,
   list: 'Your places',
   search: {
     title: 'Add place',
