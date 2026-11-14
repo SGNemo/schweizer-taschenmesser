@@ -483,7 +483,10 @@ test('the card on the overview without a paired PC: no button, the way to pairin
   // widget cover it – `modules/remote/__tests__/remote.test.tsx`)
   await asPhoneWithRemote(page);
   await page.goto('/');
+  // A fresh installation keeps the calm overview (decided at its first start, #831/#868), so the card
+  // sits behind "Mehr anzeigen", the way a new user reaches it.
   const card = page.getByTestId('widget-remote:status');
+  await page.getByRole('button', { name: /^Mehr anzeigen · \d+ Karten$/ }).click();
   await expect(card).toBeVisible({ timeout: 15_000 });
   await expect(card).toContainText('Noch kein PC gekoppelt.');
   await expect(card.getByRole('link', { name: 'PC koppeln' })).toBeVisible();
