@@ -12,6 +12,7 @@ test.describe('Deadlines (B08, V15)', () => {
     await dialog.getByLabel('Titel').fill('Zeitschrift');
     await dialog.getByLabel('Ende / Ablauf').fill('2026-12-31');
     // 4 calendar months before 31 Dec → deadline 2026-08-31, already behind us. The calendar shows counts, never a title (C04).
+    await moreFields(page);
     await dialog.getByRole('spinbutton', { name: 'Kündigungsfrist' }).fill('4');
     await dialog.getByLabel('Einheit').selectOption('months');
     await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();

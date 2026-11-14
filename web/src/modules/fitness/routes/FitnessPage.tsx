@@ -17,6 +17,7 @@ import {
   PageAction,
   PageHeader,
   Tabs,
+  useAdvancedMenuItem,
   useOpenParam,
 } from '@/ui';
 import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
@@ -130,6 +131,7 @@ export default function FitnessPage() {
     await undoableWithToast(done, done, () => sessionRepo.update(s.id, doneToday(day)));
   }
 
+  const advancedItem = useAdvancedMenuItem('fitness');
   // Phone (0b-8 follow-up 15): the row names count and minutes only; the first exercises with sets and weights made
   // the meta two to four lines (rows 77–119 px). They stay in the entry's dialog and in the wide list.
   const narrow = usePageWidthAtLeast(48) === false;
@@ -228,6 +230,7 @@ export default function FitnessPage() {
             ...(view === 'food'
               ? [{ id: 'goal', label: t.fitness.goal.open, onSelect: () => setGoalOpen(true) }]
               : []),
+            advancedItem,
           ]}
         />
       </PageHeader>

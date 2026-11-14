@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { enable, ready } from './helpers';
+import { enable, moreFields, ready } from './helpers';
 import { openEditor } from './money-helpers';
 
 test.describe('Unterlagen: delete with undo, draft kept (B09)', () => {
@@ -42,6 +42,7 @@ test.describe('Unterlagen: delete with undo, draft kept (B09)', () => {
     await ready(page, '/vault?new=1');
     let dialog = page.getByRole('dialog');
     await dialog.getByLabel('Titel').fill('Versicherung');
+    await moreFields(page);
     await dialog.getByLabel('Notiz').fill('Police Nr. 4711, Anruf am Montag');
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).toHaveCount(0);
