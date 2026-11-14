@@ -163,9 +163,9 @@
     },
     "d1920--finance": {
       "height": 1887,
-      "buttons": 66,
+      "buttons": 65,
       "links": 14,
-      "icons": 69,
+      "icons": 66,
       "firstScreenActions": 52,
       "borders": 0,
       "shadows": 0,
@@ -750,10 +750,10 @@
       "signatureBlocks": 0
     },
     "p412--finance": {
-      "height": 2204,
+      "height": 2186,
       "buttons": 15,
       "links": 9,
-      "icons": 14,
+      "icons": 12,
       "firstScreenActions": 21,
       "borders": 0,
       "shadows": 0,
