@@ -32,12 +32,8 @@ interface Entry<T> {
 const EMPTY: Snapshot<never> = { has: false };
 const registry = new Map<string, Entry<unknown>>();
 
-/**
- * How long an unused query keeps running after its last subscriber left: covers re-mounts while navigating and
- * StrictMode, and keeps a page's data for a quick return (back to the overview or to finance shows its figures at
- * once instead of reading them again). The query stays live meanwhile, so what it holds is current.
- */
-export const LINGER_MS = 30_000;
+/** Grace period before an unused query stops: covers re-mounts while navigating and StrictMode. */
+const LINGER_MS = 50;
 
 function acquire<T>(
   key: string,
