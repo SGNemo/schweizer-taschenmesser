@@ -1,3 +1,5 @@
+import type { ImportDates } from '@/core/db/repo';
+
 /**
  * Markdown notes (Obsidian vaults, any `.md` file): optional front matter with `title` / `tags`, the
  * first heading as title, otherwise the file name. The text stays raw Markdown; `[[Wikilinks]]` are
@@ -111,7 +113,7 @@ const DATE =
 export function parseNoteDate(raw: string): number | undefined {
   const m = DATE.exec(unquote(raw));
   if (!m) return undefined;
-  const [y, mo, d, h = '0', mi = '0', sec = '0'] = m.slice(1, 7).map((v) => v ?? undefined);
+  const [y, mo, d, h = '0', mi = '0', sec = '0'] = m.slice(1, 7);
   const parts = [y, mo, d, h, mi, sec].map(Number) as [
     number,
     number,
@@ -126,12 +128,13 @@ export function parseNoteDate(raw: string): number | undefined {
     local.getMonth() !== parts[1] - 1 ||
     local.getDate() !== parts[2] ||
     parts[3] > 23 ||
-    parts[4] > 59
+    parts[4] > 59 ||
+    parts[5] > 59
   )
     return undefined;
   if (!m[7]) return local.getTime();
   const zoned = Date.parse(
-    `${y}-${mo}-${d}T${h.padStart(2, '0')}:${mi}:${sec.padStart(2, '0')}${m[7]}`,
+    `${y}-${mo}-${d}T${h.padStart(2, '0')}:${mi.padStart(2, '0')}:${sec.padStart(2, '0')}${m[7]}`,
   );
   return Number.isFinite(zoned) ? zoned : undefined;
 }
@@ -234,14 +237,19 @@ export function parseMarkdownNotes(files: PickedText[]): MarkdownNotesResult {
 
 /**
  * The dates an imported note keeps: the front matter first, the file's own date (ZIP entry, file
- * system) as the fallback for both. `undefined` when nothing is known (pasted text).
+ * system) for whatever is missing – but never a `createdAt` after a known `modified:` (a copied
+ * file is often younger than its text). `undefined` when nothing is known (pasted text).
  */
 export function noteDates(
   note: Pick<ParsedNote, 'createdAt' | 'updatedAt'>,
   fileDate?: number,
-): { createdAt: number; updatedAt?: number } | undefined {
-  const createdAt = note.createdAt ?? fileDate;
-  if (createdAt === undefined) return undefined;
+): ImportDates | undefined {
   const updatedAt = note.updatedAt ?? fileDate;
+  const createdAt =
+    note.createdAt ??
+    (note.updatedAt !== undefined && fileDate !== undefined
+      ? Math.min(note.updatedAt, fileDate)
+      : (note.updatedAt ?? fileDate));
+  if (createdAt === undefined) return undefined;
   return updatedAt === undefined ? { createdAt } : { createdAt, updatedAt };
 }

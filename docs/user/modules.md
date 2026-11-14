@@ -8,38 +8,38 @@ In the **module library** you turn modules on and off (when turning one off: kee
 
 <!-- modules:start -->
 
-| Area | Module | What it does | Status |
-|---|---|---|---|
-| **Plan** | Calendar | Events in month, week and day view | on by default |
-|  | Planner | Spreads your open to-dos over the coming days | optional |
-|  | To-dos | Tasks in lists with priorities, due date and subtasks | on by default |
-|  | Habits | Daily and weekly goals with rings | optional |
-|  | Time tracking | Start and stop with one click, projects and clients with colour and hourly rate | optional |
-|  | Weather | A page of its own for the weather at your place | on by default |
-|  | Clock | Add places and always see their time | preview |
-|  | Maps & places | Places and routes you need often | preview |
-|  | People | Never forget a birthday again and collect gifts per person | optional |
-| **Money** | Finances | Accounts, income and expenses with categories | on by default |
-|  | Invoices | Open invoices with amount, payee and due date | on by default |
-|  | Subscriptions | Subscriptions and recurring payments | on by default |
-|  | Budgets & savings goals | Spending limits per category (from Finances) and savings goals with deposits and progress | on for new installations |
-| **Household** | Lists | Shopping, packing lists and checklists | on for new installations |
-|  | Routines | Cleaning plan and household routines | on for new installations |
-|  | Pantry | What’s in the fridge, the cupboard and the freezer? | optional |
-|  | Fitness | Keep a rough log of training and food | preview |
-| **Knowledge** | Saved | Save links, reading, films, places and ideas | optional |
-|  | Notes | Notebook with formatted text (Markdown), a fixed scratchpad always at the top, pinning and search | optional |
-|  | Chat | Conversations with the built-in local model or your providers | preview |
-|  | Browser | Simple browser with tabs, bookmarks and a private mode | preview, Windows and Android apps only |
-|  | Feeds | Your subscribed feeds (news, blogs, podcasts) in one place, sorted by group | optional |
-|  | Mail | Inbox, search and reading mail | preview, Windows app only |
-|  | Music | Spotify on one page | preview |
-| **Vault** | Documents | IDs, contracts, insurance and warranties with end date, notice period and an attached file | optional |
-|  | Passwords | Password vault | optional |
-| **System** | Device status | Backup, sync, storage and updates of this device on one page | on for new installations |
-|  | This PC | Drives with a scan of the biggest folders and system info (processor, memory, battery, network) | optional, Windows app only |
-|  | Downloads | Downloads files | on for new installations, Windows app only |
-|  | Remote | Control media, volume, mouse and keyboard of your PC from your phone | preview, Android app only |
+| Area          | Module                  | What it does                                                                                      | Status                                     |
+| ------------- | ----------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| **Plan**      | Calendar                | Events in month, week and day view                                                                | on by default                              |
+|               | Planner                 | Spreads your open to-dos over the coming days                                                     | optional                                   |
+|               | To-dos                  | Tasks in lists with priorities, due date and subtasks                                             | on by default                              |
+|               | Habits                  | Daily and weekly goals with rings                                                                 | optional                                   |
+|               | Time tracking           | Start and stop with one click, projects and clients with colour and hourly rate                   | optional                                   |
+|               | Weather                 | A page of its own for the weather at your place                                                   | on by default                              |
+|               | Clock                   | Add places and always see their time                                                              | preview                                    |
+|               | Maps & places           | Places and routes you need often                                                                  | preview                                    |
+|               | People                  | Never forget a birthday again and collect gifts per person                                        | optional                                   |
+| **Money**     | Finances                | Accounts, income and expenses with categories                                                     | on by default                              |
+|               | Invoices                | Open invoices with amount, payee and due date                                                     | on by default                              |
+|               | Subscriptions           | Subscriptions and recurring payments                                                              | on by default                              |
+|               | Budgets & savings goals | Spending limits per category (from Finances) and savings goals with deposits and progress         | on for new installations                   |
+| **Household** | Lists                   | Shopping, packing lists and checklists                                                            | on for new installations                   |
+|               | Routines                | Cleaning plan and household routines                                                              | on for new installations                   |
+|               | Pantry                  | What’s in the fridge, the cupboard and the freezer?                                               | optional                                   |
+|               | Fitness                 | Keep a rough log of training and food                                                             | preview                                    |
+| **Knowledge** | Saved                   | Save links, reading, films, places and ideas                                                      | optional                                   |
+|               | Notes                   | Notebook with formatted text (Markdown), a fixed scratchpad always at the top, pinning and search | optional                                   |
+|               | Chat                    | Conversations with the built-in local model or your providers                                     | preview                                    |
+|               | Browser                 | Simple browser with tabs, bookmarks and a private mode                                            | preview, Windows and Android apps only     |
+|               | Feeds                   | Your subscribed feeds (news, blogs, podcasts) in one place, sorted by group                       | optional                                   |
+|               | Mail                    | Inbox, search and reading mail                                                                    | preview, Windows app only                  |
+|               | Music                   | Spotify on one page                                                                               | preview                                    |
+| **Vault**     | Documents               | IDs, contracts, insurance and warranties with end date, notice period and an attached file        | optional                                   |
+|               | Passwords               | Password vault                                                                                    | optional                                   |
+| **System**    | Device status           | Backup, sync, storage and updates of this device on one page                                      | on for new installations                   |
+|               | This PC                 | Drives with a scan of the biggest folders and system info (processor, memory, battery, network)   | optional, Windows app only                 |
+|               | Downloads               | Downloads files                                                                                   | on for new installations, Windows app only |
+|               | Remote                  | Control media, volume, mouse and keyboard of your PC from your phone                              | preview, Android app only                  |
 
 “On for new installations”: switched on when you install Nemo fresh. An installation that already existed stays as it is; there you turn the module on in the module library.
 
@@ -68,7 +68,7 @@ Highlights of the modules that start with a short line above:
   more (units, date calculator, time zones, dice, anonymous persona, text, images, PDF and **Developer** with Base64/URL, JSON, UUID, hash) can be turned on
   under "Manage tools". In the search (Ctrl+K) a calculation like "240 + 19 %" is computed right away, "Tool: …" opens a
   tool. The former scratch note now lives as the **scratchpad** at the top of Notes (your old text is carried over once).
-- **Import into Notes:** "Set up start data" on the Notes card (Module library) reads Markdown files (e.g. from an Obsidian folder, several at once, or pasted text) and Google Keep exports (the `.json` files from Google Takeout). You see a preview first and untick what you do not want; notes you already have are marked. Titles come from the front matter, the first heading or the file name; tags are kept as `#tags` in the text, Keep checklists become task lists, Keep notes in the trash or archive are left out. ZIP files: unzip them first.
+- **Import into Notes:** "Set up start data" on the Notes card (Module library) reads Markdown files (e.g. from an Obsidian folder, several at once, or pasted text) and Google Keep exports (the `.json` files from Google Takeout). You see a preview first and untick what you do not want; notes you already have are marked. Titles come from the front matter, the first heading or the file name; tags are kept as `#tags` in the text, Keep checklists become task lists, Keep notes in the trash or archive are left out. A ZIP file with a notes folder works too. Markdown notes keep their date (`created:`/`date:` and `modified:` in the front matter, else the file date); on other synced devices they show the import date.
 - **This PC** (Windows app only): analyse and clean up drives; the "System" tab shows processor, memory, battery, graphics and network.
 - **Habits** (Planen, off by default): goals with rings – a tick or a number like "8 glasses" – rest days that never count against you, a year grid, and reminders in a time window that stop once the day's goal is met ("Drink water" template). This is a new module; the old habit tracker of 0.3.x stays retired; its old data is not carried over into the new module, but it stays in the database and in every backup.
 - **Time tracking** (Planen, off by default): one click on a project starts the clock, pause and stop, manual entries, projects with colour, client and hourly rate, a week and month report with the amount (rounded to whole cents per entry) and CSV export. If you were away while the timer ran, the app asks – keep the time, deduct it as a break, or stop where you left – and never changes anything by itself. In an event, "Track time" starts the clock. This is a new module; the old time tracker of 0.3.x stays retired; its old data is not carried over into the new module, but it stays in the database and in every backup.

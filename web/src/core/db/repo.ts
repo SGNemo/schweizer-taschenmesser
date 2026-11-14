@@ -66,7 +66,7 @@ function dataOf(record: Record<string, unknown>): Record<string, unknown> {
  * Dates an import brings along (a note's `created:` / `modified:`): only the local envelope
  * `createdAt` / `updatedAt` take them. Field stamps (`_f`, HLC) stay "now", so sync and
  * last-write-wins see a fresh write. Out-of-range values fall back to now (never in the future,
- * `updatedAt` never before `createdAt`). Other devices derive both from the stamps (`mergeOps`).
+ * `updatedAt` never before `createdAt`; a missing `updatedAt` = `createdAt`). Other devices derive both from the stamps (`mergeOps`).
  */
 export interface ImportDates {
   createdAt: number;
@@ -74,26 +74,36 @@ export interface ImportDates {
 }
 
 /** The envelope times for a new row: `at` within (0, ts], `updatedAt` within [createdAt, ts]. */
-export function envelopeTimes(
-  ts: number,
-  at?: ImportDates,
-): { createdAt: number; updatedAt: number } {
+function envelopeTimes(ts: number, at?: ImportDates): { createdAt: number; updatedAt: number } {
   const ok = (v: number | undefined): v is number =>
     typeof v === 'number' && Number.isFinite(v) && v > 0 && v <= ts;
   if (!at || !ok(at.createdAt)) return { createdAt: ts, updatedAt: ts };
   const createdAt = Math.floor(at.createdAt);
-  const updatedAt = ok(at.updatedAt) ? Math.max(createdAt, Math.floor(at.updatedAt)) : createdAt;
+  // Missing = never changed since created; out of range (future, clock skew) = now.
+  const updatedAt =
+    at.updatedAt === undefined
+      ? createdAt
+      : ok(at.updatedAt)
+        ? Math.max(createdAt, Math.floor(at.updatedAt))
+        : ts;
   return { createdAt, updatedAt };
 }
 
 /**
- * Nobody touched the record since it was created: every field still carries the creation stamp
- * (an edit, a remote change, a delete or a restore stamps a newer one). Independent of imported
- * envelope dates, unlike `updatedAt === createdAt`.
+ * Nobody touched the record since it was created: every field still carries the one creation stamp,
+ * and `updatedAt` is either `createdAt` (a plain create) or older than that stamp (imported dates).
+ * An edit, delete or restore stamps again; a remote change or a replace-mode backup restore sets
+ * `updatedAt` to the stamp's own wall time while `createdAt` stays – so all of them count as touched.
+ * Doubtful cases count as touched: import undo then keeps the record.
  */
-export function untouchedSinceCreated(row: { _f: Record<string, string> }): boolean {
-  const stamps = new Set(Object.values(row._f));
-  return stamps.size <= 1;
+export function untouchedSinceCreated(row: {
+  createdAt: number;
+  updatedAt: number;
+  _f: Record<string, string>;
+}): boolean {
+  const stamps = [...new Set(Object.values(row._f))];
+  if (stamps.length !== 1) return false;
+  return row.updatedAt === row.createdAt || row.updatedAt < Number(stamps[0]!.slice(0, 13));
 }
 
 export interface RepoOptions {

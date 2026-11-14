@@ -4403,12 +4403,13 @@ export const de = {
       folder: 'Ordner wählen',
       filesLabel: 'Einzelne Dateien',
       folderLabel: 'Ganzer Ordner',
-      hint: '.md- und .txt-Dateien. Ein Ordner wird zum Notizbuch, seine Dateien zu Seiten. Ein Obsidian-Export (oder ein Ordner mit mehreren Unterordnern) wird je Unterordner ein Notizbuch; tiefere Ordner werden ein Schlagwort.',
+      hint: '.md- und .txt-Dateien. Ein Ordner wird zum Notizbuch, seine Dateien zu Seiten. Ein Obsidian-Export (oder ein Ordner mit mehreren Unterordnern) wird je Unterordner ein Notizbuch; tiefere Ordner werden ein Schlagwort. Seiten behalten ihr Datum (created:/modified: oder das Dateidatum).',
       none: 'Keine passenden Dateien gefunden.',
       confirm: 'Importieren',
       summary: (pages: number, books: number) =>
         `${pages === 1 ? '1 Seite' : `${pages} Seiten`}${books ? `, ${books === 1 ? '1 Notizbuch' : `${books} Notizbücher`}` : ''} gefunden.`,
-      done: (n: number) => (n === 1 ? '1 Seite importiert.' : `${n} Seiten importiert.`),
+      done: (n: number) =>
+        `${n === 1 ? '1 Seite' : `${n} Seiten`} importiert – nach ihrem eigenen Datum einsortiert.`,
       duplicates: (n: number) =>
         n === 1
           ? '1 doppelte Seite wird übersprungen.'
@@ -6631,7 +6632,7 @@ export const de = {
     notes: {
       file: 'Markdown, Obsidian, Evernote oder Google Keep',
       fileHint:
-        'Wähle .md-Dateien (z. B. aus deinem Obsidian-Ordner, mehrere auf einmal), eine ZIP-Datei mit einem Notizordner, eine Evernote-Datei (.enex) oder die .json-Dateien aus dem Google-Takeout (Keep). Titel, Checklisten und #Tags werden übernommen, Ordner werden zu Notizbüchern. Anhänge (Bilder, Dateien) kann Nemo in Notizen nicht speichern; sie werden im Bericht gezählt.',
+        'Wähle .md-Dateien (z. B. aus deinem Obsidian-Ordner, mehrere auf einmal), eine ZIP-Datei mit einem Notizordner, eine Evernote-Datei (.enex) oder die .json-Dateien aus dem Google-Takeout (Keep). Titel, Checklisten und #Tags werden übernommen, Ordner werden zu Notizbüchern. Markdown-Notizen behalten ihr Datum (created:/modified: oder das Dateidatum). Anhänge (Bilder, Dateien) kann Nemo in Notizen nicht speichern; sie werden im Bericht gezählt.',
       text: 'Markdown einfügen',
       textHint: 'Der eingefügte Text wird eine Notiz; eine erste Überschrift wird zum Titel.',
       textLabel: 'Markdown-Text',

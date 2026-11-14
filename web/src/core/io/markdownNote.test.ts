@@ -97,8 +97,16 @@ describe('D17 (round 5): dates from the front matter', () => {
 
   it('reads a zone when given; impossible or foreign values are ignored', () => {
     expect(parseNoteDate('2025-12-01T09:30:00Z')).toBe(Date.UTC(2025, 11, 1, 9, 30));
+    expect(parseNoteDate('2025-12-01Z')).toBe(Date.UTC(2025, 11, 1));
     expect(parseNoteDate('2025-12-01T10:30+01:00')).toBe(Date.UTC(2025, 11, 1, 9, 30));
-    for (const bad of ['2025-02-31', '01.12.2025', 'gestern', '', '2025-12-01 25:00'])
+    for (const bad of [
+      '2025-02-31',
+      '01.12.2025',
+      'gestern',
+      '',
+      '2025-12-01 25:00',
+      '2025-12-01 09:30:75',
+    ])
       expect(parseNoteDate(bad), bad).toBeUndefined();
     const note = parseMarkdownNote('---\ncreated: bald\n---\nText')!;
     expect(note.createdAt).toBeUndefined();
@@ -113,6 +121,9 @@ describe('D17 (round 5): dates from the front matter', () => {
     expect(noteDates({ createdAt: 1 }, 5)).toEqual({ createdAt: 1, updatedAt: 5 });
     expect(noteDates({ createdAt: 1, updatedAt: 2 }, 5)).toEqual({ createdAt: 1, updatedAt: 2 });
     expect(noteDates({ createdAt: 1 })).toEqual({ createdAt: 1 });
+    // Only modified: known and a younger copy date – created never after modified.
+    expect(noteDates({ updatedAt: 3 }, 9)).toEqual({ createdAt: 3, updatedAt: 3 });
+    expect(noteDates({ updatedAt: 3 })).toEqual({ createdAt: 3, updatedAt: 3 });
     expect(noteDates({})).toBeUndefined();
   });
 });

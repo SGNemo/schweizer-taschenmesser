@@ -58,7 +58,8 @@ export function zipEntryDates(bytes: Uint8Array): Map<string, number> {
     const name = strFromU8(bytes.subarray(at + 46, at + 46 + nameLength), !(flags & 0x800));
     const month = (date >> 5) & 15;
     const day = date & 31;
-    if (month >= 1 && month <= 12 && day >= 1) {
+    const valid = time >> 11 <= 23 && ((time >> 5) & 63) <= 59 && (time & 31) <= 29;
+    if (valid && month >= 1 && month <= 12 && day >= 1) {
       const local = new Date(
         (date >> 9) + 1980,
         month - 1,

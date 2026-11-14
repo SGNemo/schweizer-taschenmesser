@@ -8,38 +8,38 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 
 <!-- modules:start -->
 
-| Bereich | Modul | Was es tut | Status |
-|---|---|---|---|
-| **Planen** | Kalender | Termine in Monats-, Wochen- und Tagesansicht | standardmäßig an |
-|  | Planer | Verteilt deine offenen ToDos auf die nächsten Tage | optional |
-|  | ToDos | Aufgaben in Listen mit Prioritäten, Fälligkeitsdatum und Unteraufgaben | standardmäßig an |
-|  | Gewohnheiten | Tägliche und wöchentliche Ziele mit Ringen | optional |
-|  | Zeiterfassung | Start und Stopp mit einem Klick, Projekte und Kunden mit Farbe und Stundensatz | optional |
-|  | Wetter | Eine eigene Seite für das Wetter deines Ortes | standardmäßig an |
-|  | Uhr | Orte eintragen und ihre Uhrzeit immer sehen | Vorschau |
-|  | Karten & Orte | Orte und Wege, die du oft brauchst | Vorschau |
-|  | Personen | Geburtstage nie mehr vergessen und Geschenke je Person sammeln | optional |
-| **Geld** | Finanzen | Konten, Einnahmen und Ausgaben mit Kategorien | standardmäßig an |
-|  | Rechnungen | Offene Rechnungen mit Betrag, Empfänger und Fälligkeit | standardmäßig an |
-|  | Abos | Abos und wiederkehrende Zahlungen | standardmäßig an |
-|  | Budgets & Sparziele | Ausgabenlimits je Kategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt | bei Neuinstallationen an |
-| **Haushalt** | Listen | Einkauf, Packlisten und Checklisten | bei Neuinstallationen an |
-|  | Routinen | Putzplan und Haushalts-Routinen | bei Neuinstallationen an |
-|  | Vorräte | Was ist im Kühlschrank, im Vorratsschrank und im Tiefkühler? | optional |
-|  | Fitness | Training und Essen grob festhalten | Vorschau |
-| **Wissen** | Merkliste | Links, Lesestoff, Filme, Orte und Ideen merken | optional |
-|  | Notizen | Notizblock mit formatiertem Text (Markdown), einem festen Zettel immer oben, Anheften und Suche | optional |
-|  | Chat | Gespräche mit dem eingebauten lokalen Modell oder deinen Anbietern | Vorschau |
-|  | Browser | Einfacher Browser mit Tabs, Lesezeichen und privatem Modus | Vorschau, nur Windows- und Android-App |
-|  | Feeds | Deine abonnierten Feeds (Nachrichten, Blogs, Podcasts) an einem Ort, nach Gruppen sortiert | optional |
-|  | E-Mail | Posteingang, Suche und Mails lesen | Vorschau, nur Windows-App |
-|  | Musik | Spotify auf einer Seite | Vorschau |
-| **Tresor** | Unterlagen | Ausweise, Verträge, Versicherungen und Garantien mit Ende, Kündigungsfrist und angehängter Datei | optional |
-|  | Passwörter | Passwort-Tresor | optional |
-| **System** | Gerätestatus | Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite | bei Neuinstallationen an |
-|  | Dieser PC | Laufwerke mit Scan der größten Ordner und Systeminfo (Prozessor, Speicher, Akku, Netzwerk) | optional, nur Windows-App |
-|  | Downloads | Lädt Dateien herunter | bei Neuinstallationen an, nur Windows-App |
-|  | Fernbedienung | Steuere Medien, Lautstärke, Maus und Tastatur deines PCs vom Handy aus | Vorschau, nur Android-App |
+| Bereich      | Modul               | Was es tut                                                                                       | Status                                    |
+| ------------ | ------------------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------- |
+| **Planen**   | Kalender            | Termine in Monats-, Wochen- und Tagesansicht                                                     | standardmäßig an                          |
+|              | Planer              | Verteilt deine offenen ToDos auf die nächsten Tage                                               | optional                                  |
+|              | ToDos               | Aufgaben in Listen mit Prioritäten, Fälligkeitsdatum und Unteraufgaben                           | standardmäßig an                          |
+|              | Gewohnheiten        | Tägliche und wöchentliche Ziele mit Ringen                                                       | optional                                  |
+|              | Zeiterfassung       | Start und Stopp mit einem Klick, Projekte und Kunden mit Farbe und Stundensatz                   | optional                                  |
+|              | Wetter              | Eine eigene Seite für das Wetter deines Ortes                                                    | standardmäßig an                          |
+|              | Uhr                 | Orte eintragen und ihre Uhrzeit immer sehen                                                      | Vorschau                                  |
+|              | Karten & Orte       | Orte und Wege, die du oft brauchst                                                               | Vorschau                                  |
+|              | Personen            | Geburtstage nie mehr vergessen und Geschenke je Person sammeln                                   | optional                                  |
+| **Geld**     | Finanzen            | Konten, Einnahmen und Ausgaben mit Kategorien                                                    | standardmäßig an                          |
+|              | Rechnungen          | Offene Rechnungen mit Betrag, Empfänger und Fälligkeit                                           | standardmäßig an                          |
+|              | Abos                | Abos und wiederkehrende Zahlungen                                                                | standardmäßig an                          |
+|              | Budgets & Sparziele | Ausgabenlimits je Kategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt    | bei Neuinstallationen an                  |
+| **Haushalt** | Listen              | Einkauf, Packlisten und Checklisten                                                              | bei Neuinstallationen an                  |
+|              | Routinen            | Putzplan und Haushalts-Routinen                                                                  | bei Neuinstallationen an                  |
+|              | Vorräte             | Was ist im Kühlschrank, im Vorratsschrank und im Tiefkühler?                                     | optional                                  |
+|              | Fitness             | Training und Essen grob festhalten                                                               | Vorschau                                  |
+| **Wissen**   | Merkliste           | Links, Lesestoff, Filme, Orte und Ideen merken                                                   | optional                                  |
+|              | Notizen             | Notizblock mit formatiertem Text (Markdown), einem festen Zettel immer oben, Anheften und Suche  | optional                                  |
+|              | Chat                | Gespräche mit dem eingebauten lokalen Modell oder deinen Anbietern                               | Vorschau                                  |
+|              | Browser             | Einfacher Browser mit Tabs, Lesezeichen und privatem Modus                                       | Vorschau, nur Windows- und Android-App    |
+|              | Feeds               | Deine abonnierten Feeds (Nachrichten, Blogs, Podcasts) an einem Ort, nach Gruppen sortiert       | optional                                  |
+|              | E-Mail              | Posteingang, Suche und Mails lesen                                                               | Vorschau, nur Windows-App                 |
+|              | Musik               | Spotify auf einer Seite                                                                          | Vorschau                                  |
+| **Tresor**   | Unterlagen          | Ausweise, Verträge, Versicherungen und Garantien mit Ende, Kündigungsfrist und angehängter Datei | optional                                  |
+|              | Passwörter          | Passwort-Tresor                                                                                  | optional                                  |
+| **System**   | Gerätestatus        | Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite                                 | bei Neuinstallationen an                  |
+|              | Dieser PC           | Laufwerke mit Scan der größten Ordner und Systeminfo (Prozessor, Speicher, Akku, Netzwerk)       | optional, nur Windows-App                 |
+|              | Downloads           | Lädt Dateien herunter                                                                            | bei Neuinstallationen an, nur Windows-App |
+|              | Fernbedienung       | Steuere Medien, Lautstärke, Maus und Tastatur deines PCs vom Handy aus                           | Vorschau, nur Android-App                 |
 
 „Bei Neuinstallationen an“: eingeschaltet, wenn du Nemo neu installierst. Eine Installation, die es schon gab, bleibt, wie sie ist; dort schaltest du das Modul in der Modul-Bibliothek ein.
 
@@ -68,7 +68,7 @@ Besonderheiten der Module, die oben nur eine kurze Zeile haben:
   weitere (Einheiten, Datumsrechner, Zeitzonen, Würfel, Anonyme Persona, Text, Bilder, PDF und **Entwickler** mit Base64/URL, JSON, UUID, Hash) schaltest du
   unter „Werkzeuge verwalten“ ein. In der Suche (Strg+K) wird eine Rechnung wie „240 + 19 %“ sofort gerechnet, „Werkzeug: …“ öffnet ein
   Werkzeug. Den früheren Notizzettel findest du jetzt als **Zettel** oben in den Notizen (dein alter Text wird einmal übernommen).
-- **Import in Notizen:** „Importieren“ auf der Karte der Notizen (Modul-Bibliothek) liest Markdown-Dateien (z. B. aus einem Obsidian-Ordner, auch mehrere auf einmal, oder eingefügten Text) und Google-Keep-Exporte (die `.json`-Dateien aus dem Google-Takeout). Du siehst zuerst eine Vorschau und nimmst Häkchen weg, was du nicht willst; schon vorhandene Notizen sind markiert. Titel kommen aus dem Kopfbereich, der ersten Überschrift oder dem Dateinamen; Tags bleiben als `#Tags` im Text, Keep-Checklisten werden zu Aufgabenlisten, Keep-Notizen im Papierkorb oder Archiv bleiben draußen. ZIP-Dateien bitte vorher entpacken.
+- **Import in Notizen:** „Importieren“ auf der Karte der Notizen (Modul-Bibliothek) liest Markdown-Dateien (z. B. aus einem Obsidian-Ordner, auch mehrere auf einmal, oder eingefügten Text) und Google-Keep-Exporte (die `.json`-Dateien aus dem Google-Takeout). Du siehst zuerst eine Vorschau und nimmst Häkchen weg, was du nicht willst; schon vorhandene Notizen sind markiert. Titel kommen aus dem Kopfbereich, der ersten Überschrift oder dem Dateinamen; Tags bleiben als `#Tags` im Text, Keep-Checklisten werden zu Aufgabenlisten, Keep-Notizen im Papierkorb oder Archiv bleiben draußen. Auch eine ZIP-Datei mit einem Notizordner geht. Markdown-Notizen behalten ihr Datum (`created:`/`date:` und `modified:` im Kopfbereich, sonst das Dateidatum); auf anderen synchronisierten Geräten zeigen sie das Importdatum.
 - **Dieser PC** (nur Windows-App): Laufwerke analysieren und aufräumen, im Tab „System“ Prozessor, Speicher, Akku, Grafik und Netzwerk.
 - **Gewohnheiten** (Planen, standardmäßig aus): Ziele mit Ringen – ein Haken oder eine Zahl wie „8 Gläser“ –, Pausentage, die nie gegen dich zählen, ein Jahresraster und Erinnerungen im Zeitfenster, die aufhören, sobald das Tagesziel erreicht ist (Vorlage „Wasser trinken“). Das ist ein neues Modul; der alte Habit-Tracker von 0.3.x bleibt stillgelegt; seine alten Daten werden nicht ins neue Modul übernommen, bleiben aber in der Datenbank und in jedem Backup.
 - **Zeiterfassung** (Planen, standardmäßig aus): ein Klick auf ein Projekt startet die Uhr, Pause und Stopp, manuelle Einträge, Projekte mit Farbe, Kunde und Stundensatz, Wochen- und Monatsauswertung mit Betrag (je Eintrag auf ganze Cent gerundet) und CSV-Export. Warst du bei laufender Uhr weg, fragt die App nach – Zeit behalten, als Pause abziehen oder dort stoppen, wo du weg warst – und ändert nie etwas von selbst. Im Termin startet „Zeit erfassen“ die Uhr. Das ist ein neues Modul; die alte Zeiterfassung von 0.3.x bleibt stillgelegt; ihre alten Daten werden nicht ins neue Modul übernommen, bleiben aber in der Datenbank und in jedem Backup.

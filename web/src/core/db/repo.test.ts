@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { setNow } from '@/core/time/now';
 import { createTestDb } from '@/test-utils';
 import type { TaschenmesserDB } from './db';
+import { formatHlc } from './hlc';
 import { createRepo, type Repo, untouchedSinceCreated } from './repo';
 
 const schema = z.object({
@@ -194,12 +195,17 @@ describe('import dates (D17, round 5)', () => {
         data: { title: 'swapped', done: false },
         at: { createdAt: clock - day, updatedAt: clock - 5 * day },
       },
+      {
+        data: { title: 'future edit', done: false },
+        at: { createdAt: clock - day, updatedAt: clock + day },
+      },
     ]);
     expect(rows.map((r) => [r.createdAt, r.updatedAt])).toEqual([
       [clock, clock],
       [clock, clock],
       [clock - day, clock - day],
       [clock - day, clock - day],
+      [clock - day, clock],
     ]);
   });
 
@@ -222,5 +228,17 @@ describe('untouchedSinceCreated', () => {
     clock += 1;
     const u = await repo.update(r!.id, { done: true });
     expect(untouchedSinceCreated(u)).toBe(false);
+  });
+
+  it('a replace-mode backup restore (one fresh stamp, updatedAt = its wall time) is touched', () => {
+    const stamp = formatHlc(clock + 5, 0, 'abcdefgh');
+    const restored = {
+      createdAt: clock - 1000,
+      updatedAt: clock + 5,
+      _f: { title: stamp, deletedAt: stamp },
+    };
+    expect(untouchedSinceCreated(restored)).toBe(false);
+    // The same row straight from an import with its own dates is untouched.
+    expect(untouchedSinceCreated({ ...restored, updatedAt: clock - 10 })).toBe(true);
   });
 });

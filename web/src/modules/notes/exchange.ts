@@ -1,4 +1,5 @@
 import { markdownToPlain, plainToMarkdown } from './editor/markdown';
+import type { ImportDates } from '@/core/db/repo';
 import { noteDates, parseMarkdownNote, type ParsedNote } from '@/core/io/markdownNote';
 import { isHiddenPath } from '@/importers/files';
 import { placeOf, stripAttachments, withFolderTag } from '@/importers/obsidian/parse';
@@ -67,7 +68,7 @@ export interface ImportedPage {
   title: string;
   body: string;
   /** Front matter `created:`/`date:`, else the file date (epoch ms). */
-  dates?: { createdAt: number; updatedAt?: number };
+  dates?: ImportDates;
 }
 
 /** Files the notes import reads as pages. */
