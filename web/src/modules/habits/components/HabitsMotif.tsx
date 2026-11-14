@@ -1,6 +1,6 @@
 /**
- * The habits motif for the shared `EmptyState`: four separate day boxes, three ticked, the fourth one faint (no
- * missed slot). Drawn like the signature marks (stroke 1.5 on a 24-unit height, `currentColor`). Decoration only.
+ * The habits motif for the shared `EmptyState`: four separate day boxes, three ticked, the fourth one faint (still
+ * open, not missed). Drawn like the signature marks (stroke 1.5 on a 24-unit height, `currentColor`). Decoration only.
  */
 export function HabitsMotif() {
   return (

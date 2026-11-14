@@ -61,7 +61,6 @@
 /* Inside a dashboard widget: small mark, one line, no extra height. */
 .emptyCompact {
   flex-direction: row;
-  justify-content: flex-start;
   flex-wrap: wrap;
   text-align: left;
   padding: var(--space-2) 0;
