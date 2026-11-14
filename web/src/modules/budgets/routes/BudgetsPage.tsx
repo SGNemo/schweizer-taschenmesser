@@ -186,7 +186,7 @@ export default function BudgetsPage() {
                   ) : null}
                 </EmptyState>
               ) : null}
-              <ItemList layout="grid" label={t.budgets.tabBudgets}>
+              <ItemList layout="grid" label={t.budgets.listBudgets}>
                 {rows.map((r) => {
                   const b = r.budget;
                   const s = r.status;
