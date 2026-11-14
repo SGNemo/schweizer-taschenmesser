@@ -230,6 +230,13 @@ export interface ModuleIdentity {
    * compares it with the page.
    */
   tabs?: boolean;
+  /**
+   * The module's entry page puts a hint above the head (`HeroSlot area="notice"`) that depends on a read (the weather's
+   * severe-weather hint needs the forecast): the frame shows the head and the page only once the page says the read is
+   * back (`useHeadReady`), at most after 1.5 s, so the hint never pushes them down (0b-8). Guard:
+   * `e2e/seed/open-shift.seed.spec.ts`.
+   */
+  notice?: boolean;
 }
 
 export type WidgetSize = 's' | 'm' | 'l';

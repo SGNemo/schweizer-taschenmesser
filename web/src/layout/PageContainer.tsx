@@ -16,11 +16,14 @@ import { PageLoadingCard } from './PageLoadingCard';
 export function PageContainer({
   variant = 'content',
   hue,
+  held = false,
   children,
 }: {
   variant?: PageLayout;
   /** Module pages: the module's hue (`manifest.identity`), read by the header, charts and empty states via `--module-color`. */
   hue?: ModuleHue;
+  /** Laid out but not painted (and busy) while the frame waits for the page's first read (`layout/noticeHold`). */
+  held?: boolean;
   children: ReactNode;
 }) {
   const [store] = useState(createPageWidthStore);
@@ -41,6 +44,8 @@ export function PageContainer({
         className={`${styles.page} ${styles[variant]}`}
         data-layout={variant}
         data-hue={hue}
+        data-held={held || undefined}
+        aria-busy={held || undefined}
         data-testid="page"
       >
         {children}
