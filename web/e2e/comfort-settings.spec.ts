@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { enableExample, ready, showAllWidgets, openAppearanceGroup } from './helpers';
+import { settingsSearch } from './settingsSearch';
 
 const isPhone = (info: { project: { name: string } }) => info.project.name === 'pixel-7';
 
@@ -74,7 +75,8 @@ test('reset a section: back to the default, undo brings the value back', async (
 test('phone: the search stays within reach inside a category', async ({ page }, info) => {
   test.skip(!isPhone(info), 'phone layout');
   await ready(page, '/settings/darstellung');
-  const search = page.getByRole('searchbox', { name: 'Einstellungen durchsuchen' });
+  // An icon in the title line opens it (0b-E).
+  const search = await settingsSearch(page);
   await expect(search).toBeVisible();
   await page.mouse.wheel(0, 1500);
   await expect(search).toBeInViewport();

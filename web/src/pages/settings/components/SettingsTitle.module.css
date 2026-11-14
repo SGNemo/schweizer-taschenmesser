@@ -39,6 +39,11 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Phone: the search icon at the end of the title line (44 px, beside the title and never over it). */
+.tool {
+  flex: none;
+  margin-inline-end: calc(-1 * var(--space-2));
+}
 /* The way back (phone): a 44 px target of its own in the plate's place, beside the title and never over it. */
 .back {
   flex: none;

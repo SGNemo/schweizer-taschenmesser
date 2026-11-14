@@ -27,8 +27,10 @@
   z-index: calc(var(--z-sticky) - 1);
   flex: none;
   align-self: stretch;
-  /* Bleeds through the page gutters up to the shell's edges; the hairline below it is the one line of the head. */
-  margin: 0 calc(-1 * var(--frame-bleed-x, 0px)) var(--space-4);
+  /* Bleeds through the page gutters up to the shell's edges; the hairline below it is the one line of the head. The
+     right gutter is narrower by a classic scrollbar's width where the shell sets `--frame-bleed-end` (AppShell). */
+  margin: 0 calc(-1 * var(--frame-bleed-end, var(--frame-bleed-x, 0px))) var(--space-4)
+    calc(-1 * var(--frame-bleed-x, 0px));
   background: var(--bg);
   border-bottom: 1px solid var(--border);
   color: var(--text);
@@ -40,20 +42,22 @@
   width: 100%;
   max-width: var(--head-max, none);
   margin-inline: auto;
-  padding: var(--head-pad) var(--frame-bleed-x, var(--space-5)) 0;
+  --bleed-start: var(--frame-bleed-x, var(--space-5));
+  --bleed-end: var(--frame-bleed-end, var(--bleed-start));
+  padding: var(--head-pad) var(--bleed-end) 0 var(--bleed-start);
 }
 .inner[data-width='narrow'] {
-  --head-max: calc(var(--page-narrow) + 2 * var(--frame-bleed-x, var(--space-5)));
+  --head-max: calc(var(--page-narrow) + var(--bleed-start) + var(--bleed-end));
 }
 .inner[data-width='content'] {
-  --head-max: calc(var(--page-content) + 2 * var(--frame-bleed-x, var(--space-5)));
+  --head-max: calc(var(--page-content) + var(--bleed-start) + var(--bleed-end));
 }
 .inner[data-width='reading'] {
-  --head-max: calc(var(--page-reading) + 2 * var(--frame-bleed-x, var(--space-5)));
+  --head-max: calc(var(--page-reading) + var(--bleed-start) + var(--bleed-end));
 }
 .inner[data-width='wide'],
 .inner[data-width='split'] {
-  --head-max: calc(var(--page-wide) + 2 * var(--frame-bleed-x, var(--space-5)));
+  --head-max: calc(var(--page-wide) + var(--bleed-start) + var(--bleed-end));
 }
 
 /* The title row: plate · eyebrow + h1 · figure (pushed to the right) · actions. One line, never wraps. */

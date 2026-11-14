@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { openAppearanceGroup, ready } from './helpers';
+import { settingsSearch } from './settingsSearch';
 
 /**
  * The time next to the Nemo logo: right of the wordmark in the sidebar head, "14"/"07" under the mark of the
@@ -146,8 +147,8 @@ test.describe('desktop (1920x1080)', () => {
 
   test('the settings search finds it as "uhr" and "clock"', async ({ page }) => {
     await ready(page, '/settings');
+    const search = await settingsSearch(page);
     for (const q of ['uhr', 'clock']) {
-      const search = page.getByRole('searchbox').first();
       await search.fill(q);
       await expect(page.getByText('Uhrzeit neben dem Logo').first()).toBeVisible();
     }

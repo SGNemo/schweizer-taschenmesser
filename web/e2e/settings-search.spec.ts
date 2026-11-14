@@ -1,11 +1,16 @@
 import { expect, test, type Page } from '@playwright/test';
 import { ready } from './helpers';
+import { settingsSearch } from './settingsSearch';
 
-const box = (page: Page) => page.getByRole('search').getByPlaceholder('Einstellung suchen …');
+const box = async (page: Page) => {
+  const field = await settingsSearch(page);
+  await expect(field).toHaveAttribute('placeholder', 'Einstellung suchen …');
+  return field;
+};
 
 test('a sub-group is found by its name and shows the path', async ({ page }) => {
   await ready(page, '/settings');
-  await box(page).fill('verwalten');
+  await (await box(page)).fill('verwalten');
   const hit = page
     .getByRole('search')
     .getByRole('link', { name: /Verwalten/ })
@@ -14,7 +19,7 @@ test('a sub-group is found by its name and shows the path', async ({ page }) => 
   await hit.click();
   await expect(page).toHaveURL(/\/settings\/allgemein#profiles$/);
 
-  await box(page).fill('änderungsverlauf');
+  await (await box(page)).fill('änderungsverlauf');
   await expect(
     page
       .getByRole('search')
@@ -27,7 +32,7 @@ test('a quick switch can be changed inside the hit, a vault setting offers none'
   page,
 }) => {
   await ready(page, '/settings');
-  await box(page).fill('dunkel');
+  await (await box(page)).fill('dunkel');
   const quick = page.getByTestId('search-quick-theme');
   await expect(quick).toBeVisible();
   await quick.getByRole('button', { name: 'Dunkel', exact: true }).click();
@@ -35,13 +40,13 @@ test('a quick switch can be changed inside the hit, a vault setting offers none'
   // The page stays where it is: the change needed no navigation.
   await expect(page).toHaveURL(/\/settings$/);
 
-  await box(page).fill('tresor sperre');
+  await (await box(page)).fill('tresor sperre');
   await expect(page.locator('[data-testid^="search-quick-"]')).toHaveCount(0);
 });
 
 test('a module setting is found with its page block in the path', async ({ page }) => {
   await ready(page, '/settings');
-  await box(page).fill('erledigte aufgaben');
+  await (await box(page)).fill('erledigte aufgaben');
   const hit = page
     .getByRole('search')
     .getByRole('link', { name: /Erledigte Aufgaben anzeigen/ })

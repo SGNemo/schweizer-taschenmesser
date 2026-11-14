@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react';
+import { useContext, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import type { AreaId, ModuleHue } from '@/core/modules/types';
 import { tSettingsV3 } from '@/strings.settingsV3';
 import { HuePlate, Icon, type IconName } from '@/ui';
+import { SettingsSearchSlot } from '../searchSlot';
 import styles from './SettingsTitle.module.css';
 
 export interface SettingsTitleProps {
@@ -46,6 +47,8 @@ export function SettingsTitle({
 }: SettingsTitleProps) {
   // The button shows a chevron only: its name says that it leads back, and where to ("Zurück: Einstellungen").
   const backTo = tSettingsV3.use().backTo;
+  // Phone: the search icon at the end of the title line (empty on the desktop).
+  const search = useContext(SettingsSearchSlot);
   return (
     <header
       className={styles.head}
@@ -68,6 +71,7 @@ export function SettingsTitle({
             {title}
           </h1>
         </div>
+        {search ? <div className={styles.tool}>{search}</div> : null}
       </div>
       {description || actions ? (
         <div className={styles.below}>

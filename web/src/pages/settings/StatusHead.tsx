@@ -1,7 +1,9 @@
+import { useContext } from 'react';
 import { StatusLineLink } from '@/core/status/StatusLineLink';
 import { tSettingsV3 } from '@/strings.settingsV3';
 import { STATUS_LOOK } from './categoryLook';
 import { PageHead } from './PageHead';
+import { SettingsSearchSlot } from './searchSlot';
 import { useSettingsStatus } from './useSettingsStatus';
 import styles from './StatusHead.module.css';
 
@@ -12,6 +14,8 @@ import styles from './StatusHead.module.css';
 export function StatusHead({ title }: { title: string }) {
   const v3 = tSettingsV3.use();
   const tiles = useSettingsStatus();
+  // Phone: the search icon at the end of the title row (empty on the desktop).
+  const search = useContext(SettingsSearchSlot);
   return (
     <PageHead
       {...STATUS_LOOK}
@@ -19,6 +23,7 @@ export function StatusHead({ title }: { title: string }) {
       eyebrow={v3.statusEyebrow}
       title={title}
       size="tall"
+      tool={search}
       testId="settings-head"
     >
       <section aria-label={v3.statusLabel}>

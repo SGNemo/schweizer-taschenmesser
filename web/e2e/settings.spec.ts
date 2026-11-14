@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { enable, openFoldedGroup, ready, openAppearanceGroup } from './helpers';
+import { settingsSearch } from './settingsSearch';
 
 const isPhone = (info: { project: { name: string } }) => info.project.name === 'pixel-7';
 const categoryNav = (page: Page) =>
@@ -93,7 +94,7 @@ test('search finds a setting by its description, jumps there and highlights it',
   page,
 }) => {
   await ready(page, '/settings');
-  await page.getByRole('searchbox', { name: 'Einstellungen durchsuchen' }).fill('Tastenkürzel');
+  await (await settingsSearch(page)).fill('Tastenkürzel');
   // "Tastenkürzel" is also a section of its own (Allgemein); the hit under Schnellerfassung is the hotkey.
   const hit = page
     .getByRole('link', { name: /Tastenkürzel/ })
