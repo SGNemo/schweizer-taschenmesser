@@ -70,7 +70,7 @@ export const budgets: Strings['budgets'] = {
   },
   title: 'Budgets & savings goals',
   tabs: 'Section',
-  tabBudgets: 'Month',
+  tabBudgets: 'Limits',
   listBudgets: 'Budgets',
   tabGoals: 'Savings goals',
   addBudget: 'Add budget',

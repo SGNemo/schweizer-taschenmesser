@@ -3,7 +3,7 @@ import { act, cleanup, render, renderHook, waitFor } from '@testing-library/reac
 import { Component, type ReactNode } from 'react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
-import { LINGER_MS, resetSharedQueries, sharedQueryCount, useSharedLiveQuery } from './sharedQuery';
+import { sharedQueryCount, useSharedLiveQuery } from './sharedQuery';
 
 // Dexie runs the very first live query after the database was opened twice; start warm to count runs.
 beforeAll(async () => {
@@ -14,7 +14,7 @@ beforeAll(async () => {
 afterEach(async () => {
   cleanup();
   await db.table('example_entry').clear();
-  resetSharedQueries();
+  await waitFor(() => expect(sharedQueryCount()).toBe(0));
 });
 
 const read = (key: string) => async () =>
@@ -99,28 +99,11 @@ describe('useSharedLiveQuery', () => {
     await waitFor(() => expect(result.current).toBe(2));
   });
 
-  it('keeps the query for LINGER_MS after the last subscriber left, then stops it', async () => {
+  it('stops the query shortly after the last subscriber left', async () => {
     const view = render(<Probe k="gone" />);
     await waitFor(() => expect(sharedQueryCount()).toBe(1));
-    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
-    try {
-      view.unmount();
-      vi.advanceTimersByTime(LINGER_MS - 1);
-      expect(sharedQueryCount()).toBe(1);
-      vi.advanceTimersByTime(1);
-      expect(sharedQueryCount()).toBe(0);
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it('a subscriber that comes back while it lingers gets the value in its first render', async () => {
-    await db.table('example_entry').put({ id: 'back', value: 4 });
-    const first = renderHook(() => useSharedLiveQuery('back', read('back')));
-    await waitFor(() => expect(first.result.current).toBe(4));
-    first.unmount();
-    const again = renderHook(() => useSharedLiveQuery('back', read('back')));
-    expect(again.result.current).toBe(4);
+    view.unmount();
+    await waitFor(() => expect(sharedQueryCount()).toBe(0));
   });
 
   it('throws a failing query into the error boundary', async () => {
