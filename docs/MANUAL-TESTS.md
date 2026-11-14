@@ -195,7 +195,7 @@ FS-R10. _Abschnitt ohne Hub:_ Heimnetz-Abgleich aus: der Abschnitt zeigt zwei ku
 
 #### Modul-Rahmen, Wetter und Musik (Branch `feat/module-shell-identity`) – nur auf Geräten prüfbar
 
-- **PK4 Ziehen im Zeitraster (≥ 1400 px):** Wochenansicht: Termin ziehen verschiebt (auch auf einen anderen Tag), unteren Rand ziehen ändert die Länge, über leere Fläche ziehen öffnet „Neuer Termin“ mit Beginn/Ende; „Rückgängig“ stellt wieder her; mit Tastatur `Alt+↓` (15 min) und `Alt+Umschalt+↓`; eine Serie lässt sich nicht ziehen (Hinweis). ☐
+- **PK4 Ziehen im Zeitraster (≥ 1400 px):** Wochenansicht: Termin ziehen verschiebt (auch auf einen anderen Tag), unteren Rand ziehen ändert die Länge, über leere Fläche ziehen öffnet „Termin eintragen“ mit Beginn/Ende; „Rückgängig“ stellt wieder her; mit Tastatur `Alt+↓` (15 min) und `Alt+Umschalt+↓`; eine Serie lässt sich nicht ziehen (Hinweis). ☐
 
 ### Musik
 
@@ -307,7 +307,7 @@ Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währ
 - **S6-4 Browser, privat:** Einen privaten Tab öffnen, eine Seite laden, den Tab schließen: „Tab neu öffnen“ nennt diese Seite nicht. In einem leeren privaten Tab steht kein „Tab neu öffnen“. Nach „Daten löschen“ ist der zuletzt geschlossene Tab vergessen; bei eingeschaltetem Verlauf bietet die Startansicht dann die letzte Seite des Verlaufs an (Verlauf und Lesezeichen bleiben bei „Daten löschen“). Nach „Verlauf löschen“ steht kein Angebot mehr da. ☐
 - **S6-5 Browser, Tabs:** Zwei Tabs öffnen: der offene Tab ist grau hinterlegt und fett, der andere ohne Fläche; in der Tab-Übersicht ebenso, ohne farbigen Rand. Die Webseite selbst liegt ohne Rahmen in der Fläche und folgt dem Fenster beim Vergrößern. ☐
 - **S6-6 Dieser PC:** Oben rechts im Kopf steht der belegte Platz des Systemlaufwerks mit dem Laufwerksnamen darunter; darunter keine Ring-Leiste mehr. „Laufwerke · System“ sind Reiter am Kopf; „System“ zeigt die Live-Werte, „Laufwerke“ die Karten mit „Scannen“. Ein Scan startet wie bisher; Löschen fragt wie bisher (Plan, bei großen oder endgültigen Löschungen die zweite Bestätigung). ☐
-- **S6-7 Downloads:** Läuft ein Download, steht oben rechts „1 läuft“ mit Prozent und Tempo; läuft keiner, steht dort nichts. „Download hinzufügen“ ist der eine gefüllte Knopf oben rechts; „Zielordner zeigen“ steht als neutraler Knopf daneben und öffnet mit einem Klick den Ordner des letzten Downloads. Der Satz „Dateien landen nur im gewählten Ordner. Nemo öffnet oder startet sie nie.“ steht weiter über der Liste. ☐
+- **S6-7 Downloads:** Läuft ein Download, steht oben rechts „1 läuft“ mit Prozent und Tempo; läuft keiner, steht dort nichts. „Download eintragen“ ist der eine gefüllte Knopf oben rechts; „Zielordner zeigen“ steht als neutraler Knopf daneben und öffnet mit einem Klick den Ordner des letzten Downloads. Der Satz „Dateien landen nur im gewählten Ordner. Nemo öffnet oder startet sie nie.“ steht weiter über der Liste. ☐
 - **S6-8 Einstellungen, Startseite:** Einstellungen öffnen: im Kopf stehen sechs Zeilen (Sicherheit, Sync, Backup, Updates, KI, Speicher) in drei Spalten, je Name und Zustand in einer Zeile, darunter klein der Kontext; ohne Rahmen. Jede Zeile führt in ihre Kategorie. Darunter „Schnell umschalten“, dann (im breiten Fenster) drei gleiche Zeilen für Darstellung, Benachrichtigungen und Module. Beim Klick auf eine Kategorie links bleibt die Kategorien-Spalte an ihrem Platz. ☐
 
 #### Gerätestatus (UI-Audit 4.0, Modul-Paket S-b) – Desktop-Zeilen nur in der Windows-App, Handy am echten Gerät
@@ -957,7 +957,7 @@ LT-L1. _Karte:_ Termin mit Ort → „Auf der Karte zeigen“ öffnet Google Map
 
 #### Geld-Gruppe: Rechnungen (Paket 2)
 
-- **PH1 Wasser trinken:** Modul-Bibliothek → Gewohnheiten einschalten; „Gewohnheit hinzufügen“ → Vorlage „Wasser trinken“ speichern; „+1“ zählt ein Glas ohne Hinweisfeld, Strg+Z nimmt es zurück; die Benachrichtigungen kommen alle 2 Stunden zwischen 9 und 19 Uhr mit „3 von 8 Gläser“ und hören auf, sobald 8 erreicht sind (Android: App geschlossen, Erinnerung kommt trotzdem). ☐
+- **PH1 Wasser trinken:** Modul-Bibliothek → Gewohnheiten einschalten; „Gewohnheit eintragen“ → Vorlage „Wasser trinken“ speichern; „+1“ zählt ein Glas ohne Hinweisfeld, Strg+Z nimmt es zurück; die Benachrichtigungen kommen alle 2 Stunden zwischen 9 und 19 Uhr mit „3 von 8 Gläser“ und hören auf, sobald 8 erreicht sind (Android: App geschlossen, Erinnerung kommt trotzdem). ☐
 
 ### Zeiterfassung
 
@@ -1447,7 +1447,7 @@ AP1. _Wegwerf-Mail:_ Werkzeug in der Bibliothek einschalten, „Wegwerf-Mail öf
 AP2. _Notiz:_ Notizen einschalten, „Als Notiz speichern“ öffnet eine neue Notiz mit allen Zeilen, auch dem Passwort. ☐
 AP3. _Telefon:_ Deutschland: die Nummern stehen im Bereich 030 23125…, 040 66969…, 089 99998…, 0221 4710…, 069 90009…; kein Anschluss meldet sich. USA: +1 … 555 01xx. ☐
 AP5. _Einstellungen:_ Einstellungen → Werkzeuge → „Anonyme Persona“: Anbieter ändern; im Werkzeug zeigt „Wegwerf-Mail öffnen“ den gleichen Anbieter und öffnet dessen Seite. ☐
-AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei gesperrtem Tresor erst entsperren): das Formular „Zugang hinzufügen“ ist mit Name, Benutzername, Passwort und Notizen gefüllt, nach „Speichern“ liegt der Eintrag verschlüsselt im Tresor; nach einem Neuladen öffnet `/accounts?handoff=1` kein Formular mehr. ☐
+AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei gesperrtem Tresor erst entsperren): das Formular „Zugang eintragen“ ist mit Name, Benutzername, Passwort und Notizen gefüllt, nach „Zugang eintragen“ liegt der Eintrag verschlüsselt im Tresor; nach einem Neuladen öffnet `/accounts?handoff=1` kein Formular mehr. ☐
 
 #### Werkzeuge: Panel (Handtest)
 
@@ -1501,7 +1501,7 @@ ML-M5. Zweites Google-Konto hinzufügen (Verbindungen → „Weiteres Konto hinz
 ML-M6. Netz aus: die zuletzt gesehenen Köpfe erscheinen mit dem Hinweis „Kein Netz". Token widerrufen (Google-Kontoeinstellungen): Hinweis „abgelaufen" mit Link zu den Verbindungen. ☐
 ML-M7. Mail-Einstellungen → „Zwischenspeicher leeren"; danach ist die Liste erst nach dem Laden wieder gefüllt. Der Cache ist nicht im Sync (zweites Gerät zeigt nichts davon) und nicht im Backup. ☐
 ML-M8. Das HTML-Fenster funktioniert im Windows-Fenster (WebView2) wie im Browser: Mail wird angezeigt, kein Skript läuft. ☐
-ML-M9. (Paket 2, `feat/mail-link`) Eine echte Rechnungsmail öffnen → „Aus dieser Mail anlegen" → Rechnung: Empfänger, Betrag und Fälligkeit sind vorbefüllt (stimmen sie bei deinen Mails?). Es wird erst mit „Speichern" etwas angelegt; die Rechnung enthält den Link zur Mail (öffnet die Mail im Browser). ☐
+ML-M9. (Paket 2, `feat/mail-link`) Eine echte Rechnungsmail öffnen → „Aus dieser Mail anlegen" → Rechnung: Empfänger, Betrag und Fälligkeit sind vorbefüllt (stimmen sie bei deinen Mails?). Es wird erst mit „Rechnung eintragen" etwas angelegt; die Rechnung enthält den Link zur Mail (öffnet die Mail im Browser). ☐
 ML-M10. Dasselbe für Termin (Datum/Uhrzeit aus einer Einladung), ToDo, Erinnerung (morgen 9:00), Merkliste, Notiz. Bei der Notiz kommt der Mailtext nur mit dem Häkchen hinein. In der Mail steht danach „Aus dieser Mail angelegt" mit Link in das Modul; löschst du den Eintrag, verschwindet der Verweis. ☐
 ML-M11. (Paket 3, `feat/mail-write`) Verbindungen → Google: „E-Mails verwalten" und „E-Mails senden" sind aus, jede mit Erklärung. Nur „verwalten" einschalten, „Neu anmelden": Google zeigt die zusätzliche Berechtigung an. Im Mail-Modul erscheinen Archivieren, Papierkorb, „Weitere Aktionen"; Antworten und „Neue Mail" nur mit Entwurf (kein Senden-Knopf). ☐
 ML-M12. Als gelesen/ungelesen markieren wirkt sofort (in Gmail prüfen) und lässt sich in den 6 s zurücknehmen. Archivieren, Label setzen, Papierkorb fragen vorher; „Rückgängig" holt den Verlauf zurück (Papierkorb: auch in Gmail wieder im Posteingang). ☐
