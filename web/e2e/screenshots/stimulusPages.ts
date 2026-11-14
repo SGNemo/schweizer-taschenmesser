@@ -75,6 +75,22 @@ export const SHELL_PAGES: StimulusPage[] = [
   { name: 'settings-darstellung', path: '/settings/darstellung' },
   { name: 'settings-benachrichtigungen', path: '/settings/benachrichtigungen' },
   { name: 'settings-module', path: '/settings/module' },
+  // The other settings tabs and the tool overview (UI audit 2026-11, 0b-E answer 4: taken in with 0b-8).
+  ...[
+    'einrichtung',
+    'allgemein',
+    'barrierefreiheit',
+    'werkzeuge',
+    'sicherheit',
+    'sync',
+    'ki',
+    'verbindungen',
+    'schnellerfassung',
+    'updates',
+    'entwickler',
+    'ueber',
+  ].map((tab) => ({ name: `settings-${tab}`, path: `/settings/${tab}` })),
+  { name: 'tools', path: '/tools' },
 ];
 
 export const PAGES: StimulusPage[] = [...SHELL_PAGES, ...MODULE_PAGES];
