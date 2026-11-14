@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseMarkdownNote, parseMarkdownNotes } from './markdownNote';
+import { noteDates, parseMarkdownNote, parseMarkdownNotes, parseNoteDate } from './markdownNote';
 
 describe('parseMarkdownNote', () => {
   it('reads title and tags from Obsidian front matter', () => {
@@ -73,5 +73,57 @@ describe('parseMarkdownNotes', () => {
     ]);
     expect(r.notes.map((n) => n.title)).toEqual(['a', 'Zwei']);
     expect(r.empty).toBe(1);
+  });
+});
+
+describe('D17 (round 5): dates from the front matter', () => {
+  const local = (y: number, m: number, d: number, h = 0, mi = 0) =>
+    new Date(y, m - 1, d, h, mi).getTime();
+
+  it('created:/date: → createdAt, modified:/updated: → updatedAt (first key wins)', () => {
+    const note = parseMarkdownNote(
+      '---\ncreated: 2025-12-01\nmodified: "2026-01-05 18:30"\ndate: 2020-01-01\n---\nText',
+      'a.md',
+    )!;
+    expect(note.createdAt).toBe(local(2025, 12, 1));
+    expect(note.updatedAt).toBe(local(2026, 1, 5, 18, 30));
+    expect(
+      parseMarkdownNote('---\ndate: 2024-03-04\nupdated: 2024-03-05\n---\nText'),
+    ).toMatchObject({
+      createdAt: local(2024, 3, 4),
+      updatedAt: local(2024, 3, 5),
+    });
+  });
+
+  it('reads a zone when given; impossible or foreign values are ignored', () => {
+    expect(parseNoteDate('2025-12-01T09:30:00Z')).toBe(Date.UTC(2025, 11, 1, 9, 30));
+    expect(parseNoteDate('2025-12-01Z')).toBe(Date.UTC(2025, 11, 1));
+    expect(parseNoteDate('2025-12-01T10:30+01:00')).toBe(Date.UTC(2025, 11, 1, 9, 30));
+    for (const bad of [
+      '2025-02-31',
+      '01.12.2025',
+      'gestern',
+      '',
+      '2025-12-01 25:00',
+      '2025-12-01 09:30:75',
+    ])
+      expect(parseNoteDate(bad), bad).toBeUndefined();
+    const note = parseMarkdownNote('---\ncreated: bald\n---\nText')!;
+    expect(note.createdAt).toBeUndefined();
+  });
+
+  it('a note without dates carries none', () => {
+    expect(Object.keys(parseMarkdownNote('# T\nText')!)).not.toContain('createdAt');
+  });
+
+  it('noteDates: front matter first, the file date for whatever is missing', () => {
+    expect(noteDates({}, 5)).toEqual({ createdAt: 5, updatedAt: 5 });
+    expect(noteDates({ createdAt: 1 }, 5)).toEqual({ createdAt: 1, updatedAt: 5 });
+    expect(noteDates({ createdAt: 1, updatedAt: 2 }, 5)).toEqual({ createdAt: 1, updatedAt: 2 });
+    expect(noteDates({ createdAt: 1 })).toEqual({ createdAt: 1 });
+    // Only modified: known and a younger copy date – created never after modified.
+    expect(noteDates({ updatedAt: 3 }, 9)).toEqual({ createdAt: 3, updatedAt: 3 });
+    expect(noteDates({ updatedAt: 3 })).toEqual({ createdAt: 3, updatedAt: 3 });
+    expect(noteDates({})).toBeUndefined();
   });
 });

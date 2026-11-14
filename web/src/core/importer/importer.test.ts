@@ -76,6 +76,56 @@ describe('buildPreview', () => {
   });
 });
 
+describe('D17 (round 5): imported dates', () => {
+  it('a candidate keeps its dates; undo still removes the untouched record', async () => {
+    const rows = await buildPreview(todos, runtime, [
+      { ...task('Alt'), dates: { createdAt: clock - 86_400_000, updatedAt: clock - 3_600_000 } },
+    ]);
+    const batch = await commitImport(todos, {
+      batchId: 'bd',
+      importerId: 'text',
+      source: 'Text',
+      rows,
+    });
+    const [stored] = await taskRepo.active().toArray();
+    expect([stored!.createdAt, stored!.updatedAt]).toEqual([clock - 86_400_000, clock - 3_600_000]);
+    expect(await undoImport(todos, batch.id)).toEqual({ removed: 1, kept: 0 });
+  });
+
+  it('a future or "now" modified date still counts as untouched for undo', async () => {
+    const rows = await buildPreview(todos, runtime, [
+      {
+        ...task('Zukunft'),
+        dates: { createdAt: clock - 86_400_000, updatedAt: clock + 86_400_000 },
+      },
+      { ...task('Jetzt'), dates: { createdAt: clock - 86_400_000, updatedAt: clock } },
+    ]);
+    const batch = await commitImport(todos, {
+      batchId: 'bf',
+      importerId: 'text',
+      source: 'Text',
+      rows,
+    });
+    expect(await undoImport(todos, batch.id)).toEqual({ removed: 2, kept: 0 });
+  });
+
+  it('undo keeps a record that was edited after the import', async () => {
+    const rows = await buildPreview(todos, runtime, [
+      { ...task('Alt'), dates: { createdAt: clock - 86_400_000 } },
+    ]);
+    const batch = await commitImport(todos, {
+      batchId: 'be',
+      importerId: 'text',
+      source: 'Text',
+      rows,
+    });
+    const [stored] = await taskRepo.active().toArray();
+    clock += 1000;
+    await taskRepo.update(stored!.id, { title: 'Bearbeitet' });
+    expect(await undoImport(todos, batch.id)).toEqual({ removed: 0, kept: 1 });
+  });
+});
+
 describe('commitImport / undoImport', () => {
   async function importTasks(titles: string[], batchId = 'b1') {
     const rows = await buildPreview(todos, runtime, titles.map(task));

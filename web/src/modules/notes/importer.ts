@@ -1,5 +1,5 @@
 import { parseGoogleKeep } from '@/core/io/googleKeep';
-import { parseMarkdownNote, type ParsedNote } from '@/core/io/markdownNote';
+import { noteDates, parseMarkdownNote, type ParsedNote } from '@/core/io/markdownNote';
 import type {
   ImportCandidate,
   ImportContext,
@@ -22,6 +22,7 @@ export { noteKey } from './exchange';
 function candidate(note: ParsedNote, notebookId?: string, newNotebook?: string): ImportCandidate {
   const firstLine = note.body.split('\n').find((l) => l.trim()) ?? '';
   const label = note.title || firstLine.slice(0, 80);
+  const dates = noteDates(note);
   return {
     collection: 'note',
     data: {
@@ -34,6 +35,8 @@ function candidate(note: ParsedNote, notebookId?: string, newNotebook?: string):
     detail: note.title ? firstLine.slice(0, 80) : undefined,
     dedupeKey: noteKey(note.title, note.body),
     ...(newNotebook ? { dependsOn: newNotebook } : {}),
+    // The note keeps its own date (front matter, else the file's): D17, round 5.
+    ...(dates ? { dates } : {}),
   };
 }
 

@@ -76,3 +76,18 @@ describe('import', () => {
     ]);
   });
 });
+
+describe('D17 (round 5): the notes import dialog keeps the dates', () => {
+  it('front matter first, else the file date; nothing known = no dates', () => {
+    const { pages } = parseImport([
+      { path: 'a.md', text: '---\ncreated: 2025-12-01\n---\nA', modifiedAt: 9_000 },
+      { path: 'b.md', text: 'B', modifiedAt: 9_000 },
+      { path: 'c.md', text: 'C' },
+    ]);
+    expect(pages.map((p) => p.dates)).toEqual([
+      { createdAt: new Date(2025, 11, 1).getTime(), updatedAt: 9_000 },
+      { createdAt: 9_000, updatedAt: 9_000 },
+      undefined,
+    ]);
+  });
+});

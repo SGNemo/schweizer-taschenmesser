@@ -39,3 +39,45 @@ describe('notes file importer – an exported Obsidian vault (D05, D06)', () => 
     expect(parsed.candidates.filter((c) => c.collection === 'note')).toHaveLength(3);
   });
 });
+
+describe('D17 (round 5): an imported note keeps its date', () => {
+  it('created: 2025-12-01 sorts below a note written today under "Zuletzt geändert"', async () => {
+    const { getManifest } = await import('@/core/modules/registry');
+    const { buildPreview } = await import('@/core/importer/plan');
+    const { commitImport } = await import('@/core/importer/batches');
+    const { noteRepo } = await import('../repo');
+    const { sortPages } = await import('../logic');
+    const notes = getManifest('notes')!;
+    await noteRepo.create({
+      title: 'Heute',
+      body: 'neu',
+      pinned: false,
+      notebookId: null,
+      order: 0,
+    });
+    const parsed = await runtime.parse(
+      'file',
+      {
+        kind: 'file',
+        fileName: 'Vault.zip',
+        text: '',
+        files: [
+          { name: 'Vault.zip/Alt.md', text: '---\ncreated: 2025-12-01\n---\n# Alt\nVom Dezember' },
+          {
+            name: 'Vault.zip/Datei.md',
+            text: '# Datei\nOhne Kopf',
+            modifiedAt: Date.UTC(2026, 0, 2),
+          },
+        ],
+      },
+      ctx,
+    );
+    const rows = await buildPreview(notes, runtime, parsed.candidates);
+    await commitImport(notes, { batchId: 'd17', importerId: 'file', source: 'Vault.zip', rows });
+    const stored = await noteRepo.active().toArray();
+    const alt = stored.find((n) => n.title === 'Alt')!;
+    expect(alt.createdAt).toBe(new Date(2025, 11, 1).getTime());
+    expect(stored.find((n) => n.title === 'Datei')!.updatedAt).toBe(Date.UTC(2026, 0, 2));
+    expect(sortPages(stored, 'recent').map((n) => n.title)).toEqual(['Heute', 'Datei', 'Alt']);
+  });
+});

@@ -1,7 +1,7 @@
 /** Batch bookkeeping, the write step and "Import rückgängig machen". Local only (`_imports`). */
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
-import { createCollectionRepo } from '@/core/db/repo';
+import { createCollectionRepo, type ImportDates, untouchedSinceCreated } from '@/core/db/repo';
 import type { AiActionHandler, ModuleManifest } from '@/core/modules/types';
 import { now } from '@/core/time/now';
 import { ImportError } from './plan';
@@ -44,7 +44,10 @@ export async function commitImport(
   }
   if (chosen.length === 0) throw new ImportError('nothing-selected');
 
-  const byCollection = new Map<string, { data: Record<string, unknown>; id: string }[]>();
+  const byCollection = new Map<
+    string,
+    { data: Record<string, unknown>; id: string; at?: ImportDates }[]
+  >();
   const changes = chosen.filter((r) => r.candidate.update && r.candidate.id);
   const removals = chosen.filter((r) => r.candidate.remove && r.candidate.id);
   chosen.forEach((row, n) => {
@@ -53,6 +56,7 @@ export async function commitImport(
     list.push({
       data: row.candidate.data,
       id: row.candidate.id ?? `imp-${args.batchId}-${n}`,
+      ...(row.candidate.dates ? { at: row.candidate.dates } : {}),
     });
     byCollection.set(row.candidate.collection, list);
   });
@@ -187,9 +191,10 @@ export const batchStatus = (batch: ImportBatch): BatchStatus =>
   batch.status ?? (batch.undoneAt ? 'undone' : 'committed');
 
 /**
- * Removes what the batch created – but only records nobody has touched since (`updatedAt` equals
- * `createdAt`) – and restores the previous values of records it changed, if they still hold the
- * imported values. Edited records stay; their number is reported. Deletions are tombstones and sync.
+ * Removes what the batch created – but only records nobody has touched since (the rule, which
+ * ignores imported dates: `untouchedSinceCreated`) – and restores the previous values of records
+ * it changed, if they still hold the imported values. Edited records stay; their number is
+ * reported. Deletions are tombstones and sync.
  */
 export async function undoImport(
   manifest: ModuleManifest,
@@ -209,7 +214,7 @@ export async function undoImport(
     const untouched: string[] = [];
     for (const row of rows) {
       if (!row || row.deletedAt !== null) continue; // gone already
-      if (row.updatedAt === row.createdAt) untouched.push(row.id);
+      if (untouchedSinceCreated(row)) untouched.push(row.id);
       else kept++;
     }
     await repo.removeMany(untouched);

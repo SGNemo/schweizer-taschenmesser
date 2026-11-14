@@ -26,6 +26,10 @@ Fixed in `fix/round5-rests` (round 2026-11-14), one line per id:
 - D16: „Passwortsatz“ as in the glossary in `docs/user/sync.de.md`, the legal text and the sync help.
 - D18: „Zuletzt abgeglichen“ is the one name (server and home network) and shows the change count of the last cycle.
 
+Fixed in `fix/notes-import-dates`:
+
+- D17: imported Markdown notes keep `created:`/`date:` (else the ZIP or file date) as `createdAt` and `modified:` as `updatedAt` (`createMany` option `at`, `decisions/core-data-ai.md`).
+
 ## Open – no PR yet
 
 | Id   | Finding                                                                                                                                                                                   | Next step                                                  | Owner            |
@@ -37,7 +41,6 @@ Fixed in `fix/round5-rests` (round 2026-11-14), one line per id:
 | C15  | "Mittag 8,50" becomes a time; "Zug 7,45" becomes an expense without a time word                                                                                                           | Parser, S, rare                                            | not started      |
 | D01  | Phone pairing path and device test (QR, real phone)                                                                                                                                       | Hardware test on Sven's devices; phone side in #559        | manual test      |
 | D15  | Planner rows from test data end up in backups                                                                                                                                             | F3                                                         | planner (demo-a) |
-| D17  | Imported notes get today's date, not the note's date                                                                                                                                      | F4, M, needs a repo option                                 | notes + core     |
 
 ## Known or decided – no action in this round
 

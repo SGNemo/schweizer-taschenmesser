@@ -28,7 +28,11 @@ export function ImportDialog({ open, onClose }: { open: boolean; onClose: () => 
         const path = (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name;
         // Only notes are read; plugins, git objects and pictures of an export only need their path.
         const read = TEXT_FILE.test(path) && !isHiddenPath(path);
-        return { path, text: read ? await f.text() : '' };
+        return {
+          path,
+          text: read ? await f.text() : '',
+          ...(f.lastModified > 0 ? { modifiedAt: f.lastModified } : {}),
+        };
       }),
     );
     const parsed = parseImport(picked);
@@ -71,6 +75,8 @@ export function ImportDialog({ open, onClose }: { open: boolean; onClose: () => 
           notebookId: p.folder ? (idOf.get(p.folder.trim().toLowerCase()) ?? null) : null,
           order: 0,
         },
+        // The note keeps its own date (front matter, else the file's): D17, round 5.
+        ...(p.dates ? { at: p.dates } : {}),
       })),
     );
     useUiStore.getState().toast(s.done(result.fresh.length));

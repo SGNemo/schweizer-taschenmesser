@@ -67,7 +67,9 @@ export function pickTextFiles(accept: string): Promise<PickedFile[]> {
 }
 
 /** The chosen files as bytes (ZIP, ENEX …); the caller unpacks and decodes them in a Worker. */
-export function pickRawFiles(accept: string): Promise<{ name: string; bytes: Uint8Array }[]> {
+export function pickRawFiles(
+  accept: string,
+): Promise<{ name: string; bytes: Uint8Array; modifiedAt?: number }[]> {
   return new Promise((resolve, reject) => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -78,7 +80,11 @@ export function pickRawFiles(accept: string): Promise<{ name: string; bytes: Uin
       if (files.length === 0) return resolve([]);
       if (files.some((f) => f.size > MAX_RAW_BYTES)) return reject(new Error('file-too-large'));
       Promise.all(
-        files.map(async (f) => ({ name: f.name, bytes: new Uint8Array(await f.arrayBuffer()) })),
+        files.map(async (f) => ({
+          name: f.name,
+          bytes: new Uint8Array(await f.arrayBuffer()),
+          ...(f.lastModified > 0 ? { modifiedAt: f.lastModified } : {}),
+        })),
       ).then(resolve, reject);
     });
     input.addEventListener('cancel', () => resolve([]));
