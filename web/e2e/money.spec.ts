@@ -268,7 +268,7 @@ test.describe('Finance', () => {
     await addTransaction(page, { kind: 'Ausgabe', amount: '45,50', category: 'Lebensmittel' });
     await ready(page, '/finance');
     const chart = page.getByTestId('chart-categories');
-    await expect(chart.locator('svg.recharts-surface')).toBeVisible();
+    await expect(chart.getByText(/45,50\s€/)).toBeVisible();
     // Point at the row of the bar (the chart resolves the hovered category from the pointer).
     await chart.hover({ position: { x: 300, y: 24 } });
     const tip = page.getByTestId('chart-tooltip');
