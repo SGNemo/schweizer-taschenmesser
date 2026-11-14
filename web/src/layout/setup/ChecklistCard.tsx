@@ -3,12 +3,14 @@ import { useSetupHost } from '@/core/setup/host';
 import { MIGRATE_STEP_ID, setManualDone } from '@/core/setup/migrate';
 import { setChecklistHidden } from '@/core/setup/state';
 import { t } from '@/strings';
-import { Badge, Button, Card, patternStyles } from '@/ui';
+import { Badge, Button, Card, patternStyles, useCardActionVariant } from '@/ui';
 
 const MAX_SHOWN = 5;
 
 /** Dashboard card with what is still open of the setup; hidden once everything is done. */
 export function ChecklistCard() {
+  // Phone: the plus owns the one filled accent (decision #856).
+  const resumeVariant = useCardActionVariant();
   const checklist = useChecklist();
   const open = useSetupHost((s) => s.openWizard);
   if (!checklist || !showChecklist(checklist.state, checklist.list)) return null;
@@ -101,7 +103,7 @@ export function ChecklistCard() {
           <p className={patternStyles.muted}>{t.setup.moreOpen(list.open.length - shown.length)}</p>
         ) : null}
         <div className={patternStyles.hstackWrap}>
-          <Button variant="primary" onClick={() => open()}>
+          <Button variant={resumeVariant} onClick={() => open()}>
             {t.setup.resume}
           </Button>
           <Button onClick={() => void setChecklistHidden(true)}>{t.setup.hideChecklist}</Button>

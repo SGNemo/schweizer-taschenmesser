@@ -206,6 +206,7 @@ export default function ProfilesStep({
           .map((m) => (
             <li key={m.id}>
               <Switch
+                tone="neutral"
                 label={m.name}
                 hint={[
                   m.description,

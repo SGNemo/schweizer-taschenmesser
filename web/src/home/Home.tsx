@@ -433,6 +433,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
             <>
               <li>
                 <Switch
+                  tone="neutral"
                   label={tx.dense}
                   hint={tx.denseHint}
                   checked={!!layout.dense}
@@ -441,6 +442,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
               </li>
               <li>
                 <Switch
+                  tone="neutral"
                   label={tx.stats}
                   hint={tx.statsHint}
                   checked={!!layout.stats}
@@ -451,6 +453,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
           ) : null}
           <li>
             <Switch
+              tone="neutral"
               label={t.home.agenda.title}
               checked={!layout.hidden.includes(AGENDA_KEY)}
               onChange={() =>
@@ -461,6 +464,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
           {cockpit ? null : (
             <li>
               <Switch
+                tone="neutral"
                 label={t.homeEdit.agendaCalm}
                 hint={t.homeEdit.agendaCalmHint}
                 checked={layout.pinned.includes(AGENDA_KEY)}
@@ -471,6 +475,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
           )}
           <li>
             <Switch
+              tone="neutral"
               label={t.attention.title}
               hint={t.attention.hint}
               checked={!layout.hidden.includes(ATTENTION_KEY)}
@@ -482,6 +487,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
           {ordered.map((e) => (
             <li key={e.key}>
               <Switch
+                tone="neutral"
                 label={e.title}
                 hint={[
                   allManifests.find((m) => m.id === e.moduleId)?.name,
