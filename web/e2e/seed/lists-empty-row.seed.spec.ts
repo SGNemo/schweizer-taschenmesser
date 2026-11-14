@@ -6,8 +6,9 @@ import { DESKTOP, openPage, PHONE, startSeeded } from './guards';
  * Lists after 0b-8 follow-up 3 (`docs/design/ui-audit-2026-11/REPORT.md`, "Abnahme 0b-8"):
  * 1. An empty list's next step is its first entry (M10, follow-up (a) of "Abschlussmessung 2"): one way in – the add
  *    field right under the empty state, its button with the verb ("Artikel eintragen" on a desktop shopping list,
- *    "Eintragen" on the others and on the phone). On the desktop that button is the filled one and "Neue Liste" steps back; on the phone the plus
- *    stays "Neue Liste" (decided) and the button is outlined. No head figure ("0 offen · 1 Ladenbereich").
+ *    "Eintragen" on the others and on the phone). On the desktop that button is the filled one and "Neue Liste" steps
+ *    back; on the phone the plus stays "Neue Liste" (decided) and the button is outlined. No head figure
+ *    ("0 offen · 1 Ladenbereich").
  * 2. On the phone a row keeps its pencil on the same line as the entry, ticked rows included (before, a row with price
  *    and quantity broke the pencil onto a second line and was twice as high).
  */
