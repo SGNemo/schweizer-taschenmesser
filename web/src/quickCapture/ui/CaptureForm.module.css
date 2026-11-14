@@ -157,7 +157,8 @@ textarea.input {
   border-radius: var(--radius-md);
   background: var(--surface-sunken);
 }
-/* On the sunken line the action chip steps up again, so it stays a shape of its own. */
+/* On the sunken line the action chip steps up again, so it stays a shape of its own (in the light theme
+   `--surface-2` and `--surface-sunken` look the same: a chip on a sunken step takes `--surface`). */
 .row .chipAction {
   background: var(--surface);
 }

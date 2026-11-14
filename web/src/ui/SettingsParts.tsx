@@ -106,7 +106,10 @@ export function DangerZone({
   children,
 }: {
   id?: string;
-  /** What it lies on: a raised card (sunken step, the default) or the page itself (raised step). */
+  /**
+   * What it lies on: a raised card (sunken step, the default) or the page itself (raised step; inside a raised
+   * settings group card outside a settings tab it falls back to sunken).
+   */
   on?: 'raised' | 'page';
   children: ReactNode;
 }) {
