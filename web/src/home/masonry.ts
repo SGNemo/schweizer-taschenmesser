@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import misc from '@/ui/Misc.module.css';
 
 /**
@@ -9,24 +9,23 @@ export function packedRows(height: number, gap: number): number {
   return Math.max(1, Math.ceil(height + gap));
 }
 
-/** Longest time the cards wait for each other before they show (a card that never loads must not hide the rest). */
+/** Longest time a step of cards waits for its slowest card before they show anyway (a card that never loads must not hide the rest). */
 export const SETTLE_CAP_MS = 1500;
 
-/** Grids that have shown their cards once: a re-pack (another view, a new card) never hides them again. */
+/** Grids that have shown their first cards: `aria-busy` is only set until then. */
 const settled = new WeakSet<HTMLElement>();
+/** Cards a grid has taken in: a card is held back once, when it first mounts, never again on a re-pack. */
+const seen = new WeakSet<HTMLElement>();
 
-/**
- * True while a card of the first screen still shows a loading skeleton. Cards are as high as their content
- * (identity 4.0, no minimum height per size class), so each one that loads would push the ones below it.
- */
-export function firstScreenLoading(
-  cards: readonly HTMLElement[],
-  fold: number,
-  skeleton: string,
-): boolean {
-  return cards.some(
-    (el) => el.getBoundingClientRect().top < fold && el.querySelector(skeleton) !== null,
-  );
+/** Columns of a grid as laid out right now (its `grid-template-columns` tracks); at least one. */
+export function gridColumns(grid: HTMLElement): number {
+  const tracks = getComputedStyle(grid).gridTemplateColumns.trim();
+  return tracks && tracks !== 'none' ? tracks.split(/\s+/).length : 1;
+}
+
+/** True while one of the cards still shows a loading skeleton (its code or its data is not there yet). */
+export function stillLoading(cards: readonly HTMLElement[], skeleton: string): boolean {
+  return cards.some((el) => el.querySelector(skeleton) !== null);
 }
 
 /**
@@ -40,13 +39,24 @@ export function firstScreenLoading(
  * re-packs; its own height never depends on its span (`align-items: start`), so there is no resize loop.
  * `enabled = false` (the overview's edit mode) leaves the grid unpacked: there the cards sit in the saved order on
  * plain rows, so dragging and the keyboard (dnd-kit picks targets by position) move a card where it looks.
- * First load: the grid carries `data-settling` (its cards are laid out but not painted, `Home.module.css`) until the
- * cards of the first screen have their content or `SETTLE_CAP_MS` have passed, so they appear once, at their own
- * heights, instead of growing one after the other.
+ * Build-up (decision "Overview builds up in grid order"): a card that mounts waits hidden (`data-wait`,
+ * `visibility: hidden` in `Home.module.css`) until every waiting card has its content, or `SETTLE_CAP_MS` after the
+ * step could start; then they show together and `onShown` runs (the overview then mounts its next step). Grid
+ * placement puts a card by the cards before it only, so cards that show later never move one already shown. Until
+ * that, the grid is `data-settling` (the "Mehr anzeigen" row below it waits too) and, the first time, `aria-busy`.
  */
-export function usePackedGrid<T extends HTMLElement>(keys: string, enabled = true, ready = true) {
+export function usePackedGrid<T extends HTMLElement>(
+  keys: string,
+  enabled = true,
+  ready = true,
+  onShown?: () => void,
+) {
   // A callback ref: a grid element that mounts again (same keys) is packed again.
   const [grid, setGrid] = useState<T | null>(null);
+  const shownRef = useRef(onShown);
+  useLayoutEffect(() => {
+    shownRef.current = onShown;
+  });
   useLayoutEffect(() => {
     if (!enabled || !grid || typeof ResizeObserver === 'undefined') return;
     const measure = (el: HTMLElement) => {
@@ -63,35 +73,44 @@ export function usePackedGrid<T extends HTMLElement>(keys: string, enabled = tru
     for (const el of children()) {
       measure(el);
       observer.observe(el);
+      if (!seen.has(el)) {
+        seen.add(el);
+        el.setAttribute('data-wait', '');
+      }
     }
+    const waiting = () => children().filter((el) => el.hasAttribute('data-wait'));
     let cap = 0;
-    const settle = () => {
+    const release = () => {
       window.clearTimeout(cap);
-      settled.add(grid);
+      cap = 0;
+      for (const el of waiting()) el.removeAttribute('data-wait');
       grid.removeAttribute('data-settling');
+      grid.removeAttribute('aria-busy');
+      settled.add(grid);
+      shownRef.current?.();
     };
-    const settleWhenLoaded = () => {
-      if (!grid.hasAttribute('data-settling') || children().length === 0) return;
-      if (!firstScreenLoading(children(), window.innerHeight, `.${misc.skeleton}`)) settle();
+    const check = () => {
+      if (!ready || !grid.hasAttribute('data-settling')) return;
+      const held = waiting();
+      // Nothing to wait for (a calm view without the "Heute" card): the row below the grid may show.
+      if (held.length === 0 || !stillLoading(held, `.${misc.skeleton}`)) release();
+      // The step can start: its cap runs from now (from the mount of its cards, not from the page load).
+      else if (!cap) cap = window.setTimeout(release, SETTLE_CAP_MS);
     };
-    if (!settled.has(grid)) {
+    if (!settled.has(grid) || waiting().length > 0) {
       grid.setAttribute('data-settling', 'true');
-      // The cap also settles a grid that never gets a card (a calm view without the "Heute" card), so the
-      // "Mehr anzeigen" row below it shows; cards that arrive before it are waited for (`settleWhenLoaded`).
-      cap = window.setTimeout(settle, SETTLE_CAP_MS);
-      // The page has what it shows and there is no card (a calm view without the "Heute" card): nothing to hold.
-      if (ready && children().length === 0) settle();
-      else settleWhenLoaded();
+      if (!settled.has(grid)) grid.setAttribute('aria-busy', 'true');
+      check();
     }
-    // A body that swaps its skeleton for the empty state may keep the card's height (the size class's minimum),
-    // so content changes re-check too, once per frame.
+    // A body that swaps its skeleton for its content changes the card's height and may end the wait: content
+    // changes re-measure and re-check, once per frame.
     let frame = 0;
     const mutations = new MutationObserver(() => {
       if (frame) return;
       frame = requestAnimationFrame(() => {
         frame = 0;
         for (const el of children()) measure(el);
-        settleWhenLoaded();
+        check();
       });
     });
     mutations.observe(grid, { childList: true, subtree: true });
@@ -101,7 +120,14 @@ export function usePackedGrid<T extends HTMLElement>(keys: string, enabled = tru
       mutations.disconnect();
       cancelAnimationFrame(frame);
       window.clearTimeout(cap);
+      // A card still waiting is taken in again by the next run (same commit, nothing is painted between); with the
+      // grid disabled (edit mode) it shows.
+      for (const el of waiting()) {
+        el.removeAttribute('data-wait');
+        seen.delete(el);
+      }
       grid.removeAttribute('data-settling');
+      grid.removeAttribute('aria-busy');
       grid.removeAttribute('data-packed');
     };
   }, [enabled, grid, keys, ready]);
