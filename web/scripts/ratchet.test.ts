@@ -5,6 +5,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
+// proxy-2026-11: the imports MAINTAINER_LOGIN, PROXY_APPROVAL_UNTIL, proxyApproval, proxyOpen, proxyReason;
+// DURING/AFTER, proxyComment and the `now` options of run() and ci().
 import {
   approvalMessage,
   BUDGET_FILE,

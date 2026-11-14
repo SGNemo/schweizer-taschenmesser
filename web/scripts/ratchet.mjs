@@ -43,7 +43,8 @@ export const LABEL = 'stimulus-raise';
  * approves the hits. Agents that act with the maintainer's token post as this account: that is the intended
  * proxy. Only comments created in [FROM, UNTIL) count, and only while the run is before UNTIL; then only the
  * signature is valid again. Never for hits on this script itself (the trust root). A follow-up pull request
- * removes every line or block marked `proxy-2026-11` (`git grep -n proxy-2026-11`). In `--pr` the proxy is read
+ * removes what every `proxy-2026-11` marker points at (`git grep -n proxy-2026-11`, also in the test), then
+ * `npm run check` and the ratchet tests must pass. In `--pr` the proxy is read
  * only when RATCHET_PUBLIC_KEY loads (no key: nothing is mergeable at all).
  */
 // proxy-2026-11 (constants up to SELF)
@@ -1245,16 +1246,17 @@ export async function runCi({
   repo = gitRepo(),
   env = process.env,
   fetchImpl = fetch,
-  now = Date.now(),
+  now = Date.now(), // proxy-2026-11
   out = console.log,
 }) {
   const hits = collectHits(repo, base, head);
   const table = hitTable(hits);
   out(table);
+  // proxy-2026-11: the clause after the semicolon below.
   if (env.GITHUB_STEP_SUMMARY)
     appendFileSync(
       env.GITHUB_STEP_SUMMARY,
-      `${table}\n\nInformation only: the approval hash comes from \`ratchet.mjs --pr\` in its \`develop\` version; a proxy approval read here uses this run's hash, the merge rule decides (proxy-2026-11).\n`,
+      `${table}\n\nInformation only: the approval hash comes from \`ratchet.mjs --pr\` in its \`develop\` version; a proxy approval read here uses this run's hash, the merge rule decides.\n`,
     );
   if (!hits.length) return 0;
   const slug = env.GITHUB_REPOSITORY || REPO;
@@ -1314,7 +1316,7 @@ export async function runPr({
   fetchImpl = fetch,
   publicKey = RATCHET_PUBLIC_KEY,
   slug = REPO,
-  now = Date.now(),
+  now = Date.now(), // proxy-2026-11
   out = console.log,
 }) {
   const problems = [];
@@ -1357,22 +1359,25 @@ export async function runPr({
 
   if (hits.length) {
     const message = approvalMessage(pr, hash, slug);
-    const proxy = proxyOpen(hits, now); // proxy-2026-11 (and every use of proxy/reason below)
+    const proxy = proxyOpen(hits, now); // proxy-2026-11
     let approved = false;
-    let reason;
+    let reason; // proxy-2026-11
     if (key) {
       const comments = await githubAll(fetchImpl, token, `/repos/${slug}/issues/${pr}/comments`);
       approved = comments.some((c) => isApproval(c?.body, { pr, hash, key, repo: slug }));
+      // proxy-2026-11
       if (!approved && proxy) reason = proxyReason(comments, { hits, pr, hash, repo: slug, now });
     }
     out(`\nHash: ${hash}`);
     out(`Message: ${message}`);
     if (approved) out('Approval: a comment with a valid signature over this message exists.');
+    // proxy-2026-11 (this branch)
     else if (reason !== undefined)
       out(
         `Approval: proxy comment by ${MAINTAINER_LOGIN} (temporary, until ${PROXY_APPROVAL_UNTIL}).\nReason: ${reason}`,
       );
     else {
+      // proxy-2026-11: the proxy clause in this text and the hint below.
       problems.push(
         `hits without a validly signed approval comment${proxy ? ' (or a proxy approval comment)' : ''} for this hash`,
       );
