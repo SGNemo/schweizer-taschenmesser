@@ -5,6 +5,7 @@ import {
   copyName,
   groupItems,
   listAsText,
+  namedSectionCount,
   recall,
   suggestNames,
   totals,
@@ -181,6 +182,12 @@ describe('shopping extras', () => {
       ['drinks', 1],
       ['', 1],
     ]);
+  });
+
+  it('counts only named store sections for the head, never "Ohne Bereich"', () => {
+    expect(namedSectionCount(groupItems([{}, {}] as never[], 'section'))).toBe(0);
+    const g = groupItems([{ section: 'produce' }, {}] as never[], 'section');
+    expect(namedSectionCount(g)).toBe(1);
   });
 
   it('sums open and ticked prices separately', () => {
