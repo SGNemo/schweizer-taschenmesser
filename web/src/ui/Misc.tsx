@@ -104,7 +104,8 @@ export function EmptyState({
       {motif && !compact ? (
         <span className={styles.emptyMotif}>{motif}</span>
       ) : (
-        <span className={styles.emptyMark}>
+        // `data-empty-mark`: a container may leave the fish out (the overview's widgets: one quiet line, no logo).
+        <span className={styles.emptyMark} data-empty-mark="">
           <Logo mono size={compact ? 28 : 60} />
         </span>
       )}
