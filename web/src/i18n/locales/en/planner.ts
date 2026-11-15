@@ -22,6 +22,9 @@ export const planner: Strings['planner'] = {
       windowSaturdayHelp: 'Empty means: Saturday without times.',
       windowSunday: 'Time window Sunday',
       windowSundayHelp: 'Empty means: Sunday without times.',
+      dayEnd: 'End of day',
+      dayEndHelp:
+        'For example 23:00, the same for every day. Half an hour before, the planner says “The day is ending soon.” Empty means: none.',
       bufferShare: 'Buffer',
       bufferShareHelp: 'This share of the free time stays unplanned, for whatever comes up.',
       bufferOption: (pct: number) => (pct === 0 ? 'No buffer' : `${pct} %`),
@@ -245,6 +248,7 @@ export const planner: Strings['planner'] = {
     notifyBody:
       'What is still open today can be spread over the next few days. A tap shows the preview.',
     nothing: 'All that stays today is what is pinned to today.',
+    dayEnd: 'The day is ending soon.',
   },
   daySetup: {
     open: 'Plan my days',
@@ -262,6 +266,12 @@ export const planner: Strings['planner'] = {
     previewTitle: 'This is your plan',
     next: 'Next',
     back: 'Back',
+    dayEndLink: 'Set an end of day',
+    dayEndLabel: 'End of day',
+    dayEndNone: 'none',
+    dayEndHint: 'The same for every day. The planner says so half an hour before.',
+    dayEndSet: (time: string) => `End of day ${time}, for every day`,
+    dayEndCleared: 'No end of day any more',
   },
   chip: {
     title: (planned: string, n: number) =>

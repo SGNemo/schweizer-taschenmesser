@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { ModuleSettings } from '@/core/modules/types';
 import type { PlanSettings } from '@/core/plan/types';
-import { parseWindow, windowText, type TimeWindow } from '@/core/plan/windows';
+import { parseTime, parseWindow, windowText, type TimeWindow } from '@/core/plan/windows';
 import { formatMinutes } from '@/core/i18n/format';
 import { t } from '@/strings';
 
@@ -21,6 +21,14 @@ const windowField = () =>
       const w = parseWindow(v);
       return w ? windowText(w) : v.trim();
     })
+    .catch('');
+
+/** The „Tagesende“ as typed: '23', '23.00' read back as '23:00'; anything else stays as typed (and is no day end). */
+const timeField = () =>
+  z
+    .string()
+    .max(20)
+    .transform((v) => parseTime(v) ?? v.trim())
     .catch('');
 
 /**
@@ -51,6 +59,12 @@ export const plannerSettingsSchema = z.object({
   allDayBlocks: z.boolean(),
   calendarChips: z.boolean(),
   overloadToast: z.boolean(),
+  /**
+   * „Tagesende“ ('HH:mm', '' = none, package 6), the same for every day. It only gives the head its one calm line
+   * „Bald ist Tagesende.“ from 30 minutes before (`rest.ts`, under `focus.eveningWrapUp`); the engine never reads
+   * it – how much lands on a day stays the day's minutes, and no session is timed after the window's end.
+   */
+  dayEnd: timeField(),
 });
 export type PlannerSettings = z.output<typeof plannerSettingsSchema>;
 
@@ -70,7 +84,12 @@ export const DEFAULT_PLANNER_SETTINGS: PlannerSettings = {
   allDayBlocks: false,
   calendarChips: true,
   overloadToast: true,
+  dayEnd: '',
 };
+
+/** The day end of the settings as 'HH:mm'; `undefined` = none (empty or not readable). */
+export const dayEndOf = (settings: Pick<PlannerSettings, 'dayEnd'>): string | undefined =>
+  settings.dayEnd ? parseTime(settings.dayEnd) : undefined;
 
 /** Minutes available on a date by its weekday (Monday = 1 … Sunday = 7) when no day row says otherwise. */
 export function defaultAvailable(settings: PlannerSettings, isoWeekday: number): number {
@@ -168,6 +187,16 @@ export const settings: ModuleSettings = {
       },
       get help() {
         return s().windowSundayHelp;
+      },
+    },
+    {
+      key: 'dayEnd',
+      type: 'text',
+      get label() {
+        return s().dayEnd;
+      },
+      get help() {
+        return s().dayEndHelp;
       },
     },
     {
