@@ -36,6 +36,19 @@ pub(crate) fn state_file(app: &AppHandle) -> Result<PathBuf, String> {
 }
 
 impl Downloads {
+    /// Whether a download is running or waiting right now (remote control asks before it shuts
+    /// the PC down). `false` while the module was never opened in this run.
+    pub fn active(&self) -> bool {
+        self.manager.get().is_some_and(|m| {
+            m.snapshot().iter().any(|j| {
+                matches!(
+                    j.state,
+                    ::downloader::State::Running | ::downloader::State::Queued
+                )
+            })
+        })
+    }
+
     /// Runs `f` with the manager while no other `downloads_*` command runs. The manager is created
     /// on first use (under the same gate, so only once), so an app that never opens the module
     /// does nothing.

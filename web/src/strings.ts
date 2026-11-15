@@ -4831,6 +4831,8 @@ export const de = {
     tabs: {
       drives: 'Laufwerke',
       tidy: 'Aufräumen',
+      startup: 'Autostart',
+      tweaks: 'Windows-Einstellungen',
       system: 'System',
       history: 'Verlauf',
     } as const,
@@ -4878,6 +4880,14 @@ export const de = {
         full: 'Fast voll – Aufräumen empfohlen.',
       } as Record<string, string>,
       healthLabel: 'Zustand',
+      toTidy: 'Aufräumen öffnen',
+      trimLabel: 'TRIM',
+      trim: {
+        on: 'In Windows eingeschaltet',
+        off: 'In Windows ausgeschaltet. Einschalten geht nur in Windows mit Administratorrechten; Nemo ändert das nicht.',
+      } as Record<string, string>,
+      helpTrim:
+        'Mit TRIM teilt Windows einer SSD mit, welche Bereiche nach dem Löschen frei sind. Ohne TRIM kann eine SSD mit der Zeit langsamer schreiben.',
       health: {
         ok: 'In Ordnung',
         warning: 'Das Laufwerk meldet Probleme – sichere deine Daten.',
@@ -5315,10 +5325,10 @@ export const de = {
     },
     /** Tab "Verlauf": what the page changed on this PC, with the way back. */
     history: {
-      lead: 'Was Nemo auf diesem PC verändert hat, mit dem Weg zurück. Was du aufräumst, steht hier, bis du Nemo schließt.',
+      lead: 'Was Nemo auf diesem PC verändert hat, mit dem Weg zurück. Aufgeräumtes steht hier, bis du Nemo schließt; Änderungen am Autostart und an Windows-Einstellungen bleiben hier stehen.',
       loading: 'Verlauf wird gelesen …',
-      empty: 'In dieser Sitzung noch nichts aufgeräumt.',
-      emptyHint: 'Sobald du etwas aufräumst, steht es hier.',
+      empty: 'Im Verlauf steht noch nichts.',
+      emptyHint: 'Sobald du etwas aufräumst oder umschaltest, steht es hier.',
       reload: 'Erneut laden',
       failed: 'Der Verlauf konnte nicht gelesen werden.',
       recovered: 'Die Verlaufsdatei war beschädigt und wurde neu angelegt. Ältere Einträge fehlen.',
@@ -5339,9 +5349,163 @@ export const de = {
       undoLabel: (what: string) => `Rückgängig: ${what}`,
       undoDone: 'Zurückgestellt.',
       undoFailed: 'Das ließ sich nicht zurückstellen.',
+      changedElsewhere: 'Das wurde inzwischen in Windows geändert. Nemo lässt es, wie es ist.',
       undone: 'Zurückgenommen.',
       canUndo: 'Der Wert von vorher ist gespeichert.',
       undoNewerFirst: 'Nimm zuerst die neuere Änderung daran zurück.',
+      stale: 'Inzwischen in Windows geändert.',
+      changed: (name: string) => `${name}: geändert`,
+      chose: (name: string, choice: string) => `${name}: ${choice}`,
+    },
+    /** Tab "Windows-Einstellungen": documented, reversible Windows settings (`pc-tune` catalogue ids). */
+    tweaks: {
+      lead: 'Das sind Einstellungen von Windows. Hier kannst du sie umstellen, ohne sie in Windows zu suchen. Jede Änderung lässt sich zurücknehmen.',
+      onlyWindows: 'Diese Einstellungen gibt es nur unter Windows.',
+      onlyWindowsHint: 'Auf diesem Gerät ändert Nemo hier nichts.',
+      loading: 'Einstellungen werden gelesen …',
+      failed: 'Die Einstellungen konnten nicht gelesen werden.',
+      again: 'Noch einmal lesen',
+      none: 'Auf diesem PC gibt es hier nichts einzustellen.',
+      changedCount: (n: number) =>
+        n === 1 ? '1 Einstellung von Nemo geändert.' : `${n} Einstellungen von Nemo geändert.`,
+      resetAll: 'Alle zurücksetzen',
+      resetTitle: 'Alle zurücksetzen?',
+      resetText:
+        'Diese Einstellungen bekommen wieder den Wert, den sie vor deiner ersten Änderung hier hatten:',
+      resetConfirm: 'Zurücksetzen',
+      cancel: 'Abbrechen',
+      resetDone: (names: string) => `Zurückgesetzt: ${names}.`,
+      resetKept: (names: string) => `Unverändert geblieben: ${names}.`,
+      resetLeft: (name: string) => `${name} (inzwischen in Windows geändert)`,
+      applyLocked: 'Dieser Plan ist schon aktiv.',
+      noPlan: 'Kein Plan erkannt',
+      resetFailed: (name: string) => `${name} (ließ sich nicht zurücksetzen)`,
+      resetNothing: 'Es gab nichts zurückzusetzen.',
+      restorePoint: 'Computerschutz öffnen',
+      restorePointHint:
+        'Wenn du magst, legst du dort vorher einen Wiederherstellungspunkt an. Nötig ist das nicht.',
+      group: {
+        appearance: 'Darstellung',
+        explorer: 'Explorer',
+        privacy: 'Privatsphäre',
+        power: 'Energie',
+      } as Record<string, string>,
+      title: {
+        animations: 'Animationen in Fenstern',
+        dragFullWindows: 'Fensterinhalt beim Ziehen',
+        pointerSonar: 'Mauszeiger mit Strg zeigen',
+        fileExtensions: 'Dateiendungen anzeigen',
+        hiddenFiles: 'Versteckte Dateien anzeigen',
+        advertisingId: 'Werbe-ID für Apps',
+        trackAppLaunches: 'App-Starts für Start und Suche merken',
+        powerPlan: 'Energiesparplan',
+      } as Record<string, string>,
+      what: {
+        animations:
+          'Bedienelemente in Fenstern blenden weich ein und aus. Ausgeschaltet erscheinen sie sofort.',
+        dragFullWindows:
+          'Beim Verschieben siehst du das ganze Fenster. Ausgeschaltet zeigt Windows nur einen Rahmen.',
+        pointerSonar: 'Ein Druck auf die Strg-Taste zeigt mit Kreisen, wo der Mauszeiger ist.',
+        fileExtensions:
+          'Der Explorer zeigt Endungen wie .pdf oder .exe hinter dem Dateinamen. So siehst du, was für eine Datei es ist.',
+        hiddenFiles:
+          'Der Explorer zeigt auch Dateien und Ordner, die als versteckt markiert sind. Geschützte Systemdateien bleiben ausgeblendet.',
+        advertisingId:
+          'Apps dürfen deine Werbe-ID nutzen, um Werbung auf dich abzustimmen. Ausgeschaltet siehst du nicht weniger Werbung, sie richtet sich aber nicht mehr nach dieser ID.',
+        trackAppLaunches:
+          'Windows merkt sich, welche Apps du startest, und sortiert damit Startmenü und Suche.',
+        powerPlan:
+          'Legt fest, wie Windows zwischen Leistung und Stromverbrauch abwägt. Der Plan gilt für alle Konten dieses PCs. Zur Wahl stehen nur die Pläne, die es hier schon gibt.',
+      } as Record<string, string>,
+      detail: {
+        animations:
+          'In Windows gehört es zum Schalter „Animationseffekte“ unter Barrierefreiheit → Visuelle Effekte. Der Schalter dort kann mehr umfassen als diese eine Einstellung.',
+        dragFullWindows:
+          'In Windows heißt es „Fensterinhalt beim Ziehen anzeigen“ (Leistungsoptionen → Visuelle Effekte). Nemo stellt es auf demselben Weg um wie Windows selbst.',
+        pointerSonar:
+          'In Windows heißt es „Zeigerposition beim Drücken der STRG-Taste anzeigen“ (Mauseigenschaften → Zeigeroptionen). Nemo stellt es auf demselben Weg um wie Windows selbst.',
+        fileExtensions:
+          'Im Explorer heißt es „Dateinamenerweiterungen“ (Anzeigen → Einblenden). Nemo stellt es auf demselben Weg um wie Windows selbst.',
+        hiddenFiles:
+          'Im Explorer heißt es „Ausgeblendete Elemente“ (Anzeigen → Einblenden). Nemo stellt es auf demselben Weg um wie Windows selbst.',
+        advertisingId:
+          'In Windows findest du es unter Datenschutz und Sicherheit → Allgemein. Nemo ändert dieselbe Angabe wie der Schalter dort; sie gilt nur für dein Konto.',
+        trackAppLaunches:
+          'In Windows findest du es unter Datenschutz und Sicherheit → Allgemein. Nemo ändert dieselbe Angabe wie der Schalter dort; sie gilt nur für dein Konto.',
+        powerPlan:
+          'In Windows findest du die Pläne in der Systemsteuerung unter Energieoptionen. Nemo wechselt nur zwischen ihnen, legt keinen neuen an und blendet keinen versteckten ein.',
+      } as Record<string, string>,
+      riskLow: 'Risiko: gering.',
+      riskNote: {
+        hiddenFiles:
+          'Versteckte Dateien gehören oft zu Programmen. Sind sie sichtbar, verschiebt oder löscht man sie leichter aus Versehen.',
+        trackAppLaunches: 'Ausgeschaltet bleibt die Liste „Meistverwendet“ im Startmenü leer.',
+        powerPlan: 'Ein Plan mit mehr Leistung braucht mehr Strom; am Laptop hält der Akku kürzer.',
+      } as Record<string, string>,
+      refresh: {
+        explorer: 'Offene Explorer-Fenster zeigen es nach dem Aktualisieren (F5).',
+      },
+      more: 'Mehr dazu',
+      moreLabel: (title: string) => `Mehr dazu: ${title}`,
+      source: 'Quelle: Dokumentation von Microsoft',
+      sourceLabel: (title: string) =>
+        `Quelle: Dokumentation von Microsoft (${title}, öffnet im Browser)`,
+      changedHere: 'von Nemo geändert',
+      stateOn: 'Eingeschaltet',
+      stateOff: 'Ausgeschaltet',
+      stateChoice: (label: string) => (label ? `Aktiv: ${label}` : ''),
+      windowsDefault: 'Hier ist nichts festgelegt; es gilt der Standard von Windows.',
+      customValue:
+        'Hier ist ein anderer Wert gespeichert, den Nemo nicht einordnet. Nach einer Änderung stellt „Rückgängig“ genau ihn wieder her.',
+      unreadable:
+        'Nemo kann den aktuellen Wert nicht lesen. Ohne ihn gäbe es keinen Weg zurück, deshalb ändert Nemo hier nichts.',
+      turnOn: 'Einschalten',
+      turnOff: 'Ausschalten',
+      turnOnLabel: (title: string) => `Einschalten: ${title}`,
+      turnOffLabel: (title: string) => `Ausschalten: ${title}`,
+      apply: 'Übernehmen',
+      applyLabel: (title: string) => `Übernehmen: ${title}`,
+      chooseLabel: (title: string) => `${title} wählen`,
+      switched: (title: string, on: boolean) =>
+        `${title}: ${on ? 'eingeschaltet' : 'ausgeschaltet'}.`,
+      chosen: (title: string, label: string) => `${title}: ${label}.`,
+      setFailed: 'Das ließ sich nicht umstellen. Es wurde nichts geändert.',
+    },
+    /** Tab "Autostart": what starts with Windows for this account, with a switch each. */
+    startup: {
+      lead: 'Hier steht, was über die Autostart-Liste mit Windows startet. Was du beim Start nicht brauchst, schaltest du aus – das Programm bleibt installiert und lässt sich wieder einschalten.',
+      loading: 'Autostart wird gelesen …',
+      failed: 'Der Autostart konnte nicht gelesen werden.',
+      again: 'Erneut versuchen',
+      onlyWindows: 'Den Autostart zeigt Nemo nur unter Windows.',
+      empty: 'Nemo findet keine Programme in der Autostart-Liste von Windows.',
+      user: 'Für dein Konto',
+      machine: 'Für alle Konten',
+      count: (on: number, total: number) => `${on} von ${total} eingeschaltet`,
+      machineHint:
+        'Nur zum Ansehen: Diese Einträge gelten für alle, die diesen PC nutzen. Ändern lassen sie sich in den Windows-Einstellungen mit einem Administratorkonto.',
+      machineOpen: 'In den Windows-Einstellungen ändern',
+      openFailed: 'Das ließ sich nicht öffnen.',
+      switchLabel: (name: string) => `${name} mit Windows starten`,
+      notSwitchable: 'Lässt sich hier nicht umschalten',
+      on: 'Eingeschaltet',
+      off: 'Ausgeschaltet',
+      folder: 'Autostart-Ordner',
+      nowOff: (name: string) => `${name} startet nicht mehr mit Windows.`,
+      nowOn: (name: string) => `${name} startet wieder mit Windows.`,
+      undo: 'Rückgängig',
+      undoFailed: 'Das ließ sich nicht zurückstellen. Im Verlauf siehst du den Stand.',
+      setFailed: 'Das ließ sich nicht umschalten.',
+      impact:
+        'Wie stark ein Programm den Start von Windows verzögert, schätzt Windows selbst: Der Task-Manager zeigt es unter „Autostart-Apps“ in der Spalte „Startauswirkungen“.',
+      historyOff: (name: string) => `${name}: startet nicht mehr mit Windows`,
+      historyOn: (name: string) => `${name}: startet wieder mit Windows`,
+    },
+    /** Above the drives, only when a built-in drive reports problems: one sentence each, no button. */
+    advice: {
+      title: 'Laufwerkszustand',
+      health: (drive: string) =>
+        `${drive} meldet Probleme. Am besten sicherst du bald die Daten darauf.`,
     },
   },
 
@@ -5737,7 +5901,7 @@ export const de = {
       warranty: 'Garantien',
       tax: 'Steuer',
       health: 'Gesundheit',
-      other: 'Sonstiges',
+      other: 'Ohne Kategorie',
     } as Record<string, string>,
     provider: 'Anbieter',
     startDate: 'Beginn',
@@ -5843,6 +6007,59 @@ export const de = {
       [expired > 0 ? `${expired} abgelaufen` : '', due > 0 ? `${due} mit Frist in Sicht` : '']
         .filter(Boolean)
         .join(' · '),
+    categoryAdmin: {
+      manage: 'Kategorien bearbeiten',
+      title: 'Kategorien',
+      add: 'Neue Kategorie',
+      editTitle: 'Kategorie bearbeiten',
+      name: 'Name',
+      colour: 'Farbe',
+      colourN: (n: number) => `Farbe ${n}`,
+      icon: 'Symbol',
+      iconNames: {
+        files: 'Ordner',
+        file: 'Blatt',
+        lock: 'Schloss',
+        receipt: 'Beleg',
+        wallet: 'Geldbörse',
+        home: 'Haus',
+        car: 'Auto',
+        heart: 'Herz',
+        calculator: 'Rechner',
+        package: 'Paket',
+        luggage: 'Koffer',
+        users: 'Personen',
+        umbrella: 'Schirm',
+      } as Record<string, string>,
+      up: (name: string) => `${name} nach oben`,
+      down: (name: string) => `${name} nach unten`,
+      edit: (name: string) => `${name} bearbeiten`,
+      remove: (name: string) => `${name} löschen`,
+      fixedHint:
+        '„Ohne Kategorie“ bleibt immer. Hierher kommen Unterlagen, deren Kategorie gelöscht wird.',
+      duplicate: 'Eine Kategorie mit diesem Namen gibt es schon.',
+      removeTitle: (name: string) => `„${name}“ löschen`,
+      inUse: (n: number) =>
+        n === 1
+          ? '1 Unterlage ist in dieser Kategorie.'
+          : `${n} Unterlagen sind in dieser Kategorie.`,
+      keepsDocs: (n: number) =>
+        n === 1
+          ? 'Sie bleibt erhalten und kommt in die Kategorie, die du hier wählst.'
+          : 'Sie bleiben erhalten und kommen in die Kategorie, die du hier wählst.',
+      place: (name: string, at: number, of: number) => `${name}: Platz ${at} von ${of}`,
+      failed: 'Das hat nicht geklappt. Probier es noch einmal.',
+      moveTo: 'Verschieben nach',
+      removeAndMove: 'Löschen und verschieben',
+      removed: (name: string) => `„${name}“ gelöscht`,
+      removedMoved: (name: string, n: number, target: string) =>
+        n === 1
+          ? `„${name}“ gelöscht · 1 Unterlage nach „${target}“ verschoben`
+          : `„${name}“ gelöscht · ${n} Unterlagen nach „${target}“ verschoben`,
+      created: (name: string) => `„${name}“ angelegt`,
+      emptyFolder: (name: string) => `Noch keine Unterlagen in „${name}“.`,
+      done: 'Fertig',
+    },
     widgetSummary: (n: number) =>
       n === 1 ? '1 Unterlage braucht einen Blick' : `${n} Unterlagen brauchen einen Blick`,
   },
@@ -9538,6 +9755,20 @@ export const de = {
     views: 'Ansicht',
     touchpad: 'Touchpad',
     keyboard: 'Tastatur',
+    presentation: {
+      tab: 'Präsentation',
+      group: 'Folien',
+      next: 'Weiter',
+      previous: 'Zurück',
+      start: 'Start',
+      startLabel: 'Start der Präsentation',
+      black: 'Schwarz',
+      blackLabel: 'Schwarz schalten oder wieder zeigen',
+      end: 'Ende',
+      endLabel: 'Ende der Präsentation',
+      hint: 'Das Präsentationsfenster muss am PC vorne sein.',
+      homeOnly: 'Geht nur im Heimnetz.',
+    },
     keys: {
       field: 'Text für den PC',
       fieldHint: 'Die Eingabetaste deiner Handy-Tastatur sendet den Text und drückt am PC Enter.',
@@ -9620,9 +9851,9 @@ export const de = {
       notPaired: 'Noch kein PC gekoppelt. Die Fernbedienung braucht die Kopplung im Heimnetz.',
       unreachable: 'Dein PC ist gerade nicht erreichbar. Beide Geräte im selben WLAN?',
       notGranted:
-        'Am PC ist die Fernsteuerung für dieses Handy aus. Am PC unter Einstellungen → Fernsteuerung dieses Handy erlauben.',
+        'Am PC ist die Fernsteuerung für dieses Handy aus. Am PC unter Einstellungen → Verbindungen → Fernsteuerung dieses Handy erlauben.',
       paused:
-        'Die Fernbedienung ist am PC pausiert. Am PC unter Einstellungen → Fernsteuerung wieder einschalten.',
+        'Die Fernbedienung ist am PC pausiert. Am PC unter Einstellungen → Verbindungen → Fernsteuerung wieder einschalten.',
       busy: 'Gerade steuert ein anderes Gerät den PC.',
       noInputHere: 'Dein PC nimmt hier gerade keine Fernbedienung an. Ist der PC im Heimnetz?',
       unsupported: 'Dieser PC lässt sich nicht fernsteuern (nur Windows).',
@@ -9631,12 +9862,84 @@ export const de = {
       limit: 'Verbindung kurz unterbrochen.',
       retry: 'Die Verbindung kam nicht zustande.',
     },
+    monitorOff: 'Monitor aus',
+    power: {
+      open: 'PC ausschalten …',
+      title: 'PC ausschalten',
+      note: 'Am PC läuft danach 10 Sekunden ein Countdown. Abbrechen geht hier oder am PC.',
+      more: 'Weitere Möglichkeiten',
+      action: {
+        shutDown: 'Ausschalten',
+        restart: 'Neu starten',
+        sleep: 'Energie sparen',
+        hibernate: 'Ruhezustand',
+        signOut: 'Abmelden',
+      },
+      asking: 'Bestätige auf diesem Handy. Danach geht der Auftrag an den PC.',
+      counting: {
+        shutDown: 'Der PC schaltet sich in Kürze aus. Abbrechen geht hier oder am PC.',
+        restart: 'Der PC startet in Kürze neu. Abbrechen geht hier oder am PC.',
+        sleep: 'Der PC geht in Kürze in den Energiesparmodus. Abbrechen geht hier oder am PC.',
+        hibernate: 'Der PC geht in Kürze in den Ruhezustand. Abbrechen geht hier oder am PC.',
+        signOut: 'Am PC wird in Kürze abgemeldet. Abbrechen geht hier oder am PC.',
+        unknown: 'Am PC läuft ein Countdown zum Ausschalten. Abbrechen geht hier oder am PC.',
+      },
+      cancel: 'Abbrechen',
+      working: 'Nemo am PC ist gerade noch beschäftigt (Abgleich, Download oder Sicherung).',
+      despite: {
+        shutDown: 'Trotzdem ausschalten',
+        restart: 'Trotzdem neu starten',
+        sleep: 'Trotzdem Energie sparen',
+        hibernate: 'Trotzdem Ruhezustand',
+        signOut: 'Trotzdem abmelden',
+      },
+      wait: 'Warten',
+      done: {
+        shutDown:
+          'Der PC fährt herunter. Fragt ein Programm noch nach dem Speichern, bleibt er an.',
+        restart: 'Der PC startet neu. Fragt ein Programm noch nach dem Speichern, bleibt er an.',
+        sleep: 'Der PC geht in den Energiesparmodus.',
+        hibernate: 'Der PC geht in den Ruhezustand.',
+        signOut:
+          'Am PC wird abgemeldet. Fragt ein Programm noch nach dem Speichern, bleibt die Sitzung offen.',
+        unknown:
+          'Der PC schaltet sich aus. Fragt ein Programm noch nach dem Speichern, bleibt er an.',
+      },
+      cancelled: 'Abgebrochen. Der PC bleibt an.',
+      cancelFailed: 'Abbrechen kam nicht an. Am PC abbrechen.',
+      notGranted:
+        'Am PC ist Ausschalten für dieses Handy aus. Am PC unter Einstellungen → Verbindungen → Fernsteuerung „Darf den PC ausschalten“ einschalten.',
+      locked: 'Der PC ist gesperrt. Ausschalten geht nur, solange er entsperrt ist.',
+      limit: 'Gerade nicht möglich. In ein paar Minuten noch einmal.',
+      failed: 'Das hat am PC nicht geklappt.',
+      unavailable:
+        'Dieses Handy kann seine Bildschirmsperre für Nemo nicht abfragen. Ausschalten geht deshalb nur am PC.',
+      unlock: 'Nicht bestätigt. Es wurde nichts gesendet.',
+      dismiss: 'Ausblenden',
+    },
+    programs: {
+      open: 'Programm starten …',
+      title: 'Programm starten',
+      note: 'Das Programm öffnet sich am PC, wie bei einem Doppelklick dort.',
+      empty: 'Am PC unter Einstellungen → Verbindungen → Fernsteuerung Programme auswählen.',
+      starting: 'Wird an den PC gesendet …',
+      started: (name: string) => `${name} wird am PC geöffnet.`,
+      notGranted:
+        'Programme starten ist für dieses Handy aus. Am PC unter Einstellungen → Verbindungen → Fernsteuerung „Darf Programme starten“ einschalten.',
+      locked: 'Der PC ist gesperrt. Programme starten geht nur, solange er entsperrt ist.',
+      limit: 'Gerade eben wurde schon ein Programm gestartet. In ein paar Sekunden noch einmal.',
+      failed: 'Das Programm ließ sich am PC nicht öffnen.',
+      unlock: 'Nicht entsperrt. Es wurde nichts gesendet.',
+      unavailable:
+        'Dieses Handy kann seine Bildschirmsperre für Nemo nicht abfragen. Programme starten geht deshalb nur am PC.',
+      dismiss: 'Ausblenden',
+    },
   },
   routines: {
     meta: {
       name: 'Routinen',
       description:
-        'Putzplan und Haushalts-Routinen: was in welchem Raum wie oft dran ist und wer an der Reihe ist. Ohne Rückstand.',
+        'Routinen für den Tag und den Haushalt: Schritte zum Abhaken, wann sie dran sind und wer an der Reihe ist. Ohne Rückstand.',
       quickAdd: 'Routine',
       widget: 'Heute dran',
     },
@@ -9658,9 +9961,91 @@ export const de = {
       `${due} dran · ${total === 1 ? '1 Routine' : `${total} Routinen`}`,
     planTitle: (name: string, who?: string) => (who ? `${name} (${who})` : name),
     views: { label: 'Ansichten', due: 'Dran', all: 'Alle nach Raum' },
+    stepCount: (n: number) => (n === 1 ? '1 Schritt' : `${n} Schritte`),
+    dayparts: { morning: 'morgens', midday: 'mittags', evening: 'abends' },
+    starts: {
+      label: 'Womit anfangen?',
+      blank: 'Leer',
+      morning: {
+        label: 'Morgen',
+        name: 'Morgenroutine',
+        steps: [
+          'Ein Glas Wasser trinken',
+          'Medikamente nehmen',
+          'Zähne putzen',
+          'Anziehen',
+          'Frühstücken',
+          'Schlüssel, Handy und Tasche einpacken',
+        ],
+      },
+      evening: {
+        label: 'Abend',
+        name: 'Abendroutine',
+        steps: [
+          'Küche kurz aufräumen',
+          'Tasche für morgen packen',
+          'Kleidung für morgen rauslegen',
+          'Handy ans Ladegerät',
+          'Zähne putzen',
+        ],
+      },
+      weekClean: {
+        label: 'Wochenputz',
+        name: 'Wochenputz',
+        steps: [
+          'Aufräumen',
+          'Staubsaugen',
+          'Bad putzen',
+          'Küche wischen',
+          'Böden wischen',
+          'Müll rausbringen',
+        ],
+      },
+      weekShop: {
+        label: 'Wocheneinkauf',
+        name: 'Wocheneinkauf',
+        steps: [
+          'Kühlschrank und Vorräte ansehen',
+          'Einkaufsliste schreiben',
+          'Taschen und Pfand mitnehmen',
+          'Einkaufen',
+          'Einräumen',
+        ],
+      },
+    },
+    run: {
+      start: 'Los',
+      resume: 'Weiter',
+      startFor: (name: string) => `Los: ${name}`,
+      progress: (done: number, total: number) => `${done} von ${total} Schritten`,
+      later: 'Später',
+      allDone: 'Erledigt',
+      edit: 'Bearbeiten',
+      steps: 'Schritte',
+    },
     fields: {
-      name: 'Was',
-      namePlaceholder: 'z. B. Bad putzen',
+      name: 'Name',
+      namePlaceholder: 'z. B. Morgenroutine oder Bad putzen',
+      rhythm: 'Wie oft',
+      rhythms: {
+        daily: 'Jeden Tag',
+        weekdays: 'An bestimmten Tagen',
+        weekly: 'Einmal pro Woche',
+        biweekly: 'Alle zwei Wochen',
+        monthly: 'Einmal im Monat',
+        custom: 'Anders',
+      },
+      days: 'An welchen Tagen',
+      lastDay: 'Ein Tag bleibt immer gewählt.',
+      daypart: 'Tageszeit',
+      daypartAny: 'Egal',
+      dayparts: { morning: 'Morgens', midday: 'Mittags', evening: 'Abends' },
+      steps: 'Schritte (optional)',
+      stepsHint: 'Ein Schritt pro Zeile. Dann lässt sich die Routine Schritt für Schritt abhaken.',
+      remindAt: 'Erinnerung (optional)',
+      remindAtHint: 'Uhrzeit an den Tagen, an denen die Routine dran ist. Leer lassen für keine.',
+      planner: 'Im Planer zeigen',
+      plannerHint: 'Der Planer findet Zeit dafür an den Tagen, an denen sie dran ist.',
       room: 'Raum',
       people: 'Wer wechselt sich ab',
       peopleHint:
@@ -9668,7 +10053,7 @@ export const de = {
       dueDate: 'Nächstes Mal',
       dueDatePast: 'Ein Tag in der Vergangenheit heißt: jetzt dran.',
       minutes: 'Dauer in Minuten',
-      moreSummary: 'Namen, nächstes Mal, Dauer, Notiz',
+      moreSummary: 'Raum, wer wechselt sich ab, nächstes Mal, Dauer, Notiz',
     },
   },
   device: {

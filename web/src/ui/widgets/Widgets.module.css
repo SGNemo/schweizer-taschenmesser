@@ -14,6 +14,11 @@
   font-size: var(--text-sm);
   font-variant-numeric: var(--font-num);
 }
+/* A part of a context line (`KennzahlBody`): the line breaks between parts, not inside one. */
+.part {
+  display: inline-block;
+  max-width: 100%;
+}
 .summary {
   font-size: var(--text-lg);
   font-weight: var(--weight-semibold);
@@ -79,9 +84,21 @@
 /* Due list: the row tone carries the emphasis, the badge carries icon + text */
 .dueRow {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: var(--space-2);
   min-height: 1.75rem;
+}
+/* A narrow card (phone, size s) keeps the name readable: below 8 rem for the name, amount, state and action (one group,
+   `.dueTail`) move to a second line at the right end instead of squeezing the name into one syllable per line ("Stadt-/werke/Mus-/ter-/stadt"). */
+.dueRow > .rowTitle {
+  flex-basis: 8rem;
+}
+.dueTail {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-inline-start: auto;
 }
 .dueRow[data-tone='later'] .rowTitle,
 .dueRow[data-tone='none'] .rowTitle {

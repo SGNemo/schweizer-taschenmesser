@@ -21,8 +21,18 @@ import {
 import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import { markDone } from '../actions';
 import { RoutineEditor, type RoutineTarget } from '../components/RoutineEditor';
-import { groupByRoom, isDue, sortRoutines, whoseTurn, type StoredRoutine } from '../logic';
+import { RoutineRun } from '../components/RoutineRun';
+import {
+  doneSteps,
+  groupByRoom,
+  isDue,
+  sortRoutines,
+  stepsOf,
+  whoseTurn,
+  type StoredRoutine,
+} from '../logic';
 import { routineRepo } from '../repo';
+import { isStartId } from '../starts';
 
 type View = 'due' | 'all';
 
@@ -30,12 +40,20 @@ export default function RoutinesPage() {
   const routines = useLiveQuery(() => routineRepo.active().toArray(), []);
   const [view, setView] = useState<View>('due');
   const [target, setTarget] = useState<RoutineTarget>(null);
-  useOpenParam((id) => routineRepo.get(id), setTarget);
+  const [running, setRunning] = useState<string | null>(null);
+  // A link to a routine (search, plan) opens its steps when it has some, else its form.
+  useOpenParam(
+    (id) => routineRepo.get(id),
+    (r) => (stepsOf(r).length > 0 ? setRunning(r.id) : setTarget(r)),
+  );
   const [params, setParams] = useSearchParams();
   const day = today();
 
-  // `?new=1` (Quick-Add, the widget's empty state) opens the dialog; derived from the URL.
-  const openTarget = target ?? (params.get('new') ? { draft: true as const } : null);
+  // `?new=1` (Quick-Add, the widget's empty state) opens the dialog, `?new=morning` with a start filled in.
+  const newParam = params.get('new');
+  const openTarget =
+    target ??
+    (newParam ? { draft: true as const, start: isStartId(newParam) ? newParam : undefined } : null);
   const close = () => {
     setTarget(null);
     if (params.get('new')) setParams({}, { replace: true });
@@ -52,6 +70,8 @@ export default function RoutinesPage() {
   const row = (r: StoredRoutine) => {
     const who = whoseTurn(r);
     const dueNow = isDue(r, day);
+    const steps = stepsOf(r).length;
+    const ticked = doneSteps(r).size;
     return (
       <ItemRow
         key={r.id}
@@ -59,6 +79,12 @@ export default function RoutinesPage() {
         meta={[
           view === 'due' ? r.room : undefined,
           describeRecurrence(r.repeat),
+          r.daypart ? t.routines.dayparts[r.daypart] : undefined,
+          steps
+            ? ticked
+              ? t.routines.run.progress(ticked, steps)
+              : t.routines.stepCount(steps)
+            : undefined,
           who ? t.routines.turnOf(who) : undefined,
         ]
           .filter(Boolean)
@@ -76,14 +102,26 @@ export default function RoutinesPage() {
                 {relativeDayLabel(r.dueDate, day)}
               </span>
             )}
-            <Button
-              size="sm"
-              variant={dueNow ? 'secondary' : 'ghost'}
-              aria-label={t.routines.doneFor(r.name)}
-              onClick={() => void markDone(r)}
-            >
-              {t.routines.done}
-            </Button>
+            {/* A routine with steps is gone through step by step; one without is ticked as a whole. */}
+            {steps ? (
+              <Button
+                size="sm"
+                variant={dueNow ? 'secondary' : 'ghost'}
+                aria-label={t.routines.run.startFor(r.name)}
+                onClick={() => setRunning(r.id)}
+              >
+                {ticked ? t.routines.run.resume : t.routines.run.start}
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant={dueNow ? 'secondary' : 'ghost'}
+                aria-label={t.routines.doneFor(r.name)}
+                onClick={() => void markDone(r)}
+              >
+                {t.routines.done}
+              </Button>
+            )}
           </>
         }
       />
@@ -171,6 +209,14 @@ export default function RoutinesPage() {
       )}
 
       <RoutineEditor target={openTarget} rooms={rooms} onClose={close} />
+      <RoutineRun
+        id={running}
+        onClose={() => setRunning(null)}
+        onEdit={(r) => {
+          setRunning(null);
+          setTarget(r);
+        }}
+      />
     </>
   );
 }

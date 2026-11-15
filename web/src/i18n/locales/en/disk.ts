@@ -16,6 +16,8 @@ export const disk: Strings['disk'] = {
   tabs: {
     drives: 'Drives',
     tidy: 'Tidy up',
+    startup: 'Startup',
+    tweaks: 'Windows settings',
     system: 'System',
     history: 'History',
   } as const,
@@ -63,6 +65,14 @@ export const disk: Strings['disk'] = {
       full: 'Almost full – tidying up recommended.',
     } as Record<string, string>,
     healthLabel: 'Health',
+    toTidy: 'Open Tidy up',
+    trimLabel: 'TRIM',
+    trim: {
+      on: 'Switched on in Windows',
+      off: 'Switched off in Windows. Switching it on takes administrator rights in Windows; Nemo doesn’t change it.',
+    } as Record<string, string>,
+    helpTrim:
+      'With TRIM, Windows tells an SSD which areas are free after deleting. Without TRIM an SSD can get slower at writing over time.',
     health: {
       ok: 'Fine',
       warning: 'The drive reports problems – back up your data.',
@@ -487,10 +497,10 @@ export const disk: Strings['disk'] = {
     pointer: 'Temporary files, browser caches and old downloads are under “Tidy up”.',
   },
   history: {
-    lead: 'What Nemo changed on this PC, with the way back. What you tidy up is listed here until you close Nemo.',
+    lead: 'What Nemo changed on this PC, with the way back. What you tidy up is listed until you close Nemo; changes to startup programs and Windows settings stay listed.',
     loading: 'Reading history …',
-    empty: 'Nothing tidied up in this session yet.',
-    emptyHint: 'As soon as you tidy something up, it’s listed here.',
+    empty: 'The history is still empty.',
+    emptyHint: 'As soon as you tidy something up or switch something, it’s listed here.',
     reload: 'Load again',
     failed: 'The history couldn’t be read.',
     recovered: 'The history file was damaged and has been started anew. Older entries are missing.',
@@ -511,8 +521,156 @@ export const disk: Strings['disk'] = {
     undoLabel: (what: string) => `Undo: ${what}`,
     undoDone: 'Put back.',
     undoFailed: 'That couldn’t be put back.',
+    changedElsewhere: 'This was changed in Windows in the meantime, so Nemo leaves it as it is.',
     undone: 'Taken back.',
     canUndo: 'The value from before is stored.',
     undoNewerFirst: 'Take back the newer change to it first.',
+    stale: 'Changed in Windows in the meantime.',
+    changed: (name: string) => `${name}: changed`,
+    chose: (name: string, choice: string) => `${name}: ${choice}`,
+  },
+  tweaks: {
+    lead: 'These are settings of Windows. You can switch them here without looking for them in Windows. Every change can be taken back.',
+    onlyWindows: 'These settings exist on Windows only.',
+    onlyWindowsHint: 'Nemo changes nothing here on this device.',
+    loading: 'Reading settings …',
+    failed: 'The settings couldn’t be read.',
+    again: 'Read again',
+    none: 'There is nothing to set here on this PC.',
+    changedCount: (n: number) =>
+      n === 1 ? '1 setting changed by Nemo.' : `${n} settings changed by Nemo.`,
+    resetAll: 'Reset all',
+    resetTitle: 'Reset all?',
+    resetText: 'These settings get back the value they had before your first change here:',
+    resetConfirm: 'Reset',
+    cancel: 'Cancel',
+    resetDone: (names: string) => `Reset: ${names}.`,
+    resetKept: (names: string) => `Left unchanged: ${names}.`,
+    resetLeft: (name: string) => `${name} (changed in Windows in the meantime)`,
+    applyLocked: 'This plan is already active.',
+    noPlan: 'No plan recognised',
+    resetFailed: (name: string) => `${name} (couldn’t be reset)`,
+    resetNothing: 'There was nothing to reset.',
+    restorePoint: 'Open System Protection',
+    restorePointHint: 'If you like, create a restore point there first. It isn’t required.',
+    group: {
+      appearance: 'Appearance',
+      explorer: 'Explorer',
+      privacy: 'Privacy',
+      power: 'Power',
+    } as Record<string, string>,
+    title: {
+      animations: 'Animations in windows',
+      dragFullWindows: 'Window contents while dragging',
+      pointerSonar: 'Show the pointer with Ctrl',
+      fileExtensions: 'Show file extensions',
+      hiddenFiles: 'Show hidden files',
+      advertisingId: 'Advertising ID for apps',
+      trackAppLaunches: 'Remember app launches for Start and search',
+      powerPlan: 'Power plan',
+    } as Record<string, string>,
+    what: {
+      animations: 'Controls inside windows fade in and out. Switched off, they appear at once.',
+      dragFullWindows:
+        'You see the whole window while you move it. Switched off, Windows shows only an outline.',
+      pointerSonar: 'Pressing the Ctrl key shows with circles where the pointer is.',
+      fileExtensions:
+        'Explorer shows extensions such as .pdf or .exe after the file name, so you see what kind of file it is.',
+      hiddenFiles:
+        'Explorer also shows files and folders that are marked as hidden. Protected system files stay hidden.',
+      advertisingId:
+        'Apps may use your advertising ID to tailor ads to you. Switched off, you don’t see fewer ads, but they no longer follow this ID.',
+      trackAppLaunches:
+        'Windows remembers which apps you start and uses that to sort the Start menu and search.',
+      powerPlan:
+        'Decides how Windows balances performance and power use. The plan applies to all accounts of this PC. You can choose only among the plans it already has.',
+    } as Record<string, string>,
+    detail: {
+      animations:
+        'In Windows it is part of the “Animation effects” switch under Accessibility → Visual effects. The switch there may cover more than this one setting.',
+      dragFullWindows:
+        'Windows calls it “Show window contents while dragging” (Performance Options → Visual Effects). Nemo switches it the same way Windows itself does.',
+      pointerSonar:
+        'Windows calls it “Show location of pointer when I press the CTRL key” (Mouse Properties → Pointer Options). Nemo switches it the same way Windows itself does.',
+      fileExtensions:
+        'Explorer calls it “File name extensions” (View → Show). Nemo switches it the same way Windows itself does.',
+      hiddenFiles:
+        'Explorer calls it “Hidden items” (View → Show). Nemo switches it the same way Windows itself does.',
+      advertisingId:
+        'In Windows it is under Privacy & security → General. Nemo changes the same entry as the switch there; it applies to your account only.',
+      trackAppLaunches:
+        'In Windows it is under Privacy & security → General. Nemo changes the same entry as the switch there; it applies to your account only.',
+      powerPlan:
+        'In Windows the plans are in Control Panel under Power Options. Nemo only switches between them, creates no new plan and unhides none.',
+    } as Record<string, string>,
+    riskLow: 'Risk: low.',
+    riskNote: {
+      hiddenFiles:
+        'Hidden files often belong to programs. Once visible, they are easier to move or delete by accident.',
+      trackAppLaunches: 'Switched off, the “Most used” list in the Start menu stays empty.',
+      powerPlan:
+        'A plan with more performance uses more power; on a laptop the battery doesn’t last as long.',
+    } as Record<string, string>,
+    refresh: {
+      explorer: 'Open Explorer windows show it after a refresh (F5).',
+    },
+    more: 'More about this',
+    moreLabel: (title: string) => `More about this: ${title}`,
+    source: 'Source: Microsoft documentation',
+    sourceLabel: (title: string) =>
+      `Source: Microsoft documentation (${title}, opens in the browser)`,
+    changedHere: 'changed by Nemo',
+    stateOn: 'Switched on',
+    stateOff: 'Switched off',
+    stateChoice: (label: string) => (label ? `Active: ${label}` : ''),
+    windowsDefault: 'Nothing is set here; Windows’ default applies.',
+    customValue:
+      'Another value is stored here that Nemo can’t place. After a change, Undo puts exactly this value back.',
+    unreadable:
+      'Nemo can’t read the current value. Without it there would be no way back, so Nemo changes nothing here.',
+    turnOn: 'Switch on',
+    turnOff: 'Switch off',
+    turnOnLabel: (title: string) => `Switch on: ${title}`,
+    turnOffLabel: (title: string) => `Switch off: ${title}`,
+    apply: 'Apply',
+    applyLabel: (title: string) => `Apply: ${title}`,
+    chooseLabel: (title: string) => `Choose ${title}`,
+    switched: (title: string, on: boolean) => `${title}: ${on ? 'switched on' : 'switched off'}.`,
+    chosen: (title: string, label: string) => `${title}: ${label}.`,
+    setFailed: 'That couldn’t be changed. Nothing was changed.',
+  },
+  startup: {
+    lead: 'This is what starts with Windows through its startup list. Switch off what you don’t need at start-up – the program stays installed and can be switched on again.',
+    loading: 'Reading startup programs …',
+    failed: 'The startup programs couldn’t be read.',
+    again: 'Try again',
+    onlyWindows: 'Nemo shows startup programs on Windows only.',
+    empty: 'Nemo finds no programs in Windows’ startup list.',
+    user: 'For your account',
+    machine: 'For all accounts',
+    count: (on: number, total: number) => `${on} of ${total} switched on`,
+    machineHint:
+      'View only: these entries apply to everyone who uses this PC. They can be changed in Windows’ settings with an administrator account.',
+    machineOpen: 'Change in Windows settings',
+    openFailed: 'That couldn’t be opened.',
+    switchLabel: (name: string) => `Start ${name} with Windows`,
+    notSwitchable: 'Can’t be switched here',
+    on: 'Switched on',
+    off: 'Switched off',
+    folder: 'Startup folder',
+    nowOff: (name: string) => `${name} no longer starts with Windows.`,
+    nowOn: (name: string) => `${name} starts with Windows again.`,
+    undo: 'Undo',
+    undoFailed: 'That couldn’t be put back. The history shows the current state.',
+    setFailed: 'That couldn’t be switched.',
+    impact:
+      'Windows rates how much a program slows down start-up itself: Task Manager shows it under “Startup apps” in the column “Startup impact”.',
+    historyOff: (name: string) => `${name}: no longer starts with Windows`,
+    historyOn: (name: string) => `${name}: starts with Windows again`,
+  },
+  advice: {
+    title: 'Drive health',
+    health: (drive: string) =>
+      `${drive} reports problems. It’s best to back up the data on it soon.`,
   },
 };

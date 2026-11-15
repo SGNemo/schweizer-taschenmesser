@@ -53,12 +53,14 @@ test.describe('UI round 6 – desktop 1920', () => {
     seeded: { scale: 'small', desktop: true, preview: true },
   });
 
-  test('U19: the detailed overview has no holes between widgets', async ({ page }) => {
+  test('U19: the detailed overview has no holes between widgets, and every row is flush', async ({
+    page,
+  }) => {
     await page.addInitScript(() => localStorage.setItem('tm-home-view', 'all'));
     await start(page, '/');
     const grid = page.getByTestId('home-grid');
-    await expect(grid).toHaveAttribute('data-packed', 'true');
-    // Lazy widgets load and re-pack: poll until the grid has settled without holes.
+    await expect(grid).not.toHaveAttribute('data-settling');
+    // Lazy widgets load and grow their row: poll until the grid has settled without holes.
     const holes = () =>
       grid.evaluate((g) => {
         const gap = parseFloat(getComputedStyle(g).columnGap);
@@ -74,7 +76,7 @@ test.describe('UI round 6 – desktop 1920', () => {
         });
         const top = Math.min(...boxes.map((b) => b.y));
         // Above every card, in the columns it covers, the nearest card ends one gap higher (or the grid starts).
-        return boxes
+        const free = boxes
           .map((b) => {
             const above = boxes
               .filter((o) => o.y < b.y && o.x < b.x + b.w - 1 && o.x + o.w > b.x + 1)
@@ -82,21 +84,31 @@ test.describe('UI round 6 – desktop 1920', () => {
             return { id: b.id, free: Math.round(b.y - (above.length ? Math.max(...above) : top)) };
           })
           .filter((x) => x.free > gap + 2);
+        // Round "Tiefe" (fix/home-polish): cards that start on one line end on one line.
+        const rows = new Map<number, number[]>();
+        for (const b of boxes)
+          rows.set(Math.round(b.y), [...(rows.get(Math.round(b.y)) ?? []), b.y + b.h]);
+        const ragged = [...rows.values()].filter(
+          (ends) => Math.max(...ends) - Math.min(...ends) > 1,
+        );
+        return { free, ragged: ragged.length };
       });
-    await expect.poll(holes, { timeout: 15_000 }).toEqual([]);
+    await expect.poll(holes, { timeout: 15_000 }).toEqual({ free: [], ragged: 0 });
   });
 
-  test('U19: editing shows the plain grid (moves follow the saved order), Fertig packs again', async ({
-    page,
-  }) => {
+  test('U19: editing shows the same grid in the saved order; Fertig keeps it', async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem('tm-home-view', 'all'));
     await start(page, '/');
     const grid = page.getByTestId('home-grid');
-    await expect(grid).toHaveAttribute('data-packed', 'true');
+    await expect(grid).not.toHaveAttribute('data-settling');
+    const order = () =>
+      grid.evaluate((g) => Array.from(g.children).map((c) => c.getAttribute('data-testid')));
+    const before = await order();
     await page.getByRole('button', { name: 'Anpassen' }).click();
-    await expect(grid).not.toHaveAttribute('data-packed');
+    // Editing reorders by position: the cards keep the saved order (hidden ones join in between), nothing repacks them.
+    expect((await order()).filter((id) => before.includes(id))).toEqual(before);
     await page.getByRole('button', { name: 'Fertig' }).click();
-    await expect(grid).toHaveAttribute('data-packed', 'true');
+    expect(await order()).toEqual(before);
   });
 
   test('U49: the calm overview ends flush with the "Heute" card', async ({ page }) => {

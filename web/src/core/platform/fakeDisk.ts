@@ -23,7 +23,14 @@ import {
   type SteamGame,
 } from './disk';
 
-import type { CareEntry, CleanupCategory, CleanupPlace, OptimizeService } from './optimize';
+import type {
+  CareEntry,
+  CleanupCategory,
+  CleanupPlace,
+  OptimizeService,
+  StartupItem,
+  TweakState,
+} from './optimize';
 
 const GB = 1e9;
 const MB = 1e6;
@@ -519,6 +526,58 @@ const CLEANUP_SPECS: {
   },
 ];
 
+const SPI_DOC =
+  'https://learn.microsoft.com/windows/win32/api/winuser/nf-winuser-systemparametersinfow';
+const SHELL_DOC =
+  'https://learn.microsoft.com/windows/win32/api/shlobj_core/nf-shlobj_core-shgetsetsettings';
+const PRIVACY_DOC =
+  'https://learn.microsoft.com/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services';
+const POWER_DOC =
+  'https://learn.microsoft.com/windows/win32/api/powersetting/nf-powersetting-powersetactivescheme';
+
+const fakeToggle = (
+  id: string,
+  group: TweakState['group'],
+  on: boolean | null,
+  sourceUrl: string,
+  risk: TweakState['risk'] = 'none',
+  refresh: TweakState['refresh'] = 'none',
+): TweakState => ({
+  id,
+  group,
+  kind: 'toggle',
+  on,
+  choice: null,
+  options: [],
+  changedHere: false,
+  applicable: true,
+  readable: true,
+  custom: false,
+  risk,
+  sourceUrl,
+  refresh,
+});
+
+/** The native catalogue (`crates/pc-tune/src/tweaks.rs`) with invented states. */
+const FAKE_TWEAKS: TweakState[] = [
+  fakeToggle('animations', 'appearance', true, SPI_DOC),
+  fakeToggle('dragFullWindows', 'appearance', true, SPI_DOC),
+  fakeToggle('pointerSonar', 'appearance', false, SPI_DOC),
+  fakeToggle('fileExtensions', 'explorer', false, SHELL_DOC, 'none', 'explorer'),
+  fakeToggle('hiddenFiles', 'explorer', false, SHELL_DOC, 'low', 'explorer'),
+  fakeToggle('advertisingId', 'privacy', true, PRIVACY_DOC),
+  fakeToggle('trackAppLaunches', 'privacy', null, PRIVACY_DOC, 'low'),
+  {
+    ...fakeToggle('powerPlan', 'power', null, POWER_DOC, 'low'),
+    kind: 'choice',
+    choice: '381b4222-f694-41f0-9685-ff5bb260df2e',
+    options: [
+      { id: '381b4222-f694-41f0-9685-ff5bb260df2e', label: 'Ausbalanciert' },
+      { id: 'a1841308-3541-4fab-bc81-f71556f20b4a', label: 'Energiesparmodus' },
+    ],
+  },
+];
+
 /** A scan takes ~0.3 s so tests can see the progress state and press "Abbrechen". */
 export function createFakeDisk(): DiskService {
   interface State {
@@ -539,6 +598,84 @@ export function createFakeDisk(): DiskService {
   /** Scan ids of the fake clean-up places with their category (for the history). */
   const cleanupScans = new Map<number, CleanupCategory>();
   const careEntries: CareEntry[] = [];
+  /** Invented autostart entries: four of the account (one off, one from the startup folder), one of the PC. */
+  const startupItems: StartupItem[] = [
+    {
+      id: 'run:Musikbox',
+      name: 'Musikbox',
+      command:
+        '"C:\\Nutzer\\Beispiel\\AppData\\Roaming\\Musikbox\\Musikbox.exe" --autostart --minimized',
+      program: 'Musikbox',
+      scope: 'user',
+      source: 'run',
+      enabled: true,
+      switchable: true,
+    },
+    {
+      id: 'run:Wolkenablage',
+      name: 'Wolkenablage',
+      command: 'C:\\Programme\\Wolkenablage\\wolke.exe /background',
+      program: 'wolke',
+      scope: 'user',
+      source: 'run',
+      enabled: true,
+      switchable: true,
+    },
+    {
+      id: 'run:Plauderbox',
+      name: 'Plauderbox',
+      command:
+        '"C:\\Nutzer\\Beispiel\\AppData\\Local\\Plauderbox\\Update.exe" --processStart Plauderbox.exe',
+      program: 'Update',
+      scope: 'user',
+      source: 'run',
+      enabled: false,
+      switchable: true,
+    },
+    {
+      id: 'folder:Notizzettel.lnk',
+      name: 'Notizzettel',
+      command: 'Notizzettel.lnk',
+      program: 'Notizzettel',
+      scope: 'user',
+      source: 'folder',
+      enabled: true,
+      switchable: true,
+    },
+    {
+      id: 'machine:Druckerhelfer',
+      name: 'Druckerhelfer',
+      command: '"C:\\Programme\\Druckerhelfer\\helfer.exe" -tray',
+      program: 'helfer',
+      scope: 'machine',
+      source: 'run',
+      enabled: true,
+      switchable: false,
+    },
+  ];
+  /**
+   * Like the journal: only the newest open change of an autostart entry or a setting can be taken
+   * back, and one that was changed in Windows since ("stale") never.
+   */
+  const refreshUndo = () => {
+    for (const e of careEntries) {
+      if (e.kind === 'cleanup') continue;
+      const newer = careEntries.some(
+        (x) => x.id > e.id && !x.undone && x.kind === e.kind && x.subject === e.subject,
+      );
+      e.canUndo = !e.undone && !e.stale && !newer;
+    }
+  };
+  /** Like the journal's `mark_stale`: every open change of the subject is settled, not undoable. */
+  const markStale = (kind: CareEntry['kind'], subject: string) => {
+    for (const e of careEntries) {
+      if (e.kind === kind && e.subject === subject && !e.undone) e.stale = true;
+    }
+    refreshUndo();
+  };
+  /** Ids a test named in a global list (`__tmCareResetLeft`, `__tmCareResetFailed`, `__tmCareCustom`). */
+  const hookIds = (name: string): string[] =>
+    (globalThis as unknown as Record<string, string[] | undefined>)[name] ?? [];
   let cleanupCancelled = false;
   const get = (id: number) => {
     const s = scans.get(id);
@@ -553,6 +690,25 @@ export function createFakeDisk(): DiskService {
   // 0 = only `__tmDiskScanStep()` moves it), so a spec can watch the live picture grow in steps.
   const stepMs = () =>
     Number((globalThis as { __tmDiskScanStepMs?: number }).__tmDiskScanStepMs ?? 60);
+
+  // Windows settings ("Windows-Einstellungen"): invented states, same ids as the native
+  // catalogue. Tests can give a switch a stored value that is neither on nor off
+  // (`__tmCareCustom`: setting ids).
+  const tweaks: TweakState[] = FAKE_TWEAKS.map((x) => ({
+    ...x,
+    options: [...x.options],
+    ...(x.kind === 'toggle' && hookIds('__tmCareCustom').includes(x.id)
+      ? { on: null, custom: true }
+      : {}),
+  }));
+  /** Per history entry the state from before; per setting the state before its first change. */
+  interface TweakValue {
+    on: boolean | null;
+    custom: boolean;
+    choice: string | null;
+  }
+  const tweakBefore = new Map<number, TweakValue>();
+  const tweakOriginals = new Map<string, TweakValue & { entry: number }>();
 
   const optimize: OptimizeService = {
     windows: true,
@@ -600,25 +756,171 @@ export function createFakeDisk(): DiskService {
     async cancelCleanup() {
       cleanupCancelled = true;
     },
+    async health() {
+      // Tests set `__tmCareTrimOff` to play a PC where TRIM is switched off.
+      return {
+        trimOff: (globalThis as { __tmCareTrimOff?: boolean }).__tmCareTrimOff ?? false,
+      };
+    },
     async history() {
       return { entries: [...careEntries].reverse(), recovered: false, unreadable: false };
     },
     async undo(id) {
       const entry = careEntries.find((e) => e.id === id);
       if (!entry) throw new Error('unknown-entry');
-      if (!entry.canUndo) throw new Error(entry.undone ? 'already-undone' : 'nothing-to-undo');
+      if (!entry.canUndo) {
+        // The journal's order: taken back, changed in Windows since, a newer change first.
+        const code = entry.undone
+          ? 'already-undone'
+          : entry.stale
+            ? 'changed-elsewhere'
+            : entry.kind === 'cleanup'
+              ? 'nothing-to-undo'
+              : 'newer-change';
+        throw new Error(code);
+      }
+      // Tests can play "changed in Windows since": the undo is refused, every open change of
+      // that entry or setting is marked, and a setting no longer counts as changed here (what
+      // stands now is the newer choice made in Windows).
+      if ((globalThis as { __tmCareChangedElsewhere?: boolean }).__tmCareChangedElsewhere) {
+        markStale(entry.kind, entry.subject);
+        if (entry.kind === 'tweak') {
+          tweakOriginals.delete(entry.subject);
+          const tweak = tweaks.find((x) => x.id === entry.subject);
+          if (tweak) tweak.changedHere = false;
+        }
+        throw new Error('changed-elsewhere');
+      }
+      if (entry.kind === 'tweak') {
+        const before = tweakBefore.get(id);
+        const tweak = tweaks.find((x) => x.id === entry.subject);
+        if (tweak && before) {
+          tweak.on = before.on;
+          tweak.custom = before.custom;
+          tweak.choice = before.choice;
+          const first = tweakOriginals.get(tweak.id);
+          if (first && first.entry === id) tweakOriginals.delete(tweak.id);
+          tweak.changedHere = tweakOriginals.has(tweak.id);
+        }
+      }
       entry.undone = true;
-      entry.canUndo = false;
+      if (entry.kind === 'startup') {
+        // The state from before the switch comes back.
+        const item = startupItems.find((i) => i.id === entry.subject);
+        if (item) item.enabled = !entry.on;
+      }
+      refreshUndo();
     },
     async openTool(tool) {
       ((globalThis as { __tmCareTools?: string[] }).__tmCareTools ??= []).push(tool);
+    },
+    async startupList() {
+      return startupItems.map((i) => ({ ...i }));
+    },
+    async setStartup(id, enabled) {
+      const item = startupItems.find((i) => i.id === id);
+      if (!item) throw new Error('unknown-entry');
+      if (!item.switchable) throw new Error('read-only');
+      if (item.enabled === enabled) return null;
+      item.enabled = enabled;
+      const entry: CareEntry = {
+        id: careEntries.length + 1,
+        at: FAKE_NOW,
+        kind: 'startup',
+        subject: item.id,
+        label: item.name,
+        bytes: 0,
+        files: 0,
+        permanent: false,
+        on: enabled,
+        canUndo: true,
+        undone: false,
+      };
+      careEntries.push(entry);
+      refreshUndo();
+      return entry.id;
+    },
+    async tweaks() {
+      return tweaks.map((x) => ({ ...x, options: [...x.options] }));
+    },
+    async setTweak(id, target) {
+      const tweak = tweaks.find((x) => x.id === id);
+      if (!tweak) throw new Error('unknown-tweak');
+      if (!tweak.applicable) throw new Error('not-applicable');
+      const toggle = tweak.kind === 'toggle';
+      if (toggle !== (typeof target === 'boolean')) throw new Error('bad-target');
+      if (!toggle && !tweak.options.some((o) => o.id === target)) throw new Error('bad-target');
+      if (toggle ? tweak.on === target : tweak.choice === target) return null;
+      const before = { on: tweak.on, custom: tweak.custom, choice: tweak.choice };
+      const entryId = careEntries.length + 1;
+      careEntries.push({
+        id: entryId,
+        at: FAKE_NOW,
+        kind: 'tweak',
+        subject: id,
+        // Like the native side: a choice carries the chosen plan's name.
+        label: tweak.options.find((o) => o.id === target)?.label ?? '',
+        bytes: 0,
+        files: 0,
+        permanent: false,
+        on: typeof target === 'boolean' ? target : null,
+        canUndo: true,
+        undone: false,
+      });
+      tweakBefore.set(entryId, before);
+      if (!tweakOriginals.has(id)) tweakOriginals.set(id, { ...before, entry: entryId });
+      if (typeof target === 'boolean') {
+        tweak.on = target;
+        tweak.custom = false;
+      } else tweak.choice = target;
+      tweak.changedHere = true;
+      // The older open change of this setting gives its undo to the new one.
+      refreshUndo();
+      return entryId;
+    },
+    async resetTweaks() {
+      // Tests can name settings that were "changed in Windows since" (`__tmCareResetLeft`: left
+      // as they are, no longer changed here) or that "cannot be written" (`__tmCareResetFailed`:
+      // they stay changed here for another try).
+      const leftIds = hookIds('__tmCareResetLeft');
+      const failedIds = hookIds('__tmCareResetFailed');
+      const report = { restored: [] as string[], failed: [] as string[], left: [] as string[] };
+      for (const [id, first] of [...tweakOriginals]) {
+        const tweak = tweaks.find((x) => x.id === id)!;
+        if (failedIds.includes(id)) {
+          report.failed.push(id);
+          continue;
+        }
+        tweakOriginals.delete(id);
+        tweak.changedHere = false;
+        if (leftIds.includes(id)) {
+          markStale('tweak', id);
+          report.left.push(id);
+          continue;
+        }
+        tweak.on = first.on;
+        tweak.custom = first.custom;
+        tweak.choice = first.choice;
+        for (const e of careEntries) {
+          if (e.kind === 'tweak' && e.subject === id && !e.stale) e.undone = true;
+        }
+        report.restored.push(id);
+      }
+      refreshUndo();
+      return report;
     },
   };
 
   return {
     supported: true,
     optimize,
-    listDrives: async () => DRIVES,
+    // Tests set `__tmDiskTroubled` to a drive root to play a drive that reports problems.
+    listDrives: async () => {
+      const troubled = (globalThis as { __tmDiskTroubled?: string }).__tmDiskTroubled;
+      return DRIVES.map((d) =>
+        d.root === troubled ? { ...d, health: { ...d.health, status: 'warning' as const } } : d,
+      );
+    },
     async startScan(root, onProgress) {
       const scanId = ++nextId;
       const state: State = {
