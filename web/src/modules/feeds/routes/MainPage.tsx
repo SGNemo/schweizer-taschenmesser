@@ -27,6 +27,7 @@ import { formatNumber } from '@/core/i18n/format';
 import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import { catalogLang, suggestions, type CatalogEntry } from '../catalog';
+import type { FeedPreview } from '../discover';
 import { feedKey, groupFeeds, hostOf, normalizeFeedUrl } from '../logic';
 import { feedRepo } from '../repo';
 import { settings, type FeedsSettings } from '../settings';
@@ -95,6 +96,27 @@ export default function MainPage() {
       toast(s.catalog.addedToast(entry.title));
     } catch (e) {
       // Kept on success: the live list may not know the new feed yet.
+      adding.current.delete(key);
+      throw e;
+    }
+  }
+
+  /** "Abonnieren" under a preview: the feed's own name, no group yet (it can be set in the list). */
+  async function addPreview(feed: FeedPreview, siteUrl?: string) {
+    const key = feedKey(feed.url);
+    if (subscribed.has(key) || adding.current.has(key)) return;
+    adding.current.add(key);
+    const title = feed.title || hostOf(feed.url);
+    const site = siteUrl && feedKey(siteUrl) !== key ? siteUrl : undefined;
+    try {
+      await feedRepo.create({
+        title,
+        url: feed.url,
+        category: '',
+        ...(site ? { siteUrl: site } : {}),
+      });
+      toast(s.catalog.addedToast(title));
+    } catch (e) {
       adding.current.delete(key);
       throw e;
     }
@@ -249,6 +271,7 @@ export default function MainPage() {
           initialQuery={shared}
           subscribed={subscribed}
           onAdd={(e) => void addEntry(e)}
+          onSubscribe={(feed, site) => void addPreview(feed, site)}
           onAddress={toForm}
           onClose={close}
         />

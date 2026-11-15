@@ -66,6 +66,12 @@
   margin: 0;
   font-size: var(--text-label);
 }
+/* The first lines of a shared text, as they will be added. */
+.preview {
+  margin: 0;
+  padding-inline-start: var(--space-5);
+  overflow-wrap: anywhere;
+}
 /* Announcements for screen readers only. */
 .srOnly {
   position: absolute;
@@ -77,4 +83,11 @@
 }
 .rowActions [aria-disabled='true'] {
   opacity: 0.4;
+}
+.picks {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }

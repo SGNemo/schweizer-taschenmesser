@@ -4,7 +4,7 @@ export const feeds: Strings['feeds'] = {
   meta: {
     name: 'Feeds',
     description:
-      'Your subscribed feeds (news, blogs, podcasts) in one place, sorted by group. Nemo does not fetch them itself; a tap opens the site.',
+      'Your subscribed feeds (news, blogs, podcasts) in one place, sorted by group, with a starter catalogue to pick from. Nemo fetches a feed only when you click, for the preview; a tap opens the site.',
     quickAdd: 'Add feed',
     settings: {
       grouped: 'Sort into groups',
@@ -44,8 +44,23 @@ export const feeds: Strings['feeds'] = {
     query: 'Search or paste an address',
     queryHint: 'The name of a source, a topic, or the address of a website or feed.',
     address: 'This address',
-    addAddress: 'Add as feed',
-    noMatch: 'Nothing about that in the catalogue. The address of the feed works too.',
+    addAddress: 'Add without preview',
+    preview: 'Preview',
+    noMatch: 'Nothing about that in the catalogue. The address of the website works too.',
+  },
+  preview: {
+    checking: (host: string) => `Looking at ${host} …`,
+    latest: 'Latest articles',
+    noItems: 'This feed has no articles right now.',
+    subscribe: 'Subscribe',
+    back: 'Back',
+    choose: (n: number) => `This page has ${n} feeds. Which one would you like to see?`,
+    none: 'This page names no feed. You can still add the address.',
+    noProxy: 'The preview works in the app or with your own sync server. Adding works anyway.',
+    network: 'The page is not answering right now. Adding works anyway.',
+    anyway: 'Add anyway',
+    tapHint: 'Tap a name to see the latest articles.',
+    previewOf: (name: string) => `Preview ${name}`,
   },
   catalog: {
     label: 'Starter catalogue',

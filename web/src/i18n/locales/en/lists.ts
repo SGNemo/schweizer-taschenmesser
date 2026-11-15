@@ -263,6 +263,22 @@ export const lists: Strings['lists'] = {
     },
   },
   startedFrom: (name: string, n: number) => `Created “${name}” with ${n} entries.`,
+  showInWidget: 'Show in widget',
+  fillFromPantry: 'Fill from pantry',
+  pantryAsking: 'Asking the pantry …',
+  pantryNothing: 'Nothing is running low in the pantry right now.',
+  pantryHint: 'Ticked items go on the list. What expires soon is up to you.',
+  pantryReasons: { empty: 'used up', low: 'running low', expired: 'expired', soon: 'expires soon' },
+  pantryAdd: (n: number) => (n === 1 ? 'Add 1 entry' : `Add ${n} entries`),
+  shareTo: 'To a list',
+  sharedPreview: (n: number) =>
+    n === 1 ? 'This entry will be added:' : `These ${n} entries will be added:`,
+  sharedMore: (n: number) => `… and ${n} more`,
+  sharedAdded: (n: number, list: string) =>
+    n === 1 ? `Added 1 entry to “${list}”.` : `Added ${n} entries to “${list}”.`,
+  widgetShows: (name: string) => `The widget now shows “${name}”.`,
+  widgetEmptyList: (name: string) => `Nothing open on “${name}”.`,
+  widgetSummary: (name: string, n: number) => `${name}: ${n} open`,
   noListInUse: 'No list yet. Create one with “New list”.',
   noListArchived: 'All lists are archived. Bring one back or create a new one.',
 };
