@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { strToU8, zipSync } from 'fflate';
 import { openPageMenu } from './money-helpers';
@@ -228,8 +229,10 @@ test('a template: saved from the form, filled into a new session with one tap', 
   const discard = page.getByRole('button', { name: /Verwerfen|Nicht speichern/ });
   if (await discard.count()) await discard.first().click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
-
-  await page.getByRole('button', { name: 'Einheit eintragen', exact: true }).click();
+  // The closing form's own „Einheit eintragen“ (its submit) leaves the DOM a moment later: wait for it.
+  const add = page.getByRole('button', { name: 'Einheit eintragen', exact: true });
+  await expect(add).toHaveCount(1);
+  await add.click();
   dialog = page.getByRole('dialog', { name: 'Einheit eintragen' });
   await dialog.getByRole('button', { name: 'Vorlage Einheit übernehmen' }).click();
   await expect(dialog.getByRole('combobox', { name: 'Übung' })).toHaveValue('Rudern');
@@ -378,6 +381,11 @@ test('exercises: last time under the form row, history with the best, search in 
   await page.getByRole('button', { name: 'Übungen', exact: true }).click();
   const list = page.getByTestId('fitness-exercises');
   await expect(list.getByText(/Zuletzt Heute · 3 × 5 · 85 kg · Bestwert$/)).toBeVisible();
+  // The new view passes axe like the pages of e2e/a11y.spec.ts (that list is a guard file).
+  const axe = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+    .analyze();
+  expect(axe.violations.map((v) => v.id)).toEqual([]);
   await list.getByRole('button', { name: /Kniebeuge/ }).click();
   const history = page.getByRole('dialog', { name: 'Kniebeuge' });
   await expect(history.getByTestId('fitness-exercise-best')).toHaveText(
