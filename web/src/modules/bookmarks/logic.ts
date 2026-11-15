@@ -32,7 +32,8 @@ const TRACKING = /^(utm_\w+|fbclid|gclid|dclid|msclkid|mc_cid|mc_eid|igshid|si|r
 
 /**
  * The address reduced to what makes it the same page: host without "www.", path without a trailing
- * slash, the remaining query sorted; scheme, fragment and tracking parameters are dropped. Used only
+ * slash, the remaining query sorted; scheme, fragment and tracking parameters are dropped (a fragment
+ * that is a route, "#/…" or "#!…", stays). Used only
  * to compare, never stored. Not an address → undefined.
  */
 export function urlKey(input: string | undefined): string | undefined {
@@ -45,7 +46,8 @@ export function urlKey(input: string | undefined): string | undefined {
     .map(([k, v]) => `${k}=${v}`)
     .join('&');
   const path = url.pathname.replace(/\/+$/, '');
-  return `${url.host.replace(/^www\./, '').toLowerCase()}${path}${query ? `?${query}` : ''}`;
+  const route = /^#[/!]/.test(url.hash) ? url.hash : '';
+  return `${url.host.replace(/^www\./, '').toLowerCase()}${path}${query ? `?${query}` : ''}${route}`;
 }
 
 /**

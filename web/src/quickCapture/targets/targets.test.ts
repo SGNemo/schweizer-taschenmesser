@@ -123,6 +123,7 @@ describe('saveCapture', () => {
     const kindOf = (title: string) => items.find((i) => i.title === title)?.kind;
     expect(kindOf('Dune')).toBe('watch');
     expect(kindOf('Kopfhörer')).toBe('buy');
+    expect(bookmarkKindFromText('Film:Dune')).toEqual({ kind: 'watch', title: 'Dune' });
     // A word alone, or a word that only starts like one, stays the title.
     expect(kindOf('Buch')).toBe('link');
     expect(kindOf('Filmabend planen')).toBe('link');

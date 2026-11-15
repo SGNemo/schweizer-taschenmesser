@@ -86,10 +86,12 @@ export const bookmarks: Strings['bookmarks'] = {
   duplicateOpen: 'Open the existing one',
   sharedPreview: 'Fetch a preview from the page',
   sharedPreviewHint:
-    'On saving, fetches the title, description and a small picture once, directly from this page, without sign-in and without cookies.',
+    'On saving, fetches the title, description and a small picture once from this page, without sign-in and without cookies.',
   previewFetch: 'Fetch a preview from the page',
   previewFetched: 'Preview fetched. The pinboard shows it.',
-  previewNone: 'This page offers no preview right now.',
+  previewNone: 'No preview came back for this page just now.',
+  previewUnavailable:
+    'In the browser the preview needs your sync server. The desktop and Android apps fetch it themselves.',
   markStarted: 'Mark as started',
   markOpen: 'Reopen',
   markDone: 'Mark as done',

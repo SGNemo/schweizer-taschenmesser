@@ -4236,10 +4236,12 @@ export const de = {
     duplicateOpen: 'Vorhandenen öffnen',
     sharedPreview: 'Vorschau von der Seite holen',
     sharedPreviewHint:
-      'Holt beim Speichern einmal Titel, Beschreibung und ein kleines Bild direkt von dieser Seite, ohne Anmeldung und ohne Cookies.',
+      'Holt beim Speichern einmal Titel, Beschreibung und ein kleines Bild von dieser Seite, ohne Anmeldung und ohne Cookies.',
     previewFetch: 'Vorschau von der Seite holen',
     previewFetched: 'Vorschau geholt. Die Pinnwand zeigt sie.',
-    previewNone: 'Diese Seite gibt gerade keine Vorschau her.',
+    previewNone: 'Für diese Seite kam gerade keine Vorschau zurück.',
+    previewUnavailable:
+      'Im Browser braucht die Vorschau deinen Sync-Server. Die Desktop- und die Android-App holen sie selbst.',
     markStarted: 'Als angefangen markieren',
     markOpen: 'Wieder öffnen',
     markDone: 'Als erledigt markieren',

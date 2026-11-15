@@ -66,10 +66,16 @@ export function bookmarkMenu(
             id: 'preview',
             label: t.bookmarks.previewFetch,
             onSelect: () =>
-              void fetchPreviewNow(item.id, item.url!).then((ok) =>
+              void fetchPreviewNow(item.id, item.url!).then((result) =>
                 useUiStore
                   .getState()
-                  .toast(ok ? t.bookmarks.previewFetched : t.bookmarks.previewNone),
+                  .toast(
+                    result === 'ok'
+                      ? t.bookmarks.previewFetched
+                      : result === 'unavailable'
+                        ? t.bookmarks.previewUnavailable
+                        : t.bookmarks.previewNone,
+                  ),
               ),
           },
         ]

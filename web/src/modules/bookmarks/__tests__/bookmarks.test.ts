@@ -216,5 +216,9 @@ describe('duplicates (round 2026-11, package 2)', () => {
     // The item being edited is never its own duplicate.
     expect(findDuplicate(saved, { title: 'Dune' }, 'b')).toBeUndefined();
     expect(findDuplicate(saved, { title: 'x', url: 'kein link' })).toBeUndefined();
+    // A fragment that is a route is another page; a plain anchor is not.
+    const { urlKey } = await import('../logic');
+    expect(urlKey('https://app.example/#/doc/1')).not.toBe(urlKey('https://app.example/#/doc/2'));
+    expect(urlKey('https://app.example/a#teil')).toBe(urlKey('https://app.example/a'));
   });
 });
