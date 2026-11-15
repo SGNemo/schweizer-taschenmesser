@@ -4,6 +4,7 @@ import { defineBundle } from '@/core/i18n/bundle';
 export const tAppLock = defineBundle(
   {
     title: 'App-Sperre',
+    statusOn: 'App-Sperre an',
     description:
       'Nemo mit einer PIN sperren, nach einer Pause und beim Wechsel in eine andere App.',
     keywords: [
@@ -24,7 +25,7 @@ export const tAppLock = defineBundle(
     changePin: 'PIN ändern',
     changePinHint: 'Erst die jetzige PIN, dann zweimal die neue.',
     idle: 'Sperren nach',
-    idleHint: 'So lange ohne Eingabe, dann sperrt Nemo.',
+    idleHint: 'Nach dieser Zeit ohne Eingabe sperrt Nemo.',
     idleOption: (min: number) => `${min} min`,
     background: 'Beim Wechsel in eine andere App',
     backgroundHint: 'Ob Nemo sperrt, wenn du kurz woanders bist.',
@@ -36,7 +37,7 @@ export const tAppLock = defineBundle(
     // Dialogs
     setTitle: 'PIN festlegen',
     setIntro:
-      'Vier bis zwölf Ziffern. Merk sie dir gut: ohne sie geht die Sperre nur mit dem Löschen der App-Daten auf.',
+      'Vier bis zwölf Ziffern. Merk sie dir gut: ohne sie geht die Sperre nur mit dem Löschen der App-Daten auf. Richte vorher Sync oder ein Backup ein, dann ist dabei nichts verloren.',
     newPin: 'Neue PIN',
     repeatPin: 'Neue PIN wiederholen',
     currentPin: 'Jetzige PIN',
@@ -62,18 +63,20 @@ export const tAppLock = defineBundle(
     unlockBio: 'Mit Fingerabdruck oder Gesicht',
     wrong: 'Die PIN passt nicht. Versuch es noch einmal.',
     wait: (left: string) => `Zu viele Versuche. Nochmal in ${left}.`,
+    error: 'Das hat gerade nicht geklappt. Bitte noch einmal versuchen.',
     seconds: (n: number) => `${n} s`,
     minutes: (n: number) => `${n} min`,
     bioInvalid: 'Fingerabdruck oder Gesicht hat sich auf dem Gerät geändert. Bitte die PIN nutzen.',
     forgot: 'PIN vergessen?',
     forgotText:
-      'Ohne die PIN lässt sich die Sperre nur aufheben, indem du die Daten der App in den Einstellungen des Systems oder Browsers löschst. Deine Einträge kommen danach über den Abgleich oder eine Sicherung zurück.',
+      'Ohne die PIN lässt sich die Sperre nur aufheben, indem du die Daten der App in den Einstellungen des Systems oder Browsers löschst. Das entfernt alles auf diesem Gerät, auch den Tresor. Ist Sync oder ein Backup eingerichtet, holst du deine Einträge danach zurück; sonst sind sie weg.',
     promptTitle: 'Nemo entsperren',
     promptSubtitle: 'Mit Fingerabdruck oder Gesicht bestätigen',
   },
   {
     en: {
       title: 'App lock',
+      statusOn: 'App lock on',
       description: 'Lock Nemo with a PIN, after a break and when you switch to another app.',
       keywords: [
         'app lock',
@@ -92,7 +95,7 @@ export const tAppLock = defineBundle(
       changePin: 'Change PIN',
       changePinHint: 'First the current PIN, then the new one twice.',
       idle: 'Lock after',
-      idleHint: 'This long without input, then Nemo locks.',
+      idleHint: 'Nemo locks after this long without input.',
       idleOption: (min: number) => `${min} min`,
       background: 'When you switch to another app',
       backgroundHint: 'Whether Nemo locks while you are briefly elsewhere.',
@@ -103,7 +106,7 @@ export const tAppLock = defineBundle(
       lockNowHint: 'Locks Nemo right away until you enter the PIN.',
       setTitle: 'Set PIN',
       setIntro:
-        'Four to twelve digits. Keep it in mind: without it the lock only opens by deleting the app data.',
+        'Four to twelve digits. Keep it in mind: without it the lock only opens by deleting the app data. Set up sync or a backup first, then nothing is lost that way.',
       newPin: 'New PIN',
       repeatPin: 'Repeat new PIN',
       currentPin: 'Current PIN',
@@ -128,12 +131,13 @@ export const tAppLock = defineBundle(
       unlockBio: 'With fingerprint or face',
       wrong: 'That PIN does not match. Try once more.',
       wait: (left: string) => `Too many tries. Again in ${left}.`,
+      error: 'That did not work just now. Please try again.',
       seconds: (n: number) => `${n} s`,
       minutes: (n: number) => `${n} min`,
       bioInvalid: 'Fingerprint or face changed on this device. Please use the PIN.',
       forgot: 'Forgot your PIN?',
       forgotText:
-        'Without the PIN the lock can only be removed by deleting the app data in the system or browser settings. Your entries come back afterwards from sync or a backup.',
+        'Without the PIN the lock can only be removed by deleting the app data in the system or browser settings. That removes everything on this device, the vault included. With sync or a backup set up you get your entries back afterwards; otherwise they are gone.',
       promptTitle: 'Unlock Nemo',
       promptSubtitle: 'Confirm with fingerprint or face',
     },

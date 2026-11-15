@@ -86,7 +86,7 @@ export function AppLockSection() {
             </SettingRow>
           ) : null}
           <SettingRow id="app-lock--lock-now" label={s.lockNow} description={s.lockNowHint}>
-            <Button data-testid="app-lock-now" onClick={lockApp}>
+            <Button data-testid="app-lock-now" onClick={() => lockApp()}>
               {s.lockNow}
             </Button>
           </SettingRow>
@@ -145,12 +145,11 @@ function PinDialog({
     if (busy) return;
     if (needsNew && !isValidPin(next)) return setError(s.pinFormat);
     if (needsNew && next !== repeat) return setError(s.pinMismatch);
-    // Read once, then the fields are emptied: the PIN lives only as long as this submit.
+    // Read once, then the current PIN is emptied. The new PIN stays in its fields only until the dialog
+    // closes (on success, or "Abbrechen"), so a wrong current PIN does not mean typing the new one twice again.
     const cur = current;
     const fresh = next;
     setCurrent('');
-    setNext('');
-    setRepeat('');
     setError(undefined);
     setBusy(true);
     try {
@@ -171,6 +170,8 @@ function PinDialog({
         else if (r === 'cancelled' || r === 'unavailable') onDone(s.bioCancelled);
         else checkFailed(r);
       }
+    } catch {
+      setError(s.error); // the secret store did not answer: calm, nothing changed
     } finally {
       setBusy(false);
     }

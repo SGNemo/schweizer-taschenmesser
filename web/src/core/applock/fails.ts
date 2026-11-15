@@ -42,7 +42,9 @@ export function waitFor(count: number): number {
 
 /** Milliseconds until the next try is allowed (0 = now). */
 export function waitRemaining(): number {
-  return Math.max(0, read().until - now());
+  const { count, until } = read();
+  // Never longer than the wait the count allows: a clock set back (or a stray value) must not lock out for days.
+  return Math.max(0, Math.min(until - now(), waitFor(count)));
 }
 
 export function recordFail(): void {

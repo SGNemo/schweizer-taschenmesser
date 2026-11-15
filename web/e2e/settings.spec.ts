@@ -249,6 +249,8 @@ test('app lock: PIN, lock now, a wrong PIN, unlock, locked again after a reload,
   await ready(page, '/settings/sicherheit'); // waits for the dialog's history step, then loads anew
   await expect(page.getByTestId('app-lock')).toHaveCount(0);
   await expect(page.getByRole('switch', { name: 'App-Sperre' })).not.toBeChecked();
+});
+
 test('Sicherheit exists without the vault; "Nur verschlüsselte Backups" removes the readable download', async ({
   page,
 }) => {

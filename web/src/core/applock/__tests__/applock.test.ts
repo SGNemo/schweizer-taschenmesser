@@ -17,7 +17,8 @@ import {
   writePrefs,
 } from '../prefs';
 import { BACKGROUND_GRACE_MS, startAppLock } from '../start';
-import { unlockApp, useAppLock } from '../state';
+import { lockApp, unlockApp, useAppLock } from '../state';
+import { bus } from '@/core/events';
 import { FAST_KDF, fakeBiometrics, memorySecrets } from './helpers';
 
 let secrets: ReturnType<typeof memorySecrets>;
@@ -269,5 +270,50 @@ describe('biometrics', () => {
     expect(await unlockWithBiometric()).toBe('invalid');
     expect(readPrefs().biometric).toBe(false);
     await disableBiometric();
+  });
+});
+
+describe('council fixes', () => {
+  it('a clock set back never makes the wait longer than the count allows', () => {
+    for (let i = 0; i < 6; i++) recordFail(); // 6 wrong: 60 s
+    clock -= 10 * 24 * 3600_000; // the clock jumps back ten days
+    expect(waitRemaining()).toBeLessThanOrEqual(waitFor(6));
+    expect(waitRemaining()).toBeLessThanOrEqual(MAX_WAIT_MS);
+  });
+
+  it('a lock tells the vault (event `app.locked`); nothing is sent while the lock is off', () => {
+    const seen = vi.fn();
+    const stop = bus.on('app.locked', seen);
+    lockApp();
+    expect(seen).not.toHaveBeenCalled();
+    writePrefs({ enabled: true });
+    lockApp();
+    expect(seen).toHaveBeenCalledTimes(1);
+    stop();
+  });
+
+  it('the lock turned off (e.g. in another window) opens this window', () => {
+    writePrefs({ enabled: true });
+    const stop = startAppLock({ onBackground: () => () => undefined, hasPin: async () => true });
+    lockApp();
+    expect(useAppLock.getState().locked).toBe(true);
+    writePrefs({ enabled: false });
+    expect(useAppLock.getState().locked).toBe(false);
+    stop();
+  });
+
+  it('holds the screen guard while the lock is on', () => {
+    const calls: boolean[] = [];
+    setPlatform({
+      ...createWebPlatform(),
+      secrets,
+      biometrics: bio.service,
+      screen: { setSecure: async (on: boolean) => void calls.push(on) },
+    });
+    const stop = startAppLock({ onBackground: () => () => undefined, hasPin: async () => true });
+    writePrefs({ enabled: true });
+    writePrefs({ enabled: false });
+    stop();
+    expect(calls).toEqual([true, false]);
   });
 });

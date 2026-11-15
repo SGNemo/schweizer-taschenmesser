@@ -10,12 +10,37 @@ import { Button, Logo, TextField } from '@/ui';
 import styles from './AppLockGate.module.css';
 
 /**
- * The app lock (device-local, `core/applock`). While locked the children are not rendered at all, so
- * nothing of the app's data stays in the DOM; the lock screen takes their place.
+ * The app lock (device-local, `core/applock`). Locked at start: the app is not mounted at all until
+ * the PIN. Locked later (idle, background, "Jetzt sperren"): the app stays mounted but hidden and
+ * `inert` under the lock screen, so a half-typed entry, an open dialog or a file picker's answer is
+ * not lost (FOCUS-GUIDELINES 5); nothing of it is visible, focusable or read out, and no key reaches it.
  */
 export function AppLockGate({ children }: { children: ReactNode }) {
   const locked = useAppLock((s) => s.locked);
-  return locked ? <AppLockScreen /> : <>{children}</>;
+  const [opened, setOpened] = useState(!locked);
+  if (!locked && !opened) setOpened(true);
+  if (!opened) return <AppLockScreen />;
+  return (
+    <>
+      <div hidden={locked} inert={locked} data-testid="app-lock-content">
+        {children}
+      </div>
+      {locked ? <AppLockScreen /> : null}
+    </>
+  );
+}
+
+/** While locked, no key outside the lock screen reaches the app (shortcuts, palette, F-keys). */
+function useBlockKeys(panel: React.RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    const block = (e: KeyboardEvent) => {
+      if (panel.current && e.target instanceof Node && panel.current.contains(e.target)) return;
+      e.stopImmediatePropagation();
+      e.preventDefault();
+    };
+    window.addEventListener('keydown', block, true);
+    return () => window.removeEventListener('keydown', block, true);
+  }, [panel]);
 }
 
 function waitText(ms: number): string {
@@ -29,18 +54,28 @@ function AppLockScreen() {
   const prefs = useAppLockPrefs();
   const [pin, setPin] = useState('');
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<'wrong' | 'bioInvalid' | undefined>();
+  const [message, setMessage] = useState<'wrong' | 'bioInvalid' | 'error' | undefined>();
   const [wait, setWait] = useState(() => waitRemaining());
   const [bioReady, setBioReady] = useState(false);
   const input = useRef<HTMLInputElement>(null);
+  const panel = useRef<HTMLFormElement>(null);
   const triedBio = useRef(false);
+  useBlockKeys(panel);
+  // Read out once when the wait starts (a per-second change in a live region would talk for minutes).
+  const [waitSaid, setWaitSaid] = useState(() =>
+    waitRemaining() > 0 ? waitText(waitRemaining()) : '',
+  );
 
   // The wait counts down as text once per second (it survives a reload: stored with the fail count).
+  const waiting = wait > 0;
   useEffect(() => {
-    if (wait <= 0) return;
+    if (!waiting) return;
     const id = setInterval(() => setWait(waitRemaining()), 1000);
-    return () => clearInterval(id);
-  }, [wait]);
+    return () => {
+      clearInterval(id);
+      input.current?.focus(); // the field is usable again: give it the focus back
+    };
+  }, [waiting]);
 
   useEffect(() => {
     input.current?.focus();
@@ -55,6 +90,8 @@ function AppLockScreen() {
         setBioReady(false);
         setMessage('bioInvalid');
       }
+    } catch {
+      setMessage('error'); // the keystore did not answer: a calm line, the PIN still works
     } finally {
       setBusy(false);
     }
@@ -70,13 +107,25 @@ function AppLockScreen() {
       .then((ok) => {
         if (!live) return;
         setBioReady(ok);
-        if (ok && !triedBio.current) {
-          triedBio.current = true;
-          void tryBio();
-        }
+        autoTry();
       });
+    // One automatic prompt, only while Nemo is in front: a lock that happened in the background (or
+    // while another window had the focus) asks when the user comes back, not on top of another app.
+    const autoTry = () => {
+      if (!live || triedBio.current) return;
+      if (document.visibilityState !== 'visible' || !document.hasFocus()) return;
+      triedBio.current = true;
+      void tryBio();
+    };
+    const onBack = () => {
+      if (document.visibilityState === 'visible') autoTry();
+    };
+    document.addEventListener('visibilitychange', onBack);
+    window.addEventListener('focus', onBack);
     return () => {
       live = false;
+      document.removeEventListener('visibilitychange', onBack);
+      window.removeEventListener('focus', onBack);
     };
   }, [prefs.biometric]);
 
@@ -93,17 +142,20 @@ function AppLockScreen() {
         return;
       }
       setMessage(result === 'wrong' ? 'wrong' : undefined);
-      setWait(waitRemaining());
+      const left = waitRemaining();
+      setWait(left);
+      setWaitSaid(left > 0 ? waitText(left) : '');
+    } catch {
+      setMessage('error');
     } finally {
       setBusy(false);
       input.current?.focus();
     }
   };
 
-  const waiting = wait > 0;
   return (
     <main className={styles.page} data-testid="app-lock">
-      <form className={styles.panel} onSubmit={(e) => void submit(e)}>
+      <form ref={panel} className={styles.panel} onSubmit={(e) => void submit(e)}>
         <div className={styles.logo}>
           <Logo size={56} />
         </div>
@@ -122,9 +174,15 @@ function AppLockScreen() {
           onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
           disabled={busy || waiting}
         />
-        <p className={styles.status} role="status" aria-live="polite">
-          {waiting ? waitText(wait) : message ? s[message] : ''}
+        {/* The wait is read out once (`waitSaid`); the countdown below it is for the eyes only. */}
+        <p className={waiting ? 'sr-only' : styles.status} role="status" aria-live="polite">
+          {waiting ? waitSaid : message ? s[message] : ''}
         </p>
+        {waiting ? (
+          <p className={styles.status} aria-hidden="true">
+            {waitText(wait)}
+          </p>
+        ) : null}
         <Button type="submit" variant="primary" disabled={busy || waiting || pin === ''}>
           {s.unlock}
         </Button>

@@ -9,7 +9,8 @@ import { now } from '@/core/time/now';
 import { hasPin } from './pin';
 import { disableBiometric } from './biometric';
 import { readPrefs, subscribePrefs, writePrefs } from './prefs';
-import { lockApp, unlockApp, useAppLock } from './state';
+import { holdScreenGuard } from '@/core/security/screen';
+import { lockApp, onOtherWindowLock, unlockApp, useAppLock } from './state';
 
 const ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'wheel', 'touchstart'] as const;
 export const BACKGROUND_GRACE_MS = 30_000;
@@ -87,12 +88,29 @@ export function startAppLock(deps: AppLockDeps = defaultDeps()): () => void {
     lastLocked = s.locked;
     arm();
   });
-  const unsubPrefs = subscribePrefs(arm);
-  arm();
+  // While the lock is on: no screenshots and no app-switcher picture (Android; a no-op elsewhere), so the
+  // last screen is not shown in the recent apps while Nemo is locked. A lock turned off in another window
+  // opens this one (its PIN verifier is gone, no PIN could open it any more).
+  let releaseGuard: (() => void) | undefined;
+  const follow = () => {
+    const on = readPrefs().enabled;
+    if (on && !releaseGuard) releaseGuard = holdScreenGuard();
+    if (!on) {
+      releaseGuard?.();
+      releaseGuard = undefined;
+      if (useAppLock.getState().locked) unlockApp();
+    }
+    arm();
+  };
+  const unsubPrefs = subscribePrefs(follow);
+  const unsubOthers = onOtherWindowLock(() => lockApp(true));
+  follow();
   void reconcile(deps);
   return () => {
     unsubState();
     unsubPrefs();
+    unsubOthers();
+    releaseGuard?.();
     disarm?.();
   };
 }

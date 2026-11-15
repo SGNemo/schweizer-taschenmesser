@@ -5,6 +5,12 @@
 export type DataPolicy = 'keep' | 'delete';
 
 export interface EventMap {
+  /**
+   * The app lock closed the app (Einstellungen → Sicherheit → App-Sperre; idle, background, "Jetzt sperren" or
+   * another window). The vault locks too, so passing the app's PIN never opens a vault that needs its master
+   * password. No payload.
+   */
+  'app.locked': Record<string, never>;
   /** An invoice was marked as paid (or a paid invoice was edited). Finance books an expense. */
   'invoice.paid': {
     invoiceId: string;
