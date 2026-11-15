@@ -176,10 +176,8 @@ export const finance: Strings['finance'] = {
     ]
       .filter(Boolean)
       .join(' · '),
-  expensesByCategory: 'Expenses by category',
   trend: 'Income and expenses over the last 6 months',
   balanceCurve: 'Course through the month',
-  categoriesRing: (n: number) => (n === 1 ? '1 category' : `${n} categories`),
   ringTitle: 'Where the money went',
   netWorthTitle: 'Net worth at month end',
   netWorthChange: (amount: string, since: string) => `${amount} since ${since}`,
@@ -202,15 +200,12 @@ export const finance: Strings['finance'] = {
         : invoices
           ? 'No open invoice.'
           : 'No subscription left until month end.',
-    curve: (a: string, b: string) => `Net worth from ${a} to ${b}`,
     byKind: 'Net worth by account type',
     otherCurrency: (code: string) => `Accounts in ${code}`,
     notConverted: 'not converted',
     widget: 'Net worth',
     widgetAvailable: (amount: string) => `Net worth, ${amount} of it available`,
   },
-  curveFrom: 'Start of month',
-  curveLabel: (a: string, b: string) => `Balance from ${a} to ${b}`,
   showTable: 'Show as table',
   showChart: 'Show as chart',
   tableShort: 'Table',

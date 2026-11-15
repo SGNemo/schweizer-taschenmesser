@@ -250,15 +250,16 @@ test.describe('Finance', () => {
     await expect(page.getByTestId('hero')).toHaveText(/2\.434,50\s€/);
     await expect(page.getByTestId('hero-breakdown')).toHaveCount(0);
 
-    // Charts render lazily; the table twin holds every value
-    await expect(page.getByTestId('chart-categories')).toBeVisible();
+    // One donut for the categories: its legend names every category with its amount, largest first.
+    const donut = page.getByTestId('chart-categories');
+    await expect(donut).toBeVisible();
     await expect(page.getByTestId('chart-trend')).toBeVisible();
-    await page.getByRole('button', { name: 'Als Tabelle anzeigen' }).first().click();
-    const table = page.getByTestId('table-categories');
-    await expect(table.getByRole('row')).toHaveCount(3); // header + 2 categories
-    await expect(table.getByRole('row').nth(1)).toContainText('Lebensmittel');
-    await expect(table.getByRole('row').nth(1)).toContainText(/45,50\s€/);
-    await expect(table.getByRole('row').nth(2)).toContainText('Freizeit');
+    const legend = donut.locator('ol li');
+    await expect(legend).toHaveCount(2);
+    await expect(legend.nth(0)).toContainText('Lebensmittel');
+    await expect(legend.nth(0)).toContainText(/45,50\s€/);
+    await expect(legend.nth(1)).toContainText('Freizeit');
+    // The six months switch to a table of every value.
     await page.getByRole('button', { name: 'Als Tabelle anzeigen' }).click();
     await expect(page.getByTestId('table-trend').getByRole('row').last()).toContainText(
       /2\.434,50\s€/,
@@ -273,17 +274,16 @@ test.describe('Finance', () => {
     await expect(page.getByTestId('month-label')).toHaveText('September 2026');
   });
 
-  test('the chart shows a tooltip when a bar is hovered', async ({ page }, info) => {
-    test.skip(info.project.name === 'pixel-7', 'hover is a desktop interaction');
+  test('every category amount is readable without hovering (the legend is the content)', async ({
+    page,
+  }) => {
     await addTransaction(page, { kind: 'Ausgabe', amount: '45,50', category: 'Lebensmittel' });
     await ready(page, '/finance');
     const chart = page.getByTestId('chart-categories');
-    await expect(chart.getByText(/45,50\s€/)).toBeVisible();
-    // Point at the row of the bar (the chart resolves the hovered category from the pointer).
-    await chart.hover({ position: { x: 300, y: 24 } });
-    const tip = page.getByTestId('chart-tooltip');
-    await expect(tip).toContainText('Lebensmittel');
-    await expect(tip).toContainText(/45,50\s€/);
+    // The former bar chart showed a value only in a hover tooltip; the donut's legend shows it at once.
+    await expect(chart.locator('ol li').first()).toContainText('Lebensmittel');
+    await expect(chart.locator('ol li').first()).toContainText(/45,50\s€/);
+    await expect(chart.locator('ol li').first()).toContainText('100 %');
   });
 
   test('lists, edits and deletes a booking', async ({ page }) => {
@@ -479,8 +479,8 @@ test.describe('Finance: net worth on the tab "Verlauf"', () => {
     await expect(parts.getByRole('listitem').last()).toContainText('nicht umgerechnet');
     // The curve is there, and its foot does not repeat the head's figure (B2: no number twice).
     await expect(page.getByTestId('net-worth-chart')).toBeVisible();
-    await expect(page.getByTestId('net-worth-chart-foot')).toContainText('September 2026');
-    await expect(page.getByTestId('net-worth-chart-foot')).not.toContainText(/5\.850,00/);
+    await expect(page.getByTestId('net-worth-chart-change')).toContainText(/seit \w+ 20\d\d/);
+    await expect(page.getByTestId('net-worth-chart-change')).not.toContainText(/5\.850,00/);
     // Nothing open: the context line says so, without an amount.
     await expect(page.getByTestId('net-worth-context')).toHaveText(
       'Keine Rechnung offen, kein Abo mehr bis Monatsende.',

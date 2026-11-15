@@ -3427,7 +3427,6 @@ export const de = {
       ]
         .filter(Boolean)
         .join(' · '),
-    expensesByCategory: 'Ausgaben nach Kategorie',
     trend: 'Einnahmen und Ausgaben der letzten 6 Monate',
     balanceCurve: 'Verlauf im Monat',
     netWorthTitle: 'Vermögen am Monatsende',
@@ -3458,7 +3457,6 @@ export const de = {
           : invoices
             ? 'Keine Rechnung offen.'
             : 'Kein Abo mehr bis Monatsende.',
-      curve: (a: string, b: string) => `Vermögen von ${a} auf ${b}`,
       byKind: 'Vermögen nach Art des Kontos',
       otherCurrency: (code: string) => `Konten in ${code}`,
       notConverted: 'nicht umgerechnet',
@@ -3467,10 +3465,7 @@ export const de = {
       /** The amount is a part of the figure, not the figure. */
       widgetAvailable: (amount: string) => `Vermögen, davon ${amount} verfügbar`,
     },
-    categoriesRing: (n: number) => (n === 1 ? '1 Kategorie' : `${n} Kategorien`),
     ringTitle: 'Wohin das Geld ging',
-    curveFrom: 'Monatsbeginn',
-    curveLabel: (a: string, b: string) => `Kontostand von ${a} auf ${b}`,
     showTable: 'Als Tabelle anzeigen',
     showChart: 'Als Diagramm anzeigen',
     tableShort: 'Tabelle',

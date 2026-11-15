@@ -11,7 +11,7 @@ import { settings } from '../settings';
 import { useForecast } from '../summary';
 import type { FinanceData } from '../types';
 import { today } from '@/core/time/dates';
-import { MonthCurve } from './MonthCurve';
+import { DayBalanceChart } from './MoneyCharts';
 import styles from '../routes/finance.module.css';
 
 /** "What is coming": the balance line until month end / 30 / 90 days, the lowest point and the end value as text, the list of what it is made of. */
@@ -71,10 +71,9 @@ export function ForecastCard({ data }: { data: FinanceData }) {
               </p>
               {open ? (
                 <>
-                  <MonthCurve
+                  <DayBalanceChart
                     points={dailySeries(forecast, today())}
                     title={e.chartLabel}
-                    fromLabel={date(today())}
                     testId="forecast-curve"
                   />
                   <ul className={styles.forecastList}>
