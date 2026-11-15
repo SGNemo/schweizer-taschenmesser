@@ -125,3 +125,19 @@ describe('fitness progress', () => {
     ]);
   });
 });
+
+describe('fitness trend', () => {
+  it('gives one point per day of the best’s measure, oldest first, never a zero', async () => {
+    const { trendOf } = await import('../progress');
+    expect(trendOf(exerciseHistory(sessions, 'Kniebeuge'))).toEqual({
+      kind: 'weight',
+      points: [
+        { date: '2026-11-01', value: 80 },
+        { date: '2026-11-05', value: 85 },
+        { date: '2026-11-08', value: 85 },
+      ],
+    });
+    expect(trendOf(exerciseHistory(sessions, 'Laufen'))?.kind).toBe('minutes');
+    expect(trendOf([])).toBeUndefined();
+  });
+});

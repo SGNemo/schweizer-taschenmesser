@@ -8976,6 +8976,8 @@ export const de = {
       byGroup: 'Je Muskelgruppe',
       groupSets: (group: string, n: number) => `${group} ${n === 1 ? '1 Satz' : `${n} Sätze`}`,
       groupMinutes: (group: string, duration: string) => `${group} ${duration}`,
+      groupsChart: 'Sätze je Muskelgruppe',
+      kcalChart: 'kcal je Tag',
     },
     planned: {
       group: 'Geplant',
@@ -9012,6 +9014,11 @@ export const de = {
       history: 'Verlauf',
       historyMore: (n: number) => `und ${n} ältere`,
       bestMark: 'Bestwert',
+      trend: {
+        weight: 'Schwerstes Gewicht je Einheit',
+        reps: 'Meiste Wiederholungen je Einheit',
+        minutes: 'Dauer je Einheit',
+      },
     },
 
     live: {
