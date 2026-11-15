@@ -5533,6 +5533,12 @@ export const de = {
     },
     startedFrom: (name: string, n: number) => `„${name}“ mit ${n} Einträgen angelegt.`,
     showInWidget: 'Im Widget zeigen',
+    fillFromPantry: 'Aus Vorräten auffüllen',
+    pantryAsking: 'Vorräte werden gefragt …',
+    pantryNothing: 'In den Vorräten wird gerade nichts knapp.',
+    pantryHint: 'Angehakt kommt auf die Liste. Was bald abläuft, entscheidest du selbst.',
+    pantryReasons: { empty: 'leer', low: 'knapp', expired: 'abgelaufen', soon: 'läuft bald ab' },
+    pantryAdd: (n: number) => (n === 1 ? '1 Eintrag übernehmen' : `${n} Einträge übernehmen`),
     shareTo: 'Auf eine Liste',
     sharedPreview: (n: number) =>
       n === 1 ? 'Dieser Eintrag kommt dazu:' : `Diese ${n} Einträge kommen dazu:`,

@@ -39,6 +39,7 @@ import { SignatureMark } from '@/ui/identity';
 import { archiveWithUndo, ListEditor, ListMark, type ListTarget } from '../components/ListEditor';
 import { ManageLists } from '../components/ManageLists';
 import { ShareToList } from '../components/ShareToList';
+import { FillFromPantry } from '../components/FillFromPantry';
 import {
   groupItems,
   listAsText,
@@ -117,6 +118,7 @@ export default function ListsPage() {
     (inUse[0] as (typeof inUse)[0] | undefined);
   const sorted = current?.archived ? [...inUse, current] : inUse;
   const [manage, setManage] = useState(false);
+  const [fill, setFill] = useState(false);
   // `?share=<text>` (the share sheet's "Auf eine Liste"): each line becomes an entry of the list the reader picks.
   const shared = useMemo(() => sharedEntries(params.get('share') ?? ''), [params]);
   const closeShare = () => {
@@ -364,6 +366,9 @@ export default function ListsPage() {
                 onSelect: () => void sendToBuy(),
               },
             ]
+          : []),
+        ...(isShopping && moduleStates?.pantry === true
+          ? [{ id: 'fill-pantry', label: t.lists.fillFromPantry, onSelect: () => setFill(true) }]
           : []),
         ...(isShopping && doneCount > 0 && moduleStates?.pantry === true
           ? [
@@ -683,6 +688,15 @@ export default function ListsPage() {
         onSaved={(id) => setParams({ list: id }, { replace: true })}
         onArchived={leaveArchived}
       />
+      {current ? (
+        <FillFromPantry
+          open={fill}
+          listId={current.id}
+          listName={current.name}
+          openNames={shown.filter((i) => !i.done).map((i) => i.name)}
+          onClose={() => setFill(false)}
+        />
+      ) : null}
       <ShareToList
         entries={shared}
         lists={inUse}
