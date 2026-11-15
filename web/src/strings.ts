@@ -1387,7 +1387,7 @@ export const de = {
         'Zeigt ruhig einen Satz im Terminformular und nach dem Speichern einer Erinnerung, wenn Benachrichtigungen nicht erlaubt sind.',
       followUp: 'Ruhig wiederholen',
       followUpHint:
-        'Eine Erinnerung, die du selbst gesetzt hast, kommt in Abständen wieder, bis du „Erledigt“ oder „Später“ wählst. Nachts bleibt es still.',
+        'Eine Erinnerung, die du selbst gesetzt hast, kommt in Abständen wieder, bis du „Erledigt“ oder „Später“ wählst. Nachts bleibt es still. Erinnerungen aus der Schnellerfassung („einmal“) kommen nur einmal.',
       repeatEvery: 'Abstand',
       repeatEveryOption: (m: number) => `${m} min`,
       repeatMax: 'Höchstens',
