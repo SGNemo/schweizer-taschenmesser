@@ -9,8 +9,8 @@ import { dismissNotices, ready, showPreview } from '../helpers';
  * Monday-morning thing, and a bedtime the plan respects. Each path counts taps, typed characters, screens,
  * dialogs and detours (an action that did not do what the person meant) and estimates the seconds a person needs
  * (same model as kopf-leer: tap 1 s, character 0,25 s keyboard / 0,4 s phone, screen 2 s, dialog 3 s, detour 5 s).
- * `MAX` holds the measured state of `develop` (2026-11-14): no path may get longer; the packages in PACKAGES.md
- * lower it to the target column of TARGET §4. The table lands in `test-results/usecase-wochenende.md`.
+ * `MAX` holds the measured state after the packages of PACKAGES.md (ANALYSIS §5): no path may get longer. The
+ * table lands in `test-results/usecase-wochenende.md`.
  *
  * Starting point is an empty install (no seed, no test data): path A goes through the welcome card and the setup
  * questions; the other paths switch on only the modules the path needs (todos, planner; timetrack in D) the way
@@ -35,15 +35,23 @@ type Row = { name: string; project: string } & Record<Metric, number> & {
   };
 
 /**
- * Measured on `develop` 35499492 (2026-11-14). Packages lower these to TARGET §4; never raise them. One trade:
- * package 5a (W06) swaps a detour for the two taps of the row pick „Termin“ → „Erinnerung“ in B and G (taps
- * 2 → 4, detours and seconds lower), as REVIEW-FABLE R6 asked.
+ * The measured state after all packages (re-measured in package 8 on `develop` d79b9d4, 2026-11-15: three runs in
+ * a row, light and dark, same figures). Never raise a value. Where a row differs from TARGET §4 („Revised“):
+ * - A, F: equal to the revised rows (1 · 0 · 2 · 1 · 0 · 8 and 2 · 0 · 1 · 1 · 0 · 7); lowered here from the
+ *   baseline, which packages 2 and 3 had left standing.
+ * - B, G: 2 taps more than the target (the row pick „Termin“ → „Erinnerung“, package 5a, REVIEW-FABLE R6); the
+ *   pick replaced one detour each compared with the state before 5a. B keeps the one detour of the bare
+ *   „Zocken“; G: 35 s instead of 33.
+ * - C: 7 taps (the revised row allows 11), but 18 keys and one screen the first target did not have: the break
+ *   is the typed line „Pause 2 Std Zocken“ (package 4a) and the planner is opened; day parts (4b) are checked
+ *   without being counted.
+ * - D, E, H: as the target says.
  */
 const MAX: Record<string, Record<Metric | 'seconds', number>> = {
   // prettier-ignore
-  'A Erster Start bis Planer · desktop-chrome': { taps: 10, keys: 0, screens: 3, dialogs: 1, detours: 1, seconds: 24 },
+  'A Erster Start bis Planer · desktop-chrome': { taps: 1, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 8 },
   // prettier-ignore
-  'A Erster Start bis Planer · pixel-7': { taps: 11, keys: 0, screens: 3, dialogs: 1, detours: 1, seconds: 25 },
+  'A Erster Start bis Planer · pixel-7': { taps: 1, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 8 },
   // prettier-ignore
   'B Kopf leeren: zwölf Dinge auf einmal · desktop-chrome': { taps: 4, keys: 280, screens: 0, dialogs: 1, detours: 1, seconds: 82 },
   // prettier-ignore
@@ -59,9 +67,9 @@ const MAX: Record<string, Record<Metric | 'seconds', number>> = {
   // prettier-ignore
   'E Mail: Persönlich, Suche, Rechnung, Antwort in den Plan · desktop-chrome': { taps: 5, keys: 9, screens: 1, dialogs: 0, detours: 0, seconds: 9 },
   // prettier-ignore
-  'F Abend: Rest auf andere Tage · desktop-chrome': { taps: 9, keys: 0, screens: 1, dialogs: 1, detours: 1, seconds: 19 },
+  'F Abend: Rest auf andere Tage · desktop-chrome': { taps: 2, keys: 0, screens: 1, dialogs: 1, detours: 0, seconds: 7 },
   // prettier-ignore
-  'F Abend: Rest auf andere Tage · pixel-7': { taps: 9, keys: 0, screens: 1, dialogs: 1, detours: 1, seconds: 19 },
+  'F Abend: Rest auf andere Tage · pixel-7': { taps: 2, keys: 0, screens: 1, dialogs: 1, detours: 0, seconds: 7 },
   // prettier-ignore
   'G Sonntag-Frist und Montag früh · desktop-chrome': { taps: 4, keys: 102, screens: 1, dialogs: 1, detours: 0, seconds: 35 },
   // prettier-ignore
@@ -461,6 +469,52 @@ test('B Kopf leeren: zwölf Dinge auf einmal', async ({ page, isMobile }, info) 
     plan,
   });
   await record(info, m, name);
+  // Package 4a, checked but not counted (the one detour of this path, fixed by hand): the bare „Zocken“ became a
+  // ToDo; ⋯ → „Als Pause …“ → „2 h“ on its plan row turns it into a break of the day the plan put it on – no open
+  // ToDo „Zocken“ afterwards. Three taps plus finding the day; the facts name that day.
+  const gaming = tasks.find((x) => /^Zocken/.test(x.title)) as { id: string } | undefined;
+  expect(gaming).toBeTruthy();
+  const placed = (await rows<{ itemKey: string; date: string }>(page, 'planner_assignment')).find(
+    (a) => a.itemKey === `todos:${gaming!.id}`,
+  );
+  expect(placed, '„Zocken“ is planned on a day').toBeTruthy();
+  const weekday = new Intl.DateTimeFormat('de-DE', { weekday: 'short' })
+    .format(new Date(`${placed!.date}T12:00:00`))
+    .replace('.', '');
+  const dayButton = placed!.date === SATURDAY ? /^Heute/ : new RegExp(`^${weekday}`);
+  if (isMobile)
+    await page
+      .getByRole('group', { name: 'Tage' })
+      .getByRole('button', { name: dayButton })
+      .click();
+  else await page.getByRole('button', { name: dayButton }).first().click();
+  await page
+    .locator(`[data-testid="day-${placed!.date}"]`)
+    .getByRole('button', { name: 'Aktionen für Zocken', exact: true })
+    .click();
+  await page.getByRole('menuitem', { name: 'Als Pause …' }).click();
+  await page
+    .getByRole('dialog', { name: 'Zocken als Pause' })
+    .getByRole('button', { name: '2 h', exact: true })
+    .click();
+  await expect
+    .poll(async () =>
+      (await rows<{ title: string; done: boolean }>(page, 'todos_task')).filter(
+        (x) => !x.done && /^Zocken/.test(x.title),
+      ),
+    )
+    .toEqual([]);
+  // The break is written after the ToDo is gone: wait for it.
+  const breakOf = async () =>
+    (
+      await rows<{ date: string; blockers: { label: string; min: number }[] }>(page, 'planner_day')
+    ).find((d) => d.blockers.some((b) => b.label === 'Zocken'));
+  await expect
+    .poll(async () => (await breakOf())?.blockers.map((b) => [b.label, b.min]))
+    .toEqual([['Zocken', 120]]);
+  const breakDay = await breakOf();
+  expect(breakDay?.date).toBe(placed!.date);
+  facts(info, 'B-break', { gamingPlannedOn: placed!.date, breakOn: breakDay?.date });
 });
 
 const OPEN = [
