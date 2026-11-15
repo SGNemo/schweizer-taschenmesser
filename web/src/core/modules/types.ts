@@ -623,8 +623,9 @@ export interface PlannableItem {
    */
   action?: { label: string; to: string };
   /**
-   * A fixed time window on the thing's day, 'HH:mm' local (a training session at 18:00). Types only for now: the
-   * first reader is planner hub S4, which also adds it to the input hash (it moves things).
+   * A fixed time window on the thing's day ('HH:mm' local, a training session at 18:00; missing `to` = `from` +
+   * `durationMin`). The thing's day is `plannedFor`, else `earliest`; without one it is no fixed block. The planner
+   * (S4) places it there at that time, never moves it, never calls it late; it is part of the input hash.
    */
   fixed?: { from: string; to?: string };
   /** A short line the row shows after the minutes (e.g. „Mahnung · 92,40 € bis 13.10.“); never in the title. */
@@ -664,8 +665,8 @@ export interface PlannableSource {
    */
   list(ctx: { today: string; until: string; requested?: string[] }): Promise<PlannableItem[]>;
   /**
-   * Blocks of time on days inside the horizon (habits, package H1 / planner hub S4). Types only for now: the first
-   * reader adds them to the day minutes and the input hash.
+   * Blocks of time on days inside the horizon (habits, package H1 / planner hub S4): the planner takes them off the
+   * day's time like an appointment (`core/modules/contributions.ts` `collectPlanBlocks`, part of the input hash).
    */
   blocks?(ctx: { today: string; until: string }): Promise<PlanBlock[]>;
   /**

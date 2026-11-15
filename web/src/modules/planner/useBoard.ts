@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo } from 'react';
 import { getMeta } from '@/core/db/metaKv';
-import { useCalendarItems, usePlannable } from '@/core/modules/contributions';
+import { useCalendarItems, usePlanBlocks, usePlannable } from '@/core/modules/contributions';
 import { addDays } from '@/core/plan/dates';
 import { useFocusSettings } from '@/core/settings/focus';
 import { useSettings } from '@/core/settings/settings';
@@ -33,6 +33,7 @@ export function useBoard(span: number): BoardData | undefined {
   const settings = stored ?? DEFAULT_PLANNER_SETTINGS;
   const [focus] = useFocusSettings();
   const calendar = useCalendarItems({ from: day, to: until });
+  const blocks = usePlanBlocks({ today: day, until });
   const own = useLiveQuery(
     async () => ({
       dayRows: await dayRepo.active().toArray(),
@@ -46,7 +47,7 @@ export function useBoard(span: number): BoardData | undefined {
   const requested = useMemo(() => (own ? requestedIds(own.itemRows) : undefined), [own]);
   const entries = usePlannable({ today: day, until }, requested);
   return useMemo(() => {
-    if (!own || !entries || !calendar) return undefined;
+    if (!own || !entries || !calendar || !blocks) return undefined;
     const last = own.last ?? undefined;
     const titles: Record<string, string> = { ...last?.titles };
     for (const e of entries) titles[`${e.moduleId}:${e.id}`] = e.title;
@@ -59,9 +60,10 @@ export function useBoard(span: number): BoardData | undefined {
       assignments: own.assignments,
       entries,
       calendar,
+      blocks,
       unplaced: last?.unplaced ?? [],
       titles,
     });
     return { board, settings, planLimit: focus.planLimit, last, titles, today: day };
-  }, [own, entries, calendar, settings, focus.planLimit, day, span]);
+  }, [own, entries, calendar, blocks, settings, focus.planLimit, day, span]);
 }

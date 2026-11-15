@@ -154,13 +154,15 @@ export function DaySheet({
                 [
                   day.window && b.from && b.to ? `${b.from}–${b.to}` : '',
                   b.calendar ? t.planner.day.calendar : '',
+                  // Time a habit keeps free (S4): changed on the goal, not here.
+                  b.module === 'habits' ? t.planner.src.habit : '',
                 ]
                   .filter(Boolean)
                   .join(' · ') || undefined
               }
               end={<span className={styles.minutes}>{compact(b.min)}</span>}
               actions={
-                b.calendar ? undefined : (
+                b.calendar || b.module ? undefined : (
                   <IconButton
                     label={t.planner.day.removeBlocker(b.label)}
                     onClick={() => void removeBlocker(day.date, b.id, titles)}

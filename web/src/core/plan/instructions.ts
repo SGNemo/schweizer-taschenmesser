@@ -40,6 +40,8 @@ export interface InstructionItem {
   hardDue?: string;
   /** The day it is nailed to, if any (it stays there when its day is moved). */
   pinned?: string;
+  /** A fixed block (planner hub S4, a training at 18:00): its day and time are its source's, nothing moves it. */
+  fixed?: true;
 }
 
 export interface InstructionContext {
@@ -56,6 +58,8 @@ export type Instruction =
   | { kind: 'explain' }
   /** A planning verb named a thing the plan does not have. */
   | { kind: 'missing'; query: string }
+  /** A planning verb would move a fixed block (S4): one calm line, nothing moves. */
+  | { kind: 'fixed'; title: string }
   /** No instruction: the field makes a ToDo. */
   | { kind: 'none' };
 
@@ -195,8 +199,35 @@ function forThing(
   const q = query.replace(/^(?:das|die|den|der)\s+/, '').trim();
   const hit = q ? target(q, ctx.items, !explicit) : undefined;
   if (!hit) return explicit ? { kind: 'missing', query: q } : { kind: 'none' };
-  if ('key' in hit) return { kind: 'ops', ops: make(hit.key) };
+  if ('key' in hit) {
+    const ops = make(hit.key);
+    const item = ctx.items.find((i) => i.key === hit.key);
+    if (item?.fixed && ops.some(isMove)) return { kind: 'fixed', title: item.title };
+    return { kind: 'ops', ops };
+  }
   return { kind: 'ask', options: hit.ask, ops: make };
+}
+
+/** The ops that move a thing in time („Später“, festnageln) – a fixed block (S4) takes none of them. */
+const isMove = (o: PlanOp): o is Extract<PlanOp, { op: 'pin' | 'earliest' }> =>
+  o.op === 'pin' || o.op === 'earliest';
+
+/**
+ * The ops without any move of a fixed block (S4) – for every way ops reach the preview (a picked question, the local
+ * model's reading). `held` = the title of a fixed block a move was dropped for, so the field can say so calmly.
+ */
+export function withoutFixedMoves(
+  ops: readonly PlanOp[],
+  items: readonly InstructionItem[],
+): { ops: PlanOp[]; held?: string } {
+  const fixed = new Map(items.filter((i) => i.fixed).map((i) => [i.key, i.title]));
+  let held: string | undefined;
+  const kept = ops.filter((o) => {
+    if (!isMove(o) || !fixed.has(o.key)) return true;
+    held ??= fixed.get(o.key);
+    return false;
+  });
+  return { ops: kept, ...(held !== undefined ? { held } : {}) };
 }
 
 /** Next Monday after `today` (the start of „nächste Woche“). */
@@ -208,13 +239,13 @@ function nextMonday(today: string): string {
 
 /**
  * „alles von Do nach Fr“: Do is free, its things not before Fr – a hard due before Fr stays first, and so does
- * a thing nailed to Do.
+ * a thing nailed to Do and a fixed block (S4, its time is its source's).
  */
 function moveAll(a: string, b: string, ctx: InstructionContext): PlanOp[] {
   return [
     { op: 'available', date: a, min: 0 },
     ...ctx.items
-      .filter((i) => i.date === a && !(i.hardDue && i.hardDue < b) && i.pinned !== a)
+      .filter((i) => i.date === a && !(i.hardDue && i.hardDue < b) && i.pinned !== a && !i.fixed)
       .map((i): PlanOp => ({ op: 'earliest', key: i.key, date: b })),
   ];
 }
@@ -222,7 +253,7 @@ function moveAll(a: string, b: string, ctx: InstructionContext): PlanOp[] {
 /**
  * „Rest verteilen“ in the evening (use case „Wochenende retten“, F3): the ops of `moveAll(today, tomorrow)` –
  * today has no time left, each open thing of today waits until tomorrow (the run spreads them over the next
- * days); a thing nailed to today or due hard today stays. Pure and deterministic; nothing moves before the
+ * days); a thing nailed to today, due hard today or fixed today (a training, S4) stays. Pure and deterministic; nothing moves before the
  * user takes the preview.
  */
 export const restToTomorrow = (ctx: InstructionContext): PlanOp[] =>

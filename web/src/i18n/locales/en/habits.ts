@@ -43,6 +43,12 @@ export const habits: Strings['habits'] = {
     reminderHint:
       "In a time window the app reminds you until the day's goal is met – and not after that.",
     templates: 'Templates',
+    keepFree: 'Keep time free in the plan',
+    keepFreeNone: 'none',
+    keepFreeOther: 'Other length …',
+    keepFreeMinutes: 'Minutes (5–240)',
+    keepFreeRange: 'Please enter a length of 5 to 240 minutes.',
+    keepFreeHint: 'The planner keeps this time free on the scheduled days. Ticking stays here.',
   },
   templates: {
     water: { name: 'Drink water', unit: 'glasses' },

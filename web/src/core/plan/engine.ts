@@ -4,7 +4,7 @@
  * honest list of what waits, a diff against the previous plan and the load per day. Pure and
  * deterministic: same input, same output; no clock, no randomness, no I/O.
  */
-import { capacity } from './capacity';
+import { capacity, fixedCharges, fixedSpan } from './capacity';
 import { addDays, cmp } from './dates';
 import { diffPlans, type Bump } from './diff';
 import {
@@ -70,8 +70,12 @@ export function plan(input: PlanInput): PlanResult {
   const prevByUnit = new Map(
     prev.filter((a) => lastDay === undefined || a.date <= lastDay).map((a) => [a.id, a]),
   );
-  const units = input.items.filter((i) => !i.done && !i.excluded).flatMap((i) => toUnits(i, s));
-  const unitById = new Map(units.map((u) => [u.id, u]));
+  const all = input.items.filter((i) => !i.done && !i.excluded).flatMap((i) => toUnits(i, s));
+  const unitById = new Map(all.map((u) => [u.id, u]));
+  // Fixed blocks (S4) are placed by their own rule 2b only: no other rule sees them, so none can move them.
+  const units = all.filter((u) => !u.item.fixed);
+  const fixedUnits = all.filter((u) => u.item.fixed);
+  let fixedDemand = 0;
   const placed = new Map<string, Assignment>();
   const assignments: Assignment[] = [];
   const load: Record<string, DayLoad> = {};
@@ -93,8 +97,15 @@ export function plan(input: PlanInput): PlanResult {
     let left = cap.usable;
     let rawLeft = cap.raw;
     let mains = 0;
+    /** Minutes the day's rows take; a fixed block counts only what no timed blocker covers already. */
+    let planned = 0;
     const todayList: Assignment[] = [];
-    const put = (u: PlanUnit, reason: Assignment['reason'], bumpedBy?: string[]): void => {
+    const put = (
+      u: PlanUnit,
+      reason: Assignment['reason'],
+      bumpedBy?: string[],
+      charge = u.minutes,
+    ): Assignment => {
       const p = prevByUnit.get(u.id);
       // A unit that keeps its day keeps its stored cause as well.
       const by = bumpedBy ?? (p && p.date === day.date ? p.bumpedBy : undefined);
@@ -112,9 +123,12 @@ export function plan(input: PlanInput): PlanResult {
       placed.set(u.id, a);
       assignments.push(a);
       todayList.push(a);
-      left -= u.minutes;
-      rawLeft -= u.minutes;
-      if (isMain(u)) mains++;
+      left -= charge;
+      rawLeft -= charge;
+      planned += charge;
+      // A fixed block is a stretch of the day like an appointment, not one of its main things.
+      if (isMain(u) && !u.item.fixed) mains++;
+      return a;
     };
     /** `sameDay`: a second session of one item on the same day is allowed only under deadline pressure. */
     const eligible = (u: PlanUnit, sameDay = false): boolean => {
@@ -126,6 +140,25 @@ export function plan(input: PlanInput): PlanResult {
       const part = placed.get(unitId(u.itemKey, u.k - 1))?.date ?? '9999';
       return sameDay ? part <= day.date : part < day.date;
     };
+
+    // Rule 2b: fixed blocks (S4) – on their own day at their own time, before everything else; capacity is not
+    // asked (an overrun is counted as for a pin). What a timed blocker already covers is not taken twice.
+    const fixedToday = fixedUnits
+      .filter((u) => u.item.fixed!.date === day.date)
+      .map((u) => ({ u, span: fixedSpan(u.item.fixed!, u.minutes) }))
+      .sort((a, b) => cmp(a.span?.from ?? '', b.span?.from ?? '') || cmp(a.u.id, b.u.id));
+    const charges = fixedCharges(
+      fixedToday.map(({ u, span }) => ({ minutes: u.minutes, ...span })),
+      day.blockers,
+    );
+    fixedToday.forEach(({ u, span }, i) => {
+      const a = put(u, 'pinned', [], charges[i]!);
+      fixedDemand += charges[i]!;
+      if (span) {
+        a.from = span.from;
+        a.to = span.to;
+      }
+    });
 
     // Rule 3: pinned – the user nailed the item to this day; capacity is not asked (overload is counted).
     for (const u of units) if (u.item.pinned === day.date && eligible(u)) put(u, 'pinned');
@@ -237,13 +270,15 @@ export function plan(input: PlanInput): PlanResult {
     // input gives the same (unit, date, minutes, order). The part only orders: the day was chosen above.
     const pinnedIds = new Set(units.filter((u) => u.item.pinned === day.date).map((u) => u.id));
     const mustIds = new Set(must.map((u) => u.id));
-    const tierOf = (a: Assignment): number => (pinnedIds.has(a.id) ? 0 : mustIds.has(a.id) ? 1 : 2);
+    const tierOf = (a: Assignment): number =>
+      unitById.get(a.id)!.item.fixed ? -1 : pinnedIds.has(a.id) ? 0 : mustIds.has(a.id) ? 1 : 2;
     todayList
       .sort((a, b) => {
         const ua = unitById.get(a.id)!.item;
         const ub = unitById.get(b.id)!.item;
         return (
           tierOf(a) - tierOf(b) ||
+          cmp(ua.fixed ? (a.from ?? '') : '', ub.fixed ? (b.from ?? '') : '') ||
           partRank(ua.part) - partRank(ub.part) ||
           ub.priority - ua.priority ||
           cmp(ua.due?.date ?? '9999', ub.due?.date ?? '9999') ||
@@ -252,19 +287,24 @@ export function plan(input: PlanInput): PlanResult {
         );
       })
       .forEach((a, i) => (a.order = i));
-    // Package 5: a day with a window gives its sessions a time, in the order above; minutes stay as planned.
+    // Package 5: a day with a window gives its sessions a time, in the order above; minutes stay as planned. A fixed
+    // block keeps its own time and is stepped around like a blocker with a time.
     const window = validWindow(day.window);
     if (window)
       for (const [id, w] of placeInWindow(
         window,
-        day.blockers,
-        todayList.map((a) => ({ ...a, part: unitById.get(a.id)!.item.part })),
+        [
+          ...day.blockers,
+          ...todayList.filter((a) => a.from && a.to && unitById.get(a.id)!.item.fixed),
+        ],
+        todayList
+          .filter((a) => !unitById.get(a.id)!.item.fixed)
+          .map((a) => ({ ...a, part: unitById.get(a.id)!.item.part })),
       )) {
         const a = placed.get(id)!;
         a.from = w.from;
         a.to = w.to;
       }
-    const planned = todayList.reduce((n, a) => n + a.minutes, 0);
     load[day.date] = {
       raw: cap.raw,
       usable: cap.usable,
@@ -301,7 +341,8 @@ export function plan(input: PlanInput): PlanResult {
 
   // The diff names every row that changes, also one from a day beyond the horizon (moved, or removed).
   const diff = diffPlans(prev, assignments, bumps, new Set(unitById.keys()));
-  const demandMin = units.reduce((n, u) => n + u.minutes, 0);
+  // A fixed block outside the horizon asks for no time here; one inside asks for what it takes of its day.
+  const demandMin = units.reduce((n, u) => n + u.minutes, fixedDemand);
   const usableMin = Object.values(load).reduce((n, l) => n + l.usable, 0);
   return {
     assignments,

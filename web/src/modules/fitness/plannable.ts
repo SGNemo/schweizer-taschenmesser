@@ -1,7 +1,8 @@
 /**
  * Planned sessions as a source of the planner (`contributions.plannable`, docs/design/plan/CONCEPT.md §4):
  * „Training: Oberkörper · 60 Min“, pinned to the day the user chose (`earliest` = `due`), so the planner
- * fits it into that day and never moves it. Ticked off in the plan = logged (`planned` cleared); an edited
+ * fits it into that day and never moves it. A session with a time is a fixed block (planner hub S4, `fixed`):
+ * it stands at its time on its day, takes that stretch and is never late – so it carries no deadline. Ticked off in the plan = logged (`planned` cleared); an edited
  * estimate becomes the session's duration. Logged sessions are never offered.
  *
  * Deep package 3: the training plan's days (a template on its weekdays) come along as items of their own,
@@ -53,7 +54,8 @@ const source: PlannableSource = {
         to: `/fitness?open=${encodeURIComponent(s.id)}`,
         durationMin: sessionMinutes(s) || DEFAULT_MINUTES,
         earliest: s.date,
-        due: { date: s.date, hard: true },
+        // With a time: from there for its minutes (the planner ends it), on its day only.
+        ...(s.time ? { fixed: { from: s.time } } : { due: { date: s.date, hard: true } }),
         createdAt: s.createdAt,
       })),
       ...plan,

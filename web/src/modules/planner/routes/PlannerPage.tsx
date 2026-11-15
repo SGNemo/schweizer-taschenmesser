@@ -7,6 +7,7 @@ import { explainAssignment, explainWait } from '@/core/plan/explain';
 import {
   isRestSentence,
   restToTomorrow,
+  withoutFixedMoves,
   type Instruction,
   type PlanOp,
 } from '@/core/plan/instructions';
@@ -55,7 +56,7 @@ import { WeekCheck } from '../components/WeekCheck';
 import { BOARD_DAYS } from '../calendar';
 import { overloadText } from '../overload';
 import { readSentence, warmLocalStage, type Said } from '../localStage';
-import { instructionItems, opLines, planLines } from '../say';
+import { instructionItems, opLines, planLines, restIsEmpty } from '../say';
 import { PlannerOffError, previewUser } from '../services';
 import { useBoard } from '../useBoard';
 import { useUiStore } from '@/stores/ui';
@@ -189,7 +190,7 @@ export default function PlannerPage() {
 
   /** The rest preview – unless only what is nailed to today (or nothing) is left: then one calm line, no preview. */
   function previewRest(ops: PlanOp[], fromField: boolean) {
-    if (!ops.some((o) => o.op === 'earliest')) {
+    if (restIsEmpty(ops)) {
       setPending(undefined);
       setSayLine(t.planner.rest.nothing);
       return;
@@ -199,13 +200,22 @@ export default function PlannerPage() {
 
   /** Shows what `ops` would do; nothing is stored until „Übernehmen“. `local` = the model read the sentence. */
   async function showPreview(
-    ops: PlanOp[],
+    said: PlanOp[],
     fromField = false,
     local?: Pending['local'],
     rest = false,
   ) {
     setAsk(undefined);
     setSayLine(undefined);
+    // A fixed block (S4) is never moved – whether a picked question or the local model asked for it.
+    const { ops, held } = board
+      ? withoutFixedMoves(said, instructionItems(board))
+      : { ops: said, held: undefined };
+    if (held !== undefined && ops.length === 0) {
+      setPending(undefined);
+      setSayLine(t.planner.say.fixed(held));
+      return;
+    }
     try {
       const out = await previewUser(ops);
       const titleOf = (key: string) => titles[key] ?? out.titles[key] ?? key;
@@ -375,6 +385,10 @@ export default function PlannerPage() {
       }
       if (said.kind === 'missing') {
         setSayLine(t.planner.say.missing(said.query));
+        return;
+      }
+      if (said.kind === 'fixed') {
+        setSayLine(t.planner.say.fixed(said.title));
         return;
       }
     }

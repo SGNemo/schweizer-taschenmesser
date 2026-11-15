@@ -108,7 +108,11 @@ export function ThingRow({
         {source.word}
       </span>,
     );
-  if (row.pinned) facts.push(<span>{t.planner.row.fixed}</span>);
+  // A fixed block (S4, a training at 18:00): its time and „fest“ – it stands there, nothing moves it.
+  if (row.fixed) {
+    facts.push(<span>{`${row.fixed.from}–${row.fixed.to}`}</span>);
+    facts.push(<span>{t.planner.row.fixed}</span>);
+  } else if (row.pinned) facts.push(<span>{t.planner.row.fixed}</span>);
   if (entry?.detail)
     facts.push(
       MONEY.test(entry.detail) ? (
@@ -132,6 +136,8 @@ export function ThingRow({
   return (
     <ItemRow
       controls="always"
+      // A fixed block lies recessed with the day's appointments (CONCEPT-DESIGN §4); its tick stays.
+      recessed={row.fixed ? true : undefined}
       weight={next ? 'next' : undefined}
       className={leaving ? styles.leaving : undefined}
       lead={
@@ -188,7 +194,7 @@ export function ThingRow({
       menuLabel={t.planner.row.menu(row.title)}
       onSwipeRight={done}
       swipeRightLabel={t.planner.row.done}
-      onSwipeLeft={onLater}
+      onSwipeLeft={row.fixed ? undefined : onLater}
       swipeLeftLabel={t.planner.row.later}
     />
   );

@@ -22,6 +22,7 @@ import { availableManifests } from '@/core/modules/available';
 import {
   activeManifests,
   collectCalendarItems,
+  collectPlanBlocks,
   collectPlannable,
 } from '@/core/modules/contributions';
 import type { ModuleManifest } from '@/core/modules/types';
@@ -197,10 +198,12 @@ async function inputSnapshot(): Promise<string> {
   const day = today();
   const until = addDays(day, Number(settings.horizonDays) - 1);
   const items = await itemRepo.active().toArray();
-  const [things, calendar, days, assignments, focus, pull, lastSync] = await Promise.all([
+  const [things, calendar, blocks, days, assignments, focus, pull, lastSync] = await Promise.all([
     // With the requests, as the run reads them (`buildInputs`): a list asked into the plan is an input.
     collectPlannable({ today: day, until }, manifests, requestedIds(items)),
     settings.calendarBlocks ? collectCalendarItems({ from: day, to: until }, manifests) : [],
+    // A habit's kept time (S4): a changed goal replans.
+    collectPlanBlocks({ today: day, until }, manifests),
     dayRepo.active().toArray(),
     assignmentRepo.active().toArray(),
     getFocusSettings(),
@@ -211,6 +214,7 @@ async function inputSnapshot(): Promise<string> {
     day,
     things,
     calendar.filter((c) => c.source !== 'planner'),
+    blocks,
     days,
     items,
     assignments,

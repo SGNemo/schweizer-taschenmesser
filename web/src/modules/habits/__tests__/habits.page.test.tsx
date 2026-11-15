@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -124,6 +124,39 @@ describe('Habits page', () => {
         reminder: { kind: 'window', from: '09:00', to: '19:00', everyMin: 120 },
       });
     });
+  });
+
+  it('„Andere Dauer …“ outside 5–240 or empty says its range at the field and stores nothing', async () => {
+    draw('/habits?new=1');
+    const dialog = await screen.findByRole('dialog');
+    await userEvent.type(within(dialog).getByLabelText('Name'), 'Spazieren');
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: /weitere Felder|Mehr Felder/i }),
+    );
+    await userEvent.selectOptions(
+      within(dialog).getByLabelText('Zeit im Plan freihalten'),
+      'other',
+    );
+    const minutes = within(dialog).getByLabelText('Minuten (5–240)');
+    const save = within(dialog).getByRole('button', { name: /^(Speichern|.+ eintragen)$/ });
+    // (The browser's own min/max check stops „300“ first; a submit that skips it gets the same line.)
+    for (const value of ['300', '']) {
+      await userEvent.clear(minutes);
+      if (value) await userEvent.type(minutes, value);
+      fireEvent.submit(dialog.querySelector('form')!);
+      expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+        'Bitte eine Dauer von 5 bis 240 Minuten eintragen.',
+      );
+      expect(minutes).toHaveAccessibleDescription(/5 bis 240 Minuten/);
+    }
+    expect(await goalRepo.active().count()).toBe(0);
+    // A length inside the range saves.
+    await userEvent.type(minutes, '45');
+    expect(within(dialog).queryByRole('alert')).toBeNull();
+    await userEvent.click(save);
+    await waitFor(async () =>
+      expect((await goalRepo.active().toArray())[0]).toMatchObject({ minutes: 45 }),
+    );
   });
 
   it('shows the last 30 days without counting rest days against the goal', async () => {

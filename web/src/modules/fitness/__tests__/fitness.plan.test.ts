@@ -108,6 +108,31 @@ describe('fitness planner source and attention', () => {
     expect(items).toHaveLength(2);
   });
 
+  it('hands a session with a time over as a fixed block on its day, without a deadline (S4)', async () => {
+    const s1 = await sessionRepo.create({
+      date: '2026-11-09',
+      time: '18:00',
+      title: 'Oberkörper',
+      durationMin: 60,
+      exercises: [],
+      planned: true,
+    });
+    const items = await plannable.list({ today: '2026-11-08', until: '2026-11-15' });
+    expect(items).toEqual([
+      expect.objectContaining({
+        id: s1.id,
+        title: 'Training: Oberkörper',
+        durationMin: 60,
+        earliest: '2026-11-09',
+        fixed: { from: '18:00' },
+      }),
+    ]);
+    expect(items[0]!.due).toBeUndefined();
+    // The tick stays: done in the plan = logged.
+    await plannable.onDone!(s1.id);
+    expect((await sessionRepo.get(s1.id))?.planned).toBeFalsy();
+  });
+
   it('ticked off in the plan = logged; an edited estimate = the duration', async () => {
     const s1 = await sessionRepo.create({ date: '2026-11-09', exercises: [], planned: true });
     await plannable.onEstimate!(s1.id, 70);

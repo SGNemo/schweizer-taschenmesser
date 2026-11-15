@@ -20,7 +20,8 @@ export function toUnits(
   settings: Pick<PlanSettings, 'maxSessionMin' | 'minSessionMin'>,
 ): PlanUnit[] {
   const min = itemMinutes(item);
-  if (!item.splittable || min <= settings.maxSessionMin)
+  // A fixed block (S4) is one stretch of its day: never cut.
+  if (!item.splittable || item.fixed || min <= settings.maxSessionMin)
     return [{ id: unitId(item.key, 0), itemKey: item.key, k: 0, of: 1, minutes: min, item }];
   const of = Math.ceil(min / settings.maxSessionMin);
   const per = Math.max(settings.minSessionMin, Math.ceil(min / of));
