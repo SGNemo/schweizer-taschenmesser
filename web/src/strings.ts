@@ -3227,6 +3227,8 @@ export const de = {
         planFor: (name: string) => `${name} kündigen: in den Plan`,
         planned: 'Im Plan',
         plannedToast: (name: string) => `Im Plan: ${name} kündigen`,
+        later: (n: number) =>
+          n === 1 ? 'Eine weitere Frist bis 90 Tage' : `${n} weitere Fristen bis 90 Tage`,
       },
       prices: {
         title: 'Preisänderungen',

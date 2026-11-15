@@ -165,3 +165,19 @@
   color: var(--text-muted);
   font-size: var(--text-sm);
 }
+/* Narrow cards: the action moves under the text instead of squeezing it into four lines. */
+.cardRow {
+  flex-wrap: wrap;
+  column-gap: var(--space-3);
+}
+.rowMain {
+  flex-basis: 14rem;
+}
+.more summary {
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}

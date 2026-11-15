@@ -84,6 +84,10 @@ export const subscriptions: Strings['subscriptions'] = {
       planFor: (name: string) => `Cancel ${name}: add to plan`,
       planned: 'In the plan',
       plannedToast: (name: string) => `In the plan: cancel ${name}`,
+      later: (n: number) =>
+        n === 1
+          ? 'One more notice period within 90 days'
+          : `${n} more notice periods within 90 days`,
     },
     prices: {
       title: 'Price changes',

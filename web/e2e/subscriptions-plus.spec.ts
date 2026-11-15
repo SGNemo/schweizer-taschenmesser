@@ -206,5 +206,5 @@ test('„Kaum genutzt“ from the dialog: the row says so and the overview names
   await save(page);
   await expect(page.getByRole('button', { name: /Streaming/ })).toContainText('Kaum genutzt');
   await page.getByRole('button', { name: 'Übersicht' }).click();
-  await expect(page.getByTestId('subscriptions-unused')).toContainText(/1 Abo, 119,88\s€ im Jahr/);
+  await expect(page.getByTestId('subscriptions-unused')).toContainText(/Streaming.*119,88\s€/);
 });

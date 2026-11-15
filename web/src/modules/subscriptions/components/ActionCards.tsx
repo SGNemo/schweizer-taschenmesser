@@ -2,11 +2,11 @@ import type { ReactNode } from 'react';
 import { useHideValues } from '@/core/focus/hideValues';
 import { relativeDays } from '@/core/i18n/format';
 import { currencyOf, formatMoney, formatTotals } from '@/core/money';
-import { formatDay } from '@/core/time/dates';
+import { addDaysStr, formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Button, Card, Icon } from '@/ui';
 import { cancelTone, changePercent } from '../logic';
-import { recentPriceChanges, unusedRows, upcomingDeadlines } from '../overview';
+import { recentPriceChanges, unusedRows, upcomingDeadlines, UPCOMING_DAYS } from '../overview';
 import type { Subscription } from '../schema';
 import styles from './OverviewView.module.css';
 
@@ -67,52 +67,62 @@ export function DeadlinesCard<R extends Row>({
   if (!subs.some((s) => s.active && s.cancelNoticeDays !== undefined && !s.recurrence.until))
     return null;
   const rows = upcomingDeadlines(subs, day);
+  // The next 30 days in view; later ones (up to 90) wait folded behind one line (one thing at a time).
+  const soonLast = addDaysStr(day, UPCOMING_DAYS - 1);
+  const near = rows.filter((r) => r.deadline <= soonLast);
+  const later = rows.filter((r) => r.deadline > soonLast);
+  const list = (part: typeof rows) => (
+    <ul className={styles.rows}>
+      {part.map((r) => {
+        const tone = cancelTone(r.deadline, day);
+        const soon = tone.tone === 'soon';
+        return (
+          <CardRow
+            key={r.sub.id}
+            name={r.sub.name}
+            onOpen={() => onOpen(r.sub)}
+            end={
+              r.planned ? (
+                <span className={styles.planned}>
+                  <Icon name="check" size={16} />
+                  {w.planned}
+                </span>
+              ) : onPlan ? (
+                <Button
+                  variant="ghost"
+                  aria-label={w.planFor(r.sub.name)}
+                  onClick={() => onPlan(r.sub, r.deadline)}
+                >
+                  {w.plan}
+                </Button>
+              ) : null
+            }
+          >
+            <span className={soon ? styles.warn : undefined} data-tone={tone.tone}>
+              {soon ? <Icon name="clock" size={14} /> : null}
+              {w.by(formatDay(r.deadline, 'd. MMM'))}
+              {soon ? ` · ${relativeDays(tone.days)}` : null}
+            </span>
+            {' · '}
+            <OtherwiseLine
+              amount={money(r.sub.amountMinor, currencyOf(r.sub))}
+              date={formatDay(r.charge, 'd. MMM')}
+            />
+          </CardRow>
+        );
+      })}
+    </ul>
+  );
   return (
     <Card title={w.title} className={styles.card} data-testid="subscriptions-deadlines">
-      {rows.length === 0 ? (
-        <p className={styles.note}>{w.none}</p>
-      ) : (
-        <ul className={styles.rows}>
-          {rows.map((r) => {
-            const tone = cancelTone(r.deadline, day);
-            const soon = tone.tone === 'soon';
-            return (
-              <CardRow
-                key={r.sub.id}
-                name={r.sub.name}
-                onOpen={() => onOpen(r.sub)}
-                end={
-                  r.planned ? (
-                    <span className={styles.planned}>
-                      <Icon name="check" size={16} />
-                      {w.planned}
-                    </span>
-                  ) : onPlan ? (
-                    <Button
-                      variant="ghost"
-                      aria-label={w.planFor(r.sub.name)}
-                      onClick={() => onPlan(r.sub, r.deadline)}
-                    >
-                      {w.plan}
-                    </Button>
-                  ) : null
-                }
-              >
-                <span className={soon ? styles.warn : undefined} data-tone={tone.tone}>
-                  {soon ? <Icon name="clock" size={14} /> : null}
-                  {w.by(formatDay(r.deadline, 'd. MMM'))}
-                  {soon ? ` · ${relativeDays(tone.days)}` : null}
-                </span>
-                {' · '}
-                <OtherwiseLine
-                  amount={money(r.sub.amountMinor, currencyOf(r.sub))}
-                  date={formatDay(r.charge, 'd. MMM')}
-                />
-              </CardRow>
-            );
-          })}
-        </ul>
-      )}
+      {rows.length === 0 ? <p className={styles.note}>{w.none}</p> : null}
+      {near.length > 0 ? list(near) : null}
+      {later.length > 0 ? (
+        <details className={styles.more}>
+          <summary>{w.later(later.length)}</summary>
+          {list(later)}
+        </details>
+      ) : null}
     </Card>
   );
 }
@@ -196,9 +206,12 @@ export function UnusedCard<R extends Row>({
   if (rows.length === 0) return null;
   return (
     <Card title={w.title} className={styles.card} data-testid="subscriptions-unused">
-      <p className={styles.sum}>
-        <SumLine n={rows.length} amount={<b>{totals(sums)}</b>} />
-      </p>
+      {/* One row says its amount itself; a sum line only adds something from two on. */}
+      {rows.length > 1 ? (
+        <p className={styles.sum}>
+          <SumLine n={rows.length} amount={<b>{totals(sums)}</b>} />
+        </p>
+      ) : null}
       <ul className={styles.rows}>
         {rows.map((r) => (
           <CardRow

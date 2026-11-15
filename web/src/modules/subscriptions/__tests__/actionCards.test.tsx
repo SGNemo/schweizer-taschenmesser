@@ -52,6 +52,22 @@ describe('notice periods card', () => {
     within(card).getByText('Im Plan');
   });
 
+  it('shows the next 30 days and folds later deadlines (up to 90) behind one line', () => {
+    const near = sub({ name: 'Zeitung', cancelNoticeDays: 7 });
+    const later = sub({
+      name: 'Versicherung',
+      startDate: '2025-02-20',
+      recurrence: { freq: 'yearly' },
+      cancelNoticeDays: 30,
+    });
+    render(<DeadlinesCard subs={[near, later]} day={DAY} onOpen={() => {}} />);
+    const card = screen.getByTestId('subscriptions-deadlines');
+    const folded = within(card).getByText('Eine weitere Frist bis 90 Tage').closest('details')!;
+    expect(folded.open).toBe(false);
+    expect(within(folded).getByText('Versicherung')).toBeTruthy();
+    expect(folded.textContent).not.toContain('Zeitung');
+  });
+
   it('has no plan button while the planner is off and is absent without any notice period', () => {
     const { unmount } = render(
       <DeadlinesCard subs={[sub({ cancelNoticeDays: 7 })]} day={DAY} onOpen={() => {}} />,
@@ -103,9 +119,11 @@ describe('price changes and hardly used', () => {
   it('lists hardly used ones with their yearly cost and opens them', async () => {
     const onOpen = vi.fn();
     const s = sub({ name: 'Box', amountMinor: 500, unusedSince: '2026-11-01' });
-    render(<UnusedCard subs={[s, sub()]} day={DAY} onOpen={onOpen} />);
+    const t2 = sub({ name: 'Kurs', amountMinor: 1000, unusedSince: '2026-10-01' });
+    render(<UnusedCard subs={[s, t2, sub()]} day={DAY} onOpen={onOpen} />);
     const card = screen.getByTestId('subscriptions-unused');
-    await waitFor(() => expect(card.textContent).toMatch(/1 Abo, 60,00\s€ im Jahr/));
+    await waitFor(() => expect(card.textContent).toMatch(/2 Abos, zusammen 180,00\s€ im Jahr/));
+    expect(card.textContent).not.toContain('Zeitung');
     fireEvent.click(within(card).getByRole('button', { name: /Box/ }));
     expect(onOpen).toHaveBeenCalledWith(s);
   });
