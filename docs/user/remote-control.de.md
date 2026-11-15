@@ -37,7 +37,24 @@ Solange der PC gesperrt ist, gehen nur Medien und Lautstärke. Das Handy sieht n
 - **Medien:** große Tasten für Wiedergabe und Lautstärke. Wenn du magst, steuern auch die Lautstärketasten des Handys den PC (Einstellung im Modul).
 - **Touchpad:** wischen bewegt den Zeiger, tippen klickt, mit zwei Fingern scrollen.
 - **Tastatur:** Text am Handy tippen, lesen und dann senden. Der Text wird nirgends gespeichert.
+- **Präsentation** (nur mit einem PC, dessen Nemo das kennt): _Weiter_ groß unten, _Zurück_ daneben, darüber _Start_ (F5), _Schwarz_ (B) und _Ende_ (Esc). Braucht wie _Tastatur_ die Stufe Maus und Tastatur. Das Präsentationsfenster muss am PC vorne sein, und es geht nur im Heimnetz. Ist ein Browser vorne, lädt _Start_ (F5) die Seite neu. Die Lautstärketasten des Handys regeln weiter die Lautstärke, sie blättern keine Folien um.
 - **Auf der Übersicht:** Die Karte _Fernbedienung_ hat eine Taste _Wiedergabe / Pause_. Ein Tipp verbindet und sendet. Dauert das Verbinden länger, sagt die Karte das; steht die Verbindung danach, tippe noch einmal. Die Karte verbindet sich nie von selbst.
+
+## PC ausschalten
+
+- **Am PC erlauben:** unter _Einstellungen → Verbindungen → Fernsteuerung_ beim Gerät _Darf den PC ausschalten_ (ab Werk aus, der PC fragt noch einmal nach).
+- **Am Handy:** Menü _⋯ → PC ausschalten …_, dann _Ausschalten_, _Neu starten_ oder _Energie sparen_ (darunter, leiser: _Ruhezustand_, wo der PC ihn hat, und _Abmelden_). Die eigene Abfrage des Handys (Fingerabdruck, Gesicht oder PIN) ist die Bestätigung (ein Handy ohne Bildschirmsperre fragt stattdessen in einem kurzen Dialog).
+- **10 Sekunden am PC:** Der PC zeigt einen Countdown mit _Abbrechen_; abbrechen geht auch am Handy. Bricht die Verbindung zum Handy dabei ab, macht der PC trotzdem weiter. Nichts wird erzwungen: Fragt ein Programm noch nach dem Speichern, bleibt der PC an.
+- Geht nur, solange der PC entsperrt ist. Ist Nemo am PC noch beschäftigt (Abgleich, Download, Sicherung), sagt das Handy das vorher: _Trotzdem ausschalten_ oder _Warten_.
+- Zweimal innerhalb einer Stunde am PC abgebrochen, ist das Ausschalten für dieses Handy wieder aus.
+- _Monitor aus_ (im selben Menü) schaltet nur den Bildschirm aus, ohne Countdown.
+
+## Programm starten
+
+- **Am PC auswählen:** unter _Einstellungen → Verbindungen → Fernsteuerung_ im Block _Programme_ mit _Programm hinzufügen …_ eine `.exe`-Datei oder eine Verknüpfung wählen (höchstens 8). Windows fragt danach noch einmal nach. _Entfernen_ wirkt sofort.
+- **Am PC erlauben:** beim Gerät mit der Stufe Maus und Tastatur _Darf Programme starten_ (ab Werk aus, der PC fragt noch einmal nach).
+- **Am Handy:** Menü _⋯ → Programm starten …_ zeigt die Namen der Liste; ein Tipp öffnet das Programm am PC wie ein Doppelklick dort. Ohne Freigabe fehlt der Eintrag. Wie _Tastatur_ braucht es Maus und Tastatur, also auch dieselbe Abfrage am Handy, wenn der PC sie verlangt.
+- Das Handy sieht nur die Namen, nie Pfade, und schickt keine Zusatzangaben mit. Geht nur, solange der PC entsperrt ist, und höchstens alle 5 Sekunden.
 
 ## Beenden und wieder einschalten
 

@@ -119,6 +119,8 @@ export const invoices: Strings['invoices'] = {
     open: (amount: string) => `Open: ${amount}`,
     amountHint: 'Less than the open amount is recorded as a part payment.',
     confirm: 'Paid',
+    alreadyPaid: 'Already paid.',
+    failed: 'That did not work. Please try again.',
   },
   payee: 'Payee',
   reference: 'Reference / invoice number',

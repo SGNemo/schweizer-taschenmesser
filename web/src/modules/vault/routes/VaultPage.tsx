@@ -9,13 +9,15 @@ import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import { t } from '@/strings';
 import {
   Button,
+  categoryColor,
   EmptyState,
+  FolderTabs,
   Icon,
+  IconButton,
   ItemList,
   ItemRow,
   PageAction,
   PageHeader,
-  Segmented,
   SplitView,
   Tabs,
   TextField,
@@ -33,7 +35,6 @@ import { VaultHead } from '../components/VaultHead';
 import {
   cancelDeadline,
   canRenew,
-  countByCategory,
   dateKind,
   endOf,
   filterDocuments,
@@ -45,7 +46,10 @@ import {
 } from '../logic';
 import { documentRepo, keepBlobIds } from '../repo';
 import styles from './VaultPage.module.css';
-import { CATEGORIES, type DocCategory, type VaultDocument } from '../schema';
+import type { DocCategory, VaultDocument } from '../schema';
+import { categoryLabel, categoryOfDoc, countByResolved } from '../categories';
+import { CategoryDialog } from '../components/CategoryDialog';
+import { useCategories } from '../useCategories';
 import type { Stored } from '@/core/db/types';
 
 type View = 'documents' | 'deadlines';
@@ -78,6 +82,9 @@ export default function VaultPage() {
   const files = useLiveQuery(async () => new Set(await blobKeys()), []);
   const [category, setCategory] = useState<DocCategory | 'all'>('all');
   const [query, setQuery] = useState('');
+  const cats = useCategories();
+  // Which way the folder dialog opens: the list, or straight to "Neue Kategorie" (the "+" beside the tabs).
+  const [managing, setManaging] = useState<false | 'list' | 'new'>(false);
   // The id only: the dialog works on the row as the list holds it now.
   const [renewing, setRenewing] = useState<string | null>(null);
   // The row "Verlängert" was pressed in. After a renewal its button is gone with the new term, so the focus goes
@@ -135,18 +142,43 @@ export default function VaultPage() {
   };
 
   // Files of documents that were deleted on another device are dead weight here.
-  // A document deleted here stays restorable for 30 days, so its file stays too.
+  // A document deleted here stays restorable for the chosen keep time, so its file stays too.
   const keep = useLiveQuery(() => keepBlobIds(), []);
   useEffect(() => {
     if (keep) void pruneBlobs(keep);
   }, [keep]);
 
+  const live = useMemo(() => new Set(cats.map((c) => c.id)), [cats]);
+  const names = t.vault.categories;
+  const labels = useMemo(
+    () => new Map(cats.map((c) => [c.id, categoryLabel(c, names)])),
+    [cats, names],
+  );
+  const nameOf = (id: DocCategory) => labels.get(id) ?? categoryLabel(undefined, names);
+  // A folder removed (here or on another device) is no filter any more: back to all.
+  if (category !== 'all' && !live.has(category)) setCategory('all');
   const shown = useMemo(
-    () => sortDocuments(filterDocuments(docs ?? [], { category, query }), day),
-    [docs, category, query, day],
+    () =>
+      sortDocuments(
+        filterDocuments(docs ?? [], {
+          category,
+          query,
+          shownCategory: (d) => categoryOfDoc(d, live),
+          categoryName: (id) => labels.get(id) ?? '',
+        }),
+        day,
+      ),
+    [docs, category, query, day, live, labels],
   );
 
-  const counts = countByCategory(docs ?? []);
+  const counts = countByResolved(docs ?? [], cats);
+  // A chosen folder with nothing in it (a new one): its own calm empty state with the one next step.
+  const emptyFolder = category !== 'all' && !query.trim() && (counts.get(category) ?? 0) === 0;
+  // The folder tabs: what holds documents, every folder the user made (also while empty, so a new one shows) and
+  // the one that is chosen. Empty built-in folders wait in the editor's list; they are no filter worth a tab.
+  const tabCats = cats.filter(
+    (c) => (counts.get(c.id) ?? 0) > 0 || (!c.builtin && !c.fixed) || c.id === category,
+  );
   const none = !!docs && docs.length === 0;
   // The panel shows the document that was picked; before that the page shows no note and no full detail (they are
   // not for whoever happens to look at the screen when the page opens). A pick ends when its folder leaves the
@@ -217,7 +249,18 @@ export default function VaultPage() {
           <Icon name="plus" size={18} />
           {t.vault.add}
         </PageAction>
-        <StartDataMenu moduleId="vault" items={[advancedItem]} />
+        <StartDataMenu
+          moduleId="vault"
+          items={[
+            // Also here, so the folders can be set up before the first document is filed.
+            {
+              id: 'categories',
+              label: t.vault.categoryAdmin.manage,
+              onSelect: () => setManaging('list'),
+            },
+            advancedItem,
+          ]}
+        />
       </PageHeader>
       <VaultHead docs={docs ?? []} day={day} />
       {none || view === 'deadlines' ? null : (
@@ -234,18 +277,32 @@ export default function VaultPage() {
               data-list-search
             />
           </div>
-          <Segmented
+          <FolderTabs
             label={t.vault.category}
             value={category}
             onChange={setCategory}
-            options={[
-              { value: 'all' as const, label: t.vault.allCategories },
-              ...CATEGORIES.filter((c) => (counts[c] ?? 0) > 0 || c === category).map((c) => ({
-                value: c,
-                label: t.vault.labelCount(t.vault.categories[c] ?? c, counts[c] ?? 0),
+            nowrap
+            testId="vault-folders"
+            tabs={[
+              {
+                id: 'all',
+                label: t.vault.labelCount(t.vault.allCategories, docs?.length ?? 0),
+              },
+              ...tabCats.map((c) => ({
+                id: c.id,
+                label: t.vault.labelCount(categoryLabel(c, names), counts.get(c.id) ?? 0),
+                color: categoryColor(c.tone),
+                icon: <Icon name={c.icon} size={14} />,
               })),
             ]}
-          />
+          >
+            <IconButton label={t.vault.categoryAdmin.add} onClick={() => setManaging('new')}>
+              <Icon name="plus" size={18} />
+            </IconButton>
+            <IconButton label={t.vault.categoryAdmin.manage} onClick={() => setManaging('list')}>
+              <Icon name="edit" size={18} />
+            </IconButton>
+          </FolderTabs>
         </div>
       )}
       <p
@@ -266,6 +323,7 @@ export default function VaultPage() {
               doc={detail}
               day={day}
               hasFile={files?.has(detail.id) ?? false}
+              categoryName={nameOf(categoryOfDoc(detail, live))}
               onEdit={() => setTarget(detail)}
               onClose={() => setPicked(null)}
             />
@@ -285,13 +343,19 @@ export default function VaultPage() {
           <>
             {docs && shown.length === 0 ? (
               <EmptyState
-                title={none ? t.vault.empty : t.vault.emptyFiltered}
+                title={
+                  none
+                    ? t.vault.empty
+                    : emptyFolder
+                      ? t.vault.categoryAdmin.emptyFolder(nameOf(category))
+                      : t.vault.emptyFiltered
+                }
                 testId="vault-empty"
                 motif={<SignatureMark id="folderTab" size={64} />}
               >
-                {none ? (
+                {none || emptyFolder ? (
                   <Button variant="primary" onClick={() => setTarget({ draft: true })}>
-                    {t.vault.addFirst}
+                    {none ? t.vault.addFirst : t.vault.add}
                   </Button>
                 ) : null}
               </EmptyState>
@@ -312,7 +376,7 @@ export default function VaultPage() {
                       current={wide && detail?.id === d.id}
                       onOpen={() => (wide ? setPicked(d.id) : setTarget(d))}
                       meta={metaLine([
-                        t.vault.categories[d.category],
+                        nameOf(categoryOfDoc(d, live)),
                         d.provider,
                         end
                           ? dated(`${t.vault.endLabel}: ${formatDay(end, 'd. MMM yyyy')}`)
@@ -375,7 +439,24 @@ export default function VaultPage() {
           if (renewal.current) renewal.current.saved = true;
         }}
       />
-      <DocumentEditor target={openTarget} onClose={closeEditor} />
+      <DocumentEditor
+        target={openTarget}
+        onClose={closeEditor}
+        cats={cats}
+        defaultCategory={category === 'all' ? undefined : category}
+      />
+      <CategoryDialog
+        open={managing !== false}
+        startNew={managing === 'new'}
+        onCreated={(id) => {
+          // The new folder shows as itself, with its own empty state, not as an empty search.
+          setQuery('');
+          setCategory(id);
+        }}
+        onClose={() => setManaging(false)}
+        cats={cats}
+        docs={docs}
+      />
     </>
   );
 }

@@ -132,6 +132,11 @@ export function isDue(config: AutoBackupConfig, last: AutoBackupLast | undefined
 
 let running = false;
 
+/** Whether an automatic backup is being written right now (remote control asks before a shutdown). */
+export function autoBackupRunning(): boolean {
+  return running;
+}
+
 /** Creates an automatic backup when one is due (or `force`). Never throws. */
 export async function runAutoBackup(
   opts: { force?: boolean } = {},

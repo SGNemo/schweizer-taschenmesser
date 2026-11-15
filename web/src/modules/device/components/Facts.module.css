@@ -1,0 +1,146 @@
+/* Gerätestatus – the live and fact sections under the status lines. Tokens only; tiles on a sunken ground, no shadow;
+   colour only from the ring's level (always written as a number next to it). */
+.section {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.head h2 {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+.tiles {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.tile {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  min-width: 0;
+}
+.tileTitle {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-muted);
+}
+.tileMain {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.tileText {
+  display: grid;
+  min-width: 0;
+}
+.value {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: var(--font-num);
+}
+.sub {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: var(--font-num);
+  overflow-wrap: anywhere;
+}
+.muted {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-label);
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: var(--font-num);
+}
+.table th,
+.table td {
+  padding: var(--space-2) var(--space-1);
+  border-bottom: 1px solid var(--border);
+  text-align: start;
+}
+.table th {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-muted);
+}
+.table .num {
+  text-align: end;
+  white-space: nowrap;
+}
+.count {
+  margin-inline-start: var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.facts {
+  display: grid;
+  grid-template-columns: minmax(8rem, max-content) 1fr;
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+}
+.facts dt {
+  color: var(--text-muted);
+}
+.facts dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 30rem) {
+  .facts {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .facts dd {
+    margin-bottom: var(--space-2);
+  }
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.state {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.state[data-tone='warning'] {
+  color: var(--warning-ink);
+}
+.crashes {
+  display: grid;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.crashes > li {
+  display: grid;
+  min-width: 0;
+}
+.crashTime {
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: var(--font-num);
+}

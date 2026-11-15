@@ -3,6 +3,7 @@
  * device-local preferences, then reloads. Synced data on a server and backup files are untouched.
  */
 import { loadAiConfig, keyName } from '@/core/ai/config';
+import { BIO_SEAL, BIO_SECRET, PIN_SECRET } from '@/core/applock/names';
 import { AUTO_PASSPHRASE_SECRET } from '@/core/backup/safety';
 import { accountKey, connectorSecret, secretName } from '@/core/connectors/context';
 import { loadStatus } from '@/core/connectors/state';
@@ -30,6 +31,8 @@ export async function deviceSecretNames(database: TaschenmesserDB = defaultDb): 
     ...ai.providers.map((p) => keyName(p.id)),
     ...extraAccounts,
     AUTO_PASSPHRASE_SECRET,
+    PIN_SECRET,
+    BIO_SECRET,
     ...connectors.flatMap((c) => [
       secretName(c.id, 'client-id'),
       secretName(c.id, 'client-secret'),
@@ -92,6 +95,7 @@ export async function resetDevice(deps?: Partial<ResetDeps>): Promise<void> {
   for (const name of await vaultSealNames(database).catch(() => [] as string[])) {
     await biometrics.remove(name).catch(() => undefined);
   }
+  await biometrics.remove(BIO_SEAL).catch(() => undefined); // the app lock's seal
 
   if (storage) {
     const keys = Array.from({ length: storage.length }, (_, i) => storage.key(i)).filter(

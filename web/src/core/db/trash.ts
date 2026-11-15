@@ -1,7 +1,8 @@
 /**
  * "Zuletzt gelöscht": a deleted record stays a tombstone (`deletedAt`) and can be restored for this
  * long. Read-only helpers; nothing here writes. Data that lives next to a record (the files of
- * Unterlagen) is kept while the record is inside the window. The window is 30 days; with the switch
+ * Unterlagen) is kept while the record is inside the window. The window is the user's choice of 7, 30
+ * (default, `TRASH_RETENTION_MS` below) or 90 days (`core/trash/settings.ts`); with the switch
  * "Zuletzt gelöscht aufbewahren" off it shrinks to a short grace period so "Rückgängig" still works.
  */
 export const TRASH_DAYS = 30;

@@ -7,6 +7,8 @@ import { StatusLineLink } from '@/core/status/StatusLineLink';
 import { t } from '@/strings';
 import { Button, PageHeader } from '@/ui';
 import { HeroFigure, HeroSlot } from '@/ui/identity';
+import DesktopFacts from '../components/DesktopFacts';
+import PhoneFacts from '../components/PhoneFacts';
 import { useDeviceStatus } from '../useDeviceStatus';
 import styles from './StatusPage.module.css';
 
@@ -15,13 +17,16 @@ import styles from './StatusPage.module.css';
  * thing is set; nothing is switched here. The one action is "Backup herunterladen" under the backup lines (follow-up
  * 16 of 0b-8): it opens the settings' export form in a dialog (password recommended, readable file only as the
  * second button there), never a file in one click, and it stays calm (secondary, no colour, no reminder).
- * The phone shows the same page without the desktop's lines.
+ * The phone shows the same page without the desktop's lines. Under the lines: live load, programs, drives and a
+ * hardware passport on the PC (`DesktopFacts`), battery and a short passport on the phone (`PhoneFacts`).
  */
 export default function StatusPage() {
   const d = t.device;
   const { groups, look, noBackup, ready } = useDeviceStatus();
-  // CPU, memory and network live in "Dieser PC" → System (desktop only); this page points there instead of repeating them.
-  const desktop = getPlatform().kind === 'desktop';
+  // This page shows and explains (live load, drives, passport); acting – cleaning up, finding big folders – is
+  // "Dieser PC"'s job, so the desktop page points there.
+  const kind = getPlatform().kind;
+  const desktop = kind === 'desktop';
   const diskOn = useModuleStates()?.disk === true;
   const [exporting, setExporting] = useState(false);
   return (
@@ -74,6 +79,7 @@ export default function StatusPage() {
               );
             })}
             <p className={styles.more}>{d.page.note}</p>
+            {desktop ? <DesktopFacts /> : kind === 'android' ? <PhoneFacts /> : null}
             {desktop ? (
               <p className={styles.more} data-testid="device-pc">
                 {d.page.pc}{' '}

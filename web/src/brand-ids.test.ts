@@ -74,7 +74,7 @@ describe('internal identifiers stay unchanged', () => {
     expect(read('src/stores/ui.ts')).toContain("THEME_KEY = 'tm-theme'");
     expect(read('src/stores/ui.ts')).toContain("ACCENT_KEY = 'tm-accent'");
     // Inline scripts read the same keys before the app boots.
-    for (const html of ['index.html', 'capture.html']) {
+    for (const html of ['index.html', 'capture.html', 'power.html']) {
       expect(read(html), html).toContain("localStorage.getItem('tm-theme')");
     }
     expect(read('index.html')).toContain("localStorage.getItem('tm-accent')");

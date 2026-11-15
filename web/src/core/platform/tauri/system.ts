@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import type { DiskIo, ProcInfo, SystemInfo, SystemService } from '../system';
+import type { DiskIo, ProcInfo, SystemHealth, SystemInfo, SystemService } from '../system';
 
 const unsupported = (): Promise<never> => Promise.reject(new Error('unsupported'));
 
@@ -18,6 +18,7 @@ export function createSystem(supported: boolean): SystemService {
     info: () => invoke<SystemInfo>('system_info'),
     processes: () => invoke<ProcInfo[]>('system_processes'),
     diskIo: () => invoke<DiskIo[]>('system_disk_io'),
+    health: () => invoke<SystemHealth>('system_health'),
     openTaskManager: () => invoke<void>('system_open_task_manager'),
   };
 }

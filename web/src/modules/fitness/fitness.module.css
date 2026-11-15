@@ -263,3 +263,12 @@
 .todayPlan {
   margin-bottom: var(--space-4);
 }
+/* Deep package 4: the week's charts, each with room for its title. */
+.weekCharts {
+  display: grid;
+  gap: var(--space-5);
+  margin-block: var(--space-3) var(--space-4);
+}
+.weekCharts:empty {
+  display: none;
+}

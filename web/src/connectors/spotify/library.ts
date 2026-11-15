@@ -124,3 +124,81 @@ export async function artist(ctx: ConnectorContext, id: string): Promise<ArtistP
     }),
   };
 }
+
+/* ---- Following (feature "Folgen": `user-follow-read`, `user-follow-modify`; playlists: "Playlists bearbeiten") ---- */
+
+const artistRow = z.object({
+  id: z.string(),
+  name: z.string(),
+  images: z.array(image).nullish(),
+});
+const followingSchema = z.object({
+  artists: z.object({ items: z.array(artistRow.nullable()), next: z.string().nullish() }),
+});
+const FOLLOW_PAGES = 4;
+
+/** The artists the user follows (cursor pages of 50, on the API host only, up to 200). */
+export async function followedArtists(ctx: ConnectorContext): Promise<MediaItem[]> {
+  const out: MediaItem[] = [];
+  let url: string | undefined = `${API_ORIGIN}v1/me/following?type=artist&limit=50`;
+  for (let page = 0; url && page < FOLLOW_PAGES; page += 1) {
+    const { json } = await call(ctx, 'GET', url);
+    const parsed = followingSchema.safeParse(json);
+    if (!parsed.success) break;
+    for (const a of parsed.data.artists.items)
+      if (a && ID.test(a.id) && a.name.trim())
+        out.push({ kind: 'artist', id: a.id, name: clip(a.name), ...coverOf(a.images) });
+    const next = parsed.data.artists.next;
+    url = next?.startsWith(API_ORIGIN) ? next : undefined;
+  }
+  return out;
+}
+
+/** Which of these artists does the user follow? One answer per id, `false` for an id that is not usable. */
+export async function artistsFollowed(ctx: ConnectorContext, list: string[]): Promise<boolean[]> {
+  const ok = plainIds(list);
+  if (ok.length === 0) return list.map(() => false);
+  const { json } = await call(
+    ctx,
+    'GET',
+    `${API_ORIGIN}v1/me/following/contains?type=artist&ids=${ok.join(',')}`,
+  );
+  const answers = z.array(z.boolean()).safeParse(json);
+  const byId = new Map(ok.map((id, i) => [id, answers.success && answers.data[i] === true]));
+  return list.map((id) => byId.get(id) ?? false);
+}
+
+/** Follows (`on`) or unfollows artists. */
+export async function followArtists(
+  ctx: ConnectorContext,
+  list: string[],
+  on: boolean,
+): Promise<void> {
+  const ok = plainIds(list);
+  if (ok.length === 0) throw new ConnectorError('bad-response', 'id');
+  await call(
+    ctx,
+    on ? 'PUT' : 'DELETE',
+    `${API_ORIGIN}v1/me/following?type=artist&ids=${ok.join(',')}`,
+  );
+}
+
+/** Does the signed-in user follow this playlist? */
+export async function playlistFollowed(ctx: ConnectorContext, id: string): Promise<boolean> {
+  if (!ID.test(id)) throw new ConnectorError('bad-response', 'id');
+  const { json } = await call(ctx, 'GET', `${API_ORIGIN}v1/playlists/${id}/followers/contains`);
+  const answer = z.array(z.boolean()).safeParse(json);
+  return answer.success && answer.data[0] === true;
+}
+
+/** Follows (`on`, privately in the profile's list) or unfollows a playlist. */
+export async function followPlaylist(
+  ctx: ConnectorContext,
+  id: string,
+  on: boolean,
+): Promise<void> {
+  if (!ID.test(id)) throw new ConnectorError('bad-response', 'id');
+  const url = `${API_ORIGIN}v1/playlists/${id}/followers`;
+  if (on) await call(ctx, 'PUT', url, [], { public: false });
+  else await call(ctx, 'DELETE', url);
+}

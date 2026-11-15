@@ -4,11 +4,11 @@ import { t } from '@/strings';
 import { ChecklistWidget } from '@/ui';
 import { pickWidgetList, sortItems } from '../logic';
 import { itemRepo, listRepo } from '../repo';
-import { settings, SETTINGS_SCOPE, settingsSchema } from '../settings';
+import { SETTINGS_DEFAULTS, SETTINGS_SCOPE, settingsSchema } from '../settings';
 
 /** The open entries of the chosen list (default: the first shopping list in use), ticked off in place. */
 export default function OpenListsWidget() {
-  const [prefs] = useSettings(SETTINGS_SCOPE, settingsSchema, settings.defaults);
+  const [prefs] = useSettings(SETTINGS_SCOPE, settingsSchema, SETTINGS_DEFAULTS);
   const chosen = prefs?.widgetList ?? '';
   const data = useLiveQuery(async () => {
     // Wait for the stored choice: no flash of the shopping list before the chosen one.

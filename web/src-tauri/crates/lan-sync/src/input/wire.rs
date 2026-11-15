@@ -4,16 +4,24 @@
 //! start at `0x20`, apart from the sync tags (`0x10`, `0x11`): a sync session closes on an input tag
 //! and an input session closes on a sync tag.
 //!
-//! Phone → PC: `open`, `events` (1..=32 records of 4 bytes), `text`. PC → phone: `opened`,
-//! `refused`, `state`, `closed` – nothing else, ever. There is no JSON and no free-form string from
-//! the PC; the only string at all is the text the user typed on the phone.
+//! Phone → PC: `open`, `events` (1..=32 records of 4 bytes), `text`, `power`, `program start`.
+//! PC → phone: `opened`, `refused`, `state`, `closed`, `power answer`, `programs`, `program
+//! answer` – nothing else, ever.
+//!
+//! Newer phones and PCs meet older ones: an `open` may carry a features byte; the PC ignores bits
+//! it does not know and names the ones it accepted in a longer `opened` (an older PC closes on the
+//! longer `open` without a word, and the phone opens once more without it). Nothing new is sent to
+//! a PC that did not accept its bit. There is no JSON. The only strings are the text the user
+//! typed on the phone and – PC → phone – the names of the PC's own program list (plain text the
+//! PC's owner chose, at most [`MAX_PROGRAMS`] of at most [`MAX_PROGRAM_NAME_BYTES`] bytes each).
 //!
 //! Decoding is strict: an unknown tag, kind or id, a reserved byte that is not zero, a wrong length
 //! or a control character is an error, and the caller closes the session.
 
-/// Phone → PC: `[level]`.
+/// Phone → PC: `[level]`, or `[level, features]` ([`FEATURES`]).
 pub const TAG_OPEN: u8 = 0x20;
-/// PC → phone: `[level, grant, unlock_required, volume, mute, playing, locked]`.
+/// PC → phone: `[level, grant, unlock_required, volume, mute, playing, locked]`, and – only when
+/// the `open` carried a features byte – `[features, power]` ([`PowerInfo`]).
 pub const TAG_OPENED: u8 = 0x21;
 /// PC → phone: `[code]`, then the PC closes.
 pub const TAG_REFUSED: u8 = 0x22;
@@ -25,6 +33,38 @@ pub const TAG_TEXT: u8 = 0x24;
 pub const TAG_STATE: u8 = 0x25;
 /// PC → phone: `[code]`, then the PC closes.
 pub const TAG_CLOSED: u8 = 0x26;
+/// PC → phone: `[answer]` ([`PowerAnswer`]): one for every `power` frame, and unasked when a
+/// countdown ends or is stopped at the PC.
+pub const TAG_POWER_ANSWER: u8 = 0x27;
+/// Phone → PC: `[action, despite]` ([`Power`]), one action per frame.
+pub const TAG_POWER: u8 = 0x28;
+/// PC → phone: the names of the PC's program list, `[epoch (u32, big-endian), count, then per
+/// entry: len, UTF-8 name]` ([`encode_programs`]). Only to a phone that asked for
+/// [`FEATURE_PROGRAMS`] and whose device may start programs: right after `opened`, and again when
+/// the list changed. The epoch names this state of the list; it changes with every change.
+pub const TAG_PROGRAMS: u8 = 0x29;
+/// Phone → PC: `[slot, epoch (u32, big-endian)]`: the position in the list the phone was told
+/// (0-based) and that list's epoch. The PC starts nothing when its list has another epoch now.
+pub const TAG_PROGRAM_START: u8 = 0x2a;
+/// PC → phone: `[answer]` ([`ProgramAnswer`]), one for every `program start`.
+pub const TAG_PROGRAM_ANSWER: u8 = 0x2b;
+
+/// Feature bit: power actions, monitor off, the power answer.
+pub const FEATURE_POWER: u8 = 0x01;
+/// Feature bit: the presentation keys ([`Key::F5`], [`Key::B`]; mouse/keyboard level like every
+/// key). Asking for it widens nothing: it only lets the PC take two more ids of the fixed list.
+pub const FEATURE_PRESENT: u8 = 0x02;
+/// Feature bit: the PC's program list (the names PC → phone, a slot number phone → PC). Asking
+/// for it widens nothing: what may be started is the PC's list and the device's own permission.
+pub const FEATURE_PROGRAMS: u8 = 0x04;
+/// The features this side knows. The PC accepts these and ignores every other bit.
+pub const FEATURES: u8 = FEATURE_POWER | FEATURE_PRESENT | FEATURE_PROGRAMS;
+
+/// Most entries of the PC's program list.
+pub const MAX_PROGRAMS: usize = 8;
+/// Most bytes of one program name on the wire (the PC keeps at most 40 characters; a longer
+/// UTF-8 form is cut at a character). Eight of them fit one input frame.
+pub const MAX_PROGRAM_NAME_BYTES: usize = 60;
 
 pub const RECORD_LEN: usize = 4;
 pub const MAX_RECORDS: usize = 32;
@@ -179,6 +219,42 @@ pub struct Opened {
     /// `Full` grant).
     pub unlock_required: bool,
     pub state: PcState,
+    /// Only for an `open` with a features byte: what the PC accepted, and its power facts.
+    pub ext: Option<OpenedExt>,
+}
+
+/// The two bytes a newer `opened` adds.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OpenedExt {
+    /// The asked features this PC accepted.
+    pub features: u8,
+    pub power: PowerInfo,
+}
+
+/// What the phone needs to show power actions. One byte: bit 0 granted, bit 1 a countdown runs,
+/// bit 2 hibernate is available on this PC.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct PowerInfo {
+    pub granted: bool,
+    pub pending: bool,
+    pub hibernate: bool,
+}
+
+impl PowerInfo {
+    fn byte(self) -> u8 {
+        u8::from(self.granted) | u8::from(self.pending) << 1 | u8::from(self.hibernate) << 2
+    }
+
+    fn from_byte(b: u8) -> Result<PowerInfo, WireError> {
+        if b & !0b111 != 0 {
+            return Err(WireError);
+        }
+        Ok(PowerInfo {
+            granted: b & 1 != 0,
+            pending: b & 2 != 0,
+            hibernate: b & 4 != 0,
+        })
+    }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -206,9 +282,21 @@ pub enum Key {
     Delete,
     F11,
     AltTab,
+    /// Start the slideshow. Sent only to a PC that accepted [`FEATURE_PRESENT`].
+    F5,
+    /// The letter key B without a modifier: black screen in a slideshow. Sent only to a PC that
+    /// accepted [`FEATURE_PRESENT`].
+    B,
 }
 
-const KEYS: [Key; 16] = [
+impl Key {
+    /// Whether the key belongs to [`FEATURE_PRESENT`] (an older PC does not know its id).
+    pub fn is_present(self) -> bool {
+        matches!(self, Key::F5 | Key::B)
+    }
+}
+
+const KEYS: [Key; 18] = [
     Key::Enter,
     Key::Escape,
     Key::Backspace,
@@ -225,6 +313,8 @@ const KEYS: [Key; 16] = [
     Key::Delete,
     Key::F11,
     Key::AltTab,
+    Key::F5,
+    Key::B,
 ];
 
 /// The fixed list of media-level commands.
@@ -239,9 +329,12 @@ pub enum Media {
     MuteToggle,
     /// Lock the PC (it only ever reduces access).
     Lock,
+    /// Switch the displays off (any touch at the PC wakes them). Sent only to a PC that accepted
+    /// [`FEATURE_POWER`].
+    MonitorOff,
 }
 
-const MEDIA: [Media; 7] = [
+const MEDIA: [Media; 8] = [
     Media::PlayPause,
     Media::Next,
     Media::Previous,
@@ -249,6 +342,90 @@ const MEDIA: [Media; 7] = [
     Media::VolumeDown,
     Media::MuteToggle,
     Media::Lock,
+    Media::MonitorOff,
+];
+
+/// The fixed list of power actions (tag [`TAG_POWER`]). All but `Cancel` need the device's power
+/// permission and run only after the PC's countdown.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Power {
+    Sleep,
+    Hibernate,
+    SignOut,
+    Restart,
+    ShutDown,
+    /// Stops a running countdown. Only ever narrows: always allowed.
+    Cancel,
+}
+
+const POWER: [Power; 6] = [
+    Power::Sleep,
+    Power::Hibernate,
+    Power::SignOut,
+    Power::Restart,
+    Power::ShutDown,
+    Power::Cancel,
+];
+
+/// What the PC says about power. Exactly one answer per `power` frame; `Cancelled` and `Done` may
+/// also come unasked.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PowerAnswer {
+    /// The countdown runs at the PC.
+    Started,
+    /// Nemo on the PC is still working (another device syncs, a download or backup runs); nothing
+    /// started. The phone may ask again with `despite`.
+    Working,
+    /// A countdown runs already.
+    Pending,
+    /// The countdown was stopped (from the phone, or at the PC).
+    Cancelled,
+    /// The countdown ran out and the PC was asked to do it.
+    Done,
+    /// This device may not do this.
+    NotGranted,
+    /// The PC is locked.
+    Locked,
+    /// Too soon after the last ones.
+    Limit,
+    /// The PC could not show its countdown or carry the action out.
+    Failed,
+}
+
+const POWER_ANSWERS: [PowerAnswer; 9] = [
+    PowerAnswer::Started,
+    PowerAnswer::Working,
+    PowerAnswer::Pending,
+    PowerAnswer::Cancelled,
+    PowerAnswer::Done,
+    PowerAnswer::NotGranted,
+    PowerAnswer::Locked,
+    PowerAnswer::Limit,
+    PowerAnswer::Failed,
+];
+
+/// What the PC says about a `program start`. Exactly one answer per frame.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ProgramAnswer {
+    /// Handed to the PC's system to start.
+    Started,
+    /// This device may not start programs (any more).
+    NotGranted,
+    /// The PC is locked.
+    Locked,
+    /// Too soon after the last one.
+    Limit,
+    /// No such entry (any more), the list changed since the phone was told, or the PC could not
+    /// start it.
+    Failed,
+}
+
+const PROGRAM_ANSWERS: [ProgramAnswer; 5] = [
+    ProgramAnswer::Started,
+    ProgramAnswer::NotGranted,
+    ProgramAnswer::Locked,
+    ProgramAnswer::Limit,
+    ProgramAnswer::Failed,
 ];
 
 /// One input event. Four bytes on the wire: `kind, a, b, reserved (0)`.
@@ -272,7 +449,7 @@ macro_rules! name_only_fmt {
         }
     )*};
 }
-name_only_fmt!(Button, Key, Media, Record);
+name_only_fmt!(Button, Key, Media, Power, Record);
 
 const KIND_MOVE: u8 = 1;
 const KIND_BUTTON: u8 = 2;
@@ -284,6 +461,11 @@ impl Record {
     /// Whether the record needs the `Full` level.
     pub fn needs_full(&self) -> bool {
         !matches!(self, Record::Media(_))
+    }
+
+    /// Whether the record needs [`FEATURE_PRESENT`] (a presentation key).
+    pub fn needs_present(&self) -> bool {
+        matches!(self, Record::Key(k) if k.is_present())
     }
 
     fn bytes(self) -> [u8; RECORD_LEN] {
@@ -350,17 +532,80 @@ fn by_index<T: Copy>(list: &[T], id: u8) -> Result<T, WireError> {
 
 // ---- phone → PC ----
 
-pub fn encode_open(level: Level) -> [u8; 1] {
-    [level.byte()]
+/// `features`: `None` for the old one-byte form (the phone's second try at an older PC).
+pub fn encode_open(level: Level, features: Option<u8>) -> Vec<u8> {
+    let mut out = vec![level.byte()];
+    out.extend(features);
+    out
 }
 
-/// The level the phone asks for. `Off` is not a level to open.
-pub fn decode_open(body: &[u8]) -> Result<Level, WireError> {
+/// The level the phone asks for (`Off` is not a level to open) and the features it asked for that
+/// this side knows (`None`: the old form). Unknown feature bits are dropped, never an error: a
+/// newer phone must not lose what this PC can do.
+pub fn decode_open(body: &[u8]) -> Result<(Level, Option<u8>), WireError> {
+    let (level, features) = match body {
+        [b] => (*b, None),
+        [b, f] => (*b, Some(*f & FEATURES)),
+        _ => return Err(WireError),
+    };
+    match Level::from_byte(level) {
+        Some(Level::Off) | None => Err(WireError),
+        Some(l) => Ok((l, features)),
+    }
+}
+
+/// `[action, despite]`. `despite` belongs to an action with a countdown only.
+pub fn encode_power(power: Power, despite: bool) -> [u8; 2] {
+    [index_of(&POWER, &power), u8::from(despite)]
+}
+
+pub fn decode_power(body: &[u8]) -> Result<(Power, bool), WireError> {
+    let [id, despite] = *body else {
+        return Err(WireError);
+    };
+    let power = by_index(&POWER, id)?;
+    let despite = flag(despite)?;
+    if despite && power == Power::Cancel {
+        return Err(WireError);
+    }
+    Ok((power, despite))
+}
+
+pub fn encode_power_answer(a: PowerAnswer) -> [u8; 1] {
+    [index_of(&POWER_ANSWERS, &a)]
+}
+
+pub fn decode_power_answer(body: &[u8]) -> Result<PowerAnswer, WireError> {
     match body {
-        [b] => match Level::from_byte(*b) {
-            Some(Level::Off) | None => Err(WireError),
-            Some(l) => Ok(l),
-        },
+        [b] => by_index(&POWER_ANSWERS, *b),
+        _ => Err(WireError),
+    }
+}
+
+/// `[slot, epoch]`: a position in the list the phone was told, and that list's epoch.
+pub fn encode_program_start(slot: u8, epoch: u32) -> [u8; 5] {
+    let e = epoch.to_be_bytes();
+    [slot, e[0], e[1], e[2], e[3]]
+}
+
+/// A slot outside the longest list is an error (the caller closes); a slot past the PC's list as
+/// it stands, or an epoch that is not the list's now, is not – the PC answers `failed`.
+pub fn decode_program_start(body: &[u8]) -> Result<(u8, u32), WireError> {
+    match body {
+        [slot, a, b, c, d] if usize::from(*slot) < MAX_PROGRAMS => {
+            Ok((*slot, u32::from_be_bytes([*a, *b, *c, *d])))
+        }
+        _ => Err(WireError),
+    }
+}
+
+pub fn encode_program_answer(a: ProgramAnswer) -> [u8; 1] {
+    [index_of(&PROGRAM_ANSWERS, &a)]
+}
+
+pub fn decode_program_answer(body: &[u8]) -> Result<ProgramAnswer, WireError> {
+    match body {
+        [b] => by_index(&PROGRAM_ANSWERS, *b),
         _ => Err(WireError),
     }
 }
@@ -397,9 +642,10 @@ pub fn check_text(body: &[u8]) -> Result<&str, WireError> {
 
 // ---- PC → phone ----
 
-pub fn encode_opened(o: Opened) -> [u8; 7] {
+/// Seven bytes, or nine with [`OpenedExt`].
+pub fn encode_opened(o: Opened) -> Vec<u8> {
     let s = o.state.bytes();
-    [
+    let mut out = vec![
         o.level.byte(),
         o.grant.byte(),
         u8::from(o.unlock_required),
@@ -407,10 +653,28 @@ pub fn encode_opened(o: Opened) -> [u8; 7] {
         s[1],
         s[2],
         s[3],
-    ]
+    ];
+    if let Some(ext) = o.ext {
+        out.extend([ext.features, ext.power.byte()]);
+    }
+    out
 }
 
+/// Seven bytes (an older PC, or an `open` without features) or nine.
 pub fn decode_opened(body: &[u8]) -> Result<Opened, WireError> {
+    let (body, ext) = match body.len() {
+        7 => (body, None),
+        9 => {
+            let features = body[7];
+            // a PC accepts only what was asked; a bit this phone does not know is not an answer
+            if features & !FEATURES != 0 {
+                return Err(WireError);
+            }
+            let power = PowerInfo::from_byte(body[8])?;
+            (&body[..7], Some(OpenedExt { features, power }))
+        }
+        _ => return Err(WireError),
+    };
     let [level, grant, unlock, state @ ..] = body else {
         return Err(WireError);
     };
@@ -425,7 +689,86 @@ pub fn decode_opened(body: &[u8]) -> Result<Opened, WireError> {
         grant,
         unlock_required: flag(*unlock)?,
         state: PcState::from_bytes(state)?,
+        ext,
     })
+}
+
+/// Characters that are not seen but change how a line reads: bidi marks and overrides,
+/// zero-width characters, and the other format characters (Unicode `Cf`). Never in a program name;
+/// the shell drops them from every name it shows in a native text (the same set).
+pub fn invisible(c: char) -> bool {
+    matches!(c,
+        '\u{00AD}' | '\u{0600}'..='\u{0605}' | '\u{061C}' | '\u{06DD}' | '\u{070F}'
+        | '\u{0890}'..='\u{0891}' | '\u{08E2}' | '\u{180E}' | '\u{200B}'..='\u{200F}'
+        | '\u{202A}'..='\u{202E}' | '\u{2060}'..='\u{206F}' | '\u{FEFF}' | '\u{FFF9}'..='\u{FFFB}'
+        | '\u{110BD}' | '\u{110CD}' | '\u{13430}'..='\u{1343F}' | '\u{1BCA0}'..='\u{1BCA3}'
+        | '\u{1D173}'..='\u{1D17A}' | '\u{E0000}'..='\u{E007F}')
+}
+
+/// Whether a program name is plain: no control and no invisible character.
+fn plain_name(name: &str) -> bool {
+    !name.chars().any(|c| c.is_control() || invisible(c))
+}
+
+/// A name as it goes on the wire: plain ([`plain_name`]), at most [`MAX_PROGRAM_NAME_BYTES`]
+/// bytes (cut at a character). `None` when nothing is left.
+fn wire_name(name: &str) -> Option<&str> {
+    if !plain_name(name) {
+        return None;
+    }
+    let mut end = name.len().min(MAX_PROGRAM_NAME_BYTES);
+    while !name.is_char_boundary(end) {
+        end -= 1;
+    }
+    (end > 0).then(|| &name[..end])
+}
+
+/// The names of the PC's program list, in slot order, under the list's `epoch`. The PC's list is
+/// already plain text; a name that is not (empty, a control or invisible character) – or a ninth
+/// entry – is not sent at all, and every entry after it is left out too, so a slot on the phone
+/// always means the same entry on the PC.
+pub fn encode_programs<S: AsRef<str>>(epoch: u32, names: &[S]) -> Vec<u8> {
+    let mut out = epoch.to_be_bytes().to_vec();
+    out.push(0);
+    const COUNT: usize = 4;
+    for name in names.iter().take(MAX_PROGRAMS) {
+        let Some(name) = wire_name(name.as_ref()) else {
+            break;
+        };
+        // (at most 60, see `wire_name`)
+        out.push(u8::try_from(name.len()).unwrap_or(0));
+        out.extend_from_slice(name.as_bytes());
+        out[COUNT] += 1;
+    }
+    out
+}
+
+/// The epoch and the names (strict: a name that is not plain text is an error).
+pub fn decode_programs(body: &[u8]) -> Result<(u32, Vec<String>), WireError> {
+    let (epoch, body) = body.split_at_checked(4).ok_or(WireError)?;
+    let epoch = u32::from_be_bytes([epoch[0], epoch[1], epoch[2], epoch[3]]);
+    let (&count, mut rest) = body.split_first().ok_or(WireError)?;
+    if usize::from(count) > MAX_PROGRAMS {
+        return Err(WireError);
+    }
+    let mut names = Vec::with_capacity(usize::from(count));
+    for _ in 0..count {
+        let (&len, tail) = rest.split_first().ok_or(WireError)?;
+        let len = usize::from(len);
+        if len == 0 || len > MAX_PROGRAM_NAME_BYTES || tail.len() < len {
+            return Err(WireError);
+        }
+        let name = std::str::from_utf8(&tail[..len]).map_err(|_| WireError)?;
+        if !plain_name(name) {
+            return Err(WireError);
+        }
+        names.push(name.to_owned());
+        rest = &tail[len..];
+    }
+    if !rest.is_empty() {
+        return Err(WireError);
+    }
+    Ok((epoch, names))
 }
 
 pub fn encode_state(s: PcState) -> [u8; 4] {
@@ -473,13 +816,21 @@ mod tests {
         // ids start at 1 and are dense
         assert_eq!(Record::Key(Key::Enter).bytes(), [KIND_KEY, 1, 0, 0]);
         assert_eq!(Record::Key(Key::AltTab).bytes(), [KIND_KEY, 16, 0, 0]);
+        // the presentation keys come after the sixteen older ones: their ids never moved
+        assert_eq!(Record::Key(Key::F5).bytes(), [KIND_KEY, 17, 0, 0]);
+        assert_eq!(Record::Key(Key::B).bytes(), [KIND_KEY, 18, 0, 0]);
         assert_eq!(Record::Media(Media::Lock).bytes(), [KIND_MEDIA, 7, 0, 0]);
+        assert_eq!(
+            Record::Media(Media::MonitorOff).bytes(),
+            [KIND_MEDIA, 8, 0, 0]
+        );
     }
 
     #[test]
     fn only_media_records_work_without_the_full_level() {
         assert!(!Record::Media(Media::VolumeUp).needs_full());
         assert!(!Record::Media(Media::Lock).needs_full());
+        assert!(!Record::Media(Media::MonitorOff).needs_full());
         for r in [
             Record::Move { dx: 1, dy: 1 },
             Record::Scroll { dx: 1, dy: 1 },
@@ -491,6 +842,23 @@ mod tests {
         ] {
             assert!(r.needs_full());
         }
+    }
+
+    #[test]
+    fn only_the_two_presentation_keys_need_their_feature() {
+        for k in KEYS {
+            let present = matches!(k, Key::F5 | Key::B);
+            assert_eq!(k.is_present(), present);
+            assert_eq!(Record::Key(k).needs_present(), present);
+            assert!(
+                Record::Key(k).needs_full(),
+                "a key is the mouse/keyboard level"
+            );
+        }
+        for m in MEDIA {
+            assert!(!Record::Media(m).needs_present());
+        }
+        assert!(!Record::Move { dx: 1, dy: 1 }.needs_present());
     }
 
     #[test]
@@ -506,9 +874,9 @@ mod tests {
             &[KIND_BUTTON, 3, 1, 0],
             &[KIND_BUTTON, 1, 2, 0], // down is 0 or 1
             &[KIND_KEY, 0, 0, 0],    // id 0
-            &[KIND_KEY, 17, 0, 0],   // past the list
+            &[KIND_KEY, 19, 0, 0],   // past the list
             &[KIND_KEY, 1, 1, 0],    // second byte must be 0
-            &[KIND_MEDIA, 8, 0, 0],
+            &[KIND_MEDIA, 9, 0, 0],
             &[KIND_MEDIA, 1, 9, 0],
             &[0x5b, 0x52, 0, 0], // a raw key code is not a kind
         ] {
@@ -536,9 +904,30 @@ mod tests {
 
     #[test]
     fn open_and_opened() {
-        assert_eq!(decode_open(&encode_open(Level::Media)), Ok(Level::Media));
-        assert_eq!(decode_open(&encode_open(Level::Full)), Ok(Level::Full));
-        for bad in [&[][..], &[0], &[3], &[1, 1]] {
+        assert_eq!(
+            decode_open(&encode_open(Level::Media, None)),
+            Ok((Level::Media, None))
+        );
+        assert_eq!(
+            decode_open(&encode_open(Level::Full, Some(FEATURES))),
+            Ok((
+                Level::Full,
+                Some(FEATURE_POWER | FEATURE_PRESENT | FEATURE_PROGRAMS)
+            ))
+        );
+        assert_eq!(
+            decode_open(&[2, 0x02]),
+            Ok((Level::Full, Some(FEATURE_PRESENT)))
+        );
+        assert_eq!(
+            decode_open(&[2, 0x04]),
+            Ok((Level::Full, Some(FEATURE_PROGRAMS)))
+        );
+        assert_eq!(FEATURES, 0x07);
+        // a newer phone's bits are dropped, never a reason to close
+        assert_eq!(decode_open(&[1, 0xff]), Ok((Level::Media, Some(FEATURES))));
+        assert_eq!(decode_open(&[1, 0x08]), Ok((Level::Media, Some(0))));
+        for bad in [&[][..], &[0], &[3], &[0, 1], &[1, 1, 1]] {
             assert!(decode_open(bad).is_err());
         }
         let o = Opened {
@@ -551,20 +940,193 @@ mod tests {
                 playing: true,
                 locked: false,
             },
+            ext: None,
         };
+        assert_eq!(
+            encode_opened(o).len(),
+            7,
+            "an older phone reads seven bytes"
+        );
         assert_eq!(decode_opened(&encode_opened(o)), Ok(o));
+        for power in [
+            PowerInfo::default(),
+            PowerInfo {
+                granted: true,
+                pending: true,
+                hibernate: true,
+            },
+            PowerInfo {
+                granted: true,
+                pending: false,
+                hibernate: false,
+            },
+        ] {
+            let o = Opened {
+                ext: Some(OpenedExt {
+                    features: FEATURES,
+                    power,
+                }),
+                ..o
+            };
+            assert_eq!(encode_opened(o).len(), 9);
+            assert_eq!(decode_opened(&encode_opened(o)), Ok(o));
+        }
+        for bad in [
+            &[1, 1, 0, 42, 0, 0, 0, 1][..],   // eight
+            &[1, 1, 0, 42, 0, 0, 0, 0x08, 0], // a feature this side does not know
+            &[1, 1, 0, 42, 0, 0, 0, 1, 8],    // an unknown power bit
+            &[1, 1, 0, 42, 0, 0, 0, 1, 0, 0], // ten
+        ] {
+            assert!(decode_opened(bad).is_err(), "{bad:?}");
+        }
         for bad in [
             &[][..],
-            &[1, 1, 0, 42, 0, 0],       // short
-            &[1, 1, 0, 42, 0, 0, 0, 0], // long
-            &[0, 1, 0, 42, 0, 0, 0],    // an open session has a level
-            &[2, 1, 0, 42, 0, 0, 0],    // never more than the grant
+            &[1, 1, 0, 42, 0, 0],    // short
+            &[0, 1, 0, 42, 0, 0, 0], // an open session has a level
+            &[2, 1, 0, 42, 0, 0, 0], // never more than the grant
             &[1, 3, 0, 42, 0, 0, 0],
             &[1, 1, 2, 42, 0, 0, 0],
             &[1, 1, 0, 101, 0, 0, 0], // volume 0..=100 or unknown
             &[1, 1, 0, 42, 2, 0, 0],
         ] {
             assert!(decode_opened(bad).is_err(), "{bad:?}");
+        }
+    }
+
+    #[test]
+    fn power_frames() {
+        for power in POWER {
+            assert_eq!(
+                decode_power(&encode_power(power, false)),
+                Ok((power, false))
+            );
+            if power != Power::Cancel {
+                assert_eq!(decode_power(&encode_power(power, true)), Ok((power, true)));
+            }
+        }
+        assert_eq!(encode_power(Power::Sleep, false), [1, 0]);
+        assert_eq!(encode_power(Power::Cancel, false), [6, 0]);
+        for bad in [
+            &[][..],
+            &[1],
+            &[1, 0, 0],
+            &[0, 0], // id 0
+            &[7, 0], // past the list
+            &[1, 2], // despite is 0 or 1
+            &[6, 1], // nothing to insist on when cancelling
+        ] {
+            assert!(decode_power(bad).is_err(), "{bad:?}");
+        }
+        for a in POWER_ANSWERS {
+            assert_eq!(decode_power_answer(&encode_power_answer(a)), Ok(a));
+        }
+        assert!(decode_power_answer(&[0]).is_err() && decode_power_answer(&[10]).is_err());
+        assert!(decode_power_answer(&[]).is_err() && decode_power_answer(&[1, 1]).is_err());
+    }
+
+    #[test]
+    fn program_frames() {
+        for slot in 0..MAX_PROGRAMS as u8 {
+            for epoch in [0, 1, 0x0102_0304, u32::MAX] {
+                assert_eq!(
+                    decode_program_start(&encode_program_start(slot, epoch)),
+                    Ok((slot, epoch))
+                );
+            }
+        }
+        assert_eq!(encode_program_start(3, 0x0102_0304), [3, 1, 2, 3, 4]);
+        for bad in [
+            &[][..],
+            &[0],             // no epoch (the frame before epochs)
+            &[0, 0, 0, 1],    // short
+            &[8, 0, 0, 0, 1], // past the longest list
+            &[255, 0, 0, 0, 1],
+            &[0, 0, 0, 0, 1, 0], // left over
+        ] {
+            assert!(decode_program_start(bad).is_err(), "{bad:?}");
+        }
+        for a in PROGRAM_ANSWERS {
+            assert_eq!(decode_program_answer(&encode_program_answer(a)), Ok(a));
+        }
+        assert_eq!(encode_program_answer(ProgramAnswer::Started), [1]);
+        assert!(decode_program_answer(&[0]).is_err() && decode_program_answer(&[6]).is_err());
+        assert!(decode_program_answer(&[]).is_err() && decode_program_answer(&[1, 1]).is_err());
+    }
+
+    #[test]
+    fn program_names() {
+        let names = ["Editor", "Grüße 👋", "OBS Studio"];
+        let body = encode_programs(7, &names);
+        assert_eq!(body[..5], [0, 0, 0, 7, 3]);
+        assert_eq!(
+            decode_programs(&body).unwrap(),
+            (7, names.map(String::from).to_vec())
+        );
+        assert_eq!(
+            encode_programs::<&str>(u32::MAX, &[]),
+            [255, 255, 255, 255, 0]
+        );
+        assert_eq!(decode_programs(&[0, 0, 0, 2, 0]).unwrap(), (2, Vec::new()));
+        // eight of the longest names fit one input frame (tag and AEAD tag included)
+        let long: Vec<String> = (0..MAX_PROGRAMS + 2).map(|_| "ü".repeat(40)).collect();
+        let body = encode_programs(1, &long);
+        assert_eq!(body[4] as usize, MAX_PROGRAMS, "never more than eight");
+        assert!(1 + body.len() + 16 <= crate::noise::frame::INPUT_CAP);
+        let (_, back) = decode_programs(&body).unwrap();
+        assert!(back
+            .iter()
+            .all(|n| n.len() <= MAX_PROGRAM_NAME_BYTES && n.chars().count() == 30));
+        // a 4-byte character is never cut in half
+        let emoji = encode_programs(1, &["👋".repeat(20)]);
+        assert_eq!(decode_programs(&emoji).unwrap().1[0], "👋".repeat(15));
+        // a name that is not plain stops the list there: later slots never move up
+        for odd in [
+            "B\nC",
+            "",
+            "B\u{202E}C",
+            "B\u{200B}",
+            "\u{2066}B",
+            "B\u{FEFF}",
+        ] {
+            let body = encode_programs(1, &["A", odd, "D"]);
+            assert_eq!(decode_programs(&body).unwrap().1, ["A"], "{odd:?}");
+        }
+        for bad in [
+            &[][..],
+            &[0, 0, 0],                            // no epoch
+            &[0, 0, 0, 1],                         // no count
+            &[0, 0, 0, 1, 9],                      // more than eight
+            &[0, 0, 0, 1, 1],                      // missing entry
+            &[0, 0, 0, 1, 1, 0],                   // empty name
+            &[0, 0, 0, 1, 1, 2, b'a'],             // short
+            &[0, 0, 0, 1, 1, 1, b'a', b'b'],       // left over
+            &[0, 0, 0, 1, 1, 1, 0x07],             // control character
+            &[0, 0, 0, 1, 1, 2, 0xff, 0xfe],       // not UTF-8
+            &[0, 0, 0, 1, 1, 61, b'a'],            // longer than a name may be
+            &[0, 0, 0, 1, 1, 3, 0xe2, 0x80, 0xae], // U+202E, a bidi override
+            &[0, 0, 0, 1, 1, 3, 0xe2, 0x80, 0x8b], // U+200B, zero width
+            &[0, 0, 0, 1, 1, 3, 0xef, 0xbb, 0xbf], // U+FEFF
+            &[0, 0, 0, 1, 1, 2, 0xc2, 0xad],       // U+00AD, a soft hyphen
+        ] {
+            assert!(decode_programs(bad).is_err(), "{bad:?}");
+        }
+    }
+
+    #[test]
+    fn invisible_is_every_format_character_we_know_and_nothing_seen() {
+        for c in [
+            '\u{200E}',
+            '\u{202A}',
+            '\u{2066}',
+            '\u{2069}',
+            '\u{200D}',
+            '\u{E0041}',
+            '\u{0605}',
+        ] {
+            assert!(invisible(c), "{c:?}");
+        }
+        for c in ['a', 'ü', ' ', '👋', '—', '\u{0301}'] {
+            assert!(!invisible(c), "{c:?}");
         }
     }
 
@@ -604,6 +1166,11 @@ mod tests {
             TAG_TEXT,
             TAG_STATE,
             TAG_CLOSED,
+            TAG_POWER_ANSWER,
+            TAG_POWER,
+            TAG_PROGRAMS,
+            TAG_PROGRAM_START,
+            TAG_PROGRAM_ANSWER,
         ];
         for (i, t) in tags.iter().enumerate() {
             assert!(*t >= 0x20, "below the input range");

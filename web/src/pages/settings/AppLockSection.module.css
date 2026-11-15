@@ -1,0 +1,15 @@
+.form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.text {
+  margin: 0;
+  max-width: var(--measure);
+}
+
+.status {
+  min-height: 1.5em;
+  margin: 0;
+  font-size: var(--text-sm);
+}

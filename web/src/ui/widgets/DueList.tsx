@@ -46,13 +46,16 @@ export function DueList({
         {shown.map((e) => (
           <li key={e.key} className={styles.dueRow} data-tone={e.tone}>
             <span className={styles.rowTitle}>{e.title}</span>
-            {e.amount ? <span className={styles.rowAmount}>{e.amount}</span> : null}
-            <StateBadge tone={e.tone} label={e.label} />
-            {e.action ? (
-              <IconButton label={e.action.label} onClick={e.action.run}>
-                <Icon name="check" size={18} />
-              </IconButton>
-            ) : null}
+            {/* Amount, state and action stay one group: on a narrow card it moves under the name as a whole. */}
+            <span className={styles.dueTail}>
+              {e.amount ? <span className={styles.rowAmount}>{e.amount}</span> : null}
+              <StateBadge tone={e.tone} label={e.label} />
+              {e.action ? (
+                <IconButton label={e.action.label} onClick={e.action.run}>
+                  <Icon name="check" size={18} />
+                </IconButton>
+              ) : null}
+            </span>
           </li>
         ))}
       </ul>
