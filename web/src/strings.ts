@@ -5231,7 +5231,6 @@ export const de = {
       /** The drives tab's pointer to this tab (replaces the former list of places there). */
       pointer:
         'Temporäre Dateien, Browser-Zwischenspeicher und alte Downloads findest du unter „Aufräumen“.',
-      pointerLink: 'Aufräumen öffnen',
     },
     /** Tab "Verlauf": what the page changed on this PC, with the way back. */
     history: {
@@ -5265,21 +5264,19 @@ export const de = {
       undoNewerFirst: 'Nimm zuerst die neuere Änderung daran zurück.',
       stale: 'Inzwischen in Windows geändert.',
       changed: (name: string) => `${name}: geändert`,
+      chose: (name: string, choice: string) => `${name}: ${choice}`,
     },
-    /** Tab "Einstellungen": documented, reversible Windows settings (`pc-tune` catalogue ids). */
+    /** Tab "Windows-Einstellungen": documented, reversible Windows settings (`pc-tune` catalogue ids). */
     tweaks: {
-      lead: 'Einstellungen, die Windows selbst anbietet, an einem Ort. Jede Änderung wird mit dem Wert von vorher gespeichert und lässt sich zurücknehmen.',
+      lead: 'Das sind Einstellungen von Windows. Nemo stellt sie hier um, ohne dass du die Windows-App „Einstellungen“ öffnen musst. Jede Änderung lässt sich zurücknehmen.',
       onlyWindows: 'Diese Einstellungen gibt es nur unter Windows.',
       onlyWindowsHint: 'Auf diesem Gerät ändert Nemo hier nichts.',
       loading: 'Einstellungen werden gelesen …',
       failed: 'Die Einstellungen konnten nicht gelesen werden.',
+      again: 'Noch einmal lesen',
       none: 'Auf diesem PC gibt es hier nichts einzustellen.',
       changedCount: (n: number) =>
-        n === 0
-          ? 'Nichts von Nemo geändert.'
-          : n === 1
-            ? '1 Einstellung von Nemo geändert.'
-            : `${n} Einstellungen von Nemo geändert.`,
+        n === 1 ? '1 Einstellung von Nemo geändert.' : `${n} Einstellungen von Nemo geändert.`,
       resetAll: 'Alle zurücksetzen',
       resetTitle: 'Alle zurücksetzen?',
       resetText:
@@ -5287,10 +5284,10 @@ export const de = {
       resetConfirm: 'Zurücksetzen',
       cancel: 'Abbrechen',
       resetDone: (names: string) => `Zurückgesetzt: ${names}.`,
-      resetPartial: (names: string) =>
-        `Nicht zurückgesetzt: ${names}. Du kannst es noch einmal versuchen.`,
-      resetLeft: (names: string) =>
-        `Inzwischen in Windows geändert, darum unverändert gelassen: ${names}.`,
+      resetKept: (names: string) => `Unverändert geblieben: ${names}.`,
+      resetLeft: (name: string) => `${name} (inzwischen in Windows geändert)`,
+      resetFailed: (name: string) => `${name} (ließ sich nicht zurücksetzen)`,
+      resetNothing: 'Es gab nichts zurückzusetzen.',
       restorePoint: 'Wiederherstellungspunkt anlegen',
       restorePointHint:
         'Wenn du magst, legst du vorher in Windows einen Wiederherstellungspunkt an. Nötig ist das nicht.',
@@ -5325,30 +5322,27 @@ export const de = {
         trackAppLaunches:
           'Windows merkt sich, welche Apps du startest, und sortiert damit Startmenü und Suche.',
         powerPlan:
-          'Legt fest, wie Windows zwischen Leistung und Stromverbrauch abwägt. Zur Wahl stehen nur die Pläne, die es auf diesem PC schon gibt.',
+          'Legt fest, wie Windows zwischen Leistung und Stromverbrauch abwägt. Der Plan gilt für alle Konten dieses PCs. Zur Wahl stehen nur die Pläne, die es hier schon gibt.',
       } as Record<string, string>,
       detail: {
         animations:
-          'Nemo stellt das über die Windows-Funktion SystemParametersInfo um (Animationen im Fensterinhalt). In Windows findest du es unter Barrierefreiheit → Visuelle Effekte.',
+          'In Windows findest du es unter Barrierefreiheit → Visuelle Effekte. Nemo stellt es auf demselben Weg um wie Windows selbst.',
         dragFullWindows:
-          'Nemo stellt das über die Windows-Funktion SystemParametersInfo um. In Windows heißt es „Fensterinhalt beim Ziehen anzeigen“ (Leistungsoptionen → Visuelle Effekte).',
+          'In Windows heißt es „Fensterinhalt beim Ziehen anzeigen“ (Leistungsoptionen → Visuelle Effekte). Nemo stellt es auf demselben Weg um wie Windows selbst.',
         pointerSonar:
-          'Nemo stellt das über die Windows-Funktion SystemParametersInfo um. In Windows heißt es „Zeigerposition beim Drücken der STRG-Taste anzeigen“ (Mauseigenschaften → Zeigeroptionen).',
+          'In Windows heißt es „Zeigerposition beim Drücken der STRG-Taste anzeigen“ (Mauseigenschaften → Zeigeroptionen). Nemo stellt es auf demselben Weg um wie Windows selbst.',
         fileExtensions:
-          'Nemo stellt das über die Windows-Funktion SHGetSetSettings um. Im Explorer heißt es „Dateinamenerweiterungen“ (Anzeigen → Einblenden).',
+          'Im Explorer heißt es „Dateinamenerweiterungen“ (Anzeigen → Einblenden). Nemo stellt es auf demselben Weg um wie Windows selbst.',
         hiddenFiles:
-          'Nemo stellt das über die Windows-Funktion SHGetSetSettings um. Im Explorer heißt es „Ausgeblendete Elemente“ (Anzeigen → Einblenden).',
+          'Im Explorer heißt es „Ausgeblendete Elemente“ (Anzeigen → Einblenden). Nemo stellt es auf demselben Weg um wie Windows selbst.',
         advertisingId:
-          'Nemo setzt deinen Benutzerwert „Enabled“ unter „AdvertisingInfo“, den Microsoft dokumentiert. In Windows findest du es unter Datenschutz und Sicherheit → Allgemein.',
+          'In Windows findest du es unter Datenschutz und Sicherheit → Allgemein. Nemo ändert dieselbe Angabe wie der Schalter dort; sie gilt nur für dein Konto.',
         trackAppLaunches:
-          'Nemo setzt deinen Benutzerwert „Start_TrackProgs“, den Microsoft dokumentiert. In Windows findest du es unter Datenschutz und Sicherheit → Allgemein.',
+          'In Windows findest du es unter Datenschutz und Sicherheit → Allgemein. Nemo ändert dieselbe Angabe wie der Schalter dort; sie gilt nur für dein Konto.',
         powerPlan:
-          'Nemo schaltet den aktiven Plan über die Windows-Funktion PowerSetActiveScheme um, legt keinen neuen an und blendet keinen versteckten ein. Der Plan gilt für den ganzen PC.',
+          'In Windows findest du die Pläne in der Systemsteuerung unter Energieoptionen. Nemo wechselt nur zwischen ihnen, legt keinen neuen an und blendet keinen versteckten ein.',
       } as Record<string, string>,
-      risk: {
-        none: 'Risiko: keines.',
-        low: 'Risiko: gering.',
-      } as Record<string, string>,
+      riskLow: 'Risiko: gering.',
       riskNote: {
         hiddenFiles:
           'Versteckte Dateien gehören oft zu Programmen. Sind sie sichtbar, verschiebt oder löscht man sie leichter aus Versehen.',
@@ -5359,25 +5353,30 @@ export const de = {
         explorer: 'Offene Explorer-Fenster zeigen es nach dem Aktualisieren (F5).',
       },
       more: 'Mehr dazu',
-      moreLabel: (title: string) => `Mehr zu „${title}“`,
+      moreLabel: (title: string) => `Mehr dazu: ${title}`,
       source: 'Quelle: Dokumentation von Microsoft',
-      sourceLabel: (title: string) => `Quelle zu „${title}“: Dokumentation von Microsoft`,
+      sourceLabel: (title: string) =>
+        `Quelle: Dokumentation von Microsoft (${title}, öffnet im Browser)`,
       changedHere: 'von Nemo geändert',
       stateOn: 'Eingeschaltet',
       stateOff: 'Ausgeschaltet',
       stateChoice: (label: string) => (label ? `Aktiv: ${label}` : ''),
-      windowsDefault: 'Standard von Windows – hier ist noch nichts festgelegt.',
+      windowsDefault:
+        'Windows entscheidet selbst (Standard). Nemo hat hier noch nichts festgelegt.',
+      customValue:
+        'Hier ist ein anderer Wert gespeichert, den Nemo nicht einordnet. Rückgängig stellt ihn genau wieder her.',
       unreadable:
         'Windows gibt den aktuellen Wert nicht her. Ohne ihn gäbe es keinen Weg zurück, deshalb stellt Nemo hier nichts um.',
       turnOn: 'Einschalten',
       turnOff: 'Ausschalten',
-      turnOnLabel: (title: string) => `${title}: einschalten`,
-      turnOffLabel: (title: string) => `${title}: ausschalten`,
+      turnOnLabel: (title: string) => `Einschalten: ${title}`,
+      turnOffLabel: (title: string) => `Ausschalten: ${title}`,
+      apply: 'Übernehmen',
+      applyLabel: (title: string) => `Übernehmen: ${title}`,
       chooseLabel: (title: string) => `${title} wählen`,
       switched: (title: string, on: boolean) =>
-        `${title}: ${on ? 'eingeschaltet' : 'ausgeschaltet'}. Der Wert von vorher steht im Verlauf.`,
-      chosen: (title: string, label: string) =>
-        `${title}: ${label}. Der Plan von vorher steht im Verlauf.`,
+        `${title}: ${on ? 'eingeschaltet' : 'ausgeschaltet'}.`,
+      chosen: (title: string, label: string) => `${title}: ${label}.`,
       setFailed: 'Das ließ sich nicht umstellen. Es wurde nichts geändert.',
     },
     /** Tab "Autostart": what starts with Windows for this account, with a switch each. */

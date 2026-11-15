@@ -653,16 +653,29 @@ export function createFakeDisk(): DiskService {
       switchable: false,
     },
   ];
-  /** Like the journal: only the newest open change of an autostart entry can be taken back. */
-  const refreshStartupUndo = () => {
+  /**
+   * Like the journal: only the newest open change of an autostart entry or a setting can be taken
+   * back, and one that was changed in Windows since ("stale") never.
+   */
+  const refreshUndo = () => {
     for (const e of careEntries) {
-      if (e.kind !== 'startup') continue;
+      if (e.kind === 'cleanup') continue;
       const newer = careEntries.some(
-        (x) => x.id > e.id && !x.undone && x.kind === 'startup' && x.subject === e.subject,
+        (x) => x.id > e.id && !x.undone && x.kind === e.kind && x.subject === e.subject,
       );
-      e.canUndo = !e.undone && !newer;
+      e.canUndo = !e.undone && !e.stale && !newer;
     }
   };
+  /** Like the journal's `mark_stale`: every open change of the subject is settled, not undoable. */
+  const markStale = (kind: CareEntry['kind'], subject: string) => {
+    for (const e of careEntries) {
+      if (e.kind === kind && e.subject === subject && !e.undone) e.stale = true;
+    }
+    refreshUndo();
+  };
+  /** Ids a test named in a global list (`__tmCareResetLeft`, `__tmCareResetFailed`, `__tmCareCustom`). */
+  const hookIds = (name: string): string[] =>
+    (globalThis as unknown as Record<string, string[] | undefined>)[name] ?? [];
   let cleanupCancelled = false;
   const get = (id: number) => {
     const s = scans.get(id);
@@ -678,14 +691,24 @@ export function createFakeDisk(): DiskService {
   const stepMs = () =>
     Number((globalThis as { __tmDiskScanStepMs?: number }).__tmDiskScanStepMs ?? 60);
 
-  // Windows settings ("Einstellungen"): invented states, same ids as the native catalogue.
-  const tweaks: TweakState[] = FAKE_TWEAKS.map((x) => ({ ...x, options: [...x.options] }));
+  // Windows settings ("Windows-Einstellungen"): invented states, same ids as the native
+  // catalogue. Tests can give a switch a stored value that is neither on nor off
+  // (`__tmCareCustom`: setting ids).
+  const tweaks: TweakState[] = FAKE_TWEAKS.map((x) => ({
+    ...x,
+    options: [...x.options],
+    ...(x.kind === 'toggle' && hookIds('__tmCareCustom').includes(x.id)
+      ? { on: null, custom: true }
+      : {}),
+  }));
   /** Per history entry the state from before; per setting the state before its first change. */
-  const tweakBefore = new Map<number, { on: boolean | null; choice: string | null }>();
-  const tweakOriginals = new Map<
-    string,
-    { on: boolean | null; choice: string | null; entry: number }
-  >();
+  interface TweakValue {
+    on: boolean | null;
+    custom: boolean;
+    choice: string | null;
+  }
+  const tweakBefore = new Map<number, TweakValue>();
+  const tweakOriginals = new Map<string, TweakValue & { entry: number }>();
 
   const optimize: OptimizeService = {
     windows: true,
@@ -745,22 +768,35 @@ export function createFakeDisk(): DiskService {
     async undo(id) {
       const entry = careEntries.find((e) => e.id === id);
       if (!entry) throw new Error('unknown-entry');
-      if (!entry.canUndo) throw new Error(entry.undone ? 'already-undone' : 'nothing-to-undo');
-      // Tests can play "changed in Windows since": the undo is refused and the entry marked.
+      if (!entry.canUndo) {
+        // The journal's order: taken back, changed in Windows since, a newer change first.
+        const code = entry.undone
+          ? 'already-undone'
+          : entry.stale
+            ? 'changed-elsewhere'
+            : entry.kind === 'cleanup'
+              ? 'nothing-to-undo'
+              : 'newer-change';
+        throw new Error(code);
+      }
+      // Tests can play "changed in Windows since": the undo is refused, every open change of
+      // that entry or setting is marked, and a setting no longer counts as changed here (what
+      // stands now is the newer choice made in Windows).
       if ((globalThis as { __tmCareChangedElsewhere?: boolean }).__tmCareChangedElsewhere) {
-        entry.stale = true;
-        entry.canUndo = false;
+        markStale(entry.kind, entry.subject);
+        if (entry.kind === 'tweak') {
+          tweakOriginals.delete(entry.subject);
+          const tweak = tweaks.find((x) => x.id === entry.subject);
+          if (tweak) tweak.changedHere = false;
+        }
         throw new Error('changed-elsewhere');
       }
       if (entry.kind === 'tweak') {
-        const newer = careEntries.some(
-          (e) => e.id > id && e.kind === 'tweak' && e.subject === entry.subject && !e.undone,
-        );
-        if (newer) throw new Error('newer-change');
         const before = tweakBefore.get(id);
         const tweak = tweaks.find((x) => x.id === entry.subject);
         if (tweak && before) {
           tweak.on = before.on;
+          tweak.custom = before.custom;
           tweak.choice = before.choice;
           const first = tweakOriginals.get(tweak.id);
           if (first && first.entry === id) tweakOriginals.delete(tweak.id);
@@ -768,13 +804,12 @@ export function createFakeDisk(): DiskService {
         }
       }
       entry.undone = true;
-      entry.canUndo = false;
       if (entry.kind === 'startup') {
         // The state from before the switch comes back.
         const item = startupItems.find((i) => i.id === entry.subject);
         if (item) item.enabled = !entry.on;
-        refreshStartupUndo();
       }
+      refreshUndo();
     },
     async openTool(tool) {
       ((globalThis as { __tmCareTools?: string[] }).__tmCareTools ??= []).push(tool);
@@ -802,7 +837,7 @@ export function createFakeDisk(): DiskService {
         undone: false,
       };
       careEntries.push(entry);
-      refreshStartupUndo();
+      refreshUndo();
       return entry.id;
     },
     async tweaks() {
@@ -816,7 +851,7 @@ export function createFakeDisk(): DiskService {
       if (toggle !== (typeof target === 'boolean')) throw new Error('bad-target');
       if (!toggle && !tweak.options.some((o) => o.id === target)) throw new Error('bad-target');
       if (toggle ? tweak.on === target : tweak.choice === target) return null;
-      const before = { on: tweak.on, choice: tweak.choice };
+      const before = { on: tweak.on, custom: tweak.custom, choice: tweak.choice };
       const entryId = careEntries.length + 1;
       careEntries.push({
         id: entryId,
@@ -834,28 +869,45 @@ export function createFakeDisk(): DiskService {
       });
       tweakBefore.set(entryId, before);
       if (!tweakOriginals.has(id)) tweakOriginals.set(id, { ...before, entry: entryId });
-      if (typeof target === 'boolean') tweak.on = target;
-      else tweak.choice = target;
+      if (typeof target === 'boolean') {
+        tweak.on = target;
+        tweak.custom = false;
+      } else tweak.choice = target;
       tweak.changedHere = true;
+      // The older open change of this setting gives its undo to the new one.
+      refreshUndo();
       return entryId;
     },
     async resetTweaks() {
-      const restored: string[] = [];
-      for (const [id, first] of tweakOriginals) {
+      // Tests can name settings that were "changed in Windows since" (`__tmCareResetLeft`: left
+      // as they are, no longer changed here) or that "cannot be written" (`__tmCareResetFailed`:
+      // they stay changed here for another try).
+      const leftIds = hookIds('__tmCareResetLeft');
+      const failedIds = hookIds('__tmCareResetFailed');
+      const report = { restored: [] as string[], failed: [] as string[], left: [] as string[] };
+      for (const [id, first] of [...tweakOriginals]) {
         const tweak = tweaks.find((x) => x.id === id)!;
-        tweak.on = first.on;
-        tweak.choice = first.choice;
-        tweak.changedHere = false;
-        for (const e of careEntries) {
-          if (e.kind === 'tweak' && e.subject === id) {
-            e.undone = true;
-            e.canUndo = false;
-          }
+        if (failedIds.includes(id)) {
+          report.failed.push(id);
+          continue;
         }
-        restored.push(id);
+        tweakOriginals.delete(id);
+        tweak.changedHere = false;
+        if (leftIds.includes(id)) {
+          markStale('tweak', id);
+          report.left.push(id);
+          continue;
+        }
+        tweak.on = first.on;
+        tweak.custom = first.custom;
+        tweak.choice = first.choice;
+        for (const e of careEntries) {
+          if (e.kind === 'tweak' && e.subject === id && !e.stale) e.undone = true;
+        }
+        report.restored.push(id);
       }
-      tweakOriginals.clear();
-      return { restored, failed: [], left: [] };
+      refreshUndo();
+      return report;
     },
   };
 

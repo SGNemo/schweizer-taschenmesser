@@ -487,7 +487,6 @@ export const disk: Strings['disk'] = {
       openFailed: 'That couldn’t be opened.',
     },
     pointer: 'Temporary files, browser caches and old downloads are under “Tidy up”.',
-    pointerLink: 'Go to Tidy up',
   },
   history: {
     lead: 'What Nemo changed on this PC, with the way back. What you tidy up is listed until you close Nemo; changes to startup programs stay listed.',
@@ -520,28 +519,28 @@ export const disk: Strings['disk'] = {
     undoNewerFirst: 'Take back the newer change to it first.',
     stale: 'Changed in Windows in the meantime.',
     changed: (name: string) => `${name}: changed`,
+    chose: (name: string, choice: string) => `${name}: ${choice}`,
   },
   tweaks: {
-    lead: 'Settings Windows offers itself, in one place. Every change is stored with the value from before and can be taken back.',
+    lead: 'These are settings of Windows. Nemo switches them here, so you don’t have to open Windows’ own Settings app. Every change can be taken back.',
     onlyWindows: 'These settings exist on Windows only.',
     onlyWindowsHint: 'Nemo changes nothing here on this device.',
     loading: 'Reading settings …',
     failed: 'The settings couldn’t be read.',
+    again: 'Read again',
     none: 'There is nothing to set here on this PC.',
     changedCount: (n: number) =>
-      n === 0
-        ? 'Nothing changed by Nemo.'
-        : n === 1
-          ? '1 setting changed by Nemo.'
-          : `${n} settings changed by Nemo.`,
+      n === 1 ? '1 setting changed by Nemo.' : `${n} settings changed by Nemo.`,
     resetAll: 'Reset all',
     resetTitle: 'Reset all?',
     resetText: 'These settings get back the value they had before your first change here:',
     resetConfirm: 'Reset',
     cancel: 'Cancel',
     resetDone: (names: string) => `Reset: ${names}.`,
-    resetPartial: (names: string) => `Not reset: ${names}. You can try again.`,
-    resetLeft: (names: string) => `Changed in Windows in the meantime, so left as it is: ${names}.`,
+    resetKept: (names: string) => `Left unchanged: ${names}.`,
+    resetLeft: (name: string) => `${name} (changed in Windows in the meantime)`,
+    resetFailed: (name: string) => `${name} (couldn’t be reset)`,
+    resetNothing: 'There was nothing to reset.',
     restorePoint: 'Create a restore point',
     restorePointHint: 'If you like, create a restore point in Windows first. It isn’t required.',
     group: {
@@ -566,7 +565,7 @@ export const disk: Strings['disk'] = {
         'You see the whole window while you move it. Switched off, Windows shows only an outline.',
       pointerSonar: 'Pressing the Ctrl key shows with circles where the pointer is.',
       fileExtensions:
-        'Explorer shows endings such as .pdf or .exe after the file name, so you see what kind of file it is.',
+        'Explorer shows extensions such as .pdf or .exe after the file name, so you see what kind of file it is.',
       hiddenFiles:
         'Explorer also shows files and folders that are marked as hidden. Protected system files stay hidden.',
       advertisingId:
@@ -574,60 +573,60 @@ export const disk: Strings['disk'] = {
       trackAppLaunches:
         'Windows remembers which apps you start and uses that to sort the Start menu and search.',
       powerPlan:
-        'Decides how Windows balances performance and power use. You can choose only among the plans this PC already has.',
+        'Decides how Windows balances performance and power use. The plan applies to all accounts of this PC. You can choose only among the plans it already has.',
     } as Record<string, string>,
     detail: {
       animations:
-        'Nemo switches this through the Windows function SystemParametersInfo (client area animation). In Windows it is under Accessibility → Visual effects.',
+        'In Windows it is under Accessibility → Visual effects. Nemo switches it the same way Windows itself does.',
       dragFullWindows:
-        'Nemo switches this through the Windows function SystemParametersInfo. Windows calls it “Show window contents while dragging” (Performance Options → Visual Effects).',
+        'Windows calls it “Show window contents while dragging” (Performance Options → Visual Effects). Nemo switches it the same way Windows itself does.',
       pointerSonar:
-        'Nemo switches this through the Windows function SystemParametersInfo. Windows calls it “Show location of pointer when I press the CTRL key” (Mouse Properties → Pointer Options).',
+        'Windows calls it “Show location of pointer when I press the CTRL key” (Mouse Properties → Pointer Options). Nemo switches it the same way Windows itself does.',
       fileExtensions:
-        'Nemo switches this through the Windows function SHGetSetSettings. Explorer calls it “File name extensions” (View → Show).',
+        'Explorer calls it “File name extensions” (View → Show). Nemo switches it the same way Windows itself does.',
       hiddenFiles:
-        'Nemo switches this through the Windows function SHGetSetSettings. Explorer calls it “Hidden items” (View → Show).',
+        'Explorer calls it “Hidden items” (View → Show). Nemo switches it the same way Windows itself does.',
       advertisingId:
-        'Nemo sets your user value “Enabled” under “AdvertisingInfo”, which Microsoft documents. In Windows it is under Privacy & security → General.',
+        'In Windows it is under Privacy & security → General. Nemo changes the same entry as the switch there; it applies to your account only.',
       trackAppLaunches:
-        'Nemo sets your user value “Start_TrackProgs”, which Microsoft documents. In Windows it is under Privacy & security → General.',
+        'In Windows it is under Privacy & security → General. Nemo changes the same entry as the switch there; it applies to your account only.',
       powerPlan:
-        'Nemo switches the active plan through the Windows function PowerSetActiveScheme, creates no new plan and unhides none. The plan applies to the whole PC.',
+        'In Windows the plans are in Control Panel under Power Options. Nemo only switches between them, creates no new plan and unhides none.',
     } as Record<string, string>,
-    risk: {
-      none: 'Risk: none.',
-      low: 'Risk: low.',
-    } as Record<string, string>,
+    riskLow: 'Risk: low.',
     riskNote: {
       hiddenFiles:
         'Hidden files often belong to programs. Once visible, they are easier to move or delete by accident.',
       trackAppLaunches: 'Switched off, the “Most used” list in the Start menu stays empty.',
       powerPlan:
-        'A plan with more performance uses more power; on a laptop the battery lasts less long.',
+        'A plan with more performance uses more power; on a laptop the battery doesn’t last as long.',
     } as Record<string, string>,
     refresh: {
       explorer: 'Open Explorer windows show it after a refresh (F5).',
     },
     more: 'More about this',
-    moreLabel: (title: string) => `More about “${title}”`,
+    moreLabel: (title: string) => `More about this: ${title}`,
     source: 'Source: Microsoft documentation',
-    sourceLabel: (title: string) => `Source for “${title}”: Microsoft documentation`,
+    sourceLabel: (title: string) =>
+      `Source: Microsoft documentation (${title}, opens in the browser)`,
     changedHere: 'changed by Nemo',
     stateOn: 'Switched on',
     stateOff: 'Switched off',
     stateChoice: (label: string) => (label ? `Active: ${label}` : ''),
-    windowsDefault: 'Windows default – nothing has been set here yet.',
+    windowsDefault: 'Windows decides itself (default). Nemo hasn’t set anything here yet.',
+    customValue:
+      'Another value is stored here that Nemo can’t place. Undo restores exactly that value.',
     unreadable:
       'Windows doesn’t give out the current value. Without it there would be no way back, so Nemo changes nothing here.',
     turnOn: 'Switch on',
     turnOff: 'Switch off',
-    turnOnLabel: (title: string) => `${title}: switch on`,
-    turnOffLabel: (title: string) => `${title}: switch off`,
+    turnOnLabel: (title: string) => `Switch on: ${title}`,
+    turnOffLabel: (title: string) => `Switch off: ${title}`,
+    apply: 'Apply',
+    applyLabel: (title: string) => `Apply: ${title}`,
     chooseLabel: (title: string) => `Choose ${title}`,
-    switched: (title: string, on: boolean) =>
-      `${title}: ${on ? 'switched on' : 'switched off'}. The value from before is in the history.`,
-    chosen: (title: string, label: string) =>
-      `${title}: ${label}. The plan from before is in the history.`,
+    switched: (title: string, on: boolean) => `${title}: ${on ? 'switched on' : 'switched off'}.`,
+    chosen: (title: string, label: string) => `${title}: ${label}.`,
     setFailed: 'That couldn’t be changed. Nothing was changed.',
   },
   startup: {

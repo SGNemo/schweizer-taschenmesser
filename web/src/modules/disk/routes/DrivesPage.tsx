@@ -28,8 +28,8 @@ type Tab = (typeof TABS)[number];
 
 /**
  * "Dieser PC": tabs Laufwerke (scan entry), Aufräumen (suggestions), Autostart (what starts with
- * Windows, with a switch each), Einstellungen (documented Windows settings), System (live facts)
- * and Verlauf (what the page changed, with the way back), selected via `?tab=`.
+ * Windows, with a switch each), Windows-Einstellungen (documented Windows settings), System (live
+ * facts) and Verlauf (what the page changed, with the way back), selected via `?tab=`.
  */
 export default function ThisPcPage() {
   const [params, setParams] = useSearchParams();
@@ -211,7 +211,7 @@ function DrivesTab({
           ))}
         </ul>
       ) : null}
-      <QuickOverview onTidy={onTidy} />
+      <QuickOverview />
     </>
   );
 }

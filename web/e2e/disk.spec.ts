@@ -669,7 +669,8 @@ test('"Im Scan ansehen" in the tidy tab starts a scan of that folder', async ({ 
   await enableDisk(page);
   await page.goto('/disk');
   // The drives tab points to the tab that took over the clean-up places.
-  await page.getByRole('button', { name: 'Aufräumen öffnen' }).last().click();
+  await expect(page.getByText('findest du unter „Aufräumen“')).toBeVisible();
+  await page.getByRole('button', { name: 'Aufräumen', exact: true }).click();
   await expect(page).toHaveURL(/tab=tidy/);
   await page.getByRole('button', { name: 'Suchen', exact: true }).click();
   await page.getByRole('button', { name: 'Im Scan ansehen: Alte Downloads' }).click();

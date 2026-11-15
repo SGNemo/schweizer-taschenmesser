@@ -28,7 +28,6 @@
   padding-bottom: 0;
 }
 .text {
-  max-width: 68ch;
   min-width: 0;
   overflow-wrap: anywhere;
 }
