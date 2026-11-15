@@ -6,7 +6,8 @@
 //! `state()` after a quiet time, which may wait a bounded moment (see [`InputSink::state`]) – and
 //! it logs nothing.
 
-use super::wire::{Button, Key, Media, PcState, Record};
+use super::wire::{Button, Key, Media, PcState, Power, PowerAnswer, Record};
+use crate::noise::PublicKey;
 use std::fmt;
 
 /// One thing to do on the PC. `Text` holds what the user typed: it is never formatted (`Debug` is
@@ -50,6 +51,30 @@ pub trait InputSink: Send + Sync {
     /// session ends, for the release of each mouse button that session still held. A key is
     /// pressed and released within one `apply`, so a mouse button is all that can stay held.
     fn apply(&self, action: Action);
+
+    /// A power action of `device` that passed the gate (session, permission, PC not locked,
+    /// limits) – or `Cancel`, which always passes. The sink owns the countdown (one for the whole
+    /// PC) and its own per-device limit, and answers at once; it never acts before the countdown
+    /// ran out. `despite`: start although Nemo on the PC is still working.
+    fn power(&self, device: &PublicKey, power: Power, despite: bool) -> PowerAnswer {
+        let _ = (device, despite);
+        match power {
+            Power::Cancel => PowerAnswer::Cancelled,
+            _ => PowerAnswer::Failed,
+        }
+    }
+
+    /// (a countdown runs, hibernate is available) – for the `opened` of a session.
+    fn power_info(&self) -> (bool, bool) {
+        (false, false)
+    }
+
+    /// The latest thing that happened to a countdown without a question (it ran out, or it was
+    /// stopped at the PC): a number that grows with every such news, whose countdown it was, and
+    /// the answer. A session tells its phone the news of its device that came after it opened.
+    fn power_news(&self) -> Option<(u64, PublicKey, PowerAnswer)> {
+        None
+    }
 }
 
 /// The sink of a PC that cannot be controlled (not Windows, or nothing wired yet).

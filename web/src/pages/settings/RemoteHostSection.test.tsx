@@ -97,6 +97,44 @@ describe('RemoteHostSection (desktop)', () => {
     expect(level().value).toBe('off');
   });
 
+  it('switching off is its own permission: offered with a level, asked at the PC, gone with the level', async () => {
+    fake.parts.hooks.addDevice('Pixel 7');
+    await show();
+    const power = () => screen.queryByRole('switch', { name: 'Darf den PC ausschalten' });
+    fireEvent.click(master());
+    await flush();
+    // nothing allowed yet: nothing to switch off with
+    expect(power()).toBeNull();
+    fireEvent.change(level(), { target: { value: 'media' } });
+    await flush();
+    expect(fake.parts.hooks.asked()).toBe(1);
+    // a level is no permission to switch off
+    expect(power()?.getAttribute('aria-checked')).toBe('false');
+    expect(screen.getByText(/10 Sekunden herunter/)).toBeTruthy();
+    fireEvent.click(power()!);
+    await flush();
+    expect(fake.parts.hooks.asked()).toBe(2);
+    expect(power()?.getAttribute('aria-checked')).toBe('true');
+    // said no at the PC: stays off
+    fireEvent.click(power()!);
+    await flush();
+    expect(power()?.getAttribute('aria-checked')).toBe('false');
+    fake.parts.hooks.answer('cancel');
+    fireEvent.click(power()!);
+    await flush();
+    expect(power()?.getAttribute('aria-checked')).toBe('false');
+    fake.parts.hooks.answer('allow');
+    fireEvent.click(power()!);
+    await flush();
+    const asked = fake.parts.hooks.asked();
+    // taking the level away takes switching off with it, without a question
+    fireEvent.change(level(), { target: { value: 'off' } });
+    await flush();
+    expect(fake.parts.hooks.asked()).toBe(asked);
+    expect(fake.parts.hooks.state().devices[0]?.power).toBe(false);
+    expect(power()).toBeNull();
+  });
+
   it('mouse and keyboard: asked at the PC, with the phone’s unlock on; dropping the unlock is asked too', async () => {
     fake.parts.hooks.addDevice('Pixel 7');
     await show();
@@ -147,7 +185,12 @@ describe('RemoteHostSection (desktop)', () => {
     // a device controls mouse and keyboard: the notification cannot be switched off now
     fireEvent.click(master());
     await flush();
-    await fake.parts.host.setDevice(id, { level: 'full', paused: false, unlock: true });
+    await fake.parts.host.setDevice(id, {
+      level: 'full',
+      paused: false,
+      unlock: true,
+      power: false,
+    });
     expect(fake.parts.hooks.open(id, 'full')).toBe(true);
     fireEvent.click(notice());
     await flush();
@@ -221,7 +264,12 @@ describe('RemoteHostSection (desktop)', () => {
     fake.parts.hooks.addDevice('Tablet');
     await fake.parts.host.setEnabled(true);
     // a grant from a later package (not choosable here yet), and its session
-    await fake.parts.host.setDevice(a, { level: 'full', paused: false, unlock: true });
+    await fake.parts.host.setDevice(a, {
+      level: 'full',
+      paused: false,
+      unlock: true,
+      power: false,
+    });
     expect(fake.parts.hooks.open(a, 'full')).toBe(true);
     await show();
     const selects = () => screen.getAllByTestId('remote-level') as HTMLSelectElement[];
@@ -289,7 +337,12 @@ describe('RemoteHostSection (desktop)', () => {
   it('a stored permission is announced before the switch asks Windows', async () => {
     const id = fake.parts.hooks.addDevice('Pixel 7');
     await fake.parts.host.setEnabled(true);
-    await fake.parts.host.setDevice(id, { level: 'media', paused: false, unlock: true });
+    await fake.parts.host.setDevice(id, {
+      level: 'media',
+      paused: false,
+      unlock: true,
+      power: false,
+    });
     await fake.parts.host.setEnabled(false);
     const asked = fake.parts.hooks.asked();
     await show();
@@ -344,7 +397,12 @@ describe('RemoteHostSection (desktop)', () => {
   it('a controller without a name is still named in the banner and the chip', async () => {
     const id = fake.parts.hooks.addDevice('');
     await fake.parts.host.setEnabled(true);
-    await fake.parts.host.setDevice(id, { level: 'media', paused: false, unlock: true });
+    await fake.parts.host.setDevice(id, {
+      level: 'media',
+      paused: false,
+      unlock: true,
+      power: false,
+    });
     fake.parts.hooks.open(id);
     await show();
     expect(screen.getByTestId('remote-controlling').textContent).toContain(
@@ -394,7 +452,12 @@ describe('RemoteChip', () => {
   it('reads the state once the PC is the home-network hub', async () => {
     const id = fake.parts.hooks.addDevice('Pixel 7');
     await fake.parts.host.setEnabled(true);
-    await fake.parts.host.setDevice(id, { level: 'media', paused: false, unlock: true });
+    await fake.parts.host.setDevice(id, {
+      level: 'media',
+      paused: false,
+      unlock: true,
+      power: false,
+    });
     fake.parts.hooks.open(id);
     useSyncStatus.getState().set({ phase: 'idle', via: 'lanHub', encrypted: true });
     render(
@@ -439,7 +502,12 @@ describe('the shared reading (core/remote/host)', () => {
   it('an answer that arrives after a newer one is dropped', async () => {
     const id = fake.parts.hooks.addDevice('Pixel 7');
     await fake.parts.host.setEnabled(true);
-    await fake.parts.host.setDevice(id, { level: 'media', paused: false, unlock: true });
+    await fake.parts.host.setDevice(id, {
+      level: 'media',
+      paused: false,
+      unlock: true,
+      power: false,
+    });
     fake.parts.hooks.open(id);
     const real = fake.parts.host.status.bind(fake.parts.host);
     let release: () => void = () => undefined;
@@ -461,7 +529,12 @@ describe('the shared reading (core/remote/host)', () => {
   it('a reading that fails no longer vouches for a controller', async () => {
     const id = fake.parts.hooks.addDevice('Pixel 7');
     await fake.parts.host.setEnabled(true);
-    await fake.parts.host.setDevice(id, { level: 'media', paused: false, unlock: true });
+    await fake.parts.host.setDevice(id, {
+      level: 'media',
+      paused: false,
+      unlock: true,
+      power: false,
+    });
     fake.parts.hooks.open(id);
     await refreshRemoteHost();
     expect(useRemoteHost.getState().status?.controller?.name).toBe('Pixel 7');

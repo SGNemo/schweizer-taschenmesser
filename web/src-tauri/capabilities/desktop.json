@@ -64,6 +64,7 @@
     "allow-remote-set-device",
     "allow-remote-end",
     "allow-remote-set-notice",
+    "allow-remote-set-busy",
     "allow-local-api-start",
     "allow-local-api-stop",
     "allow-local-api-set-tokens",

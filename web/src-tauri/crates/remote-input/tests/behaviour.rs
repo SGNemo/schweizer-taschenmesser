@@ -12,6 +12,7 @@ struct Pc {
     locked: Option<bool>,
     media: Vec<Command>,
     lock_calls: usize,
+    monitor_off_calls: usize,
     /// How long every read takes (a slow system).
     slow: Duration,
 }
@@ -57,6 +58,10 @@ impl System for Fake {
     }
     fn locked(&mut self) -> Option<bool> {
         self.0.lock().unwrap().locked
+    }
+    fn monitor_off(&mut self) -> bool {
+        self.0.lock().unwrap().monitor_off_calls += 1;
+        true
     }
 }
 
@@ -299,4 +304,37 @@ fn the_first_question_after_a_quiet_time_gets_a_real_reading() {
     std::thread::sleep(remote_input::STALE + Duration::from_millis(200));
     let s = w.state();
     assert_eq!((s.volume, s.locked), (Some(60), false));
+}
+
+#[test]
+fn monitor_off_is_one_call_and_changes_none_of_the_four_facts() {
+    let (w, pc) = rig(usual());
+    let before = until(&w, |s| s.volume == Some(42));
+    assert!(w.send(Command::MonitorOff));
+    let began = Instant::now();
+    while pc.lock().unwrap().monitor_off_calls == 0 {
+        assert!(began.elapsed() < Duration::from_secs(5), "never");
+        std::thread::sleep(Duration::from_millis(5));
+    }
+    assert_eq!(w.state(), before);
+    let pc = pc.lock().unwrap();
+    assert_eq!(pc.monitor_off_calls, 1);
+    assert!(pc.media.is_empty() && pc.lock_calls == 0);
+}
+
+#[test]
+fn power_does_nothing_where_the_pc_cannot_be_controlled() {
+    if cfg!(windows) {
+        return;
+    }
+    for action in [
+        remote_input::PowerAction::Sleep,
+        remote_input::PowerAction::Hibernate,
+        remote_input::PowerAction::SignOut,
+        remote_input::PowerAction::Restart,
+        remote_input::PowerAction::ShutDown,
+    ] {
+        assert!(!remote_input::power(action));
+    }
+    assert!(!remote_input::hibernate_available());
 }

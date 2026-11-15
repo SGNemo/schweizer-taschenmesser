@@ -36,6 +36,7 @@ mod portable;
 mod remote;
 #[cfg(desktop)]
 mod remote_notice;
+mod remote_power;
 // Remote control, phone side. Compiled for the phone (and for the unit tests): on the desktop no
 // command of it is registered.
 #[cfg(any(mobile, test))]
@@ -217,6 +218,9 @@ pub fn run() {
             remote::remote_set_device,
             remote::remote_end,
             remote::remote_set_notice,
+            remote_power::remote_power_status,
+            remote_power::remote_power_cancel,
+            remote_power::remote_set_busy,
             lan_client::lan_client_pair,
             lan_client::lan_client_pair_cancel,
             lan_client::lan_client_request,

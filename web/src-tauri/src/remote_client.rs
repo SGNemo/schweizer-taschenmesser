@@ -40,7 +40,7 @@
 #![cfg_attr(not(mobile), allow(dead_code))]
 
 use ::lan_sync::input::wire::{
-    Button, Code, Key, Level, Media, PcState, Record, MAX_TEXT_BYTES, VOLUME_UNKNOWN,
+    Button, Code, Key, Level, Media, PcState, PowerAnswer, Record, MAX_TEXT_BYTES, VOLUME_UNKNOWN,
 };
 use ::lan_sync::input_client::{Event, InputError, InputSession};
 use serde::Serialize;
@@ -268,6 +268,8 @@ pub enum EventDto {
         session: u64,
         reason: Option<&'static str>,
     },
+    /// About power: the answer to a power action, or news of a countdown at the PC.
+    Power { session: u64, answer: &'static str },
 }
 
 #[derive(Serialize, Debug, PartialEq, Eq)]
@@ -525,6 +527,25 @@ fn event_dto(id: u64, event: Event) -> EventDto {
             session: id,
             reason: code.map(reason_name),
         },
+        Event::Power(answer) => EventDto::Power {
+            session: id,
+            answer: power_answer_name(answer),
+        },
+    }
+}
+
+/// The PC's answer about power, as the page knows it.
+fn power_answer_name(answer: PowerAnswer) -> &'static str {
+    match answer {
+        PowerAnswer::Started => "started",
+        PowerAnswer::Working => "working",
+        PowerAnswer::Pending => "pending",
+        PowerAnswer::Cancelled => "cancelled",
+        PowerAnswer::Done => "done",
+        PowerAnswer::NotGranted => "not-granted",
+        PowerAnswer::Locked => "locked",
+        PowerAnswer::Limit => "limit",
+        PowerAnswer::Failed => "failed",
     }
 }
 

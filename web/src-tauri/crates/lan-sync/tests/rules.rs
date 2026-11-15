@@ -242,9 +242,14 @@ fn an_input_session_leaves_no_trace() {
         before[guard..].lines().count() <= 2,
         "the touch sits directly inside the sync-session guard"
     );
-    // the grant on disk is three settings, nothing about use
+    // the grant on disk is four settings, nothing about use
     let file = source("src/trust/file.rs");
-    for field in ["remote:", "remote_paused:", "remote_unlock:"] {
+    for field in [
+        "remote:",
+        "remote_paused:",
+        "remote_unlock:",
+        "remote_power:",
+    ] {
         assert!(file.contains(field), "{field}");
     }
     for word in [
@@ -275,8 +280,8 @@ fn input_is_never_formatted() {
     assert!(!sink.contains("impl fmt::Display"));
     // what was pressed or moved prints as its type's name only
     let wire = source("src/input/wire.rs");
-    assert!(wire.contains("name_only_fmt!(Button, Key, Media, Record);"));
-    for ty in ["Button", "Key", "Media", "Record"] {
+    assert!(wire.contains("name_only_fmt!(Button, Key, Media, Power, Record);"));
+    for ty in ["Button", "Key", "Media", "Power", "Record"] {
         let at = wire
             .find(&format!("pub enum {ty} {{"))
             .unwrap_or_else(|| panic!("{ty}"));

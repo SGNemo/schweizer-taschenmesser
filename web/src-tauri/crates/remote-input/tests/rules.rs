@@ -58,7 +58,6 @@ fn only_two_files_simulate_input_each_its_own_kind() {
         "KEYEVENTF_SCANCODE",
         "INPUT_HARDWARE",
         "enigo",
-        "PostMessage",
         "SendMessage",
         "APPCOMMAND",
         "BlockInput",
@@ -89,6 +88,18 @@ fn only_two_files_simulate_input_each_its_own_kind() {
         "IDispatch",
         "CLSIDFromProgID",
     ]);
+    // the one window message: monitor off in `power.rs`, posted (never waited for), no key
+    for (name, text) in sources() {
+        let posts: Vec<&str> = code_lines(&text)
+            .filter(|l| l.contains("PostMessage"))
+            .collect();
+        if name == "power.rs" {
+            assert_eq!(posts.len(), 2, "the import and the one call");
+            assert!(text.contains("WM_SYSCOMMAND,\n") && text.contains("SC_MONITORPOWER as usize"));
+        } else {
+            assert!(posts.is_empty(), "{name}: PostMessage");
+        }
+    }
     let mouse = ["MOUSEEVENTF", "INPUT_MOUSE", "MOUSEINPUT", " mi:"];
     let keys = [
         "VK_",
@@ -249,10 +260,10 @@ fn only_two_files_simulate_input_each_its_own_kind() {
     assert_eq!(keys, 16, "the fixed list has sixteen keys");
 }
 
-/// The crate is five files and nothing else: no sub-directory, no file pulled in from elsewhere,
+/// The crate is six files and nothing else: no sub-directory, no file pulled in from elsewhere,
 /// no macro that could hide code from the tests that read these files.
 #[test]
-fn the_crate_is_exactly_its_five_files() {
+fn the_crate_is_exactly_its_six_files() {
     let mut names: Vec<String> = fs::read_dir(root().join("src"))
         .unwrap()
         .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
@@ -264,6 +275,7 @@ fn the_crate_is_exactly_its_five_files() {
             "keyboard.rs",
             "lib.rs",
             "pointer.rs",
+            "power.rs",
             "system.rs",
             "worker.rs"
         ]
@@ -285,6 +297,7 @@ fn the_crate_is_exactly_its_five_files() {
         [
             "mod keyboard;",
             "mod pointer;",
+            "mod power;",
             "mod system;",
             "mod worker;"
         ]
@@ -365,12 +378,20 @@ fn no_network_no_files_no_tauri_no_serde() {
             "Win32_Foundation",
             "Win32_Media_Audio",
             "Win32_Media_Audio_Endpoints",
+            // power: the shutdown privilege of this process (src/power.rs)
+            "Win32_Security",
             "Win32_System_Com",
             "Win32_System_Com_StructuredStorage",
             "Win32_System_Variant",
             "Win32_System_RemoteDesktop",
+            // power: sleep, hibernate
+            "Win32_System_Power",
             "Win32_System_Shutdown",
+            // power: this process's own token
+            "Win32_System_Threading",
             "Win32_UI_Input_KeyboardAndMouse",
+            // monitor off: one posted system command (scoped above)
+            "Win32_UI_WindowsAndMessaging",
         ],
         "a new Windows feature needs a review (docs/rules/remote-control.md)"
     );
@@ -459,7 +480,10 @@ fn unsafe_is_windows_only_and_explained() {
                 continue;
             }
             assert!(
-                name == "system.rs" || name == "pointer.rs" || name == "keyboard.rs",
+                name == "system.rs"
+                    || name == "pointer.rs"
+                    || name == "keyboard.rs"
+                    || name == "power.rs",
                 "{name}: unsafe outside the Windows calls"
             );
             let explained = lines[i.saturating_sub(4)..i]
@@ -787,3 +811,34 @@ send(flags, 0, 0, amount);
 }
 }
 "#;
+
+/// Power is never forced: Windows asks programs with unsaved work as on a normal shutdown.
+#[test]
+fn power_is_never_forced_and_only_in_its_file() {
+    assert_absent(&["EWX_FORCE", "InitiateSystemShutdown", "SetSystemPowerState"]);
+    for (name, text) in sources() {
+        for line in code_lines(&text) {
+            for call in [
+                "ExitWindowsEx(",
+                "SetSuspendState(",
+                "AdjustTokenPrivileges(",
+            ] {
+                if line.contains(call) && !line.contains("use ") {
+                    assert_eq!(name, "power.rs", "{call}");
+                }
+            }
+        }
+    }
+    let power = read(root().join("src/power.rs"));
+    // "force" off in both suspend calls
+    assert_eq!(
+        power
+            .matches("SetSuspendState(false, false, false)")
+            .count(),
+        1
+    );
+    assert_eq!(
+        power.matches("SetSuspendState(true, false, false)").count(),
+        1
+    );
+}

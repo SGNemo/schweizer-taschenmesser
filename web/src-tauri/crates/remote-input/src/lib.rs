@@ -25,12 +25,16 @@
 //!   every command; nobody asking means no polling at all. Only the first question after a
 //!   quiet time (a reading older than [`STALE`]) waits for the refresh, at most [`FRESH_WAIT`].
 //! * Nothing is logged, counted or stored.
+//! * **Power** (`src/power.rs`): sleep, hibernate, sign out, restart, shut down – API calls, never
+//!   forced, called by the shell only when its countdown at the PC ran out; and monitor off for
+//!   the media worker. No simulated input there either.
 //! * Not Windows: [`Worker::supported`] is `false`, every command is ignored.
 
 #![cfg_attr(not(windows), forbid(unsafe_code))]
 
 mod keyboard;
 mod pointer;
+mod power;
 mod system;
 mod worker;
 
@@ -39,6 +43,7 @@ pub use keyboard::{
     TEXT_UNITS,
 };
 pub use pointer::{Button, Mouse, Pointer, PointerAction, QUEUE, WHEEL_UNIT};
+pub use power::{act as power, hibernate_available, PowerAction};
 pub use system::System;
 pub use worker::{Worker, FRESH_WAIT, STALE};
 
@@ -55,6 +60,8 @@ pub enum Command {
     MuteToggle,
     /// Locks the PC. There is no unlock.
     Lock,
+    /// Switches the displays off (any touch at the PC wakes them).
+    MonitorOff,
 }
 
 /// What this PC says about itself: these four facts and nothing else.
