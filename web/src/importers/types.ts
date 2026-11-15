@@ -10,6 +10,8 @@
 export interface SourceFile {
   name: string;
   text: string;
+  /** Modification time of the file or ZIP entry (epoch ms), when known. */
+  modifiedAt?: number;
 }
 
 /** Why an entry of the source did not become a record. Texts: `t.importers.reasons`. */

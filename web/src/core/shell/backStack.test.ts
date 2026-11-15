@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { backDepth, pushBack, releaseBack, resetBackStack } from './backStack';
+import { backDepth, onPageBack, pushBack, releaseBack, resetBackStack } from './backStack';
 
 const popped = () =>
   new Promise<void>((r) => window.addEventListener('popstate', () => r(), { once: true }));
@@ -73,6 +73,46 @@ describe('backStack', () => {
     await settle();
     expect(history.state?.tmBack).toBe('b');
     expect(backDepth()).toBe(1);
+  });
+
+  it('tells about a Back to the page below, not about closing an element or its own back()', async () => {
+    const page = vi.fn();
+    const stop = onPageBack(page);
+    // A sheet closed by button: our own back() is no Back of the user's.
+    pushBack('a', () => undefined);
+    releaseBack('a');
+    await settle();
+    // Back closes an open sheet: that is not a Back to a page either.
+    pushBack('b', () => undefined);
+    let p = popped();
+    history.back();
+    await p;
+    // A synthetic popstate (re-announced URL) is not a Back.
+    window.dispatchEvent(new PopStateEvent('popstate', { state: history.state }));
+    expect(page).not.toHaveBeenCalled();
+    // Back with nothing open goes to the page below.
+    history.pushState({ idx: 1 }, '', '/next');
+    p = popped();
+    history.back();
+    await p;
+    expect(page).toHaveBeenCalledTimes(1);
+    stop();
+    history.pushState({ idx: 1 }, '', '/next');
+    p = popped();
+    history.back();
+    await p;
+    expect(page).toHaveBeenCalledTimes(1);
+  });
+
+  it('after stepping over a stale marker, tells the page once, on the entry below', async () => {
+    const at: string[] = [];
+    onPageBack(() => void at.push(`${location.pathname}${history.state?.tmBack ? '+marker' : ''}`));
+    pushBack('a', () => undefined);
+    history.pushState({ idx: 5 }, '', '/next'); // the router moved on while "a" was open
+    releaseBack('a'); // marker left below
+    history.back(); // the user's Back lands on the stale marker
+    await settle();
+    expect(at).toEqual(['/']);
   });
 
   it('steps over a marker nobody owns any more', async () => {

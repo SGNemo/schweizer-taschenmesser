@@ -30,7 +30,7 @@ import {
   type RowMenuItem,
 } from '@/ui';
 import { SignatureMark } from '@/ui/identity';
-import { DEMO_ACCOUNT, type CachedThreadView } from '../cache';
+import { DEMO_ACCOUNT, DEMO_EMAIL, type CachedThreadView } from '../cache';
 import { MailError } from '../components/MailError';
 import { MailSettingsPanel } from '../components/MailSettingsPanel';
 import { ComposeDialog } from '../components/ComposeDialog';
@@ -47,6 +47,7 @@ import { InboxHead } from '../components/InboxHead';
 import { PlanAllDialog } from '../components/PlanAllDialog';
 import {
   deletedThreads,
+  openPlans,
   planMail,
   planMany,
   plannedThreads,
@@ -59,6 +60,7 @@ import { threadRepo } from '../repo';
 import { settings } from '../settings';
 import { rowAction } from '../rowActions';
 import { STEPS } from '../mailActions';
+import { answeredRows, closeAnswered } from '../answered';
 import { readSearches, rememberSearch, suggestionsFor } from '../searchHistory';
 import { useMailbox } from '../useMailbox';
 import { useMailSummary } from '../useSummary';
@@ -84,6 +86,8 @@ function ThreadList({
   invoices,
   onInvoice,
   selection,
+  answered,
+  onAnswered,
 }: {
   threads: CachedThreadView[];
   /** Select mode: a checkbox per row (Shift-click takes a range). */
@@ -106,6 +110,9 @@ function ThreadList({
   /** Rows read as an invoice or payment reminder: the muted line with its values and one verb. */
   invoices: ReadonlyMap<string, InvoiceOffer>;
   onInvoice: (th: CachedThreadView, offer: InvoiceOffer) => void;
+  /** Planned rows whose newest message is the person's own: thread id → open ToDo id („Beantwortet?“). */
+  answered: ReadonlyMap<string, string>;
+  onAnswered: (todoId: string) => void;
 }) {
   const hover = useMediaQuery('(hover: hover)');
   const groups: GroupedListGroup[] = GROUPS.map((g) => {
@@ -184,6 +191,9 @@ function ThreadList({
                   onAct={() => onInvoice(th, invoices.get(th.id)!)}
                 />
               ) : null}
+              {answered.get(th.id) ? (
+                <AnsweredLine title={titleOf(th)} onDone={() => onAnswered(answered.get(th.id)!)} />
+              ) : null}
             </ItemRow>
           ))}
         </ItemList>
@@ -194,6 +204,25 @@ function ThreadList({
 }
 
 const NO_OFFERS: ReadonlyMap<string, InvoiceOffer> = new Map();
+const NO_ANSWERED: ReadonlyMap<string, string> = new Map();
+const NO_PLANS: ReadonlyMap<string, string> = new Map();
+
+/** „Beantwortet? · Erledigt“: a question, never a claim; the one verb ticks the ToDo off (with undo). */
+function AnsweredLine({ title, onDone }: { title: string; onDone: () => void }) {
+  return (
+    <p className={styles.invoiceLine} data-testid="mail-answered">
+      <span className={styles.invoiceText}>{t.mail.answered.question}</span>
+      <Button
+        size="sm"
+        variant="ghost"
+        aria-label={t.mail.answered.doneFor(title)}
+        onClick={onDone}
+      >
+        {t.mail.answered.done}
+      </Button>
+    </p>
+  );
+}
 
 /** Page width (rem) from which folders, list and reading pane stand side by side: 12 + 20 + 24 rem and two gaps. */
 const MAIL_COLUMNS_REM = 58;
@@ -213,7 +242,7 @@ export default function MailPage() {
   const accounts: MailAccountRef[] = useMemo(() => {
     if (!live) return [];
     if (live.length > 0) return live;
-    return demoCount ? [{ key: DEMO_ACCOUNT, connectorId: 'demo' }] : [];
+    return demoCount ? [{ key: DEMO_ACCOUNT, connectorId: 'demo', email: DEMO_EMAIL }] : [];
   }, [live, demoCount]);
 
   const account = accounts.find((a) => a.key === params.get('account')) ?? accounts[0];
@@ -292,6 +321,18 @@ export default function MailPage() {
     setSelecting(false);
     if (selection.count > 0) selection.clear();
   }
+  const showAnswered = (prefs as { showAnswered?: boolean } | undefined)?.showAnswered ?? true;
+  const openTodos =
+    useLiveQuery(
+      () =>
+        // Only while ToDos are on: nobody else can tick the ToDo off.
+        account && showAnswered && canPlan ? openPlans(account.key) : Promise.resolve(NO_PLANS),
+      [account?.key, showAnswered, canPlan],
+    ) ?? NO_PLANS;
+  const answered = useMemo(
+    () => answeredRows(shown, openTodos, showAnswered),
+    [shown, openTodos, showAnswered],
+  );
   // An unsure invoice row asked for the sheet: the thread opens with it (never a write without a look).
   const [startInvoice, setStartInvoice] = useState<string | undefined>();
   // The filter hides every mail loaded so far: say so and offer the way back, never a bare „empty“.
@@ -344,6 +385,7 @@ export default function MailPage() {
         {canWrite && account ? (
           <PageAction
             short={t.mail.write.short}
+            plusName={t.mail.write.newMail}
             onClick={() =>
               setCompose({ state: emptyCompose(), title: t.mail.write.compose.titleNew, account })
             }
@@ -682,6 +724,8 @@ export default function MailPage() {
           titleOf={(th) => planTitle(account, th)}
           invoices={invoices}
           selection={selecting ? selection : undefined}
+          answered={selecting ? NO_ANSWERED : answered}
+          onAnswered={(todoId) => void closeAnswered(todoId)}
           onInvoice={(th, offer) => {
             if (offer.kind === 'create') void createInvoice(account, th, offer, box.reload);
             else if (offer.kind === 'note') void noteReminder(account, th, offer, box.reload);

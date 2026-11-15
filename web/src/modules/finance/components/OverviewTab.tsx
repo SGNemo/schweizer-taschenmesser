@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { formatMoney } from '@/core/money';
 import { useCurrency } from '../currency';
 import { t } from '@/strings';
@@ -11,14 +11,10 @@ import { totalBalance, useAvailability } from '../summary';
 import { monthBalanceSeries } from '../balanceSeries';
 import { CategoryRing } from './CategoryRing';
 import { MonthCurve } from './MonthCurve';
+// Plain elements, a few kB: loaded with the overview, so the cards never wait on a chunk or change height.
+import { CategoryBars as Charts, CategoryTable, TrendColumns as Trend, TrendTable } from './Charts';
 import { today } from '@/core/time/dates';
 import styles from '../routes/finance.module.css';
-
-// Recharts is heavy: load it only when the overview is shown.
-const Charts = lazy(() => import('./Charts').then((m) => ({ default: m.CategoryBars })));
-const Trend = lazy(() => import('./Charts').then((m) => ({ default: m.TrendColumns })));
-const CategoryTable = lazy(() => import('./Charts').then((m) => ({ default: m.CategoryTable })));
-const TrendTable = lazy(() => import('./Charts').then((m) => ({ default: m.TrendTable })));
 
 function ChartCard({ title, chart, table }: { title: string; chart: ReactNode; table: ReactNode }) {
   const [asTable, setAsTable] = useState(false);
@@ -35,22 +31,38 @@ function ChartCard({ title, chart, table }: { title: string; chart: ReactNode; t
           {asTable ? t.finance.chartShort : t.finance.tableShort}
         </Button>
       </div>
-      <Suspense fallback={<p role="status">…</p>}>{asTable ? table : chart}</Suspense>
+      {asTable ? table : chart}
     </Card>
   );
 }
 
-/** "▲ 120,00 € (+8 %) zum Vormonat": arrow and sign as text, no colour of its own (more spending is not "bad" by itself). */
+/**
+ * "▲ +120,00 € (+8 %) zum Vormonat": arrow and sign as text, no colour of its own (more spending is not "bad" by
+ * itself). A percent that rounds to 0 says nothing next to an amount and is left out. In a narrow row (phone) the card
+ * shows "▲ 120,00 €" (the arrow is the sign) and the full sentence stays for screen readers; the note under the cards
+ * names the month once.
+ */
 function DeltaLine({ d, money }: { d: Delta; money: (m: number) => string }) {
-  const text =
-    d.diffMinor === 0
-      ? t.finance.ext.compare.unchanged
-      : t.finance.ext.compare.vsPrevious(
-          `${d.diffMinor > 0 ? '▲ +' : '▼ −'}${money(Math.abs(d.diffMinor))}${
-            d.percent === undefined ? '' : ` (${d.percent > 0 ? '+' : ''}${d.percent} %)`
-          }`,
-        );
-  return <span className={styles.delta}>{text}</span>;
+  if (d.diffMinor === 0)
+    return <span className={styles.delta}>{t.finance.ext.compare.unchanged}</span>;
+  const arrow = d.diffMinor > 0 ? '▲' : '▼';
+  const value = money(Math.abs(d.diffMinor));
+  const amount = `${d.diffMinor > 0 ? '+' : '−'}${value}`;
+  const percent =
+    d.percent === undefined || d.percent === 0
+      ? ''
+      : ` (${d.percent > 0 ? '+' : '−'}${Math.abs(d.percent)} %)`;
+  return (
+    <span className={styles.delta}>
+      <span className={styles.deltaFull}>
+        {t.finance.ext.compare.vsPrevious(`${arrow} ${amount}${percent}`)}
+      </span>
+      {/* Wraps after the arrow when a long amount does not fit the card; the amount itself never breaks. */}
+      <span className={styles.deltaShort} aria-hidden="true">
+        {arrow} <span className={styles.nowrap}>{value}</span>
+      </span>
+    </span>
+  );
 }
 
 /** `narrow`: the overview shares the row with a side panel, so the charts stay in one column. */
@@ -67,12 +79,22 @@ export function OverviewTab({
   const money = (minor: number) => formatMoney(minor, currency);
   const balance = totalBalance(data);
   const a = useAvailability(balance, currency);
-  const sum = monthSummary(data.txs, month);
-  const byCategory = topCategoryTotals(data.txs, month, data.categories);
-  const cmp = compareMonths(data.txs, month);
-  const hasPrevious = data.txs.some((x) => x.date.slice(0, 7) < month);
-  const trend = monthlyTrend(data.txs, month, 6);
-  const curve = monthBalanceSeries(data.accounts, data.txs, month, today());
+  // Every figure below walks all bookings: once per data read and month, not on every render.
+  const day = today();
+  const { sum, byCategory, cmp, hasPrevious, trend, curve } = useMemo(
+    () => ({
+      sum: monthSummary(data.txs, month),
+      byCategory: topCategoryTotals(data.txs, month, data.categories),
+      cmp: compareMonths(data.txs, month),
+      hasPrevious: data.txs.some((x) => x.date.slice(0, 7) < month),
+      trend: monthlyTrend(data.txs, month, 6),
+      curve: monthBalanceSeries(data.accounts, data.txs, month, day),
+    }),
+    [data, month, day],
+  );
+  // The breakdown line above the figures depends on "Verfügbar" (open invoices, subscriptions): the page waits for it
+  // (a few reads) instead of pushing the figures and charts down when it arrives (layout shift).
+  if (a === undefined) return null;
 
   return (
     <>
@@ -116,6 +138,11 @@ export function OverviewTab({
           </span>
           {hasPrevious ? <DeltaLine d={cmp.net} money={money} /> : null}
         </Card>
+        {hasPrevious && [cmp.income, cmp.expense, cmp.net].some((d) => d.diffMinor !== 0) ? (
+          <p className={styles.deltaNote} aria-hidden="true">
+            {t.finance.ext.compare.note}
+          </p>
+        ) : null}
       </div>
 
       <div className={`${styles.visuals} ${narrow ? styles.visualsOne : ''}`}>

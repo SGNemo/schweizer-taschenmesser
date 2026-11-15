@@ -85,6 +85,7 @@
 }
 .content :global(.ProseMirror code) {
   font-family: var(--font-mono);
+  /* Relative on purpose: inline code follows the heading or paragraph it sits in (no fixed size fits both). */
   font-size: 0.9em;
   background: var(--surface-2);
   border-radius: var(--radius-sm);

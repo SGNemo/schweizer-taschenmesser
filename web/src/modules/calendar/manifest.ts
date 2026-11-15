@@ -20,7 +20,7 @@ const manifest: ModuleManifest = {
     tabs: true,
     signature: 'calendarLeaf',
   },
-  version: 4,
+  version: 5,
   get description() {
     return t.calendar.meta.description;
   },

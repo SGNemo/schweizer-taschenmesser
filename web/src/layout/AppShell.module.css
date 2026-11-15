@@ -63,6 +63,8 @@
     grid-template-columns: minmax(0, 1fr);
   }
   .shell[data-cockpit='true'] .main {
+    --frame-bleed-end: initial;
+    scrollbar-gutter: auto;
     padding: var(--space-3) var(--space-3) var(--space-4);
   }
   .col {
@@ -98,6 +100,11 @@
     min-height: 0;
     overflow-y: auto;
     padding: var(--space-5) var(--page-gutter) var(--space-6);
+    /* Right edge flush with the top bar's (0b-R): a classic scrollbar (Windows) always keeps its gutter, short page
+       or long, and comes off the right padding; overlay scrollbars measure 0 (core/shell/scrollbars.ts). */
+    scrollbar-gutter: stable;
+    --frame-bleed-end: max(0px, calc(var(--page-gutter) - var(--scrollbar-w, 0px)));
+    padding-right: var(--frame-bleed-end);
   }
 }
 
@@ -147,13 +154,17 @@
 .syncError {
   color: var(--danger);
 }
-.spin {
+/* No endless spin (DESIGN-SPEC § 9): one pulse when a sync ends well (transform only, 0 under reduced motion). */
+.syncIcon,
+.pulse {
   display: grid;
-  animation: spin 1s linear infinite;
 }
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+.pulse {
+  animation: syncPulse var(--dur-slow) var(--ease-out) 1;
+}
+@keyframes syncPulse {
+  50% {
+    transform: scale(1.15);
   }
 }
 

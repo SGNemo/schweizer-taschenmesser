@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ATTENTION_LIMIT, collectAttention, rankAttention } from './contributions';
+import { collectAttention, rankAttention } from './contributions';
 import type { AttentionItem, ModuleManifest } from './types';
 
 const item = (id: string, tone: AttentionItem['tone'], rank?: number): AttentionItem => ({
@@ -21,9 +21,11 @@ describe('rankAttention', () => {
     ]);
     expect(out.map((i) => i.id)).toEqual(['d', 'a1', 'a2', 'w']);
   });
-  it('caps the list', () => {
+  it('does not cap the list: the overview counts what waits, a cut would make that number wrong', () => {
     const many = Array.from({ length: 20 }, (_, i) => item(`i${i}`, 'warning', i));
-    expect(rankAttention(many)).toHaveLength(ATTENTION_LIMIT);
+    expect(rankAttention(many)).toHaveLength(20);
+    // A caller with little room passes its own limit (the "Jetzt" row of a module page).
+    expect(rankAttention(many, 2).map((i) => i.id)).toEqual(['i0', 'i1']);
   });
   it('is empty for nothing', () => {
     expect(rankAttention([])).toEqual([]);
@@ -54,5 +56,36 @@ describe('collectAttention', () => {
     const source = vi.fn(async () => []);
     await collectAttention('2026-09-29', [manifest('a', async () => ({ default: source }))]);
     expect(source).toHaveBeenCalledWith({ today: '2026-09-29' });
+  });
+});
+
+describe('AttentionItem contract: due, coveredBy, foldSummary', () => {
+  it('takes the three optional fields and keeps them through ranking', () => {
+    const today: AttentionItem = {
+      ...item('calendar:next', 'accent'),
+      due: 'today',
+      coveredBy: ['agenda', 'today'],
+    };
+    const later: AttentionItem = {
+      ...item('budgets:warn:b1', 'warning'),
+      foldSummary: (n) => `${n} budgets almost used up`,
+    };
+    const [first, second] = rankAttention([later, today]);
+    expect(first).toBe(today);
+    expect(first!.due).toBe('today');
+    expect(first!.coveredBy).toEqual(['agenda', 'today']);
+    expect(second!.foldSummary?.(2)).toBe('2 budgets almost used up');
+  });
+  it('knows no other value: "due" is today or absent, a cover is the agenda or the "Heute" card', () => {
+    // @ts-expect-error – a day other than today is not "due" on the strip
+    const tomorrow: AttentionItem = { ...item('x', 'accent'), due: 'tomorrow' };
+    // @ts-expect-error – only the two blocks of the overview cover an entry
+    const widget: AttentionItem = { ...item('y', 'accent'), coveredBy: ['widget'] };
+    // @ts-expect-error – the summary is a function of the count
+    const text: AttentionItem = { ...item('z', 'warning'), foldSummary: '2 budgets' };
+    expect([tomorrow.id, widget.id, text.id]).toEqual(['x', 'y', 'z']);
+  });
+  it('the tone does not say "today": an accent entry without due is not due', () => {
+    expect(item('vault:act', 'accent').due).toBeUndefined();
   });
 });

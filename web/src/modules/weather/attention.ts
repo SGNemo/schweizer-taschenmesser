@@ -37,7 +37,10 @@ export function warningLine(w: WeatherWarning, today: string): string {
   }
 }
 
-/** Severe-weather hints for today and tomorrow (from the cached forecast); a hint, never red (`warning`). */
+/**
+ * Severe-weather hints for today and tomorrow (from the cached forecast); a hint, never red (`warning`).
+ * Only a warning for today carries `due: 'today'`, so it stays a card in "Jetzt wichtig"; tomorrow's folds.
+ */
 const source: AttentionSource = async ({ today }) =>
   (await warningsNow(today)).map((w, i): AttentionItem => ({
     id: `weather:${w.kind}:${w.date}`,
@@ -46,6 +49,7 @@ const source: AttentionSource = async ({ today }) =>
     title: warningLine(w, today),
     to: '/weather',
     rank: 10 + i,
+    ...(w.date === today ? { due: 'today' as const } : {}),
   }));
 
 export default source;

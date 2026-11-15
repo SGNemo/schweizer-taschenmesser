@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useLayoutEffect } from 'react';
 
 /**
  * Portal targets of the module head of `layout/AreaFrame` (Identity 4.0): the title row takes the page title
@@ -50,16 +50,54 @@ export function useHeroTargets(): HeroTargets | undefined {
 /**
  * What the page tells the frame (never the other way round): a `HeroSlot` claims its area for as long as it is
  * mounted, so the frame stops drawing its own default there (the signature, the headline figure); `PageTitle` hands
- * over the title text, so the eyebrow can name the module when the page's title is another one.
+ * over the title text, so the eyebrow can name the module when the page's title is another one; a page whose hint above
+ * the head or whose stage waits for its first reads (`identity.firstRead`) says when those reads are back
+ * (`useHeadReady`).
  */
 export interface HeroControls {
   /** Claims `area`; returns the release. */
   claim(area: HeroArea): () => void;
   setTitle(text: string | undefined): void;
+  /** The page's first reads are back (`identity.firstRead`): the frame shows the notice, head and page. */
+  settle(): void;
+  /** The frame's hold ended at its bound before the page settled (`FIRST_READ_HOLD_MS`, a slow network): parts that
+   * arrive late go where they push nothing that is already painted, for the rest of this visit. */
+  late: boolean;
+  /** Keeps the stage's room of the last visit (U01) while `on`: a head whose figure still waits for a late read. */
+  keepRoom(on: boolean): void;
 }
 
 export const HeroControlsContext = createContext<HeroControls | undefined>(undefined);
 
 export function useHeroControls(): HeroControls | undefined {
   return useContext(HeroControlsContext);
+}
+
+/**
+ * For the entry page of a module with `identity.firstRead`: `ready` once the reads its hint above
+ * the head or its stage depend on are back, with or without a hint (0b-8). Runs before paint, so the hint, the head and
+ * the page appear in one frame and nothing pushes the head or the page down. Returns `late`: the frame stopped waiting
+ * (`FIRST_READ_HOLD_MS`, a slow network) and painted before `ready`, so what arrives now must not move what is painted.
+ * Outside a frame it does nothing and returns false.
+ */
+export function useHeadReady(ready: boolean): boolean {
+  const controls = useHeroControls();
+  useLayoutEffect(() => {
+    if (ready) controls?.settle();
+  }, [ready, controls]);
+  return controls?.late ?? false;
+}
+
+/**
+ * While `on`, the stage keeps the room it took on the last visit of this route (U01), so a head whose figure and facts
+ * still wait for a late read (a slow network after the first-read hold, 0b-8) does not grow when they arrive.
+ * One flag per frame, not a count: one user per page (the weather's pending head). Outside a frame it does nothing.
+ */
+export function useKeepHeadRoom(on: boolean): void {
+  const controls = useHeroControls();
+  useLayoutEffect(() => {
+    if (!on || !controls) return;
+    controls.keepRoom(true);
+    return () => controls.keepRoom(false);
+  }, [on, controls]);
 }

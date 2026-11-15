@@ -4,6 +4,7 @@ import { Link, useSearchParams } from 'react-router';
 import { bus } from '@/core/events';
 import { useModuleStates } from '@/core/modules/activation';
 import { whenServicesSettled } from '@/core/modules/servicesReady';
+import { useSettled } from '@/core/status/settled';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import type { Stored } from '@/core/db/types';
 import { useUiStore } from '@/stores/ui';
@@ -24,9 +25,11 @@ import {
   ItemRow,
   PageAction,
   PageHeader,
+  PHONE_QUERY,
   Progress,
   Tabs,
   TextField,
+  useMediaQuery,
   useOpenParam,
 } from '@/ui';
 import { ItemEditor } from '../components/ItemEditor';
@@ -35,6 +38,7 @@ import { ListEditor, type ListTarget } from '../components/ListEditor';
 import {
   groupItems,
   listAsText,
+  namedSectionCount,
   PACKING_TEMPLATES,
   progress,
   sortItems,
@@ -80,6 +84,7 @@ export default function ListsPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const toast = useUiStore((x) => x.toast);
   const form = useRef<HTMLFormElement>(null);
+  const phone = useMediaQuery(PHONE_QUERY);
 
   useEffect(() => {
     void ensureShoppingList();
@@ -92,16 +97,6 @@ export default function ListsPage() {
     input?.scrollIntoView({ block: 'center' });
     input?.focus({ preventScroll: true });
   };
-  // The field lies below the rows, so the parameter waits until lists and items are there.
-  const loaded = (lists?.length ?? 0) > 0 && items !== undefined;
-  useEffect(() => {
-    if (params.get('new') && loaded && form.current) {
-      focusAdd();
-      const next = new URLSearchParams(params);
-      next.delete('new');
-      setParams(next, { replace: true });
-    }
-  }, [params, setParams, loaded]);
 
   // A search hit links here with ?open=<id> of a list or an item: show that list.
   useOpenParam(
@@ -137,10 +132,31 @@ export default function ListsPage() {
   const isShopping = current?.kind === 'shopping';
   const isPacking = current?.kind === 'packing';
   const sums = totals(shown);
-  const history = useLiveQuery(
-    async () => (current && isShopping ? await historyOf(current.id) : []),
+  // Tagged with the list it was read for: a re-read keeps the last answer until the new one is there.
+  const historyRead = useLiveQuery(
+    async () => ({
+      list: current?.id,
+      names: current && isShopping ? await historyOf(current.id) : [],
+    }),
     [current?.id, isShopping, items],
   );
+  const history = historyRead?.names;
+  // 0b-8: the list (rows, the add field as its last row, the suggestions) is painted once its items and, for a
+  // shopping list, its history are read, so the rows never arrive above an add field that is already there. Once
+  // shown it stays (a tab switch keeps the page while the new list is read).
+  // Bounded like the status lines (`useSettled`, 1.5 s): a read that hangs still shows the field. It never turns back.
+  const read = useSettled(!!current && items !== undefined && historyRead?.list === current.id);
+  // `?new=1` (Quick-Add, the "+ Neu" menu) focuses the add field. The field is painted with the rows (`read`), so the
+  // parameter waits for that, not only for the items.
+  const loaded = read && (lists?.length ?? 0) > 0 && items !== undefined;
+  useEffect(() => {
+    if (params.get('new') && loaded && form.current) {
+      focusAdd();
+      const next = new URLSearchParams(params);
+      next.delete('new');
+      setParams(next, { replace: true });
+    }
+  }, [params, setParams, loaded]);
   const suggestions = useMemo(
     () =>
       isShopping
@@ -230,12 +246,15 @@ export default function ListsPage() {
       title={i.name}
       titleFull
       done={i.done}
+      className={styles.itemRow}
       lead={
         <Checkbox
           label={i.name}
           labelHidden
           checked={i.done}
           onChange={(e) => tick(i, e.target.checked)}
+          // Ticked in grey, as in ToDos: the accent stays for the page's one action.
+          tone="neutral"
           data-row-tick
         />
       }
@@ -268,6 +287,14 @@ export default function ListsPage() {
   );
 
   const openCount = shown.filter((i) => !i.done).length;
+  // An empty list's next step is its first entry (follow-up (a) of 0b-8): the field's own button carries the verb and
+  // is the page's filled action on the desktop; "Neue Liste" steps back. On the phone the plus stays "Neue Liste"
+  // (decided), so the field's button is outlined there. One way in: no second button in the empty state.
+  // Only once the list is painted (`read`) and its items are in: before that the head keeps its usual emphasis.
+  const isEmpty = !!current && read && items !== undefined && shown.length === 0;
+  const submitVariant = !isEmpty ? 'ghost' : phone ? 'secondary' : 'primary';
+  // In every state: the phone keeps the field wide with the short verb (the placeholder says what goes in).
+  const submitLabel = isShopping && !phone ? t.lists.emptyAction : t.lists.addSubmit;
   const clearBought = () => {
     if (!current) return;
     const id = current.id;
@@ -277,7 +304,8 @@ export default function ListsPage() {
   };
   const pageMenu = current
     ? [
-        { id: 'add-item', label: t.lists.addItem, onSelect: focusAdd },
+        // On an empty list the field stands right under the empty state: no second way to it.
+        ...(isEmpty ? [] : [{ id: 'add-item', label: t.lists.addItem, onSelect: focusAdd }]),
         ...(isShopping && doneCount > 0
           ? [{ id: 'clear-bought', label: t.lists.clearBought(doneCount), onSelect: clearBought }]
           : []),
@@ -350,21 +378,32 @@ export default function ListsPage() {
       >
         {/* Rule 4: items are added in the list's last row; the head's action (the plus on the phone) is a new
             list, as `e2e/mobile-layout.spec.ts` pins it. */}
-        <PageAction short={t.nav.plusThings.list} onClick={() => setListTarget('new')}>
+        <PageAction
+          short={t.nav.plusThings.list}
+          plusName={t.lists.newList}
+          onClick={() => setListTarget('new')}
+          variant={isEmpty ? 'secondary' : 'primary'}
+        >
           <Icon name="plus" size={18} />
           {t.lists.newList}
         </PageAction>
         {/* Everything occasional: templates, editing, sharing, clearing a packing list. */}
         <StartDataMenu moduleId="lists" items={pageMenu} />
       </PageHeader>
-      {lists && current && isShopping ? (
+      {/* An empty list has no figure: "0 offen" says nothing the empty state does not say better. */}
+      {lists && current && read && isShopping && !isEmpty ? (
         <ListFigure
           name={current.name}
           open={openCount}
-          detail={groups.length > 0 ? t.lists.sectionsCount(groups.length) : undefined}
+          detail={
+            namedSectionCount(groups) > 0
+              ? t.lists.sectionsCount(namedSectionCount(groups))
+              : undefined
+          }
         />
       ) : null}
-      {lists && current ? (
+      {lists && current && !read ? <div aria-busy="true" data-testid="lists-reading" /> : null}
+      {lists && current && read ? (
         <>
           {/* The first row of the page: on the phone the "⋯" menu lies beside it (`besideContent`). An empty list
               has no such line; its empty state says it. */}
@@ -410,17 +449,21 @@ export default function ListsPage() {
               tripDate={current.tripDate}
             />
           ) : null}
-          {items && shown.length === 0 ? (
-            <EmptyState
-              title={t.lists.empty}
-              testId="lists-empty"
-              motif={
-                <SignatureMark
-                  id={current.kind === 'shopping' ? 'receipt' : 'todayCard'}
-                  size={64}
-                />
-              }
-            />
+          {isEmpty ? (
+            // M10: the next step is the field right below, with its verb button (`submitLabel`). The wrapper keeps
+            // the empty state from taking the page's free height (it pushed the field to the bottom edge).
+            <div className={styles.emptyHold}>
+              <EmptyState
+                title={t.lists.empty}
+                testId="lists-empty"
+                motif={
+                  <SignatureMark
+                    id={current.kind === 'shopping' ? 'receipt' : 'todayCard'}
+                    size={64}
+                  />
+                }
+              />
+            </div>
           ) : null}
           <div
             className={isShopping ? styles.paper : styles.sheet}
@@ -462,8 +505,8 @@ export default function ListsPage() {
                   autoComplete="off"
                 />
               ) : null}
-              <Button type="submit" variant="ghost">
-                {t.actions.add}
+              <Button type="submit" variant={submitVariant}>
+                {submitLabel}
               </Button>
             </form>
             <datalist id="lists-categories">

@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
 import type { Stored } from '@/core/db/types';
 import { ItemList } from '@/ui';
+import { createPageWidthStore, PageWidthContext } from '@/ui/pageWidth';
 import { BookmarkRow, bookmarkMenu } from '../components/BookmarkRow';
 import { itemRepo } from '../repo';
 import { itemSchema, type BookmarkItem } from '../schema';
@@ -50,6 +51,25 @@ describe('BookmarkRow', () => {
     expect(links[0]).toHaveAttribute('href', 'https://www.koch.de/pasta');
     expect(links[0]).toHaveAttribute('rel', 'noreferrer noopener');
     expect(within(row).getByText(/koch\.de.*#Kochen/)).toBeVisible(); // domain and tags as text
+  });
+
+  it('on the phone the line leaves the tags out; type and domain stay', () => {
+    const store = createPageWidthStore();
+    store.set(380);
+    render(
+      <PageWidthContext.Provider value={store}>
+        <ItemList label="Merkliste">
+          <BookmarkRow
+            item={stored({ title: 'Pasta', url: 'https://www.koch.de/pasta', tags: ['Kochen'] })}
+            onEdit={vi.fn()}
+            onFilterTag={vi.fn()}
+          />
+        </ItemList>
+      </PageWidthContext.Provider>,
+    );
+    const row = screen.getByRole('listitem');
+    expect(within(row).getByText(/koch\.de/)).toBeVisible();
+    expect(within(row).queryByText(/#Kochen/)).toBeNull();
   });
 
   it('an item without an address has no link: the title opens the editor', async () => {

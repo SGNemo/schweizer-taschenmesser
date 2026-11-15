@@ -24,7 +24,10 @@ async function open(page: Page, url: string) {
 
 /** Clicks "Speichern" and waits until the dialog is gone, i.e. the write has finished. */
 async function save(page: Page) {
-  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+    .click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
@@ -170,11 +173,15 @@ test('Unterlagen: cancellation deadline is flagged and on the calendar', async (
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Titel').fill('Handyvertrag');
   await dialog.getByLabel('Ende / Ablauf').fill('2026-12-31');
+  // A contract keeps its notice period beside the end date, without "Mehr Felder".
+  await dialog.getByLabel('Kategorie').selectOption({ label: 'Verträge' });
   await dialog.getByRole('spinbutton', { name: 'Kündigungsfrist' }).fill('90');
   await save(page);
-  const row = page.getByRole('button', { name: /Handyvertrag/ });
+  // The folder itself; "Verlängert: Handyvertrag" beside it is the row's own button (module package T-a).
+  const row = page.locator('main [data-row]', { hasText: 'Handyvertrag' });
   await expect(row).toContainText('Kündigen bis');
-  await expect(page.getByText('Jetzt kündigen')).toBeVisible();
+  // 90 days before 31 Dec is 2 Oct, three days after the test day: the folder names the deadline and the day.
+  await expect(page.getByText('Kündigungsfrist endet in 3 Tagen')).toBeVisible();
 
   await open(page, '/calendar?view=week&date=2026-10-02');
   await expect(calendarEntry(page, /Kündigungsfrist: 1 Unterlage/)).toBeVisible();
@@ -195,7 +202,7 @@ test.describe('Budgets & Sparziele', () => {
   test('a budget follows the spending of its finance category', async ({ page }) => {
     await enable(page, 'budgets');
     await open(page, '/finance?new=1');
-    const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
+    const dialog = page.getByRole('dialog', { name: 'Buchung eintragen' });
     await dialog.getByRole('button', { name: 'Ausgabe', exact: true }).click();
     await dialog.getByLabel('Betrag').fill('60,00');
     await dialog.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
@@ -203,7 +210,7 @@ test.describe('Budgets & Sparziele', () => {
 
     await open(page, '/budgets');
     await page
-      .getByRole('button', { name: /Budget (hinzufügen|eintragen)/ })
+      .getByRole('button', { name: /Limit (hinzufügen|eintragen)/ })
       .first() // the head's action (the phone's plus) and, while the list is empty, the empty state's one verb
       .click();
     const editor = page.getByRole('dialog');
@@ -261,7 +268,7 @@ test('Unterlagen: metadata, local file and expiry', async ({ page }) => {
 
   const row = page.getByRole('button', { name: /^Reisepass/ });
   await expect(row).toContainText('pass.txt');
-  await expect(page.getByText('Bald', { exact: true })).toBeVisible();
+  await expect(page.getByText('Läuft bald ab', { exact: true })).toBeVisible();
 
   // The file survives a reload and can be downloaded with its content.
   await page.reload();

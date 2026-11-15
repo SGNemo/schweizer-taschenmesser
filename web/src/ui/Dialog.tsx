@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useModuleIdentity, type ModuleIdentityMark } from '@/core/modules/identityContext';
 import { useBackClose } from '@/core/shell/useBackClose';
 import { t } from '@/strings';
@@ -91,7 +91,10 @@ export function Dialog({
   const [dragY, setDragY] = useState(0);
   const dragFrom = useRef<number | null>(null);
 
-  useEffect(() => {
+  // A layout effect: closing must happen before the passive effects of the same commit, or a page
+  // that renders at once behind the closing modal (code already loaded) is still inert when it
+  // focuses its field (`?new=1` from Quick-Add).
+  useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
     if (open && !el.open) {
