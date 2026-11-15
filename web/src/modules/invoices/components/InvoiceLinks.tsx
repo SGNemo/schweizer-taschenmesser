@@ -26,9 +26,11 @@ export interface LinkFact {
  */
 export function useInvoiceLinkFacts(invoiceId: string, onLeave?: () => void): LinkFact[] {
   const links = useLinks({ module: 'invoices', id: invoiceId });
-  // Only while the planner is on (`plannedDay` answers nothing otherwise). Dexie reads only.
+  // Only while the planner is on (`plannedDay` answers nothing otherwise). Dexie reads only. A native `async`
+  // function: a plain wrapper loses Dexie's read tracking after the first `await`, so a day the planner gives
+  // the invoice while the page is open (a noted reminder takes it out of „Frist vorbei“) would never show.
   const planned = useLiveQuery(
-    () => plannedDay({ module: 'invoices', id: invoiceId }),
+    async () => plannedDay({ module: 'invoices', id: invoiceId }),
     [invoiceId],
   );
   const l = t.invoices.links;
