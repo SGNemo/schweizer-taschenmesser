@@ -6,7 +6,7 @@ import { db } from '@/core/db/db';
 import { setNow } from '@/core/time/now';
 import { LiveSession } from '../components/LiveSession';
 import { SessionEditor } from '../components/SessionEditor';
-import { loadLive, startLive, type LiveState } from '../live';
+import { loadLive, saveLive, startLive, type LiveState } from '../live';
 import { sessionRepo } from '../repo';
 
 let clock = new Date(2026, 10, 8, 18, 0).getTime();
@@ -22,9 +22,15 @@ function Harness({ initial, restSec = 90 }: { initial: LiveState; restSec?: numb
       ]}
       restSec={restSec}
       own={[]}
-      onChange={setState}
+      onChange={(next) => {
+        saveLive(next);
+        setState(next);
+      }}
       onClose={() => {}}
-      onEnd={() => setState(undefined)}
+      onEnd={() => {
+        saveLive(undefined);
+        setState(undefined);
+      }}
     />
   );
 }

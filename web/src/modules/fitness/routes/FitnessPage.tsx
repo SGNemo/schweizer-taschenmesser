@@ -96,9 +96,15 @@ export default function FitnessPage() {
     return stored;
   });
   const [liveOpen, setLiveOpen] = useState(false);
+  /** Every change of the running session is kept on this device at once (reload, app switch). */
+  const putLive = (next: LiveState | undefined) => {
+    saveLive(next);
+    setLive(next);
+  };
   function start(from?: Pick<Session, 'title' | 'exercises'>, planId?: string) {
     setSession(null);
-    if (!live) setLive(startLive(from, { date: day, time: nowTime(), now: now() }, planId));
+    // One running session per device: a second start opens the one that runs.
+    if (!live) putLive(startLive(from, { date: day, time: nowTime(), now: now() }, planId));
     setLiveOpen(true);
     close();
   }
@@ -404,7 +410,8 @@ export default function FitnessPage() {
         sessions={sessions ?? []}
         templates={templates ?? []}
         onClose={close}
-        onStart={start}
+        // While a session runs, the form offers no second start (its fields would be lost).
+        onStart={live ? undefined : start}
       />
       <LiveSession
         state={liveOpen ? live : undefined}
@@ -413,10 +420,10 @@ export default function FitnessPage() {
         own={exerciseSuggestions(sessions ?? [], builtInExercises()).filter(
           (n) => !builtInExercises().includes(n),
         )}
-        onChange={setLive}
+        onChange={putLive}
         onClose={() => setLiveOpen(false)}
         onEnd={() => {
-          setLive(undefined);
+          putLive(undefined);
           setLiveOpen(false);
         }}
       />

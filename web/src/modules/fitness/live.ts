@@ -56,7 +56,7 @@ export function finishSet(
   at: { now: number; restSec: number },
 ): LiveState {
   const ex = state.exercises[state.index];
-  if (!ex) return state;
+  if (!ex || (ex.log?.length ?? 0) >= MAX_SETS) return state;
   const exercises = state.exercises.map((e, i) =>
     i === state.index ? withLog(e, [...(e.log ?? []), set]) : e,
   );
@@ -78,15 +78,22 @@ export function nextSetDraft(e: Exercise | undefined, last: Exercise | undefined
   };
 }
 
-/** The session as it stands: exercises with a name, the minutes since the start. */
+/** Most exercises in a session and sets per exercise (the schema's limits). */
+export const MAX_EXERCISES = 30;
+export const MAX_SETS = 50;
+
+/**
+ * The session as it stands: only the exercises with at least one set done (a plan's other rows are not
+ * logged as done), the minutes since the start (at least one).
+ */
 export function liveSession(state: LiveState, now: number): Session {
   const minutes = Math.round((now - state.startedAt) / 60_000);
   return {
     date: state.date,
     time: state.time,
     ...(state.title ? { title: state.title } : {}),
-    exercises: state.exercises.filter((e) => e.name.trim()),
-    ...(minutes >= 1 ? { durationMin: Math.min(1440, minutes) } : {}),
+    exercises: state.exercises.filter((e) => e.name.trim() && e.log?.length),
+    durationMin: Math.min(1440, Math.max(1, minutes)),
   };
 }
 
