@@ -9128,7 +9128,7 @@ export const de = {
         hibernate: 'Ruhezustand',
         signOut: 'Abmelden',
       },
-      asking: 'Entsperre dieses Handy. Danach geht der Auftrag an den PC.',
+      asking: 'Bestätige auf diesem Handy. Danach geht der Auftrag an den PC.',
       counting: {
         shutDown: 'Der PC schaltet sich in Kürze aus. Abbrechen geht hier oder am PC.',
         restart: 'Der PC startet in Kürze neu. Abbrechen geht hier oder am PC.',
@@ -9159,6 +9159,7 @@ export const de = {
           'Der PC schaltet sich aus. Fragt ein Programm noch nach dem Speichern, bleibt er an.',
       },
       cancelled: 'Abgebrochen. Der PC bleibt an.',
+      cancelFailed: 'Abbrechen kam nicht an. Am PC abbrechen.',
       notGranted:
         'Am PC ist Ausschalten für dieses Handy aus. Am PC unter Einstellungen → Fernsteuerung „Darf den PC ausschalten“ einschalten.',
       locked: 'Der PC ist gesperrt. Ausschalten geht nur, solange er entsperrt ist.',
@@ -9166,7 +9167,7 @@ export const de = {
       failed: 'Das hat am PC nicht geklappt.',
       unavailable:
         'Dieses Handy kann seine Bildschirmsperre für Nemo nicht abfragen. Ausschalten geht deshalb nur am PC.',
-      unlock: 'Nicht entsperrt. Es wurde nichts gesendet.',
+      unlock: 'Nicht bestätigt. Es wurde nichts gesendet.',
       dismiss: 'Ausblenden',
     },
   },

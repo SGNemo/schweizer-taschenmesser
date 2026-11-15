@@ -94,6 +94,8 @@ export type RemotePowerPhase =
   | { kind: 'done'; action?: RemotePowerVerb }
   /** The countdown was stopped (at the PC or from here): the PC stays on. */
   | { kind: 'cancelled' }
+  /** "Abbrechen" did not reach the PC (also not on a new session): it has to be done there. */
+  | { kind: 'cancel-failed' }
   | { kind: 'refused'; reason: 'not-granted' | 'locked' | 'limit' | 'failed' | 'unavailable' }
   /** The phone's unlock was dismissed: nothing was sent. */
   | { kind: 'unlock' };
@@ -683,7 +685,6 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
     action: RemotePowerAction,
     despite: boolean,
     lang: string | undefined,
-    again = false,
   ): Promise<void> => {
     const mine = ++powerCalls;
     const latest = () => mine === powerCalls;
@@ -746,11 +747,25 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
         }
         if (action !== 'cancel') return back();
         // "Abbrechen" must arrive: once more on a new session (it needs no prompt), then say so
-        if (!again && (view.kind === 'disconnected' || view.kind === 'idle')) {
-          await powerRun('cancel', false, lang, true);
-          if (powerView.phase.kind !== 'cancel-failed') return;
+        if (view.kind === 'disconnected' || view.kind === 'idle') {
+          await open();
+          const next = session;
+          if (view.kind === 'connected' && next !== undefined && powerView.info !== null) {
+            try {
+              await deps.remote.power(next, 'cancel', false, lang);
+              return;
+            } catch {
+              if (session === next) {
+                stopWaiting();
+                session = undefined;
+                drop(next);
+                padLost();
+                set({ kind: 'disconnected' });
+              }
+            }
+          }
         }
-        if (latest() || again) setPhase({ kind: 'cancel-failed' });
+        setPhase({ kind: 'cancel-failed' });
       } else setPhase({ kind: 'refused', reason: 'failed' });
     }
   };
@@ -907,6 +922,7 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       if (
         kind === 'refused' ||
         kind === 'cancelled' ||
+        kind === 'cancel-failed' ||
         kind === 'done' ||
         kind === 'unlock' ||
         kind === 'working'

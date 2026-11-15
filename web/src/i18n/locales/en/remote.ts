@@ -131,7 +131,7 @@ export const remote: Strings['remote'] = {
       hibernate: 'Hibernate',
       signOut: 'Sign out',
     },
-    asking: 'Unlock this phone; then it is sent to the PC.',
+    asking: 'Confirm on this phone; then it is sent to the PC.',
     counting: {
       shutDown: 'The PC shuts down shortly. You can cancel here or at the PC.',
       restart: 'The PC restarts shortly. You can cancel here or at the PC.',
@@ -160,6 +160,7 @@ export const remote: Strings['remote'] = {
       unknown: 'The PC is switching off. If a program still asks about saving, it stays on.',
     },
     cancelled: 'Cancelled. The PC stays on.',
+    cancelFailed: 'Cancel did not reach the PC. Cancel at the PC.',
     notGranted:
       'Switching off is off for this phone at the PC. Turn on “May switch the PC off” under Settings → Remote control at the PC.',
     locked: 'The PC is locked. Switching off works only while it is unlocked.',
@@ -167,7 +168,7 @@ export const remote: Strings['remote'] = {
     failed: 'That did not work at the PC.',
     unavailable:
       'This phone cannot ask for its screen lock for Nemo, so switching off works only at the PC.',
-    unlock: 'Not unlocked. Nothing was sent.',
+    unlock: 'Not confirmed. Nothing was sent.',
     dismiss: 'Hide',
   },
 };

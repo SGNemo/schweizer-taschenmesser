@@ -150,6 +150,8 @@ export function powerText(phase: RemotePowerPhase): string | undefined {
       return p.done[phase.action ? POWER_KEY[phase.action] : 'unknown'];
     case 'cancelled':
       return p.cancelled;
+    case 'cancel-failed':
+      return p.cancelFailed;
     case 'unlock':
       return p.unlock;
     case 'refused':
