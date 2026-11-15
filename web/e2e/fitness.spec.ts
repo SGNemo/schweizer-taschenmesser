@@ -229,8 +229,10 @@ test('a template: saved from the form, filled into a new session with one tap', 
   const discard = page.getByRole('button', { name: /Verwerfen|Nicht speichern/ });
   if (await discard.count()) await discard.first().click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
-
-  await page.getByRole('button', { name: 'Einheit eintragen', exact: true }).click();
+  // The closing form's own „Einheit eintragen“ (its submit) leaves the DOM a moment later: wait for it.
+  const add = page.getByRole('button', { name: 'Einheit eintragen', exact: true });
+  await expect(add).toHaveCount(1);
+  await add.click();
   dialog = page.getByRole('dialog', { name: 'Einheit eintragen' });
   await dialog.getByRole('button', { name: 'Vorlage Einheit übernehmen' }).click();
   await expect(dialog.getByRole('combobox', { name: 'Übung' })).toHaveValue('Rudern');
