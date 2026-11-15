@@ -104,3 +104,42 @@ describe('states and badges', () => {
     expect(screen.getByText('Beta').className).toMatch(/info/);
   });
 });
+
+describe('ItemRow below', () => {
+  it('puts the line between the title and the ⋯ in the DOM (reading and tab order)', () => {
+    render(
+      <ItemList label="Liste">
+        <ItemRow
+          title="Ding"
+          onOpen={() => undefined}
+          below={<button type="button">Zur Mahnung</button>}
+          menu={[{ id: 'a', label: 'A', onSelect: () => undefined }]}
+          menuLabel="Aktionen"
+        />
+      </ItemList>,
+    );
+    const buttons = within(screen.getByRole('listitem'))
+      .getAllByRole('button')
+      .map((b) => b.getAttribute('aria-label') ?? b.textContent);
+    expect(buttons).toEqual(['Ding', 'Zur Mahnung', 'Aktionen']);
+  });
+
+  it('a disabled menu entry is said, not offered', async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    render(
+      <ItemList label="Liste">
+        <ItemRow
+          title="Ding"
+          menu={[{ id: 'gone', label: 'Weg', disabled: true, onSelect }]}
+          menuLabel="Aktionen"
+        />
+      </ItemList>,
+    );
+    await user.click(screen.getByRole('button', { name: 'Aktionen' }));
+    const item = screen.getByRole('menuitem', { name: 'Weg' });
+    expect(item).toHaveAttribute('aria-disabled', 'true');
+    await user.click(item);
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+});

@@ -321,6 +321,7 @@ export function ItemRow({
   controls = 'hover',
   weight,
   recessed,
+  below,
   children,
 }: {
   title: ReactNode;
@@ -370,6 +371,11 @@ export function ItemRow({
   weight?: 'next';
   /** A fixed block inside a list (an appointment in a day): a sunken tone, no hairline, never the hover tone. */
   recessed?: boolean;
+  /**
+   * A line under the title and meta (a row's links as chips): in the DOM after the main element and before `end`
+   * and the menu, so the reading and tab order is title → line → ⋯. `children` come after the whole row instead.
+   */
+  below?: ReactNode;
   children?: ReactNode;
 }) {
   const body = (
@@ -393,6 +399,25 @@ export function ItemRow({
   );
   const swipe = useSwipeRow({ onSwipeRight, onSwipeLeft });
   const [menuOpen, setMenuOpen] = useState(false);
+  const main = href ? (
+    <a className={styles.main} data-row href={href} target="_blank" rel="noreferrer noopener">
+      {body}
+    </a>
+  ) : onOpen ? (
+    <button
+      type="button"
+      className={styles.main}
+      data-row
+      aria-current={current ? 'true' : undefined}
+      onClick={onOpen}
+    >
+      {body}
+    </button>
+  ) : (
+    <div className={`${styles.main} ${styles.static}`} data-row tabIndex={-1}>
+      {body}
+    </div>
+  );
   return (
     <li
       onContextMenu={
@@ -437,24 +462,13 @@ export function ItemRow({
           />
         ) : null}
         {lead}
-        {href ? (
-          <a className={styles.main} data-row href={href} target="_blank" rel="noreferrer noopener">
-            {body}
-          </a>
-        ) : onOpen ? (
-          <button
-            type="button"
-            className={styles.main}
-            data-row
-            aria-current={current ? 'true' : undefined}
-            onClick={onOpen}
-          >
-            {body}
-          </button>
-        ) : (
-          <div className={`${styles.main} ${styles.static}`} data-row tabIndex={-1}>
-            {body}
+        {below ? (
+          <div className={styles.stack}>
+            {main}
+            <div className={styles.below}>{below}</div>
           </div>
+        ) : (
+          main
         )}
         {end}
         {actions || menu?.length ? (

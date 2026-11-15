@@ -22,7 +22,6 @@ import {
   IconButton,
   GroupedList,
   ItemList,
-  ItemRow,
   PageHeader,
   PHONE_QUERY,
   RowMenu,
@@ -39,8 +38,7 @@ import type { BoardDay, BoardRow } from '../board';
 import { Capture } from '../components/Capture';
 import { CaptureDialog } from '../components/CaptureDialog';
 import { useAbilities, useRowMenu } from '../components/rowMenu';
-import { Part, ThingRow } from '../components/ThingRow';
-import { compact } from '../components/capacity';
+import { ThingRow, WaitRow } from '../components/ThingRow';
 import { appointmentsOf, Context, nextDeadlinesOf } from '../components/Context';
 import { DayPage, DayPageLoading } from '../components/DayPage';
 import { LateGroup, LateRow } from '../components/LateGroup';
@@ -596,21 +594,12 @@ export default function PlannerPage() {
                         ? t.planner.row.excludedState
                         : explainWait({ reason: w.reason, bumpedBy: w.bumpedBy }, nameOf);
                     return (
-                      <ItemRow
+                      <WaitRow
                         key={w.unitId}
-                        title={
-                          <span>
-                            {w.title}
-                            {w.of > 1 ? <Part k={w.k} of={w.of} /> : null}
-                          </span>
-                        }
-                        titleFull
-                        // The reason only behind „Warum hier?“, like on the board (U12).
-                        // A row without a menu (no entry) keeps its reason in sight.
-                        meta={why === w.unitId || !w.entry ? reason : undefined}
-                        end={<span className={styles.minutes}>{compact(w.minutes)}</span>}
+                        row={w}
+                        reason={reason}
+                        why={why === w.unitId}
                         menu={rowMenu(w, undefined, reason)}
-                        menuLabel={t.planner.row.menu(w.title)}
                       />
                     );
                   })}

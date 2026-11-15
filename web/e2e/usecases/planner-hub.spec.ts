@@ -105,9 +105,9 @@ const MAX: Record<string, Record<Metric | 'seconds', number>> = {
   // in „Frist vorbei“, which is one folded row above the day on the phone (mockup a-412) – one tap to unfold it.
   // prettier-ignore
   'C2 Quelle öffnen: Rechnung · pixel-7': { taps: 2, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 9 },
-  // before R1: 3 taps, 7 s
+  // K1b: the chip „Aus Mail“ under the title – one tap (R1: ⋯ → „Zur Mail“, 2 taps, 6 s; before R1: 3 taps, 7 s)
   // prettier-ignore
-  'C3 Quelle öffnen: Mail · desktop-chrome': { taps: 2, keys: 0, screens: 2, dialogs: 0, detours: 0, seconds: 6 },
+  'C3 Quelle öffnen: Mail · desktop-chrome': { taps: 1, keys: 0, screens: 2, dialogs: 0, detours: 0, seconds: 5 },
   // as before R1
   // prettier-ignore
   'D Rest verteilen · desktop-chrome': { taps: 2, keys: 0, screens: 1, dialogs: 1, detours: 0, seconds: 7 },
@@ -120,13 +120,14 @@ const MAX: Record<string, Record<Metric | 'seconds', number>> = {
   // as before R1
   // prettier-ignore
   'E Ding über das Planer-Feld · pixel-7': { taps: 0, keys: 14, screens: 1, dialogs: 0, detours: 0, seconds: 8 },
-  // before R1: 6 taps, 20 s
+  // K1b: „Bezahlt …“ in the lead slot → the invoice's pay step → „Bezahlt“ → back; no tick looked for in vain
+  // (R1: 4 taps, 1 detour, 18 s; before R1: 6 taps, 20 s)
   // prettier-ignore
-  'F Überfällige Rechnung begleichen · desktop-chrome': { taps: 4, keys: 0, screens: 3, dialogs: 1, detours: 1, seconds: 18 },
-  // before R1: 6 taps, 20 s. RAISED in R2 (4 taps, 18 s → 5 taps, 19 s; maintainer to confirm): the same unfolding
-  // tap as in C2; „Bezahlt …“ in the row (K1b / S1) is what shortens this path again.
+  'F Überfällige Rechnung begleichen · desktop-chrome': { taps: 3, keys: 0, screens: 3, dialogs: 1, detours: 0, seconds: 12 },
+  // K1b: as on the desktop plus the unfolding tap of „Frist vorbei“ (R2: 5 taps, 1 detour, 19 s; before R1: 6 taps,
+  // 20 s)
   // prettier-ignore
-  'F Überfällige Rechnung begleichen · pixel-7': { taps: 5, keys: 0, screens: 3, dialogs: 1, detours: 1, seconds: 19 },
+  'F Überfällige Rechnung begleichen · pixel-7': { taps: 4, keys: 0, screens: 3, dialogs: 1, detours: 0, seconds: 13 },
 };
 
 /** The targets of R1 (HANDOFF §9) on the screen the page opens on, per window. */
@@ -370,9 +371,36 @@ async function prepare(page: Page, scene: 'week' | 'empty', opts: { mail?: boole
         open.onsuccess = () => {
           const db = open.result;
           const tx = db.transaction(
-            ['_modules', 'todos_list', 'todos_task', 'invoices_invoice', 'planner_item'],
+            [
+              '_modules',
+              'todos_list',
+              'todos_task',
+              'invoices_invoice',
+              'planner_item',
+              ...(mail ? ['mail_thread'] : []),
+            ],
             'readwrite',
           );
+          // K1b: the thread is in this device's mail cache (as after „In den Plan“ from the mail list), so the
+          // link is alive and its chip leads into the app. A made-up demo row, no account.
+          if (mail)
+            tx.objectStore('mail_thread').put({
+              ...base,
+              id: 'demo|demo-thread',
+              accountKey: 'demo',
+              threadId: 'demo-thread',
+              sortKey: 1,
+              unread: false,
+              inbox: true,
+              demo: {
+                from: { name: 'Fahrradladen Beispiel', email: 'shop@example.org' },
+                subject: 'Angebot',
+                snippet: 'Unser Angebot',
+                messageCount: 1,
+                hasAttachment: false,
+                labelIds: ['INBOX'],
+              },
+            });
           const modules = ['todos', 'planner', ...(scene === 'week' ? ['invoices'] : [])];
           for (const id of [...modules, ...(mail ? ['mail'] : [])])
             tx.objectStore('_modules').put({ ...base, id, enabled: true, dataPolicy: null });
@@ -1106,7 +1134,8 @@ test('C2 Quelle öffnen: Rechnung', async ({ page, isMobile }, info) => {
     .click();
   await expect(page.getByRole('menuitem').first()).toBeVisible();
   const menu = await page.getByRole('menuitem').allInnerTexts();
-  expect(menu).toEqual(['Öffnen', 'Nicht planen']);
+  // K1b: the source's main action leads the menu (a route to its pay step), then what is left on no day.
+  expect(menu).toEqual(['Bezahlt …', 'Öffnen', 'Nicht planen']);
   await page.keyboard.press('Escape');
   await expect(page.getByRole('menuitem')).toHaveCount(0);
   await m.nav(row.locator('button[data-row]'), /Rechnungen/);
@@ -1133,7 +1162,24 @@ test('C3 Quelle öffnen: Mail', async ({ page, isMobile }, info) => {
   await showPreview(page);
   await prepare(page, 'week', { mail: true });
   const m = new Meter(page, false);
-  const menu = await openSource(page, m, 'Angebot Fahrradladen prüfen', 'Zur Mail', /E-Mail/);
+  // K1b: the link is a chip under the row's title – one tap, no menu (before K1b: ⋯ → „Zur Mail“, 2 taps).
+  await m.go('/planner');
+  await expect(things(page, MONDAY)).not.toHaveCount(0);
+  await settledCount(things(page, MONDAY));
+  const row = things(page, MONDAY).filter({ hasText: 'Angebot Fahrradladen prüfen' });
+  const chip = row.getByRole('button', { name: /^Aus Mail: Angebot$/ });
+  await expect(chip).toBeEnabled();
+  // The ⋯ lists the same link under „Verknüpft“ (read, not counted); the old hard-coded „Zur Mail“ is gone.
+  await row
+    .getByRole('button', { name: 'Aktionen für Angebot Fahrradladen prüfen', exact: true })
+    .click();
+  await expect(page.getByRole('menuitem').first()).toBeVisible();
+  const menu = await page.getByRole('menuitem').allInnerTexts();
+  expect(menu).toContain('Aus Mail: Angebot');
+  expect(menu).not.toContain('Zur Mail');
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('menuitem')).toHaveCount(0);
+  await m.nav(chip, /E-Mail/);
   // No mail account here (Gmail needs an OAuth login): the way is measured, the mail itself is not shown.
   const text = await page.locator('main').innerText();
   facts(info, 'C3', {
@@ -1243,32 +1289,28 @@ test('F Überfällige Rechnung begleichen', async ({ page, isMobile }, info) => 
   const group = await lateGroup(page, m);
   const row = group.locator('li').filter({ hasText: 'Stadtwerke Musterstadt bezahlen' });
   await expect(row).toHaveCount(1);
-  // The person looks for the tick the ToDo rows have: an invoice row has none (its lead slot shows the source's
-  // icon; „Bezahlt …“ in that slot is package K1b).
+  // K1b: the lead slot holds „Bezahlt …“ (an outlined glyph, its word in the name and the tooltip) – no tick to
+  // look for in vain. It is a route: the planner writes nothing, the invoice's own pay step asks once.
   const tick = await row.getByRole('checkbox').count();
-  if (tick === 0) m.detour();
-  // The ⋯ cannot pay either (read, not counted).
+  // The ⋯ names the same step first (read, not counted).
   await row
     .getByRole('button', { name: 'Aktionen für Stadtwerke Musterstadt bezahlen', exact: true })
     .click();
   await expect(page.getByRole('menuitem').first()).toBeVisible();
   const menu = await page.getByRole('menuitem').allInnerTexts();
   const payInMenu = menu.some((item) => /bezahl|Erledigt/i.test(item));
+  expect(menu[0]).toBe('Bezahlt …');
   await page.keyboard.press('Escape');
   await expect(page.getByRole('menuitem')).toHaveCount(0);
-  // The way on: the title leaves the planner and lands in the invoice's edit form, which cannot pay either.
-  await m.nav(row.locator('button[data-row]'), /Rechnungen/);
-  const dialog = page.getByRole('dialog', { name: 'Rechnung bearbeiten' });
+  await m.nav(
+    row.getByRole('button', { name: 'Bezahlt …: Stadtwerke Musterstadt bezahlen', exact: true }),
+    /Rechnungen/,
+  );
+  const dialog = page.getByRole('dialog', { name: 'Stadtwerke Musterstadt bezahlt?' });
   await expect(dialog).toBeVisible();
   m.dialog();
-  await m.tap(dialog.getByRole('button', { name: 'Abbrechen' }));
+  await m.tap(dialog.getByRole('button', { name: 'Bezahlt', exact: true }));
   await expect(dialog).toHaveCount(0);
-  await m.tap(
-    page
-      .locator('main li')
-      .filter({ hasText: 'Stadtwerke Musterstadt' })
-      .getByRole('button', { name: /Als bezahlt markieren/ }),
-  );
   await expect(page.getByText('Als bezahlt markiert.')).toBeVisible();
   // Back to the plan.
   await m.back(/Planer/);

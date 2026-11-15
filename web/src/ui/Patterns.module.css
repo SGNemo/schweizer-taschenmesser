@@ -279,6 +279,14 @@
   min-height: var(--touch);
   justify-content: center;
 }
+/* A row with a line under its title (`below`): title and line stack in the main column; the line is no part of the
+   title's button (its own controls are its own tab stops). */
+.stack {
+  flex: 1 1 9rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
 .rows .main {
   min-width: 0;
   min-height: var(--row-h);
@@ -311,6 +319,17 @@
 }
 .splitMain .rows .main + * {
   margin-left: auto;
+}
+/* After the list rules and stronger than them: inside the stack the main element takes no flex basis (it would be a
+   height in a column) and the line under it is not pushed to the end like a row's status. */
+.row .stack > .main.main {
+  flex: none;
+  min-width: 0;
+}
+.row .stack > .below.below {
+  min-width: 0;
+  margin-left: 0;
+  padding-bottom: var(--space-2);
 }
 .static {
   cursor: default;
