@@ -44,6 +44,7 @@ import {
   markDue,
   pin,
   sourceAbilities,
+  type SourceAbility,
   unmarkDue,
   unpin,
 } from '../actions';
@@ -51,6 +52,7 @@ import type { BoardDay, BoardRow, WaitingRow } from '../board';
 import { capacityLabel, capacityShort, compact } from '../components/capacity';
 import { DaySetup } from '../components/DaySetup';
 import { DaySheet } from '../components/DaySheet';
+import { RowChoice, type RowChoiceState } from '../components/RowChoice';
 import { SETUP_DAYS } from '../daySetup';
 import { restOffered } from '../rest';
 import { PlanPreview, type PreviewData } from '../components/PlanPreview';
@@ -140,7 +142,9 @@ export default function PlannerPage() {
   );
 
   // Which sources take a tick or „Später“ (an invoice, a cancellation: no – that stays in its module).
-  const [abilities, setAbilities] = useState<Record<string, { done: boolean; assign: boolean }>>();
+  const [abilities, setAbilities] = useState<Record<string, SourceAbility>>();
+  // The open choice behind „Als Pause …“ / „Dauer …“ of a row.
+  const [choice, setChoice] = useState<RowChoiceState>();
   useEffect(() => {
     let live = true;
     void sourceAbilities().then((a) => live && setAbilities(a));
@@ -151,6 +155,9 @@ export default function PlannerPage() {
   // Until they are known every source counts as able (no jump for ToDo rows); `markDone` checks again.
   const canDone = (moduleId: string) => abilities?.[moduleId]?.done ?? true;
   const canAssign = (moduleId: string) => abilities?.[moduleId]?.assign ?? true;
+  // Shown only once the source is known to take them (a missing ability hides, never offers in vain).
+  const canRemove = (moduleId: string) => abilities?.[moduleId]?.remove === true;
+  const canEstimate = (moduleId: string) => abilities?.[moduleId]?.estimate === true;
 
   const answered = !!pending || !!ask || !!sayLine;
   useEffect(() => {
@@ -466,6 +473,29 @@ export default function PlannerPage() {
         : []),
       ...(canAssign(e.moduleId)
         ? [{ id: 'later', label: t.planner.row.later, onSelect: () => void later(e, titles) }]
+        : []),
+      ...(canEstimate(e.moduleId)
+        ? [
+            {
+              id: 'estimate',
+              label: t.planner.row.estimate,
+              onSelect: () =>
+                setChoice({
+                  kind: 'estimate',
+                  entry: e,
+                  ...(e.durationMin !== undefined ? { current: e.durationMin } : {}),
+                }),
+            },
+          ]
+        : []),
+      ...(canRemove(e.moduleId)
+        ? [
+            {
+              id: 'asBreak',
+              label: t.planner.row.asBreak,
+              onSelect: () => setChoice({ kind: 'break', entry: e, date: day }),
+            },
+          ]
         : []),
       ...(excluded
         ? [{ id: 'include', label: t.planner.row.include, onSelect: () => void include(e, titles) }]
@@ -899,6 +929,7 @@ export default function PlannerPage() {
         </SplitView>
       ) : null}
 
+      <RowChoice choice={choice} titles={titles} onClose={() => setChoice(undefined)} />
       <DaySheet
         day={board?.days.find((d) => d.date === sheetDate)}
         titles={titles}

@@ -28,6 +28,8 @@ export interface CorpusCase {
   fitness?: true;
   /** Run with the Uhr module on (`ParseOptions.place`, a stub that knows Tokio, New York and Lisbon). */
   place?: true;
+  /** Run with the planner on (`ParseOptions.breaks`): „Pause …“ / „Freizeit …“ lines. */
+  breaks?: true;
 }
 
 export const CORPUS_NOW = new Date(2026, 9, 29, 10, 0);
@@ -236,6 +238,33 @@ export const CORPUS: CorpusCase[] = [
     date: '2026-11-03',
     hardDue: true,
   },
+  // Breaks (use case „Wochenende retten“, package 4a): with the planner on a line that starts with „Pause“ or
+  // „Freizeit“ is a blocker of its day; the day, the span or the length only when typed.
+  {
+    from: 'break',
+    breaks: true,
+    text: 'Pause 2 Std Zocken',
+    type: 'break',
+    title: 'Zocken',
+    estimateMin: 120,
+  },
+  {
+    from: 'break',
+    breaks: true,
+    text: 'Freizeit Sa 14 bis 16 Uhr',
+    type: 'break',
+    title: 'Freizeit',
+    date: '2026-10-31',
+    time: '14:00',
+    endTime: '16:00',
+  },
+  { from: 'break', breaks: true, text: 'Pause morgen', type: 'break', date: '2026-10-30' },
+  { from: 'break', breaks: true, text: 'Pause', type: 'break', title: 'Pause' },
+  // The app never guesses what leisure is: a plain „Zocken“ stays a ToDo, and so does „Pause …“ with the planner off.
+  { from: 'break', breaks: true, text: 'Zocken', type: 'todo', title: 'Zocken' },
+  { from: 'break', breaks: true, text: 'Pausenbrot kaufen', type: 'todo' },
+  { from: 'break', breaks: true, text: 'Pause-Taste reparieren', type: 'todo' },
+  { from: 'break', text: 'Pause 2 Std Zocken', type: 'todo', estimateMin: 120 },
   // Uhr: „uhr <Stadt>“ adds a place, parsed with the module on; anything that is no place stays a ToDo.
   { from: 'clock', place: true, text: 'uhr Tokio', type: 'place', title: 'Tokio' },
   { from: 'clock', place: true, text: 'Uhr: New York', type: 'place', title: 'New York' },

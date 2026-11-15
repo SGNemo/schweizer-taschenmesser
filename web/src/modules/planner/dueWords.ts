@@ -57,14 +57,20 @@ export function extractDuePhrase(text: string, today: string): DuePhrase {
  * What the planner field makes of a line: the ToDo's fields and the planner item's hard due. A due phrase
  * („bis So“) wins over any date the parser reads from the rest („… 18:00“ alone would read as today), so the
  * ToDo's date and the planner's deadline are always the same day. A clock time stays a note line (as the
- * quick-capture target writes it). `de` = the phrase is read (German only, like the parser).
+ * quick-capture target writes it). `de` = the phrase is read (German only, like the parser). A line that starts
+ * with „Pause“ or „Freizeit“ is a break (`isBreak`, German only, as in the quick capture): no ToDo, a blocker of its day.
  */
 export function readField(
   text: string,
   now: Date,
   today: string,
   de: boolean,
-): { fields: CaptureFields; hardDue?: string } {
+): { fields: CaptureFields; hardDue?: string; isBreak?: true } {
+  // „Pause …“ / „Freizeit …“ (package 4a): a blocker of its day, read as the quick capture reads it (German only).
+  if (de) {
+    const brk = parseCapture(text, { now, defaultType: 'todo', breaks: true });
+    if (brk.type === 'break') return { fields: brk.fields, isBreak: true };
+  }
   const phrase = de ? extractDuePhrase(text, today) : { text, hasDueWord: false };
   const parsed = parseCapture(phrase.text, { now, defaultType: 'todo' });
   const hardDue = phrase.date ?? (phrase.hasDueWord ? parsed.fields.date : undefined);

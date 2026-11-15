@@ -1041,6 +1041,7 @@ export const de = {
       meal: 'Mahlzeit',
       workout: 'Training',
       place: 'Ort',
+      break: 'Pause',
     },
     target: {
       todo: 'ToDos',
@@ -1057,6 +1058,7 @@ export const de = {
       meal: 'Fitness',
       workout: 'Fitness',
       place: 'Uhr',
+      break: 'Planer (Pause)',
     },
     chip: {
       to: (name: string) => `Ziel: ${name}`,
@@ -8491,6 +8493,12 @@ export const de = {
       openMail: 'Zur Mail',
       blocker: 'Blocker',
       focus: 'Fokus starten',
+      asBreak: 'Als Pause …',
+      asBreakTitle: (title: string) => `${title} als Pause`,
+      asBreakHint: (day: string) =>
+        `Wird am ${day} zur Pause. Das ToDo wird dafür entfernt; Rückgängig holt es zurück.`,
+      estimate: 'Dauer …',
+      estimateTitle: (title: string) => `Dauer: ${title}`,
     },
     reasons: {
       pinned: 'festgenagelt',
@@ -8539,6 +8547,8 @@ export const de = {
       weekChecked: 'Woche bestätigt.',
       window: (day: string, window: string) => `${day}: Zeitfenster ${window}`,
       windowCleared: (day: string) => `${day}: Zeitfenster wie üblich`,
+      asBreak: (title: string, day: string, length: string) => `Pause ${day}: ${title} · ${length}`,
+      estimate: (title: string, length: string) => `${title} dauert ${length}`,
       off: 'Der Planer ist aus.',
     },
     add: {
@@ -8606,7 +8616,8 @@ export const de = {
       stepOf: (n: number) => `Schritt ${n} von 3`,
       thingsTitle: 'Was steht an?',
       thingsLabel: 'Eine Zeile je Ding',
-      thingsHint: 'Zum Beispiel „Bude aufräumen“ oder „Bericht bis So“. Leer lassen geht auch.',
+      thingsHint:
+        'Zum Beispiel „Bude aufräumen“, „Bericht bis So“ oder „Pause 2 Std“. Leer lassen geht auch.',
       things: (n: number) => (n === 1 ? '1 Ding kommt dazu' : `${n} Dinge kommen dazu`),
       timeTitle: 'Wie viel Zeit hast du?',
       timeIntro: 'Gilt nur für diese drei Tage.',

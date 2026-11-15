@@ -76,6 +76,9 @@ const FROM_WORD = word(String.raw`ab`);
 const PLAN_DUE = word(String.raw`bis|frist|deadline|abgabe|spätestens`);
 const PLAN_DUE_WORD = word(String.raw`frist|deadline|spätestens`);
 
+/** „Pause …“, „Freizeit: …“ at the very start of a line: a break (only with `ParseOptions.breaks`). */
+const BREAK_RE = /^\s*(pause|freizeit)(?![\p{L}\d-])[\s,:;–-]*/iu;
+
 const URL_RE = /(?:https?:\/\/|www\.)[^\s<>"']+/i;
 const KEYWORDS = {
   reminder: word(String.raw`erinnere?\s+mich(?:\s+(?:bitte\s+)?(?:daran|an|zu|dass))?`),
@@ -191,6 +194,18 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
   if (prefix) {
     forced = prefix[2] ? 'plan' : PREFIXES[prefix[1]!.toLowerCase()];
     text = text.slice(prefix[0].length);
+  }
+  // A break word fixes the type like a prefix does; the word itself is the fallback title („Pause“).
+  const breakWord = !prefix && opts.breaks ? BREAK_RE.exec(text) : null;
+  if (breakWord) {
+    forced = 'break';
+    // A short weekday right after the word is the break's day („Pause Sa 14 bis 16 Uhr“).
+    text = text
+      .slice(breakWord[0].length)
+      .replace(
+        /^(mo|di|mi|do|fr|sa|so)\.?(?![\p{L}\d])/iu,
+        (d) => SHORT_DAYS[d.replace('.', '').toLowerCase()]!,
+      );
   }
   if (forced === 'plan') {
     for (let m = SHORT_DAY_RE.exec(text); m; m = SHORT_DAY_RE.exec(text)) {
@@ -374,7 +389,10 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
   if (dt.time !== undefined) fields.time = dt.time;
   if (primaryType === 'event' && date && !hasTime) fields.allDay = true;
 
-  if (estimate !== undefined && (primaryType === 'todo' || primaryType === 'plan')) {
+  if (
+    estimate !== undefined &&
+    (primaryType === 'todo' || primaryType === 'plan' || primaryType === 'break')
+  ) {
     fields.estimateMin = estimate;
     scan.t = estimateScan.t;
   }
@@ -401,7 +419,10 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
     if (dunning)
       fields.dunning = { level: dunning[1] ? Number(dunning[1]) : 1, date: fmtDate(today) };
   }
-  fields.title = cleanTitle(scan.t) || (fields.url ?? '') || cleanTitle(text);
+  fields.title =
+    cleanTitle(scan.t) ||
+    (fields.url ?? '') ||
+    (breakWord ? cleanTitle(breakWord[1]!) : cleanTitle(text));
 
   const alternatives: CaptureAlternative[] = ranked
     .filter(([t, s]) => t !== primaryType && s >= 30)
@@ -412,7 +433,7 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
     fields,
     confidence: primaryScore / 100,
     needsChoice,
-    forced: !!forced,
+    forced: !!prefix,
     alternatives,
     notes: [...notes],
   };

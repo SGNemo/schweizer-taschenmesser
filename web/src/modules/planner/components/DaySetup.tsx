@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getLang } from '@/core/i18n/lang';
+import { dayName } from '@/core/plan/explain';
 import type { PlanOp } from '@/core/plan/instructions';
 import { formatDay } from '@/core/time/dates';
 import { now, today } from '@/core/time/now';
@@ -9,6 +10,7 @@ import { Button, Chip, Chips, Dialog, TextArea } from '@/ui';
 import { applyDaySetup } from '../actions';
 import type { BoardDay } from '../board';
 import {
+  breakOps,
   clearSetupDraft,
   gainsTime,
   previewItems,
@@ -75,10 +77,14 @@ export function DaySetup({
     ];
     setBusy(true);
     try {
-      const out = await previewUser(ops, previewItems(things, now()));
+      const breaks = breakOps(things, today());
+      const out = await previewUser([...ops, ...breaks], previewItems(things, now()));
       const names = { ...previewTitles(things), ...out.titles, ...titles };
+      const tasks = things.filter((th) => !th.isBreak).length;
       const lines = [
-        ...(things.length ? [s.things(things.length)] : []),
+        ...(tasks ? [s.things(tasks)] : []),
+        // A break says its own day and length, like its toast – never a sum.
+        ...breaks.map((b) => t.planner.toast.asBreak(b.label, dayName(b.date), compact(b.min))),
         // The day lines only: „Neu verteilt“ would say what the moves below already show.
         ...opLines(
           ops.filter((o) => o.op !== 'replan'),
