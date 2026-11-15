@@ -25,6 +25,8 @@ export interface SyncResult {
   rejected: number;
   /** The remote was new, reset or replaced: everything local was queued for upload. */
   fullUpload: boolean;
+  /** The pull started again at 0 because this app version syncs a table the last pull did not know. */
+  restarted?: boolean;
 }
 
 /** Raised internally when the remote epoch changed between pull and push. */
@@ -69,9 +71,12 @@ export function chunkOps(
  *    is queued for upload; ops the remote already has are simply not "greater" and get ignored.
  *  - The cursor only advances after a page was applied; re-applying is idempotent.
  *  - Local outbox entries are cleared only if the record was not written again while pushing.
+ *  - Before the pull the store is asked whether this app version syncs a table the last pull did not
+ *    know (`restartForNewTables`): the ops of that table were dropped then, so the cursor restarts once.
  */
 export async function runSync(deps: EngineDeps): Promise<SyncResult> {
   const result: SyncResult = { pulled: 0, applied: 0, pushed: 0, rejected: 0, fullUpload: false };
+  if (await deps.storage.restartForNewTables?.()) result.restarted = true;
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       await pullAll(deps, result);
@@ -126,7 +131,9 @@ async function pullAll(deps: EngineDeps, result: SyncResult): Promise<void> {
       ops = decrypted.ops;
     }
 
-    const applied = await storage.applyRemote(ops);
+    // Pages up to the cursor a restart replaced were pulled before: merged, never a conflict.
+    const replay = page.cursor <= ((await storage.getReplayUntil?.()) ?? 0);
+    const applied = await storage.applyRemote(ops, replay ? { replay } : undefined);
     result.pulled += page.ops.length;
     result.applied += applied.applied;
     await storage.setCursor(page.cursor);
