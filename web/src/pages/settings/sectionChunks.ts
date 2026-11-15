@@ -34,6 +34,9 @@ export const AiSection = lazyOnline<object>(() =>
 export const AiSwitchSection = lazyOnline<object>(() =>
   import('./AiSwitchSection').then((m) => ({ default: m.AiSwitchSection })),
 );
+export const AppLockSection = lazyOnline<object>(() =>
+  import('./AppLockSection').then((m) => ({ default: m.AppLockSection })),
+);
 export const AppearanceSection = lazyOnline<object>(() =>
   import('./AppearanceSection').then((m) => ({ default: m.AppearanceSection })),
 );

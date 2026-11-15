@@ -261,10 +261,10 @@ fn only_two_files_simulate_input_each_its_own_kind() {
     assert_eq!(keys, 18, "the fixed list has eighteen keys");
 }
 
-/// The crate is six files and nothing else: no sub-directory, no file pulled in from elsewhere,
+/// The crate is seven files and nothing else: no sub-directory, no file pulled in from elsewhere,
 /// no macro that could hide code from the tests that read these files.
 #[test]
-fn the_crate_is_exactly_its_six_files() {
+fn the_crate_is_exactly_its_seven_files() {
     let mut names: Vec<String> = fs::read_dir(root().join("src"))
         .unwrap()
         .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
@@ -274,6 +274,7 @@ fn the_crate_is_exactly_its_six_files() {
         names,
         [
             "keyboard.rs",
+            "launch.rs",
             "lib.rs",
             "pointer.rs",
             "power.rs",
@@ -297,6 +298,7 @@ fn the_crate_is_exactly_its_six_files() {
         mods,
         [
             "mod keyboard;",
+            "mod launch;",
             "mod pointer;",
             "mod power;",
             "mod system;",
@@ -391,6 +393,8 @@ fn no_network_no_files_no_tauri_no_serde() {
             // power: this process's own token
             "Win32_System_Threading",
             "Win32_UI_Input_KeyboardAndMouse",
+            // programs: one ShellExecuteW without arguments (src/launch.rs, pinned below)
+            "Win32_UI_Shell",
             // monitor off: one posted system command (scoped above)
             "Win32_UI_WindowsAndMessaging",
         ],
@@ -406,8 +410,10 @@ fn no_network_no_files_no_tauri_no_serde() {
                     .chars()
                     .take_while(|c| c.is_ascii_alphanumeric() || *c == '_')
                     .collect();
+                // a program's path, made a wide string for the shell: in its own file only
+                let launch = name == "launch.rs" && ["path", "os", "iter"].contains(&path.as_str());
                 assert!(
-                    ["mem", "ptr", "sync", "thread", "time"].contains(&path.as_str()),
+                    launch || ["mem", "ptr", "sync", "thread", "time"].contains(&path.as_str()),
                     "{name}: `std::{path}` in `{}`",
                     line.trim()
                 );
@@ -484,7 +490,8 @@ fn unsafe_is_windows_only_and_explained() {
                 name == "system.rs"
                     || name == "pointer.rs"
                     || name == "keyboard.rs"
-                    || name == "power.rs",
+                    || name == "power.rs"
+                    || name == "launch.rs",
                 "{name}: unsafe outside the Windows calls"
             );
             let explained = lines[i.saturating_sub(4)..i]
@@ -851,5 +858,111 @@ fn power_is_never_forced_and_only_in_its_file() {
     assert_eq!(
         power.matches("SetSuspendState(true, false, false)").count(),
         1
+    );
+}
+
+/// `src/launch.rs` from its Windows part on, as it stands (comments and layout aside).
+const PINNED_LAUNCH: &str = r#"
+#[cfg(windows)]
+mod imp {
+use std::os::windows::ffi::OsStrExt;
+use std::path::Path;
+use windows::core::{w, PCWSTR};
+use windows::Win32::System::Com::{
+CoInitializeEx, CoUninitialize, COINIT_APARTMENTTHREADED, COINIT_DISABLE_OLE1DDE,
+};
+use windows::Win32::UI::Shell::ShellExecuteW;
+use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+pub fn launch(path: &Path) -> bool {
+let wide: Vec<u16> = path
+.as_os_str()
+.encode_wide()
+.chain(std::iter::once(0))
+.collect();
+if wide[..wide.len() - 1].contains(&0) {
+return false;
+}
+let path = path.to_path_buf();
+std::thread::Builder::new()
+.name("remote-launch".into())
+.spawn(move || {
+if path.is_file() {
+open(&wide);
+}
+})
+.is_ok()
+}
+fn open(wide: &[u16]) {
+let com =
+unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE) };
+let _ = unsafe {
+ShellExecuteW(
+None,
+w!("open"),
+PCWSTR(wide.as_ptr()),
+PCWSTR::null(),
+PCWSTR::null(),
+SW_SHOWNORMAL,
+)
+};
+if com.is_ok() {
+unsafe { CoUninitialize() };
+}
+}
+}
+"#;
+
+/// A program starts only in `src/launch.rs`: one `ShellExecuteW` with the verb `open`, a path and
+/// nothing else – no arguments, no directory, no other verb ("runas"), no other way to start a
+/// process. The public call takes a path alone; there is no parameter an argument could come in.
+#[test]
+fn a_program_starts_only_in_its_file_and_never_with_arguments() {
+    assert_absent(&[
+        "CreateProcess",
+        "WinExec",
+        "ShellExecuteEx",
+        "SHELLEXECUTEINFO",
+        "runas",
+        "IShellDispatch",
+        "ShellExecuteA",
+    ]);
+    for (name, text) in sources() {
+        let calls = code_lines(&text)
+            .filter(|l| l.contains("ShellExecuteW") && !l.contains("use "))
+            .count();
+        if name == "launch.rs" {
+            assert_eq!(calls, 1, "one call");
+        } else {
+            assert_eq!(calls, 0, "{name}: ShellExecuteW");
+        }
+    }
+    let launch = read(root().join("src/launch.rs"));
+    assert_eq!(
+        code_lines(&launch)
+            .filter(|l| l.contains("pub fn launch("))
+            .map(str::trim)
+            .collect::<Vec<_>>(),
+        [
+            "pub fn launch(path: &Path) -> bool {",
+            "pub fn launch(_path: &Path) -> bool {",
+            "pub fn launch(path: &Path) -> bool {"
+        ]
+    );
+    let lib = read(root().join("src/lib.rs"));
+    assert!(lib.contains("pub use launch::launch;"));
+    let at = launch
+        .find("#[cfg(windows)]\nmod imp {")
+        .expect("the Windows part");
+    let lines = |text: &str| -> Vec<String> {
+        code_lines(text)
+            .map(|l| l.trim().to_owned())
+            .filter(|l| !l.is_empty())
+            .collect()
+    };
+    assert_eq!(
+        lines(&launch[at..]),
+        lines(PINNED_LAUNCH),
+        "launch.rs changed: read docs/rules/remote-control.md, have it reviewed, then update \
+         PINNED_LAUNCH in tests/rules.rs"
     );
 }

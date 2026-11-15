@@ -5,13 +5,22 @@ export const tTrash = defineBundle(
   {
     title: 'Zuletzt gelöscht',
     description:
-      'Gelöschtes (Unterlagen, Abos, Termine, ToDos, Notizen und mehr) bleibt 30 Tage hier und lässt sich zurückholen.',
+      'Gelöschtes (Unterlagen, Abos, Termine, ToDos, Notizen und mehr) bleibt eine Weile hier und lässt sich zurückholen.',
     keywords: ['Papierkorb', 'wiederherstellen', 'gelöscht', 'zurückholen'],
-    keep: 'Gelöschtes 30 Tage aufbewahren',
+    keep: 'Gelöschtes aufbewahren',
     keepHint:
-      'Aus: Zurückholen geht nur direkt nach dem Löschen („Rückgängig“), Dateien von Unterlagen werden nach kurzer Zeit entfernt. An: Gelöschtes bleibt 30 Tage auf diesem Gerät, auch im Backup.',
+      'Aus: Zurückholen geht nur direkt nach dem Löschen („Rückgängig“), Dateien von Unterlagen werden nach kurzer Zeit entfernt. An: Gelöschtes bleibt auf diesem Gerät, auch im Backup.',
+    days: 'Aufbewahren für',
+    daysHint: 'Danach wird Gelöschtes endgültig entfernt',
+    daysOptions: { '7': '7 Tage', '30': '30 Tage', '90': '90 Tage' },
+    shortenTitle: 'Kürzer aufbewahren?',
+    shortenBody: (n: number, days: number) =>
+      n === 1
+        ? `1 gelöschter Eintrag ist älter als ${days} Tage. Er lässt sich danach nicht mehr zurückholen.`
+        : `${n} gelöschte Einträge sind älter als ${days} Tage. Sie lassen sich danach nicht mehr zurückholen.`,
+    shortenConfirm: 'Kürzer aufbewahren',
     off: 'Aufbewahren ist aus. Gelöschtes lässt sich nur direkt über „Rückgängig“ zurückholen.',
-    empty: 'In den letzten 30 Tagen wurde nichts gelöscht.',
+    empty: (days: number) => `In den letzten ${days} Tagen wurde nichts gelöscht.`,
     kinds: {
       document: 'Unterlage',
       subscription: 'Abo',
@@ -42,19 +51,28 @@ export const tTrash = defineBundle(
     restored: 'Wiederhergestellt.',
     purged: 'Endgültig gelöscht.',
     purgeWaits: 'Wird nach dem nächsten Abgleich endgültig entfernt.',
-    list: 'Gelöscht in den letzten 30 Tagen',
+    list: (days: number) => `Gelöscht in den letzten ${days} Tagen`,
   },
   {
     en: {
       title: 'Recently deleted',
       description:
-        'Deleted items (documents, subscriptions, appointments, to-dos, notes and more) stay here for 30 days and can be brought back.',
+        'Deleted items (documents, subscriptions, appointments, to-dos, notes and more) stay here for a while and can be brought back.',
       keywords: ['trash', 'recycle bin', 'restore', 'deleted', 'undelete'],
-      keep: 'Keep deleted items for 30 days',
+      keep: 'Keep deleted items',
       keepHint:
-        'Off: you can only bring something back right after deleting it (“Undo”); files of documents are removed after a short while. On: deleted items stay on this device for 30 days, backups included.',
+        'Off: you can only bring something back right after deleting it (“Undo”); files of documents are removed after a short while. On: deleted items stay on this device, backups included.',
+      days: 'Keep for',
+      daysHint: 'After that, deleted items are removed for good',
+      daysOptions: { '7': '7 days', '30': '30 days', '90': '90 days' },
+      shortenTitle: 'Keep for a shorter time?',
+      shortenBody: (n: number, days: number) =>
+        n === 1
+          ? `1 deleted item is older than ${days} days. It can no longer be brought back afterwards.`
+          : `${n} deleted items are older than ${days} days. They can no longer be brought back afterwards.`,
+      shortenConfirm: 'Keep for shorter',
       off: 'Keeping is off. Deleted items can only be brought back right away with “Undo”.',
-      empty: 'Nothing was deleted in the last 30 days.',
+      empty: (days: number) => `Nothing was deleted in the last ${days} days.`,
       kinds: {
         document: 'Document',
         subscription: 'Subscription',
@@ -85,7 +103,7 @@ export const tTrash = defineBundle(
       restored: 'Restored.',
       purged: 'Deleted for good.',
       purgeWaits: 'It will be removed for good after the next sync.',
-      list: 'Deleted in the last 30 days',
+      list: (days: number) => `Deleted in the last ${days} days`,
     },
     es: {
       title: 'Eliminados recientemente',

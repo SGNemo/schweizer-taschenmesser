@@ -23,7 +23,7 @@ const manifest: ModuleManifest = {
     widget: 'fortschritt',
     head: 'standard',
     signature: 'weekBars',
-    type: 'thin',
+    type: 'sans',
   },
   version: 4,
   get description() {

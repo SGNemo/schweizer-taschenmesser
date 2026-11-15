@@ -142,7 +142,7 @@ export default function VaultPage() {
   };
 
   // Files of documents that were deleted on another device are dead weight here.
-  // A document deleted here stays restorable for 30 days, so its file stays too.
+  // A document deleted here stays restorable for the chosen keep time, so its file stays too.
   const keep = useLiveQuery(() => keepBlobIds(), []);
   useEffect(() => {
     if (keep) void pruneBlobs(keep);

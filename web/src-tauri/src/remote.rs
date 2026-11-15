@@ -17,15 +17,20 @@
 //! * hands power actions to the countdown of `remote_power.rs` (it owns the countdown, its window
 //!   and its limits; the hub has checked session, permission and lock state before).
 //!
-//! Nothing here logs. No command takes an input action or starts a power action; the only way in
-//! is the hub's input session.
+//! * hands program starts to the PC's program list (`remote_programs.rs`); the call that opens a
+//!   file reaches it as a closure from [`attach`]. Adding an entry is a widening like the others
+//!   (ticket, Rust's own file dialog, native confirmation, the ticket checked again).
+//!
+//! Nothing here logs. No command takes an input action, starts a power action or a program; the
+//! only way in is the hub's input session.
 
 use crate::remote_notice::{self, Notices};
 use crate::remote_power::{Env, PowerCore};
+use crate::remote_programs::{self, ProgramsCore};
 use crate::texts::{self, Lang};
 use ::lan_sync::input::remote::SwitchError;
 use ::lan_sync::input::wire::{
-    Button, Key, Level, Media, PcState, Power, PowerAnswer, VOLUME_UNKNOWN,
+    Button, Key, Level, Media, PcState, Power, PowerAnswer, ProgramAnswer, VOLUME_UNKNOWN,
 };
 use ::lan_sync::input::{Action, ControlError, FileSwitch, InputSink, MasterSwitch, Remote};
 use ::lan_sync::noise::PublicKey;
@@ -58,15 +63,17 @@ pub struct Sink {
     pointer: Pointer,
     keys: Keyboard,
     power: Arc<PowerCore>,
+    programs: Arc<ProgramsCore>,
 }
 
 impl Sink {
-    pub fn start(power: Arc<PowerCore>) -> Sink {
+    pub fn start(power: Arc<PowerCore>, programs: Arc<ProgramsCore>) -> Sink {
         Sink {
             media: Worker::start(),
             pointer: Pointer::start(),
             keys: Keyboard::start(),
             power,
+            programs,
         }
     }
 }
@@ -183,6 +190,21 @@ impl InputSink for Sink {
     fn power_news(&self) -> Option<(u64, PublicKey, PowerAnswer)> {
         self.power.news()
     }
+
+    fn programs_version(&self) -> u32 {
+        self.programs.version()
+    }
+
+    fn programs(&self) -> (u32, Vec<String>) {
+        self.programs.programs()
+    }
+
+    fn start_program(&self, peer: &PublicKey, slot: u8, epoch: u32) -> ProgramAnswer {
+        if !self.supported() {
+            return ProgramAnswer::Failed;
+        }
+        self.programs.start(peer.as_bytes(), slot, epoch)
+    }
 }
 
 /// The master switch of a PC whose switch file cannot be read: off, and it stays off.
@@ -219,7 +241,12 @@ pub fn parts(
     if let Ok(mut quiet) = host.quiet.lock() {
         *quiet = Some(switch_at(&dir.join("remote-notice.json")));
     }
-    (remote, Arc::new(Sink::start(host.power.clone())))
+    // read once per run: what was removed stays removed when the hub starts again
+    host.programs.load(&dir.join(remote_programs::FILE), plain);
+    (
+        remote,
+        Arc::new(Sink::start(host.power.clone(), host.programs.clone())),
+    )
 }
 
 fn switch_at(path: &Path) -> Arc<dyn MasterSwitch> {
@@ -250,6 +277,8 @@ pub struct RemoteHost {
     /// The countdown before a power action (`remote_power.rs`); one for the app, handed to every
     /// hub's sink.
     power: Arc<PowerCore>,
+    /// The PC's program list (`remote_programs.rs`); one for the app, handed to every hub's sink.
+    programs: Arc<ProgramsCore>,
 }
 
 #[derive(Default)]
@@ -372,9 +401,8 @@ impl RemoteHost {
 /// Characters that change how the text around them is laid out or hide in it: direction marks
 /// and overrides, zero-width and other invisible format characters.
 fn invisible(c: char) -> bool {
-    matches!(c,
-        '\u{00AD}' | '\u{061C}' | '\u{180E}' | '\u{200B}'..='\u{200F}' | '\u{202A}'..='\u{202E}'
-        | '\u{2060}'..='\u{206F}' | '\u{FEFF}' | '\u{FFF9}'..='\u{FFFB}' | '\u{E0000}'..='\u{E007F}')
+    // one set for the whole remote control: the wire refuses the same in a program name
+    ::lan_sync::input::wire::invisible(c)
 }
 
 fn quote(c: char) -> bool {
@@ -404,7 +432,8 @@ fn quote(c: char) -> bool {
 
 /// A claimed device name as one line of plain text for a native dialog or tooltip: no control or
 /// invisible characters, no quotation marks (the name must not be able to close the quotes around
-/// it or turn the sentence after it around), capped. May be empty.
+/// it or turn the sentence after it around), capped. May be empty. Also the names of the PC's
+/// program list.
 fn plain(name: &str) -> String {
     let flat: String = name
         .chars()
@@ -472,6 +501,10 @@ pub fn attach(
             show,
             close,
             visible,
+        });
+        // the one way to the system call that opens a program of the list
+        host.programs.attach(remote_programs::Env {
+            launch: Box::new(remote_input::launch),
         });
     }
     let Ok(mut slot) = host.slot.lock() else {
@@ -572,6 +605,7 @@ fn watch(
 /// closed.
 pub fn detach(app: &AppHandle) {
     app.state::<RemoteHost>().power.detach();
+    app.state::<RemoteHost>().programs.detach();
     let taken = app
         .state::<RemoteHost>()
         .slot
@@ -671,6 +705,8 @@ pub struct RemoteDeviceDto {
     unlock: bool,
     /// May switch the PC off (power actions).
     power: bool,
+    /// May start programs of the PC's list.
+    programs: bool,
 }
 
 fn status_of(lang: Lang, parts: &Parts, notice: bool) -> RemoteStatusDto {
@@ -699,6 +735,7 @@ fn status_of(lang: Lang, parts: &Parts, notice: bool) -> RemoteStatusDto {
                     paused: grant.paused,
                     unlock: grant.unlock,
                     power: grant.power,
+                    programs: grant.programs,
                 }
             })
             .collect(),
@@ -743,6 +780,10 @@ fn device_question(
     // every widening that lets power count again names it, also a raised level or a lifted pause
     if new.power && (!old.power || !old.power_effective()) {
         lines.push(texts::remote_ask_power(lang).to_owned());
+    }
+    // the same for programs, which count only with mouse and keyboard
+    if new.programs && (!old.programs || !old.programs_effective()) {
+        lines.push(texts::remote_ask_programs(lang).to_owned());
     }
     lines.push(texts::remote_last_contact(lang, last_seen, now));
     lines.join("\n\n")
@@ -881,8 +922,9 @@ pub fn remote_set_enabled(
     Ok(())
 }
 
-/// The grant of one paired device: level, pause, "unlock at the phone". A change that gives or
-/// gives back control is asked at the PC first; a narrowing is immediate.
+/// The grant of one paired device: level, pause, "unlock at the phone", power, programs. A change
+/// that gives or gives back control is asked at the PC first; a narrowing is immediate.
+#[allow(clippy::too_many_arguments)]
 #[tauri::command(async)]
 pub fn remote_set_device(
     app: AppHandle,
@@ -892,16 +934,20 @@ pub fn remote_set_device(
     paused: bool,
     unlock: bool,
     power: Option<bool>,
+    programs: Option<bool>,
 ) -> Result<(), String> {
     let parts = state.parts()?;
     let key = PublicKey::from_bytes(from_hex32(&id).ok_or("bad-id")?);
     let level = level_from(&level).ok_or("bad-level")?;
+    let stored = parts.remote.grant_of(&key);
     let grant = RemoteGrant {
         level,
         paused,
         unlock,
         // a page from before power keeps what is stored; no level, no power
-        power: level > Level::Off && power.unwrap_or_else(|| parts.remote.grant_of(&key).power),
+        power: level > Level::Off && power.unwrap_or(stored.power),
+        // the same for programs; below mouse and keyboard, no programs
+        programs: level == Level::Full && programs.unwrap_or(stored.programs),
     };
     let device = parts
         .trust
@@ -995,6 +1041,121 @@ pub fn remote_set_notice(
     quiet.set(true).map_err(|_| "failed".to_owned())?;
     state.narrowed(|n| n.notice = false);
     Ok(())
+}
+
+/// One entry of the PC's program list for the settings page: its slot and its name (never a path).
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProgramDto {
+    slot: usize,
+    name: String,
+}
+
+/// The PC's program list for the settings page: its epoch (a removal names it) and the entries.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProgramsDto {
+    version: u32,
+    list: Vec<ProgramDto>,
+}
+
+/// The PC's program list, names only.
+#[tauri::command(async)]
+pub fn remote_programs(state: State<'_, RemoteHost>) -> Result<ProgramsDto, String> {
+    let (version, names) = state.programs.names().map_err(|_| "not-started")?;
+    Ok(ProgramsDto {
+        version,
+        list: names
+            .into_iter()
+            .enumerate()
+            .map(|(slot, name)| ProgramDto { slot, name })
+            .collect(),
+    })
+}
+
+/// Adds an entry to the PC's program list – a widening. It takes no path: Rust shows its own file
+/// dialog (executables and shortcuts only), then asks at the PC whether phones with the permission
+/// may start it. Refused while a mouse/keyboard session is open, or if one was opened since the
+/// ticket was taken (it could have picked the file or clicked the answer).
+#[tauri::command(async)]
+pub fn remote_program_add(app: AppHandle, state: State<'_, RemoteHost>) -> Result<(), String> {
+    let parts = state.parts()?;
+    if !state.programs.has_room().ok_or("not-started")? {
+        return Err("full".to_owned());
+    }
+    // The ticket comes first: a mouse/keyboard session opened at any moment from here on –
+    // before the file dialog, while it or the question is on screen – makes the check refuse.
+    let ticket = parts.remote.ticket();
+    if parts.remote.full_session_open() {
+        return Err("busy-controlled".to_owned());
+    }
+    let _asking = Asking::take(&state.asking)?;
+    let lang = crate::capture::native_lang(&app);
+    let path = picked_program(&app, lang).ok_or("cancelled")?;
+    if !remote_programs::allowed_path(&path) {
+        return Err("bad-file".to_owned());
+    }
+    let name = remote_programs::name_of(&path, plain).ok_or("bad-file")?;
+    let shortcut = path
+        .extension()
+        .is_some_and(|e| e.eq_ignore_ascii_case("lnk"));
+    let question = texts::remote_ask_program(lang, &name, &plain_path(&path), shortcut);
+    if !asked(&app, texts::remote_program_dialog(lang), question, true) {
+        return Err("cancelled".to_owned());
+    }
+    // The hub may have been stopped and started meanwhile: its ticket says nothing then.
+    if !state
+        .parts()
+        .is_ok_and(|now| Arc::ptr_eq(&now.remote, &parts.remote))
+    {
+        return Err("changed".to_owned());
+    }
+    parts
+        .remote
+        .confirm(ticket)
+        .map_err(|e| error_name(e).to_owned())?;
+    state
+        .programs
+        .add(remote_programs::Entry { name, path })
+        .map_err(|e| e.name().to_owned())
+}
+
+/// Rust's own file dialog for a new entry: one executable or shortcut, or nothing.
+fn picked_program(app: &AppHandle, lang: Lang) -> Option<std::path::PathBuf> {
+    let (title, filter) = texts::remote_program_pick(lang);
+    let mut dialog = app
+        .dialog()
+        .file()
+        .set_title(title)
+        .add_filter(filter, &["exe", "lnk"]);
+    if let Some(window) = app.get_webview_window("main") {
+        dialog = dialog.set_parent(&window);
+    }
+    dialog.blocking_pick_file()?.into_path().ok()
+}
+
+/// A chosen file's full path as one line for the native question: no control or invisible
+/// characters (the PC's owner picked it, but its folders' names are not ours), nothing cut.
+fn plain_path(path: &Path) -> String {
+    path.to_string_lossy()
+        .chars()
+        .filter(|c| !invisible(*c))
+        .map(|c| if c.is_control() { ' ' } else { c })
+        .collect()
+}
+
+/// Removes an entry of the PC's program list: a narrowing, at once. `version`: the list's epoch
+/// the page showed; when the list changed since, nothing is removed (`changed`).
+#[tauri::command(async)]
+pub fn remote_program_remove(
+    state: State<'_, RemoteHost>,
+    slot: usize,
+    version: u32,
+) -> Result<(), String> {
+    state
+        .programs
+        .remove(slot, version)
+        .map_err(|e| e.name().to_owned())
 }
 
 /// "Fernsteuerung beenden": ends the controlling session and pauses that device. `false` if
@@ -1128,6 +1289,7 @@ mod tests {
             pointer: Pointer::with(Box::new(FakeMouse(for_mouse))),
             keys: Keyboard::with(Box::new(FakeKeys(for_keys))),
             power: Arc::new(PowerCore::default()),
+            programs: Arc::new(ProgramsCore::default()),
         };
         (sink, seen)
     }
@@ -1375,12 +1537,14 @@ mod tests {
             paused: true,
             unlock: true,
             power: false,
+            programs: false,
         };
         let new = RemoteGrant {
             level: Level::Full,
             paused: false,
             unlock: false,
             power: false,
+            programs: false,
         };
         for lang in [Lang::De, Lang::En] {
             let text =
@@ -1394,7 +1558,34 @@ mod tests {
             let plain_raise = device_question(lang, "A", &RemoteGrant::default(), &old, None, 0);
             assert!(!plain_raise.contains(texts::remote_ask_unpause(lang)));
             assert!(!plain_raise.contains(texts::remote_ask_no_unlock(lang)));
+            assert!(!text.contains(texts::remote_ask_programs(lang)));
+            // programs: named when they start to count – the flag, or a level raised to mouse
+            // and keyboard under a stored flag
+            let programs = RemoteGrant {
+                programs: true,
+                ..new
+            };
+            let asked = device_question(lang, "A", &new, &programs, None, 0);
+            assert!(asked.contains(texts::remote_ask_programs(lang)), "{asked}");
+            let raised = RemoteGrant {
+                level: Level::Media,
+                ..programs
+            };
+            let asked = device_question(lang, "A", &raised, &programs, None, 0);
+            assert!(asked.contains(texts::remote_ask_programs(lang)), "{asked}");
+            let same = device_question(lang, "A", &programs, &programs, None, 0);
+            assert!(!same.contains(texts::remote_ask_programs(lang)));
         }
+    }
+
+    #[test]
+    fn a_pc_that_cannot_be_controlled_starts_no_program() {
+        let (sink, _) = fake_sink();
+        let (n, names) = sink.programs();
+        assert!(names.is_empty());
+        // no list loaded, no closure from the hub: nothing to start
+        let peer = PublicKey::from_bytes([1; 32]);
+        assert_eq!(sink.start_program(&peer, 0, n), ProgramAnswer::Failed);
     }
 
     #[test]
@@ -1447,6 +1638,7 @@ mod tests {
             paused: false,
             unlock: true,
             power: false,
+            programs: false,
         };
         trust.set_remote(&key, full).unwrap();
         // on disk: switch on, device granted – as if the earlier narrowing had not been written
@@ -1495,6 +1687,7 @@ mod tests {
                     paused: false,
                     unlock: true,
                     power: false,
+                    programs: false,
                 },
             )
             .unwrap();
@@ -1510,6 +1703,7 @@ mod tests {
                 paused: true,
                 unlock: true,
                 power: false,
+                programs: false,
             },
         );
         narrowed.apply(&remote);
@@ -1524,6 +1718,7 @@ mod tests {
                 paused: false,
                 unlock: false,
                 power: false,
+                programs: false,
             },
         );
         wider.apply(&remote);

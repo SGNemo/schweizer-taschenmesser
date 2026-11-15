@@ -3,6 +3,7 @@ import type {
   RemotePad,
   RemotePowerPhase,
   RemotePowerVerb,
+  RemoteProgramPhase,
   RemoteView,
 } from '@/core/remote/session';
 import { settingsPath } from '@/core/settings/registry/paths';
@@ -164,6 +165,34 @@ export function powerText(phase: RemotePowerPhase): string | undefined {
           return p.limit;
         case 'failed':
           return p.failed;
+        case 'unavailable':
+          return p.unavailable;
+      }
+  }
+}
+
+/** Where a program start stands, as one calm sentence; `undefined` while nothing is going on. */
+export function programText(phase: RemoteProgramPhase): string | undefined {
+  const p = t.remote.programs;
+  switch (phase.kind) {
+    case 'idle':
+      return undefined;
+    case 'starting':
+      return p.starting;
+    case 'started':
+      return p.started(phase.name);
+    case 'refused':
+      switch (phase.reason) {
+        case 'not-granted':
+          return p.notGranted;
+        case 'locked':
+          return p.locked;
+        case 'limit':
+          return p.limit;
+        case 'failed':
+          return p.failed;
+        case 'unlock':
+          return p.unlock;
         case 'unavailable':
           return p.unavailable;
       }

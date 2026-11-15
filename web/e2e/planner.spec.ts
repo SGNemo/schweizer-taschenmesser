@@ -42,9 +42,13 @@ async function enablePlanner(page: Page, extra: string[] = []) {
   );
 }
 
-/** A ToDo through the planner's own field; the run follows and the row appears on the board. */
+/**
+ * A ToDo through the planner's own field; the run follows and the row appears on the board. On the desktop the
+ * field is the first thing in the page (planner hub R1); on the phone it is the page's last row (and the plus of
+ * the bottom bar opens it as a sheet: the phone test below goes that way).
+ */
 async function enter(page: Page, text: string) {
-  const field = page.getByLabel('Eintragen oder sagen', { exact: true });
+  const field = page.getByRole('textbox', { name: 'Eintragen oder sagen', exact: true });
   await expect(field).toBeVisible();
   await field.focus();
   await page.keyboard.insertText(text);
@@ -53,20 +57,24 @@ async function enter(page: Page, text: string) {
   await expect(field).toHaveValue('');
 }
 
+/** The context line of the head figure (the line under the number). */
+const headContext = (page: Page) => page.getByTestId('module-figure');
+
 const today = (page: Page) => page.getByTestId('day-2026-11-09');
 
 /**
- * A day of the week. Beside the week list (wide page, 0b-4b) one day is open in the panel: the day is chosen in
- * the list first. On the phone the strip does that, and the tests there press it themselves.
+ * A day of the week. One day is open as the sheet under the week band (planner hub R1): the day is chosen with
+ * its tile first.
  */
 async function day(page: Page, date: string) {
-  const row = page.getByTestId(`week-${date}`);
-  if (await row.isVisible()) await row.click();
+  const tile = page.getByTestId(`week-${date}`);
+  await expect(tile).toBeVisible();
+  await tile.click();
   return page.getByTestId(`day-${date}`);
 }
 
 test.describe('Planer (week board, package 1)', () => {
-  // These tests read the week list with the day panel beside it; the phone shows the strip (its own test below).
+  // These tests read the page at desktop width; the phone has its own test below.
   test.beforeEach(({ isMobile }, info) => {
     test.skip(isMobile && !info.title.startsWith('phone:'), 'wide board only');
   });
@@ -76,16 +84,20 @@ test.describe('Planer (week board, package 1)', () => {
   }) => {
     await enablePlanner(page);
     await ready(page, '/planner');
-    await expect(page.getByTestId('planner-head')).toContainText('frei heute');
+    // Nothing planned yet: the head has no figure (planner hub R1, head rule 4), the sheet says what to do.
+    await expect(page.getByTestId('planner-empty')).toBeVisible();
+    await expect(page.getByTestId('planner-head')).toHaveCount(0);
     await enter(page, 'Steuer 2 Std bis Do');
     await expect(page.getByText('Eingetragen · Frist Do', { exact: false })).toBeVisible();
     // 120 minutes become two sessions of one hour on different days.
     await expect(page.getByText('Steuer · Teil 1/2')).toBeVisible();
     await expect(await day(page, '2026-11-10')).toContainText('Steuer · Teil 2/2');
     await expect(await day(page, '2026-11-09')).toContainText('Frist Do');
-    await expect(page.getByTestId('planner-head')).toContainText('2 h 12 frei heute');
-    // The week is one list of seven days with the picked day beside it (0b-4b); no row runs past its panel and
-    // nothing scrolls sideways, from 1280 to 1920.
+    // The figure is the free time of the day that asks for something; its context line names the day.
+    await expect(page.getByTestId('planner-head')).toHaveText('2 h 12 frei');
+    await expect(headContext(page)).toContainText('Heute: Steuer. Das reicht für heute.');
+    // The week is a band of seven tiles above the picked day's sheet; no row runs past the sheet and nothing
+    // scrolls sideways, from 1280 to 1920.
     const measure = () =>
       page.evaluate(() => {
         const main = document.querySelector('main')!;
@@ -158,25 +170,41 @@ test.describe('Planer (week board, package 1)', () => {
     }
   });
 
-  test('„Eintragen“ and ⋯ line up with the field; the hint sits under the row (S09, UI round 6)', async ({
+  test('„Eintragen“ lines up with the field; the examples sit under the row and fill it (S09, field first)', async ({
     page,
   }) => {
     await enablePlanner(page);
+    await page.setViewportSize({ width: 1920, height: 1080 });
     await ready(page, '/planner');
     const field = page.getByLabel('Eintragen oder sagen', { exact: true });
     await expect(field).toBeVisible();
-    await expect(field).toHaveAccessibleDescription(/Ein ToDo entsteht/);
-    const bottom = async (name: RegExp | string, exact = false) => {
-      const box = await page.getByRole('button', { name, exact }).boundingBox();
-      return box!.y + box!.height;
-    };
-    const input = await field.boundingBox();
-    const inputBottom = input!.y + input!.height;
-    expect(Math.abs((await bottom('Eintragen', true)) - inputBottom)).toBeLessThanOrEqual(2);
-    expect(Math.abs((await bottom('Weitere Optionen', true)) - inputBottom)).toBeLessThanOrEqual(2);
-    const hint = page.getByText(/Ein ToDo entsteht/).first();
-    const hintBox = await hint.boundingBox();
-    expect(hintBox!.y).toBeGreaterThanOrEqual(inputBottom - 1);
+    // Field first (planner hub R1, D3): it is the first control of the page, focused on arrival, above the week.
+    await expect(field).toBeFocused();
+    await expect(field).toHaveAttribute('placeholder', 'Was steht an?');
+    const input = (await field.boundingBox())!;
+    expect(input.y).toBeLessThanOrEqual(260);
+    const band = (await page.getByRole('group', { name: 'Woche' }).boundingBox())!;
+    expect(band.y).toBeGreaterThan(input.y + input.height);
+    const inputBottom = input.y + input.height;
+    const button = (await page
+      .getByRole('button', { name: 'Eintragen', exact: true })
+      .boundingBox())!;
+    expect(Math.abs(button.y + button.height - inputBottom)).toBeLessThanOrEqual(2);
+    // The long hint is gone; three examples stand under the row. A chip fills the field and never submits.
+    await expect(page.getByText(/Ein ToDo entsteht/)).toHaveCount(0);
+    const examples = page.getByRole('group', { name: 'Zum Beispiel' });
+    await expect(examples.getByRole('button')).toHaveText([
+      'Steuer 2 Std bis Do',
+      'Donnerstag frei',
+      'schieb Saugen auf Mi',
+    ]);
+    expect((await examples.boundingBox())!.y).toBeGreaterThanOrEqual(inputBottom - 1);
+    await examples.getByRole('button', { name: 'Donnerstag frei' }).click();
+    await expect(field).toHaveValue('Donnerstag frei');
+    await expect(field).toBeFocused();
+    await expect(page.getByTestId('plan-preview')).toHaveCount(0);
+    // „Eintragen“ is the page's one filled button.
+    await expect(page.locator('main [data-variant="primary"]:visible')).toHaveCount(1);
   });
 
   test('the entry row stays where it is while the head figure loads (U01)', async ({ page }) => {
@@ -197,7 +225,8 @@ test.describe('Planer (week board, package 1)', () => {
       requestAnimationFrame(frame);
     });
     await ready(page, '/planner');
-    await expect(page.getByTestId('planner-head')).toContainText('frei');
+    // Nothing is planned: the board arrives with its empty state, the head stays without a figure.
+    await expect(page.getByTestId('planner-empty')).toBeVisible();
     // the frame gives the figure's room back one second after the page arrived (`FIGURE_HOLD_MS`)
     await page.waitForTimeout(1200);
     const tops = await page.evaluate(
@@ -212,7 +241,7 @@ test.describe('Planer (week board, package 1)', () => {
     await enter(page, 'Blogpost 90min');
     await expect(today(page)).toContainText('Blogpost');
     await today(page)
-      .getByRole('button', { name: /^Heute · Mo\.? 9\./ })
+      .getByRole('button', { name: /Zeit für Montag ändern/ })
       .click();
     const sheet = page.getByRole('dialog');
     await expect(sheet.getByTestId('day-available')).toHaveText('4 h');
@@ -221,10 +250,14 @@ test.describe('Planer (week board, package 1)', () => {
     await sheet.getByTestId('day-off').click();
     await expect(sheet.getByTestId('day-available')).toHaveText('frei');
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('planner-head')).toContainText('Heute ist frei.');
+    // The head follows the thing to the next day that holds it and says that today is free.
+    await expect(headContext(page)).toContainText('morgen, Di. 10. · heute ist frei');
+    await expect(today(page)).toContainText(
+      'Heute ist frei. Der nächste Tag mit Dingen ist Dienstag.',
+    );
     await expect(await day(page, '2026-11-10')).toContainText('Blogpost');
     await page.getByRole('button', { name: 'Rückgängig' }).last().click();
-    await expect(page.getByTestId('planner-head')).not.toContainText('Heute ist frei.');
+    await expect(headContext(page)).not.toContainText('heute ist frei');
   });
 
   test('the ToDo page counts what the plan counts and has no „Alle auf heute“ (N02)', async ({
@@ -245,11 +278,11 @@ test.describe('Planer (week board, package 1)', () => {
     // Today off: the planner puts the overdue thing on Tuesday.
     await page.goto('/planner');
     await today(page)
-      .getByRole('button', { name: /^Heute · Mo\.? 9\./ })
+      .getByRole('button', { name: /Zeit für Montag ändern/ })
       .click();
     await page.getByRole('dialog').getByTestId('day-off').click();
     await page.keyboard.press('Escape');
-    await expect(page.getByTestId('planner-head')).toContainText('Heute ist frei.');
+    await expect(headContext(page)).toContainText('morgen, Di. 10. · heute ist frei');
     await expect(await day(page, '2026-11-10')).toContainText('Alte Sache');
     // The ToDo page follows: not in Heute, the head counts nothing for today, no „Alle auf heute“.
     await page.goto('/todos?view=today');
@@ -275,7 +308,7 @@ test.describe('Planer (week board, package 1)', () => {
     await enter(page, 'Angebot 45min !hoch');
     await expect(today(page)).toContainText('Angebot');
     // Erledigt is one tap (the tick in the row), with undo.
-    await today(page).getByRole('checkbox', { name: 'Keller' }).click();
+    await today(page).getByRole('checkbox', { name: 'Erledigt: Keller', exact: true }).click();
     await expect(today(page)).not.toContainText('Keller');
     await page.getByRole('button', { name: 'Rückgängig' }).last().click();
     await expect(today(page)).toContainText('Keller');
@@ -295,24 +328,52 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(page.getByRole('button', { name: 'Neu planen' })).toHaveCount(0);
   });
 
-  test('phone: one day per screen with a strip from today and no horizontal overflow at 412 px', async ({
+  test('phone: one day per screen under a band of seven tiles from today, the plus opens the field, no horizontal overflow at 412 px', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 412, height: 915 });
     await enablePlanner(page);
     await ready(page, '/planner');
-    await enter(page, 'Fenster putzen 30min');
-    const strip = page.getByRole('group', { name: 'Tage' });
+    // The first screen is band and sheet; the plus of the bottom bar („Ding“) opens the field as a sheet that
+    // takes the focus and stays open for the next entry.
+    const plus = page.getByTestId('bottom-plus');
+    await expect(plus).toHaveAccessibleName('Ding eintragen');
+    await plus.click();
+    const sheet = page.getByRole('dialog', { name: 'Eintragen oder sagen' });
+    const field = sheet.getByRole('textbox', { name: 'Eintragen oder sagen' });
+    await expect(field).toBeFocused();
+    await field.fill('Fenster putzen 30min');
+    await page.keyboard.press('Enter');
+    await expect(field).toHaveValue('');
+    await expect(sheet).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(sheet).toBeHidden();
+    const strip = page.getByRole('group', { name: 'Woche' });
     await expect(strip).toBeVisible();
     await expect(strip.getByRole('button')).toHaveCount(7);
+    // Seven fit: every tile lies inside the screen and is at least 44 px wide and 56 px high.
+    const tiles = await strip.getByRole('button').evaluateAll((els) =>
+      els.map((el) => {
+        const r = el.getBoundingClientRect();
+        return { left: r.left, right: r.right, width: r.width, height: r.height };
+      }),
+    );
+    expect(tiles.every((t) => t.left >= 0 && t.right <= 412)).toBe(true);
+    expect(Math.min(...tiles.map((t) => t.width))).toBeGreaterThanOrEqual(44);
+    expect(Math.min(...tiles.map((t) => t.height))).toBeGreaterThanOrEqual(56);
+    await expect(strip.getByRole('button').first()).toHaveAttribute('aria-current', 'date');
     await expect(today(page)).toContainText('Fenster putzen');
     await strip.getByRole('button').nth(1).click();
     await expect(page.getByTestId('day-2026-11-10')).toBeVisible();
+    await expect(strip.getByRole('button').nth(1)).toHaveAttribute('aria-pressed', 'true');
+    // The page's ⋯ has no place in the phone's module head: it stands beside the sheet's day title.
+    await strip.getByRole('button').first().click();
+    await expect(today(page).getByRole('button', { name: 'Weitere Optionen' })).toBeVisible();
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );
     expect(overflow).toBeLessThanOrEqual(0);
-    // The strip's chosen chip and the one-day board pass axe at phone width too (a11y.spec covers the desktop in both themes).
+    // The band's chosen tile and the one-day sheet pass axe at phone width too (a11y.spec covers the desktop in both themes).
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
       .analyze();
@@ -322,20 +383,21 @@ test.describe('Planer (week board, package 1)', () => {
   test('„Woche prüfen“ from the head menu confirms the week in two taps', async ({ page }) => {
     await enablePlanner(page);
     await ready(page, '/planner');
-    // N04: the page's ⋯ sits beside the field, not in a toolbar row of its own.
+    // The page's ⋯ sits in the head's title row (planner hub R1), not beside the field or in a row of its own.
     await expect(
-      page
-        .locator('form')
-        .filter({ has: page.getByLabel('Eintragen oder sagen', { exact: true }) })
-        .getByRole('button', { name: 'Weitere Optionen' }),
+      page.getByTestId('module-actions').getByRole('button', { name: 'Weitere Optionen' }),
     ).toBeVisible();
+    await expect(
+      page.locator('main form').getByRole('button', { name: 'Weitere Optionen' }),
+    ).toHaveCount(0);
     await page.getByRole('button', { name: 'Weitere Optionen' }).click();
     await page.getByRole('menuitem', { name: 'Woche prüfen' }).click();
     const dialog = page.getByRole('dialog', { name: 'Woche prüfen' });
     await dialog.getByRole('button', { name: 'Mehr Zeit' }).first().click();
     await dialog.getByRole('button', { name: 'Passt so' }).click();
     await expect(page.getByText('Woche bestätigt.')).toBeVisible();
-    await expect(page.getByTestId('planner-head')).toContainText('3 h 36 frei heute');
+    // Nothing is planned, so the head has no figure: the day's own capacity line says the new time.
+    await expect(today(page)).toContainText('3 h 36 frei von 3 h 36');
   });
 });
 
@@ -371,6 +433,8 @@ test.describe('Planer (calendar chip, prefix, sentences – package 2)', () => {
     await enter(page, 'Steuer 2 Std bis Do');
     await enter(page, 'Keller 30min');
     await expect(await day(page, '2026-11-10')).toContainText('Steuer · Teil 2/2');
+    // Both entries are placed before the page is left (the second run follows the first).
+    await expect(await day(page, '2026-11-09')).toContainText('Keller');
     const days = new Set(
       (await rows(page, 'planner_assignment'))
         .filter((r) => r.deletedAt === null)
@@ -710,7 +774,7 @@ test.describe('Planer (time windows, templates – package 5)', () => {
     await enter(page, 'Keller 30min');
     await expect(today(page)).toContainText('Keller');
     await today(page)
-      .getByRole('button', { name: /^Heute · Mo\.? 9\./ })
+      .getByRole('button', { name: /Zeit für Montag ändern/ })
       .click();
     const sheet = page.getByRole('dialog');
     await expect(sheet).toContainText('Ohne Zeitfenster');
@@ -751,10 +815,10 @@ test.describe('Planer (time windows, templates – package 5)', () => {
       .click();
     await dialog.getByRole('button', { name: 'Passt so' }).click();
     await expect(page.getByText('Ruh dich aus – der Plan rückt ruhig weiter.')).toBeVisible();
-    await expect(page.getByTestId('planner-head')).toContainText('Heute ist frei.');
+    await expect(headContext(page)).toContainText('heute ist frei');
     await expect(await day(page, '2026-11-10')).toContainText('Blogpost');
     await page.getByRole('button', { name: 'Rückgängig' }).last().click();
-    await expect(page.getByTestId('planner-head')).not.toContainText('Heute ist frei.');
+    await expect(headContext(page)).not.toContainText('heute ist frei');
   });
 });
 
@@ -774,7 +838,7 @@ test.describe('Planer (package 3 of „Wochenende retten“: „Rest verteilen�
     // Both things fit today (Monday 4 h); the board shows them once the runs have settled.
     const rows = 2;
     await expect(today(page).locator('li')).toHaveCount(rows);
-    // The evening link sits in the head (from 17:00, „Tag abschließen“ on): no count of what was left.
+    // „Rest verteilen“ stands at the foot of today's sheet (planner hub R1: at any hour): no count of what was left.
     await expect(page.getByTestId('rest-link')).toHaveText('Rest verteilen');
 
     // The overview's „Heute“ card: with the planner on its evening action asks the planner (event bus).

@@ -28,11 +28,15 @@
 //! * **Power** (`src/power.rs`): sleep, hibernate, sign out, restart, shut down – API calls, never
 //!   forced, called by the shell only when its countdown at the PC ran out; and monitor off for
 //!   the media worker. No simulated input there either.
+//! * **Programs** (`src/launch.rs`): [`launch`] opens one file of the PC's own program list the
+//!   way a double click does – a path the shell looked up on the PC, never arguments – on a
+//!   thread of its own.
 //! * Not Windows: [`Worker::supported`] is `false`, every command is ignored.
 
 #![cfg_attr(not(windows), forbid(unsafe_code))]
 
 mod keyboard;
+mod launch;
 mod pointer;
 mod power;
 mod system;
@@ -42,6 +46,7 @@ pub use keyboard::{
     strokes, typed, Code, Key, KeyAction, Keyboard, Keys, Stroke, KEYS, QUEUE as KEY_QUEUE,
     TEXT_UNITS,
 };
+pub use launch::launch;
 pub use pointer::{Button, Mouse, Pointer, PointerAction, QUEUE, WHEEL_UNIT};
 pub use power::{act as power, hibernate_available, PowerAction};
 pub use system::System;

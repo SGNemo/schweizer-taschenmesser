@@ -11,6 +11,7 @@
     "allow-remote-client-text",
     "allow-remote-client-pointer",
     "allow-remote-client-power",
+    "allow-remote-client-program",
     "allow-remote-client-close"
   ]
 }

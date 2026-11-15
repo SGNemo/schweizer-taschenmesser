@@ -293,6 +293,18 @@
   flex-wrap: wrap;
   gap: var(--space-2);
 }
+/* The PC's program list: one quiet row per name, the name in full (it wraps). */
+.programs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.programs .program {
+  justify-content: flex-start;
+  min-height: var(--touch);
+  white-space: normal;
+  text-align: start;
+}
 /* The state of a power action: one still line with an icon, and its one step. */
 .powerLine {
   display: flex;

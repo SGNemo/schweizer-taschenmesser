@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { formatMinutes } from '@/core/i18n/format';
+import { Bars } from '@/ui/charts';
 import { addDaysStr, formatDay, relativeDayLabel } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Button, Icon, IconButton, ItemList, ItemRow } from '@/ui';
@@ -44,12 +45,17 @@ export function WeekView({
     plan.filter((p) => p.date === date).map((p) => t.fitness.plan.week(p.template.title));
   const canGoBack = addDaysStr(from, -7) >= weekOf(loadedFrom, weekStart).from;
   const w = t.fitness.week;
-  const groups = loadByGroup(sessions, { from, to }, [...GROUPS, 'other']).map((g) => {
-    const name = t.fitness.catalog.groups[g.group];
-    return g.sets
-      ? w.groupSets(name, g.sets)
-      : w.groupMinutes(name, formatMinutes(g.minutes, { compact: true }));
-  });
+  const load = loadByGroup(sessions, { from, to }, [...GROUPS, 'other']);
+  const setGroups = load.filter((g) => g.sets);
+  // Groups with only a duration (a run) stay a line of text: minutes and sets share no axis.
+  const minuteGroups = load
+    .filter((g) => !g.sets)
+    .map((g) =>
+      w.groupMinutes(
+        t.fitness.catalog.groups[g.group],
+        formatMinutes(g.minutes, { compact: true }),
+      ),
+    );
   const total = days.reduce(
     (a, d) => ({
       sessions: a.sessions + d.sessions,
@@ -97,11 +103,45 @@ export function WeekView({
       <p className={styles.hint} data-testid="fitness-week-total">
         {w.total}: {line(total)}
       </p>
-      {groups.length ? (
-        <p className={styles.hint} data-testid="fitness-week-groups">
-          {w.byGroup}: {groups.join(' · ')}
-        </p>
-      ) : null}
+      <div className={styles.weekCharts}>
+        {setGroups.length ? (
+          <Bars
+            title={w.groupsChart}
+            showTitle
+            data={setGroups.map((g) => ({
+              id: g.group,
+              label: t.fitness.catalog.groups[g.group],
+              value: g.sets,
+            }))}
+            format={(n) => t.fitness.line.sets(n)}
+            data-testid="fitness-week-groups"
+          />
+        ) : null}
+        {minuteGroups.length ? (
+          <p className={styles.hint} data-testid="fitness-week-minutes">
+            {w.byGroup}: {minuteGroups.join(' · ')}
+          </p>
+        ) : null}
+        {/* The week's kcal as columns from three days with meals on (two columns say less than the rows below):
+          plain amounts, no goal mark (eating is never „over“). */}
+        {nutrition && days.filter((d) => d.date <= day && d.meals > 0).length >= 3 ? (
+          <Bars
+            title={w.kcalChart}
+            showTitle
+            orientation="vertical"
+            // Days not lived yet are left out: a „0 kcal“ for tomorrow would read like a day without food.
+            data={days
+              .filter((d) => d.date <= day)
+              .map((d) => ({
+                id: d.date,
+                label: formatDay(d.date, 'EEE'),
+                value: d.kcal,
+              }))}
+            format={(n) => t.fitness.line.kcal(kcalText(n))}
+            data-testid="fitness-week-kcal"
+          />
+        ) : null}
+      </div>
       <ItemList>
         {days.map((d) => (
           <ItemRow
