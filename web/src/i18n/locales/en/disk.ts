@@ -495,6 +495,8 @@ export const disk: Strings['disk'] = {
     reload: 'Load again',
     failed: 'The history couldn’t be read.',
     recovered: 'The history file was damaged and has been started anew. Older entries are missing.',
+    unreadable:
+      'The file with the stored changes can’t be read right now. Until then Nemo changes nothing; try again later.',
     listLabel: 'History',
     fromScan: 'From the scan',
     trashed: (what: string, size: string, files: number) =>

@@ -84,6 +84,7 @@ export function HistoryTab() {
         </div>
       ) : null}
       {history?.recovered ? <p className={styles.note}>{h.recovered}</p> : null}
+      {history?.unreadable ? <p className={styles.note}>{h.unreadable}</p> : null}
       {history && history.entries.length === 0 ? (
         <EmptyState title={h.empty}>
           <p>{h.emptyHint}</p>

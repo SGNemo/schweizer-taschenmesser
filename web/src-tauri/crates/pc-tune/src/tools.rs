@@ -63,7 +63,9 @@ impl Tool {
 
     /// Opens the tool by its **full path** below the Windows folder (never by bare name: Windows
     /// would look next to the app's own exe first, where anyone could have put a file of that
-    /// name). Errors on other systems and when Windows cannot start it.
+    /// name), through the shell: a tool that needs administrator rights then shows Windows' own
+    /// prompt, the app itself never runs elevated. Errors on other systems and when Windows
+    /// cannot start it.
     pub fn open(self) -> std::io::Result<()> {
         #[cfg(windows)]
         {
@@ -71,10 +73,7 @@ impl Tool {
             let dir = imp::dir_of(home).ok_or_else(|| {
                 std::io::Error::new(std::io::ErrorKind::NotFound, "no windows folder")
             })?;
-            std::process::Command::new(dir.join(program))
-                .args(args)
-                .spawn()
-                .map(|_| ())
+            imp::shell_open(&dir.join(program), args.first().copied())
         }
         #[cfg(not(windows))]
         {
@@ -99,9 +98,42 @@ pub enum Home {
 mod imp {
     use super::Home;
     use std::path::PathBuf;
+    use windows::core::PCWSTR;
     use windows::Win32::System::SystemInformation::{
         GetSystemDirectoryW, GetSystemWindowsDirectoryW,
     };
+    use windows::Win32::UI::Shell::ShellExecuteW;
+    use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+
+    fn wide(s: &str) -> Vec<u16> {
+        s.encode_utf16().chain(std::iter::once(0)).collect()
+    }
+
+    /// Starts `program` (a full path) with at most one fixed argument, the way a double click
+    /// would. No command line is built from outside text.
+    pub fn shell_open(program: &std::path::Path, arg: Option<&str>) -> std::io::Result<()> {
+        let file = wide(&program.to_string_lossy());
+        let verb = wide("open");
+        let arg = arg.map(wide);
+        // SAFETY: all strings are NUL-terminated locals that outlive the call; a missing
+        // argument is a null pointer, which the API documents as "none".
+        let rc = unsafe {
+            ShellExecuteW(
+                None,
+                PCWSTR(verb.as_ptr()),
+                PCWSTR(file.as_ptr()),
+                arg.as_ref().map_or(PCWSTR::null(), |a| PCWSTR(a.as_ptr())),
+                PCWSTR::null(),
+                SW_SHOWNORMAL,
+            )
+        };
+        // The API reports success as a value above 32.
+        if rc.0 as usize > 32 {
+            Ok(())
+        } else {
+            Err(std::io::Error::other("not started"))
+        }
+    }
 
     /// Asked from Windows, not from an environment variable a user or another program could set.
     pub fn dir_of(home: Home) -> Option<PathBuf> {

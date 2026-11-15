@@ -5185,6 +5185,8 @@ export const de = {
       reload: 'Erneut laden',
       failed: 'Der Verlauf konnte nicht gelesen werden.',
       recovered: 'Die Verlaufsdatei war beschädigt und wurde neu angelegt. Ältere Einträge fehlen.',
+      unreadable:
+        'Die Datei mit den gespeicherten Änderungen lässt sich gerade nicht lesen. Bis dahin ändert Nemo nichts; versuch es später noch einmal.',
       listLabel: 'Verlauf',
       fromScan: 'Aus dem Scan',
       trashed: (what: string, size: string, files: number) =>
