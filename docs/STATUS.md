@@ -25,6 +25,7 @@ UI-Audit 4.0 ist abgenommen: Identity 4.0 gilt seit 0b-8 (2026-11-14, [REPORT �
 
 ## Abgeschlossene Runden (je eine Zeile; alles auf `develop`)
 
+- Merkliste „Tiefe & Politur“: Rolle, Kaufen/Ausprobieren, „Schon gemerkt“, Vorschau auf Klick, „In den Plan“, Widget mit drei Dingen (#950–#952; [design/bookmarks-deep/PLAN.md](design/bookmarks-deep/PLAN.md)); offen für Sven: drei Ja/Nein-Fragen in #951/#952.
 - Musik „Tiefe & Politur“: Playlists-Tab, Alben, Künstlerseiten, Weiterhören, Schlaf-Timer, Liedtext-Suche, Tasten (SGNemo/schweizer-taschenmesser#937, #953, #969; [features/spotify.md](features/spotify.md)); offen: Handtest mit echtem Konto (`/me`, Playlist bearbeiten, `/me/albums`, Top-Titel), Künstlern folgen (neuer Scope, nicht gebaut).
 - Musik: Cover für Playlists, Alben und Songs in allen Listen ([features/spotify.md](features/spotify.md)); offen: Handtest MU-C1 mit echtem Konto, Cover der von Spotify erzeugten Playlists (Daily Mix, Radio).
 - Heimnetz-Sync (LAN-Hub, Koppeln, zweiter PC, „Nur im WLAN“): [design/sync-lan/CONCEPT.md](design/sync-lan/CONCEPT.md). Nicht gebaut: Abgleich ganz im Hintergrund.
