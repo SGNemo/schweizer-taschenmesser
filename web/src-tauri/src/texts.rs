@@ -295,6 +295,42 @@ pub fn remote_ask_power(lang: Lang) -> &'static str {
     }
 }
 
+/// The line in a device's question when it may start programs of the PC's list afterwards.
+pub fn remote_ask_programs(lang: Lang) -> &'static str {
+    if german(lang) {
+        "Es darf außerdem die Programme starten, die hier unter Einstellungen → Fernsteuerung → Programme stehen."
+    } else {
+        "It may also start the programs listed here under Settings → Remote control → Programs."
+    }
+}
+
+/// The file dialog for a new entry of the program list: (title, filter name).
+pub fn remote_program_pick(lang: Lang) -> (&'static str, &'static str) {
+    if german(lang) {
+        ("Programm auswählen", "Programme und Verknüpfungen")
+    } else {
+        ("Choose a program", "Programs and shortcuts")
+    }
+}
+
+/// The confirmation before an entry joins the program list: (title, allow, cancel).
+pub fn remote_program_dialog(lang: Lang) -> (&'static str, &'static str, &'static str) {
+    if german(lang) {
+        ("Programm freigeben?", "Freigeben", "Abbrechen")
+    } else {
+        ("Allow this program?", "Allow", "Cancel")
+    }
+}
+
+/// What adding an entry means. `name` is already plain text.
+pub fn remote_ask_program(lang: Lang, name: &str) -> String {
+    if german(lang) {
+        format!("{name} kann danach von Handys mit der Freigabe gestartet werden.")
+    } else {
+        format!("{name} can then be started by phones that are allowed to.")
+    }
+}
+
 /// The countdown's one sentence: who, what, in how many seconds. `name` is already plain text.
 pub fn power_countdown(
     lang: Lang,

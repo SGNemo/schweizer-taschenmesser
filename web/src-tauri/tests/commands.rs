@@ -318,13 +318,13 @@ fn disk_delete_checks_keep_their_order() {
     assert_eq!(body.matches("guard_for(").count(), 1);
 }
 
-/// The five remote-control commands and nothing else, all off the main thread: three of them wait
+/// The eight remote-control commands and nothing else, all off the main thread: four of them wait
 /// for a native dialog, which must never block the event loop (or be shown from it).
 #[test]
 fn remote_commands_never_run_on_the_main_thread() {
     let src = source("remote.rs");
     assert_eq!(src.matches("#[tauri::command]").count(), 0);
-    assert_eq!(src.matches("#[tauri::command(async)]\npub fn ").count(), 5);
+    assert_eq!(src.matches("#[tauri::command(async)]\npub fn ").count(), 8);
     assert_async(
         &src,
         &[
@@ -333,8 +333,12 @@ fn remote_commands_never_run_on_the_main_thread() {
             "remote_set_device",
             "remote_end",
             "remote_set_notice",
+            "remote_programs",
+            "remote_program_add",
+            "remote_program_remove",
         ],
     );
+    assert!(!source("remote_programs.rs").contains("tauri::command"));
 }
 
 /// The command part of `src/remote.rs` (between the marker and the unit tests).
@@ -504,6 +508,44 @@ fn remote_widening_takes_a_ticket_before_the_native_dialog() {
         // the only setter call before the dialog passes no ticket (a narrowing)
         assert!(!body[..dialog].contains("Some("), "{name}");
     }
+    // Adding a program is a widening in the same order: ticket, session check, Rust's own file
+    // dialog, the native question, the same hub, the ticket checked, and only then the list.
+    let at = commands.find("pub fn remote_program_add(").unwrap();
+    let body = &commands[at..];
+    let body = &body[..body.find("\n}\n").unwrap()];
+    let order = [
+        "parts.remote.ticket()",
+        "full_session_open()",
+        "Asking::take(",
+        "picked_program(&app",
+        "allowed_path(&path)",
+        "asked(&app, texts::remote_program_dialog(lang)",
+        "Arc::ptr_eq(&now.remote, &parts.remote)",
+        ".confirm(ticket)",
+        ".add(remote_programs::Entry",
+    ];
+    let mut last = 0;
+    for step in order {
+        let found = body[last..]
+            .find(step)
+            .unwrap_or_else(|| panic!("remote_program_add: {step:?} missing or out of order"));
+        last += found + step.len();
+    }
+    assert_eq!(body.matches(".add(").count(), 1);
+    // it takes no path: only the app and the state
+    assert!(body.starts_with(
+        "pub fn remote_program_add(app: AppHandle, state: State<'_, RemoteHost>) -> Result<(), String> {"
+    ));
+    // the file dialog is Rust's, for executables and shortcuts only
+    let pick = &commands[commands.find("fn picked_program(").unwrap()..];
+    let pick = &pick[..pick.find("\n}\n").unwrap()];
+    assert!(pick.contains(".add_filter(filter, &[\"exe\", \"lnk\"])"));
+    assert!(pick.contains(".blocking_pick_file()"));
+    // removing narrows: no ticket, no dialog
+    let at = commands.find("pub fn remote_program_remove(").unwrap();
+    let body = &commands[at..];
+    let body = &body[..body.find("\n}\n").unwrap()];
+    assert!(!body.contains("ticket") && !body.contains("asked(") && !body.contains(".add("));
     // `remote_end` and `remote_status` widen nothing
     for name in ["remote_status", "remote_end"] {
         let at = commands.find(&format!("pub fn {name}(")).unwrap();
@@ -627,6 +669,7 @@ fn remote_client_commands_exist_on_the_phone_only() {
         "remote_client_text",
         "remote_client_pointer",
         "remote_client_power",
+        "remote_client_program",
         "remote_client_close",
     ];
     let mobile = mobile_handler_commands();
@@ -910,6 +953,64 @@ fn no_tauri_command_starts_a_power_action() {
         let text = source(file);
         assert!(!text.contains("remote_input::power("), "{file}");
         assert!(!text.contains("ExitWindowsEx"), "{file}");
+    }
+}
+
+/// Rule: no Tauri command starts a program. A start comes only from the hub's input session (the
+/// sink): the one call into the system is the closure `remote::attach` hands the list, called in
+/// `ProgramsCore::start`. No command takes a path, and the list holds no app handle (no window or
+/// dialog code on the sink's path – see the power test above for why that matters on Windows).
+#[test]
+fn no_tauri_command_starts_a_program() {
+    let commands = remote_commands_source();
+    for word in [
+        "launch",
+        ".start(",
+        "start_program",
+        "path: String",
+        "PathBuf::from",
+    ] {
+        assert!(!commands.contains(word), "a command reaches `{word}`");
+    }
+    let src = source("remote_programs.rs");
+    // the code without its comments (the header explains what the file must not reach)
+    let code: String = src[..src.find("#[cfg(test)]\nmod tests").unwrap()]
+        .lines()
+        .filter(|line| !line.trim_start().starts_with("//"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let code = code.as_str();
+    assert_eq!(code.matches("(env.launch)(").count(), 1);
+    let start = code
+        .find("pub fn start(&self, slot: u8, list: u64)")
+        .unwrap();
+    let call = code.find("(env.launch)(").unwrap();
+    let after = start + code[start..].find("\n    }\n").unwrap();
+    assert!(start < call && call < after, "the call is in `start`");
+    for word in [
+        "AppHandle",
+        "tauri::",
+        "get_webview_window",
+        "dialog",
+        "remote_input",
+        "std::process",
+        "Command::new",
+    ] {
+        assert!(!code.contains(word), "remote_programs.rs reaches `{word}`");
+    }
+    // the closure is built once, in `attach`, from the one call of the input crate
+    let remote = source("remote.rs");
+    let code = &remote[..remote.find("#[cfg(test)]").unwrap()];
+    assert_eq!(code.matches("remote_input::launch").count(), 1);
+    let attach = code.find("pub fn attach(").unwrap();
+    let launch = code.find("remote_input::launch").unwrap();
+    assert!(attach < launch && launch < code.find("fn watch(").unwrap());
+    // the sink is the only way to `start`
+    assert_eq!(code.matches("self.programs.start(slot, list)").count(), 1);
+    for file in ["lib.rs", "capture.rs", "lan_sync.rs", "remote_power.rs"] {
+        let text = source(file);
+        assert!(!text.contains("remote_input::launch"), "{file}");
+        assert!(!text.contains("ShellExecute"), "{file}");
     }
 }
 

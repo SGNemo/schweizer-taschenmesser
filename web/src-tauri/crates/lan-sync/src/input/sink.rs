@@ -6,7 +6,7 @@
 //! `state()` after a quiet time, which may wait a bounded moment (see [`InputSink::state`]) – and
 //! it logs nothing.
 
-use super::wire::{Button, Key, Media, PcState, Power, PowerAnswer, Record};
+use super::wire::{Button, Key, Media, PcState, Power, PowerAnswer, ProgramAnswer, Record};
 use crate::noise::PublicKey;
 use std::fmt;
 
@@ -74,6 +74,21 @@ pub trait InputSink: Send + Sync {
     /// the answer. A session tells its phone the news of its device that came after it opened.
     fn power_news(&self) -> Option<(u64, PublicKey, PowerAnswer)> {
         None
+    }
+
+    /// The names of the PC's program list in slot order, and a number that changes with every
+    /// change of the list. Names only: never a path.
+    fn programs(&self) -> (u64, Vec<String>) {
+        (0, Vec::new())
+    }
+
+    /// Starts the program in `slot` of the PC's list – a start that passed the gate (session,
+    /// permission, PC not locked, limits, the slot exists). `list`: the number of the list the
+    /// phone was told; when the list changed since, nothing starts (`Failed`). The path is the
+    /// PC's, looked up now; it starts without arguments. Answers at once.
+    fn start_program(&self, slot: u8, list: u64) -> ProgramAnswer {
+        let _ = (slot, list);
+        ProgramAnswer::Failed
     }
 }
 

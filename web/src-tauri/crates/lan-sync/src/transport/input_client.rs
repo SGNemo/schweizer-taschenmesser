@@ -35,13 +35,19 @@
 //!   names those the PC accepted (`Opened::ext`). A PC from before features closes on that `open`
 //!   without a word – then the session is opened once more the old way (`ext: None`), so an
 //!   updated phone keeps everything an older PC can do. Nothing of a feature is sent to a PC that
-//!   did not accept it (`send_power`, and `send_events` with monitor off or a presentation key,
-//!   refuse with `Protocol`).
+//!   did not accept it (`send_power`, `send_program`, and `send_events` with monitor off or a
+//!   presentation key, refuse with `Protocol`).
+//! * Programs: a PC that accepted them tells the names of its list as `Event::Programs` – only
+//!   when this device may start programs, right after `opened` and again when the list changes.
+//!   No such event: no list to offer. A start names a slot of the newest list; its answer is
+//!   `Event::Program`.
 //! * A send error is never a state to show: `Closed` means this session is over (see its
 //!   `Event::Closed`, or just open again), `Network` that the write failed.
 
 use crate::client::{hello_name, ClientError, Conn, IO_TIMEOUT};
-use crate::input::wire::{self, Code, Level, Opened, PcState, Power, PowerAnswer, Record};
+use crate::input::wire::{
+    self, Code, Level, Opened, PcState, Power, PowerAnswer, ProgramAnswer, Record,
+};
 use crate::noise::frame::{INPUT_CAP, PRE_CONFIRM_CAP, TAG_HELLO};
 use crate::noise::{self, Finished, Mode, PublicKey, StaticKey, Transport};
 use crate::qr;
@@ -71,12 +77,16 @@ pub enum InputError {
 }
 
 /// What the PC says unasked. After `Closed` nothing follows.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Event {
     State(PcState),
     /// About power: the answer to a `send_power`, or news of a countdown (it ran out, or it was
     /// stopped at the PC).
     Power(PowerAnswer),
+    /// The names of the PC's program list, in slot order (this device may start them).
+    Programs(Vec<String>),
+    /// The answer to a `send_program`.
+    Program(ProgramAnswer),
     /// The session is over: with the PC's reason, or `None` when the connection was lost.
     Closed(Option<Code>),
 }
@@ -313,6 +323,22 @@ impl InputSession {
         self.features & wire::FEATURE_PRESENT != 0
     }
 
+    /// Whether the PC accepted the program list (the list itself comes only when this device may
+    /// start programs).
+    pub fn has_programs(&self) -> bool {
+        self.features & wire::FEATURE_PROGRAMS != 0
+    }
+
+    /// Starts the program in `slot` of the list the PC told. Its answer comes as
+    /// `Event::Program`. `Protocol` on a PC that did not accept programs, or a slot past the
+    /// longest list.
+    pub fn send_program(&self, slot: u8) -> Result<(), InputError> {
+        if !self.has_programs() || usize::from(slot) >= wire::MAX_PROGRAMS {
+            return Err(InputError::Protocol);
+        }
+        self.send(wire::TAG_PROGRAM_START, &wire::encode_program_start(slot))
+    }
+
     /// Sends one power action. Its answer comes as `Event::Power`. `Protocol` on a PC that did
     /// not accept power.
     pub fn send_power(&self, power: Power, despite: bool) -> Result<(), InputError> {
@@ -394,6 +420,14 @@ fn read_loop(
             },
             wire::TAG_POWER_ANSWER => match wire::decode_power_answer(&body) {
                 Ok(answer) => on_event(Event::Power(answer)),
+                Err(_) => break None,
+            },
+            wire::TAG_PROGRAMS => match wire::decode_programs(&body) {
+                Ok(names) => on_event(Event::Programs(names)),
+                Err(_) => break None,
+            },
+            wire::TAG_PROGRAM_ANSWER => match wire::decode_program_answer(&body) {
+                Ok(answer) => on_event(Event::Program(answer)),
                 Err(_) => break None,
             },
             wire::TAG_CLOSED => break wire::decode_code(&body).ok(),

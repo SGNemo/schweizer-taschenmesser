@@ -3,7 +3,8 @@ use super::remote::{ControlError, FileSwitch, MasterSwitch, MemorySwitch, Remote
 use super::session::{InputConn, Step, STATE_INTERVAL};
 use super::sink::{Action, InputSink, NoSink};
 use super::wire::{
-    self, Button, Code, Key, Level, Media, Opened, PcState, Power, PowerAnswer, PowerInfo, Record,
+    self, Button, Code, Key, Level, Media, Opened, PcState, Power, PowerAnswer, PowerInfo,
+    ProgramAnswer, Record,
 };
 use crate::noise::{Mode, PublicKey};
 use crate::trust::{Device, MemoryTrustStore, RemoteGrant, SessionRegistry, TrustStore};
@@ -22,6 +23,10 @@ pub(crate) struct TestSink {
     pub power_answer: Mutex<PowerAnswer>,
     pub pending: AtomicBool,
     pub news: Mutex<Option<(u64, PublicKey, PowerAnswer)>>,
+    /// The PC's program list: its number and the names.
+    pub programs: Mutex<(u64, Vec<String>)>,
+    /// Program starts that reached the sink: slot and the list's number.
+    pub starts: Mutex<Vec<(u8, u64)>>,
 }
 
 impl TestSink {
@@ -39,7 +44,20 @@ impl TestSink {
             power_answer: Mutex::new(PowerAnswer::Started),
             pending: AtomicBool::new(false),
             news: Mutex::new(None),
+            programs: Mutex::new((1, vec!["Editor".into(), "Browser".into()])),
+            starts: Mutex::new(Vec::new()),
         })
+    }
+
+    pub fn starts(&self) -> Vec<(u8, u64)> {
+        std::mem::take(&mut self.starts.lock().unwrap())
+    }
+
+    /// The list changes at the PC.
+    pub fn set_programs(&self, names: &[&str]) {
+        let mut p = self.programs.lock().unwrap();
+        p.0 += 1;
+        p.1 = names.iter().map(|n| (*n).to_owned()).collect();
     }
 
     pub fn powers(&self) -> Vec<(PublicKey, Power, bool)> {
@@ -89,6 +107,17 @@ impl InputSink for TestSink {
     }
     fn power_news(&self) -> Option<(u64, PublicKey, PowerAnswer)> {
         *self.news.lock().unwrap()
+    }
+    fn programs(&self) -> (u64, Vec<String>) {
+        self.programs.lock().unwrap().clone()
+    }
+    fn start_program(&self, slot: u8, list: u64) -> ProgramAnswer {
+        self.starts.lock().unwrap().push((slot, list));
+        if list == self.programs.lock().unwrap().0 {
+            ProgramAnswer::Started
+        } else {
+            ProgramAnswer::Failed
+        }
     }
 }
 
@@ -1518,3 +1547,224 @@ fn the_presentation_keys_are_keys_on_a_locked_pc_and_in_the_limits() {
 }
 
 const MAX_BURST: usize = 32;
+
+// ---- programs ----
+
+impl Bench {
+    fn grant_programs(&self, device: u8, level: Level, programs: bool) {
+        self.remote
+            .grant_now(
+                &key(device),
+                RemoteGrant {
+                    programs,
+                    ..grant(level)
+                },
+            )
+            .unwrap();
+    }
+}
+
+fn start(c: &mut InputConn, slot: u8, at: Duration) -> Step {
+    c.on_frame(
+        wire::TAG_PROGRAM_START,
+        &wire::encode_program_start(slot),
+        at,
+    )
+}
+
+fn program_answer(a: ProgramAnswer) -> Step {
+    Step::Reply(
+        wire::TAG_PROGRAM_ANSWER,
+        wire::encode_program_answer(a).to_vec(),
+    )
+}
+
+/// The names the next tick tells, if any.
+fn told_programs(c: &mut InputConn, at: Duration) -> Option<Vec<String>> {
+    match c.poll(at) {
+        Step::Reply(wire::TAG_PROGRAMS, body) => Some(wire::decode_programs(&body).unwrap()),
+        _ => None,
+    }
+}
+
+#[test]
+fn the_list_goes_right_after_opened_only_to_a_device_that_may_start_programs() {
+    let b = bench();
+    b.grant_programs(PHONE, Level::Full, true);
+    let (mut c, o) = b.opened_with(PHONE, Level::Full, wire::FEATURE_PROGRAMS);
+    assert_eq!(o.ext.unwrap().features, wire::FEATURE_PROGRAMS, "echoed");
+    // the very next frame is the list – before any state
+    assert_eq!(
+        told_programs(&mut c, T0).unwrap(),
+        ["Editor".to_owned(), "Browser".to_owned()]
+    );
+    assert_eq!(told_programs(&mut c, T0 + STATE_INTERVAL), None, "once");
+    // a change of the list at the PC is told again
+    b.sink.set_programs(&["Editor"]);
+    assert_eq!(
+        told_programs(&mut c, T0 + STATE_INTERVAL * 2).unwrap(),
+        ["Editor".to_owned()]
+    );
+    drop(c);
+    // a media session of that device hears the list too (the phone raises before a start)
+    let (mut c, _) = b.opened_with(PHONE, Level::Media, wire::FEATURE_PROGRAMS);
+    assert!(told_programs(&mut c, T0).is_some());
+    drop(c);
+    // not asked for, or the old open: no list, ever – and a start closes the session
+    for features in [Some(wire::FEATURE_POWER | wire::FEATURE_PRESENT), None] {
+        let mut c = b.conn(PHONE);
+        let Step::Reply(wire::TAG_OPENED, body) = c.on_frame(
+            wire::TAG_OPEN,
+            &wire::encode_open(Level::Full, features),
+            T0,
+        ) else {
+            panic!("not opened")
+        };
+        let ext = wire::decode_opened(&body).unwrap().ext;
+        assert!(ext.is_none_or(|e| e.features & wire::FEATURE_PROGRAMS == 0));
+        assert_eq!(told_programs(&mut c, T0), None, "{features:?}");
+        assert_eq!(start(&mut c, 0, T0), Step::Close);
+    }
+    // without the permission, or with it but only the media level: asked, echoed, no list (the
+    // menu stays away on the phone)
+    for (level, programs) in [(Level::Full, false), (Level::Media, true)] {
+        b.grant_programs(PHONE, level, programs);
+        let (mut c, o) = b.opened_with(PHONE, level, wire::FEATURES);
+        assert_eq!(o.ext.unwrap().features, wire::FEATURES);
+        assert_eq!(told_programs(&mut c, T0), None, "{programs}");
+    }
+    assert!(b.sink.starts().is_empty());
+}
+
+#[test]
+fn a_start_passes_the_gate_and_names_the_list_the_phone_was_told() {
+    let b = bench();
+    b.grant_programs(PHONE, Level::Full, true);
+    let (mut c, _) = b.opened_with(PHONE, Level::Full, wire::FEATURES);
+    // before the list was told nothing can be started
+    assert_eq!(start(&mut c, 0, T0), program_answer(ProgramAnswer::Failed));
+    assert!(told_programs(&mut c, T0).is_some());
+    let at = T0 + Duration::from_secs(10);
+    assert_eq!(start(&mut c, 1, at), program_answer(ProgramAnswer::Started));
+    assert_eq!(b.sink.starts(), vec![(1, 1)]);
+    // a slot past the told list: failed, not closed, and nothing reached the PC
+    let at = at + Duration::from_secs(10);
+    assert_eq!(start(&mut c, 2, at), program_answer(ProgramAnswer::Failed));
+    assert!(b.sink.starts().is_empty());
+    // past the longest list: a broken frame
+    assert_eq!(c.on_frame(wire::TAG_PROGRAM_START, &[8], at), Step::Close);
+    // the list changed at the PC after it was told: the sink refuses the old number
+    let (mut c, _) = b.opened_with(PHONE, Level::Full, wire::FEATURES);
+    assert!(told_programs(&mut c, T0).is_some());
+    b.sink.set_programs(&["Editor", "Spiel"]);
+    assert_eq!(start(&mut c, 1, at), program_answer(ProgramAnswer::Failed));
+    assert_eq!(b.sink.starts(), vec![(1, 1)], "the old number went along");
+    // the next tick tells the new list; a start on it goes
+    assert!(told_programs(&mut c, at).is_some());
+    let at = at + Duration::from_secs(10);
+    assert_eq!(start(&mut c, 1, at), program_answer(ProgramAnswer::Started));
+    assert_eq!(b.sink.starts(), vec![(1, 2)]);
+}
+
+#[test]
+fn a_start_needs_the_mouse_session_the_permission_and_an_unlocked_pc() {
+    let b = bench();
+    b.grant_programs(PHONE, Level::Full, true);
+    // a media session closes on it, like on a key
+    let (mut c, _) = b.opened_with(PHONE, Level::Media, wire::FEATURES);
+    assert!(told_programs(&mut c, T0).is_some());
+    assert_eq!(start(&mut c, 0, T0), Step::Close);
+    // locked: refused, nothing reached the PC
+    let (mut c, _) = b.opened_with(PHONE, Level::Full, wire::FEATURES);
+    assert!(told_programs(&mut c, T0).is_some());
+    b.sink.set_locked(true);
+    assert_eq!(start(&mut c, 0, T0), program_answer(ProgramAnswer::Locked));
+    b.sink.set_locked(false);
+    assert!(b.sink.starts().is_empty());
+    // the permission taken away: the session ends (a changed grant); nothing starts
+    b.remote
+        .set_grant(&key(PHONE), grant(Level::Full), None)
+        .unwrap();
+    assert_eq!(start(&mut c, 0, T0), Step::Close);
+    assert!(b.sink.starts().is_empty());
+    // a new session of that device: the list is not told and a start is refused
+    let (mut c, _) = b.opened_with(PHONE, Level::Full, wire::FEATURES);
+    assert_eq!(told_programs(&mut c, T0), None);
+    assert_eq!(
+        start(&mut c, 0, T0),
+        program_answer(ProgramAnswer::NotGranted)
+    );
+    assert!(b.sink.starts().is_empty());
+}
+
+#[test]
+fn program_starts_are_limited_and_a_flood_closes() {
+    let b = bench();
+    b.grant_programs(PHONE, Level::Full, true);
+    let (mut c, _) = b.opened_with(PHONE, Level::Full, wire::FEATURES);
+    assert!(told_programs(&mut c, T0).is_some());
+    assert_eq!(start(&mut c, 0, T0), program_answer(ProgramAnswer::Started));
+    // one per five seconds
+    assert_eq!(
+        start(&mut c, 0, T0 + Duration::from_secs(2)),
+        program_answer(ProgramAnswer::Limit)
+    );
+    assert_eq!(
+        start(&mut c, 0, T0 + Duration::from_secs(5)),
+        program_answer(ProgramAnswer::Started)
+    );
+    assert_eq!(b.sink.starts().len(), 2);
+    // a stream of them is a flood like any other
+    let at = T0 + Duration::from_secs(5);
+    let flood = |c: &mut InputConn| {
+        let mut last = Step::Continue;
+        for _ in 0..3000 {
+            last = start(c, 0, at);
+            if matches!(last, Step::ReplyClose(..)) {
+                break;
+            }
+        }
+        last
+    };
+    assert_eq!(closed_with(&flood(&mut c)), Code::Limit);
+    assert!(b.sink.starts().is_empty());
+    // refusals count as drops too (a locked PC here)
+    let (mut c, _) = b.opened_with(PHONE, Level::Full, wire::FEATURES);
+    assert!(told_programs(&mut c, T0).is_some());
+    b.sink.set_locked(true);
+    assert_eq!(closed_with(&flood(&mut c)), Code::Limit);
+    assert!(b.sink.starts().is_empty());
+}
+
+#[test]
+fn a_program_start_never_reaches_the_sink_as_input() {
+    let b = bench();
+    b.grant_programs(PHONE, Level::Full, true);
+    let (mut c, _) = b.opened_with(PHONE, Level::Full, wire::FEATURES);
+    assert!(told_programs(&mut c, T0).is_some());
+    assert_eq!(start(&mut c, 0, T0), program_answer(ProgramAnswer::Started));
+    assert!(b.sink.taken().is_empty());
+    assert!(b.sink.powers().is_empty());
+}
+
+#[test]
+fn a_widening_of_the_shell_passes_only_with_an_untouched_ticket() {
+    let b = bench();
+    b.grant(PHONE, Level::Full);
+    assert_eq!(b.remote.confirm(b.remote.ticket()), Ok(()));
+    // a mouse/keyboard session opened after the ticket was taken (and gone again)
+    let ticket = b.remote.ticket();
+    let (c, _) = b.opened(PHONE, Level::Full);
+    assert_eq!(
+        b.remote.confirm(b.remote.ticket()),
+        Err(ControlError::BusyControlled),
+        "open now"
+    );
+    drop(c);
+    assert_eq!(b.remote.confirm(ticket), Err(ControlError::BusyControlled));
+    // a media session does not count
+    b.grant(PHONE, Level::Media);
+    let ticket = b.remote.ticket();
+    let (_c, _) = b.opened(PHONE, Level::Media);
+    assert_eq!(b.remote.confirm(ticket), Ok(()));
+}

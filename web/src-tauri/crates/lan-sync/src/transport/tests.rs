@@ -1085,6 +1085,7 @@ mod input_client {
                 Ok(Event::State(_)) => states += 1,
                 Ok(closed @ Event::Closed(_)) => break closed,
                 Ok(Event::Power(_)) => panic!("nobody asked about power"),
+                Ok(Event::Programs(_) | Event::Program(_)) => panic!("no programs granted"),
                 Err(_) => {}
             }
             assert!(began.elapsed() < WAIT, "never closed");
@@ -1236,6 +1237,59 @@ mod input_client {
                 && actions.contains(&Action::Key(wire::Key::B))
         });
         input.close();
+    }
+
+    #[test]
+    fn the_program_list_and_a_start_go_over_the_socket() {
+        let r = rig();
+        let key = StaticKey::generate().unwrap();
+        pair_over_socket(&r, &key);
+        r.remote.enable_now(true).unwrap();
+        r.remote
+            .grant_now(
+                &key.public(),
+                RemoteGrant {
+                    level: Level::Full,
+                    programs: true,
+                    ..RemoteGrant::default()
+                },
+            )
+            .unwrap();
+        let (input, opened, events) = open(&r, &key, Level::Full).unwrap();
+        assert!(opened.ext.unwrap().features & wire::FEATURE_PROGRAMS != 0);
+        assert!(input.has_programs());
+        // the list is the first thing after `opened`
+        assert_eq!(
+            events.recv_timeout(WAIT).unwrap(),
+            Event::Programs(vec!["Editor".into(), "Browser".into()])
+        );
+        input.send_program(1).unwrap();
+        let answer = loop {
+            match events.recv_timeout(WAIT).expect("an answer") {
+                Event::Program(a) => break a,
+                Event::State(_) => continue,
+                other => panic!("{other:?}"),
+            }
+        };
+        assert_eq!(answer, wire::ProgramAnswer::Started);
+        assert_eq!(r.sink.starts(), vec![(1, 1)]);
+        assert_eq!(input.send_program(8), Err(InputError::Protocol));
+        input.close();
+        // a PC that did not accept them gets no start
+        let (tx, _rx) = channel();
+        let (old, _) = open_plain(
+            addr(&r),
+            &key,
+            &r.hub_key,
+            Level::Full,
+            Box::new(move |e| {
+                let _ = tx.send(e);
+            }),
+        )
+        .unwrap();
+        assert!(!old.has_programs());
+        assert_eq!(old.send_program(0), Err(InputError::Protocol));
+        old.close();
     }
 
     #[test]

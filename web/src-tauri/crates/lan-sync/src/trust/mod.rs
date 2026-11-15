@@ -45,6 +45,9 @@ pub struct RemoteGrant {
     /// Power actions (shut down, restart, sleep, hibernate, sign out). Its own permission, apart
     /// from the level; it counts only with at least the media level and no pause.
     pub power: bool,
+    /// Programs of the PC's own list may be started. Its own permission too; it counts only with
+    /// the mouse/keyboard level and no pause.
+    pub programs: bool,
 }
 
 impl RemoteGrant {
@@ -58,17 +61,24 @@ impl RemoteGrant {
     }
 
     /// Whether going from `old` to `self` gives or gives back control in any way (a higher level,
-    /// lifting a pause, dropping the unlock request, allowing power actions).
+    /// lifting a pause, dropping the unlock request, allowing power actions or programs).
     pub fn widens(&self, old: &RemoteGrant) -> bool {
         self.level > old.level
             || (old.paused && !self.paused)
             || (old.unlock && !self.unlock)
             || (self.power && !old.power)
+            || (self.programs && !old.programs)
     }
 
     /// Whether power actions are allowed now: the flag, at least the media level, no pause.
     pub fn power_effective(&self) -> bool {
         self.power && self.effective() >= Level::Media
+    }
+
+    /// Whether programs of the PC's list may be started now: the flag, the mouse/keyboard level,
+    /// no pause.
+    pub fn programs_effective(&self) -> bool {
+        self.programs && self.effective() == Level::Full
     }
 }
 
@@ -79,6 +89,7 @@ impl Default for RemoteGrant {
             paused: false,
             unlock: true,
             power: false,
+            programs: false,
         }
     }
 }

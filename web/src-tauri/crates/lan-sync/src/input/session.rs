@@ -26,6 +26,14 @@
 //! only on such a session, and like every key only on the mouse/keyboard level. From any other
 //! session they close it, as an unknown id did before.
 //!
+//! Programs (a phone that asked for [`wire::FEATURE_PROGRAMS`]): when the device may start
+//! programs, the PC tells the names of its list right after `opened` (and again when the list
+//! changes). A start names a slot of the list the phone was told; it needs the mouse/keyboard
+//! session (else the session closes, like a key on a media session), the device's permission, an
+//! unlocked PC and the limit (one per 5 s). One answer per frame; every refusal counts as a drop.
+//! A slot that is not in the told list, or a list that changed since, is `failed` – never a reason
+//! to close. The sink looks the path up on the PC at that moment.
+//!
 //! Nothing here touches the sync store, sets a grant or records anything.
 
 use super::limits::{Limits, Verdict};
@@ -33,7 +41,7 @@ use super::remote::{Claimed, Ended, Flag, Remote};
 use super::sink::{Action, InputSink};
 use super::wire::{
     self, Button, Code, Level, Media, Opened, OpenedExt, PcState, Power, PowerAnswer, PowerInfo,
-    Record,
+    ProgramAnswer, Record,
 };
 use crate::noise::PublicKey;
 use crate::trust::SessionHandle;
@@ -80,6 +88,10 @@ struct Live {
     present: bool,
     /// The newest countdown news the phone has heard of (or that came before it opened).
     news_seen: u64,
+    /// The phone asked for the program list (and this PC accepted it).
+    programs: bool,
+    /// The list the phone was told: its number and how many entries it had.
+    programs_told: Option<(u64, usize)>,
 }
 
 pub struct InputConn {
@@ -159,7 +171,9 @@ impl InputConn {
         let step = match &mut self.phase {
             Phase::Live(live) => match Self::still_allowed(&self.remote, &self.peer, live) {
                 Err(step) => step,
-                Ok(()) => match Self::news(&*self.sink, &self.peer, live) {
+                Ok(()) => match Self::program_list(&self.remote, &*self.sink, &self.peer, live)
+                    .or_else(|| Self::news(&*self.sink, &self.peer, live))
+                {
                     Some(step) => step,
                     None => {
                         let state = self.sink.state();
@@ -193,6 +207,7 @@ impl InputConn {
         };
         let power = features.is_some_and(|f| f & wire::FEATURE_POWER != 0);
         let present = features.is_some_and(|f| f & wire::FEATURE_PRESENT != 0);
+        let programs = features.is_some_and(|f| f & wire::FEATURE_PROGRAMS != 0);
         // what the machine can do at all comes first: on a PC that cannot be controlled, "allow it
         // at the PC" would send the user on a pointless errand
         if !self.sink.supported() {
@@ -228,6 +243,8 @@ impl InputConn {
                     present,
                     // what happened before this session is not news to it
                     news_seen: self.sink.power_news().map_or(0, |(n, _, _)| n),
+                    programs,
+                    programs_told: None,
                 }));
                 let ext = features.map(|features| {
                     let (pending, hibernate) = self.sink.power_info();
@@ -380,9 +397,67 @@ impl InputConn {
                     wire::encode_power_answer(answer).to_vec(),
                 )
             }
-            // a sync tag, a PC → phone tag, a second `open`, power without asking, anything unknown
+            wire::TAG_PROGRAM_START if live.programs => {
+                let Ok(slot) = wire::decode_program_start(body) else {
+                    return Step::Close;
+                };
+                // starting a program is the mouse/keyboard level, like a key
+                if live.level != Level::Full {
+                    return Step::Close;
+                }
+                // every refusal counts as a drop, so a session cannot ask without end
+                let (verdict, refused) = if !remote.grant_of(peer).programs_effective() {
+                    (live.limits.dropped(now), Some(ProgramAnswer::NotGranted))
+                } else if sink.state().locked {
+                    (live.limits.dropped(now), Some(ProgramAnswer::Locked))
+                } else if !live
+                    .programs_told
+                    .is_some_and(|(_, count)| usize::from(slot) < count)
+                {
+                    // not in the list this phone was told
+                    (live.limits.dropped(now), Some(ProgramAnswer::Failed))
+                } else {
+                    (live.limits.program(now), None)
+                };
+                let answer = match (verdict, refused) {
+                    (Verdict::Flood, _) => return closed(Code::Limit),
+                    (_, Some(answer)) => answer,
+                    (Verdict::Drop, None) => ProgramAnswer::Limit,
+                    (Verdict::Pass, None) => {
+                        let list = live.programs_told.map_or(0, |(n, _)| n);
+                        sink.start_program(slot, list)
+                    }
+                };
+                Step::Reply(
+                    wire::TAG_PROGRAM_ANSWER,
+                    wire::encode_program_answer(answer).to_vec(),
+                )
+            }
+            // a sync tag, a PC → phone tag, a second `open`, power or programs without asking,
+            // anything unknown
             _ => Step::Close,
         }
+    }
+
+    /// The PC's program list, when the phone asked for it, the device may start programs and the
+    /// phone has not been told this list yet (right after `opened`, and after every change).
+    fn program_list(
+        remote: &Remote,
+        sink: &dyn InputSink,
+        peer: &PublicKey,
+        live: &mut Live,
+    ) -> Option<Step> {
+        if !live.programs || !remote.grant_of(peer).programs_effective() {
+            return None;
+        }
+        let (n, names) = sink.programs();
+        if live.programs_told.is_some_and(|(told, _)| told == n) {
+            return None;
+        }
+        let body = wire::encode_programs(&names);
+        // what was really sent (a name that is not plain text ends the list there)
+        live.programs_told = Some((n, usize::from(body[0])));
+        Some(Step::Reply(wire::TAG_PROGRAMS, body))
     }
 
     /// Countdown news of this device that the phone has not heard yet.

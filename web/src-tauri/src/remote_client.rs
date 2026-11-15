@@ -40,8 +40,8 @@
 #![cfg_attr(not(mobile), allow(dead_code))]
 
 use ::lan_sync::input::wire::{
-    Button, Code, Key, Level, Media, PcState, Power, PowerAnswer, PowerInfo, Record,
-    FEATURE_PRESENT, MAX_TEXT_BYTES, VOLUME_UNKNOWN,
+    Button, Code, Key, Level, Media, PcState, Power, PowerAnswer, PowerInfo, ProgramAnswer, Record,
+    FEATURE_PRESENT, MAX_PROGRAMS, MAX_TEXT_BYTES, VOLUME_UNKNOWN,
 };
 use ::lan_sync::input_client::{Event, InputError, InputSession};
 use serde::Serialize;
@@ -384,6 +384,11 @@ pub enum EventDto {
     },
     /// About power: the answer to a power action, or news of a countdown at the PC.
     Power { session: u64, answer: &'static str },
+    /// The PC's program list as plain text in slot order (this device may start them): after
+    /// `opened`, and again when the list changed at the PC. Never a path; a start sends the slot.
+    Programs { session: u64, list: Vec<String> },
+    /// The answer to a program start.
+    Program { session: u64, answer: &'static str },
 }
 
 #[derive(Serialize, Debug, PartialEq, Eq)]
@@ -669,6 +674,22 @@ fn event_dto(id: u64, event: Event) -> EventDto {
             session: id,
             answer: power_answer_name(answer),
         },
+        Event::Programs(list) => EventDto::Programs { session: id, list },
+        Event::Program(answer) => EventDto::Program {
+            session: id,
+            answer: program_answer_name(answer),
+        },
+    }
+}
+
+/// The PC's answer to a program start, as the page knows it.
+fn program_answer_name(answer: ProgramAnswer) -> &'static str {
+    match answer {
+        ProgramAnswer::Started => "started",
+        ProgramAnswer::NotGranted => "not-granted",
+        ProgramAnswer::Locked => "locked",
+        ProgramAnswer::Limit => "limit",
+        ProgramAnswer::Failed => "failed",
     }
 }
 
@@ -1233,6 +1254,38 @@ async fn power_confirm<R: Runtime>(
     } else {
         Err("confirm-cancelled")
     }
+}
+
+/// Starts the program in `slot` of the list the PC told on session `session`, which must be of the
+/// mouse-and-keyboard level (its unlock at the phone is the one of that level; no other prompt).
+/// Nothing is sent while the PC is locked (`locked`); `no-programs` for a PC without the list.
+/// The PC checks everything again and answers with a `program` event of the session.
+#[tauri::command]
+pub async fn remote_client_program<R: Runtime>(
+    app: AppHandle<R>,
+    session: u64,
+    slot: u8,
+) -> Result<(), String> {
+    if usize::from(slot) >= MAX_PROGRAMS {
+        return Err("bad-slot".to_owned());
+    }
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<RemoteClient>();
+        let (open, level) = picked(&state, session)?;
+        if level != Level::Full {
+            return Err("bad-level".to_owned());
+        }
+        if !open.has_programs() {
+            return Err("no-programs".to_owned());
+        }
+        if state.locked.load(Ordering::SeqCst) {
+            return Err("locked".to_owned());
+        }
+        open.send_program(slot)
+            .map_err(|e| error_name(e).to_owned())
+    })
+    .await
+    .map_err(|_| "internal".to_owned())?
 }
 
 /// Ends session `session` (the page went to the background). A number that is not the open
@@ -1954,6 +2007,19 @@ mod tests {
         assert_eq!(
             serde_json::to_string(&event_dto(7, Event::Power(PowerAnswer::Working))).unwrap(),
             r#"{"kind":"power","session":7,"answer":"working"}"#
+        );
+        assert_eq!(
+            serde_json::to_string(&event_dto(
+                7,
+                Event::Programs(vec!["Editor".into(), "Spiel".into()])
+            ))
+            .unwrap(),
+            r#"{"kind":"programs","session":7,"list":["Editor","Spiel"]}"#
+        );
+        assert_eq!(
+            serde_json::to_string(&event_dto(7, Event::Program(ProgramAnswer::NotGranted)))
+                .unwrap(),
+            r#"{"kind":"program","session":7,"answer":"not-granted"}"#
         );
         let closed = EventDto::Closed {
             session: 7,
