@@ -1,8 +1,7 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
-import { mailThreadUrl } from '@/core/mail/service';
-import { useModuleStates } from '@/core/modules/activation';
-import { getManifest } from '@/core/modules/registry';
+import { fromLegacy, refKey } from '@/core/entitylinks/types';
+import { useResolvedLinks } from '@/core/modules/contributions';
 import { getPlatform } from '@/core/platform';
 import type { NotificationPermissionState } from '@/core/notifications/service';
 import { useFocusSettings } from '@/core/settings/focus';
@@ -40,12 +39,6 @@ import styles from '../routes/todos.module.css';
 /** Deleting a task (with its subtasks) is one action: the toast and Ctrl+Z bring it back. */
 function deleteTaskUndoable(id: string) {
   return undoableWithToast(t.todos.taskDeleted, t.todos.taskDeleted, () => deleteTask(id));
-}
-
-/** Where a link of a task opens (`?open=<id>` is understood by every module page). */
-export function linkPath(l: TaskLink): string {
-  const base = { note: '/notes', mail: '/mail', invoice: '/invoices', event: '/calendar' }[l.kind];
-  return `${base}?open=${encodeURIComponent(l.id)}`;
 }
 
 /** Offered effort estimates in minutes. */
@@ -98,12 +91,41 @@ function EditorForm({
   const [tagsText, setTagsText] = useState((task.tags ?? []).map((x) => `#${x}`).join(', '));
   const [checklist, setChecklist] = useState<ChecklistItem[]>(task.checklist ?? []);
   const [itemText, setItemText] = useState('');
-  const [links, setLinks] = useState<TaskLink[]>(task.links ?? []);
-  const states = useModuleStates();
+  // Links are no draft: the list shows the stored record, and removing one is written at once (with undo).
+  const links: TaskLink[] = task.links ?? [];
+  const linkList = useRef<HTMLUListElement>(null);
+  // After a removal the focus goes to the remove control of the row that took its place (or the one before).
+  const focusLink = useRef<number | null>(null);
+  useEffect(() => {
+    const at = focusLink.current;
+    if (at === null) return;
+    focusLink.current = null;
+    const controls =
+      linkList.current?.querySelectorAll<HTMLButtonElement>('li > button:last-child');
+    if (controls?.length) controls[Math.min(at, controls.length - 1)]!.focus();
+  }, [links.length]);
+  // Every link is read through its target module (`resolveLink`): alive, gone, or not readable on this device.
+  const linkStates = useResolvedLinks(links.map((l) => fromLegacy(l).to));
   const [subTitle, setSubTitle] = useState('');
   const isSub = Boolean(task.parentId);
   const navigate = useNavigate();
   const [focus] = useFocusSettings();
+
+  /**
+   * Removing a link (every row, gone or not) is one behaviour: written at once, with the usual undo. „Speichern“
+   * never writes `links`, so an undo taken while the editor is open stays undone.
+   */
+  async function removeLink(l: TaskLink, index: number) {
+    const without = (all: readonly TaskLink[] | undefined) =>
+      (all ?? []).filter((x) => !(x.kind === l.kind && x.id === l.id));
+    focusLink.current = index;
+    await undoableWithToast(t.todos.links.removed, t.todos.links.removed, async () => {
+      const current = await taskRepo.get(task.id);
+      if (!current) return;
+      const rest = without(current.links);
+      await taskRepo.update(task.id, { links: rest.length ? rest : undefined });
+    });
+  }
 
   async function save(e: FormEvent) {
     e.preventDefault();
@@ -130,7 +152,6 @@ function EditorForm({
         startDate: startDate || undefined,
         tags: parseTags(tagsText).length ? parseTags(tagsText) : undefined,
         checklist: checklist.length ? checklist : undefined,
-        links: links.length ? links : undefined,
       }),
     );
     // Subtasks always live in the list of their parent.
@@ -340,33 +361,61 @@ function EditorForm({
       {links.length > 0 ? (
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>{t.todos.links.title}</h3>
-          <ul className={styles.checklist}>
-            {links.map((l) => (
-              <li key={`${l.kind}:${l.id}`} className={styles.checkItem}>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    // A mail opens in the app where the mail module is (desktop), else on the web.
-                    // While the states load, a desktop with the mail module opens the app (the common case).
-                    if (l.kind === 'mail' && (!getManifest('mail') || states?.mail === false)) {
-                      const url = mailThreadUrl(l.id);
-                      if (url) void getPlatform().app.openUrl(url);
-                      return;
-                    }
-                    onClose();
-                    void navigate(linkPath(l));
-                  }}
-                >
-                  {`${t.todos.links.kinds[l.kind]}: ${l.label}`}
-                </Button>
-                <IconButton
-                  label={t.todos.links.remove(l.label)}
-                  onClick={() => setLinks((all) => all.filter((x) => x !== l))}
-                >
-                  <Icon name="trash" />
-                </IconButton>
-              </li>
-            ))}
+          <ul className={styles.checklist} ref={linkList}>
+            {links.map((l, index) => {
+              const state = linkStates?.get(refKey(fromLegacy(l).to));
+              // An alive target shows its title of today; everywhere else the label of the time stands in.
+              const name = `${t.todos.links.kinds[l.kind]}: ${
+                state?.state === 'alive' && state.title ? state.title : l.label
+              }`;
+              // Only a mail has a web address (its module is off, not on this device, or the thread is not cached).
+              const url = state && 'url' in state ? state.url : undefined;
+              return (
+                <li key={`${l.kind}:${l.id}`} className={styles.checkItem}>
+                  {state === undefined || state.state === 'alive' ? (
+                    // While the answer loads the button is already there (nothing jumps), only not yet usable.
+                    <Button
+                      variant="ghost"
+                      disabled={state === undefined}
+                      onClick={() => {
+                        if (!state) return;
+                        onClose();
+                        void navigate(state.to);
+                      }}
+                    >
+                      {name}
+                    </Button>
+                  ) : (
+                    <span className={styles.linkText}>
+                      {name}
+                      {state.state === 'gone' ? ` · ${t.todos.links.gone}` : null}
+                      {/* Only where the way out exists (a mail thread outside this device's cache). */}
+                      {state.state === 'elsewhere' && url ? ` · ${t.todos.links.elsewhere}` : null}
+                    </span>
+                  )}
+                  {url ? (
+                    <Button variant="ghost" onClick={() => void getPlatform().app.openUrl(url)}>
+                      {t.todos.links.inBrowser}
+                    </Button>
+                  ) : null}
+                  {state?.state === 'gone' ? (
+                    <Button
+                      aria-label={t.todos.links.remove(l.label)}
+                      onClick={() => void removeLink(l, index)}
+                    >
+                      {t.todos.links.removeGone}
+                    </Button>
+                  ) : (
+                    <IconButton
+                      label={t.todos.links.remove(l.label)}
+                      onClick={() => void removeLink(l, index)}
+                    >
+                      <Icon name="trash" />
+                    </IconButton>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </div>
       ) : null}
