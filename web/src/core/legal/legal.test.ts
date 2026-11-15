@@ -43,6 +43,10 @@ describe('data flows', () => {
     expect(text('google')).toContain('calendar.readonly');
     expect(text('google')).toContain('gmail.readonly');
     expect(text('google')).toContain('7 Tagen');
+    expect(text('google')).toContain('ob die letzte Nachricht von dir ist (nur auf dem Gerät)');
+    expect(JSON.stringify(dataFlows(tLegal.en).find((f) => f.id === 'google'))).toContain(
+      'whether the last message is yours (on this device only)',
+    );
     expect(text('ai-cloud')).toContain('Nie deine Einträge');
     expect(text('update')).toContain('Automatisch nach Updates suchen');
   });

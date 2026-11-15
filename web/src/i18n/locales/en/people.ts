@@ -62,7 +62,7 @@ export const people: Strings['people'] = {
   giftsOpen: (n: number) => (n === 1 ? '1 gift open' : `${n} gifts open`),
   giftsHeading: 'Gifts',
   viewLabel: 'View',
-  viewPeople: 'People',
+  viewPeople: 'Birthdays',
   viewGifts: 'Open gifts',
   giftsNoneOpen: 'No open gift ideas. All given.',
   giftGivenAction: 'Given',
@@ -87,6 +87,5 @@ export const people: Strings['people'] = {
   },
   calendarGift: (who: string, what: string) => `Gift for ${who}: ${what}`,
   widgetEmpty: 'No people yet.',
-  widgetAction: 'Add person',
   widgetSummary: (n: number) => (n === 1 ? '1 gift open' : `${n} gifts open`),
 };

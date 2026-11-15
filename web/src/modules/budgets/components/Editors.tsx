@@ -10,7 +10,7 @@ import {
 } from '@/core/money';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Link } from 'react-router';
-import { formatMonth, today } from '@/core/time/dates';
+import { formatDay, formatMonth, today } from '@/core/time/dates';
 import { loadHistory } from '../data';
 import styles from '../routes/budgets.module.css';
 import { t } from '@/strings';
@@ -145,7 +145,7 @@ function BudgetFields({
         ))}
       </SelectField>
       <TextField
-        label={t.budgets.limit}
+        label={t.budgets.limit[period]}
         inputMode="decimal"
         placeholder="0,00"
         value={limit}
@@ -200,7 +200,7 @@ function BudgetFields({
       >
         <Button onClick={onClose}>{t.actions.cancel}</Button>
         <Button type="submit" variant="primary" disabled={!categoryId}>
-          {t.actions.save}
+          {existing ? t.actions.save : t.budgets.addBudget}
         </Button>
       </FormActions>
     </Form>
@@ -380,7 +380,7 @@ function GoalFields({ existing, onClose }: { existing: Stored<Goal> | null; onCl
       >
         <Button onClick={onClose}>{t.actions.cancel}</Button>
         <Button type="submit" variant="primary">
-          {t.actions.save}
+          {existing ? t.actions.save : t.budgets.addGoal}
         </Button>
       </FormActions>
     </Form>
@@ -490,12 +490,9 @@ export function HistoryDialog({
         ) : (
           <ul className={patternStyles.plainList}>
             {deposits.map((d) => (
-              <li
-                key={d.id}
-                style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}
-              >
-                <span className={patternStyles.grow}>{d.date.split('-').reverse().join('.')}</span>
-                <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+              <li key={d.id} className={styles.depositRow}>
+                <span className={patternStyles.grow}>{formatDay(d.date, 'P')}</span>
+                <span className={styles.depositAmount}>
                   {formatMoney(d.amountMinor, currencyOf(goal))}
                 </span>
                 <IconButton

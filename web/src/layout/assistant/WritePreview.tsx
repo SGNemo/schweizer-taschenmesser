@@ -265,6 +265,11 @@ function OpCard({
         <p className={styles.danger}>{t.ai.write.willDelete}</p>
       ) : null}
       {op.error === 'no-change' ? <p className={answer.note}>{t.ai.write.noChange}</p> : null}
+      {op.error === 'full' ? (
+        <p className={answer.error} role="alert">
+          {t.ai.write.full(op.moduleName)}
+        </p>
+      ) : null}
 
       {askFields.length > 0 ? (
         <div className={editing ? styles.fields : styles.missing}>

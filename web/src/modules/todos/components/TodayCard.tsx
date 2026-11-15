@@ -113,7 +113,7 @@ export function TodayCard({
         </div>
         {next && onStart ? (
           <div className={styles.nextActions}>
-            {/* Not filled: the page's one filled action is "Neue Aufgabe" in the head (rule 4). */}
+            {/* Not filled: the page's one filled action is "Aufgabe eintragen" in the head (rule 4). */}
             <Button
               size="sm"
               onClick={() => onStart(next)}

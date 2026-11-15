@@ -21,7 +21,7 @@ import { availableManifests } from '@/core/modules/available';
 import { ModuleIdentityContext } from '@/core/modules/identityContext';
 import { t } from '@/strings';
 import { PAGE_SLOW_MS, PAGE_STUCK_MS } from './PageLoadingCard';
-import { moduleSettingsPath } from '@/pages/settings/useSections';
+import { moduleSettingsPath } from '@/pages/settings/modulePath';
 import { tComfort } from '@/strings.comfort';
 import { HeadSurface, Icon, PHONE_QUERY, SettingsLink, SubNav, useMediaQuery } from '@/ui';
 import {
@@ -42,6 +42,7 @@ import {
 } from '@/core/modules/types';
 import { useFigureHold } from './figureHold';
 import { readHeadRoom, writeHeadRoom } from './headRoom';
+import { useFirstReadHold } from './firstReadHold';
 import { PageContainer, PageFallback } from './PageContainer';
 import { DefaultSignature } from './signatures';
 import { useModuleHeadline } from './useModuleHeadline';
@@ -151,20 +152,16 @@ export function AreaFrame({
   // Areas the page has claimed with a HeroSlot (the frame's defaults step back) and the page's title text.
   const [claims, setClaims] = useState<Record<string, number>>({});
   const [titleText, setTitleText] = useState<string>();
-  const controls = useMemo<HeroControls>(
-    () => ({
-      claim: (area) => {
-        setClaims((c) => ({ ...c, [area]: (c[area] ?? 0) + 1 }));
-        return () => setClaims((c) => ({ ...c, [area]: Math.max(0, (c[area] ?? 1) - 1) }));
-      },
-      setTitle: setTitleText,
-    }),
-    [],
+  const framed = !!area && !isFocusPath(pathname);
+  const id = manifest?.identity;
+  // 0b-8: the entry page of a module whose hint above the head or whose stage waits for its first reads
+  // (`identity.firstRead`: the weather's hint, the music stage) is painted once those reads are back, so nothing that
+  // arrives with them pushes the head and the page down (weather's first visit before: CLS 0.6–0.9).
+  const [firstReadHeld, settle, firstReadLate] = useFirstReadHold(
+    framed && id?.firstRead && manifest && pathname === `/${manifest.id}` ? pathname : undefined,
   );
   const claimed = (area: HeroArea) => (claims[area] ?? 0) > 0;
   const { figure: headline, pending: headlinePending } = useModuleHeadline(manifest);
-  const framed = !!area && !isFocusPath(pathname);
-  const id = manifest?.identity;
   const stage = id?.head === 'stage';
   const slot = id ? SIGNATURE_SLOTS[id.head] : 'none';
   const phone = useMediaQuery(PHONE_QUERY);
@@ -174,15 +171,31 @@ export function AreaFrame({
   const roomKey = routeKey && stage ? `${routeKey}@${phone ? 'phone' : 'wide'}` : undefined;
   // The hold restarts for every route (and layout), so the room is measured only once that route's page is there.
   const [figureHold, setPageLoading] = useFigureHold(roomKey);
+  // A page whose head still waits for a late read keeps the room too (`useKeepHeadRoom`); its own flag, so it never
+  // clears the chunk's loading or the other way round.
+  const [keptRoom, setKeptRoom] = useState(false);
+  const controls = useMemo<HeroControls>(
+    () => ({
+      claim: (area) => {
+        setClaims((c) => ({ ...c, [area]: (c[area] ?? 0) + 1 }));
+        return () => setClaims((c) => ({ ...c, [area]: Math.max(0, (c[area] ?? 1) - 1) }));
+      },
+      setTitle: setTitleText,
+      settle,
+      late: firstReadLate,
+      keepRoom: setKeptRoom,
+    }),
+    [settle, firstReadLate],
+  );
   const remembered = useMemo(() => (roomKey ? readHeadRoom(roomKey) : undefined), [roomKey]);
-  const holdRoom = figureHold && !!remembered;
+  const holdRoom = (figureHold || keptRoom) && !!remembered;
   const stageRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = stageRef.current;
-    if (figureHold || !framed || !roomKey || !el) return;
+    if (figureHold || keptRoom || !framed || !roomKey || !el) return;
     const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
     writeHeadRoom(roomKey, el.getBoundingClientRect().height / rem);
-  }, [figureHold, framed, roomKey]);
+  }, [figureHold, keptRoom, framed, roomKey]);
   // Dialogs opened inside the page wear the module's identity in their head (S02, `ui/Dialog`).
   const dialogIdentity = useMemo(
     () =>
@@ -273,10 +286,13 @@ export function AreaFrame({
   return (
     <HeroContext.Provider value={framed ? targets : undefined}>
       <HeroControlsContext.Provider value={framed ? controls : undefined}>
-        {framed ? <div className={styles.notice} ref={setNotice} /> : null}
+        {framed ? (
+          <div className={`${styles.notice} ${firstReadHeld ? styles.held : ''}`} ref={setNotice} />
+        ) : null}
         {framed && !stage ? (
           <header
-            className={styles.head}
+            className={`${styles.head} ${firstReadHeld ? styles.held : ''}`}
+            aria-busy={firstReadHeld || undefined}
             data-head="standard"
             data-hue={id?.hue}
             data-hue2={id?.hue2}
@@ -297,7 +313,8 @@ export function AreaFrame({
           <HeadSurface
             as="header"
             bleed
-            className={styles.stage}
+            className={`${styles.stage} ${firstReadHeld ? styles.held : ''}`}
+            busy={firstReadHeld}
             hue={id?.hue}
             hue2={id?.hue2}
             area={area?.id}
@@ -340,7 +357,7 @@ export function AreaFrame({
             </div>
           </HeadSurface>
         ) : null}
-        <PageContainer variant={variant} hue={hue}>
+        <PageContainer variant={variant} hue={hue} held={firstReadHeld}>
           {framed && !stage ? (
             // Under a standard head: what a page still brings for the signature slot and its strips lies in the
             // page (the area packages decide what stays), never in the head.

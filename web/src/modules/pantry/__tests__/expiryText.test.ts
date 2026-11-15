@@ -32,4 +32,13 @@ describe('pantry page: an expired item names its day (N08), in every active lang
     expect(at('2027-03-08')).toBe('Haltbar bis Mo., 8. März 2027');
     expect(expiryText({}, TODAY, 3)).toBeNull();
   });
+
+  it('drops the weekday on the phone and keeps the year rule', () => {
+    expect(expiryText({ expires: '2026-10-11' }, TODAY, 3, { weekday: false })).toBe(
+      'Haltbar bis 11. Okt.',
+    );
+    expect(expiryText({ expires: '2027-01-11' }, TODAY, 3, { weekday: false })).toBe(
+      'Haltbar bis 11. Jan. 2027',
+    );
+  });
 });

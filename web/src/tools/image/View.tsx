@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { getPlatform } from '@/core/platform';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { Button, patternStyles, SelectField, TextField } from '@/ui';
+import { Button, FileField, patternStyles, SelectField, TextField } from '@/ui';
 import { num } from '../shared';
 import styles from '../tools.module.css';
 import { convert, decode, type Converted } from './convert';
@@ -23,7 +23,6 @@ export default function ImageTool() {
   const [dims, setDims] = useState<{ w: number; h: number } | null>(null);
   const bitmap = useRef<ImageBitmap | null>(null);
   const [type, setType] = useState<OutType>('image/webp');
-  const inputRef = useRef<HTMLInputElement>(null);
   const [quality, setQuality] = useState(85);
   const [maxSide, setMaxSide] = useState('1920');
   const [crop, setCrop] = useState<CropRatio>('none');
@@ -100,17 +99,14 @@ export default function ImageTool() {
 
   return (
     <div className={styles.stack}>
-      <div>
-        <Button onClick={() => inputRef.current?.click()}>{s.pick}</Button>
-        <input
-          ref={inputRef}
-          id="image-input"
-          type="file"
-          accept="image/*"
-          hidden
-          onChange={(e) => void pick(e.target.files?.[0])}
-        />
-      </div>
+      <FileField
+        id="image-input"
+        label={s.file}
+        buttonLabel={s.pick}
+        accept="image/*"
+        fileName={file ? file.name : null}
+        onFiles={(files) => void pick(files[0])}
+      />
       {error ? (
         <p className={styles.error} role="alert">
           {error}

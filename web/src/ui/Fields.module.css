@@ -67,7 +67,7 @@
   height: 1.5rem;
   margin: 0;
   border: 1px solid var(--border-strong);
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: var(--surface);
   cursor: pointer;
   transition: transform var(--dur-fast) var(--ease-out);
@@ -94,6 +94,14 @@
 .check input:checked::after {
   transform: rotate(45deg) scale(1);
   opacity: 1;
+}
+/* Neutral: a box in every row of a list ticks in grey, like the neutral switch (B7). */
+.check[data-tone='neutral'] input:checked {
+  background: var(--calm-ink);
+  border-color: var(--calm-ink);
+}
+.check[data-tone='neutral'] input:checked::after {
+  border-color: var(--surface);
 }
 /* Locked like a disabled button (AE1): neutral surface, no accent, no opacity. A ticked box keeps its tick. */
 .check input:disabled {

@@ -19,7 +19,7 @@ They want to set it up once, see it when it is due, and tick it off step by step
 So the user meets three half-answers in two modules. Goal: **Routinen is the one place**; Listen points there.
 
 ## Ziel
-- One way: **„Routine anlegen“** → pick a start (Morgen, Abend, Wochenputz, Wocheneinkauf, „Leer“) → one form:
+- One way: **„Routine eintragen“** (the app-wide verb since 0b-8) → pick a start (Morgen, Abend, Wochenputz, Wocheneinkauf, „Leer“) → one form:
   Name · Wie oft (Jeden Tag / An Wochentagen / Jede Woche / Alle zwei Wochen / Jeden Monat; the full rule only
   under „Mehr Felder“) · Tageszeit (egal / morgens / mittags / abends) · Schritte · optional Erinnerung · optional im Planer.
 - **Durchführen**: „Los“ on a routine with steps opens a step view; ticking the last step = „Erledigt“ (toast with

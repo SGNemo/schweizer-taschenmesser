@@ -21,7 +21,7 @@ async function editNote(id: string, text: string) {
   const target = (await sessionRepo.get(id))!;
   render(<SessionEditor target={target} jobs={[]} onClose={() => {}} />);
   await userEvent.type(await screen.findByLabelText('Notiz'), text);
-  await userEvent.click(screen.getByRole('button', { name: 'Speichern' }));
+  await userEvent.click(screen.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }));
 }
 
 // QA round 4, X04: editing the running session must not stop it (at the made-up default 10:00).

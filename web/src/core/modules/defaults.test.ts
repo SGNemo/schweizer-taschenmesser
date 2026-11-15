@@ -3,6 +3,7 @@ import { createBackup, importBackup } from '@/core/backup/backup';
 import type { TaschenmesserDB } from '@/core/db/db';
 import { bus } from '@/core/events';
 import budgets from '@/modules/budgets/manifest';
+import device from '@/modules/device/manifest';
 import downloads from '@/modules/downloads/manifest';
 import finance from '@/modules/finance/manifest';
 import lists from '@/modules/lists/manifest';
@@ -273,9 +274,9 @@ describe('default set of a fresh installation', () => {
   });
 
   // Set 5 (module package H-b): routines join the set of installations from then on.
-  it('8a: a fresh installation notes set 5 and shows routines without a row', async () => {
+  it('8a: a fresh installation shows routines without a row', async () => {
     await markFreshDefaults(true, db);
-    expect(await meta(db, DEFAULTS_VERSION_KEY)).toBe(5);
+    expect(await meta(db, DEFAULTS_VERSION_KEY)).toBe(CURRENT_DEFAULTS_VERSION);
     expect(await loadModuleStates([...DESKTOP, routines], db)).toMatchObject({ routines: true });
     expect(await rows(db)).toEqual([]);
   });
@@ -297,6 +298,43 @@ describe('default set of a fresh installation', () => {
   it('8c: an installation from before the sets gets no routines either', async () => {
     await markFreshDefaults(false, db);
     expect(await loadModuleStates([...DESKTOP, routines], db)).toMatchObject({ routines: false });
+  });
+
+  // Set 6 (module package S-b): device status joins the set of installations from then on. Set 5 was shipped with
+  // routines, so `device` could not join it: a device keeps the set it started with.
+  it('9a: a fresh installation notes set 6 and shows device status without a row, on the phone too', async () => {
+    await markFreshDefaults(true, db);
+    expect(await meta(db, DEFAULTS_VERSION_KEY)).toBe(6);
+    expect(await loadModuleStates([...DESKTOP, routines, device], db)).toMatchObject({
+      routines: true,
+      device: true,
+    });
+    expect(await loadModuleStates([...PHONE, device], db)).toMatchObject({ device: true });
+    expect(await rows(db)).toEqual([]);
+  });
+
+  it('9b: a device that started with set 5 is never raised: after the update device status stays off, routines stay on, and nothing is written', async () => {
+    await db.table('_meta').put({ key: DEFAULTS_VERSION_KEY, value: 5 });
+    await markFreshDefaults(false, db);
+    await markFreshDefaults(true, db);
+    expect(await meta(db, DEFAULTS_VERSION_KEY)).toBe(5);
+    expect(await loadModuleStates([...DESKTOP, routines, device], db)).toMatchObject({
+      lists: true,
+      routines: true,
+      device: false,
+    });
+    expect(await rows(db)).toEqual([]);
+  });
+
+  it('9c: a device with set 4 and an installation from before the sets get no device status either', async () => {
+    await markFreshDefaults(false, db);
+    expect(await loadModuleStates([...DESKTOP, device], db)).toMatchObject({ device: false });
+    await db.table('_meta').put({ key: DEFAULTS_VERSION_KEY, value: 4 });
+    expect(await loadModuleStates([...DESKTOP, routines, device], db)).toMatchObject({
+      lists: true,
+      routines: false,
+      device: false,
+    });
   });
 
   it('the test builds keep the set off unless a context switches it on', async () => {

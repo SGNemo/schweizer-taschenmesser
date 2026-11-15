@@ -99,7 +99,7 @@ test.describe('shell: sidebar, areas, favourites (desktop)', () => {
   }) => {
     await ready(page, '/');
     await expect(page.getByRole('button', { name: /Neu/ })).toBeVisible();
-    const create = page.getByRole('button', { name: 'Neu: schnell hinzufügen' });
+    const create = page.getByRole('button', { name: 'Neu: etwas eintragen' });
     // Identity 4.0, rule 4: "Neu" is neutral; the filled accent belongs to the module's action in the head.
     await expect(create).toHaveAttribute('data-variant', 'secondary');
     await create.click();
@@ -171,9 +171,9 @@ test.describe('shell: phone', () => {
     await expect(page.getByRole('button', { name: 'Schnell hinzufügen', exact: true })).toHaveCount(
       0,
     );
-    await expect(page.getByRole('button', { name: 'Neu: schnell hinzufügen' })).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Neu: etwas eintragen' })).toBeHidden();
     await plus.click();
-    await expect(page.getByRole('dialog', { name: 'Schnell hinzufügen' })).toBeVisible();
+    await expect(page.getByRole('dialog', { name: 'Neu eintragen' })).toBeVisible();
     await page.keyboard.press('Escape');
 
     await nav.getByRole('link', { name: 'Geld' }).click();

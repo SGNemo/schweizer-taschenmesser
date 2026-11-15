@@ -9,13 +9,16 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function save(page: Page) {
-  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+    .click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
 async function addSubscription(page: Page, name: string, amount: string, first: string) {
   await ready(page, '/subscriptions?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Abo hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Abo eintragen' });
   await dialog.getByLabel('Name').fill(name);
   await dialog.getByLabel('Betrag').fill(amount);
   await dialog.getByLabel('Abbuchung am').fill(first);
@@ -25,6 +28,7 @@ async function addSubscription(page: Page, name: string, amount: string, first: 
 test.describe('Subscriptions: tiles, trial, category, price suggestion', () => {
   test('a subscription gets a tile, a head with the next charge and a monthly equivalent for a yearly one', async ({
     page,
+    isMobile,
   }) => {
     await addSubscription(page, 'Streaming Plus', '12,99', '2026-10-05');
     await save(page);
@@ -32,15 +36,18 @@ test.describe('Subscriptions: tiles, trial, category, price suggestion', () => {
     // carries the monthly sum. The former "Nächste Abbuchungen" block repeated both (finding B2).
     const first = rows(page).first();
     await expect(first).toContainText('Streaming Plus');
-    await expect(first).toContainText('Nächste Abbuchung: 5. Okt. 2026');
+    // The phone's one meta line (design check G4) names the day without the year.
+    await expect(first).toContainText(/Nächste Abbuchung: 5\. Okt\./);
     await expect(first).toContainText(/12,99\s€/);
     await expect(page.getByTestId('total-month')).toHaveText(/12,99\s€/);
 
     const yearly = await addSubscription(page, 'Jahres-Abo', '120,00', '2026-11-01');
     await yearly.getByLabel('Wiederholung').selectOption('yearly');
     await save(page);
-    // A yearly 120,00 € is 10,00 € a month: said in the row.
-    await expect(rows(page).filter({ hasText: 'Jahres-Abo' })).toContainText(/10,00\s€ \/ Monat/);
+    // A yearly 120,00 € is 10,00 € a month: said in the row (desktop); the phone's row says "Jährlich".
+    await expect(rows(page).filter({ hasText: 'Jahres-Abo' })).toContainText(
+      isMobile ? 'Jährlich' : /10,00\s€ \/ Monat/,
+    );
     await expect(page.getByTestId('total-month')).toBeVisible();
   });
 
@@ -90,7 +97,7 @@ test.describe('Subscriptions: tiles, trial, category, price suggestion', () => {
     // Two bookings of the same new price (the two newest agree).
     for (const date of ['2026-08-05', '2026-09-05']) {
       await ready(page, '/finance?new=1');
-      const d = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
+      const d = page.getByRole('dialog', { name: 'Buchung eintragen' });
       await d.getByLabel('Betrag').fill('14,99');
       await d.getByLabel('Empfänger / Titel').fill('STREAMING PLUS 4711');
       await moreFields(page);

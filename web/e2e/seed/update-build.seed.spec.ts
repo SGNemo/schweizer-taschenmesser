@@ -112,6 +112,10 @@ test('a page opened before an update shows "Neu laden", and the reload brings th
   page,
 }) => {
   root = DIST;
+  // No idle preloading: the page opened after the update must be one whose code was not loaded yet.
+  await page.addInitScript(() => {
+    (window as unknown as { __tmNoPreload?: boolean }).__tmNoPreload = true;
+  });
   await bootDev(page);
   await page.goto(`${origin}/settings/darstellung`);
   await expect(page.locator('main h1')).toBeVisible();

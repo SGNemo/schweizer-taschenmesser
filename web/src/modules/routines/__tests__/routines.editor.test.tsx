@@ -21,7 +21,7 @@ describe('routine editor: one way to set a routine up', () => {
     await db.table('routines_routine').clear();
   });
 
-  it('a start fills name, rhythm, time of day and steps; „Speichern“ keeps them', async () => {
+  it('a start fills name, rhythm, time of day and steps; „Routine eintragen“ keeps them', async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
     editor({ draft: true }, onClose);
@@ -33,7 +33,7 @@ describe('routine editor: one way to set a routine up', () => {
     expect((screen.getByLabelText(/Schritte/) as HTMLTextAreaElement).value).toContain(
       'Zähne putzen',
     );
-    await user.click(screen.getByRole('button', { name: 'Speichern' }));
+    await user.click(screen.getByRole('button', { name: 'Routine eintragen' }));
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     const [r] = await routineRepo.active().toArray();
     expect(r).toMatchObject({ name: 'Morgenroutine', daypart: 'morning', dueDate: today() });

@@ -23,9 +23,14 @@ export const attention: Strings['attention'] = {
     n === 1 ? '1 notice period ending soon' : `${n} notice periods ending soon`,
   driveFull: (name: string) => `Drive ${name} almost full`,
   updateAvailable: 'Update available',
-  waiting: (n: number) => `Still waiting · ${n}`,
-  nothingNow: 'None of this has to happen now.',
-  waitingExplain: 'Open for a while, but not urgent. You can re-plan them.',
+  contractsActToday: (n: number) =>
+    n === 1 ? '1 notice period ends today' : `${n} notice periods end today`,
+  canWait: (n: number) => `Can wait · ${n}`,
+  canWaitNote: 'none of this is due today.',
+  budgetsWarnFold: (n: number) =>
+    n === 1 ? '1 budget almost used up' : `${n} budgets almost used up`,
+  priceFold: (n: number) =>
+    n === 1 ? '1 subscription with a new price' : `${n} subscriptions with a new price`,
   todosWaiting: (n: number) => (n === 1 ? '1 to-do waiting' : `${n} to-dos waiting`),
   todosWaitingDetail: 'You can plan it again',
 };

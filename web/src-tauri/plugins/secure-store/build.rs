@@ -2,6 +2,7 @@ const COMMANDS: &[&str] = &[
     "available",
     "set",
     "get",
+    "has",
     "delete",
     "biometric_seal",
     "biometric_unseal",

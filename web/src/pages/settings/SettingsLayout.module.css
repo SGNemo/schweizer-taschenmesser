@@ -190,8 +190,9 @@
 .category a {
   overflow-wrap: anywhere;
 }
-/* Touch: a plain text link of a tab is 44 px to hit (Identity 4.0; they were 20–26 px). */
-@media (pointer: coarse) {
+/* Touch: a plain text link of a tab is 44 px to hit (Identity 4.0; they were 20–26 px), also outside running text
+   (`ui/global.css` covers a link in a paragraph or list item everywhere); any touch screen, like `Segmented`. */
+@media (any-pointer: coarse) {
   /* A hit strip, so the text flows as before (a link inside a sentence stays inside its line). */
   .category a:not([class]) {
     position: relative;
@@ -205,6 +206,24 @@
     height: var(--touch);
     transform: translateY(-50%);
   }
+}
+/* Phone: the search as an icon at the end of the title line (0b-E), drawn like the way back beside the title
+   (`components/SettingsTitle`): 44 px, no surface until hovered; open, it keeps a quiet surface. */
+.searchToggle {
+  display: inline-grid;
+  place-items: center;
+  width: var(--touch);
+  height: var(--touch);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+}
+.searchToggle:hover,
+.searchToggle[aria-expanded='true'] {
+  background: var(--surface-2);
 }
 .search {
   position: relative;

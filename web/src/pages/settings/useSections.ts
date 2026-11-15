@@ -1,13 +1,11 @@
 import { useRemoteHost } from '@/core/remote/host';
 import { useAutomationSettings } from '@/core/automation/settings';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useAiOn } from '@/core/ai/switch';
-import { hasStartData } from '@/core/dataapi/onboarding';
-import { useLiveQuery } from 'dexie-react-hooks';
-import { loadModuleStates, type ModuleStates } from '@/core/modules/activation';
+import { useModuleStates, type ModuleStates } from '@/core/modules/activation';
+import { useSharedLiveQuery } from '@/core/modules/sharedQuery';
 import { availableManifests } from '@/core/modules/available';
 import { getPlatform } from '@/core/platform';
-import { settingsPath } from '@/core/settings/registry/paths';
 import { validateSections, visibleSections } from '@/core/settings/registry/registry';
 import type { SettingsContext, SettingsSectionDef } from '@/core/settings/registry/types';
 import { useLocalApiConfig } from '@/core/localapi/config';
@@ -20,21 +18,11 @@ import { createElement } from 'react';
 import { blockOf } from '@/core/settings/moduleBlocks';
 import { ModuleSection } from './sectionChunks';
 import { CORE_SECTIONS } from './sections';
+import { hasSection, moduleSettingsPath } from './modulePath';
 
 const MODULE_ORDER = 100;
 
-/** Does the module have a settings section (settings fields or start data)? */
-const hasSection = (m: ReturnType<typeof availableManifests>[number]) =>
-  m.settings.fields.length > 0 || hasStartData(m);
-
-/** `/settings/<category>#module-<id>` for a module that has settings, else undefined. */
-export function moduleSettingsPath(
-  m: ReturnType<typeof availableManifests>[number],
-): string | undefined {
-  return hasSection(m)
-    ? settingsPath(m.settings.category ?? 'module', `module-${m.id}`)
-    : undefined;
-}
+export { moduleSettingsPath };
 
 /** Sections contributed by module manifests: one per module with settings or start data. */
 export function moduleSections(
@@ -88,7 +76,7 @@ export function useSectionsInUse(): Readonly<Record<string, boolean>> {
   const readAid = useUiStore((s) => s.readAid);
   const voice = useVoicePrefs();
   const networkBlocked = useNetLog((s) => s.blocked);
-  const pairs = useLiveQuery(() => loadPairs(), []);
+  const pairs = useSharedLiveQuery('sharePairs', () => loadPairs());
   const [automation] = useAutomationSettings();
   // Remote control switched on at this PC (read by the top-bar chip's watch; desktop hub only).
   const remoteOn = useRemoteHost((s) => s.status?.enabled === true);
@@ -118,15 +106,12 @@ export function useSettingsSections(): SettingsSectionDef[] {
   const aiOn = useAiOn();
   const showPreview = useUiStore((s) => s.showPreview);
   const inUse = useSectionsInUse();
-  const states = useLiveQuery(
-    async () => {
-      const read = await loadModuleStates();
-      lastStates = read;
-      return read;
-    },
-    [],
-    lastStates,
-  );
+  // The shared module-state query (every settings part and the shell read it; one query for all).
+  const read = useModuleStates();
+  useEffect(() => {
+    if (read) lastStates = read;
+  }, [read]);
+  const states = read ?? lastStates;
   return useMemo(() => {
     if (!states) return [];
     const ctx: SettingsContext = {
