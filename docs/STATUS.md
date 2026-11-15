@@ -20,6 +20,7 @@ UI-Audit 4.0 ist abgenommen: Identity 4.0 gilt seit 0b-8 (2026-11-14, [REPORT �
 - **CI aufräumen, Runde 3** ([perf/CI-2026-11.md](perf/CI-2026-11.md)): Ursache ist die Warteschlange (20 Runner, 22 % der Zeit voll); kleine Workflow-Änderungen in #692, fünf Übergabe-Pakete in [perf/CI-2026-11-PACKAGES.md](perf/CI-2026-11-PACKAGES.md); messen: `node scripts/ci/measure.mjs`.
 - **UI schärfen, Runde 6** ([qa/round-6/STATUS.md](qa/round-6/STATUS.md)): alle Fix-PRs und der Sammel-PR (#877) auf `develop`; offen U41 Kopfbandhöhen (nicht begonnen).
 - **Modul-Runde „Tiefe & Politur“, Routinen** (Plan `design/routines-deep/PLAN.md` kommt mit #936): Routinen = der eine Ort für „Routine“ (Schritte, ein Formular mit Vorlagen, „Los“); drei gestapelte PRs #936 → #954 → #957, warten auf Sven.
+- **Modul-Runde „Tiefe & Politur“, Rechnungen** (Plan `design/invoices-deep/PLAN.md` kommt mit #999): Tab „Überblick“ mit Tortendiagramm nach Empfänger und bezahlten Monaten (#999), Suche und mehrere auf einmal bezahlen (#1000, gestapelt); warten auf Sven.
 - **Modul-Runde „Tiefe & Politur“, Übersicht** (PR #955, Plan `design/home-deep/PLAN.md` im PR): Reihen gleicher Höhe statt Masonry, Kopf-Symbole bündig, leere Karten ohne Fisch; wartet auf die Abnahme.
 
 ## Abgeschlossene Runden (je eine Zeile; alles auf `develop`)
