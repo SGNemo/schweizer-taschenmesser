@@ -110,20 +110,19 @@ export function SwitchToLanDialog({ open, onClose }: { open: boolean; onClose: (
               {l.switchBackupSaved}
             </p>
           ) : (
-            <>
-              <Button
-                onClick={() => (encryptedOnly ? setExporting(true) : void saveBackup())}
-                data-testid="lan-switch-backup"
-              >
-                {l.switchBackupSave}
-              </Button>
-              <BackupExportDialog
-                open={exporting}
-                onClose={() => setExporting(false)}
-                onSaved={() => setSaved(true)}
-              />
-            </>
+            <Button
+              onClick={() => (encryptedOnly ? setExporting(true) : void saveBackup())}
+              data-testid="lan-switch-backup"
+            >
+              {l.switchBackupSave}
+            </Button>
           )}
+          {/* Outside the condition: it stays mounted while it closes after a save. */}
+          <BackupExportDialog
+            open={exporting}
+            onClose={() => setExporting(false)}
+            onSaved={() => setSaved(true)}
+          />
         </Step>
         <Step title={l.switchDevicesTitle}>
           {devices === undefined ? null : devices.length === 0 ? (

@@ -5737,7 +5737,6 @@ export const de = {
       totpInvalid: 'Kein gültiger TOTP-Schlüssel.',
     },
     copy: 'Kopieren',
-    copied: (what: string) => `${what} kopiert – wird nach 30 s aus der Zwischenablage gelöscht.`,
     copyUser: 'Benutzername kopieren',
     copyPassword: 'Passwort kopieren',
     copyCode: 'Code kopieren',

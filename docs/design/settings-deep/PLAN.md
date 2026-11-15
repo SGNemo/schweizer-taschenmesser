@@ -1,6 +1,6 @@
 # Settings "Tiefe & Politur" – inventory and plan
 
-Round 2026-11 "Tiefe & Politur", chat _einstellungen_. Sven: "Einstellungen, z. B. Sicherheit, haben zu wenige Optionen." Compared with the settings of common apps (Android/iOS system settings, Bitwarden, 1Password, Signal, Obsidian, Notion, Todoist).
+Round 2026-11 "Tiefe & Politur", chat _einstellungen_. Ask: more options in the settings, Sicherheit first. Compared with the settings of common apps (Android/iOS system settings, Bitwarden, 1Password, Signal, Obsidian, Notion, Todoist).
 
 ## Inventory per tab (before this round)
 

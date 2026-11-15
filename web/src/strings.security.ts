@@ -24,7 +24,8 @@ export const tSecurity = defineBundle(
     },
     protect: {
       title: 'Schutz auf diesem Gerät',
-      keywords: ['Bildschirmschutz', 'Screenshot', 'App-Wechsler', 'Backup', 'Verschlüsselung'],
+      keywords: ['Backup', 'Verschlüsselung', 'Fehlerbericht', 'Diagnose'],
+      screenKeywords: ['Bildschirmschutz', 'Screenshot', 'App-Wechsler'],
       screen: 'Bildschirmschutz',
       screenHint: 'Verhindert Screenshots und verbirgt Nemo in der Liste der offenen Apps',
       screenVault: 'Nur im Tresor',
@@ -101,7 +102,8 @@ export const tSecurity = defineBundle(
       },
       protect: {
         title: 'Protection on this device',
-        keywords: ['Screen guard', 'Screenshot', 'App switcher', 'Backup', 'Encryption'],
+        keywords: ['Backup', 'Encryption', 'Bug report', 'Diagnostics'],
+        screenKeywords: ['Screen guard', 'Screenshot', 'App switcher'],
         screen: 'Screen guard',
         screenHint: 'Blocks screenshots and hides Nemo in the list of open apps',
         screenVault: 'Only in the vault',

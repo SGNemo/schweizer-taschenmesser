@@ -84,6 +84,7 @@ import { tSettings4 } from '@/strings.settings4';
 import { tSettings3 } from '@/strings.settings3';
 import { tWeather } from '@/strings.weather';
 import { tSecurity } from '@/strings.security';
+import { getPlatform } from '@/core/platform';
 import { actionLabel, shortcutActions, shortcutRowKey } from '@/core/keyboard/labels';
 
 const s = t.settings;
@@ -1154,37 +1155,20 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
       return tSecurity.get().protect.title;
     },
     get keywords() {
-      return tSecurity.get().protect.keywords;
+      const p = tSecurity.get().protect;
+      return getPlatform().kind === 'android' ? [...p.keywords, ...p.screenKeywords] : p.keywords;
     },
-    fields: [
-      {
-        key: 'screen',
-        get label() {
-          return tSecurity.get().protect.screen;
-        },
-        get description() {
-          return tSecurity.get().protect.screenHint;
-        },
-      },
-      {
-        key: 'encryptedOnly',
-        get label() {
-          return tSecurity.get().protect.encryptedOnly;
-        },
-        get description() {
-          return tSecurity.get().protect.encryptedOnlyHint;
-        },
-      },
-      {
-        key: 'report',
-        get label() {
-          return tSecurity.get().protect.report;
-        },
-        get description() {
-          return tSecurity.get().protect.reportHint;
-        },
-      },
-    ],
+    // A getter: the screen-guard row exists on Android only, so the search must not find it elsewhere.
+    get fields() {
+      const p = tSecurity.get().protect;
+      return [
+        ...(getPlatform().kind === 'android'
+          ? [{ key: 'screen', label: p.screen, description: p.screenHint }]
+          : []),
+        { key: 'encryptedOnly', label: p.encryptedOnly, description: p.encryptedOnlyHint },
+        { key: 'report', label: p.report, description: p.reportHint },
+      ];
+    },
     render: () => <ProtectSection />,
   },
   {
