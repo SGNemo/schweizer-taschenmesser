@@ -68,8 +68,9 @@ async function board() {
 }
 
 it('the shape step to v3 is recorded and lossless: an old row parses as it was, a part is optional', async () => {
-  expect(manifest.version).toBe(3);
-  expect(Object.keys(migrations ?? {})).toEqual(['2', '3']);
+  // Later steps (v4: `due.time`, package 5b) come after it.
+  expect(manifest.version).toBeGreaterThanOrEqual(3);
+  expect(Object.keys(migrations ?? {})).toContain('3');
   const old = { source: { module: 'todos', id: 'a' }, pinned: SAT, order: 0 };
   expect(itemSchema.parse(old)).toEqual(old);
   expect(itemSchema.parse({ ...old, part: 'evening' }).part).toBe('evening');

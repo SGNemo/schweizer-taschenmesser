@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { fromLegacy, refKey } from '@/core/entitylinks/types';
 import { useResolvedLinks } from '@/core/modules/contributions';
 import { getPlatform } from '@/core/platform';
+import type { NotificationPermissionState } from '@/core/notifications/service';
 import { useFocusSettings } from '@/core/settings/focus';
 import { changedFields } from '@/core/db/patch';
 import type { Stored } from '@/core/db/types';
@@ -22,6 +23,7 @@ import {
   Switch,
   TextArea,
   TextField,
+  TimeField,
 } from '@/ui';
 import { t } from '@/strings';
 import { now, today } from '@/core/time/now';
@@ -74,6 +76,11 @@ function EditorForm({
   const [listId, setListId] = useState(task.listId);
   const [priority, setPriority] = useState(task.priority);
   const [dueDate, setDueDate] = useState(task.dueDate ?? '');
+  const [dueTime, setDueTime] = useState(task.dueTime ?? '');
+  const [dueRemind, setDueRemind] = useState(task.dueRemind ?? false);
+  const [permission, setPermission] = useState<NotificationPermissionState>(() =>
+    getPlatform().notifications.permission(),
+  );
   const [recurrence, setRecurrence] = useState<Recurrence | undefined>(task.recurrence);
   const [someday, setSomeday] = useState(task.someday ?? false);
   const [estimate, setEstimate] = useState<number | undefined>(task.estimateMin);
@@ -121,6 +128,9 @@ function EditorForm({
         listId,
         priority,
         dueDate: dueDate || undefined,
+        // The hour and its reminder only exist with a date; the reminder only with an hour.
+        dueTime: (dueDate && dueTime) || undefined,
+        dueRemind: (dueDate && dueTime && dueRemind) || undefined,
         recurrence: dueDate ? recurrence : undefined,
         someday: someday || undefined,
         estimateMin: estimate,
@@ -208,6 +218,35 @@ function EditorForm({
         value={dueDate}
         onChange={(e) => setDueDate(e.target.value)}
       />
+      {dueDate ? <TimeField label={t.todos.dueTime} value={dueTime} onChange={setDueTime} /> : null}
+      {dueDate && dueTime ? (
+        <Switch
+          label={t.todos.dueRemind}
+          hint={t.todos.dueRemindHint}
+          checked={dueRemind}
+          onChange={setDueRemind}
+        />
+      ) : null}
+      {/* Switched on without the system's permission: one calm line, asked only on a tap (as the calendar's lead). */}
+      {dueDate && dueTime && dueRemind && (permission === 'default' || permission === 'denied') ? (
+        <div className={styles.dueHint} role="note" data-testid="due-permission-hint">
+          <span>
+            {permission === 'denied'
+              ? t.todos.dueRemindPermissionDenied
+              : t.todos.dueRemindPermissionMissing}
+          </span>
+          {permission === 'default' ? (
+            <Button
+              variant="ghost"
+              onClick={async () =>
+                setPermission(await getPlatform().notifications.requestPermission())
+              }
+            >
+              {t.todos.dueRemindAllow}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
       {isSub ? null : (
         <>
           <Chips label={t.todos.estimate}>

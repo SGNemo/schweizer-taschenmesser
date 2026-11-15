@@ -20,7 +20,7 @@ const manifest: ModuleManifest = {
     tabs: true,
     signature: 'todayCard',
   },
-  version: 5,
+  version: 6,
   get description() {
     return t.todos.meta.description;
   },
