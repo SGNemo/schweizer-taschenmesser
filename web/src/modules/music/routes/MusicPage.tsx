@@ -54,6 +54,11 @@ export default function MusicPage() {
     prefs.shortcuts,
     () => setView({ type: 'search' }),
     trackIdOf(np?.current?.trackUrl),
+    () => {
+      np?.refresh(800);
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => setVersion((v) => v + 1), 1200);
+    },
   );
 
   if (!np) {

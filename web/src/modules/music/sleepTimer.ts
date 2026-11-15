@@ -27,6 +27,11 @@ function read(): SleepTimer | undefined {
   try {
     const raw = JSON.parse(localStorage.getItem(SLEEP_KEY) ?? 'null') as Partial<SleepTimer> | null;
     if (!raw || typeof raw.at !== 'number' || !Number.isFinite(raw.at)) return undefined;
+    // An end that passed while Nemo was closed is never acted on: it goes when Nemo starts.
+    if (raw.at <= now()) {
+      localStorage.removeItem(SLEEP_KEY);
+      return undefined;
+    }
     return { at: raw.at, mode: raw.mode === 'track' ? 'track' : 'time' };
   } catch {
     return undefined;
@@ -47,10 +52,12 @@ function write(next: SleepTimer | undefined): void {
 /** The end time for "in n minutes" or "at the end of this song" (`undefined` when the song's end is not known). */
 export function sleepEnd(
   choice: number | 'track',
-  reading?: { progressMs?: number; durationMs?: number; readAt: number },
+  reading?: { progressMs?: number; durationMs?: number; readAt: number; playing?: boolean },
 ): SleepTimer | undefined {
   if (choice !== 'track') return { at: now() + choice * 60_000, mode: 'time' };
-  if (!reading?.durationMs || reading.progressMs === undefined) return undefined;
+  // A paused song has no end in sight.
+  if (!reading?.playing || !reading.durationMs || reading.progressMs === undefined)
+    return undefined;
   const left = Math.max(0, reading.durationMs - reading.progressMs - (now() - reading.readAt));
   return { at: now() + left, mode: 'track' };
 }
@@ -59,10 +66,9 @@ export function setSleep(next: SleepTimer | undefined): void {
   write(next);
 }
 
-/** The timer that is set, if any (a stale one is dropped on the way). */
+/** The timer that is set, if any (pure: the store's snapshot; a timer long past reads as none). */
 export function currentSleep(): SleepTimer | undefined {
-  if (state && state.at < now() - STALE_MS) write(undefined);
-  return state;
+  return state && state.at >= now() - STALE_MS ? state : undefined;
 }
 
 function subscribe(listener: () => void): () => void {
@@ -107,6 +113,8 @@ export function useSleepWatcher(np: NowPlayingHandle | undefined): void {
           armed = undefined;
           if (state?.at !== at) return;
           write(undefined);
+          // Fired far too late (the computer slept): no pause out of the blue.
+          if (now() - at > STALE_MS) return;
           pause?.();
         },
         Math.max(0, at - now()),

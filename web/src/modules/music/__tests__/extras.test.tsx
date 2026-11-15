@@ -142,6 +142,7 @@ beforeEach(async () => {
 });
 afterEach(() => {
   cleanup();
+  forgetSleep();
   setPlatform(undefined);
   clearCovers();
   forgetRecent();

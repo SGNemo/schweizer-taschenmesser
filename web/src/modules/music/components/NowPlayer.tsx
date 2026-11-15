@@ -300,7 +300,7 @@ export function NowPlayer({
             />
           </span>
         ) : null}
-        {canControl && current ? (
+        {canControl && current?.playing ? (
           <span className={styles.devices}>
             <Icon name="moon" size={16} />
             <RowMenu

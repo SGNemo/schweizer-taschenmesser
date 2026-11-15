@@ -43,8 +43,17 @@ describe('sleepEnd', () => {
   it('n minutes from now, or what is left of the song (minus the time since it was read)', () => {
     expect(sleepEnd(15)).toEqual({ at: T0 + 15 * 60_000, mode: 'time' });
     expect(
-      sleepEnd('track', { progressMs: 50_000, durationMs: 200_000, readAt: T0 - 10_000 }),
+      sleepEnd('track', {
+        progressMs: 50_000,
+        durationMs: 200_000,
+        readAt: T0 - 10_000,
+        playing: true,
+      }),
     ).toEqual({ at: T0 + 140_000, mode: 'track' });
+    // A paused song has no end in sight.
+    expect(
+      sleepEnd('track', { progressMs: 50_000, durationMs: 200_000, readAt: T0, playing: false }),
+    ).toBeUndefined();
     expect(sleepEnd('track', { durationMs: 200_000, readAt: T0 })).toBeUndefined();
   });
 });
@@ -99,6 +108,26 @@ describe('the timer', () => {
     act(() => void vi.advanceTimersByTime(1000));
     expect(control).not.toHaveBeenCalled();
     expect(localStorage.getItem(SLEEP_KEY)).toBeNull();
+  });
+
+  it('an end only seconds past when Nemo opens again is dropped too', () => {
+    localStorage.setItem(SLEEP_KEY, JSON.stringify({ at: T0 - 10_000, mode: 'time' }));
+    forgetSleep();
+    const { np, control } = handle();
+    renderHook(() => useSleepWatcher(np));
+    act(() => void vi.advanceTimersByTime(1000));
+    expect(control).not.toHaveBeenCalled();
+    expect(currentSleep()).toBeUndefined();
+  });
+
+  it('a timeout that fires far too late (the computer slept) does not pause', () => {
+    const { np, control } = handle();
+    setSleep(sleepEnd(15));
+    renderHook(() => useSleepWatcher(np));
+    clock += 60 * 60_000;
+    act(() => void vi.advanceTimersByTime(15 * 60_000));
+    expect(control).not.toHaveBeenCalled();
+    expect(currentSleep()).toBeUndefined();
   });
 
   it('a timer set before a reload is armed again', () => {

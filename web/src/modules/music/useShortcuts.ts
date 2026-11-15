@@ -19,10 +19,12 @@ export function useShortcuts(
   enabled: boolean,
   openSearch: () => void,
   trackId: string | undefined,
+  /** Called after a volume or shuffle change, so the player shows the new state. */
+  onChanged?: () => void,
 ): void {
-  const latest = useRef({ np, openSearch, trackId });
+  const latest = useRef({ np, openSearch, trackId, onChanged });
   useEffect(() => {
-    latest.current = { np, openSearch, trackId };
+    latest.current = { np, openSearch, trackId, onChanged };
   });
   useEffect(() => {
     if (!enabled) return;
@@ -48,24 +50,29 @@ export function useShortcuts(
         void player.run(() => player.control('previous'));
       } else if (e.shiftKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
         const { source, ctx } = player;
-        if (!source.state || !source.setVolume) return;
+        // A held key would race read-then-set requests: one step per press.
+        if (!source.state || !source.setVolume || e.repeat) return;
         e.preventDefault();
         const step = e.key === 'ArrowUp' ? VOLUME_STEP : -VOLUME_STEP;
-        void player.run(async () => {
-          // Read first: the volume may have been changed on the phone in the meantime.
-          const volume = (await source.state!(ctx))?.volume;
-          if (volume === undefined) return;
-          await source.setVolume!(ctx, Math.min(100, Math.max(0, volume + step)));
-        });
+        void player
+          .run(async () => {
+            // Read first: the volume may have been changed on the phone in the meantime.
+            const volume = (await source.state!(ctx))?.volume;
+            if (volume === undefined) return;
+            await source.setVolume!(ctx, Math.min(100, Math.max(0, volume + step)));
+          })
+          .then((ok) => ok && latest.current.onChanged?.());
       } else if (!e.shiftKey && e.key.toLowerCase() === 's') {
         const { source, ctx } = player;
-        if (!source.state || !source.setShuffle) return;
+        if (!source.state || !source.setShuffle || e.repeat) return;
         e.preventDefault();
-        void player.run(async () => {
-          const shuffle = (await source.state!(ctx))?.shuffle;
-          if (shuffle === undefined) return;
-          await source.setShuffle!(ctx, !shuffle);
-        });
+        void player
+          .run(async () => {
+            const shuffle = (await source.state!(ctx))?.shuffle;
+            if (shuffle === undefined) return;
+            await source.setShuffle!(ctx, !shuffle);
+          })
+          .then((ok) => ok && latest.current.onChanged?.());
       } else if (!e.shiftKey && e.key.toLowerCase() === 'l' && id) {
         const { source, ctx } = player;
         if (!source.saved || !source.save) return;

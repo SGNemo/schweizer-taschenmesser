@@ -426,11 +426,11 @@
   font-size: var(--text-meta);
 }
 /* "Zurück" in the widget only from a medium card on: on a small one the three buttons would squeeze the title. */
-.miniPrev {
+.mini .miniPrev {
   display: none;
 }
 @container (min-width: 22rem) {
-  .miniPrev {
+  .mini .miniPrev {
     display: inline-flex;
   }
 }
