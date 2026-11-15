@@ -324,6 +324,10 @@ impl RemoteHost {
         &self.power
     }
 
+    pub fn power_arc(&self) -> Arc<PowerCore> {
+        self.power.clone()
+    }
+
     fn parts(&self) -> Result<Parts, String> {
         let slot = self.slot.lock().map_err(|_| "internal")?;
         Ok(slot.as_ref().ok_or("not-started")?.parts.clone())
@@ -500,7 +504,9 @@ pub fn attach(
                     },
                     |controller| crate::capture::set_remote_tray(&app, controller),
                     || {
-                        power.tick(sink.state().locked);
+                        if let Some(key) = power.tick(|| sink.state().locked) {
+                            revoke_power(&app.state::<RemoteHost>(), &key);
+                        }
                         let (count, device) = remote.full_opened();
                         let host = app.state::<RemoteHost>();
                         // read first: the lock of the notices is not held while it is read
@@ -577,7 +583,7 @@ pub fn detach(app: &AppHandle) {
 /// device.
 pub fn end_from_tray(app: &AppHandle) {
     let host = app.state::<RemoteHost>();
-    power_cancelled_at_pc(app, &host);
+    power_cancelled_at_pc(&host);
     if let Ok(parts) = host.parts() {
         host.end(&parts);
     }
@@ -585,11 +591,16 @@ pub fn end_from_tray(app: &AppHandle) {
 
 /// Someone at the PC stopped a countdown. The second time within an hour that device loses its
 /// power permission (a narrowing, remembered for this run like every other one).
-pub fn power_cancelled_at_pc(_app: &AppHandle, host: &RemoteHost) {
-    let Some(key) = host.power.cancel_at_pc() else {
-        return;
-    };
+pub fn power_cancelled_at_pc(host: &RemoteHost) {
+    if let Some(key) = host.power.cancel_at_pc() {
+        revoke_power(host, &key);
+    }
+}
+
+/// Takes a device's power permission away after its second stop at the PC within an hour.
+fn revoke_power(host: &RemoteHost, key: &PublicKey) {
     if let Ok(parts) = host.parts() {
+        let key = *key;
         let grant = RemoteGrant {
             power: false,
             ..parts.remote.grant_of(&key)
@@ -745,7 +756,9 @@ fn switch_question(lang: Lang, granted: &[(String, Level)]) -> String {
 /// Mouse and keyboard, or one protection less: the question carries the warning sign. Media
 /// alone is asked calmly.
 fn serious(old: &RemoteGrant, new: &RemoteGrant) -> bool {
-    new.level == Level::Full || (old.unlock && !new.unlock) || (new.power && !old.power)
+    new.level == Level::Full
+        || (old.unlock && !new.unlock)
+        || (new.power && (!old.power || !old.power_effective()))
 }
 
 /// Resets "a confirmation is on screen" however the command ends.
@@ -981,6 +994,8 @@ pub fn remote_set_notice(
 /// nobody controlled.
 #[tauri::command(async)]
 pub fn remote_end(state: State<'_, RemoteHost>) -> Result<bool, String> {
+    // a countdown stops too, also one whose phone has left
+    power_cancelled_at_pc(&state);
     let parts = state.parts()?;
     Ok(state.end(&parts))
 }

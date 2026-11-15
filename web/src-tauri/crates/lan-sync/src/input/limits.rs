@@ -136,7 +136,14 @@ impl Limits {
         self.verdict(ok, now)
     }
 
-    /// One power frame (a `Cancel` costs nothing: it only ever stops something).
+    /// A `Cancel`: it only ever stops something, so it costs only an ordinary event (never a
+    /// power token) – but a stream of them is a flood like any other.
+    pub fn cancel(&mut self, now: Duration) -> Verdict {
+        let ok = self.all.take(1, now);
+        self.verdict(ok, now)
+    }
+
+    /// One power frame that would start a countdown.
     pub fn power(&mut self, now: Duration) -> Verdict {
         let ok = self.all.has(1, now) && self.power.has(1, now);
         if ok {

@@ -1406,3 +1406,30 @@ fn power_actions_never_reach_the_sink_as_input() {
         PowerAnswer::Cancelled
     );
 }
+
+#[test]
+fn no_power_frame_is_free_without_end_not_even_cancel_or_a_refusal() {
+    let b = bench();
+    b.grant(PHONE, Level::Media);
+    // a cancel goes through as an ordinary event; endlessly it is a flood
+    let (mut c, _) = b.opened_power(PHONE, Level::Media);
+    let mut last = Step::Continue;
+    for _ in 0..5000 {
+        last = power(&mut c, Power::Cancel, false, T0);
+        if last != answer(PowerAnswer::Cancelled) && last != answer(PowerAnswer::Limit) {
+            break;
+        }
+    }
+    assert_eq!(closed_with(&last), Code::Limit);
+    // refused because not granted: every refusal is a drop
+    let (mut c, _) = b.opened_power(PHONE, Level::Media);
+    let mut last = Step::Continue;
+    for _ in 0..5000 {
+        last = power(&mut c, Power::ShutDown, false, T0);
+        if last != answer(PowerAnswer::NotGranted) {
+            break;
+        }
+    }
+    assert_eq!(closed_with(&last), Code::Limit);
+    assert!(b.sink.powers().iter().all(|(_, p, _)| *p == Power::Cancel));
+}

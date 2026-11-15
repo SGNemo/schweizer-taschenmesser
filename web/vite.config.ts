@@ -180,6 +180,8 @@ export default defineConfig({
       },
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        // The desktop shell's countdown window (power.html) never runs in the PWA.
+        globIgnores: ['power.html', 'assets/power-*'],
         // Tools, chat and the password dictionaries load on first use (decision in
         // docs/decisions/core.md); everything else stays precached so the app works offline.
         manifestTransforms: [

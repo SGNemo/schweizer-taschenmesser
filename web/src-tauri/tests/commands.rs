@@ -68,6 +68,15 @@ fn main_window_is_granted_every_command_except_capture_only_ones() {
         if name == "capture_hide" || name == "capture_read_clipboard" {
             continue;
         }
+        // the countdown window's own two: the main window has no business with them
+        if name == "remote_power_status" || name == "remote_power_cancel" {
+            let permission = format!("allow-{}", name.replace('_', "-"));
+            assert!(
+                !granted.contains(&permission),
+                "{permission} for the main window"
+            );
+            continue;
+        }
         let permission = format!("allow-{}", name.replace('_', "-"));
         assert!(
             granted.contains(&permission),

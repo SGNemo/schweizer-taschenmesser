@@ -27,7 +27,7 @@ export function startRemoteBusyReport(read: () => number = busyBits): () => void
     const bits = read();
     if (bits === told) return;
     told = bits;
-    // the hub may not run: the next change tells again
+    // the hub may not run (yet): the next look tells again
     host.reportBusy(bits).catch(() => {
       told = -1;
     });

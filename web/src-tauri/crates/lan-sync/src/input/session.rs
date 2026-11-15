@@ -344,24 +344,25 @@ impl InputConn {
                 let Ok((power, despite)) = wire::decode_power(body) else {
                     return Step::Close;
                 };
-                let answer = if power == Power::Cancel {
-                    // stopping is always allowed and costs nothing
-                    sink.power(peer, power, false)
+                // every refusal counts as a drop, so a session cannot ask without end
+                let (verdict, refused) = if power == Power::Cancel {
+                    // stopping is always allowed: it costs only an ordinary event
+                    (live.limits.cancel(now), None)
                 } else if !remote.grant_of(peer).power_effective() {
-                    PowerAnswer::NotGranted
+                    (live.limits.dropped(now), Some(PowerAnswer::NotGranted))
                 } else if sink.state().locked {
-                    PowerAnswer::Locked
+                    (live.limits.dropped(now), Some(PowerAnswer::Locked))
                 } else {
-                    match live.limits.power(now) {
-                        Verdict::Pass => sink.power(peer, power, despite),
-                        Verdict::Drop => PowerAnswer::Limit,
-                        Verdict::Flood => return closed(Code::Limit),
-                    }
+                    (live.limits.power(now), None)
                 };
-                // the answer stands for the news it may carry: not told twice
-                if matches!(answer, PowerAnswer::Cancelled) {
-                    live.news_seen = sink.power_news().map_or(live.news_seen, |(n, _, _)| n);
-                }
+                let answer = match (verdict, refused) {
+                    (Verdict::Flood, _) => return closed(Code::Limit),
+                    (_, Some(answer)) => answer,
+                    (Verdict::Drop, None) => PowerAnswer::Limit,
+                    (Verdict::Pass, None) => sink.power(peer, power, despite),
+                };
+                // (news this may have made comes again from the tick: the phone takes every
+                // answer as the latest state, so hearing "cancelled" twice changes nothing)
                 Step::Reply(
                     wire::TAG_POWER_ANSWER,
                     wire::encode_power_answer(answer).to_vec(),

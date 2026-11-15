@@ -64,8 +64,6 @@
     "allow-remote-set-device",
     "allow-remote-end",
     "allow-remote-set-notice",
-    "allow-remote-power-status",
-    "allow-remote-power-cancel",
     "allow-remote-set-busy",
     "allow-local-api-start",
     "allow-local-api-stop",

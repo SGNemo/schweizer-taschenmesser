@@ -499,6 +499,11 @@ pub fn lan_hub_stop(app: AppHandle, state: State<'_, LanSync>) -> Result<(), Str
     // second hub (same port, same store file) while this one still closes.
     let mut slot = state.0.lock().map_err(|_| "internal")?;
     if let Some(mut r) = slot.take() {
+        // first of all: no countdown may run out while the hub is going down
+        {
+            use tauri::Manager as _;
+            app.state::<crate::remote::RemoteHost>().power().detach();
+        }
         r.stop.store(true, Ordering::SeqCst);
         let _ = r.wake.send(());
         if let Some(t) = r.thread.take() {

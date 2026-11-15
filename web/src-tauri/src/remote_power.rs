@@ -84,8 +84,10 @@ struct Running {
     device: Device,
     act: Act,
     began: Instant,
-    /// The window was seen on screen at least once.
-    shown: bool,
+    /// The window's page has asked for the countdown (it loaded and can show the button).
+    polled: bool,
+    /// When the window was first on screen with its page loaded; the 10 s count from here.
+    shown_at: Option<Instant>,
 }
 
 /// How a tick ended a countdown.
@@ -96,6 +98,12 @@ pub enum Tick {
     Fire(Act),
     /// It was stopped (or the window never came): close the window.
     Stopped,
+    /// The window that was on screen went away (closed, hidden, minimised): a stop at the PC.
+    /// `revoke`: the second within an hour – the device's power permission goes.
+    StoppedAtPc {
+        device: Device,
+        revoke: bool,
+    },
 }
 
 /// The countdown's logic, apart from windows and clocks (time comes in as an argument).
@@ -119,9 +127,10 @@ impl Machine {
         now: Instant,
     ) -> PowerAnswer {
         let Some(act) = Act::of(power) else {
-            // stopping is always allowed (any controlling device; there is one at a time)
-            if self.running.take().is_some() {
-                self.tell(device, PowerAnswer::Cancelled);
+            // stopping is always allowed (any controlling device; there is one at a time); the
+            // news belongs to the countdown's own device
+            if let Some(run) = self.running.take() {
+                self.tell(run.device, PowerAnswer::Cancelled);
             }
             return PowerAnswer::Cancelled;
         };
@@ -147,9 +156,17 @@ impl Machine {
             device,
             act,
             began: now,
-            shown: false,
+            polled: false,
+            shown_at: None,
         });
         PowerAnswer::Started
+    }
+
+    /// The window's page asked for the countdown: it is loaded.
+    pub fn polled(&mut self) {
+        if let Some(run) = self.running.as_mut() {
+            run.polled = true;
+        }
     }
 
     /// The window could not be created: the countdown is over before it began.
@@ -170,34 +187,50 @@ impl Machine {
         let Some(run) = self.running.as_mut() else {
             return Tick::Nothing;
         };
-        if visible {
-            run.shown = true;
+        if visible && run.polled && run.shown_at.is_none() {
+            run.shown_at = Some(now);
         }
-        let waited = now.saturating_duration_since(run.began);
-        let gone = if run.shown {
-            !visible
-        } else {
-            waited >= SHOW_WITHIN
-        };
-        if gone || locked || !allowed(&run.device) {
-            let device = run.device;
+        let device = run.device;
+        if locked || !allowed(&device) {
             self.running = None;
             self.tell(device, PowerAnswer::Cancelled);
             return Tick::Stopped;
         }
-        // it acts only after it was seen for the whole time
-        if run.shown && waited >= COUNTDOWN {
-            let (device, act) = (run.device, run.act);
-            self.running = None;
-            self.tell(device, PowerAnswer::Done);
-            return Tick::Fire(act);
+        match run.shown_at {
+            // on screen, then gone: someone at the PC closed, hid or minimised it
+            Some(_) if !visible => {
+                let revoke = self.stopped_at_pc(now).is_some_and(|(_, r)| r);
+                Tick::StoppedAtPc { device, revoke }
+            }
+            // it acts only after it was on screen for the whole countdown
+            Some(at) if now.saturating_duration_since(at) >= COUNTDOWN => {
+                let act = run.act;
+                self.running = None;
+                self.tell(device, PowerAnswer::Done);
+                Tick::Fire(act)
+            }
+            Some(_) => Tick::Nothing,
+            None if now.saturating_duration_since(run.began) >= SHOW_WITHIN => {
+                self.running = None;
+                self.tell(device, PowerAnswer::Failed);
+                Tick::Stopped
+            }
+            None => Tick::Nothing,
         }
-        Tick::Nothing
+    }
+
+    /// The action ran out but Windows refused at once.
+    pub fn failed(&mut self, device: Device) {
+        self.tell(device, PowerAnswer::Failed);
     }
 
     /// Someone at the PC stopped it (window, tray). Returns the device and whether its power
     /// permission is to be taken away (the second such stop within an hour).
     pub fn cancel_at_pc(&mut self, now: Instant) -> Option<(Device, bool)> {
+        self.stopped_at_pc(now)
+    }
+
+    fn stopped_at_pc(&mut self, now: Instant) -> Option<(Device, bool)> {
         let run = self.running.take()?;
         self.tell(run.device, PowerAnswer::Cancelled);
         self.pc_cancels
@@ -214,10 +247,14 @@ impl Machine {
         }
     }
 
-    pub fn running(&self) -> Option<(Device, Act, Duration)> {
-        self.running
-            .as_ref()
-            .map(|r| (r.device, r.act, r.began.elapsed()))
+    /// Whose countdown runs, which action, and how long it has been on screen (zero until it is).
+    pub fn running(&self, now: Instant) -> Option<(Device, Act, Duration)> {
+        self.running.as_ref().map(|r| {
+            let on_screen = r
+                .shown_at
+                .map_or(Duration::ZERO, |at| now.saturating_duration_since(at));
+            (r.device, r.act, on_screen)
+        })
     }
 
     pub fn news(&self) -> Option<(u64, Device, PowerAnswer)> {
@@ -295,7 +332,12 @@ impl PowerCore {
                 _ => PowerAnswer::Failed,
             };
         };
+        // a PC that cannot hibernate would hear "done" and stay on
+        if power == Power::Hibernate && !remote_input::hibernate_available() {
+            return PowerAnswer::Failed;
+        }
         let busy = power != Power::Cancel && self.busy(&env, device);
+        let was_running = self.counting().is_some();
         let answer =
             self.machine()
                 .request(*device.as_bytes(), power, despite, busy, Instant::now());
@@ -306,7 +348,7 @@ impl PowerCore {
                     return PowerAnswer::Failed;
                 }
             }
-            PowerAnswer::Cancelled => close_window(&env.app),
+            PowerAnswer::Cancelled if was_running => close_window(&env.app),
             _ => {}
         }
         answer
@@ -314,10 +356,9 @@ impl PowerCore {
 
     /// (a countdown runs, hibernate is available)
     pub fn info(&self) -> (bool, bool) {
-        (
-            self.machine().running().is_some(),
-            remote_input::hibernate_available(),
-        )
+        // (the lock is let go before the system is asked)
+        let counting = self.counting().is_some();
+        (counting, remote_input::hibernate_available())
     }
 
     pub fn news(&self) -> Option<(u64, PublicKey, PowerAnswer)> {
@@ -329,18 +370,18 @@ impl PowerCore {
     /// Whose countdown runs (the tray shows "Fernsteuerung beenden" for it as well).
     pub fn counting(&self) -> Option<PublicKey> {
         self.machine()
-            .running()
+            .running(Instant::now())
             .map(|(d, _, _)| PublicKey::from_bytes(d))
     }
 
-    /// Called by the tray thread every quarter second while the hub runs.
-    pub fn tick(&self, locked: bool) {
-        let Some(env) = self.env() else {
-            return;
-        };
-        if self.machine().running().is_none() {
-            return;
-        }
+    /// Called by the tray thread every quarter second while the hub runs. `locked` is asked only
+    /// while a countdown runs (it reads the PC's state, which nobody should poll for nothing).
+    /// Returns the device whose power permission is to be taken away (its window was closed at
+    /// the PC for the second time within an hour).
+    pub fn tick(&self, locked: impl FnOnce() -> bool) -> Option<PublicKey> {
+        let env = self.env()?;
+        self.counting()?;
+        let locked = locked();
         let visible = env
             .app
             .get_webview_window(WINDOW)
@@ -350,16 +391,30 @@ impl PowerCore {
             .machine()
             .tick(Instant::now(), allowed, locked, visible);
         match tick {
-            Tick::Nothing => {}
-            Tick::Stopped => close_window(&env.app),
+            Tick::Nothing => None,
+            Tick::Stopped => {
+                close_window(&env.app);
+                None
+            }
+            Tick::StoppedAtPc { device, revoke } => {
+                close_window(&env.app);
+                revoke.then(|| PublicKey::from_bytes(device))
+            }
             Tick::Fire(act) => {
                 close_window(&env.app);
+                let device = self.machine().news().map(|(_, d, _)| d);
+                let core = env.app.state::<crate::remote::RemoteHost>().power_arc();
                 // sleep returns only after the PC woke up again: never on the tray thread
                 let _ = std::thread::Builder::new()
                     .name("remote-power".into())
                     .spawn(move || {
-                        remote_input::power(act.system());
+                        if !remote_input::power(act.system()) {
+                            if let Some(d) = device {
+                                core.machine().failed(d);
+                            }
+                        }
                     });
+                None
             }
         }
     }
@@ -384,8 +439,10 @@ fn show_window(app: &AppHandle) -> tauri::Result<()> {
     let lang = crate::capture::native_lang(app);
     let builder = WebviewWindowBuilder::new(app, WINDOW, WebviewUrl::App("power.html".into()))
         .title(crate::texts::power_title(lang))
-        .inner_size(440.0, 220.0)
-        .resizable(false)
+        .inner_size(460.0, 240.0)
+        // a long name at a large scale may need more room; it can grow, never shrink away
+        .min_inner_size(400.0, 200.0)
+        .resizable(true)
         .minimizable(false)
         .maximizable(false)
         .always_on_top(true)
@@ -432,10 +489,15 @@ pub fn remote_power_status(
     let Some(env) = core.env() else {
         return Ok(None);
     };
-    let running = core.machine().running();
-    Ok(running.map(|(device, act, waited)| {
+    let running = {
+        let mut machine = core.machine();
+        // the page asked: it loaded, and can show the button
+        machine.polled();
+        machine.running(Instant::now())
+    };
+    Ok(running.map(|(device, act, on_screen)| {
         let lang = crate::capture::native_lang(&app);
-        let left = COUNTDOWN.saturating_sub(waited);
+        let left = COUNTDOWN.saturating_sub(on_screen);
         let seconds = left.as_secs() + u64::from(left.subsec_nanos() > 0);
         let name = (env.name)(&PublicKey::from_bytes(device));
         PowerStatusDto {
@@ -453,8 +515,8 @@ pub fn remote_power_status(
 
 /// _Abbrechen_ at the PC. Only ever stops something.
 #[tauri::command(async)]
-pub fn remote_power_cancel(app: AppHandle, state: State<'_, crate::remote::RemoteHost>) {
-    crate::remote::power_cancelled_at_pc(&app, &state);
+pub fn remote_power_cancel(state: State<'_, crate::remote::RemoteHost>) {
+    crate::remote::power_cancelled_at_pc(&state);
 }
 
 /// What the web app is busy with right now (cloud sync, backup). It can only make the phone hear
@@ -487,6 +549,10 @@ mod tests {
             m.request(PHONE, Power::ShutDown, false, false, t0),
             PowerAnswer::Started
         );
+        // on screen but its page did not ask yet: the count has not begun
+        assert_eq!(m.tick(at(t0, 0), YES, false, true), Tick::Nothing);
+        assert_eq!(m.running(at(t0, 1)).unwrap().2, Duration::ZERO);
+        m.polled();
         assert_eq!(m.tick(at(t0, 0), YES, false, true), Tick::Nothing);
         assert_eq!(m.tick(at(t0, 9), YES, false, true), Tick::Nothing);
         assert_eq!(
@@ -497,8 +563,18 @@ mod tests {
             m.news().map(|(_, d, a)| (d, a)),
             Some((PHONE, PowerAnswer::Done))
         );
-        assert!(m.running().is_none());
+        assert!(m.running(at(t0, 10)).is_none());
         assert_eq!(m.tick(at(t0, 11), YES, false, true), Tick::Nothing);
+        // the ten seconds count from the moment it was on screen, however late that was
+        let mut m = Machine::default();
+        m.request(PHONE, Power::Restart, false, false, t0);
+        m.polled();
+        assert_eq!(m.tick(at(t0, 2), YES, false, true), Tick::Nothing);
+        assert_eq!(m.tick(at(t0, 11), YES, false, true), Tick::Nothing);
+        assert_eq!(
+            m.tick(at(t0, 12), YES, false, true),
+            Tick::Fire(Act::Restart)
+        );
     }
 
     #[test]
@@ -507,19 +583,37 @@ mod tests {
         let mut m = Machine::default();
         m.request(PHONE, Power::Sleep, false, false, t0);
         // never on screen
+        m.polled();
         assert_eq!(m.tick(at(t0, 1), YES, false, false), Tick::Nothing);
         assert_eq!(m.tick(at(t0, 3), YES, false, false), Tick::Stopped);
-        // on screen, then hidden or minimised
+        assert_eq!(m.news().map(|(_, _, a)| a), Some(PowerAnswer::Failed));
+        // on screen but its page never loaded (no button to press): the same
         let mut m = Machine::default();
         m.request(PHONE, Power::Sleep, false, false, t0);
+        assert_eq!(m.tick(at(t0, 3), YES, false, true), Tick::Stopped);
+        // on screen, then closed, hidden or minimised: a stop at the PC
+        let mut m = Machine::default();
+        m.request(PHONE, Power::Sleep, false, false, t0);
+        m.polled();
         assert_eq!(m.tick(at(t0, 1), YES, false, true), Tick::Nothing);
-        assert_eq!(m.tick(at(t0, 2), YES, false, false), Tick::Stopped);
+        assert_eq!(
+            m.tick(at(t0, 2), YES, false, false),
+            Tick::StoppedAtPc {
+                device: PHONE,
+                revoke: false
+            }
+        );
         assert_eq!(m.news().map(|(_, _, a)| a), Some(PowerAnswer::Cancelled));
+        // … with its quiet time
+        assert_eq!(
+            m.request(PHONE, Power::Sleep, false, false, at(t0, 70)),
+            PowerAnswer::Limit
+        );
         // the window could not be made at all
         let mut m = Machine::default();
         m.request(PHONE, Power::Sleep, false, false, t0);
         m.no_window();
-        assert!(m.running().is_none());
+        assert!(m.running(t0).is_none());
     }
 
     #[test]
@@ -536,16 +630,18 @@ mod tests {
         // the phone
         let mut m = Machine::default();
         m.request(PHONE, Power::Restart, false, false, t0);
+        // (another device's cancel stops it too, and the news is the countdown's own device's)
         assert_eq!(
-            m.request(PHONE, Power::Cancel, false, false, t0),
+            m.request(TABLET, Power::Cancel, false, false, t0),
             PowerAnswer::Cancelled
         );
-        assert!(m.running().is_none());
+        assert!(m.running(t0).is_none());
+        assert_eq!(m.news().map(|(_, d, _)| d), Some(PHONE));
         // the hub stopped
         let mut m = Machine::default();
         m.request(PHONE, Power::Restart, false, false, t0);
         m.stop();
-        assert!(m.running().is_none());
+        assert!(m.running(t0).is_none());
         // the PC
         let mut m = Machine::default();
         m.request(PHONE, Power::Restart, false, false, t0);
@@ -594,7 +690,7 @@ mod tests {
             m.request(PHONE, Power::ShutDown, false, true, t0),
             PowerAnswer::Working
         );
-        assert!(m.running().is_none(), "nothing started");
+        assert!(m.running(t0).is_none(), "nothing started");
         assert_eq!(
             m.request(PHONE, Power::ShutDown, true, true, t0),
             PowerAnswer::Started
@@ -648,7 +744,7 @@ mod tests {
         );
         assert_eq!(
             power_countdown(Lang::En, "Sven's phone", Act::Sleep, 3),
-            "Sven's phone puts this PC to sleep in 3 seconds."
+            "Sven's phone will put this PC to sleep in 3 seconds."
         );
         for act in [
             Act::Sleep,

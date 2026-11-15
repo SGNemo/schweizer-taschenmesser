@@ -18,6 +18,7 @@ body {
 }
 .sentence {
   margin: 0;
+  overflow-wrap: anywhere;
   font-size: var(--text-lg);
   font-weight: var(--weight-semibold);
   line-height: 1.4;
@@ -45,4 +46,12 @@ body {
 }
 .cancel:hover:not(:disabled) {
   background: var(--accent-hover);
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }

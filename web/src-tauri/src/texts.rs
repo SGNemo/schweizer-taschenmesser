@@ -323,11 +323,11 @@ pub fn power_countdown(
             format!("{seconds} seconds")
         };
         match act {
-            Act::ShutDown => format!("{name} switches this PC off in {s}."),
-            Act::Restart => format!("{name} restarts this PC in {s}."),
-            Act::Sleep => format!("{name} puts this PC to sleep in {s}."),
-            Act::Hibernate => format!("{name} hibernates this PC in {s}."),
-            Act::SignOut => format!("{name} signs you out in {s}."),
+            Act::ShutDown => format!("{name} will switch this PC off in {s}."),
+            Act::Restart => format!("{name} will restart this PC in {s}."),
+            Act::Sleep => format!("{name} will put this PC to sleep in {s}."),
+            Act::Hibernate => format!("{name} will hibernate this PC in {s}."),
+            Act::SignOut => format!("{name} will sign you out in {s}."),
         }
     }
 }
@@ -352,9 +352,9 @@ pub fn power_cancel(lang: Lang) -> &'static str {
 /// The title of the countdown window before a power action.
 pub fn power_title(lang: Lang) -> &'static str {
     if german(lang) {
-        "Nemo – PC wird ausgeschaltet"
+        "Nemo – Fernsteuerung"
     } else {
-        "Nemo – the PC is switching off"
+        "Nemo – remote control"
     }
 }
 

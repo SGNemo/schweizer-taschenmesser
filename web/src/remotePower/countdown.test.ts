@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { PowerCountdown } from '@/core/platform/tauri/remotePower';
-import { mountCountdown, READ_EVERY_MS } from './countdown';
+import { KEY_GRACE_MS, mountCountdown, READ_EVERY_MS } from './countdown';
 
 afterEach(() => vi.useRealTimers());
 
@@ -24,11 +24,15 @@ describe('power countdown window', () => {
     };
     const root = document.createElement('div');
     document.body.append(root);
-    const stop = mountCountdown(root, api);
+    let t = 0;
+    const stop = mountCountdown(root, api, () => t);
     await vi.advanceTimersByTimeAsync(0);
-    expect(root.querySelector('[role="status"]')?.textContent).toBe(
+    t = KEY_GRACE_MS;
+    expect(root.querySelector('.sentence')?.textContent).toBe(
       'Svens Handy schaltet diesen PC in 10 Sekunden aus.',
     );
+    // screen readers hear it once, and the button is described by it
+    expect(root.querySelector('[role="status"]')?.textContent).toContain('10 Sekunden');
     const button = root.querySelector('button')!;
     expect(button.textContent).toBe('Abbrechen');
     expect(document.activeElement).toBe(button);
@@ -36,12 +40,37 @@ describe('power countdown window', () => {
     expect(root.querySelector('progress, [role="progressbar"]')).toBeNull();
     current = at(3);
     await vi.advanceTimersByTimeAsync(READ_EVERY_MS);
-    expect(root.querySelector('[role="status"]')?.textContent).toContain('in 3 Sekunden');
+    expect(root.querySelector('.sentence')?.textContent).toContain('in 3 Sekunden');
+    expect(root.querySelector('[role="status"]')?.textContent).toContain('10 Sekunden');
+    expect(button.getAttribute('aria-describedby')).toBe('power-sentence');
     button.click();
     expect(api.cancel).toHaveBeenCalledTimes(1);
     await vi.advanceTimersByTimeAsync(READ_EVERY_MS);
     expect(root.childElementCount).toBe(0);
     stop();
+    root.remove();
+  });
+
+  it('Escape stops it; a key press right as it appeared does not', async () => {
+    vi.useFakeTimers();
+    let t = 0;
+    const api = { status: async () => at(9), cancel: vi.fn(async () => undefined) };
+    const root = document.createElement('div');
+    document.body.append(root);
+    const stop = mountCountdown(root, api, () => t);
+    await vi.advanceTimersByTimeAsync(0);
+    const button = root.querySelector('button')!;
+    // Enter/Space on a focused button is a click without a pointer (detail 0)
+    button.dispatchEvent(new MouseEvent('click', { detail: 0 }));
+    expect(api.cancel).not.toHaveBeenCalled();
+    t = KEY_GRACE_MS;
+    button.dispatchEvent(new MouseEvent('click', { detail: 0 }));
+    expect(api.cancel).toHaveBeenCalledTimes(1);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(api.cancel).toHaveBeenCalledTimes(2);
+    stop();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(api.cancel).toHaveBeenCalledTimes(2);
     root.remove();
   });
 

@@ -33,7 +33,7 @@ export const tRemoteHost = defineBundle(
       'Bevor es Maus und Tastatur steuert, fragt das Handy nach Fingerabdruck, Gesicht oder PIN, höchstens alle acht Stunden. Eine Hürde, falls es entsperrt herumliegt.',
     power: 'Darf den PC ausschalten',
     powerHint:
-      'Ausschalten, Neu starten, Energie sparen und Abmelden. Jedes Mal zählt dieser PC erst 10 Sekunden herunter, in denen du hier abbrechen kannst. Nur solange der PC entsperrt ist.',
+      'Ausschalten, neu starten, Energie sparen, Ruhezustand und abmelden. Jedes Mal zählt dieser PC erst 10 Sekunden herunter, in denen du hier abbrechen kannst. Nur solange der PC entsperrt ist. Brichst du zweimal in einer Stunde ab, geht dieser Schalter aus.',
     notice: 'Melden, wenn ein Gerät Maus und Tastatur steuert',
     noticeHint:
       'Eine ruhige Benachrichtigung von Windows, ohne Ton, höchstens einmal in 30 Minuten je Gerät. Auch ohne sie zeigt das Tray-Symbol jede Fernsteuerung an.',
@@ -88,7 +88,7 @@ export const tRemoteHost = defineBundle(
         'Before it controls mouse and keyboard, the phone asks for fingerprint, face or PIN, at most every eight hours. A speed bump in case it is left lying around unlocked.',
       power: 'May switch the PC off',
       powerHint:
-        'Shut down, restart, sleep and sign out. Each time this PC first counts down 10 seconds in which you can cancel here. Only while the PC is unlocked.',
+        'Switch off, restart, sleep, hibernate and sign out. Each time this PC first counts down 10 seconds in which you can cancel here. Only while the PC is unlocked. Cancel twice within an hour and this switch turns off.',
       notice: 'Tell me when a device controls mouse and keyboard',
       noticeHint:
         'A quiet Windows notification, without sound, at most once in 30 minutes per device. Without it, the tray icon still shows any remote control.',
