@@ -47,6 +47,7 @@ export const habits: Strings['habits'] = {
     keepFreeNone: 'none',
     keepFreeOther: 'Other length …',
     keepFreeMinutes: 'Minutes (5–240)',
+    keepFreeRange: 'Please enter a length of 5 to 240 minutes.',
     keepFreeHint: 'The planner keeps this time free on the scheduled days. Ticking stays here.',
   },
   templates: {

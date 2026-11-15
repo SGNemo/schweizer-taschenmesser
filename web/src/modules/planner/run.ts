@@ -237,17 +237,22 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
     const userDate = userDates.get(key);
     return userDate ? row?.earliest !== userDate : !e.plannedFor && row?.earliest !== undefined;
   });
+  // Days with a fixed block (S4): what it takes depends on the blocker times it overlaps (`fixedCharges`).
+  const fixedDays = new Set(items.flatMap((i) => (i.fixed ? [i.fixed.date] : [])));
   const hash = fnv1a(
     JSON.stringify({
       today: deps.today,
       settings,
       items: [...items].sort((a, b) => (a.key < b.key ? -1 : 1)),
-      // Windows (and blocker times on a day with one) only enter the hash when set: a plan without windows hashes as before.
+      // Windows and blocker times only enter the hash where they matter (a day with a window or a fixed block): a
+      // plan without either hashes as before, and moving an appointment elsewhere does not rerun.
       days: days.map((d) => [
         d.date,
         d.availableMin,
         d.blockers.map((b) =>
-          d.window && b.from ? [b.label, b.min, b.from, b.to] : [b.label, b.min],
+          (d.window || fixedDays.has(d.date)) && b.from
+            ? [b.label, b.min, b.from, b.to]
+            : [b.label, b.min],
         ),
         ...(d.window ? [d.window.from, d.window.to] : []),
       ]),

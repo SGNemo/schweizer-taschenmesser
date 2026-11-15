@@ -274,6 +274,7 @@ export const planner: Strings['planner'] = {
   say: {
     explain: 'I can do: day off, time per day, move, pin, don’t plan.',
     missing: (query: string) => `I can’t find “${query}” in the plan.`,
+    fixed: (title: string) => `${title} has a fixed time and stays where it is.`,
     ask: (a: string, b: string) => `Do you mean ${a} or ${b}?`,
     askLabel: 'Which one is meant?',
     reading: 'One moment – the local model is reading the sentence. Esc stops it.',

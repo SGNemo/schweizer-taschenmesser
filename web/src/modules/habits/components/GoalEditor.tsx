@@ -101,6 +101,7 @@ function Fields({
         : 'other',
   );
   const [keepOther, setKeepOther] = useState(String(existing?.minutes ?? 45));
+  const [keepError, setKeepError] = useState('');
 
   function template(id: TemplateId) {
     const tpl = TEMPLATES[id];
@@ -122,6 +123,15 @@ function Fields({
   }
 
   async function save() {
+    // „Andere Dauer …“ says its own range at the field, not only the generic line below the form.
+    const other = Number(keepOther);
+    if (
+      period === 'day' &&
+      keep === 'other' &&
+      (keepOther.trim() === '' || !Number.isInteger(other) || other < 5 || other > 240)
+    )
+      return setKeepError(t.habits.form.keepFreeRange);
+    setKeepError('');
     const data = {
       name: name.trim(),
       kind,
@@ -291,7 +301,11 @@ function Fields({
                 min={5}
                 max={240}
                 value={keepOther}
-                onChange={(e) => setKeepOther(e.target.value)}
+                onChange={(e) => {
+                  setKeepOther(e.target.value);
+                  setKeepError('');
+                }}
+                {...(keepError ? { error: keepError } : {})}
               />
             ) : null}
           </>

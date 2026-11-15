@@ -10,6 +10,7 @@ import { formatDay } from '@/core/time/dates';
 import type { InstructionItem, PlanOp } from '@/core/plan/instructions';
 import { t } from '@/strings';
 import type { Board } from './board';
+import { fixedOf } from './days';
 
 /**
  * The compact plan for the local stage (`localStage.ts`): every thing once with its minutes over all
@@ -48,19 +49,32 @@ export function planLines(board: Board): PlanLine[] {
   return [...out.values()];
 }
 
-/** The rules' view of the same lines: every thing once with its first day, its hard due and its pin. */
+/** The rules' view of the same lines: every thing once with its first day, its hard due, its pin and whether it is fixed. */
 export function instructionItems(board: Board): InstructionItem[] {
   const pinned = new Map<string, string>();
+  const fixed = new Set<string>();
   for (const day of board.days)
-    for (const row of day.rows) if (row.item?.pinned) pinned.set(row.itemKey, row.item.pinned);
+    for (const row of day.rows) {
+      if (row.item?.pinned) pinned.set(row.itemKey, row.item.pinned);
+      // A fixed block (S4): its source's day and time – no sentence moves it.
+      if (row.fixed || (row.entry && fixedOf(row.entry))) fixed.add(row.itemKey);
+    }
   return planLines(board).map((l) => ({
     key: l.key,
     title: l.title,
     ...(l.day ? { date: l.day } : {}),
     ...(l.due ? { hardDue: l.due } : {}),
     ...(pinned.has(l.key) ? { pinned: pinned.get(l.key)! } : {}),
+    ...(fixed.has(l.key) ? { fixed: true as const } : {}),
   }));
 }
+
+/**
+ * „Rest verteilen“ leaves nothing to move (only what is nailed, due hard or fixed today is left, or nothing): the
+ * page then says one calm line instead of a preview.
+ */
+export const restIsEmpty = (ops: readonly PlanOp[]): boolean =>
+  !ops.some((o) => o.op === 'earliest');
 
 /**
  * A day in a preview line: the short weekday inside the board's week, with the date beyond it – on a

@@ -6,10 +6,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
 import type { PlanBlockEntry, PlannableEntry } from '@/core/modules/contributions';
+import type { CalendarItem } from '@/core/modules/types';
 import { setNow } from '@/core/time/now';
+import { restToTomorrow } from '@/core/plan/instructions';
 import { buildBoard } from '../board';
 import { assignmentRepo } from '../repo';
 import { runPlanner, type RunDeps } from '../run';
+import { instructionItems, restIsEmpty } from '../say';
 import { DEFAULT_PLANNER_SETTINGS } from '../settings';
 
 const TODAY = '2026-11-09'; // Monday
@@ -92,6 +95,35 @@ describe('the run with fixed blocks and module blocks', () => {
     expect(await hash([training()])).toBe(base);
   });
 
+  it('moving an appointment that overlaps the training reruns and charges the training again', async () => {
+    const appt = (time: string, endTime: string): CalendarItem => ({
+      id: 'e1',
+      source: 'calendar',
+      kind: 'event',
+      title: 'Teamrunde',
+      date: TUE,
+      time,
+      endTime,
+      allDay: false,
+      to: '/calendar',
+    });
+    const withCal = (cal: CalendarItem[], entries = [training(), todo('a', 30)]): RunDeps => ({
+      ...deps(entries),
+      settings: { ...H, calendarBlocks: true },
+      calendar: cal,
+    });
+    const first = await runPlanner(withCal([appt('18:00', '19:00')]));
+    // The appointment covers the whole training: it takes nothing more from Tuesday.
+    expect(first.result!.load[TUE]!.planned).toBe(0);
+    const moved = await runPlanner(withCal([appt('20:00', '21:00')]));
+    expect(moved.ran).toBe(true);
+    expect(moved.result!.load[TUE]!.planned).toBe(60);
+    // A day without a window or a fixed block: the appointment's hour alone does not rerun (its minutes do).
+    const calm = await runPlanner(withCal([appt('20:00', '21:00')], [todo('a', 30)]));
+    const later = await runPlanner(withCal([appt('21:00', '22:00')], [todo('a', 30)]));
+    expect(later.inputs.hash).toBe(calm.inputs.hash);
+  });
+
   it('a habit block takes time off the day like an appointment and is never a row', async () => {
     const plain = await runPlanner(deps([todo('a', 30)]));
     const blocked = await runPlanner(deps([todo('a', 30)], [walk(TODAY, 60)]));
@@ -143,5 +175,41 @@ describe('the board', () => {
     ]);
     // Only the half hour before the appointment counts for the training.
     expect(tue.planned).toBe(30);
+  });
+});
+
+describe('sentences and „Rest verteilen“ leave a fixed training where it is', () => {
+  const boardOf = async (entries: PlannableEntry[]) => {
+    await runPlanner(deps(entries));
+    return buildBoard({
+      today: TODAY,
+      span: 7,
+      settings: H,
+      dayRows: [],
+      itemRows: [],
+      assignments: await assignmentRepo.active().toArray(),
+      entries,
+      calendar: [],
+      unplaced: [],
+    });
+  };
+  // The training is today at 18:00 (it is 10:00).
+  const today18 = training({ earliest: TODAY });
+
+  it('the rules see it as fixed; „Rest verteilen“ moves the ToDo but never the training', async () => {
+    const board = await boardOf([today18, todo('a', 30)]);
+    const items = instructionItems(board);
+    expect(items.find((i) => i.key === 'fitness:s1')).toMatchObject({ date: TODAY, fixed: true });
+    const ops = restToTomorrow({ today: TODAY, items });
+    expect(ops).toContainEqual({ op: 'earliest', key: 'todos:a', date: TUE });
+    expect(ops.some((o) => 'key' in o && o.key === 'fitness:s1')).toBe(false);
+    expect(restIsEmpty(ops)).toBe(false);
+  });
+
+  it('only the training left today: no op for it, the calm „nothing“ line instead of a preview', async () => {
+    const board = await boardOf([today18]);
+    const ops = restToTomorrow({ today: TODAY, items: instructionItems(board) });
+    expect(ops).toEqual([{ op: 'available', date: TODAY, min: 0 }]);
+    expect(restIsEmpty(ops)).toBe(true);
   });
 });

@@ -8890,6 +8890,7 @@ export const de = {
       keepFreeNone: 'keine',
       keepFreeOther: 'Andere Dauer …',
       keepFreeMinutes: 'Minuten (5–240)',
+      keepFreeRange: 'Bitte eine Dauer von 5 bis 240 Minuten eintragen.',
       keepFreeHint:
         'Der Planer hält diese Zeit an den geplanten Tagen frei. Abgehakt wird nur hier.',
     },
@@ -9325,6 +9326,7 @@ export const de = {
     say: {
       explain: 'Ich kann: Tag frei, Zeit je Tag, verschieben, festnageln, nicht planen.',
       missing: (query: string) => `„${query}“ finde ich nicht im Plan.`,
+      fixed: (title: string) => `${title} hat eine feste Zeit und bleibt, wo es ist.`,
       ask: (a: string, b: string) => `Meinst du ${a} oder ${b}?`,
       askLabel: 'Welches ist gemeint?',
       reading: 'Einen Moment – das lokale Modell liest den Satz. Esc bricht ab.',
