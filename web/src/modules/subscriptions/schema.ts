@@ -52,6 +52,13 @@ export const subscriptionSchema = z.object({
   /** How it is paid, in the user's words ("Visa", "Lastschrift Girokonto"); short, never a card number. */
   paymentMethod: z.string().max(40).optional(),
   priceHistory: z.array(priceChangeSchema).max(20).optional().meta({ internal: true }),
+  /** Marked „Kaum genutzt“ on this day (since version 6); the overview names what it costs a year. Nothing else follows. */
+  unusedSince: z.string().regex(DATE_RE).optional(),
+  /**
+   * The last day to cancel that the user put into the plan with „In den Plan“ (since version 6): a ToDo now stands for
+   * it, so the planner source leaves that deadline out. A later deadline is a new one.
+   */
+  plannedDeadline: z.string().regex(DATE_RE).optional().meta({ internal: true }),
 });
 
 export type Subscription = z.output<typeof subscriptionSchema>;

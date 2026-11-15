@@ -41,10 +41,12 @@ const source: PlannableSource = {
       // limit, and a months-old row would hide the next real deadline (a trial end, say).
       const recent = addDaysStr(ctx.today, -MISSED_RECENT_DAYS);
       const missed = missedDeadline(s, ctx.today);
-      if (missed && missed.deadline >= recent)
+      if (missed && missed.deadline >= recent && missed.deadline !== s.plannedDeadline)
         candidates.push({ date: missed.deadline, trial: false });
+      // A deadline put into the plan from the page („In den Plan“) has its own ToDo: never a second row for it.
       const next = cancelDeadlinesInRange(s, ctx.today, ctx.until)
         .map((d) => d.deadline)
+        .filter((d) => d !== s.plannedDeadline)
         .sort()[0];
       if (next) candidates.push({ date: next, trial: false });
       const trial = s.trialEndsOn;

@@ -6,8 +6,15 @@
 import { compareText } from '@/core/i18n/format';
 import { currencyOf, DEFAULT_CURRENCY } from '@/core/money';
 import { addDaysStr } from '@/core/time/dates';
-import { annualCost, chargesInRange, nextCharge, sortSubscriptions } from './logic';
-import type { Subscription, SubscriptionCategory } from './schema';
+import {
+  annualCost,
+  chargesInRange,
+  chargesPerYear,
+  nextCancelDeadline,
+  nextCharge,
+  sortSubscriptions,
+} from './logic';
+import type { PriceChange, Subscription, SubscriptionCategory } from './schema';
 
 type Sub = Pick<
   Subscription,
@@ -169,3 +176,79 @@ export function sortList<T extends Sub>(list: readonly T[], today: string, key: 
 
 /** The category keys in the order the editor lists them, plus `NO_CATEGORY`; for typed labels. */
 export type ShareKey = SubscriptionCategory | typeof NO_CATEGORY;
+
+/** Deadlines the overview lists: from today through this many days ahead (a quarter covers yearly contracts in time). */
+export const DEADLINE_DAYS = 90;
+
+export interface DeadlineRow<T> {
+  sub: T;
+  /** Last day to cancel. */
+  deadline: string;
+  /** The charge that cancelling in time avoids. */
+  charge: string;
+  /** Already put into the plan from here (`plannedDeadline`). */
+  planned: boolean;
+}
+
+/**
+ * The next cancellation deadline of every running subscription that has a notice period and is not cancelled
+ * already, within `days`, earliest first.
+ */
+export function upcomingDeadlines<
+  T extends Sub & Pick<Subscription, 'cancelNoticeDays' | 'cancelNoticeMonths' | 'plannedDeadline'>,
+>(subs: readonly T[], today: string, days = DEADLINE_DAYS): DeadlineRow<T>[] {
+  const last = addDaysStr(today, days);
+  return subs
+    .filter((s) => isRunning(s, today) && !s.recurrence.until)
+    .flatMap((sub) => {
+      const next = nextCancelDeadline(sub, today);
+      return next && next.deadline <= last
+        ? [{ sub, ...next, planned: sub.plannedDeadline === next.deadline }]
+        : [];
+    })
+    .sort((a, b) => a.deadline.localeCompare(b.deadline) || compareText(a.sub.name, b.sub.name));
+}
+
+export interface PriceRow<T> {
+  sub: T;
+  change: PriceChange;
+  /** What the change means per year in cents (positive = dearer), at the subscription's rule. */
+  perYear: number;
+}
+
+/** Price changes shown: within this many days back. */
+export const PRICE_DAYS = 365;
+
+/** The newest price change of every subscription within `days`, newest first (paused ones too: the price is a fact). */
+export function recentPriceChanges<T extends Sub & Pick<Subscription, 'priceHistory'>>(
+  subs: readonly T[],
+  today: string,
+  days = PRICE_DAYS,
+): PriceRow<T>[] {
+  const since = addDaysStr(today, -days);
+  return subs
+    .flatMap((sub) => {
+      const change = [...(sub.priceHistory ?? [])].reverse().find((c) => c.date >= since);
+      if (!change) return [];
+      const perCharge = change.toMinor - change.fromMinor;
+      return [{ sub, change, perYear: Math.round(perCharge * chargesPerYear(sub.recurrence)) }];
+    })
+    .sort(
+      (a, b) => b.change.date.localeCompare(a.change.date) || compareText(a.sub.name, b.sub.name),
+    );
+}
+
+/** Running subscriptions marked „Kaum genutzt“, dearest first, with their yearly cost; sums per currency. */
+export function unusedRows<T extends Sub & Pick<Subscription, 'unusedSince'>>(
+  subs: readonly T[],
+  today: string,
+): { rows: { sub: T; yearly: number }[]; sums: Map<string, number> } {
+  const rows = subs
+    .filter((s) => !!s.unusedSince && isRunning(s, today))
+    .map((sub) => ({ sub, yearly: Math.round(annualCost(sub)) }))
+    .sort((a, b) => b.yearly - a.yearly || compareText(a.sub.name, b.sub.name));
+  return {
+    rows,
+    sums: sumByCurrency(rows.map((r) => ({ amountMinor: r.yearly, currency: currencyOf(r.sub) }))),
+  };
+}

@@ -19,6 +19,7 @@ import {
   type ShareBy,
   type ShareKey,
 } from '../overview';
+import { DeadlinesCard, PricesCard, UnusedCard } from './ActionCards';
 import styles from './OverviewView.module.css';
 
 type Row = Subscription & { id: string };
@@ -28,17 +29,21 @@ export const RANKING_BARS = 8;
 
 /**
  * „Übersicht“ (round „Tiefe & Politur“): where the money goes (donut by kind or by subscription), the charges of the
- * next 30 days, and what each subscription costs in a year. Read only: editing stays in the list. Charts are drawn
- * in the main currency only; other currencies are named in one line, never added in.
+ * next 30 days, the notice periods with „In den Plan“, what each subscription costs in a year, price changes and the
+ * ones marked „Kaum genutzt“ (the last three only when there is something). Editing stays in the dialog. Charts are
+ * drawn in the main currency only; other currencies are named in one line, never added in.
  */
 export function OverviewView<R extends Row>({
   subs,
   day,
   onOpen,
+  onPlan,
 }: {
   subs: readonly R[];
   day: string;
   onOpen: (s: R) => void;
+  /** „In den Plan“ for a deadline; absent while the planner is off. */
+  onPlan?: (s: R, deadline: string) => void;
 }) {
   const v = t.subscriptions.ext.overview;
   const [by, setBy] = useState<ShareBy>('category');
@@ -81,6 +86,7 @@ export function OverviewView<R extends Row>({
       </Card>
 
       <UpcomingCard subs={subs} day={day} onOpen={onOpen} />
+      <DeadlinesCard subs={subs} day={day} onOpen={onOpen} onPlan={onPlan} />
 
       <Card title={v.yearTitle} className={styles.card}>
         <Bars
@@ -97,6 +103,8 @@ export function OverviewView<R extends Row>({
           </p>
         ) : null}
       </Card>
+      <PricesCard subs={subs} day={day} onOpen={onOpen} />
+      <UnusedCard subs={subs} day={day} onOpen={onOpen} />
     </div>
   );
 }

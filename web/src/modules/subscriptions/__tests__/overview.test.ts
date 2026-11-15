@@ -6,9 +6,12 @@ import {
   mainCurrency,
   NO_CATEGORY,
   otherCurrencyCount,
+  recentPriceChanges,
   sortList,
   sumByCurrency,
+  unusedRows,
   upcomingCharges,
+  upcomingDeadlines,
   yearlyRanking,
 } from '../overview';
 import { subscriptionSchema } from '../schema';
@@ -159,5 +162,77 @@ describe('yearly ranking and list sort', () => {
     expect(isSortKey('cost')).toBe(true);
     expect(isSortKey('price')).toBe(false);
     expect(isSortKey(null)).toBe(false);
+  });
+});
+
+describe('deadlines, price changes and unused ones (p2)', () => {
+  it('lists the next deadline within 90 days, earliest first, and knows what is planned', () => {
+    const soon = sub({ name: 'Zeitung', startDate: '2026-01-25', cancelNoticeDays: 7 });
+    const planned = sub({
+      name: 'Musik',
+      startDate: '2026-01-30',
+      cancelNoticeDays: 7,
+      plannedDeadline: '2026-11-23',
+    });
+    const far = sub({
+      name: 'Versicherung',
+      startDate: '2025-06-01',
+      recurrence: { freq: 'yearly' },
+      cancelNoticeDays: 30,
+    });
+    const cancelled = sub({
+      name: 'Gekündigt',
+      cancelNoticeDays: 7,
+      recurrence: { freq: 'monthly', until: '2027-01-01' },
+    });
+    const none = sub({ name: 'Ohne Frist' });
+    const paused = sub({ name: 'Pause', cancelNoticeDays: 7, active: false });
+    const rows = upcomingDeadlines([far, planned, soon, cancelled, none, paused], TODAY);
+    expect(rows.map((r) => [r.sub.name, r.deadline, r.charge, r.planned])).toEqual([
+      ['Zeitung', '2026-11-18', '2026-11-25', false],
+      ['Musik', '2026-11-23', '2026-11-30', true],
+    ]);
+    // The yearly one (deadline 2 May 2027) is beyond 90 days.
+    expect(upcomingDeadlines([far], TODAY, 200).map((r) => r.deadline)).toEqual(['2027-05-02']);
+  });
+
+  it('shows the newest change of the last year with what it means per year', () => {
+    const up = sub({
+      name: 'Video',
+      amountMinor: 1499,
+      priceHistory: [
+        { date: '2025-03-01', fromMinor: 999, toMinor: 1299 },
+        { date: '2026-10-01', fromMinor: 1299, toMinor: 1499 },
+      ],
+    });
+    const down = sub({
+      name: 'Box',
+      amountMinor: 500,
+      recurrence: { freq: 'weekly' },
+      priceHistory: [{ date: '2026-06-01', fromMinor: 600, toMinor: 500 }],
+    });
+    const old = sub({
+      name: 'Alt',
+      priceHistory: [{ date: '2025-01-01', fromMinor: 1, toMinor: 2 }],
+    });
+    expect(
+      recentPriceChanges([down, old, up], TODAY).map((r) => [r.sub.name, r.change.date, r.perYear]),
+    ).toEqual([
+      ['Video', '2026-10-01', 2400],
+      ['Box', '2026-06-01', -5200],
+    ]);
+  });
+
+  it('sums the yearly cost of unused running ones per currency', () => {
+    const a = sub({ name: 'Video', amountMinor: 1000, unusedSince: '2026-11-01' });
+    const b = sub({ name: 'Box', amountMinor: 500, unusedSince: '2026-11-01' });
+    const paused = sub({ name: 'Pause', unusedSince: '2026-11-01', active: false });
+    const used = sub({ name: 'Genutzt' });
+    const { rows, sums } = unusedRows([b, a, paused, used], TODAY);
+    expect(rows.map((r) => [r.sub.name, r.yearly])).toEqual([
+      ['Video', 12000],
+      ['Box', 6000],
+    ]);
+    expect([...sums]).toEqual([['EUR', 18000]]);
   });
 });

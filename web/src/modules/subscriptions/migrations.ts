@@ -20,4 +20,6 @@ export const migrations: ModuleManifest['migrations'] = {
       if (r.cancelNoticeMonths !== undefined || typeof days !== 'number') return;
       return days >= 30 && days % 30 === 0 ? { cancelNoticeMonths: days / 30 } : undefined;
     }),
+  // 6: optional `unusedSince` and `plannedDeadline`; absent means "as before", nothing is rewritten.
+  6: () => Promise.resolve(),
 };

@@ -39,6 +39,15 @@ describe('cancellation deadlines as a planner source', () => {
     ]);
   });
 
+  it('a deadline put into the plan from the page („In den Plan“) is not listed a second time', async () => {
+    await add({ plannedDeadline: '2026-11-13' });
+    expect(await source.list(ctx)).toEqual([]);
+    // An older plan mark does not hide the current deadline.
+    await db.table('subscriptions_subscription').clear();
+    await add({ plannedDeadline: '2025-11-13' });
+    expect((await source.list(ctx))[0]?.due).toEqual({ date: '2026-11-13', hard: true });
+  });
+
   it('months as notice move by calendar months (core/deadline/notice)', async () => {
     await add({ startDate: '2026-02-15', cancelNoticeDays: 90, cancelNoticeMonths: 3 });
     expect((await source.list(ctx))[0]?.due).toEqual({ date: '2026-11-15', hard: true });
