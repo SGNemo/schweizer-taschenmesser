@@ -81,6 +81,7 @@ export function ThingRow({
       }
     : undefined;
 
+  const duration = row.approx ? t.planner.row.approx(compact(row.minutes)) : compact(row.minutes);
   const facts: ReactNode[] = [];
   if (source)
     facts.push(
@@ -151,14 +152,15 @@ export function ThingRow({
               {fact}
             </Fragment>
           ))}
+          {/* Phone: the duration closes the meta line, so the title has the row's width (the end slot is hidden). */}
+          <span className={styles.metaDuration}>
+            {facts.length > 0 ? <span aria-hidden="true">· </span> : null}
+            {duration}
+          </span>
           {whyOpen ? <span className={styles.reason}>{reason}</span> : null}
         </span>
       }
-      end={
-        <span className={styles.duration}>
-          {row.approx ? t.planner.row.approx(compact(row.minutes)) : compact(row.minutes)}
-        </span>
-      }
+      end={<span className={styles.duration}>{duration}</span>}
       menu={menu}
       menuLabel={t.planner.row.menu(row.title)}
       onSwipeRight={done}

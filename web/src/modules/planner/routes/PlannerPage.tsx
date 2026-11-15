@@ -104,7 +104,10 @@ export default function PlannerPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   // Phone: the plus of the bottom bar („Ding“) opens the field as a sheet; `?new=1` (quick add, a tap of the
   // user) opens it too.
-  const [capturing, setCapturing] = useState(() => phone && params.get('new') === '1');
+  const [capturing, setCapturing] = useState(false);
+  // Adjusting state during render: `?new=1` opens the sheet on the phone, also when the page is already there
+  // (the effect below then takes the parameter away).
+  if (phone && params.get('new') === '1' && !capturing) setCapturing(true);
   usePageAction({ short: t.planner.add.short, onClick: () => setCapturing(true) }, phone);
   // The entry was not stored (the planner was switched off meanwhile): the field says so, the text is still there.
   const [addError, setAddError] = useState(false);
@@ -121,7 +124,9 @@ export default function PlannerPage() {
     [phone],
   );
   // What changed, for screen readers (the picked day and its capacity, a ticked thing).
-  const [status, setStatus] = useState('');
+  // `n` changes with every announcement, so the same sentence said twice is a new node and is read again.
+  const [status, setStatusState] = useState({ text: '', n: 0 });
+  const setStatus = (text: string) => setStatusState((cur) => ({ text, n: cur.n + 1 }));
   const [why, setWhy] = useState<string | undefined>();
   const [pending, setPending] = useState<Pending | undefined>();
   const [ask, setAsk] = useState<
@@ -231,8 +236,8 @@ export default function PlannerPage() {
   // `pickedDay` above); `?week=` (the calendar's „Plan“ entry) lands on the page as it is.
   useEffect(() => {
     if (params.get('new')) {
-      // Desktop: the field in the page; the phone's sheet focuses its own field when it opens.
-      addRef.current?.querySelector('input')?.focus();
+      // Desktop: the field in the page. Phone: the sheet (opened above) focuses its own field when it opens.
+      if (!phone) addRef.current?.querySelector('input')?.focus();
       setParams({}, { replace: true });
       return;
     }
@@ -398,7 +403,8 @@ export default function PlannerPage() {
     { id: 'check', label: t.planner.check.title, onSelect: () => setChecking(true) },
     { id: 'days', label: t.planner.daySetup.open, onSelect: () => setSettingUp(true) },
   ];
-  // The page's ⋯: in the head's title row on the desktop; on the phone (no action in the head) at the sheet's foot.
+  // The page's ⋯: in the head's title row on the desktop; on the phone (no action in the module head) beside the
+  // sheet's day title.
   const pageMenuButton = (
     <RowMenu
       label={t.planner.head.menu}
@@ -520,7 +526,7 @@ export default function PlannerPage() {
   const days = board?.days;
   const storedDate = storedPick && storedPick.on === data?.today ? storedPick.date : undefined;
   const shownDay =
-    !days || storedPick === undefined
+    !days || storedPick === undefined || thenStored === undefined
       ? undefined
       : (days.find((d) => d.date === pickedDay) ??
         days.find((d) => d.date === storedDate) ??
@@ -702,11 +708,13 @@ export default function PlannerPage() {
 
       {/* Day and plan changes for screen readers: the picked day with its capacity, a ticked thing. */}
       <p className="sr-only" role="status" data-testid="planner-status">
-        {status}
+        <span key={status.n}>{status.text}</span>
       </p>
 
       <SplitView enabled={wide && hasContext} asideLabel={t.planner.ctx.label} aside={context}>
-        <div className={styles.main}>
+        {/* Wide and nothing beside it (no appointment, nothing waits): the main column keeps the width it has
+            beside the context column, left-aligned with the head's title – rows do not stretch over the page. */}
+        <div className={wide && !hasContext ? `${styles.main} ${styles.mainAlone}` : styles.main}>
           {/* Reading order = DOM order: field → band → sheet → context. The field is there from the first paint
               and never moves under the typing hand (U01). */}
           {phone ? null : capture(false)}
@@ -743,9 +751,9 @@ export default function PlannerPage() {
               onThenToggle={(open) => void setMeta(phone ? THEN_NARROW_KEY : THEN_WIDE_KEY, open)}
               empty={emptySheet}
               onRest={shownDay.isToday ? () => void showRest() : undefined}
-              // On the phone the page's ⋯ stands in the same foot and holds „Tage einteilen“: said once.
+              // On the phone the page's ⋯ stands in the sheet's head and holds „Tage einteilen“: said once.
               onSetup={phone ? undefined : () => setSettingUp(true)}
-              footEnd={phone ? pageMenuButton : undefined}
+              headEnd={phone ? pageMenuButton : undefined}
               onSwipe={
                 phone
                   ? (dir) => {

@@ -4,7 +4,7 @@ import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Progress } from '@/ui';
 import type { BoardDay } from '../board';
-import { capacityLabel, capacityState, capacityTile, compact } from './capacity';
+import { capacityLabel, capacityShort, capacityState, capacityTile, compact } from './capacity';
 import styles from './WeekBand.module.css';
 
 /** Things of a day as the tile counts them (blockers are no things; a thing cut into parts counts once). */
@@ -83,40 +83,43 @@ export function WeekBand({
           const state = capacityState(d);
           const number = formatDay(d.date, 'd.');
           return (
-            <button
-              key={d.date}
-              type="button"
-              className={styles.tile}
-              data-testid={`week-${d.date}`}
-              data-off={d.off || undefined}
-              aria-pressed={d.date === picked}
-              aria-current={d.isToday ? 'date' : undefined}
-              tabIndex={d.date === stop ? 0 : -1}
-              onClick={() => onPick(d.date)}
-            >
-              {/* The name is the sentence; the two visible forms are its short picture (hidden from the name, so
-                  the tile is not read twice). */}
-              <span className="sr-only">{tileName(d, i === 1)}</span>
-              <span className={styles.wide} aria-hidden="true">
-                <span className={styles.top}>
-                  <span className={styles.day}>
-                    {d.isToday
-                      ? t.planner.board.todayIs(`${dayName(d.date)} ${number}`)
-                      : `${dayName(d.date)} ${number}`}
+            // The tile is a box with the button over all of it and the bar laid on top (a bar is a `div`: it may
+            // not stand inside a button). The bar takes no pointer, so the whole tile answers.
+            <div key={d.date} className={styles.tile} data-off={d.off || undefined}>
+              <button
+                type="button"
+                className={styles.pick}
+                data-testid={`week-${d.date}`}
+                aria-pressed={d.date === picked}
+                aria-current={d.isToday ? 'date' : undefined}
+                tabIndex={d.date === stop ? 0 : -1}
+                onClick={() => onPick(d.date)}
+              >
+                {/* The name is the sentence; the two visible forms are its short picture (hidden from the name,
+                    so the tile is not read twice). */}
+                <span className="sr-only">{tileName(d, i === 1)}</span>
+                <span className={styles.wide} aria-hidden="true">
+                  <span className={styles.top}>
+                    <span className={styles.day}>
+                      {d.isToday
+                        ? t.planner.board.todayIs(`${dayName(d.date)} ${number}`)
+                        : `${dayName(d.date)} ${number}`}
+                    </span>
+                    {n > 0 ? (
+                      <span className={styles.count}>{t.planner.board.things(n)}</span>
+                    ) : null}
                   </span>
-                  {n > 0 ? <span className={styles.count}>{t.planner.board.things(n)}</span> : null}
+                  <span className={styles.state}>{capacityTile(d)}</span>
                 </span>
-                <span className={styles.state}>{capacityTile(d)}</span>
-              </span>
-              <span className={styles.compact} aria-hidden="true">
-                <span className={styles.day}>{dayName(d.date)}</span>
-                <span className={styles.day}>{formatDay(d.date, 'd')}</span>
-                <span className={styles.state}>
-                  {n > 0 ? n : d.off ? t.planner.board.off : '–'}
+                <span className={styles.compact} aria-hidden="true">
+                  <span className={styles.day}>{dayName(d.date)}</span>
+                  <span className={styles.day}>{formatDay(d.date, 'd')}</span>
+                  {/* The count of things, else what the day has: its free time or one state word („frei“). */}
+                  <span className={styles.state}>{n > 0 ? n : capacityShort(d)}</span>
                 </span>
-              </span>
+              </button>
               {/* The button's name says the load in words; the bar is its picture. */}
-              <span className={styles.bar} aria-hidden="true">
+              <div className={styles.bar} aria-hidden="true">
                 <Progress
                   value={d.off ? 0 : d.planned}
                   max={Math.max(d.usable, 1)}
@@ -126,8 +129,8 @@ export function WeekBand({
                   over={state === 'over' ? 'hatch' : undefined}
                   outline
                 />
-              </span>
-            </button>
+              </div>
+            </div>
           );
         })}
       </div>

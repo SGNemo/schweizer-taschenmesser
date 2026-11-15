@@ -12,6 +12,11 @@
   gap: var(--space-4);
   min-width: 0;
 }
+/* Wide, and nothing stands beside it: the column keeps the width it has next to the context column (the same
+   token), left-aligned with the head's title. */
+.mainAlone {
+  width: calc(100% - var(--split-detail) - var(--space-5));
+}
 .context {
   display: flex;
   flex-direction: column;
@@ -40,7 +45,7 @@
   align-items: center;
   /* 32 px chips with a 44 px hit box: wrapped lines keep 44 px from line to line */
   gap: var(--space-3) var(--space-2);
-  margin: var(--space-2) 0 0;
+  margin: var(--space-1) 0 0;
 }
 .examplesLead {
   color: var(--text-3);
@@ -67,7 +72,7 @@ section.sheet {
   flex-direction: column;
   gap: var(--space-1);
   min-width: 0;
-  padding: var(--space-3) var(--space-2);
+  padding: var(--space-2) var(--space-2) var(--space-3);
 }
 .sheetHead {
   display: grid;
@@ -122,6 +127,10 @@ section.sheet {
   font-weight: var(--weight-semibold);
 }
 /* „Danach · 5 · 1 h 20“ and „22 weitere“: folds, 44 px to hit. */
+/* „Zuerst“ keeps the air from the bar that the groups keep from each other. */
+.groupFirst {
+  margin-top: var(--space-2);
+}
 .fold {
   display: inline-flex;
   align-items: center;
@@ -141,8 +150,8 @@ section.sheet {
 .fold:hover {
   color: var(--text);
 }
-/* „n weitere“ stands under the rows, in line with their titles' column start. */
-.fold[data-testid] {
+/* „n weitere“ stands under the rows, in line with the group heads. */
+.more {
   margin-left: var(--sheet-inset);
 }
 .foldNarrow {
@@ -176,9 +185,6 @@ section.sheet {
   align-items: center;
   gap: 0 var(--space-5);
   padding: 0 var(--sheet-inset);
-}
-.footEnd {
-  margin-left: auto;
 }
 /* A text link that acts in place („Rest verteilen“, „Tage einteilen“, „Woche prüfen“): the link tokens, 44 px to hit. */
 .textLink {
@@ -227,13 +233,25 @@ section.sheet {
   content: '';
   position: absolute;
   /* 44 px around the box's 24 (its 1 px frame counted) */
-  inset: calc((1.5rem - var(--touch)) / 2 - 1px);
+  inset: calc((var(--space-5) - var(--touch)) / 2 - 1px);
 }
 /* The ⋯ of a row and of the page: the shared icon button draws 40 px and answers on 42 (its frame is not part of
    the enlarged hit box); in the sheet it answers on the full 44. */
 section.sheet [data-row-actions] button::after,
-.footEnd button::after {
+section.sheet .headEnd button::after {
   inset: -3px;
+}
+/* … and is drawn as the glyph alone until the pointer or the focus is on it (a filled square in every row is
+   louder than the row's title). */
+section.sheet [data-row-actions] button,
+section.sheet .headEnd button {
+  background: transparent;
+}
+section.sheet [data-row-actions] button:hover,
+section.sheet [data-row-actions] button[aria-expanded='true'],
+section.sheet .headEnd button:hover,
+section.sheet .headEnd button[aria-expanded='true'] {
+  background: var(--surface-2);
 }
 .thingTitle {
   font-size: var(--text-md);
@@ -258,6 +276,12 @@ section.sheet [data-row-actions] button::after,
 .duration {
   color: var(--text-muted);
   font-size: var(--text-md);
+  font-variant-numeric: var(--font-num);
+  white-space: nowrap;
+}
+/* The duration as the last fact of the meta line: the phone's form (see the media rule below). */
+.metaDuration {
+  display: none;
   font-variant-numeric: var(--font-num);
   white-space: nowrap;
 }
@@ -378,23 +402,24 @@ section.sheet [data-row-actions] button::after,
   margin: var(--space-3) 0 0;
 }
 
-/* Phone: the day title steps down a size, „Danach“ says its things in words. */
+/* Phone: the day title steps down a size and shares its row with the page's ⋯; the duration closes the meta line,
+   so the title has the row's width; „Danach“ says its things in words. */
 @media (max-width: 899px) {
-  /* The rows take the card's full width: lead, title, duration and ⋯ need every pixel of 412. */
   section.sheet {
     --sheet-inset: var(--space-4);
     padding-inline: 0;
   }
   .duration {
-    font-size: var(--text-meta);
+    display: none;
+  }
+  .metaDuration {
+    display: inline;
   }
   .sheetTitle {
     font-size: var(--text-lg);
   }
-  .sheetHead {
-    grid-template-columns: minmax(0, 1fr);
-  }
   .capacityButton {
+    grid-column: 1 / -1;
     justify-self: start;
     text-align: left;
   }

@@ -49,6 +49,10 @@ function BlockRow({ blocker }: { blocker: BoardBlocker }) {
               <span>{time}</span>
             </>
           ) : null}
+          <span className={styles.metaDuration}>
+            <span aria-hidden="true">· </span>
+            {compact(blocker.min)}
+          </span>
         </span>
       }
       end={<span className={styles.duration}>{compact(blocker.min)}</span>}
@@ -80,7 +84,7 @@ export function DayPage({
   empty,
   onRest,
   onSetup,
-  footEnd,
+  headEnd,
   onSwipe,
 }: {
   day: BoardDay;
@@ -96,8 +100,8 @@ export function DayPage({
   onRest?: () => void;
   /** „Tage einteilen“ as a link of the foot; left out where the foot's ⋯ already offers it (phone). */
   onSetup?: () => void;
-  /** At the end of the foot (the page's ⋯ on the phone). */
-  footEnd?: ReactNode;
+  /** Beside the day title (the page's ⋯ on the phone). */
+  headEnd?: ReactNode;
   /** Phone: a sideways swipe on the sheet, not started on a row (`1` = the next day). */
   onSwipe?: (dir: 1 | -1) => void;
 }) {
@@ -142,6 +146,7 @@ export function DayPage({
         <h2 id={`${id}-title`} className={styles.sheetTitle}>
           {dayTitle(day, tomorrow)}
         </h2>
+        {headEnd ? <span className={styles.headEnd}>{headEnd}</span> : null}
         <button
           type="button"
           className={styles.capacityButton}
@@ -186,7 +191,7 @@ export function DayPage({
 
       {hasRows ? (
         <>
-          <h3 className={styles.groupHead}>{t.planner.sheet.first}</h3>
+          <h3 className={`${styles.groupHead} ${styles.groupFirst}`}>{t.planner.sheet.first}</h3>
           <ItemList label={t.planner.sheet.first}>
             {first.map((row, i) => renderRow(row, i === 0))}
           </ItemList>
@@ -224,9 +229,7 @@ export function DayPage({
                 {folded ? (
                   <button
                     type="button"
-                    className={styles.fold}
-                    aria-expanded={false}
-                    aria-controls={`${id}-then`}
+                    className={`${styles.fold} ${styles.more}`}
                     data-testid="planner-more"
                     onClick={() => {
                       setAll(true);
@@ -247,7 +250,7 @@ export function DayPage({
         </>
       ) : null}
 
-      {hasRows || footEnd ? (
+      {hasRows && (onRest || onSetup) ? (
         <div className={styles.sheetFoot}>
           {hasRows && onRest ? (
             <span data-testid="rest-link">
@@ -261,7 +264,6 @@ export function DayPage({
               {t.planner.daySetup.open}
             </button>
           ) : null}
-          {footEnd ? <span className={styles.footEnd}>{footEnd}</span> : null}
         </div>
       ) : null}
     </Card>
