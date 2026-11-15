@@ -58,3 +58,10 @@ the user's entries; FOCUS 9 = offer, never move by code).
 - „Im Planer zeigen“ shows only while the planner is on; stored only when off (`planner: false`), so old rows stay
   in the plan. Morgen/Abend starts are off (a daily routine would fill every plan), Wochenputz/Wocheneinkauf on.
   While the planner is off the switch is hidden and nothing is stored for it (no hidden choice).
+
+## p3 details (scope cut with the Listen chat)
+- The Listen chat owns `ListsPage.tsx` this round and builds the Listen side itself: morning/evening templates link
+  to `/routines?new=morning|evening` (works since p1) and, once `routine.requested` is on `develop`, the menu item
+  „Als Routine übernehmen“. This package is only the event and the routines service.
+- `routine.requested {name, steps}` → a routine every week from today (shows under „Dran“ to be adjusted); a
+  routine of the same name is left alone; the checklist is never touched.
