@@ -16,10 +16,11 @@
   display: grid;
   gap: var(--grid-gap);
   grid-template-columns: minmax(0, 1fr);
-  /* Identity 4.0: a card is as high as its content; no minimum height per size class (it left empty bodies). Before the
-     grid is packed the rows follow the cards. */
+  /* Rows of equal height (round "Tiefe", fix/home-polish): every card of a row reaches down to the row's tallest card,
+     so a row is flush at the top and at the bottom and no page area stays empty beside a shorter card. A card is still
+     as high as its content plus what its row adds; no minimum height per size class (identity 4.0). */
   grid-auto-rows: auto;
-  align-items: start;
+  align-items: stretch;
   /* Fills gaps left by wider widgets so there are no empty holes. */
   grid-auto-flow: row dense;
 }
@@ -38,29 +39,6 @@
   /* Size classes are widths only: `m` spans two columns, `l` see below. */
   .m {
     grid-column: span 2;
-  }
-  /* U19: packed (`masonry.ts`): 1 px rows without a gap; each card spans its own height plus the gap below it
-     (`--rows`), so a tall card no longer stretches a shared row and leaves holes beside it. */
-  .grid[data-packed] {
-    grid-auto-rows: 1px;
-    row-gap: 0;
-    margin-bottom: calc(-1 * var(--grid-gap));
-  }
-  .grid[data-packed] > .widget {
-    grid-row: span var(--rows, 2);
-    margin-bottom: var(--grid-gap);
-  }
-}
-/* Print reflows to the paper's width: the spans measured for the screen would overlap there, so print uses plain rows. */
-@media print {
-  .grid[data-packed] {
-    grid-auto-rows: auto;
-    row-gap: var(--grid-gap);
-    margin-bottom: 0;
-  }
-  .grid[data-packed] > .widget {
-    grid-row: auto;
-    margin-bottom: 0;
   }
 }
 .l {
@@ -130,7 +108,12 @@
   display: flex;
   flex-direction: column;
 }
+/* The card fills its cell: the row's height (rows of equal height, see `.grid`). */
+.widget > section {
+  flex: 1;
+}
 .head {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -171,6 +154,11 @@
   outline: 2px dashed var(--border);
   outline-offset: 2px;
 }
+/* An empty widget is one quiet line and its next step: the fish of the empty state stays out of the cards (with it
+   an empty card read like an error). Other empty states keep it. */
+.widget [data-empty-mark] {
+  display: none;
+}
 .hidden {
   opacity: 0.55;
 }
@@ -207,23 +195,35 @@
   text-underline-offset: 0.2em;
   cursor: pointer;
 }
-/* Context gear of a widget: with a mouse it appears on hover or keyboard focus, on touch it is always there. */
-/* N05: the signature mark at the right end of the head, in every variant; ink, not hue (readable without colour). */
+/* N05: the signature mark at the right end of the head, in every variant; ink, not hue (readable without colour). It
+   ends where the card's content ends (flush with the amounts and dates below), in a box of a token's size. */
 .mark {
   display: inline-flex;
   flex: none;
+  justify-content: center;
+  width: var(--space-5);
   color: var(--text-muted);
 }
+/* Context gear of a widget: with a mouse it appears on hover or keyboard focus, in the mark's place (the mark steps
+   back meanwhile), so the hidden gear takes no room at the end of the head; on touch it is always there, after the mark. */
 .gear {
   display: inline-flex;
 }
 @media (hover: hover) {
   .gear {
+    position: absolute;
+    inset-inline-end: calc((var(--space-5) - var(--touch)) / 2);
+    top: 50%;
+    margin-top: calc(var(--touch) / -2);
     opacity: 0;
   }
   .widget:hover .gear,
   .widget:focus-within .gear {
     opacity: 1;
+  }
+  .widget:hover .withGear .mark,
+  .widget:focus-within .withGear .mark {
+    opacity: 0;
   }
 }
 

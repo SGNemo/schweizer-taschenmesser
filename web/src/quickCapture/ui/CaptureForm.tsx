@@ -27,11 +27,13 @@ import { formatDay } from '@/core/time/dates';
 import { fullFormPath } from '../targets/fullForm';
 import { announceSaved } from './announceSaved';
 import {
-  batchRow,
   batchTypes,
   finalPick,
   isReminder,
+  kindsOf,
   lookupInvoice,
+  readLine,
+  typeLabel,
   reminderRow,
   resolveReminder,
   withoutPart,
@@ -84,9 +86,6 @@ export interface CaptureFormProps {
   /** Further ways in (quick add: free text, the other forms): above the actions, which stay the sheet's foot (K4). */
   beforeActions?: ReactNode;
 }
-
-const typeLabel = (type: CaptureType, kind: CaptureFields['kind']): string =>
-  t.quickCapture.type[type === 'finance' && kind === 'income' ? 'income' : type];
 
 function errorText(e: unknown): string {
   if (e instanceof CaptureError) {
@@ -225,17 +224,16 @@ export function CaptureForm({
       multi
         ? parts.map((part, i) => {
             const key = `${part}#${parts.slice(0, i).filter((p) => p === part).length}`;
-            const r = parseCapture(part, {
-              now: new Date(now()),
-              defaultType: settings?.defaultType,
+            const chosen = rowOverride[key];
+            // The one reading of a line (`readLine`, shared with the planner's „Tage einteilen“); a batch never
+            // books: a money line becomes a ToDo with its amount (Q1 a).
+            const { readType, notes, inbox, ...row } = readLine(part, {
+              ...resolveOpts,
               fitness,
               place,
               breaks,
+              override: chosen?.type,
             });
-            const chosen = rowOverride[key];
-            const res = resolveTarget(part, r, { ...resolveOpts, override: chosen?.type });
-            // A batch never books: a money line becomes a ToDo with its amount (Q1 a).
-            const row = batchRow(res.type, res.fields, available, r.type, res.inbox);
             // A payment reminder: noted on its open invoice, a ToDo „… prüfen“, or a new invoice. A target
             // picked by hand is final when the pick said so (`finalPick`, decided at the moment of the pick).
             const asReminder = isReminder(row.type, row.fields);
@@ -244,17 +242,17 @@ export function CaptureForm({
               : row;
             const reminder = asReminder && !chosen?.final;
             const plan: ReminderRow = reminder ? base : row;
-            const rowChips = previewChips(plan.fields, plan.type, r.notes, today()).filter(
+            const rowChips = previewChips(plan.fields, plan.type, notes, today()).filter(
               (c) => c.id !== 'target',
             );
             return {
               part,
               key,
-              ...res,
+              inbox,
               ...row,
               ...plan,
               reminder,
-              readType: r.type,
+              readType,
               pending: asReminder && !(lookupKey(part) in lookups),
               source: row.fields,
               lookup: lookups[lookupKey(part)],
@@ -279,15 +277,7 @@ export function CaptureForm({
     ],
   );
   // „ToDo 9 · Termin 3“: what the rows turn into, in the order the kinds first appear (W07).
-  const kinds = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const r of rows)
-      if (r.type) {
-        const label = typeLabel(r.type, r.fields.kind);
-        counts.set(label, (counts.get(label) ?? 0) + 1);
-      }
-    return [...counts].map(([label, n]) => `${label} ${n}`);
-  }, [rows]);
+  const kinds = useMemo(() => kindsOf(rows), [rows]);
   const rowTypes = batchTypes(pickable);
 
   // Reminder lines look for their open invoice while the person types; the result only changes text.

@@ -1,5 +1,5 @@
 import { bus } from '@/core/events';
-import { normalizeUrl } from './logic';
+import { findDuplicate, normalizeUrl } from './logic';
 import { fetchPreviewFor, previewEnabled } from './preview';
 import { itemRepo } from './repo';
 import { KINDS, type Kind } from './schema';
@@ -15,7 +15,7 @@ export async function addRequested(req: {
   const url = normalizeUrl(req.url);
   if (!url) return;
   const existing = await itemRepo.active().toArray();
-  if (existing.some((i) => i.url === url)) return;
+  if (findDuplicate(existing, { title: req.title, url })) return;
   const created = await itemRepo.create({
     title: req.title.trim() || url,
     url,

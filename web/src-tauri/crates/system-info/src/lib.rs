@@ -11,6 +11,7 @@ use sysinfo::{
 
 pub mod gaming;
 pub mod gpu;
+pub mod health;
 pub mod net;
 mod platform;
 pub mod smbios;

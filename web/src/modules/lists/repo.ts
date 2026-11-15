@@ -1,7 +1,16 @@
 import { createRepo } from '@/core/db/repo';
 import { tableName } from '@/core/db/schema';
 import { t } from '@/strings';
-import { copyName, isDuplicate, nextOrder, parseEntry, recall, sortItems } from './logic';
+import {
+  copyName,
+  isDuplicate,
+  moveOrders,
+  nextOrder,
+  parseEntry,
+  pickShoppingTarget,
+  recall,
+  sortItems,
+} from './logic';
 import { itemSchema, listSchema, SHOPPING_LIST_ID, type ListKind } from './schema';
 
 export const listRepo = createRepo(tableName('lists', 'list'), listSchema);
@@ -24,6 +33,40 @@ export async function ensureShoppingList(): Promise<void> {
   await listRepo.createMany([
     { id: SHOPPING_LIST_ID, data: { name: t.lists.defaultShopping, kind: 'shopping', order: 0 } },
   ]);
+}
+
+/**
+ * The list that receives items for "the shopping list" (pantry, quick capture, assistant, text import): the first
+ * shopping list in use in the user's order. With none in use, a fresh install gets the default one; whoever deleted
+ * or archived theirs gets a new one – the item was asked for, so it needs a place that is not hidden.
+ */
+export async function shoppingTargetId(): Promise<string> {
+  const lists = await listRepo.active().toArray();
+  const target = pickShoppingTarget(lists);
+  if (target) return target.id;
+  if (!(await listRepo.table.get(SHOPPING_LIST_ID))) {
+    await ensureShoppingList();
+    return SHOPPING_LIST_ID;
+  }
+  const created = await listRepo.create({
+    name: t.lists.defaultShopping,
+    kind: 'shopping',
+    order: nextOrder(lists),
+  });
+  return created.id;
+}
+
+/** Moves a list one step up or down in the tab row (only the lists in use take part). */
+export async function moveList(listId: string, step: -1 | 1): Promise<void> {
+  for (const { id, order } of moveOrders(await listRepo.active().toArray(), listId, step))
+    await listRepo.update(id, { order });
+}
+
+/** Puts a list away (out of the tab row) or back; an unarchived list goes to the end of the row. */
+export async function setArchived(listId: string, archived: boolean): Promise<void> {
+  if (archived) return listRepo.update(listId, { archived: true }).then(() => undefined);
+  const lists = (await listRepo.active().toArray()).filter((l) => !l.archived);
+  await listRepo.update(listId, { archived: undefined, order: nextOrder(lists) });
 }
 
 /**
@@ -106,7 +149,20 @@ export async function duplicateList(listId: string): Promise<string> {
   return copy.id;
 }
 
-/** Deletes a list together with its entries (tombstones). */
+/**
+ * Moves an entry to another list, at its end. The entry keeps all its fields (a section or a category only shows
+ * on a list of that kind), so moving it back loses nothing.
+ */
+export async function moveItem(itemId: string, toListId: string): Promise<void> {
+  const item = await itemRepo.get(itemId);
+  if (!item || item.listId === toListId) return;
+  await itemRepo.update(itemId, { listId: toListId, order: nextOrder(await itemsOf(toListId)) });
+}
+
+/**
+ * Deletes a list together with its entries (tombstones). "Zuletzt gelöscht" brings both back for 30 days
+ * (`core/trash`: the entries are the list's children).
+ */
 export async function deleteList(listId: string): Promise<void> {
   await itemRepo.removeMany((await itemsOf(listId)).map((i) => i.id));
   await listRepo.remove(listId);

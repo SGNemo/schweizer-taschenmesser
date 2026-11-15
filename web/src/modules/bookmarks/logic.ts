@@ -1,7 +1,9 @@
 import { compareText } from '@/core/i18n/format';
 import { addDaysStr, toDateString } from '@/core/time/dates';
 import { KINDS, type BookmarkItem, type Kind } from './schema';
-import type { SortMode } from './settings';
+import type { Grouping, SortMode } from './settings';
+
+export { GROUPINGS, type Grouping } from './settings';
 
 /** "example.com/x" → "https://example.com/x"; anything that is not a http(s) address → undefined. */
 export function normalizeUrl(input: string): string | undefined {
@@ -23,6 +25,47 @@ export function hostOf(url: string | undefined): string | undefined {
   } catch {
     return undefined;
   }
+}
+
+/** Query parameters that only track where a click came from; they never change the page. */
+const TRACKING = /^(utm_\w+|fbclid|gclid|dclid|msclkid|mc_cid|mc_eid|igshid|si|ref_src)$/i;
+
+/**
+ * The address reduced to what makes it the same page: host without "www.", path without a trailing
+ * slash, the remaining query sorted; scheme, fragment and tracking parameters are dropped (a fragment
+ * that is a route, "#/…" or "#!…", stays). Used only
+ * to compare, never stored. Not an address → undefined.
+ */
+export function urlKey(input: string | undefined): string | undefined {
+  const normal = input ? normalizeUrl(input) : undefined;
+  if (!normal) return undefined;
+  const url = new URL(normal);
+  const query = [...url.searchParams.entries()]
+    .filter(([k]) => !TRACKING.test(k))
+    .sort(([a, x], [b, y]) => a.localeCompare(b) || x.localeCompare(y))
+    .map(([k, v]) => `${k}=${v}`)
+    .join('&');
+  const path = url.pathname.replace(/\/+$/, '');
+  const route = /^#[/!]/.test(url.hash) ? url.hash : '';
+  return `${url.host.replace(/^www\./, '').toLowerCase()}${path}${query ? `?${query}` : ''}${route}`;
+}
+
+/**
+ * The saved item that is the same thing as the draft: the same page (`urlKey`), or, for a draft
+ * without an address, the same title among the items without an address. `exceptId` is the item
+ * being edited.
+ */
+export function findDuplicate<T extends Pick<BookmarkItem, 'title' | 'url'> & { id: string }>(
+  items: readonly T[],
+  draft: { title: string; url?: string },
+  exceptId?: string,
+): T | undefined {
+  const others = items.filter((i) => i.id !== exceptId);
+  const key = urlKey(draft.url);
+  if (key) return others.find((i) => urlKey(i.url) === key);
+  if (draft.url?.trim()) return undefined;
+  const title = fold(draft.title.trim());
+  return title ? others.find((i) => !i.url && fold(i.title.trim()) === title) : undefined;
 }
 
 /** "Rezept, #Kochen  urlaub" → ['Rezept', 'Kochen', 'urlaub']; duplicates (any case) are dropped. */
@@ -77,6 +120,43 @@ export function tagCounts(items: readonly Pick<BookmarkItem, 'tags'>[]): [string
     .map((e) => [e.label, e.n]);
 }
 
+/** Minutes the planner sets aside for a Merkzettel of a kind, until the person says otherwise. */
+export const PLAN_MINUTES: Record<Kind, number> = {
+  link: 15,
+  read: 20,
+  watch: 90,
+  book: 30,
+  place: 60,
+  buy: 15,
+  try: 30,
+  idea: 15,
+  other: 15,
+};
+
+export const planMinutesOf = (i: Pick<BookmarkItem, 'kind' | 'planMinutes'>): number =>
+  i.planMinutes ?? PLAN_MINUTES[i.kind];
+
+/** Friday to Sunday: the widget offers its three things "fürs Wochenende". */
+export function isWeekendNear(day: string): boolean {
+  const weekday = new Date(`${day}T12:00:00`).getDay();
+  return weekday === 5 || weekday === 6 || weekday === 0;
+}
+
+/**
+ * What the widget offers next: at most `max` open Merkzettel, never the permanent links (kind "link").
+ * First what is in the plan (only while the planner is on: `planner`), then what was started, then the rest;
+ * inside each the newest first.
+ */
+export function pickNext<
+  T extends Pick<BookmarkItem, 'kind' | 'done' | 'started' | 'inPlan'> & { createdAt: number },
+>(items: readonly T[], max = 3, planner = true): T[] {
+  const rank = (i: T) => (planner && i.inPlan ? 0 : i.started ? 1 : 2);
+  return items
+    .filter((i) => !i.done && i.kind !== 'link')
+    .sort((a, b) => rank(a) - rank(b) || b.createdAt - a.createdAt)
+    .slice(0, max);
+}
+
 /** Open → started → done. `done` wins when both flags are set. */
 export type Status = 'open' | 'started' | 'done';
 export const statusOf = (i: Pick<BookmarkItem, 'done' | 'started'>): Status =>
@@ -121,10 +201,6 @@ export function sorter<T extends BookmarkItem & { createdAt: number }>(
     return (a, b) => STATUS_ORDER[statusOf(a)] - STATUS_ORDER[statusOf(b)] || newest(a, b);
   return newest;
 }
-
-/** How the list is grouped: by when it was saved (default), by first tag or by type. */
-export type Grouping = 'recent' | 'tag' | 'kind';
-export const GROUPINGS: readonly Grouping[] = ['recent', 'tag', 'kind'];
 
 /** `id` is stable and safe in a DOM id; `tag` is the tag text of a tag group ('' = no tag). */
 export interface ItemGroup<T> {

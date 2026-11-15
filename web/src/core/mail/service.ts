@@ -78,6 +78,14 @@ export function mailWebUrl(
 }
 
 /**
+ * A thread id from outside (`?open=<threadId>`, a link stored on a ToDo) is untrusted input: only a plain
+ * provider id passes – letters, digits, `_` and `-`, at most 128 characters. Everything else opens nothing.
+ */
+export function safeThreadId(raw: string | null | undefined): string | undefined {
+  return raw && /^[A-Za-z0-9_-]{1,128}$/.test(raw) ? raw : undefined;
+}
+
+/**
  * A thread's web address without any account (for a ToDo's mail link where the mail module is not
  * there, e.g. on the phone): the first mail provider that can build one; never an address in it.
  */

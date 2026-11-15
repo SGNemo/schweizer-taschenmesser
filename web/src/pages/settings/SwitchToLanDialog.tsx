@@ -3,6 +3,8 @@ import { backupFileName, createBackup } from '@/core/backup/backup';
 import { serializeSealedBackup } from '@/core/backup/encrypted';
 import { downloadTextFile } from '@/core/backup/download';
 import { recordFileBackup } from '@/core/backup/lastBackup';
+import { BackupExportDialog } from '@/core/backup/BackupExport';
+import { useSecurityPrefs } from '@/core/security/prefs';
 import { disconnect, fetchDevices, lockDevice } from '@/core/sync/service';
 import type { DeviceInfo } from '@/core/sync/types';
 import { t } from '@/strings';
@@ -24,6 +26,9 @@ export function SwitchToLanDialog({ open, onClose }: { open: boolean; onClose: (
   const [locked, setLocked] = useState<ReadonlySet<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  // "Nur verschlüsselte Backups": the save opens the password form instead of writing a readable file.
+  const { encryptedOnly } = useSecurityPrefs();
+  const [exporting, setExporting] = useState(false);
 
   // A new opening starts clean (adjusted during render, not in an effect).
   const [wasOpen, setWasOpen] = useState(open);
@@ -105,10 +110,19 @@ export function SwitchToLanDialog({ open, onClose }: { open: boolean; onClose: (
               {l.switchBackupSaved}
             </p>
           ) : (
-            <Button onClick={() => void saveBackup()} data-testid="lan-switch-backup">
+            <Button
+              onClick={() => (encryptedOnly ? setExporting(true) : void saveBackup())}
+              data-testid="lan-switch-backup"
+            >
               {l.switchBackupSave}
             </Button>
           )}
+          {/* Outside the condition: it stays mounted while it closes after a save. */}
+          <BackupExportDialog
+            open={exporting}
+            onClose={() => setExporting(false)}
+            onSaved={() => setSaved(true)}
+          />
         </Step>
         <Step title={l.switchDevicesTitle}>
           {devices === undefined ? null : devices.length === 0 ? (

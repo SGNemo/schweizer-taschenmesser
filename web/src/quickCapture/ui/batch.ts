@@ -1,8 +1,15 @@
 import { formatMoney } from '@/core/money';
-import { today } from '@/core/time/now';
+import { now, today } from '@/core/time/now';
 import { t } from '@/strings';
-import type { CaptureFields, CaptureType } from '../parser';
+import {
+  parseCapture,
+  type CaptureFields,
+  type CaptureResult,
+  type CaptureType,
+  type ParseOptions,
+} from '../parser';
 import { targetFor, type InvoiceLookup, type OpenInvoice } from '../targets';
+import { resolveTarget } from './resolve';
 
 /** One line of a many-lines capture as it will be saved. */
 export interface BatchRow {
@@ -50,6 +57,70 @@ export function batchRow(
       ? { booking: fields.kind === 'income' ? 'income' : 'expense' }
       : {}),
   };
+}
+
+/** How a line of a batch is read: the parser's options and how its target is decided (`resolveTarget`). */
+export interface LineReadOptions extends Pick<ParseOptions, 'fitness' | 'place' | 'breaks'> {
+  /** Types whose module is on (`availableTypes`). */
+  available: readonly CaptureType[];
+  defaultType?: CaptureType;
+  /** "Ohne Rückfrage speichern": unclear text goes to the default target as typed. */
+  noQuestion: boolean;
+  /** A target picked by hand for this line. */
+  override?: CaptureType;
+}
+
+/** One line of a batch as read: its row (`batchRow`), what the parser made of it and whether it fell back to the inbox. */
+export interface LineRead extends BatchRow {
+  /** The parser's own type, before availability and a hand pick. */
+  readType: CaptureResult['type'];
+  notes: CaptureResult['notes'];
+  /** Unclear text went to the default target as typed. */
+  inbox: boolean;
+}
+
+/**
+ * Reads one line of a batch: the parser, the target (`resolveTarget`) and the batch's money rule (`batchRow`).
+ * The one reading of a line for every sheet that takes many lines – the quick capture's rows and the planner's
+ * „Tage einteilen“ – so a line becomes the same thing in both (W23).
+ */
+export function readLine(line: string, o: LineReadOptions): LineRead {
+  const r = parseCapture(line, {
+    now: new Date(now()),
+    defaultType: o.defaultType,
+    fitness: o.fitness,
+    place: o.place,
+    breaks: o.breaks,
+  });
+  const res = resolveTarget(line, r, {
+    available: o.available,
+    noQuestion: o.noQuestion,
+    defaultType: o.defaultType,
+    override: o.override,
+  });
+  return {
+    ...batchRow(res.type, res.fields, o.available, r.type, res.inbox),
+    readType: r.type,
+    notes: r.notes,
+    inbox: res.inbox,
+  };
+}
+
+/** A target's name in the kinds line („Einnahme“ for an income booking). */
+export const typeLabel = (type: CaptureType, kind: CaptureFields['kind']): string =>
+  t.quickCapture.type[type === 'finance' && kind === 'income' ? 'income' : type];
+
+/** „ToDo 9 · Termin 3“: what the rows turn into, in the order the kinds first appear (W07). */
+export function kindsOf(
+  rows: readonly { type?: CaptureType; fields: Pick<CaptureFields, 'kind'> }[],
+): string[] {
+  const counts = new Map<string, number>();
+  for (const r of rows)
+    if (r.type) {
+      const label = typeLabel(r.type, r.fields.kind);
+      counts.set(label, (counts.get(label) ?? 0) + 1);
+    }
+  return [...counts].map(([label, n]) => `${label} ${n}`);
 }
 
 /**

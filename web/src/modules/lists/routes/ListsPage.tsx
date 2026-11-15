@@ -34,7 +34,8 @@ import {
 } from '@/ui';
 import { ItemEditor } from '../components/ItemEditor';
 import { SignatureMark } from '@/ui/identity';
-import { ListEditor, type ListTarget } from '../components/ListEditor';
+import { archiveWithUndo, ListEditor, ListMark, type ListTarget } from '../components/ListEditor';
+import { ManageLists } from '../components/ManageLists';
 import {
   groupItems,
   listAsText,
@@ -42,7 +43,7 @@ import {
   PACKING_TEMPLATES,
   progress,
   sortItems,
-  sortLists,
+  splitArchived,
   suggestNames,
   totals,
 } from '../logic';
@@ -103,8 +104,23 @@ export default function ListsPage() {
     async (id) => (await listRepo.get(id)) ?? (await itemRepo.get(id)),
     (r) => ({ list: 'listId' in r ? r.listId : r.id }),
   );
-  const sorted = useMemo(() => sortLists(lists ?? []), [lists]);
-  const current = sorted.find((l) => l.id === params.get('list')) ?? sorted[0];
+  // The tab row holds the lists in use; an archived list opens only by its address (search hit, "Listen
+  // verwalten") and then shows as one more tab with a way back.
+  const { active: inUse } = useMemo(() => splitArchived(lists ?? []), [lists]);
+  const current =
+    (lists ?? []).find((l) => l.id === params.get('list')) ??
+    (inUse[0] as (typeof inUse)[0] | undefined);
+  const sorted = current?.archived ? [...inUse, current] : inUse;
+  const [manage, setManage] = useState(false);
+  // Own icon or colour: shown in front of the list's first line (the tabs carry names only).
+  const mark =
+    current && (current.icon || current.tone !== undefined) ? (
+      <ListMark list={current} />
+    ) : undefined;
+  /** A list just archived leaves the tab row: the page goes to the first list in use. */
+  const leaveArchived = (id: string) => {
+    if (params.get('list') === id || current?.id === id) setParams({}, { replace: true });
+  };
   // id -> `done` before the change: such an entry sorts as if nothing changed until HOLD_MS is over.
   const [held, setHeld] = useState<ReadonlyMap<string, boolean>>(new Map());
   const shown = useMemo(() => {
@@ -311,6 +327,19 @@ export default function ListsPage() {
           : []),
         { id: 'templates', label: t.lists.routines.title, onSelect: () => setTemplates(true) },
         { id: 'edit-list', label: t.lists.editList, onSelect: () => setListTarget(current) },
+        { id: 'manage', label: t.lists.manage, onSelect: () => setManage(true) },
+        ...(!current.archived
+          ? [
+              {
+                id: 'archive',
+                label: t.lists.archiveList,
+                onSelect: () => {
+                  archiveWithUndo(current, true);
+                  leaveArchived(current.id);
+                },
+              },
+            ]
+          : []),
         ...(toBuy.length > 0
           ? [
               {
@@ -356,7 +385,10 @@ export default function ListsPage() {
           : []),
         { id: 'share', label: t.lists.share, onSelect: () => void share() },
       ]
-    : [];
+    : // No list in use (all archived or deleted): the way back to the archive stays in the menu.
+      lists && lists.length > 0
+      ? [{ id: 'manage', label: t.lists.manage, onSelect: () => setManage(true) }]
+      : [];
 
   return (
     <>
@@ -368,7 +400,11 @@ export default function ListsPage() {
           lists && current ? (
             <Tabs
               label={t.lists.tabsLabel}
-              items={sorted.map((l) => ({ id: l.id, label: l.name, active: l.id === current.id }))}
+              items={sorted.map((l) => ({
+                id: l.id,
+                label: l.archived ? t.lists.archivedTab(l.name) : l.name,
+                active: l.id === current.id,
+              }))}
               onSelect={(id) => {
                 setParams({ list: id }, { replace: true });
               }}
@@ -403,16 +439,36 @@ export default function ListsPage() {
         />
       ) : null}
       {lists && current && !read ? <div aria-busy="true" data-testid="lists-reading" /> : null}
+      {lists && !current ? (
+        <EmptyState
+          title={lists.length > 0 ? t.lists.noListArchived : t.lists.noListInUse}
+          testId="lists-none"
+        >
+          {lists.length > 0 ? (
+            <Button onClick={() => setManage(true)}>{t.lists.manage}</Button>
+          ) : null}
+        </EmptyState>
+      ) : null}
       {lists && current && read ? (
         <>
+          {current.archived ? (
+            <div className={styles.suggest} data-testid="lists-archived-note">
+              <span>{t.lists.archivedNote}</span>
+              <Button onClick={() => archiveWithUndo(current, false)}>{t.lists.unarchive}</Button>
+            </div>
+          ) : null}
           {/* The first row of the page: on the phone the "⋯" menu lies beside it (`besideContent`). An empty list
               has no such line; its empty state says it. */}
           {shown.length === 0 ? (
             tripLine ? (
-              <ListSummary>{tripLine}</ListSummary>
+              <ListSummary mark={mark}>{tripLine}</ListSummary>
             ) : null
           ) : isShopping ? (
-            <ListSummary testId="lists-sums" note={sums.priced > 0 ? t.lists.sumNote : undefined}>
+            <ListSummary
+              testId="lists-sums"
+              mark={mark}
+              note={sums.priced > 0 ? t.lists.sumNote : undefined}
+            >
               {sums.priced > 0 ? (
                 <>
                   <span>{t.lists.sumOpen(formatMoney(sums.openCents))}</span>
@@ -428,7 +484,7 @@ export default function ListsPage() {
             </ListSummary>
           ) : (
             <div className={styles.progress} data-testid="lists-progress">
-              <ListSummary>
+              <ListSummary mark={mark}>
                 {[
                   isPacking
                     ? t.lists.progressPacked(stats.done, stats.total)
@@ -457,10 +513,15 @@ export default function ListsPage() {
                 title={t.lists.empty}
                 testId="lists-empty"
                 motif={
-                  <SignatureMark
-                    id={current.kind === 'shopping' ? 'receipt' : 'todayCard'}
-                    size={64}
-                  />
+                  // A list with its own icon or colour shows it; otherwise the module's signature.
+                  mark ? (
+                    <ListMark list={current} size={64} />
+                  ) : (
+                    <SignatureMark
+                      id={current.kind === 'shopping' ? 'receipt' : 'todayCard'}
+                      size={64}
+                    />
+                  )
                 }
               />
             </div>
@@ -596,6 +657,7 @@ export default function ListsPage() {
       <ItemEditor
         item={editingItem}
         kind={current?.kind ?? 'checklist'}
+        lists={sorted}
         onClose={() => setEditingItem(null)}
       />
       <ListEditor
@@ -603,6 +665,15 @@ export default function ListsPage() {
         existing={lists ?? []}
         onClose={() => setListTarget(null)}
         onSaved={(id) => setParams({ list: id }, { replace: true })}
+      />
+      <ManageLists
+        onArchived={leaveArchived}
+        open={manage}
+        lists={lists ?? []}
+        items={items ?? []}
+        onClose={() => setManage(false)}
+        onEdit={(l) => setListTarget(l)}
+        onOpenList={(id) => setParams({ list: id }, { replace: true })}
       />
     </>
   );

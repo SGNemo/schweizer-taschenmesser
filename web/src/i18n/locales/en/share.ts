@@ -10,4 +10,5 @@ export const share: Strings['share'] = {
   toBookmarks: 'To Saved',
   toNote: 'As a note',
   toTodo: 'As a to-do',
+  toFeed: 'Subscribe as feed',
 };

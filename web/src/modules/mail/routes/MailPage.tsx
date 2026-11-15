@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { listMailAccounts } from '@/core/mail/accounts';
 import { mailLabels } from '@/core/mail/service';
@@ -25,6 +25,7 @@ import {
   Skeleton,
   TextField,
   useMediaQuery,
+  useSelection,
   type GroupedListGroup,
   type RowMenuItem,
 } from '@/ui';
@@ -36,6 +37,7 @@ import { ComposeDialog } from '../components/ComposeDialog';
 import { PendingSendBar } from '../components/PendingSendBar';
 import { InvoiceLine } from '../components/InvoiceLine';
 import { ThreadView } from '../components/ThreadView';
+import { BatchBar } from '../components/BatchBar';
 import { createInvoice, noteReminder, type InvoiceOffer } from '../invoiceRow';
 import { useInvoiceOffers } from '../useInvoiceOffers';
 import { emptyCompose, type ComposeState } from '../composeState';
@@ -57,8 +59,21 @@ import { dayGroup, personName, shortWhen, subjectOf, type DayGroup } from '../fo
 import { threadRepo } from '../repo';
 import { settings } from '../settings';
 import { rowAction } from '../rowActions';
+import { STEPS } from '../mailActions';
 import { answeredRows, closeAnswered } from '../answered';
-import { readSearches, rememberSearch, suggestionsFor } from '../searchHistory';
+import {
+  FILTERS,
+  forgetSearch,
+  hasFilter,
+  isSaved,
+  readSaved,
+  readSearches,
+  rememberSearch,
+  saveSearch,
+  suggestionsFor,
+  toggleFilter,
+} from '../searchHistory';
+import { focusedThreadId, useMailKeys } from '../useMailKeys';
 import { useMailbox } from '../useMailbox';
 import { useMailSummary } from '../useSummary';
 
@@ -82,10 +97,16 @@ function ThreadList({
   titleOf,
   invoices,
   onInvoice,
+  selection,
   answered,
   onAnswered,
 }: {
   threads: CachedThreadView[];
+  /** Select mode: a checkbox per row (Shift-click takes a range). */
+  selection?: {
+    isSelected: (id: string) => boolean;
+    toggle: (id: string, extend: boolean) => void;
+  };
   onOpen: (id: string) => void;
   /** Quick actions of one row (in den Plan, read/unread, archive). */
   menuFor?: (th: CachedThreadView) => RowMenuItem[];
@@ -120,12 +141,22 @@ function ThreadList({
               // Sender and time share the title line, subject and snippet are two lines at most: a row keeps
               // its height beside the reading pane (design check G1, G4).
               title={
-                <span className={styles.rowTitle}>
+                <span className={styles.rowTitle} data-thread-id={th.id}>
                   <span className={th.unread ? styles.unreadRow : styles.rowFrom}>
                     {personName(th.from)}
                     {th.messageCount > 1 ? ` (${th.messageCount})` : ''}
                   </span>
                   <span className={styles.rowWhen}>
+                    {th.labelIds.includes('STARRED') ? (
+                      <span
+                        className={styles.starMark}
+                        role="img"
+                        aria-label={t.mail.page.starredMark}
+                        data-testid="mail-starred"
+                      >
+                        <Icon name="star" size={14} />{' '}
+                      </span>
+                    ) : null}
                     {planned.has(th.id) ? (
                       <span className={styles.planMark} data-testid="mail-in-plan">
                         {plannerOn ? t.mail.plan.mark : t.mail.plan.todo.mark} ·{' '}
@@ -144,6 +175,9 @@ function ThreadList({
                 </span>
               }
               onOpen={() => onOpen(th.id)}
+              selectable={!!selection}
+              selected={selection?.isSelected(th.id)}
+              onSelectChange={(_, extend) => selection?.toggle(th.id, extend)}
               menu={menuFor?.(th)}
               // A quiet button only where the pointer hovers (PC); on touch it is in ⋯ and a swipe,
               // so a phone row never carries a standing button.
@@ -182,6 +216,7 @@ function ThreadList({
 }
 
 const NO_OFFERS: ReadonlyMap<string, InvoiceOffer> = new Map();
+const NO_ANSWERED: ReadonlyMap<string, string> = new Map();
 const NO_PLANS: ReadonlyMap<string, string> = new Map();
 
 /** „Beantwortet? · Erledigt“: a question, never a claim; the one verb ticks the ToDo off (with undo). */
@@ -262,6 +297,12 @@ export default function MailPage() {
   const wide = pageWide ?? windowWide;
   const summary = useMailSummary();
   const [recent, setRecent] = useState<string[]>(readSearches);
+  const [saved, setSaved] = useState<string[]>(readSaved);
+  const searchForm = useRef<HTMLFormElement>(null);
+  // The remembered entry that matches the running search (any case), in its stored spelling.
+  const savedQuery = query
+    ? saved.find((x) => x.toLowerCase() === query.trim().toLowerCase())
+    : undefined;
   const senders = useMemo(
     () => [...new Set(box.threads.map((th) => personName(th.from)))],
     [box.threads],
@@ -278,6 +319,26 @@ export default function MailPage() {
     personalOnly && offerPersonal ? box.threads.filter((th) => th.personal !== false) : box.threads;
   const offerInvoices = (prefs as { offerInvoices?: boolean } | undefined)?.offerInvoices ?? true;
   const invoices = useInvoiceOffers(shown, offerInvoices) ?? NO_OFFERS;
+  // Select mode (manage permission): checkboxes on the rows and the batch bar. A new folder, search or
+  // account starts without a selection.
+  const [selecting, setSelecting] = useState(false);
+  // The row that holds the select switch (`Button` takes no ref): focus goes back to the switch after a batch.
+  const selectRow = useRef<HTMLDivElement>(null);
+  // Bumped when a batch changed the thread open beside the list: it loads again with its new labels.
+  const [viewTick, setViewTick] = useState(0);
+  const order = useMemo(() => shown.map((th) => th.id), [shown]);
+  const selection = useSelection(order);
+  // Only what is on screen counts (a reload can drop a selected thread).
+  const selected = shown.filter((th) => selection.isSelected(th.id));
+  // A batch emptied the list: select mode ends with it (its switch is gone).
+  if (selecting && shown.length === 0 && !box.loading) setSelecting(false);
+  const viewKey = `${account?.key}|${labelId}|${query}|${personalOnly}`;
+  const [seenView, setSeenView] = useState(viewKey);
+  if (seenView !== viewKey) {
+    setSeenView(viewKey);
+    setSelecting(false);
+    if (selection.count > 0) selection.clear();
+  }
   const showAnswered = (prefs as { showAnswered?: boolean } | undefined)?.showAnswered ?? true;
   const openTodos =
     useLiveQuery(
@@ -335,6 +396,30 @@ export default function MailPage() {
 
   const canWrite =
     !!account && (hasFeature(account, 'mail-send') || hasFeature(account, 'mail-modify'));
+  const shortcuts = (prefs as { shortcuts?: boolean } | undefined)?.shortcuts ?? true;
+  // Page-level keys; the open thread adds its own (archive, star, reply …) in `ThreadView`.
+  useMailKeys(shortcuts && !!account, {
+    compose: () => {
+      if (canWrite && account)
+        setCompose({ state: emptyCompose(), title: t.mail.write.compose.titleNew, account });
+    },
+    search: () => searchForm.current?.querySelector<HTMLInputElement>('input')?.focus(),
+    back: () => {
+      if (!threadId) return;
+      setStartInvoice(undefined);
+      update({ thread: null });
+    },
+    open: () => {
+      const id = focusedThreadId();
+      if (id) update({ thread: id });
+    },
+    select: () => {
+      const id = focusedThreadId();
+      if (!id || !account || !hasFeature(account, 'mail-modify')) return;
+      setSelecting(true);
+      selection.toggle(id, false);
+    },
+  });
   const header = (
     <>
       <InboxHead unread={summary && summary.total > 0 ? summary.unread : undefined} />
@@ -404,7 +489,7 @@ export default function MailPage() {
 
   const threadView = threadId ? (
     <ThreadView
-      key={`${account.key}|${threadId}|${startInvoice === threadId ? 'invoice' : ''}`}
+      key={`${account.key}|${threadId}|${startInvoice === threadId ? 'invoice' : ''}|${viewTick}`}
       account={account}
       threadId={threadId}
       cacheBodies={cacheBodies}
@@ -412,8 +497,10 @@ export default function MailPage() {
       labels={labels}
       confirmMoves={confirmMoves}
       localAi={localAi}
+      shortcuts={shortcuts}
       onChanged={box.reload}
-      onCompose={(state, title) => setCompose({ state, title, account })}
+      // A forward that finished loading never replaces a compose window the user opened meanwhile.
+      onCompose={(state, title) => setCompose((cur) => cur ?? { state, title, account })}
       onBack={() => {
         setStartInvoice(undefined);
         update({ thread: null });
@@ -446,24 +533,37 @@ export default function MailPage() {
           ...(canModify ? modifyItems(th) : []),
         ]
       : undefined;
+  const starItem = (th: (typeof box.threads)[number]): RowMenuItem =>
+    th.labelIds.includes('STARRED')
+      ? {
+          id: 'unstar',
+          label: t.mail.page.rowUnstar,
+          onSelect: () => void rowAction(account, th, 'unstar', box.reload),
+        }
+      : {
+          id: 'star',
+          label: t.mail.page.rowStar,
+          onSelect: () => void rowAction(account, th, 'star', box.reload),
+        };
   const modifyItems = (th: (typeof box.threads)[number]): RowMenuItem[] => [
     th.unread
       ? {
           id: 'read',
           label: t.mail.page.rowRead,
-          onSelect: () => void rowAction(account, th.id, 'read', box.reload),
+          onSelect: () => void rowAction(account, th, 'read', box.reload),
         }
       : {
           id: 'unread',
           label: t.mail.page.rowUnread,
-          onSelect: () => void rowAction(account, th.id, 'unread', box.reload),
+          onSelect: () => void rowAction(account, th, 'unread', box.reload),
         },
+    starItem(th),
     ...(th.labelIds.includes('INBOX')
       ? [
           {
             id: 'archive',
             label: t.mail.page.rowArchive,
-            onSelect: () => void rowAction(account, th.id, 'archive', box.reload),
+            onSelect: () => void rowAction(account, th, 'archive', box.reload),
           },
         ]
       : []),
@@ -474,6 +574,7 @@ export default function MailPage() {
       {account.key === DEMO_ACCOUNT ? <p className={styles.notice}>{t.mail.page.demo}</p> : null}
       <form
         className={styles.toolbar}
+        ref={searchForm}
         onSubmit={(e) => {
           e.preventDefault();
           setRecent(rememberSearch(draft));
@@ -500,9 +601,13 @@ export default function MailPage() {
           <div className={styles.picker}>
             <SelectField
               label={t.mail.page.label}
-              value={labelId}
-              disabled={query !== ''}
-              onChange={(e) => update({ label: e.target.value })}
+              value={savedQuery ? `q:${savedQuery}` : labelId}
+              disabled={query !== '' && !savedQuery}
+              onChange={(e) =>
+                e.target.value.startsWith('q:')
+                  ? update({ q: e.target.value.slice(2), thread: null })
+                  : update({ label: e.target.value, q: null })
+              }
             >
               {labels.map((l) => (
                 <option key={l.id} value={l.id}>
@@ -510,6 +615,15 @@ export default function MailPage() {
                   {l.unread ? ` (${l.unread})` : ''}
                 </option>
               ))}
+              {saved.length > 0 ? (
+                <optgroup label={t.mail.find.saved}>
+                  {saved.map((q) => (
+                    <option key={q} value={`q:${q}`}>
+                      {q}
+                    </option>
+                  ))}
+                </optgroup>
+              ) : null}
             </SelectField>
           </div>
         )}
@@ -535,13 +649,55 @@ export default function MailPage() {
         {query ? (
           <Button onClick={() => update({ q: null })}>{t.mail.page.searchEnd}</Button>
         ) : null}
+        {query && !isSaved(saved, query) ? (
+          <Button
+            variant="ghost"
+            onClick={() => {
+              if (saved.length >= 10) return useUiStore.getState().toast(t.mail.find.savedFull);
+              setSaved(saveSearch(query));
+              useUiStore.getState().toast(t.mail.find.savedDone);
+            }}
+          >
+            {t.mail.find.save}
+          </Button>
+        ) : query ? (
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setSaved(forgetSearch(query));
+              useUiStore.getState().toast(t.mail.find.forgotten);
+            }}
+          >
+            {t.mail.find.forgetThis}
+          </Button>
+        ) : null}
         <IconButton label={t.mail.page.refresh} onClick={box.reload} disabled={box.loading}>
           <Icon name="sync" />
         </IconButton>
       </form>
+      {/* Quick filters write Gmail operators into the search; shown once a search is typed or running. */}
+      {draft.trim() || query ? (
+        <div className={styles.row} role="group" aria-label={t.mail.find.filters}>
+          <Chips>
+            {FILTERS.map((f) => (
+              <Chip
+                key={f}
+                label={t.mail.find.filter[f] ?? f}
+                selected={hasFilter(draft, f)}
+                onClick={() => {
+                  const next = toggleFilter(draft, f);
+                  setRecent(rememberSearch(next));
+                  setDraft(next);
+                  update({ q: next || null, thread: null });
+                }}
+              />
+            ))}
+          </Chips>
+        </div>
+      ) : null}
 
-      {(offerPersonal || (offerPlanAll && onPlan)) && box.threads.length > 0 ? (
-        <div className={styles.row}>
+      {(offerPersonal || (offerPlanAll && onPlan) || canModify) && box.threads.length > 0 ? (
+        <div className={styles.row} ref={selectRow}>
           {offerPersonal ? (
             <Chips>
               <Chip
@@ -565,7 +721,54 @@ export default function MailPage() {
               {states?.planner ? t.mail.plan.all : t.mail.plan.todo.all}
             </Button>
           ) : null}
+          {canModify && shown.length > 0 ? (
+            <>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  if (selecting) selection.clear();
+                  setSelecting(!selecting);
+                }}
+                data-testid="mail-select"
+              >
+                {selecting ? t.mail.batch.selectEnd : t.mail.batch.select}
+              </Button>
+              {selecting && selected.length < shown.length ? (
+                <Button variant="ghost" onClick={selection.selectAll}>
+                  {t.mail.batch.selectAll}
+                </Button>
+              ) : null}
+            </>
+          ) : null}
         </div>
+      ) : null}
+      {selecting && selected.length > 0 ? (
+        <BatchBar
+          account={account}
+          targets={selected}
+          labelId={query ? '' : labelId}
+          confirmMoves={confirmMoves}
+          onCancel={() => {
+            selection.clear();
+            setSelecting(false);
+          }}
+          onSettled={(failed) => {
+            selection.clear();
+            for (const id of failed) selection.toggle(id, false);
+            // The bar goes away with the selection: focus stays on the page instead of falling to the body.
+            if (failed.length === 0)
+              selectRow.current?.querySelector<HTMLElement>('[data-testid="mail-select"]')?.focus();
+          }}
+          onDone={(direction, ids, action) => {
+            if (direction === 'do') {
+              if (threadId && ids.includes(threadId) && STEPS[action].leaves)
+                update({ thread: null });
+            }
+            // The open thread was part of it: it reloads, so its buttons show the new state.
+            if (threadId && ids.includes(threadId)) setViewTick((n) => n + 1);
+            box.reload();
+          }}
+        />
       ) : null}
       {planAll ? (
         <PlanAllDialog
@@ -607,17 +810,21 @@ export default function MailPage() {
         <ThreadList
           threads={shown}
           onOpen={(id) => {
+            // In select mode a tap on a row ticks it (a mis-tap never leaves the list).
+            if (selecting) return selection.toggle(id, false);
             setStartInvoice(undefined);
             update({ thread: id });
           }}
-          menuFor={menuFor}
+          // While picking, rows carry only their checkbox (no menu, no plan or invoice buttons).
+          menuFor={selecting ? undefined : menuFor}
           planned={planned}
           planLabel={planLabel}
           plannerOn={!!states?.planner}
-          onPlan={onPlan}
+          onPlan={selecting ? undefined : onPlan}
           titleOf={(th) => planTitle(account, th)}
           invoices={invoices}
-          answered={answered}
+          selection={selecting ? selection : undefined}
+          answered={selecting ? NO_ANSWERED : answered}
           onAnswered={(todoId) => void closeAnswered(todoId)}
           onInvoice={(th, offer) => {
             if (offer.kind === 'create') void createInvoice(account, th, offer, box.reload);
@@ -658,6 +865,29 @@ export default function MailPage() {
                 {l.unread ? <span className={styles.labelCount}>{l.unread}</span> : null}
               </button>
             ))}
+            {saved.length > 0 ? (
+              <>
+                <p className={styles.savedHead}>{t.mail.find.saved}</p>
+                {saved.map((q) => (
+                  <div key={q} className={styles.savedRow}>
+                    <button
+                      type="button"
+                      className={styles.labelBtn}
+                      aria-current={q === savedQuery ? 'true' : undefined}
+                      onClick={() => update({ q, thread: null })}
+                    >
+                      <span className={styles.savedText}>{q}</span>
+                    </button>
+                    <IconButton
+                      label={t.mail.find.forget(q)}
+                      onClick={() => setSaved(forgetSearch(q))}
+                    >
+                      <Icon name="close" size={16} />
+                    </IconButton>
+                  </div>
+                ))}
+              </>
+            ) : null}
           </nav>
           <div className={styles.listCol}>{listPane}</div>
           <section className={styles.reading} aria-label={t.mail.view.back}>

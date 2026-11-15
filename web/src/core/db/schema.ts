@@ -21,6 +21,11 @@ export const SYSTEM_TABLES = {
   _automationLog: { stores: '++id, at, ruleId, groupId', synced: false },
   _settings: { stores: 'id, updatedAt', synced: true },
   _modules: { stores: 'id, updatedAt', synced: true },
+  /**
+   * Links between entities of different modules, one row per link (`core/entitylinks`, its only writer
+   * and reader). The id is a hash – a record id travels in clear – and both refs are values.
+   */
+  _links: { stores: 'id, updatedAt, fromKey, toKey', synced: true },
 } as const;
 
 export type SystemTableName = keyof typeof SYSTEM_TABLES;

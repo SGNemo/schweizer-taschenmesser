@@ -4,6 +4,7 @@
  * current occurrence is listed). The write-back is the ownership rule of §2: `plannedFor` is the
  * planner's only while `planMark.date === plannedFor`; `prior` carries the user's own date it overwrote.
  */
+import { fromLegacy } from '@/core/entitylinks/types';
 import type { PlannableItem, PlannableSource } from '@/core/modules/types';
 import { today } from '@/core/time/now';
 import { nextInstanceId } from './logic';
@@ -68,12 +69,15 @@ const source: PlannableSource = {
       to: `/todos?open=${t.id}`,
       ...(t.estimateMin !== undefined ? { durationMin: t.estimateMin } : {}),
       priority: t.priority as 0 | 1 | 2 | 3,
-      ...(t.dueDate ? { due: { date: t.dueDate, hard: false } } : {}),
+      ...(t.dueDate
+        ? { due: { date: t.dueDate, hard: false, ...(t.dueTime ? { time: t.dueTime } : {}) } }
+        : {}),
       ...(t.startDate ? { earliest: t.startDate } : {}),
       ...(t.plannedFor ? { plannedFor: t.plannedFor } : {}),
       ...(t.planMark ? { planMark: t.planMark } : {}),
       ...(t.personId ? { personId: t.personId } : {}),
-      ...(t.links?.[0] ? { link: t.links[0] } : {}),
+      // Every link travels (`links`); `link` stays the first one for readers of before the link contract.
+      ...(t.links?.[0] ? { link: t.links[0], links: t.links.map(fromLegacy) } : {}),
       createdAt: t.createdAt,
     }));
   },

@@ -27,6 +27,8 @@ mod local_llm;
 #[cfg(desktop)]
 mod oauth;
 #[cfg(desktop)]
+mod optimize;
+#[cfg(desktop)]
 mod panic_log;
 #[cfg(desktop)]
 mod portable;
@@ -159,6 +161,7 @@ pub fn run() {
         .manage(remote::RemoteHost::default())
         .manage(local_api::LocalApi::default())
         .manage(disk::DiskScans::default())
+        .manage(optimize::PcCare::default())
         .manage(downloads::Downloads::default())
         .manage(torrent::Torrents::default())
         .manage(system::SystemMonitor::default())
@@ -252,6 +255,17 @@ pub fn run() {
             disk::disk_delete_plan,
             disk::disk_delete,
             disk::disk_delete_cancel,
+            disk::disk_cleanup_scan,
+            disk::disk_cleanup_cancel,
+            optimize::disk_care_history,
+            optimize::disk_care_open_tool,
+            optimize::disk_care_undo,
+            optimize::disk_care_health,
+            optimize::disk_startup_list,
+            optimize::disk_startup_set,
+            optimize::disk_tweaks_list,
+            optimize::disk_tweak_set,
+            optimize::disk_tweaks_reset_all,
             local_llm::llm_status,
             local_llm::llm_download,
             local_llm::llm_download_cancel,
@@ -263,6 +277,7 @@ pub fn run() {
             system::system_info,
             system::system_processes,
             system::system_disk_io,
+            system::system_health,
             system::system_open_task_manager,
             system::system_game_active,
             system::system_play_tone,

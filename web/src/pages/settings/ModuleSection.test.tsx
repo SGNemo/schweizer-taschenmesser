@@ -24,8 +24,8 @@ describe('Module settings, folded', () => {
     const line = [
       value('autoLockMinutes', '5'),
       value('backgroundLock', 'now'),
-      value('originMatch', 'domain'),
-      m.more(2),
+      value('clipboardSeconds', '30'),
+      m.more(3),
     ].join(' · ');
     expect(await within(fields).findByText(g.line(m.fields, line))).toBeInTheDocument();
     expect(fields).not.toHaveAttribute('open');

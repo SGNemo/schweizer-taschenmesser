@@ -3,7 +3,7 @@
 Binding rules: [MODULE-IDENTITY](../design/MODULE-IDENTITY.md). Index: [HOW-TO](../HOW-TO.md). Code: `web/src/modules/invoices/`.
 
 ## Data (manifest version 4, all new fields optional, no index change)
-`payments[]` (`{id, date, amountMinor}`), `dunningLevel` 0–3 + `dunnedAt`, `iban`, `bic`, `attachment` (`{name, mime, size}`: the note; the file is in the device-local blob store under `invoices:<id>`, not synced, not in the JSON backup; the UI says so).
+`payments[]` (`{id, date, amountMinor}`), `dunningLevel` 0–3 + `dunnedAt` (+ `dunnedDueDate`, `dunnedAmountMinor`: what a noted reminder claims, version 5), `iban`, `bic`, `attachment` (`{name, mime, size}`: the note; the file is in the device-local blob store under `invoices:<id>`, not synced, not in the JSON backup; the UI says so).
 
 ## Rest, state, part payments
 - `status` stays `open | paid`. `remainingMinor` = amount − part payments (never negative). `invoiceState(invoice, day)` derives `paid > overdue > partial > open` (`partial` also on an overdue partly paid one); an invoice is overdue the day *after* its due date.
@@ -12,7 +12,7 @@ Binding rules: [MODULE-IDENTITY](../design/MODULE-IDENTITY.md). Index: [HOW-TO](
 - Finance (`services.ts`) books each part as `inv-<invoiceId>-<paymentId>` and the rest as `inv-<invoiceId>`; all idempotent; a rest of 0 books nothing and drops an earlier rest booking.
 
 ## From the mail list („Kopf leer“ 3b)
-The mail module writes invoices through the quick-capture `invoice` target (id `mail-<hash(message id)>`, create-if-absent) and notes a payment reminder with `amendCapture` on the invoice `findOpenInvoice` names (level, `dunnedAt`, one note line; amount and due stay). `plannable.ts` shows a noted reminder in the plan row as „… bezahlen · Mahnung · <Betrag> bis <Frist>“, read only from the note line the reminder wrote.
+The mail module writes invoices through the quick-capture `invoice` target (id `mail-<hash(message id)>`, create-if-absent) and notes a payment reminder with `amendCapture` on the invoice `findOpenInvoice` names (level, `dunnedAt`, one note line, the reminder's deadline and amount as `dunnedDueDate` / `dunnedAmountMinor`; amount and due stay), and both taps write a link row invoice → mail thread (`_links`, `origin` / `dunning`; decisions: `docs/decisions/plan-links.md`). `plannable.ts` shows a noted reminder in the plan row as „… bezahlen · Mahnung · <Betrag> bis <Frist>“ from those fields (the note line for older ones), hands over `dunnedDueDate ?? dueDate` as the hard due and the `action` „Bezahlt …“ → `?open=<id>&do=pay` (untrusted: only opens `PayStep`).
 
 ## Payment data
 `iban.ts` (normalise, group in fours, mod-97 check; a calm hint, never a block). `pay.ts` copies payee, IBAN, BIC, reference and the **rest** as one block (`paymentBlock`) or the IBAN alone. Row menu: "Zahlungsdaten kopieren"; editor (Mehr Felder): IBAN, BIC, the same buttons.

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { getLang } from '@/core/i18n/lang';
 import { dayName } from '@/core/plan/explain';
 import type { PlanOp } from '@/core/plan/instructions';
 import { formatDay } from '@/core/time/dates';
 import { now, today } from '@/core/time/now';
+import { kindsOf } from '@/quickCapture/ui/batch';
+import { useCaptureTypes } from '@/quickCapture/ui/useCaptureTypes';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { Button, Chip, Chips, Dialog, TextArea } from '@/ui';
@@ -12,11 +13,13 @@ import type { BoardDay } from '../board';
 import {
   breakOps,
   clearSetupDraft,
+  eventsFill,
   gainsTime,
   previewItems,
   previewTitles,
   readSetupDraft,
   SETUP_CHIPS,
+  setupTasks,
   setupThings,
   writeSetupDraft,
   type SetupThing,
@@ -58,6 +61,9 @@ export function DaySetup({
   onClose: () => void;
 }) {
   const s = t.planner.daySetup;
+  // The capture's targets on this device: the sheet reads a line exactly as a many-lines capture does (W23).
+  // Until the module states are read every line would fall back to a ToDo: the preview waits for them.
+  const { states, available, fitness, place, breaks } = useCaptureTypes();
   const [step, setStep] = useState<Step>(1);
   const [text, setText] = useState(readSetupDraft);
   // Set by the first keystroke: only typing renews the draft (a reopened sheet does not touch its age).
@@ -82,7 +88,7 @@ export function DaySetup({
     dayEndChoice !== undefined && dayEndChoice !== dayEnd ? dayEndChoice : undefined;
 
   async function toPreview() {
-    const things = setupThings(text, today(), getLang() === 'de');
+    const things = setupThings(text, { available, fitness, place, breaks });
     const ops: PlanOp[] = [
       ...changes.map((c): PlanOp => ({ op: 'available', date: c.date, min: c.min })),
       ...(reshuffle ? [{ op: 'replan', reshuffle: true } as const] : []),
@@ -92,9 +98,16 @@ export function DaySetup({
       const breaks = breakOps(things, today());
       const out = await previewUser([...ops, ...breaks], previewItems(things, now()));
       const names = { ...previewTitles(things), ...out.titles, ...titles };
-      const tasks = things.filter((th) => !th.isBreak).length;
+      const tasks = setupTasks(things).length;
+      // What becomes what: when a line is neither a ToDo nor a break, the capture's own kinds line („ToDo 9 ·
+      // Termin 1 · …“) instead of the count of things, never both. A break says itself below (never twice).
+      const kinds = kindsOf(things.filter((th) => th.type !== 'break'));
       const lines = [
-        ...(tasks ? [s.things(tasks)] : []),
+        ...(kinds.length > 1 || (kinds.length === 1 && !tasks)
+          ? [t.quickCapture.multi.kinds(kinds)]
+          : tasks
+            ? [s.things(tasks)]
+            : []),
         // A break says its own day and length, like its toast – never a sum.
         ...breaks.map((b) => t.planner.toast.asBreak(b.label, dayName(b.date), compact(b.min))),
         // The day lines only: „Neu verteilt“ would say what the moves below already show.
@@ -164,7 +177,7 @@ export function DaySetup({
         <Button variant="ghost" onClick={() => setStep(1)} disabled={busy}>
           {s.back}
         </Button>
-        <Button variant="primary" onClick={() => void toPreview()} disabled={busy}>
+        <Button variant="primary" onClick={() => void toPreview()} disabled={busy || !states}>
           {s.next}
         </Button>
       </>
@@ -213,6 +226,9 @@ export function DaySetup({
                   {(SETUP_CHIPS as readonly number[]).includes(value) ? null : (
                     <span className={styles.capacity}>{s.current(chipLabel(value))}</span>
                   )}
+                  {eventsFill(d, value) ? (
+                    <span className={styles.capacity}>{s.eventsFill}</span>
+                  ) : null}
                 </div>
               );
             })}

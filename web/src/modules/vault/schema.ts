@@ -1,6 +1,12 @@
 import { z } from 'zod';
 import { DATE_RE } from '@/core/time/dates';
+import type { IconName } from '@/ui/icons';
 
+/**
+ * The built-in categories. Their keys are also their ids in the `category` collection (the same on every
+ * device, so two devices never create two "Verträge"): a record with such an id renames, recolours, moves or
+ * removes the built-in one; without a record it shows with its translated name.
+ */
 export const CATEGORIES = [
   'identity',
   'insurance',
@@ -10,7 +16,11 @@ export const CATEGORIES = [
   'health',
   'other',
 ] as const;
-export type DocCategory = (typeof CATEGORIES)[number];
+export type BuiltinCategory = (typeof CATEGORIES)[number];
+/** A category id: a built-in key or the id of a category the user made (since version 4). */
+export type DocCategory = string;
+/** "Ohne Kategorie": fixed, never deleted, never renamed. A document whose category is gone counts here. */
+export const NO_CATEGORY = 'other' satisfies BuiltinCategory;
 
 /**
  * Metadata of a document ("Unterlagen"). The file itself lives in the local-only `_blobs` table
@@ -20,7 +30,8 @@ export type DocCategory = (typeof CATEGORIES)[number];
 export const documentSchema = z
   .object({
     title: z.string().min(1),
-    category: z.enum(CATEGORIES).default('other'),
+    /** A category id (`CATEGORIES` or a record of the `category` collection); see `resolveCategory`. */
+    category: z.string().min(1).default(NO_CATEGORY),
     provider: z.string().optional(),
     startDate: z.string().regex(DATE_RE).optional(),
     /** End of validity or of the term (passport, contract, warranty). */
@@ -42,3 +53,38 @@ export const documentSchema = z
   });
 
 export type VaultDocument = z.output<typeof documentSchema>;
+
+/** Icons a category can carry (all from `@/ui/icons`). */
+export const CATEGORY_ICONS = [
+  'files',
+  'file',
+  'lock',
+  'receipt',
+  'wallet',
+  'home',
+  'car',
+  'heart',
+  'calculator',
+  'package',
+  'luggage',
+  'users',
+  'umbrella',
+] as const satisfies readonly IconName[];
+export type CategoryIcon = (typeof CATEGORY_ICONS)[number];
+
+/**
+ * A category of documents (since version 4). Built-in ones need no record; one is written only when the user
+ * changes or removes it. Removing sets `removed` (never a tombstone): a built-in category must not come back
+ * when a tombstone is cleaned up, and "Rückgängig" simply clears the flag.
+ */
+export const categorySchema = z.object({
+  /** Empty on a built-in category that was never renamed: it keeps its translated name. */
+  name: z.string().trim().max(60).optional(),
+  /** Index into the fixed category palette (`categoryColor`); always shown together with the name. */
+  tone: z.number().int().min(0).max(5).default(0),
+  icon: z.enum(CATEGORY_ICONS).default('files'),
+  order: z.number().default(0),
+  removed: z.boolean().optional(),
+});
+
+export type DocumentCategory = z.output<typeof categorySchema>;

@@ -1,5 +1,6 @@
 import { compareText } from '@/core/i18n/format';
-import { useModuleStates } from './activation';
+import { NEVER_LINKED, refKey, type EntityRef } from '@/core/entitylinks/types';
+import { loadModuleStates, useModuleStates } from './activation';
 import { availableManifests } from '@/core/modules/available';
 import { useSharedLiveQuery } from './sharedQuery';
 import { noteSource } from '@/core/notifications/source';
@@ -13,12 +14,13 @@ import type {
   ModuleHue,
   ModuleManifest,
   PlannableItem,
+  ResolvedState,
 } from './types';
 
 /** Loads the lazy sources of one contribution kind, so a live query over them starts with them cached. */
 const preload =
   (
-    kind: 'calendarItems' | 'notifications' | 'attention' | 'headline' | 'plannable',
+    kind: 'calendarItems' | 'notifications' | 'attention' | 'headline' | 'plannable' | 'linkTarget',
     manifests: readonly ModuleManifest[],
   ) =>
   () =>
@@ -99,6 +101,74 @@ export async function plannableSource(manifest: ModuleManifest | undefined) {
 }
 
 /** Notifications due in (from, to] from all given (active) modules, oldest first. */
+/**
+ * The address a link falls back to where its module cannot answer (off, or not on this platform): only a mail
+ * thread has one – the provider's web mail, without any account. The id is untrusted; nothing is requested.
+ */
+async function fallbackUrl(ref: EntityRef): Promise<string | undefined> {
+  if (ref.module !== 'mail') return undefined;
+  const { mailThreadUrl, safeThreadId } = await import('@/core/mail/service');
+  const id = safeThreadId(ref.id);
+  return id ? mailThreadUrl(id) : undefined;
+}
+
+/**
+ * What a link's target is on this device (docs/design/planner-hub/CONCEPT-LINKS.md §1.1, §1.4) – the one reader
+ * of `contributions.linkTarget`. Core answers by itself, without calling a module: `gone` for the vault and for an
+ * id that cannot be a record id; `unavailable` (with the fallback address, if any) while the target module is
+ * unknown, not on this platform or switched off. A module without a resolver is `gone`. Never throws: a failing
+ * resolver reads as `elsewhere` (it cannot be told) – never as `gone`, which would offer to remove the link.
+ */
+export async function resolveLink(
+  ref: EntityRef,
+  manifests: readonly ModuleManifest[] = availableManifests(),
+): Promise<ResolvedState> {
+  if (ref.module === NEVER_LINKED) return { state: 'gone' };
+  // A record id is capped at 128 characters everywhere (`core/sync/crypto.ts`); anything else names nothing.
+  if (typeof ref.id !== 'string' || ref.id === '' || ref.id.length > 128) return { state: 'gone' };
+  // Only a registry id is ever logged: `ref.module` is a stored string from outside.
+  let known: string | undefined;
+  try {
+    const manifest = manifests.find((m) => m.id === ref.module);
+    known = manifest?.id;
+    if (!manifest || !(await loadModuleStates(manifests))[manifest.id]) {
+      const url = await fallbackUrl(ref);
+      return { state: 'unavailable', ...(url ? { url } : {}) };
+    }
+    const load = manifest.contributions?.linkTarget;
+    if (!load) return { state: 'gone' };
+    return await (await load()).default.resolve(ref.id);
+  } catch (e) {
+    console.error(`[linkTarget] "${known ?? 'unknown module'}" failed`, e);
+    return { state: 'elsewhere' };
+  }
+}
+
+/**
+ * Live states of several links by `refKey`; `undefined` while loading. Follows the targets (a deleted note turns
+ * `gone`) and the module switches. A map, not a list: while another set of refs loads, the previous answer stays,
+ * and it is still right for every key it holds.
+ */
+export function useResolvedLinks(
+  refs: readonly EntityRef[],
+): ReadonlyMap<string, ResolvedState> | undefined {
+  const key = JSON.stringify(refs.map((r) => [r.module, r.id]));
+  return useSharedLiveQuery(
+    `links|${key}`,
+    async () =>
+      new Map(await Promise.all(refs.map(async (r) => [refKey(r), await resolveLink(r)] as const))),
+    async () => {
+      const modules = new Set(refs.map((r) => r.module));
+      modules.delete(NEVER_LINKED);
+      if (modules.has('mail')) await import('@/core/mail/service');
+      await preload(
+        'linkTarget',
+        availableManifests().filter((m) => modules.has(m.id)),
+      )();
+    },
+  );
+}
+
 export async function collectNotifications(
   range: { from: number; to: number },
   manifests: readonly ModuleManifest[],

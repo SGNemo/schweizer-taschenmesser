@@ -16,6 +16,7 @@ One chat owns one file; nobody edits another chat's file. Friction ids are split
 
 Rules of the round:
 
+- Split-off files (docs budget): `ANALYSIS-LINKS.md`, `ANALYSIS-DESIGN-SYSTEM.md`, `CONCEPT-SOURCES.md`, `CONCEPT-COPY.md`, `CONCEPT-A11Y.md`. Mockups: `cd web && node ../docs/design/planner-hub/mockups/render.mjs` → `web/.screens/planner-hub/`.
 - Sample data everywhere (measurement, mockups): Sunday 2026-11-15, Monday with nine things and 37 min free, six invoices whose deadline has passed.
 - Images only in PR texts (branch `shots/planner-hub` holds them); `docs/STATUS.md` and „Wartet auf Sven“ are edited by the orchestrating chat only.
 - The four questions of phase 2 (link model, direction, first sources, head) are answered with the recommended options unless the maintainer says otherwise; each answer is recorded as revisable in `docs/decisions/plan.md` when phase 2 closes.

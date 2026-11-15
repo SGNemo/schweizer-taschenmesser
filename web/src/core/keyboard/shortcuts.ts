@@ -161,6 +161,8 @@ export function createShortcutHandler(ctx: ShortcutContext): (e: Key) => void {
         return;
       }
       case 'e': {
+        // An open mail with Gmail-style keys owns E (archive), like the vault's entry owns T.
+        if (document.querySelector('[data-shortcut-scope="mail"]')) return;
         // The row's own edit hook, else its main button (which opens the editor).
         const item = focusedRowItem();
         (
