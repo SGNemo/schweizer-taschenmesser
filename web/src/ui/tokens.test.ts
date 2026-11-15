@@ -215,6 +215,11 @@ describe('design tokens', () => {
       ...chartCss.matchAll(/--c: color-mix\(in srgb, var\(--viz-1\) (\d+)%, var\(--text\)\)/g),
     ].map((m) => Number(m[1]) / 100);
     expect(steps).toHaveLength(5);
+    // "Ruhig" greys the chart series inside the chart frame (not globally: finance's older charts keep theirs).
+    const calmFrame = chartCss.slice(chartCss.indexOf(":global(:root[data-color='calm']) .frame"));
+    expect(calmFrame.slice(0, calmFrame.indexOf('}'))).toMatch(
+      /--viz-1: var\(--calm-ink\);\s*--viz-2: var\(--calm-ink\);/,
+    );
     for (const theme of [light, dark]) {
       const hues = [
         theme['--viz-1']!,

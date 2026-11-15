@@ -35,11 +35,6 @@ describe('foldShares', () => {
     expect(s[6]).toMatchObject({ label: 'k6', other: true, value: 4 });
   });
 
-  it('never more than six named slices, whatever `max` asks for', () => {
-    const data = Array.from({ length: 12 }, (_, i) => d(`k${i}`, 20 - i));
-    expect(foldShares(data, 'R', 10).filter((x) => !x.other)).toHaveLength(6);
-  });
-
   it('small steps give clean ticks', () => {
     expect(niceScale([0.1, 0.35]).ticks.every((v) => String(v).length <= 4)).toBe(true);
   });

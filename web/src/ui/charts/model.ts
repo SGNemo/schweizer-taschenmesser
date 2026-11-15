@@ -19,6 +19,7 @@ export interface Share {
   /** 0..1 of the total. */
   share: number;
   index: number;
+  /** Sits on the grey "other" slot: "Sonstiges", or the one leftover value under its own name. */
   other: boolean;
 }
 
@@ -28,24 +29,19 @@ export const MAX_SEGMENTS = 6;
 const usable = (v: number) => Number.isFinite(v) && v > 0;
 
 /**
- * Sorts by size (largest first, ties keep input order) and folds everything after `max` (at most six: one colour
- * and pattern slot each) into one slice named `otherLabel` on the grey "other" slot. A rest of exactly one value
+ * Sorts by size (largest first, ties keep input order) and folds everything after six (one colour and pattern slot
+ * each) into one slice named `otherLabel` on the grey "other" slot. A rest of exactly one value
  * keeps its own name on that slot (a "Sonstiges" of one thing hides a name for nothing). Zero, negative and
  * non-finite values have no share and are left out.
  */
-export function foldShares(
-  data: readonly ChartDatum[],
-  otherLabel: string,
-  max: number = MAX_SEGMENTS,
-): Share[] {
+export function foldShares(data: readonly ChartDatum[], otherLabel: string): Share[] {
   const rows = data
     .map((d, i) => ({ d, i }))
     .filter(({ d }) => usable(d.value))
     .sort((a, b) => b.d.value - a.d.value || a.i - b.i);
   const total = rows.reduce((s, r) => s + r.d.value, 0);
   if (total <= 0) return [];
-  const cap = Math.min(MAX_SEGMENTS, Math.max(1, Math.floor(max)));
-  const named = rows.slice(0, cap);
+  const named = rows.slice(0, MAX_SEGMENTS);
   const rest = rows.slice(named.length);
   const shares: Share[] = named.map(({ d, i }, index) => ({
     key: d.id ?? `${i}`,
