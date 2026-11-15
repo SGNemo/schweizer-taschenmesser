@@ -120,7 +120,7 @@ All pictures show made-up sample data in the German interface; the app also spea
     <td width="50%">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/finance-desktop-dark.webp">
-        <img src="docs/assets/screenshots/finance-desktop-light.webp" alt="Finances overview for September with the available balance in the header, income, expenses and result for the month, a line chart of the balance, a donut chart of where the money went and the latest transactions on the right">
+        <img src="docs/assets/screenshots/finance-desktop-light.webp" alt="Finances in the month tab for September, with the available balance in the header, income, expenses and result for the month, a line chart of the balance, a donut chart of where the money went and the latest transactions on the right">
       </picture>
       <br><sub>Finances: month overview with balance and transactions</sub>
     </td>
@@ -150,7 +150,7 @@ All pictures show made-up sample data in the German interface; the app also spea
   </picture>
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/calendar-phone-dark.webp">
-    <img src="docs/assets/screenshots/calendar-phone-light.webp" alt="The calendar on a phone: the module head with tabs for the planning modules, a week switch, a view switch for month, week, day, agenda and year, and the events of the week as a list" width="220">
+    <img src="docs/assets/screenshots/calendar-phone-light.webp" alt="The calendar on a phone: the module head with tabs for the planning modules and for events and reminders, a week switch, a view switch for month, week, day, agenda and year, and the events of the week as a list" width="220">
   </picture>
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/tools-phone-dark.webp">

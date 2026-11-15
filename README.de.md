@@ -120,7 +120,7 @@ Alle Bilder zeigen erfundene Beispieldaten in der deutschen Oberfläche; die App
     <td width="50%">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/finance-desktop-dark.webp">
-        <img src="docs/assets/screenshots/finance-desktop-light.webp" alt="Finanzübersicht für September mit dem verfügbaren Betrag im Kopfbereich, Einnahmen, Ausgaben und Ergebnis des Monats, einem Liniendiagramm des Kontostands, einem Ringdiagramm, wohin das Geld ging, und rechts den letzten Buchungen">
+        <img src="docs/assets/screenshots/finance-desktop-light.webp" alt="Finanzen im Reiter „Monat“ für September, mit dem verfügbaren Betrag im Kopfbereich, Einnahmen, Ausgaben und Ergebnis des Monats, einem Liniendiagramm des Kontostands, einem Ringdiagramm, wohin das Geld ging, und rechts den letzten Buchungen">
       </picture>
       <br><sub>Finanzen: Monatsübersicht mit Kontostand und Buchungen</sub>
     </td>
@@ -150,7 +150,7 @@ Alle Bilder zeigen erfundene Beispieldaten in der deutschen Oberfläche; die App
   </picture>
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/calendar-phone-dark.webp">
-    <img src="docs/assets/screenshots/calendar-phone-light.webp" alt="Der Kalender auf dem Handy: der Modulkopf mit Reitern für die Planen-Module, ein Wochenumschalter, ein Umschalter für Monat, Woche, Tag, Agenda und Jahr und die Termine der Woche als Liste" width="220">
+    <img src="docs/assets/screenshots/calendar-phone-light.webp" alt="Der Kalender auf dem Handy: der Modulkopf mit Reitern für die Planen-Module sowie für Termine und Erinnerungen, ein Wochenumschalter, ein Umschalter für Monat, Woche, Tag, Agenda und Jahr und die Termine der Woche als Liste" width="220">
   </picture>
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/tools-phone-dark.webp">
