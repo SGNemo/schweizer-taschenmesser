@@ -25,18 +25,21 @@ export function PlanDialog({
   const p = t.fitness.plan;
   const order = weekdayOrder(weekStart);
 
-  async function toggle(tpl: Stored<Template>, wd: number) {
-    const has = tpl.weekdays?.includes(wd);
-    const next = has ? (tpl.weekdays ?? []).filter((d) => d !== wd) : [...(tpl.weekdays ?? []), wd];
-    await templateRepo.update(tpl.id, { weekdays: next.length ? next.sort() : undefined });
+  async function toggle(id: string, wd: number) {
+    // From the stored record: two quick taps on one template never undo each other.
+    const days = (await templateRepo.get(id))?.weekdays ?? [];
+    const next = days.includes(wd) ? days.filter((d) => d !== wd) : [...days, wd];
+    await templateRepo.update(id, { weekdays: next.length ? next.sort() : undefined });
   }
 
   async function apply(id: PresetId) {
     const list = presetTemplates(id);
     await undoableWithToast(p.preset[id].name, p.applied(list.length), async () => {
+      // Read now, not from the last render: a second tap finds the templates the first one made.
+      const stored = await templateRepo.active().toArray();
       for (const tpl of list) {
         // A template of the same title keeps its exercises and gets the preset's days.
-        const same = templates.find(
+        const same = stored.find(
           (x) => x.title.trim().toLocaleLowerCase() === tpl.title.toLocaleLowerCase(),
         );
         if (same) await templateRepo.update(same.id, { weekdays: tpl.weekdays });
@@ -67,7 +70,7 @@ export function PlanDialog({
                     className={styles.weekday}
                     aria-pressed={!!tpl.weekdays?.includes(wd)}
                     aria-label={p.dayToggle(tpl.title, p.weekdayNames[wd - 1]!)}
-                    onClick={() => void toggle(tpl, wd)}
+                    onClick={() => void toggle(tpl.id, wd)}
                   >
                     {p.weekdays[wd - 1]}
                   </button>

@@ -92,6 +92,10 @@ describe('fitness training plan (planner and dialog)', () => {
     // Done: the day is taken, nothing is offered again; the estimate never writes a record.
     expect(await plannable.list({ today: '2026-11-09', until: '2026-11-10' })).toEqual([]);
     await plannable.onEstimate!(items[0]!.id, 30);
+    // A later plan day ticked today logs nothing.
+    const before = await sessionRepo.active().count();
+    await plannable.onDone!(planItemId(a.id, '2026-11-11'));
+    expect(await sessionRepo.active().count()).toBe(before);
     expect((await templateRepo.get(a.id))!.durationMin).toBeUndefined();
   });
 
