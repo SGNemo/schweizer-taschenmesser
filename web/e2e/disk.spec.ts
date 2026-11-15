@@ -849,7 +849,7 @@ test('history tab is empty before anything was changed', async ({ page }) => {
   await asDesktop(page);
   await enableDisk(page);
   await page.goto('/disk?tab=history');
-  await expect(page.getByText('In dieser Sitzung noch nichts aufgeräumt.')).toBeVisible();
+  await expect(page.getByText('Im Verlauf steht noch nichts.')).toBeVisible();
 });
 
 test('tidy and history tabs have no accessibility violations', async ({ page }) => {
@@ -858,7 +858,7 @@ test('tidy and history tabs have no accessibility violations', async ({ page }) 
   const tidy = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
   expect(tidy.violations).toEqual([]);
   await page.getByRole('button', { name: 'Verlauf', exact: true }).click();
-  await expect(page.getByText('In dieser Sitzung noch nichts aufgeräumt.')).toBeVisible();
+  await expect(page.getByText('Im Verlauf steht noch nichts.')).toBeVisible();
   const history = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
   expect(history.violations).toEqual([]);
 });

@@ -489,10 +489,10 @@ export const disk: Strings['disk'] = {
     pointerLink: 'Go to Tidy up',
   },
   history: {
-    lead: 'What Nemo changed on this PC, with the way back. What you tidy up is listed here until you close Nemo.',
+    lead: 'What Nemo changed on this PC, with the way back. What you tidy up is listed here until you close Nemo; switched entries stay until you take them back.',
     loading: 'Reading history …',
-    empty: 'Nothing tidied up in this session yet.',
-    emptyHint: 'As soon as you tidy something up, it’s listed here.',
+    empty: 'The history is still empty.',
+    emptyHint: 'As soon as you tidy something up or switch something, it’s listed here.',
     reload: 'Load again',
     failed: 'The history couldn’t be read.',
     recovered: 'The history file was damaged and has been started anew. Older entries are missing.',

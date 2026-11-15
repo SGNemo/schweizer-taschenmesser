@@ -5234,10 +5234,10 @@ export const de = {
     },
     /** Tab "Verlauf": what the page changed on this PC, with the way back. */
     history: {
-      lead: 'Was Nemo auf diesem PC verändert hat, mit dem Weg zurück. Was du aufräumst, steht hier, bis du Nemo schließt.',
+      lead: 'Was Nemo auf diesem PC verändert hat, mit dem Weg zurück. Was du aufräumst, steht hier, bis du Nemo schließt; geschaltete Einträge bleiben, bis du sie zurücknimmst.',
       loading: 'Verlauf wird gelesen …',
-      empty: 'In dieser Sitzung noch nichts aufgeräumt.',
-      emptyHint: 'Sobald du etwas aufräumst, steht es hier.',
+      empty: 'Im Verlauf steht noch nichts.',
+      emptyHint: 'Sobald du etwas aufräumst oder umschaltest, steht es hier.',
       reload: 'Erneut laden',
       failed: 'Der Verlauf konnte nicht gelesen werden.',
       recovered: 'Die Verlaufsdatei war beschädigt und wurde neu angelegt. Ältere Einträge fehlen.',

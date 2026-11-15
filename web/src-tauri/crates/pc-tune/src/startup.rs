@@ -32,6 +32,8 @@ pub const APPROVED_FOLDER: &str =
 
 /// More entries than this are not listed (no real PC comes close).
 const MAX_ITEMS: usize = 500;
+/// `REG_SZ`.
+const TYPE_SZ: u32 = 1;
 /// `REG_EXPAND_SZ`.
 const TYPE_EXPAND_SZ: u32 = 2;
 /// Seconds between 1601-01-01 (FILETIME) and 1970-01-01 (Unix).
@@ -123,7 +125,9 @@ pub fn approval_bytes(enabled: bool, unix_secs: i64) -> [u8; 12] {
 fn command_text(value: &Value) -> Option<String> {
     match value {
         Value::Sz(s) => Some(s.clone()),
-        Value::Raw { ty, data } if *ty == TYPE_EXPAND_SZ => {
+        // An expandable string, or a plain one that is not stored in the usual form (kept raw
+        // by the registry seam so that it can be restored byte for byte).
+        Value::Raw { ty, data } if *ty == TYPE_EXPAND_SZ || *ty == TYPE_SZ => {
             let units: Vec<u16> = data
                 .chunks_exact(2)
                 .map(|c| u16::from_le_bytes([c[0], c[1]]))

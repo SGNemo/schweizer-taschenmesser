@@ -89,7 +89,8 @@ export function StartupTab() {
         </>
       ) : null}
       {!items && !failed ? (
-        <div role="status" aria-label={x.loading}>
+        <div role="status">
+          <span className="sr-only">{x.loading}</span>
           <Skeleton width="60%" height="1.25rem" />
         </div>
       ) : null}
