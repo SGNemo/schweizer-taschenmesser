@@ -27,7 +27,7 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 |  | Routinen | Putzplan und Haushalts-Routinen | bei Neuinstallationen an |
 |  | Vorräte | Was ist im Kühlschrank, im Vorratsschrank und im Tiefkühler? | optional |
 |  | Fitness | Training und Essen grob festhalten | Vorschau |
-| **Wissen** | Merkliste | Links, Lesestoff, Filme, Orte und Ideen merken | optional |
+| **Wissen** | Merkliste | Was du dir noch anschauen, lesen, kaufen, ausprobieren oder besuchen willst | optional |
 |  | Notizen | Notizblock mit formatiertem Text (Markdown), einem festen Zettel immer oben, Anheften und Suche | optional |
 |  | Chat | Gespräche mit dem eingebauten lokalen Modell oder deinen Anbietern | Vorschau |
 |  | Browser | Einfacher Browser mit Tabs, Lesezeichen und privatem Modus | Vorschau, nur Windows- und Android-App |
@@ -52,7 +52,7 @@ Vorschau-Module und -Werkzeuge bleiben versteckt, bis du „In Arbeit anzeigen�
 Besonderheiten der Module, die oben nur eine kurze Zeile haben:
 
 - **Kalender** (standardmäßig an): Erinnerungen und Benachrichtigung vor Terminen. **ToDos:** auch wiederkehrend, mit „Irgendwann“.
-- **Merkliste:** Links, Lesen, Ansehen, Orte und Ideen mit Tags; auf dem Handy per „Teilen“. Ihre Lesezeichen-Ansicht zeigt Kacheln nach erstem Tag gruppiert, z. B. Paketverfolgung, Bahn, Karten …
+- **Merkliste:** was du dir noch anschauen, lesen, kaufen, ausprobieren oder besuchen willst, mit Tags und Status; jeder Merkzettel hat ein Ende (erledigt oder weg). Auf dem Handy per „Teilen“. Der Tab „Lesezeichen“ zeigt die paar Links, die du täglich brauchst, als Kacheln nach erstem Tag gruppiert (Paketverfolgung, Bahn, Karten …); die Lesezeichen deines Browsers ersetzt er nicht.
 - **Notizen:** mit festem **Zettel** oben für Zwischendurch.
 - **Listen:** Einkauf mit „2 Milch“, Packlisten mit Fortschritt und Vorlagen, Checklisten.
 - **Personen:** Geburtstage jährlich im Kalender, mit Alter, Erinnerung und WhatsApp-Gruß; Geschenkideen je Person mit Preis, Link und Stand.

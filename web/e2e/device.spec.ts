@@ -119,9 +119,43 @@ test('desktop: home-network hub and drive join the page as words and sizes; no p
   const root = page.getByTestId('device-status');
   await expect(root.getByTestId('device-hub')).toContainText('Heimnetz');
   await expect(root.getByTestId('device-drive')).toContainText(/frei.*auf dem Systemlaufwerk/);
-  // CPU, memory and network are not repeated here: the page points to "Dieser PC".
+  // Acting (cleaning up, big folders) stays in "Dieser PC": the page points there.
   await expect(page.getByTestId('device-pc')).toContainText('Dieser PC');
   const text = (await page.locator('main').innerText()) ?? '';
   expect(text).not.toMatch(/\b\d{1,3}(\.\d{1,3}){3}\b/);
   expect(text).not.toMatch(/https?:\/\/|[A-Z]:\\|:\d{4,5}\b|NEMO1:/);
+});
+
+test('desktop: live load, programs, drives and a passport to copy – read while the page is open, without an address or a name', async ({
+  page,
+}) => {
+  test.skip(isPhone(page), 'the live facts exist in the desktop app only');
+  await page.addInitScript(() => localStorage.setItem('__tmPlatformKind', 'desktop'));
+  await enable(page, 'device');
+  await ready(page, '/device');
+  const live = page.getByTestId('device-live');
+  await expect(live.getByRole('heading', { name: 'Gerade jetzt' })).toBeVisible();
+  for (const id of ['cpu', 'memory', 'network', 'battery', 'connection', 'uptime'])
+    await expect(page.getByTestId(`device-live-${id}`)).toBeVisible();
+  await expect(page.getByTestId('device-programs')).toContainText('browser.exe');
+  await expect(page.getByTestId('device-passport')).toContainText('Beispiel-Prozessor 3000');
+  // "Anhalten" stops the reading and stays after a reload.
+  await page.getByTestId('device-live-pause').click();
+  await expect(live).toContainText('Angehalten');
+  await page.reload();
+  await expect(page.getByTestId('device-live-pause')).toHaveAttribute('aria-pressed', 'true');
+  const text = (await page.locator('main').innerText()) ?? '';
+  expect(text).not.toMatch(/\b\d{1,3}(\.\d{1,3}){3}\b/);
+  expect(text).not.toMatch(/Beispiel-WLAN|vEthernet|Lautsprecher|Mikrofon|[A-Z]:\\/);
+});
+
+test('desktop: condition – battery wear and unexpected restarts as a time and a stop code', async ({
+  page,
+}) => {
+  test.skip(isPhone(page), 'the condition exists in the desktop app only');
+  await page.addInitScript(() => localStorage.setItem('__tmPlatformKind', 'desktop'));
+  await enable(page, 'device');
+  await ready(page, '/device');
+  await expect(page.getByTestId('device-battery-health')).toContainText('85 %');
+  await expect(page.getByTestId('device-crashes')).toContainText('Stoppcode 0x0000009F');
 });

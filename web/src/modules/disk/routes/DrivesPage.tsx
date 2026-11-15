@@ -7,6 +7,8 @@ import type { DiskIo } from '@/core/platform/system';
 import { t } from '@/strings';
 import { EmptyState, PageHeader, Skeleton, Tabs } from '@/ui';
 import SystemTab from '../components/SystemTab';
+import { CleanupTab } from '../components/CleanupTab';
+import { HistoryTab } from '../components/HistoryTab';
 import { DiskHead } from '../components/DiskHead';
 import { DriveCard } from '../components/DriveCard';
 import { QuickOverview } from '../components/QuickOverview';
@@ -18,15 +20,20 @@ import styles from './DrivesPage.module.css';
 /** Drives are re-read while the tab is open: the history and the live speed need fresh numbers. */
 const REFRESH_MS = 5000;
 
-const TABS = ['drives', 'system'] as const;
+const TABS = ['drives', 'tidy', 'system', 'history'] as const;
 type Tab = (typeof TABS)[number];
 
-/** "Dieser PC": tab Laufwerke (scan entry) and tab System (live facts), selected via `?tab=`. */
+/**
+ * "Dieser PC": tabs Laufwerke (scan entry), Aufräumen (suggestions), System (live facts) and
+ * Verlauf (what the page changed, with the way back), selected via `?tab=`.
+ */
 export default function ThisPcPage() {
   const [params, setParams] = useSearchParams();
   const raw = params.get('tab');
   const tab: Tab = TABS.find((k) => k === raw) ?? 'drives';
   const list = useDriveList(tab === 'drives');
+  const setTab = (k: Tab) => setParams(k === 'drives' ? {} : { tab: k }, { replace: true });
+  const startScan = useStartScan();
   return (
     <>
       <DiskHead drives={list.drives} />
@@ -37,11 +44,14 @@ export default function ThisPcPage() {
             label={t.disk.tabsLabel}
             value={tab}
             options={TABS.map((k) => ({ value: k, label: t.disk.tabs[k] }))}
-            onChange={(k) => setParams(k === 'drives' ? {} : { tab: k }, { replace: true })}
+            onChange={setTab}
           />
         }
       />
-      {tab === 'system' ? <SystemTab /> : <DrivesTab {...list} />}
+      {tab === 'system' ? <SystemTab /> : null}
+      {tab === 'tidy' ? <CleanupTab onScan={startScan} onDrives={() => setTab('drives')} /> : null}
+      {tab === 'history' ? <HistoryTab /> : null}
+      {tab === 'drives' ? <DrivesTab {...list} onScan={startScan} /> : null}
     </>
   );
 }
@@ -138,18 +148,14 @@ function useDriveList(withIo: boolean): DriveList {
   return { drives, failed, io };
 }
 
-function DrivesTab({ drives, failed, io }: DriveList) {
+/** Starts the scan of a folder and leads to it; a running scan is not dropped. */
+function useStartScan(): (root: string) => void {
   const navigate = useNavigate();
   const start = useDiskStore((s) => s.start);
-  const scanning = useDiskStore((s) => s.phase === 'scanning');
-  const scanRoot = useDiskStore((s) => s.root);
   const toast = useUiStore((s) => s.toast);
-  // A drive's scan is shown in its card; only a clean-up place's scan needs the line above. While
-  // the drives still load, nothing flashes above the grid (unless loading failed).
-  const scanOnCard = drives ? drives.some((d) => d.root === scanRoot) : !failed;
-
-  const startScan = (root: string) => {
-    if (scanning) {
+  return (root) => {
+    const { phase, root: scanRoot } = useDiskStore.getState();
+    if (phase === 'scanning') {
       // A second scan would drop the running one: lead to it instead, nothing is lost.
       if (root !== scanRoot) toast(t.disk.scan.alreadyRunning);
       void navigate('/disk/scan');
@@ -158,6 +164,18 @@ function DrivesTab({ drives, failed, io }: DriveList) {
     void start(root);
     void navigate('/disk/scan');
   };
+}
+
+function DrivesTab({
+  drives,
+  failed,
+  io,
+  onScan: startScan,
+}: DriveList & { onScan: (root: string) => void }) {
+  const scanRoot = useDiskStore((s) => s.root);
+  // A drive's scan is shown in its card; only a clean-up place's scan needs the line above. While
+  // the drives still load, nothing flashes above the grid (unless loading failed).
+  const scanOnCard = drives ? drives.some((d) => d.root === scanRoot) : !failed;
 
   return (
     <>
@@ -183,7 +201,7 @@ function DrivesTab({ drives, failed, io }: DriveList) {
           ))}
         </ul>
       ) : null}
-      <QuickOverview onScan={startScan} />
+      <QuickOverview />
     </>
   );
 }

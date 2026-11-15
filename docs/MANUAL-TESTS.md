@@ -319,8 +319,13 @@ Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währ
 - **GS-5 Heimnetz:** Mit eingerichtetem Heimnetz-Hub: „Heimnetz · Aktiv · n Geräte gekoppelt“; ohne: „Aus“. Nirgends auf der Seite stehen Port, IP-Adresse oder Gerätenamen. ☐
 - **GS-6 Backup:** Automatische Backups einschalten und eines anlegen: „Backup · Gesichert“ mit Zeit, „Nächstes Backup“ mit dem Tag danach; ausschalten: „Nicht geplant“. Ohne gespeicherte Passphrase: „Passphrase fehlt“ mit Punkt, oben „1 braucht einen Blick“. ☐
 - **GS-7 Updates und Netzwerk:** Liegt ein Update vor, steht „Update verfügbar“ mit Punkt davor und oben „1 braucht einen Blick“. Einstellungen → Verbindungen → „Netzwerk sperren“: Zeile „Netzwerk · Gesperrt“, ohne Punkt. ☐
-- **GS-8 Verweis:** Unter den Zeilen steht der Satz zu „Dieser PC“; der Link öffnet den Reiter „System“ (ist „Dieser PC“ aus: die Bibliothek). Am Handy fehlt der Satz. ☐
-- **GS-9 Handy:** Am Android-Gerät: Backup, Sync, Speicher, App; keine Zeilen Heimnetz, Laufwerk, Autostart, kein Akku; jede Zeile lässt sich mit dem Daumen treffen. ☐
+- **GS-8 Verweis:** Unten steht der Satz „Aufräumen und große Ordner finden kannst du in „Dieser PC““; der Link öffnet „Dieser PC“ (ist es aus: die Bibliothek). Am Handy fehlt der Satz. ☐
+- **GS-9 Handy:** Am Android-Gerät: Backup, Sync, Speicher, App; keine Zeilen Heimnetz, Laufwerk, Autostart (der Akku steht unter „Gerade jetzt“, GS-13); jede Zeile lässt sich mit dem Daumen treffen. ☐
+- **GS-10 Gerade jetzt (Windows):** Gerätestatus öffnen: Kacheln Prozessor, Arbeitsspeicher, Netzwerk, (Laptop: Akku), Verbindung, Läuft seit; Werte wie im Task-Manager, Kurven wachsen alle 3 s. Fenster minimieren und zurück: keine Lücke voller Nullen. „Anhalten“: Werte stehen; nach Neustart der App bleibt es angehalten. ☐
+- **GS-11 Programme und Laufwerke (Windows):** „Was gerade arbeitet“ nennt dieselben Programme wie der Task-Manager; „Nach Arbeitsspeicher“ sortiert um. „Laufwerke“: Systemlaufwerk zuerst, Zustand und Temperatur (ohne Admin ggf. „nur mit Administratorrechten“), keine Buchstaben, Namen oder Modelle. ☐
+- **GS-12 Steckbrief:** „Als Text kopieren“, in einen Editor einfügen: System, Windows-Version, Prozessor, Grafik, Arbeitsspeicher, Mainboard, BIOS, Bildschirm, Nemo-Version; keine IP, kein WLAN-Name, kein Benutzername, kein Pfad, keine Audio-Gerätenamen. ☐
+- **GS-13 Handy-Akku:** Am Android-Gerät: „Gerade jetzt“ zeigt den Akkustand wie die Statusleiste; Ladekabel ein/aus: „Lädt“ / „Im Akkubetrieb“ wechselt ohne Neuladen. „Steckbrief“: Android-Version und Nemo-Version. ☐
+- **GS-14 Zustand (Windows):** Am Laptop: „Akku-Zustand“ nennt einen Anteil der ursprünglichen Kapazität und Ladezyklen ähnlich wie `powercfg /batteryreport`; am Desktop-PC fehlt die Kachel. „Unerwartete Neustarts“: nach einem harten Ausschalten (Ein-/Aus-Taste 5 s) steht beim nächsten Öffnen „Ohne Herunterfahren beendet“ mit Zeit; nur Zeit, Art und ggf. Stoppcode, kein Treiber- oder Dateiname. Ohne solche Ereignisse: „Keine“. ☐
 
 ### Downloads und Torrent
 
@@ -367,6 +372,10 @@ Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währ
 #### Datenträger, Systeminfo (diese Runde) – nur auf echtem Windows prüfbar
 
 Alles mit einem **Testordner** mit erfundenen Dateien, nie mit echten Nutzerdaten:
+PC-A1. _Aufräumen suchen:_ Dieser PC → Aufräumen → „Suchen“: Temporäre Dateien, Browser-Zwischenspeicher (je Browser und Profil), Absturzberichte und Alte Downloads erscheinen mit Größe; in der Vorschau von „Temporäre Dateien“ steht nichts, das jünger als 7 Tage ist; bei „Alte Downloads“ ist nichts angehakt. Läuft Chrome/Edge/Firefox, steht der Hinweis „läuft gerade“ an dessen Karte. ☐
+PC-A2. _Aufräumen ausführen:_ Bei „Temporäre Dateien“ → „Aufräumen …“: derselbe Dialog wie im Scan (Papierkorb vorgewählt), danach liegen die Dateien im Papierkorb, die Karte zeigt nur noch den Rest (Dateien in Benutzung bleiben und stehen im Bericht). Bei über 10 GB fragt Nemo ein zweites Mal. ☐
+PC-A3. _Verlauf und Weg zurück:_ Dieser PC → Verlauf zeigt „Temporäre Dateien: … in den Papierkorb“ ohne Dateinamen; „Papierkorb öffnen“ öffnet den Papierkorb im Explorer, dort lässt sich alles wiederherstellen. Nach einem Neustart der App ist der Aufräum-Eintrag weg (er wird nicht gespeichert); im App-Datenordner liegt keine Datei `pc-care/journal.json`. ☐
+PC-A4. _Windows-Werkzeuge:_ Aufräumen → „Speicher-Einstellungen öffnen“ öffnet Einstellungen → System → Speicher; „Papierkorb öffnen“ den Papierkorb. Nemo selbst leert den Papierkorb nie. ☐
 DT-D1. _Scan echtes Laufwerk:_ Datenträger → C: scannen. Fortschritt läuft, UI bleibt flüssig, Summe stimmt grob mit dem Explorer („Größe auf Datenträger“ des Ordners) überein. Ergebnis mit „Nicht gelesen“-Liste (z. B. `System Volume Information`). ☐
 DT-D2. _Treemap navigieren:_ Klick in einen Ordner, Brotkrumen zurück, Umschalt+Klick wählt nur aus, Pfeiltasten/Eingabe/Rücktaste, Tooltip, Legende, Farbe nach Tiefe, Filter „Älter als“, „Dateityp“. ☐
 DT-D3. _Laufwerksarten:_ USB-Stick und Netzlaufwerk erscheinen mit richtigem Typ; SSD/HDD-Angabe stimmt (kann „Festplatte“ ohne Angabe sein). ☐
@@ -404,7 +413,7 @@ DV-V6. _Live-Kacheln:_ CPU/RAM/Netz aktualisieren alle 3 s ohne Flackern; Mini-V
 
 Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währenddessen verschieben, in der Titelleiste steht nie „Keine Rückmeldung“, und ein Wechsel zu einem anderen Modul zeigt dessen Inhalt statt „…“. Hintergrund und Einordnung je Command: [perf/MAIN-THREAD-COMMANDS-2026-11.md](perf/MAIN-THREAD-COMMANDS-2026-11.md).
 - **MT-H1 Löschen in „Dieser PC“ (wichtigster Punkt):** einen Testordner mit ein paar Wegwerf-Dateien scannen, zwei Dateien markieren, „Löschen“: der Plan erscheint, nach der Bestätigung liegen die Dateien im Papierkorb, die Karte zeigt die neue Größe. Dann „Endgültig löschen“ wählen: Nemo fragt ein **zweites Mal** nach; ohne die zweite Bestätigung wird nichts gelöscht. Ein Ordner aus der Sperrliste (z. B. `C:\Windows`) lässt sich weiterhin nicht zum Löschen vormerken. Zweimal schnell auf „Löschen“ klicken: es läuft nur ein Löschvorgang. ☐
-- **MT-H2 „Dieser PC“ blättern:** `C:\` scannen, während und nach dem Scan schnell durch große Ordner klicken (z. B. `Windows` → `WinSxS`), dabei zum Kalender und zurück: die Karte folgt dem zuletzt geklickten Ordner, nichts bleibt hängen. „Im Explorer zeigen“ öffnet den Explorer mit dem markierten Eintrag. „Aufräumen“ zeigt die bekannten Orte (Temp, Browser-Caches). ☐
+- **MT-H2 „Dieser PC“ blättern:** `C:\` scannen, während und nach dem Scan schnell durch große Ordner klicken (z. B. `Windows` → `WinSxS`), dabei zum Kalender und zurück: die Karte folgt dem zuletzt geklickten Ordner, nichts bleibt hängen. „Im Explorer zeigen“ öffnet den Explorer mit dem markierten Eintrag. Der Reiter „Aufräumen“ zeigt nach „Suchen“ die bekannten Orte (Temp, Browser-Caches). ☐
 
 ### Werkzeuge
 
@@ -605,6 +614,10 @@ EG-E3. _Android, Neustart:_ Erinnerung in 10 Minuten, Gerät neu starten, Nemo n
 EG-E4. _Android, Akku „eingeschränkt“ für Nemo_ und _„Wecker & Erinnerungen“ entzogen_: jeweils wie EG-E1; Ergebnis dokumentieren. ☐
 EG-E5. _Android, „Beenden erzwingen“ und Flugmodus:_ wie EG-E1 (Flugmodus muss gehen). ☐
 EG-E6. _PWA in Chrome (gleiches Handy), mit und ohne Web Push:_ EG-E1 und EG-E3; ohne Push kommt nichts, mit Push kommt es. ☐
+
+#### Frist mit Uhrzeit (Wochenende retten, Paket 5b, #915)
+
+FU-W1. _Android:_ ToDo mit Frist heute und „Uhrzeit der Frist“ in gut einer Stunde anlegen, im Bearbeiten-Dialog „Erinnern: 1 Std vorher“ einschalten (Vorgabe: aus), App schließen: genau eine Benachrichtigung eine Stunde vor der Frist, keine Wiederholung. Gegenprobe: ToDo vorher abhaken oder Schalter aus – es kommt nichts. ☐
 
 #### Erinnern-Zeile, Genommen, Ruhe (P5 Paket A)
 
@@ -1512,6 +1525,7 @@ ML-M16. (Paket 4, `feat/mail-notify`) Modul-Einstellungen E-Mail: „Bei neuen M
 ML-M17. Mail anderswo lesen, bevor die Meldung kommt: es kommt keine. Mehrere Mails in einem Abstand: eine Meldung mit der Anzahl. In den Ruhezeiten (Einstellungen → Benachrichtigungen) kommt sie erst nach deren Ende. Nur die gewählten Labels zählen (Dialog „Mail-Einstellungen" → Labels). Bei ausgeschalteter App/Netz kommt nichts, und es entsteht kein Stau von Meldungen beim Wiedereinschalten (höchstens eine). ☐
 ML-M18. Einstellungen → Mail → „Lokales Modell darf Mails lesen" einschalten, ohne geladenes Modell: „Kurz zusammenfassen" zeigt „Kein lokales Modell bereit" mit Link zu den KI-Einstellungen, es geht nichts ins Netz. Eingebautes Modell laden: Zusammenfassung erscheint, Hinweis „Wird nicht gespeichert", nach „Schließen" und Neuöffnen ist sie weg. ☐
 ML-M19. Nur Ollama auf `localhost` konfiguriert: Zusammenfassung funktioniert. Ollama-Eintrag auf eine LAN-Adresse oder Cloud-Preset: keine Antwort, Hinweis „Kein lokales Modell bereit"; im Netzwerk-Mitschnitt keine Anfrage an einen fremden Host. „Aus dieser Mail anlegen" → „Vorschlag vom lokalen Modell": Feld ändert sich erst nach „Übernehmen". ☐
+ML-M20. (Planer-Hub S1, `feat/links-invoice-mail`) _Mahnkette mit echtem Gmail-Konto (Windows-App):_ In der Mail-Liste unter einer echten Rechnungsmail „Anlegen“ (ein Tipp). Rechnungen → die Rechnung: „Aus Mail“ nennt den Betreff, ein Klick öffnet die Mail in Nemo; die Notiz enthält keine Mail-Adresse und keinen Link mehr. Zurück in der Mail steht „Aus dieser Mail angelegt · Rechnung: …“ und öffnet genau diese Rechnung (nicht nur die Seite). Unter einer echten Mahnung zur selben Rechnung „Mahnung vermerken“ (ein Tipp): die Rechnung zeigt „Mahnung aus Mail vom <Tag>“, Betrag und Fälligkeit der Rechnung sind unverändert; mit eingeschaltetem Planer steht in der Rechnung „Im Plan“ mit dem Tag (Klick öffnet den Planer), die Plan-Zeile nennt „Mahnung · <neuer Betrag> bis <neue Frist>“. „Rückgängig“ im Hinweis nimmt Mahnstufe und Verknüpfung zurück. _Zweites Gerät:_ nach dem Sync zeigt ein zweiter PC (gleiches Gmail-Konto verbunden, Mail nie dort angelegt) dieselbe Rechnung mit „Aus Mail“ und in der Mail „Aus dieser Mail angelegt“; ohne die Mail im dortigen Zwischenspeicher und auf dem Handy steht der Betreff mit „Nicht auf diesem Gerät.“ und „Im Browser öffnen“ (öffnet Gmail, ohne Adresse im Link). Adresse `/invoices?open=<Id>&do=pay` von Hand öffnen: nur der Dialog „… bezahlt?“ erscheint, bezahlt ist erst nach „Bezahlt“. ☐
 
 #### Einrichtungsassistent
 

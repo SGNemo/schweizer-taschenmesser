@@ -147,6 +147,11 @@ test.describe('Calm Merkliste page (focus audit 2)', () => {
     await expect(list.getByRole('heading', { name: /Film/ })).toBeVisible();
     await expect(list.getByRole('heading', { name: /Kochen/ })).toBeVisible();
     await expect(list.getByRole('listitem')).toHaveCount(2);
+    // The grouping is kept: after a reload the list is still grouped by tag.
+    await ready(page, '/bookmarks');
+    await expect(
+      page.getByRole('group', { name: 'Merkliste' }).getByRole('heading', { name: /Kochen/ }),
+    ).toBeVisible();
     await (
       await openBookmarksMenu(page)
     )
@@ -154,6 +159,77 @@ test.describe('Calm Merkliste page (focus audit 2)', () => {
       .click();
     await expect(list.getByRole('heading', { name: /Link/ })).toBeVisible();
     await expect(list.getByRole('listitem')).toHaveCount(2);
+  });
+});
+
+test.describe('Role of the Merkliste (round 2026-11)', () => {
+  test('the empty page says what belongs here; "Kaufen" and "Ausprobieren" are kinds', async ({
+    page,
+  }) => {
+    await enable(page, 'bookmarks');
+    await ready(page, '/bookmarks');
+    await expect(page.getByTestId('bookmarks-empty')).toContainText(
+      'was du dir anschauen, lesen, kaufen oder ausprobieren willst',
+    );
+    await ready(page, '/bookmarks?view=links');
+    await expect(page.getByTestId('bookmarks-empty')).toContainText(
+      'Die Lesezeichen deines Browsers ersetzt das nicht.',
+    );
+    await add(page, 'Kopfhörer', '', '', 'Kaufen');
+    await add(page, 'Sauerteig ansetzen', '', '', 'Ausprobieren');
+    await expect(rowOf(page, 'Kopfhörer')).toContainText('Kaufen');
+    await expect(rowOf(page, 'Sauerteig ansetzen')).toContainText('Ausprobieren');
+  });
+});
+
+test.describe('Capture (round 2026-11, package 2)', () => {
+  test('a page that is already saved is named; the hint opens it', async ({ page }) => {
+    await enable(page, 'bookmarks');
+    await add(page, 'Pasta Rezept', 'koch.de/pasta');
+    await ready(page, '/bookmarks?new=1');
+    const dialog = page.getByRole('dialog');
+    await expect(
+      dialog.getByRole('checkbox', { name: /Vorschau von der Seite holen/ }),
+    ).toHaveCount(0);
+    await dialog.getByLabel('Adresse (Link)').fill('https://www.koch.de/pasta/?utm_source=mail');
+    await expect(dialog.getByTestId('bookmark-duplicate')).toContainText(
+      'Schon gemerkt: „Pasta Rezept“',
+    );
+    await dialog.getByRole('button', { name: 'Vorhandenen öffnen' }).click();
+    await expect(page.getByRole('dialog').getByLabel('Titel')).toHaveValue('Pasta Rezept');
+    await expect(page.getByRole('dialog').getByTestId('bookmark-duplicate')).toHaveCount(0);
+  });
+});
+
+test.describe('Plan and widget (round 2026-11, package 3)', () => {
+  test('"In den Plan" offers a Merkzettel to the planner; taking it out keeps it', async ({
+    page,
+  }) => {
+    await enable(page, 'todos');
+    await enable(page, 'planner');
+    await enable(page, 'bookmarks');
+    await add(page, 'Dune', '', '', 'Film/Serie');
+    await (await rowMenu(page, 'Dune')).getByRole('menuitem', { name: 'In den Plan' }).click();
+    await expect(page.getByText('Steht jetzt im Plan.')).toBeVisible();
+    await expect(rowOf(page, 'Dune')).toContainText('im Plan');
+    await ready(page, '/planner');
+    await expect(page.locator('main').getByText('Film/Serie: Dune').first()).toBeVisible();
+    await ready(page, '/bookmarks');
+    await (
+      await rowMenu(page, 'Dune')
+    )
+      .getByRole('menuitem', { name: 'Aus dem Plan nehmen' })
+      .click();
+    await expect(rowOf(page, 'Dune')).not.toContainText('im Plan');
+    await expect(rowOf(page, 'Dune')).toBeVisible();
+  });
+
+  test('without the planner the menu has no plan entry', async ({ page }) => {
+    await enable(page, 'bookmarks');
+    await add(page, 'Dune', '', '', 'Film/Serie');
+    const menu = await rowMenu(page, 'Dune');
+    await expect(menu.getByRole('menuitem', { name: 'Bearbeiten' })).toBeVisible();
+    await expect(menu.getByRole('menuitem', { name: 'In den Plan' })).toHaveCount(0);
   });
 });
 

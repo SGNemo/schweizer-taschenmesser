@@ -17,6 +17,8 @@ import type {
   ScanSummary,
   SteamGame,
 } from '../disk';
+import { noOptimize } from '../optimize';
+import { createOptimize } from './optimize';
 
 type ScanEvent =
   | ({ event: 'progress' } & ScanProgress)
@@ -33,6 +35,7 @@ export function createDisk(supported: boolean): DiskService {
   if (!supported) {
     return {
       supported: false,
+      optimize: noOptimize,
       listDrives: unsupported,
       startScan: unsupported,
       cancelScan: unsupported,
@@ -65,6 +68,7 @@ export function createDisk(supported: boolean): DiskService {
   };
   return {
     supported: true,
+    optimize: createOptimize(),
     listDrives: () => call<DriveInfo[]>('disk_list_drives'),
     async startScan(root, onProgress): Promise<ScanHandle> {
       const channel = new Channel<ScanEvent>();
