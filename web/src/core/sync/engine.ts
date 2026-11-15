@@ -131,8 +131,10 @@ async function pullAll(deps: EngineDeps, result: SyncResult): Promise<void> {
       ops = decrypted.ops;
     }
 
-    // Pages up to the cursor a restart replaced were pulled before: merged, never a conflict.
-    const replay = page.cursor <= ((await storage.getReplayUntil?.()) ?? 0);
+    // A page that starts below the cursor a restart replaced holds ops pulled before: merged, never a
+    // conflict. The one page that crosses the mark may also hold new ops (ops carry no sequence number):
+    // it counts as a replay too – a missed conflict note there, never a false one.
+    const replay = cursor < ((await storage.getReplayUntil?.()) ?? 0);
     const applied = await storage.applyRemote(ops, replay ? { replay } : undefined);
     result.pulled += page.ops.length;
     result.applied += applied.applied;

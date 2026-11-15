@@ -64,7 +64,7 @@ export interface StorageAdapter {
    */
   restartForNewTables?(): Promise<boolean>;
   /**
-   * The cursor the last restart replaced: pages up to it were pulled before and are replays
+   * The cursor the last restart replaced: a page that starts below it was pulled before and is a replay
    * (`applyRemote` `replay`). 0 when there was none; cleared when the remote data set changes.
    */
   getReplayUntil?(): Promise<number>;

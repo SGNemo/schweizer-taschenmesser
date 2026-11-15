@@ -10,7 +10,7 @@ import { syncedTableNames } from '@/core/db/schema';
 import { allManifests } from '@/core/modules/registry';
 import { SelfHostedAdapter, normalizeServerUrl, type VaultInfo } from './adapters/selfHosted';
 import { LanClientAdapter, LanHubAdapter } from './adapters/lanHub';
-import { copyTodoLinksAfterChange } from '@/core/entitylinks/migrate';
+import { copyTodoLinksAfterSync } from '@/core/entitylinks/migrate';
 import { getPlatform } from '@/core/platform';
 import type {
   LanClientService,
@@ -299,11 +299,10 @@ export function syncNow(deps: SyncServiceDeps = defaultDeps()): Promise<void> {
       const { adapter, key } = await adapterFor(config, deps);
       const result = await runSync({ storage: deps.storage, adapter, key });
       // Older devices keep writing the retired tables: copy what the pull brought into the new ones.
-      if (result.applied > 0) {
-        await runAppMigrations(deps.database);
-        // …and they keep writing links into the ToDo's own field: those become link rows here.
-        await copyTodoLinksAfterChange(deps.database);
-      }
+      if (result.applied > 0) await runAppMigrations(deps.database);
+      // …and they keep writing links into the ToDo's own field: those become link rows here – after the
+      // pull completed, so a removal made elsewhere is already on this device (first copy included).
+      await copyTodoLinksAfterSync(deps.database, result.applied > 0 || result.pushed > 0);
       const at = now();
       await deps.database.table('_meta').put({ key: LAST_SYNC_KEY, value: at });
       status.set({

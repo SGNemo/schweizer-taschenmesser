@@ -147,6 +147,29 @@ describe('cursor repair for newly synced tables', () => {
     expect((await entries(a).get(row.id))?.title).toBe('neu auf B');
   });
 
+  it('the page that crosses the replay mark is a replay too: one unrelated new op causes no false conflict', async () => {
+    const a = database();
+    const row = await entries(a).create({ title: 'alt', done: false });
+    await sync(a, NEW);
+    const b = database();
+    await sync(b, OLD);
+    await entries(b).update(row.id, { title: 'neu auf B' }); // unsynced
+    await entries(a).create({ title: 'neu auf A, hat damit nichts zu tun', done: false });
+    await sync(a, NEW); // one new op set beyond B's old cursor: the restarted pull is one page across the mark
+    const result = await sync(b, NEW);
+    expect(result.restarted).toBe(true);
+    expect(await b.table('_conflicts').count()).toBe(0);
+    expect((await entries(b).get(row.id))?.title).toBe('neu auf B');
+    expect(await b.table('example_entry').count()).toBe(2);
+    // Past the mark conflicts are noted again.
+    await sync(a, NEW);
+    await entries(a).update(row.id, { title: 'A ändert' });
+    await entries(b).update(row.id, { title: 'B ändert später' });
+    await sync(a, NEW);
+    await sync(b, NEW);
+    expect(await b.table('_conflicts').count()).toBe(1);
+  });
+
   it('a changed remote data set forgets the replay mark', async () => {
     const { b } = await oldDevicePulled();
     await sync(b, NEW);
