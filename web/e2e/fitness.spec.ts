@@ -351,12 +351,14 @@ test('exercises: last time under the form row, history with the best, search in 
 }) => {
   await page.goto('/fitness?new=session');
   let dialog = page.getByRole('dialog', { name: 'Einheit eintragen' });
+  await expect(dialog).toBeVisible();
+  await moreFields(page);
   await dialog.getByLabel('Datum').fill('2026-11-05');
   await dialog.getByRole('combobox', { name: 'Übung' }).fill('Kniebeuge');
   await dialog.getByLabel('Sätze').fill('3');
   await dialog.getByLabel('Wdh.').fill('5');
   await dialog.getByLabel('kg', { exact: true }).fill('80');
-  await dialog.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
   // A second session: the catalogue search finds the exercise, the row says what it was last time.
@@ -370,7 +372,7 @@ test('exercises: last time under the form row, history with the best, search in 
   await expect(dialog.getByText(/Letztes Mal \(.*\): 3 × 5 · 80 kg/)).toBeVisible();
   await expect(dialog.getByLabel('kg', { exact: true })).toHaveValue('80');
   await dialog.getByLabel('kg', { exact: true }).fill('85');
-  await dialog.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
   await page.getByRole('button', { name: 'Übungen', exact: true }).click();

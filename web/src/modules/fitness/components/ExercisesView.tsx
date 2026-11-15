@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { formatMinutes, formatNumber } from '@/core/i18n/format';
 import { relativeDayLabel } from '@/core/time/dates';
 import { t } from '@/strings';
+import { SignatureMark } from '@/ui/identity';
 import { Dialog, EmptyState, GroupedList, ItemList, ItemRow, TextField } from '@/ui';
 import { GROUPS, patternOf, type Group } from '../catalog';
 import { exerciseDetail, useSessions } from '../data';
@@ -43,7 +44,11 @@ export function ExercisesView({ day }: { day: string }) {
   if (!sessions) return null;
   if (all.length === 0)
     return (
-      <EmptyState title={x.empty} testId="fitness-exercises-empty">
+      <EmptyState
+        title={x.empty}
+        testId="fitness-exercises-empty"
+        motif={<SignatureMark id="dumbbell" size={64} />}
+      >
         <p>{x.emptyHint}</p>
       </EmptyState>
     );
