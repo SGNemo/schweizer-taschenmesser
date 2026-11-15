@@ -4,7 +4,9 @@ import { addDaysStr, formatDay, relativeDayLabel } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Button, Icon, IconButton, ItemList, ItemRow } from '@/ui';
 import { kcalText } from '../data';
+import { GROUPS } from '../catalog';
 import { weekDays, weekOf } from '../logic';
+import { loadByGroup } from '../progress';
 import type { Meal, Session } from '../schema';
 import { WeekPlates } from './WeekPlates';
 import styles from '../fitness.module.css';
@@ -34,6 +36,12 @@ export function WeekView({
   const days = weekDays(from, sessions, meals, day);
   const canGoBack = addDaysStr(from, -7) >= weekOf(loadedFrom, weekStart).from;
   const w = t.fitness.week;
+  const groups = loadByGroup(sessions, { from, to }, [...GROUPS, 'other']).map((g) => {
+    const name = t.fitness.catalog.groups[g.group];
+    return g.sets
+      ? w.groupSets(name, g.sets)
+      : w.groupMinutes(name, formatMinutes(g.minutes, { compact: true }));
+  });
   const total = days.reduce(
     (a, d) => ({
       sessions: a.sessions + d.sessions,
@@ -81,6 +89,11 @@ export function WeekView({
       <p className={styles.hint} data-testid="fitness-week-total">
         {w.total}: {line(total)}
       </p>
+      {groups.length ? (
+        <p className={styles.hint} data-testid="fitness-week-groups">
+          {w.byGroup}: {groups.join(' · ')}
+        </p>
+      ) : null}
       <ItemList>
         {days.map((d) => (
           <ItemRow

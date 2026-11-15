@@ -25,6 +25,7 @@ import { MealEditor, type MealTarget } from '../components/MealEditor';
 import { SessionEditor, type SessionTarget } from '../components/SessionEditor';
 import { ExercisePicto } from '../components/ExercisePicto';
 import { WeekView } from '../components/WeekView';
+import { ExercisesView } from '../components/ExercisesView';
 import { patternOf } from '../catalog';
 import {
   exerciseDetail,
@@ -51,7 +52,7 @@ import {
 import { mealRepo, sessionRepo } from '../repo';
 import type { Session } from '../schema';
 
-type View = 'training' | 'food' | 'week';
+type View = 'training' | 'food' | 'week' | 'exercises';
 /** How far back the lists and the week view go; older entries stay stored. */
 const WINDOW_DAYS = 90;
 
@@ -61,8 +62,8 @@ export default function FitnessPage() {
   const raw = params.get('view');
   // `undefined` while `?view=food` cannot be decided yet: the stored preferences are still loading.
   const view: View | undefined =
-    raw === 'week'
-      ? 'week'
+    raw === 'week' || raw === 'exercises'
+      ? raw
       : raw !== 'food'
         ? 'training'
         : prefs
@@ -168,15 +169,17 @@ export default function FitnessPage() {
   const noSessions = !!sessions && sessions.length === 0;
   const noMeals = !!meals && meals.length === 0;
   const views: readonly View[] = prefs?.nutrition
-    ? ['training', 'food', 'week']
-    : ['training', 'week'];
+    ? ['training', 'exercises', 'food', 'week']
+    : ['training', 'exercises', 'week'];
   return (
     <>
       <PageHeader
         title={t.fitness.meta.name}
         // Each view starts with a short row at the left (a group heading, the week switch): the phone's "⋯" menu
         // lies beside it. An empty view keeps the menu in its own row.
-        besideContent={view === 'week' || (view === 'food' ? !noMeals : !noSessions)}
+        besideContent={
+          view === 'week' || view === 'exercises' || (view === 'food' ? !noMeals : !noSessions)
+        }
         views={
           // The tabs depend on the preferences („Essen“ only with calorie tracking), so they wait for them.
           prefs && view ? (
@@ -257,6 +260,8 @@ export default function FitnessPage() {
           nutrition={prefs.nutrition}
           loadedFrom={from}
         />
+      ) : view === 'exercises' ? (
+        <ExercisesView day={day} />
       ) : view === 'training' ? (
         <>
           {noSessions ? (

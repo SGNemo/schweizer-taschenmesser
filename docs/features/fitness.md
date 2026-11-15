@@ -1,6 +1,6 @@
 # Fitness (module, concept – phase 1)
 
-Log training (exercises, sets, weight, duration) and calories (meals, kcal, rough). Not a gym coach, not a diet app: calm, rough, honest. Wish: Sven, for a friend who likes "a rough overview". State: **packages 1–3 merged (#565, #573, #581), package 4 („Eigenart“) built (`feat/fitness-4`)**. Rules applied: [FOCUS-GUIDELINES](../design/FOCUS-GUIDELINES.md), [MODULE-IDENTITY](../design/MODULE-IDENTITY.md) v3.1, [DESIGN-SPEC](../design/DESIGN-SPEC.md) §4a, [new-module](../howto/new-module.md).
+Log training (exercises, sets, weight, duration) and calories (meals, kcal, rough). Not a gym coach, not a diet app: calm, rough, honest. Wish: Sven, for a friend who likes "a rough overview". State: **packages 1–5 merged; round „Tiefe“ in packages p1–p4 ([fitness-deep/PLAN](../design/fitness-deep/PLAN.md))**. Rules applied: [FOCUS-GUIDELINES](../design/FOCUS-GUIDELINES.md), [MODULE-IDENTITY](../design/MODULE-IDENTITY.md) v3.1, [DESIGN-SPEC](../design/DESIGN-SPEC.md) §4a, [new-module](../howto/new-module.md).
 
 ## 1. One module or two – recommendation: **one module `fitness`**
 
@@ -138,3 +138,10 @@ Not planned: body data, weight trend, step counter, external food databases, spe
 - **Known limit:** meals are matched with their kcal, so a meal changed in MFP (or Cronometer) after an import comes in a second time.
 - **Yazio not built:** its own export format is not documented and no sample could be checked; it waits for a real export file.
 
+
+## Deep p1 as built („Übungen“, `feat/fitness-deep-p1`)
+
+- **View „Übungen“** (tab after Training, `?view=exercises`): every exercise ever logged (all sessions, not only the page's 90 days; never a plan) by muscle group in catalogue order, own names by their words (`groupOf`: „Kurzhantel-Rudern“ → Rücken), the rest „Weitere“; row = „Zuletzt Gestern · 3 × 5 · 80 kg · Bestwert 100 kg × 5“, or only „Bestwert“ when the last time reached it; a search narrows the list. Tap → history (newest first, 30 rows, the rest counted), the row that set the best says „Bestwert“.
+- **Personal best** (`progress.ts`): heaviest weight (more reps at the same weight beat fewer), else most reps without weight, else longest duration; the first day a value was reached keeps it. Shown as a fact only: no toast, no badge, no comparison with a judgement.
+- **Form:** under each exercise with a known name „Letztes Mal (Mo., 3. Nov.): 3 × 8 · 60 kg“ (never read from the session being edited). **Catalogue:** a search over the catalogue and own exercises („Deine Übungen“); a name that matches nothing is taken as an own exercise with one tap.
+- **Week:** one line „Je Muskelgruppe: Brust 6 Sätze · Beine 9 Sätze · Ausdauer 1 h 05“ (an exercise with reps or kg but no set count is one set; duration-only exercises count minutes). Bars follow in p4.

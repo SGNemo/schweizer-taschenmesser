@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { changedFields } from '@/core/db/patch';
 import type { Stored } from '@/core/db/types';
-import { nowTime, today } from '@/core/time/dates';
+import { nowTime, relativeDayLabel, today } from '@/core/time/dates';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
@@ -18,9 +18,10 @@ import {
   TextField,
   TimeField,
 } from '@/ui';
-import { builtInExercises } from '../data';
+import { builtInExercises, exerciseDetail } from '../data';
 import { CatalogPicker } from './CatalogPicker';
 import { exerciseSuggestions, lastOf, toTemplate } from '../logic';
+import { lastEntry } from '../progress';
 import { sessionRepo, templateRepo } from '../repo';
 import {
   sessionSchema,
@@ -65,7 +66,7 @@ export function SessionEditor({
 }: {
   target: SessionTarget;
   /** Own sessions (suggestions and "last time" values). */
-  sessions: readonly Session[];
+  sessions: readonly (Session & { id?: string })[];
   /** Saved templates, offered as chips on a new session. */
   templates: readonly Stored<Template>[];
   onClose: () => void;
@@ -102,7 +103,7 @@ function Fields({
   onPicked,
 }: {
   target: NonNullable<SessionTarget>;
-  sessions: readonly Session[];
+  sessions: readonly (Session & { id?: string })[];
   templates: readonly Stored<Template>[];
   onClose: () => void;
   onPicked: (picked: boolean) => void;
@@ -121,7 +122,17 @@ function Fields({
     toRows(existing?.exercises.length ? existing.exercises : [{ name: '' }]),
   );
   const [error, setError] = useState('');
-  const names = exerciseSuggestions(sessions, builtInExercises());
+  const builtIn = builtInExercises();
+  const names = exerciseSuggestions(sessions, builtIn);
+  const own = names.filter((n) => !builtIn.includes(n));
+  // „Letztes Mal“ never reads the session being edited.
+  const others = existing ? sessions.filter((s) => s.id !== existing.id) : sessions;
+  /** „Letztes Mal (Mo., 3. Nov.): 3 × 8 · 60 kg“ under an exercise with a known name. */
+  const lastHint = (name: string): string => {
+    const hit = name.trim() ? lastEntry(others, name) : undefined;
+    const detail = hit ? exerciseDetail(hit.exercise) : '';
+    return hit && detail ? t.fitness.form.last(relativeDayLabel(hit.date, today()), detail) : '';
+  };
   const listId = 'fitness-exercise-names';
 
   const patch = (key: number, p: Partial<Row>) =>
@@ -334,6 +345,9 @@ function Fields({
                 <Icon name="trash" />
               </IconButton>
             ) : null}
+            {lastHint(r.name) ? (
+              <p className={`${styles.hint} ${styles.lastHint}`}>{lastHint(r.name)}</p>
+            ) : null}
             <div className={styles.numbers}>
               <TextField
                 label={t.fitness.form.sets}
@@ -417,7 +431,12 @@ function Fields({
           onChange={(e) => setNote(e.target.value)}
         />
       </AdvancedFields>
-      <CatalogPicker open={picking} onPick={addFromCatalog} onClose={() => setPicking(false)} />
+      <CatalogPicker
+        open={picking}
+        own={own}
+        onPick={addFromCatalog}
+        onClose={() => setPicking(false)}
+      />
       {error ? <p role="alert">{error}</p> : null}
       <FormActions
         start={

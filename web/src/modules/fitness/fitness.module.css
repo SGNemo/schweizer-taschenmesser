@@ -95,7 +95,7 @@
 .plate[data-today] {
   font-weight: var(--weight-semibold);
 }
-.catalogGroup + .catalogGroup {
+.catalogGroup {
   margin-top: var(--space-4);
 }
 .catalogList {
@@ -128,4 +128,12 @@
 }
 .catalogItem:hover {
   background: var(--surface-sunken);
+}
+.lastHint {
+  grid-column: 1 / -1;
+  font-size: var(--text-sm);
+}
+.search > * {
+  /* A search box, not a page width: leaves room for the phone's "⋯" beside it (PageHeader besideContent). */
+  flex: 0 1 17rem;
 }

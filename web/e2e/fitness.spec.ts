@@ -311,3 +311,47 @@ test('import from MyFitnessPal: the export ZIP brings a day of exercise and a me
   // The weight from Measurement-Summary is nowhere.
   await expect(page.getByText(/81[,.]4/)).toHaveCount(0);
 });
+
+test('exercises: last time under the form row, history with the best, search in the catalogue', async ({
+  page,
+}) => {
+  await page.goto('/fitness?new=session');
+  let dialog = page.getByRole('dialog', { name: 'Einheit eintragen' });
+  await dialog.getByLabel('Datum').fill('2026-11-05');
+  await dialog.getByRole('combobox', { name: 'Übung' }).fill('Kniebeuge');
+  await dialog.getByLabel('Sätze').fill('3');
+  await dialog.getByLabel('Wdh.').fill('5');
+  await dialog.getByLabel('kg', { exact: true }).fill('80');
+  await dialog.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+
+  // A second session: the catalogue search finds the exercise, the row says what it was last time.
+  await page.getByRole('button', { name: 'Einheit eintragen' }).first().click();
+  dialog = page.getByRole('dialog', { name: 'Einheit eintragen' });
+  await dialog.getByRole('button', { name: 'Aus dem Katalog' }).click();
+  const picker = page.getByRole('dialog', { name: 'Übung aus dem Katalog' });
+  await picker.getByRole('searchbox').fill('knie');
+  await expect(picker.getByRole('button', { name: 'Bankdrücken hinzufügen' })).toHaveCount(0);
+  await picker.getByRole('button', { name: 'Kniebeuge hinzufügen' }).click();
+  await expect(dialog.getByText(/Letztes Mal \(.*\): 3 × 5 · 80 kg/)).toBeVisible();
+  await expect(dialog.getByLabel('kg', { exact: true })).toHaveValue('80');
+  await dialog.getByLabel('kg', { exact: true }).fill('85');
+  await dialog.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Übungen', exact: true }).click();
+  const list = page.getByTestId('fitness-exercises');
+  await expect(list.getByText(/Zuletzt Heute · 3 × 5 · 85 kg · Bestwert$/)).toBeVisible();
+  await list.getByRole('button', { name: /Kniebeuge/ }).click();
+  const history = page.getByRole('dialog', { name: 'Kniebeuge' });
+  await expect(history.getByTestId('fitness-exercise-best')).toHaveText(
+    'Bestwert 85 kg × 5 · 2-mal eingetragen',
+  );
+
+  // The week names the sets per muscle group, in words.
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Woche', exact: true }).click();
+  await expect(page.getByTestId('fitness-week-groups')).toHaveText(
+    'Je Muskelgruppe: Beine 6 Sätze',
+  );
+});
