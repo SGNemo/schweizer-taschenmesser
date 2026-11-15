@@ -49,6 +49,8 @@
   margin-inline-start: auto;
 }
 .nowTitle {
+  min-width: 0;
+  overflow-wrap: anywhere;
   margin: 0;
   font-size: var(--text-2xl);
   line-height: 1.15;

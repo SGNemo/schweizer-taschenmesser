@@ -40,7 +40,7 @@ export function NowPlayer({
   const [player, setPlayer] = useState<PlayerState | undefined | 'none'>();
   const [devices, setDevices] = useState<PlayerDevice[]>([]);
   const [menu, setMenu] = useState(false);
-  const [sleepMenu, setSleepMenu] = useState(false);
+  const [extrasMenu, setExtrasMenu] = useState(false);
   const sleep = useSleep();
   const [seekTo, setSeekTo] = useState<number>();
   const [volume, setVolume] = useState<number>();
@@ -204,7 +204,14 @@ export function NowPlayer({
                         ]
                       : []),
                     ...(sleep
-                      ? [{ id: 'off', label: tm.sleepOff, onSelect: () => setSleep(undefined) }]
+                      ? [
+                          {
+                            id: 'off',
+                            group: canControl && current.playing ? undefined : tm.sleepTitle,
+                            label: tm.sleepOff,
+                            onSelect: () => setSleep(undefined),
+                          },
+                        ]
                       : []),
                     ...(current.trackUrl
                       ? [
@@ -229,8 +236,8 @@ export function NowPlayer({
                         ),
                     },
                   ]}
-                  open={sleepMenu}
-                  onOpenChange={setSleepMenu}
+                  open={extrasMenu}
+                  onOpenChange={setExtrasMenu}
                 />
               </span>
             ) : null}
