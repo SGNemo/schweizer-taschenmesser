@@ -49,6 +49,11 @@ Off by default, device-local (`tm-spotify-focus`: mode, playlist id, end switch 
 - **Shortcuts:** Shift+↑ / ↓ volume ±10 (read first, capped 0–100), S shuffle on/off, besides Space, Shift+← / →, L, "/" (setting unchanged).
 - **Widget:** "Zurück" beside pause/next from a card width of 22 rem (container query; three 44 px targets would squeeze a small card).
 
+## Following (round "Tiefe & Politur", p4)
+- New opt-in feature **"Folgen"** (`user-follow-read`, `user-follow-modify`, off by default; the maintainer agreed to new scopes): "Folgen / Gefolgt" on an artist page (`GET /me/following/contains`, `PUT|DELETE /me/following?type=artist`), and the followed artists under the albums in the "Alben" tab (`GET /me/following?type=artist`, cursor pages of 50, up to 200, API host only).
+- Playlists of others: "Folgen / Gefolgt" in the playlist head (`GET /playlists/{id}/followers/contains`, `PUT` with `public: false` / `DELETE /playlists/{id}/followers`), with the existing feature "Playlists bearbeiten" (`playlist-modify-*`); never on own playlists.
+- `components/FollowButton.tsx`: reads once, applies a tap at once, takes it back with one sentence on failure, locked while the answer is on its way. Lists that show what you follow read afresh (`changedFollows`, `changedPlaylists`).
+
 ## Privacy
 Title and artist are user data: never to the AI (the connector cannot import `core/ai`, `privacy.test.ts` untouched), not in diagnostics (canary in `core/diagnostics/diagnostics.test.ts`), not synced (device-local only), not in logs. Data flow `spotify` in [DATA-FLOWS](../legal/DATA-FLOWS.md) and Settings → Über Nemo → Rechtliches.
 

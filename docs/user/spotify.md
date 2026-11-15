@@ -21,6 +21,7 @@ In the **PWA** (browser or installed from the browser) the Redirect URI is diffe
 - **Albums tab:** your saved albums. On an album page, *Save* keeps it in your albums (needs *Liked songs*). *⋯ → Go to <artist>* and the search open an **artist page** with the most played tracks and the albums.
 - **Continue listening** (start view): the playlists, albums and artists you played from lately; a tap plays on there. *Recently played* moved into the start view (*Show all* opens the whole list).
 - **Sleep timer** (*⋯* beside the track title): pause in 15–60 minutes or at the end of the track. It works while Nemo is open; *Off* ends it. The same *⋯* also has **Search lyrics** (opens genius.com in your browser) and *Open in Spotify*. Keys: Shift+↑ / ↓ volume, S shuffle.
+- **Follow** (tick *Follow* when connecting): *Follow* on an artist page; the artists you follow are listed under your albums. Playlists of others can be followed or unfollowed in their header (needs *Edit playlists*).
 - Extra permissions are opt-in when connecting: *Playlists*, *Liked songs* (read **and** save) and *Recently played*. If you connected earlier, tick them under Connections → Spotify and connect again.
 
 Good to know:
