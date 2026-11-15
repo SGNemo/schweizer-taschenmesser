@@ -134,10 +134,30 @@ test('stimulus inventory', async ({ browser }) => {
       await page.mouse.move(0, 0);
       await settle(page, `${vp.name}--${target.name}`);
       const m = await page.evaluate(() => {
+        // Chromium gives the content of a closed `<details>` real sizes (it hides it through the
+        // `::details-content` slot, not `display: none`): such content is not on screen unless it is
+        // (inside) that details' own `summary`.
+        const inClosedDetails = (e: Element) => {
+          for (
+            let d = e.parentElement?.closest('details');
+            d;
+            d = d.parentElement?.closest('details')
+          ) {
+            if (d.open) continue;
+            if (!d.querySelector(':scope > summary')?.contains(e)) return true;
+          }
+          return false;
+        };
         const vis = (e: Element) => {
           const r = e.getBoundingClientRect();
           const s = getComputedStyle(e);
-          return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none';
+          return (
+            r.width > 0 &&
+            r.height > 0 &&
+            s.visibility !== 'hidden' &&
+            s.display !== 'none' &&
+            !inClosedDetails(e)
+          );
         };
         const q = (sel: string, root: ParentNode = document) =>
           [...root.querySelectorAll(sel)].filter(vis);

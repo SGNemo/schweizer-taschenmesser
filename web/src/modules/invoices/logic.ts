@@ -102,3 +102,14 @@ export const nextDueDate = (
   repeat: InvoiceRepeat,
   seriesStart: string = dueDate,
 ): string => addMonthsInSeries(dueDate, REPEAT_MONTHS[repeat], seriesStart);
+
+/** Search in the list: every word of `query` must appear in the payee, the reference or the note (any case). */
+export function matchesQuery(
+  i: Pick<Invoice, 'payee' | 'reference' | 'note'>,
+  query: string,
+): boolean {
+  const words = query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return true;
+  const text = [i.payee, i.reference ?? '', i.note ?? ''].join(' ').toLocaleLowerCase();
+  return words.every((w) => text.includes(w));
+}
