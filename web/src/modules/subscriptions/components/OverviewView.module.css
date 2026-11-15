@@ -114,15 +114,17 @@
 }
 .cardRow {
   display: flex;
+  /* Narrow cards: the action moves under the text instead of squeezing it into four lines. */
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-3);
+  gap: 0 var(--space-3);
   min-height: var(--touch);
 }
 .cardRow + .cardRow {
   border-top: 1px solid var(--border);
 }
 .rowMain {
-  flex: 1 1 auto;
+  flex: 1 1 14rem;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -164,14 +166,6 @@
 .planned {
   color: var(--text-muted);
   font-size: var(--text-sm);
-}
-/* Narrow cards: the action moves under the text instead of squeezing it into four lines. */
-.cardRow {
-  flex-wrap: wrap;
-  column-gap: var(--space-3);
-}
-.rowMain {
-  flex-basis: 14rem;
 }
 .more summary {
   min-height: var(--touch);
