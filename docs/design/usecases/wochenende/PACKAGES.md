@@ -1,8 +1,8 @@
 # Use case „Wochenende retten“ – packages (phase 3, final prompts)
 
-Decisions: [TARGET.md](TARGET.md) §5 answered 2026-11-14 with the recommended options (Q1 a, Q2 a, Q3 a, Q4 a), recorded in [`docs/decisions/features-wochenende.md`](../../../decisions/features-wochenende.md) – a package adds a decision bullet **only where it builds differently**. Friction ids: [ANALYSIS.md](ANALYSIS.md) (W01–W22). Council round 1 (2026-11-14) folded in. One package = one chat, one branch, one PR against `develop`; paste one prompt per chat. Template: kopf-leer's package plan (git history, `9113e74d1^:docs/design/usecases/kopf-leer/PACKAGES.md`).
+Decisions: [TARGET.md](TARGET.md) §5 answered 2026-11-14 with the recommended options (Q1 a, Q2 a, Q3 a, Q4 a), recorded in [`docs/decisions/features-wochenende.md`](../../../decisions/features-wochenende.md) – a package adds a decision bullet **only where it builds differently**. Friction ids: [ANALYSIS.md](ANALYSIS.md) (W01–W22). Council round 1 (2026-11-14) folded in. One package = one chat, one branch, one PR against `develop`; paste one prompt per chat. Template: kopf-leer's package plan (git history, `9113e74d1^:docs/design/usecases/kopf-leer/PACKAGES.md`). **State 2026-11-15:** packages 1–3 are merged (#870, #880, #888); next is package 4. Second opinion before 4–8: [REVIEW-FABLE.md](REVIEW-FABLE.md).
 
-**Order:** 1 → 2 → 3 → 4 → 5 → 6 → 8; package 7 after 5, in parallel to 6 (7: `modules/mail/**`, `connectors/google/gmail.ts`, `quickCapture/parser`, todos adapter; 6: `core/plan/**`, planner settings, `DaySetup.tsx` – no shared file; `strings.ts` and the en catalog only in the own block). Serial before that because 1–6 all touch `modules/planner/**`, 1/4/5/7 the quick-capture parser, and 5 the contract in `core/modules/types.ts` (hotspot, one chat at a time). Not now (own decision later): a shared Google OAuth client (W15), auto-enabling time tracking (W14).
+**Order:** 1 → 2 → 3 → 4 → 5 → 6 → 8; package 7 after 5, in parallel to 6 (7: `modules/mail/**`, `connectors/google/gmail.ts`, `quickCapture/parser`, todos adapter; 6: `core/plan/**`, planner settings, `DaySetup.tsx` – no shared product file; both edit `web/e2e/usecases/wochenende.spec.ts` (own path each) and one line of `FOCUS-WORDING.md`; `strings.ts` and the en catalog only in the own block). Serial before that because 1–6 all touch `modules/planner/**`, 1/4/5/7 the quick-capture parser, and 5 the contract in `core/modules/types.ts` (hotspot, one chat at a time). Not now (own decision later): a shared Google OAuth client (W15), auto-enabling time tracking (W14).
 
 | #   | Package                                                   | Branch                            | Scope (short)                                                                                                                                                                                                                               | Hotspots to announce (row in CHATS.md „Hotspots“)        | Skill         | Acceptance figures (script `web/e2e/usecases/wochenende.spec.ts`; `MAX` is lowered only in package 8) |
 | --- | --------------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------- |
@@ -105,7 +105,7 @@ Verteilen ohne Tipp, Änderungen an Engine-Regel 6 (nichts rückt von selbst), T
 ## Abnahme
 - `npm run check`, `test`, `check:i18n`, `e2e` grün; wochenende-, kopf-leer-Skript und `e2e/planner.spec.ts` grün; Benachrichtigung: Unit-Test Standard aus, einmal am Tag, 20:00 außerhalb der Ruhezeit.
 - Zahlen: F 9 → 2 Taps, 1 → 0 Umwege; Fokus-Checkliste 1–9; Entfernt: „Auf morgen schieben“ bei aktivem Planer.
-- Docs: FOCUS-WORDING eine Zeile (so / nicht so) für den neuen Satz; Entscheidungs-Bullet in docs/decisions/plan.md (Op und Ereignis), `.changes/`, STATUS im eigenen PR, Hotspot-Zeile raus.
+- Docs: FOCUS-WORDING eine Zeile (so / nicht so) für den neuen Satz; Entscheidungs-Bullet in docs/decisions/plan-contract.md (Op und Ereignis), `.changes/`, STATUS im eigenen PR, Hotspot-Zeile raus.
 
 ## Skills
 `council` über den Diff (Guardian: nichts verschiebt sich ohne Tipp, Rückgängig stellt alles her, Benachrichtigung aus und gedrosselt; Advocate: ein ruhiger Satz, keine Zahl des Liegengebliebenen; Architect: ops wie `moveAll`, deterministisch, Ereignis additiv, kein Modul-Import), dann `full stop`.
@@ -121,7 +121,7 @@ Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Q
 Branch `feat/plan-day-parts` von frischem `develop` – nach dem Merge von Paket 3. Vorher eine Zeile in docs/CHATS.md „Hotspots“: `core/plan/**` (Engine), ein Chat. `core/modules/types.ts` bleibt unberührt. Vorgegebene Session-Branches ignorieren.
 
 ## Ausgangslage
-Entscheidung Q2 a, Zielbild TARGET.md F2 (mittel), Reibung W05, W11, W12; planner CONCEPT §3 (Regeln 1–8). Lies `core/plan/{types,engine,windows,explain}.ts` (Reihenfolge im Tag `engine.ts:216–233`, `isMain` Z. 78), `modules/planner/{schema,migrations,manifest}.ts`, `core/plan/instructions.ts` (op `duration`), `modules/todos/components/TaskEditor.tsx:50` (`ESTIMATES = [5, 15, 30, 60]`), `quickCapture/parser/index.ts`.
+Entscheidung Q2 a, Zielbild TARGET.md F2 (mittel), Reibung W05, W11, W12; planner CONCEPT §3 (Regeln 1–8). Lies `core/plan/{types,engine,windows,explain}.ts` (Reihenfolge im Tag `engine.ts:216–233`, `isMain` Z. 78), `modules/planner/{schema,migrations,manifest}.ts`, `core/plan/instructions.ts` (op `duration`), `modules/todos/components/TaskEditor.tsx:49` (`ESTIMATES = [5, 15, 30, 60]`), `quickCapture/parser/index.ts`.
 
 ## Pflichtliste
 - Planer-intern: `part?: 'morning' | 'afternoon' | 'evening'` und `asBreakOn?: 'YYYY-MM-DD'` (+ Länge) an der eigenen Planer-Zeile (`manifest.version` + eine Migration) und `part?` an `PlanItem`/`PlanBlocker` in `core/plan`. **Kein** Feld in `contributions.plannable`.
@@ -136,7 +136,7 @@ Entscheidung Q2 a, Zielbild TARGET.md F2 (mittel), Reibung W05, W11, W12; planne
 Uhrzeit-Planung mit Ziehen, Tagesende (6), Fristen-Uhrzeit (5), Vertragsänderung.
 
 ## Abnahme
-- `npm run check`, `test`, `check:i18n`, `e2e`; `db:bump` falls ein Index sich ändert; Engine-Fixtures und Migrations-Test; wochenende-, kopf-leer-Skript, `e2e/planner.spec.ts` grün.
+- `npm run check`, `test`, `check:i18n`, `e2e`; `db:bump` falls ein Index sich ändert; Engine-Fixtures und Migrations-Test; `npx vitest run src/quickCapture src/core/plan src/modules/planner`; wochenende-, kopf-leer-Skript, `e2e/planner.spec.ts`, `e2e/quick-capture.spec.ts` grün.
 - Zahlen: C Reihenfolge ohne Abschnitt → Vormittag → Nachmittag → Abend, „Zocken“ als 2-Std-Pause am Nachmittag in 5 Taps; Fokus-Checkliste 1–9.
 - Docs: CONCEPT §3 eine Zeile (Regel 5 Abschnitt), Entscheidungs-Bullet nur bei Abweichung, `.changes/`, STATUS im eigenen PR, Hotspot-Zeile raus.
 
@@ -169,7 +169,7 @@ Entscheidung Q4 a (nur Selbstgesetztes, einmal zur Uhrzeit, nie wiederholt; „1
 Stundengenaue Planung, neue **automatische** Benachrichtigungsarten (der „1 Std vorher“-Hinweis ist selbst gesetzt: nicht `soft`, einmal; Stumm und Stundengrenze gelten), Änderungen an der globalen Wiederholung oder an `core/notifications/policy.ts`.
 
 ## Abnahme
-- `npm run check`, `test`, `check:i18n`, `e2e` grün; Migrations-Tests (Planer, ToDos, Kalender); Korpus; wochenende-, kopf-leer-Skript, `e2e/reminders.spec.ts` grün.
+- `npm run check`, `test`, `check:i18n`, `e2e` grün; Migrations-Tests (Planer, ToDos, Kalender); Korpus; wochenende-, kopf-leer-Skript, `e2e/reminders.spec.ts`, `e2e/quick-capture.spec.ts` grün.
 - Zahlen: G Umwege 1 → 0 (die Montagszeile wird durch „falls nötig“ eine Erinnerung; das Skript prüft zusätzlich `dueTime` = 18:00 am ToDo), B Umwege 2 → 1; Erinnerungen aus Pfad G wiederholen nie; Fokus-Checkliste 1–9; Entfernt: Notizzeile „Uhrzeit: …“ bei Fristen.
 - Docs: FOCUS-WORDING eine Zeile (so / nicht so) für den neuen Satz; docs/features/repeat-reminders.md ein Satz, Entscheidungs-Bullet nur bei Abweichung, `.changes/`, STATUS im eigenen PR, Hotspot-Zeile raus.
 
@@ -232,7 +232,7 @@ Zielbild TARGET.md F5 (a und b, zwei Commits), Reibung W17; docs/legal/DATA-FLOW
 WhatsApp (kein Connector, kein Link), Antwort-Entwürfe, gemeinsamer OAuth-Client (W15), ein Hinweis an der Plan-Zeile.
 
 ## Abnahme
-- `npm run check`, `test`, `check:i18n`, `e2e` grün; `USECASE_SEED_URL=… npx playwright test e2e/usecases/wochenende.spec.ts e2e/usecases/kopf-leer.spec.ts --project=desktop-chrome`; Seed-Registry-Test; `core/mail/isolation.test.ts` grün.
+- `npm run check`, `test`, `check:i18n`, `e2e` grün; `USECASE_SEED_URL=… npx playwright test e2e/usecases/wochenende.spec.ts e2e/usecases/kopf-leer.spec.ts --project=desktop-chrome`; Seed-Registry-Test; `core/mail/isolation.test.ts`, `npx vitest run src/quickCapture` und `e2e/quick-capture.spec.ts` grün.
 - Zahlen: E „Erledigt“ 1 Tap mit Rückgängig; eine Zeile → ein ToDo mit drei Punkten; Fokus-Checkliste 1–9.
 - Docs: FOCUS-WORDING eine Zeile (so / nicht so) für den neuen Satz; DATA-FLOWS, data-flows-hinweise, `.changes/`, STATUS im eigenen PR.
 
