@@ -276,6 +276,11 @@
         "type": "number",
         "label": "Einheiten pro Woche",
         "default": 0
+      },
+      "restSec": {
+        "type": "number",
+        "label": "Pause zwischen Sätzen in Sekunden",
+        "default": 90
       }
     }
   },
@@ -350,6 +355,11 @@
       "showAnswered": {
         "type": "boolean",
         "label": "„Beantwortet?“ anzeigen",
+        "default": true
+      },
+      "shortcuts": {
+        "type": "boolean",
+        "label": "Tastenkürzel wie in Gmail",
         "default": true
       },
       "notify": {

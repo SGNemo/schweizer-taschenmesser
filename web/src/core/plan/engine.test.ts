@@ -435,6 +435,111 @@ describe('council round 1', () => {
     expect(shape(again)).toEqual(shape(first));
   });
 
+  it('a pin on a later day holds the thing back: no earlier day takes it, the move names the pin (planner hub P09)', () => {
+    const WED = '2026-11-11';
+    const days = week();
+    const free = [item('a', { durationMin: 30 }), item('b', { durationMin: 30 })];
+    const before = plan({ today: MON, days, items: free, settings: H });
+    expect(before.assignments.map((a) => a.date)).toEqual([MON, MON]);
+    const items = [item('a', { durationMin: 30, pinned: WED }), item('b', { durationMin: 30 })];
+    const r = plan({ today: MON, days, items, prev: before.assignments, settings: H });
+    expect(r.assignments.find((a) => a.id === 'todos:a#0')).toMatchObject({
+      date: WED,
+      reason: 'pinned',
+    });
+    expect(r.diff.moved).toEqual([{ id: 'todos:a#0', from: MON, to: WED, reason: 'pinned' }]);
+    // Fixpoint, and the same without a previous plan (a new thing with a pin).
+    const again = plan({ today: MON, days, items, prev: r.assignments, settings: H });
+    expect(shape(again)).toEqual(shape(r));
+    expect(again.diff.moved).toHaveLength(0);
+    expect(shape(plan({ today: MON, days, items, settings: H }))).toEqual(shape(r));
+  });
+
+  it('a later pin also holds against a hard due before it (the thing is reported late) and moves every session', () => {
+    const WED = '2026-11-11';
+    const late = plan({
+      today: MON,
+      days: week(),
+      items: [item('d', { durationMin: 30, pinned: WED, due: { date: MON, hard: true } })],
+      settings: H,
+    });
+    expect(late.assignments[0]).toMatchObject({ date: WED, reason: 'pinned', late: true });
+    const split = plan({
+      today: MON,
+      days: week(),
+      items: [item('s', { durationMin: 120, pinned: WED, splittable: true })],
+      settings: { ...H, maxSessionMin: 60 },
+    });
+    expect(split.assignments.map((a) => [a.id, a.date])).toEqual([
+      ['todos:s#0', WED],
+      ['todos:s#1', '2026-11-12'],
+    ]);
+    // Planned Mon/Tue before, then pinned: session 1 moves for the pin, session 2 because it follows it.
+    const sessions = { ...H, maxSessionMin: 60 };
+    const loose = [item('s', { durationMin: 120, splittable: true })];
+    const was = plan({ today: MON, days: week(), items: loose, settings: sessions });
+    expect(was.assignments.map((a) => a.date)).toEqual([MON, '2026-11-10']);
+    const moved = plan({
+      today: MON,
+      days: week(),
+      items: [item('s', { durationMin: 120, pinned: WED, splittable: true })],
+      prev: was.assignments,
+      settings: sessions,
+    });
+    expect(moved.diff.moved).toEqual([
+      { id: 'todos:s#0', from: MON, to: WED, reason: 'pinned' },
+      {
+        id: 'todos:s#1',
+        from: '2026-11-10',
+        to: '2026-11-12',
+        reason: 'after-part',
+        by: ['todos:s#0'],
+      },
+    ]);
+    expect(moved.assignments[1]).toMatchObject({ reason: 'after-part', bumpedBy: ['todos:s#0'] });
+  });
+
+  it('a pin to an earlier day reports the pin as the cause of the move', () => {
+    const THU = '2026-11-12';
+    const days = week();
+    const was = plan({
+      today: MON,
+      days,
+      items: [item('e', { durationMin: 30, earliest: THU })],
+      settings: H,
+    });
+    expect(was.assignments[0]).toMatchObject({ date: THU });
+    const r = plan({
+      today: MON,
+      days,
+      items: [item('e', { durationMin: 30, earliest: THU, pinned: MON })],
+      prev: was.assignments,
+      settings: H,
+    });
+    expect(r.diff.moved).toEqual([{ id: 'todos:e#0', from: THU, to: MON, reason: 'pinned' }]);
+  });
+
+  it('a pin on the last day of the horizon leaves a second session waiting (`horizon`)', () => {
+    const r = plan({
+      today: MON,
+      days: week([240, 240, 240, 240, 240, 240, 240]),
+      items: [item('z', { durationMin: 120, pinned: '2026-11-15', splittable: true })],
+      settings: { ...H, maxSessionMin: 60 },
+    });
+    expect(r.assignments.map((a) => [a.id, a.date])).toEqual([['todos:z#0', '2026-11-15']]);
+    expect(r.unplaced).toMatchObject([{ id: 'todos:z#1', reason: 'horizon' }]);
+  });
+
+  it('a pin outside the horizon holds nothing back (as before)', () => {
+    const r = plan({
+      today: MON,
+      days: week(),
+      items: [item('p', { durationMin: 30, pinned: '2026-12-24' })],
+      settings: H,
+    });
+    expect(r.assignments[0]).toMatchObject({ date: MON });
+  });
+
   it('a pin beats a date that only says "not before"', () => {
     const r = plan({
       today: MON,

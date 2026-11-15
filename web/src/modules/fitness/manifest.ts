@@ -24,7 +24,7 @@ const manifest: ModuleManifest = {
     tabs: true,
     signature: 'dumbbell',
   },
-  version: 2,
+  version: 4,
   get description() {
     return t.fitness.meta.description;
   },
@@ -62,7 +62,7 @@ const manifest: ModuleManifest = {
   dataApi: false,
   defaultEnabled: false,
   maturity: 'preview',
-  seed: { version: 3, dependsOn: [] },
+  seed: { version: 4, dependsOn: [] },
   layout: 'content',
   order: 98,
   area: 'household',

@@ -1,5 +1,5 @@
 {
-  "version": 37,
+  "version": 38,
   "stores": {
     "_aiCache": "key, createdAt",
     "_aiUsage": "++id, at",
@@ -7,6 +7,7 @@
     "_blobs": "key",
     "_conflicts": "++id, at, status",
     "_imports": "id, createdAt, moduleId",
+    "_links": "id, updatedAt, fromKey, toKey",
     "_meta": "key",
     "_modules": "id, updatedAt",
     "_outbox": "[collection+id], queuedAt",

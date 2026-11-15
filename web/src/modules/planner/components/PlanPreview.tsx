@@ -11,7 +11,20 @@ export interface PreviewData {
   note?: string;
   /** No counts beside the groups („Rest verteilen“ never counts what was left). */
   noCounts?: boolean;
+  /** Item key → its deadline ('YYYY-MM-DD'): a move past it says so (C5, CHECK-1-3). */
+  dues?: Readonly<Record<string, string>>;
   diff: PlanDiff;
+}
+
+/** The deadline a move from `from` to `to` crosses, else `undefined` (unit id `<module>:<id>#<k>`). */
+export function pastDue(
+  unitId: string,
+  from: string,
+  to: string,
+  dues: Readonly<Record<string, string>> | undefined,
+): string | undefined {
+  const due = dues?.[unitId.slice(0, unitId.lastIndexOf('#'))];
+  return due && from <= due && to > due ? due : undefined;
 }
 
 /** The cause of a move in the preview: who took the room, the part it follows, or the day's time. */
@@ -31,6 +44,8 @@ function cause(
       return t.planner.preview.earlier;
     case 'carried':
       return t.planner.preview.later;
+    case 'pinned':
+      return r.pinned;
     case 'done':
       return undefined;
   }
@@ -71,16 +86,23 @@ export function PlanPreview({
             countHidden: data.noCounts === true,
             children: (
               <ItemList>
-                {moved.map((m) => (
-                  <ItemRow
-                    key={m.id}
-                    title={nameOf(m.id)}
-                    titleFull
-                    meta={[p.move(dayName(m.from), dayName(m.to)), cause(m, nameOf)]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  />
-                ))}
+                {moved.map((m) => {
+                  // A move past the deadline names it instead of the day's time: nothing moves silently.
+                  const due = pastDue(m.id, m.from, m.to, data.dues);
+                  return (
+                    <ItemRow
+                      key={m.id}
+                      title={nameOf(m.id)}
+                      titleFull
+                      meta={[
+                        p.move(dayName(m.from), dayName(m.to)),
+                        due ? p.pastDue(dayName(due)) : cause(m, nameOf),
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    />
+                  );
+                })}
               </ItemList>
             ),
           },

@@ -6,6 +6,7 @@ import { COVER_PX } from '../useCover';
 import { Cover } from './Cover';
 import type { PlayerApi } from './types';
 import styles from '../routes/music.module.css';
+import sx from './Spotify.module.css';
 
 const QUEUE_SHOWN = 5;
 
@@ -31,9 +32,20 @@ export function SideLists({ api }: { api: PlayerApi }) {
     <>
       {next.length > 0 ? (
         <section className={styles.asideCard} aria-labelledby="music-queue">
-          <h2 id="music-queue" className={styles.sectionTitle}>
-            {tm.queueTitle}
-          </h2>
+          {/* The queue has no tab of its own (five views under the stage): "Alle anzeigen" opens it whole. */}
+          <div className={styles.sectionHead}>
+            <h2 id="music-queue" className={styles.sectionTitle}>
+              {tm.queueTitle}
+            </h2>
+            <button
+              type="button"
+              className={`${sx.linkButton} ${styles.sectionLink}`}
+              aria-label={tm.queueAll}
+              onClick={() => api.open({ type: 'queue' })}
+            >
+              {tm.queueMore}
+            </button>
+          </div>
           <ol className={styles.queue} data-testid="music-queue">
             {next.map((item, i) => (
               <li key={`${item.id}-${i}`}>

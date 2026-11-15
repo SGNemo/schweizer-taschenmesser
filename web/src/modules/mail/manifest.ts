@@ -84,6 +84,8 @@ const manifest: ModuleManifest = {
   automation: () => import('./automation'),
   contributions: {
     onboarding: noOnboarding,
+    // What a link to one of these says about its target (alive, gone); read through `resolveLink` only.
+    linkTarget: () => import('./linkTarget'),
     // New-mail notifications: off until switched on in the module settings.
     services: () => import('./notifyService'),
     notifications: () => import('./notifications'),

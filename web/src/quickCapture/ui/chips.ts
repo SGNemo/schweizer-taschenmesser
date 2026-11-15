@@ -103,7 +103,14 @@ export function previewChips(
     { id: 'target', label: t.quickCapture.chip.to(t.quickCapture.target[type]) },
   ];
   if (fields.date && usesDate(type))
-    chips.push({ id: 'date', label: describeDate(fields.date, today) });
+    chips.push({
+      id: 'date',
+      // „bis So 18:00“ on a ToDo is a deadline: the chip says so (package 5b).
+      label:
+        type === 'todo' && fields.deadline
+          ? t.quickCapture.chip.planDue(describeDate(fields.date, today))
+          : describeDate(fields.date, today),
+    });
   if (fields.time && usesTime(type)) {
     const range = fields.endTime ? `${fields.time}–${fields.endTime}` : fields.time;
     chips.push({ id: 'time', label: t.time.atClock(range) });

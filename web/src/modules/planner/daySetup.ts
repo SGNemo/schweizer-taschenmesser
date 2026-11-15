@@ -1,15 +1,15 @@
 /**
  * „Tage einteilen“ (use case „Wochenende retten“, package 2): the pure parts of the three-step sheet – the
- * lines of the dump (one line = one thing), what each line becomes (the planner field's reading, so a line
- * says the same here as in the field), the in-memory plan items of the preview, the time chips and the
- * device-local draft of the dump. Nothing here writes to the database.
+ * lines of the dump (one line = one thing), what each line becomes (the quick capture's reading of a line,
+ * `readLine`, so a line says the same here as in a many-lines capture), the in-memory plan items of the
+ * preview, the time chips and the device-local draft of the dump. Nothing here writes to the database.
  */
 import type { PlanOp } from '@/core/plan/instructions';
 import type { PlanItem } from '@/core/plan/types';
 import { now } from '@/core/time/now';
-import type { CaptureFields } from '@/quickCapture/parser';
+import type { CaptureFields, CaptureType } from '@/quickCapture/parser';
 import { breakOf } from '@/quickCapture/targets';
-import { readField } from './dueWords';
+import { isReminder, readLine, reminderRow, type LineReadOptions } from '@/quickCapture/ui/batch';
 
 /** The chips of step 2 in minutes: „keine Zeit · 2 h · 4 h · 6 h · ganzer Tag“ (TARGET F1). */
 export const SETUP_CHIPS = [0, 120, 240, 360, 720] as const;
@@ -17,16 +17,24 @@ export const SETUP_CHIPS = [0, 120, 240, 360, 720] as const;
 /** How many days the sheet lays out: today and the next two. */
 export const SETUP_DAYS = 3;
 
-/** One thing of the dump, read like a line of the planner field. */
+/** One thing of the dump, read like a line of a many-lines quick capture. */
 export interface SetupThing {
   /** The key of its preview item (`new:<n>`); the stored ToDo gets its own id. */
   key: string;
+  /**
+   * Where the line goes, as the quick capture decides it: a ToDo, a Termin, a reminder (`once`), a break
+   * („Pause 2 Std Zocken“: a blocker of its day, never a ToDo) …
+   */
+  type: CaptureType;
   fields: CaptureFields;
-  /** „bis So“ / „Frist …“: the planner item's hard deadline. */
+  /** „bis So“: the ToDo's deadline, the planner item's hard due. */
   hardDue?: string;
-  /** „Pause 2 Std Zocken“: a blocker of its day (through the quick-capture target `break`), never a ToDo. */
-  isBreak?: true;
+  /** „bis So 18:00“: the deadline's hour ('HH:mm', package 5b). */
+  hardDueTime?: string;
 }
+
+/** What the sheet reads lines with: the capture's targets on this device (`useCaptureTypes`). */
+export type SetupRead = Pick<LineReadOptions, 'available' | 'fitness' | 'place' | 'breaks'>;
 
 /** The dump's lines without list markers and blanks (a pasted list „- Duschen“ reads as „Duschen“). */
 export function setupLines(text: string): string[] {
@@ -36,22 +44,38 @@ export function setupLines(text: string): string[] {
     .filter(Boolean);
 }
 
-/** Each line as the planner field reads it (German phrases only in German, like the field). */
-export function setupThings(text: string, today: string, de: boolean): SetupThing[] {
-  const at = new Date(now());
+/**
+ * Each line as a many-lines quick capture reads it (`readLine`, W23): „So 19 Uhr erinnere mich: …“ is a
+ * reminder on Sunday, „Mo 7:30 …“ a Termin on Monday, „… bis So 18:00“ a ToDo with its deadline and hour,
+ * „Pause …“ a break – each on the day it names. The sheet asks nothing: an unclear line is a ToDo as typed
+ * (the planner's own default, whatever the capture's default target is), a money line a ToDo with its amount
+ * (a batch never books), a payment reminder the ToDo „Mahnung … prüfen“ (no invoice lookup here).
+ */
+export function setupThings(text: string, read: SetupRead): SetupThing[] {
   return setupLines(text).flatMap((line, i) => {
-    const { fields, hardDue, isBreak } = readField(line, at, today, de);
+    const row = readLine(line, { ...read, defaultType: 'todo', noQuestion: true });
+    const plan = isReminder(row.type, row.fields)
+      ? reminderRow(row.type, row.fields, 'failed', read.available)
+      : row;
+    const type = plan.type ?? 'todo';
+    const fields = plan.fields;
     if (!fields.title?.trim()) return [];
+    const hardDue = type === 'todo' && fields.deadline ? fields.date : undefined;
     return [
       {
         key: `new:${i}`,
+        type,
         fields,
         ...(hardDue ? { hardDue } : {}),
-        ...(isBreak ? { isBreak } : {}),
+        ...(hardDue && fields.time ? { hardDueTime: fields.time } : {}),
       },
     ];
   });
 }
+
+/** The things the plan takes as items: the ToDos (a Termin, a reminder or a break is no thing to distribute). */
+export const setupTasks = (things: readonly SetupThing[]): SetupThing[] =>
+  things.filter((th) => th.type === 'todo');
 
 /**
  * The things as plan items for the preview's dry run – what the ToDos source will report for them once
@@ -60,21 +84,19 @@ export function setupThings(text: string, today: string, de: boolean): SetupThin
  * (`breakOps` blocks its day).
  */
 export function previewItems(things: readonly SetupThing[], at: number): PlanItem[] {
-  return things
-    .filter((th) => !th.isBreak)
-    .map((th, i) => {
-      const f = th.fields;
-      const due = th.hardDue ?? f.date;
-      return {
-        key: th.key,
-        ...(f.estimateMin ? { durationMin: f.estimateMin } : {}),
-        priority: (f.priority ?? 0) as PlanItem['priority'],
-        ...(due ? { due: { date: due, hard: !!th.hardDue } } : {}),
-        ...(f.startDate ? { earliest: f.startDate } : {}),
-        splittable: true,
-        createdAt: at + i,
-      };
-    });
+  return setupTasks(things).map((th, i) => {
+    const f = th.fields;
+    const due = th.hardDue ?? f.date;
+    return {
+      key: th.key,
+      ...(f.estimateMin ? { durationMin: f.estimateMin } : {}),
+      priority: (f.priority ?? 0) as PlanItem['priority'],
+      ...(due ? { due: { date: due, hard: !!th.hardDue } } : {}),
+      ...(f.startDate ? { earliest: f.startDate } : {}),
+      splittable: true,
+      createdAt: at + i,
+    };
+  });
 }
 
 /**
@@ -86,7 +108,7 @@ export function breakOps(
   today: string,
 ): Extract<PlanOp, { op: 'block' }>[] {
   return things
-    .filter((th) => th.isBreak)
+    .filter((th) => th.type === 'break')
     .map((th) => {
       const b = breakOf(th.fields, { today });
       return {
@@ -109,6 +131,18 @@ export const gainsTime = (
   days: readonly { availableMin: number; date: string }[],
   chosen: Readonly<Record<string, number>>,
 ): boolean => days.some((d) => (chosen[d.date] ?? d.availableMin) > d.availableMin);
+
+/**
+ * C6 (CHECK-1-3): the day's appointments already take the chosen time – step 2 says so in one calm line (the chips
+ * stay as they are: time with appointments counted, as on the board).
+ */
+export const eventsFill = (
+  day: { blockers: readonly { min: number; calendar: boolean }[] },
+  min: number,
+): boolean => {
+  const events = day.blockers.filter((b) => b.calendar).reduce((sum, b) => sum + b.min, 0);
+  return min > 0 && events >= min;
+};
 
 /** Key → title of the preview items (the preview names its rows by them). */
 export const previewTitles = (things: readonly SetupThing[]): Record<string, string> =>

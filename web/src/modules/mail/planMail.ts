@@ -8,7 +8,7 @@
  */
 import { createCollectionRepo } from '@/core/db/repo';
 import { cleanSubject, mailPlanTitle } from '@/core/mail/prefill';
-import { mailWebUrl } from '@/core/mail/service';
+import { mailWebUrl, safeThreadId } from '@/core/mail/service';
 import type { MailAccountRef, MailAddress } from '@/core/mail/types';
 import { loadModuleStates } from '@/core/modules/activation';
 import { getManifest, visibleManifests } from '@/core/modules/registry';
@@ -324,10 +324,4 @@ export async function planMany(
   }
 }
 
-/**
- * `?open=<threadId>` is untrusted input (a link from a ToDo, the planner, or anywhere): only a plain
- * provider id passes – letters, digits, `_` and `-`, at most 128 characters. Everything else opens nothing.
- */
-export function safeThreadId(raw: string | null | undefined): string | undefined {
-  return raw && /^[A-Za-z0-9_-]{1,128}$/.test(raw) ? raw : undefined;
-}
+export { safeThreadId };
