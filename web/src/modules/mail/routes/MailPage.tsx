@@ -682,7 +682,7 @@ export default function MailPage() {
               <Chip
                 key={f}
                 label={t.mail.find.filter[f] ?? f}
-                selected={hasFilter(query, f)}
+                selected={hasFilter(draft, f)}
                 onClick={() => {
                   const next = toggleFilter(draft, f);
                   setRecent(rememberSearch(next));
