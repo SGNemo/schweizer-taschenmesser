@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { backupFileName, createBackup } from '@/core/backup/backup';
 import { downloadTextFile } from '@/core/backup/download';
 import { serializeSealedBackup } from '@/core/backup/encrypted';
+import { BackupExportDialog } from '@/core/backup/BackupExport';
+import { useSecurityPrefs } from '@/core/security/prefs';
 import { getPlatform } from '@/core/platform';
 import type { SetupStepProps } from '@/core/setup/types';
 import { loadPrefs, savePrefs, type UpdatePrefs } from '@/core/update/prefs';
@@ -15,6 +17,9 @@ const s = t.setup.steps.backupupdates;
 export default function BackupUpdatesStep({ registerCommit }: SetupStepProps) {
   const toast = useUiStore((st) => st.toast);
   const native = getPlatform().isNative;
+  // "Nur verschlüsselte Backups": the button opens the password form instead of writing a readable file.
+  const { encryptedOnly } = useSecurityPrefs();
+  const [exporting, setExporting] = useState(false);
   const [prefs, setPrefs] = useState<UpdatePrefs | undefined>();
   const [draft, setDraft] = useState<UpdatePrefs | undefined>();
 
@@ -43,7 +48,10 @@ export default function BackupUpdatesStep({ registerCommit }: SetupStepProps) {
   return (
     <>
       <div>
-        <Button onClick={() => void backupNow()}>{s.backupNow}</Button>
+        <Button onClick={() => (encryptedOnly ? setExporting(true) : void backupNow())}>
+          {s.backupNow}
+        </Button>
+        <BackupExportDialog open={exporting} onClose={() => setExporting(false)} />
         <p className={patternStyles.muted}>{s.autoNote}</p>
       </div>
       {!native ? <p>{s.browser}</p> : null}

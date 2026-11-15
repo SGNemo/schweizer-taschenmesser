@@ -8,12 +8,14 @@ import { markFreshDefaults } from '@/core/modules/defaults';
 import { decideFreshStart, ensureSetupState } from '@/core/setup/detect';
 import { startAutomation } from '@/core/automation/start';
 import { startHistory } from '@/core/settings/history';
+import { startScreenGuard } from '@/core/security/screen';
 import { startProfileScheduler } from '@/core/settings/profiles';
 import { useUiStore } from '@/stores/ui';
 
 let stopHistory: (() => void) | undefined;
 let stopScheduler: (() => void) | undefined;
 let stopAutomation: (() => void) | undefined;
+let stopScreenGuard: (() => void) | undefined;
 
 /**
  * One-time app start work: storage persistence and pending module migrations. `start` is the "fresh
@@ -24,6 +26,8 @@ export async function initCore(
 ): Promise<void> {
   // The change history listens from the very start, so a change made while the app is still waking up counts too.
   if (!stopHistory && typeof localStorage !== 'undefined') stopHistory = startHistory();
+  // "Bildschirmschutz: überall" (Android) from the very start, before any data shows.
+  if (!stopScreenGuard && typeof localStorage !== 'undefined') stopScreenGuard = startScreenGuard();
   // A really empty app (no setup state, no data) is a fresh installation: it gets the calm defaults. The answer is
   // noted in `_meta` when it is decided, so a first start closed or reloaded before the steps below keeps it.
   const fresh = await start;

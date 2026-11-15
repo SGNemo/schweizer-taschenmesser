@@ -12,6 +12,11 @@
         "label": "Tresor sperren, wenn die App im Hintergrund ist",
         "default": "now"
       },
+      "clipboardSeconds": {
+        "type": "select",
+        "label": "Kopiertes aus der Zwischenablage löschen",
+        "default": "30"
+      },
       "originMatch": {
         "type": "select",
         "label": "Browser-Erweiterung: Zugangsdaten anbieten für",

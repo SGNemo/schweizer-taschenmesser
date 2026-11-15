@@ -499,14 +499,14 @@
     },
     "d1920--settings-sicherheit": {
       "height": 1110,
-      "buttons": 22,
-      "links": 26,
-      "icons": 37,
-      "firstScreenActions": 47,
+      "buttons": 25,
+      "links": 34,
+      "icons": 40,
+      "firstScreenActions": 56,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
-      "colouredAboveFold": 5,
+      "colouredAboveFold": 6,
       "signatureBlocks": 0
     },
     "d1920--settings-sync": {
@@ -1062,11 +1062,11 @@
       "signatureBlocks": 0
     },
     "p412--settings-sicherheit": {
-      "height": 915,
-      "buttons": 16,
-      "links": 6,
-      "icons": 12,
-      "firstScreenActions": 14,
+      "height": 1364,
+      "buttons": 20,
+      "links": 11,
+      "icons": 16,
+      "firstScreenActions": 20,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
