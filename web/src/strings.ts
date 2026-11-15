@@ -9148,13 +9148,15 @@ export const de = {
       },
       wait: 'Warten',
       done: {
-        shutDown: 'Der PC fährt herunter. Fragt ein Programm noch nach dem Speichern, bleibt er an.',
+        shutDown:
+          'Der PC fährt herunter. Fragt ein Programm noch nach dem Speichern, bleibt er an.',
         restart: 'Der PC startet neu. Fragt ein Programm noch nach dem Speichern, bleibt er an.',
         sleep: 'Der PC geht in den Energiesparmodus.',
         hibernate: 'Der PC geht in den Ruhezustand.',
         signOut:
           'Am PC wird abgemeldet. Fragt ein Programm noch nach dem Speichern, bleibt die Sitzung offen.',
-        unknown: 'Der PC schaltet sich aus. Fragt ein Programm noch nach dem Speichern, bleibt er an.',
+        unknown:
+          'Der PC schaltet sich aus. Fragt ein Programm noch nach dem Speichern, bleibt er an.',
       },
       cancelled: 'Abgebrochen. Der PC bleibt an.',
       notGranted:

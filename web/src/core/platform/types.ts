@@ -286,12 +286,7 @@ export type RemoteAction =
 
 /** Power at the PC (each but `cancel` runs only after the PC's 10 s countdown). A fixed list. */
 export type RemotePowerAction =
-  | 'sleep'
-  | 'hibernate'
-  | 'sign-out'
-  | 'restart'
-  | 'shut-down'
-  | 'cancel';
+  'sleep' | 'hibernate' | 'sign-out' | 'restart' | 'shut-down' | 'cancel';
 
 /**
  * What the PC says about power – to an action, or unasked (the countdown ran out, or was stopped
@@ -439,12 +434,7 @@ export interface RemoteService {
    * Rejects with `no-power` (the PC has no power), `bad-action`, `unlock-cancelled`,
    * `unlock-failed`, `unlock-unavailable`, `unlock-busy`, `closed`, `network`.
    */
-  power(
-    session: number,
-    action: RemotePowerAction,
-    despite: boolean,
-    lang?: string,
-  ): Promise<void>;
+  power(session: number, action: RemotePowerAction, despite: boolean, lang?: string): Promise<void>;
   close(session: number): Promise<void>;
 }
 

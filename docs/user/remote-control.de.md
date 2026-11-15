@@ -39,6 +39,15 @@ Solange der PC gesperrt ist, gehen nur Medien und Lautstärke. Das Handy sieht n
 - **Tastatur:** Text am Handy tippen, lesen und dann senden. Der Text wird nirgends gespeichert.
 - **Auf der Übersicht:** Die Karte _Fernbedienung_ hat eine Taste _Wiedergabe / Pause_. Ein Tipp verbindet und sendet. Dauert das Verbinden länger, sagt die Karte das; steht die Verbindung danach, tippe noch einmal. Die Karte verbindet sich nie von selbst.
 
+## PC ausschalten
+
+- **Am PC erlauben:** unter _Einstellungen → Verbindungen → Fernsteuerung_ beim Gerät _Darf den PC ausschalten_ (ab Werk aus, der PC fragt noch einmal nach).
+- **Am Handy:** Menü _⋯ → PC ausschalten …_, dann _Ausschalten_, _Neu starten_ oder _Energie sparen_ (darunter, leiser: _Ruhezustand_, wo der PC ihn hat, und _Abmelden_). Die eigene Abfrage des Handys (Fingerabdruck, Gesicht oder PIN) ist die Bestätigung.
+- **10 Sekunden am PC:** Der PC zeigt einen Countdown mit _Abbrechen_; auch das Handy kann abbrechen. Nichts wird erzwungen: Fragt ein Programm noch nach dem Speichern, bleibt der PC an.
+- Geht nur, solange der PC entsperrt ist. Ist Nemo am PC noch beschäftigt (Abgleich, Download, Sicherung), sagt das Handy das vorher: _Trotzdem ausschalten_ oder _Warten_.
+- Zweimal innerhalb einer Stunde am PC abgebrochen, ist das Ausschalten für dieses Handy wieder aus.
+- _Monitor aus_ (im selben Menü) schaltet nur den Bildschirm aus, ohne Countdown.
+
 ## Beenden und wieder einschalten
 
 - Am PC zeigt Nemo immer an, wenn ein Gerät steuert: im Fenster oben und am Symbol neben der Uhr.

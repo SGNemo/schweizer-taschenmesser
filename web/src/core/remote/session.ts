@@ -300,7 +300,10 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
             : { kind: 'refused', reason: 'failed' },
         );
       case 'cancelled':
-        return setPower({ info: info && { ...info, pending: false }, phase: { kind: 'cancelled' } });
+        return setPower({
+          info: info && { ...info, pending: false },
+          phase: { kind: 'cancelled' },
+        });
       case 'done':
         return setPower({
           info: info && { ...info, pending: false },

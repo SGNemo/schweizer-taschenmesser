@@ -155,7 +155,8 @@ export const remote: Strings['remote'] = {
       restart: 'The PC is restarting. If a program still asks about saving, it stays on.',
       sleep: 'The PC is going to sleep.',
       hibernate: 'The PC is hibernating.',
-      signOut: 'The PC is signing out. If a program still asks about saving, the session stays open.',
+      signOut:
+        'The PC is signing out. If a program still asks about saving, the session stays open.',
       unknown: 'The PC is switching off. If a program still asks about saving, it stays on.',
     },
     cancelled: 'Cancelled. The PC stays on.',
