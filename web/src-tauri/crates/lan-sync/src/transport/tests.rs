@@ -1081,6 +1081,7 @@ mod input_client {
             match events.recv_timeout(Duration::from_millis(50)) {
                 Ok(Event::State(_)) => states += 1,
                 Ok(closed @ Event::Closed(_)) => break closed,
+                Ok(Event::Power(_)) => panic!("nobody asked about power"),
                 Err(_) => {}
             }
             assert!(began.elapsed() < WAIT, "never closed");

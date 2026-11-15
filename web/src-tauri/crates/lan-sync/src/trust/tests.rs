@@ -200,6 +200,7 @@ fn a_grant_belongs_to_an_active_device_and_goes_with_it() {
         level: Level::Full,
         paused: false,
         unlock: true,
+        power: false,
     };
     trust.set_remote(&a, full).unwrap();
     assert_eq!(trust.remote_of(&a), full);
@@ -224,6 +225,30 @@ fn a_grant_belongs_to_an_active_device_and_goes_with_it() {
     );
     assert!(!paused.widens(&full) && !RemoteGrant::default().widens(&full));
     assert!(!full.widens(&full));
+    // power is its own permission: allowing it widens, taking it away does not; it counts only
+    // with a level and without a pause
+    let power = RemoteGrant {
+        power: true,
+        ..full
+    };
+    assert!(power.widens(&full), "allowing power");
+    assert!(!full.widens(&power));
+    assert!(power.power_effective() && !full.power_effective());
+    assert!(!RemoteGrant {
+        paused: true,
+        ..power
+    }
+    .power_effective());
+    assert!(!RemoteGrant {
+        level: Level::Off,
+        ..power
+    }
+    .power_effective());
+    assert!(RemoteGrant {
+        level: Level::Media,
+        ..power
+    }
+    .power_effective());
     // revoked: the grant is gone and cannot be set again
     trust.revoke(&a).unwrap();
     assert_eq!(trust.remote_of(&a), RemoteGrant::default());

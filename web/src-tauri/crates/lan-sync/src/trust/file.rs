@@ -25,6 +25,9 @@ struct FileDevice {
     remote_paused: bool,
     #[serde(default = "yes", rename = "remoteUnlock")]
     remote_unlock: bool,
+    /// Power actions allowed (missing in older files = no).
+    #[serde(default, rename = "remotePower")]
+    remote_power: bool,
 }
 
 fn level_off() -> String {
@@ -124,6 +127,7 @@ impl FileTrustStore {
                                 level,
                                 paused: d.remote_paused,
                                 unlock: d.remote_unlock,
+                                power: d.remote_power,
                             },
                         )
                         .map_err(|_| OpenError::Corrupt)?;
@@ -157,6 +161,7 @@ impl FileTrustStore {
                         remote: level_name(grant.level).to_owned(),
                         remote_paused: grant.paused,
                         remote_unlock: grant.unlock,
+                        remote_power: grant.power,
                     }
                 })
                 .collect(),
@@ -350,6 +355,7 @@ mod tests {
             level: Level::Full,
             paused: true,
             unlock: false,
+            power: false,
         };
         {
             let s = FileTrustStore::open(&path).unwrap();
@@ -361,6 +367,7 @@ mod tests {
                 &dev(2).key,
                 RemoteGrant {
                     level: Level::Media,
+                    power: true,
                     ..RemoteGrant::default()
                 },
             )
@@ -375,8 +382,10 @@ mod tests {
         assert_eq!(s.remote_of(&dev(1).key), full_paused);
         assert_eq!(s.remote_of(&dev(2).key).level, Level::Media);
         assert!(s.remote_of(&dev(2).key).unlock);
+        assert!(text.contains(r#""remotePower":true"#));
+        assert!(s.remote_of(&dev(2).key).power && !s.remote_of(&dev(1).key).power);
         assert_eq!(s.remote_of(&dev(3).key), RemoteGrant::default(), "revoked");
-        // nothing about use is in the file: only the three settings per device
+        // nothing about use is in the file: only the four settings per device
         for word in ["remoteUsed", "usedAt", "lastInput", "lastRemote"] {
             assert!(!text.contains(word), "{word}");
         }

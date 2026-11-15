@@ -42,6 +42,9 @@ pub struct RemoteGrant {
     pub paused: bool,
     /// The PC asks the phone to unlock itself before a `Full` session.
     pub unlock: bool,
+    /// Power actions (shut down, restart, sleep, hibernate, sign out). Its own permission, apart
+    /// from the level; it counts only with at least the media level and no pause.
+    pub power: bool,
 }
 
 impl RemoteGrant {
@@ -55,9 +58,17 @@ impl RemoteGrant {
     }
 
     /// Whether going from `old` to `self` gives or gives back control in any way (a higher level,
-    /// lifting a pause, dropping the unlock request).
+    /// lifting a pause, dropping the unlock request, allowing power actions).
     pub fn widens(&self, old: &RemoteGrant) -> bool {
-        self.level > old.level || (old.paused && !self.paused) || (old.unlock && !self.unlock)
+        self.level > old.level
+            || (old.paused && !self.paused)
+            || (old.unlock && !self.unlock)
+            || (self.power && !old.power)
+    }
+
+    /// Whether power actions are allowed now: the flag, at least the media level, no pause.
+    pub fn power_effective(&self) -> bool {
+        self.power && self.effective() >= Level::Media
     }
 }
 
@@ -67,6 +78,7 @@ impl Default for RemoteGrant {
             level: Level::Off,
             paused: false,
             unlock: true,
+            power: false,
         }
     }
 }

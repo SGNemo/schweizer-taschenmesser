@@ -16,12 +16,21 @@
 //! nothing stays held.) A release of a button this session does not hold is an ordinary event:
 //! limited, and not applied on a locked PC.
 //!
+//! Power (a phone that asked for [`wire::FEATURE_POWER`] in its `open`): one action per frame,
+//! one answer per frame. The gate here asks the session, the device's power permission and the
+//! lock state; `Cancel` always passes. The countdown itself, and how often one may start, are the
+//! sink's (they outlive a session). Monitor off is a media record, accepted only from a phone that
+//! asked for the feature.
+//!
 //! Nothing here touches the sync store, sets a grant or records anything.
 
 use super::limits::{Limits, Verdict};
 use super::remote::{Claimed, Ended, Flag, Remote};
 use super::sink::{Action, InputSink};
-use super::wire::{self, Button, Code, Level, Opened, PcState, Record};
+use super::wire::{
+    self, Button, Code, Level, Media, Opened, OpenedExt, PcState, Power, PowerAnswer, PowerInfo,
+    Record,
+};
 use crate::noise::PublicKey;
 use crate::trust::SessionHandle;
 use std::sync::Arc;
@@ -61,6 +70,10 @@ struct Live {
     answer_due: bool,
     told: PcState,
     told_at: Duration,
+    /// The phone asked for power (and this PC accepted it).
+    power: bool,
+    /// The newest countdown news the phone has heard of (or that came before it opened).
+    news_seen: u64,
 }
 
 pub struct InputConn {
@@ -140,19 +153,22 @@ impl InputConn {
         let step = match &mut self.phase {
             Phase::Live(live) => match Self::still_allowed(&self.remote, &self.peer, live) {
                 Err(step) => step,
-                Ok(()) => {
-                    let state = self.sink.state();
-                    if (state != live.told || live.answer_due)
-                        && now.saturating_sub(live.told_at) >= STATE_INTERVAL
-                    {
-                        live.told = state;
-                        live.told_at = now;
-                        live.answer_due = false;
-                        Step::Reply(wire::TAG_STATE, wire::encode_state(state).to_vec())
-                    } else {
-                        Step::Continue
+                Ok(()) => match Self::news(&*self.sink, &self.peer, live) {
+                    Some(step) => step,
+                    None => {
+                        let state = self.sink.state();
+                        if (state != live.told || live.answer_due)
+                            && now.saturating_sub(live.told_at) >= STATE_INTERVAL
+                        {
+                            live.told = state;
+                            live.told_at = now;
+                            live.answer_due = false;
+                            Step::Reply(wire::TAG_STATE, wire::encode_state(state).to_vec())
+                        } else {
+                            Step::Continue
+                        }
                     }
-                }
+                },
             },
             // before `open` the PC has nothing to say (a switch that is off is the answer to `open`)
             _ => Step::Continue,
@@ -166,9 +182,10 @@ impl InputConn {
     }
 
     fn try_open(&mut self, body: &[u8], now: Duration) -> Step {
-        let Ok(asked) = wire::decode_open(body) else {
+        let Ok((asked, features)) = wire::decode_open(body) else {
             return Step::Close;
         };
+        let power = features.is_some_and(|f| f & wire::FEATURE_POWER != 0);
         // what the machine can do at all comes first: on a PC that cannot be controlled, "allow it
         // at the PC" would send the user on a pointless errand
         if !self.sink.supported() {
@@ -200,14 +217,29 @@ impl InputConn {
                     answer_due: false,
                     told: state,
                     told_at: now,
+                    power,
+                    // what happened before this session is not news to it
+                    news_seen: self.sink.power_news().map_or(0, |(n, _, _)| n),
                 }));
+                let ext = features.map(|features| {
+                    let (pending, hibernate) = self.sink.power_info();
+                    OpenedExt {
+                        features,
+                        power: PowerInfo {
+                            granted: grant.power_effective(),
+                            pending,
+                            hibernate,
+                        },
+                    }
+                });
                 let opened = Opened {
                     level,
                     grant: grant.level,
                     unlock_required: grant.unlock && grant.level == Level::Full,
                     state,
+                    ext,
                 };
-                Step::Reply(wire::TAG_OPENED, wire::encode_opened(opened).to_vec())
+                Step::Reply(wire::TAG_OPENED, wire::encode_opened(opened))
             }
         }
     }
@@ -252,6 +284,10 @@ impl InputConn {
                 };
                 // the whole frame is judged before anything of it acts
                 if live.level != Level::Full && records.iter().any(|r| r.needs_full()) {
+                    return Step::Close;
+                }
+                // monitor off belongs to a phone that asked for power
+                if !live.power && records.contains(&Record::Media(Media::MonitorOff)) {
                     return Step::Close;
                 }
                 for r in records {
@@ -304,9 +340,54 @@ impl InputConn {
                 }
                 Step::Continue
             }
-            // a sync tag, a PC → phone tag, a second `open`, anything unknown
+            wire::TAG_POWER if live.power => {
+                let Ok((power, despite)) = wire::decode_power(body) else {
+                    return Step::Close;
+                };
+                let answer = if power == Power::Cancel {
+                    // stopping is always allowed and costs nothing
+                    sink.power(peer, power, false)
+                } else if !remote.grant_of(peer).power_effective() {
+                    PowerAnswer::NotGranted
+                } else if sink.state().locked {
+                    PowerAnswer::Locked
+                } else {
+                    match live.limits.power(now) {
+                        Verdict::Pass => sink.power(peer, power, despite),
+                        Verdict::Drop => PowerAnswer::Limit,
+                        Verdict::Flood => return closed(Code::Limit),
+                    }
+                };
+                // the answer stands for the news it may carry: not told twice
+                if matches!(answer, PowerAnswer::Cancelled) {
+                    live.news_seen = sink.power_news().map_or(live.news_seen, |(n, _, _)| n);
+                }
+                Step::Reply(
+                    wire::TAG_POWER_ANSWER,
+                    wire::encode_power_answer(answer).to_vec(),
+                )
+            }
+            // a sync tag, a PC → phone tag, a second `open`, power without asking, anything unknown
             _ => Step::Close,
         }
+    }
+
+    /// Countdown news of this device that the phone has not heard yet.
+    fn news(sink: &dyn InputSink, peer: &PublicKey, live: &mut Live) -> Option<Step> {
+        if !live.power {
+            return None;
+        }
+        let (n, device, answer) = sink.power_news()?;
+        if n <= live.news_seen {
+            return None;
+        }
+        live.news_seen = n;
+        (device == *peer).then(|| {
+            Step::Reply(
+                wire::TAG_POWER_ANSWER,
+                wire::encode_power_answer(answer).to_vec(),
+            )
+        })
     }
 
     /// A closing step ends the session for good: its buttons are let go and the slot is freed.
