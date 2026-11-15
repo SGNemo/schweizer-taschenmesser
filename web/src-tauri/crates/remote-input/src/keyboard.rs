@@ -2,7 +2,7 @@
 //! `pointer.rs` are the simulated input of this crate, and all of it** – here the keyboard part
 //! of `SendInput`, nothing else (no window message, no hook, no clipboard).
 //!
-//! * There is no "any key". A [`Key`] is one of sixteen; the one combination among them
+//! * There is no "any key". A [`Key`] is one of eighteen; the one combination among them
 //!   (Alt+Tab) is one id, pressed and released inside one call: every call carries the release
 //!   of everything it presses, and if the system took only part of a call, the releases are
 //!   sent once more on their own (the system takes a call whole or not at all in practice).
@@ -51,10 +51,14 @@ pub enum Key {
     F11,
     /// Switch window: Alt held while Tab is pressed once, then both released.
     AltTab,
+    /// Start the slideshow (presentation).
+    F5,
+    /// The letter key B, no modifier: black screen in a slideshow (presentation).
+    B,
 }
 
 /// Every key of the list (tests walk it).
-pub const KEYS: [Key; 16] = [
+pub const KEYS: [Key; 18] = [
     Key::Enter,
     Key::Escape,
     Key::Backspace,
@@ -71,9 +75,11 @@ pub const KEYS: [Key; 16] = [
     Key::Delete,
     Key::F11,
     Key::AltTab,
+    Key::F5,
+    Key::B,
 ];
 
-/// One key of the keyboard itself: the fifteen plain keys of the list, and Alt (which exists
+/// One key of the keyboard itself: the seventeen plain keys of the list, and Alt (which exists
 /// only as the one half of [`Key::AltTab`]).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Code {
@@ -93,6 +99,8 @@ pub enum Code {
     Delete,
     F11,
     Alt,
+    F5,
+    B,
 }
 
 /// One event the system is handed: a key of the keyboard, or one unit of text – down or up.
@@ -121,6 +129,8 @@ fn chord(key: Key) -> &'static [Code] {
         Key::Delete => &[Code::Delete],
         Key::F11 => &[Code::F11],
         Key::AltTab => &[Code::Alt, Code::Tab],
+        Key::F5 => &[Code::F5],
+        Key::B => &[Code::B],
     }
 }
 
@@ -258,9 +268,9 @@ mod imp {
     use super::{Code, Keys, Stroke};
     use windows::Win32::UI::Input::KeyboardAndMouse::{
         SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYBD_EVENT_FLAGS,
-        KEYEVENTF_EXTENDEDKEY, KEYEVENTF_KEYUP, KEYEVENTF_UNICODE, VIRTUAL_KEY, VK_BACK, VK_DELETE,
-        VK_DOWN, VK_END, VK_ESCAPE, VK_F11, VK_HOME, VK_LEFT, VK_MENU, VK_NEXT, VK_PRIOR,
-        VK_RETURN, VK_RIGHT, VK_SPACE, VK_TAB, VK_UP,
+        KEYEVENTF_EXTENDEDKEY, KEYEVENTF_KEYUP, KEYEVENTF_UNICODE, VIRTUAL_KEY, VK_B, VK_BACK,
+        VK_DELETE, VK_DOWN, VK_END, VK_ESCAPE, VK_F11, VK_F5, VK_HOME, VK_LEFT, VK_MENU, VK_NEXT,
+        VK_PRIOR, VK_RETURN, VK_RIGHT, VK_SPACE, VK_TAB, VK_UP,
     };
 
     pub fn native() -> Option<Box<dyn Keys>> {
@@ -289,6 +299,8 @@ mod imp {
             Code::Delete => (VK_DELETE, true),
             Code::F11 => (VK_F11, false),
             Code::Alt => (VK_MENU, false),
+            Code::F5 => (VK_F5, false),
+            Code::B => (VK_B, false),
         }
     }
 

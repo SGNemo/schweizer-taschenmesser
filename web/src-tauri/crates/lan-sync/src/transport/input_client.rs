@@ -35,7 +35,8 @@
 //!   names those the PC accepted (`Opened::ext`). A PC from before features closes on that `open`
 //!   without a word – then the session is opened once more the old way (`ext: None`), so an
 //!   updated phone keeps everything an older PC can do. Nothing of a feature is sent to a PC that
-//!   did not accept it (`send_power` refuses with `Protocol`).
+//!   did not accept it (`send_power`, and `send_events` with monitor off or a presentation key,
+//!   refuse with `Protocol`).
 //! * A send error is never a state to show: `Closed` means this session is over (see its
 //!   `Event::Closed`, or just open again), `Network` that the write failed.
 
@@ -284,6 +285,10 @@ impl InputSession {
         if !self.has_power() && records.contains(&Record::Media(wire::Media::MonitorOff)) {
             return Err(InputError::Protocol);
         }
+        // the presentation keys only to a PC that accepted them (the same)
+        if !self.has_present() && records.iter().any(Record::needs_present) {
+            return Err(InputError::Protocol);
+        }
         for chunk in records.chunks(wire::MAX_RECORDS) {
             let body = wire::encode_events(chunk).ok_or(InputError::Protocol)?;
             self.send(wire::TAG_EVENTS, &body)?;
@@ -301,6 +306,11 @@ impl InputSession {
     /// Whether the PC accepted power (power frames, monitor off, the power answer).
     pub fn has_power(&self) -> bool {
         self.features & wire::FEATURE_POWER != 0
+    }
+
+    /// Whether the PC accepted the presentation keys (F5, B).
+    pub fn has_present(&self) -> bool {
+        self.features & wire::FEATURE_PRESENT != 0
     }
 
     /// Sends one power action. Its answer comes as `Event::Power`. `Protocol` on a PC that did

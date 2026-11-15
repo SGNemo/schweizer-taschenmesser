@@ -190,6 +190,22 @@
   background: transparent;
   color: var(--text-muted);
 }
+/* Präsentation: the state and the hint on top, the keys at the bottom in the thumb zone –
+   Weiter twice as wide as Zurück, both taller than every other key. */
+.slidesView {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.slideRow {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--space-3);
+}
+.slideKey {
+  min-height: calc(var(--touch) * 2.5);
+}
 /* Sideways on a phone: the pad and the strips side by side, as tall as the screen leaves below
    the head that stays in place (about 11rem) – scrolled into view both are fully visible. The
    legend would take the whole height: it waits for upright. */

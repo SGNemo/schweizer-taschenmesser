@@ -1218,7 +1218,7 @@ fn an_older_phone_gets_the_old_opened_and_a_newer_one_learns_its_power() {
     b.sink.pending.store(true, Ordering::SeqCst);
     let (_c, new) = b.opened_power(PHONE, Level::Media);
     let ext = new.ext.unwrap();
-    assert_eq!(ext.features, wire::FEATURE_POWER);
+    assert_eq!(ext.features, wire::FEATURES);
     assert_eq!(
         ext.power,
         PowerInfo {
@@ -1433,3 +1433,88 @@ fn no_power_frame_is_free_without_end_not_even_cancel_or_a_refusal() {
     assert_eq!(closed_with(&last), Code::Limit);
     assert!(b.sink.powers().iter().all(|(_, p, _)| *p == Power::Cancel));
 }
+
+// ---- presentation ----
+
+impl Bench {
+    /// Opens with exactly the features `features`.
+    fn opened_with(&self, device: u8, level: Level, features: u8) -> (InputConn, Opened) {
+        let mut c = self.conn(device);
+        let step = c.on_frame(
+            wire::TAG_OPEN,
+            &wire::encode_open(level, Some(features)),
+            T0,
+        );
+        let Step::Reply(wire::TAG_OPENED, body) = step else {
+            panic!("not opened: {step:?}")
+        };
+        (c, wire::decode_opened(&body).unwrap())
+    }
+}
+
+#[test]
+fn the_presentation_keys_need_their_feature_and_the_mouse_level() {
+    let b = bench();
+    b.grant(PHONE, Level::Full);
+    let slides = [Record::Key(Key::F5), Record::Key(Key::B)];
+    // asked for and granted: echoed, and both keys reach the PC
+    let (mut c, o) = b.opened_with(PHONE, Level::Full, wire::FEATURE_PRESENT);
+    assert_eq!(o.ext.unwrap().features, wire::FEATURE_PRESENT);
+    assert_eq!(events(&mut c, &slides, T0), Step::Continue);
+    assert_eq!(
+        b.sink.taken(),
+        vec![Action::Key(Key::F5), Action::Key(Key::B)]
+    );
+    drop(c);
+    // a phone that asked for everything this PC knows gets it
+    let (mut c, o) = b.opened_power(PHONE, Level::Full);
+    assert_eq!(o.ext.unwrap().features, wire::FEATURES);
+    assert_eq!(events(&mut c, &slides[..1], T0), Step::Continue);
+    assert_eq!(b.sink.taken(), vec![Action::Key(Key::F5)]);
+    drop(c);
+    // not asked for (power only, nothing, or the old open): closed, nothing reached the PC – the
+    // frame is judged whole, so a key before it does not act either
+    for features in [Some(wire::FEATURE_POWER), Some(0), None] {
+        for key in [Key::F5, Key::B] {
+            let mut c = b.conn(PHONE);
+            let Step::Reply(wire::TAG_OPENED, body) = c.on_frame(
+                wire::TAG_OPEN,
+                &wire::encode_open(Level::Full, features),
+                T0,
+            ) else {
+                panic!("not opened")
+            };
+            let ext = wire::decode_opened(&body).unwrap().ext;
+            assert!(ext.is_none_or(|e| e.features & wire::FEATURE_PRESENT == 0));
+            assert_eq!(
+                events(&mut c, &[Record::Key(Key::Enter), Record::Key(key)], T0),
+                Step::Close,
+                "{features:?}"
+            );
+            assert!(b.sink.taken().is_empty());
+        }
+    }
+    // a media session closes on them like on every key, feature or not
+    b.grant(PHONE, Level::Media);
+    let (mut c, o) = b.opened_with(PHONE, Level::Media, wire::FEATURE_PRESENT);
+    assert_eq!(o.ext.unwrap().features, wire::FEATURE_PRESENT);
+    assert_eq!(events(&mut c, &slides[..1], T0), Step::Close);
+    assert!(b.sink.taken().is_empty());
+}
+
+#[test]
+fn the_presentation_keys_are_keys_on_a_locked_pc_and_in_the_limits() {
+    let b = bench();
+    b.grant(PHONE, Level::Full);
+    let (mut c, _) = b.opened_with(PHONE, Level::Full, wire::FEATURE_PRESENT);
+    b.sink.set_locked(true);
+    assert_eq!(events(&mut c, &[Record::Key(Key::F5)], T0), Step::Continue);
+    assert!(b.sink.taken().is_empty(), "nothing acts on a locked PC");
+    b.sink.set_locked(false);
+    // the bucket of every key: 30 at once, the rest dropped
+    let slide = [Record::Key(Key::B); MAX_BURST];
+    assert_eq!(events(&mut c, &slide, T0), Step::Continue);
+    assert_eq!(b.sink.taken().len(), 30);
+}
+
+const MAX_BURST: usize = 32;

@@ -4,7 +4,8 @@
  * refusal with a reason, a close. Only wired up in `--mode e2e` builds (see `web.ts`), and only
  * for pages that set `localStorage['tm-e2e-remote'] = '1'`. Tests steer it through
  * `window.__tmRemote`. Power: the demo PC knows power (not granted) unless a test says otherwise;
- * a start answers `started`, the rest (`done`, `cancelled`, …) is pushed by the test.
+ * a start answers `started`, the rest (`done`, `cancelled`, …) is pushed by the test. It takes the
+ * presentation keys unless a test says otherwise.
  */
 import type {
   RemoteAction,
@@ -25,6 +26,7 @@ const E2E_FLAG = 'tm-e2e-remote';
 const FAIL_FLAG = 'tm-e2e-remote-fail';
 const GRANT_FLAG = 'tm-e2e-remote-grant';
 const POWER_FLAG = 'tm-e2e-remote-power';
+const PRESENT_FLAG = 'tm-e2e-remote-present';
 /** The demo PC's name (the phone knows its PC by the name it shows for sync). */
 export const FAKE_PC_NAME = 'PC-Sven';
 const STEP = 2;
@@ -60,6 +62,9 @@ export function createFakeRemoteParts() {
   /** The PC's power facts (`null`: a PC from before power), and what the phone asked of it. */
   let power: RemotePowerInfo | null = { granted: false, pending: false, hibernate: false };
   let busyPc = false;
+  /** The PC takes the presentation keys (an older PC does not). */
+  let present = true;
+  const PRESENT = new Set<string>(['key-f5', 'key-b']);
   /** How the native confirm dialog ends on a phone without a screen lock (`setUnlock('none')`). */
   let confirm: 'ok' | 'cancel' = 'ok';
   let confirms = 0;
@@ -138,6 +143,7 @@ export function createFakeRemoteParts() {
         noLock,
         state: { ...pc },
         power: power && { ...power },
+        present,
       };
     },
     send: async (session, actions) => {
@@ -149,6 +155,8 @@ export function createFakeRemoteParts() {
         live = undefined;
         throw new Error('closed');
       }
+      // like the shell: never to a PC that does not take them (it would end the session)
+      if (!present && actions.some((a) => PRESENT.has(a))) throw new Error('no-present');
       for (const action of actions) {
         // like the shell: no press and no key reaches a locked PC, a release always goes
         if ((PRESS.has(action) || action.startsWith('key-')) && pc.locked) continue;
@@ -279,6 +287,10 @@ export function createFakeRemoteParts() {
     setPower(info: RemotePowerInfo | null) {
       power = info && { ...info };
     },
+    /** Whether the PC takes the presentation keys, from the next `open` on. */
+    setPresent(on: boolean) {
+      present = on;
+    },
     /** Nemo on the PC is busy: a start without `despite` answers `working`. */
     setPowerBusy(on = true) {
       busyPc = on;
@@ -349,6 +361,13 @@ export function createFakeRemote(): RemoteService {
     if (granted === 'none') hooks.setPower(null);
     else if (granted === 'granted')
       hooks.setPower({ granted: true, pending: false, hibernate: hibernate === 'hibernate' });
+  } catch {
+    // Storage blocked: nothing arranged.
+  }
+  // A spec about presentation says before the app starts that the demo PC is older
+  // (`tm-e2e-remote-present` = `none`).
+  try {
+    if (localStorage.getItem(PRESENT_FLAG) === 'none') hooks.setPresent(false);
   } catch {
     // Storage blocked: nothing arranged.
   }

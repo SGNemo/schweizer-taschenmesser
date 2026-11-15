@@ -41,7 +41,7 @@
 
 use ::lan_sync::input::wire::{
     Button, Code, Key, Level, Media, PcState, Power, PowerAnswer, PowerInfo, Record,
-    MAX_TEXT_BYTES, VOLUME_UNKNOWN,
+    FEATURE_PRESENT, MAX_TEXT_BYTES, VOLUME_UNKNOWN,
 };
 use ::lan_sync::input_client::{Event, InputError, InputSession};
 use serde::Serialize;
@@ -400,6 +400,8 @@ pub struct OpenedDto {
     state: StateDto,
     /// `None`: a PC from before power.
     power: Option<PowerDto>,
+    /// The PC takes the presentation keys (F5, B); `false` for an older PC.
+    present: bool,
 }
 
 #[derive(Serialize, Clone, Copy, Debug, PartialEq, Eq)]
@@ -522,6 +524,9 @@ fn key_from(name: &str) -> Option<Key> {
         "key-delete" => Key::Delete,
         "key-f11" => Key::F11,
         "key-alt-tab" => Key::AltTab,
+        // the presentation keys: only to a PC that accepted them (`no-present`)
+        "key-f5" => Key::F5,
+        "key-b" => Key::B,
         _ => return None,
     })
 }
@@ -976,6 +981,9 @@ fn open_now<R: Runtime>(
             no_lock,
             state: state_dto(opened.state),
             power: opened.ext.map(|ext| power_dto(ext.power)),
+            present: opened
+                .ext
+                .is_some_and(|ext| ext.features & FEATURE_PRESENT != 0),
         })
     }
 }
@@ -1010,6 +1018,9 @@ pub async fn remote_client_send<R: Runtime>(
         // an older PC would end the session for it
         if !open.has_power() && records.contains(&Record::Media(Media::MonitorOff)) {
             return Err("no-power".to_owned());
+        }
+        if !open.has_present() && records.iter().any(Record::needs_present) {
+            return Err("no-present".to_owned());
         }
         open.send_events(&records)
             .map_err(|e| error_name(e).to_owned())
@@ -1252,7 +1263,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn keys_are_sixteen_names_and_nothing_else_is_a_key() {
+    fn keys_are_eighteen_names_and_nothing_else_is_a_key() {
         let names = [
             "key-enter",
             "key-escape",
@@ -1270,6 +1281,8 @@ mod tests {
             "key-delete",
             "key-f11",
             "key-alt-tab",
+            "key-f5",
+            "key-b",
         ];
         let mut seen = Vec::new();
         for name in names {
@@ -1280,6 +1293,8 @@ mod tests {
         for bad in [
             "key-",
             "key-a",
+            "key-B",
+            "key-f4",
             "key-win",
             "key-ctrl-c",
             "key-13",
@@ -1918,10 +1933,11 @@ mod tests {
             no_lock: false,
             state: state_dto(PcState::UNKNOWN),
             power: None,
+            present: false,
         };
         assert_eq!(
             serde_json::to_string(&opened).unwrap(),
-            r#"{"session":7,"level":"media","grant":"full","unlockRequired":true,"noLock":false,"state":{"volume":null,"mute":false,"playing":false,"locked":false},"power":null}"#
+            r#"{"session":7,"level":"media","grant":"full","unlockRequired":true,"noLock":false,"state":{"volume":null,"mute":false,"playing":false,"locked":false},"power":null,"present":false}"#
         );
         let with_power = OpenedDto {
             power: Some(power_dto(PowerInfo {
@@ -1929,11 +1945,12 @@ mod tests {
                 pending: false,
                 hibernate: true,
             })),
+            present: true,
             ..opened
         };
-        assert!(serde_json::to_string(&with_power)
-            .unwrap()
-            .ends_with(r#""power":{"granted":true,"pending":false,"hibernate":true}}"#));
+        assert!(serde_json::to_string(&with_power).unwrap().ends_with(
+            r#""power":{"granted":true,"pending":false,"hibernate":true},"present":true}"#
+        ));
         assert_eq!(
             serde_json::to_string(&event_dto(7, Event::Power(PowerAnswer::Working))).unwrap(),
             r#"{"kind":"power","session":7,"answer":"working"}"#

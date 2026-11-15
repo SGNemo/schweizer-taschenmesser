@@ -22,6 +22,10 @@
 //! sink's (they outlive a session). Monitor off is a media record, accepted only from a phone that
 //! asked for the feature.
 //!
+//! Presentation (a phone that asked for [`wire::FEATURE_PRESENT`]): the keys F5 and B are taken
+//! only on such a session, and like every key only on the mouse/keyboard level. From any other
+//! session they close it, as an unknown id did before.
+//!
 //! Nothing here touches the sync store, sets a grant or records anything.
 
 use super::limits::{Limits, Verdict};
@@ -72,6 +76,8 @@ struct Live {
     told_at: Duration,
     /// The phone asked for power (and this PC accepted it).
     power: bool,
+    /// The phone asked for the presentation keys (and this PC accepted them).
+    present: bool,
     /// The newest countdown news the phone has heard of (or that came before it opened).
     news_seen: u64,
 }
@@ -186,6 +192,7 @@ impl InputConn {
             return Step::Close;
         };
         let power = features.is_some_and(|f| f & wire::FEATURE_POWER != 0);
+        let present = features.is_some_and(|f| f & wire::FEATURE_PRESENT != 0);
         // what the machine can do at all comes first: on a PC that cannot be controlled, "allow it
         // at the PC" would send the user on a pointless errand
         if !self.sink.supported() {
@@ -218,6 +225,7 @@ impl InputConn {
                     told: state,
                     told_at: now,
                     power,
+                    present,
                     // what happened before this session is not news to it
                     news_seen: self.sink.power_news().map_or(0, |(n, _, _)| n),
                 }));
@@ -288,6 +296,10 @@ impl InputConn {
                 }
                 // monitor off belongs to a phone that asked for power
                 if !live.power && records.contains(&Record::Media(Media::MonitorOff)) {
+                    return Step::Close;
+                }
+                // and the presentation keys to a phone that asked for them
+                if !live.present && records.iter().any(Record::needs_present) {
                     return Step::Close;
                 }
                 for r in records {

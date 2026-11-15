@@ -37,6 +37,7 @@ Solange der PC gesperrt ist, gehen nur Medien und Lautstärke. Das Handy sieht n
 - **Medien:** große Tasten für Wiedergabe und Lautstärke. Wenn du magst, steuern auch die Lautstärketasten des Handys den PC (Einstellung im Modul).
 - **Touchpad:** wischen bewegt den Zeiger, tippen klickt, mit zwei Fingern scrollen.
 - **Tastatur:** Text am Handy tippen, lesen und dann senden. Der Text wird nirgends gespeichert.
+- **Präsentation** (nur mit einem PC, dessen Nemo das kennt): _Weiter_ groß unten, _Zurück_ daneben, darüber _Start_ (F5), _Schwarz_ (B) und _Ende_ (Esc). Braucht wie _Tastatur_ die Stufe Maus und Tastatur. Das Präsentationsfenster muss am PC vorne sein, und es geht nur im Heimnetz. Ist ein Browser vorne, lädt _Start_ (F5) die Seite neu. Die Lautstärketasten des Handys regeln weiter die Lautstärke, sie blättern keine Folien um.
 - **Auf der Übersicht:** Die Karte _Fernbedienung_ hat eine Taste _Wiedergabe / Pause_. Ein Tipp verbindet und sendet. Dauert das Verbinden länger, sagt die Karte das; steht die Verbindung danach, tippe noch einmal. Die Karte verbindet sich nie von selbst.
 
 ## PC ausschalten

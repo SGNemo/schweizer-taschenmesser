@@ -522,6 +522,55 @@ test('keyboard: without the level at the PC the sentence and the way back, no fi
   await expect(page.getByTestId('remote-play-pause')).toBeVisible();
 });
 
+test('presentation: Weiter big in the thumb zone, Start · Schwarz · Ende above, keys reach the PC', async ({
+  page,
+}, info) => {
+  await asPhoneWithRemote(page, 'full');
+  await page.goto('/remote');
+  await expect(page.getByTestId('remote-state')).toHaveText('Dein PC · Lautstärke 42 %');
+  await page.getByRole('button', { name: 'Präsentation' }).click();
+  await expect(page.getByTestId('remote-present-hint')).toHaveText(
+    'Das Präsentationsfenster muss am PC vorne sein. Geht nur im Heimnetz.',
+  );
+  const next = page.getByTestId('remote-slide-next');
+  await expect(next).toBeEnabled();
+  await expect.poll(() => page.evaluate(() => window.__tmRemote.level())).toBe('full');
+  // Weiter: the biggest key, in the lower half of the screen, Zurück beside it; the row above
+  const nextBox = (await next.boundingBox())!;
+  const backBox = (await page.getByTestId('remote-slide-previous').boundingBox())!;
+  const startBox = (await page.getByTestId('remote-key-f5').boundingBox())!;
+  const height = page.viewportSize()!.height;
+  expect(nextBox.y).toBeGreaterThan(height / 2);
+  expect(nextBox.width).toBeGreaterThan(backBox.width);
+  expect(Math.abs(nextBox.y - backBox.y)).toBeLessThanOrEqual(1);
+  expect(startBox.y + startBox.height).toBeLessThanOrEqual(nextBox.y);
+  expect(startBox.height).toBeGreaterThanOrEqual(44);
+  expect(
+    await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight),
+  ).toBeLessThanOrEqual(1);
+
+  await page.getByRole('button', { name: 'Start der Präsentation' }).click();
+  await next.click();
+  await page.getByTestId('remote-slide-previous').click();
+  await page.getByRole('button', { name: 'Schwarz schalten oder wieder zeigen' }).click();
+  await page.getByRole('button', { name: 'Ende der Präsentation' }).click();
+  await expect
+    .poll(() => page.evaluate(() => window.__tmRemote.sent()))
+    .toEqual(['key-f5', 'key-right', 'key-left', 'key-b', 'key-escape']);
+  await page.screenshot({ path: info.outputPath('remote-11-presentation.png') });
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations).toEqual([]);
+});
+
+test('presentation: a PC without the presentation keys shows no such tab', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('tm-e2e-remote-present', 'none'));
+  await asPhoneWithRemote(page, 'full');
+  await page.goto('/remote');
+  await expect(page.getByTestId('remote-state')).toHaveText('Dein PC · Lautstärke 42 %');
+  await expect(page.getByRole('button', { name: 'Tastatur' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Präsentation' })).toHaveCount(0);
+});
+
 test('the card on the overview without a paired PC: no button, the way to pairing, and its title into the module', async ({
   page,
 }, info) => {
