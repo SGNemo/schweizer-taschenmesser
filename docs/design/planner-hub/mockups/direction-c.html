@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planer-Hub – Richtung C „Was jetzt?“</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+/* C: one next thing large, then the day's sheet; the week is one folded line. No figure in the head: the card is it. */
+.c{display:grid;grid-template-columns:minmax(0,60rem) 24rem;gap:24px;align-items:start;justify-content:center}
+.c .main,.c .ctx{display:grid;gap:16px;min-width:0}
+.hero{padding:24px 24px 20px;display:grid;gap:10px}
+.hero>h2{padding:0}
+.hero .big{font-size:var(--text-2xl);font-weight:600;letter-spacing:-.02em;line-height:1.15}
+.hero .meta{display:flex;flex-wrap:wrap;gap:2px 6px;align-items:center}
+.hero .src{display:inline-flex;align-items:center;gap:4px;color:var(--text-muted)}
+.hero .links{margin:-4px 0}
+.hero .acts{display:flex;flex-wrap:wrap;gap:8px}
+.weekline{display:flex;align-items:center;gap:12px}
+.weekline .mini{display:grid;grid-template-columns:repeat(7,28px);gap:4px;align-items:end;margin-left:auto}
+.weekline .mini span{display:grid;gap:2px;justify-items:center;font-size:var(--text-meta);color:var(--text-3)}
+.weekline .mini i{display:block;width:8px;border-radius:var(--r-full);background:var(--mod)}
+@media (max-width:899px){.c{grid-template-columns:minmax(0,1fr);gap:12px}.c .main{gap:12px}.c .main>.capture,.c .ctx{display:none}.hero{padding:16px}.weekline .mini{grid-template-columns:repeat(7,18px)}.weekline .mini span{font-size:0}}
+</style></head>
+<body>
+<div class="app">
+<aside class="sidebar" id="sb"></aside>
+<div>
+<header class="top" id="tb"></header>
+<main>
+  <section class="head" id="hd"></section>
+  <div class="page c">
+    <div class="main" id="main"></div>
+    <aside class="ctx" id="ctx" aria-label="Rund um die Woche"></aside>
+  </div>
+</main>
+</div></div>
+<nav class="bottom" id="bt" aria-label="Bereiche"></nav>
+<script src="mock.js"></script>
+<script>
+const { D, I, capture, daySheet, lateFold, waitFold, context, shell, phone } = PH;
+shell();
+const day = D.days[D.pick];
+const next = day.things.find((t) => t.first);
+const rest = { ...day, things: day.things.filter((t) => t !== next).map((t) => ({ ...t, first: 0 })) };
+const hero = `<section class="card hero" aria-labelledby="next-h">
+  <p class="meta"><span>Heute ist frei.</span><span aria-hidden="true">·</span><span>Als Nächstes, morgen</span></p>
+  <h2 class="big" id="next-h">${next.title}</h2>
+  <p class="meta"><span class="src">${I('bill', 's')}Rechnung</span><span aria-hidden="true">·</span><span>${next.detail}</span><span aria-hidden="true">·</span><span>${next.dur}</span></p>
+  <div class="links">${next.links.map(([i, l]) => `<a class="chip" href="#"><span>${I(i, 's')}${l}</span></a>`).join('')}</div>
+  <div class="acts"><button class="btn primary">Bezahlt …</button><button class="btn quiet">Später</button><button class="btn quiet">Etwas anderes</button></div></section>`;
+const weekline = `<button class="fold card weekline" style="padding:8px 12px" aria-expanded="false">${I('right')}<b>Woche</b><span>eng wird Mo. 16.</span>
+  <span class="mini" aria-hidden="true">${D.days.map((d) => `<span><i style="height:${Math.max(3, Math.round((d.used / 192) * 28))}px"></i>${d.id}</span>`).join('')}</span></button>`;
+document.getElementById('main').innerHTML = hero + (phone ? '' : capture()) + lateFold() + daySheet(rest, { open: 3, firstLabel: 'Dann' }) + weekline + waitFold();
+if (!phone) document.getElementById('ctx').innerHTML = context();
+</script>
+</body></html>

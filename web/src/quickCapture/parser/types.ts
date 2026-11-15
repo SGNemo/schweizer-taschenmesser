@@ -76,6 +76,11 @@ export interface CaptureFields {
   pin?: string;
   /** Plan captures: `date` is a hard deadline („bis Do“, „Frist“). */
   hardDue?: boolean;
+  /**
+   * ToDos: `date` (and `time`, if typed) is a deadline – „bis/spätestens <Tag>“ („Team-Sachen lesen bis So 18:00“).
+   * The ToDo target then writes the time as the deadline's hour (`dueTime`), not as a note line.
+   */
+  deadline?: true;
   /** Meal captures: rough kcal. */
   kcal?: number;
   /** Workout captures: the exercises of the line. */
