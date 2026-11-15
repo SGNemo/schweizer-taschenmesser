@@ -240,6 +240,8 @@ test.describe('Planer (week board, package 1)', () => {
     await ready(page, '/planner');
     await enter(page, 'Blogpost 90min');
     await expect(today(page)).toContainText('Blogpost');
+    // R2: the capacity opens „Warum?“; „Zeit ändern“ in it opens the day's settings.
+    await today(page).getByTestId('planner-why').click();
     await today(page)
       .getByRole('button', { name: /Zeit für Montag ändern/ })
       .click();
@@ -277,6 +279,8 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(page.getByTestId('today-count')).toHaveText('1');
     // Today off: the planner puts the overdue thing on Tuesday.
     await page.goto('/planner');
+    // R2: the capacity opens „Warum?“; „Zeit ändern“ in it opens the day's settings.
+    await today(page).getByTestId('planner-why').click();
     await today(page)
       .getByRole('button', { name: /Zeit für Montag ändern/ })
       .click();
@@ -709,8 +713,11 @@ test.describe('Planer (more sources, overload – package 3)', () => {
       status: 'open',
     });
     await ready(page, '/planner');
-    // exact: the head's detail line names today's first thing too („Heute: Stadtwerke bezahlen. …“).
-    const row = page.getByText('Stadtwerke bezahlen', { exact: true });
+    // exact: the head's detail line names today's first thing too („Heute: Stadtwerke bezahlen. …“); on a day –
+    // „Nächste Fristen“ beside it names the invoice as well (R2).
+    const row = page
+      .locator('[data-testid^="day-"]')
+      .getByText('Stadtwerke bezahlen', { exact: true });
     await expect(row).toBeVisible();
     const day = page.locator('[data-testid^="day-"]', { hasText: 'Stadtwerke bezahlen' });
     await expect(day).toContainText('Frist Do');
@@ -786,6 +793,8 @@ test.describe('Planer (time windows, templates – package 5)', () => {
     await enter(page, 'Blogpost 90min');
     await enter(page, 'Keller 30min');
     await expect(today(page)).toContainText('Keller');
+    // R2: the capacity opens „Warum?“; „Zeit ändern“ in it opens the day's settings.
+    await today(page).getByTestId('planner-why').click();
     await today(page)
       .getByRole('button', { name: /Zeit für Montag ändern/ })
       .click();
