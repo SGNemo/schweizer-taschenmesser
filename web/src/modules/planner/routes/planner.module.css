@@ -304,6 +304,8 @@ section.lateFold {
    its height: one row unit plus breathing room. */
 .lead {
   flex: none;
+  /* Beside the title and meta, not the middle of a row that also holds a chip line (K1b). */
+  align-self: flex-start;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -322,6 +324,109 @@ section.lateFold {
   position: absolute;
   /* 44 px around the box's 24 (its 1 px frame counted) */
   inset: calc((var(--space-5) - var(--touch)) / 2 - 1px);
+}
+/* The main action in the lead slot (K1b, „Bezahlt …“, „Zur Liste“): the tick's outlined slot with the glyph of the
+   step inside – drawn at 28 px, answering on the whole 44 px slot. A route: nothing is written. */
+.actionLead {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch);
+  height: var(--touch);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.actionGlyph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--space-5) + var(--space-1));
+  height: calc(var(--space-5) + var(--space-1));
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+}
+.actionLead:hover .actionGlyph {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.actionLead:active {
+  opacity: 0.7;
+}
+.actionLead:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+/* The one chip line of a row's links (K1b): never wraps; a long word ends in „…“, the full name is the chip's
+   accessible name and tooltip. No `overflow: hidden` on the line: it would clip the chips' 44 px hit boxes. */
+.chipLine {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+.chipItem {
+  display: flex;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+.linkChip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  min-height: var(--space-6);
+  padding: 0 var(--space-3) 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-meta);
+}
+.linkChip > svg {
+  flex: none;
+}
+button.linkChip {
+  cursor: pointer;
+}
+/* 32 px to look at, 44 px to hit. */
+button.linkChip::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--space-6) - var(--touch)) / 2) 0;
+}
+button.linkChip:hover:not(:disabled) {
+  color: var(--text);
+}
+button.linkChip:disabled {
+  cursor: default;
+}
+button.linkChip:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.chipText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Gone, or not on this device without a way out: said in words, no action. */
+.linkChipMuted {
+  background: transparent;
+  padding-inline: 0;
+}
+.chipNote {
+  color: var(--text-3);
 }
 /* The ⋯ of a row and of the page: the shared icon button draws 40 px and answers on 42 (its frame is not part of
    the enlarged hit box); in the sheet it answers on the full 44. */

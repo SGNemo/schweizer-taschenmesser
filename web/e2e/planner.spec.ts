@@ -696,8 +696,8 @@ test.describe('Planer (more sources, overload – package 3)', () => {
     });
     await ready(page, '/planner');
     await expect(today(page)).toContainText('Vermieter antworten');
-    await today(page).getByRole('button', { name: 'Aktionen für Vermieter antworten' }).click();
-    await page.getByRole('menuitem', { name: 'Zur Notiz' }).click();
+    // K1b: the link is a chip under the row's title (the old ⋯ „Zur Notiz“ is gone; ⋯ lists it under „Verknüpft“).
+    await today(page).getByRole('button', { name: 'Zur Notiz: Vermieter antworten' }).click();
     await expect(page).toHaveURL(/\/notes/);
   });
 

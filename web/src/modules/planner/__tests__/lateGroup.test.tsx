@@ -185,7 +185,11 @@ describe('the page with late invoices', () => {
     expect(within(group).queryByRole('checkbox')).toBeNull();
     fireEvent.click(within(group).getByRole('button', { name: 'Aktionen für Zahnarzt bezahlen' }));
     const items = (await screen.findAllByRole('menuitem')).map((m) => m.textContent);
-    expect(items).toEqual(['Öffnen', 'Nicht planen']);
+    // K1b: the source's main action leads (a route to its pay step), then what is left for a thing on no day.
+    expect(items).toEqual(['Bezahlt …', 'Öffnen', 'Nicht planen']);
+    expect(
+      within(group).getByRole('button', { name: 'Bezahlt …: Zahnarzt bezahlen' }),
+    ).toBeInTheDocument();
   });
 
   it('only late invoices: the sheet says where the open things are, not „Noch nichts geplant“', async () => {
