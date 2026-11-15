@@ -77,9 +77,9 @@ test("on a module page the plus is the module's action, not the quick capture", 
   await plus.tap();
   // The module's own dialog, not the capture sheet.
   await expect(page.getByRole('dialog')).toBeVisible();
-  await expect(page.getByRole('dialog', { name: 'Schnell hinzufügen' })).toHaveCount(0);
+  await expect(page.getByRole('dialog', { name: 'Neu eintragen' })).toHaveCount(0);
   await ready(page, '/calendar');
   await page.getByRole('button', { name: 'Termin eintragen', exact: true }).tap();
   await expect(page.getByRole('dialog')).toBeVisible();
-  await expect(page.getByRole('dialog', { name: 'Schnell hinzufügen' })).toHaveCount(0);
+  await expect(page.getByRole('dialog', { name: 'Neu eintragen' })).toHaveCount(0);
 });

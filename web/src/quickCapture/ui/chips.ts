@@ -2,6 +2,7 @@ import { formatMoney } from '@/core/money';
 import { formatMinutes, formatNumber } from '@/core/i18n/format';
 import { daysBetween, formatDay, relativeDayLabel } from '@/core/time/dates';
 import { t } from '@/strings';
+import { breakOf } from '../targets';
 import type { CaptureFields, CaptureNote, CaptureRecurrence, CaptureType } from '../parser';
 
 export interface PreviewChip {
@@ -82,8 +83,10 @@ const usesDate = (type: CaptureType) =>
   type === 'subscription' ||
   type === 'birthday' ||
   type === 'meal' ||
-  type === 'workout';
-const usesTime = (type: CaptureType) => type === 'todo' || type === 'event' || type === 'reminder';
+  type === 'workout' ||
+  type === 'break';
+const usesTime = (type: CaptureType) =>
+  type === 'todo' || type === 'event' || type === 'reminder' || type === 'break';
 const isTask = (type: CaptureType) => type === 'todo' || type === 'plan';
 const usesMoney = (type: CaptureType) =>
   type === 'finance' || type === 'invoice' || type === 'subscription';
@@ -127,6 +130,12 @@ export function previewChips(
   }
   if (isTask(type) && fields.estimateMin)
     chips.push({ id: 'estimate', label: t.todos.estimateAbout(fields.estimateMin) });
+  // A break says its day (today when none was typed) and its own length – never a sum (TARGET F2).
+  if (type === 'break' && fields.title.trim()) {
+    const b = breakOf(fields, { today });
+    if (!fields.date) chips.push({ id: 'date', label: describeDate(b.date, today) });
+    if (!b.from) chips.push({ id: 'estimate', label: formatMinutes(b.min, { compact: true }) });
+  }
   if (type === 'event' && fields.date && !fields.time)
     chips.push({ id: 'allDay', label: t.quickCapture.chip.allDay });
   if (fields.recurrence && (type === 'event' || type === 'reminder' || type === 'subscription')) {

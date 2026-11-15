@@ -47,56 +47,64 @@ export async function deleteTask(taskId: string): Promise<void> {
  */
 export async function setDone(task: Stored<Task>, done: boolean): Promise<void> {
   await taskRepo.update(task.id, { done, completedAt: done ? now() : undefined });
+  if (done) await createNextInstance(task);
+  else {
+    const nextId = nextInstanceId(task);
+    const next = nextId && nextDueDate(task) ? await taskRepo.get(nextId) : undefined;
+    if (next && !next.done) await deleteTask(next.id);
+  }
+}
+
+/**
+ * The next instance of a recurring task (deterministic id, open copies of its subtasks), as a tick creates it.
+ * Also used without a tick: „Als Pause …“ removes this occurrence and the series goes on (nothing counts as done).
+ */
+export async function createNextInstance(task: Stored<Task>): Promise<void> {
   const nextId = nextInstanceId(task);
   const nextDue = nextDueDate(task);
   if (!nextId || !nextDue) return;
-  if (done) {
-    const shift = daysBetween(task.dueDate!, nextDue);
-    const subs = (await taskRepo.table.where('parentId').equals(task.id).toArray()).filter(
-      (s) => s.deletedAt === null,
-    );
-    const items = [
-      {
-        id: nextId,
-        data: {
-          listId: task.listId,
-          title: task.title,
-          done: false,
-          priority: task.priority,
-          dueDate: nextDue,
-          recurrence: nextRecurrence(task, nextDue),
-          estimateMin: task.estimateMin,
-          note: task.note,
-          order: task.order,
-        },
+  const shift = daysBetween(task.dueDate!, nextDue);
+  const subs = (await taskRepo.table.where('parentId').equals(task.id).toArray()).filter(
+    (s) => s.deletedAt === null,
+  );
+  const items = [
+    {
+      id: nextId,
+      data: {
+        listId: task.listId,
+        title: task.title,
+        done: false,
+        priority: task.priority,
+        dueDate: nextDue,
+        recurrence: nextRecurrence(task, nextDue),
+        estimateMin: task.estimateMin,
+        note: task.note,
+        order: task.order,
       },
-      ...subs.map((s) => ({
-        // Same rule as the parent: `<first id>:<date>`, so a second run adds nothing.
-        id: `${s.id.split(':')[0]}:${nextDue}`,
-        data: {
-          listId: s.listId,
-          parentId: nextId,
-          title: s.title,
-          done: false,
-          priority: s.priority,
-          // Explicit `undefined`: a copy brought back must lose a due date removed meanwhile.
-          dueDate: s.dueDate ? addDaysStr(s.dueDate, shift) : undefined,
-          note: s.note,
-          order: s.order,
-        },
-      })),
-    ];
-    // Reopening tombstoned the next instance (same ids) and `createMany` skips existing ids: bring
-    // them back with today's values, otherwise ticking off again would end the series.
-    const stored = await taskRepo.table.bulkGet(items.map((i) => i.id));
-    for (const [i, row] of stored.entries()) {
-      if (!row || row.deletedAt === null) continue;
-      await taskRepo.restore(row.id);
-      await taskRepo.update(row.id, items[i]!.data);
-    }
-    await taskRepo.createMany(items);
-  } else {
-    const next = await taskRepo.get(nextId);
-    if (next && !next.done) await deleteTask(nextId);
+    },
+    ...subs.map((s) => ({
+      // Same rule as the parent: `<first id>:<date>`, so a second run adds nothing.
+      id: `${s.id.split(':')[0]}:${nextDue}`,
+      data: {
+        listId: s.listId,
+        parentId: nextId,
+        title: s.title,
+        done: false,
+        priority: s.priority,
+        // Explicit `undefined`: a copy brought back must lose a due date removed meanwhile.
+        dueDate: s.dueDate ? addDaysStr(s.dueDate, shift) : undefined,
+        note: s.note,
+        order: s.order,
+      },
+    })),
+  ];
+  // Reopening tombstoned the next instance (same ids) and `createMany` skips existing ids: bring
+  // them back with today's values, otherwise ticking off again would end the series.
+  const stored = await taskRepo.table.bulkGet(items.map((i) => i.id));
+  for (const [i, row] of stored.entries()) {
+    if (!row || row.deletedAt === null) continue;
+    await taskRepo.restore(row.id);
+    await taskRepo.update(row.id, items[i]!.data);
   }
+  await taskRepo.createMany(items);
 }

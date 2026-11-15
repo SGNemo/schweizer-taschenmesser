@@ -36,11 +36,25 @@ export function detectDelimiter(text: string): Delimiter {
 }
 
 export function parseCsv(text: string, opts: { delimiter?: Delimiter } = {}): string[][] {
+  return parseCsvLines(text, opts).rows;
+}
+
+/**
+ * `parseCsv` plus the file line (1-based) each row starts on, so a message can name the line a
+ * person sees in an editor (empty lines are dropped from `rows`, quoted fields may span lines).
+ */
+export function parseCsvLines(
+  text: string,
+  opts: { delimiter?: Delimiter } = {},
+): { rows: string[][]; lines: number[] } {
   const delimiter = opts.delimiter ?? detectDelimiter(text);
   const rows: string[][] = [];
+  const lines: number[] = [];
   let row: string[] = [];
   let field = '';
   let quoted = false;
+  let line = 1;
+  let rowStart = 1;
   const src = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text; // drop a BOM
   for (let i = 0; i < src.length; i++) {
     const c = src[i]!;
@@ -50,7 +64,10 @@ export function parseCsv(text: string, opts: { delimiter?: Delimiter } = {}): st
           field += '"';
           i++;
         } else quoted = false;
-      } else field += c;
+      } else {
+        if (c === '\n' || (c === '\r' && src[i + 1] !== '\n')) line++;
+        field += c;
+      }
     } else if (c === '"' && field === '') quoted = true;
     else if (c === delimiter) {
       row.push(field);
@@ -59,13 +76,21 @@ export function parseCsv(text: string, opts: { delimiter?: Delimiter } = {}): st
       if (c === '\r' && src[i + 1] === '\n') i++;
       row.push(field);
       field = '';
-      if (row.some((f) => f !== '')) rows.push(row);
+      if (row.some((f) => f !== '')) {
+        rows.push(row);
+        lines.push(rowStart);
+      }
       row = [];
+      line++;
+      rowStart = line;
     } else field += c;
   }
   row.push(field);
-  if (row.some((f) => f !== '')) rows.push(row);
-  return rows;
+  if (row.some((f) => f !== '')) {
+    rows.push(row);
+    lines.push(rowStart);
+  }
+  return { rows, lines };
 }
 
 /** A plain number ("-12.50", "+3,5") is data, not a formula. */

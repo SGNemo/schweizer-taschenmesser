@@ -1,7 +1,8 @@
 import { useTools } from '@/core/tools/state';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { SettingsGroup, SortableList } from '@/ui';
+import { SettingsGroup } from '@/ui';
+import { SortableList } from '@/ui/SortableList';
 import { ToolRow } from '../tools/ToolRow';
 import styles from './settings.module.css';
 

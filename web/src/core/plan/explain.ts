@@ -5,15 +5,29 @@
  */
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
-import type { Assignment, Unplaced } from './types';
+import type { Assignment, DayPart, Unplaced } from './types';
 
 /** Short weekday of a date in the UI language, without a trailing period („Do“, „Thu“, „jeu“). */
 export const dayName = (date: string): string => formatDay(date, 'EEE').replace(/\.$/, '');
 
 export type NameOf = (unitId: string) => string;
 
-/** The sentence behind „Warum hier?“ of a placed unit. */
+/** The day part as the row and „Warum hier?“ name it („abends“, „in the evening“). */
+export const partWord = (part: DayPart): string => t.planner.row.dayPartShort[part];
+
+/**
+ * The sentence behind „Warum hier?“ of a placed unit; a unit with a day part (package 4b) adds
+ * „abends, wie gewählt“ – the part orders the day, it never says why the day was chosen.
+ */
 export function explainAssignment(
+  a: Pick<Assignment, 'reason' | 'bumpedBy'>,
+  ctx: { due?: string; prevDate?: string; part?: DayPart | undefined; nameOf: NameOf },
+): string {
+  const base = explainReason(a, ctx);
+  return ctx.part ? `${base} · ${t.planner.reasons.part(partWord(ctx.part))}` : base;
+}
+
+function explainReason(
   a: Pick<Assignment, 'reason' | 'bumpedBy'>,
   ctx: { due?: string; prevDate?: string; nameOf: NameOf },
 ): string {

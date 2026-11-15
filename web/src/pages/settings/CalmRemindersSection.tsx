@@ -8,6 +8,7 @@ import {
   type FocusSettings,
 } from '@/core/settings/focus';
 import type { ReactNode } from 'react';
+import { useModuleStates } from '@/core/modules/activation';
 import { t } from '@/strings';
 import { Chip, Chips, Segmented, SettingRow, SettingsGroup, Switch, TextField } from '@/ui';
 import { FoldedGroup } from './FoldedGroup';
@@ -25,6 +26,8 @@ type BoolKey = {
 export function CalmRemindersSection() {
   const [v, patch] = useFocusSettings();
   const s = t.focus.reminders;
+  // „Rest verteilen?“ belongs to the planner: offered only while it is on.
+  const plannerOn = useModuleStates()?.planner === true;
   const toggle = (key: BoolKey, label: string, hint: string) => (
     <SettingRow id={`calm-reminders--${key}`} label={label} description={hint}>
       <Switch
@@ -216,6 +219,14 @@ export function CalmRemindersSection() {
           ) : null}
         </>,
       )}
+      {plannerOn
+        ? group(
+            'rest',
+            s.restReminder,
+            [v.restReminder ? s.on : s.off],
+            toggle('restReminder', s.restReminder, s.restReminderHint),
+          )
+        : null}
     </SettingsGroup>
   );
 }

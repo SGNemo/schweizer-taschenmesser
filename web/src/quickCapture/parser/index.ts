@@ -76,6 +76,9 @@ const FROM_WORD = word(String.raw`ab`);
 const PLAN_DUE = word(String.raw`bis|frist|deadline|abgabe|spätestens`);
 const PLAN_DUE_WORD = word(String.raw`frist|deadline|spätestens`);
 
+/** „Pause …“, „Freizeit: …“ at the very start of a line: a break (only with `ParseOptions.breaks`). */
+const BREAK_RE = /^\s*(pause|freizeit)(?![\p{L}\d-])[\s,:;–-]*/iu;
+
 const URL_RE = /(?:https?:\/\/|www\.)[^\s<>"']+/i;
 const KEYWORDS = {
   reminder: word(String.raw`erinnere?\s+mich(?:\s+(?:bitte\s+)?(?:daran|an|zu|dass))?`),
@@ -104,6 +107,23 @@ const DUNNING = word(
 const PAY = word(String.raw`zahlen|bezahlen|überweisen`);
 /** Words that make a dated sentence a deadline (a ToDo), even with a clock time. */
 const DEADLINE = word(String.raw`abgeben|abgabe|einreichen|abschicken|hochladen|deadline|frist`);
+/**
+ * „bis So 18:00“, „spätestens Montag“: a deadline for a thing to do, not an appointment at that time (W04,
+ * use case „Wochenende retten“). Only „bis/spätestens“ right before a day; „bis 18 Uhr“ stays a time span.
+ * Short weekdays are already written out at this point („bis Sonntag“).
+ */
+const BY_DAY = word(
+  String.raw`(?:bis|spätestens)\s+(?:(?:zum\s+|am\s+)?(?:montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|sonnabend|morgen|übermorgen|heute)|\d{1,2}\.\d{1,2}\.?)`,
+);
+/** A start before „bis <Tag>“ makes it a span („Fr 18 Uhr bis So Hütte“, „Konferenz 10.11. 9 Uhr bis 12.11.“): an event. */
+const SPAN_START = word(
+  String.raw`\d{1,2}(?::\d{2})?\s*uhr|\d{1,2}:\d{2}|\d{1,2}\.\d{1,2}\.|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|sonnabend|morgen|heute`,
+);
+/** „bis So“ as a deadline: only when nothing before it already names a day or a time. */
+function byDayDeadline(t: string): boolean {
+  const m = BY_DAY.exec(t);
+  return !!m && !SPAN_START.test(t.slice(0, m.index));
+}
 /** "bis 5.11.", "fällig am": a payment target when an amount is there. */
 const DUE_HINT = word(String.raw`bis|fällig|zahlbar`);
 const PRIORITY_RE = /(?<![\p{L}\d])!(hoch|wichtig|dringend|mittel|niedrig)(?![\p{L}\d])/iu;
@@ -115,7 +135,7 @@ const PRIORITY: Record<string, 1 | 2 | 3> = {
   niedrig: 1,
 };
 const DANGLING =
-  /^(?:um|am|an|den|dem|bis|ab|für|und|zu|dass|,|;|:|-|–)+\s+|\s+(?:um|am|an|den|dem|bis|ab|für|und|zu|,|;|:|-|–)+$/iu;
+  /^(?:um|am|an|den|dem|bis|spätestens|ab|für|und|zu|dass|,|;|:|-|–)+\s+|\s+(?:um|am|an|den|dem|bis|spätestens|ab|für|und|zu|,|;|:|-|–)+$/iu;
 
 function cleanTitle(raw: string): string {
   let t = raw.replace(/\s+/g, ' ').trim();
@@ -175,6 +195,18 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
     forced = prefix[2] ? 'plan' : PREFIXES[prefix[1]!.toLowerCase()];
     text = text.slice(prefix[0].length);
   }
+  // A break word fixes the type like a prefix does; the word itself is the fallback title („Pause“).
+  const breakWord = !prefix && opts.breaks ? BREAK_RE.exec(text) : null;
+  if (breakWord) {
+    forced = 'break';
+    // A short weekday right after the word is the break's day („Pause Sa 14 bis 16 Uhr“).
+    text = text
+      .slice(breakWord[0].length)
+      .replace(
+        /^(mo|di|mi|do|fr|sa|so)\.?(?![\p{L}\d])/iu,
+        (d) => SHORT_DAYS[d.replace('.', '').toLowerCase()]!,
+      );
+  }
   if (forced === 'plan') {
     for (let m = SHORT_DAY_RE.exec(text); m; m = SHORT_DAY_RE.exec(text)) {
       const long = SHORT_DAYS[m[2]!.toLowerCase()]!;
@@ -210,6 +242,7 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
     spendPast: SPEND_PAST.test(scan.t),
     pay: PAY.test(scan.t),
     deadline: DEADLINE.test(scan.t),
+    byDay: byDayDeadline(scan.t),
     dueHint: DUE_HINT.test(scan.t),
   };
 
@@ -309,6 +342,7 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
     score(scores, 'invoice', 90);
   if (kw.birthday && hasDate && !hasTime && !recurrence) score(scores, 'birthday', 93);
   if (kw.deadline && !money && !recurrence) score(scores, 'todo', 96);
+  else if (kw.byDay && !money && !recurrence && !kw.reminder) score(scores, 'todo', 96);
   if (hasDate && hasTime && !recurrence) score(scores, 'event', 85);
   else if (!hasDate && hasTime && !recurrence) score(scores, 'event', 70);
   else if (hasDate && !hasTime && !recurrence && !money) {
@@ -355,7 +389,10 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
   if (dt.time !== undefined) fields.time = dt.time;
   if (primaryType === 'event' && date && !hasTime) fields.allDay = true;
 
-  if (estimate !== undefined && (primaryType === 'todo' || primaryType === 'plan')) {
+  if (
+    estimate !== undefined &&
+    (primaryType === 'todo' || primaryType === 'plan' || primaryType === 'break')
+  ) {
     fields.estimateMin = estimate;
     scan.t = estimateScan.t;
   }
@@ -382,7 +419,10 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
     if (dunning)
       fields.dunning = { level: dunning[1] ? Number(dunning[1]) : 1, date: fmtDate(today) };
   }
-  fields.title = cleanTitle(scan.t) || (fields.url ?? '') || cleanTitle(text);
+  fields.title =
+    cleanTitle(scan.t) ||
+    (fields.url ?? '') ||
+    (breakWord ? cleanTitle(breakWord[1]!) : cleanTitle(text));
 
   const alternatives: CaptureAlternative[] = ranked
     .filter(([t, s]) => t !== primaryType && s >= 30)
@@ -393,7 +433,7 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
     fields,
     confidence: primaryScore / 100,
     needsChoice,
-    forced: !!forced,
+    forced: !!prefix,
     alternatives,
     notes: [...notes],
   };

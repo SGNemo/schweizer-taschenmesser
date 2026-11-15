@@ -10,7 +10,7 @@ test('free text + Enter in the search bar is quick capture; a second Enter saves
   const bar = page.getByRole('combobox');
   await bar.fill('Irgendwas mit Opa klären');
   await expect(page.getByRole('option').first()).toContainText(
-    'Schnell hinzufügen: „Irgendwas mit Opa klären“',
+    'Neu eintragen: „Irgendwas mit Opa klären“',
   );
   await bar.press('Enter');
   await expect(page.getByTestId('ai-answer')).toHaveCount(0);
@@ -28,7 +28,7 @@ test('"?" asks instead', async ({ page }) => {
   const bar = page.getByRole('combobox');
   await bar.fill('?Irgendwas mit Opa klären');
   await expect(page.getByRole('option').first()).toContainText('„Irgendwas mit Opa klären“');
-  await expect(page.getByRole('option', { name: /^Schnell hinzufügen/ })).toHaveCount(0);
+  await expect(page.getByRole('option', { name: /^Neu eintragen/ })).toHaveCount(0);
   await bar.press('Enter');
   await expect(page.getByTestId('ai-answer')).toBeVisible();
 });

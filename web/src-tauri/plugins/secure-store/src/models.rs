@@ -25,10 +25,17 @@ pub fn validate_name(name: &str) -> Result<(), String> {
 /// plugin's commands refuse them, so the webview can neither read nor replace them.
 pub const RUST_ONLY_PREFIX: &str = "lan-client:";
 
-/// What the webview's commands may name (everything `validate_name` accepts, minus Rust-only entries).
+/// Prefix under which the desktop backend files sealed vault keys (`desktop.rs`). Only the
+/// `biometric_*` commands may reach these entries (they take the bare name and add the prefix in
+/// Rust); through `get`/`set`/`delete` the webview could read the vault key without the Windows
+/// Hello prompt, or replace/delete it.
+pub const BIO_PREFIX: &str = "bio:";
+
+/// What the webview's commands may name (everything `validate_name` accepts, minus Rust-only
+/// entries and the sealed vault keys).
 pub fn validate_webview_name(name: &str) -> Result<(), String> {
     validate_name(name)?;
-    if name.starts_with(RUST_ONLY_PREFIX) {
+    if name.starts_with(RUST_ONLY_PREFIX) || name.starts_with(BIO_PREFIX) {
         return Err("reserved name".into());
     }
     Ok(())
@@ -101,10 +108,17 @@ pub struct UnsealResponse {
     pub secret: Option<String>,
 }
 
+/// Answer of `has` and `biometric_has`: a yes/no only – never the value, its length or a hint of it.
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HasResponse {
     pub present: bool,
+}
+
+/// `has`: a stored value counts only when it is not empty – the same answer the web view would
+/// get from `get` (`value ?? undefined` and a truthy check), without handing the value over.
+pub fn is_present(value: Option<&str>) -> bool {
+    value.is_some_and(|v| !v.is_empty())
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -146,6 +160,48 @@ mod tests {
         assert!(
             validate_name("lan-client:hub").is_ok(),
             "Rust itself still may"
+        );
+    }
+
+    #[test]
+    fn the_webview_cannot_name_sealed_vault_keys() {
+        assert!(validate_webview_name("bio:vault-dek:3f2a-91").is_err());
+        assert!(validate_webview_name("bio:x").is_err());
+        assert!(
+            validate_webview_name("vault-dek:3f2a-91").is_ok(),
+            "the bare seal name stays valid"
+        );
+        assert!(validate_webview_name("biography").is_ok());
+        assert!(
+            validate_name("bio:vault-dek:3f2a-91").is_ok(),
+            "the biometric backend files it there"
+        );
+    }
+
+    #[test]
+    fn has_counts_only_non_empty_values() {
+        assert!(!is_present(None));
+        assert!(!is_present(Some("")));
+        assert!(is_present(Some("a-long-test-passphrase")));
+        assert!(
+            is_present(Some(" ")),
+            "whitespace is a value; callers trim before they store"
+        );
+    }
+
+    #[test]
+    fn the_has_answer_carries_a_bool_and_nothing_else() {
+        for present in [true, false] {
+            let json = serde_json::to_value(HasResponse { present }).unwrap();
+            assert_eq!(json, serde_json::json!({ "present": present }));
+        }
+        // a stray value from the Android side is dropped on the way back, never passed on
+        let parsed: HasResponse =
+            serde_json::from_value(serde_json::json!({ "present": true, "value": "secret" }))
+                .unwrap();
+        assert_eq!(
+            serde_json::to_value(parsed).unwrap(),
+            serde_json::json!({ "present": true })
         );
     }
 

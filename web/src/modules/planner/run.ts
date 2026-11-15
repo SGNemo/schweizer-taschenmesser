@@ -175,6 +175,7 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
       ...(row?.pinned ? { pinned: row.pinned } : {}),
       splittable: row?.splittable ?? true,
       ...(row?.excluded ? { excluded: true } : {}),
+      ...(row?.part ? { part: row.part } : {}),
       createdAt: e.createdAt ?? 0,
     });
   }
@@ -296,6 +297,7 @@ const rowData = (row: PlanItemRow): PlanItemRow => {
     pinned,
     splittable,
     excluded,
+    part,
     order,
   } = row;
   return {
@@ -308,6 +310,7 @@ const rowData = (row: PlanItemRow): PlanItemRow => {
     ...(pinned ? { pinned } : {}),
     ...(splittable !== undefined ? { splittable } : {}),
     ...(excluded ? { excluded } : {}),
+    ...(part ? { part } : {}),
     order,
   };
 };
@@ -515,13 +518,17 @@ export function withOps(
   return { days, items, settings, reshuffle };
 }
 
-/** A dry run for the preview: reads like a run, writes nothing, returns what the engine would do with `ops`. */
+/**
+ * A dry run for the preview: reads like a run, writes nothing, returns what the engine would do with `ops`.
+ * `extra` = things not stored yet („Tage einteilen“: the dump's lines), planned as if they were there.
+ */
 export async function previewPlanner(
   deps: RunDeps,
   ops: readonly PlanOp[],
+  extra: readonly PlanItem[] = [],
 ): Promise<PreviewOutcome> {
   const inputs = await buildInputs(deps, plannerRepos(deps.database));
-  const next = withOps(inputs, ops);
+  const next = withOps({ ...inputs, items: [...inputs.items, ...extra] }, ops);
   const result = plan({
     today: deps.today,
     days: next.days,
