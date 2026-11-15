@@ -49,7 +49,6 @@ export default function BudgetsPage() {
   const [tab, setTab] = useState<Tab>(params.get('tab') === 'goals' ? 'goals' : 'budgets');
   const [month, setMonth] = useState(monthOf(today()));
   const { data, financeOn, loading } = useBudgetData(month);
-  const insights = useBudgetInsights(month, data);
   const goals = useLiveQuery(
     async () => (await goalRepo.active().toArray()).sort((a, b) => a.createdAt - b.createdAt),
     [],
@@ -90,6 +89,7 @@ export default function BudgetsPage() {
   const overCount = inMain.filter((r) => r.status.tone === 'over').length;
   const canAddBudget = Boolean(financeOn) && categories.some((c) => !taken.has(c.id));
   const advancedItem = useAdvancedMenuItem('budgets');
+  const insights = useBudgetInsights(month, data, Boolean(prefs?.showCharts));
   // An empty view holds the one filled step itself (U26); the head's action steps back then.
   const emptyBudgets = !!data && budgets.length === 0 && Boolean(financeOn);
   const emptyGoals = !!goals && goals.length === 0;

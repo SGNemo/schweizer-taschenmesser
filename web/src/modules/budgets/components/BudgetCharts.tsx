@@ -73,14 +73,14 @@ export function BudgetCharts({
   const money = (cents: number) => formatMoney(cents, currency);
   const day = today();
   const info = periodOf(month, 'month');
-  const endText = formatDay(info.to, 'd. MMMM');
+  const endText = formatDay(info.to, 'd. MMM');
   const head = headTotals(own);
   const rate = head.count > 0 ? dailyRate(head.free, info.from, info.to, day) : undefined;
-  const nextMonthText = formatDay(`${addMonthsToMonth(month, 1)}-01`, 'd. MMMM');
+  const nextMonthText = formatDay(`${addMonthsToMonth(month, 1)}-01`, 'd. MMM');
   const thisMonth = monthOf(day);
 
   if (part === 'more') {
-    if (!insights || insights.currency !== currency) return null;
+    if (!insights || insights.currency !== currency || insights.month !== month) return null;
     const spent = trendValues(
       insights.months,
       insights.spentPerMonth,
@@ -140,16 +140,18 @@ export function BudgetCharts({
     );
   }
 
+  const figures = Boolean(rate) || head.projected !== undefined;
   return (
     <section
-      className={`${styles.charts} ${styles.chartsHead}`}
+      // Two columns (figures beside the bars) only when the figures are there: a past month has the bars alone.
+      className={`${styles.charts} ${figures ? styles.chartsHead : ''}`}
       aria-label={c.section}
       data-testid="budget-charts"
     >
-      {rate || head.projected !== undefined ? (
+      {figures ? (
         <Card className={styles.figures}>
           {rate ? (
-            rate.perDay > 0 ? (
+            head.free > 0 ? (
               <Figure
                 label={c.perDay.label}
                 value={money(rate.perDay)}

@@ -219,7 +219,7 @@ test.describe('Budgets: charts', () => {
     // 300 € free on the 29th of 30 days: two days left, 150 € a day.
     const perDay = page.getByTestId('budget-per-day');
     await expect(perDay).toContainText(/150,00\s€/);
-    await expect(perDay).toContainText('noch 2 Tage bis 30. September');
+    await expect(perDay).toContainText('noch 2 Tage bis 30. Sep.');
     // Run rate 100 € / 29 days × 30 days.
     const forecast = page.getByTestId('budget-forecast');
     await expect(forecast).toContainText(/103,45\s€/);

@@ -15,6 +15,7 @@ import {
   budgetStatus,
   carryIn,
   effectiveLimit,
+  familyOf,
   projectedSpend,
   spentInMonths,
   type BudgetStatus,
@@ -187,6 +188,8 @@ export function mainCurrencyOf(budgets: readonly Pick<Budget, 'currency'>[]): st
 }
 
 export interface BudgetInsights {
+  /** The viewed month the figures belong to (a live query keeps its last result while the month changes). */
+  month: string;
   currency: string;
   /** 'YYYY-MM' of the trend, oldest first; the last one is the viewed month. */
   months: string[];
@@ -217,9 +220,13 @@ export async function loadInsights(
   const own = budgets.filter((b) => currencyOf(b) === currency);
   const months = Array.from({ length: count }, (_, i) => addMonthsToMonth(month, i - count + 1));
   const maps = await Promise.all(months.map((m) => expensesByCategory(m, currency)));
-  const spentPerMonth = maps.map((map) =>
-    own.reduce((sum, b) => sum + spentInMonths([map], categories, b.categoryId), 0),
-  );
+  // One set over every budget's category family: a child with its own limit under a parent with one is counted once.
+  const budgeted = new Set(own.flatMap((b) => [...familyOf(categories, b.categoryId)]));
+  const spentPerMonth = maps.map((map) => {
+    let sum = 0;
+    for (const [id, cents] of map) if (budgeted.has(id)) sum += cents;
+    return sum;
+  });
   const plannedPerMonth = own.reduce(
     (sum, b) => sum + monthlyShare(b.monthlyLimitMinor, b.period ?? 'month'),
     0,
@@ -230,14 +237,35 @@ export async function loadInsights(
     .sort((a, b) => b.value - a.value);
   const monthTotal = shares.reduce((sum, s) => sum + s.value, 0);
   const hasSpending = maps.map((map) => [...map.values()].some((v) => v > 0));
-  return { currency, months, spentPerMonth, hasSpending, plannedPerMonth, shares, monthTotal };
+  return {
+    month,
+    currency,
+    months,
+    spentPerMonth,
+    hasSpending,
+    plannedPerMonth,
+    shares,
+    monthTotal,
+  };
 }
 
-/** The chart figures for `month` (live), once the budget rows are there; none without budgets. */
-export function useBudgetInsights(month: string, data: BudgetData | undefined) {
+/**
+ * The chart figures for `month` (live), once the budget rows are there; none without budgets or while
+ * `enabled` is false (charts switched off, a small widget). Keyed on what the figures depend on, not on the
+ * `data` object, which is new on every emission: the live query tracks the bookings itself.
+ */
+export function useBudgetInsights(month: string, data: BudgetData | undefined, enabled = true) {
+  const key = data
+    ? JSON.stringify([
+        data.budgets.map((b) => [b.id, b.categoryId, b.currency, b.period, b.monthlyLimitMinor]),
+        data.categories.map((c) => [c.id, c.parentId]),
+        data.rows.length,
+      ])
+    : '';
   return useLiveQuery(async () => {
     const currency = data && mainCurrencyOf(data.budgets);
-    if (!data || !currency || data.rows.length === 0) return null;
+    if (!enabled || !data || !currency || data.rows.length === 0) return null;
     return loadInsights(month, data.budgets, data.categories, currency);
-  }, [month, data]);
+    // `data` is read through `key` (same key = same figures).
+  }, [month, key, enabled]);
 }
