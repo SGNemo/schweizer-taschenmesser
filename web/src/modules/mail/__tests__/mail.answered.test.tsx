@@ -165,7 +165,11 @@ describe('„Beantwortet? · Erledigt“', () => {
     await vi.waitFor(async () => expect((await taskRepo().get(id))?.done).toBe(false));
   });
 
-  it('says so when nothing was closed (todos off: nobody listens)', async () => {
+  it('stays quiet when nothing was closed (already done or gone), says so when the listener fails', async () => {
+    await closeAnswered('mail-x');
+    expect(lastToast()).toBeUndefined();
+    bus.on('todo.doneRequested', () => Promise.reject(new Error('x')));
+    vi.spyOn(bus, 'emit').mockRejectedValueOnce(new Error('x'));
     await closeAnswered('mail-x');
     expect(lastToast()?.message).toBe(t.mail.answered.failed);
   });

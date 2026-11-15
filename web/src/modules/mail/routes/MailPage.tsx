@@ -281,8 +281,10 @@ export default function MailPage() {
   const showAnswered = (prefs as { showAnswered?: boolean } | undefined)?.showAnswered ?? true;
   const openTodos =
     useLiveQuery(
-      () => (account && showAnswered ? openPlans(account.key) : Promise.resolve(NO_PLANS)),
-      [account?.key, showAnswered],
+      () =>
+        // Only while ToDos are on: nobody else can tick the ToDo off.
+        account && showAnswered && canPlan ? openPlans(account.key) : Promise.resolve(NO_PLANS),
+      [account?.key, showAnswered, canPlan],
     ) ?? NO_PLANS;
   const answered = useMemo(
     () => answeredRows(shown, openTodos, showAnswered),

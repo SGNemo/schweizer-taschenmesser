@@ -612,6 +612,9 @@ test('E Mail: Persönlich, Suche, Rechnung, Antwort in den Plan', async ({
     .last();
   await expect(toast.getByRole('button', { name: 'Rückgängig' })).toBeVisible();
   await expect(answered).toBeHidden();
+  // Not counted: „Rückgängig“ reopens the ToDo and the row asks again.
+  await toast.getByRole('button', { name: 'Rückgängig' }).click();
+  await expect(answered).toBeVisible({ timeout: 10_000 });
   facts(info, 'E', {
     hasPersonal,
     searchFound: /Stadtwerke|Rechnung/.test(afterSearch),

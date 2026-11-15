@@ -41,7 +41,7 @@ export const mail: Strings['mail'] = {
       'Under an invoice mail you see payee, amount and due date with “Add”; for a payment reminder on an open invoice, “Note the reminder”. It is read on this device only.',
     showAnswered: 'Show “Answered?”',
     showAnsweredHelp:
-      'Under a mail in the plan whose last message is yours you see “Answered? · Done”. Nothing is ticked off by itself; it is read on this device only.',
+      'Under a mail in the plan whose last message is yours you see “Answered? · Done”. Nothing is ticked off by itself; this is checked on this device only.',
   },
   answered: {
     question: 'Answered?',

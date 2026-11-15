@@ -17,7 +17,8 @@ export const threadMetaSchema = z.object({
   /**
    * The newest message is the person's own (it carries `SENT`): the „Beantwortet?“ hint of a planned mail.
    * Written only when the person opens or refreshes the list (`useMailbox`), never by the background check
-   * (`notifyService`, whose header refresh drops it until the list reads it again). Device-local like the rest.
+   * (`notifyService`) or the head/widget refresh (`useSummary`): their header refresh drops it until the list
+   * reads it again. Device-local like the rest.
    */
   lastFromMe: z.literal(true).optional(),
 });

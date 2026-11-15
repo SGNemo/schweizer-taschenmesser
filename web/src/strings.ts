@@ -7412,7 +7412,7 @@ export const de = {
         'Unter einer Rechnungsmail stehen Empfänger, Betrag und Fälligkeit mit „Anlegen“; bei einer Mahnung zur offenen Rechnung „Mahnung vermerken“. Gelesen wird nur auf diesem Gerät.',
       showAnswered: '„Beantwortet?“ anzeigen',
       showAnsweredHelp:
-        'Unter einer Mail im Plan, deren letzte Nachricht von dir ist, steht „Beantwortet? · Erledigt“. Nichts wird von selbst erledigt; erkannt wird nur auf diesem Gerät.',
+        'Unter einer Mail im Plan, deren letzte Nachricht von dir ist, steht „Beantwortet? · Erledigt“. Nichts wird von selbst erledigt; geprüft wird nur auf diesem Gerät.',
     },
     /** A planned mail whose newest message is the person's own („Wochenende retten“ F5): a question, one verb. */
     answered: {

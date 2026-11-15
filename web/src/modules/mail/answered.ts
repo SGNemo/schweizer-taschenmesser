@@ -24,7 +24,7 @@ export function answeredRows(
   return out;
 }
 
-/** One tap: the ToDo is ticked off through the bus; „Erledigt · Rückgängig“. */
+/** One tap: the ToDo is ticked off through the bus; „Erledigt · Rückgängig“. The page offers it only while ToDos are on. */
 export async function closeAnswered(todoId: string): Promise<void> {
   const toast = useUiStore.getState().toast;
   try {
@@ -32,7 +32,8 @@ export async function closeAnswered(todoId: string): Promise<void> {
     const { entry } = await undoable(t.mail.answered.closed, () =>
       bus.emit('todo.doneRequested', { id: todoId }),
     );
-    if (!entry) return void toast(t.mail.answered.failed);
+    // No write: the ToDo was already done or gone (a second tap, a tick synced in); the row goes by itself.
+    if (!entry) return;
     toast(t.mail.answered.closed, {
       label: t.ui.undo,
       run: () => void undoEntry(entry.id).then((ok) => toast(ok ? t.ui.undone : t.ui.undoFailed)),
