@@ -162,3 +162,9 @@ Not planned: body data, weight trend, step counter, external food databases, spe
 - **Today:** one row „Heute laut Plan: Oberkörper · 5 Übungen · 55 Min“ with „Anfangen“ (→ „Einheit starten“ with the template), above the list, gone once the day has a session or a live session runs. **Week:** „laut Plan: Oberkörper“ on today and later days.
 - **Planner:** plan days as items `plan:<templateId>:<date>` (pinned to their day like a planned session, the template's length or 45 min); ticked off = a logged session from the template today; an edited estimate is not written (the template keeps its length). Calendar and „Jetzt wichtig“ do not show plan days (noise; a planned session with a time still does).
 - **Off:** a template without weekdays is not in the plan; removing the days removes the plan.
+
+## Deep p4 as built (charts, `feat/fitness-deep-p4`, needs `@/ui/charts` from `feat/ui-charts`)
+
+- **Exercise history:** a `Trend` „Schwerstes Gewicht je Einheit“ (else „Meiste Wiederholungen“, else „Dauer“: the best's measure, `trendOf`), one point per day, from two days on; one point stays the sentence „Bestwert …“. Days without the measure are left out, never drawn as zero.
+- **Week:** `Bars` „Sätze je Muskelgruppe“ (horizontal, catalogue order) replace the text line; groups with only minutes (a run) stay one line of text, since minutes and sets share no axis. `Bars` „kcal je Tag“ (columns, only with „Kalorien erfassen“ and any kcal that week): plain amounts, **no target mark** – the charts' red is „over target“, and eating is never „over“.
+- Charts follow the blocks' rules (legend and table in words, module hue, „Ruhig“ grey, reduced motion); no own chart code in the module.

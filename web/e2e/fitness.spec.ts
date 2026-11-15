@@ -384,12 +384,12 @@ test('exercises: last time under the form row, history with the best, search in 
     'Bestwert 85 kg × 5 · 2-mal eingetragen',
   );
 
-  // The week names the sets per muscle group, in words.
+  // The week shows the sets per muscle group as bars, named in words (legend and table).
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Woche', exact: true }).click();
-  await expect(page.getByTestId('fitness-week-groups')).toHaveText(
-    'Je Muskelgruppe: Beine 6 Sätze',
-  );
+  const groups = page.getByRole('figure', { name: 'Sätze je Muskelgruppe' });
+  await expect(groups).toContainText('Beine');
+  await expect(groups).toContainText('6 Sätze');
 });
 
 test('a live session: started from the menu, saved after each set, survives a reload, ends with its duration', async ({
