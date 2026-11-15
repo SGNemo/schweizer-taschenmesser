@@ -3358,13 +3358,14 @@ export const de = {
         done: 'Export gespeichert.',
         file: 'buchungen',
       },
-      widget: { addExpense: 'Ausgabe +', vsPrevious: (change: string) => `${change} zum Vormonat` },
+      widget: { addExpense: 'Ausgabe +' },
       month: {
         title: 'Diesen Monat',
         free: 'Frei bis Monatsende',
         coming: (amount: string) => `Kommt noch ${amount}`,
         nothingComing: 'Nichts mehr fällig',
-        spent: (amount: string) => `bisher ausgegeben ${amount}`,
+        spent: (amount: string) => `Ausgegeben ${amount}`,
+        spentNone: 'Noch nichts ausgegeben',
         open: 'Was noch kommt',
       },
       settings: {

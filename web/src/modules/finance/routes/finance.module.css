@@ -70,9 +70,14 @@
   font-size: var(--text-lg);
   font-weight: var(--weight-semibold);
   overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
 }
 .income {
   color: var(--success);
+}
+/* A card followed by another block: the same distance as between the grids around it. */
+.block {
+  margin-bottom: var(--space-5);
 }
 
 /* Charts */
@@ -340,6 +345,16 @@
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--module-color) 14%, var(--surface));
   color: var(--module-color);
+}
+/* Phone (the list's wrap rule in ui/Patterns starts at 40 rem): icon, 9 rem of text, a four-digit amount and "⋯" filled
+   the 412-px row to the pixel, so "⋯" fell alone under the amount of every income. A smaller icon, closer to the text,
+   leaves the row 8 px to spare (polish p1). */
+@media (max-width: 40rem) {
+  .catIcon {
+    width: 1.75rem;
+    height: 1.75rem;
+    margin-inline-end: calc(-1 * var(--space-1));
+  }
 }
 
 /* ---- money group: transfers, splits, categories, filters, year, outlook ---- */

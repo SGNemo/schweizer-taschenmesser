@@ -3,7 +3,6 @@ import { endOfMonthStr, monthOf, today } from '@/core/time/dates';
 import { t } from '@/strings';
 import { useNavigate } from 'react-router';
 import { Button, KpiWidget, SensitiveValue, useWidgetSize } from '@/ui';
-import { compareMonths } from '../analysis';
 import { BankCard } from '@/ui/identity';
 import { balances, currenciesOf, filterByCurrency, monthlyTrend, sortAccounts } from '../logic';
 import { totalBalance, useAvailability, useFinanceData } from '../summary';
@@ -36,14 +35,6 @@ export default function BalanceWidget() {
     : [];
   const size = useWidgetSize();
   const navigate = useNavigate();
-  const cmp = data ? compareMonths(data.txs, monthOf(day)) : undefined;
-  const hasPrevious = Boolean(data?.txs.some((x) => x.date.slice(0, 7) < monthOf(day)));
-  const expenseChange =
-    cmp && hasPrevious && cmp.expense.diffMinor !== 0
-      ? t.finance.ext.widget.vsPrevious(
-          `${t.finance.expense} ${cmp.expense.diffMinor > 0 ? '▲ +' : '▼ −'}${formatMoney(Math.abs(cmp.expense.diffMinor), currency)}`,
-        )
-      : '';
   const first = data
     ? sortAccounts(data.accounts).find((a) => currencyOf(a) === currency)
     : undefined;
@@ -73,7 +64,9 @@ export default function BalanceWidget() {
             ? t.widgets.kpiAvailable(formatMoney(a.available, currency))
             : '',
           others,
-          expenseChange || (a?.deducting || others ? '' : accountsLabel),
+          // No comparison of the month's spending here: mid-month it set a part month against a whole one (the page's
+          // cards and "Diesen Monat" carry the month). One sentence that names the figure is enough for a glance.
+          a?.deducting || others ? '' : accountsLabel,
         ]
           .filter(Boolean)
           .join(' · ')}

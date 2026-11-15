@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useMemo, useState, type ReactNode } from 'react';
 import { formatMoney } from '@/core/money';
 import { useCurrency } from '../currency';
 import { t } from '@/strings';
@@ -65,6 +65,26 @@ function DeltaLine({ d, money }: { d: Delta; money: (m: number) => string }) {
   );
 }
 
+const SEP = ' · ';
+
+/**
+ * A line of parts ("Kontostand 12.616,33 € · offene Rechnungen −1.017,84 €") that breaks between its parts, never
+ * inside one: on the phone an amount used to land alone on the next line. The text stays the same for screen readers.
+ */
+export function PartsLine({ text }: { text: string }) {
+  const parts = text.split(SEP);
+  return (
+    <>
+      {parts.map((part, i) => (
+        <Fragment key={i}>
+          <span className={styles.nowrap}>{i < parts.length - 1 ? `${part} ·` : part}</span>
+          {i < parts.length - 1 ? ' ' : null}
+        </Fragment>
+      ))}
+    </>
+  );
+}
+
 /** `narrow`: the overview shares the row with a side panel, so the charts stay in one column. */
 export function OverviewTab({
   data,
@@ -103,11 +123,13 @@ export function OverviewTab({
         <p className={styles.breakdown} data-testid="hero-breakdown">
           {/* Its amounts add up to the head's figure, so the line hides with it ("Werte ausblenden"). */}
           <SensitiveValue>
-            {t.finance.breakdown(
-              money(a.balance),
-              a.useInvoices && a.openInvoices ? money(a.openInvoices) : '',
-              a.useSubs && a.subscriptions ? money(a.subscriptions) : '',
-            )}
+            <PartsLine
+              text={t.finance.breakdown(
+                money(a.balance),
+                a.useInvoices && a.openInvoices ? money(a.openInvoices) : '',
+                a.useSubs && a.subscriptions ? money(a.subscriptions) : '',
+              )}
+            />
           </SensitiveValue>
         </p>
       ) : null}

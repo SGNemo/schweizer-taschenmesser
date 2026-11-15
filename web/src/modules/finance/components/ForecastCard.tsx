@@ -30,7 +30,7 @@ export function ForecastCard({ data }: { data: FinanceData }) {
   const money = (m: number) => formatMoney(m, currency);
   const date = (d: string) => formatDay(d, 'P');
   return (
-    <Card>
+    <Card className={styles.block}>
       <div className={styles.chartHead}>
         <h2 className={styles.chartTitle}>{e.title}</h2>
         {advanced ? (

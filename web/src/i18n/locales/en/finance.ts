@@ -109,13 +109,14 @@ export const finance: Strings['finance'] = {
       done: 'Export saved.',
       file: 'transactions',
     },
-    widget: { addExpense: 'Expense +', vsPrevious: (change: string) => `${change} vs. last month` },
+    widget: { addExpense: 'Expense +' },
     month: {
       title: 'This month',
       free: 'Free until month end',
       coming: (amount: string) => `Still to pay ${amount}`,
       nothingComing: 'Nothing else due',
-      spent: (amount: string) => `spent so far ${amount}`,
+      spent: (amount: string) => `Spent ${amount}`,
+      spentNone: 'Nothing spent yet',
       open: "What's still to pay",
     },
     settings: {

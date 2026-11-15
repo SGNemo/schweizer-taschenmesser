@@ -528,6 +528,8 @@ test.describe('Finance: net worth on the tab "Verlauf"', () => {
     await ready(page, '/');
     const widget = page.getByTestId('widget-finance:balance');
     await expect(widget).toContainText(/Vermögen, davon 5\.484,01\s€ verfügbar/);
+    // One sentence names the figure: no mid-month comparison of a part month with a whole one (polish p1).
+    await expect(widget).not.toContainText('zum Vormonat');
     await expect(widget.getByText(/5\.850,00\s€/)).toHaveCount(1);
   });
 

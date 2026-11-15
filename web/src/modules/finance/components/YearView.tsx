@@ -41,19 +41,19 @@ export function YearView({ data, year }: { data: FinanceData; year: number }) {
           </span>
         </Card>
       </div>
-      <Card>
+      <Card className={styles.block}>
         <h2 className={styles.chartTitle}>{e.byMonth}</h2>
         <table className={styles.table}>
           <thead>
             <tr>
               <th scope="col">{t.finance.ext.period.month}</th>
-              <th scope="col" className="num">
+              <th scope="col" className={styles.num}>
                 {t.finance.income}
               </th>
-              <th scope="col" className="num">
+              <th scope="col" className={styles.num}>
                 {t.finance.expense}
               </th>
-              <th scope="col" className="num">
+              <th scope="col" className={styles.num}>
                 {t.finance.net}
               </th>
             </tr>
@@ -62,9 +62,9 @@ export function YearView({ data, year }: { data: FinanceData; year: number }) {
             {sum.months.map((m) => (
               <tr key={m.month}>
                 <th scope="row">{formatDay(`${m.month}-01`, 'LLLL')}</th>
-                <td className="num">{money(m.income)}</td>
-                <td className="num">{money(m.expense)}</td>
-                <td className="num">{money(m.net)}</td>
+                <td className={styles.num}>{money(m.income)}</td>
+                <td className={styles.num}>{money(m.expense)}</td>
+                <td className={styles.num}>{money(m.net)}</td>
               </tr>
             ))}
           </tbody>
