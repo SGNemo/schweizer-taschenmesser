@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { formatMinutes } from '@/core/i18n/format';
 import { useWeekStart } from '@/core/settings/core';
-import { addDaysStr, relativeDayLabel, today } from '@/core/time/dates';
+import { addDaysStr, nowTime, relativeDayLabel, today } from '@/core/time/dates';
+import { now } from '@/core/time/now';
 import type { Stored } from '@/core/db/types';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import { undoableWithToast } from '@/core/undo/withToast';
@@ -27,8 +28,14 @@ import { MealEditor, type MealTarget } from '../components/MealEditor';
 import { SessionEditor, type SessionTarget } from '../components/SessionEditor';
 import { ExercisePicto } from '../components/ExercisePicto';
 import { WeekView } from '../components/WeekView';
+import { ExercisesView } from '../components/ExercisesView';
+import { LiveSession } from '../components/LiveSession';
+import { PlanDialog } from '../components/PlanDialog';
+import { planDays } from '../plan';
+import { loadLive, saveLive, startLive, type LiveState } from '../live';
 import { patternOf } from '../catalog';
 import {
+  builtInExercises,
   exerciseDetail,
   kcalLine,
   kcalText,
@@ -42,6 +49,7 @@ import {
   byDay,
   daySum,
   doneToday,
+  exerciseSuggestions,
   isAhead,
   isLogged,
   latestSession,
@@ -52,8 +60,9 @@ import {
 } from '../logic';
 import { mealRepo, sessionRepo } from '../repo';
 import type { Session } from '../schema';
+import styles from '../fitness.module.css';
 
-type View = 'training' | 'food' | 'week';
+type View = 'training' | 'food' | 'week' | 'exercises';
 /** How far back the lists and the week view go; older entries stay stored. */
 const WINDOW_DAYS = 90;
 
@@ -63,8 +72,8 @@ export default function FitnessPage() {
   const raw = params.get('view');
   // `undefined` while `?view=food` cannot be decided yet: the stored preferences are still loading.
   const view: View | undefined =
-    raw === 'week'
-      ? 'week'
+    raw === 'week' || raw === 'exercises'
+      ? raw
       : raw !== 'food'
         ? 'training'
         : prefs
@@ -81,6 +90,27 @@ export default function FitnessPage() {
   const [session, setSession] = useState<SessionTarget>(null);
   const [meal, setMeal] = useState<MealTarget>(null);
   const [goalOpen, setGoalOpen] = useState(false);
+  // „Einheit starten“: the running session of this device (kept across reloads) and whether it is shown.
+  // A session left running on an earlier day is over: its sets are saved, only the local state goes.
+  const [live, setLive] = useState<LiveState | undefined>(() => {
+    const stored = loadLive();
+    if (stored && stored.date < today()) return void saveLive(undefined);
+    return stored;
+  });
+  const [liveOpen, setLiveOpen] = useState(false);
+  const [planOpen, setPlanOpen] = useState(false);
+  /** Every change of the running session is kept on this device at once (reload, app switch). */
+  const putLive = (next: LiveState | undefined) => {
+    saveLive(next);
+    setLive(next);
+  };
+  function start(from?: Pick<Session, 'title' | 'exercises'>, planId?: string) {
+    setSession(null);
+    // One running session per device: a second start opens the one that runs.
+    if (!live) putLive(startLive(from, { date: day, time: nowTime(), now: now() }, planId));
+    setLiveOpen(true);
+    close();
+  }
   useOpenParam(
     async (id) => (await sessionRepo.get(id)) ?? (await mealRepo.get(id)),
     (r) => {
@@ -124,6 +154,7 @@ export default function FitnessPage() {
   // Plans whose day has passed: folded away under „Wartet noch“, never a list of misses.
   const waiting = plans.filter((s) => !isAhead(s, day));
   const logged = (sessions ?? []).filter(isLogged);
+  const todayPlan = sessions && templates ? planDays(templates, sessions, day, day) : [];
 
   /** A planned session is done: it counts from now on, on today when it was planned for later. */
   async function markDone(s: Stored<Session>) {
@@ -174,15 +205,22 @@ export default function FitnessPage() {
   const noSessions = !!sessions && sessions.length === 0;
   const noMeals = !!meals && meals.length === 0;
   const views: readonly View[] = prefs?.nutrition
-    ? ['training', 'food', 'week']
-    : ['training', 'week'];
+    ? ['training', 'exercises', 'food', 'week']
+    : ['training', 'exercises', 'week'];
   return (
     <>
       <PageHeader
         title={t.fitness.meta.name}
         // Each view starts with a short row at the left (a group heading, the week switch): the phone's "⋯" menu
         // lies beside it. An empty view keeps the menu in its own row.
-        besideContent={view === 'week' || (view === 'food' ? !noMeals : !noSessions)}
+        // A full-width first row (the running session's line) keeps the phone's "⋯" in its own row.
+        besideContent={
+          view === 'week' ||
+          view === 'exercises' ||
+          (view === 'food'
+            ? !noMeals
+            : !noSessions && !(live && !liveOpen) && !(!live && todayPlan.length))
+        }
         views={
           // The tabs depend on the preferences („Essen“ only with calorie tracking), so they wait for them.
           prefs && view ? (
@@ -218,6 +256,18 @@ export default function FitnessPage() {
         <StartDataMenu
           moduleId="fitness"
           items={[
+            ...(view === 'training'
+              ? [
+                  {
+                    id: 'start',
+                    label: live ? t.fitness.live.resume : t.fitness.live.start,
+                    onSelect: () => start(),
+                  },
+                ]
+              : []),
+            ...(view === 'training' || view === 'week'
+              ? [{ id: 'plan', label: t.fitness.plan.open, onSelect: () => setPlanOpen(true) }]
+              : []),
             ...(view === 'training' && canRepeat && last
               ? [
                   {
@@ -263,9 +313,54 @@ export default function FitnessPage() {
           meals={meals ?? []}
           nutrition={prefs.nutrition}
           loadedFrom={from}
+          templates={templates ?? []}
         />
+      ) : view === 'exercises' ? (
+        <ExercisesView day={day} />
       ) : view === 'training' ? (
         <>
+          {live && !liveOpen ? (
+            <div className={styles.liveBanner} data-testid="fitness-live-banner">
+              <p>{t.fitness.live.banner(live.time)}</p>
+              <Button size="sm" variant="secondary" onClick={() => setLiveOpen(true)}>
+                {t.fitness.live.resume}
+              </Button>
+            </div>
+          ) : null}
+          {/* The plan's day: one quiet row with „Anfangen“, gone once the day has a session. */}
+          {!live && todayPlan.length ? (
+            <div className={styles.todayPlan} data-testid="fitness-today-plan">
+              <ItemList>
+                {todayPlan.map(({ template: tpl }) => (
+                  <ItemRow
+                    key={tpl.id}
+                    title={t.fitness.plan.today(tpl.title)}
+                    meta={[
+                      tpl.exercises.length ? t.fitness.list.exercises(tpl.exercises.length) : '',
+                      tpl.durationMin ? formatMinutes(tpl.durationMin, { compact: true }) : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                    lead={
+                      <ExercisePicto
+                        pattern={tpl.exercises[0] ? patternOf(tpl.exercises[0].name) : 'other'}
+                      />
+                    }
+                    end={
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        aria-label={t.fitness.plan.startFor(tpl.title)}
+                        onClick={() => start(tpl)}
+                      >
+                        {t.fitness.plan.start}
+                      </Button>
+                    }
+                  />
+                ))}
+              </ItemList>
+            </div>
+          ) : null}
           {noSessions ? (
             <EmptyState
               title={t.fitness.empty.training}
@@ -362,8 +457,30 @@ export default function FitnessPage() {
         sessions={sessions ?? []}
         templates={templates ?? []}
         onClose={close}
+        // While a session runs, the form offers no second start (its fields would be lost).
+        onStart={live ? undefined : start}
+      />
+      <LiveSession
+        state={liveOpen ? live : undefined}
+        sessions={sessions ?? []}
+        restSec={prefs?.restSec ?? 90}
+        own={exerciseSuggestions(sessions ?? [], builtInExercises()).filter(
+          (n) => !builtInExercises().includes(n),
+        )}
+        onChange={putLive}
+        onClose={() => setLiveOpen(false)}
+        onEnd={() => {
+          putLive(undefined);
+          setLiveOpen(false);
+        }}
       />
       <MealEditor target={mealTarget} meals={meals ?? []} onClose={close} />
+      <PlanDialog
+        open={planOpen}
+        templates={templates ?? []}
+        weekStart={weekStart}
+        onClose={() => setPlanOpen(false)}
+      />
       <GoalDialog
         open={goalOpen}
         current={prefs?.kcalGoal ?? 0}

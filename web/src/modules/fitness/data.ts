@@ -6,7 +6,7 @@ import { useSettings } from '@/core/settings/settings';
 import { t } from '@/strings';
 import { catalogNames } from './catalog';
 import { mealRepo, sessionRepo, templateRepo } from './repo';
-import type { Exercise, Meal, Session, Template } from './schema';
+import type { Exercise, Meal, Session, Template, WorkSet } from './schema';
 import { DEFAULTS, settingsSchema, type FitnessSettings } from './settings';
 
 /** Sessions from `from` on (newest first); `undefined` while loading. */
@@ -63,6 +63,25 @@ export function exerciseDetail(e: Exercise): string {
   if (e.weightKg !== undefined) parts.push(t.fitness.line.weight(formatNumber(e.weightKg)));
   if (e.durationMin) parts.push(formatMinutes(e.durationMin));
   return parts.join(' · ');
+}
+
+/** One set: „8 × 60 kg“, „12 Wdh.“, with „Aufwärmen“ and its note. */
+export function setDetail(s: WorkSet): string {
+  const l = t.fitness.line;
+  const main =
+    s.reps && s.weightKg !== undefined
+      ? `${s.reps} × ${l.weight(formatNumber(s.weightKg))}`
+      : s.reps
+        ? l.reps(s.reps)
+        : s.weightKg !== undefined
+          ? l.weight(formatNumber(s.weightKg))
+          : '';
+  return [main, s.warmup ? l.warmup : '', s.note ?? ''].filter(Boolean).join(' · ');
+}
+
+/** Every set of a row logged set by set („10 × 40 kg · Aufwärmen, 8 × 60 kg, …“), else its summary. */
+export function setsDetail(e: Exercise): string {
+  return e.log?.length ? e.log.map(setDetail).filter(Boolean).join(', ') : exerciseDetail(e);
 }
 
 /** Title of a session: its own, else its exercise names, else "Einheit". */
