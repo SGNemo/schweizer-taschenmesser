@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { DayPart } from '@/core/plan/types';
 import { DATE_RE, TIME_RE } from '@/core/time/dates';
 
 /**
@@ -29,6 +30,13 @@ export const daySchema = z.object({
   to: z.string().regex(TIME_RE).optional(),
 });
 
+/** The day parts a row may carry (`core/plan/types.ts` `DayPart`). */
+export const DAY_PARTS_ENUM = [
+  'morning',
+  'afternoon',
+  'evening',
+] as const satisfies readonly DayPart[];
+
 export const PLAN_PRIORITIES = [0, 1, 2, 3] as const;
 
 /**
@@ -48,6 +56,8 @@ export const itemSchema = z.object({
   splittable: z.boolean().optional(),
   /** „Nicht planen“. */
   excluded: z.boolean().optional(),
+  /** Tagesabschnitt (package 4b): orders the thing inside its day and, with a window, where it sits; never its day. */
+  part: z.enum(DAY_PARTS_ENUM).optional(),
   order: z.number().default(0),
 });
 

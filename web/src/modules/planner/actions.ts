@@ -10,7 +10,8 @@ import { getLang } from '@/core/i18n/lang';
 import { plannableSource, type PlannableEntry } from '@/core/modules/contributions';
 import { availableManifests } from '@/core/modules/available';
 import { addDays } from '@/core/plan/dates';
-import { dayName } from '@/core/plan/explain';
+import { dayName, partWord } from '@/core/plan/explain';
+import type { DayPart } from '@/core/plan/types';
 import { spanMin, windowText, type TimeWindow } from '@/core/plan/windows';
 import { now, today } from '@/core/time/now';
 import { undoEntry } from '@/core/undo';
@@ -28,7 +29,7 @@ import { setSettings } from '@/core/settings/settings';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import type { SetupThing } from './daySetup';
-import { readField } from './dueWords';
+import { readFieldWithPart } from './dueWords';
 import { dayRepo, itemKeyOf, itemRepo, putRow } from './repo';
 import type { PlanDayRow, PlanItemRow } from './schema';
 import { overloadLine } from './overload';
@@ -200,7 +201,8 @@ async function itemPatch(
 /** The one field: a ToDo through the quick-capture target; „bis Do“ or „Frist“ makes the planner item's due hard. */
 export async function addFromField(text: string, titles: Record<string, string>): Promise<boolean> {
   // The phrase is German, like the quick-capture parser (CONCEPT §6c); elsewhere the ⋯ action sets a deadline.
-  const { fields, hardDue, isBreak } = readField(
+  // „Duschen nachmittags“ (package 4b): the part word becomes the item's part (`readFieldWithPart`).
+  const { fields, hardDue, isBreak, part } = readFieldWithPart(
     text,
     new Date(now()),
     today(),
@@ -223,13 +225,19 @@ export async function addFromField(text: string, titles: Record<string, string>)
       { leadOnly: true },
     );
   }
-  const lead = hardDue ? t.planner.toast.addedWithDue(dayName(hardDue)) : t.planner.toast.added;
+  // A part word read from the line says so (as a deadline does), so „nachmittags“ is not taken for a title word.
+  const lead = hardDue
+    ? t.planner.toast.addedWithDue(dayName(hardDue))
+    : part && fields.title
+      ? t.planner.toast.part(short(fields.title), partWord(part))
+      : t.planner.toast.added;
   return act(t.planner.toast.added, lead, titles, async () => {
     const saved = await saveCapture('todo', fields);
-    if (hardDue)
+    if (hardDue || part)
       await putRow(itemRepo, itemKeyOf(saved.moduleId, saved.id), {
         source: { module: saved.moduleId, id: saved.id },
-        due: { date: hardDue, hard: true },
+        ...(hardDue ? { due: { date: hardDue, hard: true } } : {}),
+        ...(part ? { part } : {}),
         order: 0,
       });
   });
@@ -320,6 +328,25 @@ export async function setEstimate(
     },
   );
 }
+
+/**
+ * „Tagesabschnitt …“ (package 4b): Vormittag / Nachmittag / Abend or none, on the planner's own row. Orders
+ * the thing inside its day (and, with a window, where it sits); the engine never moves its day for it.
+ */
+export const setPart = (
+  e: PlannableEntry,
+  part: DayPart | undefined,
+  titles: Record<string, string>,
+) =>
+  act(
+    t.planner.row.dayPart,
+    part
+      ? t.planner.toast.part(short(e.title), partWord(part))
+      : t.planner.toast.partCleared(short(e.title)),
+    titles,
+    () => itemPatch(e, { part }),
+    { leadOnly: true },
+  );
 
 export const pin = (e: PlannableEntry, date: string, titles: Record<string, string>) =>
   act(t.planner.row.pin, t.planner.toast.pinned(dayName(date)), titles, () =>

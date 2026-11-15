@@ -3,7 +3,7 @@ import { type FormEvent, useEffect, useId, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { getMeta, setMeta } from '@/core/db/metaKv';
 import { getLang } from '@/core/i18n/lang';
-import { dayName, explainAssignment, explainWait } from '@/core/plan/explain';
+import { dayName, explainAssignment, explainWait, partWord } from '@/core/plan/explain';
 import {
   isRestSentence,
   restToTomorrow,
@@ -488,6 +488,22 @@ export default function PlannerPage() {
             },
           ]
         : []),
+      // „Tagesabschnitt …“ (package 4b): one entry, the choice opens in `RowChoice`; only on a row of a day
+      // (a waiting row has no day to order in yet).
+      ...(date
+        ? [
+            {
+              id: 'dayPart',
+              label: t.planner.row.dayPart,
+              onSelect: () =>
+                setChoice({
+                  kind: 'part',
+                  entry: e,
+                  ...(row.item?.part ? { current: row.item.part } : {}),
+                }),
+            },
+          ]
+        : []),
       ...(canRemove(e.moduleId)
         ? [
             {
@@ -583,7 +599,12 @@ export default function PlannerPage() {
   const renderRow = (row: BoardRow, day: BoardDay) => {
     const reason = explainAssignment(
       { reason: row.reason, bumpedBy: row.bumpedBy },
-      { due: row.hardDue ?? row.entry?.due?.date, prevDate: row.entry?.plannedFor, nameOf },
+      {
+        due: row.hardDue ?? row.entry?.due?.date,
+        prevDate: row.entry?.plannedFor,
+        part: row.item?.part,
+        nameOf,
+      },
     );
     const open = why === row.unitId;
     return (
@@ -602,6 +623,8 @@ export default function PlannerPage() {
             <span className={styles.minutes}>
               {row.approx ? t.planner.row.approx(compact(row.minutes)) : compact(row.minutes)}
             </span>
+            {/* The part as plain text, only when set (package 4b; no colour carries it). */}
+            {row.item?.part ? <span>{` · ${partWord(row.item.part)}`}</span> : null}
             {row.hardDue ? (
               <span className={row.late ? styles.dueWas : undefined}>
                 {` · ${row.late ? t.planner.row.dueWas(dayName(row.hardDue)) : t.planner.row.due(dayName(row.hardDue))}`}

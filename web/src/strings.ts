@@ -8499,6 +8499,20 @@ export const de = {
         `Wird am ${day} zur Pause. Das ToDo wird dafür entfernt; Rückgängig holt es zurück.`,
       estimate: 'Dauer …',
       estimateTitle: (title: string) => `Dauer: ${title}`,
+      dayPart: 'Tagesabschnitt …',
+      dayPartTitle: (title: string) => `Tagesabschnitt: ${title}`,
+      dayPartHint: 'Ordnet es im Tag ein. Der Tag bleibt derselbe.',
+      dayParts: {
+        morning: 'Vormittag',
+        afternoon: 'Nachmittag',
+        evening: 'Abend',
+        none: 'Ohne',
+      },
+      dayPartShort: {
+        morning: 'vormittags',
+        afternoon: 'nachmittags',
+        evening: 'abends',
+      },
     },
     reasons: {
       pinned: 'festgenagelt',
@@ -8513,6 +8527,7 @@ export const de = {
       pulled: (day: string) => `vorgezogen, muss bis ${day} fertig sein`,
       capacity: 'der Tag hat weniger Zeit',
       others: 'andere',
+      part: (part: string) => `${part}, wie gewählt`,
     },
     wait: {
       title: 'Wartet auf freie Zeit',
@@ -8549,6 +8564,8 @@ export const de = {
       windowCleared: (day: string) => `${day}: Zeitfenster wie üblich`,
       asBreak: (title: string, day: string, length: string) => `Pause ${day}: ${title} · ${length}`,
       estimate: (title: string, length: string) => `${title} dauert ${length}`,
+      part: (title: string, part: string) => `${title}: ${part}`,
+      partCleared: (title: string) => `${title}: ohne Tagesabschnitt`,
       off: 'Der Planer ist aus.',
     },
     add: {
