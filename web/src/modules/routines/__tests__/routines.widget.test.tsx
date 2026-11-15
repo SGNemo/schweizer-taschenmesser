@@ -25,7 +25,7 @@ describe('routines widget', () => {
 
   it('shows an empty state with an action when there is no routine', async () => {
     view();
-    expect(await screen.findByRole('link', { name: 'Routine eintragen' })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: 'Routine anlegen' })).toHaveAttribute(
       'href',
       '/routines?new=1',
     );

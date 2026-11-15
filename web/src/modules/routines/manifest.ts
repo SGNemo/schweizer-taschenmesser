@@ -7,8 +7,9 @@ import { routineSchema } from './schema';
 import { settings } from './settings';
 
 /**
- * Routinen / Putzplan (UI audit 2026-11, module package H-b): household routines with a room, an interval and a
- * rotation between names typed here. "dran" instead of a backlog: no red, no streak, nothing that counts days.
+ * Routinen (UI audit 2026-11, module package H-b; steps and plain „Wie oft“: round „Tiefe & Politur“): routines
+ * for the day (steps ticked one by one, morning or evening) and the household (a room, a rhythm and a rotation
+ * between names typed here). "dran" instead of a backlog: no red, no streak, nothing that counts days.
  */
 const manifest: ModuleManifest = {
   id: 'routines',
@@ -23,7 +24,7 @@ const manifest: ModuleManifest = {
     tabs: true,
     signature: 'cycle',
   },
-  version: 1,
+  version: 2,
   get description() {
     return t.routines.meta.description;
   },
@@ -58,7 +59,7 @@ const manifest: ModuleManifest = {
   settings,
   defaultEnabled: false,
   maturity: 'stable',
-  seed: { version: 1, dependsOn: [] },
+  seed: { version: 2, dependsOn: [] },
   layout: 'reading',
   order: 92,
   area: 'household',
