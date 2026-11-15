@@ -176,22 +176,22 @@ export const lists: Strings['lists'] = {
   },
   manage: 'Manage lists',
   manageHint:
-    'Tab order, archive and delete. What the pantry, quick capture and the assistant want to buy goes to the first shopping list.',
-  shoppingTarget: 'Gets new shopping items',
+    'New shopping items from the pantry, quick capture and the assistant go to the first shopping list.',
+  shoppingTarget: 'New shopping items go here',
   itemCount: (n: number) => (n === 1 ? '1 entry' : `${n} entries`),
   moveUp: (name: string) => `Move ${name} up`,
   moveDown: (name: string) => `Move ${name} down`,
+  movedTo: (name: string, pos: number, total: number) =>
+    `${name} is now at position ${pos} of ${total}.`,
   archive: 'Archive',
   unarchive: 'Bring back',
   archiveList: 'Archive list',
   archivedTitle: 'Archive',
-  archivedBadge: 'Archived',
-  archivedNote: 'This list is archived and not among the tabs.',
+  archivedTab: (name: string) => `${name} (archived)`,
+  archivedNote: 'This list is archived and isn’t shown as a tab.',
   archivedDone: (name: string) => `“${name}” archived.`,
   unarchivedDone: (name: string) => `“${name}” is back.`,
   archiveHint: 'Archived lists keep their entries and come back under “Manage lists”.',
-  deleteHint: (trash: string) =>
-    `You can undo a delete. After that the list and its entries are under “${trash}”.`,
   editListNamed: (name: string) => `Edit ${name}`,
   itemList: 'List',
   movedItem: (item: string, list: string) => `Moved “${item}” to “${list}”.`,
@@ -246,7 +246,6 @@ export const lists: Strings['lists'] = {
     },
   },
   startedFrom: (name: string, n: number) => `Created “${name}” with ${n} entries.`,
-  startersTitle: 'Shopping and travel',
   showInWidget: 'Show in widget',
   shareTo: 'To a list',
   sharedPreview: (n: number) =>
@@ -257,6 +256,6 @@ export const lists: Strings['lists'] = {
   widgetShows: (name: string) => `The widget now shows “${name}”.`,
   widgetEmptyList: (name: string) => `Nothing open on “${name}”.`,
   widgetSummary: (name: string, n: number) => `${name}: ${n} open`,
-  noListInUse:
-    'No list in use. Create a new one or bring one back from the archive (“⋯” → “Manage lists”).',
+  noListInUse: 'No list yet. Create one with “New list”.',
+  noListArchived: 'All lists are archived. Bring one back or create a new one.',
 };

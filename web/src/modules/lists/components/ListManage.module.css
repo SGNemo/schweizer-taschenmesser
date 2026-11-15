@@ -30,6 +30,8 @@
 }
 .choice[aria-pressed='true'] {
   border-color: var(--text);
+  border-width: 3px;
+  background: var(--accent-soft);
 }
 .dot {
   width: 1.5rem;
@@ -69,4 +71,16 @@
   margin: 0;
   padding-inline-start: var(--space-5);
   overflow-wrap: anywhere;
+}
+/* Announcements for screen readers only. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.rowActions [aria-disabled='true'] {
+  opacity: 0.4;
 }

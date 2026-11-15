@@ -133,8 +133,11 @@ test('Listen verwalten: icon and colour, order, archive and bring back', async (
   // Move "Geschenke" in front of the shopping list.
   await (await openPageMenu(page)).getByRole('menuitem', { name: 'Listen verwalten' }).click();
   const manage = page.getByRole('dialog', { name: 'Listen verwalten' });
-  await expect(manage.getByText('Bekommt neue Einkäufe')).toBeVisible();
-  await manage.getByRole('button', { name: 'Geschenke nach oben' }).click();
+  await expect(manage.getByText('Hier landen neue Einkäufe')).toBeVisible();
+  await manage.getByRole('button', { name: 'Geschenke weiter nach oben' }).click();
+  // The row moved; the pressed arrow keeps the focus and the new place is said.
+  await expect(manage.getByRole('button', { name: 'Geschenke weiter nach oben' })).toBeFocused();
+  await expect(manage.getByRole('status')).toHaveText('Geschenke ist jetzt an Position 1 von 2.');
   await expect(manage.getByTestId('lists-manage').getByRole('listitem').first()).toContainText(
     'Geschenke',
   );

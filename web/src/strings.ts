@@ -5461,23 +5461,23 @@ export const de = {
     } as Record<string, string>,
     manage: 'Listen verwalten',
     manageHint:
-      'Reihenfolge der Reiter, Archiv und Löschen. Was Vorräte, Schnellerfassung und Assistent einkaufen wollen, landet auf der ersten Einkaufsliste.',
-    shoppingTarget: 'Bekommt neue Einkäufe',
+      'Neue Einkäufe aus Vorräten, Schnellerfassung und Assistent landen auf der ersten Einkaufsliste.',
+    shoppingTarget: 'Hier landen neue Einkäufe',
     itemCount: (n: number) => (n === 1 ? '1 Eintrag' : `${n} Einträge`),
-    moveUp: (name: string) => `${name} nach oben`,
-    moveDown: (name: string) => `${name} nach unten`,
+    moveUp: (name: string) => `${name} weiter nach oben`,
+    moveDown: (name: string) => `${name} weiter nach unten`,
+    movedTo: (name: string, pos: number, total: number) =>
+      `${name} ist jetzt an Position ${pos} von ${total}.`,
     archive: 'Archivieren',
     unarchive: 'Zurückholen',
     archiveList: 'Liste archivieren',
     archivedTitle: 'Archiv',
-    archivedBadge: 'Archiviert',
-    archivedNote: 'Diese Liste ist archiviert und steht nicht bei den Reitern.',
+    archivedTab: (name: string) => `${name} (archiviert)`,
+    archivedNote: 'Diese Liste ist archiviert und erscheint nicht als Reiter.',
     archivedDone: (name: string) => `„${name}“ archiviert.`,
     unarchivedDone: (name: string) => `„${name}“ ist zurück.`,
     archiveHint:
       'Archivierte Listen behalten ihre Einträge und kommen unter „Listen verwalten“ zurück.',
-    deleteHint: (trash: string) =>
-      `Löschen kannst du rückgängig machen. Danach liegt die Liste mit ihren Einträgen unter „${trash}“.`,
     editListNamed: (name: string) => `${name} bearbeiten`,
     itemList: 'Liste',
     movedItem: (item: string, list: string) => `„${item}“ nach „${list}“ verschoben.`,
@@ -5532,7 +5532,6 @@ export const de = {
       },
     },
     startedFrom: (name: string, n: number) => `„${name}“ mit ${n} Einträgen angelegt.`,
-    startersTitle: 'Einkauf und Reise',
     showInWidget: 'Im Widget zeigen',
     shareTo: 'Auf eine Liste',
     sharedPreview: (n: number) =>
@@ -5543,8 +5542,8 @@ export const de = {
     widgetShows: (name: string) => `Das Widget zeigt jetzt „${name}“.`,
     widgetEmptyList: (name: string) => `Auf „${name}“ ist nichts offen.`,
     widgetSummary: (name: string, n: number) => `${name}: ${n} offen`,
-    noListInUse:
-      'Keine Liste in Gebrauch. Leg eine neue an oder hol eine aus dem Archiv zurück („⋯“ → „Listen verwalten“).',
+    noListInUse: 'Noch keine Liste. Leg mit „Neue Liste“ eine an.',
+    noListArchived: 'Alle Listen sind archiviert. Hol eine zurück oder leg eine neue an.',
   },
 
   vault: {
