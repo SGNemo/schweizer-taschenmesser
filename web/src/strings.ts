@@ -4820,7 +4820,7 @@ export const de = {
     meta: {
       name: 'Dieser PC',
       description:
-        'Laufwerke mit Scan der größten Ordner und Systeminfo (Prozessor, Speicher, Akku, Netzwerk) – nur zum Ansehen, nur am PC; der Scan verändert nichts.',
+        'Laufwerke mit Scan der größten Ordner, Aufräum-Vorschläge und Systeminfo – nur am PC. Gelöscht wird nur, was du bestätigst.',
       route: 'Dieser PC',
       route2: 'Datenträger-Scan',
       widget: 'Laufwerke',
@@ -4828,7 +4828,12 @@ export const de = {
     },
     title: 'Dieser PC',
     tabsLabel: 'Bereich',
-    tabs: { drives: 'Laufwerke', system: 'System' } as const,
+    tabs: {
+      drives: 'Laufwerke',
+      tidy: 'Aufräumen',
+      system: 'System',
+      history: 'Verlauf',
+    } as const,
     lead: 'Was belegt den Platz? Scanne ein Laufwerk und erkunde die größten Ordner. Es wird nichts verändert oder hochgeladen.',
     loading: 'Laufwerke werden gelesen …',
     empty: 'Es wurden keine Laufwerke gefunden.',
@@ -4894,11 +4899,6 @@ export const de = {
       ioLabel: 'Aktivität',
     },
     quick: {
-      title: 'Schnellübersicht',
-      lead: 'Das lässt sich oft schnell aufräumen – ohne neuen Scan. Die Größen sind ungefähr.',
-      recycle: 'Papierkorb',
-      recycleHint: 'Leere ihn im Explorer; Nemo löscht nichts endgültig von selbst.',
-      atLeast: (size: string) => `mindestens ${size}`,
       biggest: 'Größte Ordner im letzten Scan',
       biggestHint: 'Aus dem Scan dieser Sitzung.',
     },
@@ -5007,27 +5007,6 @@ export const de = {
         permanentInstead: 'Diese endgültig löschen …',
         partialHint: 'Die Zahlen dieses Ordners können jetzt abweichen. Scanne ihn bei Bedarf neu.',
       },
-    },
-    places: {
-      title: 'Aufräumen',
-      lead: 'Bekannte Ordner, in denen sich oft Ballast sammelt. Scanne sie und wähle selbst aus, was weg kann – nichts wird automatisch gelöscht.',
-      name: {
-        temp: 'Temporäre Dateien',
-        chrome: 'Chrome-Zwischenspeicher',
-        edge: 'Edge-Zwischenspeicher',
-        firefox: 'Firefox-Zwischenspeicher',
-        downloads: 'Downloads',
-        cache: 'Zwischenspeicher (.cache)',
-      } as Record<string, string>,
-      hint: {
-        downloads: 'Tipp: Mit dem Filter „Älter als“ findest du alte Downloads.',
-        temp: 'Programme können hier Dateien noch brauchen; Dateien in Benutzung bleiben stehen.',
-        chrome: 'Der Browser baut den Zwischenspeicher bei Bedarf neu auf.',
-        edge: 'Der Browser baut den Zwischenspeicher bei Bedarf neu auf.',
-        firefox: 'Der Browser baut den Zwischenspeicher bei Bedarf neu auf.',
-        cache: 'Programme bauen ihren Zwischenspeicher bei Bedarf neu auf.',
-      } as Record<string, string>,
-      scan: (name: string) => `${name} scannen`,
     },
     dupes: {
       title: 'Doppelte Dateien',
@@ -5262,6 +5241,107 @@ export const de = {
         error: 'nicht lesbar',
       },
       smallFiles: (n: number) => `${n} kleinere Dateien`,
+    },
+    /** Tab "Aufräumen": suggestions with preview and size; deleting stays the delete dialog. */
+    tidy: {
+      lead: 'Nemo sieht an bekannten Orten nach, was meist weg kann. Du siehst vorher, was es ist; gelöscht wird nur, was du bestätigst – voreingestellt in den Papierkorb.',
+      search: 'Suchen',
+      again: 'Erneut suchen',
+      cancel: 'Abbrechen',
+      searching: 'Suche läuft …',
+      searchingStep: (done: number, total: number, what: string) =>
+        `Suche läuft … ${done} von ${total}: ${what}`,
+      failed: 'Die Suche hat nicht geklappt. Du kannst es noch einmal versuchen.',
+      none: 'Nichts zum Aufräumen gefunden.',
+      noneHint:
+        'An den bekannten Orten liegt gerade kaum etwas. Doppelte und große, lange nicht genutzte Dateien zeigt der Scan eines Laufwerks.',
+      toDrives: 'Zu den Laufwerken',
+      cancelledNote: 'Die Suche wurde abgebrochen. Die Liste ist vielleicht unvollständig.',
+      summary: (n: number, size: string) =>
+        `${n === 1 ? '1 Vorschlag' : `${formatNumber(n)} Vorschläge`} · zusammen ${size}`,
+      listLabel: 'Vorschläge',
+      category: {
+        temp: 'Temporäre Dateien',
+        browserCache: 'Browser-Zwischenspeicher',
+        crashReports: 'Absturzberichte',
+        oldDownloads: 'Alte Downloads',
+      } as Record<string, string>,
+      source: { chrome: 'Chrome', edge: 'Edge', brave: 'Brave', firefox: 'Firefox' } as Record<
+        string,
+        string
+      >,
+      placeName: (category: string, source: string) =>
+        source ? `${category} (${source})` : category,
+      what: {
+        temp: 'Reste von Programmen und Installationen. Dateien der letzten 7 Tage bleiben, weil ein Programm sie noch brauchen kann.',
+        browserCache:
+          'Kopien von Webseiten, damit sie schneller laden. Der Browser legt sie bei Bedarf neu an; Lesezeichen, Verlauf und Anmeldungen bleiben.',
+        crashReports:
+          'Berichte und Speicherabbilder abgestürzter Programme. Du brauchst sie nur, wenn jemand einen Absturz untersucht.',
+        oldDownloads:
+          'Dateien in Downloads, die seit mindestens 90 Tagen unverändert sind. Das sind deine eigenen Dateien: Wähle selbst aus.',
+      } as Record<string, string>,
+      busy: (program: string) =>
+        `${program} läuft gerade. Schließe das Programm vorher, sonst bleiben Dateien liegen.`,
+      preview: (n: number) => `Vorschau · ${n === 1 ? '1 Eintrag' : `${formatNumber(n)} Einträge`}`,
+      selectItem: (name: string) => `${name} auswählen`,
+      rest: (n: number, size: string) =>
+        `${n === 1 ? '1 weiterer, kleinerer Eintrag' : `${formatNumber(n)} weitere, kleinere Einträge`} · ${size}`,
+      all: 'Alle auswählen',
+      noneSelected: 'Auswahl aufheben',
+      selected: (size: string) => `Ausgewählt: ${size}`,
+      nothingSelected: 'Nichts ausgewählt',
+      clean: 'Aufräumen …',
+      cleanLabel: (name: string) => `Aufräumen: ${name}`,
+      look: 'Im Scan ansehen',
+      lookLabel: (name: string) => `Im Scan ansehen: ${name}`,
+      changed: (when: string) => `geändert ${when}`,
+      windows: {
+        title: 'Macht Windows selbst',
+        lead: 'Manches räumt Windows am sichersten selbst auf. Nemo öffnet dir die richtige Stelle.',
+        recycle: 'Papierkorb',
+        recycleHint:
+          'Was Nemo aufräumt, landet hier. Im Papierkorb holst du es zurück oder leerst ihn endgültig.',
+        recycleOpen: 'Papierkorb öffnen',
+        updates: 'Update-Reste und Systemdateien',
+        updatesHint:
+          'Alte Update-Dateien entfernt Windows unter Einstellungen → System → Speicher.',
+        updatesOpen: 'Speicher-Einstellungen öffnen',
+        openFailed: 'Das ließ sich nicht öffnen.',
+      },
+      /** The drives tab's pointer to this tab (replaces the former list of places there). */
+      pointer:
+        'Temporäre Dateien, Browser-Zwischenspeicher und alte Downloads findest du unter „Aufräumen“.',
+    },
+    /** Tab "Verlauf": what the page changed on this PC, with the way back. */
+    history: {
+      lead: 'Was Nemo auf diesem PC verändert hat, mit dem Weg zurück. Was du aufräumst, steht hier, bis du Nemo schließt.',
+      loading: 'Verlauf wird gelesen …',
+      empty: 'In dieser Sitzung noch nichts aufgeräumt.',
+      emptyHint: 'Sobald du etwas aufräumst, steht es hier.',
+      reload: 'Erneut laden',
+      failed: 'Der Verlauf konnte nicht gelesen werden.',
+      recovered: 'Die Verlaufsdatei war beschädigt und wurde neu angelegt. Ältere Einträge fehlen.',
+      unreadable:
+        'Die Datei mit den gespeicherten Änderungen lässt sich gerade nicht lesen. Bis dahin ändert Nemo nichts; versuch es später noch einmal.',
+      listLabel: 'Verlauf',
+      fromScan: 'Aus dem Scan',
+      trashed: (what: string, size: string, files: number) =>
+        `${what}: ${size} in den Papierkorb · ${files === 1 ? '1 Datei' : `${formatNumber(files)} Dateien`}`,
+      deleted: (what: string, size: string, files: number) =>
+        `${what}: ${size} endgültig gelöscht · ${files === 1 ? '1 Datei' : `${formatNumber(files)} Dateien`}`,
+      restore: 'Papierkorb öffnen',
+      restoreHint: 'Solange sie im Papierkorb liegen, holst du die Dateien dort zurück.',
+      restoreLabel: (what: string) => `Papierkorb öffnen: ${what}`,
+      noWayBack: 'Endgültig gelöscht – das lässt sich nicht zurückholen.',
+      switched: (name: string, on: boolean) => `${name}: ${on ? 'eingeschaltet' : 'ausgeschaltet'}`,
+      undo: 'Rückgängig',
+      undoLabel: (what: string) => `Rückgängig: ${what}`,
+      undoDone: 'Zurückgestellt.',
+      undoFailed: 'Das ließ sich nicht zurückstellen.',
+      undone: 'Zurückgenommen.',
+      canUndo: 'Der Wert von vorher ist gespeichert.',
+      undoNewerFirst: 'Nimm zuerst die neuere Änderung daran zurück.',
     },
   },
 

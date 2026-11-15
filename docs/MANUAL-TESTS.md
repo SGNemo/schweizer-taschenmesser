@@ -367,6 +367,10 @@ Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währ
 #### Datenträger, Systeminfo (diese Runde) – nur auf echtem Windows prüfbar
 
 Alles mit einem **Testordner** mit erfundenen Dateien, nie mit echten Nutzerdaten:
+PC-A1. _Aufräumen suchen:_ Dieser PC → Aufräumen → „Suchen“: Temporäre Dateien, Browser-Zwischenspeicher (je Browser und Profil), Absturzberichte und Alte Downloads erscheinen mit Größe; in der Vorschau von „Temporäre Dateien“ steht nichts, das jünger als 7 Tage ist; bei „Alte Downloads“ ist nichts angehakt. Läuft Chrome/Edge/Firefox, steht der Hinweis „läuft gerade“ an dessen Karte. ☐
+PC-A2. _Aufräumen ausführen:_ Bei „Temporäre Dateien“ → „Aufräumen …“: derselbe Dialog wie im Scan (Papierkorb vorgewählt), danach liegen die Dateien im Papierkorb, die Karte zeigt nur noch den Rest (Dateien in Benutzung bleiben und stehen im Bericht). Bei über 10 GB fragt Nemo ein zweites Mal. ☐
+PC-A3. _Verlauf und Weg zurück:_ Dieser PC → Verlauf zeigt „Temporäre Dateien: … in den Papierkorb“ ohne Dateinamen; „Papierkorb öffnen“ öffnet den Papierkorb im Explorer, dort lässt sich alles wiederherstellen. Nach einem Neustart der App ist der Aufräum-Eintrag weg (er wird nicht gespeichert); im App-Datenordner liegt keine Datei `pc-care/journal.json`. ☐
+PC-A4. _Windows-Werkzeuge:_ Aufräumen → „Speicher-Einstellungen öffnen“ öffnet Einstellungen → System → Speicher; „Papierkorb öffnen“ den Papierkorb. Nemo selbst leert den Papierkorb nie. ☐
 DT-D1. _Scan echtes Laufwerk:_ Datenträger → C: scannen. Fortschritt läuft, UI bleibt flüssig, Summe stimmt grob mit dem Explorer („Größe auf Datenträger“ des Ordners) überein. Ergebnis mit „Nicht gelesen“-Liste (z. B. `System Volume Information`). ☐
 DT-D2. _Treemap navigieren:_ Klick in einen Ordner, Brotkrumen zurück, Umschalt+Klick wählt nur aus, Pfeiltasten/Eingabe/Rücktaste, Tooltip, Legende, Farbe nach Tiefe, Filter „Älter als“, „Dateityp“. ☐
 DT-D3. _Laufwerksarten:_ USB-Stick und Netzlaufwerk erscheinen mit richtigem Typ; SSD/HDD-Angabe stimmt (kann „Festplatte“ ohne Angabe sein). ☐
@@ -404,7 +408,7 @@ DV-V6. _Live-Kacheln:_ CPU/RAM/Netz aktualisieren alle 3 s ohne Flackern; Mini-V
 
 Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währenddessen verschieben, in der Titelleiste steht nie „Keine Rückmeldung“, und ein Wechsel zu einem anderen Modul zeigt dessen Inhalt statt „…“. Hintergrund und Einordnung je Command: [perf/MAIN-THREAD-COMMANDS-2026-11.md](perf/MAIN-THREAD-COMMANDS-2026-11.md).
 - **MT-H1 Löschen in „Dieser PC“ (wichtigster Punkt):** einen Testordner mit ein paar Wegwerf-Dateien scannen, zwei Dateien markieren, „Löschen“: der Plan erscheint, nach der Bestätigung liegen die Dateien im Papierkorb, die Karte zeigt die neue Größe. Dann „Endgültig löschen“ wählen: Nemo fragt ein **zweites Mal** nach; ohne die zweite Bestätigung wird nichts gelöscht. Ein Ordner aus der Sperrliste (z. B. `C:\Windows`) lässt sich weiterhin nicht zum Löschen vormerken. Zweimal schnell auf „Löschen“ klicken: es läuft nur ein Löschvorgang. ☐
-- **MT-H2 „Dieser PC“ blättern:** `C:\` scannen, während und nach dem Scan schnell durch große Ordner klicken (z. B. `Windows` → `WinSxS`), dabei zum Kalender und zurück: die Karte folgt dem zuletzt geklickten Ordner, nichts bleibt hängen. „Im Explorer zeigen“ öffnet den Explorer mit dem markierten Eintrag. „Aufräumen“ zeigt die bekannten Orte (Temp, Browser-Caches). ☐
+- **MT-H2 „Dieser PC“ blättern:** `C:\` scannen, während und nach dem Scan schnell durch große Ordner klicken (z. B. `Windows` → `WinSxS`), dabei zum Kalender und zurück: die Karte folgt dem zuletzt geklickten Ordner, nichts bleibt hängen. „Im Explorer zeigen“ öffnet den Explorer mit dem markierten Eintrag. Der Reiter „Aufräumen“ zeigt nach „Suchen“ die bekannten Orte (Temp, Browser-Caches). ☐
 
 ### Werkzeuge
 

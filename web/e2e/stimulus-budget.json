@@ -114,11 +114,11 @@
       "signatureBlocks": 0
     },
     "d1920--disk": {
-      "height": 1460,
+      "height": 1080,
       "buttons": 24,
       "links": 11,
       "icons": 35,
-      "firstScreenActions": 31,
+      "firstScreenActions": 35,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
@@ -126,11 +126,11 @@
       "signatureBlocks": 0
     },
     "d1920--disk-scan": {
-      "height": 1460,
+      "height": 1080,
       "buttons": 24,
       "links": 11,
       "icons": 35,
-      "firstScreenActions": 31,
+      "firstScreenActions": 35,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,

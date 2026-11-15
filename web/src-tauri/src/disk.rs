@@ -10,8 +10,9 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
 use ::disk_scan::{
-    apply_to_tree, drive_kind_of, execute, find_duplicates, known_places, list_drives, plan,
-    platform_trasher, reveal_in_file_manager, scan, steam_games, steam_install_dirs, system_guard,
+    apply_to_tree, cleanup_roots, cleanup_scan_options, drive_kind_of, execute, find_duplicates,
+    is_busy, known_places, list_drives, plan, platform_trasher, reveal_in_file_manager,
+    running_programs, scan, select_cleanup, steam_games, steam_install_dirs, system_guard,
     user_data_dirs, DeleteControl, DeleteProgress, Denied, DriveInfo, DriveKind, DupGroup, Flag,
     Mode, NodeView, NotRead, Place, Plan, Progress, Query, Report, ScanControl, ScanOptions,
     SteamGame, Tree,
@@ -32,6 +33,12 @@ pub struct DiskScans(Arc<Mutex<Inner>>);
 struct Inner {
     next_id: u64,
     scans: HashMap<u64, Arc<Session>>,
+    /// The scans of the clean-up places of the last "Aufräumen" run, with their category code.
+    /// Kept apart from `scans`, so they neither push a drive scan out nor get pushed out by one;
+    /// a new run replaces them all.
+    cleanup: HashMap<u64, (Arc<Session>, &'static str)>,
+    /// Stops the running clean-up search.
+    cleanup_control: Arc<ScanControl>,
     plans: HashMap<u64, Arc<StoredPlan>>,
 }
 
@@ -44,6 +51,8 @@ struct Session {
 
 struct StoredPlan {
     scan_id: u64,
+    /// What a deletion of this plan is called in the history (fixed when the plan is made).
+    category: &'static str,
     plan: Plan,
     created: Instant,
     control: DeleteControl,
@@ -82,8 +91,14 @@ impl Inner {
     fn get(&self, id: u64) -> Result<Arc<Session>, String> {
         self.scans
             .get(&id)
+            .or_else(|| self.cleanup.get(&id).map(|(s, _)| s))
             .cloned()
             .ok_or_else(|| "unknown-scan".to_string())
+    }
+
+    /// What a deletion in this scan is called in the history: the clean-up category, or `scan`.
+    fn category(&self, scan_id: u64) -> &'static str {
+        self.cleanup.get(&scan_id).map_or("scan", |(_, c)| c)
     }
 
     /// Makes room for a new scan by dropping the oldest ones.
@@ -396,6 +411,149 @@ pub fn disk_duplicates_cancel(state: State<'_, DiskScans>, scan_id: u64) -> Resu
     Ok(())
 }
 
+// --- clean-up suggestions ---------------------------------------------------------------------
+
+/// Entries a suggestion shows in its preview; the ids of all of them come along in `ids`.
+const CLEANUP_PREVIEW: usize = 200;
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CleanupPlace {
+    /// `temp`, `browserCache`, `crashReports`, `oldDownloads`.
+    category: &'static str,
+    /// The browser for a cache (`chrome`, `edge`, `brave`, `firefox`), else empty.
+    source: &'static str,
+    /// The scan that holds this place: deleting takes this id and node ids, never a path.
+    scan_id: u64,
+    path: String,
+    /// The biggest suggested entries.
+    items: Vec<NodeView>,
+    /// Node ids of all suggested entries (at most 5000, the limit of a delete plan).
+    ids: Vec<u32>,
+    total_bytes: u64,
+    total_files: u64,
+    /// Ticked by default (never for the user's own downloads).
+    preselected: bool,
+    /// Only entries at least this old are suggested (0 = all).
+    min_age_days: u32,
+    /// The program that uses these files is running (close it first).
+    busy: bool,
+}
+
+#[derive(Serialize)]
+#[serde(tag = "event", rename_all = "camelCase")]
+pub enum CleanupEvent {
+    #[serde(rename_all = "camelCase")]
+    Progress {
+        done: usize,
+        total: usize,
+        category: &'static str,
+    },
+    Done {
+        places: Vec<CleanupPlace>,
+        cancelled: bool,
+    },
+}
+
+/// Looks through the clean-up places of this machine (temp files, browser caches, crash reports,
+/// old downloads) and reports what could go, with sizes. Nothing is changed: each place is an
+/// ordinary scan, and deleting a suggestion is the ordinary `disk_delete_plan` → `disk_delete`
+/// with its block list and confirmations. A new search replaces the previous one.
+#[tauri::command]
+pub fn disk_cleanup_scan(
+    state: State<'_, DiskScans>,
+    on_event: Channel<CleanupEvent>,
+) -> Result<(), String> {
+    let control = Arc::new(ScanControl::default());
+    {
+        let mut inner = state.0.lock().map_err(|_| "internal")?;
+        inner.cleanup_control.cancel();
+        inner.cleanup_control = control.clone();
+        for (_, (s, _)) in inner.cleanup.drain() {
+            s.control.cancel();
+        }
+    }
+    let scans = state.0.clone();
+    std::thread::Builder::new()
+        .name("disk-cleanup".into())
+        .spawn(move || {
+            let roots = cleanup_roots();
+            let running = running_programs();
+            let now = crate::optimize::unix_now();
+            let total = roots.len();
+            let mut places = Vec::new();
+            for (done, root) in roots.into_iter().enumerate() {
+                if control.is_cancelled() {
+                    break;
+                }
+                let category = root.kind.code();
+                let _ = on_event.send(CleanupEvent::Progress {
+                    done,
+                    total,
+                    category,
+                });
+                let Ok(result) = scan(&root.path, &cleanup_scan_options(), &control, |_| {}) else {
+                    continue;
+                };
+                if result.cancelled {
+                    break;
+                }
+                let rule = root.kind.rule();
+                let tree = result.tree;
+                let picked = select_cleanup(&tree.children(tree.root_id(), 1, 0), rule, now);
+                if picked.is_empty() {
+                    continue;
+                }
+                let session = Arc::new(new_session());
+                if let Ok(mut slot) = session.tree.lock() {
+                    *slot = Some(Arc::new(RwLock::new(tree)));
+                }
+                let scan_id = {
+                    let Ok(mut inner) = scans.lock() else { break };
+                    // A newer search took over while this place was read: its results win.
+                    if control.is_cancelled() {
+                        break;
+                    }
+                    inner.next_id += 1;
+                    let id = inner.next_id;
+                    inner.cleanup.insert(id, (session, category));
+                    id
+                };
+                places.push(CleanupPlace {
+                    category,
+                    source: root.source,
+                    scan_id,
+                    path: display_path(&root.path),
+                    ids: picked.iter().map(|n| n.id).collect(),
+                    total_bytes: picked.iter().map(|n| n.bytes).sum(),
+                    total_files: picked.iter().map(|n| n.files).sum(),
+                    items: picked.into_iter().take(CLEANUP_PREVIEW).collect(),
+                    preselected: rule.preselect,
+                    min_age_days: rule.min_age_days,
+                    busy: is_busy(root.busy_when, &running),
+                });
+            }
+            let _ = on_event.send(CleanupEvent::Done {
+                places,
+                cancelled: control.is_cancelled(),
+            });
+        })
+        .map_err(|_| "internal".to_string())?;
+    Ok(())
+}
+
+/// Stops the running clean-up search; what was found so far is still reported.
+#[tauri::command]
+pub fn disk_cleanup_cancel(state: State<'_, DiskScans>) -> Result<(), String> {
+    state
+        .0
+        .lock()
+        .map_err(|_| "internal")?
+        .cleanup_control
+        .cancel();
+    Ok(())
+}
+
 // --- deleting ---------------------------------------------------------------------------------
 
 /// The block list of this machine, with the app's own folders added.
@@ -529,10 +687,12 @@ pub fn disk_delete_plan(
     }
     inner.next_id += 1;
     let plan_id = inner.next_id;
+    let category = inner.category(scan_id);
     inner.plans.insert(
         plan_id,
         Arc::new(StoredPlan {
             scan_id,
+            category,
             plan: p,
             created: now,
             control: DeleteControl::default(),
@@ -628,6 +788,15 @@ pub fn disk_delete(
             if let Ok(mut inner) = scans.lock() {
                 inner.plans.remove(&plan_id);
             }
+            if report.files_deleted > 0 || report.freed_bytes > 0 {
+                crate::optimize::note_cleanup(
+                    &app,
+                    stored.category,
+                    report.freed_bytes,
+                    report.files_deleted,
+                    mode == Mode::Permanent,
+                );
+            }
             let _ = on_event.send(DeleteEvent::Done(Box::new(DoneView { report, root_node })));
         })
         .map_err(|_| "internal".to_string())?;
@@ -672,6 +841,20 @@ mod tests {
     fn unknown_scans_are_an_error() {
         let inner = Inner::default();
         assert_eq!(inner.get(9).err().as_deref(), Some("unknown-scan"));
+    }
+
+    #[test]
+    fn clean_up_scans_are_found_by_id_but_never_evict_or_get_evicted() {
+        let mut inner = Inner::default();
+        inner.cleanup.insert(50, (session(), "temp"));
+        for id in 1..=MAX_KEPT as u64 {
+            inner.scans.insert(id, session());
+        }
+        inner.evict();
+        assert!(inner.get(50).is_ok());
+        assert_eq!(inner.cleanup.len(), 1);
+        assert_eq!(inner.category(50), "temp");
+        assert_eq!(inner.category(2), "scan");
     }
 
     #[test]
