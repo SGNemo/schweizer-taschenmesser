@@ -3,7 +3,8 @@
  * "PC-Sven" at volume 42 % that answers like the real hub – its state after every bundle, a
  * refusal with a reason, a close. Only wired up in `--mode e2e` builds (see `web.ts`), and only
  * for pages that set `localStorage['tm-e2e-remote'] = '1'`. Tests steer it through
- * `window.__tmRemote`.
+ * `window.__tmRemote`. Power: the demo PC knows power (not granted) unless a test says otherwise;
+ * a start answers `started`, the rest (`done`, `cancelled`, …) is pushed by the test.
  */
 import type {
   RemoteAction,
@@ -14,12 +15,16 @@ import type {
   RemoteOpened,
   RemoteLevel,
   RemotePcState,
+  RemotePowerAction,
+  RemotePowerAnswer,
+  RemotePowerInfo,
   RemoteService,
 } from './types';
 
 const E2E_FLAG = 'tm-e2e-remote';
 const FAIL_FLAG = 'tm-e2e-remote-fail';
 const GRANT_FLAG = 'tm-e2e-remote-grant';
+const POWER_FLAG = 'tm-e2e-remote-power';
 /** The demo PC's name (the phone knows its PC by the name it shows for sync). */
 export const FAKE_PC_NAME = 'PC-Sven';
 const STEP = 2;
@@ -52,6 +57,24 @@ export function createFakeRemoteParts() {
   let opens = 0;
   let hold: Promise<void> | undefined;
   let greeting: RemoteCloseReason | undefined;
+  /** The PC's power facts (`null`: a PC from before power), and what the phone asked of it. */
+  let power: RemotePowerInfo | null = { granted: false, pending: false, hibernate: false };
+  let busyPc = false;
+  /** How the native confirm dialog ends on a phone without a screen lock (`setUnlock('none')`). */
+  let confirm: 'ok' | 'cancel' = 'ok';
+  let confirms = 0;
+  /** The next power calls fail with this code; a held prompt waits for its release. */
+  let powerError: { code: string; left: number } | undefined;
+  let prompt: Promise<void> | undefined;
+  const powered: { action: RemotePowerAction; despite: boolean }[] = [];
+  /** Tells the live session `answer` – after the call returned, like the shell's channel. */
+  const answerPower = (answer: RemotePowerAnswer) => {
+    const session = live;
+    if (!session) return;
+    void Promise.resolve().then(() =>
+      session.onEvent({ kind: 'power', session: session.session, answer }),
+    );
+  };
 
   const apply = (action: RemoteAction | RemoteButtonAction | RemoteKeyAction) => {
     const volume = pc.volume ?? 0;
@@ -114,12 +137,18 @@ export function createFakeRemoteParts() {
         unlockRequired: known.unlockRequired,
         noLock,
         state: { ...pc },
+        power: power && { ...power },
       };
     },
     send: async (session, actions) => {
       if (!live || live.session !== session) throw new Error('closed');
       const full = (a: string) => MOUSE.has(a) || a.startsWith('key-');
       if (live.level !== 'full' && actions.some(full)) throw new Error('bad-level');
+      // an older PC does not know "monitor off": it ends the session without a word
+      if (power === null && actions.includes('monitor-off')) {
+        live = undefined;
+        throw new Error('closed');
+      }
       for (const action of actions) {
         // like the shell: no press and no key reaches a locked PC, a release always goes
         if ((PRESS.has(action) || action.startsWith('key-')) && pc.locked) continue;
@@ -151,6 +180,40 @@ export function createFakeRemoteParts() {
         throw new Error('cut');
       }
       typed.push(text);
+    },
+    power: async (session, action, despite) => {
+      if (powerError && powerError.left > 0) {
+        powerError.left -= 1;
+        throw new Error(powerError.code);
+      }
+      if (!live || live.session !== session) throw new Error('closed');
+      if (power === null) throw new Error('no-power');
+      // the phone's own unlock before every action but `cancel` (one approval serves `despite`)
+      if (action !== 'cancel' && !despite) {
+        unlocks += 1;
+        if (unlock === 'cancel') throw new Error('unlock-cancelled');
+        if (unlock === 'unavailable') throw new Error('unlock-unavailable');
+        if (prompt) await prompt;
+        // like the shell: a session closed while the prompt was up gets nothing
+        if (!live || live.session !== session) throw new Error('closed');
+        // no screen lock: the shell asks in a native confirm dialog instead
+        if (unlock === 'none') {
+          confirms += 1;
+          if (confirm === 'cancel') throw new Error('confirm-cancelled');
+        }
+      }
+      powered.push({ action, despite });
+      if (action === 'cancel') {
+        power.pending = false;
+        answerPower('cancelled');
+        return;
+      }
+      if (!power.granted) return answerPower('not-granted');
+      if (pc.locked) return answerPower('locked');
+      if (power.pending) return answerPower('pending');
+      if (busyPc && !despite) return answerPower('working');
+      power.pending = true;
+      answerPower('started');
     },
     close: async (session) => {
       if (live?.session === session) live = undefined;
@@ -212,6 +275,40 @@ export function createFakeRemoteParts() {
     },
     /** How often the phone asked for an unlock. */
     unlocks: () => unlocks,
+    /** The PC's power facts from the next `open` on (`null`: a PC from before power). */
+    setPower(info: RemotePowerInfo | null) {
+      power = info && { ...info };
+    },
+    /** Nemo on the PC is busy: a start without `despite` answers `working`. */
+    setPowerBusy(on = true) {
+      busyPc = on;
+    },
+    /** The PC tells the phone about power unasked (`done`, `cancelled` at the PC, …). */
+    pushPower(answer: RemotePowerAnswer) {
+      if (power && (answer === 'done' || answer === 'cancelled')) power.pending = false;
+      answerPower(answer);
+    },
+    /** How the native confirm dialog for power ends (a phone without a screen lock). */
+    setConfirm(answer: 'ok' | 'cancel') {
+      confirm = answer;
+    },
+    /** The next `count` power calls fail with `code` (`closed`, `network`, …). */
+    failPower(code: string, count = 1) {
+      powerError = { code, left: count };
+    },
+    /** The phone's prompt stays up until the returned function is called. */
+    holdPrompt(): () => void {
+      let release: () => void = () => undefined;
+      prompt = new Promise<void>((resolve) => (release = resolve));
+      return () => {
+        prompt = undefined;
+        release();
+      };
+    },
+    /** How often that dialog was shown. */
+    confirms: () => confirms,
+    /** What the phone asked of the PC's power, in order. */
+    powered: () => [...powered],
     pointed: () => [...pointed],
     typed: () => [...typed],
     level: () => live?.level,
@@ -242,6 +339,16 @@ export function createFakeRemote(): RemoteService {
   try {
     const [level, unlock] = (localStorage.getItem(GRANT_FLAG) ?? '').split(':');
     if (level === 'full') hooks.setGrant('full', unlock === 'unlock');
+  } catch {
+    // Storage blocked: nothing arranged.
+  }
+  // A spec about power says before the app starts what the demo PC has
+  // (`tm-e2e-remote-power` = `none` for a PC from before power, or `granted` / `granted:hibernate`).
+  try {
+    const [granted, hibernate] = (localStorage.getItem(POWER_FLAG) ?? '').split(':');
+    if (granted === 'none') hooks.setPower(null);
+    else if (granted === 'granted')
+      hooks.setPower({ granted: true, pending: false, hibernate: hibernate === 'hibernate' });
   } catch {
     // Storage blocked: nothing arranged.
   }

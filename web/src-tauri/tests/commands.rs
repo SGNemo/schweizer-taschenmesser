@@ -626,6 +626,7 @@ fn remote_client_commands_exist_on_the_phone_only() {
         "remote_client_send",
         "remote_client_text",
         "remote_client_pointer",
+        "remote_client_power",
         "remote_client_close",
     ];
     let mobile = mobile_handler_commands();

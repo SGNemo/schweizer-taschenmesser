@@ -123,18 +123,20 @@ impl InputSession {
     /// Connects, proves this device's key, checks the pinned hub key and asks for `level`. The
     /// answer says which level the session really has (never more than the PC granted).
     /// `on_event` is called on the reader thread.
+    /// `features`: ask for the features this side knows; `false` for a PC known to be older.
     pub fn open(
         addr: SocketAddrV4,
         own: &StaticKey,
         hub: &PublicKey,
         name: &str,
         level: Level,
+        features: bool,
         on_event: Box<dyn FnMut(Event) + Send>,
     ) -> Result<(InputSession, Opened), InputError> {
         if !qr::is_private_v4(addr.ip().octets()) {
             return Err(InputError::Network);
         }
-        Self::open_at(addr, own, hub, name, level, on_event)
+        Self::open_at(addr, own, hub, name, level, features, on_event)
     }
 
     /// With features first; a PC that hangs up on that `open` without a word is asked once more
@@ -145,9 +147,15 @@ impl InputSession {
         hub: &PublicKey,
         name: &str,
         level: Level,
+        features: bool,
         on_event: OnEvent,
     ) -> Result<(InputSession, Opened), InputError> {
         let mut on_event = Some(on_event);
+        // a PC known to be older is asked the old way at once (one handshake, not two)
+        if !features {
+            return Self::attempt(addr, own, hub, name, level, None, &mut on_event)
+                .map_err(|a| a.error);
+        }
         match Self::attempt(
             addr,
             own,
@@ -401,6 +409,17 @@ pub(crate) mod testing {
         level: Level,
         on_event: Box<dyn FnMut(Event) + Send>,
     ) -> Result<(InputSession, Opened), InputError> {
-        InputSession::open_at(addr, own, hub, "Phone", level, on_event)
+        InputSession::open_at(addr, own, hub, "Phone", level, true, on_event)
+    }
+
+    /// The old way (no features byte), as a phone does with a PC it knows to be older.
+    pub fn open_plain(
+        addr: SocketAddrV4,
+        own: &StaticKey,
+        hub: &PublicKey,
+        level: Level,
+        on_event: Box<dyn FnMut(Event) + Send>,
+    ) -> Result<(InputSession, Opened), InputError> {
+        InputSession::open_at(addr, own, hub, "Phone", level, false, on_event)
     }
 }

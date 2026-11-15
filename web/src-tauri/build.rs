@@ -65,6 +65,7 @@ const COMMANDS: &[&str] = &[
     "remote_client_send",
     "remote_client_text",
     "remote_client_pointer",
+    "remote_client_power",
     "remote_client_close",
     "local_api_start",
     "local_api_stop",

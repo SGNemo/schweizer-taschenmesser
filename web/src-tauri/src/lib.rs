@@ -306,6 +306,7 @@ pub fn run() {
         remote_client::remote_client_send,
         remote_client::remote_client_text,
         remote_client::remote_client_pointer,
+        remote_client::remote_client_power,
         remote_client::remote_client_close
     ]);
 
