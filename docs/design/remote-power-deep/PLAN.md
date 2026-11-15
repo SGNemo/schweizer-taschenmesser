@@ -19,7 +19,7 @@ Round „Tiefe & Politur“, 2026-11-15, branch family `feat/remote-power-p*`. B
 | Medien/Lautstärke | exists |
 | Präsentation | **p3**: fourth tab (mouse/keyboard level). _Weiter_ large in the thumb zone with _Zurück_ beside it, above one row _Start_ · _Schwarz_ · _Ende_ (F5, B, Esc; two new fixed keys behind feature bit 1); hint „Das Präsentationsfenster muss am PC vorne sein.“ Works only at home (home-network rule) – said in the page and the user docs |
 | Laser-Zeiger, volume keys turn slides | not built („Noch offen“ in p3) |
-| Programm starten (am PC freigegebene Liste) | **p4**: list kept only on the PC (≤ 8 entries, added with the PC's file dialog, name ≤ 40 characters, plain line), phone: header menu _Programm starten …_ (sheet), empty: „Am PC unter Fernsteuerung Programme für dieses Handy auswählen.“; slot number on the wire, never a path or argument; feature bit 2 |
+| Programm starten (am PC freigegebene Liste) | **p4**: one list kept only on the PC (≤ 8 entries, name ≤ 40 characters, plain line) plus a per-device switch _Darf Programme starten_; an entry is added only through a file dialog Rust opens itself (no command takes a path) and adding is a widening (native confirmation, refused while a mouse/keyboard session is or was open since the ticket); only the executable, never arguments. Phone: header menu _Programm starten …_ (sheet), empty: „Am PC unter Fernsteuerung Programme auswählen.“; slot number on the wire; feature bit 2 |
 | Zwischenablage Handy → PC | **not built**: the hard rule says „never … clipboard … in either direction“. Today: paste into the _Tastatur_ field, _Senden_ types it at the PC. Question to Sven in the p2a PR |
 | Wake-on-LAN | **not built**, „Im Nachhinein klären“ (MAC, broadcast, BIOS/NIC setting; reaches the PC while Nemo does not run) |
 
@@ -38,21 +38,24 @@ Round „Tiefe & Politur“, 2026-11-15, branch family `feat/remote-power-p*`. B
 - `open`: `[level]` as before, or `[level, features]`. The PC **ignores** unknown bits and echoes the ones it accepted. An old PC closes on the second byte without a word: the phone then opens once more with `[level]` and treats the PC as one without power (no page shown, nothing lost).
 - `opened`: 7 bytes as before; with a features byte in the `open`, two more: `features` (accepted bits; bit 0 power) and `power` (bit 0 granted, bit 1 a countdown runs, bit 2 hibernate available).
 - Phone → PC tag `0x28` `power [action, despite]`, one per frame, actions: sleep, hibernate, sign-out, restart, shut-down, cancel; `despite` 0/1 (start although the PC said `working`; only for the five countdown actions).
-- PC → phone tag `0x27` `power [answer]`: exactly one per `0x28`, plus unasked from the tick when a countdown ends or is stopped at the PC. Answers: `started` · `working` (nothing started) · `pending` · `cancelled` · `done` · `not-granted` · `locked` · `limit` · `failed`.
+- PC → phone tag `0x27` `power [answer]`: one per `0x28`, plus unasked news when a countdown ends or is stopped at the PC. The phone treats every `0x27` as the latest state of the countdown and never pairs an answer with a request. Answers: `started` · `working` (nothing started; generic wording, no reason byte) · `pending` · `cancelled` · `done` · `not-granted` · `locked` · `limit` · `failed`.
+- The phone remembers „this PC has no features“ for the app run after one fallback open (no second handshake on every connect).
 - Monitor off is media id 8 in the existing `events` frame (sent only to a PC that echoed bit 0).
 
 ## Where what lives
 
 - `crates/lan-sync`: decodes, gates (session open, power grant, PC not locked; `cancel` always passes), hands over through a new sink method `power(device, action, despite) -> answer`; tells pending/granted in `opened`.
-- shell `src/remote_power.rs`: the countdown state machine (one at a time, hub-wide), the per-device limit (2 starts per 60 s, memory only, survives a reconnect), the busy bits (Rust: another device's LAN sync session, a download or torrent job; web view: cloud sync or backup running – a bit from the web view can only add a hint, never remove one), the window and the tray entry, the cancel triggers, and the one call into `remote-input` when the countdown ends.
-- `crates/remote-input`: power commands on their own queue (never dropped when the media queue is full): `SetSuspendState`, `ExitWindowsEx` without `EWX_FORCE`, monitor off by `SendMessageTimeoutW(HWND_BROADCAST, WM_SYSCOMMAND, SC_MONITORPOWER)` – the one window message of the crate, scoped in `tests/rules.rs`.
+- shell `src/remote_power.rs`: the countdown state machine (one at a time, hub-wide), the per-device limit (2 starts per 60 s, memory only, survives a reconnect; after a stop at the PC that device starts none for 10 minutes, the second stop at the PC within an hour takes its power permission away), the busy bits (Rust: another device's LAN sync session, a download or torrent job; web view: cloud sync or backup running – a bit from the web view can only add a hint, never remove one), the window and the tray entry, the cancel triggers, and the one call into `remote-input` when the countdown ends.
+- `crates/remote-input` (`src/power.rs`): a direct call from the shell's countdown thread (never the media queue, so never dropped): `SetSuspendState`, `ExitWindowsEx` without `EWX_FORCE` after `AdjustTokenPrivileges` for `SeShutdownPrivilege` (this process only), monitor off by `PostMessageW(HWND_BROADCAST, WM_SYSCOMMAND, SC_MONITORPOWER)` – posted, so a hung window cannot hold the worker; the one window message of the crate, scoped in `tests/rules.rs`.
 - No Tauri command starts a power action or a program. The countdown window's capability (`capabilities/power.json`) grants status and cancel only.
 
 ## Countdown (Guardian + Advocate)
 
-- Stops: _Abbrechen_ in the window, in the tray, from the phone; ending remote control at the PC; master switch off; the device's power grant taken away or paused; the PC locked; the window closed or not shown (no window, no action). Does **not** stop: the phone's connection dropping (“PC aus, Handy weg” must work).
+- Stops: _Abbrechen_ in the window, _Fernsteuerung beenden_ in the tray (shown during a countdown also after the phone left), the phone (any controlling session; there is one at a time); master switch off; the device's power permission taken away or paused; the PC locked; the window closed, hidden, minimised or not on screen within 3 s (no visible window, no action; the window has no minimise button; no capability of the main window names it). Does **not** stop: the phone's connection dropping („PC aus, Handy weg“ must work).
+- Not covered: an exclusive-fullscreen program can paint over an always-on-top window while Windows still reports it visible – „Noch offen“ in p2a (recommendation: answer `working` while `SHQueryUserNotificationState` reports a full-screen app).
 - Window: one still sentence „Svens Handy schaltet diesen PC in 10 Sekunden aus.“ (action word per action), the number changes once a second, no bar, no animation, no sound, no red, one primary button _Abbrechen_. Always on top, centred, not full screen.
-- Phone after `started`: „Der PC fährt herunter. Fragt ein Programm noch nach Speichern, bleibt er an.“ (per action), then the expected disconnect is shown as that calm line, not as „nicht erreichbar“.
+- Phone after `started`: the sentence of the countdown and _Abbrechen_ as the only action until `done`, `cancelled` or the connection drops; then „Der PC fährt herunter. Fragt ein Programm noch nach Speichern, bleibt er an.“ (per action), and the expected disconnect is shown as that calm line, not as „nicht erreichbar“.
+- `working` → _Trotzdem ausschalten_ / _Warten_: the `despite` resend uses the same native unlock (one approval per unlock, same action, single use, ≤ 30 s, kept in Rust), never a second prompt and never without one.
 - Locked PC: refused, phone line „PC ist gesperrt. Ausschalten geht, solange er entsperrt ist.“ (Windows locks itself after idle: sleep on a locked PC is a question to Sven, recommendation yes, sleep only.)
 
 ## Focus checklist (p2)
@@ -66,5 +69,5 @@ Round „Tiefe & Politur“, 2026-11-15, branch family `feat/remote-power-p*`. B
 | 5 Interruption | a dropped connection does not stop a started countdown; the phone's line says what happens |
 | 6 Tests | Rust: wire, gate, limits, countdown state machine, rules; unit: sheet, states; e2e with the fake |
 | 7 Readability | text + icon for every action and state |
-| 8 Clicks | „PC aus vom Sofa“: menu → _PC ausschalten …_ → _Ausschalten_ → fingerprint (4 steps, then 10 s); by hand at the PC: Start → Ein/Aus → Herunterfahren (3, but at the desk) |
+| 8 Clicks | „PC aus vom Sofa“: menu → _PC ausschalten …_ → _Ausschalten_ → fingerprint (4 steps, then 10 s); with Nemo busy one more: _Trotzdem ausschalten_ (5); by hand at the PC: Start → Ein/Aus → Herunterfahren (3, but at the desk) |
 | 9 Removed instead | no own power page or tab; hibernate shown only where the PC has it; sign-out and hibernate below the three main actions |
