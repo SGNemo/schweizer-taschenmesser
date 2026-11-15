@@ -48,7 +48,14 @@ export const itemSchema = z.object({
   title: z.string().optional(),
   durationMin: z.number().int().min(1).max(1440).optional(),
   priority: z.number().int().min(0).max(3).optional(),
-  due: z.object({ date: z.string().regex(DATE_RE), hard: z.boolean() }).optional(),
+  /** A deadline; `time` ('HH:mm') is its hour („Frist So 18:00“, package 5b): shown, never planned by. */
+  due: z
+    .object({
+      date: z.string().regex(DATE_RE),
+      hard: z.boolean(),
+      time: z.string().regex(TIME_RE).optional(),
+    })
+    .optional(),
   /** The user's own date (a ToDo's `plannedFor` before the first overwrite); read as "not before". */
   earliest: z.string().regex(DATE_RE).optional(),
   /** Nailed to a day („Festnageln“). */
