@@ -55,7 +55,9 @@ const noop = async (): Promise<void> => undefined;
 
 /**
  * Adds a link by a tap. Nothing there → the row is created. Removed before → the same row comes back (with the
- * label and day of now). Already live → nothing is written. Returns the undo of what it did.
+ * label and day of now). Already live → nothing is written, except for a `dunning` link: a later reminder in
+ * the same thread takes over its label and day (the undo puts the earlier ones back). Returns the undo of what
+ * it did.
  * Throws for the vault, a module that is no link target, a link to itself or a malformed day.
  */
 export async function addLink(
@@ -66,7 +68,17 @@ export async function addLink(
   const id = await linkId(data as EntityLink);
   const repo = linksRepo(database);
   const existing = await repo.table.get(id);
-  if (existing?.deletedAt === null) return noop;
+  if (existing?.deletedAt === null) {
+    // A later reminder in the same thread is the same link: it carries the latest reminder's day and subject.
+    // Every other live link stays as it is (a tap on what is there writes nothing).
+    if (data.rel !== 'dunning' || (existing.on === data.on && existing.label === data.label))
+      return noop;
+    const before = { label: existing.label, on: existing.on };
+    await repo.update(id, { label: data.label, on: data.on });
+    return async () => {
+      await repo.update(id, before);
+    };
+  }
   if (!existing) {
     // `createMany` skips an id that appeared meanwhile (a pull): the add stays idempotent.
     const created = await repo.createMany([{ data, id }]);
