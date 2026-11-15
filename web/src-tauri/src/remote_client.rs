@@ -208,8 +208,9 @@ fn power_prompt_texts(lang: Option<&str>, power: Power) -> (&'static str, &'stat
         let l = l.to_ascii_lowercase();
         l == "de" || l.starts_with("de-")
     });
-    let subtitle_de = "Am PC läuft dann 10 Sekunden ein Countdown zum Abbrechen.";
-    let subtitle_en = "The PC then counts down 10 seconds in which it can be cancelled.";
+    let subtitle_de =
+        "Am PC läuft danach 10 Sekunden ein Countdown; Abbrechen geht dort oder hier.";
+    let subtitle_en = "The PC then counts down 10 seconds; you can cancel there or here.";
     match (german, power) {
         (true, Power::Restart) => ("PC neu starten?", subtitle_de),
         (true, Power::Sleep) => ("PC in den Energiesparmodus?", subtitle_de),
@@ -272,7 +273,10 @@ struct Approvals {
 }
 
 impl Approvals {
-    /// The PC answered: only `working` arms the one "Trotzdem".
+    /// The PC answered: only `working` arms the one "Trotzdem". Answers are not paired with
+    /// requests on the wire, so unasked news (`done`, `cancelled` of an earlier countdown) arriving
+    /// between an action and its `working` drops the unlock too – that only ever means asking once
+    /// more, never acting without asking.
     fn heard(&mut self, answer: PowerAnswer) {
         let given = self.given.take();
         self.despite = match answer {
