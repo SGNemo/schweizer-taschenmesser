@@ -18,9 +18,9 @@ UI-Audit 4.0 ist abgenommen: Identity 4.0 gilt seit 0b-8 (2026-11-14, [REPORT �
 - **Modul Uhr** ([features/clock.md](features/clock.md)): Paket 1 und Folgepunkte auf `develop`; Paket 2 (Erinnern nach Ortszeit, Timer-Link) ist auf `develop` (#896); 03/04 nicht gestartet.
 - **CI aufräumen, Runde 3** ([perf/CI-2026-11.md](perf/CI-2026-11.md)): Ursache ist die Warteschlange (20 Runner, 22 % der Zeit voll); kleine Workflow-Änderungen in #692, fünf Übergabe-Pakete in [perf/CI-2026-11-PACKAGES.md](perf/CI-2026-11-PACKAGES.md); messen: `node scripts/ci/measure.mjs`.
 - **UI schärfen, Runde 6** ([qa/round-6/STATUS.md](qa/round-6/STATUS.md)): alle Fix-PRs und der Sammel-PR (#877) auf `develop`; offen U41 Kopfbandhöhen (nicht begonnen).
-- **Modul-Runde „Tiefe & Politur“, Routinen** (Plan `design/routines-deep/PLAN.md` kommt mit #936): Routinen = der eine Ort für „Routine“ (Schritte, ein Formular mit Vorlagen, „Los“); drei gestapelte PRs #936 → #954 → #957, warten auf Sven.
+- **Modul-Runde „Tiefe & Politur“, Routinen** (Plan `design/routines-deep/PLAN.md` kommt mit #936): Routinen = der eine Ort für „Routine“ (Schritte, ein Formular mit Vorlagen, „Los“); auf `develop` (#936, #954, #957).
 - **Tiefe & Politur, Rechnungen**: #999 Überblick (Torte, Monate) → #1000 Suche, mehrere bezahlen; warten auf Sven.
-- **Modul-Runde „Tiefe & Politur“, Übersicht** (PR #955, Plan `design/home-deep/PLAN.md` im PR): Reihen gleicher Höhe statt Masonry, Kopf-Symbole bündig, leere Karten ohne Fisch; wartet auf die Abnahme.
+- **Modul-Runde „Tiefe & Politur“, Übersicht** (PR #955, Plan `design/home-deep/PLAN.md` im PR): Reihen gleicher Höhe statt Masonry, Kopf-Symbole bündig, leere Karten ohne Fisch; auf `develop`.
 
 ## Abgeschlossene Runden (je eine Zeile; alles auf `develop`)
 
