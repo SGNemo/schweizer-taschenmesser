@@ -9,7 +9,7 @@ import { announceSaved } from '@/quickCapture/ui/announceSaved';
 import { t } from '@/strings';
 import { Button, Checkbox, Dialog } from '@/ui';
 import { sheetInvoiceId } from '../invoiceRow';
-import { linkInvoiceToThread, saveLink } from '../links';
+import { linkInvoiceToThread, mailDay, saveLink } from '../links';
 import { useUiStore } from '@/stores/ui';
 import styles from './mail.module.css';
 
@@ -72,7 +72,7 @@ export function LinkDialog({
             saved.id,
             threadId,
             message.subject,
-            new Date(message.date).toISOString().slice(0, 10),
+            mailDay(message.date),
             saved.amended ? 'dunning' : 'origin',
           )
         : undefined;
@@ -91,9 +91,9 @@ export function LinkDialog({
       unlink
         ? {
             ...saved,
+            // Both parts on their own: a failing entry undo must not leave the link row behind.
             undo: async () => {
-              await saved.undo();
-              await unlink();
+              await Promise.allSettled([saved.undo(), unlink()]);
             },
           }
         : saved,
