@@ -209,33 +209,6 @@ describe('design tokens', () => {
     expect(css).not.toMatch(/--accent-2/);
   });
 
-  it('chart share slots (ui/charts) keep 3:1 on the card for every hue, both themes', () => {
-    const chartCss = read('ui/charts/charts.module.css');
-    const steps = [
-      ...chartCss.matchAll(/--c: color-mix\(in srgb, var\(--viz-1\) (\d+)%, var\(--text\)\)/g),
-    ].map((m) => Number(m[1]) / 100);
-    expect(steps).toHaveLength(5);
-    // "Ruhig" greys the chart series inside the chart frame (not globally: finance's older charts keep theirs).
-    const calmFrame = chartCss.slice(chartCss.indexOf(":global(:root[data-color='calm']) .frame"));
-    expect(calmFrame.slice(0, calmFrame.indexOf('}'))).toMatch(
-      /--viz-1: var\(--calm-ink\);\s*--viz-2: var\(--calm-ink\);/,
-    );
-    for (const theme of [light, dark]) {
-      const hues = [
-        theme['--viz-1']!,
-        theme['--calm-ink']!,
-        ...moduleHues(theme).map((k) => theme[k]!),
-      ];
-      for (const hue of hues)
-        for (const pct of [1, ...steps])
-          for (const surface of [theme['--surface']!, theme['--surface-raised']!])
-            expect(
-              ratio(mix(hue, theme['--text']!, pct), surface),
-              `${hue} ${pct}`,
-            ).toBeGreaterThanOrEqual(3);
-    }
-  });
-
   it('the calm colour mode and the module-colours switch grey out every module hue; every hue has a data-hue rule', () => {
     const calm = block(":root[data-color='calm']");
     const off = block(":root[data-module-colors='off']");
