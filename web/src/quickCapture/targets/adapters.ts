@@ -44,15 +44,20 @@ const todos: CaptureTarget = {
   moduleId: 'todos',
   collection: 'task',
   // `listId` comes from the module's `aiCreateDefaults` (the inbox list).
-  build: (f) => ({
-    title: title(f),
-    ...(f.date ? { dueDate: date(f.date) } : {}),
-    ...(f.startDate ? { startDate: date(f.startDate) } : {}),
-    ...(f.estimateMin ? { estimateMin: f.estimateMin } : {}),
-    ...(f.priority ? { priority: f.priority } : {}),
-    ...noteOf(f.time ? t.quickCapture.todoTimeNote(f.time) : undefined, f.note),
-    ...(f.link ? { links: [f.link] } : {}),
-  }),
+  build: (f) => {
+    // A deadline's hour („bis So 18:00“) is the ToDo's `dueTime`; any other typed time stays a note line.
+    const dueHour = f.time && f.date && (f.deadline || f.hardDue) ? f.time : undefined;
+    return {
+      title: title(f),
+      ...(f.date ? { dueDate: date(f.date) } : {}),
+      ...(f.startDate ? { startDate: date(f.startDate) } : {}),
+      ...(f.estimateMin ? { estimateMin: f.estimateMin } : {}),
+      ...(f.priority ? { priority: f.priority } : {}),
+      ...(dueHour ? { dueTime: dueHour } : {}),
+      ...noteOf(f.time && !dueHour ? t.quickCapture.todoTimeNote(f.time) : undefined, f.note),
+      ...(f.link ? { links: [f.link] } : {}),
+    };
+  },
 };
 
 const calendar: CaptureTarget = {
@@ -352,7 +357,9 @@ const plan: CaptureTarget = {
       source: { module: first?.moduleId ?? 'todos', id: first?.id ?? 'new' },
       order: 0,
       ...(pinned ? { pinned } : {}),
-      ...(f.hardDue && f.date ? { due: { date: date(f.date), hard: true } } : {}),
+      ...(f.hardDue && f.date
+        ? { due: { date: date(f.date), hard: true, ...(f.time ? { time: f.time } : {}) } }
+        : {}),
     };
   },
 };
