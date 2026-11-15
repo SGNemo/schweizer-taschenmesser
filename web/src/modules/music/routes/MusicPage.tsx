@@ -12,6 +12,7 @@ import { SideLists } from '../components/SideLists';
 import { SourceView } from '../components/SourceView';
 import { StartView } from '../components/StartView';
 import { trackIdOf, type PlayerApi, type View } from '../components/types';
+import { forgetLibrary } from '../library';
 import { useShortcuts } from '../useShortcuts';
 import { settings as moduleSettings, settingsSchema, type MusicPrefs } from '../settings';
 import { useNowPlayingStatus } from '../useNowPlaying';
@@ -42,6 +43,8 @@ export default function MusicPage() {
   const [version, setVersion] = useState(0);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
+  // Leaving the page: the playlist names read for it go too.
+  useEffect(() => () => forgetLibrary(), []);
   const [stored] = useSettings('module.music', settingsSchema, moduleSettings.defaults as never);
   const prefs = stored ?? (moduleSettings.defaults as MusicPrefs);
   useShortcuts(

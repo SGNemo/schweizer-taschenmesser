@@ -24,6 +24,30 @@ export function readAllPlaylists(
   return promise;
 }
 
+/** Pages of the start view's read (`playlists` without `all`): a shorter answer is the whole list. */
+const PICKER_MAX = 200;
+
+/**
+ * The start view's playlists: the short read (up to 200, 4 requests at most) so the page never waits for 1000. When the
+ * answer is shorter than that, it is the whole list and the playlists tab takes it without asking again.
+ */
+export function readStartPlaylists(
+  source: NowPlayingSource,
+  ctx: ConnectorContext,
+): Promise<Playlist[]> {
+  if (!source.playlists) return Promise.resolve([]);
+  if (lists && lists.ctx === ctx && lists.generation === generation) return lists.promise;
+  const promise = source.playlists(ctx);
+  const mine = { ctx, generation, promise };
+  promise.then(
+    (l) => {
+      if (l.length < PICKER_MAX && !lists && mine.generation === generation) lists = mine;
+    },
+    () => undefined,
+  );
+  return promise;
+}
+
 /** The signed-in account's id, asked once per page; without it every playlist counts as "followed" for the filter. */
 export function readAccount(
   source: NowPlayingSource,
@@ -46,7 +70,7 @@ export function changedPlaylists(): number {
   return generation;
 }
 
-/** Can this account change the playlist? Own ones, and shared ones others let you edit. */
+/** Can this account change the playlist's songs? Own ones, and shared ones others let you edit. */
 export function canEdit(
   list: { ownerId?: string; collaborative?: boolean },
   me: string | undefined,
@@ -54,7 +78,12 @@ export function canEdit(
   return list.collaborative === true || (!!me && list.ownerId === me);
 }
 
-/** For tests. */
+/** Name and description can only be changed by the owner (Spotify refuses collaborators). */
+export function canRename(list: { ownerId?: string }, me: string | undefined): boolean {
+  return !!me && list.ownerId === me;
+}
+
+/** The page closed: nothing of the lists stays in memory. */
 export function forgetLibrary(): void {
   lists = undefined;
   account = undefined;

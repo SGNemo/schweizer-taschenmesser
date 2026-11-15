@@ -4,7 +4,7 @@ import type { MediaItem, Playlist } from '@/core/connectors/types';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { tMusicPage } from '@/strings.musicPage';
 import { tSpotify } from '@/strings.spotify';
-import { readAllPlaylists } from '../library';
+import { readStartPlaylists } from '../library';
 import { readRecent } from '../recentOnce';
 import { Tile } from './Tile';
 import { viewKey, type PlayerApi, type View } from './types';
@@ -42,7 +42,7 @@ export function StartView({
         .then((items) => alive && setRecent(items))
         .catch(() => alive && setRecent('error'));
     if (hasPlaylists)
-      readAllPlaylists(source, ctx)
+      readStartPlaylists(source, ctx)
         .then((items) => alive && setPlaylists(items))
         .catch(() => alive && setPlaylists('error'));
     return () => {

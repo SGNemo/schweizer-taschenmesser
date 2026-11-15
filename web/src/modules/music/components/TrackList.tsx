@@ -24,6 +24,8 @@ export interface TrackListProps {
   onAddToPlaylist?: (item: MediaItem) => void;
   /** "Aus dieser Playlist entfernen" (absent unless this playlist can be edited by this account). */
   onRemove?: (item: MediaItem) => void;
+  /** Rows that may be removed (absent = all); a song that is in the list twice is left out. */
+  removable?: ReadonlySet<string>;
   /** Hearts: `saved` by track id; `onToggleSave` is absent when saving is not possible. */
   saved?: Record<string, boolean>;
   onToggleSave?: (item: MediaItem, on: boolean) => void;
@@ -47,6 +49,7 @@ export function TrackList({
   onQueue,
   onAddToPlaylist,
   onRemove,
+  removable,
   saved,
   onToggleSave,
   hidden,
@@ -99,7 +102,7 @@ export function TrackList({
                   },
                 ]
               : []),
-            ...(onRemove
+            ...(onRemove && (!removable || removable.has(item.id))
               ? [{ id: 'remove', label: tm.menuRemove, onSelect: () => removeRow(item, index) }]
               : []),
             ...(isHidden && onUnhide

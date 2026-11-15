@@ -374,4 +374,63 @@ describe('making and changing playlists', () => {
     );
     expect(screen.getAllByTestId('track-row')).toHaveLength(3);
   });
+
+  it('a shared playlist of someone else: songs can be removed, but name and description stay with the owner', async () => {
+    await connect();
+    route = (c) =>
+      c.method === 'GET' && c.path.startsWith('/playlists/PLd')
+        ? { ...CONTENT('other'), name: 'Gemeinsame Party', collaborative: true }
+        : undefined;
+    await openTab();
+    fireEvent.click(await screen.findByRole('button', { name: /^Gemeinsame Party/ }));
+    await screen.findByRole('button', { name: 'Zwei abspielen' });
+    expect(screen.queryByRole('button', { name: /bearbeiten$/ })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Mehr zu Zwei' }));
+    expect(
+      await screen.findByRole('menuitem', { name: 'Aus dieser Playlist entfernen' }),
+    ).toBeInTheDocument();
+  });
+
+  it('a song that is in the playlist twice is not offered for removal (Rückgängig could put back one)', async () => {
+    await connect();
+    route = (c) =>
+      c.method === 'GET' && c.path.startsWith('/playlists/PLa')
+        ? {
+            ...CONTENT(ME),
+            tracks: { total: 3, items: [T('s1', 'Eins'), T('s2', 'Zwei'), T('s2', 'Zwei')] },
+          }
+        : undefined;
+    await openTab();
+    fireEvent.click(await screen.findByRole('button', { name: /^Fokus/ }));
+    await screen.findByRole('button', { name: 'Eins abspielen' });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Mehr zu Zwei' })[0]!);
+    await screen.findByRole('menuitem', { name: 'Zur Warteschlange hinzufügen' });
+    expect(screen.queryByRole('menuitem', { name: 'Aus dieser Playlist entfernen' })).toBeNull();
+  });
+
+  it('a playlist made with "Zu Playlist hinzufügen" shows in the tab without reopening the page', async () => {
+    await connect();
+    let made = false;
+    route = (c) => {
+      if (c.method === 'POST' && c.path === '/me/playlists') {
+        made = true;
+        return json({ id: 'PLn', name: 'Frisch' }, 201);
+      }
+      if (c.method === 'GET' && c.path.startsWith('/me/playlists') && made)
+        return { items: [...LISTS, PL('PLn', 'Frisch')], next: null };
+      return undefined;
+    };
+    await openTab();
+    fireEvent.click(await screen.findByRole('button', { name: /^Fokus/ }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Mehr zu Zwei' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Zu Playlist hinzufügen …' }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Name der Playlist' }), {
+      target: { value: 'Frisch' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Anlegen und hinzufügen' }));
+    await waitFor(() => expect(sent('POST', '/playlists/PLn/items')).toHaveLength(1));
+    fireEvent.click(screen.getByRole('button', { name: 'Zurück zu den Playlists' }));
+    await waitFor(() => expect(tiles()).toContain('Frisch'));
+  });
 });

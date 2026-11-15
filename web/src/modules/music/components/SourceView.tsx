@@ -16,7 +16,7 @@ import { tSpotify } from '@/strings.spotify';
 import type { CoverImage } from '@/core/connectors/coverUrl';
 import type { ConnectorContext } from '@/core/connectors/types';
 import { Button, Icon, TextField } from '@/ui';
-import { canEdit, changedPlaylists, readAccount } from '../library';
+import { canEdit, canRename, changedPlaylists, readAccount } from '../library';
 import { COVER_PX } from '../useCover';
 import { Cover } from './Cover';
 import { useAddToPlaylist } from './AddToPlaylist';
@@ -262,23 +262,34 @@ function ContentView({
   // Changing the playlist: the feature "Playlists bearbeiten" and a playlist this account may change (own or shared).
   const editable =
     view.type === 'playlist' && features.includes('playlistEdit') && canEdit(value, me);
+  const renamable = editable && canRename(value, me);
+  // Spotify removes a song every time it is in the playlist, and "Rückgängig" can put back one: a song that is in
+  // there twice is not offered for removal.
+  const counts = new Map<string, number>();
+  for (const i of value.items) counts.set(i.id, (counts.get(i.id) ?? 0) + 1);
+  const once = new Set([...counts].filter(([, n]) => n === 1).map(([id]) => id));
 
   /** Removes a song from the playlist on Spotify (every time it is in there), with "Rückgängig" that puts it back. */
   const remove = (item: MediaItem) => {
     setRemoved((r) => new Set(r).add(item.id));
     const putBack = () => setRemoved((r) => new Set([...r].filter((x) => x !== item.id)));
     source.removeFromPlaylist!(ctx, view.id, [item.id]).then(
-      () =>
+      () => {
+        changedPlaylists();
         toast(tm.removed(item.name), {
           label: t.ui.undo,
           run: () => {
             putBack();
-            source.addToPlaylist!(ctx, view.id, [item.id], item.position).catch(() => {
-              setRemoved((r) => new Set(r).add(item.id));
-              toast(tm.restoreFailed);
-            });
+            source.addToPlaylist!(ctx, view.id, [item.id], item.position).then(
+              changedPlaylists,
+              () => {
+                setRemoved((r) => new Set(r).add(item.id));
+                toast(tm.restoreFailed);
+              },
+            );
           },
-        }),
+        });
+      },
       () => {
         putBack();
         toast(tm.removeFailed);
@@ -301,7 +312,7 @@ function ContentView({
         ctx={ctx}
         cover={value}
       >
-        {canControl || (editable && source.editPlaylist) ? (
+        {canControl || (renamable && source.editPlaylist) ? (
           <div className={styles.headActions}>
             {canControl ? (
               <Button onClick={() => playAll(false)} disabled={visible.length === 0}>
@@ -315,7 +326,7 @@ function ContentView({
                 {tx.shuffleAll}
               </Button>
             ) : null}
-            {editable && source.editPlaylist ? (
+            {renamable && source.editPlaylist ? (
               <Button
                 variant="ghost"
                 aria-label={tm.editFor(name)}
@@ -355,6 +366,7 @@ function ContentView({
         onRemove={
           editable && source.removeFromPlaylist && source.addToPlaylist ? remove : undefined
         }
+        removable={once}
         saved={hearts.saved}
         onToggleSave={hearts.onToggleSave}
         hidden={view.type === 'playlist' ? hiddenIds : undefined}
@@ -363,7 +375,7 @@ function ContentView({
         showHidden={showHidden}
       />
       {view.type === 'playlist' ? <p className={styles.note}>{tx.hiddenNote}</p> : null}
-      {editable ? (
+      {renamable ? (
         <PlaylistDialog
           api={api}
           target={editing}
