@@ -21,8 +21,8 @@ mod tree;
 
 pub use access::access_time_tracked;
 pub use cleanup::{
-    chromium_profiles, cleanup_roots, cleanup_scan_options, is_busy, select as select_cleanup,
-    CleanupKind, CleanupRoot, Rule as CleanupRule, MAX_CANDIDATES,
+    chromium_profiles, cleanup_roots, cleanup_scan_options, is_busy, is_real_dir,
+    select as select_cleanup, CleanupKind, CleanupRoot, Rule as CleanupRule, MAX_CANDIDATES,
 };
 pub use delete::{
     apply_to_tree, execute, plan, platform_trasher, DeleteControl, DeleteProgress, EntryError,

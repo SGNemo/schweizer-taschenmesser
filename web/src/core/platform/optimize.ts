@@ -103,6 +103,11 @@ export interface TweakState {
   changedHere: boolean;
   /** Exists on this Windows; the page hides the others. */
   applicable: boolean;
+  /**
+   * The stored value could be read. When not, the setting is shown as not changeable: without the
+   * value from before there is no way back.
+   */
+  readable: boolean;
   risk: TweakRisk;
   /** The Microsoft page that documents the mechanism. */
   sourceUrl: string;

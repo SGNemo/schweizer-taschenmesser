@@ -421,7 +421,7 @@ export const disk: Strings['disk'] = {
     smallFiles: (n: number) => (n === 1 ? '1 smaller file' : `${n} smaller files`),
   },
   tidy: {
-    lead: 'Nemo looks in well-known places for things that can usually go. You see everything first; only what you confirm is deleted – to the recycle bin.',
+    lead: 'Nemo looks in well-known places for things that can usually go. You see what it is beforehand; only what you confirm is deleted – to the recycle bin by default.',
     search: 'Search',
     again: 'Search again',
     cancel: 'Cancel',
@@ -430,10 +430,12 @@ export const disk: Strings['disk'] = {
       `Searching … ${done} of ${total}: ${what}`,
     failed: 'The search didn’t work. You can try again.',
     none: 'Nothing to tidy up.',
-    noneHint: 'There’s hardly anything in the well-known places right now.',
+    noneHint:
+      'There’s hardly anything in the well-known places right now. Duplicates and large files you haven’t used for a long time are in a drive’s scan.',
+    toDrives: 'Go to drives',
     cancelledNote: 'The search was cancelled. The list may be incomplete.',
     summary: (n: number, size: string) =>
-      `${n === 1 ? '1 suggestion' : `${n} suggestions`} · ${size} in total`,
+      `${n === 1 ? '1 suggestion' : `${formatNumber(n)} suggestions`} · ${size} in total`,
     listLabel: 'Suggestions',
     category: {
       temp: 'Temporary files',
@@ -458,18 +460,18 @@ export const disk: Strings['disk'] = {
     } as Record<string, string>,
     busy: (program: string) =>
       `${program} is running. Close it first, otherwise some files will be left behind.`,
-    preview: (n: number) => `Preview · ${n === 1 ? '1 entry' : `${n} entries`}`,
+    preview: (n: number) => `Preview · ${n === 1 ? '1 entry' : `${formatNumber(n)} entries`}`,
     selectItem: (name: string) => `Select ${name}`,
     rest: (n: number, size: string) =>
-      `${n === 1 ? '1 more, smaller entry' : `${n} more, smaller entries`} · ${size}`,
+      `${n === 1 ? '1 more, smaller entry' : `${formatNumber(n)} more, smaller entries`} · ${size}`,
     all: 'Select all',
     noneSelected: 'Clear selection',
     selected: (size: string) => `Selected: ${size}`,
     nothingSelected: 'Nothing selected',
     clean: 'Tidy up …',
-    cleanLabel: (name: string) => `Tidy up ${name}`,
+    cleanLabel: (name: string) => `Tidy up: ${name}`,
     look: 'Take a closer look',
-    lookLabel: (name: string) => `View ${name} in the scan`,
+    lookLabel: (name: string) => `Take a closer look: ${name}`,
     changed: (when: string) => `changed ${when}`,
     windows: {
       title: 'Windows does this itself',
@@ -481,19 +483,13 @@ export const disk: Strings['disk'] = {
       updates: 'Update leftovers and system files',
       updatesHint: 'Windows removes old update files under Settings → System → Storage.',
       updatesOpen: 'Open storage settings',
-      onlyWindows: 'These tools exist on Windows only.',
       openFailed: 'That couldn’t be opened.',
-    },
-    more: {
-      title: 'The scan shows more',
-      text: 'Duplicate files and large files you haven’t used for a long time are in a drive’s scan.',
-      link: 'Go to drives',
     },
     pointer: 'Temporary files, browser caches and old downloads are under “Tidy up”.',
     pointerLink: 'Open Tidy up',
   },
   history: {
-    lead: 'What Nemo changed on this PC, with the way back. The history stays on this device.',
+    lead: 'What Nemo changed on this PC, with the way back. Tidy-ups are listed here until you close Nemo.',
     loading: 'Reading history …',
     empty: 'Nothing changed yet.',
     emptyHint: 'As soon as you tidy something up, it’s listed here.',
@@ -506,7 +502,8 @@ export const disk: Strings['disk'] = {
     deleted: (what: string, size: string, files: number) =>
       `${what}: ${size} deleted permanently · ${files === 1 ? '1 file' : `${formatNumber(files)} files`}`,
     restore: 'Open recycle bin',
-    restoreHint: 'You can restore the files in the recycle bin.',
+    restoreHint: 'As long as they are in the recycle bin, you can restore the files there.',
+    restoreLabel: (what: string) => `Open recycle bin: ${what}`,
     noWayBack: 'Deleted permanently – this can’t be brought back.',
     switched: (name: string, on: boolean) => `${name}: ${on ? 'switched on' : 'switched off'}`,
     undo: 'Undo',
@@ -613,6 +610,8 @@ export const disk: Strings['disk'] = {
     stateOff: 'Switched off',
     stateChoice: (label: string) => (label ? `Active: ${label}` : ''),
     windowsDefault: 'Windows default – nothing has been set here yet.',
+    unreadable:
+      'Windows doesn’t give out the current value. Without it there would be no way back, so Nemo changes nothing here.',
     turnOn: 'Switch on',
     turnOff: 'Switch off',
     turnOnLabel: (title: string) => `${title}: switch on`,

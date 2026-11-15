@@ -192,7 +192,7 @@ function Row({
           {tweak.changedHere ? <p className={styles.changed}>{x.changedHere}</p> : null}
         </div>
         <div className={styles.control}>
-          {tweak.kind === 'choice' ? (
+          {!tweak.readable ? null : tweak.kind === 'choice' ? (
             <SelectField
               label={x.chooseLabel(title)}
               labelHidden
@@ -238,7 +238,9 @@ function Row({
           )}
         </div>
       </div>
-      {tweak.kind === 'toggle' ? (
+      {!tweak.readable ? (
+        <p className={styles.state}>{x.unreadable}</p>
+      ) : tweak.kind === 'toggle' ? (
         <p className={styles.state}>
           {state === 'default' ? x.windowsDefault : state === 'on' ? x.stateOn : x.stateOff}
         </p>

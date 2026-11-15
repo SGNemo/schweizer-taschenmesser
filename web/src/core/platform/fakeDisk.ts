@@ -550,6 +550,7 @@ const fakeToggle = (
   options: [],
   changedHere: false,
   applicable: true,
+  readable: true,
   risk,
   sourceUrl,
   refresh,

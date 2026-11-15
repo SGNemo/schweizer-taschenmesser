@@ -376,8 +376,11 @@ pub struct TweakState {
     pub options: Vec<PowerScheme>,
     /// A state from before a change made here is stored ("Alle zurücksetzen" would touch it).
     pub changed_here: bool,
-    /// The setting exists on this Windows and can be read; the page hides the others.
+    /// The setting exists on this Windows; the page hides the others.
     pub applicable: bool,
+    /// The stored value could be read exactly. When not, the page shows the setting as not
+    /// changeable here: without the value from before there is no way back, so nothing is set.
+    pub readable: bool,
     pub risk: Risk,
     pub source_url: &'static str,
     pub refresh: Refresh,
@@ -421,6 +424,8 @@ fn windows_build(reg: &dyn Registry) -> u32 {
         r"SOFTWARE\Microsoft\Windows NT\CurrentVersion",
         "CurrentBuildNumber",
     )
+    .ok()
+    .flatten()
     .and_then(|v| v.as_str().and_then(|s| s.trim().parse().ok()))
     .unwrap_or(0)
 }
@@ -452,6 +457,7 @@ fn state_of(
         options: Vec::new(),
         changed_here: changed.iter().any(|c| c == t.id),
         applicable: build >= t.min_build,
+        readable: true,
         risk: t.risk,
         source_url: t.source_url,
         refresh: t.refresh,
@@ -464,7 +470,11 @@ fn state_of(
             off,
             default_when_missing,
         } => {
-            s.on = reg_state(reg.get(key, name).as_ref(), on, off, default_when_missing);
+            match reg.get(key, name) {
+                Ok(value) => s.on = reg_state(value.as_ref(), on, off, default_when_missing),
+                // Exists but cannot be read exactly: never guessed, never changed.
+                Err(_) => s.readable = false,
+            }
         }
         Mechanism::Flag(flag) => {
             s.on = effects.flag(flag);
@@ -534,8 +544,9 @@ pub fn set(
             },
             Target::Switch(want),
         ) => {
-            // The raw value, whatever its type: an undo puts back exactly this.
-            let previous = reg.get(key, name);
+            // The raw value, whatever its type: an undo puts back exactly this. A value that
+            // cannot be read exactly has no way back, so the change is refused.
+            let previous = reg.get(key, name).map_err(TweakError::Failed)?;
             // Only a value that is already the wanted number counts as "already so": a missing
             // value with a known default is still written, so the state is explicit afterwards.
             let wanted = Value::Dword(if *want { on } else { off });
@@ -901,10 +912,11 @@ mod win {
             let e = WinEffects;
             let r = WinRegistry;
             let key = r"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced";
-            if let Some(n) = r.get(key, "HideFileExt").and_then(|v| v.as_dword()) {
+            let dword = |name: &str| r.get(key, name).ok().flatten().and_then(|v| v.as_dword());
+            if let Some(n) = dword("HideFileExt") {
                 assert_eq!(e.flag(Flag::ShowExtensions), Some(n == 0));
             }
-            if let Some(n) = r.get(key, "Hidden").and_then(|v| v.as_dword()) {
+            if let Some(n) = dword("Hidden") {
                 assert_eq!(e.flag(Flag::ShowHiddenFiles), Some(n == 1));
             }
             assert!(e.flag(Flag::ShowExtensions).is_some());
@@ -936,7 +948,7 @@ mod win {
             let path = std::env::temp_dir()
                 .join(format!("tm-pc-tune-tweaks-{}", std::process::id()))
                 .join("journal.json");
-            let (j, _) = Journal::open(&path);
+            let (j, _) = Journal::open(&path).unwrap();
             let states = state(&j, &WinRegistry, &WinEffects);
             assert_eq!(states.len(), catalogue().len());
             assert!(states.iter().all(|s| !s.changed_here));
@@ -1044,8 +1056,10 @@ mod tests {
             {
                 seen += 1;
                 assert!(valid_key(key), "{key}");
+                // `valid_key` refuses everything outside `Software\…` and every `Policies` key.
                 assert!(key.starts_with(r"Software\"), "{key}");
                 assert!(!key.to_ascii_lowercase().contains("policies"), "{key}");
+                assert!(!valid_key(&format!(r"{key}\Policies")));
                 assert!(!key.to_ascii_lowercase().starts_with("hk"), "{key}");
                 assert!(!name.is_empty() && !name.contains('\\'), "{name}");
                 assert_ne!(on, off, "{}", t.id);
@@ -1072,7 +1086,7 @@ mod tests {
     fn the_state_shows_what_is_set_and_admits_what_it_does_not_know() {
         let path = temp_path("state");
         let (reg, fx) = machine();
-        let (j, _) = Journal::open(&path);
+        let (j, _) = Journal::open(&path).unwrap();
         let s = state(&j, &reg, &fx);
         assert_eq!(s.len(), catalogue().len());
         assert!(s.iter().all(|x| x.applicable && !x.changed_here));
@@ -1110,7 +1124,7 @@ mod tests {
         );
         let lone = MemEffects::new();
         lone.seed_schemes(&[(BALANCED, "Ausbalanciert")]);
-        let (mut j, _) = Journal::open(&path);
+        let (mut j, _) = Journal::open(&path).unwrap();
         let s = state(&j, &reg, &lone);
         assert!(!of(&s, "trackAppLaunches").applicable);
         assert!(!of(&s, "animations").applicable);
@@ -1139,7 +1153,7 @@ mod tests {
     fn a_registry_setting_is_switched_and_undo_removes_the_value_that_was_missing() {
         let path = temp_path("reg-missing");
         let (reg, fx) = machine();
-        let (mut j, _) = Journal::open(&path);
+        let (mut j, _) = Journal::open(&path).unwrap();
         let id = set(
             &mut j,
             &reg,
@@ -1150,7 +1164,7 @@ mod tests {
         )
         .unwrap()
         .expect("an entry");
-        assert_eq!(reg.get(AD_KEY, "Enabled"), Some(Value::Dword(0)));
+        assert_eq!(reg.get(AD_KEY, "Enabled").unwrap(), Some(Value::Dword(0)));
         let s = state(&j, &reg, &fx);
         assert_eq!(of(&s, "advertisingId").on, Some(false));
         assert!(of(&s, "advertisingId").changed_here);
@@ -1162,7 +1176,7 @@ mod tests {
         );
 
         undo(&mut j, &reg, &fx, id);
-        assert_eq!(reg.get(AD_KEY, "Enabled"), None);
+        assert_eq!(reg.get(AD_KEY, "Enabled").unwrap(), None);
         assert!(!of(&state(&j, &reg, &fx), "advertisingId").changed_here);
         cleanup(&path);
     }
@@ -1173,7 +1187,7 @@ mod tests {
         let (reg, fx) = machine();
         let odd = Value::Sz("yes".into());
         reg.set(ADV_KEY, "Start_TrackProgs", &odd).unwrap();
-        let (mut j, _) = Journal::open(&path);
+        let (mut j, _) = Journal::open(&path).unwrap();
         let id = set(
             &mut j,
             &reg,
@@ -1184,9 +1198,12 @@ mod tests {
         )
         .unwrap()
         .unwrap();
-        assert_eq!(reg.get(ADV_KEY, "Start_TrackProgs"), Some(Value::Dword(0)));
+        assert_eq!(
+            reg.get(ADV_KEY, "Start_TrackProgs").unwrap(),
+            Some(Value::Dword(0))
+        );
         undo(&mut j, &reg, &fx, id);
-        assert_eq!(reg.get(ADV_KEY, "Start_TrackProgs"), Some(odd));
+        assert_eq!(reg.get(ADV_KEY, "Start_TrackProgs").unwrap(), Some(odd));
         cleanup(&path);
     }
 
@@ -1194,7 +1211,7 @@ mod tests {
     fn a_flag_and_the_power_plan_are_switched_and_taken_back() {
         let path = temp_path("other");
         let (reg, fx) = machine();
-        let (mut j, _) = Journal::open(&path);
+        let (mut j, _) = Journal::open(&path).unwrap();
         let a = set(&mut j, &reg, &fx, "animations", &Target::Switch(false), 5)
             .unwrap()
             .unwrap();
@@ -1230,7 +1247,7 @@ mod tests {
         let path = temp_path("same");
         let (reg, fx) = machine();
         reg.set(AD_KEY, "Enabled", &Value::Dword(1)).unwrap();
-        let (mut j, _) = Journal::open(&path);
+        let (mut j, _) = Journal::open(&path).unwrap();
         for (id, target) in [
             ("advertisingId", Target::Switch(true)),
             ("animations", Target::Switch(true)),
@@ -1249,7 +1266,7 @@ mod tests {
     fn unknown_ids_and_wrong_targets_are_refused_before_anything_happens() {
         let path = temp_path("refused");
         let (reg, fx) = machine();
-        let (mut j, _) = Journal::open(&path);
+        let (mut j, _) = Journal::open(&path).unwrap();
         for id in ["", "nope", "Animations", "animations ", r"Software\x"] {
             assert_eq!(
                 set(&mut j, &reg, &fx, id, &Target::Switch(true), 1),
@@ -1286,7 +1303,7 @@ mod tests {
         let (reg, fx) = machine();
         reg.fail_writes.store(true, Ordering::Relaxed);
         fx.fail_writes.store(true, Ordering::Relaxed);
-        let (mut j, _) = Journal::open(&path);
+        let (mut j, _) = Journal::open(&path).unwrap();
         for (id, target) in [
             ("advertisingId", Target::Switch(false)),
             ("animations", Target::Switch(false)),
@@ -1301,7 +1318,7 @@ mod tests {
         assert!(j.views().is_empty());
         assert!(j.originals(Kind::Tweak).is_empty());
         assert!(state(&j, &reg, &fx).iter().all(|s| !s.changed_here));
-        let (j, _) = Journal::open(&path);
+        let (j, _) = Journal::open(&path).unwrap();
         assert!(j.views().is_empty());
         cleanup(&path);
     }
@@ -1310,9 +1327,10 @@ mod tests {
     fn nothing_is_changed_when_the_journal_cannot_be_saved() {
         let path = temp_path("unsaved");
         let blocker = path.parent().unwrap().to_path_buf();
-        std::fs::write(&blocker, b"x").unwrap();
         let (reg, fx) = machine();
-        let (mut j, _) = Journal::open(&path);
+        let (mut j, _) = Journal::open(&path).unwrap();
+        // After opening, the journal's "folder" turns out to be a file, so saving must fail.
+        std::fs::write(&blocker, b"x").unwrap();
         assert_eq!(
             set(&mut j, &reg, &fx, "animations", &Target::Switch(false), 1),
             Err(TweakError::Journal(JournalError::NotSaved))
@@ -1327,7 +1345,7 @@ mod tests {
         let (reg, fx) = machine();
         reg.set(ADV_KEY, "Start_TrackProgs", &Value::Dword(1))
             .unwrap();
-        let (mut j, _) = Journal::open(&path);
+        let (mut j, _) = Journal::open(&path).unwrap();
         let mut go = |id: &str, target: Target| {
             set(&mut j, &reg, &fx, id, &target, 9).unwrap().unwrap();
         };
@@ -1342,14 +1360,16 @@ mod tests {
         go("powerPlan", Target::Choice(SAVER.into()));
         go("powerPlan", Target::Choice(BALANCED.into()));
         go("powerPlan", Target::Choice(SAVER.into()));
-        // Push every one of these entries out of the capped history.
-        for _ in 0..MAX_ENTRIES {
-            j.record_cleanup(11, "temp", 1, 1, false).unwrap();
+        // Push every one of these entries out of the capped history (an even number of
+        // switches, so this setting ends where it started).
+        for n in 0..MAX_ENTRIES + 2 {
+            go("dragFullWindows", Target::Switch(n % 2 == 1));
         }
-        assert!(j.views().iter().all(|v| v.kind == Kind::Cleanup));
+        assert_eq!(j.views().len(), MAX_ENTRIES);
+        assert!(j.views().iter().all(|v| v.subject == "dragFullWindows"));
 
         // A new process still knows the values from before.
-        let (mut j, _) = Journal::open(&path);
+        let (mut j, _) = Journal::open(&path).unwrap();
         let mut report = reset_all(&mut j, &reg, &fx);
         report.restored.sort();
         assert_eq!(
@@ -1357,16 +1377,21 @@ mod tests {
             [
                 "advertisingId",
                 "animations",
+                "dragFullWindows",
                 "hiddenFiles",
                 "powerPlan",
                 "trackAppLaunches"
             ]
         );
         assert!(report.failed.is_empty());
-        assert_eq!(reg.get(AD_KEY, "Enabled"), None);
-        assert_eq!(reg.get(ADV_KEY, "Start_TrackProgs"), Some(Value::Dword(1)));
+        assert_eq!(reg.get(AD_KEY, "Enabled").unwrap(), None);
+        assert_eq!(
+            reg.get(ADV_KEY, "Start_TrackProgs").unwrap(),
+            Some(Value::Dword(1))
+        );
         assert_eq!(fx.flag(Flag::ClientAreaAnimation), Some(true));
         assert_eq!(fx.flag(Flag::ShowHiddenFiles), Some(false));
+        assert_eq!(fx.flag(Flag::DragFullWindows), Some(true));
         assert_eq!(fx.active_power_scheme().as_deref(), Some(BALANCED));
         assert!(j.originals(Kind::Tweak).is_empty());
         assert!(state(&j, &reg, &fx).iter().all(|s| !s.changed_here));
@@ -1379,7 +1404,7 @@ mod tests {
     fn reset_all_marks_the_open_entries_as_taken_back() {
         let path = temp_path("reset-marks");
         let (reg, fx) = machine();
-        let (mut j, _) = Journal::open(&path);
+        let (mut j, _) = Journal::open(&path).unwrap();
         set(
             &mut j,
             &reg,
@@ -1411,7 +1436,7 @@ mod tests {
     fn reset_all_puts_back_what_it_can_and_reports_the_rest() {
         let path = temp_path("reset-partial");
         let (reg, fx) = machine();
-        let (mut j, _) = Journal::open(&path);
+        let (mut j, _) = Journal::open(&path).unwrap();
         set(
             &mut j,
             &reg,
@@ -1440,7 +1465,7 @@ mod tests {
         reg.fail_writes.store(false, Ordering::Relaxed);
         let report = reset_all(&mut j, &reg, &fx);
         assert_eq!(report.restored, ["advertisingId".to_string()]);
-        assert_eq!(reg.get(AD_KEY, "Enabled"), None);
+        assert_eq!(reg.get(AD_KEY, "Enabled").unwrap(), None);
         cleanup(&path);
     }
 
@@ -1466,6 +1491,72 @@ mod tests {
         apply_other(&fx, POWER_SCHEME, SAVER).unwrap();
         assert_eq!(fx.flag(Flag::MouseSonar), Some(true));
         assert_eq!(fx.active_power_scheme().as_deref(), Some(SAVER));
+    }
+
+    #[test]
+    fn a_value_that_cannot_be_read_is_shown_as_not_changeable_and_never_written() {
+        let path = temp_path("unreadable");
+        let (reg, fx) = machine();
+        reg.set(AD_KEY, "Enabled", &Value::Dword(1)).unwrap();
+        reg.fail_reads.store(true, Ordering::Relaxed);
+        let (mut j, _) = Journal::open(&path).unwrap();
+        let s = state(&j, &reg, &fx);
+        let ad = of(&s, "advertisingId");
+        assert!(!ad.readable);
+        assert_eq!(ad.on, None, "never guessed");
+        // What does not go through the registry is not affected.
+        assert!(of(&s, "animations").readable);
+        assert_eq!(
+            set(
+                &mut j,
+                &reg,
+                &fx,
+                "advertisingId",
+                &Target::Switch(false),
+                1
+            ),
+            Err(TweakError::Failed(RegError::Unreadable))
+        );
+        assert!(j.views().is_empty());
+        assert!(j.originals(Kind::Tweak).is_empty());
+        reg.fail_reads.store(false, Ordering::Relaxed);
+        assert_eq!(reg.get(AD_KEY, "Enabled").unwrap(), Some(Value::Dword(1)));
+        cleanup(&path);
+    }
+
+    #[test]
+    fn off_on_off_then_undoing_both_leaves_nothing_for_reset_all() {
+        let path = temp_path("sequence");
+        let (reg, fx) = machine();
+        reg.set(AD_KEY, "Enabled", &Value::Dword(0)).unwrap();
+        let (mut j, _) = Journal::open(&path).unwrap();
+        let go = |j: &mut Journal, on: bool| {
+            set(j, &reg, &fx, "advertisingId", &Target::Switch(on), 1)
+                .unwrap()
+                .unwrap()
+        };
+        let first = go(&mut j, true);
+        let second = go(&mut j, false);
+        // Undoing the later change leaves the first one open: reset all still knows "off".
+        undo(&mut j, &reg, &fx, second);
+        assert_eq!(reg.get(AD_KEY, "Enabled").unwrap(), Some(Value::Dword(1)));
+        assert!(of(&state(&j, &reg, &fx), "advertisingId").changed_here);
+        undo(&mut j, &reg, &fx, first);
+        assert_eq!(reg.get(AD_KEY, "Enabled").unwrap(), Some(Value::Dword(0)));
+        assert!(!of(&state(&j, &reg, &fx), "advertisingId").changed_here);
+        assert_eq!(reset_all(&mut j, &reg, &fx), ResetReport::default());
+
+        // The same sequence again, but "Alle zurücksetzen" after only one undo.
+        let _ = go(&mut j, true);
+        let second = go(&mut j, false);
+        undo(&mut j, &reg, &fx, second);
+        assert_eq!(
+            reset_all(&mut j, &reg, &fx).restored,
+            ["advertisingId".to_string()]
+        );
+        assert_eq!(reg.get(AD_KEY, "Enabled").unwrap(), Some(Value::Dword(0)));
+        assert!(j.views().iter().all(|v| !v.can_undo));
+        cleanup(&path);
     }
 
     #[test]
@@ -1496,7 +1587,7 @@ mod tests {
         let path = temp_path("json");
         let (reg, fx) = machine();
         reg.set(AD_KEY, "Enabled", &Value::Dword(1)).unwrap();
-        let (j, _) = Journal::open(&path);
+        let (j, _) = Journal::open(&path).unwrap();
         let json = serde_json::to_string(&state(&j, &reg, &fx)).unwrap();
         assert!(json.contains(r#""id":"advertisingId""#));
         assert!(json.contains(r#""changedHere":false"#));

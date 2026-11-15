@@ -1,11 +1,15 @@
 //! The history of what the page changed on this PC, with the values needed to take it back.
 //!
-//! One small JSON file in the app's local data folder: device-local, never synced, never part of
-//! a backup or a bug report. It holds no file paths and no file names; a clean-up entry is a
-//! category with a size, a setting entry is the setting's id with the value from before.
+//! Clean-ups are noted **in memory only** (the disk module holds no data: `docs/RULES.md`); they
+//! are gone when the app closes. Changes that need a way back (a setting, an autostart entry) are
+//! written to one small JSON file in the app's local data folder: device-local, never synced,
+//! never part of a backup or a bug report. Nothing here holds a file path or a file name; a
+//! clean-up entry is a category with a size, a setting entry is the setting's id with the value
+//! from before.
 //!
-//! Two stores in one file:
-//! - `entries`: what happened, newest last, capped at [`MAX_ENTRIES`] (the oldest fall out).
+//! Two stores in the file:
+//! - `entries`: the changes, newest last, capped at [`MAX_ENTRIES`] (taken-back ones fall out
+//!   first, then the oldest).
 //! - `originals`: per subject (a setting, an autostart entry) the values from **before the first
 //!   change**. They never fall out, so "Alle zurücksetzen" works however long the history is.
 
@@ -97,13 +101,23 @@ struct File {
     next_id: u64,
     entries: Vec<Entry>,
     #[serde(default)]
-    originals: BTreeMap<String, Vec<Undo>>,
+    originals: BTreeMap<String, Original>,
+}
+
+/// The values of a subject from before its first change, with the entry that made that change.
+#[derive(Clone, Serialize, Deserialize)]
+struct Original {
+    entry: u64,
+    undo: Vec<Undo>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum JournalError {
     /// The file could not be written: the change must not be made.
     NotSaved,
+    /// The file exists but could not be read (locked, access denied): nothing is changed and
+    /// nothing is written, so the stored undo values stay as they are.
+    Unreadable,
     UnknownEntry,
     AlreadyUndone,
     /// The entry has nothing to take back (a clean-up: the recycle bin is the way back).
@@ -117,6 +131,7 @@ impl JournalError {
     pub fn code(&self) -> &'static str {
         match self {
             JournalError::NotSaved => "not-saved",
+            JournalError::Unreadable => "journal-unreadable",
             JournalError::UnknownEntry => "unknown-entry",
             JournalError::AlreadyUndone => "already-undone",
             JournalError::NothingToUndo => "nothing-to-undo",
@@ -130,6 +145,8 @@ impl JournalError {
 pub struct Journal {
     path: PathBuf,
     file: File,
+    /// Clean-ups of this session (never written to disk).
+    session: Vec<Entry>,
 }
 
 fn subject_key(kind: Kind, subject: &str) -> String {
@@ -142,10 +159,11 @@ fn subject_key(kind: Kind, subject: &str) -> String {
 }
 
 impl Journal {
-    /// Opens the journal at `path`. A missing file is an empty journal. An unreadable one is set
-    /// aside as `<name>.bad` (once) and an empty journal starts: the stored undo values are then
-    /// gone, which the returned flag tells the caller.
-    pub fn open(path: &Path) -> (Journal, bool) {
+    /// Opens the journal at `path`. A missing file is an empty journal. A file that exists but
+    /// cannot be read is an error (it is not touched). One that is read but makes no sense is set
+    /// aside as `<name>.bad` and an empty journal starts: the stored undo values are then gone,
+    /// which the returned flag tells the caller.
+    pub fn open(path: &Path) -> Result<(Journal, bool), JournalError> {
         let mut recovered = false;
         let file = match std::fs::read(path) {
             Ok(bytes) => match serde_json::from_slice::<File>(&bytes) {
@@ -154,18 +172,21 @@ impl Journal {
                     recovered = true;
                     let mut bad = path.as_os_str().to_owned();
                     bad.push(".bad");
-                    let _ = std::fs::rename(path, PathBuf::from(bad));
+                    std::fs::rename(path, PathBuf::from(bad))
+                        .map_err(|_| JournalError::Unreadable)?;
                     File::default()
                 }
             },
-            Err(_) => File::default(),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => File::default(),
+            Err(_) => return Err(JournalError::Unreadable),
         };
         let mut j = Journal {
             path: path.to_path_buf(),
             file,
+            session: Vec::new(),
         };
         j.file.version = VERSION;
-        (j, recovered)
+        Ok((j, recovered))
     }
 
     /// Writes the file next to itself and renames it over the old one, so a crash never leaves
@@ -185,24 +206,8 @@ impl Journal {
         })
     }
 
-    fn push(&mut self, mut entry: Entry) -> Result<u64, JournalError> {
-        self.file.next_id += 1;
-        entry.id = self.file.next_id;
-        let id = entry.id;
-        if !entry.undo.is_empty() {
-            self.file
-                .originals
-                .entry(subject_key(entry.kind, &entry.subject))
-                .or_insert_with(|| entry.undo.clone());
-        }
-        self.file.entries.push(entry);
-        let extra = self.file.entries.len().saturating_sub(MAX_ENTRIES);
-        self.file.entries.drain(..extra);
-        self.save()?;
-        Ok(id)
-    }
-
-    /// Notes a finished clean-up (nothing to undo here: the recycle bin is the way back).
+    /// Notes a finished clean-up for this session (nothing to undo here: the recycle bin is the
+    /// way back). Not written to disk.
     pub fn record_cleanup(
         &mut self,
         at: i64,
@@ -210,9 +215,11 @@ impl Journal {
         bytes: u64,
         files: u64,
         permanent: bool,
-    ) -> Result<u64, JournalError> {
-        self.push(Entry {
-            id: 0,
+    ) -> u64 {
+        self.file.next_id += 1;
+        let id = self.file.next_id;
+        self.session.push(Entry {
+            id,
             at,
             kind: Kind::Cleanup,
             subject: category.to_string(),
@@ -223,12 +230,26 @@ impl Journal {
             on: None,
             undo: Vec::new(),
             undone: false,
-        })
+        });
+        let extra = self.session.len().saturating_sub(MAX_ENTRIES);
+        self.session.drain(..extra);
+        id
+    }
+
+    /// Keeps the stored history at [`MAX_ENTRIES`]: taken-back entries go first, then the oldest.
+    fn trim(&mut self) {
+        while self.file.entries.len() > MAX_ENTRIES {
+            let i = self.file.entries.iter().position(|e| e.undone).unwrap_or(0);
+            self.file.entries.remove(i);
+        }
     }
 
     /// Makes a change **after** its undo values are safely on disk: the entry is saved first,
     /// then `apply` runs; when `apply` fails the entry is taken out again. So there is never a
-    /// change without a way back, whatever happens in between.
+    /// change without a way back, whatever happens in between. `apply` must be all-or-nothing
+    /// (one write, or [`crate::reg::set_all`] for several): when it fails, nothing may be left
+    /// changed.
+    #[allow(clippy::too_many_arguments)]
     pub fn change<E>(
         &mut self,
         at: i64,
@@ -240,29 +261,50 @@ impl Journal {
         apply: impl FnOnce() -> Result<(), E>,
     ) -> Result<u64, ChangeError<E>> {
         let key = subject_key(kind, subject);
-        let had_original = self.file.originals.contains_key(&key);
-        let id = self
-            .push(Entry {
-                id: 0,
-                at,
-                kind,
-                subject: subject.to_string(),
-                label: label.to_string(),
-                bytes: 0,
-                files: 0,
-                permanent: false,
-                on,
-                undo,
-                undone: false,
-            })
-            .map_err(ChangeError::Journal)?;
-        if let Err(e) = apply() {
-            self.file.entries.retain(|x| x.id != id);
-            if !had_original {
-                self.file.originals.remove(&key);
+        self.file.next_id += 1;
+        let id = self.file.next_id;
+        let first = !self.file.originals.contains_key(&key);
+        if first {
+            self.file.originals.insert(
+                key.clone(),
+                Original {
+                    entry: id,
+                    undo: undo.clone(),
+                },
+            );
+        }
+        self.file.entries.push(Entry {
+            id,
+            at,
+            kind,
+            subject: subject.to_string(),
+            label: label.to_string(),
+            bytes: 0,
+            files: 0,
+            permanent: false,
+            on,
+            undo,
+            undone: false,
+        });
+        let take_out = |j: &mut Journal| {
+            j.file.entries.retain(|x| x.id != id);
+            if first {
+                j.file.originals.remove(&key);
             }
+        };
+        if let Err(e) = self.save() {
+            take_out(self);
+            return Err(ChangeError::Journal(e));
+        }
+        if let Err(e) = apply() {
+            take_out(self);
             let _ = self.save();
             return Err(ChangeError::Apply(e));
+        }
+        // Only now, with the change made, may an older entry fall out of the history.
+        if self.file.entries.len() > MAX_ENTRIES {
+            self.trim();
+            let _ = self.save();
         }
         Ok(id)
     }
@@ -293,8 +335,8 @@ impl Journal {
         Ok(e.undo.clone())
     }
 
-    /// Marks an entry as taken back. When it was the subject's first change (its values are the
-    /// stored original), the subject is back where it started and the original is forgotten.
+    /// Marks an entry as taken back. When it is the entry that made the subject's first change,
+    /// the subject is back where it started and the original is forgotten.
     pub fn mark_undone(&mut self, id: u64) -> Result<(), JournalError> {
         let e = self
             .file
@@ -304,7 +346,7 @@ impl Journal {
             .ok_or(JournalError::UnknownEntry)?;
         e.undone = true;
         let key = subject_key(e.kind, &e.subject);
-        if self.file.originals.get(&key) == Some(&e.undo) {
+        if self.file.originals.get(&key).is_some_and(|o| o.entry == id) {
             self.file.originals.remove(&key);
         }
         self.save()
@@ -319,7 +361,7 @@ impl Journal {
             .iter()
             .filter_map(|(k, v)| {
                 k.strip_prefix(&prefix)
-                    .map(|subject| (subject.to_string(), v.clone()))
+                    .map(|subject| (subject.to_string(), v.undo.clone()))
             })
             .collect()
     }
@@ -337,10 +379,9 @@ impl Journal {
 
     /// Newest first, without the stored values.
     pub fn views(&self) -> Vec<EntryView> {
-        self.file
-            .entries
-            .iter()
-            .rev()
+        let mut all: Vec<&Entry> = self.file.entries.iter().chain(&self.session).collect();
+        all.sort_by(|a, b| b.id.cmp(&a.id));
+        all.into_iter()
             .map(|e| EntryView {
                 id: e.id,
                 at: e.at,
@@ -420,7 +461,7 @@ mod tests {
         let undo = vec![Undo::Reg {
             key: KEY.into(),
             name: name.into(),
-            previous: reg.get(KEY, name),
+            previous: reg.get(KEY, name).unwrap(),
         }];
         j.change(10, Kind::Tweak, name, "", Some(to == 1), undo, || {
             reg.set(KEY, name, &Value::Dword(to))
@@ -432,17 +473,17 @@ mod tests {
         let path = temp_path("undo");
         let reg = MemRegistry::new();
         reg.set(KEY, "a", &Value::Dword(1)).unwrap();
-        let (mut j, recovered) = Journal::open(&path);
+        let (mut j, recovered) = Journal::open(&path).unwrap();
         assert!(!recovered);
         let id = switch(&mut j, &reg, "a", 0).unwrap();
-        assert_eq!(reg.get(KEY, "a"), Some(Value::Dword(0)));
+        assert_eq!(reg.get(KEY, "a"), Ok(Some(Value::Dword(0))));
 
         // A new process: the value from before is still there.
-        let (mut j, _) = Journal::open(&path);
+        let (mut j, _) = Journal::open(&path).unwrap();
         let steps = j.undo_steps(id).unwrap();
         apply_undo(&reg, &steps, |_, _| Ok(())).unwrap();
         j.mark_undone(id).unwrap();
-        assert_eq!(reg.get(KEY, "a"), Some(Value::Dword(1)));
+        assert_eq!(reg.get(KEY, "a"), Ok(Some(Value::Dword(1))));
         assert_eq!(j.undo_steps(id), Err(JournalError::AlreadyUndone));
         assert!(j.originals(Kind::Tweak).is_empty());
         cleanup(&path);
@@ -452,10 +493,10 @@ mod tests {
     fn undoing_a_value_that_did_not_exist_removes_it_again() {
         let path = temp_path("absent");
         let reg = MemRegistry::new();
-        let (mut j, _) = Journal::open(&path);
+        let (mut j, _) = Journal::open(&path).unwrap();
         let id = switch(&mut j, &reg, "new", 1).unwrap();
         apply_undo(&reg, &j.undo_steps(id).unwrap(), |_, _| Ok(())).unwrap();
-        assert_eq!(reg.get(KEY, "new"), None);
+        assert_eq!(reg.get(KEY, "new"), Ok(None));
         cleanup(&path);
     }
 
@@ -464,27 +505,27 @@ mod tests {
         let path = temp_path("failed");
         let reg = MemRegistry::new();
         reg.fail_writes.store(true, Ordering::Relaxed);
-        let (mut j, _) = Journal::open(&path);
+        let (mut j, _) = Journal::open(&path).unwrap();
         assert_eq!(
             switch(&mut j, &reg, "a", 1),
             Err(ChangeError::Apply(RegError::Failed))
         );
         assert!(j.views().is_empty());
         assert!(j.originals(Kind::Tweak).is_empty());
-        let (j, _) = Journal::open(&path);
+        let (j, _) = Journal::open(&path).unwrap();
         assert!(j.views().is_empty());
         cleanup(&path);
     }
 
     #[test]
     fn nothing_is_changed_when_the_journal_cannot_be_saved() {
-        // The "folder" of the journal is a file, so saving must fail.
+        // After opening, the journal's "folder" turns out to be a file, so saving must fail.
         let dir = temp_path("unsaved");
         let blocker = dir.parent().unwrap().to_path_buf();
+        let reg = MemRegistry::new();
+        let (mut j, _) = Journal::open(&dir).unwrap();
         std::fs::create_dir_all(blocker.parent().unwrap()).unwrap();
         std::fs::write(&blocker, b"x").unwrap();
-        let reg = MemRegistry::new();
-        let (mut j, _) = Journal::open(&dir);
         assert_eq!(
             switch(&mut j, &reg, "a", 1),
             Err(ChangeError::Journal(JournalError::NotSaved))
@@ -498,7 +539,7 @@ mod tests {
         let path = temp_path("order");
         let reg = MemRegistry::new();
         reg.set(KEY, "a", &Value::Dword(5)).unwrap();
-        let (mut j, _) = Journal::open(&path);
+        let (mut j, _) = Journal::open(&path).unwrap();
         let first = switch(&mut j, &reg, "a", 0).unwrap();
         let second = switch(&mut j, &reg, "a", 1).unwrap();
         let other = switch(&mut j, &reg, "b", 1).unwrap();
@@ -514,11 +555,18 @@ mod tests {
 
         apply_undo(&reg, &j.undo_steps(second).unwrap(), |_, _| Ok(())).unwrap();
         j.mark_undone(second).unwrap();
-        assert_eq!(reg.get(KEY, "a"), Some(Value::Dword(0)));
+        assert_eq!(reg.get(KEY, "a"), Ok(Some(Value::Dword(0))));
         apply_undo(&reg, &j.undo_steps(first).unwrap(), |_, _| Ok(())).unwrap();
         j.mark_undone(first).unwrap();
-        assert_eq!(reg.get(KEY, "a"), Some(Value::Dword(5)));
+        assert_eq!(reg.get(KEY, "a"), Ok(Some(Value::Dword(5))));
         cleanup(&path);
+    }
+
+    /// Fills the stored history with changes of other subjects until the oldest entries fall out.
+    fn fill(j: &mut Journal, reg: &MemRegistry) {
+        for i in 0..=MAX_ENTRIES {
+            switch(j, reg, &format!("filler{i}"), 1).unwrap();
+        }
     }
 
     #[test]
@@ -526,25 +574,20 @@ mod tests {
         let path = temp_path("reset");
         let reg = MemRegistry::new();
         reg.set(KEY, "a", &Value::Dword(7)).unwrap();
-        let (mut j, _) = Journal::open(&path);
-        switch(&mut j, &reg, "a", 0).unwrap();
+        let (mut j, _) = Journal::open(&path).unwrap();
+        let first = switch(&mut j, &reg, "a", 0).unwrap();
         switch(&mut j, &reg, "a", 1).unwrap();
-        switch(&mut j, &reg, "fresh", 1).unwrap();
-        // Push the first entries out of the capped history.
-        for _ in 0..MAX_ENTRIES {
-            j.record_cleanup(11, "temp", 1, 1, false).unwrap();
-        }
+        fill(&mut j, &reg);
         assert_eq!(j.views().len(), MAX_ENTRIES);
+        assert!(j.views().iter().all(|v| v.id != first), "fell out");
 
-        let (mut j, _) = Journal::open(&path);
-        let originals = j.originals(Kind::Tweak);
-        assert_eq!(originals.len(), 2);
-        for (subject, steps) in originals {
+        let (mut j, _) = Journal::open(&path).unwrap();
+        for (subject, steps) in j.originals(Kind::Tweak) {
             apply_undo(&reg, &steps, |_, _| Ok(())).unwrap();
             j.mark_reset(Kind::Tweak, &subject).unwrap();
         }
-        assert_eq!(reg.get(KEY, "a"), Some(Value::Dword(7)));
-        assert_eq!(reg.get(KEY, "fresh"), None);
+        assert_eq!(reg.get(KEY, "a"), Ok(Some(Value::Dword(7))));
+        assert_eq!(reg.get(KEY, "filler0"), Ok(None));
         assert!(j.originals(Kind::Tweak).is_empty());
         assert!(j.views().iter().all(|v| !v.can_undo));
         cleanup(&path);
@@ -555,42 +598,92 @@ mod tests {
         let path = temp_path("later");
         let reg = MemRegistry::new();
         reg.set(KEY, "a", &Value::Dword(7)).unwrap();
-        let (mut j, _) = Journal::open(&path);
+        let (mut j, _) = Journal::open(&path).unwrap();
         switch(&mut j, &reg, "a", 0).unwrap();
-        // The first change falls out of the history.
-        for _ in 0..MAX_ENTRIES {
-            j.record_cleanup(11, "temp", 1, 1, false).unwrap();
-        }
+        fill(&mut j, &reg);
         let second = switch(&mut j, &reg, "a", 1).unwrap();
         apply_undo(&reg, &j.undo_steps(second).unwrap(), |_, _| Ok(())).unwrap();
         j.mark_undone(second).unwrap();
-        assert_eq!(reg.get(KEY, "a"), Some(Value::Dword(0)));
+        assert_eq!(reg.get(KEY, "a"), Ok(Some(Value::Dword(0))));
         // "Alle zurücksetzen" still knows the 7 from before the first change.
-        let originals = j.originals(Kind::Tweak);
-        assert_eq!(originals.len(), 1);
-        apply_undo(&reg, &originals[0].1, |_, _| Ok(())).unwrap();
-        assert_eq!(reg.get(KEY, "a"), Some(Value::Dword(7)));
+        let original = j
+            .originals(Kind::Tweak)
+            .into_iter()
+            .find(|(subject, _)| subject == "a")
+            .expect("original kept");
+        apply_undo(&reg, &original.1, |_, _| Ok(())).unwrap();
+        assert_eq!(reg.get(KEY, "a"), Ok(Some(Value::Dword(7))));
         cleanup(&path);
     }
 
     #[test]
-    fn a_clean_up_has_nothing_to_undo_and_stores_no_names() {
+    fn the_original_is_tied_to_the_first_change_not_to_equal_values() {
+        // off, on, off again: the third change stores the same "previous" as the original.
+        let path = temp_path("tied");
+        let reg = MemRegistry::new();
+        reg.set(KEY, "a", &Value::Dword(1)).unwrap();
+        let (mut j, _) = Journal::open(&path).unwrap();
+        let a = switch(&mut j, &reg, "a", 0).unwrap();
+        let b = switch(&mut j, &reg, "a", 1).unwrap();
+        let c = switch(&mut j, &reg, "a", 0).unwrap();
+        for id in [c, b] {
+            apply_undo(&reg, &j.undo_steps(id).unwrap(), |_, _| Ok(())).unwrap();
+            j.mark_undone(id).unwrap();
+            assert_eq!(
+                j.originals(Kind::Tweak).len(),
+                1,
+                "still changed by entry {a}"
+            );
+        }
+        apply_undo(&reg, &j.undo_steps(a).unwrap(), |_, _| Ok(())).unwrap();
+        j.mark_undone(a).unwrap();
+        assert!(j.originals(Kind::Tweak).is_empty());
+        assert_eq!(reg.get(KEY, "a"), Ok(Some(Value::Dword(1))));
+        cleanup(&path);
+    }
+
+    #[test]
+    fn taken_back_entries_fall_out_of_a_full_history_first() {
+        let path = temp_path("trim");
+        let reg = MemRegistry::new();
+        let (mut j, _) = Journal::open(&path).unwrap();
+        let oldest = switch(&mut j, &reg, "keep", 1).unwrap();
+        let undone = switch(&mut j, &reg, "gone", 1).unwrap();
+        apply_undo(&reg, &j.undo_steps(undone).unwrap(), |_, _| Ok(())).unwrap();
+        j.mark_undone(undone).unwrap();
+        for i in 0..MAX_ENTRIES - 1 {
+            switch(&mut j, &reg, &format!("filler{i}"), 1).unwrap();
+        }
+        let views = j.views();
+        assert_eq!(views.len(), MAX_ENTRIES);
+        assert!(views.iter().any(|v| v.id == oldest && v.can_undo));
+        assert!(views.iter().all(|v| v.id != undone));
+        cleanup(&path);
+    }
+
+    #[test]
+    fn a_clean_up_is_noted_for_the_session_only_and_never_written() {
         let path = temp_path("cleanup");
-        let (mut j, _) = Journal::open(&path);
-        let id = j
-            .record_cleanup(5, "browserCache", 4096, 12, false)
-            .unwrap();
-        assert_eq!(j.undo_steps(id), Err(JournalError::NothingToUndo));
+        let (mut j, _) = Journal::open(&path).unwrap();
+        let id = j.record_cleanup(5, "browserCache", 4096, 12, false);
+        assert_eq!(j.undo_steps(id), Err(JournalError::UnknownEntry));
         let v = &j.views()[0];
         assert_eq!(
             (v.bytes, v.files, v.permanent, v.can_undo),
             (4096, 12, false, false)
         );
-        let text = std::fs::read_to_string(&path).unwrap();
-        assert!(
-            !text.contains('\\') && !text.contains('/'),
-            "no paths in the file"
+        assert!(!path.exists(), "a clean-up alone writes no file");
+        // A later change is written, the clean-up still is not; both show, newest first.
+        let reg = MemRegistry::new();
+        let change = switch(&mut j, &reg, "a", 1).unwrap();
+        assert_eq!(
+            j.views().iter().map(|v| v.id).collect::<Vec<_>>(),
+            vec![change, id]
         );
+        let text = std::fs::read_to_string(&path).unwrap();
+        assert!(!text.contains("browserCache"));
+        let (j, _) = Journal::open(&path).unwrap();
+        assert_eq!(j.views().len(), 1, "the clean-up is gone after a restart");
         cleanup(&path);
     }
 
@@ -618,23 +711,34 @@ mod tests {
         let path = temp_path("broken");
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
         std::fs::write(&path, b"{ not json").unwrap();
-        let (mut j, recovered) = Journal::open(&path);
+        let (mut j, recovered) = Journal::open(&path).unwrap();
         assert!(recovered);
         assert!(j.views().is_empty());
         let mut bad = path.as_os_str().to_owned();
         bad.push(".bad");
         assert!(PathBuf::from(bad).exists());
-        j.record_cleanup(1, "temp", 1, 1, false).unwrap();
-        let (j, recovered) = Journal::open(&path);
+        let reg = MemRegistry::new();
+        switch(&mut j, &reg, "a", 1).unwrap();
+        let (j, recovered) = Journal::open(&path).unwrap();
         assert!(!recovered);
         assert_eq!(j.views().len(), 1);
         cleanup(&path);
     }
 
     #[test]
+    fn a_file_that_cannot_be_read_is_an_error_and_stays_untouched() {
+        // A folder where the file should be: reading fails with something other than "not found".
+        let path = temp_path("locked");
+        std::fs::create_dir_all(&path).unwrap();
+        assert_eq!(Journal::open(&path).err(), Some(JournalError::Unreadable));
+        assert!(path.is_dir(), "nothing was renamed or overwritten");
+        cleanup(&path);
+    }
+
+    #[test]
     fn unknown_entries_are_an_error() {
         let path = temp_path("unknown");
-        let (mut j, _) = Journal::open(&path);
+        let (mut j, _) = Journal::open(&path).unwrap();
         assert_eq!(j.undo_steps(99), Err(JournalError::UnknownEntry));
         assert_eq!(j.mark_undone(99), Err(JournalError::UnknownEntry));
         cleanup(&path);

@@ -22,6 +22,7 @@ const tweak = (over: Partial<TweakState>): TweakState => ({
   options: [],
   changedHere: false,
   applicable: true,
+  readable: true,
   risk: 'none',
   sourceUrl: 'https://learn.microsoft.com/x',
   refresh: 'none',

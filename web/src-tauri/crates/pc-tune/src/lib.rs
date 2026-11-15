@@ -17,8 +17,8 @@ pub mod tweaks;
 pub use journal::{
     apply_undo, ChangeError, Entry, EntryView, Journal, JournalError, Kind, Undo, MAX_ENTRIES,
 };
-pub use reg::{valid_key, MemRegistry, RegError, Registry, Value};
-pub use tools::Tool;
+pub use reg::{set_all, valid_key, MemRegistry, RegError, Registry, Value};
+pub use tools::{Home, Tool};
 pub use tweaks::{system_effects, Effects, MemEffects, Target, TweakError, TweakState};
 
 /// The registry of this machine; `None` where there is none (Linux, macOS).

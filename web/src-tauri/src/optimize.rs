@@ -1,6 +1,7 @@
 //! PC care of the disk module (desktop): the thin Tauri side around the `pc_tune` crate.
 //!
-//! Holds the journal (what the page changed on this PC, with the values to take it back) and
+//! Holds the journal (what the page changed on this PC: clean-ups for this session in memory,
+//! changes with the values to take them back in a device-local file) and
 //! opens Windows' own tools from a fixed list. Nothing here runs by itself, nothing takes a path
 //! or a program name from the webview, and no value is logged.
 
@@ -49,7 +50,10 @@ impl PcCare {
     ) -> Result<T, String> {
         let mut slot = self.0.lock().map_err(|_| "internal")?;
         if slot.is_none() {
-            let (journal, recovered) = Journal::open(&journal_path(app)?);
+            // A journal that cannot be read is not cached: the next call tries again, and until
+            // then nothing is changed or written.
+            let (journal, recovered) =
+                Journal::open(&journal_path(app)?).map_err(|e| e.code().to_string())?;
             *slot = Some(Opened { journal, recovered });
         }
         f(&mut slot.as_mut().expect("just opened").journal)
@@ -64,13 +68,13 @@ impl PcCare {
     }
 }
 
-/// Notes a finished deletion in the history (category and size only, never a name or a path).
-/// Best effort: the files are already gone, a history that cannot be written must not fail that.
+/// Notes a finished deletion in the history of this session (category and size only, never a
+/// name or a path; kept in memory, not written to disk). Best effort: the files are already gone.
 pub fn note_cleanup(app: &AppHandle, category: &str, bytes: u64, files: u64, permanent: bool) {
     if let Some(care) = app.try_state::<PcCare>() {
         let _ = care.with(app, |j| {
-            j.record_cleanup(unix_now(), category, bytes, files, permanent)
-                .map_err(|e| e.code().to_string())
+            j.record_cleanup(unix_now(), category, bytes, files, permanent);
+            Ok(())
         });
     }
 }
