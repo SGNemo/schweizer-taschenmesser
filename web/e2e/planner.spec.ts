@@ -240,6 +240,8 @@ test.describe('Planer (week board, package 1)', () => {
     await ready(page, '/planner');
     await enter(page, 'Blogpost 90min');
     await expect(today(page)).toContainText('Blogpost');
+    // R2: the capacity opens „Warum?“; „Zeit ändern“ in it opens the day's settings.
+    await today(page).getByTestId('planner-why').click();
     await today(page)
       .getByRole('button', { name: /Zeit für Montag ändern/ })
       .click();
@@ -277,6 +279,8 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(page.getByTestId('today-count')).toHaveText('1');
     // Today off: the planner puts the overdue thing on Tuesday.
     await page.goto('/planner');
+    // R2: the capacity opens „Warum?“; „Zeit ändern“ in it opens the day's settings.
+    await today(page).getByTestId('planner-why').click();
     await today(page)
       .getByRole('button', { name: /Zeit für Montag ändern/ })
       .click();
@@ -312,9 +316,22 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(today(page)).not.toContainText('Keller');
     await page.getByRole('button', { name: 'Rückgängig' }).last().click();
     await expect(today(page)).toContainText('Keller');
-    // Festnageln keeps the thing on its day: the menu changes to „Nicht mehr festnageln“.
+    // Festnageln keeps the thing on its day: since planner hub R2 through ⋯ → „Verschieben …“ → the day's chip
+    // (the one place that nails); the menu then offers „Nicht mehr festnageln“.
     await today(page).getByRole('button', { name: 'Aktionen für Keller' }).click();
-    await page.getByRole('menuitem', { name: 'Festnageln auf Mo' }).click();
+    await expect(page.getByRole('menuitem', { name: /Festnageln auf/ })).toHaveCount(0);
+    await page.getByRole('menuitem', { name: 'Verschieben …' }).click();
+    const move = page.getByRole('dialog', { name: 'Verschieben: Keller' });
+    await expect(move.getByRole('group').getByRole('button')).toHaveText([
+      'Mo 9.',
+      'Di 10.',
+      'Mi 11.',
+      'Do 12.',
+      'Fr 13.',
+      'Sa 14.',
+      'So 15.',
+    ]);
+    await move.getByRole('button', { name: 'Mo 9.', exact: true }).click();
     await expect(page.getByText('Festgenagelt: Mo')).toBeVisible();
     await today(page).getByRole('button', { name: 'Aktionen für Keller' }).click();
     await expect(page.getByRole('menuitem', { name: 'Nicht mehr festnageln' })).toBeVisible();
@@ -696,8 +713,11 @@ test.describe('Planer (more sources, overload – package 3)', () => {
       status: 'open',
     });
     await ready(page, '/planner');
-    // exact: the head's detail line names today's first thing too („Heute: Stadtwerke bezahlen. …“).
-    const row = page.getByText('Stadtwerke bezahlen', { exact: true });
+    // exact: the head's detail line names today's first thing too („Heute: Stadtwerke bezahlen. …“); on a day –
+    // „Nächste Fristen“ beside it names the invoice as well (R2).
+    const row = page
+      .locator('[data-testid^="day-"]')
+      .getByText('Stadtwerke bezahlen', { exact: true });
     await expect(row).toBeVisible();
     const day = page.locator('[data-testid^="day-"]', { hasText: 'Stadtwerke bezahlen' });
     await expect(day).toContainText('Frist Do');
@@ -773,6 +793,8 @@ test.describe('Planer (time windows, templates – package 5)', () => {
     await enter(page, 'Blogpost 90min');
     await enter(page, 'Keller 30min');
     await expect(today(page)).toContainText('Keller');
+    // R2: the capacity opens „Warum?“; „Zeit ändern“ in it opens the day's settings.
+    await today(page).getByTestId('planner-why').click();
     await today(page)
       .getByRole('button', { name: /Zeit für Montag ändern/ })
       .click();

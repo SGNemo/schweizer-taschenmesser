@@ -63,7 +63,7 @@ describe('day sheet: the phone’s swipe changes the day', () => {
     swipe(title, sheet, 200, 150); // 50 px
     swipe(title, sheet, 200, 120, 100, 180); // scrolling down while drifting
     swipe(screen.getByText('a'), sheet, 200, 100); // a row swipes by itself (done / later)
-    swipe(screen.getByRole('button', { name: /Zeit für Montag ändern/ }), sheet, 200, 100);
+    swipe(screen.getByTestId('planner-why'), sheet, 200, 100); // the capacity, a control
     expect(onSwipe).not.toHaveBeenCalled();
   });
 

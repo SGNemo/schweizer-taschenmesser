@@ -28,6 +28,7 @@ import {
 } from '@/core/modules/contributions';
 import { isPlannerOwned, type CalendarItem, type ModuleManifest } from '@/core/modules/types';
 import { planDays } from './days';
+import { lateMoneyDue } from './late';
 import { itemKeyOf, plannerRepos, putRow, type PlannerDb, type PlannerRepos } from './repo';
 import type { AssignmentRow, PlanItemRow } from './schema';
 import { planSettings, type PlannerSettings } from './settings';
@@ -184,6 +185,10 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
     const key = itemKeyOf(e.moduleId, e.id);
     const row = itemRows.get(key);
     titles[key] = e.title;
+    // „Frist vorbei“ (D7): late money is no item of the run – it sits on no day, counts in no sum and no
+    // sentence moves it. Its stored session rows go with this run (`writeRows`), a mark on its source with the
+    // write-back (`writeBackPlan`); the input hash changes with the item list, so that run happens.
+    if (lateMoneyDue(e, row, deps.today)) continue;
     const userDate = e.plannedFor && !isPlannerOwned(e) ? e.plannedFor : undefined;
     if (userDate) userDates.set(key, userDate);
     const dueAny = row?.due?.hard ? row.due : (e.due ?? row?.due);
