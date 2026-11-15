@@ -656,7 +656,7 @@ describe('power: "Monitor aus" and "PC ausschalten …"', () => {
     fake.parts.hooks.setUnlock('cancel');
     await act(() => remoteSession.powerAct('sleep'));
     await flush();
-    expect(power()).toContain('Nicht entsperrt. Es wurde nichts gesendet.');
+    expect(power()).toContain('Nicht bestätigt. Es wurde nichts gesendet.');
     fireEvent.click(screen.getByRole('button', { name: 'Ausblenden' }));
     expect(screen.queryByTestId('remote-power')).toBeNull();
     fake.parts.hooks.setUnlock('ok');

@@ -63,6 +63,9 @@ export function createFakeRemoteParts() {
   /** How the native confirm dialog ends on a phone without a screen lock (`setUnlock('none')`). */
   let confirm: 'ok' | 'cancel' = 'ok';
   let confirms = 0;
+  /** The next power calls fail with this code; a held prompt waits for its release. */
+  let powerError: { code: string; left: number } | undefined;
+  let prompt: Promise<void> | undefined;
   const powered: { action: RemotePowerAction; despite: boolean }[] = [];
   /** Tells the live session `answer` – after the call returned, like the shell's channel. */
   const answerPower = (answer: RemotePowerAnswer) => {
@@ -179,6 +182,10 @@ export function createFakeRemoteParts() {
       typed.push(text);
     },
     power: async (session, action, despite) => {
+      if (powerError && powerError.left > 0) {
+        powerError.left -= 1;
+        throw new Error(powerError.code);
+      }
       if (!live || live.session !== session) throw new Error('closed');
       if (power === null) throw new Error('no-power');
       // the phone's own unlock before every action but `cancel` (one approval serves `despite`)
@@ -186,6 +193,9 @@ export function createFakeRemoteParts() {
         unlocks += 1;
         if (unlock === 'cancel') throw new Error('unlock-cancelled');
         if (unlock === 'unavailable') throw new Error('unlock-unavailable');
+        if (prompt) await prompt;
+        // like the shell: a session closed while the prompt was up gets nothing
+        if (!live || live.session !== session) throw new Error('closed');
         // no screen lock: the shell asks in a native confirm dialog instead
         if (unlock === 'none') {
           confirms += 1;
@@ -281,6 +291,19 @@ export function createFakeRemoteParts() {
     /** How the native confirm dialog for power ends (a phone without a screen lock). */
     setConfirm(answer: 'ok' | 'cancel') {
       confirm = answer;
+    },
+    /** The next `count` power calls fail with `code` (`closed`, `network`, …). */
+    failPower(code: string, count = 1) {
+      powerError = { code, left: count };
+    },
+    /** The phone's prompt stays up until the returned function is called. */
+    holdPrompt(): () => void {
+      let release: () => void = () => undefined;
+      prompt = new Promise<void>((resolve) => (release = resolve));
+      return () => {
+        prompt = undefined;
+        release();
+      };
     },
     /** How often that dialog was shown. */
     confirms: () => confirms,

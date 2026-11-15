@@ -258,3 +258,71 @@ describe('remote session: power', () => {
     expect(session.power().phase).toEqual({ kind: 'counting', action: undefined });
   });
 });
+
+describe('remote session: power, interrupted', () => {
+  it('the page goes to the background while the prompt is up: the action still goes out', async () => {
+    const { session, hooks } = rig();
+    hooks.setPower(GRANTED);
+    await session.open();
+    const release = hooks.holdPrompt();
+    const act = session.powerAct('shut-down');
+    await pass(0);
+    // a PIN screen covers the app
+    await session.close();
+    expect(hooks.isOpen()).toBe(true);
+    release();
+    await act;
+    await pass(0);
+    expect(hooks.powered()).toEqual([{ action: 'shut-down', despite: false }]);
+    // still in the background afterwards: now it closes (the countdown goes on at the PC)
+    expect(hooks.isOpen()).toBe(false);
+    expect(session.view().kind).toBe('idle');
+    expect(session.power().phase).toEqual({ kind: 'done', action: 'shut-down' });
+  });
+
+  it('back in front before the prompt is answered: the session stays, nothing closes', async () => {
+    const { session, hooks } = rig();
+    hooks.setPower(GRANTED);
+    await session.open();
+    const release = hooks.holdPrompt();
+    const act = session.powerAct('restart');
+    await pass(0);
+    await session.close();
+    await session.open();
+    release();
+    await act;
+    await pass(0);
+    expect(hooks.opens()).toBe(1);
+    expect(hooks.isOpen()).toBe(true);
+    expect(session.power().phase).toEqual({ kind: 'counting', action: 'restart' });
+  });
+
+  it('"Abbrechen" that does not arrive is sent once more on a new session', async () => {
+    const { session, hooks } = rig();
+    hooks.setPower(GRANTED);
+    await session.open();
+    await session.powerAct('shut-down');
+    await pass(0);
+    hooks.failPower('network');
+    const cancel = session.powerAct('cancel');
+    await pass(2000);
+    await cancel;
+    await pass(0);
+    expect(hooks.opens()).toBe(2);
+    expect(hooks.powered().map((p) => p.action)).toEqual(['shut-down', 'cancel']);
+    expect(session.power().phase).toEqual({ kind: 'cancelled' });
+  });
+
+  it('"Abbrechen" that does not arrive twice: the phone says to cancel at the PC', async () => {
+    const { session, hooks } = rig();
+    hooks.setPower(GRANTED);
+    await session.open();
+    await session.powerAct('shut-down');
+    await pass(0);
+    hooks.failPower('closed', 2);
+    const cancel = session.powerAct('cancel');
+    await pass(2000);
+    await cancel;
+    expect(session.power().phase).toEqual({ kind: 'cancel-failed' });
+  });
+});
