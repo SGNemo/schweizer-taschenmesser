@@ -39,8 +39,9 @@ import type {
  *   write is pending, a press that finds the queue full is dropped, a release never is;
  * - power (`powerAct`): every answer of the PC is the latest state of its countdown, never paired
  *   with a request; a power answer does not end the session. Without a session an action opens
- *   one first, once; the session ending resets the state, except after `done` (the disconnect
- *   that follows is expected and keeps that line until a new session stands).
+ *   one first, once; the session ending resets the state, except a countdown, which becomes
+ *   `done` (the PC acts without the phone), and `done` itself (the disconnect that follows is
+ *   expected and keeps that line until a new session stands).
  */
 export type RemoteView =
   | { kind: 'idle' }
@@ -274,8 +275,10 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
   const setPhase = (phase: RemotePowerPhase) => setPower({ phase });
   /** The session is gone: so is what power was doing – except `done`, whose disconnect is expected. */
   const powerLost = () => {
-    const kind = powerView.phase.kind;
-    if (kind !== 'idle' && kind !== 'done') setPhase({ kind: 'idle' });
+    const phase = powerView.phase;
+    // a countdown that ran goes on at the PC without this phone: it ends as it would have
+    if (phase.kind === 'counting') setPhase({ kind: 'done', action: phase.action });
+    else if (phase.kind !== 'idle' && phase.kind !== 'done') setPhase({ kind: 'idle' });
   };
   /** One answer of the PC: the latest state of its countdown. */
   const powerAnswer = (answer: RemotePowerAnswer) => {
@@ -424,7 +427,10 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       // (an action waiting for this session keeps its prompt: the PC answers it)
       if (phase.kind === 'asking') next = phase;
       else if (opened.power?.pending)
-        next = { kind: 'counting', action: phase.kind === 'counting' ? phase.action : undefined };
+        next = {
+          kind: 'counting',
+          action: phase.kind === 'counting' || phase.kind === 'done' ? phase.action : undefined,
+        };
       else if (opened.power === null || phase.kind === 'counting' || phase.kind === 'done')
         next = { kind: 'idle' };
       // (listeners hear of it with the connected state, one notice)
@@ -790,7 +796,7 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
     power: () => powerView,
     async powerAct(action, despite = false, lang) {
       // one prompt at a time
-      if (powerView.phase.kind === 'asking') return;
+      if (powerView.phase.kind === 'asking' && action !== 'cancel') return;
       const mine = ++powerCalls;
       const latest = () => mine === powerCalls;
       if (action !== 'cancel') {
@@ -818,7 +824,12 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       } catch (e) {
         const code = e instanceof Error ? e.message : '';
         // the phone's own answer to its prompt counts, also when the page was left meanwhile
-        if (code === 'unlock-cancelled' || code === 'unlock-failed' || code === 'unlock-busy') {
+        if (
+          code === 'unlock-cancelled' ||
+          code === 'confirm-cancelled' ||
+          code === 'unlock-failed' ||
+          code === 'unlock-busy'
+        ) {
           if (latest()) setPhase({ kind: 'unlock' });
           return;
         }

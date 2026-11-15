@@ -173,7 +173,7 @@ test('PC ausschalten: menu, the sheet, the countdown line and "Abbrechen"', asyn
   await expect(sheet).toBeHidden();
   const line = page.getByTestId('remote-power');
   await expect(line).toContainText(
-    'Der PC schaltet sich in Kürze aus. Am PC lässt es sich abbrechen.',
+    'Der PC schaltet sich in Kürze aus. Abbrechen geht hier oder am PC.',
   );
   expect(await page.evaluate(() => window.__tmRemote.powered())).toEqual([
     { action: 'shut-down', despite: false },

@@ -93,8 +93,8 @@ export function PowerStatus() {
             ? 'lock'
             : 'alert';
   return (
-    <section className={styles.state} role="status" data-testid="remote-power">
-      <p className={styles.powerLine}>
+    <section className={styles.state} data-testid="remote-power">
+      <p className={styles.powerLine} role="status">
         <Icon name={icon} />
         <span>{text}</span>
       </p>

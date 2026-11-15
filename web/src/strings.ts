@@ -9119,7 +9119,7 @@ export const de = {
     power: {
       open: 'PC ausschalten …',
       title: 'PC ausschalten',
-      note: 'Am PC läuft danach 10 Sekunden ein Countdown. Dort lässt es sich abbrechen.',
+      note: 'Am PC läuft danach 10 Sekunden ein Countdown. Abbrechen geht hier oder am PC.',
       more: 'Weitere Möglichkeiten',
       action: {
         shutDown: 'Ausschalten',
@@ -9128,14 +9128,14 @@ export const de = {
         hibernate: 'Ruhezustand',
         signOut: 'Abmelden',
       },
-      asking: 'Entsperre dieses Handy, dann geht es an den PC.',
+      asking: 'Entsperre dieses Handy. Danach geht der Auftrag an den PC.',
       counting: {
-        shutDown: 'Der PC schaltet sich in Kürze aus. Am PC lässt es sich abbrechen.',
-        restart: 'Der PC startet in Kürze neu. Am PC lässt es sich abbrechen.',
-        sleep: 'Der PC geht in Kürze in den Energiesparmodus. Am PC lässt es sich abbrechen.',
-        hibernate: 'Der PC geht in Kürze in den Ruhezustand. Am PC lässt es sich abbrechen.',
-        signOut: 'Am PC wird in Kürze abgemeldet. Am PC lässt es sich abbrechen.',
-        unknown: 'Am PC läuft ein Countdown zum Ausschalten. Am PC lässt er sich abbrechen.',
+        shutDown: 'Der PC schaltet sich in Kürze aus. Abbrechen geht hier oder am PC.',
+        restart: 'Der PC startet in Kürze neu. Abbrechen geht hier oder am PC.',
+        sleep: 'Der PC geht in Kürze in den Energiesparmodus. Abbrechen geht hier oder am PC.',
+        hibernate: 'Der PC geht in Kürze in den Ruhezustand. Abbrechen geht hier oder am PC.',
+        signOut: 'Am PC wird in Kürze abgemeldet. Abbrechen geht hier oder am PC.',
+        unknown: 'Am PC läuft ein Countdown zum Ausschalten. Abbrechen geht hier oder am PC.',
       },
       cancel: 'Abbrechen',
       working: 'Nemo am PC ist gerade noch beschäftigt (Abgleich, Download oder Sicherung).',
@@ -9160,9 +9160,9 @@ export const de = {
       },
       cancelled: 'Abgebrochen. Der PC bleibt an.',
       notGranted:
-        'Am PC ist Ausschalten für dieses Handy aus. Am PC unter Einstellungen → Fernsteuerung erlauben.',
+        'Am PC ist Ausschalten für dieses Handy aus. Am PC unter Einstellungen → Fernsteuerung „Darf den PC ausschalten“ einschalten.',
       locked: 'Der PC ist gesperrt. Ausschalten geht nur, solange er entsperrt ist.',
-      limit: 'Gleich wieder möglich.',
+      limit: 'Gerade nicht möglich. In ein paar Minuten noch einmal.',
       failed: 'Das hat am PC nicht geklappt.',
       unavailable:
         'Dieses Handy kann seine Bildschirmsperre für Nemo nicht abfragen. Ausschalten geht deshalb nur am PC.',

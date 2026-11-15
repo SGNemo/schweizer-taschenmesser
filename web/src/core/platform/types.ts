@@ -429,10 +429,10 @@ export interface RemoteService {
   /**
    * One power action. Before every action but `cancel` the phone asks for its own unlock
    * (fingerprint, face or PIN, natively; its prompt names the action – `lang` picks the
-   * language); a phone without a screen lock is not asked. `despite` (after `working`) re-uses
-   * that unlock for the same action within 30 s, once. The PC's answer comes as a `power` event.
+   * language); a phone without a screen lock is asked in a native confirm dialog instead.
+   * `despite` (after `working`) re-uses that unlock for the same action within 30 s, once. The PC's answer comes as a `power` event.
    * Rejects with `no-power` (the PC has no power), `bad-action`, `unlock-cancelled`,
-   * `unlock-failed`, `unlock-unavailable`, `unlock-busy`, `closed`, `network`.
+   * `confirm-cancelled`, `unlock-failed`, `unlock-unavailable`, `unlock-busy`, `closed`, `network`.
    */
   power(session: number, action: RemotePowerAction, despite: boolean, lang?: string): Promise<void>;
   close(session: number): Promise<void>;

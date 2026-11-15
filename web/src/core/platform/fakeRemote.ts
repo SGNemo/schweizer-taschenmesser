@@ -60,6 +60,9 @@ export function createFakeRemoteParts() {
   /** The PC's power facts (`null`: a PC from before power), and what the phone asked of it. */
   let power: RemotePowerInfo | null = { granted: false, pending: false, hibernate: false };
   let busyPc = false;
+  /** How the native confirm dialog ends on a phone without a screen lock (`setUnlock('none')`). */
+  let confirm: 'ok' | 'cancel' = 'ok';
+  let confirms = 0;
   const powered: { action: RemotePowerAction; despite: boolean }[] = [];
   /** Tells the live session `answer` – after the call returned, like the shell's channel. */
   const answerPower = (answer: RemotePowerAnswer) => {
@@ -183,6 +186,11 @@ export function createFakeRemoteParts() {
         unlocks += 1;
         if (unlock === 'cancel') throw new Error('unlock-cancelled');
         if (unlock === 'unavailable') throw new Error('unlock-unavailable');
+        // no screen lock: the shell asks in a native confirm dialog instead
+        if (unlock === 'none') {
+          confirms += 1;
+          if (confirm === 'cancel') throw new Error('confirm-cancelled');
+        }
       }
       powered.push({ action, despite });
       if (action === 'cancel') {
@@ -270,6 +278,12 @@ export function createFakeRemoteParts() {
       if (power && (answer === 'done' || answer === 'cancelled')) power.pending = false;
       answerPower(answer);
     },
+    /** How the native confirm dialog for power ends (a phone without a screen lock). */
+    setConfirm(answer: 'ok' | 'cancel') {
+      confirm = answer;
+    },
+    /** How often that dialog was shown. */
+    confirms: () => confirms,
     /** What the phone asked of the PC's power, in order. */
     powered: () => [...powered],
     pointed: () => [...pointed],

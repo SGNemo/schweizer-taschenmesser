@@ -42,8 +42,8 @@ Solange der PC gesperrt ist, gehen nur Medien und Lautstärke. Das Handy sieht n
 ## PC ausschalten
 
 - **Am PC erlauben:** unter _Einstellungen → Verbindungen → Fernsteuerung_ beim Gerät _Darf den PC ausschalten_ (ab Werk aus, der PC fragt noch einmal nach).
-- **Am Handy:** Menü _⋯ → PC ausschalten …_, dann _Ausschalten_, _Neu starten_ oder _Energie sparen_ (darunter, leiser: _Ruhezustand_, wo der PC ihn hat, und _Abmelden_). Die eigene Abfrage des Handys (Fingerabdruck, Gesicht oder PIN) ist die Bestätigung.
-- **10 Sekunden am PC:** Der PC zeigt einen Countdown mit _Abbrechen_; auch das Handy kann abbrechen. Nichts wird erzwungen: Fragt ein Programm noch nach dem Speichern, bleibt der PC an.
+- **Am Handy:** Menü _⋯ → PC ausschalten …_, dann _Ausschalten_, _Neu starten_ oder _Energie sparen_ (darunter, leiser: _Ruhezustand_, wo der PC ihn hat, und _Abmelden_). Die eigene Abfrage des Handys (Fingerabdruck, Gesicht oder PIN) ist die Bestätigung (ein Handy ohne Bildschirmsperre fragt stattdessen in einem kurzen Dialog).
+- **10 Sekunden am PC:** Der PC zeigt einen Countdown mit _Abbrechen_; abbrechen geht auch am Handy. Bricht die Verbindung zum Handy dabei ab, macht der PC trotzdem weiter. Nichts wird erzwungen: Fragt ein Programm noch nach dem Speichern, bleibt der PC an.
 - Geht nur, solange der PC entsperrt ist. Ist Nemo am PC noch beschäftigt (Abgleich, Download, Sicherung), sagt das Handy das vorher: _Trotzdem ausschalten_ oder _Warten_.
 - Zweimal innerhalb einer Stunde am PC abgebrochen, ist das Ausschalten für dieses Handy wieder aus.
 - _Monitor aus_ (im selben Menü) schaltet nur den Bildschirm aus, ohne Countdown.

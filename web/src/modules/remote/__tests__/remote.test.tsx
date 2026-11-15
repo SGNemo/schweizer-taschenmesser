@@ -589,7 +589,7 @@ describe('power: "Monitor aus" and "PC ausschalten …"', () => {
     await flush();
     await flush();
     expect(fake.parts.hooks.powered()).toEqual([{ action: 'shut-down', despite: false }]);
-    expect(power()).toContain('Der PC schaltet sich in Kürze aus. Am PC lässt es sich abbrechen.');
+    expect(power()).toContain('Der PC schaltet sich in Kürze aus. Abbrechen geht hier oder am PC.');
     const buttons = screen.getByTestId('remote-power').querySelectorAll('button');
     expect([...buttons].map((b) => b.textContent)).toEqual(['Abbrechen']);
     fireEvent.click(screen.getByTestId('remote-power-cancel'));
@@ -634,6 +634,18 @@ describe('power: "Monitor aus" and "PC ausschalten …"', () => {
     fireEvent.click(key('play-pause'));
     await act(async () => new Promise((r) => setTimeout(r, 1500)));
     expect(remoteSession.view().kind).toBe('unreachable');
+    expect(power()).toContain('Der PC fährt herunter.');
+    expect(state()).not.toContain('nicht erreichbar');
+  });
+
+  it('the connection dropping while the PC counts down: the calm done line', async () => {
+    fake.parts.hooks.setPower(granted);
+    await show();
+    await act(() => remoteSession.powerAct('shut-down'));
+    await flush();
+    expect(power()).toContain('Der PC schaltet sich in Kürze aus.');
+    act(() => fake.parts.hooks.close(null));
+    await flush();
     expect(power()).toContain('Der PC fährt herunter.');
     expect(state()).not.toContain('nicht erreichbar');
   });

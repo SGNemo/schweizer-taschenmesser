@@ -62,7 +62,7 @@ describe('remote session: power', () => {
     expect(session.power().phase.kind).toBe('idle');
   });
 
-  it('the session ending during the countdown resets to idle', async () => {
+  it('the connection dropping during the countdown is done: the PC acts without the phone', async () => {
     const { session, hooks } = rig();
     hooks.setPower(GRANTED);
     await session.open();
@@ -70,7 +70,50 @@ describe('remote session: power', () => {
     await pass(0);
     expect(session.power().phase.kind).toBe('counting');
     hooks.close(null);
+    expect(session.power().phase).toEqual({ kind: 'done', action: 'restart' });
+    // back while it still counts: the countdown keeps its words
+    await pass(1000);
+    await session.open();
+    expect(session.power().phase).toEqual({ kind: 'counting', action: 'restart' });
+  });
+
+  it('other states end with the session', async () => {
+    const { session, hooks } = rig();
+    hooks.setPower(GRANTED);
+    hooks.setPowerBusy();
+    await session.open();
+    await session.powerAct('restart');
+    await pass(0);
+    expect(session.power().phase.kind).toBe('working');
+    hooks.close(null);
     expect(session.power().phase.kind).toBe('idle');
+  });
+
+  it('a phone without a screen lock: the native confirm, dismissed, sends nothing', async () => {
+    const { session, hooks } = rig();
+    hooks.setPower(GRANTED);
+    hooks.setUnlock('none');
+    hooks.setConfirm('cancel');
+    await session.open();
+    await session.powerAct('shut-down');
+    expect(hooks.confirms()).toBe(1);
+    expect(hooks.powered()).toEqual([]);
+    expect(session.power().phase).toEqual({ kind: 'unlock' });
+  });
+
+  it('"Abbrechen" is not held back by a prompt that is up', async () => {
+    const { session, hooks } = rig();
+    hooks.setPower(GRANTED);
+    await session.open();
+    // the start is still on its way (its prompt up) when "Abbrechen" comes
+    const start = session.powerAct('shut-down');
+    expect(session.power().phase.kind).toBe('asking');
+    const cancel = session.powerAct('cancel');
+    // a second start is held back
+    await session.powerAct('restart');
+    await Promise.all([start, cancel]);
+    await pass(0);
+    expect(hooks.powered().map((p) => p.action)).toEqual(['shut-down', 'cancel']);
   });
 
   it('"Abbrechen" while it counts: cancelled, the PC stays on', async () => {

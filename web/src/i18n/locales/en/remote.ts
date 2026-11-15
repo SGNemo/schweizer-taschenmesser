@@ -122,7 +122,7 @@ export const remote: Strings['remote'] = {
   power: {
     open: 'Switch PC off …',
     title: 'Switch PC off',
-    note: 'The PC then counts down 10 seconds. It can be cancelled there.',
+    note: 'The PC then counts down 10 seconds. You can cancel here or at the PC.',
     more: 'More options',
     action: {
       shutDown: 'Shut down',
@@ -131,14 +131,14 @@ export const remote: Strings['remote'] = {
       hibernate: 'Hibernate',
       signOut: 'Sign out',
     },
-    asking: 'Unlock this phone, then it goes to the PC.',
+    asking: 'Unlock this phone; then it is sent to the PC.',
     counting: {
-      shutDown: 'The PC shuts down shortly. It can be cancelled at the PC.',
-      restart: 'The PC restarts shortly. It can be cancelled at the PC.',
-      sleep: 'The PC goes to sleep shortly. It can be cancelled at the PC.',
-      hibernate: 'The PC hibernates shortly. It can be cancelled at the PC.',
-      signOut: 'The PC signs out shortly. It can be cancelled at the PC.',
-      unknown: 'The PC is counting down to switch off. It can be cancelled at the PC.',
+      shutDown: 'The PC shuts down shortly. You can cancel here or at the PC.',
+      restart: 'The PC restarts shortly. You can cancel here or at the PC.',
+      sleep: 'The PC goes to sleep shortly. You can cancel here or at the PC.',
+      hibernate: 'The PC hibernates shortly. You can cancel here or at the PC.',
+      signOut: 'The PC signs out shortly. You can cancel here or at the PC.',
+      unknown: 'The PC is counting down to switch off. You can cancel here or at the PC.',
     },
     cancel: 'Cancel',
     working: 'Nemo on the PC is still busy (sync, download or backup).',
@@ -161,9 +161,9 @@ export const remote: Strings['remote'] = {
     },
     cancelled: 'Cancelled. The PC stays on.',
     notGranted:
-      'Switching off is off for this phone at the PC. Allow it at the PC under Settings → Remote control.',
+      'Switching off is off for this phone at the PC. Turn on “May switch the PC off” under Settings → Remote control at the PC.',
     locked: 'The PC is locked. Switching off works only while it is unlocked.',
-    limit: 'Possible again in a moment.',
+    limit: 'Not possible right now. Try again in a few minutes.',
     failed: 'That did not work at the PC.',
     unavailable:
       'This phone cannot ask for its screen lock for Nemo, so switching off works only at the PC.',
