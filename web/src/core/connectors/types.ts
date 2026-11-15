@@ -227,7 +227,7 @@ export interface PlayerState {
   repeat?: 'off' | 'track' | 'context';
 }
 
-export type MediaKind = 'track' | 'playlist' | 'album';
+export type MediaKind = 'track' | 'playlist' | 'album' | 'artist';
 
 /** A track, playlist or album the user can start. Names are user data: shown on request, never stored. */
 export interface MediaItem {
@@ -242,6 +242,11 @@ export interface MediaItem {
   coverUrl?: string;
   /** Every size of that picture that passed the host rule; the view picks the one its surface needs. */
   covers?: CoverImage[];
+  /** Tracks: the first artist's and the album's ids (artist view, album view, "Weiterhören"); albums: the artist's id. */
+  artistId?: string;
+  albumId?: string;
+  /** Recently played tracks: the playlist, album or artist they were played from, if any. */
+  context?: { kind: 'playlist' | 'album' | 'artist'; id: string };
   /** Tracks of a playlist: the row's place in the playlist (0-based, counting rows the list leaves out), for "Rückgängig". */
   position?: number;
 }
@@ -257,6 +262,8 @@ export interface Tracklist {
   /** How many tracks the whole list has (can be more than `items`). */
   total?: number;
   items: MediaItem[];
+  /** Albums: the artist's id. */
+  artistId?: string;
   /** Playlists: the owner's account id, the description (plain text) and whether others may edit it. */
   ownerId?: string;
   description?: string;
@@ -281,6 +288,17 @@ export interface PlayerQueue {
 export interface SearchResult {
   tracks: MediaItem[];
   playlists: MediaItem[];
+  albums: MediaItem[];
+  /** Absent from sources that do not search artists. */
+  artists?: MediaItem[];
+}
+
+/** An artist page: picture, the most played songs (may be empty: the service offers them to some apps only) and the albums. */
+export interface ArtistPage {
+  name: string;
+  coverUrl?: string;
+  covers?: CoverImage[];
+  top: MediaItem[];
   albums: MediaItem[];
 }
 
@@ -352,6 +370,14 @@ export interface NowPlayingSource {
   saved?(ctx: ConnectorContext, ids: string[]): Promise<boolean[]>;
   /** Saves or removes songs in the user's saved songs ("Lieblingssongs"). */
   save?(ctx: ConnectorContext, ids: string[], on: boolean): Promise<void>;
+  /** The user's saved albums (up to 200, newest first). Feature "Lieblingssongs" (library scope). */
+  savedAlbums?(ctx: ConnectorContext): Promise<MediaItem[]>;
+  /** For each album id: is it saved? */
+  albumsSaved?(ctx: ConnectorContext, ids: string[]): Promise<boolean[]>;
+  /** Saves (`on`) or removes albums in the user's library. */
+  saveAlbums?(ctx: ConnectorContext, ids: string[], on: boolean): Promise<void>;
+  /** An artist's picture, most played songs and albums. No scope. */
+  artist?(ctx: ConnectorContext, id: string): Promise<ArtistPage>;
   /** Playlist editing; each needs its own feature/scope ("Playlists bearbeiten", off until chosen). */
   createPlaylist?(ctx: ConnectorContext, name: string, description?: string): Promise<Playlist>;
   renamePlaylist?(ctx: ConnectorContext, id: string, name: string): Promise<void>;

@@ -67,7 +67,7 @@ export const tSpotify = defineBundle(
     onDevice: (name: string) => `Auf ${name}`,
     noDevice:
       'Kein aktives Gerät. Starte Spotify einmal auf einem Gerät, dann kann Nemo es steuern.',
-    searchLabel: 'Titel, Playlist oder Album suchen',
+    searchLabel: 'Titel, Künstler, Playlist oder Album suchen',
     searchButton: 'Suchen',
     searching: 'Suche …',
     noResults: 'Nichts gefunden.',
@@ -218,7 +218,7 @@ export const tSpotify = defineBundle(
       position: 'Position',
       onDevice: (name: string) => `On ${name}`,
       noDevice: 'No active device. Start Spotify once on a device, then Nemo can control it.',
-      searchLabel: 'Search a track, playlist or album',
+      searchLabel: 'Search a track, artist, playlist or album',
       searchButton: 'Search',
       searching: 'Searching …',
       noResults: 'Nothing found.',

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import {
   ConnectorError,
+  type ArtistPage,
   type MediaItem,
   type PlayerQueue,
   type SearchResult,
@@ -16,16 +17,20 @@ import { tSpotify } from '@/strings.spotify';
 import type { CoverImage } from '@/core/connectors/coverUrl';
 import type { ConnectorContext } from '@/core/connectors/types';
 import { Button, Icon, TextField } from '@/ui';
-import { canEdit, canRename, changedPlaylists, readAccount } from '../library';
+import { canEdit, canRename, changedAlbums, changedPlaylists, readAccount } from '../library';
 import { COVER_PX } from '../useCover';
 import { Cover } from './Cover';
 import { useAddToPlaylist } from './AddToPlaylist';
 import { PlaylistDialog, type PlaylistTarget } from './PlaylistDialog';
 import { PlaylistsView } from './PlaylistsView';
+import { AlbumsView } from './AlbumsView';
+import { BackButton } from './Back';
+import { Tile } from './Tile';
 import { TrackList } from './TrackList';
 import { useSavedTracks } from './useSavedTracks';
-import { viewKey, type PlayerApi, type View } from './types';
+import { viewKey, type Back, type PlayerApi, type View } from './types';
 import styles from './Spotify.module.css';
+import grid from '../routes/music.module.css';
 
 const CONNECTIONS = settingsPath('verbindungen');
 
@@ -87,19 +92,32 @@ function useQueueAction(api: PlayerApi) {
     void api.act(() => source.addToQueue!(ctx, item.id)).then((ok) => ok && toast(tx.queued));
 }
 
+/** "Zu <Künstler>" in a song's menu: opens the artist page (only for songs that name their artist's id). */
+function useArtistAction(api: PlayerApi, back?: Back) {
+  if (!api.np.source.artist) return undefined;
+  return (item: MediaItem) =>
+    item.artistId
+      ? api.open({ type: 'artist', id: item.artistId, name: item.subtitle ?? '', back })
+      : undefined;
+}
+
 /** A plain list of songs (saved, recent): a tap plays the song and the rest of the list after it. */
 function SongList({
   api,
   items,
   empty,
+  back,
 }: {
   api: PlayerApi;
   items: readonly MediaItem[];
   empty: string;
+  /** Where "Zurück" leads from an artist page opened from here. */
+  back?: Back;
 }) {
   const hearts = useHearts(api, items);
   const queue = useQueueAction(api);
   const add = useAddToPlaylist(api);
+  const artist = useArtistAction(api, back);
   if (items.length === 0) return <p className={styles.note}>{empty}</p>;
   return (
     <>
@@ -111,6 +129,7 @@ function SongList({
         playingId={api.playingId}
         onPlay={(i) => void api.playFromList(i, items)}
         onQueue={queue}
+        onArtist={artist}
         onAddToPlaylist={add.onAdd}
         saved={hearts.saved}
         onToggleSave={hearts.onToggleSave}
@@ -201,6 +220,32 @@ function ContentView({
   const [edited, setEdited] = useState<{ name: string; description?: string }>();
   const [editing, setEditing] = useState<PlaylistTarget | null>(null);
   const [removed, setRemoved] = useState<ReadonlySet<string>>(new Set());
+  // Albums: saved in the library? (`undefined` = not known, no heart then)
+  const canSaveAlbum =
+    view.type === 'album' &&
+    features.includes('library') &&
+    !!source.albumsSaved &&
+    !!source.saveAlbums;
+  const [albumSaved, setAlbumSaved] = useState<boolean>();
+  useEffect(() => {
+    if (!canSaveAlbum) return;
+    let alive = true;
+    source.albumsSaved!(ctx, [view.id]).then(
+      ([on]) => alive && setAlbumSaved(on === true),
+      () => undefined,
+    );
+    return () => {
+      alive = false;
+    };
+  }, [canSaveAlbum, source, ctx, view.id]);
+  const toggleAlbum = (on: boolean) => {
+    setAlbumSaved(on);
+    source.saveAlbums!(ctx, [view.id], on).then(changedAlbums, () => {
+      setAlbumSaved(!on);
+      toast(tm.albumSaveFailed);
+    });
+  };
+  const artist = useArtistAction(api);
   const [hiddenAll, setHiddenAll] = useState<HiddenTracks>(readHidden);
   const [showHidden, setShowHidden] = useState(false);
   const hiddenIds = new Set(hiddenAll[view.id] ?? []);
@@ -231,17 +276,7 @@ function ContentView({
     else void api.playFromList(item, visible);
   };
 
-  const back =
-    view.type === 'playlist' && view.back === 'playlists' ? (
-      <Button
-        variant="ghost"
-        className={styles.backButton}
-        onClick={() => api.open({ type: 'playlists' })}
-      >
-        <Icon name="chevronLeft" size={18} />
-        {tm.backToPlaylists}
-      </Button>
-    ) : null;
+  const back = <BackButton api={api} back={view.back} />;
   if (list.state === 'loading')
     return (
       <>
@@ -338,6 +373,39 @@ function ContentView({
             ) : null}
           </div>
         ) : null}
+        {view.type === 'album' && (value.artistId || albumSaved !== undefined) ? (
+          <div className={styles.headActions}>
+            {value.artistId && source.artist ? (
+              <Button
+                variant="ghost"
+                onClick={() =>
+                  api.open({
+                    type: 'artist',
+                    id: value.artistId!,
+                    name: value.subtitle ?? '',
+                  })
+                }
+              >
+                <Icon name="mic" size={18} />
+                {tm.artistOf(value.subtitle ?? '')}
+              </Button>
+            ) : null}
+            {albumSaved !== undefined ? (
+              <Button
+                variant="ghost"
+                aria-pressed={albumSaved}
+                aria-label={albumSaved ? tm.albumUnsaveFor(name) : tm.albumSaveFor(name)}
+                onClick={() => toggleAlbum(!albumSaved)}
+                data-testid="music-album-save"
+              >
+                <span className={albumSaved ? styles.heartOn : undefined}>
+                  <Icon name="heart" size={18} />
+                </span>
+                {albumSaved ? tm.albumSaved : tm.albumSave}
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
         {view.type === 'playlist' && hiddenHere > 0 ? (
           <p className={styles.note}>
             {tx.hiddenCount(hiddenHere)} ·{' '}
@@ -363,6 +431,7 @@ function ContentView({
         onPlay={playOne}
         onQueue={queue}
         onAddToPlaylist={add.onAdd}
+        onArtist={artist}
         onRemove={
           editable && source.removeFromPlaylist && source.addToPlaylist ? remove : undefined
         }
@@ -387,6 +456,78 @@ function ContentView({
           }}
         />
       ) : null}
+    </>
+  );
+}
+
+/** An artist page: picture and name, "Abspielen", the most played songs and the albums as tiles. */
+function ArtistView({ api, view }: { api: PlayerApi; view: Extract<View, { type: 'artist' }> }) {
+  const tx = tSpotify.use();
+  const tm = tMusicPage.use();
+  const { source, ctx, canControl } = api.np;
+  const page = useLoad<ArtistPage>(
+    source.artist ? () => source.artist!(ctx, view.id) : undefined,
+    viewKey(view),
+  );
+  const back = <BackButton api={api} back={view.back} />;
+  if (page.state === 'loading')
+    return (
+      <>
+        {back}
+        <p className={styles.note}>{tx.loading}</p>
+      </>
+    );
+  if (page.state === 'error')
+    return (
+      <>
+        {back}
+        <p className={styles.note}>{tx.listFailed}</p>
+      </>
+    );
+  const { value } = page;
+  const name = value.name || view.name;
+  const here: Back = { artist: view.id, name };
+  return (
+    <>
+      {back}
+      <ListHeader title={name} focusTitle ctx={ctx} cover={value}>
+        {canControl && source.play ? (
+          <div className={styles.headActions}>
+            <Button
+              onClick={() =>
+                void api.act(() => source.play!(ctx, { kind: 'artist', id: view.id, name }))
+              }
+            >
+              <Icon name="play" size={18} />
+              {tm.playArtist}
+            </Button>
+          </div>
+        ) : null}
+      </ListHeader>
+      <h3 className={styles.sub}>{tm.artistTop}</h3>
+      {value.top.length === 0 ? (
+        <p className={styles.note}>{tm.artistTopNone}</p>
+      ) : (
+        <SongList api={api} items={value.top} empty="" back={here} />
+      )}
+      <h3 className={styles.sub}>{tm.artistAlbums}</h3>
+      {value.albums.length === 0 ? (
+        <p className={styles.note}>{tm.artistAlbumsNone}</p>
+      ) : (
+        <ul className={grid.grid} data-testid="music-artist-albums">
+          {value.albums.map((a) => (
+            <li key={a.id}>
+              <Tile
+                api={api}
+                title={a.name}
+                cover={a}
+                alt={a.name}
+                onOpen={() => api.open({ type: 'album', id: a.id, name: a.name, back: here })}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
     </>
   );
 }
@@ -426,6 +567,7 @@ function QueueView({ api }: { api: PlayerApi }) {
 
 function SearchView({ api }: { api: PlayerApi }) {
   const tx = tSpotify.use();
+  const tm = tMusicPage.use();
   const { source, ctx } = api.np;
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Load<SearchResult> | undefined>();
@@ -462,7 +604,11 @@ function SearchView({ api }: { api: PlayerApi }) {
       {results?.state === 'loading' ? <p className={styles.note}>{tx.searching}</p> : null}
       {results?.state === 'error' ? <p className={styles.note}>{tx.searchFailed}</p> : null}
       {found ? (
-        found.tracks.length + found.playlists.length + found.albums.length === 0 ? (
+        found.tracks.length +
+          found.playlists.length +
+          found.albums.length +
+          (found.artists?.length ?? 0) ===
+        0 ? (
           <p className={styles.note}>{tx.noResults}</p>
         ) : (
           <div data-testid="spotify-results">
@@ -474,6 +620,7 @@ function SearchView({ api }: { api: PlayerApi }) {
             ) : null}
             {(
               [
+                [tm.groupArtists, found.artists ?? [], 'artist'],
                 [tx.groupPlaylists, found.playlists, 'playlist'],
                 [tx.groupAlbums, found.albums, 'album'],
               ] as const
@@ -536,6 +683,8 @@ export function SourceView({ api, view }: { api: PlayerApi; view: View }) {
     return <ContentView key={viewKey(view)} api={api} view={view} />;
   if (view.type === 'queue') return <QueueView api={api} />;
   if (view.type === 'playlists') return <PlaylistsView api={api} />;
+  if (view.type === 'albums') return <AlbumsView api={api} />;
+  if (view.type === 'artist') return <ArtistView key={viewKey(view)} api={api} view={view} />;
   if (view.type === 'search') return <SearchView api={api} />;
   if (view.type === 'liked') {
     if (!features.includes('library')) return <Reconnect text={tx.libraryReconnect} />;
@@ -555,6 +704,7 @@ export function SourceView({ api, view }: { api: PlayerApi; view: View }) {
   if (!features.includes('history')) return <Reconnect text={tx.historyReconnect} />;
   return (
     <>
+      {view.type === 'recent' ? <BackButton api={api} back={view.back} /> : null}
       <ListHeader title={tx.navRecent} />
       {recent.state === 'loading' ? (
         <p className={styles.note}>{tx.loading}</p>

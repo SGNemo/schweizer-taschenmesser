@@ -1,4 +1,9 @@
-import type { ConnectorContext, NowPlayingSource, Playlist } from '@/core/connectors/types';
+import type {
+  ConnectorContext,
+  MediaItem,
+  NowPlayingSource,
+  Playlist,
+} from '@/core/connectors/types';
 
 /**
  * The playlists tab's reads, kept only while the page is open (the connection context lives as long as the page): every
@@ -8,6 +13,30 @@ import type { ConnectorContext, NowPlayingSource, Playlist } from '@/core/connec
 let lists: { ctx: ConnectorContext; generation: number; promise: Promise<Playlist[]> } | undefined;
 let account: { ctx: ConnectorContext; promise: Promise<string | undefined> } | undefined;
 let generation = 0;
+let albums:
+  { ctx: ConnectorContext; generation: number; promise: Promise<MediaItem[]> } | undefined;
+let albumGeneration = 0;
+
+/** The saved albums, read once per page visit; saving or removing an album calls `changedAlbums`. */
+export function readSavedAlbums(
+  source: NowPlayingSource,
+  ctx: ConnectorContext,
+): Promise<MediaItem[]> {
+  if (!source.savedAlbums) return Promise.resolve([]);
+  if (albums && albums.ctx === ctx && albums.generation === albumGeneration) return albums.promise;
+  const promise = source.savedAlbums(ctx);
+  const mine = { ctx, generation: albumGeneration, promise };
+  albums = mine;
+  promise.catch(() => {
+    if (albums === mine) albums = undefined;
+  });
+  return promise;
+}
+
+/** An album was saved or removed: the albums tab reads afresh next time. */
+export function changedAlbums(): void {
+  albumGeneration += 1;
+}
 
 export function readAllPlaylists(
   source: NowPlayingSource,
@@ -89,4 +118,5 @@ export function forgetLibrary(): void {
   generation += 1;
   lists = undefined;
   account = undefined;
+  albums = undefined;
 }

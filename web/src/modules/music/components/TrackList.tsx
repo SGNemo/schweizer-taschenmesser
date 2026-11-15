@@ -20,6 +20,8 @@ export interface TrackListProps {
   playingId?: string;
   onPlay: (item: MediaItem) => void;
   onQueue?: (item: MediaItem) => void;
+  /** "Zu <Künstler>": opens the artist page (only rows that name their artist's id get it). */
+  onArtist?: (item: MediaItem) => void;
   /** "Zu Playlist hinzufügen …" (absent unless playlist editing is switched on). */
   onAddToPlaylist?: (item: MediaItem) => void;
   /** "Aus dieser Playlist entfernen" (absent unless this playlist can be edited by this account). */
@@ -47,6 +49,7 @@ export function TrackList({
   playingId,
   onPlay,
   onQueue,
+  onArtist,
   onAddToPlaylist,
   onRemove,
   removable,
@@ -92,6 +95,15 @@ export function TrackList({
             { id: 'play', label: tx.play(item.name), onSelect: () => onPlay(item) },
             ...(onQueue
               ? [{ id: 'queue', label: tx.menuQueue, onSelect: () => onQueue(item) }]
+              : []),
+            ...(onArtist && item.artistId && item.subtitle
+              ? [
+                  {
+                    id: 'artist',
+                    label: tm.menuArtist(item.subtitle),
+                    onSelect: () => onArtist(item),
+                  },
+                ]
               : []),
             ...(onAddToPlaylist
               ? [

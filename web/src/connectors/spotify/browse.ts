@@ -15,7 +15,7 @@ import {
   type PlayerQueue,
   type Tracklist,
 } from '@/core/connectors/types';
-import { ACCOUNT_ID, API_ORIGIN, ID, PLAYER, call, clip, coverOf, plainText } from './api';
+import { ACCOUNT_ID, API_ORIGIN, ID, PLAYER, call, clip, coverOf, idsOf, plainText } from './api';
 
 const trackSchema = z.object({
   id: z.string().nullish(),
@@ -23,9 +23,10 @@ const trackSchema = z.object({
   type: z.string().nullish(),
   is_local: z.boolean().nullish(),
   duration_ms: z.number().nullish(),
-  artists: z.array(z.object({ name: z.string() })).nullish(),
+  artists: z.array(z.object({ name: z.string(), id: z.string().nullish() })).nullish(),
   album: z
     .object({
+      id: z.string().nullish(),
       name: z.string().nullish(),
       images: z.array(z.object({ url: z.string(), width: z.number().nullish() })).nullish(),
     })
@@ -48,7 +49,14 @@ export function toTrack(t: RawTrack | null | undefined): MediaItem | undefined {
     album: t.album?.name ? clip(t.album.name) : undefined,
     durationMs: t.duration_ms ?? undefined,
     ...coverOf(t.album?.images),
+    ...idsOf(t),
   };
+}
+
+/** A track from an answer that was not parsed yet (e.g. an artist's most played songs). */
+export function parseTrack(x: unknown): MediaItem | undefined {
+  const r = trackSchema.safeParse(x);
+  return r.success ? toTrack(r.data) : undefined;
 }
 
 const MAX_TRACKS = 200;
@@ -74,7 +82,7 @@ const playlistSchema = z.object({
 });
 const albumSchema = z.object({
   name: z.string().nullish(),
-  artists: z.array(z.object({ name: z.string() })).nullish(),
+  artists: z.array(z.object({ name: z.string(), id: z.string().nullish() })).nullish(),
   images: z.array(z.object({ url: z.string(), width: z.number().nullish() })).nullish(),
   tracks: z
     .object({ items: z.array(trackSchema.nullable()), total: z.number().nullish() })
@@ -104,13 +112,14 @@ export async function tracks(
     if (!a.success) return { name: '', items: [] };
     const items = (a.data.tracks?.items ?? []).flatMap((t) => {
       // Album tracks come without the album itself: fill it in so every row reads the same.
-      const x = toTrack(t ? { ...t, album: { name: a.data.name, images: a.data.images } } : t);
+      const x = toTrack(t ? { ...t, album: { id, name: a.data.name, images: a.data.images } } : t);
       return x ? [x] : [];
     });
     return {
       name: clip(a.data.name ?? ''),
       subtitle: a.data.artists?.[0]?.name ? clip(a.data.artists[0].name) : undefined,
       ...coverOf(a.data.images),
+      ...idsOf({ artists: a.data.artists }),
       total: a.data.tracks?.total ?? items.length,
       items,
     };
@@ -157,10 +166,25 @@ export async function playFrom(
 }
 
 const recentSchema = z.object({
-  items: z.array(z.object({ track: trackSchema.nullish() }).nullable()),
+  items: z.array(
+    z
+      .object({
+        track: trackSchema.nullish(),
+        context: z.object({ type: z.string().nullish(), uri: z.string().nullish() }).nullish(),
+      })
+      .nullable(),
+  ),
 });
 
-/** The songs played most recently (`user-read-recently-played`), each once, newest first. */
+/** `spotify:<kind>:<id>` of a playlist, album or artist the song was played from; anything else is dropped. */
+function contextOf(
+  c: { type?: string | null; uri?: string | null } | null | undefined,
+): MediaItem['context'] {
+  const m = /^spotify:(playlist|album|artist):([A-Za-z0-9]{1,40})$/.exec(c?.uri ?? '');
+  return m ? { kind: m[1] as 'playlist' | 'album' | 'artist', id: m[2]! } : undefined;
+}
+
+/** The songs played most recently (`user-read-recently-played`), each once, newest first, with what they were played from. */
 export async function recent(ctx: ConnectorContext): Promise<MediaItem[]> {
   const { json } = await call(ctx, 'GET', `${PLAYER}/recently-played?limit=50`);
   const parsed = recentSchema.safeParse(json);
@@ -171,7 +195,8 @@ export async function recent(ctx: ConnectorContext): Promise<MediaItem[]> {
     const t = toTrack(e?.track);
     if (t && !seen.has(t.id)) {
       seen.add(t.id);
-      out.push(t);
+      const context = contextOf(e?.context);
+      out.push(context ? { ...t, context } : t);
     }
   }
   return out.slice(0, 30);

@@ -18,6 +18,8 @@ In der **PWA** (Browser oder aus dem Browser installiert) ist die Redirect-URI e
 - **♥** speichert einen Titel in deinen Lieblingssongs (oder entfernt ihn). **⋯** legt ihn in die Warteschlange, blendet ihn in dieser Liste aus oder öffnet ihn in Spotify.
 - **Ausblenden:** ein ausgeblendeter Titel verschwindet nur in Nemo aus der Liste; bei Spotify ändert sich nichts. „Abspielen“ überspringt ihn. „Ausgeblendete zeigen“ holt sie zurück.
 - **Tab „Playlists“** (Musik-Seite): alle deine Playlists, eigene und gefolgte, als Cover. Suche nach Name oder Beschreibung, nur *Eigene* oder *Gefolgte* zeigen, nach Name oder Anzahl Titel sortieren. Mit *Playlists bearbeiten* legst du eine Playlist an, änderst Name und Beschreibung und entfernst Titel (*⋯ → Aus dieser Playlist entfernen*; *Rückgängig* legt ihn zurück).
+- **Tab „Alben“:** deine gespeicherten Alben. Auf einer Albumseite merkt *Speichern* es sich in deinen Alben (braucht *Lieblingssongs*). *⋯ → Zu <Künstler>* und die Suche öffnen eine **Künstlerseite** mit den meistgehörten Titeln und den Alben.
+- **Weiterhören** (Startansicht): die Playlists, Alben und Künstler, aus denen du zuletzt gehört hast; ein Tipp spielt dort weiter. *Zuletzt gespielt* ist in die Startansicht gewandert (*Alle anzeigen* öffnet die ganze Liste).
 - Zusätzliche Berechtigungen sind beim Verbinden freiwillig: *Playlists*, *Lieblingssongs* (lesen **und** speichern) und *Zuletzt gehört*. Wenn du schon verbunden warst, hake sie unter Verbindungen → Spotify an und verbinde neu.
 
 Gut zu wissen:

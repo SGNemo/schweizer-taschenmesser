@@ -5,6 +5,7 @@ import { settingsPath } from '@/core/settings/registry/paths';
 import { tMusicPage } from '@/strings.musicPage';
 import { tSpotify } from '@/strings.spotify';
 import { readStartPlaylists } from '../library';
+import { continueFrom } from '../continueListening';
 import { readRecent } from '../recentOnce';
 import { Tile } from './Tile';
 import { viewKey, type PlayerApi, type View } from './types';
@@ -56,12 +57,56 @@ export function StartView({
   }, [read, onRead]);
 
   const open = (v: View) => api.open(v);
+  const going = Array.isArray(recent)
+    ? continueFrom(recent, Array.isArray(playlists) ? playlists : undefined)
+    : [];
   return (
     <div className={styles.start} data-testid="music-start">
+      {going.length > 0 ? (
+        <section aria-labelledby="music-continue">
+          <h2 id="music-continue" className={styles.sectionTitle}>
+            {tm.continueTitle}
+          </h2>
+          <div className={styles.recentRow} role="list" data-testid="music-continue">
+            {going.map((c) => (
+              <div role="listitem" key={`${c.kind}:${c.id}`}>
+                <Tile
+                  api={api}
+                  small
+                  title={c.name}
+                  sub={tm.continueKind[c.kind]}
+                  cover={c.cover}
+                  alt={c.name}
+                  label={api.np.canControl ? tm.continuePlay(c.name) : undefined}
+                  onOpen={() =>
+                    // With "Steuern" a tap plays on where it was; without, it opens the list.
+                    api.np.canControl && api.np.source.play
+                      ? void api.act(() =>
+                          api.np.source.play!(api.np.ctx, { kind: c.kind, id: c.id, name: c.name }),
+                        )
+                      : open({ type: c.kind, id: c.id, name: c.name, back: 'start' })
+                  }
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
       <section aria-labelledby="music-recent">
-        <h2 id="music-recent" className={styles.sectionTitle}>
-          {tm.startRecent}
-        </h2>
+        <div className={styles.sectionHead}>
+          <h2 id="music-recent" className={styles.sectionTitle}>
+            {tm.startRecent}
+          </h2>
+          {hasHistory && Array.isArray(recent) && recent.length > 0 ? (
+            <button
+              type="button"
+              className={`${sx.linkButton} ${styles.sectionLink}`}
+              onClick={() => open({ type: 'recent', back: 'start' })}
+            >
+              {tm.recentAll}
+            </button>
+          ) : null}
+        </div>
         {!hasHistory ? (
           <p className={styles.note}>
             {tm.startNeedsHistory} <Link to={CONNECTIONS}>{tx.settings}</Link>

@@ -315,55 +315,28 @@ export async function setRepeat(
 }
 
 export const ID = /^[A-Za-z0-9]{1,40}$/;
+const named = z.object({
+  id: z.string(),
+  name: z.string(),
+  artists: z.array(z.object({ name: z.string(), id: z.string().nullish() })).optional(),
+  images: z.array(imageSchema).nullish(),
+  album: z
+    .object({
+      id: z.string().nullish(),
+      name: z.string().nullish(),
+      images: z.array(imageSchema).nullish(),
+    })
+    .nullish(),
+});
+const group = z.object({ items: z.array(named.nullable()) }).optional();
 const searchSchema = z.object({
-  tracks: z
-    .object({
-      items: z.array(
-        z
-          .object({
-            id: z.string(),
-            name: z.string(),
-            artists: z.array(z.object({ name: z.string() })).optional(),
-            album: z
-              .object({ name: z.string().nullish(), images: z.array(imageSchema).nullish() })
-              .nullish(),
-          })
-          .nullable(),
-      ),
-    })
-    .optional(),
-  playlists: z
-    .object({
-      items: z.array(
-        z
-          .object({ id: z.string(), name: z.string(), images: z.array(imageSchema).nullish() })
-          .nullable(),
-      ),
-    })
-    .optional(),
-  albums: z
-    .object({
-      items: z.array(
-        z
-          .object({
-            id: z.string(),
-            name: z.string(),
-            artists: z.array(z.object({ name: z.string() })).optional(),
-            images: z.array(imageSchema).nullish(),
-          })
-          .nullable(),
-      ),
-    })
-    .optional(),
+  tracks: group,
+  playlists: group,
+  albums: group,
+  artists: group,
 });
 
-type Named = {
-  id: string;
-  name: string;
-  artists?: { name: string }[];
-  images?: RawImages;
-  album?: { name?: string | null; images?: RawImages } | null;
-} | null;
+type Named = z.infer<typeof named> | null;
 const toItems = (kind: MediaItem['kind'], list: Named[] | undefined): MediaItem[] =>
   (list ?? []).flatMap((x) =>
     x && ID.test(x.id) && x.name.trim()
@@ -373,19 +346,20 @@ const toItems = (kind: MediaItem['kind'], list: Named[] | undefined): MediaItem[
             id: x.id,
             name: clip(x.name),
             subtitle: x.artists?.[0]?.name ? clip(x.artists[0].name) : undefined,
-            // A track shows its album's picture; a playlist or album its own.
+            // A track shows its album's picture; a playlist, album or artist its own.
             ...(kind === 'track' && x.album?.name ? { album: clip(x.album.name) } : {}),
             ...coverOf(kind === 'track' ? x.album?.images : x.images),
+            ...(kind === 'track' || kind === 'album' ? idsOf(x) : {}),
           },
         ]
       : [],
   );
 
-/** `GET /search` for tracks, playlists and albums (a few of each). The typed words are the only thing sent. */
+/** `GET /search` for tracks, playlists, albums and artists (a few of each). The typed words are the only thing sent. */
 export async function search(ctx: ConnectorContext, query: string): Promise<SearchResult> {
   const q = query.trim().slice(0, 100);
   if (q.length < 2) return { tracks: [], playlists: [], albums: [] };
-  const params = new URLSearchParams({ q, type: 'track,playlist,album', limit: '6' });
+  const params = new URLSearchParams({ q, type: 'track,playlist,album,artist', limit: '6' });
   const { json } = await call(ctx, 'GET', `${API_ORIGIN}v1/search?${params}`);
   const parsed = searchSchema.safeParse(json);
   if (!parsed.success) return { tracks: [], playlists: [], albums: [] };
@@ -393,6 +367,7 @@ export async function search(ctx: ConnectorContext, query: string): Promise<Sear
     tracks: toItems('track', parsed.data.tracks?.items),
     playlists: toItems('playlist', parsed.data.playlists?.items),
     albums: toItems('album', parsed.data.albums?.items),
+    artists: toItems('artist', parsed.data.artists?.items),
   };
 }
 
@@ -404,10 +379,14 @@ const likedSchema = z.object({
           .object({
             id: z.string().nullish(),
             name: z.string(),
-            artists: z.array(z.object({ name: z.string() })).optional(),
+            artists: z.array(z.object({ name: z.string(), id: z.string().nullish() })).optional(),
             duration_ms: z.number().nullish(),
             album: z
-              .object({ name: z.string().nullish(), images: z.array(imageSchema).nullish() })
+              .object({
+                id: z.string().nullish(),
+                name: z.string().nullish(),
+                images: z.array(imageSchema).nullish(),
+              })
               .nullish(),
           })
           .nullish(),
@@ -433,10 +412,24 @@ export async function likedSongs(ctx: ConnectorContext): Promise<MediaItem[]> {
             album: t.album?.name ? clip(t.album.name) : undefined,
             durationMs: t.duration_ms ?? undefined,
             ...coverOf(t.album?.images),
+            ...idsOf(t),
           },
         ]
       : [];
   });
+}
+
+/** Artist and album ids of a track, each only when it is a plain id (they become part of a request later). */
+export function idsOf(t: {
+  artists?: { id?: string | null }[] | null;
+  album?: { id?: string | null } | null;
+}): { artistId?: string; albumId?: string } {
+  const artistId = t.artists?.[0]?.id;
+  const albumId = t.album?.id;
+  return {
+    ...(artistId && ID.test(artistId) ? { artistId } : {}),
+    ...(albumId && ID.test(albumId) ? { albumId } : {}),
+  };
 }
 
 /**

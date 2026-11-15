@@ -35,6 +35,14 @@ Off by default, device-local (`tm-spotify-focus`: mode, playlist id, end switch 
 - Playlist view: description (plain text: tags dropped, entities decoded, never HTML), "Zurück zu den Playlists" when opened from the tab, "Bearbeiten" (name, description; only changed fields are sent) and "⋯ → Aus dieser Playlist entfernen" with "Rückgängig" (puts the song back at its place: `position` from the playlist row, rows left out still count). Edit and remove only with the feature "Playlists bearbeiten" and only on own or shared (`collaborative`) playlists. "Neue Playlist" (name, description, private) opens the new list. Every failure keeps what was typed or the song, one sentence. Known limit: a song in the playlist twice is not offered for removal, but only the first 200 rows are checked; a second copy further down goes too when one is removed, and "Rückgängig" puts back one.
 - No new scope: `playlists` + `playlistEdit` as before; `GET /me` needs none.
 
+## Albums, artists, "Weiterhören" (round "Tiefe & Politur", p2)
+`modules/music/components/{AlbumsView,Back}.tsx`, `ArtistView` in `SourceView.tsx`, `continueListening.ts`, connector `connectors/spotify/library.ts`.
+- Tab "Alben": the saved albums (`GET /me/albums`, up to 4 pages = 200, feature "Lieblingssongs" = the library scopes that already exist). An album page gets "Gespeichert / Speichern" (`PUT|DELETE /me/albums`, applied at once, taken back on failure with one sentence) and "Künstler: …".
+- Artist page (no scope): `GET /artists/{id}`, `/top-tracks`, `/albums?include_groups=album,single&limit=20`, read together; a refused "Meistgehört" (Spotify offers it to some apps only) leaves that part empty with one sentence. Reached from a song's "⋯ → Zu <Künstler>", the album head and the search (which now finds artists too). Lists opened from it lead back to it.
+- "Weiterhören" on the start view: the playlists, albums and artists the recent songs were played from (`context` of `recently-played`, no extra request), newest first, each once, at most 6; names come from what the page already has (a playlist not in your list, e.g. a generated mix, is left out). With "Steuern" a tap plays on there (`context_uri`), without it opens the list.
+- The tab "Zuletzt gespielt" is gone (it repeated the start view's row): "Alle anzeigen" there opens the whole list with "Zurück zur Startansicht". Tabs: Start · Playlists · Alben · Suchen · Lieblingssongs · Warteschlange.
+- Not built: following artists (needs `user-follow-read` / `user-follow-modify`, new scopes, maintainer's decision).
+
 ## Privacy
 Title and artist are user data: never to the AI (the connector cannot import `core/ai`, `privacy.test.ts` untouched), not in diagnostics (canary in `core/diagnostics/diagnostics.test.ts`), not synced (device-local only), not in logs. Data flow `spotify` in [DATA-FLOWS](../legal/DATA-FLOWS.md) and Settings → Über Nemo → Rechtliches.
 

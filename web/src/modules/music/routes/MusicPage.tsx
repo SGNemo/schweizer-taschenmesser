@@ -95,17 +95,18 @@ export default function MusicPage() {
   const views: { id: string; view?: View; label: string }[] = [
     { id: 'start', label: tm.start },
     { id: 'playlists', view: { type: 'playlists' }, label: tm.tabPlaylists },
+    { id: 'albums', view: { type: 'albums' }, label: tm.tabAlbums },
     { id: 'search', view: { type: 'search' }, label: tx.tabSearch },
     { id: 'liked', view: { type: 'liked' }, label: tx.tabLiked },
-    { id: 'recent', view: { type: 'recent' }, label: tx.navRecent },
     { id: 'queue', view: { type: 'queue' }, label: tx.navQueue },
   ];
-  // A playlist opened from the playlists tab keeps that tab marked (its way back is in the list's head).
+  // A list opened from a tab keeps that tab marked (its way back is in the list's head); the songs played lately are
+  // part of the start view.
+  const from = view && 'back' in view ? view.back : undefined;
   const isOn = (v?: View) =>
     v
-      ? (view?.type === v.type && !('id' in v)) ||
-        (v.type === 'playlists' && view?.type === 'playlist' && view.back === 'playlists')
-      : !view;
+      ? (view?.type === v.type && !('id' in v)) || (typeof from === 'string' && from === v.type)
+      : !view || from === 'start';
 
   return (
     <>

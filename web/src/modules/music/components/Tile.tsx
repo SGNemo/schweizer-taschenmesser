@@ -13,6 +13,7 @@ export function Tile({
   alt,
   onOpen,
   small = false,
+  label,
 }: {
   api: PlayerApi;
   title: string;
@@ -22,12 +23,15 @@ export function Tile({
   alt: string;
   onOpen: () => void;
   small?: boolean;
+  /** The button's name when a tap does more than open (e.g. "Fokus weiterhören"); default: what the tile shows. */
+  label?: string;
 }) {
   return (
     <button
       type="button"
       className={small ? `${styles.tile} ${styles.tileSmall}` : styles.tile}
       onClick={onOpen}
+      aria-label={label}
     >
       <Cover
         ctx={api.np.ctx}

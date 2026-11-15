@@ -33,6 +33,7 @@ import {
   removeFromPlaylist,
   renamePlaylist,
 } from './browse';
+import { albumsSaved, artist, saveAlbums, savedAlbums } from './library';
 
 const s = () => tSpotify.get();
 
@@ -172,6 +173,10 @@ const connector: ConnectorDef = {
     transfer,
     saved,
     save,
+    savedAlbums,
+    albumsSaved,
+    saveAlbums,
+    artist,
   },
 };
 
