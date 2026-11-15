@@ -3,12 +3,14 @@ import type { NowPlayingHandle } from '../useNowPlaying';
 
 /** What the player's main pane shows. */
 export type View =
-  | { type: 'playlist'; id: string; name: string }
+  /** `back`: the tab the playlist was opened from, offered as the way back (only the playlists tab so far). */
+  | { type: 'playlist'; id: string; name: string; back?: 'playlists' }
   | { type: 'album'; id: string; name: string }
   | { type: 'liked' }
   | { type: 'recent' }
   | { type: 'queue' }
-  | { type: 'search' };
+  | { type: 'search' }
+  | { type: 'playlists' };
 
 export const viewKey = (v: View): string => ('id' in v ? `${v.type}:${v.id}` : v.type);
 

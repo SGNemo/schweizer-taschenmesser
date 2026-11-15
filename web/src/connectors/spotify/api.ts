@@ -161,8 +161,10 @@ const playlistsSchema = z.object({
       .object({
         id: z.string(),
         name: z.string(),
+        description: z.string().nullish(),
+        collaborative: z.boolean().nullish(),
         images: z.array(imageSchema).nullish(),
-        owner: z.object({ display_name: z.string().nullish() }).nullish(),
+        owner: z.object({ id: z.string().nullish(), display_name: z.string().nullish() }).nullish(),
         // The documented field is `tracks`; the newer shape calls the same object `items`.
         tracks: z.object({ total: z.number().nullish() }).nullish(),
         items: z.object({ total: z.number().nullish() }).nullish(),
@@ -173,15 +175,59 @@ const playlistsSchema = z.object({
 });
 /** Pages of 50; four pages (200 playlists) are enough for a picker and keep the request count small. */
 const MAX_PLAYLIST_PAGES = 4;
+/** The playlists tab lists every playlist: up to 20 pages (1000), still one request per 50. */
+const ALL_PLAYLIST_PAGES = 20;
 export const API_ORIGIN = 'https://api.spotify.com/';
 /** Playlist ids are plain base-62; anything else never reaches a URI. */
 const PLAYLIST_ID = /^[A-Za-z0-9]{1,40}$/;
+/** Account ids are short and plain (letters, digits, `.`, `_`, `-`); anything else is dropped. */
+export const ACCOUNT_ID = /^[A-Za-z0-9._-]{1,64}$/;
+const MAX_DESCRIPTION = 300;
 
-/** The user's playlists (`playlist-read-private`), up to 200, following Spotify's own `next` links. */
-export async function listPlaylists(ctx: ConnectorContext): Promise<Playlist[]> {
+const ENTITIES: Record<string, string> = {
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  apos: "'",
+  nbsp: ' ',
+};
+/**
+ * A playlist description as plain text: Spotify sends it HTML-escaped and with links as `<a>` tags. Tags are dropped,
+ * the common entities decoded, white space folded; the result is only ever rendered as text, never as HTML.
+ */
+export function plainText(raw: string | null | undefined): string | undefined {
+  if (!raw) return undefined;
+  const text = raw
+    .replace(/<[^>]*>/g, '')
+    .replace(/&(#x[0-9a-f]{1,6}|#[0-9]{1,7}|[a-z]{2,6});/gi, (all, code: string) => {
+      const c = code.toLowerCase();
+      const n = c.startsWith('#x')
+        ? parseInt(c.slice(2), 16)
+        : c.startsWith('#')
+          ? Number(c.slice(1))
+          : NaN;
+      if (Number.isFinite(n)) return n > 31 && n < 0x110000 ? String.fromCodePoint(n) : '';
+      return ENTITIES[c] ?? all;
+    })
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, MAX_DESCRIPTION);
+  return text || undefined;
+}
+
+/**
+ * The user's playlists, own and followed (`playlist-read-private`), following Spotify's own `next` links: up to 200 for
+ * a picker, up to 1000 with `all` (the playlists tab).
+ */
+export async function listPlaylists(
+  ctx: ConnectorContext,
+  opts?: { all?: boolean },
+): Promise<Playlist[]> {
   const out: Playlist[] = [];
+  const pages = opts?.all ? ALL_PLAYLIST_PAGES : MAX_PLAYLIST_PAGES;
   let url: string | null | undefined = `${API_ORIGIN}v1/me/playlists?limit=50`;
-  for (let page = 0; url && page < MAX_PLAYLIST_PAGES; page += 1) {
+  for (let page = 0; url && page < pages; page += 1) {
     const { json } = await call(ctx, 'GET', url);
     const parsed = playlistsSchema.safeParse(json);
     if (!parsed.success) break;
@@ -193,11 +239,26 @@ export async function listPlaylists(ctx: ConnectorContext): Promise<Playlist[]> 
           trackCount: p.tracks?.total ?? p.items?.total ?? undefined,
           ...coverOf(p.images),
           owner: p.owner?.display_name ? clip(p.owner.display_name) : undefined,
+          ownerId: p.owner?.id && ACCOUNT_ID.test(p.owner.id) ? p.owner.id : undefined,
+          description: plainText(p.description),
+          collaborative: p.collaborative === true || undefined,
         });
     // Only follow a link that stays on the API host, never one the response made up.
     url = parsed.data.next?.startsWith(API_ORIGIN) ? parsed.data.next : undefined;
   }
   return out;
+}
+
+const accountSchema = z.object({ id: z.string() });
+
+/**
+ * The signed-in account's id (`GET /me`, no extra scope), only to tell own playlists from followed ones. Kept in memory
+ * by the caller; nothing else of the profile is read.
+ */
+export async function accountId(ctx: ConnectorContext): Promise<string | undefined> {
+  const { json } = await call(ctx, 'GET', `${API_ORIGIN}v1/me`);
+  const parsed = accountSchema.safeParse(json);
+  return parsed.success && ACCOUNT_ID.test(parsed.data.id) ? parsed.data.id : undefined;
 }
 
 export async function startPlaylist(ctx: ConnectorContext, id: string): Promise<void> {

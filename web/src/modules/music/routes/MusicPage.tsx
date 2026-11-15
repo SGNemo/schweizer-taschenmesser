@@ -91,12 +91,18 @@ export default function MusicPage() {
   };
   const views: { id: string; view?: View; label: string }[] = [
     { id: 'start', label: tm.start },
+    { id: 'playlists', view: { type: 'playlists' }, label: tm.tabPlaylists },
     { id: 'search', view: { type: 'search' }, label: tx.tabSearch },
     { id: 'liked', view: { type: 'liked' }, label: tx.tabLiked },
     { id: 'recent', view: { type: 'recent' }, label: tx.navRecent },
     { id: 'queue', view: { type: 'queue' }, label: tx.navQueue },
   ];
-  const isOn = (v?: View) => (v ? view?.type === v.type && !('id' in v) : !view);
+  // A playlist opened from the playlists tab keeps that tab marked (its way back is in the list's head).
+  const isOn = (v?: View) =>
+    v
+      ? (view?.type === v.type && !('id' in v)) ||
+        (v.type === 'playlists' && view?.type === 'playlist' && view.back === 'playlists')
+      : !view;
 
   return (
     <>

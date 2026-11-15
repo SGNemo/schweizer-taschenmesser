@@ -3,6 +3,7 @@ import { redirectUri } from '@/core/connectors/redirect';
 import { getPlatform } from '@/core/platform';
 import { tSpotify } from '@/strings.spotify';
 import {
+  accountId,
   likedSongs,
   listPlaylists,
   play,
@@ -28,6 +29,7 @@ import {
   transfer,
   addToPlaylist,
   createPlaylist,
+  editPlaylist,
   removeFromPlaylist,
   renamePlaylist,
 } from './browse';
@@ -143,8 +145,10 @@ const connector: ConnectorDef = {
     },
   ],
   nowPlaying: {
+    account: accountId,
     createPlaylist,
     renamePlaylist,
+    editPlaylist,
     addToPlaylist,
     removeFromPlaylist,
     read: readCurrentlyPlaying,

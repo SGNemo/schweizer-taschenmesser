@@ -256,6 +256,49 @@
   flex-direction: column;
   gap: var(--space-5);
 }
+/* Playlists tab: a head row (count, "Neue Playlist"), the tools (search, filter, sort), the tiles. */
+.lib {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.libHead,
+.sectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.libHead .sectionTitle,
+.sectionHead .sectionTitle {
+  margin: 0;
+}
+.libTitle {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+.libCount {
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  font-variant-numeric: var(--font-num);
+}
+.libTools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.libTools > :first-child {
+  flex: 1 1 14rem;
+}
+.sectionLink {
+  min-height: var(--touch);
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--text-sm);
+}
 .recentRow {
   display: flex;
   gap: var(--space-4);

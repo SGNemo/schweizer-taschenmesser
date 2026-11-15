@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import {
   ConnectorError,
@@ -10,13 +10,18 @@ import {
 import { readHidden, setHidden, type HiddenTracks } from '@/core/connectors/hiddenTracks';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { useUiStore } from '@/stores/ui';
+import { t } from '@/strings';
+import { tMusicPage } from '@/strings.musicPage';
 import { tSpotify } from '@/strings.spotify';
 import type { CoverImage } from '@/core/connectors/coverUrl';
 import type { ConnectorContext } from '@/core/connectors/types';
 import { Button, Icon, TextField } from '@/ui';
+import { canEdit, changedPlaylists, readAccount } from '../library';
 import { COVER_PX } from '../useCover';
 import { Cover } from './Cover';
 import { useAddToPlaylist } from './AddToPlaylist';
+import { PlaylistDialog, type PlaylistTarget } from './PlaylistDialog';
+import { PlaylistsView } from './PlaylistsView';
 import { TrackList } from './TrackList';
 import { useSavedTracks } from './useSavedTracks';
 import { viewKey, type PlayerApi, type View } from './types';
@@ -117,16 +122,26 @@ function SongList({
 function ListHeader({
   title,
   sub,
+  about,
+  focusTitle = false,
   ctx,
   cover,
   children,
 }: {
   title: string;
   sub?: string;
+  /** A playlist's description (plain text). */
+  about?: string;
+  /** The list was opened by a tap: focus moves to its title, so a screen reader and the keyboard start there. */
+  focusTitle?: boolean;
   ctx?: ConnectorContext;
   cover?: { coverUrl?: string; covers?: CoverImage[] };
   children?: React.ReactNode;
 }) {
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (focusTitle) titleRef.current?.focus();
+  }, [focusTitle]);
   return (
     <header className={styles.header}>
       <Cover
@@ -139,8 +154,15 @@ function ListHeader({
         testId="music-list-cover"
       />
       <div className={styles.headText}>
-        <h3 className={styles.headTitle}>{title}</h3>
+        <h3 className={styles.headTitle} ref={titleRef} tabIndex={focusTitle ? -1 : undefined}>
+          {title}
+        </h3>
         {sub ? <p className={styles.headSub}>{sub}</p> : null}
+        {about ? (
+          <p className={styles.headAbout} data-testid="music-list-about">
+            {about}
+          </p>
+        ) : null}
         {children}
       </div>
     </header>
@@ -156,15 +178,33 @@ function ContentView({
   view: Extract<View, { type: 'playlist' | 'album' }>;
 }) {
   const tx = tSpotify.use();
-  const { source, ctx, canControl } = api.np;
+  const tm = tMusicPage.use();
+  const toast = useUiStore((s) => s.toast);
+  const { source, ctx, canControl, features } = api.np;
   const list = useLoad<Tracklist>(
     source.tracks ? () => source.tracks!(ctx, view.type, view.id) : undefined,
     viewKey(view),
   );
+  const [me, setMe] = useState<string | undefined>();
+  useEffect(() => {
+    if (view.type !== 'playlist' || !features.includes('playlistEdit')) return;
+    let alive = true;
+    readAccount(source, ctx).then(
+      (id) => alive && setMe(id),
+      () => undefined,
+    );
+    return () => {
+      alive = false;
+    };
+  }, [view.type, features, source, ctx]);
+  // Edits made here, shown at once (Spotify takes a moment to report them back).
+  const [edited, setEdited] = useState<{ name: string; description?: string }>();
+  const [editing, setEditing] = useState<PlaylistTarget | null>(null);
+  const [removed, setRemoved] = useState<ReadonlySet<string>>(new Set());
   const [hiddenAll, setHiddenAll] = useState<HiddenTracks>(readHidden);
   const [showHidden, setShowHidden] = useState(false);
   const hiddenIds = new Set(hiddenAll[view.id] ?? []);
-  const items = list.state === 'ready' ? list.value.items : [];
+  const items = list.state === 'ready' ? list.value.items.filter((i) => !removed.has(i.id)) : [];
   const hearts = useHearts(api, items);
   const queue = useQueueAction(api);
   const add = useAddToPlaylist(api);
@@ -191,29 +231,98 @@ function ContentView({
     else void api.playFromList(item, visible);
   };
 
-  if (list.state === 'loading') return <p className={styles.note}>{tx.loading}</p>;
-  if (list.state === 'error') return <p className={styles.note}>{tx.listFailed}</p>;
+  const back =
+    view.type === 'playlist' && view.back === 'playlists' ? (
+      <Button
+        variant="ghost"
+        className={styles.backButton}
+        onClick={() => api.open({ type: 'playlists' })}
+      >
+        <Icon name="chevronLeft" size={18} />
+        {tm.backToPlaylists}
+      </Button>
+    ) : null;
+  if (list.state === 'loading')
+    return (
+      <>
+        {back}
+        <p className={styles.note}>{tx.loading}</p>
+      </>
+    );
+  if (list.state === 'error')
+    return (
+      <>
+        {back}
+        <p className={styles.note}>{tx.listFailed}</p>
+      </>
+    );
   const { value } = list;
+  const name = edited?.name ?? (value.name || view.name);
+  const about = edited ? edited.description : value.description;
+  // Changing the playlist: the feature "Playlists bearbeiten" and a playlist this account may change (own or shared).
+  const editable =
+    view.type === 'playlist' && features.includes('playlistEdit') && canEdit(value, me);
+
+  /** Removes a song from the playlist on Spotify (every time it is in there), with "Rückgängig" that puts it back. */
+  const remove = (item: MediaItem) => {
+    setRemoved((r) => new Set(r).add(item.id));
+    const putBack = () => setRemoved((r) => new Set([...r].filter((x) => x !== item.id)));
+    source.removeFromPlaylist!(ctx, view.id, [item.id]).then(
+      () =>
+        toast(tm.removed(item.name), {
+          label: t.ui.undo,
+          run: () => {
+            putBack();
+            source.addToPlaylist!(ctx, view.id, [item.id], item.position).catch(() => {
+              setRemoved((r) => new Set(r).add(item.id));
+              toast(tm.restoreFailed);
+            });
+          },
+        }),
+      () => {
+        putBack();
+        toast(tm.removeFailed);
+      },
+    );
+  };
   return (
     <>
+      {back}
       <ListHeader
-        title={value.name || view.name}
-        sub={[value.subtitle, tx.tracksCount(value.total ?? items.length)]
+        title={name}
+        sub={[
+          value.subtitle,
+          tx.tracksCount(Math.max(0, (value.total ?? items.length) - removed.size)),
+        ]
           .filter(Boolean)
           .join(' · ')}
+        about={about}
+        focusTitle
         ctx={ctx}
         cover={value}
       >
-        {canControl ? (
+        {canControl || (editable && source.editPlaylist) ? (
           <div className={styles.headActions}>
-            <Button onClick={() => playAll(false)} disabled={visible.length === 0}>
-              <Icon name="play" size={18} />
-              {tx.playAll}
-            </Button>
-            {source.setShuffle ? (
+            {canControl ? (
+              <Button onClick={() => playAll(false)} disabled={visible.length === 0}>
+                <Icon name="play" size={18} />
+                {tx.playAll}
+              </Button>
+            ) : null}
+            {canControl && source.setShuffle ? (
               <Button variant="ghost" onClick={() => playAll(true)} disabled={visible.length === 0}>
                 <Icon name="shuffle" size={18} />
                 {tx.shuffleAll}
+              </Button>
+            ) : null}
+            {editable && source.editPlaylist ? (
+              <Button
+                variant="ghost"
+                aria-label={tm.editFor(name)}
+                onClick={() => setEditing({ kind: 'edit', id: view.id, name, description: about })}
+              >
+                <Icon name="edit" size={18} />
+                {tm.edit}
               </Button>
             ) : null}
           </div>
@@ -243,6 +352,9 @@ function ContentView({
         onPlay={playOne}
         onQueue={queue}
         onAddToPlaylist={add.onAdd}
+        onRemove={
+          editable && source.removeFromPlaylist && source.addToPlaylist ? remove : undefined
+        }
         saved={hearts.saved}
         onToggleSave={hearts.onToggleSave}
         hidden={view.type === 'playlist' ? hiddenIds : undefined}
@@ -251,6 +363,18 @@ function ContentView({
         showHidden={showHidden}
       />
       {view.type === 'playlist' ? <p className={styles.note}>{tx.hiddenNote}</p> : null}
+      {editable ? (
+        <PlaylistDialog
+          api={api}
+          target={editing}
+          onClose={() => setEditing(null)}
+          onDone={(saved) => {
+            setEditing(null);
+            setEdited({ name: saved.name, description: saved.description });
+            changedPlaylists();
+          }}
+        />
+      ) : null}
     </>
   );
 }
@@ -399,6 +523,7 @@ export function SourceView({ api, view }: { api: PlayerApi; view: View }) {
   if (view.type === 'playlist' || view.type === 'album')
     return <ContentView key={viewKey(view)} api={api} view={view} />;
   if (view.type === 'queue') return <QueueView api={api} />;
+  if (view.type === 'playlists') return <PlaylistsView api={api} />;
   if (view.type === 'search') return <SearchView api={api} />;
   if (view.type === 'liked') {
     if (!features.includes('library')) return <Reconnect text={tx.libraryReconnect} />;

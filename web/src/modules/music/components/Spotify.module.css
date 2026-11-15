@@ -136,6 +136,24 @@
   color: var(--text-muted);
   font-size: var(--text-sm);
 }
+.headTitle:focus {
+  outline: none;
+}
+.headTitle:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+/* The way back lines up with the list's left edge (the ghost button brings its own padding). */
+.backButton {
+  margin-inline-start: calc(-1 * var(--space-3));
+}
+.headAbout {
+  margin: 0;
+  max-width: 68ch;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
 .headActions {
   display: flex;
   flex-wrap: wrap;

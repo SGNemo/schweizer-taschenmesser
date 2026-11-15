@@ -28,6 +28,13 @@ Off by default, device-local (`tm-spotify-focus`: mode, playlist id, end switch 
 - Features (each its own scope, all opt-in except the first two; existing logins tick and connect again): `playlists` (+ `playlist-read-collaborative`), `library` (`user-library-read` + `user-library-modify`), `history` ("Zuletzt gehört", `user-read-recently-played`). Parsers in `connectors/spotify/browse.ts` accept both the documented and the newer playlist shape (`tracks`/`items`, `track`/`item`); unknown fields mean fewer details, never an error.
 - Covers only for the open list and the bar (via `useCover`, no per-row requests). Not built: adding songs to playlists or removing them (needs the playlist-modify scopes and changes the user's playlists; a separate decision), artist pages.
 
+## Playlists tab (round "Tiefe & Politur", p1)
+`modules/music/components/PlaylistsView.tsx` (+ `PlaylistDialog.tsx`, `library.ts`, `playlistFilter.ts`); plan: [design/music-deep/PLAN.md](../design/music-deep/PLAN.md).
+- Tab "Playlists" (second tab): every own and followed playlist (`GET /me/playlists` with `all`, up to 20 pages = 1000; the focus picker keeps 4), cover tiles with owner ("von Kim"), "Gemeinsam" and count. Start view and tab share one read per page visit (`library.ts`, memo per connection context; an edit bumps it). "Alle Playlists" on the start view leads there.
+- Search over name and description (case and accents ignored, local, nothing sent), filter Alle / Eigene / Gefolgte (own = owner id equals the account id from `GET /me`, read once per page, id only, memory only; without it the filter is hidden), sort Wie in Spotify / Name / Anzahl Titel. Filter and sort device-local (`tm-music-playlists`, two words, never a name).
+- Playlist view: description (plain text: tags dropped, entities decoded, never HTML), "Zurück zu den Playlists" when opened from the tab, "Bearbeiten" (name, description; only changed fields are sent) and "⋯ → Aus dieser Playlist entfernen" with "Rückgängig" (puts the song back at its place: `position` from the playlist row, rows left out still count). Edit and remove only with the feature "Playlists bearbeiten" and only on own or shared (`collaborative`) playlists. "Neue Playlist" (name, description, private) opens the new list. Every failure keeps what was typed or the song, one sentence.
+- No new scope: `playlists` + `playlistEdit` as before; `GET /me` needs none.
+
 ## Privacy
 Title and artist are user data: never to the AI (the connector cannot import `core/ai`, `privacy.test.ts` untouched), not in diagnostics (canary in `core/diagnostics/diagnostics.test.ts`), not synced (device-local only), not in logs. Data flow `spotify` in [DATA-FLOWS](../legal/DATA-FLOWS.md) and Settings → Über Nemo → Rechtliches.
 

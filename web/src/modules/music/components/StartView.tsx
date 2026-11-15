@@ -4,55 +4,16 @@ import type { MediaItem, Playlist } from '@/core/connectors/types';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { tMusicPage } from '@/strings.musicPage';
 import { tSpotify } from '@/strings.spotify';
-import type { CoverImage } from '@/core/connectors/coverUrl';
+import { readAllPlaylists } from '../library';
 import { readRecent } from '../recentOnce';
-import { COVER_PX } from '../useCover';
-import { Cover } from './Cover';
+import { Tile } from './Tile';
 import { viewKey, type PlayerApi, type View } from './types';
 import styles from '../routes/music.module.css';
+import sx from './Spotify.module.css';
 
 const CONNECTIONS = settingsPath('verbindungen');
 const RECENT_SHOWN = 12;
 const PLAYLISTS_SHOWN = 24;
-
-function Tile({
-  api,
-  title,
-  sub,
-  cover,
-  alt,
-  onOpen,
-  small = false,
-}: {
-  api: PlayerApi;
-  title: string;
-  sub?: string;
-  cover: { coverUrl?: string; covers?: CoverImage[] };
-  /** Name of the playlist or album the picture belongs to. */
-  alt: string;
-  onOpen: () => void;
-  small?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      className={small ? `${styles.tile} ${styles.tileSmall}` : styles.tile}
-      onClick={onOpen}
-    >
-      <Cover
-        ctx={api.np.ctx}
-        item={cover}
-        px={small ? COVER_PX.tileSmall : COVER_PX.tile}
-        alt={alt}
-        className={styles.tileCover}
-        icon={28}
-        testId="music-tile-cover"
-      />
-      <span className={styles.tileTitle}>{title}</span>
-      {sub ? <span className={styles.tileSub}>{sub}</span> : null}
-    </button>
-  );
-}
 
 /**
  * The start view, never empty: what you played last (a row of covers; a tap plays it) and your playlists as a cover grid (a tap
@@ -81,7 +42,7 @@ export function StartView({
         .then((items) => alive && setRecent(items))
         .catch(() => alive && setRecent('error'));
     if (hasPlaylists)
-      source.playlists!(ctx)
+      readAllPlaylists(source, ctx)
         .then((items) => alive && setPlaylists(items))
         .catch(() => alive && setPlaylists('error'));
     return () => {
@@ -130,9 +91,20 @@ export function StartView({
         )}
       </section>
       <section aria-labelledby="music-playlists">
-        <h2 id="music-playlists" className={styles.sectionTitle}>
-          {tm.startPlaylists}
-        </h2>
+        <div className={styles.sectionHead}>
+          <h2 id="music-playlists" className={styles.sectionTitle}>
+            {tm.startPlaylists}
+          </h2>
+          {hasPlaylists ? (
+            <button
+              type="button"
+              className={`${sx.linkButton} ${styles.sectionLink}`}
+              onClick={() => open({ type: 'playlists' })}
+            >
+              {tm.allPlaylists}
+            </button>
+          ) : null}
+        </div>
         {!hasPlaylists ? (
           <p className={styles.note}>
             {tm.startNeedsPlaylists} <Link to={CONNECTIONS}>{tx.settings}</Link>
