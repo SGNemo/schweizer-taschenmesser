@@ -391,3 +391,48 @@ test('exercises: last time under the form row, history with the best, search in 
     'Je Muskelgruppe: Beine 6 Sätze',
   );
 });
+
+test('a live session: started from the menu, saved after each set, survives a reload, ends with its duration', async ({
+  page,
+}) => {
+  await page.goto('/fitness');
+  await (await openPageMenu(page)).getByRole('menuitem', { name: 'Einheit starten' }).click();
+  let live = page.getByTestId('fitness-live');
+  await expect(live.getByText('Wähle die erste Übung, dann geht es los.')).toBeVisible();
+  await live.getByRole('button', { name: 'Übung hinzufügen' }).click();
+  const picker = page.getByRole('dialog', { name: 'Übung aus dem Katalog' });
+  await picker.getByRole('searchbox').fill('knie');
+  await picker.getByRole('button', { name: 'Kniebeuge hinzufügen' }).click();
+
+  await live.getByLabel('Wdh.').fill('5');
+  await live.getByLabel('kg', { exact: true }).fill('60');
+  await live.getByLabel('Aufwärmen').check();
+  await live.getByRole('button', { name: 'Satz fertig' }).click();
+  await expect(live.getByText('5 × 60 kg · Aufwärmen')).toBeVisible();
+  // The rest runs quietly, in words; it can be ended.
+  await expect(page.getByTestId('fitness-rest')).toContainText('Pause · 1:30');
+  await expect.poll(async () => (await rows(page, 'fitness_session')).length).toBe(1);
+
+  // A reload keeps it: the training view offers „Weiter“.
+  await page.reload();
+  await expect(page.getByTestId('fitness-live-banner')).toContainText('Einheit läuft seit 10:00');
+  await page.getByTestId('fitness-live-banner').getByRole('button', { name: 'Weiter' }).click();
+  live = page.getByTestId('fitness-live');
+  await live.getByRole('button', { name: 'Pause beenden' }).click();
+  // The last set is offered again.
+  await expect(live.getByLabel('kg', { exact: true })).toHaveValue('60');
+  await live.getByLabel('kg', { exact: true }).fill('80');
+  await live.getByRole('button', { name: 'Satz fertig' }).click();
+  await expect(live.getByText('5 × 80 kg', { exact: true })).toBeVisible();
+
+  await page.clock.setFixedTime(new Date('2026-11-08T10:35:00'));
+  await live.getByRole('button', { name: 'Einheit beenden' }).click();
+  await expect(page.getByText('Einheit gespeichert · 35 Min')).toBeVisible();
+  await expect(page.getByTestId('fitness-live-banner')).toHaveCount(0);
+  const [saved] = await rows(page, 'fitness_session');
+  expect(saved).toMatchObject({ durationMin: 35, date: '2026-11-08', time: '10:00' });
+  expect((saved!.exercises as { sets: number; weightKg: number }[])[0]).toMatchObject({
+    sets: 1,
+    weightKg: 80,
+  });
+});

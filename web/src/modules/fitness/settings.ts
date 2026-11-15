@@ -7,15 +7,22 @@ export const settingsSchema = z.object({
   nutrition: z.boolean(),
   kcalGoal: z.number().int().min(0).max(9999),
   weekSessions: z.number().int().min(0).max(21),
+  /** Rest timer of „Einheit starten“ in seconds; 0 = no timer. */
+  restSec: z.number().int().min(0).max(600),
 });
 export type FitnessSettings = z.output<typeof settingsSchema>;
 
-export const DEFAULTS: FitnessSettings = { nutrition: true, kcalGoal: 0, weekSessions: 0 };
+export const DEFAULTS: FitnessSettings = {
+  nutrition: true,
+  kcalGoal: 0,
+  weekSessions: 0,
+  restSec: 90,
+};
 
 export const settings: ModuleSettings = {
   schema: settingsSchema,
   defaults: DEFAULTS,
-  keywords: ['training', 'kalorien', 'kcal', 'sport', 'essen'],
+  keywords: ['training', 'kalorien', 'kcal', 'sport', 'essen', 'pause', 'timer'],
   fields: [
     {
       key: 'nutrition',
@@ -44,6 +51,16 @@ export const settings: ModuleSettings = {
       },
       get help() {
         return t.fitness.meta.settings.weekSessionsHelp;
+      },
+      type: 'number',
+    },
+    {
+      key: 'restSec',
+      get label() {
+        return t.fitness.meta.settings.restSec;
+      },
+      get help() {
+        return t.fitness.meta.settings.restSecHelp;
       },
       type: 'number',
     },

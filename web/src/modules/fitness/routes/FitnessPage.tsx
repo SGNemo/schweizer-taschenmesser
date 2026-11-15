@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { formatMinutes } from '@/core/i18n/format';
 import { useWeekStart } from '@/core/settings/core';
-import { addDaysStr, relativeDayLabel, today } from '@/core/time/dates';
+import { addDaysStr, nowTime, relativeDayLabel, today } from '@/core/time/dates';
+import { now } from '@/core/time/now';
 import type { Stored } from '@/core/db/types';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import { undoableWithToast } from '@/core/undo/withToast';
@@ -28,8 +29,11 @@ import { SessionEditor, type SessionTarget } from '../components/SessionEditor';
 import { ExercisePicto } from '../components/ExercisePicto';
 import { WeekView } from '../components/WeekView';
 import { ExercisesView } from '../components/ExercisesView';
+import { LiveSession } from '../components/LiveSession';
+import { loadLive, saveLive, startLive, type LiveState } from '../live';
 import { patternOf } from '../catalog';
 import {
+  builtInExercises,
   exerciseDetail,
   kcalLine,
   kcalText,
@@ -43,6 +47,7 @@ import {
   byDay,
   daySum,
   doneToday,
+  exerciseSuggestions,
   isAhead,
   isLogged,
   latestSession,
@@ -53,6 +58,7 @@ import {
 } from '../logic';
 import { mealRepo, sessionRepo } from '../repo';
 import type { Session } from '../schema';
+import styles from '../fitness.module.css';
 
 type View = 'training' | 'food' | 'week' | 'exercises';
 /** How far back the lists and the week view go; older entries stay stored. */
@@ -82,6 +88,20 @@ export default function FitnessPage() {
   const [session, setSession] = useState<SessionTarget>(null);
   const [meal, setMeal] = useState<MealTarget>(null);
   const [goalOpen, setGoalOpen] = useState(false);
+  // „Einheit starten“: the running session of this device (kept across reloads) and whether it is shown.
+  // A session left running on an earlier day is over: its sets are saved, only the local state goes.
+  const [live, setLive] = useState<LiveState | undefined>(() => {
+    const stored = loadLive();
+    if (stored && stored.date < today()) return void saveLive(undefined);
+    return stored;
+  });
+  const [liveOpen, setLiveOpen] = useState(false);
+  function start(from?: Pick<Session, 'title' | 'exercises'>, planId?: string) {
+    setSession(null);
+    if (!live) setLive(startLive(from, { date: day, time: nowTime(), now: now() }, planId));
+    setLiveOpen(true);
+    close();
+  }
   useOpenParam(
     async (id) => (await sessionRepo.get(id)) ?? (await mealRepo.get(id)),
     (r) => {
@@ -221,6 +241,15 @@ export default function FitnessPage() {
         <StartDataMenu
           moduleId="fitness"
           items={[
+            ...(view === 'training'
+              ? [
+                  {
+                    id: 'start',
+                    label: live ? t.fitness.live.resume : t.fitness.live.start,
+                    onSelect: () => start(),
+                  },
+                ]
+              : []),
             ...(view === 'training' && canRepeat && last
               ? [
                   {
@@ -271,6 +300,14 @@ export default function FitnessPage() {
         <ExercisesView day={day} />
       ) : view === 'training' ? (
         <>
+          {live && !liveOpen ? (
+            <div className={styles.liveBanner} data-testid="fitness-live-banner">
+              <p>{t.fitness.live.banner(live.time)}</p>
+              <Button size="sm" variant="secondary" onClick={() => setLiveOpen(true)}>
+                {t.fitness.live.resume}
+              </Button>
+            </div>
+          ) : null}
           {noSessions ? (
             <EmptyState
               title={t.fitness.empty.training}
@@ -367,6 +404,21 @@ export default function FitnessPage() {
         sessions={sessions ?? []}
         templates={templates ?? []}
         onClose={close}
+        onStart={start}
+      />
+      <LiveSession
+        state={liveOpen ? live : undefined}
+        sessions={sessions ?? []}
+        restSec={prefs?.restSec ?? 90}
+        own={exerciseSuggestions(sessions ?? [], builtInExercises()).filter(
+          (n) => !builtInExercises().includes(n),
+        )}
+        onChange={setLive}
+        onClose={() => setLiveOpen(false)}
+        onEnd={() => {
+          setLive(undefined);
+          setLiveOpen(false);
+        }}
       />
       <MealEditor target={mealTarget} meals={meals ?? []} onClose={close} />
       <GoalDialog

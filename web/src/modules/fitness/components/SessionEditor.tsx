@@ -15,6 +15,7 @@ import {
   FormActions,
   Icon,
   IconButton,
+  RowMenu,
   TextField,
   TimeField,
 } from '@/ui';
@@ -22,6 +23,7 @@ import { builtInExercises, exerciseDetail } from '../data';
 import { CatalogPicker } from './CatalogPicker';
 import { exerciseSuggestions, lastOf, toTemplate } from '../logic';
 import { lastEntry } from '../progress';
+import { logFromSummary, withLog } from '../sets';
 import { sessionRepo, templateRepo } from '../repo';
 import {
   sessionSchema,
@@ -34,6 +36,14 @@ import styles from '../fitness.module.css';
 
 export type SessionTarget = Stored<Session> | 'new' | null;
 
+interface SetRow {
+  key: number;
+  reps: string;
+  weight: string;
+  warmup: boolean;
+  note: string;
+}
+
 interface Row {
   key: number;
   name: string;
@@ -41,6 +51,9 @@ interface Row {
   reps: string;
   weight: string;
   minutes: string;
+  /** Set by set (deep package 2); then the four summary fields are not shown. */
+  log?: SetRow[];
+  superset?: boolean;
 }
 
 const num = (s: string): number | undefined => {
@@ -48,6 +61,14 @@ const num = (s: string): number | undefined => {
   return s.trim() && Number.isFinite(v) && v > 0 ? v : undefined;
 };
 const str = (n: number | undefined) => (n === undefined ? '' : String(n));
+const toSetRows = (log: Exercise['log']): SetRow[] =>
+  (log ?? []).map((x, i) => ({
+    key: i,
+    reps: str(x.reps),
+    weight: str(x.weightKg),
+    warmup: !!x.warmup,
+    note: x.note ?? '',
+  }));
 const toRows = (list: readonly (Exercise | { name: string })[]): Row[] =>
   list.map((e, i) => ({
     key: i,
@@ -56,13 +77,41 @@ const toRows = (list: readonly (Exercise | { name: string })[]): Row[] =>
     reps: str('reps' in e ? e.reps : undefined),
     weight: str('weightKg' in e ? e.weightKg : undefined),
     minutes: str('durationMin' in e ? e.durationMin : undefined),
+    ...('log' in e && e.log?.length ? { log: toSetRows(e.log) } : {}),
+    ...('superset' in e && e.superset ? { superset: true } : {}),
   }));
+const kg = (s: string) => {
+  const v = num(s);
+  return v !== undefined ? Math.round(v * 10) / 10 : undefined;
+};
+/** A form row as a stored exercise (a set log keeps its summary in step). */
+function toExercise(r: Row): Exercise {
+  const base: Exercise = {
+    name: r.name.trim(),
+    ...(num(r.sets) ? { sets: Math.round(num(r.sets)!) } : {}),
+    ...(num(r.reps) ? { reps: Math.round(num(r.reps)!) } : {}),
+    ...(kg(r.weight) !== undefined ? { weightKg: kg(r.weight)! } : {}),
+    ...(num(r.minutes) ? { durationMin: Math.round(num(r.minutes)!) } : {}),
+    ...(r.superset ? { superset: true as const } : {}),
+  };
+  if (!r.log) return base;
+  return withLog(
+    base,
+    r.log.map((x) => ({
+      ...(num(x.reps) ? { reps: Math.round(num(x.reps)!) } : {}),
+      ...(kg(x.weight) !== undefined ? { weightKg: kg(x.weight)! } : {}),
+      ...(x.warmup ? { warmup: true as const } : {}),
+      ...(x.note.trim() ? { note: x.note.trim() } : {}),
+    })),
+  );
+}
 
 export function SessionEditor({
   target,
   sessions,
   templates,
   onClose,
+  onStart,
 }: {
   target: SessionTarget;
   /** Own sessions (suggestions and "last time" values). */
@@ -70,6 +119,8 @@ export function SessionEditor({
   /** Saved templates, offered as chips on a new session. */
   templates: readonly Stored<Template>[];
   onClose: () => void;
+  /** „Anfangen“: the form's exercises go into „Einheit starten“ (a plan's id comes along). */
+  onStart?: (from: Pick<Session, 'title' | 'exercises'>, planId?: string) => void;
 }) {
   // A name picked from the catalogue is a click, not typing: the fields report it so closing still asks.
   const [picked, setPicked] = useState(false);
@@ -88,6 +139,7 @@ export function SessionEditor({
           sessions={sessions}
           templates={templates}
           onClose={onClose}
+          onStart={onStart}
           onPicked={setPicked}
         />
       ) : null}
@@ -100,12 +152,14 @@ function Fields({
   sessions,
   templates,
   onClose,
+  onStart,
   onPicked,
 }: {
   target: NonNullable<SessionTarget>;
   sessions: readonly (Session & { id?: string })[];
   templates: readonly Stored<Template>[];
   onClose: () => void;
+  onStart?: (from: Pick<Session, 'title' | 'exercises'>, planId?: string) => void;
   onPicked: (picked: boolean) => void;
 }) {
   const existing = target === 'new' ? null : target;
@@ -122,6 +176,7 @@ function Fields({
     toRows(existing?.exercises.length ? existing.exercises : [{ name: '' }]),
   );
   const [error, setError] = useState('');
+  const [menuFor, setMenuFor] = useState<number | null>(null);
   const builtIn = builtInExercises();
   const names = exerciseSuggestions(sessions, builtIn);
   const own = names.filter((n) => !builtIn.includes(n));
@@ -175,6 +230,17 @@ function Fields({
     });
   }
 
+  /** „Sätze einzeln“: the row's summary becomes that many equal sets, each editable. */
+  function split(r: Row) {
+    patch(r.key, { log: toSetRows(logFromSummary(toExercise(r))) });
+  }
+
+  /** „Sätze zusammenfassen“: back to one line (count, heaviest weight); warm-ups and notes go. */
+  function join(r: Row) {
+    const e = toExercise(r);
+    patch(r.key, { log: undefined, sets: str(e.sets), reps: str(e.reps), weight: str(e.weightKg) });
+  }
+
   /** A template fills title, duration and exercises (the date and the plan stay as they are). */
   function apply(tpl: Template) {
     setTitle(tpl.title);
@@ -195,17 +261,7 @@ function Fields({
       ...(title.trim() ? { title: title.trim() } : {}),
       ...(num(duration) ? { durationMin: Math.round(num(duration)!) } : {}),
       ...(note.trim() ? { note: note.trim() } : {}),
-      exercises: rows
-        .filter((r) => r.name.trim())
-        .map((r) => ({
-          name: r.name.trim(),
-          ...(num(r.sets) ? { sets: Math.round(num(r.sets)!) } : {}),
-          ...(num(r.reps) ? { reps: Math.round(num(r.reps)!) } : {}),
-          ...(num(r.weight) !== undefined
-            ? { weightKg: Math.round(num(r.weight)! * 10) / 10 }
-            : {}),
-          ...(num(r.minutes) ? { durationMin: Math.round(num(r.minutes)!) } : {}),
-        })),
+      exercises: rows.filter((r) => r.name.trim()).map(toExercise),
       ...(planned ? { planned: true } : {}),
     };
   }
@@ -247,6 +303,8 @@ function Fields({
     onClose();
   }
 
+  // „Anfangen“ on a new session for today or a plan whose day has come – never on a logged one or a later day.
+  const canStart = !!onStart && date <= today() && (!existing || !!existing.planned);
   return (
     <Form onSubmit={save}>
       {/* Templates only on a fresh form: a tap never overwrites exercises already typed. */}
@@ -296,47 +354,86 @@ function Fields({
                 onBlur={() => prefill(r)}
                 {...(i === 0 ? { 'data-autofocus': true } : {})}
               />
-              {rows.length > 1 ? (
-                <IconButton
-                  label={t.fitness.form.removeExercise(r.name || t.fitness.form.exercise)}
-                  onClick={() => setRows((rs) => rs.filter((x) => x.key !== r.key))}
-                >
-                  <Icon name="trash" />
-                </IconButton>
-              ) : null}
+              <span className={styles.rowActions}>
+                <RowMenu
+                  label={t.fitness.form.rowMenu(r.name || t.fitness.form.exercise)}
+                  open={menuFor === r.key}
+                  onOpenChange={(o) => setMenuFor(o ? r.key : null)}
+                  items={[
+                    r.log
+                      ? { id: 'join', label: t.fitness.form.setsJoin, onSelect: () => join(r) }
+                      : {
+                          id: 'single',
+                          label: t.fitness.form.setsSingle,
+                          onSelect: () => split(r),
+                        },
+                    ...(i < rows.length - 1
+                      ? [
+                          {
+                            id: 'superset',
+                            label: t.fitness.form.superset,
+                            checked: !!r.superset,
+                            onSelect: () => patch(r.key, { superset: !r.superset }),
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
+                {rows.length > 1 ? (
+                  <IconButton
+                    label={t.fitness.form.removeExercise(r.name || t.fitness.form.exercise)}
+                    onClick={() => setRows((rs) => rs.filter((x) => x.key !== r.key))}
+                  >
+                    <Icon name="trash" />
+                  </IconButton>
+                ) : null}
+              </span>
               {r.hint ? <p className={`${styles.hint} ${styles.lastHint}`}>{r.hint}</p> : null}
-              <div className={styles.numbers}>
-                <TextField
-                  label={t.fitness.form.sets}
-                  type="number"
-                  inputMode="numeric"
-                  min={1}
-                  value={r.sets}
-                  onChange={(e) => patch(r.key, { sets: e.target.value })}
+              {r.log ? (
+                <SetRows
+                  name={r.name || t.fitness.form.exercise}
+                  sets={r.log}
+                  onChange={(log) => patch(r.key, { log })}
                 />
-                <TextField
-                  label={t.fitness.form.reps}
-                  type="number"
-                  inputMode="numeric"
-                  min={1}
-                  value={r.reps}
-                  onChange={(e) => patch(r.key, { reps: e.target.value })}
-                />
-                <TextField
-                  label={t.fitness.form.weight}
-                  inputMode="decimal"
-                  value={r.weight}
-                  onChange={(e) => patch(r.key, { weight: e.target.value })}
-                />
-                <TextField
-                  label={t.fitness.form.minutes}
-                  type="number"
-                  inputMode="numeric"
-                  min={1}
-                  value={r.minutes}
-                  onChange={(e) => patch(r.key, { minutes: e.target.value })}
-                />
-              </div>
+              ) : (
+                <div className={styles.numbers}>
+                  <TextField
+                    label={t.fitness.form.sets}
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    value={r.sets}
+                    onChange={(e) => patch(r.key, { sets: e.target.value })}
+                  />
+                  <TextField
+                    label={t.fitness.form.reps}
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    value={r.reps}
+                    onChange={(e) => patch(r.key, { reps: e.target.value })}
+                  />
+                  <TextField
+                    label={t.fitness.form.weight}
+                    inputMode="decimal"
+                    value={r.weight}
+                    onChange={(e) => patch(r.key, { weight: e.target.value })}
+                  />
+                  <TextField
+                    label={t.fitness.form.minutes}
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    value={r.minutes}
+                    onChange={(e) => patch(r.key, { minutes: e.target.value })}
+                  />
+                </div>
+              )}
+              {r.superset && rows[i + 1] ? (
+                <p className={`${styles.hint} ${styles.lastHint}`}>
+                  {t.fitness.form.supersetWith(rows[i + 1]!.name || t.fitness.form.exercise)}
+                </p>
+              ) : null}
             </li>
           ))}
       </ul>
@@ -455,17 +552,32 @@ function Fields({
       {error ? <p role="alert">{error}</p> : null}
       <FormActions
         start={
-          existing ? (
-            <Button
-              variant="danger"
-              onClick={async () => {
-                await deleteWithUndo(() => sessionRepo.remove(existing.id));
-                onClose();
-              }}
-            >
-              {t.actions.delete}
-            </Button>
-          ) : undefined
+          <>
+            {existing ? (
+              <Button
+                variant="danger"
+                onClick={async () => {
+                  await deleteWithUndo(() => sessionRepo.remove(existing.id));
+                  onClose();
+                }}
+              >
+                {t.actions.delete}
+              </Button>
+            ) : null}
+            {canStart ? (
+              <Button
+                onClick={() => {
+                  const data = collect();
+                  onStart!(
+                    { ...(data.title ? { title: data.title } : {}), exercises: data.exercises },
+                    existing?.id,
+                  );
+                }}
+              >
+                {t.fitness.form.start}
+              </Button>
+            ) : null}
+          </>
         }
       >
         <Button onClick={onClose}>{t.actions.cancel}</Button>
@@ -474,5 +586,82 @@ function Fields({
         </Button>
       </FormActions>
     </Form>
+  );
+}
+
+/** The single sets of one exercise: reps, kg, warm-up and a short note each. */
+function SetRows({
+  name,
+  sets,
+  onChange,
+}: {
+  name: string;
+  sets: SetRow[];
+  onChange: (sets: SetRow[]) => void;
+}) {
+  const f = t.fitness.form;
+  const put = (key: number, p: Partial<SetRow>) =>
+    onChange(sets.map((x) => (x.key === key ? { ...x, ...p } : x)));
+  return (
+    <div className={styles.setRows} role="group" aria-label={name}>
+      <ol className={styles.setList}>
+        {sets.map((x, n) => (
+          <li key={x.key} className={styles.setRow}>
+            <span className={styles.setNumber}>{f.set(n + 1)}</span>
+            <TextField
+              label={f.reps}
+              type="number"
+              inputMode="numeric"
+              min={1}
+              value={x.reps}
+              onChange={(e) => put(x.key, { reps: e.target.value })}
+            />
+            <TextField
+              label={f.weight}
+              inputMode="decimal"
+              value={x.weight}
+              onChange={(e) => put(x.key, { weight: e.target.value })}
+            />
+            <IconButton
+              label={f.removeSet(n + 1)}
+              onClick={() => onChange(sets.filter((y) => y.key !== x.key))}
+            >
+              <Icon name="close" size={16} />
+            </IconButton>
+            <Checkbox
+              label={f.warmup}
+              checked={x.warmup}
+              onChange={(e) => put(x.key, { warmup: e.target.checked })}
+            />
+            <TextField
+              label={f.setNote}
+              value={x.note}
+              maxLength={200}
+              onChange={(e) => put(x.key, { note: e.target.value })}
+            />
+          </li>
+        ))}
+      </ol>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => {
+          const last = sets.at(-1);
+          onChange([
+            ...sets,
+            {
+              key: Math.max(0, ...sets.map((y) => y.key)) + 1,
+              reps: last?.reps ?? '',
+              weight: last?.weight ?? '',
+              warmup: false,
+              note: '',
+            },
+          ]);
+        }}
+      >
+        <Icon name="plus" size={16} />
+        {f.addSet}
+      </Button>
+    </div>
   );
 }

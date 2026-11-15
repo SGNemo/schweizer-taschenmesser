@@ -5,7 +5,7 @@ import { t } from '@/strings';
 import { SignatureMark } from '@/ui/identity';
 import { Dialog, EmptyState, GroupedList, ItemList, ItemRow, TextField } from '@/ui';
 import { GROUPS, patternOf, type Group } from '../catalog';
-import { exerciseDetail, useSessions } from '../data';
+import { exerciseDetail, setsDetail, useSessions } from '../data';
 import {
   exerciseHistory,
   exerciseOverview,
@@ -147,7 +147,7 @@ function ExerciseDialog({
               <ItemRow
                 key={`${h.date}-${i}`}
                 title={relativeDayLabel(h.date, day)}
-                meta={[exerciseDetail(h.exercise), isBestEntry(h, summary.best) ? x.bestMark : '']
+                meta={[setsDetail(h.exercise), isBestEntry(h, summary.best) ? x.bestMark : '']
                   .filter(Boolean)
                   .join(' · ')}
               />

@@ -4,6 +4,8 @@ import { SEED_SCALES } from '@/core/seed/types';
 import manifest from '../manifest';
 import { mealSchema, sessionSchema, templateSchema } from '../schema';
 import seedModule from '../seed';
+import { summarize } from '../sets';
+import type { Exercise } from '../schema';
 
 // The generic contract (all modules, runner, removal) lives in core/seed/registry.test.ts.
 describe('fitness seed', () => {
@@ -20,6 +22,13 @@ describe('fitness seed', () => {
         expect(sessionSchema.safeParse(row.data).success).toBe(true);
         expect(row.data.date).not.toBe('2026-09-29');
       }
+      // Recent sessions carry single sets with a warm-up; their summary is in step.
+      const logged = rows
+        .session!.flatMap((r) => r.data.exercises as Exercise[])
+        .filter((e) => e.log);
+      expect(logged.length).toBeGreaterThan(0);
+      for (const e of logged)
+        expect(summarize(e.log!)).toEqual({ sets: e.sets, reps: e.reps, weightKg: e.weightKg });
       for (const row of rows.meal!) expect(mealSchema.safeParse(row.data).success).toBe(true);
       // One plan for tomorrow, one template.
       expect(rows.session!.filter((r) => r.data.planned).map((r) => r.data.date)).toEqual([
