@@ -31,8 +31,8 @@ describe('power countdown window', () => {
     expect(root.querySelector('.sentence')?.textContent).toBe(
       'Svens Handy schaltet diesen PC in 10 Sekunden aus.',
     );
-    // screen readers hear it once, and the button is described by it
-    expect(root.querySelector('[role="status"]')?.textContent).toContain('10 Sekunden');
+    // screen readers hear it with the focused button it describes; nothing re-announces it
+    expect(root.querySelector('[role="status"], [aria-live]')).toBeNull();
     const button = root.querySelector('button')!;
     expect(button.textContent).toBe('Abbrechen');
     expect(document.activeElement).toBe(button);
@@ -41,7 +41,6 @@ describe('power countdown window', () => {
     current = at(3);
     await vi.advanceTimersByTimeAsync(READ_EVERY_MS);
     expect(root.querySelector('.sentence')?.textContent).toContain('in 3 Sekunden');
-    expect(root.querySelector('[role="status"]')?.textContent).toContain('10 Sekunden');
     expect(button.getAttribute('aria-describedby')).toBe('power-sentence');
     button.click();
     expect(api.cancel).toHaveBeenCalledTimes(1);
@@ -60,8 +59,9 @@ describe('power countdown window', () => {
     const stop = mountCountdown(root, api, () => t);
     await vi.advanceTimersByTimeAsync(0);
     const button = root.querySelector('button')!;
-    // Enter/Space on a focused button is a click without a pointer (detail 0)
+    // Enter/Space on a focused button is a click without a pointer (detail 0); Esc likewise
     button.dispatchEvent(new MouseEvent('click', { detail: 0 }));
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     expect(api.cancel).not.toHaveBeenCalled();
     t = KEY_GRACE_MS;
     button.dispatchEvent(new MouseEvent('click', { detail: 0 }));

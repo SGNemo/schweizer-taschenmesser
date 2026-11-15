@@ -37,7 +37,10 @@ const QUIET_AFTER_PC_CANCEL: Duration = Duration::from_secs(10 * 60);
 /// A second stop at the PC within this time takes the device's power permission away.
 const SECOND_CANCEL_WITHIN: Duration = Duration::from_secs(60 * 60);
 /// The window must be on screen within this time, or nothing happens.
-const SHOW_WITHIN: Duration = Duration::from_secs(3);
+const SHOW_WITHIN: Duration = Duration::from_secs(5);
+/// The page asks every quarter second; quiet for longer than this, it counts as not on screen (a
+/// hung page shows no button).
+const POLL_FRESH: Duration = Duration::from_millis(1500);
 /// The label of the countdown window (`capabilities/power.json` names it).
 pub const WINDOW: &str = "remote-power";
 
@@ -84,8 +87,8 @@ struct Running {
     device: Device,
     act: Act,
     began: Instant,
-    /// The window's page has asked for the countdown (it loaded and can show the button).
-    polled: bool,
+    /// When the window's page last asked for the countdown (it is loaded and shows the button).
+    last_poll: Option<Instant>,
     /// When the window was first on screen with its page loaded; the 10 s count from here.
     shown_at: Option<Instant>,
 }
@@ -156,16 +159,16 @@ impl Machine {
             device,
             act,
             began: now,
-            polled: false,
+            last_poll: None,
             shown_at: None,
         });
         PowerAnswer::Started
     }
 
-    /// The window's page asked for the countdown: it is loaded.
-    pub fn polled(&mut self) {
+    /// The window's page asked for the countdown: it is loaded and alive.
+    pub fn polled(&mut self, now: Instant) {
         if let Some(run) = self.running.as_mut() {
-            run.polled = true;
+            run.last_poll = Some(now);
         }
     }
 
@@ -187,11 +190,16 @@ impl Machine {
         let Some(run) = self.running.as_mut() else {
             return Tick::Nothing;
         };
-        if visible && run.polled && run.shown_at.is_none() {
+        let alive = run
+            .last_poll
+            .is_some_and(|at| now.saturating_duration_since(at) < POLL_FRESH);
+        if visible && alive && run.shown_at.is_none() {
             run.shown_at = Some(now);
         }
         let device = run.device;
-        if locked || !allowed(&device) {
+        // shown once, then its page went quiet (hung, crashed): no button to press any more
+        let hung = run.shown_at.is_some() && visible && !alive;
+        if locked || hung || !allowed(&device) {
             self.running = None;
             self.tell(device, PowerAnswer::Cancelled);
             return Tick::Stopped;
@@ -347,6 +355,10 @@ impl PowerCore {
                     self.machine().no_window();
                     return PowerAnswer::Failed;
                 }
+                // stopped while the window was being built (tray, hub stop): no empty window
+                if self.counting().is_none() {
+                    close_window(&env.app);
+                }
             }
             PowerAnswer::Cancelled if was_running => close_window(&env.app),
             _ => {}
@@ -380,7 +392,13 @@ impl PowerCore {
     /// the PC for the second time within an hour).
     pub fn tick(&self, locked: impl FnOnce() -> bool) -> Option<PublicKey> {
         let env = self.env()?;
-        self.counting()?;
+        if self.counting().is_none() {
+            // a window that outlived its countdown (built while it was stopped) goes too
+            if env.app.get_webview_window(WINDOW).is_some() {
+                close_window(&env.app);
+            }
+            return None;
+        }
         let locked = locked();
         let visible = env
             .app
@@ -491,8 +509,8 @@ pub fn remote_power_status(
     };
     let running = {
         let mut machine = core.machine();
-        // the page asked: it loaded, and can show the button
-        machine.polled();
+        // the page asked: it is loaded and alive, and shows the button
+        machine.polled(Instant::now());
         machine.running(Instant::now())
     };
     Ok(running.map(|(device, act, on_screen)| {
@@ -502,7 +520,7 @@ pub fn remote_power_status(
         let name = (env.name)(&PublicKey::from_bytes(device));
         PowerStatusDto {
             text: crate::texts::power_countdown(lang, &name, act, seconds),
-            note: crate::texts::power_note(lang),
+            note: crate::texts::power_note(lang, act),
             cancel: crate::texts::power_cancel(lang),
             lang: if lang == crate::texts::Lang::De {
                 "de"
@@ -541,6 +559,18 @@ mod tests {
         t0 + Duration::from_secs(secs)
     }
 
+    /// A tick of a window whose page keeps asking (it is alive).
+    fn look(
+        m: &mut Machine,
+        now: Instant,
+        allowed: impl Fn(&Device) -> bool,
+        locked: bool,
+        visible: bool,
+    ) -> Tick {
+        m.polled(now);
+        m.tick(now, allowed, locked, visible)
+    }
+
     #[test]
     fn it_acts_only_after_ten_seconds_on_screen() {
         let t0 = Instant::now();
@@ -552,11 +582,11 @@ mod tests {
         // on screen but its page did not ask yet: the count has not begun
         assert_eq!(m.tick(at(t0, 0), YES, false, true), Tick::Nothing);
         assert_eq!(m.running(at(t0, 1)).unwrap().2, Duration::ZERO);
-        m.polled();
-        assert_eq!(m.tick(at(t0, 0), YES, false, true), Tick::Nothing);
-        assert_eq!(m.tick(at(t0, 9), YES, false, true), Tick::Nothing);
+        m.polled(t0);
+        assert_eq!(look(&mut m, at(t0, 0), YES, false, true), Tick::Nothing);
+        assert_eq!(look(&mut m, at(t0, 9), YES, false, true), Tick::Nothing);
         assert_eq!(
-            m.tick(at(t0, 10), YES, false, true),
+            look(&mut m, at(t0, 10), YES, false, true),
             Tick::Fire(Act::ShutDown)
         );
         assert_eq!(
@@ -564,15 +594,15 @@ mod tests {
             Some((PHONE, PowerAnswer::Done))
         );
         assert!(m.running(at(t0, 10)).is_none());
-        assert_eq!(m.tick(at(t0, 11), YES, false, true), Tick::Nothing);
+        assert_eq!(look(&mut m, at(t0, 11), YES, false, true), Tick::Nothing);
         // the ten seconds count from the moment it was on screen, however late that was
         let mut m = Machine::default();
         m.request(PHONE, Power::Restart, false, false, t0);
-        m.polled();
-        assert_eq!(m.tick(at(t0, 2), YES, false, true), Tick::Nothing);
-        assert_eq!(m.tick(at(t0, 11), YES, false, true), Tick::Nothing);
+        m.polled(t0);
+        assert_eq!(look(&mut m, at(t0, 2), YES, false, true), Tick::Nothing);
+        assert_eq!(look(&mut m, at(t0, 11), YES, false, true), Tick::Nothing);
         assert_eq!(
-            m.tick(at(t0, 12), YES, false, true),
+            look(&mut m, at(t0, 12), YES, false, true),
             Tick::Fire(Act::Restart)
         );
     }
@@ -583,21 +613,22 @@ mod tests {
         let mut m = Machine::default();
         m.request(PHONE, Power::Sleep, false, false, t0);
         // never on screen
-        m.polled();
-        assert_eq!(m.tick(at(t0, 1), YES, false, false), Tick::Nothing);
-        assert_eq!(m.tick(at(t0, 3), YES, false, false), Tick::Stopped);
+        m.polled(t0);
+        assert_eq!(look(&mut m, at(t0, 1), YES, false, false), Tick::Nothing);
+        assert_eq!(look(&mut m, at(t0, 4), YES, false, false), Tick::Nothing);
+        assert_eq!(look(&mut m, at(t0, 5), YES, false, false), Tick::Stopped);
         assert_eq!(m.news().map(|(_, _, a)| a), Some(PowerAnswer::Failed));
         // on screen but its page never loaded (no button to press): the same
         let mut m = Machine::default();
         m.request(PHONE, Power::Sleep, false, false, t0);
-        assert_eq!(m.tick(at(t0, 3), YES, false, true), Tick::Stopped);
+        assert_eq!(m.tick(at(t0, 5), YES, false, true), Tick::Stopped);
         // on screen, then closed, hidden or minimised: a stop at the PC
         let mut m = Machine::default();
         m.request(PHONE, Power::Sleep, false, false, t0);
-        m.polled();
-        assert_eq!(m.tick(at(t0, 1), YES, false, true), Tick::Nothing);
+        m.polled(t0);
+        assert_eq!(look(&mut m, at(t0, 1), YES, false, true), Tick::Nothing);
         assert_eq!(
-            m.tick(at(t0, 2), YES, false, false),
+            look(&mut m, at(t0, 2), YES, false, false),
             Tick::StoppedAtPc {
                 device: PHONE,
                 revoke: false
@@ -758,6 +789,17 @@ mod tests {
                 assert!(text.starts_with("X ") && text.contains('5'), "{text}");
             }
         }
+    }
+
+    #[test]
+    fn a_page_that_stops_asking_stops_the_countdown() {
+        let t0 = Instant::now();
+        let mut m = Machine::default();
+        m.request(PHONE, Power::ShutDown, false, false, t0);
+        assert_eq!(look(&mut m, at(t0, 1), YES, false, true), Tick::Nothing);
+        // still on screen, but the page went quiet
+        assert_eq!(m.tick(at(t0, 3), YES, false, true), Tick::Stopped);
+        assert!(m.running(at(t0, 3)).is_none());
     }
 
     #[test]

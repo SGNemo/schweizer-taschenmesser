@@ -332,12 +332,14 @@ pub fn power_countdown(
     }
 }
 
-/// The quiet line under it: nothing is forced.
-pub fn power_note(lang: Lang) -> &'static str {
-    if german(lang) {
-        "Fragt ein Programm noch nach dem Speichern, wartet Windows auf dich."
-    } else {
-        "If a program still asks about saving, Windows waits for you."
+/// The quiet line under it: what happens to open programs (nothing is forced).
+pub fn power_note(lang: Lang, act: crate::remote_power::Act) -> &'static str {
+    use crate::remote_power::Act;
+    match (german(lang), act) {
+        (true, Act::Sleep | Act::Hibernate) => "Offene Programme bleiben, wie sie sind.",
+        (true, _) => "Fragt ein Programm noch nach dem Speichern, wartet Windows auf dich.",
+        (false, Act::Sleep | Act::Hibernate) => "Open programs stay as they are.",
+        (false, _) => "If a program still asks about saving, Windows waits for you.",
     }
 }
 
