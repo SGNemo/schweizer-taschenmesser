@@ -42,7 +42,7 @@ const manifest: ModuleManifest = {
         // Since version 4 `category` is any id, so the import text no longer lists the built-in ones: the example
         // shows one. An unknown value is kept and shown under "Ohne Kategorie", never dropped.
         example: {
-          title: 'Handyvertrag',
+          title: 'Mobilfunkvertrag',
           category: 'contract',
           provider: 'Beispiel Mobil GmbH',
           endDate: '2027-06-30',
