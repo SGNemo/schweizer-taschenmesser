@@ -84,7 +84,8 @@ export default function VaultPage() {
   const [category, setCategory] = useState<DocCategory | 'all'>('all');
   const [query, setQuery] = useState('');
   const cats = useCategories();
-  const [managing, setManaging] = useState(false);
+  // Which way the folder dialog opens: the list, or straight to "Neue Kategorie" (the "+" beside the tabs).
+  const [managing, setManaging] = useState<false | 'list' | 'new'>(false);
   // The id only: the dialog works on the row as the list holds it now.
   const [renewing, setRenewing] = useState<string | null>(null);
   // The row "Verlängert" was pressed in. After a renewal its button is gone with the new term, so the focus goes
@@ -150,11 +151,11 @@ export default function VaultPage() {
 
   const live = useMemo(() => new Set(cats.map((c) => c.id)), [cats]);
   const names = t.vault.categories;
-  const nameOf = (id: DocCategory) =>
-    categoryLabel(
-      cats.find((c) => c.id === id),
-      names,
-    );
+  const labels = useMemo(
+    () => new Map(cats.map((c) => [c.id, categoryLabel(c, names)])),
+    [cats, names],
+  );
+  const nameOf = (id: DocCategory) => labels.get(id) ?? categoryLabel(undefined, names);
   // A folder removed (here or on another device) is no filter any more: back to all.
   if (category !== 'all' && !live.has(category)) setCategory('all');
   const shown = useMemo(
@@ -164,18 +165,16 @@ export default function VaultPage() {
           category,
           query,
           shownCategory: (d) => categoryOfDoc(d, live),
-          categoryName: (id) =>
-            categoryLabel(
-              cats.find((c) => c.id === id),
-              names,
-            ),
+          categoryName: (id) => labels.get(id) ?? '',
         }),
         day,
       ),
-    [docs, category, query, day, live, cats, names],
+    [docs, category, query, day, live, labels],
   );
 
   const counts = countByResolved(docs ?? [], cats);
+  // A chosen folder with nothing in it (a new one): its own calm empty state with the one next step.
+  const emptyFolder = category !== 'all' && !query.trim() && (counts.get(category) ?? 0) === 0;
   // The folder tabs: what holds documents, every folder the user made (also while empty, so a new one shows) and
   // the one that is chosen. Empty built-in folders wait in the editor's list; they are no filter worth a tab.
   const tabCats = cats.filter(
@@ -258,7 +257,7 @@ export default function VaultPage() {
             {
               id: 'categories',
               label: t.vault.categoryAdmin.manage,
-              onSelect: () => setManaging(true),
+              onSelect: () => setManaging('list'),
             },
             advancedItem,
           ]}
@@ -298,7 +297,10 @@ export default function VaultPage() {
               })),
             ]}
           >
-            <IconButton label={t.vault.categoryAdmin.manage} onClick={() => setManaging(true)}>
+            <IconButton label={t.vault.categoryAdmin.add} onClick={() => setManaging('new')}>
+              <Icon name="plus" size={18} />
+            </IconButton>
+            <IconButton label={t.vault.categoryAdmin.manage} onClick={() => setManaging('list')}>
               <Icon name="edit" size={18} />
             </IconButton>
           </FolderTabs>
@@ -342,13 +344,19 @@ export default function VaultPage() {
           <>
             {docs && shown.length === 0 ? (
               <EmptyState
-                title={none ? t.vault.empty : t.vault.emptyFiltered}
+                title={
+                  none
+                    ? t.vault.empty
+                    : emptyFolder
+                      ? t.vault.categoryAdmin.emptyFolder(nameOf(category))
+                      : t.vault.emptyFiltered
+                }
                 testId="vault-empty"
                 motif={<SignatureMark id="folderTab" size={64} />}
               >
-                {none ? (
+                {none || emptyFolder ? (
                   <Button variant="primary" onClick={() => setTarget({ draft: true })}>
-                    {t.vault.addFirst}
+                    {none ? t.vault.addFirst : t.vault.add}
                   </Button>
                 ) : null}
               </EmptyState>
@@ -438,7 +446,13 @@ export default function VaultPage() {
         cats={cats}
         defaultCategory={category === 'all' ? undefined : category}
       />
-      <CategoryDialog open={managing} onClose={() => setManaging(false)} cats={cats} docs={docs} />
+      <CategoryDialog
+        open={managing !== false}
+        startNew={managing === 'new'}
+        onClose={() => setManaging(false)}
+        cats={cats}
+        docs={docs}
+      />
     </>
   );
 }

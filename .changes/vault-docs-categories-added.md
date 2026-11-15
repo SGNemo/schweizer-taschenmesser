@@ -10,6 +10,6 @@ en: Documents: categories can be added, renamed, coloured, sorted and deleted �
 type: changed
 area: vault
 breaking: false
-de: Unterlagen: „Sonstiges“ heißt jetzt „Ohne Kategorie“ und bleibt immer da. Die Kategorien stehen als Ordnerreiter über der Ablage.
-en: Documents: “Other” is now called “No category” and always stays. The categories sit as folder tabs above the filing.
+de: Unterlagen: „Sonstiges“ heißt jetzt „Ohne Kategorie“ und bleibt immer da. Die Kategorien stehen jetzt als Ordnerreiter über der Liste.
+en: Documents: “Other” is now called “No category” and always stays. The categories now appear as folder tabs above the document list.
 ---

@@ -67,11 +67,12 @@ export async function writeCategory(
 ): Promise<void> {
   if (cat.fixed || cat.id === NO_CATEGORY) return;
   const existing = await categoryRepo.table.get(cat.id);
-  if (existing) {
+  if (existing && existing.deletedAt === null) {
     await categoryRepo.update(cat.id, patch);
-    if (existing.deletedAt !== null) await categoryRepo.restore(cat.id);
     return;
   }
+  // No record, or a tombstone (the undo of a first change): write the whole record from what the page shows now,
+  // never from the tombstone's old values (an undone rename must not come back), then bring it back to life.
   await categoryRepo.upsert(cat.id, {
     ...(cat.name ? { name: cat.name } : {}),
     tone: cat.tone,
@@ -79,6 +80,7 @@ export async function writeCategory(
     order: cat.order,
     ...patch,
   });
+  if (existing) await categoryRepo.restore(cat.id);
 }
 
 /** A new category; returns its id. */
@@ -87,9 +89,10 @@ export async function createCategory(data: DocumentCategory): Promise<string> {
 }
 
 /**
- * Removes a category without losing a document: every document in it moves to `moveTo` first ("Ohne Kategorie"
- * unless another live category is chosen), only then is the category marked removed. Run it inside
- * `deleteWithUndo`: one "Rückgängig" brings the category and every document's place back.
+ * Removes a category without losing a document: the category is marked removed, then every document in it moves to
+ * `moveTo` ("Ohne Kategorie" unless another live category is chosen). Should a move fail halfway, the rest still
+ * show under "Ohne Kategorie" (`categoryOfDoc`): nothing is hidden. Run it inside `deleteWithUndo`: one
+ * "Rückgängig" brings the category and every document's place back.
  */
 export async function removeCategory(
   cat: Pick<ResolvedCategory, 'id' | 'tone' | 'icon' | 'order' | 'fixed'> & { name?: string },
@@ -98,6 +101,6 @@ export async function removeCategory(
 ): Promise<void> {
   if (cat.fixed || cat.id === NO_CATEGORY) throw new Error('"Ohne Kategorie" cannot be removed');
   const target = moveTo === cat.id ? NO_CATEGORY : moveTo;
-  for (const id of docIds) await documentRepo.update(id, { category: target });
   await writeCategory(cat, { removed: true });
+  for (const id of docIds) await documentRepo.update(id, { category: target });
 }

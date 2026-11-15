@@ -197,6 +197,33 @@ describe('changing categories', () => {
     expect((await loadCats()).map((x) => x.id)).toContain(id);
   });
 
+  it('after "Rückgängig" of a first change, the built-in folder can be changed again (no stale values)', async () => {
+    const contract = (await loadCats()).find((x) => x.id === 'contract')!;
+    const first = await undoable('test', () =>
+      writeCategory(contract, { name: 'Verträge & Abos' }),
+    );
+    await undoEntry(first.entry!.id);
+    let now = (await loadCats()).find((x) => x.id === 'contract')!;
+    expect(now.name).toBeUndefined();
+    // Recolour only: the undone rename must not come back.
+    await writeCategory(now, { tone: 5 });
+    now = (await loadCats()).find((x) => x.id === 'contract')!;
+    expect(now).toMatchObject({ tone: 5 });
+    expect(now.name).toBeUndefined();
+  });
+
+  it('remove, undo, remove again: works every time and moves the documents each time', async () => {
+    const a = await documentRepo.create(doc({ title: 'A', category: 'warranty' }));
+    for (let round = 0; round < 2; round++) {
+      const cat = (await loadCats()).find((x) => x.id === 'warranty')!;
+      const { entry } = await undoable('test', () => removeCategory(cat, [a.id]));
+      expect((await documentRepo.get(a.id))?.category).toBe(NO_CATEGORY);
+      await undoEntry(entry!.id);
+      expect((await documentRepo.get(a.id))?.category).toBe('warranty');
+      expect((await loadCats()).map((x) => x.id)).toContain('warranty');
+    }
+  });
+
   it('"Ohne Kategorie" cannot be removed or written', async () => {
     const fixed = (await loadCats()).at(-1)!;
     await expect(removeCategory(fixed, [])).rejects.toThrow();

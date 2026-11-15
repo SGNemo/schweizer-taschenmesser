@@ -46,7 +46,7 @@ describe('vault folders', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Kategorien bearbeiten' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Verträge löschen' }));
     expect((await screen.findByTestId('vault-category-in-use')).textContent).toBe(
-      '2 Unterlagen liegen in „Verträge“.',
+      '2 Unterlagen sind in dieser Kategorie.',
     );
     expect((screen.getByLabelText('Verschieben nach') as HTMLSelectElement).value).toBe('other');
     fireEvent.click(screen.getByRole('button', { name: 'Löschen und verschieben' }));
@@ -82,5 +82,22 @@ describe('vault folders', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Speichern' }));
     const list = await screen.findByTestId('vault-categories');
     await waitFor(() => expect(within(list).getByText('Fahrzeug')).toBeTruthy());
+  });
+
+  it('"+" beside the tabs opens the new-folder form directly; a chosen empty folder offers to add a document', async () => {
+    await documentRepo.create({ title: 'Mietvertrag', category: 'contract' } as never);
+    page();
+    await screen.findByText('Mietvertrag');
+    fireEvent.click(screen.getByRole('button', { name: 'Neue Kategorie' }));
+    fireEvent.change(await screen.findByLabelText('Name'), { target: { value: 'Fahrzeug' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Speichern' }));
+    const tabs = screen.getByTestId('vault-folders');
+    fireEvent.click(await within(tabs).findByRole('button', { name: /Fahrzeug 0/ }));
+    expect(await screen.findByText('Noch keine Unterlagen in „Fahrzeug“.')).toBeTruthy();
+    expect(
+      within(screen.getByTestId('vault-empty')).getByRole('button', {
+        name: 'Unterlage eintragen',
+      }),
+    ).toBeTruthy();
   });
 });

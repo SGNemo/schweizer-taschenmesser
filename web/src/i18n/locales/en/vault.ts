@@ -164,9 +164,9 @@ export const vault: Strings['vault'] = {
     fixedHint: '“No category” always stays. Documents whose category is deleted land here.',
     duplicate: 'A category with this name already exists.',
     removeTitle: (name: string) => `Delete “${name}”`,
-    inUse: (n: number, name: string) =>
-      n === 1 ? `1 document is in “${name}”.` : `${n} documents are in “${name}”.`,
-    keepsDocs: 'No document is lost: they move to the category you choose here.',
+    inUse: (n: number) =>
+      n === 1 ? '1 document is in this category.' : `${n} documents are in this category.`,
+    keepsDocs: 'They are kept and move to the category you choose here.',
     moveTo: 'Move to',
     removeAndMove: 'Delete and move',
     removed: (name: string) => `“${name}” deleted`,
@@ -175,6 +175,7 @@ export const vault: Strings['vault'] = {
         ? `“${name}” deleted · 1 document moved to “${target}”`
         : `“${name}” deleted · ${n} documents moved to “${target}”`,
     created: (name: string) => `“${name}” added`,
+    emptyFolder: (name: string) => `No documents in “${name}” yet.`,
     done: 'Done',
   },
   widgetSummary: (n: number) =>

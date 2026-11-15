@@ -38,7 +38,8 @@ const manifest: ModuleManifest = {
     collections: {
       document: { schema: documentSchema, indexes: ['category', 'expiresOn'] },
       // The user's folders (since version 4); built-in ones get a record only once they are changed.
-      category: { schema: categorySchema, indexes: [] },
+      // Not in the data API or the JSON import: folders are made here, not imported.
+      category: { schema: categorySchema, indexes: [], dataApi: false },
     },
   },
   migrations,

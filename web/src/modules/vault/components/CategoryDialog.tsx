@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { changedFields } from '@/core/db/patch';
 import { deleteWithUndo, changeWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import {
@@ -15,6 +16,7 @@ import {
 import type { IconName } from '@/ui/icons';
 import {
   categoryLabel,
+  countByResolved,
   docsInCategory,
   moveCategory,
   nextCategoryOrder,
@@ -38,21 +40,28 @@ export function CategoryDialog({
   onClose,
   cats,
   docs,
-  onRemoved,
+  startNew = false,
 }: {
   open: boolean;
   onClose: () => void;
   cats: readonly ResolvedCategory[];
   /** `undefined` while the documents load: nothing can be deleted before they are counted. */
   docs: readonly { id: string; category?: string }[] | undefined;
-  /** A folder is gone: the page leaves a filter that pointed at it. */
-  onRemoved?: (id: string) => void;
+  /** Opened by the "+" beside the folder tabs: straight to the form, and done when it is. */
+  startNew?: boolean;
 }) {
   const [mode, setMode] = useState<Mode>({ kind: 'list' });
+  // Each opening starts where it was opened from (adjusting state during render).
+  const [wasOpen, setWasOpen] = useState(false);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setMode(startNew ? { kind: 'edit', id: null } : { kind: 'list' });
+  }
   const close = () => {
     setMode({ kind: 'list' });
     onClose();
   };
+  const back = () => (startNew ? close() : setMode({ kind: 'list' }));
   const names = t.vault.categories;
   const a = t.vault.categoryAdmin;
   const editing = mode.kind === 'edit' ? cats.find((c) => c.id === mode.id) : undefined;
@@ -76,21 +85,13 @@ export function CategoryDialog({
   return (
     <Dialog open={open} onClose={close} title={title}>
       {!open ? null : mode.kind === 'edit' ? (
-        <EditForm
-          key={mode.id ?? 'new'}
-          cat={editing ?? null}
-          cats={cats}
-          onDone={() => setMode({ kind: 'list' })}
-        />
+        <EditForm key={mode.id ?? 'new'} cat={editing ?? null} cats={cats} onDone={back} />
       ) : mode.kind === 'remove' && removing ? (
         <RemoveForm
           cat={removing}
           cats={cats}
           docIds={docsInCategory(docs ?? [], cats, removing.id)}
-          onDone={(removed) => {
-            if (removed) onRemoved?.(removing.id);
-            setMode({ kind: 'list' });
-          }}
+          onDone={() => setMode({ kind: 'list' })}
         />
       ) : (
         <CategoryList
@@ -105,7 +106,7 @@ export function CategoryDialog({
               void deleteWithUndo(
                 () => removeCategory(cat, []),
                 a.removed(categoryLabel(cat, names)),
-              ).then(() => onRemoved?.(cat.id));
+              );
             else setMode({ kind: 'remove', id: cat.id });
           }}
           onClose={close}
@@ -134,19 +135,21 @@ function CategoryList({
   const move = (id: string, dir: -1 | 1) => {
     const writes = moveCategory(cats, id, dir);
     if (writes.length === 0) return;
-    void changeWithUndo(async () => {
+    // No toast: the list shows the new place at once, and the arrow back undoes it (no toast per click).
+    void (async () => {
       for (const w of writes) {
         const cat = cats.find((c) => c.id === w.id);
         if (cat) await writeCategory(cat, { order: w.order });
       }
-    });
+    })();
   };
+  const counts = docs ? countByResolved(docs, cats) : undefined;
   return (
     <div className={styles.root}>
       <ul className={styles.list} data-testid="vault-categories">
         {cats.map((c) => {
           const name = categoryLabel(c, names);
-          const n = docs ? docsInCategory(docs, cats, c.id).length : undefined;
+          const n = counts ? (counts.get(c.id) ?? 0) : undefined;
           const i = movable.findIndex((m) => m.id === c.id);
           return (
             <li key={c.id} className={styles.row}>
@@ -225,15 +228,16 @@ function EditForm({
     );
     if (clash) return setError(a.duplicate);
     if (cat) {
-      // A built-in folder keeps its translated name until it is really renamed.
-      const renamed = trimmed !== categoryLabel(cat, names);
-      await changeWithUndo(() =>
-        writeCategory(cat, {
-          ...(renamed ? { name: trimmed } : {}),
-          tone,
-          icon,
-        }),
-      );
+      // A built-in folder keeps its translated name until it is really renamed; typing its own name back resets it.
+      const builtinName = cat.builtin ? names[cat.id] : undefined;
+      const next = {
+        name: trimmed === builtinName ? undefined : trimmed,
+        tone,
+        icon,
+      };
+      const patch = changedFields({ name: cat.name, tone: cat.tone, icon: cat.icon }, next);
+      // Nothing changed: no write, no toast.
+      if (Object.keys(patch).length > 0) await changeWithUndo(() => writeCategory(cat, patch));
     } else {
       await changeWithUndo(
         () => createCategory({ name: trimmed, tone, icon, order: nextCategoryOrder(cats) }),
@@ -336,7 +340,7 @@ function RemoveForm({
   return (
     <Form onSubmit={() => void remove()}>
       <p className={styles.lead} data-testid="vault-category-in-use">
-        {a.inUse(docIds.length, name)}
+        {a.inUse(docIds.length)}
       </p>
       <p className={styles.hint}>{a.keepsDocs}</p>
       <SelectField

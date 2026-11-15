@@ -72,9 +72,10 @@
   color: var(--text);
   cursor: pointer;
 }
-/* The choice is marked by a heavier frame, not by colour alone. */
+/* The choice is marked by a heavier, darker frame (2 px border + 2 px ring), not by colour alone. */
 .choice[aria-pressed='true'] {
   border-color: var(--text);
+  box-shadow: 0 0 0 2px var(--text);
 }
 .dot {
   width: 1.5rem;

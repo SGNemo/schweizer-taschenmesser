@@ -5607,9 +5607,11 @@ export const de = {
         '„Ohne Kategorie“ bleibt immer. Hierher kommen Unterlagen, deren Kategorie gelöscht wird.',
       duplicate: 'Eine Kategorie mit diesem Namen gibt es schon.',
       removeTitle: (name: string) => `„${name}“ löschen`,
-      inUse: (n: number, name: string) =>
-        n === 1 ? `1 Unterlage liegt in „${name}“.` : `${n} Unterlagen liegen in „${name}“.`,
-      keepsDocs: 'Keine Unterlage geht verloren: Sie kommen in die Kategorie, die du hier wählst.',
+      inUse: (n: number) =>
+        n === 1
+          ? '1 Unterlage ist in dieser Kategorie.'
+          : `${n} Unterlagen sind in dieser Kategorie.`,
+      keepsDocs: 'Sie bleiben erhalten und kommen in die Kategorie, die du hier wählst.',
       moveTo: 'Verschieben nach',
       removeAndMove: 'Löschen und verschieben',
       removed: (name: string) => `„${name}“ gelöscht`,
@@ -5618,6 +5620,7 @@ export const de = {
           ? `„${name}“ gelöscht · 1 Unterlage nach „${target}“ verschoben`
           : `„${name}“ gelöscht · ${n} Unterlagen nach „${target}“ verschoben`,
       created: (name: string) => `„${name}“ angelegt`,
+      emptyFolder: (name: string) => `Noch keine Unterlagen in „${name}“.`,
       done: 'Fertig',
     },
     widgetSummary: (n: number) =>
