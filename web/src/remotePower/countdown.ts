@@ -22,14 +22,11 @@ export function mountCountdown(
   clock: () => number = () => performance.now(),
 ): () => void {
   const doc = root.ownerDocument;
-  // the visible sentence changes every second and is not live; screen readers hear it once, when
-  // the countdown appears (the hidden line), and with the button it describes
+  // the visible sentence changes every second and is not live: screen readers hear it once, as
+  // the description of the button that gets the focus when the countdown appears
   const sentence = doc.createElement('p');
   sentence.className = 'sentence';
   sentence.id = 'power-sentence';
-  const live = doc.createElement('p');
-  live.className = 'sr-only';
-  live.setAttribute('role', 'status');
   const note = doc.createElement('p');
   note.className = 'note';
   const button = doc.createElement('button');
@@ -50,7 +47,9 @@ export function mountCountdown(
     stop();
   });
   const onKey = (e: KeyboardEvent) => {
-    if (e.key === 'Escape' && root.childElementCount > 0) stop();
+    // (the same grace: an Esc meant for a game must not count as a stop at the PC)
+    if (e.key === 'Escape' && root.childElementCount > 0 && clock() - shownAt >= KEY_GRACE_MS)
+      stop();
   };
   doc.addEventListener('keydown', onKey);
   let shown = false;
@@ -71,8 +70,7 @@ export function mountCountdown(
     put(button, c.cancel);
     doc.documentElement.lang = c.lang;
     if (!shown) {
-      put(live, c.text);
-      root.replaceChildren(live, sentence, note, button);
+      root.replaceChildren(sentence, note, button);
       shown = true;
       shownAt = clock();
       // the button that stops is the one a key press reaches first
