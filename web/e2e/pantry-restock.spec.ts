@@ -73,3 +73,30 @@ test('everything that runs low goes to the shopping list from the ⋯ menu; the 
   await expect(widget).toContainText('Wird knapp');
   await expect(widget).toContainText('2 wenig');
 });
+
+test('a shopping list fills itself from the pantry: only the ticked names, nothing twice', async ({
+  page,
+}) => {
+  await enable(page, 'pantry');
+  await enable(page, 'lists');
+  await page.goto('/pantry');
+  await addItem(page, 'Milch', '1', '2');
+  await addItem(page, 'Eier', '2', '4');
+  await addItem(page, 'Salz', '5', '1'); // enough
+  await page.goto('/lists');
+  const input = page.getByLabel('Eintrag hinzufügen');
+  await input.fill('Eier');
+  await input.press('Enter');
+  await expect(page.getByRole('checkbox', { name: 'Eier' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Weitere Aktionen' }).first().click();
+  await page.getByRole('menuitem', { name: 'Aus Vorräten auffüllen' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Aus Vorräten auffüllen' });
+  const needs = dialog.getByTestId('lists-pantry-needs');
+  // "Eier" is open on the list already, "Salz" is enough.
+  await expect(needs.getByRole('checkbox')).toHaveCount(1);
+  await expect(needs.getByRole('checkbox', { name: 'Milch · knapp' })).toBeChecked();
+  await dialog.getByRole('button', { name: '1 Eintrag übernehmen' }).click();
+  await expect(page.getByText('1 Eintrag auf „Einkauf“ gesetzt.')).toBeVisible();
+  await expect(page.getByRole('checkbox', { name: 'Milch' })).toBeVisible();
+});

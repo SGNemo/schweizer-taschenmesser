@@ -59,6 +59,14 @@ export interface EventMap {
   };
   /** Something was bought (shopping list). The pantry adds the amount to the item of that name or creates it. */
   'pantry.restock': { name: string; quantity?: string };
+  /**
+   * The shopping list asks what the pantry needs ("Aus Vorräten auffüllen"). The pantry answers once with the names
+   * of stock that is used up, at its minimum, expired or expiring soon; nothing is written by the pantry. No answer
+   * while the pantry is off.
+   */
+  'pantry.needsRequested': {
+    answer: (needs: { name: string; reason: 'empty' | 'low' | 'expired' | 'soon' }[]) => void;
+  };
   /** A saved link could be a gift idea (bookmarks). The people module keeps it until the reader picks a person. */
   'gift.requested': { title: string; url?: string; priceCents?: number };
   /**

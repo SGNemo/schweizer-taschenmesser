@@ -224,3 +224,33 @@ export function pickShoppingTarget<T extends List & { id: string; createdAt: num
 ): T | undefined {
   return splitArchived(lists).active.find((l) => l.kind === 'shopping');
 }
+
+/**
+ * The list the widget shows: the chosen one while it is in use, else the first shopping list in use, else the
+ * first list in use (an archived or deleted choice falls back quietly).
+ */
+export function pickWidgetList<T extends List & { id: string; createdAt: number }>(
+  lists: readonly T[],
+  chosenId: string,
+): T | undefined {
+  const { active } = splitArchived(lists);
+  return active.find((l) => l.id === chosenId) ?? pickShoppingTarget(lists) ?? active[0];
+}
+
+/**
+ * Shared text as list entries: one entry per non-empty line, without list marks ("- ", "• ", "1. ", "[ ]", "[x]")
+ * a messenger or another list app puts in front. A ticked "[x]" line stays an entry (to buy again). At most 100.
+ */
+export function sharedEntries(text: string): string[] {
+  return text
+    .split(/\r?\n/)
+    .map((line) =>
+      line
+        .trim()
+        .replace(/^(?:[-*•–·]|\d{1,3}[.)])\s+/, '')
+        .replace(/^\[[ xX✓]?\]\s*/, '')
+        .trim(),
+    )
+    .filter(Boolean)
+    .slice(0, 100);
+}
