@@ -99,6 +99,19 @@ function Part({ k, of }: { k: number; of: number }) {
   );
 }
 
+/** Item key → the deadline a row shows (its planner row's own, else the source's), for the preview (C5). */
+function duesOf(board: {
+  days: readonly { rows: readonly BoardRow[] }[];
+  waiting: readonly WaitingRow[];
+}) {
+  const dues: Record<string, string> = {};
+  for (const r of [...board.days.flatMap((d) => d.rows), ...board.waiting]) {
+    const due = r.item?.due?.date ?? r.entry?.due?.date;
+    if (due) dues[r.itemKey] = due;
+  }
+  return dues;
+}
+
 export default function PlannerPage() {
   const data = useBoard(SPAN);
   // Master–detail (layout `split`, package 0b-4b): on a wide page the week is a list and the picked day lies in the
@@ -242,6 +255,7 @@ export default function PlannerPage() {
           lines,
           ...(local ? { note: t.planner.say.localRead } : {}),
           ...(rest ? { noCounts: true } : {}),
+          dues: board ? duesOf(board) : {},
           diff: out.result.diff,
         },
         fromField,
