@@ -352,6 +352,11 @@
         "label": "„Beantwortet?“ anzeigen",
         "default": true
       },
+      "shortcuts": {
+        "type": "boolean",
+        "label": "Tastenkürzel wie in Gmail",
+        "default": true
+      },
       "notify": {
         "type": "boolean",
         "label": "Bei neuen Mails benachrichtigen",
