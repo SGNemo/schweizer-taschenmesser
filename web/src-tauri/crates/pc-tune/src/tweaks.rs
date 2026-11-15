@@ -635,11 +635,18 @@ pub fn apply_other(
     written: Option<&str>,
 ) -> Result<(), RegError> {
     if what == POWER_SCHEME {
-        if written.is_some_and(|w| effects.active_power_scheme().as_deref() != Some(w)) {
+        // What cannot be read is not "changed elsewhere": the step fails and stays for a retry.
+        let active = effects.active_power_scheme().ok_or(RegError::Failed)?;
+        let plans = effects.power_schemes();
+        if plans.is_empty() {
+            return Err(RegError::Failed);
+        }
+        if written.is_some_and(|w| active != w) {
             return Err(RegError::ChangedElsewhere);
         }
-        // Only a plan that still exists; a removed one cannot be brought back from here.
-        if !effects.power_schemes().iter().any(|s| s.id == previous) {
+        // Only a plan that still exists; a removed one cannot be brought back from here, so
+        // what is active now stands.
+        if !plans.iter().any(|s| s.id == previous) {
             return Err(RegError::ChangedElsewhere);
         }
         return effects.set_power_scheme(previous);
@@ -652,7 +659,9 @@ pub fn apply_other(
     };
     let on = state(previous)?;
     if let Some(w) = written {
-        if effects.flag(flag) != Some(state(w)?) {
+        // A state Windows does not answer for is a failure (retry later), never "changed".
+        let now = effects.flag(flag).ok_or(RegError::Failed)?;
+        if now != state(w)? {
             return Err(RegError::ChangedElsewhere);
         }
     }
@@ -664,10 +673,11 @@ pub fn apply_other(
 #[serde(rename_all = "camelCase")]
 pub struct ResetReport {
     pub restored: Vec<String>,
-    /// Could not be put back (or not noted as put back); they stay "changed here" for a retry.
+    /// Could not be put back (Windows refused or did not answer); they stay "changed here" for
+    /// a retry.
     pub failed: Vec<String>,
-    /// Changed in Windows itself since: left as they are, and no longer counted as changed
-    /// here (the newer choice stands).
+    /// Changed in Windows itself since (or the plan to go back to no longer exists): left as
+    /// they are, and no longer counted as changed here (what is set now stands).
     pub left: Vec<String>,
 }
 
@@ -680,7 +690,10 @@ pub fn reset_all(journal: &mut Journal, reg: &dyn Registry, effects: &dyn Effect
             apply_other(effects, what, previous, written)
         });
         match applied {
-            Ok(()) if journal.mark_reset(Kind::Tweak, &subject).is_ok() => {
+            // Put back. Should the note of it fail to save, it still was put back; a later
+            // reset then finds nothing left to do for it.
+            Ok(()) => {
+                let _ = journal.mark_reset(Kind::Tweak, &subject);
                 report.restored.push(subject)
             }
             // Windows' own settings changed it after us: that choice stands, nothing is
@@ -726,9 +739,10 @@ mod win {
         SHGetSetSettings, SHELLSTATEA, SSF_MASK, SSF_SHOWALLOBJECTS, SSF_SHOWEXTENSIONS,
     };
     use windows::Win32::UI::WindowsAndMessaging::{
-        SystemParametersInfoW, SPIF_SENDCHANGE, SPIF_UPDATEINIFILE, SPI_GETCLIENTAREAANIMATION,
-        SPI_GETDRAGFULLWINDOWS, SPI_GETMOUSESONAR, SPI_SETCLIENTAREAANIMATION,
-        SPI_SETDRAGFULLWINDOWS, SPI_SETMOUSESONAR, SYSTEM_PARAMETERS_INFO_ACTION,
+        GetSystemMetrics, SystemParametersInfoW, SM_REMOTESESSION, SPIF_SENDCHANGE,
+        SPIF_UPDATEINIFILE, SPI_GETCLIENTAREAANIMATION, SPI_GETDRAGFULLWINDOWS, SPI_GETMOUSESONAR,
+        SPI_SETCLIENTAREAANIMATION, SPI_SETDRAGFULLWINDOWS, SPI_SETMOUSESONAR,
+        SYSTEM_PARAMETERS_INFO_ACTION,
     };
 
     /// More plans than any machine has; ends the enumeration whatever Windows answers.
@@ -819,6 +833,13 @@ mod win {
     impl Effects for WinEffects {
         fn flag(&self, flag: Flag) -> Option<bool> {
             if let Some((get, _, _)) = spi(flag) {
+                // In a remote desktop session Windows can report these as off although the
+                // user's stored setting is on; an undo would then store "off" for good. There
+                // the settings are not offered at all.
+                // SAFETY: a plain query without pointers.
+                if unsafe { GetSystemMetrics(SM_REMOTESESSION) } != 0 {
+                    return None;
+                }
                 let mut on = 0i32;
                 // SAFETY: every "get" action used here writes one BOOL through `pvParam`; `on`
                 // is a local of that size.
@@ -1691,6 +1712,42 @@ mod tests {
         assert_eq!(fx.flag(Flag::ClientAreaAnimation), Some(false));
         assert_eq!(fx.active_power_scheme().as_deref(), Some(THIRD));
         assert!(state(&j, &reg, &fx).iter().all(|s| !s.changed_here));
+        cleanup(&path);
+    }
+
+    #[test]
+    fn a_state_windows_does_not_answer_for_fails_and_keeps_the_way_back() {
+        let path = temp_path("noanswer");
+        let (reg, fx) = machine();
+        let (mut j, _) = Journal::open(&path).unwrap();
+        set(&mut j, &reg, &fx, "pointerSonar", &Target::Switch(true), 1).unwrap();
+        set(
+            &mut j,
+            &reg,
+            &fx,
+            "powerPlan",
+            &Target::Choice(SAVER.into()),
+            2,
+        )
+        .unwrap();
+        // Windows answers for neither: no flag state, no plan list.
+        let silent = MemEffects::new();
+        assert_eq!(
+            apply_other(&silent, "spi:mouseSonar", "off", Some("on")),
+            Err(RegError::Failed)
+        );
+        assert_eq!(
+            apply_other(&silent, POWER_SCHEME, BALANCED, Some(SAVER)),
+            Err(RegError::Failed)
+        );
+        let report = reset_all(&mut j, &reg, &silent);
+        assert_eq!(report.failed.len(), 2);
+        assert!(report.left.is_empty() && report.restored.is_empty());
+        // Nothing was marked: with Windows answering again, the reset works.
+        let report = reset_all(&mut j, &reg, &fx);
+        assert_eq!(report.restored.len(), 2);
+        assert_eq!(fx.flag(Flag::MouseSonar), Some(false));
+        assert_eq!(fx.active_power_scheme().as_deref(), Some(BALANCED));
         cleanup(&path);
     }
 

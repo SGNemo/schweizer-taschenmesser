@@ -65,7 +65,7 @@ test('settings tab: the catalogue in calm groups, each with a Microsoft source',
   await openTweaks(page);
   for (const group of ['Darstellung', 'Explorer', 'Privatsphäre', 'Energie'])
     await expect(page.getByRole('heading', { name: group, exact: true })).toBeVisible();
-  await expect(page.getByText('ohne dass du die Windows-App „Einstellungen“')).toBeVisible();
+  await expect(page.getByText('ohne sie in Windows zu suchen')).toBeVisible();
   // Nothing was changed yet: no count and no reset button take up room.
   await expect(page.getByText(/von Nemo geändert/)).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Alle zurücksetzen' })).toHaveCount(0);
@@ -96,7 +96,7 @@ test('settings tab: the catalogue in calm groups, each with a Microsoft source',
   // A setting Windows has no stored value for shows no switch that pretends to know.
   const unset = page.getByTestId('tweak-trackAppLaunches');
   await expect(
-    unset.getByText('Windows entscheidet selbst (Standard). Nemo hat hier noch nichts festgelegt.'),
+    unset.getByText('Hier ist nichts festgelegt; es gilt der Standard von Windows.'),
   ).toBeVisible();
   await expect(unset.getByRole('switch')).toHaveCount(0);
   await expect(
@@ -111,7 +111,7 @@ test('settings tab: the catalogue in calm groups, each with a Microsoft source',
 
   // The restore point is Windows' own dialog, offered quietly below and never required.
   await expect(page.getByText('Nötig ist das nicht.')).toBeVisible();
-  await page.getByRole('button', { name: 'Wiederherstellungspunkt anlegen' }).click();
+  await page.getByRole('button', { name: 'Computerschutz öffnen' }).click();
   expect(
     await page.evaluate(() => (globalThis as { __tmCareTools?: string[] }).__tmCareTools),
   ).toEqual(['systemProtection']);
@@ -164,7 +164,9 @@ test('settings tab: the notice takes a switch back right away', async ({ page })
   await unset.getByRole('button', { name: /^Ausschalten/ }).click();
   await expect(unset.getByRole('switch')).toHaveAttribute('aria-checked', 'false');
   await page.getByRole('button', { name: 'Rückgängig', exact: true }).click();
-  await expect(unset.getByText('Windows entscheidet selbst (Standard).')).toBeVisible();
+  await expect(
+    unset.getByText('Hier ist nichts festgelegt; es gilt der Standard von Windows.'),
+  ).toBeVisible();
   await expect(unset.getByRole('switch')).toHaveCount(0);
 });
 

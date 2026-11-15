@@ -5234,7 +5234,7 @@ export const de = {
     },
     /** Tab "Verlauf": what the page changed on this PC, with the way back. */
     history: {
-      lead: 'Was Nemo auf diesem PC verändert hat, mit dem Weg zurück. Aufgeräumtes steht hier, bis du Nemo schließt; Änderungen am Autostart bleiben hier stehen.',
+      lead: 'Was Nemo auf diesem PC verändert hat, mit dem Weg zurück. Aufgeräumtes steht hier, bis du Nemo schließt; Änderungen am Autostart und an Windows-Einstellungen bleiben hier stehen.',
       loading: 'Verlauf wird gelesen …',
       empty: 'Im Verlauf steht noch nichts.',
       emptyHint: 'Sobald du etwas aufräumst oder umschaltest, steht es hier.',
@@ -5268,7 +5268,7 @@ export const de = {
     },
     /** Tab "Windows-Einstellungen": documented, reversible Windows settings (`pc-tune` catalogue ids). */
     tweaks: {
-      lead: 'Das sind Einstellungen von Windows. Nemo stellt sie hier um, ohne dass du die Windows-App „Einstellungen“ öffnen musst. Jede Änderung lässt sich zurücknehmen.',
+      lead: 'Das sind Einstellungen von Windows. Hier kannst du sie umstellen, ohne sie in Windows zu suchen. Jede Änderung lässt sich zurücknehmen.',
       onlyWindows: 'Diese Einstellungen gibt es nur unter Windows.',
       onlyWindowsHint: 'Auf diesem Gerät ändert Nemo hier nichts.',
       loading: 'Einstellungen werden gelesen …',
@@ -5286,11 +5286,13 @@ export const de = {
       resetDone: (names: string) => `Zurückgesetzt: ${names}.`,
       resetKept: (names: string) => `Unverändert geblieben: ${names}.`,
       resetLeft: (name: string) => `${name} (inzwischen in Windows geändert)`,
+      applyLocked: 'Dieser Plan ist schon aktiv.',
+      noPlan: 'Kein Plan erkannt',
       resetFailed: (name: string) => `${name} (ließ sich nicht zurücksetzen)`,
       resetNothing: 'Es gab nichts zurückzusetzen.',
-      restorePoint: 'Wiederherstellungspunkt anlegen',
+      restorePoint: 'Computerschutz öffnen',
       restorePointHint:
-        'Wenn du magst, legst du vorher in Windows einen Wiederherstellungspunkt an. Nötig ist das nicht.',
+        'Wenn du magst, legst du dort vorher einen Wiederherstellungspunkt an. Nötig ist das nicht.',
       group: {
         appearance: 'Darstellung',
         explorer: 'Explorer',
@@ -5326,7 +5328,7 @@ export const de = {
       } as Record<string, string>,
       detail: {
         animations:
-          'In Windows findest du es unter Barrierefreiheit → Visuelle Effekte. Nemo stellt es auf demselben Weg um wie Windows selbst.',
+          'In Windows gehört es zum Schalter „Animationseffekte“ unter Barrierefreiheit → Visuelle Effekte. Der Schalter dort kann mehr umfassen als diese eine Einstellung.',
         dragFullWindows:
           'In Windows heißt es „Fensterinhalt beim Ziehen anzeigen“ (Leistungsoptionen → Visuelle Effekte). Nemo stellt es auf demselben Weg um wie Windows selbst.',
         pointerSonar:
@@ -5361,12 +5363,11 @@ export const de = {
       stateOn: 'Eingeschaltet',
       stateOff: 'Ausgeschaltet',
       stateChoice: (label: string) => (label ? `Aktiv: ${label}` : ''),
-      windowsDefault:
-        'Windows entscheidet selbst (Standard). Nemo hat hier noch nichts festgelegt.',
+      windowsDefault: 'Hier ist nichts festgelegt; es gilt der Standard von Windows.',
       customValue:
-        'Hier ist ein anderer Wert gespeichert, den Nemo nicht einordnet. Rückgängig stellt ihn genau wieder her.',
+        'Hier ist ein anderer Wert gespeichert, den Nemo nicht einordnet. Nach einer Änderung stellt „Rückgängig“ genau ihn wieder her.',
       unreadable:
-        'Windows gibt den aktuellen Wert nicht her. Ohne ihn gäbe es keinen Weg zurück, deshalb stellt Nemo hier nichts um.',
+        'Nemo kann den aktuellen Wert nicht lesen. Ohne ihn gäbe es keinen Weg zurück, deshalb ändert Nemo hier nichts.',
       turnOn: 'Einschalten',
       turnOff: 'Ausschalten',
       turnOnLabel: (title: string) => `Einschalten: ${title}`,

@@ -44,13 +44,14 @@ CF-N11. _Neues Clownfisch-Icon (Branch `design/app-icon`), Windows-Portable:_ Ta
 
 #### Dieser PC → Windows-Einstellungen (Runde `feat/disk-optimize-p3`) – nur auf echtem Windows prüfbar
 
-DO3-1. _Gleicher Stand wie in Windows:_ Dieser PC → Windows-Einstellungen: jeder Schalter zeigt denselben Stand wie Windows selbst. Dateiendungen und versteckte Dateien: Explorer → Anzeigen → Einblenden. Animationen: die Windows-App „Einstellungen“ → Barrierefreiheit → Visuelle Effekte. Fensterinhalt beim Ziehen: Start → „Darstellung und Leistung von Windows anpassen“ eintippen und öffnen (das Fenster heißt „Leistungsoptionen“). Mauszeiger mit Strg: Start → „Maus“ → „Weitere Mauseinstellungen“ → Reiter „Zeigeroptionen“. Werbe-ID und App-Starts: die Windows-App „Einstellungen“ → Datenschutz und Sicherheit → Allgemein. Stimmt einer nicht, bitte mit Windows-Version notieren. ☐
+DO3-1. _Gleicher Stand wie in Windows:_ Dieser PC → Windows-Einstellungen: jeder Schalter zeigt denselben Stand wie Windows selbst. Dateiendungen und versteckte Dateien: Explorer → Anzeigen → Einblenden. Animationen: die Windows-App „Einstellungen“ → Barrierefreiheit → Visuelle Effekte → „Animationseffekte“ (bitte in beiden Richtungen prüfen und notieren, ob Nemo und dieser Schalter immer denselben Stand zeigen). Fensterinhalt beim Ziehen: Start → „Darstellung und Leistung von Windows anpassen“ eintippen und öffnen (das Fenster heißt „Leistungsoptionen“). Mauszeiger mit Strg: Start → „Maus“ → „Weitere Mauseinstellungen“ → Reiter „Zeigeroptionen“. Werbe-ID und App-Starts: die Windows-App „Einstellungen“ → Datenschutz und Sicherheit → Allgemein. Stimmt einer nicht, bitte mit Windows-Version notieren. ☐
 DO3-2. _Umschalten wirkt:_ in Dieser PC → Windows-Einstellungen jeden Schalter einmal umlegen: Windows zeigt danach an der genannten Stelle den neuen Stand (die Windows-App „Einstellungen“ dafür schließen und neu öffnen), und die Wirkung ist da (Endung hinter Dateinamen nach F5 im Explorer, Kreise um den Mauszeiger bei Strg, nur ein Rahmen beim Fensterziehen). Nach einem Neustart von Windows steht alles noch so. ☐
 DO3-3. _Rückgängig:_ einmal „Rückgängig“ direkt im Hinweis nach dem Umschalten, einmal Dieser PC → Verlauf → „Rückgängig“: Nemo und Windows zeigen wieder den Stand von vorher. Stand bei „Werbe-ID“ oder „App-Starts“ vorher „Windows entscheidet selbst (Standard)“, steht das danach wieder da (zwei Knöpfe statt Schalter). Nach einem Wechsel mit der Tastatur bleibt der Fokus in der Zeile. ☐
 DO3-4. _Alle zurücksetzen:_ in Dieser PC → Windows-Einstellungen vier Einstellungen ändern, eine davon zweimal (im Verlauf bietet dann nur ihr neuerer Eintrag „Rückgängig“), Nemo beenden und neu starten, „Alle zurücksetzen“: die Rückfrage nennt die vier, danach haben alle den Stand von vor der ersten Änderung, in Nemo und in Windows, und Zähler samt Knopf „Alle zurücksetzen“ sind wieder weg. ☐
 DO3-5. _Energiesparplan:_ Die Auswahl zeigt genau die Pläne aus Systemsteuerung → Energieoptionen (kein „Ultimative Leistung“, wenn Windows ihn dort nicht zeigt). Einen anderen wählen: es ändert sich noch nichts; erst „Übernehmen“ stellt um, Windows zeigt ihn dann als aktiv, der Verlauf nennt den Plan beim Namen; „Rückgängig“ stellt den alten wieder ein. Auf einem Gerät mit nur einem Plan fehlt die Zeile. ☐
-DO3-6. _Keine Nebenwirkungen:_ Nach allen Schritten zeigt die Windows-App „Einstellungen“ nirgends „Einige dieser Einstellungen werden von Ihrer Organisation verwaltet“. Kein Schalter hat nach Adminrechten gefragt, der Explorer wurde nie neu gestartet. „Wiederherstellungspunkt anlegen“ (ganz unten in Dieser PC → Windows-Einstellungen) öffnet den Windows-Dialog „Computerschutz“. ☐
+DO3-6. _Keine Nebenwirkungen:_ Nach allen Schritten zeigt die Windows-App „Einstellungen“ nirgends „Einige dieser Einstellungen werden von Ihrer Organisation verwaltet“. Kein Schalter hat nach Adminrechten gefragt, der Explorer wurde nie neu gestartet. „Computerschutz öffnen“ (ganz unten in Dieser PC → Windows-Einstellungen) öffnet den Windows-Dialog „Computerschutz“. ☐
 DO3-7. _Inzwischen in Windows geändert:_ in Dieser PC → Windows-Einstellungen den Energiesparplan wechseln („Übernehmen“). Dann in Windows (Systemsteuerung → Energieoptionen) einen dritten Plan wählen. Zurück in Nemo: Dieser PC → Verlauf → „Rückgängig“ meldet „Das wurde inzwischen in Windows geändert“, ändert nichts (Windows zeigt weiter den dritten Plan), und die Zeile bietet danach kein „Rückgängig“ mehr. Hat der PC nur zwei Pläne: dasselbe mit einem Schalter, den du nach dem Umlegen in Windows selbst noch einmal umstellst – „Alle zurücksetzen“ nennt ihn dann als „inzwischen in Windows geändert“. ☐
+DO3-8. _Quellen:_ bei jeder der acht Einstellungen „Mehr dazu“ → „Quelle: Dokumentation von Microsoft“ öffnen: es erscheint eine erreichbare Seite von learn.microsoft.com oder support.microsoft.com, die genau diese Einstellung beschreibt. Eine tote oder unpassende Seite bitte mit dem Namen der Einstellung notieren. Per Remotedesktop verbunden: die drei Zeilen unter „Darstellung“ fehlen (Absicht). ☐
 
 #### Handtests aus gemergten PRs (aus CHATS.md gesammelt, 2026-11-10)
 
@@ -59,7 +60,6 @@ DO3-7. _Inzwischen in Windows geändert:_ in Dieser PC → Windows-Einstellungen
 #### Logo v2 (Branch `design/logo-v2`) – nur auf Geräten prüfbar
 
 Neues Zeichen: orangefarbene Kachel mit weißem Fisch (App-Symbol), Pille „Mark + NEMO“ in der Seitenleiste; Farbe = Akzent-Token (`#b5430c` hell, `#ff9a57` dunkel).
-
 - **LG1 Windows-Taskleiste:** Portable-App starten: Taskleisten-Symbol bei 100 % und 150 % Skalierung, mit heller und dunkler Taskleiste, zeigt die Kachel mit dem Fisch (Bänder und Auge erkennbar, Ecken nicht abgeschnitten); Alt+Tab und Fensterleiste dasselbe. ☐
 - **LG2 Windows-Tray:** Tray-Symbol („Heute“) im Infobereich bei 16 und 24 px erkennbar, helle und dunkle Taskleiste. ☐
 
@@ -98,7 +98,6 @@ EN-E1. _Windows-Portable:_ Einstellungen durchklicken – Kategorien-Leiste link
 #### Hauptthread frei halten (UI-Audit 4.0, Paket 0a-4 Teil 2) – nur auf Windows prüfbar
 
 Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währenddessen verschieben, in der Titelleiste steht nie „Keine Rückmeldung“, und ein Wechsel zu einem anderen Modul zeigt dessen Inhalt statt „…“. Hintergrund und Einordnung je Command: [perf/MAIN-THREAD-COMMANDS-2026-11.md](perf/MAIN-THREAD-COMMANDS-2026-11.md).
-
 - **MT-H6 Einstellungen und „Über Nemo“:** „Mit Windows starten“ ein und aus: der Schalter bleibt nach erneutem Öffnen der Seite auf dem gewählten Stand (Task-Manager → Autostart zeigt Nemo bzw. nicht). „Datenordner öffnen“ öffnet den Explorer. Im Systemmonitor „Task-Manager öffnen“ startet ihn. ☐
 
 #### Geheimnis nur abfragen, nicht lesen (`fix/secret-store-has`) – nur auf Windows prüfbar
@@ -122,7 +121,6 @@ TR-T3. _Aktualisieren und Abschalten:_ ToDo erledigen → nach dem nächsten Öf
 #### Hauptthread frei halten (UI-Audit 4.0, Paket 0a-4 Teil 2) – nur auf Windows prüfbar
 
 Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währenddessen verschieben, in der Titelleiste steht nie „Keine Rückmeldung“, und ein Wechsel zu einem anderen Modul zeigt dessen Inhalt statt „…“. Hintergrund und Einordnung je Command: [perf/MAIN-THREAD-COMMANDS-2026-11.md](perf/MAIN-THREAD-COMMANDS-2026-11.md).
-
 - **MT-H5 Schnellerfassung mit Zwischenablage:** Einstellung „Zwischenablage beim Öffnen einfügen“ ein, in einem anderen Programm Text kopieren, Schnellerfassung per Tastenkürzel öffnen: der Text steht sofort im Feld. Noch einmal mit einer großen kopierten Excel-Tabelle (Excel offen lassen): das Fenster öffnet sich ohne Hänger. ☐
 
 ### Spracheingabe
@@ -149,7 +147,6 @@ ST-M4. _Desktop:_ Karte in der App erscheint wie sonst; der Ton der Windows-Bena
 #### Zock-Modus (Windows, Vollbild-Spiel) – nur von Hand prüfbar
 
 Vorbereitung: Portable-EXE aus dem Branch/Artefakt; Einstellungen → Benachrichtigungen: Erlaubnis erteilt, „Zock-Modus“ auf „Automatisch“; Lautstärke ca. 50 %. Hintergrund: [features/game-mode.md](features/game-mode.md).
-
 - **Z1 Kein Windows-Ton:** Zock-Modus „Aus“, Fenster im Hintergrund, „Testbenachrichtigung senden“: kommt der Toast ohne Windows-Benachrichtigungston? (Die App setzt keinen Ton; wenn doch einer kommt: melden.) ☐
 - **Z2 Ton bei Fenster im Tray:** „Ton testen“ mit sichtbarem Fenster (alle drei Klänge, Lautstärke 0 = still). Dann Schließen-in-Tray an, Fenster schließen, Erinnerung für in 2 Minuten anlegen vorher, Zock-Modus „Immer“: kommt der Toast ohne Windows-Ton, und danach der App-Ton? Notieren: Verzögerung in Sekunden. ☐
 - **Z3 Vollbild-Spiel:** ein Spiel im Vollbild (Direct3D) starten, Zock-Modus „Automatisch“, Erinnerung für in 2 Minuten: nur der leichte App-Ton, kein Windows-Ton, der Toast wartet im Info-Center oder erscheint (Windows' Spiel-Ruhe kann ihn zurückhalten, das ist ok). Spiel beenden, nächste Erinnerung: normaler Weg, kein App-Ton. ☐
@@ -222,7 +219,6 @@ FS-R10. _Abschnitt ohne Hub:_ Heimnetz-Abgleich aus: der Abschnitt zeigt zwei ku
 #### Uhr (Paket 1, #615) – nur von Hand prüfbar
 
 Vorbereitung: Einstellungen → Darstellung → „In Arbeit anzeigen“, Modul-Bibliothek → „Uhr“ einschalten, zwei Orte eintragen. Hintergrund: [features/clock.md](features/clock.md).
-
 - **UH-U1 Logo-Uhr in der Windows-App:** „Uhrzeit neben dem Logo“ an; Klick auf die Uhrzeit öffnet die Uhr-Seite; Modul aus → die Uhrzeit ist kein Link mehr (kein Hand-Cursor, nichts passiert). Eingeklappte Seitenleiste: „14“/„07“ öffnet ebenfalls die Seite. ☐
 
 ### Tresor
@@ -268,7 +264,6 @@ X14. _Eigene Seiten:_ Auf der Nemo-PWA im Browser schlägt die Erweiterung nicht
 #### Hauptthread frei halten (UI-Audit 4.0, Paket 0a-4 Teil 2) – nur auf Windows prüfbar
 
 Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währenddessen verschieben, in der Titelleiste steht nie „Keine Rückmeldung“, und ein Wechsel zu einem anderen Modul zeigt dessen Inhalt statt „…“. Hintergrund und Einordnung je Command: [perf/MAIN-THREAD-COMMANDS-2026-11.md](perf/MAIN-THREAD-COMMANDS-2026-11.md).
-
 - **MT-H4 Browser-Erweiterung:** Konten → Browser-Erweiterung: „Verbinden“ (Registrierung) zeigt die Browser als eingetragen, der Status bleibt nach einem Seitenwechsel richtig; Brücke aus und wieder ein, danach füllt die Erweiterung auf einer Testseite weiter aus (Klick → Zugangsdaten erscheinen). „Trennen“ entfernt die Einträge wieder. ☐
 
 ### Notizen
@@ -302,7 +297,6 @@ BR-B8. _Merkliste/Notiz:_ „In Merkliste speichern“ (Modul an) legt den Eintr
 #### Hauptthread frei halten (UI-Audit 4.0, Paket 0a-4 Teil 2) – nur auf Windows prüfbar
 
 Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währenddessen verschieben, in der Titelleiste steht nie „Keine Rückmeldung“, und ein Wechsel zu einem anderen Modul zeigt dessen Inhalt statt „…“. Hintergrund und Einordnung je Command: [perf/MAIN-THREAD-COMMANDS-2026-11.md](perf/MAIN-THREAD-COMMANDS-2026-11.md).
-
 - **MT-H7 Browser-Tabs (bleiben auf dem Hauptthread):** in einem Tab vier Seiten nacheinander öffnen, dann dreimal sehr schnell „Zurück“: der Tab steht auf der ersten Seite, „Vor“ dreimal: auf der vierten. Neu laden und Zoom (Strg +/−) reagieren sofort. Hängt das Fenster genau hier, bitte mit Seite und Uhrzeit notieren – das wäre ein Fall für WebView2 selbst. ☐
 
 #### Identity 4.0: Wissen (UI-Audit 4.0, Paket 0b-6a) – E-Mail nur in der Windows-App; Notizen auch im Browser, Musik überall mit verbundenem Spotify-Konto
@@ -377,7 +371,6 @@ TO-D12. _IP und Ausschalten:_ „IP-Adresse anzeigen“ fragt erst auf den Klick
 #### Hauptthread frei halten (UI-Audit 4.0, Paket 0a-4 Teil 2) – nur auf Windows prüfbar
 
 Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währenddessen verschieben, in der Titelleiste steht nie „Keine Rückmeldung“, und ein Wechsel zu einem anderen Modul zeigt dessen Inhalt statt „…“. Hintergrund und Einordnung je Command: [perf/MAIN-THREAD-COMMANDS-2026-11.md](perf/MAIN-THREAD-COMMANDS-2026-11.md).
-
 - **MT-H3 Downloads:** einen großen Download starten, schnell hintereinander Pause → Fortsetzen → Pause klicken: der Eintrag steht am Ende auf „Pausiert“ und zeigt nach „Fortsetzen“ wieder Tempo; Limit setzen und wieder auf 0; „Im Ordner zeigen“; „Aus der Liste entfernen“. Nemo beenden und neu starten: die Liste ist dieselbe wie vorher (kein leerer Stand, kein doppelter Eintrag). Wenn möglich einmal mit einem USB-Stick oder Netzlaufwerk als Zielordner. ☐
 
 ### Dieser PC
@@ -438,7 +431,6 @@ DV-V6. _Live-Kacheln:_ CPU/RAM/Netz aktualisieren alle 3 s ohne Flackern; Mini-V
 #### Hauptthread frei halten (UI-Audit 4.0, Paket 0a-4 Teil 2) – nur auf Windows prüfbar
 
 Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währenddessen verschieben, in der Titelleiste steht nie „Keine Rückmeldung“, und ein Wechsel zu einem anderen Modul zeigt dessen Inhalt statt „…“. Hintergrund und Einordnung je Command: [perf/MAIN-THREAD-COMMANDS-2026-11.md](perf/MAIN-THREAD-COMMANDS-2026-11.md).
-
 - **MT-H1 Löschen in „Dieser PC“ (wichtigster Punkt):** einen Testordner mit ein paar Wegwerf-Dateien scannen, zwei Dateien markieren, „Löschen“: der Plan erscheint, nach der Bestätigung liegen die Dateien im Papierkorb, die Karte zeigt die neue Größe. Dann „Endgültig löschen“ wählen: Nemo fragt ein **zweites Mal** nach; ohne die zweite Bestätigung wird nichts gelöscht. Ein Ordner aus der Sperrliste (z. B. `C:\Windows`) lässt sich weiterhin nicht zum Löschen vormerken. Zweimal schnell auf „Löschen“ klicken: es läuft nur ein Löschvorgang. ☐
 - **MT-H2 „Dieser PC“ blättern:** `C:\` scannen, während und nach dem Scan schnell durch große Ordner klicken (z. B. `Windows` → `WinSxS`), dabei zum Kalender und zurück: die Karte folgt dem zuletzt geklickten Ordner, nichts bleibt hängen. „Im Explorer zeigen“ öffnet den Explorer mit dem markierten Eintrag. Der Reiter „Aufräumen“ zeigt nach „Suchen“ die bekannten Orte (Temp, Browser-Caches). ☐
 
@@ -447,7 +439,6 @@ Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währ
 #### Bildschirmfoto (Windows-App, Handy) – nur von Hand prüfbar
 
 Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: [features/screenshot.md](features/screenshot.md).
-
 - **BF-B1 Windows-App, Fenster:** Portable-EXE, Werkzeug „Bildschirmfoto“ → „Bildschirm aufnehmen“: kommt eine Auswahl (Bildschirm/Fenster)? Ein Fenster wählen: Vorschau erscheint. Kommt stattdessen „… gibt es auf diesem Gerät nicht“ (kein Fehler), ist WebView2 ohne Aufnahme – dann Notiz an den Maintainer (Rust-Aufnahme = neue Abhängigkeit). ☐
 - **BF-B2 Kopieren:** „Kopieren“, dann in Paint/Mail einfügen (Strg+V): das Bild erscheint. ☐
 - **BF-B3 Speichern:** „Speichern“: Windows-Dialog, Datei `bildschirmfoto-JJJJ-MM-TT-HHMM.png` öffnet sich als Bild. ☐
@@ -519,7 +510,6 @@ CF-N12. _Clownfisch-Icon, Android-APK als Update über die bestehende Installati
 #### Logo v2 (Branch `design/logo-v2`) – nur auf Geräten prüfbar
 
 Neues Zeichen: orangefarbene Kachel mit weißem Fisch (App-Symbol), Pille „Mark + NEMO“ in der Seitenleiste; Farbe = Akzent-Token (`#b5430c` hell, `#ff9a57` dunkel).
-
 - **LG3 Android als Update:** `Nemo.apk` über eine bestehende Installation installieren: Daten bleiben, Launcher-Symbol zeigt den neuen Fisch (Kreis, Squircle oder abgerundet je nach Launcher; der Fisch liegt vollständig innerhalb der Maske), Benachrichtigungs-Symbol in der Statusleiste ist der Fisch (einfarbig) mit der Akzentfarbe, Verknüpfungen (Kurzbefehle, Teilen-Ziel) haben den neuen Hintergrund. ☐
 - **LG4 Themed Icon (Android 13+):** „Designte Symbole“ im Launcher an: das Symbol nimmt die Hintergrundfarbe an, der Fisch bleibt mit Bändern und Auge erkennbar. ☐
 
@@ -688,7 +678,6 @@ QR-Q5. _Android-App:_ QR-Lesen braucht Kamera-Berechtigung und eine WebView mit 
 #### Uhr (Paket 1, #615) – nur von Hand prüfbar
 
 Vorbereitung: Einstellungen → Darstellung → „In Arbeit anzeigen“, Modul-Bibliothek → „Uhr“ einschalten, zwei Orte eintragen. Hintergrund: [features/clock.md](features/clock.md).
-
 - **UH-U2 Sortieren mit dem Finger (Android):** Griff lange drücken, Ort ziehen: die Reihenfolge bleibt nach Neustart; Scrollen der Liste verschiebt nichts; „Rückgängig“ im Toast stellt die alte Reihenfolge her. ☐
 
 ### Finanzen
@@ -781,7 +770,6 @@ DT-D16. _Android/PWA:_ „Datenträger“ und „Systeminfo“ erscheinen weder 
 #### Bildschirmfoto (Windows-App, Handy) – nur von Hand prüfbar
 
 Werkzeug in Einstellungen/Werkzeuge einschalten (standardmäßig aus). Details: [features/screenshot.md](features/screenshot.md).
-
 - **BF-B5 Android:** Werkzeug zeigt nur den Hinweis, keinen Knopf. ☐
 
 #### Rechner-Modi (Branch `feat/calculator-modes`)
@@ -830,7 +818,6 @@ RL-R5. Datenträger-Modul DT-D1–DT-D18 und Keystore/Windows Hello (Schritt 11b
 #### Logo v2 (Branch `design/logo-v2`) – nur auf Geräten prüfbar
 
 Neues Zeichen: orangefarbene Kachel mit weißem Fisch (App-Symbol), Pille „Mark + NEMO“ in der Seitenleiste; Farbe = Akzent-Token (`#b5430c` hell, `#ff9a57` dunkel).
-
 - **LG7 Logo v2.1 (nach dem ersten Dev-Preview-Build):** Windows-Taskleiste bei 100 % und 150 %: der weiße Fisch auf der Akzent-Kachel ist bei 16–24 px als Fisch in einem Stück erkennbar (zwei innere Bänder, kein Lautsprecher-Symbol); Android-Launcher (Kreis/Squircle), Themed Icon und Benachrichtigung zeigen dieselbe Form, nichts angeschnitten. ☐
 
 ### Darstellung
@@ -1070,7 +1057,6 @@ CF-N13. _Clownfisch-Icon im Browser/PWA:_ Favicon im Tab (hell/dunkel), „Zum S
 #### Logo v2 (Branch `design/logo-v2`) – nur auf Geräten prüfbar
 
 Neues Zeichen: orangefarbene Kachel mit weißem Fisch (App-Symbol), Pille „Mark + NEMO“ in der Seitenleiste; Farbe = Akzent-Token (`#b5430c` hell, `#ff9a57` dunkel).
-
 - **LG5 Favicon und PWA:** Tab-Symbol in Chrome/Edge/Firefox bei heller und dunkler Tab-Leiste ist die Kachel mit dem Fisch; PWA installieren: Symbol auf Startbildschirm oder Desktop (maskable: Fisch nicht angeschnitten), Splash beim Start zeigt den Fisch in der Akzentfarbe. ☐
 - **LG6 Seitenleiste und Topbar:** breite Seitenleiste zeigt die Pille (hell und dunkel; Systemschema und App-Thema verschieden: die Pille bleibt lesbar), eingeklappt zeigt sie nur den Fisch in Akzentfarbe, Handy-Topbar unter 416 px nur den Fisch, darüber die Pille. ☐
 
@@ -1288,7 +1274,6 @@ QR-Q4. _Kamera verweigert:_ ruhiger Hinweis, die Kamera bleibt aus, die Datei ge
 #### Uhr (Paket 1, #615) – nur von Hand prüfbar
 
 Vorbereitung: Einstellungen → Darstellung → „In Arbeit anzeigen“, Modul-Bibliothek → „Uhr“ einschalten, zwei Orte eintragen. Hintergrund: [features/clock.md](features/clock.md).
-
 - **UH-U3 Minutenwechsel:** App 2 Minuten offen lassen: Seite, Widget und Logo-Uhr springen gleichzeitig zur vollen Minute; nach Standby/Bildschirm aus stimmt die Zeit sofort wieder. ☐
 - **UH-U4 12-Stunden-Format:** Einstellungen → Sprache & Format → en-US: Seite und Widget zeigen „11:07 PM“ ohne Überlauf am Handy. ☐
 
