@@ -42,6 +42,39 @@ export const subscriptions: Strings['subscriptions'] = {
       unit: '/ month',
       paused: (n: number) => `${n} paused`,
     },
+    overview: {
+      tab: 'Overview',
+      listTab: 'Subscriptions',
+      tabsLabel: 'View',
+      sharesTitle: 'What you pay for',
+      sharesByCategory: 'Cost per month by type',
+      sharesByProvider: 'Cost per month by subscription',
+      byLabel: 'Split by',
+      byCategory: 'Type',
+      byProvider: 'Subscription',
+      noCategory: 'No type',
+      perMonth: 'per month',
+      nothingRunning: 'No subscription is running right now.',
+      otherCurrencies: (n: number) =>
+        n === 1
+          ? '1 subscription in another currency is not included.'
+          : `${n} subscriptions in other currencies are not included.`,
+      upcomingTitle: 'Next 30 days',
+      upcomingEmpty: 'Nothing is charged in the next 30 days.',
+      upcomingSum: (n: number) => (n === 1 ? '1 charge, in total' : `${n} charges, in total`),
+      yearTitle: 'What does it cost me per year',
+      moreInYear: (n: number, amount: string) =>
+        n === 1
+          ? `Plus 1 more subscription: ${amount}`
+          : `Plus ${n} more subscriptions: ${amount} in total`,
+    },
+    sort: {
+      label: 'Sort by',
+      next: 'Date',
+      cost: 'Cost',
+      name: 'Name',
+    },
+    perYearShort: (amount: string) => `${amount} a year`,
     suggest: {
       apply: (amount: string) => `Take over the price: ${amount}`,
       seen: (amount: string) => `Last charged: ${amount}`,

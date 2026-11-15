@@ -3186,6 +3186,38 @@ export const de = {
         unit: '/ Monat',
         paused: (n: number) => (n === 1 ? '1 pausiert' : `${n} pausiert`),
       },
+      overview: {
+        tab: 'Übersicht',
+        listTab: 'Abos',
+        tabsLabel: 'Ansicht',
+        sharesTitle: 'Wofür du zahlst',
+        sharesByCategory: 'Kosten pro Monat nach Art',
+        sharesByProvider: 'Kosten pro Monat nach Abo',
+        byLabel: 'Aufteilen nach',
+        byCategory: 'Art',
+        byProvider: 'Abo',
+        noCategory: 'Ohne Art',
+        perMonth: 'pro Monat',
+        nothingRunning: 'Gerade läuft kein Abo.',
+        otherCurrencies: (n: number) =>
+          n === 1
+            ? '1 Abo in einer anderen Währung ist nicht mitgerechnet.'
+            : `${n} Abos in anderen Währungen sind nicht mitgerechnet.`,
+        upcomingTitle: 'Nächste 30 Tage',
+        upcomingEmpty: 'In den nächsten 30 Tagen wird nichts abgebucht.',
+        upcomingSum: (n: number) =>
+          n === 1 ? '1 Abbuchung, zusammen' : `${n} Abbuchungen, zusammen`,
+        yearTitle: 'Was kostet mich das im Jahr',
+        moreInYear: (n: number, amount: string) =>
+          n === 1 ? `Dazu 1 weiteres Abo: ${amount}` : `Dazu ${n} weitere Abos: zusammen ${amount}`,
+      },
+      sort: {
+        label: 'Sortieren nach',
+        next: 'Datum',
+        cost: 'Kosten',
+        name: 'Name',
+      },
+      perYearShort: (amount: string) => `${amount} im Jahr`,
       suggest: {
         apply: (amount: string) => `Preis übernehmen: ${amount}`,
         seen: (amount: string) => `Zuletzt abgebucht: ${amount}`,
