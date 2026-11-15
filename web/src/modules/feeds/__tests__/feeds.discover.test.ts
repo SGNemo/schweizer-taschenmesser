@@ -76,6 +76,21 @@ describe('looking an address up (one click, at most three requests)', () => {
     if (r.kind === 'choices') expect(r.links).toHaveLength(2);
   });
 
+  it('a host that is down behind the proxy (502/504) is a network problem, asked once', async () => {
+    const down = vi.fn(async (_url: string) => reply('{"error":"timeout"}', 504));
+    expect(await lookUp('https://example.org/', down)).toEqual({
+      kind: 'error',
+      reason: 'network',
+    });
+    expect(down).toHaveBeenCalledTimes(1);
+  });
+
+  it('reads an http address as https', async () => {
+    const fetcher = vi.fn(async (_url: string) => reply(rss(1)));
+    await lookUp('http://blog.example.org/feed/', fetcher);
+    expect(fetcher.mock.calls[0]![0]).toBe('https://blog.example.org/feed/');
+  });
+
   it('says so when there is no feed, no proxy or no answer', async () => {
     const none = vi.fn(async (_u: string, _i?: unknown, _t?: unknown, kind?: string) =>
       kind === 'page' ? reply('<p>hallo</p>') : reply('nope', 415),

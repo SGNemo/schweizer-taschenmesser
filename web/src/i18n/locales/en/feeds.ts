@@ -60,6 +60,7 @@ export const feeds: Strings['feeds'] = {
     network: 'The page is not answering right now. Adding works anyway.',
     anyway: 'Add anyway',
     tapHint: 'Tap a name to see the latest articles.',
+    previewOf: (name: string) => `Preview ${name}`,
   },
   catalog: {
     label: 'Starter catalogue',

@@ -62,9 +62,24 @@ export type LookUpResult =
 
 type Fetcher = typeof fetchPublic;
 
+/**
+ * The answers that say "this is not that kind of document" (wrong type, too large, not there). Every
+ * other failure – the proxy's 502/504 for a host that is down, 401/429 from the own server – is a
+ * network problem and is said as one.
+ */
+const NOT_THIS_KIND = new Set([404, 410, 413, 415]);
+
+class Unreachable extends Error {}
+
+/** `http:` addresses are read as `https:` (the native path and the proxy only fetch https). */
+const https = (url: string): string => url.replace(/^http:\/\//i, 'https://');
+
 async function readFeed(url: string, fetcher: Fetcher): Promise<FeedPreview | 'not-feed'> {
   const res = await fetcher(url, undefined, undefined, 'feed');
-  if (!res.ok) return 'not-feed';
+  if (!res.ok) {
+    if (NOT_THIS_KIND.has(res.status)) return 'not-feed';
+    throw new Unreachable();
+  }
   try {
     const parsed = parseFeed(await res.text(), now(), url);
     return {
@@ -85,13 +100,21 @@ async function readFeed(url: string, fetcher: Fetcher): Promise<FeedPreview | 'n
  * names, or nothing. At most three requests: the address as a feed, the address as a page, and the
  * one feed the page names. Nothing is stored here.
  */
-export async function lookUp(url: string, fetcher: Fetcher = fetchPublic): Promise<LookUpResult> {
+export async function lookUp(typed: string, fetcher: Fetcher = fetchPublic): Promise<LookUpResult> {
+  const url = https(typed);
   try {
     const direct = await readFeed(url, fetcher);
     if (direct !== 'not-feed') return { kind: 'feed', feed: direct };
     const page = await fetcher(url, undefined, undefined, 'page');
-    if (!page.ok) return { kind: 'none' };
-    const links = discoverFeedLinks(await page.text(), url);
+    if (!page.ok) {
+      if (NOT_THIS_KIND.has(page.status)) return { kind: 'none' };
+      throw new Unreachable();
+    }
+    // Relative links resolve against the typed address; a redirect to another path can miss them.
+    const links = discoverFeedLinks(await page.text(), url).map((l) => ({
+      ...l,
+      url: https(l.url),
+    }));
     if (links.length === 0) return { kind: 'none' };
     if (links.length > 1) return { kind: 'choices', links };
     const only = await readFeed(links[0]!.url, fetcher);

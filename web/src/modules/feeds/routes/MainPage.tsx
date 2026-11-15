@@ -99,16 +99,23 @@ export default function MainPage() {
 
   /** "Abonnieren" under a preview: the feed's own name, no group yet (it can be set in the list). */
   async function addPreview(feed: FeedPreview, siteUrl?: string) {
-    if (subscribed.has(feedKey(feed.url))) return;
+    const key = feedKey(feed.url);
+    if (subscribed.has(key) || adding.current.has(key)) return;
+    adding.current.add(key);
     const title = feed.title || hostOf(feed.url);
-    const site = siteUrl && feedKey(siteUrl) !== feedKey(feed.url) ? siteUrl : undefined;
-    await feedRepo.create({
-      title,
-      url: feed.url,
-      category: '',
-      ...(site ? { siteUrl: site } : {}),
-    });
-    toast(s.catalog.addedToast(title));
+    const site = siteUrl && feedKey(siteUrl) !== key ? siteUrl : undefined;
+    try {
+      await feedRepo.create({
+        title,
+        url: feed.url,
+        category: '',
+        ...(site ? { siteUrl: site } : {}),
+      });
+      toast(s.catalog.addedToast(title));
+    } catch (e) {
+      adding.current.delete(key);
+      throw e;
+    }
   }
 
   async function save(e: FormEvent) {

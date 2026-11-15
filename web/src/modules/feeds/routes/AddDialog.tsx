@@ -10,7 +10,7 @@ import {
   type CatalogLang,
 } from '../catalog';
 import { lookUp, type FeedPreview, type LookUpResult } from '../discover';
-import { hostOf, normalizeFeedUrl } from '../logic';
+import { feedKey, hostOf, normalizeFeedUrl } from '../logic';
 import { CatalogRow } from './CatalogRow';
 import { FeedPreviewView } from './FeedPreviewView';
 import styles from './feeds.module.css';
@@ -82,6 +82,10 @@ export function AddDialog({
   function back() {
     run.current++;
     setLook(null);
+    // The search field comes back; keyboard and screen-reader users land there again.
+    requestAnimationFrame(() =>
+      document.querySelector<HTMLInputElement>('input[data-feeds-find]')?.focus(),
+    );
   }
 
   return (
@@ -98,7 +102,7 @@ export function AddDialog({
           result={look.result}
           subscribed={subscribed}
           onSubscribe={(feed) => {
-            if (look.entry) onAdd(look.entry);
+            if (look.entry && feedKey(look.entry.url) === feedKey(feed.url)) onAdd(look.entry);
             else onSubscribe(feed, look.site ?? look.url);
           }}
           onPick={(url) => preview(url, { site: look.site ?? look.url })}
@@ -112,6 +116,7 @@ export function AddDialog({
             hint={s.find.queryHint}
             value={query}
             data-autofocus
+            data-feeds-find=""
             type="search"
             inputMode="search"
             autoComplete="off"

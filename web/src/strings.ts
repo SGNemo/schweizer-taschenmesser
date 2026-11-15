@@ -8390,6 +8390,7 @@ export const de = {
       network: 'Die Seite antwortet gerade nicht. Eintragen geht auch so.',
       anyway: 'Trotzdem eintragen',
       tapHint: 'Ein Tipp auf den Namen zeigt die neuesten Artikel.',
+      previewOf: (name: string) => `${name} ansehen`,
     },
     catalog: {
       label: 'Startkatalog',

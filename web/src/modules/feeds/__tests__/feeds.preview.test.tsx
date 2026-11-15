@@ -52,10 +52,15 @@ describe('feeds: look before subscribing', () => {
     );
     expect(fetchPublic).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button', { name: t.feeds.find.preview }));
-    expect(await screen.findByRole('heading', { name: 'Werkstatt-Blog' })).toBeInTheDocument();
+    const heading = await screen.findByRole('heading', { name: 'Werkstatt-Blog' });
+    // Focus follows the result, so a screen reader reads what was found.
+    await waitFor(() => expect(heading).toHaveFocus());
     expect(screen.getByText('Neues Regal')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: t.feeds.preview.subscribe }));
+    // A double click subscribes once.
+    await user.dblClick(screen.getByRole('button', { name: t.feeds.preview.subscribe }));
     await waitFor(async () => expect(await feedRepo.active().count()).toBe(1));
+    await new Promise((r) => setTimeout(r, 50));
+    expect(await feedRepo.active().count()).toBe(1);
     const [feed] = await feedRepo.active().toArray();
     expect(feed).toMatchObject({
       title: 'Werkstatt-Blog',

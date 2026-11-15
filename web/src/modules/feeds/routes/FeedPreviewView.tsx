@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { dateTimeFormat } from '@/core/i18n/format';
 import { t } from '@/strings';
 import { Button, ItemList, ItemRow } from '@/ui';
@@ -38,6 +39,12 @@ export function FeedPreviewView({
 }) {
   const s = t.feeds.preview;
   const back = <Button onClick={onBack}>{s.back}</Button>;
+  // The control that was pressed is gone: once there is a result, focus moves to its first line, so
+  // keyboard users keep their place and screen readers read what was found.
+  const lead = useRef<HTMLHeadingElement & HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (result) lead.current?.focus();
+  }, [result]);
 
   if (!result)
     return (
@@ -51,7 +58,7 @@ export function FeedPreviewView({
     const has = subscribed.has(feedKey(feed.url));
     return (
       <section aria-labelledby="feeds-preview-title" data-testid="feeds-preview">
-        <h3 id="feeds-preview-title" className={styles.previewTitle}>
+        <h3 id="feeds-preview-title" className={styles.previewTitle} tabIndex={-1} ref={lead}>
           {feed.title || hostOf(feed.url)}
         </h3>
         <p className={styles.muted}>{hostOf(feed.url)}</p>
@@ -87,15 +94,24 @@ export function FeedPreviewView({
 
   if (result.kind === 'choices')
     return (
-      <section aria-label={s.choose(result.links.length)} data-testid="feeds-preview-choices">
-        <p>{s.choose(result.links.length)}</p>
-        <ItemList label={s.choose(result.links.length)}>
+      <section data-testid="feeds-preview-choices">
+        <p tabIndex={-1} ref={lead}>
+          {s.choose(result.links.length)}
+        </p>
+        <ItemList>
           {result.links.map((link) => (
             <ItemRow
               key={link.url}
               title={link.title || hostOf(link.url)}
               meta={link.url}
-              end={<Button onClick={() => onPick(link.url)}>{t.feeds.find.preview}</Button>}
+              end={
+                <Button
+                  aria-label={s.previewOf(link.title || hostOf(link.url))}
+                  onClick={() => onPick(link.url)}
+                >
+                  {t.feeds.find.preview}
+                </Button>
+              }
             />
           ))}
         </ItemList>
@@ -107,7 +123,9 @@ export function FeedPreviewView({
     result.kind === 'none' ? s.none : result.reason === 'no-proxy' ? s.noProxy : s.network;
   return (
     <section data-testid="feeds-preview-none">
-      <p>{text}</p>
+      <p tabIndex={-1} ref={lead}>
+        {text}
+      </p>
       <div className={styles.previewActions}>
         {back}
         <Button variant="primary" onClick={onAnyway}>
