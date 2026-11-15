@@ -77,6 +77,7 @@ const manifest: ModuleManifest = {
     ],
     plannable: () => import('./plannable'),
     notifications: () => import('./notifications'),
+    services: () => import('./services'),
   },
 };
 
