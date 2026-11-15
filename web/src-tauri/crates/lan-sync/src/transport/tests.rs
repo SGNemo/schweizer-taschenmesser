@@ -764,7 +764,10 @@ mod input_client {
     use super::*;
     use crate::input::wire::{self, Code, Level, Media, Record};
     use crate::input::Action;
-    use crate::input_client::{testing::open_via, Event, InputError, InputSession};
+    use crate::input_client::{
+        testing::{open_plain, open_via},
+        Event, InputError, InputSession,
+    };
     use crate::noise::frame::{INPUT_CAP, TAG_UNPAIR};
     use crate::trust::RemoteGrant;
     use std::sync::mpsc::{channel, Receiver};
@@ -1154,6 +1157,62 @@ mod input_client {
     }
 
     #[test]
+    fn features_are_asked_for_and_power_goes_both_ways_over_the_socket() {
+        let r = rig();
+        let key = granted(&r, Level::Media);
+        // the old way: seven bytes back, nothing of power
+        let (tx, _rx) = channel();
+        let (old, opened) = open_plain(
+            addr(&r),
+            &key,
+            &r.hub_key,
+            Level::Media,
+            Box::new(move |e| {
+                let _ = tx.send(e);
+            }),
+        )
+        .unwrap();
+        assert_eq!(opened.ext, None);
+        assert!(!old.has_power());
+        assert_eq!(
+            old.send_power(wire::Power::Cancel, false),
+            Err(InputError::Protocol)
+        );
+        assert_eq!(
+            old.send_events(&[Record::Media(Media::MonitorOff)]),
+            Err(InputError::Protocol),
+            "never to a PC that did not accept power"
+        );
+        old.close();
+        // the new way: the PC names what it accepted
+        let (input, opened, events) = open(&r, &key, Level::Media).unwrap();
+        let ext = opened.ext.unwrap();
+        assert_eq!(ext.features, wire::FEATURE_POWER);
+        assert!(!ext.power.granted, "a level is no power permission");
+        assert!(input.has_power());
+        input.send_power(wire::Power::Cancel, false).unwrap();
+        let answer = loop {
+            match events.recv_timeout(WAIT).expect("an answer") {
+                Event::Power(a) => break a,
+                Event::State(_) => continue,
+                other => panic!("{other:?}"),
+            }
+        };
+        assert_eq!(answer, wire::PowerAnswer::Cancelled);
+        input
+            .send_events(&[Record::Media(Media::MonitorOff)])
+            .unwrap();
+        wait_for(|| {
+            r.sink
+                .actions
+                .lock()
+                .unwrap()
+                .contains(&Action::Media(Media::MonitorOff))
+        });
+        input.close();
+    }
+
+    #[test]
     fn the_input_client_dials_private_addresses_only() {
         let key = StaticKey::generate().unwrap();
         let hub = StaticKey::generate().unwrap().public();
@@ -1166,6 +1225,7 @@ mod input_client {
                     &hub,
                     "Phone",
                     Level::Media,
+                    true,
                     Box::new(move |e| {
                         let _ = tx.send(e);
                     })

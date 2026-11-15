@@ -40,7 +40,8 @@
 #![cfg_attr(not(mobile), allow(dead_code))]
 
 use ::lan_sync::input::wire::{
-    Button, Code, Key, Level, Media, PcState, PowerAnswer, Record, MAX_TEXT_BYTES, VOLUME_UNKNOWN,
+    Button, Code, Key, Level, Media, PcState, Power, PowerAnswer, PowerInfo, Record,
+    MAX_TEXT_BYTES, VOLUME_UNKNOWN,
 };
 use ::lan_sync::input_client::{Event, InputError, InputSession};
 use serde::Serialize;
@@ -58,6 +59,9 @@ const MAX_STEPS: usize = 32;
 const STEP: i32 = 127;
 /// How long one unlock of the phone holds for the mouse level (process memory only).
 const UNLOCK_VALID: Duration = Duration::from_secs(8 * 60 * 60);
+/// How long an unlock for a power action may be used once more, for the same action, after the
+/// PC said Nemo is still working ("Trotzdem ausschalten").
+const DESPITE_VALID: Duration = Duration::from_secs(30);
 
 /// What the PC said about this device in its last `opened`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -101,6 +105,11 @@ pub struct RemoteClient {
     pairing: AtomicU64,
     /// How much text the PC still takes right now, as this phone reckons it ([`Pace`]).
     pace: Mutex<Pace>,
+    /// The paired PC hung up on an `open` with features: it is older; asked the old way for the
+    /// rest of this run (one handshake per open, not two).
+    no_features: AtomicBool,
+    /// The one unlock for a power action that may be used once more (the action and when).
+    approval: Mutex<Option<(Power, Instant)>>,
 }
 
 /// The PC takes text only so fast (512 bytes at once, then 512 a second, per session) and drops
@@ -170,6 +179,10 @@ impl RemoteClient {
             *lost = None;
         }
         self.locked.store(false, Ordering::SeqCst);
+        self.no_features.store(false, Ordering::SeqCst);
+        if let Ok(mut approval) = self.approval.lock() {
+            *approval = None;
+        }
     }
 }
 
@@ -185,6 +198,54 @@ fn prompt_texts(lang: Option<&str>) -> (&'static str, &'static str) {
     } else {
         ("Unlock phone", "For mouse and keyboard on your PC")
     }
+}
+
+/// The texts of the phone's unlock prompt before a power action: it names the action, and it is
+/// the confirmation (fixed here, never handed in by the page).
+fn power_prompt_texts(lang: Option<&str>, power: Power) -> (&'static str, &'static str) {
+    let german = lang.is_some_and(|l| {
+        let l = l.to_ascii_lowercase();
+        l == "de" || l.starts_with("de-")
+    });
+    let subtitle_de = "Am PC läuft dann 10 Sekunden ein Countdown zum Abbrechen.";
+    let subtitle_en = "The PC then counts down 10 seconds in which it can be cancelled.";
+    match (german, power) {
+        (true, Power::Restart) => ("PC neu starten?", subtitle_de),
+        (true, Power::Sleep) => ("PC in den Energiesparmodus?", subtitle_de),
+        (true, Power::Hibernate) => ("PC in den Ruhezustand?", subtitle_de),
+        (true, Power::SignOut) => ("Am PC abmelden?", subtitle_de),
+        (true, _) => ("PC ausschalten?", subtitle_de),
+        (false, Power::Restart) => ("Restart the PC?", subtitle_en),
+        (false, Power::Sleep) => ("Put the PC to sleep?", subtitle_en),
+        (false, Power::Hibernate) => ("Hibernate the PC?", subtitle_en),
+        (false, Power::SignOut) => ("Sign out on the PC?", subtitle_en),
+        (false, _) => ("Switch the PC off?", subtitle_en),
+    }
+}
+
+/// The fixed list of power actions the page may name.
+fn power_from(name: &str) -> Option<Power> {
+    Some(match name {
+        "sleep" => Power::Sleep,
+        "hibernate" => Power::Hibernate,
+        "sign-out" => Power::SignOut,
+        "restart" => Power::Restart,
+        "shut-down" => Power::ShutDown,
+        "cancel" => Power::Cancel,
+        _ => return None,
+    })
+}
+
+/// Whether a kept unlock may stand for this action once more: the same action, `despite`, in time.
+fn approval_holds(
+    kept: Option<(Power, Instant)>,
+    power: Power,
+    despite: bool,
+    now: Instant,
+) -> bool {
+    despite
+        && kept
+            .is_some_and(|(p, at)| p == power && now.saturating_duration_since(at) < DESPITE_VALID)
 }
 
 /// What an `open` at the mouse level does first.
@@ -284,6 +345,24 @@ pub struct OpenedDto {
     /// The PC asks for an unlock at the phone, and this phone has no lock the app can ask for.
     no_lock: bool,
     state: StateDto,
+    /// `None`: a PC from before power.
+    power: Option<PowerDto>,
+}
+
+#[derive(Serialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct PowerDto {
+    granted: bool,
+    pending: bool,
+    hibernate: bool,
+}
+
+fn power_dto(info: PowerInfo) -> PowerDto {
+    PowerDto {
+        granted: info.granted,
+        pending: info.pending,
+        hibernate: info.hibernate,
+    }
 }
 
 fn state_dto(state: PcState) -> StateDto {
@@ -354,6 +433,7 @@ fn media_from(name: &str) -> Option<Media> {
         "volume-down" => Media::VolumeDown,
         "mute" => Media::MuteToggle,
         "lock" => Media::Lock,
+        "monitor-off" => Media::MonitorOff,
         _ => return None,
     })
 }
@@ -743,12 +823,14 @@ fn open_now<R: Runtime>(
         // a state the PC sent right after `opened` must not be overwritten by the older one in it
         let told = Arc::new(AtomicBool::new(false));
         let heard = told.clone();
+        let features = !state.no_features.load(Ordering::SeqCst);
         let (session, opened) = InputSession::open(
             addr,
             &key,
             &hub,
             &name,
             level,
+            features,
             Box::new(move |event| {
                 // the session in the slot, or the one that is just being opened
                 if !passes(
@@ -793,6 +875,10 @@ fn open_now<R: Runtime>(
             session.close();
             return Err("closed".to_owned());
         }
+        // asked with features and answered without: an older PC, asked the old way from now on
+        if features && opened.ext.is_none() {
+            state.no_features.store(true, Ordering::SeqCst);
+        }
         *state.known.lock().map_err(|_| "internal")? = Some(Known {
             grant: opened.grant,
             unlock_required: opened.unlock_required,
@@ -829,6 +915,7 @@ fn open_now<R: Runtime>(
             unlock_required: opened.unlock_required,
             no_lock,
             state: state_dto(opened.state),
+            power: opened.ext.map(|ext| power_dto(ext.power)),
         })
     }
 }
@@ -859,6 +946,10 @@ pub async fn remote_client_send<R: Runtime>(
         let records = sendable(records, level, state.locked.load(Ordering::SeqCst))?;
         if records.is_empty() {
             return Ok(());
+        }
+        // an older PC would end the session for it
+        if !open.has_power() && records.contains(&Record::Media(Media::MonitorOff)) {
+            return Err("no-power".to_owned());
         }
         open.send_events(&records)
             .map_err(|e| error_name(e).to_owned())
@@ -964,6 +1055,77 @@ fn failed_as(written: bool, name: &'static str) -> &'static str {
 
 /// Ends session `session` (the page went to the background). A number that is not the open
 /// session changes nothing.
+/// One power action on session `session` (any level; the PC checks the permission). Every action
+/// but `cancel` is unlocked at the phone first – natively, here, with the action named in the
+/// prompt; that prompt is the confirmation. A phone without a screen lock is not asked (the PC's
+/// countdown stays). `despite` – sent after the PC said Nemo is still working – re-uses that
+/// unlock once, for the same action, within 30 s; otherwise it asks again. The PC's answer comes as
+/// a `power` event of the session.
+#[tauri::command]
+pub async fn remote_client_power<R: Runtime>(
+    app: AppHandle<R>,
+    session: u64,
+    action: String,
+    despite: bool,
+    lang: Option<String>,
+) -> Result<(), String> {
+    let power = power_from(&action).ok_or("bad-action")?;
+    if power == Power::Cancel && despite {
+        return Err("bad-action".to_owned());
+    }
+    {
+        let state = app.state::<RemoteClient>();
+        let (open, _) = picked(&state, session)?;
+        if !open.has_power() {
+            return Err("no-power".to_owned());
+        }
+    }
+    if power != Power::Cancel {
+        let state = app.state::<RemoteClient>();
+        let kept = state.approval.lock().map_err(|_| "internal")?.take();
+        if !approval_holds(kept, power, despite, Instant::now()) {
+            if state.asking.swap(true, Ordering::SeqCst) {
+                return Err("unlock-busy".to_owned());
+            }
+            let _asking = Asking(&state.asking);
+            let pairing = state.pairing.load(Ordering::SeqCst);
+            power_unlock(&app, lang.as_deref(), power).await?;
+            // unpaired or paired anew while the prompt was up: the answer was for the old PC
+            if state.pairing.load(Ordering::SeqCst) != pairing {
+                return Err("closed".to_owned());
+            }
+        }
+        // the one unlock this answer may stand for once more ("Trotzdem")
+        if !despite {
+            *state.approval.lock().map_err(|_| "internal")? = Some((power, Instant::now()));
+        }
+    }
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<RemoteClient>();
+        let (open, _) = picked(&state, session)?;
+        open.send_power(power, despite)
+            .map_err(|e| error_name(e).to_owned())
+    })
+    .await
+    .map_err(|_| "internal".to_owned())?
+}
+
+/// The phone's unlock before a power action; a phone without a screen lock passes.
+async fn power_unlock<R: Runtime>(
+    app: &AppHandle<R>,
+    lang: Option<&str>,
+    power: Power,
+) -> Result<(), &'static str> {
+    use tauri_plugin_secure_store::{ConfirmRequest, SecureStoreExt};
+    let (title, subtitle) = power_prompt_texts(lang, power);
+    let asked = app.secure_store().confirm_user(ConfirmRequest {
+        title: title.to_owned(),
+        subtitle: subtitle.to_owned(),
+    });
+    let answer = asked.await.map_err(|_| "unlock-failed")?;
+    unlocked_from(&answer.status).map(|_| ())
+}
+
 #[tauri::command]
 pub async fn remote_client_close<R: Runtime>(
     app: AppHandle<R>,
@@ -1552,6 +1714,64 @@ mod tests {
     }
 
     #[test]
+    fn power_actions_are_a_fixed_list_and_the_prompt_names_each() {
+        for (name, power) in [
+            ("sleep", Power::Sleep),
+            ("hibernate", Power::Hibernate),
+            ("sign-out", Power::SignOut),
+            ("restart", Power::Restart),
+            ("shut-down", Power::ShutDown),
+            ("cancel", Power::Cancel),
+        ] {
+            assert!(power_from(name) == Some(power), "{name}");
+        }
+        for bad in ["", "shutdown", "SHUT-DOWN", "reboot", "lock", "force"] {
+            assert!(power_from(bad).is_none(), "{bad}");
+        }
+        assert_eq!(
+            power_prompt_texts(Some("de"), Power::ShutDown).0,
+            "PC ausschalten?"
+        );
+        assert_eq!(
+            power_prompt_texts(Some("en"), Power::Restart).0,
+            "Restart the PC?"
+        );
+        assert_eq!(
+            power_prompt_texts(None, Power::Sleep).0,
+            "Put the PC to sleep?"
+        );
+        // monitor off is a media action of the fixed list
+        assert!(media_from("monitor-off") == Some(Media::MonitorOff));
+    }
+
+    #[test]
+    fn an_unlock_stands_once_more_only_for_the_same_action_soon_and_with_despite() {
+        let t0 = Instant::now();
+        let kept = Some((Power::ShutDown, t0));
+        assert!(approval_holds(
+            kept,
+            Power::ShutDown,
+            true,
+            t0 + Duration::from_secs(29)
+        ));
+        assert!(!approval_holds(
+            kept,
+            Power::ShutDown,
+            true,
+            t0 + DESPITE_VALID
+        ));
+        assert!(
+            !approval_holds(kept, Power::Restart, true, t0),
+            "another action"
+        );
+        assert!(
+            !approval_holds(kept, Power::ShutDown, false, t0),
+            "not a despite"
+        );
+        assert!(!approval_holds(None, Power::ShutDown, true, t0));
+    }
+
+    #[test]
     fn the_wire_shape_the_page_relies_on() {
         let event = EventDto::State {
             session: 7,
@@ -1573,10 +1793,26 @@ mod tests {
             unlock_required: true,
             no_lock: false,
             state: state_dto(PcState::UNKNOWN),
+            power: None,
         };
         assert_eq!(
             serde_json::to_string(&opened).unwrap(),
-            r#"{"session":7,"level":"media","grant":"full","unlockRequired":true,"noLock":false,"state":{"volume":null,"mute":false,"playing":false,"locked":false}}"#
+            r#"{"session":7,"level":"media","grant":"full","unlockRequired":true,"noLock":false,"state":{"volume":null,"mute":false,"playing":false,"locked":false},"power":null}"#
+        );
+        let with_power = OpenedDto {
+            power: Some(power_dto(PowerInfo {
+                granted: true,
+                pending: false,
+                hibernate: true,
+            })),
+            ..opened
+        };
+        assert!(serde_json::to_string(&with_power)
+            .unwrap()
+            .ends_with(r#""power":{"granted":true,"pending":false,"hibernate":true}}"#));
+        assert_eq!(
+            serde_json::to_string(&event_dto(7, Event::Power(PowerAnswer::Working))).unwrap(),
+            r#"{"kind":"power","session":7,"answer":"working"}"#
         );
         let closed = EventDto::Closed {
             session: 7,

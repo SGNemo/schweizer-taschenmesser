@@ -274,7 +274,51 @@ export interface RemoteHostService {
 
 /** What the phone may ask of the PC in a media session: a fixed list, there is no "any key". */
 export type RemoteAction =
-  'play-pause' | 'next' | 'previous' | 'volume-up' | 'volume-down' | 'mute' | 'lock';
+  | 'play-pause'
+  | 'next'
+  | 'previous'
+  | 'volume-up'
+  | 'volume-down'
+  | 'mute'
+  | 'lock'
+  /** Only to a PC whose `opened.power` is not `null` (an older PC would end the session). */
+  | 'monitor-off';
+
+/** Power at the PC (each but `cancel` runs only after the PC's 10 s countdown). A fixed list. */
+export type RemotePowerAction =
+  | 'sleep'
+  | 'hibernate'
+  | 'sign-out'
+  | 'restart'
+  | 'shut-down'
+  | 'cancel';
+
+/**
+ * What the PC says about power – to an action, or unasked (the countdown ran out, or was stopped
+ * at the PC). Every answer is the latest state of the countdown; none is paired with a request.
+ * `working`: Nemo on the PC is still busy (sync, download, backup) – nothing started; asking again
+ * with `despite` starts it.
+ */
+export type RemotePowerAnswer =
+  | 'started'
+  | 'working'
+  | 'pending'
+  | 'cancelled'
+  | 'done'
+  | 'not-granted'
+  | 'locked'
+  | 'limit'
+  | 'failed';
+
+/** The PC's power facts in `opened`. */
+export interface RemotePowerInfo {
+  /** This phone may switch the PC off. */
+  granted: boolean;
+  /** A countdown runs at the PC right now. */
+  pending: boolean;
+  /** The PC can hibernate. */
+  hibernate: boolean;
+}
 
 /** Mouse buttons, pressed or released (a session of the mouse level only). A fixed list. */
 export type RemoteButtonAction = 'left-down' | 'left-up' | 'right-down' | 'right-up';
@@ -316,7 +360,9 @@ export type RemoteCloseReason =
 export type RemoteEvent =
   | { kind: 'state'; session: number; state: RemotePcState }
   /** Over: with the PC's reason, or `null` (connection lost, idle, replaced at the PC). */
-  | { kind: 'closed'; session: number; reason: RemoteCloseReason | null };
+  | { kind: 'closed'; session: number; reason: RemoteCloseReason | null }
+  /** About power (see `RemotePowerAnswer`); the session goes on. */
+  | { kind: 'power'; session: number; answer: RemotePowerAnswer };
 
 export interface RemoteOpened {
   session: number;
@@ -328,6 +374,8 @@ export interface RemoteOpened {
   /** The PC asks for an unlock at the phone, and this phone has no screen lock at all. */
   noLock: boolean;
   state: RemotePcState;
+  /** `null`: a PC from before power (no monitor off, no power actions). */
+  power: RemotePowerInfo | null;
 }
 
 /**
@@ -383,6 +431,20 @@ export interface RemoteService {
   text(session: number, text: string): Promise<void>;
   /** One pointer move or wheel step; `dy > 0` is down, `dx > 0` to the right. */
   pointer(session: number, kind: 'move' | 'scroll', dx: number, dy: number): Promise<void>;
+  /**
+   * One power action. Before every action but `cancel` the phone asks for its own unlock
+   * (fingerprint, face or PIN, natively; its prompt names the action – `lang` picks the
+   * language); a phone without a screen lock is not asked. `despite` (after `working`) re-uses
+   * that unlock for the same action within 30 s, once. The PC's answer comes as a `power` event.
+   * Rejects with `no-power` (the PC has no power), `bad-action`, `unlock-cancelled`,
+   * `unlock-failed`, `unlock-unavailable`, `unlock-busy`, `closed`, `network`.
+   */
+  power(
+    session: number,
+    action: RemotePowerAction,
+    despite: boolean,
+    lang?: string,
+  ): Promise<void>;
   close(session: number): Promise<void>;
 }
 
