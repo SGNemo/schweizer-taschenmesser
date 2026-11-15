@@ -24,7 +24,7 @@ const manifest: ModuleManifest = {
     tabs: true,
     signature: 'dumbbell',
   },
-  version: 2,
+  version: 3,
   get description() {
     return t.fitness.meta.description;
   },

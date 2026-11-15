@@ -6,6 +6,18 @@ import { DATE_RE, TIME_RE } from '@/core/time/dates';
  * stored here (no weight, height, age): the kcal goal calculator keeps its inputs in the open dialog.
  */
 
+/**
+ * One set of an exercise, when it was logged set by set (deep package 2: „Einheit starten“ or „Sätze
+ * einzeln“). A warm-up set never counts in the summary, the best or the sets per muscle group.
+ */
+export const setSchema = z.object({
+  reps: z.number().int().min(1).max(500).optional(),
+  weightKg: z.number().min(0).max(1000).optional(),
+  warmup: z.literal(true).optional(),
+  note: z.string().trim().max(200).optional(),
+});
+export type WorkSet = z.output<typeof setSchema>;
+
 /** One exercise of a session: sets × reps at a weight, or a duration (Laufen 30 Min). All optional. */
 export const exerciseSchema = z.object({
   name: z.string().trim().min(1).max(80),
@@ -14,6 +26,13 @@ export const exerciseSchema = z.object({
   /** Kilograms, at most one decimal (62.5). */
   weightKg: z.number().min(0).max(1000).optional(),
   durationMin: z.number().int().min(1).max(1440).optional(),
+  /**
+   * The single sets (manifest v3). When present, `sets`/`reps`/`weightKg` are its summary (working sets,
+   * heaviest weight with its reps), so every older reader keeps working unchanged.
+   */
+  log: z.array(setSchema).max(50).optional(),
+  /** Done back to back with the next exercise (a superset); the rest comes after both. */
+  superset: z.literal(true).optional(),
 });
 export type Exercise = z.output<typeof exerciseSchema>;
 

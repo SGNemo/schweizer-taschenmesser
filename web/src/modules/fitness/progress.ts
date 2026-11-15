@@ -5,6 +5,7 @@
  */
 import { groupOf, type Group } from './catalog';
 import { isLogged } from './logic';
+import { measuredSets } from './sets';
 import type { Exercise, Session } from './schema';
 
 type Logged = Pick<Session, 'date' | 'time' | 'exercises' | 'planned'>;
@@ -51,17 +52,21 @@ export function personalBest(history: readonly ExerciseEntry[]): Best | undefine
   let weight: Extract<Best, { kind: 'weight' }> | undefined;
   let reps: Extract<Best, { kind: 'reps' }> | undefined;
   let minutes: Extract<Best, { kind: 'minutes' }> | undefined;
-  for (const { date, exercise: e } of old) {
-    if (e.weightKg !== undefined && e.weightKg > 0) {
-      const better =
-        !weight ||
-        e.weightKg > weight.kg ||
-        (e.weightKg === weight.kg && (e.reps ?? 0) > (weight.reps ?? 0));
-      if (better)
-        weight = { kind: 'weight', kg: e.weightKg, ...(e.reps ? { reps: e.reps } : {}), date };
-    } else if (e.reps && (!reps || e.reps > reps.reps)) reps = { kind: 'reps', reps: e.reps, date };
-    if (e.durationMin && (!minutes || e.durationMin > minutes.minutes))
-      minutes = { kind: 'minutes', minutes: e.durationMin, date };
+  for (const { date, exercise: row } of old) {
+    // A row logged set by set is measured per working set (warm-ups never set a best).
+    for (const e of measuredSets(row)) {
+      if (e.weightKg !== undefined && e.weightKg > 0) {
+        const better =
+          !weight ||
+          e.weightKg > weight.kg ||
+          (e.weightKg === weight.kg && (e.reps ?? 0) > (weight.reps ?? 0));
+        if (better)
+          weight = { kind: 'weight', kg: e.weightKg, ...(e.reps ? { reps: e.reps } : {}), date };
+      } else if (e.reps && (!reps || e.reps > reps.reps))
+        reps = { kind: 'reps', reps: e.reps, date };
+    }
+    if (row.durationMin && (!minutes || row.durationMin > minutes.minutes))
+      minutes = { kind: 'minutes', minutes: row.durationMin, date };
   }
   return weight ?? reps ?? minutes;
 }
@@ -105,10 +110,12 @@ export function isBestEntry(entry: ExerciseEntry, best: Best | undefined): boole
 /** Do this entry's values equal the best (on any day)? The list then says „Bestwert“ instead of the numbers. */
 export function reachesBest(entry: ExerciseEntry, best: Best | undefined): boolean {
   if (!best) return false;
-  const e = entry.exercise;
-  if (best.kind === 'weight') return e.weightKg === best.kg && (e.reps ?? 0) === (best.reps ?? 0);
-  if (best.kind === 'reps') return !(e.weightKg && e.weightKg > 0) && e.reps === best.reps;
-  return e.durationMin === best.minutes;
+  if (best.kind === 'minutes') return entry.exercise.durationMin === best.minutes;
+  return measuredSets(entry.exercise).some((e) =>
+    best.kind === 'weight'
+      ? e.weightKg === best.kg && (e.reps ?? 0) === (best.reps ?? 0)
+      : !(e.weightKg && e.weightKg > 0) && e.reps === best.reps,
+  );
 }
 
 /** Sets (and minutes for exercises without sets) per muscle group inside a date range. */
