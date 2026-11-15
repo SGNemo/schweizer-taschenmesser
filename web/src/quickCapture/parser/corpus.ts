@@ -24,6 +24,8 @@ export interface CorpusCase {
   pin?: string;
   startDate?: string;
   hardDue?: boolean;
+  /** ToDos: „bis/spätestens <Tag>“ makes the day and its hour a deadline (package 5b: the ToDo's `dueTime`). */
+  deadline?: true;
   /** Run with Fitness on (`ParseOptions.fitness`): the meal and workout sentences. */
   fitness?: true;
   /** Run with the Uhr module on (`ParseOptions.place`, a stub that knows Tokio, New York and Lisbon). */
@@ -397,6 +399,7 @@ export const CORPUS: CorpusCase[] = [
     type: 'todo',
     date: '2026-11-01',
     time: '18:00',
+    deadline: true,
     title: 'Team-Sachen lesen',
   },
   { from: 'WE-W04', text: 'Team-Sachen lesen bis Sonntag', type: 'todo', date: '2026-11-01' },
