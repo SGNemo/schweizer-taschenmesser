@@ -3213,8 +3213,8 @@ export const de = {
       },
       sort: {
         label: 'Sortieren nach',
-        next: 'Datum',
-        cost: 'Kosten',
+        next: 'Fällig',
+        cost: 'Pro Jahr',
         name: 'Name',
       },
       perYearShort: (amount: string) => `${amount} im Jahr`,

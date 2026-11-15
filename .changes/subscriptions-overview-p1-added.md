@@ -10,6 +10,6 @@ en: Subscriptions: a new overview with a pie chart by type or subscription, the 
 type: changed
 area: subscriptions
 breaking: false
-de: Abos: Die Liste lässt sich nach Datum, Kosten oder Name sortieren; nach Kosten steht bei jedem Abo, was es im Jahr kostet. „Teuerste Abos“ geht in der Übersicht auf.
-en: Subscriptions: the list can be sorted by date, cost or name; sorted by cost each subscription shows what it costs per year. “Most expensive” is now part of the overview.
+de: Abos: Die Liste lässt sich nach Fälligkeit, Kosten pro Jahr oder Name sortieren; nach Kosten steht bei jedem Abo, was es im Jahr kostet. „Teuerste Abos“ geht in der Übersicht auf.
+en: Subscriptions: the list can be sorted by due date, cost per year or name; sorted by cost each subscription shows what it costs per year. “Most expensive” is now part of the overview.
 ---
