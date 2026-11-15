@@ -20,7 +20,7 @@ In der **PWA** (Browser oder aus dem Browser installiert) ist die Redirect-URI e
 - **Tab „Playlists“** (Musik-Seite): alle deine Playlists, eigene und gefolgte, als Cover. Suche nach Name oder Beschreibung, nur *Eigene* oder *Gefolgte* zeigen, nach Name oder Anzahl Titel sortieren. Mit *Playlists bearbeiten* legst du eine Playlist an, änderst Name und Beschreibung und entfernst Titel (*⋯ → Aus dieser Playlist entfernen*; *Rückgängig* legt ihn zurück).
 - **Tab „Alben“:** deine gespeicherten Alben. Auf einer Albumseite merkt *Speichern* es sich in deinen Alben (braucht *Lieblingssongs*). *⋯ → Zu <Künstler>* und die Suche öffnen eine **Künstlerseite** mit den meistgehörten Titeln und den Alben.
 - **Weiterhören** (Startansicht): die Playlists, Alben und Künstler, aus denen du zuletzt gehört hast; ein Tipp spielt dort weiter. *Zuletzt gespielt* ist in die Startansicht gewandert (*Alle anzeigen* öffnet die ganze Liste).
-- **Schlaf-Timer** (Mond-Menü im Player): in 15–60 Minuten oder am Ende des Titels pausieren. Er läuft, solange Nemo offen ist; *Aus* beendet ihn. **Liedtext suchen** (selbes Menü) öffnet genius.com im Browser. Tasten: Umschalt+↑ / ↓ Lautstärke, S Zufall.
+- **Schlaf-Timer** (*⋯* neben dem Titel): in 15–60 Minuten oder am Ende des Titels pausieren. Er läuft, solange Nemo offen ist; *Aus* beendet ihn. **Liedtext suchen** und *In Spotify öffnen* (selbes Menü) öffnet genius.com im Browser. Tasten: Umschalt+↑ / ↓ Lautstärke, S Zufall.
 - Zusätzliche Berechtigungen sind beim Verbinden freiwillig: *Playlists*, *Lieblingssongs* (lesen **und** speichern) und *Zuletzt gehört*. Wenn du schon verbunden warst, hake sie unter Verbindungen → Spotify an und verbinde neu.
 
 Gut zu wissen:

@@ -20,7 +20,7 @@ In the **PWA** (browser or installed from the browser) the Redirect URI is diffe
 - **Playlists tab** (Music page): all your playlists, your own and the ones you follow, as covers. Search by name or description, show *Yours* or *Followed*, sort by name or number of tracks. With *Edit playlists* you can create a playlist, change its name and description, and remove a song (*⋯ → Remove from this playlist*; *Undo* puts it back).
 - **Albums tab:** your saved albums. On an album page, *Save* keeps it in your albums (needs *Liked songs*). *⋯ → Go to <artist>* and the search open an **artist page** with the most played tracks and the albums.
 - **Continue listening** (start view): the playlists, albums and artists you played from lately; a tap plays on there. *Recently played* moved into the start view (*Show all* opens the whole list).
-- **Sleep timer** (moon menu in the player): pause in 15–60 minutes or at the end of the track. It works while Nemo is open; *Off* ends it. **Search lyrics** (same menu) opens genius.com in your browser. Keys: Shift+↑ / ↓ volume, S shuffle.
+- **Sleep timer** (*⋯* beside the track title): pause in 15–60 minutes or at the end of the track. It works while Nemo is open; *Off* ends it. **Search lyrics** and *Open in Spotify* (same menu) opens genius.com in your browser. Keys: Shift+↑ / ↓ volume, S shuffle.
 - Extra permissions are opt-in when connecting: *Playlists*, *Liked songs* (read **and** save) and *Recently played*. If you connected earlier, tick them under Connections → Spotify and connect again.
 
 Good to know:
