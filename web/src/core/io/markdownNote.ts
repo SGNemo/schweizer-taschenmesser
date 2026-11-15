@@ -14,9 +14,9 @@ export interface ParsedNote {
   pinned?: boolean;
   /** Top-level folder of a folder/ZIP import (Obsidian vault); becomes a notebook. */
   folder?: string;
-  /** Epoch ms from the front matter (`created:`, else `date:`); see `noteDates` for the file date. */
+  /** Epoch ms, the source's own date: front matter `created:` (else `date:`), Keep, ENEX `<created>`; see `noteDates`. */
   createdAt?: number;
-  /** Epoch ms from the front matter (`modified:`, else `updated:`). */
+  /** Epoch ms, the source's own: front matter `modified:` (else `updated:`), Keep, ENEX `<updated>`. */
   updatedAt?: number;
 }
 
