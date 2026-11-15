@@ -112,6 +112,7 @@ export function RemoteHostSection() {
         level: now.level,
         paused: now.paused,
         unlock: now.unlock,
+        power: now.power,
         ...patch,
       });
     });
@@ -205,6 +206,16 @@ export function RemoteHostSection() {
                     ))}
                   </SelectField>
                 )}
+                {/* switching off is its own permission, offered once the device may do anything */}
+                {!d.paused && d.level !== 'off' ? (
+                  <Switch
+                    label={l.power}
+                    hint={l.powerHint}
+                    checked={d.power}
+                    disabled={busy || !status.enabled}
+                    onChange={(on) => void setGrant(d, { power: on })}
+                  />
+                ) : null}
                 {/* the phone's own unlock: only mouse and keyboard ask for it */}
                 {!d.paused && d.level === 'full' ? (
                   <Switch

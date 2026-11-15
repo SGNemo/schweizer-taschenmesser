@@ -4,7 +4,7 @@ export const bookmarks: Strings['bookmarks'] = {
   meta: {
     name: 'Saved',
     description:
-      'Save links, reading, films, places and ideas – with tags, filters and a done status; links you use often as bookmark tiles. On your phone also via “Share” from other apps.',
+      'What you still want to look at, read, buy, try out or visit – with tags and a status. Every saved item has an end: done or gone. The few links you need every day live in the “Bookmarks” tab. On your phone also via “Share” from other apps.',
     route: 'Saved',
     widget: 'Saved',
     widgetLinks: 'Bookmarks',
@@ -15,9 +15,12 @@ export const bookmarks: Strings['bookmarks'] = {
       sort: 'Sorting',
       sortHelp:
         'Sets what comes first in each group: newest, by title, by type, or started items first.',
+      groupBy: 'Grouping',
+      groupByHelp:
+        'Sets how the list is divided: by when you saved it, by first tag (like collections) or by type. The choice in the page menu changes the same setting.',
       linkPreview: 'Load link previews',
       linkPreviewHint:
-        'When you save a link, fetches its title, description and a small picture directly from the linked page. That page then learns that you saved the link. Default: off.',
+        'Every time you save a link, fetches its title, description and a small picture directly from the linked page. That page then learns that you saved the link. Default: off. One at a time always works: in the “⋯” menu of a saved item, or when you share from your phone.',
     },
   },
   title: 'Saved',
@@ -33,6 +36,8 @@ export const bookmarks: Strings['bookmarks'] = {
     watch: 'Film/Series',
     book: 'Book',
     place: 'Place',
+    buy: 'Buy',
+    try: 'Try out',
     idea: 'Idea',
     other: 'Other',
   } as Record<string, string>,
@@ -51,14 +56,14 @@ export const bookmarks: Strings['bookmarks'] = {
   linksContext: (n: number, groups: number) =>
     `${n === 1 ? '1 link' : `${n} links`}${groups === 0 ? '' : ` · ${groups === 1 ? 'in 1 group' : `in ${groups} groups`}`}`,
   noGroup: 'No group',
-  linksEmpty: 'No bookmarks yet. Add links you need often – grouped by their first tag.',
-  empty: 'Nothing saved yet.',
+  linksEmpty:
+    'No bookmarks yet. This is the place for the few links you need every day, grouped by their first tag. It does not replace your browser’s bookmarks.',
+  empty: 'Nothing saved yet. Collect here what you want to look at, read, buy or try out.',
   emptyAction: 'Add saved item',
   emptyFiltered: 'Nothing found.',
   open: 'Open link',
   done: 'Done',
   widgetEmpty: 'Nothing saved.',
-  openCount: (n: number) => (n === 1 ? '1 open saved item' : `${n} open saved items`),
   moreOptions: 'More options',
   groupBy: 'Group by',
   groupings: { recent: 'Recently saved', tag: 'First tag', kind: 'Type' },
@@ -75,6 +80,25 @@ export const bookmarks: Strings['bookmarks'] = {
   sortBy: 'Sort by',
   sorts: { newest: 'Newest first', title: 'Title A–Z', kind: 'By type', status: 'Started first' },
   statuses: { open: 'Open', started: 'Started', done: 'Done' },
+  duplicate: (title: string, status: string) =>
+    `Already saved: “${title}”${status ? ` (${status})` : ''}. You can still save it.`,
+  duplicateOpen: 'Open the existing one',
+  sharedPreview: 'Fetch a preview from the page',
+  sharedPreviewHint:
+    'On saving, fetches the title, description and a small picture once from this page, without sign-in and without cookies.',
+  previewFetch: 'Fetch a preview from the page',
+  previewFetched: 'Preview fetched. The pinboard shows it.',
+  previewNone: 'No preview came back for this page just now.',
+  previewUnavailable:
+    'In the browser the preview needs your sync server. The desktop and Android apps fetch it themselves.',
+  planAdd: 'Add to the plan',
+  planRemove: 'Take out of the plan',
+  planAdded: 'Now in the plan.',
+  planRemoved: 'Taken out of the plan. The saved item stays.',
+  inPlan: 'in the plan',
+  planTitle: (kind: string, title: string) => (kind ? `${kind}: ${title}` : title),
+  widgetNext: 'Up next · pick one',
+  widgetWeekend: 'For the weekend · pick one',
   markStarted: 'Mark as started',
   markOpen: 'Reopen',
   markDone: 'Mark as done',

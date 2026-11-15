@@ -2,3 +2,14 @@
   display: grid;
   gap: var(--space-3);
 }
+
+.subhead {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-muted);
+  margin: var(--space-4) 0 var(--space-2);
+}
+
+.muted {
+  color: var(--text-muted);
+}

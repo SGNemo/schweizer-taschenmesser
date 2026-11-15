@@ -401,3 +401,23 @@ describe('write side (opt-in, only called after the UI confirmed)', () => {
     expect(requests).toHaveLength(0);
   });
 });
+
+describe('newsletter unsubscribe header', () => {
+  it('keeps only an https unsubscribe page of a full message', async () => {
+    const { parseMessage } = await import('./gmail');
+    const m = parseMessage({
+      id: 'm1',
+      threadId: 't1',
+      payload: {
+        headers: [
+          { name: 'From', value: 'News <news@example.org>' },
+          {
+            name: 'List-Unsubscribe',
+            value: '<mailto:out@example.org>, <https://news.example.org/u?id=1>',
+          },
+        ],
+      },
+    });
+    expect(m.unsubscribeUrl).toBe('https://news.example.org/u?id=1');
+  });
+});

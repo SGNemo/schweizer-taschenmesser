@@ -27,13 +27,15 @@ export function diffPlans(
     else if (p.date === a.date) diff.unchanged++;
     else {
       const b = bumps.find((x) => x.id === a.id);
-      const reason: MoveReason = b?.cause ?? (a.date < p.date ? 'pulled' : 'carried');
+      // The user's pin moved it: that is the cause, whatever else happened on the day it left.
+      const reason: MoveReason =
+        a.reason === 'pinned' ? 'pinned' : (b?.cause ?? (a.date < p.date ? 'pulled' : 'carried'));
       diff.moved.push({
         id: a.id,
         from: p.date,
         to: a.date,
         reason,
-        ...(b?.by.length ? { by: b.by } : {}),
+        ...(b?.by.length && reason !== 'pinned' ? { by: b.by } : {}),
       });
     }
   }

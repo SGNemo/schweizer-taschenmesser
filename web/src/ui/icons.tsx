@@ -36,6 +36,8 @@ import {
   Sunrise,
   Sunset,
   Umbrella,
+  LogOut,
+  Power,
   Bell,
   Bookmark,
   Cake,
@@ -259,6 +261,8 @@ const ICONS = {
   sunrise: Sunrise,
   sunset: Sunset,
   umbrella: Umbrella,
+  power: Power,
+  signOut: LogOut,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;

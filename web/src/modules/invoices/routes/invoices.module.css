@@ -181,3 +181,28 @@
     display: none;
   }
 }
+
+/* Where the invoice came from and where it stands (links, plan day): label over value, quiet. */
+.linkFacts {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+.linkFacts dt {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.linkFacts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.linkValue {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.linkValues {
+  display: grid;
+  gap: var(--space-1);
+}

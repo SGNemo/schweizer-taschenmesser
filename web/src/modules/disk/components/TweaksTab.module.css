@@ -1,0 +1,153 @@
+.tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.lead {
+  color: var(--text-muted);
+  margin: calc(-1 * var(--space-3)) 0 0;
+}
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-4);
+  min-height: var(--touch);
+}
+.status {
+  margin: 0;
+  font-weight: var(--weight-semibold);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.failed {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.muted {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+/* The restore point is an offer, not a step: one quiet line below everything else. */
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  margin-top: var(--space-2);
+}
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+.group h2 {
+  margin: 0;
+  font-size: var(--text-xl);
+}
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--border);
+}
+.row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.row:last-child {
+  padding-bottom: 0;
+}
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+.name {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+}
+.what {
+  margin: 0;
+}
+.changed,
+.state {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.control {
+  flex: none;
+  display: flex;
+  align-items: center;
+  min-height: var(--touch);
+}
+.pair {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.pair > button {
+  min-height: var(--touch);
+}
+/* Nothing to apply: locked like a disabled button (neutral surface, readable text), but it keeps
+   the focus. */
+.control .apply[aria-disabled='true'],
+.control .apply[aria-disabled='true']:hover,
+.control .apply[aria-disabled='true']:active {
+  background: var(--surface-sunken);
+  color: var(--text-3);
+  border-color: color-mix(in srgb, var(--border-strong) 55%, transparent);
+  cursor: not-allowed;
+  transform: none;
+}
+.more > summary {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  color: var(--text-muted);
+}
+.moreBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-bottom: var(--space-2);
+}
+.moreBody p {
+  margin: 0;
+}
+.moreBody a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+}
+.dialogText {
+  margin: 0;
+}
+.dialogList {
+  margin: var(--space-3) 0 0;
+  padding-left: var(--space-5);
+}

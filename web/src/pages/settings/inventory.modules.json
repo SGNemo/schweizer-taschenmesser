@@ -12,6 +12,11 @@
         "label": "Tresor sperren, wenn die App im Hintergrund ist",
         "default": "now"
       },
+      "clipboardSeconds": {
+        "type": "select",
+        "label": "Kopiertes aus der Zwischenablage löschen",
+        "default": "30"
+      },
       "originMatch": {
         "type": "select",
         "label": "Browser-Erweiterung: Zugangsdaten anbieten für",
@@ -51,6 +56,11 @@
         "type": "select",
         "label": "Sortierung",
         "default": "newest"
+      },
+      "groupBy": {
+        "type": "select",
+        "label": "Gruppierung",
+        "default": "recent"
       },
       "linkPreview": {
         "type": "boolean",
@@ -355,6 +365,11 @@
       "showAnswered": {
         "type": "boolean",
         "label": "„Beantwortet?“ anzeigen",
+        "default": true
+      },
+      "shortcuts": {
+        "type": "boolean",
+        "label": "Tastenkürzel wie in Gmail",
         "default": true
       },
       "notify": {

@@ -16,12 +16,15 @@ export function DocumentDetail({
   doc: d,
   day,
   hasFile,
+  categoryName,
   onEdit,
   onClose,
 }: {
   doc: Stored<VaultDocument>;
   day: string;
   hasFile: boolean;
+  /** The folder it is shown in ("Ohne Kategorie" when its own is gone). */
+  categoryName: string;
   onEdit: () => void;
   onClose: () => void;
 }) {
@@ -65,7 +68,7 @@ export function DocumentDetail({
   return (
     <DetailPanel
       testId="document-detail"
-      eyebrow={t.vault.categories[d.category]}
+      eyebrow={categoryName}
       title={d.title}
       facts={facts}
       onClose={onClose}

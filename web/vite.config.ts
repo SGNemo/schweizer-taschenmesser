@@ -180,6 +180,8 @@ export default defineConfig({
       },
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        // The desktop shell's countdown window (power.html) never runs in the PWA.
+        globIgnores: ['power.html', 'assets/power-*'],
         // Tools, chat and the password dictionaries load on first use (decision in
         // docs/decisions/core.md); everything else stays precached so the app works offline.
         manifestTransforms: [
@@ -191,7 +193,8 @@ export default defineConfig({
       },
     }),
   ],
-  // Two entries: the app and the small quick-capture window of the desktop shell (capture.html).
+  // Three entries: the app, the small quick-capture window of the desktop shell (capture.html) and
+  // the countdown before a remote power action (power.html).
   build: {
     manifest: bundleReport,
     rollupOptions: {
@@ -234,6 +237,7 @@ export default defineConfig({
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         capture: fileURLToPath(new URL('./capture.html', import.meta.url)),
+        power: fileURLToPath(new URL('./power.html', import.meta.url)),
       },
     },
   },

@@ -1,6 +1,5 @@
 import { WidgetErrorBoundary } from '@/layout/WidgetErrorBoundary';
 import {
-  closestCenter,
   DndContext,
   KeyboardSensor,
   MouseSensor,
@@ -56,6 +55,7 @@ import {
 } from '@/ui';
 import { widgetsOf } from './AutoWidget';
 import { AgendaBlock } from './AgendaBlock';
+import { overviewCollision } from './collision';
 import { agendaRange } from './agenda';
 import { AttentionStrip } from './AttentionStrip';
 import {
@@ -68,7 +68,7 @@ import {
 import { CockpitStats } from './CockpitStats';
 import { OverviewHead } from './OverviewHead';
 import { ResumeCard } from './ResumeCard';
-import { gridColumns, SETTLE_CAP_MS, stagedCards, usePackedGrid } from './masonry';
+import { gridColumns, SETTLE_CAP_MS, stagedCards, useGridBuildUp } from './masonry';
 
 import styles from './Home.module.css';
 import {
@@ -240,9 +240,9 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
   // the first ones before mounting the rest only adds a round trip.
   const staged = !built && shown.length > 2 * firstStep;
   const mounted = stagedCards(shown, firstStep, built);
-  // Packed (no holes) except while editing: reordering picks targets by position, so there the grid keeps the
-  // saved order on plain rows.
-  const packRef = usePackedGrid<HTMLDivElement>(
+  // Built up step by step except while editing (the edit mode shows every card at once). The grid is the same in both:
+  // rows of equal height in the saved order, so reordering picks targets where the cards are.
+  const buildRef = useGridBuildUp<HTMLDivElement>(
     mounted.map((e) => e.key).join('|'),
     !editing,
     blocksReady && (!staged || firstStep > 0),
@@ -253,10 +253,10 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
   // grid stands, empty, before the first card.
   const gridRef = useCallback(
     (el: HTMLDivElement | null) => {
-      packRef(el);
+      buildRef(el);
       if (el && layoutRead) setFirstStep((n) => n || gridColumns(el));
     },
-    [packRef, layoutRead],
+    [buildRef, layoutRead],
   );
 
   const sensors = useSensors(
@@ -390,7 +390,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
       ) : (
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCenter}
+          collisionDetection={overviewCollision}
           onDragEnd={onDragEnd}
           accessibility={{
             announcements,
@@ -613,7 +613,7 @@ function SortableWidget({
       data-area={manifest?.area}
     >
       <Card>
-        <div className={styles.head}>
+        <div className={[styles.head, !editing && settingsTo ? styles.withGear : ''].join(' ')}>
           {manifest ? (
             <span className={styles.chip} aria-hidden="true">
               <Icon name={manifest.icon} size={16} />

@@ -8,6 +8,11 @@
   color: var(--text);
   font-variant-numeric: var(--font-num);
 }
+.mark {
+  display: inline-flex;
+  margin-inline-end: var(--space-2);
+  vertical-align: -0.2em;
+}
 .note {
   color: var(--text-on-tint);
 }

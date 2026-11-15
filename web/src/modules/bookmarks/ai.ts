@@ -1,14 +1,15 @@
 import type { ModuleAiSchema } from '@/core/modules/types';
 
 export const aiSchema: ModuleAiSchema = {
-  description: 'Merkliste: Links, Lesen, Ansehen, Orte, Ideen mit Tags und Erledigt-Status',
+  description:
+    'Merkliste: was man sich noch ansehen, lesen, kaufen, ausprobieren oder besuchen will; mit Tags und Erledigt-Status',
   collections: {
     item: {
       label: 'Merkzettel',
       fields: {
         title: 'text',
         url: 'text',
-        kind: 'enum:link|read|watch|book|place|idea|other',
+        kind: 'enum:link|read|watch|book|place|buy|try|idea|other',
         tags: 'tags',
         note: 'text',
         done: 'bool',
@@ -22,7 +23,8 @@ export const aiSchema: ModuleAiSchema = {
       kind: 'create',
       collection: 'item',
       label: 'Merkzettel anlegen',
-      description: 'Link, Lesestoff, Film, Ort oder Idee merken',
+      description:
+        'Link, Lesestoff, Film, Ort, Kaufwunsch, etwas zum Ausprobieren oder Idee merken',
       fields: ['title', 'url', 'kind', 'tags', 'note'],
       required: ['title'],
       parse: {
@@ -34,6 +36,8 @@ export const aiSchema: ModuleAiSchema = {
             book: ['buch', 'roman'],
             watch: ['film', 'serie', 'ansehen', 'anschauen'],
             place: ['ort', 'restaurant'],
+            buy: ['kaufen', 'kaufwunsch'],
+            try: ['ausprobieren'],
             idea: ['idee'],
           },
         },
