@@ -8,11 +8,11 @@ test.beforeEach(async ({ page }) => {
 
 async function addReminder(page: Page, title: string, date: string, time = '20:00') {
   await ready(page, '/calendar?tab=reminders&new=1');
-  const dialog = page.getByRole('dialog', { name: 'Erinnerung hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Erinnerung eintragen' });
   await dialog.getByLabel('Titel').fill(title);
   await dialog.getByLabel('Datum').fill(date);
   await dialog.getByLabel('Beginn').fill(time);
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 

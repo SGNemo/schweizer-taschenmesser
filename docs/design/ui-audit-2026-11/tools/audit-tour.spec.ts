@@ -60,6 +60,10 @@ const MODULES: Mod[] = [
   { id: 'accounts', path: '/accounts' },
   { id: 'disk', path: '/disk', desktop: true, views: ['/disk/scan'] },
   { id: 'downloads', path: '/downloads', desktop: true },
+  // 0b-8: the clock is measured for the first time; routines (H-b) and device (S-b) are new modules.
+  { id: 'clock', path: '/clock' },
+  { id: 'routines', path: '/routines' },
+  { id: 'device', path: '/device' },
 ];
 const AREAS = ['/planen', '/geld', '/haushalt', '/wissen', '/tresor', '/geraet'];
 const SETTINGS = [
@@ -128,7 +132,8 @@ async function newContext(
     colorScheme: scheme,
   });
   const page = await context.newPage();
-  await page.route(/^https?:\/\/(?!localhost)/, (route) => route.abort());
+  await page.route(/^https?:\/\/(?!localhost(:\d+)?\/)/, (route) => route.abort());
+  await page.routeWebSocket(/^wss?:\/\/(?!localhost(:\d+)?\/)/, (ws) => ws.close());
   await mockWeather(page);
   await page.addInitScript((isDesktop) => {
     localStorage.setItem('tm-show-preview', '1');
@@ -198,8 +203,13 @@ async function measure(page: Page, root: 'main' | 'dialog', phone: boolean) {
         return k ? { r: Math.round(+k[1]! * 255), g: Math.round(+k[2]! * 255), b: Math.round(+k[3]! * 255), a: k[4] === undefined ? 1 : +k[4] } : null;
       };
       const saturation = (c: string) => { const p = parseRgb(c); if (!p || p.a < 0.05) return 0; const max = Math.max(p.r, p.g, p.b), min = Math.min(p.r, p.g, p.b); return max === 0 ? 0 : (max - min) / max; };
+      // 0b-8 (Sven, 2026-11-13): chroma (max − min) / 255 next to the saturation above; a dark grey with a slight hue
+      // has a high saturation but a tiny chroma. Tone steps count as plain, as in `measurePage()` since #796.
+      const chroma = (c: string) => { const p = parseRgb(c); if (!p || p.a < 0.05) return 0; return (Math.max(p.r, p.g, p.b) - Math.min(p.r, p.g, p.b)) / 255; };
+      const toneSteps = new Set(['--surface-raised', '--surface-sunken'].filter((n) => token(n) !== '').map((n) => { const q = document.createElement('span'); document.body.appendChild(q); q.style.color = token(n); const c = getComputedStyle(q).color; q.remove(); return c; }));
 
       // 1. Stimulus above the fold: actions, meaning colours, text amount.
+      const CHROMA = 0.1;
       const actionSel = 'button, a[href], input:not([type=hidden]), select, textarea, [role="button"], [role="tab"], [role="switch"], [role="checkbox"], [role="menuitem"]';
       const actions = all.filter((el) => el.matches(actionSel) && visible(el) && aboveFold(el));
       const chromeActions = actions.filter((el) => !el.closest('li, [data-row], table, [role="gridcell"], [role="grid"], [data-testid^="widget-"], article, dialog')).length;
@@ -208,7 +218,7 @@ async function measure(page: Page, root: 'main' | 'dialog', phone: boolean) {
       let firstContentY: number | null = null;
       for (const el of Array.from(document.querySelectorAll<HTMLElement>(contentSel))) { if (!visible(el) || el.closest('nav, [role="tablist"], dialog, aside, [data-testid="module-frame"]')) continue; const t = el.getBoundingClientRect().top; if (t > 60 && (firstContentY === null || t < firstContentY)) firstContentY = Math.round(t); }
       const primaries = actions.filter((el) => el.matches('button, a') && /(^|_| )primary(_|$| )/.test(String(el.className))).map((el) => txt(el) || el.getAttribute('aria-label') || '?');
-      let colouredText = 0, colouredSurfaces = 0, colouredIcons = 0, gradients = 0;
+      let colouredText = 0, colouredSurfaces = 0, colouredIcons = 0, gradients = 0, chromaText = 0, chromaSurfaces = 0;
       const colourSamples: string[] = [];
       for (const el of all) {
         if (!visible(el) || !aboveFold(el)) continue;
@@ -220,7 +230,9 @@ async function measure(page: Page, root: 'main' | 'dialog', phone: boolean) {
         }
         const own = Array.from(el.childNodes).some((n) => n.nodeType === Node.TEXT_NODE && n.textContent!.trim());
         if (own && saturation(s.color) > 0.25 && !neutralInk.has(s.color)) { colouredText++; if (colourSamples.length < 12) colourSamples.push(`text ${cls(el)} | ${txt(el).slice(0, 30)}`); }
+        if (own && chroma(s.color) > CHROMA && !neutralInk.has(s.color)) chromaText++;
         const pbg = parseRgb(s.backgroundColor);
+        if (!bgs.has(s.backgroundColor) && s.backgroundColor !== surface2 && !toneSteps.has(s.backgroundColor) && pbg && pbg.a > 0.05 && chroma(s.backgroundColor) > CHROMA) chromaSurfaces++;
         if (!bgs.has(s.backgroundColor) && s.backgroundColor !== surface2 && pbg && pbg.a > 0.05 && saturation(s.backgroundColor) > 0.12) { colouredSurfaces++; if (colourSamples.length < 12) colourSamples.push(`bg ${cls(el)} | ${txt(el).slice(0, 30)}`); }
         if (s.backgroundImage.includes('gradient')) gradients++;
       }
@@ -229,11 +241,13 @@ async function measure(page: Page, root: 'main' | 'dialog', phone: boolean) {
       for (const el of leafs) for (const n of Array.from(el.childNodes)) if (n.nodeType === Node.TEXT_NODE) { const t = n.textContent!.trim(); if (t) { textChars += t.length; words += t.split(/\s+/).length; } }
 
       // 2. Consistency: head, type, icons, spacing, weights, surfaces.
-      const band = document.querySelector<HTMLElement>('[data-testid="module-frame"] [data-size], header [data-size], [data-size]');
+      // 4.0 (0b-2): the module head is `[data-head]` (standard or stage); library, tools and settings keep a head card.
+      // Two queries: a selector list returns the first match in document order, not the first selector.
+      const band = ['main [data-head]', '[data-testid="module-frame"] [data-size]', 'header [data-size]', '[data-size]'].reduce<HTMLElement | null>((found, sel) => found ?? document.querySelector<HTMLElement>(sel), null);
       const h1 = scope.querySelector('h1') ?? document.querySelector('h1');
       const h1s = h1 ? getComputedStyle(h1) : null;
       const headEl = band ?? document.querySelector<HTMLElement>('[class*="band"]');
-      const head = headEl ? { height: Math.round(headEl.getBoundingClientRect().height), size: headEl.getAttribute('data-size'), hue: headEl.getAttribute('data-hue'), area: headEl.getAttribute('data-area') } : null;
+      const head = headEl ? { height: Math.round(headEl.getBoundingClientRect().height), size: headEl.getAttribute('data-size') ?? headEl.getAttribute('data-head'), hue: headEl.getAttribute('data-hue'), area: headEl.getAttribute('data-area') } : null;
       const h2 = new Map<string, number>();
       for (const el of Array.from(scope.querySelectorAll<HTMLElement>('h2, h3')).filter(visible)) {
         const s = getComputedStyle(el);
@@ -261,6 +275,8 @@ async function measure(page: Page, root: 'main' | 'dialog', phone: boolean) {
         }
         const pb = parseRgb(s.backgroundColor);
         if (s.backgroundColor === surface2) surface2Count++;
+        // 0b-8: tone steps are plain (in the dark theme their cool grey has a saturation above 0.12).
+        else if (toneSteps.has(s.backgroundColor)) neutralFills++;
         else if (!bgs.has(s.backgroundColor) && pb && pb.a > 0.05 && saturation(s.backgroundColor) > 0.12 && !el.matches('button, input, select, [role="tab"]')) tinted++;
         else if (!bgs.has(s.backgroundColor) && pb && pb.a > 0.05 && !el.matches('button, input, select, [role="tab"]')) neutralFills++;
         if (s.borderTopLeftRadius !== '0px' && r.width > 80) radii.set(s.borderTopLeftRadius, (radii.get(s.borderTopLeftRadius) ?? 0) + 1);
@@ -292,14 +308,15 @@ async function measure(page: Page, root: 'main' | 'dialog', phone: boolean) {
 
       const top = (m: Map<string, number>, n = 8) => Object.fromEntries(Array.from(m.entries()).sort((a, b) => b[1] - a[1]).slice(0, n));
       return {
-        stimulus: { actionsAboveFold: actions.length, chromeActions, firstContentY, primaries, colouredText, colouredSurfaces, gradients, colouredIcons, colourSamples, textChars, words },
+        stimulus: { actionsAboveFold: actions.length, chromeActions, firstContentY, primaries, colouredText, colouredSurfaces, gradients, colouredIcons, colourSamples, textChars, words, chromaText, chromaSurfaces },
         head,
         h1: h1s ? { size: h1s.fontSize, weight: h1s.fontWeight, family: h1s.fontFamily.split(',')[0]!.replace(/"/g, ''), text: txt(h1!) } : null,
         headings: Object.fromEntries(h2),
         fontSizes: top(sizes, 12), fontWeights: top(weights, 6), icons: top(icons, 10), spacing: { distinct: gaps.size, top: top(gaps, 10) },
         surfaces: { bordered, ringed, shadowed, tinted, neutralFills, surface2: surface2Count, gradients, radii: top(radii, 6) },
         rows: { n: rows.length, median: rowMedian, min: rows[0] ?? null, max: rows[rows.length - 1] ?? null },
-        motion: { animated: animated.slice(0, 10), transitions: top(transitions, 10) },
+        // 0b-8: no cap (the audit capped at 10, so 10 meant "10 or more").
+        motion: { animated, transitions: top(transitions, 10) },
         overflow, clipped, small,
         cls: (window as unknown as { __cls?: number }).__cls ?? null,
       };
@@ -345,7 +362,7 @@ async function discoverViews(page: Page): Promise<{ label: string; sel: string }
 }
 
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9äöü]+/g, '-').replace(/^-|-$/g, '').slice(0, 24);
-const ADD = /hinzufügen|anlegen|^neu(e[rs]?)?( |$)|neuer? [a-zäöü]+|erfassen|scannen|^\+/i;
+const ADD = /eintragen|hinzufügen|anlegen|^neu(e[rs]?)?( |$)|neuer? [a-zäöü]+|erfassen|scannen|^\+/i;
 
 async function closeDialogs(page: Page) {
   for (let i = 0; i < 3; i++) {
@@ -380,7 +397,7 @@ async function states(page: Page, dir: string, facts: Facts) {
   await page.keyboard.press('Tab');
   const focusInfo = await page.evaluate(() => { const el = document.activeElement as HTMLElement | null; if (!el) return null; const s = getComputedStyle(el); return { tag: el.tagName, name: el.getAttribute('aria-label') || el.innerText?.trim().slice(0, 30), outline: `${s.outlineStyle} ${s.outlineWidth} ${s.outlineOffset}`, focusVisible: el.matches(':focus-visible') }; });
   await page.screenshot({ path: `${dir}/state-focus.png` });
-  const btn = page.locator('main button').filter({ hasText: /Rechnung hinzufügen/ }).first();
+  const btn = page.locator('main button').filter({ hasText: /Rechnung (eintragen|hinzufügen)/ }).first();
   let press: unknown = null;
   if (await btn.count()) {
     const box = await btn.boundingBox();
@@ -439,11 +456,29 @@ async function tour(page: Page, vp: Vp, dir: string, seed: boolean) {
     await settle(page);
     const names: string[] = await page.locator('main button, main a[href]').evaluateAll((els) => els.slice(0, 60).map((e) => (e.getAttribute('aria-label') || (e as HTMLElement).innerText || '').trim())).catch(() => []);
     let opened = false;
+    // 0b-8: on the phone the page's main action is the plus of the bottom bar (Identity 4.0), not a button in `#main`.
+    const plus = page.getByTestId('bottom-plus');
+    if (vp.mobile && (await plus.isVisible().catch(() => false)) && (await plus.getAttribute('data-plus')) !== 'capture') {
+      const name = (await plus.getAttribute('aria-label')) ?? 'plus';
+      await page.evaluate(() => { (window as unknown as { __cls: number }).__cls = 0; });
+      await plus.click({ timeout: 5000 }).catch(() => {});
+      await page.waitForTimeout(WAIT);
+      const dlg = page.locator('dialog[open], [role="dialog"]').last();
+      if ((await dlg.count()) && (await dlg.isVisible().catch(() => false))) {
+        opened = true;
+        await page.screenshot({ path: `${dir}/dialog-${m.id}.png` });
+        facts[`dialog-${m.id}`] = { trigger: `plus: ${name}`, title: await dlg.locator('h2').first().innerText({ timeout: 2000 }).catch(() => null), box: await dlg.boundingBox(), fields: await dlg.locator('input:not([type=hidden]), select, textarea').count(), buttons: await dlg.locator('button').count(), ...(await measure(page, 'dialog', true)) };
+      }
+      await closeDialogs(page);
+      if (new URL(page.url()).pathname !== new URL(m.path, page.url()).pathname) { await page.goto(m.path); await settle(page); }
+    }
     for (let i = 0; i < names.length && !opened; i++) {
       const name = names[i]!;
       if (!ADD.test(name) || /importieren|einrichtung|kalender verwalten|nachkaufen|satz eintragen/i.test(name)) continue;
       const b = page.locator('main button, main a[href]').nth(i);
       if (!(await b.isVisible({ timeout: 1500 }).catch(() => false))) continue;
+      // 0b-8: CLS of the dialog alone (the audit summed since the page loaded).
+      await page.evaluate(() => { (window as unknown as { __cls: number }).__cls = 0; });
       await b.click({ timeout: 5000 }).catch(() => {});
       await page.waitForTimeout(WAIT);
       const dlg = page.locator('dialog[open], [role="dialog"]').last();
@@ -453,7 +488,7 @@ async function tour(page: Page, vp: Vp, dir: string, seed: boolean) {
         facts[`dialog-${m.id}`] = { trigger: name, title: await dlg.locator('h2').first().innerText({ timeout: 2000 }).catch(() => null), box: await dlg.boundingBox(), fields: await dlg.locator('input:not([type=hidden]), select, textarea').count(), buttons: await dlg.locator('button').count(), ...(await measure(page, 'dialog', !!vp.mobile)) };
       }
       await closeDialogs(page);
-      if (!opened && page.url().replace(/[?#].*$/, '') !== new URL(m.path, page.url()).pathname) { await page.goto(m.path); await settle(page); }
+      if (!opened && new URL(page.url()).pathname !== new URL(m.path, page.url()).pathname) { await page.goto(m.path); await settle(page); }
     }
     if (!opened) facts[`dialog-${m.id}`] = { trigger: null };
   }
@@ -470,10 +505,12 @@ async function tour(page: Page, vp: Vp, dir: string, seed: boolean) {
   }
 
   // Quick capture ("+ Neu" / FAB).
-  await page.goto('/todos');
+  // Desktop: „Neu“ in the top bar; phone: the plus of the bottom bar on the overview (it is the capture there).
+  await page.goto(vp.mobile ? '/' : '/todos');
   await settle(page);
-  const btn = page.getByRole('button', { name: /Neu: schnell|Schnell hinzufügen/ }).first();
+  const btn = vp.mobile ? page.getByTestId('bottom-plus') : page.getByRole('button', { name: /Neu: etwas eintragen|Neu: schnell|Schnell hinzufügen/ }).first();
   if (await btn.count()) {
+    await page.evaluate(() => { (window as unknown as { __cls: number }).__cls = 0; });
     await btn.click().catch(() => {});
     await page.waitForTimeout(WAIT);
     await page.screenshot({ path: `${dir}/quick-capture.png` });

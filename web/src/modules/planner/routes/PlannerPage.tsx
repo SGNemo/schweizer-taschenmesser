@@ -3,8 +3,14 @@ import { type FormEvent, useEffect, useId, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { getMeta, setMeta } from '@/core/db/metaKv';
 import { getLang } from '@/core/i18n/lang';
-import { dayName, explainAssignment, explainWait } from '@/core/plan/explain';
-import type { Instruction, PlanOp } from '@/core/plan/instructions';
+import { dayName, explainAssignment, explainWait, partWord } from '@/core/plan/explain';
+import {
+  isRestSentence,
+  restToTomorrow,
+  type Instruction,
+  type PlanOp,
+} from '@/core/plan/instructions';
+import { useNow } from '@/core/focus/useNow';
 import { useModuleStates } from '@/core/modules/activation';
 import { getManifest } from '@/core/modules/registry';
 import { useFocusSettings } from '@/core/settings/focus';
@@ -38,12 +44,18 @@ import {
   markDue,
   pin,
   sourceAbilities,
+  type SourceAbility,
   unmarkDue,
   unpin,
 } from '../actions';
 import type { BoardDay, BoardRow, WaitingRow } from '../board';
 import { capacityLabel, capacityShort, compact } from '../components/capacity';
+import { DaySetup } from '../components/DaySetup';
 import { DaySheet } from '../components/DaySheet';
+import { RowChoice, type RowChoiceState } from '../components/RowChoice';
+import { SETUP_DAYS } from '../daySetup';
+import { eveningLine } from '../rest';
+import { dayEndOf } from '../settings';
 import { PlanPreview, type PreviewData } from '../components/PlanPreview';
 import { WeekCheck } from '../components/WeekCheck';
 import { BOARD_DAYS } from '../calendar';
@@ -71,6 +83,8 @@ interface Pending {
   fromField: boolean;
   /** The model's reading of this sentence; `rules` = what the rules made of it (stands on „Verwerfen“). */
   local?: { sentence: string; rules: Instruction };
+  /** „Rest verteilen“: one calm sentence above the moves and in the toast, never a count of what was left. */
+  rest?: boolean;
 }
 
 /** „Teil 1/2“ for the eye, „Teil 1 von 2“ for the screen reader. */
@@ -96,6 +110,8 @@ export default function PlannerPage() {
   const [sheetDate, setSheetDate] = useState<string | undefined>();
   // `?check=1` (the lists' „Woche prüfen im Planer“ link, a tap of the user) opens the week sheet.
   const [checking, setChecking] = useState(() => params.get('check') === '1');
+  // `?start=1` (the welcome card's „Tage einteilen“, a tap of the user) opens the three-step sheet.
+  const [settingUp, setSettingUp] = useState(() => params.get('start') === '1');
   const [menuOpen, setMenuOpen] = useState(false);
   // The day shown in the one-day layout; `?day=` (the calendar's plan chip) picks it.
   const [pickedDay, setPickedDay] = useState<string | undefined>(
@@ -127,7 +143,9 @@ export default function PlannerPage() {
   );
 
   // Which sources take a tick or „Später“ (an invoice, a cancellation: no – that stays in its module).
-  const [abilities, setAbilities] = useState<Record<string, { done: boolean; assign: boolean }>>();
+  const [abilities, setAbilities] = useState<Record<string, SourceAbility>>();
+  // The open choice behind „Als Pause …“ / „Dauer …“ of a row.
+  const [choice, setChoice] = useState<RowChoiceState>();
   useEffect(() => {
     let live = true;
     void sourceAbilities().then((a) => live && setAbilities(a));
@@ -138,6 +156,9 @@ export default function PlannerPage() {
   // Until they are known every source counts as able (no jump for ToDo rows); `markDone` checks again.
   const canDone = (moduleId: string) => abilities?.[moduleId]?.done ?? true;
   const canAssign = (moduleId: string) => abilities?.[moduleId]?.assign ?? true;
+  // Shown only once the source is known to take them (a missing ability hides, never offers in vain).
+  const canRemove = (moduleId: string) => abilities?.[moduleId]?.remove === true;
+  const canEstimate = (moduleId: string) => abilities?.[moduleId]?.estimate === true;
 
   const answered = !!pending || !!ask || !!sayLine;
   useEffect(() => {
@@ -170,24 +191,57 @@ export default function PlannerPage() {
         .querySelector(`[data-testid="day-${day}"]`)
         ?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
       setParams({}, { replace: true });
-    } else if (params.get('week') || params.get('check')) setParams({}, { replace: true });
+    } else if (params.get('rest')) {
+      // `?rest=1` (the widgets, „Tag abschließen“ over the bus): the preview of „Rest verteilen“, once the board is there.
+      if (!board) return;
+      setParams({}, { replace: true });
+      void showRest();
+    } else if (params.get('week') || params.get('check') || params.get('start'))
+      setParams({}, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `showRest` reads the board this effect waits for
   }, [params, setParams, board]);
 
+  /** „Rest verteilen“: the ops of `moveAll(today, tomorrow)` as a preview; nothing moves before „Übernehmen“. */
+  function showRest() {
+    if (!board) return;
+    return previewRest(
+      restToTomorrow({ today: data?.today ?? today(), items: instructionItems(board) }),
+      false,
+    );
+  }
+
+  /** The rest preview – unless only what is nailed to today (or nothing) is left: then one calm line, no preview. */
+  function previewRest(ops: PlanOp[], fromField: boolean) {
+    if (!ops.some((o) => o.op === 'earliest')) {
+      setPending(undefined);
+      setSayLine(t.planner.rest.nothing);
+      return;
+    }
+    return showPreview(ops, fromField, undefined, true);
+  }
+
   /** Shows what `ops` would do; nothing is stored until „Übernehmen“. `local` = the model read the sentence. */
-  async function showPreview(ops: PlanOp[], fromField = false, local?: Pending['local']) {
+  async function showPreview(
+    ops: PlanOp[],
+    fromField = false,
+    local?: Pending['local'],
+    rest = false,
+  ) {
     setAsk(undefined);
     setSayLine(undefined);
     try {
       const out = await previewUser(ops);
       const titleOf = (key: string) => titles[key] ?? out.titles[key] ?? key;
-      const lines = opLines(ops, titleOf, data?.today ?? today());
+      const lines = rest ? [t.planner.rest.line] : opLines(ops, titleOf, data?.today ?? today());
       setPending({
         ops,
-        lead: lines[0] ?? t.planner.ops.replan,
+        lead: rest ? t.planner.rest.done : (lines[0] ?? t.planner.ops.replan),
+        ...(rest ? { rest: true } : {}),
         // A sentence the local model read says so above the lines: its reading is checked here, by the user.
         data: {
           lines,
           ...(local ? { note: t.planner.say.localRead } : {}),
+          ...(rest ? { noCounts: true } : {}),
           diff: out.result.diff,
         },
         fromField,
@@ -203,7 +257,7 @@ export default function PlannerPage() {
     if (!pending) return;
     setBusy(true);
     try {
-      await applyOps(pending.ops, pending.lead, titles);
+      await applyOps(pending.ops, pending.lead, titles, pending.rest === true);
       if (pending.fromField) setText('');
       setPending(undefined);
     } finally {
@@ -296,6 +350,11 @@ export default function PlannerPage() {
         return;
       }
       if (said.kind === 'ops') {
+        // „Rest verteilen“ typed: the same preview (or calm line) as the evening link.
+        if (said.stage !== 1 && isRestSentence(value)) {
+          await previewRest(said.ops, true);
+          return;
+        }
         // The sentence stays in the field until „Übernehmen“: „Verwerfen“ keeps what was typed.
         await showPreview(
           said.ops,
@@ -336,14 +395,18 @@ export default function PlannerPage() {
           : todayDay.usable === 0
             ? t.planner.head.noTime
             : t.planner.head.full;
-  // U13: the detail line names the next step – today's first thing, or the next day with free time.
-  const nextFree = board?.days.slice(1).find((d) => !d.off && d.free > 0);
+  // U13: the detail line names the next step – today's first thing. W13: with time today and nothing on it, a calm
+  // line – unless the whole board is empty, where the empty state already says it.
+  const boardEmpty =
+    (board?.days.every((d) => d.rows.length === 0) ?? true) && !board?.waiting.length;
   const headDetail = !todayDay
     ? undefined
     : !todayDay.off && todayDay.rows[0]
       ? t.planner.head.first(todayDay.rows[0].title)
-      : !todayDay.off && todayDay.usable > 0 && nextFree
-        ? t.planner.head.nextFree(dayName(nextFree.date), compact(nextFree.free))
+      : !todayDay.off && todayDay.usable > 0
+        ? boardEmpty
+          ? undefined
+          : t.planner.head.nothing
         : `${t.planner.head.context(board!.todayCount, compact(todayDay.planned))} · ${t.planner.head.week(formatDay(todayDay.date, 'II'))}`;
 
   const pageMenu: RowMenuItem[] = [
@@ -353,6 +416,7 @@ export default function PlannerPage() {
       onSelect: () => void showPreview([{ op: 'replan', reshuffle: false }]),
     },
     { id: 'check', label: t.planner.check.title, onSelect: () => setChecking(true) },
+    { id: 'days', label: t.planner.daySetup.open, onSelect: () => setSettingUp(true) },
   ];
 
   // „Woche prüfen · 2 Schritte“: Mondays only, only with the switch on, until it is clicked away for this week.
@@ -363,6 +427,18 @@ export default function PlannerPage() {
     isoWeekday(data.today) === 1 &&
     dismissedWeek !== undefined &&
     dismissedWeek !== monday;
+
+  // One evening line under `focus.eveningWrapUp` (REVIEW-FABLE R11): from 30 min before the „Tagesende“ the sentence
+  // „Bald ist Tagesende.“, carrying „Rest verteilen“ while today holds something open (package 6); else that link
+  // from 17:00 (F3). Never a count. The clock is read once a minute.
+  const clock = useNow(60_000, focus.eveningWrapUp);
+  const evening = eveningLine(
+    focus.eveningWrapUp,
+    clock,
+    data ? dayEndOf(data.settings) : undefined,
+    todayDay,
+  );
+  const showRestLink = !pending && evening?.kind === 'rest';
 
   /** The three biggest things of the shown week (all their sessions together). */
   const biggest = (() => {
@@ -405,6 +481,45 @@ export default function PlannerPage() {
         : []),
       ...(canAssign(e.moduleId)
         ? [{ id: 'later', label: t.planner.row.later, onSelect: () => void later(e, titles) }]
+        : []),
+      ...(canEstimate(e.moduleId)
+        ? [
+            {
+              id: 'estimate',
+              label: t.planner.row.estimate,
+              onSelect: () =>
+                setChoice({
+                  kind: 'estimate',
+                  entry: e,
+                  ...(e.durationMin !== undefined ? { current: e.durationMin } : {}),
+                }),
+            },
+          ]
+        : []),
+      // „Tagesabschnitt …“ (package 4b): one entry, the choice opens in `RowChoice`; only on a row of a day
+      // (a waiting row has no day to order in yet).
+      ...(date
+        ? [
+            {
+              id: 'dayPart',
+              label: t.planner.row.dayPart,
+              onSelect: () =>
+                setChoice({
+                  kind: 'part',
+                  entry: e,
+                  ...(row.item?.part ? { current: row.item.part } : {}),
+                }),
+            },
+          ]
+        : []),
+      ...(canRemove(e.moduleId)
+        ? [
+            {
+              id: 'asBreak',
+              label: t.planner.row.asBreak,
+              onSelect: () => setChoice({ kind: 'break', entry: e, date: day }),
+            },
+          ]
         : []),
       ...(excluded
         ? [{ id: 'include', label: t.planner.row.include, onSelect: () => void include(e, titles) }]
@@ -492,7 +607,12 @@ export default function PlannerPage() {
   const renderRow = (row: BoardRow, day: BoardDay) => {
     const reason = explainAssignment(
       { reason: row.reason, bumpedBy: row.bumpedBy },
-      { due: row.hardDue ?? row.entry?.due?.date, prevDate: row.entry?.plannedFor, nameOf },
+      {
+        due: row.hardDue ?? row.entry?.due?.date,
+        prevDate: row.entry?.plannedFor,
+        part: row.item?.part,
+        nameOf,
+      },
     );
     const open = why === row.unitId;
     return (
@@ -511,6 +631,8 @@ export default function PlannerPage() {
             <span className={styles.minutes}>
               {row.approx ? t.planner.row.approx(compact(row.minutes)) : compact(row.minutes)}
             </span>
+            {/* The part as plain text, only when set (package 4b; no colour carries it). */}
+            {row.item?.part ? <span>{` · ${partWord(row.item.part)}`}</span> : null}
             {row.hardDue ? (
               <span className={row.late ? styles.dueWas : undefined}>
                 {` · ${row.late ? t.planner.row.dueWas(dayName(row.hardDue)) : t.planner.row.due(dayName(row.hardDue))}`}
@@ -739,7 +861,26 @@ export default function PlannerPage() {
         )}
       </HeroSlot>
 
-      {showWeekLink ? (
+      {showRestLink ? (
+        <p className={styles.weekLink} data-testid="rest-link">
+          <button type="button" className={styles.weekLinkText} onClick={() => void showRest()}>
+            {t.planner.rest.link}
+          </button>
+        </p>
+      ) : null}
+
+      {evening?.kind === 'dayEnd' ? (
+        <p className={styles.weekLink} data-testid="day-end-line">
+          <span>{t.planner.rest.dayEnd}</span>
+          {evening.rest && !pending ? (
+            <button type="button" className={styles.weekLinkText} onClick={() => void showRest()}>
+              {t.planner.rest.link}
+            </button>
+          ) : null}
+        </p>
+      ) : null}
+
+      {showWeekLink && !showRestLink && evening?.kind !== 'dayEnd' ? (
         <p className={styles.weekLink} data-testid="week-check-link">
           <button type="button" className={styles.weekLinkText} onClick={() => setChecking(true)}>
             {t.planner.weekLink.label}
@@ -758,7 +899,13 @@ export default function PlannerPage() {
           title={t.planner.empty}
           testId="planner-empty"
           motif={<SignatureMark id="weekBars" size={64} />}
-        />
+        >
+          {/* Its one action (TARGET F1): the three-step sheet instead of the stepper as the first way. Secondary:
+              „Eintragen“ under the week stays the page's one filled button. */}
+          <Button onClick={() => setSettingUp(true)} data-testid="planner-days-setup">
+            {t.planner.daySetup.open}
+          </Button>
+        </EmptyState>
       ) : null}
 
       {/* The entry row is the last row under the week, so it comes with the board: it is built once, at its place,
@@ -824,11 +971,20 @@ export default function PlannerPage() {
         </SplitView>
       ) : null}
 
+      <RowChoice choice={choice} titles={titles} onClose={() => setChoice(undefined)} />
       <DaySheet
         day={board?.days.find((d) => d.date === sheetDate)}
         titles={titles}
         onClose={() => setSheetDate(undefined)}
       />
+      {settingUp && board ? (
+        <DaySetup
+          days={board.days.slice(0, SETUP_DAYS)}
+          titles={titles}
+          dayEnd={data?.settings.dayEnd}
+          onClose={() => setSettingUp(false)}
+        />
+      ) : null}
       {checking && board ? (
         <WeekCheck
           days={board.days}

@@ -104,7 +104,7 @@ test.describe('mail (demo mails)', () => {
     // prefilled from the mail text; the preview shows what would be saved, nothing is saved yet
     await expect(dialog.getByRole('textbox')).toHaveValue(/Stadtwerke Musterstadt 84,30 €/);
     await expect(dialog.getByTestId('capture-chips')).toContainText('84,30');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(dialog).toHaveCount(0);
     // the way back from the thread
     await expect(page.getByTestId('mail-linked')).toContainText('Rechnung: Stadtwerke Musterstadt');
@@ -127,7 +127,8 @@ test.describe('mail (demo mails)', () => {
     await expect(row).toHaveCount(0);
     await page.getByText('Wochenende?').first().click();
     await expect(page.getByTestId('mail-plan-thread')).toHaveCount(0);
-    await expect(page.getByText(/^(Im Plan|Als ToDo da)$/)).toBeVisible();
+    // In the page, not the toast that may still say „Im Plan“ from the tap above.
+    await expect(page.locator('main').getByText(/^(Im Plan|Als ToDo da)$/)).toBeVisible();
     // The ToDo carries the way back: a mail link, never an address.
     await page.goto('/todos');
     await expect(page.getByText('Anna Beispiel · Wochenende?').first()).toBeVisible();
@@ -206,7 +207,7 @@ test.describe('mail (demo mails)', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/mail');
     await expect(page.getByTestId('mail-columns')).toBeVisible();
-    await expect(page.getByTestId('mail-stamp')).toContainText('ungelesen');
+    await expect(page.getByTestId('mail-unread')).toContainText('ungelesen');
     await expect(page.getByRole('navigation', { name: 'Ordner' })).toBeVisible();
     await page.getByText('Ihre Rechnung für Oktober').click();
     await expect(page.getByTitle(/Inhalt der Mail/)).toBeVisible();

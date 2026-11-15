@@ -10,3 +10,4 @@ Erledigt in diesem PR (DE + EN): [datenschutz.astro](../../site/src/pages/datens
 - **Website Impressum/Datenschutz:** Platzhalter `[PLATZHALTER: …]` und die In-App-`[[…]]` müssen dieselben Angaben tragen (Name, Anschrift, E-Mail). Die E-Mail der Website steht schon im Repo; in der App bewusst Platzhalter, bis du sie freigibst.
 - **README:** neuer Punkt „Nur, was du einrichtest, verlässt das Gerät“ unter „Datenschutz in Kürze“.
 - **docs/user/security.md, ai-assistant.md** (+ `.de.md`): gegen die Zeilen `ai-cloud` und `google` prüfen.
+- **Abgleich „Beantwortet?“ (Wochenende F5, 2026-11-15):** Website (DE + EN), README (DE + EN) und `docs/user/security*.md` nennen für Google nur die Scopes bzw. „nur mit einer von dir eingerichteten Verbindung“, keine Kopfzeilen im Einzelnen; das gerätelokale Kennzeichen „letzte Nachricht von dir“ ändert daran nichts – keine Änderung nötig. In der App: `strings.legal.ts` (DE + EN).

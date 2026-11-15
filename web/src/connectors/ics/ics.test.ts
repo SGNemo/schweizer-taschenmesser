@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { ConnectorContext, ConnectorError } from '@/core/connectors/types';
 import { normalizeIcsUrl, saveSubscriptions } from './subscriptions';
 import { contentTag, syncIcs } from './sync';
@@ -40,6 +40,7 @@ function ctxWith(fetchPublic: ConnectorContext['fetchPublic']): ConnectorContext
     fetchPublic,
     secrets: {
       get: async (k) => store.get(k),
+      has: async (k) => Boolean(store.get(k)),
       set: async (k, v) => void store.set(k, v),
       delete: async (k) => void store.delete(k),
     },
@@ -171,6 +172,11 @@ describe('connector definition', () => {
       { id: 'c1', name: 'Verein', url: 'https://cal.example.test/x.ics' },
     ]);
     expect(await connector.isConfigured!(ctx)).toBe(true);
+    // a yes/no only: the secret addresses are not read for it
+    const get = vi.spyOn(ctx.secrets, 'get');
+    await connector.isConfigured!(ctx);
+    expect(get).not.toHaveBeenCalled();
+    get.mockRestore();
     expect(await connector.calendar!.listCalendars(ctx)).toEqual([
       { id: 'c1', name: 'Verein', primary: true },
     ]);

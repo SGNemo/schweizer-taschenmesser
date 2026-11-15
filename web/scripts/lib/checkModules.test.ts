@@ -329,3 +329,17 @@ describe('checkAutomationSource', () => {
     ]);
   });
 });
+
+it('module package S-b: the manifest of `device` holds no data and opts out of the data API and the assistant', async () => {
+  const { readFileSync } = await import('node:fs');
+  const src = readFileSync(
+    new URL('../../src/modules/device/manifest.ts', import.meta.url),
+    'utf8',
+  );
+  expect(src).toMatch(/dataSchema: \{ collections: \{\} \}/);
+  expect(src).toMatch(/dataApi: false/);
+  expect(src).not.toMatch(/aiSchema[,:]/);
+  expect(src).not.toMatch(/searchable|platforms:/);
+  expect(src).toMatch(/seed: \{ version: 1, dependsOn: \[\], none: 'live-data' \}/);
+  expect(checkMaturity('device', src)).toEqual([]);
+});

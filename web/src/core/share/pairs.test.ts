@@ -34,6 +34,7 @@ beforeEach(() => {
     secrets: {
       protection: 'device-key',
       get: async (n) => secrets.get(n),
+      has: async (n) => Boolean(secrets.get(n)),
       set: async (n, v) => void secrets.set(n, v),
       delete: async (n) => void secrets.delete(n),
     },

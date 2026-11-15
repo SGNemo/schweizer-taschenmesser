@@ -3,13 +3,15 @@ import { useNow } from '@/core/focus/useNow';
 import { today } from '@/core/time/dates';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { Button, KpiWidget, WidgetBody } from '@/ui';
+import { Button, KpiWidget, useCardActionVariant, WidgetBody } from '@/ui';
 import { duration } from '../components/format';
 import { runningSeconds, runningSession, sessionMinutes, stopwatch } from '../logic';
 import { jobRepo, sessionRepo, startSession, stopSession } from '../repo';
 
 /** What runs right now (or today's total) with one button: Stopp, or Start for the last used project. */
 export default function TimerWidget() {
+  // Phone: the plus owns the one filled accent (decision #856).
+  const stopVariant = useCardActionVariant();
   const nowMs = useNow(30_000);
   const data = useLiveQuery(async () => {
     const day = today();
@@ -44,7 +46,7 @@ export default function TimerWidget() {
           value={stopwatch(runningSeconds(running, nowMs), false)}
           context={`${t.timetrack.widgetText.running(job?.name ?? t.timetrack.noJob, running.startTime)} · ${t.timetrack.todayTotal(duration(total))}`}
         />
-        <Button size="sm" variant="primary" onClick={() => void stopSession(running)}>
+        <Button size="sm" variant={stopVariant} onClick={() => void stopSession(running)}>
           {t.timetrack.stop}
         </Button>
       </>

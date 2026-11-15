@@ -4,7 +4,7 @@ Letztes Release: `v0.3.1` am 2026-10-01 (stabil, auf `main`; `releases/latest` z
 
 ## Nächste eine Sache
 
-UI-Audit 4.0 weiterführen: Paket 0b-4 (Planen), dann 0b-5 bis 0b-8. Plan, Ledger und Pakete: [design/ui-audit-2026-11/](design/ui-audit-2026-11/PACKAGES.md).
+UI-Audit 4.0 ist abgenommen: Identity 4.0 gilt seit 0b-8 (2026-11-14, [REPORT „Abschlussmessung 2“](design/ui-audit-2026-11/REPORT.md#abschlussmessung-2-2026-11-14): 8 × erfüllt, 2 × teils, 0 × nicht). Als Nächstes neue Bilder für README und Social Preview (Prompt in #845), dann die Folgepunkte dort.
 
 ## Laufende Runden
 
@@ -13,7 +13,8 @@ UI-Audit 4.0 weiterführen: Paket 0b-4 (Planen), dann 0b-5 bis 0b-8. Plan, Ledge
 - **App-Rahmen 0b-R** (Seitenleiste, eingeklappte Leiste, obere Leiste auf Tonstufen; #761, Spec #760) und der Nachtrag #772 (Modul-Icons der Seitenleiste wieder in ihrer Farbe) sind auf `develop`. Offen daraus: rechte Flucht bei sichtbarer Bildlaufleiste (Windows; braucht `.main`), `data-hue` am `<aside>` in `AppShell.tsx` ist ohne Verwendung.
 - **Fernsteuerung des PCs vom Handy** ([design/remote-control/PACKAGES.md](design/remote-control/PACKAGES.md), Regel [rules/remote-control.md](rules/remote-control.md), Nutzer-Doku [user/remote-control.de.md](user/remote-control.de.md)): Pakete 0–5 sind auf `develop` (Medien, Touchpad, Tastatur, Lautstärketasten, Karte auf der Übersicht mit „Wiedergabe / Pause“, Nutzer-Doku). Modul und Einstellungs-Abschnitt bleiben `preview`, bis die Handtests FB1–FB19 (ohne FB13: Latenzmessung am 2026-11-11 bestanden, `design/remote-control/CONCEPT.md` §3) in [MANUAL-TESTS.md](MANUAL-TESTS.md) auf echtem Handy und Windows-PC bestanden sind (die übrigen sind noch nicht gelaufen).
 - **Website neu gedacht** ([design/site/RETHINK.md](design/site/RETHINK.md), PR #694): Richtung „Ein Tag“ mit der Tabelle „Was ins Netz geht“, Aussage „Eine Sache zuerst.“; Start, `/module`, `/daten`, `/unterstuetzen`, `/install` und Rechtliches in neuer Form, de und en, ohne ein App-Bild. Sechs Bild-Slots sind gezeichnet gefüllt; echte Bilder kommen über [design/site/SLOTS.md](design/site/SLOTS.md), sobald die App steht (ersetzt Runde 5, Paket 1).
-- **Modul Uhr** ([features/clock.md](features/clock.md)): Paket 1 auf `develop`; Folge-Prompts in [product/clock/](product/clock/01-followups.md), nicht gestartet.
+- **Modul Uhr** ([features/clock.md](features/clock.md)): Paket 1 und Folgepunkte auf `develop`; Paket 2 (Erinnern nach Ortszeit, Timer-Link, `feat/clock-alarm`) wartet auf den Merge; 03/04 nicht gestartet.
+- **Use case „Wochenende retten“** (`docs/design/usecases/wochenende/`): Pakete 1–3 und 4a gemergt (#870, #880, #888, #895: „Pause …“-Zeilen und ⋯ „Als Pause …“ werden ein Blocker statt eines offenen ToDos, ⋯ „Dauer …“; Pfad C 7 Taps); Paket 5a (Erinnerungen aus der Erfassung „einmal“, W06 per Zeilenziel) als PR #904 zur Abnahme; Paket 7b („Beantwortet? · Erledigt“ an der Mail-Zeile, Kennzeichen nur auf dem Gerät) als PR #907 zur Abnahme; Paket 6 („Tagesende“: Kopfsatz „Bald ist Tagesende.“ mit „Rest verteilen“, Pfad H 2 Taps) als PR #909 zur Abnahme; 4b läuft parallel, danach 5b, zuletzt Paket 8.
 - **CI aufräumen, Runde 3** ([perf/CI-2026-11.md](perf/CI-2026-11.md)): Ursache ist die Warteschlange (20 Runner, 22 % der Zeit voll); kleine Workflow-Änderungen in #692, fünf Übergabe-Pakete in [perf/CI-2026-11-PACKAGES.md](perf/CI-2026-11-PACKAGES.md); messen: `node scripts/ci/measure.mjs`.
 - **UI schärfen, Runde 6** ([qa/round-6/STATUS.md](qa/round-6/STATUS.md)): alle acht Fix-PRs auf `develop`; offen U41 Kopfbandhöhen (`fix/ui6-head-heights`) und der Sammel-PR `fix/ui6-followups`.
 

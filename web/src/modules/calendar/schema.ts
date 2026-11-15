@@ -41,6 +41,11 @@ export const eventSchema = z
     notify: notifySchema.optional(),
     /** A reminder answered with "Genommen" instead of "Erledigt" (medication, vitamins); nothing is counted. */
     taken: z.boolean().optional(),
+    /**
+     * „einmal“: exactly one notification at its time – no extra lead, no staged stage, no repeat,
+     * whatever the focus settings say. Set on every reminder made by the quick capture (decision Q4 a).
+     */
+    once: z.boolean().optional(),
   })
   .refine((e) => !e.endDate || e.endDate >= e.startDate, {
     message: 'endDate must not be before startDate',

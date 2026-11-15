@@ -72,6 +72,11 @@ export interface MailThreadSummary {
   personal?: boolean;
   /** Provider id of the newest message (an invoice read from the row is keyed on it); absent when unknown. */
   lastMessageId?: string;
+  /**
+   * Labels of the newest message only (`labelIds` is the union of all messages). The mail list reads `SENT`
+   * here for the device-local „Beantwortet?“ hint; absent when the provider cannot tell.
+   */
+  lastLabelIds?: string[];
 }
 
 export interface MailThread {

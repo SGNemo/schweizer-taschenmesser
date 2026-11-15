@@ -3,7 +3,7 @@ import { today } from '@/core/time/now';
 import { t } from '@/strings';
 import { useNavigate } from 'react-router';
 import { Button, EmptyState, ItemList, ItemRow, SensitiveValue } from '@/ui';
-import { netWorth, netWorthSeries } from '../netWorth';
+import { netWorth, type MonthPoint } from '../netWorth';
 import { useCurrency } from '../currency';
 import { useOpenUntilMonthEnd } from '../summary';
 import type { FinanceData } from '../types';
@@ -13,12 +13,20 @@ import { TrendChart } from './TrendChart';
 /**
  * "Verlauf": the net worth ("Vermögen", the head's figure on this tab) with its context line, split by the kind of
  * account, and its curve over the month ends of the last 12 months. `data` holds the accounts of the shown currency,
- * `all` every account: another currency is one row of its own, never converted and never added.
+ * `all` every account: another currency is one row of its own, never converted and never added. `points` is the
+ * curve of `data` (the page computes it once: it also decides whether the head's action is the primary one).
  */
-export function NetWorthTab({ data, all }: { data: FinanceData; all: FinanceData }) {
+export function NetWorthTab({
+  data,
+  all,
+  points,
+}: {
+  data: FinanceData;
+  all: FinanceData;
+  points: MonthPoint[];
+}) {
   const navigate = useNavigate();
   const day = today();
-  const points = netWorthSeries(data.accounts, data.txs, day, 12);
   const currency = useCurrency();
   const worth = netWorth(all.accounts, all.txs, day);
   const shown = worth.find((w) => w.currency === currency);

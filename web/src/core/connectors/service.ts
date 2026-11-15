@@ -84,8 +84,9 @@ export async function saveClient(
   forgetAccessToken(id);
 }
 
+/** Only a yes/no: the client id and secret stay in the secret store. */
 export async function hasClient(id: string): Promise<boolean> {
-  return Boolean((await loadClient(id)).clientId);
+  return getPlatform().secrets.has(secretName(id, 'client-id'));
 }
 
 /** Opens the system browser for the login and stores the refresh token. */
