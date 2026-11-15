@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { formatMoney, formatMoneyAxis } from '@/core/money';
 import { dateTimeFormat } from '@/core/i18n/format';
 import { formatDay, formatMonth, parseDate } from '@/core/time/dates';
-import { useAmountMask } from '@/core/focus/maskAmounts';
+import { useHideValues } from '@/core/focus/hideValues';
+import { HIDDEN_AMOUNT } from '@/core/focus/maskAmounts';
 import { t } from '@/strings';
 import { Button, Card, SensitiveValue } from '@/ui';
 import { Donut, Trend } from '@/ui/charts';
@@ -25,6 +26,24 @@ const dayFormat = (dayOnly: boolean) =>
  */
 export const monthLabel = (month: string, index: number): string =>
   formatDay(`${month}-01`, index === 0 || month.endsWith('-01') ? 'MMM yyyy' : 'MMM');
+
+/**
+ * A table cell that holds only an amount: with "Werte ausblenden" the whole cell is the mask, sign and currency
+ * included (a text mask by pattern would miss "SEK" or keep a "−"), as text, no reveal button per cell.
+ */
+export function useMoneyCell() {
+  const money = useMoney();
+  const hide = useHideValues();
+  return (minor: number): ReactNode =>
+    hide ? (
+      <>
+        <span aria-hidden="true">{HIDDEN_AMOUNT}</span>
+        <span className="sr-only">{t.widgets.valueHidden}</span>
+      </>
+    ) : (
+      money(minor)
+    );
+}
 
 function useMoney() {
   const currency = useCurrency();
@@ -134,9 +153,8 @@ export function IncomeExpenseChart({
 
 /** Table of the months: what the income/expense chart shows, for reading off every value (a visible switch). */
 export function MonthTable({ points }: { points: readonly IncomePoint[] }) {
-  const money = useMoney();
-  // "Werte ausblenden" masks the table as text like the chart it stands for (no reveal button per cell).
-  const mask = useAmountMask();
+  // "Werte ausblenden" masks the table like the chart it stands for.
+  const cell = useMoneyCell();
   return (
     <table className={styles.table} data-testid="table-trend">
       <thead>
@@ -157,9 +175,9 @@ export function MonthTable({ points }: { points: readonly IncomePoint[] }) {
         {points.map((p) => (
           <tr key={p.month}>
             <td>{p.label}</td>
-            <td className={styles.num}>{mask(money(p.income))}</td>
-            <td className={styles.num}>{mask(money(p.expense))}</td>
-            <td className={styles.num}>{mask(money(p.net))}</td>
+            <td className={styles.num}>{cell(p.income)}</td>
+            <td className={styles.num}>{cell(p.expense)}</td>
+            <td className={styles.num}>{cell(p.net)}</td>
           </tr>
         ))}
       </tbody>
@@ -174,8 +192,8 @@ export function ChartCard({
   table,
 }: {
   title: string;
-  chart: React.ReactNode;
-  table: React.ReactNode;
+  chart: ReactNode;
+  table: ReactNode;
 }) {
   const [asTable, setAsTable] = useState(false);
   return (

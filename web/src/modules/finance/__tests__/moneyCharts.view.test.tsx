@@ -12,6 +12,7 @@ import {
   MonthTable,
   NetWorthChart,
 } from '../components/MoneyCharts';
+import { CurrencyContext } from '../currency';
 import type { CategoryTotal, MonthPoint } from '../logic';
 
 const plain = (s: string | null | undefined) => (s ?? '').replace(/\s/g, ' ');
@@ -116,5 +117,20 @@ describe('finance charts on the shared blocks (polish p2)', () => {
     // Text, not a reveal button per cell: nine masked amounts, no extra tab stops.
     expect(table.querySelectorAll('.sr-only')).toHaveLength(9);
     expect(table.querySelectorAll('button')).toHaveLength(0);
+  });
+
+  it('a masked cell hides sign and currency too, in any currency', async () => {
+    await setHideValues(true);
+    render(
+      <CurrencyContext.Provider value="SEK">
+        <MonthTable
+          points={[{ month: '2026-09', label: 'Sep.', income: 0, expense: 50_000, net: -50_000 }]}
+        />
+      </CurrencyContext.Provider>,
+    );
+    const table = await screen.findByTestId('table-trend');
+    await waitFor(() => expect(table.querySelectorAll('.sr-only')).toHaveLength(3));
+    const body = plain(table.querySelector('tbody')?.textContent);
+    expect(body).not.toMatch(/\d|SEK|−/);
   });
 });

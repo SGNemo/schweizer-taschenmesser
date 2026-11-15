@@ -1,21 +1,20 @@
 import { formatMoney } from '@/core/money';
 import { formatDay, monthOf } from '@/core/time/dates';
 import { today } from '@/core/time/now';
-import { useAmountMask } from '@/core/focus/maskAmounts';
 import { t } from '@/strings';
 import { Card } from '@/ui';
 import { rollupYear, yearSummary } from '../analysis';
 import { useCurrency } from '../currency';
 import type { FinanceData } from '../types';
-import { CategoryDonut, IncomeExpenseChart } from './MoneyCharts';
+import { CategoryDonut, IncomeExpenseChart, useMoneyCell } from './MoneyCharts';
 import styles from '../routes/finance.module.css';
 
 /** The year as a table: income, expenses and result per month (numbers right-aligned), the savings rate, where the money went. */
 export function YearView({ data, year }: { data: FinanceData; year: number }) {
   const currency = useCurrency();
   const money = (m: number) => formatMoney(m, currency);
-  // "Werte ausblenden": the table masks as text like the chart above it (no reveal button per cell).
-  const mask = useAmountMask();
+  // "Werte ausblenden": the table masks like the chart above it.
+  const cell = useMoneyCell();
   const sum = yearSummary(data.txs, year);
   // Every category: the donut folds the small ones itself.
   const top = rollupYear(data.txs, year, data.categories);
@@ -84,9 +83,9 @@ export function YearView({ data, year }: { data: FinanceData; year: number }) {
                   </>
                 ) : (
                   <>
-                    <td className={styles.num}>{mask(money(m.income))}</td>
-                    <td className={styles.num}>{mask(money(m.expense))}</td>
-                    <td className={styles.num}>{mask(money(m.net))}</td>
+                    <td className={styles.num}>{cell(m.income)}</td>
+                    <td className={styles.num}>{cell(m.expense)}</td>
+                    <td className={styles.num}>{cell(m.net)}</td>
                   </>
                 )}
               </tr>
