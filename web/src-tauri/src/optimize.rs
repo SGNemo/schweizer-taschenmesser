@@ -8,7 +8,11 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use ::pc_tune::{apply_undo, system_registry, EntryView, Journal, RegError, Tool};
+use ::pc_tune::tweaks::{self, ResetReport};
+use ::pc_tune::{
+    apply_undo, system_effects, system_registry, EntryView, Journal, RegError, Target, Tool,
+    TweakState,
+};
 use serde::Serialize;
 use tauri::{AppHandle, Manager, State};
 
@@ -99,8 +103,10 @@ pub fn disk_care_open_tool(tool: String) -> Result<(), String> {
 /// Takes back the parts of an undo that are not registry values. Each package that makes such a
 /// change adds its case here; an unknown one is refused, so nothing is marked as taken back that
 /// was not.
-fn undo_other(_what: &str, _previous: &str) -> Result<(), RegError> {
-    Err(RegError::Unsupported)
+fn undo_other(what: &str, previous: &str) -> Result<(), RegError> {
+    // Settings: a Windows on/off API or the active power plan (`pc_tune::tweaks`).
+    let effects = system_effects().ok_or(RegError::Unsupported)?;
+    tweaks::apply_other(effects.as_ref(), what, previous)
 }
 
 /// Takes one change of the history back (the newest change of its subject only) by putting the
@@ -113,5 +119,51 @@ pub fn disk_care_undo(app: AppHandle, care: State<'_, PcCare>, id: u64) -> Resul
         let steps = j.undo_steps(id).map_err(|e| e.code().to_string())?;
         apply_undo(reg.as_ref(), &steps, undo_other).map_err(|e| e.code().to_string())?;
         j.mark_undone(id).map_err(|e| e.code().to_string())
+    })
+}
+
+/// The catalogue of Windows settings with their state on this PC (on/off or the chosen plan;
+/// never a registry value).
+#[tauri::command(async)]
+pub fn disk_tweaks_list(
+    app: AppHandle,
+    care: State<'_, PcCare>,
+) -> Result<Vec<TweakState>, String> {
+    let reg = system_registry().ok_or("unsupported")?;
+    let effects = system_effects().ok_or("unsupported")?;
+    care.with(&app, |j| {
+        Ok(tweaks::state(j, reg.as_ref(), effects.as_ref()))
+    })
+}
+
+/// Switches one setting of the catalogue (`target`: `true`/`false`, or the id of a choice). The
+/// state from before goes into the journal first; unknown ids are refused.
+#[tauri::command(async)]
+pub fn disk_tweak_set(
+    app: AppHandle,
+    care: State<'_, PcCare>,
+    id: String,
+    target: Target,
+) -> Result<(), String> {
+    let reg = system_registry().ok_or("unsupported")?;
+    let effects = system_effects().ok_or("unsupported")?;
+    care.with(&app, |j| {
+        tweaks::set(j, reg.as_ref(), effects.as_ref(), &id, &target, unix_now())
+            .map(|_| ())
+            .map_err(|e| e.code().to_string())
+    })
+}
+
+/// "Alle zurücksetzen": every setting changed here goes back to the state from before its first
+/// change. Reports which were put back and which could not be.
+#[tauri::command(async)]
+pub fn disk_tweaks_reset_all(
+    app: AppHandle,
+    care: State<'_, PcCare>,
+) -> Result<ResetReport, String> {
+    let reg = system_registry().ok_or("unsupported")?;
+    let effects = system_effects().ok_or("unsupported")?;
+    care.with(&app, |j| {
+        Ok(tweaks::reset_all(j, reg.as_ref(), effects.as_ref()))
     })
 }
