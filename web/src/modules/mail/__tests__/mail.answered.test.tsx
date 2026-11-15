@@ -165,12 +165,17 @@ describe('„Beantwortet? · Erledigt“', () => {
     await vi.waitFor(async () => expect((await taskRepo().get(id))?.done).toBe(false));
   });
 
-  it('stays quiet when nothing was closed (already done or gone), says so when the listener fails', async () => {
+  it('stays quiet when nothing was closed because the ToDo is done or gone; says so when it stayed open', async () => {
     await closeAnswered('mail-x');
     expect(lastToast()).toBeUndefined();
+    await planMail(account, { id: mine.id, from: mine.from, subject: mine.subject }, () => {});
+    useUiStore.setState({ toasts: [] });
+    const id = await planMailId('t-mine');
+    // A failing listener: the bus logs and swallows the error, the ToDo stays open.
+    const quiet = vi.spyOn(console, 'error').mockImplementation(() => {});
     bus.on('todo.doneRequested', () => Promise.reject(new Error('x')));
-    vi.spyOn(bus, 'emit').mockRejectedValueOnce(new Error('x'));
-    await closeAnswered('mail-x');
+    await closeAnswered(id);
+    quiet.mockRestore();
     expect(lastToast()?.message).toBe(t.mail.answered.failed);
   });
 });

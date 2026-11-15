@@ -3,7 +3,9 @@
  * asks once on its row; the tap asks the todos module over the bus to tick the ToDo off (only its id travels)
  * and the toast carries the undo. Nothing is ticked off without that tap.
  */
+import { createCollectionRepo } from '@/core/db/repo';
 import { bus } from '@/core/events';
+import { getManifest } from '@/core/modules/registry';
 import { undoable, undoEntry } from '@/core/undo';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
@@ -24,6 +26,14 @@ export function answeredRows(
   return out;
 }
 
+async function stillOpen(todoId: string): Promise<boolean> {
+  const todos = getManifest('todos');
+  const task = todos
+    ? ((await createCollectionRepo(todos, 'task').get(todoId)) as { done?: boolean } | undefined)
+    : undefined;
+  return !!task && !task.done;
+}
+
 /** One tap: the ToDo is ticked off through the bus; „Erledigt · Rückgängig“. The page offers it only while ToDos are on. */
 export async function closeAnswered(todoId: string): Promise<void> {
   const toast = useUiStore.getState().toast;
@@ -32,8 +42,9 @@ export async function closeAnswered(todoId: string): Promise<void> {
     const { entry } = await undoable(t.mail.answered.closed, () =>
       bus.emit('todo.doneRequested', { id: todoId }),
     );
-    // No write: the ToDo was already done or gone (a second tap, a tick synced in); the row goes by itself.
-    if (!entry) return;
+    // No write: quiet when the ToDo was already done or gone (a second tap, a tick synced in) – the row goes by
+    // itself; still open means the listener failed (the bus logs and swallows a handler's error).
+    if (!entry) return void ((await stillOpen(todoId)) && toast(t.mail.answered.failed));
     toast(t.mail.answered.closed, {
       label: t.ui.undo,
       run: () => void undoEntry(entry.id).then((ok) => toast(ok ? t.ui.undone : t.ui.undoFailed)),
