@@ -286,6 +286,78 @@ pub fn remote_ask_no_unlock(lang: Lang) -> &'static str {
     }
 }
 
+/// The line in a device's question when it may switch the PC off afterwards.
+pub fn remote_ask_power(lang: Lang) -> &'static str {
+    if german(lang) {
+        "Es darf diesen PC außerdem ausschalten, neu starten, in den Energiesparmodus schicken und abmelden – jedes Mal erst nach 10 Sekunden, in denen du hier abbrechen kannst."
+    } else {
+        "It may also switch this PC off, restart it, put it to sleep and sign out – each time only after 10 seconds in which you can cancel here."
+    }
+}
+
+/// The countdown's one sentence: who, what, in how many seconds. `name` is already plain text.
+pub fn power_countdown(
+    lang: Lang,
+    name: &str,
+    act: crate::remote_power::Act,
+    seconds: u64,
+) -> String {
+    use crate::remote_power::Act;
+    if german(lang) {
+        let s = if seconds == 1 {
+            "1 Sekunde".to_owned()
+        } else {
+            format!("{seconds} Sekunden")
+        };
+        match act {
+            Act::ShutDown => format!("{name} schaltet diesen PC in {s} aus."),
+            Act::Restart => format!("{name} startet diesen PC in {s} neu."),
+            Act::Sleep => format!("{name} schickt diesen PC in {s} in den Energiesparmodus."),
+            Act::Hibernate => format!("{name} schickt diesen PC in {s} in den Ruhezustand."),
+            Act::SignOut => format!("{name} meldet dich in {s} ab."),
+        }
+    } else {
+        let s = if seconds == 1 {
+            "1 second".to_owned()
+        } else {
+            format!("{seconds} seconds")
+        };
+        match act {
+            Act::ShutDown => format!("{name} switches this PC off in {s}."),
+            Act::Restart => format!("{name} restarts this PC in {s}."),
+            Act::Sleep => format!("{name} puts this PC to sleep in {s}."),
+            Act::Hibernate => format!("{name} hibernates this PC in {s}."),
+            Act::SignOut => format!("{name} signs you out in {s}."),
+        }
+    }
+}
+
+/// The quiet line under it: nothing is forced.
+pub fn power_note(lang: Lang) -> &'static str {
+    if german(lang) {
+        "Fragt ein Programm noch nach dem Speichern, wartet Windows auf dich."
+    } else {
+        "If a program still asks about saving, Windows waits for you."
+    }
+}
+
+pub fn power_cancel(lang: Lang) -> &'static str {
+    if german(lang) {
+        "Abbrechen"
+    } else {
+        "Cancel"
+    }
+}
+
+/// The title of the countdown window before a power action.
+pub fn power_title(lang: Lang) -> &'static str {
+    if german(lang) {
+        "Nemo – PC wird ausgeschaltet"
+    } else {
+        "Nemo – the PC is switching off"
+    }
+}
+
 /// "Last contact" in whole days: no clock format, so no locale is needed.
 pub fn remote_last_contact(lang: Lang, last_seen: Option<u64>, now: u64) -> String {
     let days = last_seen.map(|seen| now.saturating_sub(seen) / 86_400);

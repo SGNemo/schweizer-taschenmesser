@@ -433,7 +433,17 @@ fn no_tauri_command_simulates_input() {
         ] {
             assert!(!text.contains(api), "{name} mentions {api}");
         }
-        if name != "remote.rs" {
+        if name == "remote_power.rs" {
+            // the countdown reaches the power calls of remote_input, and nothing else of it
+            let other = text
+                .replace("remote_input::power(", "")
+                .replace("remote_input::hibernate_available(", "")
+                .replace("remote_input::PowerAction", "");
+            assert!(
+                !other.contains("remote_input") && !text.contains("InputSink for"),
+                "{name} reaches the input sink"
+            );
+        } else if name != "remote.rs" {
             assert!(
                 !text.contains("remote_input") && !text.contains("InputSink for"),
                 "{name} reaches the input sink"
@@ -805,5 +815,75 @@ fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
                 "{dto} carries {field}"
             );
         }
+    }
+}
+
+/// The countdown window before a power action reads the countdown and stops it – nothing else.
+#[test]
+fn power_window_gets_only_status_and_cancel() {
+    let value: serde_json::Value = serde_json::from_str(&read("capabilities/power.json")).unwrap();
+    let permissions: Vec<&str> = value["permissions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|p| p.as_str().unwrap())
+        .collect();
+    assert_eq!(
+        permissions,
+        ["allow-remote-power-status", "allow-remote-power-cancel"]
+    );
+    assert_eq!(value["windows"], serde_json::json!(["remote-power"]));
+    // no other capability applies to that window
+    for file in [
+        "default.json",
+        "desktop.json",
+        "mobile.json",
+        "capture.json",
+    ] {
+        let value: serde_json::Value =
+            serde_json::from_str(&read(&format!("capabilities/{file}"))).unwrap();
+        for key in ["windows", "webviews"] {
+            let names = value[key].as_array().cloned().unwrap_or_default();
+            assert!(
+                names.iter().all(|w| w != "remote-power" && w != "*"),
+                "{file}"
+            );
+        }
+    }
+}
+
+/// Rule: no Tauri command starts a power action. The commands of `remote_power.rs` read, stop or
+/// add a hint; the one call into the system sits in the countdown's tick, which only the tray
+/// thread runs.
+#[test]
+fn no_tauri_command_starts_a_power_action() {
+    let src = source("remote_power.rs");
+    let start = src.find("// ---- commands ----").expect("commands marker");
+    let end = src.find("#[cfg(test)]").expect("unit tests");
+    let commands = &src[start..end];
+    for word in ["remote_input::", ".request(", ".tick(", "Power::", "Fire"] {
+        assert!(!commands.contains(word), "a command reaches `{word}`");
+    }
+    assert_eq!(src.matches("remote_input::power(").count(), 1);
+    let tick = src.find("pub fn tick(&self").expect("tick");
+    let call = src.find("remote_input::power(").unwrap();
+    assert!(
+        tick < call && call < start,
+        "the system call is in the tick"
+    );
+    assert_eq!(src.matches("#[tauri::command]").count(), 0);
+    assert_async(
+        &src,
+        &[
+            "remote_power_status",
+            "remote_power_cancel",
+            "remote_set_busy",
+        ],
+    );
+    // and nothing in the shell asks Windows to switch off by itself
+    for file in ["remote.rs", "lib.rs", "capture.rs", "lan_sync.rs"] {
+        let text = source(file);
+        assert!(!text.contains("remote_input::power("), "{file}");
+        assert!(!text.contains("ExitWindowsEx"), "{file}");
     }
 }

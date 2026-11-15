@@ -329,6 +329,15 @@ impl SessionRegistry {
         handle
     }
 
+    /// Whether a device other than `peer` has a sync session open right now (remote control asks
+    /// before it shuts the PC down; the controlling phone's own sync does not count).
+    pub fn sync_open_except(&self, peer: &PublicKey) -> bool {
+        self.sessions.lock().is_ok_and(|s| {
+            s.iter()
+                .any(|(p, m, h)| p != peer && *m == Mode::Session && !h.is_closed())
+        })
+    }
+
     /// Closes every session of this peer, sync and input; returns how many were open.
     pub fn close_peer(&self, peer: &PublicKey) -> usize {
         self.close_where(|p, _| p == peer)

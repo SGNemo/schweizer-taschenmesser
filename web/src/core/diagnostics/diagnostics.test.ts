@@ -217,6 +217,7 @@ describe('diagnostics export', () => {
             level: 'full',
             paused: false,
             unlock: false,
+            power: true,
           },
         ],
       },

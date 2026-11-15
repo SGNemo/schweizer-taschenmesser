@@ -287,3 +287,23 @@ fn a_store_without_grants_is_closed() {
     assert_eq!(Bare.remote_of(&k), RemoteGrant::default());
     assert!(Bare.set_remote(&k, RemoteGrant::default()).is_err());
 }
+
+#[test]
+fn another_devices_sync_session_counts_as_work_and_the_own_one_does_not() {
+    use crate::noise::Mode;
+    let reg = SessionRegistry::new();
+    let (phone, tablet) = (key(), key());
+    assert!(!reg.sync_open_except(&phone));
+    let _own_sync = reg.register(phone, Mode::Session);
+    let _own_input = reg.register(phone, Mode::Input);
+    let other_input = reg.register(tablet, Mode::Input);
+    assert!(!reg.sync_open_except(&phone), "own sync, any input");
+    let other_sync = reg.register(tablet, Mode::Session);
+    assert!(reg.sync_open_except(&phone));
+    other_sync.close();
+    other_input.close();
+    assert!(
+        !reg.sync_open_except(&phone),
+        "closed sessions do not count"
+    );
+}

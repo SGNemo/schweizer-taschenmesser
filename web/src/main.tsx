@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { startAutoBackup } from '@/core/backup/auto';
+import { startRemoteBusyReport } from '@/core/remote/busy';
 import { startModuleServices } from '@/core/modules/services';
 import { startSync } from '@/core/sync/service';
 import { startNativeSchedule } from '@/core/notifications/nativeSchedule';
@@ -74,6 +75,7 @@ void Promise.all([initPlatform(), initLang(hasExistingData)]).then(async () => {
       startPushSync();
       startUpdateChecks();
       startAutoBackup();
+      startRemoteBusyReport();
     })
     .catch(async (e: unknown) => {
       recordError('startup', e);

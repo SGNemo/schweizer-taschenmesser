@@ -14,16 +14,23 @@
 //! * keeps the tray telling the truth from Rust state while a device controls the PC, and shows
 //!   the quiet notice when a mouse/keyboard session begins (`remote_notice.rs`).
 //!
-//! Nothing here logs. No command takes an input action; the only way in is the hub's input session.
+//! * hands power actions to the countdown of `remote_power.rs` (it owns the countdown, its window
+//!   and its limits; the hub has checked session, permission and lock state before).
+//!
+//! Nothing here logs. No command takes an input action or starts a power action; the only way in
+//! is the hub's input session.
 
 use crate::remote_notice::{self, Notices};
+use crate::remote_power::{Env, PowerCore};
 use crate::texts::{self, Lang};
 use ::lan_sync::input::remote::SwitchError;
-use ::lan_sync::input::wire::{Button, Key, Level, Media, PcState, VOLUME_UNKNOWN};
+use ::lan_sync::input::wire::{
+    Button, Key, Level, Media, PcState, Power, PowerAnswer, VOLUME_UNKNOWN,
+};
 use ::lan_sync::input::{Action, ControlError, FileSwitch, InputSink, MasterSwitch, Remote};
 use ::lan_sync::noise::PublicKey;
 use ::lan_sync::trust::file::{from_hex32, to_hex};
-use ::lan_sync::trust::{FileTrustStore, RemoteGrant, TrustStore};
+use ::lan_sync::trust::{FileTrustStore, RemoteGrant, SessionRegistry, TrustStore};
 use remote_input::{Command, KeyAction, Keyboard, Pointer, PointerAction, Worker};
 use serde::Serialize;
 use std::path::Path;
@@ -50,14 +57,16 @@ pub struct Sink {
     media: Worker,
     pointer: Pointer,
     keys: Keyboard,
+    power: Arc<PowerCore>,
 }
 
 impl Sink {
-    pub fn start() -> Sink {
+    pub fn start(power: Arc<PowerCore>) -> Sink {
         Sink {
             media: Worker::start(),
             pointer: Pointer::start(),
             keys: Keyboard::start(),
+            power,
         }
     }
 }
@@ -121,6 +130,7 @@ fn command_of(media: Media) -> Command {
         Media::VolumeDown => Command::VolumeDown,
         Media::MuteToggle => Command::MuteToggle,
         Media::Lock => Command::Lock,
+        Media::MonitorOff => Command::MonitorOff,
     }
 }
 
@@ -155,6 +165,21 @@ impl InputSink for Sink {
         } else if let Ok(keys) = keys_of(action) {
             self.keys.send(keys);
         }
+    }
+
+    fn power(&self, device: &PublicKey, power: Power, despite: bool) -> PowerAnswer {
+        if !self.supported() && power != Power::Cancel {
+            return PowerAnswer::Failed;
+        }
+        self.power.request(device, power, despite)
+    }
+
+    fn power_info(&self) -> (bool, bool) {
+        self.power.info()
+    }
+
+    fn power_news(&self) -> Option<(u64, PublicKey, PowerAnswer)> {
+        self.power.news()
     }
 }
 
@@ -192,7 +217,7 @@ pub fn parts(
     if let Ok(mut quiet) = host.quiet.lock() {
         *quiet = Some(switch_at(&dir.join("remote-notice.json")));
     }
-    (remote, Arc::new(Sink::start()))
+    (remote, Arc::new(Sink::start(host.power.clone())))
 }
 
 fn switch_at(path: &Path) -> Arc<dyn MasterSwitch> {
@@ -220,6 +245,9 @@ pub struct RemoteHost {
     /// loosening it is: a missing file, an unreadable one or no hub started yet mean "notice on"
     /// (after a stop the last hub's switch stays – nobody can be told while no hub runs).
     quiet: Mutex<Option<Arc<dyn MasterSwitch>>>,
+    /// The countdown before a power action (`remote_power.rs`); one for the app, handed to every
+    /// hub's sink.
+    power: Arc<PowerCore>,
 }
 
 #[derive(Default)]
@@ -292,6 +320,10 @@ impl Parts {
 }
 
 impl RemoteHost {
+    pub fn power(&self) -> &PowerCore {
+        &self.power
+    }
+
     fn parts(&self) -> Result<Parts, String> {
         let slot = self.slot.lock().map_err(|_| "internal")?;
         Ok(slot.as_ref().ok_or("not-started")?.parts.clone())
@@ -410,8 +442,27 @@ fn name_of(lang: Lang, trust: &FileTrustStore, key: &PublicKey) -> String {
 
 /// The hub started: its controls become reachable, and a small thread keeps the tray in step
 /// with who controls. Called with the hub lock held, so it only stores and spawns.
-pub fn attach(app: &AppHandle, remote: Arc<Remote>, trust: Arc<FileTrustStore>, supported: bool) {
+pub fn attach(
+    app: &AppHandle,
+    remote: Arc<Remote>,
+    trust: Arc<FileTrustStore>,
+    sink: Arc<Sink>,
+    sessions: Arc<SessionRegistry>,
+) {
+    let supported = sink.supported();
     let host = app.state::<RemoteHost>();
+    {
+        let (r, t) = (remote.clone(), trust.clone());
+        let lang_app = app.clone();
+        host.power.attach(Env {
+            app: app.clone(),
+            allowed: Box::new(move |key| r.enabled() && r.grant_of(key).power_effective()),
+            other_sync: Box::new(move |key| sessions.sync_open_except(key)),
+            name: Box::new(move |key| {
+                plain(&name_of(crate::capture::native_lang(&lang_app), &t, key))
+            }),
+        });
+    }
     let Ok(mut slot) = host.slot.lock() else {
         return;
     };
@@ -431,18 +482,25 @@ pub fn attach(app: &AppHandle, remote: Arc<Remote>, trust: Arc<FileTrustStore>, 
         let app = app.clone();
         let remote = parts.remote.clone();
         let trust = parts.trust.clone();
+        let power = host.power.clone();
+        let sink = sink.clone();
         std::thread::Builder::new()
             .name("remote-tray".into())
             .spawn(move || {
                 watch(
                     rx,
                     || {
-                        remote.status().controller.map(|(key, _)| {
-                            name_of(crate::capture::native_lang(&app), &trust, &key)
-                        })
+                        // whoever controls – or whose countdown runs, also after its phone left
+                        let key = remote
+                            .status()
+                            .controller
+                            .map(|(key, _)| key)
+                            .or_else(|| power.counting());
+                        key.map(|key| name_of(crate::capture::native_lang(&app), &trust, &key))
                     },
                     |controller| crate::capture::set_remote_tray(&app, controller),
                     || {
+                        power.tick(sink.state().locked);
                         let (count, device) = remote.full_opened();
                         let host = app.state::<RemoteHost>();
                         // read first: the lock of the notices is not held while it is read
@@ -500,6 +558,7 @@ fn watch(
 /// The hub stopped: no controls, and the tray is back to normal. Called after the sessions were
 /// closed.
 pub fn detach(app: &AppHandle) {
+    app.state::<RemoteHost>().power.detach();
     let taken = app
         .state::<RemoteHost>()
         .slot
@@ -514,11 +573,31 @@ pub fn detach(app: &AppHandle) {
     }
 }
 
-/// "Fernsteuerung beenden" in the tray: ends the session and pauses that device.
+/// "Fernsteuerung beenden" in the tray: stops a countdown, ends the session and pauses that
+/// device.
 pub fn end_from_tray(app: &AppHandle) {
     let host = app.state::<RemoteHost>();
+    power_cancelled_at_pc(app, &host);
     if let Ok(parts) = host.parts() {
         host.end(&parts);
+    }
+}
+
+/// Someone at the PC stopped a countdown. The second time within an hour that device loses its
+/// power permission (a narrowing, remembered for this run like every other one).
+pub fn power_cancelled_at_pc(_app: &AppHandle, host: &RemoteHost) {
+    let Some(key) = host.power.cancel_at_pc() else {
+        return;
+    };
+    if let Ok(parts) = host.parts() {
+        let grant = RemoteGrant {
+            power: false,
+            ..parts.remote.grant_of(&key)
+        };
+        let _ = parts.remote.set_grant(&key, grant, None);
+        let holds = parts.remote.grant_of(&key);
+        host.narrowed(|n| n.keep(&key, holds));
+        parts.look();
     }
 }
 
@@ -572,6 +651,8 @@ pub struct RemoteDeviceDto {
     level: &'static str,
     paused: bool,
     unlock: bool,
+    /// May switch the PC off (power actions).
+    power: bool,
 }
 
 fn status_of(lang: Lang, parts: &Parts, notice: bool) -> RemoteStatusDto {
@@ -599,6 +680,7 @@ fn status_of(lang: Lang, parts: &Parts, notice: bool) -> RemoteStatusDto {
                     level: level_name(grant.level),
                     paused: grant.paused,
                     unlock: grant.unlock,
+                    power: grant.power,
                 }
             })
             .collect(),
@@ -640,6 +722,10 @@ fn device_question(
     if old.unlock && !new.unlock {
         lines.push(texts::remote_ask_no_unlock(lang).to_owned());
     }
+    // every widening that lets power count again names it, also a raised level or a lifted pause
+    if new.power && (!old.power || !old.power_effective()) {
+        lines.push(texts::remote_ask_power(lang).to_owned());
+    }
     lines.push(texts::remote_last_contact(lang, last_seen, now));
     lines.join("\n\n")
 }
@@ -659,7 +745,7 @@ fn switch_question(lang: Lang, granted: &[(String, Level)]) -> String {
 /// Mouse and keyboard, or one protection less: the question carries the warning sign. Media
 /// alone is asked calmly.
 fn serious(old: &RemoteGrant, new: &RemoteGrant) -> bool {
-    new.level == Level::Full || (old.unlock && !new.unlock)
+    new.level == Level::Full || (old.unlock && !new.unlock) || (new.power && !old.power)
 }
 
 /// Resets "a confirmation is on screen" however the command ends.
@@ -785,13 +871,17 @@ pub fn remote_set_device(
     level: String,
     paused: bool,
     unlock: bool,
+    power: Option<bool>,
 ) -> Result<(), String> {
     let parts = state.parts()?;
     let key = PublicKey::from_bytes(from_hex32(&id).ok_or("bad-id")?);
+    let level = level_from(&level).ok_or("bad-level")?;
     let grant = RemoteGrant {
-        level: level_from(&level).ok_or("bad-level")?,
+        level,
         paused,
         unlock,
+        // a page from before power keeps what is stored; no level, no power
+        power: level > Level::Off && power.unwrap_or_else(|| parts.remote.grant_of(&key).power),
     };
     let device = parts
         .trust
@@ -1000,6 +1090,10 @@ mod tests {
         fn locked(&mut self) -> Option<bool> {
             Some(false)
         }
+        fn monitor_off(&mut self) -> bool {
+            self.0.media.fetch_add(1, Ordering::SeqCst);
+            true
+        }
     }
 
     fn fake_sink() -> (Sink, Arc<Seen>) {
@@ -1011,6 +1105,7 @@ mod tests {
             media: Worker::with(move || Some(Box::new(FakeSystem(for_worker)) as Box<dyn System>)),
             pointer: Pointer::with(Box::new(FakeMouse(for_mouse))),
             keys: Keyboard::with(Box::new(FakeKeys(for_keys))),
+            power: Arc::new(PowerCore::default()),
         };
         (sink, seen)
     }
@@ -1256,11 +1351,13 @@ mod tests {
             level: Level::Media,
             paused: true,
             unlock: true,
+            power: false,
         };
         let new = RemoteGrant {
             level: Level::Full,
             paused: false,
             unlock: false,
+            power: false,
         };
         for lang in [Lang::De, Lang::En] {
             let text =
@@ -1326,6 +1423,7 @@ mod tests {
             level: Level::Full,
             paused: false,
             unlock: true,
+            power: false,
         };
         trust.set_remote(&key, full).unwrap();
         // on disk: switch on, device granted – as if the earlier narrowing had not been written
@@ -1373,6 +1471,7 @@ mod tests {
                     level: Level::Full,
                     paused: false,
                     unlock: true,
+                    power: false,
                 },
             )
             .unwrap();
@@ -1387,6 +1486,7 @@ mod tests {
                 level: Level::Full,
                 paused: true,
                 unlock: true,
+                power: false,
             },
         );
         narrowed.apply(&remote);
@@ -1400,6 +1500,7 @@ mod tests {
                 level: Level::Full,
                 paused: false,
                 unlock: false,
+                power: false,
             },
         );
         wider.apply(&remote);

@@ -218,6 +218,8 @@ export interface RemoteHostGrant {
   level: RemoteLevel;
   paused: boolean;
   unlock: boolean;
+  /** May switch the PC off (shut down, restart, sleep, sign out) – each time after a countdown at the PC. Needs a level; off with `level: 'off'`. */
+  power: boolean;
 }
 
 export interface RemoteHostDevice extends RemoteHostGrant {
@@ -263,6 +265,11 @@ export interface RemoteHostService {
   setNotice(on: boolean): Promise<void>;
   /** "Fernsteuerung beenden": ends the session and pauses that device. `false`: nobody controlled. */
   end(): Promise<boolean>;
+  /**
+   * What Nemo on this PC is busy with right now (bit 1 cloud sync, bit 2 backup). Before a remote
+   * "switch off" the phone hears it first; it never starts or stops anything.
+   */
+  reportBusy(bits: number): Promise<void>;
 }
 
 /** What the phone may ask of the PC in a media session: a fixed list, there is no "any key". */

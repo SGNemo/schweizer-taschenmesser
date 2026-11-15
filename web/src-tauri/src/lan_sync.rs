@@ -451,12 +451,12 @@ pub fn lan_hub_start(app: AppHandle, state: State<'_, LanSync>) -> Result<StartD
     // The PC's own controls (end, switch off, the tray) are reachable before anything can listen:
     // a session that opens in the hub's first moment can be ended like any other.
     {
-        use ::lan_sync::input::InputSink as _;
         crate::remote::attach(
             &app,
             core.remote.clone(),
             core.trust.clone(),
-            core.sink.supported(),
+            core.sink.clone(),
+            core.sessions.clone(),
         );
     }
     let stop = Arc::new(AtomicBool::new(false));

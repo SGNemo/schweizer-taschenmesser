@@ -1,0 +1,48 @@
+/* The countdown window stands alone (no app shell): the app's tokens, its own few rules. */
+@import '../ui/tokens.css';
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+#root {
+  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-5);
+}
+.sentence {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: 1.4;
+}
+.note {
+  margin: 0;
+  color: var(--text-muted);
+}
+.cancel {
+  align-self: flex-start;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 var(--space-5);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.cancel:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.cancel:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
