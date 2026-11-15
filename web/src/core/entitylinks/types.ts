@@ -55,9 +55,9 @@ export const MAX_LINK_LABEL = 120;
 export const refKey = (ref: EntityRef): string => `${ref.module}:${ref.id}`;
 
 /**
- * `<module>:<id>` → its ref, or `undefined` for anything that is no key: a module id is lowercase alphanumeric (the
- * id may hold a colon),
- * and an id is capped at 128 characters like every record id. Stored keys are untrusted input.
+ * `<module>:<id>` → its ref, or `undefined` for anything that is no key: a module id is lowercase alphanumeric, and
+ * an id (it may hold a colon) has no whitespace or control character and is capped at 128 characters like every
+ * record id. Stored keys are untrusted input.
  */
 export function refOfKey(key: unknown): EntityRef | undefined {
   if (typeof key !== 'string') return undefined;
@@ -66,6 +66,7 @@ export function refOfKey(key: unknown): EntityRef | undefined {
   const module = key.slice(0, at);
   const id = key.slice(at + 1);
   if (!/^[a-z][a-z0-9]*$/.test(module) || id === '' || id.length > 128) return undefined;
+  if (/[\s\p{Cc}\p{Cf}]/u.test(id)) return undefined;
   return { module, id };
 }
 

@@ -1,8 +1,7 @@
 import { liveQuery } from 'dexie';
 import { bus } from '@/core/events';
 import { logError } from '@/core/diagnostics/logError';
-import { addLinkIfAbsent } from '@/core/entitylinks';
-import { fromLegacy } from '@/core/entitylinks/types';
+import { copyTodoLinksOf } from '@/core/entitylinks/migrate';
 import { getMeta } from '@/core/db/metaKv';
 import { loadStoredModuleState } from '@/core/modules/activation';
 import { PULL_COMPLETE_KEY } from '@/core/storage/dexie';
@@ -36,11 +35,13 @@ export async function addRequested(req: {
   });
   if (!req.link) return;
   // The row of the link table right away, so the other end (the note, the event) lists this ToDo now and not only
-  // after the next start's copy of `links[]` (planner hub S5, P46/P52). Same id as that copy; only when absent.
+  // after the next start's copy of `links[]` (planner hub S5, P46/P52). Written exactly as that copy writes it:
+  // same id, only when absent, stamped like the task's `links` field – so a removal elsewhere always wins.
+  // A link that must not be stored (no link target) is skipped there; the ToDo keeps its `links[]` entry.
   try {
-    await addLinkIfAbsent({ from: { module: 'todos', id: task.id }, ...fromLegacy(req.link) });
+    await copyTodoLinksOf(task);
   } catch {
-    // A link that must not be stored (no link target): the ToDo keeps its `links[]` entry as before.
+    console.error('[todos] link row of a requested to-do failed');
   }
 }
 

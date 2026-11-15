@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { db, type TaschenmesserDB } from '@/core/db/db';
-import { addLinkIfAbsent, linkEntries } from '@/core/entitylinks';
+import { addLinkIfAbsent, linkEntries, removeLink } from '@/core/entitylinks';
 import { copyTodoLinks } from '@/core/entitylinks/migrate';
 import { bus } from '@/core/events';
 import { DexieStorageAdapter } from '@/core/storage/dexie';
@@ -118,5 +118,59 @@ describe('the two-way link on a second device', () => {
     expect(fromTodo.map((e) => [e.direction, e.other])).toEqual([
       ['out', { module: 'calendar', id: 'ev1' }],
     ]);
+  });
+
+  it('a removal on B with a clock slightly behind A stays removed: A writes the row stamped like the copy', async () => {
+    const server = new MemoryServer();
+    const replica = (d: TaschenmesserDB) => {
+      const storage = new DexieStorageAdapter(d);
+      return { db: d, sync: () => runSync({ storage, adapter: server.adapter() }) };
+    };
+    // A is the app's own database: `todo.requested` writes there.
+    for (const table of ['_outbox', '_meta']) await db.table(table).clear();
+    const a = replica(db);
+    const bDb = createTestDb();
+    dbs.push(bDb);
+    const b = replica(bDb);
+    await a.sync(); // the first round uploads everything; the case below needs an ordinary one
+
+    const stop = start();
+    const before = clock;
+    try {
+      await bus.emit('todo.requested', {
+        title: 'Unterlagen mitnehmen',
+        link: { kind: 'event', id: 'ev1', label: 'Zahnarzt' },
+      });
+    } finally {
+      stop();
+    }
+    const [task] = await taskRepo.active().toArray();
+    const todo = { module: 'todos', id: task!.id };
+    expect(await linkEntries(todo, a.db)).toHaveLength(1);
+
+    // A push ran between the task and its row: B gets the task only, then copies it itself.
+    const outbox = db.table('_outbox');
+    const rowQueued = await outbox
+      .filter((r: { collection: string }) => r.collection === '_links')
+      .toArray();
+    expect(rowQueued).toHaveLength(1);
+    await outbox.bulkDelete(
+      rowQueued.map((r: { collection: string; id: string }) => [r.collection, r.id]),
+    );
+    await a.sync();
+    await outbox.bulkPut(rowQueued);
+    await b.sync();
+    expect(await b.db.table('_links').count()).toBe(0);
+    expect(await copyTodoLinks(b.db)).toBe(1);
+
+    // B's clock is slightly behind A's: the removal there is stamped before A wrote its row by the wall clock.
+    clock = before;
+    const [entry] = await linkEntries(todo, b.db);
+    await removeLink(entry!.id, b.db);
+    await b.sync();
+    await a.sync();
+    await b.sync();
+    await a.sync();
+    for (const d of [a, b]) expect(await linkEntries(todo, d.db)).toEqual([]);
   });
 });

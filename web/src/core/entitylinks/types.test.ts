@@ -21,6 +21,7 @@ describe('link contract: helpers', () => {
   it('a key reads back as its ref; anything else is no ref', () => {
     expect(refOfKey('todos:t-1')).toEqual({ module: 'todos', id: 't-1' });
     expect(refOfKey('mail:a:b')).toEqual({ module: 'mail', id: 'a:b' });
+    expect(refOfKey(`todos:${'x'.repeat(128)}`)).toEqual({ module: 'todos', id: 'x'.repeat(128) });
     for (const bad of [
       '',
       'evt-1',
@@ -28,6 +29,15 @@ describe('link contract: helpers', () => {
       'todos:',
       'To Dos:x',
       `todos:${'x'.repeat(129)}`,
+      'todos:t 1',
+      'todos: t1',
+      'todos:t1\n',
+      'todos:t\t1',
+      'todos:t\u00a01',
+      'todos:t\u00001',
+      'todos:t\u001b1',
+      'todos:t\u007f1',
+      'todos:t\u200b1',
       42,
       null,
     ])
