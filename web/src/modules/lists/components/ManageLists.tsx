@@ -69,7 +69,8 @@ export function ManageLists({
         onOpenList(l.id);
         onClose();
       }}
-      actions={
+      // Always visible (not on hover only): moving is what this dialog is for.
+      end={
         inUse ? (
           <span className={styles.rowActions}>
             {/* aria-disabled, not disabled: a pressed arrow at the edge keeps the focus. */}

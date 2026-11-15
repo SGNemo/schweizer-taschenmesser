@@ -29,7 +29,6 @@ export function ListEditor({
   existing,
   onClose,
   onSaved,
-  onArchived,
 }: {
   target: ListTarget;
   /** Every live list (for the sort key of a new one). */
@@ -37,8 +36,6 @@ export function ListEditor({
   onClose: () => void;
   /** Called with the id of the created or edited list. */
   onSaved: (id: string) => void;
-  /** Called with the id of a list that was just archived (the page leaves it). */
-  onArchived?: (id: string) => void;
 }) {
   const list = target && target !== 'new' ? target : null;
   return (
@@ -55,7 +52,6 @@ export function ListEditor({
           existing={existing}
           onClose={onClose}
           onSaved={onSaved}
-          onArchived={onArchived}
         />
       ) : null}
     </Dialog>
@@ -78,13 +74,11 @@ function Fields({
   existing,
   onClose,
   onSaved,
-  onArchived,
 }: {
   list: Stored<List> | null;
   existing: readonly Stored<List>[];
   onClose: () => void;
   onSaved: (id: string) => void;
-  onArchived?: (id: string) => void;
 }) {
   // The record as the editor opened it: only fields that differ from it are saved (QA X01).
   const [opened] = useState(list);
@@ -217,28 +211,15 @@ function Fields({
       <FormActions
         start={
           list ? (
-            <>
-              <Button
-                variant="danger"
-                onClick={() => {
-                  deleteListWithUndo(list.id);
-                  onClose();
-                }}
-              >
-                {t.lists.deleteList}
-              </Button>
-              {!list.archived ? (
-                <Button
-                  onClick={() => {
-                    archiveWithUndo(list, true);
-                    onArchived?.(list.id);
-                    onClose();
-                  }}
-                >
-                  {t.lists.archiveList}
-                </Button>
-              ) : null}
-            </>
+            <Button
+              variant="danger"
+              onClick={() => {
+                deleteListWithUndo(list.id);
+                onClose();
+              }}
+            >
+              {t.lists.deleteList}
+            </Button>
           ) : undefined
         }
       >

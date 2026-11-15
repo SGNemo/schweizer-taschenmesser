@@ -328,6 +328,18 @@ export default function ListsPage() {
         { id: 'templates', label: t.lists.routines.title, onSelect: () => setTemplates(true) },
         { id: 'edit-list', label: t.lists.editList, onSelect: () => setListTarget(current) },
         { id: 'manage', label: t.lists.manage, onSelect: () => setManage(true) },
+        ...(!current.archived
+          ? [
+              {
+                id: 'archive',
+                label: t.lists.archiveList,
+                onSelect: () => {
+                  archiveWithUndo(current, true);
+                  leaveArchived(current.id);
+                },
+              },
+            ]
+          : []),
         ...(toBuy.length > 0
           ? [
               {
@@ -652,7 +664,6 @@ export default function ListsPage() {
         existing={lists ?? []}
         onClose={() => setListTarget(null)}
         onSaved={(id) => setParams({ list: id }, { replace: true })}
-        onArchived={leaveArchived}
       />
       <ManageLists
         onArchived={leaveArchived}

@@ -146,8 +146,7 @@ test('Listen verwalten: icon and colour, order, archive and bring back', async (
 
   // Archive: out of the tab row, back through "Listen verwalten".
   await page.getByRole('button', { name: 'Geschenke', exact: true }).click();
-  await (await openPageMenu(page)).getByRole('menuitem', { name: 'Liste bearbeiten' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Liste archivieren' }).click();
+  await (await openPageMenu(page)).getByRole('menuitem', { name: 'Liste archivieren' }).click();
   await expect(tabs).toHaveText(['Einkauf']);
   await backSettled(page);
   await (await openPageMenu(page)).getByRole('menuitem', { name: 'Listen verwalten' }).click();
