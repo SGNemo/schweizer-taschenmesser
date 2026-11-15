@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { formatMoney, formatMoneyAxis } from '@/core/money';
 import { dateTimeFormat } from '@/core/i18n/format';
 import { formatDay, formatMonth, parseDate } from '@/core/time/dates';
+import { useAmountMask } from '@/core/focus/maskAmounts';
 import { t } from '@/strings';
 import { Button, Card, SensitiveValue } from '@/ui';
 import { Donut, Trend } from '@/ui/charts';
@@ -134,6 +135,8 @@ export function IncomeExpenseChart({
 /** Table of the months: what the income/expense chart shows, for reading off every value (a visible switch). */
 export function MonthTable({ points }: { points: readonly IncomePoint[] }) {
   const money = useMoney();
+  // "Werte ausblenden" masks the table as text like the chart it stands for (no reveal button per cell).
+  const mask = useAmountMask();
   return (
     <table className={styles.table} data-testid="table-trend">
       <thead>
@@ -154,16 +157,9 @@ export function MonthTable({ points }: { points: readonly IncomePoint[] }) {
         {points.map((p) => (
           <tr key={p.month}>
             <td>{p.label}</td>
-            {/* "Werte ausblenden" masks the table like the chart it stands for. */}
-            <td className={styles.num}>
-              <SensitiveValue compact>{money(p.income)}</SensitiveValue>
-            </td>
-            <td className={styles.num}>
-              <SensitiveValue compact>{money(p.expense)}</SensitiveValue>
-            </td>
-            <td className={styles.num}>
-              <SensitiveValue compact>{money(p.net)}</SensitiveValue>
-            </td>
+            <td className={styles.num}>{mask(money(p.income))}</td>
+            <td className={styles.num}>{mask(money(p.expense))}</td>
+            <td className={styles.num}>{mask(money(p.net))}</td>
           </tr>
         ))}
       </tbody>

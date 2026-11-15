@@ -113,5 +113,8 @@ describe('finance charts on the shared blocks (polish p2)', () => {
     const table = await screen.findByTestId('table-trend');
     await waitFor(() => expect(plain(table.textContent)).not.toMatch(/\d,\d\d/));
     expect(plain(table.textContent)).toContain('Aug.');
+    // Text, not a reveal button per cell: nine masked amounts, no extra tab stops.
+    expect(table.querySelectorAll('.sr-only')).toHaveLength(9);
+    expect(table.querySelectorAll('button')).toHaveLength(0);
   });
 });
