@@ -89,12 +89,15 @@
   gap: var(--space-2);
   min-height: 1.75rem;
 }
-/* A narrow card (phone, size s) keeps the name readable: below 8 rem for the name, amount, state and action move to a
-   second line at the right end instead of squeezing the name into one syllable per line ("Stadt-/werke/Mus-/ter-/stadt"). */
+/* A narrow card (phone, size s) keeps the name readable: below 8 rem for the name, amount, state and action (one group,
+   `.dueTail`) move to a second line at the right end instead of squeezing the name into one syllable per line ("Stadt-/werke/Mus-/ter-/stadt"). */
 .dueRow > .rowTitle {
   flex-basis: 8rem;
 }
-.dueRow > .rowTitle + * {
+.dueTail {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
   margin-inline-start: auto;
 }
 .dueRow[data-tone='later'] .rowTitle,
