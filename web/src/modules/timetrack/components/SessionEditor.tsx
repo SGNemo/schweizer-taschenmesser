@@ -16,6 +16,7 @@ import {
   TimeField,
 } from '@/ui';
 import { sessionRepo } from '../repo';
+import { SessionSourceLine } from './SessionSource';
 import { sessionSchema, type Job, type Session } from '../schema';
 
 export type SessionTarget = Stored<Session> | 'new' | null;
@@ -94,6 +95,7 @@ function Fields({
 
   return (
     <Form onSubmit={save}>
+      <SessionSourceLine sourceRef={existing?.ref} onLeave={onClose} />
       <SelectField
         label={t.timetrack.form.job}
         value={jobId}

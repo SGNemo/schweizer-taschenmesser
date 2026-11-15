@@ -496,8 +496,8 @@
         "en": "Your subscribed feeds (news, blogs, podcasts) in one place, sorted by group"
       },
       "description": {
-        "de": "Deine abonnierten Feeds (Nachrichten, Blogs, Podcasts) an einem Ort, nach Gruppen sortiert. Nemo ruft sie nicht selbst ab; ein Tipp öffnet die Seite.",
-        "en": "Your subscribed feeds (news, blogs, podcasts) in one place, sorted by group. Nemo does not fetch them itself; a tap opens the site."
+        "de": "Deine abonnierten Feeds (Nachrichten, Blogs, Podcasts) an einem Ort, nach Gruppen sortiert, mit einem Startkatalog zum Aussuchen. Nemo ruft Feeds nur auf deinen Klick ab, für die Vorschau; ein Tipp öffnet die Seite.",
+        "en": "Your subscribed feeds (news, blogs, podcasts) in one place, sorted by group, with a starter catalogue to pick from. Nemo fetches a feed only when you click, for the preview; a tap opens the site."
       }
     },
     {

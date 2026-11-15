@@ -26,7 +26,7 @@ const manifest: ModuleManifest = {
     signature: 'stopwatch',
     type: 'mono',
   },
-  version: 1,
+  version: 2,
   get description() {
     return t.timetrack.meta.description;
   },

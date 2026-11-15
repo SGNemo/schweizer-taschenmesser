@@ -6,6 +6,8 @@ import { bus } from '@/core/events';
 import { useModuleStates } from '@/core/modules/activation';
 import { whenServicesSettled } from '@/core/modules/servicesReady';
 import { useSettled } from '@/core/status/settled';
+import { useSettings } from '@/core/settings/settings';
+import { SETTINGS_DEFAULTS, SETTINGS_SCOPE, settingsSchema } from '../settings';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import type { Stored } from '@/core/db/types';
 import { useUiStore } from '@/stores/ui';
@@ -37,10 +39,14 @@ import { ItemEditor } from '../components/ItemEditor';
 import { SignatureMark } from '@/ui/identity';
 import { archiveWithUndo, ListEditor, ListMark, type ListTarget } from '../components/ListEditor';
 import { ManageLists } from '../components/ManageLists';
+import { ShareToList } from '../components/ShareToList';
+import { FillFromPantry } from '../components/FillFromPantry';
 import {
   groupItems,
   listAsText,
   namedSectionCount,
+  pickWidgetList,
+  sharedEntries,
   PACKING_TEMPLATES,
   progress,
   sortItems,
@@ -113,6 +119,16 @@ export default function ListsPage() {
     (inUse[0] as (typeof inUse)[0] | undefined);
   const sorted = current?.archived ? [...inUse, current] : inUse;
   const [manage, setManage] = useState(false);
+  const [fill, setFill] = useState(false);
+  // `?share=<text>` (the share sheet's "Auf eine Liste"): each line becomes an entry of the list the reader picks.
+  const shared = useMemo(() => sharedEntries(params.get('share') ?? ''), [params]);
+  const closeShare = () => {
+    const next = new URLSearchParams(params);
+    next.delete('share');
+    setParams(next, { replace: true });
+  };
+  const [prefs, setPrefs] = useSettings(SETTINGS_SCOPE, settingsSchema, SETTINGS_DEFAULTS);
+  const widgetList = pickWidgetList(lists ?? [], prefs?.widgetList ?? '');
   // Own icon or colour: shown in front of the list's first line (the tabs carry names only).
   const mark =
     current && (current.icon || current.tone !== undefined) ? (
@@ -354,6 +370,16 @@ export default function ListsPage() {
         ...(!current.archived
           ? [
               {
+                id: 'widget',
+                label: t.lists.showInWidget,
+                checked: widgetList?.id === current.id,
+                onSelect: () => {
+                  void setPrefs({ widgetList: current.id }).then(() =>
+                    toast(t.lists.widgetShows(current.name)),
+                  );
+                },
+              },
+              {
                 id: 'archive',
                 label: t.lists.archiveList,
                 onSelect: () => {
@@ -371,6 +397,9 @@ export default function ListsPage() {
                 onSelect: () => void sendToBuy(),
               },
             ]
+          : []),
+        ...(isShopping && moduleStates?.pantry === true
+          ? [{ id: 'fill-pantry', label: t.lists.fillFromPantry, onSelect: () => setFill(true) }]
           : []),
         ...(isShopping && doneCount > 0 && moduleStates?.pantry === true
           ? [
@@ -688,6 +717,21 @@ export default function ListsPage() {
         existing={lists ?? []}
         onClose={() => setListTarget(null)}
         onSaved={(id) => setParams({ list: id }, { replace: true })}
+      />
+      {current ? (
+        <FillFromPantry
+          open={fill}
+          listId={current.id}
+          listName={current.name}
+          openNames={shown.filter((i) => !i.done).map((i) => i.name)}
+          onClose={() => setFill(false)}
+        />
+      ) : null}
+      <ShareToList
+        entries={shared}
+        lists={inUse}
+        onClose={closeShare}
+        onAdded={(id) => setParams({ list: id }, { replace: true })}
       />
       <ManageLists
         onArchived={leaveArchived}

@@ -8,16 +8,20 @@ export function CatalogRow({
   entry,
   subscribed,
   onAdd,
+  onPreview,
 }: {
   entry: CatalogEntry;
   subscribed: ReadonlySet<string>;
   onAdd: (entry: CatalogEntry) => void;
+  /** A tap on the name shows the newest articles (network, on that click only). */
+  onPreview?: (entry: CatalogEntry) => void;
 }) {
   const s = t.feeds.catalog;
   const has = subscribed.has(feedKey(entry.url));
   return (
     <ItemRow
       title={entry.title}
+      onOpen={onPreview ? () => onPreview(entry) : undefined}
       // The site only when the name does not already say it ("tagesschau.de").
       meta={[hostOf(entry.site) === entry.title ? '' : hostOf(entry.site), entry.region]
         .filter(Boolean)

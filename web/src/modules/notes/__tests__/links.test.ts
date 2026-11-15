@@ -2,7 +2,7 @@
 import { Editor } from '@tiptap/core';
 import { describe, expect, it } from 'vitest';
 import { noteExtensions } from '../editor/extensions';
-import { backlinks, extractLinks, findPage, suggestTitles } from '../links';
+import { backlinks, extractLinks, findPage, suggestTitles, todoRequest } from '../links';
 
 const page = (id: string, title: string, body = '') => ({ id, title, body });
 
@@ -61,5 +61,18 @@ describe('link logic', () => {
     ];
     expect(suggestTitles('rei', pages)).toEqual(['Reise', 'Wochenplan Reise']);
     expect(suggestTitles('', pages, 2)).toHaveLength(2);
+  });
+});
+
+describe('„Als ToDo“ on a line (P46)', () => {
+  it('sends the page as the link, like „In den Plan“', () => {
+    expect(todoRequest('Reifen wechseln', { id: 'n1', label: 'Auto' })).toEqual({
+      title: 'Reifen wechseln',
+      link: { kind: 'note', id: 'n1', label: 'Auto' },
+    });
+  });
+
+  it('a page that is not saved yet sends no link', () => {
+    expect(todoRequest('Milch', null)).toEqual({ title: 'Milch' });
   });
 });

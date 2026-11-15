@@ -31,6 +31,11 @@ export const calendar: Strings['calendar'] = {
   overlaps: 'Overlaps with another event',
   asTodo: 'Save as to-do',
   asTodoDone: 'Saved as to-do.',
+  preparation: {
+    label: 'Preparation',
+    open: (title: string) => `Open preparation: ${title}`,
+    done: 'done',
+  },
   skipOccurrence: (date: string) => `Remove only the one on ${date}`,
   movedToast: 'Event moved.',
   dragRecurring: 'Change repeating events in the editor.',

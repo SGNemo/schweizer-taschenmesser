@@ -84,6 +84,15 @@ const TARGETS: Target[] = [
     to: (c) => `/todos?${q({ new: '1', title: c.title || c.text || c.url })}`,
   },
   {
+    module: 'lists',
+    // The label lives in the lists block: each shared line becomes an entry of the list picked there.
+    get label() {
+      return t.lists.shareTo;
+    },
+    icon: 'cart',
+    to: (c) => `/lists?${q({ share: c.text || c.title || c.url })}`,
+  },
+  {
     module: 'feeds',
     get label() {
       return t.share.toFeed;

@@ -1760,6 +1760,12 @@ export const de = {
     overlaps: 'Überschneidet sich mit einem anderen Termin',
     asTodo: 'Als ToDo merken',
     asTodoDone: 'Als ToDo gemerkt.',
+    /** The ToDos that link to an event, in its editor (planner hub S5, P52). */
+    preparation: {
+      label: 'Vorbereitung',
+      open: (title: string) => `Vorbereitung öffnen: ${title}`,
+      done: 'erledigt',
+    },
     skipOccurrence: (date: string) => `Nur den Termin am ${date} entfernen`,
     movedToast: 'Termin verschoben.',
     dragRecurring: 'Wiederkehrende Termine änderst du im Editor.',
@@ -4647,6 +4653,9 @@ export const de = {
   people: {
     turnsAge: (name: string, age: number) => `${name} wird ${age}`,
     birthdayOf: (name: string) => `Geburtstag: ${name}`,
+    /** A gift with a day in the planner (S5): never the gift itself – a surprise. */
+    planTitle: (name: string) => `Geschenk für ${name}`,
+    planAction: 'Zur Person',
     meta: {
       name: 'Personen',
       description:
@@ -4659,6 +4668,9 @@ export const de = {
         remindDaysBeforeHelp: '0 = am Geburtstag selbst',
         remindTime: 'Uhrzeit der Erinnerung',
         remindTimeHelp: 'Format HH:mm',
+        showInPlan: 'Im Plan zeigen',
+        showInPlanHelp:
+          'Geschenke mit Datum stehen im Planer als „Geschenk für <Name>“ (20 Min, bis zum Anlass) – ohne zu verraten, was es ist. Nur bei eingeschaltetem Planer.',
       },
     },
     /** The detail panel of the wide page, and the one verb of the empty list. */
@@ -5893,6 +5905,22 @@ export const de = {
       },
     },
     startedFrom: (name: string, n: number) => `„${name}“ mit ${n} Einträgen angelegt.`,
+    showInWidget: 'Im Widget zeigen',
+    fillFromPantry: 'Aus Vorräten auffüllen',
+    pantryAsking: 'Vorräte werden gefragt …',
+    pantryNothing: 'In den Vorräten wird gerade nichts knapp.',
+    pantryHint: 'Angehakt kommt auf die Liste. Was bald abläuft, entscheidest du selbst.',
+    pantryReasons: { empty: 'leer', low: 'knapp', expired: 'abgelaufen', soon: 'läuft bald ab' },
+    pantryAdd: (n: number) => (n === 1 ? '1 Eintrag übernehmen' : `${n} Einträge übernehmen`),
+    shareTo: 'Auf eine Liste',
+    sharedPreview: (n: number) =>
+      n === 1 ? 'Dieser Eintrag kommt dazu:' : `Diese ${n} Einträge kommen dazu:`,
+    sharedMore: (n: number) => `… und ${n} weitere`,
+    sharedAdded: (n: number, list: string) =>
+      n === 1 ? `1 Eintrag auf „${list}“ gesetzt.` : `${n} Einträge auf „${list}“ gesetzt.`,
+    widgetShows: (name: string) => `Das Widget zeigt jetzt „${name}“.`,
+    widgetEmptyList: (name: string) => `Auf „${name}“ ist nichts offen.`,
+    widgetSummary: (name: string, n: number) => `${name}: ${n} offen`,
     noListInUse: 'Noch keine Liste. Leg mit „Neue Liste“ eine an.',
     noListArchived: 'Alle Listen sind archiviert. Hol eine zurück oder leg eine neue an.',
   },
@@ -8833,6 +8861,11 @@ export const de = {
       action: 'Zeit erfassen',
       started: (title: string) => `Zeit läuft für „${title}“.`,
     },
+    /** What a session was started for (TT1): „Für: Zahnarzt“, the title opens the thing. */
+    source: {
+      label: 'Für',
+      open: (title: string) => `${title} öffnen`,
+    },
     widgetText: {
       start: 'Starten',
       none: 'Noch keine Projekte.',
@@ -8958,7 +8991,7 @@ export const de = {
     meta: {
       name: 'Feeds',
       description:
-        'Deine abonnierten Feeds (Nachrichten, Blogs, Podcasts) an einem Ort, nach Gruppen sortiert. Nemo ruft sie nicht selbst ab; ein Tipp öffnet die Seite.',
+        'Deine abonnierten Feeds (Nachrichten, Blogs, Podcasts) an einem Ort, nach Gruppen sortiert, mit einem Startkatalog zum Aussuchen. Nemo ruft Feeds nur auf deinen Klick ab, für die Vorschau; ein Tipp öffnet die Seite.',
       quickAdd: 'Feed eintragen',
       settings: {
         grouped: 'Nach Gruppen ordnen',
@@ -8998,8 +9031,23 @@ export const de = {
       query: 'Suchen oder Adresse einfügen',
       queryHint: 'Name einer Quelle, ein Thema oder die Adresse einer Website oder eines Feeds.',
       address: 'Diese Adresse',
-      addAddress: 'Als Feed eintragen',
-      noMatch: 'Im Katalog ist dazu nichts. Mit der Adresse des Feeds klappt es auch.',
+      addAddress: 'Ohne Vorschau eintragen',
+      preview: 'Ansehen',
+      noMatch: 'Im Katalog ist dazu nichts. Mit der Adresse der Website klappt es auch.',
+    },
+    preview: {
+      checking: (host: string) => `Schaue bei ${host} nach …`,
+      latest: 'Neueste Artikel',
+      noItems: 'In diesem Feed stehen gerade keine Artikel.',
+      subscribe: 'Abonnieren',
+      back: 'Zurück',
+      choose: (n: number) => `Diese Seite hat ${n} Feeds. Welchen möchtest du sehen?`,
+      none: 'Auf dieser Seite steht kein Feed. Du kannst die Adresse trotzdem eintragen.',
+      noProxy: 'Die Vorschau geht in der App oder mit eigenem Sync-Server. Eintragen geht auch so.',
+      network: 'Die Seite antwortet gerade nicht. Eintragen geht auch so.',
+      anyway: 'Trotzdem eintragen',
+      tapHint: 'Ein Tipp auf den Namen zeigt die neuesten Artikel.',
+      previewOf: (name: string) => `${name} ansehen`,
     },
     catalog: {
       label: 'Startkatalog',

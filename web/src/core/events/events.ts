@@ -59,6 +59,14 @@ export interface EventMap {
   };
   /** Something was bought (shopping list). The pantry adds the amount to the item of that name or creates it. */
   'pantry.restock': { name: string; quantity?: string };
+  /**
+   * The shopping list asks what the pantry needs ("Aus Vorräten auffüllen"). The pantry answers once with the names
+   * of stock that is used up, at its minimum, expired or expiring soon; nothing is written by the pantry. No answer
+   * while the pantry is off.
+   */
+  'pantry.needsRequested': {
+    answer: (needs: { name: string; reason: 'empty' | 'low' | 'expired' | 'soon' }[]) => void;
+  };
   /** A saved link could be a gift idea (bookmarks). The people module keeps it until the reader picks a person. */
   'gift.requested': { title: string; url?: string; priceCents?: number };
   /**
@@ -114,7 +122,11 @@ export interface EventMap {
    */
   'plan.restRequested': { open: (path: string) => void };
   /** Something starts the clock (a calendar event: "Zeit erfassen"). Time tracking starts a session without a project, titled as a note. */
-  'timetrack.start.requested': { title: string; sourceRef?: string };
+  'timetrack.start.requested': {
+    title: string;
+    /** The thing the time is for, as `<module>:<id>`; time tracking keeps it on the session (anything else is dropped). */
+    sourceRef?: string;
+  };
   /**
    * A module reports something to the automation engine (`core/automation`): a domain event such as
    * `mail.invoiceReceived`. Nothing happens unless a rule listens. Keep `data` to what rules need.

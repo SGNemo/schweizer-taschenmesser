@@ -64,3 +64,16 @@ describe('moving entries and starting from a template (round 2026-11)', () => {
     expect([...groups]).toEqual(['Kleidung', 'Hygiene', 'Dokumente', 'Technik', 'Sonstiges']);
   });
 });
+
+describe('shared text', () => {
+  it('turns each line into an entry without list marks', async () => {
+    const { sharedEntries } = await import('../logic');
+    expect(
+      sharedEntries('Einkauf:\n- 2 Milch\n• Brot\n\n1. Eier\n[ ] Käse\n[x] Butter\n  * Salz  '),
+    ).toEqual(['Einkauf:', '2 Milch', 'Brot', 'Eier', 'Käse', 'Butter', 'Salz']);
+    expect(sharedEntries('')).toEqual([]);
+    expect(sharedEntries(Array.from({ length: 150 }, (_, i) => `x${i}`).join('\n'))).toHaveLength(
+      100,
+    );
+  });
+});

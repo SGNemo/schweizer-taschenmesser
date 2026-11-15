@@ -54,6 +54,22 @@ export const MAX_LINK_LABEL = 120;
 /** `<module>:<id>` – the one key format of a ref. */
 export const refKey = (ref: EntityRef): string => `${ref.module}:${ref.id}`;
 
+/**
+ * `<module>:<id>` → its ref, or `undefined` for anything that is no key: a module id is lowercase alphanumeric, and
+ * an id (it may hold a colon) has no whitespace or control character and is capped at 128 characters like every
+ * record id. Stored keys are untrusted input.
+ */
+export function refOfKey(key: unknown): EntityRef | undefined {
+  if (typeof key !== 'string') return undefined;
+  const at = key.indexOf(':');
+  if (at <= 0) return undefined;
+  const module = key.slice(0, at);
+  const id = key.slice(at + 1);
+  if (!/^[a-z][a-z0-9]*$/.test(module) || id === '' || id.length > 128) return undefined;
+  if (/[\s\p{Cc}\p{Cf}]/u.test(id)) return undefined;
+  return { module, id };
+}
+
 /** A stored `rel` is a plain string: anything unknown (a newer app's value) reads as `about`. */
 export const linkRel = (raw: unknown): LinkRel =>
   LINK_RELS.includes(raw as LinkRel) ? (raw as LinkRel) : 'about';

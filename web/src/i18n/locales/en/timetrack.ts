@@ -93,6 +93,7 @@ export const timetrack: Strings['timetrack'] = {
     open: 'Look',
   },
   fromEvent: { action: 'Track time', started: (title: string) => `Timer running for "${title}".` },
+  source: { label: 'For', open: (title: string) => `Open ${title}` },
   widgetText: {
     start: 'Start',
     none: 'No projects yet.',

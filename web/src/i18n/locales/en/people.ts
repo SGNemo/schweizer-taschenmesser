@@ -3,6 +3,8 @@ import type { Strings } from '@/strings';
 export const people: Strings['people'] = {
   turnsAge: (name: string, age: number) => `${name} turns ${age}`,
   birthdayOf: (name: string) => `Birthday: ${name}`,
+  planTitle: (name: string) => `Gift for ${name}`,
+  planAction: 'Go to person',
   meta: {
     name: 'People',
     description:
@@ -15,6 +17,9 @@ export const people: Strings['people'] = {
       remindDaysBeforeHelp: '0 = on the birthday itself',
       remindTime: 'Reminder time',
       remindTimeHelp: 'Format HH:mm',
+      showInPlan: 'Show in the plan',
+      showInPlanHelp:
+        'Gifts with a date appear in the planner as “Gift for <name>” (20 min, by the occasion) – without saying what it is. Only with the planner on.',
     },
   },
   detailLabel: 'Person in detail',
