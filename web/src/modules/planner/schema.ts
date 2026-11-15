@@ -1,5 +1,9 @@
 import { z } from 'zod';
+import { PLAN_DAY_PARTS } from '@/core/plan/types';
 import { DATE_RE, TIME_RE } from '@/core/time/dates';
+
+/** Morning, afternoon, evening (v3, use case „Wochenende retten“ F2): orders a thing inside its day. */
+export const dayPartSchema = z.enum(PLAN_DAY_PARTS);
 
 /**
  * The planner's three synced collections (docs/design/plan/CONCEPT.md §2). Ids are deterministic and
@@ -15,6 +19,8 @@ export const blockerSchema = z.object({
   min: z.number().int().min(0).max(1440),
   from: z.string().regex(TIME_RE).optional(),
   to: z.string().regex(TIME_RE).optional(),
+  /** A break said for a part of the day (v3); shown with it, never summed. */
+  part: dayPartSchema.optional(),
 });
 
 /** Only days the user touched are stored; a missing day = the weekday default of the settings. */
@@ -48,6 +54,14 @@ export const itemSchema = z.object({
   splittable: z.boolean().optional(),
   /** „Nicht planen“. */
   excluded: z.boolean().optional(),
+  /** v3: the part of the day it belongs to (orders it inside its day, never moves it to another day). */
+  part: dayPartSchema.optional(),
+  /**
+   * v3 „Als Pause“: on this day the thing is a break, not work – never planned as a unit; the day gets a blocker of
+   * `breakMin` with its title. No total, no rating, no leisure sum.
+   */
+  asBreakOn: z.string().regex(DATE_RE).optional(),
+  breakMin: z.number().int().min(15).max(720).optional(),
   order: z.number().default(0),
 });
 

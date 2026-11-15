@@ -3,6 +3,7 @@ import { extractDateTime } from './dates';
 import { extractEndTime } from './endtime';
 import { extractEstimate } from './estimate';
 import { parseFitness } from './fitness';
+import { isBreakLine, parseBreak } from './brk';
 import { parsePlace } from './place';
 import { extractRecurrence } from './recurrence';
 import { extractUntil } from './until';
@@ -203,6 +204,13 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
       const long = SHORT_DAYS[(m[2] ?? m[4])!.toLowerCase().replace('.', '')]!;
       text = `${text.slice(0, m.index)}${m[1] ? `${m[1]} ` : ''}${long}${text.slice(m.index + m[0].length)}`;
     }
+  }
+  // „Pause …“/„Freizeit …“ while the planner is on: a day's break; without the planner the line is a ToDo (a time
+  // in it never makes it an appointment) – the app never guesses what is leisure from other words.
+  if (!forced && isBreakLine(text)) {
+    const pause = parseBreak(text, opts);
+    if (pause) return pause;
+    forced = 'todo';
   }
   const plan =
     forced === 'plan' ? { from: FROM_WORD.test(text), due: PLAN_DUE.test(text) } : undefined;

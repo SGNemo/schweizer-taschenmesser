@@ -28,6 +28,8 @@ export interface CorpusCase {
   fitness?: true;
   /** Run with the Uhr module on (`ParseOptions.place`, a stub that knows Tokio, New York and Lisbon). */
   place?: true;
+  /** Run with the planner on (`ParseOptions.breaks`): „Pause …“/„Freizeit …“ lines are a day's break. */
+  breaks?: true;
 }
 
 export const CORPUS_NOW = new Date(2026, 9, 29, 10, 0);
@@ -394,4 +396,34 @@ export const CORPUS: CorpusCase[] = [
   { from: 'WE-W04', text: 'Konferenz 10.11. 9 Uhr bis 12.11.', type: 'event', date: '2026-11-10' },
   { from: 'WE-W04', text: 'Seminar Mo 9 Uhr bis Mi', type: 'event', date: '2026-11-02' },
   { from: 'WE-W04', text: 'Montage Regal bis Sonntag 18 Uhr', type: 'todo', date: '2026-11-01' },
+  // Use case „Wochenende retten“ F2: a break line while the planner is on; without it (or without the word) a ToDo.
+  {
+    from: 'WE-W05',
+    text: 'Pause 14 bis 16 Uhr Zocken',
+    breaks: true,
+    type: 'break',
+    date: '2026-10-29',
+    time: '14:00',
+    endTime: '16:00',
+    title: 'Zocken',
+  },
+  {
+    from: 'WE-W05',
+    text: 'Freizeit Sa 2 Std',
+    breaks: true,
+    type: 'break',
+    date: '2026-10-31',
+    estimateMin: 120,
+    title: 'Freizeit',
+  },
+  {
+    from: 'WE-W05',
+    text: 'Pause',
+    breaks: true,
+    type: 'break',
+    date: '2026-10-29',
+    title: 'Pause',
+  },
+  { from: 'WE-W05', text: 'Pause 14 bis 16 Uhr Zocken', type: 'todo' },
+  { from: 'WE-W05', text: 'Zocken', breaks: true, type: 'todo', title: 'Zocken' },
 ];

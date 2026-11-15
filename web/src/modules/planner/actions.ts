@@ -17,6 +17,7 @@ import type { EventMap } from '@/core/events/events';
 import type { CaptureFields } from '@/quickCapture/parser';
 import { saveCapture, saveCaptures, targetFor, type SavedCapture } from '@/quickCapture/targets';
 import type { PlanOp } from '@/core/plan/instructions';
+import type { PlanDayPart } from '@/core/plan/types';
 import { setSettings } from '@/core/settings/settings';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
@@ -136,17 +137,22 @@ export async function addRequested(req: EventMap['plan.requested']): Promise<boo
 
 /** Which sources take a tick or „Später“ back (an invoice or a cancellation does not: that stays in its module). */
 export async function sourceAbilities(): Promise<
-  Record<string, { done: boolean; assign: boolean }>
+  Record<string, { done: boolean; assign: boolean; estimate: boolean }>
 > {
-  const out: Record<string, { done: boolean; assign: boolean }> = {};
+  const out: Record<string, { done: boolean; assign: boolean; estimate: boolean }> = {};
   await Promise.all(
     availableManifests().map(async (m) => {
       const s = await plannableSource(m).catch(() => undefined);
-      if (s) out[m.id] = { done: !!s.onDone, assign: !!s.onAssign };
+      if (s) out[m.id] = { done: !!s.onDone, assign: !!s.onAssign, estimate: !!s.onEstimate };
     }),
   );
   return out;
 }
+
+/** „dauert …“ on the row ⋯: the same choices as the ToDo editor's estimate (below 30 a thing is no main item). */
+export const DURATION_CHOICES = [5, 15, 30, 60] as const;
+/** „Als Pause · …“ on the row ⋯ (minutes). */
+export const BREAK_CHOICES = [60, 120, 180] as const;
 
 const source = (moduleId: string) =>
   plannableSource(availableManifests().find((m) => m.id === moduleId));
@@ -228,6 +234,58 @@ export const include = (e: PlannableEntry, titles: Record<string, string>) =>
   act(t.planner.row.include, t.planner.toast.included, titles, () =>
     itemPatch(e, { excluded: undefined }),
   );
+
+/** The part of the day (row ⋯ „Vormittag · Nachmittag · Abend · Ohne Abschnitt“): orders it inside its day only. */
+export const setPart = (
+  e: PlannableEntry,
+  part: PlanDayPart | undefined,
+  titles: Record<string, string>,
+) =>
+  act(
+    t.planner.row.partGroup,
+    part ? t.planner.toast.partSet(t.planner.parts[part]) : t.planner.toast.partCleared,
+    titles,
+    () => itemPatch(e, { part }),
+  );
+
+/**
+ * „Als Pause · 2 h“: on `date` the thing is a break, never planned as work; the day gets a blocker of `min` with its
+ * title (and its part). One undo. No total, no rating.
+ */
+export const asBreak = (
+  e: PlannableEntry,
+  date: string,
+  min: number,
+  titles: Record<string, string>,
+) =>
+  act(
+    t.planner.row.breakGroup,
+    t.planner.toast.breakSet(dayName(date), formatMinutes(min, { compact: true })),
+    titles,
+    () => itemPatch(e, { asBreakOn: date, breakMin: min }),
+  );
+
+/** „Keine Pause mehr“ (row ⋯ of the break): the thing is planned again like before. */
+export const unBreak = (itemKey: string, titles: Record<string, string>) =>
+  act(t.planner.row.unBreak, t.planner.toast.breakCleared, titles, () =>
+    itemPatch(refOf(itemKey), { asBreakOn: undefined, breakMin: undefined }),
+  );
+
+/** „dauert 15 Min“: the thing's own estimate through its source (the existing choices of the ToDo editor). */
+export async function setDuration(
+  e: PlannableEntry,
+  min: number,
+  titles: Record<string, string>,
+): Promise<boolean> {
+  const s = await source(e.moduleId);
+  if (!s?.onEstimate) return false;
+  return act(
+    t.planner.row.durationGroup,
+    t.planner.toast.durationSet(formatMinutes(min, { compact: true })),
+    titles,
+    () => s.onEstimate!(e.id, min),
+  );
+}
 
 export const markDue = (e: PlannableEntry, date: string, titles: Record<string, string>) =>
   act(t.planner.row.markDue, t.planner.toast.markedDue(dayName(date)), titles, () =>
@@ -446,6 +504,9 @@ export function applyOps(
             await (await source(ref.moduleId))?.onEstimate?.(ref.id, op.min);
             break;
           }
+          case 'part':
+            await itemPatch(refOf(op.key), { part: op.part });
+            break;
           case 'buffer':
             await setSettings(
               PLANNER_SCOPE,

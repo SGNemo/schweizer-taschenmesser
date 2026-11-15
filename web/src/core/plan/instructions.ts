@@ -12,6 +12,7 @@ import { extractDateTime } from '@/quickCapture/parser/dates';
 import { extractEndTime } from '@/quickCapture/parser/endtime';
 import { NUMBER_WORDS } from '@/quickCapture/parser/util';
 import { addDays } from './dates';
+import type { PlanDayPart } from './types';
 
 export type PlanOp =
   /** Minutes for planned work on a day (0 = a day off). */
@@ -25,6 +26,8 @@ export type PlanOp =
   | { op: 'priority'; key: string; value: 3 }
   | { op: 'exclude'; key: string }
   | { op: 'duration'; key: string; min: number }
+  /** The part of the day a thing belongs to („Duschen nachmittags“); `undefined` takes it away. */
+  | { op: 'part'; key: string; part: PlanDayPart | undefined }
   /** Run again: calm (`reshuffle: false`, the previous plan stays where it can) or from scratch (`prev = []`). */
   | { op: 'replan'; reshuffle: boolean }
   /** Share of the free time never planned, in percent (a setting). */
@@ -332,6 +335,16 @@ export function parseInstruction(text: string, ctx: InstructionContext): Instruc
     return forThing(m[1]!, ctx, (key) => [{ op: 'exclude', key }], true);
   if ((m = re(String.raw`(.+?) raus`).exec(s)))
     return forThing(m[1]!, ctx, (key) => [{ op: 'exclude', key }], false);
+  // A part of the day („Duschen nachmittags“, „Bude abends“): only for a thing of the plan, else it is a ToDo.
+  if ((m = re(String.raw`(.+?) (?:am )?(vormittags?|morgens|nachmittags?|abends?)`).exec(s))) {
+    const word = m[2]!;
+    const part: PlanDayPart = word.startsWith('nach')
+      ? 'afternoon'
+      : word.startsWith('abend')
+        ? 'evening'
+        : 'morning';
+    return forThing(m[1]!, ctx, (key) => [{ op: 'part', key, part }], false);
+  }
   if ((m = re(String.raw`(.+?) dauert (?:nur |etwa |ca )?${DURATION}`).exec(s))) {
     const min = durationMin(m[2]!, m[3]!);
     if (min === undefined) return { kind: 'explain' };

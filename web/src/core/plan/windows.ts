@@ -4,7 +4,7 @@
  * changes what the engine planned (capacity, minutes, order), it only gives the sessions of a day a
  * start and an end inside the window, around the blockers that have a time. Pure and deterministic.
  */
-import type { PlanBlocker } from './types';
+import { partRank, type PlanBlocker, type PlanDayPart } from './types';
 
 export interface TimeWindow {
   /** 'HH:mm', local. */
@@ -86,23 +86,36 @@ export function freeSpans(
 const ceilStep = (min: number): number => Math.ceil(min / SLOT_STEP_MIN) * SLOT_STEP_MIN;
 
 /**
+ * The start of a part's third of the window (use case „Wochenende retten“, F2): the window is cut into three equal
+ * thirds – morning, afternoon, evening; without a part the window's start.
+ */
+export function partStart(window: TimeWindow, part: PlanDayPart | undefined): number {
+  const from = toMin(window.from);
+  const rank = partRank(part);
+  return rank === 0 ? from : from + Math.floor(((toMin(window.to) - from) * (rank - 1)) / 3);
+}
+
+/**
  * Lays the sessions of one day (in the day's order) into the free stretches of its window: each one
  * at the earliest start on the 5-minute grid after the previous session plus a short pause, whole,
- * never split, never shortened. A session that does not fit anywhere after the previous one keeps no
- * time (it stays in the day's summary chip); a later, shorter one may still fit. Same input, same output.
+ * never split, never shortened. A session with a part of the day starts no earlier than its third
+ * (`partStart`); when it does not fit there it takes the next free place later in the window. A session
+ * that does not fit anywhere after the previous one keeps no time (it stays in the day's summary chip);
+ * a later, shorter one may still fit. Same input, same output.
  */
 export function placeInWindow(
   window: TimeWindow,
   blockers: readonly Pick<PlanBlocker, 'from' | 'to'>[],
-  sessions: readonly { id: string; minutes: number }[],
+  sessions: readonly { id: string; minutes: number; part?: PlanDayPart }[],
 ): Map<string, TimeWindow> {
   const spans = freeSpans(window, blockers);
   const out = new Map<string, TimeWindow>();
   let cursor = toMin(window.from);
   for (const s of sessions) {
     if (s.minutes <= 0) continue;
+    const lower = Math.max(cursor, partStart(window, s.part));
     for (const [a, b] of spans) {
-      const start = ceilStep(Math.max(a, cursor));
+      const start = ceilStep(Math.max(a, lower));
       if (start + s.minutes > b) continue;
       out.set(s.id, { from: toHHmm(start), to: toHHmm(start + s.minutes) });
       cursor = start + s.minutes + SESSION_GAP_MIN;

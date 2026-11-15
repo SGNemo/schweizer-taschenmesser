@@ -19,6 +19,7 @@ import {
   type PlanUnit,
   type PrevAssignment,
   type Unplaced,
+  partRank,
 } from './types';
 import { toUnits, unitId } from './units';
 import { placeInWindow, validWindow } from './windows';
@@ -213,8 +214,9 @@ export function plan(input: PlanInput): PlanResult {
       bumps.push({ id: u.id, date: day.date, by, cause: by.length ? 'bumped' : 'capacity' });
     }
 
-    // Final order of the day without `prev`: pinned, deadline, then priority ↓, due ↑, age ↑, id –
-    // so a rerun on the same input gives the same (unit, date, minutes, order).
+    // Final order of the day without `prev`: pinned, deadline, rest; inside that the part of the day (without one
+    // first, then morning, afternoon, evening); then priority ↓, due ↑, age ↑, id – so a rerun on the same input gives
+    // the same (unit, date, minutes, order). The part only orders the day; which day a unit gets is decided above.
     const pinnedIds = new Set(units.filter((u) => u.item.pinned === day.date).map((u) => u.id));
     const mustIds = new Set(must.map((u) => u.id));
     const tierOf = (a: Assignment): number => (pinnedIds.has(a.id) ? 0 : mustIds.has(a.id) ? 1 : 2);
@@ -224,6 +226,7 @@ export function plan(input: PlanInput): PlanResult {
         const ub = unitById.get(b.id)!.item;
         return (
           tierOf(a) - tierOf(b) ||
+          partRank(ua.part) - partRank(ub.part) ||
           ub.priority - ua.priority ||
           cmp(ua.due?.date ?? '9999', ub.due?.date ?? '9999') ||
           ua.createdAt - ub.createdAt ||
@@ -234,7 +237,11 @@ export function plan(input: PlanInput): PlanResult {
     // Package 5: a day with a window gives its sessions a time, in the order above; minutes stay as planned.
     const window = validWindow(day.window);
     if (window)
-      for (const [id, w] of placeInWindow(window, day.blockers, todayList)) {
+      for (const [id, w] of placeInWindow(
+        window,
+        day.blockers,
+        todayList.map((a) => ({ ...a, part: unitById.get(a.id)!.item.part })),
+      )) {
         const a = placed.get(id)!;
         a.from = w.from;
         a.to = w.to;

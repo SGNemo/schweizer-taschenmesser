@@ -8,10 +8,23 @@ export const DEFAULT_MIN = 30;
 /** From this length on a unit is a "main item" of its day (`planLimit` counts those). */
 export const MAIN_THRESHOLD_MIN = 30;
 
+/**
+ * An optional part of the day (use case „Wochenende retten“, F2): it orders a day's things – without a part first,
+ * then morning, afternoon, evening – and, with a window, gives a thing its time in that third. Never changes the day.
+ */
+export const PLAN_DAY_PARTS = ['morning', 'afternoon', 'evening'] as const;
+export type PlanDayPart = (typeof PLAN_DAY_PARTS)[number];
+
+/** Rank inside a day: without a part 0, then morning 1, afternoon 2, evening 3. */
+export const partRank = (part: PlanDayPart | undefined): number =>
+  part ? PLAN_DAY_PARTS.indexOf(part) + 1 : 0;
+
 export interface PlanBlocker {
   id?: string;
   label: string;
   min: number;
+  /** A break said for a part of the day („Pause nachmittags“); shown with it, never ordered or summed. */
+  part?: PlanDayPart;
   /** 'HH:mm': a blocker with both times also keeps that stretch of the day's window free (`windows.ts`). */
   from?: string;
   to?: string;
@@ -44,6 +57,8 @@ export interface PlanItem {
   splittable?: boolean;
   /** „Nicht planen“: left out of every run. */
   excluded?: boolean;
+  /** The part of the day it belongs to: orders it inside its day (and its third of a window), never its day. */
+  part?: PlanDayPart;
   done?: boolean;
   /** Age for the tie-break "older first" (epoch ms). */
   createdAt: number;

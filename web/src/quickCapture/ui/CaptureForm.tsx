@@ -130,7 +130,7 @@ export function CaptureForm({
 }: CaptureFormProps) {
   const [settings] = useCaptureSettings();
   // One source for the module states and the types they allow (a second query could lag behind).
-  const { states, available, fitness, place } = useCaptureTypes();
+  const { states, available, fitness, place, breaks } = useCaptureTypes();
   const [focus] = useFocusSettings();
   // "Ändern" after a multi-line save puts the text back (see `reopen.ts`).
   // A text kept from an app the phone killed mid-typing comes back too (C04, `draft.ts`).
@@ -181,9 +181,10 @@ export function CaptureForm({
         defaultType: settings?.defaultType,
         fitness,
         place,
+        breaks,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `fitness` is rebuilt per render; its two flags are the deps
-    [single, settings?.defaultType, fitness.meal, fitness.workout, place],
+    [single, settings?.defaultType, fitness.meal, fitness.workout, place, breaks],
   );
   const resolveOpts = {
     available,
@@ -226,6 +227,7 @@ export function CaptureForm({
               defaultType: settings?.defaultType,
               fitness,
               place,
+              breaks,
             });
             const chosen = rowOverride[key];
             const res = resolveTarget(part, r, { ...resolveOpts, override: chosen?.type });
@@ -270,6 +272,7 @@ export function CaptureForm({
       fitness.meal,
       fitness.workout,
       place,
+      breaks,
     ],
   );
   // „ToDo 9 · Termin 3“: what the rows turn into, in the order the kinds first appear (W07).

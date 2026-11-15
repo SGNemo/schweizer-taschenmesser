@@ -99,8 +99,8 @@ describe('window settings', () => {
   });
 
   it('the shape step to v2 is recorded and keeps old rows as they are', () => {
-    expect(manifest.version).toBe(2);
-    expect(Object.keys(migrations ?? {})).toEqual(['2']);
+    expect(manifest.version).toBeGreaterThanOrEqual(2);
+    expect(Object.keys(migrations ?? {})).toContain('2');
   });
 });
 

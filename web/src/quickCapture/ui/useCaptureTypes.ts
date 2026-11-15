@@ -24,6 +24,8 @@ export function useCaptureTypes(): {
   fitness: NonNullable<ParseOptions['fitness']>;
   /** Set while the Uhr module is on. */
   place: ParseOptions['place'];
+  /** Set while the planner is on: „Pause …“/„Freizeit …“ lines are a day's break. */
+  breaks: boolean;
 } {
   const states = useModuleStates();
   const [prefs] = useSettings('module.fitness', FITNESS_PREFS, {});
@@ -35,5 +37,6 @@ export function useCaptureTypes(): {
     available,
     fitness: { meal: available.includes('meal'), workout: available.includes('workout') },
     place: available.includes('place') ? isPlaceName : undefined,
+    breaks: available.includes('break'),
   };
 }

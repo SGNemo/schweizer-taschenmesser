@@ -3,7 +3,7 @@ import { type FormEvent, useEffect, useId, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { getMeta, setMeta } from '@/core/db/metaKv';
 import { getLang } from '@/core/i18n/lang';
-import { dayName, explainAssignment, explainWait } from '@/core/plan/explain';
+import { dayName, explainAssignment, explainPart, explainWait } from '@/core/plan/explain';
 import {
   isRestSentence,
   restToTomorrow,
@@ -37,6 +37,12 @@ import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import {
   addFromField,
   applyOps,
+  asBreak,
+  BREAK_CHOICES,
+  DURATION_CHOICES,
+  setDuration,
+  setPart,
+  unBreak,
   exclude,
   include,
   later,
@@ -47,6 +53,8 @@ import {
   unmarkDue,
   unpin,
 } from '../actions';
+import type { PlannableEntry } from '@/core/modules/contributions';
+import { PLAN_DAY_PARTS } from '@/core/plan/types';
 import type { BoardDay, BoardRow, WaitingRow } from '../board';
 import { capacityLabel, capacityShort, compact } from '../components/capacity';
 import { DaySetup } from '../components/DaySetup';
@@ -140,7 +148,8 @@ export default function PlannerPage() {
   );
 
   // Which sources take a tick or „Später“ (an invoice, a cancellation: no – that stays in its module).
-  const [abilities, setAbilities] = useState<Record<string, { done: boolean; assign: boolean }>>();
+  const [abilities, setAbilities] =
+    useState<Record<string, { done: boolean; assign: boolean; estimate: boolean }>>();
   useEffect(() => {
     let live = true;
     void sourceAbilities().then((a) => live && setAbilities(a));
@@ -151,6 +160,7 @@ export default function PlannerPage() {
   // Until they are known every source counts as able (no jump for ToDo rows); `markDone` checks again.
   const canDone = (moduleId: string) => abilities?.[moduleId]?.done ?? true;
   const canAssign = (moduleId: string) => abilities?.[moduleId]?.assign ?? true;
+  const canEstimate = (moduleId: string) => abilities?.[moduleId]?.estimate ?? true;
 
   const answered = !!pending || !!ask || !!sayLine;
   useEffect(() => {
@@ -547,14 +557,59 @@ export default function PlannerPage() {
             },
           ]
         : []),
+      // F2 (use case „Wochenende retten“): the part of the day, „Als Pause“ and the length – behind ⋯ only.
+      ...(excluded ? [] : dayGroups(row, e, day)),
+    ];
+  };
+
+  /** The row ⋯ groups „Tagesabschnitt“, „Als Pause“ and „Dauer“ (optional, never on the board itself). */
+  const dayGroups = (row: BoardRow | WaitingRow, e: PlannableEntry, day: string): RowMenuItem[] => {
+    const r = t.planner.row;
+    const part = row.item?.part;
+    const len = (min: number) => compact(min);
+    return [
+      ...PLAN_DAY_PARTS.map((p) => ({
+        id: `part-${p}`,
+        label: t.planner.parts[p],
+        group: r.partGroup,
+        checked: part === p,
+        onSelect: () => void setPart(e, part === p ? undefined : p, titles),
+      })),
+      ...(part
+        ? [
+            {
+              id: 'part-none',
+              label: r.partNone,
+              group: r.partGroup,
+              onSelect: () => void setPart(e, undefined, titles),
+            },
+          ]
+        : []),
+      ...BREAK_CHOICES.map((min) => ({
+        id: `break-${min}`,
+        label: r.breakFor(len(min)),
+        group: r.breakGroup,
+        onSelect: () => void asBreak(e, day, min, titles),
+      })),
+      ...(canEstimate(e.moduleId)
+        ? DURATION_CHOICES.map((min) => ({
+            id: `duration-${min}`,
+            label: r.durationFor(len(min)),
+            group: r.durationGroup,
+            checked: row.item?.durationMin === min || e.durationMin === min,
+            onSelect: () => void setDuration(e, min, titles),
+          }))
+        : []),
     ];
   };
 
   const renderRow = (row: BoardRow, day: BoardDay) => {
-    const reason = explainAssignment(
+    const reasonOnly = explainAssignment(
       { reason: row.reason, bumpedBy: row.bumpedBy },
       { due: row.hardDue ?? row.entry?.due?.date, prevDate: row.entry?.plannedFor, nameOf },
     );
+    // „Warum hier?“ names the chosen part too („Nachmittag, wie gewählt“): it explains the order of the day.
+    const reason = row.item?.part ? `${reasonOnly} · ${explainPart(row.item.part)}` : reasonOnly;
     const open = why === row.unitId;
     return (
       <ItemRow
@@ -577,6 +632,7 @@ export default function PlannerPage() {
                 {` · ${row.late ? t.planner.row.dueWas(dayName(row.hardDue)) : t.planner.row.due(dayName(row.hardDue))}`}
               </span>
             ) : null}
+            {row.item?.part ? <span>{` · ${t.planner.parts[row.item.part]}`}</span> : null}
             {row.entry?.detail ? <span>{` · ${row.entry.detail}`}</span> : null}
             {open ? <span className={styles.reason}>{reason}</span> : null}
           </span>
@@ -647,7 +703,27 @@ export default function PlannerPage() {
               key={b.id}
               className={styles.blocker}
               title={b.label}
-              meta={`${t.planner.row.blocker} · ${compact(b.min)}`}
+              // A break shows its own length like any blocker – never a total or a rating.
+              meta={[
+                b.breakOf
+                  ? t.planner.row.breakMeta(compact(b.min))
+                  : `${t.planner.row.blocker} · ${compact(b.min)}`,
+                b.part ? t.planner.parts[b.part] : '',
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+              {...(b.breakOf
+                ? {
+                    menu: [
+                      {
+                        id: 'unbreak',
+                        label: t.planner.row.unBreak,
+                        onSelect: () => void unBreak(b.breakOf!, titles),
+                      },
+                    ],
+                    menuLabel: t.planner.row.menu(b.label),
+                  }
+                : {})}
             />
           ))}
           {day.rows.map((row) => renderRow(row, day))}

@@ -91,6 +91,10 @@ export function opLine(op: PlanOp, titleOf: (key: string) => string, today: stri
       return o.exclude(titleOf(op.key));
     case 'duration':
       return o.duration(titleOf(op.key), min(op.min));
+    case 'part':
+      return op.part
+        ? o.part(titleOf(op.key), t.planner.parts[op.part])
+        : o.partNone(titleOf(op.key));
     case 'buffer':
       return o.buffer(op.pct);
     case 'replan':

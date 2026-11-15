@@ -103,6 +103,11 @@ export async function saveCapture(
   }
   if (target.requiresConfirm && !opts.confirmed) throw new CaptureError('invalid');
   if (target.via) return saveTwoStage(target, target.via, manifest, fields, states, opts);
+  if (target.merge)
+    return target.merge(fields, {
+      today: today(),
+      repo: createCollectionRepo(manifest, target.collection, opts.database),
+    });
 
   const data = target.build(fields, { today: today() });
   const load = manifest.contributions?.aiCreateDefaults;

@@ -309,6 +309,31 @@ async function sideLink(page: Page, m: Meter, name: string, group: string) {
   return link;
 }
 
+/** The titles of a day's plan rows (not its blockers) in their order, once the run has settled. */
+async function settledTitles(day: Locator): Promise<string[]> {
+  let last = '';
+  let titles: string[] = [];
+  await expect
+    .poll(
+      async () => {
+        titles = await day
+          .locator('li:not([data-blocker])')
+          .evaluateAll((lis) =>
+            lis
+              .filter((li) => !/Pause ·|Blocker ·/.test((li as HTMLElement).innerText))
+              .map((li) => (li as HTMLElement).innerText.split('\n')[0]!.trim()),
+          );
+        const now = titles.join('|');
+        const same = now === last;
+        last = now;
+        return same;
+      },
+      { intervals: [400], timeout: 15_000 },
+    )
+    .toBe(true);
+  return titles;
+}
+
 const openPlannerDay = async (page: Page, m: Meter, mobile: boolean, label: RegExp) => {
   // Desktop: the week list on the left picks the day, its head on the right opens the day sheet.
   // Phone: the strip picks the day, the day's head opens the sheet. Both are two taps.
@@ -448,7 +473,11 @@ test('C Wochenende einteilen', async ({ page, isMobile }, info) => {
   await prepare(
     page,
     ['todos', 'planner'],
-    OPEN.map((title) => ({ title })),
+    // „Zocken“ came in with the morning's dump (path B) as a ToDo; a chore is older than the duty here, so without
+    // a part it would come first – the evening part has to move it behind („erst Pflicht, dann Haushalt“).
+    ['Zocken', 'Bude aufräumen', ...OPEN.filter((x) => x !== 'Bude aufräumen')].map((title) => ({
+      title,
+    })),
   );
   const m = new Meter(page, isMobile);
   await m.go('/planner');
@@ -473,14 +502,39 @@ test('C Wochenende einteilen', async ({ page, isMobile }, info) => {
   await m.tap(setup.getByRole('button', { name: 'Übernehmen' }));
   await expect(setup).toHaveCount(0);
   await expect(page.getByText('Eingeplant: Sa, So, Mo')).toBeVisible();
-  // The break: a blocker „Zocken“ of 2 h in the day sheet (day parts and „Als Pause“ come with package 4).
-  await openPlannerDay(page, m, isMobile, isMobile ? /^Heute/ : /^Heute · Sa/);
-  const sheet = page.getByRole('dialog');
-  await m.type(sheet.getByLabel('Was blockt die Zeit?'), 'Zocken');
-  await m.type(sheet.getByLabel('Dauer'), '120');
-  await m.tap(sheet.getByRole('button', { name: 'Blocker hinzufügen' }));
-  await expect(sheet.getByText('Zocken')).toBeVisible();
-  await m.tap(sheet.getByRole('button', { name: 'Schließen' }).first());
+  // Package 4 (TARGET F2): „Zocken“ – a ToDo from the morning's dump – becomes the afternoon's 2-h break, and the
+  // chores of Saturday go to the evening: all behind the row ⋯, nothing new on the board.
+  const sat = page.locator(`[data-testid="day-${SATURDAY}"]`);
+  const rowMenu = async (title: string) => {
+    await m.tap(sat.getByRole('button', { name: `Aktionen für ${title}` }));
+    return page.getByRole('menu');
+  };
+  await expect(sat.getByText('Zocken', { exact: true })).toBeVisible();
+  await m.tap((await rowMenu('Zocken')).getByRole('menuitemcheckbox', { name: 'Nachmittag' }));
+  await expect(page.getByText('Jetzt: Nachmittag')).toBeVisible();
+  await m.tap((await rowMenu('Zocken')).getByRole('menuitem', { name: 'Als Pause · 2 h' }));
+  // Its row becomes the day's break: its own length and part, no total.
+  await expect(sat.locator('li').filter({ hasText: 'Pause · 2 h · Nachmittag' })).toContainText(
+    'Zocken',
+  );
+  await expect(sat.locator('li').filter({ hasText: 'Zocken' })).toHaveCount(1);
+  const chores = ['Bude aufräumen', 'Pfand zusammenräumen', 'Duschen'];
+  const onSat = (
+    await sat
+      .locator('li')
+      .evaluateAll((lis) => lis.map((li) => (li as HTMLElement).innerText.split('\n')[0]!.trim()))
+  ).filter((title) => chores.includes(title));
+  for (const title of onSat) {
+    await m.tap((await rowMenu(title)).getByRole('menuitemcheckbox', { name: 'Abend' }));
+    await expect(page.getByText('Jetzt: Abend')).toBeVisible();
+  }
+  // The order of the day: without a part first, then the evening chores (a part never changes the day).
+  expect(onSat.length).toBeGreaterThan(0);
+  const order = await settledTitles(sat);
+  const evening = order.filter((title) => onSat.includes(title));
+  expect(evening).toEqual(onSat);
+  expect(order.slice(order.length - evening.length)).toEqual(evening);
+  expect(order.length).toBeGreaterThan(evening.length);
   // W10: Sunday got its time before the distribution: what Saturday cannot hold goes there. The script looks at
   // Sunday to read it (not counted: the facts only).
   if (isMobile)

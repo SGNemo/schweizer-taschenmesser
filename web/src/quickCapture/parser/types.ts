@@ -21,7 +21,9 @@ export type CaptureType =
   /** A training session for Fitness (prefix „training“/„workout“). */
   | 'workout'
   /** A place for the Uhr module (prefix „uhr“/„clock“ and a known city or zone). */
-  | 'place';
+  | 'place'
+  /** A break of a day for the planner (a line starting with „Pause“ or „Freizeit“, only while the planner is on). */
+  | 'break';
 
 /** One exercise of a `workout` capture („Bankdrücken 3×8 60“). */
 export interface CaptureExercise {
@@ -128,4 +130,6 @@ export interface ParseOptions {
    * is read like any other text.
    */
   place?: (name: string) => boolean;
+  /** Set while the planner is on: lines starting with „Pause“/„Freizeit“ are a day's break, not a ToDo. */
+  breaks?: boolean;
 }

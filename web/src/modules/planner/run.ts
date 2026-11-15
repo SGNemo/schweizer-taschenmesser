@@ -26,7 +26,7 @@ import {
   type PlannableEntry,
 } from '@/core/modules/contributions';
 import { isPlannerOwned, type CalendarItem, type ModuleManifest } from '@/core/modules/types';
-import { planDays } from './days';
+import { breakBlockers, planDays } from './days';
 import { itemKeyOf, plannerRepos, putRow, type PlannerDb, type PlannerRepos } from './repo';
 import type { AssignmentRow, PlanItemRow } from './schema';
 import { planSettings, type PlannerSettings } from './settings';
@@ -131,12 +131,16 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
     ? (deps.calendar ??
       (await collectCalendarItems({ from: deps.today, to: until }, deps.manifests)))
     : [];
+  const itemRows = new Map<string, PlanItemRow>(
+    (await repos.item.active().toArray()).map((r) => [r.id, r]),
+  );
   const days: PlanDay[] = planDays({
     today: deps.today,
     span: settings.horizonDays,
     settings: deps.settings,
     dayRows: await repos.day.active().toArray(),
     calendar,
+    breaks: breakBlockers(itemRows.values(), entries),
   }).map(({ date, availableMin, blockers, window }) => ({
     date,
     availableMin,
@@ -148,9 +152,6 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
     })),
     ...(window ? { window } : {}),
   }));
-  const itemRows = new Map<string, PlanItemRow>(
-    (await repos.item.active().toArray()).map((r) => [r.id, r]),
-  );
   const userDates = new Map<string, string>();
   const titles: Record<string, string> = {};
   const items: PlanItem[] = [];
@@ -174,7 +175,12 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
         : {}),
       ...(row?.pinned ? { pinned: row.pinned } : {}),
       splittable: row?.splittable ?? true,
-      ...(row?.excluded ? { excluded: true } : {}),
+      // „Als Pause“: until its day is over a break is never planned as work – its day carries it as a blocker
+      // (`breakBlockers`); afterwards the thing is an ordinary thing of the plan again.
+      ...(row?.excluded || (row?.asBreakOn && row.asBreakOn >= deps.today)
+        ? { excluded: true }
+        : {}),
+      ...(row?.part ? { part: row.part } : {}),
       createdAt: e.createdAt ?? 0,
     });
   }
@@ -502,6 +508,14 @@ export function withOps(
       case 'duration': {
         const i = item(op.key);
         if (i) i.durationMin = op.min;
+        break;
+      }
+      case 'part': {
+        const i = item(op.key);
+        if (i) {
+          if (op.part) i.part = op.part;
+          else delete i.part;
+        }
         break;
       }
       case 'buffer':

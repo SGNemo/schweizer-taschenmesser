@@ -1041,6 +1041,7 @@ export const de = {
       meal: 'Mahlzeit',
       workout: 'Training',
       place: 'Ort',
+      break: 'Pause',
     },
     target: {
       todo: 'ToDos',
@@ -1057,6 +1058,7 @@ export const de = {
       meal: 'Fitness',
       workout: 'Fitness',
       place: 'Uhr',
+      break: 'Planer',
     },
     chip: {
       to: (name: string) => `Ziel: ${name}`,
@@ -8484,6 +8486,22 @@ export const de = {
       openMail: 'Zur Mail',
       blocker: 'Blocker',
       focus: 'Fokus starten',
+      /** Row ⋯ group heads and entries (use case „Wochenende retten“, F2). */
+      partGroup: 'Tagesabschnitt',
+      partNone: 'Ohne Abschnitt',
+      breakGroup: 'Als Pause',
+      breakFor: (len: string) => `Als Pause · ${len}`,
+      unBreak: 'Keine Pause mehr',
+      breakState: (day: string) => `Pause am ${day}`,
+      durationGroup: 'Dauer',
+      durationFor: (len: string) => `dauert ${len}`,
+      breakMeta: (len: string) => `Pause · ${len}`,
+    },
+    /** The parts of a day, as the row ⋯ and the field say them. */
+    parts: {
+      morning: 'Vormittag',
+      afternoon: 'Nachmittag',
+      evening: 'Abend',
     },
     reasons: {
       pinned: 'festgenagelt',
@@ -8498,6 +8516,7 @@ export const de = {
       pulled: (day: string) => `vorgezogen, muss bis ${day} fertig sein`,
       capacity: 'der Tag hat weniger Zeit',
       others: 'andere',
+      part: (part: string) => `${part}, wie gewählt`,
     },
     wait: {
       title: 'Wartet auf freie Zeit',
@@ -8520,6 +8539,11 @@ export const de = {
       included: 'Wieder im Plan',
       markedDue: (day: string) => `Frist: ${day}`,
       unmarkedDue: 'Frist aufgehoben',
+      partSet: (part: string) => `Jetzt: ${part}`,
+      partCleared: 'Ohne Abschnitt',
+      breakSet: (day: string, len: string) => `Pause am ${day} · ${len}`,
+      breakCleared: 'Keine Pause mehr',
+      durationSet: (len: string) => `Dauert jetzt ${len}`,
       added: 'Eingetragen',
       addedWithDue: (day: string) => `Eingetragen · Frist ${day}`,
       dayOff: (day: string) => `${day} ist frei.`,
@@ -8572,6 +8596,8 @@ export const de = {
       priority: (title: string) => `${title} ist wichtig`,
       exclude: (title: string) => `${title} nicht planen`,
       duration: (title: string, min: string) => `${title} dauert ${min}`,
+      part: (title: string, part: string) => `${title}: ${part}`,
+      partNone: (title: string) => `${title}: ohne Abschnitt`,
       buffer: (pct: number) => `Puffer ${pct} %`,
       replan: 'Neu verteilt',
       reshuffle: 'Alles neu gemischt',

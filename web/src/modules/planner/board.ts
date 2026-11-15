@@ -7,7 +7,7 @@ import type { PlannableEntry } from '@/core/modules/contributions';
 import type { CalendarItem } from '@/core/modules/types';
 import { capacity } from '@/core/plan/capacity';
 import { DEFAULT_MIN, type PlaceReason, type Unplaced } from '@/core/plan/types';
-import { planDays, type DayBlocker } from './days';
+import { breakBlockers, planDays, type DayBlocker } from './days';
 import { itemKeyOf } from './repo';
 import type { AssignmentRow, PlanDayRow, PlanItemRow } from './schema';
 import { defaultAvailable, type PlannerSettings } from './settings';
@@ -106,6 +106,7 @@ export function buildBoard(input: BoardInput): Board {
     settings: input.settings,
     dayRows: input.dayRows,
     calendar: input.calendar,
+    breaks: breakBlockers(input.itemRows, input.entries),
   });
   const days: BoardDay[] = built.map(({ date, availableMin, blockers, row, window, ownWindow }) => {
     const cap = capacity({ date, availableMin, blockers }, { bufferShare });

@@ -5,7 +5,7 @@
  */
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
-import type { Assignment, Unplaced } from './types';
+import type { Assignment, PlanDayPart, Unplaced } from './types';
 
 /** Short weekday of a date in the UI language, without a trailing period („Do“, „Thu“, „jeu“). */
 export const dayName = (date: string): string => formatDay(date, 'EEE').replace(/\.$/, '');
@@ -41,6 +41,10 @@ export function explainAssignment(
       return r.capacity;
   }
 }
+
+/** The part of the day a thing was given („nachmittags, wie gewählt“), added to „Warum hier?“. */
+export const explainPart = (part: PlanDayPart): string =>
+  t.planner.reasons.part(t.planner.parts[part]);
 
 /** Why a unit waits („Wartet auf freie Zeit“). */
 export function explainWait(u: Pick<Unplaced, 'reason' | 'bumpedBy'>, nameOf: NameOf): string {

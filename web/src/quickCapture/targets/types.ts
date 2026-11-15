@@ -67,6 +67,11 @@ export interface CaptureTarget {
    * returned `undo` takes back only what it wrote and never removes the record.
    */
   amend?(fields: CaptureFields, match: OpenInvoice, ctx: AmendContext): Promise<SavedCapture>;
+  /**
+   * Writes into an existing record keyed by the line itself instead of creating one (a break into its day's
+   * blockers). `undo` takes back only what it added.
+   */
+  merge?(fields: CaptureFields, ctx: AmendContext): Promise<SavedCapture>;
 }
 
 export type CaptureErrorCode =
