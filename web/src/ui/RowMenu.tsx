@@ -16,6 +16,8 @@ export interface RowMenuItem {
   group?: string;
   /** Marks the current choice (list filter, a switch that is on): `menuitemcheckbox` with `aria-checked`. */
   checked?: boolean;
+  /** Said, not offered (a link whose target is gone): `aria-disabled`, still reachable by the arrow keys. */
+  disabled?: boolean;
 }
 
 /**
@@ -114,8 +116,10 @@ export function RowMenu({
           type="button"
           role={item.checked === undefined ? 'menuitem' : 'menuitemcheckbox'}
           aria-checked={item.checked}
+          aria-disabled={item.disabled || undefined}
           className={`${styles.item} ${item.danger ? styles.danger : ''}`}
           onClick={() => {
+            if (item.disabled) return;
             onOpenChange(false);
             item.onSelect();
           }}

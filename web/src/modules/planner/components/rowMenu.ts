@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { useModuleStates } from '@/core/modules/activation';
-import { getManifest } from '@/core/modules/registry';
 import { dayName } from '@/core/plan/explain';
 import { t } from '@/strings';
 import type { RowMenuItem } from '@/ui';
@@ -45,7 +43,8 @@ export type Abilities = ReturnType<typeof useAbilities>;
 /**
  * Builds the ⋯ menu of a row; `date` = the row's day (a waiting row has none: then today, named). The steps of
  * every day come first („Verschieben …“, „Später“, „Dauer …“, „Tagesabschnitt …“), the rest under „Mehr“. `tick`: the row's lead is
- * the tick, so „Erledigt“ is not said twice.
+ * the tick, so „Erledigt“ is not said twice. The row adds its action's word in front and its links under
+ * „Verknüpft“ (`ThingRow`, K1b) – the links are no longer hard-coded entries here.
  */
 export function useRowMenu(ctx: {
   today: string | undefined;
@@ -56,8 +55,6 @@ export function useRowMenu(ctx: {
   setChoice: (choice: RowChoiceState) => void;
 }) {
   const navigate = useNavigate();
-  const moduleStates = useModuleStates();
-  const mailOn = !!getManifest('mail') && moduleStates?.mail === true;
   const { titles, abilities, why, setWhy, setChoice } = ctx;
   return (
     row: BoardRow | WaitingRow,
@@ -201,27 +198,6 @@ export function useRowMenu(ctx: {
           ]
         : []),
       { id: 'open', label: t.planner.row.open, onSelect: () => void navigate(e.to) },
-      // Back to the note it came from (a note's „In den Plan“; the notes page reads `?open=`).
-      ...(e.link?.kind === 'note'
-        ? [
-            {
-              id: 'link',
-              label: t.planner.row.openNote,
-              onSelect: () => void navigate(`/notes?open=${encodeURIComponent(e.link!.id)}`),
-            },
-          ]
-        : []),
-      // Back to the mail it came from („In den Plan“ from the mail list; the mail page reads `?open=`).
-      // Only where the mail module is there and on (desktop): elsewhere the ToDo's note holds the web link.
-      ...(e.link?.kind === 'mail' && mailOn
-        ? [
-            {
-              id: 'mail',
-              label: t.planner.row.openMail,
-              onSelect: () => void navigate(`/mail?open=${encodeURIComponent(e.link!.id)}`),
-            },
-          ]
-        : []),
     ];
     return [
       ...top,

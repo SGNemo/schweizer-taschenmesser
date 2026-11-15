@@ -9399,6 +9399,23 @@ export const de = {
         sick: 'Ruh dich aus – der Plan rückt ruhig weiter.',
       },
     },
+    /** A row's links and its main action (planner hub K1b, CONCEPT-COPY „Chips“, „Lead actions“). */
+    links: {
+      fromMail: 'Aus Mail',
+      dunning: 'Zur Mahnung',
+      invoice: 'Zur Rechnung',
+      event: 'Zum Termin',
+      todo: 'Zum ToDo',
+      other: 'Verknüpft',
+      gone: 'Gibt es nicht mehr.',
+      elsewhere: 'Nicht auf diesem Gerät.',
+      browser: 'Im Browser öffnen',
+      name: (word: string, label: string) => `${word}: ${label}`,
+      stateName: (word: string, label: string, state: string) => `${word}: ${label} · ${state}`,
+      group: 'Verknüpft',
+      groupCount: (n: number) => `Verknüpft · ${n}`,
+      actionName: (action: string, title: string) => `${action}: ${title}`,
+    },
   },
   fitness: {
     meta: {

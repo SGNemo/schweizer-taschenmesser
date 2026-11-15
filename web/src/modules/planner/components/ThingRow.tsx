@@ -5,8 +5,16 @@ import { getManifest } from '@/core/modules/registry';
 import { dayName, partWord } from '@/core/plan/explain';
 import { t } from '@/strings';
 import { Checkbox, Icon, type IconName, ItemRow, type RowMenuItem, SensitiveValue } from '@/ui';
-import { dueWas, type BoardRow } from '../board';
+import { dueWas, type BoardRow, type WaitingRow } from '../board';
 import { compact } from './capacity';
+import {
+  ActionLead,
+  LinkChips,
+  useActionMenu,
+  useLinkMenu,
+  useRowLinks,
+  withLinks,
+} from './RowLinks';
 import styles from '../routes/planner.module.css';
 
 /** „Teil 1/2“ for the eye, „Teil 1 von 2“ for the screen reader. */
@@ -38,9 +46,11 @@ export function sourceOf(entry: Pick<PlannableEntry, 'kind' | 'moduleId'>): {
 const MONEY = /\d\s?(€|\$|£|CHF)|(€|\$|£|CHF)\s?\d/;
 
 /**
- * One planned thing of a day – the same form for every source (planner hub R1): a lead slot that is always filled
- * (the tick where the source takes one, else the source's icon), the title (it opens the thing in its module), a
- * meta line in a fixed order, the duration and the ⋯ menu, which stays in sight.
+ * One planned thing – the same form for every source and every place (a day, „Frist vorbei“; planner hub R1,
+ * K1b): a lead slot that is always filled (the tick where ticking is the source's own „Erledigt“, else the
+ * source's main action as an outlined glyph – a route, the planner writes nothing – else the source's icon), the
+ * title (it opens the thing in its module), a meta line in a fixed order, at most one line of link chips, the
+ * duration and the ⋯ menu, which stays in sight and starts with the action's word.
  */
 export function ThingRow({
   row,
@@ -73,6 +83,9 @@ export function ThingRow({
   const [leaving, setLeaving] = useState(false);
   const entry = row.entry;
   const source = entry ? sourceOf(entry) : undefined;
+  const action = onDone ? undefined : entry?.action;
+  const links = useRowLinks(entry);
+  const fullMenu = withLinks(menu, useActionMenu(action), useLinkMenu(links));
   const done = onDone
     ? () => {
         if (leaving) return;
@@ -86,10 +99,12 @@ export function ThingRow({
 
   const duration = row.approx ? t.planner.row.approx(compact(row.minutes)) : compact(row.minutes);
   const facts: ReactNode[] = [];
+  // The source's icon stands once: in the meta beside its word, or in the lead slot when that has no control.
+  const iconLead = !done && !action;
   if (source)
     facts.push(
       <span className={styles.source}>
-        <Icon name={source.icon} size={16} />
+        {iconLead ? null : <Icon name={source.icon} size={16} />}
         {source.word}
       </span>,
     );
@@ -131,6 +146,8 @@ export function ThingRow({
               onChange={done}
             />
           </span>
+        ) : action ? (
+          <ActionLead action={action} title={row.title} />
         ) : (
           <span className={styles.lead} aria-hidden="true">
             <Icon name={source?.icon ?? 'checklist'} size={20} />
@@ -165,13 +182,52 @@ export function ThingRow({
           {whyOpen ? <span className={styles.reason}>{reason}</span> : null}
         </span>
       }
+      below={links.length > 0 ? <LinkChips views={links} /> : undefined}
       end={noDuration ? undefined : <span className={styles.duration}>{duration}</span>}
-      menu={menu}
+      menu={fullMenu}
       menuLabel={t.planner.row.menu(row.title)}
       onSwipeRight={done}
       swipeRightLabel={t.planner.row.done}
       onSwipeLeft={onLater}
       swipeLeftLabel={t.planner.row.later}
+    />
+  );
+}
+
+/**
+ * A row of „Wartet auf freie Zeit“: the title, its reason behind „Warum hier?“, the minutes and ⋯ – plus the links
+ * of the thing (K1b: chips and „Verknüpft“ in ⋯, which replaced the old hard-coded „Zur Notiz“ / „Zur Mail“).
+ */
+export function WaitRow({
+  row,
+  reason,
+  why,
+  menu,
+}: {
+  row: WaitingRow;
+  reason: string;
+  /** „Warum hier?“ is open for this row. */
+  why: boolean;
+  menu: RowMenuItem[];
+}) {
+  const links = useRowLinks(row.entry);
+  const linkMenu = useLinkMenu(links);
+  return (
+    <ItemRow
+      title={
+        <span>
+          {row.title}
+          {row.of > 1 ? <Part k={row.k} of={row.of} /> : null}
+        </span>
+      }
+      titleFull
+      // The reason only behind „Warum hier?“, like on the board (U12). A row without a menu (no entry) keeps its
+      // reason in sight.
+      meta={why || !row.entry ? reason : undefined}
+      below={links.length > 0 ? <LinkChips views={links} /> : undefined}
+      end={<span className={styles.minutes}>{compact(row.minutes)}</span>}
+      menu={withLinks(menu, [], linkMenu)}
+      menuLabel={t.planner.row.menu(row.title)}
     />
   );
 }
