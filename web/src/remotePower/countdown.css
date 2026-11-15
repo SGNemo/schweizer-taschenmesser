@@ -19,7 +19,7 @@ body {
 .sentence {
   margin: 0;
   font-size: var(--text-lg);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   line-height: 1.4;
 }
 .note {
@@ -36,7 +36,7 @@ body {
   background: var(--accent);
   color: var(--accent-contrast);
   font: inherit;
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   cursor: pointer;
 }
 .cancel:focus-visible {

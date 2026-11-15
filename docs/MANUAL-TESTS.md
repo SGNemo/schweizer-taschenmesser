@@ -191,6 +191,16 @@ FS-R1, FS-R2, FS-R8, FS-R10 und FS-R11 gehen sofort (Einstellungen → Allgemein
 FS-R2. _Tray nach Neuaufbau, Sprache:_ App-Sprache wechseln und einen Termin für heute anlegen (Tray-Menü wird neu gebaut): Menü und Tooltip bleiben vollständig, das Symbol flackert nicht; App auf Englisch bei deutschem Windows: der Bestätigungs-Dialog (FS-R8) ist englisch. ☐
 FS-R10. _Abschnitt ohne Hub:_ Heimnetz-Abgleich aus: der Abschnitt zeigt zwei kurze Sätze und den Link „Zum Abgleich im Heimnetz“, keinen Schalter. Mit Hub, Hauptschalter aus: die Auswahl je Gerät ist grau, ein Satz erklärt warum. ☐
 
+#### Fernsteuerung: PC ausschalten, PC-Seite (`feat/remote-power-p2a`) – nur auf echtem Windows prüfbar
+
+FS-P1 und FS-P2 gehen sofort; FS-P3–FS-P5 brauchen das Handy aus `feat/remote-power-p2b`.
+
+FS-P1. _Freigabe:_ Gerät mit Stufe „Medien und Lautstärke“ → darunter „Darf den PC ausschalten“ (aus). Einschalten → Windows-Fenster mit Warnzeichen nennt Gerät, Ausschalten und die 10 Sekunden; „Abbrechen“ ändert nichts. Ausschalten fragt nicht. Stufe auf „Nichts“ → der Schalter verschwindet; wieder „Medien“ → er steht auf aus. Während das Handy Maus und Tastatur steuert, lässt er sich nicht einschalten (Satz dazu). ☐
+FS-P2. _Monitor aus:_ (mit p2b) Handy → Menü → „Monitor aus“: Bildschirme werden dunkel, eine Mausbewegung am PC weckt sie; kein Countdown, auch bei gesperrtem PC. ☐
+FS-P3. _Countdown:_ Handy → „Ausschalten“ → am PC erscheint ein kleines Fenster oben: „<Gerät> schaltet diesen PC in 10 Sekunden aus.“, die Zahl zählt ruhig herunter, kein Balken, kein Ton; Enter/Leertaste drückt „Abbrechen“. Nichts tun → nach 10 s fährt Windows herunter; ein offenes Notepad mit ungespeichertem Text fragt wie sonst auch. Neu starten, Energie sparen, Ruhezustand (wo vorhanden), Abmelden genauso. ☐
+FS-P4. _Abbrechen wirkt überall:_ „Abbrechen“ im Fenster; Tray „Fernsteuerung beenden“ (auch nachdem das Handy das WLAN verlassen hat); Fenster schließen oder minimieren (Win+D); PC sperren (Win+L); Hauptschalter aus; „Darf den PC ausschalten“ aus → jeweils passiert nichts. Nach einem Abbrechen am PC startet dasselbe Handy 10 Minuten lang keinen neuen Countdown; beim zweiten Abbrechen am PC innerhalb einer Stunde steht „Darf den PC ausschalten“ danach auf aus. ☐
+FS-P5. _Nemo arbeitet noch:_ Download im Modul Downloads läuft (oder ein zweites Gerät synchronisiert gerade) → Handy hört erst den Hinweis, nichts startet; „Trotzdem“ startet den Countdown. Vollbild-Spiel oder -Film vorn: prüfen, ob das Countdown-Fenster sichtbar darüber liegt (sonst „Noch offen“ im PR). ☐
+
 ### Kalender
 
 #### Modul-Rahmen, Wetter und Musik (Branch `feat/module-shell-identity`) – nur auf Geräten prüfbar
