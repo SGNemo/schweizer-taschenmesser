@@ -57,3 +57,4 @@ the user's entries; FOCUS 9 = offer, never move by code).
   day, never on the days between, never once done. Body = number of steps, never how long it waited.
 - „Im Planer zeigen“ shows only while the planner is on; stored only when off (`planner: false`), so old rows stay
   in the plan. Morgen/Abend starts are off (a daily routine would fill every plan), Wochenputz/Wocheneinkauf on.
+  While the planner is off the switch is hidden and nothing is stored for it (no hidden choice).

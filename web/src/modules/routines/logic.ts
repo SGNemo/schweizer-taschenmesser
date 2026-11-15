@@ -347,9 +347,10 @@ export function reminderDays(
   from: string,
   to: string,
 ): string[] {
-  const days = new Set(
-    occurrencesBetween(openEnded(r.repeat), r.startDate, from, to).filter((d) => d >= r.dueDate),
-  );
+  // Not due in the window: nothing to walk (most routines on most collects).
+  if (r.dueDate > to) return [];
+  const start = r.dueDate > from ? r.dueDate : from;
+  const days = new Set(occurrencesBetween(openEnded(r.repeat), r.startDate, start, to));
   if (r.dueDate >= from && r.dueDate <= to) days.add(r.dueDate);
   return [...days].sort();
 }
