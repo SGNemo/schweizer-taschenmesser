@@ -13,7 +13,7 @@ import { purgeTombstones, TOMBSTONE_RETENTION_MS } from '@/core/sync/tombstones'
 import { setNow } from '@/core/time/now';
 import { createTestDb } from '@/test-utils';
 import { addLink, addLinkIfAbsent, linkEntries, linkId, removeLink } from './index';
-import { copyTodoLinks } from './migrate';
+import { copyTodoLinks, copyTodoLinksAfterSync, copyTodoLinksAtStart } from './migrate';
 import { LINKS_TABLE } from './store';
 import type { EntityLink } from './types';
 
@@ -44,9 +44,20 @@ function device() {
     db,
     sync: (key?: CryptoKey) => runSync({ storage, adapter: server.adapter(), key }),
     live: async () => (await linkEntries(ref, db)).map((e) => e.link.label),
-    row: async () => db.table(LINKS_TABLE).get(await linkId(link)),
+    row: async (id?: string) => db.table(LINKS_TABLE).get(id ?? (await linkId(link))),
   };
 }
+
+const tasks = (db: TaschenmesserDB) => createCollectionRepo(getManifest('todos')!, 'task', db);
+const newTask = (db: TaschenmesserDB) =>
+  tasks(db).create({
+    listId: 'inbox',
+    title: 'Antworten',
+    done: false,
+    priority: 0,
+    order: 0,
+    links: [{ kind: 'mail', id: THREAD, label: LABEL }],
+  });
 
 beforeEach(() => {
   clock = 1_800_000_000_000;
@@ -150,7 +161,6 @@ describe('links between two devices', () => {
   });
 
   it('two devices that both copy the ToDo links write the same rows', async () => {
-    const tasks = (db: TaschenmesserDB) => createCollectionRepo(getManifest('todos')!, 'task', db);
     const a = device();
     const b = device();
     const t = await tasks(a.db).create({
@@ -171,6 +181,75 @@ describe('links between two devices', () => {
     for (const d of [a, b]) {
       expect(await d.db.table(LINKS_TABLE).count()).toBe(1);
       expect(await linkEntries({ module: 'todos', id: t.id }, d.db)).toHaveLength(1);
+    }
+  });
+
+  it('the copy never brings back a link removed elsewhere: B copies and removes, A starts the new version later', async () => {
+    const a = device();
+    const b = device();
+    const t = await newTask(a.db);
+    await a.sync();
+    await b.sync();
+    const todo = { module: 'todos', id: t.id };
+    const live = async (d: { db: TaschenmesserDB }) => (await linkEntries(todo, d.db)).length;
+
+    // B runs the new version: copies, the person removes the link there (row and array entry), B pushes.
+    await copyTodoLinks(b.db);
+    const [entry] = await linkEntries(todo, b.db);
+    await removeLink(entry!.id, b.db);
+    expect((await tasks(b.db).get(t.id))!.links).toBeUndefined();
+    await b.sync();
+
+    // A was closed meanwhile and still holds the array. Worst case: it copies BEFORE its first pull.
+    expect(await copyTodoLinks(a.db)).toBe(1);
+    expect(await live(a)).toBe(1);
+    await a.sync();
+    await b.sync();
+    await a.sync();
+    for (const d of [a, b]) {
+      expect(await live(d)).toBe(0);
+      expect((await tasks(d.db).get(t.id))!.links).toBeUndefined();
+      expect(await copyTodoLinks(d.db)).toBe(0);
+    }
+  });
+
+  it('…and as the app does it: with sync configured the first copy waits for the completed pull', async () => {
+    const a = device();
+    const b = device();
+    const t = await newTask(a.db);
+    await a.sync();
+    await b.sync();
+    await copyTodoLinks(b.db);
+    const [entry] = await linkEntries({ module: 'todos', id: t.id }, b.db);
+    await removeLink(entry!.id, b.db);
+    await b.sync();
+
+    await copyTodoLinksAtStart(a.db, true); // start of the new version on A: nothing yet
+    expect(await a.db.table(LINKS_TABLE).count()).toBe(0);
+    const round = await a.sync();
+    await copyTodoLinksAfterSync(a.db, round.applied > 0 || round.pushed > 0);
+    expect(await linkEntries({ module: 'todos', id: t.id }, a.db)).toEqual([]);
+    expect((await a.row(entry!.id)).deletedAt).not.toBeNull();
+  });
+
+  it('A removes offline, B copies later: the removal wins on both', async () => {
+    const a = device();
+    const b = device();
+    const t = await newTask(a.db);
+    await a.sync();
+    await b.sync();
+    await copyTodoLinks(a.db);
+    const [entry] = await linkEntries({ module: 'todos', id: t.id }, a.db);
+    await removeLink(entry!.id, a.db); // offline: not pushed
+
+    clock += 3_600_000; // B copies an hour later, by the clock long after the removal
+    expect(await copyTodoLinks(b.db)).toBe(1);
+    await b.sync();
+    await a.sync();
+    await b.sync();
+    for (const d of [a, b]) {
+      expect(await linkEntries({ module: 'todos', id: t.id }, d.db)).toEqual([]);
+      expect((await tasks(d.db).get(t.id))!.links).toBeUndefined();
     }
   });
 
@@ -218,7 +297,6 @@ describe('the table goes where every synced table goes', () => {
   });
 
   it('a „replace“ restore of a backup from before the link table brings the links of its ToDos back', async () => {
-    const tasks = (db: TaschenmesserDB) => createCollectionRepo(getManifest('todos')!, 'task', db);
     const a = device();
     const t = await tasks(a.db).create({
       listId: 'inbox',

@@ -21,7 +21,7 @@ import { useSharedLiveQuery } from '@/core/modules/sharedQuery';
 import type { ResolvedState } from '@/core/modules/types';
 import { today } from '@/core/time/now';
 import { linkId, linksRepo, readLink, toRow, type LinkRow, type StoredLink } from './store';
-import { refKey, type EntityLink, type EntityRef } from './types';
+import { refKey, refOfKind, type EntityLink, type EntityRef, type LegacyLink } from './types';
 
 export { linkId } from './store';
 export type { EntityLink, EntityRef, LinkRel } from './types';
@@ -106,9 +106,32 @@ export async function addLinkIfAbsent(
   return (await addLinksIfAbsent([link], database)) > 0;
 }
 
-/** Removes one link (soft delete: the removal reaches every device). */
-export function removeLink(id: string, database: TaschenmesserDB = defaultDb): Promise<void> {
-  return linksRepo(database).remove(id);
+/**
+ * Removes one link (soft delete: the removal reaches every device). A link a ToDo carries may also stand in
+ * the task's own frozen `links[]` field: that entry goes with it (unless another live row still leads to the
+ * same target), so the copy of the ToDo links can never bring the link back once the tombstone was purged.
+ * Both writes report to the undo journal of the calling action: one undo restores row and entry.
+ */
+export async function removeLink(id: string, database: TaschenmesserDB = defaultDb): Promise<void> {
+  const repo = linksRepo(database);
+  const row = await repo.table.get(id);
+  await repo.remove(id);
+  const link = row && readLink(row);
+  if (!link || link.from.module !== 'todos') return;
+  const todos = getManifest('todos');
+  if (!todos?.dataSchema.collections.task) return;
+  const others = await repo.table.where('fromKey').equals(row.fromKey).toArray();
+  if (others.some((r) => r.deletedAt === null && r.toKey === row.toKey)) return;
+  const tasks = createCollectionRepo(todos, 'task', database);
+  const task = await tasks.get(link.from.id);
+  const stored = Array.isArray(task?.links) ? (task.links as unknown[]) : [];
+  const rest = stored.filter((entry) => {
+    const l = entry as Partial<LegacyLink> | null;
+    const module = l && typeof l.kind === 'string' ? refOfKind[l.kind] : undefined;
+    return !(module === link.to.module && l?.id === link.to.id);
+  });
+  if (rest.length !== stored.length)
+    await tasks.update(link.from.id, { links: rest.length ? rest : undefined });
 }
 
 function entries(rows: readonly StoredLink[], key: string): LinkEntry[] {

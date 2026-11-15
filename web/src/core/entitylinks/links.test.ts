@@ -6,6 +6,7 @@ import { wipeModuleData } from '@/core/modules/activation';
 import { allManifests, getManifest } from '@/core/modules/registry';
 import { purgeTombstones, TOMBSTONE_RETENTION_MS } from '@/core/sync/tombstones';
 import { setNow } from '@/core/time/now';
+import { undoable, undoLast } from '@/core/undo';
 import { captureId } from '@/quickCapture/targets';
 import {
   addLink,
@@ -17,7 +18,13 @@ import {
   plannedDay,
   removeLink,
 } from './index';
-import { copyTodoLinks, copyTodoLinksOnce, TODO_LINKS_COPIED_KEY, todoLink } from './migrate';
+import {
+  copyTodoLinks,
+  copyTodoLinksAfterSync,
+  copyTodoLinksAtStart,
+  TODO_LINKS_COPIED_KEY,
+  todoLink,
+} from './migrate';
 import { LINKS_TABLE, linksRepo } from './store';
 import type { EntityLink } from './types';
 
@@ -181,6 +188,66 @@ describe('addLink / addLinkIfAbsent / removeLink', () => {
   });
 });
 
+describe('removeLink and the ToDo’s own field', () => {
+  const legacy = [
+    { kind: 'event', id: 'e1', label: 'Zahnarzt' },
+    { kind: 'note', id: 'n1', label: 'Einkaufsliste' },
+  ];
+
+  it('removing a ToDo’s link also strips the matching entry of its `links[]`; one undo restores both', async () => {
+    const t = await task('Mit Links', { links: legacy });
+    await copyTodoLinks();
+    const id = await linkId(todoLink(t.id, legacy[0] as never));
+    await undoable('Entfernt', () => removeLink(id));
+    expect((await tasks.get(t.id))!.links).toEqual([legacy[1]]);
+    expect((await linkEntries({ module: 'todos', id: t.id })).map((l) => l.other.id)).toEqual([
+      'n1',
+    ]);
+    // Past the purge of the tombstone the copy finds nothing to bring back.
+    await db.table(LINKS_TABLE).delete(id);
+    expect(await copyTodoLinks()).toBe(0);
+
+    await db.table(LINKS_TABLE).clear();
+    await tasks.update(t.id, { links: legacy });
+    await copyTodoLinks();
+    await undoable('Entfernt', () => removeLink(id));
+    await undoLast();
+    expect((await tasks.get(t.id))!.links).toEqual(legacy);
+    expect(await linkEntries({ module: 'todos', id: t.id })).toHaveLength(2);
+  });
+
+  it('the last entry leaves no empty array; another live row to the same target keeps the entry', async () => {
+    const t = await task('Eins', { links: [legacy[0]] });
+    await copyTodoLinks();
+    await addLink({ ...todoLink(t.id, legacy[0] as never), rel: 'about' });
+    await removeLink(await linkId({ ...todoLink(t.id, legacy[0] as never), rel: 'about' }));
+    expect((await tasks.get(t.id))!.links).toEqual([legacy[0]]);
+    await removeLink(await linkId(todoLink(t.id, legacy[0] as never)));
+    expect((await tasks.get(t.id))!.links).toBeUndefined();
+  });
+
+  it('a link carried by another module, a missing task or an unknown id touch no task', async () => {
+    const t = await task('Unberührt', { links: legacy });
+    await addLink({
+      from: { module: 'invoices', id: 'i1' },
+      to: { module: 'calendar', id: 'e1' },
+      rel: 'about',
+      label: 'Zahnarzt',
+    });
+    await removeLink(
+      await linkId({
+        from: { module: 'invoices', id: 'i1' },
+        to: { module: 'calendar', id: 'e1' },
+        rel: 'about',
+      }),
+    );
+    await addLink(link('no-such-task', 'e1'));
+    await removeLink(await linkId(link('no-such-task', 'e1')));
+    await removeLink('no-such-row');
+    expect((await tasks.get(t.id))!.links).toEqual(legacy);
+  });
+});
+
 describe('linksOf', () => {
   it('reads both directions and resolves the other end through its module', async () => {
     const t = await task('Vorbereiten');
@@ -336,11 +403,11 @@ describe('copy of the ToDo links', () => {
     expect(await copyTodoLinks()).toBe(2);
     expect(await copyTodoLinks()).toBe(0);
     const out = await linkEntries({ module: 'todos', id: t.id });
-    expect(out.map((l) => [l.other.module, l.other.id, l.link.rel, l.link.label])).toEqual([
+    expect(out.map((l) => [l.other.module, l.other.id, l.link.rel, l.link.label]).sort()).toEqual([
       ['calendar', 'e1', 'origin', 'Zahnarzt'],
       ['notes', 'n1', 'origin', 'Einkaufsliste'],
     ]);
-    expect(out[0]!.id).toBe(
+    expect(out.find((l) => l.other.id === 'e1')!.id).toBe(
       await linkId(todoLink(t.id, { kind: 'event', id: 'e1', label: 'Zahnarzt' })),
     );
     expect((await tasks.get(t.id))!.links).toEqual(legacy);
@@ -364,16 +431,41 @@ describe('copy of the ToDo links', () => {
     expect(JSON.stringify(await rows())).not.toContain('Tresor');
   });
 
-  it('the app-start run happens once per device (a `_meta` flag); later runs are explicit', async () => {
+  it('a copied row carries the stamp of the task’s `links` field on every field – not "now"', async () => {
+    const t = await task('Gestempelt', { links: [legacy[0]] });
+    const stamp = (await db.table('todos_task').get(t.id))._f.links as string;
+    clock += 60_000; // the copy runs a minute later
+    await copyTodoLinks();
+    const [row] = await rows();
+    expect(new Set(Object.values(row._f))).toEqual(new Set([stamp]));
+    expect(row.deletedAt).toBeNull();
+    // Queued for upload like a written row.
+    expect(await db.table('_outbox').get([LINKS_TABLE, row.id])).toBeTruthy();
+  });
+
+  it('at app start: without sync every start copies; with sync only once a pull completed here', async () => {
     const t = await task('Erste', { links: [legacy[0]] });
-    await copyTodoLinksOnce();
-    expect(await db.table('_meta').get(TODO_LINKS_COPIED_KEY)).toMatchObject({
-      value: { copied: 1 },
-    });
-    await tasks.update(t.id, { links: legacy });
-    await copyTodoLinksOnce(); // flagged: no second scan at start
+    await copyTodoLinksAtStart(db, true); // sync configured, nothing pulled yet: wait
+    expect(await rows()).toHaveLength(0);
+    expect(await db.table('_meta').get(TODO_LINKS_COPIED_KEY)).toBeUndefined();
+
+    await copyTodoLinksAfterSync(db, false); // the first completed round, even one that moved nothing
     expect(await rows()).toHaveLength(1);
-    expect(await copyTodoLinks()).toBe(1); // the run after a pull or restore
+    expect(await db.table('_meta').get(TODO_LINKS_COPIED_KEY)).toBeTruthy();
+
+    await tasks.update(t.id, { links: legacy });
+    await copyTodoLinksAfterSync(db, false); // a later round that moved nothing: no scan
+    expect(await rows()).toHaveLength(1);
+    await copyTodoLinksAtStart(db, true); // …but every start after the first copy
+    expect(await rows()).toHaveLength(2);
+
+    await db.table(LINKS_TABLE).clear();
+    await db.table('_meta').clear();
+    await copyTodoLinksAtStart(db, false); // no sync: at once, and again at the next start
+    expect(await rows()).toHaveLength(2);
+    await tasks.update(t.id, { links: [...legacy, { kind: 'invoice', id: 'i1', label: 'R' }] });
+    await copyTodoLinksAtStart(db, false);
+    expect(await rows()).toHaveLength(3);
   });
 
   it('in bulk: one unreadable or forbidden link does not stop the others', async () => {
