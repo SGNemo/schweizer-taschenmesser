@@ -433,6 +433,8 @@ test.describe('Planer (calendar chip, prefix, sentences – package 2)', () => {
     await enter(page, 'Steuer 2 Std bis Do');
     await enter(page, 'Keller 30min');
     await expect(await day(page, '2026-11-10')).toContainText('Steuer · Teil 2/2');
+    // Both entries are placed before the page is left (the second run follows the first).
+    await expect(await day(page, '2026-11-09')).toContainText('Keller');
     const days = new Set(
       (await rows(page, 'planner_assignment'))
         .filter((r) => r.deletedAt === null)
