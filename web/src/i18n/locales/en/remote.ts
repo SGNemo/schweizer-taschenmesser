@@ -185,4 +185,21 @@ export const remote: Strings['remote'] = {
     unlock: 'Not confirmed. Nothing was sent.',
     dismiss: 'Hide',
   },
+  programs: {
+    open: 'Start a program …',
+    title: 'Start a program',
+    note: 'The program opens on the PC, as with a double click there.',
+    empty: 'Choose programs on the PC under Settings → Remote control.',
+    starting: 'Sending to the PC …',
+    started: (name: string) => `${name} is opening on the PC.`,
+    notGranted:
+      'Starting programs is off for this phone. Switch on “May start programs” on the PC under Settings → Remote control.',
+    locked: 'The PC is locked. Starting programs works only while it is unlocked.',
+    limit: 'A program was started just now. Try again in a few seconds.',
+    failed: 'The program could not be opened on the PC.',
+    unlock: 'Not unlocked. Nothing was sent.',
+    unavailable:
+      'This phone cannot ask for its screen lock for Nemo, so starting programs works only at the PC.',
+    dismiss: 'Hide',
+  },
 };

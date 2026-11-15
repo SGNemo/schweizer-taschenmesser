@@ -41,7 +41,7 @@
 
 use ::lan_sync::input::wire::{
     Button, Code, Key, Level, Media, PcState, Power, PowerAnswer, PowerInfo, ProgramAnswer, Record,
-    FEATURE_PRESENT, MAX_PROGRAMS, MAX_TEXT_BYTES, VOLUME_UNKNOWN,
+    FEATURE_PRESENT, FEATURE_PROGRAMS, MAX_PROGRAMS, MAX_TEXT_BYTES, VOLUME_UNKNOWN,
 };
 use ::lan_sync::input_client::{Event, InputError, InputSession};
 use serde::Serialize;
@@ -407,6 +407,9 @@ pub struct OpenedDto {
     power: Option<PowerDto>,
     /// The PC takes the presentation keys (F5, B); `false` for an older PC.
     present: bool,
+    /// The PC knows the program list (whether this device may start programs, and the list
+    /// itself, come as a `programs` event); `false` for an older PC.
+    programs: bool,
 }
 
 #[derive(Serialize, Clone, Copy, Debug, PartialEq, Eq)]
@@ -1005,6 +1008,9 @@ fn open_now<R: Runtime>(
             present: opened
                 .ext
                 .is_some_and(|ext| ext.features & FEATURE_PRESENT != 0),
+            programs: opened
+                .ext
+                .is_some_and(|ext| ext.features & FEATURE_PROGRAMS != 0),
         })
     }
 }
@@ -1987,10 +1993,11 @@ mod tests {
             state: state_dto(PcState::UNKNOWN),
             power: None,
             present: false,
+            programs: false,
         };
         assert_eq!(
             serde_json::to_string(&opened).unwrap(),
-            r#"{"session":7,"level":"media","grant":"full","unlockRequired":true,"noLock":false,"state":{"volume":null,"mute":false,"playing":false,"locked":false},"power":null,"present":false}"#
+            r#"{"session":7,"level":"media","grant":"full","unlockRequired":true,"noLock":false,"state":{"volume":null,"mute":false,"playing":false,"locked":false},"power":null,"present":false,"programs":false}"#
         );
         let with_power = OpenedDto {
             power: Some(power_dto(PowerInfo {
@@ -1999,10 +2006,11 @@ mod tests {
                 hibernate: true,
             })),
             present: true,
+            programs: true,
             ..opened
         };
         assert!(serde_json::to_string(&with_power).unwrap().ends_with(
-            r#""power":{"granted":true,"pending":false,"hibernate":true},"present":true}"#
+            r#""power":{"granted":true,"pending":false,"hibernate":true},"present":true,"programs":true}"#
         ));
         assert_eq!(
             serde_json::to_string(&event_dto(7, Event::Power(PowerAnswer::Working))).unwrap(),

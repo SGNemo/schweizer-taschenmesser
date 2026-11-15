@@ -9184,6 +9184,23 @@ export const de = {
       unlock: 'Nicht bestätigt. Es wurde nichts gesendet.',
       dismiss: 'Ausblenden',
     },
+    programs: {
+      open: 'Programm starten …',
+      title: 'Programm starten',
+      note: 'Das Programm öffnet sich am PC, wie bei einem Doppelklick dort.',
+      empty: 'Am PC unter Einstellungen → Fernsteuerung Programme auswählen.',
+      starting: 'Wird an den PC gesendet …',
+      started: (name: string) => `${name} wird am PC geöffnet.`,
+      notGranted:
+        'Am PC ist Programme starten für dieses Handy aus. Am PC unter Einstellungen → Fernsteuerung „Darf Programme starten“ einschalten.',
+      locked: 'Der PC ist gesperrt. Programme starten geht nur, solange er entsperrt ist.',
+      limit: 'Gerade eben wurde schon ein Programm gestartet. In ein paar Sekunden noch einmal.',
+      failed: 'Das Programm ließ sich am PC nicht öffnen.',
+      unlock: 'Nicht entsperrt. Es wurde nichts gesendet.',
+      unavailable:
+        'Dieses Handy kann seine Bildschirmsperre für Nemo nicht abfragen. Programme starten geht deshalb nur am PC.',
+      dismiss: 'Ausblenden',
+    },
   },
   routines: {
     meta: {

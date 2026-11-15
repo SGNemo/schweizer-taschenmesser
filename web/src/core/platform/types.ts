@@ -220,6 +220,14 @@ export interface RemoteHostGrant {
   unlock: boolean;
   /** May switch the PC off (shut down, restart, sleep, sign out) – each time after a countdown at the PC. Needs a level; off with `level: 'off'`. */
   power: boolean;
+  /** May start programs of this PC's own list. Needs mouse and keyboard; off below `full`. */
+  programs: boolean;
+}
+
+/** One entry of this PC's program list as the settings page sees it: never a path. */
+export interface RemoteHostProgram {
+  slot: number;
+  name: string;
 }
 
 export interface RemoteHostDevice extends RemoteHostGrant {
@@ -265,6 +273,16 @@ export interface RemoteHostService {
   setNotice(on: boolean): Promise<void>;
   /** "Fernsteuerung beenden": ends the session and pauses that device. `false`: nobody controlled. */
   end(): Promise<boolean>;
+  /** This PC's program list (names only, at most 8). */
+  programs(): Promise<RemoteHostProgram[]>;
+  /**
+   * Adds an entry: the PC shows its own file dialog (programs and shortcuts only) and then asks
+   * in a native dialog – the page names no file. Rejects with the codes above, or `full`,
+   * `duplicate`, `bad-file`.
+   */
+  addProgram(): Promise<void>;
+  /** Removes an entry at once. */
+  removeProgram(slot: number): Promise<void>;
   /**
    * What Nemo on this PC is busy with right now (bit 1 cloud sync, bit 2 backup). Before a remote
    * "switch off" the phone hears it first; it never starts or stops anything.
@@ -360,7 +378,21 @@ export type RemoteEvent =
   /** Over: with the PC's reason, or `null` (connection lost, idle, replaced at the PC). */
   | { kind: 'closed'; session: number; reason: RemoteCloseReason | null }
   /** About power (see `RemotePowerAnswer`); the session goes on. */
-  | { kind: 'power'; session: number; answer: RemotePowerAnswer };
+  | { kind: 'power'; session: number; answer: RemotePowerAnswer }
+  /**
+   * The PC's program list (names in slot order): only when this phone may start programs, right
+   * after `opened` and again when the list changed at the PC.
+   */
+  | { kind: 'programs'; session: number; list: string[] }
+  /** The answer to a program start; the session goes on. */
+  | { kind: 'program'; session: number; answer: RemoteProgramAnswer };
+
+/**
+ * What the PC says to a program start: `started` (handed to Windows), `not-granted` (this phone
+ * may not start programs), `locked`, `limit` (one start per 5 s), `failed` (no such entry any
+ * more, the list changed, or it could not be started).
+ */
+export type RemoteProgramAnswer = 'started' | 'not-granted' | 'locked' | 'limit' | 'failed';
 
 export interface RemoteOpened {
   session: number;
@@ -376,6 +408,11 @@ export interface RemoteOpened {
   power: RemotePowerInfo | null;
   /** The PC takes the presentation keys (`key-f5`, `key-b`); `false` for an older PC. */
   present: boolean;
+  /**
+   * The PC knows the program list; the list itself comes as a `programs` event, and only when
+   * this phone may start programs. `false` (or missing) for an older PC.
+   */
+  programs?: boolean;
 }
 
 /**
@@ -441,6 +478,12 @@ export interface RemoteService {
    * `confirm-cancelled`, `unlock-failed`, `unlock-unavailable`, `unlock-busy`, `closed`, `network`.
    */
   power(session: number, action: RemotePowerAction, despite: boolean, lang?: string): Promise<void>;
+  /**
+   * Starts the program in `slot` of the list the PC told (mouse-and-keyboard session; no prompt
+   * of its own). The PC's answer comes as a `program` event. Rejects with `bad-level`, `locked`
+   * (nothing sent), `no-programs` (an older PC), `bad-slot`, `closed`, `network`.
+   */
+  program(session: number, slot: number): Promise<void>;
   close(session: number): Promise<void>;
 }
 

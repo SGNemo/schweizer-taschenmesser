@@ -190,6 +190,7 @@ describe('RemoteHostSection (desktop)', () => {
       paused: false,
       unlock: true,
       power: false,
+      programs: false,
     });
     expect(fake.parts.hooks.open(id, 'full')).toBe(true);
     fireEvent.click(notice());
@@ -269,6 +270,7 @@ describe('RemoteHostSection (desktop)', () => {
       paused: false,
       unlock: true,
       power: false,
+      programs: false,
     });
     expect(fake.parts.hooks.open(a, 'full')).toBe(true);
     await show();
@@ -342,6 +344,7 @@ describe('RemoteHostSection (desktop)', () => {
       paused: false,
       unlock: true,
       power: false,
+      programs: false,
     });
     await fake.parts.host.setEnabled(false);
     const asked = fake.parts.hooks.asked();
@@ -402,6 +405,7 @@ describe('RemoteHostSection (desktop)', () => {
       paused: false,
       unlock: true,
       power: false,
+      programs: false,
     });
     fake.parts.hooks.open(id);
     await show();
@@ -457,6 +461,7 @@ describe('RemoteChip', () => {
       paused: false,
       unlock: true,
       power: false,
+      programs: false,
     });
     fake.parts.hooks.open(id);
     useSyncStatus.getState().set({ phase: 'idle', via: 'lanHub', encrypted: true });
@@ -507,6 +512,7 @@ describe('the shared reading (core/remote/host)', () => {
       paused: false,
       unlock: true,
       power: false,
+      programs: false,
     });
     fake.parts.hooks.open(id);
     const real = fake.parts.host.status.bind(fake.parts.host);
@@ -534,6 +540,7 @@ describe('the shared reading (core/remote/host)', () => {
       paused: false,
       unlock: true,
       power: false,
+      programs: false,
     });
     fake.parts.hooks.open(id);
     await refreshRemoteHost();
@@ -542,5 +549,108 @@ describe('the shared reading (core/remote/host)', () => {
     await refreshRemoteHost();
     expect(useRemoteHost.getState().status?.controller).toBeNull();
     expect(useRemoteHost.getState().off).toBe(false);
+  });
+
+  it('programs: a permission of mouse and keyboard, asked at the PC, gone below that level', async () => {
+    fake.parts.hooks.addDevice('Pixel 7');
+    await show();
+    const allow = () => screen.queryByRole('switch', { name: 'Darf Programme starten' });
+    fireEvent.click(master());
+    await flush();
+    fireEvent.change(level(), { target: { value: 'media' } });
+    await flush();
+    // media is no level to start programs with
+    expect(allow()).toBeNull();
+    fireEvent.change(level(), { target: { value: 'full' } });
+    await flush();
+    expect(allow()?.getAttribute('aria-checked')).toBe('false');
+    const asked = fake.parts.hooks.asked();
+    fireEvent.click(allow()!);
+    await flush();
+    expect(fake.parts.hooks.asked()).toBe(asked + 1);
+    expect(allow()?.getAttribute('aria-checked')).toBe('true');
+    // down to media: the permission goes with it, without a question
+    fireEvent.change(level(), { target: { value: 'media' } });
+    await flush();
+    expect(fake.parts.hooks.asked()).toBe(asked + 1);
+    expect(fake.parts.hooks.state().devices[0]?.programs).toBe(false);
+    expect(allow()).toBeNull();
+  });
+
+  it('the program list: added through the PC’s own dialog and question, removed at once', async () => {
+    await show();
+    expect(screen.getByTestId('remote-programs-none').textContent).toBe(
+      'Noch kein Programm ausgewählt.',
+    );
+    const add = () => screen.getByTestId('remote-program-add') as HTMLButtonElement;
+    expect(add().textContent).toBe('Programm hinzufügen …');
+    // the file dialog closed without a file: nothing, and nothing to say
+    fireEvent.click(add());
+    await flush();
+    expect(fake.parts.hooks.programs()).toEqual([]);
+    expect(screen.queryByTestId('remote-program-note')).toBeNull();
+    // a file: asked at the PC, then in the list – names only
+    fake.parts.hooks.pickFile('C:\\Programme\\OBS Studio.exe');
+    fireEvent.click(add());
+    await flush();
+    expect(fake.parts.hooks.asked()).toBe(1);
+    expect(screen.getAllByTestId('remote-program').map((r) => r.firstChild?.textContent)).toEqual([
+      'OBS Studio',
+    ]);
+    expect(screen.getByTestId('remote-program-note').textContent).toBe('Programm hinzugefügt.');
+    // the same again, or no program at all: a calm sentence
+    fireEvent.click(add());
+    await flush();
+    expect(screen.getByTestId('remote-program-note').textContent).toBe(
+      'Dieses Programm steht schon in der Liste.',
+    );
+    fake.parts.hooks.pickFile('C:\\x\\start.bat');
+    fireEvent.click(add());
+    await flush();
+    expect(screen.getByTestId('remote-program-note').textContent).toContain('kein Programm');
+    // said no at the PC: not added
+    fake.parts.hooks.pickFile('C:\\x\\Spiel.lnk');
+    fake.parts.hooks.answer('cancel');
+    fireEvent.click(add());
+    await flush();
+    expect(fake.parts.hooks.programs()).toEqual(['OBS Studio']);
+    // removing asks nothing
+    const asked = fake.parts.hooks.asked();
+    fireEvent.click(screen.getByRole('button', { name: 'OBS Studio entfernen' }));
+    await flush();
+    expect(fake.parts.hooks.asked()).toBe(asked);
+    expect(fake.parts.hooks.programs()).toEqual([]);
+    expect(screen.getByTestId('remote-program-note').textContent).toBe('OBS Studio entfernt.');
+  });
+
+  it('eight programs at most; never while mouse and keyboard are controlled', async () => {
+    const id = fake.parts.hooks.addDevice('Pixel 7');
+    await fake.parts.host.setEnabled(true);
+    await fake.parts.host.setDevice(id, {
+      level: 'full',
+      paused: false,
+      unlock: true,
+      power: false,
+      programs: false,
+    });
+    fake.parts.hooks.open(id, 'full');
+    await show();
+    fake.parts.hooks.pickFile('C:\\x\\Editor.exe');
+    fireEvent.click(screen.getByTestId('remote-program-add'));
+    await flush();
+    expect(fake.parts.hooks.programs()).toEqual([]);
+    expect(screen.getByTestId('remote-program-note').textContent).toContain(
+      'solange ein Gerät Maus und Tastatur steuert',
+    );
+    fake.parts.hooks.state();
+    await fake.parts.host.end();
+    for (let i = 0; i < 8; i++) {
+      fake.parts.hooks.pickFile(`C:\\x\\P${i}.exe`);
+      await fake.parts.host.addProgram();
+    }
+    fireEvent.click(master());
+    await flush();
+    expect((screen.getByTestId('remote-program-add') as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText(/Die Liste ist voll/)).toBeTruthy();
   });
 });
