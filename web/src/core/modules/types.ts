@@ -640,7 +640,8 @@ export interface PlannableSource {
   onEstimate?(id: string, minutes: number): Promise<void>;
   /**
    * The planner turned the thing into something that is no task any more („Als Pause …“: a blocker of its day):
-   * the source removes it (soft delete, never a purge) and returns the function that brings it back as it was, or
+   * the source removes it (soft delete, never a purge) and returns the function that brings it back as it was (and
+   * takes back what the removal created itself, e.g. the next instance of a series), or
    * `undefined` when there was nothing to remove (gone or done meanwhile). The planner records the function into its
    * own undoable action, next to the source's recorded writes, so it must be idempotent; one undo restores the
    * thing, its row and the plan.

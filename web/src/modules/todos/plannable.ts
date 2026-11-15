@@ -6,6 +6,7 @@
  */
 import type { PlannableItem, PlannableSource } from '@/core/modules/types';
 import { today } from '@/core/time/now';
+import { nextInstanceId } from './logic';
 import { restorePatch } from './planMark';
 import { createNextInstance, deleteTask, setDone, taskRepo } from './repo';
 import type { PlanMark, Task } from './schema';
@@ -99,7 +100,7 @@ const source: PlannableSource = {
   // „Als Pause …“: the ToDo goes (with its subtasks, like a delete in the list), so leisure never waits as an open
   // task (morning digest, „Erledigt heute“). A recurring ToDo keeps its series: its next instance is created as a
   // tick would create it, but nothing is ticked (no `todos.task.completed`, no `completedAt`). The restore brings
-  // back exactly the removed rows (idempotent); the next instance is a recorded write the planner's undo takes back.
+  // back the removed rows and takes back a next instance it created (idempotent next to the journal).
   async onRemove(id) {
     const task = await taskRepo.get(id);
     if (!task || task.done) return undefined;
@@ -109,10 +110,16 @@ const source: PlannableSource = {
         .filter((t) => t.deletedAt === null)
         .map((t) => t.id),
     ];
+    // A next instance this call creates from nothing is this call's to take back too (also outside the planner's
+    // journal); one that existed as a tombstone is left to the journal, whose steps undo its restore and update.
+    const nextId = task.recurrence ? nextInstanceId(task) : undefined;
+    const fresh = nextId ? !(await taskRepo.table.get(nextId)) : false;
     if (task.recurrence) await createNextInstance(task);
     await deleteTask(id);
     return async () => {
       for (const x of ids) await taskRepo.restore(x);
+      const next = fresh && nextId ? await taskRepo.get(nextId) : undefined;
+      if (next && !next.done) await deleteTask(next.id);
     };
   },
 };

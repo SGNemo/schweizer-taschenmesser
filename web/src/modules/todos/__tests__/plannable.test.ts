@@ -363,8 +363,9 @@ describe('onRemove („Als Pause …“, package 4a)', () => {
     // Nothing is ticked: the removed occurrence stays undone (no completed event, no `completedAt`).
     const gone = (await taskRepo.table.get(task.id))!;
     expect([gone.done, gone.completedAt]).toEqual([false, undefined]);
-    // The restore brings back the removed rows; the next instance is the planner journal's to take back.
+    // The restore brings back the removed rows and takes back the next instance it created (also without a journal).
     await undo!();
-    expect((await taskRepo.get(task.id))!.done).toBe(false);
+    const back = await taskRepo.active().toArray();
+    expect(back.map((t) => [t.id, t.done])).toEqual([[task.id, false]]);
   });
 });

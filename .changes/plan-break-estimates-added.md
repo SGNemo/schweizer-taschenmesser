@@ -3,7 +3,7 @@ type: added
 area: planner
 breaking: false
 de: Eine Zeile „Pause 2 Std Zocken“ (oder „Freizeit …“) in der Schnellerfassung oder im Planer wird bei aktivem Planer eine Pause an diesem Tag statt eines ToDos.
-en: With the planner on and German as the app language, a line starting with "Pause" or "Freizeit" becomes a break on its day, not a to-do.
+en: With the planner on and German as the app language, a line starting with the German words "Pause" or "Freizeit" becomes a break on its day, not a to-do.
 ---
 
 ---

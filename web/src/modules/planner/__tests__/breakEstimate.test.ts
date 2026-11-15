@@ -4,7 +4,7 @@
  * removes it (no open ToDo stays); one undo brings back the ToDo, its plan and takes the blocker out. „Dauer …“
  * and the field („Duschen 15 Min“) set the estimate; a „Pause …“ line in the field or the day sheet is a blocker.
  */
-import { afterEach, beforeEach, expect, it } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
 import { createCollectionRepo } from '@/core/db/repo';
 import { enableModule } from '@/core/modules/activation';
@@ -144,6 +144,25 @@ it('a recurring ToDo: the series goes on, nothing is ticked, one undo (journal) 
   toast.action!.run();
   await expect.poll(() => lastToast().message, { timeout: 3000 }).toBe('Rückgängig gemacht.');
   await expect.poll(async () => snapshot(), { timeout: 3000 }).toEqual(before);
+});
+
+it('a failed blocker write brings the thing back as it was (no second open instance of a series)', async () => {
+  const task = await taskRepo.create({
+    listId: 'inbox',
+    done: false,
+    priority: 0,
+    order: 0,
+    title: 'Zocken',
+    dueDate: SAT,
+    recurrence: { freq: 'weekly', interval: 1, byWeekday: [6] },
+  });
+  const e = (await entries()).find((x) => x.id === task.id)!;
+  const spy = vi.spyOn(dayRepo, 'upsert').mockRejectedValueOnce(new Error('disk full'));
+  await expect(asBreak(e, SAT, 60, {})).rejects.toThrow('disk full');
+  spy.mockRestore();
+  const live = await taskRepo.active().toArray();
+  expect(live.map((t) => [t.id, t.done])).toEqual([[task.id, false]]);
+  expect(await dayRepo.active().toArray()).toEqual([]);
 });
 
 it('„Dauer …“ writes the estimate through the source', async () => {

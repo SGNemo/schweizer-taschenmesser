@@ -291,7 +291,7 @@ export async function asBreak(
         });
       } catch (err) {
         // A failed write drops the action's undo: the thing must not stay removed without its blocker.
-        await restore();
+        await restore().catch(() => undefined);
         throw err;
       }
     },
