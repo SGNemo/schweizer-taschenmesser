@@ -104,6 +104,42 @@ export function applyChange(labelIds: readonly string[], change: ThreadChange): 
   return [...next];
 }
 
+/** The way back of a label change. */
+export const inverse = (c: ThreadChange): ThreadChange => ({
+  addLabelIds: c.removeLabelIds,
+  removeLabelIds: c.addLabelIds,
+});
+
+/**
+ * The part of `change` that really changes a thread with these labels: only labels it lacks are added,
+ * only labels it has are removed. `undefined` when nothing would change (the thread is skipped, and its
+ * undo cannot touch it).
+ */
+export function deltaFor(
+  labelIds: readonly string[],
+  change: ThreadChange,
+): ThreadChange | undefined {
+  const add = (change.addLabelIds ?? []).filter((l) => !labelIds.includes(l));
+  const remove = (change.removeLabelIds ?? []).filter((l) => labelIds.includes(l));
+  if (add.length === 0 && remove.length === 0) return undefined;
+  return {
+    ...(add.length ? { addLabelIds: add } : {}),
+    ...(remove.length ? { removeLabelIds: remove } : {}),
+  };
+}
+
+/** A thread and its labels as the user saw them when acting. */
+export interface Target {
+  id: string;
+  labelIds: readonly string[];
+}
+
+/** What one thread had done to it: exactly this delta, taken back by its inverse. */
+export interface Done {
+  id: string;
+  delta: ThreadChange;
+}
+
 async function perform(
   account: MailAccountRef,
   threadId: string,
@@ -118,68 +154,117 @@ async function perform(
 /** At most this many calls at a time: a batch stays far inside Gmail's per-user quota. */
 const PARALLEL = 4;
 
-/** Runs `step` on every thread (`undo`: its way back); resolves with the threads that changed. */
-export async function applyStep(
-  account: MailAccountRef,
-  threadIds: readonly string[],
-  step: Step,
-  direction: 'do' | 'undo' = 'do',
-): Promise<{ ok: string[]; failed: string[]; error?: unknown }> {
-  const call = direction === 'do' ? step.call : step.undoCall;
-  const change = direction === 'do' ? step.change : step.undo;
-  const ok: string[] = [];
-  const failed: string[] = [];
-  let error: unknown;
+async function forEach<T>(items: readonly T[], fn: (item: T) => Promise<void>): Promise<void> {
   let next = 0;
   const worker = async () => {
-    while (next < threadIds.length) {
-      const id = threadIds[next++]!;
-      try {
-        await perform(account, id, call, change);
-        await patchCachedThread(account.key, id, change);
-        ok.push(id);
-      } catch (e) {
-        error ??= e;
-        failed.push(id);
-      }
-    }
+    while (next < items.length) await fn(items[next++]!);
   };
-  await Promise.all(Array.from({ length: Math.min(PARALLEL, threadIds.length) }, worker));
-  // Keep the order the user saw.
-  const order = (ids: string[]) => threadIds.filter((id) => ids.includes(id));
-  return { ok: order(ok), failed: order(failed), error };
+  await Promise.all(Array.from({ length: Math.min(PARALLEL, items.length) }, worker));
+}
+
+/** Mirrors a change that went through into the local cache; a cache hiccup never hides that the mailbox changed. */
+async function mirror(accountKey: string, threadId: string, change: ThreadChange) {
+  try {
+    await patchCachedThread(accountKey, threadId, change);
+  } catch {
+    // the next fetch brings the cache in line
+  }
+}
+
+/**
+ * Runs `step` on every thread that it would change; threads it would not change are `skipped` and never
+ * touched. Resolves with what each changed thread had done to it, in the order the user saw.
+ */
+export async function applyStep(
+  account: MailAccountRef,
+  targets: readonly Target[],
+  step: Step,
+): Promise<{ done: Done[]; skipped: string[]; failed: string[]; error?: unknown }> {
+  const done: Done[] = [];
+  const skipped: string[] = [];
+  const failed: string[] = [];
+  let error: unknown;
+  await forEach(targets, async ({ id, labelIds }) => {
+    const delta = deltaFor(labelIds, step.change);
+    if (!delta) {
+      skipped.push(id);
+      return;
+    }
+    try {
+      await perform(account, id, step.call, delta);
+    } catch (e) {
+      error ??= e;
+      failed.push(id);
+      return;
+    }
+    await mirror(account.key, id, delta);
+    done.push({ id, delta });
+  });
+  const order = targets.map((x) => x.id);
+  done.sort((x, y) => order.indexOf(x.id) - order.indexOf(y.id));
+  return { done, skipped, failed: order.filter((id) => failed.includes(id)), error };
+}
+
+/** Takes back exactly what `applyStep` did; resolves with the threads that are back. */
+export async function undoStep(
+  account: MailAccountRef,
+  done: readonly Done[],
+  step: Step,
+): Promise<{ ok: string[]; failed: string[] }> {
+  const ok: string[] = [];
+  const failed: string[] = [];
+  await forEach(done, async ({ id, delta }) => {
+    const back = inverse(delta);
+    try {
+      await perform(account, id, step.undoCall, back);
+    } catch {
+      failed.push(id);
+      return;
+    }
+    await mirror(account.key, id, back);
+    ok.push(id);
+  });
+  return { ok, failed };
 }
 
 /**
  * Runs a change on one or many threads and says what happened in a toast with „Rückgängig“: the undo
- * takes back exactly the threads that changed. A partial failure says how many went through; the rest
- * stays as it was. Resolves with the threads that changed and the first error, if any.
+ * takes back exactly what changed on each thread, nothing more. A partial failure says how many went
+ * through; the rest stays as it was. Resolves with the threads that changed and the first error, if any.
  */
 export async function runStep(
   account: MailAccountRef,
-  threadIds: readonly string[],
+  targets: readonly Target[],
   step: Step,
-  done: (n: number) => string,
+  text: (n: number) => string,
   onChanged: (direction: 'do' | 'undo', ids: string[]) => void,
 ): Promise<{ ok: string[]; error?: unknown }> {
   const toast = useUiStore.getState().toast;
-  if (threadIds.length === 0) return { ok: [] };
-  const { ok, failed, error } = await applyStep(account, threadIds, step);
-  if (ok.length === 0) {
+  if (targets.length === 0) return { ok: [] };
+  const { done, skipped, failed, error } = await applyStep(account, targets, step);
+  const reached = done.length + skipped.length;
+  if (reached === 0) {
     toast(t.mail.write.failed);
-    return { ok, error };
+    return { ok: [], error };
   }
-  onChanged('do', ok);
-  toast(failed.length ? t.mail.batch.partial(ok.length, threadIds.length) : done(ok.length), {
-    label: t.mail.write.undo,
-    run: () =>
-      void (async () => {
-        const back = await applyStep(account, ok, step, 'undo');
-        if (back.ok.length) onChanged('undo', back.ok);
-        toast(back.failed.length ? t.mail.write.failed : t.mail.write.undone);
-      })(),
-  });
-  return { ok, error };
+  const ids = done.map((d) => d.id);
+  if (ids.length) onChanged('do', ids);
+  const message = failed.length ? t.mail.batch.partial(reached, targets.length) : text(reached);
+  toast(
+    message,
+    done.length
+      ? {
+          label: t.mail.write.undo,
+          run: () =>
+            void (async () => {
+              const back = await undoStep(account, done, step);
+              if (back.ok.length) onChanged('undo', back.ok);
+              toast(back.failed.length ? t.mail.write.failed : t.mail.write.undone);
+            })(),
+        }
+      : undefined,
+  );
+  return { ok: [...ids, ...skipped], error };
 }
 
 /** The toast text of an action: the single wording for one thread, a count for many. */

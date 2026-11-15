@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import type { MailAccountRef } from '@/core/mail/types';
+import { ConnectorError } from '@/core/connectors/types';
+import type { MailAccountRef, MailErrorCode } from '@/core/mail/types';
 import { t } from '@/strings';
 import { Button, Dialog, RowMenu, SelectionBar } from '@/ui';
-import { asksFirst, doneText, runStep, STEPS, type MailAction } from '../mailActions';
+import { asksFirst, doneText, runStep, STEPS, type MailAction, type Target } from '../mailActions';
+import { MailError } from './MailError';
 import styles from './mail.module.css';
 
 type Asking = Extract<MailAction, 'archive' | 'trash' | 'spam'>;
@@ -14,16 +16,16 @@ type Asking = Extract<MailAction, 'archive' | 'trash' | 'spam'>;
  */
 export function BatchBar({
   account,
-  ids,
+  targets,
   labelId,
   confirmMoves,
   onCancel,
   onDone,
 }: {
   account: MailAccountRef;
-  /** Selected thread ids, in list order. */
-  ids: string[];
-  /** The folder on screen (`TRASH`, `SPAM` offer their way back). */
+  /** Selected threads with their labels, in list order. */
+  targets: Target[];
+  /** The folder on screen (`TRASH`, `SPAM` offer their way back); empty for a search. */
   labelId: string;
   confirmMoves: boolean;
   onCancel: () => void;
@@ -33,15 +35,32 @@ export function BatchBar({
   const [menu, setMenu] = useState(false);
   const [asking, setAsking] = useState<Asking | undefined>();
   const [busy, setBusy] = useState(false);
-  const n = ids.length;
+  const [error, setError] = useState<MailErrorCode | undefined>();
+  const n = targets.length;
 
   async function act(action: MailAction) {
+    if (busy) return;
     setBusy(true);
-    await runStep(account, ids, STEPS[action], doneText(action), (direction, changed) =>
-      onDone(direction, changed, action),
+    setError(undefined);
+    const res = await runStep(
+      account,
+      targets,
+      STEPS[action],
+      doneText(action),
+      (direction, changed) => onDone(direction, changed, action),
     );
     setBusy(false);
     setAsking(undefined);
+    // Nothing went through: say why (an expired login gets its own way back, like in the thread view).
+    if (res.ok.length === 0 && res.error !== undefined)
+      setError(
+        res.error instanceof ConnectorError &&
+          (res.error.code === 'expired' ||
+            res.error.code === 'denied' ||
+            res.error.code === 'rate-limited')
+          ? res.error.code
+          : 'network',
+      );
   }
   const ask = (action: Asking) => {
     if (asksFirst(STEPS[action], confirmMoves)) setAsking(action);
@@ -51,17 +70,17 @@ export function BatchBar({
   const text: Record<Asking, { title: string; body: string; confirm: string }> = {
     archive: {
       title: t.mail.batch.confirm.archiveTitle(n),
-      body: t.mail.write.confirm.archiveBody,
+      body: t.mail.batch.confirm.archiveBody,
       confirm: t.mail.write.archive,
     },
     trash: {
       title: t.mail.batch.confirm.trashTitle(n),
-      body: t.mail.write.confirm.trashBody,
+      body: t.mail.batch.confirm.trashBody,
       confirm: t.mail.write.trash,
     },
     spam: {
       title: t.mail.batch.confirm.spamTitle(n),
-      body: t.mail.write.confirm.spamBody,
+      body: t.mail.batch.confirm.spamBody,
       confirm: t.mail.write.spam,
     },
   };
@@ -69,6 +88,8 @@ export function BatchBar({
   const item = (id: MailAction, label: string) => ({ id, label, onSelect: () => void act(id) });
   const inTrash = labelId === 'TRASH';
   const inSpam = labelId === 'SPAM';
+  // Archive takes mail out of the inbox: offered where the inbox is on screen (the inbox or a search).
+  const canArchive = labelId === 'INBOX' || labelId === '';
   return (
     <>
       <SelectionBar count={n} onCancel={onCancel}>
@@ -82,9 +103,11 @@ export function BatchBar({
           </Button>
         ) : (
           <>
-            <Button onClick={() => ask('archive')} disabled={busy}>
-              {t.mail.write.archive}
-            </Button>
+            {canArchive ? (
+              <Button onClick={() => ask('archive')} disabled={busy}>
+                {t.mail.write.archive}
+              </Button>
+            ) : null}
             <Button onClick={() => ask('trash')} disabled={busy}>
               {t.mail.write.trash}
             </Button>
@@ -107,6 +130,7 @@ export function BatchBar({
           ]}
         />
       </SelectionBar>
+      {error ? <MailError code={error} /> : null}
       <Dialog
         open={asking !== undefined}
         onClose={() => setAsking(undefined)}

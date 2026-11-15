@@ -275,6 +275,8 @@ export default function MailPage() {
   // Select mode (manage permission): checkboxes on the rows and the batch bar. A new folder, search or
   // account starts without a selection.
   const [selecting, setSelecting] = useState(false);
+  // Bumped when a batch changed the thread open beside the list: it loads again with its new labels.
+  const [viewTick, setViewTick] = useState(0);
   const order = useMemo(() => shown.map((th) => th.id), [shown]);
   const selection = useSelection(order);
   const viewKey = `${account?.key}|${labelId}|${query}|${personalOnly}`;
@@ -397,7 +399,7 @@ export default function MailPage() {
 
   const threadView = threadId ? (
     <ThreadView
-      key={`${account.key}|${threadId}|${startInvoice === threadId ? 'invoice' : ''}`}
+      key={`${account.key}|${threadId}|${startInvoice === threadId ? 'invoice' : ''}|${viewTick}`}
       account={account}
       threadId={threadId}
       cacheBodies={cacheBodies}
@@ -444,24 +446,24 @@ export default function MailPage() {
       ? {
           id: 'unstar',
           label: t.mail.page.rowUnstar,
-          onSelect: () => void rowAction(account, th.id, 'unstar', box.reload),
+          onSelect: () => void rowAction(account, th, 'unstar', box.reload),
         }
       : {
           id: 'star',
           label: t.mail.page.rowStar,
-          onSelect: () => void rowAction(account, th.id, 'star', box.reload),
+          onSelect: () => void rowAction(account, th, 'star', box.reload),
         };
   const modifyItems = (th: (typeof box.threads)[number]): RowMenuItem[] => [
     th.unread
       ? {
           id: 'read',
           label: t.mail.page.rowRead,
-          onSelect: () => void rowAction(account, th.id, 'read', box.reload),
+          onSelect: () => void rowAction(account, th, 'read', box.reload),
         }
       : {
           id: 'unread',
           label: t.mail.page.rowUnread,
-          onSelect: () => void rowAction(account, th.id, 'unread', box.reload),
+          onSelect: () => void rowAction(account, th, 'unread', box.reload),
         },
     starItem(th),
     ...(th.labelIds.includes('INBOX')
@@ -469,7 +471,7 @@ export default function MailPage() {
           {
             id: 'archive',
             label: t.mail.page.rowArchive,
-            onSelect: () => void rowAction(account, th.id, 'archive', box.reload),
+            onSelect: () => void rowAction(account, th, 'archive', box.reload),
           },
         ]
       : []),
@@ -575,7 +577,6 @@ export default function MailPage() {
             <>
               <Button
                 variant="ghost"
-                aria-pressed={selecting}
                 onClick={() => {
                   if (selecting) selection.clear();
                   setSelecting(!selecting);
@@ -596,7 +597,7 @@ export default function MailPage() {
       {selecting && selection.count > 0 ? (
         <BatchBar
           account={account}
-          ids={selection.ids}
+          targets={shown.filter((th) => selection.isSelected(th.id))}
           labelId={query ? '' : labelId}
           confirmMoves={confirmMoves}
           onCancel={() => {
@@ -609,6 +610,8 @@ export default function MailPage() {
               if (threadId && ids.includes(threadId) && STEPS[action].leaves)
                 update({ thread: null });
             }
+            // The open thread was part of it: it reloads, so its buttons show the new state.
+            if (threadId && ids.includes(threadId)) setViewTick((n) => n + 1);
             box.reload();
           }}
         />
@@ -653,6 +656,8 @@ export default function MailPage() {
         <ThreadList
           threads={shown}
           onOpen={(id) => {
+            // In select mode a tap on a row ticks it (a mis-tap never leaves the list).
+            if (selecting) return selection.toggle(id, false);
             setStartInvoice(undefined);
             update({ thread: id });
           }}

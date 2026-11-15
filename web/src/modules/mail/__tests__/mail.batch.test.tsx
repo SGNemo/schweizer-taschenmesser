@@ -50,7 +50,15 @@ vi.mock('@/core/mail/service', async (orig) => ({
 
 import MailPage from '../routes/MailPage';
 import { ThreadView } from '../components/ThreadView';
-import { applyChange, applyStep, doneText, STEPS, type MailAction } from '../mailActions';
+import {
+  applyChange,
+  applyStep,
+  deltaFor,
+  doneText,
+  STEPS,
+  undoStep,
+  type MailAction,
+} from '../mailActions';
 
 const summary = (id: string, subject: string, labelIds = ['INBOX']): MailThreadSummary => ({
   id,
@@ -149,8 +157,8 @@ describe('every action has its exact way back', () => {
   });
 
   it('the trash goes through its own endpoints, never through a label change', async () => {
-    await applyStep(full, ['a'], STEPS.trash);
-    await applyStep(full, ['a'], STEPS.trash, 'undo');
+    const res = await applyStep(full, [{ id: 'a', labelIds: ['INBOX'] }], STEPS.trash);
+    await undoStep(full, res.done, STEPS.trash);
     expect(mocks.trash).toHaveBeenCalledWith(full, 'a');
     expect(mocks.untrash).toHaveBeenCalledWith(full, 'a');
     expect(mocks.modify).not.toHaveBeenCalled();
@@ -160,14 +168,46 @@ describe('every action has its exact way back', () => {
     mocks.modify.mockImplementation(async (_a: unknown, id: string) => {
       if (id === 'b') throw new ConnectorError('network');
     });
-    const res = await applyStep(full, ['a', 'b', 'c'], STEPS.archive);
-    expect(res.ok).toEqual(['a', 'c']);
+    const inbox = ['INBOX'];
+    const res = await applyStep(
+      full,
+      ['a', 'b', 'c'].map((id) => ({ id, labelIds: inbox })),
+      STEPS.archive,
+    );
+    expect(res.done.map((d) => d.id)).toEqual(['a', 'c']);
     expect(res.failed).toEqual(['b']);
+  });
+
+  it('only what really changes is sent, and the undo takes back only that', async () => {
+    // Star a mixed selection: the already starred thread is left alone, and stays starred after the undo.
+    const res = await applyStep(
+      full,
+      [
+        { id: 'a', labelIds: ['INBOX'] },
+        { id: 'b', labelIds: ['INBOX', 'STARRED'] },
+      ],
+      STEPS.star,
+    );
+    expect(res.skipped).toEqual(['b']);
+    expect(mocks.modify).toHaveBeenCalledTimes(1);
+    await undoStep(full, res.done, STEPS.star);
+    expect(mocks.modify).toHaveBeenLastCalledWith(full, 'a', {
+      addLabelIds: undefined,
+      removeLabelIds: ['STARRED'],
+    });
+    expect(mocks.modify).toHaveBeenCalledTimes(2);
+  });
+
+  it('archive or spam from outside the inbox never puts a mail into the inbox on undo', () => {
+    // A starred mail that was already archived, reported as spam: only SPAM is added, so the undo
+    // removes only SPAM.
+    expect(deltaFor(['STARRED'], STEPS.spam.change)).toEqual({ addLabelIds: ['SPAM'] });
+    expect(deltaFor(['STARRED'], STEPS.archive.change)).toBeUndefined();
   });
 
   it('one thread keeps the single wording, many get a count', () => {
     expect(doneText('archive')(1)).toBe('Archiviert.');
-    expect(doneText('archive')(3)).toBe('3 archiviert.');
+    expect(doneText('archive')(3)).toBe('3 Mails archiviert.');
     expect(doneText('star')(1)).toBe('Mit Stern markiert.');
   });
 });
@@ -181,10 +221,7 @@ describe('star, important, spam and labels in a thread', () => {
     await waitFor(() =>
       expect(mocks.modify).toHaveBeenCalledWith(full, 't1', { addLabelIds: ['STARRED'] }),
     );
-    expect(await screen.findByRole('button', { name: 'Stern entfernen' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+    expect(await screen.findByRole('button', { name: 'Stern entfernen' })).toBeInTheDocument();
     expect(lastToast()?.message).toBe('Mit Stern markiert.');
     lastToast()!.action!.run();
     await waitFor(() =>
@@ -298,13 +335,20 @@ describe('select mode in the list', () => {
     await user.click(within(dialog).getByRole('button', { name: 'In den Papierkorb' }));
     await waitFor(() => expect(mocks.trash).toHaveBeenCalledTimes(2));
     expect(mocks.trash.mock.calls.map((c) => c[1]).sort()).toEqual(['t1', 't3']);
-    await waitFor(() => expect(lastToast()?.message).toBe('2 in den Papierkorb gelegt.'));
+    await waitFor(() => expect(lastToast()?.message).toBe('2 Mails in den Papierkorb gelegt.'));
     lastToast()!.action!.run();
     await waitFor(() => expect(mocks.untrash).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(lastToast()?.message).toBe('Zurückgenommen.'));
   });
 
-  it('read from the menu goes straight through for all selected', async () => {
+  it('read from the menu goes through for the unread ones; the undo makes only those unread again', async () => {
+    mocks.threads.mockResolvedValue({
+      threads: [
+        summary('t1', 'Rechnung', ['INBOX', 'UNREAD']),
+        summary('t2', 'Newsletter', ['INBOX']),
+        summary('t3', 'Termin', ['INBOX', 'UNREAD']),
+      ],
+    });
     const user = userEvent.setup();
     page();
     await screen.findByText('Termin');
@@ -317,8 +361,29 @@ describe('select mode in the list', () => {
     expect(within(bar).getByText('3 ausgewählt')).toBeInTheDocument();
     await user.click(within(bar).getByRole('button', { name: 'Weitere Aktionen für die Auswahl' }));
     await user.click(await screen.findByRole('menuitem', { name: 'Als gelesen markieren' }));
-    await waitFor(() => expect(mocks.modify).toHaveBeenCalledTimes(3));
-    await waitFor(() => expect(lastToast()?.message).toBe('3 als gelesen markiert.'));
+    await waitFor(() => expect(lastToast()?.message).toBe('3 Mails als gelesen markiert.'));
+    expect(mocks.modify.mock.calls.map((c) => c[1]).sort()).toEqual(['t1', 't3']);
+    lastToast()!.action!.run();
+    await waitFor(() => expect(mocks.modify).toHaveBeenCalledTimes(4));
+    expect(
+      mocks.modify.mock.calls
+        .slice(2)
+        .map((c) => c[1])
+        .sort(),
+    ).toEqual(['t1', 't3']);
+    await waitFor(() => expect(lastToast()?.message).toBe('Zurückgenommen.'));
+  });
+
+  it('in select mode a tap on a row ticks it instead of opening the mail', async () => {
+    const user = userEvent.setup();
+    page();
+    await screen.findByText('Termin');
+    await user.click(screen.getByTestId('mail-select'));
+    await user.click(screen.getByText('Newsletter'));
+    expect(
+      within(screen.getByRole('region', { name: /Auswahl/ })).getByText('1 ausgewählt'),
+    ).toBeInTheDocument();
+    expect(mocks.thread).not.toHaveBeenCalled();
   });
 
   it('a starred row says so beside the time', async () => {

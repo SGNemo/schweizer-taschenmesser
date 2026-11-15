@@ -387,6 +387,8 @@ export function ThreadView({
           account={account}
           threadId={threadId}
           labelIds={labelIds}
+          inTrash={!!messages.length && messages.every((m) => m.labelIds.includes('TRASH'))}
+          inSpam={!!messages.length && messages.every((m) => m.labelIds.includes('SPAM'))}
           labels={labels}
           confirmMoves={confirmMoves}
           onLabels={setLabelsNow}

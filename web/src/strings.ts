@@ -7623,24 +7623,31 @@ export const de = {
       selectAll: 'Alle auswählen',
       more: 'Weitere Aktionen für die Auswahl',
       partial: (ok: number, total: number) =>
-        `${ok} von ${total} geändert. Die übrigen sind unverändert.`,
+        `${ok} von ${total} Mails geändert. Die übrigen sind unverändert.`,
       done: {
-        read: (n: number) => `${n} als gelesen markiert.`,
-        unread: (n: number) => `${n} als ungelesen markiert.`,
-        star: (n: number) => `${n} mit Stern markiert.`,
-        unstar: (n: number) => `Stern bei ${n} entfernt.`,
-        important: (n: number) => `${n} als wichtig markiert.`,
-        unimportant: (n: number) => `${n} nicht mehr als wichtig markiert.`,
-        archive: (n: number) => `${n} archiviert.`,
-        spam: (n: number) => `${n} als Spam gemeldet.`,
-        notSpam: (n: number) => `${n} zurück im Posteingang.`,
-        trash: (n: number) => `${n} in den Papierkorb gelegt.`,
-        untrash: (n: number) => `${n} aus dem Papierkorb zurückgelegt.`,
+        read: (n: number) => `${n} Mails als gelesen markiert.`,
+        unread: (n: number) => `${n} Mails als ungelesen markiert.`,
+        star: (n: number) => `${n} Mails mit Stern markiert.`,
+        unstar: (n: number) => `Stern bei ${n} Mails entfernt.`,
+        important: (n: number) => `${n} Mails als wichtig markiert.`,
+        unimportant: (n: number) => `${n} Mails nicht mehr als wichtig markiert.`,
+        archive: (n: number) => `${n} Mails archiviert.`,
+        spam: (n: number) => `${n} Mails als Spam gemeldet.`,
+        notSpam: (n: number) => `${n} Mails zurück im Posteingang.`,
+        trash: (n: number) => `${n} Mails in den Papierkorb gelegt.`,
+        untrash: (n: number) => `${n} Mails aus dem Papierkorb zurückgelegt.`,
       },
       confirm: {
-        archiveTitle: (n: number) => `${n} Mails archivieren?`,
-        trashTitle: (n: number) => `${n} Mails in den Papierkorb legen?`,
-        spamTitle: (n: number) => `${n} Mails als Spam melden?`,
+        archiveTitle: (n: number) => (n === 1 ? 'Mail archivieren?' : `${n} Mails archivieren?`),
+        trashTitle: (n: number) =>
+          n === 1 ? 'In den Papierkorb legen?' : `${n} Mails in den Papierkorb legen?`,
+        spamTitle: (n: number) => (n === 1 ? 'Als Spam melden?' : `${n} Mails als Spam melden?`),
+        archiveBody:
+          'Die Auswahl verlässt den Posteingang und bleibt unter „Alle Mails“. Du kannst es gleich zurücknehmen.',
+        trashBody:
+          'Google löscht Mails im Papierkorb erst nach 30 Tagen. Bis dahin kannst du sie zurückholen, und du kannst es gleich zurücknehmen.',
+        spamBody:
+          'Die Auswahl verlässt den Posteingang und liegt dann im Ordner „Spam“. Gmail nutzt die Meldung für seinen Spamfilter. Du kannst es gleich zurücknehmen.',
       },
     },
     notify: {

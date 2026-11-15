@@ -1,5 +1,5 @@
 import type { MailAccountRef } from '@/core/mail/types';
-import { doneText, runStep, STEPS, type MailAction } from './mailActions';
+import { doneText, runStep, STEPS, type MailAction, type Target } from './mailActions';
 
 export type RowAction = Extract<MailAction, 'read' | 'unread' | 'archive' | 'star' | 'unstar'>;
 
@@ -10,9 +10,9 @@ export type RowAction = Extract<MailAction, 'read' | 'unread' | 'archive' | 'sta
  */
 export async function rowAction(
   account: MailAccountRef,
-  threadId: string,
+  thread: Target,
   action: RowAction,
   onChanged: () => void,
 ): Promise<void> {
-  await runStep(account, [threadId], STEPS[action], doneText(action), () => onChanged());
+  await runStep(account, [thread], STEPS[action], doneText(action), () => onChanged());
 }

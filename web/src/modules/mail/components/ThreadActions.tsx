@@ -7,7 +7,9 @@ import { Button, Dialog, Icon, RowMenu, SelectField } from '@/ui';
 import {
   applyChange,
   asksFirst,
+  deltaFor,
   doneText,
+  inverse,
   labelStep,
   runStep,
   STEPS,
@@ -35,6 +37,8 @@ export function ThreadActions({
   account,
   threadId,
   labelIds,
+  inTrash,
+  inSpam,
   labels,
   confirmMoves,
   onLabels,
@@ -45,6 +49,9 @@ export function ThreadActions({
   threadId: string;
   /** The thread's labels as they are now (all messages together). */
   labelIds: readonly string[];
+  /** Every message is in the trash / in spam: the way back replaces archive and trash. */
+  inTrash: boolean;
+  inSpam: boolean;
   labels: MailLabel[];
   /** Ask before archiving and labelling (the trash and spam always ask). */
   confirmMoves: boolean;
@@ -65,16 +72,17 @@ export function ThreadActions({
   if (!hasFeature(account, 'mail-modify')) return null;
 
   const has = (id: string) => labelIds.includes(id);
-  const inTrash = has('TRASH');
-  const inSpam = has('SPAM');
 
   async function go(step: Step, done: (n: number) => string) {
+    if (busy) return;
     setBusy(true);
     setError(undefined);
-    // The view follows each direction itself, so an undo after leaving still reloads the list.
+    // The view follows each direction itself (exactly the delta that went through), so an undo after
+    // leaving still reloads the list.
     let current = [...labelIds];
-    const res = await runStep(account, [threadId], step, done, (direction) => {
-      current = applyChange(current, direction === 'do' ? step.change : step.undo);
+    const delta = deltaFor(current, step.change);
+    const res = await runStep(account, [{ id: threadId, labelIds }], step, done, (direction) => {
+      if (delta) current = applyChange(current, direction === 'do' ? delta : inverse(delta));
       onLabels(current);
       onChanged();
     });
@@ -144,12 +152,7 @@ export function ThreadActions({
             </Button>
           </>
         )}
-        <Button
-          variant="ghost"
-          aria-pressed={starred}
-          onClick={() => act(starred ? 'unstar' : 'star')}
-          disabled={busy}
-        >
+        <Button variant="ghost" onClick={() => act(starred ? 'unstar' : 'star')} disabled={busy}>
           <Icon name="star" /> {starred ? t.mail.write.unstar : t.mail.write.star}
         </Button>
         <RowMenu
@@ -247,15 +250,18 @@ export function ThreadLabels({
   onLabels: (next: string[]) => void;
   onChanged: () => void;
 }) {
+  const [busy, setBusy] = useState(false);
   const own = labels.filter((l) => l.kind === 'user' && labelIds.includes(l.id));
   if (own.length === 0) return null;
   const canModify = hasFeature(account, 'mail-modify');
   async function remove(label: MailLabel) {
+    if (busy) return;
+    setBusy(true);
     const step = labelStep(label.id, false);
     let current = [...labelIds];
     await runStep(
       account,
-      [threadId],
+      [{ id: threadId, labelIds }],
       step,
       () => t.mail.write.done.unlabelled(label.name),
       (direction) => {
@@ -264,6 +270,7 @@ export function ThreadLabels({
         onChanged();
       },
     );
+    setBusy(false);
   }
   return (
     <ul className={styles.labelChips} aria-label={t.mail.write.labelsOf}>
@@ -275,6 +282,7 @@ export function ThreadLabels({
               type="button"
               className={styles.labelRemove}
               aria-label={t.mail.write.removeLabel(l.name)}
+              disabled={busy}
               onClick={() => void remove(l)}
             >
               <Icon name="close" size={14} />

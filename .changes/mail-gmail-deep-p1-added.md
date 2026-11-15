@@ -3,8 +3,8 @@ type: added
 area: mail
 breaking: false
 highlight: true
-de: E-Mail kann mehrere Mails auf einmal archivieren, löschen, als gelesen oder Spam markieren – mit Rückgängig für alle.
-en: Mail can archive, trash, mark as read or report as spam several mails at once – with one undo for all of them.
+de: In E-Mail wählst du mit „Auswählen“ mehrere Mails und archivierst, löschst, markierst sie oder meldest sie als Spam – ein Rückgängig nimmt alles zurück.
+en: In Mail, tap “Select” to archive, trash, mark or report several mails as spam at once – one undo takes them all back.
 ---
 
 ---
