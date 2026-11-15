@@ -19,7 +19,14 @@ const monthLabel = (month: string, first: boolean) =>
  * The tab „Überblick“: three figures (open, past their date, paid this month), where the money goes per payee
  * (open or paid in the last twelve months) and what was paid per month. Read-only: paying stays in the lists.
  */
-export function InvoicesOverview({ invoices }: { invoices: Stored<Invoice>[] }) {
+export function InvoicesOverview({
+  invoices,
+  onShowLate,
+}: {
+  invoices: Stored<Invoice>[];
+  /** Opens the list with the invoices past their date (the late figure's count is the link). */
+  onShowLate?: () => void;
+}) {
   const o = t.invoices.ext.overview;
   const day = today();
   const ov = invoiceOverview(invoices, day);
@@ -31,13 +38,6 @@ export function InvoicesOverview({ invoices }: { invoices: Stored<Invoice>[] }) 
   return (
     <div className={styles.overview} data-testid="invoices-overview">
       <ul className={styles.figures} aria-label={o.figures}>
-        <li className={styles.figure} data-testid="invoices-figure-open">
-          <span className={styles.label}>{o.open}</span>
-          <span className={styles.value}>
-            <SensitiveValue compact>{money(ov.open.minor)}</SensitiveValue>
-          </span>
-          <span className={styles.context}>{o.count(ov.open.count)}</span>
-        </li>
         <li
           className={styles.figure}
           data-tone={ov.late.count > 0 ? 'late' : undefined}
@@ -56,7 +56,19 @@ export function InvoicesOverview({ invoices }: { invoices: Stored<Invoice>[] }) 
               <span className={styles.value}>
                 <SensitiveValue compact>{money(ov.late.minor)}</SensitiveValue>
               </span>
-              <span className={styles.context}>{o.count(ov.late.count)}</span>
+              {onShowLate ? (
+                <button
+                  type="button"
+                  className={styles.show}
+                  onClick={onShowLate}
+                  aria-label={o.lateShow(ov.late.count)}
+                  data-testid="invoices-figure-late-show"
+                >
+                  {o.count(ov.late.count)}
+                </button>
+              ) : (
+                <span className={styles.context}>{o.count(ov.late.count)}</span>
+              )}
             </>
           ) : (
             <span className={styles.calm}>{o.lateNone}</span>

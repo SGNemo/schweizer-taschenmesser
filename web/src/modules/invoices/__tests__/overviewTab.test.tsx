@@ -7,6 +7,7 @@ import { db } from '@/core/db/db';
 import { bus } from '@/core/events';
 import { setHideValues } from '@/core/focus/hideValues';
 import { setNow } from '@/core/time/now';
+import { t } from '@/strings';
 import { invoiceRepo } from '../repo';
 import InvoicesPage from '../routes/InvoicesPage';
 
@@ -52,10 +53,8 @@ const openOverview = async () => {
   return screen.findByTestId('invoices-overview');
 };
 
-it('shows open, past due and paid this month, and no list', async () => {
+it('shows past due and paid this month beside the open sum of the head, and no list', async () => {
   const ov = await openOverview();
-  expect(within(ov).getByTestId('invoices-figure-open')).toHaveTextContent('129,89');
-  expect(within(ov).getByTestId('invoices-figure-open')).toHaveTextContent('2 Rechnungen');
   const late = within(ov).getByTestId('invoices-figure-late');
   expect(late).toHaveTextContent('Frist vorbei');
   expect(late).toHaveTextContent('89,90');
@@ -71,7 +70,7 @@ it('the donut switches between open and paid, the month bars hold the paid sum',
   const donut = within(ov).getByTestId('invoices-donut');
   expect(donut).toHaveAccessibleName('Offen nach Empfänger');
   expect(within(donut).getByRole('table')).toHaveTextContent('Telekom');
-  await userEvent.click(within(ov).getByRole('button', { name: 'Bezahlt (12 Monate)' }));
+  await userEvent.click(within(ov).getByRole('button', { name: 'Bezahlt, 12 Monate' }));
   const paid = within(ov).getByTestId('invoices-donut');
   expect(paid).toHaveAccessibleName('Bezahlt nach Empfänger, letzte 12 Monate');
   expect(within(paid).getByRole('table')).toHaveTextContent('Hausverwaltung');
@@ -87,4 +86,18 @@ it('"Werte ausblenden" hides every amount of the overview', async () => {
   expect(ov).not.toHaveTextContent('89,90');
   expect(ov).not.toHaveTextContent('750,00');
   expect(within(ov).getByTestId('invoices-figure-late')).toHaveTextContent('1 Rechnung');
+});
+
+it('the head line uses the calm words of the overview', () => {
+  // The head renders into the frame (not in this test); its line is the shared string.
+  expect(t.invoices.ext.head.context(2, 1)).toBe('Frist vorbei: 1 · 2 Rechnungen');
+});
+
+it('the count of late invoices opens the open list', async () => {
+  const ov = await openOverview();
+  await userEvent.click(
+    within(ov).getByRole('button', { name: 'Frist vorbei: 1 Rechnung, in der Liste zeigen' }),
+  );
+  expect(screen.queryByTestId('invoices-overview')).toBeNull();
+  expect(screen.getByRole('button', { name: 'Offen' })).toHaveAttribute('aria-current', 'page');
 });

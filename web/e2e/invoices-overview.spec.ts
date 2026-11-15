@@ -20,7 +20,7 @@ async function addInvoice(page: Page, payee: string, amount: string, due: string
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
-test('the overview shows open, past due and paid this month, by payee and per month', async ({
+test('the overview shows past due and paid this month, by payee and per month', async ({
   page,
 }) => {
   await addInvoice(page, 'Stadtwerke', '89,90', '2026-11-10');
@@ -36,7 +36,7 @@ test('the overview shows open, past due and paid this month, by payee and per mo
 
   await page.getByRole('button', { name: 'Überblick', exact: true }).click();
   const ov = page.getByTestId('invoices-overview');
-  await expect(ov.getByTestId('invoices-figure-open')).toContainText(/129,89\s€/);
+  await expect(page.getByTestId('invoices-head')).toContainText(/129,89\s€/);
   await expect(ov.getByTestId('invoices-figure-late')).toContainText('Frist vorbei');
   await expect(ov.getByTestId('invoices-figure-late')).toContainText(/89,90\s€/);
   await expect(ov.getByTestId('invoices-figure-paid')).toContainText('Bezahlt im November');
@@ -44,7 +44,7 @@ test('the overview shows open, past due and paid this month, by payee and per mo
 
   const donut = ov.getByTestId('invoices-donut');
   await expect(donut).toContainText('Telekom');
-  await ov.getByRole('button', { name: 'Bezahlt (12 Monate)' }).click();
+  await ov.getByRole('button', { name: 'Bezahlt, 12 Monate' }).click();
   await expect(ov.getByTestId('invoices-donut')).toContainText('Hausverwaltung');
   await expect(ov.getByTestId('invoices-donut')).not.toContainText('Telekom');
   await expect(ov.getByTestId('invoices-months')).toBeVisible();
@@ -60,7 +60,7 @@ test('the overview of an empty module says so calmly', async ({ page }) => {
   await ready(page, '/invoices');
   await page.getByRole('button', { name: 'Überblick', exact: true }).click();
   const ov = page.getByTestId('invoices-overview');
-  await expect(ov.getByTestId('invoices-figure-late')).toContainText('Keine Frist vorbei.');
+  await expect(ov.getByTestId('invoices-figure-late')).toContainText('Alle Fristen laufen noch.');
   await expect(ov.getByTestId('invoices-donut')).toContainText('Gerade ist nichts offen.');
   await expect(ov.getByTestId('invoices-months')).toContainText(
     'In den letzten 12 Monaten noch nichts bezahlt.',

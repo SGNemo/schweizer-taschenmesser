@@ -9,7 +9,7 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-3);
 }
 .figure {
@@ -21,10 +21,7 @@
   border-radius: var(--radius-lg);
   background: var(--surface-raised);
 }
-/* Past its date: a warm surface and the red icon with its word; the amount stays in the text ink. */
-.figure[data-tone='late'] {
-  background: var(--warning-soft);
-}
+/* Past its date: the red icon with its word; surface and amount stay as the other figure. */
 .label {
   display: inline-flex;
   align-items: center;
@@ -42,7 +39,7 @@
 .value {
   font-size: var(--text-xl);
   font-weight: var(--weight-semibold);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: var(--font-num);
   overflow-wrap: anywhere;
 }
 .context,
@@ -55,6 +52,26 @@
 }
 .calm {
   margin-top: auto;
+}
+/* The count of late invoices opens the list: a link in the text ink, 44 px to tap. */
+.show {
+  align-self: flex-start;
+  justify-self: start;
+  min-height: var(--touch);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--link);
+  text-decoration: underline;
+  text-decoration-color: var(--link-line);
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+.show:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 .charts {
   display: grid;
@@ -73,19 +90,28 @@
   color: var(--text-muted);
 }
 @container (max-width: 40rem) {
+  /* Phone: the figures are rows of one surface with a hairline between them, so the charts start sooner. */
   .figures {
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-2);
+    gap: 0;
+    border-radius: var(--radius-lg);
+    background: var(--surface-raised);
   }
   .figure {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: baseline;
     column-gap: var(--space-3);
-    padding: var(--space-3) var(--space-4);
+    padding: var(--space-2) var(--space-4);
+    background: none;
+    border-radius: 0;
+  }
+  .figure + .figure {
+    border-top: 1px solid var(--border);
   }
   .figure > .context,
-  .figure > .calm {
+  .figure > .calm,
+  .figure > .show {
     grid-column: 1 / -1;
   }
   .charts {

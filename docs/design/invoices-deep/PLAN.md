@@ -16,7 +16,7 @@ A calm overview: what is open, what has passed its date, what was paid this mont
 
 | Package | Branch | Content | Data |
 | --- | --- | --- | --- |
-| p1 | `feat/invoices-overview-p1` | tab „Überblick“: three figures (offen · Frist vorbei · bezahlt diesen Monat), `Donut` by payee (offen / bezahlt switchable), `Bars` paid per month (12 months); head context adds "bezahlt im <Monat>"; pure logic `overview.ts` + tests | none |
+| p1 | `feat/invoices-overview-p1` | tab „Überblick“: two figures beside the head's open sum (Frist vorbei · bezahlt diesen Monat), `Donut` by payee (offen / bezahlt switchable), `Bars` paid per month (12 months); head context adds "bezahlt im <Monat>"; pure logic `overview.ts` + tests | none |
 | p2 | `feat/invoices-overview-p2` | lists: search (payee, reference, note), "Frist vorbei" as its own calm section on top of the open list (warning tone, red only on the badge), selection mode with "Als bezahlt markieren" for many + one "Rückgängig"; widget gets a `Spark` of the paid months at size l | none |
 
 ## Entschieden

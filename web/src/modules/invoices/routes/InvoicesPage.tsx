@@ -311,7 +311,7 @@ export default function InvoicesPage() {
 
       {overview ? (
         invoices ? (
-          <InvoicesOverview invoices={invoices} />
+          <InvoicesOverview invoices={invoices} onShowLate={() => setView('open')} />
         ) : null
       ) : (
         <SplitView

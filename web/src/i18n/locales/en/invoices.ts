@@ -60,15 +60,18 @@ export const invoices: Strings['invoices'] = {
       open: 'open',
       context: (n: number, overdue: number) => {
         const count = n === 1 ? '1 invoice' : `${n} invoices`;
-        return overdue > 0 ? `${overdue} overdue · ${count}` : count;
+        return overdue > 0 ? `Past due: ${overdue} · ${count}` : count;
       },
     },
     overview: {
       tab: 'Overview',
       figures: 'Invoices in figures',
-      open: 'Open',
       late: 'Past due',
-      lateNone: 'Nothing past due.',
+      lateNone: 'All due dates still ahead.',
+      lateShow: (n: number) =>
+        n === 1
+          ? 'Past due: 1 invoice, show in the list'
+          : `Past due: ${n} invoices, show in the list`,
       paidMonth: (month: string) => `Paid in ${month}`,
       count: (n: number) => (n === 1 ? '1 invoice' : `${n} invoices`),
       byPayee: 'By payee',
@@ -76,7 +79,7 @@ export const invoices: Strings['invoices'] = {
       byPayeePaid: 'Paid by payee, last 12 months',
       show: 'Show',
       showOpen: 'Open',
-      showPaid: 'Paid (12 months)',
+      showPaid: 'Paid, 12 months',
       centreOpen: 'open',
       centrePaid: 'paid',
       emptyOpen: 'Nothing open right now.',
