@@ -329,6 +329,16 @@
       }
     }
   },
+  "lists": {
+    "scope": "module.lists",
+    "fields": {
+      "showInPlan": {
+        "type": "boolean",
+        "label": "Im Plan zeigen",
+        "default": true
+      }
+    }
+  },
   "mail": {
     "scope": "module.mail",
     "fields": {
