@@ -74,12 +74,11 @@ const MAX: Record<string, Record<Metric | 'seconds', number>> = {
   // as before R1: the fold of „Danach“ takes the tap the day took
   // prettier-ignore
   'A Ding abhaken · pixel-7': { taps: 2, keys: 0, screens: 1, dialogs: 0, detours: 0, seconds: 4 },
-  // before R1: 4 taps, 26 s
+  // B: the sentence moves the thing and „Später“ moves a thing of tomorrow since fix/plan-move-sentence (P08, P09).
   // prettier-ignore
-  'B Ding auf einen anderen Tag · desktop-chrome': { taps: 3, keys: 29, screens: 1, dialogs: 1, detours: 2, seconds: 25 },
-  // as before R1: the fold of „Danach“ takes the tap the day took
+  'B Ding auf einen anderen Tag · desktop-chrome': { taps: 4, keys: 29, screens: 1, dialogs: 1, detours: 1, seconds: 21 },
   // prettier-ignore
-  'B Ding auf einen anderen Tag · pixel-7': { taps: 4, keys: 29, screens: 1, dialogs: 1, detours: 2, seconds: 31 },
+  'B Ding auf einen anderen Tag · pixel-7': { taps: 4, keys: 29, screens: 1, dialogs: 1, detours: 1, seconds: 26 },
   // before R1: 3 taps, 10 s
   // prettier-ignore
   'C1 Quelle öffnen: ToDo · desktop-chrome': { taps: 1, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 8 },
@@ -905,7 +904,7 @@ test('B Ding auf einen anderen Tag', async ({ page, isMobile }, info) => {
   const pinned = (
     await rows<{ id: string; pinned?: string; source?: { id: string } }>(page, 'planner_item')
   ).find((r) => r.source?.id === 'p1')?.pinned;
-  // Not counted: what „Später“ does with a thing of tomorrow (the toast says „Später“; does the thing move?).
+  // „Später“ on a thing of tomorrow (the taps are not counted): a thing that stays is a detour.
   await dayPick(page, MONDAY).click();
   await settledCount(things(page, MONDAY));
   let laterMoved: boolean | null = null;
@@ -919,6 +918,7 @@ test('B Ding auf einen anderen Tag', async ({ page, isMobile }, info) => {
     await page.waitForTimeout(1500);
     await settledCount(things(page, MONDAY));
     laterMoved = (await day(page, MONDAY).getByText('Steuerunterlagen sortieren').count()) === 0;
+    if (!laterMoved) m.detour();
   }
   facts(info, 'B', {
     menu,
