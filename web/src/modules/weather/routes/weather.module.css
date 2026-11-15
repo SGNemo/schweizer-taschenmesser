@@ -434,13 +434,20 @@
   place-items: center;
   min-height: 16rem;
 }
+/* Overview widget: the figure on the left, the sky swatch at the right end of the same row (not laid over the card:
+   a long place or context line wraps beside it instead of running under it). */
 .widget {
-  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.widget > :not(.widgetSky) {
+  flex: 1;
+  min-width: 0;
 }
 .widgetSky {
-  position: absolute;
-  right: 0;
-  top: 0;
+  order: 1;
+  flex: none;
 }
 .hourWind {
   color: var(--text-3);
