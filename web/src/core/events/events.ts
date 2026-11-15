@@ -122,7 +122,11 @@ export interface EventMap {
    */
   'plan.restRequested': { open: (path: string) => void };
   /** Something starts the clock (a calendar event: "Zeit erfassen"). Time tracking starts a session without a project, titled as a note. */
-  'timetrack.start.requested': { title: string; sourceRef?: string };
+  'timetrack.start.requested': {
+    title: string;
+    /** The thing the time is for, as `<module>:<id>`; time tracking keeps it on the session (anything else is dropped). */
+    sourceRef?: string;
+  };
   /**
    * A module reports something to the automation engine (`core/automation`): a domain event such as
    * `mail.invoiceReceived`. Nothing happens unless a rule listens. Keep `data` to what rules need.

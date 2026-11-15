@@ -39,6 +39,51 @@ export const todoLink = (taskId: string, link: LegacyLink): EntityLink => ({
   ...fromLegacy(link),
 });
 
+/** What the copy reads of a task. */
+interface Carrier {
+  id: string;
+  links?: unknown;
+  deletedAt?: unknown;
+  createdAt?: unknown;
+  updatedAt?: unknown;
+  _f?: Record<string, string>;
+}
+
+type Wanted = Map<string, { data: LinkRow; stamp: string; link: EntityLink }>;
+
+/** The rows the `links[]` entries of these tasks stand for, by id; entries that must not be stored are skipped. */
+async function wantedRows(tasks: readonly Carrier[]): Promise<Wanted> {
+  const wanted: Wanted = new Map();
+  for (const task of tasks) {
+    if (!Array.isArray(task.links)) continue;
+    const stamp = carrierStamp(task);
+    for (const entry of task.links as unknown[]) {
+      if (!isLegacy(entry)) continue;
+      const link = todoLink(task.id, entry);
+      let data: LinkRow;
+      try {
+        data = toRow(link);
+      } catch {
+        continue; // a link that must not be stored (the vault, no link target, malformed)
+      }
+      wanted.set(await linkId(link), { data, stamp, link });
+    }
+  }
+  return wanted;
+}
+
+/** Writes the wanted rows that have no row yet (live or tombstone: present), stamped like their source. */
+async function writeAbsent(wanted: Wanted, database: TaschenmesserDB): Promise<number> {
+  if (wanted.size === 0) return 0;
+  const ids = [...wanted.keys()];
+  const existing = await linksRepo(database).table.bulkGet(ids);
+  const missing = ids.filter((_id, i) => !existing[i]);
+  return writeStamped(
+    missing.map((id) => ({ id, data: wanted.get(id)!.data, stamp: wanted.get(id)!.stamp })),
+    database,
+  );
+}
+
 /**
  * Copies every `links[]` entry of every live task that has no row yet. Returns how many rows were written.
  * `revive` is for a „replace“ restore of a backup from before the link table: the backup is the truth again, so
@@ -54,21 +99,7 @@ export async function copyTodoLinks(
     .active()
     .filter((t) => Array.isArray(t.links) && t.links.length > 0)
     .toArray();
-  const wanted = new Map<string, { data: LinkRow; stamp: string; link: EntityLink }>();
-  for (const task of tasks) {
-    const stamp = carrierStamp(task);
-    for (const entry of task.links as unknown[]) {
-      if (!isLegacy(entry)) continue;
-      const link = todoLink(task.id, entry);
-      let data: LinkRow;
-      try {
-        data = toRow(link);
-      } catch {
-        continue; // a link that must not be stored (the vault, no link target, malformed)
-      }
-      wanted.set(await linkId(link), { data, stamp, link });
-    }
-  }
+  const wanted = await wantedRows(tasks);
   if (wanted.size === 0) return 0;
 
   if (opts.revive) {
@@ -76,14 +107,20 @@ export async function copyTodoLinks(
     return wanted.size;
   }
 
-  const ids = [...wanted.keys()];
-  const existing = await linksRepo(database).table.bulkGet(ids);
-  // Live or tombstone: present.
-  const missing = ids.filter((_id, i) => !existing[i]);
-  return writeStamped(
-    missing.map((id) => ({ id, data: wanted.get(id)!.data, stamp: wanted.get(id)!.stamp })),
-    database,
-  );
+  return writeAbsent(wanted, database);
+}
+
+/**
+ * The copy for one task, right after it was written (a requested ToDo, planner hub S5): its rows exist at once,
+ * not only after the next start. Same code path and stamp as the copy, so every device writes identical ops
+ * and a removal made anywhere later wins. Entries that must not be stored are skipped. Returns rows written.
+ */
+export async function copyTodoLinksOf(
+  task: Carrier,
+  database: TaschenmesserDB = defaultDb,
+): Promise<number> {
+  if (task.deletedAt != null) return 0;
+  return writeAbsent(await wantedRows([task]), database);
 }
 
 let queue: Promise<unknown> = Promise.resolve();

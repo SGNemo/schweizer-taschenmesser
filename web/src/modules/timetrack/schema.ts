@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { refOfKey } from '@/core/entitylinks/types';
 import { DATE_RE, TIME_RE } from '@/core/time/dates';
 
 /**
@@ -52,5 +53,15 @@ export const sessionSchema = z.object({
   note: z.string().optional(),
   /** Where the session came from ("Zahnarzt" for a start from a calendar event); free text, never a link. */
   from: z.string().optional(),
+  /**
+   * The thing the session was started for, as `<module>:<id>` (a plan row, a calendar event): internal, never in
+   * the data API. Shown as „Für: <title>“ through that module's link target; free text stays in `from`.
+   */
+  ref: z
+    .string()
+    .max(160)
+    .refine((v) => refOfKey(v) !== undefined)
+    .optional()
+    .meta({ internal: true }),
 });
 export type Session = z.output<typeof sessionSchema>;

@@ -1760,6 +1760,12 @@ export const de = {
     overlaps: 'Überschneidet sich mit einem anderen Termin',
     asTodo: 'Als ToDo merken',
     asTodoDone: 'Als ToDo gemerkt.',
+    /** The ToDos that link to an event, in its editor (planner hub S5, P52). */
+    preparation: {
+      label: 'Vorbereitung',
+      open: (title: string) => `Vorbereitung öffnen: ${title}`,
+      done: 'erledigt',
+    },
     skipOccurrence: (date: string) => `Nur den Termin am ${date} entfernen`,
     movedToast: 'Termin verschoben.',
     dragRecurring: 'Wiederkehrende Termine änderst du im Editor.',
@@ -4645,6 +4651,9 @@ export const de = {
   people: {
     turnsAge: (name: string, age: number) => `${name} wird ${age}`,
     birthdayOf: (name: string) => `Geburtstag: ${name}`,
+    /** A gift with a day in the planner (S5): never the gift itself – a surprise. */
+    planTitle: (name: string) => `Geschenk für ${name}`,
+    planAction: 'Zur Person',
     meta: {
       name: 'Personen',
       description:
@@ -4657,6 +4666,9 @@ export const de = {
         remindDaysBeforeHelp: '0 = am Geburtstag selbst',
         remindTime: 'Uhrzeit der Erinnerung',
         remindTimeHelp: 'Format HH:mm',
+        showInPlan: 'Im Plan zeigen',
+        showInPlanHelp:
+          'Geschenke mit Datum stehen im Planer als „Geschenk für <Name>“ (20 Min, bis zum Anlass) – ohne zu verraten, was es ist. Nur bei eingeschaltetem Planer.',
       },
     },
     /** The detail panel of the wide page, and the one verb of the empty list. */
@@ -8831,6 +8843,11 @@ export const de = {
     fromEvent: {
       action: 'Zeit erfassen',
       started: (title: string) => `Zeit läuft für „${title}“.`,
+    },
+    /** What a session was started for (TT1): „Für: Zahnarzt“, the title opens the thing. */
+    source: {
+      label: 'Für',
+      open: (title: string) => `${title} öffnen`,
     },
     widgetText: {
       start: 'Starten',
