@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { LINK_KINDS, type LegacyLink } from '@/core/entitylinks/types';
 import { recurrenceSchema } from '@/core/recurrence/types';
 import { DATE_RE, TIME_RE } from '@/core/time/dates';
 
@@ -20,7 +21,6 @@ export const checklistItemSchema = z.object({
 });
 
 /** Where a link of a task leads; only the id and the title at the time, never the content. */
-export const LINK_KINDS = ['note', 'mail', 'invoice', 'event'] as const;
 export const taskLinkSchema = z.object({
   kind: z.enum(LINK_KINDS),
   id: z.string().min(1),
@@ -88,5 +88,6 @@ export const taskSchema = z.object({
 export type TodoList = z.output<typeof listSchema>;
 export type Task = z.output<typeof taskSchema>;
 export type ChecklistItem = z.output<typeof checklistItemSchema>;
-export type TaskLink = z.output<typeof taskLinkSchema>;
+/** The stored link is the legacy shape of the link contract (`core/entitylinks/types.ts`); `taskLinkSchema` parses exactly it. */
+export type TaskLink = LegacyLink;
 export type PlanMark = z.output<typeof planMarkSchema>;
