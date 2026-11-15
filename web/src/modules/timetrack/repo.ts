@@ -1,4 +1,5 @@
 import { createRepo } from '@/core/db/repo';
+import { refOfKey } from '@/core/entitylinks/types';
 import { tableName } from '@/core/db/schema';
 import type { Stored } from '@/core/db/types';
 import { toDateString } from '@/core/time/dates';
@@ -35,7 +36,7 @@ export async function stopSession(session: Stored<Session>, at: number = now()):
 /** One click: stops whatever runs and starts a session on `jobId` (or without a project). */
 export async function startSession(
   jobId: string | undefined,
-  opts: { from?: string; note?: string; at?: number } = {},
+  opts: { from?: string; note?: string; ref?: string; at?: number } = {},
 ): Promise<Stored<Session>> {
   const at = opts.at ?? now();
   const running = await getRunning();
@@ -48,6 +49,8 @@ export async function startSession(
     breakMin: 0,
     ...(opts.from ? { from: opts.from } : {}),
     ...(opts.note ? { note: opts.note } : {}),
+    // Only a well-formed `<module>:<id>`: anything else (a bare id) is not stored, so `ref` holds one format.
+    ...(refOfKey(opts.ref) ? { ref: opts.ref } : {}),
   });
 }
 

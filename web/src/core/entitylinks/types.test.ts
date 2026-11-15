@@ -7,6 +7,7 @@ import {
   fromLegacy,
   linkRel,
   refKey,
+  refOfKey,
   refOfKind,
   type EntityLink,
   type LegacyLink,
@@ -15,6 +16,22 @@ import {
 describe('link contract: helpers', () => {
   it('a ref key is `<module>:<id>`, the planner’s item key format', () => {
     expect(refKey({ module: 'invoices', id: 'mail-abc' })).toBe('invoices:mail-abc');
+  });
+
+  it('a key reads back as its ref; anything else is no ref', () => {
+    expect(refOfKey('todos:t-1')).toEqual({ module: 'todos', id: 't-1' });
+    expect(refOfKey('mail:a:b')).toEqual({ module: 'mail', id: 'a:b' });
+    for (const bad of [
+      '',
+      'evt-1',
+      ':x',
+      'todos:',
+      'To Dos:x',
+      `todos:${'x'.repeat(129)}`,
+      42,
+      null,
+    ])
+      expect(refOfKey(bad)).toBeUndefined();
   });
 
   it('every legacy kind names its module', () => {

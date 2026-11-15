@@ -8,6 +8,8 @@ Estimates are guesses; only 4 of 55 seeded ToDos have one, and the plan falls ba
 
 ## Smallest useful step (TT1)
 
+**Built (time-tracking side, 2026-11-15, planner hub S5):** `sessionSchema.ref` (internal, version 2), kept from `sourceRef` only as `<module>:<id>`; the calendar sends `calendar:<id>`; editor and detail panel show „Für: <title>“ through the source's `linkTarget` ([decision](../../../decisions/plan-links.md)). Open: the planner's ⋯ entry and focus-screen action.
+
 „Zeit erfassen“ in the ⋯ menu of a plan row and as a quiet secondary action on the planner's focus screen – **only while time tracking is on** (no hint to switch it on). It emits `timetrack.start.requested { title, sourceRef: '<module>:<id>' }` (the source thing's key, not the session unit, so all parts of a thing add up); time tracking starts a session „Ohne Projekt“ with the title as `from` and `note` (as for the calendar; its own toast, the planner adds none) and stores `ref` (internal, never shown, never in the data API, like finance's `sourceRef`) **only when it has the form `<module>:<id>`** – the calendar's bare event id (`EventEditor.tsx`) is not stored, so `ref` holds one key format. A session that is still running is stopped first – time tracking's existing one-click rule (`startSession` in `modules/timetrack/repo.ts`); the toast names the new one.
 
 ## Next step (TT2)
