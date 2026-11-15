@@ -39,6 +39,7 @@ import {
   type ReminderRow,
 } from './batch';
 import { previewChips } from './chips';
+import { visibleTypes } from './typeFold';
 import { clearCaptureDraft, readCaptureDraft, writeCaptureDraft } from './draft';
 import { clearReopenDraft, peekReopenDraft, reopenCapture } from './reopen';
 import { resolveTarget } from './resolve';
@@ -92,6 +93,7 @@ function errorText(e: unknown): string {
     if (e.code === 'module-off') return t.quickCapture.errors.moduleOff(e.detail ?? '');
     if (e.code === 'invalid') return t.quickCapture.errors.invalid;
     if (e.code === 'currency') return t.quickCapture.errors.currency(e.detail ?? '');
+    if (e.code === 'full' && e.detail) return e.detail;
   }
   return t.quickCapture.errors.failed;
 }
@@ -154,6 +156,8 @@ export function CaptureForm({
   const [lookups, setLookups] = useState<Record<string, LookupResult>>({});
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  // „Mehr (n)“ opened: every type chip in view until the sheet closes (decision #856).
+  const [typesOpen, setTypesOpen] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   // The booking toast outlives the sheet: its undo must know whether the sheet is still there.
   const mounted = useRef(true);
@@ -271,6 +275,16 @@ export function CaptureForm({
       place,
     ],
   );
+  // „ToDo 9 · Termin 3“: what the rows turn into, in the order the kinds first appear (W07).
+  const kinds = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const r of rows)
+      if (r.type) {
+        const label = typeLabel(r.type, r.fields.kind);
+        counts.set(label, (counts.get(label) ?? 0) + 1);
+      }
+    return [...counts].map(([label, n]) => `${label} ${n}`);
+  }, [rows]);
   const rowTypes = batchTypes(available);
 
   // Reminder lines look for their open invoice while the person types; the result only changes text.
@@ -341,6 +355,8 @@ export function CaptureForm({
     setConfirming(false);
     setError('');
   };
+
+  const shownTypes = visibleTypes(available, type, typesOpen);
 
   const pick = (next: CaptureType) => {
     setOverride(next);
@@ -567,6 +583,12 @@ export function CaptureForm({
           </p>
         )}
 
+        {multi && kinds.length > 1 ? (
+          // More than one place: say it above the rows, so a line that is no ToDo is seen first (W07).
+          <p className={styles.hint} data-testid="capture-kinds">
+            {t.quickCapture.multi.kinds(kinds)}
+          </p>
+        ) : null}
         {multi ? (
           <ul
             className={styles.rows}
@@ -681,20 +703,35 @@ export function CaptureForm({
         ) : null}
 
         {multi ? null : (
-          <div className={styles.types} role="radiogroup" aria-label={t.quickCapture.title}>
-            {available.map((a) => (
+          <div className={styles.types}>
+            {/* Five fixed chips and one for the selected type; the rest behind „Mehr (n)“ (decision #856). */}
+            <div className={styles.typeGroup} role="radiogroup" aria-label={t.quickCapture.title}>
+              {shownTypes.shown.map((a) => (
+                <button
+                  key={a}
+                  type="button"
+                  role="radio"
+                  aria-checked={a === type}
+                  tabIndex={tabSwitchesType ? -1 : 0}
+                  className={styles.type}
+                  onClick={() => pick(a)}
+                >
+                  {typeLabel(a, fields.kind)}
+                </button>
+              ))}
+            </div>
+            {shownTypes.hidden > 0 ? (
               <button
-                key={a}
                 type="button"
-                role="radio"
-                aria-checked={a === type}
-                tabIndex={tabSwitchesType ? -1 : 0}
                 className={styles.type}
-                onClick={() => pick(a)}
+                aria-expanded={false}
+                tabIndex={tabSwitchesType ? -1 : 0}
+                onClick={() => setTypesOpen(true)}
+                data-testid="capture-more-types"
               >
-                {typeLabel(a, fields.kind)}
+                {t.quickCapture.moreTypes(shownTypes.hidden)}
               </button>
-            ))}
+            ) : null}
           </div>
         )}
 

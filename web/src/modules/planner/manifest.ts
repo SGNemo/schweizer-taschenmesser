@@ -79,6 +79,7 @@ const manifest: ModuleManifest = {
   area: 'plan',
   requires: ['todos'],
   contributions: {
+    notifications: () => import('./notifications'),
     onboarding: noOnboarding,
     quickAdd: [
       {

@@ -4,6 +4,7 @@
  * taken out of the text, so the ToDo's title stays clean. Pure; `today` is 'YYYY-MM-DD'.
  */
 import { addDays } from '@/core/plan/dates';
+import { parseCapture, type CaptureFields } from '@/quickCapture/parser';
 
 const SHORT: Record<string, number> = { mo: 1, di: 2, mi: 3, do: 4, fr: 5, sa: 6, so: 7 };
 const LONG: Record<string, number> = {
@@ -50,4 +51,26 @@ export function extractDuePhrase(text: string, today: string): DuePhrase {
     .replace(/\s{2,}/g, ' ')
     .trim();
   return { text: stripped, date: nextWeekday(today, weekday), hasDueWord: true };
+}
+
+/**
+ * What the planner field makes of a line: the ToDo's fields and the planner item's hard due. A due phrase
+ * („bis So“) wins over any date the parser reads from the rest („… 18:00“ alone would read as today), so the
+ * ToDo's date and the planner's deadline are always the same day. A clock time stays a note line (as the
+ * quick-capture target writes it). `de` = the phrase is read (German only, like the parser).
+ */
+export function readField(
+  text: string,
+  now: Date,
+  today: string,
+  de: boolean,
+): { fields: CaptureFields; hardDue?: string } {
+  const phrase = de ? extractDuePhrase(text, today) : { text, hasDueWord: false };
+  const parsed = parseCapture(phrase.text, { now, defaultType: 'todo' });
+  const hardDue = phrase.date ?? (phrase.hasDueWord ? parsed.fields.date : undefined);
+  const fields: CaptureFields = { ...parsed.fields };
+  // The deadline is the ToDo's date too, so the ToDo page shows the same day as the planner.
+  if (phrase.date) fields.date = phrase.date;
+  else if (hardDue && !fields.date) fields.date = hardDue;
+  return { fields, hardDue };
 }

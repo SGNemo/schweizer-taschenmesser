@@ -191,12 +191,13 @@ export const notes: Strings['notes'] = {
     folder: 'Choose folder',
     filesLabel: 'Single files',
     folderLabel: 'Whole folder',
-    hint: '.md and .txt files. A folder becomes a notebook, its files become pages. An Obsidian export (or a folder with several sub-folders) becomes one notebook per sub-folder; deeper folders become a tag.',
+    hint: '.md and .txt files. A folder becomes a notebook, its files become pages. An Obsidian export (or a folder with several sub-folders) becomes one notebook per sub-folder; deeper folders become a tag. Pages keep their date (created:/modified: or the file date).',
     none: 'No matching files found.',
     confirm: 'Import',
     summary: (pages: number, books: number) =>
       `${pages === 1 ? '1 page' : `${pages} pages`}${books ? `, ${books === 1 ? '1 notebook' : `${books} notebooks`}` : ''} found.`,
-    done: (n: number) => (n === 1 ? '1 page imported.' : `${n} pages imported.`),
+    done: (n: number) =>
+      `${n === 1 ? '1 page' : `${n} pages`} imported – sorted by their own date.`,
     duplicates: (n: number) =>
       n === 1 ? '1 duplicate page will be skipped.' : `${n} duplicate pages will be skipped.`,
   },

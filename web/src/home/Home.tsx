@@ -17,7 +17,7 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { useModuleStates } from '@/core/modules/activation';
 import { useAttentionItems, useCalendarItems } from '@/core/modules/contributions';
@@ -68,7 +68,7 @@ import {
 import { CockpitStats } from './CockpitStats';
 import { OverviewHead } from './OverviewHead';
 import { ResumeCard } from './ResumeCard';
-import { SETTLE_CAP_MS, usePackedGrid } from './masonry';
+import { gridColumns, SETTLE_CAP_MS, stagedCards, usePackedGrid } from './masonry';
 
 import styles from './Home.module.css';
 import {
@@ -228,12 +228,35 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
       !layout.hidden.includes(e.key) &&
       (!calmView || isCalmVisible(e.key, layout, available)),
   );
+  // Build-up in grid order (decision "Overview builds up in grid order"): first as many cards as the grid has
+  // columns, once "Jetzt wichtig" and the agenda stand; when those show, all others mount and show together once
+  // they have their content (`masonry.ts`). A card is placed by the cards before it only, so nothing shown moves.
+  // Mounting only the first ones first gives them the main thread (mounted beside the rest they came a second later).
+  const [firstStep, setFirstStep] = useState(0);
+  const [built, setBuilt] = useState(false);
+  // The edit mode shows every card at once; afterwards the page does not build up again.
+  if (editing && !built) setBuilt(true);
+  // A second step only pays when it holds more than one more row: with few cards ("Ruhig", one column) waiting for
+  // the first ones before mounting the rest only adds a round trip.
+  const staged = !built && shown.length > 2 * firstStep;
+  const mounted = stagedCards(shown, firstStep, built);
   // Packed (no holes) except while editing: reordering picks targets by position, so there the grid keeps the
   // saved order on plain rows.
-  const gridRef = usePackedGrid<HTMLDivElement>(
-    shown.map((e) => e.key).join('|'),
+  const packRef = usePackedGrid<HTMLDivElement>(
+    mounted.map((e) => e.key).join('|'),
     !editing,
-    blocksReady,
+    blocksReady && (!staged || firstStep > 0),
+    () => setBuilt(true),
+    !built,
+  );
+  // The column count is read once the saved layout is applied (the cockpit's dense grid has one column more); the
+  // grid stands, empty, before the first card.
+  const gridRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      packRef(el);
+      if (el && layoutRead) setFirstStep((n) => n || gridColumns(el));
+    },
+    [packRef, layoutRead],
   );
 
   const sensors = useSensors(
@@ -376,7 +399,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
         >
           {editing ? <p className={styles.hint}>{t.homeEdit.pinNote}</p> : null}
           <OverviewBlocksContext.Provider value={blocks}>
-            <SortableContext items={shown.map((e) => e.key)} strategy={rectSortingStrategy}>
+            <SortableContext items={mounted.map((e) => e.key)} strategy={rectSortingStrategy}>
               <div
                 ref={gridRef}
                 className={[
@@ -388,7 +411,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
                 ].join(' ')}
                 data-testid={cockpit ? 'cockpit-grid' : 'home-grid'}
               >
-                {shown.map((e) => (
+                {mounted.map((e) => (
                   <SortableWidget
                     key={e.key}
                     entry={e}
@@ -414,7 +437,8 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
         </DndContext>
       )}
 
-      {calm && folded > 0 ? (
+      {/* Not between the two steps: the second would push it down. */}
+      {calm && folded > 0 && !staged ? (
         <div className={styles.moreRow} data-testid="home-calm-more">
           <Button variant="secondary" onClick={() => setHomeView('all')}>
             {t.homeEdit.showMore(folded)}
@@ -433,6 +457,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
             <>
               <li>
                 <Switch
+                  tone="neutral"
                   label={tx.dense}
                   hint={tx.denseHint}
                   checked={!!layout.dense}
@@ -441,6 +466,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
               </li>
               <li>
                 <Switch
+                  tone="neutral"
                   label={tx.stats}
                   hint={tx.statsHint}
                   checked={!!layout.stats}
@@ -451,6 +477,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
           ) : null}
           <li>
             <Switch
+              tone="neutral"
               label={t.home.agenda.title}
               checked={!layout.hidden.includes(AGENDA_KEY)}
               onChange={() =>
@@ -461,6 +488,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
           {cockpit ? null : (
             <li>
               <Switch
+                tone="neutral"
                 label={t.homeEdit.agendaCalm}
                 hint={t.homeEdit.agendaCalmHint}
                 checked={layout.pinned.includes(AGENDA_KEY)}
@@ -471,6 +499,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
           )}
           <li>
             <Switch
+              tone="neutral"
               label={t.attention.title}
               hint={t.attention.hint}
               checked={!layout.hidden.includes(ATTENTION_KEY)}
@@ -482,6 +511,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
           {ordered.map((e) => (
             <li key={e.key}>
               <Switch
+                tone="neutral"
                 label={e.title}
                 hint={[
                   allManifests.find((m) => m.id === e.moduleId)?.name,

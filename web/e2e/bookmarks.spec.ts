@@ -44,12 +44,15 @@ test.describe('Calm Merkliste page (focus audit 2)', () => {
 
   test('a row has one link (the title) and a menu; the title opens the address', async ({
     page,
+    isMobile,
   }) => {
     const row = rowOf(page, 'Pasta Rezept');
     await expect(row.getByRole('link')).toHaveCount(1);
     await expect(row.getByRole('link')).toHaveAttribute('rel', 'noreferrer noopener');
     await expect(row).toContainText('koch.de');
-    await expect(row).toContainText('#Kochen · #Rezept'); // domain and tags as text
+    // Domain and tags as text; the phone leaves the tags out (one meta line, 0b-8 follow-up 15).
+    if (isMobile) await expect(row).not.toContainText('#Kochen');
+    else await expect(row).toContainText('#Kochen · #Rezept');
     await expect(row.getByRole('button', { name: 'Weitere Aktionen' })).toBeVisible();
     // No row anywhere carries more than one link (no separate "Link öffnen" icon any more).
     for (const item of await page

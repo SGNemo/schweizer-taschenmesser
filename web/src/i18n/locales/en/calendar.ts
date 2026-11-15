@@ -199,7 +199,7 @@ export const calendar: Strings['calendar'] = {
     reminder: (lead) => `Reminder: ${lead}`,
   },
   tabsLabel: 'Section',
-  tabCalendar: 'Calendar',
+  tabCalendar: 'Events',
   tabReminders: 'Reminders',
   kinds: {
     event: 'Event',
@@ -214,6 +214,12 @@ export const calendar: Strings['calendar'] = {
     external: 'External',
     plan: 'Plan',
     training: 'Training',
+    gift: 'Gift',
+    trial: 'Trial',
+  } as Record<string, string>,
+  overdueKinds: {
+    invoice: 'Invoice overdue',
+    expiry: 'Expired',
   } as Record<string, string>,
   planLink: 'Plan',
   external: {

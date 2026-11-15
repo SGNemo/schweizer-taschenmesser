@@ -101,7 +101,7 @@ export function LanClientSection({ tinted = true }: { tinted?: boolean }) {
         items={[
           {
             label: l.lastSynced,
-            value: lastSyncedText(sync.lastSyncAt, l),
+            value: lastSyncedText(sync.lastSyncAt, l, sync.lastResult),
             testId: 'lan-last-sync',
           },
           ...(sync.pending > 0
@@ -205,10 +205,17 @@ function longWithoutPc(phase: string, error: string | undefined, lastSyncAt?: nu
 }
 
 /** "gerade eben", the time for today, the date from yesterday on (never "vor n Tagen"). */
-function lastSyncedText(at: number | undefined, l: Texts): string {
+function lastSyncedText(
+  at: number | undefined,
+  l: Texts,
+  last?: { applied: number; pushed: number },
+): string {
   if (!at) return l.never;
-  if (now() - at < 60_000) return l.justNow;
-  return toDateString(new Date(at)) === today()
-    ? formatTimestamp(at, { timeStyle: 'short' })
-    : formatDateTime(at);
+  const when =
+    now() - at < 60_000
+      ? l.justNow
+      : toDateString(new Date(at)) === today()
+        ? formatTimestamp(at, { timeStyle: 'short' })
+        : formatDateTime(at);
+  return last ? l.lastSyncedWith(when, last.applied + last.pushed) : when;
 }

@@ -17,11 +17,23 @@ export function withTitle(line: Pick<StatusLine, 'title' | 'status'>): string {
   return line.status.toLowerCase().includes(stem) ? line.status : `${line.title}: ${line.status}`;
 }
 
-/** "Nichts Dringendes" or what needs a look, as one sentence: the one line's own state, or a count. */
+/**
+ * The line nothing needs a look at, but whose state is worth naming calmly (no backup yet: the only risk of losing
+ * data). Never a point, never red; only the words change.
+ */
+export const calmPoint = (lines: readonly StatusLine[]): StatusLine | undefined =>
+  // Only the backup line: the words below ("Noch kein Backup") name it, whatever other line might set `missing`.
+  needingLook(lines).length === 0
+    ? lines.find((l) => l.id === 'backup' && l.missing && !l.loading)
+    : undefined;
+
+/**
+ * "Nichts Dringendes", "Noch kein Backup" or what needs a look, as one sentence: the one line's own state, or a count.
+ */
 export function summaryText(lines: readonly StatusLine[]): string {
   const look = needingLook(lines);
   const s = t.device.summary;
-  if (look.length === 0) return s.ok;
+  if (look.length === 0) return calmPoint(lines) ? s.noBackup : s.ok;
   if (look.length === 1) return withTitle(look[0]!);
   return s.look(look.length);
 }

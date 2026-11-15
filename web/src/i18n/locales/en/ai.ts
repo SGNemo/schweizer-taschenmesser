@@ -268,6 +268,7 @@ export const ai: Strings['ai'] = {
     noTarget: 'I couldn’t find a matching entry.',
     willDelete: 'Will be deleted',
     noChange: 'Nothing would change.',
+    full: (module) => `“${module}” is full. Remove an entry there first.`,
     question: 'Question',
     choose: 'Please choose',
     done: (n: number) => (n === 1 ? '1 change saved.' : `${n} changes saved.`),

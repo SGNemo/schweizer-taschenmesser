@@ -72,6 +72,12 @@ export interface EventMap {
     /** Where it came from: only the id and the title. */
     link?: { kind: 'note' | 'mail' | 'invoice' | 'event'; id: string; label: string };
   };
+  /**
+   * „Tag abschließen“ on the ToDo widget while the planner is on (use case „Wochenende retten“, F3): the planner
+   * answers by opening its preview of „Rest verteilen“ through `open` (the asker's navigation; the planner names its
+   * own page). Nothing moves before the user takes the preview. Nothing happens while the planner is off.
+   */
+  'plan.restRequested': { open: (path: string) => void };
   /** Something starts the clock (a calendar event: "Zeit erfassen"). Time tracking starts a session without a project, titled as a note. */
   'timetrack.start.requested': { title: string; sourceRef?: string };
   /**

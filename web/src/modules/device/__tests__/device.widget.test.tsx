@@ -27,13 +27,24 @@ afterEach(async () => {
   useSyncStatus.setState({ phase: 'off', server: undefined });
   setPlatform(undefined);
   await db.table('_meta').delete('backup.auto.config');
+  await db.table('_meta').delete('backup.file.last');
 });
 
 describe('device widget (catalogue type: status)', () => {
   it('says "Nichts Dringendes" while nothing needs a look; it has no link of its own (the header leads to the page)', async () => {
+    await db.table('_meta').put({ key: 'backup.file.last', value: { at: Date.UTC(2026, 10, 12) } });
     await view();
     expect(screen.getByText('Nichts Dringendes')).toBeInTheDocument();
     expect(screen.queryByRole('link')).toBeNull();
+  });
+
+  it('no backup yet and nothing else: says "Noch kein Backup" calmly (no warning tone), not twice', async () => {
+    const out = await view('l');
+    expect(screen.getByText('Noch kein Backup')).toBeInTheDocument();
+    expect(screen.queryByText('Nichts Dringendes')).toBeNull();
+    // The hint does not repeat the backup; the card carries no warning.
+    expect(out.container.textContent).not.toContain('Kein Backup ·');
+    expect(out.container.querySelector('[data-tone="warning"]')).toBeNull();
   });
 
   it('names the one thing that needs a look, in words; size l adds the context line', async () => {

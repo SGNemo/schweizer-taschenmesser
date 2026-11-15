@@ -1,4 +1,8 @@
 /* Widget type catalogue (KPI, due list, progress, checklist, timeline, tiles, status, gauge). Tokens only. */
+/* Marks an empty widget body (`data-empty`) without a box of its own. */
+.emptyBody {
+  display: contents;
+}
 .skeleton {
   display: flex;
   flex-direction: column;

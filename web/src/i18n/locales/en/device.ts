@@ -4,16 +4,17 @@ export const device: Strings['device'] = {
   meta: {
     name: 'Device status',
     description:
-      'Backup, sync, storage and updates of this device on one page. Display only; this page sends nothing.',
+      'Backup, sync, storage and updates of this device on one page, plus a backup to download. This page sends nothing.',
   },
   summary: {
     ok: 'Nothing urgent',
+    noBackup: 'No backup yet',
     look: (n: number) => `${n} things need a look`,
     settingsContext: 'Sync, backup, updates, storage',
   },
   page: {
     figureUnit: (n: number) => (n === 1 ? 'needs a look' : 'need a look'),
-    note: 'Display only: every line leads to its setting.',
+    note: 'Every line leads to its setting.',
     pc: 'Processor, memory and network traffic are shown by “This PC” on the tab “System”.',
     pcOpen: 'Open “This PC”',
     pcLibrary: 'Switch on “This PC” in the library',

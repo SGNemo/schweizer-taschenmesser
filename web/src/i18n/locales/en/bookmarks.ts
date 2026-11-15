@@ -44,7 +44,7 @@ export const bookmarks: Strings['bookmarks'] = {
   view: 'Status',
   views: { open: 'Open', done: 'Done', all: 'All' },
   tabsLabel: 'View',
-  tabList: 'Saved',
+  tabList: 'Items',
   tabLinks: 'Bookmarks',
   addLink: 'Add bookmark',
   linksWidgetEmpty: 'No bookmarks yet.',

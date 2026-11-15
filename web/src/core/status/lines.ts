@@ -10,8 +10,13 @@
  * stands there before the last backup is read): a list shows its lines once none of them loads (`useSettled`), so they
  * appear together instead of one by one.
  */
-import { useEffect, useState } from 'react';
-import { loadLastBackup, type LastBackup } from '@/core/backup/lastBackup';
+import { useEffect, useState, useSyncExternalStore } from 'react';
+import {
+  lastBackupVersion,
+  loadLastBackup,
+  subscribeLastBackup,
+  type LastBackup,
+} from '@/core/backup/lastBackup';
 import { formatNumber, formatTimestamp } from '@/core/i18n/format';
 import { getPlatform } from '@/core/platform';
 import { categoryDef } from '@/core/settings/registry/categories';
@@ -36,6 +41,9 @@ export interface StatusLine {
   /** `true` = the context line only explains the state or the category (no date, number or setting of its own): the
    *  settings head leaves it out on the phone (U55). */
   generic?: boolean;
+  /** `true` = there is nothing yet that only exists once made (no backup on this device): no point that needs a look,
+   *  but the only state with a risk of losing data, so the summary names it calmly instead of "Nichts Dringendes". */
+  missing?: boolean;
   /** `true` while the line's first read has not come back: its words are not the state yet (empty, or a fallback). */
   loading?: boolean;
   testId: string;
@@ -45,7 +53,11 @@ export interface StatusLine {
  * The value of one read per mount, and whether it came back (`done` also when it failed: a failed read keeps the
  * line's fallback words, it never holds a list back). No read (`undefined`: not on this platform) = done at once.
  */
-export function useRead<T>(read: (() => Promise<T>) | undefined): {
+export function useRead<T>(
+  read: (() => Promise<T>) | undefined,
+  /** A new key reads again; the last value stays until the new one is back (no line falls back to "loading"). */
+  key: unknown = 0,
+): {
   value: T | undefined;
   done: boolean;
 } {
@@ -60,32 +72,20 @@ export function useRead<T>(read: (() => Promise<T>) | undefined): {
     let live = true;
     void read().then(
       (value) => live && setState({ value, done: true }),
-      () => live && setState({ value: undefined, done: true }),
+      // A failed re-read keeps what the last read found (never back to "Noch kein Backup").
+      () => live && setState((last) => ({ value: last.value, done: true })),
     );
     return () => {
       live = false;
     };
-    // The readers are stable per platform; only "exists here" can differ.
+    // The readers are stable per platform; only "exists here" and the caller's key can differ.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [on]);
+  }, [on, key]);
   return state;
 }
 
-/** How long a list waits at most for its lines' first reads before it shows what it has (a read that hangs). */
-export const STATUS_WAIT_MS = 1500;
-
-/** `true` once `ready` was true or `STATUS_WAIT_MS` have passed since mount; it never turns back to `false`. */
-export function useSettled(ready: boolean, waitMs = STATUS_WAIT_MS): boolean {
-  const [waited, setWaited] = useState(false);
-  const [settled, setSettled] = useState(ready);
-  if (ready && !settled) setSettled(true);
-  useEffect(() => {
-    if (settled) return;
-    const timer = setTimeout(() => setWaited(true), waitMs);
-    return () => clearTimeout(timer);
-  }, [settled, waitMs]);
-  return settled || waited;
-}
+// The bound of a first read lives in `./settled` (light, also for pages that wait for one read before they paint).
+export { STATUS_WAIT_MS, useSettled } from './settled';
 
 /** `true` while a line of the list still loads. */
 export const anyLoading = (lines: readonly (StatusLine | undefined)[]): boolean =>
@@ -128,7 +128,8 @@ export function useSyncLine(): StatusLine {
 export function useBackupLine(): StatusLine {
   const v3 = tSettingsV3.use();
   // `undefined` after the read = this device has no backup yet; before it, the line says nothing.
-  const { value: last, done } = useRead<LastBackup | undefined>(loadLastBackup);
+  const recorded = useSyncExternalStore(subscribeLastBackup, lastBackupVersion);
+  const { value: last, done } = useRead<LastBackup | undefined>(loadLastBackup, recorded);
   const base = {
     id: 'backup',
     to: settingsPath('sync', 'backup'),
@@ -146,6 +147,7 @@ export function useBackupLine(): StatusLine {
         ? (last.kind === 'file' ? v3.backup.fileAt : v3.backup.at)(formatTimestamp(last.at))
         : v3.backup.tried(formatTimestamp(last.at)),
     generic: !last,
+    missing: !last,
     attention: last?.ok === false,
   };
 }

@@ -230,6 +230,17 @@ export interface ModuleIdentity {
    * compares it with the page.
    */
   tabs?: boolean;
+  /**
+   * The module's entry page paints parts that come from reads after the first paint (0b-8): the weather's
+   * severe-weather hint above the head (`HeroSlot area="notice"`) needs the forecast; the music stage and the page
+   * below it need the connection, what plays, the player and the start view. The frame lays the notice, the head and
+   * the page out unpainted until the page says those reads are back (`useHeadReady`), at most `FIRST_READ_HOLD_MS`
+   * (0.6 s; after that the page is `late` and keeps its form), so nothing that arrives with them pushes down what is
+   * already on the screen. Hook: `layout/firstReadHold.ts`. Guards: `e2e/seed/open-shift.seed.spec.ts`,
+   * `open-shift-music.seed.spec.ts`, `open-hold.seed.spec.ts` (slow network too). Was `notice` for the weather until
+   * 2026-11.
+   */
+  firstRead?: boolean;
 }
 
 export type WidgetSize = 's' | 'm' | 'l';
@@ -330,6 +341,8 @@ export interface AiActionDef {
   examples: AiActionExample[];
   /** Hints for the free rule parser (stage 0, no tokens). Plain data; the parser lives in core. */
   parse?: AiActionParseHints;
+  /** `create` only: at most this many live rows; the preview then shows `error: 'full'` and writes nothing. */
+  maxActive?: number;
 }
 
 /** Which part of a sentence fills which field. Each role maps to a field of `AiActionDef.fields`; `estimate` = an effort in minutes („2 Std“). */

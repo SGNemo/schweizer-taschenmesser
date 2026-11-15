@@ -24,8 +24,10 @@ const CEILING: Readonly<Record<string, Partial<Record<'first' | 'second' | 'dial
   overview: { first: 1050, second: 900 },
   settings: { second: 900 },
   calendar: { first: 900, second: 650 },
-  finance: { first: 1400, second: 1100 },
-  'finance+': { dialog: 500 },
+  // After the charts without Recharts (#863): `measure:click` 2026-11-14, median of 5, larger of desktop and phone.
+  // The entry dialog meets its target (0.1–0.2 s). The 2nd visit reaches 0.5 s once shared queries stay
+  // (`fix/perf-keep-shared-queries`); then this entry goes.
+  finance: { first: 1150, second: 750 },
 };
 
 const budget = (id: string, kind: 'first' | 'second' | 'dialog') =>
@@ -39,6 +41,8 @@ const PAGES = [
   { id: 'todos', path: '/todos', start: '/' },
   { id: 'calendar', path: '/calendar', start: '/' },
   { id: 'finance', path: '/finance', start: '/' },
+  // Desktop only (`platforms: ['desktop']`); within the targets at 4× (0.7 / 0.4 s, docs/perf/FINANCE-MAIL-2026-11.md).
+  { id: 'mail', path: '/mail', start: '/', desktopOnly: true },
 ] as const;
 /** Entry dialogs behind the page's main action. */
 const DIALOGS = ['todos', 'finance'] as const;
@@ -61,6 +65,7 @@ function guard(phone: boolean) {
     const found: string[] = [];
 
     for (const t of PAGES) {
+      if (phone && 'desktopOnly' in t) continue;
       const first: number[] = [];
       const second: number[] = [];
       for (let r = 0; r < RUNS; r++) {

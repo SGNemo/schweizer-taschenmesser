@@ -17,6 +17,13 @@ import { DESKTOP, openPage, PHONE, startSeeded } from './guards';
 const PAGES = ['/finance', '/invoices', '/subscriptions', '/budgets'] as const;
 const CONTENT_Y_PHONE = 220;
 const COLOURED_MAX = 10;
+/**
+ * Colour is counted by chroma since #854, which also sees pale tints the saturation missed. A page's limit grows by
+ * exactly what the new formula counts there in addition (CI, same build and seed: stimulus job 132516978844 with
+ * the saturation against job 132520075490 with chroma), so no colour the old limit kept out gets in.
+ * `/invoices`, desktop: 6 → 14, eight pale plates in the invoice hue; phone 5 → 7 stays under ten.
+ */
+const CHROMA_EXTRA: Partial<Record<(typeof PAGES)[number], number>> = { '/invoices': 8 };
 const SHOTS = process.env.MONEY_SHOTS;
 
 interface Read {
@@ -138,11 +145,12 @@ async function check(page: Page, phone: boolean, theme: string) {
     expect.soft(m.borders, `${path}: framed elements in main`).toBe(0);
     expect.soft(m.shadows, `${path}: shadows in main`).toBe(0);
     expect.soft(m.signatureBlocks, `${path}: signature blocks`).toBe(0);
-    // The measurement reads the dark neutral steps as colour (decisions: calm guard), so colour is counted in light.
+    // Colour is counted in light, the theme of the stimulus budget: the tone steps are plain in both themes (#796),
+    // but in dark the measurement still reads the module tints over the surface as saturated (0b-8 topic E).
     if (theme === 'light')
       expect
         .soft(m.colouredAboveFold, `${path}: coloured text and surfaces above the fold`)
-        .toBeLessThanOrEqual(COLOURED_MAX);
+        .toBeLessThanOrEqual(COLOURED_MAX + (phone ? 0 : (CHROMA_EXTRA[path] ?? 0)));
     // Rule 2/4: tabs for the views, one action in the head (desktop), none on the phone.
     expect.soft(r.segmentedInTabs, `${path}: a Segmented in the row of the tabs`).toBe(0);
     if (path !== '/subscriptions')

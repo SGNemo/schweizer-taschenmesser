@@ -14,13 +14,14 @@ import { spanMin, windowText, type TimeWindow } from '@/core/plan/windows';
 import { now, today } from '@/core/time/now';
 import { undoEntry } from '@/core/undo';
 import type { EventMap } from '@/core/events/events';
-import { parseCapture, type CaptureFields } from '@/quickCapture/parser';
-import { saveCapture, type SavedCapture } from '@/quickCapture/targets';
+import type { CaptureFields } from '@/quickCapture/parser';
+import { saveCapture, saveCaptures, targetFor, type SavedCapture } from '@/quickCapture/targets';
 import type { PlanOp } from '@/core/plan/instructions';
 import { setSettings } from '@/core/settings/settings';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { extractDuePhrase } from './dueWords';
+import type { SetupThing } from './daySetup';
+import { readField } from './dueWords';
 import { dayRepo, itemKeyOf, itemRepo, putRow } from './repo';
 import type { PlanDayRow, PlanItemRow } from './schema';
 import { overloadLine } from './overload';
@@ -176,15 +177,10 @@ async function itemPatch(
 /** The one field: a ToDo through the quick-capture target; „bis Do“ or „Frist“ makes the planner item's due hard. */
 export async function addFromField(text: string, titles: Record<string, string>): Promise<boolean> {
   // The phrase is German, like the quick-capture parser (CONCEPT §6c); elsewhere the ⋯ action sets a deadline.
-  const phrase =
-    getLang() === 'de' ? extractDuePhrase(text, today()) : { text, hasDueWord: false as const };
-  const parsed = parseCapture(phrase.text, { now: new Date(now()), defaultType: 'todo' });
-  const hardDue = phrase.date ?? (phrase.hasDueWord ? parsed.fields.date : undefined);
-  // The deadline is the ToDo's date too, so the ToDo page shows it.
-  if (hardDue && !parsed.fields.date) parsed.fields.date = hardDue;
+  const { fields, hardDue } = readField(text, new Date(now()), today(), getLang() === 'de');
   const lead = hardDue ? t.planner.toast.addedWithDue(dayName(hardDue)) : t.planner.toast.added;
   return act(t.planner.toast.added, lead, titles, async () => {
-    const saved = await saveCapture('todo', parsed.fields);
+    const saved = await saveCapture('todo', fields);
     if (hardDue)
       await putRow(itemRepo, itemKeyOf(saved.moduleId, saved.id), {
         source: { module: saved.moduleId, id: saved.id },
@@ -261,6 +257,50 @@ async function dayPatch(date: string, patch: Partial<PlanDayRow>): Promise<void>
 }
 
 export const AVAILABLE_STEP = 30;
+
+/**
+ * „Übernehmen“ of „Tage einteilen“: the chosen minutes of the shown days (day rows only, never the weekday
+ * settings), the dump's things as ToDos through the quick-capture targets (one batch, all or nothing; „bis So“
+ * makes the planner item's deadline hard, as in the field) and the run – one undoable action, one toast
+ * „Eingeplant: Sa, So, Mo · Rückgängig“. A day that was not touched keeps what it had. `reshuffle` (a day gained
+ * time, W10): the run distributes anew, so the day takes things – the sheet's preview showed every move.
+ */
+export function applyDaySetup(
+  days: readonly { date: string; min: number }[],
+  things: readonly SetupThing[],
+  shown: readonly string[],
+  titles: Record<string, string>,
+  reshuffle = false,
+) {
+  const lead = t.planner.toast.planned(shown.map(dayName).join(', '));
+  return act(
+    lead,
+    lead,
+    titles,
+    async () => {
+      for (const d of days)
+        await dayPatch(d.date, { availableMin: Math.max(0, Math.min(1440, d.min)) });
+      if (things.length === 0) return;
+      // Ids in line order: ToDos saved in the same millisecond tie on their age and the engine then
+      // breaks the tie by id – sorted, the plan keeps the order the preview showed.
+      const ids = things.map(() => randomId()).sort();
+      await saveCaptures(
+        things.map((th, i) => ({ type: 'todo' as const, fields: th.fields, id: ids[i] })),
+        things.map((th) => th.fields.title).join('\n'),
+      );
+      const moduleId = targetFor('todo').moduleId;
+      for (const [i, th] of things.entries()) {
+        if (!th.hardDue) continue;
+        await putRow(itemRepo, itemKeyOf(moduleId, ids[i]!), {
+          source: { module: moduleId, id: ids[i]! },
+          due: { date: th.hardDue, hard: true },
+          order: 0,
+        });
+      }
+    },
+    { leadOnly: true, reshuffle },
+  );
+}
 
 export const setAvailable = (date: string, min: number, titles: Record<string, string>) =>
   act(
@@ -357,7 +397,13 @@ const refOf = (key: string) => {
  * through the source, the buffer in the settings – and planned in the same `undoable`, never through
  * `core/ai/write`. One toast with the undo.
  */
-export function applyOps(ops: readonly PlanOp[], lead: string, titles: Record<string, string>) {
+export function applyOps(
+  ops: readonly PlanOp[],
+  lead: string,
+  titles: Record<string, string>,
+  /** One calm sentence instead of the moves („Rest verteilen“: never a count of what was left). */
+  leadOnly = false,
+) {
   const reshuffle = ops.some((o) => o.op === 'replan' && o.reshuffle);
   return act(
     lead,
@@ -412,6 +458,6 @@ export function applyOps(ops: readonly PlanOp[], lead: string, titles: Record<st
         }
       }
     },
-    { reshuffle },
+    { reshuffle, leadOnly },
   );
 }

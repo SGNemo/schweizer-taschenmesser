@@ -34,13 +34,13 @@ test.describe('Finance: transfers, splits, year, outlook', () => {
 
     // C23: the empty bookings page offers one verb; transfers live on "Konten".
     await ready(page, '/finance?tab=accounts');
-    // One primary on "Konten": the toolbar's "Buchung"; "Konto eintragen" is secondary (round 6, U13).
+    // One primary on "Konten": the head's "Buchung eintragen"; "Konto eintragen" is secondary (round 6, U13).
     await expect(page.getByRole('button', { name: 'Konto eintragen' })).toBeVisible();
     // Identity 4.0: on the phone the page's one action is the plus of the bottom bar, no filled button in the page.
     if ((page.viewportSize()?.width ?? 1280) < 900) {
       expect(await primaryActions(page)).toEqual([]);
       await expect(page.getByTestId('bottom-plus')).toHaveAccessibleName('Buchung eintragen');
-    } else expect(await primaryActions(page)).toEqual(['Buchung']);
+    } else expect(await primaryActions(page)).toEqual(['Buchung eintragen']);
     await page.getByRole('button', { name: 'Umbuchung', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Umbuchung' });
     await dialog.getByLabel('Von Konto').selectOption({ label: 'Girokonto' });
@@ -60,6 +60,10 @@ test.describe('Finance: transfers, splits, year, outlook', () => {
   test('the history tab shows a calm empty state without enough data', async ({ page }) => {
     await ready(page, '/finance?tab=trend');
     await expect(page.getByTestId('net-worth-empty')).toContainText('Noch zu wenig Verlauf');
+    // One primary per view: the empty state holds the filled step, the head's action steps back (round 6).
+    // On the phone the plus of the bottom bar is the one action, no filled button in the page.
+    const phone = (page.viewportSize()?.width ?? 1280) < 900;
+    await expect.poll(() => primaryActions(page)).toEqual(phone ? [] : ['Buchung eintragen']);
     await page.getByTestId('net-worth-empty').getByRole('button').click();
     await expect(page.getByRole('dialog', { name: 'Buchung eintragen' })).toBeVisible();
   });
