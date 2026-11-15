@@ -1,23 +1,28 @@
 import { changedFields } from '@/core/db/patch';
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import type { Stored } from '@/core/db/types';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import {
   Button,
+  categoryColor,
   DayField,
   Dialog,
   Form,
   FormActions,
+  Icon,
   SelectField,
   TextArea,
   TextField,
 } from '@/ui';
-import { nextOrder } from '../logic';
-import { deleteList, listRepo } from '../repo';
-import { KINDS, SHOPPING_LIST_ID, type List, type ListKind } from '../schema';
+import { iconOf, LIST_ICONS, nextOrder, type ListIcon } from '../logic';
+import { deleteList, listRepo, setArchived } from '../repo';
+import { KINDS, type List, type ListKind } from '../schema';
+import styles from './ListManage.module.css';
 
 export type ListTarget = Stored<List> | 'new' | null;
+
+const TONES = [0, 1, 2, 3, 4, 5] as const;
 
 export function ListEditor({
   target,
@@ -53,6 +58,17 @@ export function ListEditor({
   );
 }
 
+/** Deletes a list (with its entries) behind "Rückgängig"; afterwards it waits in "Zuletzt gelöscht". */
+export function deleteListWithUndo(id: string): void {
+  void undoableWithToast(t.lists.listDeleted, t.lists.listDeleted, () => deleteList(id));
+}
+
+/** Archives a list or brings it back behind "Rückgängig". */
+export function archiveWithUndo(list: Stored<List>, archived: boolean): void {
+  const message = archived ? t.lists.archivedDone(list.name) : t.lists.unarchivedDone(list.name);
+  void undoableWithToast(message, message, () => setArchived(list.id, archived));
+}
+
 function Fields({
   list,
   existing,
@@ -68,10 +84,16 @@ function Fields({
   const [opened] = useState(list);
   const [name, setName] = useState(list?.name ?? '');
   const [kind, setKind] = useState<ListKind>(list?.kind ?? 'checklist');
+  // No own icon yet: the picker follows the kind until one is chosen.
+  const [icon, setIcon] = useState<ListIcon | undefined>(
+    list?.icon ? iconOf({ icon: list.icon, kind: list.kind }) : undefined,
+  );
+  const [tone, setTone] = useState<number | undefined>(list?.tone);
   const [note, setNote] = useState(list?.note ?? '');
   const [tripDate, setTripDate] = useState(list?.tripDate ?? '');
   const [place, setPlace] = useState(list?.place ?? '');
   const [error, setError] = useState('');
+  const shownIcon = icon ?? iconOf({ kind });
 
   async function save() {
     const trimmed = name.trim();
@@ -80,6 +102,8 @@ function Fields({
     const data = {
       name: trimmed,
       kind,
+      icon,
+      tone,
       note: note.trim() || undefined,
       tripDate: trip ? tripDate || undefined : undefined,
       place: trip ? place.trim() || undefined : undefined,
@@ -88,7 +112,8 @@ function Fields({
       await listRepo.update(list.id, changedFields(opened ?? list, data));
       onSaved(list.id);
     } else {
-      const created = await listRepo.create({ ...data, order: nextOrder(existing) });
+      const inUse = existing.filter((l) => !l.archived);
+      const created = await listRepo.create({ ...data, order: nextOrder(inUse) });
       onSaved(created.id);
     }
     onClose();
@@ -117,6 +142,56 @@ function Fields({
           </option>
         ))}
       </SelectField>
+      <div className={styles.field} role="group" aria-labelledby="list-colour-legend">
+        <span className={styles.legend} id="list-colour-legend">
+          {t.lists.listColour}
+        </span>
+        <div className={styles.choices}>
+          <button
+            type="button"
+            className={`${styles.choice} ${styles.swatch}`}
+            aria-pressed={tone === undefined}
+            aria-label={t.lists.noColour}
+            title={t.lists.noColour}
+            onClick={() => setTone(undefined)}
+          >
+            <span className={`${styles.dot} ${styles.dotNone}`} />
+          </button>
+          {TONES.map((i) => (
+            <button
+              key={i}
+              type="button"
+              className={`${styles.choice} ${styles.swatch}`}
+              aria-pressed={tone === i}
+              aria-label={t.lists.colourN(i + 1)}
+              title={t.lists.colourN(i + 1)}
+              onClick={() => setTone(i)}
+            >
+              <span className={styles.dot} style={{ background: categoryColor(i) }} />
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className={styles.field} role="group" aria-labelledby="list-icon-legend">
+        <span className={styles.legend} id="list-icon-legend">
+          {t.lists.listIcon}
+        </span>
+        <div className={styles.choices}>
+          {LIST_ICONS.map((id) => (
+            <button
+              key={id}
+              type="button"
+              className={styles.choice}
+              aria-pressed={shownIcon === id}
+              aria-label={t.lists.iconNames[id]}
+              title={t.lists.iconNames[id]}
+              onClick={() => setIcon(id)}
+            >
+              <Icon name={id} size={20} />
+            </button>
+          ))}
+        </div>
+      </div>
       {kind === 'packing' ? (
         <>
           <TextField
@@ -135,13 +210,11 @@ function Fields({
       />
       <FormActions
         start={
-          list && list.id !== SHOPPING_LIST_ID ? (
+          list ? (
             <Button
               variant="danger"
               onClick={() => {
-                void undoableWithToast(t.lists.listDeleted, t.lists.listDeleted, () =>
-                  deleteList(list.id),
-                );
+                deleteListWithUndo(list.id);
                 onClose();
               }}
             >
@@ -156,5 +229,28 @@ function Fields({
         </Button>
       </FormActions>
     </Form>
+  );
+}
+
+/** The list's icon, tinted with its colour when it has one (the name is always shown beside it). */
+export function ListMark({
+  list,
+  size = 18,
+}: {
+  list: Pick<List, 'icon' | 'kind' | 'tone'>;
+  size?: number;
+}) {
+  return (
+    <span
+      className={styles.mark}
+      aria-hidden
+      style={
+        list.tone !== undefined
+          ? ({ '--list-tone': categoryColor(list.tone) } as CSSProperties)
+          : undefined
+      }
+    >
+      <Icon name={iconOf(list)} size={size} />
+    </span>
   );
 }

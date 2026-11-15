@@ -1,19 +1,18 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { t } from '@/strings';
 import { ChecklistWidget } from '@/ui';
-import { sortItems } from '../logic';
-import { itemRepo } from '../repo';
-import { SHOPPING_LIST_ID } from '../schema';
+import { pickShoppingTarget, sortItems } from '../logic';
+import { itemRepo, listRepo } from '../repo';
 
-/** The open entries of the shopping list, ticked off in place. */
+/** The open entries of the shopping list (the first one in use), ticked off in place. */
 export default function OpenListsWidget() {
-  const open = useLiveQuery(
-    async () =>
-      sortItems(await itemRepo.table.where('listId').equals(SHOPPING_LIST_ID).toArray()).filter(
-        (i) => i.deletedAt === null && !i.done,
-      ),
-    [],
-  );
+  const open = useLiveQuery(async () => {
+    const target = pickShoppingTarget(await listRepo.active().toArray());
+    if (!target) return [];
+    return sortItems(await itemRepo.table.where('listId').equals(target.id).toArray()).filter(
+      (i) => i.deletedAt === null && !i.done,
+    );
+  }, []);
   return (
     <ChecklistWidget
       loading={!open}

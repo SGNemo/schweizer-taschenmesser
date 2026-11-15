@@ -1,5 +1,5 @@
 import { t } from '@/strings';
-import { SECTIONS, type Item, type List, type Section } from './schema';
+import { SECTIONS, type Item, type List, type ListKind, type Section } from './schema';
 
 /** "2x Milch" / "500 g Mehl" / "Brot" → quantity + name. Only a leading number (with optional unit or "x") counts. */
 export function parseEntry(text: string): { name: string; quantity?: string } {
@@ -160,4 +160,67 @@ export function listAsText(
     (i) => `${i.done ? '[x]' : '[ ]'} ${[i.quantity, i.name].filter(Boolean).join(' ')}`,
   );
   return [title, ...lines].join('\n');
+}
+
+/** Icons a list can carry (names of `@/ui` icons); the first three are the kinds' own. */
+export const LIST_ICONS = [
+  'cart',
+  'luggage',
+  'checklist',
+  'home',
+  'gift',
+  'star',
+  'heart',
+  'package',
+  'calendar',
+  'car',
+  'sun',
+  'wrench',
+] as const;
+export type ListIcon = (typeof LIST_ICONS)[number];
+
+const KIND_ICON: Record<ListKind, ListIcon> = {
+  shopping: 'cart',
+  packing: 'luggage',
+  checklist: 'checklist',
+};
+
+/** The list's icon: its own when it is one of `LIST_ICONS`, else the kind's. */
+export function iconOf(list: Pick<List, 'icon' | 'kind'>): ListIcon {
+  return (LIST_ICONS as readonly string[]).includes(list.icon ?? '')
+    ? (list.icon as ListIcon)
+    : KIND_ICON[list.kind];
+}
+
+/** Lists in tab order, split into the ones in use and the archived ones. */
+export function splitArchived<T extends List & { createdAt: number }>(
+  lists: readonly T[],
+): { active: T[]; archived: T[] } {
+  const sorted = sortLists(lists);
+  return { active: sorted.filter((l) => !l.archived), archived: sorted.filter((l) => l.archived) };
+}
+
+/**
+ * New sort keys after moving one list a step up (-1) or down (+1) among the lists in use: every list gets its
+ * position as `order` (old data has many 0s). Returns only the lists whose key changes; nothing at the edges.
+ */
+export function moveOrders<T extends List & { id: string; createdAt: number }>(
+  lists: readonly T[],
+  id: string,
+  step: -1 | 1,
+): { id: string; order: number }[] {
+  const ordered = splitArchived(lists).active;
+  const from = ordered.findIndex((l) => l.id === id);
+  const to = from + step;
+  if (from < 0 || to < 0 || to >= ordered.length) return [];
+  const next = [...ordered];
+  [next[from], next[to]] = [next[to]!, next[from]!];
+  return next.flatMap((l, i) => (l.order === i ? [] : [{ id: l.id, order: i }]));
+}
+
+/** Where items for "the shopping list" go: the first shopping list in use, in the user's order. */
+export function pickShoppingTarget<T extends List & { id: string; createdAt: number }>(
+  lists: readonly T[],
+): T | undefined {
+  return splitArchived(lists).active.find((l) => l.kind === 'shopping');
 }
