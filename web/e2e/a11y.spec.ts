@@ -116,7 +116,6 @@ const PAGES = [
   ['fitness', '/fitness'],
   ['fitness food', '/fitness?view=food'],
   ['fitness week', '/fitness?view=week'],
-  ['fitness exercises', '/fitness?view=exercises'],
   ['timetrack', '/timetrack'],
   ['calendar reminders', '/calendar?tab=reminders'],
   ['finance', '/finance'],
