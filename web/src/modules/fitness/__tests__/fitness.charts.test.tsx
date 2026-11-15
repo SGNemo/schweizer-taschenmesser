@@ -52,7 +52,11 @@ describe('fitness charts', () => {
             ],
           },
         ]}
-        meals={[{ date: '2026-11-03', text: 'Brot', kcal: 2600 }]}
+        meals={[
+          { date: '2026-11-03', text: 'Brot', kcal: 2600 },
+          { date: '2026-11-04', text: 'Suppe', kcal: 900 },
+          { date: '2026-11-05', text: 'Reis', kcal: 1200 },
+        ]}
         nutrition
         loadedFrom="2026-08-01"
       />,
@@ -65,5 +69,19 @@ describe('fitness charts', () => {
     const kcal = screen.getByRole('figure', { name: 'kcal je Tag' });
     // Eating is never „over“: no target, no „drüber“.
     expect(kcal.textContent).not.toMatch(/drüber|Geplant/);
+  });
+
+  it('leaves the kcal columns out while fewer than three days have meals', () => {
+    render(
+      <WeekView
+        day="2026-11-08"
+        weekStart={1}
+        sessions={[]}
+        meals={[{ date: '2026-11-03', text: 'Brot', kcal: 2600 }]}
+        nutrition
+        loadedFrom="2026-08-01"
+      />,
+    );
+    expect(screen.queryByRole('figure', { name: 'kcal je Tag' })).toBeNull();
   });
 });

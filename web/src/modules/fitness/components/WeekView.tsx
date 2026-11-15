@@ -103,42 +103,45 @@ export function WeekView({
       <p className={styles.hint} data-testid="fitness-week-total">
         {w.total}: {line(total)}
       </p>
-      {setGroups.length ? (
-        <Bars
-          title={w.groupsChart}
-          showTitle
-          data={setGroups.map((g) => ({
-            id: g.group,
-            label: t.fitness.catalog.groups[g.group],
-            value: g.sets,
-          }))}
-          format={(n) => t.fitness.line.sets(n)}
-          data-testid="fitness-week-groups"
-        />
-      ) : null}
-      {minuteGroups.length ? (
-        <p className={styles.hint} data-testid="fitness-week-minutes">
-          {w.byGroup}: {minuteGroups.join(' · ')}
-        </p>
-      ) : null}
-      {/* The week's kcal as columns: plain amounts, no goal mark (eating is never „over“). */}
-      {nutrition && total.kcal > 0 ? (
-        <Bars
-          title={w.kcalChart}
-          showTitle
-          orientation="vertical"
-          // Days not lived yet are left out: a „0 kcal“ for tomorrow would read like a day without food.
-          data={days
-            .filter((d) => d.date <= day)
-            .map((d) => ({
-              id: d.date,
-              label: formatDay(d.date, 'EEE'),
-              value: d.kcal,
+      <div className={styles.weekCharts}>
+        {setGroups.length ? (
+          <Bars
+            title={w.groupsChart}
+            showTitle
+            data={setGroups.map((g) => ({
+              id: g.group,
+              label: t.fitness.catalog.groups[g.group],
+              value: g.sets,
             }))}
-          format={(n) => t.fitness.line.kcal(kcalText(n))}
-          data-testid="fitness-week-kcal"
-        />
-      ) : null}
+            format={(n) => t.fitness.line.sets(n)}
+            data-testid="fitness-week-groups"
+          />
+        ) : null}
+        {minuteGroups.length ? (
+          <p className={styles.hint} data-testid="fitness-week-minutes">
+            {w.byGroup}: {minuteGroups.join(' · ')}
+          </p>
+        ) : null}
+        {/* The week's kcal as columns from three days with meals on (two columns say less than the rows below):
+          plain amounts, no goal mark (eating is never „over“). */}
+        {nutrition && days.filter((d) => d.date <= day && d.meals > 0).length >= 3 ? (
+          <Bars
+            title={w.kcalChart}
+            showTitle
+            orientation="vertical"
+            // Days not lived yet are left out: a „0 kcal“ for tomorrow would read like a day without food.
+            data={days
+              .filter((d) => d.date <= day)
+              .map((d) => ({
+                id: d.date,
+                label: formatDay(d.date, 'EEE'),
+                value: d.kcal,
+              }))}
+            format={(n) => t.fitness.line.kcal(kcalText(n))}
+            data-testid="fitness-week-kcal"
+          />
+        ) : null}
+      </div>
       <ItemList>
         {days.map((d) => (
           <ItemRow
