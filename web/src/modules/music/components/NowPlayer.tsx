@@ -4,7 +4,9 @@ import { getPlatform } from '@/core/platform';
 import { tMusicPage } from '@/strings.musicPage';
 import { tSpotify } from '@/strings.spotify';
 import { Button, Icon, RowMenu } from '@/ui';
+import { formatTimestamp } from '@/core/i18n/format';
 import { clock, useProgress } from '../nowPlayingTime';
+import { SLEEP_MINUTES, setSleep, sleepEnd, useSleep } from '../sleepTimer';
 import { trackUrl } from './TrackList';
 import { useSavedTracks } from './useSavedTracks';
 import { trackIdOf, type PlayerApi } from './types';
@@ -38,6 +40,8 @@ export function NowPlayer({
   const [player, setPlayer] = useState<PlayerState | undefined | 'none'>();
   const [devices, setDevices] = useState<PlayerDevice[]>([]);
   const [menu, setMenu] = useState(false);
+  const [sleepMenu, setSleepMenu] = useState(false);
+  const sleep = useSleep();
   const [seekTo, setSeekTo] = useState<number>();
   const [volume, setVolume] = useState<number>();
   const [failed, setFailed] = useState(false);
@@ -296,6 +300,52 @@ export function NowPlayer({
             />
           </span>
         ) : null}
+        {canControl && current ? (
+          <span className={styles.devices}>
+            <Icon name="moon" size={16} />
+            <RowMenu
+              label={tm.sleepTitle}
+              items={[
+                ...SLEEP_MINUTES.map((m) => ({
+                  id: `m${m}`,
+                  label: tm.sleepIn(m),
+                  onSelect: () => setSleep(sleepEnd(m)),
+                })),
+                ...(current.durationMs && current.progressMs !== undefined
+                  ? [
+                      {
+                        id: 'track',
+                        label: tm.sleepTrack,
+                        onSelect: () =>
+                          setSleep(sleepEnd('track', { ...current, readAt: np.readAt })),
+                      },
+                    ]
+                  : []),
+                ...(sleep
+                  ? [{ id: 'off', label: tm.sleepOff, onSelect: () => setSleep(undefined) }]
+                  : []),
+              ]}
+              open={sleepMenu}
+              onOpenChange={setSleepMenu}
+            />
+          </span>
+        ) : null}
+        {current ? (
+          <Button
+            variant="ghost"
+            aria-label={tm.lyricsHint(current.title)}
+            title={tm.lyrics}
+            onClick={() =>
+              void getPlatform().app.openUrl(
+                `https://genius.com/search?q=${encodeURIComponent(
+                  [current.artist, current.title].filter(Boolean).join(' '),
+                )}`,
+              )
+            }
+          >
+            <Icon name="text" size={18} />
+          </Button>
+        ) : null}
         {current?.trackUrl ? (
           <Button
             variant="ghost"
@@ -306,6 +356,26 @@ export function NowPlayer({
           </Button>
         ) : null}
       </div>
+      {sleep ? (
+        // Always visible while set, one tap ends it (focus rules: no silent countdown).
+        <p className={styles.sleepLine} data-testid="music-sleep">
+          <Icon name="moon" size={16} />
+          <span>
+            {sleep.mode === 'track'
+              ? tm.sleepAtTrack(formatTimestamp(sleep.at, { timeStyle: 'short' }))
+              : tm.sleepAt(formatTimestamp(sleep.at, { timeStyle: 'short' }))}{' '}
+            · {tm.sleepOpenOnly}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label={tm.sleepOff}
+            onClick={() => setSleep(undefined)}
+          >
+            {tm.sleepEnd}
+          </Button>
+        </p>
+      ) : null}
       {failed ? <p className={styles.note}>{tx.playFailed}</p> : null}
     </div>
   );

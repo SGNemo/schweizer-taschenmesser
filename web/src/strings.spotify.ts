@@ -123,7 +123,7 @@ export const tSpotify = defineBundle(
       'Spotify erlaubt nur, Songs hinten anzufügen. Umsortieren oder Entfernen geht dort nicht.',
     shortcutsSetting: 'Tastenkürzel auf der Musikseite',
     shortcutsHelp:
-      'Leertaste: Wiedergabe · Umschalt+← / →: zurück / weiter · L: Lieblingssong · /: Suche',
+      'Leertaste: Wiedergabe · Umschalt+← / →: zurück / weiter · Umschalt+↑ / ↓: lauter / leiser · S: Zufall · L: Lieblingssong · /: Suche',
     queueNow: 'Läuft jetzt',
     queueNext: 'Als Nächstes',
     queueEmpty: 'Die Warteschlange ist leer.',
@@ -272,7 +272,8 @@ export const tSpotify = defineBundle(
       queueNote:
         'Spotify only lets songs be added at the end. Reordering or removing is not possible there.',
       shortcutsSetting: 'Keyboard shortcuts on the music page',
-      shortcutsHelp: 'Space: play/pause · Shift+← / →: previous / next · L: like · /: search',
+      shortcutsHelp:
+        'Space: play/pause · Shift+← / →: previous / next · Shift+↑ / ↓: louder / quieter · S: shuffle · L: like · /: search',
       queueNow: 'Playing now',
       queueNext: 'Up next',
       queueEmpty: 'The queue is empty.',

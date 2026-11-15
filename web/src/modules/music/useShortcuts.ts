@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import type { NowPlayingHandle } from './useNowPlaying';
 
+const VOLUME_STEP = 10;
+
 /** Typing somewhere must never trigger a shortcut. */
 const typing = (el: EventTarget | null): boolean =>
   el instanceof HTMLElement &&
@@ -8,7 +10,8 @@ const typing = (el: EventTarget | null): boolean =>
 
 /**
  * Keyboard shortcuts of the music page (a setting, on by default): Space plays or pauses, Shift+← / → goes to the previous or
- * next song, L saves or un-saves the song that plays, "/" opens the search. Nothing fires while typing, with Ctrl/Alt/Meta,
+ * next song, Shift+↑ / ↓ makes it louder or quieter (10 steps), S switches shuffle, L saves or un-saves the song that plays,
+ * "/" opens the search. Nothing fires while typing, with Ctrl/Alt/Meta,
  * or when the player cannot be controlled. Nothing is shown or moved by itself.
  */
 export function useShortcuts(
@@ -43,6 +46,26 @@ export function useShortcuts(
       } else if (e.shiftKey && e.key === 'ArrowLeft') {
         e.preventDefault();
         void player.run(() => player.control('previous'));
+      } else if (e.shiftKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+        const { source, ctx } = player;
+        if (!source.state || !source.setVolume) return;
+        e.preventDefault();
+        const step = e.key === 'ArrowUp' ? VOLUME_STEP : -VOLUME_STEP;
+        void player.run(async () => {
+          // Read first: the volume may have been changed on the phone in the meantime.
+          const volume = (await source.state!(ctx))?.volume;
+          if (volume === undefined) return;
+          await source.setVolume!(ctx, Math.min(100, Math.max(0, volume + step)));
+        });
+      } else if (!e.shiftKey && e.key.toLowerCase() === 's') {
+        const { source, ctx } = player;
+        if (!source.state || !source.setShuffle) return;
+        e.preventDefault();
+        void player.run(async () => {
+          const shuffle = (await source.state!(ctx))?.shuffle;
+          if (shuffle === undefined) return;
+          await source.setShuffle!(ctx, !shuffle);
+        });
       } else if (!e.shiftKey && e.key.toLowerCase() === 'l' && id) {
         const { source, ctx } = player;
         if (!source.saved || !source.save) return;

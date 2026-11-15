@@ -43,6 +43,12 @@ Off by default, device-local (`tm-spotify-focus`: mode, playlist id, end switch 
 - The tab "Zuletzt gespielt" is gone (it repeated the start view's row): "Alle anzeigen" there opens the whole list with "Zurück zur Startansicht". Tabs: Start · Playlists · Alben · Suchen · Lieblingssongs · Warteschlange.
 - Not built: following artists (needs `user-follow-read` / `user-follow-modify`, new scopes, maintainer's decision).
 
+## Player extras (round "Tiefe & Politur", p3)
+- **Sleep timer** (`modules/music/sleepTimer.ts`): moon menu in the player (needs "Steuern" and something playing): pause in 15/30/45/60 min or at the end of this song (end computed from the last reading). While set, one line under the controls says when ("Pausiert um 23:10 · Nur solange Nemo offen ist." + "Aus"); the widget shows the time too. Device-local `tm-music-sleep` (end time and mode only). Page and widget arm one shared timeout; it pauses only while music plays. An end that passed while Nemo was closed is dropped, never acted on later. No setting: it is off until chosen and ends itself.
+- **Lyrics:** a button opens `https://genius.com/search?q=<artist title>` in the browser, on tap only (Spotify's API has no lyrics; nothing is fetched by Nemo itself).
+- **Shortcuts:** Shift+↑ / ↓ volume ±10 (read first, capped 0–100), S shuffle on/off, besides Space, Shift+← / →, L, "/" (setting unchanged).
+- **Widget:** "Zurück" beside pause/next from a card width of 22 rem (container query; three 44 px targets would squeeze a small card).
+
 ## Privacy
 Title and artist are user data: never to the AI (the connector cannot import `core/ai`, `privacy.test.ts` untouched), not in diagnostics (canary in `core/diagnostics/diagnostics.test.ts`), not synced (device-local only), not in logs. Data flow `spotify` in [DATA-FLOWS](../legal/DATA-FLOWS.md) and Settings → Über Nemo → Rechtliches.
 

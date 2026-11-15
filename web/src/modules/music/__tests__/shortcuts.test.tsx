@@ -82,4 +82,19 @@ describe('music keyboard shortcuts', () => {
     fireEvent.keyDown(window, { key: ' ' });
     expect(control).not.toHaveBeenCalled();
   });
+
+  it('Shift+↑ / ↓ change the volume by 10 from what the player says now; S switches shuffle', async () => {
+    const setVolume = vi.fn(async () => {});
+    const setShuffle = vi.fn(async () => {});
+    const state = vi.fn(async () => ({ volume: 95, shuffle: false }));
+    const { np } = handle({ source: { state, setVolume, setShuffle } as never, ctx: {} as never });
+    render(<Host np={np} />);
+    fireEvent.keyDown(window, { key: 'ArrowUp', shiftKey: true });
+    await vi.waitFor(() => expect(setVolume).toHaveBeenLastCalledWith({}, 100));
+    state.mockResolvedValueOnce({ volume: 5, shuffle: false });
+    fireEvent.keyDown(window, { key: 'ArrowDown', shiftKey: true });
+    await vi.waitFor(() => expect(setVolume).toHaveBeenLastCalledWith({}, 0));
+    fireEvent.keyDown(window, { key: 's' });
+    await vi.waitFor(() => expect(setShuffle).toHaveBeenCalledWith({}, true));
+  });
 });

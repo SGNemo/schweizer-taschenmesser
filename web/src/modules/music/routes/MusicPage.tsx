@@ -14,6 +14,7 @@ import { StartView } from '../components/StartView';
 import { trackIdOf, type PlayerApi, type View } from '../components/types';
 import { forgetLibrary } from '../library';
 import { useShortcuts } from '../useShortcuts';
+import { useSleepWatcher } from '../sleepTimer';
 import { settings as moduleSettings, settingsSchema, type MusicPrefs } from '../settings';
 import { useNowPlayingStatus } from '../useNowPlaying';
 import styles from './music.module.css';
@@ -47,6 +48,7 @@ export default function MusicPage() {
   useEffect(() => () => forgetLibrary(), []);
   const [stored] = useSettings('module.music', settingsSchema, moduleSettings.defaults as never);
   const prefs = stored ?? (moduleSettings.defaults as MusicPrefs);
+  useSleepWatcher(np);
   useShortcuts(
     np,
     prefs.shortcuts,
