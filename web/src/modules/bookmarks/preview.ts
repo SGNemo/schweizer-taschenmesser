@@ -28,11 +28,14 @@ export async function previewEnabled(): Promise<boolean> {
   }
 }
 
-/** Fetches and stores the preview of one item; every failure ends quietly (the row just has no preview). */
-export async function fetchPreviewFor(id: string, url: string): Promise<void> {
+/**
+ * Fetches and stores the preview of one item; every failure ends quietly (the row just has no preview).
+ * `true` = something was stored.
+ */
+export async function fetchPreviewNow(id: string, url: string): Promise<boolean> {
   try {
     const res = await fetchPublic(url, undefined, undefined, 'page');
-    if (!res.ok) return;
+    if (!res.ok) return false;
     const meta = parsePageMeta(await res.text(), url);
     let image = false;
     if (meta.imageUrl) {
@@ -46,13 +49,20 @@ export async function fetchPreviewFor(id: string, url: string): Promise<void> {
         /* no picture is fine */
       }
     }
-    if (!meta.title && !meta.description && !meta.siteName && !image) return;
+    if (!meta.title && !meta.description && !meta.siteName && !image) return false;
     await itemRepo.update(id, {
       preview: { site: meta.siteName, description: meta.description, image: image || undefined },
     });
+    return true;
   } catch {
     /* offline, blocked, not a page: no preview */
+    return false;
   }
+}
+
+/** The same without an answer, for the callers that fetch in passing (saving with the setting on). */
+export async function fetchPreviewFor(id: string, url: string): Promise<void> {
+  await fetchPreviewNow(id, url);
 }
 
 export const removePreviewImage = (id: string): Promise<void> => deleteBlob(previewKey(id));

@@ -34,6 +34,10 @@ test('the share page offers only enabled modules and prefills the target', async
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByLabel('Titel')).toHaveValue('Schöner Weg');
   await expect(dialog.getByLabel('Adresse (Link)')).toHaveValue('https://wandern.example/weg');
+  // A shared link offers its preview with one tick (on); typing a link by hand never does.
+  await expect(
+    dialog.getByRole('checkbox', { name: /Vorschau von der Seite holen/ }),
+  ).toBeChecked();
   await dialog.getByRole('button', { name: 'Abbrechen' }).click();
 
   await backSettled(page);

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { setNow } from '@/core/time/now';
 import { visibleManifests } from '@/core/modules/registry';
+import { bookmarkKindFromText } from './adapters';
 import { CaptureError, TARGETS, availableTypes, saveCapture, saveCaptures } from './index';
 
 const ON = {
@@ -111,6 +112,38 @@ describe('saveCapture', () => {
     const items = await rows('bookmarks_item');
     expect(items.find((i) => i.title === 'Artikel')!.url).toBe('https://example.org/a');
     expect(items.find((i) => i.title === 'Skript')!.url).toBeUndefined();
+  });
+
+  it('a Merkzettel takes its kind from the first word', async () => {
+    await saveCapture('bookmark', { title: 'film Dune' }, { states: ON });
+    await saveCapture('bookmark', { title: 'Kaufen: Kopfhörer' }, { states: ON });
+    await saveCapture('bookmark', { title: 'Buch' }, { states: ON });
+    await saveCapture('bookmark', { title: 'Filmabend planen' }, { states: ON });
+    const items = await rows('bookmarks_item');
+    const kindOf = (title: string) => items.find((i) => i.title === title)?.kind;
+    expect(kindOf('Dune')).toBe('watch');
+    expect(kindOf('Kopfhörer')).toBe('buy');
+    // A word alone, or a word that only starts like one, stays the title.
+    expect(kindOf('Buch')).toBe('link');
+    expect(kindOf('Filmabend planen')).toBe('link');
+  });
+
+  it('every kind word of the capture names a kind the Merkliste knows', async () => {
+    const { KINDS } = await import('@/modules/bookmarks/schema');
+    for (const word of [
+      'lesen',
+      'artikel',
+      'film',
+      'serie',
+      'ansehen',
+      'anschauen',
+      'buch',
+      'ort',
+      'kaufen',
+      'ausprobieren',
+      'idee',
+    ])
+      expect(KINDS).toContain(bookmarkKindFromText(`${word} x`).kind);
   });
 
   it('writes an entry onto the shopping list of the lists module', async () => {

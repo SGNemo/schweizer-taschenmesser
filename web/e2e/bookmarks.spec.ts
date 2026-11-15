@@ -182,6 +182,25 @@ test.describe('Role of the Merkliste (round 2026-11)', () => {
   });
 });
 
+test.describe('Capture (round 2026-11, package 2)', () => {
+  test('a page that is already saved is named; the hint opens it', async ({ page }) => {
+    await enable(page, 'bookmarks');
+    await add(page, 'Pasta Rezept', 'koch.de/pasta');
+    await ready(page, '/bookmarks?new=1');
+    const dialog = page.getByRole('dialog');
+    await expect(
+      dialog.getByRole('checkbox', { name: /Vorschau von der Seite holen/ }),
+    ).toHaveCount(0);
+    await dialog.getByLabel('Adresse (Link)').fill('https://www.koch.de/pasta/?utm_source=mail');
+    await expect(dialog.getByTestId('bookmark-duplicate')).toContainText(
+      'Schon gemerkt: „Pasta Rezept“',
+    );
+    await dialog.getByRole('button', { name: 'Vorhandenen öffnen' }).click();
+    await expect(page.getByRole('dialog').getByLabel('Titel')).toHaveValue('Pasta Rezept');
+    await expect(page.getByRole('dialog').getByTestId('bookmark-duplicate')).toHaveCount(0);
+  });
+});
+
 test.describe('Calm Lesezeichen tiles (focus audit 2)', () => {
   test.beforeEach(async ({ page }) => {
     await enable(page, 'bookmarks');

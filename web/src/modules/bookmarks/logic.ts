@@ -27,6 +27,45 @@ export function hostOf(url: string | undefined): string | undefined {
   }
 }
 
+/** Query parameters that only track where a click came from; they never change the page. */
+const TRACKING = /^(utm_\w+|fbclid|gclid|dclid|msclkid|mc_cid|mc_eid|igshid|si|ref_src)$/i;
+
+/**
+ * The address reduced to what makes it the same page: host without "www.", path without a trailing
+ * slash, the remaining query sorted; scheme, fragment and tracking parameters are dropped. Used only
+ * to compare, never stored. Not an address → undefined.
+ */
+export function urlKey(input: string | undefined): string | undefined {
+  const normal = input ? normalizeUrl(input) : undefined;
+  if (!normal) return undefined;
+  const url = new URL(normal);
+  const query = [...url.searchParams.entries()]
+    .filter(([k]) => !TRACKING.test(k))
+    .sort(([a, x], [b, y]) => a.localeCompare(b) || x.localeCompare(y))
+    .map(([k, v]) => `${k}=${v}`)
+    .join('&');
+  const path = url.pathname.replace(/\/+$/, '');
+  return `${url.host.replace(/^www\./, '').toLowerCase()}${path}${query ? `?${query}` : ''}`;
+}
+
+/**
+ * The saved item that is the same thing as the draft: the same page (`urlKey`), or, for a draft
+ * without an address, the same title among the items without an address. `exceptId` is the item
+ * being edited.
+ */
+export function findDuplicate<T extends Pick<BookmarkItem, 'title' | 'url'> & { id: string }>(
+  items: readonly T[],
+  draft: { title: string; url?: string },
+  exceptId?: string,
+): T | undefined {
+  const others = items.filter((i) => i.id !== exceptId);
+  const key = urlKey(draft.url);
+  if (key) return others.find((i) => urlKey(i.url) === key);
+  if (draft.url?.trim()) return undefined;
+  const title = fold(draft.title.trim());
+  return title ? others.find((i) => !i.url && fold(i.title.trim()) === title) : undefined;
+}
+
 /** "Rezept, #Kochen  urlaub" → ['Rezept', 'Kochen', 'urlaub']; duplicates (any case) are dropped. */
 export function parseTags(text: string): string[] {
   const seen = new Set<string>();

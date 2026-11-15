@@ -11,6 +11,7 @@ import { t } from '@/strings';
 import { Checkbox, ItemRow, type RowMenuItem } from '@/ui';
 import { usePageWidthAtLeast } from '@/ui/pageWidth';
 import { hostOf, statusOf } from '../logic';
+import { fetchPreviewNow } from '../preview';
 import { itemRepo } from '../repo';
 import type { BookmarkItem } from '../schema';
 
@@ -24,6 +25,8 @@ export function bookmarkMenu(
     edit: (item: Stored<BookmarkItem>) => void;
     filterTag?: (tag: string) => void;
     read?: (item: Stored<BookmarkItem>) => void;
+    /** Offer "Vorschau von der Seite holen" (list and pinboard; the link tiles show no preview). */
+    preview?: boolean;
   },
 ): RowMenuItem[] {
   const status = statusOf(item);
@@ -56,6 +59,21 @@ export function bookmarkMenu(
             onSelect: () => void itemRepo.update(item.id, { done: false, started: false }),
           },
         ]),
+    // One click = one fetch from the page itself; works whatever the "Linkvorschau laden" setting says.
+    ...(on.preview && item.url && !item.preview
+      ? [
+          {
+            id: 'preview',
+            label: t.bookmarks.previewFetch,
+            onSelect: () =>
+              void fetchPreviewNow(item.id, item.url!).then((ok) =>
+                useUiStore
+                  .getState()
+                  .toast(ok ? t.bookmarks.previewFetched : t.bookmarks.previewNone),
+              ),
+          },
+        ]
+      : []),
     ...(item.url
       ? [
           {
@@ -152,7 +170,12 @@ export function BookmarkRow({
       ]
         .filter(Boolean)
         .join(' · ')}
-      menu={bookmarkMenu(item, { edit: onEdit, filterTag: onFilterTag, read: onRead })}
+      menu={bookmarkMenu(item, {
+        edit: onEdit,
+        filterTag: onFilterTag,
+        read: onRead,
+        preview: true,
+      })}
     />
   );
 }

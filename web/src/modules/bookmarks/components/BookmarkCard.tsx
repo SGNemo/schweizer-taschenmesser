@@ -87,7 +87,12 @@ export function BookmarkCard({
           label={`${t.bookmarks.moreOptions}: ${item.title}`}
           open={menuOpen}
           onOpenChange={setMenuOpen}
-          items={bookmarkMenu(item, { edit: onEdit, filterTag: onFilterTag, read: onRead })}
+          items={bookmarkMenu(item, {
+            edit: onEdit,
+            filterTag: onFilterTag,
+            read: onRead,
+            preview: true,
+          })}
         />
       </div>
     </article>

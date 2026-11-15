@@ -183,3 +183,38 @@ describe('role: things to look at, buy or try (round 2026-11)', () => {
     expect(Object.keys(manifest.migrations ?? {})).toContain('3');
   });
 });
+
+describe('duplicates (round 2026-11, package 2)', () => {
+  const saved = [
+    { id: 'a', title: 'Pasta', url: 'https://www.koch.example/pasta/' },
+    { id: 'b', title: 'Dune', url: undefined },
+    { id: 'c', title: 'Suche', url: 'https://shop.example/s?q=lampe&page=2' },
+  ];
+
+  it('the same page is found whatever the scheme, "www.", trailing slash, fragment or tracking', async () => {
+    const { findDuplicate, urlKey } = await import('../logic');
+    expect(urlKey('http://koch.example/pasta#zutaten')).toBe('koch.example/pasta');
+    expect(
+      findDuplicate(saved, { title: 'x', url: 'koch.example/pasta?utm_source=mail' })?.id,
+    ).toBe('a');
+    expect(
+      findDuplicate(saved, { title: 'x', url: 'https://shop.example/s?page=2&q=lampe&fbclid=1' })
+        ?.id,
+    ).toBe('c');
+    // Another page of the same site, or another query, is not the same thing.
+    expect(findDuplicate(saved, { title: 'x', url: 'https://koch.example/pizza' })).toBeUndefined();
+    expect(
+      findDuplicate(saved, { title: 'x', url: 'https://shop.example/s?q=lampe' }),
+    ).toBeUndefined();
+  });
+
+  it('without an address the title decides, only among items without an address', async () => {
+    const { findDuplicate } = await import('../logic');
+    expect(findDuplicate(saved, { title: ' dune ' })?.id).toBe('b');
+    expect(findDuplicate(saved, { title: 'Pasta' })).toBeUndefined();
+    expect(findDuplicate(saved, { title: '' })).toBeUndefined();
+    // The item being edited is never its own duplicate.
+    expect(findDuplicate(saved, { title: 'Dune' }, 'b')).toBeUndefined();
+    expect(findDuplicate(saved, { title: 'x', url: 'kein link' })).toBeUndefined();
+  });
+});

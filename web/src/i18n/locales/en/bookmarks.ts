@@ -20,7 +20,7 @@ export const bookmarks: Strings['bookmarks'] = {
         'Sets how the list is divided: by when you saved it, by first tag (like collections) or by type. The choice in the page menu changes the same setting.',
       linkPreview: 'Load link previews',
       linkPreviewHint:
-        'When you save a link, fetches its title, description and a small picture directly from the linked page. That page then learns that you saved the link. Default: off.',
+        'Every time you save a link, fetches its title, description and a small picture directly from the linked page. That page then learns that you saved the link. Default: off. One at a time always works: in the “⋯” menu of a saved item, or when you share from your phone.',
     },
   },
   title: 'Saved',
@@ -81,6 +81,15 @@ export const bookmarks: Strings['bookmarks'] = {
   sortBy: 'Sort by',
   sorts: { newest: 'Newest first', title: 'Title A–Z', kind: 'By type', status: 'Started first' },
   statuses: { open: 'Open', started: 'Started', done: 'Done' },
+  duplicate: (title: string, status: string) =>
+    `Already saved: “${title}”${status ? ` (${status})` : ''}. You can still save it.`,
+  duplicateOpen: 'Open the existing one',
+  sharedPreview: 'Fetch a preview from the page',
+  sharedPreviewHint:
+    'On saving, fetches the title, description and a small picture once, directly from this page, without sign-in and without cookies.',
+  previewFetch: 'Fetch a preview from the page',
+  previewFetched: 'Preview fetched. The pinboard shows it.',
+  previewNone: 'This page offers no preview right now.',
   markStarted: 'Mark as started',
   markOpen: 'Reopen',
   markDone: 'Mark as done',

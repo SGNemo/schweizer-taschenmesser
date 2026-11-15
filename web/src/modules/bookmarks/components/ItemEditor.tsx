@@ -1,10 +1,12 @@
 import { changedFields } from '@/core/db/patch';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { t } from '@/strings';
 import {
   AdvancedFields,
   Button,
+  Checkbox,
   Dialog,
   Form,
   FormActions,
@@ -12,16 +14,29 @@ import {
   TextArea,
   TextField,
 } from '@/ui';
-import { formatTags, normalizeUrl, parseTags } from '../logic';
+import { findDuplicate, formatTags, normalizeUrl, parseTags, statusOf } from '../logic';
 import { fetchPreviewFor, previewEnabled } from '../preview';
 import { itemRepo } from '../repo';
 import { KINDS, type BookmarkItem, type Kind } from '../schema';
 import { deleteWithUndo } from '@/core/undo/withToast';
+import styles from './ItemEditor.module.css';
 
 export type ItemTarget =
-  Stored<BookmarkItem> | { draft: true; title?: string; url?: string; kind?: Kind } | null;
+  | Stored<BookmarkItem>
+  /** `shared`: the draft came through "Teilen"; its preview is fetched once on saving (a tick in the form). */
+  | { draft: true; title?: string; url?: string; kind?: Kind; shared?: boolean }
+  | null;
 
-export function ItemEditor({ target, onClose }: { target: ItemTarget; onClose: () => void }) {
+export function ItemEditor({
+  target,
+  onClose,
+  onOpenExisting,
+}: {
+  target: ItemTarget;
+  onClose: () => void;
+  /** Opens the item the draft duplicates instead of the draft. */
+  onOpenExisting?: (item: Stored<BookmarkItem>) => void;
+}) {
   const existing = target && 'id' in target ? target : null;
   return (
     <Dialog
@@ -30,14 +45,31 @@ export function ItemEditor({ target, onClose }: { target: ItemTarget; onClose: (
       onClose={onClose}
       title={existing ? t.bookmarks.edit : t.bookmarks.add}
     >
-      {target ? <Fields key={existing?.id ?? 'new'} target={target} onClose={onClose} /> : null}
+      {target ? (
+        <Fields
+          key={existing?.id ?? 'new'}
+          target={target}
+          onClose={onClose}
+          onOpenExisting={onOpenExisting}
+        />
+      ) : null}
     </Dialog>
   );
 }
 
-function Fields({ target, onClose }: { target: NonNullable<ItemTarget>; onClose: () => void }) {
+function Fields({
+  target,
+  onClose,
+  onOpenExisting,
+}: {
+  target: NonNullable<ItemTarget>;
+  onClose: () => void;
+  onOpenExisting?: (item: Stored<BookmarkItem>) => void;
+}) {
   const existing = 'id' in target ? target : null;
-  const draft = !existing ? (target as { title?: string; url?: string; kind?: Kind }) : {};
+  const draft = !existing
+    ? (target as { title?: string; url?: string; kind?: Kind; shared?: boolean })
+    : {};
   // The record as the editor opened it: only fields that differ from it are saved (QA X01).
   const [opened] = useState(existing);
   const [title, setTitle] = useState(existing?.title ?? draft.title ?? '');
@@ -46,6 +78,12 @@ function Fields({ target, onClose }: { target: NonNullable<ItemTarget>; onClose:
   const [tags, setTags] = useState(formatTags(existing?.tags ?? []));
   const [note, setNote] = useState(existing?.note ?? '');
   const [error, setError] = useState('');
+  // A shared link gets its preview on saving, unless the tick is taken away (the page learns of the fetch).
+  const shared = !existing && !!draft.shared && !!draft.url;
+  const [withPreview, setWithPreview] = useState(shared);
+  // The same page (or, without an address, the same title) already saved: say so, never block.
+  const all = useLiveQuery(() => itemRepo.active().toArray(), []);
+  const duplicate = all ? findDuplicate(all, { title, url }, existing?.id) : undefined;
 
   async function save() {
     const address = url.trim() ? normalizeUrl(url) : undefined;
@@ -73,7 +111,7 @@ function Fields({ target, onClose }: { target: NonNullable<ItemTarget>; onClose:
         ),
         existing)
       : await itemRepo.create(data);
-    if (address && addressChanged && (await previewEnabled()))
+    if (address && addressChanged && ((shared && withPreview) || (await previewEnabled())))
       void fetchPreviewFor(saved.id, address);
     onClose();
   }
@@ -99,6 +137,29 @@ function Fields({ target, onClose }: { target: NonNullable<ItemTarget>; onClose:
         }}
         error={error}
       />
+      {duplicate ? (
+        <p className={styles.duplicate} role="status" data-testid="bookmark-duplicate">
+          <span>
+            {t.bookmarks.duplicate(
+              duplicate.title,
+              statusOf(duplicate) === 'open' ? '' : t.bookmarks.statuses[statusOf(duplicate)],
+            )}
+          </span>
+          {onOpenExisting ? (
+            <Button variant="ghost" onClick={() => onOpenExisting(duplicate)}>
+              {t.bookmarks.duplicateOpen}
+            </Button>
+          ) : null}
+        </p>
+      ) : null}
+      {shared ? (
+        <Checkbox
+          label={t.bookmarks.sharedPreview}
+          description={t.bookmarks.sharedPreviewHint}
+          checked={withPreview}
+          onChange={(e) => setWithPreview(e.target.checked)}
+        />
+      ) : null}
       <AdvancedFields moduleId="bookmarks" hasData={kind !== 'link' || !!tags || !!note}>
         <SelectField
           label={t.bookmarks.kind}

@@ -50,3 +50,11 @@ describe('bookmark.requested', () => {
     expect(await itemRepo.active().count()).toBe(1);
   });
 });
+
+describe('bookmark.requested and tracking parameters', () => {
+  it('the same page with a tracking parameter is not stored twice', async () => {
+    await addRequested({ title: 'Artikel', url: 'https://news.example.test/b' });
+    await addRequested({ title: 'Artikel', url: 'http://www.news.example.test/b/?utm_source=x' });
+    expect(await itemRepo.active().toArray()).toHaveLength(1);
+  });
+});

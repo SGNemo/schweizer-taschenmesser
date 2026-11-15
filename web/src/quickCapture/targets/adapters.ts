@@ -107,6 +107,31 @@ function httpUrl(raw: string | undefined): string | undefined {
   }
 }
 
+/**
+ * First word of a Merkzettel → its kind ("m film Dune" → Film/Serie „Dune“). German like the parser; the
+ * values are the kinds of `modules/bookmarks/schema.ts` (no module import here; `targets.test.ts` pins them).
+ */
+const BOOKMARK_KIND_WORDS: Record<string, string> = {
+  lesen: 'read',
+  artikel: 'read',
+  film: 'watch',
+  serie: 'watch',
+  ansehen: 'watch',
+  anschauen: 'watch',
+  buch: 'book',
+  ort: 'place',
+  kaufen: 'buy',
+  ausprobieren: 'try',
+  idee: 'idea',
+};
+
+/** "film: Dune" → kind `watch`, title "Dune". A word alone ("Buch") stays the title. */
+export function bookmarkKindFromText(text: string): { kind?: string; title: string } {
+  const match = /^(\p{L}+):?\s+(\S.*)$/u.exec(text.trim());
+  const kind = match ? BOOKMARK_KIND_WORDS[match[1]!.toLowerCase()] : undefined;
+  return kind ? { kind, title: match![2]!.trim() } : { title: text.trim() };
+}
+
 const bookmarks: CaptureTarget = {
   type: 'bookmark',
   moduleId: 'bookmarks',
@@ -114,11 +139,12 @@ const bookmarks: CaptureTarget = {
   // Direct write: the module's dedupe service (`bookmark.requested`) only runs in the main window.
   build: (f) => {
     const url = httpUrl(f.url);
-    const name = f.title.trim() || (url ? new URL(url).hostname : '');
+    const said = bookmarkKindFromText(f.title);
+    const name = said.title || (url ? new URL(url).hostname : '');
     if (!name) throw new CaptureError('invalid');
     return {
       title: name,
-      kind: 'link',
+      kind: said.kind ?? 'link',
       ...(url ? { url } : {}),
     };
   },

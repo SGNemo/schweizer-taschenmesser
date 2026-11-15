@@ -4164,7 +4164,7 @@ export const de = {
           'Legt fest, wie die Merkliste unterteilt ist: nach Zeitpunkt, nach dem ersten Tag (wie Sammlungen) oder nach Art. Die Auswahl im Menü der Seite ändert dieselbe Einstellung.',
         linkPreview: 'Linkvorschau laden',
         linkPreviewHint:
-          'Holt beim Speichern Titel, Beschreibung und ein kleines Bild direkt von der Seite des Links. Dabei erfährt diese Seite, dass du den Link gespeichert hast. Standard: aus.',
+          'Holt bei jedem Speichern Titel, Beschreibung und ein kleines Bild direkt von der Seite des Links. Dabei erfährt diese Seite, dass du den Link gespeichert hast. Standard: aus. Einzeln geht es immer: im Menü „⋯“ eines Merkzettels oder beim Teilen vom Handy.',
       },
     },
     title: 'Merkliste',
@@ -4231,6 +4231,15 @@ export const de = {
       status: 'Angefangenes zuerst',
     },
     statuses: { open: 'Offen', started: 'Angefangen', done: 'Erledigt' },
+    duplicate: (title: string, status: string) =>
+      `Schon gemerkt: „${title}“${status ? ` (${status})` : ''}. Du kannst trotzdem speichern.`,
+    duplicateOpen: 'Vorhandenen öffnen',
+    sharedPreview: 'Vorschau von der Seite holen',
+    sharedPreviewHint:
+      'Holt beim Speichern einmal Titel, Beschreibung und ein kleines Bild direkt von dieser Seite, ohne Anmeldung und ohne Cookies.',
+    previewFetch: 'Vorschau von der Seite holen',
+    previewFetched: 'Vorschau geholt. Die Pinnwand zeigt sie.',
+    previewNone: 'Diese Seite gibt gerade keine Vorschau her.',
     markStarted: 'Als angefangen markieren',
     markOpen: 'Wieder öffnen',
     markDone: 'Als erledigt markieren',
