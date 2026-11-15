@@ -8870,6 +8870,12 @@ export const de = {
       reminderHint:
         'Im Zeitfenster erinnert die App, bis das Tagesziel erreicht ist – danach nicht mehr.',
       templates: 'Vorlagen',
+      keepFree: 'Zeit im Plan freihalten',
+      keepFreeNone: 'keine',
+      keepFreeOther: 'Andere Dauer …',
+      keepFreeMinutes: 'Minuten (5–240)',
+      keepFreeHint:
+        'Der Planer hält diese Zeit an den geplanten Tagen frei. Abgehakt wird nur hier.',
     },
     templates: {
       water: { name: 'Wasser trinken', unit: 'Gläser' },
@@ -9123,6 +9129,7 @@ export const de = {
       routine: 'Routine',
       training: 'Training',
       appointment: 'Termin',
+      habit: 'Gewohnheit',
     },
     ctx: {
       label: 'Rund um die Woche',

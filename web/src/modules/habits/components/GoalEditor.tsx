@@ -1,4 +1,5 @@
 import { changedFields } from '@/core/db/patch';
+import { formatMinutes } from '@/core/i18n/format';
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { weekdayShort } from '@/core/recurrence/describe';
@@ -21,6 +22,8 @@ import styles from '../habits.module.css';
 export type GoalTarget = Stored<Goal> | 'new' | null;
 
 type TemplateId = 'water' | 'walk' | 'stretch' | 'pill';
+/** „Zeit im Plan freihalten“ (concept H1): the offered lengths; „Andere Dauer …“ takes 5–240 minutes. */
+const KEEP_FREE = [15, 30, 60] as const;
 /** Starting points; the name and unit come from the strings, the rest is fixed here. */
 const TEMPLATES: Record<TemplateId, Partial<Goal>> = {
   water: {
@@ -89,6 +92,15 @@ function Fields({
   const [to, setTo] = useState(rem?.kind === 'window' ? rem.to : '19:00');
   const [every, setEvery] = useState(String(rem?.kind === 'window' ? rem.everyMin : 120));
   const [error, setError] = useState('');
+  // Planner hub S4: 'none', one of `KEEP_FREE`, or 'other' with its own minutes.
+  const [keep, setKeep] = useState<string>(
+    existing?.minutes === undefined
+      ? 'none'
+      : (KEEP_FREE as readonly number[]).includes(existing.minutes)
+        ? String(existing.minutes)
+        : 'other',
+  );
+  const [keepOther, setKeepOther] = useState(String(existing?.minutes ?? 45));
 
   function template(id: TemplateId) {
     const tpl = TEMPLATES[id];
@@ -124,6 +136,13 @@ function Fields({
           : remKind === 'window'
             ? { kind: 'window' as const, from, to, everyMin: Number(every) || 120 }
             : undefined,
+      // Only a daily goal has a day to keep free.
+      minutes:
+        period !== 'day' || keep === 'none'
+          ? undefined
+          : keep === 'other'
+            ? Number(keepOther)
+            : Number(keep),
       order: existing?.order ?? nextOrder,
       archived: existing?.archived,
     };
@@ -204,7 +223,10 @@ function Fields({
           />
         </div>
       ) : null}
-      <AdvancedFields moduleId="habits" hasData={period === 'week' || weekdays.length > 0}>
+      <AdvancedFields
+        moduleId="habits"
+        hasData={period === 'week' || weekdays.length > 0 || keep !== 'none'}
+      >
         <SelectField
           label={t.habits.form.period}
           value={period}
@@ -245,6 +267,35 @@ function Fields({
             </div>
           </div>
         )}
+        {period === 'day' ? (
+          <>
+            <SelectField
+              label={t.habits.form.keepFree}
+              hint={t.habits.form.keepFreeHint}
+              value={keep}
+              onChange={(e) => setKeep(e.target.value)}
+            >
+              <option value="none">{t.habits.form.keepFreeNone}</option>
+              {KEEP_FREE.map((m) => (
+                <option key={m} value={String(m)}>
+                  {formatMinutes(m)}
+                </option>
+              ))}
+              <option value="other">{t.habits.form.keepFreeOther}</option>
+            </SelectField>
+            {keep === 'other' ? (
+              <TextField
+                label={t.habits.form.keepFreeMinutes}
+                type="number"
+                inputMode="numeric"
+                min={5}
+                max={240}
+                value={keepOther}
+                onChange={(e) => setKeepOther(e.target.value)}
+              />
+            ) : null}
+          </>
+        ) : null}
       </AdvancedFields>
       {error ? <p role="alert">{error}</p> : null}
       <FormActions

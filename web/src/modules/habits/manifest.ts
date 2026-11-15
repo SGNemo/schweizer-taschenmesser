@@ -25,7 +25,7 @@ const manifest: ModuleManifest = {
     tabs: true,
     signature: 'ring',
   },
-  version: 1,
+  version: 2,
   get description() {
     return t.habits.meta.description;
   },
@@ -69,6 +69,8 @@ const manifest: ModuleManifest = {
   contributions: {
     onboarding: noOnboarding,
     notifications: () => import('./notifications'),
+    // Blocks only (planner hub S4, concept H1): a goal with „Zeit im Plan freihalten“ keeps its time free.
+    plannable: () => import('./plannable'),
     quickAdd: [
       {
         id: 'new',

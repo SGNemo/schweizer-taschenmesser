@@ -71,6 +71,35 @@ export function useRowMenu(ctx: {
         { id: 'open', label: t.planner.row.open, onSelect: () => void navigate(e.to) },
         { id: 'exclude', label: t.planner.row.exclude, onSelect: () => void exclude(e, titles) },
       ];
+    // A fixed block (S4): its day and time are the source's – nothing here moves, nails, orders or dates it. What is
+    // left: its length (the source's own), take it out of the plan, open it.
+    if (e.fixed && 'fixed' in row && row.fixed)
+      return [
+        ...(abilities.canDone(e.moduleId) && !opts.tick
+          ? [{ id: 'done', label: t.planner.row.done, onSelect: () => void markDone(e, titles) }]
+          : []),
+        ...(abilities.canEstimate(e.moduleId)
+          ? [
+              {
+                id: 'estimate',
+                label: t.planner.row.estimate,
+                onSelect: () =>
+                  setChoice({
+                    kind: 'estimate',
+                    entry: e,
+                    ...(e.durationMin !== undefined ? { current: e.durationMin } : {}),
+                  }),
+              },
+            ]
+          : []),
+        {
+          id: 'exclude',
+          label: t.planner.row.exclude,
+          group: t.planner.row.more,
+          onSelect: () => void exclude(e, titles),
+        },
+        { id: 'open', label: t.planner.row.open, onSelect: () => void navigate(e.to) },
+      ];
     const day = date ?? ctx.today;
     const pinned = row.item?.pinned !== undefined;
     const hard = row.item?.due?.hard === true;

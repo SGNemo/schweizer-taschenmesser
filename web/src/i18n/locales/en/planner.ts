@@ -109,6 +109,7 @@ export const planner: Strings['planner'] = {
     routine: 'Routine',
     training: 'Workout',
     appointment: 'Appointment',
+    habit: 'Habit',
   },
   ctx: {
     label: 'Around the week',

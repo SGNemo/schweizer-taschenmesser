@@ -21,13 +21,15 @@ import type {
 } from '@/core/plan/types';
 import {
   collectCalendarItems,
+  collectPlanBlocks,
   collectPlannable,
   plannableSource,
+  type PlanBlockEntry,
   type PlannableEntry,
   type RequestedIds,
 } from '@/core/modules/contributions';
 import { isPlannerOwned, type CalendarItem, type ModuleManifest } from '@/core/modules/types';
-import { planDays } from './days';
+import { fixedOf, planDays } from './days';
 import { lateMoneyDue } from './late';
 import { itemKeyOf, plannerRepos, putRow, type PlannerDb, type PlannerRepos } from './repo';
 import type { AssignmentRow, PlanItemRow } from './schema';
@@ -71,6 +73,7 @@ export interface RunDeps {
   entries?: PlannableEntry[];
   writer?: SourceWriter;
   calendar?: CalendarItem[];
+  blocks?: PlanBlockEntry[];
 }
 
 export interface RunInputs {
@@ -160,12 +163,16 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
     ? (deps.calendar ??
       (await collectCalendarItems({ from: deps.today, to: until }, deps.manifests)))
     : [];
+  // Time a module keeps free (a habit, S4): taken off the day like an appointment, so part of the hash below.
+  const blocks =
+    deps.blocks ?? (await collectPlanBlocks({ today: deps.today, until }, deps.manifests));
   const days: PlanDay[] = planDays({
     today: deps.today,
     span: settings.horizonDays,
     settings: deps.settings,
     dayRows: await repos.day.active().toArray(),
     calendar,
+    blocks,
   }).map(({ date, availableMin, blockers, window }) => ({
     date,
     availableMin,
@@ -195,6 +202,8 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
     // The engine places by day: a deadline's hour (`due.time`, package 5b) never reaches it.
     const due = dueAny ? { date: dueAny.date, hard: dueAny.hard } : undefined;
     const durationMin = row?.durationMin ?? e.durationMin;
+    // A fixed block (S4) moves things, so it is an engine field and enters the hash with the items.
+    const fixed = fixedOf(e);
     items.push({
       key,
       ...(durationMin !== undefined ? { durationMin } : {}),
@@ -208,6 +217,7 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
       splittable: row?.splittable ?? true,
       ...(row?.excluded ? { excluded: true } : {}),
       ...(row?.part ? { part: row.part } : {}),
+      ...(fixed ? { fixed } : {}),
       createdAt: e.createdAt ?? 0,
     });
   }

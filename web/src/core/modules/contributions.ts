@@ -13,6 +13,7 @@ import type {
   HeadlineFigure,
   ModuleHue,
   ModuleManifest,
+  PlanBlock,
   PlannableItem,
   ResolvedState,
 } from './types';
@@ -101,6 +102,49 @@ export function usePlannable(
   return useSharedLiveQuery(
     `plannable|${ctx.today}|${ctx.until}|${ids}|${states === undefined}|${asked}`,
     async () => (states ? collectPlannable(ctx, activeManifests(states), requested) : undefined),
+    preload('plannable', activeManifests(states)),
+  );
+}
+
+/** A block of time a module keeps free (`PlannableSource.blocks`), with the module that asked for it. */
+export type PlanBlockEntry = PlanBlock & { moduleId: string };
+
+/**
+ * Blocks of time of all given (active) modules (habits: „Zeit im Plan freihalten“, planner hub S4), in manifest
+ * order. A failing source never breaks the others; a block outside the range is dropped.
+ */
+export async function collectPlanBlocks(
+  ctx: { today: string; until: string },
+  manifests: readonly ModuleManifest[],
+): Promise<PlanBlockEntry[]> {
+  const lists = await Promise.all(
+    manifests.map(async (m) => {
+      const load = m.contributions?.plannable;
+      if (!load) return [];
+      try {
+        const source = (await load()).default;
+        if (!source.blocks) return [];
+        return (await source.blocks(ctx))
+          .filter((b) => b.date >= ctx.today && b.date <= ctx.until && b.min > 0)
+          .map((b) => ({ ...b, moduleId: m.id }));
+      } catch (e) {
+        console.error(`[plannable] blocks of "${m.id}" failed`, e);
+        return [];
+      }
+    }),
+  );
+  return lists.flat();
+}
+
+/** Live blocks of time of all active modules; `undefined` while loading. */
+export function usePlanBlocks(ctx: { today: string; until: string }): PlanBlockEntry[] | undefined {
+  const states = useModuleStates();
+  const ids = activeManifests(states)
+    .map((m) => m.id)
+    .join(',');
+  return useSharedLiveQuery(
+    `planBlocks|${ctx.today}|${ctx.until}|${ids}|${states === undefined}`,
+    async () => (states ? collectPlanBlocks(ctx, activeManifests(states)) : undefined),
     preload('plannable', activeManifests(states)),
   );
 }

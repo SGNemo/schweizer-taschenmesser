@@ -1,9 +1,10 @@
-import { type ReactNode, type TouchEvent, useId, useRef, useState } from 'react';
+import { Fragment, type ReactNode, type TouchEvent, useId, useRef, useState } from 'react';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Card, Icon, ItemList, ItemRow, Progress, SkeletonRows } from '@/ui';
 import type { BoardBlocker, BoardDay, BoardRow } from '../board';
 import { capacityLabel, capacityState, capacityWhy, compact } from './capacity';
+import { sourceOf } from './ThingRow';
 import styles from '../routes/planner.module.css';
 
 /** The first rows of a day are „Zuerst“; what follows is „Danach“. */
@@ -25,9 +26,20 @@ export function dayTitle(day: Pick<BoardDay, 'date' | 'isToday'>, tomorrow: bool
       : full;
 }
 
-/** A fixed block of the day (an appointment from the calendar, a blocker of the day): recessed, no tick, no menu. */
-function BlockRow({ blocker }: { blocker: BoardBlocker }) {
+/**
+ * A block of the day (an appointment from the calendar, a blocker of the day, time a habit keeps free – S4): recessed,
+ * a clock in the lead, no tick, no menu. A habit's block says only its typed name, its module and its minutes.
+ */
+export function BlockRow({ blocker }: { blocker: BoardBlocker }) {
   const time = blocker.from && blocker.to ? `${blocker.from}–${blocker.to}` : undefined;
+  const source = blocker.module
+    ? sourceOf({
+        kind: blocker.module === 'habits' ? 'habit' : blocker.module,
+        moduleId: blocker.module,
+      })
+    : blocker.calendar
+      ? { word: t.planner.src.appointment, icon: 'calendar' as const }
+      : { word: t.planner.row.blocker, icon: 'circleMinus' as const };
   return (
     <ItemRow
       recessed
@@ -40,8 +52,8 @@ function BlockRow({ blocker }: { blocker: BoardBlocker }) {
       meta={
         <span className={styles.meta}>
           <span className={styles.source}>
-            <Icon name={blocker.calendar ? 'calendar' : 'circleMinus'} size={16} />
-            {blocker.calendar ? t.planner.src.appointment : t.planner.row.blocker}
+            <Icon name={source.icon} size={16} />
+            {source.word}
           </span>
           {time ? (
             <>
@@ -115,12 +127,26 @@ export function DayPage({
   const [whyOpen, setWhyOpen] = useState(false);
   const thenRef = useRef<HTMLDivElement>(null);
   const start = useRef<{ x: number; y: number } | undefined>(undefined);
-  const first = day.rows.slice(0, FIRST_ROWS);
-  const then = day.rows.slice(FIRST_ROWS);
+  // Fixed blocks (S4, a training at 18:00) lie with the day's blocks, in time order; „Zuerst“ / „Danach“ hold the rest.
+  const things = day.rows.filter((r) => !r.fixed);
+  const blocks = [
+    ...day.blockers.map((b) => ({
+      at: b.from,
+      key: b.id,
+      node: <BlockRow key={b.id} blocker={b} />,
+    })),
+    ...day.rows
+      .filter((r) => r.fixed)
+      .map((r) => ({ at: r.fixed!.from, key: r.unitId, node: renderRow(r, false) })),
+  ].sort((a, b) =>
+    a.at && b.at ? (a.at < b.at ? -1 : a.at > b.at ? 1 : 0) : a.at ? -1 : b.at ? 1 : 0,
+  );
+  const first = things.slice(0, FIRST_ROWS);
+  const then = things.slice(FIRST_ROWS);
   const folded = !all && then.length - THEN_ROWS >= MIN_HIDDEN;
   const shown = folded ? then.slice(0, THEN_ROWS) : then;
   const state = capacityState(day);
-  const hasRows = day.rows.length > 0;
+  const hasRows = things.length > 0;
   const editName = t.planner.board.editDay(formatDay(day.date, 'EEEE'));
 
   const onTouchStart = (e: TouchEvent) => {
@@ -228,10 +254,10 @@ export function DayPage({
         </p>
       ) : null}
 
-      {day.blockers.length > 0 ? (
+      {blocks.length > 0 ? (
         <ItemList label={t.planner.day.blockers}>
-          {day.blockers.map((b) => (
-            <BlockRow key={b.id} blocker={b} />
+          {blocks.map((b) => (
+            <Fragment key={b.key}>{b.node}</Fragment>
           ))}
         </ItemList>
       ) : null}
@@ -243,7 +269,8 @@ export function DayPage({
             {first.map((row, i) => renderRow(row, i === 0))}
           </ItemList>
         </>
-      ) : (
+      ) : day.rows.length > 0 ? null : (
+        // Only a fixed block on the day: it stands above, no empty line under it.
         empty
       )}
 

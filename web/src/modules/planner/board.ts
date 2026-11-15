@@ -3,11 +3,12 @@
  * one object per day with its capacity line, rows and blockers, plus the waiting list. The engine is
  * not run here; the board shows what the last run stored (`assignment` rows, `LastRun`).
  */
-import type { PlannableEntry } from '@/core/modules/contributions';
+import type { PlanBlockEntry, PlannableEntry } from '@/core/modules/contributions';
 import type { CalendarItem } from '@/core/modules/types';
-import { capacity } from '@/core/plan/capacity';
+import { capacity, fixedCharges } from '@/core/plan/capacity';
+import { cmp } from '@/core/plan/dates';
 import { DEFAULT_MIN, type PlaceReason, type Unplaced } from '@/core/plan/types';
-import { planDays, type DayBlocker } from './days';
+import { fixedOf, planDays, type DayBlocker } from './days';
 import { lateMoneyDue } from './late';
 import { itemKeyOf } from './repo';
 import type { AssignmentRow, PlanDayRow, PlanItemRow } from './schema';
@@ -35,6 +36,11 @@ export interface BoardRow {
   /** The source's own date before the planner (for „Warum hier?“ of a carried thing). */
   entry?: PlannableEntry;
   item?: PlanItemRow;
+  /**
+   * A fixed block (planner hub S4, a training at 18:00): its time on this day. Shown with the day's blocks, never
+   * moved, never late; it takes from the day only what no timed blocker covers already.
+   */
+  fixed?: { from: string; to: string };
 }
 
 export interface BoardDay {
@@ -95,6 +101,8 @@ export interface BoardInput {
   assignments: readonly (AssignmentRow & { id: string })[];
   entries: readonly PlannableEntry[];
   calendar: readonly CalendarItem[];
+  /** Blocks of time modules keep free (habits, S4). */
+  blocks?: readonly PlanBlockEntry[];
   unplaced: readonly Unplaced[];
   titles?: Record<string, string>;
 }
@@ -173,6 +181,7 @@ export function buildBoard(input: BoardInput): Board {
     settings: input.settings,
     dayRows: input.dayRows,
     calendar: input.calendar,
+    ...(input.blocks ? { blocks: input.blocks } : {}),
   });
   const days: BoardDay[] = built.map(({ date, availableMin, blockers, row, window, ownWindow }) => {
     const cap = capacity({ date, availableMin, blockers }, { bufferShare });
@@ -182,6 +191,8 @@ export function buildBoard(input: BoardInput): Board {
       .map((a) => {
         const entry = entries.get(a.itemKey);
         const item = items.get(a.itemKey);
+        // Fixed on this day by its source (S4); the run stored its time with the row.
+        const fixed = entry && fixedOf(entry)?.date === date && a.from && a.to;
         return {
           unitId: a.id,
           itemKey: a.itemKey,
@@ -205,9 +216,20 @@ export function buildBoard(input: BoardInput): Board {
               : {}),
           ...(entry ? { entry } : {}),
           ...(item ? { item } : {}),
+          ...(fixed ? { fixed: { from: a.from!, to: a.to! } } : {}),
         };
       });
-    const planned = rows.reduce((n, r) => n + r.minutes, 0);
+    // As the engine counts (`core/plan/engine.ts` rule 2b): a fixed block takes only what no timed blocker covers.
+    const fixedRows = rows
+      .filter((r) => r.fixed)
+      .sort((a, b) => cmp(a.fixed!.from, b.fixed!.from) || cmp(a.unitId, b.unitId));
+    const charges = fixedCharges(
+      fixedRows.map((r) => ({ minutes: r.minutes, ...r.fixed })),
+      blockers,
+    );
+    const planned =
+      rows.filter((r) => !r.fixed).reduce((n, r) => n + r.minutes, 0) +
+      charges.reduce((n, c) => n + c, 0);
     return {
       date,
       isToday: date === input.today,
