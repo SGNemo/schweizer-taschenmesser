@@ -54,7 +54,7 @@ import { DaySetup } from '../components/DaySetup';
 import { DaySheet } from '../components/DaySheet';
 import { RowChoice, type RowChoiceState } from '../components/RowChoice';
 import { SETUP_DAYS } from '../daySetup';
-import { eveningLine } from '../rest';
+import { duesOf, eveningLine } from '../rest';
 import { dayEndOf } from '../settings';
 import { PlanPreview, type PreviewData } from '../components/PlanPreview';
 import { WeekCheck } from '../components/WeekCheck';
@@ -97,19 +97,6 @@ function Part({ k, of }: { k: number; of: number }) {
       <span className="sr-only">{` ${t.planner.row.partAria(k + 1, of)}`}</span>
     </>
   );
-}
-
-/** Item key → the deadline a row shows (its planner row's own, else the source's), for the preview (C5). */
-function duesOf(board: {
-  days: readonly { rows: readonly BoardRow[] }[];
-  waiting: readonly WaitingRow[];
-}) {
-  const dues: Record<string, string> = {};
-  for (const r of [...board.days.flatMap((d) => d.rows), ...board.waiting]) {
-    const due = r.item?.due?.date ?? r.entry?.due?.date;
-    if (due) dues[r.itemKey] = due;
-  }
-  return dues;
 }
 
 export default function PlannerPage() {

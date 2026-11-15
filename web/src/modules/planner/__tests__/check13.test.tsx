@@ -8,6 +8,8 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { PlanPreview, pastDue } from '../components/PlanPreview';
 import { eventsFill } from '../daySetup';
+import type { WaitingRow } from '../board';
+import { duesOf } from '../rest';
 
 const SAT = '2026-11-14';
 const SUN = '2026-11-15';
@@ -16,10 +18,30 @@ const MON = '2026-11-16';
 describe('C5: a move past the deadline', () => {
   it('finds the deadline a move lands after, by the unit’s item key', () => {
     const dues = { 'todos:a': SUN };
-    expect(pastDue('todos:a#0', MON, dues)).toBe(SUN);
-    expect(pastDue('todos:a#1', SUN, dues)).toBeUndefined(); // on the deadline itself is still in time
-    expect(pastDue('todos:b#0', MON, dues)).toBeUndefined();
-    expect(pastDue('todos:a#0', MON, undefined)).toBeUndefined();
+    expect(pastDue('todos:a#0', SAT, MON, dues)).toBe(SUN);
+    expect(pastDue('todos:a#1', SAT, SUN, dues)).toBeUndefined(); // on the deadline itself is still in time
+    expect(pastDue('todos:b#0', SAT, MON, dues)).toBeUndefined();
+    expect(pastDue('todos:a#0', SAT, MON, undefined)).toBeUndefined();
+    // Already past it before the move: the move crosses no deadline, its own cause stays.
+    expect(pastDue('todos:a#0', MON, '2026-11-17', dues)).toBeUndefined();
+  });
+
+  it('takes only hard deadlines, by the board’s rule – a ToDo’s or routine’s soft date is none', () => {
+    const waiting = [
+      { itemKey: 'todos:w', entry: { due: { date: SUN, hard: true } } },
+      { itemKey: 'todos:s', entry: { due: { date: SAT, hard: false } } },
+      {
+        itemKey: 'todos:i',
+        item: { due: { date: SUN, hard: true } },
+        entry: { due: { date: SAT, hard: false } },
+      },
+    ] as unknown as WaitingRow[];
+    expect(
+      duesOf({
+        days: [{ rows: [{ itemKey: 'todos:a', hardDue: SUN }, { itemKey: 'routines:r' }] }],
+        waiting,
+      }),
+    ).toEqual({ 'todos:a': SUN, 'todos:w': SUN, 'todos:i': SUN });
   });
 
   it('the preview row says „nach der Frist …“, other rows keep their cause', () => {

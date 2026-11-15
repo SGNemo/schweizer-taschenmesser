@@ -16,14 +16,15 @@ export interface PreviewData {
   diff: PlanDiff;
 }
 
-/** The deadline a move to `to` lands after, else `undefined` (unit id `<module>:<id>#<k>`). */
+/** The deadline a move from `from` to `to` crosses, else `undefined` (unit id `<module>:<id>#<k>`). */
 export function pastDue(
   unitId: string,
+  from: string,
   to: string,
   dues: Readonly<Record<string, string>> | undefined,
 ): string | undefined {
   const due = dues?.[unitId.slice(0, unitId.lastIndexOf('#'))];
-  return due && to > due ? due : undefined;
+  return due && from <= due && to > due ? due : undefined;
 }
 
 /** The cause of a move in the preview: who took the room, the part it follows, or the day's time. */
@@ -85,7 +86,7 @@ export function PlanPreview({
               <ItemList>
                 {moved.map((m) => {
                   // A move past the deadline names it instead of the day's time: nothing moves silently.
-                  const due = pastDue(m.id, m.to, data.dues);
+                  const due = pastDue(m.id, m.from, m.to, data.dues);
                   return (
                     <ItemRow
                       key={m.id}

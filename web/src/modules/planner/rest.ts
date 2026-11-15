@@ -3,7 +3,7 @@
  * offered. Pure and light, so the widget does not load the planner's services for it.
  */
 import { EVENING_HOUR } from '@/core/settings/focus';
-import type { BoardDay } from './board';
+import type { BoardDay, BoardRow, WaitingRow } from './board';
 
 /** The planner page with the preview of „Rest verteilen“ open (head link, widget, `plan.restRequested`). */
 export const REST_PATH = '/planner?rest=1';
@@ -58,4 +58,25 @@ export function eveningLine(
   const open = !!today && today.rows.some((r) => r.item?.pinned !== today.date);
   if (dayEndNear(eveningWrapUp, clock, dayEnd)) return { kind: 'dayEnd', rest: open };
   return restOffered(eveningWrapUp, clock, today) ? { kind: 'rest' } : undefined;
+}
+
+/**
+ * Item key → the hard deadline a row shows as „Frist …“ (the board's rule: the planner row's hard due, else the
+ * source's), for the preview (C5). A soft due (a ToDo's date, a routine's next day) is no deadline here.
+ */
+export function duesOf(board: {
+  days: readonly { rows: readonly Pick<BoardRow, 'itemKey' | 'hardDue'>[] }[];
+  waiting: readonly Pick<WaitingRow, 'itemKey' | 'item' | 'entry'>[];
+}): Record<string, string> {
+  const dues: Record<string, string> = {};
+  for (const r of board.days.flatMap((d) => d.rows)) if (r.hardDue) dues[r.itemKey] = r.hardDue;
+  for (const r of board.waiting) {
+    const due = r.item?.due?.hard
+      ? r.item.due.date
+      : r.entry?.due?.hard
+        ? r.entry.due.date
+        : undefined;
+    if (due) dues[r.itemKey] = due;
+  }
+  return dues;
 }
