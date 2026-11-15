@@ -191,10 +191,12 @@ export const openRest = (row: Record<string, unknown>): number =>
     : 0);
 
 /**
- * A payment reminder on its open invoice: writes exactly three things – the level + 1 (at most 3), the
- * day of the reminder and one appended note line – and never the amount or the due date (money changes
- * only in the editor). Noting the same reminder again does nothing. The undo removes only that line
- * and resets level and day only while they still hold what was written; it never removes the invoice.
+ * A payment reminder on its open invoice: writes the level + 1 (at most 3), the day of the reminder, one
+ * appended note line and – where the reminder states them – its deadline and amount as the fields
+ * `dunnedDueDate` / `dunnedAmountMinor` (planner hub S1, L6: the planner needs a date, not prose). Never the
+ * invoice's own amount or due date (money changes only in the editor). Noting the same reminder again does
+ * nothing. The undo removes only that line and resets each field only while it still holds what was written;
+ * it never removes the invoice.
  */
 async function amendInvoice(
   f: CaptureFields,
@@ -209,6 +211,8 @@ async function amendInvoice(
   const before = {
     level: row.dunningLevel as number | undefined,
     at: row.dunnedAt as string | undefined,
+    due: row.dunnedDueDate as string | undefined,
+    amount: row.dunnedAmountMinor as number | undefined,
   };
   if (before.at && before.at >= day)
     return { ...base, amended: true, existed: true, undo: async () => undefined };
@@ -221,7 +225,16 @@ async function amendInvoice(
     f.date ? formatDay(f.date, 'dd.MM.yyyy') : undefined,
   );
   const note = [row.note as string | undefined, line].filter(Boolean).join('\n');
-  await repo.update(match.id, { dunningLevel: level, dunnedAt: day, note });
+  // What this reminder claims; one that names no deadline or amount leaves the earlier claim as it is.
+  const due = f.date ? date(f.date) : undefined;
+  const amount = f.amountMinor && f.amountMinor > 0 ? f.amountMinor : undefined;
+  await repo.update(match.id, {
+    dunningLevel: level,
+    dunnedAt: day,
+    note,
+    ...(due ? { dunnedDueDate: due } : {}),
+    ...(amount ? { dunnedAmountMinor: amount } : {}),
+  });
   return {
     ...base,
     amended: true,
@@ -242,6 +255,8 @@ async function amendInvoice(
       }
       if (now.dunningLevel === level) patch.dunningLevel = before.level;
       if (now.dunnedAt === day) patch.dunnedAt = before.at;
+      if (due && now.dunnedDueDate === due) patch.dunnedDueDate = before.due;
+      if (amount && now.dunnedAmountMinor === amount) patch.dunnedAmountMinor = before.amount;
       if (Object.keys(patch).length > 0) await repo.update(match.id, patch);
     },
   };

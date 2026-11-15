@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { formatMoney } from '@/core/money';
 import type { Stored } from '@/core/db/types';
@@ -27,6 +27,7 @@ import {
 } from '@/ui';
 import { InvoiceDetail } from '../components/InvoiceDetail';
 import { InvoiceEditor, type InvoiceTarget } from '../components/InvoiceEditor';
+import { PayStep } from '../components/PayStep';
 import { markOpen } from '../actions';
 import { payWithUndo } from '../quickActions';
 import { invoiceState, openTotalText, remainingMinor, sortInvoices } from '../logic';
@@ -45,8 +46,40 @@ export default function InvoicesPage() {
   const invoices = useLiveQuery(async () => sortInvoices(await invoiceRepo.active().toArray()), []);
   const [view, setView] = useState<View>('open');
   const [target, setTarget] = useState<InvoiceTarget>(null);
-  useOpenParam((id) => invoiceRepo.get(id), setTarget);
+  const [paying, setPaying] = useState<Stored<Invoice> | null>(null);
+  // The invoice shown in the detail panel of the wide page (master–detail).
+  const [picked, setPicked] = useState<{ id: string } | 'closed' | null>(null);
   const [params, setParams] = useSearchParams();
+  // `?open=<id>` and `?do=pay` are untrusted input (the app is URL-addressable, and paying books into finance,
+  // CONCEPT-LINKS §2 L7): the id must name a live invoice of this module (`invoiceRepo.get` – anything else opens
+  // nothing), and `do=pay` only OPENS the pay step of an invoice that is still open. Nothing is written until
+  // the person confirms there. Any other value of `do` is ignored; both parameters leave the URL after reading.
+  const doParam = useRef<string | null>(null);
+  useEffect(() => {
+    doParam.current = params.get('do');
+  });
+  useOpenParam(
+    (id) => invoiceRepo.get(id),
+    (invoice) => {
+      setPicked({ id: invoice.id });
+      if (doParam.current === 'pay' && invoice.status === 'open') setPaying(invoice);
+      else setTarget(invoice);
+    },
+  );
+  // Without an id there is nothing to do: `do` (and an empty `open`) just leaves the URL.
+  const strayDo = params.has('do') && !params.get('open');
+  useEffect(() => {
+    if (!strayDo) return;
+    setParams(
+      (p) => {
+        const next = new URLSearchParams(p);
+        next.delete('do');
+        if (!next.get('open')) next.delete('open');
+        return next;
+      },
+      { replace: true },
+    );
+  }, [strayDo, setParams]);
   const day = today();
   // F15: the row's pay button follows the page, not the window (icon below 48 rem of page).
   const narrow = usePageWidthAtLeast(48) === false;
@@ -58,7 +91,6 @@ export default function InvoicesPage() {
   // Beside the detail panel the list has about 60 % of the page: below 80 rem of page the pay button is the icon
   // there too, so status, amount and button stay on the row's first line (a 1280-px laptop).
   const roomy = usePageWidthAtLeast(80) !== false;
-  const [picked, setPicked] = useState<{ id: string } | 'closed' | null>(null);
 
   // `?new=1` (Quick-Add) opens the create dialog; derived from the URL.
   const openTarget = target ?? (params.get('new') ? { draft: true as const } : null);
@@ -307,6 +339,7 @@ export default function InvoicesPage() {
       </SplitView>
 
       <InvoiceEditor target={openTarget} onClose={closeEditor} onDuplicated={setTarget} />
+      <PayStep invoice={paying} onClose={() => setPaying(null)} />
     </>
   );
 }
