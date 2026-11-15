@@ -1,9 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { type FormEvent, useEffect, useId, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
+import { type FormEvent, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { getMeta, setMeta } from '@/core/db/metaKv';
 import { getLang } from '@/core/i18n/lang';
-import { dayName, explainAssignment, explainWait, partWord } from '@/core/plan/explain';
+import { dayName, explainAssignment, explainWait } from '@/core/plan/explain';
 import {
   isRestSentence,
   restToTomorrow,
@@ -11,8 +11,6 @@ import {
   type PlanOp,
 } from '@/core/plan/instructions';
 import { useNow } from '@/core/focus/useNow';
-import { useModuleStates } from '@/core/modules/activation';
-import { getManifest } from '@/core/modules/registry';
 import { useFocusSettings } from '@/core/settings/focus';
 import { addDaysStr, formatDay, isoWeekday } from '@/core/time/dates';
 import { today } from '@/core/time/now';
@@ -28,27 +26,16 @@ import {
   PageHeader,
   Progress,
   RowMenu,
-  TextField,
   type RowMenuItem,
   SplitView,
   useSplitView,
 } from '@/ui';
 import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
-import {
-  addFromField,
-  applyOps,
-  exclude,
-  include,
-  later,
-  markDone,
-  markDue,
-  pin,
-  sourceAbilities,
-  type SourceAbility,
-  unmarkDue,
-  unpin,
-} from '../actions';
-import { dueWas, type BoardDay, type BoardRow, type WaitingRow } from '../board';
+import { addFromField, applyOps, later, markDone } from '../actions';
+import type { BoardDay, BoardRow } from '../board';
+import { Capture } from '../components/Capture';
+import { useAbilities, useRowMenu } from '../components/rowMenu';
+import { Part, ThingRow } from '../components/ThingRow';
 import { capacityLabel, capacityShort, compact } from '../components/capacity';
 import { DaySetup } from '../components/DaySetup';
 import { DaySheet } from '../components/DaySheet';
@@ -59,7 +46,6 @@ import { dayEndOf } from '../settings';
 import { PlanPreview, type PreviewData } from '../components/PlanPreview';
 import { WeekCheck } from '../components/WeekCheck';
 import { BOARD_DAYS } from '../calendar';
-import { beginPlanFocus, planFocusPath } from '../focus';
 import { overloadText } from '../overload';
 import { readSentence, warmLocalStage, type Said } from '../localStage';
 import { instructionItems, opLines, planLines } from '../say';
@@ -87,18 +73,6 @@ interface Pending {
   rest?: boolean;
 }
 
-/** „Teil 1/2“ for the eye, „Teil 1 von 2“ for the screen reader. */
-function Part({ k, of }: { k: number; of: number }) {
-  return (
-    <>
-      <span className={styles.part} aria-hidden="true">
-        {` · ${t.planner.row.part(k + 1, of)}`}
-      </span>
-      <span className="sr-only">{` ${t.planner.row.partAria(k + 1, of)}`}</span>
-    </>
-  );
-}
-
 export default function PlannerPage() {
   const data = useBoard(SPAN);
   // Master–detail (layout `split`, package 0b-4b): on a wide page the week is a list and the picked day lies in the
@@ -106,7 +80,6 @@ export default function PlannerPage() {
   const wide = useSplitView();
   const [params, setParams] = useSearchParams();
   const [text, setText] = useState('');
-  const hintId = useId();
   const [sheetDate, setSheetDate] = useState<string | undefined>();
   // `?check=1` (the lists' „Woche prüfen im Planer“ link, a tap of the user) opens the week sheet.
   const [checking, setChecking] = useState(() => params.get('check') === '1');
@@ -133,32 +106,16 @@ export default function PlannerPage() {
   const addRef = useRef<HTMLFormElement>(null);
   // The field is the page's last row: what the planner answers under it is brought into view.
   const answerRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
-  const moduleStates = useModuleStates();
-  const mailOn = !!getManifest('mail') && moduleStates?.mail === true;
   const [focus] = useFocusSettings();
   const dismissedWeek = useLiveQuery(
     async () => (await getMeta<string>(WEEK_CHECK_KEY)) ?? null,
     [],
   );
 
-  // Which sources take a tick or „Später“ (an invoice, a cancellation: no – that stays in its module).
-  const [abilities, setAbilities] = useState<Record<string, SourceAbility>>();
   // The open choice behind „Als Pause …“ / „Dauer …“ of a row.
   const [choice, setChoice] = useState<RowChoiceState>();
-  useEffect(() => {
-    let live = true;
-    void sourceAbilities().then((a) => live && setAbilities(a));
-    return () => {
-      live = false;
-    };
-  }, []);
-  // Until they are known every source counts as able (no jump for ToDo rows); `markDone` checks again.
-  const canDone = (moduleId: string) => abilities?.[moduleId]?.done ?? true;
-  const canAssign = (moduleId: string) => abilities?.[moduleId]?.assign ?? true;
-  // Shown only once the source is known to take them (a missing ability hides, never offers in vain).
-  const canRemove = (moduleId: string) => abilities?.[moduleId]?.remove === true;
-  const canEstimate = (moduleId: string) => abilities?.[moduleId]?.estimate === true;
+  const abilities = useAbilities();
+  const { canDone, canAssign } = abilities;
 
   const answered = !!pending || !!ask || !!sayLine;
   useEffect(() => {
@@ -465,145 +422,14 @@ export default function PlannerPage() {
       : titleOf(unitId);
   };
 
-  /** The ⋯ menu of a row; `date` = the row's day (a waiting row has none: then today, named). */
-  const rowMenu = (row: BoardRow | WaitingRow, date?: string, reason?: string): RowMenuItem[] => {
-    const e = row.entry;
-    if (!e) return [];
-    const day = date ?? data!.today;
-    const pinned = row.item?.pinned !== undefined;
-    const hard = row.item?.due?.hard === true;
-    // A deadline the source holds (invoice, cancellation) is not the planner's to lift or set.
-    const sourceHard = e.due?.hard === true;
-    const excluded = row.item?.excluded === true;
-    const open = why === row.unitId;
-    return [
-      ...(canDone(e.moduleId)
-        ? [{ id: 'done', label: t.planner.row.done, onSelect: () => void markDone(e, titles) }]
-        : []),
-      ...(canAssign(e.moduleId)
-        ? [{ id: 'later', label: t.planner.row.later, onSelect: () => void later(e, titles) }]
-        : []),
-      ...(canEstimate(e.moduleId)
-        ? [
-            {
-              id: 'estimate',
-              label: t.planner.row.estimate,
-              onSelect: () =>
-                setChoice({
-                  kind: 'estimate',
-                  entry: e,
-                  ...(e.durationMin !== undefined ? { current: e.durationMin } : {}),
-                }),
-            },
-          ]
-        : []),
-      // „Tagesabschnitt …“ (package 4b): one entry, the choice opens in `RowChoice`; only on a row of a day
-      // (a waiting row has no day to order in yet).
-      ...(date
-        ? [
-            {
-              id: 'dayPart',
-              label: t.planner.row.dayPart,
-              onSelect: () =>
-                setChoice({
-                  kind: 'part',
-                  entry: e,
-                  ...(row.item?.part ? { current: row.item.part } : {}),
-                }),
-            },
-          ]
-        : []),
-      ...(canRemove(e.moduleId)
-        ? [
-            {
-              id: 'asBreak',
-              label: t.planner.row.asBreak,
-              onSelect: () => setChoice({ kind: 'break', entry: e, date: day }),
-            },
-          ]
-        : []),
-      ...(excluded
-        ? [{ id: 'include', label: t.planner.row.include, onSelect: () => void include(e, titles) }]
-        : [
-            pinned
-              ? { id: 'unpin', label: t.planner.row.unpin, onSelect: () => void unpin(e, titles) }
-              : {
-                  id: 'pin',
-                  label: t.planner.row.pinOn(dayName(day)),
-                  onSelect: () => void pin(e, day, titles),
-                },
-            {
-              id: 'exclude',
-              label: t.planner.row.exclude,
-              onSelect: () => void exclude(e, titles),
-            },
-          ]),
-      ...(sourceHard
-        ? []
-        : [
-            hard
-              ? {
-                  id: 'unmarkDue',
-                  label: t.planner.row.unmarkDue,
-                  onSelect: () => void unmarkDue(e, titles),
-                }
-              : {
-                  id: 'markDue',
-                  label: t.planner.row.markDueOn(dayName(e.due?.date ?? day)),
-                  onSelect: () => void markDue(e, e.due?.date ?? day, titles),
-                },
-          ]),
-      ...(reason
-        ? [
-            {
-              id: 'why',
-              label: t.planner.row.why,
-              checked: open,
-              onSelect: () => setWhy(open ? undefined : row.unitId),
-            },
-          ]
-        : []),
-      ...(date
-        ? [
-            {
-              id: 'focus',
-              label: t.planner.row.focus,
-              onSelect: () => {
-                const title =
-                  row.of > 1
-                    ? `${row.title} · ${t.planner.row.part(row.k + 1, row.of)}`
-                    : row.title;
-                void beginPlanFocus({ unitId: row.unitId, title, minutes: row.minutes }).then(() =>
-                  navigate(planFocusPath(row.unitId)),
-                );
-              },
-            },
-          ]
-        : []),
-      { id: 'open', label: t.planner.row.open, onSelect: () => void navigate(e.to) },
-      // Back to the note it came from (a note's „In den Plan“; the notes page reads `?open=`).
-      ...(e.link?.kind === 'note'
-        ? [
-            {
-              id: 'link',
-              label: t.planner.row.openNote,
-              onSelect: () => void navigate(`/notes?open=${encodeURIComponent(e.link!.id)}`),
-            },
-          ]
-        : []),
-      // Back to the mail it came from („In den Plan“ from the mail list; the mail page reads `?open=`).
-      // Only where the mail module is there and on (desktop): elsewhere the ToDo's note holds the web link.
-      ...(e.link?.kind === 'mail' && mailOn
-        ? [
-            {
-              id: 'mail',
-              label: t.planner.row.openMail,
-              onSelect: () => void navigate(`/mail?open=${encodeURIComponent(e.link!.id)}`),
-            },
-          ]
-        : []),
-    ];
-  };
+  const rowMenu = useRowMenu({
+    today: data?.today,
+    titles,
+    abilities,
+    why,
+    setWhy,
+    setChoice,
+  });
 
   // „Frist So 18:00“ turns into „Frist war So 18:00“ once the hour has passed (package 5b); read once a minute.
   const dueClock = useNow(60_000);
@@ -617,68 +443,24 @@ export default function PlannerPage() {
         nameOf,
       },
     );
-    const open = why === row.unitId;
     return (
-      <ItemRow
+      <ThingRow
         key={row.unitId}
-        title={
-          <span title={reason}>
-            {row.title}
-            {row.of > 1 ? <Part k={row.k} of={row.of} /> : null}
-          </span>
-        }
-        titleFull
-        // The minutes lead the meta line, the deadline follows, the reason only while „Warum hier?“ is on.
-        meta={
-          <span>
-            <span className={styles.minutes}>
-              {row.approx ? t.planner.row.approx(compact(row.minutes)) : compact(row.minutes)}
-            </span>
-            {/* The part as plain text, only when set (package 4b; no colour carries it). */}
-            {row.item?.part ? <span>{` · ${partWord(row.item.part)}`}</span> : null}
-            {row.hardDue
-              ? (() => {
-                  const when = row.hardDueTime
-                    ? `${dayName(row.hardDue)} ${row.hardDueTime}`
-                    : dayName(row.hardDue);
-                  const was = dueWas(row, dueClock);
-                  return (
-                    <span className={was ? styles.dueWas : undefined}>
-                      {` · ${was ? t.planner.row.dueWas(when) : t.planner.row.due(when)}`}
-                    </span>
-                  );
-                })()
-              : null}
-            {row.entry?.detail ? <span>{` · ${row.entry.detail}`}</span> : null}
-            {open ? <span className={styles.reason}>{reason}</span> : null}
-          </span>
-        }
-        lead={
-          row.entry && canDone(row.entry.moduleId) ? (
-            <input
-              type="checkbox"
-              className={styles.check}
-              aria-label={row.title}
-              data-row-tick
-              checked={false}
-              onChange={() => void markDone(row.entry!, titles)}
-            />
-          ) : undefined
-        }
+        row={row}
+        reason={reason}
+        whyOpen={why === row.unitId}
+        dueClock={dueClock}
         menu={rowMenu(row, day.date, reason)}
-        menuLabel={t.planner.row.menu(row.title)}
-        onSwipeRight={
+        onDone={
           row.entry && canDone(row.entry.moduleId)
             ? () => void markDone(row.entry!, titles)
             : undefined
         }
-        swipeRightLabel={t.planner.row.done}
-        onSwipeLeft={
+        onLater={
           row.entry && canAssign(row.entry.moduleId)
             ? () => void later(row.entry!, titles)
             : undefined
         }
-        swipeLeftLabel={t.planner.row.later}
       />
     );
   };
@@ -793,29 +575,7 @@ export default function PlannerPage() {
     ) : null;
   const entryRow = (
     <>
-      <form
-        ref={addRef}
-        onSubmit={add}
-        className={styles.add}
-        data-keep-visible
-        aria-busy={reading || undefined}
-      >
-        <div className={styles.grow}>
-          {/* S09 (UI round 6): the hint sits under the whole row, not inside the field, so „Eintragen“ and ⋯ line up
-              with the input instead of with the hint's baseline. The prop replaces TextField's own description: an
-              `error` here would have to be appended to `hintId`. */}
-          <TextField
-            label={t.planner.add.label}
-            placeholder={t.planner.add.placeholder}
-            aria-describedby={hintId}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            readOnly={reading}
-          />
-        </div>
-        <Button type="submit" variant="primary" disabled={!text.trim() || reading}>
-          {t.planner.add.submit}
-        </Button>
+      <Capture value={text} onChange={setText} onSubmit={add} reading={reading} formRef={addRef}>
         {/* N04: the page's ⋯ sits beside the field (a toolbar row with only ⋯ left ~100 px empty above it). */}
         <RowMenu
           label={t.planner.head.menu}
@@ -823,10 +583,7 @@ export default function PlannerPage() {
           open={menuOpen}
           onOpenChange={setMenuOpen}
         />
-      </form>
-      <p id={hintId} className={styles.addHint}>
-        {t.planner.add.hint}
-      </p>
+      </Capture>
       {/* What the planner understood, or asks back, lies right under the field it answers. */}
       <div ref={answerRef}>
         {sayLine ? (

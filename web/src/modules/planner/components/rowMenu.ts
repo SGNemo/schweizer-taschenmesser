@@ -1,0 +1,197 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
+import { useModuleStates } from '@/core/modules/activation';
+import { getManifest } from '@/core/modules/registry';
+import { dayName } from '@/core/plan/explain';
+import { t } from '@/strings';
+import type { RowMenuItem } from '@/ui';
+import {
+  exclude,
+  include,
+  later,
+  markDone,
+  markDue,
+  pin,
+  sourceAbilities,
+  type SourceAbility,
+  unmarkDue,
+  unpin,
+} from '../actions';
+import type { BoardRow, WaitingRow } from '../board';
+import { beginPlanFocus, planFocusPath } from '../focus';
+import type { RowChoiceState } from './RowChoice';
+
+/** Which sources take a tick, „Später“, „Als Pause …“ or „Dauer …“ (an invoice, a cancellation: no – that stays in its module). */
+export function useAbilities() {
+  const [abilities, setAbilities] = useState<Record<string, SourceAbility>>();
+  useEffect(() => {
+    let live = true;
+    void sourceAbilities().then((a) => live && setAbilities(a));
+    return () => {
+      live = false;
+    };
+  }, []);
+  return {
+    // Until they are known every source counts as able (no jump for ToDo rows); `markDone` checks again.
+    canDone: (moduleId: string) => abilities?.[moduleId]?.done ?? true,
+    canAssign: (moduleId: string) => abilities?.[moduleId]?.assign ?? true,
+    // Shown only once the source is known to take them (a missing ability hides, never offers in vain).
+    canRemove: (moduleId: string) => abilities?.[moduleId]?.remove === true,
+    canEstimate: (moduleId: string) => abilities?.[moduleId]?.estimate === true,
+  };
+}
+
+export type Abilities = ReturnType<typeof useAbilities>;
+
+/** Builds the ⋯ menu of a row; `date` = the row's day (a waiting row has none: then today, named). */
+export function useRowMenu(ctx: {
+  today: string | undefined;
+  titles: Record<string, string>;
+  abilities: Abilities;
+  why: string | undefined;
+  setWhy: (unitId: string | undefined) => void;
+  setChoice: (choice: RowChoiceState) => void;
+}) {
+  const navigate = useNavigate();
+  const moduleStates = useModuleStates();
+  const mailOn = !!getManifest('mail') && moduleStates?.mail === true;
+  const { titles, abilities, why, setWhy, setChoice } = ctx;
+  return (row: BoardRow | WaitingRow, date?: string, reason?: string): RowMenuItem[] => {
+    const e = row.entry;
+    if (!e || !ctx.today) return [];
+    const day = date ?? ctx.today;
+    const pinned = row.item?.pinned !== undefined;
+    const hard = row.item?.due?.hard === true;
+    // A deadline the source holds (invoice, cancellation) is not the planner's to lift or set.
+    const sourceHard = e.due?.hard === true;
+    const excluded = row.item?.excluded === true;
+    const open = why === row.unitId;
+    return [
+      ...(abilities.canDone(e.moduleId)
+        ? [{ id: 'done', label: t.planner.row.done, onSelect: () => void markDone(e, titles) }]
+        : []),
+      ...(abilities.canAssign(e.moduleId)
+        ? [{ id: 'later', label: t.planner.row.later, onSelect: () => void later(e, titles) }]
+        : []),
+      ...(abilities.canEstimate(e.moduleId)
+        ? [
+            {
+              id: 'estimate',
+              label: t.planner.row.estimate,
+              onSelect: () =>
+                setChoice({
+                  kind: 'estimate',
+                  entry: e,
+                  ...(e.durationMin !== undefined ? { current: e.durationMin } : {}),
+                }),
+            },
+          ]
+        : []),
+      // „Tagesabschnitt …“ (package 4b): one entry, the choice opens in `RowChoice`; only on a row of a day
+      // (a waiting row has no day to order in yet).
+      ...(date
+        ? [
+            {
+              id: 'dayPart',
+              label: t.planner.row.dayPart,
+              onSelect: () =>
+                setChoice({
+                  kind: 'part',
+                  entry: e,
+                  ...(row.item?.part ? { current: row.item.part } : {}),
+                }),
+            },
+          ]
+        : []),
+      ...(abilities.canRemove(e.moduleId)
+        ? [
+            {
+              id: 'asBreak',
+              label: t.planner.row.asBreak,
+              onSelect: () => setChoice({ kind: 'break', entry: e, date: day }),
+            },
+          ]
+        : []),
+      ...(excluded
+        ? [{ id: 'include', label: t.planner.row.include, onSelect: () => void include(e, titles) }]
+        : [
+            pinned
+              ? { id: 'unpin', label: t.planner.row.unpin, onSelect: () => void unpin(e, titles) }
+              : {
+                  id: 'pin',
+                  label: t.planner.row.pinOn(dayName(day)),
+                  onSelect: () => void pin(e, day, titles),
+                },
+            {
+              id: 'exclude',
+              label: t.planner.row.exclude,
+              onSelect: () => void exclude(e, titles),
+            },
+          ]),
+      ...(sourceHard
+        ? []
+        : [
+            hard
+              ? {
+                  id: 'unmarkDue',
+                  label: t.planner.row.unmarkDue,
+                  onSelect: () => void unmarkDue(e, titles),
+                }
+              : {
+                  id: 'markDue',
+                  label: t.planner.row.markDueOn(dayName(e.due?.date ?? day)),
+                  onSelect: () => void markDue(e, e.due?.date ?? day, titles),
+                },
+          ]),
+      ...(reason
+        ? [
+            {
+              id: 'why',
+              label: t.planner.row.why,
+              checked: open,
+              onSelect: () => setWhy(open ? undefined : row.unitId),
+            },
+          ]
+        : []),
+      ...(date
+        ? [
+            {
+              id: 'focus',
+              label: t.planner.row.focus,
+              onSelect: () => {
+                const title =
+                  row.of > 1
+                    ? `${row.title} · ${t.planner.row.part(row.k + 1, row.of)}`
+                    : row.title;
+                void beginPlanFocus({ unitId: row.unitId, title, minutes: row.minutes }).then(() =>
+                  navigate(planFocusPath(row.unitId)),
+                );
+              },
+            },
+          ]
+        : []),
+      { id: 'open', label: t.planner.row.open, onSelect: () => void navigate(e.to) },
+      // Back to the note it came from (a note's „In den Plan“; the notes page reads `?open=`).
+      ...(e.link?.kind === 'note'
+        ? [
+            {
+              id: 'link',
+              label: t.planner.row.openNote,
+              onSelect: () => void navigate(`/notes?open=${encodeURIComponent(e.link!.id)}`),
+            },
+          ]
+        : []),
+      // Back to the mail it came from („In den Plan“ from the mail list; the mail page reads `?open=`).
+      // Only where the mail module is there and on (desktop): elsewhere the ToDo's note holds the web link.
+      ...(e.link?.kind === 'mail' && mailOn
+        ? [
+            {
+              id: 'mail',
+              label: t.planner.row.openMail,
+              onSelect: () => void navigate(`/mail?open=${encodeURIComponent(e.link!.id)}`),
+            },
+          ]
+        : []),
+    ];
+  };
+}
