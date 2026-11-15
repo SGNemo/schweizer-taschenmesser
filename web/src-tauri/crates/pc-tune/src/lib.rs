@@ -6,7 +6,8 @@
 //! - **Only the user's own settings.** The registry seam ([`reg`]) can write below
 //!   `HKCU\Software` and nowhere else; machine-wide keys are read-only by construction, so nothing
 //!   here needs or keeps administrator rights.
-//! - **Nothing runs by itself.** Every function is a direct answer to a click; there is no
+//! - **Nothing runs by itself.** Every change is a direct answer to a click; the only thing done
+//!   without one is reading (the lists, and [`health`] when the drives tab opens). There is no
 //!   schedule, no background work and no logging of values.
 
 pub mod health;

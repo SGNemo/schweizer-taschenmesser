@@ -4797,6 +4797,14 @@ export const de = {
         full: 'Fast voll – Aufräumen empfohlen.',
       } as Record<string, string>,
       healthLabel: 'Zustand',
+      toTidy: 'Aufräumen öffnen',
+      trimLabel: 'TRIM',
+      trim: {
+        on: 'Eingeschaltet',
+        off: 'Ausgeschaltet. Einschalten geht nur in Windows mit Administratorrechten; Nemo ändert das nicht.',
+      } as Record<string, string>,
+      helpTrim:
+        'Mit TRIM teilt Windows einer SSD mit, welche Bereiche nach dem Löschen frei sind. Ohne TRIM kann eine SSD mit der Zeit langsamer schreiben.',
       health: {
         ok: 'In Ordnung',
         warning: 'Das Laufwerk meldet Probleme – sichere deine Daten.',
@@ -5412,14 +5420,9 @@ export const de = {
     },
     /** "Empfehlungen" above the drives: at most three, each with one next step. */
     advice: {
-      title: 'Empfehlungen',
-      full: (drive: string, free: string) => `${drive} ist fast voll – ${free} frei.`,
+      title: 'Bitte ansehen',
       health: (drive: string) =>
-        `${drive} meldet Probleme. Sichere die Daten darauf, bevor du etwas anderes tust.`,
-      trimOff:
-        'Windows teilt der SSD gelöschte Bereiche gerade nicht mit (TRIM ist aus). In „Laufwerke optimieren“ siehst du den Stand.',
-      toTidy: 'Aufräumen öffnen',
-      toOptimize: '„Laufwerke optimieren“ öffnen',
+        `${drive} meldet Probleme. Am besten sicherst du bald die Daten darauf.`,
     },
   },
 

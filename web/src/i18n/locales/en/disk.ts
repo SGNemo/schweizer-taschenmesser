@@ -65,6 +65,14 @@ export const disk: Strings['disk'] = {
       full: 'Almost full – tidying up recommended.',
     } as Record<string, string>,
     healthLabel: 'Health',
+    toTidy: 'Go to Tidy up',
+    trimLabel: 'TRIM',
+    trim: {
+      on: 'Switched on',
+      off: 'Switched off. Switching it on takes administrator rights in Windows; Nemo doesn’t change it.',
+    } as Record<string, string>,
+    helpTrim:
+      'With TRIM, Windows tells an SSD which areas are free after deleting. Without TRIM an SSD can get slower at writing over time.',
     health: {
       ok: 'Fine',
       warning: 'The drive reports problems – back up your data.',
@@ -661,13 +669,8 @@ export const disk: Strings['disk'] = {
     historyOn: (name: string) => `${name}: starts with Windows again`,
   },
   advice: {
-    title: 'Recommendations',
-    full: (drive: string, free: string) => `${drive} is almost full – ${free} free.`,
+    title: 'Worth a look',
     health: (drive: string) =>
-      `${drive} reports problems. Back up the data on it before you do anything else.`,
-    trimOff:
-      'Windows isn’t telling the SSD about deleted areas right now (TRIM is off). “Optimise drives” shows the state.',
-    toTidy: 'Go to Tidy up',
-    toOptimize: 'Open “Optimise drives”',
+      `${drive} reports problems. It’s best to back up the data on it soon.`,
   },
 };

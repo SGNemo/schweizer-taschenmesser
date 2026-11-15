@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { DriveInfo } from '@/core/platform/disk';
-import { adviceFor, MAX_ADVICE } from '../logic/advice';
+import { MAX_ADVICE, tidyHelps, trimFact, troubledDrives } from '../logic/advice';
 
 const GB = 1024 ** 3;
 
@@ -18,66 +18,57 @@ const drive = (over: Partial<DriveInfo> = {}): DriveInfo => ({
   health: { status: 'ok', temperatureC: null, gap: null },
   ...over,
 });
+const bad = { status: 'warning', temperatureC: null, gap: null } as const;
 
-describe('recommendations for the drives tab', () => {
-  it('says nothing when everything is fine or simply unknown', () => {
-    expect(adviceFor([drive()], { trimOff: false })).toEqual([]);
-    expect(adviceFor([drive()], null)).toEqual([]);
-    expect(adviceFor([drive()], { trimOff: null })).toEqual([]);
+describe('drives that report problems', () => {
+  it('names built-in drives with a warning and nothing else', () => {
+    const d = drive({ root: 'D:\\', isSystem: false, health: bad });
+    expect(troubledDrives([drive(), d]).map((x) => x.root)).toEqual(['D:\\']);
+    expect(troubledDrives([drive()])).toEqual([]);
     expect(
-      adviceFor(
-        [drive({ health: { status: 'unknown', temperatureC: null, gap: 'needsAdmin' } })],
-        null,
-      ),
+      troubledDrives([
+        drive({ health: { status: 'unknown', temperatureC: null, gap: 'needsAdmin' } }),
+      ]),
     ).toEqual([]);
-    expect(adviceFor([], { trimOff: true })).toEqual([]);
   });
 
-  it('names an almost full drive with what is left, the system drive first', () => {
-    const d = drive({ root: 'D:\\', isSystem: false, freeBytes: 10 * GB });
-    const c = drive({ freeBytes: 30 * GB });
-    expect(adviceFor([d, c], null)).toEqual([
-      { kind: 'full', root: 'C:\\', freeBytes: 30 * GB },
-      { kind: 'full', root: 'D:\\', freeBytes: 10 * GB },
-    ]);
-  });
-
-  it('counts a big drive with under 5 GB left as full', () => {
-    const big = drive({ totalBytes: 4000 * GB, freeBytes: 4 * GB });
-    expect(adviceFor([big], null).map((a) => a.kind)).toEqual(['full']);
-  });
-
-  it('puts a drive that reports problems first', () => {
-    const bad = drive({
-      root: 'D:\\',
-      isSystem: false,
-      health: { status: 'warning', temperatureC: null, gap: null },
-    });
-    const full = drive({ freeBytes: 2 * GB });
-    expect(adviceFor([full, bad], null).map((a) => [a.kind, a.root])).toEqual([
-      ['health', 'D:\\'],
-      ['full', 'C:\\'],
-    ]);
-  });
-
-  it('mentions TRIM only when it is known to be off and an SSD is built in', () => {
-    expect(adviceFor([drive()], { trimOff: true })).toEqual([{ kind: 'trimOff', root: null }]);
-    expect(adviceFor([drive({ media: 'hdd' })], { trimOff: true })).toEqual([]);
-    expect(adviceFor([drive({ kind: 'removable' })], { trimOff: true })).toEqual([]);
-  });
-
-  it('leaves network and removable drives alone', () => {
-    const usb = drive({ kind: 'removable', freeBytes: 0 });
-    const net = drive({ kind: 'network', freeBytes: 0 });
-    expect(adviceFor([usb, net], null)).toEqual([]);
+  it('leaves USB, removable and network drives alone', () => {
+    expect(
+      troubledDrives([
+        drive({ bus: 'usb', health: bad }),
+        drive({ kind: 'removable', health: bad }),
+        drive({ kind: 'network', health: bad }),
+      ]),
+    ).toEqual([]);
   });
 
   it('never shows more than three', () => {
-    const many = ['C', 'D', 'E', 'F', 'G'].map((l) =>
-      drive({ root: `${l}:\\`, isSystem: l === 'C', freeBytes: GB }),
-    );
-    const out = adviceFor(many, { trimOff: true });
-    expect(out).toHaveLength(MAX_ADVICE);
-    expect(out[0]?.root).toBe('C:\\');
+    const many = ['C', 'D', 'E', 'F', 'G'].map((l) => drive({ root: `${l}:\\`, health: bad }));
+    expect(troubledDrives(many)).toHaveLength(MAX_ADVICE);
+  });
+});
+
+describe('the next step of an almost full drive', () => {
+  it('is the tidy tab only for the system drive', () => {
+    expect(tidyHelps(drive(), 'full')).toBe(true);
+    expect(tidyHelps(drive(), 'tight')).toBe(false);
+    expect(tidyHelps(drive({ isSystem: false }), 'full')).toBe(false);
+    expect(tidyHelps(drive({ bus: 'usb' }), 'full')).toBe(false);
+  });
+});
+
+describe('the TRIM fact', () => {
+  it('is shown for a built-in NTFS SSD when the state is known', () => {
+    expect(trimFact(drive(), { trimOff: true })).toBe('off');
+    expect(trimFact(drive(), { trimOff: false })).toBe('on');
+  });
+
+  it('says nothing when unknown or when it does not apply', () => {
+    expect(trimFact(drive(), null)).toBeNull();
+    expect(trimFact(drive(), { trimOff: null })).toBeNull();
+    expect(trimFact(drive({ media: 'hdd' }), { trimOff: true })).toBeNull();
+    expect(trimFact(drive({ fileSystem: 'ReFS' }), { trimOff: true })).toBeNull();
+    expect(trimFact(drive({ bus: 'usb' }), { trimOff: true })).toBeNull();
+    expect(trimFact(drive({ kind: 'removable' }), { trimOff: true })).toBeNull();
   });
 });

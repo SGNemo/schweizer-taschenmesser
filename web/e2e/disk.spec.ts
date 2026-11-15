@@ -864,7 +864,7 @@ test('tidy and history tabs have no accessibility violations', async ({ page }) 
   expect(history.violations).toEqual([]);
 });
 
-test('recommendations: an almost full drive leads to the tidy tab, TRIM off to Windows’ tool', async ({
+test('the almost full system drive offers the tidy tab; TRIM is a quiet fact in the details', async ({
   page,
 }) => {
   await asDesktop(page);
@@ -873,16 +873,18 @@ test('recommendations: an almost full drive leads to the tidy tab, TRIM off to W
     (globalThis as { __tmCareTrimOff?: boolean }).__tmCareTrimOff = true;
   });
   await page.goto('/disk');
-  const advice = page.getByRole('region', { name: 'Empfehlungen' });
-  // The system drive of the fake PC is 92 % full; D: and the USB stick are fine or not ours.
-  await expect(advice).toContainText('C:\\ ist fast voll – 38,2 GB frei.');
-  await expect(advice.getByRole('listitem')).toHaveCount(2);
-  await expect(advice).toContainText('TRIM ist aus');
-  await advice.getByRole('button', { name: '„Laufwerke optimieren“ öffnen' }).click();
-  expect(
-    await page.evaluate(() => (globalThis as { __tmCareTools?: string[] }).__tmCareTools),
-  ).toEqual(['optimizeDrives']);
-  await advice.getByRole('button', { name: 'Aufräumen öffnen' }).first().click();
+  // No drive of the fake PC reports problems: there is no extra block.
+  await expect(page.getByRole('heading', { name: 'Bitte ansehen' })).toHaveCount(0);
+  const cards = page.getByRole('list', { name: 'Laufwerke' }).getByRole('listitem');
+  const system = cards.filter({ hasText: 'Systemlaufwerk' });
+  // TRIM: only on the built-in SSD, folded under "Details", with no button.
+  await system.getByText('Details').click();
+  await expect(system).toContainText('TRIM');
+  await expect(system).toContainText('Ausgeschaltet. Einschalten geht nur in Windows');
+  await expect(cards.filter({ hasText: 'Daten' }).getByText('TRIM')).toHaveCount(0);
+  // "Fast voll – Aufräumen empfohlen." has its step on the card; the data drive has none.
+  await expect(page.getByRole('button', { name: 'Aufräumen öffnen' })).toHaveCount(1);
+  await system.getByRole('button', { name: 'Aufräumen öffnen' }).click();
   await expect(page).toHaveURL(/tab=tidy/);
 });
 

@@ -154,7 +154,7 @@ export interface TweakReset {
   left: string[];
 }
 
-/** Read-only facts for the recommendations of the drives tab; `null` = not known. */
+/** Read-only facts for the drive cards; `null` = not known. */
 export interface CareHealth {
   /** TRIM is switched off in Windows (true), on (false) or unknown (null). */
   trimOff: boolean | null;

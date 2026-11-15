@@ -3,11 +3,13 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { getPlatform } from '@/core/platform';
 import { useUiStore } from '@/stores/ui';
 import type { DriveInfo } from '@/core/platform/disk';
+import type { CareHealth } from '@/core/platform/optimize';
 import type { DiskIo } from '@/core/platform/system';
 import { t } from '@/strings';
 import { EmptyState, PageHeader, Skeleton, Tabs } from '@/ui';
 import SystemTab from '../components/SystemTab';
 import { Advice } from '../components/Advice';
+import { trimFact } from '../logic/advice';
 import { CleanupTab } from '../components/CleanupTab';
 import { HistoryTab } from '../components/HistoryTab';
 import { StartupTab } from '../components/StartupTab';
@@ -174,6 +176,24 @@ function useStartScan(): (root: string) => void {
   };
 }
 
+/** Read-only facts for the drive cards (is TRIM on), read once per visit; Windows only. */
+function useCareHealth(): CareHealth | null {
+  const [health, setHealth] = useState<CareHealth | null>(null);
+  useEffect(() => {
+    let alive = true;
+    const optimize = getPlatform().disk.optimize;
+    if (!optimize.windows) return;
+    optimize
+      .health()
+      .then((h) => alive && setHealth(h))
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return health;
+}
+
 function DrivesTab({
   drives,
   failed,
@@ -182,12 +202,14 @@ function DrivesTab({
   onTidy,
 }: DriveList & { onScan: (root: string) => void; onTidy: () => void }) {
   const scanRoot = useDiskStore((s) => s.root);
+  const health = useCareHealth();
   // A drive's scan is shown in its card; only a clean-up place's scan needs the line above. While
   // the drives still load, nothing flashes above the grid (unless loading failed).
   const scanOnCard = drives ? drives.some((d) => d.root === scanRoot) : !failed;
 
   return (
     <>
+      {drives && drives.length > 0 ? <Advice drives={drives} /> : null}
       <p className={styles.lead}>{t.disk.lead}</p>
       {scanOnCard ? null : <ScanLine />}
       {failed ? <p role="alert">{t.disk.failedDrives}</p> : null}
@@ -197,7 +219,6 @@ function DrivesTab({
         </div>
       ) : null}
       {drives && drives.length === 0 ? <EmptyState title={t.disk.empty} /> : null}
-      {drives && drives.length > 0 ? <Advice drives={drives} onTidy={onTidy} /> : null}
       {drives && drives.length > 0 ? (
         <ul className={styles.grid} aria-label={t.disk.tabs.drives}>
           {drives.map((d) => (
@@ -206,6 +227,8 @@ function DrivesTab({
                 drive={d}
                 io={io.find((x) => x.root === d.root)}
                 onScan={() => startScan(d.root)}
+                onTidy={onTidy}
+                trim={trimFact(d, health)}
               />
             </li>
           ))}

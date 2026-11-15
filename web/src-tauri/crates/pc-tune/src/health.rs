@@ -1,4 +1,4 @@
-//! Read-only facts for the recommendations of the drives tab. Nothing here changes anything.
+//! Read-only facts for the drive cards (is TRIM on). Nothing here changes anything.
 
 use crate::reg::Registry;
 use serde::Serialize;
