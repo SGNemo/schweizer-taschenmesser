@@ -20,7 +20,8 @@ function useBackupExport(dialog?: { open: boolean; formId: string; onSaved: () =
   const toast = useUiStore((s) => s.toast);
   const [pass, setPass] = useState('');
   const [error, setError] = useState<string | undefined>();
-  const [busy, setBusy] = useState(false);
+  // Which export runs: its button says "Wird gesichert …" (encrypting a large backup takes a moment).
+  const [busy, setBusy] = useState<'encrypted' | 'plain' | undefined>();
   // A closed dialog keeps no password in memory.
   if (dialog && !dialog.open && (pass || error)) {
     setPass('');
@@ -42,22 +43,26 @@ function useBackupExport(dialog?: { open: boolean; formId: string; onSaved: () =
   }
 
   async function exportPlain() {
-    setBusy(true);
+    setError(undefined);
+    setBusy('plain');
     try {
       const result = await downloadTextFile(
         backupFileName(),
         await serializeSealedBackup(await createBackup(), { readable: true }),
       );
       if (result === 'saved') await saved(t.backup.exported);
+    } catch {
+      // A calm line in the form instead of a silent failure; the details never reach the screen.
+      if (live.current) setError(t.backup.exportFailed);
     } finally {
-      setBusy(false);
+      setBusy(undefined);
     }
   }
 
   async function exportEncrypted() {
     setError(undefined);
     if (pass.length < MIN_BACKUP_PASSPHRASE_LENGTH) return setError(t.backup.passphraseTooShort);
-    setBusy(true);
+    setBusy('encrypted');
     try {
       const file = await encryptBackup(await createBackup(), pass);
       const result = await downloadTextFile(
@@ -68,8 +73,10 @@ function useBackupExport(dialog?: { open: boolean; formId: string; onSaved: () =
         setPass('');
         await saved(t.backup.encryptedExported);
       }
+    } catch {
+      if (live.current) setError(t.backup.exportFailed);
     } finally {
-      setBusy(false);
+      setBusy(undefined);
     }
   }
 
@@ -98,15 +105,15 @@ function useBackupExport(dialog?: { open: boolean; formId: string; onSaved: () =
       {/* In the dialog the encrypted export submits the form: Enter or the phone's "Go" key in the password field. */}
       <Button
         variant={inDialog ? 'primary' : 'secondary'}
-        disabled={busy}
+        disabled={busy !== undefined}
         {...(inDialog
           ? { type: 'submit' as const, form: dialog.formId }
           : { onClick: () => void exportEncrypted() })}
       >
-        {t.backup.encryptedExport}
+        {busy === 'encrypted' ? t.backup.exporting : t.backup.encryptedExport}
       </Button>
-      <Button disabled={busy} onClick={() => void exportPlain()}>
-        {inDialog ? t.backup.exportPlain : t.backup.export}
+      <Button disabled={busy !== undefined} onClick={() => void exportPlain()}>
+        {busy === 'plain' ? t.backup.exporting : inDialog ? t.backup.exportPlain : t.backup.export}
       </Button>
     </>
   );

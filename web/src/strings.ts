@@ -3625,6 +3625,9 @@ export const de = {
         : `${records} Einträge wiederhergestellt.`,
     encryptedExport: 'Verschlüsselt exportieren',
     encryptedExported: 'Verschlüsseltes Backup heruntergeladen.',
+    exporting: 'Wird gesichert …',
+    exportFailed:
+      'Das Backup ließ sich gerade nicht sichern. Deine Daten sind unverändert – versuch es gleich noch einmal.',
     exportHint:
       'Empfohlen: mit Passwort sichern. Dann ist die Datei verschlüsselt und eine Änderung fällt auf. Ohne Passwort liegen alle Einträge lesbar in der Datei.',
     exportPassphrase: 'Passwort für das Backup',
