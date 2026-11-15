@@ -6,6 +6,7 @@ import { t } from '@/strings';
 import {
   LIVE_POINTS,
   androidVersion,
+  batteryWear,
   connection,
   driveViews,
   passport,
@@ -181,5 +182,15 @@ describe('hardware passport', () => {
       },
     };
     expect(passport(bare, null, labels()).map((f) => f.id)).toEqual(['os', 'cpu', 'ram']);
+  });
+});
+
+describe('battery wear', () => {
+  it('share of the original capacity, never above 100, in three calm words', () => {
+    expect(batteryWear(57_000, 48_450)).toEqual({ percent: 85, state: 'good' });
+    expect(batteryWear(50_000, 35_000)).toEqual({ percent: 70, state: 'worn' });
+    expect(batteryWear(50_000, 20_000)).toEqual({ percent: 40, state: 'weak' });
+    expect(batteryWear(50_000, 52_000)).toEqual({ percent: 100, state: 'good' });
+    expect(batteryWear(0, 1)).toBeNull();
   });
 });

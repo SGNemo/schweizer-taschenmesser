@@ -19,6 +19,7 @@ import {
 } from '../system';
 import { useLiveSystem, usePaused, type LiveState } from '../useLive';
 import styles from './Facts.module.css';
+import Health from './Health';
 import { PassportSection } from './Passport';
 
 const level = (pct: number) => (pct >= 90 ? 'full' : pct >= 75 ? 'tight' : 'ok');
@@ -336,6 +337,7 @@ export default function DesktopFacts() {
         </section>
       ) : null}
       {live.info ? <Programs live={live} /> : null}
+      {supported ? <Health /> : null}
       <Drives />
       {live.info ? <Passport info={live.info} /> : null}
     </>

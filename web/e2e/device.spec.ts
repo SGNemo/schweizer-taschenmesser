@@ -148,3 +148,14 @@ test('desktop: live load, programs, drives and a passport to copy – read while
   expect(text).not.toMatch(/\b\d{1,3}(\.\d{1,3}){3}\b/);
   expect(text).not.toMatch(/Beispiel-WLAN|vEthernet|Lautsprecher|Mikrofon|[A-Z]:\\/);
 });
+
+test('desktop: condition – battery wear and unexpected restarts as a time and a stop code', async ({
+  page,
+}) => {
+  test.skip(isPhone(page), 'the condition exists in the desktop app only');
+  await page.addInitScript(() => localStorage.setItem('__tmPlatformKind', 'desktop'));
+  await enable(page, 'device');
+  await ready(page, '/device');
+  await expect(page.getByTestId('device-battery-health')).toContainText('85 %');
+  await expect(page.getByTestId('device-crashes')).toContainText('Stoppcode 0x0000009F');
+});

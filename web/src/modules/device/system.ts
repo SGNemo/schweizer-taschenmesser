@@ -198,3 +198,16 @@ export function androidVersion(userAgent: string): string | null {
   const m = /Android (\d+(?:\.\d+)?)/.exec(userAgent);
   return m ? m[1]! : null;
 }
+
+/** Battery wear in words: share of the original capacity (never above 100) and a calm word for it. */
+export function batteryWear(
+  designMwh: number,
+  fullMwh: number,
+): {
+  percent: number;
+  state: 'good' | 'worn' | 'weak';
+} | null {
+  if (designMwh <= 0 || fullMwh <= 0) return null;
+  const percent = Math.min(100, Math.round((fullMwh / designMwh) * 100));
+  return { percent, state: percent >= 80 ? 'good' : percent >= 60 ? 'worn' : 'weak' };
+}

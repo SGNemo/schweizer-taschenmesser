@@ -9299,6 +9299,23 @@ export const de = {
       app: 'Nemo-Version',
       android: 'Android',
     },
+    health: {
+      title: 'Zustand',
+      battery: 'Akku-Zustand',
+      capacity: (pct: number) => `${pct} % der ursprünglichen Kapazität`,
+      cycles: (n: number) => (n === 1 ? '1 Ladezyklus' : `${n} Ladezyklen`),
+      state: { good: 'Gut', worn: 'Etwas abgenutzt', weak: 'Deutlich abgenutzt' },
+      weakContext: 'Hält spürbar kürzer als neu. Ein Tausch lohnt sich, wenn dich das stört.',
+      crashes: 'Unerwartete Neustarts',
+      crashesWindow: 'In den letzten 30 Tagen',
+      crashesNone: 'Keine',
+      bluescreen: (code: string) => `Bluescreen · Stoppcode ${code}`,
+      bluescreenNoCode: 'Bluescreen',
+      unexpected: 'Ohne Herunterfahren beendet',
+      unexpectedContext: 'Stromausfall, Einfrieren oder die Ein-/Aus-Taste',
+      codeHint: 'Den Stoppcode kannst du bei einer Suche oder beim Support angeben.',
+      unreadable: 'Das Ereignisprotokoll lässt sich gerade nicht lesen.',
+    },
   },
 } as const;
 

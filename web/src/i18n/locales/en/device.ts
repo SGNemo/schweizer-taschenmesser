@@ -143,4 +143,22 @@ export const device: Strings['device'] = {
     app: 'Nemo version',
     android: 'Android',
   },
+  health: {
+    title: 'Condition',
+    battery: 'Battery condition',
+    capacity: (pct: number) => `${pct} % of its original capacity`,
+    cycles: (n: number) => (n === 1 ? '1 charge cycle' : `${n} charge cycles`),
+    state: { good: 'Good', worn: 'Somewhat worn', weak: 'Clearly worn' },
+    weakContext:
+      'Lasts noticeably shorter than new. A replacement is worth it if that bothers you.',
+    crashes: 'Unexpected restarts',
+    crashesWindow: 'In the last 30 days',
+    crashesNone: 'None',
+    bluescreen: (code: string) => `Blue screen · stop code ${code}`,
+    bluescreenNoCode: 'Blue screen',
+    unexpected: 'Ended without shutting down',
+    unexpectedContext: 'Power loss, a freeze or the power button',
+    codeHint: 'You can give the stop code in a search or to support.',
+    unreadable: 'The event log cannot be read right now.',
+  },
 };

@@ -325,6 +325,7 @@ Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währ
 - **GS-11 Programme und Laufwerke (Windows):** „Was gerade arbeitet“ nennt dieselben Programme wie der Task-Manager; „Nach Arbeitsspeicher“ sortiert um. „Laufwerke“: Systemlaufwerk zuerst, Zustand und Temperatur (ohne Admin ggf. „nur mit Administratorrechten“), keine Buchstaben, Namen oder Modelle. ☐
 - **GS-12 Steckbrief:** „Als Text kopieren“, in einen Editor einfügen: System, Windows-Version, Prozessor, Grafik, Arbeitsspeicher, Mainboard, BIOS, Bildschirm, Nemo-Version; keine IP, kein WLAN-Name, kein Benutzername, kein Pfad, keine Audio-Gerätenamen. ☐
 - **GS-13 Handy-Akku:** Am Android-Gerät: „Gerade jetzt“ zeigt den Akkustand wie die Statusleiste; Ladekabel ein/aus: „Lädt“ / „Im Akkubetrieb“ wechselt ohne Neuladen. „Steckbrief“: Android-Version und Nemo-Version. ☐
+- **GS-14 Zustand (Windows):** Am Laptop: „Akku-Zustand“ nennt einen Anteil der ursprünglichen Kapazität und Ladezyklen ähnlich wie `powercfg /batteryreport`; am Desktop-PC fehlt die Kachel. „Unerwartete Neustarts“: nach einem harten Ausschalten (Ein-/Aus-Taste 5 s) steht beim nächsten Öffnen „Ohne Herunterfahren beendet“ mit Zeit; nur Zeit, Art und ggf. Stoppcode, kein Treiber- oder Dateiname. Ohne solche Ereignisse: „Keine“. ☐
 
 ### Downloads und Torrent
 

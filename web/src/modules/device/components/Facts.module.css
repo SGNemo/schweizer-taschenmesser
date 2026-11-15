@@ -136,3 +136,18 @@
 .state[data-tone='warning'] {
   color: var(--warning-ink);
 }
+.crashes {
+  display: grid;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.crashes > li {
+  display: grid;
+  min-width: 0;
+}
+.crashTime {
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: var(--font-num);
+}

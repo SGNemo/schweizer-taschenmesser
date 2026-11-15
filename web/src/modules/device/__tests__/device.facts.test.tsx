@@ -187,6 +187,49 @@ describe('Gerätestatus – live facts on the PC', () => {
   });
 });
 
+describe('Gerätestatus – condition (battery wear, unexpected restarts)', () => {
+  it('reads once per visit and says wear and restarts in words, with a stop code and a time only', async () => {
+    const system = createFakeSystem();
+    const health = vi.spyOn(system, 'health');
+    await show(platform('desktop', system));
+    expect(health).toHaveBeenCalledTimes(1);
+    const battery = screen.getByTestId('device-battery-health');
+    expect(battery).toHaveTextContent('Gut');
+    expect(battery).toHaveTextContent('85 % der ursprünglichen Kapazität · 214 Ladezyklen');
+    const crashes = screen.getByTestId('device-crashes');
+    expect(crashes).toHaveTextContent('Bluescreen · Stoppcode 0x0000009F');
+    expect(crashes).toHaveTextContent('Ohne Herunterfahren beendet');
+    expect(crashes).toHaveTextContent('In den letzten 30 Tagen');
+  });
+
+  it('no restarts: a calm "Keine"; an unreadable log says so; a worn battery is said, never red', async () => {
+    const system = createFakeSystem();
+    system.health = async () => ({
+      battery: { designMwh: 50_000, fullMwh: 20_000, cycles: null },
+      crashes: [],
+      crashesRead: true,
+    });
+    const view = await show(platform('desktop', system));
+    expect(screen.getByTestId('device-crashes')).toHaveTextContent('Keine');
+    const battery = screen.getByTestId('device-battery-health');
+    expect(battery).toHaveTextContent('Deutlich abgenutzt');
+    expect(battery).toHaveTextContent('40 % der ursprünglichen Kapazität');
+    expect(battery).not.toHaveTextContent('Ladezyklen');
+    view.unmount();
+    system.health = async () => ({ battery: null, crashes: [], crashesRead: false });
+    await show(platform('desktop', system));
+    expect(screen.queryByTestId('device-battery-health')).toBeNull();
+    expect(screen.getByTestId('device-crashes')).toHaveTextContent('lässt sich gerade nicht lesen');
+  });
+
+  it('a platform without the read shows no condition section', async () => {
+    const system = createFakeSystem();
+    delete system.health;
+    await show(platform('desktop', system));
+    expect(screen.queryByTestId('device-health')).toBeNull();
+  });
+});
+
 describe('Gerätestatus – the phone and the browser', () => {
   it('phone: battery from the WebView and a short passport (Android and Nemo version)', async () => {
     const listeners: string[] = [];

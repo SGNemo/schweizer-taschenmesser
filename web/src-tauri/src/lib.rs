@@ -254,6 +254,7 @@ pub fn run() {
             system::system_info,
             system::system_processes,
             system::system_disk_io,
+            system::system_health,
             system::system_open_task_manager,
             system::system_game_active,
             system::system_play_tone,
