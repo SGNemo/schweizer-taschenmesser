@@ -280,14 +280,25 @@ impl Machine {
     }
 }
 
-/// What the hub's other parts tell the countdown: is the device still allowed, is anything of
-/// Nemo still working, how the device is called. Set while the hub runs.
+type ShowFn = Box<dyn Fn() -> bool + Send + Sync>;
+type CloseFn = Box<dyn Fn() + Send + Sync>;
+type VisibleFn = Box<dyn Fn() -> Option<bool> + Send + Sync>;
+
+/// What the hub's other parts tell the countdown, and the countdown's window. Set while the hub
+/// runs (`remote::attach`). Everything that touches Tauri comes in here as a closure: the
+/// countdown itself holds no app handle, so no code path from the hub's sink reaches window code
+/// (which also keeps that code out of the shell's unit-test binary on Windows).
 pub struct Env {
-    pub app: AppHandle,
     pub allowed: Box<dyn Fn(&PublicKey) -> bool + Send + Sync>,
-    /// Another device than this one has an open sync session.
-    pub other_sync: Box<dyn Fn(&PublicKey) -> bool + Send + Sync>,
+    /// Nemo in Rust is still working for someone else: another device's sync session, a download.
+    pub working: Box<dyn Fn(&PublicKey) -> bool + Send + Sync>,
     pub name: Box<dyn Fn(&PublicKey) -> String + Send + Sync>,
+    /// Shows the countdown window; `false` when it could not be made.
+    pub show: ShowFn,
+    /// Closes it, if there is one.
+    pub close: CloseFn,
+    /// `None`: no window; else whether it is on screen (not hidden, not minimised).
+    pub visible: VisibleFn,
 }
 
 /// The countdown of this PC, shared by the sink (hub threads), the tray thread and the commands.
@@ -320,16 +331,12 @@ impl PowerCore {
         let env = self.env.lock().ok().and_then(|mut e| e.take());
         self.machine().stop();
         if let Some(env) = env {
-            close_window(&env.app);
+            (env.close)();
         }
     }
 
     fn busy(&self, env: &Env, device: &PublicKey) -> bool {
-        let downloads = env
-            .app
-            .try_state::<crate::downloads::Downloads>()
-            .is_some_and(|d| d.active());
-        self.web_busy.load(Ordering::SeqCst) != 0 || downloads || (env.other_sync)(device)
+        self.web_busy.load(Ordering::SeqCst) != 0 || (env.working)(device)
     }
 
     /// From the hub's input session (via the sink): answers at once.
@@ -351,16 +358,16 @@ impl PowerCore {
                 .request(*device.as_bytes(), power, despite, busy, Instant::now());
         match answer {
             PowerAnswer::Started => {
-                if show_window(&env.app).is_err() {
+                if !(env.show)() {
                     self.machine().no_window();
                     return PowerAnswer::Failed;
                 }
                 // stopped while the window was being built (tray, hub stop): no empty window
                 if self.counting().is_none() {
-                    close_window(&env.app);
+                    (env.close)();
                 }
             }
-            PowerAnswer::Cancelled if was_running => close_window(&env.app),
+            PowerAnswer::Cancelled if was_running => (env.close)(),
             _ => {}
         }
         answer
@@ -390,20 +397,17 @@ impl PowerCore {
     /// while a countdown runs (it reads the PC's state, which nobody should poll for nothing).
     /// Returns the device whose power permission is to be taken away (its window was closed at
     /// the PC for the second time within an hour).
-    pub fn tick(&self, locked: impl FnOnce() -> bool) -> Option<PublicKey> {
+    pub fn tick(self: &Arc<Self>, locked: impl FnOnce() -> bool) -> Option<PublicKey> {
         let env = self.env()?;
         if self.counting().is_none() {
             // a window that outlived its countdown (built while it was stopped) goes too
-            if env.app.get_webview_window(WINDOW).is_some() {
-                close_window(&env.app);
+            if (env.visible)().is_some() {
+                (env.close)();
             }
             return None;
         }
         let locked = locked();
-        let visible = env
-            .app
-            .get_webview_window(WINDOW)
-            .is_some_and(|w| w.is_visible().unwrap_or(false) && !w.is_minimized().unwrap_or(true));
+        let visible = (env.visible)().unwrap_or(false);
         let allowed = |d: &Device| (env.allowed)(&PublicKey::from_bytes(*d));
         let tick = self
             .machine()
@@ -411,17 +415,17 @@ impl PowerCore {
         match tick {
             Tick::Nothing => None,
             Tick::Stopped => {
-                close_window(&env.app);
+                (env.close)();
                 None
             }
             Tick::StoppedAtPc { device, revoke } => {
-                close_window(&env.app);
+                (env.close)();
                 revoke.then(|| PublicKey::from_bytes(device))
             }
             Tick::Fire(act) => {
-                close_window(&env.app);
+                (env.close)();
                 let device = self.machine().news().map(|(_, d, _)| d);
-                let core = env.app.state::<crate::remote::RemoteHost>().power_arc();
+                let core = self.clone();
                 // sleep returns only after the PC woke up again: never on the tray thread
                 let _ = std::thread::Builder::new()
                     .name("remote-power".into())
@@ -442,10 +446,23 @@ impl PowerCore {
     pub fn cancel_at_pc(&self) -> Option<PublicKey> {
         let stopped = self.machine().cancel_at_pc(Instant::now());
         if let Some(env) = self.env() {
-            close_window(&env.app);
+            (env.close)();
         }
         stopped.and_then(|(d, revoke)| revoke.then(|| PublicKey::from_bytes(d)))
     }
+}
+
+/// The three window closures of [`Env`] for this app (called from `remote::attach` only).
+pub fn window_closures(app: &AppHandle) -> (ShowFn, CloseFn, VisibleFn) {
+    let (a, b, c) = (app.clone(), app.clone(), app.clone());
+    (
+        Box::new(move || show_window(&a).is_ok()),
+        Box::new(move || close_window(&b)),
+        Box::new(move || {
+            c.get_webview_window(WINDOW)
+                .map(|w| w.is_visible().unwrap_or(false) && !w.is_minimized().unwrap_or(true))
+        }),
+    )
 }
 
 fn show_window(app: &AppHandle) -> tauri::Result<()> {
