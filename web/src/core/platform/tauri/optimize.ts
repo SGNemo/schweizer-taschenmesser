@@ -44,7 +44,7 @@ export function createOptimize(): OptimizeService {
     startupList: () => call<StartupItem[]>('disk_startup_list'),
     setStartup: (id, enabled) => call<number | null>('disk_startup_set', { id, enabled }),
     tweaks: () => call<TweakState[]>('disk_tweaks_list'),
-    setTweak: (id, target) => call('disk_tweak_set', { id, target }),
+    setTweak: (id, target) => call<number | null>('disk_tweak_set', { id, target }),
     resetTweaks: () => call<TweakReset>('disk_tweaks_reset_all'),
   };
 }

@@ -552,6 +552,7 @@ const fakeToggle = (
   changedHere: false,
   applicable: true,
   readable: true,
+  custom: false,
   risk,
   sourceUrl,
   refresh,
@@ -808,7 +809,7 @@ export function createFakeDisk(): DiskService {
       const toggle = tweak.kind === 'toggle';
       if (toggle !== (typeof target === 'boolean')) throw new Error('bad-target');
       if (!toggle && !tweak.options.some((o) => o.id === target)) throw new Error('bad-target');
-      if (toggle ? tweak.on === target : tweak.choice === target) return;
+      if (toggle ? tweak.on === target : tweak.choice === target) return null;
       const before = { on: tweak.on, choice: tweak.choice };
       const entryId = careEntries.length + 1;
       careEntries.push({
@@ -816,7 +817,8 @@ export function createFakeDisk(): DiskService {
         at: FAKE_NOW,
         kind: 'tweak',
         subject: id,
-        label: '',
+        // Like the native side: a choice carries the chosen plan's name.
+        label: tweak.options.find((o) => o.id === target)?.label ?? '',
         bytes: 0,
         files: 0,
         permanent: false,
@@ -829,6 +831,7 @@ export function createFakeDisk(): DiskService {
       if (typeof target === 'boolean') tweak.on = target;
       else tweak.choice = target;
       tweak.changedHere = true;
+      return entryId;
     },
     async resetTweaks() {
       const restored: string[] = [];

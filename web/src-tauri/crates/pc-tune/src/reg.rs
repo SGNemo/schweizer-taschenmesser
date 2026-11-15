@@ -1,5 +1,5 @@
 //! The registry seam: read anywhere below `HKCU` and `HKLM`, **write only below
-//! `HKCU\Software`** (and on the real registry only at the keys listed in [`WRITABLE_KEYS`]). There is no function that writes to the machine hive, so nothing built on
+//! `HKCU\Software`** (and on the real registry only at the keys and names listed in [`WRITABLE`]). There is no function that writes to the machine hive, so nothing built on
 //! this trait can need administrator rights.
 //!
 //! [`MemRegistry`] is the in-memory twin for tests (same key rules, case-insensitive like the
@@ -106,24 +106,38 @@ pub fn valid_key(key: &str) -> bool {
             .all(|s| !s.is_empty() && *s != "." && *s != ".." && s.len() <= 255)
 }
 
-/// The keys the real registry lets this crate write, in full: what the catalogues use and
-/// nothing else. [`valid_key`] is the general rule (and all the in-memory fake checks); this
-/// list is the second lock on the real thing, so not even a hand-edited journal file can make an
-/// undo write anywhere else.
-pub const WRITABLE_KEYS: &[&str] = &[
-    // Autostart: Windows' own "switched off" notes (startup.rs).
-    r"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run",
-    r"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\StartupFolder",
+/// What the real registry lets this crate write, in full: the keys the catalogues use, and for
+/// a key that holds other settings too, the one value name. [`valid_key`] is the general rule
+/// (and all the in-memory fake checks); this list is the second lock on the real thing, so not
+/// even a hand-edited journal file can make an undo write anywhere else.
+pub const WRITABLE: &[(&str, Option<&str>)] = &[
+    // Autostart: Windows' own "switched off" notes, one value per entry (startup.rs).
+    (
+        r"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run",
+        None,
+    ),
+    (
+        r"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\StartupFolder",
+        None,
+    ),
     // Settings catalogue (tweaks.rs): the two entries that are registry values.
-    r"Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo",
-    r"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced",
+    (
+        r"Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo",
+        Some("Enabled"),
+    ),
+    (
+        r"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced",
+        Some("Start_TrackProgs"),
+    ),
 ];
 
-/// Whether the real registry may be written at `key`.
-pub fn writable_key(key: &str) -> bool {
+/// Whether the real registry may be written at `key`, value `name`.
+pub fn writable(key: &str, name: &str) -> bool {
     valid_key(key)
-        && (WRITABLE_KEYS.iter().any(|k| k.eq_ignore_ascii_case(key))
-            || (cfg!(test) && key.starts_with(r"Software\NemoPcTuneTest\")))
+        && valid_name(name)
+        && (WRITABLE.iter().any(|(k, n)| {
+            k.eq_ignore_ascii_case(key) && n.is_none_or(|n| n.eq_ignore_ascii_case(name))
+        }) || (cfg!(test) && key.starts_with(r"Software\NemoPcTuneTest\")))
 }
 
 /// A value name the seam writes: not over-long, no control characters.
@@ -449,7 +463,7 @@ mod win {
         }
 
         fn set(&self, key: &str, name: &str, value: &Value) -> Result<(), RegError> {
-            if !writable_key(key) || !valid_name(name) {
+            if !writable(key, name) {
                 return Err(RegError::KeyNotAllowed);
             }
             let (ty, data) = encode(value);
@@ -474,7 +488,7 @@ mod win {
         }
 
         fn delete(&self, key: &str, name: &str) -> Result<(), RegError> {
-            if !writable_key(key) || !valid_name(name) {
+            if !writable(key, name) {
                 return Err(RegError::KeyNotAllowed);
             }
             let (key_w, name_w) = (wide(key), wide(name));
@@ -676,10 +690,19 @@ mod tests {
     }
 
     #[test]
-    fn the_real_registry_may_only_be_written_at_the_listed_keys() {
-        for k in WRITABLE_KEYS {
+    fn the_real_registry_may_only_be_written_at_the_listed_keys_and_names() {
+        for (k, name) in WRITABLE {
             assert!(valid_key(k), "{k}");
-            assert!(writable_key(&k.to_uppercase()), "{k}");
+            assert!(
+                writable(&k.to_uppercase(), name.unwrap_or("Any entry")),
+                "{k}"
+            );
+        }
+        const ADVANCED: &str = r"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced";
+        assert!(writable(ADVANCED, "start_trackprogs"));
+        // The same key holds other settings: those are not ours to write.
+        for other in ["Hidden", "HideFileExt", "ShowSuperHidden", ""] {
+            assert!(!writable(ADVANCED, other), "{other}");
         }
         for bad in [
             r"Software\Microsoft\Windows\CurrentVersion\Run",
@@ -690,7 +713,7 @@ mod tests {
             r"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run\x",
             r"Software\X",
         ] {
-            assert!(!writable_key(bad), "{bad}");
+            assert!(!writable(bad, "x"), "{bad}");
         }
     }
 

@@ -120,8 +120,13 @@ export interface TweakState {
   id: string;
   group: TweakGroup;
   kind: 'toggle' | 'choice';
-  /** A switch: its state; `null` = Windows' own default applies (no value set yet). */
+  /**
+   * A switch: its state; `null` = no value set yet (Windows decides), or – with `custom` – a
+   * stored value that is neither this catalogue's on nor its off.
+   */
   on: boolean | null;
+  /** A value is stored that is neither on nor off here: never call it Windows' default. */
+  custom: boolean;
   /** A choice: the id of the active option. */
   choice: string | null;
   options: TweakOption[];
@@ -180,7 +185,7 @@ export interface OptimizeService {
    * Switches a setting (`true`/`false`, or the id of a choice). The state from before is stored
    * first and the change appears in `history()` with `canUndo`. Rejects with `Error(code)`.
    */
-  setTweak(id: string, target: boolean | string): Promise<void>;
+  setTweak(id: string, target: boolean | string): Promise<number | null>;
   /** Puts every setting changed here back to the state from before its first change. */
   resetTweaks(): Promise<TweakReset>;
 }
