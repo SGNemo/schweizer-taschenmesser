@@ -57,10 +57,26 @@ test.describe('Zuletzt gelöscht', () => {
   test('the switch turns the list off and says what that means', async ({ page }) => {
     await ready(page, '/settings/allgemein');
     const section = page.locator('section[aria-labelledby="recently-deleted"]');
-    const keep = section.getByRole('switch', { name: 'Gelöschtes 30 Tage aufbewahren' });
+    const keep = section.getByRole('switch', { name: 'Gelöschtes aufbewahren' });
     await expect(keep).toHaveAttribute('aria-checked', 'true');
     await keep.click();
     await expect(keep).toHaveAttribute('aria-checked', 'false');
     await expect(section.getByText(/nur direkt über „Rückgängig“/)).toBeVisible();
+    // The keep time only shows while keeping is on.
+    await expect(section.getByRole('group', { name: 'Aufbewahren für' })).toHaveCount(0);
+  });
+
+  test('the keep time can be lengthened and survives a reload', async ({ page }) => {
+    await ready(page, '/settings/allgemein');
+    const section = page.locator('section[aria-labelledby="recently-deleted"]');
+    const days = section.getByRole('group', { name: 'Aufbewahren für' });
+    await days.getByRole('button', { name: '90 Tage' }).click();
+    await expect(section.getByText('In den letzten 90 Tagen wurde nichts gelöscht.')).toBeVisible();
+    await page.reload();
+    await expect(
+      page
+        .locator('section[aria-labelledby="recently-deleted"]')
+        .getByText('In den letzten 90 Tagen wurde nichts gelöscht.'),
+    ).toBeVisible();
   });
 });

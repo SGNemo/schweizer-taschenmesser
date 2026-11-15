@@ -1246,6 +1246,15 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
           return tTrash.get().keep;
         },
       },
+      {
+        key: 'days',
+        get label() {
+          return tTrash.get().days;
+        },
+        get description() {
+          return tTrash.get().daysHint;
+        },
+      },
     ],
     render: () => <RecentlyDeletedSection />,
   },
