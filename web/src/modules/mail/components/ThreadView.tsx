@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ConnectorError } from '@/core/connectors/types';
 import { mailAttachment, mailThread, mailWebUrl } from '@/core/mail/service';
 import type { MailLinkType } from '@/core/mail/prefill';
@@ -19,7 +19,7 @@ import { MAX_MAIL_BYTES } from '@/core/mail/compose';
 import { DEMO_ACCOUNT, loadThreadBodies, saveBody } from '../cache';
 import { fullWhen, personName, subjectOf } from '../format';
 import { formatAddress } from '@/core/mail/address';
-import { forwardFields, replyFields } from '@/core/mail/reply';
+import { forwardFields, replyFields, type ComposeFields } from '@/core/mail/reply';
 import { hasFeature, mailDrafts } from '@/core/mail/service';
 import { mailText } from '@/core/mail/prefill';
 import { emptyCompose, type ComposeState } from '../composeState';
@@ -53,11 +53,18 @@ function Attachments({ account, message }: { account: MailAccountRef; message: M
   const toast = useUiStore((st) => st.toast);
   const [busy, setBusy] = useState<string | undefined>();
   const [preview, setPreview] = useState<{ name: string; src: string } | undefined>();
+  // The object URL lives as long as the preview is open.
+  useEffect(() => (preview ? () => URL.revokeObjectURL(preview.src) : undefined), [preview]);
   if (message.attachments.length === 0) return null;
   async function view(id: string, name: string, mime: string) {
     setBusy(id);
     try {
-      setPreview({ name, src: dataUrl(await mailAttachment(account, message.id, id), mime) });
+      const data = await mailAttachment(account, message.id, id);
+      if (data.length > PREVIEW_MAX) throw new Error('too large');
+      setPreview({
+        name,
+        src: URL.createObjectURL(new Blob([new Uint8Array(data)], { type: mime })),
+      });
     } catch {
       toast(t.mail.view.previewFailed);
     } finally {
@@ -85,23 +92,25 @@ function Attachments({ account, message }: { account: MailAccountRef; message: M
             <span>
               {a.filename} <span className={styles.meta}>({size(a.size)})</span>
             </span>
-            {canPreview(a) ? (
+            <span className={styles.row}>
+              {canPreview(a) ? (
+                <Button
+                  variant="ghost"
+                  disabled={busy !== undefined}
+                  aria-label={t.mail.view.preview(a.filename)}
+                  onClick={() => void view(a.id, a.filename, a.mime)}
+                >
+                  {t.mail.view.previewLabel}
+                </Button>
+              ) : null}
               <Button
-                variant="ghost"
                 disabled={busy !== undefined}
-                aria-label={t.mail.view.preview(a.filename)}
-                onClick={() => void view(a.id, a.filename, a.mime)}
+                aria-label={t.mail.view.download(a.filename)}
+                onClick={() => void download(a.id, a.filename, a.mime)}
               >
-                {t.mail.view.previewLabel}
+                <Icon name="download" /> {t.mail.view.downloadLabel}
               </Button>
-            ) : null}
-            <Button
-              disabled={busy !== undefined}
-              aria-label={t.mail.view.download(a.filename)}
-              onClick={() => void download(a.id, a.filename, a.mime)}
-            >
-              <Icon name="download" /> {t.mail.view.downloadLabel}
-            </Button>
+            </span>
           </li>
         ))}
       </ul>
@@ -110,6 +119,18 @@ function Attachments({ account, message }: { account: MailAccountRef; message: M
         onClose={() => setPreview(undefined)}
         title={preview?.name ?? ''}
         size="roomy"
+        footer={
+          preview ? (
+            <Button
+              onClick={() => {
+                const a = message.attachments.find((x) => x.filename === preview.name);
+                if (a) void download(a.id, a.filename, a.mime);
+              }}
+            >
+              <Icon name="download" /> {t.mail.view.downloadLabel}
+            </Button>
+          ) : undefined
+        }
       >
         {preview ? <img className={styles.preview} src={preview.src} alt={preview.name} /> : null}
       </Dialog>
@@ -135,24 +156,60 @@ async function forwardWithAttachments(
   account: MailAccountRef,
 ): Promise<[ComposeState, string]> {
   const [state, title] = composeOf('forward', message, account);
-  const skipped: string[] = [];
-  let total = state.text.length;
-  for (const a of message.attachments) {
-    if (total + a.size > MAX_MAIL_BYTES) {
-      skipped.push(a.filename);
-      continue;
-    }
-    try {
-      const data = await mailAttachment(account, message.id, a.id);
-      total += data.length;
-      state.attachments.push({ filename: a.filename, mime: a.mime, data });
-    } catch {
-      skipped.push(a.filename);
-    }
-  }
-  if (skipped.length)
-    useUiStore.getState().toast(t.mail.write.compose.forwardSkipped(skipped.join(', ')));
+  // Decided up front from the sizes the mail names, so the fetches can run side by side.
+  let budget = MAX_MAIL_BYTES - state.text.length;
+  // One that does not fit is left out; smaller ones after it still go.
+  const fits = message.attachments.filter((a) => {
+    if (a.size > budget) return false;
+    budget -= a.size;
+    return true;
+  });
+  const fetched = await Promise.all(
+    fits.map((a) =>
+      mailAttachment(account, message.id, a.id).then(
+        (data) => ({ filename: a.filename, mime: a.mime, data }),
+        () => undefined,
+      ),
+    ),
+  );
+  state.attachments = fetched.filter((x) => x !== undefined);
+  const kept = new Set(state.attachments.map((a) => a.filename));
+  const skipped = message.attachments.filter((a) => !kept.has(a.filename)).map((a) => a.filename);
+  // A lasting line in the compose window, not only a toast that the window could cover.
+  if (skipped.length) state.forwardNote = t.mail.write.compose.forwardSkipped(skipped.join(', '));
   return [state, title];
+}
+
+/**
+ * One forward at a time per thread view: the button and the F key share it, a second press while the
+ * attachments load does nothing, and a result that arrives after the view is gone is dropped.
+ */
+function useForward(account: MailAccountRef, onCompose: (s: ComposeState, title: string) => void) {
+  const [busy, setBusy] = useState(false);
+  const running = useRef(false);
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
+  const forward = (message: MailMessage) => {
+    if (running.current) return;
+    if (message.attachments.length === 0)
+      return onCompose(...composeOf('forward', message, account));
+    running.current = true;
+    setBusy(true);
+    void forwardWithAttachments(message, account)
+      .then((r) => {
+        if (alive.current) onCompose(...r);
+      })
+      .finally(() => {
+        running.current = false;
+        if (alive.current) setBusy(false);
+      });
+  };
+  return { forward, busy };
 }
 
 /**
@@ -198,9 +255,12 @@ function composeOf(
   account: MailAccountRef,
 ): [ComposeState, string] {
   const body = (message.text ?? mailText(message, 3000)).slice(0, 3000);
+  // The quote or forward header the window starts with: snippets go above it and never take it along.
+  const withPrefill = (f: ComposeFields): ComposeState =>
+    emptyCompose({ ...f, prefill: f.text.replace(/^\n+/, '') });
   if (kind === 'forward')
     return [
-      emptyCompose(
+      withPrefill(
         forwardFields(message, {
           header: t.mail.write.compose.forwardHeader(
             formatAddress(message.from),
@@ -213,7 +273,7 @@ function composeOf(
       t.mail.write.compose.titleForward,
     ];
   return [
-    emptyCompose(
+    withPrefill(
       replyFields(message, {
         all: kind === 'replyAll',
         me: account.email,
@@ -237,6 +297,8 @@ function MessageCard({
   onToggle,
   autoLoadImages,
   onCompose,
+  onForward,
+  forwarding,
   localAi,
   startLink,
 }: {
@@ -251,6 +313,8 @@ function MessageCard({
   onToggle: () => void;
   autoLoadImages: boolean;
   onCompose: (state: ComposeState, title: string) => void;
+  onForward: (message: MailMessage) => void;
+  forwarding: boolean;
 }) {
   const canCompose = hasFeature(account, 'mail-send') || hasFeature(account, 'mail-modify');
   const isDraft = message.labelIds.includes('DRAFT');
@@ -276,18 +340,7 @@ function MessageCard({
   }
 
   const [cid, setCid] = useState<Record<string, string>>({});
-  const [forwarding, setForwarding] = useState(false);
-  async function forward() {
-    if (message.attachments.length === 0)
-      return onCompose(...composeOf('forward', message, account));
-    setForwarding(true);
-    useUiStore.getState().toast(t.mail.write.compose.forwardLoading);
-    try {
-      onCompose(...(await forwardWithAttachments(message, account)));
-    } finally {
-      setForwarding(false);
-    }
-  }
+
   const [linkType, setLinkType] = useState<MailLinkType | undefined>(startLink);
 
   useEffect(() => {
@@ -365,8 +418,8 @@ function MessageCard({
                       {t.mail.write.replyAll}
                     </Button>
                   ) : null}
-                  <Button disabled={forwarding} onClick={() => void forward()}>
-                    {t.mail.write.forward}
+                  <Button disabled={forwarding} onClick={() => onForward(message)}>
+                    {forwarding ? t.mail.write.compose.forwardLoading : t.mail.write.forward}
                   </Button>
                 </>
               )}
@@ -458,7 +511,12 @@ export function ThreadView({
   const subject = messages?.[0] ? subjectOf(messages[0].subject) : '';
   // r/a/f answer the newest message that is not a draft, like its buttons.
   const newest = messages?.filter((m) => !m.labelIds.includes('DRAFT')).at(-1);
-  const newestAny = messages?.at(-1);
+  // The newest message that names an unsubscribe page; never in spam (opening it there confirms the address).
+  const newsletter = messages
+    ?.filter((m) => m.unsubscribeUrl && !m.labelIds.includes('DRAFT'))
+    .at(-1);
+  const inSpamNow = !!messages?.length && messages.every((m) => m.labelIds.includes('SPAM'));
+  const { forward, busy: forwarding } = useForward(account, onCompose);
   const canCompose = hasFeature(account, 'mail-send') || hasFeature(account, 'mail-modify');
   useMailKeys(shortcuts && canCompose && !!newest, {
     reply: () => newest && onCompose(...composeOf('reply', newest, account)),
@@ -467,7 +525,7 @@ export function ThreadView({
       newest.to.length + newest.cc.length > 1 &&
       onCompose(...composeOf('replyAll', newest, account)),
     forward: () => {
-      if (newest) void forwardWithAttachments(newest, account).then((r) => onCompose(...r));
+      if (newest) forward(newest);
     },
   });
   const loaded = [...new Set(messages?.flatMap((m) => m.labelIds) ?? [])];
@@ -489,7 +547,6 @@ export function ThreadView({
         <Button onClick={onBack}>
           <Icon name="chevronLeft" /> {t.mail.view.back}
         </Button>
-        {newestAny?.unsubscribeUrl ? <Unsubscribe url={newestAny.unsubscribeUrl} /> : null}
         {web && account.key !== DEMO_ACCOUNT ? (
           <Button onClick={() => void getPlatform().app.openUrl(web)}>
             {t.mail.view.openInGmail}
@@ -536,6 +593,12 @@ export function ThreadView({
         />
       ) : null}
       {messages === undefined ? <Skeleton height="6rem" /> : <h2>{subject}</h2>}
+      {/* Beside the subject, not in the toolbar: it belongs to this newsletter, and the bar keeps three buttons. */}
+      {newsletter?.unsubscribeUrl && !inSpamNow ? (
+        <div className={styles.row}>
+          <Unsubscribe url={newsletter.unsubscribeUrl} />
+        </div>
+      ) : null}
       {messages ? (
         <ThreadLabels
           account={account}
@@ -560,6 +623,8 @@ export function ThreadView({
           open={openIds.includes(m.id) || messages.length === 1}
           autoLoadImages={autoLoadImages}
           onCompose={onCompose}
+          onForward={forward}
+          forwarding={forwarding}
           localAi={localAi}
           startLink={
             startInvoice && m.id === messages[messages.length - 1]!.id ? 'invoice' : undefined

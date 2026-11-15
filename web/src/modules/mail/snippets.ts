@@ -50,21 +50,33 @@ export function snippetName(text: string): string {
   return first.length > NAME_MAX ? `${first.slice(0, NAME_MAX - 1)}…` : first;
 }
 
+/** What the user wrote: the text above the quote or forward header the window started with. */
+export function ownText(body: string, prefill?: string): string {
+  const at = prefill ? body.lastIndexOf(prefill) : -1;
+  return at >= 0 ? body.slice(0, at) : body;
+}
+
 /** Keeps a text as a snippet (the same text once); a full list keeps what it has. */
-export function addSnippet(text: string): Snippet[] {
+export function addSnippet(text: string): { list: Snippet[]; added: boolean } {
   const clean = text.trim();
   const now = readSnippets();
-  if (!clean || now.length >= SNIPPETS_MAX || now.some((s) => s.text === clean)) return now;
-  return write([...now, { name: snippetName(clean), text: clean }]);
+  if (!clean || now.length >= SNIPPETS_MAX || now.some((s) => s.text === clean))
+    return { list: now, added: false };
+  return { list: write([...now, { name: snippetName(clean), text: clean }]), added: true };
 }
 
-export function removeSnippet(index: number): Snippet[] {
-  return write(readSnippets().filter((_, i) => i !== index));
+/** Removes by text (unique per list), so another window's change cannot make it hit the wrong one. */
+export function removeSnippet(text: string): Snippet[] {
+  return write(readSnippets().filter((s) => s.text !== text));
 }
 
-/** Puts a snippet in front of what is written (a reply's quote stays below it). */
-export function insertSnippet(body: string, snippet: Snippet): string {
-  return body.trim() === ''
-    ? snippet.text
-    : `${snippet.text}${body.startsWith('\n') ? '' : '\n\n'}${body}`;
+/**
+ * Adds a snippet at the end of what the user wrote, above a reply's quote or a forward's header: two
+ * snippets come out in the order they were picked.
+ */
+export function insertSnippet(body: string, snippet: Snippet, prefill?: string): string {
+  const own = ownText(body, prefill).trimEnd();
+  const rest = body.slice(ownText(body, prefill).length);
+  const next = own ? `${own}\n\n${snippet.text}` : snippet.text;
+  return rest ? `${next}\n\n${rest.replace(/^\n+/, '')}` : next;
 }

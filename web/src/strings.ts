@@ -7710,9 +7710,8 @@ export const de = {
         body: 'Text',
         attach: 'Anhang hinzufügen',
         attachments: 'Anhänge',
-        attachNote:
-          'Gesendet wird genau, was hier steht – beim Weiterleiten auch die Anhänge der Mail.',
-        forwardLoading: 'Anhänge der Mail werden geladen …',
+        attachNote: 'Gesendet wird genau, was hier steht.',
+        forwardLoading: 'Anhänge werden geladen …',
         forwardSkipped: (names: string) =>
           `Nicht mitgeschickt (zu groß oder nicht ladbar): ${names}. Du kannst sie selbst anhängen.`,
         snippets: 'Textbausteine',
@@ -7725,6 +7724,8 @@ export const de = {
         snippetInsertLabel: 'Einfügen',
         snippetSave: 'Diesen Text als Baustein merken',
         snippetSaved: 'Als Textbaustein gemerkt.',
+        snippetKnown: 'Diesen Text hast du schon als Baustein.',
+        snippetRemoved: 'Textbaustein entfernt.',
         removeAttachment: (name: string) => `Anhang ${name} entfernen`,
         fileTooLarge: (names: string) => `Zu groß für einen Anhang (höchstens 15 MB): ${names}`,
         invalidAddress: (list: string) => `Das ist keine E-Mail-Adresse: ${list}`,

@@ -9,7 +9,14 @@ import { Button, Dialog, Icon, IconButton, TextArea, TextField } from '@/ui';
 import { toDraft, toOutgoing, type ComposeProblem, type ComposeState } from '../composeState';
 import { pickAttachments } from '../pickAttachments';
 import { queueSend } from '../pendingSend';
-import { addSnippet, insertSnippet, readSnippets, removeSnippet, SNIPPETS_MAX } from '../snippets';
+import {
+  addSnippet,
+  insertSnippet,
+  ownText,
+  readSnippets,
+  removeSnippet,
+  SNIPPETS_MAX,
+} from '../snippets';
 import { MailError } from './MailError';
 import styles from './mail.module.css';
 
@@ -168,19 +175,27 @@ export function ComposeDialog({
               <p className={styles.hint}>{t.mail.write.compose.snippetsEmpty}</p>
             ) : (
               <ul className={styles.attachments}>
-                {snippets.map((sn, i) => (
-                  <li key={`${sn.name}-${i}`} className={styles.attachment}>
-                    <span className={styles.savedText}>{sn.name}</span>
+                {snippets.map((sn) => (
+                  <li key={sn.text} className={styles.attachment}>
+                    <span className={styles.savedText} title={sn.text}>
+                      {sn.name}
+                    </span>
                     <span className={styles.row}>
                       <Button
                         aria-label={t.mail.write.compose.snippetInsert(sn.name)}
-                        onClick={() => set({ text: insertSnippet(s.text, sn) })}
+                        onClick={() => set({ text: insertSnippet(s.text, sn, s.prefill) })}
                       >
                         {t.mail.write.compose.snippetInsertLabel}
                       </Button>
                       <IconButton
                         label={t.mail.write.compose.snippetRemove(sn.name)}
-                        onClick={() => setSnippets(removeSnippet(i))}
+                        onClick={() => {
+                          setSnippets(removeSnippet(sn.text));
+                          toast(t.mail.write.compose.snippetRemoved, {
+                            label: t.mail.write.undo,
+                            run: () => setSnippets(addSnippet(sn.text).list),
+                          });
+                        }}
                       >
                         <Icon name="close" size={16} />
                       </IconButton>
@@ -191,12 +206,16 @@ export function ComposeDialog({
             )}
             <Button
               variant="ghost"
-              disabled={s.text.trim() === ''}
+              // Only the user's own words: never the quote or a forwarded mail.
+              disabled={ownText(s.text, s.prefill).trim() === ''}
               onClick={() => {
                 if (snippets.length >= SNIPPETS_MAX)
                   return toast(t.mail.write.compose.snippetsFull);
-                setSnippets(addSnippet(s.text));
-                toast(t.mail.write.compose.snippetSaved);
+                const { list, added } = addSnippet(ownText(s.text, s.prefill));
+                setSnippets(list);
+                toast(
+                  added ? t.mail.write.compose.snippetSaved : t.mail.write.compose.snippetKnown,
+                );
               }}
             >
               {t.mail.write.compose.snippetSave}
@@ -221,6 +240,7 @@ export function ComposeDialog({
                 ))}
               </ul>
             ) : null}
+            {s.forwardNote ? <p className={styles.hint}>{s.forwardNote}</p> : null}
             <Button onClick={() => void attach()}>{t.mail.write.compose.attach}</Button>
             <p className={styles.hint}>{t.mail.write.compose.attachNote}</p>
           </div>
