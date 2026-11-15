@@ -100,10 +100,12 @@ export function WeekBand({
                 <span className="sr-only">{tileName(d, i === 1)}</span>
                 <span className={styles.wide} aria-hidden="true">
                   <span className={styles.top}>
+                    {/* Weekday and number stay together (a no-break space); a narrow tile breaks „Heute ·“
+                        onto a line of its own instead of letting the day run past the tile. */}
                     <span className={styles.day}>
                       {d.isToday
-                        ? t.planner.board.todayIs(`${dayName(d.date)} ${number}`)
-                        : `${dayName(d.date)} ${number}`}
+                        ? t.planner.board.todayIs(`${dayName(d.date)}\u00a0${number}`)
+                        : `${dayName(d.date)}\u00a0${number}`}
                     </span>
                     {n > 0 ? (
                       <span className={styles.count}>{t.planner.board.things(n)}</span>
