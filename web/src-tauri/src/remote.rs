@@ -191,15 +191,19 @@ impl InputSink for Sink {
         self.power.news()
     }
 
-    fn programs(&self) -> (u64, Vec<String>) {
+    fn programs_version(&self) -> u32 {
+        self.programs.version()
+    }
+
+    fn programs(&self) -> (u32, Vec<String>) {
         self.programs.programs()
     }
 
-    fn start_program(&self, slot: u8, list: u64) -> ProgramAnswer {
+    fn start_program(&self, peer: &PublicKey, slot: u8, epoch: u32) -> ProgramAnswer {
         if !self.supported() {
             return ProgramAnswer::Failed;
         }
-        self.programs.start(slot, list)
+        self.programs.start(peer.as_bytes(), slot, epoch)
     }
 }
 
@@ -397,9 +401,8 @@ impl RemoteHost {
 /// Characters that change how the text around them is laid out or hide in it: direction marks
 /// and overrides, zero-width and other invisible format characters.
 fn invisible(c: char) -> bool {
-    matches!(c,
-        '\u{00AD}' | '\u{061C}' | '\u{180E}' | '\u{200B}'..='\u{200F}' | '\u{202A}'..='\u{202E}'
-        | '\u{2060}'..='\u{206F}' | '\u{FEFF}' | '\u{FFF9}'..='\u{FFFB}' | '\u{E0000}'..='\u{E007F}')
+    // one set for the whole remote control: the wire refuses the same in a program name
+    ::lan_sync::input::wire::invisible(c)
 }
 
 fn quote(c: char) -> bool {
@@ -1048,15 +1051,26 @@ pub struct ProgramDto {
     name: String,
 }
 
+/// The PC's program list for the settings page: its epoch (a removal names it) and the entries.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProgramsDto {
+    version: u32,
+    list: Vec<ProgramDto>,
+}
+
 /// The PC's program list, names only.
 #[tauri::command(async)]
-pub fn remote_programs(state: State<'_, RemoteHost>) -> Result<Vec<ProgramDto>, String> {
-    let names = state.programs.names().map_err(|_| "not-started")?;
-    Ok(names
-        .into_iter()
-        .enumerate()
-        .map(|(slot, name)| ProgramDto { slot, name })
-        .collect())
+pub fn remote_programs(state: State<'_, RemoteHost>) -> Result<ProgramsDto, String> {
+    let (version, names) = state.programs.names().map_err(|_| "not-started")?;
+    Ok(ProgramsDto {
+        version,
+        list: names
+            .into_iter()
+            .enumerate()
+            .map(|(slot, name)| ProgramDto { slot, name })
+            .collect(),
+    })
 }
 
 /// Adds an entry to the PC's program list – a widening. It takes no path: Rust shows its own file
@@ -1082,7 +1096,10 @@ pub fn remote_program_add(app: AppHandle, state: State<'_, RemoteHost>) -> Resul
         return Err("bad-file".to_owned());
     }
     let name = remote_programs::name_of(&path, plain).ok_or("bad-file")?;
-    let question = texts::remote_ask_program(lang, &name);
+    let shortcut = path
+        .extension()
+        .is_some_and(|e| e.eq_ignore_ascii_case("lnk"));
+    let question = texts::remote_ask_program(lang, &name, &plain_path(&path), shortcut);
     if !asked(&app, texts::remote_program_dialog(lang), question, true) {
         return Err("cancelled".to_owned());
     }
@@ -1117,10 +1134,28 @@ fn picked_program(app: &AppHandle, lang: Lang) -> Option<std::path::PathBuf> {
     dialog.blocking_pick_file()?.into_path().ok()
 }
 
-/// Removes an entry of the PC's program list: a narrowing, at once.
+/// A chosen file's full path as one line for the native question: no control or invisible
+/// characters (the PC's owner picked it, but its folders' names are not ours), nothing cut.
+fn plain_path(path: &Path) -> String {
+    path.to_string_lossy()
+        .chars()
+        .filter(|c| !invisible(*c))
+        .map(|c| if c.is_control() { ' ' } else { c })
+        .collect()
+}
+
+/// Removes an entry of the PC's program list: a narrowing, at once. `version`: the list's epoch
+/// the page showed; when the list changed since, nothing is removed (`changed`).
 #[tauri::command(async)]
-pub fn remote_program_remove(state: State<'_, RemoteHost>, slot: usize) -> Result<(), String> {
-    state.programs.remove(slot).map_err(|e| e.name().to_owned())
+pub fn remote_program_remove(
+    state: State<'_, RemoteHost>,
+    slot: usize,
+    version: u32,
+) -> Result<(), String> {
+    state
+        .programs
+        .remove(slot, version)
+        .map_err(|e| e.name().to_owned())
 }
 
 /// "Fernsteuerung beenden": ends the controlling session and pauses that device. `false` if
@@ -1549,7 +1584,8 @@ mod tests {
         let (n, names) = sink.programs();
         assert!(names.is_empty());
         // no list loaded, no closure from the hub: nothing to start
-        assert_eq!(sink.start_program(0, n), ProgramAnswer::Failed);
+        let peer = PublicKey::from_bytes([1; 32]);
+        assert_eq!(sink.start_program(&peer, 0, n), ProgramAnswer::Failed);
     }
 
     #[test]

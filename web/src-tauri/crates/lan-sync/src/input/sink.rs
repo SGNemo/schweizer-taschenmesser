@@ -76,18 +76,26 @@ pub trait InputSink: Send + Sync {
         None
     }
 
-    /// The names of the PC's program list in slot order, and a number that changes with every
-    /// change of the list. Names only: never a path.
-    fn programs(&self) -> (u64, Vec<String>) {
+    /// The epoch of the PC's program list: it changes with every change of the list. Cheap (the
+    /// session asks at every tick); the names come with [`InputSink::programs`].
+    fn programs_version(&self) -> u32 {
+        0
+    }
+
+    /// The names of the PC's program list in slot order, and its epoch (both read together).
+    /// Names only: never a path.
+    fn programs(&self) -> (u32, Vec<String>) {
         (0, Vec::new())
     }
 
-    /// Starts the program in `slot` of the PC's list – a start that passed the gate (session,
-    /// permission, PC not locked, limits, the slot exists). `list`: the number of the list the
-    /// phone was told; when the list changed since, nothing starts (`Failed`). The path is the
-    /// PC's, looked up now; it starts without arguments. Answers at once.
-    fn start_program(&self, slot: u8, list: u64) -> ProgramAnswer {
-        let _ = (slot, list);
+    /// Starts the program in `slot` of the PC's list for device `peer` – a start that passed the
+    /// session's gate (session, permission, PC not locked, the session's limit). `epoch`: the
+    /// epoch of the list the phone was told; the sink compares it with the list's epoch now,
+    /// under the list's lock, and starts nothing on a mismatch or an empty slot (`Failed`). It
+    /// also keeps the per-device limit (`Limit`), across sessions. The path is the PC's, looked
+    /// up now; it starts without arguments. Answers at once.
+    fn start_program(&self, peer: &PublicKey, slot: u8, epoch: u32) -> ProgramAnswer {
+        let _ = (peer, slot, epoch);
         ProgramAnswer::Failed
     }
 }

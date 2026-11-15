@@ -623,6 +623,39 @@ describe('the shared reading (core/remote/host)', () => {
     expect(screen.getByTestId('remote-program-note').textContent).toBe('OBS Studio entfernt.');
   });
 
+  it('a removal names the list it saw: a list changed since removes nothing', async () => {
+    fake.parts.hooks.pickFile('C:\\x\\Editor.exe');
+    await fake.parts.host.addProgram();
+    await show();
+    // the list changes at the PC behind the page's back
+    fake.parts.hooks.addProgramElsewhere('Spiel');
+    fireEvent.click(screen.getByRole('button', { name: 'Editor entfernen' }));
+    await flush();
+    expect(fake.parts.hooks.programs()).toEqual(['Editor', 'Spiel']);
+    expect(screen.getByTestId('remote-program-note').textContent).toBe(
+      'In der Zwischenzeit hat sich die Freigabe geändert. Wähle noch einmal.',
+    );
+    // the page read the list anew: now it goes
+    expect(screen.getAllByTestId('remote-program')).toHaveLength(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Editor entfernen' }));
+    await flush();
+    expect(fake.parts.hooks.programs()).toEqual(['Spiel']);
+  });
+
+  it('a removal that could not be saved says so', async () => {
+    fake.parts.hooks.pickFile('C:\\x\\Editor.exe');
+    await fake.parts.host.addProgram();
+    await show();
+    fake.parts.hooks.setUnwritable(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Editor entfernen' }));
+    await flush();
+    // removed for this run all the same; the page says it could not save
+    expect(fake.parts.hooks.programs()).toEqual([]);
+    expect(screen.getByTestId('remote-program-note').textContent).toBe(
+      'Das ließ sich nicht speichern. Versuche es noch einmal.',
+    );
+  });
+
   it('eight programs at most; never while mouse and keyboard are controlled', async () => {
     const id = fake.parts.hooks.addDevice('Pixel 7');
     await fake.parts.host.setEnabled(true);

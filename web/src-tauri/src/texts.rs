@@ -298,9 +298,9 @@ pub fn remote_ask_power(lang: Lang) -> &'static str {
 /// The line in a device's question when it may start programs of the PC's list afterwards.
 pub fn remote_ask_programs(lang: Lang) -> &'static str {
     if german(lang) {
-        "Es darf außerdem die Programme starten, die hier unter Einstellungen → Fernsteuerung → Programme stehen."
+        "Es darf außerdem die Programme starten, die hier unter Einstellungen → Verbindungen → Fernsteuerung stehen."
     } else {
-        "It may also start the programs listed here under Settings → Remote control → Programs."
+        "It may also start the programs listed here under Settings → Connections → Remote control."
     }
 }
 
@@ -322,13 +322,24 @@ pub fn remote_program_dialog(lang: Lang) -> (&'static str, &'static str, &'stati
     }
 }
 
-/// What adding an entry means. `name` is already plain text.
-pub fn remote_ask_program(lang: Lang, name: &str) -> String {
-    if german(lang) {
-        format!("{name} kann danach von Handys mit der Freigabe gestartet werden.")
+/// What adding an entry means: the sentence, the full path on a line of its own (so the owner
+/// sees which file it really is) and, for a shortcut, what it starts with. `name` and `path` are
+/// already plain text.
+pub fn remote_ask_program(lang: Lang, name: &str, path: &str, shortcut: bool) -> String {
+    let mut text = if german(lang) {
+        format!("{name} kann danach von Handys mit der Freigabe gestartet werden.\n\n{path}")
     } else {
-        format!("{name} can then be started by phones that are allowed to.")
+        format!("{name} can then be started by phones that are allowed to.\n\n{path}")
+    };
+    if shortcut {
+        text.push_str("\n\n");
+        text.push_str(if german(lang) {
+            "Verknüpfung: startet mit den in ihr gespeicherten Angaben."
+        } else {
+            "Shortcut: starts with the details saved in it."
+        });
     }
+    text
 }
 
 /// The countdown's one sentence: who, what, in how many seconds. `name` is already plain text.
@@ -602,6 +613,31 @@ mod tests {
         }
         assert_eq!(remote_dialog(Lang::Fr), remote_dialog(Lang::En));
         assert_ne!(remote_dialog(Lang::De), remote_dialog(Lang::En));
+    }
+
+    #[test]
+    fn adding_a_program_shows_the_full_path_on_its_own_line_and_says_what_a_shortcut_does() {
+        let path = r"C:\Users\A\Desktop\Spiel.exe";
+        for lang in [Lang::De, Lang::En] {
+            let exe = remote_ask_program(lang, "Spiel", path, false);
+            let lines: Vec<&str> = exe.lines().collect();
+            assert!(lines[0].starts_with("Spiel "), "{exe}");
+            assert!(lines.contains(&path), "the path alone on a line: {exe}");
+            assert!(!exe.contains("Verknüpfung") && !exe.contains("Shortcut"));
+            let lnk = remote_ask_program(lang, "Spiel", r"C:\x\Spiel.lnk", true);
+            assert!(lnk.lines().any(|l| l == r"C:\x\Spiel.lnk"));
+            assert!(lnk.ends_with(if lang == Lang::De {
+                "Verknüpfung: startet mit den in ihr gespeicherten Angaben."
+            } else {
+                "Shortcut: starts with the details saved in it."
+            }));
+            // the way to the list, as the settings page names it
+            assert!(remote_ask_programs(lang).contains(if lang == Lang::De {
+                "Einstellungen → Verbindungen → Fernsteuerung"
+            } else {
+                "Settings → Connections → Remote control"
+            }));
+        }
     }
 
     #[test]

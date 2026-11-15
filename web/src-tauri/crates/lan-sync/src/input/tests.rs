@@ -23,10 +23,12 @@ pub(crate) struct TestSink {
     pub power_answer: Mutex<PowerAnswer>,
     pub pending: AtomicBool,
     pub news: Mutex<Option<(u64, PublicKey, PowerAnswer)>>,
-    /// The PC's program list: its number and the names.
-    pub programs: Mutex<(u64, Vec<String>)>,
-    /// Program starts that reached the sink: slot and the list's number.
-    pub starts: Mutex<Vec<(u8, u64)>>,
+    /// The PC's program list: its epoch and the names.
+    pub programs: Mutex<(u32, Vec<String>)>,
+    /// Program starts that reached the sink: slot and the epoch the phone named.
+    pub starts: Mutex<Vec<(u8, u32)>>,
+    /// How often the names were read (the tick asks for the epoch alone).
+    pub names_read: std::sync::atomic::AtomicUsize,
 }
 
 impl TestSink {
@@ -46,10 +48,11 @@ impl TestSink {
             news: Mutex::new(None),
             programs: Mutex::new((1, vec!["Editor".into(), "Browser".into()])),
             starts: Mutex::new(Vec::new()),
+            names_read: std::sync::atomic::AtomicUsize::new(0),
         })
     }
 
-    pub fn starts(&self) -> Vec<(u8, u64)> {
+    pub fn starts(&self) -> Vec<(u8, u32)> {
         std::mem::take(&mut self.starts.lock().unwrap())
     }
 
@@ -108,12 +111,17 @@ impl InputSink for TestSink {
     fn power_news(&self) -> Option<(u64, PublicKey, PowerAnswer)> {
         *self.news.lock().unwrap()
     }
-    fn programs(&self) -> (u64, Vec<String>) {
+    fn programs_version(&self) -> u32 {
+        self.programs.lock().unwrap().0
+    }
+    fn programs(&self) -> (u32, Vec<String>) {
+        self.names_read.fetch_add(1, Ordering::SeqCst);
         self.programs.lock().unwrap().clone()
     }
-    fn start_program(&self, slot: u8, list: u64) -> ProgramAnswer {
-        self.starts.lock().unwrap().push((slot, list));
-        if list == self.programs.lock().unwrap().0 {
+    fn start_program(&self, _peer: &PublicKey, slot: u8, epoch: u32) -> ProgramAnswer {
+        self.starts.lock().unwrap().push((slot, epoch));
+        let list = self.programs.lock().unwrap();
+        if epoch == list.0 && usize::from(slot) < list.1.len() {
             ProgramAnswer::Started
         } else {
             ProgramAnswer::Failed
@@ -1565,9 +1573,14 @@ impl Bench {
 }
 
 fn start(c: &mut InputConn, slot: u8, at: Duration) -> Step {
+    start_on(c, slot, 1, at)
+}
+
+/// A start naming the list's epoch.
+fn start_on(c: &mut InputConn, slot: u8, epoch: u32, at: Duration) -> Step {
     c.on_frame(
         wire::TAG_PROGRAM_START,
-        &wire::encode_program_start(slot),
+        &wire::encode_program_start(slot, epoch),
         at,
     )
 }
@@ -1579,12 +1592,17 @@ fn program_answer(a: ProgramAnswer) -> Step {
     )
 }
 
-/// The names the next tick tells, if any.
-fn told_programs(c: &mut InputConn, at: Duration) -> Option<Vec<String>> {
+/// The epoch and the names the next tick tells, if any.
+fn told_list(c: &mut InputConn, at: Duration) -> Option<(u32, Vec<String>)> {
     match c.poll(at) {
         Step::Reply(wire::TAG_PROGRAMS, body) => Some(wire::decode_programs(&body).unwrap()),
         _ => None,
     }
+}
+
+/// The names the next tick tells, if any.
+fn told_programs(c: &mut InputConn, at: Duration) -> Option<Vec<String>> {
+    told_list(c, at).map(|(_, names)| names)
 }
 
 #[test]
@@ -1593,17 +1611,23 @@ fn the_list_goes_right_after_opened_only_to_a_device_that_may_start_programs() {
     b.grant_programs(PHONE, Level::Full, true);
     let (mut c, o) = b.opened_with(PHONE, Level::Full, wire::FEATURE_PROGRAMS);
     assert_eq!(o.ext.unwrap().features, wire::FEATURE_PROGRAMS, "echoed");
-    // the very next frame is the list – before any state
+    // the very next frame is the list with its epoch – before any state
     assert_eq!(
-        told_programs(&mut c, T0).unwrap(),
-        ["Editor".to_owned(), "Browser".to_owned()]
+        told_list(&mut c, T0).unwrap(),
+        (1, vec!["Editor".to_owned(), "Browser".to_owned()])
     );
+    let read = b.sink.names_read.load(Ordering::SeqCst);
     assert_eq!(told_programs(&mut c, T0 + STATE_INTERVAL), None, "once");
-    // a change of the list at the PC is told again
+    assert_eq!(
+        b.sink.names_read.load(Ordering::SeqCst),
+        read,
+        "a tick asks for the epoch alone"
+    );
+    // a change of the list at the PC is told again, under its new epoch
     b.sink.set_programs(&["Editor"]);
     assert_eq!(
-        told_programs(&mut c, T0 + STATE_INTERVAL * 2).unwrap(),
-        ["Editor".to_owned()]
+        told_list(&mut c, T0 + STATE_INTERVAL * 2).unwrap(),
+        (2, vec!["Editor".to_owned()])
     );
     drop(c);
     // a media session of that device hears the list too (the phone raises before a start)
@@ -1637,32 +1661,76 @@ fn the_list_goes_right_after_opened_only_to_a_device_that_may_start_programs() {
 }
 
 #[test]
-fn a_start_passes_the_gate_and_names_the_list_the_phone_was_told() {
+fn the_list_is_told_again_when_the_permission_comes_back_within_a_session() {
     let b = bench();
     b.grant_programs(PHONE, Level::Full, true);
+    let (mut c, _) = b.opened_with(PHONE, Level::Media, wire::FEATURES);
+    assert!(told_programs(&mut c, T0).is_some());
+    // taken away in the store (the media session goes on): nothing is told
+    let full = RemoteGrant {
+        programs: true,
+        ..grant(Level::Full)
+    };
+    let without = RemoteGrant {
+        programs: false,
+        ..full
+    };
+    b.trust.set_remote(&key(PHONE), without).unwrap();
+    assert_eq!(told_programs(&mut c, T0 + STATE_INTERVAL), None);
+    // given back: the same list, told once more
+    b.trust.set_remote(&key(PHONE), full).unwrap();
+    assert_eq!(
+        told_list(&mut c, T0 + STATE_INTERVAL * 2).unwrap(),
+        (1, vec!["Editor".to_owned(), "Browser".to_owned()])
+    );
+    assert_eq!(told_programs(&mut c, T0 + STATE_INTERVAL * 3), None);
+}
+
+#[test]
+fn start_right_after_opened_with_the_current_epoch_is_started() {
+    let b = bench();
+    b.grant_programs(PHONE, Level::Full, true);
+    // the phone heard the list on Medien, then raised: the new session told nothing yet
     let (mut c, _) = b.opened_with(PHONE, Level::Full, wire::FEATURES);
-    // before the list was told nothing can be started
-    assert_eq!(start(&mut c, 0, T0), program_answer(ProgramAnswer::Failed));
+    assert_eq!(start(&mut c, 0, T0), program_answer(ProgramAnswer::Started));
+    assert_eq!(b.sink.starts(), vec![(0, 1)]);
     assert!(told_programs(&mut c, T0).is_some());
     let at = T0 + Duration::from_secs(10);
     assert_eq!(start(&mut c, 1, at), program_answer(ProgramAnswer::Started));
-    assert_eq!(b.sink.starts(), vec![(1, 1)]);
-    // a slot past the told list: failed, not closed, and nothing reached the PC
+    // a slot past the list: failed, not closed
     let at = at + Duration::from_secs(10);
     assert_eq!(start(&mut c, 2, at), program_answer(ProgramAnswer::Failed));
-    assert!(b.sink.starts().is_empty());
-    // past the longest list: a broken frame
-    assert_eq!(c.on_frame(wire::TAG_PROGRAM_START, &[8], at), Step::Close);
-    // the list changed at the PC after it was told: the sink refuses the old number
+    assert_eq!(b.sink.starts(), vec![(1, 1), (2, 1)]);
+    // past the longest list, or a start without an epoch: a broken frame
+    let past = c.on_frame(wire::TAG_PROGRAM_START, &[8, 0, 0, 0, 1], at);
+    assert_eq!(past, Step::Close);
     let (mut c, _) = b.opened_with(PHONE, Level::Full, wire::FEATURES);
-    assert!(told_programs(&mut c, T0).is_some());
+    assert_eq!(c.on_frame(wire::TAG_PROGRAM_START, &[0], at), Step::Close);
+}
+
+#[test]
+fn list_sent_list_changed_start_with_old_epoch_fails_even_after_the_new_list_was_sent() {
+    let b = bench();
+    b.grant_programs(PHONE, Level::Full, true);
+    let (mut c, _) = b.opened_with(PHONE, Level::Full, wire::FEATURES);
+    assert_eq!(told_list(&mut c, T0).unwrap().0, 1);
     b.sink.set_programs(&["Editor", "Spiel"]);
-    assert_eq!(start(&mut c, 1, at), program_answer(ProgramAnswer::Failed));
-    assert_eq!(b.sink.starts(), vec![(1, 1)], "the old number went along");
-    // the next tick tells the new list; a start on it goes
-    assert!(told_programs(&mut c, at).is_some());
+    let at = T0 + Duration::from_secs(10);
+    let old = start_on(&mut c, 1, 1, at);
+    assert_eq!(old, program_answer(ProgramAnswer::Failed));
+    assert_eq!(told_list(&mut c, at).unwrap().0, 2, "the new list");
     let at = at + Duration::from_secs(10);
-    assert_eq!(start(&mut c, 1, at), program_answer(ProgramAnswer::Started));
+    let old = start_on(&mut c, 1, 1, at);
+    assert_eq!(
+        old,
+        program_answer(ProgramAnswer::Failed),
+        "still the old epoch"
+    );
+    assert_eq!(b.sink.starts(), vec![(1, 1), (1, 1)]);
+    // a start on the new epoch goes
+    let at = at + Duration::from_secs(10);
+    let new = start_on(&mut c, 1, 2, at);
+    assert_eq!(new, program_answer(ProgramAnswer::Started));
     assert_eq!(b.sink.starts(), vec![(1, 2)]);
 }
 

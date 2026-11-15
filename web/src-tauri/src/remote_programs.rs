@@ -10,11 +10,15 @@
 //!   started); the next entry added at this PC replaces it.
 //! * An entry is added only by the shell's own command after its file dialog and confirmation
 //!   (`remote::remote_program_add`); removing one acts at once and holds for this run even if it
-//!   cannot be written.
+//!   cannot be written – then the file is deleted (a missing file is an empty list, so nothing
+//!   comes back after a restart) and the page hears `failed`. A removal names the list's epoch
+//!   the page saw; when the list changed since, nothing is removed (`changed`).
 //! * A start comes from the hub's input session through the sink ([`ProgramsCore::start`]): the
-//!   slot is looked up in the list as it is at that moment, under the number the phone was told –
-//!   when the list changed since, nothing starts. The call into the system comes in as a closure
-//!   from `remote::attach` ([`Env`]); this file holds no app handle and reaches no window or
+//!   slot is looked up in the list as it is at that moment, under the list's epoch the phone was
+//!   told (compared under the list's lock) – when the list changed since, nothing starts. One
+//!   start per [`START_EVERY`] per device (memory only, kept across reconnects). The call into the
+//!   system comes in as a closure from `remote::attach` ([`Env`]); it checks on a thread of its
+//!   own whether the file is still there. This file holds no app handle and reaches no window or
 //!   dialog code.
 //!
 //! No Tauri command starts a program. Nothing is logged.
@@ -22,8 +26,9 @@
 use ::lan_sync::input::wire::{ProgramAnswer, MAX_PROGRAMS};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 
 /// Most entries of the list (the wire's limit).
 pub const MAX_ENTRIES: usize = MAX_PROGRAMS;
@@ -31,6 +36,8 @@ pub const MAX_ENTRIES: usize = MAX_PROGRAMS;
 pub const NAME_MAX_CHARS: usize = 40;
 /// The file next to the trust list.
 pub const FILE: &str = "remote-programs.json";
+/// One program start per device in this time, across sessions.
+pub const START_EVERY: Duration = Duration::from_secs(5);
 
 #[derive(Serialize, Deserialize)]
 struct FileEntry {
@@ -68,6 +75,8 @@ pub enum ListError {
     BadFile,
     NotFound,
     Storage,
+    /// The list changed since the page read it.
+    Changed,
 }
 
 impl ListError {
@@ -78,6 +87,7 @@ impl ListError {
             ListError::BadFile => "bad-file",
             ListError::NotFound => "not-found",
             ListError::Storage => "failed",
+            ListError::Changed => "changed",
         }
     }
 }
@@ -177,13 +187,18 @@ impl ProgramList {
         Ok(())
     }
 
-    /// Removes an entry (a narrowing): at once, also when it cannot be written.
+    /// Removes an entry (a narrowing): at once, also when it cannot be written. Then the file is
+    /// deleted, so the entry cannot come back after a restart (a missing file is an empty list),
+    /// and the answer is `Storage` all the same: the page says it could not save.
     pub fn remove(&mut self, slot: usize) -> Result<(), ListError> {
         if slot >= self.entries.len() {
             return Err(ListError::NotFound);
         }
         self.entries.remove(slot);
-        self.write(&self.entries)
+        self.write(&self.entries).inspect_err(|_| {
+            // fail closed across restarts (a file that is gone already is fine)
+            let _ = std::fs::remove_file(&self.file);
+        })
     }
 }
 
@@ -208,9 +223,12 @@ pub struct Env {
 #[derive(Default)]
 pub struct ProgramsCore {
     list: Mutex<Option<ProgramList>>,
-    /// Grows with every change of the list; the phone's start names the one it was told.
-    version: AtomicU64,
+    /// The list's epoch: moves with every change of the list (under the list's lock); the phone's
+    /// start names the one it was told.
+    version: AtomicU32,
     env: Mutex<Option<Arc<Env>>>,
+    /// The last start per device (memory only; kept across sessions and hub restarts).
+    starts: Mutex<Vec<([u8; 32], Instant)>>,
 }
 
 impl ProgramsCore {
@@ -244,8 +262,13 @@ impl ProgramsCore {
         }
     }
 
-    /// The names in slot order, and the list's number (for the hub).
-    pub fn programs(&self) -> (u64, Vec<String>) {
+    /// The list's epoch alone (cheap: the hub asks at every tick).
+    pub fn version(&self) -> u32 {
+        self.version.load(Ordering::SeqCst)
+    }
+
+    /// The names in slot order, and the list's epoch, read together (for the hub).
+    pub fn programs(&self) -> (u32, Vec<String>) {
         let list = self.list();
         let names = list
             .as_ref()
@@ -254,16 +277,21 @@ impl ProgramsCore {
         (self.version.load(Ordering::SeqCst), names)
     }
 
-    /// A start that passed the hub's gate. The path is the one in the list now; a list that
-    /// changed since the phone was told (`list`), an empty slot or a file that is gone start
-    /// nothing.
-    pub fn start(&self, slot: u8, list: u64) -> ProgramAnswer {
+    /// A start of device `peer` that passed the hub's gate. The path is the one in the list now;
+    /// a list whose epoch is not `epoch` any more, or an empty slot, starts nothing (`Failed`); a
+    /// device that started one less than [`START_EVERY`] ago gets `Limit`. Whether the file is
+    /// still there is asked on the launch's own thread, never here (a network path can be slow).
+    pub fn start(&self, peer: &[u8; 32], slot: u8, epoch: u32) -> ProgramAnswer {
+        self.start_at(peer, slot, epoch, Instant::now())
+    }
+
+    fn start_at(&self, peer: &[u8; 32], slot: u8, epoch: u32, now: Instant) -> ProgramAnswer {
         let Some(env) = self.env.lock().ok().and_then(|e| e.clone()) else {
             return ProgramAnswer::Failed;
         };
         let path = {
             let entries = self.list();
-            if self.version.load(Ordering::SeqCst) != list {
+            if self.version.load(Ordering::SeqCst) != epoch {
                 return ProgramAnswer::Failed;
             }
             match entries
@@ -274,8 +302,13 @@ impl ProgramsCore {
                 None => return ProgramAnswer::Failed,
             }
         };
-        if !path.is_file() {
-            return ProgramAnswer::Failed;
+        {
+            let mut starts = self.starts.lock().unwrap_or_else(|e| e.into_inner());
+            starts.retain(|(_, at)| now.saturating_duration_since(*at) < START_EVERY);
+            if starts.iter().any(|(d, _)| d == peer) {
+                return ProgramAnswer::Limit;
+            }
+            starts.push((*peer, now));
         }
         if (env.launch)(&path) {
             ProgramAnswer::Started
@@ -284,11 +317,15 @@ impl ProgramsCore {
         }
     }
 
-    /// The entries for the PC's settings: names only (the page never gets a path).
-    pub fn names(&self) -> Result<Vec<String>, ListError> {
+    /// The entries for the PC's settings: the list's epoch and the names (the page never gets a
+    /// path). A removal names that epoch.
+    pub fn names(&self) -> Result<(u32, Vec<String>), ListError> {
         let list = self.list();
         let list = list.as_ref().ok_or(ListError::NotFound)?;
-        Ok(list.entries.iter().map(|e| e.name.clone()).collect())
+        Ok((
+            self.version.load(Ordering::SeqCst),
+            list.entries.iter().map(|e| e.name.clone()).collect(),
+        ))
     }
 
     /// Whether another entry fits (`None`: no list loaded yet).
@@ -306,10 +343,14 @@ impl ProgramsCore {
         added
     }
 
-    /// Removes an entry, at once.
-    pub fn remove(&self, slot: usize) -> Result<(), ListError> {
+    /// Removes an entry, at once – if the list is still the one of epoch `version` (the one the
+    /// page showed); else `Changed`, and nothing is removed.
+    pub fn remove(&self, slot: usize, version: u32) -> Result<(), ListError> {
         let mut list = self.list();
         let list = list.as_mut().ok_or(ListError::NotFound)?;
+        if self.version.load(Ordering::SeqCst) != version {
+            return Err(ListError::Changed);
+        }
         let before = list.entries.len();
         let removed = list.remove(slot);
         if list.entries.len() != before {
@@ -448,9 +489,56 @@ mod tests {
         std::fs::create_dir_all(d.join("remote-programs.json.tmp")).unwrap();
         assert_eq!(list.add(entry(&d, "Browser")), Err(ListError::Storage));
         assert_eq!(list.entries().len(), 1, "not added");
+        assert!(file.exists());
         assert_eq!(list.remove(0), Err(ListError::Storage));
         assert!(list.entries().is_empty(), "removed all the same");
         assert_eq!(list.remove(0), Err(ListError::NotFound));
+        std::fs::remove_dir_all(d).ok();
+    }
+
+    #[test]
+    fn a_removal_that_cannot_be_written_deletes_the_file_and_says_failed() {
+        let d = dir("remove-unwritable");
+        let file = d.join(FILE);
+        let core = ProgramsCore::default();
+        core.load(&file, plain);
+        core.add(entry(&d, "Editor")).unwrap();
+        core.add(entry(&d, "Browser")).unwrap();
+        std::fs::create_dir_all(d.join("remote-programs.json.tmp")).unwrap();
+        let (v, _) = core.names().unwrap();
+        let removed = core.remove(0, v);
+        assert_eq!(removed, Err(ListError::Storage));
+        assert_eq!(
+            removed.unwrap_err().name(),
+            "failed",
+            "the page says it could not save"
+        );
+        // for this run: removed; on disk: no file, so after a restart the list is empty and the
+        // removed entry does not come back
+        assert_eq!(core.names().unwrap().1, ["Browser"]);
+        assert!(!file.exists());
+        let restarted = ProgramsCore::default();
+        restarted.load(&file, plain);
+        assert!(restarted.names().unwrap().1.is_empty());
+        // a file that is gone already: still failed, nothing else
+        let (v, _) = core.names().unwrap();
+        assert_eq!(core.remove(0, v), Err(ListError::Storage));
+        assert!(core.names().unwrap().1.is_empty());
+        std::fs::remove_dir_all(d).ok();
+    }
+
+    #[test]
+    fn a_removal_of_a_list_that_changed_since_the_page_read_it_removes_nothing() {
+        let d = dir("remove-changed");
+        let (core, _) = core_with(&d, &["Editor", "Browser"]);
+        let (seen, _) = core.names().unwrap();
+        core.add(entry(&d, "Spiel")).unwrap();
+        assert_eq!(core.remove(0, seen), Err(ListError::Changed));
+        assert_eq!(ListError::Changed.name(), "changed");
+        assert_eq!(core.names().unwrap().1, ["Editor", "Browser", "Spiel"]);
+        let (now, _) = core.names().unwrap();
+        core.remove(0, now).unwrap();
+        assert_eq!(core.names().unwrap().1, ["Browser", "Spiel"]);
         std::fs::remove_dir_all(d).ok();
     }
 
@@ -485,29 +573,65 @@ mod tests {
         (core, opened)
     }
 
+    const PHONE: [u8; 32] = [1; 32];
+    const TABLET: [u8; 32] = [2; 32];
+
     #[test]
     fn a_start_opens_the_path_of_the_list_as_it_is_now_and_nothing_else() {
         let d = dir("start");
         let (core, opened) = core_with(&d, &["Editor", "Browser"]);
+        let t0 = Instant::now();
+        let later = |n: u64| t0 + START_EVERY * u32::try_from(n).unwrap();
         let (n, names) = core.programs();
+        assert_eq!(core.version(), n);
         assert_eq!(names, ["Editor", "Browser"]);
-        assert_eq!(core.start(1, n), ProgramAnswer::Started);
+        assert_eq!(core.start_at(&PHONE, 1, n, t0), ProgramAnswer::Started);
         assert_eq!(*opened.lock().unwrap(), [d.join("Browser.exe")]);
-        // an empty slot, an old number, a file that is gone: nothing opens
-        assert_eq!(core.start(2, n), ProgramAnswer::Failed);
-        core.remove(0).unwrap();
-        assert_eq!(core.start(0, n), ProgramAnswer::Failed, "the list changed");
+        // an empty slot, an old epoch: nothing opens
+        assert_eq!(core.start_at(&PHONE, 2, n, later(1)), ProgramAnswer::Failed);
+        core.remove(0, n).unwrap();
+        let old = core.start_at(&PHONE, 0, n, later(2));
+        assert_eq!(old, ProgramAnswer::Failed, "the list changed");
         let (n, names) = core.programs();
         assert_eq!(names, ["Browser"]);
+        // a file that is gone is the launch's own question (on its thread): handed over
         std::fs::remove_file(d.join("Browser.exe")).unwrap();
-        assert_eq!(core.start(0, n), ProgramAnswer::Failed, "gone");
-        assert_eq!(opened.lock().unwrap().len(), 1);
+        assert_eq!(
+            core.start_at(&PHONE, 0, n, later(3)),
+            ProgramAnswer::Started
+        );
+        assert_eq!(opened.lock().unwrap().len(), 2);
         // without the hub's closure nothing opens at all
         core.add(entry(&d, "Spiel")).unwrap();
         core.detach();
         let (n, _) = core.programs();
-        assert_eq!(core.start(1, n), ProgramAnswer::Failed);
-        assert_eq!(opened.lock().unwrap().len(), 1);
+        assert_eq!(core.start_at(&PHONE, 1, n, later(4)), ProgramAnswer::Failed);
+        assert_eq!(opened.lock().unwrap().len(), 2);
+        std::fs::remove_dir_all(d).ok();
+    }
+
+    #[test]
+    fn one_start_per_five_seconds_per_device_across_sessions() {
+        let d = dir("limit");
+        let (core, opened) = core_with(&d, &["Editor"]);
+        let t0 = Instant::now();
+        let n = core.version();
+        assert_eq!(core.start_at(&PHONE, 0, n, t0), ProgramAnswer::Started);
+        // a new session of the same phone does not reset it (the limit lives here, not there)
+        let soon = t0 + Duration::from_secs(4);
+        assert_eq!(core.start_at(&PHONE, 0, n, soon), ProgramAnswer::Limit);
+        // another device has its own
+        assert_eq!(core.start_at(&TABLET, 0, n, soon), ProgramAnswer::Started);
+        assert_eq!(
+            core.start_at(&PHONE, 0, n, t0 + START_EVERY),
+            ProgramAnswer::Started
+        );
+        // a refused start (old epoch, empty slot) uses nothing up
+        let t1 = t0 + START_EVERY * 3;
+        assert_eq!(core.start_at(&PHONE, 0, n + 1, t1), ProgramAnswer::Failed);
+        assert_eq!(core.start_at(&PHONE, 5, n, t1), ProgramAnswer::Failed);
+        assert_eq!(core.start_at(&PHONE, 0, n, t1), ProgramAnswer::Started);
+        assert_eq!(opened.lock().unwrap().len(), 4);
         std::fs::remove_dir_all(d).ok();
     }
 
@@ -523,9 +647,9 @@ mod tests {
         assert!(b > a);
         assert_eq!(core.add(entry(&d, "Browser")), Err(ListError::Duplicate));
         assert_eq!(core.programs().0, b, "a refused add changes nothing");
-        core.remove(5).unwrap_err();
+        core.remove(5, b).unwrap_err();
         assert_eq!(core.programs().0, b);
-        core.remove(0).unwrap();
+        core.remove(0, b).unwrap();
         assert!(core.programs().0 > b);
         assert_eq!(core.has_room(), Some(true));
         assert_eq!(ProgramsCore::default().has_room(), None);

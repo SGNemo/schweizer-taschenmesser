@@ -121,9 +121,9 @@ export const remote: Strings['remote'] = {
     notPaired: 'No PC paired yet. The remote needs the pairing on your home network.',
     unreachable: 'Your PC cannot be reached right now. Both devices on the same Wi-Fi?',
     notGranted:
-      'Remote control is off for this phone at the PC. Allow this phone at the PC under Settings → Remote control.',
+      'Remote control is off for this phone at the PC. Allow this phone at the PC under Settings → Connections → Remote control.',
     paused:
-      'The remote is paused at the PC. Switch it on again at the PC under Settings → Remote control.',
+      'The remote is paused at the PC. Switch it on again at the PC under Settings → Connections → Remote control.',
     busy: 'Another device is controlling the PC right now.',
     noInputHere: 'Your PC is not taking the remote right now. Is it on your home network?',
     unsupported: 'This PC cannot be remote controlled (Windows only).',
@@ -176,7 +176,7 @@ export const remote: Strings['remote'] = {
     cancelled: 'Cancelled. The PC stays on.',
     cancelFailed: 'Cancel did not reach the PC. Cancel at the PC.',
     notGranted:
-      'Switching off is off for this phone at the PC. Turn on “May switch the PC off” under Settings → Remote control at the PC.',
+      'Switching off is off for this phone at the PC. Turn on “May switch the PC off” under Settings → Connections → Remote control at the PC.',
     locked: 'The PC is locked. Switching off works only while it is unlocked.',
     limit: 'Not possible right now. Try again in a few minutes.',
     failed: 'That did not work at the PC.',
@@ -189,11 +189,11 @@ export const remote: Strings['remote'] = {
     open: 'Start a program …',
     title: 'Start a program',
     note: 'The program opens on the PC, as with a double click there.',
-    empty: 'Choose programs on the PC under Settings → Remote control.',
+    empty: 'Choose programs on the PC under Settings → Connections → Remote control.',
     starting: 'Sending to the PC …',
     started: (name: string) => `${name} is opening on the PC.`,
     notGranted:
-      'Starting programs is off for this phone. Switch on “May start programs” on the PC under Settings → Remote control.',
+      'Starting programs is off for this phone. Switch on “May start programs” on the PC under Settings → Connections → Remote control.',
     locked: 'The PC is locked. Starting programs works only while it is unlocked.',
     limit: 'A program was started just now. Try again in a few seconds.',
     failed: 'The program could not be opened on the PC.',

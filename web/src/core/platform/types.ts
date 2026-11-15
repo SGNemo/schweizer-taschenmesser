@@ -230,6 +230,13 @@ export interface RemoteHostProgram {
   name: string;
 }
 
+/** This PC's program list as the settings page sees it. */
+export interface RemoteHostPrograms {
+  /** The list's epoch: a removal names it, so it never removes from a list that changed since. */
+  version: number;
+  list: RemoteHostProgram[];
+}
+
 export interface RemoteHostDevice extends RemoteHostGrant {
   /** Hex of the device's static key. */
   id: string;
@@ -273,16 +280,20 @@ export interface RemoteHostService {
   setNotice(on: boolean): Promise<void>;
   /** "Fernsteuerung beenden": ends the session and pauses that device. `false`: nobody controlled. */
   end(): Promise<boolean>;
-  /** This PC's program list (names only, at most 8). */
-  programs(): Promise<RemoteHostProgram[]>;
+  /** This PC's program list (names only, at most 8) and its epoch. */
+  programs(): Promise<RemoteHostPrograms>;
   /**
    * Adds an entry: the PC shows its own file dialog (programs and shortcuts only) and then asks
    * in a native dialog – the page names no file. Rejects with the codes above, or `full`,
    * `duplicate`, `bad-file`.
    */
   addProgram(): Promise<void>;
-  /** Removes an entry at once. */
-  removeProgram(slot: number): Promise<void>;
+  /**
+   * Removes an entry at once – from the list of epoch `version` (the one the page shows). Rejects
+   * with `changed` when the list changed since (nothing removed), `failed` when it could not be
+   * saved (removed for this run; the PC's list is empty after a restart).
+   */
+  removeProgram(slot: number, version: number): Promise<void>;
   /**
    * What Nemo on this PC is busy with right now (bit 1 cloud sync, bit 2 backup). Before a remote
    * "switch off" the phone hears it first; it never starts or stops anything.
@@ -380,10 +391,11 @@ export type RemoteEvent =
   /** About power (see `RemotePowerAnswer`); the session goes on. */
   | { kind: 'power'; session: number; answer: RemotePowerAnswer }
   /**
-   * The PC's program list (names in slot order): only when this phone may start programs, right
-   * after `opened` and again when the list changed at the PC.
+   * The PC's program list (names in slot order) and its epoch: only when this phone may start
+   * programs, right after `opened` and again when the list changed at the PC. A start echoes the
+   * epoch; the PC starts nothing when its list changed since.
    */
-  | { kind: 'programs'; session: number; list: string[] }
+  | { kind: 'programs'; session: number; list: string[]; epoch: number }
   /** The answer to a program start; the session goes on. */
   | { kind: 'program'; session: number; answer: RemoteProgramAnswer };
 
@@ -479,11 +491,11 @@ export interface RemoteService {
    */
   power(session: number, action: RemotePowerAction, despite: boolean, lang?: string): Promise<void>;
   /**
-   * Starts the program in `slot` of the list the PC told (mouse-and-keyboard session; no prompt
+   * Starts the program in `slot` of the list the PC told under `epoch` (mouse-and-keyboard session; no prompt
    * of its own). The PC's answer comes as a `program` event. Rejects with `bad-level`, `locked`
    * (nothing sent), `no-programs` (an older PC), `bad-slot`, `closed`, `network`.
    */
-  program(session: number, slot: number): Promise<void>;
+  program(session: number, slot: number, epoch: number): Promise<void>;
   close(session: number): Promise<void>;
 }
 

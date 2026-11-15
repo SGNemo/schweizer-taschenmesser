@@ -882,13 +882,19 @@ let wide: Vec<u16> = path
 if wide[..wide.len() - 1].contains(&0) {
 return false;
 }
+let path = path.to_path_buf();
 std::thread::Builder::new()
 .name("remote-launch".into())
-.spawn(move || open(&wide))
+.spawn(move || {
+if path.is_file() {
+open(&wide);
+}
+})
 .is_ok()
 }
 fn open(wide: &[u16]) {
-let com = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE) };
+let com =
+unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE) };
 let _ = unsafe {
 ShellExecuteW(
 None,

@@ -10,7 +10,7 @@
 import type {
   RemoteHostDevice,
   RemoteHostGrant,
-  RemoteHostProgram,
+  RemoteHostPrograms,
   RemoteHostService,
   RemoteHostStatus,
   RemoteLevel,
@@ -40,6 +40,10 @@ export function createFakeRemoteHostParts() {
   const devices: RemoteHostDevice[] = [];
   /** The PC's program list (names; the fake keeps no path either). */
   const programs: string[] = [];
+  /** The list's epoch: moves with every change, like the PC's. */
+  let programsVersion = 1;
+  /** The list file cannot be written (a removal holds for this run and answers `failed`). */
+  let unwritable = false;
   /** What the PC's own file dialog returns next (`null`: closed without a file). */
   let picked: string | null = null;
 
@@ -119,9 +123,9 @@ export function createFakeRemoteHostParts() {
     reportBusy: async (bits) => {
       busy = bits;
     },
-    programs: async (): Promise<RemoteHostProgram[]> => {
+    programs: async (): Promise<RemoteHostPrograms> => {
       needRunning();
-      return programs.map((name, slot) => ({ slot, name }));
+      return { version: programsVersion, list: programs.map((name, slot) => ({ slot, name })) };
     },
     addProgram: async () => {
       needRunning();
@@ -134,11 +138,17 @@ export function createFakeRemoteHostParts() {
       if (programs.includes(name)) throw new Error('duplicate');
       ask();
       programs.push(name.slice(0, 40));
+      programsVersion += 1;
     },
-    removeProgram: async (slot) => {
+    removeProgram: async (slot, version) => {
       needRunning();
       if (slot < 0 || slot >= programs.length) throw new Error('not-found');
+      // like the PC: never from a list that changed since the page read it
+      if (version !== programsVersion) throw new Error('changed');
       programs.splice(slot, 1);
+      programsVersion += 1;
+      // like the PC: removed for this run all the same, and the page hears it was not saved
+      if (unwritable) throw new Error('failed');
     },
   };
 
@@ -197,6 +207,15 @@ export function createFakeRemoteHostParts() {
     },
     /** The PC's program list, names only. */
     programs: () => [...programs],
+    /** The list changes at the PC behind the page's back (another window, say). */
+    addProgramElsewhere(name: string) {
+      programs.push(name);
+      programsVersion += 1;
+    },
+    /** The PC's list file cannot be written from now on. */
+    setUnwritable(on: boolean) {
+      unwritable = on;
+    },
   };
   return { host, hooks };
 }

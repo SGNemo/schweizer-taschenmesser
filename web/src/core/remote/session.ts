@@ -50,7 +50,9 @@ import type {
  *   may start programs – kept across sessions of this visit until a PC without programs answers,
  *   the PC says `not-granted`, or the page is left. A start needs the mouse level: it goes the
  *   way of the touchpad (`raise`, with the unlock of that level and no prompt of its own), names
- *   the slot of the list the PC sent, and its answer is one calm line.
+ *   the slot and echoes the epoch of the list the PC sent (in this session or an earlier one; the
+ *   PC starts nothing when its list changed since), and its answer is one calm line – `started`
+ *   leaves by itself after `PROGRAM_STARTED_SHOWN_MS`, a refusal stays until it is dismissed.
  */
 export type RemoteView =
   | { kind: 'idle' }
@@ -152,6 +154,8 @@ export const NO_ANSWER_GAP_MS = 4000;
 export const ANSWER_WAIT_MS = 3000;
 /** "Connecting" is shown at most this long; after that the page says "no answer yet" while it keeps trying. */
 export const OPEN_PATIENCE_MS = 5000;
+/** A program's `started` line goes back to nothing by itself after this long (refusals stay). */
+export const PROGRAM_STARTED_SHOWN_MS = 4000;
 /** The phone's volume keys stay with the PC this long after the session was last alive. */
 export const KEYS_LINGER_MS = 5000;
 
@@ -327,7 +331,15 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
   /** Counts `programStart` calls: only the latest one sets a state when its call returns. */
   let programCalls = 0;
   let programHeard: (() => void) | undefined;
+  /** The epoch of the list the PC sent with it; a start echoes it (the PC checks it). */
+  let programEpoch = 0;
+  /** Takes a `started` line away again by itself. */
+  let programFade: ReturnType<typeof setTimeout> | undefined;
   const setPrograms = (next: Partial<RemoteProgramsView>) => {
+    if (next.phase && programFade !== undefined) {
+      clearTimeout(programFade);
+      programFade = undefined;
+    }
     programsView = { ...programsView, ...next };
     for (const listener of listeners) listener(view);
   };
@@ -335,10 +347,16 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
   const programAnswer = (answer: RemoteProgramAnswer) => {
     programHeard?.();
     const phase = programsView.phase;
-    if (answer === 'started')
-      return setPrograms({
-        phase: phase.kind === 'starting' ? { kind: 'started', name: phase.name } : { kind: 'idle' },
-      });
+    if (answer === 'started') {
+      if (phase.kind !== 'starting') return setPrograms({ phase: { kind: 'idle' } });
+      setPrograms({ phase: { kind: 'started', name: phase.name } });
+      // a calm confirmation that leaves by itself; a refusal stays until it is read
+      programFade = setTimeout(() => {
+        programFade = undefined;
+        if (programsView.phase.kind === 'started') setPrograms({ phase: { kind: 'idle' } });
+      }, PROGRAM_STARTED_SHOWN_MS);
+      return;
+    }
     // a phone that may not (any more) loses the list until the PC sends it again
     if (answer === 'not-granted')
       return setPrograms({ list: null, phase: { kind: 'refused', reason: 'not-granted' } });
@@ -446,6 +464,7 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
     }
     // the program list and a start's answer: the session goes on
     if (event.kind === 'programs') {
+      programEpoch = event.epoch;
       setPrograms({ list: [...event.list] });
       return;
     }
@@ -883,7 +902,7 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
     if (programsView.list?.[slot] !== name) return refuse('failed');
     const used = session;
     try {
-      await deps.remote.program(used, slot);
+      await deps.remote.program(used, slot, programEpoch);
       // the PC answers at once; no answer in time is a start that did not happen here
       if (latest() && programsView.phase.kind === 'starting') {
         const heard = await new Promise<boolean>((resolve) => {
@@ -1050,6 +1069,8 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       padLost();
       // the list is the PC's word for this visit: a new visit hears it anew
       programCalls += 1;
+      clearTimeout(programFade);
+      programFade = undefined;
       programsView = { list: null, phase: { kind: 'idle' } };
       set({ kind: 'idle' });
       await Promise.all(

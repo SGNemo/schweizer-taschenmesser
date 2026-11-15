@@ -385,8 +385,13 @@ pub enum EventDto {
     /// About power: the answer to a power action, or news of a countdown at the PC.
     Power { session: u64, answer: &'static str },
     /// The PC's program list as plain text in slot order (this device may start them): after
-    /// `opened`, and again when the list changed at the PC. Never a path; a start sends the slot.
-    Programs { session: u64, list: Vec<String> },
+    /// `opened`, and again when the list changed at the PC. Never a path; a start sends the slot
+    /// and this list's `epoch` back (the PC starts nothing when its list changed since).
+    Programs {
+        session: u64,
+        list: Vec<String>,
+        epoch: u32,
+    },
     /// The answer to a program start.
     Program { session: u64, answer: &'static str },
 }
@@ -677,7 +682,11 @@ fn event_dto(id: u64, event: Event) -> EventDto {
             session: id,
             answer: power_answer_name(answer),
         },
-        Event::Programs(list) => EventDto::Programs { session: id, list },
+        Event::Programs(epoch, list) => EventDto::Programs {
+            session: id,
+            list,
+            epoch,
+        },
         Event::Program(answer) => EventDto::Program {
             session: id,
             answer: program_answer_name(answer),
@@ -1262,7 +1271,8 @@ async fn power_confirm<R: Runtime>(
     }
 }
 
-/// Starts the program in `slot` of the list the PC told on session `session`, which must be of the
+/// Starts the program in `slot` of the list the PC told under `epoch` (in this session or an
+/// earlier one) on session `session`, which must be of the
 /// mouse-and-keyboard level (its unlock at the phone is the one of that level; no other prompt).
 /// Nothing is sent while the PC is locked (`locked`); `no-programs` for a PC without the list.
 /// The PC checks everything again and answers with a `program` event of the session.
@@ -1271,6 +1281,7 @@ pub async fn remote_client_program<R: Runtime>(
     app: AppHandle<R>,
     session: u64,
     slot: u8,
+    epoch: u32,
 ) -> Result<(), String> {
     if usize::from(slot) >= MAX_PROGRAMS {
         return Err("bad-slot".to_owned());
@@ -1287,7 +1298,7 @@ pub async fn remote_client_program<R: Runtime>(
         if state.locked.load(Ordering::SeqCst) {
             return Err("locked".to_owned());
         }
-        open.send_program(slot)
+        open.send_program(slot, epoch)
             .map_err(|e| error_name(e).to_owned())
     })
     .await
@@ -2019,10 +2030,10 @@ mod tests {
         assert_eq!(
             serde_json::to_string(&event_dto(
                 7,
-                Event::Programs(vec!["Editor".into(), "Spiel".into()])
+                Event::Programs(3, vec!["Editor".into(), "Spiel".into()])
             ))
             .unwrap(),
-            r#"{"kind":"programs","session":7,"list":["Editor","Spiel"]}"#
+            r#"{"kind":"programs","session":7,"list":["Editor","Spiel"],"epoch":3}"#
         );
         assert_eq!(
             serde_json::to_string(&event_dto(7, Event::Program(ProgramAnswer::NotGranted)))

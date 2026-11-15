@@ -596,6 +596,8 @@ test('programs: "Programm starten …" lists what the PC sent and starts one on 
   );
   expect(await page.evaluate(() => window.__tmRemote.started())).toEqual([1]);
   expect(await page.evaluate(() => window.__tmRemote.level())).toBe('full');
+  // the calm confirmation leaves by itself
+  await expect(page.getByTestId('remote-program-status')).toHaveCount(0, { timeout: 8000 });
 });
 
 test('programs: an empty list says where it is made; without a list there is no entry', async ({
@@ -608,7 +610,7 @@ test('programs: an empty list says where it is made; without a list there is no 
   await page.getByRole('button', { name: 'Weitere Aktionen' }).click();
   await page.getByRole('menuitem', { name: 'Programm starten …' }).click();
   await expect(page.getByTestId('remote-programs-empty')).toHaveText(
-    'Am PC unter Einstellungen → Fernsteuerung Programme auswählen.',
+    'Am PC unter Einstellungen → Verbindungen → Fernsteuerung Programme auswählen.',
   );
 });
 

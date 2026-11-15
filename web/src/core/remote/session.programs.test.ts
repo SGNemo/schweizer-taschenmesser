@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createFakeRemoteParts } from '@/core/platform/fakeRemote';
-import { ANSWER_WAIT_MS, OPEN_EVERY_MS, createRemoteSession } from './session';
+import {
+  ANSWER_WAIT_MS,
+  OPEN_EVERY_MS,
+  PROGRAM_STARTED_SHOWN_MS,
+  createRemoteSession,
+} from './session';
 
 function rig() {
   const parts = createFakeRemoteParts();
@@ -122,6 +127,68 @@ describe('remote session: programs', () => {
     await done(session.programStart(0, 'de'));
     expect(session.programs().phase).toEqual({ kind: 'refused', reason: 'not-granted' });
     expect(hooks.started()).toEqual([]);
+  });
+
+  it('echoes the epoch of the list the PC sent; a list changed since starts nothing', async () => {
+    const { session, hooks } = rig();
+    hooks.setGrant('full');
+    hooks.setPrograms(['Editor', 'Browser']);
+    await session.open();
+    await done(session.raise('de'));
+    await pass(0);
+    await done(session.programStart(1, 'de'));
+    expect(hooks.started()).toEqual([1]);
+    const [told] = hooks.epochs();
+    // the list changes at the PC; the phone has not heard of it yet
+    hooks.changeProgramsUntold(['Spiel', 'Editor']);
+    await pass(5000);
+    await done(session.programStart(1, 'de'));
+    expect(hooks.epochs()).toEqual([told, told]);
+    expect(session.programs().phase).toEqual({ kind: 'refused', reason: 'failed' });
+    expect(hooks.started()).toEqual([1]);
+    // the new list arrives: its epoch goes with the next start
+    hooks.tellProgramsNow();
+    await pass(0);
+    expect(session.programs().list).toEqual(['Spiel', 'Editor']);
+    await done(session.programStart(1, 'de'));
+    expect(hooks.epochs()[2]).toBe((told ?? 0) + 1);
+    expect(hooks.started()).toEqual([1, 1]);
+  });
+
+  it('keeps the epoch across a reopen: a tap right after media → full starts', async () => {
+    const { session, hooks } = rig();
+    hooks.setGrant('full', true);
+    hooks.setPrograms(['Editor']);
+    await session.open();
+    await pass(0);
+    expect(hooks.level()).toBe('media');
+    // the raise opens a new session; the start goes before that session tells the list again
+    await done(session.programStart(0, 'de'));
+    expect(hooks.level()).toBe('full');
+    expect(hooks.started()).toEqual([0]);
+    expect(session.programs().phase).toEqual({ kind: 'started', name: 'Editor' });
+  });
+
+  it('a started line leaves by itself; a refusal stays until it is dismissed', async () => {
+    const { session, hooks } = rig();
+    hooks.setGrant('full');
+    hooks.setPrograms(['Editor']);
+    await session.open();
+    await done(session.raise('de'));
+    await pass(0);
+    await session.programStart(0, 'de');
+    await pass(0);
+    expect(session.programs().phase).toEqual({ kind: 'started', name: 'Editor' });
+    await pass(PROGRAM_STARTED_SHOWN_MS - 100);
+    expect(session.programs().phase.kind).toBe('started');
+    await pass(200);
+    expect(session.programs().phase).toEqual({ kind: 'idle' });
+    hooks.answerNextProgram('limit');
+    await session.programStart(0, 'de');
+    await pass(PROGRAM_STARTED_SHOWN_MS * 3);
+    expect(session.programs().phase).toEqual({ kind: 'refused', reason: 'limit' });
+    session.programDismiss();
+    expect(session.programs().phase).toEqual({ kind: 'idle' });
   });
 
   it('a start whose answer never comes is not shown as started', async () => {

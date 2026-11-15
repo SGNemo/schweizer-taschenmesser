@@ -25,7 +25,7 @@ export function ProgramSheet({ open, onClose }: { open: boolean; onClose: () => 
         {list && list.length > 0 ? (
           <>
             <p className={styles.note}>{p.note}</p>
-            <div className={styles.programs} role="group" aria-label={p.title}>
+            <div className={styles.programs}>
               {list.map((name, slot) => (
                 <Button
                   // (slot order is the PC's: a name may stand twice)

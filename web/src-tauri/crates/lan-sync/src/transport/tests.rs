@@ -1085,7 +1085,7 @@ mod input_client {
                 Ok(Event::State(_)) => states += 1,
                 Ok(closed @ Event::Closed(_)) => break closed,
                 Ok(Event::Power(_)) => panic!("nobody asked about power"),
-                Ok(Event::Programs(_) | Event::Program(_)) => panic!("no programs granted"),
+                Ok(Event::Programs(..) | Event::Program(_)) => panic!("no programs granted"),
                 Err(_) => {}
             }
             assert!(began.elapsed() < WAIT, "never closed");
@@ -1261,9 +1261,9 @@ mod input_client {
         // the list is the first thing after `opened`
         assert_eq!(
             events.recv_timeout(WAIT).unwrap(),
-            Event::Programs(vec!["Editor".into(), "Browser".into()])
+            Event::Programs(1, vec!["Editor".into(), "Browser".into()])
         );
-        input.send_program(1).unwrap();
+        input.send_program(1, 1).unwrap();
         let answer = loop {
             match events.recv_timeout(WAIT).expect("an answer") {
                 Event::Program(a) => break a,
@@ -1273,7 +1273,7 @@ mod input_client {
         };
         assert_eq!(answer, wire::ProgramAnswer::Started);
         assert_eq!(r.sink.starts(), vec![(1, 1)]);
-        assert_eq!(input.send_program(8), Err(InputError::Protocol));
+        assert_eq!(input.send_program(8, 1), Err(InputError::Protocol));
         input.close();
         // a PC that did not accept them gets no start
         let (tx, _rx) = channel();
@@ -1288,7 +1288,7 @@ mod input_client {
         )
         .unwrap();
         assert!(!old.has_programs());
-        assert_eq!(old.send_program(0), Err(InputError::Protocol));
+        assert_eq!(old.send_program(0, 1), Err(InputError::Protocol));
         old.close();
     }
 

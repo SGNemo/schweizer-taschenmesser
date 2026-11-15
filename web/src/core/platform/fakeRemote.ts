@@ -72,6 +72,10 @@ export function createFakeRemoteParts() {
   let programsKnown = true;
   /** The list it tells this phone; `null`: this phone may not start programs (no list is sent). */
   let programList: string[] | null = null;
+  /** The list's epoch: moves with every change, like the PC's. */
+  let programEpoch = 1;
+  /** The epochs the phone's starts named. */
+  const epochs: number[] = [];
   /** The slots this phone started, in order; the next answer a test arranged. */
   const started: number[] = [];
   let programNext: RemoteProgramAnswer | undefined;
@@ -81,7 +85,12 @@ export function createFakeRemoteParts() {
     const list = programList;
     if (!session || list === null) return;
     void Promise.resolve().then(() =>
-      session.onEvent({ kind: 'programs', session: session.session, list: [...list] }),
+      session.onEvent({
+        kind: 'programs',
+        session: session.session,
+        list: [...list],
+        epoch: programEpoch,
+      }),
     );
   };
   const answerProgram = (answer: RemoteProgramAnswer) => {
@@ -252,8 +261,9 @@ export function createFakeRemoteParts() {
       power.pending = true;
       answerPower('started');
     },
-    program: async (session, slot) => {
+    program: async (session, slot, epoch) => {
       if (!live || live.session !== session) throw new Error('closed');
+      epochs.push(epoch);
       if (live.level !== 'full') throw new Error('bad-level');
       if (!programsKnown) throw new Error('no-programs');
       // like the shell: nothing goes to a locked PC
@@ -262,7 +272,9 @@ export function createFakeRemoteParts() {
       programNext = undefined;
       if (forced) return answerProgram(forced);
       if (programList === null) return answerProgram('not-granted');
-      if (slot < 0 || slot >= programList.length) return answerProgram('failed');
+      // like the PC: a list that changed since the phone was told starts nothing
+      if (epoch !== programEpoch || slot < 0 || slot >= programList.length)
+        return answerProgram('failed');
       started.push(slot);
       answerProgram('started');
     },
@@ -340,8 +352,23 @@ export function createFakeRemoteParts() {
      */
     setPrograms(list: string[] | null) {
       programList = list && [...list];
+      programEpoch += 1;
       if (programsKnown) tellPrograms();
     },
+    /**
+     * The PC's list changes, but the phone has not heard of it yet (the new list is on its way):
+     * a start with the old epoch answers `failed`, like the PC.
+     */
+    changeProgramsUntold(list: string[]) {
+      programList = [...list];
+      programEpoch += 1;
+    },
+    /** Tells the live session the PC's current list again (the new list arrives). */
+    tellProgramsNow() {
+      tellPrograms();
+    },
+    /** The epochs the phone echoed with its starts, in order. */
+    epochs: () => [...epochs],
     /** Whether the PC knows the program list at all, from the next `open` on. */
     setProgramsKnown(on: boolean) {
       programsKnown = on;

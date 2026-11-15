@@ -1,7 +1,7 @@
 import { defineBundle } from '@/core/i18n/bundle';
 
 /**
- * Remote control, PC side (Settings → Verbindungen → Fernsteuerung, top-bar chip). Wording:
+ * Remote control, PC side (Einstellungen → Verbindungen → Fernsteuerung, top-bar chip). Wording:
  * docs/design/remote-control/CONCEPT.md §4, §7. Next to the feature instead of in `strings.ts`
  * (a hotspot).
  */

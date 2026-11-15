@@ -4,7 +4,7 @@ import { getPlatform } from '@/core/platform';
 import type {
   RemoteHostDevice,
   RemoteHostGrant,
-  RemoteHostProgram,
+  RemoteHostPrograms,
   RemoteLevel,
 } from '@/core/platform/types';
 import { refreshRemoteHost, useRemoteHost, useRemoteHostWatch } from '@/core/remote/host';
@@ -48,8 +48,12 @@ export function RemoteHostSection() {
   const [note, setNote] = useState<string>();
   /** What was said about the notification switch: shown right below it, not far above. */
   const [noticeNote, setNoticeNote] = useState<string>();
-  /** The PC's program list (names only); `undefined` until read, or when it cannot be read. */
-  const [programs, setPrograms] = useState<RemoteHostProgram[]>();
+  /**
+   * The PC's program list (names only) and its epoch; `undefined` until read, or when it cannot
+   * be read.
+   */
+  const [programList, setPrograms] = useState<RemoteHostPrograms>();
+  const programs = programList?.list;
   /** What was said about the program list: shown right below it. */
   const [programNote, setProgramNote] = useState<string>();
   const running = !off && host.supported;
@@ -290,7 +294,8 @@ export function RemoteHostSection() {
                   variant="ghost"
                   onClick={() =>
                     void change(
-                      () => host.removeProgram(p.slot),
+                      // (the list's epoch: nothing is removed from a list that changed since)
+                      () => host.removeProgram(p.slot, programList?.version ?? -1),
                       l.programs.removed(p.name),
                       setProgramNote,
                     )

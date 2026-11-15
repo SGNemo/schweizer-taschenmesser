@@ -9118,9 +9118,9 @@ export const de = {
       notPaired: 'Noch kein PC gekoppelt. Die Fernbedienung braucht die Kopplung im Heimnetz.',
       unreachable: 'Dein PC ist gerade nicht erreichbar. Beide Geräte im selben WLAN?',
       notGranted:
-        'Am PC ist die Fernsteuerung für dieses Handy aus. Am PC unter Einstellungen → Fernsteuerung dieses Handy erlauben.',
+        'Am PC ist die Fernsteuerung für dieses Handy aus. Am PC unter Einstellungen → Verbindungen → Fernsteuerung dieses Handy erlauben.',
       paused:
-        'Die Fernbedienung ist am PC pausiert. Am PC unter Einstellungen → Fernsteuerung wieder einschalten.',
+        'Die Fernbedienung ist am PC pausiert. Am PC unter Einstellungen → Verbindungen → Fernsteuerung wieder einschalten.',
       busy: 'Gerade steuert ein anderes Gerät den PC.',
       noInputHere: 'Dein PC nimmt hier gerade keine Fernbedienung an. Ist der PC im Heimnetz?',
       unsupported: 'Dieser PC lässt sich nicht fernsteuern (nur Windows).',
@@ -9175,7 +9175,7 @@ export const de = {
       cancelled: 'Abgebrochen. Der PC bleibt an.',
       cancelFailed: 'Abbrechen kam nicht an. Am PC abbrechen.',
       notGranted:
-        'Am PC ist Ausschalten für dieses Handy aus. Am PC unter Einstellungen → Fernsteuerung „Darf den PC ausschalten“ einschalten.',
+        'Am PC ist Ausschalten für dieses Handy aus. Am PC unter Einstellungen → Verbindungen → Fernsteuerung „Darf den PC ausschalten“ einschalten.',
       locked: 'Der PC ist gesperrt. Ausschalten geht nur, solange er entsperrt ist.',
       limit: 'Gerade nicht möglich. In ein paar Minuten noch einmal.',
       failed: 'Das hat am PC nicht geklappt.',
@@ -9188,11 +9188,11 @@ export const de = {
       open: 'Programm starten …',
       title: 'Programm starten',
       note: 'Das Programm öffnet sich am PC, wie bei einem Doppelklick dort.',
-      empty: 'Am PC unter Einstellungen → Fernsteuerung Programme auswählen.',
+      empty: 'Am PC unter Einstellungen → Verbindungen → Fernsteuerung Programme auswählen.',
       starting: 'Wird an den PC gesendet …',
       started: (name: string) => `${name} wird am PC geöffnet.`,
       notGranted:
-        'Am PC ist Programme starten für dieses Handy aus. Am PC unter Einstellungen → Fernsteuerung „Darf Programme starten“ einschalten.',
+        'Programme starten ist für dieses Handy aus. Am PC unter Einstellungen → Verbindungen → Fernsteuerung „Darf Programme starten“ einschalten.',
       locked: 'Der PC ist gesperrt. Programme starten geht nur, solange er entsperrt ist.',
       limit: 'Gerade eben wurde schon ein Programm gestartet. In ein paar Sekunden noch einmal.',
       failed: 'Das Programm ließ sich am PC nicht öffnen.',

@@ -982,7 +982,7 @@ fn no_tauri_command_starts_a_program() {
     let code = code.as_str();
     assert_eq!(code.matches("(env.launch)(").count(), 1);
     let start = code
-        .find("pub fn start(&self, slot: u8, list: u64)")
+        .find("fn start_at(&self, peer: &[u8; 32], slot: u8, epoch: u32, now: Instant)")
         .unwrap();
     let call = code.find("(env.launch)(").unwrap();
     let after = start + code[start..].find("\n    }\n").unwrap();
@@ -1006,7 +1006,11 @@ fn no_tauri_command_starts_a_program() {
     let launch = code.find("remote_input::launch").unwrap();
     assert!(attach < launch && launch < code.find("fn watch(").unwrap());
     // the sink is the only way to `start`
-    assert_eq!(code.matches("self.programs.start(slot, list)").count(), 1);
+    assert_eq!(
+        code.matches("self.programs.start(peer.as_bytes(), slot, epoch)")
+            .count(),
+        1
+    );
     for file in ["lib.rs", "capture.rs", "lan_sync.rs", "remote_power.rs"] {
         let text = source(file);
         assert!(!text.contains("remote_input::launch"), "{file}");

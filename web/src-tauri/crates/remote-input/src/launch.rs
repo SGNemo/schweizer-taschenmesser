@@ -5,7 +5,9 @@
 //! command. The shell opens the file the normal way (`ShellExecuteW` with the verb `open`), as a
 //! double click would: never with arguments, never with a working directory of its own, never
 //! elevated on purpose. It runs on a thread of its own, so a slow start (a shortcut to a network
-//! drive) never holds the caller; whether Windows then starts it is not waited for.
+//! drive) never holds the caller – nor does the check that the file is still there, which runs on
+//! that thread first (a file that is gone opens nothing); whether Windows then starts it is not
+//! waited for.
 //!
 //! Nothing is logged. Not Windows: nothing happens, the call says `false`.
 
@@ -46,16 +48,24 @@ mod imp {
         if wide[..wide.len() - 1].contains(&0) {
             return false;
         }
+        // whether the file is still there is asked on that thread too: on a network path the
+        // answer can take long, and the caller (the hub's session) must not wait for it
+        let path = path.to_path_buf();
         std::thread::Builder::new()
             .name("remote-launch".into())
-            .spawn(move || open(&wide))
+            .spawn(move || {
+                if path.is_file() {
+                    open(&wide);
+                }
+            })
             .is_ok()
     }
 
     fn open(wide: &[u16]) {
         // SAFETY: initialises COM for this thread only (the shell may use it for a shortcut);
         // undone below when it succeeded.
-        let com = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE) };
+        let com =
+            unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE) };
         // SAFETY: `wide` is a NUL-terminated UTF-16 path that lives for the whole call; no
         // arguments and no directory (both null), no window of ours.
         let _ = unsafe {

@@ -70,7 +70,7 @@ describe('"Programm starten …"', () => {
     expect(menu()).toContain('Programm starten …');
     fireEvent.click(screen.getByRole('menuitem', { name: 'Programm starten …' }));
     expect(screen.getByTestId('remote-programs-empty').textContent).toBe(
-      'Am PC unter Einstellungen → Fernsteuerung Programme auswählen.',
+      'Am PC unter Einstellungen → Verbindungen → Fernsteuerung Programme auswählen.',
     );
     expect(screen.queryAllByTestId('remote-program')).toHaveLength(0);
   });

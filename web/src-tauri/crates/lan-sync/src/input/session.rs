@@ -27,12 +27,14 @@
 //! session they close it, as an unknown id did before.
 //!
 //! Programs (a phone that asked for [`wire::FEATURE_PROGRAMS`]): when the device may start
-//! programs, the PC tells the names of its list right after `opened` (and again when the list
-//! changes). A start names a slot of the list the phone was told; it needs the mouse/keyboard
-//! session (else the session closes, like a key on a media session), the device's permission, an
-//! unlocked PC and the limit (one per 5 s). One answer per frame; every refusal counts as a drop.
-//! A slot that is not in the told list, or a list that changed since, is `failed` – never a reason
-//! to close. The sink looks the path up on the PC at that moment.
+//! programs, the PC tells the names of its list with the list's epoch right after `opened` (and
+//! again when the list changes, or when the permission comes back within the session). A start
+//! names a slot and the epoch of the list the phone was told – in this session or an earlier one;
+//! it needs the mouse/keyboard session (else the session closes, like a key on a media session),
+//! the device's permission, an unlocked PC and the limits (one per 5 s in the session; the sink
+//! keeps one per 5 s per device across sessions). One answer per frame; every refusal counts as
+//! a drop. The sink compares the epoch with its list's under the list's lock: an empty slot or a
+//! list that changed since is `failed` – never a reason to close.
 //!
 //! Nothing here touches the sync store, sets a grant or records anything.
 
@@ -90,8 +92,10 @@ struct Live {
     news_seen: u64,
     /// The phone asked for the program list (and this PC accepted it).
     programs: bool,
-    /// The list the phone was told: its number and how many entries it had.
-    programs_told: Option<(u64, usize)>,
+    /// The epoch of the list this session told the phone (only to see when to tell it again; a
+    /// start is checked against the PC's list, never against this). `None`: not told, or the
+    /// permission is not in effect (it is told again when it comes back).
+    programs_told: Option<u32>,
 }
 
 pub struct InputConn {
@@ -398,7 +402,7 @@ impl InputConn {
                 )
             }
             wire::TAG_PROGRAM_START if live.programs => {
-                let Ok(slot) = wire::decode_program_start(body) else {
+                let Ok((slot, epoch)) = wire::decode_program_start(body) else {
                     return Step::Close;
                 };
                 // starting a program is the mouse/keyboard level, like a key
@@ -410,12 +414,6 @@ impl InputConn {
                     (live.limits.dropped(now), Some(ProgramAnswer::NotGranted))
                 } else if sink.state().locked {
                     (live.limits.dropped(now), Some(ProgramAnswer::Locked))
-                } else if !live
-                    .programs_told
-                    .is_some_and(|(_, count)| usize::from(slot) < count)
-                {
-                    // not in the list this phone was told
-                    (live.limits.dropped(now), Some(ProgramAnswer::Failed))
                 } else {
                     (live.limits.program(now), None)
                 };
@@ -423,10 +421,8 @@ impl InputConn {
                     (Verdict::Flood, _) => return closed(Code::Limit),
                     (_, Some(answer)) => answer,
                     (Verdict::Drop, None) => ProgramAnswer::Limit,
-                    (Verdict::Pass, None) => {
-                        let list = live.programs_told.map_or(0, |(n, _)| n);
-                        sink.start_program(slot, list)
-                    }
+                    // the sink checks the epoch and the slot against its list now
+                    (Verdict::Pass, None) => sink.start_program(peer, slot, epoch),
                 };
                 Step::Reply(
                     wire::TAG_PROGRAM_ANSWER,
@@ -440,24 +436,32 @@ impl InputConn {
     }
 
     /// The PC's program list, when the phone asked for it, the device may start programs and the
-    /// phone has not been told this list yet (right after `opened`, and after every change).
+    /// phone has not been told this list yet (right after `opened`, after every change, and after
+    /// the permission came back). Asks the sink for the epoch alone first: the names are read only
+    /// when they are to be sent.
     fn program_list(
         remote: &Remote,
         sink: &dyn InputSink,
         peer: &PublicKey,
         live: &mut Live,
     ) -> Option<Step> {
-        if !live.programs || !remote.grant_of(peer).programs_effective() {
+        if !live.programs {
             return None;
         }
-        let (n, names) = sink.programs();
-        if live.programs_told.is_some_and(|(told, _)| told == n) {
+        if !remote.grant_of(peer).programs_effective() {
+            // told again once it is in effect again
+            live.programs_told = None;
             return None;
         }
-        let body = wire::encode_programs(&names);
-        // what was really sent (a name that is not plain text ends the list there)
-        live.programs_told = Some((n, usize::from(body[0])));
-        Some(Step::Reply(wire::TAG_PROGRAMS, body))
+        if live.programs_told == Some(sink.programs_version()) {
+            return None;
+        }
+        let (epoch, names) = sink.programs();
+        live.programs_told = Some(epoch);
+        Some(Step::Reply(
+            wire::TAG_PROGRAMS,
+            wire::encode_programs(epoch, &names),
+        ))
     }
 
     /// Countdown news of this device that the phone has not heard yet.
