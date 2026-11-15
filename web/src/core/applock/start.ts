@@ -41,6 +41,8 @@ async function reconcile(deps: AppLockDeps): Promise<void> {
 /** Call once at startup; returns the stop function. */
 export function startAppLock(deps: AppLockDeps = defaultDeps()): () => void {
   let disarm: (() => void) | undefined;
+  // When this window went to the background (30 s mode); kept across a re-arm (prefs changed elsewhere).
+  let hiddenAt: number | undefined;
 
   const arm = () => {
     disarm?.();
@@ -57,7 +59,6 @@ export function startAppLock(deps: AppLockDeps = defaultDeps()): () => void {
     };
     restart();
     for (const type of ACTIVITY_EVENTS) window.addEventListener(type, restart, { passive: true });
-    let hiddenAt: number | undefined;
     const stopBackground = deps.onBackground(() => {
       if (prefs.background === 'now') lockApp();
       else if (prefs.background === '30s') {
@@ -74,7 +75,8 @@ export function startAppLock(deps: AppLockDeps = defaultDeps()): () => void {
       const away = hiddenAt === undefined ? 0 : now() - hiddenAt;
       hiddenAt = undefined;
       clearTimeout(grace);
-      if (away >= BACKGROUND_GRACE_MS || now() - lastActivity >= idleMs) lockApp();
+      // A clock set back while away (negative) fails closed.
+      if (away < 0 || away >= BACKGROUND_GRACE_MS || now() - lastActivity >= idleMs) lockApp();
     };
     document.addEventListener('visibilitychange', onVisible);
     disarm = () => {
