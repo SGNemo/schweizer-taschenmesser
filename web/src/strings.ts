@@ -5155,8 +5155,8 @@ export const de = {
       nothingSelected: 'Nichts ausgewählt',
       clean: 'Aufräumen …',
       cleanLabel: (name: string) => `Aufräumen: ${name}`,
-      look: 'Genauer ansehen',
-      lookLabel: (name: string) => `Genauer ansehen: ${name}`,
+      look: 'Im Scan ansehen',
+      lookLabel: (name: string) => `Im Scan ansehen: ${name}`,
       changed: (when: string) => `geändert ${when}`,
       windows: {
         title: 'Macht Windows selbst',
@@ -5178,10 +5178,11 @@ export const de = {
     },
     /** Tab "Verlauf": what the page changed on this PC, with the way back. */
     history: {
-      lead: 'Was Nemo auf diesem PC verändert hat, mit dem Weg zurück. Aufräumen steht hier, bis du Nemo schließt.',
+      lead: 'Was Nemo auf diesem PC verändert hat, mit dem Weg zurück. Was du aufräumst, steht hier, bis du Nemo schließt.',
       loading: 'Verlauf wird gelesen …',
-      empty: 'Noch nichts verändert.',
+      empty: 'In dieser Sitzung noch nichts aufgeräumt.',
       emptyHint: 'Sobald du etwas aufräumst, steht es hier.',
+      reload: 'Erneut laden',
       failed: 'Der Verlauf konnte nicht gelesen werden.',
       recovered: 'Die Verlaufsdatei war beschädigt und wurde neu angelegt. Ältere Einträge fehlen.',
       listLabel: 'Verlauf',

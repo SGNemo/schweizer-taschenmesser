@@ -64,9 +64,22 @@ export function HistoryTab() {
   return (
     <div className={styles.tab}>
       <p className={styles.lead}>{h.lead}</p>
-      {failed ? <p role="alert">{h.failed}</p> : null}
+      {failed ? (
+        <div className={styles.failed}>
+          <p role="alert">{h.failed}</p>
+          <Button
+            onClick={() => {
+              setFailed(false);
+              setReload((n) => n + 1);
+            }}
+          >
+            {h.reload}
+          </Button>
+        </div>
+      ) : null}
       {!history && !failed ? (
-        <div role="status" aria-label={h.loading}>
+        <div role="status">
+          <span className="sr-only">{h.loading}</span>
           <Skeleton width="60%" height="1.25rem" />
         </div>
       ) : null}
