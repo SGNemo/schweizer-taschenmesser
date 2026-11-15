@@ -24,6 +24,8 @@ export interface SetupThing {
   fields: CaptureFields;
   /** „bis So“ / „Frist …“: the planner item's hard deadline. */
   hardDue?: string;
+  /** „bis So 18:00“: the deadline's hour ('HH:mm', package 5b). */
+  hardDueTime?: string;
   /** „Pause 2 Std Zocken“: a blocker of its day (through the quick-capture target `break`), never a ToDo. */
   isBreak?: true;
 }
@@ -40,13 +42,14 @@ export function setupLines(text: string): string[] {
 export function setupThings(text: string, today: string, de: boolean): SetupThing[] {
   const at = new Date(now());
   return setupLines(text).flatMap((line, i) => {
-    const { fields, hardDue, isBreak } = readField(line, at, today, de);
+    const { fields, hardDue, hardDueTime, isBreak } = readField(line, at, today, de);
     if (!fields.title?.trim()) return [];
     return [
       {
         key: `new:${i}`,
         fields,
         ...(hardDue ? { hardDue } : {}),
+        ...(hardDueTime ? { hardDueTime } : {}),
         ...(isBreak ? { isBreak } : {}),
       },
     ];
@@ -109,6 +112,18 @@ export const gainsTime = (
   days: readonly { availableMin: number; date: string }[],
   chosen: Readonly<Record<string, number>>,
 ): boolean => days.some((d) => (chosen[d.date] ?? d.availableMin) > d.availableMin);
+
+/**
+ * C6 (CHECK-1-3): the day's appointments already take the chosen time – step 2 says so in one calm line (the chips
+ * stay as they are: time with appointments counted, as on the board).
+ */
+export const eventsFill = (
+  day: { blockers: readonly { min: number; calendar: boolean }[] },
+  min: number,
+): boolean => {
+  const events = day.blockers.filter((b) => b.calendar).reduce((sum, b) => sum + b.min, 0);
+  return min > 0 && events >= min;
+};
 
 /** Key → title of the preview items (the preview names its rows by them). */
 export const previewTitles = (things: readonly SetupThing[]): Record<string, string> =>

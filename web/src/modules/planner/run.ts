@@ -161,7 +161,9 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
     titles[key] = e.title;
     const userDate = e.plannedFor && !isPlannerOwned(e) ? e.plannedFor : undefined;
     if (userDate) userDates.set(key, userDate);
-    const due = row?.due?.hard ? row.due : (e.due ?? row?.due);
+    const dueAny = row?.due?.hard ? row.due : (e.due ?? row?.due);
+    // The engine places by day: a deadline's hour (`due.time`, package 5b) never reaches it.
+    const due = dueAny ? { date: dueAny.date, hard: dueAny.hard } : undefined;
     const durationMin = row?.durationMin ?? e.durationMin;
     items.push({
       key,

@@ -68,7 +68,9 @@ const source: PlannableSource = {
       to: `/todos?open=${t.id}`,
       ...(t.estimateMin !== undefined ? { durationMin: t.estimateMin } : {}),
       priority: t.priority as 0 | 1 | 2 | 3,
-      ...(t.dueDate ? { due: { date: t.dueDate, hard: false } } : {}),
+      ...(t.dueDate
+        ? { due: { date: t.dueDate, hard: false, ...(t.dueTime ? { time: t.dueTime } : {}) } }
+        : {}),
       ...(t.startDate ? { earliest: t.startDate } : {}),
       ...(t.plannedFor ? { plannedFor: t.plannedFor } : {}),
       ...(t.planMark ? { planMark: t.planMark } : {}),
