@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { recurrenceSchema } from '@/core/recurrence/types';
 import { DATE_RE } from '@/core/time/dates';
 
+const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
 /** One step of a routine („Zähne putzen“). The id keeps a tick on the step while its text is corrected. */
 export const stepSchema = z.object({
   id: z.string().min(1).max(40),
@@ -49,6 +51,10 @@ export const routineSchema = z.object({
   progress: z
     .object({ day: z.string().regex(DATE_RE), done: z.array(z.string().min(1).max(40)).max(40) })
     .optional(),
+  /** A reminder at this clock time (`HH:mm`) on the days the routine comes round, until it is done. Since version 3. */
+  remindAt: z.string().regex(TIME_RE).optional(),
+  /** Offered to the planner; none = yes (as before version 3). */
+  planner: z.boolean().optional(),
 });
 
 export type Step = z.output<typeof stepSchema>;

@@ -1,6 +1,6 @@
 import type { Stored } from '@/core/db/types';
 import { compareText } from '@/core/i18n/format';
-import { firstOnOrAfter, nextOccurrence } from '@/core/recurrence/expand';
+import { firstOnOrAfter, nextOccurrence, occurrencesBetween } from '@/core/recurrence/expand';
 import type { Recurrence } from '@/core/recurrence/types';
 import { addDaysStr } from '@/core/time/dates';
 import type { Daypart, Routine, Step } from './schema';
@@ -230,6 +230,10 @@ export interface RoutineForm {
   /** The steps, already parsed (`parseSteps`); left out = none for a new routine, unchanged for an edit. */
   steps?: Step[];
   daypart?: Daypart;
+  /** `HH:mm` or empty = no reminder; left out = unchanged for an edit. */
+  remindAt?: string;
+  /** „Im Planer zeigen“; left out = yes for a new routine, unchanged for an edit. */
+  planner?: boolean;
 }
 
 /** The rule as a comparable text: its fields in a fixed order, weekdays sorted, nothing for "not set". */
@@ -266,6 +270,9 @@ export function newRoutine(form: RoutineForm): Routine {
     note: form.note.trim() || undefined,
     steps: form.steps ?? [],
     daypart: form.daypart,
+    remindAt: form.remindAt || undefined,
+    // Stored only when switched off: a routine without the field is offered to the planner.
+    planner: form.planner === false ? false : undefined,
   };
 }
 
@@ -321,7 +328,28 @@ export function editPatch(
       form.steps.every((s, i) => s.id === before[i]!.id && s.text === before[i]!.text);
     if (!same) patch.steps = form.steps;
   }
+  if ('remindAt' in form && (form.remindAt || undefined) !== existing.remindAt)
+    patch.remindAt = form.remindAt || undefined;
+  if (form.planner !== undefined && form.planner !== (existing.planner !== false))
+    patch.planner = form.planner ? undefined : false;
   // An edit that leaves the time of day out (older callers, tests) keeps it.
   if ('daypart' in form && form.daypart !== existing.daypart) patch.daypart = form.daypart;
   return patch;
+}
+
+/**
+ * The days in [from, to] a routine's reminder is for: the day its turn is due and the rule's days after it while
+ * the turn waits. A turn that is done moves `dueDate` on, so days before it are never reminded of; a routine that
+ * waits is reminded once on each of its own days, never on the days in between.
+ */
+export function reminderDays(
+  r: Pick<Routine, 'repeat' | 'startDate' | 'dueDate'>,
+  from: string,
+  to: string,
+): string[] {
+  const days = new Set(
+    occurrencesBetween(openEnded(r.repeat), r.startDate, from, to).filter((d) => d >= r.dueDate),
+  );
+  if (r.dueDate >= from && r.dueDate <= to) days.add(r.dueDate);
+  return [...days].sort();
 }

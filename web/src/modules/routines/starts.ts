@@ -9,6 +9,8 @@ export interface RoutineStart {
   repeat: Recurrence;
   daypart?: Daypart;
   minutes: number;
+  /** Offered to the planner. A daily routine of the day is not: it would fill every plan with the same row. */
+  planner: boolean;
 }
 
 const weeklyOn = (day: number): Recurrence => ({ freq: 'weekly', interval: 1, byWeekday: [day] });
@@ -17,11 +19,11 @@ const daily: Recurrence = { freq: 'daily', interval: 1 };
 export type RoutineStartId = 'morning' | 'evening' | 'weekClean' | 'weekShop';
 
 export const ROUTINE_STARTS: Record<RoutineStartId, RoutineStart> = {
-  morning: { repeat: daily, daypart: 'morning', minutes: 30 },
-  evening: { repeat: daily, daypart: 'evening', minutes: 20 },
+  morning: { repeat: daily, daypart: 'morning', minutes: 30, planner: false },
+  evening: { repeat: daily, daypart: 'evening', minutes: 20, planner: false },
   // Saturday and Friday: a weekly routine with its day named reads as a plan, not as a chore that is due now.
-  weekClean: { repeat: weeklyOn(6), minutes: 90 },
-  weekShop: { repeat: weeklyOn(5), minutes: 60 },
+  weekClean: { repeat: weeklyOn(6), minutes: 90, planner: true },
+  weekShop: { repeat: weeklyOn(5), minutes: 60, planner: true },
 };
 
 export const ROUTINE_START_IDS: readonly RoutineStartId[] = [

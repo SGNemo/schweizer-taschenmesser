@@ -9029,6 +9029,10 @@ export const de = {
       dayparts: { morning: 'Morgens', midday: 'Mittags', evening: 'Abends' },
       steps: 'Schritte (optional)',
       stepsHint: 'Ein Schritt pro Zeile. Dann lässt sich die Routine Schritt für Schritt abhaken.',
+      remindAt: 'Erinnerung (optional)',
+      remindAtHint: 'Uhrzeit an den Tagen, an denen die Routine dran ist. Leer lassen für keine.',
+      planner: 'Im Planer zeigen',
+      plannerHint: 'Der Planer findet Zeit dafür an den Tagen, an denen sie dran ist.',
       room: 'Raum',
       people: 'Wer wechselt sich ab',
       peopleHint:

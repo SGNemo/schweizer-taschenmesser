@@ -107,6 +107,10 @@ export const routines: Strings['routines'] = {
     dayparts: { morning: 'Morning', midday: 'Midday', evening: 'Evening' },
     steps: 'Steps (optional)',
     stepsHint: 'One step per line. Then the routine can be ticked off step by step.',
+    remindAt: 'Reminder (optional)',
+    remindAtHint: 'A time on the days the routine is due. Leave empty for none.',
+    planner: 'Show in the planner',
+    plannerHint: 'The planner finds time for it on the days it is due.',
     room: 'Room',
     people: 'Who takes turns',
     peopleHint:

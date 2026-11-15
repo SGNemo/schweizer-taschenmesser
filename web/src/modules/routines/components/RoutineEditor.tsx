@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { useModuleStates } from '@/core/modules/activation';
 import { weekdayShort } from '@/core/recurrence/describe';
 import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
@@ -8,6 +9,7 @@ import { t } from '@/strings';
 import {
   AdvancedFields,
   Button,
+  Checkbox,
   DayField,
   Dialog,
   Form,
@@ -16,6 +18,7 @@ import {
   SelectField,
   TextArea,
   TextField,
+  TimeField,
 } from '@/ui';
 import {
   editPatch,
@@ -116,6 +119,12 @@ function Fields({
         : '',
   );
   const [note, setNote] = useState(existing?.note ?? '');
+  const [remindAt, setRemindAt] = useState(existing?.remindAt ?? '');
+  const [planner, setPlanner] = useState(
+    existing ? existing.planner !== false : start ? ROUTINE_STARTS[start].planner : true,
+  );
+  // „Im Planer zeigen“ only while the planner is on: without it the switch would do nothing visible.
+  const plannerOn = useModuleStates()?.planner === true;
   const [error, setError] = useState('');
 
   /** A start fills the form; the name only when it is empty or still the name of another start. */
@@ -131,6 +140,7 @@ function Fields({
     setDaypart(id ? ROUTINE_STARTS[id].daypart : undefined);
     setSteps(id ? t.routines.starts[id].steps.join('\n') : '');
     setMinutes(id ? String(ROUTINE_STARTS[id].minutes) : '');
+    setPlanner(id ? ROUTINE_STARTS[id].planner : true);
     setError('');
   }
 
@@ -172,6 +182,8 @@ function Fields({
       note,
       steps: parseSteps(steps, existing ? stepsOf(existing) : [], newStepId),
       daypart,
+      remindAt,
+      planner,
     };
     if (existing) {
       // Only what was changed here is written (`editPatch`): a due routine stays due, a tick made meanwhile stays.
@@ -291,6 +303,20 @@ function Fields({
         value={steps}
         onChange={(e) => setSteps(e.target.value)}
       />
+      <TimeField
+        label={t.routines.fields.remindAt}
+        hint={t.routines.fields.remindAtHint}
+        value={remindAt}
+        onChange={setRemindAt}
+      />
+      {plannerOn ? (
+        <Checkbox
+          label={t.routines.fields.planner}
+          description={t.routines.fields.plannerHint}
+          checked={planner}
+          onChange={(e) => setPlanner(e.target.checked)}
+        />
+      ) : null}
       <AdvancedFields
         moduleId="routines"
         hasData={

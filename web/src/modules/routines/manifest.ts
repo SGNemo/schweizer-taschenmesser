@@ -24,7 +24,7 @@ const manifest: ModuleManifest = {
     tabs: true,
     signature: 'cycle',
   },
-  version: 2,
+  version: 3,
   get description() {
     return t.routines.meta.description;
   },
@@ -76,6 +76,7 @@ const manifest: ModuleManifest = {
       },
     ],
     plannable: () => import('./plannable'),
+    notifications: () => import('./notifications'),
   },
 };
 

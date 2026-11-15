@@ -50,3 +50,10 @@ the user's entries; FOCUS 9 = offer, never move by code).
   a turn done without every step.
 - A link to a routine (`?open=`, plan, search) opens the step view when it has steps.
 - Due ones sort morning → midday → evening → any time.
+
+## p2 details
+- Reminder = one optional time field („Erinnerung (optional)“, empty = none) on the visible form; quiet hours and
+  „Stumm“ apply centrally. Reminded on the due day and each later rule day while the turn waits – once per rule
+  day, never on the days between, never once done. Body = number of steps, never how long it waited.
+- „Im Planer zeigen“ shows only while the planner is on; stored only when off (`planner: false`), so old rows stay
+  in the plan. Morgen/Abend starts are off (a daily routine would fill every plan), Wochenputz/Wocheneinkauf on.

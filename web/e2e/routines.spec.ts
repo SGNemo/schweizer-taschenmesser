@@ -89,6 +89,29 @@ test('one way: a start fills the routine; „Los“ ticks it off step by step', 
   await expect(page.getByTestId('routines-nothing-due')).toBeVisible();
 });
 
+test('reminder and planner: optional, in the same form; a daily start stays out of the plan', async ({
+  page,
+}) => {
+  await enable(page, 'planner');
+  await enable(page, 'routines');
+  await ready(page, '/routines?new=morning');
+  const dialog = page.getByRole('dialog', { name: 'Routine anlegen' });
+  await expect(dialog.getByLabel('Name', { exact: true })).toHaveValue('Morgenroutine');
+  // A routine of every day would fill each plan with the same row: the start leaves it out.
+  const planner = dialog.getByRole('checkbox', { name: 'Im Planer zeigen' });
+  await expect(planner).not.toBeChecked();
+  await dialog.getByRole('button', { name: 'Wochenputz' }).click();
+  await expect(planner).toBeChecked();
+  await dialog.getByRole('button', { name: 'Morgen', exact: true }).click();
+  await dialog.getByLabel('Erinnerung (optional)').fill('07:30');
+  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole('listitem').filter({ hasText: 'Morgenroutine' }).click();
+  const edit = page.getByRole('dialog', { name: 'Routine bearbeiten' });
+  await expect(edit.getByLabel('Erinnerung (optional)')).toHaveValue('07:30');
+  await expect(edit.getByRole('checkbox', { name: 'Im Planer zeigen' })).not.toBeChecked();
+});
+
 test('calm: no red on the page, and a routine that waited is simply "dran"', async ({ page }) => {
   await enable(page, 'routines');
   await ready(page, '/routines?new=1');
