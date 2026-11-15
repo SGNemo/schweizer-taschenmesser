@@ -196,6 +196,31 @@ describe('planner page', () => {
     expect(screen.queryByText('Wartet auf freie Zeit')).toBeNull();
   });
 
+  it('the day sheet offers „2 h · 4 h · 6 h · ganzer Tag“: one tap sets the day, the pick shows as chosen (W09)', async () => {
+    draw();
+    const day = await screen.findByTestId('day-2026-11-09');
+    fireEvent.click(within(day).getAllByRole('button')[0]!);
+    const sheet = await screen.findByRole('dialog');
+    const picks = within(
+      within(sheet).getByRole('group', { name: 'Verfügbare Zeit schnell wählen' }),
+    );
+    expect(picks.getAllByRole('button').map((b) => b.textContent)).toEqual([
+      '2 h',
+      '4 h',
+      '6 h',
+      'ganzer Tag',
+    ]);
+    fireEvent.click(picks.getByRole('button', { name: '6 h' }));
+    // The day's own row only, never the weekday setting.
+    await waitFor(async () => expect((await dayRepo.get('2026-11-09'))?.availableMin).toBe(360));
+    await waitFor(() =>
+      expect(picks.getByRole('button', { name: '6 h' })).toHaveAttribute('aria-pressed', 'true'),
+    );
+    expect(await db.table('_settings').count()).toBe(0);
+    fireEvent.click(picks.getByRole('button', { name: 'ganzer Tag' }));
+    await waitFor(async () => expect((await dayRepo.get('2026-11-09'))?.availableMin).toBe(720));
+  });
+
   it('„Donnerstag frei“ → preview first, nothing stored; „Übernehmen“ stores it; no model, no request', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
     draw();
