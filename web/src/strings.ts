@@ -3051,6 +3051,18 @@ export const de = {
           return overdue > 0 ? `Frist vorbei: ${overdue} · ${count}` : count;
         },
       },
+      batch: {
+        select: 'Auswählen',
+        selectAll: 'Alle auswählen',
+        paid: (n: number) =>
+          n === 1 ? '1 Rechnung als bezahlt markiert.' : `${n} Rechnungen als bezahlt markiert.`,
+      },
+      search: {
+        label: 'Rechnungen durchsuchen',
+        placeholder: 'Rechnungen suchen',
+        none: (q: string) => `Keine Rechnung passt zu „${q}“.`,
+        clear: 'Suche leeren',
+      },
       overview: {
         tab: 'Überblick',
         figures: 'Rechnungen in Zahlen',

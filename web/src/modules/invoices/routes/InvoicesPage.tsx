@@ -18,19 +18,22 @@ import {
   ItemRow,
   PageAction,
   PageHeader,
+  SelectionBar,
   SplitView,
   StateBadge,
   Tabs,
+  TextField,
   useAdvancedMenuItem,
   useOpenParam,
+  useSelection,
   useSplitView,
 } from '@/ui';
 import { InvoiceDetail } from '../components/InvoiceDetail';
 import { InvoiceEditor, type InvoiceTarget } from '../components/InvoiceEditor';
 import { PayStep } from '../components/PayStep';
 import { markOpen } from '../actions';
-import { payWithUndo } from '../quickActions';
-import { invoiceState, openTotalText, remainingMinor, sortInvoices } from '../logic';
+import { payManyWithUndo, payWithUndo } from '../quickActions';
+import { invoiceState, matchesQuery, openTotalText, remainingMinor, sortInvoices } from '../logic';
 import { copyPaymentData } from '../pay';
 import { InvoicesHead } from '../components/InvoicesHead';
 import { InvoicesOverview } from '../components/InvoicesOverview';
@@ -45,7 +48,10 @@ type View = 'open' | 'paid' | 'all' | 'overview';
 
 export default function InvoicesPage() {
   const invoices = useLiveQuery(async () => sortInvoices(await invoiceRepo.active().toArray()), []);
-  const [view, setView] = useState<View>('open');
+  const [view, setViewState] = useState<View>('open');
+  const [query, setQuery] = useState('');
+  // Selection mode ("Auswählen"): open rows get a tick box, the bar marks the ticked ones as paid at once.
+  const [selecting, setSelecting] = useState(false);
   const [target, setTarget] = useState<InvoiceTarget>(null);
   const [paying, setPaying] = useState<Stored<Invoice> | null>(null);
   // The invoice shown in the detail panel of the wide page (master–detail).
@@ -102,10 +108,38 @@ export default function InvoicesPage() {
 
   const overview = view === 'overview';
   // The overview tab lists nothing: no row, no detail panel.
-  const shown = overview ? [] : (invoices ?? []).filter((i) => view === 'all' || i.status === view);
-  // Nothing open (or nothing at all): the empty state holds the one verb.
-  const emptyOpen = !!invoices && shown.length === 0 && (view === 'open' || view === 'all');
+  const inView = overview
+    ? []
+    : (invoices ?? []).filter((i) => view === 'all' || i.status === view);
+  const shown = inView.filter((i) => matchesQuery(i, query));
+  // Nothing open (or nothing at all): the empty state holds the one verb. A search that finds nothing is no
+  // empty module: it says so beside the field.
+  const emptyOpen = !!invoices && inView.length === 0 && (view === 'open' || view === 'all');
+  const noMatch = inView.length > 0 && shown.length === 0;
   const timeGroups = groupByTime(shown, (i) => i.dueDate, day);
+  // Open view: what is past its date stands in its own calm section above the time groups.
+  const lateItems =
+    view === 'open' ? (timeGroups.find((g) => g.id === 'overdue')?.items ?? []) : [];
+  const restGroups = view === 'open' ? timeGroups.filter((g) => g.id !== 'overdue') : timeGroups;
+  const selectable = (
+    view === 'open' ? [...lateItems, ...restGroups.flatMap((g) => g.items)] : shown
+  )
+    .filter((i) => i.status === 'open')
+    .map((i) => i.id);
+  const selection = useSelection(selectable);
+  const stopSelecting = () => {
+    selection.clear();
+    setSelecting(false);
+  };
+  const setView = (next: View) => {
+    stopSelecting();
+    setViewState(next);
+  };
+  const payPicked = async () => {
+    const ids = selection.ids;
+    stopSelecting();
+    await payManyWithUndo(ids);
+  };
   // The panel shows the picked invoice, else the first row as the list shows it (the open view is grouped by time).
   const firstShown = view === 'open' ? timeGroups[0]?.items[0] : shown[0];
   const detail =
@@ -171,6 +205,9 @@ export default function InvoicesPage() {
           />
         }
         current={wide && detail?.id === i.id}
+        selectable={selecting && i.status === 'open'}
+        selected={selection.isSelected(i.id)}
+        onSelectChange={(_, extend) => selection.toggle(i.id, extend)}
         onOpen={() => openRow(i)}
         onSwipeRight={i.status === 'open' ? () => void pay(i.id) : undefined}
         swipeRightLabel={t.invoices.markPaid}
@@ -260,13 +297,15 @@ export default function InvoicesPage() {
     );
   }
 
-  const openGroups = timeGroups.map((g) => ({
+  const toGroup = (g: (typeof timeGroups)[number]) => ({
     id: g.id,
     label: t.groups[g.id as keyof typeof t.groups] as string,
     count: g.items.length,
     tone: g.id === 'overdue' || g.id === 'today' ? (g.id as 'overdue' | 'today') : undefined,
     children: <ItemList>{g.items.map((i) => renderRow(i))}</ItemList>,
-  }));
+  });
+  const openGroups = restGroups.map(toGroup);
+  const lateGroups = lateItems.length ? [toGroup({ id: 'overdue', items: lateItems })] : [];
 
   const pay = payWithUndo;
 
@@ -274,8 +313,9 @@ export default function InvoicesPage() {
     <>
       <PageHeader
         title={t.invoices.title}
-        // The open view starts with a group heading; the flat lists start with a row that needs its width.
-        besideContent={view === 'open'}
+        // A list starts with its search row (room left for the menu at its end); an empty open view with its empty
+        // state; the overview and the empty paid list start with something that needs the width.
+        besideContent={inView.length > 0 || view === 'open'}
         views={
           <Tabs
             label={t.invoices.view}
@@ -327,7 +367,51 @@ export default function InvoicesPage() {
             ) : null
           }
         >
-          {invoices && shown.length === 0 ? (
+          {inView.length > 0 ? (
+            <div className={styles.listBar}>
+              <TextField
+                label={t.invoices.ext.search.label}
+                labelHidden
+                type="search"
+                placeholder={t.invoices.ext.search.placeholder}
+                data-list-search
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              {selectable.length > 0 ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-pressed={selecting}
+                  onClick={() => (selecting ? stopSelecting() : setSelecting(true))}
+                  data-testid="invoices-select"
+                >
+                  {t.invoices.ext.batch.select}
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
+          {selecting ? (
+            <SelectionBar count={selection.count} onCancel={stopSelecting}>
+              <Button variant="primary" onClick={() => void payPicked()}>
+                {t.invoices.markPaid}
+              </Button>
+              {selection.count < selectable.length ? (
+                <Button variant="ghost" onClick={selection.selectAll}>
+                  {t.invoices.ext.batch.selectAll}
+                </Button>
+              ) : null}
+            </SelectionBar>
+          ) : null}
+          {noMatch ? (
+            <p className={styles.noMatch} data-testid="invoices-no-match">
+              {t.invoices.ext.search.none(query.trim())}{' '}
+              <Button variant="ghost" size="sm" onClick={() => setQuery('')}>
+                {t.invoices.ext.search.clear}
+              </Button>
+            </p>
+          ) : null}
+          {invoices && inView.length === 0 ? (
             <EmptyState
               title={view === 'paid' ? t.invoices.emptyPaid : t.invoices.empty}
               testId="invoices-empty"
@@ -339,6 +423,14 @@ export default function InvoicesPage() {
                 </Button>
               ) : null}
             </EmptyState>
+          ) : null}
+          {lateGroups.length > 0 ? (
+            // What is past its date stands apart: its own area under a hairline in the warning tone above the other groups; the red
+            // stays on the group's word and the rows' badges (red only for overdue money). Same list id, so the fold
+            // state of "Überfällig" is the one it always had.
+            <div className={styles.late} data-testid="invoices-late">
+              <GroupedList listId="invoices" groups={lateGroups} label={t.groups.overdue} />
+            </div>
           ) : null}
           {view === 'open' ? (
             <GroupedList listId="invoices" groups={openGroups} label={t.invoices.title} />

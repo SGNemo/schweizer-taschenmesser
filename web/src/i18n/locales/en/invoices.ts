@@ -63,6 +63,18 @@ export const invoices: Strings['invoices'] = {
         return overdue > 0 ? `Past due: ${overdue} · ${count}` : count;
       },
     },
+    batch: {
+      select: 'Select',
+      selectAll: 'Select all',
+      paid: (n: number) =>
+        n === 1 ? '1 invoice marked as paid.' : `${n} invoices marked as paid.`,
+    },
+    search: {
+      label: 'Search invoices',
+      placeholder: 'Search invoices',
+      none: (q: string) => `No invoice matches “${q}”.`,
+      clear: 'Clear search',
+    },
     overview: {
       tab: 'Overview',
       figures: 'Invoices in figures',
