@@ -6,7 +6,6 @@
 .lead {
   color: var(--text-muted);
   margin: calc(-1 * var(--space-3)) 0 0;
-  max-width: 60ch;
 }
 .bar {
   display: flex;
@@ -32,7 +31,6 @@
   margin: 0;
   color: var(--text-muted);
   font-size: var(--text-sm);
-  max-width: 68ch;
 }
 /* The restore point is an offer, not a step: one quiet line below everything else. */
 .foot {
@@ -92,7 +90,6 @@
 }
 .what {
   margin: 0;
-  max-width: 68ch;
 }
 .changed,
 .state {
@@ -137,7 +134,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  max-width: 68ch;
   padding-bottom: var(--space-2);
 }
 .moreBody p {
