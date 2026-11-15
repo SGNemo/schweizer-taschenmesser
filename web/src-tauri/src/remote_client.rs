@@ -108,8 +108,9 @@ pub struct RemoteClient {
     /// The paired PC hung up on an `open` with features: it is older; asked the old way for the
     /// rest of this run (one handshake per open, not two).
     no_features: AtomicBool,
-    /// The one unlock for a power action that may be used once more (the action and when).
-    approval: Mutex<Option<(Power, Instant)>>,
+    /// Power unlocks (see [`Approvals`]): the last one given, and the one that may stand once more
+    /// for "Trotzdem" – armed only when the PC answers `working` to that action.
+    approvals: Arc<Mutex<Approvals>>,
 }
 
 /// The PC takes text only so fast (512 bytes at once, then 512 a second, per session) and drops
@@ -180,8 +181,8 @@ impl RemoteClient {
         }
         self.locked.store(false, Ordering::SeqCst);
         self.no_features.store(false, Ordering::SeqCst);
-        if let Ok(mut approval) = self.approval.lock() {
-            *approval = None;
+        if let Ok(mut approvals) = self.approvals.lock() {
+            *approvals = Approvals::default();
         }
     }
 }
@@ -223,6 +224,26 @@ fn power_prompt_texts(lang: Option<&str>, power: Power) -> (&'static str, &'stat
     }
 }
 
+/// The buttons of the native confirmation on a phone without a screen lock.
+fn power_confirm_buttons(lang: Option<&str>, power: Power) -> (&'static str, &'static str) {
+    let german = lang.is_some_and(|l| {
+        let l = l.to_ascii_lowercase();
+        l == "de" || l.starts_with("de-")
+    });
+    match (german, power) {
+        (true, Power::Restart) => ("Neu starten", "Abbrechen"),
+        (true, Power::Sleep) => ("Energie sparen", "Abbrechen"),
+        (true, Power::Hibernate) => ("Ruhezustand", "Abbrechen"),
+        (true, Power::SignOut) => ("Abmelden", "Abbrechen"),
+        (true, _) => ("Ausschalten", "Abbrechen"),
+        (false, Power::Restart) => ("Restart", "Cancel"),
+        (false, Power::Sleep) => ("Sleep", "Cancel"),
+        (false, Power::Hibernate) => ("Hibernate", "Cancel"),
+        (false, Power::SignOut) => ("Sign out", "Cancel"),
+        (false, _) => ("Switch off", "Cancel"),
+    }
+}
+
 /// The fixed list of power actions the page may name.
 fn power_from(name: &str) -> Option<Power> {
     Some(match name {
@@ -236,16 +257,44 @@ fn power_from(name: &str) -> Option<Power> {
     })
 }
 
-/// Whether a kept unlock may stand for this action once more: the same action, `despite`, in time.
-fn approval_holds(
-    kept: Option<(Power, Instant)>,
-    power: Power,
-    despite: bool,
-    now: Instant,
-) -> bool {
-    despite
-        && kept
-            .is_some_and(|(p, at)| p == power && now.saturating_duration_since(at) < DESPITE_VALID)
+/// One unlock for a power action: which action, when, under which pairing.
+type Approval = (Power, Instant, u64);
+
+/// The unlocks of power actions. `given` is the last unlock (or confirmation) that went out with
+/// an action; only the PC's answer `working` to it turns it into `despite`, the one that may stand
+/// once more – for the same action, within 30 s, under the same pairing, once. Every other answer
+/// of the PC, and a `cancel`, clears both: an unlock is never re-used for a start the person did
+/// not just ask for.
+#[derive(Default, Debug)]
+struct Approvals {
+    given: Option<Approval>,
+    despite: Option<Approval>,
+}
+
+impl Approvals {
+    /// The PC answered: only `working` arms the one "Trotzdem".
+    fn heard(&mut self, answer: PowerAnswer) {
+        let given = self.given.take();
+        self.despite = match answer {
+            PowerAnswer::Working => given,
+            _ => None,
+        };
+    }
+
+    /// Takes the "Trotzdem" approval if it stands for this action now.
+    fn take_despite(&mut self, power: Power, now: Instant, pairing: u64) -> bool {
+        let holds = self.despite.is_some_and(|(p, at, pair)| {
+            p == power && pair == pairing && now.saturating_duration_since(at) < DESPITE_VALID
+        });
+        if holds {
+            self.despite = None;
+        }
+        holds
+    }
+
+    fn clear(&mut self) {
+        *self = Approvals::default();
+    }
 }
 
 /// What an `open` at the mouse level does first.
@@ -820,6 +869,7 @@ fn open_now<R: Runtime>(
         let locked = state.locked.clone();
         let replacing = state.replacing.clone();
         let lost = state.lost.clone();
+        let approvals = state.approvals.clone();
         // a state the PC sent right after `opened` must not be overwritten by the older one in it
         let told = Arc::new(AtomicBool::new(false));
         let heard = told.clone();
@@ -839,6 +889,12 @@ fn open_now<R: Runtime>(
                     newest.load(Ordering::SeqCst),
                 ) {
                     return;
+                }
+                // what the PC says about power decides what an unlock is still worth
+                if let Event::Power(answer) = &event {
+                    if let Ok(mut a) = approvals.lock() {
+                        a.heard(*answer);
+                    }
                 }
                 if let Event::State(pc) = &event {
                     heard.store(true, Ordering::SeqCst);
@@ -1053,11 +1109,10 @@ fn failed_as(written: bool, name: &'static str) -> &'static str {
     }
 }
 
-/// Ends session `session` (the page went to the background). A number that is not the open
-/// session changes nothing.
 /// One power action on session `session` (any level; the PC checks the permission). Every action
 /// but `cancel` is unlocked at the phone first – natively, here, with the action named in the
-/// prompt; that prompt is the confirmation. A phone without a screen lock is not asked (the PC's
+/// prompt; that prompt is the confirmation. A phone without a screen lock is asked in a native
+/// confirmation instead (the PC's
 /// countdown stays). `despite` – sent after the PC said Nemo is still working – re-uses that
 /// unlock once, for the same action, within 30 s; otherwise it asks again. The PC's answer comes as
 /// a `power` event of the session.
@@ -1080,24 +1135,33 @@ pub async fn remote_client_power<R: Runtime>(
             return Err("no-power".to_owned());
         }
     }
-    if power != Power::Cancel {
+    {
         let state = app.state::<RemoteClient>();
-        let kept = state.approval.lock().map_err(|_| "internal")?.take();
-        if !approval_holds(kept, power, despite, Instant::now()) {
-            if state.asking.swap(true, Ordering::SeqCst) {
-                return Err("unlock-busy".to_owned());
+        let pairing = state.pairing.load(Ordering::SeqCst);
+        if power == Power::Cancel {
+            // stopping needs no unlock, and nothing given before may start anything afterwards
+            state.approvals.lock().map_err(|_| "internal")?.clear();
+        } else {
+            let approved = despite
+                && state
+                    .approvals
+                    .lock()
+                    .map_err(|_| "internal")?
+                    .take_despite(power, Instant::now(), pairing);
+            if !approved {
+                if state.asking.swap(true, Ordering::SeqCst) {
+                    return Err("unlock-busy".to_owned());
+                }
+                let _asking = Asking(&state.asking);
+                power_unlock(&app, lang.as_deref(), power).await?;
+                // unpaired or paired anew while the prompt was up: the answer was for the old PC
+                if state.pairing.load(Ordering::SeqCst) != pairing {
+                    return Err("closed".to_owned());
+                }
             }
-            let _asking = Asking(&state.asking);
-            let pairing = state.pairing.load(Ordering::SeqCst);
-            power_unlock(&app, lang.as_deref(), power).await?;
-            // unpaired or paired anew while the prompt was up: the answer was for the old PC
-            if state.pairing.load(Ordering::SeqCst) != pairing {
-                return Err("closed".to_owned());
-            }
-        }
-        // the one unlock this answer may stand for once more ("Trotzdem")
-        if !despite {
-            *state.approval.lock().map_err(|_| "internal")? = Some((power, Instant::now()));
+            // this unlock went out with this action; the PC's answer decides what it is worth
+            state.approvals.lock().map_err(|_| "internal")?.given =
+                Some((power, Instant::now(), pairing));
         }
     }
     tauri::async_runtime::spawn_blocking(move || {
@@ -1110,7 +1174,8 @@ pub async fn remote_client_power<R: Runtime>(
     .map_err(|_| "internal".to_owned())?
 }
 
-/// The phone's unlock before a power action; a phone without a screen lock passes.
+/// The phone's unlock before a power action. A phone without a screen lock is asked in a native
+/// confirmation instead (never nothing: the page alone can start no power action).
 async fn power_unlock<R: Runtime>(
     app: &AppHandle<R>,
     lang: Option<&str>,
@@ -1123,9 +1188,40 @@ async fn power_unlock<R: Runtime>(
         subtitle: subtitle.to_owned(),
     });
     let answer = asked.await.map_err(|_| "unlock-failed")?;
-    unlocked_from(&answer.status).map(|_| ())
+    match unlocked_from(&answer.status)? {
+        Unlocked::Yes => Ok(()),
+        Unlocked::NoLock => power_confirm(app, lang, power).await,
+    }
 }
 
+/// A native question (Rust, not the page) for a phone without a screen lock.
+async fn power_confirm<R: Runtime>(
+    app: &AppHandle<R>,
+    lang: Option<&str>,
+    power: Power,
+) -> Result<(), &'static str> {
+    // (aliased: the source test that keeps logging out of this file looks for `log::`)
+    use native::{DialogExt, MessageDialogButtons};
+    use tauri_plugin_dialog as native;
+    let (title, subtitle) = power_prompt_texts(lang, power);
+    let (yes, no) = power_confirm_buttons(lang, power);
+    let dialog = app
+        .dialog()
+        .message(subtitle)
+        .title(title)
+        .buttons(MessageDialogButtons::OkCancelCustom(yes.into(), no.into()));
+    let confirmed = tauri::async_runtime::spawn_blocking(move || dialog.blocking_show())
+        .await
+        .map_err(|_| "confirm-failed")?;
+    if confirmed {
+        Ok(())
+    } else {
+        Err("confirm-cancelled")
+    }
+}
+
+/// Ends session `session` (the page went to the background). A number that is not the open
+/// session changes nothing.
 #[tauri::command]
 pub async fn remote_client_close<R: Runtime>(
     app: AppHandle<R>,
@@ -1745,30 +1841,54 @@ mod tests {
     }
 
     #[test]
-    fn an_unlock_stands_once_more_only_for_the_same_action_soon_and_with_despite() {
+    fn an_unlock_stands_once_more_only_after_working_for_the_same_action_soon() {
         let t0 = Instant::now();
-        let kept = Some((Power::ShutDown, t0));
-        assert!(approval_holds(
-            kept,
-            Power::ShutDown,
-            true,
-            t0 + Duration::from_secs(29)
-        ));
-        assert!(!approval_holds(
-            kept,
-            Power::ShutDown,
-            true,
-            t0 + DESPITE_VALID
-        ));
+        let given = |a: &mut Approvals| a.given = Some((Power::ShutDown, t0, 1));
+        // the PC said "working": one "Trotzdem" for the same action, in time, same pairing
+        let mut a = Approvals::default();
+        given(&mut a);
+        a.heard(PowerAnswer::Working);
+        assert!(!a.take_despite(Power::Restart, t0, 1), "another action");
+        assert!(!a.take_despite(Power::ShutDown, t0, 2), "another pairing");
         assert!(
-            !approval_holds(kept, Power::Restart, true, t0),
-            "another action"
+            !a.take_despite(Power::ShutDown, t0 + DESPITE_VALID, 1),
+            "too late"
         );
-        assert!(
-            !approval_holds(kept, Power::ShutDown, false, t0),
-            "not a despite"
+        assert!(a.take_despite(Power::ShutDown, t0 + Duration::from_secs(29), 1));
+        assert!(!a.take_despite(Power::ShutDown, t0, 1), "once");
+        // any other answer: worth nothing afterwards
+        for answer in [
+            PowerAnswer::Started,
+            PowerAnswer::Cancelled,
+            PowerAnswer::Done,
+            PowerAnswer::Limit,
+            PowerAnswer::NotGranted,
+        ] {
+            let mut a = Approvals::default();
+            given(&mut a);
+            a.heard(answer);
+            assert!(!a.take_despite(Power::ShutDown, t0, 1), "{answer:?}");
+        }
+        // started, then cancelled from the phone: no second start without a new unlock
+        let mut a = Approvals::default();
+        given(&mut a);
+        a.heard(PowerAnswer::Started);
+        a.clear();
+        assert!(!a.take_despite(Power::ShutDown, t0, 1));
+        // working, then a cancel clears it too
+        let mut a = Approvals::default();
+        given(&mut a);
+        a.heard(PowerAnswer::Working);
+        a.clear();
+        assert!(!a.take_despite(Power::ShutDown, t0, 1));
+        assert_eq!(
+            power_confirm_buttons(Some("de"), Power::ShutDown).0,
+            "Ausschalten"
         );
-        assert!(!approval_holds(None, Power::ShutDown, true, t0));
+        assert_eq!(
+            power_confirm_buttons(Some("en"), Power::SignOut).0,
+            "Sign out"
+        );
     }
 
     #[test]
