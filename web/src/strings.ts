@@ -2845,6 +2845,34 @@ export const de = {
     valueReveal: 'Zum Einblenden tippen',
     valueRehide: 'Wieder ausblenden',
   },
+  /** Shared charts (`ui/charts`): every visible value is also in the screen-reader table. */
+  charts: {
+    empty: 'Noch keine Werte.',
+    other: 'Sonstiges',
+    total: 'Summe',
+    item: 'Eintrag',
+    value: 'Wert',
+    share: 'Anteil',
+    target: 'Soll',
+    /** Key under bars with a target mark. */
+    targetKey: 'Strich: Soll',
+    ofTarget: (target: string) => `von ${target}`,
+    over: (amount: string) => `${amount} drüber`,
+    overPlain: 'über dem Soll',
+    donutSummary: (n: number, top: string, share: string, total: string | null) =>
+      [
+        n === 1 ? `Ein Anteil: ${top}` : `${n} Anteile, am größten ${top} mit ${share}`,
+        total ? `Summe ${total}` : null,
+      ]
+        .filter(Boolean)
+        .join('. ') + '.',
+    barsSummary: (n: number, over: number) =>
+      `${n1(n, 'Ein Wert', `${n} Werte`)}${over > 0 ? `, davon ${over} über dem Soll` : ''}.`,
+    trendSummary: (n: number, first: string | null, last: string | null) =>
+      n === 1
+        ? `Ein Wert${last ? `: ${last}` : ''}.`
+        : `${n} Werte${first && last ? `, von ${first} bis ${last}` : ''}.`,
+  },
   homeEdit: {
     showMore: (n: number) => (n === 1 ? 'Mehr anzeigen · 1 Karte' : `Mehr anzeigen · ${n} Karten`),
     pinStart: 'Karte hinzufügen…',

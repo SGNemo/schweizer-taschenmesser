@@ -1,0 +1,556 @@
+/* Shared charts (`ui/charts`). Colours only from tokens: the first series is `--viz-1` (= the module hue inside a
+   module, grey in the calm colour mode), the second `--viz-2`, a comparison `--border-strong`, red only for "over".
+   Marks are SVG or plain boxes; every text is HTML (crisp at any width, container queries decide what shows). */
+
+.frame {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  min-width: 0;
+}
+.title {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+.empty {
+  margin: 0;
+  font-size: var(--text-meta);
+  color: var(--text-3);
+}
+.num {
+  font-variant-numeric: var(--font-num);
+  white-space: nowrap;
+}
+.muted {
+  color: var(--text-3);
+}
+
+/* Colour slots of shares: steps of the first series colour towards the surface (no extra hues, so a donut reads as
+   one module), the rest in a neutral grey. A pattern on every slot after the first (`Pattern`) tells them apart
+   without colour. */
+.c0 {
+  --c: var(--viz-1);
+}
+.c1 {
+  --c: color-mix(in srgb, var(--viz-1) 84%, var(--surface));
+}
+.c2 {
+  --c: color-mix(in srgb, var(--viz-1) 70%, var(--surface));
+}
+.c3 {
+  --c: color-mix(in srgb, var(--viz-1) 58%, var(--surface));
+}
+.c4 {
+  --c: color-mix(in srgb, var(--viz-1) 48%, var(--surface));
+}
+.c5 {
+  --c: color-mix(in srgb, var(--viz-1) 40%, var(--surface));
+}
+.cOther {
+  --c: var(--border-strong);
+}
+.patternInk {
+  stroke: var(--surface);
+  fill: var(--surface);
+  opacity: 0.7;
+}
+
+/* Legend (donut, trend): swatch, name, value, share. */
+.legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  column-gap: var(--space-3);
+  row-gap: var(--space-2);
+  font-size: var(--text-sm);
+  min-width: 0;
+}
+.legend li {
+  display: contents;
+}
+.legendName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.legendValue {
+  text-align: end;
+}
+.legendShare {
+  text-align: end;
+  color: var(--text-3);
+  min-width: 3ch;
+}
+.swatch {
+  display: block;
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+}
+.swatch rect:first-child {
+  fill: var(--c);
+}
+.lineKey {
+  display: block;
+  width: 1.25rem;
+  height: 0.5rem;
+  overflow: visible;
+}
+/* Trend legend: one line per series, wraps. */
+.keys {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+}
+.keys li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+/* Donut */
+.donutBody {
+  display: grid;
+  gap: var(--space-4);
+  justify-items: center;
+}
+.donutBody > .legend {
+  width: 100%;
+}
+@container (min-width: 26rem) {
+  .donutBody {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    justify-items: stretch;
+  }
+}
+.donut {
+  position: relative;
+  width: 9rem;
+  aspect-ratio: 1;
+  flex: none;
+}
+@container (min-width: 40rem) {
+  .donut {
+    width: 10rem;
+  }
+}
+.donut svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.seg {
+  fill: none;
+  stroke: var(--c);
+  stroke-width: 16;
+}
+.segPattern {
+  fill: none;
+  stroke-width: 16;
+}
+.centre {
+  position: absolute;
+  inset: 20%;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  line-height: 1.2;
+  min-width: 0;
+}
+.centreValue {
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+}
+.centreLabel {
+  font-size: var(--text-meta);
+  color: var(--text-3);
+}
+
+/* Bars, horizontal: label | bar | value in one grid (subgrid rows keep the columns aligned); narrow: the bar below. */
+.bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, max-content) minmax(3rem, 1fr) auto;
+  column-gap: var(--space-3);
+  row-gap: var(--space-3);
+  font-size: var(--text-sm);
+}
+.barRow {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  grid-template-areas: 'label track value';
+  align-items: center;
+  row-gap: var(--space-1);
+}
+/* A bar over its target gets one more line for "… drüber", under the value (wide) or under the bar (narrow). */
+.barRow[data-over] {
+  grid-template-areas:
+    'label track value'
+    '. . over';
+}
+@container (max-width: 24rem) {
+  .bars {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .barRow {
+    grid-template-areas:
+      'label value'
+      'track track';
+  }
+  .barRow[data-over] {
+    grid-template-areas:
+      'label value'
+      'track track'
+      'over over';
+  }
+}
+.barLabel {
+  grid-area: label;
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@container (max-width: 24rem) {
+  .barLabel {
+    max-width: none;
+  }
+}
+.track {
+  grid-area: track;
+  position: relative;
+  height: 0.75rem;
+}
+.bar {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: calc(var(--v) * 100%);
+  min-width: 2px;
+  border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+  background: var(--viz-1);
+  transform-origin: left center;
+}
+.bar[data-over],
+.colBar[data-over] {
+  background: var(--danger);
+}
+.mark {
+  position: absolute;
+  inset-block: calc(var(--space-1) * -1);
+  inset-inline-start: calc(var(--t) * 100%);
+  width: 2px;
+  margin-inline-start: -1px;
+  background: var(--text);
+}
+.barValue {
+  grid-area: value;
+  text-align: end;
+  font-variant-numeric: var(--font-num);
+  white-space: nowrap;
+}
+.over {
+  grid-area: over;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--danger);
+  font-size: var(--text-meta);
+  white-space: nowrap;
+}
+.targetKey {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-meta);
+  color: var(--text-3);
+}
+.targetKey::before {
+  content: '';
+  width: 2px;
+  height: 0.875rem;
+  background: var(--text);
+}
+
+/* Bars, vertical: one column per value, value above, label below. */
+.cols {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  column-gap: clamp(2px, 2%, var(--space-3));
+}
+.col {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 8rem auto;
+  justify-items: center;
+  row-gap: var(--space-1);
+  min-width: 0;
+}
+@container (min-width: 36rem) {
+  .col {
+    grid-template-rows: auto 10rem auto;
+  }
+}
+.colValue {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  overflow: hidden;
+  min-height: 1rem;
+  font-size: var(--text-meta);
+  font-variant-numeric: var(--font-num);
+  white-space: nowrap;
+}
+.colValue svg {
+  flex: none;
+}
+.colValue > .thin {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.colValue[data-over] {
+  color: var(--danger);
+}
+.colArea {
+  position: relative;
+  width: 100%;
+  max-width: 2.5rem;
+  border-block-end: 1px solid var(--border-strong);
+}
+.colBar {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: calc(var(--v) * 100%);
+  min-height: 2px;
+  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
+  background: var(--viz-1);
+  transform-origin: center bottom;
+}
+.colMark {
+  position: absolute;
+  inset-inline: calc(var(--space-1) * -1);
+  bottom: calc(var(--t) * 100%);
+  height: 2px;
+  margin-bottom: -1px;
+  background: var(--text);
+}
+.colLabel {
+  font-size: var(--text-meta);
+  color: var(--text-3);
+  white-space: nowrap;
+}
+/* Only every n-th label shows, so a shown one may run into its hidden neighbours' room; the outer ones keep to the
+   chart's edges. */
+.col:first-child .colLabel {
+  justify-self: start;
+}
+.col:last-child .colLabel {
+  justify-self: end;
+}
+.col:only-child .colLabel {
+  justify-self: center;
+}
+
+/* Which category labels and values show: `data-n` in a narrow chart, `data-w` from 36 rem (model `labelIndexes`). */
+.thin {
+  visibility: hidden;
+}
+.thin[data-n] {
+  visibility: visible;
+}
+@container (min-width: 36rem) {
+  .thin[data-n] {
+    visibility: hidden;
+  }
+  .thin[data-w] {
+    visibility: visible;
+  }
+}
+
+/* Trend: y labels | plot, x labels below. */
+.trend {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: 9rem auto;
+  column-gap: var(--space-2);
+}
+@container (min-width: 36rem) {
+  .trend {
+    grid-template-rows: 11rem auto;
+  }
+}
+.yAxis {
+  position: relative;
+  min-width: 2ch;
+  font-size: var(--text-meta);
+  color: var(--text-3);
+}
+.yTick {
+  display: block;
+  position: absolute;
+  inset-inline-end: 0;
+  bottom: calc(var(--f) * 100%);
+  transform: translateY(50%);
+  line-height: 1;
+}
+/* Holds the widest tick label in the flow, so the column is as wide as its text. */
+.yWidth {
+  display: block;
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
+}
+.plot {
+  position: relative;
+  min-width: 0;
+}
+.plot svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.gridLine {
+  stroke: var(--border);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.zeroLine {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+.line {
+  fill: none;
+  stroke: var(--sc);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.s0 {
+  --sc: var(--viz-1);
+}
+.s1 {
+  --sc: var(--viz-2);
+}
+.s1 .line,
+.line.s1 {
+  stroke-dasharray: 8 4;
+}
+.sCompare {
+  --sc: var(--border-strong);
+}
+.sCompare .line,
+.line.sCompare {
+  stroke-dasharray: 2 4;
+}
+.area {
+  fill: color-mix(in srgb, var(--viz-1) 16%, transparent);
+  stroke: none;
+}
+.dot {
+  position: absolute;
+  left: calc(var(--x) * 1%);
+  bottom: calc(var(--f) * 100%);
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: var(--radius-full);
+  background: var(--sc);
+  border: 2px solid var(--surface);
+  transform: translate(-50%, 50%);
+}
+.xAxis {
+  grid-column: 2;
+  position: relative;
+  height: 1.5rem;
+  font-size: var(--text-meta);
+  color: var(--text-3);
+}
+.xLabel {
+  position: absolute;
+  top: var(--space-1);
+  left: calc(var(--x) * 1%);
+  transform: translateX(-50%);
+  white-space: nowrap;
+  line-height: 1;
+}
+.xLabel[data-edge='start'] {
+  transform: none;
+}
+.xLabel[data-edge='end'] {
+  transform: translateX(-100%);
+}
+
+/* Spark (widgets): line in the first series colour, optional quiet area. */
+.spark {
+  display: block;
+  overflow: visible;
+}
+.sparkLine {
+  fill: none;
+  stroke: var(--viz-1);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sparkArea {
+  fill: color-mix(in srgb, var(--viz-1) 16%, transparent);
+}
+.sparkDot {
+  fill: var(--viz-1);
+}
+
+/* First appearance only (a remount, not a re-render), transform/opacity only, off with reduced motion – the
+   system's or the app's (Einstellungen → Darstellung → Bewegung). */
+@media (prefers-reduced-motion: no-preference) {
+  :global(:root:not([data-motion='reduce'])) .bar {
+    animation: grow-x var(--dur-slow) var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 30ms);
+  }
+  :global(:root:not([data-motion='reduce'])) .colBar {
+    animation: grow-y var(--dur-slow) var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 30ms);
+  }
+  :global(:root:not([data-motion='reduce'])) .donut svg,
+  :global(:root:not([data-motion='reduce'])) .plot svg {
+    animation: appear var(--dur-slow) var(--ease-out) both;
+  }
+}
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes grow-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
