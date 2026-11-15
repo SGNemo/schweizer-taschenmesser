@@ -48,3 +48,18 @@ test('breakdown line: every part on one line', async ({ page }) => {
     expect(lines, (await part.textContent()) ?? '').toBe(1);
   }
 });
+
+test('accounts: each account with history shows its six-month shape, named for screen readers', async ({
+  page,
+}) => {
+  await startSeeded(page, { phone: true });
+  await openPage(page, '/finance?tab=accounts');
+  const shapes = page.locator('main [data-testid^="shape-"]');
+  await expect(shapes.first()).toBeVisible();
+  expect(await shapes.count()).toBeGreaterThanOrEqual(2);
+  await expect(
+    shapes.first().getByRole('img', { name: 'Kontostand am Monatsende, letzte 6 Monate' }),
+  ).toBeVisible();
+  // Shape only: no amount inside it, the row's figure says the balance.
+  await expect(shapes.first()).not.toContainText(/\d/);
+});

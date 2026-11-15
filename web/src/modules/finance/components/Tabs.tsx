@@ -35,6 +35,8 @@ import type { Account, Transaction } from '../schema';
 import { categoryIcon } from '../categoryIcon';
 import styles from '../routes/finance.module.css';
 import { SignatureMark } from '@/ui/identity';
+import { Spark } from '@/ui/charts';
+import { netWorthSeries } from '../netWorth';
 
 export function TransactionsTab({
   data,
@@ -343,7 +345,17 @@ export function kindMeta(a: Pick<Account, 'name' | 'kind'>): string | undefined 
 export function AccountsTab({ data }: { data: FinanceData }) {
   const [target, setTarget] = useState<AccountTarget>(null);
   const [transfer, setTransfer] = useState<TransferTarget>(null);
-  const map = balances(data.accounts, data.txs, today());
+  const day = today();
+  const map = balances(data.accounts, data.txs, day);
+  // The shape of each balance over the last six month ends (from the account's start; the newest point is today).
+  // The React compiler memoises this per data read.
+  const shapes = new Map(
+    data.accounts.map((a) => [
+      a.id,
+      netWorthSeries([a], data.txs, day, 6).map((p) => p.valueMinor),
+    ]),
+  );
+
   return (
     <>
       <div className={patternStyles.gapBottom + ' ' + patternStyles.hstack}>
@@ -372,6 +384,13 @@ export function AccountsTab({ data }: { data: FinanceData }) {
             title={a.name}
             meta={kindMeta(a)}
             onOpen={() => setTarget(a)}
+            below={
+              (shapes.get(a.id)?.length ?? 0) > 1 ? (
+                <span className={styles.accountShape} data-testid={`shape-${a.name}`}>
+                  <Spark values={shapes.get(a.id)!} label={t.widgets.kpiSeries} />
+                </span>
+              ) : undefined
+            }
             end={
               <span className={styles.amount} data-testid={`balance-${a.name}`}>
                 {formatMoney(map.get(a.id) ?? 0, currencyOf(a))}
