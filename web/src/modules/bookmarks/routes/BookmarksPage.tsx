@@ -50,7 +50,12 @@ import { useStartDataItems } from '@/core/importer/StartDataMenu';
 import styles from './bookmarks.module.css';
 
 /** The Web Share Target sends `title`, `text` and `url`; some apps put the link into `text`. */
-function sharedDraft(params: URLSearchParams): { draft: true; title?: string; url?: string } {
+function sharedDraft(params: URLSearchParams): {
+  draft: true;
+  title?: string;
+  url?: string;
+  shared: boolean;
+} {
   const text = params.get('text') ?? '';
   const url = params.get('url') || text.match(/https?:\/\/\S+/)?.[0];
   const title = params.get('title') || text.replace(/https?:\/\/\S+/, '').trim();
@@ -58,6 +63,8 @@ function sharedDraft(params: URLSearchParams): { draft: true; title?: string; ur
     draft: true,
     title: title || undefined,
     url: url && normalizeUrl(url) ? url : undefined,
+    // `new=1` is the app's own way in (quick add, full form); without it the content came through "Teilen".
+    shared: !params.get('new'),
   };
 }
 
@@ -69,10 +76,10 @@ export default function BookmarksPage() {
     moduleSettings.defaults as never,
   );
   const prefs = stored ?? (moduleSettings.defaults as BookmarksSettings);
+  const grouping: Grouping = prefs.groupBy;
   const navigate = useNavigate();
   const read = (i: { id: string }) => void navigate(`/bookmarks/read/${i.id}`);
   const [filter, setFilter] = useState<Filter>({ view: 'open', kind: 'all', query: '' });
-  const [grouping, setGrouping] = useState<Grouping>('recent');
   const [menuOpen, setMenuOpen] = useState(false);
   const [advanced, setAdvanced] = useAdvanced('bookmarks');
   const tx = tAdvanced.use();
@@ -209,7 +216,7 @@ export default function BookmarksPage() {
       group: t.bookmarks.groupBy,
       label: t.bookmarks.groupings[g],
       checked: grouping === g,
-      onSelect: () => setGrouping(g),
+      onSelect: () => void setPrefs({ groupBy: g }),
     })),
   ];
   const startItems = useStartDataItems('bookmarks');
@@ -354,7 +361,14 @@ export default function BookmarksPage() {
         <GroupedList listId={`bookmarks-${grouping}`} groups={groups} label={t.bookmarks.title} />
       )}
 
-      <ItemEditor target={openTarget} onClose={closeEditor} />
+      <ItemEditor
+        target={openTarget}
+        onClose={closeEditor}
+        onOpenExisting={(item) => {
+          if (incoming) setParams({}, { replace: true });
+          setTarget(item);
+        }}
+      />
     </>
   );
 }

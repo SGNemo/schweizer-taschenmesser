@@ -1,7 +1,7 @@
 import type { Stored } from '@/core/db/types';
 import { copyData } from '@/core/db/copy';
 import { bus } from '@/core/events';
-import { loadModuleStates } from '@/core/modules/activation';
+import { loadModuleStates, useModuleStates } from '@/core/modules/activation';
 import { offerEnableModule } from '@/core/modules/offerEnable';
 import { whenServicesSettled } from '@/core/modules/servicesReady';
 import { getPlatform } from '@/core/platform';
@@ -11,6 +11,7 @@ import { t } from '@/strings';
 import { Checkbox, ItemRow, type RowMenuItem } from '@/ui';
 import { usePageWidthAtLeast } from '@/ui/pageWidth';
 import { hostOf, statusOf } from '../logic';
+import { fetchPreviewNow } from '../preview';
 import { itemRepo } from '../repo';
 import type { BookmarkItem } from '../schema';
 
@@ -24,6 +25,13 @@ export function bookmarkMenu(
     edit: (item: Stored<BookmarkItem>) => void;
     filterTag?: (tag: string) => void;
     read?: (item: Stored<BookmarkItem>) => void;
+    /** Offer "Vorschau von der Seite holen" (list and pinboard; the link tiles show no preview). */
+    preview?: boolean;
+    /**
+     * Offer "In den Plan" / "Aus dem Plan nehmen": only while the planner is switched on, and never for the
+     * permanent links (kind "link", the tiles).
+     */
+    plan?: boolean;
   },
 ): RowMenuItem[] {
   const status = statusOf(item);
@@ -56,6 +64,48 @@ export function bookmarkMenu(
             onSelect: () => void itemRepo.update(item.id, { done: false, started: false }),
           },
         ]),
+    ...(on.plan && status !== 'done' && item.kind !== 'link'
+      ? [
+          item.inPlan
+            ? {
+                id: 'unplan',
+                label: t.bookmarks.planRemove,
+                onSelect: () =>
+                  void undoableWithToast(t.bookmarks.planRemoved, t.bookmarks.planRemoved, () =>
+                    itemRepo.update(item.id, { inPlan: false }),
+                  ),
+              }
+            : {
+                id: 'plan',
+                label: t.bookmarks.planAdd,
+                onSelect: () =>
+                  void undoableWithToast(t.bookmarks.planAdded, t.bookmarks.planAdded, () =>
+                    itemRepo.update(item.id, { inPlan: true }),
+                  ),
+              },
+        ]
+      : []),
+    // One click = one fetch from the page itself; works whatever the "Linkvorschau laden" setting says.
+    ...(on.preview && item.url && !item.preview
+      ? [
+          {
+            id: 'preview',
+            label: t.bookmarks.previewFetch,
+            onSelect: () =>
+              void fetchPreviewNow(item.id, item.url!).then((result) =>
+                useUiStore
+                  .getState()
+                  .toast(
+                    result === 'ok'
+                      ? t.bookmarks.previewFetched
+                      : result === 'unavailable'
+                        ? t.bookmarks.previewUnavailable
+                        : t.bookmarks.previewNone,
+                  ),
+              ),
+          },
+        ]
+      : []),
     ...(item.url
       ? [
           {
@@ -100,7 +150,7 @@ export function bookmarkMenu(
       label: t.actions.duplicate,
       onSelect: () =>
         void undoableWithToast(t.actions.duplicated, t.actions.duplicated, () =>
-          itemRepo.create({ ...copyData(item), done: false, started: false }),
+          itemRepo.create({ ...copyData(item), done: false, started: false, inPlan: undefined }),
         ),
     },
     {
@@ -130,6 +180,8 @@ export function BookmarkRow({
   onRead?: (item: Stored<BookmarkItem>) => void;
 }) {
   const narrow = usePageWidthAtLeast(48) === false;
+  // "im Plan" is only true while there is a plan: the mark stays stored when the planner is switched off.
+  const planner = useModuleStates()?.planner === true;
   return (
     <ItemRow
       title={item.title}
@@ -147,12 +199,21 @@ export function BookmarkRow({
       meta={[
         t.bookmarks.kinds[item.kind],
         statusOf(item) === 'started' ? t.bookmarks.statuses.started : undefined,
+        planner && item.inPlan && !item.done && item.kind !== 'link'
+          ? t.bookmarks.inPlan
+          : undefined,
         hostOf(item.url),
         ...(narrow ? [] : item.tags.map((x) => `#${x}`)),
       ]
         .filter(Boolean)
         .join(' · ')}
-      menu={bookmarkMenu(item, { edit: onEdit, filterTag: onFilterTag, read: onRead })}
+      menu={bookmarkMenu(item, {
+        edit: onEdit,
+        filterTag: onFilterTag,
+        read: onRead,
+        preview: true,
+        plan: planner,
+      })}
     />
   );
 }
