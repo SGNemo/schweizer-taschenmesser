@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { listMailAccounts } from '@/core/mail/accounts';
 import { mailLabels } from '@/core/mail/service';
@@ -275,10 +275,16 @@ export default function MailPage() {
   // Select mode (manage permission): checkboxes on the rows and the batch bar. A new folder, search or
   // account starts without a selection.
   const [selecting, setSelecting] = useState(false);
+  // The row that holds the select switch (`Button` takes no ref): focus goes back to the switch after a batch.
+  const selectRow = useRef<HTMLDivElement>(null);
   // Bumped when a batch changed the thread open beside the list: it loads again with its new labels.
   const [viewTick, setViewTick] = useState(0);
   const order = useMemo(() => shown.map((th) => th.id), [shown]);
   const selection = useSelection(order);
+  // Only what is on screen counts (a reload can drop a selected thread).
+  const selected = shown.filter((th) => selection.isSelected(th.id));
+  // A batch emptied the list: select mode ends with it (its switch is gone).
+  if (selecting && shown.length === 0 && !box.loading) setSelecting(false);
   const viewKey = `${account?.key}|${labelId}|${query}|${personalOnly}`;
   const [seenView, setSeenView] = useState(viewKey);
   if (seenView !== viewKey) {
@@ -549,7 +555,7 @@ export default function MailPage() {
       </form>
 
       {(offerPersonal || (offerPlanAll && onPlan) || canModify) && box.threads.length > 0 ? (
-        <div className={styles.row}>
+        <div className={styles.row} ref={selectRow}>
           {offerPersonal ? (
             <Chips>
               <Chip
@@ -585,7 +591,7 @@ export default function MailPage() {
               >
                 {selecting ? t.mail.batch.selectEnd : t.mail.batch.select}
               </Button>
-              {selecting && selection.count < shown.length ? (
+              {selecting && selected.length < shown.length ? (
                 <Button variant="ghost" onClick={selection.selectAll}>
                   {t.mail.batch.selectAll}
                 </Button>
@@ -594,19 +600,25 @@ export default function MailPage() {
           ) : null}
         </div>
       ) : null}
-      {selecting && selection.count > 0 ? (
+      {selecting && selected.length > 0 ? (
         <BatchBar
           account={account}
-          targets={shown.filter((th) => selection.isSelected(th.id))}
+          targets={selected}
           labelId={query ? '' : labelId}
           confirmMoves={confirmMoves}
           onCancel={() => {
             selection.clear();
             setSelecting(false);
           }}
+          onSettled={(failed) => {
+            selection.clear();
+            for (const id of failed) selection.toggle(id, false);
+            // The bar goes away with the selection: focus stays on the page instead of falling to the body.
+            if (failed.length === 0)
+              selectRow.current?.querySelector<HTMLElement>('[data-testid="mail-select"]')?.focus();
+          }}
           onDone={(direction, ids, action) => {
             if (direction === 'do') {
-              selection.clear();
               if (threadId && ids.includes(threadId) && STEPS[action].leaves)
                 update({ thread: null });
             }
@@ -661,11 +673,12 @@ export default function MailPage() {
             setStartInvoice(undefined);
             update({ thread: id });
           }}
-          menuFor={menuFor}
+          // While picking, rows carry only their checkbox (no menu, no plan or invoice buttons).
+          menuFor={selecting ? undefined : menuFor}
           planned={planned}
           planLabel={planLabel}
           plannerOn={!!states?.planner}
-          onPlan={onPlan}
+          onPlan={selecting ? undefined : onPlan}
           titleOf={(th) => planTitle(account, th)}
           invoices={invoices}
           selection={selecting ? selection : undefined}

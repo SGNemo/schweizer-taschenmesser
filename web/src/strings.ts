@@ -7526,7 +7526,7 @@ export const de = {
       unimportant: 'Nicht mehr wichtig',
       spam: 'Als Spam melden',
       notSpam: 'Kein Spam',
-      untrash: 'Zurücklegen',
+      untrash: 'Aus dem Papierkorb holen',
       labelsOf: 'Labels dieses Verlaufs',
       removeLabel: (name: string) => `Label „${name}“ entfernen`,
       reply: 'Antworten',
@@ -7622,8 +7622,9 @@ export const de = {
       selectEnd: 'Auswahl beenden',
       selectAll: 'Alle auswählen',
       more: 'Weitere Aktionen für die Auswahl',
+      unchanged: 'Da war nichts zu ändern.',
       partial: (ok: number, total: number) =>
-        `${ok} von ${total} Mails geändert. Die übrigen sind unverändert.`,
+        `Bei ${ok} von ${total} Mails hat es geklappt. Die übrigen sind unverändert und bleiben ausgewählt.`,
       done: {
         read: (n: number) => `${n} Mails als gelesen markiert.`,
         unread: (n: number) => `${n} Mails als ungelesen markiert.`,
@@ -7645,7 +7646,7 @@ export const de = {
         archiveBody:
           'Die Auswahl verlässt den Posteingang und bleibt unter „Alle Mails“. Du kannst es gleich zurücknehmen.',
         trashBody:
-          'Google löscht Mails im Papierkorb erst nach 30 Tagen. Bis dahin kannst du sie zurückholen, und du kannst es gleich zurücknehmen.',
+          'Gmail löscht Mails im Papierkorb erst nach 30 Tagen. Bis dahin holst du sie jederzeit zurück.',
         spamBody:
           'Die Auswahl verlässt den Posteingang und liegt dann im Ordner „Spam“. Gmail nutzt die Meldung für seinen Spamfilter. Du kannst es gleich zurücknehmen.',
       },

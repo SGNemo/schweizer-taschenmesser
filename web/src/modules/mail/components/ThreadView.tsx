@@ -3,7 +3,13 @@ import { useEffect, useState } from 'react';
 import { ConnectorError } from '@/core/connectors/types';
 import { mailAttachment, mailThread, mailWebUrl } from '@/core/mail/service';
 import type { MailLinkType } from '@/core/mail/prefill';
-import type { MailAccountRef, MailErrorCode, MailLabel, MailMessage } from '@/core/mail/types';
+import type {
+  MailAccountRef,
+  MailErrorCode,
+  MailLabel,
+  MailMessage,
+  ThreadChange,
+} from '@/core/mail/types';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
@@ -20,6 +26,7 @@ import { useModuleStates } from '@/core/modules/activation';
 import { fromOf, planMail, plannedThreads } from '../planMail';
 import { LocalSummary } from './LocalSummary';
 import { ThreadActions, ThreadLabels } from './ThreadActions';
+import { applyChange } from '../mailActions';
 import { LinkMenu } from './LinkMenu';
 import { LinkedEntries } from './LinkedEntries';
 import { MailFrame } from './MailFrame';
@@ -340,7 +347,11 @@ export function ThreadView({
   }, [account, threadId, cacheBodies]);
 
   const subject = messages?.[0] ? subjectOf(messages[0].subject) : '';
-  const labelIds = labelsNow ?? [...new Set(messages?.flatMap((m) => m.labelIds) ?? [])];
+  const loaded = [...new Set(messages?.flatMap((m) => m.labelIds) ?? [])];
+  const labelIds = labelsNow ?? loaded;
+  // Functional: two changes in flight (a star and a label) both land on the newest state.
+  const onLabels = (change: ThreadChange) =>
+    setLabelsNow((prev) => applyChange(prev ?? loaded, change));
   const web = mailWebUrl(account, threadId);
   const states = useModuleStates();
   const planned = useLiveQuery(() => plannedThreads(account.key), [account.key]);
@@ -391,7 +402,7 @@ export function ThreadView({
           inSpam={!!messages.length && messages.every((m) => m.labelIds.includes('SPAM'))}
           labels={labels}
           confirmMoves={confirmMoves}
-          onLabels={setLabelsNow}
+          onLabels={onLabels}
           onChanged={onChanged}
           onLeave={onBack}
         />
@@ -403,7 +414,7 @@ export function ThreadView({
           threadId={threadId}
           labelIds={labelIds}
           labels={labels}
-          onLabels={setLabelsNow}
+          onLabels={onLabels}
           onChanged={onChanged}
         />
       ) : null}

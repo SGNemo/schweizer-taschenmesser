@@ -375,7 +375,11 @@
   color: inherit;
   cursor: pointer;
 }
-.labelRemove:hover {
+.labelRemove:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+.labelRemove:hover:not(:disabled) {
   background: var(--surface-sunken);
 }
 

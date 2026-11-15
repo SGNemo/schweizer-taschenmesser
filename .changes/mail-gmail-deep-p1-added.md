@@ -3,7 +3,7 @@ type: added
 area: mail
 breaking: false
 highlight: true
-de: In E-Mail wählst du mit „Auswählen“ mehrere Mails und archivierst, löschst, markierst sie oder meldest sie als Spam – ein Rückgängig nimmt alles zurück.
+de: In E-Mail wählst du mit „Auswählen“ mehrere Mails und archivierst sie, legst sie in den Papierkorb, markierst sie oder meldest sie als Spam – ein Rückgängig nimmt alles zurück.
 en: In Mail, tap “Select” to archive, trash, mark or report several mails as spam at once – one undo takes them all back.
 ---
 

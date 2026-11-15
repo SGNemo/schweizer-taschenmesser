@@ -20,6 +20,7 @@ export function BatchBar({
   labelId,
   confirmMoves,
   onCancel,
+  onSettled,
   onDone,
 }: {
   account: MailAccountRef;
@@ -29,6 +30,8 @@ export function BatchBar({
   labelId: string;
   confirmMoves: boolean;
   onCancel: () => void;
+  /** The action ran: these selected threads did not go through and stay selected for another try. */
+  onSettled: (failed: string[]) => void;
   /** A change (`do`) or its undo went through for these threads. */
   onDone: (direction: 'do' | 'undo', ids: string[], action: MailAction) => void;
 }) {
@@ -51,6 +54,7 @@ export function BatchBar({
     );
     setBusy(false);
     setAsking(undefined);
+    if (res.ok.length > 0) onSettled(targets.map((x) => x.id).filter((id) => !res.ok.includes(id)));
     // Nothing went through: say why (an expired login gets its own way back, like in the thread view).
     if (res.ok.length === 0 && res.error !== undefined)
       setError(

@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { ConnectorError } from '@/core/connectors/types';
 import { hasFeature } from '@/core/mail/service';
-import type { MailAccountRef, MailErrorCode, MailLabel } from '@/core/mail/types';
+import type { MailAccountRef, MailErrorCode, MailLabel, ThreadChange } from '@/core/mail/types';
 import { t } from '@/strings';
 import { Button, Dialog, Icon, RowMenu, SelectField } from '@/ui';
 import {
-  applyChange,
   asksFirst,
   deltaFor,
   doneText,
@@ -55,8 +54,8 @@ export function ThreadActions({
   labels: MailLabel[];
   /** Ask before archiving and labelling (the trash and spam always ask). */
   confirmMoves: boolean;
-  /** The thread's labels changed (a change or its undo went through). */
-  onLabels: (next: string[]) => void;
+  /** A change or its undo went through: exactly this label change, applied to the newest state. */
+  onLabels: (change: ThreadChange) => void;
   /** The list should reload. */
   onChanged: () => void;
   /** The thread left the view (archived, trashed, spam): back to the list. */
@@ -79,11 +78,9 @@ export function ThreadActions({
     setError(undefined);
     // The view follows each direction itself (exactly the delta that went through), so an undo after
     // leaving still reloads the list.
-    let current = [...labelIds];
-    const delta = deltaFor(current, step.change);
+    const delta = deltaFor(labelIds, step.change);
     const res = await runStep(account, [{ id: threadId, labelIds }], step, done, (direction) => {
-      if (delta) current = applyChange(current, direction === 'do' ? delta : inverse(delta));
-      onLabels(current);
+      if (delta) onLabels(direction === 'do' ? delta : inverse(delta));
       onChanged();
     });
     setBusy(false);
@@ -144,9 +141,11 @@ export function ThreadActions({
           </Button>
         ) : (
           <>
-            <Button onClick={() => ask('archive')} disabled={busy}>
-              <Icon name="download" /> {t.mail.write.archive}
-            </Button>
+            {has('INBOX') ? (
+              <Button onClick={() => ask('archive')} disabled={busy}>
+                <Icon name="download" /> {t.mail.write.archive}
+              </Button>
+            ) : null}
             <Button onClick={() => ask('trash')} disabled={busy}>
               <Icon name="trash" /> {t.mail.write.trash}
             </Button>
@@ -247,7 +246,7 @@ export function ThreadLabels({
   threadId: string;
   labelIds: readonly string[];
   labels: MailLabel[];
-  onLabels: (next: string[]) => void;
+  onLabels: (change: ThreadChange) => void;
   onChanged: () => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -258,15 +257,14 @@ export function ThreadLabels({
     if (busy) return;
     setBusy(true);
     const step = labelStep(label.id, false);
-    let current = [...labelIds];
+    const delta = deltaFor(labelIds, step.change);
     await runStep(
       account,
       [{ id: threadId, labelIds }],
       step,
       () => t.mail.write.done.unlabelled(label.name),
       (direction) => {
-        current = applyChange(current, direction === 'do' ? step.change : step.undo);
-        onLabels(current);
+        if (delta) onLabels(direction === 'do' ? delta : inverse(delta));
         onChanged();
       },
     );

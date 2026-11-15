@@ -301,7 +301,7 @@ describe('star, important, spam and labels in a thread', () => {
     mocks.thread.mockResolvedValue({ id: 't1', messages: [message(['TRASH'])] });
     const user = userEvent.setup();
     thread();
-    const back = await screen.findByRole('button', { name: 'Zurücklegen' });
+    const back = await screen.findByRole('button', { name: 'Aus dem Papierkorb holen' });
     expect(screen.queryByRole('button', { name: 'In den Papierkorb' })).toBeNull();
     await user.click(back);
     await waitFor(() => expect(mocks.untrash).toHaveBeenCalledWith(full, 't1'));
@@ -346,12 +346,13 @@ describe('select mode in the list', () => {
       threads: [
         summary('t1', 'Rechnung', ['INBOX', 'UNREAD']),
         summary('t2', 'Newsletter', ['INBOX']),
-        summary('t3', 'Termin', ['INBOX', 'UNREAD']),
+        summary('t3', 'Termin neu', ['INBOX', 'UNREAD']),
       ],
     });
     const user = userEvent.setup();
     page();
-    await screen.findByText('Termin');
+    // A subject only the fresh list has: the rows carry the fetched labels, not an older cache.
+    await screen.findByText('Termin neu');
     await user.click(screen.getByTestId('mail-select'));
     await waitFor(() =>
       expect(screen.getAllByRole('checkbox', { name: 'Auswählen' })).toHaveLength(3),
@@ -361,7 +362,7 @@ describe('select mode in the list', () => {
     expect(within(bar).getByText('3 ausgewählt')).toBeInTheDocument();
     await user.click(within(bar).getByRole('button', { name: 'Weitere Aktionen für die Auswahl' }));
     await user.click(await screen.findByRole('menuitem', { name: 'Als gelesen markieren' }));
-    await waitFor(() => expect(lastToast()?.message).toBe('3 Mails als gelesen markiert.'));
+    await waitFor(() => expect(lastToast()?.message).toBe('2 Mails als gelesen markiert.'));
     expect(mocks.modify.mock.calls.map((c) => c[1]).sort()).toEqual(['t1', 't3']);
     lastToast()!.action!.run();
     await waitFor(() => expect(mocks.modify).toHaveBeenCalledTimes(4));
@@ -381,9 +382,33 @@ describe('select mode in the list', () => {
     await user.click(screen.getByTestId('mail-select'));
     await user.click(screen.getByText('Newsletter'));
     expect(
-      within(screen.getByRole('region', { name: /Auswahl/ })).getByText('1 ausgewählt'),
+      within(await screen.findByRole('region', { name: /Auswahl/ })).getByText('1 ausgewählt'),
     ).toBeInTheDocument();
     expect(mocks.thread).not.toHaveBeenCalled();
+  });
+
+  it('after a partial failure the failed mails stay selected for another try', async () => {
+    mocks.modify.mockImplementation(async (_a: unknown, id: string) => {
+      if (id === 't2') throw new ConnectorError('network');
+    });
+    const user = userEvent.setup();
+    page();
+    await screen.findByText('Termin');
+    await user.click(screen.getByTestId('mail-select'));
+    await waitFor(() =>
+      expect(screen.getAllByRole('checkbox', { name: 'Auswählen' })).toHaveLength(3),
+    );
+    await user.click(screen.getByRole('button', { name: 'Alle auswählen' }));
+    await user.click(
+      within(screen.getByRole('region', { name: /Auswahl/ })).getByRole('button', {
+        name: 'Weitere Aktionen für die Auswahl',
+      }),
+    );
+    await user.click(await screen.findByRole('menuitem', { name: 'Mit Stern markieren' }));
+    await waitFor(() => expect(lastToast()?.message).toMatch(/Bei 2 von 3 Mails/));
+    expect(
+      within(await screen.findByRole('region', { name: /Auswahl/ })).getByText('1 ausgewählt'),
+    ).toBeInTheDocument();
   });
 
   it('a starred row says so beside the time', async () => {

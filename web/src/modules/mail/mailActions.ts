@@ -242,14 +242,18 @@ export async function runStep(
   const toast = useUiStore.getState().toast;
   if (targets.length === 0) return { ok: [] };
   const { done, skipped, failed, error } = await applyStep(account, targets, step);
-  const reached = done.length + skipped.length;
-  if (reached === 0) {
+  // Only threads that really changed are counted; the rest were already so (or are unchanged).
+  if (done.length + skipped.length === 0) {
     toast(t.mail.write.failed);
     return { ok: [], error };
   }
   const ids = done.map((d) => d.id);
   if (ids.length) onChanged('do', ids);
-  const message = failed.length ? t.mail.batch.partial(reached, targets.length) : text(reached);
+  const message = failed.length
+    ? t.mail.batch.partial(done.length, targets.length)
+    : done.length === 0
+      ? t.mail.batch.unchanged
+      : text(done.length);
   toast(
     message,
     done.length

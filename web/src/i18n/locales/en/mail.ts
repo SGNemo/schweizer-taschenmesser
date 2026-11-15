@@ -336,8 +336,9 @@ export const mail: Strings['mail'] = {
     selectEnd: 'End selection',
     selectAll: 'Select all',
     more: 'More actions for the selection',
+    unchanged: 'There was nothing to change.',
     partial: (ok: number, total: number) =>
-      `${ok} of ${total} mails changed. The others are unchanged.`,
+      `It worked for ${ok} of ${total} mails. The others are unchanged and stay selected.`,
     done: {
       read: (n: number) => `${n} mails marked as read.`,
       unread: (n: number) => `${n} mails marked as unread.`,
@@ -358,7 +359,7 @@ export const mail: Strings['mail'] = {
       archiveBody:
         'The selection leaves the inbox and stays under “All Mail”. You can undo it right away.',
       trashBody:
-        'Google only deletes mail in the trash after 30 days. Until then you can get it back, and you can undo it right away.',
+        'Gmail only deletes mail in the trash after 30 days. Until then you can get it back at any time.',
       spamBody:
         'The selection leaves the inbox and goes to the “Spam” folder. Gmail uses the report for its spam filter. You can undo it right away.',
     },
