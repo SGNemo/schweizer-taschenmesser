@@ -385,6 +385,8 @@ export function parseCapture(input: string, opts: ParseOptions): CaptureResult {
   }
 
   if (date) fields.date = fmtDate(date);
+  // „bis/spätestens <Tag> [<Uhrzeit>]“ on a ToDo: the day and its hour are a deadline (package 5b).
+  if (primaryType === 'todo' && kw.byDay && date) fields.deadline = true;
   if (primaryType !== 'todo' && primaryType !== 'plan') delete fields.priority;
   if (dt.time !== undefined) fields.time = dt.time;
   if (primaryType === 'event' && date && !hasTime) fields.allDay = true;

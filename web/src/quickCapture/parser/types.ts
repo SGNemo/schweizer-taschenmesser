@@ -76,6 +76,11 @@ export interface CaptureFields {
   pin?: string;
   /** Plan captures: `date` is a hard deadline („bis Do“, „Frist“). */
   hardDue?: boolean;
+  /**
+   * ToDos: `date` (and `time`, if typed) is a deadline – „bis/spätestens <Tag>“ („Team-Sachen lesen bis So 18:00“).
+   * The ToDo target then writes the time as the deadline's hour (`dueTime`), not as a note line.
+   */
+  deadline?: true;
   /** Meal captures: rough kcal. */
   kcal?: number;
   /** Workout captures: the exercises of the line. */
@@ -84,7 +89,11 @@ export interface CaptureFields {
   note?: string;
   /** A payment reminder („Mahnung“, „2. Mahnung“): its level (1–3) and the day it was noted, 'YYYY-MM-DD'. */
   dunning?: { level: number; date: string };
-  /** ToDos and plan captures: where the entry came from (`plan.requested` of a note); never set by the parser. */
+  /**
+   * ToDos and plan captures: where the entry came from (`plan.requested` of a note); never set by the parser.
+   * The shape is `LegacyLink` of `core/entitylinks/types.ts`, spelled out because the parser imports nothing from
+   * outside its folder (`isolation.test.ts`); `core/entitylinks/types.test.ts` pins that both stay the same type.
+   */
   link?: { kind: 'note' | 'mail' | 'invoice' | 'event'; id: string; label: string };
 }
 

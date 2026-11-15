@@ -25,7 +25,7 @@ const manifest: ModuleManifest = {
     signature: 'weekBars',
     type: 'thin',
   },
-  version: 3,
+  version: 4,
   get description() {
     return t.planner.meta.description;
   },
