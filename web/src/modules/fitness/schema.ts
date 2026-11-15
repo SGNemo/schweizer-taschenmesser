@@ -59,6 +59,11 @@ export const templateSchema = z.object({
   title: z.string().trim().min(1).max(80),
   durationMin: z.number().int().min(1).max(1440).optional(),
   exercises: z.array(exerciseSchema).max(30).default([]),
+  /**
+   * Training plan (deep package 3, manifest v4): ISO weekdays (1 = Monday … 7 = Sunday) this template is
+   * due on. None = not in the plan. A plan day is never stored as a session until it is started or done.
+   */
+  weekdays: z.array(z.number().int().min(1).max(7)).max(7).optional(),
 });
 export type Template = z.output<typeof templateSchema>;
 

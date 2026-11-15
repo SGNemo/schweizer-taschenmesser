@@ -436,3 +436,34 @@ test('a live session: started from the menu, saved after each set, survives a re
     weightKg: 80,
   });
 });
+
+test('a training plan: a preset with weekdays, „Heute laut Plan“ starts the session, then the day is done', async ({
+  page,
+}) => {
+  await page.goto('/fitness');
+  await (await openPageMenu(page)).getByRole('menuitem', { name: 'Trainingsplan' }).click();
+  const plan = page.getByRole('dialog', { name: 'Trainingsplan' });
+  await plan.getByRole('button', { name: 'Plan Ganzkörper, 2 × pro Woche übernehmen' }).click();
+  await expect(page.getByText('Plan angelegt: 2 Vorlagen.')).toBeVisible();
+  // Sunday 2026-11-08 is no preset day: the user adds it.
+  const sunday = plan.getByRole('button', { name: 'Ganzkörper A am Sonntag' });
+  await sunday.click();
+  await expect(sunday).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('Escape');
+
+  const today = page.getByTestId('fitness-today-plan');
+  await expect(today).toContainText('Heute laut Plan: Ganzkörper A');
+  await today.getByRole('button', { name: 'Ganzkörper A anfangen' }).click();
+  const live = page.getByTestId('fitness-live');
+  await expect(live.getByRole('heading', { name: 'Kniebeuge' })).toBeVisible();
+  await expect(live).toContainText('Übung 1 von 4');
+  await live.getByLabel('Wdh.').fill('8');
+  await live.getByLabel('kg', { exact: true }).fill('50');
+  await live.getByRole('button', { name: 'Satz fertig' }).click();
+  await expect(live.getByText('8 × 50 kg', { exact: true })).toBeVisible();
+  await live.getByRole('button', { name: 'Einheit beenden' }).click();
+
+  // The day has its session now: no plan row, the session is listed.
+  await expect(page.getByTestId('fitness-today-plan')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Ganzkörper A/ }).first()).toBeVisible();
+});

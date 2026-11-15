@@ -7,7 +7,8 @@ import { kcalText } from '../data';
 import { GROUPS } from '../catalog';
 import { weekDays, weekOf } from '../logic';
 import { loadByGroup } from '../progress';
-import type { Meal, Session } from '../schema';
+import { planDays } from '../plan';
+import type { Meal, Session, Template } from '../schema';
 import { WeekPlates } from './WeekPlates';
 import styles from '../fitness.module.css';
 
@@ -22,6 +23,7 @@ export function WeekView({
   meals,
   nutrition,
   loadedFrom,
+  templates = [],
 }: {
   day: string;
   weekStart: 1 | 7;
@@ -30,10 +32,16 @@ export function WeekView({
   nutrition: boolean;
   /** The first day the page loaded; the arrows never step to a week before it (it would look empty). */
   loadedFrom: string;
+  /** Templates with weekdays: the plan's days from today on („laut Plan: Oberkörper“). */
+  templates?: readonly Template[];
 }) {
   const [offset, setOffset] = useState(0);
   const { from, to } = weekOf(addDaysStr(day, offset * 7), weekStart);
   const days = weekDays(from, sessions, meals, day);
+  // Only today and later: a passed plan day is never shown as missed.
+  const plan = to >= day ? planDays(templates, sessions, from > day ? from : day, to) : [];
+  const planned = (date: string) =>
+    plan.filter((p) => p.date === date).map((p) => t.fitness.plan.week(p.template.title));
   const canGoBack = addDaysStr(from, -7) >= weekOf(loadedFrom, weekStart).from;
   const w = t.fitness.week;
   const groups = loadByGroup(sessions, { from, to }, [...GROUPS, 'other']).map((g) => {
@@ -103,7 +111,13 @@ export function WeekView({
                 ? `${relativeDayLabel(day, day)}, ${formatDay(d.date, 'd. MMM')}`
                 : formatDay(d.date, 'EEEE, d. MMM')
             }
-            meta={line(d)}
+            meta={
+              planned(d.date).length
+                ? [line(d) === w.nothing ? '' : line(d), ...planned(d.date)]
+                    .filter(Boolean)
+                    .join(' · ')
+                : line(d)
+            }
           />
         ))}
       </ItemList>

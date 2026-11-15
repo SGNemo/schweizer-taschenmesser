@@ -154,3 +154,11 @@ Not planned: body data, weight trend, step counter, external food databases, spe
 - **Interruption:** the running state is device-local (`localStorage`, never synced); closing the dialog or a reload shows „Einheit läuft seit 18:02 · Weiter“ above the list; a state from an earlier day is dropped quietly (its sets are saved).
 - **Seed v4:** the last two weeks log sets one by one with a warm-up; „Latziehen“ is a superset with „Bizepscurls“.
 - **Known limits:** one running session per device; the duration counts from the start, also across a long break; the assistant still sees no exercises (`aiSchema` unchanged).
+
+## Deep p3 as built (training plan, `feat/fitness-deep-p3`)
+
+- **Data (manifest v4, nothing rewritten):** a template may carry `weekdays` (ISO 1–7). A plan day is derived (`plan.ts`), never stored: it exists only from today on and only on a day without any session (logged or planned), so a passed plan day just disappears – never „verpasst“, no counter.
+- **„Trainingsplan“** (⋯ of Training and Woche): seven toggles per template (saved on every tap, week start respected); three splits to start with (Ganzkörper 2 ×: Mo/Do · Ober-/Unterkörper 4 ×: Mo, Di, Do, Fr · Drücken/Ziehen/Beine 3 ×: Mo, Mi, Fr), catalogue exercises with sets and reps but no weights (the first session fills them in); a template of the same title keeps its exercises and only takes the days; toast with „Rückgängig“.
+- **Today:** one row „Heute laut Plan: Oberkörper · 5 Übungen · 55 Min“ with „Anfangen“ (→ „Einheit starten“ with the template), above the list, gone once the day has a session or a live session runs. **Week:** „laut Plan: Oberkörper“ on today and later days.
+- **Planner:** plan days as items `plan:<templateId>:<date>` (pinned to their day like a planned session, the template's length or 45 min); ticked off = a logged session from the template today; an edited estimate is not written (the template keeps its length). Calendar and „Jetzt wichtig“ do not show plan days (noise; a planned session with a time still does).
+- **Off:** a template without weekdays is not in the plan; removing the days removes the plan.

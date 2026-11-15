@@ -9003,6 +9003,50 @@ export const de = {
       resume: 'Weiter',
       saved: 'Gespeichert. Die Einheit läuft weiter, bis du sie beendest.',
     },
+
+    plan: {
+      open: 'Trainingsplan',
+      title: 'Trainingsplan',
+      intro:
+        'Wähle Wochentage für deine Vorlagen. An diesen Tagen steht die Einheit im Plan; sie zählt erst, wenn du sie machst.',
+      none: 'Noch keine Vorlage. Fang mit einem Plan unten an oder speichere eine Einheit als Vorlage.',
+      weekdays: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+      weekdayNames: [
+        'Montag',
+        'Dienstag',
+        'Mittwoch',
+        'Donnerstag',
+        'Freitag',
+        'Samstag',
+        'Sonntag',
+      ],
+      dayToggle: (title: string, day: string) => `${title} am ${day}`,
+      notInPlan: 'Nicht im Plan',
+      presets: 'Pläne zum Anfangen',
+      presetHint: 'Legt Vorlagen mit Wochentagen an. Übungen und Tage kannst du danach ändern.',
+      presetUse: 'Übernehmen',
+      presetUseFor: (name: string) => `Plan ${name} übernehmen`,
+      preset: {
+        full2: { name: 'Ganzkörper, 2 × pro Woche', detail: 'Mo und Do' },
+        upperLower4: { name: 'Ober- und Unterkörper, 4 × pro Woche', detail: 'Mo, Di, Do, Fr' },
+        ppl3: { name: 'Drücken, Ziehen, Beine, 3 × pro Woche', detail: 'Mo, Mi, Fr' },
+      },
+      days: {
+        fullA: 'Ganzkörper A',
+        fullB: 'Ganzkörper B',
+        upper: 'Oberkörper',
+        lower: 'Unterkörper',
+        push: 'Drücken',
+        pull: 'Ziehen',
+        legs: 'Beine',
+      },
+      applied: (n: number) =>
+        n === 1 ? 'Plan angelegt: 1 Vorlage.' : `Plan angelegt: ${n} Vorlagen.`,
+      today: (title: string) => `Heute laut Plan: ${title}`,
+      start: 'Anfangen',
+      startFor: (title: string) => `${title} anfangen`,
+      week: (title: string) => `laut Plan: ${title}`,
+    },
   },
   clock: {
     meta: {

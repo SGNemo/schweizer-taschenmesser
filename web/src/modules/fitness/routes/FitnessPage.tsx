@@ -30,6 +30,8 @@ import { ExercisePicto } from '../components/ExercisePicto';
 import { WeekView } from '../components/WeekView';
 import { ExercisesView } from '../components/ExercisesView';
 import { LiveSession } from '../components/LiveSession';
+import { PlanDialog } from '../components/PlanDialog';
+import { planDays } from '../plan';
 import { loadLive, saveLive, startLive, type LiveState } from '../live';
 import { patternOf } from '../catalog';
 import {
@@ -96,6 +98,7 @@ export default function FitnessPage() {
     return stored;
   });
   const [liveOpen, setLiveOpen] = useState(false);
+  const [planOpen, setPlanOpen] = useState(false);
   function start(from?: Pick<Session, 'title' | 'exercises'>, planId?: string) {
     setSession(null);
     if (!live) setLive(startLive(from, { date: day, time: nowTime(), now: now() }, planId));
@@ -145,6 +148,7 @@ export default function FitnessPage() {
   // Plans whose day has passed: folded away under „Wartet noch“, never a list of misses.
   const waiting = plans.filter((s) => !isAhead(s, day));
   const logged = (sessions ?? []).filter(isLogged);
+  const todayPlan = sessions && templates ? planDays(templates, sessions, day, day) : [];
 
   /** A planned session is done: it counts from now on, on today when it was planned for later. */
   async function markDone(s: Stored<Session>) {
@@ -250,6 +254,9 @@ export default function FitnessPage() {
                   },
                 ]
               : []),
+            ...(view === 'training' || view === 'week'
+              ? [{ id: 'plan', label: t.fitness.plan.open, onSelect: () => setPlanOpen(true) }]
+              : []),
             ...(view === 'training' && canRepeat && last
               ? [
                   {
@@ -295,6 +302,7 @@ export default function FitnessPage() {
           meals={meals ?? []}
           nutrition={prefs.nutrition}
           loadedFrom={from}
+          templates={templates ?? []}
         />
       ) : view === 'exercises' ? (
         <ExercisesView day={day} />
@@ -306,6 +314,40 @@ export default function FitnessPage() {
               <Button size="sm" variant="secondary" onClick={() => setLiveOpen(true)}>
                 {t.fitness.live.resume}
               </Button>
+            </div>
+          ) : null}
+          {/* The plan's day: one quiet row with „Anfangen“, gone once the day has a session. */}
+          {!live && todayPlan.length ? (
+            <div className={styles.todayPlan} data-testid="fitness-today-plan">
+              <ItemList>
+                {todayPlan.map(({ template: tpl }) => (
+                  <ItemRow
+                    key={tpl.id}
+                    title={t.fitness.plan.today(tpl.title)}
+                    meta={[
+                      tpl.exercises.length ? t.fitness.list.exercises(tpl.exercises.length) : '',
+                      tpl.durationMin ? formatMinutes(tpl.durationMin, { compact: true }) : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                    lead={
+                      <ExercisePicto
+                        pattern={tpl.exercises[0] ? patternOf(tpl.exercises[0].name) : 'other'}
+                      />
+                    }
+                    end={
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        aria-label={t.fitness.plan.startFor(tpl.title)}
+                        onClick={() => start(tpl)}
+                      >
+                        {t.fitness.plan.start}
+                      </Button>
+                    }
+                  />
+                ))}
+              </ItemList>
             </div>
           ) : null}
           {noSessions ? (
@@ -421,6 +463,12 @@ export default function FitnessPage() {
         }}
       />
       <MealEditor target={mealTarget} meals={meals ?? []} onClose={close} />
+      <PlanDialog
+        open={planOpen}
+        templates={templates ?? []}
+        weekStart={weekStart}
+        onClose={() => setPlanOpen(false)}
+      />
       <GoalDialog
         open={goalOpen}
         current={prefs?.kcalGoal ?? 0}
