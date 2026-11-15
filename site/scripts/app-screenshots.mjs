@@ -17,6 +17,7 @@
  *   npm run app:screenshots -- --readme   README motifs instead (../docs/assets/screenshots/*.webp):
  *     overview, calendar, finance, tools, settings; desktop 1920×1080 and phone 412×915, light and dark.
  *     SCREENS_PAGES=calendar|tools limits the motifs, SCREENS_VIEWPORTS=phone the viewport.
+ *   A motif or slot `app` with `ready: '<selector>'` waits for that element before the shot.
  */
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
@@ -43,8 +44,8 @@ if (!process.argv.includes('--readme')) for (const [name, def] of Object.entries
 const README = process.argv.includes('--readme');
 /** README motifs (docs/assets/screenshots): one overview plus modules with a strong identity, the toolbox, settings. */
 const README_PAGES = [
-  // `ready`: a text that only shows once the slow card has loaded (the "Heute" card renders after the strip).
-  { name: 'overview', path: '/', ready: 'Alle Termine' },
+  // `ready`: the "Heute" card's suggested task, which renders after the strip (a missing card times out after 30 s).
+  { name: 'overview', path: '/', ready: '[data-testid="next-card"]' },
   { name: 'calendar', path: `/calendar?view=week&date=${SEED_TODAY}` },
   { name: 'finance', path: '/finance?tab=overview' },
   // The toolbox panel (top bar button "Werkzeuge"), not the tool library page.
@@ -137,7 +138,7 @@ try {
         // On a phone the panel opens on the tool list; show the calculator like the desktop does.
         if (p.mobile) await toolbox.getByText('Rechner', { exact: true }).first().click();
       }
-      if (p.ready) await page.getByText(p.ready, { exact: true }).first().waitFor({ timeout: 30_000 });
+      if (p.ready) await page.locator(p.ready).first().waitFor({ timeout: 30_000 });
       await page.addStyleTag({ content: '[data-testid="dev-badge"]{display:none !important}' });
       // The last click leaves the pointer over the page; park it so no row shows a hover underline.
       await page.mouse.move(0, 0);

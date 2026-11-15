@@ -150,7 +150,7 @@ Alle Bilder zeigen erfundene Beispieldaten in der deutschen Oberfläche; die App
   </picture>
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/calendar-phone-dark.webp">
-    <img src="docs/assets/screenshots/calendar-phone-light.webp" alt="Der Kalender auf dem Handy: der Modulkopf mit Reitern für die Planen-Module, Reiter für Termine und Erinnerungen, ein Wochenumschalter, ein Umschalter für Monat, Woche, Tag, Agenda und Jahr und die Termine der Woche als Liste" width="220">
+    <img src="docs/assets/screenshots/calendar-phone-light.webp" alt="Der Kalender auf dem Handy: der Modulkopf mit Reitern für die Planen-Module sowie für Termine und Erinnerungen, ein Wochenumschalter, ein Umschalter für Monat, Woche, Tag, Agenda und Jahr und die Termine der Woche als Liste" width="220">
   </picture>
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/tools-phone-dark.webp">
