@@ -1,6 +1,7 @@
 import type { DueNotification, NotificationSource } from '@/core/modules/types';
 import { getFocusSettings } from '@/core/settings/focus';
 import { eachDay, toDateString, toEpoch } from '@/core/time/dates';
+import { now } from '@/core/time/now';
 import { t } from '@/strings';
 import { taskRepo } from './repo';
 import type { Task } from './schema';
@@ -38,9 +39,11 @@ const source: NotificationSource = async ({ from, to }) => {
   const open = (await taskRepo.active().toArray()).filter((x) => !x.done);
   const out: DueNotification[] = [];
   // Asked for per task, so also for a subtask or an „Irgendwann“ one: what was switched on is sent.
+  // A catch-up after the app was closed never says „in einer Stunde“ about a deadline that has passed.
+  const at = now();
   for (const task of open) {
     const n = dueReminder(task);
-    if (n && n.at > from && n.at <= to) out.push(n);
+    if (n && n.at > from && n.at <= to && n.at + DUE_REMIND_LEAD_MS > at) out.push(n);
   }
   if (!focus.todoDigest) return out;
   const top = open.filter((x) => !x.someday && !x.parentId);

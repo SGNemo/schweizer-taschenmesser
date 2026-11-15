@@ -14,13 +14,14 @@ import { getManifest } from '@/core/modules/registry';
 import { toEpoch } from '@/core/time/dates';
 import { setNow } from '@/core/time/now';
 import { addFromField, markDue } from '../actions';
-import { dueWas } from '../board';
+import { buildBoard, dueWas } from '../board';
 import { readField } from '../dueWords';
 import manifest from '../manifest';
 import { migrations } from '../migrations';
 import { assignmentRepo, itemRepo } from '../repo';
 import { itemSchema } from '../schema';
 import { runsSettled, setManifestsForTests } from '../services';
+import { DEFAULT_PLANNER_SETTINGS } from '../settings';
 
 const SAT = '2026-11-14';
 const SUN = '2026-11-15';
@@ -153,4 +154,29 @@ it('„Frist war …“ once the deadline has passed or the session lies after i
   expect(dueWas({ hardDue: SUN }, toEpoch('2026-11-16', '00:00'))).toBe(true);
   expect(dueWas({ ...row, late: true }, toEpoch(SAT, '10:00'))).toBe(true);
   expect(dueWas({}, toEpoch(SUN, '20:00'))).toBe(false);
+});
+
+it('the ToDo is the authority for the hour of its own day: cleared there, the row has none', async () => {
+  expect(await addFromField('Team-Sachen lesen bis So 18:00', {})).toBe(true);
+  await runsSettled();
+  const [task] = await taskRepo.active().toArray();
+  const row = async () =>
+    buildBoard({
+      today: SAT,
+      span: 7,
+      settings: DEFAULT_PLANNER_SETTINGS,
+      dayRows: [],
+      itemRows: await itemRepo.active().toArray(),
+      assignments: await assignmentRepo.active().toArray(),
+      entries: await entries(),
+      calendar: [],
+      unplaced: [],
+    }).days.flatMap((d) => d.rows)[0]!;
+  expect(await row()).toMatchObject({ hardDue: SUN, hardDueTime: '18:00' });
+  await taskRepo.update(task!.id, { dueTime: undefined });
+  // The plan row still holds 18:00; the source (same day, no hour) wins.
+  expect((await itemRepo.get(`todos:${task!.id}`))?.due?.time).toBe('18:00');
+  const cleared = await row();
+  expect(cleared.hardDue).toBe(SUN);
+  expect(cleared.hardDueTime).toBeUndefined();
 });

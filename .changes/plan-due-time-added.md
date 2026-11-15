@@ -2,8 +2,8 @@
 type: added
 area: todos
 breaking: false
-de: „bis So 18:00“ speichert die Uhrzeit als Frist (statt als Notiz); auf Wunsch erinnert die App eine Stunde vorher, genau einmal.
-en: “by Sun 18:00” now saves the time as the deadline (not as a note); on request the app reminds you an hour before, exactly once.
+de: „bis So 18:00“ speichert 18:00 jetzt als Uhrzeit der Frist statt als Notiz; im ToDo kannst du „Erinnern: 1 Std vorher“ einschalten.
+en: In German, “bis So 18:00” now saves 18:00 as the to-do's deadline time instead of a note; in the to-do you can turn on “Remind me: 1 h before”.
 ---
 ---
 type: fixed

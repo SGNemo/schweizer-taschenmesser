@@ -97,14 +97,14 @@ export const unitTitle = (titles: Record<string, string>, unitId: string): strin
   titles[unitId.slice(0, unitId.lastIndexOf('#'))] ?? unitId;
 
 /**
- * A row's hard deadline and its hour: the source's own hour of the same day wins (the ToDo editor changed it
- * since), else the one the plan row holds.
+ * A row's hard deadline and its hour: for the same day the source is the authority (the ToDo editor may have
+ * changed or cleared the hour since); for another day the plan row's own hour.
  */
 function dueOf(
   due: { date: string; time?: string },
   source?: { date: string; time?: string },
 ): Pick<BoardRow, 'hardDue' | 'hardDueTime'> {
-  const time = (source?.date === due.date ? source.time : undefined) ?? due.time;
+  const time = source?.date === due.date ? source.time : due.time;
   return { hardDue: due.date, ...(time ? { hardDueTime: time } : {}) };
 }
 

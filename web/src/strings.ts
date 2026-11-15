@@ -1697,7 +1697,7 @@ export const de = {
     dueTime: 'Uhrzeit der Frist (optional)',
     dueAt: (day: string, time: string) => `${day}, ${time}`,
     dueRemind: 'Erinnern: 1 Std vorher',
-    dueRemindHint: 'Eine Benachrichtigung, genau einmal.',
+    dueRemindHint: 'Eine Benachrichtigung je Frist, genau einmal.',
     dueRemindTitle: (time: string, title: string) => `Bis ${time}: ${title}`,
     dueRemindBody: 'Die Frist ist in einer Stunde.',
     estimate: 'Dauer',

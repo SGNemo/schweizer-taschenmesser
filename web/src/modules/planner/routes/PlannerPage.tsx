@@ -597,7 +597,7 @@ export default function PlannerPage() {
   };
 
   // „Frist So 18:00“ turns into „Frist war So 18:00“ once the hour has passed (package 5b); read once a minute.
-  const dueClock = useNow(60_000);
+  const dueClock = useNow(60_000, !!board?.days.some((d) => d.rows.some((r) => r.hardDueTime)));
   const renderRow = (row: BoardRow, day: BoardDay) => {
     const reason = explainAssignment(
       { reason: row.reason, bumpedBy: row.bumpedBy },

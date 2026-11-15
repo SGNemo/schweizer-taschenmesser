@@ -1,7 +1,10 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { patchFocusSettings } from '@/core/settings/focus';
 import { toEpoch } from '@/core/time/dates';
+import { setNow } from '@/core/time/now';
+import { describeCollection } from '@/core/dataapi/format';
+import manifest from '../manifest';
 import source from '../notifications';
 import { taskRepo } from '../repo';
 
@@ -49,6 +52,8 @@ describe('todos morning digest', () => {
 
 describe('deadline reminder „Erinnern: 1 Std vorher“ (package 5b)', () => {
   const due = { ...base, title: 'Team-Sachen lesen', dueDate: '2026-10-05', dueTime: '18:00' };
+  beforeEach(() => setNow(() => toEpoch('2026-10-05', '08:00')));
+  afterEach(() => setNow());
   const reminders = async (r = range) =>
     (await source(r)).filter((n) => n.key.startsWith('todos:due:'));
 
@@ -101,5 +106,17 @@ describe('deadline reminder „Erinnern: 1 Std vorher“ (package 5b)', () => {
     await patchFocusSettings({ todoDigest: false });
     const out = await source(range);
     expect(out.map((n) => n.title)).toEqual(['Bis 18:00: Team-Sachen lesen']);
+  });
+
+  it('a catch-up after the deadline has passed sends nothing („in einer Stunde“ would be wrong)', async () => {
+    await taskRepo.create({ ...due, dueRemind: true });
+    setNow(() => toEpoch('2026-10-05', '18:30'));
+    expect(await reminders()).toEqual([]);
+  });
+
+  it('the opt-in is not part of the import format: no AI or API switches it on in bulk', () => {
+    const format = describeCollection(manifest, 'task');
+    expect(format.internal).toContain('dueRemind');
+    expect(format.fields.map((f) => f.name)).toContain('dueTime');
   });
 });

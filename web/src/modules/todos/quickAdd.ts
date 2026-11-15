@@ -53,7 +53,7 @@ export function readQuickAdd(text: string, now: Date): QuickAdd {
     ...(fields.date ? { dueDate: fields.date } : {}),
     ...(fields.time
       ? fields.deadline && fields.date
-        ? { time: fields.time, dueTime: fields.time }
+        ? { dueTime: fields.time }
         : { time: fields.time, note: t.quickCapture.todoTimeNote(fields.time) }
       : {}),
     ...(fields.priority ? { priority: fields.priority } : {}),

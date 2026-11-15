@@ -118,7 +118,7 @@ export const todos: Strings['todos'] = {
   dueTime: 'Deadline time (optional)',
   dueAt: (day: string, time: string) => `${day}, ${time}`,
   dueRemind: 'Remind me: 1 h before',
-  dueRemindHint: 'One notification, exactly once.',
+  dueRemindHint: 'One notification per deadline, exactly once.',
   dueRemindTitle: (time: string, title: string) => `By ${time}: ${title}`,
   dueRemindBody: 'The deadline is in an hour.',
   estimate: 'Duration',

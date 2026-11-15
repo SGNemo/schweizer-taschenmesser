@@ -44,22 +44,20 @@ const todos: CaptureTarget = {
   moduleId: 'todos',
   collection: 'task',
   // `listId` comes from the module's `aiCreateDefaults` (the inbox list).
-  build: (f) => ({
-    title: title(f),
-    ...(f.date ? { dueDate: date(f.date) } : {}),
-    ...(f.startDate ? { startDate: date(f.startDate) } : {}),
-    ...(f.estimateMin ? { estimateMin: f.estimateMin } : {}),
-    ...(f.priority ? { priority: f.priority } : {}),
+  build: (f) => {
     // A deadline's hour („bis So 18:00“) is the ToDo's `dueTime`; any other typed time stays a note line.
-    ...(f.time && f.date && (f.deadline || f.hardDue) ? { dueTime: f.time } : {}),
-    ...noteOf(
-      f.time && !(f.date && (f.deadline || f.hardDue))
-        ? t.quickCapture.todoTimeNote(f.time)
-        : undefined,
-      f.note,
-    ),
-    ...(f.link ? { links: [f.link] } : {}),
-  }),
+    const dueHour = f.time && f.date && (f.deadline || f.hardDue) ? f.time : undefined;
+    return {
+      title: title(f),
+      ...(f.date ? { dueDate: date(f.date) } : {}),
+      ...(f.startDate ? { startDate: date(f.startDate) } : {}),
+      ...(f.estimateMin ? { estimateMin: f.estimateMin } : {}),
+      ...(f.priority ? { priority: f.priority } : {}),
+      ...(dueHour ? { dueTime: dueHour } : {}),
+      ...noteOf(f.time && !dueHour ? t.quickCapture.todoTimeNote(f.time) : undefined, f.note),
+      ...(f.link ? { links: [f.link] } : {}),
+    };
+  },
 };
 
 const calendar: CaptureTarget = {
