@@ -29,7 +29,7 @@ describe('home grid size classes', () => {
     const hover = css.indexOf('@media (hover: hover)', css.indexOf('.gear {'));
     expect(rule('.gear', hover)).toContain('position: absolute');
     expect(rule('.gear', hover)).toContain('opacity: 0');
-    expect(css).toContain('.widget:hover .head:has(.gear) .mark');
+    expect(css).toContain('.widget:hover .withGear .mark');
   });
 
   it('an empty widget shows no fish, only its line and next step', () => {

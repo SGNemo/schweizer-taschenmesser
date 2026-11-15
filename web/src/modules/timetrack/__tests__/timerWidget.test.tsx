@@ -32,7 +32,10 @@ describe('Time tracking widget (U30)', () => {
       </MemoryRouter>,
     );
     expect(await screen.findByText('2:00')).toBeVisible();
-    expect(screen.getByText('heute · nichts läuft')).toBeVisible();
+    // The context line keeps its text; its parts are separate boxes (it breaks only between them).
+    expect(
+      screen.getByText((_, el) => el?.tagName === 'P' && el.textContent === 'heute · nichts läuft'),
+    ).toBeVisible();
     expect(screen.queryByText(/Heute: 2 Std/)).toBeNull();
     expect(screen.queryByText('Nichts läuft')).toBeNull();
   });

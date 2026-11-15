@@ -221,8 +221,8 @@
   .widget:focus-within .gear {
     opacity: 1;
   }
-  .widget:hover .head:has(.gear) .mark,
-  .widget:focus-within .head:has(.gear) .mark {
+  .widget:hover .withGear .mark,
+  .widget:focus-within .withGear .mark {
     opacity: 0;
   }
 }

@@ -1,6 +1,5 @@
 import { WidgetErrorBoundary } from '@/layout/WidgetErrorBoundary';
 import {
-  closestCenter,
   DndContext,
   KeyboardSensor,
   MouseSensor,
@@ -56,6 +55,7 @@ import {
 } from '@/ui';
 import { widgetsOf } from './AutoWidget';
 import { AgendaBlock } from './AgendaBlock';
+import { overviewCollision } from './collision';
 import { agendaRange } from './agenda';
 import { AttentionStrip } from './AttentionStrip';
 import {
@@ -390,7 +390,7 @@ export function Home({ cockpit = false }: { cockpit?: boolean }) {
       ) : (
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCenter}
+          collisionDetection={overviewCollision}
           onDragEnd={onDragEnd}
           accessibility={{
             announcements,
@@ -613,7 +613,7 @@ function SortableWidget({
       data-area={manifest?.area}
     >
       <Card>
-        <div className={styles.head}>
+        <div className={[styles.head, !editing && settingsTo ? styles.withGear : ''].join(' ')}>
           {manifest ? (
             <span className={styles.chip} aria-hidden="true">
               <Icon name={manifest.icon} size={16} />
