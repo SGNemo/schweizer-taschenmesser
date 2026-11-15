@@ -84,16 +84,27 @@ class ChunkBoundary extends Component<BoundaryProps, { error: unknown }> {
  */
 export function lazyOnline<P extends object>(
   load: () => Promise<{ default: ComponentType<P> }>,
-): ComponentType<P> {
+): ComponentType<P> & { preload: () => Promise<void> } {
+  // Once the code is there it renders at once: React.lazy suspends on its first render even for a cached module,
+  // and React shows the fallback then for its throttle (~300 ms) – see core/modules/lazy.ts.
+  let resolved: ComponentType<P> | undefined;
+  const loadAndKeep = () =>
+    load().then((m) => {
+      resolved = m.default;
+      return m;
+    });
   const make = () =>
     lazy<ComponentType<P>>(() =>
-      load().catch((e: unknown): never => {
+      loadAndKeep().catch((e: unknown): never => {
         throw new ChunkUnavailable(e);
       }),
     );
   let Lazy = make();
   function OnlineChunk(props: P) {
     const [, setTry] = useState(0);
+    // Decided once per mount: a mounted instance never switches its element type.
+    const [Loaded] = useState(() => resolved);
+    if (Loaded) return <Loaded {...props} />;
     return (
       <ChunkBoundary
         onRetry={() => {
@@ -105,5 +116,11 @@ export function lazyOnline<P extends object>(
       </ChunkBoundary>
     );
   }
+  /** Loads the code without rendering it (an idle preload); a failure is left to the first real render. */
+  OnlineChunk.preload = () =>
+    loadAndKeep().then(
+      () => undefined,
+      () => undefined,
+    );
   return OnlineChunk;
 }

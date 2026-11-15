@@ -78,6 +78,30 @@ export interface CareHistory {
   entries: CareEntry[];
   /** The history file was unreadable and a new one was started. */
   recovered: boolean;
+  /**
+   * The file with the stored changes cannot be read right now: only this session's clean-ups
+   * are listed, and nothing can be changed or taken back until it can.
+   */
+  unreadable: boolean;
+}
+
+export type StartupScope = 'user' | 'machine';
+export type StartupSource = 'run' | 'folder';
+
+/** One program that starts with Windows. */
+export interface StartupItem {
+  /** Names the entry for `setStartup`; nothing else is ever sent back. */
+  id: string;
+  name: string;
+  /** The command line, or the file name in the startup folder. For display only. */
+  command: string;
+  /** Best guess at the program (the executable's name without its ending); may be empty. */
+  program: string;
+  /** `machine`: starts for every account of the PC and is only shown. */
+  scope: StartupScope;
+  source: StartupSource;
+  enabled: boolean;
+  switchable: boolean;
 }
 
 export type TweakGroup = 'appearance' | 'explorer' | 'privacy' | 'power';
@@ -138,6 +162,14 @@ export interface OptimizeService {
   undo(id: number): Promise<void>;
   /** Rejects with `Error('unsupported')` where the tool does not exist. */
   openTool(tool: CareTool): Promise<void>;
+  /** What starts with Windows for this account. Rejects with `Error('unsupported')` elsewhere. */
+  startupList(): Promise<StartupItem[]>;
+  /**
+   * Switches one of the user's own entries on or off (the way Task Manager does; the entry itself
+   * stays). Resolves with the id of the history entry (for `undo`), or `null` when the entry
+   * already was in that state. Rejects with `Error(code)`, e.g. `read-only`, `unknown-entry`.
+   */
+  setStartup(id: string, enabled: boolean): Promise<number | null>;
   /** The catalogue of Windows settings with their state (Windows only). */
   tweaks(): Promise<TweakState[]>;
   /**
@@ -159,6 +191,8 @@ export const noOptimize: OptimizeService = {
   history: unsupported,
   undo: unsupported,
   openTool: unsupported,
+  startupList: unsupported,
+  setStartup: unsupported,
   tweaks: unsupported,
   setTweak: unsupported,
   resetTweaks: unsupported,

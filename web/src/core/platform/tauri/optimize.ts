@@ -4,6 +4,7 @@ import type {
   CleanupProgress,
   CleanupResult,
   OptimizeService,
+  StartupItem,
   TweakReset,
   TweakState,
 } from '../optimize';
@@ -40,6 +41,8 @@ export function createOptimize(): OptimizeService {
     history: () => call<CareHistory>('disk_care_history'),
     undo: (id) => call('disk_care_undo', { id }),
     openTool: (tool) => call('disk_care_open_tool', { tool }),
+    startupList: () => call<StartupItem[]>('disk_startup_list'),
+    setStartup: (id, enabled) => call<number | null>('disk_startup_set', { id, enabled }),
     tweaks: () => call<TweakState[]>('disk_tweaks_list'),
     setTweak: (id, target) => call('disk_tweak_set', { id, target }),
     resetTweaks: () => call<TweakReset>('disk_tweaks_reset_all'),

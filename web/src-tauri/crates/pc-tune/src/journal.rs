@@ -1,8 +1,8 @@
 //! The history of what the page changed on this PC, with the values needed to take it back.
 //!
-//! Clean-ups are noted **in memory only** (the disk module holds no data: `docs/RULES.md`); they
-//! are gone when the app closes. Changes that need a way back (a setting, an autostart entry) are
-//! written to one small JSON file in the app's local data folder: device-local, never synced,
+//! Clean-ups are not in here at all: the shell keeps them in memory for the session (the disk
+//! module holds no data: `docs/RULES.md`; [`cleanup_view`] only shapes such a line). Changes
+//! that need a way back (a setting, an autostart entry) are written to one small JSON file in the app's local data folder: device-local, never synced,
 //! never part of a backup or a bug report. Nothing here holds a file path or a file name; a
 //! clean-up entry is a category with a size, a setting entry is the setting's id with the value
 //! from before.
@@ -145,8 +145,31 @@ impl JournalError {
 pub struct Journal {
     path: PathBuf,
     file: File,
-    /// Clean-ups of this session (never written to disk).
-    session: Vec<Entry>,
+}
+
+/// A clean-up as a history line (kept by the caller for the session, never stored here): a
+/// category with a size, nothing to undo — the recycle bin is the way back.
+pub fn cleanup_view(
+    id: u64,
+    at: i64,
+    category: &str,
+    bytes: u64,
+    files: u64,
+    permanent: bool,
+) -> EntryView {
+    EntryView {
+        id,
+        at,
+        kind: Kind::Cleanup,
+        subject: category.to_string(),
+        label: String::new(),
+        bytes,
+        files,
+        permanent,
+        on: None,
+        can_undo: false,
+        undone: false,
+    }
 }
 
 fn subject_key(kind: Kind, subject: &str) -> String {
@@ -160,20 +183,25 @@ fn subject_key(kind: Kind, subject: &str) -> String {
 
 impl Journal {
     /// Opens the journal at `path`. A missing file is an empty journal. A file that exists but
-    /// cannot be read is an error (it is not touched). One that is read but makes no sense is set
-    /// aside as `<name>.bad` and an empty journal starts: the stored undo values are then gone,
-    /// which the returned flag tells the caller.
+    /// cannot be read, or that a newer version of the app wrote, is an error (it is not touched).
+    /// One that is read but makes no sense is set aside as `<name>.bad` (never over an earlier
+    /// one) and an empty journal starts: the stored undo values are then gone, which the
+    /// returned flag tells the caller.
     pub fn open(path: &Path) -> Result<(Journal, bool), JournalError> {
         let mut recovered = false;
         let file = match std::fs::read(path) {
             Ok(bytes) => match serde_json::from_slice::<File>(&bytes) {
                 Ok(f) if f.version == VERSION => f,
+                Ok(f) if f.version > VERSION => return Err(JournalError::Unreadable),
                 _ => {
                     recovered = true;
                     let mut bad = path.as_os_str().to_owned();
                     bad.push(".bad");
-                    std::fs::rename(path, PathBuf::from(bad))
-                        .map_err(|_| JournalError::Unreadable)?;
+                    let bad = PathBuf::from(bad);
+                    if bad.exists() {
+                        return Err(JournalError::Unreadable);
+                    }
+                    std::fs::rename(path, bad).map_err(|_| JournalError::Unreadable)?;
                     File::default()
                 }
             },
@@ -183,7 +211,6 @@ impl Journal {
         let mut j = Journal {
             path: path.to_path_buf(),
             file,
-            session: Vec::new(),
         };
         j.file.version = VERSION;
         Ok((j, recovered))
@@ -199,41 +226,21 @@ impl Journal {
         let mut tmp = self.path.as_os_str().to_owned();
         tmp.push(".tmp");
         let tmp = PathBuf::from(tmp);
-        std::fs::write(&tmp, bytes).map_err(|_| JournalError::NotSaved)?;
+        // Flushed to the disk before the rename, so a power loss cannot leave an empty file
+        // under the journal's name.
+        let written = std::fs::File::create(&tmp).and_then(|mut f| {
+            use std::io::Write;
+            f.write_all(&bytes)?;
+            f.sync_all()
+        });
+        if written.is_err() {
+            let _ = std::fs::remove_file(&tmp);
+            return Err(JournalError::NotSaved);
+        }
         std::fs::rename(&tmp, &self.path).map_err(|_| {
             let _ = std::fs::remove_file(&tmp);
             JournalError::NotSaved
         })
-    }
-
-    /// Notes a finished clean-up for this session (nothing to undo here: the recycle bin is the
-    /// way back). Not written to disk.
-    pub fn record_cleanup(
-        &mut self,
-        at: i64,
-        category: &str,
-        bytes: u64,
-        files: u64,
-        permanent: bool,
-    ) -> u64 {
-        self.file.next_id += 1;
-        let id = self.file.next_id;
-        self.session.push(Entry {
-            id,
-            at,
-            kind: Kind::Cleanup,
-            subject: category.to_string(),
-            label: String::new(),
-            bytes,
-            files,
-            permanent,
-            on: None,
-            undo: Vec::new(),
-            undone: false,
-        });
-        let extra = self.session.len().saturating_sub(MAX_ENTRIES);
-        self.session.drain(..extra);
-        id
     }
 
     /// Keeps the stored history at [`MAX_ENTRIES`]: taken-back entries go first, then the oldest.
@@ -324,11 +331,25 @@ impl Journal {
         if e.undo.is_empty() {
             return Err(JournalError::NothingToUndo);
         }
-        let newer = self
-            .file
-            .entries
-            .iter()
-            .any(|x| x.id > id && !x.undone && x.kind == e.kind && x.subject == e.subject);
+        // A newer open change of the same subject, or of another subject that wrote one of the
+        // same values: taking this one back first would put a stale value over the newer one.
+        let touches = |x: &Entry| {
+            x.undo.iter().any(|theirs| {
+                e.undo.iter().any(|mine| match (mine, theirs) {
+                    (
+                        Undo::Reg { key, name, .. },
+                        Undo::Reg {
+                            key: k, name: n, ..
+                        },
+                    ) => key.eq_ignore_ascii_case(k) && name.eq_ignore_ascii_case(n),
+                    (Undo::Other { what, .. }, Undo::Other { what: w, .. }) => what == w,
+                    _ => false,
+                })
+            })
+        };
+        let newer = self.file.entries.iter().any(|x| {
+            x.id > id && !x.undone && ((x.kind == e.kind && x.subject == e.subject) || touches(x))
+        });
         if newer {
             return Err(JournalError::NewerChange);
         }
@@ -379,9 +400,10 @@ impl Journal {
 
     /// Newest first, without the stored values.
     pub fn views(&self) -> Vec<EntryView> {
-        let mut all: Vec<&Entry> = self.file.entries.iter().chain(&self.session).collect();
-        all.sort_by(|a, b| b.id.cmp(&a.id));
-        all.into_iter()
+        self.file
+            .entries
+            .iter()
+            .rev()
             .map(|e| EntryView {
                 id: e.id,
                 at: e.at,
@@ -662,28 +684,41 @@ mod tests {
     }
 
     #[test]
-    fn a_clean_up_is_noted_for_the_session_only_and_never_written() {
-        let path = temp_path("cleanup");
-        let (mut j, _) = Journal::open(&path).unwrap();
-        let id = j.record_cleanup(5, "browserCache", 4096, 12, false);
-        assert_eq!(j.undo_steps(id), Err(JournalError::UnknownEntry));
-        let v = &j.views()[0];
+    fn a_clean_up_line_has_nothing_to_undo() {
+        let v = cleanup_view(9, 5, "browserCache", 4096, 12, false);
         assert_eq!(
-            (v.bytes, v.files, v.permanent, v.can_undo),
-            (4096, 12, false, false)
+            (v.kind, v.bytes, v.files, v.permanent, v.can_undo, v.undone),
+            (Kind::Cleanup, 4096, 12, false, false, false)
         );
-        assert!(!path.exists(), "a clean-up alone writes no file");
-        // A later change is written, the clean-up still is not; both show, newest first.
+    }
+
+    #[test]
+    fn a_change_of_another_subject_to_the_same_value_must_be_undone_first() {
+        let path = temp_path("shared");
         let reg = MemRegistry::new();
-        let change = switch(&mut j, &reg, "a", 1).unwrap();
-        assert_eq!(
-            j.views().iter().map(|v| v.id).collect::<Vec<_>>(),
-            vec![change, id]
-        );
-        let text = std::fs::read_to_string(&path).unwrap();
-        assert!(!text.contains("browserCache"));
-        let (j, _) = Journal::open(&path).unwrap();
-        assert_eq!(j.views().len(), 1, "the clean-up is gone after a restart");
+        let (mut j, _) = Journal::open(&path).unwrap();
+        let step = |reg: &MemRegistry| {
+            vec![Undo::Reg {
+                key: KEY.into(),
+                name: "Shared".into(),
+                previous: reg.get(KEY, "shared").unwrap(),
+            }]
+        };
+        let first = j
+            .change(1, Kind::Tweak, "one", "", Some(true), step(&reg), || {
+                reg.set(KEY, "Shared", &Value::Dword(1))
+            })
+            .unwrap();
+        let second = j
+            .change(2, Kind::Startup, "two", "", Some(true), step(&reg), || {
+                reg.set(KEY, "shared", &Value::Dword(2))
+            })
+            .unwrap();
+        assert_eq!(j.undo_steps(first), Err(JournalError::NewerChange));
+        apply_undo(&reg, &j.undo_steps(second).unwrap(), |_, _| Ok(())).unwrap();
+        j.mark_undone(second).unwrap();
+        apply_undo(&reg, &j.undo_steps(first).unwrap(), |_, _| Ok(())).unwrap();
+        assert_eq!(reg.get(KEY, "Shared"), Ok(None));
         cleanup(&path);
     }
 
@@ -722,6 +757,24 @@ mod tests {
         let (j, recovered) = Journal::open(&path).unwrap();
         assert!(!recovered);
         assert_eq!(j.views().len(), 1);
+        cleanup(&path);
+    }
+
+    #[test]
+    fn a_file_of_a_newer_version_and_a_second_broken_file_are_left_alone() {
+        let path = temp_path("newer");
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        let newer = br#"{"version":99,"nextId":1,"entries":[]}"#;
+        std::fs::write(&path, newer).unwrap();
+        assert_eq!(Journal::open(&path).err(), Some(JournalError::Unreadable));
+        assert_eq!(std::fs::read(&path).unwrap(), newer);
+        // An earlier `.bad` is never overwritten by a second recovery.
+        let mut bad = path.as_os_str().to_owned();
+        bad.push(".bad");
+        std::fs::write(PathBuf::from(&bad), b"first").unwrap();
+        std::fs::write(&path, b"{ broken").unwrap();
+        assert_eq!(Journal::open(&path).err(), Some(JournalError::Unreadable));
+        assert_eq!(std::fs::read(PathBuf::from(bad)).unwrap(), b"first");
         cleanup(&path);
     }
 

@@ -213,6 +213,21 @@ export default defineConfig({
               name: 'vendor',
               test: /node_modules[\\/](react|react-dom|scheduler|react-router|dexie|dexie-react-hooks|zod|zustand)[\\/]/,
             },
+            // The settings page (layout, registry, shared pieces) as one file: it left the start bundle and
+            // loads right after the start (`preloadSettings` in router.tsx). Without this group its many
+            // small shared modules become one file each. The section components stay chunks of their own.
+            {
+              name: 'settings',
+              test: /[\\/]src[\\/]pages[\\/]settings[\\/](?!modulePath\.ts$|[^\\/]*Section\.tsx$)/,
+              includeDependenciesRecursively: false,
+            },
+            // Small sections (a switch or two) in one file as well; the large ones keep their own chunk.
+            {
+              name: 'settings-small',
+              test: /[\\/]src[\\/]pages[\\/]settings[\\/][^\\/]*Section\.tsx$/,
+              maxModuleSize: 6144,
+              includeDependenciesRecursively: false,
+            },
           ],
         },
       },

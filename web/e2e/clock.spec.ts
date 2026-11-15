@@ -16,7 +16,7 @@ test.beforeEach(async ({ page }) => {
 
 async function addPlace(page: Page, query: string, hit: string) {
   await page.goto('/clock?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Ort hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Ort eintragen' });
   await dialog.getByLabel('Stadt oder Zeitzone').fill(query);
   await dialog.getByTestId('clock-hit').filter({ hasText: hit }).first().click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -53,7 +53,7 @@ test('a place gets its own name; removing it can be undone', async ({ page }) =>
   await page.getByRole('menuitem', { name: 'Umbenennen' }).click();
   const dialog = page.getByRole('dialog', { name: 'Ort umbenennen' });
   await dialog.getByLabel('Name').fill('Tante Ines');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(row).toContainText('Tante Ines');
 
   await row.getByRole('button', { name: 'Aktionen für Tante Ines' }).click();
@@ -61,6 +61,66 @@ test('a place gets its own name; removing it can be undone', async ({ page }) =>
   await expect(page.getByTestId('clock-empty')).toBeVisible();
   await page.getByRole('button', { name: 'Rückgängig' }).click();
   await expect(page.getByTestId('clock-place')).toContainText('Tante Ines');
+});
+
+test('"Erinnern um …" turns a time in Tokyo into a calendar reminder at the local time', async ({
+  page,
+}) => {
+  await enable(page, 'clock');
+  await addPlace(page, 'Tokio', 'Tokio');
+  const row = page.getByTestId('clock-place');
+  await row.getByRole('button', { name: 'Aktionen für Tokio' }).click();
+  await page.getByRole('menuitem', { name: 'Erinnern um …' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Erinnern nach der Zeit in Tokio' });
+  // Starts at the next full hour there: 07:00 tomorrow in Tokyo.
+  await expect(dialog.getByLabel('Uhrzeit in Tokio')).toHaveValue('07:00');
+  await dialog.getByLabel('Woran erinnern?').fill('Mama anrufen');
+  await dialog.getByLabel('Datum in Tokio').fill('2026-01-16');
+  await dialog.getByLabel('Uhrzeit in Tokio').fill('19:00');
+  // 19:00 in Tokyo in January is 11:00 in Berlin (+8 h), the same day.
+  await expect(dialog.getByTestId('clock-remind-here')).toContainText('Bei dir:');
+  await expect(dialog.getByTestId('clock-remind-here')).toContainText('11:00');
+  await dialog.getByRole('button', { name: 'Erinnerung anlegen' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByText(/Erinnerung für .* 11:00 angelegt\./)).toBeVisible();
+
+  await page.goto('/calendar?tab=reminders');
+  const entry = page.getByRole('button', { name: /Mama anrufen \(19:00 in Tokio\)/ });
+  await expect(entry).toBeVisible();
+  await entry.click();
+  const editor = page.getByRole('dialog');
+  await expect(editor.getByLabel('Beginn')).toHaveValue('11:00');
+});
+
+test('a reminder from the clock can be undone; a past time cannot be saved', async ({ page }) => {
+  await enable(page, 'clock');
+  await addPlace(page, 'New York', 'New York');
+  await page.getByRole('button', { name: 'Aktionen für New York' }).click();
+  await page.getByRole('menuitem', { name: 'Erinnern um …' }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel('Woran erinnern?').fill('Anrufen');
+  // 16:30 in New York now: 10:00 today there has passed.
+  await dialog.getByLabel('Datum in New York').fill('2026-01-15');
+  await dialog.getByLabel('Uhrzeit in New York').fill('10:00');
+  await expect(dialog.getByTestId('clock-remind-here')).toHaveText(
+    'Dieser Zeitpunkt ist schon vorbei.',
+  );
+  await expect(dialog.getByRole('button', { name: 'Erinnerung anlegen' })).toBeDisabled();
+  await dialog.getByLabel('Uhrzeit in New York').fill('18:00');
+  await dialog.getByRole('button', { name: 'Erinnerung anlegen' }).click();
+  await page.getByRole('button', { name: 'Rückgängig' }).click();
+  await expect(page.getByText('Rückgängig gemacht.')).toBeVisible();
+  await page.goto('/calendar?tab=reminders');
+  await expect(page.getByText(/Anrufen \(/)).toHaveCount(0);
+});
+
+test("the page's ⋯ opens the Timer tool, no second timer", async ({ page }) => {
+  await enable(page, 'clock');
+  await page.goto('/clock');
+  await page.getByRole('button', { name: 'Mehr zur Uhr' }).click();
+  await page.getByRole('menuitem', { name: 'Timer' }).click();
+  await expect(page.getByRole('dialog', { name: 'Timer' })).toBeVisible();
+  await expect(page).toHaveURL(/\/clock$/);
 });
 
 test('the clock next to the logo opens the module while it is on', async ({ page }) => {
@@ -93,7 +153,10 @@ test.describe('phone (412 px)', () => {
       .getByRole('dialog')
       .getByLabel('Name')
       .fill('Ferienwohnung der Familie am Kap der Guten Hoffnung');
-    await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     await expect(page.getByTestId('clock-place')).toHaveCount(2);
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -103,6 +166,16 @@ test.describe('phone (412 px)', () => {
       const box = (await r.boundingBox())!;
       expect(box.x + box.width).toBeLessThanOrEqual(412);
     }
+    // The reminder dialog fits too: day and time stack, the preview line wraps.
+    await page.getByRole('button', { name: /Aktionen für Kolkata/ }).click();
+    await page.getByRole('menuitem', { name: 'Erinnern um …' }).click();
+    await expect(page.getByTestId('clock-remind-here')).toContainText('Bei dir:');
+    const dialogOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(dialogOverflow).toBeLessThanOrEqual(0);
+    await page.keyboard.press('Escape');
+
     await page.goto('/');
     const tile = page.getByTestId('widget-clock:places');
     await expect(tile).toContainText('+4:30 h');

@@ -1,13 +1,19 @@
 import { create } from 'zustand';
 import { getManifest } from '@/core/modules/registry';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect, type ComponentProps } from 'react';
+import { lazyOnline } from '@/core/net/OnlineChunk';
 import { useAppImport } from './appImportStore';
-import { OnboardingWizard } from './OnboardingWizard';
+import type { OnboardingWizard as Wizard } from './OnboardingWizard';
 import type { ImportPreset } from './types';
 
 /** One wizard run: a module and, when files were chosen before, what to read in it. */
 // The dialog (source detection, unpacking) is only fetched when someone opens it.
 const AppImportHost = lazy(() => import('./appImport').then((m) => ({ default: m.AppImportHost })));
+// The wizard (~17 KB gzip) is not part of the start: it is fetched in an idle slot after the start (so the first
+// open renders at once, without React's fallback throttle) or, at the latest, when a run opens.
+const OnboardingWizard = lazyOnline<ComponentProps<typeof Wizard>>(() =>
+  import('./OnboardingWizard').then((m) => ({ default: m.OnboardingWizard })),
+);
 
 export interface HostItem {
   moduleId: string;
@@ -65,18 +71,29 @@ export function OnboardingHost() {
   const { moduleId, preset, queue, total, close } = useOnboardingHost();
   const manifest = moduleId ? getManifest(moduleId) : undefined;
   const appImportOpen = useAppImport((s) => s.open);
+  useEffect(() => {
+    const idle = window.requestIdleCallback?.bind(window);
+    if (!idle) {
+      const id = window.setTimeout(() => void OnboardingWizard.preload(), 2000);
+      return () => window.clearTimeout(id);
+    }
+    const id = idle(() => void OnboardingWizard.preload(), { timeout: 5000 });
+    return () => window.cancelIdleCallback(id);
+  }, []);
   return (
     <>
       {manifest ? (
-        <OnboardingWizard
-          // A new part is a new wizard: its own state, its own batch id.
-          key={`${moduleId}-${queue.length}`}
-          manifest={manifest}
-          open
-          onClose={close}
-          preset={preset ?? undefined}
-          part={total > 1 ? { index: total - queue.length, total } : undefined}
-        />
+        <Suspense fallback={null}>
+          <OnboardingWizard
+            // A new part is a new wizard: its own state, its own batch id.
+            key={`${moduleId}-${queue.length}`}
+            manifest={manifest}
+            open
+            onClose={close}
+            preset={preset ?? undefined}
+            part={total > 1 ? { index: total - queue.length, total } : undefined}
+          />
+        </Suspense>
       ) : null}
       {appImportOpen ? (
         <Suspense fallback={null}>

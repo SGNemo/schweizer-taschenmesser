@@ -93,6 +93,8 @@ const COMMANDS: &[&str] = &[
     "disk_care_history",
     "disk_care_open_tool",
     "disk_care_undo",
+    "disk_startup_list",
+    "disk_startup_set",
     "disk_tweaks_list",
     "disk_tweak_set",
     "disk_tweaks_reset_all",

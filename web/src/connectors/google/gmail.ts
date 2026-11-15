@@ -186,6 +186,7 @@ function summarize(raw: unknown, snippetFallback = ''): MailThreadSummary {
   const first = messages[0] ?? {};
   const lastPayload = obj(last.payload);
   const labelIds = [...new Set(messages.flatMap((m) => strs(m.labelIds)))];
+  const lastLabelIds = strs(last.labelIds);
   return {
     id: str(t.id),
     messageCount: messages.length,
@@ -197,6 +198,8 @@ function summarize(raw: unknown, snippetFallback = ''): MailThreadSummary {
     labelIds,
     hasAttachment: false,
     ...(str(last.id) ? { lastMessageId: str(last.id) } : {}),
+    // Only the newest message's labels: „last message is mine“ (`SENT`) must not come from an older reply.
+    lastLabelIds,
     personal: isPersonalMail({
       listUnsubscribe: header(lastPayload, 'List-Unsubscribe'),
       precedence: header(lastPayload, 'Precedence'),

@@ -60,3 +60,52 @@ export function devInstallBlock(repo: string, tag: string, files: readonly FileH
     '',
   ].join('\n');
 }
+
+/** GitHub rejects a release body above 125,000 characters (HTTP 422); stay well below it. */
+export const MAX_RELEASE_BODY = 100_000;
+
+const HEADING = /^## (?!#)/m;
+
+/** Splits markdown into the text before the first `## ` heading and one chunk per `## ` section. */
+function sections(md: string): { pre: string; parts: string[] } {
+  const at = md.search(HEADING);
+  if (at === -1) return { pre: md, parts: [] };
+  const parts = md
+    .slice(at)
+    .split(/\n(?=## (?!#))/)
+    .map((p) => p.trimEnd());
+  return { pre: md.slice(0, at), parts };
+}
+
+/**
+ * The full release body (`head` + `notes`), capped at `max` characters. `notes` is the output of
+ * `changelog-release.mjs --unreleased`: a German and an English list of `## Build N` sections (newest
+ * first) separated by a `---` line. When too long, the oldest builds are dropped from both languages
+ * alike, always whole sections, and one line pointing to the full history is appended.
+ */
+export function capReleaseBody(
+  head: string,
+  notes: string,
+  repo: string,
+  max: number = MAX_RELEASE_BODY,
+): string {
+  if (head.length + notes.length <= max) return head + notes;
+  const sep = notes.search(/\n---\n/);
+  const halves = (
+    sep === -1 ? [notes] : [notes.slice(0, sep), notes.slice(sep + 5).replace(/^\n+/, '')]
+  ).map(sections);
+  const footer =
+    `\n_Older builds omitted (GitHub size limit) · Ältere Builds gekürzt. Full history / vollständige Liste: ` +
+    `https://github.com/${repo}/tree/develop/.changes · https://github.com/${repo}/blob/develop/CHANGELOG.md_\n`;
+  const build = (k: number) =>
+    head +
+    halves.map(({ pre, parts }) => pre + parts.slice(0, k).join('\n\n') + '\n').join('\n---\n\n') +
+    footer;
+  const most = Math.max(...halves.map((h) => h.parts.length));
+  let k = most;
+  while (k > 0 && build(k).length > max) k--;
+  const body = build(k);
+  if (body.length > max)
+    throw new Error(`Release body too long even without build notes (${body.length} > ${max})`);
+  return body;
+}

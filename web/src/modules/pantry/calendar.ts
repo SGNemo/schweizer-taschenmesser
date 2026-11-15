@@ -12,7 +12,7 @@ const source: CalendarSource = async (range) => {
     id: i.id,
     source: 'pantry',
     kind: 'expiry',
-    title: t.pantry.expiresNotice(i.name),
+    title: t.pantry.calendarTitle(i.name),
     date: i.expires!,
     allDay: true,
     to: '/pantry',

@@ -10,14 +10,14 @@ test('a monthly booking books the missed months at the next start; undo takes th
   page,
 }) => {
   await ready(page, '/finance?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Buchung eintragen' });
   await dialog.getByRole('button', { name: 'Ausgabe', exact: true }).click();
   await dialog.getByLabel('Betrag').fill('850,00');
   await moreFields(page);
   await dialog.getByLabel('Datum').fill('2026-07-15');
   await dialog.getByLabel('Empfänger / Titel').fill('Miete');
   await dialog.getByLabel('Wiederholen').selectOption('monthly');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
   // The next app start books August and September.

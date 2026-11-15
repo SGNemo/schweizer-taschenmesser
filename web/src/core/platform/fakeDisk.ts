@@ -28,6 +28,7 @@ import type {
   CleanupCategory,
   CleanupPlace,
   OptimizeService,
+  StartupItem,
   TweakState,
 } from './optimize';
 
@@ -596,6 +597,71 @@ export function createFakeDisk(): DiskService {
   /** Scan ids of the fake clean-up places with their category (for the history). */
   const cleanupScans = new Map<number, CleanupCategory>();
   const careEntries: CareEntry[] = [];
+  /** Invented autostart entries: four of the account (one off, one from the startup folder), one of the PC. */
+  const startupItems: StartupItem[] = [
+    {
+      id: 'run:Musikbox',
+      name: 'Musikbox',
+      command:
+        '"C:\\Nutzer\\Beispiel\\AppData\\Roaming\\Musikbox\\Musikbox.exe" --autostart --minimized',
+      program: 'Musikbox',
+      scope: 'user',
+      source: 'run',
+      enabled: true,
+      switchable: true,
+    },
+    {
+      id: 'run:Wolkenablage',
+      name: 'Wolkenablage',
+      command: 'C:\\Programme\\Wolkenablage\\wolke.exe /background',
+      program: 'wolke',
+      scope: 'user',
+      source: 'run',
+      enabled: true,
+      switchable: true,
+    },
+    {
+      id: 'run:Plauderbox',
+      name: 'Plauderbox',
+      command:
+        '"C:\\Nutzer\\Beispiel\\AppData\\Local\\Plauderbox\\Update.exe" --processStart Plauderbox.exe',
+      program: 'Update',
+      scope: 'user',
+      source: 'run',
+      enabled: false,
+      switchable: true,
+    },
+    {
+      id: 'folder:Notizzettel.lnk',
+      name: 'Notizzettel',
+      command: 'Notizzettel.lnk',
+      program: 'Notizzettel',
+      scope: 'user',
+      source: 'folder',
+      enabled: true,
+      switchable: true,
+    },
+    {
+      id: 'machine:Druckerhelfer',
+      name: 'Druckerhelfer',
+      command: '"C:\\Programme\\Druckerhelfer\\helfer.exe" -tray',
+      program: 'helfer',
+      scope: 'machine',
+      source: 'run',
+      enabled: true,
+      switchable: false,
+    },
+  ];
+  /** Like the journal: only the newest open change of an autostart entry can be taken back. */
+  const refreshStartupUndo = () => {
+    for (const e of careEntries) {
+      if (e.kind !== 'startup') continue;
+      const newer = careEntries.some(
+        (x) => x.id > e.id && !x.undone && x.kind === 'startup' && x.subject === e.subject,
+      );
+      e.canUndo = !e.undone && !newer;
+    }
+  };
   let cleanupCancelled = false;
   const get = (id: number) => {
     const s = scans.get(id);
@@ -667,7 +733,7 @@ export function createFakeDisk(): DiskService {
       cleanupCancelled = true;
     },
     async history() {
-      return { entries: [...careEntries].reverse(), recovered: false };
+      return { entries: [...careEntries].reverse(), recovered: false, unreadable: false };
     },
     async undo(id) {
       const entry = careEntries.find((e) => e.id === id);
@@ -690,9 +756,41 @@ export function createFakeDisk(): DiskService {
       }
       entry.undone = true;
       entry.canUndo = false;
+      if (entry.kind === 'startup') {
+        // The state from before the switch comes back.
+        const item = startupItems.find((i) => i.id === entry.subject);
+        if (item) item.enabled = !entry.on;
+        refreshStartupUndo();
+      }
     },
     async openTool(tool) {
       ((globalThis as { __tmCareTools?: string[] }).__tmCareTools ??= []).push(tool);
+    },
+    async startupList() {
+      return startupItems.map((i) => ({ ...i }));
+    },
+    async setStartup(id, enabled) {
+      const item = startupItems.find((i) => i.id === id);
+      if (!item) throw new Error('unknown-entry');
+      if (!item.switchable) throw new Error('read-only');
+      if (item.enabled === enabled) return null;
+      item.enabled = enabled;
+      const entry: CareEntry = {
+        id: careEntries.length + 1,
+        at: FAKE_NOW,
+        kind: 'startup',
+        subject: item.id,
+        label: item.name,
+        bytes: 0,
+        files: 0,
+        permanent: false,
+        on: enabled,
+        canUndo: true,
+        undone: false,
+      };
+      careEntries.push(entry);
+      refreshStartupUndo();
+      return entry.id;
     },
     async tweaks() {
       return tweaks.map((x) => ({ ...x, options: [...x.options] }));

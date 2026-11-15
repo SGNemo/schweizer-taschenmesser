@@ -11,13 +11,15 @@
 
 pub mod journal;
 pub mod reg;
+pub mod startup;
 pub mod tools;
 pub mod tweaks;
 
 pub use journal::{
-    apply_undo, ChangeError, Entry, EntryView, Journal, JournalError, Kind, Undo, MAX_ENTRIES,
+    apply_undo, cleanup_view, ChangeError, Entry, EntryView, Journal, JournalError, Kind, Undo,
+    MAX_ENTRIES,
 };
-pub use reg::{set_all, valid_key, MemRegistry, RegError, Registry, Value};
+pub use reg::{valid_key, MemRegistry, RegError, Registry, Value};
 pub use tools::{Home, Tool};
 pub use tweaks::{system_effects, Effects, MemEffects, Target, TweakError, TweakState};
 

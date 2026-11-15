@@ -73,7 +73,7 @@ function SortableRow({
       >
         <Icon name="grip" size={18} />
       </button>
-      <Switch label={s.hide(row.title)} checked={!hidden} onChange={onToggle} />
+      <Switch tone="neutral" label={s.hide(row.title)} checked={!hidden} onChange={onToggle} />
     </li>
   );
 }

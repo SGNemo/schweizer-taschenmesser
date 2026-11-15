@@ -6,21 +6,28 @@ Examples to copy from. Rules: [FOCUS-GUIDELINES.md](FOCUS-GUIDELINES.md) (text r
 |---|---|---|
 | Next step card | "Jetzt dran: Formular ausfüllen" · "Anfangen · 10 Min" · "Später" · "Etwas anderes" | "Du solltest jetzt …" |
 | Several things waiting | "Wartet noch · 5 Dinge" · "Nichts davon muss jetzt sein." | "5 Aufgaben überfällig!" |
+| Folded line of "Jetzt wichtig" (overview) | "Kann warten · 4 · 2 Budgets fast aufgebraucht, 1 Vorrat abgelaufen … · nichts davon muss heute sein." · en: "Can wait · 4 · 2 budgets almost used up, 1 pantry item expired … · none of this is due today." | "Bald dran" (does not fit expired things) · "4 weitere Warnungen" |
+| Deadline that ends today | "1 Kündigungsfrist endet heute" · en: "1 notice period ends today" | "Letzte Chance!" |
 | Old ToDo | "offen seit letzter Woche" · "geplant für Mo., 21. Sep." | "Überfällig seit 12 Tagen" |
 | Date passed (due lists, widgets) | "war am Di. fällig" · "war am 17. Sep. fällig" · Vorräte "MHD war Mo." | "seit 3 Tagen" · "seit gestern" |
+| Deadline with an hour (planner row, ToDo) | "Frist So 18:00" · afterwards "Frist war So 18:00" (plain text, never red) · opt-in reminder "Bis 18:00: Team-Sachen lesen" · "Die Frist ist um 18:00." | "Frist verpasst!" · "Nur noch 1 Stunde!" |
 | Money deadline passed | "Rechnung offen · 12,00 € · Frist war am 21. Sep." | "Du hast die Frist verpasst" |
 | Replan | "Neu planen" · "Auf die nächsten Tage verteilt." (+ Rückgängig) | "Aufräumen" |
+| Rest of the day (evening) | "Rest verteilen" · "Was heute offen ist, geht auf die nächsten Tage." · "Rest verteilen?" | "3 Sachen liegen geblieben" · "Du hast heute nicht alles geschafft" |
+| End of day near (planner head, 30 min before) | "Bald ist Tagesende." · with something open: "Bald ist Tagesende. Rest verteilen" · en: "The day is ending soon." | "Zu spät!" · "Du hättest schon schlafen sollen" · "Noch 3 Dinge offen" |
 | Done | "Erledigt." · "Gut gemacht." (sparsam) | "Super!!! Weiter so!" |
+| Planned mail, last message is mine (mail row) | "Beantwortet? · Erledigt" → "Erledigt · Rückgängig" · en: "Answered? · Done" | "Beantwortet ✓" (a claim) · "Noch nicht erledigt!" · closing it by itself |
 | Done today | "Erledigt heute: 3" · "Gut dabei" | "Nur 3 geschafft" |
 | Empty, all done | "Alles erledigt. Zeit für etwas Schönes." | "Keine Aufgaben vorhanden" |
 | Empty, nothing yet | "Noch nichts geplant. Eine Sache reicht." | "Es gibt keine Einträge." |
 | Day plan full | "Drei Dinge reichen für heute." | "Limit erreicht" |
-| Day plan head (planner) | "Heute: Stadtwerke bezahlen. Das reicht für heute." · nothing planned: "Heute ist frei. Mi: 1 h 24 frei." · folded waiting group: "Wartet auf freie Zeit · 16 · Nichts davon muss heute sein." | "Noch 16 offen" |
+| Day plan head (planner) | "Heute: Stadtwerke bezahlen. Das reicht für heute." · time today, nothing on it: "Für heute noch nichts geplant." (nothing on the whole board: only the empty state) · folded waiting group: "Wartet auf freie Zeit · 16 · Nichts davon muss heute sein." | "Noch 16 offen" · "Heute ist frei." beside "1 h 36 frei heute" |
 | After a batch | "5 Dinge gespeichert. Sortiert wird später. · Ansehen · Rückgängig" | "5 neue Aufgaben – jetzt sortieren!" |
 | Focus start | "Fokus: Formular ausfüllen · 25 Min" | "Konzentrier dich!" |
 | Focus end | "Zeit ist um. Noch fünf Minuten oder fertig?" | "Zeit abgelaufen!" |
 | Focus leave | "Fokus beendet. Dein Stand ist gespeichert." | "Abgebrochen" |
 | Reminder | "Gleich: Paket abholen" · "Erledigt" · "Später ▾" | "Du hast noch nicht reagiert" |
+| Reminder from the quick capture (row meta) | "einmal · Nächste: Mo., 2. Nov. 2026 · 07:30" · en: "once · Next: …" | "Erinnerung ohne Wiederholung!" · "Achtung: nur 1×" |
 | Snooze options | "In 10 Min" · "In 1 Std" · "Heute Abend" · "Morgen früh" | "Ignorieren" |
 | Rest day (streak) | "Pausentag. Die Serie bleibt." | "Serie verloren" |
 | Setting hints | "Zeigt oben eine einzige nächste Aufgabe. Du kannst es jederzeit ausschalten." | "Empfohlen: aktivieren" |

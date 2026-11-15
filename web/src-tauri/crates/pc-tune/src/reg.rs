@@ -78,12 +78,18 @@ impl RegError {
 }
 
 /// A key that may be written: `Software\…` with at least one more segment, backslash-separated,
-/// no empty, `.`/`..` or over-long segments, no control characters. Never a policy key (any
+/// ASCII only, no empty, `.`/`..` or over-long segments, no control characters. Never a policy key (any
 /// segment `Policies`: Windows would show "managed by your organisation") and never
 /// `Software\Classes` (file and COM registration). (Hive names are not part of a
 /// key here: the hive is chosen by the function, and only the user hive has write functions.)
 pub fn valid_key(key: &str) -> bool {
-    if key.len() > 512 || key.contains('/') || key.chars().any(|c| c.is_control()) {
+    // ASCII only: the registry folds case with its own table, so a look-alike letter could
+    // otherwise stand in for a refused name. Every key the catalogues use is ASCII.
+    if key.len() > 512
+        || key.contains('/')
+        || !key.is_ascii()
+        || key.chars().any(|c| c.is_control())
+    {
         return false;
     }
     let segs: Vec<&str> = key.split('\\').collect();
@@ -96,7 +102,8 @@ pub fn valid_key(key: &str) -> bool {
             .all(|s| !s.is_empty() && *s != "." && *s != ".." && s.len() <= 255)
 }
 
-fn valid_name(name: &str) -> bool {
+/// A value name the seam writes: not over-long, no control characters.
+pub(crate) fn valid_name(name: &str) -> bool {
     name.len() <= 255 && !name.chars().any(|c| c.is_control())
 }
 
@@ -126,32 +133,6 @@ pub trait Registry: Send + Sync {
     }
 }
 
-/// Writes several values of the current user as one step: when a write fails, the ones already
-/// made are put back, so a change is either complete or did not happen. Returns the values from
-/// before (in order), which are what an undo needs. Refuses before writing anything when an old
-/// value cannot be read exactly.
-pub fn set_all(
-    reg: &dyn Registry,
-    writes: &[(&str, &str, Value)],
-) -> Result<Vec<Option<Value>>, RegError> {
-    let mut before = Vec::with_capacity(writes.len());
-    for (key, name, _) in writes {
-        if !valid_key(key) {
-            return Err(RegError::KeyNotAllowed);
-        }
-        before.push(reg.get(key, name)?);
-    }
-    for (i, (key, name, value)) in writes.iter().enumerate() {
-        if let Err(e) = reg.set(key, name, value) {
-            for (j, (k, n, _)) in writes.iter().enumerate().take(i).rev() {
-                let _ = reg.restore(k, n, before[j].as_ref());
-            }
-            return Err(e);
-        }
-    }
-    Ok(before)
-}
-
 type Store = BTreeMap<(String, String), (String, Value)>;
 
 /// In-memory registry for tests: same rules as the real one.
@@ -161,9 +142,6 @@ pub struct MemRegistry {
     machine: Mutex<Store>,
     /// Makes every write fail (to test that a failed change leaves no journal entry).
     pub fail_writes: std::sync::atomic::AtomicBool,
-    /// Makes the n-th write from now fail, once (0 = off): a change of several values that
-    /// breaks in the middle.
-    pub fail_after: std::sync::atomic::AtomicUsize,
     /// Makes every single-value read fail (a value that exists but cannot be read).
     pub fail_reads: std::sync::atomic::AtomicBool,
 }
@@ -238,16 +216,6 @@ impl Registry for MemRegistry {
         }
         if self.fail_writes.load(std::sync::atomic::Ordering::Relaxed) {
             return Err(RegError::Failed);
-        }
-        use std::sync::atomic::Ordering::Relaxed;
-        match self.fail_after.load(Relaxed) {
-            0 => {}
-            1 => {
-                // One failure, then writes work again (so a roll-back can be watched).
-                self.fail_after.store(0, Relaxed);
-                return Err(RegError::Failed);
-            }
-            n => self.fail_after.store(n - 1, Relaxed),
         }
         self.user
             .lock()
@@ -674,6 +642,9 @@ mod tests {
             r"Software\Microsoft\Windows\CurrentVersion\Policies\Explorer",
             r"Software\Classes\.txt",
             r"software\classes\CLSID\x",
+            "Software\\Cla\u{17f}\u{17f}es\\x",
+            "Software\\Pol\u{131}cies\\x",
+            "Software\\Übung",
         ] {
             assert!(!valid_key(bad), "{bad:?}");
         }
@@ -720,40 +691,12 @@ mod tests {
     }
 
     #[test]
-    fn several_values_are_written_completely_or_not_at_all() {
-        use std::sync::atomic::Ordering::Relaxed;
+    fn a_value_that_cannot_be_read_is_an_error_not_a_missing_value() {
         let r = MemRegistry::new();
-        let key = r"Software\X";
-        r.set(key, "a", &Value::Dword(1)).unwrap();
-        let writes = [
-            (key, "a", Value::Dword(0)),
-            (key, "b", Value::Dword(5)),
-            (key, "c", Value::Dword(9)),
-        ];
-        // The third write fails: the first two are put back.
-        r.fail_after.store(3, Relaxed);
-        assert_eq!(set_all(&r, &writes), Err(RegError::Failed));
-        assert_eq!(r.get(key, "a"), Ok(Some(Value::Dword(1))));
-        assert_eq!(r.get(key, "b"), Ok(None));
-        assert_eq!(r.get(key, "c"), Ok(None));
-        // Without a failure: all written, the old values returned in order.
-        assert_eq!(
-            set_all(&r, &writes),
-            Ok(vec![Some(Value::Dword(1)), None, None])
-        );
-        assert_eq!(r.get(key, "c"), Ok(Some(Value::Dword(9))));
-    }
-
-    #[test]
-    fn nothing_is_written_when_an_old_value_cannot_be_read() {
-        use std::sync::atomic::Ordering::Relaxed;
-        let r = MemRegistry::new();
-        r.fail_reads.store(true, Relaxed);
-        assert_eq!(
-            set_all(&r, &[(r"Software\X", "a", Value::Dword(1))]),
-            Err(RegError::Unreadable)
-        );
-        assert_eq!(r.user_len(), 0);
+        r.set(r"Software\X", "a", &Value::Dword(1)).unwrap();
+        r.fail_reads
+            .store(true, std::sync::atomic::Ordering::Relaxed);
+        assert_eq!(r.get(r"Software\X", "a"), Err(RegError::Unreadable));
     }
 
     #[test]

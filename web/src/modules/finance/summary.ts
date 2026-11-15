@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
+import { useMemo } from 'react';
 import { useModuleStates } from '@/core/modules/activation';
 import { useSharedLiveQuery } from '@/core/modules/sharedQuery';
 import { DEFAULT_CURRENCY, sumMinor } from '@/core/money';
@@ -99,9 +100,17 @@ export function useOpenUntilMonthEnd(
   }, [invoicesOn, subsOn, day, currency]);
 }
 
+/** Balance per data read and day: the page, its tabs and the forecast ask for it several times per render. */
+const balanceCache = new WeakMap<FinanceData, { day: string; value: number }>();
+
 export function totalBalance(data: FinanceData | undefined): number | undefined {
   if (!data) return undefined;
-  return sumMinor(balances(data.accounts, data.txs, today()).values());
+  const day = today();
+  const hit = balanceCache.get(data);
+  if (hit?.day === day) return hit.value;
+  const value = sumMinor(balances(data.accounts, data.txs, day).values());
+  balanceCache.set(data, { day, value });
+  return value;
 }
 
 /**
@@ -125,16 +134,19 @@ export function useForecast(
     ]);
     return { charges, invoices: invoices.filter((i) => i.currency === currency) };
   }, [subsOn, invoicesOn, day, to, currency]);
-  if (!data || !extra) return undefined;
-  const anchors = seriesAnchors(data.txs);
-  return buildForecast({
-    balanceMinor: totalBalance(data) ?? 0,
-    today: day,
-    to,
-    repeatHeads: data.txs
-      .filter((x) => x.repeat && !x.transferId)
-      .map((x) => ({ ...x, anchor: seriesAnchor(x, anchors) })),
-    subscriptionCharges: extra.charges,
-    openInvoices: extra.invoices,
-  });
+  // Once per data read, not on every render of the card.
+  return useMemo(() => {
+    if (!data || !extra) return undefined;
+    const anchors = seriesAnchors(data.txs);
+    return buildForecast({
+      balanceMinor: totalBalance(data) ?? 0,
+      today: day,
+      to,
+      repeatHeads: data.txs
+        .filter((x) => x.repeat && !x.transferId)
+        .map((x) => ({ ...x, anchor: seriesAnchor(x, anchors) })),
+      subscriptionCharges: extra.charges,
+      openInvoices: extra.invoices,
+    });
+  }, [data, extra, day, to]);
 }

@@ -110,7 +110,7 @@ test.describe('connectors', () => {
     await expect(dialog).toContainText('Vereinsheim');
     await expect(dialog).toContainText('Bitte Unterlagen mitbringen');
     await expect(dialog).toContainText('nur lesbar');
-    await expect(dialog.getByRole('button', { name: 'Speichern' })).toHaveCount(0);
+    await expect(dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })).toHaveCount(0);
     await page.keyboard.press('Escape');
 
     // The question "what is tomorrow" sees it through the calendar contribution, without any network.

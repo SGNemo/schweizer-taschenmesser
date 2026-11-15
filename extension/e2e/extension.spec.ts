@@ -87,7 +87,9 @@ test.describe('registration', () => {
     await env.app.bringToFront();
     await env.app.getByLabel('Master-Passwort', { exact: true }).fill('Mein-Master-Passwort-1');
     await env.app.getByRole('button', { name: 'Entsperren' }).click();
-    await expect(env.app.getByRole('button', { name: 'Zugang hinzufügen' })).toBeVisible({
+    await expect(
+      env.app.getByRole('button', { name: 'Zugang eintragen', exact: true }),
+    ).toBeVisible({
       timeout: 20_000,
     });
     await page.bringToFront();
@@ -150,14 +152,14 @@ test.describe('login autofill', () => {
   test('fills a TOTP code into a code field when the entry has one', async ({ env }) => {
     await pair(env);
     await env.app.bringToFront();
-    await env.app.getByRole('button', { name: 'Zugang hinzufügen' }).click();
-    const form = env.app.getByRole('dialog', { name: 'Zugang hinzufügen' });
+    await env.app.getByRole('button', { name: 'Zugang eintragen', exact: true }).click();
+    const form = env.app.getByRole('dialog', { name: 'Zugang eintragen' });
     await form.getByLabel('Name', { exact: true }).fill('Shop mit Code');
     await form.getByLabel('Benutzername').fill('dave@example.test');
     await form.getByLabel('Passwort', { exact: true }).fill('Daves-Passwort-4711'); // gitleaks:allow
     await form.getByLabel('Website').fill('https://shop.example.test');
     await form.getByLabel('Einmalcode (TOTP)').fill('JBSWY3DPEHPK3PXP');
-    await form.getByRole('button', { name: 'Speichern' }).click();
+    await form.getByRole('button', { name: 'Zugang eintragen' }).click();
 
     const page = await env.context.newPage();
     await page.goto(`${SHOP}/login`);

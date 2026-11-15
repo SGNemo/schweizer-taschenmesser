@@ -240,6 +240,33 @@ describe('CaptureForm', () => {
     expect(reminder).toMatchObject({ title: 'Oma anrufen', kind: 'reminder' });
   });
 
+  it('W06: a row with day and time switches from „Termin“ to „Erinnerung“ in the preview, the kinds line follows, it fires once', async () => {
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} />);
+    fireEvent.change(await box(), {
+      target: { value: 'Mo 7:30 krankmelden falls nötig\nFr 20 Uhr Kino mit Anna\nMilch kaufen' },
+    });
+    await waitFor(() => expect(rowTypes()).toEqual(['event', 'event', 'todo']));
+    expect(screen.getByTestId('capture-kinds')).toHaveTextContent('Termin 2 · ToDo 1');
+    await pickTarget(user, 0, 'reminder');
+    await waitFor(() => expect(rowTypes()).toEqual(['reminder', 'event', 'todo']));
+    expect(screen.getByTestId('capture-kinds')).toHaveTextContent(
+      'Erinnerung 1 · Termin 1 · ToDo 1',
+    );
+    await user.click(screen.getByRole('button', { name: t.quickCapture.multi.saveAll(3) }));
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    const events = await db.table('calendar_event').toArray();
+    expect(events.find((e) => /krankmelden/i.test(e.title))).toMatchObject({
+      kind: 'reminder',
+      once: true,
+      startDate: '2026-10-05',
+      startTime: '07:30',
+    });
+    // The counter line stays an appointment with the calendar's own rule.
+    expect(events.find((e) => /Kino/.test(e.title))).not.toHaveProperty('once');
+  });
+
   it('unclear rows land in the inbox as typed; a batch never books (one tap, a `$` line becomes a ToDo)', async () => {
     const user = userEvent.setup();
     const onSaved = vi.fn();
@@ -576,5 +603,65 @@ describe('council round 4 – presets, ToDos off, moving lines', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(reason);
     expect(onSaved).not.toHaveBeenCalled();
     expect((await db.table('invoices_invoice').toArray()).every((x) => !x.dunningLevel)).toBe(true);
+  });
+
+  it('folds the type chips to six; a folded selected type takes the sixth slot; „Mehr“ shows the rest', async () => {
+    for (const id of ['bookmarks', 'lists', 'invoices', 'notes', 'subscriptions', 'people'])
+      await enableModule(getManifest(id)!);
+    const user = userEvent.setup();
+    render(<CaptureForm initialType="note" onSaved={() => undefined} />);
+    await box();
+    const group = await screen.findByRole('radiogroup', { name: t.quickCapture.title });
+    await waitFor(() => expect(within(group).getAllByRole('radio')).toHaveLength(6));
+    const radios = within(group).getAllByRole('radio');
+    // The first five never move; the sixth is the selected type, which would otherwise be folded.
+    expect(radios[5]).toHaveAccessibleName(t.quickCapture.type.note);
+    expect(radios[5]).toHaveAttribute('aria-checked', 'true');
+    const more = screen.getByTestId('capture-more-types');
+    const folded = Number(/\d+/.exec(more.textContent ?? '')?.[0]);
+    expect(folded).toBeGreaterThan(0);
+    await user.click(more);
+    expect(within(group).getAllByRole('radio')).toHaveLength(6 + folded);
+    expect(screen.queryByTestId('capture-more-types')).toBeNull();
+  });
+});
+
+describe('breaks („Wochenende retten“ package 4a)', () => {
+  it('with the planner on, „Pause 2 Std Zocken“ is a blocker of today and no ToDo; „Zocken“ stays a ToDo', async () => {
+    await enableModule(getManifest('planner')!);
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} />);
+    await user.type(await box(), 'Pause 2 Std Zocken');
+    await waitFor(() => expect(chips()).toHaveTextContent('Ziel: Planer (Pause)'));
+    expect(chips()).toHaveTextContent('Heute');
+    expect(chips()).toHaveTextContent('2 h');
+    // A break is reached by its word only: it never sits among the type chips.
+    expect(screen.queryByRole('radio', { name: t.quickCapture.type.break })).toBeNull();
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    const [day] = await db.table('planner_day').toArray();
+    expect(day.blockers.map((b: { label: string; min: number }) => [b.label, b.min])).toEqual([
+      ['Zocken', 120],
+    ]);
+    expect(await db.table('todos_task').count()).toBe(0);
+    // Plain text goes where any plain text goes (the default target); the app never guesses leisure.
+    await user.type(await box(), 'Zocken');
+    await waitFor(() => expect(chips()).toHaveTextContent('Ziel:'));
+    expect(chips()).not.toHaveTextContent('Ziel: Planer');
+  });
+
+  it('with the planner off, „Pause …“ stays a ToDo', async () => {
+    await disableModule(getManifest('planner')!, 'keep');
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} />);
+    await user.type(await box(), 'Pause 2 Std Zocken');
+    await waitFor(() => expect(chips()).toHaveTextContent('Ziel:'));
+    expect(chips()).not.toHaveTextContent('Ziel: Planer');
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    expect(onSaved.mock.calls[0]![0].type).not.toBe('break');
+    expect(await db.table('planner_day').count()).toBe(0);
   });
 });

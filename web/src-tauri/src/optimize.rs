@@ -10,6 +10,7 @@ use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use ::pc_tune::tweaks::{self, ResetReport};
+use ::pc_tune::{apply_undo, cleanup_view, system_registry, EntryView, Journal, RegError, Tool};
 use ::pc_tune::{
     apply_undo, system_effects, system_registry, EntryView, Journal, RegError, Target, Tool,
     TweakState,
@@ -19,7 +20,17 @@ use tauri::{AppHandle, Manager, State};
 
 /// The journal, opened on first use (`<app local data>/pc-care/journal.json`, device-local).
 #[derive(Default)]
-pub struct PcCare(Mutex<Option<Opened>>);
+pub struct PcCare {
+    journal: Mutex<Option<Opened>>,
+    /// Clean-ups of this session: memory only, never written (the disk module holds no data).
+    session: Mutex<Vec<EntryView>>,
+}
+
+/// Session lines get ids from here up, far above any journal id, so the two never collide
+/// (and well inside what the webview's numbers hold exactly).
+const SESSION_ID_BASE: u64 = 1 << 40;
+/// Most clean-up lines kept for the session.
+const SESSION_MAX: usize = 300;
 
 struct Opened {
     journal: Journal,
@@ -48,7 +59,7 @@ impl PcCare {
         app: &AppHandle,
         f: impl FnOnce(&mut Journal) -> Result<T, String>,
     ) -> Result<T, String> {
-        let mut slot = self.0.lock().map_err(|_| "internal")?;
+        let mut slot = self.journal.lock().map_err(|_| "internal")?;
         if slot.is_none() {
             // A journal that cannot be read is not cached: the next call tries again, and until
             // then nothing is changed or written.
@@ -60,7 +71,7 @@ impl PcCare {
     }
 
     fn recovered(&self) -> bool {
-        self.0
+        self.journal
             .lock()
             .ok()
             .and_then(|s| s.as_ref().map(|o| o.recovered))
@@ -69,14 +80,24 @@ impl PcCare {
 }
 
 /// Notes a finished deletion in the history of this session (category and size only, never a
-/// name or a path; kept in memory, not written to disk). Best effort: the files are already gone.
+/// name or a path; kept in memory, not written to disk, independent of the journal file).
 pub fn note_cleanup(app: &AppHandle, category: &str, bytes: u64, files: u64, permanent: bool) {
-    if let Some(care) = app.try_state::<PcCare>() {
-        let _ = care.with(app, |j| {
-            j.record_cleanup(unix_now(), category, bytes, files, permanent);
-            Ok(())
-        });
-    }
+    let Some(care) = app.try_state::<PcCare>() else {
+        return;
+    };
+    if let Ok(mut session) = care.session.lock() {
+        let id = SESSION_ID_BASE + session.last().map_or(0, |e| e.id - SESSION_ID_BASE + 1);
+        session.push(cleanup_view(
+            id,
+            unix_now(),
+            category,
+            bytes,
+            files,
+            permanent,
+        ));
+        let extra = session.len().saturating_sub(SESSION_MAX);
+        session.drain(..extra);
+    };
 }
 
 #[derive(Serialize)]
@@ -85,15 +106,24 @@ pub struct HistoryView {
     entries: Vec<EntryView>,
     /// The history file was unreadable and a new one was started.
     recovered: bool,
+    /// The file with the stored changes cannot be read right now: only this session's
+    /// clean-ups are listed, and nothing can be changed or taken back until it can.
+    unreadable: bool,
 }
 
-/// What the page changed on this PC, newest first (without the stored values).
+/// What the page changed on this PC, newest first (without the stored values): this session's
+/// clean-ups and the stored changes.
 #[tauri::command(async)]
 pub fn disk_care_history(app: AppHandle, care: State<'_, PcCare>) -> Result<HistoryView, String> {
-    let entries = care.with(&app, |j| Ok(j.views()))?;
+    let stored = care.with(&app, |j| Ok(j.views()));
+    let unreadable = stored.is_err();
+    let mut entries = stored.unwrap_or_default();
+    entries.extend(care.session.lock().map_err(|_| "internal")?.iter().cloned());
+    entries.sort_by(|a, b| b.at.cmp(&a.at).then(b.id.cmp(&a.id)));
     Ok(HistoryView {
         entries,
         recovered: care.recovered(),
+        unreadable,
     })
 }
 
@@ -123,6 +153,43 @@ pub fn disk_care_undo(app: AppHandle, care: State<'_, PcCare>, id: u64) -> Resul
         let steps = j.undo_steps(id).map_err(|e| e.code().to_string())?;
         apply_undo(reg.as_ref(), &steps, undo_other).map_err(|e| e.code().to_string())?;
         j.mark_undone(id).map_err(|e| e.code().to_string())
+    })
+}
+
+/// What starts with Windows for this account (the user's Run key and startup folder, plus the
+/// machine-wide Run keys, which are shown only). Command lines are for display, never logged.
+#[tauri::command(async)]
+pub fn disk_startup_list() -> Result<Vec<::pc_tune::startup::Item>, String> {
+    let reg = system_registry().ok_or("unsupported")?;
+    Ok(::pc_tune::startup::list(
+        reg.as_ref(),
+        ::pc_tune::startup::system_folder().as_deref(),
+    ))
+}
+
+/// Switches one of the user's autostart entries on or off, the way Task Manager does. `id` is
+/// looked up in a fresh listing (no key or name comes from the webview); machine-wide entries
+/// are refused. Returns the history entry's id for "Rückgängig", or nothing when the entry
+/// already was in that state.
+#[tauri::command(async)]
+pub fn disk_startup_set(
+    app: AppHandle,
+    care: State<'_, PcCare>,
+    id: String,
+    enabled: bool,
+) -> Result<Option<u64>, String> {
+    let reg = system_registry().ok_or("unsupported")?;
+    let folder = ::pc_tune::startup::system_folder();
+    care.with(&app, |j| {
+        ::pc_tune::startup::set_enabled(
+            reg.as_ref(),
+            j,
+            folder.as_deref(),
+            &id,
+            enabled,
+            unix_now(),
+        )
+        .map_err(|e| e.code().to_string())
     })
 }
 

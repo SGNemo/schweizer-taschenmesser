@@ -11,5 +11,10 @@ afterEach(() => setLang('de'));
 if (typeof document !== 'undefined') {
   await import('@testing-library/jest-dom/vitest');
   const { cleanup } = await import('@testing-library/react');
-  afterEach(() => cleanup());
+  const { resetSharedQueries } = await import('@/core/modules/sharedQuery');
+  afterEach(() => {
+    cleanup();
+    // Shared live queries (module states, settings) linger 50 ms after their last user: none may outlive a test.
+    resetSharedQueries();
+  });
 }

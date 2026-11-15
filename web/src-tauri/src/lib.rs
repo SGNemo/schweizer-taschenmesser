@@ -251,6 +251,8 @@ pub fn run() {
             optimize::disk_care_history,
             optimize::disk_care_open_tool,
             optimize::disk_care_undo,
+            optimize::disk_startup_list,
+            optimize::disk_startup_set,
             optimize::disk_tweaks_list,
             optimize::disk_tweak_set,
             optimize::disk_tweaks_reset_all,

@@ -15,6 +15,7 @@ function memorySecrets(
     map,
     protection: 'device-key',
     get: async (n) => map.get(n),
+    has: async (n) => Boolean(map.get(n)),
     set: async (n, v) => void map.set(n, v),
     delete: async (n) => void map.delete(n),
   };

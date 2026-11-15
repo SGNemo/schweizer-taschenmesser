@@ -153,6 +153,7 @@ export function Checkbox({
   label,
   labelHidden,
   description,
+  tone = 'accent',
   ...rest
 }: {
   label: ReactNode;
@@ -160,10 +161,16 @@ export function Checkbox({
   labelHidden?: boolean;
   /** A second, quieter line under the label (what the choice does); the box then sits beside the title. */
   description?: ReactNode;
+  /** `neutral`: ticked in grey, for a box in every row of a list (the page keeps its one accent, B7). */
+  tone?: 'accent' | 'neutral';
 } & Omit<InputHTMLAttributes<HTMLInputElement>, 'type'>) {
   const id = useId();
   return (
-    <label className={styles.check} data-detail={description ? 'true' : undefined}>
+    <label
+      className={styles.check}
+      data-detail={description ? 'true' : undefined}
+      data-tone={tone === 'neutral' ? 'neutral' : undefined}
+    >
       <input
         type="checkbox"
         {...(description

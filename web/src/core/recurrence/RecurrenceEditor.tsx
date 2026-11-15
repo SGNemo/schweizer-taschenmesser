@@ -1,5 +1,5 @@
 import { t } from '@/strings';
-import { SelectField, TextField } from '@/ui';
+import { DayField, SelectField, TextField } from '@/ui';
 import { weekdayShort } from './describe';
 import type { Recurrence } from './types';
 import styles from './RecurrenceEditor.module.css';
@@ -34,6 +34,12 @@ interface Props {
   followStartDay?: boolean;
   /** Hide the "Ende" choice (things that never end by their rule: household routines). */
   noEnd?: boolean;
+  /**
+   * Which part of the rule to show (default `all`). A dialog that puts the rarely needed part behind "Mehr Felder"
+   * renders the editor twice: `basic` (how often: the frequency, the weekdays, the day of the month) in its body and
+   * `more` (the interval "Alle (Monate)" and "Ende") inside `AdvancedFields` (subscriptions, design check G8).
+   */
+  parts?: 'all' | 'basic' | 'more';
 }
 
 /** True when the rule has no pinned day, or pins the day `startDate` already has. */
@@ -53,7 +59,10 @@ export function RecurrenceEditor({
   required,
   followStartDay,
   noEnd,
+  parts = 'all',
 }: Props) {
+  const basic = parts !== 'more';
+  const more = parts !== 'basic';
   const set = (patch: Partial<Recurrence>) => value && onChange({ ...value, ...patch });
 
   function changeFreq(freq: string) {
@@ -76,56 +85,65 @@ export function RecurrenceEditor({
     set({ byWeekday: next.length ? next : undefined });
   }
 
+  if (!basic && !value) return null;
+  const monthDay =
+    basic && value?.freq === 'monthly' && !(followStartDay && followsStart(value, startDate));
   return (
     <div className={styles.wrap}>
-      <SelectField
-        label={t.recurrence.label}
-        value={value?.freq ?? 'none'}
-        onChange={(e) => changeFreq(e.target.value)}
-      >
-        {required ? null : <option value="none">{t.recurrence.none}</option>}
-        <option value="daily">{t.recurrence.daily}</option>
-        <option value="weekly">{t.recurrence.weekly}</option>
-        <option value="monthly">{t.recurrence.monthly}</option>
-        <option value="yearly">{t.recurrence.yearly}</option>
-      </SelectField>
+      {basic ? (
+        <SelectField
+          label={t.recurrence.label}
+          value={value?.freq ?? 'none'}
+          onChange={(e) => changeFreq(e.target.value)}
+        >
+          {required ? null : <option value="none">{t.recurrence.none}</option>}
+          <option value="daily">{t.recurrence.daily}</option>
+          <option value="weekly">{t.recurrence.weekly}</option>
+          <option value="monthly">{t.recurrence.monthly}</option>
+          <option value="yearly">{t.recurrence.yearly}</option>
+        </SelectField>
+      ) : null}
 
       {value ? (
         <>
-          <div className={styles.row}>
-            <div className={styles.grow}>
-              <TextField
-                label={`${t.recurrence.every} (${UNIT[value.freq]})`}
-                type="number"
-                min={1}
-                max={999}
-                value={value.interval ?? 1}
-                onChange={(e) =>
-                  set({ interval: Math.max(1, Math.min(999, Number(e.target.value) || 1)) })
-                }
-              />
+          {more || monthDay ? (
+            <div className={styles.row}>
+              {more ? (
+                <div className={styles.grow}>
+                  <TextField
+                    label={`${t.recurrence.every} (${UNIT[value.freq]})`}
+                    type="number"
+                    min={1}
+                    max={999}
+                    value={value.interval ?? 1}
+                    onChange={(e) =>
+                      set({ interval: Math.max(1, Math.min(999, Number(e.target.value) || 1)) })
+                    }
+                  />
+                </div>
+              ) : null}
+              {monthDay ? (
+                <div className={styles.grow}>
+                  <SelectField
+                    label={t.recurrence.monthDay}
+                    value={String(value.byMonthDay ?? '')}
+                    onChange={(e) =>
+                      set({ byMonthDay: e.target.value ? Number(e.target.value) : undefined })
+                    }
+                  >
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                      <option key={d} value={d}>
+                        {t.recurrence.dayNumber(d)}
+                      </option>
+                    ))}
+                    <option value="-1">{t.recurrence.lastDay}</option>
+                  </SelectField>
+                </div>
+              ) : null}
             </div>
-            {value.freq === 'monthly' && !(followStartDay && followsStart(value, startDate)) ? (
-              <div className={styles.grow}>
-                <SelectField
-                  label={t.recurrence.monthDay}
-                  value={String(value.byMonthDay ?? '')}
-                  onChange={(e) =>
-                    set({ byMonthDay: e.target.value ? Number(e.target.value) : undefined })
-                  }
-                >
-                  {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-                    <option key={d} value={d}>
-                      {t.recurrence.dayNumber(d)}
-                    </option>
-                  ))}
-                  <option value="-1">{t.recurrence.lastDay}</option>
-                </SelectField>
-              </div>
-            ) : null}
-          </div>
+          ) : null}
 
-          {value.freq === 'weekly' ? (
+          {basic && value.freq === 'weekly' ? (
             <fieldset className={styles.fieldset}>
               <legend className={styles.legend}>{t.recurrence.weekdays}</legend>
               <div className={styles.chips}>
@@ -144,7 +162,7 @@ export function RecurrenceEditor({
             </fieldset>
           ) : null}
 
-          {noEnd ? null : (
+          {noEnd || !more ? null : (
             <div className={styles.row}>
               <div className={styles.grow}>
                 <SelectField
@@ -165,12 +183,12 @@ export function RecurrenceEditor({
               </div>
               {value.until ? (
                 <div className={styles.grow}>
-                  <TextField
+                  <DayField
                     label={t.recurrence.endDate}
-                    type="date"
                     min={startDate}
                     value={value.until}
-                    onChange={(e) => e.target.value && set({ until: e.target.value })}
+                    onChange={(day) => day && set({ until: day })}
+                    required
                   />
                 </div>
               ) : null}

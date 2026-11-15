@@ -663,7 +663,7 @@ test('empty folders are listed', async ({ page }) => {
   await expect(page.getByRole('table', { name: 'Schnellfilter' })).toContainText('Leer');
 });
 
-test('"Genauer ansehen" in the tidy tab starts a scan of that folder', async ({ page }) => {
+test('"Im Scan ansehen" in the tidy tab starts a scan of that folder', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2025-06-15T00:00:00Z'));
   await asDesktop(page);
   await enableDisk(page);
@@ -672,7 +672,7 @@ test('"Genauer ansehen" in the tidy tab starts a scan of that folder', async ({ 
   await page.getByRole('button', { name: 'Aufräumen öffnen' }).click();
   await expect(page).toHaveURL(/tab=tidy/);
   await page.getByRole('button', { name: 'Suchen', exact: true }).click();
-  await page.getByRole('button', { name: 'Genauer ansehen: Alte Downloads' }).click();
+  await page.getByRole('button', { name: 'Im Scan ansehen: Alte Downloads' }).click();
   await expect(
     page.getByRole('heading', { name: /Scan von C:\\Nutzer\\Beispiel\\Downloads/ }),
   ).toBeVisible();
@@ -849,7 +849,7 @@ test('history tab is empty before anything was changed', async ({ page }) => {
   await asDesktop(page);
   await enableDisk(page);
   await page.goto('/disk?tab=history');
-  await expect(page.getByText('Noch nichts verändert.')).toBeVisible();
+  await expect(page.getByText('Im Verlauf steht noch nichts.')).toBeVisible();
 });
 
 test('tidy and history tabs have no accessibility violations', async ({ page }) => {
@@ -858,7 +858,7 @@ test('tidy and history tabs have no accessibility violations', async ({ page }) 
   const tidy = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
   expect(tidy.violations).toEqual([]);
   await page.getByRole('button', { name: 'Verlauf', exact: true }).click();
-  await expect(page.getByText('Noch nichts verändert.')).toBeVisible();
+  await expect(page.getByText('Im Verlauf steht noch nichts.')).toBeVisible();
   const history = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
   expect(history.violations).toEqual([]);
 });

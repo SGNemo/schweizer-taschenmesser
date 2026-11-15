@@ -7,7 +7,7 @@ import { PULL_COMPLETE_KEY } from '@/core/storage/dexie';
 import { LAST_SYNC_KEY } from '@/core/sync/service';
 import { t } from '@/strings';
 import { cleanupPlanMarks, PLANNER_ID } from './planMark';
-import { ensureInbox, listRepo, taskRepo } from './repo';
+import { ensureInbox, listRepo, setDone, taskRepo } from './repo';
 import type { TaskLink } from './schema';
 
 /** Adds a requested to-do to the inbox (the first list when there is no inbox). */
@@ -34,6 +34,13 @@ export async function addRequested(req: {
   });
 }
 
+/** Ticks off one open to-do another module asked for by id (`todo.doneRequested`); anything else stays. */
+export async function closeRequested(req: { id: string }): Promise<void> {
+  const task = await taskRepo.get(req.id);
+  if (!task || task.done) return;
+  await setDone(task, true);
+}
+
 /** What the clean-up depends on: the planner's stored state, the sync gate, the marks themselves. */
 async function cleanupInputs(): Promise<string> {
   const [stored, pull, lastSync, marked] = await Promise.all([
@@ -49,12 +56,14 @@ async function cleanupInputs(): Promise<string> {
 }
 
 /**
- * Runs while the todos module is enabled: reacts to `todo.requested` (e.g. from a note) and hands the
+ * Runs while the todos module is enabled: reacts to `todo.requested` (e.g. from a note) and
+ * `todo.doneRequested` (the mail row „Erledigt“), and hands the
  * planner's dates back to the user whenever the stored state says the planner is off and the sync gate
  * is open – also for a mark that lands late (a run in another tab or device, a sync round that ends).
  */
 export default function start(): () => void {
   const offRequested = bus.on('todo.requested', (req) => addRequested(req));
+  const offDone = bus.on('todo.doneRequested', (req) => closeRequested(req));
   // One clean-up at a time; emissions while one runs collapse into a single follow-up run.
   let running: Promise<unknown> = Promise.resolve();
   let queued = false;
@@ -76,6 +85,7 @@ export default function start(): () => void {
   return () => {
     active = false;
     offRequested();
+    offDone();
     sub.unsubscribe();
   };
 }

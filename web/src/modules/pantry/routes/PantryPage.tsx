@@ -27,6 +27,7 @@ import {
   useAdvancedMenuItem,
   useOpenParam,
 } from '@/ui';
+import { usePageWidthAtLeast } from '@/ui/pageWidth';
 import { ItemEditor, type ItemTarget } from '../components/ItemEditor';
 import {
   applyFilter,
@@ -125,7 +126,9 @@ export default function PantryPage() {
     [items, filter, day, soonDays],
   );
 
-  const expiryLine = (i: NonNullable<typeof items>[number]) => expiryText(i, day, soonDays);
+  const narrow = usePageWidthAtLeast(48) === false;
+  const expiryLine = (i: NonNullable<typeof items>[number]) =>
+    expiryText(i, day, soonDays, { weekday: !narrow });
   const advancedItem = useAdvancedMenuItem('pantry');
   const none = !!items && items.length === 0;
 

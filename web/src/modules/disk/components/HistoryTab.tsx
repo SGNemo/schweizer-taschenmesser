@@ -11,6 +11,10 @@ import styles from './HistoryTab.module.css';
 /** What a history line says (read at render time). */
 export function entryText(e: CareEntry): string {
   const h = t.disk.history;
+  if (e.kind === 'startup') {
+    const name = e.label || e.subject;
+    return e.on ? t.disk.startup.historyOn(name) : t.disk.startup.historyOff(name);
+  }
   if (e.kind === 'tweak') {
     // A setting is named by its catalogue id; a choice (the power plan) has no on/off.
     const name = t.disk.tweaks.title[e.subject] ?? e.subject;
@@ -69,13 +73,27 @@ export function HistoryTab() {
   return (
     <div className={styles.tab}>
       <p className={styles.lead}>{h.lead}</p>
-      {failed ? <p role="alert">{h.failed}</p> : null}
+      {failed ? (
+        <div className={styles.failed}>
+          <p role="alert">{h.failed}</p>
+          <Button
+            onClick={() => {
+              setFailed(false);
+              setReload((n) => n + 1);
+            }}
+          >
+            {h.reload}
+          </Button>
+        </div>
+      ) : null}
       {!history && !failed ? (
-        <div role="status" aria-label={h.loading}>
+        <div role="status">
+          <span className="sr-only">{h.loading}</span>
           <Skeleton width="60%" height="1.25rem" />
         </div>
       ) : null}
       {history?.recovered ? <p className={styles.note}>{h.recovered}</p> : null}
+      {history?.unreadable ? <p className={styles.note}>{h.unreadable}</p> : null}
       {history && history.entries.length === 0 ? (
         <EmptyState title={h.empty}>
           <p>{h.emptyHint}</p>
