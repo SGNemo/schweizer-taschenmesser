@@ -8,6 +8,8 @@ import { compareText } from '@/core/i18n/format';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { getPlatform } from '@/core/platform';
+import { holdScreenGuard } from '@/core/security/screen';
+import { primeClipboardTime } from '../copy';
 import { t } from '@/strings';
 import {
   Button,
@@ -67,12 +69,11 @@ export default function AccountsPage() {
   const header = useHeaderState();
   const session = useSession((s) => s.session);
 
-  // No screenshots / app-switcher preview of the vault (Android FLAG_SECURE; a no-op elsewhere).
-  useEffect(() => {
-    const { screen } = getPlatform();
-    void screen.setSecure(true);
-    return () => void screen.setSecure(false);
-  }, []);
+  // No screenshots / app-switcher preview of the vault (Android FLAG_SECURE; a no-op elsewhere). A hold, so
+  // leaving the vault keeps the guard on when "Bildschirmschutz: überall" is set.
+  useEffect(() => holdScreenGuard(), []);
+  // The clipboard time is read here, so a copy never waits for the database (`copy.ts`).
+  useEffect(() => void primeClipboardTime().catch(() => undefined), []);
 
   // The strength dictionaries are not precached: fetch them once in the background (offline later).
   useEffect(() => {

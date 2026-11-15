@@ -103,6 +103,35 @@ const HINTS: [RegExp, Pattern][] = [
   [/dehn|stretch|yoga|mobil|faszien|foam|pilates/i, 'stretch'],
 ];
 
+/** Where an own exercise most likely belongs when only its movement is known. */
+const GROUP_OF_PATTERN: Record<Pattern, Group | 'other'> = {
+  press: 'chest',
+  overhead: 'shoulders',
+  row: 'back',
+  pullup: 'back',
+  squat: 'legs',
+  hinge: 'back',
+  lunge: 'legs',
+  curl: 'arms',
+  core: 'core',
+  run: 'cardio',
+  bike: 'cardio',
+  swim: 'cardio',
+  stretch: 'mobility',
+  other: 'other',
+};
+
+/**
+ * The muscle group of an exercise: its catalogue entry, else a guess from the words in its name
+ * („Kurzhantel-Rudern“ → Rücken), else `other` („Weitere“). Only for grouping and sums, never stored.
+ */
+export function groupOf(name: string): Group | 'other' {
+  const key = name.trim().toLocaleLowerCase();
+  const hit = CATALOG.find((e) => catalogName(e.id).toLocaleLowerCase() === key);
+  if (hit) return hit.group;
+  return GROUP_OF_PATTERN[patternOf(name)];
+}
+
 /** The pattern of an exercise: its catalogue entry, else a word in its name, else the dumbbell. */
 export function patternOf(name: string): Pattern {
   const key = name.trim().toLocaleLowerCase();

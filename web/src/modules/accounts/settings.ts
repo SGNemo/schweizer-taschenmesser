@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { ModuleSettings } from '@/core/modules/types';
 import { t } from '@/strings';
+import { tSecurity } from '@/strings.security';
 
 export const settingsSchema = z.object({
   /** Minutes without interaction until the vault locks. */
@@ -15,6 +16,8 @@ export const settingsSchema = z.object({
   genAvoidAmbiguous: z.boolean(),
   /** Opt-in: ask Have I Been Pwned (first 5 hash characters only) whether a password is in a known leak. */
   breachCheck: z.boolean(),
+  /** Seconds until a copied password, user name or code is cleared from the clipboard. */
+  clipboardSeconds: z.enum(['10', '30', '60', '120']),
 });
 export type FullAccountsSettings = z.output<typeof settingsSchema>;
 /** What the auto-lock needs; the other fields belong to the browser extension bridge. */
@@ -28,10 +31,13 @@ export const defaultSettings: FullAccountsSettings = {
   genSymbols: true,
   genAvoidAmbiguous: false,
   breachCheck: false,
+  clipboardSeconds: '30',
 };
 
 export const settings: ModuleSettings = {
   category: 'sicherheit',
+  // Between "Schutz auf diesem Gerät" (10) and "Zugriff auf dieses Gerät" (30).
+  order: 20,
   get keywords() {
     return [...t.accounts.meta.settings.keywords];
   },
@@ -91,6 +97,22 @@ export const settings: ModuleSettings = {
           },
         },
       ],
+    },
+    {
+      key: 'clipboardSeconds',
+      get label() {
+        return tSecurity.get().clipboard.label;
+      },
+      get help() {
+        return tSecurity.get().clipboard.help;
+      },
+      type: 'select',
+      options: (['10', '30', '60', '120'] as const).map((value) => ({
+        value,
+        get label() {
+          return tSecurity.get().clipboard[`s${value}`];
+        },
+      })),
     },
     {
       key: 'originMatch',

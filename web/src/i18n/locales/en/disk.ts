@@ -1,10 +1,11 @@
+import { formatNumber } from '@/core/i18n/format';
 import type { Strings } from '@/strings';
 
 export const disk: Strings['disk'] = {
   meta: {
     name: 'This PC',
     description:
-      'Drives with a scan of the biggest folders and system info (processor, memory, battery, network) – view only, PC only; the scan changes nothing.',
+      'Drives with a scan of the biggest folders, tidy-up suggestions and system info – PC only. Only what you confirm is deleted.',
     route: 'This PC',
     route2: 'Disk scan',
     widget: 'Drives',
@@ -12,7 +13,12 @@ export const disk: Strings['disk'] = {
   },
   title: 'This PC',
   tabsLabel: 'Section',
-  tabs: { drives: 'Drives', system: 'System' } as const,
+  tabs: {
+    drives: 'Drives',
+    tidy: 'Tidy up',
+    system: 'System',
+    history: 'History',
+  } as const,
   lead: 'What’s using the space? Scan a drive and explore the biggest folders. Nothing is changed or uploaded.',
   loading: 'Reading drives …',
   empty: 'No drives were found.',
@@ -78,11 +84,6 @@ export const disk: Strings['disk'] = {
     ioLabel: 'Activity',
   },
   quick: {
-    title: 'Quick overview',
-    lead: 'These can often be tidied up quickly – without a new scan. Sizes are approximate.',
-    recycle: 'Recycle bin',
-    recycleHint: 'Empty it in Explorer; Nemo never deletes anything permanently by itself.',
-    atLeast: (size: string) => `at least ${size}`,
     biggest: 'Biggest folders in the last scan',
     biggestHint: 'From this session’s scan.',
   },
@@ -187,27 +188,6 @@ export const disk: Strings['disk'] = {
       permanentInstead: 'Delete these permanently …',
       partialHint: 'This folder’s numbers may now be off. Scan it again if needed.',
     },
-  },
-  places: {
-    title: 'Tidy up',
-    lead: 'Well-known folders where clutter often builds up. Scan them and choose yourself what can go – nothing is deleted automatically.',
-    name: {
-      temp: 'Temporary files',
-      chrome: 'Chrome cache',
-      edge: 'Edge cache',
-      firefox: 'Firefox cache',
-      downloads: 'Downloads',
-      cache: 'Cache (.cache)',
-    } as Record<string, string>,
-    hint: {
-      downloads: 'Tip: use the “Older than” filter to find old downloads.',
-      temp: 'Programs may still need files here; files in use are left alone.',
-      chrome: 'The browser rebuilds its cache when needed.',
-      edge: 'The browser rebuilds its cache when needed.',
-      firefox: 'The browser rebuilds its cache when needed.',
-      cache: 'Programs rebuild their cache when needed.',
-    } as Record<string, string>,
-    scan: (name: string) => `Scan ${name}`,
   },
   dupes: {
     title: 'Duplicate files',
@@ -438,5 +418,101 @@ export const disk: Strings['disk'] = {
       error: 'not readable',
     },
     smallFiles: (n: number) => (n === 1 ? '1 smaller file' : `${n} smaller files`),
+  },
+  tidy: {
+    lead: 'Nemo looks in well-known places for things that can usually go. You see what it is beforehand; only what you confirm is deleted – to the recycle bin by default.',
+    search: 'Search',
+    again: 'Search again',
+    cancel: 'Cancel',
+    searching: 'Searching …',
+    searchingStep: (done: number, total: number, what: string) =>
+      `Searching … ${done} of ${total}: ${what}`,
+    failed: 'The search didn’t work. You can try again.',
+    none: 'Nothing to tidy up.',
+    noneHint:
+      'There’s hardly anything in the well-known places right now. Duplicates and large files you haven’t used for a long time are in a drive’s scan.',
+    toDrives: 'Go to drives',
+    cancelledNote: 'The search was cancelled. The list may be incomplete.',
+    summary: (n: number, size: string) =>
+      `${n === 1 ? '1 suggestion' : `${formatNumber(n)} suggestions`} · ${size} in total`,
+    listLabel: 'Suggestions',
+    category: {
+      temp: 'Temporary files',
+      browserCache: 'Browser cache',
+      crashReports: 'Crash reports',
+      oldDownloads: 'Old downloads',
+    } as Record<string, string>,
+    source: { chrome: 'Chrome', edge: 'Edge', brave: 'Brave', firefox: 'Firefox' } as Record<
+      string,
+      string
+    >,
+    placeName: (category: string, source: string) =>
+      source ? `${category} (${source})` : category,
+    what: {
+      temp: 'Leftovers of programs and installers. Files from the last 7 days stay, because a program may still need them.',
+      browserCache:
+        'Copies of web pages so they load faster. The browser recreates them when needed; bookmarks, history and sign-ins stay.',
+      crashReports:
+        'Reports and memory dumps of crashed programs. You only need them when someone looks into a crash.',
+      oldDownloads:
+        'Files in Downloads that haven’t changed for at least 90 days. These are your own files: choose yourself.',
+    } as Record<string, string>,
+    busy: (program: string) =>
+      `${program} is running. Close it first, otherwise some files will be left behind.`,
+    preview: (n: number) => `Preview · ${n === 1 ? '1 entry' : `${formatNumber(n)} entries`}`,
+    selectItem: (name: string) => `Select ${name}`,
+    rest: (n: number, size: string) =>
+      `${n === 1 ? '1 more, smaller entry' : `${formatNumber(n)} more, smaller entries`} · ${size}`,
+    all: 'Select all',
+    noneSelected: 'Clear selection',
+    selected: (size: string) => `Selected: ${size}`,
+    nothingSelected: 'Nothing selected',
+    clean: 'Tidy up …',
+    cleanLabel: (name: string) => `Tidy up: ${name}`,
+    look: 'View in scan',
+    lookLabel: (name: string) => `View in scan: ${name}`,
+    changed: (when: string) => `changed ${when}`,
+    windows: {
+      title: 'Windows does this itself',
+      lead: 'Some things are tidied up most safely by Windows itself. Nemo opens the right place for you.',
+      recycle: 'Recycle bin',
+      recycleHint:
+        'What Nemo tidies up lands here. In the recycle bin you can restore it or empty it for good.',
+      recycleOpen: 'Open recycle bin',
+      updates: 'Update leftovers and system files',
+      updatesHint: 'Windows removes old update files under Settings → System → Storage.',
+      updatesOpen: 'Open storage settings',
+      openFailed: 'That couldn’t be opened.',
+    },
+    pointer: 'Temporary files, browser caches and old downloads are under “Tidy up”.',
+  },
+  history: {
+    lead: 'What Nemo changed on this PC, with the way back. What you tidy up is listed here until you close Nemo.',
+    loading: 'Reading history …',
+    empty: 'Nothing tidied up in this session yet.',
+    emptyHint: 'As soon as you tidy something up, it’s listed here.',
+    reload: 'Load again',
+    failed: 'The history couldn’t be read.',
+    recovered: 'The history file was damaged and has been started anew. Older entries are missing.',
+    unreadable:
+      'The file with the stored changes can’t be read right now. Until then Nemo changes nothing; try again later.',
+    listLabel: 'History',
+    fromScan: 'From the scan',
+    trashed: (what: string, size: string, files: number) =>
+      `${what}: ${size} to the recycle bin · ${files === 1 ? '1 file' : `${formatNumber(files)} files`}`,
+    deleted: (what: string, size: string, files: number) =>
+      `${what}: ${size} deleted permanently · ${files === 1 ? '1 file' : `${formatNumber(files)} files`}`,
+    restore: 'Open recycle bin',
+    restoreHint: 'As long as they are in the recycle bin, you can restore the files there.',
+    restoreLabel: (what: string) => `Open recycle bin: ${what}`,
+    noWayBack: 'Deleted permanently – this can’t be brought back.',
+    switched: (name: string, on: boolean) => `${name}: ${on ? 'switched on' : 'switched off'}`,
+    undo: 'Undo',
+    undoLabel: (what: string) => `Undo: ${what}`,
+    undoDone: 'Put back.',
+    undoFailed: 'That couldn’t be put back.',
+    undone: 'Taken back.',
+    canUndo: 'The value from before is stored.',
+    undoNewerFirst: 'Take back the newer change to it first.',
   },
 };

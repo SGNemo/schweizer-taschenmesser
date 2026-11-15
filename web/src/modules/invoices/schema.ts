@@ -44,6 +44,13 @@ export const invoiceSchema = z.object({
   /** Reminder level 0–3 (0 = none) and the day it was sent or received. */
   dunningLevel: z.number().int().min(0).max(3).optional(),
   dunnedAt: z.string().regex(DATE_RE).optional(),
+  /**
+   * What the latest reminder claims (since version 5): its deadline and its amount (cents, with fees). Facts of
+   * the reminder beside `dueDate` / `amountMinor`, which stay what the invoice said; the planner's hard due is
+   * `dunnedDueDate ?? dueDate`.
+   */
+  dunnedDueDate: z.string().regex(DATE_RE).optional(),
+  dunnedAmountMinor: z.number().int().min(1).optional(),
   /** Payee's account for the transfer, taken from the invoice. */
   iban: z.string().max(42).optional(),
   bic: z.string().max(11).optional(),

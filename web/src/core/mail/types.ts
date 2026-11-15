@@ -54,6 +54,8 @@ export interface MailMessage {
   /** The `Message-ID` and `References` headers, for replies that stay in the conversation. */
   rfcMessageId?: string;
   references?: string;
+  /** A newsletter's https unsubscribe page (`unsubscribe.ts`): opened only after the user confirmed. */
+  unsubscribeUrl?: string;
 }
 
 export interface MailThreadSummary {

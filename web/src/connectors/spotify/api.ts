@@ -161,8 +161,10 @@ const playlistsSchema = z.object({
       .object({
         id: z.string(),
         name: z.string(),
+        description: z.string().nullish(),
+        collaborative: z.boolean().nullish(),
         images: z.array(imageSchema).nullish(),
-        owner: z.object({ display_name: z.string().nullish() }).nullish(),
+        owner: z.object({ id: z.string().nullish(), display_name: z.string().nullish() }).nullish(),
         // The documented field is `tracks`; the newer shape calls the same object `items`.
         tracks: z.object({ total: z.number().nullish() }).nullish(),
         items: z.object({ total: z.number().nullish() }).nullish(),
@@ -173,15 +175,65 @@ const playlistsSchema = z.object({
 });
 /** Pages of 50; four pages (200 playlists) are enough for a picker and keep the request count small. */
 const MAX_PLAYLIST_PAGES = 4;
+/** The playlists tab lists every playlist: up to 20 pages (1000), still one request per 50. */
+const ALL_PLAYLIST_PAGES = 20;
 export const API_ORIGIN = 'https://api.spotify.com/';
 /** Playlist ids are plain base-62; anything else never reaches a URI. */
 const PLAYLIST_ID = /^[A-Za-z0-9]{1,40}$/;
+/** Account ids are short and plain (letters, digits, `.`, `_`, `-`); anything else is dropped. */
+export const ACCOUNT_ID = /^[A-Za-z0-9._-]{1,64}$/;
+const MAX_DESCRIPTION = 300;
 
-/** The user's playlists (`playlist-read-private`), up to 200, following Spotify's own `next` links. */
-export async function listPlaylists(ctx: ConnectorContext): Promise<Playlist[]> {
+const ENTITIES: Record<string, string> = {
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  apos: "'",
+  nbsp: ' ',
+};
+/**
+ * A playlist description as plain text: Spotify sends it HTML-escaped and with links as `<a>` tags. Tags are dropped,
+ * the common entities decoded, white space folded; the result is only ever rendered as text, never as HTML.
+ */
+export function plainText(raw: string | null | undefined): string | undefined {
+  if (!raw) return undefined;
+  // Tags go until none is left (a nested `<<b>x>` would otherwise leave one behind).
+  let stripped = raw;
+  for (let prev = ''; prev !== stripped;) {
+    prev = stripped;
+    stripped = stripped.replace(/<[^<>]*>/g, '');
+  }
+  const text = stripped
+    .replace(/[<>]/g, '')
+    .replace(/&(#x[0-9a-f]{1,6}|#[0-9]{1,7}|[a-z]{2,6});/gi, (all, code: string) => {
+      const c = code.toLowerCase();
+      const n = c.startsWith('#x')
+        ? parseInt(c.slice(2), 16)
+        : c.startsWith('#')
+          ? Number(c.slice(1))
+          : NaN;
+      if (Number.isFinite(n)) return n > 31 && n < 0x110000 ? String.fromCodePoint(n) : '';
+      return ENTITIES[c] ?? all;
+    })
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, MAX_DESCRIPTION);
+  return text || undefined;
+}
+
+/**
+ * The user's playlists, own and followed (`playlist-read-private`), following Spotify's own `next` links: up to 200 for
+ * a picker, up to 1000 with `all` (the playlists tab).
+ */
+export async function listPlaylists(
+  ctx: ConnectorContext,
+  opts?: { all?: boolean },
+): Promise<Playlist[]> {
   const out: Playlist[] = [];
+  const pages = opts?.all ? ALL_PLAYLIST_PAGES : MAX_PLAYLIST_PAGES;
   let url: string | null | undefined = `${API_ORIGIN}v1/me/playlists?limit=50`;
-  for (let page = 0; url && page < MAX_PLAYLIST_PAGES; page += 1) {
+  for (let page = 0; url && page < pages; page += 1) {
     const { json } = await call(ctx, 'GET', url);
     const parsed = playlistsSchema.safeParse(json);
     if (!parsed.success) break;
@@ -193,11 +245,26 @@ export async function listPlaylists(ctx: ConnectorContext): Promise<Playlist[]> 
           trackCount: p.tracks?.total ?? p.items?.total ?? undefined,
           ...coverOf(p.images),
           owner: p.owner?.display_name ? clip(p.owner.display_name) : undefined,
+          ownerId: p.owner?.id && ACCOUNT_ID.test(p.owner.id) ? p.owner.id : undefined,
+          description: plainText(p.description),
+          collaborative: p.collaborative === true || undefined,
         });
     // Only follow a link that stays on the API host, never one the response made up.
     url = parsed.data.next?.startsWith(API_ORIGIN) ? parsed.data.next : undefined;
   }
   return out;
+}
+
+const accountSchema = z.object({ id: z.string() });
+
+/**
+ * The signed-in account's id (`GET /me`, no extra scope), only to tell own playlists from followed ones. Kept in memory
+ * by the caller; nothing else of the profile is read.
+ */
+export async function accountId(ctx: ConnectorContext): Promise<string | undefined> {
+  const { json } = await call(ctx, 'GET', `${API_ORIGIN}v1/me`);
+  const parsed = accountSchema.safeParse(json);
+  return parsed.success && ACCOUNT_ID.test(parsed.data.id) ? parsed.data.id : undefined;
 }
 
 export async function startPlaylist(ctx: ConnectorContext, id: string): Promise<void> {
@@ -248,55 +315,28 @@ export async function setRepeat(
 }
 
 export const ID = /^[A-Za-z0-9]{1,40}$/;
+const named = z.object({
+  id: z.string(),
+  name: z.string(),
+  artists: z.array(z.object({ name: z.string(), id: z.string().nullish() })).optional(),
+  images: z.array(imageSchema).nullish(),
+  album: z
+    .object({
+      id: z.string().nullish(),
+      name: z.string().nullish(),
+      images: z.array(imageSchema).nullish(),
+    })
+    .nullish(),
+});
+const group = z.object({ items: z.array(named.nullable()) }).optional();
 const searchSchema = z.object({
-  tracks: z
-    .object({
-      items: z.array(
-        z
-          .object({
-            id: z.string(),
-            name: z.string(),
-            artists: z.array(z.object({ name: z.string() })).optional(),
-            album: z
-              .object({ name: z.string().nullish(), images: z.array(imageSchema).nullish() })
-              .nullish(),
-          })
-          .nullable(),
-      ),
-    })
-    .optional(),
-  playlists: z
-    .object({
-      items: z.array(
-        z
-          .object({ id: z.string(), name: z.string(), images: z.array(imageSchema).nullish() })
-          .nullable(),
-      ),
-    })
-    .optional(),
-  albums: z
-    .object({
-      items: z.array(
-        z
-          .object({
-            id: z.string(),
-            name: z.string(),
-            artists: z.array(z.object({ name: z.string() })).optional(),
-            images: z.array(imageSchema).nullish(),
-          })
-          .nullable(),
-      ),
-    })
-    .optional(),
+  tracks: group,
+  playlists: group,
+  albums: group,
+  artists: group,
 });
 
-type Named = {
-  id: string;
-  name: string;
-  artists?: { name: string }[];
-  images?: RawImages;
-  album?: { name?: string | null; images?: RawImages } | null;
-} | null;
+type Named = z.infer<typeof named> | null;
 const toItems = (kind: MediaItem['kind'], list: Named[] | undefined): MediaItem[] =>
   (list ?? []).flatMap((x) =>
     x && ID.test(x.id) && x.name.trim()
@@ -306,19 +346,20 @@ const toItems = (kind: MediaItem['kind'], list: Named[] | undefined): MediaItem[
             id: x.id,
             name: clip(x.name),
             subtitle: x.artists?.[0]?.name ? clip(x.artists[0].name) : undefined,
-            // A track shows its album's picture; a playlist or album its own.
+            // A track shows its album's picture; a playlist, album or artist its own.
             ...(kind === 'track' && x.album?.name ? { album: clip(x.album.name) } : {}),
             ...coverOf(kind === 'track' ? x.album?.images : x.images),
+            ...(kind === 'track' || kind === 'album' ? idsOf(x) : {}),
           },
         ]
       : [],
   );
 
-/** `GET /search` for tracks, playlists and albums (a few of each). The typed words are the only thing sent. */
+/** `GET /search` for tracks, playlists, albums and artists (a few of each). The typed words are the only thing sent. */
 export async function search(ctx: ConnectorContext, query: string): Promise<SearchResult> {
   const q = query.trim().slice(0, 100);
   if (q.length < 2) return { tracks: [], playlists: [], albums: [] };
-  const params = new URLSearchParams({ q, type: 'track,playlist,album', limit: '6' });
+  const params = new URLSearchParams({ q, type: 'track,playlist,album,artist', limit: '6' });
   const { json } = await call(ctx, 'GET', `${API_ORIGIN}v1/search?${params}`);
   const parsed = searchSchema.safeParse(json);
   if (!parsed.success) return { tracks: [], playlists: [], albums: [] };
@@ -326,6 +367,7 @@ export async function search(ctx: ConnectorContext, query: string): Promise<Sear
     tracks: toItems('track', parsed.data.tracks?.items),
     playlists: toItems('playlist', parsed.data.playlists?.items),
     albums: toItems('album', parsed.data.albums?.items),
+    artists: toItems('artist', parsed.data.artists?.items),
   };
 }
 
@@ -337,10 +379,14 @@ const likedSchema = z.object({
           .object({
             id: z.string().nullish(),
             name: z.string(),
-            artists: z.array(z.object({ name: z.string() })).optional(),
+            artists: z.array(z.object({ name: z.string(), id: z.string().nullish() })).optional(),
             duration_ms: z.number().nullish(),
             album: z
-              .object({ name: z.string().nullish(), images: z.array(imageSchema).nullish() })
+              .object({
+                id: z.string().nullish(),
+                name: z.string().nullish(),
+                images: z.array(imageSchema).nullish(),
+              })
               .nullish(),
           })
           .nullish(),
@@ -366,10 +412,24 @@ export async function likedSongs(ctx: ConnectorContext): Promise<MediaItem[]> {
             album: t.album?.name ? clip(t.album.name) : undefined,
             durationMs: t.duration_ms ?? undefined,
             ...coverOf(t.album?.images),
+            ...idsOf(t),
           },
         ]
       : [];
   });
+}
+
+/** Artist and album ids of a track, each only when it is a plain id (they become part of a request later). */
+export function idsOf(t: {
+  artists?: { id?: string | null }[] | null;
+  album?: { id?: string | null } | null;
+}): { artistId?: string; albumId?: string } {
+  const artistId = t.artists?.[0]?.id;
+  const albumId = t.album?.id;
+  return {
+    ...(artistId && ID.test(artistId) ? { artistId } : {}),
+    ...(albumId && ID.test(albumId) ? { albumId } : {}),
+  };
 }
 
 /**

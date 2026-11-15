@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { ConnectorContext, MediaItem } from '@/core/connectors/types';
 import { getPlatform } from '@/core/platform';
+import { tMusicPage } from '@/strings.musicPage';
 import { tSpotify } from '@/strings.spotify';
 import { Icon, RowMenu, type RowMenuItem } from '@/ui';
 import { clock } from '../nowPlayingTime';
@@ -19,8 +20,14 @@ export interface TrackListProps {
   playingId?: string;
   onPlay: (item: MediaItem) => void;
   onQueue?: (item: MediaItem) => void;
+  /** "Zu <Künstler>": opens the artist page (only rows that name their artist's id get it). */
+  onArtist?: (item: MediaItem) => void;
   /** "Zu Playlist hinzufügen …" (absent unless playlist editing is switched on). */
   onAddToPlaylist?: (item: MediaItem) => void;
+  /** "Aus dieser Playlist entfernen" (absent unless this playlist can be edited by this account). */
+  onRemove?: (item: MediaItem) => void;
+  /** Rows that may be removed (absent = all); a song that is in the list twice is left out. */
+  removable?: ReadonlySet<string>;
   /** Hearts: `saved` by track id; `onToggleSave` is absent when saving is not possible. */
   saved?: Record<string, boolean>;
   onToggleSave?: (item: MediaItem, on: boolean) => void;
@@ -42,7 +49,10 @@ export function TrackList({
   playingId,
   onPlay,
   onQueue,
+  onArtist,
   onAddToPlaylist,
+  onRemove,
+  removable,
   saved,
   onToggleSave,
   hidden,
@@ -51,7 +61,18 @@ export function TrackList({
   showHidden,
 }: TrackListProps) {
   const tx = tSpotify.use();
+  const tm = tMusicPage.use();
   const [menu, setMenu] = useState<string>();
+  const list = useRef<HTMLUListElement>(null);
+  /** Removing a row takes its menu with it: focus goes to the next song (or the one before the last). */
+  const removeRow = (item: MediaItem, index: number) => {
+    onRemove?.(item);
+    requestAnimationFrame(() => {
+      const buttons = list.current?.querySelectorAll<HTMLButtonElement>('[data-row-play]');
+      if (!buttons || buttons.length === 0) return;
+      buttons[Math.min(index, buttons.length - 1)]?.focus();
+    });
+  };
   const rows = items.filter((i) => showHidden || !hidden?.has(i.id));
   if (rows.length === 0) return <p className={styles.note}>{tx.noTracks}</p>;
   return (
@@ -65,7 +86,7 @@ export function TrackList({
           {tx.colLength}
         </span>
       </div>
-      <ul className={styles.rows}>
+      <ul className={styles.rows} ref={list}>
         {rows.map((item, index) => {
           const rowKey = `${item.id}:${index}`;
           const isHidden = hidden?.has(item.id) === true;
@@ -75,6 +96,15 @@ export function TrackList({
             ...(onQueue
               ? [{ id: 'queue', label: tx.menuQueue, onSelect: () => onQueue(item) }]
               : []),
+            ...(onArtist && item.artistId && item.subtitle
+              ? [
+                  {
+                    id: 'artist',
+                    label: tm.menuArtist(item.subtitle),
+                    onSelect: () => onArtist(item),
+                  },
+                ]
+              : []),
             ...(onAddToPlaylist
               ? [
                   {
@@ -83,6 +113,9 @@ export function TrackList({
                     onSelect: () => onAddToPlaylist(item),
                   },
                 ]
+              : []),
+            ...(onRemove && (!removable || removable.has(item.id))
+              ? [{ id: 'remove', label: tm.menuRemove, onSelect: () => removeRow(item, index) }]
               : []),
             ...(isHidden && onUnhide
               ? [{ id: 'show', label: tx.menuShow, onSelect: () => onUnhide(item) }]
@@ -109,6 +142,7 @@ export function TrackList({
               <button
                 type="button"
                 className={styles.trackMain}
+                data-row-play=""
                 aria-label={tx.play(item.name)}
                 onClick={() => onPlay(item)}
               >

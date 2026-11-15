@@ -20,7 +20,7 @@ const manifest: ModuleManifest = {
     signature: 'receipt',
     tabs: true,
   },
-  version: 2,
+  version: 3,
   get description() {
     return t.lists.meta.description;
   },

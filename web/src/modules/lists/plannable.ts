@@ -37,6 +37,8 @@ const source: PlannableSource = {
     const items: PlannableItem[] = [];
     for (const l of await listRepo.active().toArray()) {
       if (l.kind !== 'shopping' && l.kind !== 'packing') continue;
+      // An archived list is put away: never a row of the plan, even while a request for it stands.
+      if (l.archived) continue;
       // The trip is still ahead (or today) and its day before is one of the planned days.
       const packBy =
         l.kind === 'packing' && l.tripDate && l.tripDate >= ctx.today
