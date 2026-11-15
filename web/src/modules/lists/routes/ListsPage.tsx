@@ -657,6 +657,7 @@ export default function ListsPage() {
       <ItemEditor
         item={editingItem}
         kind={current?.kind ?? 'checklist'}
+        lists={sorted}
         onClose={() => setEditingItem(null)}
       />
       <ListEditor
