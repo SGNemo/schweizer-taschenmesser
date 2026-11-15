@@ -11,7 +11,6 @@ import {
   later,
   markDone,
   markDue,
-  pin,
   sourceAbilities,
   type SourceAbility,
   unmarkDue,
@@ -45,7 +44,7 @@ export type Abilities = ReturnType<typeof useAbilities>;
 
 /**
  * Builds the ⋯ menu of a row; `date` = the row's day (a waiting row has none: then today, named). The steps of
- * every day come first („Später“, „Dauer …“, „Tagesabschnitt …“), the rest under „Mehr“. `tick`: the row's lead is
+ * every day come first („Verschieben …“, „Später“, „Dauer …“, „Tagesabschnitt …“), the rest under „Mehr“. `tick`: the row's lead is
  * the tick, so „Erledigt“ is not said twice.
  */
 export function useRowMenu(ctx: {
@@ -64,10 +63,17 @@ export function useRowMenu(ctx: {
     row: BoardRow | WaitingRow,
     date?: string,
     reason?: string,
-    opts: { tick?: boolean } = {},
+    opts: { tick?: boolean; late?: boolean } = {},
   ): RowMenuItem[] => {
     const e = row.entry;
     if (!e || !ctx.today) return [];
+    // „Frist vorbei“: the thing sits on no day, so nothing here moves, nails or orders it. What is left:
+    // open it, or take it out of the plan.
+    if (opts.late)
+      return [
+        { id: 'open', label: t.planner.row.open, onSelect: () => void navigate(e.to) },
+        { id: 'exclude', label: t.planner.row.exclude, onSelect: () => void exclude(e, titles) },
+      ];
     const day = date ?? ctx.today;
     const pinned = row.item?.pinned !== undefined;
     const hard = row.item?.due?.hard === true;
@@ -79,6 +85,22 @@ export function useRowMenu(ctx: {
       ...(abilities.canDone(e.moduleId) && !opts.tick
         ? [{ id: 'done', label: t.planner.row.done, onSelect: () => void markDone(e, titles) }]
         : []),
+      // „Verschieben …“ (R2): day chips; the chosen day is where the thing stays (the one place that nails).
+      ...(excluded
+        ? []
+        : [
+            {
+              id: 'move',
+              label: t.planner.row.move,
+              onSelect: () =>
+                setChoice({
+                  kind: 'move',
+                  entry: e,
+                  ...(date ? { on: date } : {}),
+                  ...(row.item?.pinned ? { pinned: row.item.pinned } : {}),
+                }),
+            },
+          ]),
       ...(abilities.canAssign(e.moduleId)
         ? [{ id: 'later', label: t.planner.row.later, onSelect: () => void later(e, titles) }]
         : []),
@@ -117,13 +139,10 @@ export function useRowMenu(ctx: {
       ...(excluded
         ? [{ id: 'include', label: t.planner.row.include, onSelect: () => void include(e, titles) }]
         : [
-            pinned
-              ? { id: 'unpin', label: t.planner.row.unpin, onSelect: () => void unpin(e, titles) }
-              : {
-                  id: 'pin',
-                  label: t.planner.row.pinOn(dayName(day)),
-                  onSelect: () => void pin(e, day, titles),
-                },
+            // Nailing is „Verschieben …“ (also onto the day the thing is on); here only the way back.
+            ...(pinned
+              ? [{ id: 'unpin', label: t.planner.row.unpin, onSelect: () => void unpin(e, titles) }]
+              : []),
             {
               id: 'exclude',
               label: t.planner.row.exclude,

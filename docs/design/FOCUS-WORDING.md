@@ -12,6 +12,7 @@ Examples to copy from. Rules: [FOCUS-GUIDELINES.md](FOCUS-GUIDELINES.md) (text r
 | Date passed (due lists, widgets) | "war am Di. fällig" · "war am 17. Sep. fällig" · Vorräte "MHD war Mo." | "seit 3 Tagen" · "seit gestern" |
 | Deadline with an hour (planner row, ToDo) | "Frist So 18:00" · afterwards "Frist war So 18:00" (plain text, never red) · opt-in reminder "Bis 18:00: Team-Sachen lesen" · "Die Frist ist um 18:00." | "Frist verpasst!" · "Nur noch 1 Stunde!" |
 | Money deadline passed | "Rechnung offen · 12,00 € · Frist war am 21. Sep." | "Du hast die Frist verpasst" |
+| Late money in the planner (group, phone row, head) | "Frist vorbei · 6 Rechnungen" · "Liegt auf keinem Tag. Bezahlt ist bezahlt – wann, entscheidest du." · row "Rechnung · Frist war So" · head "Heute ist frei." / "Frist vorbei: 6 Rechnungen" | "6 überfällige Rechnungen!" · "seit 7 Tagen überfällig" · a red row |
 | Replan | "Neu planen" · "Auf die nächsten Tage verteilt." (+ Rückgängig) | "Aufräumen" |
 | Rest of the day (evening) | "Rest verteilen" · "Was heute offen ist, geht auf die nächsten Tage." · "Rest verteilen?" | "3 Sachen liegen geblieben" · "Du hast heute nicht alles geschafft" |
 | End of day near (planner head, 30 min before) | "Bald ist Tagesende." · with something open: "Bald ist Tagesende. Rest verteilen" · en: "The day is ending soon." | "Zu spät!" · "Du hättest schon schlafen sollen" · "Noch 3 Dinge offen" |

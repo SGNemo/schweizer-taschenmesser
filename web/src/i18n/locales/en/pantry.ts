@@ -74,6 +74,8 @@ export const pantry: Strings['pantry'] = {
   expiresBody: (date: string) => `Best before ${date}`,
   widgetEmpty: 'Nothing is expiring soon.',
   restockOne: (n: string) => `Add to shopping list: ${n}`,
+  onList: 'On the shopping list',
+  toList: (n: string) => `Go to shopping list: ${n}`,
   shelf: {
     jump: (place: string, n: number) => `${place}: ${n}, jump to section`,
     expired: (n: number) => `${n} expired`,

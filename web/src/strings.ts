@@ -1,5 +1,5 @@
 import { catalogChain } from '@/core/i18n/catalogs';
-import { formatNumber } from '@/core/i18n/format';
+import { formatNumber, plural } from '@/core/i18n/format';
 import { localize } from '@/core/i18n/localize';
 import type { Shape } from '@/core/i18n/shape';
 
@@ -3102,6 +3102,9 @@ export const de = {
       open: (amount: string) => `Offen: ${amount}`,
       amountHint: 'Weniger als der offene Betrag wird als Teilzahlung erfasst.',
       confirm: 'Bezahlt',
+      /** The invoice was paid elsewhere while the step was open: nothing was written. */
+      alreadyPaid: 'Schon bezahlt.',
+      failed: 'Das hat nicht geklappt. Probier es noch einmal.',
     },
     payee: 'Empfänger',
     reference: 'Verwendungszweck / Rechnungsnummer',
@@ -4619,6 +4622,8 @@ export const de = {
     expiresBody: (date: string) => `Haltbar bis ${date}`,
     widgetEmpty: 'Nichts läuft bald ab.',
     restockOne: (n: string) => `Auf die Einkaufsliste: ${n}`,
+    onList: 'Auf der Einkaufsliste',
+    toList: (n: string) => `Zur Einkaufsliste: ${n}`,
     shelf: {
       jump: (place: string, n: number) => `${place}: ${n}, zum Abschnitt springen`,
       expired: (n: number) => `${n} abgelaufen`,
@@ -5674,6 +5679,11 @@ export const de = {
       widget: 'Einkauf',
       widgetPacking: 'Packlisten',
       quickAdd: 'Einkauf',
+      settings: {
+        showInPlan: 'Im Plan zeigen',
+        showInPlanHelp:
+          'Eine Packliste mit Reisedatum steht im Planer als „Packen: <Name>“ (20 Min, bis zum Tag vor der Reise). Der Einkauf kommt nur über „In den Plan“ dazu, als eine Zeile. Nur bei eingeschaltetem Planer.',
+      },
     },
     title: 'Listen',
     tabsLabel: 'Deine Listen',
@@ -5780,6 +5790,17 @@ export const de = {
     buyMissing: (n: number) => `Noch kaufen (${n})`,
     buyMissingDone: (n: number) => `${n} auf die Einkaufsliste gesetzt.`,
     tripIn: (d: number) => `In ${d} Tagen`,
+    plan: {
+      shopping: (n: number) =>
+        plural(n, { one: 'Einkaufen · # Ding', other: 'Einkaufen · # Dinge' }, 'de'),
+      packing: (name: string) => `Packen: ${name}`,
+      toList: 'Zur Liste',
+      add: 'In den Plan',
+      placed: (day: string) => `Im Plan · ${day}`,
+      fromPantry: (name: string) => `Aus den Vorräten: ${name}`,
+      waits: 'Im Plan · noch ohne Tag',
+      remove: 'Nicht mehr planen',
+    },
     // Package „Listen verwalten“ (round 2026-11): icon, colour, order, archive.
     listIcon: 'Symbol',
     listColour: 'Farbe',
@@ -9070,6 +9091,8 @@ export const de = {
         tomorrow ? `morgen, ${day} · heute ist frei` : `${day} · heute ist frei`,
       ctxNextShort: (day: string, tomorrow: boolean) => (tomorrow ? `morgen, ${day}` : day),
       fullNext: (day: string) => `Für ${day} ist genug geplant.`,
+      dayFree: 'Heute ist frei.',
+      ctxLate: (count: string) => `Frist vorbei: ${count}`,
     },
     board: {
       label: 'Woche',
@@ -9089,6 +9112,15 @@ export const de = {
       tileName: (day: string, capacity: string, things: string) =>
         things ? `${day}: ${capacity} · ${things}` : `${day}: ${capacity}`,
       editDay: (day: string) => `Zeit für ${day} ändern`,
+      /** The capacity as the one control that opens „Warum?“: „37 Min frei von 3 h 12 – warum?“. */
+      whyName: (capacity: string) => `${capacity} – warum?`,
+      /** Inside the open „Warum?“: the day's settings. */
+      editTime: 'Zeit ändern',
+      whyTime: (min: string) => `${min} für den Tag.`,
+      whyOff: (list: string) => `Abgezogen: ${list}.`,
+      whyBuffer: (min: string) => `Puffer ${min}`,
+      whyWindow: (window: string) => `Zeitfenster ${window}.`,
+      whyEnd: (time: string) => `Tagesende ${time}.`,
     },
     sheet: {
       first: 'Zuerst',
@@ -9098,6 +9130,8 @@ export const de = {
       overLine: 'Der Tag hat mehr Dinge als Zeit.',
       dayOffNext: (day: string) => `Heute ist frei. Der nächste Tag mit Dingen ist ${day}.`,
       emptyDay: 'Für diesen Tag ist nichts geplant.',
+      onlyLate: 'Die Woche ist leer. Offen sind nur die Rechnungen unter „Frist vorbei“.',
+      onlyLateThings: 'Die Woche ist leer. Offen ist nur, was unter „Frist vorbei“ steht.',
     },
     src: {
       task: 'ToDo',
@@ -9110,6 +9144,13 @@ export const de = {
     ctx: {
       label: 'Rund um die Woche',
       appointments: 'Termine',
+      deadlines: 'Nächste Fristen',
+    },
+    late: {
+      title: 'Frist vorbei',
+      invoices: (n: number) => (n === 1 ? '1 Rechnung' : `${n} Rechnungen`),
+      line: 'Liegt auf keinem Tag. Bezahlt ist bezahlt – wann, entscheidest du.',
+      row: (count: string) => `Frist vorbei · ${count}`,
     },
     day: {
       available: 'Verfügbar',
@@ -9149,7 +9190,9 @@ export const de = {
       done: 'Erledigt',
       later: 'Später',
       pin: 'Festnageln',
-      pinOn: (day: string) => `Festnageln auf ${day}`,
+      move: 'Verschieben …',
+      moveTitle: (title: string) => `Verschieben: ${title}`,
+      moveHint: 'Es bleibt an dem Tag, den du wählst – bis du es wieder löst.',
       unpin: 'Nicht mehr festnageln',
       exclude: 'Nicht planen',
       include: 'Wieder planen',

@@ -62,6 +62,8 @@ export const planner: Strings['planner'] = {
       tomorrow ? `tomorrow, ${day} · today is free` : `${day} · today is free`,
     ctxNextShort: (day: string, tomorrow: boolean) => (tomorrow ? `tomorrow, ${day}` : day),
     fullNext: (day: string) => `Enough is planned for ${day}.`,
+    dayFree: 'Today is free.',
+    ctxLate: (count: string) => `Deadline passed: ${count}`,
   },
   board: {
     label: 'Week',
@@ -81,6 +83,13 @@ export const planner: Strings['planner'] = {
     tileName: (day: string, capacity: string, things: string) =>
       things ? `${day}: ${capacity} · ${things}` : `${day}: ${capacity}`,
     editDay: (day: string) => `Change time for ${day}`,
+    whyName: (capacity: string) => `${capacity} – why?`,
+    editTime: 'Change time',
+    whyTime: (min: string) => `${min} for the day.`,
+    whyOff: (list: string) => `Taken off: ${list}.`,
+    whyBuffer: (min: string) => `buffer ${min}`,
+    whyWindow: (window: string) => `Time window ${window}.`,
+    whyEnd: (time: string) => `Day ends at ${time}.`,
   },
   sheet: {
     first: 'First',
@@ -90,6 +99,8 @@ export const planner: Strings['planner'] = {
     overLine: 'The day holds more things than time.',
     dayOffNext: (day: string) => `Today is free. The next day with things is ${day}.`,
     emptyDay: 'Nothing is planned for this day.',
+    onlyLate: 'The week is empty. Only the invoices under “Deadline passed” are open.',
+    onlyLateThings: 'The week is empty. Only what stands under “Deadline passed” is open.',
   },
   src: {
     task: 'To-do',
@@ -102,6 +113,13 @@ export const planner: Strings['planner'] = {
   ctx: {
     label: 'Around the week',
     appointments: 'Appointments',
+    deadlines: 'Next deadlines',
+  },
+  late: {
+    title: 'Deadline passed',
+    invoices: (n: number) => (n === 1 ? '1 invoice' : `${n} invoices`),
+    line: 'Sits on no day. Paid is paid – when is up to you.',
+    row: (count: string) => `Deadline passed · ${count}`,
   },
   day: {
     available: 'Available',
@@ -141,7 +159,9 @@ export const planner: Strings['planner'] = {
     done: 'Done',
     later: 'Later',
     pin: 'Pin to day',
-    pinOn: (day: string) => `Pin to ${day}`,
+    move: 'Move …',
+    moveTitle: (title: string) => `Move: ${title}`,
+    moveHint: 'It stays on the day you choose – until you release it again.',
     unpin: 'Unpin',
     exclude: 'Do not plan',
     include: 'Plan again',
