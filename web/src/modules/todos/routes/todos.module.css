@@ -469,6 +469,12 @@
   gap: var(--space-2);
   min-height: var(--touch);
 }
+/* A link whose target cannot be opened here: its label as plain text beside the row's action. */
+.linkText {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .tickPop {
   animation: tick-pop 200ms ease-out;
 }
@@ -481,4 +487,15 @@
   .tickPop {
     animation: none;
   }
+}
+
+/* „Erinnern: 1 Std vorher“ without the system's permission (package 5b): the calendar's calm hint. */
+.dueHint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
 }
