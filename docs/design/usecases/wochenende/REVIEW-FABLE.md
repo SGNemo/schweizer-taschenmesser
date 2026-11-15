@@ -39,3 +39,7 @@ Schwere: hoch = vor dem nächsten Paket entscheiden · mittel = im Paket-Prompt 
 ## Changed directly in PACKAGES.md
 
 Status line (packages 1–3 merged); the 6 ∥ 7 shared files; package 3's decision file (`plan-contract.md`, as built); quick-capture tests in the acceptance of packages 4, 5 and 7; `TaskEditor.tsx:49`. Nothing else: R2–R10 change scope and are the maintainer's call.
+
+## Follow-up 2026-11-15
+
+The maintainer said: build as recommended. `PACKAGES.md`, TARGET §4 („Revised“) and the decision file now carry R2–R9 and R11–R14; R10's table is a task of package 8. Two things turned out differently while writing the prompts: (1) removing the ToDo for „Als Pause“ needs one additive contract callback (`onRemove?`), so package 4a keeps `council` – R14 was wrong there; (2) R6's open point is settled: the capture types include `reminder` (`quickCapture/parser/types.ts`), so a row can be switched to it.
