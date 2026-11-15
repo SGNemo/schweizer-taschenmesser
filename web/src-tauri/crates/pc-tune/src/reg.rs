@@ -250,9 +250,9 @@ mod win {
         ERROR_FILE_NOT_FOUND, ERROR_MORE_DATA, ERROR_PATH_NOT_FOUND, ERROR_SUCCESS,
     };
     use windows::Win32::System::Registry::{
-        RegCloseKey, RegDeleteKeyValueW, RegEnumValueW, RegOpenKeyExW, RegQueryValueExW,
-        RegSetKeyValueW, HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_READ, KEY_WOW64_64KEY,
-        REG_SAM_FLAGS, REG_VALUE_TYPE,
+        RegCloseKey, RegCreateKeyExW, RegDeleteKeyValueW, RegEnumValueW, RegOpenKeyExW,
+        RegQueryValueExW, RegSetValueExW, HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_READ,
+        KEY_SET_VALUE, KEY_WOW64_64KEY, REG_OPTION_NON_VOLATILE, REG_SAM_FLAGS, REG_VALUE_TYPE,
     };
 
     const REG_SZ: u32 = 1;
@@ -429,17 +429,37 @@ mod win {
             }
             let (ty, data) = encode(value);
             let (key_w, name_w) = (wide(key), wide(name));
-            // SAFETY: both strings are NUL-terminated locals; `data` outlives the call and its
-            // length is passed along. The hive is the constant HKEY_CURRENT_USER.
+            let mut handle = HKEY::default();
+            // The key is opened (created when missing) and the value stored with
+            // `RegSetValueExW`, which keeps the bytes exactly as given. (`RegSetKeyValueW` adds a
+            // terminator to a string that has none, so an undo would not be byte for byte.)
+            // SAFETY: both strings are NUL-terminated locals; `handle` is closed after a
+            // successful open; `data` is a slice that outlives the call. The hive is the constant
+            // HKEY_CURRENT_USER.
             let rc = unsafe {
-                RegSetKeyValueW(
+                let opened = RegCreateKeyExW(
                     HKEY_CURRENT_USER,
                     PCWSTR(key_w.as_ptr()),
+                    None,
+                    PCWSTR::null(),
+                    REG_OPTION_NON_VOLATILE,
+                    KEY_SET_VALUE,
+                    None,
+                    &mut handle,
+                    None,
+                );
+                if opened != ERROR_SUCCESS {
+                    return Err(RegError::Failed);
+                }
+                let rc = RegSetValueExW(
+                    handle,
                     PCWSTR(name_w.as_ptr()),
-                    ty,
-                    Some(data.as_ptr().cast()),
-                    data.len() as u32,
-                )
+                    None,
+                    REG_VALUE_TYPE(ty),
+                    Some(&data),
+                );
+                let _ = RegCloseKey(handle);
+                rc
             };
             if rc == ERROR_SUCCESS {
                 Ok(())
