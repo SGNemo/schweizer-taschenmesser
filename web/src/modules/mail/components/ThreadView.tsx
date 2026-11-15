@@ -26,6 +26,7 @@ import { useModuleStates } from '@/core/modules/activation';
 import { fromOf, planMail, plannedThreads } from '../planMail';
 import { LocalSummary } from './LocalSummary';
 import { ThreadActions, ThreadLabels } from './ThreadActions';
+import { useMailKeys } from '../useMailKeys';
 import { applyChange } from '../mailActions';
 import { LinkMenu } from './LinkMenu';
 import { LinkedEntries } from './LinkedEntries';
@@ -85,6 +86,43 @@ function Attachments({ account, message }: { account: MailAccountRef; message: M
   );
 }
 
+/** Reply, reply all or forward to one message: the compose window's prefill and title. */
+function composeOf(
+  kind: 'reply' | 'replyAll' | 'forward',
+  message: MailMessage,
+  account: MailAccountRef,
+): [ComposeState, string] {
+  const body = (message.text ?? mailText(message, 3000)).slice(0, 3000);
+  if (kind === 'forward')
+    return [
+      emptyCompose(
+        forwardFields(message, {
+          header: t.mail.write.compose.forwardHeader(
+            formatAddress(message.from),
+            fullWhen(message.date),
+            message.subject,
+          ),
+          body,
+        }),
+      ),
+      t.mail.write.compose.titleForward,
+    ];
+  return [
+    emptyCompose(
+      replyFields(message, {
+        all: kind === 'replyAll',
+        me: account.email,
+        quoteHeader: t.mail.write.compose.quoteHeader(
+          fullWhen(message.date),
+          personName(message.from),
+        ),
+        body,
+      }),
+    ),
+    t.mail.write.compose.titleReply,
+  ];
+}
+
 function MessageCard({
   account,
   threadId,
@@ -111,11 +149,6 @@ function MessageCard({
 }) {
   const canCompose = hasFeature(account, 'mail-send') || hasFeature(account, 'mail-modify');
   const isDraft = message.labelIds.includes('DRAFT');
-  const quoteBody = (message.text ?? mailText(message, 3000)).slice(0, 3000);
-  const quoteHeader = t.mail.write.compose.quoteHeader(
-    fullWhen(message.date),
-    personName(message.from),
-  );
 
   async function editDraft() {
     let draftId: string | undefined;
@@ -207,59 +240,15 @@ function MessageCard({
                 <Button onClick={() => void editDraft()}>{t.mail.write.editDraft}</Button>
               ) : (
                 <>
-                  <Button
-                    onClick={() =>
-                      onCompose(
-                        emptyCompose(
-                          replyFields(message, {
-                            all: false,
-                            me: account.email,
-                            quoteHeader,
-                            body: quoteBody,
-                          }),
-                        ),
-                        t.mail.write.compose.titleReply,
-                      )
-                    }
-                  >
+                  <Button onClick={() => onCompose(...composeOf('reply', message, account))}>
                     {t.mail.write.reply}
                   </Button>
                   {message.to.length + message.cc.length > 1 ? (
-                    <Button
-                      onClick={() =>
-                        onCompose(
-                          emptyCompose(
-                            replyFields(message, {
-                              all: true,
-                              me: account.email,
-                              quoteHeader,
-                              body: quoteBody,
-                            }),
-                          ),
-                          t.mail.write.compose.titleReply,
-                        )
-                      }
-                    >
+                    <Button onClick={() => onCompose(...composeOf('replyAll', message, account))}>
                       {t.mail.write.replyAll}
                     </Button>
                   ) : null}
-                  <Button
-                    onClick={() =>
-                      onCompose(
-                        emptyCompose(
-                          forwardFields(message, {
-                            header: t.mail.write.compose.forwardHeader(
-                              formatAddress(message.from),
-                              fullWhen(message.date),
-                              message.subject,
-                            ),
-                            body: quoteBody,
-                          }),
-                        ),
-                        t.mail.write.compose.titleForward,
-                      )
-                    }
-                  >
+                  <Button onClick={() => onCompose(...composeOf('forward', message, account))}>
                     {t.mail.write.forward}
                   </Button>
                 </>
@@ -291,6 +280,7 @@ export function ThreadView({
   labels,
   confirmMoves,
   localAi = false,
+  shortcuts = false,
   onChanged,
   onCompose,
   onBack,
@@ -304,6 +294,8 @@ export function ThreadView({
   confirmMoves: boolean;
   /** The local model may read mail (module setting, off by default). */
   localAi?: boolean;
+  /** Gmail-style keys (module setting): r/a/f here, the moves in `ThreadActions`. */
+  shortcuts?: boolean;
   /** A change at the service went through: the list should reload. */
   onChanged: () => void;
   onCompose: (state: ComposeState, title: string) => void;
@@ -347,6 +339,17 @@ export function ThreadView({
   }, [account, threadId, cacheBodies]);
 
   const subject = messages?.[0] ? subjectOf(messages[0].subject) : '';
+  // r/a/f answer the newest message that is not a draft, like its buttons.
+  const newest = messages?.filter((m) => !m.labelIds.includes('DRAFT')).at(-1);
+  const canCompose = hasFeature(account, 'mail-send') || hasFeature(account, 'mail-modify');
+  useMailKeys(shortcuts && canCompose && !!newest, {
+    reply: () => newest && onCompose(...composeOf('reply', newest, account)),
+    replyAll: () =>
+      newest &&
+      newest.to.length + newest.cc.length > 1 &&
+      onCompose(...composeOf('replyAll', newest, account)),
+    forward: () => newest && onCompose(...composeOf('forward', newest, account)),
+  });
   const loaded = [...new Set(messages?.flatMap((m) => m.labelIds) ?? [])];
   const labelIds = labelsNow ?? loaded;
   // Functional: two changes in flight (a star and a label) both land on the newest state.
@@ -402,6 +405,7 @@ export function ThreadView({
           inSpam={!!messages.length && messages.every((m) => m.labelIds.includes('SPAM'))}
           labels={labels}
           confirmMoves={confirmMoves}
+          shortcuts={shortcuts}
           onLabels={onLabels}
           onChanged={onChanged}
           onLeave={onBack}

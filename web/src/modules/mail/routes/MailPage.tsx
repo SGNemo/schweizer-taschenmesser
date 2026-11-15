@@ -61,7 +61,19 @@ import { settings } from '../settings';
 import { rowAction } from '../rowActions';
 import { STEPS } from '../mailActions';
 import { answeredRows, closeAnswered } from '../answered';
-import { readSearches, rememberSearch, suggestionsFor } from '../searchHistory';
+import {
+  FILTERS,
+  forgetSearch,
+  hasFilter,
+  isSaved,
+  readSaved,
+  readSearches,
+  rememberSearch,
+  saveSearch,
+  suggestionsFor,
+  toggleFilter,
+} from '../searchHistory';
+import { focusedThreadId, useMailKeys } from '../useMailKeys';
 import { useMailbox } from '../useMailbox';
 import { useMailSummary } from '../useSummary';
 
@@ -129,7 +141,7 @@ function ThreadList({
               // Sender and time share the title line, subject and snippet are two lines at most: a row keeps
               // its height beside the reading pane (design check G1, G4).
               title={
-                <span className={styles.rowTitle}>
+                <span className={styles.rowTitle} data-thread-id={th.id}>
                   <span className={th.unread ? styles.unreadRow : styles.rowFrom}>
                     {personName(th.from)}
                     {th.messageCount > 1 ? ` (${th.messageCount})` : ''}
@@ -285,6 +297,8 @@ export default function MailPage() {
   const wide = pageWide ?? windowWide;
   const summary = useMailSummary();
   const [recent, setRecent] = useState<string[]>(readSearches);
+  const [saved, setSaved] = useState<string[]>(readSaved);
+  const searchForm = useRef<HTMLFormElement>(null);
   const senders = useMemo(
     () => [...new Set(box.threads.map((th) => personName(th.from)))],
     [box.threads],
@@ -378,6 +392,28 @@ export default function MailPage() {
 
   const canWrite =
     !!account && (hasFeature(account, 'mail-send') || hasFeature(account, 'mail-modify'));
+  const shortcuts = (prefs as { shortcuts?: boolean } | undefined)?.shortcuts ?? true;
+  // Page-level keys; the open thread adds its own (archive, star, reply …) in `ThreadView`.
+  useMailKeys(shortcuts && !!account, {
+    compose: () => {
+      if (canWrite && account)
+        setCompose({ state: emptyCompose(), title: t.mail.write.compose.titleNew, account });
+    },
+    search: () => searchForm.current?.querySelector<HTMLInputElement>('input')?.focus(),
+    back: () => {
+      if (threadId) update({ thread: null });
+    },
+    open: () => {
+      const id = focusedThreadId();
+      if (id) update({ thread: id });
+    },
+    select: () => {
+      const id = focusedThreadId();
+      if (!id || !account || !hasFeature(account, 'mail-modify')) return;
+      setSelecting(true);
+      selection.toggle(id, false);
+    },
+  });
   const header = (
     <>
       <InboxHead unread={summary && summary.total > 0 ? summary.unread : undefined} />
@@ -455,6 +491,7 @@ export default function MailPage() {
       labels={labels}
       confirmMoves={confirmMoves}
       localAi={localAi}
+      shortcuts={shortcuts}
       onChanged={box.reload}
       onCompose={(state, title) => setCompose({ state, title, account })}
       onBack={() => {
@@ -530,6 +567,7 @@ export default function MailPage() {
       {account.key === DEMO_ACCOUNT ? <p className={styles.notice}>{t.mail.page.demo}</p> : null}
       <form
         className={styles.toolbar}
+        ref={searchForm}
         onSubmit={(e) => {
           e.preventDefault();
           setRecent(rememberSearch(draft));
@@ -556,9 +594,13 @@ export default function MailPage() {
           <div className={styles.picker}>
             <SelectField
               label={t.mail.page.label}
-              value={labelId}
-              disabled={query !== ''}
-              onChange={(e) => update({ label: e.target.value })}
+              value={query && isSaved(saved, query) ? `q:${query}` : labelId}
+              disabled={query !== '' && !isSaved(saved, query)}
+              onChange={(e) =>
+                e.target.value.startsWith('q:')
+                  ? update({ q: e.target.value.slice(2), thread: null })
+                  : update({ label: e.target.value, q: null })
+              }
             >
               {labels.map((l) => (
                 <option key={l.id} value={l.id}>
@@ -566,6 +608,15 @@ export default function MailPage() {
                   {l.unread ? ` (${l.unread})` : ''}
                 </option>
               ))}
+              {saved.length > 0 ? (
+                <optgroup label={t.mail.find.saved}>
+                  {saved.map((q) => (
+                    <option key={q} value={`q:${q}`}>
+                      {q}
+                    </option>
+                  ))}
+                </optgroup>
+              ) : null}
             </SelectField>
           </div>
         )}
@@ -591,10 +642,51 @@ export default function MailPage() {
         {query ? (
           <Button onClick={() => update({ q: null })}>{t.mail.page.searchEnd}</Button>
         ) : null}
+        {query && !isSaved(saved, query) ? (
+          <Button
+            variant="ghost"
+            onClick={() => {
+              if (saved.length >= 10) return useUiStore.getState().toast(t.mail.find.savedFull);
+              setSaved(saveSearch(query));
+              useUiStore.getState().toast(t.mail.find.savedDone);
+            }}
+          >
+            {t.mail.find.save}
+          </Button>
+        ) : query ? (
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setSaved(forgetSearch(query));
+              useUiStore.getState().toast(t.mail.find.forgotten);
+            }}
+          >
+            {t.mail.find.forgetThis}
+          </Button>
+        ) : null}
         <IconButton label={t.mail.page.refresh} onClick={box.reload} disabled={box.loading}>
           <Icon name="sync" />
         </IconButton>
       </form>
+      {/* Quick filters write Gmail operators into the search; shown once a search is typed or running. */}
+      {draft.trim() || query ? (
+        <div className={styles.row} role="group" aria-label={t.mail.find.filters}>
+          <Chips>
+            {FILTERS.map((f) => (
+              <Chip
+                key={f}
+                label={t.mail.find.filter[f] ?? f}
+                selected={hasFilter(query, f)}
+                onClick={() => {
+                  const next = toggleFilter(query || draft, f);
+                  setDraft(next);
+                  update({ q: next || null, thread: null });
+                }}
+              />
+            ))}
+          </Chips>
+        </div>
+      ) : null}
 
       {(offerPersonal || (offerPlanAll && onPlan) || canModify) && box.threads.length > 0 ? (
         <div className={styles.row} ref={selectRow}>
@@ -765,6 +857,29 @@ export default function MailPage() {
                 {l.unread ? <span className={styles.labelCount}>{l.unread}</span> : null}
               </button>
             ))}
+            {saved.length > 0 ? (
+              <>
+                <p className={styles.savedHead}>{t.mail.find.saved}</p>
+                {saved.map((q) => (
+                  <div key={q} className={styles.savedRow}>
+                    <button
+                      type="button"
+                      className={styles.labelBtn}
+                      aria-current={q === query ? 'true' : undefined}
+                      onClick={() => update({ q, thread: null })}
+                    >
+                      <span className={styles.savedText}>{q}</span>
+                    </button>
+                    <IconButton
+                      label={t.mail.find.forget(q)}
+                      onClick={() => setSaved(forgetSearch(q))}
+                    >
+                      <Icon name="close" size={16} />
+                    </IconButton>
+                  </div>
+                ))}
+              </>
+            ) : null}
           </nav>
           <div className={styles.listCol}>{listPane}</div>
           <section className={styles.reading} aria-label={t.mail.view.back}>

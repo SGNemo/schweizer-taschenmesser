@@ -42,6 +42,9 @@ export const mail: Strings['mail'] = {
     showAnswered: 'Show “Answered?”',
     showAnsweredHelp:
       'Under a mail in the plan whose last message is yours you see “Answered? · Done”. Nothing is ticked off by itself; this is checked on this device only.',
+    shortcuts: 'Gmail-style keyboard shortcuts',
+    shortcutsHelp:
+      'c new mail · / search · u back to the list · o open · x select · e archive · # trash · ! spam · s star · r reply · a reply all · f forward · Shift+I read · Shift+U unread. J/K pick the row. Whatever asks first elsewhere asks here too.',
   },
   answered: {
     question: 'Answered?',
@@ -340,6 +343,22 @@ export const mail: Strings['mail'] = {
       edit: 'Edit',
       sent: 'Mail sent.',
     },
+  },
+  find: {
+    filters: 'Search filters',
+    filter: {
+      'is:unread': 'Unread',
+      'has:attachment': 'With attachment',
+      'is:starred': 'Starred',
+      'older_than:1y': 'Older than a year',
+    } as Record<string, string>,
+    save: 'Remember search',
+    forgetThis: 'Stop remembering',
+    saved: 'Remembered searches',
+    savedFull: 'Ten searches are already remembered. Remove one to remember this one.',
+    savedDone: 'Search remembered. It now sits with the folders.',
+    forgotten: 'Search no longer remembered.',
+    forget: (q: string) => `Remove remembered search “${q}”`,
   },
   batch: {
     select: 'Select',

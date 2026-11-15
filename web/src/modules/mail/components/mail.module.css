@@ -389,3 +389,25 @@
   vertical-align: -2px;
   color: var(--text-muted);
 }
+
+/* Remembered searches under the folders: a small head, then one row each with its remove button. */
+.savedHead {
+  margin: var(--space-3) 0 var(--space-1);
+  padding: 0 var(--space-3);
+  font-size: var(--text-meta);
+  color: var(--text-muted);
+}
+.savedRow {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.savedRow > .labelBtn {
+  flex: 1;
+  min-width: 0;
+}
+.savedText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

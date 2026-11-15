@@ -7426,6 +7426,9 @@ export const de = {
       showAnswered: '„Beantwortet?“ anzeigen',
       showAnsweredHelp:
         'Unter einer Mail im Plan, deren letzte Nachricht von dir ist, steht „Beantwortet? · Erledigt“. Nichts wird von selbst erledigt; geprüft wird nur auf diesem Gerät.',
+      shortcuts: 'Tastenkürzel wie in Gmail',
+      shortcutsHelp:
+        'c neue Mail · / suchen · u zurück zur Liste · o öffnen · x auswählen · e archivieren · # Papierkorb · ! Spam · s Stern · r antworten · a allen antworten · f weiterleiten · Umschalt+I gelesen · Umschalt+U ungelesen. J/K wählen die Zeile. Was sonst nachfragt, fragt auch hier.',
     },
     /** A planned mail whose newest message is the person's own („Wochenende retten“ F5): a question, one verb. */
     answered: {
@@ -7734,6 +7737,22 @@ export const de = {
         edit: 'Bearbeiten',
         sent: 'Mail gesendet.',
       },
+    },
+    find: {
+      filters: 'Filter für die Suche',
+      filter: {
+        'is:unread': 'Ungelesen',
+        'has:attachment': 'Mit Anhang',
+        'is:starred': 'Mit Stern',
+        'older_than:1y': 'Älter als ein Jahr',
+      } as Record<string, string>,
+      save: 'Suche merken',
+      forgetThis: 'Nicht mehr merken',
+      saved: 'Gemerkte Suchen',
+      savedFull: 'Es sind schon zehn Suchen gemerkt. Entferne eine, um diese zu merken.',
+      savedDone: 'Suche gemerkt. Sie steht jetzt bei den Ordnern.',
+      forgotten: 'Suche nicht mehr gemerkt.',
+      forget: (q: string) => `Gemerkte Suche „${q}“ entfernen`,
     },
     batch: {
       select: 'Auswählen',

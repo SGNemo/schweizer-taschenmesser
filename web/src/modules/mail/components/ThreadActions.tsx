@@ -16,6 +16,7 @@ import {
   type Step,
 } from '../mailActions';
 import { MailError } from './MailError';
+import { useMailKeys } from '../useMailKeys';
 import styles from './mail.module.css';
 
 type Asking = 'archive' | 'trash' | 'spam' | 'label';
@@ -40,6 +41,7 @@ export function ThreadActions({
   inSpam,
   labels,
   confirmMoves,
+  shortcuts = false,
   onLabels,
   onChanged,
   onLeave,
@@ -54,6 +56,8 @@ export function ThreadActions({
   labels: MailLabel[];
   /** Ask before archiving and labelling (the trash and spam always ask). */
   confirmMoves: boolean;
+  /** Gmail-style keys: e, #, !, s, Shift+I, Shift+U do what the buttons do (asking where they ask). */
+  shortcuts?: boolean;
   /** A change or its undo went through: exactly this label change, applied to the newest state. */
   onLabels: (change: ThreadChange) => void;
   /** The list should reload. */
@@ -68,9 +72,28 @@ export function ThreadActions({
   const [error, setError] = useState<MailErrorCode | undefined>();
   const userLabels = labels.filter((l) => l.kind === 'user' && !labelIds.includes(l.id));
 
-  if (!hasFeature(account, 'mail-modify')) return null;
-
   const has = (id: string) => labelIds.includes(id);
+  const canModify = hasFeature(account, 'mail-modify');
+  useMailKeys(shortcuts && canModify && !asking, {
+    archive: () => {
+      if (has('INBOX') && !inTrash && !inSpam) ask('archive');
+    },
+    trash: () => {
+      if (!inTrash) ask('trash');
+    },
+    spam: () => {
+      if (!inSpam && !inTrash) ask('spam');
+    },
+    star: () => act(has('STARRED') ? 'unstar' : 'star'),
+    read: () => {
+      if (has('UNREAD')) act('read');
+    },
+    unread: () => {
+      if (!has('UNREAD')) act('unread');
+    },
+  });
+
+  if (!canModify) return null;
 
   async function go(step: Step, done: (n: number) => string) {
     if (busy) return;
