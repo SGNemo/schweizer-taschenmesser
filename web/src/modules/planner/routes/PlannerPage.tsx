@@ -54,7 +54,8 @@ import { DaySetup } from '../components/DaySetup';
 import { DaySheet } from '../components/DaySheet';
 import { RowChoice, type RowChoiceState } from '../components/RowChoice';
 import { SETUP_DAYS } from '../daySetup';
-import { restOffered } from '../rest';
+import { eveningLine } from '../rest';
+import { dayEndOf } from '../settings';
 import { PlanPreview, type PreviewData } from '../components/PlanPreview';
 import { WeekCheck } from '../components/WeekCheck';
 import { BOARD_DAYS } from '../calendar';
@@ -427,10 +428,17 @@ export default function PlannerPage() {
     dismissedWeek !== undefined &&
     dismissedWeek !== monday;
 
-  // „Rest verteilen“ in the evening (F3): a quiet link from 17:00 under `focus.eveningWrapUp`, only while today
-  // holds something open; never a count. The clock is read once a minute.
+  // One evening line under `focus.eveningWrapUp` (REVIEW-FABLE R11): from 30 min before the „Tagesende“ the sentence
+  // „Bald ist Tagesende.“, carrying „Rest verteilen“ while today holds something open (package 6); else that link
+  // from 17:00 (F3). Never a count. The clock is read once a minute.
   const clock = useNow(60_000, focus.eveningWrapUp);
-  const showRestLink = !pending && restOffered(focus.eveningWrapUp, clock, todayDay);
+  const evening = eveningLine(
+    focus.eveningWrapUp,
+    clock,
+    data ? dayEndOf(data.settings) : undefined,
+    todayDay,
+  );
+  const showRestLink = !pending && evening?.kind === 'rest';
 
   /** The three biggest things of the shown week (all their sessions together). */
   const biggest = (() => {
@@ -871,7 +879,18 @@ export default function PlannerPage() {
         </p>
       ) : null}
 
-      {showWeekLink && !showRestLink ? (
+      {evening?.kind === 'dayEnd' ? (
+        <p className={styles.weekLink} data-testid="day-end-line">
+          <span>{t.planner.rest.dayEnd}</span>
+          {evening.rest && !pending ? (
+            <button type="button" className={styles.weekLinkText} onClick={() => void showRest()}>
+              {t.planner.rest.link}
+            </button>
+          ) : null}
+        </p>
+      ) : null}
+
+      {showWeekLink && !showRestLink && evening?.kind !== 'dayEnd' ? (
         <p className={styles.weekLink} data-testid="week-check-link">
           <button type="button" className={styles.weekLinkText} onClick={() => setChecking(true)}>
             {t.planner.weekLink.label}
@@ -972,6 +991,7 @@ export default function PlannerPage() {
         <DaySetup
           days={board.days.slice(0, SETUP_DAYS)}
           titles={titles}
+          dayEnd={data?.settings.dayEnd}
           onClose={() => setSettingUp(false)}
         />
       ) : null}

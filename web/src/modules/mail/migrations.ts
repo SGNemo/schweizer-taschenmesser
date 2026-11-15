@@ -11,4 +11,7 @@ export const migrations: ModuleManifest['migrations'] = {
   // Version 3 („Kopf leer“ 3b): headers may carry `lastMessageId` (optional). Without it a row shows no
   // invoice line until the list is fetched again; nothing to rewrite.
   3: async () => undefined,
+  // Version 4 („Wochenende retten“ F5): headers may carry `lastFromMe` (optional, set by the list only).
+  // Without it a planned row shows no „Beantwortet?“ until the list is fetched again; nothing to rewrite.
+  4: async () => undefined,
 };
