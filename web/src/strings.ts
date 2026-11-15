@@ -8903,6 +8903,28 @@ export const de = {
       up: 'Nach oben',
       down: 'Nach unten',
       remove: 'Entfernen',
+      remind: 'Erinnern um …',
+    },
+    /** The page's ⋯ menu in the head. */
+    more: 'Mehr zur Uhr',
+    timer: 'Timer',
+    remind: {
+      title: (place: string) => `Erinnern nach der Zeit in ${place}`,
+      text: 'Woran erinnern?',
+      textPlaceholder: 'z. B. Mama anrufen',
+      date: (place: string) => `Datum in ${place}`,
+      time: (place: string) => `Uhrzeit in ${place}`,
+      /** The preview under the fields: "Bei dir: Mi, 18. Nov. 11:00". */
+      here: (day: string, time: string) => `Bei dir: ${day} ${time}`,
+      past: 'Dieser Zeitpunkt ist schon vorbei.',
+      invalid: 'Bitte Datum und Uhrzeit prüfen.',
+      once: 'Einmalig. Die Erinnerung steht danach im Kalender unter „Erinnerungen“ und meldet sich wie jede andere.',
+      calendarOff:
+        'Erinnerungen liegen im Kalender, der gerade aus ist. Schalte ihn in der Bibliothek ein, dann geht es hier weiter.',
+      save: 'Erinnerung anlegen',
+      /** The reminder's title in the calendar: "Mama anrufen (19:00 in Tokio)". */
+      entry: (text: string, time: string, place: string) => `${text} (${time} in ${place})`,
+      saved: (day: string, time: string) => `Erinnerung für ${day} ${time} angelegt.`,
     },
     added: (name: string) => `${name} hinzugefügt.`,
     removed: (name: string) => `${name} entfernt.`,
