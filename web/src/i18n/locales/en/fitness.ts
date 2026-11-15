@@ -217,7 +217,6 @@ export const fitness: Strings['fitness'] = {
     kcal: (kcal) => `${kcal} kcal`,
     total: 'Week total',
     byGroup: 'By muscle group',
-    groupSets: (group, n) => `${group} ${n === 1 ? '1 set' : `${n} sets`}`,
     groupMinutes: (group, duration) => `${group} ${duration}`,
     groupsChart: 'Sets by muscle group',
     kcalChart: 'kcal per day',
@@ -256,9 +255,9 @@ export const fitness: Strings['fitness'] = {
     historyMore: (n) => `and ${n} older`,
     bestMark: 'Best',
     trend: {
-      weight: 'Heaviest weight per session',
-      reps: 'Most reps per session',
-      minutes: 'Duration per session',
+      weight: 'Heaviest weight per training day',
+      reps: 'Most reps per training day',
+      minutes: 'Duration per training day',
     },
   },
   live: {

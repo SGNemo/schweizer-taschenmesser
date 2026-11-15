@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { formatMinutes, formatNumber } from '@/core/i18n/format';
+import { formatMinutes } from '@/core/i18n/format';
 import { Bars } from '@/ui/charts';
 import { addDaysStr, formatDay, relativeDayLabel } from '@/core/time/dates';
 import { t } from '@/strings';
@@ -127,12 +127,15 @@ export function WeekView({
           title={w.kcalChart}
           showTitle
           orientation="vertical"
-          data={days.map((d) => ({
-            id: d.date,
-            label: formatDay(d.date, 'EEE'),
-            value: d.kcal,
-          }))}
-          format={(n) => `${formatNumber(n)} kcal`}
+          // Days not lived yet are left out: a „0 kcal“ for tomorrow would read like a day without food.
+          data={days
+            .filter((d) => d.date <= day)
+            .map((d) => ({
+              id: d.date,
+              label: formatDay(d.date, 'EEE'),
+              value: d.kcal,
+            }))}
+          format={(n) => t.fitness.line.kcal(kcalText(n))}
           data-testid="fitness-week-kcal"
         />
       ) : null}

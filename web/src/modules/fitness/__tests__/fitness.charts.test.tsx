@@ -33,7 +33,7 @@ describe('fitness charts', () => {
       </MemoryRouter>,
     );
     fireEvent.click(await screen.findByText('Kniebeuge'));
-    const trend = await screen.findByRole('figure', { name: 'Schwerstes Gewicht je Einheit' });
+    const trend = await screen.findByRole('figure', { name: 'Schwerstes Gewicht je Trainingstag' });
     expect(within(trend).getAllByText(/85 kg/).length).toBeGreaterThan(0);
     fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' });
   });

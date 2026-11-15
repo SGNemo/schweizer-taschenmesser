@@ -155,7 +155,15 @@ function ExerciseDialog({
             <Trend
               title={x.trend[trend.kind]}
               showTitle
-              labels={trend.points.map((p) => formatDay(p.date, 'd. MMM'))}
+              // With the year once the course spans more than one.
+              labels={trend.points.map((p) =>
+                formatDay(
+                  p.date,
+                  trend.points[0]!.date.slice(0, 4) === trend.points.at(-1)!.date.slice(0, 4)
+                    ? 'd. MMM'
+                    : 'd. MMM yy',
+                ),
+              )}
               series={[{ label: name ?? '', values: trend.points.map((p) => p.value) }]}
               format={unit}
               data-testid="fitness-exercise-trend"
