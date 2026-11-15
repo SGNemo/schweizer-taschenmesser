@@ -14,10 +14,8 @@ import {
 import styles from './charts.module.css';
 
 export interface DonutProps extends ChartBaseProps {
-  /** Shares: only positive values count; largest first, after `maxSegments` the rest is "Sonstiges". */
+  /** Shares: only positive values count; largest first, after six the rest is "Sonstiges". */
   data: readonly ChartDatum[];
-  /** At most this many named slices (default and upper limit 6: one colour and pattern slot each). */
-  maxSegments?: number;
   /** Small word under the sum in the middle (default "Summe", e.g. "pro Monat"). */
   centreLabel?: string;
 }
@@ -32,13 +30,13 @@ const GAP = 0.8;
  * o'clock, at most six named slices plus "Sonstiges". Slices are steps of the module colour with a pattern each, and
  * the legend beside them names every slice with its value and share: the ring never has to be read by colour.
  */
-export function Donut({ data, maxSegments = MAX_SEGMENTS, centreLabel, ...base }: DonutProps) {
+export function Donut({ data, centreLabel, ...base }: DonutProps) {
   const prefix = `ch${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const { show, read, hidden } = useValueText(
     base.format ?? defaultFormat,
     base.sensitive ?? false,
   );
-  const shares = foldShares(data, t.charts.other, maxSegments);
+  const shares = foldShares(data, t.charts.other);
   const total = shares.reduce((s, p) => s + p.value, 0);
   const top = shares[0];
   const summary = top

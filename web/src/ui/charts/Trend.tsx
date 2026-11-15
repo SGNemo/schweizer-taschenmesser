@@ -62,6 +62,7 @@ export function Trend({
   const wide = labelIndexes(n, X_LABELS.wide);
   /** One sentence per series (every series is named; the table has every value). */
   const summary = all
+    .filter((s) => s.values.slice(0, n).some((v) => v != null && Number.isFinite(v)))
     .map((s) => {
       const own = s.values.slice(0, n);
       const known = own.filter((v): v is number => v != null && Number.isFinite(v));
@@ -132,7 +133,7 @@ export function Trend({
           ))}
           <span className={`${styles.yWidth} ${styles.num}`}>
             {scale.ticks.map((v) => (
-              <span key={v} className={styles.yWidth}>
+              <span key={v} className={styles.yLine}>
                 {axisText(v)}
               </span>
             ))}

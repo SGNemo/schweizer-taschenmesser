@@ -88,7 +88,7 @@ describe('Donut', () => {
     expect(screen.queryByText('Summe')).toBeNull();
   });
 
-  it('seven values: six named slices and "Sonstiges", each with its own pattern', () => {
+  it('seven values: seven slices, each with its own pattern (the seventh on the grey slot)', () => {
     const seven = Array.from({ length: 7 }, (_, i) => ({ label: `K${i}`, value: 10 - i }));
     const { container } = render(<Donut title="T" data={seven} />);
     const slices = [...container.querySelectorAll('[data-slice]')];
@@ -137,12 +137,12 @@ describe('Bars', () => {
     expect(screen.getAllByText('Geplant')).toHaveLength(2); // key and table column
   });
 
-  it('a module names its target; columns over it get the "drüber" key', () => {
+  it('a module names its target; columns over it get the "mehr als geplant" key', () => {
     render(
       <Bars title="T" data={budgets} orientation="vertical" targetLabel="Budget" format={euro} />,
     );
     expect(screen.getAllByText('Budget')).toHaveLength(2);
-    expect(screen.getByText('drüber')).toBeInTheDocument();
+    expect(screen.getByText('mehr als geplant')).toBeInTheDocument();
     expect(
       within(tableOf(screen.getByRole('figure'))).getByRole('columnheader', { name: 'Budget' }),
     ).toBeInTheDocument();
@@ -216,6 +216,14 @@ describe('Bars', () => {
     render(<Bars title="T" data={budgets} format={euro} sensitive />);
     await waitFor(() => expect(screen.getByText('mehr als geplant')).toBeInTheDocument());
     expect(screen.getByRole('figure').textContent).not.toMatch(/\d+,\d\d €/);
+  });
+
+  it('hidden values: columns, "von …" and the table show no amount', async () => {
+    await setHideValues(true);
+    render(<Bars title="T" data={budgets} format={euro} orientation="vertical" sensitive />);
+    const fig = screen.getByRole('figure');
+    await waitFor(() => expect(fig.textContent).not.toMatch(/\d+,\d\d/));
+    expect(rows(tableOf(fig))[1]).toEqual(['Freizeit', 'Ausgeblendet', 'Ausgeblendet']);
   });
 
   it('empty', () => {
@@ -339,6 +347,7 @@ describe('Trend with "Werte ausblenden"', () => {
           { label: 'Aus', values: [90000, 95000, 99000] },
         ]}
         format={euro}
+        formatAxis={(v) => `${v / 100} k`}
         sensitive
       />,
     );

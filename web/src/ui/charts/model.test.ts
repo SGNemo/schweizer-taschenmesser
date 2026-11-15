@@ -28,11 +28,11 @@ describe('foldShares', () => {
     expect(s[6]).toMatchObject({ label: 'Sonstiges', other: true, value: 94 + 93 + 92 + 91 });
   });
 
-  it('seven values: six named, the seventh is "Sonstiges" (never a slice without a pattern slot)', () => {
+  it('seven values: the seventh keeps its name on the grey "other" slot (never a slice without a pattern)', () => {
     const data = Array.from({ length: 7 }, (_, i) => d(`k${i}`, 10 - i));
     const s = foldShares(data, 'Sonstiges');
     expect(s).toHaveLength(7);
-    expect(s[6]).toMatchObject({ label: 'Sonstiges', other: true, value: 4 });
+    expect(s[6]).toMatchObject({ label: 'k6', other: true, value: 4 });
   });
 
   it('never more than six named slices, whatever `max` asks for', () => {

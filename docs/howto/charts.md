@@ -6,8 +6,8 @@ Shared chart blocks in `web/src/ui/charts/` (import from `@/ui/charts`, not from
 | ------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------- |
 | `Donut` | parts of a whole, ≤ 6 named + "Sonstiges", sum in the middle                                              | where the money went, cost per subscription                               | values over time, negative values             |
 | `Bars`  | values side by side from zero, optional target mark (`target`, named by `targetLabel`, default "Geplant") | budgets (spent vs. limit), categories (`horizontal`), months (`vertical`) | parts of a whole (Donut), long series (Trend) |
-| `Trend` | one or two series over labels, optional `compare` period                                                  | balance, spending per month, this year vs last year                       | ≤ 2 points (say it in a sentence)             |
-| `Spark` | shape only, no axis                                                                                       | a widget or a row next to its number                                      | anything people must read values from         |
+| `Trend` | one or two series over labels, optional `compare` period                                                  | balance, spending per month, this year vs last year                       | < 2 points (one value is better a sentence)   |
+| `Spark` | shape only, no axis (`ui/widgets/Sparkline` = the same block, nothing for one value)                      | a widget or a row next to its number                                      | anything people must read values from         |
 
 ## Rules the blocks keep (do not rebuild them in a module)
 
@@ -15,7 +15,7 @@ Shared chart blocks in `web/src/ui/charts/` (import from `@/ui/charts`, not from
 - **Colours:** first series `--viz-1` (= module hue inside a module), slices are steps of it towards `--text` (each ≥ 3:1, `tokens.test.ts`), second series `--viz-2`, comparison and "Sonstiges" `--border-strong`; in "Ruhig" both series are grey. **Red only for the part over target** (`Bars`), always with an icon and "… drüber" (rows) or the key "drüber" (columns).
 - **Numbers:** `format` (default `formatNumber`); money: `format={(c) => formatMoney(c, currency)}`, axis `formatAxis={formatMoneyAxis}`. **Every chart of money passes `sensitive`**: "Werte ausblenden" then masks every amount (axis, legend, middle, summary, table); shapes and shares stay.
 - **Width:** container queries, not the viewport: legend beside or under the donut, bars stack their label at ≤ 24 rem, axis labels thin out (the newest always shows). Give the chart its card's width; no fixed pixel sizes.
-- **States:** a trend needs two points (a single value is better a sentence); no usable value → `emptyText` (default "Noch keine Werte."); one value → full ring, one bar, a dot; many values → "Sonstiges", thinned labels, no values over more than 7 columns.
+- **States:** no usable value → `emptyText` (default "Noch keine Werte."); one value → full ring, one bar, a dot; many values → "Sonstiges", thinned labels, no values over more than 7 columns – a column over its target then shows the icon without the amount, so budgets use horizontal bars.
 - **Motion:** bars grow once on first appearance (transform), off with "Bewegung reduzieren" (system or app); donut and trend do not move.
 
 ## Examples

@@ -119,12 +119,12 @@ export function Bars({ data, orientation = 'horizontal', targetLabel, ...base }:
         <Columns rows={rows} vars={vars} show={show} isOver={isOver} />
       )}
       {hasTarget ? (
-        <p className={styles.key}>
+        <p className={styles.key} data-orientation={orientation}>
           <span className={styles.targetKey}>{targetLabel ?? t.charts.target}</span>
           {overCount > 0 && orientation === 'vertical' ? (
             <span className={styles.overKey}>
               <Icon name="alert" size={14} />
-              {t.charts.overKey}
+              {t.charts.overPlain}
             </span>
           ) : null}
         </p>

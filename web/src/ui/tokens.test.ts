@@ -209,7 +209,7 @@ describe('design tokens', () => {
     expect(css).not.toMatch(/--accent-2/);
   });
 
-  it('chart share slots (ui/charts) keep 3:1 on the card for every hue, both themes; calm greys the series', () => {
+  it('chart share slots (ui/charts) keep 3:1 on the card for every hue, both themes', () => {
     const chartCss = read('ui/charts/charts.module.css');
     const steps = [
       ...chartCss.matchAll(/--c: color-mix\(in srgb, var\(--viz-1\) (\d+)%, var\(--text\)\)/g),
@@ -229,9 +229,6 @@ describe('design tokens', () => {
               `${hue} ${pct}`,
             ).toBeGreaterThanOrEqual(3);
     }
-    const calm = block(":root[data-color='calm']");
-    expect(calm['--viz-1']).toBe('var(--calm-ink)');
-    expect(calm['--viz-2']).toBe('var(--calm-ink)');
   });
 
   it('the calm colour mode and the module-colours switch grey out every module hue; every hue has a data-hue rule', () => {

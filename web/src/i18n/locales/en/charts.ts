@@ -11,7 +11,6 @@ export const charts: Strings['charts'] = {
   ofTarget: (target) => `of ${target}`,
   over: (amount) => `${amount} over`,
   overPlain: 'more than planned',
-  overKey: 'over',
   latest: (label, value) => `${label} ${value}`,
   donutSummary: (n, top, share, total) =>
     [

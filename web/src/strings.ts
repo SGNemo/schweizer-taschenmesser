@@ -2858,8 +2858,6 @@ export const de = {
     ofTarget: (target: string) => `von ${target}`,
     over: (amount: string) => `${amount} drüber`,
     overPlain: 'mehr als geplant',
-    /** Key under columns: the icon above a column means "over". */
-    overKey: 'drüber',
     /** Legend of a trend: the series' newest value with its label ("Nov. 2.300,00 €"). */
     latest: (label: string, value: string) => `${label} ${value}`,
     donutSummary: (n: number, top: string, share: string, total: string | null) =>

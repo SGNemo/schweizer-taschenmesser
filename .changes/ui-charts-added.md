@@ -2,6 +2,6 @@
 type: added
 area: ui
 breaking: false
-de: Einheitliche Diagramme (Ring, Balken, Verlauf), lesbar auch ohne Farben, im Modus „Ruhig“ und mit Screenreader; „Werte ausblenden“ verdeckt auch dort die Beträge.
-en: Consistent charts (ring, bars, trend), readable without colour, in calm mode and with a screen reader; "Hide values" covers their amounts too.
+de: Gemeinsame Diagramm-Bausteine (Ring, Balken, Verlauf), lesbar ohne Farben und mit Screenreader. Budgets, Abos, Rechnungen und Finanzen stellen in den nächsten Updates darauf um.
+en: Shared chart blocks (ring, bars, trend), readable without colour and with a screen reader. Budgets, subscriptions, invoices and finance switch to them in the next updates.
 ---

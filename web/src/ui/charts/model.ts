@@ -29,8 +29,9 @@ const usable = (v: number) => Number.isFinite(v) && v > 0;
 
 /**
  * Sorts by size (largest first, ties keep input order) and folds everything after `max` (at most six: one colour
- * and pattern slot each) into one slice named `otherLabel`. Zero, negative and non-finite values have no share and
- * are left out.
+ * and pattern slot each) into one slice named `otherLabel` on the grey "other" slot. A rest of exactly one value
+ * keeps its own name on that slot (a "Sonstiges" of one thing hides a name for nothing). Zero, negative and
+ * non-finite values have no share and are left out.
  */
 export function foldShares(
   data: readonly ChartDatum[],
@@ -57,8 +58,8 @@ export function foldShares(
   if (rest.length > 0) {
     const value = rest.reduce((s, r) => s + r.d.value, 0);
     shares.push({
-      key: '__other',
-      label: otherLabel,
+      key: rest.length === 1 ? (rest[0]!.d.id ?? `${rest[0]!.i}`) : '__other',
+      label: rest.length === 1 ? rest[0]!.d.label : otherLabel,
       value,
       share: value / total,
       index: shares.length,
