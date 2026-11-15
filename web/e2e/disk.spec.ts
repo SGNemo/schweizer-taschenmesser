@@ -663,13 +663,16 @@ test('empty folders are listed', async ({ page }) => {
   await expect(page.getByRole('table', { name: 'Schnellfilter' })).toContainText('Leer');
 });
 
-test('clean-up places on the drives page start a scan of that folder', async ({ page }) => {
+test('"Genauer ansehen" in the tidy tab starts a scan of that folder', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2025-06-15T00:00:00Z'));
   await asDesktop(page);
   await enableDisk(page);
   await page.goto('/disk');
-  await expect(page.getByRole('heading', { name: 'Schnellübersicht' })).toBeVisible();
-  await page.getByRole('button', { name: 'Downloads scannen' }).click();
+  // The drives tab points to the tab that took over the clean-up places.
+  await page.getByRole('button', { name: 'Aufräumen öffnen' }).click();
+  await expect(page).toHaveURL(/tab=tidy/);
+  await page.getByRole('button', { name: 'Suchen', exact: true }).click();
+  await page.getByRole('button', { name: 'Alte Downloads im Scan ansehen' }).click();
   await expect(
     page.getByRole('heading', { name: /Scan von C:\\Nutzer\\Beispiel\\Downloads/ }),
   ).toBeVisible();
@@ -760,19 +763,104 @@ test('public IP is only asked for on a click and only shows the answer', async (
   expect(asked).toBe(1);
 });
 
-test('quick overview lists sizes of clean-up places and the recycle bin without a scan', async ({
-  page,
-}) => {
+/** Opens the tab "Aufräumen" of the fake PC and runs the search. */
+async function openTidy(page: Page) {
+  await page.clock.setFixedTime(new Date('2025-06-15T00:00:00Z'));
   await asDesktop(page);
   await enableDisk(page);
-  await page.goto('/disk');
-  await expect(page.getByRole('heading', { name: 'Schnellübersicht' })).toBeVisible();
-  const quick = page.getByRole('region', { name: 'Aufräumen' });
-  await expect(quick).toContainText('Downloads');
-  await expect(quick).toContainText('mindestens 11,5 GB');
-  await expect(quick).toContainText('3,2 GB');
-  await expect(quick.getByText('Papierkorb')).toBeVisible();
-  await expect(quick).toContainText('1,1 GB');
+  await page.goto('/disk?tab=tidy');
+  await page.getByRole('button', { name: 'Suchen', exact: true }).click();
+  await expect(page.getByText(/^3 Vorschläge · zusammen/)).toBeVisible();
+}
+
+test('tidy tab: nothing is searched until asked, then suggestions with sizes', async ({ page }) => {
+  await asDesktop(page);
+  await enableDisk(page);
+  await page.goto('/disk?tab=tidy');
+  await expect(page.getByRole('list', { name: 'Vorschläge' })).toHaveCount(0);
+  // The recycle bin is listed with its size; emptying it stays with Windows.
+  const windows = page.getByRole('region', { name: 'Macht Windows selbst' });
+  await expect(windows.getByText('Papierkorb', { exact: true })).toBeVisible();
+  await expect(windows).toContainText('1,1 GB');
+  await page.getByRole('button', { name: 'Suchen', exact: true }).click();
+  const list = page.getByRole('list', { name: 'Vorschläge' });
+  await expect(list.getByRole('heading', { name: 'Temporäre Dateien' })).toBeVisible();
+  await expect(
+    list.getByRole('heading', { name: 'Browser-Zwischenspeicher (Chrome)' }),
+  ).toBeVisible();
+  await expect(list.getByRole('heading', { name: 'Alte Downloads' })).toBeVisible();
+  // Temp: the file from today is not suggested (a program may still need it).
+  await expect(list).toContainText('alt.tmp');
+  await expect(list).not.toContainText('heute.tmp');
+  // A running browser is named.
+  await expect(list).toContainText('Chrome läuft gerade');
+  // The young download is not listed.
+  await expect(list).not.toContainText('rechnung.pdf');
+});
+
+test('tidy tab: the user’s own downloads start unticked and need a choice', async ({ page }) => {
+  await openTidy(page);
+  const clean = page.getByRole('button', { name: 'Alte Downloads aufräumen' });
+  await expect(clean).toBeDisabled();
+  await page.getByRole('checkbox', { name: 'urlaub.zip auswählen' }).check();
+  await expect(clean).toBeEnabled();
+  // Caches and temp files are ticked from the start.
+  await expect(page.getByRole('button', { name: 'Temporäre Dateien aufräumen' })).toBeEnabled();
+  await page.getByText('Vorschau · 3 Einträge').click();
+  await expect(page.getByRole('checkbox', { name: 'alt.tmp auswählen' })).toBeChecked();
+});
+
+test('tidy tab: cleaning goes through the delete dialog, then the suggestion is gone and the history has it', async ({
+  page,
+}) => {
+  await openTidy(page);
+  // One entry stays: untick it.
+  await page.getByText('Vorschau · 3 Einträge').click();
+  await page.getByRole('checkbox', { name: 'protokoll.log auswählen' }).uncheck();
+  await page.getByRole('button', { name: 'Temporäre Dateien aufräumen' }).click();
+  const dialog = page.getByRole('dialog');
+  // The same dialog as in the scan: recycle bin preselected, the entries listed.
+  await expect(dialog.getByRole('radio', { name: /In den Papierkorb verschieben/ })).toBeChecked();
+  await expect(dialog).toContainText('installer-reste');
+  await expect(dialog).not.toContainText('protokoll.log');
+  await dialog.getByRole('button', { name: 'In den Papierkorb' }).click();
+  await expect(page.getByTestId('delete-report')).toContainText('Papierkorb');
+  await dialog.getByRole('button', { name: 'Schließen' }).first().click();
+  // What was left stays suggested, the rest is gone.
+  const list = page.getByRole('list', { name: 'Vorschläge' });
+  await expect(list).toContainText('protokoll.log');
+  await expect(list).not.toContainText('installer-reste');
+  await expect(list).not.toContainText('alt.tmp');
+  // The history names the category and the size, never a file.
+  await page.getByRole('button', { name: 'Verlauf', exact: true }).click();
+  const history = page.getByRole('list', { name: 'Verlauf' });
+  await expect(history).toContainText('Temporäre Dateien: 2,2 GB in den Papierkorb · 2 Dateien');
+  await expect(history).not.toContainText('alt.tmp');
+  await history.getByRole('button', { name: 'Papierkorb öffnen' }).click();
+  expect(
+    await page.evaluate(() => (globalThis as { __tmCareTools?: string[] }).__tmCareTools),
+  ).toEqual(['recycleBin']);
+  // The result of the search survives the change of tab.
+  await page.getByRole('button', { name: 'Aufräumen', exact: true }).click();
+  await expect(page.getByRole('list', { name: 'Vorschläge' })).toContainText('protokoll.log');
+});
+
+test('history tab is empty before anything was changed', async ({ page }) => {
+  await asDesktop(page);
+  await enableDisk(page);
+  await page.goto('/disk?tab=history');
+  await expect(page.getByText('Noch nichts verändert.')).toBeVisible();
+});
+
+test('tidy and history tabs have no accessibility violations', async ({ page }) => {
+  await openTidy(page);
+  await page.getByText('Vorschau · 3 Einträge').click();
+  const tidy = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
+  expect(tidy.violations).toEqual([]);
+  await page.getByRole('button', { name: 'Verlauf', exact: true }).click();
+  await expect(page.getByText('Noch nichts verändert.')).toBeVisible();
+  const history = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
+  expect(history.violations).toEqual([]);
 });
 
 test('the old /system path leads to the System tab', async ({ page }) => {

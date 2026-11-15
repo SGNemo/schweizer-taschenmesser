@@ -23,6 +23,8 @@ import {
   type SteamGame,
 } from './disk';
 
+import type { CareEntry, CleanupCategory, CleanupPlace, OptimizeService } from './optimize';
+
 const GB = 1e9;
 const MB = 1e6;
 /** Reference "now" of the fake data (2025-06-15). */
@@ -444,6 +446,79 @@ function needsDoubleConfirm(plan: DeletePlan, mode: DeleteMode): boolean {
   return mode === 'permanent' || large;
 }
 
+/** The invented clean-up places of the fake (every file its own entry, like the native side). */
+const CLEANUP_SPECS: {
+  category: CleanupCategory;
+  source: CleanupPlace['source'];
+  path: string;
+  minAgeDays: number;
+  preselected: boolean;
+  busy: boolean;
+  spec: FakeDir;
+}[] = [
+  {
+    category: 'temp',
+    source: '',
+    path: 'C:\\Nutzer\\Beispiel\\AppData\\Local\\Temp',
+    minAgeDays: 7,
+    preselected: true,
+    busy: false,
+    spec: {
+      name: '',
+      ageDays: 0,
+      dirs: [
+        {
+          name: 'installer-reste',
+          ageDays: 40,
+          files: [{ name: 'setup.bin', bytes: 1.8 * GB, ageDays: 40 }],
+        },
+      ],
+      files: [
+        { name: 'alt.tmp', bytes: 600 * MB, ageDays: 20 },
+        { name: 'protokoll.log', bytes: 90 * MB, ageDays: 9 },
+        // Younger than a week: a running program may still need it, so it is not suggested.
+        { name: 'heute.tmp', bytes: 900 * MB, ageDays: 0 },
+      ],
+    },
+  },
+  {
+    category: 'browserCache',
+    source: 'chrome',
+    path: 'C:\\Nutzer\\Beispiel\\AppData\\Local\\Chrome\\Cache',
+    minAgeDays: 0,
+    preselected: true,
+    busy: true,
+    spec: {
+      name: '',
+      ageDays: 0,
+      dirs: [
+        {
+          name: 'Cache_Data',
+          ageDays: 0,
+          files: [{ name: 'data_1', bytes: 0.9 * GB, ageDays: 0 }],
+        },
+      ],
+    },
+  },
+  {
+    category: 'oldDownloads',
+    source: '',
+    path: 'C:\\Nutzer\\Beispiel\\Downloads',
+    minAgeDays: 90,
+    preselected: false,
+    busy: false,
+    spec: {
+      name: '',
+      ageDays: 1,
+      files: [
+        { name: 'treiber-setup.exe', bytes: 700 * MB, ageDays: 400 },
+        { name: 'urlaub.zip', bytes: 2.5 * GB, ageDays: 200 },
+        { name: 'rechnung.pdf', bytes: 2 * MB, ageDays: 5 },
+      ],
+    },
+  },
+];
+
 /** A scan takes ~0.3 s so tests can see the progress state and press "Abbrechen". */
 export function createFakeDisk(): DiskService {
   interface State {
@@ -461,6 +536,10 @@ export function createFakeDisk(): DiskService {
   const scans = new Map<number, State>();
   const plans = new Map<number, { scanId: number; plan: DeletePlan; cancelled: boolean }>();
   let nextId = 0;
+  /** Scan ids of the fake clean-up places with their category (for the history). */
+  const cleanupScans = new Map<number, CleanupCategory>();
+  const careEntries: CareEntry[] = [];
+  let cleanupCancelled = false;
   const get = (id: number) => {
     const s = scans.get(id);
     if (!s) throw new Error('unknown-scan');
@@ -475,8 +554,63 @@ export function createFakeDisk(): DiskService {
   const stepMs = () =>
     Number((globalThis as { __tmDiskScanStepMs?: number }).__tmDiskScanStepMs ?? 60);
 
+  const optimize: OptimizeService = {
+    windows: true,
+    async cleanupScan(onProgress) {
+      cleanupCancelled = false;
+      for (const id of cleanupScans.keys()) scans.delete(id);
+      cleanupScans.clear();
+      const places: CleanupPlace[] = [];
+      for (const [i, c] of CLEANUP_SPECS.entries()) {
+        onProgress({ done: i, total: CLEANUP_SPECS.length, category: c.category });
+        await wait(stepMs());
+        if (cleanupCancelled) break;
+        const tree = new FakeTree(c.path, c.spec, false);
+        const limit = FAKE_NOW - c.minAgeDays * DAY;
+        const items = tree
+          .children(0, 1, 0)
+          .filter((n) => n.kind !== 'small' && (c.minAgeDays === 0 || n.modified <= limit));
+        if (items.length === 0) continue;
+        const scanId = ++nextId;
+        scans.set(scanId, {
+          tree,
+          cancelled: false,
+          paused: false,
+          dupCancelled: false,
+          done: 1,
+          manual: false,
+        });
+        cleanupScans.set(scanId, c.category);
+        places.push({
+          category: c.category,
+          source: c.source,
+          scanId,
+          path: c.path,
+          items,
+          ids: items.map((n) => n.id),
+          totalBytes: items.reduce((sum, n) => sum + n.bytes, 0),
+          totalFiles: items.reduce((sum, n) => sum + n.files, 0),
+          preselected: c.preselected,
+          minAgeDays: c.minAgeDays,
+          busy: c.busy,
+        });
+      }
+      return { places, cancelled: cleanupCancelled };
+    },
+    async cancelCleanup() {
+      cleanupCancelled = true;
+    },
+    async history() {
+      return { entries: [...careEntries].reverse(), recovered: false };
+    },
+    async openTool(tool) {
+      ((globalThis as { __tmCareTools?: string[] }).__tmCareTools ??= []).push(tool);
+    },
+  };
+
   return {
     supported: true,
+    optimize,
     listDrives: async () => DRIVES,
     async startScan(root, onProgress) {
       const scanId = ++nextId;
@@ -756,6 +890,21 @@ export function createFakeDisk(): DiskService {
         filesDeleted: files,
       });
       plans.delete(planId);
+      // Like the native side: a deletion is noted in the history (category and size only).
+      if (files > 0 || freed > 0)
+        careEntries.push({
+          id: careEntries.length + 1,
+          at: FAKE_NOW,
+          kind: 'cleanup',
+          subject: cleanupScans.get(stored.scanId) ?? 'scan',
+          label: '',
+          bytes: freed,
+          files,
+          permanent: mode === 'permanent',
+          on: null,
+          canUndo: false,
+          undone: false,
+        });
       return {
         mode,
         items,
