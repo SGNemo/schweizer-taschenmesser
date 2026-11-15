@@ -206,3 +206,32 @@
   display: grid;
   gap: var(--space-1);
 }
+/* p2: search and "Auswählen" above the list. */
+.listBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.listBar > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+/* Phone: the page's "⋯" lies beside this first row (`besideContent`). */
+@media (max-width: 899px) {
+  .listBar {
+    padding-inline-end: calc(var(--touch) + var(--space-3));
+  }
+}
+.noMatch {
+  margin: 0 0 var(--space-3);
+  color: var(--text-muted);
+}
+/* What is past its date: its own area above the other groups, set off by a top hairline in the warning tone and
+   space below (no frame, no tint: the red stays on the group's word and the rows' badges). */
+.late {
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-5);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--warning);
+}
