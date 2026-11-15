@@ -49,6 +49,13 @@ While the PC is locked, only media and volume work. The phone never sees your sc
 - Cancelled at the PC twice within an hour, the permission is switched off again for that phone.
 - _Monitor off_ (same menu) switches only the screen off, without a countdown.
 
+## Starting a program
+
+- **Choose at the PC:** under _Settings → Connections → Remote control_, in the block _Programs_, pick an `.exe` file or a shortcut with _Add program …_ (8 at most). Windows asks once more afterwards. _Remove_ works at once.
+- **Allow it at the PC:** next to a device with the mouse-and-keyboard level, _May start programs_ (off by default, the PC asks once more).
+- **On the phone:** menu _⋯ → Start a program …_ shows the names of the list; a tap opens the program on the PC like a double click there. Without the permission the entry is missing. Like _Keyboard_ it needs mouse and keyboard, so also the same prompt on the phone when the PC asks for it.
+- The phone sees only the names, never paths, and sends no extra parameters. Works only while the PC is unlocked, and at most every 5 seconds.
+
 ## Ending it and switching it on again
 
 - The PC always shows when a device is in control: at the top of the window and at the icon next to the clock.

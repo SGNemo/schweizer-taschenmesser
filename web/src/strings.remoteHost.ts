@@ -1,7 +1,7 @@
 import { defineBundle } from '@/core/i18n/bundle';
 
 /**
- * Remote control, PC side (Settings → Verbindungen → Fernsteuerung, top-bar chip). Wording:
+ * Remote control, PC side (Einstellungen → Verbindungen → Fernsteuerung, top-bar chip). Wording:
  * docs/design/remote-control/CONCEPT.md §4, §7. Next to the feature instead of in `strings.ts`
  * (a hotspot).
  */
@@ -34,6 +34,20 @@ export const tRemoteHost = defineBundle(
     power: 'Darf den PC ausschalten',
     powerHint:
       'Ausschalten, neu starten, Energie sparen, Ruhezustand und abmelden. Jedes Mal zählt dieser PC erst 10 Sekunden herunter, in denen du hier abbrechen kannst. Nur solange der PC entsperrt ist. Brichst du zweimal in einer Stunde ab, geht dieser Schalter aus.',
+    programsAllow: 'Darf Programme starten',
+    programsAllowHint:
+      'Nur die Programme aus der Liste unten, so wie ein Doppelklick sie startet. Nur solange der PC entsperrt ist.',
+    programs: {
+      title: 'Programme',
+      help: 'Diese Programme können Handys mit „Darf Programme starten“ am PC öffnen. Das Handy sieht nur die Namen.',
+      none: 'Noch kein Programm ausgewählt.',
+      add: 'Programm hinzufügen …',
+      added: 'Programm hinzugefügt.',
+      remove: 'Entfernen',
+      removeLabel: (name: string) => `${name} entfernen`,
+      removed: (name: string) => `${name} entfernt.`,
+      full: 'Die Liste ist voll (8 Programme). Entferne eins, um ein anderes hinzuzufügen.',
+    },
     notice: 'Melden, wenn ein Gerät Maus und Tastatur steuert',
     noticeHint:
       'Eine ruhige Benachrichtigung von Windows, ohne Ton, höchstens einmal in 30 Minuten je Gerät. Auch ohne sie zeigt das Tray-Symbol jede Fernsteuerung an.',
@@ -59,6 +73,9 @@ export const tRemoteHost = defineBundle(
       changed: 'In der Zwischenzeit hat sich die Freigabe geändert. Wähle noch einmal.',
       'not-found': 'Dieses Gerät ist nicht mehr gekoppelt.',
       failed: 'Das ließ sich nicht speichern. Versuche es noch einmal.',
+      full: 'Die Liste ist voll (8 Programme).',
+      duplicate: 'Dieses Programm steht schon in der Liste.',
+      'bad-file': 'Das ist kein Programm. Wähle eine .exe-Datei oder eine Verknüpfung.',
     },
   },
   {
@@ -89,6 +106,20 @@ export const tRemoteHost = defineBundle(
       power: 'May switch the PC off',
       powerHint:
         'Switch off, restart, sleep, hibernate and sign out. Each time this PC first counts down 10 seconds in which you can cancel here. Only while the PC is unlocked. Cancel twice within an hour and this switch turns off.',
+      programsAllow: 'May start programs',
+      programsAllowHint:
+        'Only the programs in the list below, the way a double click starts them. Only while the PC is unlocked.',
+      programs: {
+        title: 'Programs',
+        help: 'Phones with “May start programs” can open these programs on this PC. The phone sees only the names.',
+        none: 'No program chosen yet.',
+        add: 'Add program …',
+        added: 'Program added.',
+        remove: 'Remove',
+        removeLabel: (name: string) => `Remove ${name}`,
+        removed: (name: string) => `${name} removed.`,
+        full: 'The list is full (8 programs). Remove one to add another.',
+      },
       notice: 'Tell me when a device controls mouse and keyboard',
       noticeHint:
         'A quiet Windows notification, without sound, at most once in 30 minutes per device. Without it, the tray icon still shows any remote control.',
@@ -114,6 +145,9 @@ export const tRemoteHost = defineBundle(
         changed: 'The permission changed in the meantime. Choose again.',
         'not-found': 'This device is no longer paired.',
         failed: 'That could not be saved. Try again.',
+        full: 'The list is full (8 programs).',
+        duplicate: 'This program is already in the list.',
+        'bad-file': 'That is not a program. Choose an .exe file or a shortcut.',
       },
     },
   },

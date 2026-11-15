@@ -218,6 +218,7 @@ describe('diagnostics export', () => {
             paused: false,
             unlock: false,
             power: true,
+            programs: true,
           },
         ],
       },

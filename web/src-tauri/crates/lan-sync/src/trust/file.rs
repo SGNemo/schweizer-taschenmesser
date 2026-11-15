@@ -28,6 +28,9 @@ struct FileDevice {
     /// Power actions allowed (missing in older files = no).
     #[serde(default, rename = "remotePower")]
     remote_power: bool,
+    /// Programs of the PC's list may be started (missing in older files = no).
+    #[serde(default, rename = "remotePrograms")]
+    remote_programs: bool,
 }
 
 fn level_off() -> String {
@@ -128,6 +131,7 @@ impl FileTrustStore {
                                 paused: d.remote_paused,
                                 unlock: d.remote_unlock,
                                 power: d.remote_power,
+                                programs: d.remote_programs,
                             },
                         )
                         .map_err(|_| OpenError::Corrupt)?;
@@ -162,6 +166,7 @@ impl FileTrustStore {
                         remote_paused: grant.paused,
                         remote_unlock: grant.unlock,
                         remote_power: grant.power,
+                        remote_programs: grant.programs,
                     }
                 })
                 .collect(),
@@ -356,6 +361,7 @@ mod tests {
             paused: true,
             unlock: false,
             power: false,
+            programs: false,
         };
         {
             let s = FileTrustStore::open(&path).unwrap();
@@ -374,6 +380,16 @@ mod tests {
             .unwrap();
             s.set_remote(&dev(3).key, full_paused).unwrap();
             s.revoke(&dev(3).key).unwrap();
+            s.add(dev(4)).unwrap();
+            s.set_remote(
+                &dev(4).key,
+                RemoteGrant {
+                    level: Level::Full,
+                    programs: true,
+                    ..RemoteGrant::default()
+                },
+            )
+            .unwrap();
         }
         let text = std::fs::read_to_string(&path).unwrap();
         assert!(text.contains(r#""remote":"full""#) && text.contains(r#""remotePaused":true"#));
@@ -384,8 +400,11 @@ mod tests {
         assert!(s.remote_of(&dev(2).key).unlock);
         assert!(text.contains(r#""remotePower":true"#));
         assert!(s.remote_of(&dev(2).key).power && !s.remote_of(&dev(1).key).power);
+        assert!(text.contains(r#""remotePrograms":true"#));
+        assert!(s.remote_of(&dev(4).key).programs && s.remote_of(&dev(4).key).programs_effective());
+        assert!(!s.remote_of(&dev(1).key).programs && !s.remote_of(&dev(2).key).programs);
         assert_eq!(s.remote_of(&dev(3).key), RemoteGrant::default(), "revoked");
-        // nothing about use is in the file: only the four settings per device
+        // nothing about use is in the file: only the five settings per device
         for word in ["remoteUsed", "usedAt", "lastInput", "lastRemote"] {
             assert!(!text.contains(word), "{word}");
         }

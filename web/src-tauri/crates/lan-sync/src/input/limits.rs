@@ -67,7 +67,8 @@ pub enum Verdict {
 }
 
 /// Events per second (burst): all 500 (250) · clicks 20 · keys 30 · text 512 bytes · media 10 ·
-/// volume up 5 · lock 1 per 10 s · monitor off 1 per 10 s · power frames 1 (3). Drops: 2000 at
+/// volume up 5 · lock 1 per 10 s · monitor off 1 per 10 s · power frames 1 (3) · program starts 1
+/// per 5 s (1). Drops: 2000 at
 /// once, then 200 per second, before the session closes. (How often a countdown may start is the
 /// sink's: per device, across sessions.)
 #[derive(Debug)]
@@ -81,6 +82,7 @@ pub struct Limits {
     lock: Bucket,
     monitor: Bucket,
     power: Bucket,
+    program: Bucket,
     drops: Bucket,
 }
 
@@ -96,6 +98,7 @@ impl Limits {
             lock: Bucket::new(1, 1, now),
             monitor: Bucket::new(1, 1, now),
             power: Bucket::new(3, 10, now),
+            program: Bucket::new(1, 2, now),
             drops: Bucket::new(2000, 2000, now),
         }
     }
@@ -149,6 +152,16 @@ impl Limits {
         if ok {
             self.all.take(1, now);
             self.power.take(1, now);
+        }
+        self.verdict(ok, now)
+    }
+
+    /// One program start.
+    pub fn program(&mut self, now: Duration) -> Verdict {
+        let ok = self.all.has(1, now) && self.program.has(1, now);
+        if ok {
+            self.all.take(1, now);
+            self.program.take(1, now);
         }
         self.verdict(ok, now)
     }

@@ -40,8 +40,8 @@
 #![cfg_attr(not(mobile), allow(dead_code))]
 
 use ::lan_sync::input::wire::{
-    Button, Code, Key, Level, Media, PcState, Power, PowerAnswer, PowerInfo, Record,
-    FEATURE_PRESENT, MAX_TEXT_BYTES, VOLUME_UNKNOWN,
+    Button, Code, Key, Level, Media, PcState, Power, PowerAnswer, PowerInfo, ProgramAnswer, Record,
+    FEATURE_PRESENT, FEATURE_PROGRAMS, MAX_PROGRAMS, MAX_TEXT_BYTES, VOLUME_UNKNOWN,
 };
 use ::lan_sync::input_client::{Event, InputError, InputSession};
 use serde::Serialize;
@@ -384,6 +384,16 @@ pub enum EventDto {
     },
     /// About power: the answer to a power action, or news of a countdown at the PC.
     Power { session: u64, answer: &'static str },
+    /// The PC's program list as plain text in slot order (this device may start them): after
+    /// `opened`, and again when the list changed at the PC. Never a path; a start sends the slot
+    /// and this list's `epoch` back (the PC starts nothing when its list changed since).
+    Programs {
+        session: u64,
+        list: Vec<String>,
+        epoch: u32,
+    },
+    /// The answer to a program start.
+    Program { session: u64, answer: &'static str },
 }
 
 #[derive(Serialize, Debug, PartialEq, Eq)]
@@ -402,6 +412,9 @@ pub struct OpenedDto {
     power: Option<PowerDto>,
     /// The PC takes the presentation keys (F5, B); `false` for an older PC.
     present: bool,
+    /// The PC knows the program list (whether this device may start programs, and the list
+    /// itself, come as a `programs` event); `false` for an older PC.
+    programs: bool,
 }
 
 #[derive(Serialize, Clone, Copy, Debug, PartialEq, Eq)]
@@ -669,6 +682,26 @@ fn event_dto(id: u64, event: Event) -> EventDto {
             session: id,
             answer: power_answer_name(answer),
         },
+        Event::Programs(epoch, list) => EventDto::Programs {
+            session: id,
+            list,
+            epoch,
+        },
+        Event::Program(answer) => EventDto::Program {
+            session: id,
+            answer: program_answer_name(answer),
+        },
+    }
+}
+
+/// The PC's answer to a program start, as the page knows it.
+fn program_answer_name(answer: ProgramAnswer) -> &'static str {
+    match answer {
+        ProgramAnswer::Started => "started",
+        ProgramAnswer::NotGranted => "not-granted",
+        ProgramAnswer::Locked => "locked",
+        ProgramAnswer::Limit => "limit",
+        ProgramAnswer::Failed => "failed",
     }
 }
 
@@ -984,6 +1017,9 @@ fn open_now<R: Runtime>(
             present: opened
                 .ext
                 .is_some_and(|ext| ext.features & FEATURE_PRESENT != 0),
+            programs: opened
+                .ext
+                .is_some_and(|ext| ext.features & FEATURE_PROGRAMS != 0),
         })
     }
 }
@@ -1233,6 +1269,40 @@ async fn power_confirm<R: Runtime>(
     } else {
         Err("confirm-cancelled")
     }
+}
+
+/// Starts the program in `slot` of the list the PC told under `epoch` (in this session or an
+/// earlier one) on session `session`, which must be of the
+/// mouse-and-keyboard level (its unlock at the phone is the one of that level; no other prompt).
+/// Nothing is sent while the PC is locked (`locked`); `no-programs` for a PC without the list.
+/// The PC checks everything again and answers with a `program` event of the session.
+#[tauri::command]
+pub async fn remote_client_program<R: Runtime>(
+    app: AppHandle<R>,
+    session: u64,
+    slot: u8,
+    epoch: u32,
+) -> Result<(), String> {
+    if usize::from(slot) >= MAX_PROGRAMS {
+        return Err("bad-slot".to_owned());
+    }
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<RemoteClient>();
+        let (open, level) = picked(&state, session)?;
+        if level != Level::Full {
+            return Err("bad-level".to_owned());
+        }
+        if !open.has_programs() {
+            return Err("no-programs".to_owned());
+        }
+        if state.locked.load(Ordering::SeqCst) {
+            return Err("locked".to_owned());
+        }
+        open.send_program(slot, epoch)
+            .map_err(|e| error_name(e).to_owned())
+    })
+    .await
+    .map_err(|_| "internal".to_owned())?
 }
 
 /// Ends session `session` (the page went to the background). A number that is not the open
@@ -1934,10 +2004,11 @@ mod tests {
             state: state_dto(PcState::UNKNOWN),
             power: None,
             present: false,
+            programs: false,
         };
         assert_eq!(
             serde_json::to_string(&opened).unwrap(),
-            r#"{"session":7,"level":"media","grant":"full","unlockRequired":true,"noLock":false,"state":{"volume":null,"mute":false,"playing":false,"locked":false},"power":null,"present":false}"#
+            r#"{"session":7,"level":"media","grant":"full","unlockRequired":true,"noLock":false,"state":{"volume":null,"mute":false,"playing":false,"locked":false},"power":null,"present":false,"programs":false}"#
         );
         let with_power = OpenedDto {
             power: Some(power_dto(PowerInfo {
@@ -1946,14 +2017,28 @@ mod tests {
                 hibernate: true,
             })),
             present: true,
+            programs: true,
             ..opened
         };
         assert!(serde_json::to_string(&with_power).unwrap().ends_with(
-            r#""power":{"granted":true,"pending":false,"hibernate":true},"present":true}"#
+            r#""power":{"granted":true,"pending":false,"hibernate":true},"present":true,"programs":true}"#
         ));
         assert_eq!(
             serde_json::to_string(&event_dto(7, Event::Power(PowerAnswer::Working))).unwrap(),
             r#"{"kind":"power","session":7,"answer":"working"}"#
+        );
+        assert_eq!(
+            serde_json::to_string(&event_dto(
+                7,
+                Event::Programs(3, vec!["Editor".into(), "Spiel".into()])
+            ))
+            .unwrap(),
+            r#"{"kind":"programs","session":7,"list":["Editor","Spiel"],"epoch":3}"#
+        );
+        assert_eq!(
+            serde_json::to_string(&event_dto(7, Event::Program(ProgramAnswer::NotGranted)))
+                .unwrap(),
+            r#"{"kind":"program","session":7,"answer":"not-granted"}"#
         );
         let closed = EventDto::Closed {
             session: 7,
