@@ -115,7 +115,7 @@
     },
     "d1920--disk": {
       "height": 1080,
-      "buttons": 24,
+      "buttons": 27,
       "links": 11,
       "icons": 35,
       "firstScreenActions": 37,
@@ -127,7 +127,7 @@
     },
     "d1920--disk-scan": {
       "height": 1080,
-      "buttons": 24,
+      "buttons": 27,
       "links": 11,
       "icons": 35,
       "firstScreenActions": 37,
