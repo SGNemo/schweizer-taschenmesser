@@ -1,4 +1,4 @@
-import { type FormEvent, type ReactNode, type Ref, useId } from 'react';
+import type { FormEvent, ReactNode, Ref } from 'react';
 import { t } from '@/strings';
 import { Button, TextField } from '@/ui';
 import styles from '../routes/planner.module.css';
@@ -23,7 +23,6 @@ export function Capture({
   formRef?: Ref<HTMLFormElement>;
   children?: ReactNode;
 }) {
-  const hintId = useId();
   return (
     <>
       <form
@@ -34,13 +33,9 @@ export function Capture({
         aria-busy={reading || undefined}
       >
         <div className={styles.grow}>
-          {/* S09 (UI round 6): the hint sits under the whole row, not inside the field, so „Eintragen“ and ⋯ line up
-              with the input instead of with the hint's baseline. The prop replaces TextField's own description: an
-              `error` here would have to be appended to `hintId`. */}
           <TextField
             label={t.planner.add.label}
             placeholder={t.planner.add.placeholder}
-            aria-describedby={hintId}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             readOnly={reading}
@@ -51,9 +46,6 @@ export function Capture({
         </Button>
         {children}
       </form>
-      <p id={hintId} className={styles.addHint}>
-        {t.planner.add.hint}
-      </p>
     </>
   );
 }
