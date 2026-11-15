@@ -396,12 +396,12 @@
         "en": "Routines"
       },
       "short": {
-        "de": "Putzplan und Haushalts-Routinen",
-        "en": "Cleaning plan and household routines"
+        "de": "Routinen für den Tag und den Haushalt",
+        "en": "Routines for the day and the household"
       },
       "description": {
-        "de": "Putzplan und Haushalts-Routinen: was in welchem Raum wie oft dran ist und wer an der Reihe ist. Ohne Rückstand.",
-        "en": "Cleaning plan and household routines: what is due in which room how often, and whose turn it is. No backlog."
+        "de": "Routinen für den Tag und den Haushalt: Schritte zum Abhaken, wann sie dran sind und wer an der Reihe ist. Ohne Rückstand.",
+        "en": "Routines for the day and the household: steps to tick off, when they are due and whose turn it is. No backlog."
       }
     },
     {
@@ -684,12 +684,12 @@
         "en": "Device status"
       },
       "short": {
-        "de": "Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite",
-        "en": "Backup, sync, storage and updates of this device on one page"
+        "de": "Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite, dazu ein Backup zum Herunterladen",
+        "en": "Backup, sync, storage and updates of this device on one page, plus a backup to download"
       },
       "description": {
-        "de": "Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite. Nur Anzeige, die Seite sendet nichts.",
-        "en": "Backup, sync, storage and updates of this device on one page. Display only; this page sends nothing."
+        "de": "Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite, dazu ein Backup zum Herunterladen. Die Seite sendet nichts.",
+        "en": "Backup, sync, storage and updates of this device on one page, plus a backup to download. This page sends nothing."
       }
     },
     {

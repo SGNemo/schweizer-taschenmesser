@@ -55,7 +55,7 @@ Nemo is a set of small modules for everyday life. You turn on what you need in t
 |  | Subscriptions | Subscriptions and recurring payments | on by default |
 |  | Budgets & savings goals | Spending limits per category (from Finances) and savings goals with deposits and progress | on for new installations |
 | **Household** | Lists | Shopping, packing lists and checklists | on for new installations |
-|  | Routines | Cleaning plan and household routines | on for new installations |
+|  | Routines | Routines for the day and the household | on for new installations |
 |  | Pantry | What’s in the fridge, the cupboard and the freezer? | optional |
 |  | Fitness | Keep a rough log of training and food | preview |
 | **Knowledge** | Saved | What you still want to look at, read, buy, try out or visit | optional |
@@ -67,7 +67,7 @@ Nemo is a set of small modules for everyday life. You turn on what you need in t
 |  | Music | Spotify on one page | preview |
 | **Vault** | Documents | IDs, contracts, insurance and warranties with end date, notice period and an attached file | optional |
 |  | Passwords | Password vault | optional |
-| **System** | Device status | Backup, sync, storage and updates of this device on one page | on for new installations |
+| **System** | Device status | Backup, sync, storage and updates of this device on one page, plus a backup to download | on for new installations |
 |  | This PC | Drives with a scan of the biggest folders and system info (processor, memory, battery, network) | optional, Windows app only |
 |  | Downloads | Downloads files | on for new installations, Windows app only |
 |  | Remote | Control media, volume, mouse and keyboard of your PC from your phone | preview, Android app only |
