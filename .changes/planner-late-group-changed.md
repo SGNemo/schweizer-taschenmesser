@@ -10,6 +10,6 @@ en: Invoices whose deadline has passed stand in a group of their own, “Deadlin
 type: added
 area: planner
 breaking: false
-de: Im Planer verschiebst du ein Ding über ⋯ → „Verschieben …“ mit einem Tipp auf den Wochentag. Ein Tipp auf die freie Zeit sagt, warum es so viel ist (Termine, Pausen, Puffer), und „Nächste Fristen“ neben dem Tag nennt die nächsten drei Fristen der Woche.
-en: In the planner, ⋯ → “Move …” moves a thing with one tap on the weekday. A tap on the free time says why it is that much (appointments, breaks, buffer), and “Next deadlines” beside the day names the week's next three deadlines.
+de: Im Planer verschiebt ⋯ → „Verschieben …“ ein Ding per Tipp auf den Tag, die freie Zeit sagt auf Tipp, wohin die Zeit geht, und „Nächste Fristen“ steht neben dem Tag.
+en: In the planner, ⋯ → “Move …” moves a thing with one tap on the day, the free time says where the time goes, and “Next deadlines” sits beside the day.
 ---
