@@ -27,6 +27,9 @@ export const backup: Strings['backup'] = {
       : `${records} ${records === 1 ? 'entry' : 'entries'} restored.`,
   encryptedExport: 'Export encrypted',
   encryptedExported: 'Encrypted backup downloaded.',
+  exporting: 'Saving …',
+  exportFailed:
+    'The backup could not be saved just now. Your data is unchanged – please try again in a moment.',
   exportHint:
     'Recommended: back up with a password. The file is then encrypted and a change is noticed. Without a password, all entries are readable in the file.',
   exportPassphrase: 'Password for the backup',

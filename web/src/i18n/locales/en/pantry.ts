@@ -70,6 +70,7 @@ export const pantry: Strings['pantry'] = {
   lowStock: 'Running low',
   expiredOn: (day: string) => `best-before was ${day}`,
   expiresNotice: (n: string) => `Expiring soon: ${n}`,
+  calendarTitle: (n: string) => `Best before: ${n}`,
   expiresBody: (date: string) => `Best before ${date}`,
   widgetEmpty: 'Nothing is expiring soon.',
   restockOne: (n: string) => `Add to shopping list: ${n}`,

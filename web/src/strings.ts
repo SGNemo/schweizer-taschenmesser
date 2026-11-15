@@ -2742,7 +2742,7 @@ export const de = {
       state: {
         unsupported: 'Dieser Browser unterstützt kein Web Push.',
         'needs-sync':
-          'Push braucht die Verbindung zu deinem Sync-Server (Einstellungen → Synchronisation).',
+          'Push braucht die Verbindung zu deinem Sync-Server (Einstellungen → Sync & Backup).',
         denied: 'Benachrichtigungen sind blockiert – bitte in den Browser-Einstellungen erlauben.',
         off: 'Aus',
         on: 'Aktiv auf diesem Gerät',
@@ -3625,6 +3625,9 @@ export const de = {
         : `${records} Einträge wiederhergestellt.`,
     encryptedExport: 'Verschlüsselt exportieren',
     encryptedExported: 'Verschlüsseltes Backup heruntergeladen.',
+    exporting: 'Wird gesichert …',
+    exportFailed:
+      'Das Backup ließ sich gerade nicht sichern. Deine Daten sind unverändert – versuch es gleich noch einmal.',
     exportHint:
       'Empfohlen: mit Passwort sichern. Dann ist die Datei verschlüsselt und eine Änderung fällt auf. Ohne Passwort liegen alle Einträge lesbar in der Datei.',
     exportPassphrase: 'Passwort für das Backup',
@@ -4511,6 +4514,8 @@ export const de = {
     /** Widget row of an expired item (N08): the best-before day, never "seit n Tagen". */
     expiredOn: (day: string) => `MHD war ${day}`,
     expiresNotice: (n: string) => `Läuft bald ab: ${n}`,
+    /** Calendar entry of a best-before day: no tense, the badge says "Ablauf" or "Abgelaufen". */
+    calendarTitle: (n: string) => `MHD: ${n}`,
     expiresBody: (date: string) => `Haltbar bis ${date}`,
     widgetEmpty: 'Nichts läuft bald ab.',
     restockOne: (n: string) => `Auf die Einkaufsliste: ${n}`,
@@ -5911,7 +5916,7 @@ export const de = {
       'rate-limited': 'Der Dienst hat zu viele Anfragen gemeldet. Es wird später erneut versucht.',
       'not-configured': 'Es fehlen noch Zugangsdaten.',
       'no-proxy':
-        'Im Browser braucht dieser Abruf den Sync-Server (Einstellungen → Synchronisierung).',
+        'Im Browser braucht dieser Abruf den Sync-Server (Einstellungen → Sync & Backup).',
       network: 'Der Dienst ist gerade nicht erreichbar.',
       denied: 'Die Anmeldung wurde abgebrochen oder abgelehnt.',
       'bad-response': 'Der Dienst hat eine unerwartete Antwort geschickt.',
@@ -6006,7 +6011,7 @@ export const de = {
       notACalendar: 'Unter dieser Adresse liegt kein Kalender.',
       unreachable: 'Die Adresse ist nicht erreichbar.',
       noProxy:
-        'Im Browser braucht das den Sync-Server (Einstellungen → Synchronisierung), weil Kalender-Dienste den Abruf aus dem Browser blockieren.',
+        'Im Browser braucht das den Sync-Server (Einstellungen → Sync & Backup), weil Kalender-Dienste den Abruf aus dem Browser blockieren.',
     },
     google: {
       name: 'Google',
@@ -8901,6 +8906,28 @@ export const de = {
       up: 'Nach oben',
       down: 'Nach unten',
       remove: 'Entfernen',
+      remind: 'Erinnern um …',
+    },
+    /** The page's ⋯ menu in the head. */
+    more: 'Mehr zur Uhr',
+    timer: 'Timer',
+    remind: {
+      title: (place: string) => `Erinnern nach der Zeit in ${place}`,
+      text: 'Woran erinnern?',
+      textPlaceholder: 'z. B. Mama anrufen',
+      date: (place: string) => `Datum in ${place}`,
+      time: (place: string) => `Uhrzeit in ${place}`,
+      /** The preview under the fields: "Bei dir: Mi, 18. Nov. 11:00". */
+      here: (day: string, time: string) => `Bei dir: ${day} ${time}`,
+      past: 'Dieser Zeitpunkt ist schon vorbei.',
+      invalid: 'Bitte Datum und Uhrzeit prüfen.',
+      once: 'Einmalig. Die Erinnerung steht danach im Kalender unter „Erinnerungen“ und meldet sich wie jede andere.',
+      calendarOff:
+        'Erinnerungen liegen im Kalender, der gerade aus ist. Schalte ihn in der Bibliothek ein, dann geht es hier weiter.',
+      save: 'Erinnerung anlegen',
+      /** The reminder's title in the calendar: "Mama anrufen (19:00 in Tokio)". */
+      entry: (text: string, time: string, place: string) => `${text} (${time} in ${place})`,
+      saved: (day: string, time: string) => `Erinnerung für ${day} ${time} angelegt.`,
     },
     added: (name: string) => `${name} hinzugefügt.`,
     removed: (name: string) => `${name} entfernt.`,
@@ -9105,8 +9132,8 @@ export const de = {
       dueContext: 'Läuft, sobald Nemo das nächste Mal prüft',
       off: 'Nicht geplant',
       offContext: 'Automatische Backups sind aus',
-      noPassphrase: 'Passphrase fehlt',
-      noPassphraseContext: 'Ohne Passphrase läuft kein automatisches Backup',
+      noPassphrase: 'Passwort fehlt',
+      noPassphraseContext: 'Ohne Passwort läuft kein automatisches Backup',
       manual: 'Von Hand',
       manualContext: 'Im Browser sicherst du als Datei, wann du willst',
     },
