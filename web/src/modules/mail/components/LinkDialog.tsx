@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { suggestCaptureLine } from '@/core/mail/localAssist';
 import { mailPrefill, type MailLinkType } from '@/core/mail/prefill';
 import type { MailAccountRef, MailMessage } from '@/core/mail/types';
@@ -100,8 +100,19 @@ export function LinkDialog({
     );
   }
 
+  // Saving ends in `close()` only after the link, the link row and the toast are written; by then the
+  // thread view may be gone (another thread, another page). Nothing to reset or close then.
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+
   // A fresh start for the next time the dialog opens (another destination, another mail).
   const close = () => {
+    if (!mounted.current) return;
     setSuggestion({ phase: 'idle' });
     setApplied(undefined);
     setExcerpt(false);

@@ -60,6 +60,9 @@ const view = (acc: MailAccountRef = account) =>
     </MemoryRouter>,
   );
 
+/** Saving files the link and the toast, then closes the sheet: wait for that, so nothing runs after the test. */
+const saved = () => waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+
 const openMenu = async (user: ReturnType<typeof userEvent.setup>) => {
   await user.click(await screen.findByRole('button', { name: 'Aus dieser Mail anlegen' }));
 };
@@ -103,6 +106,7 @@ describe('create from this mail', () => {
     expect(await db.table('mail_link').count()).toBe(0);
 
     await user.click(within(dialog).getByRole('button', { name: 'Speichern' }));
+    await saved();
     await waitFor(async () => expect(await db.table('invoices_invoice').count()).toBe(1));
     const [invoice] = await db.table('invoices_invoice').toArray();
     expect(invoice).toMatchObject({
@@ -138,6 +142,7 @@ describe('create from this mail', () => {
       expect(within(dialog).getByTestId('capture-chips')).toHaveTextContent('84,30'),
     );
     await user.click(within(dialog).getByRole('button', { name: 'Speichern' }));
+    await saved();
     await waitFor(async () => expect(await db.table('invoices_invoice').count()).toBe(1));
     const [invoice] = await db.table('invoices_invoice').toArray();
     expect(invoice.id).toBe(await invoiceMailId('m1'));
@@ -149,6 +154,7 @@ describe('create from this mail', () => {
       expect(within(dialog).getByTestId('capture-chips')).toHaveTextContent('84,30'),
     );
     await user.click(within(dialog).getByRole('button', { name: 'Speichern' }));
+    await saved();
     await waitFor(() =>
       expect(useUiStore.getState().toasts.at(-1)?.message).toBe('Schon angelegt'),
     );
@@ -178,6 +184,7 @@ describe('create from this mail', () => {
       expect(within(dialog).getByTestId('capture-chips')).toHaveTextContent('84,30'),
     );
     await user.click(within(dialog).getByRole('button', { name: 'Speichern' }));
+    await saved();
     const live = async () =>
       (await db.table('invoices_invoice').toArray()).filter((r) => !r.deletedAt);
     await waitFor(async () => expect(await live()).toHaveLength(1));
@@ -207,6 +214,7 @@ describe('create from this mail', () => {
     await user.click(
       within(await screen.findByRole('dialog')).getByRole('button', { name: 'Speichern' }),
     );
+    await saved();
     await screen.findByTestId('mail-linked');
     const repo = createCollectionRepo(getManifest('invoices')!, 'invoice');
     const [invoice] = await db.table('invoices_invoice').toArray();
@@ -223,6 +231,7 @@ describe('create from this mail', () => {
     await user.click(await screen.findByRole('menuitem', { name: 'Notiz' }));
     const dialog = await screen.findByRole('dialog');
     await user.click(within(dialog).getByRole('button', { name: 'Speichern' }));
+    await saved();
     await waitFor(async () => expect(await db.table('notes_note').count()).toBe(1));
     const [plain] = await db.table('notes_note').toArray();
     expect(plain!.body).toBe(LINK);
@@ -260,6 +269,7 @@ describe('create from this mail', () => {
       within(dialog).getByText(/Beispiel-Mail: es wird kein Link gespeichert/),
     ).toBeInTheDocument();
     await user.click(within(dialog).getByRole('button', { name: 'Speichern' }));
+    await saved();
     await waitFor(async () => expect(await db.table('invoices_invoice').count()).toBe(1));
     expect('note' in (await db.table('invoices_invoice').toArray())[0]!).toBe(false);
   });
@@ -286,6 +296,7 @@ describe('create from this mail', () => {
       _f: {},
     });
     await user.click(within(dialog).getByRole('button', { name: 'Speichern' }));
+    await saved();
     const live = async () =>
       (await db.table('invoices_invoice').toArray()).filter((r) => !r.deletedAt);
     await waitFor(async () => expect(await live()).toHaveLength(1));
