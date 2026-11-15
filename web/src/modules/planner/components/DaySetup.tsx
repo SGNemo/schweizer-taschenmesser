@@ -23,6 +23,7 @@ import {
 } from '../daySetup';
 import { opLines } from '../say';
 import { PlannerOffError, previewUser } from '../services';
+import { dayEndLabel, dayEndOf } from '../settings';
 import { PlanPreview, type PreviewData } from './PlanPreview';
 import { compact } from './capacity';
 import styles from '../routes/planner.module.css';
@@ -32,6 +33,9 @@ type Step = 1 | 2 | 3;
 /** A chip's text: „keine Zeit“, „2 h“ … „ganzer Tag“ (figures through `core/i18n/format`). */
 const chipLabel = (min: number) =>
   min === 0 ? t.planner.daySetup.noTime : min === 720 ? t.planner.day.wholeDay : compact(min);
+
+/** The day ends the sheet offers (package 6): 23:00, midnight, none ('' clears the setting). */
+const DAY_END_CHIPS = ['23:00', '00:00', ''] as const;
 
 /**
  * „Tage einteilen“ (use case „Wochenende retten“, TARGET F1): one sheet in three steps – (1) „Was steht an?“,
@@ -43,11 +47,14 @@ const chipLabel = (min: number) =>
 export function DaySetup({
   days,
   titles,
+  dayEnd = '',
   onClose,
 }: {
   /** Today and the next two days of the board. */
   days: readonly BoardDay[];
   titles: Record<string, string>;
+  /** The stored „Tagesende“ ('HH:mm', '' = none). */
+  dayEnd?: string;
   onClose: () => void;
 }) {
   const s = t.planner.daySetup;
@@ -59,6 +66,9 @@ export function DaySetup({
   const [chosen, setChosen] = useState<Record<string, number>>({});
   const [preview, setPreview] = useState<{ data: PreviewData; things: SetupThing[] }>();
   const [busy, setBusy] = useState(false);
+  // „Tagesende festlegen“ (package 6): folded until tapped; a chip sets the one day end for every day on „Übernehmen“.
+  const [dayEndOpen, setDayEndOpen] = useState(false);
+  const [dayEndChoice, setDayEndChoice] = useState<string>();
 
   useEffect(() => {
     if (edited) writeSetupDraft(text);
@@ -68,6 +78,8 @@ export function DaySetup({
   const changes = days
     .filter((d) => chosen[d.date] !== undefined && chosen[d.date] !== d.availableMin)
     .map((d) => ({ date: d.date, min: chosen[d.date]! }));
+  const newDayEnd =
+    dayEndChoice !== undefined && dayEndChoice !== dayEnd ? dayEndChoice : undefined;
 
   async function toPreview() {
     const things = setupThings(text, today(), getLang() === 'de');
@@ -91,6 +103,9 @@ export function DaySetup({
           (key) => names[key] ?? key,
           today(),
         ),
+        ...(newDayEnd === undefined
+          ? []
+          : [newDayEnd ? s.dayEndSet(dayEndLabel(newDayEnd)) : s.dayEndCleared]),
       ];
       setPreview({ data: { lines, diff: out.result.diff }, things });
       setStep(3);
@@ -105,7 +120,12 @@ export function DaySetup({
   async function apply() {
     if (!preview) return;
     // Nothing typed and no day changed: nothing to enter, no toast that says otherwise.
-    if (preview.things.length === 0 && changes.length === 0 && !reshuffle) {
+    if (
+      preview.things.length === 0 &&
+      changes.length === 0 &&
+      !reshuffle &&
+      newDayEnd === undefined
+    ) {
       onClose();
       return;
     }
@@ -117,6 +137,7 @@ export function DaySetup({
         days.map((d) => d.date),
         titles,
         reshuffle,
+        newDayEnd,
       );
       if (ok) {
         setText('');
@@ -195,6 +216,36 @@ export function DaySetup({
                 </div>
               );
             })}
+            <div className={styles.setupDay} data-testid="setup-day-end">
+              <button
+                type="button"
+                className={styles.weekLinkText}
+                aria-expanded={dayEndOpen}
+                onClick={() => setDayEndOpen((o) => !o)}
+              >
+                {s.dayEndLink}
+              </button>
+              {dayEndOpen ? (
+                <>
+                  <Chips label={s.dayEndLabel}>
+                    {DAY_END_CHIPS.map((v) => (
+                      <Chip
+                        key={v || 'none'}
+                        label={v ? dayEndLabel(v) : s.dayEndNone}
+                        selected={(dayEndChoice ?? dayEnd) === v}
+                        onClick={() => setDayEndChoice(v)}
+                      />
+                    ))}
+                  </Chips>
+                  <span className={styles.capacity}>
+                    {(DAY_END_CHIPS as readonly string[]).includes(dayEndChoice ?? dayEnd) ||
+                    !dayEndOf({ dayEnd })
+                      ? s.dayEndHint
+                      : `${s.current(dayEndLabel(dayEnd))} · ${s.dayEndHint}`}
+                  </span>
+                </>
+              ) : null}
+            </div>
           </>
         ) : null}
         {step === 3 && preview ? (
