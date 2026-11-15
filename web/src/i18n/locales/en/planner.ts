@@ -132,10 +132,9 @@ export const planner: Strings['planner'] = {
     asBreak: 'As a break …',
     asBreakTitle: (title: string) => `${title} as a break`,
     asBreakHint: (day: string) =>
-      `Becomes a blocker on ${day}. The to-do goes for it; Undo brings it back.`,
+      `Becomes a break on ${day}. The to-do is removed; Undo brings it back.`,
     estimate: 'Duration …',
     estimateTitle: (title: string) => `Duration: ${title}`,
-    choices: 'Choice',
   },
   reasons: {
     pinned: 'pinned',

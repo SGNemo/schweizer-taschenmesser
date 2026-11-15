@@ -7,7 +7,7 @@
 import type { PlannableItem, PlannableSource } from '@/core/modules/types';
 import { today } from '@/core/time/now';
 import { restorePatch } from './planMark';
-import { setDone, taskRepo } from './repo';
+import { deleteTask, setDone, taskRepo } from './repo';
 import type { PlanMark, Task } from './schema';
 import { isPlannerOwned } from './views';
 
@@ -97,19 +97,24 @@ const source: PlannableSource = {
     if (task && task.estimateMin !== minutes) await taskRepo.update(id, { estimateMin: minutes });
   },
   // „Als Pause …“: the ToDo goes (with its subtasks, like a delete in the list), so leisure never waits as an open
-  // task (morning digest, „Erledigt heute“). The undo restores exactly the rows this removal took.
+  // task (morning digest, „Erledigt heute“). A recurring ToDo keeps its series: the next instance is created as a
+  // tick would, then this occurrence goes too (a removed row never counts as done today). The undo restores the
+  // rows this removal took and reopens the series; it is idempotent next to the journal's own steps.
   async onRemove(id) {
     const task = await taskRepo.get(id);
-    if (!task) return async () => undefined;
+    if (!task || task.done) return undefined;
     const ids = [
       id,
       ...(await taskRepo.table.where('parentId').equals(id).toArray())
         .filter((t) => t.deletedAt === null)
         .map((t) => t.id),
     ];
-    await taskRepo.removeMany(ids);
+    if (task.recurrence) await setDone(task, true);
+    await deleteTask(id);
     return async () => {
       for (const x of ids) await taskRepo.restore(x);
+      const back = await taskRepo.get(id);
+      if (back?.done) await setDone(back, false);
     };
   },
 };

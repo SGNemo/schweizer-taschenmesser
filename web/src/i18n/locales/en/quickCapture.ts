@@ -39,7 +39,7 @@ export const quickCapture: Strings['quickCapture'] = {
     meal: 'Fitness',
     workout: 'Fitness',
     place: 'Clock',
-    break: 'Planner',
+    break: 'Planner (break)',
   },
   chip: {
     to: (name: string) => `To: ${name}`,

@@ -2,7 +2,7 @@ import { formatMoney } from '@/core/money';
 import { formatMinutes, formatNumber } from '@/core/i18n/format';
 import { daysBetween, formatDay, relativeDayLabel } from '@/core/time/dates';
 import { t } from '@/strings';
-import { breakOf } from '../targets/adapters';
+import { breakOf } from '../targets';
 import type { CaptureFields, CaptureNote, CaptureRecurrence, CaptureType } from '../parser';
 
 export interface PreviewChip {

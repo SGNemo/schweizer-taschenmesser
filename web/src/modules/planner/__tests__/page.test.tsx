@@ -174,10 +174,12 @@ describe('planner page', () => {
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Als Pause …' }));
     const pause = await screen.findByRole('dialog', { name: 'Duschen als Pause' });
     fireEvent.click(within(pause).getByRole('button', { name: '1 h' }));
-    await waitFor(async () => expect(await taskRepo.get(a.id)).toBeUndefined());
-    expect((await dayRepo.get('2026-11-09'))!.blockers.map((b) => [b.label, b.min])).toEqual([
-      ['Duschen', 60],
-    ]);
+    await waitFor(async () =>
+      expect((await dayRepo.get('2026-11-09'))?.blockers.map((b) => [b.label, b.min])).toEqual([
+        ['Duschen', 60],
+      ]),
+    );
+    expect(await taskRepo.get(a.id)).toBeUndefined();
   });
 
   it('a day off says so in the head and the empty board offers the one field', async () => {

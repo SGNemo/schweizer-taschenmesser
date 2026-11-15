@@ -16,7 +16,13 @@ import { now, today } from '@/core/time/now';
 import { undoEntry } from '@/core/undo';
 import type { EventMap } from '@/core/events/events';
 import type { CaptureFields } from '@/quickCapture/parser';
-import { saveCapture, saveCaptures, targetFor, type SavedCapture } from '@/quickCapture/targets';
+import {
+  breakOf,
+  saveCapture,
+  saveCaptures,
+  targetFor,
+  type SavedCapture,
+} from '@/quickCapture/targets';
 import type { PlanOp } from '@/core/plan/instructions';
 import { setSettings } from '@/core/settings/settings';
 import { useUiStore } from '@/stores/ui';
@@ -201,10 +207,22 @@ export async function addFromField(text: string, titles: Record<string, string>)
     getLang() === 'de',
   );
   // „Pause 2 Std Zocken“: a blocker of its day through the quick-capture target, no ToDo (package 4a).
-  if (isBreak)
-    return act(t.planner.day.addBlocker, t.planner.toast.blockerAdded, titles, async () => {
-      await saveCapture('break', fields);
-    });
+  if (isBreak) {
+    const b = breakOf(fields, { today: today() });
+    return act(
+      t.planner.day.addBlocker,
+      t.planner.toast.asBreak(
+        short(b.label),
+        dayName(b.date),
+        formatMinutes(b.min, { compact: true }),
+      ),
+      titles,
+      async () => {
+        await saveCapture('break', fields);
+      },
+      { leadOnly: true },
+    );
+  }
   const lead = hardDue ? t.planner.toast.addedWithDue(dayName(hardDue)) : t.planner.toast.added;
   return act(t.planner.toast.added, lead, titles, async () => {
     const saved = await saveCapture('todo', fields);
@@ -261,12 +279,15 @@ export async function asBreak(
     t.planner.toast.asBreak(short(e.title), dayName(date), length),
     titles,
     async () => {
+      // The thing goes first: a second tap or a thing removed on another device adds no second blocker.
+      const restore = await s.onRemove!(e.id);
+      if (!restore) return;
+      // The source's own undo joins this action: a source whose removal is no recorded write comes back too.
+      recordWrite(restore);
       const row = await dayRepo.get(date);
       await dayPatch(date, {
         blockers: [...(row?.blockers ?? []), { id: randomId(), label: e.title, min }],
       });
-      // The source's own undo joins this action: a source whose removal is no recorded write comes back too.
-      recordWrite(await s.onRemove!(e.id));
     },
     { leadOnly: true },
   );

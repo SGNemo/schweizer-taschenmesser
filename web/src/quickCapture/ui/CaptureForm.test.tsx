@@ -606,7 +606,7 @@ describe('breaks („Wochenende retten“ package 4a)', () => {
     const onSaved = vi.fn();
     render(<CaptureForm onSaved={onSaved} />);
     await user.type(await box(), 'Pause 2 Std Zocken');
-    await waitFor(() => expect(chips()).toHaveTextContent('Ziel: Planer'));
+    await waitFor(() => expect(chips()).toHaveTextContent('Ziel: Planer (Pause)'));
     expect(chips()).toHaveTextContent('Heute');
     expect(chips()).toHaveTextContent('2 h');
     // A break is reached by its word only: it never sits among the type chips.

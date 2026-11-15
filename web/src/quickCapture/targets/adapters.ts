@@ -386,16 +386,14 @@ type DayRow = {
   to?: string;
 };
 
-/** The data fields of a stored day row (the envelope is the repo's). */
+const ENVELOPE = ['id', 'createdAt', 'updatedAt', 'deviceId', 'deletedAt', '_f'];
+
+/** The data fields of a stored day row, all of them (the envelope is the repo's): a field added later survives a break. */
 const dayData = (row: Record<string, unknown>): DayRow => {
-  const r = row as DayRow;
-  return {
-    date: r.date,
-    blockers: [...(r.blockers ?? [])],
-    ...(r.availableMin !== undefined ? { availableMin: r.availableMin } : {}),
-    ...(r.note ? { note: r.note } : {}),
-    ...(r.from && r.to ? { from: r.from, to: r.to } : {}),
-  };
+  const data = Object.fromEntries(
+    Object.entries(row).filter(([k, v]) => !ENVELOPE.includes(k) && v !== undefined),
+  ) as DayRow;
+  return { ...data, blockers: [...(data.blockers ?? [])] };
 };
 
 /**
@@ -430,11 +428,12 @@ const breaks: CaptureTarget = {
       min: b.min,
       ...(b.from && b.to ? { from: b.from, to: b.to } : {}),
     };
-    // A day removed earlier (a tombstone) comes back, as the planner's own `putRow` does it.
+    // A day removed earlier (a tombstone) comes back empty, as the planner's own `dayPatch` starts it: read before
+    // the restore, so no old blocker, minutes or window return with it.
     const stored = await repo.table.get(b.date);
+    const fresh = !stored || stored.deletedAt !== null;
     if (stored && stored.deletedAt !== null) await repo.restore(b.date);
-    const live = await repo.get(b.date);
-    const base: DayRow = live ? dayData(live) : { date: b.date, blockers: [] };
+    const base: DayRow = fresh ? { date: b.date, blockers: [] } : dayData(stored);
     try {
       await repo.upsert(b.date, { ...base, blockers: [...base.blockers, blocker] });
     } catch {
@@ -449,7 +448,12 @@ const breaks: CaptureTarget = {
         if (!now) return;
         const data = dayData(now);
         if (!data.blockers.some((x) => x.id === id)) return;
-        await repo.upsert(b.date, { ...data, blockers: data.blockers.filter((x) => x.id !== id) });
+        const rest = { ...data, blockers: data.blockers.filter((x) => x.id !== id) };
+        // A day this save brought in goes again when nothing else was put on it meanwhile.
+        const untouched =
+          rest.blockers.length === 0 && rest.availableMin === undefined && !rest.note && !rest.from;
+        if (fresh && untouched) await repo.remove(b.date);
+        else await repo.upsert(b.date, rest);
       },
     };
   },

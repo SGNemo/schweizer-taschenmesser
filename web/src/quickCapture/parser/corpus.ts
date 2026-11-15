@@ -263,6 +263,7 @@ export const CORPUS: CorpusCase[] = [
   // The app never guesses what leisure is: a plain „Zocken“ stays a ToDo, and so does „Pause …“ with the planner off.
   { from: 'break', breaks: true, text: 'Zocken', type: 'todo', title: 'Zocken' },
   { from: 'break', breaks: true, text: 'Pausenbrot kaufen', type: 'todo' },
+  { from: 'break', breaks: true, text: 'Pause-Taste reparieren', type: 'todo' },
   { from: 'break', text: 'Pause 2 Std Zocken', type: 'todo', estimateMin: 120 },
   // Uhr: „uhr <Stadt>“ adds a place, parsed with the module on; anything that is no place stays a ToDo.
   { from: 'clock', place: true, text: 'uhr Tokio', type: 'place', title: 'Tokio' },

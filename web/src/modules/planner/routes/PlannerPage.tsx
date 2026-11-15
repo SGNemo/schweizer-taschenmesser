@@ -474,6 +474,29 @@ export default function PlannerPage() {
       ...(canAssign(e.moduleId)
         ? [{ id: 'later', label: t.planner.row.later, onSelect: () => void later(e, titles) }]
         : []),
+      ...(canEstimate(e.moduleId)
+        ? [
+            {
+              id: 'estimate',
+              label: t.planner.row.estimate,
+              onSelect: () =>
+                setChoice({
+                  kind: 'estimate',
+                  entry: e,
+                  ...(e.durationMin !== undefined ? { current: e.durationMin } : {}),
+                }),
+            },
+          ]
+        : []),
+      ...(canRemove(e.moduleId)
+        ? [
+            {
+              id: 'asBreak',
+              label: t.planner.row.asBreak,
+              onSelect: () => setChoice({ kind: 'break', entry: e, date: day }),
+            },
+          ]
+        : []),
       ...(excluded
         ? [{ id: 'include', label: t.planner.row.include, onSelect: () => void include(e, titles) }]
         : [
@@ -505,29 +528,6 @@ export default function PlannerPage() {
                   onSelect: () => void markDue(e, e.due?.date ?? day, titles),
                 },
           ]),
-      ...(canEstimate(e.moduleId)
-        ? [
-            {
-              id: 'estimate',
-              label: t.planner.row.estimate,
-              onSelect: () =>
-                setChoice({
-                  kind: 'estimate',
-                  entry: e,
-                  ...(e.durationMin !== undefined ? { current: e.durationMin } : {}),
-                }),
-            },
-          ]
-        : []),
-      ...(canRemove(e.moduleId)
-        ? [
-            {
-              id: 'asBreak',
-              label: t.planner.row.asBreak,
-              onSelect: () => setChoice({ kind: 'break', entry: e, date: day }),
-            },
-          ]
-        : []),
       ...(reason
         ? [
             {

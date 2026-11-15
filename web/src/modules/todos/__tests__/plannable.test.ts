@@ -333,15 +333,35 @@ describe('onRemove („Als Pause …“, package 4a)', () => {
     // A removal is no tick: the rows are tombstones, never done.
     expect((await taskRepo.table.get(task.id))!.done).toBe(false);
 
-    await undo();
+    await undo!();
     const back = await taskRepo.active().toArray();
     expect(back.map((t) => t.id).sort()).toEqual([task.id, sub.id].sort());
     expect(back.find((t) => t.id === task.id)).toMatchObject(own(TODAY, 0));
   });
 
-  it('a removed or unknown id is a no-op with a no-op undo', async () => {
-    const undo = await source.onRemove!('nope');
-    await undo();
-    expect(await taskRepo.active().toArray()).toEqual([]);
+  it('an unknown or done id removes nothing (undefined)', async () => {
+    expect(await source.onRemove!('nope')).toBeUndefined();
+    const done = await taskRepo.create({ ...base, title: 'Fertig', done: true });
+    expect(await source.onRemove!(done.id)).toBeUndefined();
+    expect((await taskRepo.active().toArray()).map((t) => t.id)).toEqual([done.id]);
+  });
+
+  it('a recurring ToDo keeps its series: the next instance is there, this one goes, nothing counts as done', async () => {
+    const weekly = { freq: 'weekly' as const, interval: 1, byWeekday: [1] };
+    const task = await taskRepo.create({
+      ...base,
+      title: 'Zocken',
+      dueDate: TODAY,
+      recurrence: weekly,
+    });
+    const undo = await source.onRemove!(task.id);
+    const live = await taskRepo.active().toArray();
+    expect(live.map((t) => [t.title, t.dueDate, t.done])).toEqual([
+      ['Zocken', '2026-11-16', false],
+    ]);
+    expect(dayPlan(live, TODAY, 5).doneToday).toBe(0);
+    await undo!();
+    const back = await taskRepo.active().toArray();
+    expect(back.map((t) => [t.id, t.done])).toEqual([[task.id, false]]);
   });
 });

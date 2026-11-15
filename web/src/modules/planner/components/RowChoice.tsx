@@ -37,23 +37,20 @@ export function RowChoice({
     onClose();
     void setEstimate(choice.entry, min, titles);
   };
+  const heading = choice.kind === 'break' ? r.asBreakTitle(title) : r.estimateTitle(title);
   return (
-    <Dialog
-      open
-      onClose={onClose}
-      title={choice.kind === 'break' ? r.asBreakTitle(title) : r.estimateTitle(title)}
-    >
+    <Dialog open onClose={onClose} title={heading}>
       {choice.kind === 'break' ? (
         <>
           <p className={styles.capacity}>{r.asBreakHint(dayName(choice.date))}</p>
-          <Chips label={r.choices}>
+          <Chips label={heading}>
             {BREAK_CHOICES.map((min) => (
               <Chip key={min} label={compact(min)} onClick={() => pickBreak(min)} />
             ))}
           </Chips>
         </>
       ) : (
-        <Chips label={r.choices}>
+        <Chips label={heading}>
           {ESTIMATE_CHOICES.map((min) => (
             <Chip
               key={min}

@@ -77,7 +77,7 @@ const PLAN_DUE = word(String.raw`bis|frist|deadline|abgabe|spätestens`);
 const PLAN_DUE_WORD = word(String.raw`frist|deadline|spätestens`);
 
 /** „Pause …“, „Freizeit: …“ at the very start of a line: a break (only with `ParseOptions.breaks`). */
-const BREAK_RE = /^\s*(pause|freizeit)(?![\p{L}\d])[\s,:;–-]*/iu;
+const BREAK_RE = /^\s*(pause|freizeit)(?![\p{L}\d-])[\s,:;–-]*/iu;
 
 const URL_RE = /(?:https?:\/\/|www\.)[^\s<>"']+/i;
 const KEYWORDS = {

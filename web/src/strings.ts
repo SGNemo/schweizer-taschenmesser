@@ -1058,7 +1058,7 @@ export const de = {
       meal: 'Fitness',
       workout: 'Fitness',
       place: 'Uhr',
-      break: 'Planer',
+      break: 'Planer (Pause)',
     },
     chip: {
       to: (name: string) => `Ziel: ${name}`,
@@ -8493,10 +8493,9 @@ export const de = {
       asBreak: 'Als Pause …',
       asBreakTitle: (title: string) => `${title} als Pause`,
       asBreakHint: (day: string) =>
-        `Wird ein Blocker am ${day}. Das ToDo geht dafür weg; Rückgängig holt es zurück.`,
+        `Wird am ${day} zur Pause. Das ToDo wird dafür entfernt; Rückgängig holt es zurück.`,
       estimate: 'Dauer …',
       estimateTitle: (title: string) => `Dauer: ${title}`,
-      choices: 'Auswahl',
     },
     reasons: {
       pinned: 'festgenagelt',
