@@ -2,6 +2,7 @@ import type { ModuleAutomation } from '@/core/automation/module';
 import type { ComponentType } from 'react';
 import type { z } from 'zod';
 import type { ExternalEvent } from '@/core/connectors/types';
+import type { EntityLink, LegacyLink } from '@/core/entitylinks/types';
 import type { PlatformKind } from '@/core/platform/types';
 import type { OnboardingDef } from '@/core/importer/types';
 import type { SeedMeta } from '@/core/seed/types';
@@ -605,7 +606,23 @@ export interface PlannableItem {
   planMark?: { date: string; order: number; prior?: string };
   done?: boolean;
   personId?: string;
-  link?: { kind: 'note' | 'mail' | 'invoice' | 'event'; id: string; label: string };
+  /** @deprecated Read as `links[0]`; kept until every reader renders `links` (planner hub K1b). */
+  link?: LegacyLink;
+  /**
+   * Every link of the thing, stored or computed by the source (CONCEPT-LINKS §1.1). Display only: never part of
+   * the planner's input hash. First reader: planner hub K1b (the plan row); the ToDo source fills it since K1a.
+   */
+  links?: Omit<EntityLink, 'from'>[];
+  /**
+   * The main action of a row that has no tick (money, deadlines: „Bezahlt …“ → the module's own step, CONCEPT-LINKS
+   * §2 L7). `to` is a route of the source module; the planner writes nothing. Display only. First reader: K1b.
+   */
+  action?: { label: string; to: string };
+  /**
+   * A fixed time window on the thing's day, 'HH:mm' local (a training session at 18:00). Types only for now: the
+   * first reader is planner hub S4, which also adds it to the input hash (it moves things).
+   */
+  fixed?: { from: string; to?: string };
   /** A short line the row shows after the minutes (e.g. „Mahnung · 92,40 € bis 13.10.“); never in the title. */
   detail?: string;
   /** When the thing was created (epoch ms): the engine's tie-break "older first". */
@@ -620,10 +637,33 @@ export interface PlannableItem {
 export const isPlannerOwned = (x: Pick<PlannableItem, 'plannedFor' | 'planMark'>): boolean =>
   x.plannedFor !== undefined && x.planMark?.date === x.plannedFor;
 
+/**
+ * Time a module keeps free on a day without offering a thing to plan or tick (a habit with „Zeit im Plan
+ * freihalten“, docs/design/plan/concepts/habits.md). Never a time window: the source does not say when.
+ */
+export interface PlanBlock {
+  /** 'YYYY-MM-DD' */
+  date: string;
+  /** Unique within its source. */
+  id: string;
+  label: string;
+  /** Whole minutes. */
+  min: number;
+}
+
 /** The planner's view of a module's open things plus the write-back of the same contract (typed, no module import). */
 export interface PlannableSource {
-  /** Open, plannable things only (no done, no „Irgendwann“, no subtasks). */
-  list(ctx: { today: string; until: string }): Promise<PlannableItem[]>;
+  /**
+   * Open, plannable things only (no done, no „Irgendwann“, no subtasks). `requested`: the ids of this module the
+   * person asked into the plan („In den Plan“ on a thing without a date, CONCEPT-SOURCES §3.3); the flag stays the
+   * planner's item row. No collector passes it yet: first writer and reader planner hub K2 / S3 (lists).
+   */
+  list(ctx: { today: string; until: string; requested?: string[] }): Promise<PlannableItem[]>;
+  /**
+   * Blocks of time on days inside the horizon (habits, package H1 / planner hub S4). Types only for now: the first
+   * reader adds them to the day minutes and the input hash.
+   */
+  blocks?(ctx: { today: string; until: string }): Promise<PlanBlock[]>;
   /**
    * The planner assigned the thing to `date` (first session) at `order` inside that day, or took it out
    * (`date` undefined). A ToDo writes `plannedFor` + `planMark`; no `order` clears the mark.
@@ -648,6 +688,35 @@ export interface PlannableSource {
    */
   onRemove?(id: string): Promise<(() => Promise<void>) | undefined>;
 }
+
+/**
+ * What a link's target says about itself (CONCEPT-LINKS §1.1). `alive`: it exists here, `to` is its route and
+ * `done` its own „Erledigt“ (paid, ticked) – a link only reads that, never writes it. `gone`: soft-deleted, never
+ * synced to this device, or the id is not one of the module's. `elsewhere`: it cannot be told on this device (a mail
+ * thread outside this device's cache); `url` is an external address that opens only on a tap.
+ */
+export type LinkState =
+  | { state: 'alive'; title: string; to: string; done?: boolean }
+  | { state: 'gone' }
+  | { state: 'elsewhere'; url?: string };
+
+/**
+ * A module as a link target (`contributions.linkTarget`). Rules: reads only the module's own data, no network,
+ * `id` is untrusted input (a foreign or malformed id resolves to `gone`, never to a request), a soft-deleted
+ * entity is `gone`. Asked only through `resolveLink` (`core/modules/contributions.ts`). First reader: K1a (ToDo editor).
+ */
+export interface LinkTarget {
+  resolve(id: string): Promise<LinkState>;
+}
+
+/** `resolveLink`'s answer: the target's state, or `unavailable` from core itself (module off or not on this platform). */
+export type ResolvedState = LinkState | { state: 'unavailable'; url?: string };
+
+/**
+ * Finished minutes per ref (`<module>:<id>`), breaks removed (time tracking, docs/design/plan/concepts/time-tracking.md).
+ * Types only for now: first reader package TT2 (a hint in the plan, never a comparison).
+ */
+export type ActualsSource = (refs: string[]) => Promise<Record<string, number>>;
 
 /**
  * One large figure for the cockpit's "Großanzeige" (`home/CockpitStats`): a formatted value with a
@@ -679,6 +748,13 @@ export interface ModuleContributions {
   attention?: () => Promise<{ default: AttentionSource }>;
   /** Open things the planner may distribute over the days, with the write-back callbacks (lazy like `calendarItems`). */
   plannable?: () => Promise<{ default: PlannableSource }>;
+  /**
+   * The module's entities as link targets: alive, gone or not on this device (lazy; rules on `LinkTarget`). The
+   * vault (`accounts`) never has one. First reader: planner hub K1a (`resolveLink`, the ToDo editor's link list).
+   */
+  linkTarget?: () => Promise<{ default: LinkTarget }>;
+  /** Tracked minutes per thing (time tracking only). Types only for now: first reader package TT2. */
+  actuals?: () => Promise<{ default: ActualsSource }>;
   /** One large figure for the cockpit's "Großanzeige" (balance, …); the module formats it. */
   headline?: () => Promise<{ default: HeadlineSource }>;
   /** The calendar module only: receives events synced by connectors. */
