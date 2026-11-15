@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import { Ring } from '@/ui';
-import { androidVersion, type Fact } from '../system';
+import { androidVersion, formatPercent, type Fact } from '../system';
 import { usePhoneBattery } from '../useLive';
 import { PassportSection } from './Passport';
 import styles from './Facts.module.css';
@@ -54,7 +54,7 @@ export default function PhoneFacts() {
                   <span />
                 </Ring>
                 <div className={styles.tileText}>
-                  <span className={styles.value}>{`${battery.percent} %`}</span>
+                  <span className={styles.value}>{formatPercent(battery.percent)}</span>
                   <p className={styles.sub}>{battery.charging ? l.charging : l.onBattery}</p>
                 </div>
               </div>

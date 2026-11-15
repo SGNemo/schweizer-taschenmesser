@@ -51,9 +51,14 @@ export function useLiveSystem(enabled: boolean, paused: boolean): LiveState {
         busy = false;
       }
     };
+    // A gap (paused, hidden window) would join two periods in the curves as if no time had passed: they start anew.
+    const restart = () => setState((s) => ({ ...s, cpu: [], ram: [], down: [] }));
     const onShow = () => {
-      if (!document.hidden) void load();
+      if (document.hidden) return;
+      restart();
+      void load();
     };
+    restart();
     void load();
     const id = setInterval(() => void load(), LIVE_MS);
     document.addEventListener('visibilitychange', onShow);
@@ -111,6 +116,8 @@ export function usePhoneBattery(enabled: boolean): { percent: number; charging: 
     };
     nav.getBattery().then(
       (b) => {
+        // The page may be gone before the WebView answers: then no listener is attached at all.
+        if (!alive) return;
         battery = b;
         read();
         b.addEventListener('levelchange', read);
