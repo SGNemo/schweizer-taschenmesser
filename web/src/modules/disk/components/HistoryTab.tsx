@@ -25,6 +25,7 @@ export function entryText(e: CareEntry): string {
 function wayBack(e: CareEntry): string {
   const h = t.disk.history;
   if (e.kind === 'cleanup') return e.permanent ? h.noWayBack : h.restoreHint;
+  if (e.stale) return h.stale;
   return e.undone ? h.undone : e.canUndo ? h.canUndo : h.undoNewerFirst;
 }
 

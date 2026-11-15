@@ -144,8 +144,18 @@ pub fn disk_care_undo(app: AppHandle, care: State<'_, PcCare>, id: u64) -> Resul
     let reg = system_registry().ok_or("unsupported")?;
     care.with(&app, |j| {
         let steps = j.undo_steps(id).map_err(|e| e.code().to_string())?;
-        apply_undo(reg.as_ref(), &steps, undo_other).map_err(|e| e.code().to_string())?;
-        j.mark_undone(id).map_err(|e| e.code().to_string())
+        match apply_undo(reg.as_ref(), &steps, undo_other) {
+            Ok(()) => j.mark_undone(id).map_err(|e| e.code().to_string()),
+            // Changed in Windows since: nothing was touched. The entry is marked, so the page
+            // stops offering an undo that can never work.
+            Err(RegError::ChangedElsewhere) => {
+                if let Some((kind, subject)) = j.subject_of(id) {
+                    let _ = j.mark_stale(kind, &subject);
+                }
+                Err(RegError::ChangedElsewhere.code().to_string())
+            }
+            Err(e) => Err(e.code().to_string()),
+        }
     })
 }
 

@@ -5262,15 +5262,16 @@ export const de = {
       undone: 'Zurückgenommen.',
       canUndo: 'Der Wert von vorher ist gespeichert.',
       undoNewerFirst: 'Nimm zuerst die neuere Änderung daran zurück.',
+      stale: 'Inzwischen in Windows geändert.',
     },
     /** Tab "Autostart": what starts with Windows for this account, with a switch each. */
     startup: {
-      lead: 'Hier steht, was mit Windows starten kann. Was du beim Start nicht brauchst, schaltest du aus – das Programm bleibt installiert und lässt sich wieder einschalten.',
+      lead: 'Hier steht, was über die Autostart-Liste mit Windows startet. Was du beim Start nicht brauchst, schaltest du aus – das Programm bleibt installiert und lässt sich wieder einschalten.',
       loading: 'Autostart wird gelesen …',
       failed: 'Der Autostart konnte nicht gelesen werden.',
       again: 'Erneut versuchen',
       onlyWindows: 'Den Autostart zeigt Nemo nur unter Windows.',
-      empty: 'Hier startet nichts mit Windows.',
+      empty: 'Nemo findet keine Programme in der Autostart-Liste von Windows.',
       user: 'Für dein Konto',
       machine: 'Für alle Konten',
       count: (on: number, total: number) => `${on} von ${total} eingeschaltet`,

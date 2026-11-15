@@ -1,5 +1,5 @@
 //! The registry seam: read anywhere below `HKCU` and `HKLM`, **write only below
-//! `HKCU\Software`**. There is no function that writes to the machine hive, so nothing built on
+//! `HKCU\Software`** (and on the real registry only at the keys listed in [`WRITABLE_KEYS`]). There is no function that writes to the machine hive, so nothing built on
 //! this trait can need administrator rights.
 //!
 //! [`MemRegistry`] is the in-memory twin for tests (same key rules, case-insensitive like the
@@ -106,7 +106,6 @@ pub fn valid_key(key: &str) -> bool {
             .all(|s| !s.is_empty() && *s != "." && *s != ".." && s.len() <= 255)
 }
 
-/// A value name the seam writes: not over-long, no control characters.
 /// The keys the real registry lets this crate write, in full: what the catalogues use and
 /// nothing else. [`valid_key`] is the general rule (and all the in-memory fake checks); this
 /// list is the second lock on the real thing, so not even a hand-edited journal file can make an
@@ -124,6 +123,7 @@ pub fn writable_key(key: &str) -> bool {
             || (cfg!(test) && key.starts_with(r"Software\NemoPcTuneTest\")))
 }
 
+/// A value name the seam writes: not over-long, no control characters.
 pub(crate) fn valid_name(name: &str) -> bool {
     name.len() <= 255 && !name.chars().any(|c| c.is_control())
 }

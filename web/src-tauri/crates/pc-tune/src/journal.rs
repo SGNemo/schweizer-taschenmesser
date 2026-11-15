@@ -81,6 +81,10 @@ pub struct Entry {
     pub undo: Vec<Undo>,
     #[serde(default)]
     pub undone: bool,
+    /// The value was changed elsewhere (Windows' own settings) after this change: there is
+    /// nothing left for this entry to take back.
+    #[serde(default)]
+    pub stale: bool,
 }
 
 /// What the webview gets: the entry without the stored values.
@@ -98,6 +102,8 @@ pub struct EntryView {
     pub on: Option<bool>,
     pub can_undo: bool,
     pub undone: bool,
+    /// Changed elsewhere since: cannot be taken back here any more.
+    pub stale: bool,
 }
 
 #[derive(Default, Serialize, Deserialize)]
@@ -130,6 +136,8 @@ pub enum JournalError {
     NothingToUndo,
     /// A newer, not yet undone change of the same subject exists: undo that one first.
     NewerChange,
+    /// The value was changed elsewhere since: this entry can no longer be taken back.
+    ChangedElsewhere,
     Reg(RegError),
 }
 
@@ -142,6 +150,7 @@ impl JournalError {
             JournalError::AlreadyUndone => "already-undone",
             JournalError::NothingToUndo => "nothing-to-undo",
             JournalError::NewerChange => "newer-change",
+            JournalError::ChangedElsewhere => "changed-elsewhere",
             JournalError::Reg(e) => e.code(),
         }
     }
@@ -175,6 +184,7 @@ pub fn cleanup_view(
         on: None,
         can_undo: false,
         undone: false,
+        stale: false,
     }
 }
 
@@ -298,6 +308,7 @@ impl Journal {
             on,
             undo,
             undone: false,
+            stale: false,
         });
         let take_out = |j: &mut Journal| {
             j.file.entries.retain(|x| x.id != id);
@@ -333,6 +344,9 @@ impl Journal {
             .ok_or(JournalError::UnknownEntry)?;
         if e.undone {
             return Err(JournalError::AlreadyUndone);
+        }
+        if e.stale {
+            return Err(JournalError::ChangedElsewhere);
         }
         if e.undo.is_empty() {
             return Err(JournalError::NothingToUndo);
@@ -379,6 +393,28 @@ impl Journal {
         self.save()
     }
 
+    /// After an undo or reset found the subject's value changed elsewhere: its open entries are
+    /// marked as no longer undoable and its original is forgotten. What stands now is the
+    /// user's newer choice, made outside the app, and nothing here will touch it again.
+    pub fn mark_stale(&mut self, kind: Kind, subject: &str) -> Result<(), JournalError> {
+        for e in &mut self.file.entries {
+            if e.kind == kind && e.subject == subject && !e.undone && !e.undo.is_empty() {
+                e.stale = true;
+            }
+        }
+        self.file.originals.remove(&subject_key(kind, subject));
+        self.save()
+    }
+
+    /// Kind and subject of an entry (to mark its subject after a refused undo).
+    pub fn subject_of(&self, id: u64) -> Option<(Kind, String)> {
+        self.file
+            .entries
+            .iter()
+            .find(|e| e.id == id)
+            .map(|e| (e.kind, e.subject.clone()))
+    }
+
     /// Subjects of `kind` that are changed right now, with the values from before their first
     /// change ("Alle zurücksetzen"). Each step expects the value the subject's newest open change
     /// wrote, so a reset, like an undo, leaves alone what was changed elsewhere since.
@@ -400,6 +436,8 @@ impl Journal {
     }
 
     /// `step` with `written` taken from the newest open change of the subject to the same value.
+    /// When the history no longer holds one (trimmed after very many changes), the step comes
+    /// without it and is put back unchecked: refusing would leave the subject stuck for good.
     fn with_newest_written(&self, kind: Kind, subject: &str, step: &Undo) -> Undo {
         let Undo::Reg {
             key,
@@ -466,6 +504,7 @@ impl Journal {
                 on: e.on,
                 can_undo: !e.undone && self.undo_steps(e.id).is_ok(),
                 undone: e.undone,
+                stale: e.stale,
             })
             .collect()
     }
@@ -811,6 +850,41 @@ mod tests {
             apply_undo(&reg, &j.undo_steps(id).unwrap(), |_, _| Ok(())),
             Err(RegError::ChangedElsewhere)
         );
+        // The way out: the entry is marked, offers no undo any more, and "reset all" forgets it.
+        j.mark_stale(Kind::Tweak, "a").unwrap();
+        assert_eq!(j.undo_steps(id), Err(JournalError::ChangedElsewhere));
+        let v = &j.views()[0];
+        assert!(v.stale && !v.can_undo && !v.undone);
+        assert!(j.originals(Kind::Tweak).is_empty());
+        let (j, _) = Journal::open(&path).unwrap();
+        assert!(j.views()[0].stale, "kept across a restart");
+        cleanup(&path);
+    }
+
+    #[test]
+    fn reset_expects_what_the_newest_open_change_wrote() {
+        let path = temp_path("resetwritten");
+        let reg = MemRegistry::new();
+        reg.set(KEY, "a", &Value::Dword(7)).unwrap();
+        let (mut j, _) = Journal::open(&path).unwrap();
+        switch(&mut j, &reg, "a", 0).unwrap();
+        switch(&mut j, &reg, "a", 1).unwrap();
+        // Untouched since: the reset goes back to the 7.
+        let steps = j.originals(Kind::Tweak).remove(0).1;
+        assert!(matches!(
+            &steps[0],
+            Undo::Reg {
+                written: Some(Value::Dword(1)),
+                ..
+            }
+        ));
+        // Changed elsewhere since: the reset refuses and leaves it.
+        reg.set(KEY, "a", &Value::Dword(5)).unwrap();
+        assert_eq!(
+            apply_undo(&reg, &steps, |_, _| Ok(())),
+            Err(RegError::ChangedElsewhere)
+        );
+        assert_eq!(reg.get(KEY, "a"), Ok(Some(Value::Dword(5))));
         cleanup(&path);
     }
 
