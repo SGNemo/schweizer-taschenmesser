@@ -217,7 +217,9 @@ export default function FitnessPage() {
         besideContent={
           view === 'week' ||
           view === 'exercises' ||
-          (view === 'food' ? !noMeals : !noSessions && !(live && !liveOpen))
+          (view === 'food'
+            ? !noMeals
+            : !noSessions && !(live && !liveOpen) && !(!live && todayPlan.length))
         }
         views={
           // The tabs depend on the preferences („Essen“ only with calorie tracking), so they wait for them.
