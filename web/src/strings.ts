@@ -9115,6 +9115,58 @@ export const de = {
       limit: 'Verbindung kurz unterbrochen.',
       retry: 'Die Verbindung kam nicht zustande.',
     },
+    monitorOff: 'Monitor aus',
+    power: {
+      open: 'PC ausschalten …',
+      title: 'PC ausschalten',
+      note: 'Am PC läuft danach 10 Sekunden ein Countdown. Dort lässt es sich abbrechen.',
+      more: 'Weitere Möglichkeiten',
+      action: {
+        shutDown: 'Ausschalten',
+        restart: 'Neu starten',
+        sleep: 'Energie sparen',
+        hibernate: 'Ruhezustand',
+        signOut: 'Abmelden',
+      },
+      asking: 'Entsperre dieses Handy, dann geht es an den PC.',
+      counting: {
+        shutDown: 'Der PC schaltet sich in Kürze aus. Am PC lässt es sich abbrechen.',
+        restart: 'Der PC startet in Kürze neu. Am PC lässt es sich abbrechen.',
+        sleep: 'Der PC geht in Kürze in den Energiesparmodus. Am PC lässt es sich abbrechen.',
+        hibernate: 'Der PC geht in Kürze in den Ruhezustand. Am PC lässt es sich abbrechen.',
+        signOut: 'Am PC wird in Kürze abgemeldet. Am PC lässt es sich abbrechen.',
+        unknown: 'Am PC läuft ein Countdown zum Ausschalten. Am PC lässt er sich abbrechen.',
+      },
+      cancel: 'Abbrechen',
+      working: 'Nemo am PC ist gerade noch beschäftigt (Abgleich, Download oder Sicherung).',
+      despite: {
+        shutDown: 'Trotzdem ausschalten',
+        restart: 'Trotzdem neu starten',
+        sleep: 'Trotzdem Energie sparen',
+        hibernate: 'Trotzdem Ruhezustand',
+        signOut: 'Trotzdem abmelden',
+      },
+      wait: 'Warten',
+      done: {
+        shutDown: 'Der PC fährt herunter. Fragt ein Programm noch nach dem Speichern, bleibt er an.',
+        restart: 'Der PC startet neu. Fragt ein Programm noch nach dem Speichern, bleibt er an.',
+        sleep: 'Der PC geht in den Energiesparmodus.',
+        hibernate: 'Der PC geht in den Ruhezustand.',
+        signOut:
+          'Am PC wird abgemeldet. Fragt ein Programm noch nach dem Speichern, bleibt die Sitzung offen.',
+        unknown: 'Der PC schaltet sich aus. Fragt ein Programm noch nach dem Speichern, bleibt er an.',
+      },
+      cancelled: 'Abgebrochen. Der PC bleibt an.',
+      notGranted:
+        'Am PC ist Ausschalten für dieses Handy aus. Am PC unter Einstellungen → Fernsteuerung erlauben.',
+      locked: 'Der PC ist gesperrt. Ausschalten geht nur, solange er entsperrt ist.',
+      limit: 'Gleich wieder möglich.',
+      failed: 'Das hat am PC nicht geklappt.',
+      unavailable:
+        'Dieses Handy kann seine Bildschirmsperre für Nemo nicht abfragen. Ausschalten geht deshalb nur am PC.',
+      unlock: 'Nicht entsperrt. Es wurde nichts gesendet.',
+      dismiss: 'Ausblenden',
+    },
   },
   routines: {
     meta: {

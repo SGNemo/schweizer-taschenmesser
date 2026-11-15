@@ -41,6 +41,8 @@ export function createRemote(supported: boolean): RemoteService {
         dy: whole(dy),
       }),
     text: (session, text) => call<void>('remote_client_text', { session, text }),
+    power: (session, action, despite, lang) =>
+      call<void>('remote_client_power', { session, action, despite, lang: lang ?? null }),
     close: (session) => call<void>('remote_client_close', { session }),
   };
 }

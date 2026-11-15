@@ -6,6 +6,9 @@ import type {
   RemoteKeyAction,
   RemoteLevel,
   RemotePcState,
+  RemotePowerAction,
+  RemotePowerAnswer,
+  RemotePowerInfo,
   RemoteService,
 } from '@/core/platform/types';
 
@@ -33,7 +36,11 @@ import type {
  *   session. A device granted only media, and a locked PC, get their sentence without a call; a
  *   dismissed unlock is not asked again by itself (only the person's own step asks again);
  * - what the pad sends goes out in order, one write at a time: moves are summed only while a
- *   write is pending, a press that finds the queue full is dropped, a release never is.
+ *   write is pending, a press that finds the queue full is dropped, a release never is;
+ * - power (`powerAct`): every answer of the PC is the latest state of its countdown, never paired
+ *   with a request; a power answer does not end the session. Without a session an action opens
+ *   one first, once; the session ending resets the state, except after `done` (the disconnect
+ *   that follows is expected and keeps that line until a new session stands).
  */
 export type RemoteView =
   | { kind: 'idle' }
@@ -69,6 +76,32 @@ export type RemotePad =
   | { kind: 'unlock' }
   /** This phone has a screen lock it cannot ask for: the level is not for this phone. */
   | { kind: 'unavailable' };
+
+/** A power action that runs after the PC's countdown (all but `cancel`). */
+export type RemotePowerVerb = Exclude<RemotePowerAction, 'cancel'>;
+
+/** Where power stands, from the PC's latest answer. */
+export type RemotePowerPhase =
+  | { kind: 'idle' }
+  /** The phone's unlock prompt is up, or the action is on its way to the PC. */
+  | { kind: 'asking'; action: RemotePowerVerb }
+  /** A countdown runs at the PC (`action` unknown when it was started before this run). */
+  | { kind: 'counting'; action?: RemotePowerVerb }
+  /** Nemo on the PC is still busy: nothing started; asking again `despite` starts it. */
+  | { kind: 'working'; action: RemotePowerVerb }
+  /** The countdown ran out: the PC goes off (the disconnect after it is expected). */
+  | { kind: 'done'; action?: RemotePowerVerb }
+  /** The countdown was stopped (at the PC or from here): the PC stays on. */
+  | { kind: 'cancelled' }
+  | { kind: 'refused'; reason: 'not-granted' | 'locked' | 'limit' | 'failed' | 'unavailable' }
+  /** The phone's unlock was dismissed: nothing was sent. */
+  | { kind: 'unlock' };
+
+export interface RemotePowerView {
+  /** The PC's power facts from the last open; `null`: not known yet, or a PC from before power. */
+  info: RemotePowerInfo | null;
+  phase: RemotePowerPhase;
+}
 
 /** What a sync round says about the pairing. */
 export type SyncVerdict = 'ok' | 'not-paired' | 'failed';
@@ -189,6 +222,16 @@ export interface RemoteSession {
   type(text: string, enter: boolean): Promise<TypeResult>;
   /** Whether a press of the phone's volume keys belongs to the PC right now. */
   takesVolumeKeys(): boolean;
+  /** Power at the PC right now (a stable object until it changes; listeners hear of changes). */
+  power(): RemotePowerView;
+  /**
+   * One power action (the phone's unlock prompt, shown by the shell, is the confirmation;
+   * `lang` picks its language). Without a session it opens one first, once. `despite`: after
+   * `working`, the same action again. The PC's answer comes as an event.
+   */
+  powerAct(action: RemotePowerAction, despite?: boolean, lang?: string): Promise<void>;
+  /** The person read a final line (refused, cancelled, done, unlock dismissed) or chose "Warten": back to idle. */
+  powerDismiss(): void;
 }
 
 export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
@@ -218,6 +261,62 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
   /** What the pad sends, in order; one write at a time. */
   const out: Out[] = [];
   let pumping = false;
+  let powerView: RemotePowerView = { info: null, phase: { kind: 'idle' } };
+  /** The last action asked for: its words name what the countdown does. */
+  let powerAction: RemotePowerVerb | undefined;
+  /** Counts `powerAct` calls: only the latest one sets a state when its call returns. */
+  let powerCalls = 0;
+
+  const setPower = (next: Partial<RemotePowerView>) => {
+    powerView = { ...powerView, ...next };
+    for (const listener of listeners) listener(view);
+  };
+  const setPhase = (phase: RemotePowerPhase) => setPower({ phase });
+  /** The session is gone: so is what power was doing – except `done`, whose disconnect is expected. */
+  const powerLost = () => {
+    const kind = powerView.phase.kind;
+    if (kind !== 'idle' && kind !== 'done') setPhase({ kind: 'idle' });
+  };
+  /** One answer of the PC: the latest state of its countdown. */
+  const powerAnswer = (answer: RemotePowerAnswer) => {
+    const phase = powerView.phase;
+    const info = powerView.info;
+    switch (answer) {
+      case 'started':
+        return setPower({
+          info: info && { ...info, pending: true },
+          phase: { kind: 'counting', action: powerAction },
+        });
+      case 'pending':
+        // a countdown ran already: what it does is known only if this phone started it
+        return setPower({
+          info: info && { ...info, pending: true },
+          phase: { kind: 'counting', action: phase.kind === 'counting' ? phase.action : undefined },
+        });
+      case 'working':
+        return setPhase(
+          powerAction
+            ? { kind: 'working', action: powerAction }
+            : { kind: 'refused', reason: 'failed' },
+        );
+      case 'cancelled':
+        return setPower({ info: info && { ...info, pending: false }, phase: { kind: 'cancelled' } });
+      case 'done':
+        return setPower({
+          info: info && { ...info, pending: false },
+          phase: { kind: 'done', action: phase.kind === 'counting' ? phase.action : powerAction },
+        });
+      case 'not-granted':
+        return setPower({
+          info: info && { ...info, granted: false },
+          phase: { kind: 'refused', reason: 'not-granted' },
+        });
+      case 'locked':
+      case 'limit':
+      case 'failed':
+        return setPhase({ kind: 'refused', reason: answer });
+    }
+  };
 
   const setPad = (next: RemotePad) => {
     if (
@@ -237,6 +336,7 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
     emptyOut();
     level = 'media';
     if (pad.kind !== 'unlock' && pad.kind !== 'unavailable') setPad({ kind: 'off' });
+    powerLost();
   };
 
   const set = (next: RemoteView) => {
@@ -255,6 +355,11 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
   /** What the PC says about session `id` (only ever called for the current or the quiet one). */
   const handle = (event: RemoteEvent) => {
     if (event.session !== session && event.session !== quiet) return;
+    // about power: the session goes on (a quiet one's late word changes nothing about it)
+    if (event.kind === 'power') {
+      powerAnswer(event.answer);
+      return;
+    }
     stopWaiting();
     if (event.kind === 'state') {
       // a late answer of a session that had gone quiet: it is alive after all
@@ -310,6 +415,17 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       level = opened.level;
       grant = opened.grant;
       noLock = opened.noLock;
+      // a new session stands: what the PC says about power now replaces what was known
+      const phase = powerView.phase;
+      let next: RemotePowerPhase = phase;
+      // (an action waiting for this session keeps its prompt: the PC answers it)
+      if (phase.kind === 'asking') next = phase;
+      else if (opened.power?.pending)
+        next = { kind: 'counting', action: phase.kind === 'counting' ? phase.action : undefined };
+      else if (opened.power === null || phase.kind === 'counting' || phase.kind === 'done')
+        next = { kind: 'idle' };
+      // (listeners hear of it with the connected state, one notice)
+      powerView = { info: opened.power, phase: next };
       set({ kind: 'connected', pc: opened.state });
       for (const event of early) if (event.session === known) handle(event);
       return undefined;
@@ -617,6 +733,8 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
         waiting = undefined;
       }
       if (view.kind !== 'connected' || session === undefined) return false;
+      // an older PC would end the session on it
+      if (action === 'monitor-off' && powerView.info === null) return false;
       const used = session;
       // wait for the PC's answer from before the call: it may arrive while the call returns
       // every press that goes out is waited for anew
@@ -665,6 +783,68 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
         ),
       );
       lastAliveAt = -Infinity;
+    },
+    power: () => powerView,
+    async powerAct(action, despite = false, lang) {
+      // one prompt at a time
+      if (powerView.phase.kind === 'asking') return;
+      const mine = ++powerCalls;
+      const latest = () => mine === powerCalls;
+      if (action !== 'cancel') {
+        powerAction = action;
+        setPhase({ kind: 'asking', action });
+      }
+      const back = () => {
+        if (latest() && powerView.phase.kind === 'asking') setPhase({ kind: 'idle' });
+      };
+      if (view.kind !== 'connected' || session === undefined) {
+        const opens =
+          view.kind === 'idle' ||
+          view.kind === 'disconnected' ||
+          ((view.kind === 'connecting' || view.kind === 'slow') && opening !== undefined);
+        // refused, unreachable, …: the page says why; nothing goes out
+        if (!opens) return back();
+        await open();
+      }
+      // never repeated by itself: without a session (or power) now, it is the person's step again
+      if (!latest() || view.kind !== 'connected' || session === undefined) return back();
+      if (powerView.info === null) return back();
+      const used = session;
+      try {
+        await deps.remote.power(used, action, despite, lang);
+      } catch (e) {
+        const code = e instanceof Error ? e.message : '';
+        // the phone's own answer to its prompt counts, also when the page was left meanwhile
+        if (code === 'unlock-cancelled' || code === 'unlock-failed' || code === 'unlock-busy') {
+          if (latest()) setPhase({ kind: 'unlock' });
+          return;
+        }
+        if (!latest()) return;
+        if (code === 'unlock-unavailable') setPhase({ kind: 'refused', reason: 'unavailable' });
+        else if (code === 'no-power') setPower({ info: null, phase: { kind: 'idle' } });
+        else if (code === 'closed' || code === 'network') {
+          // the session is over (like a send that failed); the next step opens again
+          if (session === used) {
+            stopWaiting();
+            session = undefined;
+            drop(used);
+            padLost();
+            set({ kind: 'disconnected' });
+          }
+          back();
+        } else setPhase({ kind: 'refused', reason: 'failed' });
+      }
+    },
+    powerDismiss() {
+      const kind = powerView.phase.kind;
+      if (
+        kind === 'refused' ||
+        kind === 'cancelled' ||
+        kind === 'done' ||
+        kind === 'unlock' ||
+        kind === 'working'
+      )
+        setPhase({ kind: 'idle' });
     },
     // With a session, and for a few seconds after it was last alive (a drop, a reconnect): then
     // the keys go back to the phone, so its own volume is never out of reach for long.

@@ -255,3 +255,42 @@
     transform: none;
   }
 }
+/* Power ("PC ausschalten …"): three main actions as big keys, the two rarer ones below, quieter. */
+.power {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.powerMain {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+.powerMain .powerKey {
+  flex-direction: column;
+  gap: var(--space-1);
+  min-height: calc(var(--touch) * 1.75);
+  white-space: normal;
+}
+.powerMore {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+/* The state of a power action: one still line with an icon, and its one step. */
+.powerLine {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--text);
+}
+.powerLine > svg {
+  flex: none;
+  margin-top: var(--space-1);
+}
+.powerSteps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
