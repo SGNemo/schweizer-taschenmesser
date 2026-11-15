@@ -230,6 +230,7 @@ export const planner: Strings['planner'] = {
     waits: 'Waits',
     move: (from: string, to: string) => `${from} → ${to}`,
     from: (day: string) => `was ${day}`,
+    pastDue: (day: string) => `after its deadline ${day}`,
     earlier: 'earlier, because room opened up',
     later: 'later, because the day is full',
     nothing: 'Nothing in the plan changes.',
@@ -289,6 +290,7 @@ export const planner: Strings['planner'] = {
     dayEndHint: 'The same for every day. The planner says so half an hour before.',
     dayEndSet: (time: string) => `End of day ${time}, for every day`,
     dayEndCleared: 'No end of day any more',
+    eventsFill: 'Appointments on this day already fill this time.',
   },
   chip: {
     title: (planned: string, n: number) =>

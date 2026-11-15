@@ -408,7 +408,10 @@ test('B Kopf leeren: zwölf Dinge auf einmal', async ({ page, isMobile }, info) 
   await m.tap(page.getByRole('button', { name: `Alle speichern (${DUMP.length})` }).first());
   await expect(page.getByText(`${DUMP.length} Dinge gespeichert`)).toBeVisible();
   // Where did the lines land? Each one that does not become what was meant is a detour the person has to fix.
-  const tasks = await rows<{ title: string; dueDate?: string }>(page, 'todos_task');
+  const tasks = await rows<{ title: string; dueDate?: string; dueTime?: string; note?: string }>(
+    page,
+    'todos_task',
+  );
   const events = await rows<{
     title: string;
     startDate?: string;
@@ -421,6 +424,10 @@ test('B Kopf leeren: zwölf Dinge auf einmal', async ({ page, isMobile }, info) 
   // (1) „bis So 18:00“ is a deadline for a thing to do, not an appointment at 18:00.
   const teamDeadline = task(/Team-Sachen/)?.dueDate === SUNDAY;
   if (!teamDeadline) m.detour();
+  // Package 5b: the 18:00 is the deadline's hour on the ToDo, never a note line „Uhrzeit: …“.
+  const teamDueTime = task(/Team-Sachen/)?.dueTime;
+  expect(teamDueTime).toBe('18:00');
+  expect(task(/Team-Sachen/)?.note ?? '').not.toMatch(/Uhrzeit/);
   // (2) „Zocken“ is the break, not a ToDo the planner fills the day with.
   const gamingTask = !!task(/^Zocken/);
   if (gamingTask) m.detour();
@@ -444,6 +451,7 @@ test('B Kopf leeren: zwölf Dinge auf einmal', async ({ page, isMobile }, info) 
   facts(info, 'B', {
     kinds,
     teamDeadline,
+    teamDueTime,
     gamingTask,
     mondayKind,
     mondayOnce,
@@ -729,22 +737,27 @@ test('G Sonntag-Frist und Montag früh', async ({ page, isMobile }, info) => {
   await prepare(page, ['todos', 'planner']);
   const m = new Meter(page, false);
   await m.go('/planner');
-  // The planner's own field: „bis So“ makes a hard due – the 18:00 has nowhere to go.
+  // The planner's own field: „bis So 18:00“ makes a hard due with its hour (package 5b).
   const field = page.getByRole('textbox', { name: 'Eintragen oder sagen' });
   await m.type(field, 'Team-Sachen lesen bis So 18:00');
   await m.enter(field);
   await expect(page.getByText(/Eingetragen/).first()).toBeVisible();
   const team = (
-    await rows<{ title: string; dueDate?: string; plannedFor?: string; note?: string }>(
-      page,
-      'todos_task',
-    )
+    await rows<{
+      title: string;
+      dueDate?: string;
+      dueTime?: string;
+      plannedFor?: string;
+      note?: string;
+    }>(page, 'todos_task')
   ).find((t) => /Team-Sachen/.test(t.title));
   // „bis So“ must give Sunday as the hard due; any other day is a detour the person has to find and fix.
   const dueRight = team?.dueDate === SUNDAY;
   if (!dueRight) m.detour();
-  // The 18:00 has no field (no due time): at most a note line the plan never reads.
-  const timeOnlyInNote = /18:00/.test(team?.note ?? '');
+  // The 18:00 is the ToDo's `dueTime` (package 5b), no note line „Uhrzeit: …“ any more; the row says the hour.
+  expect(team?.dueTime).toBe('18:00');
+  expect(team?.note ?? '').not.toMatch(/Uhrzeit/);
+  await expect(page.getByText(/Frist So 18:00/).first()).toBeVisible();
   // Sunday evening and Monday morning through the quick capture (one sheet, two lines).
   await m.tap(page.getByRole('button', { name: /Neu: etwas eintragen|Neu eintragen/ }));
   m.dialog();
@@ -771,11 +784,11 @@ test('G Sonntag-Frist und Montag früh', async ({ page, isMobile }, info) => {
     team: {
       title: team?.title,
       dueDate: team?.dueDate,
+      dueTime: team?.dueTime,
       plannedFor: team?.plannedFor,
       note: team?.note,
     },
     dueRight,
-    timeOnlyInNote,
     sunday: sunday && {
       kind: sunday.kind,
       once: sunday.once,

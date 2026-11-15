@@ -76,6 +76,9 @@ export async function createNextInstance(task: Stored<Task>): Promise<void> {
         done: false,
         priority: task.priority,
         dueDate: nextDue,
+        // The deadline's hour and its opt-in reminder belong to the series (each instance notifies once).
+        dueTime: task.dueTime,
+        dueRemind: task.dueRemind,
         recurrence: nextRecurrence(task, nextDue),
         estimateMin: task.estimateMin,
         note: task.note,
