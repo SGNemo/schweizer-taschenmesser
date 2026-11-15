@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { parseInstruction, resolveDay, type InstructionContext, type PlanOp } from './instructions';
+import {
+  parseInstruction,
+  resolveDay,
+  restToTomorrow,
+  type InstructionContext,
+  type PlanOp,
+} from './instructions';
 
 // Monday, 2 November 2026: Do = 5.11., Fr = 6.11., nächster Donnerstag = 12.11.
 const TODAY = '2026-11-02';
@@ -165,6 +171,29 @@ describe('parseInstruction – the whole day and runs', () => {
       { op: 'earliest', key: 'todos:steuer', date: '2026-11-06' },
       { op: 'earliest', key: 'todos:rad', date: '2026-11-06' },
     ]);
+  });
+
+  it('a thing nailed to the day stays: no earliest for it (alles von … and „Rest verteilen“ alike)', () => {
+    const pinned = {
+      ...ctx,
+      items: [
+        ...ctx.items,
+        { key: 'todos:nagel', title: 'Nagel', date: '2026-11-05', pinned: '2026-11-05' },
+      ],
+    };
+    const keys = (r: ReturnType<typeof parseInstruction>) =>
+      r.kind === 'ops' ? r.ops.flatMap((o) => ('key' in o ? [o.key] : [])) : [];
+    expect(keys(parseInstruction('alles von Do nach Fr', pinned))).not.toContain('todos:nagel');
+    const today = { ...pinned, today: '2026-11-05' };
+    expect(restToTomorrow(today)).toEqual([
+      { op: 'available', date: '2026-11-05', min: 0 },
+      { op: 'earliest', key: 'todos:steuer', date: '2026-11-06' },
+      { op: 'earliest', key: 'todos:rad', date: '2026-11-06' },
+    ]);
+    expect(parseInstruction('Rest verteilen', today)).toEqual({
+      kind: 'ops',
+      ops: restToTomorrow(today),
+    });
   });
 
   it('schieb alles von Donnerstag auf Freitag / Do frei, alles nach Fr', () => {

@@ -1347,7 +1347,7 @@ export const de = {
         'Montags steht im Planer eine stille Zeile, die zum Wochenzettel führt. Ein × blendet sie für die Woche aus; über ⋯ ist der Zettel immer da.',
       eveningWrapUp: '„Tag abschließen“ am Abend',
       eveningWrapUpHint:
-        'Ab dem späten Nachmittag lässt sich Übriges mit einem Tipp auf morgen schieben.',
+        'Ab dem späten Nachmittag lässt sich Übriges mit einem Tipp auf morgen schieben. Mit dem Planer zeigt erst eine Vorschau, wohin der Rest geht.',
     },
     reminders: {
       title: 'Ruhige Erinnerungen',
@@ -1394,6 +1394,9 @@ export const de = {
       todoDigest: 'ToDos am Morgen',
       todoDigestHint:
         'Ein Hinweis pro Tag, der die ToDos für heute nennt. Keine Einzelhinweise je Aufgabe.',
+      restReminder: '„Rest verteilen?“ am Abend',
+      restReminderHint:
+        'Um 20 Uhr ein leiser Hinweis, wenn im Planer für heute noch etwas steht. Einmal am Tag, nie wiederholt; verteilt wird erst nach deinem Tipp.',
       digestTime: 'Uhrzeit der Übersicht',
       inAppGroup: 'Karte in der App',
       on: 'An',
@@ -1559,6 +1562,10 @@ export const de = {
       wrapLeft: (n: number) =>
         n === 1 ? 'Eine Sache ist noch offen.' : `${n} Sachen sind noch offen.`,
       wrapAction: 'Auf morgen schieben',
+      /** With the planner on: its preview of „Rest verteilen“ instead of moving everything to tomorrow. */
+      wrapRest: 'Rest verteilen',
+      /** With the planner on: no count of what is left, one calm line. */
+      wrapRestLine: 'Was heute offen ist, lässt sich auf die nächsten Tage verteilen.',
       wrapDone: 'Auf morgen geschoben. Schönen Abend!',
       wrapClear: 'Alles für heute erledigt. Schönen Abend!',
     },
@@ -8579,6 +8586,15 @@ export const de = {
       back: 'Zum Planer',
     },
     empty: 'Noch nichts geplant. Eine Sache reicht.',
+    rest: {
+      link: 'Rest verteilen',
+      line: 'Was heute offen ist, geht auf die nächsten Tage.',
+      done: 'Auf die nächsten Tage verteilt.',
+      notifyTitle: 'Rest verteilen?',
+      notifyBody:
+        'Was heute offen ist, lässt sich auf die nächsten Tage verteilen. Ein Tipp zeigt die Vorschau.',
+      nothing: 'Für heute bleibt nur, was fest auf heute liegt.',
+    },
     daySetup: {
       open: 'Tage einteilen',
       title: 'Tage einteilen',

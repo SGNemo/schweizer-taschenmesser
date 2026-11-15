@@ -7,6 +7,7 @@ import { useModuleStates } from '@/core/modules/activation';
 import { useCalendarItems } from '@/core/modules/contributions';
 import { useOverviewBlocks } from '@/core/modules/overviewBlocks';
 import { useAmountMask } from '@/core/focus/maskAmounts';
+import { bus } from '@/core/events';
 import { useFocusSettings } from '@/core/settings/focus';
 import { addDaysStr, formatDay, today } from '@/core/time/dates';
 import { now, pad2 } from '@/core/time/now';
@@ -115,6 +116,10 @@ export default function NextWidget() {
     undoableWithToast(t.focus.progress.wrapDone, t.focus.progress.wrapDone, async () => {
       for (const x of left) await taskRepo.update(x.id, userPlannedFor(x, addDaysStr(day, 1)));
     });
+  // With the planner on, „Tag abschließen“ asks it over the bus (no module import): the planner opens its preview of
+  // „Rest verteilen“, and nothing moves before „Übernehmen“ there. „Auf morgen schieben“ is the way without it.
+  const restInPlan = states?.planner === true;
+  const askPlanner = () => bus.emit('plan.restRequested', { open: (path) => void navigate(path) });
   const toggle = (id: string, done: boolean) => {
     const task = all.find((x) => x.id === id);
     if (!task) return;
@@ -275,9 +280,17 @@ export default function NextWidget() {
           <span className={styles.planTitle}>{t.focus.progress.wrapTitle}</span>
           {left.length > 0 ? (
             <>
-              <p className={styles.hint}>{t.focus.progress.wrapLeft(left.length)}</p>
+              <p className={styles.hint}>
+                {restInPlan
+                  ? t.focus.progress.wrapRestLine
+                  : t.focus.progress.wrapLeft(left.length)}
+              </p>
               <div className={styles.actions}>
-                <Button onClick={() => void wrapUp()}>{t.focus.progress.wrapAction}</Button>
+                {restInPlan ? (
+                  <Button onClick={() => void askPlanner()}>{t.focus.progress.wrapRest}</Button>
+                ) : (
+                  <Button onClick={() => void wrapUp()}>{t.focus.progress.wrapAction}</Button>
+                )}
               </div>
             </>
           ) : (

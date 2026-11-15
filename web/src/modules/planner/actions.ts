@@ -397,7 +397,13 @@ const refOf = (key: string) => {
  * through the source, the buffer in the settings – and planned in the same `undoable`, never through
  * `core/ai/write`. One toast with the undo.
  */
-export function applyOps(ops: readonly PlanOp[], lead: string, titles: Record<string, string>) {
+export function applyOps(
+  ops: readonly PlanOp[],
+  lead: string,
+  titles: Record<string, string>,
+  /** One calm sentence instead of the moves („Rest verteilen“: never a count of what was left). */
+  leadOnly = false,
+) {
   const reshuffle = ops.some((o) => o.op === 'replan' && o.reshuffle);
   return act(
     lead,
@@ -452,6 +458,6 @@ export function applyOps(ops: readonly PlanOp[], lead: string, titles: Record<st
         }
       }
     },
-    { reshuffle },
+    { reshuffle, leadOnly },
   );
 }

@@ -229,6 +229,15 @@ export const planner: Strings['planner'] = {
     back: 'To the planner',
   },
   empty: 'Nothing planned yet. One thing is enough.',
+  rest: {
+    link: 'Spread the rest',
+    line: 'What is still open today goes to the next few days.',
+    done: 'Spread over the next few days.',
+    notifyTitle: 'Spread the rest?',
+    notifyBody:
+      'What is still open today can be spread over the next few days. A tap shows the preview.',
+    nothing: 'All that stays today is what is pinned to today.',
+  },
   daySetup: {
     open: 'Plan my days',
     title: 'Plan my days',
