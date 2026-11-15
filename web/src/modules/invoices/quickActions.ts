@@ -30,6 +30,9 @@ export async function payManyWithUndo(ids: readonly string[]): Promise<void> {
     label: t.invoices.undo,
     run: () =>
       void (async () => {
+        // In the order they were paid (the list's order: oldest due first). Reopening an invoice removes the open
+        // next one of its series, so the earlier one must be reopened while a later, also ticked one is still
+        // paid – it then survives (pinned in listTools.test.tsx).
         for (const id of paid) await markOpen(id);
       })(),
   });

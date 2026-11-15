@@ -62,6 +62,24 @@ describe('payManyWithUndo', () => {
   });
 });
 
+describe('payManyWithUndo with a series', () => {
+  it('undo keeps an invoice of the series that was paid in the same batch', async () => {
+    const a = await add('Miete', '2026-10-01', { repeat: 'monthly' });
+    // The next one of the series exists already (created when "a" was paid once before) and is open.
+    const b = await add('Miete', '2026-11-01', { repeat: 'monthly', repeatOf: a.id });
+    await payManyWithUndo([a.id, b.id]);
+    const created = (await invoiceRepo.active().toArray()).filter((i) => i.repeatOf === b.id);
+    expect(created).toHaveLength(1);
+    useUiStore.getState().toasts.at(-1)?.action?.run();
+    await waitFor(async () => {
+      expect((await invoiceRepo.get(a.id))?.status).toBe('open');
+      expect((await invoiceRepo.get(b.id))?.status).toBe('open');
+      // The one that paying "b" brought is gone again; "b" itself was never removed.
+      expect((await invoiceRepo.active().toArray()).filter((i) => i.repeatOf === b.id)).toEqual([]);
+    });
+  });
+});
+
 const renderPage = async () => {
   render(
     <MemoryRouter initialEntries={['/invoices']}>
@@ -123,6 +141,23 @@ describe('invoice list tools', () => {
       expect(
         (await invoiceRepo.active().toArray()).filter((i) => i.status === 'open'),
       ).toHaveLength(3),
+    );
+  });
+
+  it('a new search clears the ticks, and Esc ends the selection mode', async () => {
+    await renderPage();
+    await userEvent.click(screen.getByRole('button', { name: 'Auswählen' }));
+    await userEvent.click(screen.getAllByRole('checkbox')[0]!);
+    expect(screen.getByRole('region', { name: /Auswahl/ })).toHaveTextContent('1');
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Rechnungen durchsuchen' }), 'tele');
+    expect(screen.queryByRole('region', { name: /Auswahl/ })).toBeNull();
+    expect(screen.getAllByRole('checkbox')).toHaveLength(1);
+    await userEvent.click(document.body);
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
+    expect(screen.getByRole('button', { name: 'Auswählen' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
     );
   });
 });

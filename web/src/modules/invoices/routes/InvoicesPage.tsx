@@ -8,6 +8,7 @@ import { dueState } from '@/core/time/due';
 import { groupByTime } from '@/core/time/groups';
 import { t } from '@/strings';
 import { deleteWithUndo } from '@/core/undo/withToast';
+import { isTypingTarget } from '@/core/keyboard/typing';
 import {
   Button,
   EmptyState,
@@ -127,6 +128,27 @@ export default function InvoicesPage() {
     .filter((i) => i.status === 'open')
     .map((i) => i.id);
   const selection = useSelection(selectable);
+  // What the bar counts and pays: ticked rows that are still on screen and open (paid elsewhere meanwhile, or
+  // hidden by the search, they drop out).
+  const ticked = selection.ids;
+  // Nothing left to tick (all paid elsewhere): the mode ends by itself, so it never comes back on unasked.
+  const nothingToPick = selectable.length === 0;
+  // (Adjusted while rendering, React's pattern for state that follows other state.)
+  if (nothingToPick && selecting) setSelecting(false);
+  // Esc ends the mode, not only the ticks (the hook clears them).
+  useEffect(() => {
+    if (!selecting) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (
+        e.key === 'Escape' &&
+        !isTypingTarget(e.target) &&
+        !document.querySelector('dialog[open]')
+      )
+        setSelecting(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selecting]);
   const stopSelecting = () => {
     selection.clear();
     setSelecting(false);
@@ -136,7 +158,7 @@ export default function InvoicesPage() {
     setViewState(next);
   };
   const payPicked = async () => {
-    const ids = selection.ids;
+    const ids = ticked;
     stopSelecting();
     await payManyWithUndo(ids);
   };
@@ -351,7 +373,14 @@ export default function InvoicesPage() {
 
       {overview ? (
         invoices ? (
-          <InvoicesOverview invoices={invoices} onShowLate={() => setView('open')} />
+          <InvoicesOverview
+            invoices={invoices}
+            onShowLate={() => {
+              // The late invoices it promised: the whole open list, not one still filtered by an old search.
+              setQuery('');
+              setView('open');
+            }}
+          />
         ) : null
       ) : (
         <SplitView
@@ -376,7 +405,11 @@ export default function InvoicesPage() {
                 placeholder={t.invoices.ext.search.placeholder}
                 data-list-search
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+                  // A new search starts a new selection: nothing hidden stays ticked.
+                  selection.clear();
+                  setQuery(e.target.value);
+                }}
               />
               {selectable.length > 0 ? (
                 <Button
@@ -392,11 +425,11 @@ export default function InvoicesPage() {
             </div>
           ) : null}
           {selecting ? (
-            <SelectionBar count={selection.count} onCancel={stopSelecting}>
+            <SelectionBar count={ticked.length} onCancel={stopSelecting}>
               <Button variant="primary" onClick={() => void payPicked()}>
                 {t.invoices.markPaid}
               </Button>
-              {selection.count < selectable.length ? (
+              {ticked.length < selectable.length ? (
                 <Button variant="ghost" onClick={selection.selectAll}>
                   {t.invoices.ext.batch.selectAll}
                 </Button>
