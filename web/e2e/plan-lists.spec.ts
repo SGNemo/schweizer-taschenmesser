@@ -71,6 +71,15 @@ test('„In den Plan“ on the shopping list: one row in the planner, then „Im
   }
   await open(page, '/planner');
   await expect(page.getByText(/Einkaufen · \d/)).toHaveCount(0);
+
+  // The request still stands (the next entry would bring the list back): the emptied list says so and ends it.
+  await open(page, '/lists');
+  menu = await openPageMenu(page);
+  await menu.getByRole('menuitem', { name: 'Nicht mehr planen' }).click();
+  await expect(page.getByText(/Nicht im Plan/).first()).toBeVisible();
+  menu = await openPageMenu(page);
+  await expect(menu.getByRole('menuitem', { name: 'Nicht mehr planen' })).toHaveCount(0);
+  await page.keyboard.press('Escape');
 });
 
 test('pantry → shopping list: „Auf der Einkaufsliste“, the cart leads to the entry, the entry leads back', async ({

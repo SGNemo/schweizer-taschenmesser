@@ -8,7 +8,8 @@
  *  - user actions from the planner UI run inside one `undoable` together with their run and write-backs
  *    (`runUser`); every other run is background: serialised behind any open user action, not undoable.
  *  - `plan.requested` (a note's „In den Plan“) becomes a ToDo plus planner item and one undoable run
- *    (`actions.addRequested`, loaded on demand: `actions.ts` itself imports this file).
+ *    (`actions.addRequested`, loaded on demand: `actions.ts` itself imports this file); `plan.unrequested`
+ *    excludes the item row of a thing asked in by ref (`actions.unrequest`).
  *  - `module.disabling` for the planner stops the runs and hands every planner-own date back to its
  *    source (both policies), before the state is written and before any wipe.
  */
@@ -278,6 +279,12 @@ export default function start(): () => void {
       .then((m) => m.addRequested(req))
       .then(() => undefined, logError('planner.request')),
   );
+  // „Nicht mehr planen“ on a thing asked in by ref: its item row is excluded (`actions.unrequest`).
+  const offUnrequested = bus.on('plan.unrequested', (req) =>
+    import('./actions')
+      .then((m) => m.unrequest(req))
+      .then(() => undefined, logError('planner.unrequest')),
+  );
   // The ToDo widget's evening action: the planner opens its own preview of the evening ops (nothing moves yet).
   const offRest = bus.on('plan.restRequested', (req) => req.open(REST_PATH));
   const offDisabling = bus.on('module.disabling', async ({ moduleId, policy }) => {
@@ -285,6 +292,7 @@ export default function start(): () => void {
     stopped = true;
     active = false;
     offRequested();
+    offUnrequested();
     offRest();
     clearTimeout(timer);
     clearTimeout(midnight);
@@ -308,6 +316,7 @@ export default function start(): () => void {
     if (typeof document !== 'undefined')
       document.removeEventListener('visibilitychange', onVisible);
     offRequested();
+    offUnrequested();
     offRest();
     offDisabling();
   };

@@ -13,7 +13,7 @@ import { setSettings } from '@/core/settings/settings';
 import { setNow } from '@/core/time/now';
 import { undoLast } from '@/core/undo';
 import { useUiStore } from '@/stores/ui';
-import { addRequested, exclude } from '../actions';
+import { addRequested, exclude, unrequest } from '../actions';
 import { assignmentRepo, itemRepo, plannerRepos } from '../repo';
 import { buildInputs, requestedIds, runPlanner, type RunDeps } from '../run';
 import start, { runsSettled, setManifestsForTests } from '../services';
@@ -223,5 +223,54 @@ describe('plan.requested with ref', () => {
     } finally {
       stop();
     }
+  }, 20_000);
+});
+
+describe('plan.unrequested („Nicht mehr planen“)', () => {
+  const unplan = () => unrequest({ title: 'Einkauf', ref: { module: 'lists', id: SHOP } });
+
+  it('ends the request: the item row is excluded, the list leaves the plan; one undo brings it back', async () => {
+    await request();
+    useUiStore.setState({ toasts: [] });
+    expect(await unplan()).toBe(true);
+    expect((await itemRepo.get(KEY))?.excluded).toBe(true);
+    expect(await planned()).toEqual([]);
+    expect((await buildInputs(deps(), plannerRepos())).entries).toEqual([]);
+    expect(useUiStore.getState().toasts[0]?.action?.label).toBe('Rückgängig');
+    expect(await undoLast()).toBeTruthy();
+    await runsSettled();
+    expect((await itemRepo.get(KEY))?.excluded).toBeUndefined();
+    await runPlanner(deps(), { force: true });
+    expect(await planned()).toHaveLength(1);
   });
+
+  it('an emptied list no longer returns with its next entry once the request ended', async () => {
+    await request();
+    for (const i of await entryRepo.active().toArray())
+      await entryRepo.update(i.id, { done: true });
+    await runPlanner(deps());
+    await unplan();
+    await entryRepo.create({ listId: SHOP, name: 'Salz', done: false, order: 0 });
+    await runPlanner(deps(), { force: true });
+    expect(await planned()).toEqual([]);
+  });
+
+  it('never the vault, never a module that is no plan source', async () => {
+    expect(await unrequest({ title: 'x', ref: { module: 'accounts', id: 'a1' } })).toBe(false);
+    expect(await unrequest({ title: 'x', ref: { module: 'notes', id: 'n1' } })).toBe(false);
+    expect(await itemRepo.active().toArray()).toEqual([]);
+  });
+
+  it('over the bus: the service ends the request', async () => {
+    await request();
+    const stop = start();
+    try {
+      await bus.emit('plan.unrequested', { title: 'Einkauf', ref: { module: 'lists', id: SHOP } });
+      await runsSettled();
+      expect((await itemRepo.get(KEY))?.excluded).toBe(true);
+      expect(await planned()).toEqual([]);
+    } finally {
+      stop();
+    }
+  }, 20_000);
 });

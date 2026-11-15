@@ -87,10 +87,15 @@ export interface EventMap {
     link?: LegacyLink;
     /**
      * The thing is a plan item itself (an invoice, a list): the planner places `<module>:<id>` and creates no ToDo
-     * (CONCEPT-SOURCES §3.3). No handler reads it yet: planner hub K2.
+     * (CONCEPT-SOURCES §3.3); its item row is the request (`planner/actions.ts placeRequested`).
      */
     ref?: EntityRef;
   };
+  /**
+   * „Nicht mehr planen“ on a thing asked in by `ref` (a list): the planner excludes its item row `<module>:<id>`, as
+   * its own „Nicht planen“ does, as one undoable action. Nothing happens while the planner is off.
+   */
+  'plan.unrequested': { title: string; ref: EntityRef };
   /**
    * „Tag abschließen“ on the ToDo widget while the planner is on (use case „Wochenende retten“, F3): the planner
    * answers by opening its preview of „Rest verteilen“ through `open` (the asker's navigation; the planner names its

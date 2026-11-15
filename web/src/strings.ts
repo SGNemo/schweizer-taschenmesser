@@ -5629,6 +5629,8 @@ export const de = {
       add: 'In den Plan',
       placed: (day: string) => `Im Plan · ${day}`,
       fromPantry: (name: string) => `Aus den Vorräten: ${name}`,
+      waits: 'Im Plan · noch ohne Tag',
+      remove: 'Nicht mehr planen',
     },
     // Package „Listen verwalten“ (round 2026-11): icon, colour, order, archive.
     listIcon: 'Symbol',

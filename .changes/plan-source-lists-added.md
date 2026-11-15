@@ -2,8 +2,8 @@
 type: added
 area: lists
 breaking: false
-de: Der Einkauf steht über „In den Plan“ im Menü der Liste als eine Zeile im Planer, eine Packliste mit Reisedatum von selbst. Abschaltbar in den Einstellungen der Listen.
-en: Shopping appears in the planner as one row through “Add to plan” in the list’s menu, a packing list with a trip date by itself. Can be switched off in the list settings.
+de: Der Einkauf steht über „In den Plan“ im Menü der Liste als eine Zeile im Planer, eine Packliste mit Reisedatum von selbst. „Nicht mehr planen“ nimmt sie wieder heraus. Abschaltbar in den Einstellungen der Listen.
+en: Shopping appears in the planner as one row through “Add to plan” in the list’s menu, a packing list with a trip date by itself. “Stop planning” takes it out again. Can be switched off in the list settings.
 ---
 ---
 type: added

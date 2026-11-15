@@ -169,6 +169,8 @@ export const lists: Strings['lists'] = {
     add: 'Add to plan',
     placed: (day: string) => `In plan · ${day}`,
     fromPantry: (name: string) => `From the pantry: ${name}`,
+    waits: 'In plan · no day yet',
+    remove: 'Stop planning',
   },
   // Package "manage lists" (round 2026-11): icon, colour, order, archive.
   listIcon: 'Icon',

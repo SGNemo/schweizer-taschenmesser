@@ -5,13 +5,24 @@ import { bus } from '@/core/events';
 import type { EventMap } from '@/core/events/events';
 import { getManifest } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
-import { planRowAction, planRowState, requestIntoPlan } from './planRow';
+import { planRowAction, planRowEntries, planRowState, requestIntoPlan } from './planRow';
 
 const planner = getManifest('planner')!;
 const assignments = createCollectionRepo(planner, 'assignment');
+const items = createCollectionRepo(planner, 'item');
 const LIST = { module: 'lists', id: 'shopping-default' };
 const target = { ref: LIST, title: 'Einkauf' };
-const labels = { add: 'In den Plan', placed: (day: string) => `Im Plan · ${day}` };
+const labels = {
+  add: 'In den Plan',
+  placed: (day: string) => `Im Plan · ${day}`,
+  waits: 'Im Plan · noch ohne Tag',
+  remove: 'Nicht mehr planen',
+};
+const askIn = (excluded?: boolean) =>
+  items.create(
+    { source: LIST, order: 0, ...(excluded ? { excluded } : {}) },
+    { id: 'lists:shopping-default' },
+  );
 
 const plannerOn = (enabled: boolean) =>
   db.table('_modules').put({
@@ -32,7 +43,8 @@ const assign = (date: string) =>
 
 beforeEach(async () => {
   setNow(() => new Date(2026, 10, 16, 10, 0).getTime()); // Monday
-  for (const t of ['planner_assignment', '_modules', '_links']) await db.table(t).clear();
+  for (const t of ['planner_assignment', 'planner_item', '_modules', '_links'])
+    await db.table(t).clear();
   bus.clear();
 });
 afterEach(() => {
@@ -53,6 +65,14 @@ describe('planRowState', () => {
     expect(await planRowState(LIST)).toEqual({ on: true });
     await assign('2026-11-17');
     expect(await planRowState(LIST)).toEqual({ on: true, day: '2026-11-17' });
+  });
+
+  it("is requested while the planner's item row is live and not excluded", async () => {
+    await plannerOn(true);
+    await askIn();
+    expect(await planRowState(LIST)).toEqual({ on: true, requested: true });
+    await items.update('lists:shopping-default', { excluded: true });
+    expect(await planRowState(LIST)).toEqual({ on: true });
   });
 
   it('never for the vault', async () => {
@@ -99,5 +119,36 @@ describe('planRowAction', () => {
     entry.onSelect();
     expect(open).toHaveBeenCalledWith('/planner?day=2026-11-17');
     expect(seen).toEqual([]);
+  });
+});
+
+describe('planRowEntries („Nicht mehr planen“)', () => {
+  it('only the request entry while the thing is not asked in', () => {
+    expect(planRowEntries(target, { on: true }, labels, vi.fn()).map((e) => e.id)).toEqual([
+      'to-plan',
+    ]);
+    expect(planRowEntries(target, { on: false }, labels, vi.fn())).toEqual([]);
+  });
+
+  it('asked in without a day: „Im Plan · noch ohne Tag“ plus „Nicht mehr planen“, which emits `plan.unrequested`', async () => {
+    const seen: EventMap['plan.unrequested'][] = [];
+    bus.on('plan.unrequested', (req) => void seen.push(req));
+    const open = vi.fn();
+    const entries = planRowEntries(target, { on: true, requested: true }, labels, open);
+    expect(entries.map((e) => e.label)).toEqual(['Im Plan · noch ohne Tag', 'Nicht mehr planen']);
+    entries[0]!.onSelect();
+    expect(open).toHaveBeenCalledWith('/planner');
+    entries[1]!.onSelect();
+    await vi.waitFor(() => expect(seen).toEqual([{ title: 'Einkauf', ref: LIST }]));
+  });
+
+  it('placed: „Im Plan · Di“ plus „Nicht mehr planen“', () => {
+    const entries = planRowEntries(
+      target,
+      { on: true, day: '2026-11-17', requested: true },
+      labels,
+      vi.fn(),
+    );
+    expect(entries.map((e) => e.label)).toEqual(['Im Plan · Di', 'Nicht mehr planen']);
   });
 });

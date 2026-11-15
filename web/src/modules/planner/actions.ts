@@ -193,6 +193,24 @@ export async function placeRequested(
   return true;
 }
 
+/**
+ * `plan.unrequested` („Nicht mehr planen“ on a list): the request ends. Same path as the row's „Nicht planen“
+ * (`exclude`): the item row `<module>:<id>` gets `excluded`, so `requestedIds` no longer hands the id to its source;
+ * one undo. The ref is untrusted like in `placeRequested`: never the vault, only a module that is a plan source.
+ */
+export async function unrequest(req: EventMap['plan.unrequested']): Promise<boolean> {
+  const ref = req.ref;
+  if (ref.module === NEVER_LINKED || !ref.id || ref.id.length > 128) return false;
+  if (!(await source(ref.module).catch(() => undefined))) return false;
+  const entry = { moduleId: ref.module, id: ref.id };
+  return act(
+    t.planner.row.exclude,
+    t.planner.toast.excluded,
+    { [itemKeyOf(ref.module, ref.id)]: req.title },
+    () => itemPatch(entry, { excluded: true }),
+  );
+}
+
 /** What a source takes back from a row of the plan (`PlannableSource`). */
 export interface SourceAbility {
   /** A tick („Erledigt“). */
