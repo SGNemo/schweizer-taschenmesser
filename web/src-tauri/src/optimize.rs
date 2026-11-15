@@ -1,0 +1,97 @@
+//! PC care of the disk module (desktop): the thin Tauri side around the `pc_tune` crate.
+//!
+//! Holds the journal (what the page changed on this PC, with the values to take it back) and
+//! opens Windows' own tools from a fixed list. Nothing here runs by itself, nothing takes a path
+//! or a program name from the webview, and no value is logged.
+
+use std::path::PathBuf;
+use std::sync::Mutex;
+use std::time::{SystemTime, UNIX_EPOCH};
+
+use ::pc_tune::{EntryView, Journal, Tool};
+use serde::Serialize;
+use tauri::{AppHandle, Manager, State};
+
+/// The journal, opened on first use (`<app local data>/pc-care/journal.json`, device-local).
+#[derive(Default)]
+pub struct PcCare(Mutex<Option<Opened>>);
+
+struct Opened {
+    journal: Journal,
+    /// The file was unreadable and set aside: older undo values are gone.
+    recovered: bool,
+}
+
+pub fn unix_now() -> i64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0)
+}
+
+fn journal_path(app: &AppHandle) -> Result<PathBuf, String> {
+    app.path()
+        .app_local_data_dir()
+        .map(|d| d.join("pc-care").join("journal.json"))
+        .map_err(|_| "internal".to_string())
+}
+
+impl PcCare {
+    /// Runs `f` with the journal of this machine.
+    pub fn with<T>(
+        &self,
+        app: &AppHandle,
+        f: impl FnOnce(&mut Journal) -> Result<T, String>,
+    ) -> Result<T, String> {
+        let mut slot = self.0.lock().map_err(|_| "internal")?;
+        if slot.is_none() {
+            let (journal, recovered) = Journal::open(&journal_path(app)?);
+            *slot = Some(Opened { journal, recovered });
+        }
+        f(&mut slot.as_mut().expect("just opened").journal)
+    }
+
+    fn recovered(&self) -> bool {
+        self.0
+            .lock()
+            .ok()
+            .and_then(|s| s.as_ref().map(|o| o.recovered))
+            .unwrap_or(false)
+    }
+}
+
+/// Notes a finished deletion in the history (category and size only, never a name or a path).
+/// Best effort: the files are already gone, a history that cannot be written must not fail that.
+pub fn note_cleanup(app: &AppHandle, category: &str, bytes: u64, files: u64, permanent: bool) {
+    if let Some(care) = app.try_state::<PcCare>() {
+        let _ = care.with(app, |j| {
+            j.record_cleanup(unix_now(), category, bytes, files, permanent)
+                .map_err(|e| e.code().to_string())
+        });
+    }
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HistoryView {
+    entries: Vec<EntryView>,
+    /// The history file was unreadable and a new one was started.
+    recovered: bool,
+}
+
+/// What the page changed on this PC, newest first (without the stored values).
+#[tauri::command(async)]
+pub fn disk_care_history(app: AppHandle, care: State<'_, PcCare>) -> Result<HistoryView, String> {
+    let entries = care.with(&app, |j| Ok(j.views()))?;
+    Ok(HistoryView {
+        entries,
+        recovered: care.recovered(),
+    })
+}
+
+/// Opens one of Windows' own tools (fixed list in `pc_tune::Tool`; unknown names are refused).
+#[tauri::command(async)]
+pub fn disk_care_open_tool(tool: String) -> Result<(), String> {
+    let tool = Tool::from_code(&tool).ok_or("unknown-tool")?;
+    tool.open().map_err(|_| "unsupported".to_string())
+}
