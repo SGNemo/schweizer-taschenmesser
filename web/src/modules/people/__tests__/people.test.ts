@@ -205,6 +205,7 @@ describe('people module', () => {
     expect(await getSettings('module.people', settingsSchema, settings.defaults as never)).toEqual({
       remindDaysBefore: 3,
       remindTime: '07:15',
+      showInPlan: true,
     });
     await setSettings('module.people', { remindDaysBefore: 1 });
     await carryOverSettings();

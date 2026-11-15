@@ -1,25 +1,32 @@
 import { changedFields } from '@/core/db/patch';
 import { useState } from 'react';
+import { Link } from 'react-router';
+import { useLinks } from '@/core/entitylinks';
 import type { Stored } from '@/core/db/types';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
 import { formatMoneyInput, parseMoney } from '@/core/money';
 import { Button, Checkbox, Dialog, Form, FormActions, SelectField, TextField } from '@/ui';
-import { itemRepo } from '../repo';
-import { SECTIONS, SHOPPING_LIST_ID, type Item, type Section } from '../schema';
+import { itemRepo, moveItem } from '../repo';
+import { SECTIONS, SHOPPING_LIST_ID, type Item, type List, type Section } from '../schema';
 
 export function ItemEditor({
   item,
   kind,
+  lists,
   onClose,
 }: {
   item: Stored<Item> | null;
   kind: 'shopping' | 'packing' | 'checklist';
+  /** Lists the entry can move to (in tab order); the entry's own list is always offered. */
+  lists: readonly Stored<List>[];
   onClose: () => void;
 }) {
   return (
     <Dialog askAfterTyping open={item !== null} onClose={onClose} title={t.lists.editItem}>
-      {item ? <Fields key={item.id} item={item} kind={kind} onClose={onClose} /> : null}
+      {item ? (
+        <Fields key={item.id} item={item} kind={kind} lists={lists} onClose={onClose} />
+      ) : null}
     </Dialog>
   );
 }
@@ -27,12 +34,15 @@ export function ItemEditor({
 function Fields({
   item,
   kind,
+  lists,
   onClose,
 }: {
   item: Stored<Item>;
   kind: 'shopping' | 'packing' | 'checklist';
+  lists: readonly Stored<List>[];
   onClose: () => void;
 }) {
+  const [listId, setListId] = useState(item.listId);
   const shopping = kind === 'shopping' || item.listId === SHOPPING_LIST_ID;
   const [section, setSection] = useState<Section | ''>(item.section ?? '');
   // The record as the editor opened it: only fields that differ from it are saved (QA X01).
@@ -47,6 +57,10 @@ function Fields({
   const [name, setName] = useState(item.name);
   const [quantity, setQuantity] = useState(item.quantity ?? '');
   const [error, setError] = useState('');
+  // The thing that asked for this entry (a pantry entry that ran low): the way back to it.
+  const origin = useLinks({ module: 'lists', id: item.id })?.find(
+    (l) => l.direction === 'out' && l.state.state === 'alive',
+  );
 
   async function save() {
     if (!name.trim()) return setError(t.form.required);
@@ -69,6 +83,11 @@ function Fields({
           : {}),
       }),
     );
+    const to = lists.find((l) => l.id === listId);
+    if (to && listId !== item.listId) {
+      const message = t.lists.movedItem(name.trim(), to.name);
+      void undoableWithToast(message, message, () => moveItem(item.id, listId));
+    }
     onClose();
   }
 
@@ -84,6 +103,19 @@ function Fields({
         error={error}
         data-autofocus
       />
+      {lists.length > 1 ? (
+        <SelectField
+          label={t.lists.itemList}
+          value={listId}
+          onChange={(e) => setListId(e.target.value)}
+        >
+          {lists.map((l) => (
+            <option key={l.id} value={l.id}>
+              {l.name}
+            </option>
+          ))}
+        </SelectField>
+      ) : null}
       <TextField
         label={t.lists.quantity}
         value={quantity}
@@ -134,6 +166,13 @@ function Fields({
             onChange={(e) => setToBuy(e.target.checked)}
           />
         </>
+      ) : null}
+      {origin?.state.state === 'alive' ? (
+        <p>
+          <Link to={origin.state.to} onClick={onClose}>
+            {t.lists.plan.fromPantry(origin.state.title)}
+          </Link>
+        </p>
       ) : null}
       <FormActions
         start={

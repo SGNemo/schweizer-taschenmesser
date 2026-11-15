@@ -91,7 +91,8 @@ export function latestSession<T extends Pick<Session, 'date' | 'time' | 'planned
 export function repeatSession(s: Session, day: string): Session {
   return {
     date: day,
-    exercises: s.exercises.map((e) => ({ ...e })),
+    // The summary only: last time's warm-ups and set notes stay with last time.
+    exercises: s.exercises.map(({ log: _log, ...e }) => ({ ...e })),
     ...(s.title ? { title: s.title } : {}),
     ...(s.durationMin ? { durationMin: s.durationMin } : {}),
   };
@@ -142,7 +143,7 @@ export function weekDays(
 export function toTemplate(s: Session, fallbackTitle: string): Template {
   return {
     title: s.title?.trim() || fallbackTitle,
-    exercises: s.exercises.map((e) => ({ ...e })),
+    exercises: s.exercises.map(({ log: _log, ...e }) => ({ ...e })),
     ...(s.durationMin ? { durationMin: s.durationMin } : {}),
   };
 }

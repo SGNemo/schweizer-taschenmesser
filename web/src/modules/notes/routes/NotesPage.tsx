@@ -29,7 +29,7 @@ import {
   SORT_MODES,
   type SortMode,
 } from '../logic';
-import { backlinks as backlinksOf, findPage, suggestTitles } from '../links';
+import { backlinks as backlinksOf, findPage, suggestTitles, todoRequest } from '../links';
 import { noteRepo, notebookRepo } from '../repo';
 import type { Note } from '../schema';
 import { type NotesSettings, settings as moduleSettings, settingsSchema } from '../settings';
@@ -275,7 +275,11 @@ export default function NotesPage() {
   }
   function sendTodo(text: string) {
     const send = async () => {
-      await bus.emit('todo.requested', { title: text });
+      // The ToDo leads back to the page it came from, as „In den Plan“ does (P46).
+      await bus.emit(
+        'todo.requested',
+        todoRequest(text, subject ? { id: subject.id, label: titleOf(subject) } : null),
+      );
       useUiStore.getState().toast(t.notes.links.todoAdded);
     };
     if (moduleStates?.todos !== true)

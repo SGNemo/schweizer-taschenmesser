@@ -1,81 +1,296 @@
-/* U01: the room of the head figure and of the week bars while the board is read (same shape, unseen). */
+/* Planner hub R1 „Der Tag als Blatt“: field → week band → the picked day's sheet → context. Everything is in rem
+   and tokens; the form of the band follows its own width (components/WeekBand.module.css). */
+
+/* U01: the room of the head figure while the board is read, and while no day holds a thing (same shape, unseen). */
 .headPending {
   visibility: hidden;
+}
+/* The main column: one rhythm between field, band and sheet. */
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+/* Wide, and nothing stands beside it: the column keeps the width it has next to the context column (the same
+   token), left-aligned with the head's title. */
+.mainAlone {
+  width: calc(100% - var(--split-detail) - var(--space-5));
+}
+.context {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
 }
 .add {
   display: flex;
   gap: var(--space-2);
   align-items: flex-end;
-  margin: var(--space-4) 0 var(--space-1);
-}
-/* S09: the hint under the row, where the field's own hint sat; the buttons align with the input's bottom edge. */
-.addHint {
-  margin: 0 0 var(--space-4);
-  font-size: var(--text-meta);
-  color: var(--text-3);
 }
 .grow {
   flex: 1;
   min-width: 0;
 }
-/* N04: with ⋯ beside „Eintragen“ a phone keeps the field on the full width; the two buttons follow, the hint (S09) comes
-   after them as a note on the whole row. */
-@container page (max-width: 40rem) {
-  .add {
-    flex-wrap: wrap;
-    justify-content: flex-end;
-  }
-  .grow {
-    flex-basis: 100%;
-  }
+/* Nothing was stored: said under the row, in words and in the danger ink (an error, the one place for it here). */
+.addError {
+  margin: var(--space-1) 0 0;
+  color: var(--danger);
+  font-size: var(--text-meta);
 }
-
-/* Identity 4.0 (package 0b-4b): the week is a list on one raised surface, the picked day lies beside it (wide) or
-   under the strip of chips (narrow). No frame, no shadow; today is named in the day's line. */
-.week {
-  margin-bottom: var(--space-4);
-}
-.weekBar {
-  display: block;
-  width: 8rem;
-}
-.column {
+/* „Zum Beispiel“ and three chips under the field: they fill the field, they never submit. */
+.examples {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  min-width: 0;
-  padding: var(--space-2);
+  flex-wrap: wrap;
+  align-items: center;
+  /* 32 px chips with a 44 px hit box: wrapped lines keep 44 px from line to line */
+  gap: var(--space-3) var(--space-2);
+  margin: var(--space-1) 0 0;
+}
+.examplesLead {
+  color: var(--text-3);
+  font-size: var(--text-meta);
+}
+/* The band's room while the board is read: one tile's height. */
+.bandPending {
+  min-height: calc(var(--touch) + var(--space-3) + var(--space-5));
+  border-radius: var(--radius-md);
   background: var(--surface-raised);
-  border-radius: var(--radius-lg);
 }
-/* Beside the week (master–detail) the day is no card of its own: its list is the one surface in the panel. */
-.column[data-panel='true'],
-.column[data-panel='true'][data-off='true'] {
-  padding: 0;
-  background: none;
-}
-.column[data-off='true'] {
-  background: var(--surface-2);
+/* „Bald ist Tagesende.“ in the head's notice slot. */
+.notice {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-meta);
 }
 
-.dayButton {
+/* The sheet: one raised card. Its lists lie on the card's own tone, so the rows read as lines of one sheet. */
+section.sheet {
+  /* what the head, the group heads and the foot stand in from the card's edge (the lists bring their own) */
+  --sheet-inset: var(--space-2);
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   gap: var(--space-1);
-  width: 100%;
+  min-width: 0;
+  padding: var(--space-2) var(--space-2) var(--space-3);
+}
+.sheetHead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0 var(--space-3);
+  padding: 0 var(--sheet-inset);
+}
+.sheetTitle {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  overflow-wrap: break-word;
+}
+.cardHead {
+  margin: 0;
+  padding: 0 var(--sheet-inset);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+/* The capacity is a text button: it opens „Warum?“ (a day off: the day's settings). */
+.capacityButton {
+  min-width: var(--touch);
   min-height: var(--touch);
-  padding: var(--space-1) var(--space-2);
-  color: inherit;
+  padding: 0;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-meta);
+  font-variant-numeric: var(--font-num);
+  text-align: right;
+  text-decoration: var(--link-line);
+  text-decoration-color: var(--link-line-color);
+  text-underline-offset: var(--link-line-offset);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.capacityButton:hover {
+  color: var(--text);
+}
+.capacityLine {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.sheetBar {
+  grid-column: 1 / -1;
+}
+.whyLine {
+  grid-column: 1 / -1;
+  margin: var(--space-2) 0 0;
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  font-variant-numeric: var(--font-num);
+}
+
+/* „Frist vorbei“: the one place of the page with the danger tone – the icon, beside the words. Rows stay neutral. */
+.lateHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: 0 var(--sheet-inset);
+}
+.lateIcon {
+  display: inline-flex;
+  flex: none;
+  color: var(--danger);
+}
+.lateTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-2);
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+.lateCount {
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  font-weight: normal;
+  font-variant-numeric: var(--font-num);
+}
+.lateLine {
+  margin: 0;
+  padding: 0 var(--sheet-inset) var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+}
+/* No column beside the sheet: the group is one row above the day; it unfolds in place. */
+section.lateFold {
+  padding-block: 0;
+}
+.lateFold[class] > div:not([hidden]) {
+  padding-bottom: var(--space-3);
+}
+.lateFoldHead {
+  margin: 0;
+  font: inherit;
+}
+.lateRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: calc(var(--touch) + var(--space-2));
+  padding: 0 var(--sheet-inset);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-meta);
+  font-weight: var(--weight-semibold);
   text-align: left;
   background: none;
   border: 0;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   cursor: pointer;
 }
-.dayButton:hover {
+.lateRow:hover {
   background: var(--surface-2);
 }
+.lateRowText {
+  flex: 1;
+  min-width: 0;
+}
+.lateRow > svg {
+  flex: none;
+  color: var(--text-muted);
+}
+.groupHead {
+  display: flex;
+  align-items: center;
+  min-height: var(--space-5);
+  margin: 0;
+  padding: 0 var(--sheet-inset);
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-semibold);
+}
+/* „Danach · 5 · 1 h 20“ and „22 weitere“: folds, 44 px to hit. */
+/* „Zuerst“ keeps the air from the bar that the groups keep from each other. */
+.groupFirst {
+  margin-top: var(--space-2);
+}
+.fold {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--touch);
+  padding: 0 var(--space-2) 0 0;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-meta);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: var(--font-num);
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.fold:hover {
+  color: var(--text);
+}
+/* „n weitere“ stands under the rows, in line with the group heads. */
+.more {
+  margin-left: var(--sheet-inset);
+}
+.foldNarrow {
+  display: none;
+}
+.overLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0 var(--sheet-inset);
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+}
+.overLine > svg {
+  flex: none;
+  color: var(--text-3);
+}
+.emptyDay {
+  margin: 0;
+  padding: var(--space-4) var(--sheet-inset);
+  color: var(--text-muted);
+}
+.emptyNext {
+  margin: 0;
+}
+.sheetFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--space-5);
+  padding: 0 var(--sheet-inset);
+}
+/* A text link that acts in place („Rest verteilen“, „Tage einteilen“, „Woche prüfen“): the link tokens, 44 px to hit. */
+.textLink {
+  min-width: var(--touch);
+  min-height: var(--touch);
+  padding: 0;
+  color: var(--link);
+  font: inherit;
+  font-size: var(--text-meta);
+  text-decoration: var(--link-line);
+  text-decoration-color: var(--link-line-color);
+  text-underline-offset: var(--link-line-offset);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+/* Headings and the capacity line inside the planner's dialogs (day settings, „Tage einteilen“, „Woche prüfen“). */
 .dayName {
   font-weight: var(--weight-semibold);
 }
@@ -84,16 +299,189 @@
   font-size: var(--text-meta);
   font-variant-numeric: var(--font-num);
 }
-.bar {
-  width: 100%;
-}
 
-.check {
+/* The thing row. The lead slot is 44 × 44 and always filled (a tick, or the source's icon); it also gives the row
+   its height: one row unit plus breathing room. */
+.lead {
   flex: none;
-  width: 1.5rem;
-  height: 1.5rem;
+  /* Beside the title and meta, not the middle of a row that also holds a chip line (K1b). */
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch);
+  min-height: calc(var(--row-h) + var(--space-4) + var(--space-1));
+  color: var(--text-muted);
+}
+.lead > label {
+  justify-content: center;
+  width: 100%;
+  min-height: var(--touch);
+}
+/* The tick is drawn at 24 px; the box itself answers on the whole 44 px slot. */
+.lead input::before {
+  content: '';
+  position: absolute;
+  /* 44 px around the box's 24 (its 1 px frame counted) */
+  inset: calc((var(--space-5) - var(--touch)) / 2 - 1px);
+}
+/* The main action in the lead slot (K1b, „Bezahlt …“, „Zur Liste“): the tick's outlined slot with the glyph of the
+   step inside – drawn at 28 px, answering on the whole 44 px slot. A route: nothing is written. */
+.actionLead {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch);
+  height: var(--touch);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.actionGlyph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--space-5) + var(--space-1));
+  height: calc(var(--space-5) + var(--space-1));
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+}
+.actionLead:hover .actionGlyph {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.actionLead:active {
+  opacity: 0.7;
+}
+.actionLead:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+/* The one chip line of a row's links (K1b): never wraps; a long word ends in „…“, the full name is the chip's
+   accessible name and tooltip. No `overflow: hidden` on the line: it would clip the chips' 44 px hit boxes. */
+.chipLine {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--space-2);
   margin: 0;
-  accent-color: var(--module-color);
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+.chipItem {
+  display: flex;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+.linkChip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  min-height: var(--space-6);
+  padding: 0 var(--space-3) 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-meta);
+}
+.linkChip > svg {
+  flex: none;
+}
+button.linkChip {
+  cursor: pointer;
+}
+/* 32 px to look at, 44 px to hit. */
+button.linkChip::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--space-6) - var(--touch)) / 2) 0;
+}
+button.linkChip:hover:not(:disabled) {
+  color: var(--text);
+}
+button.linkChip:disabled {
+  cursor: default;
+}
+button.linkChip:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.chipText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Gone, or not on this device without a way out: said in words, no action. */
+.linkChipMuted {
+  background: transparent;
+  padding-inline: 0;
+}
+.chipNote {
+  color: var(--text-3);
+}
+/* The ⋯ of a row and of the page: the shared icon button draws 40 px and answers on 42 (its frame is not part of
+   the enlarged hit box); in the sheet it answers on the full 44. */
+section.sheet [data-row-actions] button::after,
+section.sheet .headEnd button::after {
+  inset: -3px;
+}
+/* … and is drawn as the glyph alone until the pointer or the focus is on it (a filled square in every row is
+   louder than the row's title). */
+section.sheet [data-row-actions] button,
+section.sheet .headEnd button {
+  background: transparent;
+}
+section.sheet [data-row-actions] button:hover,
+section.sheet [data-row-actions] button[aria-expanded='true'],
+section.sheet .headEnd button:hover,
+section.sheet .headEnd button[aria-expanded='true'] {
+  background: var(--surface-2);
+}
+.thingTitle {
+  font-size: var(--text-md);
+}
+/* Every title but the next row's (that one takes the row's strong weight). */
+.thingWeight {
+  font-weight: var(--weight-medium);
+}
+/* The meta line: source, then the facts, in one order for every source. */
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--space-1);
+}
+.source {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--text-muted);
+}
+.duration {
+  color: var(--text-muted);
+  font-size: var(--text-md);
+  font-variant-numeric: var(--font-num);
+  white-space: nowrap;
+}
+/* The duration as the last fact of the meta line: the phone's form (see the media rule below). */
+.metaDuration {
+  display: none;
+  font-variant-numeric: var(--font-num);
+  white-space: nowrap;
+}
+/* A ticked row fades while the source stores it (opacity only; no time under reduced motion). */
+.leaving {
+  opacity: 0.4;
+  transition: opacity var(--dur) var(--ease-out);
 }
 
 /* The minutes of a row: figures in the meta line. */
@@ -103,56 +491,16 @@
   font-variant-numeric: var(--font-num);
   white-space: nowrap;
 }
-.blocker {
-  color: var(--text-3);
-}
 .reason {
   display: block;
   color: var(--text-3);
-}
-.dueWas {
-  color: var(--warning);
 }
 .part {
   color: var(--text-3);
   font-weight: var(--weight-medium);
 }
-
-.strip {
-  display: flex;
-  gap: var(--space-1);
-  margin-bottom: var(--space-3);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.stripChip {
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-hair);
-  min-width: var(--touch);
-  min-height: var(--touch);
-  padding: var(--space-1) var(--space-2);
-  color: inherit;
-  background: var(--surface-raised);
-  border: 0;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  font-size: var(--text-meta);
-  font-variant-numeric: var(--font-num);
-}
-/* The chosen day: one tone step down and the strong weight (no frame, no hue). */
-.stripChip[aria-pressed='true'] {
-  color: var(--text);
-  background: var(--surface-sunken);
-  font-weight: var(--weight-semibold);
-  /* B7, as the shared chip: a line, not a shadow */
-  box-shadow: inset 0 0 0 1px var(--border-strong);
-}
-
 .waiting {
-  margin-top: var(--space-4);
+  min-width: 0;
 }
 
 .sheetRow {
@@ -207,7 +555,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  margin: 0 0 var(--space-4);
+  margin: 0;
   padding: var(--space-3);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -233,27 +581,47 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
-  margin: calc(-1 * var(--space-2)) 0 var(--space-4);
+  margin: 0;
   color: var(--text-muted);
 }
-/* „Woche prüfen · 2 Schritte“ on Mondays: a text link, not a button; target ≥ 44 px. */
+/* „Woche prüfen · 2 Schritte“ on Mondays: a text link, not a button. */
 .weekLink {
   display: flex;
   align-items: center;
   gap: var(--space-1);
-  margin: 0 0 var(--space-3);
-}
-.weekLinkText {
-  min-height: 2.75rem;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--accent);
-  font: inherit;
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-  cursor: pointer;
+  margin: 0;
 }
 .biggest {
   margin: var(--space-3) 0 0;
+}
+
+/* Phone: the day title steps down a size and shares its row with the page's ⋯; the duration closes the meta line,
+   so the title has the row's width; „Danach“ says its things in words. */
+@media (max-width: 899px) {
+  section.sheet {
+    --sheet-inset: var(--space-4);
+    padding-inline: 0;
+  }
+  .duration {
+    display: none;
+  }
+  .metaDuration {
+    display: inline;
+  }
+  .sheetTitle {
+    font-size: var(--text-lg);
+  }
+  .capacityLine {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+  .capacityButton {
+    text-align: left;
+  }
+  .foldWide {
+    display: none;
+  }
+  .foldNarrow {
+    display: inline;
+  }
 }

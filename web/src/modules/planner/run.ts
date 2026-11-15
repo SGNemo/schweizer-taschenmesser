@@ -21,12 +21,16 @@ import type {
 } from '@/core/plan/types';
 import {
   collectCalendarItems,
+  collectPlanBlocks,
   collectPlannable,
   plannableSource,
+  type PlanBlockEntry,
   type PlannableEntry,
+  type RequestedIds,
 } from '@/core/modules/contributions';
 import { isPlannerOwned, type CalendarItem, type ModuleManifest } from '@/core/modules/types';
-import { planDays } from './days';
+import { fixedOf, planDays } from './days';
+import { lateMoneyDue } from './late';
 import { itemKeyOf, plannerRepos, putRow, type PlannerDb, type PlannerRepos } from './repo';
 import type { AssignmentRow, PlanItemRow } from './schema';
 import { planSettings, type PlannerSettings } from './settings';
@@ -69,6 +73,7 @@ export interface RunDeps {
   entries?: PlannableEntry[];
   writer?: SourceWriter;
   calendar?: CalendarItem[];
+  blocks?: PlanBlockEntry[];
 }
 
 export interface RunInputs {
@@ -120,23 +125,54 @@ export function rowsSignature(rows: readonly (AssignmentRow & { id: string })[])
   );
 }
 
+/**
+ * What the person asked into the plan, per module: every live item row that is not excluded (`plan.requested`
+ * with `ref` writes such a row; „Nicht planen“ or removing the row takes the thing out again). A source reads
+ * its ids as `ctx.requested` and lists an undated thing only then (CONCEPT-SOURCES §3.1 rule 1, §3.3). Sorted,
+ * so the same rows give the same lists on every device.
+ */
+export function requestedIds(
+  rows: readonly Pick<PlanItemRow, 'source' | 'excluded'>[],
+): RequestedIds {
+  const out: Record<string, string[]> = {};
+  for (const r of rows) {
+    if (r.excluded || !r.source?.module || !r.source.id) continue;
+    (out[r.source.module] ??= []).push(r.source.id);
+  }
+  for (const ids of Object.values(out)) ids.sort();
+  return out;
+}
+
 /** Everything the engine needs, plus the input hash (without `prev`, marks, planner-own dates or the assignment rows). */
 export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<RunInputs> {
   const settings = planSettings(deps.settings, deps.planLimit);
   const horizon = Array.from({ length: settings.horizonDays }, (_, i) => addDays(deps.today, i));
   const until = horizon[horizon.length - 1]!;
+  const itemRows = new Map<string, PlanItemRow>(
+    (await repos.item.active().toArray()).map((r) => [r.id, r]),
+  );
+  // The requests come first: an undated thing (a shopping list) is listed only for an id asked into the plan.
   const entries =
-    deps.entries ?? (await collectPlannable({ today: deps.today, until }, deps.manifests));
+    deps.entries ??
+    (await collectPlannable(
+      { today: deps.today, until },
+      deps.manifests,
+      requestedIds([...itemRows.values()]),
+    ));
   const calendar = deps.settings.calendarBlocks
     ? (deps.calendar ??
       (await collectCalendarItems({ from: deps.today, to: until }, deps.manifests)))
     : [];
+  // Time a module keeps free (a habit, S4): taken off the day like an appointment, so part of the hash below.
+  const blocks =
+    deps.blocks ?? (await collectPlanBlocks({ today: deps.today, until }, deps.manifests));
   const days: PlanDay[] = planDays({
     today: deps.today,
     span: settings.horizonDays,
     settings: deps.settings,
     dayRows: await repos.day.active().toArray(),
     calendar,
+    blocks,
   }).map(({ date, availableMin, blockers, window }) => ({
     date,
     availableMin,
@@ -148,9 +184,6 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
     })),
     ...(window ? { window } : {}),
   }));
-  const itemRows = new Map<string, PlanItemRow>(
-    (await repos.item.active().toArray()).map((r) => [r.id, r]),
-  );
   const userDates = new Map<string, string>();
   const titles: Record<string, string> = {};
   const items: PlanItem[] = [];
@@ -159,12 +192,18 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
     const key = itemKeyOf(e.moduleId, e.id);
     const row = itemRows.get(key);
     titles[key] = e.title;
+    // „Frist vorbei“ (D7): late money is no item of the run – it sits on no day, counts in no sum and no
+    // sentence moves it. Its stored session rows go with this run (`writeRows`), a mark on its source with the
+    // write-back (`writeBackPlan`); the input hash changes with the item list, so that run happens.
+    if (lateMoneyDue(e, row, deps.today)) continue;
     const userDate = e.plannedFor && !isPlannerOwned(e) ? e.plannedFor : undefined;
     if (userDate) userDates.set(key, userDate);
     const dueAny = row?.due?.hard ? row.due : (e.due ?? row?.due);
     // The engine places by day: a deadline's hour (`due.time`, package 5b) never reaches it.
     const due = dueAny ? { date: dueAny.date, hard: dueAny.hard } : undefined;
     const durationMin = row?.durationMin ?? e.durationMin;
+    // A fixed block (S4) moves things, so it is an engine field and enters the hash with the items.
+    const fixed = fixedOf(e);
     items.push({
       key,
       ...(durationMin !== undefined ? { durationMin } : {}),
@@ -178,6 +217,7 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
       splittable: row?.splittable ?? true,
       ...(row?.excluded ? { excluded: true } : {}),
       ...(row?.part ? { part: row.part } : {}),
+      ...(fixed ? { fixed } : {}),
       createdAt: e.createdAt ?? 0,
     });
   }
@@ -197,17 +237,22 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
     const userDate = userDates.get(key);
     return userDate ? row?.earliest !== userDate : !e.plannedFor && row?.earliest !== undefined;
   });
+  // Days with a fixed block (S4): what it takes depends on the blocker times it overlaps (`fixedCharges`).
+  const fixedDays = new Set(items.flatMap((i) => (i.fixed ? [i.fixed.date] : [])));
   const hash = fnv1a(
     JSON.stringify({
       today: deps.today,
       settings,
       items: [...items].sort((a, b) => (a.key < b.key ? -1 : 1)),
-      // Windows (and blocker times on a day with one) only enter the hash when set: a plan without windows hashes as before.
+      // Windows and blocker times only enter the hash where they matter (a day with a window or a fixed block): a
+      // plan without either hashes as before, and moving an appointment elsewhere does not rerun.
       days: days.map((d) => [
         d.date,
         d.availableMin,
         d.blockers.map((b) =>
-          d.window && b.from ? [b.label, b.min, b.from, b.to] : [b.label, b.min],
+          (d.window || fixedDays.has(d.date)) && b.from
+            ? [b.label, b.min, b.from, b.to]
+            : [b.label, b.min],
         ),
         ...(d.window ? [d.window.from, d.window.to] : []),
       ]),

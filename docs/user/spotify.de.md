@@ -17,6 +17,11 @@ In der **PWA** (Browser oder aus dem Browser installiert) ist die Redirect-URI e
 - Ein Tipp auf eine **Playlist** öffnet ihre Titel – es spielt nichts, bis du einen Titel oder „Abspielen“ antippst. Ein Tipp auf einen Titel spielt ihn innerhalb seiner Playlist.
 - **♥** speichert einen Titel in deinen Lieblingssongs (oder entfernt ihn). **⋯** legt ihn in die Warteschlange, blendet ihn in dieser Liste aus oder öffnet ihn in Spotify.
 - **Ausblenden:** ein ausgeblendeter Titel verschwindet nur in Nemo aus der Liste; bei Spotify ändert sich nichts. „Abspielen“ überspringt ihn. „Ausgeblendete zeigen“ holt sie zurück.
+- **Tab „Playlists“** (Musik-Seite): alle deine Playlists, eigene und gefolgte, als Cover. Suche nach Name oder Beschreibung, nur *Eigene* oder *Gefolgte* zeigen, nach Name oder Anzahl Titel sortieren. Mit *Playlists bearbeiten* legst du eine Playlist an, änderst Name und Beschreibung und entfernst Titel (*⋯ → Aus dieser Playlist entfernen*; *Rückgängig* legt ihn zurück).
+- **Tab „Alben“:** deine gespeicherten Alben. Auf einer Albumseite merkt *Speichern* es sich in deinen Alben (braucht *Lieblingssongs*). *⋯ → Zu <Künstler>* und die Suche öffnen eine **Künstlerseite** mit den meistgehörten Titeln und den Alben.
+- **Weiterhören** (Startansicht): die Playlists, Alben und Künstler, aus denen du zuletzt gehört hast; ein Tipp spielt dort weiter. *Zuletzt gespielt* ist in die Startansicht gewandert (*Alle anzeigen* öffnet die ganze Liste).
+- **Schlaf-Timer** (*⋯* neben dem Titel): in 15–60 Minuten oder am Ende des Titels pausieren. Er läuft, solange Nemo offen ist; *Aus* beendet ihn. Im selben *⋯* stehen auch **Liedtext suchen** (öffnet genius.com im Browser) und *In Spotify öffnen*. Tasten: Umschalt+↑ / ↓ Lautstärke, S Zufall.
+- **Folgen** (beim Verbinden *Folgen* ankreuzen): *Folgen* auf einer Künstlerseite; die Künstler, denen du folgst, stehen unter deinen Alben. Fremden Playlists folgst du in ihrem Kopf oder entfolgst ihnen dort (braucht *Playlists bearbeiten*).
 - Zusätzliche Berechtigungen sind beim Verbinden freiwillig: *Playlists*, *Lieblingssongs* (lesen **und** speichern) und *Zuletzt gehört*. Wenn du schon verbunden warst, hake sie unter Verbindungen → Spotify an und verbinde neu.
 
 Gut zu wissen:

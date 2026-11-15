@@ -1,3 +1,4 @@
+import { bus } from '@/core/events';
 import { getPlatform } from '@/core/platform';
 import { startAutoLock } from './autolock';
 import { getBridge, resumeBridge, stopBridge } from './bridge/control';
@@ -29,8 +30,11 @@ export default function startAccountsService(): () => void {
       .clipboard.clearSensitive()
       .catch(() => undefined);
   });
+  // The app lock (Einstellungen → Sicherheit) closes the vault too: the app's PIN never opens it.
+  const stopAppLock = bus.on('app.locked', () => lockVault());
   void resumeBridge();
   return () => {
+    stopAppLock();
     stopLockWatch();
     void stopBridge();
     stopSearchKey();

@@ -18,6 +18,8 @@ import { tClock } from '@/strings.clock';
 import { tDiag } from '@/strings.diagnostics';
 import { tLegal } from '@/strings.legal';
 import {
+  AccessSection,
+  ProtectSection,
   AutomationLogSection,
   AutomationSection,
   AboutSection,
@@ -29,6 +31,7 @@ import {
   AiSwitchSection,
   AiWriteSection,
   AppearanceSection,
+  AppLockSection,
   CalmRemindersSection,
   ConnectorsSection,
   DeviceResetSection,
@@ -78,9 +81,13 @@ import { tRemoteHost } from '@/strings.remoteHost';
 import { tTrash } from '@/strings.trash';
 import { tAdvanced } from '@/strings.advanced';
 import { tKeys } from '@/strings.keys';
+import { tAppLock } from '@/strings.applock';
+import { readPrefs as readAppLockPrefs } from '@/core/applock/prefs';
 import { tSettings4 } from '@/strings.settings4';
 import { tSettings3 } from '@/strings.settings3';
 import { tWeather } from '@/strings.weather';
+import { tSecurity } from '@/strings.security';
+import { getPlatform } from '@/core/platform';
 import { actionLabel, shortcutActions, shortcutRowKey } from '@/core/keyboard/labels';
 
 const s = t.settings;
@@ -1100,6 +1107,40 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     render: () => <HistorySection />,
   },
   {
+    id: 'app-lock',
+    category: 'sicherheit',
+    maturity: 'stable',
+    order: 5,
+    scope: 'local',
+    get title() {
+      return tAppLock.get().title;
+    },
+    get description() {
+      return tAppLock.get().description;
+    },
+    get keywords() {
+      return tAppLock.de.keywords;
+    },
+    // Only rows that exist: the others show while the lock is on; biometrics depend on the device (async),
+    // so the search leads to the section instead of a row that may be missing.
+    get fields() {
+      const a = tAppLock.get();
+      const on = readAppLockPrefs().enabled;
+      return [
+        { key: 'enabled', label: a.enabled, description: a.enabledHint },
+        ...(on
+          ? [
+              { key: 'pin', label: a.changePin, description: a.changePinHint },
+              { key: 'idle', label: a.idle, description: a.idleHint },
+              { key: 'background', label: a.background, description: a.backgroundHint },
+              { key: 'lock-now', label: a.lockNow, description: a.lockNowHint },
+            ]
+          : []),
+      ];
+    },
+    render: () => <AppLockSection />,
+  },
+  {
     id: 'shortcuts',
     category: 'allgemein',
     maturity: 'stable',
@@ -1142,6 +1183,49 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
     ),
   },
   {
+    id: 'security-protect',
+    category: 'sicherheit',
+    maturity: 'stable',
+    order: 10,
+    scope: 'local',
+    get title() {
+      return tSecurity.get().protect.title;
+    },
+    get keywords() {
+      const p = tSecurity.get().protect;
+      return getPlatform().kind === 'android' ? [...p.keywords, ...p.screenKeywords] : p.keywords;
+    },
+    // A getter: the screen-guard row exists on Android only, so the search must not find it elsewhere.
+    get fields() {
+      const p = tSecurity.get().protect;
+      return [
+        ...(getPlatform().kind === 'android'
+          ? [{ key: 'screen', label: p.screen, description: p.screenHint }]
+          : []),
+        { key: 'encryptedOnly', label: p.encryptedOnly, description: p.encryptedOnlyHint },
+        { key: 'report', label: p.report, description: p.reportHint },
+      ];
+    },
+    render: () => <ProtectSection />,
+  },
+  {
+    id: 'security-access',
+    category: 'sicherheit',
+    maturity: 'stable',
+    order: 30,
+    scope: 'local',
+    get title() {
+      return tSecurity.get().access.title;
+    },
+    get description() {
+      return tSecurity.get().access.description;
+    },
+    get keywords() {
+      return tSecurity.get().access.keywords;
+    },
+    render: () => <AccessSection />,
+  },
+  {
     id: 'recently-deleted',
     category: 'allgemein',
     maturity: 'stable',
@@ -1160,6 +1244,15 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         key: 'keep',
         get label() {
           return tTrash.get().keep;
+        },
+      },
+      {
+        key: 'days',
+        get label() {
+          return tTrash.get().days;
+        },
+        get description() {
+          return tTrash.get().daysHint;
         },
       },
     ],

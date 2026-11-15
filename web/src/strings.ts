@@ -1,5 +1,5 @@
 import { catalogChain } from '@/core/i18n/catalogs';
-import { formatNumber } from '@/core/i18n/format';
+import { formatNumber, plural } from '@/core/i18n/format';
 import { localize } from '@/core/i18n/localize';
 import type { Shape } from '@/core/i18n/shape';
 
@@ -1013,6 +1013,7 @@ export const de = {
     toBookmarks: 'In die Merkliste',
     toNote: 'Als Notiz',
     toTodo: 'Als ToDo',
+    toFeed: 'Als Feed abonnieren',
   },
   quickAdd: {
     title: 'Neu eintragen',
@@ -1759,6 +1760,12 @@ export const de = {
     overlaps: 'Überschneidet sich mit einem anderen Termin',
     asTodo: 'Als ToDo merken',
     asTodoDone: 'Als ToDo gemerkt.',
+    /** The ToDos that link to an event, in its editor (planner hub S5, P52). */
+    preparation: {
+      label: 'Vorbereitung',
+      open: (title: string) => `Vorbereitung öffnen: ${title}`,
+      done: 'erledigt',
+    },
     skipOccurrence: (date: string) => `Nur den Termin am ${date} entfernen`,
     movedToast: 'Termin verschoben.',
     dragRecurring: 'Wiederkehrende Termine änderst du im Editor.',
@@ -2861,6 +2868,35 @@ export const de = {
     valueReveal: 'Zum Einblenden tippen',
     valueRehide: 'Wieder ausblenden',
   },
+  /** Shared charts (`ui/charts`): every visible value is also in the screen-reader table. */
+  charts: {
+    empty: 'Noch keine Werte.',
+    other: 'Sonstiges',
+    total: 'Summe',
+    item: 'Eintrag',
+    value: 'Wert',
+    share: 'Anteil',
+    /** The mark on a bar (key and table column), unless the module names it ("Budget"). */
+    target: 'Geplant',
+    ofTarget: (target: string) => `von ${target}`,
+    over: (amount: string) => `${amount} drüber`,
+    overPlain: 'mehr als geplant',
+    /** Legend of a trend: the series' newest value with its label ("Nov. 2.300,00 €"). */
+    latest: (label: string, value: string) => `${label} ${value}`,
+    donutSummary: (n: number, top: string, share: string, total: string | null) =>
+      [
+        n === 1 ? `Ein Anteil: ${top}` : `${n} Anteile, am größten ${top} mit ${share}`,
+        total ? `Summe ${total}` : null,
+      ]
+        .filter(Boolean)
+        .join('. ') + '.',
+    barsSummary: (n: number, over: number) =>
+      `${n1(n, 'Ein Wert', `${n} Werte`)}${over > 0 ? `, davon ${over} mehr als geplant` : ''}.`,
+    trendSummary: (label: string, n: number, first: string | null, last: string | null) =>
+      n === 1
+        ? `${label}: ein Wert${last ? `, ${last}` : ''}.`
+        : `${label}: ${n} Werte${first && last ? `, von ${first} bis ${last}` : ''}.`,
+  },
   homeEdit: {
     showMore: (n: number) => (n === 1 ? 'Mehr anzeigen · 1 Karte' : `Mehr anzeigen · ${n} Karten`),
     pinStart: 'Karte hinzufügen…',
@@ -3049,6 +3085,33 @@ export const de = {
     edit: 'Rechnung bearbeiten',
     planTitle: (payee: string) => `${payee} bezahlen`,
     planDunned: (detail?: string) => (detail ? `Mahnung · ${detail}` : 'Mahnung'),
+    planDunnedUntil: (amount: string, until: string) => `${amount} bis ${until}`,
+    planDunnedBy: (until: string) => `bis ${until}`,
+    /** The plan row's main action: opens this module's pay step, never pays by itself. */
+    planAction: 'Bezahlt …',
+    links: {
+      origin: 'Aus Mail',
+      dunning: (day?: string) => (day ? `Mahnung aus Mail vom ${day}` : 'Mahnung aus Mail'),
+      about: 'Verknüpft',
+      plan: 'Im Plan',
+      planDay: (day: string) => `Im Plan · ${day}`,
+      openMail: (subject: string) => `Mail „${subject}“ öffnen`,
+      gone: 'Gibt es nicht mehr.',
+      elsewhere: 'Nicht auf diesem Gerät.',
+      inBrowser: 'Im Browser öffnen',
+      remove: 'Entfernen',
+      removeFor: (subject: string) => `Verknüpfung zu „${subject}“ entfernen`,
+      removed: 'Verknüpfung entfernt.',
+    },
+    payStep: {
+      title: (payee: string) => `${payee} bezahlt?`,
+      open: (amount: string) => `Offen: ${amount}`,
+      amountHint: 'Weniger als der offene Betrag wird als Teilzahlung erfasst.',
+      confirm: 'Bezahlt',
+      /** The invoice was paid elsewhere while the step was open: nothing was written. */
+      alreadyPaid: 'Schon bezahlt.',
+      failed: 'Das hat nicht geklappt. Probier es noch einmal.',
+    },
     payee: 'Empfänger',
     reference: 'Verwendungszweck / Rechnungsnummer',
     dueDate: 'Fällig am',
@@ -3148,7 +3211,7 @@ export const de = {
         remindTimeHelp: 'Format HH:mm',
         showInPlan: 'Im Plan zeigen',
         showInPlanHelp:
-          'Kündigungsfristen stehen im Planer als „<Abo> kündigen“ (15 Min, bis zum letzten Tag der Frist). Nur bei eingeschaltetem Planer.',
+          'Kündigungsfristen stehen im Planer als „<Abo> kündigen“, das Ende einer Probezeit als „<Abo>: Probezeit endet“ (15 Min, bis zum letzten Tag der Frist). Gekündigt wird hier. Nur bei eingeschaltetem Planer.',
         priceHint: 'Hinweis bei Preiserhöhung',
         priceHintHelp:
           'Zeigt einmal unter „Jetzt wichtig“, wenn ein Abo teurer geworden ist. Du kannst es jederzeit ausschalten.',
@@ -3159,6 +3222,8 @@ export const de = {
     edit: 'Abo bearbeiten',
     name: 'Name',
     planTitle: (name: string) => `${name} kündigen`,
+    planTrialTitle: (name: string) => `${name}: Probezeit endet`,
+    planAction: 'Kündigen …',
     firstCharge: 'Abbuchung am',
     noticeDays: 'Kündigungsfrist (Tage vor Abbuchung)',
     noticeHint: 'Leer lassen, wenn jederzeit kündbar.',
@@ -4164,7 +4229,7 @@ export const de = {
     meta: {
       name: 'Merkliste',
       description:
-        'Links, Lesestoff, Filme, Orte und Ideen merken – mit Tags, Filtern und Erledigt-Status; oft gebrauchte Links als Lesezeichen-Kacheln. Auf dem Handy auch über „Teilen“ aus anderen Apps.',
+        'Was du dir noch anschauen, lesen, kaufen, ausprobieren oder besuchen willst – mit Tags und Status. Jeder Merkzettel hat ein Ende: erledigt oder weg. Die paar Links, die du täglich brauchst, liegen im Tab „Lesezeichen“. Auf dem Handy auch über „Teilen“ aus anderen Apps.',
       route: 'Merkliste',
       widget: 'Merkliste',
       widgetLinks: 'Lesezeichen',
@@ -4175,9 +4240,12 @@ export const de = {
         sort: 'Sortierung',
         sortHelp:
           'Legt fest, was in jeder Gruppe oben steht: das Neueste, nach Titel, nach Art oder Angefangenes zuerst.',
+        groupBy: 'Gruppierung',
+        groupByHelp:
+          'Legt fest, wie die Merkliste unterteilt ist: nach Zeitpunkt, nach dem ersten Tag (wie Sammlungen) oder nach Art. Die Auswahl im Menü der Seite ändert dieselbe Einstellung.',
         linkPreview: 'Linkvorschau laden',
         linkPreviewHint:
-          'Holt beim Speichern Titel, Beschreibung und ein kleines Bild direkt von der Seite des Links. Dabei erfährt diese Seite, dass du den Link gespeichert hast. Standard: aus.',
+          'Holt bei jedem Speichern Titel, Beschreibung und ein kleines Bild direkt von der Seite des Links. Dabei erfährt diese Seite, dass du den Link gespeichert hast. Standard: aus. Einzeln geht es immer: im Menü „⋯“ eines Merkzettels oder beim Teilen vom Handy.',
       },
     },
     title: 'Merkliste',
@@ -4193,6 +4261,8 @@ export const de = {
       watch: 'Film/Serie',
       book: 'Buch',
       place: 'Ort',
+      buy: 'Kaufen',
+      try: 'Ausprobieren',
       idea: 'Idee',
       other: 'Sonstiges',
     } as Record<string, string>,
@@ -4212,14 +4282,14 @@ export const de = {
       `${n === 1 ? '1 Lesezeichen' : `${n} Lesezeichen`}${groups === 0 ? '' : ` · ${groups === 1 ? 'in 1 Gruppe' : `in ${groups} Gruppen`}`}`,
     noGroup: 'Ohne Gruppe',
     linksEmpty:
-      'Noch keine Lesezeichen. Lege Links an, die du oft brauchst – gruppiert über den ersten Tag.',
-    empty: 'Noch nichts gemerkt.',
+      'Noch keine Lesezeichen. Hier liegen die paar Links, die du täglich brauchst, gruppiert über den ersten Tag. Die Lesezeichen deines Browsers ersetzt das nicht.',
+    empty:
+      'Noch nichts gemerkt. Hier sammelst du, was du dir anschauen, lesen, kaufen oder ausprobieren willst.',
     emptyAction: 'Merkzettel eintragen',
     emptyFiltered: 'Nichts gefunden.',
     open: 'Link öffnen',
     done: 'Erledigt',
     widgetEmpty: 'Nichts gemerkt.',
-    openCount: (n: number) => (n === 1 ? '1 offener Merkzettel' : `${n} offene Merkzettel`),
     moreOptions: 'Weitere Optionen',
     groupBy: 'Gruppieren nach',
     groupings: { recent: 'Zuletzt hinzugefügt', tag: 'Erster Tag', kind: 'Art' },
@@ -4241,6 +4311,25 @@ export const de = {
       status: 'Angefangenes zuerst',
     },
     statuses: { open: 'Offen', started: 'Angefangen', done: 'Erledigt' },
+    duplicate: (title: string, status: string) =>
+      `Schon gemerkt: „${title}“${status ? ` (${status})` : ''}. Du kannst trotzdem speichern.`,
+    duplicateOpen: 'Vorhandenen öffnen',
+    sharedPreview: 'Vorschau von der Seite holen',
+    sharedPreviewHint:
+      'Holt beim Speichern einmal Titel, Beschreibung und ein kleines Bild von dieser Seite, ohne Anmeldung und ohne Cookies.',
+    previewFetch: 'Vorschau von der Seite holen',
+    previewFetched: 'Vorschau geholt. Die Pinnwand zeigt sie.',
+    previewNone: 'Für diese Seite kam gerade keine Vorschau zurück.',
+    previewUnavailable:
+      'Im Browser braucht die Vorschau deinen Sync-Server. Die Desktop- und die Android-App holen sie selbst.',
+    planAdd: 'In den Plan',
+    planRemove: 'Aus dem Plan nehmen',
+    planAdded: 'Steht jetzt im Plan.',
+    planRemoved: 'Aus dem Plan genommen. Der Merkzettel bleibt.',
+    inPlan: 'im Plan',
+    planTitle: (kind: string, title: string) => (kind ? `${kind}: ${title}` : title),
+    widgetNext: 'Als Nächstes · such dir eins aus',
+    widgetWeekend: 'Fürs Wochenende · such dir eins aus',
     markStarted: 'Als angefangen markieren',
     markOpen: 'Wieder öffnen',
     markDone: 'Als erledigt markieren',
@@ -4539,6 +4628,8 @@ export const de = {
     expiresBody: (date: string) => `Haltbar bis ${date}`,
     widgetEmpty: 'Nichts läuft bald ab.',
     restockOne: (n: string) => `Auf die Einkaufsliste: ${n}`,
+    onList: 'Auf der Einkaufsliste',
+    toList: (n: string) => `Zur Einkaufsliste: ${n}`,
     shelf: {
       jump: (place: string, n: number) => `${place}: ${n}, zum Abschnitt springen`,
       expired: (n: number) => `${n} abgelaufen`,
@@ -4562,6 +4653,9 @@ export const de = {
   people: {
     turnsAge: (name: string, age: number) => `${name} wird ${age}`,
     birthdayOf: (name: string) => `Geburtstag: ${name}`,
+    /** A gift with a day in the planner (S5): never the gift itself – a surprise. */
+    planTitle: (name: string) => `Geschenk für ${name}`,
+    planAction: 'Zur Person',
     meta: {
       name: 'Personen',
       description:
@@ -4574,6 +4668,9 @@ export const de = {
         remindDaysBeforeHelp: '0 = am Geburtstag selbst',
         remindTime: 'Uhrzeit der Erinnerung',
         remindTimeHelp: 'Format HH:mm',
+        showInPlan: 'Im Plan zeigen',
+        showInPlanHelp:
+          'Geschenke mit Datum stehen im Planer als „Geschenk für <Name>“ (20 Min, bis zum Anlass) – ohne zu verraten, was es ist. Nur bei eingeschaltetem Planer.',
       },
     },
     /** The detail panel of the wide page, and the one verb of the empty list. */
@@ -4742,7 +4839,7 @@ export const de = {
     meta: {
       name: 'Dieser PC',
       description:
-        'Laufwerke mit Scan der größten Ordner und Systeminfo (Prozessor, Speicher, Akku, Netzwerk) – nur zum Ansehen, nur am PC; der Scan verändert nichts.',
+        'Laufwerke mit Scan der größten Ordner, Aufräum-Vorschläge und Systeminfo – nur am PC. Gelöscht wird nur, was du bestätigst.',
       route: 'Dieser PC',
       route2: 'Datenträger-Scan',
       widget: 'Laufwerke',
@@ -4750,7 +4847,14 @@ export const de = {
     },
     title: 'Dieser PC',
     tabsLabel: 'Bereich',
-    tabs: { drives: 'Laufwerke', system: 'System' } as const,
+    tabs: {
+      drives: 'Laufwerke',
+      tidy: 'Aufräumen',
+      startup: 'Autostart',
+      tweaks: 'Windows-Einstellungen',
+      system: 'System',
+      history: 'Verlauf',
+    } as const,
     lead: 'Was belegt den Platz? Scanne ein Laufwerk und erkunde die größten Ordner. Es wird nichts verändert oder hochgeladen.',
     loading: 'Laufwerke werden gelesen …',
     empty: 'Es wurden keine Laufwerke gefunden.',
@@ -4795,6 +4899,14 @@ export const de = {
         full: 'Fast voll – Aufräumen empfohlen.',
       } as Record<string, string>,
       healthLabel: 'Zustand',
+      toTidy: 'Aufräumen öffnen',
+      trimLabel: 'TRIM',
+      trim: {
+        on: 'In Windows eingeschaltet',
+        off: 'In Windows ausgeschaltet. Einschalten geht nur in Windows mit Administratorrechten; Nemo ändert das nicht.',
+      } as Record<string, string>,
+      helpTrim:
+        'Mit TRIM teilt Windows einer SSD mit, welche Bereiche nach dem Löschen frei sind. Ohne TRIM kann eine SSD mit der Zeit langsamer schreiben.',
       health: {
         ok: 'In Ordnung',
         warning: 'Das Laufwerk meldet Probleme – sichere deine Daten.',
@@ -4816,11 +4928,6 @@ export const de = {
       ioLabel: 'Aktivität',
     },
     quick: {
-      title: 'Schnellübersicht',
-      lead: 'Das lässt sich oft schnell aufräumen – ohne neuen Scan. Die Größen sind ungefähr.',
-      recycle: 'Papierkorb',
-      recycleHint: 'Leere ihn im Explorer; Nemo löscht nichts endgültig von selbst.',
-      atLeast: (size: string) => `mindestens ${size}`,
       biggest: 'Größte Ordner im letzten Scan',
       biggestHint: 'Aus dem Scan dieser Sitzung.',
     },
@@ -4929,27 +5036,6 @@ export const de = {
         permanentInstead: 'Diese endgültig löschen …',
         partialHint: 'Die Zahlen dieses Ordners können jetzt abweichen. Scanne ihn bei Bedarf neu.',
       },
-    },
-    places: {
-      title: 'Aufräumen',
-      lead: 'Bekannte Ordner, in denen sich oft Ballast sammelt. Scanne sie und wähle selbst aus, was weg kann – nichts wird automatisch gelöscht.',
-      name: {
-        temp: 'Temporäre Dateien',
-        chrome: 'Chrome-Zwischenspeicher',
-        edge: 'Edge-Zwischenspeicher',
-        firefox: 'Firefox-Zwischenspeicher',
-        downloads: 'Downloads',
-        cache: 'Zwischenspeicher (.cache)',
-      } as Record<string, string>,
-      hint: {
-        downloads: 'Tipp: Mit dem Filter „Älter als“ findest du alte Downloads.',
-        temp: 'Programme können hier Dateien noch brauchen; Dateien in Benutzung bleiben stehen.',
-        chrome: 'Der Browser baut den Zwischenspeicher bei Bedarf neu auf.',
-        edge: 'Der Browser baut den Zwischenspeicher bei Bedarf neu auf.',
-        firefox: 'Der Browser baut den Zwischenspeicher bei Bedarf neu auf.',
-        cache: 'Programme bauen ihren Zwischenspeicher bei Bedarf neu auf.',
-      } as Record<string, string>,
-      scan: (name: string) => `${name} scannen`,
     },
     dupes: {
       title: 'Doppelte Dateien',
@@ -5185,6 +5271,261 @@ export const de = {
       },
       smallFiles: (n: number) => `${n} kleinere Dateien`,
     },
+    /** Tab "Aufräumen": suggestions with preview and size; deleting stays the delete dialog. */
+    tidy: {
+      lead: 'Nemo sieht an bekannten Orten nach, was meist weg kann. Du siehst vorher, was es ist; gelöscht wird nur, was du bestätigst – voreingestellt in den Papierkorb.',
+      search: 'Suchen',
+      again: 'Erneut suchen',
+      cancel: 'Abbrechen',
+      searching: 'Suche läuft …',
+      searchingStep: (done: number, total: number, what: string) =>
+        `Suche läuft … ${done} von ${total}: ${what}`,
+      failed: 'Die Suche hat nicht geklappt. Du kannst es noch einmal versuchen.',
+      none: 'Nichts zum Aufräumen gefunden.',
+      noneHint:
+        'An den bekannten Orten liegt gerade kaum etwas. Doppelte und große, lange nicht genutzte Dateien zeigt der Scan eines Laufwerks.',
+      toDrives: 'Zu den Laufwerken',
+      cancelledNote: 'Die Suche wurde abgebrochen. Die Liste ist vielleicht unvollständig.',
+      summary: (n: number, size: string) =>
+        `${n === 1 ? '1 Vorschlag' : `${formatNumber(n)} Vorschläge`} · zusammen ${size}`,
+      listLabel: 'Vorschläge',
+      category: {
+        temp: 'Temporäre Dateien',
+        browserCache: 'Browser-Zwischenspeicher',
+        crashReports: 'Absturzberichte',
+        oldDownloads: 'Alte Downloads',
+      } as Record<string, string>,
+      source: { chrome: 'Chrome', edge: 'Edge', brave: 'Brave', firefox: 'Firefox' } as Record<
+        string,
+        string
+      >,
+      placeName: (category: string, source: string) =>
+        source ? `${category} (${source})` : category,
+      what: {
+        temp: 'Reste von Programmen und Installationen. Dateien der letzten 7 Tage bleiben, weil ein Programm sie noch brauchen kann.',
+        browserCache:
+          'Kopien von Webseiten, damit sie schneller laden. Der Browser legt sie bei Bedarf neu an; Lesezeichen, Verlauf und Anmeldungen bleiben.',
+        crashReports:
+          'Berichte und Speicherabbilder abgestürzter Programme. Du brauchst sie nur, wenn jemand einen Absturz untersucht.',
+        oldDownloads:
+          'Dateien in Downloads, die seit mindestens 90 Tagen unverändert sind. Das sind deine eigenen Dateien: Wähle selbst aus.',
+      } as Record<string, string>,
+      busy: (program: string) =>
+        `${program} läuft gerade. Schließe das Programm vorher, sonst bleiben Dateien liegen.`,
+      preview: (n: number) => `Vorschau · ${n === 1 ? '1 Eintrag' : `${formatNumber(n)} Einträge`}`,
+      selectItem: (name: string) => `${name} auswählen`,
+      rest: (n: number, size: string) =>
+        `${n === 1 ? '1 weiterer, kleinerer Eintrag' : `${formatNumber(n)} weitere, kleinere Einträge`} · ${size}`,
+      all: 'Alle auswählen',
+      noneSelected: 'Auswahl aufheben',
+      selected: (size: string) => `Ausgewählt: ${size}`,
+      nothingSelected: 'Nichts ausgewählt',
+      clean: 'Aufräumen …',
+      cleanLabel: (name: string) => `Aufräumen: ${name}`,
+      look: 'Im Scan ansehen',
+      lookLabel: (name: string) => `Im Scan ansehen: ${name}`,
+      changed: (when: string) => `geändert ${when}`,
+      windows: {
+        title: 'Macht Windows selbst',
+        lead: 'Manches räumt Windows am sichersten selbst auf. Nemo öffnet dir die richtige Stelle.',
+        recycle: 'Papierkorb',
+        recycleHint:
+          'Was Nemo aufräumt, landet hier. Im Papierkorb holst du es zurück oder leerst ihn endgültig.',
+        recycleOpen: 'Papierkorb öffnen',
+        updates: 'Update-Reste und Systemdateien',
+        updatesHint:
+          'Alte Update-Dateien entfernt Windows unter Einstellungen → System → Speicher.',
+        updatesOpen: 'Speicher-Einstellungen öffnen',
+        openFailed: 'Das ließ sich nicht öffnen.',
+      },
+      /** The drives tab's pointer to this tab (replaces the former list of places there). */
+      pointer:
+        'Temporäre Dateien, Browser-Zwischenspeicher und alte Downloads findest du unter „Aufräumen“.',
+    },
+    /** Tab "Verlauf": what the page changed on this PC, with the way back. */
+    history: {
+      lead: 'Was Nemo auf diesem PC verändert hat, mit dem Weg zurück. Aufgeräumtes steht hier, bis du Nemo schließt; Änderungen am Autostart und an Windows-Einstellungen bleiben hier stehen.',
+      loading: 'Verlauf wird gelesen …',
+      empty: 'Im Verlauf steht noch nichts.',
+      emptyHint: 'Sobald du etwas aufräumst oder umschaltest, steht es hier.',
+      reload: 'Erneut laden',
+      failed: 'Der Verlauf konnte nicht gelesen werden.',
+      recovered: 'Die Verlaufsdatei war beschädigt und wurde neu angelegt. Ältere Einträge fehlen.',
+      unreadable:
+        'Die Datei mit den gespeicherten Änderungen lässt sich gerade nicht lesen. Bis dahin ändert Nemo nichts; versuch es später noch einmal.',
+      listLabel: 'Verlauf',
+      fromScan: 'Aus dem Scan',
+      trashed: (what: string, size: string, files: number) =>
+        `${what}: ${size} in den Papierkorb · ${files === 1 ? '1 Datei' : `${formatNumber(files)} Dateien`}`,
+      deleted: (what: string, size: string, files: number) =>
+        `${what}: ${size} endgültig gelöscht · ${files === 1 ? '1 Datei' : `${formatNumber(files)} Dateien`}`,
+      restore: 'Papierkorb öffnen',
+      restoreHint: 'Solange sie im Papierkorb liegen, holst du die Dateien dort zurück.',
+      restoreLabel: (what: string) => `Papierkorb öffnen: ${what}`,
+      noWayBack: 'Endgültig gelöscht – das lässt sich nicht zurückholen.',
+      switched: (name: string, on: boolean) => `${name}: ${on ? 'eingeschaltet' : 'ausgeschaltet'}`,
+      undo: 'Rückgängig',
+      undoLabel: (what: string) => `Rückgängig: ${what}`,
+      undoDone: 'Zurückgestellt.',
+      undoFailed: 'Das ließ sich nicht zurückstellen.',
+      changedElsewhere: 'Das wurde inzwischen in Windows geändert. Nemo lässt es, wie es ist.',
+      undone: 'Zurückgenommen.',
+      canUndo: 'Der Wert von vorher ist gespeichert.',
+      undoNewerFirst: 'Nimm zuerst die neuere Änderung daran zurück.',
+      stale: 'Inzwischen in Windows geändert.',
+      changed: (name: string) => `${name}: geändert`,
+      chose: (name: string, choice: string) => `${name}: ${choice}`,
+    },
+    /** Tab "Windows-Einstellungen": documented, reversible Windows settings (`pc-tune` catalogue ids). */
+    tweaks: {
+      lead: 'Das sind Einstellungen von Windows. Hier kannst du sie umstellen, ohne sie in Windows zu suchen. Jede Änderung lässt sich zurücknehmen.',
+      onlyWindows: 'Diese Einstellungen gibt es nur unter Windows.',
+      onlyWindowsHint: 'Auf diesem Gerät ändert Nemo hier nichts.',
+      loading: 'Einstellungen werden gelesen …',
+      failed: 'Die Einstellungen konnten nicht gelesen werden.',
+      again: 'Noch einmal lesen',
+      none: 'Auf diesem PC gibt es hier nichts einzustellen.',
+      changedCount: (n: number) =>
+        n === 1 ? '1 Einstellung von Nemo geändert.' : `${n} Einstellungen von Nemo geändert.`,
+      resetAll: 'Alle zurücksetzen',
+      resetTitle: 'Alle zurücksetzen?',
+      resetText:
+        'Diese Einstellungen bekommen wieder den Wert, den sie vor deiner ersten Änderung hier hatten:',
+      resetConfirm: 'Zurücksetzen',
+      cancel: 'Abbrechen',
+      resetDone: (names: string) => `Zurückgesetzt: ${names}.`,
+      resetKept: (names: string) => `Unverändert geblieben: ${names}.`,
+      resetLeft: (name: string) => `${name} (inzwischen in Windows geändert)`,
+      applyLocked: 'Dieser Plan ist schon aktiv.',
+      noPlan: 'Kein Plan erkannt',
+      resetFailed: (name: string) => `${name} (ließ sich nicht zurücksetzen)`,
+      resetNothing: 'Es gab nichts zurückzusetzen.',
+      restorePoint: 'Computerschutz öffnen',
+      restorePointHint:
+        'Wenn du magst, legst du dort vorher einen Wiederherstellungspunkt an. Nötig ist das nicht.',
+      group: {
+        appearance: 'Darstellung',
+        explorer: 'Explorer',
+        privacy: 'Privatsphäre',
+        power: 'Energie',
+      } as Record<string, string>,
+      title: {
+        animations: 'Animationen in Fenstern',
+        dragFullWindows: 'Fensterinhalt beim Ziehen',
+        pointerSonar: 'Mauszeiger mit Strg zeigen',
+        fileExtensions: 'Dateiendungen anzeigen',
+        hiddenFiles: 'Versteckte Dateien anzeigen',
+        advertisingId: 'Werbe-ID für Apps',
+        trackAppLaunches: 'App-Starts für Start und Suche merken',
+        powerPlan: 'Energiesparplan',
+      } as Record<string, string>,
+      what: {
+        animations:
+          'Bedienelemente in Fenstern blenden weich ein und aus. Ausgeschaltet erscheinen sie sofort.',
+        dragFullWindows:
+          'Beim Verschieben siehst du das ganze Fenster. Ausgeschaltet zeigt Windows nur einen Rahmen.',
+        pointerSonar: 'Ein Druck auf die Strg-Taste zeigt mit Kreisen, wo der Mauszeiger ist.',
+        fileExtensions:
+          'Der Explorer zeigt Endungen wie .pdf oder .exe hinter dem Dateinamen. So siehst du, was für eine Datei es ist.',
+        hiddenFiles:
+          'Der Explorer zeigt auch Dateien und Ordner, die als versteckt markiert sind. Geschützte Systemdateien bleiben ausgeblendet.',
+        advertisingId:
+          'Apps dürfen deine Werbe-ID nutzen, um Werbung auf dich abzustimmen. Ausgeschaltet siehst du nicht weniger Werbung, sie richtet sich aber nicht mehr nach dieser ID.',
+        trackAppLaunches:
+          'Windows merkt sich, welche Apps du startest, und sortiert damit Startmenü und Suche.',
+        powerPlan:
+          'Legt fest, wie Windows zwischen Leistung und Stromverbrauch abwägt. Der Plan gilt für alle Konten dieses PCs. Zur Wahl stehen nur die Pläne, die es hier schon gibt.',
+      } as Record<string, string>,
+      detail: {
+        animations:
+          'In Windows gehört es zum Schalter „Animationseffekte“ unter Barrierefreiheit → Visuelle Effekte. Der Schalter dort kann mehr umfassen als diese eine Einstellung.',
+        dragFullWindows:
+          'In Windows heißt es „Fensterinhalt beim Ziehen anzeigen“ (Leistungsoptionen → Visuelle Effekte). Nemo stellt es auf demselben Weg um wie Windows selbst.',
+        pointerSonar:
+          'In Windows heißt es „Zeigerposition beim Drücken der STRG-Taste anzeigen“ (Mauseigenschaften → Zeigeroptionen). Nemo stellt es auf demselben Weg um wie Windows selbst.',
+        fileExtensions:
+          'Im Explorer heißt es „Dateinamenerweiterungen“ (Anzeigen → Einblenden). Nemo stellt es auf demselben Weg um wie Windows selbst.',
+        hiddenFiles:
+          'Im Explorer heißt es „Ausgeblendete Elemente“ (Anzeigen → Einblenden). Nemo stellt es auf demselben Weg um wie Windows selbst.',
+        advertisingId:
+          'In Windows findest du es unter Datenschutz und Sicherheit → Allgemein. Nemo ändert dieselbe Angabe wie der Schalter dort; sie gilt nur für dein Konto.',
+        trackAppLaunches:
+          'In Windows findest du es unter Datenschutz und Sicherheit → Allgemein. Nemo ändert dieselbe Angabe wie der Schalter dort; sie gilt nur für dein Konto.',
+        powerPlan:
+          'In Windows findest du die Pläne in der Systemsteuerung unter Energieoptionen. Nemo wechselt nur zwischen ihnen, legt keinen neuen an und blendet keinen versteckten ein.',
+      } as Record<string, string>,
+      riskLow: 'Risiko: gering.',
+      riskNote: {
+        hiddenFiles:
+          'Versteckte Dateien gehören oft zu Programmen. Sind sie sichtbar, verschiebt oder löscht man sie leichter aus Versehen.',
+        trackAppLaunches: 'Ausgeschaltet bleibt die Liste „Meistverwendet“ im Startmenü leer.',
+        powerPlan: 'Ein Plan mit mehr Leistung braucht mehr Strom; am Laptop hält der Akku kürzer.',
+      } as Record<string, string>,
+      refresh: {
+        explorer: 'Offene Explorer-Fenster zeigen es nach dem Aktualisieren (F5).',
+      },
+      more: 'Mehr dazu',
+      moreLabel: (title: string) => `Mehr dazu: ${title}`,
+      source: 'Quelle: Dokumentation von Microsoft',
+      sourceLabel: (title: string) =>
+        `Quelle: Dokumentation von Microsoft (${title}, öffnet im Browser)`,
+      changedHere: 'von Nemo geändert',
+      stateOn: 'Eingeschaltet',
+      stateOff: 'Ausgeschaltet',
+      stateChoice: (label: string) => (label ? `Aktiv: ${label}` : ''),
+      windowsDefault: 'Hier ist nichts festgelegt; es gilt der Standard von Windows.',
+      customValue:
+        'Hier ist ein anderer Wert gespeichert, den Nemo nicht einordnet. Nach einer Änderung stellt „Rückgängig“ genau ihn wieder her.',
+      unreadable:
+        'Nemo kann den aktuellen Wert nicht lesen. Ohne ihn gäbe es keinen Weg zurück, deshalb ändert Nemo hier nichts.',
+      turnOn: 'Einschalten',
+      turnOff: 'Ausschalten',
+      turnOnLabel: (title: string) => `Einschalten: ${title}`,
+      turnOffLabel: (title: string) => `Ausschalten: ${title}`,
+      apply: 'Übernehmen',
+      applyLabel: (title: string) => `Übernehmen: ${title}`,
+      chooseLabel: (title: string) => `${title} wählen`,
+      switched: (title: string, on: boolean) =>
+        `${title}: ${on ? 'eingeschaltet' : 'ausgeschaltet'}.`,
+      chosen: (title: string, label: string) => `${title}: ${label}.`,
+      setFailed: 'Das ließ sich nicht umstellen. Es wurde nichts geändert.',
+    },
+    /** Tab "Autostart": what starts with Windows for this account, with a switch each. */
+    startup: {
+      lead: 'Hier steht, was über die Autostart-Liste mit Windows startet. Was du beim Start nicht brauchst, schaltest du aus – das Programm bleibt installiert und lässt sich wieder einschalten.',
+      loading: 'Autostart wird gelesen …',
+      failed: 'Der Autostart konnte nicht gelesen werden.',
+      again: 'Erneut versuchen',
+      onlyWindows: 'Den Autostart zeigt Nemo nur unter Windows.',
+      empty: 'Nemo findet keine Programme in der Autostart-Liste von Windows.',
+      user: 'Für dein Konto',
+      machine: 'Für alle Konten',
+      count: (on: number, total: number) => `${on} von ${total} eingeschaltet`,
+      machineHint:
+        'Nur zum Ansehen: Diese Einträge gelten für alle, die diesen PC nutzen. Ändern lassen sie sich in den Windows-Einstellungen mit einem Administratorkonto.',
+      machineOpen: 'In den Windows-Einstellungen ändern',
+      openFailed: 'Das ließ sich nicht öffnen.',
+      switchLabel: (name: string) => `${name} mit Windows starten`,
+      notSwitchable: 'Lässt sich hier nicht umschalten',
+      on: 'Eingeschaltet',
+      off: 'Ausgeschaltet',
+      folder: 'Autostart-Ordner',
+      nowOff: (name: string) => `${name} startet nicht mehr mit Windows.`,
+      nowOn: (name: string) => `${name} startet wieder mit Windows.`,
+      undo: 'Rückgängig',
+      undoFailed: 'Das ließ sich nicht zurückstellen. Im Verlauf siehst du den Stand.',
+      setFailed: 'Das ließ sich nicht umschalten.',
+      impact:
+        'Wie stark ein Programm den Start von Windows verzögert, schätzt Windows selbst: Der Task-Manager zeigt es unter „Autostart-Apps“ in der Spalte „Startauswirkungen“.',
+      historyOff: (name: string) => `${name}: startet nicht mehr mit Windows`,
+      historyOn: (name: string) => `${name}: startet wieder mit Windows`,
+    },
+    /** Above the drives, only when a built-in drive reports problems: one sentence each, no button. */
+    advice: {
+      title: 'Laufwerkszustand',
+      health: (drive: string) =>
+        `${drive} meldet Probleme. Am besten sicherst du bald die Daten darauf.`,
+    },
   },
 
   budgets: {
@@ -5350,6 +5691,11 @@ export const de = {
       widget: 'Einkauf',
       widgetPacking: 'Packlisten',
       quickAdd: 'Einkauf',
+      settings: {
+        showInPlan: 'Im Plan zeigen',
+        showInPlanHelp:
+          'Eine Packliste mit Reisedatum steht im Planer als „Packen: <Name>“ (20 Min, bis zum Tag vor der Reise). Der Einkauf kommt nur über „In den Plan“ dazu, als eine Zeile. Nur bei eingeschaltetem Planer.',
+      },
     },
     title: 'Listen',
     tabsLabel: 'Deine Listen',
@@ -5456,6 +5802,127 @@ export const de = {
     buyMissing: (n: number) => `Noch kaufen (${n})`,
     buyMissingDone: (n: number) => `${n} auf die Einkaufsliste gesetzt.`,
     tripIn: (d: number) => `In ${d} Tagen`,
+    plan: {
+      shopping: (n: number) =>
+        plural(n, { one: 'Einkaufen · # Ding', other: 'Einkaufen · # Dinge' }, 'de'),
+      packing: (name: string) => `Packen: ${name}`,
+      toList: 'Zur Liste',
+      add: 'In den Plan',
+      placed: (day: string) => `Im Plan · ${day}`,
+      fromPantry: (name: string) => `Aus den Vorräten: ${name}`,
+      waits: 'Im Plan · noch ohne Tag',
+      remove: 'Nicht mehr planen',
+    },
+    // Package „Listen verwalten“ (round 2026-11): icon, colour, order, archive.
+    listIcon: 'Symbol',
+    listColour: 'Farbe',
+    noColour: 'Ohne Farbe',
+    colourN: (n: number) => `Farbe ${n}`,
+    iconNames: {
+      cart: 'Einkaufswagen',
+      luggage: 'Koffer',
+      checklist: 'Checkliste',
+      home: 'Haus',
+      gift: 'Geschenk',
+      star: 'Stern',
+      heart: 'Herz',
+      package: 'Paket',
+      calendar: 'Kalender',
+      car: 'Auto',
+      sun: 'Sonne',
+      wrench: 'Werkzeug',
+    } as Record<string, string>,
+    manage: 'Listen verwalten',
+    manageHint:
+      'Neue Einkäufe aus Vorräten, Schnellerfassung und Assistent landen auf der ersten Einkaufsliste.',
+    shoppingTarget: 'Hier landen neue Einkäufe',
+    itemCount: (n: number) => (n === 1 ? '1 Eintrag' : `${n} Einträge`),
+    moveUp: (name: string) => `${name} weiter nach oben`,
+    moveDown: (name: string) => `${name} weiter nach unten`,
+    movedTo: (name: string, pos: number, total: number) =>
+      `${name} ist jetzt an Position ${pos} von ${total}.`,
+    archive: 'Archivieren',
+    unarchive: 'Zurückholen',
+    archiveList: 'Liste archivieren',
+    archivedTitle: 'Archiv',
+    archivedTab: (name: string) => `${name} (archiviert)`,
+    archivedNote: 'Diese Liste ist archiviert und erscheint nicht als Reiter.',
+    archivedDone: (name: string) => `„${name}“ archiviert.`,
+    unarchivedDone: (name: string) => `„${name}“ ist zurück.`,
+    archiveHint:
+      'Archivierte Listen behalten ihre Einträge und kommen unter „Listen verwalten“ zurück.',
+    editListNamed: (name: string) => `${name} bearbeiten`,
+    itemList: 'Liste',
+    movedItem: (item: string, list: string) => `„${item}“ nach „${list}“ verschoben.`,
+    starters: {
+      label: 'Vorlage',
+      none: 'Leere Liste',
+      hint: 'Eine Vorlage füllt die neue Liste mit Einträgen, die du danach frei änderst.',
+      weekly: {
+        name: 'Wocheneinkauf',
+        items: [
+          { name: 'Äpfel', group: 'produce' },
+          { name: 'Bananen', group: 'produce' },
+          { name: 'Tomaten', group: 'produce' },
+          { name: 'Salat', group: 'produce' },
+          { name: 'Brot', group: 'bakery' },
+          { name: 'Milch', group: 'dairy' },
+          { name: 'Butter', group: 'dairy' },
+          { name: 'Käse', group: 'dairy' },
+          { name: 'Joghurt', group: 'dairy' },
+          { name: 'Eier', group: 'dairy' },
+          { name: 'Nudeln', group: 'other' },
+          { name: 'Reis', group: 'other' },
+          { name: 'Kaffee', group: 'drinks' },
+          { name: 'Mineralwasser', group: 'drinks' },
+          { name: 'Toilettenpapier', group: 'household' },
+          { name: 'Spülmittel', group: 'household' },
+        ],
+      },
+      vacation: {
+        name: 'Urlaub',
+        items: [
+          { name: 'T-Shirts', group: 'Kleidung' },
+          { name: 'Hosen', group: 'Kleidung' },
+          { name: 'Unterwäsche und Socken', group: 'Kleidung' },
+          { name: 'Schlafsachen', group: 'Kleidung' },
+          { name: 'Badesachen', group: 'Kleidung' },
+          { name: 'Jacke', group: 'Kleidung' },
+          { name: 'Zahnbürste und Zahnpasta', group: 'Hygiene' },
+          { name: 'Duschgel und Shampoo', group: 'Hygiene' },
+          { name: 'Sonnencreme', group: 'Hygiene' },
+          { name: 'Medikamente', group: 'Hygiene' },
+          { name: 'Ausweis oder Reisepass', group: 'Dokumente' },
+          { name: 'Krankenversicherungskarte', group: 'Dokumente' },
+          { name: 'Tickets und Buchungen', group: 'Dokumente' },
+          { name: 'Bargeld und Karte', group: 'Dokumente' },
+          { name: 'Ladekabel', group: 'Technik' },
+          { name: 'Kopfhörer', group: 'Technik' },
+          { name: 'Powerbank', group: 'Technik' },
+          { name: 'Sonnenbrille', group: 'Sonstiges' },
+          { name: 'Buch', group: 'Sonstiges' },
+        ],
+      },
+    },
+    startedFrom: (name: string, n: number) => `„${name}“ mit ${n} Einträgen angelegt.`,
+    showInWidget: 'Im Widget zeigen',
+    fillFromPantry: 'Aus Vorräten auffüllen',
+    pantryAsking: 'Vorräte werden gefragt …',
+    pantryNothing: 'In den Vorräten wird gerade nichts knapp.',
+    pantryHint: 'Angehakt kommt auf die Liste. Was bald abläuft, entscheidest du selbst.',
+    pantryReasons: { empty: 'leer', low: 'knapp', expired: 'abgelaufen', soon: 'läuft bald ab' },
+    pantryAdd: (n: number) => (n === 1 ? '1 Eintrag übernehmen' : `${n} Einträge übernehmen`),
+    shareTo: 'Auf eine Liste',
+    sharedPreview: (n: number) =>
+      n === 1 ? 'Dieser Eintrag kommt dazu:' : `Diese ${n} Einträge kommen dazu:`,
+    sharedMore: (n: number) => `… und ${n} weitere`,
+    sharedAdded: (n: number, list: string) =>
+      n === 1 ? `1 Eintrag auf „${list}“ gesetzt.` : `${n} Einträge auf „${list}“ gesetzt.`,
+    widgetShows: (name: string) => `Das Widget zeigt jetzt „${name}“.`,
+    widgetEmptyList: (name: string) => `Auf „${name}“ ist nichts offen.`,
+    widgetSummary: (name: string, n: number) => `${name}: ${n} offen`,
+    noListInUse: 'Noch keine Liste. Leg mit „Neue Liste“ eine an.',
+    noListArchived: 'Alle Listen sind archiviert. Hol eine zurück oder leg eine neue an.',
   },
 
   vault: {
@@ -5471,8 +5938,23 @@ export const de = {
         remindDaysBeforeDeadline: 'Erinnerung vor Kündigungsfrist (Tage)',
         remindTime: 'Uhrzeit der Erinnerung',
         remindTimeHelp: 'Format HH:mm',
+        showInPlan: 'Im Plan zeigen',
+        showInPlanHelp:
+          'Kündigungsfristen und Abläufe stehen im Planer als „Vertrag kündigen“ oder „Ausweis verlängern“ (15 Min, bis zum letzten Tag). Der Name der Unterlage steht nur auf der Planer-Seite. Nur bei eingeschaltetem Planer.',
       },
     },
+    /** Plan row titles: the category's wording only, never the document's name (it reaches calendar and widget). */
+    planCancel: (category: string) =>
+      category === 'insurance' ? 'Versicherung kündigen' : 'Vertrag kündigen',
+    planRenew: (category: string) =>
+      category === 'identity'
+        ? 'Ausweis verlängern'
+        : category === 'warranty'
+          ? 'Garantie prüfen'
+          : category === 'contract' || category === 'insurance'
+            ? 'Vertragsende prüfen'
+            : 'Unterlage verlängern',
+    planAction: 'Zum Dokument',
     title: 'Unterlagen',
     add: 'Unterlage eintragen',
     edit: 'Unterlage bearbeiten',
@@ -5485,7 +5967,7 @@ export const de = {
       warranty: 'Garantien',
       tax: 'Steuer',
       health: 'Gesundheit',
-      other: 'Sonstiges',
+      other: 'Ohne Kategorie',
     } as Record<string, string>,
     provider: 'Anbieter',
     startDate: 'Beginn',
@@ -5591,6 +6073,59 @@ export const de = {
       [expired > 0 ? `${expired} abgelaufen` : '', due > 0 ? `${due} mit Frist in Sicht` : '']
         .filter(Boolean)
         .join(' · '),
+    categoryAdmin: {
+      manage: 'Kategorien bearbeiten',
+      title: 'Kategorien',
+      add: 'Neue Kategorie',
+      editTitle: 'Kategorie bearbeiten',
+      name: 'Name',
+      colour: 'Farbe',
+      colourN: (n: number) => `Farbe ${n}`,
+      icon: 'Symbol',
+      iconNames: {
+        files: 'Ordner',
+        file: 'Blatt',
+        lock: 'Schloss',
+        receipt: 'Beleg',
+        wallet: 'Geldbörse',
+        home: 'Haus',
+        car: 'Auto',
+        heart: 'Herz',
+        calculator: 'Rechner',
+        package: 'Paket',
+        luggage: 'Koffer',
+        users: 'Personen',
+        umbrella: 'Schirm',
+      } as Record<string, string>,
+      up: (name: string) => `${name} nach oben`,
+      down: (name: string) => `${name} nach unten`,
+      edit: (name: string) => `${name} bearbeiten`,
+      remove: (name: string) => `${name} löschen`,
+      fixedHint:
+        '„Ohne Kategorie“ bleibt immer. Hierher kommen Unterlagen, deren Kategorie gelöscht wird.',
+      duplicate: 'Eine Kategorie mit diesem Namen gibt es schon.',
+      removeTitle: (name: string) => `„${name}“ löschen`,
+      inUse: (n: number) =>
+        n === 1
+          ? '1 Unterlage ist in dieser Kategorie.'
+          : `${n} Unterlagen sind in dieser Kategorie.`,
+      keepsDocs: (n: number) =>
+        n === 1
+          ? 'Sie bleibt erhalten und kommt in die Kategorie, die du hier wählst.'
+          : 'Sie bleiben erhalten und kommen in die Kategorie, die du hier wählst.',
+      place: (name: string, at: number, of: number) => `${name}: Platz ${at} von ${of}`,
+      failed: 'Das hat nicht geklappt. Probier es noch einmal.',
+      moveTo: 'Verschieben nach',
+      removeAndMove: 'Löschen und verschieben',
+      removed: (name: string) => `„${name}“ gelöscht`,
+      removedMoved: (name: string, n: number, target: string) =>
+        n === 1
+          ? `„${name}“ gelöscht · 1 Unterlage nach „${target}“ verschoben`
+          : `„${name}“ gelöscht · ${n} Unterlagen nach „${target}“ verschoben`,
+      created: (name: string) => `„${name}“ angelegt`,
+      emptyFolder: (name: string) => `Noch keine Unterlagen in „${name}“.`,
+      done: 'Fertig',
+    },
     widgetSummary: (n: number) =>
       n === 1 ? '1 Unterlage braucht einen Blick' : `${n} Unterlagen brauchen einen Blick`,
   },
@@ -5753,7 +6288,6 @@ export const de = {
       totpInvalid: 'Kein gültiger TOTP-Schlüssel.',
     },
     copy: 'Kopieren',
-    copied: (what: string) => `${what} kopiert – wird nach 30 s aus der Zwischenablage gelöscht.`,
     copyUser: 'Benutzername kopieren',
     copyPassword: 'Passwort kopieren',
     copyCode: 'Code kopieren',
@@ -7431,6 +7965,9 @@ export const de = {
       showAnswered: '„Beantwortet?“ anzeigen',
       showAnsweredHelp:
         'Unter einer Mail im Plan, deren letzte Nachricht von dir ist, steht „Beantwortet? · Erledigt“. Nichts wird von selbst erledigt; geprüft wird nur auf diesem Gerät.',
+      shortcuts: 'Tastenkürzel wie in Gmail',
+      shortcutsHelp:
+        'c neue Mail · / suchen · u zurück zur Liste · o öffnen · x auswählen · e archivieren · # Papierkorb · ! Spam · s Stern · r antworten · a allen antworten · f weiterleiten · Umschalt+I gelesen · Umschalt+U ungelesen. J/K wählen die Zeile. Was sonst nachfragt, fragt auch hier.',
     },
     /** A planned mail whose newest message is the person's own („Wochenende retten“ F5): a question, one verb. */
     answered: {
@@ -7514,6 +8051,9 @@ export const de = {
       rowRead: 'Als gelesen markieren',
       rowUnread: 'Als ungelesen markieren',
       rowArchive: 'Archivieren',
+      rowStar: 'Mit Stern markieren',
+      rowUnstar: 'Stern entfernen',
+      starredMark: 'Mit Stern',
       loading: 'Mails werden geladen …',
       more: 'Mehr laden',
       searchLabel: 'Suchen',
@@ -7572,6 +8112,14 @@ export const de = {
       saved: 'Anhang gespeichert.',
       downloadLabel: 'Herunterladen',
       downloadFailed: 'Der Anhang konnte nicht geladen werden.',
+      previewLabel: 'Ansehen',
+      preview: (name: string) => `${name} ansehen`,
+      previewFailed: 'Das Bild konnte nicht geladen werden.',
+      unsubscribe: 'Newsletter abbestellen …',
+      unsubscribeTitle: 'Newsletter abbestellen?',
+      unsubscribeBody: (host: string) =>
+        `Das öffnet die Abmeldeseite von ${host} im Browser. Nemo schickt dabei nichts; abbestellen tust du auf der Seite selbst.`,
+      unsubscribeOpen: 'Seite öffnen',
       blockedImages: (n: number) =>
         n === 1 ? '1 externes Bild blockiert' : `${n} externe Bilder blockiert`,
       loadImages: 'Bilder laden',
@@ -7640,6 +8188,15 @@ export const de = {
       markRead: 'Als gelesen markieren',
       markUnread: 'Als ungelesen markieren',
       label: 'Label setzen …',
+      star: 'Mit Stern markieren',
+      unstar: 'Stern entfernen',
+      important: 'Als wichtig markieren',
+      unimportant: 'Nicht mehr wichtig',
+      spam: 'Als Spam melden',
+      notSpam: 'Kein Spam',
+      untrash: 'Aus dem Papierkorb holen',
+      labelsOf: 'Labels dieses Verlaufs',
+      removeLabel: (name: string) => `Label „${name}“ entfernen`,
       reply: 'Antworten',
       replyAll: 'Allen antworten',
       forward: 'Weiterleiten',
@@ -7653,6 +8210,14 @@ export const de = {
         archived: 'Archiviert.',
         trashed: 'In den Papierkorb gelegt.',
         labelled: (name: string) => `Label „${name}“ gesetzt.`,
+        unlabelled: (name: string) => `Label „${name}“ entfernt.`,
+        starred: 'Mit Stern markiert.',
+        unstarred: 'Stern entfernt.',
+        important: 'Als wichtig markiert.',
+        unimportant: 'Nicht mehr als wichtig markiert.',
+        spam: 'Als Spam gemeldet.',
+        notSpam: 'Zurück im Posteingang.',
+        restored: 'Aus dem Papierkorb zurückgelegt.',
       },
       confirm: {
         archiveTitle: 'Mail archivieren?',
@@ -7667,6 +8232,9 @@ export const de = {
         labelPick: 'Label',
         labelNone: '– Label wählen –',
         labelConfirm: 'Label setzen',
+        spamTitle: 'Als Spam melden?',
+        spamBody:
+          'Der Verlauf verlässt den Posteingang und liegt dann im Ordner „Spam“. Gmail nutzt die Meldung für seinen Spamfilter. Du kannst es gleich zurücknehmen.',
       },
       compose: {
         titleNew: 'Neue Mail',
@@ -7681,8 +8249,25 @@ export const de = {
         body: 'Text',
         attach: 'Anhang hinzufügen',
         attachments: 'Anhänge',
-        attachNote:
-          'Anhänge einer Mail werden beim Weiterleiten nicht mitgeschickt; füge sie hier selbst hinzu.',
+        attachNote: 'Gesendet wird genau, was hier steht.',
+        forwardLoading: 'Anhänge werden geladen …',
+        forwardTooLarge: (names: string) => `Nicht mitgeschickt, zu groß für eine Mail: ${names}.`,
+        forwardTogether: (names: string) =>
+          `Nicht mitgeschickt, zusammen zu groß für eine Mail: ${names}. Leite sie in einer zweiten Mail weiter.`,
+        forwardFailed: (names: string) =>
+          `Nicht mitgeschickt, nicht ladbar: ${names}. Versuch es später noch einmal oder lade sie aus der Mail herunter und häng sie an.`,
+        snippets: 'Textbausteine',
+        snippetsHint: 'Deine Bausteine bleiben auf diesem Gerät.',
+        snippetsEmpty: 'Noch keine Textbausteine. Schreib einen Text und merke ihn dir hier.',
+        snippetsFull:
+          'Es sind schon zwanzig Textbausteine gemerkt. Entferne einen, um diesen zu merken.',
+        snippetInsert: (name: string) => `„${name}“ einfügen`,
+        snippetRemove: (name: string) => `Textbaustein „${name}“ entfernen`,
+        snippetInsertLabel: 'Einfügen',
+        snippetSave: 'Diesen Text als Baustein merken',
+        snippetSaved: 'Als Textbaustein gemerkt.',
+        snippetKnown: 'Diesen Text hast du schon als Baustein.',
+        snippetRemoved: (name: string) => `„${name}“ entfernt.`,
         removeAttachment: (name: string) => `Anhang ${name} entfernen`,
         fileTooLarge: (names: string) => `Zu groß für einen Anhang (höchstens 15 MB): ${names}`,
         invalidAddress: (list: string) => `Das ist keine E-Mail-Adresse: ${list}`,
@@ -7715,6 +8300,58 @@ export const de = {
         retry: 'Erneut versuchen',
         edit: 'Bearbeiten',
         sent: 'Mail gesendet.',
+      },
+    },
+    find: {
+      filters: 'Filter für die Suche',
+      filter: {
+        'is:unread': 'Ungelesen',
+        'has:attachment': 'Mit Anhang',
+        'is:starred': 'Mit Stern',
+        'older_than:1y': 'Älter als ein Jahr',
+      } as Record<string, string>,
+      save: 'Suche merken',
+      forgetThis: 'Nicht mehr merken',
+      saved: 'Gemerkte Suchen',
+      savedFull: 'Es sind schon zehn Suchen gemerkt. Entferne eine, um diese zu merken.',
+      savedDone: 'Suche gemerkt. Sie steht jetzt bei den Ordnern.',
+      forgotten: 'Suche nicht mehr gemerkt.',
+      forget: (q: string) => `Gemerkte Suche „${q}“ entfernen`,
+    },
+    batch: {
+      select: 'Auswählen',
+      selectEnd: 'Auswahl beenden',
+      selectAll: 'Alle auswählen',
+      more: 'Weitere Aktionen für die Auswahl',
+      unchanged: 'Da war nichts zu ändern.',
+      partial: (failed: number) =>
+        failed === 1
+          ? 'Bei 1 Mail hat es nicht geklappt. Sie ist unverändert und bleibt ausgewählt.'
+          : `Bei ${failed} Mails hat es nicht geklappt. Sie sind unverändert und bleiben ausgewählt.`,
+      done: {
+        read: (n: number) => `${n} Mails als gelesen markiert.`,
+        unread: (n: number) => `${n} Mails als ungelesen markiert.`,
+        star: (n: number) => `${n} Mails mit Stern markiert.`,
+        unstar: (n: number) => `Stern bei ${n} Mails entfernt.`,
+        important: (n: number) => `${n} Mails als wichtig markiert.`,
+        unimportant: (n: number) => `${n} Mails nicht mehr als wichtig markiert.`,
+        archive: (n: number) => `${n} Mails archiviert.`,
+        spam: (n: number) => `${n} Mails als Spam gemeldet.`,
+        notSpam: (n: number) => `${n} Mails zurück im Posteingang.`,
+        trash: (n: number) => `${n} Mails in den Papierkorb gelegt.`,
+        untrash: (n: number) => `${n} Mails aus dem Papierkorb zurückgelegt.`,
+      },
+      confirm: {
+        archiveTitle: (n: number) => (n === 1 ? 'Mail archivieren?' : `${n} Mails archivieren?`),
+        trashTitle: (n: number) =>
+          n === 1 ? 'In den Papierkorb legen?' : `${n} Mails in den Papierkorb legen?`,
+        spamTitle: (n: number) => (n === 1 ? 'Als Spam melden?' : `${n} Mails als Spam melden?`),
+        archiveBody:
+          'Die Auswahl verlässt den Posteingang und bleibt unter „Alle Mails“. Du kannst es gleich zurücknehmen.',
+        trashBody:
+          'Gmail löscht Mails im Papierkorb erst nach 30 Tagen. Bis dahin holst du sie jederzeit zurück.',
+        spamBody:
+          'Die Auswahl verlässt den Posteingang und liegt dann im Ordner „Spam“. Gmail nutzt die Meldung für seinen Spamfilter. Du kannst es gleich zurücknehmen.',
       },
     },
     notify: {
@@ -8224,6 +8861,11 @@ export const de = {
       action: 'Zeit erfassen',
       started: (title: string) => `Zeit läuft für „${title}“.`,
     },
+    /** What a session was started for (TT1): „Für: Zahnarzt“, the title opens the thing. */
+    source: {
+      label: 'Für',
+      open: (title: string) => `${title} öffnen`,
+    },
     widgetText: {
       start: 'Starten',
       none: 'Noch keine Projekte.',
@@ -8278,6 +8920,13 @@ export const de = {
       reminderHint:
         'Im Zeitfenster erinnert die App, bis das Tagesziel erreicht ist – danach nicht mehr.',
       templates: 'Vorlagen',
+      keepFree: 'Zeit im Plan freihalten',
+      keepFreeNone: 'keine',
+      keepFreeOther: 'Andere Dauer …',
+      keepFreeMinutes: 'Minuten (5–240)',
+      keepFreeRange: 'Bitte eine Dauer von 5 bis 240 Minuten eintragen.',
+      keepFreeHint:
+        'Der Planer hält diese Zeit an den geplanten Tagen frei. Abgehakt wird nur hier.',
     },
     templates: {
       water: { name: 'Wasser trinken', unit: 'Gläser' },
@@ -8349,7 +8998,7 @@ export const de = {
     meta: {
       name: 'Feeds',
       description:
-        'Deine abonnierten Feeds (Nachrichten, Blogs, Podcasts) an einem Ort, nach Gruppen sortiert. Nemo ruft sie nicht selbst ab; ein Tipp öffnet die Seite.',
+        'Deine abonnierten Feeds (Nachrichten, Blogs, Podcasts) an einem Ort, nach Gruppen sortiert, mit einem Startkatalog zum Aussuchen. Nemo ruft Feeds nur auf deinen Klick ab, für die Vorschau; ein Tipp öffnet die Seite.',
       quickAdd: 'Feed eintragen',
       settings: {
         grouped: 'Nach Gruppen ordnen',
@@ -8361,7 +9010,9 @@ export const de = {
     edit: 'Feed bearbeiten',
     remove: 'Entfernen',
     empty: 'Noch keine Feeds',
-    emptyHint: 'Trag die Adresse eines Feeds ein, zum Beispiel von deinem Lieblingsblog.',
+    emptyHint: 'Drei Vorschläge zum Anfangen. Mehr Quellen findest du unter „Feed eintragen“.',
+    suggestions: 'Vorschläge',
+    done: 'Fertig',
     listLabel: 'Abonnierte Feeds',
     ungrouped: 'Ohne Gruppe',
     allFeeds: 'Alle Feeds',
@@ -8382,6 +9033,46 @@ export const de = {
     errors: {
       url: 'Das ist keine Web-Adresse (http oder https).',
       duplicate: 'Diesen Feed hast du schon.',
+    },
+    find: {
+      query: 'Suchen oder Adresse einfügen',
+      queryHint: 'Name einer Quelle, ein Thema oder die Adresse einer Website oder eines Feeds.',
+      address: 'Diese Adresse',
+      addAddress: 'Ohne Vorschau eintragen',
+      preview: 'Ansehen',
+      noMatch: 'Im Katalog ist dazu nichts. Mit der Adresse der Website klappt es auch.',
+    },
+    preview: {
+      checking: (host: string) => `Schaue bei ${host} nach …`,
+      latest: 'Neueste Artikel',
+      noItems: 'In diesem Feed stehen gerade keine Artikel.',
+      subscribe: 'Abonnieren',
+      back: 'Zurück',
+      choose: (n: number) => `Diese Seite hat ${n} Feeds. Welchen möchtest du sehen?`,
+      none: 'Auf dieser Seite steht kein Feed. Du kannst die Adresse trotzdem eintragen.',
+      noProxy: 'Die Vorschau geht in der App oder mit eigenem Sync-Server. Eintragen geht auch so.',
+      network: 'Die Seite antwortet gerade nicht. Eintragen geht auch so.',
+      anyway: 'Trotzdem eintragen',
+      tapHint: 'Ein Tipp auf den Namen zeigt die neuesten Artikel.',
+      previewOf: (name: string) => `${name} ansehen`,
+    },
+    catalog: {
+      label: 'Startkatalog',
+      lang: 'Sprache der Quellen',
+      langDe: 'Deutsch',
+      langEn: 'Englisch',
+      categories: {
+        news: 'Nachrichten',
+        tech: 'Technik',
+        science: 'Wissenschaft',
+        sport: 'Sport',
+        gaming: 'Gaming',
+        local: 'Lokal',
+      },
+      add: 'Abonnieren',
+      addNamed: (name: string) => `${name} abonnieren`,
+      added: 'Abonniert',
+      addedToast: (name: string) => `${name} abonniert.`,
     },
     widget: {
       label: 'Feeds',
@@ -8444,18 +9135,19 @@ export const de = {
     },
     title: 'Planer',
     head: {
-      free: (min: string) => `${min} frei heute`,
+      free: (min: string) => `${min} frei`,
       full: 'Für heute ist genug geplant.',
-      noTime: 'Heute ist keine Zeit frei.',
-      dayOff: 'Heute ist frei.',
       over: (min: string) => `${min} mehr als planbar`,
       first: (title: string) => `Heute: ${title}. Das reicht für heute.`,
-      nothing: 'Für heute noch nichts geplant.',
-      context: (n: number, planned: string) =>
-        `${n === 1 ? '1 Ding' : `${n} Dinge`} · ${planned} geplant`,
-      week: (week: string) => `KW ${week}`,
       menu: 'Weitere Optionen',
       replan: 'Neu verteilen',
+      ctxToday: (n: number) => `heute · ${n === 1 ? '1 Ding' : `${n} Dinge`}`,
+      ctxNext: (day: string, tomorrow: boolean) =>
+        tomorrow ? `morgen, ${day} · heute ist frei` : `${day} · heute ist frei`,
+      ctxNextShort: (day: string, tomorrow: boolean) => (tomorrow ? `morgen, ${day}` : day),
+      fullNext: (day: string) => `Für ${day} ist genug geplant.`,
+      dayFree: 'Heute ist frei.',
+      ctxLate: (count: string) => `Frist vorbei: ${count}`,
     },
     board: {
       label: 'Woche',
@@ -8465,11 +9157,56 @@ export const de = {
       noTime: 'keine freie Zeit',
       noTimeShort: 'belegt',
       load: (planned: string, usable: string) => `${planned} von ${usable} geplant`,
-      strip: 'Tage',
-      dayPanel: 'Gewählter Tag',
       todayIs: (day: string) => `Heute · ${day}`,
-      todayShort: 'Heute',
       things: (n: number) => (n === 1 ? '1 Ding' : `${n} Dinge`),
+      tomorrowIs: (day: string) => `Morgen · ${day}`,
+      freeShort: (min: string) => `${min} frei`,
+      overShort: (min: string) => `${min} mehr`,
+      tileToday: (day: string) => `Heute, ${day}`,
+      tileTomorrow: (day: string) => `Morgen, ${day}`,
+      tileName: (day: string, capacity: string, things: string) =>
+        things ? `${day}: ${capacity} · ${things}` : `${day}: ${capacity}`,
+      editDay: (day: string) => `Zeit für ${day} ändern`,
+      /** The capacity as the one control that opens „Warum?“: „37 Min frei von 3 h 12 – warum?“. */
+      whyName: (capacity: string) => `${capacity} – warum?`,
+      /** Inside the open „Warum?“: the day's settings. */
+      editTime: 'Zeit ändern',
+      whyTime: (min: string) => `${min} für den Tag.`,
+      whyOff: (list: string) => `Abgezogen: ${list}.`,
+      whyBuffer: (min: string) => `Puffer ${min}`,
+      whyWindow: (window: string) => `Zeitfenster ${window}.`,
+      whyEnd: (time: string) => `Tagesende ${time}.`,
+    },
+    sheet: {
+      first: 'Zuerst',
+      then: (n: number, min: string) => `Danach · ${n} · ${min}`,
+      thenFold: (n: number) => `Danach · ${n === 1 ? '1 Ding' : `${n} Dinge`}`,
+      more: (n: number) => `${n} weitere`,
+      overLine: 'Der Tag hat mehr Dinge als Zeit.',
+      dayOffNext: (day: string) => `Heute ist frei. Der nächste Tag mit Dingen ist ${day}.`,
+      emptyDay: 'Für diesen Tag ist nichts geplant.',
+      onlyLate: 'Die Woche ist leer. Offen sind nur die Rechnungen unter „Frist vorbei“.',
+      onlyLateThings: 'Die Woche ist leer. Offen ist nur, was unter „Frist vorbei“ steht.',
+    },
+    src: {
+      task: 'ToDo',
+      invoice: 'Rechnung',
+      cancel: 'Abo',
+      routine: 'Routine',
+      training: 'Training',
+      appointment: 'Termin',
+      habit: 'Gewohnheit',
+    },
+    ctx: {
+      label: 'Rund um die Woche',
+      appointments: 'Termine',
+      deadlines: 'Nächste Fristen',
+    },
+    late: {
+      title: 'Frist vorbei',
+      invoices: (n: number) => (n === 1 ? '1 Rechnung' : `${n} Rechnungen`),
+      line: 'Liegt auf keinem Tag. Bezahlt ist bezahlt – wann, entscheidest du.',
+      row: (count: string) => `Frist vorbei · ${count}`,
     },
     day: {
       available: 'Verfügbar',
@@ -8509,7 +9246,9 @@ export const de = {
       done: 'Erledigt',
       later: 'Später',
       pin: 'Festnageln',
-      pinOn: (day: string) => `Festnageln auf ${day}`,
+      move: 'Verschieben …',
+      moveTitle: (title: string) => `Verschieben: ${title}`,
+      moveHint: 'Es bleibt an dem Tag, den du wählst – bis du es wieder löst.',
       unpin: 'Nicht mehr festnageln',
       exclude: 'Nicht planen',
       include: 'Wieder planen',
@@ -8524,9 +9263,14 @@ export const de = {
       openNote: 'Zur Notiz',
       openMail: 'Zur Mail',
       blocker: 'Blocker',
+      doneName: (title: string) => `Erledigt: ${title}`,
+      fixed: 'fest',
+      more: 'Mehr',
       focus: 'Fokus starten',
       asBreak: 'Als Pause …',
       asBreakTitle: (title: string) => `${title} als Pause`,
+      asBreakDay: 'Tag der Pause',
+      asBreakToday: 'Heute',
       asBreakHint: (day: string) =>
         `Wird am ${day} zur Pause. Das ToDo wird dafür entfernt; Rückgängig holt es zurück.`,
       estimate: 'Dauer …',
@@ -8602,13 +9346,21 @@ export const de = {
     },
     add: {
       label: 'Eintragen oder sagen',
-      placeholder: 'Steuer 2 Std bis Do · Donnerstag frei',
-      hint: 'Ein ToDo entsteht; „bis Do“ setzt eine Frist. Sätze wie „Donnerstag frei“ oder „schieb Steuer auf Fr“ zeigen erst eine Vorschau.',
+      placeholder: 'Was steht an?',
       submit: 'Eintragen',
+      short: 'Ding',
+      examplesLead: 'Zum Beispiel',
+      examples: {
+        entry: 'Steuer 2 Std bis Do',
+        dayOff: 'Donnerstag frei',
+        move: 'schieb Saugen auf Mi',
+      },
+      error: 'Das habe ich nicht gespeichert. Dein Text steht noch im Feld.',
     },
     say: {
       explain: 'Ich kann: Tag frei, Zeit je Tag, verschieben, festnageln, nicht planen.',
       missing: (query: string) => `„${query}“ finde ich nicht im Plan.`,
+      fixed: (title: string) => `${title} hat eine feste Zeit und bleibt, wo es ist.`,
       ask: (a: string, b: string) => `Meinst du ${a} oder ${b}?`,
       askLabel: 'Welches ist gemeint?',
       reading: 'Einen Moment – das lokale Modell liest den Satz. Esc bricht ab.',
@@ -8651,6 +9403,8 @@ export const de = {
       back: 'Zum Planer',
     },
     empty: 'Noch nichts geplant. Eine Sache reicht.',
+    emptyNext: 'Schreib oben, was ansteht – oder tippe ein Beispiel an.',
+    emptyNextPhone: 'Tippe auf das Plus.',
     rest: {
       link: 'Rest verteilen',
       line: 'Was heute offen ist, geht auf die nächsten Tage.',
@@ -8719,6 +9473,23 @@ export const de = {
         sick: 'Ruh dich aus – der Plan rückt ruhig weiter.',
       },
     },
+    /** A row's links and its main action (planner hub K1b, CONCEPT-COPY „Chips“, „Lead actions“). */
+    links: {
+      fromMail: 'Aus Mail',
+      dunning: 'Zur Mahnung',
+      invoice: 'Zur Rechnung',
+      event: 'Zum Termin',
+      todo: 'Zum ToDo',
+      other: 'Verknüpft',
+      gone: 'Gibt es nicht mehr.',
+      elsewhere: 'Nicht auf diesem Gerät.',
+      browser: 'Im Browser öffnen',
+      name: (word: string, label: string) => `${word}: ${label}`,
+      stateName: (word: string, label: string, state: string) => `${word}: ${label} · ${state}`,
+      group: 'Verknüpft',
+      groupCount: (n: number) => `Verknüpft · ${n}`,
+      actionName: (action: string, title: string) => `${action}: ${title}`,
+    },
   },
   fitness: {
     meta: {
@@ -8735,9 +9506,18 @@ export const de = {
         kcalGoalHelp: '0 = kein Ziel. Unter „Essen“ → „Tagesziel“ kannst du es grob ausrechnen.',
         weekSessions: 'Einheiten pro Woche',
         weekSessionsHelp: '0 = kein Ziel, das Widget zählt dann nur.',
+        restSec: 'Pause zwischen Sätzen in Sekunden',
+        restSecHelp:
+          '0 = ohne Pausen-Timer. Er läuft nur bei „Einheit starten“ und endet leise, ohne Ton.',
       },
     },
-    tabs: { label: 'Ansicht', training: 'Training', food: 'Essen', week: 'Woche' },
+    tabs: {
+      label: 'Ansicht',
+      training: 'Training',
+      food: 'Essen',
+      week: 'Woche',
+      exercises: 'Übungen',
+    },
     addSession: 'Einheit eintragen',
     addMeal: 'Mahlzeit eintragen',
     editSession: 'Einheit bearbeiten',
@@ -8770,6 +9550,7 @@ export const de = {
       reps: (reps: number) => `${reps} Wdh.`,
       weight: (kg: string) => `${kg} kg`,
       kcal: (kcal: string) => `${kcal} kcal`,
+      warmup: 'Aufwärmen',
     },
     form: {
       date: 'Datum',
@@ -8795,12 +9576,28 @@ export const de = {
       known: 'Schon einmal eingetragen',
       invalid: 'Bitte prüfe die Angaben.',
       emptySession: 'Trag eine Übung oder eine Dauer ein.',
+      last: (day: string, detail: string) => `Letztes Mal (${day}): ${detail}`,
+      rowMenu: (name: string) => `Mehr zu ${name}`,
+      setsSingle: 'Sätze einzeln eintragen',
+      setsJoin: 'Sätze zusammenfassen',
+      superset: 'Supersatz mit der nächsten Übung',
+      supersetWith: (name: string) => `Supersatz mit ${name}`,
+      set: (n: number) => `Satz ${n}`,
+      warmup: 'Aufwärmen',
+      setNote: 'Notiz',
+      addSet: 'Satz hinzufügen',
+      removeSet: (n: number) => `Satz ${n} entfernen`,
+      start: 'Anfangen',
     },
     catalog: {
       pick: 'Aus dem Katalog',
       title: 'Übung aus dem Katalog',
       intro: 'Tippe eine Übung an, sie kommt mit deinen Werten vom letzten Mal dazu.',
       add: (name: string) => `${name} hinzufügen`,
+      search: 'Übung suchen',
+      own: 'Deine Übungen',
+      addOwn: (name: string) => `„${name}“ als eigene Übung`,
+      none: 'Nichts gefunden. Du kannst sie als eigene Übung übernehmen.',
       groups: {
         chest: 'Brust',
         back: 'Rücken',
@@ -8810,6 +9607,7 @@ export const de = {
         core: 'Rumpf',
         cardio: 'Ausdauer',
         mobility: 'Beweglichkeit',
+        other: 'Weitere',
       },
       names: {
         benchPress: 'Bankdrücken',
@@ -8916,6 +9714,10 @@ export const de = {
       planned: (n: number) => (n === 1 ? '1 geplant' : `${n} geplant`),
       kcal: (kcal: string) => `${kcal} kcal`,
       total: 'Zusammen',
+      byGroup: 'Je Muskelgruppe',
+      groupMinutes: (group: string, duration: string) => `${group} ${duration}`,
+      groupsChart: 'Sätze je Muskelgruppe',
+      kcalChart: 'kcal je Tag',
     },
     planned: {
       group: 'Geplant',
@@ -8935,6 +9737,96 @@ export const de = {
       saved: 'Als Vorlage gespeichert.',
       remove: (title: string) => `Vorlage ${title} entfernen`,
       removed: 'Vorlage entfernt.',
+    },
+
+    exercises: {
+      label: 'Deine Übungen nach Muskelgruppe',
+      search: 'Übung suchen',
+      empty: 'Noch keine Übung eingetragen.',
+      emptyHint: 'Nach der ersten Einheit stehen hier deine Übungen mit den letzten Werten.',
+      noMatch: 'Keine Übung passt zur Suche.',
+      last: (day: string, detail: string) => `Zuletzt ${day}${detail ? ` · ${detail}` : ''}`,
+      bestWeight: (kg: string, reps: number | undefined) =>
+        `Bestwert ${kg} kg${reps ? ` × ${reps}` : ''}`,
+      bestReps: (reps: number) => `Bestwert ${reps} Wdh.`,
+      bestMinutes: (duration: string) => `Am längsten ${duration}`,
+      times: (n: number) => (n === 1 ? '1-mal eingetragen' : `${n}-mal eingetragen`),
+      history: 'Verlauf',
+      historyMore: (n: number) => `und ${n} ältere`,
+      bestMark: 'Bestwert',
+      trend: {
+        weight: 'Schwerstes Gewicht je Trainingstag',
+        reps: 'Meiste Wiederholungen je Trainingstag',
+        minutes: 'Dauer je Trainingstag',
+      },
+    },
+
+    live: {
+      title: 'Einheit läuft',
+      start: 'Einheit starten',
+      of: (i: number, n: number) => `Übung ${i} von ${n}`,
+      prev: 'Vorherige Übung',
+      next: 'Nächste Übung',
+      done: 'Satz fertig',
+      rest: 'Pause',
+      restOver: 'Pause ist um.',
+      restMore: '+30 s',
+      restMoreLabel: 'Pause um 30 Sekunden verlängern',
+      restSkip: 'Pause beenden',
+      sets: 'Sätze heute',
+      none: 'Noch kein Satz.',
+      pickFirst: 'Wähle die erste Übung, dann geht es los.',
+      addExercise: 'Übung hinzufügen',
+      finish: 'Einheit beenden',
+      finished: (duration: string) => `Einheit gespeichert · ${duration}`,
+      nothing: 'Beendet. Es war noch kein Satz eingetragen.',
+      banner: (time: string) => `Einheit läuft seit ${time}`,
+      resume: 'Weiter',
+      failed: 'Das ließ sich gerade nicht speichern. Versuch es bitte noch einmal.',
+    },
+
+    plan: {
+      open: 'Trainingsplan',
+      title: 'Trainingsplan',
+      intro:
+        'Wähle Wochentage für deine Vorlagen. An diesen Tagen steht die Einheit im Plan; sie zählt erst, wenn du sie machst.',
+      none: 'Noch keine Vorlage. Fang mit einem Plan unten an oder speichere eine Einheit als Vorlage.',
+      weekdays: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+      weekdayNames: [
+        'Montag',
+        'Dienstag',
+        'Mittwoch',
+        'Donnerstag',
+        'Freitag',
+        'Samstag',
+        'Sonntag',
+      ],
+      dayToggle: (title: string, day: string) => `${title} am ${day}`,
+      notInPlan: 'Nicht im Plan',
+      presets: 'Pläne zum Anfangen',
+      presetHint: 'Legt Vorlagen mit Wochentagen an. Übungen und Tage kannst du danach ändern.',
+      presetUse: 'Übernehmen',
+      presetUseFor: (name: string) => `Plan ${name} übernehmen`,
+      preset: {
+        full2: { name: 'Ganzkörper, 2 × pro Woche', detail: 'Mo und Do' },
+        upperLower4: { name: 'Ober- und Unterkörper, 4 × pro Woche', detail: 'Mo, Di, Do, Fr' },
+        ppl3: { name: 'Drücken, Ziehen, Beine, 3 × pro Woche', detail: 'Mo, Mi, Fr' },
+      },
+      days: {
+        fullA: 'Ganzkörper A',
+        fullB: 'Ganzkörper B',
+        upper: 'Oberkörper',
+        lower: 'Unterkörper',
+        push: 'Drücken',
+        pull: 'Ziehen',
+        legs: 'Beine',
+      },
+      applied: (n: number) =>
+        n === 1 ? 'Plan angelegt: 1 Vorlage.' : `Plan angelegt: ${n} Vorlagen.`,
+      today: (title: string) => `Heute laut Plan: ${title}`,
+      start: 'Anfangen',
+      startFor: (title: string) => `${title} anfangen`,
+      week: (title: string) => `laut Plan: ${title}`,
     },
   },
   clock: {
@@ -9040,6 +9932,20 @@ export const de = {
     views: 'Ansicht',
     touchpad: 'Touchpad',
     keyboard: 'Tastatur',
+    presentation: {
+      tab: 'Präsentation',
+      group: 'Folien',
+      next: 'Weiter',
+      previous: 'Zurück',
+      start: 'Start',
+      startLabel: 'Start der Präsentation',
+      black: 'Schwarz',
+      blackLabel: 'Schwarz schalten oder wieder zeigen',
+      end: 'Ende',
+      endLabel: 'Ende der Präsentation',
+      hint: 'Das Präsentationsfenster muss am PC vorne sein.',
+      homeOnly: 'Geht nur im Heimnetz.',
+    },
     keys: {
       field: 'Text für den PC',
       fieldHint: 'Die Eingabetaste deiner Handy-Tastatur sendet den Text und drückt am PC Enter.',
@@ -9122,9 +10028,9 @@ export const de = {
       notPaired: 'Noch kein PC gekoppelt. Die Fernbedienung braucht die Kopplung im Heimnetz.',
       unreachable: 'Dein PC ist gerade nicht erreichbar. Beide Geräte im selben WLAN?',
       notGranted:
-        'Am PC ist die Fernsteuerung für dieses Handy aus. Am PC unter Einstellungen → Fernsteuerung dieses Handy erlauben.',
+        'Am PC ist die Fernsteuerung für dieses Handy aus. Am PC unter Einstellungen → Verbindungen → Fernsteuerung dieses Handy erlauben.',
       paused:
-        'Die Fernbedienung ist am PC pausiert. Am PC unter Einstellungen → Fernsteuerung wieder einschalten.',
+        'Die Fernbedienung ist am PC pausiert. Am PC unter Einstellungen → Verbindungen → Fernsteuerung wieder einschalten.',
       busy: 'Gerade steuert ein anderes Gerät den PC.',
       noInputHere: 'Dein PC nimmt hier gerade keine Fernbedienung an. Ist der PC im Heimnetz?',
       unsupported: 'Dieser PC lässt sich nicht fernsteuern (nur Windows).',
@@ -9133,12 +10039,84 @@ export const de = {
       limit: 'Verbindung kurz unterbrochen.',
       retry: 'Die Verbindung kam nicht zustande.',
     },
+    monitorOff: 'Monitor aus',
+    power: {
+      open: 'PC ausschalten …',
+      title: 'PC ausschalten',
+      note: 'Am PC läuft danach 10 Sekunden ein Countdown. Abbrechen geht hier oder am PC.',
+      more: 'Weitere Möglichkeiten',
+      action: {
+        shutDown: 'Ausschalten',
+        restart: 'Neu starten',
+        sleep: 'Energie sparen',
+        hibernate: 'Ruhezustand',
+        signOut: 'Abmelden',
+      },
+      asking: 'Bestätige auf diesem Handy. Danach geht der Auftrag an den PC.',
+      counting: {
+        shutDown: 'Der PC schaltet sich in Kürze aus. Abbrechen geht hier oder am PC.',
+        restart: 'Der PC startet in Kürze neu. Abbrechen geht hier oder am PC.',
+        sleep: 'Der PC geht in Kürze in den Energiesparmodus. Abbrechen geht hier oder am PC.',
+        hibernate: 'Der PC geht in Kürze in den Ruhezustand. Abbrechen geht hier oder am PC.',
+        signOut: 'Am PC wird in Kürze abgemeldet. Abbrechen geht hier oder am PC.',
+        unknown: 'Am PC läuft ein Countdown zum Ausschalten. Abbrechen geht hier oder am PC.',
+      },
+      cancel: 'Abbrechen',
+      working: 'Nemo am PC ist gerade noch beschäftigt (Abgleich, Download oder Sicherung).',
+      despite: {
+        shutDown: 'Trotzdem ausschalten',
+        restart: 'Trotzdem neu starten',
+        sleep: 'Trotzdem Energie sparen',
+        hibernate: 'Trotzdem Ruhezustand',
+        signOut: 'Trotzdem abmelden',
+      },
+      wait: 'Warten',
+      done: {
+        shutDown:
+          'Der PC fährt herunter. Fragt ein Programm noch nach dem Speichern, bleibt er an.',
+        restart: 'Der PC startet neu. Fragt ein Programm noch nach dem Speichern, bleibt er an.',
+        sleep: 'Der PC geht in den Energiesparmodus.',
+        hibernate: 'Der PC geht in den Ruhezustand.',
+        signOut:
+          'Am PC wird abgemeldet. Fragt ein Programm noch nach dem Speichern, bleibt die Sitzung offen.',
+        unknown:
+          'Der PC schaltet sich aus. Fragt ein Programm noch nach dem Speichern, bleibt er an.',
+      },
+      cancelled: 'Abgebrochen. Der PC bleibt an.',
+      cancelFailed: 'Abbrechen kam nicht an. Am PC abbrechen.',
+      notGranted:
+        'Am PC ist Ausschalten für dieses Handy aus. Am PC unter Einstellungen → Verbindungen → Fernsteuerung „Darf den PC ausschalten“ einschalten.',
+      locked: 'Der PC ist gesperrt. Ausschalten geht nur, solange er entsperrt ist.',
+      limit: 'Gerade nicht möglich. In ein paar Minuten noch einmal.',
+      failed: 'Das hat am PC nicht geklappt.',
+      unavailable:
+        'Dieses Handy kann seine Bildschirmsperre für Nemo nicht abfragen. Ausschalten geht deshalb nur am PC.',
+      unlock: 'Nicht bestätigt. Es wurde nichts gesendet.',
+      dismiss: 'Ausblenden',
+    },
+    programs: {
+      open: 'Programm starten …',
+      title: 'Programm starten',
+      note: 'Das Programm öffnet sich am PC, wie bei einem Doppelklick dort.',
+      empty: 'Am PC unter Einstellungen → Verbindungen → Fernsteuerung Programme auswählen.',
+      starting: 'Wird an den PC gesendet …',
+      started: (name: string) => `${name} wird am PC geöffnet.`,
+      notGranted:
+        'Programme starten ist für dieses Handy aus. Am PC unter Einstellungen → Verbindungen → Fernsteuerung „Darf Programme starten“ einschalten.',
+      locked: 'Der PC ist gesperrt. Programme starten geht nur, solange er entsperrt ist.',
+      limit: 'Gerade eben wurde schon ein Programm gestartet. In ein paar Sekunden noch einmal.',
+      failed: 'Das Programm ließ sich am PC nicht öffnen.',
+      unlock: 'Nicht entsperrt. Es wurde nichts gesendet.',
+      unavailable:
+        'Dieses Handy kann seine Bildschirmsperre für Nemo nicht abfragen. Programme starten geht deshalb nur am PC.',
+      dismiss: 'Ausblenden',
+    },
   },
   routines: {
     meta: {
       name: 'Routinen',
       description:
-        'Putzplan und Haushalts-Routinen: was in welchem Raum wie oft dran ist und wer an der Reihe ist. Ohne Rückstand.',
+        'Routinen für den Tag und den Haushalt: Schritte zum Abhaken, wann sie dran sind und wer an der Reihe ist. Ohne Rückstand.',
       quickAdd: 'Routine',
       widget: 'Heute dran',
     },
@@ -9160,9 +10138,91 @@ export const de = {
       `${due} dran · ${total === 1 ? '1 Routine' : `${total} Routinen`}`,
     planTitle: (name: string, who?: string) => (who ? `${name} (${who})` : name),
     views: { label: 'Ansichten', due: 'Dran', all: 'Alle nach Raum' },
+    stepCount: (n: number) => (n === 1 ? '1 Schritt' : `${n} Schritte`),
+    dayparts: { morning: 'morgens', midday: 'mittags', evening: 'abends' },
+    starts: {
+      label: 'Womit anfangen?',
+      blank: 'Leer',
+      morning: {
+        label: 'Morgen',
+        name: 'Morgenroutine',
+        steps: [
+          'Ein Glas Wasser trinken',
+          'Medikamente nehmen',
+          'Zähne putzen',
+          'Anziehen',
+          'Frühstücken',
+          'Schlüssel, Handy und Tasche einpacken',
+        ],
+      },
+      evening: {
+        label: 'Abend',
+        name: 'Abendroutine',
+        steps: [
+          'Küche kurz aufräumen',
+          'Tasche für morgen packen',
+          'Kleidung für morgen rauslegen',
+          'Handy ans Ladegerät',
+          'Zähne putzen',
+        ],
+      },
+      weekClean: {
+        label: 'Wochenputz',
+        name: 'Wochenputz',
+        steps: [
+          'Aufräumen',
+          'Staubsaugen',
+          'Bad putzen',
+          'Küche wischen',
+          'Böden wischen',
+          'Müll rausbringen',
+        ],
+      },
+      weekShop: {
+        label: 'Wocheneinkauf',
+        name: 'Wocheneinkauf',
+        steps: [
+          'Kühlschrank und Vorräte ansehen',
+          'Einkaufsliste schreiben',
+          'Taschen und Pfand mitnehmen',
+          'Einkaufen',
+          'Einräumen',
+        ],
+      },
+    },
+    run: {
+      start: 'Los',
+      resume: 'Weiter',
+      startFor: (name: string) => `Los: ${name}`,
+      progress: (done: number, total: number) => `${done} von ${total} Schritten`,
+      later: 'Später',
+      allDone: 'Erledigt',
+      edit: 'Bearbeiten',
+      steps: 'Schritte',
+    },
     fields: {
-      name: 'Was',
-      namePlaceholder: 'z. B. Bad putzen',
+      name: 'Name',
+      namePlaceholder: 'z. B. Morgenroutine oder Bad putzen',
+      rhythm: 'Wie oft',
+      rhythms: {
+        daily: 'Jeden Tag',
+        weekdays: 'An bestimmten Tagen',
+        weekly: 'Einmal pro Woche',
+        biweekly: 'Alle zwei Wochen',
+        monthly: 'Einmal im Monat',
+        custom: 'Anders',
+      },
+      days: 'An welchen Tagen',
+      lastDay: 'Ein Tag bleibt immer gewählt.',
+      daypart: 'Tageszeit',
+      daypartAny: 'Egal',
+      dayparts: { morning: 'Morgens', midday: 'Mittags', evening: 'Abends' },
+      steps: 'Schritte (optional)',
+      stepsHint: 'Ein Schritt pro Zeile. Dann lässt sich die Routine Schritt für Schritt abhaken.',
+      remindAt: 'Erinnerung (optional)',
+      remindAtHint: 'Uhrzeit an den Tagen, an denen die Routine dran ist. Leer lassen für keine.',
+      planner: 'Im Planer zeigen',
+      plannerHint: 'Der Planer findet Zeit dafür an den Tagen, an denen sie dran ist.',
       room: 'Raum',
       people: 'Wer wechselt sich ab',
       peopleHint:
@@ -9170,7 +10230,7 @@ export const de = {
       dueDate: 'Nächstes Mal',
       dueDatePast: 'Ein Tag in der Vergangenheit heißt: jetzt dran.',
       minutes: 'Dauer in Minuten',
-      moreSummary: 'Namen, nächstes Mal, Dauer, Notiz',
+      moreSummary: 'Raum, wer wechselt sich ab, nächstes Mal, Dauer, Notiz',
     },
   },
   device: {
@@ -9189,7 +10249,7 @@ export const de = {
     page: {
       figureUnit: (n: number) => (n === 1 ? 'braucht einen Blick' : 'brauchen einen Blick'),
       note: 'Jede Zeile führt zur passenden Einstellung.',
-      pc: 'Prozessor, Arbeitsspeicher und Netzwerkverkehr zeigt „Dieser PC“ im Reiter „System“.',
+      pc: 'Aufräumen und große Ordner finden kannst du in „Dieser PC“.',
       pcOpen: '„Dieser PC“ öffnen',
       pcLibrary: '„Dieser PC“ in der Bibliothek einschalten',
     },
@@ -9231,6 +10291,114 @@ export const de = {
       blocked: 'Gesperrt',
       openContext: 'Was wohin ging, steht in den Einstellungen',
       blockedContext: 'Nemo sendet nichts, bis du es wieder erlaubst',
+    },
+    live: {
+      title: 'Gerade jetzt',
+      cpu: 'Prozessor',
+      memory: 'Arbeitsspeicher',
+      network: 'Netzwerk',
+      battery: 'Akku',
+      cores: (cores: number | null, threads: number) =>
+        cores ? `${cores} Kerne, ${threads} Threads` : `${threads} Threads`,
+      memoryContext: (used: string, total: string) => `${used} von ${total} belegt`,
+      down: (rate: string) => `↓ ${rate}`,
+      up: (rate: string) => `↑ ${rate} hoch`,
+      noTraffic: 'Kein Verkehr gemeldet',
+      charging: 'Lädt',
+      pluggedIn: 'Am Netz',
+      onBattery: 'Im Akkubetrieb',
+      spark: {
+        cpu: 'Prozessorlast der letzten zwei Minuten',
+        memory: 'Belegter Arbeitsspeicher der letzten zwei Minuten',
+        network: 'Empfangene Daten der letzten zwei Minuten',
+      },
+      pause: 'Anhalten',
+      resume: 'Weiter',
+      paused: 'Angehalten. Die Werte bleiben stehen, bis du „Weiter“ wählst.',
+      note: 'Liest alle drei Sekunden, nur solange die Seite offen ist. Nichts wird gespeichert oder gesendet.',
+      loading: 'Liest die Werte …',
+      failed: 'Die Werte lassen sich gerade nicht lesen.',
+      connection: 'Verbindung',
+      cable: 'Kabel',
+      wifi: 'WLAN',
+      offline: 'Nicht verbunden',
+      offlineContext: 'Kein Netzwerkadapter ist verbunden',
+      signal: { strong: 'Starkes Signal', ok: 'Mittleres Signal', weak: 'Schwaches Signal' },
+      noSignal: 'Signalstärke nicht gemeldet',
+      cableContext: 'Über Netzwerkkabel',
+      uptime: 'Läuft seit',
+      uptimeValue: (days: number, hours: number, minutes: number) =>
+        days > 0
+          ? `${days} ${days === 1 ? 'Tag' : 'Tagen'}, ${hours} Std.`
+          : hours > 0
+            ? `${hours} Std., ${minutes} Min.`
+            : `${minutes} Min.`,
+      uptimeContext: 'Seit dem letzten Neustart',
+    },
+    programs: {
+      title: 'Was gerade arbeitet',
+      byCpu: 'Nach Prozessor',
+      byMemory: 'Nach Arbeitsspeicher',
+      program: 'Programm',
+      share: 'Anteil',
+      instances: (n: number) => (n === 1 ? '' : `${n}×`),
+      empty: 'Gerade arbeitet kein Programm spürbar.',
+      hint: 'Beenden kannst du ein Programm im Task-Manager. Nemo beendet nichts.',
+      taskManager: 'Task-Manager öffnen',
+    },
+    drives: {
+      title: 'Laufwerke',
+      system: 'Systemlaufwerk',
+      other: (n: number) => `Laufwerk ${n}`,
+      media: { ssd: 'SSD', hdd: 'Festplatte', unknown: '' },
+      free: (free: string, total: string) => `${free} frei von ${total}`,
+      health: { ok: 'Gesund', warning: 'Meldet ein Problem', unknown: 'Zustand unbekannt' },
+      needsAdmin: 'Den Zustand gibt Windows nur mit Administratorrechten heraus',
+      unsupported: 'Das Laufwerk meldet keinen Zustand',
+      temperature: (c: number) => `${c} °C`,
+      warningContext: 'Sichere deine Daten bald. Einzelheiten zeigt „Dieser PC“.',
+    },
+    passport: {
+      title: 'Steckbrief',
+      textTitle: 'Nemo – Steckbrief dieses Geräts',
+      hint: 'Für eine Frage an den Support. Ohne Adressen, Namen oder Pfade.',
+      copy: 'Als Text kopieren',
+      copied: 'Steckbrief kopiert',
+      os: 'System',
+      build: 'Windows-Version',
+      cpu: 'Prozessor',
+      gpu: 'Grafik',
+      gpuMemory: (size: string) => `${size} eigener Speicher`,
+      ram: 'Arbeitsspeicher',
+      board: 'Mainboard',
+      bios: 'BIOS',
+      display: 'Bildschirm',
+      displayValue: (w: number, h: number, hz: number) => `${w} × ${h} · ${hz} Hz`,
+      app: 'Nemo-Version',
+      android: 'Android',
+    },
+    health: {
+      title: 'Zustand',
+      battery: 'Akku-Zustand',
+      capacity: (pct: number) => `${pct} % der ursprünglichen Kapazität`,
+      cycles: (n: number) => (n === 1 ? '1 Ladezyklus' : `${n} Ladezyklen`),
+      state: { good: 'Gut', worn: 'Etwas abgenutzt', weak: 'Deutlich abgenutzt' },
+      weakContext: 'Hält spürbar kürzer als neu. Ein Tausch lohnt sich, wenn dich das stört.',
+      crashes: 'Unerwartete Neustarts',
+      crashesWindow: 'In den letzten 30 Tagen',
+      crashesNone: 'Keine',
+      bluescreen: (code: string) => `Bluescreen · Stoppcode ${code}`,
+      bluescreenNoCode: 'Bluescreen',
+      unexpected: 'Ohne Herunterfahren beendet',
+      unexpectedContext: 'Stromausfall, Einfrieren oder die Ein-/Aus-Taste',
+      codeHint: 'Den Stoppcode kannst du bei einer Suche oder beim Support angeben.',
+      unreadable: 'Das Ereignisprotokoll lässt sich gerade nicht lesen.',
+    },
+    widget: {
+      memory: (pct: number) => `Arbeitsspeicher ${pct} %`,
+      uptime: (value: string) => `läuft seit ${value}`,
+      battery: (pct: number) => `Akku ${pct} %`,
+      charging: 'lädt',
     },
   },
 } as const;

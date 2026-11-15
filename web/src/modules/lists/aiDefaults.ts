@@ -1,9 +1,7 @@
-import { ensureShoppingList } from './repo';
-import { SHOPPING_LIST_ID } from './schema';
+import { shoppingTargetId } from './repo';
 
-/** Entries created by the assistant land on the shopping list. */
+/** Entries created by the assistant land on the shopping list (the first one in use). */
 export default async function defaults(collection: string): Promise<Record<string, unknown>> {
   if (collection !== 'item') return {};
-  await ensureShoppingList();
-  return { listId: SHOPPING_LIST_ID };
+  return { listId: await shoppingTargetId() };
 }

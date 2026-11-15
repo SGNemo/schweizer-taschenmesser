@@ -1,7 +1,8 @@
 /**
  * Routines as a source of the planner (`contributions.plannable`): what is due until the planner's horizon,
  * offered from its day on. The date is soft (a routine waits, it is never "missed"); ticked off in the plan is
- * "Erledigt" on the page: next day, next name. An edited estimate is kept as the routine's minutes.
+ * "Erledigt" on the page: next day, next name. An edited estimate is kept as the routine's minutes. A routine
+ * switched off for the planner („Im Planer zeigen“) is not offered.
  */
 import { notDeleted } from '@/core/db/repo';
 import type { PlannableItem, PlannableSource } from '@/core/modules/types';
@@ -21,7 +22,7 @@ const source: PlannableSource = {
     const due = await routineRepo.table
       .where('dueDate')
       .belowOrEqual(ctx.until)
-      .filter(notDeleted)
+      .filter((r) => notDeleted(r) && r.planner !== false)
       .toArray();
     return due.map((r): PlannableItem => ({
       // One item per turn (`<id>:<due day>`): a pin or "Nicht planen" of this turn never carries over to the next.

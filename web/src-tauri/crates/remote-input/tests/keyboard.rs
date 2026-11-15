@@ -127,7 +127,7 @@ fn each_key_of_the_list_is_its_own_key_of_the_keyboard() {
         assert!(!seen.contains(&key));
         seen.push(key);
     }
-    assert_eq!(seen.len(), 16);
+    assert_eq!(seen.len(), 18);
     let pairs = [
         (Key::Enter, Code::Enter),
         (Key::Escape, Code::Escape),
@@ -144,6 +144,8 @@ fn each_key_of_the_list_is_its_own_key_of_the_keyboard() {
         (Key::PageDown, Code::PageDown),
         (Key::Delete, Code::Delete),
         (Key::F11, Code::F11),
+        (Key::F5, Code::F5),
+        (Key::B, Code::B),
     ];
     for (key, code) in pairs {
         assert_eq!(strokes(key), [down(code), up(code)], "{key:?}");

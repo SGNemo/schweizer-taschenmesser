@@ -4,6 +4,8 @@ import type { RemotePcState } from '@/core/platform/types';
 import {
   createRemoteSession,
   type RemotePad,
+  type RemotePowerView,
+  type RemoteProgramsView,
   type RemoteView,
   type SyncVerdict,
 } from '@/core/remote/session';
@@ -66,4 +68,19 @@ export function useRemotePad(): RemotePad {
 /** The session's state, re-rendering on every change. */
 export function useRemoteView(): RemoteView {
   return useSyncExternalStore(subscribe, remoteSession.view, remoteSession.view);
+}
+
+/** Power at the PC (what it allows, where its countdown stands), re-rendering on every change. */
+export function useRemotePower(): RemotePowerView {
+  return useSyncExternalStore(subscribe, remoteSession.power, remoteSession.power);
+}
+
+/** Whether the PC takes the presentation keys (its last answer), re-rendering with the session. */
+export function useRemotePresent(): boolean {
+  return useSyncExternalStore(subscribe, remoteSession.present, remoteSession.present);
+}
+
+/** The PC's program list and where a start stands, re-rendering on every change. */
+export function useRemotePrograms(): RemoteProgramsView {
+  return useSyncExternalStore(subscribe, remoteSession.programs, remoteSession.programs);
 }

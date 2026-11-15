@@ -64,3 +64,49 @@ export function capacity(day: PlanDay, settings: Pick<PlanSettings, 'bufferShare
   const raw = Math.max(0, day.availableMin - blocked);
   return { raw, usable: Math.floor(raw * (1 - settings.bufferShare)), blocked };
 }
+
+const HHMM = /^\d{2}:\d{2}$/;
+const DAY_END_MIN = 23 * 60 + 59;
+
+/**
+ * The stretch of a fixed item (planner hub S4): its own `to`, else `from` + its minutes, never past the end of the
+ * day. `undefined` when `from` is no 'HH:mm'.
+ */
+export function fixedSpan(
+  fixed: { from: string; to?: string },
+  minutes: number,
+): { from: string; to: string } | undefined {
+  if (!HHMM.test(fixed.from)) return undefined;
+  const start = toMinutes(fixed.from);
+  const own = fixed.to && HHMM.test(fixed.to) ? toMinutes(fixed.to) : undefined;
+  const end = Math.min(own !== undefined && own > start ? own : start + minutes, DAY_END_MIN);
+  return end > start ? { from: fixed.from, to: toTime(end) } : undefined;
+}
+
+/**
+ * What each fixed item of a day takes from its time (planner hub S4): its stretch minus what a timed blocker of the
+ * day or an earlier fixed item of the list already covers – a training that overlaps an appointment is never
+ * counted twice. An item without a stretch takes its whole minutes. Same list in, same numbers out.
+ */
+export function fixedCharges(
+  fixed: readonly { minutes: number; from?: string; to?: string }[],
+  blockers: readonly Pick<PlanBlocker, 'from' | 'to'>[],
+): number[] {
+  const busy = new Uint8Array(24 * 60);
+  const span = (from?: string, to?: string): [number, number] | undefined =>
+    from && to && HHMM.test(from) && HHMM.test(to) && from < to
+      ? [toMinutes(from), toMinutes(to)]
+      : undefined;
+  for (const b of blockers) {
+    const s = span(b.from, b.to);
+    if (s) busy.fill(1, s[0], s[1]);
+  }
+  return fixed.map((f) => {
+    const s = span(f.from, f.to);
+    if (!s) return f.minutes;
+    let free = 0;
+    for (let m = s[0]; m < s[1]; m++) if (!busy[m]) free++;
+    busy.fill(1, s[0], s[1]);
+    return free;
+  });
+}

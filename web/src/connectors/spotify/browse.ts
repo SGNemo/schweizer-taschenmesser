@@ -10,11 +10,12 @@ import {
   type ConnectorContext,
   type MediaItem,
   type Playlist,
+  type PlaylistChange,
   type PlayerDevice,
   type PlayerQueue,
   type Tracklist,
 } from '@/core/connectors/types';
-import { API_ORIGIN, ID, PLAYER, call, clip, coverOf } from './api';
+import { ACCOUNT_ID, API_ORIGIN, ID, PLAYER, call, clip, coverOf, idsOf, plainText } from './api';
 
 const trackSchema = z.object({
   id: z.string().nullish(),
@@ -22,9 +23,10 @@ const trackSchema = z.object({
   type: z.string().nullish(),
   is_local: z.boolean().nullish(),
   duration_ms: z.number().nullish(),
-  artists: z.array(z.object({ name: z.string() })).nullish(),
+  artists: z.array(z.object({ name: z.string(), id: z.string().nullish() })).nullish(),
   album: z
     .object({
+      id: z.string().nullish(),
       name: z.string().nullish(),
       images: z.array(z.object({ url: z.string(), width: z.number().nullish() })).nullish(),
     })
@@ -47,7 +49,14 @@ export function toTrack(t: RawTrack | null | undefined): MediaItem | undefined {
     album: t.album?.name ? clip(t.album.name) : undefined,
     durationMs: t.duration_ms ?? undefined,
     ...coverOf(t.album?.images),
+    ...idsOf(t),
   };
+}
+
+/** A track from an answer that was not parsed yet (e.g. an artist's most played songs). */
+export function parseTrack(x: unknown): MediaItem | undefined {
+  const r = trackSchema.safeParse(x);
+  return r.success ? toTrack(r.data) : undefined;
 }
 
 const MAX_TRACKS = 200;
@@ -64,24 +73,27 @@ const pageSchema = z.object({
 });
 const playlistSchema = z.object({
   name: z.string().nullish(),
-  owner: z.object({ display_name: z.string().nullish() }).nullish(),
+  description: z.string().nullish(),
+  collaborative: z.boolean().nullish(),
+  owner: z.object({ id: z.string().nullish(), display_name: z.string().nullish() }).nullish(),
   images: z.array(z.object({ url: z.string(), width: z.number().nullish() })).nullish(),
   tracks: pageSchema.nullish(),
   items: pageSchema.nullish(),
 });
 const albumSchema = z.object({
   name: z.string().nullish(),
-  artists: z.array(z.object({ name: z.string() })).nullish(),
+  artists: z.array(z.object({ name: z.string(), id: z.string().nullish() })).nullish(),
   images: z.array(z.object({ url: z.string(), width: z.number().nullish() })).nullish(),
   tracks: z
     .object({ items: z.array(trackSchema.nullable()), total: z.number().nullish() })
     .nullish(),
 });
 
-const entries = (page: z.infer<typeof pageSchema> | null | undefined): MediaItem[] =>
-  (page?.items ?? []).flatMap((e) => {
+/** The usable tracks of one page; `offset` is the place of the page's first row in the playlist (rows left out count). */
+const entries = (page: z.infer<typeof pageSchema> | null | undefined, offset = 0): MediaItem[] =>
+  (page?.items ?? []).flatMap((e, i) => {
     const t = toTrack(e?.track ?? e?.item);
-    return t ? [t] : [];
+    return t ? [{ ...t, position: offset + i }] : [];
   });
 
 const sameHost = (url: string | null | undefined): string | undefined =>
@@ -100,13 +112,14 @@ export async function tracks(
     if (!a.success) return { name: '', items: [] };
     const items = (a.data.tracks?.items ?? []).flatMap((t) => {
       // Album tracks come without the album itself: fill it in so every row reads the same.
-      const x = toTrack(t ? { ...t, album: { name: a.data.name, images: a.data.images } } : t);
+      const x = toTrack(t ? { ...t, album: { id, name: a.data.name, images: a.data.images } } : t);
       return x ? [x] : [];
     });
     return {
       name: clip(a.data.name ?? ''),
       subtitle: a.data.artists?.[0]?.name ? clip(a.data.artists[0].name) : undefined,
       ...coverOf(a.data.images),
+      ...idsOf({ artists: a.data.artists }),
       total: a.data.tracks?.total ?? items.length,
       items,
     };
@@ -116,20 +129,26 @@ export async function tracks(
   if (!p.success) return { name: '', items: [] };
   const first = p.data.tracks ?? p.data.items ?? undefined;
   const items = entries(first);
+  let seen = first?.items.length ?? 0;
   let next = sameHost(first?.next);
   for (let page = 1; next && items.length < MAX_TRACKS && page < MAX_TRACKS / PAGE; page += 1) {
     const more = await call(ctx, 'GET', next);
     const parsed = pageSchema.safeParse(more.json);
     if (!parsed.success) break;
-    items.push(...entries(parsed.data));
+    items.push(...entries(parsed.data, seen));
+    seen += parsed.data.items.length;
     next = sameHost(parsed.data.next);
   }
+  const ownerId = p.data.owner?.id;
   return {
     name: clip(p.data.name ?? ''),
     subtitle: p.data.owner?.display_name ? clip(p.data.owner.display_name) : undefined,
     ...coverOf(p.data.images),
     total: first?.total ?? items.length,
     items: items.slice(0, MAX_TRACKS),
+    ownerId: ownerId && ACCOUNT_ID.test(ownerId) ? ownerId : undefined,
+    description: plainText(p.data.description),
+    collaborative: p.data.collaborative === true || undefined,
   };
 }
 
@@ -147,10 +166,25 @@ export async function playFrom(
 }
 
 const recentSchema = z.object({
-  items: z.array(z.object({ track: trackSchema.nullish() }).nullable()),
+  items: z.array(
+    z
+      .object({
+        track: trackSchema.nullish(),
+        context: z.object({ type: z.string().nullish(), uri: z.string().nullish() }).nullish(),
+      })
+      .nullable(),
+  ),
 });
 
-/** The songs played most recently (`user-read-recently-played`), each once, newest first. */
+/** `spotify:<kind>:<id>` of a playlist, album or artist the song was played from; anything else is dropped. */
+function contextOf(
+  c: { type?: string | null; uri?: string | null } | null | undefined,
+): MediaItem['context'] {
+  const m = /^spotify:(playlist|album|artist):([A-Za-z0-9]{1,40})$/.exec(c?.uri ?? '');
+  return m ? { kind: m[1] as 'playlist' | 'album' | 'artist', id: m[2]! } : undefined;
+}
+
+/** The songs played most recently (`user-read-recently-played`), each once, newest first, with what they were played from. */
 export async function recent(ctx: ConnectorContext): Promise<MediaItem[]> {
   const { json } = await call(ctx, 'GET', `${PLAYER}/recently-played?limit=50`);
   const parsed = recentSchema.safeParse(json);
@@ -161,7 +195,8 @@ export async function recent(ctx: ConnectorContext): Promise<MediaItem[]> {
     const t = toTrack(e?.track);
     if (t && !seen.has(t.id)) {
       seen.add(t.id);
-      out.push(t);
+      const context = contextOf(e?.context);
+      out.push(context ? { ...t, context } : t);
     }
   }
   return out.slice(0, 30);
@@ -254,22 +289,47 @@ export async function save(ctx: ConnectorContext, list: string[], on: boolean): 
 
 const uris = (list: string[]): string[] => ids(list).map((id) => `spotify:track:${id}`);
 const cleanName = (name: string): string => clip(name.trim());
+/** Spotify keeps up to 300 characters of a description; line breaks are not allowed in it. */
+const cleanDescription = (text: string): string => text.replace(/\s+/g, ' ').trim().slice(0, 300);
 /** "Not found" or "bad request" on the newer path means the older one is the one this account's API speaks. */
 const FALLBACK = [400, 404];
 
 const createdSchema = z.object({ id: z.string(), name: z.string().nullish() });
 
 /** Creates a private playlist for the signed-in user and returns it (`POST /me/playlists`). */
-export async function createPlaylist(ctx: ConnectorContext, name: string): Promise<Playlist> {
+export async function createPlaylist(
+  ctx: ConnectorContext,
+  name: string,
+  description?: string,
+): Promise<Playlist> {
   const clean = cleanName(name);
   if (!clean) throw new ConnectorError('bad-response', 'name');
+  const about = description ? cleanDescription(description) : '';
   const { json } = await call(ctx, 'POST', `${API_ORIGIN}v1/me/playlists`, [], {
     name: clean,
     public: false,
+    ...(about ? { description: about } : {}),
   });
   const parsed = createdSchema.safeParse(json);
   if (!parsed.success || !ID.test(parsed.data.id)) throw new ConnectorError('bad-response', 'id');
-  return { id: parsed.data.id, name: clean, trackCount: 0 };
+  return { id: parsed.data.id, name: clean, trackCount: 0, description: about || undefined };
+}
+
+/**
+ * Changes name and/or description of a playlist (`PUT /playlists/{id}`). An empty description clears it; an empty
+ * name is refused (Spotify needs one).
+ */
+export async function editPlaylist(
+  ctx: ConnectorContext,
+  id: string,
+  change: PlaylistChange,
+): Promise<void> {
+  const body: { name?: string; description?: string } = {};
+  if (change.name !== undefined) body.name = cleanName(change.name);
+  if (change.description !== undefined) body.description = cleanDescription(change.description);
+  if (!ID.test(id) || body.name === '' || Object.keys(body).length === 0)
+    throw new ConnectorError('bad-response', 'id');
+  await call(ctx, 'PUT', `${API_ORIGIN}v1/playlists/${id}`, [], body);
 }
 
 /** Renames a playlist of the user (`PUT /playlists/{id}`). */
@@ -283,13 +343,19 @@ export async function renamePlaylist(
   await call(ctx, 'PUT', `${API_ORIGIN}v1/playlists/${id}`, [], { name: clean });
 }
 
-/** Adds songs to the end of a playlist: the newer `/items` path first, the older `/tracks` path as the fallback. */
+/**
+ * Adds songs to the end of a playlist, or at `position` (0-based; "Rückgängig" puts a removed song back where it was):
+ * the newer `/items` path first, the older `/tracks` path as the fallback.
+ */
 export async function addToPlaylist(
   ctx: ConnectorContext,
   id: string,
   list: string[],
+  position?: number,
 ): Promise<void> {
-  const body = { uris: uris(list) };
+  const at =
+    position !== undefined && Number.isInteger(position) && position >= 0 ? { position } : {};
+  const body = { uris: uris(list), ...at };
   if (!ID.test(id) || body.uris.length === 0) throw new ConnectorError('bad-response', 'id');
   const first = await call(ctx, 'POST', `${API_ORIGIN}v1/playlists/${id}/items`, FALLBACK, body);
   if (!FALLBACK.includes(first.status)) return;

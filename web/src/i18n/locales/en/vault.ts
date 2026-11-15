@@ -13,8 +13,22 @@ export const vault: Strings['vault'] = {
       remindDaysBeforeDeadline: 'Reminder before the notice period (days)',
       remindTime: 'Reminder time',
       remindTimeHelp: 'Format HH:mm',
+      showInPlan: 'Show in the plan',
+      showInPlanHelp:
+        'Notice deadlines and expiry dates appear in the planner as “Cancel contract” or “Renew ID” (15 min, by the last day). The document’s name shows on the planner page only. Only with the planner on.',
     },
   },
+  planCancel: (category: string) =>
+    category === 'insurance' ? 'Cancel insurance' : 'Cancel contract',
+  planRenew: (category: string) =>
+    category === 'identity'
+      ? 'Renew ID'
+      : category === 'warranty'
+        ? 'Check warranty'
+        : category === 'contract' || category === 'insurance'
+          ? 'Check contract end'
+          : 'Renew document',
+  planAction: 'Go to document',
   title: 'Documents',
   add: 'Add document',
   edit: 'Edit document',
@@ -27,7 +41,7 @@ export const vault: Strings['vault'] = {
     warranty: 'Warranties',
     tax: 'Tax',
     health: 'Health',
-    other: 'Other',
+    other: 'No category',
   } as Record<string, string>,
   provider: 'Provider',
   startDate: 'Start',
@@ -133,6 +147,56 @@ export const vault: Strings['vault'] = {
     [expired > 0 ? `${expired} expired` : '', due > 0 ? `${due} with a deadline ahead` : '']
       .filter(Boolean)
       .join(' · '),
+  categoryAdmin: {
+    manage: 'Edit categories',
+    title: 'Categories',
+    add: 'New category',
+    editTitle: 'Edit category',
+    name: 'Name',
+    colour: 'Colour',
+    colourN: (n: number) => `Colour ${n}`,
+    icon: 'Icon',
+    iconNames: {
+      files: 'Folder',
+      file: 'Sheet',
+      lock: 'Lock',
+      receipt: 'Receipt',
+      wallet: 'Wallet',
+      home: 'House',
+      car: 'Car',
+      heart: 'Heart',
+      calculator: 'Calculator',
+      package: 'Parcel',
+      luggage: 'Suitcase',
+      users: 'People',
+      umbrella: 'Umbrella',
+    },
+    up: (name: string) => `Move ${name} up`,
+    down: (name: string) => `Move ${name} down`,
+    edit: (name: string) => `Edit ${name}`,
+    remove: (name: string) => `Delete ${name}`,
+    fixedHint: '“No category” always stays. Documents whose category is deleted land here.',
+    duplicate: 'A category with this name already exists.',
+    removeTitle: (name: string) => `Delete “${name}”`,
+    inUse: (n: number) =>
+      n === 1 ? '1 document is in this category.' : `${n} documents are in this category.`,
+    keepsDocs: (n: number) =>
+      n === 1
+        ? 'It is kept and moves to the category you choose here.'
+        : 'They are kept and move to the category you choose here.',
+    place: (name: string, at: number, of: number) => `${name}: place ${at} of ${of}`,
+    failed: 'That did not work. Please try again.',
+    moveTo: 'Move to',
+    removeAndMove: 'Delete and move',
+    removed: (name: string) => `“${name}” deleted`,
+    removedMoved: (name: string, n: number, target: string) =>
+      n === 1
+        ? `“${name}” deleted · 1 document moved to “${target}”`
+        : `“${name}” deleted · ${n} documents moved to “${target}”`,
+    created: (name: string) => `“${name}” added`,
+    emptyFolder: (name: string) => `No documents in “${name}” yet.`,
+    done: 'Done',
+  },
   widgetSummary: (n: number) =>
     n === 1 ? '1 document needs a look' : `${n} documents need a look`,
 };

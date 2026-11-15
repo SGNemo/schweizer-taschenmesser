@@ -1,6 +1,6 @@
 # Planner hub – accessibility review of direction A (chat E)
 
-**Standard:** WCAG 2.1 AA · **Date:** 2026-11-15 · skill `design:accessibility-review` · object: `mockups/direction-a.html` (+ `?state=`, `?sheet=1`) at 1920 × 1080 and 412 × 915, light and dark. Part of [CONCEPT-DESIGN](CONCEPT-DESIGN.md). A mockup review: colours are computed from the values of `web/src/ui/tokens.css`, sizes and order are read from the rendered DOM; nothing was tested with a screen reader. The build repeats this with NVDA / TalkBack.
+**Standard:** WCAG 2.1 AA · **Date:** 2026-11-15 · skill `design:accessibility-review` · object: `mockups/direction-a.html` (+ `?state=`, `?sheet=1`; removed with the round, in the git history) at 1920 × 1080 and 412 × 915, light and dark. Part of [CONCEPT-DESIGN](CONCEPT-DESIGN.md). A mockup review: colours are computed from the values of `web/src/ui/tokens.css`, sizes and order are read from the rendered DOM; nothing was tested with a screen reader. The build repeats this with NVDA / TalkBack.
 
 ## Summary
 

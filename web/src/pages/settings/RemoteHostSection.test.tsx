@@ -97,6 +97,44 @@ describe('RemoteHostSection (desktop)', () => {
     expect(level().value).toBe('off');
   });
 
+  it('switching off is its own permission: offered with a level, asked at the PC, gone with the level', async () => {
+    fake.parts.hooks.addDevice('Pixel 7');
+    await show();
+    const power = () => screen.queryByRole('switch', { name: 'Darf den PC ausschalten' });
+    fireEvent.click(master());
+    await flush();
+    // nothing allowed yet: nothing to switch off with
+    expect(power()).toBeNull();
+    fireEvent.change(level(), { target: { value: 'media' } });
+    await flush();
+    expect(fake.parts.hooks.asked()).toBe(1);
+    // a level is no permission to switch off
+    expect(power()?.getAttribute('aria-checked')).toBe('false');
+    expect(screen.getByText(/10 Sekunden herunter/)).toBeTruthy();
+    fireEvent.click(power()!);
+    await flush();
+    expect(fake.parts.hooks.asked()).toBe(2);
+    expect(power()?.getAttribute('aria-checked')).toBe('true');
+    // said no at the PC: stays off
+    fireEvent.click(power()!);
+    await flush();
+    expect(power()?.getAttribute('aria-checked')).toBe('false');
+    fake.parts.hooks.answer('cancel');
+    fireEvent.click(power()!);
+    await flush();
+    expect(power()?.getAttribute('aria-checked')).toBe('false');
+    fake.parts.hooks.answer('allow');
+    fireEvent.click(power()!);
+    await flush();
+    const asked = fake.parts.hooks.asked();
+    // taking the level away takes switching off with it, without a question
+    fireEvent.change(level(), { target: { value: 'off' } });
+    await flush();
+    expect(fake.parts.hooks.asked()).toBe(asked);
+    expect(fake.parts.hooks.state().devices[0]?.power).toBe(false);
+    expect(power()).toBeNull();
+  });
+
   it('mouse and keyboard: asked at the PC, with the phone’s unlock on; dropping the unlock is asked too', async () => {
     fake.parts.hooks.addDevice('Pixel 7');
     await show();
@@ -147,7 +185,13 @@ describe('RemoteHostSection (desktop)', () => {
     // a device controls mouse and keyboard: the notification cannot be switched off now
     fireEvent.click(master());
     await flush();
-    await fake.parts.host.setDevice(id, { level: 'full', paused: false, unlock: true });
+    await fake.parts.host.setDevice(id, {
+      level: 'full',
+      paused: false,
+      unlock: true,
+      power: false,
+      programs: false,
+    });
     expect(fake.parts.hooks.open(id, 'full')).toBe(true);
     fireEvent.click(notice());
     await flush();
@@ -221,7 +265,13 @@ describe('RemoteHostSection (desktop)', () => {
     fake.parts.hooks.addDevice('Tablet');
     await fake.parts.host.setEnabled(true);
     // a grant from a later package (not choosable here yet), and its session
-    await fake.parts.host.setDevice(a, { level: 'full', paused: false, unlock: true });
+    await fake.parts.host.setDevice(a, {
+      level: 'full',
+      paused: false,
+      unlock: true,
+      power: false,
+      programs: false,
+    });
     expect(fake.parts.hooks.open(a, 'full')).toBe(true);
     await show();
     const selects = () => screen.getAllByTestId('remote-level') as HTMLSelectElement[];
@@ -289,7 +339,13 @@ describe('RemoteHostSection (desktop)', () => {
   it('a stored permission is announced before the switch asks Windows', async () => {
     const id = fake.parts.hooks.addDevice('Pixel 7');
     await fake.parts.host.setEnabled(true);
-    await fake.parts.host.setDevice(id, { level: 'media', paused: false, unlock: true });
+    await fake.parts.host.setDevice(id, {
+      level: 'media',
+      paused: false,
+      unlock: true,
+      power: false,
+      programs: false,
+    });
     await fake.parts.host.setEnabled(false);
     const asked = fake.parts.hooks.asked();
     await show();
@@ -344,7 +400,13 @@ describe('RemoteHostSection (desktop)', () => {
   it('a controller without a name is still named in the banner and the chip', async () => {
     const id = fake.parts.hooks.addDevice('');
     await fake.parts.host.setEnabled(true);
-    await fake.parts.host.setDevice(id, { level: 'media', paused: false, unlock: true });
+    await fake.parts.host.setDevice(id, {
+      level: 'media',
+      paused: false,
+      unlock: true,
+      power: false,
+      programs: false,
+    });
     fake.parts.hooks.open(id);
     await show();
     expect(screen.getByTestId('remote-controlling').textContent).toContain(
@@ -394,7 +456,13 @@ describe('RemoteChip', () => {
   it('reads the state once the PC is the home-network hub', async () => {
     const id = fake.parts.hooks.addDevice('Pixel 7');
     await fake.parts.host.setEnabled(true);
-    await fake.parts.host.setDevice(id, { level: 'media', paused: false, unlock: true });
+    await fake.parts.host.setDevice(id, {
+      level: 'media',
+      paused: false,
+      unlock: true,
+      power: false,
+      programs: false,
+    });
     fake.parts.hooks.open(id);
     useSyncStatus.getState().set({ phase: 'idle', via: 'lanHub', encrypted: true });
     render(
@@ -439,7 +507,13 @@ describe('the shared reading (core/remote/host)', () => {
   it('an answer that arrives after a newer one is dropped', async () => {
     const id = fake.parts.hooks.addDevice('Pixel 7');
     await fake.parts.host.setEnabled(true);
-    await fake.parts.host.setDevice(id, { level: 'media', paused: false, unlock: true });
+    await fake.parts.host.setDevice(id, {
+      level: 'media',
+      paused: false,
+      unlock: true,
+      power: false,
+      programs: false,
+    });
     fake.parts.hooks.open(id);
     const real = fake.parts.host.status.bind(fake.parts.host);
     let release: () => void = () => undefined;
@@ -461,7 +535,13 @@ describe('the shared reading (core/remote/host)', () => {
   it('a reading that fails no longer vouches for a controller', async () => {
     const id = fake.parts.hooks.addDevice('Pixel 7');
     await fake.parts.host.setEnabled(true);
-    await fake.parts.host.setDevice(id, { level: 'media', paused: false, unlock: true });
+    await fake.parts.host.setDevice(id, {
+      level: 'media',
+      paused: false,
+      unlock: true,
+      power: false,
+      programs: false,
+    });
     fake.parts.hooks.open(id);
     await refreshRemoteHost();
     expect(useRemoteHost.getState().status?.controller?.name).toBe('Pixel 7');
@@ -469,5 +549,141 @@ describe('the shared reading (core/remote/host)', () => {
     await refreshRemoteHost();
     expect(useRemoteHost.getState().status?.controller).toBeNull();
     expect(useRemoteHost.getState().off).toBe(false);
+  });
+
+  it('programs: a permission of mouse and keyboard, asked at the PC, gone below that level', async () => {
+    fake.parts.hooks.addDevice('Pixel 7');
+    await show();
+    const allow = () => screen.queryByRole('switch', { name: 'Darf Programme starten' });
+    fireEvent.click(master());
+    await flush();
+    fireEvent.change(level(), { target: { value: 'media' } });
+    await flush();
+    // media is no level to start programs with
+    expect(allow()).toBeNull();
+    fireEvent.change(level(), { target: { value: 'full' } });
+    await flush();
+    expect(allow()?.getAttribute('aria-checked')).toBe('false');
+    const asked = fake.parts.hooks.asked();
+    fireEvent.click(allow()!);
+    await flush();
+    expect(fake.parts.hooks.asked()).toBe(asked + 1);
+    expect(allow()?.getAttribute('aria-checked')).toBe('true');
+    // down to media: the permission goes with it, without a question
+    fireEvent.change(level(), { target: { value: 'media' } });
+    await flush();
+    expect(fake.parts.hooks.asked()).toBe(asked + 1);
+    expect(fake.parts.hooks.state().devices[0]?.programs).toBe(false);
+    expect(allow()).toBeNull();
+  });
+
+  it('the program list: added through the PC’s own dialog and question, removed at once', async () => {
+    await show();
+    expect(screen.getByTestId('remote-programs-none').textContent).toBe(
+      'Noch kein Programm ausgewählt.',
+    );
+    const add = () => screen.getByTestId('remote-program-add') as HTMLButtonElement;
+    expect(add().textContent).toBe('Programm hinzufügen …');
+    // the file dialog closed without a file: nothing, and nothing to say
+    fireEvent.click(add());
+    await flush();
+    expect(fake.parts.hooks.programs()).toEqual([]);
+    expect(screen.queryByTestId('remote-program-note')).toBeNull();
+    // a file: asked at the PC, then in the list – names only
+    fake.parts.hooks.pickFile('C:\\Programme\\OBS Studio.exe');
+    fireEvent.click(add());
+    await flush();
+    expect(fake.parts.hooks.asked()).toBe(1);
+    expect(screen.getAllByTestId('remote-program').map((r) => r.firstChild?.textContent)).toEqual([
+      'OBS Studio',
+    ]);
+    expect(screen.getByTestId('remote-program-note').textContent).toBe('Programm hinzugefügt.');
+    // the same again, or no program at all: a calm sentence
+    fireEvent.click(add());
+    await flush();
+    expect(screen.getByTestId('remote-program-note').textContent).toBe(
+      'Dieses Programm steht schon in der Liste.',
+    );
+    fake.parts.hooks.pickFile('C:\\x\\start.bat');
+    fireEvent.click(add());
+    await flush();
+    expect(screen.getByTestId('remote-program-note').textContent).toContain('kein Programm');
+    // said no at the PC: not added
+    fake.parts.hooks.pickFile('C:\\x\\Spiel.lnk');
+    fake.parts.hooks.answer('cancel');
+    fireEvent.click(add());
+    await flush();
+    expect(fake.parts.hooks.programs()).toEqual(['OBS Studio']);
+    // removing asks nothing
+    const asked = fake.parts.hooks.asked();
+    fireEvent.click(screen.getByRole('button', { name: 'OBS Studio entfernen' }));
+    await flush();
+    expect(fake.parts.hooks.asked()).toBe(asked);
+    expect(fake.parts.hooks.programs()).toEqual([]);
+    expect(screen.getByTestId('remote-program-note').textContent).toBe('OBS Studio entfernt.');
+  });
+
+  it('a removal names the list it saw: a list changed since removes nothing', async () => {
+    fake.parts.hooks.pickFile('C:\\x\\Editor.exe');
+    await fake.parts.host.addProgram();
+    await show();
+    // the list changes at the PC behind the page's back
+    fake.parts.hooks.addProgramElsewhere('Spiel');
+    fireEvent.click(screen.getByRole('button', { name: 'Editor entfernen' }));
+    await flush();
+    expect(fake.parts.hooks.programs()).toEqual(['Editor', 'Spiel']);
+    expect(screen.getByTestId('remote-program-note').textContent).toBe(
+      'In der Zwischenzeit hat sich die Freigabe geändert. Wähle noch einmal.',
+    );
+    // the page read the list anew: now it goes
+    expect(screen.getAllByTestId('remote-program')).toHaveLength(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Editor entfernen' }));
+    await flush();
+    expect(fake.parts.hooks.programs()).toEqual(['Spiel']);
+  });
+
+  it('a removal that could not be saved says so', async () => {
+    fake.parts.hooks.pickFile('C:\\x\\Editor.exe');
+    await fake.parts.host.addProgram();
+    await show();
+    fake.parts.hooks.setUnwritable(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Editor entfernen' }));
+    await flush();
+    // removed for this run all the same; the page says it could not save
+    expect(fake.parts.hooks.programs()).toEqual([]);
+    expect(screen.getByTestId('remote-program-note').textContent).toBe(
+      'Das ließ sich nicht speichern. Versuche es noch einmal.',
+    );
+  });
+
+  it('eight programs at most; never while mouse and keyboard are controlled', async () => {
+    const id = fake.parts.hooks.addDevice('Pixel 7');
+    await fake.parts.host.setEnabled(true);
+    await fake.parts.host.setDevice(id, {
+      level: 'full',
+      paused: false,
+      unlock: true,
+      power: false,
+      programs: false,
+    });
+    fake.parts.hooks.open(id, 'full');
+    await show();
+    fake.parts.hooks.pickFile('C:\\x\\Editor.exe');
+    fireEvent.click(screen.getByTestId('remote-program-add'));
+    await flush();
+    expect(fake.parts.hooks.programs()).toEqual([]);
+    expect(screen.getByTestId('remote-program-note').textContent).toContain(
+      'solange ein Gerät Maus und Tastatur steuert',
+    );
+    fake.parts.hooks.state();
+    await fake.parts.host.end();
+    for (let i = 0; i < 8; i++) {
+      fake.parts.hooks.pickFile(`C:\\x\\P${i}.exe`);
+      await fake.parts.host.addProgram();
+    }
+    fireEvent.click(master());
+    await flush();
+    expect((screen.getByTestId('remote-program-add') as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText(/Die Liste ist voll/)).toBeTruthy();
   });
 });

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { suggestCaptureLine } from '@/core/mail/localAssist';
 import { mailPrefill, type MailLinkType } from '@/core/mail/prefill';
 import type { MailAccountRef, MailMessage } from '@/core/mail/types';
@@ -9,7 +9,7 @@ import { announceSaved } from '@/quickCapture/ui/announceSaved';
 import { t } from '@/strings';
 import { Button, Checkbox, Dialog } from '@/ui';
 import { sheetInvoiceId } from '../invoiceRow';
-import { saveLink } from '../links';
+import { linkInvoiceToThread, mailDay, saveLink } from '../links';
 import { useUiStore } from '@/stores/ui';
 import styles from './mail.module.css';
 
@@ -62,6 +62,20 @@ export function LinkDialog({
 
   /** After the sheet saved: the link back, and the right words for an invoice that was there already. */
   async function filed(saved: SavedCapture) {
+    // An invoice also gets the synced link row invoice → this thread (thread id, cleaned subject, the mail's
+    // day; planner hub S1): `dunning` when the sheet noted a reminder on an open invoice, else `origin`. Not for
+    // a sample mail (the sheet says „kein Link“ there) and not when nothing was written. One undo takes entry
+    // and link back.
+    const unlink =
+      saved.type === 'invoice' && link && saved.existed !== 'tombstone'
+        ? await linkInvoiceToThread(
+            saved.id,
+            threadId,
+            message.subject,
+            mailDay(message.date),
+            saved.amended ? 'dunning' : 'origin',
+          )
+        : undefined;
     if (saved.existed === true) {
       await saveLink(account.key, threadId, message.id, saved).catch(() => undefined);
       useUiStore
@@ -73,11 +87,32 @@ export function LinkDialog({
     if (saved.existed === 'tombstone')
       return void useUiStore.getState().toast(t.mail.invoice.failed);
     await saveLink(account.key, threadId, message.id, saved).catch(() => undefined);
-    await announceSaved(saved);
+    await announceSaved(
+      unlink
+        ? {
+            ...saved,
+            // Both parts on their own: a failing entry undo must not leave the link row behind.
+            undo: async () => {
+              await Promise.allSettled([saved.undo(), unlink()]);
+            },
+          }
+        : saved,
+    );
   }
+
+  // Saving ends in `close()` only after the link, the link row and the toast are written; by then the
+  // thread view may be gone (another thread, another page). Nothing to reset or close then.
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   // A fresh start for the next time the dialog opens (another destination, another mail).
   const close = () => {
+    if (!mounted.current) return;
     setSuggestion({ phase: 'idle' });
     setApplied(undefined);
     setExcerpt(false);

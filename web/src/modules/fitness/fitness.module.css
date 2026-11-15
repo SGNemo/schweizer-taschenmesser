@@ -95,7 +95,7 @@
 .plate[data-today] {
   font-weight: var(--weight-semibold);
 }
-.catalogGroup + .catalogGroup {
+.catalogGroup {
   margin-top: var(--space-4);
 }
 .catalogList {
@@ -128,4 +128,147 @@
 }
 .catalogItem:hover {
   background: var(--surface-sunken);
+}
+.lastHint {
+  grid-column: 1 / -1;
+  font-size: var(--text-sm);
+}
+.search > * {
+  /* A search box, not a page width: leaves room for the phone's "⋯" beside it (PageHeader besideContent). */
+  flex: 0 1 17rem;
+}
+/* Deep package 2: single sets in the form. */
+.rowActions {
+  display: inline-flex;
+  align-items: center;
+}
+.setRows {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+.setList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+  width: 100%;
+}
+.setRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  align-items: end;
+}
+.setRow > :nth-child(n + 5) {
+  grid-column: 2 / -1;
+}
+.setNumber {
+  min-width: 3.5rem;
+  padding-bottom: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+/* Deep package 2: „Einheit starten“. */
+.live {
+  display: grid;
+  gap: var(--space-3);
+}
+.liveNav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.liveName {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-lg);
+}
+.liveSets {
+  margin: 0;
+  padding-left: var(--space-5);
+  display: grid;
+  gap: var(--space-1);
+}
+.rest {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+.restTime {
+  margin: 0;
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+.liveBanner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+.liveBanner p {
+  margin: 0;
+}
+/* Deep package 3: training plan. */
+.planList {
+  list-style: none;
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+.planRow {
+  display: grid;
+  gap: var(--space-2);
+}
+.weekdays {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.weekday {
+  min-width: var(--touch);
+  min-height: var(--touch);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.weekday[aria-pressed='true'] {
+  border-color: var(--module-color);
+  background: var(--module-color);
+  color: var(--surface);
+  font-weight: var(--weight-semibold);
+}
+.weekday:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.todayPlan {
+  margin-bottom: var(--space-4);
+}
+/* Deep package 4: the week's charts, each with room for its title. */
+.weekCharts {
+  display: grid;
+  gap: var(--space-5);
+  margin-block: var(--space-3) var(--space-4);
+}
+.weekCharts:empty {
+  display: none;
 }

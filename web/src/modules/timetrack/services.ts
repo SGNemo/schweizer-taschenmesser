@@ -46,7 +46,7 @@ export default function start(): () => void {
   const off = bus.on('timetrack.start.requested', async (req) => {
     const title = req.title.trim();
     if (!title) return;
-    await startSession(undefined, { from: title, note: title });
+    await startSession(undefined, { from: title, note: title, ref: req.sourceRef });
     useUiStore.getState().toast(t.timetrack.fromEvent.started(title));
   });
   return () => {

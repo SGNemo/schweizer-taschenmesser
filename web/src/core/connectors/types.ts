@@ -227,7 +227,7 @@ export interface PlayerState {
   repeat?: 'off' | 'track' | 'context';
 }
 
-export type MediaKind = 'track' | 'playlist' | 'album';
+export type MediaKind = 'track' | 'playlist' | 'album' | 'artist';
 
 /** A track, playlist or album the user can start. Names are user data: shown on request, never stored. */
 export interface MediaItem {
@@ -242,6 +242,13 @@ export interface MediaItem {
   coverUrl?: string;
   /** Every size of that picture that passed the host rule; the view picks the one its surface needs. */
   covers?: CoverImage[];
+  /** Tracks: the first artist's and the album's ids (artist view, album view, "Weiterhören"); albums: the artist's id. */
+  artistId?: string;
+  albumId?: string;
+  /** Recently played tracks: the playlist, album or artist they were played from, if any. */
+  context?: { kind: 'playlist' | 'album' | 'artist'; id: string };
+  /** Tracks of a playlist: the row's place in the playlist (0-based, counting rows the list leaves out), for "Rückgängig". */
+  position?: number;
 }
 
 /** The content of a playlist or album: its own details and the tracks (up to 200). Shown on request, never stored. */
@@ -255,6 +262,12 @@ export interface Tracklist {
   /** How many tracks the whole list has (can be more than `items`). */
   total?: number;
   items: MediaItem[];
+  /** Albums: the artist's id. */
+  artistId?: string;
+  /** Playlists: the owner's account id, the description (plain text) and whether others may edit it. */
+  ownerId?: string;
+  description?: string;
+  collaborative?: boolean;
 }
 
 /** A device Spotify can play on right now. */
@@ -276,6 +289,17 @@ export interface SearchResult {
   tracks: MediaItem[];
   playlists: MediaItem[];
   albums: MediaItem[];
+  /** Absent from sources that do not search artists. */
+  artists?: MediaItem[];
+}
+
+/** An artist page: picture, the most played songs (may be empty: the service offers them to some apps only) and the albums. */
+export interface ArtistPage {
+  name: string;
+  coverUrl?: string;
+  covers?: CoverImage[];
+  top: MediaItem[];
+  albums: MediaItem[];
 }
 
 /** One of the user's own playlists. Names are user data: shown on request, never stored. */
@@ -288,6 +312,16 @@ export interface Playlist {
   /** Every size of that picture that passed the host rule; the view picks the one its surface needs. */
   covers?: CoverImage[];
   owner?: string;
+  /** The owner's account id (own vs. followed, compared with `account`), the description as plain text, shared editing. */
+  ownerId?: string;
+  description?: string;
+  collaborative?: boolean;
+}
+
+/** What a playlist edit changes; a field left out stays as it is. */
+export interface PlaylistChange {
+  name?: string;
+  description?: string;
 }
 
 /** Optional capability of a media connector: what plays now, and a few remote controls. */
@@ -296,8 +330,13 @@ export interface NowPlayingSource {
   read(ctx: ConnectorContext): Promise<NowPlaying | undefined>;
   /** Rejects with `ConnectorError('premium-required')` when the service only controls for paid accounts. */
   control(ctx: ConnectorContext, command: NowPlayingCommand): Promise<void>;
-  /** The user's own playlists (one page), for the focus-round music. Needs its own feature/scope. */
-  playlists?(ctx: ConnectorContext): Promise<Playlist[]>;
+  /**
+   * The user's playlists, own and followed (up to 200; with `all` up to 1000, the playlists tab). Needs its own
+   * feature/scope.
+   */
+  playlists?(ctx: ConnectorContext, opts?: { all?: boolean }): Promise<Playlist[]>;
+  /** The signed-in account's id, only to tell own playlists from followed ones (kept in memory). */
+  account?(ctx: ConnectorContext): Promise<string | undefined>;
   /** Starts the playlist with this id on the active device. */
   startPlaylist?(ctx: ConnectorContext, id: string): Promise<void>;
   /** Device, volume, shuffle and repeat of the active player; `undefined` = no active device. */
@@ -331,10 +370,36 @@ export interface NowPlayingSource {
   saved?(ctx: ConnectorContext, ids: string[]): Promise<boolean[]>;
   /** Saves or removes songs in the user's saved songs ("Lieblingssongs"). */
   save?(ctx: ConnectorContext, ids: string[], on: boolean): Promise<void>;
+  /** The user's saved albums (up to 200, newest first). Feature "Lieblingssongs" (library scope). */
+  savedAlbums?(ctx: ConnectorContext): Promise<MediaItem[]>;
+  /** For each album id: is it saved? */
+  albumsSaved?(ctx: ConnectorContext, ids: string[]): Promise<boolean[]>;
+  /** Saves (`on`) or removes albums in the user's library. */
+  saveAlbums?(ctx: ConnectorContext, ids: string[], on: boolean): Promise<void>;
+  /** An artist's picture, most played songs and albums. No scope. */
+  artist?(ctx: ConnectorContext, id: string): Promise<ArtistPage>;
+  /** The artists the user follows (up to 200). Feature "Folgen". */
+  followedArtists?(ctx: ConnectorContext): Promise<MediaItem[]>;
+  /** For each artist id: does the user follow it? */
+  artistsFollowed?(ctx: ConnectorContext, ids: string[]): Promise<boolean[]>;
+  /** Follows (`on`) or unfollows artists. */
+  followArtists?(ctx: ConnectorContext, ids: string[], on: boolean): Promise<void>;
+  /** Does the user follow this playlist? (Feature "Playlists bearbeiten".) */
+  playlistFollowed?(ctx: ConnectorContext, id: string): Promise<boolean>;
+  /** Follows (`on`) or unfollows a playlist. */
+  followPlaylist?(ctx: ConnectorContext, id: string, on: boolean): Promise<void>;
   /** Playlist editing; each needs its own feature/scope ("Playlists bearbeiten", off until chosen). */
-  createPlaylist?(ctx: ConnectorContext, name: string): Promise<Playlist>;
+  createPlaylist?(ctx: ConnectorContext, name: string, description?: string): Promise<Playlist>;
   renamePlaylist?(ctx: ConnectorContext, id: string, name: string): Promise<void>;
-  addToPlaylist?(ctx: ConnectorContext, id: string, trackIds: string[]): Promise<void>;
+  /** Changes name and/or description of an own playlist. */
+  editPlaylist?(ctx: ConnectorContext, id: string, change: PlaylistChange): Promise<void>;
+  /** Adds songs at the end, or at `position` (0-based) when given ("Rückgängig" after removing). */
+  addToPlaylist?(
+    ctx: ConnectorContext,
+    id: string,
+    trackIds: string[],
+    position?: number,
+  ): Promise<void>;
   removeFromPlaylist?(ctx: ConnectorContext, id: string, trackIds: string[]): Promise<void>;
 }
 

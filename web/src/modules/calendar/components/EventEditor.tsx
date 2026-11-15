@@ -37,6 +37,7 @@ import {
 import { recentSlots } from '../recentSlots';
 import { eventRepo } from '../repo';
 import { useCalendars } from './CalendarsBar';
+import { EventTodos } from './EventTodos';
 import { LeadRow, NOTIFY_LEADS, leadLabel } from './LeadRow';
 import { eventSchema, type CalendarEvent, type EventKind } from '../schema';
 import styles from '../routes/calendar.module.css';
@@ -432,6 +433,7 @@ function Form({
           {error}
         </p>
       ) : null}
+      {existing && !reminder ? <EventTodos eventId={existing.id} onLeave={onClose} /> : null}
       {/* What else can be done with a saved entry: a row of its own, so the foot holds delete, cancel and save only
           (it is the fixed foot of the sheet on the phone). */}
       {existing ? (
@@ -459,7 +461,7 @@ function Form({
                 // Time tracking starts the clock when it is on (it listens to this event); the event only names it.
                 await bus.emit('timetrack.start.requested', {
                   title: existing.title,
-                  sourceRef: existing.id,
+                  sourceRef: `calendar:${existing.id}`,
                 });
               }}
             >

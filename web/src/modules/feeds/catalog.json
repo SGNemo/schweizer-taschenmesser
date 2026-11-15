@@ -1,0 +1,331 @@
+[
+  {
+    "id": "tagesschau",
+    "lang": "de",
+    "category": "news",
+    "title": "tagesschau.de",
+    "url": "https://www.tagesschau.de/index~rss2.xml",
+    "site": "https://www.tagesschau.de/"
+  },
+  {
+    "id": "dlf-nachrichten",
+    "lang": "de",
+    "category": "news",
+    "title": "Deutschlandfunk Nachrichten",
+    "url": "https://www.deutschlandfunk.de/nachrichten-100.rss",
+    "site": "https://www.deutschlandfunk.de/"
+  },
+  {
+    "id": "zeit",
+    "lang": "de",
+    "category": "news",
+    "title": "ZEIT ONLINE",
+    "url": "https://newsfeed.zeit.de/index",
+    "site": "https://www.zeit.de/"
+  },
+  {
+    "id": "spiegel",
+    "lang": "de",
+    "category": "news",
+    "title": "DER SPIEGEL",
+    "url": "https://www.spiegel.de/schlagzeilen/index.rss",
+    "site": "https://www.spiegel.de/"
+  },
+  {
+    "id": "heise",
+    "lang": "de",
+    "category": "tech",
+    "title": "heise online",
+    "url": "https://www.heise.de/rss/heise-atom.xml",
+    "site": "https://www.heise.de/"
+  },
+  {
+    "id": "golem",
+    "lang": "de",
+    "category": "tech",
+    "title": "Golem.de",
+    "url": "https://rss.golem.de/rss.php?feed=ATOM1.0",
+    "site": "https://www.golem.de/"
+  },
+  {
+    "id": "netzpolitik",
+    "lang": "de",
+    "category": "tech",
+    "title": "netzpolitik.org",
+    "url": "https://netzpolitik.org/feed/",
+    "site": "https://netzpolitik.org/"
+  },
+  {
+    "id": "t3n",
+    "lang": "de",
+    "category": "tech",
+    "title": "t3n",
+    "url": "https://t3n.de/rss.xml",
+    "site": "https://t3n.de/"
+  },
+  {
+    "id": "spektrum",
+    "lang": "de",
+    "category": "science",
+    "title": "Spektrum der Wissenschaft",
+    "url": "https://www.spektrum.de/alias/rss/spektrum-de-rss-feed/996406",
+    "site": "https://www.spektrum.de/"
+  },
+  {
+    "id": "scinexx",
+    "lang": "de",
+    "category": "science",
+    "title": "scinexx",
+    "url": "https://www.scinexx.de/feed/",
+    "site": "https://www.scinexx.de/"
+  },
+  {
+    "id": "dlf-forschung",
+    "lang": "de",
+    "category": "science",
+    "title": "Deutschlandfunk Forschung aktuell",
+    "url": "https://www.deutschlandfunk.de/forschung-aktuell-102.rss",
+    "site": "https://www.deutschlandfunk.de/"
+  },
+  {
+    "id": "sportschau",
+    "lang": "de",
+    "category": "sport",
+    "title": "Sportschau",
+    "url": "https://www.sportschau.de/index~rss2.xml",
+    "site": "https://www.sportschau.de/"
+  },
+  {
+    "id": "kicker",
+    "lang": "de",
+    "category": "sport",
+    "title": "kicker",
+    "url": "https://newsfeed.kicker.de/news/aktuell",
+    "site": "https://www.kicker.de/"
+  },
+  {
+    "id": "gamestar",
+    "lang": "de",
+    "category": "gaming",
+    "title": "GameStar",
+    "url": "https://www.gamestar.de/news/rss/news.rss",
+    "site": "https://www.gamestar.de/"
+  },
+  {
+    "id": "gamepro",
+    "lang": "de",
+    "category": "gaming",
+    "title": "GamePro",
+    "url": "https://www.gamepro.de/rss/gamepro.rss",
+    "site": "https://www.gamepro.de/"
+  },
+  {
+    "id": "ndr",
+    "lang": "de",
+    "category": "local",
+    "region": "Norddeutschland",
+    "title": "NDR",
+    "url": "https://www.ndr.de/home/index-rss.xml",
+    "site": "https://www.ndr.de/"
+  },
+  {
+    "id": "wdr",
+    "lang": "de",
+    "category": "local",
+    "region": "Nordrhein-Westfalen",
+    "title": "WDR",
+    "url": "https://www1.wdr.de/uebersicht-100.feed",
+    "site": "https://www1.wdr.de/"
+  },
+  {
+    "id": "mdr",
+    "lang": "de",
+    "category": "local",
+    "region": "Mitteldeutschland",
+    "title": "MDR",
+    "url": "https://www.mdr.de/nachrichten/index-rss.xml",
+    "site": "https://www.mdr.de/"
+  },
+  {
+    "id": "rbb24",
+    "lang": "de",
+    "category": "local",
+    "region": "Berlin und Brandenburg",
+    "title": "rbb24",
+    "url": "https://www.rbb24.de/aktuell/index.xml/feed=rss.xml",
+    "site": "https://www.rbb24.de/"
+  },
+  {
+    "id": "orf",
+    "lang": "de",
+    "category": "local",
+    "region": "Österreich",
+    "title": "ORF.at",
+    "url": "https://rss.orf.at/news.xml",
+    "site": "https://orf.at/"
+  },
+  {
+    "id": "srf",
+    "lang": "de",
+    "category": "local",
+    "region": "Schweiz",
+    "title": "SRF News",
+    "url": "https://www.srf.ch/news/bnf/rss/1646",
+    "site": "https://www.srf.ch/news"
+  },
+  {
+    "id": "bbc-news",
+    "lang": "en",
+    "category": "news",
+    "title": "BBC News",
+    "url": "https://feeds.bbci.co.uk/news/rss.xml",
+    "site": "https://www.bbc.co.uk/news"
+  },
+  {
+    "id": "guardian-world",
+    "lang": "en",
+    "category": "news",
+    "title": "The Guardian – World",
+    "url": "https://www.theguardian.com/world/rss",
+    "site": "https://www.theguardian.com/world"
+  },
+  {
+    "id": "npr",
+    "lang": "en",
+    "category": "news",
+    "title": "NPR News",
+    "url": "https://feeds.npr.org/1001/rss.xml",
+    "site": "https://www.npr.org/"
+  },
+  {
+    "id": "aljazeera",
+    "lang": "en",
+    "category": "news",
+    "title": "Al Jazeera English",
+    "url": "https://www.aljazeera.com/xml/rss/all.xml",
+    "site": "https://www.aljazeera.com/"
+  },
+  {
+    "id": "ars",
+    "lang": "en",
+    "category": "tech",
+    "title": "Ars Technica",
+    "url": "https://feeds.arstechnica.com/arstechnica/index",
+    "site": "https://arstechnica.com/"
+  },
+  {
+    "id": "verge",
+    "lang": "en",
+    "category": "tech",
+    "title": "The Verge",
+    "url": "https://www.theverge.com/rss/index.xml",
+    "site": "https://www.theverge.com/"
+  },
+  {
+    "id": "hn",
+    "lang": "en",
+    "category": "tech",
+    "title": "Hacker News (front page)",
+    "url": "https://hnrss.org/frontpage",
+    "site": "https://news.ycombinator.com/"
+  },
+  {
+    "id": "quanta",
+    "lang": "en",
+    "category": "science",
+    "title": "Quanta Magazine",
+    "url": "https://www.quantamagazine.org/feed/",
+    "site": "https://www.quantamagazine.org/"
+  },
+  {
+    "id": "sciencedaily",
+    "lang": "en",
+    "category": "science",
+    "title": "ScienceDaily",
+    "url": "https://www.sciencedaily.com/rss/all.xml",
+    "site": "https://www.sciencedaily.com/"
+  },
+  {
+    "id": "nature",
+    "lang": "en",
+    "category": "science",
+    "title": "Nature",
+    "url": "https://www.nature.com/nature.rss",
+    "site": "https://www.nature.com/"
+  },
+  {
+    "id": "bbc-sport",
+    "lang": "en",
+    "category": "sport",
+    "title": "BBC Sport",
+    "url": "https://feeds.bbci.co.uk/sport/rss.xml",
+    "site": "https://www.bbc.co.uk/sport"
+  },
+  {
+    "id": "guardian-sport",
+    "lang": "en",
+    "category": "sport",
+    "title": "The Guardian – Sport",
+    "url": "https://www.theguardian.com/uk/sport/rss",
+    "site": "https://www.theguardian.com/uk/sport"
+  },
+  {
+    "id": "espn",
+    "lang": "en",
+    "category": "sport",
+    "title": "ESPN",
+    "url": "https://www.espn.com/espn/rss/news",
+    "site": "https://www.espn.com/"
+  },
+  {
+    "id": "rps",
+    "lang": "en",
+    "category": "gaming",
+    "title": "Rock Paper Shotgun",
+    "url": "https://www.rockpapershotgun.com/feed",
+    "site": "https://www.rockpapershotgun.com/"
+  },
+  {
+    "id": "eurogamer",
+    "lang": "en",
+    "category": "gaming",
+    "title": "Eurogamer",
+    "url": "https://www.eurogamer.net/feed",
+    "site": "https://www.eurogamer.net/"
+  },
+  {
+    "id": "polygon",
+    "lang": "en",
+    "category": "gaming",
+    "title": "Polygon",
+    "url": "https://www.polygon.com/rss/index.xml",
+    "site": "https://www.polygon.com/"
+  },
+  {
+    "id": "bbc-london",
+    "lang": "en",
+    "category": "local",
+    "region": "London",
+    "title": "BBC News – London",
+    "url": "https://feeds.bbci.co.uk/news/england/london/rss.xml",
+    "site": "https://www.bbc.co.uk/news/england/london"
+  },
+  {
+    "id": "bbc-scotland",
+    "lang": "en",
+    "category": "local",
+    "region": "Scotland",
+    "title": "BBC News – Scotland",
+    "url": "https://feeds.bbci.co.uk/news/scotland/rss.xml",
+    "site": "https://www.bbc.co.uk/news/scotland"
+  },
+  {
+    "id": "nyt-nyregion",
+    "lang": "en",
+    "category": "local",
+    "region": "New York",
+    "title": "The New York Times – N.Y. Region",
+    "url": "https://rss.nytimes.com/services/xml/rss/nyt/NYRegion.xml",
+    "site": "https://www.nytimes.com/section/nyregion"
+  }
+]

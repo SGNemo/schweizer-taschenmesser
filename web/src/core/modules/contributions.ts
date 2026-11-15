@@ -1,5 +1,5 @@
 import { compareText } from '@/core/i18n/format';
-import { refKey, type EntityRef } from '@/core/entitylinks/types';
+import { NEVER_LINKED, refKey, type EntityRef } from '@/core/entitylinks/types';
 import { loadModuleStates, useModuleStates } from './activation';
 import { availableManifests } from '@/core/modules/available';
 import { useSharedLiveQuery } from './sharedQuery';
@@ -13,6 +13,7 @@ import type {
   HeadlineFigure,
   ModuleHue,
   ModuleManifest,
+  PlanBlock,
   PlannableItem,
   ResolvedState,
 } from './types';
@@ -58,20 +59,27 @@ export async function collectCalendarItems(
 /** What the planner may plan, with the module that offered it. */
 export type PlannableEntry = PlannableItem & { moduleId: string };
 
+/** Module id → the ids of that module the person asked into the plan (the planner's item rows; CONCEPT-SOURCES §3.3). */
+export type RequestedIds = Readonly<Record<string, readonly string[]>>;
+
 /**
  * Plannable things of all given (active) modules, in manifest order. A failing source never breaks
- * the others; the planner reaches the write-back of a source through `plannableSource`.
+ * the others; the planner reaches the write-back of a source through `plannableSource`. `requested` reaches
+ * each source as `ctx.requested` (its own ids only): a thing without a date is listed only when asked for.
  */
 export async function collectPlannable(
   ctx: { today: string; until: string },
   manifests: readonly ModuleManifest[],
+  requested?: RequestedIds,
 ): Promise<PlannableEntry[]> {
   const lists = await Promise.all(
     manifests.map(async (m) => {
       const load = m.contributions?.plannable;
       if (!load) return [];
+      const asked = requested?.[m.id];
+      const own = asked?.length ? { ...ctx, requested: [...asked] } : ctx;
       try {
-        return (await (await load()).default.list(ctx)).map((i) => ({ ...i, moduleId: m.id }));
+        return (await (await load()).default.list(own)).map((i) => ({ ...i, moduleId: m.id }));
       } catch (e) {
         console.error(`[plannable] source "${m.id}" failed`, e);
         return [];
@@ -81,15 +89,62 @@ export async function collectPlannable(
   return lists.flat();
 }
 
-/** Live plannable things of all active modules; `undefined` while loading. */
-export function usePlannable(ctx: { today: string; until: string }): PlannableEntry[] | undefined {
+/** Live plannable things of all active modules; `undefined` while loading. `requested`: see `collectPlannable`. */
+export function usePlannable(
+  ctx: { today: string; until: string },
+  requested?: RequestedIds,
+): PlannableEntry[] | undefined {
+  const states = useModuleStates();
+  const ids = activeManifests(states)
+    .map((m) => m.id)
+    .join(',');
+  const asked = requested ? JSON.stringify(requested) : '';
+  return useSharedLiveQuery(
+    `plannable|${ctx.today}|${ctx.until}|${ids}|${states === undefined}|${asked}`,
+    async () => (states ? collectPlannable(ctx, activeManifests(states), requested) : undefined),
+    preload('plannable', activeManifests(states)),
+  );
+}
+
+/** A block of time a module keeps free (`PlannableSource.blocks`), with the module that asked for it. */
+export type PlanBlockEntry = PlanBlock & { moduleId: string };
+
+/**
+ * Blocks of time of all given (active) modules (habits: „Zeit im Plan freihalten“, planner hub S4), in manifest
+ * order. A failing source never breaks the others; a block outside the range is dropped.
+ */
+export async function collectPlanBlocks(
+  ctx: { today: string; until: string },
+  manifests: readonly ModuleManifest[],
+): Promise<PlanBlockEntry[]> {
+  const lists = await Promise.all(
+    manifests.map(async (m) => {
+      const load = m.contributions?.plannable;
+      if (!load) return [];
+      try {
+        const source = (await load()).default;
+        if (!source.blocks) return [];
+        return (await source.blocks(ctx))
+          .filter((b) => b.date >= ctx.today && b.date <= ctx.until && b.min > 0)
+          .map((b) => ({ ...b, moduleId: m.id }));
+      } catch (e) {
+        console.error(`[plannable] blocks of "${m.id}" failed`, e);
+        return [];
+      }
+    }),
+  );
+  return lists.flat();
+}
+
+/** Live blocks of time of all active modules; `undefined` while loading. */
+export function usePlanBlocks(ctx: { today: string; until: string }): PlanBlockEntry[] | undefined {
   const states = useModuleStates();
   const ids = activeManifests(states)
     .map((m) => m.id)
     .join(',');
   return useSharedLiveQuery(
-    `plannable|${ctx.today}|${ctx.until}|${ids}|${states === undefined}`,
-    async () => (states ? collectPlannable(ctx, activeManifests(states)) : undefined),
+    `planBlocks|${ctx.today}|${ctx.until}|${ids}|${states === undefined}`,
+    async () => (states ? collectPlanBlocks(ctx, activeManifests(states)) : undefined),
     preload('plannable', activeManifests(states)),
   );
 }
@@ -101,9 +156,6 @@ export async function plannableSource(manifest: ModuleManifest | undefined) {
 }
 
 /** Notifications due in (from, to] from all given (active) modules, oldest first. */
-/** The vault is never a link source or target: no module is asked, not even a label is read (docs/RULES.md "AI privacy"). */
-const NEVER_LINKED = 'accounts';
-
 /**
  * The address a link falls back to where its module cannot answer (off, or not on this platform): only a mail
  * thread has one – the provider's web mail, without any account. The id is untrusted; nothing is requested.

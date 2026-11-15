@@ -24,10 +24,10 @@ In the **module library** you turn modules on and off (when turning one off: kee
 |  | Subscriptions | Subscriptions and recurring payments | on by default |
 |  | Budgets & savings goals | Spending limits per category (from Finances) and savings goals with deposits and progress | on for new installations |
 | **Household** | Lists | Shopping, packing lists and checklists | on for new installations |
-|  | Routines | Cleaning plan and household routines | on for new installations |
+|  | Routines | Routines for the day and the household | on for new installations |
 |  | Pantry | What’s in the fridge, the cupboard and the freezer? | optional |
 |  | Fitness | Keep a rough log of training and food | preview |
-| **Knowledge** | Saved | Save links, reading, films, places and ideas | optional |
+| **Knowledge** | Saved | What you still want to look at, read, buy, try out or visit | optional |
 |  | Notes | Notebook with formatted text (Markdown), a fixed scratchpad always at the top, pinning and search | optional |
 |  | Chat | Conversations with the built-in local model or your providers | preview |
 |  | Browser | Simple browser with tabs, bookmarks and a private mode | preview, Windows and Android apps only |
@@ -36,7 +36,7 @@ In the **module library** you turn modules on and off (when turning one off: kee
 |  | Music | Spotify on one page | preview |
 | **Vault** | Documents | IDs, contracts, insurance and warranties with end date, notice period and an attached file | optional |
 |  | Passwords | Password vault | optional |
-| **System** | Device status | Backup, sync, storage and updates of this device on one page | on for new installations |
+| **System** | Device status | Backup, sync, storage and updates of this device on one page, plus a backup to download | on for new installations |
 |  | This PC | Drives with a scan of the biggest folders and system info (processor, memory, battery, network) | optional, Windows app only |
 |  | Downloads | Downloads files | on for new installations, Windows app only |
 |  | Remote | Control media, volume, mouse and keyboard of your PC from your phone | preview, Android app only |
@@ -52,7 +52,7 @@ Preview modules and tools stay hidden until you turn on “Show work in progress
 Highlights of the modules that start with a short line above:
 
 - **Calendar** (on by default): reminders and a notification before events. **To-dos**: also recurring, with “Someday”.
-- **Saved:** links, reading, films, places and ideas with tags; on the phone via “Share”. Its bookmarks view shows tiles grouped by first tag, for example parcel tracking, trains, maps …
+- **Saved:** what you still want to look at, read, buy, try out or visit, with tags and a status; every saved item has an end (done or gone). On the phone via “Share”. The “Bookmarks” tab shows the few links you need every day as tiles grouped by first tag (parcel tracking, trains, maps …); it does not replace your browser’s bookmarks.
 - **Notes:** with a pinned **scratchpad** at the top for quick jots.
 - **Lists:** shopping with “2 milk”, packing lists with progress and templates, checklists.
 - **People:** birthdays yearly in the calendar, with age, reminder and WhatsApp greeting; gift ideas per person with price, link and status.

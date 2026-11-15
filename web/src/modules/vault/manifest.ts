@@ -2,7 +2,7 @@ import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
 import { onboarding } from './onboarding';
-import { documentSchema } from './schema';
+import { categorySchema, documentSchema } from './schema';
 import { settings } from './settings';
 import { t } from '@/strings';
 
@@ -20,7 +20,7 @@ const manifest: ModuleManifest = {
     signature: 'folderTab',
     tabs: true,
   },
-  version: 3,
+  version: 4,
   get description() {
     return t.vault.meta.description;
   },
@@ -35,7 +35,24 @@ const manifest: ModuleManifest = {
     },
   ],
   dataSchema: {
-    collections: { document: { schema: documentSchema, indexes: ['category', 'expiresOn'] } },
+    collections: {
+      document: {
+        schema: documentSchema,
+        indexes: ['category', 'expiresOn'],
+        // Since version 4 `category` is any id, so the import text no longer lists the built-in ones: the example
+        // shows one. An unknown value is kept and shown under "Ohne Kategorie", never dropped.
+        example: {
+          title: 'Mobilfunkvertrag',
+          category: 'contract',
+          provider: 'Beispiel Mobil GmbH',
+          endDate: '2027-06-30',
+          noticeDays: 30,
+        },
+      },
+      // The user's folders (since version 4); built-in ones get a record only once they are changed.
+      // Not in the data API or the JSON import: folders are made here, not imported.
+      category: { schema: categorySchema, indexes: [], dataApi: false },
+    },
   },
   migrations,
   widgets: [
@@ -53,7 +70,7 @@ const manifest: ModuleManifest = {
   settings,
   defaultEnabled: false,
   maturity: 'stable',
-  seed: { version: 1, dependsOn: [] },
+  seed: { version: 2, dependsOn: [] },
   layout: 'split',
   order: 150,
   area: 'vault',
@@ -71,6 +88,8 @@ const manifest: ModuleManifest = {
     ],
     calendarItems: () => import('./calendar'),
     notifications: () => import('./notifications'),
+    // Deadlines and expiry dates in the planner; titles are category wording only (`plannable.ts`).
+    plannable: () => import('./plannable'),
     services: () => import('./services'),
   },
 };

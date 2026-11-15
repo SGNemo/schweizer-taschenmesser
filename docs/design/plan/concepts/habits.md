@@ -1,6 +1,6 @@
 # Habits as fixed blocks – concept
 
-Index and seed figures: [README.md](README.md). Package: H1 in [PACKAGES.md](PACKAGES.md).
+Index and seed figures: [README.md](README.md). Package: H1 in [PACKAGES.md](PACKAGES.md). **Built** with planner hub S4 (2026-11-15, `modules/habits/plannable.ts`; decision in [plan-hub](../../../decisions/plan-hub.md)). Deviation: the block row says „Gewohnheit“ with a clock in the lead (the day sheet's one row grammar), not the habits icon.
 
 ## What the planner needs from it
 

@@ -6,7 +6,8 @@
 //! `state()` after a quiet time, which may wait a bounded moment (see [`InputSink::state`]) – and
 //! it logs nothing.
 
-use super::wire::{Button, Key, Media, PcState, Record};
+use super::wire::{Button, Key, Media, PcState, Power, PowerAnswer, ProgramAnswer, Record};
+use crate::noise::PublicKey;
 use std::fmt;
 
 /// One thing to do on the PC. `Text` holds what the user typed: it is never formatted (`Debug` is
@@ -50,6 +51,53 @@ pub trait InputSink: Send + Sync {
     /// session ends, for the release of each mouse button that session still held. A key is
     /// pressed and released within one `apply`, so a mouse button is all that can stay held.
     fn apply(&self, action: Action);
+
+    /// A power action of `device` that passed the gate (session, permission, PC not locked,
+    /// limits) – or `Cancel`, which always passes. The sink owns the countdown (one for the whole
+    /// PC) and its own per-device limit, and answers at once; it never acts before the countdown
+    /// ran out. `despite`: start although Nemo on the PC is still working.
+    fn power(&self, device: &PublicKey, power: Power, despite: bool) -> PowerAnswer {
+        let _ = (device, despite);
+        match power {
+            Power::Cancel => PowerAnswer::Cancelled,
+            _ => PowerAnswer::Failed,
+        }
+    }
+
+    /// (a countdown runs, hibernate is available) – for the `opened` of a session.
+    fn power_info(&self) -> (bool, bool) {
+        (false, false)
+    }
+
+    /// The latest thing that happened to a countdown without a question (it ran out, or it was
+    /// stopped at the PC): a number that grows with every such news, whose countdown it was, and
+    /// the answer. A session tells its phone the news of its device that came after it opened.
+    fn power_news(&self) -> Option<(u64, PublicKey, PowerAnswer)> {
+        None
+    }
+
+    /// The epoch of the PC's program list: it changes with every change of the list. Cheap (the
+    /// session asks at every tick); the names come with [`InputSink::programs`].
+    fn programs_version(&self) -> u32 {
+        0
+    }
+
+    /// The names of the PC's program list in slot order, and its epoch (both read together).
+    /// Names only: never a path.
+    fn programs(&self) -> (u32, Vec<String>) {
+        (0, Vec::new())
+    }
+
+    /// Starts the program in `slot` of the PC's list for device `peer` – a start that passed the
+    /// session's gate (session, permission, PC not locked, the session's limit). `epoch`: the
+    /// epoch of the list the phone was told; the sink compares it with the list's epoch now,
+    /// under the list's lock, and starts nothing on a mismatch or an empty slot (`Failed`). It
+    /// also keeps the per-device limit (`Limit`), across sessions. The path is the PC's, looked
+    /// up now; it starts without arguments. Answers at once.
+    fn start_program(&self, peer: &PublicKey, slot: u8, epoch: u32) -> ProgramAnswer {
+        let _ = (peer, slot, epoch);
+        ProgramAnswer::Failed
+    }
 }
 
 /// The sink of a PC that cannot be controlled (not Windows, or nothing wired yet).

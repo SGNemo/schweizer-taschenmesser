@@ -1,7 +1,9 @@
 import { addDaysStr } from '@/core/time/dates';
 import type { SeedContext, SeedModule, SeedRows } from '@/core/seed/types';
 
-type Category = 'identity' | 'insurance' | 'contract' | 'warranty' | 'tax' | 'health' | 'other';
+/** `vehicle` is the user's own folder the seed makes (a category of the `category` collection). */
+type Category =
+  'identity' | 'insurance' | 'contract' | 'warranty' | 'tax' | 'health' | 'other' | 'vehicle';
 
 // exp: days from today until the document expires (undefined = no expiry)
 const BASE: {
@@ -84,6 +86,13 @@ const BASE: {
     file: 'fuehrerschein.jpg',
     type: 'image/jpeg',
     size: 620_000,
+  },
+  {
+    title: 'Fahrzeugschein',
+    category: 'vehicle',
+    file: 'fahrzeugschein.pdf',
+    type: 'application/pdf',
+    size: 205_000,
   },
   {
     title: 'Zahnbonusheft',
@@ -242,6 +251,13 @@ const TR: Record<string, readonly [string, string, string, string]> = {
     'Permis de conduire',
     'Carteira de motorista',
   ],
+  Fahrzeugschein: [
+    'Vehicle registration',
+    'Permiso de circulación',
+    'Carte grise',
+    'Documento do veículo',
+  ],
+  Fahrzeug: ['Vehicle', 'Vehículo', 'Véhicule', 'Veículo'],
   Zahnbonusheft: [
     'Dental bonus booklet',
     'Cartilla de revisiones dentales',
@@ -357,7 +373,12 @@ function seed(ctx: SeedContext): SeedRows {
       term: ctx.rng.pick([365, 730]),
     });
   }
+  // One folder of the user's own: shows the folder tabs with more than the built-in ones.
+  const vehicle = ctx.id('vault', 'category', 'vehicle');
   return {
+    category: [
+      { id: vehicle, data: { name: tr(ctx, 'Fahrzeug'), tone: 2, icon: 'car', order: 6 } },
+    ],
     document: [
       ...Array.from({ length: n }, (_, i) => {
         const b = BASE[i % BASE.length]!;
@@ -366,7 +387,7 @@ function seed(ctx: SeedContext): SeedRows {
           id: ctx.id('vault', 'document', i),
           data: {
             title: round === 0 ? tr(ctx, b.title) : `${tr(ctx, b.title)} (${round + 1})`,
-            category: b.category,
+            category: b.category === 'vehicle' ? vehicle : b.category,
             ...(b.note ? { note: tr(ctx, b.note) } : {}),
             ...(b.exp !== undefined ? { endDate: ctx.day(b.exp + round * 30) } : {}),
             fileName: b.file,

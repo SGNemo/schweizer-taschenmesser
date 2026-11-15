@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useLang } from '@/core/i18n/lang';
 import { useSearchParams } from 'react-router';
 import { collator } from '@/core/i18n/format';
 import { getPlatform } from '@/core/platform';
@@ -25,9 +26,13 @@ import {
 import { formatNumber } from '@/core/i18n/format';
 import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
+import { catalogLang, suggestions, type CatalogEntry } from '../catalog';
+import type { FeedPreview } from '../discover';
 import { feedKey, groupFeeds, hostOf, normalizeFeedUrl } from '../logic';
 import { feedRepo } from '../repo';
 import { settings, type FeedsSettings } from '../settings';
+import { AddDialog } from './AddDialog';
+import { CatalogRow } from './CatalogRow';
 import styles from './feeds.module.css';
 
 interface Draft {
@@ -43,15 +48,19 @@ export default function MainPage() {
   const s = t.feeds;
   const feeds = useLiveQuery(() => feedRepo.active().toArray(), []);
   const [edited, setDraft] = useState<Draft | null>(null);
+  const [finding, setFinding] = useState(false);
   const [closed, setClosed] = useState(false);
   const [error, setError] = useState('');
   const [params, setParams] = useSearchParams();
   const toast = useUiStore((st) => st.toast);
   const [prefs] = useSettings('module.feeds', settings.schema, settings.defaults);
+  const lang = catalogLang(useLang());
 
-  // `?new=1` (quick add, widget) opens the empty form; typing takes the draft over.
-  const wantsNew = params.get('new') !== null && !closed;
-  const draft = edited ?? (wantsNew ? EMPTY : null);
+  // `?new=1` (quick add, widget) and `?add=<address>` (share sheet) open the add dialog.
+  const shared = params.get('add') ?? '';
+  const wantsAdd = (params.get('new') !== null || shared !== '') && !closed;
+  const addOpen = finding || (wantsAdd && edited === null);
+  const draft = edited;
   useOpenParam(
     (id) => feedRepo.get(id),
     (feed) => setDraft({ id: feed.id, title: feed.title, url: feed.url, category: feed.category }),
@@ -64,6 +73,54 @@ export default function MainPage() {
   );
   const categories = [...new Set((feeds ?? []).map((f) => f.category).filter(Boolean))];
   const isEmpty = !!feeds && feeds.length === 0;
+  const subscribed = new Set((feeds ?? []).map((f) => feedKey(f.url)));
+
+  /** One tap in the catalogue: subscribed under the group's name, nothing else to fill in. */
+  const adding = useRef(new Set<string>());
+  // Once the live list shows a feed, its key is no longer "on its way" (removing it later must not block a new add).
+  useEffect(() => {
+    for (const key of adding.current) if (subscribed.has(key)) adding.current.delete(key);
+  });
+  async function addEntry(entry: CatalogEntry) {
+    const key = feedKey(entry.url);
+    // A double tap lands before the live list knows the first one: keys on their way count too.
+    if (subscribed.has(key) || adding.current.has(key)) return;
+    adding.current.add(key);
+    try {
+      await feedRepo.create({
+        title: entry.title,
+        url: entry.url,
+        category: s.catalog.categories[entry.category],
+        siteUrl: entry.site,
+      });
+      toast(s.catalog.addedToast(entry.title));
+    } catch (e) {
+      // Kept on success: the live list may not know the new feed yet.
+      adding.current.delete(key);
+      throw e;
+    }
+  }
+
+  /** "Abonnieren" under a preview: the feed's own name, no group yet (it can be set in the list). */
+  async function addPreview(feed: FeedPreview, siteUrl?: string) {
+    const key = feedKey(feed.url);
+    if (subscribed.has(key) || adding.current.has(key)) return;
+    adding.current.add(key);
+    const title = feed.title || hostOf(feed.url);
+    const site = siteUrl && feedKey(siteUrl) !== key ? siteUrl : undefined;
+    try {
+      await feedRepo.create({
+        title,
+        url: feed.url,
+        category: '',
+        ...(site ? { siteUrl: site } : {}),
+      });
+      toast(s.catalog.addedToast(title));
+    } catch (e) {
+      adding.current.delete(key);
+      throw e;
+    }
+  }
 
   async function save(e: FormEvent) {
     e.preventDefault();
@@ -91,9 +148,17 @@ export default function MainPage() {
 
   function close() {
     setDraft(null);
+    setFinding(false);
     setClosed(true);
     setError('');
-    if (params.get('new') !== null) setParams({}, { replace: true });
+    if (params.get('new') !== null || params.get('add') !== null) setParams({}, { replace: true });
+  }
+
+  /** From the add dialog to the form: the typed address with name and group still to fill in. */
+  function toForm(url: string) {
+    setFinding(false);
+    setClosed(true);
+    setDraft({ ...EMPTY, url });
   }
 
   return (
@@ -102,7 +167,7 @@ export default function MainPage() {
         <PageAction
           short={t.nav.plusThings.feed}
           variant={isEmpty ? 'secondary' : 'primary'}
-          onClick={() => setDraft(EMPTY)}
+          onClick={() => setFinding(true)}
         >
           <Icon name="plus" size={18} />
           {s.add}
@@ -135,10 +200,27 @@ export default function MainPage() {
           motif={<SignatureMark id="masthead" size={64} />}
         >
           <p>{s.emptyHint}</p>
-          <Button variant="primary" onClick={() => setDraft(EMPTY)}>
+          <Button variant="primary" onClick={() => setFinding(true)}>
             {s.add}
           </Button>
         </EmptyState>
+      ) : null}
+      {isEmpty ? (
+        <section aria-labelledby="feeds-suggestions" data-testid="feeds-suggestions">
+          <h2 id="feeds-suggestions" className={styles.subhead}>
+            {s.suggestions}
+          </h2>
+          <ItemList>
+            {suggestions(lang, subscribed).map((entry) => (
+              <CatalogRow
+                key={entry.id}
+                entry={entry}
+                subscribed={subscribed}
+                onAdd={(e) => void addEntry(e)}
+              />
+            ))}
+          </ItemList>
+        </section>
       ) : null}
       {groups.length > 0 ? (
         <GroupedList
@@ -181,6 +263,17 @@ export default function MainPage() {
               </ItemList>
             ),
           }))}
+        />
+      ) : null}
+      {addOpen ? (
+        <AddDialog
+          open
+          initialQuery={shared}
+          subscribed={subscribed}
+          onAdd={(e) => void addEntry(e)}
+          onSubscribe={(feed, site) => void addPreview(feed, site)}
+          onAddress={toForm}
+          onClose={close}
         />
       ) : null}
       <Dialog

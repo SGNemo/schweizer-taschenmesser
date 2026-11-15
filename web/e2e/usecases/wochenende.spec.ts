@@ -9,8 +9,8 @@ import { dismissNotices, ready, showPreview } from '../helpers';
  * Monday-morning thing, and a bedtime the plan respects. Each path counts taps, typed characters, screens,
  * dialogs and detours (an action that did not do what the person meant) and estimates the seconds a person needs
  * (same model as kopf-leer: tap 1 s, character 0,25 s keyboard / 0,4 s phone, screen 2 s, dialog 3 s, detour 5 s).
- * `MAX` holds the measured state of `develop` (2026-11-14): no path may get longer; the packages in PACKAGES.md
- * lower it to the target column of TARGET §4. The table lands in `test-results/usecase-wochenende.md`.
+ * `MAX` holds the measured state after the packages of PACKAGES.md (ANALYSIS §5): no path may get longer. The
+ * table lands in `test-results/usecase-wochenende.md`.
  *
  * Starting point is an empty install (no seed, no test data): path A goes through the welcome card and the setup
  * questions; the other paths switch on only the modules the path needs (todos, planner; timetrack in D) the way
@@ -27,6 +27,7 @@ import { dismissNotices, ready, showPreview } from '../helpers';
 const OUT = 'test-results/usecase-wochenende';
 const SATURDAY = '2026-11-14';
 const SUNDAY = '2026-11-15';
+const MONDAY = '2026-11-16';
 
 type Metric = 'taps' | 'keys' | 'screens' | 'dialogs' | 'detours';
 type Row = { name: string; project: string } & Record<Metric, number> & {
@@ -35,15 +36,23 @@ type Row = { name: string; project: string } & Record<Metric, number> & {
   };
 
 /**
- * Measured on `develop` 35499492 (2026-11-14). Packages lower these to TARGET §4; never raise them. One trade:
- * package 5a (W06) swaps a detour for the two taps of the row pick „Termin“ → „Erinnerung“ in B and G (taps
- * 2 → 4, detours and seconds lower), as REVIEW-FABLE R6 asked.
+ * The measured state after all packages (re-measured in package 8 on `develop` d79b9d4, 2026-11-15: three runs in
+ * a row, light and dark, same figures). Never raise a value. Where a row differs from TARGET §4 („Revised“):
+ * - A, F: equal to the revised rows (1 · 0 · 2 · 1 · 0 · 8 and 2 · 0 · 1 · 1 · 0 · 7); lowered here from the
+ *   baseline, which packages 2 and 3 had left standing.
+ * - B, G: 2 taps more than the target (the row pick „Termin“ → „Erinnerung“, package 5a, REVIEW-FABLE R6); the
+ *   pick replaced one detour each compared with the state before 5a. B keeps the one detour of the bare
+ *   „Zocken“; G: 35 s instead of 33.
+ * - C: 7 taps (the revised row allows 11), but 18 keys and one screen the first target did not have: the break
+ *   is the typed line „Pause 2 Std Zocken“ (package 4a) and the planner is opened; day parts (4b) are checked
+ *   without being counted.
+ * - D, E, H: as the target says.
  */
 const MAX: Record<string, Record<Metric | 'seconds', number>> = {
   // prettier-ignore
-  'A Erster Start bis Planer · desktop-chrome': { taps: 10, keys: 0, screens: 3, dialogs: 1, detours: 1, seconds: 24 },
+  'A Erster Start bis Planer · desktop-chrome': { taps: 1, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 8 },
   // prettier-ignore
-  'A Erster Start bis Planer · pixel-7': { taps: 11, keys: 0, screens: 3, dialogs: 1, detours: 1, seconds: 25 },
+  'A Erster Start bis Planer · pixel-7': { taps: 1, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 8 },
   // prettier-ignore
   'B Kopf leeren: zwölf Dinge auf einmal · desktop-chrome': { taps: 4, keys: 280, screens: 0, dialogs: 1, detours: 1, seconds: 82 },
   // prettier-ignore
@@ -59,9 +68,9 @@ const MAX: Record<string, Record<Metric | 'seconds', number>> = {
   // prettier-ignore
   'E Mail: Persönlich, Suche, Rechnung, Antwort in den Plan · desktop-chrome': { taps: 5, keys: 9, screens: 1, dialogs: 0, detours: 0, seconds: 9 },
   // prettier-ignore
-  'F Abend: Rest auf andere Tage · desktop-chrome': { taps: 9, keys: 0, screens: 1, dialogs: 1, detours: 1, seconds: 19 },
+  'F Abend: Rest auf andere Tage · desktop-chrome': { taps: 2, keys: 0, screens: 1, dialogs: 1, detours: 0, seconds: 7 },
   // prettier-ignore
-  'F Abend: Rest auf andere Tage · pixel-7': { taps: 9, keys: 0, screens: 1, dialogs: 1, detours: 1, seconds: 19 },
+  'F Abend: Rest auf andere Tage · pixel-7': { taps: 2, keys: 0, screens: 1, dialogs: 1, detours: 0, seconds: 7 },
   // prettier-ignore
   'G Sonntag-Frist und Montag früh · desktop-chrome': { taps: 4, keys: 102, screens: 1, dialogs: 1, detours: 0, seconds: 35 },
   // prettier-ignore
@@ -264,8 +273,16 @@ async function rows<T>(page: Page, store: string): Promise<T[]> {
 async function planOf(page: Page) {
   return page.evaluate(() => {
     const titles = (sel: string) =>
+      // The row's title (planner hub R1: the row leads with its tick, so the first line is not the title any more).
       Array.from(document.querySelectorAll(`${sel} li`))
-        .map((li) => (li as HTMLElement).innerText.split('\n')[0]!.trim())
+        .map((li) =>
+          (
+            (li.querySelector('[data-row] > span') as HTMLElement | null)?.innerText ??
+            (li as HTMLElement).innerText
+          )
+            .split('\n')[0]!
+            .trim(),
+        )
         .filter(Boolean);
     const shownDay = document
       .querySelector('main [data-testid^="day-"]')
@@ -282,10 +299,10 @@ async function planOf(page: Page) {
         .find((s) => /^Wartet auf freie Zeit/.test(s))
         ?.split('\n')[0],
       shown: titles('main [data-testid^="day-"]'),
-      // Desktop: one row per day („Sa. 14. · 1 h 42 frei von 3 h 12 · 3 Dinge“); phone: the strip chips.
-      week: Array.from(
-        document.querySelectorAll('main [aria-label="Woche"] li, main [aria-label="Tage"] button'),
-      ).map((e) => (e as HTMLElement).innerText.replace(/\s+/g, ' ').trim()),
+      // One tile per day, read by its name („Heute, Samstag, 14. November: 1 h 42 frei von 3 h 12 · 3 Dinge“).
+      week: Array.from(document.querySelectorAll('main [aria-label="Woche"] button .sr-only')).map(
+        (e) => (e.textContent ?? '').replace(/\s+/g, ' ').trim(),
+      ),
     };
   });
 }
@@ -352,9 +369,10 @@ test('A Erster Start bis Planer', async ({ page, isMobile }, info) => {
   const sheet = page.getByRole('dialog', { name: 'Tage einteilen' });
   await expect(sheet).toBeVisible();
   m.dialog();
-  await expect(page.getByTestId('planner-head')).toBeVisible();
-  // W13: an empty board with time today never says „Heute ist frei“ beside „… frei heute“.
-  await expect(page.getByTestId('planner-head')).not.toContainText('Heute ist frei');
+  await expect(page.getByRole('group', { name: 'Woche' })).toBeVisible();
+  // W13: an empty board with time today never says „Heute ist frei“ beside „… frei heute“ – since planner hub R1 a
+  // board without things has no head figure at all.
+  await expect(page.getByTestId('planner-head')).toHaveCount(0);
   // W03: the planner is in the navigation right away (desktop: its „Planen“ group is open; phone: the „Mehr“ sheet).
   const plannerInNav = isMobile
     ? true
@@ -461,7 +479,58 @@ test('B Kopf leeren: zwölf Dinge auf einmal', async ({ page, isMobile }, info) 
     plan,
   });
   await record(info, m, name);
+  // Package 4a, checked but not counted (the one detour of this path, fixed by hand): the bare „Zocken“ became a
+  // ToDo; ⋯ → „Als Pause …“ → „Heute“ → „2 h“ on its plan row turns it into today's break (W24) – no open ToDo
+  // „Zocken“ afterwards. Finding the row's day stays; the facts name both days.
+  const gaming = tasks.find((x) => /^Zocken/.test(x.title)) as { id: string } | undefined;
+  expect(gaming).toBeTruthy();
+  const placed = (await rows<{ itemKey: string; date: string }>(page, 'planner_assignment')).find(
+    (a) => a.itemKey === `todos:${gaming!.id}`,
+  );
+  expect(placed, '„Zocken“ is planned on a day').toBeTruthy();
+  // The day's tile in the week band (planner hub R1); on the phone the row may lie in the folded „Danach“.
+  await page.getByTestId(`week-${placed!.date}`).click();
+  const placedDay = page.locator(`[data-testid="day-${placed!.date}"]`);
+  const gamingMenu = placedDay.getByRole('button', { name: 'Aktionen für Zocken', exact: true });
+  await expect(placedDay.locator('li').first()).toBeVisible();
+  if (!(await gamingMenu.isVisible()))
+    await placedDay.getByRole('button', { name: /^Danach/ }).click();
+  await gamingMenu.click();
+  await page.getByRole('menuitem', { name: 'Als Pause …' }).click();
+  const asBreakSheet = page.getByRole('dialog', { name: 'Zocken als Pause' });
+  // W24 (fixed): the plan put „Zocken“ on another day; the small sheet offers „Heute“ beside the row's day, and
+  // the person means now. On a row of today there is no choice to make.
+  if (placed!.date !== SATURDAY)
+    await asBreakSheet.getByRole('button', { name: 'Heute', exact: true }).click();
+  await expect(asBreakSheet.getByText('Wird am Sa zur Pause.', { exact: false })).toBeVisible();
+  await asBreakSheet.getByRole('button', { name: '2 h', exact: true }).click();
+  await expect
+    .poll(async () =>
+      (await rows<{ title: string; done: boolean }>(page, 'todos_task')).filter(
+        (x) => !x.done && /^Zocken/.test(x.title),
+      ),
+    )
+    .toEqual([]);
+  // The break is written after the ToDo is gone: wait for it.
+  const breakOf = async () =>
+    (
+      await rows<{ date: string; blockers: { label: string; min: number }[] }>(page, 'planner_day')
+    ).find((d) => d.blockers.some((b) => b.label === 'Zocken'));
+  await expect
+    .poll(async () => (await breakOf())?.blockers.map((b) => [b.label, b.min]))
+    .toEqual([['Zocken', 120]]);
+  const breakDay = await breakOf();
+  expect(breakDay?.date).toBe(SATURDAY);
+  facts(info, 'B-break', { gamingPlannedOn: placed!.date, breakOn: breakDay?.date });
 });
+
+/** W23: the lines that the sheet once turned into ToDos on Saturday (ANALYSIS §7). */
+const W23_LINES = [
+  'Team-Sachen lesen bis So 18:00',
+  'So 19 Uhr erinnere mich: kurz schauen',
+  'Mo 7:30 krankmelden falls nötig',
+  'Pause 1 Std Zocken',
+];
 
 const OPEN = [
   'Arbeitszeit eintragen',
@@ -524,9 +593,7 @@ test('C Wochenende einteilen', async ({ page, isMobile }, info) => {
   expect(saturday).toEqual(OPEN.filter((title) => saturday.includes(title)));
   // W10: Sunday got its time before the distribution: what Saturday cannot hold goes there. The script looks at
   // Sunday to read it (not counted: the facts only).
-  if (isMobile)
-    await page.getByRole('group', { name: 'Tage' }).getByRole('button', { name: /^So/ }).click();
-  else await page.getByRole('button', { name: /^So/ }).first().click();
+  await page.getByTestId(`week-${SUNDAY}`).click();
   const sundayRows = await settledCount(page.locator(`[data-testid="day-${SUNDAY}"] li`));
   if (sundayRows === 0) m.detour();
   const plan = await planOf(page);
@@ -535,16 +602,7 @@ test('C Wochenende einteilen', async ({ page, isMobile }, info) => {
   // Package 4b, checked but not counted: ⋯ → „Tagesabschnitt …“ → „Abend“ adds 3 taps to the 7 of package 4a,
   // so the path without a part stays the measured one. One thing gets „Abend“ and then stands after the things
   // without a part, on the same day.
-  if (isMobile)
-    await page
-      .getByRole('group', { name: 'Tage' })
-      .getByRole('button', { name: /^Heute/ })
-      .click();
-  else
-    await page
-      .getByRole('button', { name: /^Heute · / })
-      .first()
-      .click();
+  await page.getByTestId(`week-${SATURDAY}`).click();
   const sat = page.locator(`[data-testid="day-${SATURDAY}"]`);
   await settledCount(sat.locator('li'));
   const onSaturday = async () => (await planOf(page)).shown.filter((t) => OPEN.includes(t));
@@ -560,6 +618,46 @@ test('C Wochenende einteilen', async ({ page, isMobile }, info) => {
   await expect(page.getByText(`${first}: abends`)).toBeVisible();
   await expect.poll(onSaturday).toEqual([...before.slice(1), first]);
   await expect(sat.getByText('abends')).toBeVisible();
+  // W23 (fixed), checked but not counted: the sheet reads a line exactly as the quick capture's many lines do – a
+  // ToDo with its deadline and hour, a reminder (`once`), a Termin and a break, each on the day typed. The preview
+  // says what becomes what with the capture's kinds line.
+  await page.getByRole('button', { name: 'Weitere Optionen', exact: true }).first().click();
+  await page.getByRole('menuitem', { name: 'Tage einteilen' }).click();
+  await expect(setup).toBeVisible();
+  await setup.getByLabel('Eine Zeile je Ding').fill(W23_LINES.join('\n'));
+  await setup.getByRole('button', { name: 'Weiter' }).click();
+  await setup.getByRole('button', { name: 'Weiter' }).click();
+  await expect(setup.getByText('ToDo 1 · Erinnerung 1 · Termin 1')).toBeVisible();
+  await setup.getByRole('button', { name: 'Übernehmen' }).click();
+  await expect(setup).toHaveCount(0);
+  await expect
+    .poll(async () =>
+      (
+        await rows<{ title: string; dueDate?: string; dueTime?: string; note?: string }>(
+          page,
+          'todos_task',
+        )
+      )
+        .filter((x) => /Team-Sachen/.test(x.title))
+        .map((x) => [x.dueDate, x.dueTime, x.note ?? '']),
+    )
+    .toEqual([[SUNDAY, '18:00', '']]);
+  const sheetEvents = (
+    await rows<{
+      title: string;
+      kind?: string;
+      startDate?: string;
+      startTime?: string;
+      once?: boolean;
+    }>(page, 'calendar_event')
+  )
+    .map((e) => [e.title, e.kind ?? 'event', e.startDate, e.startTime, e.once === true])
+    .sort();
+  expect(sheetEvents).toEqual([
+    ['Krankmelden falls nötig', 'event', MONDAY, '07:30', false],
+    ['Kurz schauen', 'reminder', SUNDAY, '19:00', true],
+  ]);
+  facts(info, 'C-sheet-lines', { sheetEvents });
 });
 
 test('D Arbeitszeit nachtragen', async ({ page, isMobile }, info) => {
@@ -834,14 +932,17 @@ test('H Schlaf: Abendgrenze für den Plan', async ({ page, isMobile }, info) => 
   // The setting must hold the day end for every day; anything else is a detour to the settings page.
   const dayEnd = stored?.dayEnd;
   if (dayEnd !== '23:00') m.detour();
-  // 22:30, half an hour before: one calm sentence in the head, with „Rest verteilen“ while „Duschen“ is open.
+  // 22:30, half an hour before: one calm sentence in the head's notice slot (planner hub R1: never in the figure,
+  // and it carries no link of its own). „Rest verteilen“ stands at the foot of today's sheet while „Duschen“ is open.
   await page.clock.setFixedTime(new Date(`${SATURDAY}T22:30:00`));
   await page.reload();
   const line = page.getByTestId('day-end-line');
-  await expect(line).toContainText('Bald ist Tagesende.');
-  await expect(line.getByRole('button', { name: 'Rest verteilen' })).toBeVisible();
-  // One line at a time: the 17:00 link is not there besides it.
-  await expect(page.getByTestId('rest-link')).toHaveCount(0);
+  await expect(line).toHaveText('Bald ist Tagesende.');
+  await expect(line.getByRole('button')).toHaveCount(0);
+  await expect(line).toBeVisible();
+  await expect(
+    page.getByTestId('rest-link').getByRole('button', { name: 'Rest verteilen' }),
+  ).toHaveCount(1);
   const said = (await line.innerText()).replace(/\s+/g, ' ').trim();
   // The switch `focus.eveningWrapUp` off: no evening line at all (not counted, the switch is set once).
   await page.evaluate(
@@ -876,7 +977,8 @@ test('H Schlaf: Abendgrenze für den Plan', async ({ page, isMobile }, info) => 
   await page.reload();
   await expect(page.getByTestId('planner-head')).toBeVisible();
   await expect(page.getByTestId('day-end-line')).toHaveCount(0);
-  await expect(page.getByTestId('rest-link')).toHaveCount(0);
+  // The link at the sheet's foot is a standing step of the day, no evening line: it stays.
+  await expect(page.getByTestId('rest-link')).toHaveCount(1);
   facts(info, 'H', { dayEnd, line: said });
   await record(info, m, name);
 });

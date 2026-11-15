@@ -3,10 +3,14 @@
  * other devices. Once it has been synced and is older than the retention period it is removed
  * locally. The retention is long on purpose: a device that was offline for longer than this could
  * bring a deleted record back, so the device list flags devices unseen for that long.
+ *
+ * Links (`_links`) whose carrying record was purged here are soft-deleted in the same run (`sweepPurged`):
+ * the link's own tombstone syncs and is purged a retention period later, like any row.
  */
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { syncedTableNames } from '@/core/db/schema';
 import { rwTransaction } from '@/core/db/tx';
+import { LINKS_TABLE, sweepPurged } from '@/core/entitylinks/store';
 import { allManifests } from '@/core/modules/registry';
 import { now } from '@/core/time/now';
 import type { SyncRow } from './ops';
@@ -21,6 +25,7 @@ export async function purgeTombstones(
 ): Promise<number> {
   const cutoff = at - retentionMs;
   let removed = 0;
+  const purged = new Map<string, string[]>();
   for (const name of tableNames) {
     const table = database.table<SyncRow, string>(name);
     const outbox = database.table('_outbox');
@@ -33,8 +38,11 @@ export async function purgeTombstones(
       const queued = await outbox.bulkGet(old.map((id): [string, string] => [name, id]));
       const purge = old.filter((_id, i) => !queued[i]);
       await table.bulkDelete(purge);
+      if (purge.length > 0) purged.set(name, purge);
       return purge.length;
     });
   }
+  // After the purge, outside its transactions: the links the purged records carried become tombstones.
+  if (tableNames.includes(LINKS_TABLE)) await sweepPurged(purged, database);
   return removed;
 }

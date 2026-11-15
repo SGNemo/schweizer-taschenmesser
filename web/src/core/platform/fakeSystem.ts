@@ -1,5 +1,5 @@
 /** E2E stand-in for the native system facts (only wired in `--mode e2e` builds): invented values. */
-import type { DiskIo, ProcInfo, SystemInfo, SystemService } from './system';
+import type { DiskIo, ProcInfo, SystemHealth, SystemInfo, SystemService } from './system';
 
 const GB = 1024 ** 3;
 const MB = 1024 ** 2;
@@ -90,6 +90,16 @@ export function createFakeSystem(): SystemService {
     },
     async diskIo(): Promise<DiskIo[]> {
       return [{ root: 'C:\\', readBytesPerSec: 3 * MB, writeBytesPerSec: 1 * MB }];
+    },
+    async health(): Promise<SystemHealth> {
+      return {
+        battery: { designMwh: 57_000, fullMwh: 48_450, cycles: 214 },
+        crashes: [
+          { atSecs: 1_749_600_000, kind: 'unexpected', code: null },
+          { atSecs: 1_749_000_000, kind: 'bluescreen', code: '0x0000009F' },
+        ],
+        crashesRead: true,
+      };
     },
     async openTaskManager() {
       (globalThis as { __tmTaskManagerOpened?: number }).__tmTaskManagerOpened = n;

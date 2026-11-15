@@ -32,6 +32,7 @@ import { Report } from '../components/Report';
 import { TimerHead } from '../components/TimerHead';
 import { RunningCard } from '../components/RunningCard';
 import { SessionEditor, type SessionTarget } from '../components/SessionEditor';
+import { SessionSourceLink, useSessionSource } from '../components/SessionSource';
 import { duration } from '../components/format';
 import { useClients, useJobs, useSessions } from '../data';
 import { runningSeconds, runningSession, sessionMinutes, stopwatch } from '../logic';
@@ -98,6 +99,8 @@ export default function TimetrackPage() {
     !wide || picked === 'closed' || view !== 'today'
       ? undefined
       : (todays.find((s) => s.id === picked) ?? todays[0]);
+  // „Für: <title>“ in the panel: what the session was started for, read through that module (TT1).
+  const detailSource = useSessionSource(detail?.ref);
 
   // U10: without a project the page says one thing (the empty state); idle line and day list follow the first project.
   const noJobs = !!jobs && jobs.length === 0;
@@ -230,6 +233,14 @@ export default function TimetrackPage() {
                         label: t.timetrack.detail.time,
                         value: `${detail.startTime} – ${detail.endTime ?? t.timetrack.running}`,
                       },
+                      ...(detailSource
+                        ? [
+                            {
+                              label: t.timetrack.source.label,
+                              value: <SessionSourceLink source={detailSource} />,
+                            },
+                          ]
+                        : []),
                       ...(detail.breakMin
                         ? [
                             {

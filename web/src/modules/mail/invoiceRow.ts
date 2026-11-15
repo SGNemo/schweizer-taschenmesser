@@ -20,7 +20,8 @@ import { mailWebUrl } from '@/core/mail/service';
 import type { MailAccountRef, MailAddress } from '@/core/mail/types';
 import { loadModuleStates } from '@/core/modules/activation';
 import { getManifest, visibleManifests } from '@/core/modules/registry';
-import { formatDay } from '@/core/time/dates';
+import { dayName } from '@/core/plan/explain';
+import { addDaysStr, formatDay } from '@/core/time/dates';
 import { today } from '@/core/time/now';
 import {
   amendCapture,
@@ -36,7 +37,7 @@ import { t } from '@/strings';
 import { findOpenInvoice } from '@/quickCapture/targets/lookup';
 import { useUiStore } from '@/stores/ui';
 import { DEMO_ACCOUNT } from './cache';
-import { saveLink } from './links';
+import { linkInvoiceToThread, saveLink } from './links';
 import { linkRepo } from './repo';
 
 /** What a list row knows: enough to read an invoice and to key it on the message. */
@@ -226,14 +227,15 @@ const ENVELOPE = new Set(['id', 'createdAt', 'updatedAt', 'deviceId', 'deletedAt
 
 /**
  * A deleted invoice under one of the row's ids still is exactly what the row would write – and nothing else:
- * payee, amount, due day, open, the reminder level and day, the note with the mail's web link. Any other field
+ * payee, amount, due day, open, the reminder level and day – and, on an invoice filed before planner hub S1, the
+ * note with the mail's web link (`legacyNote`; today the way back is a link row, not a note). Any other field
  * (a part payment, a currency, an account, a repeat rule, a reference, a paid date) only an edit can set, so
  * such an invoice never comes back unseen.
  */
 async function holdsRead(
   id: string,
   read: InvoiceRead,
-  note: string | undefined,
+  legacyNote: string | undefined,
 ): Promise<boolean> {
   const row = (await invoicesRepo()?.table.get(id)) as Record<string, unknown> | undefined;
   if (!row) return false;
@@ -244,7 +246,7 @@ async function holdsRead(
     dueDate: read.date,
     status: 'open',
     ...(level ? { dunningLevel: level, dunnedAt: read.mailDate } : {}),
-    ...(note ? { note } : {}),
+    ...(legacyNote && row.note === legacyNote ? { note: legacyNote } : {}),
   };
   const keys = Object.keys(row).filter((k) => !ENVELOPE.has(k) && row[k] !== undefined);
   return keys.length === Object.keys(expected).length && keys.every((k) => row[k] === expected[k]);
@@ -276,6 +278,13 @@ function reminderFields(read: InvoiceRead) {
 }
 
 const day = (d: string) => formatDay(d, 'd. MMM');
+
+/** „heute“, a weekday within this week, else the date: never two Wednesdays that read the same. */
+export function planDayLabel(d: string): string {
+  const now = today();
+  if (d === now) return t.mail.invoice.today;
+  return d <= addDaysStr(now, 6) ? dayName(d) : day(d);
+}
 
 /** The muted line under the row: every value that will be written, before the tap. */
 export function offerText(offer: InvoiceOffer, todayStr: string): { text: string; late?: string } {
@@ -340,9 +349,11 @@ async function linkOnce(
 }
 
 /**
- * „Anlegen“: the invoice with exactly the values the row shows, the address-free web link as its note,
- * and for a reminder that has no open invoice its level. Already there → „Schon angelegt“, no undo;
- * deleted before → brought back (the same entry, not a second one).
+ * „Anlegen“: the invoice with exactly the values the row shows, and for a reminder that has no open invoice
+ * its level. The way back to the mail is a synced link row invoice → thread (`origin`: thread id, cleaned
+ * subject, the mail's day), written in the same step and taken back by the same undo – no longer the mail's web
+ * address as a note line (planner hub S1, P40/P56; invoices filed before keep theirs). Already there → „Schon
+ * angelegt“, no undo; deleted before → brought back (the same entry, not a second one).
  */
 export async function createInvoice(
   account: MailAccountRef,
@@ -351,15 +362,17 @@ export async function createInvoice(
   onChanged: () => void,
 ): Promise<void> {
   const { read } = offer;
-  const note =
+  // What „Anlegen“ wrote as the note before S1: only read, to recognise such an invoice when it comes back.
+  const legacyNote =
     account.key === DEMO_ACCOUNT ? undefined : mailWebUrl(account, th.id, { forStorage: true });
   const fields = {
     title: read.payee,
     amountMinor: read.amountMinor,
     date: read.date,
     ...(read.dunning ? { dunning: { level: read.dunning, date: read.mailDate } } : {}),
-    ...(note ? { note } : {}),
   };
+  const linkTo = (id: string) =>
+    linkInvoiceToThread(id, th.id, th.subject, read.mailDate, 'origin');
   try {
     // The row's id first, then a second fixed id from the message and the shown values (so a repeat tap after
     // a deleted invoice with other values finds the new one). Under each: there → „Schon angelegt“; deleted →
@@ -373,6 +386,8 @@ export async function createInvoice(
       const tried = await saveCapture('invoice', fields, { id });
       if (tried.existed === true) {
         await linkOnce(account, th, tried);
+        // Filed on another device, or before S1: the tap leaves the way back to this mail (no undo, as the mark).
+        await linkTo(tried.id);
         onChanged();
         return void toast(t.mail.invoice.already);
       }
@@ -380,21 +395,26 @@ export async function createInvoice(
         saved = tried;
         break;
       }
-      if (await holdsRead(id, read, note)) {
+      if (await holdsRead(id, read, legacyNote)) {
         saved = await reinstateCapture('invoice', id);
         break;
       }
     }
     saved ??= await saveCapture('invoice', fields);
     const link = await linkOnce(account, th, saved);
+    const unlink = await linkTo(saved.id);
     onChanged();
     const done = saved;
     toast(t.mail.invoice.created, {
       label: t.mail.write.undo,
       run: () =>
         void (async () => {
-          await done.undo();
-          if (link) await linkRepo.remove(link);
+          // Each part on its own: a failing entry undo must not leave the link rows behind.
+          await Promise.allSettled([
+            done.undo(),
+            unlink(),
+            ...(link ? [linkRepo.remove(link)] : []),
+          ]);
           onChanged();
           toast(t.mail.write.undone);
         })(),
@@ -405,9 +425,11 @@ export async function createInvoice(
 }
 
 /**
- * „Mahnung vermerken“: on the open invoice the row names, three things – level + 1 (at most 3), the
- * mail's day, one note line; amount and due date stay. Noted already → „Schon vermerkt“. Settled or
- * gone since the list was read → said, nothing written.
+ * „Mahnung vermerken“: on the open invoice the row names – level + 1 (at most 3), the mail's day, one note
+ * line, the reminder's own deadline and amount as fields; amount and due date of the invoice stay. In the same
+ * step a synced link row invoice → this thread (`dunning`, the mail's day), taken back by the same undo. Noted
+ * already → „Schon vermerkt“, nothing written (not the link either). Settled or gone since the list was read →
+ * said, nothing written.
  */
 export async function noteReminder(
   account: MailAccountRef,
@@ -419,13 +441,29 @@ export async function noteReminder(
     const saved = await amendCapture('invoice', reminderFields(offer.read), offer.match);
     if (saved.existed) return void toast(t.mail.invoice.alreadyNoted);
     const link = await linkOnce(account, th, saved);
+    const unlink = await linkInvoiceToThread(
+      saved.id,
+      th.id,
+      th.subject,
+      offer.read.mailDate,
+      'dunning',
+    );
     onChanged();
-    toast(t.mail.invoice.noted, {
+    // The invoice keeps its plan row and day (one thing, CONCEPT-LINKS §2 L5): the toast says where it stands.
+    const planned = await plannedOn('invoices', saved.id).catch(() => undefined);
+    const text = planned
+      ? `${t.mail.invoice.noted} · ${t.mail.invoice.inPlan(planDayLabel(planned))}`
+      : t.mail.invoice.noted;
+    toast(text, {
       label: t.mail.write.undo,
       run: () =>
         void (async () => {
-          await saved.undo();
-          if (link) await linkRepo.remove(link);
+          // Each part on its own: a failing entry undo must not leave the link rows behind.
+          await Promise.allSettled([
+            saved.undo(),
+            unlink(),
+            ...(link ? [linkRepo.remove(link)] : []),
+          ]);
           onChanged();
           toast(t.mail.write.undone);
         })(),

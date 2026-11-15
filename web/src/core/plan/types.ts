@@ -21,7 +21,10 @@ export interface PlanDay {
   date: string;
   /** Minutes the user has for planned work on this day (0 = a day off). */
   availableMin: number;
-  /** Stored blockers plus the timed calendar items of the day (`calendarBlockers`). */
+  /**
+   * Stored blockers, the timed calendar items of the day (`calendarBlockers`) and the blocks a module keeps free
+   * (`PlannableSource.blocks`, planner hub S4: a habit's „Zeit im Plan freihalten“) – all reduce the day's time.
+   */
   blockers: PlanBlocker[];
   /** Optional time window ('HH:mm'): the sessions of the day get a start and an end inside it (`windows.ts`); never changes the minutes. */
   window?: { from: string; to: string };
@@ -53,6 +56,13 @@ export interface PlanItem {
   excluded?: boolean;
   /** Vormittag / Nachmittag / Abend (planner-own, never a contract field): order inside the day, never the day. */
   part?: DayPart;
+  /**
+   * A fixed block (planner hub S4, a training at 18:00): placed on `date` at `from`–`to` ('HH:mm'; missing `to` =
+   * `from` + the minutes), first on its day, never split, never moved by any rule (pin, deadline, capacity, „Später“),
+   * never late and never waiting. It takes the day's time like a pin – minus what a timed blocker of the day already
+   * covers (`fixedCharges`). Outside the horizon it is neither placed nor reported.
+   */
+  fixed?: { date: string; from: string; to?: string };
   done?: boolean;
   /** Age for the tie-break "older first" (epoch ms). */
   createdAt: number;
@@ -103,7 +113,8 @@ export type PlaceReason =
   | 'capacity';
 
 /** Why a unit moved or dropped out. */
-export type MoveReason = 'bumped' | 'after-part' | 'capacity' | 'carried' | 'pulled' | 'done';
+export type MoveReason =
+  'bumped' | 'after-part' | 'capacity' | 'carried' | 'pulled' | 'pinned' | 'done';
 
 export type WaitReason = 'horizon' | 'too-long' | 'after-hard-due';
 

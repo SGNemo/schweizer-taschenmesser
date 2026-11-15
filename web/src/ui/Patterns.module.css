@@ -279,6 +279,14 @@
   min-height: var(--touch);
   justify-content: center;
 }
+/* A row with a line under its title (`below`): title and line stack in the main column; the line is no part of the
+   title's button (its own controls are its own tab stops). */
+.stack {
+  flex: 1 1 9rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
 .rows .main {
   min-width: 0;
   min-height: var(--row-h);
@@ -311,6 +319,17 @@
 }
 .splitMain .rows .main + * {
   margin-left: auto;
+}
+/* After the list rules and stronger than them: inside the stack the main element takes no flex basis (it would be a
+   height in a column) and the line under it is not pushed to the end like a row's status. */
+.row .stack > .main.main {
+  flex: none;
+  min-width: 0;
+}
+.row .stack > .below.below {
+  min-width: 0;
+  margin-left: 0;
+  padding-bottom: var(--space-2);
 }
 .static {
   cursor: default;
@@ -368,6 +387,28 @@
   .actions {
     opacity: 1;
   }
+}
+/* `controls="always"`: the actions stay in sight at rest. */
+.actionsAlways {
+  opacity: 1;
+}
+/* `weight="next"`: the row to do first says so by weight alone. */
+.next > .row .title {
+  font-weight: var(--weight-semibold);
+}
+/* `recessed`: a fixed block among the rows. One tone step down, no hairline above or below it, no hover tone. */
+.rows > .recessed,
+.rows > .recessed:hover,
+.rows > .recessed:focus-within {
+  background: var(--surface-sunken);
+  border-radius: var(--radius-md);
+  border-top-color: transparent;
+}
+.rows > .recessed + * {
+  border-top-color: transparent;
+}
+.recessed > .row .title {
+  font-weight: normal;
 }
 /* The row's enter animation makes every row its own layer: the row with an open menu must sit above the rows below it. */
 .item:has(.actionsOpen) {
@@ -447,6 +488,19 @@ button.chip[aria-pressed='true'] {
 }
 .progressWarn {
   background: var(--warning);
+}
+/* An overrun in the bar's own hue: hatched, so it is told from a full bar without a second colour. */
+.progressHatch {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--module-color, var(--accent)) 0 3px,
+    color-mix(in srgb, var(--module-color, var(--accent)) 35%, transparent) 3px 6px
+  );
+}
+/* A real border (it survives forced colours); the fill keeps the track's rounding. */
+.progressOutline {
+  box-sizing: border-box;
+  border: 1px solid var(--border-strong);
 }
 .overdue {
   color: var(--danger);
@@ -700,6 +754,12 @@ button.chip[aria-pressed='true'] {
 .rows > .current.swipeable:hover > .row,
 .rows > .current.swipeable:focus-within > .row {
   background: var(--row-current);
+}
+/* … and the sunken tone of a recessed block that can be swiped (a fixed training with its tick). */
+.rows > .recessed.swipeable > .row,
+.rows > .recessed.swipeable:hover > .row,
+.rows > .recessed.swipeable:focus-within > .row {
+  background: var(--surface-sunken);
 }
 .reveal {
   position: absolute;

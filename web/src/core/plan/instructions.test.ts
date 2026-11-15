@@ -3,6 +3,7 @@ import {
   parseInstruction,
   resolveDay,
   restToTomorrow,
+  withoutFixedMoves,
   type InstructionContext,
   type PlanOp,
 } from './instructions';
@@ -194,6 +195,55 @@ describe('parseInstruction – the whole day and runs', () => {
       kind: 'ops',
       ops: restToTomorrow(today),
     });
+  });
+
+  it('a fixed block (S4) is never moved: no op from „Rest verteilen“ / „alles von …“, a calm line for a move', () => {
+    const training = {
+      key: 'fitness:s1',
+      title: 'Training Oberkörper',
+      date: '2026-11-05',
+      fixed: true as const,
+    };
+    const today = { ...ctx, today: '2026-11-05', items: [...ctx.items, training] };
+    const keys = (o: readonly PlanOp[]) => o.flatMap((x) => ('key' in x ? [x.key] : []));
+    expect(keys(restToTomorrow(today))).not.toContain('fitness:s1');
+    expect(keys(ops('alles von Do nach Fr'))).not.toContain('fitness:s1');
+    // Only the training left today: no earliest at all (the page's calm „nothing“ line).
+    const alone = { today: '2026-11-05', items: [training] };
+    expect(restToTomorrow(alone)).toEqual([{ op: 'available', date: '2026-11-05', min: 0 }]);
+    for (const text of [
+      'schieb Training auf Fr',
+      'Training erst Fr',
+      'Training erst nächste Woche',
+      'Training auf Fr',
+      'Training heute',
+    ])
+      expect(parseInstruction(text, today)).toEqual({
+        kind: 'fixed',
+        title: 'Training Oberkörper',
+      });
+    // What does not move it still works: its length, taking it out of the plan.
+    expect(parseInstruction('Training dauert 45 min', today)).toEqual({
+      kind: 'ops',
+      ops: [{ op: 'duration', key: 'fitness:s1', min: 45 }],
+    });
+  });
+
+  it('withoutFixedMoves drops a move of a fixed block from any ops (a picked question, the model) and names it', () => {
+    const items = [
+      { key: 'fitness:s1', title: 'Training', fixed: true as const },
+      { key: 'todos:steuer', title: 'Steuer' },
+    ];
+    const moves: PlanOp[] = [
+      { op: 'pin', key: 'fitness:s1', date: TODAY },
+      { op: 'earliest', key: 'todos:steuer', date: TODAY },
+      { op: 'exclude', key: 'fitness:s1' },
+    ];
+    expect(withoutFixedMoves(moves, items)).toEqual({
+      ops: [moves[1], moves[2]],
+      held: 'Training',
+    });
+    expect(withoutFixedMoves([moves[1]!], items)).toEqual({ ops: [moves[1]] });
   });
 
   it('schieb alles von Donnerstag auf Freitag / Do frei, alles nach Fr', () => {

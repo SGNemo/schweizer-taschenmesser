@@ -570,8 +570,10 @@ test('D Planer öffnen bei Überlast', async ({ page, isMobile }, info) => {
   await prepare(page);
   const m = new Meter(page, isMobile);
   await m.go('/planner');
+  // The head figure is the free time of the day that asks for something (planner hub R1: the context line names
+  // the day, the figure lost its „heute“).
   const head = page.getByTestId('planner-head');
-  await expect(head).toContainText('frei heute');
+  await expect(head).toContainText('frei');
   // The overload shows as a number in the head of the waiting group, folded with its calming half (F4).
   const waiting = page.getByText(/Wartet auf freie Zeit/);
   await expect(waiting).toBeVisible({ timeout: 15_000 });
@@ -608,8 +610,16 @@ test('D Planer öffnen bei Überlast', async ({ page, isMobile }, info) => {
   // TARGET §4 (F4: the waiting group folded, the head names the next step); remeasured 2026-11-09: PC 40 · 244 ·
   // 13 · 549 px, phone 23 · 120 · 4 · 437 px. The PC's rows and interactive elements sit exactly at the target:
   // a planner change that adds one fails here on purpose (run this script for planner PRs).
+  // Planner hub R1 (2026-11-15, „Der Tag als Blatt“), measured: PC 29 · 210 · 4 · 178 px (clearly under the
+  // target), phone 26 · 3 rows. The phone's bound for interactive elements is 26 since R1 (25 before): every row's
+  // title is a control now (it opens the thing: path C of planner-hub.spec.ts went from 3 taps to 1), and the
+  // phone keeps its field as the page's last row next to the plus's sheet. Without that field the phone measures
+  // 24, at the price of one tap and one sheet more per entry – the maintainer's call (docs/decisions/plan-hub.md).
+  // Planner hub K1b (2026-11-15): 27 – the late invoice's lead is now the action „Bezahlt …“ (one tap to the pay
+  // step) instead of a silent icon; path F of planner-hub.spec.ts went from 5 taps and a detour to 4. Raised with
+  // the maintainer's approval in the chat (docs/decisions/plan-links.md, K1b).
   const bound = isMobile
-    ? { interactive: 25, words: 200, rows: 5, scroll: 800 }
+    ? { interactive: 27, words: 200, rows: 5, scroll: 800 }
     : { interactive: 40, words: 280, rows: 13, scroll: 700 };
   expect(s.interactive, 'interactive elements').toBeLessThanOrEqual(bound.interactive);
   expect(s.words, 'words').toBeLessThanOrEqual(bound.words);

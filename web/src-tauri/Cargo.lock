@@ -5785,6 +5785,7 @@ dependencies = [
  "taschenmesser-local-api",
  "taschenmesser-local-llm",
  "taschenmesser-os-association",
+ "taschenmesser-pc-tune",
  "taschenmesser-remote-input",
  "taschenmesser-system-info",
  "taschenmesser-torrent",
@@ -5886,6 +5887,15 @@ dependencies = [
 [[package]]
 name = "taschenmesser-os-association"
 version = "0.1.0"
+
+[[package]]
+name = "taschenmesser-pc-tune"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "windows 0.61.3",
+]
 
 [[package]]
 name = "taschenmesser-remote-input"

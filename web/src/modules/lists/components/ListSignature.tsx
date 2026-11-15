@@ -36,15 +36,19 @@ export function ListFigure({
 export function ListSummary({
   testId,
   note,
+  mark,
   children,
 }: {
   testId?: string;
+  /** The list's own icon and colour (`ListMark`), in front of the line. */
+  mark?: ReactNode;
   /** A quiet addition at the end of the line ("Nur Artikel mit Preis"). */
   note?: string;
   children: ReactNode;
 }) {
   return (
     <p className={styles.summary} data-testid={testId}>
+      {mark ? <span className={styles.mark}>{mark}</span> : null}
       {children}
       {note ? <span className={styles.note}> ({note})</span> : null}
     </p>

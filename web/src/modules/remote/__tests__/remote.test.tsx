@@ -2,7 +2,7 @@
 import 'fake-indexeddb/auto';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createFakeRemoteParts } from '@/core/platform/fakeRemote';
 import type { RemoteCloseReason } from '@/core/platform/types';
 import type { RemoteView } from '@/core/remote/session';
@@ -532,5 +532,137 @@ describe('what a sync round says about the pairing', () => {
     useSyncStatus.getState().set({ phase: 'off', via: undefined, error: undefined });
     expect(await syncRound()).toBe('not-paired');
     expect(fake.syncNow).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('power: "Monitor aus" and "PC ausschalten …"', () => {
+  const granted = { granted: true, pending: false, hibernate: false };
+  const menu = () => {
+    fireEvent.click(screen.getByRole('button', { name: 'Weitere Aktionen' }));
+    return screen.getAllByRole('menuitem').map((item) => item.textContent);
+  };
+  const power = () => screen.getByTestId('remote-power').textContent ?? '';
+  // the app's one session keeps a final line: the next test starts without it
+  afterEach(() => remoteSession.powerDismiss());
+
+  it('a PC from before power: neither entry, and nothing about power on the page', async () => {
+    fake.parts.hooks.setPower(null);
+    await show();
+    const items = menu();
+    expect(items).not.toContain('Monitor aus');
+    expect(items).not.toContain('PC ausschalten …');
+    expect(screen.queryByTestId('remote-power')).toBeNull();
+  });
+
+  it('power not granted at the PC: "Monitor aus" only', async () => {
+    await show();
+    const items = menu();
+    expect(items).toContain('Monitor aus');
+    expect(items).not.toContain('PC ausschalten …');
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Monitor aus' }));
+    await flush();
+    expect(fake.parts.hooks.sent()).toEqual(['monitor-off']);
+  });
+
+  it('the sheet: three main actions, hibernate only where the PC has it, sign-out below', async () => {
+    fake.parts.hooks.setPower(granted);
+    await show();
+    menu();
+    fireEvent.click(screen.getByRole('menuitem', { name: 'PC ausschalten …' }));
+    const main = screen.getByRole('group', { name: 'PC ausschalten' });
+    expect([...main.querySelectorAll('button')].map((b) => b.textContent)).toEqual([
+      'Ausschalten',
+      'Neu starten',
+      'Energie sparen',
+    ]);
+    const more = screen.getByRole('group', { name: 'Weitere Möglichkeiten' });
+    expect([...more.querySelectorAll('button')].map((b) => b.textContent)).toEqual(['Abmelden']);
+  });
+
+  it('choosing sends at once; the countdown line has one action, "Abbrechen"', async () => {
+    fake.parts.hooks.setPower({ ...granted, hibernate: true });
+    await show();
+    menu();
+    fireEvent.click(screen.getByRole('menuitem', { name: 'PC ausschalten …' }));
+    expect(screen.getByTestId('remote-power-hibernate')).toBeTruthy();
+    fireEvent.click(screen.getByTestId('remote-power-shut-down'));
+    await flush();
+    await flush();
+    expect(fake.parts.hooks.powered()).toEqual([{ action: 'shut-down', despite: false }]);
+    expect(power()).toContain('Der PC schaltet sich in Kürze aus. Abbrechen geht hier oder am PC.');
+    const buttons = screen.getByTestId('remote-power').querySelectorAll('button');
+    expect([...buttons].map((b) => b.textContent)).toEqual(['Abbrechen']);
+    fireEvent.click(screen.getByTestId('remote-power-cancel'));
+    await flush();
+    await flush();
+    expect(power()).toContain('Abgebrochen. Der PC bleibt an.');
+  });
+
+  it('busy at the PC: "Trotzdem neu starten" sends the same action despite it', async () => {
+    fake.parts.hooks.setPower(granted);
+    fake.parts.hooks.setPowerBusy();
+    await show();
+    menu();
+    fireEvent.click(screen.getByRole('menuitem', { name: 'PC ausschalten …' }));
+    fireEvent.click(screen.getByTestId('remote-power-restart'));
+    await flush();
+    await flush();
+    expect(power()).toContain('Nemo am PC ist gerade noch beschäftigt');
+    expect(screen.getByRole('button', { name: 'Warten' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Trotzdem neu starten' }));
+    await flush();
+    await flush();
+    expect(fake.parts.hooks.powered()).toEqual([
+      { action: 'restart', despite: false },
+      { action: 'restart', despite: true },
+    ]);
+    expect(power()).toContain('Der PC startet in Kürze neu.');
+  });
+
+  it('done, and the disconnect after it: the calm line, never "nicht erreichbar"', async () => {
+    fake.parts.hooks.setPower(granted);
+    await show();
+    await act(() => remoteSession.powerAct('shut-down'));
+    await flush();
+    act(() => fake.parts.hooks.pushPower('done'));
+    await flush();
+    act(() => fake.parts.hooks.close(null));
+    await flush();
+    // the PC is gone: a press finds it unreachable
+    fake.parts.hooks.failOpen('network', 5);
+    useSyncStatus.getState().set({ phase: 'error', via: 'lanClient', error: undefined });
+    fireEvent.click(key('play-pause'));
+    await act(async () => new Promise((r) => setTimeout(r, 1500)));
+    expect(remoteSession.view().kind).toBe('unreachable');
+    expect(power()).toContain('Der PC fährt herunter.');
+    expect(state()).not.toContain('nicht erreichbar');
+  });
+
+  it('the connection dropping while the PC counts down: the calm done line', async () => {
+    fake.parts.hooks.setPower(granted);
+    await show();
+    await act(() => remoteSession.powerAct('shut-down'));
+    await flush();
+    expect(power()).toContain('Der PC schaltet sich in Kürze aus.');
+    act(() => fake.parts.hooks.close(null));
+    await flush();
+    expect(power()).toContain('Der PC fährt herunter.');
+    expect(state()).not.toContain('nicht erreichbar');
+  });
+
+  it('refusals have their sentence and can be hidden', async () => {
+    fake.parts.hooks.setPower(granted);
+    await show();
+    fake.parts.hooks.setUnlock('cancel');
+    await act(() => remoteSession.powerAct('sleep'));
+    await flush();
+    expect(power()).toContain('Nicht bestätigt. Es wurde nichts gesendet.');
+    fireEvent.click(screen.getByRole('button', { name: 'Ausblenden' }));
+    expect(screen.queryByTestId('remote-power')).toBeNull();
+    fake.parts.hooks.setUnlock('ok');
+    fake.parts.hooks.setState({ locked: true });
+    await act(() => remoteSession.powerAct('sleep'));
+    await flush();
+    expect(power()).toContain('Der PC ist gesperrt.');
   });
 });

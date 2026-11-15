@@ -3,11 +3,13 @@
  * one object per day with its capacity line, rows and blockers, plus the waiting list. The engine is
  * not run here; the board shows what the last run stored (`assignment` rows, `LastRun`).
  */
-import type { PlannableEntry } from '@/core/modules/contributions';
+import type { PlanBlockEntry, PlannableEntry } from '@/core/modules/contributions';
 import type { CalendarItem } from '@/core/modules/types';
-import { capacity } from '@/core/plan/capacity';
+import { capacity, fixedCharges } from '@/core/plan/capacity';
+import { cmp } from '@/core/plan/dates';
 import { DEFAULT_MIN, type PlaceReason, type Unplaced } from '@/core/plan/types';
-import { planDays, type DayBlocker } from './days';
+import { fixedOf, planDays, type DayBlocker } from './days';
+import { lateMoneyDue } from './late';
 import { itemKeyOf } from './repo';
 import type { AssignmentRow, PlanDayRow, PlanItemRow } from './schema';
 import { defaultAvailable, type PlannerSettings } from './settings';
@@ -34,6 +36,11 @@ export interface BoardRow {
   /** The source's own date before the planner (for „Warum hier?“ of a carried thing). */
   entry?: PlannableEntry;
   item?: PlanItemRow;
+  /**
+   * A fixed block (planner hub S4, a training at 18:00): its time on this day. Shown with the day's blocks, never
+   * moved, never late; it takes from the day only what no timed blocker covers already.
+   */
+  fixed?: { from: string; to: string };
 }
 
 export interface BoardDay {
@@ -75,6 +82,11 @@ export interface WaitingRow {
 export interface Board {
   days: BoardDay[];
   waiting: WaitingRow[];
+  /**
+   * „Frist vorbei“ (planner hub R2, D7): money whose hard deadline has passed – on no day, in no day's sum, not
+   * in `waiting`. Oldest deadline first. A thing set to „Nicht planen“ is not listed here (it waits, as before).
+   */
+  late: BoardRow[];
   /** Open things in the plan today (first sessions). */
   todayCount: number;
 }
@@ -89,6 +101,8 @@ export interface BoardInput {
   assignments: readonly (AssignmentRow & { id: string })[];
   entries: readonly PlannableEntry[];
   calendar: readonly CalendarItem[];
+  /** Blocks of time modules keep free (habits, S4). */
+  blocks?: readonly PlanBlockEntry[];
   unplaced: readonly Unplaced[];
   titles?: Record<string, string>;
 }
@@ -128,21 +142,57 @@ export function buildBoard(input: BoardInput): Board {
   const titles: Record<string, string> = { ...input.titles };
   for (const [key, e] of entries) titles[key] = e.title;
   const bufferShare = Number(input.settings.bufferShare) / 100;
+  // Late money: off the days at once, also before the next run has dropped its stored rows.
+  const lateDue = new Map<string, string>();
+  for (const [key, e] of entries) {
+    const due = lateMoneyDue(e, items.get(key), input.today);
+    if (due) lateDue.set(key, due);
+  }
+  const late: BoardRow[] = [...lateDue]
+    .filter(([key]) => !items.get(key)?.excluded)
+    .map(([key, due]) => {
+      const entry = entries.get(key)!;
+      const item = items.get(key);
+      return {
+        unitId: `${key}#0`,
+        itemKey: key,
+        title: entry.title,
+        minutes: item?.durationMin ?? entry.durationMin ?? DEFAULT_MIN,
+        k: 0,
+        of: 1,
+        reason: 'deadline' as const,
+        late: true,
+        approx: item?.durationMin === undefined && entry.durationMin === undefined,
+        pinned: false,
+        hardDue: due,
+        entry,
+        ...(item ? { item } : {}),
+      };
+    })
+    .sort(
+      (a, b) =>
+        a.hardDue!.localeCompare(b.hardDue!) ||
+        (a.entry?.createdAt ?? 0) - (b.entry?.createdAt ?? 0) ||
+        a.itemKey.localeCompare(b.itemKey),
+    );
   const built = planDays({
     today: input.today,
     span: input.span,
     settings: input.settings,
     dayRows: input.dayRows,
     calendar: input.calendar,
+    ...(input.blocks ? { blocks: input.blocks } : {}),
   });
   const days: BoardDay[] = built.map(({ date, availableMin, blockers, row, window, ownWindow }) => {
     const cap = capacity({ date, availableMin, blockers }, { bufferShare });
     const rows: BoardRow[] = input.assignments
-      .filter((a) => a.date === date)
+      .filter((a) => a.date === date && !lateDue.has(a.itemKey))
       .sort((a, b) => a.order - b.order)
       .map((a) => {
         const entry = entries.get(a.itemKey);
         const item = items.get(a.itemKey);
+        // Fixed on this day by its source (S4); the run stored its time with the row.
+        const fixed = entry && fixedOf(entry)?.date === date && a.from && a.to;
         return {
           unitId: a.id,
           itemKey: a.itemKey,
@@ -166,9 +216,20 @@ export function buildBoard(input: BoardInput): Board {
               : {}),
           ...(entry ? { entry } : {}),
           ...(item ? { item } : {}),
+          ...(fixed ? { fixed: { from: a.from!, to: a.to! } } : {}),
         };
       });
-    const planned = rows.reduce((n, r) => n + r.minutes, 0);
+    // As the engine counts (`core/plan/engine.ts` rule 2b): a fixed block takes only what no timed blocker covers.
+    const fixedRows = rows
+      .filter((r) => r.fixed)
+      .sort((a, b) => cmp(a.fixed!.from, b.fixed!.from) || cmp(a.unitId, b.unitId));
+    const charges = fixedCharges(
+      fixedRows.map((r) => ({ minutes: r.minutes, ...r.fixed })),
+      blockers,
+    );
+    const planned =
+      rows.filter((r) => !r.fixed).reduce((n, r) => n + r.minutes, 0) +
+      charges.reduce((n, c) => n + c, 0);
     return {
       date,
       isToday: date === input.today,
@@ -190,7 +251,7 @@ export function buildBoard(input: BoardInput): Board {
   const placed = new Set(input.assignments.map((a) => a.itemKey));
   const waiting: WaitingRow[] = input.unplaced
     .filter((u) => u.reason !== 'after-hard-due' || !placed.has(u.itemKey) || u.date === undefined)
-    .filter((u) => entries.has(u.itemKey))
+    .filter((u) => entries.has(u.itemKey) && !lateDue.has(u.itemKey))
     .map((u) => ({
       unitId: u.id,
       itemKey: u.itemKey,
@@ -222,5 +283,5 @@ export function buildBoard(input: BoardInput): Board {
   }
   const todayDay = days[0];
   const todayCount = todayDay ? new Set(todayDay.rows.map((r) => r.itemKey)).size : 0;
-  return { days, waiting, todayCount };
+  return { days, waiting, late, todayCount };
 }

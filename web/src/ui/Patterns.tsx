@@ -318,6 +318,10 @@ export function ItemRow({
   swipeLeftLabel,
   className,
   signatureBlock,
+  controls = 'hover',
+  weight,
+  recessed,
+  below,
   children,
 }: {
   title: ReactNode;
@@ -358,6 +362,20 @@ export function ItemRow({
    * `web/scripts/baselines/signature-blocks.json`; the stimulus budget counts them per page (docs/howto/ci.md).
    */
   signatureBlock?: string;
+  /**
+   * `always`: the row's actions and its "⋯" stay in sight at rest (a list whose rows are worked through one by one);
+   * the default shows them on hover and focus, and always on devices without hover.
+   */
+  controls?: 'hover' | 'always';
+  /** `next`: the row to do first, its title in the strong weight (words, no colour). */
+  weight?: 'next';
+  /** A fixed block inside a list (an appointment in a day): a sunken tone, no hairline, never the hover tone. */
+  recessed?: boolean;
+  /**
+   * A line under the title and meta (a row's links as chips): in the DOM after the main element and before `end`
+   * and the menu, so the reading and tab order is title → line → ⋯. `children` come after the whole row instead.
+   */
+  below?: ReactNode;
   children?: ReactNode;
 }) {
   const body = (
@@ -381,6 +399,25 @@ export function ItemRow({
   );
   const swipe = useSwipeRow({ onSwipeRight, onSwipeLeft });
   const [menuOpen, setMenuOpen] = useState(false);
+  const main = href ? (
+    <a className={styles.main} data-row href={href} target="_blank" rel="noreferrer noopener">
+      {body}
+    </a>
+  ) : onOpen ? (
+    <button
+      type="button"
+      className={styles.main}
+      data-row
+      aria-current={current ? 'true' : undefined}
+      onClick={onOpen}
+    >
+      {body}
+    </button>
+  ) : (
+    <div className={`${styles.main} ${styles.static}`} data-row tabIndex={-1}>
+      {body}
+    </div>
+  );
   return (
     <li
       onContextMenu={
@@ -399,6 +436,8 @@ export function ItemRow({
         selected ? styles.selected : '',
         current ? styles.current : '',
         done ? styles.done : '',
+        weight === 'next' ? styles.next : '',
+        recessed ? styles.recessed : '',
         className ?? '',
       ]
         .filter(Boolean)
@@ -423,29 +462,18 @@ export function ItemRow({
           />
         ) : null}
         {lead}
-        {href ? (
-          <a className={styles.main} data-row href={href} target="_blank" rel="noreferrer noopener">
-            {body}
-          </a>
-        ) : onOpen ? (
-          <button
-            type="button"
-            className={styles.main}
-            data-row
-            aria-current={current ? 'true' : undefined}
-            onClick={onOpen}
-          >
-            {body}
-          </button>
-        ) : (
-          <div className={`${styles.main} ${styles.static}`} data-row tabIndex={-1}>
-            {body}
+        {below ? (
+          <div className={styles.stack}>
+            {main}
+            <div className={styles.below}>{below}</div>
           </div>
+        ) : (
+          main
         )}
         {end}
         {actions || menu?.length ? (
           <div
-            className={`${styles.actions} ${menuOpen ? styles.actionsOpen : ''}`}
+            className={`${styles.actions} ${menuOpen ? styles.actionsOpen : ''} ${controls === 'always' ? styles.actionsAlways : ''}`}
             data-row-actions
           >
             {actions}
@@ -591,28 +619,48 @@ export function Progress({
   label,
   over,
   tone,
+  scale,
+  outline,
+  valueText,
 }: {
   value: number;
   max: number;
   label: string;
-  over?: boolean;
+  /**
+   * The value exceeds the maximum. `true` paints the bar in the danger colour; `'hatch'` keeps the bar's own hue and
+   * draws it hatched (an overrun that is a fact, not an alarm – the text beside the bar says it in words).
+   */
+  over?: boolean | 'hatch';
   /** Colours the bar for a level (warning / danger) when it is not an overrun. */
   tone?: 'warning' | 'danger';
+  /** 0–1: the track's length as a share of the room it has (bars of one group on a common scale). */
+  scale?: number;
+  /** Draws the track's outline, for a track on a surface of nearly its own tone (non-text contrast). */
+  outline?: boolean;
+  /** What the bar says in words (`aria-valuetext`), where the percentage alone means little. */
+  valueText?: string;
 }) {
   const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
   return (
     <div
-      className={styles.progress}
+      className={outline ? `${styles.progress} ${styles.progressOutline}` : styles.progress}
+      style={
+        scale === undefined
+          ? undefined
+          : { width: `${Math.round(Math.min(1, Math.max(0, scale)) * 100)}%` }
+      }
       role="progressbar"
       aria-label={label}
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={pct}
+      aria-valuetext={valueText}
     >
       <div
         className={[
           styles.progressBar,
-          over || tone === 'danger' ? styles.progressOver : '',
+          over === true || tone === 'danger' ? styles.progressOver : '',
+          over === 'hatch' ? styles.progressHatch : '',
           tone === 'warning' ? styles.progressWarn : '',
         ].join(' ')}
         style={{ transform: `scaleX(${pct / 100})` }}

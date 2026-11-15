@@ -37,6 +37,11 @@ export const goalSchema = z.object({
   /** Times per week (period `week`). */
   weeklyTimes: z.number().int().min(1).max(7).default(3),
   reminder: reminderSchema.optional(),
+  /**
+   * „Zeit im Plan freihalten“ (manifest v2, planner hub S4 / concept H1): minutes the planner keeps free on every
+   * scheduled day of a daily goal. Missing = none (the default). Never a time of day, never a tick in the plan.
+   */
+  minutes: z.number().int().min(5).max(240).optional(),
   order: z.number().default(0),
   /** Out of sight but kept (and exportable) – nothing is deleted by archiving. */
   archived: z.boolean().optional(),

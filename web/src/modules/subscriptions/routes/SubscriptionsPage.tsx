@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { currencyOf, formatMoney, formatTotals } from '@/core/money';
 import { describeRecurrence } from '@/core/recurrence/describe';
@@ -65,6 +65,22 @@ export default function SubscriptionsPage() {
       setSuggestion(amountMinor > 0 ? { id: record.id, amountMinor } : undefined);
     },
   );
+  // `?do=cancel` (the plan row's „Kündigen …“, CONCEPT-LINKS §2 L7) is untrusted input. The module has no cancel
+  // step of its own (cancelling is the „Gekündigt zum“ field of the entry), so it does nothing beyond `?open=`:
+  // the id is checked by `useOpenParam`, nothing is written, and once `open` is read `do` (any value) leaves the URL.
+  const strayDo = params.has('do') && !params.get('open');
+  useEffect(() => {
+    if (!strayDo) return;
+    setParams(
+      (p) => {
+        const next = new URLSearchParams(p);
+        next.delete('do');
+        if (!next.get('open')) next.delete('open');
+        return next;
+      },
+      { replace: true },
+    );
+  }, [strayDo, setParams]);
 
   // `?new=1` (Quick-Add) opens the create dialog; derived from the URL.
   const openTarget = target ?? (params.get('new') ? { draft: true as const } : null);

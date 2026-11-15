@@ -300,12 +300,12 @@
         "en": "Saved"
       },
       "short": {
-        "de": "Links, Lesestoff, Filme, Orte und Ideen merken",
-        "en": "Save links, reading, films, places and ideas"
+        "de": "Was du dir noch anschauen, lesen, kaufen, ausprobieren oder besuchen willst",
+        "en": "What you still want to look at, read, buy, try out or visit"
       },
       "description": {
-        "de": "Links, Lesestoff, Filme, Orte und Ideen merken – mit Tags, Filtern und Erledigt-Status; oft gebrauchte Links als Lesezeichen-Kacheln. Auf dem Handy auch über „Teilen“ aus anderen Apps.",
-        "en": "Save links, reading, films, places and ideas – with tags, filters and a done status; links you use often as bookmark tiles. On your phone also via “Share” from other apps."
+        "de": "Was du dir noch anschauen, lesen, kaufen, ausprobieren oder besuchen willst – mit Tags und Status. Jeder Merkzettel hat ein Ende: erledigt oder weg. Die paar Links, die du täglich brauchst, liegen im Tab „Lesezeichen“. Auf dem Handy auch über „Teilen“ aus anderen Apps.",
+        "en": "What you still want to look at, read, buy, try out or visit – with tags and a status. Every saved item has an end: done or gone. The few links you need every day live in the “Bookmarks” tab. On your phone also via “Share” from other apps."
       }
     },
     {
@@ -396,12 +396,12 @@
         "en": "Routines"
       },
       "short": {
-        "de": "Putzplan und Haushalts-Routinen",
-        "en": "Cleaning plan and household routines"
+        "de": "Routinen für den Tag und den Haushalt",
+        "en": "Routines for the day and the household"
       },
       "description": {
-        "de": "Putzplan und Haushalts-Routinen: was in welchem Raum wie oft dran ist und wer an der Reihe ist. Ohne Rückstand.",
-        "en": "Cleaning plan and household routines: what is due in which room how often, and whose turn it is. No backlog."
+        "de": "Routinen für den Tag und den Haushalt: Schritte zum Abhaken, wann sie dran sind und wer an der Reihe ist. Ohne Rückstand.",
+        "en": "Routines for the day and the household: steps to tick off, when they are due and whose turn it is. No backlog."
       }
     },
     {
@@ -496,8 +496,8 @@
         "en": "Your subscribed feeds (news, blogs, podcasts) in one place, sorted by group"
       },
       "description": {
-        "de": "Deine abonnierten Feeds (Nachrichten, Blogs, Podcasts) an einem Ort, nach Gruppen sortiert. Nemo ruft sie nicht selbst ab; ein Tipp öffnet die Seite.",
-        "en": "Your subscribed feeds (news, blogs, podcasts) in one place, sorted by group. Nemo does not fetch them itself; a tap opens the site."
+        "de": "Deine abonnierten Feeds (Nachrichten, Blogs, Podcasts) an einem Ort, nach Gruppen sortiert, mit einem Startkatalog zum Aussuchen. Nemo ruft Feeds nur auf deinen Klick ab, für die Vorschau; ein Tipp öffnet die Seite.",
+        "en": "Your subscribed feeds (news, blogs, podcasts) in one place, sorted by group, with a starter catalogue to pick from. Nemo fetches a feed only when you click, for the preview; a tap opens the site."
       }
     },
     {
@@ -684,12 +684,12 @@
         "en": "Device status"
       },
       "short": {
-        "de": "Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite",
-        "en": "Backup, sync, storage and updates of this device on one page"
+        "de": "Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite, dazu ein Backup zum Herunterladen",
+        "en": "Backup, sync, storage and updates of this device on one page, plus a backup to download"
       },
       "description": {
-        "de": "Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite. Nur Anzeige, die Seite sendet nichts.",
-        "en": "Backup, sync, storage and updates of this device on one page. Display only; this page sends nothing."
+        "de": "Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite, dazu ein Backup zum Herunterladen. Die Seite sendet nichts.",
+        "en": "Backup, sync, storage and updates of this device on one page, plus a backup to download. This page sends nothing."
       }
     },
     {

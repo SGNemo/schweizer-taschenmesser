@@ -3,6 +3,7 @@ import { redirectUri } from '@/core/connectors/redirect';
 import { getPlatform } from '@/core/platform';
 import { tSpotify } from '@/strings.spotify';
 import {
+  accountId,
   likedSongs,
   listPlaylists,
   play,
@@ -28,9 +29,21 @@ import {
   transfer,
   addToPlaylist,
   createPlaylist,
+  editPlaylist,
   removeFromPlaylist,
   renamePlaylist,
 } from './browse';
+import {
+  albumsSaved,
+  artist,
+  artistsFollowed,
+  followArtists,
+  followedArtists,
+  followPlaylist,
+  playlistFollowed,
+  saveAlbums,
+  savedAlbums,
+} from './library';
 
 const s = () => tSpotify.get();
 
@@ -131,6 +144,17 @@ const connector: ConnectorDef = {
       defaultOn: false,
     },
     {
+      id: 'follow',
+      get label() {
+        return s().followFeature;
+      },
+      get description() {
+        return s().followHint;
+      },
+      scopes: ['user-follow-read', 'user-follow-modify'],
+      defaultOn: false,
+    },
+    {
       id: 'history',
       get label() {
         return s().historyFeature;
@@ -143,8 +167,10 @@ const connector: ConnectorDef = {
     },
   ],
   nowPlaying: {
+    account: accountId,
     createPlaylist,
     renamePlaylist,
+    editPlaylist,
     addToPlaylist,
     removeFromPlaylist,
     read: readCurrentlyPlaying,
@@ -168,6 +194,15 @@ const connector: ConnectorDef = {
     transfer,
     saved,
     save,
+    savedAlbums,
+    albumsSaved,
+    saveAlbums,
+    artist,
+    followedArtists,
+    artistsFollowed,
+    followArtists,
+    playlistFollowed,
+    followPlaylist,
   },
 };
 

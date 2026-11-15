@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { strToU8, zipSync } from 'fflate';
 import { openPageMenu } from './money-helpers';
@@ -228,8 +229,10 @@ test('a template: saved from the form, filled into a new session with one tap', 
   const discard = page.getByRole('button', { name: /Verwerfen|Nicht speichern/ });
   if (await discard.count()) await discard.first().click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
-
-  await page.getByRole('button', { name: 'Einheit eintragen', exact: true }).click();
+  // The closing form's own „Einheit eintragen“ (its submit) leaves the DOM a moment later: wait for it.
+  const add = page.getByRole('button', { name: 'Einheit eintragen', exact: true });
+  await expect(add).toHaveCount(1);
+  await add.click();
   dialog = page.getByRole('dialog', { name: 'Einheit eintragen' });
   await dialog.getByRole('button', { name: 'Vorlage Einheit übernehmen' }).click();
   await expect(dialog.getByRole('combobox', { name: 'Übung' })).toHaveValue('Rudern');
@@ -344,4 +347,131 @@ test('import from MyFitnessPal: the export ZIP brings a day of exercise and a me
   await expectRowDetail(page, /Squats, Barbell 3 × 5 · 80 kg/);
   // The weight from Measurement-Summary is nowhere.
   await expect(page.getByText(/81[,.]4/)).toHaveCount(0);
+});
+
+test('exercises: last time under the form row, history with the best, search in the catalogue', async ({
+  page,
+}) => {
+  await page.goto('/fitness?new=session');
+  let dialog = page.getByRole('dialog', { name: 'Einheit eintragen' });
+  await expect(dialog).toBeVisible();
+  await moreFields(page);
+  await dialog.getByLabel('Datum').fill('2026-11-05');
+  await dialog.getByRole('combobox', { name: 'Übung' }).fill('Kniebeuge');
+  await dialog.getByLabel('Sätze').fill('3');
+  await dialog.getByLabel('Wdh.').fill('5');
+  await dialog.getByLabel('kg', { exact: true }).fill('80');
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+
+  // A second session: the catalogue search finds the exercise, the row says what it was last time.
+  await page.getByRole('button', { name: 'Einheit eintragen' }).first().click();
+  dialog = page.getByRole('dialog', { name: 'Einheit eintragen' });
+  await dialog.getByRole('button', { name: 'Aus dem Katalog' }).click();
+  const picker = page.getByRole('dialog', { name: 'Übung aus dem Katalog' });
+  await picker.getByRole('searchbox').fill('knie');
+  await expect(picker.getByRole('button', { name: 'Bankdrücken hinzufügen' })).toHaveCount(0);
+  await picker.getByRole('button', { name: 'Kniebeuge hinzufügen' }).click();
+  await expect(dialog.getByText(/Letztes Mal \(.*\): 3 × 5 · 80 kg/)).toBeVisible();
+  await expect(dialog.getByLabel('kg', { exact: true })).toHaveValue('80');
+  await dialog.getByLabel('kg', { exact: true }).fill('85');
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Übungen', exact: true }).click();
+  const list = page.getByTestId('fitness-exercises');
+  await expect(list.getByText(/Zuletzt Heute · 3 × 5 · 85 kg · Bestwert$/)).toBeVisible();
+  // The new view passes axe like the pages of e2e/a11y.spec.ts (that list is a guard file).
+  const axe = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+    .analyze();
+  expect(axe.violations.map((v) => v.id)).toEqual([]);
+  await list.getByRole('button', { name: /Kniebeuge/ }).click();
+  const history = page.getByRole('dialog', { name: 'Kniebeuge' });
+  await expect(history.getByTestId('fitness-exercise-best')).toHaveText(
+    'Bestwert 85 kg × 5 · 2-mal eingetragen',
+  );
+
+  // The week shows the sets per muscle group as bars, named in words (legend and table).
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Woche', exact: true }).click();
+  const groups = page.getByRole('figure', { name: 'Sätze je Muskelgruppe' });
+  await expect(groups).toContainText('Beine');
+  await expect(groups).toContainText('6 Sätze');
+});
+
+test('a live session: started from the menu, saved after each set, survives a reload, ends with its duration', async ({
+  page,
+}) => {
+  await page.goto('/fitness');
+  await (await openPageMenu(page)).getByRole('menuitem', { name: 'Einheit starten' }).click();
+  let live = page.getByTestId('fitness-live');
+  await expect(live.getByText('Wähle die erste Übung, dann geht es los.')).toBeVisible();
+  await live.getByRole('button', { name: 'Übung hinzufügen' }).click();
+  const picker = page.getByRole('dialog', { name: 'Übung aus dem Katalog' });
+  await picker.getByRole('searchbox').fill('knie');
+  await picker.getByRole('button', { name: 'Kniebeuge hinzufügen' }).click();
+
+  await live.getByLabel('Wdh.').fill('5');
+  await live.getByLabel('kg', { exact: true }).fill('60');
+  await live.getByLabel('Aufwärmen').check();
+  await live.getByRole('button', { name: 'Satz fertig' }).click();
+  await expect(live.getByText('5 × 60 kg · Aufwärmen')).toBeVisible();
+  // The rest runs quietly, in words; it can be ended.
+  await expect(page.getByTestId('fitness-rest')).toContainText('Pause · 1:30');
+  await expect.poll(async () => (await rows(page, 'fitness_session')).length).toBe(1);
+
+  // A reload keeps it: the training view offers „Weiter“.
+  await page.reload();
+  await expect(page.getByTestId('fitness-live-banner')).toContainText('Einheit läuft seit 10:00');
+  await page.getByTestId('fitness-live-banner').getByRole('button', { name: 'Weiter' }).click();
+  live = page.getByTestId('fitness-live');
+  await live.getByRole('button', { name: 'Pause beenden' }).click();
+  // The last set is offered again.
+  await expect(live.getByLabel('kg', { exact: true })).toHaveValue('60');
+  await live.getByLabel('kg', { exact: true }).fill('80');
+  await live.getByRole('button', { name: 'Satz fertig' }).click();
+  await expect(live.getByText('5 × 80 kg', { exact: true })).toBeVisible();
+
+  await page.clock.setFixedTime(new Date('2026-11-08T10:35:00'));
+  await live.getByRole('button', { name: 'Einheit beenden' }).click();
+  await expect(page.getByText('Einheit gespeichert · 35 Min')).toBeVisible();
+  await expect(page.getByTestId('fitness-live-banner')).toHaveCount(0);
+  const [saved] = await rows(page, 'fitness_session');
+  expect(saved).toMatchObject({ durationMin: 35, date: '2026-11-08', time: '10:00' });
+  expect((saved!.exercises as { sets: number; weightKg: number }[])[0]).toMatchObject({
+    sets: 1,
+    weightKg: 80,
+  });
+});
+
+test('a training plan: a preset with weekdays, „Heute laut Plan“ starts the session, then the day is done', async ({
+  page,
+}) => {
+  await page.goto('/fitness');
+  await (await openPageMenu(page)).getByRole('menuitem', { name: 'Trainingsplan' }).click();
+  const plan = page.getByRole('dialog', { name: 'Trainingsplan' });
+  await plan.getByRole('button', { name: 'Plan Ganzkörper, 2 × pro Woche übernehmen' }).click();
+  await expect(page.getByText('Plan angelegt: 2 Vorlagen.')).toBeVisible();
+  // Sunday 2026-11-08 is no preset day: the user adds it.
+  const sunday = plan.getByRole('button', { name: 'Ganzkörper A am Sonntag' });
+  await sunday.click();
+  await expect(sunday).toHaveAttribute('aria-pressed', 'true');
+  await page.keyboard.press('Escape');
+
+  const today = page.getByTestId('fitness-today-plan');
+  await expect(today).toContainText('Heute laut Plan: Ganzkörper A');
+  await today.getByRole('button', { name: 'Ganzkörper A anfangen' }).click();
+  const live = page.getByTestId('fitness-live');
+  await expect(live.getByRole('heading', { name: 'Kniebeuge' })).toBeVisible();
+  await expect(live).toContainText('Übung 1 von 4');
+  await live.getByLabel('Wdh.').fill('8');
+  await live.getByLabel('kg', { exact: true }).fill('50');
+  await live.getByRole('button', { name: 'Satz fertig' }).click();
+  await expect(live.getByText('8 × 50 kg', { exact: true })).toBeVisible();
+  await live.getByRole('button', { name: 'Einheit beenden' }).click();
+
+  // The day has its session now: no plan row, the session is listed.
+  await expect(page.getByTestId('fitness-today-plan')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Ganzkörper A/ }).first()).toBeVisible();
 });

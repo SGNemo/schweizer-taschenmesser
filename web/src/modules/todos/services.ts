@@ -1,6 +1,7 @@
 import { liveQuery } from 'dexie';
 import { bus } from '@/core/events';
 import { logError } from '@/core/diagnostics/logError';
+import { copyTodoLinksOf } from '@/core/entitylinks/migrate';
 import { getMeta } from '@/core/db/metaKv';
 import { loadStoredModuleState } from '@/core/modules/activation';
 import { PULL_COMPLETE_KEY } from '@/core/storage/dexie';
@@ -22,7 +23,7 @@ export async function addRequested(req: {
   await ensureInbox(t.todos.inbox);
   const list = (await listRepo.active().sortBy('order'))[0];
   if (!list) return;
-  await taskRepo.create({
+  const task = await taskRepo.create({
     listId: list.id,
     title,
     done: false,
@@ -32,6 +33,16 @@ export async function addRequested(req: {
     ...(req.dueDate ? { dueDate: req.dueDate } : {}),
     ...(req.link ? { links: [req.link] } : {}),
   });
+  if (!req.link) return;
+  // The row of the link table right away, so the other end (the note, the event) lists this ToDo now and not only
+  // after the next start's copy of `links[]` (planner hub S5, P46/P52). Written exactly as that copy writes it:
+  // same id, only when absent, stamped like the task's `links` field – so a removal elsewhere always wins.
+  // A link that must not be stored (no link target) is skipped there; the ToDo keeps its `links[]` entry.
+  try {
+    await copyTodoLinksOf(task);
+  } catch {
+    console.error('[todos] link row of a requested to-do failed');
+  }
 }
 
 /** Ticks off one open to-do another module asked for by id (`todo.doneRequested`); anything else stays. */

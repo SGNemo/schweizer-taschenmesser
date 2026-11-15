@@ -1,10 +1,13 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
+import { usePlanRowEntries } from '@/core/entitylinks/planRow';
 import { bus } from '@/core/events';
 import { useModuleStates } from '@/core/modules/activation';
 import { whenServicesSettled } from '@/core/modules/servicesReady';
 import { useSettled } from '@/core/status/settled';
+import { useSettings } from '@/core/settings/settings';
+import { SETTINGS_DEFAULTS, SETTINGS_SCOPE, settingsSchema } from '../settings';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import type { Stored } from '@/core/db/types';
 import { useUiStore } from '@/stores/ui';
@@ -34,15 +37,20 @@ import {
 } from '@/ui';
 import { ItemEditor } from '../components/ItemEditor';
 import { SignatureMark } from '@/ui/identity';
-import { ListEditor, type ListTarget } from '../components/ListEditor';
+import { archiveWithUndo, ListEditor, ListMark, type ListTarget } from '../components/ListEditor';
+import { ManageLists } from '../components/ManageLists';
+import { ShareToList } from '../components/ShareToList';
+import { FillFromPantry } from '../components/FillFromPantry';
 import {
   groupItems,
   listAsText,
   namedSectionCount,
+  pickWidgetList,
+  sharedEntries,
   PACKING_TEMPLATES,
   progress,
   sortItems,
-  sortLists,
+  splitArchived,
   suggestNames,
   totals,
 } from '../logic';
@@ -103,8 +111,33 @@ export default function ListsPage() {
     async (id) => (await listRepo.get(id)) ?? (await itemRepo.get(id)),
     (r) => ({ list: 'listId' in r ? r.listId : r.id }),
   );
-  const sorted = useMemo(() => sortLists(lists ?? []), [lists]);
-  const current = sorted.find((l) => l.id === params.get('list')) ?? sorted[0];
+  // The tab row holds the lists in use; an archived list opens only by its address (search hit, "Listen
+  // verwalten") and then shows as one more tab with a way back.
+  const { active: inUse } = useMemo(() => splitArchived(lists ?? []), [lists]);
+  const current =
+    (lists ?? []).find((l) => l.id === params.get('list')) ??
+    (inUse[0] as (typeof inUse)[0] | undefined);
+  const sorted = current?.archived ? [...inUse, current] : inUse;
+  const [manage, setManage] = useState(false);
+  const [fill, setFill] = useState(false);
+  // `?share=<text>` (the share sheet's "Auf eine Liste"): each line becomes an entry of the list the reader picks.
+  const shared = useMemo(() => sharedEntries(params.get('share') ?? ''), [params]);
+  const closeShare = () => {
+    const next = new URLSearchParams(params);
+    next.delete('share');
+    setParams(next, { replace: true });
+  };
+  const [prefs, setPrefs] = useSettings(SETTINGS_SCOPE, settingsSchema, SETTINGS_DEFAULTS);
+  const widgetList = pickWidgetList(lists ?? [], prefs?.widgetList ?? '');
+  // Own icon or colour: shown in front of the list's first line (the tabs carry names only).
+  const mark =
+    current && (current.icon || current.tone !== undefined) ? (
+      <ListMark list={current} />
+    ) : undefined;
+  /** A list just archived leaves the tab row: the page goes to the first list in use. */
+  const leaveArchived = (id: string) => {
+    if (params.get('list') === id || current?.id === id) setParams({}, { replace: true });
+  };
   // id -> `done` before the change: such an entry sorts as if nothing changed until HOLD_MS is over.
   const [held, setHeld] = useState<ReadonlyMap<string, boolean>>(new Map());
   const shown = useMemo(() => {
@@ -302,6 +335,27 @@ export default function ListsPage() {
       clearDone(id),
     );
   };
+  // „In den Plan“ / „Im Plan · Di“ (planner hub S3): one plan row for the whole list, only for a shopping or a
+  // packing list, and only while the planner is on (the helper reads that itself). A request has no end of its
+  // own, so „Nicht mehr planen“ stays offered while it stands – also on an emptied list, which offers nothing else.
+  const navigate = useNavigate();
+  const planTarget = useMemo(
+    () =>
+      current && !current.archived && (isShopping || isPacking)
+        ? { ref: { module: 'lists', id: current.id }, title: current.name }
+        : undefined,
+    [current, isShopping, isPacking],
+  );
+  const planEntries = usePlanRowEntries(
+    planTarget,
+    {
+      add: t.lists.plan.add,
+      placed: t.lists.plan.placed,
+      waits: t.lists.plan.waits,
+      remove: t.lists.plan.remove,
+    },
+    (to) => void navigate(to),
+  ).filter((e) => openCount > 0 || e.id === 'not-in-plan');
   const pageMenu = current
     ? [
         // On an empty list the field stands right under the empty state: no second way to it.
@@ -309,8 +363,32 @@ export default function ListsPage() {
         ...(isShopping && doneCount > 0
           ? [{ id: 'clear-bought', label: t.lists.clearBought(doneCount), onSelect: clearBought }]
           : []),
+        ...planEntries,
         { id: 'templates', label: t.lists.routines.title, onSelect: () => setTemplates(true) },
         { id: 'edit-list', label: t.lists.editList, onSelect: () => setListTarget(current) },
+        { id: 'manage', label: t.lists.manage, onSelect: () => setManage(true) },
+        ...(!current.archived
+          ? [
+              {
+                id: 'widget',
+                label: t.lists.showInWidget,
+                checked: widgetList?.id === current.id,
+                onSelect: () => {
+                  void setPrefs({ widgetList: current.id }).then(() =>
+                    toast(t.lists.widgetShows(current.name)),
+                  );
+                },
+              },
+              {
+                id: 'archive',
+                label: t.lists.archiveList,
+                onSelect: () => {
+                  archiveWithUndo(current, true);
+                  leaveArchived(current.id);
+                },
+              },
+            ]
+          : []),
         ...(toBuy.length > 0
           ? [
               {
@@ -319,6 +397,9 @@ export default function ListsPage() {
                 onSelect: () => void sendToBuy(),
               },
             ]
+          : []),
+        ...(isShopping && moduleStates?.pantry === true
+          ? [{ id: 'fill-pantry', label: t.lists.fillFromPantry, onSelect: () => setFill(true) }]
           : []),
         ...(isShopping && doneCount > 0 && moduleStates?.pantry === true
           ? [
@@ -356,7 +437,10 @@ export default function ListsPage() {
           : []),
         { id: 'share', label: t.lists.share, onSelect: () => void share() },
       ]
-    : [];
+    : // No list in use (all archived or deleted): the way back to the archive stays in the menu.
+      lists && lists.length > 0
+      ? [{ id: 'manage', label: t.lists.manage, onSelect: () => setManage(true) }]
+      : [];
 
   return (
     <>
@@ -368,7 +452,11 @@ export default function ListsPage() {
           lists && current ? (
             <Tabs
               label={t.lists.tabsLabel}
-              items={sorted.map((l) => ({ id: l.id, label: l.name, active: l.id === current.id }))}
+              items={sorted.map((l) => ({
+                id: l.id,
+                label: l.archived ? t.lists.archivedTab(l.name) : l.name,
+                active: l.id === current.id,
+              }))}
               onSelect={(id) => {
                 setParams({ list: id }, { replace: true });
               }}
@@ -403,16 +491,36 @@ export default function ListsPage() {
         />
       ) : null}
       {lists && current && !read ? <div aria-busy="true" data-testid="lists-reading" /> : null}
+      {lists && !current ? (
+        <EmptyState
+          title={lists.length > 0 ? t.lists.noListArchived : t.lists.noListInUse}
+          testId="lists-none"
+        >
+          {lists.length > 0 ? (
+            <Button onClick={() => setManage(true)}>{t.lists.manage}</Button>
+          ) : null}
+        </EmptyState>
+      ) : null}
       {lists && current && read ? (
         <>
+          {current.archived ? (
+            <div className={styles.suggest} data-testid="lists-archived-note">
+              <span>{t.lists.archivedNote}</span>
+              <Button onClick={() => archiveWithUndo(current, false)}>{t.lists.unarchive}</Button>
+            </div>
+          ) : null}
           {/* The first row of the page: on the phone the "⋯" menu lies beside it (`besideContent`). An empty list
               has no such line; its empty state says it. */}
           {shown.length === 0 ? (
             tripLine ? (
-              <ListSummary>{tripLine}</ListSummary>
+              <ListSummary mark={mark}>{tripLine}</ListSummary>
             ) : null
           ) : isShopping ? (
-            <ListSummary testId="lists-sums" note={sums.priced > 0 ? t.lists.sumNote : undefined}>
+            <ListSummary
+              testId="lists-sums"
+              mark={mark}
+              note={sums.priced > 0 ? t.lists.sumNote : undefined}
+            >
               {sums.priced > 0 ? (
                 <>
                   <span>{t.lists.sumOpen(formatMoney(sums.openCents))}</span>
@@ -428,7 +536,7 @@ export default function ListsPage() {
             </ListSummary>
           ) : (
             <div className={styles.progress} data-testid="lists-progress">
-              <ListSummary>
+              <ListSummary mark={mark}>
                 {[
                   isPacking
                     ? t.lists.progressPacked(stats.done, stats.total)
@@ -457,10 +565,15 @@ export default function ListsPage() {
                 title={t.lists.empty}
                 testId="lists-empty"
                 motif={
-                  <SignatureMark
-                    id={current.kind === 'shopping' ? 'receipt' : 'todayCard'}
-                    size={64}
-                  />
+                  // A list with its own icon or colour shows it; otherwise the module's signature.
+                  mark ? (
+                    <ListMark list={current} size={64} />
+                  ) : (
+                    <SignatureMark
+                      id={current.kind === 'shopping' ? 'receipt' : 'todayCard'}
+                      size={64}
+                    />
+                  )
                 }
               />
             </div>
@@ -596,6 +709,7 @@ export default function ListsPage() {
       <ItemEditor
         item={editingItem}
         kind={current?.kind ?? 'checklist'}
+        lists={sorted}
         onClose={() => setEditingItem(null)}
       />
       <ListEditor
@@ -603,6 +717,30 @@ export default function ListsPage() {
         existing={lists ?? []}
         onClose={() => setListTarget(null)}
         onSaved={(id) => setParams({ list: id }, { replace: true })}
+      />
+      {current ? (
+        <FillFromPantry
+          open={fill}
+          listId={current.id}
+          listName={current.name}
+          openNames={shown.filter((i) => !i.done).map((i) => i.name)}
+          onClose={() => setFill(false)}
+        />
+      ) : null}
+      <ShareToList
+        entries={shared}
+        lists={inUse}
+        onClose={closeShare}
+        onAdded={(id) => setParams({ list: id }, { replace: true })}
+      />
+      <ManageLists
+        onArchived={leaveArchived}
+        open={manage}
+        lists={lists ?? []}
+        items={items ?? []}
+        onClose={() => setManage(false)}
+        onEdit={(l) => setListTarget(l)}
+        onOpenList={(id) => setParams({ list: id }, { replace: true })}
       />
     </>
   );

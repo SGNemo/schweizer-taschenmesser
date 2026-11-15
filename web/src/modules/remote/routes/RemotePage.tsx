@@ -8,36 +8,59 @@ import { holdKeepAwake } from '@/core/shell/keepAwake';
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
 import { Button, EmptyState, Icon, PageHeader, RowMenu, Tabs, type IconName } from '@/ui';
-import { remoteSession, useLastPc, useRemoteView } from '../session';
+import {
+  remoteSession,
+  useLastPc,
+  useRemotePower,
+  useRemotePresent,
+  useRemotePrograms,
+  useRemoteView,
+} from '../session';
 import { DEFAULTS, PAD_SPEED, settings, type RemotePrefs } from '../settings';
 import { describe, stepLink, type RemoteLine } from '../view';
 import { useVolumeKeys } from '../volumeKeys';
 import styles from '../remote.module.css';
 import { Keyboard } from './Keyboard';
+import { PowerSheet, PowerStatus } from './Power';
+import { Presentation } from './Presentation';
+import { ProgramSheet, ProgramStatus } from './Programs';
 import { Touchpad } from './Touchpad';
 
 const HOLD_MS = 1000 / HOLD_STEPS_PER_SECOND;
 
-type RemoteTab = 'media' | 'touchpad' | 'keyboard';
+type RemoteTab = 'media' | 'touchpad' | 'keyboard' | 'present';
 
 /**
- * Three views: Medien (default), Touchpad (`./Touchpad`) and Tastatur (`./Keyboard`).
+ * Three views: Medien (default), Touchpad (`./Touchpad`) and Tastatur (`./Keyboard`); a fourth,
+ * Präsentation (`./Presentation`), on a PC that takes the presentation keys.
  *
  * Medien: volume in the lowest row, transport above it, the state as one line; "Ton aus" and "PC
- * sperren" in the menu. One-handed and without looking: big targets in the thumb zone, a short
+ * sperren" in the menu, and – on a PC that knows them – "Monitor aus" and "PC ausschalten …" (the
+ * sheet `./Power`; its state is one line above the views) and, when the PC sent its list,
+ * "Programm starten …" (the sheet `./Programs`, its state likewise one line). One-handed and without looking: big targets in the thumb zone, a short
  * tick on every press (switchable), nothing that moves. The session opens when the page comes to
  * the front and ends when it leaves. What this phone may do is decided at the PC.
  */
 export default function RemotePage() {
   const supported = getPlatform().remote.supported;
-  const view = useRemoteView();
+  const live = useRemoteView();
+  const power = useRemotePower();
+  const present = useRemotePresent();
+  const [powerSheet, setPowerSheet] = useState(false);
+  const programs = useRemotePrograms();
+  const [programSheet, setProgramSheet] = useState(false);
   const [prefs, setPrefs] = useSettings('module.remote', settings.schema, settings.defaults);
   const { haptics, keepAwake, volumeKeys, padSpeed, padLegendSeen } = {
     ...DEFAULTS,
     ...(prefs as RemotePrefs | undefined),
   };
   const [menu, setMenu] = useState(false);
-  const [tab, setTab] = useState<RemoteTab>('media');
+  const [chosen, setTab] = useState<RemoteTab>('media');
+  // Präsentation exists only while the PC said it takes those keys
+  const tab: RemoteTab = chosen === 'present' && !present ? 'media' : chosen;
+  // a PC without presentation sends the page back to Medien for good: a later answer with the
+  // feature must not switch the tab by itself (adjusted while rendering, not in an effect)
+  if (chosen === 'present' && !present) setTab('media');
   /** The legend was asked for again from the menu (the stored "seen" stays). */
   const [legendAgain, setLegendAgain] = useState(false);
   const r = t.remote;
@@ -76,6 +99,12 @@ export default function RemotePage() {
     );
   }
 
+  // After "done" the PC goes away on purpose: its disconnect (and that it cannot be reached
+  // afterwards) is shown as the quiet last state, the power line says what happens.
+  const view =
+    power.phase.kind === 'done' && live.kind !== 'connected'
+      ? ({ kind: 'disconnected' } as const)
+      : live;
   const line = describe(view, last);
   const playing = (view.kind === 'connected' ? view.pc : last)?.playing ?? false;
   const tick = () => {
@@ -97,6 +126,22 @@ export default function RemotePage() {
           items={[
             { id: 'mute', label: muted ? r.unmute : r.mute, onSelect: () => press('mute') },
             { id: 'lock', label: r.lock, onSelect: () => press('lock') },
+            ...(power.info
+              ? [{ id: 'monitor-off', label: r.monitorOff, onSelect: () => press('monitor-off') }]
+              : []),
+            ...(power.info?.granted
+              ? [{ id: 'power', label: r.power.open, onSelect: () => setPowerSheet(true) }]
+              : []),
+            // only when the PC sent its list (this phone may start programs)
+            ...(programs.list
+              ? [
+                  {
+                    id: 'programs',
+                    label: r.programs.open,
+                    onSelect: () => setProgramSheet(true),
+                  },
+                ]
+              : []),
             ...(tab === 'touchpad'
               ? [{ id: 'legend', label: r.pad.legendTitle, onSelect: () => setLegendAgain(true) }]
               : []),
@@ -110,11 +155,21 @@ export default function RemotePage() {
           { value: 'media', label: r.media },
           { value: 'touchpad', label: r.touchpad },
           { value: 'keyboard', label: r.keyboard },
+          ...(present ? [{ value: 'present' as const, label: r.presentation.tab }] : []),
         ]}
         onChange={(next) => {
           setTab(next);
           setLegendAgain(false);
         }}
+      />
+
+      <PowerStatus />
+      <ProgramStatus />
+      <ProgramSheet open={programSheet} onClose={() => setProgramSheet(false)} />
+      <PowerSheet
+        open={powerSheet}
+        onClose={() => setPowerSheet(false)}
+        hibernate={power.info?.hibernate === true}
       />
 
       {keysWithPc ? (
@@ -140,6 +195,8 @@ export default function RemotePage() {
         />
       ) : tab === 'keyboard' ? (
         <Keyboard view={view} last={last} tick={tick} onMedia={() => setTab('media')} />
+      ) : tab === 'present' ? (
+        <Presentation view={view} last={last} tick={tick} onMedia={() => setTab('media')} />
       ) : (
         <Media line={line} playing={playing} press={press} />
       )}

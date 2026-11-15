@@ -1,4 +1,5 @@
 import { displayTitle, isScratch } from './logic';
+import type { EventMap } from '@/core/events/events';
 import type { Note } from './schema';
 
 /** `[[Page title]]`; no `|` and no line breaks inside (the editor writes exactly this form). */
@@ -54,4 +55,19 @@ export function suggestTitles(query: string, pages: readonly Page[], max = 8): s
       (a, b) => Number(fold(b).startsWith(q)) - Number(fold(a).startsWith(q)) || a.localeCompare(b),
     )
     .slice(0, max);
+}
+
+/**
+ * The `todo.requested` of „Als ToDo“ on a line of a page (P46): the line as the title and – like „In den Plan“ –
+ * the page as the link, so the ToDo leads back to its note. Without a saved page (a new one not stored yet) the
+ * ToDo carries no link.
+ */
+export function todoRequest(
+  text: string,
+  page: { id: string; label: string } | null | undefined,
+): EventMap['todo.requested'] {
+  return {
+    title: text,
+    ...(page ? { link: { kind: 'note', id: page.id, label: page.label } } : {}),
+  };
 }

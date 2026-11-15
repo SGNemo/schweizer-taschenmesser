@@ -80,6 +80,7 @@ const manifest: ModuleManifest = {
       },
     ],
     calendarItems: () => import('./calendar'),
+    plannable: () => import('./plannable'),
     notifications: () => import('./notifications'),
     services: () => import('./services'),
   },

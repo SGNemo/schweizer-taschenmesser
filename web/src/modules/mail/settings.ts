@@ -26,6 +26,8 @@ const schema = z.object({
   offerInvoices: z.boolean(),
   /** A planned mail whose last message is the person's own shows „Beantwortet? · Erledigt“ (display only). */
   showAnswered: z.boolean(),
+  /** Gmail-style keyboard shortcuts on the mail page (`useMailKeys.ts`). */
+  shortcuts: z.boolean(),
 });
 
 export type MailSettings = z.output<typeof schema>;
@@ -45,6 +47,7 @@ export const settings: ModuleSettings = {
     offerPlanAll: true,
     offerInvoices: true,
     showAnswered: true,
+    shortcuts: true,
   },
   get keywords() {
     return [
@@ -129,6 +132,16 @@ export const settings: ModuleSettings = {
       },
       get help() {
         return t.mail.meta.showAnsweredHelp;
+      },
+      type: 'boolean',
+    },
+    {
+      key: 'shortcuts',
+      get label() {
+        return t.mail.meta.shortcuts;
+      },
+      get help() {
+        return t.mail.meta.shortcutsHelp;
       },
       type: 'boolean',
     },
