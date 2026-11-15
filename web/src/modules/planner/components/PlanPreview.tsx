@@ -31,6 +31,8 @@ function cause(
       return t.planner.preview.earlier;
     case 'carried':
       return t.planner.preview.later;
+    case 'pinned':
+      return r.pinned;
     case 'done':
       return undefined;
   }

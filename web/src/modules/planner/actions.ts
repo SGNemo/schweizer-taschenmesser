@@ -12,6 +12,7 @@ import { availableManifests } from '@/core/modules/available';
 import { addDays } from '@/core/plan/dates';
 import { dayName, partWord } from '@/core/plan/explain';
 import type { DayPart } from '@/core/plan/types';
+import { unitId } from '@/core/plan/units';
 import { spanMin, windowText, type TimeWindow } from '@/core/plan/windows';
 import { now, today } from '@/core/time/now';
 import { undoEntry } from '@/core/undo';
@@ -30,7 +31,7 @@ import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import type { SetupThing } from './daySetup';
 import { readFieldWithPart } from './dueWords';
-import { dayRepo, itemKeyOf, itemRepo, putRow } from './repo';
+import { assignmentRepo, dayRepo, itemKeyOf, itemRepo, putRow } from './repo';
 import type { PlanDayRow, PlanItemRow } from './schema';
 import { overloadLine } from './overload';
 import { getPlannerSettings } from './prefs';
@@ -255,13 +256,18 @@ export async function markDone(
   return act(t.planner.toast.done, t.planner.toast.done, titles, () => s.onDone!(e.id));
 }
 
-/** „Später“: the thing's own date becomes tomorrow (an earliest day, never a pin); false for a source without a date. */
+/**
+ * „Später“: the thing's own date becomes the day after the one it is planned on, never before tomorrow (an
+ * earliest day, never a pin) – so it leaves its day whichever day that is. False for a source without a date.
+ */
 export async function later(e: PlannableEntry, titles: Record<string, string>): Promise<boolean> {
   const s = await source(e.moduleId);
   if (!s?.onAssign) return false;
-  return act(t.planner.toast.later, t.planner.toast.later, titles, () =>
-    s.onAssign!(e.id, addDays(today(), 1)),
-  );
+  return act(t.planner.toast.later, t.planner.toast.later, titles, async () => {
+    // The first session's row is the thing's first day (`<itemKey>#0`); a waiting thing has none.
+    const on = (await assignmentRepo.get(unitId(itemKeyOf(e.moduleId, e.id), 0)))?.date;
+    await s.onAssign!(e.id, addDays(on && on > today() ? on : today(), 1));
+  });
 }
 
 /** The lengths „Als Pause …“ offers (minutes): 1 h · 2 h · 3 h. */
