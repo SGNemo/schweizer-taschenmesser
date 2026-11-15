@@ -83,6 +83,24 @@ test('startup tab: own entries with a switch, machine-wide entries to look at', 
   await expect(page.getByText('schätzt Windows selbst', { exact: false })).toBeVisible();
 });
 
+test('an undo is refused and settled when Windows changed the entry in the meantime', async ({
+  page,
+}) => {
+  await openStartup(page);
+  await page.getByRole('switch', { name: musikbox }).click();
+  await expect(page.getByText('Musikbox startet nicht mehr mit Windows.')).toBeVisible();
+  await page.evaluate(() => {
+    (globalThis as { __tmCareChangedElsewhere?: boolean }).__tmCareChangedElsewhere = true;
+  });
+  await page.getByRole('button', { name: 'Verlauf', exact: true }).click();
+  const history = page.getByRole('list', { name: 'Verlauf' });
+  await history.getByRole('button', { name: /^Rückgängig/ }).click();
+  await expect(page.getByText('Das wurde inzwischen in Windows geändert.')).toBeVisible();
+  // The line says so and no longer offers an undo that could never work.
+  await expect(history).toContainText('Inzwischen in Windows geändert.');
+  await expect(history.getByRole('button', { name: /^Rückgängig/ })).toHaveCount(0);
+});
+
 test('startup tab: switching off is noted in the history and can be taken back there', async ({
   page,
 }) => {

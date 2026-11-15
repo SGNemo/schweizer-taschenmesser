@@ -518,6 +518,7 @@ export const disk: Strings['disk'] = {
     undone: 'Taken back.',
     canUndo: 'The value from before is stored.',
     undoNewerFirst: 'Take back the newer change to it first.',
+    stale: 'Changed in Windows in the meantime.',
     changed: (name: string) => `${name}: changed`,
   },
   tweaks: {
@@ -629,12 +630,12 @@ export const disk: Strings['disk'] = {
     setFailed: 'That couldn’t be changed. Nothing was changed.',
   },
   startup: {
-    lead: 'This is what can start with Windows. Switch off what you don’t need at start-up – the program stays installed and can be switched on again.',
+    lead: 'This is what starts with Windows through its startup list. Switch off what you don’t need at start-up – the program stays installed and can be switched on again.',
     loading: 'Reading startup programs …',
     failed: 'The startup programs couldn’t be read.',
     again: 'Try again',
     onlyWindows: 'Nemo shows startup programs on Windows only.',
-    empty: 'Nothing starts with Windows here.',
+    empty: 'Nemo finds no programs in Windows’ startup list.',
     user: 'For your account',
     machine: 'For all accounts',
     count: (on: number, total: number) => `${on} of ${total} switched on`,

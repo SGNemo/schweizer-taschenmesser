@@ -88,7 +88,7 @@ export function StartupTab() {
 
   return (
     <div className={styles.tab}>
-      {items && items.length > 0 ? <p className={styles.lead}>{x.lead}</p> : null}
+      {groups?.user.some((i) => i.switchable) ? <p className={styles.lead}>{x.lead}</p> : null}
       {failed ? (
         <>
           <p role="alert">{x.failed}</p>
@@ -115,7 +115,7 @@ export function StartupTab() {
             </span>
           </div>
           <Card as="div">
-            <ul className={styles.list} aria-label={x.user}>
+            <ul className={styles.list} aria-label={x.user} aria-busy={busy !== null}>
               {groups.user.map((item) => (
                 <li key={item.id} className={styles.row}>
                   <div className={styles.text}>

@@ -72,6 +72,8 @@ export interface CareEntry {
   on: boolean | null;
   canUndo: boolean;
   undone: boolean;
+  /** Changed elsewhere (in Windows itself) since: cannot be taken back here any more. */
+  stale?: boolean;
 }
 
 export interface CareHistory {

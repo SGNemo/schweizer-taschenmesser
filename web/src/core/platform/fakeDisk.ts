@@ -739,6 +739,12 @@ export function createFakeDisk(): DiskService {
       const entry = careEntries.find((e) => e.id === id);
       if (!entry) throw new Error('unknown-entry');
       if (!entry.canUndo) throw new Error(entry.undone ? 'already-undone' : 'nothing-to-undo');
+      // Tests can play "changed in Windows since": the undo is refused and the entry marked.
+      if ((globalThis as { __tmCareChangedElsewhere?: boolean }).__tmCareChangedElsewhere) {
+        entry.stale = true;
+        entry.canUndo = false;
+        throw new Error('changed-elsewhere');
+      }
       if (entry.kind === 'tweak') {
         const newer = careEntries.some(
           (e) => e.id > id && e.kind === 'tweak' && e.subject === entry.subject && !e.undone,
