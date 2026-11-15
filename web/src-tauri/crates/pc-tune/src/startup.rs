@@ -422,7 +422,7 @@ mod tests {
 
     fn undo(reg: &MemRegistry, j: &mut Journal, id: u64) {
         let steps = j.undo_steps(id).unwrap();
-        apply_undo(reg, &steps, |_, _| Err(RegError::Unsupported)).unwrap();
+        apply_undo(reg, &steps, |_, _, _| Err(RegError::Unsupported)).unwrap();
         j.mark_undone(id).unwrap();
     }
 
@@ -772,10 +772,10 @@ mod tests {
     #[test]
     fn the_approval_keys_are_on_the_list_the_real_registry_may_write() {
         for key in [APPROVED_RUN, APPROVED_FOLDER] {
-            assert!(crate::reg::writable_key(key), "{key}");
+            assert!(crate::reg::writable(key, "Any entry"), "{key}");
         }
         // The Run key itself is never written.
-        assert!(!crate::reg::writable_key(RUN));
+        assert!(!crate::reg::writable(RUN, "Any entry"));
     }
 
     #[test]

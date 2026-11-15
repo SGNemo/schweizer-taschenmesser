@@ -381,6 +381,9 @@ pub struct TweakState {
     /// The stored value could be read exactly. When not, the page shows the setting as not
     /// changeable here: without the value from before there is no way back, so nothing is set.
     pub readable: bool,
+    /// A value is stored that is neither this catalogue's "on" nor its "off" (set by another
+    /// program or by hand): `on` is `None`, and the page must not call it Windows' default.
+    pub custom: bool,
     pub risk: Risk,
     pub source_url: &'static str,
     pub refresh: Refresh,
@@ -458,6 +461,7 @@ fn state_of(
         changed_here: changed.iter().any(|c| c == t.id),
         applicable: build >= t.min_build,
         readable: true,
+        custom: false,
         risk: t.risk,
         source_url: t.source_url,
         refresh: t.refresh,
@@ -471,7 +475,10 @@ fn state_of(
             default_when_missing,
         } => {
             match reg.get(key, name) {
-                Ok(value) => s.on = reg_state(value.as_ref(), on, off, default_when_missing),
+                Ok(value) => {
+                    s.on = reg_state(value.as_ref(), on, off, default_when_missing);
+                    s.custom = value.is_some() && s.on.is_none();
+                }
                 // Exists but cannot be read exactly: never guessed, never changed.
                 Err(_) => s.readable = false,
             }
@@ -576,6 +583,7 @@ pub fn set(
             let undo = vec![Undo::Other {
                 what: flag.code().to_string(),
                 previous: on_off(previous).to_string(),
+                written: Some(on_off(*want).to_string()),
             }];
             journal
                 .change(now, Kind::Tweak, id, "", Some(*want), undo, || {
@@ -595,9 +603,17 @@ pub fn set(
             let undo = vec![Undo::Other {
                 what: POWER_SCHEME.to_string(),
                 previous,
+                written: Some(want.clone()),
             }];
+            // The plan's name goes along as the entry's label, so the history can say which.
+            let label = current
+                .options
+                .iter()
+                .find(|o| o.id == *want)
+                .map(|o| o.label.clone())
+                .unwrap_or_default();
             journal
-                .change(now, Kind::Tweak, id, "", None, undo, || {
+                .change(now, Kind::Tweak, id, &label, None, undo, || {
                     effects.set_power_scheme(want)
                 })
                 .map(Some)
@@ -608,25 +624,42 @@ pub fn set(
 }
 
 /// Takes back a step that is not a registry value (`Undo::Other`). Unknown names and states are
-/// refused, so nothing counts as taken back that was not.
-pub fn apply_other(effects: &dyn Effects, what: &str, previous: &str) -> Result<(), RegError> {
+/// refused, so nothing counts as taken back that was not. When the step knows what the change
+/// set (`written`) and the state is no longer that – Windows' own settings changed it since, or
+/// the plan to go back to is gone – the answer is `ChangedElsewhere` and nothing is touched: the
+/// newer choice stands.
+pub fn apply_other(
+    effects: &dyn Effects,
+    what: &str,
+    previous: &str,
+    written: Option<&str>,
+) -> Result<(), RegError> {
     if what == POWER_SCHEME {
+        if written.is_some_and(|w| effects.active_power_scheme().as_deref() != Some(w)) {
+            return Err(RegError::ChangedElsewhere);
+        }
         // Only a plan that still exists; a removed one cannot be brought back from here.
         if !effects.power_schemes().iter().any(|s| s.id == previous) {
-            return Err(RegError::Failed);
+            return Err(RegError::ChangedElsewhere);
         }
         return effects.set_power_scheme(previous);
     }
     let flag = Flag::from_code(what).ok_or(RegError::Unsupported)?;
-    let on = match previous {
-        "on" => true,
-        "off" => false,
-        _ => return Err(RegError::Failed),
+    let state = |text: &str| match text {
+        "on" => Ok(true),
+        "off" => Ok(false),
+        _ => Err(RegError::Failed),
     };
+    let on = state(previous)?;
+    if let Some(w) = written {
+        if effects.flag(flag) != Some(state(w)?) {
+            return Err(RegError::ChangedElsewhere);
+        }
+    }
     effects.set_flag(flag, on)
 }
 
-/// The outcome of "Alle zurücksetzen": setting ids, in the journal's order.
+/// The outcome of "Alle zurücksetzen": setting ids, alphabetical.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ResetReport {
@@ -643,8 +676,8 @@ pub struct ResetReport {
 pub fn reset_all(journal: &mut Journal, reg: &dyn Registry, effects: &dyn Effects) -> ResetReport {
     let mut report = ResetReport::default();
     for (subject, steps) in journal.originals(Kind::Tweak) {
-        let applied = apply_undo(reg, &steps, |what, previous| {
-            apply_other(effects, what, previous)
+        let applied = apply_undo(reg, &steps, |what, previous, written| {
+            apply_other(effects, what, previous, written)
         });
         match applied {
             Ok(()) if journal.mark_reset(Kind::Tweak, &subject).is_ok() => {
@@ -829,10 +862,14 @@ mod win {
             // SAFETY: `st` is a local SHELLSTATE; with `bSet` true only the field named by
             // `mask` is taken from it.
             unsafe { SHGetSetSettings(Some(&mut st), mask, true) };
-            // The call reports nothing: read the state back to know whether it took.
+            // The call reports nothing: read the state back to know whether it took. If not,
+            // the old state is set once more, so a failed change leaves nothing half done.
             if self.flag(flag) == Some(on) {
                 Ok(())
             } else {
+                st._bitfield1 = if on { 0 } else { bit };
+                // SAFETY: as above.
+                unsafe { SHGetSetSettings(Some(&mut st), mask, true) };
                 Err(RegError::Failed)
             }
         }
@@ -1023,7 +1060,7 @@ mod tests {
 
     fn undo(j: &mut Journal, reg: &MemRegistry, fx: &MemEffects, id: u64) {
         let steps = j.undo_steps(id).unwrap();
-        apply_undo(reg, &steps, |w, p| apply_other(fx, w, p)).unwrap();
+        apply_undo(reg, &steps, |w, p, wr| apply_other(fx, w, p, wr)).unwrap();
         j.mark_undone(id).unwrap();
     }
 
@@ -1485,22 +1522,27 @@ mod tests {
     fn other_steps_refuse_unknown_names_states_and_plans_that_are_gone() {
         let (_, fx) = machine();
         assert_eq!(
-            apply_other(&fx, "spi:unknown", "on"),
+            apply_other(&fx, "spi:unknown", "on", None),
             Err(RegError::Unsupported)
         );
-        assert_eq!(apply_other(&fx, "", "on"), Err(RegError::Unsupported));
+        assert_eq!(apply_other(&fx, "", "on", None), Err(RegError::Unsupported));
         assert_eq!(
-            apply_other(&fx, "spi:mouseSonar", "maybe"),
+            apply_other(&fx, "spi:mouseSonar", "maybe", None),
             Err(RegError::Failed)
         );
         assert_eq!(
-            apply_other(&fx, POWER_SCHEME, "e9a42b02-d5df-448d-aa00-03f14749eb61"),
-            Err(RegError::Failed)
+            apply_other(
+                &fx,
+                POWER_SCHEME,
+                "e9a42b02-d5df-448d-aa00-03f14749eb61",
+                None
+            ),
+            Err(RegError::ChangedElsewhere)
         );
         assert_eq!(fx.flag(Flag::MouseSonar), Some(false));
         assert_eq!(fx.active_power_scheme().as_deref(), Some(BALANCED));
-        apply_other(&fx, "spi:mouseSonar", "on").unwrap();
-        apply_other(&fx, POWER_SCHEME, SAVER).unwrap();
+        apply_other(&fx, "spi:mouseSonar", "on", None).unwrap();
+        apply_other(&fx, POWER_SCHEME, SAVER, None).unwrap();
         assert_eq!(fx.flag(Flag::MouseSonar), Some(true));
         assert_eq!(fx.active_power_scheme().as_deref(), Some(SAVER));
     }
@@ -1590,7 +1632,7 @@ mod tests {
         reg.set(AD_KEY, "Enabled", &Value::Dword(1)).unwrap();
         let steps = j.undo_steps(id).unwrap();
         assert_eq!(
-            apply_undo(&reg, &steps, |w, p| apply_other(&fx, w, p)),
+            apply_undo(&reg, &steps, |w, p, wr| apply_other(&fx, w, p, wr)),
             Err(RegError::ChangedElsewhere)
         );
         let report = reset_all(&mut j, &reg, &fx);
@@ -1604,10 +1646,74 @@ mod tests {
     }
 
     #[test]
+    fn a_plan_or_switch_changed_in_windows_since_is_left_alone() {
+        const THIRD: &str = "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c";
+        let path = temp_path("elsewhere-other");
+        let (reg, fx) = machine();
+        fx.seed_schemes(&[
+            (BALANCED, "Ausbalanciert"),
+            (SAVER, "Energiesparmodus"),
+            (THIRD, "Höchstleistung"),
+        ]);
+        let (mut j, _) = Journal::open(&path).unwrap();
+        // Nemo: Balanced → Saver. Then the user picks a third plan in Windows.
+        let plan = set(
+            &mut j,
+            &reg,
+            &fx,
+            "powerPlan",
+            &Target::Choice(SAVER.into()),
+            1,
+        )
+        .unwrap()
+        .unwrap();
+        fx.set_power_scheme(THIRD).unwrap();
+        let steps = j.undo_steps(plan).unwrap();
+        assert_eq!(
+            apply_undo(&reg, &steps, |w, p, wr| apply_other(&fx, w, p, wr)),
+            Err(RegError::ChangedElsewhere)
+        );
+        assert_eq!(fx.active_power_scheme().as_deref(), Some(THIRD));
+        // The history line names the plan Nemo chose.
+        assert_eq!(j.views()[0].label, "Energiesparmodus");
+
+        // A switch changed here twice (on → off → on), then switched off in Windows: a reset
+        // would write "on" over the user's "off" – it must leave it.
+        set(&mut j, &reg, &fx, "animations", &Target::Switch(false), 2).unwrap();
+        set(&mut j, &reg, &fx, "animations", &Target::Switch(true), 3).unwrap();
+        fx.seed_flag(Flag::ClientAreaAnimation, false);
+        let report = reset_all(&mut j, &reg, &fx);
+        assert!(report.restored.is_empty() && report.failed.is_empty());
+        assert_eq!(
+            report.left,
+            vec!["animations".to_string(), "powerPlan".to_string()]
+        );
+        assert_eq!(fx.flag(Flag::ClientAreaAnimation), Some(false));
+        assert_eq!(fx.active_power_scheme().as_deref(), Some(THIRD));
+        assert!(state(&j, &reg, &fx).iter().all(|s| !s.changed_here));
+        cleanup(&path);
+    }
+
+    #[test]
+    fn a_stored_value_that_is_neither_on_nor_off_is_not_called_windows_default() {
+        let path = temp_path("custom");
+        let (reg, fx) = machine();
+        let (j, _) = Journal::open(&path).unwrap();
+        let missing = state(&j, &reg, &fx);
+        let s = of(&missing, "advertisingId");
+        assert!(s.on.is_none() && !s.custom, "no value: Windows decides");
+        reg.set(AD_KEY, "Enabled", &Value::Dword(2)).unwrap();
+        let odd = state(&j, &reg, &fx);
+        let s = of(&odd, "advertisingId");
+        assert!(s.on.is_none() && s.custom && s.readable);
+        cleanup(&path);
+    }
+
+    #[test]
     fn every_registry_entry_is_on_the_list_the_real_registry_may_write() {
         for t in catalogue() {
-            if let Mechanism::Reg { key, .. } = t.mechanism {
-                assert!(crate::reg::writable_key(key), "{}: {key}", t.id);
+            if let Mechanism::Reg { key, name, .. } = t.mechanism {
+                assert!(crate::reg::writable(key, name), "{}: {key}", t.id);
             }
         }
     }

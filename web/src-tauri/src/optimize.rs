@@ -136,10 +136,10 @@ pub fn disk_care_open_tool(tool: String) -> Result<(), String> {
 /// Takes back the parts of an undo that are not registry values. Each package that makes such a
 /// change adds its case here; an unknown one is refused, so nothing is marked as taken back that
 /// was not.
-fn undo_other(what: &str, previous: &str) -> Result<(), RegError> {
+fn undo_other(what: &str, previous: &str, written: Option<&str>) -> Result<(), RegError> {
     // Settings: a Windows on/off API or the active power plan (`pc_tune::tweaks`).
     let effects = system_effects().ok_or(RegError::Unsupported)?;
-    tweaks::apply_other(effects.as_ref(), what, previous)
+    tweaks::apply_other(effects.as_ref(), what, previous, written)
 }
 
 /// Takes one change of the history back (the newest change of its subject only) by putting the
@@ -217,19 +217,19 @@ pub fn disk_tweaks_list(
 }
 
 /// Switches one setting of the catalogue (`target`: `true`/`false`, or the id of a choice). The
-/// state from before goes into the journal first; unknown ids are refused.
+/// state from before goes into the journal first; unknown ids are refused. Returns the history
+/// entry's id for "Rückgängig", or nothing when the setting already was in that state.
 #[tauri::command(async)]
 pub fn disk_tweak_set(
     app: AppHandle,
     care: State<'_, PcCare>,
     id: String,
     target: Target,
-) -> Result<(), String> {
+) -> Result<Option<u64>, String> {
     let reg = system_registry().ok_or("unsupported")?;
     let effects = system_effects().ok_or("unsupported")?;
     care.with(&app, |j| {
         tweaks::set(j, reg.as_ref(), effects.as_ref(), &id, &target, unix_now())
-            .map(|_| ())
             .map_err(|e| e.code().to_string())
     })
 }
