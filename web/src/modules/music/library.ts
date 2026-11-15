@@ -85,6 +85,8 @@ export function canRename(list: { ownerId?: string }, me: string | undefined): b
 
 /** The page closed: nothing of the lists stays in memory. */
 export function forgetLibrary(): void {
+  // A read still on its way must not put the names back after the page closed.
+  generation += 1;
   lists = undefined;
   account = undefined;
 }
