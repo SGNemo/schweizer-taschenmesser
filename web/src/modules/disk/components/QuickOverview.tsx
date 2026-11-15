@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { getPlatform } from '@/core/platform';
 import type { DiskNode } from '@/core/platform/disk';
 import { t } from '@/strings';
-import { Button, Card, patternStyles } from '@/ui';
+import { Card, patternStyles } from '@/ui';
 import { useDiskStore } from '../store';
 import { formatBytes } from '../format';
 import styles from '../routes/DrivesPage.module.css';
@@ -11,7 +11,7 @@ import styles from '../routes/DrivesPage.module.css';
  * Below the drives: the pointer to the tab "Aufräumen" (which took over the list of clean-up
  * places and the recycle bin) and the biggest folders of this session's last scan.
  */
-export function QuickOverview({ onTidy }: { onTidy: () => void }) {
+export function QuickOverview() {
   const [biggest, setBiggest] = useState<DiskNode[]>([]);
   const scanId = useDiskStore((s) => s.scanId);
   const phase = useDiskStore((s) => s.phase);
@@ -36,10 +36,8 @@ export function QuickOverview({ onTidy }: { onTidy: () => void }) {
   const q = t.disk.quick;
   return (
     <div className={styles.places}>
-      <p className={styles.pointer}>
-        <span>{t.disk.tidy.pointer}</span>
-        <Button onClick={onTidy}>{t.disk.tidy.pointerLink}</Button>
-      </p>
+      {/* A sentence, no button: the tab is right above (one action less on the first screen). */}
+      <p className={styles.pointer}>{t.disk.tidy.pointer}</p>
       {biggest.length > 0 ? (
         <Card title={q.biggest} className={styles.biggest}>
           <p className={styles.meta}>{q.biggestHint}</p>

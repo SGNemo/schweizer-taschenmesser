@@ -51,9 +51,7 @@ export default function ThisPcPage() {
       {tab === 'system' ? <SystemTab /> : null}
       {tab === 'tidy' ? <CleanupTab onScan={startScan} onDrives={() => setTab('drives')} /> : null}
       {tab === 'history' ? <HistoryTab /> : null}
-      {tab === 'drives' ? (
-        <DrivesTab {...list} onScan={startScan} onTidy={() => setTab('tidy')} />
-      ) : null}
+      {tab === 'drives' ? <DrivesTab {...list} onScan={startScan} /> : null}
     </>
   );
 }
@@ -173,8 +171,7 @@ function DrivesTab({
   failed,
   io,
   onScan: startScan,
-  onTidy,
-}: DriveList & { onScan: (root: string) => void; onTidy: () => void }) {
+}: DriveList & { onScan: (root: string) => void }) {
   const scanRoot = useDiskStore((s) => s.root);
   // A drive's scan is shown in its card; only a clean-up place's scan needs the line above. While
   // the drives still load, nothing flashes above the grid (unless loading failed).
@@ -204,7 +201,7 @@ function DrivesTab({
           ))}
         </ul>
       ) : null}
-      <QuickOverview onTidy={onTidy} />
+      <QuickOverview />
     </>
   );
 }
