@@ -17,6 +17,10 @@ In the **PWA** (browser or installed from the browser) the Redirect URI is diffe
 - A tap on a **playlist** opens its songs – nothing plays until you tap a song or "Play". A tap on a song plays it inside its playlist.
 - **♥** saves a song to your liked songs (or removes it). **⋯** adds it to the queue, hides it in this list or opens it in Spotify.
 - **Hide:** a hidden song disappears from the list in Nemo only; at Spotify nothing changes. "Play" skips hidden songs. "Show hidden" brings them back.
+- **Playlists tab** (Music page): all your playlists, your own and the ones you follow, as covers. Search by name or description, show *Yours* or *Followed*, sort by name or number of tracks. With *Edit playlists* you can create a playlist, change its name and description, and remove a song (*⋯ → Remove from this playlist*; *Undo* puts it back).
+- **Albums tab:** your saved albums. On an album page, *Save* keeps it in your albums (needs *Liked songs*). *⋯ → Go to <artist>* and the search open an **artist page** with the most played tracks and the albums.
+- **Continue listening** (start view): the playlists, albums and artists you played from lately; a tap plays on there. *Recently played* moved into the start view (*Show all* opens the whole list).
+- **Sleep timer** (*⋯* beside the track title): pause in 15–60 minutes or at the end of the track. It works while Nemo is open; *Off* ends it. The same *⋯* also has **Search lyrics** (opens genius.com in your browser) and *Open in Spotify*. Keys: Shift+↑ / ↓ volume, S shuffle.
 - Extra permissions are opt-in when connecting: *Playlists*, *Liked songs* (read **and** save) and *Recently played*. If you connected earlier, tick them under Connections → Spotify and connect again.
 
 Good to know:

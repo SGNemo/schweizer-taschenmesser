@@ -3,6 +3,7 @@ import type { MediaItem, Playlist } from '@/core/connectors/types';
 import { useUiStore } from '@/stores/ui';
 import { tSpotify } from '@/strings.spotify';
 import { Button, Dialog, Form, TextField } from '@/ui';
+import { changedPlaylists } from '../library';
 import type { PlayerApi } from './types';
 import styles from './Spotify.module.css';
 
@@ -64,6 +65,8 @@ function PlaylistPicker({
     try {
       const list = target ?? (await source.createPlaylist!(ctx, name.trim() || tx.newPlaylist));
       await source.addToPlaylist!(ctx, list.id, [item.id]);
+      // A new playlist or a new count: the playlists tab reads afresh next time.
+      changedPlaylists();
       toast(tx.addedToPlaylist(list.name));
       setName('');
       onClose();

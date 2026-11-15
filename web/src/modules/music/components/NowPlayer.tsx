@@ -4,7 +4,9 @@ import { getPlatform } from '@/core/platform';
 import { tMusicPage } from '@/strings.musicPage';
 import { tSpotify } from '@/strings.spotify';
 import { Button, Icon, RowMenu } from '@/ui';
+import { formatTimestamp } from '@/core/i18n/format';
 import { clock, useProgress } from '../nowPlayingTime';
+import { SLEEP_MINUTES, setSleep, sleepEnd, useSleep } from '../sleepTimer';
 import { trackUrl } from './TrackList';
 import { useSavedTracks } from './useSavedTracks';
 import { trackIdOf, type PlayerApi } from './types';
@@ -38,6 +40,8 @@ export function NowPlayer({
   const [player, setPlayer] = useState<PlayerState | undefined | 'none'>();
   const [devices, setDevices] = useState<PlayerDevice[]>([]);
   const [menu, setMenu] = useState(false);
+  const [extrasMenu, setExtrasMenu] = useState(false);
+  const sleep = useSleep();
   const [seekTo, setSeekTo] = useState<number>();
   const [volume, setVolume] = useState<number>();
   const [failed, setFailed] = useState(false);
@@ -172,6 +176,71 @@ export function NowPlayer({
                 <Icon name="heart" size={18} />
               </button>
             ) : null}
+            {current ? (
+              // Sleep timer, "In Spotify öffnen" and lyrics in one menu at the end of the title row: the controls keep their rows,
+              // and the menu opens to the left inside the head (never under the sidebar).
+              <span className={styles.titleMenu}>
+                <RowMenu
+                  label={tm.extrasMenu}
+                  items={[
+                    ...(canControl && current.playing
+                      ? [
+                          ...SLEEP_MINUTES.map((m) => ({
+                            id: `m${m}`,
+                            group: tm.sleepTitle,
+                            label: tm.sleepIn(m),
+                            onSelect: () => setSleep(sleepEnd(m)),
+                          })),
+                          ...(current.durationMs && current.progressMs !== undefined
+                            ? [
+                                {
+                                  id: 'track',
+                                  label: tm.sleepTrack,
+                                  onSelect: () =>
+                                    setSleep(sleepEnd('track', { ...current, readAt: np.readAt })),
+                                },
+                              ]
+                            : []),
+                        ]
+                      : []),
+                    ...(sleep
+                      ? [
+                          {
+                            id: 'off',
+                            group: canControl && current.playing ? undefined : tm.sleepTitle,
+                            label: tm.sleepOff,
+                            onSelect: () => setSleep(undefined),
+                          },
+                        ]
+                      : []),
+                    ...(current.trackUrl
+                      ? [
+                          {
+                            id: 'open',
+                            group: tm.extrasTrack,
+                            label: tx.menuOpen,
+                            onSelect: () =>
+                              void getPlatform().app.openUrl(id ? trackUrl(id) : current.trackUrl!),
+                          },
+                        ]
+                      : []),
+                    {
+                      id: 'lyrics',
+                      ...(current.trackUrl ? {} : { group: tm.extrasTrack }),
+                      label: tm.lyricsMenu,
+                      onSelect: () =>
+                        void getPlatform().app.openUrl(
+                          `https://genius.com/search?q=${encodeURIComponent(
+                            [current.artist, current.title].filter(Boolean).join(' '),
+                          )}`,
+                        ),
+                    },
+                  ]}
+                  open={extrasMenu}
+                  onOpenChange={setExtrasMenu}
+                />
+              </span>
+            ) : null}
           </div>
           <p className={styles.nowSub}>
             {[current.artist, current.album].filter(Boolean).join(' · ')}
@@ -296,16 +365,27 @@ export function NowPlayer({
             />
           </span>
         ) : null}
-        {current?.trackUrl ? (
+      </div>
+      {sleep ? (
+        // Always visible while set, one tap ends it (focus rules: no silent countdown).
+        <p className={styles.sleepLine} data-testid="music-sleep">
+          <Icon name="moon" size={16} />
+          <span>
+            {sleep.mode === 'track'
+              ? tm.sleepAtTrack(formatTimestamp(sleep.at, { timeStyle: 'short' }))
+              : tm.sleepAt(formatTimestamp(sleep.at, { timeStyle: 'short' }))}{' '}
+            · {tm.sleepOpenOnly}
+          </span>
           <Button
             variant="ghost"
-            aria-label={tx.menuOpen}
-            onClick={() => void getPlatform().app.openUrl(id ? trackUrl(id) : current.trackUrl!)}
+            size="sm"
+            aria-label={tm.sleepOff}
+            onClick={() => setSleep(undefined)}
           >
-            <Icon name="external" size={18} />
+            {tm.sleepEnd}
           </Button>
-        ) : null}
-      </div>
+        </p>
+      ) : null}
       {failed ? <p className={styles.note}>{tx.playFailed}</p> : null}
     </div>
   );
