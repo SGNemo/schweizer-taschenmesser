@@ -5,6 +5,8 @@ import { bus } from '@/core/events';
 import { useModuleStates } from '@/core/modules/activation';
 import { whenServicesSettled } from '@/core/modules/servicesReady';
 import { useSettled } from '@/core/status/settled';
+import { useSettings } from '@/core/settings/settings';
+import { settings, SETTINGS_SCOPE, settingsSchema } from '../settings';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import type { Stored } from '@/core/db/types';
 import { useUiStore } from '@/stores/ui';
@@ -36,10 +38,13 @@ import { ItemEditor } from '../components/ItemEditor';
 import { SignatureMark } from '@/ui/identity';
 import { archiveWithUndo, ListEditor, type ListTarget } from '../components/ListEditor';
 import { ManageLists } from '../components/ManageLists';
+import { ShareToList } from '../components/ShareToList';
 import {
   groupItems,
   listAsText,
   namedSectionCount,
+  pickWidgetList,
+  sharedEntries,
   PACKING_TEMPLATES,
   progress,
   sortItems,
@@ -118,6 +123,15 @@ export default function ListsPage() {
     (inUse[0] as (typeof inUse)[0] | undefined);
   const sorted = current?.archived ? [...inUse, current] : inUse;
   const [manage, setManage] = useState(false);
+  // `?share=<text>` (the share sheet's "Auf eine Liste"): each line becomes an entry of the list the reader picks.
+  const shared = useMemo(() => sharedEntries(params.get('share') ?? ''), [params]);
+  const closeShare = () => {
+    const next = new URLSearchParams(params);
+    next.delete('share');
+    setParams(next, { replace: true });
+  };
+  const [prefs, setPrefs] = useSettings(SETTINGS_SCOPE, settingsSchema, settings.defaults);
+  const widgetList = pickWidgetList(lists ?? [], prefs?.widgetList ?? '');
   /** A list just archived leaves the tab row: the page goes to the first list in use. */
   const leaveArchived = (id: string) => {
     if (params.get('list') === id || current?.id === id) setParams({}, { replace: true });
@@ -329,6 +343,20 @@ export default function ListsPage() {
         { id: 'templates', label: t.lists.routines.title, onSelect: () => setTemplates(true) },
         { id: 'edit-list', label: t.lists.editList, onSelect: () => setListTarget(current) },
         { id: 'manage', label: t.lists.manage, onSelect: () => setManage(true) },
+        ...(!current.archived
+          ? [
+              {
+                id: 'widget',
+                label: t.lists.showInWidget,
+                checked: widgetList?.id === current.id,
+                onSelect: () => {
+                  void setPrefs({ widgetList: current.id }).then(() =>
+                    toast(t.lists.widgetShows(current.name)),
+                  );
+                },
+              },
+            ]
+          : []),
         ...(toBuy.length > 0
           ? [
               {
@@ -651,6 +679,12 @@ export default function ListsPage() {
         onClose={() => setListTarget(null)}
         onSaved={(id) => setParams({ list: id }, { replace: true })}
         onArchived={leaveArchived}
+      />
+      <ShareToList
+        entries={shared}
+        lists={inUse}
+        onClose={closeShare}
+        onAdded={(id) => setParams({ list: id }, { replace: true })}
       />
       <ManageLists
         onArchived={leaveArchived}

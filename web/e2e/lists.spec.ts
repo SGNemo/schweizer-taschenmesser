@@ -210,3 +210,37 @@ test('Vorlage als Start und Einträge zwischen Listen verschieben', async ({ pag
   await page.getByRole('button', { name: 'Einkauf', exact: true }).click();
   await expect(page.getByRole('checkbox', { name: 'Kaffee' })).toBeVisible();
 });
+
+test('Teilen auf eine Liste und das Widget zeigt die gewählte Liste', async ({ page }) => {
+  await enable(page, 'lists');
+  await open(page, '/lists');
+  await page.getByRole('button', { name: /Neue Liste|Liste eintragen/ }).click();
+  const dialog = page.getByRole('dialog', { name: 'Neue Liste' });
+  await dialog.getByLabel('Name der Liste').fill('Baumarkt');
+  await save(page);
+
+  // A shared shopping list from a messenger: one entry per line, list marks gone.
+  await backSettled(page);
+  await page.goto('/share?text=' + encodeURIComponent('- 2 Milch\n- Brot'));
+  await page.getByTestId('share-lists').click();
+  const share = page.getByRole('dialog', { name: 'Auf eine Liste' });
+  await expect(share.getByTestId('lists-share-preview')).toContainText('2 Milch');
+  await expect(share.getByLabel('Liste', { exact: true })).toHaveValue('shopping-default');
+  await share.getByRole('button', { name: 'Hinzufügen' }).click();
+  await expect(page.getByText('2 Einträge auf „Einkauf“ gesetzt.')).toBeVisible();
+  await expect(page.getByRole('checkbox', { name: 'Milch' })).toBeVisible();
+  await expect(page.getByRole('checkbox', { name: 'Brot' })).toBeVisible();
+
+  // The widget follows the list chosen in its "⋯" menu.
+  await page.getByRole('button', { name: 'Baumarkt', exact: true }).click();
+  const menu = await openPageMenu(page);
+  await expect(menu.getByRole('menuitemcheckbox', { name: 'Im Widget zeigen' })).toHaveAttribute(
+    'aria-checked',
+    'false',
+  );
+  await menu.getByRole('menuitemcheckbox', { name: 'Im Widget zeigen' }).click();
+  await expect(page.getByText('Das Widget zeigt jetzt „Baumarkt“.')).toBeVisible();
+  await expect(
+    (await openPageMenu(page)).getByRole('menuitemcheckbox', { name: 'Im Widget zeigen' }),
+  ).toHaveAttribute('aria-checked', 'true');
+});

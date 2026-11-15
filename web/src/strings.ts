@@ -5533,6 +5533,16 @@ export const de = {
     },
     startedFrom: (name: string, n: number) => `„${name}“ mit ${n} Einträgen angelegt.`,
     startersTitle: 'Einkauf und Reise',
+    showInWidget: 'Im Widget zeigen',
+    shareTo: 'Auf eine Liste',
+    sharedPreview: (n: number) =>
+      n === 1 ? 'Dieser Eintrag kommt dazu:' : `Diese ${n} Einträge kommen dazu:`,
+    sharedMore: (n: number) => `… und ${n} weitere`,
+    sharedAdded: (n: number, list: string) =>
+      n === 1 ? `1 Eintrag auf „${list}“ gesetzt.` : `${n} Einträge auf „${list}“ gesetzt.`,
+    widgetShows: (name: string) => `Das Widget zeigt jetzt „${name}“.`,
+    widgetEmptyList: (name: string) => `Auf „${name}“ ist nichts offen.`,
+    widgetSummary: (name: string, n: number) => `${name}: ${n} offen`,
     noListInUse:
       'Keine Liste in Gebrauch. Leg eine neue an oder hol eine aus dem Archiv zurück („⋯“ → „Listen verwalten“).',
   },

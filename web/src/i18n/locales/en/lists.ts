@@ -247,6 +247,16 @@ export const lists: Strings['lists'] = {
   },
   startedFrom: (name: string, n: number) => `Created “${name}” with ${n} entries.`,
   startersTitle: 'Shopping and travel',
+  showInWidget: 'Show in widget',
+  shareTo: 'To a list',
+  sharedPreview: (n: number) =>
+    n === 1 ? 'This entry will be added:' : `These ${n} entries will be added:`,
+  sharedMore: (n: number) => `… and ${n} more`,
+  sharedAdded: (n: number, list: string) =>
+    n === 1 ? `Added 1 entry to “${list}”.` : `Added ${n} entries to “${list}”.`,
+  widgetShows: (name: string) => `The widget now shows “${name}”.`,
+  widgetEmptyList: (name: string) => `Nothing open on “${name}”.`,
+  widgetSummary: (name: string, n: number) => `${name}: ${n} open`,
   noListInUse:
     'No list in use. Create a new one or bring one back from the archive (“⋯” → “Manage lists”).',
 };
