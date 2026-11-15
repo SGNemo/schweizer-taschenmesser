@@ -106,6 +106,8 @@ export const tMusicPage = defineBundle(
     recentAll: 'Alle anzeigen',
     // Player extras (round "Tiefe & Politur", p3)
     sleepTitle: 'Schlaf-Timer',
+    extrasMenu: 'Mehr zum Titel',
+    extrasTrack: 'Dieser Titel',
     sleepIn: (minutes: number) => `In ${minutes} Min. pausieren`,
     sleepTrack: 'Am Ende dieses Titels pausieren',
     sleepOff: 'Schlaf-Timer aus',
@@ -113,8 +115,7 @@ export const tMusicPage = defineBundle(
     sleepAtTrack: (time: string) => `Pausiert am Ende des Titels, um ${time}`,
     sleepOpenOnly: 'Nur solange Nemo offen ist.',
     sleepEnd: 'Aus',
-    lyrics: 'Liedtext suchen',
-    lyricsHint: (title: string) => `Liedtext zu „${title}“ auf genius.com suchen`,
+    lyricsMenu: 'Liedtext suchen (genius.com)',
   },
   {
     en: {
@@ -214,6 +215,8 @@ export const tMusicPage = defineBundle(
       continuePlay: (name: string) => `Continue ${name}`,
       recentAll: 'Show all',
       sleepTitle: 'Sleep timer',
+      extrasMenu: 'More for this track',
+      extrasTrack: 'This track',
       sleepIn: (minutes: number) => `Pause in ${minutes} min`,
       sleepTrack: 'Pause at the end of this track',
       sleepOff: 'Sleep timer off',
@@ -221,8 +224,7 @@ export const tMusicPage = defineBundle(
       sleepAtTrack: (time: string) => `Pauses at the end of the track, at ${time}`,
       sleepOpenOnly: 'Only while Nemo is open.',
       sleepEnd: 'Off',
-      lyrics: 'Search lyrics',
-      lyricsHint: (title: string) => `Search the lyrics of “${title}” on genius.com`,
+      lyricsMenu: 'Search lyrics (genius.com)',
     },
     es: {
       name: 'Música',

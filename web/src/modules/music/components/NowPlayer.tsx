@@ -176,6 +176,64 @@ export function NowPlayer({
                 <Icon name="heart" size={18} />
               </button>
             ) : null}
+            {current ? (
+              // Sleep timer, "In Spotify öffnen" and lyrics in one menu at the end of the title row: the controls keep their rows,
+              // and the menu opens to the left inside the head (never under the sidebar).
+              <span className={styles.titleMenu}>
+                <RowMenu
+                  label={tm.extrasMenu}
+                  items={[
+                    ...(canControl && current.playing
+                      ? [
+                          ...SLEEP_MINUTES.map((m) => ({
+                            id: `m${m}`,
+                            group: tm.sleepTitle,
+                            label: tm.sleepIn(m),
+                            onSelect: () => setSleep(sleepEnd(m)),
+                          })),
+                          ...(current.durationMs && current.progressMs !== undefined
+                            ? [
+                                {
+                                  id: 'track',
+                                  label: tm.sleepTrack,
+                                  onSelect: () =>
+                                    setSleep(sleepEnd('track', { ...current, readAt: np.readAt })),
+                                },
+                              ]
+                            : []),
+                        ]
+                      : []),
+                    ...(sleep
+                      ? [{ id: 'off', label: tm.sleepOff, onSelect: () => setSleep(undefined) }]
+                      : []),
+                    ...(current.trackUrl
+                      ? [
+                          {
+                            id: 'open',
+                            group: tm.extrasTrack,
+                            label: tx.menuOpen,
+                            onSelect: () =>
+                              void getPlatform().app.openUrl(id ? trackUrl(id) : current.trackUrl!),
+                          },
+                        ]
+                      : []),
+                    {
+                      id: 'lyrics',
+                      ...(current.trackUrl ? {} : { group: tm.extrasTrack }),
+                      label: tm.lyricsMenu,
+                      onSelect: () =>
+                        void getPlatform().app.openUrl(
+                          `https://genius.com/search?q=${encodeURIComponent(
+                            [current.artist, current.title].filter(Boolean).join(' '),
+                          )}`,
+                        ),
+                    },
+                  ]}
+                  open={sleepMenu}
+                  onOpenChange={setSleepMenu}
+                />
+              </span>
+            ) : null}
           </div>
           <p className={styles.nowSub}>
             {[current.artist, current.album].filter(Boolean).join(' · ')}
@@ -299,61 +357,6 @@ export function NowPlayer({
               onOpenChange={setMenu}
             />
           </span>
-        ) : null}
-        {canControl && current?.playing ? (
-          <span className={styles.devices}>
-            <Icon name="moon" size={16} />
-            <RowMenu
-              label={tm.sleepTitle}
-              items={[
-                ...SLEEP_MINUTES.map((m) => ({
-                  id: `m${m}`,
-                  label: tm.sleepIn(m),
-                  onSelect: () => setSleep(sleepEnd(m)),
-                })),
-                ...(current.durationMs && current.progressMs !== undefined
-                  ? [
-                      {
-                        id: 'track',
-                        label: tm.sleepTrack,
-                        onSelect: () =>
-                          setSleep(sleepEnd('track', { ...current, readAt: np.readAt })),
-                      },
-                    ]
-                  : []),
-                ...(sleep
-                  ? [{ id: 'off', label: tm.sleepOff, onSelect: () => setSleep(undefined) }]
-                  : []),
-              ]}
-              open={sleepMenu}
-              onOpenChange={setSleepMenu}
-            />
-          </span>
-        ) : null}
-        {current ? (
-          <Button
-            variant="ghost"
-            aria-label={tm.lyricsHint(current.title)}
-            title={tm.lyrics}
-            onClick={() =>
-              void getPlatform().app.openUrl(
-                `https://genius.com/search?q=${encodeURIComponent(
-                  [current.artist, current.title].filter(Boolean).join(' '),
-                )}`,
-              )
-            }
-          >
-            <Icon name="text" size={18} />
-          </Button>
-        ) : null}
-        {current?.trackUrl ? (
-          <Button
-            variant="ghost"
-            aria-label={tx.menuOpen}
-            onClick={() => void getPlatform().app.openUrl(id ? trackUrl(id) : current.trackUrl!)}
-          >
-            <Icon name="external" size={18} />
-          </Button>
         ) : null}
       </div>
       {sleep ? (

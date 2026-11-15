@@ -152,7 +152,7 @@ describe('sleep timer', () => {
   it('pauses in n minutes: the line says when, keeps only the time on this device, one tap ends it', async () => {
     await connect();
     await renderPage();
-    fireEvent.click(await screen.findByRole('button', { name: 'Schlaf-Timer' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Mehr zum Titel' }));
     fireEvent.click(await screen.findByRole('menuitem', { name: 'In 30 Min. pausieren' }));
     const line = await screen.findByTestId('music-sleep');
     expect(line).toHaveTextContent(/Pausiert um \d{1,2}[:.]\d{2}/);
@@ -168,7 +168,7 @@ describe('sleep timer', () => {
   it('"Am Ende dieses Titels" sets the end from the song that plays', async () => {
     await connect();
     await renderPage();
-    fireEvent.click(await screen.findByRole('button', { name: 'Schlaf-Timer' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Mehr zum Titel' }));
     fireEvent.click(
       await screen.findByRole('menuitem', { name: 'Am Ende dieses Titels pausieren' }),
     );
@@ -181,7 +181,9 @@ describe('sleep timer', () => {
   it('without "Steuern" there is no sleep timer', async () => {
     await connect(['show']);
     await renderPage();
-    expect(screen.queryByRole('button', { name: 'Schlaf-Timer' })).toBeNull();
+    fireEvent.click(await screen.findByRole('button', { name: 'Mehr zum Titel' }));
+    await screen.findByRole('menuitem', { name: /Liedtext suchen/ });
+    expect(screen.queryByRole('menuitem', { name: 'In 30 Min. pausieren' })).toBeNull();
   });
 });
 
@@ -190,9 +192,10 @@ describe('lyrics', () => {
     await connect();
     await renderPage();
     expect(opened).toEqual([]);
+    fireEvent.click(await screen.findByRole('button', { name: 'Mehr zum Titel' }));
     fireEvent.click(
-      await screen.findByRole('button', {
-        name: 'Liedtext zu „Jetzt & hier“ auf genius.com suchen',
+      await screen.findByRole('menuitem', {
+        name: 'Liedtext suchen (genius.com)',
       }),
     );
     await waitFor(() =>
