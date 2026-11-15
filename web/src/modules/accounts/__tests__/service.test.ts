@@ -80,3 +80,20 @@ describe('lock', () => {
     }
   });
 });
+
+describe('app lock', () => {
+  it('the app lock (event `app.locked`) locks an open vault while the service runs', async () => {
+    const { bus } = await import('@/core/events');
+    const stop = startAccountsService();
+    setSession({
+      status: 'unlocked',
+      vaultId: 'v',
+      header: {} as KeychainHeader,
+      dek: {} as CryptoKey,
+    });
+    await bus.emit('app.locked', {});
+    const { getSession } = await import('../session');
+    expect(getSession().status).toBe('locked');
+    stop();
+  });
+});

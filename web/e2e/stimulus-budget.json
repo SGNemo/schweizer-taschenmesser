@@ -1062,11 +1062,11 @@
       "signatureBlocks": 0
     },
     "p412--settings-sicherheit": {
-      "height": 1364,
-      "buttons": 20,
+      "height": 1635,
+      "buttons": 21,
       "links": 11,
       "icons": 16,
-      "firstScreenActions": 20,
+      "firstScreenActions": 15,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
