@@ -5,13 +5,15 @@
  */
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
 import { createCollectionRepo } from '@/core/db/repo';
 import { getManifest } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
-import type { BoardDay, BoardRow } from '../board';
+import type { PlannableEntry } from '@/core/modules/contributions';
+import type { BoardDay, BoardRow, WaitingRow } from '../board';
 import { capacityWhy } from '../components/capacity';
+import { nextDeadlinesOf } from '../components/Context';
 import { DayPage } from '../components/DayPage';
 import { LateGroup, LateRow } from '../components/LateGroup';
 import { assignmentRepo, itemRepo } from '../repo';
@@ -266,9 +268,23 @@ describe('„Warum?“ beside the day’s capacity', () => {
     expect(capacityWhy({ ...DAY, raw: 240, usable: 240, blockers: [] })).toBe('4 h für den Tag.');
   });
 
-  it('is a button that opens one line of text and closes it again', () => {
-    draw(DAY, '21:00');
-    const why = screen.getByRole('button', { name: 'Warum?' });
+  it('the capacity is the one control: it opens one line and „Zeit ändern“, and closes it again', () => {
+    const onEditDay = vi.fn();
+    render(
+      <DayPage
+        day={DAY}
+        tomorrow
+        renderRow={() => null}
+        onEditDay={onEditDay}
+        thenOpen
+        onThenToggle={() => undefined}
+        empty={<p>leer</p>}
+        dayEnd="21:00"
+      />,
+    );
+    // No second „Warum?“ control beside the capacity.
+    expect(screen.queryByRole('button', { name: 'Warum?' })).toBeNull();
+    const why = screen.getByRole('button', { name: '1 h 24 frei von 2 h 24 – warum?' });
     expect(why).toHaveAttribute('aria-expanded', 'false');
     const line = document.getElementById(why.getAttribute('aria-controls')!)!;
     expect(line).not.toBeVisible();
@@ -277,12 +293,97 @@ describe('„Warum?“ beside the day’s capacity', () => {
     expect(line).toHaveTextContent(
       '4 h für den Tag. Abgezogen: Teamrunde 1 h, Puffer 36 Min. Tagesende 21:00.',
     );
+    fireEvent.click(screen.getByRole('button', { name: 'Zeit für Montag ändern' }));
+    expect(onEditDay).toHaveBeenCalledTimes(1);
     fireEvent.click(why);
     expect(line).not.toBeVisible();
   });
 
-  it('a day off has no question to answer', () => {
+  it('a day off has no question to answer: its capacity opens the day’s settings', () => {
     draw({ ...DAY, off: true, availableMin: 0, raw: 0, usable: 0 });
-    expect(screen.queryByRole('button', { name: 'Warum?' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /warum\?/ })).toBeNull();
+    expect(screen.getByRole('button', { name: /Zeit für Montag ändern/ })).toBeTruthy();
+  });
+});
+
+describe('„Nächste Fristen“', () => {
+  const entry = (id: string, due?: string): PlannableEntry => ({
+    moduleId: 'invoices',
+    id,
+    kind: 'invoice',
+    title: id,
+    to: `/x/${id}`,
+    ...(due ? { due: { date: due, hard: true } } : {}),
+  });
+  const row = (id: string, hardDue?: string, extra: Partial<BoardRow> = {}): BoardRow => ({
+    unitId: `invoices:${id}#0`,
+    itemKey: `invoices:${id}`,
+    title: id,
+    minutes: 10,
+    k: 0,
+    of: 1,
+    reason: 'new',
+    approx: false,
+    pinned: false,
+    ...(hardDue ? { hardDue } : {}),
+    entry: entry(id),
+    ...extra,
+  });
+  const day = (date: string, rows: BoardRow[]): BoardDay => ({
+    date,
+    isToday: date === '2026-11-15',
+    availableMin: 240,
+    raw: 240,
+    usable: 192,
+    planned: 0,
+    free: 192,
+    over: 0,
+    off: false,
+    defaultMin: 240,
+    blockers: [],
+    rows,
+  });
+
+  it('the next three hard deadlines inside the days, not late, one row per thing, nearest first', () => {
+    const days = [
+      day('2026-11-15', []),
+      day('2026-11-16', [
+        row('soft'),
+        row('late', '2026-11-14', { late: true }),
+        row('fri', '2026-11-20'),
+      ]),
+      day('2026-11-17', [row('thu', '2026-11-19', { k: 0, of: 2 })]),
+      day('2026-11-18', [row('thu', '2026-11-19', { k: 1, of: 2 }), row('wed', '2026-11-18')]),
+      day('2026-11-21', [row('sat', '2026-11-21')]),
+    ];
+    const waiting: WaitingRow[] = [
+      {
+        unitId: 'invoices:far#0',
+        itemKey: 'invoices:far',
+        title: 'far',
+        minutes: 10,
+        k: 0,
+        of: 1,
+        reason: 'horizon',
+        entry: entry('far', '2026-11-30'),
+      },
+      {
+        unitId: 'invoices:tue#0',
+        itemKey: 'invoices:tue',
+        title: 'tue',
+        minutes: 10,
+        k: 0,
+        of: 1,
+        reason: 'after-hard-due',
+        entry: entry('tue', '2026-11-17'),
+      },
+    ];
+    expect(nextDeadlinesOf(days, waiting).map((d) => `${d.title} ${d.date}`)).toEqual([
+      'tue 2026-11-17',
+      'wed 2026-11-18',
+      'thu 2026-11-19',
+    ]);
+    expect(nextDeadlinesOf(days, [], 9).map((d) => d.title)).toEqual(['wed', 'thu', 'fri', 'sat']);
+    expect(nextDeadlinesOf([day('2026-11-15', [row('soft')])], [])).toEqual([]);
   });
 });

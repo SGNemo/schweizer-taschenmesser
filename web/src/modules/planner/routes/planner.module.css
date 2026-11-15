@@ -93,7 +93,7 @@ section.sheet {
   font-size: var(--text-md);
   font-weight: var(--weight-semibold);
 }
-/* The capacity is a text button: it opens the day's settings. */
+/* The capacity is a text button: it opens „Warum?“ (a day off: the day's settings). */
 .capacityButton {
   min-width: var(--touch);
   min-height: var(--touch);
@@ -119,21 +119,6 @@ section.sheet {
   justify-content: flex-end;
   gap: var(--space-3);
   min-width: 0;
-}
-/* „Warum?“: a text button beside the capacity; it opens one line. */
-.whyButton {
-  min-width: var(--touch);
-  min-height: var(--touch);
-  padding: 0;
-  color: var(--link);
-  font: inherit;
-  font-size: var(--text-meta);
-  text-decoration: var(--link-line);
-  text-decoration-color: var(--link-line-color);
-  text-underline-offset: var(--link-line-offset);
-  background: none;
-  border: 0;
-  cursor: pointer;
 }
 .sheetBar {
   grid-column: 1 / -1;

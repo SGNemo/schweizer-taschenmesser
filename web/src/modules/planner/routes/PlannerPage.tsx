@@ -41,7 +41,7 @@ import { CaptureDialog } from '../components/CaptureDialog';
 import { useAbilities, useRowMenu } from '../components/rowMenu';
 import { Part, ThingRow } from '../components/ThingRow';
 import { compact } from '../components/capacity';
-import { appointmentsOf, Context } from '../components/Context';
+import { appointmentsOf, Context, nextDeadlinesOf } from '../components/Context';
 import { DayPage, DayPageLoading } from '../components/DayPage';
 import { LateGroup, LateRow } from '../components/LateGroup';
 import { tileName, WeekBand } from '../components/WeekBand';
@@ -700,15 +700,20 @@ export default function PlannerPage() {
 
   // „Frist vorbei“ is the first card of the context column where there is one (wide); elsewhere it is one row
   // above the day's sheet.
+  // „Nächste Fristen“ (R2): a card of the column beside the sheet only – the phone's context is the waiting group
+  // (CONCEPT-DESIGN §4).
+  const deadlines = wide && days ? nextDeadlinesOf(days, waiting) : [];
   const context = days ? (
     <Context
       days={days}
       before={wide ? <LateGroup rows={late} renderRow={renderLate} /> : undefined}
+      deadlines={deadlines}
     >
       {waitingBlock}
     </Context>
   ) : null;
-  const hasBeside = !!days && (waiting.length > 0 || appointmentsOf(days).length > 0);
+  const hasBeside =
+    !!days && (waiting.length > 0 || appointmentsOf(days).length > 0 || deadlines.length > 0);
   const hasContext = hasBeside || (wide && late.length > 0);
 
   return (

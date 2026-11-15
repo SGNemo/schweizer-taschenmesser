@@ -8476,7 +8476,10 @@ export const de = {
       tileName: (day: string, capacity: string, things: string) =>
         things ? `${day}: ${capacity} · ${things}` : `${day}: ${capacity}`,
       editDay: (day: string) => `Zeit für ${day} ändern`,
-      why: 'Warum?',
+      /** The capacity as the one control that opens „Warum?“: „37 Min frei von 3 h 12 – warum?“. */
+      whyName: (capacity: string) => `${capacity} – warum?`,
+      /** Inside the open „Warum?“: the day's settings. */
+      editTime: 'Zeit ändern',
       whyTime: (min: string) => `${min} für den Tag.`,
       whyOff: (list: string) => `Abgezogen: ${list}.`,
       whyBuffer: (min: string) => `Puffer ${min}`,
@@ -8505,6 +8508,7 @@ export const de = {
     ctx: {
       label: 'Rund um die Woche',
       appointments: 'Termine',
+      deadlines: 'Nächste Fristen',
     },
     late: {
       title: 'Frist vorbei',

@@ -83,7 +83,8 @@ export const planner: Strings['planner'] = {
     tileName: (day: string, capacity: string, things: string) =>
       things ? `${day}: ${capacity} · ${things}` : `${day}: ${capacity}`,
     editDay: (day: string) => `Change time for ${day}`,
-    why: 'Why?',
+    whyName: (capacity: string) => `${capacity} – why?`,
+    editTime: 'Change time',
     whyTime: (min: string) => `${min} for the day.`,
     whyOff: (list: string) => `Taken off: ${list}.`,
     whyBuffer: (min: string) => `buffer ${min}`,
@@ -112,6 +113,7 @@ export const planner: Strings['planner'] = {
   ctx: {
     label: 'Around the week',
     appointments: 'Appointments',
+    deadlines: 'Next deadlines',
   },
   late: {
     title: 'Deadline passed',

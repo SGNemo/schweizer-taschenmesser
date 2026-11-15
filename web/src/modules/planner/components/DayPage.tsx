@@ -70,9 +70,10 @@ export function DayPageLoading() {
 }
 
 /**
- * The picked day as one sheet (planner hub R1): its name, its capacity (a text button that opens the day's
- * settings) and the bar; then the fixed blocks, „Zuerst“ (≤ 3 rows, the first one strong) and „Danach“ (folded on
- * the phone, on the desktop five rows and „n weitere“); a foot with the two steps a day offers.
+ * The picked day as one sheet (planner hub R1): its name, its capacity (a text button that opens „Warum?“, R2 –
+ * one line and „Zeit ändern“; a day off opens the day's settings) and the bar; then the fixed blocks, „Zuerst“
+ * (≤ 3 rows, the first one strong) and „Danach“ (folded on the phone, on the desktop five rows and „n weitere“); a
+ * foot with the two steps a day offers.
  */
 export function DayPage({
   day,
@@ -120,6 +121,7 @@ export function DayPage({
   const shown = folded ? then.slice(0, THEN_ROWS) : then;
   const state = capacityState(day);
   const hasRows = day.rows.length > 0;
+  const editName = t.planner.board.editDay(formatDay(day.date, 'EEEE'));
 
   const onTouchStart = (e: TouchEvent) => {
     const touch = e.touches[0];
@@ -153,26 +155,30 @@ export function DayPage({
         </h2>
         {headEnd ? <span className={styles.headEnd}>{headEnd}</span> : null}
         <span className={styles.capacityLine}>
-          <button
-            type="button"
-            className={styles.capacityButton}
-            aria-label={`${capacityLabel(day)} – ${t.planner.board.editDay(formatDay(day.date, 'EEEE'))}`}
-            onClick={onEditDay}
-          >
-            {capacityLabel(day)}
-          </button>
-          {!day.off ? (
+          {day.off ? (
+            // A day off has no question to answer: its capacity opens the day's settings.
             <button
               type="button"
-              className={styles.whyButton}
+              className={styles.capacityButton}
+              aria-label={`${capacityLabel(day)} – ${editName}`}
+              onClick={onEditDay}
+            >
+              {capacityLabel(day)}
+            </button>
+          ) : (
+            // „Warum?“ (R2, P80): the capacity itself is the one control – no second link beside it.
+            <button
+              type="button"
+              className={styles.capacityButton}
               data-testid="planner-why"
+              aria-label={t.planner.board.whyName(capacityLabel(day))}
               aria-expanded={whyOpen}
               aria-controls={`${id}-why`}
               onClick={() => setWhyOpen((open) => !open)}
             >
-              {t.planner.board.why}
+              {capacityLabel(day)}
             </button>
-          ) : null}
+          )}
         </span>
         {!day.off ? (
           <div className={styles.sheetBar}>
@@ -193,7 +199,19 @@ export function DayPage({
             hidden={!whyOpen}
             data-testid="planner-why-line"
           >
-            {whyOpen ? capacityWhy(day, dayEnd) : null}
+            {whyOpen ? (
+              <>
+                <span>{capacityWhy(day, dayEnd)}</span>{' '}
+                <button
+                  type="button"
+                  className={styles.textLink}
+                  aria-label={editName}
+                  onClick={onEditDay}
+                >
+                  {t.planner.board.editTime}
+                </button>
+              </>
+            ) : null}
           </p>
         ) : null}
       </div>
