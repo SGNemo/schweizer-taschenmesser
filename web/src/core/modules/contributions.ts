@@ -129,8 +129,11 @@ export async function resolveLink(
   if (ref.module === NEVER_LINKED) return { state: 'gone' };
   // A record id is capped at 128 characters everywhere (`core/sync/crypto.ts`); anything else names nothing.
   if (typeof ref.id !== 'string' || ref.id === '' || ref.id.length > 128) return { state: 'gone' };
+  // Only a registry id is ever logged: `ref.module` is a stored string from outside.
+  let known: string | undefined;
   try {
     const manifest = manifests.find((m) => m.id === ref.module);
+    known = manifest?.id;
     if (!manifest || !(await loadModuleStates(manifests))[manifest.id]) {
       const url = await fallbackUrl(ref);
       return { state: 'unavailable', ...(url ? { url } : {}) };
@@ -139,7 +142,7 @@ export async function resolveLink(
     if (!load) return { state: 'gone' };
     return await (await load()).default.resolve(ref.id);
   } catch (e) {
-    console.error(`[linkTarget] "${ref.module}" failed`, e);
+    console.error(`[linkTarget] "${known ?? 'unknown module'}" failed`, e);
     return { state: 'elsewhere' };
   }
 }

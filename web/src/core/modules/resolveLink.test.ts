@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
 import { resolveLink } from './contributions';
+import { allManifests, getManifest } from './registry';
 import type { LinkState, ModuleManifest } from './types';
 
 /** A manifest with only what `resolveLink` and the module states read. */
@@ -39,6 +40,22 @@ describe('resolveLink', () => {
     expect(resolve).not.toHaveBeenCalled();
     // The real registry: the same answer, whatever the module's state.
     expect(await resolveLink({ module: 'accounts', id: 'entry-1' })).toEqual({ state: 'gone' });
+  });
+
+  it('the vault offers no resolver, and the modules that do are exactly the linkable ones', () => {
+    expect(getManifest('accounts')!.contributions).not.toHaveProperty('linkTarget');
+    const targets = allManifests.filter((m) => m.contributions?.linkTarget).map((m) => m.id);
+    expect(targets.sort()).toEqual(['calendar', 'invoices', 'mail', 'notes', 'todos']);
+  });
+
+  it('a failing resolver is logged by the registry id only, never by the stored module string', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const broken = fake('x', async () => {
+      throw new Error('boom');
+    });
+    await resolveLink({ module: 'x', id: 'secret-id' }, [broken]);
+    expect(String(error.mock.calls[0]![0])).toBe('[linkTarget] "x" failed');
+    expect(String(error.mock.calls[0]![0])).not.toContain('secret-id');
   });
 
   it('answers `unavailable` itself while the module is off, unknown or not on this platform', async () => {

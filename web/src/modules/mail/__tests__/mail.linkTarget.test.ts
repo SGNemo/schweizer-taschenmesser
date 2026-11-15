@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
+import * as accounts from '@/core/mail/accounts';
 import * as service from '@/core/mail/service';
-import type { MailThreadSummary } from '@/core/mail/types';
+import type { MailAccountRef, MailThreadSummary } from '@/core/mail/types';
 import { saveThreads } from '../cache';
 import target from '../linkTarget';
 import { threadRepo } from '../repo';
@@ -19,8 +20,15 @@ const thread = (id: string): MailThreadSummary => ({
   hasAttachment: false,
 });
 
+const account = (key: string): MailAccountRef => ({
+  key,
+  connectorId: key,
+  email: `${key}@example.org`,
+});
+
 beforeEach(async () => {
   for (const t of ['mail_thread', '_secrets', '_meta']) await db.table(t).clear();
+  vi.spyOn(accounts, 'listMailAccounts').mockResolvedValue([account('acc-1'), account('acc-2')]);
 });
 afterEach(() => vi.restoreAllMocks());
 
@@ -30,8 +38,30 @@ describe('mail threads as a link target', () => {
     expect(await target.resolve('18c2a_b-9')).toEqual({
       state: 'alive',
       title: 'Ihre Rechnung',
-      to: '/mail?open=18c2a_b-9',
+      to: '/mail?account=acc-1&open=18c2a_b-9',
     });
+  });
+
+  it('two accounts: the route names the account that has the thread (the page opens `?open=` only inside it)', async () => {
+    await saveThreads('acc-1', [thread('only-first')]);
+    await saveThreads('acc-2', [thread('only-second')]);
+    expect(await target.resolve('only-second')).toMatchObject({
+      state: 'alive',
+      to: '/mail?account=acc-2&open=only-second',
+    });
+    expect(await target.resolve('only-first')).toMatchObject({
+      to: '/mail?account=acc-1&open=only-first',
+    });
+    // A row of a mailbox that is no longer connected is not offered: the page could not open it.
+    await saveThreads('acc-old', [thread('left-over')]);
+    expect((await target.resolve('left-over')).state).toBe('elsewhere');
+  });
+
+  it('reads the cache by key only – no scan of the thread table', async () => {
+    await saveThreads('acc-2', [thread('t9')]);
+    const scan = vi.spyOn(threadRepo, 'active');
+    expect((await target.resolve('t9')).state).toBe('alive');
+    expect(scan).not.toHaveBeenCalled();
   });
 
   it('elsewhere: a thread that is not cached here – the web address, no request, no account in it', async () => {

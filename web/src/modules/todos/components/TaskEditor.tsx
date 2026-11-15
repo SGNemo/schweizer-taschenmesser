@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { fromLegacy, refKey } from '@/core/entitylinks/types';
 import { useResolvedLinks } from '@/core/modules/contributions';
@@ -71,7 +71,7 @@ function EditorForm({
   onClose,
 }: Omit<Props, 'task'> & { task: StoredTask }) {
   // The record as the editor opened it: only fields that differ from it are saved (QA X01).
-  const [opened, setOpened] = useState(task);
+  const [opened] = useState(task);
   const [title, setTitle] = useState(task.title);
   const [listId, setListId] = useState(task.listId);
   const [priority, setPriority] = useState(task.priority);
@@ -91,7 +91,19 @@ function EditorForm({
   const [tagsText, setTagsText] = useState((task.tags ?? []).map((x) => `#${x}`).join(', '));
   const [checklist, setChecklist] = useState<ChecklistItem[]>(task.checklist ?? []);
   const [itemText, setItemText] = useState('');
-  const [links, setLinks] = useState<TaskLink[]>(task.links ?? []);
+  // Links are no draft: the list shows the stored record, and removing one is written at once (with undo).
+  const links: TaskLink[] = task.links ?? [];
+  const linkList = useRef<HTMLUListElement>(null);
+  // After a removal the focus goes to the remove control of the row that took its place (or the one before).
+  const focusLink = useRef<number | null>(null);
+  useEffect(() => {
+    const at = focusLink.current;
+    if (at === null) return;
+    focusLink.current = null;
+    const controls =
+      linkList.current?.querySelectorAll<HTMLButtonElement>('li > button:last-child');
+    if (controls?.length) controls[Math.min(at, controls.length - 1)]!.focus();
+  }, [links.length]);
   // Every link is read through its target module (`resolveLink`): alive, gone, or not readable on this device.
   const linkStates = useResolvedLinks(links.map((l) => fromLegacy(l).to));
   const [subTitle, setSubTitle] = useState('');
@@ -100,14 +112,13 @@ function EditorForm({
   const [focus] = useFocusSettings();
 
   /**
-   * „Entfernen“ on a link whose target no longer exists: written at once (the row says nothing true any more),
-   * with the usual undo. The editor's baseline follows, so „Speichern“ does not write `links` a second time.
+   * Removing a link (every row, gone or not) is one behaviour: written at once, with the usual undo. „Speichern“
+   * never writes `links`, so an undo taken while the editor is open stays undone.
    */
-  async function removeGone(l: TaskLink) {
+  async function removeLink(l: TaskLink, index: number) {
     const without = (all: readonly TaskLink[] | undefined) =>
       (all ?? []).filter((x) => !(x.kind === l.kind && x.id === l.id));
-    setLinks(without);
-    setOpened((o) => ({ ...o, links: without(o.links).length ? without(o.links) : undefined }));
+    focusLink.current = index;
     await undoableWithToast(t.todos.links.removed, t.todos.links.removed, async () => {
       const current = await taskRepo.get(task.id);
       if (!current) return;
@@ -141,7 +152,6 @@ function EditorForm({
         startDate: startDate || undefined,
         tags: parseTags(tagsText).length ? parseTags(tagsText) : undefined,
         checklist: checklist.length ? checklist : undefined,
-        links: links.length ? links : undefined,
       }),
     );
     // Subtasks always live in the list of their parent.
@@ -351,8 +361,8 @@ function EditorForm({
       {links.length > 0 ? (
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>{t.todos.links.title}</h3>
-          <ul className={styles.checklist}>
-            {links.map((l) => {
+          <ul className={styles.checklist} ref={linkList}>
+            {links.map((l, index) => {
               const state = linkStates?.get(refKey(fromLegacy(l).to));
               // An alive target shows its title of today; everywhere else the label of the time stands in.
               const name = `${t.todos.links.kinds[l.kind]}: ${
@@ -362,10 +372,13 @@ function EditorForm({
               const url = state && 'url' in state ? state.url : undefined;
               return (
                 <li key={`${l.kind}:${l.id}`} className={styles.checkItem}>
-                  {state?.state === 'alive' ? (
+                  {state === undefined || state.state === 'alive' ? (
+                    // While the answer loads the button is already there (nothing jumps), only not yet usable.
                     <Button
                       variant="ghost"
+                      disabled={state === undefined}
                       onClick={() => {
+                        if (!state) return;
                         onClose();
                         void navigate(state.to);
                       }}
@@ -375,8 +388,9 @@ function EditorForm({
                   ) : (
                     <span className={styles.linkText}>
                       {name}
-                      {state?.state === 'gone' ? ` · ${t.todos.links.gone}` : null}
-                      {state?.state === 'elsewhere' ? ` · ${t.todos.links.elsewhere}` : null}
+                      {state.state === 'gone' ? ` · ${t.todos.links.gone}` : null}
+                      {/* Only where the way out exists (a mail thread outside this device's cache). */}
+                      {state.state === 'elsewhere' && url ? ` · ${t.todos.links.elsewhere}` : null}
                     </span>
                   )}
                   {url ? (
@@ -387,14 +401,14 @@ function EditorForm({
                   {state?.state === 'gone' ? (
                     <Button
                       aria-label={t.todos.links.remove(l.label)}
-                      onClick={() => void removeGone(l)}
+                      onClick={() => void removeLink(l, index)}
                     >
                       {t.todos.links.removeGone}
                     </Button>
                   ) : (
                     <IconButton
                       label={t.todos.links.remove(l.label)}
-                      onClick={() => setLinks((all) => all.filter((x) => x !== l))}
+                      onClick={() => void removeLink(l, index)}
                     >
                       <Icon name="trash" />
                     </IconButton>
