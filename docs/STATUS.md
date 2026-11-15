@@ -18,6 +18,8 @@ UI-Audit 4.0 ist abgenommen: Identity 4.0 gilt seit 0b-8 (2026-11-14, [REPORT �
 - **CI aufräumen, Runde 3** ([perf/CI-2026-11.md](perf/CI-2026-11.md)): Ursache ist die Warteschlange (20 Runner, 22 % der Zeit voll); kleine Workflow-Änderungen in #692, fünf Übergabe-Pakete in [perf/CI-2026-11-PACKAGES.md](perf/CI-2026-11-PACKAGES.md); messen: `node scripts/ci/measure.mjs`.
 - **UI schärfen, Runde 6** ([qa/round-6/STATUS.md](qa/round-6/STATUS.md)): alle acht Fix-PRs auf `develop`; offen U41 Kopfbandhöhen (`fix/ui6-head-heights`) und der Sammel-PR `fix/ui6-followups`.
 
+- **Modul-Runde „Tiefe & Politur“, Übersicht** (`fix/home-polish`, PR #955, Plan [design/home-deep/PLAN.md](design/home-deep/PLAN.md) im PR): Reihen gleicher Höhe statt Masonry, Kopf-Symbole bündig, leere Karten ohne Fisch; wartet auf die Abnahme.
+
 ## Abgeschlossene Runden (je eine Zeile; alles auf `develop`)
 
 - Musik: Cover für Playlists, Alben und Songs in allen Listen ([features/spotify.md](features/spotify.md)); offen: Handtest MU-C1 mit echtem Konto, Cover der von Spotify erzeugten Playlists (Daily Mix, Radio).
