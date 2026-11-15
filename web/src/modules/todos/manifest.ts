@@ -97,6 +97,8 @@ const manifest: ModuleManifest = {
     ],
     calendarItems: () => import('./calendar'),
     plannable: () => import('./plannable'),
+    // What a link to one of these says about its target (alive, gone); read through `resolveLink` only.
+    linkTarget: () => import('./linkTarget'),
     aiCreateDefaults: () => import('./aiDefaults'),
     services: () => import('./services'),
   },

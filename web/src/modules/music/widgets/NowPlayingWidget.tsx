@@ -2,6 +2,8 @@ import { clock, useProgress } from '../nowPlayingTime';
 import { COVER_PX } from '../useCover';
 import { Cover } from '../components/Cover';
 import { useNowPlaying } from '../useNowPlaying';
+import { useSleep, useSleepWatcher } from '../sleepTimer';
+import { formatTimestamp } from '@/core/i18n/format';
 import { tMusicPage } from '@/strings.musicPage';
 import { tSpotify } from '@/strings.spotify';
 import { Button, Icon, WidgetBody } from '@/ui';
@@ -17,6 +19,9 @@ export default function NowPlayingWidget() {
   const tm = tMusicPage.use();
   const np = useNowPlaying();
   const current = np?.current;
+  // The sleep timer set on the music page keeps running while the Overview is shown.
+  useSleepWatcher(np);
+  const sleep = useSleep();
   const position = useProgress(
     current?.progressMs,
     current?.durationMs,
@@ -51,9 +56,25 @@ export default function NowPlayingWidget() {
             ) : (
               <p className={styles.miniTitle}>{tm.widgetIdle}</p>
             )}
+            {sleep ? (
+              <p className={styles.miniSleep} data-testid="music-widget-sleep">
+                <Icon name="moon" size={14} />
+                {tm.sleepAt(formatTimestamp(sleep.at, { timeStyle: 'short' }))}
+              </p>
+            ) : null}
           </div>
           {np.canControl && current ? (
             <span role="group" aria-label={tx.controlsLabel} className={styles.miniControls}>
+              {/* "Zurück" only where the card is wide enough (container query), so three targets keep 44 px. */}
+              <Button
+                variant="ghost"
+                className={styles.miniPrev}
+                data-testid="now-playing-previous"
+                aria-label={tx.previous}
+                onClick={() => void np.control('previous')}
+              >
+                <Icon name="skipBack" size={18} />
+              </Button>
               <Button
                 variant="ghost"
                 data-testid="now-playing-toggle"

@@ -19,6 +19,7 @@ import type {
 import { parseAddress, parseAddressList } from '@/core/mail/address';
 import { buildRaw } from '@/core/mail/compose';
 import { isPersonalMail } from '@/core/mail/heuristics';
+import { unsubscribeUrl } from '@/core/mail/unsubscribe';
 import { googleRequest, type GoogleResponse } from './http';
 
 const API = 'https://gmail.googleapis.com/gmail/v1/users/me';
@@ -176,6 +177,7 @@ export function parseMessage(raw: unknown): MailMessage {
     inline: into.inline,
     rfcMessageId: header(payload, 'Message-ID') || undefined,
     references: header(payload, 'References') || undefined,
+    unsubscribeUrl: unsubscribeUrl(header(payload, 'List-Unsubscribe')),
   };
 }
 

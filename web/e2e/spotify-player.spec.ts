@@ -306,11 +306,14 @@ test.describe('Music page', () => {
     await page.getByRole('menuitem', { name: 'Zur Warteschlange hinzufügen' }).click();
     await expect.poll(() => mock.api.some((c) => c.startsWith('POST /queue'))).toBe(true);
 
-    await chip(page, /Warteschlange/).click();
+    // No tab of its own: the aside's queue card opens the whole queue.
+    await page.getByRole('button', { name: 'Ganze Warteschlange anzeigen' }).click();
     await expect(main).toContainText('Als Nächstes');
     await expect(main.getByRole('button', { name: 'Als Nächstes abspielen' })).toBeVisible();
 
-    await chip(page, /Zuletzt gespielt/).click();
+    // The songs played lately sit in the start view; "Alle anzeigen" opens the whole list.
+    await chip(page, 'Start').click();
+    await page.getByTestId('music-start').getByRole('button', { name: 'Alle anzeigen' }).click();
     await expect(main.getByRole('button', { name: 'Gestern gehört abspielen' })).toBeVisible();
 
     await page.getByTestId('music-now').getByRole('button', { name: 'Geräte' }).click();
@@ -325,8 +328,7 @@ test.describe('Music page', () => {
     await seedConnected(page, ['show', 'control']);
     const main = await openMusic(page);
     await expect(page.getByTestId('music-start')).toContainText('„Playlists“');
-    await chip(page, /Zuletzt gespielt/).click();
-    await expect(main).toContainText('„Zuletzt gehört“ ankreuzen');
+    await expect(page.getByTestId('music-start')).toContainText('„Verlauf“');
     await chip(page, /Lieblingssongs/).click();
     await expect(main).toContainText('„Lieblingssongs“');
   });

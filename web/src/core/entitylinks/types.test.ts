@@ -1,0 +1,52 @@
+import { describe, expect, expectTypeOf, it } from 'vitest';
+import type { EventMap } from '@/core/events/events';
+import type { PlannableItem } from '@/core/modules/types';
+import type { CaptureFields } from '@/quickCapture/parser/types';
+import {
+  LINK_KINDS,
+  fromLegacy,
+  linkRel,
+  refKey,
+  refOfKind,
+  type EntityLink,
+  type LegacyLink,
+} from './types';
+
+describe('link contract: helpers', () => {
+  it('a ref key is `<module>:<id>`, the planner’s item key format', () => {
+    expect(refKey({ module: 'invoices', id: 'mail-abc' })).toBe('invoices:mail-abc');
+  });
+
+  it('every legacy kind names its module', () => {
+    expect(LINK_KINDS).toEqual(['note', 'mail', 'invoice', 'event']);
+    expect(LINK_KINDS.map((k) => refOfKind[k])).toEqual(['notes', 'mail', 'invoices', 'calendar']);
+  });
+
+  it('a legacy link becomes the target half of an entity link, label unchanged', () => {
+    expect(fromLegacy({ kind: 'mail', id: 't-1', label: 'Stadtwerke <b>' })).toEqual({
+      to: { module: 'mail', id: 't-1' },
+      rel: 'origin',
+      label: 'Stadtwerke <b>',
+    });
+  });
+
+  it('an unknown stored rel reads as `about`', () => {
+    expect(linkRel('dunning')).toBe('dunning');
+    expect(linkRel('origin')).toBe('origin');
+    expect(linkRel('something-newer')).toBe('about');
+    expect(linkRel(undefined)).toBe('about');
+  });
+});
+
+describe('link contract: one legacy shape everywhere', () => {
+  it('events, plannable items and the capture parser carry exactly `LegacyLink`', () => {
+    expectTypeOf<NonNullable<EventMap['todo.requested']['link']>>().toEqualTypeOf<LegacyLink>();
+    expectTypeOf<NonNullable<EventMap['plan.requested']['link']>>().toEqualTypeOf<LegacyLink>();
+    expectTypeOf<NonNullable<PlannableItem['link']>>().toEqualTypeOf<LegacyLink>();
+    // The parser may not import from outside its folder, so its copy of the shape is pinned here.
+    expectTypeOf<NonNullable<CaptureFields['link']>>().toEqualTypeOf<LegacyLink>();
+    expectTypeOf<NonNullable<PlannableItem['links']>[number]>().toEqualTypeOf<
+      Omit<EntityLink, 'from'>
+    >();
+  });
+});

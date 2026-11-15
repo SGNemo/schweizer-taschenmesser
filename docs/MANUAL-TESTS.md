@@ -606,6 +606,10 @@ EG-E4. _Android, Akku „eingeschränkt“ für Nemo_ und _„Wecker & Erinnerun
 EG-E5. _Android, „Beenden erzwingen“ und Flugmodus:_ wie EG-E1 (Flugmodus muss gehen). ☐
 EG-E6. _PWA in Chrome (gleiches Handy), mit und ohne Web Push:_ EG-E1 und EG-E3; ohne Push kommt nichts, mit Push kommt es. ☐
 
+#### Frist mit Uhrzeit (Wochenende retten, Paket 5b, #915)
+
+FU-W1. _Android:_ ToDo mit Frist heute und „Uhrzeit der Frist“ in gut einer Stunde anlegen, im Bearbeiten-Dialog „Erinnern: 1 Std vorher“ einschalten (Vorgabe: aus), App schließen: genau eine Benachrichtigung eine Stunde vor der Frist, keine Wiederholung. Gegenprobe: ToDo vorher abhaken oder Schalter aus – es kommt nichts. ☐
+
 #### Erinnern-Zeile, Genommen, Ruhe (P5 Paket A)
 
 EZ-A1. _Android:_ Termin mit Uhrzeit anlegen, „Erinnern → 1 h“ und „Als Vorgabe merken“; ein neuer Termin startet mit „1 h“, ein Termin ohne Uhrzeit bekommt nichts. Ohne Benachrichtigungs-Erlaubnis erscheint ein ruhiger Satz mit „Erlauben“ und „Nicht mehr zeigen“. ☐
@@ -1512,6 +1516,7 @@ ML-M16. (Paket 4, `feat/mail-notify`) Modul-Einstellungen E-Mail: „Bei neuen M
 ML-M17. Mail anderswo lesen, bevor die Meldung kommt: es kommt keine. Mehrere Mails in einem Abstand: eine Meldung mit der Anzahl. In den Ruhezeiten (Einstellungen → Benachrichtigungen) kommt sie erst nach deren Ende. Nur die gewählten Labels zählen (Dialog „Mail-Einstellungen" → Labels). Bei ausgeschalteter App/Netz kommt nichts, und es entsteht kein Stau von Meldungen beim Wiedereinschalten (höchstens eine). ☐
 ML-M18. Einstellungen → Mail → „Lokales Modell darf Mails lesen" einschalten, ohne geladenes Modell: „Kurz zusammenfassen" zeigt „Kein lokales Modell bereit" mit Link zu den KI-Einstellungen, es geht nichts ins Netz. Eingebautes Modell laden: Zusammenfassung erscheint, Hinweis „Wird nicht gespeichert", nach „Schließen" und Neuöffnen ist sie weg. ☐
 ML-M19. Nur Ollama auf `localhost` konfiguriert: Zusammenfassung funktioniert. Ollama-Eintrag auf eine LAN-Adresse oder Cloud-Preset: keine Antwort, Hinweis „Kein lokales Modell bereit"; im Netzwerk-Mitschnitt keine Anfrage an einen fremden Host. „Aus dieser Mail anlegen" → „Vorschlag vom lokalen Modell": Feld ändert sich erst nach „Übernehmen". ☐
+ML-M20. (Planer-Hub S1, `feat/links-invoice-mail`) _Mahnkette mit echtem Gmail-Konto (Windows-App):_ In der Mail-Liste unter einer echten Rechnungsmail „Anlegen“ (ein Tipp). Rechnungen → die Rechnung: „Aus Mail“ nennt den Betreff, ein Klick öffnet die Mail in Nemo; die Notiz enthält keine Mail-Adresse und keinen Link mehr. Zurück in der Mail steht „Aus dieser Mail angelegt · Rechnung: …“ und öffnet genau diese Rechnung (nicht nur die Seite). Unter einer echten Mahnung zur selben Rechnung „Mahnung vermerken“ (ein Tipp): die Rechnung zeigt „Mahnung aus Mail vom <Tag>“, Betrag und Fälligkeit der Rechnung sind unverändert; mit eingeschaltetem Planer steht in der Rechnung „Im Plan“ mit dem Tag (Klick öffnet den Planer), die Plan-Zeile nennt „Mahnung · <neuer Betrag> bis <neue Frist>“. „Rückgängig“ im Hinweis nimmt Mahnstufe und Verknüpfung zurück. _Zweites Gerät:_ nach dem Sync zeigt ein zweiter PC (gleiches Gmail-Konto verbunden, Mail nie dort angelegt) dieselbe Rechnung mit „Aus Mail“ und in der Mail „Aus dieser Mail angelegt“; ohne die Mail im dortigen Zwischenspeicher und auf dem Handy steht der Betreff mit „Nicht auf diesem Gerät.“ und „Im Browser öffnen“ (öffnet Gmail, ohne Adresse im Link). Adresse `/invoices?open=<Id>&do=pay` von Hand öffnen: nur der Dialog „… bezahlt?“ erscheint, bezahlt ist erst nach „Bezahlt“. ☐
 
 #### Einrichtungsassistent
 
