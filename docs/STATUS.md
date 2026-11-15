@@ -21,6 +21,8 @@ UI-Audit 4.0 ist abgenommen: Identity 4.0 gilt seit 0b-8 (2026-11-14, [REPORT �
 - **UI schärfen, Runde 6** ([qa/round-6/STATUS.md](qa/round-6/STATUS.md)): alle acht Fix-PRs auf `develop`; offen U41 Kopfbandhöhen (`fix/ui6-head-heights`) und der Sammel-PR `fix/ui6-followups`.
 - **Modul-Runde „Tiefe & Politur“, Routinen** (Plan `design/routines-deep/PLAN.md` kommt mit #936): Routinen = der eine Ort für „Routine“ (Schritte, ein Formular mit Vorlagen, „Los“); drei gestapelte PRs #936 → #954 → #957, warten auf Sven; die Listen-Seite baut der Listen-Chat.
 
+- **Modul-Runde „Tiefe & Politur“, Übersicht** (`fix/home-polish`, PR #955, Plan `design/home-deep/PLAN.md` im PR): Reihen gleicher Höhe statt Masonry, Kopf-Symbole bündig, leere Karten ohne Fisch; wartet auf die Abnahme.
+
 ## Abgeschlossene Runden (je eine Zeile; alles auf `develop`)
 
 - Musik „Tiefe & Politur“: Playlists-Tab, Alben, Künstlerseiten, Weiterhören, Schlaf-Timer, Liedtext-Suche, Tasten (SGNemo/schweizer-taschenmesser#937, #953, #969; [features/spotify.md](features/spotify.md)); offen: Handtest mit echtem Konto (`/me`, Playlist bearbeiten, `/me/albums`, Top-Titel), Künstlern folgen (neuer Scope, nicht gebaut).
