@@ -54,15 +54,15 @@
       "signatureBlocks": 0
     },
     "d1920--budgets": {
-      "height": 1080,
+      "height": 1294,
       "buttons": 27,
       "links": 14,
-      "icons": 29,
+      "icons": 40,
       "firstScreenActions": 40,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
-      "colouredAboveFold": 9,
+      "colouredAboveFold": 17,
       "signatureBlocks": 0
     },
     "d1920--calendar": {
@@ -678,15 +678,15 @@
       "signatureBlocks": 0
     },
     "p412--budgets": {
-      "height": 1117,
+      "height": 2835,
       "buttons": 16,
       "links": 9,
-      "icons": 11,
-      "firstScreenActions": 21,
+      "icons": 22,
+      "firstScreenActions": 18,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
-      "colouredAboveFold": 7,
+      "colouredAboveFold": 9,
       "signatureBlocks": 0
     },
     "p412--calendar": {
