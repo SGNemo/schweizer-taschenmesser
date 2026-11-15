@@ -4218,7 +4218,7 @@ export const de = {
     meta: {
       name: 'Merkliste',
       description:
-        'Links, Lesestoff, Filme, Orte und Ideen merken – mit Tags, Filtern und Erledigt-Status; oft gebrauchte Links als Lesezeichen-Kacheln. Auf dem Handy auch über „Teilen“ aus anderen Apps.',
+        'Was du dir noch anschauen, lesen, kaufen, ausprobieren oder besuchen willst – mit Tags und Status. Jeder Merkzettel hat ein Ende: erledigt oder weg. Die paar Links, die du täglich brauchst, liegen im Tab „Lesezeichen“. Auf dem Handy auch über „Teilen“ aus anderen Apps.',
       route: 'Merkliste',
       widget: 'Merkliste',
       widgetLinks: 'Lesezeichen',
@@ -4229,9 +4229,12 @@ export const de = {
         sort: 'Sortierung',
         sortHelp:
           'Legt fest, was in jeder Gruppe oben steht: das Neueste, nach Titel, nach Art oder Angefangenes zuerst.',
+        groupBy: 'Gruppierung',
+        groupByHelp:
+          'Legt fest, wie die Merkliste unterteilt ist: nach Zeitpunkt, nach dem ersten Tag (wie Sammlungen) oder nach Art. Die Auswahl im Menü der Seite ändert dieselbe Einstellung.',
         linkPreview: 'Linkvorschau laden',
         linkPreviewHint:
-          'Holt beim Speichern Titel, Beschreibung und ein kleines Bild direkt von der Seite des Links. Dabei erfährt diese Seite, dass du den Link gespeichert hast. Standard: aus.',
+          'Holt bei jedem Speichern Titel, Beschreibung und ein kleines Bild direkt von der Seite des Links. Dabei erfährt diese Seite, dass du den Link gespeichert hast. Standard: aus. Einzeln geht es immer: im Menü „⋯“ eines Merkzettels oder beim Teilen vom Handy.',
       },
     },
     title: 'Merkliste',
@@ -4247,6 +4250,8 @@ export const de = {
       watch: 'Film/Serie',
       book: 'Buch',
       place: 'Ort',
+      buy: 'Kaufen',
+      try: 'Ausprobieren',
       idea: 'Idee',
       other: 'Sonstiges',
     } as Record<string, string>,
@@ -4266,14 +4271,14 @@ export const de = {
       `${n === 1 ? '1 Lesezeichen' : `${n} Lesezeichen`}${groups === 0 ? '' : ` · ${groups === 1 ? 'in 1 Gruppe' : `in ${groups} Gruppen`}`}`,
     noGroup: 'Ohne Gruppe',
     linksEmpty:
-      'Noch keine Lesezeichen. Lege Links an, die du oft brauchst – gruppiert über den ersten Tag.',
-    empty: 'Noch nichts gemerkt.',
+      'Noch keine Lesezeichen. Hier liegen die paar Links, die du täglich brauchst, gruppiert über den ersten Tag. Die Lesezeichen deines Browsers ersetzt das nicht.',
+    empty:
+      'Noch nichts gemerkt. Hier sammelst du, was du dir anschauen, lesen, kaufen oder ausprobieren willst.',
     emptyAction: 'Merkzettel eintragen',
     emptyFiltered: 'Nichts gefunden.',
     open: 'Link öffnen',
     done: 'Erledigt',
     widgetEmpty: 'Nichts gemerkt.',
-    openCount: (n: number) => (n === 1 ? '1 offener Merkzettel' : `${n} offene Merkzettel`),
     moreOptions: 'Weitere Optionen',
     groupBy: 'Gruppieren nach',
     groupings: { recent: 'Zuletzt hinzugefügt', tag: 'Erster Tag', kind: 'Art' },
@@ -4295,6 +4300,25 @@ export const de = {
       status: 'Angefangenes zuerst',
     },
     statuses: { open: 'Offen', started: 'Angefangen', done: 'Erledigt' },
+    duplicate: (title: string, status: string) =>
+      `Schon gemerkt: „${title}“${status ? ` (${status})` : ''}. Du kannst trotzdem speichern.`,
+    duplicateOpen: 'Vorhandenen öffnen',
+    sharedPreview: 'Vorschau von der Seite holen',
+    sharedPreviewHint:
+      'Holt beim Speichern einmal Titel, Beschreibung und ein kleines Bild von dieser Seite, ohne Anmeldung und ohne Cookies.',
+    previewFetch: 'Vorschau von der Seite holen',
+    previewFetched: 'Vorschau geholt. Die Pinnwand zeigt sie.',
+    previewNone: 'Für diese Seite kam gerade keine Vorschau zurück.',
+    previewUnavailable:
+      'Im Browser braucht die Vorschau deinen Sync-Server. Die Desktop- und die Android-App holen sie selbst.',
+    planAdd: 'In den Plan',
+    planRemove: 'Aus dem Plan nehmen',
+    planAdded: 'Steht jetzt im Plan.',
+    planRemoved: 'Aus dem Plan genommen. Der Merkzettel bleibt.',
+    inPlan: 'im Plan',
+    planTitle: (kind: string, title: string) => (kind ? `${kind}: ${title}` : title),
+    widgetNext: 'Als Nächstes · such dir eins aus',
+    widgetWeekend: 'Fürs Wochenende · such dir eins aus',
     markStarted: 'Als angefangen markieren',
     markOpen: 'Wieder öffnen',
     markDone: 'Als erledigt markieren',
