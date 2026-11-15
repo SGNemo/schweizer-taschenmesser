@@ -14,6 +14,7 @@ Examples to copy from. Rules: [FOCUS-GUIDELINES.md](FOCUS-GUIDELINES.md) (text r
 | Replan | "Neu planen" · "Auf die nächsten Tage verteilt." (+ Rückgängig) | "Aufräumen" |
 | Rest of the day (evening) | "Rest verteilen" · "Was heute offen ist, geht auf die nächsten Tage." · "Rest verteilen?" | "3 Sachen liegen geblieben" · "Du hast heute nicht alles geschafft" |
 | Done | "Erledigt." · "Gut gemacht." (sparsam) | "Super!!! Weiter so!" |
+| Planned mail, last message is mine (mail row) | "Beantwortet? · Erledigt" → "Erledigt · Rückgängig" · en: "Answered? · Done" | "Beantwortet ✓" (a claim) · "Noch nicht erledigt!" · closing it by itself |
 | Done today | "Erledigt heute: 3" · "Gut dabei" | "Nur 3 geschafft" |
 | Empty, all done | "Alles erledigt. Zeit für etwas Schönes." | "Keine Aufgaben vorhanden" |
 | Empty, nothing yet | "Noch nichts geplant. Eine Sache reicht." | "Es gibt keine Einträge." |

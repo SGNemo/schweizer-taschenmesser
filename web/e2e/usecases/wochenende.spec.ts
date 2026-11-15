@@ -54,8 +54,10 @@ const MAX: Record<string, Record<Metric | 'seconds', number>> = {
   'C Wochenende einteilen · pixel-7': { taps: 7, keys: 18, screens: 1, dialogs: 1, detours: 0, seconds: 19 },
   // prettier-ignore
   'D Arbeitszeit nachtragen · desktop-chrome': { taps: 6, keys: 20, screens: 2, dialogs: 1, detours: 0, seconds: 18 },
+  // Package 7 (F5 b) adds one tap on purpose: „Erledigt“ under „Beantwortet?“ ticks off an answered reply (with undo),
+  // which before meant opening ToDos and finding it there.
   // prettier-ignore
-  'E Mail: Persönlich, Suche, Rechnung, Antwort in den Plan · desktop-chrome': { taps: 4, keys: 9, screens: 1, dialogs: 0, detours: 0, seconds: 8 },
+  'E Mail: Persönlich, Suche, Rechnung, Antwort in den Plan · desktop-chrome': { taps: 5, keys: 9, screens: 1, dialogs: 0, detours: 0, seconds: 9 },
   // prettier-ignore
   'F Abend: Rest auf andere Tage · desktop-chrome': { taps: 9, keys: 0, screens: 1, dialogs: 1, detours: 1, seconds: 19 },
   // prettier-ignore
@@ -655,9 +657,28 @@ test('E Mail: Persönlich, Suche, Rechnung, Antwort in den Plan', async ({
   await expect(reply).toBeVisible({ timeout: 10_000 });
   await m.tap(reply);
   await expect(page.getByText(/^Im Plan/).first()).toBeVisible();
+  // „Beantwortet? · Erledigt“ (TARGET F5 b): a reply the person planned earlier and has since answered (the seed
+  // thread's newest message is their own). Planning it is the set-up of an earlier day, so it is not counted;
+  // the path counts the one tap that ticks the ToDo off, and the toast offers the undo.
+  await page.getByRole('button', { name: /^In den Plan: Umzugshilfe am Sonntag\?/ }).click();
+  const answered = page.getByRole('button', { name: /^Erledigt: Umzugshilfe am Sonntag\?/ });
+  await expect(answered).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByTestId('mail-answered')).toContainText('Beantwortet?');
+  await m.tap(answered);
+  const toast = page
+    .getByRole('status')
+    .locator('div')
+    .filter({ has: page.getByText('Erledigt', { exact: true }) })
+    .last();
+  await expect(toast.getByRole('button', { name: 'Rückgängig' })).toBeVisible();
+  await expect(answered).toBeHidden();
+  // Not counted: „Rückgängig“ reopens the ToDo and the row asks again.
+  await toast.getByRole('button', { name: 'Rückgängig' }).click();
+  await expect(answered).toBeVisible({ timeout: 10_000 });
   facts(info, 'E', {
     hasPersonal,
     searchFound: /Stadtwerke|Rechnung/.test(afterSearch),
+    answeredUndo: true,
   });
   await record(info, m, name);
 });

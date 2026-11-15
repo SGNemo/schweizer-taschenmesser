@@ -7412,6 +7412,17 @@ export const de = {
       offerInvoices: 'Rechnungen in der Liste erkennen',
       offerInvoicesHelp:
         'Unter einer Rechnungsmail stehen Empfänger, Betrag und Fälligkeit mit „Anlegen“; bei einer Mahnung zur offenen Rechnung „Mahnung vermerken“. Gelesen wird nur auf diesem Gerät.',
+      showAnswered: '„Beantwortet?“ anzeigen',
+      showAnsweredHelp:
+        'Unter einer Mail im Plan, deren letzte Nachricht von dir ist, steht „Beantwortet? · Erledigt“. Nichts wird von selbst erledigt; geprüft wird nur auf diesem Gerät.',
+    },
+    /** A planned mail whose newest message is the person's own („Wochenende retten“ F5): a question, one verb. */
+    answered: {
+      question: 'Beantwortet?',
+      done: 'Erledigt',
+      doneFor: (title: string) => `Erledigt: ${title}`,
+      closed: 'Erledigt',
+      failed: 'Das hat nicht geklappt. Das ToDo bleibt offen.',
     },
     invoice: {
       create: 'Anlegen',

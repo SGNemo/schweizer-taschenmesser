@@ -57,6 +57,13 @@ export interface EventMap {
     link?: { kind: 'note' | 'mail' | 'invoice' | 'event'; id: string; label: string };
   };
   /**
+   * Close one open to-do (the mail row „Beantwortet? · Erledigt“, use case „Wochenende retten“ F5): the todos
+   * module ticks it off the way a tap in the list does (`setDone`, next instance of a repeating one). Only the
+   * id travels; a missing, deleted or done to-do is left alone. The asker wraps the emit in `undoable` for its
+   * „Rückgängig“ (the handler's writes happen inside the awaited emit). Never sent without a tap.
+   */
+  'todo.doneRequested': { id: string };
+  /**
    * Something should go into the plan (a note: „In den Plan“). The planner adds a to-do through the
    * quick-capture target (with the link) plus its planner item, plans it and says on which day it landed.
    * Nothing happens while the planner is off.
