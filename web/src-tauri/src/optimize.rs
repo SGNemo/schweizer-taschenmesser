@@ -115,3 +115,40 @@ pub fn disk_care_undo(app: AppHandle, care: State<'_, PcCare>, id: u64) -> Resul
         j.mark_undone(id).map_err(|e| e.code().to_string())
     })
 }
+
+/// What starts with Windows for this account (the user's Run key and startup folder, plus the
+/// machine-wide Run keys, which are shown only). Command lines are for display, never logged.
+#[tauri::command(async)]
+pub fn disk_startup_list() -> Result<Vec<::pc_tune::startup::Item>, String> {
+    let reg = system_registry().ok_or("unsupported")?;
+    Ok(::pc_tune::startup::list(
+        reg.as_ref(),
+        ::pc_tune::startup::system_folder().as_deref(),
+    ))
+}
+
+/// Switches one of the user's autostart entries on or off, the way Task Manager does. `id` is
+/// looked up in a fresh listing (no key or name comes from the webview); machine-wide entries
+/// are refused. Returns the history entry's id for "Rückgängig", or nothing when the entry
+/// already was in that state.
+#[tauri::command(async)]
+pub fn disk_startup_set(
+    app: AppHandle,
+    care: State<'_, PcCare>,
+    id: String,
+    enabled: bool,
+) -> Result<Option<u64>, String> {
+    let reg = system_registry().ok_or("unsupported")?;
+    let folder = ::pc_tune::startup::system_folder();
+    care.with(&app, |j| {
+        ::pc_tune::startup::set_enabled(
+            reg.as_ref(),
+            j,
+            folder.as_deref(),
+            &id,
+            enabled,
+            unix_now(),
+        )
+        .map_err(|e| e.code().to_string())
+    })
+}

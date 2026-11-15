@@ -88,7 +88,8 @@ pub fn valid_key(key: &str) -> bool {
             .all(|s| !s.is_empty() && *s != "." && *s != ".." && s.len() <= 255)
 }
 
-fn valid_name(name: &str) -> bool {
+/// A value name the seam writes: not over-long, no control characters.
+pub(crate) fn valid_name(name: &str) -> bool {
     name.len() <= 255 && !name.chars().any(|c| c.is_control())
 }
 

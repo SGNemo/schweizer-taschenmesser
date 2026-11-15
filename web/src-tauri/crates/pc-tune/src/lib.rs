@@ -11,6 +11,7 @@
 
 pub mod journal;
 pub mod reg;
+pub mod startup;
 pub mod tools;
 
 pub use journal::{
