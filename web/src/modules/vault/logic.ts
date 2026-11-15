@@ -1,7 +1,8 @@
 import { compareText } from '@/core/i18n/format';
 import { minusNotice } from '@/core/deadline/notice';
 import { addDaysStr, addMonthsStr, daysBetween } from '@/core/time/dates';
-import type { DocCategory, VaultDocument } from './schema';
+import { isBuiltin } from './categories';
+import type { BuiltinCategory, DocCategory, VaultDocument } from './schema';
 
 export const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
@@ -79,17 +80,30 @@ const RANK: Record<Status, number> = {
 
 const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
+/**
+ * Filter by folder and search text. `shownCategory` maps a document to the category it is shown in (a gone
+ * category counts as "Ohne Kategorie", see `categoryOfDoc`); `categoryName` lets the search find a folder's
+ * documents by the folder's name.
+ */
 export function filterDocuments<T extends VaultDocument>(
   docs: readonly T[],
-  opts: { category: DocCategory | 'all'; query: string },
+  opts: {
+    category: DocCategory | 'all';
+    query: string;
+    shownCategory?: (d: T) => DocCategory;
+    categoryName?: (id: DocCategory) => string;
+  },
 ): T[] {
   const q = fold(opts.query.trim());
+  const shown = opts.shownCategory ?? ((d: T) => d.category);
   return docs
-    .filter((d) => opts.category === 'all' || d.category === opts.category)
+    .filter((d) => opts.category === 'all' || shown(d) === opts.category)
     .filter(
       (d) =>
         !q ||
-        fold(`${d.title} ${d.provider ?? ''} ${d.note ?? ''} ${d.fileName ?? ''}`).includes(q),
+        fold(
+          `${d.title} ${d.provider ?? ''} ${d.note ?? ''} ${d.fileName ?? ''} ${opts.categoryName?.(shown(d)) ?? ''}`,
+        ).includes(q),
     );
 }
 
@@ -123,15 +137,18 @@ export type PaperTemplate = (typeof PAPER_TEMPLATES)[number];
 
 /**
  * Categories with a "Verlängert" button: whatever is renewed rather than replaced (a contract, an insurance, a
- * passport, the vehicle inspection under "Sonstiges"). A warranty ends; a tax paper has no term.
+ * passport, the vehicle inspection under "Ohne Kategorie", and every category the user made). A warranty ends; a tax paper has no term.
  */
-export const RENEWABLE: readonly DocCategory[] = [
+export const RENEWABLE: readonly BuiltinCategory[] = [
   'identity',
   'insurance',
   'contract',
   'health',
   'other',
 ];
+/** Whether documents of a category are renewed: the built-in ones above, and every category the user made. */
+export const isRenewable = (category: DocCategory): boolean =>
+  isBuiltin(category) ? RENEWABLE.includes(category) : true;
 
 /** Days before the end from which a contract whose cancellation deadline has passed offers "Verlängert". */
 const RENEW_MISSED_DAYS = 30;
@@ -151,7 +168,7 @@ export function canRenew(
   today: string,
 ): boolean {
   const end = endOf(d);
-  if (!end || !RENEWABLE.includes(d.category)) return false;
+  if (!end || !isRenewable(d.category)) return false;
   const left = daysBetween(today, end);
   if (state === 'expired') return -left <= PAST_DAYS;
   if (state === 'missed') return left <= RENEW_MISSED_DAYS;

@@ -36,6 +36,9 @@ mod portable;
 mod remote;
 #[cfg(desktop)]
 mod remote_notice;
+mod remote_power;
+#[cfg(desktop)]
+mod remote_programs;
 // Remote control, phone side. Compiled for the phone (and for the unit tests): on the desktop no
 // command of it is registered.
 #[cfg(any(mobile, test))]
@@ -217,6 +220,12 @@ pub fn run() {
             remote::remote_set_device,
             remote::remote_end,
             remote::remote_set_notice,
+            remote::remote_programs,
+            remote::remote_program_add,
+            remote::remote_program_remove,
+            remote_power::remote_power_status,
+            remote_power::remote_power_cancel,
+            remote_power::remote_set_busy,
             lan_client::lan_client_pair,
             lan_client::lan_client_pair_cancel,
             lan_client::lan_client_request,
@@ -251,6 +260,12 @@ pub fn run() {
             optimize::disk_care_history,
             optimize::disk_care_open_tool,
             optimize::disk_care_undo,
+            optimize::disk_care_health,
+            optimize::disk_startup_list,
+            optimize::disk_startup_set,
+            optimize::disk_tweaks_list,
+            optimize::disk_tweak_set,
+            optimize::disk_tweaks_reset_all,
             local_llm::llm_status,
             local_llm::llm_download,
             local_llm::llm_download_cancel,
@@ -302,6 +317,8 @@ pub fn run() {
         remote_client::remote_client_send,
         remote_client::remote_client_text,
         remote_client::remote_client_pointer,
+        remote_client::remote_client_power,
+        remote_client::remote_client_program,
         remote_client::remote_client_close
     ]);
 

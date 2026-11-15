@@ -37,6 +37,16 @@ describe('remote bridge (phone)', () => {
     );
   });
 
+  it('starts a program by its slot and the epoch of the list, nothing else', async () => {
+    const remote = createRemote(true);
+    await remote.program(4, 2, 7);
+    expect(mocks.invoke).toHaveBeenLastCalledWith('remote_client_program', {
+      session: 4,
+      slot: 2,
+      epoch: 7,
+    });
+  });
+
   it('sends actions as names and pointer ways as whole numbers', async () => {
     const remote = createRemote(true);
     await remote.send(3, ['left-down', 'mute']);

@@ -1,0 +1,10 @@
+# Hard rule – disk module and PC care
+
+Unabridged text of the rule; short line in root [CLAUDE.md](../../CLAUDE.md), index in [RULES.md](../RULES.md). Catalogue and rejected candidates: [design/disk-deep/TWEAKS.md](../design/disk-deep/TWEAKS.md); decisions: [decisions/features-disk.md](../decisions/features-disk.md).
+
+- **Data:** the disk module holds no scan results, file names from scans or paths (health, temperature, history and "last scan" live in session memory only; no collection, nothing synced). The one file it keeps is the PC-care journal (`<app local data>/pc-care/journal.json`): ids of settings and autostart entries, their display names, and the values from before and after a change, so every change can be undone – device-local, never synced, backed up, exported, given to the assistant/local API or put in a bug report.
+- **Delete:** node ids → Rust plan → block list (`crates/disk-scan/src/guard.rs`, unit-tested, do not weaken) → a second confirmation for large or permanent deletions, checked in Rust; recycle bin by default, never a silent permanent delete.
+- **PC settings ("Windows-Einstellungen") and autostart:** closed catalogue in `crates/pc-tune/src/tweaks.rs`; an entry needs a per-user setting Windows offers itself, a Microsoft-documented mechanism with URL, risk ≤ low, no admin. Autostart touches only the user's own entries.
+- **Changes** only through `Journal::change` (the state from before is saved first; an unreadable old state = no change); registry writes only via the `Registry` seam at the listed keys and value names below `HKCU\Software` (never `Policies`), otherwise only a documented Windows API; undo and reset leave alone what Windows changed since; power plans only among existing ones.
+- **Never** `reg.exe`, PowerShell, elevation, services or drivers; nothing runs at start or on a schedule; no speed promises.
+- **Commands:** every new Tauri command in `build.rs` `COMMANDS` + `capabilities/desktop.json`; Linux and macOS say honestly "Windows only".

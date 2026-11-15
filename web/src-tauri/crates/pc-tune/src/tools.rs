@@ -14,20 +14,17 @@ pub enum Tool {
     StartupApps,
     /// "System protection" (create a restore point; Windows asks for admin rights itself).
     SystemProtection,
-    /// "Optimise drives" (defragment / TRIM and its schedule).
-    OptimizeDrives,
     /// Settings → System → Power.
     PowerSettings,
 }
 
 impl Tool {
-    pub const ALL: [Tool; 7] = [
+    pub const ALL: [Tool; 6] = [
         Tool::StorageSettings,
         Tool::DiskCleanup,
         Tool::RecycleBin,
         Tool::StartupApps,
         Tool::SystemProtection,
-        Tool::OptimizeDrives,
         Tool::PowerSettings,
     ];
 
@@ -38,7 +35,6 @@ impl Tool {
             Tool::RecycleBin => "recycleBin",
             Tool::StartupApps => "startupApps",
             Tool::SystemProtection => "systemProtection",
-            Tool::OptimizeDrives => "optimizeDrives",
             Tool::PowerSettings => "powerSettings",
         }
     }
@@ -56,7 +52,6 @@ impl Tool {
             Tool::RecycleBin => (Home::Windows, "explorer.exe", &["shell:RecycleBinFolder"]),
             Tool::StartupApps => (Home::Windows, "explorer.exe", &["ms-settings:startupapps"]),
             Tool::SystemProtection => (Home::System32, "SystemPropertiesProtection.exe", &[]),
-            Tool::OptimizeDrives => (Home::System32, "dfrgui.exe", &[]),
             Tool::PowerSettings => (Home::Windows, "explorer.exe", &["ms-settings:powersleep"]),
         }
     }

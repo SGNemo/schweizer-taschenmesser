@@ -3,12 +3,17 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { getPlatform } from '@/core/platform';
 import { useUiStore } from '@/stores/ui';
 import type { DriveInfo } from '@/core/platform/disk';
+import type { CareHealth } from '@/core/platform/optimize';
 import type { DiskIo } from '@/core/platform/system';
 import { t } from '@/strings';
 import { EmptyState, PageHeader, Skeleton, Tabs } from '@/ui';
 import SystemTab from '../components/SystemTab';
+import { Advice } from '../components/Advice';
+import { trimFact } from '../logic/advice';
 import { CleanupTab } from '../components/CleanupTab';
 import { HistoryTab } from '../components/HistoryTab';
+import { StartupTab } from '../components/StartupTab';
+import { TweaksTab } from '../components/TweaksTab';
 import { DiskHead } from '../components/DiskHead';
 import { DriveCard } from '../components/DriveCard';
 import { QuickOverview } from '../components/QuickOverview';
@@ -20,12 +25,13 @@ import styles from './DrivesPage.module.css';
 /** Drives are re-read while the tab is open: the history and the live speed need fresh numbers. */
 const REFRESH_MS = 5000;
 
-const TABS = ['drives', 'tidy', 'system', 'history'] as const;
+const TABS = ['drives', 'tidy', 'startup', 'tweaks', 'system', 'history'] as const;
 type Tab = (typeof TABS)[number];
 
 /**
- * "Dieser PC": tabs Laufwerke (scan entry), Aufräumen (suggestions), System (live facts) and
- * Verlauf (what the page changed, with the way back), selected via `?tab=`.
+ * "Dieser PC": tabs Laufwerke (scan entry), Aufräumen (suggestions), Autostart (what starts with
+ * Windows, with a switch each), Windows-Einstellungen (documented Windows settings), System (live
+ * facts) and Verlauf (what the page changed, with the way back), selected via `?tab=`.
  */
 export default function ThisPcPage() {
   const [params, setParams] = useSearchParams();
@@ -50,8 +56,12 @@ export default function ThisPcPage() {
       />
       {tab === 'system' ? <SystemTab /> : null}
       {tab === 'tidy' ? <CleanupTab onScan={startScan} onDrives={() => setTab('drives')} /> : null}
+      {tab === 'startup' ? <StartupTab /> : null}
+      {tab === 'tweaks' ? <TweaksTab /> : null}
       {tab === 'history' ? <HistoryTab /> : null}
-      {tab === 'drives' ? <DrivesTab {...list} onScan={startScan} /> : null}
+      {tab === 'drives' ? (
+        <DrivesTab {...list} onScan={startScan} onTidy={() => setTab('tidy')} />
+      ) : null}
     </>
   );
 }
@@ -166,19 +176,40 @@ function useStartScan(): (root: string) => void {
   };
 }
 
+/** Read-only facts for the drive cards (is TRIM on), read once per visit; Windows only. */
+function useCareHealth(): CareHealth | null {
+  const [health, setHealth] = useState<CareHealth | null>(null);
+  useEffect(() => {
+    let alive = true;
+    const optimize = getPlatform().disk.optimize;
+    if (!optimize.windows) return;
+    optimize
+      .health()
+      .then((h) => alive && setHealth(h))
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return health;
+}
+
 function DrivesTab({
   drives,
   failed,
   io,
   onScan: startScan,
-}: DriveList & { onScan: (root: string) => void }) {
+  onTidy,
+}: DriveList & { onScan: (root: string) => void; onTidy: () => void }) {
   const scanRoot = useDiskStore((s) => s.root);
+  const health = useCareHealth();
   // A drive's scan is shown in its card; only a clean-up place's scan needs the line above. While
   // the drives still load, nothing flashes above the grid (unless loading failed).
   const scanOnCard = drives ? drives.some((d) => d.root === scanRoot) : !failed;
 
   return (
     <>
+      {drives && drives.length > 0 ? <Advice drives={drives} /> : null}
       <p className={styles.lead}>{t.disk.lead}</p>
       {scanOnCard ? null : <ScanLine />}
       {failed ? <p role="alert">{t.disk.failedDrives}</p> : null}
@@ -196,6 +227,8 @@ function DrivesTab({
                 drive={d}
                 io={io.find((x) => x.root === d.root)}
                 onScan={() => startScan(d.root)}
+                onTidy={onTidy}
+                trim={trimFact(d, health)}
               />
             </li>
           ))}

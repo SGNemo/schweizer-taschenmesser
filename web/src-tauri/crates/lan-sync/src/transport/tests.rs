@@ -764,7 +764,10 @@ mod input_client {
     use super::*;
     use crate::input::wire::{self, Code, Level, Media, Record};
     use crate::input::Action;
-    use crate::input_client::{testing::open_via, Event, InputError, InputSession};
+    use crate::input_client::{
+        testing::{open_plain, open_via},
+        Event, InputError, InputSession,
+    };
     use crate::noise::frame::{INPUT_CAP, TAG_UNPAIR};
     use crate::trust::RemoteGrant;
     use std::sync::mpsc::{channel, Receiver};
@@ -1081,6 +1084,8 @@ mod input_client {
             match events.recv_timeout(Duration::from_millis(50)) {
                 Ok(Event::State(_)) => states += 1,
                 Ok(closed @ Event::Closed(_)) => break closed,
+                Ok(Event::Power(_)) => panic!("nobody asked about power"),
+                Ok(Event::Programs(..) | Event::Program(_)) => panic!("no programs granted"),
                 Err(_) => {}
             }
             assert!(began.elapsed() < WAIT, "never closed");
@@ -1153,6 +1158,141 @@ mod input_client {
     }
 
     #[test]
+    fn features_are_asked_for_and_power_goes_both_ways_over_the_socket() {
+        let r = rig();
+        let key = granted(&r, Level::Media);
+        // the old way: seven bytes back, nothing of power
+        let (tx, _rx) = channel();
+        let (old, opened) = open_plain(
+            addr(&r),
+            &key,
+            &r.hub_key,
+            Level::Media,
+            Box::new(move |e| {
+                let _ = tx.send(e);
+            }),
+        )
+        .unwrap();
+        assert_eq!(opened.ext, None);
+        assert!(!old.has_power());
+        assert!(!old.has_present());
+        assert_eq!(
+            old.send_events(&[Record::Key(wire::Key::F5)]),
+            Err(InputError::Protocol),
+            "never to a PC that did not accept the presentation keys"
+        );
+        assert_eq!(
+            old.send_power(wire::Power::Cancel, false),
+            Err(InputError::Protocol)
+        );
+        assert_eq!(
+            old.send_events(&[Record::Media(Media::MonitorOff)]),
+            Err(InputError::Protocol),
+            "never to a PC that did not accept power"
+        );
+        old.close();
+        // the new way: the PC names what it accepted
+        let (input, opened, events) = open(&r, &key, Level::Media).unwrap();
+        let ext = opened.ext.unwrap();
+        assert_eq!(ext.features, wire::FEATURES);
+        assert!(!ext.power.granted, "a level is no power permission");
+        assert!(input.has_power());
+        assert!(input.has_present());
+        input.send_power(wire::Power::Cancel, false).unwrap();
+        let answer = loop {
+            match events.recv_timeout(WAIT).expect("an answer") {
+                Event::Power(a) => break a,
+                Event::State(_) => continue,
+                other => panic!("{other:?}"),
+            }
+        };
+        assert_eq!(answer, wire::PowerAnswer::Cancelled);
+        input
+            .send_events(&[Record::Media(Media::MonitorOff)])
+            .unwrap();
+        wait_for(|| {
+            r.sink
+                .actions
+                .lock()
+                .unwrap()
+                .contains(&Action::Media(Media::MonitorOff))
+        });
+        input.close();
+    }
+
+    #[test]
+    fn the_presentation_keys_go_over_the_socket_to_a_pc_that_accepted_them() {
+        let r = rig();
+        let key = granted(&r, Level::Full);
+        let (input, opened, _events) = open(&r, &key, Level::Full).unwrap();
+        assert_eq!(opened.level, Level::Full);
+        assert!(opened.ext.unwrap().features & wire::FEATURE_PRESENT != 0);
+        assert!(input.has_present());
+        input
+            .send_events(&[Record::Key(wire::Key::F5), Record::Key(wire::Key::B)])
+            .unwrap();
+        wait_for(|| {
+            let actions = r.sink.actions.lock().unwrap();
+            actions.contains(&Action::Key(wire::Key::F5))
+                && actions.contains(&Action::Key(wire::Key::B))
+        });
+        input.close();
+    }
+
+    #[test]
+    fn the_program_list_and_a_start_go_over_the_socket() {
+        let r = rig();
+        let key = StaticKey::generate().unwrap();
+        pair_over_socket(&r, &key);
+        r.remote.enable_now(true).unwrap();
+        r.remote
+            .grant_now(
+                &key.public(),
+                RemoteGrant {
+                    level: Level::Full,
+                    programs: true,
+                    ..RemoteGrant::default()
+                },
+            )
+            .unwrap();
+        let (input, opened, events) = open(&r, &key, Level::Full).unwrap();
+        assert!(opened.ext.unwrap().features & wire::FEATURE_PROGRAMS != 0);
+        assert!(input.has_programs());
+        // the list is the first thing after `opened`
+        assert_eq!(
+            events.recv_timeout(WAIT).unwrap(),
+            Event::Programs(1, vec!["Editor".into(), "Browser".into()])
+        );
+        input.send_program(1, 1).unwrap();
+        let answer = loop {
+            match events.recv_timeout(WAIT).expect("an answer") {
+                Event::Program(a) => break a,
+                Event::State(_) => continue,
+                other => panic!("{other:?}"),
+            }
+        };
+        assert_eq!(answer, wire::ProgramAnswer::Started);
+        assert_eq!(r.sink.starts(), vec![(1, 1)]);
+        assert_eq!(input.send_program(8, 1), Err(InputError::Protocol));
+        input.close();
+        // a PC that did not accept them gets no start
+        let (tx, _rx) = channel();
+        let (old, _) = open_plain(
+            addr(&r),
+            &key,
+            &r.hub_key,
+            Level::Full,
+            Box::new(move |e| {
+                let _ = tx.send(e);
+            }),
+        )
+        .unwrap();
+        assert!(!old.has_programs());
+        assert_eq!(old.send_program(0, 1), Err(InputError::Protocol));
+        old.close();
+    }
+
+    #[test]
     fn the_input_client_dials_private_addresses_only() {
         let key = StaticKey::generate().unwrap();
         let hub = StaticKey::generate().unwrap().public();
@@ -1165,6 +1305,7 @@ mod input_client {
                     &hub,
                     "Phone",
                     Level::Media,
+                    true,
                     Box::new(move |e| {
                         let _ = tx.send(e);
                     })

@@ -3,7 +3,10 @@
  * "PC-Sven" at volume 42 % that answers like the real hub – its state after every bundle, a
  * refusal with a reason, a close. Only wired up in `--mode e2e` builds (see `web.ts`), and only
  * for pages that set `localStorage['tm-e2e-remote'] = '1'`. Tests steer it through
- * `window.__tmRemote`.
+ * `window.__tmRemote`. Power: the demo PC knows power (not granted) unless a test says otherwise;
+ * a start answers `started`, the rest (`done`, `cancelled`, …) is pushed by the test. It takes the
+ * presentation keys unless a test says otherwise. Programs: it knows the list but grants none
+ * (sends no list) unless a test gives it one.
  */
 import type {
   RemoteAction,
@@ -14,12 +17,19 @@ import type {
   RemoteOpened,
   RemoteLevel,
   RemotePcState,
+  RemotePowerAction,
+  RemotePowerAnswer,
+  RemotePowerInfo,
+  RemoteProgramAnswer,
   RemoteService,
 } from './types';
 
 const E2E_FLAG = 'tm-e2e-remote';
 const FAIL_FLAG = 'tm-e2e-remote-fail';
 const GRANT_FLAG = 'tm-e2e-remote-grant';
+const POWER_FLAG = 'tm-e2e-remote-power';
+const PRESENT_FLAG = 'tm-e2e-remote-present';
+const PROGRAMS_FLAG = 'tm-e2e-remote-programs';
 /** The demo PC's name (the phone knows its PC by the name it shows for sync). */
 export const FAKE_PC_NAME = 'PC-Sven';
 const STEP = 2;
@@ -52,6 +62,59 @@ export function createFakeRemoteParts() {
   let opens = 0;
   let hold: Promise<void> | undefined;
   let greeting: RemoteCloseReason | undefined;
+  /** The PC's power facts (`null`: a PC from before power), and what the phone asked of it. */
+  let power: RemotePowerInfo | null = { granted: false, pending: false, hibernate: false };
+  let busyPc = false;
+  /** The PC takes the presentation keys (an older PC does not). */
+  let present = true;
+  const PRESENT = new Set<string>(['key-f5', 'key-b']);
+  /** The PC knows the program list (an older PC does not). */
+  let programsKnown = true;
+  /** The list it tells this phone; `null`: this phone may not start programs (no list is sent). */
+  let programList: string[] | null = null;
+  /** The list's epoch: moves with every change, like the PC's. */
+  let programEpoch = 1;
+  /** The epochs the phone's starts named. */
+  const epochs: number[] = [];
+  /** The slots this phone started, in order; the next answer a test arranged. */
+  const started: number[] = [];
+  let programNext: RemoteProgramAnswer | undefined;
+  /** Tells the live session its program list – after the call returned, like the shell's channel. */
+  const tellPrograms = () => {
+    const session = live;
+    const list = programList;
+    if (!session || list === null) return;
+    void Promise.resolve().then(() =>
+      session.onEvent({
+        kind: 'programs',
+        session: session.session,
+        list: [...list],
+        epoch: programEpoch,
+      }),
+    );
+  };
+  const answerProgram = (answer: RemoteProgramAnswer) => {
+    const session = live;
+    if (!session) return;
+    void Promise.resolve().then(() =>
+      session.onEvent({ kind: 'program', session: session.session, answer }),
+    );
+  };
+  /** How the native confirm dialog ends on a phone without a screen lock (`setUnlock('none')`). */
+  let confirm: 'ok' | 'cancel' = 'ok';
+  let confirms = 0;
+  /** The next power calls fail with this code; a held prompt waits for its release. */
+  let powerError: { code: string; left: number } | undefined;
+  let prompt: Promise<void> | undefined;
+  const powered: { action: RemotePowerAction; despite: boolean }[] = [];
+  /** Tells the live session `answer` – after the call returned, like the shell's channel. */
+  const answerPower = (answer: RemotePowerAnswer) => {
+    const session = live;
+    if (!session) return;
+    void Promise.resolve().then(() =>
+      session.onEvent({ kind: 'power', session: session.session, answer }),
+    );
+  };
 
   const apply = (action: RemoteAction | RemoteButtonAction | RemoteKeyAction) => {
     const volume = pc.volume ?? 0;
@@ -107,6 +170,8 @@ export function createFakeRemoteParts() {
       live = { session, level: got, onEvent };
       known = { grant, unlockRequired: grant === 'full' && unlockRequired };
       if (greeting) onEvent({ kind: 'closed', session, reason: greeting });
+      // like the PC: the list right after `opened`, to a phone that may start programs
+      if (programsKnown) tellPrograms();
       return {
         session,
         level: got,
@@ -114,12 +179,22 @@ export function createFakeRemoteParts() {
         unlockRequired: known.unlockRequired,
         noLock,
         state: { ...pc },
+        power: power && { ...power },
+        present,
+        programs: programsKnown,
       };
     },
     send: async (session, actions) => {
       if (!live || live.session !== session) throw new Error('closed');
       const full = (a: string) => MOUSE.has(a) || a.startsWith('key-');
       if (live.level !== 'full' && actions.some(full)) throw new Error('bad-level');
+      // an older PC does not know "monitor off": it ends the session without a word
+      if (power === null && actions.includes('monitor-off')) {
+        live = undefined;
+        throw new Error('closed');
+      }
+      // like the shell: never to a PC that does not take them (it would end the session)
+      if (!present && actions.some((a) => PRESENT.has(a))) throw new Error('no-present');
       for (const action of actions) {
         // like the shell: no press and no key reaches a locked PC, a release always goes
         if ((PRESS.has(action) || action.startsWith('key-')) && pc.locked) continue;
@@ -151,6 +226,57 @@ export function createFakeRemoteParts() {
         throw new Error('cut');
       }
       typed.push(text);
+    },
+    power: async (session, action, despite) => {
+      if (powerError && powerError.left > 0) {
+        powerError.left -= 1;
+        throw new Error(powerError.code);
+      }
+      if (!live || live.session !== session) throw new Error('closed');
+      if (power === null) throw new Error('no-power');
+      // the phone's own unlock before every action but `cancel` (one approval serves `despite`)
+      if (action !== 'cancel' && !despite) {
+        unlocks += 1;
+        if (unlock === 'cancel') throw new Error('unlock-cancelled');
+        if (unlock === 'unavailable') throw new Error('unlock-unavailable');
+        if (prompt) await prompt;
+        // like the shell: a session closed while the prompt was up gets nothing
+        if (!live || live.session !== session) throw new Error('closed');
+        // no screen lock: the shell asks in a native confirm dialog instead
+        if (unlock === 'none') {
+          confirms += 1;
+          if (confirm === 'cancel') throw new Error('confirm-cancelled');
+        }
+      }
+      powered.push({ action, despite });
+      if (action === 'cancel') {
+        power.pending = false;
+        answerPower('cancelled');
+        return;
+      }
+      if (!power.granted) return answerPower('not-granted');
+      if (pc.locked) return answerPower('locked');
+      if (power.pending) return answerPower('pending');
+      if (busyPc && !despite) return answerPower('working');
+      power.pending = true;
+      answerPower('started');
+    },
+    program: async (session, slot, epoch) => {
+      if (!live || live.session !== session) throw new Error('closed');
+      epochs.push(epoch);
+      if (live.level !== 'full') throw new Error('bad-level');
+      if (!programsKnown) throw new Error('no-programs');
+      // like the shell: nothing goes to a locked PC
+      if (pc.locked) throw new Error('locked');
+      const forced = programNext;
+      programNext = undefined;
+      if (forced) return answerProgram(forced);
+      if (programList === null) return answerProgram('not-granted');
+      // like the PC: a list that changed since the phone was told starts nothing
+      if (epoch !== programEpoch || slot < 0 || slot >= programList.length)
+        return answerProgram('failed');
+      started.push(slot);
+      answerProgram('started');
     },
     close: async (session) => {
       if (live?.session === session) live = undefined;
@@ -212,6 +338,77 @@ export function createFakeRemoteParts() {
     },
     /** How often the phone asked for an unlock. */
     unlocks: () => unlocks,
+    /** The PC's power facts from the next `open` on (`null`: a PC from before power). */
+    setPower(info: RemotePowerInfo | null) {
+      power = info && { ...info };
+    },
+    /** Whether the PC takes the presentation keys, from the next `open` on. */
+    setPresent(on: boolean) {
+      present = on;
+    },
+    /**
+     * The PC's program list for this phone (`null`: not allowed, no list is sent); a live session
+     * hears it at once, like a list changed at the PC.
+     */
+    setPrograms(list: string[] | null) {
+      programList = list && [...list];
+      programEpoch += 1;
+      if (programsKnown) tellPrograms();
+    },
+    /**
+     * The PC's list changes, but the phone has not heard of it yet (the new list is on its way):
+     * a start with the old epoch answers `failed`, like the PC.
+     */
+    changeProgramsUntold(list: string[]) {
+      programList = [...list];
+      programEpoch += 1;
+    },
+    /** Tells the live session the PC's current list again (the new list arrives). */
+    tellProgramsNow() {
+      tellPrograms();
+    },
+    /** The epochs the phone echoed with its starts, in order. */
+    epochs: () => [...epochs],
+    /** Whether the PC knows the program list at all, from the next `open` on. */
+    setProgramsKnown(on: boolean) {
+      programsKnown = on;
+    },
+    /** The next program start is answered so (`limit`, `failed`, …). */
+    answerNextProgram(answer: RemoteProgramAnswer) {
+      programNext = answer;
+    },
+    /** The slots this phone started, in order. */
+    started: () => [...started],
+    /** Nemo on the PC is busy: a start without `despite` answers `working`. */
+    setPowerBusy(on = true) {
+      busyPc = on;
+    },
+    /** The PC tells the phone about power unasked (`done`, `cancelled` at the PC, …). */
+    pushPower(answer: RemotePowerAnswer) {
+      if (power && (answer === 'done' || answer === 'cancelled')) power.pending = false;
+      answerPower(answer);
+    },
+    /** How the native confirm dialog for power ends (a phone without a screen lock). */
+    setConfirm(answer: 'ok' | 'cancel') {
+      confirm = answer;
+    },
+    /** The next `count` power calls fail with `code` (`closed`, `network`, …). */
+    failPower(code: string, count = 1) {
+      powerError = { code, left: count };
+    },
+    /** The phone's prompt stays up until the returned function is called. */
+    holdPrompt(): () => void {
+      let release: () => void = () => undefined;
+      prompt = new Promise<void>((resolve) => (release = resolve));
+      return () => {
+        prompt = undefined;
+        release();
+      };
+    },
+    /** How often that dialog was shown. */
+    confirms: () => confirms,
+    /** What the phone asked of the PC's power, in order. */
+    powered: () => [...powered],
     pointed: () => [...pointed],
     typed: () => [...typed],
     level: () => live?.level,
@@ -242,6 +439,34 @@ export function createFakeRemote(): RemoteService {
   try {
     const [level, unlock] = (localStorage.getItem(GRANT_FLAG) ?? '').split(':');
     if (level === 'full') hooks.setGrant('full', unlock === 'unlock');
+  } catch {
+    // Storage blocked: nothing arranged.
+  }
+  // A spec about power says before the app starts what the demo PC has
+  // (`tm-e2e-remote-power` = `none` for a PC from before power, or `granted` / `granted:hibernate`).
+  try {
+    const [granted, hibernate] = (localStorage.getItem(POWER_FLAG) ?? '').split(':');
+    if (granted === 'none') hooks.setPower(null);
+    else if (granted === 'granted')
+      hooks.setPower({ granted: true, pending: false, hibernate: hibernate === 'hibernate' });
+  } catch {
+    // Storage blocked: nothing arranged.
+  }
+  // A spec about presentation says before the app starts that the demo PC is older
+  // (`tm-e2e-remote-present` = `none`).
+  try {
+    if (localStorage.getItem(PRESENT_FLAG) === 'none') hooks.setPresent(false);
+  } catch {
+    // Storage blocked: nothing arranged.
+  }
+  // A spec about programs says before the app starts what the demo PC tells this phone
+  // (`tm-e2e-remote-programs` = `none` for a PC from before programs, `empty` for an allowed phone
+  // and an empty list, or the names separated by `|`).
+  try {
+    const programs = localStorage.getItem(PROGRAMS_FLAG);
+    if (programs === 'none') hooks.setProgramsKnown(false);
+    else if (programs === 'empty') hooks.setPrograms([]);
+    else if (programs) hooks.setPrograms(programs.split('|'));
   } catch {
     // Storage blocked: nothing arranged.
   }

@@ -1,0 +1,8 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "power",
+  "description": "The countdown window before a remote power action (shut down, restart, sleep, sign out): read the countdown and stop it. It cannot start anything and has no file, network, dialog, window or update access.",
+  "windows": ["remote-power"],
+  "platforms": ["windows", "macOS", "linux"],
+  "permissions": ["allow-remote-power-status", "allow-remote-power-cancel"]
+}

@@ -11,6 +11,8 @@ import { now } from '@/core/time/now';
 import { loadAccountsSettings } from '@/modules/accounts/autolock';
 import { useSession } from '@/modules/accounts/session';
 import { tSettings2 } from '@/strings.settings2';
+import { tAppLock } from '@/strings.applock';
+import { useAppLockPrefs } from '@/core/applock/prefs';
 import { tSettingsV3 } from '@/strings.settingsV3';
 
 export type StatusTile = StatusLine;
@@ -26,6 +28,8 @@ export type StatusTile = StatusLine;
  */
 export function useSettingsStatus(): StatusTile[] | undefined {
   const o = tSettings2.use().overview;
+  const appLock = tAppLock.use();
+  const appLockOn = useAppLockPrefs().enabled;
   const v3 = tSettingsV3.use();
 
   const states = useModuleStates();
@@ -63,12 +67,14 @@ export function useSettingsStatus(): StatusTile[] | undefined {
 
   const security: StatusTile = {
     id: 'security',
-    // With the vault off the category does not exist: the module list is where it is switched on.
-    to: vaultOn ? '/settings/sicherheit' : '/settings/module',
+    // The category always exists (app lock, protection, access); without the vault its state is the app lock's.
+    to: '/settings/sicherheit',
     icon: 'lock',
     title: v3.tiles.security,
     status: !vaultOn
-      ? o.security.noVault
+      ? appLockOn
+        ? appLock.statusOn
+        : o.security.noVault
       : session.status === 'locked'
         ? o.security.locked
         : o.security.unlocked,

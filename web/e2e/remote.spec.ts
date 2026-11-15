@@ -18,6 +18,9 @@ interface Hooks {
   setUnlock(answer: 'ok' | 'cancel' | 'none' | 'unavailable'): void;
   typed(): string[];
   cutNextText(chars: number): void;
+  powered(): { action: string; despite: boolean }[];
+  pushPower(answer: string): void;
+  started(): number[];
 }
 declare global {
   interface Window {
@@ -143,6 +146,50 @@ test('ended at the PC: the phone says so and offers one step', async ({ page }, 
   await page.getByTestId('remote-retry').click();
   await expect(state).toHaveText('Dein PC · Lautstärke 42 %');
   await expect(page.getByTestId('remote-play-pause')).toBeEnabled();
+});
+
+test('PC ausschalten: menu, the sheet, the countdown line and "Abbrechen"', async ({
+  page,
+}, info) => {
+  await asPhoneWithRemote(page);
+  await page.addInitScript(() => localStorage.setItem('tm-e2e-remote-power', 'granted'));
+  await page.goto('/remote');
+  await expect(page.getByTestId('remote-state')).toHaveText('Dein PC · Lautstärke 42 %');
+
+  await page.getByRole('button', { name: 'Weitere Aktionen' }).click();
+  await expect(page.getByRole('menuitem', { name: 'Monitor aus' })).toBeVisible();
+  await page.getByRole('menuitem', { name: 'PC ausschalten …' }).click();
+  const sheet = page.getByRole('dialog', { name: 'PC ausschalten' });
+  await expect(sheet).toBeVisible();
+  // this PC cannot hibernate: only sign-out below the three
+  await expect(page.getByTestId('remote-power-hibernate')).toHaveCount(0);
+  for (const id of ['shut-down', 'restart', 'sleep', 'sign-out']) {
+    const box = await page.getByTestId(`remote-power-${id}`).boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+  }
+  await page.screenshot({ path: info.outputPath('remote-power-1-sheet.png') });
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+
+  await page.getByTestId('remote-power-shut-down').click();
+  await expect(sheet).toBeHidden();
+  const line = page.getByTestId('remote-power');
+  await expect(line).toContainText(
+    'Der PC schaltet sich in Kürze aus. Abbrechen geht hier oder am PC.',
+  );
+  expect(await page.evaluate(() => window.__tmRemote.powered())).toEqual([
+    { action: 'shut-down', despite: false },
+  ]);
+  await expect(line.getByRole('button')).toHaveText(['Abbrechen']);
+  await page.screenshot({ path: info.outputPath('remote-power-2-counting.png') });
+
+  await page.getByTestId('remote-power-cancel').click();
+  await expect(line).toContainText('Abgebrochen. Der PC bleibt an.');
+  expect(await page.evaluate(() => window.__tmRemote.powered())).toEqual([
+    { action: 'shut-down', despite: false },
+    { action: 'cancel', despite: false },
+  ]);
+  // the session went on all along
+  await expect(page.getByTestId('remote-state')).toHaveText('Dein PC · Lautstärke 42 %');
 });
 
 test('no PC paired: a sentence and the way to pairing', async ({ page }) => {
@@ -474,6 +521,106 @@ test('keyboard: without the level at the PC the sentence and the way back, no fi
   expect(results.violations).toEqual([]);
   await page.getByTestId('remote-to-media').click();
   await expect(page.getByTestId('remote-play-pause')).toBeVisible();
+});
+
+test('presentation: Weiter big in the thumb zone, Start · Schwarz · Ende above, keys reach the PC', async ({
+  page,
+}, info) => {
+  await asPhoneWithRemote(page, 'full');
+  await page.goto('/remote');
+  await expect(page.getByTestId('remote-state')).toHaveText('Dein PC · Lautstärke 42 %');
+  await page.getByRole('button', { name: 'Präsentation' }).click();
+  await expect(page.getByTestId('remote-present-hint')).toHaveText(
+    'Das Präsentationsfenster muss am PC vorne sein. Geht nur im Heimnetz.',
+  );
+  const next = page.getByTestId('remote-slide-next');
+  await expect(next).toBeEnabled();
+  await expect.poll(() => page.evaluate(() => window.__tmRemote.level())).toBe('full');
+  // Weiter: the biggest key, in the lower half of the screen, Zurück beside it; the row above
+  const nextBox = (await next.boundingBox())!;
+  const backBox = (await page.getByTestId('remote-slide-previous').boundingBox())!;
+  const startBox = (await page.getByTestId('remote-key-f5').boundingBox())!;
+  const height = page.viewportSize()!.height;
+  expect(nextBox.y).toBeGreaterThan(height / 2);
+  expect(nextBox.width).toBeGreaterThan(backBox.width);
+  expect(Math.abs(nextBox.y - backBox.y)).toBeLessThanOrEqual(1);
+  expect(startBox.y + startBox.height).toBeLessThanOrEqual(nextBox.y);
+  expect(startBox.height).toBeGreaterThanOrEqual(44);
+  expect(
+    await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight),
+  ).toBeLessThanOrEqual(1);
+
+  await page.getByRole('button', { name: 'Start der Präsentation' }).click();
+  await next.click();
+  await page.getByTestId('remote-slide-previous').click();
+  await page.getByRole('button', { name: 'Schwarz schalten oder wieder zeigen' }).click();
+  await page.getByRole('button', { name: 'Ende der Präsentation' }).click();
+  await expect
+    .poll(() => page.evaluate(() => window.__tmRemote.sent()))
+    .toEqual(['key-f5', 'key-right', 'key-left', 'key-b', 'key-escape']);
+  await page.screenshot({ path: info.outputPath('remote-11-presentation.png') });
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations).toEqual([]);
+});
+
+test('presentation: a PC without the presentation keys shows no such tab', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('tm-e2e-remote-present', 'none'));
+  await asPhoneWithRemote(page, 'full');
+  await page.goto('/remote');
+  await expect(page.getByTestId('remote-state')).toHaveText('Dein PC · Lautstärke 42 %');
+  await expect(page.getByRole('button', { name: 'Tastatur' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Präsentation' })).toHaveCount(0);
+});
+
+test('programs: "Programm starten …" lists what the PC sent and starts one on the mouse level', async ({
+  page,
+}, info) => {
+  await page.addInitScript(() =>
+    localStorage.setItem('tm-e2e-remote-programs', 'Editor|OBS Studio'),
+  );
+  await asPhoneWithRemote(page, 'full');
+  await page.goto('/remote');
+  await expect(page.getByTestId('remote-state')).toHaveText('Dein PC · Lautstärke 42 %');
+  await page.getByRole('button', { name: 'Weitere Aktionen' }).click();
+  await page.getByRole('menuitem', { name: 'Programm starten …' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Programm starten' });
+  await expect(dialog.getByTestId('remote-program')).toHaveText(['Editor', 'OBS Studio']);
+  const box = (await dialog.getByTestId('remote-program').first().boundingBox())!;
+  expect(box.height).toBeGreaterThanOrEqual(44);
+  await page.screenshot({ path: info.outputPath('remote-12-programs.png') });
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations).toEqual([]);
+  await dialog.getByTestId('remote-program').nth(1).click();
+  await expect(page.getByTestId('remote-program-status')).toContainText(
+    'OBS Studio wird am PC geöffnet.',
+  );
+  expect(await page.evaluate(() => window.__tmRemote.started())).toEqual([1]);
+  expect(await page.evaluate(() => window.__tmRemote.level())).toBe('full');
+  // the calm confirmation leaves by itself
+  await expect(page.getByTestId('remote-program-status')).toHaveCount(0, { timeout: 8000 });
+});
+
+test('programs: an empty list says where it is made; without a list there is no entry', async ({
+  page,
+}) => {
+  await page.addInitScript(() => localStorage.setItem('tm-e2e-remote-programs', 'empty'));
+  await asPhoneWithRemote(page);
+  await page.goto('/remote');
+  await expect(page.getByTestId('remote-state')).toHaveText('Dein PC · Lautstärke 42 %');
+  await page.getByRole('button', { name: 'Weitere Aktionen' }).click();
+  await page.getByRole('menuitem', { name: 'Programm starten …' }).click();
+  await expect(page.getByTestId('remote-programs-empty')).toHaveText(
+    'Am PC unter Einstellungen → Verbindungen → Fernsteuerung Programme auswählen.',
+  );
+});
+
+test('programs: no list from the PC, no menu entry', async ({ page }) => {
+  await asPhoneWithRemote(page);
+  await page.goto('/remote');
+  await expect(page.getByTestId('remote-state')).toHaveText('Dein PC · Lautstärke 42 %');
+  await page.getByRole('button', { name: 'Weitere Aktionen' }).click();
+  await expect(page.getByRole('menuitem', { name: 'Monitor aus' })).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: 'Programm starten …' })).toHaveCount(0);
 });
 
 test('the card on the overview without a paired PC: no button, the way to pairing, and its title into the module', async ({

@@ -9,7 +9,7 @@ export const tSecurity = defineBundle(
   {
     cat: {
       title: 'Sicherheit',
-      description: 'Bildschirmschutz, Backups, Zugriffe, Tresor',
+      description: 'App-Sperre, Bildschirmschutz, Backups, Zugriffe, Tresor',
       keywords: [
         'Passwort',
         'Sperre',
@@ -88,7 +88,7 @@ export const tSecurity = defineBundle(
     en: {
       cat: {
         title: 'Security',
-        description: 'Screen guard, backups, access, vault',
+        description: 'App lock, screen guard, backups, access, vault',
         keywords: [
           'Password',
           'Lock',
