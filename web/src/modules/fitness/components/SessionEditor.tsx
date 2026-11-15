@@ -311,7 +311,7 @@ function Fields({
     onClose();
   }
 
-  // „Anfangen“ on a new session for today or a plan whose day has come – never on a logged one or a later day.
+  // „Anfangen“ only for today: a new session, or a plan for today – never a logged one or another day.
   const canStart = !!onStart && date === today() && (!existing || !!existing.planned);
   return (
     <Form onSubmit={save}>
