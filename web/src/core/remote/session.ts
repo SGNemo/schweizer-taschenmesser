@@ -267,6 +267,14 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
   let powerAction: RemotePowerVerb | undefined;
   /** Counts `powerAct` calls: only the latest one sets a state when its call returns. */
   let powerCalls = 0;
+  /** The `powerAct` in flight, and its wait for the PC's first answer. */
+  let powerBusy: Promise<void> | undefined;
+  let powerHeard: (() => void) | undefined;
+  /**
+   * The page went to the background while the phone's own prompt was up (a PIN screen can cover
+   * the app): the session is closed once the action is through, not under it.
+   */
+  let closeLater = false;
 
   const setPower = (next: Partial<RemotePowerView>) => {
     powerView = { ...powerView, ...next };
@@ -282,6 +290,7 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
   };
   /** One answer of the PC: the latest state of its countdown. */
   const powerAnswer = (answer: RemotePowerAnswer) => {
+    powerHeard?.();
     const phase = powerView.phase;
     const info = powerView.info;
     switch (answer) {
@@ -489,6 +498,11 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
   };
 
   const open = (): Promise<void> => {
+    // back before a close that waited for a prompt: the session still stands
+    if (closeLater) {
+      closeLater = false;
+      if (view.kind === 'connected' && session !== undefined) return Promise.resolve();
+    }
     // an attempt from before a `close()` is not this one: it ends by itself and leaves nothing
     if (opening?.generation === generation) {
       opening.nudge();
@@ -664,6 +678,65 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
     return last || (code !== 'media-first' && code !== 'unlock-needed');
   };
 
+  /** One power action through to its call (see `powerAct`). */
+  const powerRun = async (
+    action: RemotePowerAction,
+    despite: boolean,
+    lang: string | undefined,
+  ): Promise<void> => {
+    const mine = ++powerCalls;
+    const latest = () => mine === powerCalls;
+    if (action !== 'cancel') {
+      powerAction = action;
+      setPhase({ kind: 'asking', action });
+    }
+    const back = () => {
+      if (latest() && powerView.phase.kind === 'asking') setPhase({ kind: 'idle' });
+    };
+    if (view.kind !== 'connected' || session === undefined) {
+      const opens =
+        view.kind === 'idle' ||
+        view.kind === 'disconnected' ||
+        ((view.kind === 'connecting' || view.kind === 'slow') && opening !== undefined);
+      // refused, unreachable, …: the page says why; nothing goes out
+      if (!opens) return back();
+      await open();
+    }
+    // never repeated by itself: without a session (or power) now, it is the person's step again
+    if (!latest() || view.kind !== 'connected' || session === undefined) return back();
+    if (powerView.info === null) return back();
+    const used = session;
+    try {
+      await deps.remote.power(used, action, despite, lang);
+    } catch (e) {
+      const code = e instanceof Error ? e.message : '';
+      // the phone's own answer to its prompt counts, also when the page was left meanwhile
+      if (
+        code === 'unlock-cancelled' ||
+        code === 'confirm-cancelled' ||
+        code === 'unlock-failed' ||
+        code === 'unlock-busy'
+      ) {
+        if (latest()) setPhase({ kind: 'unlock' });
+        return;
+      }
+      if (!latest()) return;
+      if (code === 'unlock-unavailable') setPhase({ kind: 'refused', reason: 'unavailable' });
+      else if (code === 'no-power') setPower({ info: null, phase: { kind: 'idle' } });
+      else if (code === 'closed' || code === 'network') {
+        // the session is over (like a send that failed); the next step opens again
+        if (session === used) {
+          stopWaiting();
+          session = undefined;
+          drop(used);
+          padLost();
+          set({ kind: 'disconnected' });
+        }
+        back();
+      } else setPhase({ kind: 'refused', reason: 'failed' });
+    }
+  };
+
   return {
     view: () => view,
     pad: () => pad,
@@ -775,6 +848,12 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       }
     },
     async close() {
+      // the phone's own prompt is up: closing now would drop what it confirms
+      if (powerBusy && powerView.phase.kind === 'asking') {
+        closeLater = true;
+        return;
+      }
+      closeLater = false;
       generation += 1;
       opening = undefined;
       waiting = undefined;
@@ -794,60 +873,16 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       lastAliveAt = -Infinity;
     },
     power: () => powerView,
-    async powerAct(action, despite = false, lang) {
+    powerAct(action, despite = false, lang) {
       // one prompt at a time
-      if (powerView.phase.kind === 'asking' && action !== 'cancel') return;
-      const mine = ++powerCalls;
-      const latest = () => mine === powerCalls;
-      if (action !== 'cancel') {
-        powerAction = action;
-        setPhase({ kind: 'asking', action });
-      }
-      const back = () => {
-        if (latest() && powerView.phase.kind === 'asking') setPhase({ kind: 'idle' });
-      };
-      if (view.kind !== 'connected' || session === undefined) {
-        const opens =
-          view.kind === 'idle' ||
-          view.kind === 'disconnected' ||
-          ((view.kind === 'connecting' || view.kind === 'slow') && opening !== undefined);
-        // refused, unreachable, …: the page says why; nothing goes out
-        if (!opens) return back();
-        await open();
-      }
-      // never repeated by itself: without a session (or power) now, it is the person's step again
-      if (!latest() || view.kind !== 'connected' || session === undefined) return back();
-      if (powerView.info === null) return back();
-      const used = session;
-      try {
-        await deps.remote.power(used, action, despite, lang);
-      } catch (e) {
-        const code = e instanceof Error ? e.message : '';
-        // the phone's own answer to its prompt counts, also when the page was left meanwhile
-        if (
-          code === 'unlock-cancelled' ||
-          code === 'confirm-cancelled' ||
-          code === 'unlock-failed' ||
-          code === 'unlock-busy'
-        ) {
-          if (latest()) setPhase({ kind: 'unlock' });
-          return;
-        }
-        if (!latest()) return;
-        if (code === 'unlock-unavailable') setPhase({ kind: 'refused', reason: 'unavailable' });
-        else if (code === 'no-power') setPower({ info: null, phase: { kind: 'idle' } });
-        else if (code === 'closed' || code === 'network') {
-          // the session is over (like a send that failed); the next step opens again
-          if (session === used) {
-            stopWaiting();
-            session = undefined;
-            drop(used);
-            padLost();
-            set({ kind: 'disconnected' });
-          }
-          back();
-        } else setPhase({ kind: 'refused', reason: 'failed' });
-      }
+      if (powerView.phase.kind === 'asking' && action !== 'cancel') return Promise.resolve();
+      const run = powerRun(action, despite, lang).finally(() => {
+        if (powerBusy !== run) return;
+        powerBusy = undefined;
+        if (closeLater) void this.close();
+      });
+      powerBusy = run;
+      return run;
     },
     powerDismiss() {
       const kind = powerView.phase.kind;
