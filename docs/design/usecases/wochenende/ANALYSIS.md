@@ -110,7 +110,7 @@ Measured in this run: `develop` @ `d79b9d4` (all packages merged), e2e build on 
 
 | Id  | State                                                                                                                                                                                             |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| W01 | built in package 2 (#880): „Tage einteilen“ on the welcome card, the empty planner and the planner ⋯                                                                                              |
+| W01 | built in package 2 (#880): „Tage einteilen“ on the welcome card, the empty planner and the planner ⋯; #906 made the card's tap reliable (CHECK-1-3 C1)                                            |
 | W02 | built in package 2: the entry switches on the planner (and ToDos) only, nothing off                                                                                                               |
 | W03 | built in package 2: the planner is in the navigation right after the tap (path A)                                                                                                                 |
 | W04 | built in package 1 (#870); the hour in package 5b (#915, `dueTime`)                                                                                                                               |

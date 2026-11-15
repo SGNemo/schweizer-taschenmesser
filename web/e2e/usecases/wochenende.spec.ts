@@ -39,10 +39,12 @@ type Row = { name: string; project: string } & Record<Metric, number> & {
  * a row, light and dark, same figures). Never raise a value. Where a row differs from TARGET §4 („Revised“):
  * - A, F: equal to the revised rows (1 · 0 · 2 · 1 · 0 · 8 and 2 · 0 · 1 · 1 · 0 · 7); lowered here from the
  *   baseline, which packages 2 and 3 had left standing.
- * - B, G: taps 4 instead of 2 and one detour less each – package 5a (W06) swaps the detour for the two taps of
- *   the row pick „Termin“ → „Erinnerung“ (REVIEW-FABLE R6); B keeps the one detour of the bare „Zocken“.
- * - C: 7 taps (the revised row allows 11), but 18 keys the first target did not have: the break is the typed
- *   line „Pause 2 Std Zocken“ (package 4a); day parts (4b) are checked without being counted.
+ * - B, G: 2 taps more than the target (the row pick „Termin“ → „Erinnerung“, package 5a, REVIEW-FABLE R6); the
+ *   pick replaced one detour each compared with the state before 5a. B keeps the one detour of the bare
+ *   „Zocken“; G: 35 s instead of 33.
+ * - C: 7 taps (the revised row allows 11), but 18 keys and one screen the first target did not have: the break
+ *   is the typed line „Pause 2 Std Zocken“ (package 4a) and the planner is opened; day parts (4b) are checked
+ *   without being counted.
  * - D, E, H: as the target says.
  */
 const MAX: Record<string, Record<Metric | 'seconds', number>> = {
@@ -479,16 +481,13 @@ test('B Kopf leeren: zwölf Dinge auf einmal', async ({ page, isMobile }, info) 
   const weekday = new Intl.DateTimeFormat('de-DE', { weekday: 'short' })
     .format(new Date(`${placed!.date}T12:00:00`))
     .replace('.', '');
+  const dayButton = placed!.date === SATURDAY ? /^Heute/ : new RegExp(`^${weekday}`);
   if (isMobile)
     await page
       .getByRole('group', { name: 'Tage' })
-      .getByRole('button', { name: new RegExp(`^${weekday}`) })
+      .getByRole('button', { name: dayButton })
       .click();
-  else
-    await page
-      .getByRole('button', { name: new RegExp(`^${weekday}`) })
-      .first()
-      .click();
+  else await page.getByRole('button', { name: dayButton }).first().click();
   await page
     .locator(`[data-testid="day-${placed!.date}"]`)
     .getByRole('button', { name: 'Aktionen für Zocken', exact: true })
@@ -505,10 +504,16 @@ test('B Kopf leeren: zwölf Dinge auf einmal', async ({ page, isMobile }, info) 
       ),
     )
     .toEqual([]);
-  const breakDay = (
-    await rows<{ date: string; blockers: { label: string; min: number }[] }>(page, 'planner_day')
-  ).find((d) => d.blockers.some((b) => b.label === 'Zocken'));
-  expect(breakDay?.blockers.map((b) => [b.label, b.min])).toEqual([['Zocken', 120]]);
+  // The break is written after the ToDo is gone: wait for it.
+  const breakOf = async () =>
+    (
+      await rows<{ date: string; blockers: { label: string; min: number }[] }>(page, 'planner_day')
+    ).find((d) => d.blockers.some((b) => b.label === 'Zocken'));
+  await expect
+    .poll(async () => (await breakOf())?.blockers.map((b) => [b.label, b.min]))
+    .toEqual([['Zocken', 120]]);
+  const breakDay = await breakOf();
+  expect(breakDay?.date).toBe(placed!.date);
   facts(info, 'B-break', { gamingPlannedOn: placed!.date, breakOn: breakDay?.date });
 });
 
