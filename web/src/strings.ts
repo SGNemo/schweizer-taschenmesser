@@ -5107,7 +5107,7 @@ export const de = {
     },
     /** Tab "Aufräumen": suggestions with preview and size; deleting stays the delete dialog. */
     tidy: {
-      lead: 'Nemo sieht an bekannten Orten nach, was meist weg kann. Du siehst erst alles; gelöscht wird nur, was du bestätigst – in den Papierkorb.',
+      lead: 'Nemo sieht an bekannten Orten nach, was meist weg kann. Du siehst vorher, was es ist; gelöscht wird nur, was du bestätigst – voreingestellt in den Papierkorb.',
       search: 'Suchen',
       again: 'Erneut suchen',
       cancel: 'Abbrechen',
@@ -5116,10 +5116,12 @@ export const de = {
         `Suche läuft … ${done} von ${total}: ${what}`,
       failed: 'Die Suche hat nicht geklappt. Du kannst es noch einmal versuchen.',
       none: 'Nichts zum Aufräumen gefunden.',
-      noneHint: 'An den bekannten Orten liegt gerade kaum etwas.',
+      noneHint:
+        'An den bekannten Orten liegt gerade kaum etwas. Doppelte und große, lange nicht genutzte Dateien zeigt der Scan eines Laufwerks.',
+      toDrives: 'Zu den Laufwerken',
       cancelledNote: 'Die Suche wurde abgebrochen. Die Liste ist vielleicht unvollständig.',
       summary: (n: number, size: string) =>
-        `${n === 1 ? '1 Vorschlag' : `${n} Vorschläge`} · zusammen ${size}`,
+        `${n === 1 ? '1 Vorschlag' : `${formatNumber(n)} Vorschläge`} · zusammen ${size}`,
       listLabel: 'Vorschläge',
       category: {
         temp: 'Temporäre Dateien',
@@ -5144,18 +5146,18 @@ export const de = {
       } as Record<string, string>,
       busy: (program: string) =>
         `${program} läuft gerade. Schließe das Programm vorher, sonst bleiben Dateien liegen.`,
-      preview: (n: number) => `Vorschau · ${n === 1 ? '1 Eintrag' : `${n} Einträge`}`,
+      preview: (n: number) => `Vorschau · ${n === 1 ? '1 Eintrag' : `${formatNumber(n)} Einträge`}`,
       selectItem: (name: string) => `${name} auswählen`,
       rest: (n: number, size: string) =>
-        `${n === 1 ? '1 weiterer, kleinerer Eintrag' : `${n} weitere, kleinere Einträge`} · ${size}`,
+        `${n === 1 ? '1 weiterer, kleinerer Eintrag' : `${formatNumber(n)} weitere, kleinere Einträge`} · ${size}`,
       all: 'Alle auswählen',
       noneSelected: 'Auswahl aufheben',
       selected: (size: string) => `Ausgewählt: ${size}`,
       nothingSelected: 'Nichts ausgewählt',
       clean: 'Aufräumen …',
-      cleanLabel: (name: string) => `${name} aufräumen`,
+      cleanLabel: (name: string) => `Aufräumen: ${name}`,
       look: 'Genauer ansehen',
-      lookLabel: (name: string) => `${name} im Scan ansehen`,
+      lookLabel: (name: string) => `Genauer ansehen: ${name}`,
       changed: (when: string) => `geändert ${when}`,
       windows: {
         title: 'Macht Windows selbst',
@@ -5168,13 +5170,7 @@ export const de = {
         updatesHint:
           'Alte Update-Dateien entfernt Windows unter Einstellungen → System → Speicher.',
         updatesOpen: 'Speicher-Einstellungen öffnen',
-        onlyWindows: 'Diese Werkzeuge gibt es nur unter Windows.',
         openFailed: 'Das ließ sich nicht öffnen.',
-      },
-      more: {
-        title: 'Mehr zeigt der Scan',
-        text: 'Doppelte Dateien und große, lange nicht genutzte Dateien findest du im Scan eines Laufwerks.',
-        link: 'Zu den Laufwerken',
       },
       /** The drives tab's pointer to this tab (replaces the former list of places there). */
       pointer:
@@ -5183,7 +5179,7 @@ export const de = {
     },
     /** Tab "Verlauf": what the page changed on this PC, with the way back. */
     history: {
-      lead: 'Was Nemo auf diesem PC verändert hat, mit dem Weg zurück. Der Verlauf bleibt auf diesem Gerät.',
+      lead: 'Was Nemo auf diesem PC verändert hat, mit dem Weg zurück. Aufräumen steht hier, bis du Nemo schließt.',
       loading: 'Verlauf wird gelesen …',
       empty: 'Noch nichts verändert.',
       emptyHint: 'Sobald du etwas aufräumst, steht es hier.',
@@ -5196,7 +5192,8 @@ export const de = {
       deleted: (what: string, size: string, files: number) =>
         `${what}: ${size} endgültig gelöscht · ${files === 1 ? '1 Datei' : `${formatNumber(files)} Dateien`}`,
       restore: 'Papierkorb öffnen',
-      restoreHint: 'Im Papierkorb holst du die Dateien zurück.',
+      restoreHint: 'Solange sie im Papierkorb liegen, holst du die Dateien dort zurück.',
+      restoreLabel: (what: string) => `Papierkorb öffnen: ${what}`,
       noWayBack: 'Endgültig gelöscht – das lässt sich nicht zurückholen.',
       switched: (name: string, on: boolean) => `${name}: ${on ? 'eingeschaltet' : 'ausgeschaltet'}`,
       undo: 'Rückgängig',

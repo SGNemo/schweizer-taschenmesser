@@ -99,7 +99,9 @@ export function HistoryTab() {
                   </Button>
                 ) : null}
                 {e.kind === 'cleanup' && !e.permanent && optimize.windows ? (
-                  <Button onClick={openBin}>{h.restore}</Button>
+                  <Button aria-label={h.restoreLabel(entryText(e))} onClick={openBin}>
+                    {h.restore}
+                  </Button>
                 ) : null}
               </li>
             ))}

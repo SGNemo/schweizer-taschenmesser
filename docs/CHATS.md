@@ -56,6 +56,7 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 | `core/db/schema.snapshot.json`, Dexie version                                            | on conflict re-run `npm run db:bump` after merging `develop`; never hand-edit               |
 | `web/src/pages/Settings.tsx`, `layout/AppShell.tsx`, `router.tsx`                        | small edits, local to your section                                                          |
 | images under `docs/`                                                                     | none ([DOCS-GUIDE](meta/DOCS-GUIDE.md#images)); screenshots go into the PR text             |
+| `src-tauri/{build.rs,capabilities/desktop.json,src/lib.rs}`                              | `feat/disk-optimize-p1…p4`: `disk_*` lines, append-only (row leaves with p4)                |
 | `docs/STATUS.md`                                                                         | only in a `docs(status)` PR of its own (docs only), never in a feature PR                   |
 | `docs/DECISIONS.md`, `docs/HOW-TO.md`, `docs/ARCHITECTURE-MAP.md`, `README.md`           | touch only on real change; one line / one block, no reformatting                            |
 

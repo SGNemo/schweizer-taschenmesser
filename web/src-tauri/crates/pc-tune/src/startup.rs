@@ -192,6 +192,12 @@ pub fn folder_files(dir: &Path) -> Vec<String> {
     out
 }
 
+/// The state to show for an approval value as read. One that exists but cannot be read is shown
+/// as on (display only); [`set_enabled`] reads it again and refuses to change it.
+fn shown(read: Result<Option<Value>, RegError>) -> bool {
+    approved(read.ok().flatten().as_ref())
+}
+
 /// The approval key of a switchable entry.
 fn approval_key(source: Source) -> &'static str {
     match source {
@@ -224,7 +230,7 @@ fn find_all(reg: &dyn Registry, startup_folder: Option<&Path>) -> Vec<Found> {
                 command,
                 scope: Scope::User,
                 source: Source::Run,
-                enabled: approved(reg.get(APPROVED_RUN, &name).as_ref()),
+                enabled: shown(reg.get(APPROVED_RUN, &name)),
                 switchable: valid_name(&name),
             },
             value_name: name,
@@ -242,7 +248,7 @@ fn find_all(reg: &dyn Registry, startup_folder: Option<&Path>) -> Vec<Found> {
                     command: file.clone(),
                     scope: Scope::User,
                     source: Source::Folder,
-                    enabled: approved(reg.get(APPROVED_FOLDER, &file).as_ref()),
+                    enabled: shown(reg.get(APPROVED_FOLDER, &file)),
                     switchable: valid_name(&file),
                 },
                 value_name: file,
@@ -262,8 +268,8 @@ fn find_all(reg: &dyn Registry, startup_folder: Option<&Path>) -> Vec<Found> {
                 continue;
             }
             // Off when either the machine or this account says so.
-            let enabled = approved(reg.machine_get(approval, &name).as_ref())
-                && approved(reg.get(approval, &name).as_ref());
+            let enabled =
+                shown(reg.machine_get(approval, &name)) && shown(reg.get(approval, &name));
             out.push(Found {
                 item: Item {
                     id: format!("{prefix}:{name}"),
@@ -297,7 +303,8 @@ pub fn list(reg: &dyn Registry, startup_folder: Option<&Path>) -> Vec<Item> {
 
 /// Switches one of the user's entries on or off and notes it in the journal with the approval
 /// value from before. Returns the journal entry's id, or `None` when the entry already was in
-/// that state (nothing written, nothing noted). `at` is now in Unix seconds.
+/// that state (nothing written, nothing noted). Refused with `unreadable`, without a write or a
+/// note, when the approval value exists but cannot be read. `at` is now in Unix seconds.
 pub fn set_enabled(
     reg: &dyn Registry,
     journal: &mut Journal,
@@ -313,12 +320,14 @@ pub fn set_enabled(
     if !found.item.switchable {
         return Err(StartupError::ReadOnly);
     }
-    if found.item.enabled == enabled {
-        return Ok(None);
-    }
     let key = approval_key(found.item.source);
     let name = found.value_name.as_str();
-    let previous = reg.get(key, name);
+    // The value from before is what the way back needs: when it cannot be read exactly, nothing
+    // is changed (the listing is for display only and never the source of an undo value).
+    let previous = reg.get(key, name).map_err(StartupError::Reg)?;
+    if approved(previous.as_ref()) == enabled {
+        return Ok(None);
+    }
     let value = Value::binary(&approval_bytes(enabled, at));
     journal
         .change(
@@ -384,7 +393,11 @@ mod tests {
     }
 
     fn journal(dir: &Path) -> Journal {
-        Journal::open(&dir.join("journal.json")).0
+        Journal::open(&dir.join("journal.json")).unwrap().0
+    }
+
+    fn got(reg: &MemRegistry, key: &str, name: &str) -> Option<Value> {
+        reg.get(key, name).unwrap()
     }
 
     fn sz(s: &str) -> Value {
@@ -619,7 +632,7 @@ mod tests {
             .unwrap()
             .unwrap();
         assert_eq!(
-            reg.get(APPROVED_RUN, "Spotify"),
+            got(&reg, APPROVED_RUN, "Spotify"),
             Some(Value::binary(&approval_bytes(false, AT)))
         );
         assert!(
@@ -644,21 +657,21 @@ mod tests {
             .unwrap()
             .unwrap();
         assert_eq!(
-            reg.get(APPROVED_RUN, "Spotify"),
+            got(&reg, APPROVED_RUN, "Spotify"),
             Some(Value::binary(&[2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
         );
         // Newest first: the older change waits for the newer one.
         assert_eq!(j.undo_steps(off), Err(JournalError::NewerChange));
         undo(&reg, &mut j, on);
         assert_eq!(
-            reg.get(APPROVED_RUN, "Spotify"),
+            got(&reg, APPROVED_RUN, "Spotify"),
             Some(Value::binary(&approval_bytes(false, AT)))
         );
         undo(&reg, &mut j, off);
-        assert_eq!(reg.get(APPROVED_RUN, "Spotify"), None);
+        assert_eq!(got(&reg, APPROVED_RUN, "Spotify"), None);
 
         // "cloud" was off with Task Manager's own bytes: on, then undo, gives those bytes back.
-        let before = reg.get(APPROVED_RUN, "cloud");
+        let before = got(&reg, APPROVED_RUN, "cloud");
         let id = set_enabled(&reg, &mut j, Some(&dir), "run:cloud", true, AT)
             .unwrap()
             .unwrap();
@@ -670,7 +683,7 @@ mod tests {
                 .enabled
         );
         undo(&reg, &mut j, id);
-        assert_eq!(reg.get(APPROVED_RUN, "cloud"), before);
+        assert_eq!(got(&reg, APPROVED_RUN, "cloud"), before);
 
         // The Run key itself was never touched.
         assert_eq!(reg.list(RUN), run_before);
@@ -685,10 +698,12 @@ mod tests {
         let id = set_enabled(&reg, &mut j, Some(&dir), "folder:Notizen.lnk", false, AT)
             .unwrap()
             .unwrap();
-        assert!(!approved(reg.get(APPROVED_FOLDER, "Notizen.lnk").as_ref()));
+        assert!(!approved(
+            got(&reg, APPROVED_FOLDER, "Notizen.lnk").as_ref()
+        ));
         assert!(dir.join("Notizen.lnk").exists());
         undo(&reg, &mut j, id);
-        assert_eq!(reg.get(APPROVED_FOLDER, "Notizen.lnk"), None);
+        assert_eq!(got(&reg, APPROVED_FOLDER, "Notizen.lnk"), None);
         // Without the folder the entry is unknown.
         assert_eq!(
             set_enabled(&reg, &mut j, None, "folder:Notizen.lnk", false, AT),
@@ -783,12 +798,44 @@ mod tests {
         // Exactly one new value, under the fixed key, named like the entry.
         assert_eq!(reg.user_len(), 2);
         assert_eq!(reg.list(APPROVED_RUN).len(), 1);
-        assert!(!approved(reg.get(APPROVED_RUN, odd).as_ref()));
+        assert!(!approved(got(&reg, APPROVED_RUN, odd).as_ref()));
         assert!(!list(&reg, None)[0].enabled);
 
         // A name the registry seam would refuse is shown, but not offered as a switch.
         assert!(!valid_name(&"x".repeat(300)));
         assert!(!valid_name("a\u{7}b"));
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn an_unreadable_approval_value_refuses_the_switch_and_writes_nothing() {
+        let dir = temp_dir("unreadable");
+        let reg = seeded(&dir);
+        let mut j = journal(&dir);
+        let before = reg.user_len();
+        let cloud = got(&reg, APPROVED_RUN, "cloud");
+        reg.fail_reads.store(true, Ordering::Relaxed);
+        // The list still shows the entries (display only) ...
+        assert!(list(&reg, Some(&dir)).iter().any(|i| i.id == "run:cloud"));
+        // ... but no switch goes through, in either direction.
+        for (id, enabled) in [
+            ("run:Spotify", false),
+            ("run:Spotify", true),
+            ("run:cloud", true),
+            ("run:cloud", false),
+            ("folder:Notizen.lnk", false),
+        ] {
+            assert_eq!(
+                set_enabled(&reg, &mut j, Some(&dir), id, enabled, AT),
+                Err(StartupError::Reg(RegError::Unreadable)),
+                "{id} {enabled}"
+            );
+        }
+        reg.fail_reads.store(false, Ordering::Relaxed);
+        assert_eq!(reg.user_len(), before);
+        assert_eq!(got(&reg, APPROVED_RUN, "cloud"), cloud);
+        assert_eq!(got(&reg, APPROVED_RUN, "Spotify"), None);
+        assert!(j.views().is_empty());
         std::fs::remove_dir_all(&dir).unwrap();
     }
 
@@ -805,7 +852,7 @@ mod tests {
         assert!(j.views().is_empty());
         assert!(j.originals(Kind::Startup).is_empty());
         reg.fail_writes.store(false, Ordering::Relaxed);
-        assert_eq!(reg.get(APPROVED_RUN, "Spotify"), None);
+        assert_eq!(got(&reg, APPROVED_RUN, "Spotify"), None);
         assert!(
             list(&reg, None)
                 .iter()
@@ -820,9 +867,11 @@ mod tests {
     fn nothing_is_switched_when_the_journal_cannot_be_saved() {
         let dir = temp_dir("nojournal");
         let reg = seeded(&dir);
-        // The journal's "folder" is a file: saving fails.
+        // After opening, the journal's "folder" turns out to be a file: saving fails.
+        let mut j = Journal::open(&dir.join("blocker").join("journal.json"))
+            .unwrap()
+            .0;
         std::fs::write(dir.join("blocker"), b"x").unwrap();
-        let mut j = Journal::open(&dir.join("blocker").join("journal.json")).0;
         let before = reg.user_len();
         assert_eq!(
             set_enabled(&reg, &mut j, Some(&dir), "run:Spotify", false, AT),

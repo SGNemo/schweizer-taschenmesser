@@ -83,6 +83,7 @@ export function CleanupTab({ onScan, onDrives }: Props) {
       {phase === 'done' && places.length === 0 && !cancelled ? (
         <EmptyState title={x.none}>
           <p>{x.noneHint}</p>
+          <Button onClick={onDrives}>{x.toDrives}</Button>
         </EmptyState>
       ) : null}
       {places.length > 0 ? (
@@ -99,11 +100,6 @@ export function CleanupTab({ onScan, onDrives }: Props) {
         </ul>
       ) : null}
       <WindowsTools />
-      <section className={styles.more} aria-label={x.more.title}>
-        <h2>{x.more.title}</h2>
-        <p className={styles.muted}>{x.more.text}</p>
-        <Button onClick={onDrives}>{x.more.link}</Button>
-      </section>
       {deleting ? (
         <DeleteDialog
           key={`${deleting.scanId}:${deleting.ids.join(',')}`}
@@ -149,8 +145,11 @@ function Suggestion({
       </div>
       <p className={styles.muted}>{x.what[place.category]}</p>
       {place.busy ? <p className={styles.note}>{x.busy(x.source[place.source] ?? name)}</p> : null}
-      <details className={styles.preview} open={!place.preselected}>
+      <details className={styles.preview} open={!place.preselected || place.busy}>
         <summary>{x.preview(place.ids.length)}</summary>
+        <Button size="sm" variant="ghost" onClick={() => toggleAll(place.scanId, !allTicked)}>
+          {allTicked ? x.noneSelected : x.all}
+        </Button>
         <ul className={styles.items}>
           {place.items.map((n) => (
             <li key={n.id} className={styles.item}>
@@ -179,9 +178,6 @@ function Suggestion({
             </li>
           ) : null}
         </ul>
-        <Button size="sm" variant="ghost" onClick={() => toggleAll(place.scanId, !allTicked)}>
-          {allTicked ? x.noneSelected : x.all}
-        </Button>
       </details>
       <div className={styles.foot}>
         <span className={styles.selected}>
@@ -190,7 +186,7 @@ function Suggestion({
             : x.nothingSelected}
         </span>
         <div className={styles.actions}>
-          <Button aria-label={x.lookLabel(name)} onClick={onScan}>
+          <Button variant="ghost" aria-label={x.lookLabel(name)} onClick={onScan}>
             {x.look}
           </Button>
           <Button
@@ -228,32 +224,32 @@ function WindowsTools() {
     optimize.openTool(tool).catch(() => toast(w.openFailed));
   };
 
+  // Other systems have none of these tools: nothing to show.
+  if (!optimize.windows) return null;
   return (
     <section className={styles.windows} aria-label={w.title}>
       <h2>{w.title}</h2>
-      <p className={styles.muted}>{optimize.windows ? w.lead : w.onlyWindows}</p>
-      {optimize.windows ? (
-        <Card as="div">
-          <ul className={styles.tools}>
-            <li className={styles.tool}>
-              <div className={styles.toolText}>
-                <span className={styles.toolName}>{w.recycle}</span>
-                <span className={styles.muted}>{w.recycleHint}</span>
-              </div>
-              <span className={styles.size}>{recycle === null ? '' : formatBytes(recycle)}</span>
-              <Button onClick={() => open('recycleBin')}>{w.recycleOpen}</Button>
-            </li>
-            <li className={styles.tool}>
-              <div className={styles.toolText}>
-                <span className={styles.toolName}>{w.updates}</span>
-                <span className={styles.muted}>{w.updatesHint}</span>
-              </div>
-              <span />
-              <Button onClick={() => open('storageSettings')}>{w.updatesOpen}</Button>
-            </li>
-          </ul>
-        </Card>
-      ) : null}
+      <p className={styles.muted}>{w.lead}</p>
+      <Card as="div">
+        <ul className={styles.tools}>
+          <li className={styles.tool}>
+            <div className={styles.toolText}>
+              <span className={styles.toolName}>{w.recycle}</span>
+              <span className={styles.muted}>{w.recycleHint}</span>
+            </div>
+            <span className={styles.size}>{recycle === null ? '' : formatBytes(recycle)}</span>
+            <Button onClick={() => open('recycleBin')}>{w.recycleOpen}</Button>
+          </li>
+          <li className={styles.tool}>
+            <div className={styles.toolText}>
+              <span className={styles.toolName}>{w.updates}</span>
+              <span className={styles.muted}>{w.updatesHint}</span>
+            </div>
+            <span />
+            <Button onClick={() => open('storageSettings')}>{w.updatesOpen}</Button>
+          </li>
+        </ul>
+      </Card>
     </section>
   );
 }

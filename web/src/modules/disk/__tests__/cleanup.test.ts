@@ -52,6 +52,8 @@ describe('clean-up selection', () => {
   it('ticks everything for caches and nothing for the user’s own downloads', () => {
     expect([...initialSelection(place())]).toEqual([1, 2, 3, 4, 5]);
     expect(initialSelection(place({ preselected: false })).size).toBe(0);
+    // A cache whose program is running is not ticked either.
+    expect(initialSelection(place({ busy: true })).size).toBe(0);
   });
 
   it('toggles one entry and the rest as a group', () => {

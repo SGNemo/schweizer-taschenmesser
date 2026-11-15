@@ -51,6 +51,8 @@ struct Session {
 
 struct StoredPlan {
     scan_id: u64,
+    /// What a deletion of this plan is called in the history (fixed when the plan is made).
+    category: &'static str,
     plan: Plan,
     created: Instant,
     control: DeleteControl,
@@ -685,10 +687,12 @@ pub fn disk_delete_plan(
     }
     inner.next_id += 1;
     let plan_id = inner.next_id;
+    let category = inner.category(scan_id);
     inner.plans.insert(
         plan_id,
         Arc::new(StoredPlan {
             scan_id,
+            category,
             plan: p,
             created: now,
             control: DeleteControl::default(),
@@ -781,17 +785,13 @@ pub fn disk_delete(
                 apply_to_tree(&mut t, &report);
                 t.view(t.root_id())
             };
-            let category = match scans.lock() {
-                Ok(mut inner) => {
-                    inner.plans.remove(&plan_id);
-                    inner.category(stored.scan_id)
-                }
-                Err(_) => "scan",
-            };
+            if let Ok(mut inner) = scans.lock() {
+                inner.plans.remove(&plan_id);
+            }
             if report.files_deleted > 0 || report.freed_bytes > 0 {
                 crate::optimize::note_cleanup(
                     &app,
-                    category,
+                    stored.category,
                     report.freed_bytes,
                     report.files_deleted,
                     mode == Mode::Permanent,

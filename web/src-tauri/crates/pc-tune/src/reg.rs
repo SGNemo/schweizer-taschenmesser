@@ -59,6 +59,9 @@ pub enum RegError {
     KeyNotAllowed,
     /// Windows refused the change.
     Failed,
+    /// The value exists but could not be read exactly (access denied, too large): nothing may
+    /// be changed, because there would be no exact way back.
+    Unreadable,
     /// No registry on this system.
     Unsupported,
 }
@@ -68,13 +71,16 @@ impl RegError {
         match self {
             RegError::KeyNotAllowed => "key-not-allowed",
             RegError::Failed => "failed",
+            RegError::Unreadable => "unreadable",
             RegError::Unsupported => "unsupported",
         }
     }
 }
 
 /// A key that may be written: `Software\…` with at least one more segment, backslash-separated,
-/// no empty, `.`/`..` or over-long segments, no control characters. (Hive names are not part of a
+/// no empty, `.`/`..` or over-long segments, no control characters. Never a policy key (any
+/// segment `Policies`: Windows would show "managed by your organisation") and never
+/// `Software\Classes` (file and COM registration). (Hive names are not part of a
 /// key here: the hive is chosen by the function, and only the user hive has write functions.)
 pub fn valid_key(key: &str) -> bool {
     if key.len() > 512 || key.contains('/') || key.chars().any(|c| c.is_control()) {
@@ -83,6 +89,8 @@ pub fn valid_key(key: &str) -> bool {
     let segs: Vec<&str> = key.split('\\').collect();
     segs.len() >= 2
         && segs[0].eq_ignore_ascii_case("software")
+        && !segs[1].eq_ignore_ascii_case("classes")
+        && !segs.iter().any(|s| s.eq_ignore_ascii_case("policies"))
         && segs
             .iter()
             .all(|s| !s.is_empty() && *s != "." && *s != ".." && s.len() <= 255)
@@ -94,12 +102,15 @@ pub(crate) fn valid_name(name: &str) -> bool {
 }
 
 pub trait Registry: Send + Sync {
-    /// A value of the current user (`HKCU\<key>`); `None` when the key or the value is missing.
-    fn get(&self, key: &str, name: &str) -> Option<Value>;
-    /// All values of a key of the current user (empty when the key is missing).
+    /// A value of the current user (`HKCU\<key>`), byte for byte. `Ok(None)` only when the key
+    /// or the value really is missing; a value that exists but cannot be read is an error, so
+    /// a caller never mistakes it for "nothing there" (an undo would then delete it).
+    fn get(&self, key: &str, name: &str) -> Result<Option<Value>, RegError>;
+    /// All values of a key of the current user (empty when the key is missing). For display
+    /// only: values that cannot be read are left out, so never take an undo value from here.
     fn list(&self, key: &str) -> Vec<(String, Value)>;
     /// A machine-wide value (`HKLM\<key>`, 64-bit view). Read only.
-    fn machine_get(&self, key: &str, name: &str) -> Option<Value>;
+    fn machine_get(&self, key: &str, name: &str) -> Result<Option<Value>, RegError>;
     /// All values of a machine-wide key. Read only.
     fn machine_list(&self, key: &str) -> Vec<(String, Value)>;
     /// Sets a value of the current user; the key is created when missing.
@@ -116,6 +127,32 @@ pub trait Registry: Send + Sync {
     }
 }
 
+/// Writes several values of the current user as one step: when a write fails, the ones already
+/// made are put back, so a change is either complete or did not happen. Returns the values from
+/// before (in order), which are what an undo needs. Refuses before writing anything when an old
+/// value cannot be read exactly.
+pub fn set_all(
+    reg: &dyn Registry,
+    writes: &[(&str, &str, Value)],
+) -> Result<Vec<Option<Value>>, RegError> {
+    let mut before = Vec::with_capacity(writes.len());
+    for (key, name, _) in writes {
+        if !valid_key(key) {
+            return Err(RegError::KeyNotAllowed);
+        }
+        before.push(reg.get(key, name)?);
+    }
+    for (i, (key, name, value)) in writes.iter().enumerate() {
+        if let Err(e) = reg.set(key, name, value) {
+            for (j, (k, n, _)) in writes.iter().enumerate().take(i).rev() {
+                let _ = reg.restore(k, n, before[j].as_ref());
+            }
+            return Err(e);
+        }
+    }
+    Ok(before)
+}
+
 type Store = BTreeMap<(String, String), (String, Value)>;
 
 /// In-memory registry for tests: same rules as the real one.
@@ -125,6 +162,11 @@ pub struct MemRegistry {
     machine: Mutex<Store>,
     /// Makes every write fail (to test that a failed change leaves no journal entry).
     pub fail_writes: std::sync::atomic::AtomicBool,
+    /// Makes the n-th write from now fail, once (0 = off): a change of several values that
+    /// breaks in the middle.
+    pub fail_after: std::sync::atomic::AtomicUsize,
+    /// Makes every single-value read fail (a value that exists but cannot be read).
+    pub fail_reads: std::sync::atomic::AtomicBool,
 }
 
 fn slot(key: &str, name: &str) -> (String, String) {
@@ -162,24 +204,29 @@ impl MemRegistry {
 }
 
 impl Registry for MemRegistry {
-    fn get(&self, key: &str, name: &str) -> Option<Value> {
-        self.user
+    fn get(&self, key: &str, name: &str) -> Result<Option<Value>, RegError> {
+        if self.fail_reads.load(std::sync::atomic::Ordering::Relaxed) {
+            return Err(RegError::Unreadable);
+        }
+        Ok(self
+            .user
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .get(&slot(key, name))
-            .map(|(_, v)| v.clone())
+            .map(|(_, v)| v.clone()))
     }
 
     fn list(&self, key: &str) -> Vec<(String, Value)> {
         list_of(&self.user, key)
     }
 
-    fn machine_get(&self, key: &str, name: &str) -> Option<Value> {
-        self.machine
+    fn machine_get(&self, key: &str, name: &str) -> Result<Option<Value>, RegError> {
+        Ok(self
+            .machine
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .get(&slot(key, name))
-            .map(|(_, v)| v.clone())
+            .map(|(_, v)| v.clone()))
     }
 
     fn machine_list(&self, key: &str) -> Vec<(String, Value)> {
@@ -192,6 +239,16 @@ impl Registry for MemRegistry {
         }
         if self.fail_writes.load(std::sync::atomic::Ordering::Relaxed) {
             return Err(RegError::Failed);
+        }
+        use std::sync::atomic::Ordering::Relaxed;
+        match self.fail_after.load(Relaxed) {
+            0 => {}
+            1 => {
+                // One failure, then writes work again (so a roll-back can be watched).
+                self.fail_after.store(0, Relaxed);
+                return Err(RegError::Failed);
+            }
+            n => self.fail_after.store(n - 1, Relaxed),
         }
         self.user
             .lock()
@@ -223,34 +280,46 @@ pub struct WinRegistry;
 mod win {
     use super::*;
     use windows::core::{PCWSTR, PWSTR};
-    use windows::Win32::Foundation::{ERROR_FILE_NOT_FOUND, ERROR_MORE_DATA, ERROR_SUCCESS};
+    use windows::Win32::Foundation::{
+        ERROR_FILE_NOT_FOUND, ERROR_MORE_DATA, ERROR_PATH_NOT_FOUND, ERROR_SUCCESS,
+    };
     use windows::Win32::System::Registry::{
-        RegCloseKey, RegDeleteKeyValueW, RegEnumValueW, RegOpenKeyExW, RegSetKeyValueW, HKEY,
-        HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_READ, KEY_WOW64_64KEY, REG_SAM_FLAGS,
+        RegCloseKey, RegDeleteKeyValueW, RegEnumValueW, RegOpenKeyExW, RegQueryValueExW,
+        RegSetKeyValueW, HKEY, HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_READ, KEY_WOW64_64KEY,
+        REG_SAM_FLAGS, REG_VALUE_TYPE,
     };
 
     const REG_SZ: u32 = 1;
     const REG_DWORD: u32 = 4;
-    /// Largest value read (a startup command or a small binary; anything bigger is not ours).
-    const MAX_DATA: usize = 64 * 1024;
+    /// Largest value read (a startup command or a small binary). A bigger one is reported as
+    /// unreadable by `get` and left out by `list`.
+    const MAX_DATA: usize = 1024 * 1024;
     const MAX_VALUES: u32 = 2000;
 
     fn wide(s: &str) -> Vec<u16> {
         s.encode_utf16().chain(std::iter::once(0)).collect()
     }
 
+    /// A string becomes `Sz` only when writing it back gives the same bytes; anything else (no
+    /// terminator, data after it, half a character) stays `Raw`, so an undo is exact.
     fn decode(ty: u32, data: &[u8]) -> Value {
         match ty {
             REG_DWORD if data.len() == 4 => {
                 Value::Dword(u32::from_le_bytes([data[0], data[1], data[2], data[3]]))
             }
-            REG_SZ => {
+            REG_SZ if data.len() % 2 == 0 && data.len() >= 2 => {
                 let units: Vec<u16> = data
                     .chunks_exact(2)
                     .map(|c| u16::from_le_bytes([c[0], c[1]]))
                     .collect();
-                let end = units.iter().position(|&u| u == 0).unwrap_or(units.len());
-                Value::Sz(String::from_utf16_lossy(&units[..end]))
+                let text = &units[..units.len() - 1];
+                match String::from_utf16(text) {
+                    Ok(s) if units[units.len() - 1] == 0 && !text.contains(&0) => Value::Sz(s),
+                    _ => Value::Raw {
+                        ty,
+                        data: data.to_vec(),
+                    },
+                }
             }
             _ => Value::Raw {
                 ty,
@@ -318,15 +387,61 @@ mod win {
         out
     }
 
-    fn value(hive: HKEY, access: REG_SAM_FLAGS, key: &str, name: &str) -> Option<Value> {
-        values(hive, access, key)
-            .into_iter()
-            .find(|(n, _)| n.eq_ignore_ascii_case(name))
-            .map(|(_, v)| v)
+    /// One value, byte for byte. `Ok(None)` only for "key or value not there".
+    fn value(
+        hive: HKEY,
+        access: REG_SAM_FLAGS,
+        key: &str,
+        name: &str,
+    ) -> Result<Option<Value>, RegError> {
+        let (key_w, name_w) = (wide(key), wide(name));
+        let mut handle = HKEY::default();
+        // SAFETY: both strings are NUL-terminated locals that outlive the calls; `handle` is
+        // closed on every path after a successful open; the data buffer is a local whose length
+        // is passed along and updated by the call.
+        unsafe {
+            let rc = RegOpenKeyExW(hive, PCWSTR(key_w.as_ptr()), None, access, &mut handle);
+            if rc == ERROR_FILE_NOT_FOUND || rc == ERROR_PATH_NOT_FOUND {
+                return Ok(None);
+            }
+            if rc != ERROR_SUCCESS {
+                return Err(RegError::Unreadable);
+            }
+            let mut data = vec![0u8; 512];
+            let mut result = Err(RegError::Unreadable);
+            // A second round when the value is bigger than the first buffer (the call says how
+            // big); a third only if it grew in between.
+            for _ in 0..3 {
+                let mut ty = REG_VALUE_TYPE(0);
+                let mut len = data.len() as u32;
+                let rc = RegQueryValueExW(
+                    handle,
+                    PCWSTR(name_w.as_ptr()),
+                    None,
+                    Some(&mut ty),
+                    Some(data.as_mut_ptr()),
+                    Some(&mut len),
+                );
+                if rc == ERROR_SUCCESS {
+                    result = Ok(Some(decode(ty.0, &data[..len as usize])));
+                    break;
+                }
+                if rc == ERROR_FILE_NOT_FOUND {
+                    result = Ok(None);
+                    break;
+                }
+                if rc != ERROR_MORE_DATA || len as usize > MAX_DATA {
+                    break;
+                }
+                data.resize(len as usize, 0);
+            }
+            let _ = RegCloseKey(handle);
+            result
+        }
     }
 
     impl Registry for WinRegistry {
-        fn get(&self, key: &str, name: &str) -> Option<Value> {
+        fn get(&self, key: &str, name: &str) -> Result<Option<Value>, RegError> {
             value(HKEY_CURRENT_USER, KEY_READ, key, name)
         }
 
@@ -334,7 +449,7 @@ mod win {
             values(HKEY_CURRENT_USER, KEY_READ, key)
         }
 
-        fn machine_get(&self, key: &str, name: &str) -> Option<Value> {
+        fn machine_get(&self, key: &str, name: &str) -> Result<Option<Value>, RegError> {
             value(HKEY_LOCAL_MACHINE, KEY_READ | KEY_WOW64_64KEY, key, name)
         }
 
@@ -419,7 +534,8 @@ mod win {
         fn values_round_trip_with_their_type() {
             let k = TestKey::new("roundtrip");
             let r = WinRegistry;
-            assert_eq!(r.get(&k.0, "missing"), None);
+            assert_eq!(r.get(&k.0, "missing"), Ok(None));
+            assert_eq!(r.get(r"Software\NemoPcTuneTest\no-such-key", "x"), Ok(None));
             let cases = [
                 ("num", Value::Dword(0xDEAD_BEEF)),
                 (
@@ -441,11 +557,11 @@ mod win {
             ];
             for (name, v) in &cases {
                 r.set(&k.0, name, v).unwrap();
-                assert_eq!(r.get(&k.0, name).as_ref(), Some(v), "{name}");
+                assert_eq!(r.get(&k.0, name).as_ref(), Ok(&Some(v.clone())), "{name}");
             }
             assert_eq!(r.list(&k.0).len(), cases.len());
             // Names are case-insensitive, like the registry itself.
-            assert_eq!(r.get(&k.0, "NUM"), Some(Value::Dword(0xDEAD_BEEF)));
+            assert_eq!(r.get(&k.0, "NUM"), Ok(Some(Value::Dword(0xDEAD_BEEF))));
         }
 
         #[test]
@@ -453,15 +569,15 @@ mod win {
             let k = TestKey::new("restore");
             let r = WinRegistry;
             r.set(&k.0, "a", &Value::Dword(1)).unwrap();
-            let before = r.get(&k.0, "a");
+            let before = r.get(&k.0, "a").unwrap();
             r.set(&k.0, "a", &Value::Dword(0)).unwrap();
             r.restore(&k.0, "a", before.as_ref()).unwrap();
-            assert_eq!(r.get(&k.0, "a"), Some(Value::Dword(1)));
+            assert_eq!(r.get(&k.0, "a"), Ok(Some(Value::Dword(1))));
 
-            let before = r.get(&k.0, "b");
+            let before = r.get(&k.0, "b").unwrap();
             r.set(&k.0, "b", &Value::Sz("x".into())).unwrap();
             r.restore(&k.0, "b", before.as_ref()).unwrap();
-            assert_eq!(r.get(&k.0, "b"), None);
+            assert_eq!(r.get(&k.0, "b"), Ok(None));
             // Deleting what is not there is fine.
             r.delete(&k.0, "b").unwrap();
         }
@@ -472,7 +588,24 @@ mod win {
             let r = WinRegistry;
             let v = Value::binary(&vec![7u8; 20_000]);
             r.set(&k.0, "big", &v).unwrap();
-            assert_eq!(r.get(&k.0, "big"), Some(v));
+            assert_eq!(r.get(&k.0, "big"), Ok(Some(v)));
+        }
+
+        #[test]
+        fn odd_strings_come_back_byte_for_byte() {
+            let k = TestKey::new("oddsz");
+            let r = WinRegistry;
+            // No terminator, data after a NUL, an odd length: each must survive a round trip.
+            for (name, data) in [
+                ("bare", vec![b'a', 0, b'b', 0]),
+                ("inner", vec![b'a', 0, 0, 0, b'b', 0, 0, 0]),
+                ("odd", vec![b'a', 0, 0]),
+                ("none", vec![]),
+            ] {
+                let v = Value::Raw { ty: 1, data };
+                r.set(&k.0, name, &v).unwrap();
+                assert_eq!(r.get(&k.0, name), Ok(Some(v)), "{name}");
+            }
         }
 
         #[test]
@@ -500,7 +633,7 @@ mod win {
                 r"SOFTWARE\Microsoft\Windows NT\CurrentVersion",
                 "CurrentBuildNumber",
             );
-            assert!(matches!(v, Some(Value::Sz(s)) if !s.is_empty()));
+            assert!(matches!(v, Ok(Some(Value::Sz(s))) if !s.is_empty()));
             assert!(!r
                 .machine_list(r"SOFTWARE\Microsoft\Windows NT\CurrentVersion")
                 .is_empty());
@@ -537,6 +670,11 @@ mod tests {
             "Software/Microsoft",
             "Software\\x\0y",
             "Software\\x\ny",
+            r"Software\Policies\Microsoft\Windows\Explorer",
+            r"SOFTWARE\POLICIES\x",
+            r"Software\Microsoft\Windows\CurrentVersion\Policies\Explorer",
+            r"Software\Classes\.txt",
+            r"software\classes\CLSID\x",
         ] {
             assert!(!valid_key(bad), "{bad:?}");
         }
@@ -559,7 +697,10 @@ mod tests {
         let r = MemRegistry::new();
         r.set(r"Software\X", "HideFileExt", &Value::Dword(0))
             .unwrap();
-        assert_eq!(r.get(r"software\x", "hidefileext"), Some(Value::Dword(0)));
+        assert_eq!(
+            r.get(r"software\x", "hidefileext"),
+            Ok(Some(Value::Dword(0)))
+        );
         assert_eq!(
             r.list(r"SOFTWARE\X"),
             vec![("HideFileExt".to_string(), Value::Dword(0))]
@@ -573,10 +714,47 @@ mod tests {
         r.set(key, "a", &Value::Dword(1)).unwrap();
         r.set(key, "a", &Value::Dword(0)).unwrap();
         r.restore(key, "a", Some(&Value::Dword(1))).unwrap();
-        assert_eq!(r.get(key, "a"), Some(Value::Dword(1)));
+        assert_eq!(r.get(key, "a"), Ok(Some(Value::Dword(1))));
         r.set(key, "b", &Value::Sz("x".into())).unwrap();
         r.restore(key, "b", None).unwrap();
-        assert_eq!(r.get(key, "b"), None);
+        assert_eq!(r.get(key, "b"), Ok(None));
+    }
+
+    #[test]
+    fn several_values_are_written_completely_or_not_at_all() {
+        use std::sync::atomic::Ordering::Relaxed;
+        let r = MemRegistry::new();
+        let key = r"Software\X";
+        r.set(key, "a", &Value::Dword(1)).unwrap();
+        let writes = [
+            (key, "a", Value::Dword(0)),
+            (key, "b", Value::Dword(5)),
+            (key, "c", Value::Dword(9)),
+        ];
+        // The third write fails: the first two are put back.
+        r.fail_after.store(3, Relaxed);
+        assert_eq!(set_all(&r, &writes), Err(RegError::Failed));
+        assert_eq!(r.get(key, "a"), Ok(Some(Value::Dword(1))));
+        assert_eq!(r.get(key, "b"), Ok(None));
+        assert_eq!(r.get(key, "c"), Ok(None));
+        // Without a failure: all written, the old values returned in order.
+        assert_eq!(
+            set_all(&r, &writes),
+            Ok(vec![Some(Value::Dword(1)), None, None])
+        );
+        assert_eq!(r.get(key, "c"), Ok(Some(Value::Dword(9))));
+    }
+
+    #[test]
+    fn nothing_is_written_when_an_old_value_cannot_be_read() {
+        use std::sync::atomic::Ordering::Relaxed;
+        let r = MemRegistry::new();
+        r.fail_reads.store(true, Relaxed);
+        assert_eq!(
+            set_all(&r, &[(r"Software\X", "a", Value::Dword(1))]),
+            Err(RegError::Unreadable)
+        );
+        assert_eq!(r.user_len(), 0);
     }
 
     #[test]
@@ -585,11 +763,11 @@ mod tests {
         r.seed_machine(r"SOFTWARE\M", "v", Value::Sz("x".into()));
         assert_eq!(
             r.machine_get(r"software\m", "V"),
-            Some(Value::Sz("x".into()))
+            Ok(Some(Value::Sz("x".into())))
         );
         assert_eq!(r.machine_list(r"SOFTWARE\M").len(), 1);
         // The user hive does not see it.
-        assert_eq!(r.get(r"SOFTWARE\M", "v"), None);
+        assert_eq!(r.get(r"SOFTWARE\M", "v"), Ok(None));
     }
 
     #[test]
