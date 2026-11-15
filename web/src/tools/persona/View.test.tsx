@@ -12,7 +12,7 @@ vi.mock('@/core/modules/activation', async (orig) => ({
   useModuleStates: () => modules.states,
 }));
 
-import { setSettings } from '@/core/settings/settings';
+import { setSettings, settingsRepo } from '@/core/settings/settings';
 import { clearVaultEntry, peekVaultEntry } from '@/core/handoff/vaultEntry';
 import { t } from '@/strings';
 import PersonaTool from './View';
@@ -93,6 +93,10 @@ describe('persona tool', () => {
     expect(await screen.findByText(s.notice)).toBeVisible();
     await user.click(screen.getByRole('button', { name: s.noticeOk }));
     await waitFor(() => expect(screen.queryByText(s.notice)).toBeNull());
+    // The tool hides the notice at once and stores the choice a moment later; reopening is about the stored choice.
+    await waitFor(async () =>
+      expect((await settingsRepo.get('tools.persona'))?.noticeSeen).toBe(true),
+    );
     first.unmount();
     wrap();
     await screen.findByTestId('persona-fields');

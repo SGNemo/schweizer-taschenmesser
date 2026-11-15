@@ -1,8 +1,8 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { getPlatform } from '@/core/platform';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { Button, Icon, IconButton, SelectField, Segmented, TextField } from '@/ui';
+import { Button, FileField, Icon, IconButton, SelectField, Segmented, TextField } from '@/ui';
 import { kit } from '../kit';
 import styles from '../tools.module.css';
 import { outName, parseRanges, without, type Rotation } from './logic';
@@ -88,13 +88,12 @@ interface StepProps {
 
 function Merge({ run, save, busy }: StepProps) {
   const [files, setFiles] = useState<Loaded[]>([]);
-  const inputRef = useRef<HTMLInputElement>(null);
   const [tooFew, setTooFew] = useState(false);
 
-  async function pick(list: FileList | null) {
+  async function pick(list: File[]) {
     setTooFew(false);
     await run(async () => {
-      const loaded = await Promise.all([...(list ?? [])].map(read));
+      const loaded = await Promise.all(list.map(read));
       setFiles((old) => [...old, ...loaded]);
     });
   }
@@ -108,21 +107,16 @@ function Merge({ run, save, busy }: StepProps) {
 
   return (
     <>
-      <div>
-        <Button onClick={() => inputRef.current?.click()}>{s.pickMany}</Button>
-        <input
-          ref={inputRef}
-          id="pdf-merge-input"
-          type="file"
-          accept="application/pdf,.pdf"
-          multiple
-          hidden
-          onChange={(e) => {
-            void pick(e.target.files);
-            e.target.value = '';
-          }}
-        />
-      </div>
+      <FileField
+        id="pdf-merge-input"
+        label={s.fileMany}
+        buttonLabel={s.pickMany}
+        accept="application/pdf,.pdf"
+        multiple
+        fileName={files.length > 0 ? t.ui.file.count(files.length) : null}
+        // The input is cleared right after this call: copy the list first.
+        onFiles={(list) => void pick([...list])}
+      />
       {files.length > 0 ? (
         <ul className={kit.files} aria-label={s.files} data-testid="pdf-files">
           {files.map((f, i) => (
@@ -180,7 +174,6 @@ function Merge({ run, save, busy }: StepProps) {
 
 function Single({ mode, run, save, busy }: StepProps & { mode: 'pages' | 'rotate' }) {
   const [file, setFile] = useState<(Loaded & { count: number }) | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const [range, setRange] = useState('');
   const [keep, setKeep] = useState<'keep' | 'drop'>('keep');
   const [angle, setAngle] = useState<Rotation>(90);
@@ -217,17 +210,14 @@ function Single({ mode, run, save, busy }: StepProps & { mode: 'pages' | 'rotate
 
   return (
     <>
-      <div>
-        <Button onClick={() => inputRef.current?.click()}>{s.pickOne}</Button>
-        <input
-          ref={inputRef}
-          id="pdf-single-input"
-          type="file"
-          accept="application/pdf,.pdf"
-          hidden
-          onChange={(e) => void pick(e.target.files?.[0])}
-        />
-      </div>
+      <FileField
+        id="pdf-single-input"
+        label={s.fileOne}
+        buttonLabel={s.pickOne}
+        accept="application/pdf,.pdf"
+        fileName={file ? file.name : null}
+        onFiles={(list) => void pick(list[0])}
+      />
       {file ? (
         <>
           <p className={styles.muted} data-testid="pdf-info">

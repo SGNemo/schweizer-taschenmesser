@@ -47,38 +47,44 @@ export function QuickAdd() {
             setOpen(false);
             void navigate(path);
           }}
+          // The other ways in come before "Abbrechen · Speichern", so the actions are the sheet's foot (design check K4).
+          beforeActions={
+            <>
+              {aiOn && write?.enabled ? (
+                // Free text for any module; on the phone the keyboard's own dictation works in the field.
+                <Button
+                  variant="ghost"
+                  className={styles.write}
+                  data-testid="quick-add-ai"
+                  onClick={() => {
+                    setOpen(false);
+                    openWritePalette();
+                  }}
+                >
+                  <Icon name={writeLabel.ai ? 'sparkles' : 'plus'} size={16} /> {writeLabel.label}
+                </Button>
+              ) : null}
+              {actions.length === 0 ? (
+                <p>{t.quickAdd.empty}</p>
+              ) : (
+                <details className={styles.others}>
+                  <summary>{t.quickAdd.others}</summary>
+                  <ul className={styles.list}>
+                    {actions.map((a) => (
+                      <li key={`${a.icon}-${a.id}`}>
+                        <NavLink to={a.to} className={styles.link} onClick={() => setOpen(false)}>
+                          <Icon name={a.icon} />
+                          {a.label}
+                        </NavLink>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </>
+          }
         />
       ) : null}
-      {aiOn && write?.enabled ? (
-        // Free text for any module; on the phone the keyboard's own dictation works in the field.
-        <Button
-          variant="ghost"
-          data-testid="quick-add-ai"
-          onClick={() => {
-            setOpen(false);
-            openWritePalette();
-          }}
-        >
-          <Icon name={writeLabel.ai ? 'sparkles' : 'plus'} size={16} /> {writeLabel.label}
-        </Button>
-      ) : null}
-      {actions.length === 0 ? (
-        <p>{t.quickAdd.empty}</p>
-      ) : (
-        <details className={styles.others}>
-          <summary>{t.quickAdd.others}</summary>
-          <ul className={styles.list}>
-            {actions.map((a) => (
-              <li key={`${a.icon}-${a.id}`}>
-                <NavLink to={a.to} className={styles.link} onClick={() => setOpen(false)}>
-                  <Icon name={a.icon} />
-                  {a.label}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-        </details>
-      )}
     </Dialog>
   );
 }

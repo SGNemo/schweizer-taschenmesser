@@ -29,7 +29,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/overview-desktop-dark.webp">
-    <img src="docs/assets/screenshots/overview-desktop-light.webp" alt="Nemo overview on a desktop with made-up sample data: a sidebar with favourites and areas, a strip “Important now” with six cards, today, tomorrow and this week in three columns, and one suggested task to start with" width="900">
+    <img src="docs/assets/screenshots/overview-desktop-light.webp" alt="Nemo overview on a desktop with made-up sample data, in the calm view “Ruhig”: a sidebar with favourites and areas, a strip “Important now” with three cards and a note of what can wait, and a card “Today” with the next appointment, today’s events and one suggested task to start with" width="900">
   </picture>
 </p>
 
@@ -53,9 +53,9 @@ Nemo is a set of small modules for everyday life. You turn on what you need in t
 | **Money** | Finances | Accounts, income and expenses with categories | on by default |
 |  | Invoices | Open invoices with amount, payee and due date | on by default |
 |  | Subscriptions | Subscriptions and recurring payments | on by default |
-|  | Budgets & savings goals | Monthly limits per expense category (from Finances) and savings goals with deposits and progress | on for new installations |
+|  | Budgets & savings goals | Spending limits per category (from Finances) and savings goals with deposits and progress | on for new installations |
 | **Household** | Lists | Shopping, packing lists and checklists | on for new installations |
-|  | Routines | Cleaning plan and household routines | on for new installations |
+|  | Routines | Routines for the day and the household | on for new installations |
 |  | Pantry | What’s in the fridge, the cupboard and the freezer? | optional |
 |  | Fitness | Keep a rough log of training and food | preview |
 | **Knowledge** | Saved | Save links, reading, films, places and ideas | optional |
@@ -67,7 +67,8 @@ Nemo is a set of small modules for everyday life. You turn on what you need in t
 |  | Music | Spotify on one page | preview |
 | **Vault** | Documents | IDs, contracts, insurance and warranties with end date, notice period and an attached file | optional |
 |  | Passwords | Password vault | optional |
-| **System** | This PC | Drives with a scan of the biggest folders and system info (processor, memory, battery, network) | optional, Windows app only |
+| **System** | Device status | Backup, sync, storage and updates of this device on one page, plus a backup to download | on for new installations |
+|  | This PC | Drives with a scan of the biggest folders and system info (processor, memory, battery, network) | optional, Windows app only |
 |  | Downloads | Downloads files | on for new installations, Windows app only |
 |  | Remote | Control media, volume, mouse and keyboard of your PC from your phone | preview, Android app only |
 
@@ -112,14 +113,14 @@ All pictures show made-up sample data in the German interface; the app also spea
     <td width="50%">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/calendar-desktop-dark.webp">
-        <img src="docs/assets/screenshots/calendar-desktop-light.webp" alt="Calendar in week view with colour-coded events from several modules and an agenda panel for the selected day, under a blue calendar header">
+        <img src="docs/assets/screenshots/calendar-desktop-light.webp" alt="Calendar in week view with events from several modules, an hour grid with today’s column marked, and an agenda panel for the selected day on the right">
       </picture>
       <br><sub>Calendar: week view with the day’s agenda</sub>
     </td>
     <td width="50%">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/finance-desktop-dark.webp">
-        <img src="docs/assets/screenshots/finance-desktop-light.webp" alt="Finances overview with two account cards, balance, income, expenses and result for the month, a line chart of the balance and the latest transactions">
+        <img src="docs/assets/screenshots/finance-desktop-light.webp" alt="Finances in the month tab for September, with the available balance in the header, income, expenses and result for the month, a line chart of the balance, a donut chart of where the money went and the latest transactions on the right">
       </picture>
       <br><sub>Finances: month overview with balance and transactions</sub>
     </td>
@@ -128,16 +129,16 @@ All pictures show made-up sample data in the German interface; the app also spea
     <td width="50%">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/tools-desktop-dark.webp">
-        <img src="docs/assets/screenshots/tools-desktop-light.webp" alt="The toolbox opened over the overview: a list of tools on the left, the calculator with a number pad and tabs for standard, scientific and more on the right">
+        <img src="docs/assets/screenshots/tools-desktop-light.webp" alt="The toolbox opened over the overview: a list of tools on the left, the calculator with a number pad and tabs for standard, scientific, programmer and more on the right">
       </picture>
       <br><sub>Toolbox: the calculator, one of many small tools</sub>
     </td>
     <td width="50%">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/settings-desktop-dark.webp">
-        <img src="docs/assets/screenshots/settings-desktop-light.webp" alt="Settings overview with six status tiles for security, sync, backup, updates, AI and storage, quick switches for colour scheme, density and reading aid, and a list of categories">
+        <img src="docs/assets/screenshots/settings-desktop-light.webp" alt="Settings overview: a status header with security, device status and AI, quick switches for colour scheme, density, reading aid, profile and quiet time, and the list of categories on the left">
       </picture>
-      <br><sub>Settings: status at a glance, then the categories</sub>
+      <br><sub>Settings: status at a glance, categories on the left</sub>
     </td>
   </tr>
 </table>
@@ -145,15 +146,15 @@ All pictures show made-up sample data in the German interface; the app also spea
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/overview-phone-dark.webp">
-    <img src="docs/assets/screenshots/overview-phone-light.webp" alt="The overview on a phone: the strip “Important now” as two columns of cards, then today’s events, with a navigation bar at the bottom" width="220">
+    <img src="docs/assets/screenshots/overview-phone-light.webp" alt="The overview on a phone in the calm view: the strip “Important now” with three cards and a line of what can wait, then the card “Today” with today’s events, with a navigation bar at the bottom" width="220">
   </picture>
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/calendar-phone-dark.webp">
-    <img src="docs/assets/screenshots/calendar-phone-light.webp" alt="The calendar on a phone: a header with today’s date and a strip of busy hours, tabs, a view switch for month, week, day, agenda and year, and the first day of the week with its events" width="220">
+    <img src="docs/assets/screenshots/calendar-phone-light.webp" alt="The calendar on a phone: the module head with tabs for the planning modules and for events and reminders, a week switch, a view switch for month, week, day, agenda and year, and the events of the week as a list" width="220">
   </picture>
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screenshots/tools-phone-dark.webp">
-    <img src="docs/assets/screenshots/tools-phone-light.webp" alt="The calculator on a phone, full screen, with a number pad and a history" width="220">
+    <img src="docs/assets/screenshots/tools-phone-light.webp" alt="The calculator on a phone, full screen, with tabs, a number pad and an empty history" width="220">
   </picture>
 </p>
 

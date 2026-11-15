@@ -5,6 +5,7 @@ import { t } from '@/strings';
 import { tDraft } from '@/strings.draft';
 import { deleteWithUndo } from '@/core/undo/withToast';
 import {
+  AdvancedFields,
   Button,
   DayField,
   Dialog,
@@ -19,6 +20,7 @@ import {
 } from '@/ui';
 import { endOf, formatSize, MAX_FILE_BYTES } from '../logic';
 import { deleteDocument, saveDocument } from '../repo';
+import { canPreview, FilePreview } from './FilePreview';
 import { CATEGORIES, documentSchema, type DocCategory, type VaultDocument } from '../schema';
 
 export type DocumentTarget = Stored<VaultDocument> | { draft: true } | null;
@@ -98,6 +100,7 @@ function Fields({
     onClose();
   };
 
+  const noticeInBasis = category === 'contract' || category === 'insurance';
   const shownFile =
     file instanceof File
       ? `${file.name} (${formatSize(file.size)})`
@@ -122,6 +125,8 @@ function Fields({
         required
         data-autofocus
       />
+      {/* Basis (0b-8 follow-up 7): title, kind and the date the deadlines follow; the rest is behind "Mehr Felder"
+          and opens by itself once one of those fields holds something. */}
       <Split>
         <SelectField
           label={t.vault.category}
@@ -134,21 +139,6 @@ function Fields({
             </option>
           ))}
         </SelectField>
-        <TextField
-          label={t.vault.provider}
-          value={provider}
-          onChange={(e) => setProvider(e.target.value)}
-        />
-      </Split>
-      <Split>
-        <DayField
-          label={t.vault.startDate}
-          value={startDate}
-          onChange={(next) => {
-            setStartDate(next);
-            setDateError('');
-          }}
-        />
         <DayField
           label={t.vault.endDate}
           value={endDate}
@@ -159,8 +149,11 @@ function Fields({
           error={dateError}
         />
       </Split>
-      <NoticeField days={notice} months={noticeMonths} onChange={setNotice} max={730} />
-      <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      {/* A contract or an insurance is filed for its cancellation deadline ("Jetzt wichtig", calendar): there the
+          notice period stays in Basis; for a passport or a receipt it waits behind "Mehr Felder". */}
+      {noticeInBasis ? (
+        <NoticeField days={notice} months={noticeMonths} onChange={setNotice} max={730} />
+      ) : null}
       <FileField
         label={t.vault.file}
         hint={t.vault.localOnly}
@@ -177,6 +170,38 @@ function Fields({
         onRemove={() => setFile('remove')}
         removeLabel={t.vault.removeFile}
       />
+      <AdvancedFields
+        moduleId="vault"
+        hasData={Boolean(provider || startDate || (notice !== undefined && !noticeInBasis) || note)}
+      >
+        <Split>
+          <TextField
+            label={t.vault.provider}
+            value={provider}
+            onChange={(e) => setProvider(e.target.value)}
+          />
+          <DayField
+            label={t.vault.startDate}
+            value={startDate}
+            onChange={(next) => {
+              setStartDate(next);
+              setDateError('');
+            }}
+          />
+        </Split>
+        {noticeInBasis ? null : (
+          <NoticeField days={notice} months={noticeMonths} onChange={setNotice} max={730} />
+        )}
+        <TextArea label={t.form.note} value={note} onChange={(e) => setNote(e.target.value)} />
+      </AdvancedFields>
+      {/* Below the wide layout a folder opens this dialog, not the panel: the preview is reached here. */}
+      {existing?.fileName && file === undefined && canPreview(existing.fileType) ? (
+        <FilePreview
+          key={`${existing.id}:${existing.fileName}:${existing.fileSize}:${existing.updatedAt}`}
+          id={existing.id}
+          fileName={existing.fileName}
+        />
+      ) : null}
       <FormActions
         start={
           existing ? (
@@ -196,7 +221,7 @@ function Fields({
       >
         <Button onClick={cancel}>{t.actions.cancel}</Button>
         <Button type="submit" variant="primary">
-          {t.actions.save}
+          {existing ? t.actions.save : t.vault.add}
         </Button>
       </FormActions>
     </Form>

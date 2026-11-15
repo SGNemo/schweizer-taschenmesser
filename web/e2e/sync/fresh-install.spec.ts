@@ -23,7 +23,10 @@ async function ready(page: Page, url: string) {
 }
 
 async function save(page: Page) {
-  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+    .click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
@@ -49,7 +52,7 @@ async function finishSetup(page: Page) {
 
 async function addInvoice(page: Page) {
   await ready(page, '/invoices?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Rechnung hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Rechnung eintragen' });
   await dialog.getByLabel('Empfänger', { exact: true }).fill('Stadtwerke Beispiel');
   await dialog.getByLabel('Betrag').fill('89,90');
   await dialog.getByLabel('Fällig am').fill('2026-10-05');
@@ -58,7 +61,7 @@ async function addInvoice(page: Page) {
 
 async function addTransaction(page: Page) {
   await ready(page, '/finance?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Buchung eintragen' });
   await dialog.getByRole('button', { name: 'Ausgabe', exact: true }).click();
   await dialog.getByLabel('Betrag').fill('12,50');
   await dialog.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });

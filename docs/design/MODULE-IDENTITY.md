@@ -1,6 +1,6 @@
 # Module identity v3.1 – rules for every module
 
-> **Identity 4.0 (UI audit 2026-11) changes the module head and the navigation around it:** the section [Identity 4.0 – draft](#identity-40--draft) at the end replaces "Frame – who owns what", "Head variants" and the `head` column of the mapping below for the module frame. Palette, signatures, widgets, sidebar and the stripe rule stay as written here.
+> **Identity 4.0 (UI audit 2026-11) changes the module head and the navigation around it:** the section [Identity 4.0](#identity-40) at the end replaces "Frame – who owns what", "Head variants" and the `head` column of the mapping below for the module frame. Palette, signatures, widgets, sidebar and the stripe rule stay as written here.
 
 Binding for every module and for new ones. Origin: [identity-v3/](identity-v3/) (diagnosis, concept, mockups), audit and fix packages: [identity-v3-audit/](identity-v3-audit/01-findings.md) (v3.1 = the foundation fix package; sheets `identity-v3/shots/frame-v31-*.jpg`). Decisions: [ui-shell](../decisions/ui-shell.md) "Module identity v3" and "Identity v3.1". It extends [DESIGN-SPEC](DESIGN-SPEC.md) and [FOCUS-GUIDELINES](FOCUS-GUIDELINES.md).
 
@@ -69,13 +69,13 @@ Every id in `SIGNATURES` has a **mark** (`SignatureMark`, 24-grid line drawing i
 - **Palette v3:** `--mod-<hue>` for lime … orchid (26° HSL steps) and slate. Each ≥ 3:1 on the surfaces and ≥ 25° from danger, accent, warning and success; `--info` sits next to ocean/sky and only warns; the accent variants (teal, coral, lagoon) share a hue family with a module or a state by geometry – the pairs are pinned in `tokens.test.ts`, a new one fails.
 - `--text-on-tint`: the one quiet ink on a tinted head or widget zone (light `--text` 84 % over the surface, dark 94 %; ≥ 4.5:1 on the 40 % tint of every hue). `--text-muted`/`--text-3` never on the band.
 - `--font-serif`, `--weight-light`: the type accents; no bare `font-weight` number or font stack outside `tokens.css` (`tokens.test.ts` ratchet, module files listed until their package cleans them).
-- `--head-h-tall`/`--head-h-compact` (phone values), `--card-pad` (cards and the widget head zone), `--focus` on the default (orange) accent hue in both themes – it stays orange under the teal/coral/lagoon accents, so a ring never blends into the accent it surrounds –, `--slot-s`/`--slot-m`/`--slot-extra` (slot sizes), `[data-hue2]` → `--module-color-2`.
+- `--head-h-tall`/`--head-h-compact` (phone values), `--card-pad` (cards and the widget head zone), `--focus` on the default (orange) accent hue in both themes – it stays orange under the teal/coral/lagoon accents, so a ring never blends into the accent it surrounds –, `--slot-s`/`--slot-extra` (slot sizes), `[data-hue2]` → `--module-color-2`.
 - `--widget-tint` 14 %, `--pattern-head` 0.06 (dark 0.03), `--pattern-widget` 0.04 (dark 0.02; light lines on a dark tint stand out more, AE2), `--group-tint` 6 % (neutral on `--text-3` in the library).
 - **"Ruhig" and "Modulfarben: Aus"** flatten the hues to grey, lower the tints and set `--area-pattern: none` (not painted). Shape and signature stay.
 
 ## Widgets
 
-The frame (`home/Home.module.css`, `data-widget`, `data-hue`, `data-area`): a head zone tinted `--widget-tint`, the module icon on a tinted plate, the area's pattern behind the content. The grid gives every size class its height (`align-items: start`, s/m/l minimum heights); cards never stretch to the row. **Only what matters today**; urgency stays in the card, the tint never signals state. Bars and rings fill with `--module-color`; `--accent` stays the primary action. **Widget titles are unique app-wide** (registry test).
+The frame (`home/Home.module.css`, `data-widget`, `data-hue`; Identity 4.0, package 0b-7): a tone step (`--surface-raised`) without a tinted head, pattern or wash; the module icon on a tinted plate, the signature mark at the end of the head. A card is as high as its content (`align-items: start`, no minimum height per size class; size classes are widths); cards never stretch to the row. **Only what matters today**; urgency stays in the card, the tint never signals state. Bars and rings fill with `--module-color`; `--accent` stays the primary action. **Widget titles are unique app-wide** (registry test).
 
 | Variant | Shape | Body in `@/ui/widgets` |
 | --- | --- | --- |
@@ -95,7 +95,7 @@ Default order: saved positions first, then the manifest order (no spreading by s
 
 ## Sidebar, scrollbars, overview head
 
-- **Sidebar** (`layout/Sidebar`; Identity 4.0, package 0b-R): on `--bg` in tone steps, no frame, no wash. Brand row; favourites as a sunken track of icons in their module hue, the current one a raised chip; a folded area is its head row, the open one a raised group; module icons in their hue (a quiet mark of what is what, grey in "Ruhig" / "Modulfarben: Aus"), only the current module also fills its 16 % capsule with it (text `--text`); no tinted chips, no wash; Übersicht, Bibliothek and Einstellungen are current as the same capsule in grey, without accent. Collapsed to a rail where the **area colour** lives (with the bottom navigation). Guard: `e2e/seed/frame.seed.spec.ts`. Low pointer screens (≤ 1100 px high): 36 px rows, 2 px group padding, 36 px favourites, 28 px area heads, so every area and module fits 1920 × 1080 without scrolling (overflow spec).
+- **Sidebar** (`layout/Sidebar`; Identity 4.0, package 0b-R): on `--bg` in tone steps, no frame, no wash. Brand row; favourites as a sunken track of icons in their module hue, the current one a raised chip; a folded area is its head row, the open one a raised group; module icons in their hue (a quiet mark of what is what, grey in "Ruhig" / "Modulfarben: Aus"), only the current module also fills its 16 % capsule with it (text `--text`); no tinted chips, no wash; Übersicht, Bibliothek and Einstellungen are current as the same capsule in grey, without accent. Collapsed to a rail where the **area colour** lives (with the bottom navigation): every area's icon is in its colour, the active area also fills its tile. Guard: `e2e/seed/frame.seed.spec.ts`. Low pointer screens (≤ 1100 px high): 36 px rows, 2 px group padding, 36 px favourites, 28 px area heads, so every area and module fits 1920 × 1080 without scrolling (overflow spec).
 - **Scrollbars:** thin, transparent until hover/scroll (`core/shell/scrollbars.ts`); the sidebar list uses `ui/OverlayScroll`.
 - **Overview head** (`home/OverviewHead`): greeting by the hour, date, weather line, calm tools; "Jetzt wichtig" cards; day cards on a time rail.
 
@@ -159,9 +159,9 @@ Not module pages, so no band: `pages/settings/PageHead` on `ui/HeadSurface` as a
 
 **Choices:** a checkbox that needs an explanation takes `description` (title in the name, detail as `aria-describedby`); a group of them sits in `ChoiceList` (framed, one hairline between rows) instead of one long sentence per box.
 
-## Identity 4.0 – draft
+## Identity 4.0
 
-In force in the code since package 0b-2 (UI audit 2026-11, [PACKAGES](ui-audit-2026-11/PACKAGES.md), rules 2–4); "draft" until the acceptance sweep 0b-8 makes it "valid". Decision: [ui-shell](../decisions/ui-shell.md) "Identity 4.0 head and navigation".
+In force in the code since package 0b-2 (UI audit 2026-11, [PACKAGES](ui-audit-2026-11/PACKAGES.md), rules 2–4); **valid** since the acceptance sweep 0b-8 (2026-11-14, [REPORT „Abschlussmessung 2“](ui-audit-2026-11/REPORT.md#abschlussmessung-2-2026-11-14): 8 × erfüllt, 2 × teils, 0 × nicht). Decision: [ui-shell](../decisions/ui-shell.md) "Identity 4.0 head and navigation".
 
 **Frame.** `layout/AreaFrame` wraps every module page in a head and the `PageContainer`:
 

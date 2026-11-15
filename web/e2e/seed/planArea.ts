@@ -168,7 +168,8 @@ export async function checkPlanPage(
   expect.soft(m.borders, `${path}: framed elements in main (${named})`).toBe(0);
   expect.soft(m.shadows, `${path}: shadows in main (${named})`).toBe(0);
   expect.soft(m.signatureBlocks, `${path}: signature blocks`).toBe(0);
-  // The measurement reads the dark neutral steps as colour (decisions: calm guard), so colour is counted in light.
+  // Colour is counted in light, the theme of the stimulus budget: the tone steps are plain in both themes (#796),
+  // but in dark the measurement still reads the module tints over the surface as saturated (0b-8 topic E).
   if (theme === 'light')
     expect
       .soft(m.colouredAboveFold, `${path}: coloured text and surfaces above the fold`)
@@ -181,7 +182,7 @@ export async function checkPlanPage(
     if (rule.action)
       await expect
         .soft(page.getByTestId('bottom-plus'), `${path}: the plus is the page's action`)
-        .toHaveAccessibleName(/\S+ eintragen$/);
+        .toHaveAccessibleName(/\S+ eintragen$|^Neue \S+$/);
     // Rule 5: the page starts on the first screen.
     expect.soft(r.contentY, `${path}: first content below the head`).not.toBeNull();
     expect

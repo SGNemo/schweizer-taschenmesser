@@ -15,6 +15,8 @@ interface Mock {
   labels: string[];
   /** The sender is a person (the filter „Persönlich“). */
   personal: boolean;
+  /** The person's own answer as the newest message (labels `SENT`): the „Beantwortet?“ hint once it is planned. */
+  reply?: { text: string; days: number; time: string };
 }
 
 const ME = { name: 'Test Person', email: 'test@example.org' };
@@ -91,6 +93,17 @@ const MAILS: Mock[] = [
     labels: ['INBOX'],
     personal: true,
   },
+  {
+    from: { name: 'Lisa Beispiel', email: 'lisa@example.org' },
+    subject: 'Umzugshilfe am Sonntag?',
+    text: 'Hi! Kannst du mir am Sonntag beim Umzug helfen? Ab 10 Uhr wäre super. Lisa',
+    days: -1,
+    time: '18:30',
+    unread: false,
+    labels: ['INBOX', 'SENT'],
+    personal: true,
+    reply: { text: 'Klar, ich bin um 10 Uhr da.', days: -1, time: '20:05' },
+  },
 ];
 
 function seed(ctx: SeedContext): SeedRows {
@@ -98,47 +111,74 @@ function seed(ctx: SeedContext): SeedRows {
   const rows = MAILS.slice(0, n);
   const thread = rows.map((m, i) => {
     const threadId = ctx.id('mail', 'thread', i);
+    const newest = m.reply ?? m;
     return {
       id: `demo|${threadId}`,
       data: {
         accountKey: 'demo',
         threadId,
-        sortKey: ctx.at(m.days, m.time),
+        sortKey: ctx.at(newest.days, newest.time),
         unread: m.unread,
         inbox: m.labels.includes('INBOX'),
         demo: {
-          from: m.from,
+          // As the provider lists it: the newest message's sender and preview.
+          from: m.reply ? ME : m.from,
           subject: m.subject,
-          snippet: m.text.slice(0, 80).replace(/\s+/g, ' '),
-          messageCount: 1,
+          snippet: newest.text.slice(0, 80).replace(/\s+/g, ' '),
+          messageCount: m.reply ? 2 : 1,
           hasAttachment: false,
           labelIds: m.labels,
           personal: m.personal,
-          lastMessageId: `${threadId}-m1`,
+          lastMessageId: `${threadId}-m${m.reply ? 2 : 1}`,
+          // What the list reads from the newest message's labels (`SENT`); a seed row stands for a fetched list.
+          ...(m.reply ? { lastFromMe: true as const } : {}),
         },
       },
     };
   });
-  const body = rows.map((m, i) => {
+  const body = rows.flatMap((m, i) => {
     const threadId = ctx.id('mail', 'thread', i);
     const messageId = `${threadId}-m1`;
-    return {
-      id: `demo|${messageId}`,
-      data: {
-        accountKey: 'demo',
-        messageId,
-        threadId,
-        sortKey: ctx.at(m.days, m.time),
-        demo: {
-          from: m.from,
-          to: [ME],
-          subject: m.subject,
-          date: ctx.at(m.days, m.time),
-          text: m.text,
-          html: m.html,
+    const answer = m.reply
+      ? [
+          {
+            id: `demo|${threadId}-m2`,
+            data: {
+              accountKey: 'demo',
+              messageId: `${threadId}-m2`,
+              threadId,
+              sortKey: ctx.at(m.reply.days, m.reply.time),
+              demo: {
+                from: ME,
+                to: [m.from],
+                subject: `Re: ${m.subject}`,
+                date: ctx.at(m.reply.days, m.reply.time),
+                text: m.reply.text,
+              },
+            },
+          },
+        ]
+      : [];
+    return [
+      {
+        id: `demo|${messageId}`,
+        data: {
+          accountKey: 'demo',
+          messageId,
+          threadId,
+          sortKey: ctx.at(m.days, m.time),
+          demo: {
+            from: m.from,
+            to: [ME],
+            subject: m.subject,
+            date: ctx.at(m.days, m.time),
+            text: m.text,
+            html: m.html,
+          },
         },
       },
-    };
+      ...answer,
+    ];
   });
   return { thread, body };
 }

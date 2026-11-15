@@ -11,7 +11,7 @@ async function addJob(page: Page, name: string, rate: string) {
   const dialog = page.getByRole('dialog', { name: 'Projekt eintragen' });
   await dialog.getByLabel('Name', { exact: true }).fill(name);
   await dialog.getByLabel('Stundensatz (€)').fill(rate);
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
@@ -41,7 +41,7 @@ test.describe('Time tracking (plan group, new module)', () => {
     const dialog = page.getByRole('dialog', { name: 'Zeit eintragen' });
     await dialog.getByLabel('Beginn').fill('08:00');
     await dialog.getByLabel('Ende', { exact: true }).fill('10:30');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.getByRole('button', { name: 'Auswertung', exact: true }).click();
     await expect(page.getByTestId('report-total')).toHaveText('2 Std 30 Min');

@@ -10,7 +10,15 @@ export const settingsSchema = z.object({
 export const settings: ModuleSettings = {
   schema: settingsSchema,
   defaults: { idleMinutes: 15 },
-  keywords: ['Stempeluhr', 'Stundenzettel', 'Stundensatz', 'Abwesenheitsfrage'],
+  // „Arbeitszeit“: the word a person types for it (the plan row „Arbeitszeit eintragen“ has no way here, W14).
+  keywords: [
+    'Arbeitszeit',
+    'working hours',
+    'Stempeluhr',
+    'Stundenzettel',
+    'Stundensatz',
+    'Abwesenheitsfrage',
+  ],
   fields: [
     {
       key: 'idleMinutes',

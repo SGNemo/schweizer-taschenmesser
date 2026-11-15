@@ -16,7 +16,7 @@ const MAX_ITEMS = 2;
  */
 export function NowStrip({ modules }: { modules: readonly string[] }) {
   const [focus] = useFocusSettings();
-  const items = useAttentionItems();
+  const items = useAttentionItems(modules);
   const { pathname } = useLocation();
   if (!focus.moduleNow || !items) return null;
   const mine = rankAttention(

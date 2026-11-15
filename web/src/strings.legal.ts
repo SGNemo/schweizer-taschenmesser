@@ -35,13 +35,13 @@ export const tLegal = defineBundle(
       },
       sync: {
         title: 'Sync mit deinem eigenen Server',
-        what: 'Änderungen deiner Einträge und Einstellungen (Sammlung, Eintrags-Id, Feldname, Zeitstempel, Wert). Mit Passphrase werden die Werte Ende-zu-Ende verschlüsselt; Sammlung, Id, Feld und Zeitstempel bleiben für den Server lesbar. Zugangsdaten, Schlüssel und lokale Stände werden nie übertragen.',
+        what: 'Änderungen deiner Einträge und Einstellungen (Sammlung, Eintrags-Id, Feldname, Zeitstempel, Wert). Mit Passwortsatz werden die Werte Ende-zu-Ende verschlüsselt; Sammlung, Id, Feld und Zeitstempel bleiben für den Server lesbar. Zugangsdaten, Schlüssel und lokale Stände werden nie übertragen.',
         to: 'Der Server, dessen Adresse du selbst einträgst und betreibst. Kein Dienst des Betreibers von Nemo.',
         when: 'Nur nach dem Verbinden unter Sync & Backup: beim Start, etwa jede Minute, bei Änderungen.',
       },
       push: {
         title: 'Web-Push-Erinnerungen (optional)',
-        what: 'Titel, Text und Link der Erinnerungen der nächsten zwei Wochen sowie die Push-Adresse deines Browsers. Mit Passphrase verschlüsselt.',
+        what: 'Titel, Text und Link der Erinnerungen der nächsten zwei Wochen sowie die Push-Adresse deines Browsers. Mit Passwortsatz verschlüsselt.',
         to: 'Dein Sync-Server und von dort der Push-Dienst deines Browser-Herstellers (z. B. Google, Mozilla, Apple, Microsoft).',
         when: 'Nur wenn du Push-Erinnerungen einschaltest.',
       },
@@ -71,7 +71,7 @@ export const tLegal = defineBundle(
       },
       google: {
         title: 'Google-Verbindung (Windows)',
-        what: 'Anmeldung bei Google mit deiner eigenen OAuth-Anwendung (nur Lesen). Kalender: Termine der gewählten Kalender, ab 60 Tage zurück bis 400 Tage voraus. E-Mail: nur auf deinen Klick Absender, Betreff, Datum und Abmelde-Kopfzeile passender Mails, nie der Inhalt. Berechtigungen: calendar.readonly und gmail.readonly, je nach Auswahl.',
+        what: 'Anmeldung bei Google mit deiner eigenen OAuth-Anwendung (nur Lesen). Kalender: Termine der gewählten Kalender, ab 60 Tage zurück bis 400 Tage voraus. E-Mail: nur auf deinen Klick Absender, Betreff, Datum und Abmelde-Kopfzeile passender Mails und ob die letzte Nachricht von dir ist (nur auf dem Gerät), nie der Inhalt. Berechtigungen: calendar.readonly und gmail.readonly, je nach Auswahl.',
         to: 'Google (accounts.google.com, oauth2.googleapis.com, www.googleapis.com, gmail.googleapis.com). Der Betreiber von Nemo erhält nichts.',
         when: 'Nur nach dem Verbinden. Kalender-Abgleich im Hintergrund etwa alle 30 Minuten. Trennen widerruft den Zugriff. Das Zugriffs-Token läuft ab, wenn dein Google-Projekt im Status „Testing“ ist (nach 7 Tagen): dann „Neu anmelden“.',
       },
@@ -315,7 +315,7 @@ export const tLegal = defineBundle(
         },
         google: {
           title: 'Google connection (Windows)',
-          what: 'Sign-in to Google with your own OAuth application (read only). Calendar: events of the chosen calendars, from 60 days back to 400 days ahead. Email: only when you click, sender, subject, date and unsubscribe header of matching mails, never the content. Permissions: calendar.readonly and gmail.readonly, depending on your choice.',
+          what: 'Sign-in to Google with your own OAuth application (read only). Calendar: events of the chosen calendars, from 60 days back to 400 days ahead. Email: only when you click, sender, subject, date and unsubscribe header of matching mails and whether the last message is yours (on this device only), never the content. Permissions: calendar.readonly and gmail.readonly, depending on your choice.',
           to: 'Google (accounts.google.com, oauth2.googleapis.com, www.googleapis.com, gmail.googleapis.com). The maintainer of Nemo receives nothing.',
           when: 'Only after connecting. Calendar sync in the background about every 30 minutes. Disconnecting revokes access. The access token expires if your Google project is in “Testing” status (after 7 days): then use “Neu anmelden” (sign in again).',
         },

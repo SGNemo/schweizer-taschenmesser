@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { parseEnex } from './parse';
+import { enexTime, parseEnex } from './parse';
 import { enmlToMarkdown } from './enml';
 
 const fixture = readFileSync(new URL('../__fixtures__/notes.enex', import.meta.url), 'utf8');
@@ -21,6 +21,17 @@ describe('ENEX', () => {
     expect(first.body).toContain('- [ ] Tee kaufen');
     expect(first.body).toContain('[Rezept](https://example.org/rezept?a=1&b=2)');
     expect(first.body).toContain('#Haushalt #Zu-Hause');
+  });
+
+  it('keeps the note’s own dates (created, updated)', () => {
+    expect(result.notes[0]).toMatchObject({
+      createdAt: Date.UTC(2026, 0, 1, 9),
+      updatedAt: Date.UTC(2026, 0, 1, 10),
+    });
+    expect(enexTime(' 20230115T093000Z ')).toBe(Date.UTC(2023, 0, 15, 9, 30));
+    expect(enexTime('20230230T093000Z')).toBeUndefined();
+    expect(enexTime('2023-01-15')).toBeUndefined();
+    expect(enexTime(undefined)).toBeUndefined();
   });
 
   it('counts attachments and empty notes instead of storing them', () => {

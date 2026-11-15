@@ -12,6 +12,7 @@ Nothing here is imported by the app. Mockups are standalone HTML with invented d
 | [site/](site/ROUND-5.md) | website rounds | running |
 | [identity-v3/](identity-v3/) | concept and mockups behind MODULE-IDENTITY (code comments cite it) | reference |
 | [identity-v3-audit/](identity-v3-audit/03-acceptance.md) | findings and acceptance of v3.1 | finished, reference |
+| [planner-hub/](planner-hub/README.md) | planner as the hub: analysis, link contract, redesign directions, packages | running |
 | [plan/](plan/CONCEPT.md) | planner concept and engine prototype (code and tests cite it) | finished, reference |
 | [sync-lan/](sync-lan/CONCEPT.md) | LAN sync concept, notes, review, prototype | finished, reference |
 | [settings-v3/](settings-v3/ROUND-1.md) | settings rounds 1–3 (decisions cite them) | finished, reference |

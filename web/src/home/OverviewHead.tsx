@@ -10,16 +10,19 @@ import styles from './OverviewHead.module.css';
 const WeatherGlance = lazyComponent(() => import('./WeatherGlance'));
 
 /**
- * Head of the overview (identity v3): a greeting by the time of day, the date with the weather, and the calm tools on the right.
+ * Head of the overview (identity 4.0): a greeting by the time of day, the date with the weather, and the calm tools on the right.
  * The h1 keeps the page's name for screen readers ("Übersicht: Guten Morgen"); the greeting carries no name and no exclamation.
  */
 export function OverviewHead({
   weather = false,
   tools,
+  compactTools = false,
 }: {
   /** The weather module is on: show the short weather line. */
   weather?: boolean;
   tools?: ReactNode;
+  /** The tools are the three of the plain view (Cockpit, view switch, pencil): one row on a phone. */
+  compactTools?: boolean;
 }) {
   const to = tOverview.use();
   const day = today();
@@ -41,7 +44,11 @@ export function OverviewHead({
           ) : null}
         </div>
       </div>
-      {tools ? <div className={styles.tools}>{tools}</div> : null}
+      {tools ? (
+        <div className={styles.tools} data-compact={compactTools ? '' : undefined}>
+          {tools}
+        </div>
+      ) : null}
     </header>
   );
 }

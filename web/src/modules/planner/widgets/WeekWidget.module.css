@@ -1,0 +1,9 @@
+/* „Rest verteilen“ in the evening: one quiet text action under the rows (a link, never a button of its own). */
+.rest {
+  margin: var(--space-2) 0 0;
+}
+.rest a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}

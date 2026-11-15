@@ -45,6 +45,7 @@ import {
 import { Breadcrumb, type Crumb } from './Breadcrumb';
 import { CATEGORY_LOOK, NAV_GROUPS } from './categoryLook';
 import { SettingsHead } from './components/SettingsHead';
+import { SettingsSearchSlot } from './searchSlot';
 import { CategoryStatus } from './CategoryStatus';
 import { ModuleList, ModuleSettingsPage } from './ModuleSettingsPage';
 import { QuickBar, QuickInline } from './QuickBar';
@@ -52,12 +53,15 @@ import { SettingsOverview } from './SettingsOverview';
 import { SettingsToc } from './SettingsToc';
 import { ScopeLabel } from './SettingExtras';
 import { useSettingsSections } from './useSections';
+import { useSettingsStatus } from './useSettingsStatus';
 import styles from './SettingsLayout.module.css';
 
 /** Desktop two-column layout from this width; below it the categories are a list (first level). */
 import { WIDE_QUERY as MASTER_DETAIL_QUERY } from './wide';
 /** Third column (table of contents) from this width. */
 const TOC_QUERY = '(min-width: 1440px)';
+/** Phone: the settings search field, opened from the icon in the title line. */
+const SEARCH_ID = 'settings-search';
 /** How long a deep-linked settings section stays highlighted. */
 const HIGHLIGHT_MS = 1600;
 
@@ -66,26 +70,47 @@ const HIGHLIGHT_MS = 1600;
  * identity v3.1 package 3) it heads the category column, so the page loses a band and the search sits next to the
  * list it filters; its hits open as an overlay over the content.
  */
-function SettingsSearch({ inNav }: { inNav?: boolean }) {
+function SettingsSearch({
+  inNav,
+  id,
+  onDone,
+  onEmptyEscape,
+}: {
+  inNav?: boolean;
+  id?: string;
+  /** Phone: a hit was chosen (the field closes again). */
+  onDone?: () => void;
+  /** Phone: Escape in an empty field closes it. */
+  onEmptyEscape?: () => void;
+}) {
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
   const sections = useSettingsSections();
+  const input = useRef<HTMLInputElement>(null);
   const results = useMemo(
     () => searchSettings(sections, SETTINGS_CATEGORIES, query),
     [sections, query],
   );
+  // Phone: the field opens from the icon in the title line with the cursor in it (a layout effect, so the focus still
+  // belongs to the tap and the on-screen keyboard opens).
+  useLayoutEffect(() => {
+    if (!inNav) input.current?.focus();
+  }, [inNav]);
   const go = (r: (typeof results)[number]) => {
     setQuery('');
     void navigate(settingsPath(r.category, r.sectionId, r.fieldKey));
+    onDone?.();
   };
   return (
     <div
+      id={id}
       role="search"
       className={
         inNav ? `${styles.search} ${styles.navSearch}` : `${styles.search} ${styles.stickySearch}`
       }
     >
       <TextField
+        ref={input}
         label={t.settings.search}
         labelHidden
         type="search"
@@ -95,7 +120,10 @@ function SettingsSearch({ inNav }: { inNav?: boolean }) {
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && results[0]) go(results[0]);
-          if (e.key === 'Escape') setQuery('');
+          if (e.key === 'Escape') {
+            if (query) setQuery('');
+            else onEmptyEscape?.();
+          }
         }}
       />
       {query.trim() ? (
@@ -113,7 +141,10 @@ function SettingsSearch({ inNav }: { inNav?: boolean }) {
                 <li key={`${r.sectionId}:${r.fieldKey ?? ''}`}>
                   <Link
                     to={settingsPath(r.category, r.sectionId, r.fieldKey)}
-                    onClick={() => setQuery('')}
+                    onClick={() => {
+                      setQuery('');
+                      onDone?.();
+                    }}
                     className={styles.result}
                   >
                     <span>{r.label}</span>
@@ -332,7 +363,10 @@ export function CategoryNav({ list }: { list?: boolean }) {
 /** `/settings`: the overview cards on the desktop, the category list on phones; old `#anchor` links are mapped. */
 export function SettingsIndex() {
   const wide = useMediaQuery(MASTER_DETAIL_QUERY);
-  const ready = useSettingsSections().length > 0;
+  // The status lines above come with their own reads (sync, backup, updates): on the phone the list below waits for
+  // them, or it would be drawn first and pushed down when they arrive (seed guard `status-loading`).
+  const statusKnown = useSettingsStatus() !== undefined;
+  const ready = useSettingsSections().length > 0 && (wide || statusKnown);
   const { hash } = useLocation();
   const legacy = legacyTarget(hash);
   if (legacy) return <Navigate to={legacy} replace />;
@@ -343,7 +377,7 @@ export function SettingsIndex() {
       {wide ? <QuickBar /> : null}
       {/* On the phone the category list below says the same (title, one line, state); the cards would only repeat it. */}
       {wide ? <SettingsOverview /> : null}
-      {wide ? null : <CategoryNav list />}
+      {wide || !ready ? null : <CategoryNav list />}
       {/* After the list is there: the group below it must not be pushed down when the categories arrive. */}
       {wide || !ready ? null : <QuickBar />}
     </div>
@@ -464,7 +498,7 @@ function useChanged(plan?: ResetPlan): boolean {
 const PendingSections = createContext<{ add: () => void; done: () => void } | null>(null);
 
 /** The fallback of a section that is still loading: nothing to see, it only tells the tab that it waits. */
-function PendingSection() {
+export function PendingSection() {
   const pending = useContext(PendingSections);
   useLayoutEffect(() => {
     pending?.add();
@@ -474,11 +508,11 @@ function PendingSection() {
 }
 
 /** After the last section's code has arrived its stored values still load (a few ms): the tab waits this long. */
-const TAB_SETTLE_MS = 120;
+export const TAB_SETTLE_MS = 120;
 /** Whatever still waits after this long, the tab is shown: a section that hangs must never hide the others. */
-const TAB_WAIT_MAX_MS = 1500;
+export const TAB_WAIT_MAX_MS = 1500;
 /** A wait shorter than this shows nothing at all (no skeleton flashing up on every tab switch). */
-const TAB_SKELETON_AFTER_MS = 300;
+export const TAB_SKELETON_AFTER_MS = 300;
 
 /**
  * The sections of a tab, shown in one piece (Identity 4.0, package 0b-E): every section is its own chunk and reads
@@ -488,7 +522,7 @@ const TAB_SKELETON_AFTER_MS = 300;
  * hidden again (a part that loads later appears in place, as before). A tab whose code is already there waits
  * only the settle; a section that hangs is cut off after `TAB_WAIT_MAX_MS`, so it can hide nothing but itself.
  */
-function TabBody({ children }: { children: ReactNode }) {
+export function TabBody({ children }: { children: ReactNode }) {
   const [shown, setShown] = useState(false);
   const [slow, setSlow] = useState(false);
   const waiting = useRef(0);
@@ -739,10 +773,52 @@ export function SettingsLayout() {
       ? sectionsOf(sections, open).map((x) => ({ id: x.id, title: x.title }))
       : [];
   const showToc = wide && tocWide && entries.length >= 3;
+  // Phone: the search is an icon in the title line (0b-E); a tap opens the field under the head with the cursor in it.
+  const [searchOpen, setSearchOpen] = useState(false);
+  const toggle = useRef<HTMLButtonElement>(null);
+  const closeSearch = () => {
+    setSearchOpen(false);
+    toggle.current?.focus();
+  };
+  // A hit closes the field behind the jump; the focus goes to the icon in the new head (it renders with the page),
+  // never to <body>, and the page stays where the jump put it.
+  const searchDone = () => {
+    setSearchOpen(false);
+    requestAnimationFrame(() => toggle.current?.focus({ preventScroll: true }));
+  };
+  // Opened on the phone, it never reopens by itself after a turn to the desktop width and back (reset while
+  // rendering, React's pattern for state that follows a prop).
+  const [wasWide, setWasWide] = useState(wide);
+  if (wasWide !== wide) {
+    setWasWide(wide);
+    if (wide) setSearchOpen(false);
+  }
   return (
     <>
-      {wide ? null : <SettingsSearch />}
-      {wide ? null : <SettingsHead />}
+      {wide ? null : (
+        <SettingsSearchSlot.Provider
+          value={
+            <button
+              ref={toggle}
+              type="button"
+              className={styles.searchToggle}
+              aria-label={t.settings.search}
+              title={t.settings.search}
+              aria-expanded={searchOpen}
+              aria-controls={searchOpen ? SEARCH_ID : undefined}
+              onClick={() => (searchOpen ? closeSearch() : setSearchOpen(true))}
+              data-testid="settings-search-toggle"
+            >
+              <Icon name="search" />
+            </button>
+          }
+        >
+          <SettingsHead />
+        </SettingsSearchSlot.Provider>
+      )}
+      {!wide && searchOpen ? (
+        <SettingsSearch id={SEARCH_ID} onDone={searchDone} onEmptyEscape={closeSearch} />
+      ) : null}
       {wide ? (
         <div className={`${styles.split} ${showToc ? styles.splitToc : ''}`}>
           <div className={styles.navCol}>

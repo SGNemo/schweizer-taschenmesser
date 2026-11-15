@@ -125,19 +125,36 @@ for (const vp of VIEWPORTS) {
       await page.goto('/');
       await expect(page.locator('main h1')).toBeVisible();
       await expect(page.getByTestId(/^widget-/).first()).toBeVisible();
-      const boxes = await page.evaluate(() =>
-        [...document.querySelectorAll<HTMLElement>('[data-testid^="widget-"]')].map((el) => ({
-          top: Math.round(el.getBoundingClientRect().top + window.scrollY),
-          height: Math.round(el.getBoundingClientRect().height),
-          span: getComputedStyle(el).gridRowStart,
-        })),
-      );
-      const seen = new Map<string, number>();
-      for (const b of boxes) {
-        const key = `${b.top}/${b.span}`;
-        if (seen.has(key)) expect(b.height, `band ${key}`).toBe(seen.get(key));
-        else seen.set(key, b.height);
-      }
+      // Cards are as high as their content (package 0b-7) and their span follows their height one rendering step
+      // later (ResizeObserver, `home/masonry.ts`): a card whose data arrives late grows first and re-packs in the
+      // next frame. Measure the shown grid after a frame and until it is at rest; a band that stays uneven fails.
+      await expect(page.locator('[data-settling]')).toHaveCount(0);
+      await expect(async () => {
+        const boxes = await page.evaluate(
+          () =>
+            new Promise<{ top: number; height: number; span: string }[]>((resolve) =>
+              requestAnimationFrame(() =>
+                setTimeout(() =>
+                  resolve(
+                    [...document.querySelectorAll<HTMLElement>('[data-testid^="widget-"]')].map(
+                      (el) => ({
+                        top: Math.round(el.getBoundingClientRect().top + window.scrollY),
+                        height: Math.round(el.getBoundingClientRect().height),
+                        span: getComputedStyle(el).gridRowStart,
+                      }),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        );
+        const seen = new Map<string, number>();
+        for (const b of boxes) {
+          const key = `${b.top}/${b.span}`;
+          if (seen.has(key)) expect(b.height, `band ${key}`).toBe(seen.get(key));
+          else seen.set(key, b.height);
+        }
+      }).toPass({ timeout: 5_000 });
     });
 
     test('the calendar month grid uses the available height and width', async ({ page }) => {
@@ -199,11 +216,13 @@ test.describe('wide screens (1920x1080)', () => {
     await page.getByLabel('Master-Passwort', { exact: true }).fill('Demo-Master-Passwort-1'); // gitleaks:allow
     await page.getByLabel('Master-Passwort wiederholen').fill('Demo-Master-Passwort-1'); // gitleaks:allow
     await page.getByRole('button', { name: 'Tresor erstellen' }).click();
-    await page.getByRole('button', { name: 'Zugang hinzufügen' }).click({ timeout: 30_000 });
-    const form = page.getByRole('dialog', { name: 'Zugang hinzufügen' });
+    await page
+      .getByRole('button', { name: 'Zugang eintragen', exact: true })
+      .click({ timeout: 30_000 });
+    const form = page.getByRole('dialog', { name: 'Zugang eintragen' });
     await form.getByLabel('Name', { exact: true }).fill('Demo-Shop example.org');
     await form.getByLabel('Passwort', { exact: true }).fill('demo-passwort-000'); // gitleaks:allow
-    await form.getByRole('button', { name: 'Speichern' }).click();
+    await form.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     const panel = page.getByRole('complementary', { name: 'Details' });
     await expect(panel.getByRole('heading', { name: 'Demo-Shop example.org' })).toBeVisible();

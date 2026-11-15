@@ -13,6 +13,7 @@ export const setup: Strings['setup'] = {
   welcomeText:
     'Would you like to set up the app step by step? You can also do this later in Settings.',
   welcomeLater: 'Later',
+  welcomePlanDays: 'Plan my days',
   dialogTitle: 'Setup',
   stepOf: (n: number, total: number) => `Step ${n} of ${total}`,
   progressLabel: 'Setup progress',

@@ -1,6 +1,6 @@
 import { zipSync, strToU8 } from 'fflate';
 import { describe, expect, it } from 'vitest';
-import { expandFiles } from '../files';
+import { expandFiles, zipEntryDates } from '../files';
 import { runJob, isAbort } from '../run';
 import { detectSources } from '../registry';
 import { parseMarkdownFolder, placeOf } from './parse';
@@ -131,5 +131,40 @@ describe('jobs', () => {
     await expect(
       runJob('markdown', { files: [], binary: 0 }, { signal: ctl.signal }),
     ).rejects.toSatisfy(isAbort);
+  });
+});
+
+describe('D17 (round 5): ZIP entry dates', () => {
+  it('reads the modification time of each entry and passes it on with the file', () => {
+    const when = new Date(2025, 11, 1, 9, 30, 10);
+    const zip = zipSync({
+      'Vault/a.md': [strToU8('# A\nText'), { mtime: when }],
+      'Vault/ü.md': [strToU8('# Ü\nText'), { mtime: new Date(2024, 0, 2, 3, 4, 6) }],
+    });
+    const dates = zipEntryDates(zip);
+    expect(dates.get('Vault/a.md')).toBe(when.getTime());
+    expect(dates.get('Vault/ü.md')).toBe(new Date(2024, 0, 2, 3, 4, 6).getTime());
+    const expanded = expandFiles([{ name: 'v.zip', bytes: zip }]);
+    expect(expanded.files.find((f) => f.name === 'v.zip/Vault/a.md')?.modifiedAt).toBe(
+      when.getTime(),
+    );
+  });
+
+  it('a plain file keeps the picker date; garbage gives no dates', () => {
+    const out = expandFiles([{ name: 'n.md', bytes: strToU8('x'), modifiedAt: 42 }]);
+    expect(out.files[0]?.modifiedAt).toBe(42);
+    expect(zipEntryDates(strToU8('PK no zip')).size).toBe(0);
+  });
+
+  it('a note takes its front matter date, else the file date', () => {
+    const r = parseMarkdownFolder([
+      { name: 'V/a.md', text: '---\ncreated: 2025-12-01\n---\nA', modifiedAt: 7_000 },
+      { name: 'V/b.md', text: 'B', modifiedAt: 7_000 },
+      { name: 'V/c.md', text: 'C' },
+    ]);
+    const [a, b, c] = r.notes;
+    expect([a!.createdAt, a!.updatedAt]).toEqual([new Date(2025, 11, 1).getTime(), 7_000]);
+    expect([b!.createdAt, b!.updatedAt]).toEqual([7_000, 7_000]);
+    expect(c!.createdAt).toBeUndefined();
   });
 });

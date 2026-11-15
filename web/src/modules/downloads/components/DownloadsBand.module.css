@@ -1,3 +1,0 @@
-/* Nothing left to style: since Identity 4.0 (package 0b-6b) what runs is the head's own figure (`DownloadsPage.tsx`),
-   the arrow band is gone from the page. The file stays because the protected `ui/tokens.test.ts` reads it by name
-   ("head zone" test); the acceptance sweep 0b-8 removes both together. */

@@ -24,6 +24,55 @@ export interface ExpandedFiles {
 export interface RawFile {
   name: string;
   bytes: Uint8Array;
+  /** `File.lastModified` (epoch ms), when the picker knows it. */
+  modifiedAt?: number;
+}
+
+/**
+ * Modification time of every entry of a ZIP, from its central directory (DOS date and time, local
+ * time as the zip tool wrote it). Names are decoded like fflate does, so they match `unzipSync`.
+ * ZIP64 or a damaged directory gives an empty map: dates are a nicety, never a reason to fail.
+ */
+export function zipEntryDates(bytes: Uint8Array): Map<string, number> {
+  const out = new Map<string, number>();
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const u16 = (at: number) => view.getUint16(at, true);
+  const u32 = (at: number) => view.getUint32(at, true);
+  let eocd = -1;
+  for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 22 - 0xffff); i--)
+    if (u32(i) === 0x06054b50) {
+      eocd = i;
+      break;
+    }
+  if (eocd < 0) return out;
+  const count = Math.min(u16(eocd + 10), LIMITS.entries);
+  let at = u32(eocd + 16);
+  for (let n = 0; n < count; n++) {
+    if (at + 46 > bytes.length || u32(at) !== 0x02014b50) break;
+    const flags = u16(at + 8);
+    const time = u16(at + 12);
+    const date = u16(at + 14);
+    const nameLength = u16(at + 28);
+    const next = at + 46 + nameLength + u16(at + 30) + u16(at + 32);
+    if (next > bytes.length) break;
+    const name = strFromU8(bytes.subarray(at + 46, at + 46 + nameLength), !(flags & 0x800));
+    const month = (date >> 5) & 15;
+    const day = date & 31;
+    const valid = time >> 11 <= 23 && ((time >> 5) & 63) <= 59 && (time & 31) <= 29;
+    if (valid && month >= 1 && month <= 12 && day >= 1) {
+      const local = new Date(
+        (date >> 9) + 1980,
+        month - 1,
+        day,
+        time >> 11,
+        (time >> 5) & 63,
+        (time & 31) * 2,
+      );
+      if (local.getDate() === day) out.set(name, local.getTime());
+    }
+    at = next;
+  }
+  return out;
 }
 
 /** `..`, absolute paths and drive letters never leave the archive. */
@@ -69,7 +118,7 @@ export function expandFiles(
 ): ExpandedFiles {
   const out: ExpandedFiles = { files: [], binary: 0, refused: 0 };
   let textBytes = 0;
-  const take = (name: string, bytes: Uint8Array) => {
+  const take = (name: string, bytes: Uint8Array, modifiedAt?: number) => {
     const path = safePath(name);
     // Binaries in hidden folders of an export (plugins, git objects, trash) are not counted as
     // attachments; hidden text files stay readable for detection (`.obsidian/app.json`).
@@ -83,13 +132,13 @@ export function expandFiles(
       return;
     }
     textBytes += bytes.length;
-    out.files.push({ name: path, text: decode(bytes) });
+    out.files.push({ name: path, text: decode(bytes), ...(modifiedAt ? { modifiedAt } : {}) });
   };
   let done = 0;
   for (const file of raw) {
     if (hooks.cancelled?.()) break;
     if (!isZip(file.bytes)) {
-      take(file.name, file.bytes);
+      take(file.name, file.bytes, file.modifiedAt);
     } else {
       try {
         let seen = 0;
@@ -103,7 +152,14 @@ export function expandFiles(
           },
         });
         if (seen > LIMITS.entries) out.refused += seen - LIMITS.entries;
-        for (const [name, bytes] of Object.entries(entries)) take(`${file.name}/${name}`, bytes);
+        let dates = new Map<string, number>();
+        try {
+          dates = zipEntryDates(file.bytes);
+        } catch {
+          // no dates – the notes get the import date as before
+        }
+        for (const [name, bytes] of Object.entries(entries))
+          take(`${file.name}/${name}`, bytes, dates.get(name));
       } catch {
         out.refused++;
       }
