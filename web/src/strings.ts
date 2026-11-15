@@ -5469,7 +5469,7 @@ export const de = {
       warranty: 'Garantien',
       tax: 'Steuer',
       health: 'Gesundheit',
-      other: 'Sonstiges',
+      other: 'Ohne Kategorie',
     } as Record<string, string>,
     provider: 'Anbieter',
     startDate: 'Beginn',
@@ -5575,6 +5575,51 @@ export const de = {
       [expired > 0 ? `${expired} abgelaufen` : '', due > 0 ? `${due} mit Frist in Sicht` : '']
         .filter(Boolean)
         .join(' · '),
+    categoryAdmin: {
+      manage: 'Kategorien bearbeiten',
+      title: 'Kategorien',
+      add: 'Neue Kategorie',
+      editTitle: 'Kategorie bearbeiten',
+      name: 'Name',
+      colour: 'Farbe',
+      colourN: (n: number) => `Farbe ${n}`,
+      icon: 'Symbol',
+      iconNames: {
+        files: 'Ordner',
+        file: 'Blatt',
+        lock: 'Schloss',
+        receipt: 'Beleg',
+        wallet: 'Geldbörse',
+        home: 'Haus',
+        car: 'Auto',
+        heart: 'Herz',
+        calculator: 'Rechner',
+        package: 'Paket',
+        luggage: 'Koffer',
+        users: 'Personen',
+        umbrella: 'Schirm',
+      } as Record<string, string>,
+      up: (name: string) => `${name} nach oben`,
+      down: (name: string) => `${name} nach unten`,
+      edit: (name: string) => `${name} bearbeiten`,
+      remove: (name: string) => `${name} löschen`,
+      fixedHint:
+        '„Ohne Kategorie“ bleibt immer. Hierher kommen Unterlagen, deren Kategorie gelöscht wird.',
+      duplicate: 'Eine Kategorie mit diesem Namen gibt es schon.',
+      removeTitle: (name: string) => `„${name}“ löschen`,
+      inUse: (n: number, name: string) =>
+        n === 1 ? `1 Unterlage liegt in „${name}“.` : `${n} Unterlagen liegen in „${name}“.`,
+      keepsDocs: 'Keine Unterlage geht verloren: Sie kommen in die Kategorie, die du hier wählst.',
+      moveTo: 'Verschieben nach',
+      removeAndMove: 'Löschen und verschieben',
+      removed: (name: string) => `„${name}“ gelöscht`,
+      removedMoved: (name: string, n: number, target: string) =>
+        n === 1
+          ? `„${name}“ gelöscht · 1 Unterlage nach „${target}“ verschoben`
+          : `„${name}“ gelöscht · ${n} Unterlagen nach „${target}“ verschoben`,
+      created: (name: string) => `„${name}“ angelegt`,
+      done: 'Fertig',
+    },
     widgetSummary: (n: number) =>
       n === 1 ? '1 Unterlage braucht einen Blick' : `${n} Unterlagen brauchen einen Blick`,
   },

@@ -21,21 +21,36 @@ import {
 import { endOf, formatSize, MAX_FILE_BYTES } from '../logic';
 import { deleteDocument, saveDocument } from '../repo';
 import { canPreview, FilePreview } from './FilePreview';
-import { CATEGORIES, documentSchema, type DocCategory, type VaultDocument } from '../schema';
+import { categoryLabel, categoryOfDoc, type ResolvedCategory } from '../categories';
+import { documentSchema, NO_CATEGORY, type DocCategory, type VaultDocument } from '../schema';
 
 export type DocumentTarget = Stored<VaultDocument> | { draft: true } | null;
 
 export function DocumentEditor({
   target,
   onClose,
+  cats,
+  defaultCategory,
 }: {
   target: DocumentTarget;
   onClose: () => void;
+  /** The live folders (`useCategories`). */
+  cats: readonly ResolvedCategory[];
+  /** A new document starts in this folder (the one the page is filtered to). */
+  defaultCategory?: DocCategory;
 }) {
   const existing = target && 'id' in target ? target : null;
   return (
     <Dialog open={target !== null} onClose={onClose} title={existing ? t.vault.edit : t.vault.add}>
-      {target ? <Fields key={existing?.id ?? 'new'} existing={existing} onClose={onClose} /> : null}
+      {target ? (
+        <Fields
+          key={existing?.id ?? 'new'}
+          existing={existing}
+          onClose={onClose}
+          cats={cats}
+          defaultCategory={defaultCategory}
+        />
+      ) : null}
     </Dialog>
   );
 }
@@ -43,16 +58,26 @@ export function DocumentEditor({
 function Fields({
   existing,
   onClose,
+  cats,
+  defaultCategory,
 }: {
   existing: Stored<VaultDocument> | null;
   onClose: () => void;
+  cats: readonly ResolvedCategory[];
+  defaultCategory?: DocCategory;
 }) {
+  const live = new Set(cats.map((c) => c.id));
   // Typed text survives Esc or a tap beside the dialog (in memory, 30 minutes); "Abbrechen" and
   // saving drop it.
   const dr = tDraft.use();
   const draft = useFormDraft(`vault:document:${existing?.id ?? 'new'}`, {
     title: existing?.title ?? '',
-    category: (existing?.category ?? 'other') as DocCategory,
+    // A document whose folder is gone opens under "Ohne Kategorie", as the list shows it.
+    category: existing
+      ? categoryOfDoc(existing, live)
+      : defaultCategory && live.has(defaultCategory)
+        ? defaultCategory
+        : NO_CATEGORY,
     provider: existing?.provider ?? '',
     startDate: existing?.startDate ?? '',
     endDate: (existing && endOf(existing)) ?? '',
@@ -79,7 +104,8 @@ function Fields({
   async function save() {
     const parsed = documentSchema.safeParse({
       title: title.trim(),
-      category,
+      // The folder may have gone while the dialog was open (another device): never into nowhere.
+      category: live.has(category) ? category : NO_CATEGORY,
       provider: provider.trim() || undefined,
       startDate: startDate || undefined,
       endDate: endDate || undefined,
@@ -131,11 +157,11 @@ function Fields({
         <SelectField
           label={t.vault.category}
           value={category}
-          onChange={(e) => setCategory(e.target.value as DocCategory)}
+          onChange={(e) => setCategory(e.target.value)}
         >
-          {CATEGORIES.map((c) => (
-            <option key={c} value={c}>
-              {t.vault.categories[c]}
+          {cats.map((c) => (
+            <option key={c.id} value={c.id}>
+              {categoryLabel(c, t.vault.categories)}
             </option>
           ))}
         </SelectField>

@@ -27,7 +27,7 @@ export const vault: Strings['vault'] = {
     warranty: 'Warranties',
     tax: 'Tax',
     health: 'Health',
-    other: 'Other',
+    other: 'No category',
   } as Record<string, string>,
   provider: 'Provider',
   startDate: 'Start',
@@ -133,6 +133,50 @@ export const vault: Strings['vault'] = {
     [expired > 0 ? `${expired} expired` : '', due > 0 ? `${due} with a deadline ahead` : '']
       .filter(Boolean)
       .join(' · '),
+  categoryAdmin: {
+    manage: 'Edit categories',
+    title: 'Categories',
+    add: 'New category',
+    editTitle: 'Edit category',
+    name: 'Name',
+    colour: 'Colour',
+    colourN: (n: number) => `Colour ${n}`,
+    icon: 'Icon',
+    iconNames: {
+      files: 'Folder',
+      file: 'Sheet',
+      lock: 'Lock',
+      receipt: 'Receipt',
+      wallet: 'Wallet',
+      home: 'House',
+      car: 'Car',
+      heart: 'Heart',
+      calculator: 'Calculator',
+      package: 'Parcel',
+      luggage: 'Suitcase',
+      users: 'People',
+      umbrella: 'Umbrella',
+    },
+    up: (name: string) => `Move ${name} up`,
+    down: (name: string) => `Move ${name} down`,
+    edit: (name: string) => `Edit ${name}`,
+    remove: (name: string) => `Delete ${name}`,
+    fixedHint: '“No category” always stays. Documents whose category is deleted land here.',
+    duplicate: 'A category with this name already exists.',
+    removeTitle: (name: string) => `Delete “${name}”`,
+    inUse: (n: number, name: string) =>
+      n === 1 ? `1 document is in “${name}”.` : `${n} documents are in “${name}”.`,
+    keepsDocs: 'No document is lost: they move to the category you choose here.',
+    moveTo: 'Move to',
+    removeAndMove: 'Delete and move',
+    removed: (name: string) => `“${name}” deleted`,
+    removedMoved: (name: string, n: number, target: string) =>
+      n === 1
+        ? `“${name}” deleted · 1 document moved to “${target}”`
+        : `“${name}” deleted · ${n} documents moved to “${target}”`,
+    created: (name: string) => `“${name}” added`,
+    done: 'Done',
+  },
   widgetSummary: (n: number) =>
     n === 1 ? '1 document needs a look' : `${n} documents need a look`,
 };

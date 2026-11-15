@@ -1,0 +1,83 @@
+.root {
+  display: grid;
+  gap: var(--space-3);
+}
+/* The folders in their order: one row each, name and count left, the four tools right. */
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-1);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding-inline-start: var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
+.mark {
+  display: inline-flex;
+  flex: none;
+}
+.name {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.meta {
+  font-size: var(--text-meta);
+  color: var(--text-2);
+}
+.tools {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.hint {
+  margin: 0;
+  font-size: var(--text-meta);
+  color: var(--text-2);
+}
+.lead {
+  margin: 0;
+}
+.field {
+  display: grid;
+  gap: var(--space-2);
+}
+.legend {
+  font-size: var(--text-label);
+  font-weight: var(--weight-semibold);
+  color: var(--text-muted);
+}
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.choice {
+  width: var(--touch);
+  height: var(--touch);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+/* The choice is marked by a heavier frame, not by colour alone. */
+.choice[aria-pressed='true'] {
+  border-color: var(--text);
+}
+.dot {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--radius-full);
+}

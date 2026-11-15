@@ -2,7 +2,7 @@ import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
 import { aiSchema } from './ai';
 import { migrations } from './migrations';
 import { onboarding } from './onboarding';
-import { documentSchema } from './schema';
+import { categorySchema, documentSchema } from './schema';
 import { settings } from './settings';
 import { t } from '@/strings';
 
@@ -20,7 +20,7 @@ const manifest: ModuleManifest = {
     signature: 'folderTab',
     tabs: true,
   },
-  version: 3,
+  version: 4,
   get description() {
     return t.vault.meta.description;
   },
@@ -35,7 +35,11 @@ const manifest: ModuleManifest = {
     },
   ],
   dataSchema: {
-    collections: { document: { schema: documentSchema, indexes: ['category', 'expiresOn'] } },
+    collections: {
+      document: { schema: documentSchema, indexes: ['category', 'expiresOn'] },
+      // The user's folders (since version 4); built-in ones get a record only once they are changed.
+      category: { schema: categorySchema, indexes: [] },
+    },
   },
   migrations,
   widgets: [
@@ -53,7 +57,7 @@ const manifest: ModuleManifest = {
   settings,
   defaultEnabled: false,
   maturity: 'stable',
-  seed: { version: 1, dependsOn: [] },
+  seed: { version: 2, dependsOn: [] },
   layout: 'split',
   order: 150,
   area: 'vault',
