@@ -96,6 +96,26 @@ describe('subscription deadlines in the plan (S2)', () => {
     ]);
   });
 
+  it('a deadline missed more than a week ago is no row and never hides an upcoming trial end', async () => {
+    // Yearly charge on 20 Dec, 90 days' notice: the deadline was 21 Sep (49 days ago); trial ends 15 Nov.
+    const s = await add({
+      startDate: '2025-12-20',
+      cancelNoticeDays: 90,
+      trialEndsOn: '2026-11-15',
+    });
+    expect(await source.list(ctx)).toEqual([
+      expect.objectContaining({
+        id: `${s.id}:trial:2026-11-15`,
+        title: 'Zeitung: Probezeit endet',
+        due: { date: '2026-11-15', hard: true },
+      }),
+    ]);
+    // Without a trial: no stale „kündigen“ row either.
+    await db.table('subscriptions_subscription').clear();
+    await add({ startDate: '2025-12-20', cancelNoticeDays: 90 });
+    expect(await source.list(ctx)).toEqual([]);
+  });
+
   it('a paused or cancelled subscription has no trial row; „Im Plan zeigen“ off → nothing', async () => {
     await add({ active: false, trialEndsOn: '2026-11-12' });
     await add({ recurrence: { freq: 'yearly', until: '2026-11-20' }, trialEndsOn: '2026-11-12' });

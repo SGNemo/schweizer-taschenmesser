@@ -3,7 +3,7 @@
  * „<Abo> kündigen“, 15 minutes, priority 3, the last day of the notice period (`core/deadline/notice.ts`
  * through `cancelDeadlinesInRange`) as a hard due. Since planner hub S2 (docs/design/planner-hub/CONCEPT-SOURCES.md
  * §3.2 row 4) the end of a trial („<Abo>: Probezeit endet“, its last day = the last day to cancel) is a deadline
- * too, and a deadline that has just passed (`missedDeadline`, the module's own „verpasst“; a trial end for
+ * too, and a deadline that has just passed (`missedDeadline`, the module's own „verpasst“, and a trial end, each for
  * `MISSED_RECENT_DAYS`) is still handed over with its date in the past, so the planner can say „Frist vorbei“
  * (P86). Only the NEXT of these per subscription, only for active subscriptions that are not cancelled already.
  * No write-back: cancelling stays in this module – the row gets `action` „Kündigen …“ instead, a route that opens
@@ -37,14 +37,18 @@ const source: PlannableSource = {
     const items: PlannableItem[] = [];
     for (const s of subs) {
       const candidates: Deadline[] = [];
+      // A passed deadline only while it is recent: for quarterly or longer cycles `missedDeadline` has no lower
+      // limit, and a months-old row would hide the next real deadline (a trial end, say).
+      const recent = addDaysStr(ctx.today, -MISSED_RECENT_DAYS);
       const missed = missedDeadline(s, ctx.today);
-      if (missed) candidates.push({ date: missed.deadline, trial: false });
+      if (missed && missed.deadline >= recent)
+        candidates.push({ date: missed.deadline, trial: false });
       const next = cancelDeadlinesInRange(s, ctx.today, ctx.until)
         .map((d) => d.deadline)
         .sort()[0];
       if (next) candidates.push({ date: next, trial: false });
       const trial = s.trialEndsOn;
-      if (trial && trial <= ctx.until && trial >= addDaysStr(ctx.today, -MISSED_RECENT_DAYS))
+      if (trial && trial <= ctx.until && trial >= recent)
         candidates.push({ date: trial, trial: true });
       // One row per subscription: the earliest (a passed deadline first – it is the one at stake).
       const first = candidates.sort((a, b) => a.date.localeCompare(b.date))[0];

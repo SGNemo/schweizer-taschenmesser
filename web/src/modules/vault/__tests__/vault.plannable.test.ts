@@ -96,6 +96,12 @@ describe('document deadlines as a planner source', () => {
     expect(items).toHaveLength(2);
   });
 
+  it('a notice deadline missed more than a week ago gives no row for the end either: the term runs on', async () => {
+    // Deadline 21 Oct (19 days ago), the end 20 Nov is inside the plan.
+    await add({ endDate: '2026-11-20', noticeDays: 30 });
+    expect(await source.list(ctx)).toEqual([]);
+  });
+
   it('„Im Plan zeigen“ (default on) off → no items', async () => {
     await add({ endDate: '2026-12-31', noticeDays: 45 });
     expect(await source.list(ctx)).toHaveLength(1);

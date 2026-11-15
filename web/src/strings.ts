@@ -3202,7 +3202,7 @@ export const de = {
         remindTimeHelp: 'Format HH:mm',
         showInPlan: 'Im Plan zeigen',
         showInPlanHelp:
-          'Kündigungsfristen und das Ende einer Probezeit stehen im Planer als „<Abo> kündigen“ (15 Min, bis zum letzten Tag der Frist). Gekündigt wird hier. Nur bei eingeschaltetem Planer.',
+          'Kündigungsfristen stehen im Planer als „<Abo> kündigen“, das Ende einer Probezeit als „<Abo>: Probezeit endet“ (15 Min, bis zum letzten Tag der Frist). Gekündigt wird hier. Nur bei eingeschaltetem Planer.',
         priceHint: 'Hinweis bei Preiserhöhung',
         priceHintHelp:
           'Zeigt einmal unter „Jetzt wichtig“, wenn ein Abo teurer geworden ist. Du kannst es jederzeit ausschalten.',

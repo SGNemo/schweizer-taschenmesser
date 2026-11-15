@@ -67,7 +67,7 @@ export const subscriptions: Strings['subscriptions'] = {
       remindTimeHelp: 'Format HH:mm',
       showInPlan: 'Show in the plan',
       showInPlanHelp:
-        'Cancellation deadlines and the end of a trial appear in the planner as “Cancel <subscription>” (15 min, by the last day of the deadline). Cancelling happens here. Only with the planner on.',
+        'Cancellation deadlines appear in the planner as “Cancel <subscription>”, the end of a trial as “<subscription>: trial ends” (15 min, by the last day of the deadline). Cancelling happens here. Only with the planner on.',
       priceHint: 'Notice when a price goes up',
       priceHintHelp:
         'Shows once under “Important now” when a subscription got more expensive. You can switch it off at any time.',
