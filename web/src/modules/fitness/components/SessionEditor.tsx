@@ -125,8 +125,10 @@ function Fields({
   const builtIn = builtInExercises();
   const names = exerciseSuggestions(sessions, builtIn);
   const own = names.filter((n) => !builtIn.includes(n));
-  // „Letztes Mal“ never reads the session being edited.
-  const others = existing ? sessions.filter((s) => s.id !== existing.id) : sessions;
+  // „Letztes Mal“ never reads the session being edited, nor one after it.
+  const others = existing
+    ? sessions.filter((s) => s.id !== existing.id && s.date <= existing.date)
+    : sessions;
   /** „Letztes Mal (Mo., 3. Nov.): 3 × 8 · 60 kg“ under an exercise with a known name. */
   const lastHint = (name: string): string => {
     const hit = name.trim() ? lastEntry(others, name) : undefined;
@@ -327,61 +329,61 @@ function Fields({
         ))}
       </datalist>
       <ul className={styles.exercises}>
-        {rows.map((r, i) => (
-          <li key={r.key} className={styles.exercise}>
-            <TextField
-              label={t.fitness.form.exercise}
-              list={listId}
-              value={r.name}
-              onChange={(e) => patch(r.key, { name: e.target.value })}
-              onBlur={() => prefill(r)}
-              {...(i === 0 ? { 'data-autofocus': true } : {})}
-            />
-            {rows.length > 1 ? (
-              <IconButton
-                label={t.fitness.form.removeExercise(r.name || t.fitness.form.exercise)}
-                onClick={() => setRows((rs) => rs.filter((x) => x.key !== r.key))}
-              >
-                <Icon name="trash" />
-              </IconButton>
-            ) : null}
-            {lastHint(r.name) ? (
-              <p className={`${styles.hint} ${styles.lastHint}`}>{lastHint(r.name)}</p>
-            ) : null}
-            <div className={styles.numbers}>
+        {rows
+          .map((row) => ({ ...row, hint: lastHint(row.name) }))
+          .map((r, i) => (
+            <li key={r.key} className={styles.exercise}>
               <TextField
-                label={t.fitness.form.sets}
-                type="number"
-                inputMode="numeric"
-                min={1}
-                value={r.sets}
-                onChange={(e) => patch(r.key, { sets: e.target.value })}
+                label={t.fitness.form.exercise}
+                list={listId}
+                value={r.name}
+                onChange={(e) => patch(r.key, { name: e.target.value })}
+                onBlur={() => prefill(r)}
+                {...(i === 0 ? { 'data-autofocus': true } : {})}
               />
-              <TextField
-                label={t.fitness.form.reps}
-                type="number"
-                inputMode="numeric"
-                min={1}
-                value={r.reps}
-                onChange={(e) => patch(r.key, { reps: e.target.value })}
-              />
-              <TextField
-                label={t.fitness.form.weight}
-                inputMode="decimal"
-                value={r.weight}
-                onChange={(e) => patch(r.key, { weight: e.target.value })}
-              />
-              <TextField
-                label={t.fitness.form.minutes}
-                type="number"
-                inputMode="numeric"
-                min={1}
-                value={r.minutes}
-                onChange={(e) => patch(r.key, { minutes: e.target.value })}
-              />
-            </div>
-          </li>
-        ))}
+              {rows.length > 1 ? (
+                <IconButton
+                  label={t.fitness.form.removeExercise(r.name || t.fitness.form.exercise)}
+                  onClick={() => setRows((rs) => rs.filter((x) => x.key !== r.key))}
+                >
+                  <Icon name="trash" />
+                </IconButton>
+              ) : null}
+              {r.hint ? <p className={`${styles.hint} ${styles.lastHint}`}>{r.hint}</p> : null}
+              <div className={styles.numbers}>
+                <TextField
+                  label={t.fitness.form.sets}
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  value={r.sets}
+                  onChange={(e) => patch(r.key, { sets: e.target.value })}
+                />
+                <TextField
+                  label={t.fitness.form.reps}
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  value={r.reps}
+                  onChange={(e) => patch(r.key, { reps: e.target.value })}
+                />
+                <TextField
+                  label={t.fitness.form.weight}
+                  inputMode="decimal"
+                  value={r.weight}
+                  onChange={(e) => patch(r.key, { weight: e.target.value })}
+                />
+                <TextField
+                  label={t.fitness.form.minutes}
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  value={r.minutes}
+                  onChange={(e) => patch(r.key, { minutes: e.target.value })}
+                />
+              </div>
+            </li>
+          ))}
       </ul>
       <div className={styles.chips}>
         <Button variant="secondary" size="sm" onClick={() => setPicking(true)}>

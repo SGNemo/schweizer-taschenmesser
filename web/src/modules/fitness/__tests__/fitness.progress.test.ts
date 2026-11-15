@@ -58,6 +58,26 @@ describe('fitness progress', () => {
     expect(reachesBest(h[0]!, best)).toBe(true);
   });
 
+  it('counts every row of an exercise in one session (working sets, then a top set)', () => {
+    const two = [
+      s('2026-11-01', [
+        { name: 'Kniebeuge', sets: 3, reps: 5, weightKg: 80 },
+        { name: 'Kniebeuge', sets: 1, reps: 3, weightKg: 100 },
+      ]),
+    ];
+    const h = exerciseHistory(two, 'Kniebeuge');
+    expect(h).toHaveLength(2);
+    expect(personalBest(h)).toMatchObject({ kg: 100, reps: 3 });
+    expect(exerciseOverview(two)[0]!.times).toBe(1);
+  });
+
+  it('treats 0 kg as no weight, also for the mark', () => {
+    const h = exerciseHistory([s('2026-11-01', [{ name: 'Dips', reps: 12, weightKg: 0 }])], 'Dips');
+    const best = personalBest(h);
+    expect(best).toMatchObject({ kind: 'reps', reps: 12 });
+    expect(isBestEntry(h[0]!, best)).toBe(true);
+  });
+
   it('falls back to reps without weight, then to the longest duration', () => {
     expect(personalBest(exerciseHistory(sessions, 'Klimmzüge'))).toEqual({
       kind: 'reps',

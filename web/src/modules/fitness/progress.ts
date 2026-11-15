@@ -17,19 +17,21 @@ export interface ExerciseEntry {
   exercise: Exercise;
 }
 
-/** Every logged time an exercise was done, newest first (one entry per session). */
+/**
+ * Every logged row of an exercise, newest first. A session can hold the same exercise twice (a top set
+ * after the working sets): both rows count, in their order inside the session.
+ */
 export function exerciseHistory(sessions: readonly Logged[], name: string): ExerciseEntry[] {
   const k = key(name);
   return [...sessions]
     .filter(isLogged)
     .sort((a, b) => `${b.date} ${b.time ?? ''}`.localeCompare(`${a.date} ${a.time ?? ''}`))
-    .flatMap((s) => {
-      const hit = s.exercises.find((e) => key(e.name) === k);
-      return hit ? [{ date: s.date, exercise: hit }] : [];
-    });
+    .flatMap((s) =>
+      s.exercises.filter((e) => key(e.name) === k).map((exercise) => ({ date: s.date, exercise })),
+    );
 }
 
-/** The last logged time of an exercise (date and values), or undefined. */
+/** The last logged time of an exercise (the first row of the latest session), or undefined. */
 export function lastEntry(sessions: readonly Logged[], name: string): ExerciseEntry | undefined {
   return exerciseHistory(sessions, name)[0];
 }
@@ -69,7 +71,7 @@ export interface ExerciseSummary {
   /** The name as written the last time. */
   name: string;
   group: Group | 'other';
-  /** How many logged sessions hold it. */
+  /** How many logged days hold it. */
   times: number;
   last: ExerciseEntry;
   best: Best | undefined;
@@ -88,7 +90,7 @@ export function exerciseOverview(sessions: readonly Logged[]): ExerciseSummary[]
     return {
       name,
       group: groupOf(name),
-      times: history.length,
+      times: new Set(history.map((h) => h.date)).size,
       last: history[0]!,
       best: personalBest(history),
     };
@@ -105,7 +107,7 @@ export function reachesBest(entry: ExerciseEntry, best: Best | undefined): boole
   if (!best) return false;
   const e = entry.exercise;
   if (best.kind === 'weight') return e.weightKg === best.kg && (e.reps ?? 0) === (best.reps ?? 0);
-  if (best.kind === 'reps') return e.weightKg === undefined && e.reps === best.reps;
+  if (best.kind === 'reps') return !(e.weightKg && e.weightKg > 0) && e.reps === best.reps;
   return e.durationMin === best.minutes;
 }
 
