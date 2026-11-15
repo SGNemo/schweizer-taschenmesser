@@ -18,6 +18,7 @@ export const DATA_FLOW_IDS = [
   'spotify',
   'supporter',
   'currency',
+  'feeds',
   'weather',
   'maps',
   'browser',

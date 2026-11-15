@@ -67,7 +67,7 @@ Nemo is a set of small modules for everyday life. You turn on what you need in t
 |  | Music | Spotify on one page | preview |
 | **Vault** | Documents | IDs, contracts, insurance and warranties with end date, notice period and an attached file | optional |
 |  | Passwords | Password vault | optional |
-| **System** | Device status | Backup, sync, storage and updates of this device on one page | on for new installations |
+| **System** | Device status | Backup, sync, storage and updates of this device on one page, plus a backup to download | on for new installations |
 |  | This PC | Drives with a scan of the biggest folders and system info (processor, memory, battery, network) | optional, Windows app only |
 |  | Downloads | Downloads files | on for new installations, Windows app only |
 |  | Remote | Control media, volume, mouse and keyboard of your PC from your phone | preview, Android app only |
@@ -170,7 +170,7 @@ More detail, including the browser (PWA) and moving from another app: [Installat
 
 - **Stored locally.** Data lives in your device’s database. No account, no Nemo cloud service.
 - **Sync is optional.** Only through a server you run yourself (Docker or Node), end-to-end encrypted if you want.
-- **Only what you set up leaves the device.** Update check (GitHub, can be switched off), AI providers, Google and Spotify connections, calendar subscriptions, maps (tiles, place search, routes), weather (only with a chosen place), currency rates, downloads, model download. What is sent and when: in the app under Settings → About Nemo → Legal and in [DATA-FLOWS](docs/legal/DATA-FLOWS.md).
+- **Only what you set up leaves the device.** Update check (GitHub, can be switched off), AI providers, Google and Spotify connections, calendar subscriptions, maps (tiles, place search, routes), weather (only with a chosen place), feed previews (on click), currency rates, downloads, model download. What is sent and when: in the app under Settings → About Nemo → Legal and in [DATA-FLOWS](docs/legal/DATA-FLOWS.md).
 - **Never your data to AI.** The assistant only sends your question, the date and field names, never entries. The only exceptions are ones you trigger yourself: attaching a module’s data in the chat (with a preview) or granting an AI read access through the local interface. The password vault (Argon2id, AES-256, one-time codes) is completely invisible to AI, search and import.
 - **Signed updates.** Every update is checked against the project’s key before it is applied. Details: [Security](docs/user/security.md).
 
