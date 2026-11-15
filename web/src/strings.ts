@@ -1,5 +1,5 @@
 import { catalogChain } from '@/core/i18n/catalogs';
-import { formatNumber } from '@/core/i18n/format';
+import { formatNumber, plural } from '@/core/i18n/format';
 import { localize } from '@/core/i18n/localize';
 import type { Shape } from '@/core/i18n/shape';
 
@@ -4539,6 +4539,8 @@ export const de = {
     expiresBody: (date: string) => `Haltbar bis ${date}`,
     widgetEmpty: 'Nichts läuft bald ab.',
     restockOne: (n: string) => `Auf die Einkaufsliste: ${n}`,
+    onList: 'Auf der Einkaufsliste',
+    toList: (n: string) => `Zur Einkaufsliste: ${n}`,
     shelf: {
       jump: (place: string, n: number) => `${place}: ${n}, zum Abschnitt springen`,
       expired: (n: number) => `${n} abgelaufen`,
@@ -5350,6 +5352,11 @@ export const de = {
       widget: 'Einkauf',
       widgetPacking: 'Packlisten',
       quickAdd: 'Einkauf',
+      settings: {
+        showInPlan: 'Im Plan zeigen',
+        showInPlanHelp:
+          'Eine Packliste mit Reisedatum steht im Planer als „Packen: <Name>“ (20 Min, bis zum Tag vor der Reise). Der Einkauf kommt nur über „In den Plan“ dazu, als eine Zeile. Nur bei eingeschaltetem Planer.',
+      },
     },
     title: 'Listen',
     tabsLabel: 'Deine Listen',
@@ -5456,6 +5463,15 @@ export const de = {
     buyMissing: (n: number) => `Noch kaufen (${n})`,
     buyMissingDone: (n: number) => `${n} auf die Einkaufsliste gesetzt.`,
     tripIn: (d: number) => `In ${d} Tagen`,
+    plan: {
+      shopping: (n: number) =>
+        plural(n, { one: 'Einkaufen · # Ding', other: 'Einkaufen · # Dinge' }, 'de'),
+      packing: (name: string) => `Packen: ${name}`,
+      toList: 'Zur Liste',
+      add: 'In den Plan',
+      placed: (day: string) => `Im Plan · ${day}`,
+      fromPantry: (name: string) => `Aus den Vorräten: ${name}`,
+    },
   },
 
   vault: {

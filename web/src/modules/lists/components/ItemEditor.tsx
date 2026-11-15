@@ -1,5 +1,7 @@
 import { changedFields } from '@/core/db/patch';
 import { useState } from 'react';
+import { Link } from 'react-router';
+import { useLinks } from '@/core/entitylinks';
 import type { Stored } from '@/core/db/types';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
@@ -47,6 +49,10 @@ function Fields({
   const [name, setName] = useState(item.name);
   const [quantity, setQuantity] = useState(item.quantity ?? '');
   const [error, setError] = useState('');
+  // The thing that asked for this entry (a pantry entry that ran low): the way back to it.
+  const origin = useLinks({ module: 'lists', id: item.id })?.find(
+    (l) => l.direction === 'out' && l.state.state === 'alive',
+  );
 
   async function save() {
     if (!name.trim()) return setError(t.form.required);
@@ -134,6 +140,13 @@ function Fields({
             onChange={(e) => setToBuy(e.target.checked)}
           />
         </>
+      ) : null}
+      {origin?.state.state === 'alive' ? (
+        <p>
+          <Link to={origin.state.to} onClick={onClose}>
+            {t.lists.plan.fromPantry(origin.state.title)}
+          </Link>
+        </p>
       ) : null}
       <FormActions
         start={
