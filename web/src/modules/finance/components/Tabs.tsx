@@ -331,11 +331,13 @@ export function TransactionsTab({
   );
 }
 
-/** The kind as the row's meta, left out when the name already says it ("Girokonto / Girokonto"). */
+/** The kind as the row's meta, left out when the name already starts with it ("Girokonto / Girokonto", "Savings account / Savings"). */
 export function kindMeta(a: Pick<Account, 'name' | 'kind'>): string | undefined {
   if (!a.kind) return undefined;
   const label = t.finance.ext.accountKind[a.kind];
-  return label.trim().toLocaleLowerCase() === a.name.trim().toLocaleLowerCase() ? undefined : label;
+  return a.name.trim().toLocaleLowerCase().startsWith(label.toLocaleLowerCase())
+    ? undefined
+    : label;
 }
 
 export function AccountsTab({ data }: { data: FinanceData }) {

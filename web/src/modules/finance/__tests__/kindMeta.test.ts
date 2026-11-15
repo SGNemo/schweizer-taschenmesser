@@ -8,6 +8,7 @@ describe('kindMeta', () => {
   it('leaves the kind out when the name already says it', () => {
     expect(kindMeta({ name: 'Girokonto', kind: 'checking' })).toBeUndefined();
     expect(kindMeta({ name: ' bargeld ', kind: 'cash' })).toBeUndefined();
+    expect(kindMeta({ name: 'Sparkonto Urlaub', kind: 'savings' })).toBeUndefined();
   });
   it('has no meta without a kind', () => {
     expect(kindMeta({ name: 'Konto', kind: undefined })).toBeUndefined();
