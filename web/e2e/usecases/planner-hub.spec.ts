@@ -16,10 +16,15 @@ import { backSettled, dismissNotices, ready, showPreview } from '../helpers';
  * 2. **Design measures** of the first screen at 1920 × 1080 and 412 × 915, light and dark. The R1 targets are
  *    asserted on the screen the page opens on (`TARGET`); everything else is recorded with loose sanity checks.
  *
- * The scene is the maintainer's Sunday: 2026-11-15, an empty install with ToDos, Rechnungen and Planer on, three
- * ToDos (35 + 30 + 30 min) and six open invoices that were due on the Sunday, Tuesday and Thursday before. The
- * planner's defaults (Sunday 0 min, weekday 4 h less 20 % buffer) put all nine on Monday and leave 37 min free
- * there. Since R1 the page opens on that Monday (the first day that holds things). Made-up data only; rows go straight into IndexedDB, as in `wochenende.spec.ts`.
+ * The scene is the maintainer's Sunday (CONCEPT-DESIGN: „Monday nine things, 37 min free of 3 h 12; six invoices
+ * past their deadline“): 2026-11-15, an empty install with ToDos, Rechnungen and Planer on, nine ToDos (35 + 30 +
+ * 30 and six of 10 min) and six open invoices that were due on the Sunday, Tuesday and Thursday before. The
+ * planner's defaults (Sunday 0 min, weekday 4 h less 20 % buffer) put the nine ToDos on Monday and leave 37 min
+ * free there; the six invoices are „Frist vorbei“ since R2 – a group of their own, on no day and in no day's sum.
+ * (Before R2 the scene had three ToDos and the six invoices were Monday's other six rows; R2 took them off the day,
+ * so six short ToDos fill their places: Monday is nine rows and 37 min free as before, and the measures compare.)
+ * Since R1 the page opens on that Monday (the first day that holds things). Made-up data only; rows go straight
+ * into IndexedDB, as in `wochenende.spec.ts`.
  *
  * How the design measures are taken (`measure`, in the page):
  * - **Content area** = the part of the first screen that belongs to the page: `main`'s box, below the module head
@@ -36,7 +41,10 @@ import { backSettled, dismissNotices, ready, showPreview } from '../helpers';
  * - **Targets** = visible controls in the content area whose hit box (probed with `elementFromPoint`, so an
  *   enlarged pseudo-element counts) is narrower or lower than 44 px. A control the fold cuts is not counted (R1:
  *   its box is whole, the screen ends in it).
- * - **Overdue rows** = rows saying „Frist war …“: the day they sit on, their colour, its contrast on the row.
+ * - **Thing rows** = the rows of the shown day plus the rows of „Frist vorbei“ where the group is open (the
+ *   context column at 1920; folded to one row on the phone).
+ * - **Overdue rows** = rows saying „Frist war …“: the day they sit on (`group` = „Frist vorbei“), their colour,
+ *   its contrast on the row.
  *
  * Run (from `web/`; the app build is served on 4173):
  *   E2E_SEED=0 npx playwright test e2e/usecases/planner-hub.spec.ts --trace off
@@ -71,25 +79,27 @@ const MAX: Record<string, Record<Metric | 'seconds', number>> = {
   // before R1: 2 taps, 4 s
   // prettier-ignore
   'A Ding abhaken · desktop-chrome': { taps: 1, keys: 0, screens: 1, dialogs: 0, detours: 0, seconds: 3 },
-  // as before R1: the fold of „Danach“ takes the tap the day took
+  // R2: the invoices left Monday, the three first ToDos are „Zuerst“ – no fold to open (R1: 2 taps, 4 s)
   // prettier-ignore
-  'A Ding abhaken · pixel-7': { taps: 2, keys: 0, screens: 1, dialogs: 0, detours: 0, seconds: 4 },
-  // B: the sentence moves the thing and „Später“ moves a thing of tomorrow since fix/plan-move-sentence (P08, P09).
-  // R1 on top of it: no tap on a day on the desktop (4 taps, 21 s before); on the phone the fold of „Danach“ takes it.
+  'A Ding abhaken · pixel-7': { taps: 1, keys: 0, screens: 1, dialogs: 0, detours: 0, seconds: 3 },
+  // B since R2: ⋯ → „Verschieben …“ → „Mi“ – three taps, nothing typed, no detour (R1: 3 taps, 29 keys, 1 detour,
+  // 20 s on the desktop; 4 taps and 26 s on the phone; before R1: 4 taps, 21 s).
   // prettier-ignore
-  'B Ding auf einen anderen Tag · desktop-chrome': { taps: 3, keys: 29, screens: 1, dialogs: 1, detours: 1, seconds: 20 },
+  'B Ding auf einen anderen Tag · desktop-chrome': { taps: 3, keys: 0, screens: 1, dialogs: 1, detours: 0, seconds: 8 },
   // prettier-ignore
-  'B Ding auf einen anderen Tag · pixel-7': { taps: 4, keys: 29, screens: 1, dialogs: 1, detours: 1, seconds: 26 },
+  'B Ding auf einen anderen Tag · pixel-7': { taps: 3, keys: 0, screens: 1, dialogs: 1, detours: 0, seconds: 8 },
   // before R1: 3 taps, 10 s
   // prettier-ignore
   'C1 Quelle öffnen: ToDo · desktop-chrome': { taps: 1, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 8 },
-  // before R1: 3 taps, 10 s
+  // R2: the thing is one of „Zuerst“ since the invoices left the day – no fold to open (R1: 2 taps, 9 s; before
+  // R1: 3 taps, 10 s)
   // prettier-ignore
-  'C1 Quelle öffnen: ToDo · pixel-7': { taps: 2, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 9 },
+  'C1 Quelle öffnen: ToDo · pixel-7': { taps: 1, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 8 },
   // before R1: 3 taps, 10 s
   // prettier-ignore
   'C2 Quelle öffnen: Rechnung · desktop-chrome': { taps: 1, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 8 },
-  // before R1: 3 taps, 10 s
+  // before R1: 3 taps, 10 s. OPEN since R2 (not raised, the maintainer decides): the phone measures 2 taps, 9 s –
+  // a late invoice stands in „Frist vorbei“, which is one folded row above the day on the phone (mockup a-412).
   // prettier-ignore
   'C2 Quelle öffnen: Rechnung · pixel-7': { taps: 1, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 8 },
   // before R1: 3 taps, 7 s
@@ -110,7 +120,8 @@ const MAX: Record<string, Record<Metric | 'seconds', number>> = {
   // before R1: 6 taps, 20 s
   // prettier-ignore
   'F Überfällige Rechnung begleichen · desktop-chrome': { taps: 4, keys: 0, screens: 3, dialogs: 1, detours: 1, seconds: 18 },
-  // before R1: 6 taps, 20 s
+  // before R1: 6 taps, 20 s. OPEN since R2 (not raised, the maintainer decides): the phone measures 5 taps, 19 s –
+  // the same unfolding tap as in C2; „Bezahlt …“ in the row (K1b / S1) is what shortens this path.
   // prettier-ignore
   'F Überfällige Rechnung begleichen · pixel-7': { taps: 4, keys: 0, screens: 3, dialogs: 1, detours: 1, seconds: 18 },
 };
@@ -121,6 +132,8 @@ const TARGET = {
    * 1920: at most a quarter is unpainted (71 % of the content area before) – of the page's columns: the whole
    * content area while a context column stands beside the main one, the main column alone while nothing does
    * (`coverage.emptyColumns`; the share of the whole area is recorded next to it as `coverage.empty`).
+   * OPEN since R2 (not raised, the maintainer decides): the scene measures 27 % – „Frist vorbei“ makes the context
+   * column exist, and under its one card the column is empty (no appointment, nothing waits in this scene).
    */
   emptyShare: 0.25,
   /** 1920: thing rows in full on the first screen (0 before) … */
@@ -312,6 +325,13 @@ const TODOS = [
   { title: 'Steuerunterlagen sortieren', estimateMin: 35 },
   { title: 'Wohnung saugen', estimateMin: 30 },
   { title: 'Angebot Fahrradladen prüfen', estimateMin: 30 },
+  // R2: six short things more, so Monday holds nine things beside the six late invoices (the concept's scene).
+  { title: 'Antwort an Hausverwaltung Muster', estimateMin: 10 },
+  { title: 'Paket zur Post bringen', estimateMin: 10 },
+  { title: 'Arzttermin bestätigen', estimateMin: 10 },
+  { title: 'Blumen gießen', estimateMin: 10 },
+  { title: 'Fahrkarte buchen', estimateMin: 10 },
+  { title: 'Leergut wegbringen', estimateMin: 10 },
 ];
 /** Six open invoices: two each were due on the Sunday, the Tuesday and the Thursday before. */
 const INVOICES = [
@@ -429,6 +449,21 @@ async function settledCount(loc: Locator): Promise<number> {
 
 const day = (page: Page, date: string) => page.locator(`[data-testid="day-${date}"]`);
 const things = (page: Page, date: string) => day(page, date).locator('li');
+
+/**
+ * „Frist vorbei“ (R2): the card of the context column on the desktop; on the phone one row above the day that
+ * unfolds the group – that tap is the person's (counted with `m`).
+ */
+async function lateGroup(page: Page, m?: Meter) {
+  const fold = page.getByTestId('planner-late-row');
+  if ((await fold.count()) && (await fold.getAttribute('aria-expanded')) !== 'true') {
+    if (m) await m.tap(fold);
+    else await fold.click();
+  }
+  const group = page.getByTestId('planner-late');
+  await expect(group.locator('li')).not.toHaveCount(0);
+  return group;
+}
 
 /** The control that shows another day: its tile in the week band (at every width). */
 function dayPick(page: Page, date: string) {
@@ -655,8 +690,10 @@ async function measure(page: Page) {
         };
       });
 
-    // The things: rows of the shown day.
-    const thingRows = Array.from(main.querySelectorAll('[data-testid^="day-"] li'));
+    // The things: rows of the shown day and of „Frist vorbei“ (R2; the group's rows exist while it is open).
+    const thingRows = Array.from(
+      main.querySelectorAll('[data-testid^="day-"] li, [data-testid="planner-late"] li'),
+    );
     const boxes = thingRows.map((li) => li.getBoundingClientRect());
     const first = thingRows[0];
     const fontOf = (el: Element | null | undefined) =>
@@ -795,15 +832,17 @@ async function measure(page: Page) {
         days: [
           ...new Set(
             late.map((li) =>
-              (li.closest('[data-testid^="day-"]')?.getAttribute('data-testid') ?? '').slice(4),
+              li.closest('[data-testid="planner-late"]')
+                ? 'group'
+                : (li.closest('[data-testid^="day-"]')?.getAttribute('data-testid') ?? '').slice(4),
             ),
           ),
         ],
         firstY: late[0] ? Math.round(late[0].getBoundingClientRect().top) : null,
         colour: lateColour ? hex(lateColour) : null,
         contrast: lateWord ? contrast(lateWord) : null,
-        /** A group of its own („Überfällig“) anywhere on the page. */
-        ownGroup: /Überfällig/.test(main.innerText),
+        /** A group of its own („Frist vorbei“) anywhere on the page. */
+        ownGroup: /Frist vorbei/.test(main.innerText),
       },
     };
   });
@@ -850,8 +889,8 @@ test('A Ding abhaken', async ({ page, isMobile }, info) => {
   const m = new Meter(page, isMobile);
   await m.go('/planner');
   await expect(page.getByTestId('planner-head')).toBeVisible();
-  // The page opens on the first day that holds things (Monday; today, Sunday, is free): the nine things are there
-  // without a tap, and the tile says so.
+  // The page opens on the first day that holds things (Monday; today, Sunday, is free): its nine things are there
+  // without a tap, and the tile says so. The six late invoices are not among them (R2).
   await expect(things(page, MONDAY)).not.toHaveCount(0);
   await expect(dayPick(page, MONDAY)).toHaveAttribute('aria-pressed', 'true');
   await expect(dayPick(page, SUNDAY)).toHaveAttribute('aria-current', 'date');
@@ -885,34 +924,32 @@ test('B Ding auf einen anderen Tag', async ({ page, isMobile }, info) => {
   await m.go('/planner');
   await expect(things(page, MONDAY)).not.toHaveCount(0);
   await settledCount(things(page, MONDAY));
-  // „Danach“ is folded on the phone: the thing is in it (one tap, counted).
+  // (Were the thing folded into „Danach“ on the phone, that tap would count; since R2 it is one of „Zuerst“.)
   const actions = day(page, MONDAY).getByRole('button', {
     name: 'Aktionen für Wohnung saugen',
     exact: true,
   });
   if (!(await actions.isVisible()))
     await m.tap(day(page, MONDAY).getByRole('button', { name: /^Danach/ }));
-  // First look: the row's ⋯. It names no other day („Später“ means tomorrow, „Festnageln auf Mo“ the day it is on;
-  // „Verschieben …“ is package R2).
+  // First look: the row's ⋯. Since R2 it leads with „Verschieben …“; the days of the week are one tap behind it.
   await m.tap(actions);
   await expect(page.getByRole('menuitem').first()).toBeVisible();
   const menu = await page.getByRole('menuitem').allInnerTexts();
   const menuMoves = menu.some((item) => /\b(Mi|Mittwoch|Verschieben|Anderer Tag)\b/.test(item));
-  if (!menuMoves) {
-    m.detour();
-    await m.closeMenu();
-  }
-  // The way that exists: a sentence in the field, its preview, „Übernehmen“.
+  expect(menuMoves, '⋯ offers „Verschieben …“').toBe(true);
+  // „Festnageln“ is said in one place only: no second entry that does the same.
+  expect(menu.filter((item) => /Festnageln auf/.test(item))).toEqual([]);
   const field = page.getByRole('textbox', { name: 'Eintragen oder sagen' });
   const fieldBox = await field.boundingBox();
-  await m.type(field, 'schieb Wohnung saugen auf Mi');
-  await m.enter(field);
-  const preview = page.getByTestId('plan-preview');
-  await expect(preview).toBeVisible();
+  await m.tap(page.getByRole('menuitem', { name: 'Verschieben …', exact: true }));
+  const choice = page.getByRole('dialog', { name: 'Verschieben: Wohnung saugen' });
+  await expect(choice).toBeVisible();
   m.dialog();
-  const previewText = (await preview.innerText()).replace(/\s+/g, ' ').trim();
-  await m.tap(preview.getByRole('button', { name: 'Übernehmen' }));
-  await expect(preview).toHaveCount(0);
+  const previewText = (await choice.innerText()).replace(/\s+/g, ' ').trim();
+  await m.tap(choice.getByRole('button', { name: 'Mi 18.', exact: true }));
+  await expect(choice).toHaveCount(0);
+  // One toast says where it went and carries the undo.
+  await expect(page.getByRole('button', { name: 'Rückgängig' })).toBeVisible();
   // Where is it now? Looking at Wednesday is not counted; a thing that did not move is a detour.
   await page.waitForTimeout(1500);
   await settledCount(things(page, MONDAY));
@@ -925,6 +962,7 @@ test('B Ding auf einen anderen Tag', async ({ page, isMobile }, info) => {
   const pinned = (
     await rows<{ id: string; pinned?: string; source?: { id: string } }>(page, 'planner_item')
   ).find((r) => r.source?.id === 'p1')?.pinned;
+  expect(pinned).toBe(WEDNESDAY);
   // „Später“ on a thing of tomorrow (the taps are not counted): a thing that stays is a detour.
   await dayPick(page, MONDAY).click();
   await settledCount(things(page, MONDAY));
@@ -1017,13 +1055,24 @@ test('C2 Quelle öffnen: Rechnung', async ({ page, isMobile }, info) => {
   const name = 'C2 Quelle öffnen: Rechnung';
   await prepare(page, 'week');
   const m = new Meter(page, isMobile);
-  const menu = await openSource(
-    page,
-    m,
-    'Stadtwerke Musterstadt bezahlen',
-    undefined,
-    /Rechnungen/,
-  );
+  await m.go('/planner');
+  await expect(things(page, MONDAY)).not.toHaveCount(0);
+  await settledCount(things(page, MONDAY));
+  // Since R2 a late invoice is no row of a day: it stands in „Frist vorbei“ (desktop: beside the day; phone: one
+  // row above it, one tap to unfold – counted).
+  await expect(day(page, MONDAY).getByText('Stadtwerke Musterstadt bezahlen')).toHaveCount(0);
+  const group = await lateGroup(page, m);
+  const row = group.locator('li').filter({ hasText: 'Stadtwerke Musterstadt bezahlen' });
+  // The ⋯ is read (not counted): nothing in it moves or nails a thing that sits on no day.
+  await row
+    .getByRole('button', { name: 'Aktionen für Stadtwerke Musterstadt bezahlen', exact: true })
+    .click();
+  await expect(page.getByRole('menuitem').first()).toBeVisible();
+  const menu = await page.getByRole('menuitem').allInnerTexts();
+  expect(menu).toEqual(['Öffnen', 'Nicht planen']);
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('menuitem')).toHaveCount(0);
+  await m.nav(row.locator('button[data-row]'), /Rechnungen/);
   const dialog = page.getByRole('dialog', { name: 'Rechnung bearbeiten' });
   await expect(dialog).toBeVisible();
   m.dialog();
@@ -1062,8 +1111,8 @@ test('C3 Quelle öffnen: Mail', async ({ page, isMobile }, info) => {
 test('D Rest verteilen', async ({ page, isMobile }, info) => {
   const name = 'D Rest verteilen';
   await prepare(page, 'week');
-  // Monday morning: today holds the nine things; since R1 the link stands at the sheet's foot at any hour
-  // (recorded, not counted).
+  // Monday morning: today holds the nine ToDos (the six late invoices are „Frist vorbei“, on no day); since R1
+  // the link stands at the sheet's foot at any hour (recorded, not counted).
   await page.clock.setFixedTime(new Date(`${MONDAY}T10:00:00`));
   await ready(page, '/planner');
   await expect(things(page, MONDAY)).not.toHaveCount(0);
@@ -1082,11 +1131,20 @@ test('D Rest verteilen', async ({ page, isMobile }, info) => {
   await expect(preview).toBeVisible();
   m.dialog();
   const moves = (await preview.innerText()).split('\n').filter((l) => /→/.test(l));
+  // „Rest verteilen“ never touches what is „Frist vorbei“ (P72, P73): no invoice among the moves …
+  expect(moves.filter((l) => /bezahlen/.test(l))).toEqual([]);
   await m.tap(preview.getByRole('button', { name: 'Übernehmen' }));
   await expect(preview).toHaveCount(0);
   await expect(page.getByText('Auf die nächsten Tage verteilt.')).toBeVisible();
   const stuck = await settledCount(things(page, MONDAY));
   if (stuck > 0) m.detour();
+  // … and the six are still in their group afterwards, on no day.
+  await page.waitForTimeout(1500);
+  expect(await settledCount((await lateGroup(page)).locator('li'))).toBe(6);
+  const placedInvoices = (await rows<{ itemKey: string }>(page, 'planner_assignment')).filter((a) =>
+    a.itemKey.startsWith('invoices:'),
+  );
+  expect(placedInvoices).toEqual([]);
   facts(info, 'D', {
     linkInTheMorning,
     morningHead: [morning.head, morning.headDetail],
@@ -1141,7 +1199,10 @@ test('F Überfällige Rechnung begleichen', async ({ page, isMobile }, info) => 
   await m.go('/planner');
   await expect(things(page, MONDAY)).not.toHaveCount(0);
   await settledCount(things(page, MONDAY));
-  const row = things(page, MONDAY).filter({ hasText: 'Stadtwerke Musterstadt bezahlen' });
+  // Since R2 the late invoice stands in „Frist vorbei“, not among Monday's things (phone: the group's row is one
+  // tap to unfold – counted).
+  const group = await lateGroup(page, m);
+  const row = group.locator('li').filter({ hasText: 'Stadtwerke Musterstadt bezahlen' });
   await expect(row).toHaveCount(1);
   // The person looks for the tick the ToDo rows have: an invoice row has none (its lead slot shows the source's
   // icon; „Bezahlt …“ in that slot is package K1b).
@@ -1173,7 +1234,10 @@ test('F Überfällige Rechnung begleichen', async ({ page, isMobile }, info) => 
   // Back to the plan.
   await m.back(/Planer/);
   await expect(things(page, MONDAY)).not.toHaveCount(0);
-  await expect(day(page, MONDAY).getByText('Stadtwerke Musterstadt bezahlen')).toHaveCount(0);
+  // Five are left in the group; the paid one is gone from it.
+  const left = await lateGroup(page);
+  await expect(left.locator('li')).toHaveCount(5);
+  await expect(left.getByText('Stadtwerke Musterstadt bezahlen')).toHaveCount(0);
   const paid = (await rows<{ payee: string; status: string }>(page, 'invoices_invoice')).find(
     (i) => i.payee === 'Stadtwerke Musterstadt',
   )?.status;
@@ -1187,7 +1251,8 @@ test('M Designmaße: die Woche des Sonntags, wie sie öffnet, und heute', async 
   isMobile,
 }, info) => {
   test.setTimeout(120_000);
-  // (1) Sunday as the page opens: on Monday, the first day that holds things – the nine things are on the screen.
+  // (1) Sunday as the page opens: on Monday, the first day that holds things – its nine things are on the screen,
+  // the six late invoices in „Frist vorbei“ (R2: beside the day at 1920, one folded row on the phone).
   await prepare(page, 'week');
   await ready(page, '/planner');
   await expect(things(page, MONDAY)).not.toHaveCount(0);
@@ -1197,6 +1262,30 @@ test('M Designmaße: die Woche des Sonntags, wie sie öffnet, und heute', async 
   const landing = await design(page, info, 'M1 Sonntag, wie die Seite öffnet', 'dark');
   const landingLight = await design(page, info, 'M1 Sonntag, wie die Seite öffnet', 'light');
   const board = await boardOf(page);
+  // R2 (PACKAGES acceptance): the six late invoices sit in the group, on no day, and Monday's sum is without
+  // them – 155 of 192 minutes planned, so 37 min free (with their 60 minutes the day would be 23 min over); the
+  // head says the same.
+  if (!isMobile) expect(board.shown).toHaveLength(9);
+  expect(board.shown.join(' ')).not.toMatch(/bezahlen/);
+  await expect(day(page, MONDAY)).toContainText('37 Min frei von 3 h 12');
+  expect(board.head).toBe('37 Min frei');
+  expect(board.week[1]).toMatch(/37 Min frei von 3 h 12 · 9 Dinge$/);
+  const placed = (await rows<{ itemKey: string; date: string }>(page, 'planner_assignment')).map(
+    (a) => `${a.itemKey} ${a.date}`,
+  );
+  expect(placed.sort()).toEqual(TODOS.map((_, i) => `todos:p${i} ${MONDAY}`));
+  if (isMobile) {
+    await expect(page.getByTestId('planner-late-row')).toHaveText('Frist vorbei · 6 Rechnungen');
+    expect(landing.overdue.rows).toBe(0);
+  } else {
+    const group = page.getByTestId('planner-late');
+    await expect(group.getByRole('heading', { level: 2 })).toContainText('Frist vorbei');
+    await expect(group.getByRole('heading', { level: 2 })).toContainText('6 Rechnungen');
+    await expect(group.locator('li')).toHaveCount(6);
+    expect(landing.overdue.rows).toBe(6);
+    expect(landing.overdue.days).toEqual(['group']);
+  }
+  expect(landing.overdue.ownGroup).toBe(true);
   // The targets of R1 (HANDOFF §9), on the screen the page opens on, in both themes.
   for (const m of [landing, landingLight]) {
     expect(m.fonts.sizes.length, 'font sizes').toBeLessThanOrEqual(TARGET.fontSizes);

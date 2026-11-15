@@ -312,9 +312,22 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(today(page)).not.toContainText('Keller');
     await page.getByRole('button', { name: 'Rückgängig' }).last().click();
     await expect(today(page)).toContainText('Keller');
-    // Festnageln keeps the thing on its day: the menu changes to „Nicht mehr festnageln“.
+    // Festnageln keeps the thing on its day: since planner hub R2 through ⋯ → „Verschieben …“ → the day's chip
+    // (the one place that nails); the menu then offers „Nicht mehr festnageln“.
     await today(page).getByRole('button', { name: 'Aktionen für Keller' }).click();
-    await page.getByRole('menuitem', { name: 'Festnageln auf Mo' }).click();
+    await expect(page.getByRole('menuitem', { name: /Festnageln auf/ })).toHaveCount(0);
+    await page.getByRole('menuitem', { name: 'Verschieben …' }).click();
+    const move = page.getByRole('dialog', { name: 'Verschieben: Keller' });
+    await expect(move.getByRole('group').getByRole('button')).toHaveText([
+      'Mo 9.',
+      'Di 10.',
+      'Mi 11.',
+      'Do 12.',
+      'Fr 13.',
+      'Sa 14.',
+      'So 15.',
+    ]);
+    await move.getByRole('button', { name: 'Mo 9.', exact: true }).click();
     await expect(page.getByText('Festgenagelt: Mo')).toBeVisible();
     await today(page).getByRole('button', { name: 'Aktionen für Keller' }).click();
     await expect(page.getByRole('menuitem', { name: 'Nicht mehr festnageln' })).toBeVisible();
