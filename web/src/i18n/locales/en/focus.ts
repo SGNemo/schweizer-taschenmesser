@@ -66,7 +66,7 @@ export const focus: Strings['focus'] = {
       'On Mondays the planner shows one quiet line that leads to the week sheet. An × hides it for the week; the sheet is always in the ⋯ menu.',
     eveningWrapUp: '“Wrap up the day” in the evening',
     eveningWrapUpHint:
-      'From late afternoon, you can move what’s left to tomorrow with one tap. With the planner, a preview first shows where the rest goes.',
+      'From late afternoon, you can move what’s left to tomorrow with one tap. With the planner, a preview first shows where the rest goes. With an end of day, the planner says “The day is ending soon.” half an hour before.',
   },
   reminders: {
     title: 'Calm reminders',

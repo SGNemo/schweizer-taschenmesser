@@ -65,7 +65,7 @@ const MAX: Record<string, Record<Metric | 'seconds', number>> = {
   // prettier-ignore
   'G Sonntag-Frist und Montag früh · desktop-chrome': { taps: 4, keys: 102, screens: 1, dialogs: 1, detours: 0, seconds: 35 },
   // prettier-ignore
-  'H Schlaf: Abendgrenze für den Plan · desktop-chrome': { taps: 3, keys: 10, screens: 2, dialogs: 0, detours: 1, seconds: 15 },
+  'H Schlaf: Abendgrenze für den Plan · desktop-chrome': { taps: 2, keys: 0, screens: 0, dialogs: 0, detours: 0, seconds: 2 },
 };
 
 class Meter {
@@ -795,27 +795,75 @@ test('G Sonntag-Frist und Montag früh', async ({ page, isMobile }, info) => {
 test('H Schlaf: Abendgrenze für den Plan', async ({ page, isMobile }, info) => {
   const name = 'H Schlaf: Abendgrenze für den Plan';
   test.skip(isMobile, 'measured on the PC');
-  await prepare(page, ['todos', 'planner']);
+  await prepare(page, ['todos', 'planner'], [{ title: 'Duschen' }]);
   const m = new Meter(page, false);
-  await m.go('/planner');
-  // No sleep or bedtime setting exists; the nearest is the planner's time window per weekday (module settings).
-  await m.nav(
-    page.getByRole('link', { name: 'Dieses Modul anpassen' }).first(),
-    /Planer|Einstellungen/,
+  await page.goto('/planner');
+  await expect(page.getByTestId('planner-head')).toBeVisible();
+  // Package 6 (TARGET F6, REVIEW-FABLE R4): the day end rides on path C's sheet – „Tage einteilen“ is open anyway in
+  // the morning, so only what the day end adds is counted: „Tagesende festlegen“ and the chip. Opening the sheet,
+  // „Weiter“ and „Übernehmen“ are path C's taps.
+  await page.getByRole('button', { name: 'Weitere Optionen', exact: true }).first().click();
+  await page.getByRole('menuitem', { name: 'Tage einteilen' }).click();
+  const setup = page.getByRole('dialog', { name: 'Tage einteilen' });
+  await setup.getByRole('button', { name: 'Weiter' }).click();
+  await m.tap(setup.getByRole('button', { name: 'Tagesende festlegen' }));
+  await m.tap(
+    setup.getByRole('group', { name: 'Tagesende' }).getByRole('button', { name: '23:00' }),
   );
-  const sat = page.getByLabel('Zeitfenster Samstag');
-  await expect(sat).toBeVisible();
-  await m.type(sat, '10-23');
-  await m.tap(page.locator('main h1'));
-  await m.type(page.getByLabel('Zeitfenster Sonntag'), '10-23');
-  await m.tap(page.locator('main h1'));
-  // The window is saved …
+  await expect(setup.getByText('Gilt für jeden Tag.')).toBeVisible();
+  await setup.getByRole('button', { name: 'Weiter' }).click();
+  await expect(setup.getByText('Tagesende 23:00, für jeden Tag')).toBeVisible();
+  await setup.getByRole('button', { name: 'Übernehmen' }).click();
+  await expect(setup).toHaveCount(0);
+  const stored = (await rows<{ id: string; dayEnd?: string }>(page, '_settings')).find(
+    (r) => r.id === 'module.planner',
+  );
+  // The setting must hold the day end for every day; anything else is a detour to the settings page.
+  const dayEnd = stored?.dayEnd;
+  if (dayEnd !== '23:00') m.detour();
+  // 22:30, half an hour before: one calm sentence in the head, with „Rest verteilen“ while „Duschen“ is open.
+  await page.clock.setFixedTime(new Date(`${SATURDAY}T22:30:00`));
   await page.reload();
-  await expect(page.getByLabel('Zeitfenster Samstag')).toHaveValue('10:00–23:00');
-  // … but it gives times and is no limit: what does not fit before 23:00 still stays on the day without a time
-  // (windows.ts). A detour while no „Tagesende“ exists that the plan respects (F6 adds it).
-  const dayEnd = await page.getByLabel(/Tagesende/).count();
-  if (dayEnd === 0) m.detour();
-  facts(info, 'H', { window: await sat.inputValue(), dayEnd });
+  const line = page.getByTestId('day-end-line');
+  await expect(line).toContainText('Bald ist Tagesende.');
+  await expect(line.getByRole('button', { name: 'Rest verteilen' })).toBeVisible();
+  // One line at a time: the 17:00 link is not there besides it.
+  await expect(page.getByTestId('rest-link')).toHaveCount(0);
+  const said = (await line.innerText()).replace(/\s+/g, ' ').trim();
+  // The switch `focus.eveningWrapUp` off: no evening line at all (not counted, the switch is set once).
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open('taschenmesser');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const db = open.result;
+          const tx = db.transaction('_settings', 'readwrite');
+          const store = tx.objectStore('_settings');
+          const get = store.get('focus');
+          get.onsuccess = () =>
+            store.put({
+              createdAt: 1,
+              deviceId: 'e2e',
+              deletedAt: null,
+              _f: {},
+              ...get.result,
+              id: 'focus',
+              updatedAt: Date.now(),
+              eveningWrapUp: false,
+            });
+          tx.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+          tx.onerror = () => reject(tx.error);
+        };
+      }),
+  );
+  await page.reload();
+  await expect(page.getByTestId('planner-head')).toBeVisible();
+  await expect(page.getByTestId('day-end-line')).toHaveCount(0);
+  await expect(page.getByTestId('rest-link')).toHaveCount(0);
+  facts(info, 'H', { dayEnd, line: said });
   await record(info, m, name);
 });

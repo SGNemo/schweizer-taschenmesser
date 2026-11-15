@@ -13,6 +13,7 @@ Examples to copy from. Rules: [FOCUS-GUIDELINES.md](FOCUS-GUIDELINES.md) (text r
 | Money deadline passed | "Rechnung offen · 12,00 € · Frist war am 21. Sep." | "Du hast die Frist verpasst" |
 | Replan | "Neu planen" · "Auf die nächsten Tage verteilt." (+ Rückgängig) | "Aufräumen" |
 | Rest of the day (evening) | "Rest verteilen" · "Was heute offen ist, geht auf die nächsten Tage." · "Rest verteilen?" | "3 Sachen liegen geblieben" · "Du hast heute nicht alles geschafft" |
+| End of day near (planner head, 30 min before) | "Bald ist Tagesende." · with something open: "Bald ist Tagesende. Rest verteilen" · en: "The day is ending soon." | "Zu spät!" · "Du hättest schon schlafen sollen" · "Noch 3 Dinge offen" |
 | Done | "Erledigt." · "Gut gemacht." (sparsam) | "Super!!! Weiter so!" |
 | Planned mail, last message is mine (mail row) | "Beantwortet? · Erledigt" → "Erledigt · Rückgängig" · en: "Answered? · Done" | "Beantwortet ✓" (a claim) · "Noch nicht erledigt!" · closing it by itself |
 | Done today | "Erledigt heute: 3" · "Gut dabei" | "Nur 3 geschafft" |

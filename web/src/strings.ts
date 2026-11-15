@@ -1349,7 +1349,7 @@ export const de = {
         'Montags steht im Planer eine stille Zeile, die zum Wochenzettel führt. Ein × blendet sie für die Woche aus; über ⋯ ist der Zettel immer da.',
       eveningWrapUp: '„Tag abschließen“ am Abend',
       eveningWrapUpHint:
-        'Ab dem späten Nachmittag lässt sich Übriges mit einem Tipp auf morgen schieben. Mit dem Planer zeigt erst eine Vorschau, wohin der Rest geht.',
+        'Ab dem späten Nachmittag lässt sich Übriges mit einem Tipp auf morgen schieben. Mit dem Planer zeigt erst eine Vorschau, wohin der Rest geht. Mit einem Tagesende sagt der Planer eine halbe Stunde vorher „Bald ist Tagesende.“',
     },
     reminders: {
       title: 'Ruhige Erinnerungen',
@@ -8398,6 +8398,9 @@ export const de = {
         windowSaturdayHelp: 'Leer heißt: Samstag ohne Uhrzeit.',
         windowSunday: 'Zeitfenster Sonntag',
         windowSundayHelp: 'Leer heißt: Sonntag ohne Uhrzeit.',
+        dayEnd: 'Tagesende',
+        dayEndHelp:
+          'Zum Beispiel 23:00, gilt für jeden Tag. Eine halbe Stunde vorher steht im Planer „Bald ist Tagesende.“ Leer heißt: keins.',
         bufferShare: 'Puffer',
         bufferShareHelp:
           'Dieser Anteil der freien Zeit bleibt ungeplant – für das, was zwischendurch kommt.',
@@ -8639,6 +8642,7 @@ export const de = {
       notifyBody:
         'Was heute offen ist, lässt sich auf die nächsten Tage verteilen. Ein Tipp zeigt die Vorschau.',
       nothing: 'Für heute bleibt nur, was fest auf heute liegt.',
+      dayEnd: 'Bald ist Tagesende.',
     },
     daySetup: {
       open: 'Tage einteilen',
@@ -8657,6 +8661,12 @@ export const de = {
       previewTitle: 'So sieht dein Plan aus',
       next: 'Weiter',
       back: 'Zurück',
+      dayEndLink: 'Tagesende festlegen',
+      dayEndLabel: 'Tagesende',
+      dayEndNone: 'keins',
+      dayEndHint: 'Gilt für jeden Tag. Eine halbe Stunde vorher sagt es der Planer.',
+      dayEndSet: (time: string) => `Tagesende ${time}, für jeden Tag`,
+      dayEndCleared: 'Kein Tagesende mehr',
     },
     chip: {
       title: (planned: string, n: number) =>
