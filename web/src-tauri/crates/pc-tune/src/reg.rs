@@ -453,10 +453,15 @@ mod win {
             let (key_w, name_w) = (wide(key), wide(name));
             let mut handle = HKEY::default();
             // The key is opened (created when missing) and the value stored with
-            // `RegSetValueExW`, which keeps the bytes exactly as given. (`RegSetKeyValueW` adds a
-            // terminator to a string that has none, so an undo would not be byte for byte.)
+            // `RegSetValueExW`. For a string without a terminator Windows looks at the two bytes
+            // behind the data and, when they are zero, stores them as well. The data is therefore
+            // handed over inside a longer buffer whose tail is not zero: nothing is added, the
+            // look stays inside our own memory, and an undo is byte for byte.
+            let len = data.len();
+            let mut data = data;
+            data.extend_from_slice(&[0xFF; 4]);
             // SAFETY: both strings are NUL-terminated locals; `handle` is closed after a
-            // successful open; `data` is a slice that outlives the call. The hive is the constant
+            // successful open; `data[..len]` is a slice that outlives the call. The hive is the constant
             // HKEY_CURRENT_USER.
             let rc = unsafe {
                 let opened = RegCreateKeyExW(
@@ -478,7 +483,7 @@ mod win {
                     PCWSTR(name_w.as_ptr()),
                     None,
                     REG_VALUE_TYPE(ty),
-                    Some(&data),
+                    Some(&data[..len]),
                 );
                 let _ = RegCloseKey(handle);
                 rc
