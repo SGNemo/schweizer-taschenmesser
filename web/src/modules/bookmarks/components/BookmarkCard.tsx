@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
+import { useModuleStates } from '@/core/modules/activation';
 import { t } from '@/strings';
 import { RowMenu } from '@/ui';
 import { hostOf, statusOf } from '../logic';
@@ -34,6 +35,7 @@ export function BookmarkCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const image = usePreviewImage(item.id, item.preview?.image);
   const status = statusOf(item);
+  const planner = useModuleStates()?.planner === true;
   const site = item.preview?.site ?? hostOf(item.url);
   const title = (
     <>
@@ -70,6 +72,9 @@ export function BookmarkCard({
           {[
             t.bookmarks.kinds[item.kind],
             status === 'open' ? undefined : t.bookmarks.statuses[status],
+            planner && item.inPlan && !item.done && item.kind !== 'link'
+              ? t.bookmarks.inPlan
+              : undefined,
             site,
           ]
             .filter(Boolean)
@@ -87,7 +92,13 @@ export function BookmarkCard({
           label={`${t.bookmarks.moreOptions}: ${item.title}`}
           open={menuOpen}
           onOpenChange={setMenuOpen}
-          items={bookmarkMenu(item, { edit: onEdit, filterTag: onFilterTag, read: onRead })}
+          items={bookmarkMenu(item, {
+            edit: onEdit,
+            filterTag: onFilterTag,
+            read: onRead,
+            preview: true,
+            plan: planner,
+          })}
         />
       </div>
     </article>

@@ -12,6 +12,7 @@ import { availableManifests } from '@/core/modules/available';
 import { addDays } from '@/core/plan/dates';
 import { dayName, partWord } from '@/core/plan/explain';
 import type { DayPart } from '@/core/plan/types';
+import { unitId } from '@/core/plan/units';
 import { spanMin, windowText, type TimeWindow } from '@/core/plan/windows';
 import { now, today } from '@/core/time/now';
 import { undoEntry } from '@/core/undo';
@@ -30,7 +31,7 @@ import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import type { SetupThing } from './daySetup';
 import { readFieldWithPart } from './dueWords';
-import { dayRepo, itemKeyOf, itemRepo, putRow } from './repo';
+import { assignmentRepo, dayRepo, itemKeyOf, itemRepo, putRow } from './repo';
 import type { PlanDayRow, PlanItemRow } from './schema';
 import { overloadLine } from './overload';
 import { getPlannerSettings } from './prefs';
@@ -255,13 +256,22 @@ export async function markDone(
   return act(t.planner.toast.done, t.planner.toast.done, titles, () => s.onDone!(e.id));
 }
 
-/** „Später“: the thing's own date becomes tomorrow (an earliest day, never a pin); false for a source without a date. */
+/**
+ * „Später“: the thing's own date becomes the day after the one it is planned on, never before tomorrow (an
+ * earliest day, never a pin) – so it leaves its day whichever day that is; a pin on the thing is lifted in the
+ * same undoable step. False for a source without a date.
+ */
 export async function later(e: PlannableEntry, titles: Record<string, string>): Promise<boolean> {
   const s = await source(e.moduleId);
   if (!s?.onAssign) return false;
-  return act(t.planner.toast.later, t.planner.toast.later, titles, () =>
-    s.onAssign!(e.id, addDays(today(), 1)),
-  );
+  return act(t.planner.toast.later, t.planner.toast.later, titles, async () => {
+    // A pin beats an earliest day: „Später“ on a nailed thing lifts the pin, or nothing would move.
+    if ((await itemRepo.get(itemKeyOf(e.moduleId, e.id)))?.pinned)
+      await itemPatch(e, { pinned: undefined });
+    // The first session's row is the thing's first day (`<itemKey>#0`); a waiting thing has none.
+    const on = (await assignmentRepo.get(unitId(itemKeyOf(e.moduleId, e.id), 0)))?.date;
+    await s.onAssign!(e.id, addDays(on && on > today() ? on : today(), 1));
+  });
 }
 
 /** The lengths „Als Pause …“ offers (minutes): 1 h · 2 h · 3 h. */
@@ -408,7 +418,7 @@ export const AVAILABLE_STEP = 30;
 
 /**
  * „Übernehmen“ of „Tage einteilen“: the chosen minutes of the shown days (day rows only, never the weekday
- * settings), the dump's things as ToDos through the quick-capture targets (one batch, all or nothing; „bis So“
+ * settings), the dump's things through the quick-capture targets, each line as the capture reads it (one batch, all or nothing; „bis So“
  * makes the planner item's deadline hard, as in the field), the „Tagesende“ when one was chosen (a setting for every
  * day, package 6) and the run – one undoable action, one toast
  * „Eingeplant: Sa, So, Mo · Rückgängig“. A day that was not touched keeps what it had. `reshuffle` (a day gained
@@ -441,20 +451,21 @@ export function applyDaySetup(
         await dayPatch(d.date, { availableMin: Math.max(0, Math.min(1440, d.min)) });
       if (things.length === 0) return;
       // Ids in line order: ToDos saved in the same millisecond tie on their age and the engine then
-      // breaks the tie by id – sorted, the plan keeps the order the preview showed. A break („Pause …“)
-      // is a blocker of its day through the quick-capture target `break`: no id, no ToDo.
+      // breaks the tie by id – sorted, the plan keeps the order the preview showed. Every other line goes
+      // through its own quick-capture target, as the capture saves it (W23): a Termin, a reminder (`once`),
+      // a break („Pause …“: a blocker of its day) – no id, no ToDo. All of it is recorded in this one action.
       const ids = things.map(() => randomId()).sort();
       await saveCaptures(
         things.map((th, i) =>
-          th.isBreak
-            ? { type: 'break' as const, fields: th.fields }
-            : { type: 'todo' as const, fields: th.fields, id: ids[i] },
+          th.type === 'todo'
+            ? { type: th.type, fields: th.fields, id: ids[i] }
+            : { type: th.type, fields: th.fields },
         ),
         things.map((th) => th.fields.title).join('\n'),
       );
       const moduleId = targetFor('todo').moduleId;
       for (const [i, th] of things.entries()) {
-        if (!th.hardDue || th.isBreak) continue;
+        if (!th.hardDue || th.type !== 'todo') continue;
         await putRow(itemRepo, itemKeyOf(moduleId, ids[i]!), {
           source: { module: moduleId, id: ids[i]! },
           due: {

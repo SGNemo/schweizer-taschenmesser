@@ -2,8 +2,7 @@ import { parseLines } from '@/core/io/textLines';
 import type { ImportCandidate, ImporterRuntime } from '@/core/importer/types';
 import { t } from '@/strings';
 import { PACKING_TEMPLATES, parseEntry, type PackingTemplate } from './logic';
-import { ensureShoppingList, itemRepo, listRepo } from './repo';
-import { SHOPPING_LIST_ID } from './schema';
+import { itemRepo, listRepo, shoppingTargetId } from './repo';
 
 const key = (a: string, b = '') => `${a.trim().toLowerCase()}/${b.trim().toLowerCase()}`;
 const s = t.onboarding.lists;
@@ -11,14 +10,15 @@ const s = t.onboarding.lists;
 const runtime: ImporterRuntime = {
   async parse(id, input, ctx) {
     if (id === 'text' && input.kind === 'text') {
-      await ensureShoppingList();
+      const listId = await shoppingTargetId();
+      const listName = (await listRepo.get(listId))?.name ?? t.lists.defaultShopping;
       return {
         candidates: parseLines(input.text, { max: 500 }).map((line, i): ImportCandidate => {
           const { name, quantity } = parseEntry(line);
           return {
             collection: 'item',
             data: {
-              listId: SHOPPING_LIST_ID,
+              listId,
               name,
               done: false,
               order: i,
@@ -26,7 +26,7 @@ const runtime: ImporterRuntime = {
             },
             label: name,
             ...(quantity ? { detail: quantity } : {}),
-            dedupeKey: key(t.lists.defaultShopping, name),
+            dedupeKey: key(listName, name),
           };
         }),
         notes: [],
@@ -76,13 +76,13 @@ const runtime: ImporterRuntime = {
   async existingKeys(collection) {
     const lists = await listRepo.active().toArray();
     if (collection === 'list') return new Set(lists.map((l) => key(l.name)));
-    const names = new Map(lists.map((l) => [l.id, l.name]));
+    const byId = new Map(lists.map((l) => [l.id, l]));
     const items = await itemRepo.active().toArray();
     return new Set(
       items
         // An open shopping entry counts as present; for other lists every entry does.
-        .filter((i) => !i.done || names.get(i.listId) !== t.lists.defaultShopping)
-        .map((i) => key(names.get(i.listId) ?? '', i.name)),
+        .filter((i) => !i.done || byId.get(i.listId)?.kind !== 'shopping')
+        .map((i) => key(byId.get(i.listId)?.name ?? '', i.name)),
     );
   },
 };

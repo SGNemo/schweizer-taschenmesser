@@ -1,0 +1,10 @@
+/* "Schon gemerkt": a quiet line under the address, the way out beside it. */
+.duplicate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}

@@ -112,6 +112,31 @@ function httpUrl(raw: string | undefined): string | undefined {
   }
 }
 
+/**
+ * First word of a Merkzettel → its kind ("m film Dune" → Film/Serie „Dune“). German like the parser; the
+ * values are the kinds of `modules/bookmarks/schema.ts` (no module import here; `targets.test.ts` pins them).
+ */
+const BOOKMARK_KIND_WORDS: Record<string, string> = {
+  lesen: 'read',
+  artikel: 'read',
+  film: 'watch',
+  serie: 'watch',
+  ansehen: 'watch',
+  anschauen: 'watch',
+  buch: 'book',
+  ort: 'place',
+  kaufen: 'buy',
+  ausprobieren: 'try',
+  idee: 'idea',
+};
+
+/** "film: Dune" → kind `watch`, title "Dune". A word alone ("Buch") stays the title. */
+export function bookmarkKindFromText(text: string): { kind?: string; title: string } {
+  const match = /^(\p{L}+)(?::\s*|\s+)(\S[\s\S]*)$/u.exec(text.trim());
+  const kind = match ? BOOKMARK_KIND_WORDS[match[1]!.toLowerCase()] : undefined;
+  return kind ? { kind, title: match![2]!.trim() } : { title: text.trim() };
+}
+
 const bookmarks: CaptureTarget = {
   type: 'bookmark',
   moduleId: 'bookmarks',
@@ -119,11 +144,12 @@ const bookmarks: CaptureTarget = {
   // Direct write: the module's dedupe service (`bookmark.requested`) only runs in the main window.
   build: (f) => {
     const url = httpUrl(f.url);
-    const name = f.title.trim() || (url ? new URL(url).hostname : '');
+    const said = bookmarkKindFromText(f.title);
+    const name = said.title || (url ? new URL(url).hostname : '');
     if (!name) throw new CaptureError('invalid');
     return {
       title: name,
-      kind: 'link',
+      kind: said.kind ?? 'link',
       ...(url ? { url } : {}),
     };
   },
@@ -191,10 +217,12 @@ export const openRest = (row: Record<string, unknown>): number =>
     : 0);
 
 /**
- * A payment reminder on its open invoice: writes exactly three things – the level + 1 (at most 3), the
- * day of the reminder and one appended note line – and never the amount or the due date (money changes
- * only in the editor). Noting the same reminder again does nothing. The undo removes only that line
- * and resets level and day only while they still hold what was written; it never removes the invoice.
+ * A payment reminder on its open invoice: writes the level + 1 (at most 3), the day of the reminder, one
+ * appended note line and – where the reminder states them – its deadline and amount as the fields
+ * `dunnedDueDate` / `dunnedAmountMinor` (planner hub S1, L6: the planner needs a date, not prose). Never the
+ * invoice's own amount or due date (money changes only in the editor). Noting the same reminder again does
+ * nothing. The undo removes only that line and resets each field only while it still holds what was written;
+ * it never removes the invoice.
  */
 async function amendInvoice(
   f: CaptureFields,
@@ -209,6 +237,8 @@ async function amendInvoice(
   const before = {
     level: row.dunningLevel as number | undefined,
     at: row.dunnedAt as string | undefined,
+    due: row.dunnedDueDate as string | undefined,
+    amount: row.dunnedAmountMinor as number | undefined,
   };
   if (before.at && before.at >= day)
     return { ...base, amended: true, existed: true, undo: async () => undefined };
@@ -221,7 +251,16 @@ async function amendInvoice(
     f.date ? formatDay(f.date, 'dd.MM.yyyy') : undefined,
   );
   const note = [row.note as string | undefined, line].filter(Boolean).join('\n');
-  await repo.update(match.id, { dunningLevel: level, dunnedAt: day, note });
+  // What this reminder claims; one that names no deadline or amount leaves the earlier claim as it is.
+  const due = f.date ? date(f.date) : undefined;
+  const amount = f.amountMinor && f.amountMinor > 0 ? f.amountMinor : undefined;
+  await repo.update(match.id, {
+    dunningLevel: level,
+    dunnedAt: day,
+    note,
+    ...(due ? { dunnedDueDate: due } : {}),
+    ...(amount ? { dunnedAmountMinor: amount } : {}),
+  });
   return {
     ...base,
     amended: true,
@@ -242,6 +281,8 @@ async function amendInvoice(
       }
       if (now.dunningLevel === level) patch.dunningLevel = before.level;
       if (now.dunnedAt === day) patch.dunnedAt = before.at;
+      if (due && now.dunnedDueDate === due) patch.dunnedDueDate = before.due;
+      if (amount && now.dunnedAmountMinor === amount) patch.dunnedAmountMinor = before.amount;
       if (Object.keys(patch).length > 0) await repo.update(match.id, patch);
     },
   };

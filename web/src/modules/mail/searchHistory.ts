@@ -50,3 +50,68 @@ export function suggestionsFor(
   }
   return out;
 }
+
+/* ------------------------------ filter chips (Gmail operators) ------------------------------ */
+
+/** The quick filters under the search: each one is a Gmail operator written into the search text. */
+export const FILTERS = ['is:unread', 'has:attachment', 'is:starred', 'older_than:1y'] as const;
+export type Filter = (typeof FILTERS)[number];
+
+const tokens = (query: string): string[] => query.trim().split(/\s+/).filter(Boolean);
+
+/** Does the search already hold this operator (as a whole word, any case)? */
+export const hasFilter = (query: string, filter: Filter): boolean =>
+  tokens(query).some((tok) => tok.toLowerCase() === filter);
+
+/** Adds the operator to the search, or takes it out when it is there; the rest of the text stays. */
+export function toggleFilter(query: string, filter: Filter): string {
+  const list = tokens(query);
+  return hasFilter(query, filter)
+    ? list.filter((tok) => tok.toLowerCase() !== filter).join(' ')
+    : [...list, filter].join(' ');
+}
+
+/* ----------------------------------------- saved searches ----------------------------------------- */
+
+/**
+ * Searches the user keeps („Suche merken“): device-local like the history (never synced, never sent), at
+ * most ten, shown in the folder column. A search text can name people (`from:anna`), which is why it stays
+ * on this device.
+ */
+const SAVED_KEY = 'tm-mail-saved-searches';
+const SAVED_MAX = 10;
+
+export function readSaved(): string[] {
+  try {
+    const v: unknown = JSON.parse(localStorage.getItem(SAVED_KEY) ?? '[]');
+    return Array.isArray(v)
+      ? v.filter((x): x is string => typeof x === 'string' && x.trim() !== '').slice(0, SAVED_MAX)
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeSaved(list: string[]): string[] {
+  try {
+    localStorage.setItem(SAVED_KEY, JSON.stringify(list));
+  } catch {
+    /* storage unavailable: nothing is kept */
+  }
+  return list;
+}
+
+export const isSaved = (saved: readonly string[], query: string): boolean =>
+  saved.some((s) => s.toLowerCase() === query.trim().toLowerCase());
+
+/** Keeps a search (newest last, like a list the user builds); a full list keeps its first ten. */
+export function saveSearch(query: string): string[] {
+  const q = query.trim();
+  const now = readSaved();
+  if (!q || isSaved(now, q) || now.length >= SAVED_MAX) return now;
+  return writeSaved([...now, q]);
+}
+
+export function forgetSearch(query: string): string[] {
+  return writeSaved(readSaved().filter((s) => s.toLowerCase() !== query.trim().toLowerCase()));
+}

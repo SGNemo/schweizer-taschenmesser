@@ -87,7 +87,12 @@ export const TRASH_COLLECTIONS: readonly TrashCollection[] = [
     kind: () => 'note',
   },
   { table: 'bookmarks_item', title: (r) => str(r.title), kind: () => 'bookmark' },
-  { table: 'lists_list', title: (r) => str(r.name), kind: () => 'list' },
+  {
+    table: 'lists_list',
+    title: (r) => str(r.name),
+    kind: () => 'list',
+    children: { table: 'lists_item', parentKey: 'listId' },
+  },
   { table: 'pantry_item', title: (r) => str(r.name), kind: () => 'pantry' },
   { table: 'people_person', title: (r) => str(r.name), kind: () => 'person' },
   { table: 'people_gift', title: (r) => str(r.title), kind: () => 'gift' },

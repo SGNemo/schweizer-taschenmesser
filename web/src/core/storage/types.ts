@@ -33,7 +33,14 @@ export interface StorageAdapter {
   /** Clears entries that did not change again since they were read. */
   acknowledge(entries: OutboxEntry[]): Promise<void>;
   /** Merges remote ops (greatest HLC per field wins). `markDirty` queues touched records for pushing. */
-  applyRemote(ops: FieldOp[], opts?: { markDirty?: boolean }): Promise<ApplyResult>;
+  applyRemote(
+    ops: FieldOp[],
+    opts?: {
+      markDirty?: boolean;
+      /** The ops were pulled before (a restarted cursor): merged as usual, never logged as a conflict. */
+      replay?: boolean;
+    },
+  ): Promise<ApplyResult>;
   /** Queues every synced record, e.g. for the first upload to a new server. */
   markAllDirty(): Promise<void>;
   pendingCount(): Promise<number>;
@@ -47,4 +54,18 @@ export interface StorageAdapter {
    * `core/sync/service.ts` `syncSettled()` reads it. Optional: test doubles need not keep it.
    */
   setPullComplete?(complete: boolean): Promise<void>;
+  /**
+   * Cursor repair for tables a newer app version syncs: ops of a table this device did not know were
+   * dropped while the cursor moved on (`applyRemote`, `skippedUnknown`). The store keeps the set of
+   * synced table names (device-local); when the set has a name the stored one lacks, the pull cursor
+   * restarts at 0 once – re-applying is idempotent – and the new set is stored. Returns whether it
+   * restarted. `runSync` calls it before every round, for every transport (they share this store).
+   * Optional: test doubles need not keep it.
+   */
+  restartForNewTables?(): Promise<boolean>;
+  /**
+   * The cursor the last restart replaced: a page that starts below it was pulled before and is a replay
+   * (`applyRemote` `replay`). 0 when there was none; cleared when the remote data set changes.
+   */
+  getReplayUntil?(): Promise<number>;
 }

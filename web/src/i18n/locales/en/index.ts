@@ -30,6 +30,7 @@ import { reminder } from './reminder';
 import { notifications } from './notifications';
 import { attention } from './attention';
 import { widgets } from './widgets';
+import { charts } from './charts';
 import { homeEdit } from './homeEdit';
 import { homeEmpty } from './homeEmpty';
 import { homeAuto } from './homeAuto';
@@ -112,6 +113,7 @@ export const en: Strings = {
   notifications,
   attention,
   widgets,
+  charts,
   homeEdit,
   homeEmpty,
   homeAuto,

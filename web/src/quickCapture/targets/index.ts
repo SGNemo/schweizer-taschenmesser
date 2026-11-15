@@ -1,3 +1,4 @@
+import { hashId } from '@/core/db/hashId';
 import { randomId } from '@/core/db/util';
 import { createCollectionRepo, type Repo } from '@/core/db/repo';
 import type { TaschenmesserDB } from '@/core/db/db';
@@ -43,11 +44,7 @@ const noop = async (): Promise<void> => undefined;
  * A short deterministic id from its parts (SHA-256, hex, 16 characters): the same parts give the same
  * id on every device, so a second save of the same thing finds the first instead of doubling it.
  */
-export async function captureId(parts: readonly string[]): Promise<string> {
-  const bytes = new TextEncoder().encode(parts.join('\u0000'));
-  const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
-  return Array.from(hash.slice(0, 8), (b) => b.toString(16).padStart(2, '0')).join('');
-}
+export const captureId = (parts: readonly string[]): Promise<string> => hashId(parts, 8);
 
 /**
  * Writes `data` under a fixed id only when nothing has that id yet. `createMany` skips an existing id

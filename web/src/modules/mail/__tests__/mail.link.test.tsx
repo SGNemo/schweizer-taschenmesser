@@ -117,7 +117,7 @@ describe('create from this mail', () => {
     const back = await screen.findByTestId('mail-linked');
     expect(
       within(back).getByRole('link', { name: /Rechnung „Stadtwerke Musterstadt“ öffnen/ }),
-    ).toHaveAttribute('href', '/invoices');
+    ).toHaveAttribute('href', `/invoices?open=${invoice.id}`); // the entry itself (P44)
     const [row] = await db.table('mail_link').toArray();
     expect(row).toMatchObject({
       accountKey: 'google',

@@ -10,4 +10,5 @@ New decisions go into the matching topic file as one bullet (not into this index
 - [modules-money](modules-money.md) – Money: comfort packages 5a–6, missed cancellation deadline, currency per account/invoice/subscription/budget, bank import (T2), rules from suggestions, paid invoice → booking, finance/invoices/subscriptions/budgets depth
 - [modules-desktop-net](modules-desktop-net.md) – Built-in browser (P1), download manager (P2), BitTorrent (P3), browser on Android and association (P4)
 - [modules-household-knowledge](modules-household-knowledge.md) – Knowledge/media pass, household and vault depth, pantry and gifts events, barcode scan, trip weather, Passwörter additions, contacts import, habits, time tracking, feeds and OPML, fitness packages 1–5
+- [modules-bookmarks](modules-bookmarks.md) – Merkliste: role, kinds, capture (duplicates, preview on a click, kind from the first word), plan and widget
 - [modules-catalogue](modules-catalogue.md) – Maturity `stable | preview` (T3), importers for other apps, Notion import, default set of a fresh installation

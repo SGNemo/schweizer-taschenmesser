@@ -4,55 +4,17 @@ import type { MediaItem, Playlist } from '@/core/connectors/types';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { tMusicPage } from '@/strings.musicPage';
 import { tSpotify } from '@/strings.spotify';
-import type { CoverImage } from '@/core/connectors/coverUrl';
+import { readStartPlaylists } from '../library';
+import { continueFrom } from '../continueListening';
 import { readRecent } from '../recentOnce';
-import { COVER_PX } from '../useCover';
-import { Cover } from './Cover';
+import { Tile } from './Tile';
 import { viewKey, type PlayerApi, type View } from './types';
 import styles from '../routes/music.module.css';
+import sx from './Spotify.module.css';
 
 const CONNECTIONS = settingsPath('verbindungen');
 const RECENT_SHOWN = 12;
 const PLAYLISTS_SHOWN = 24;
-
-function Tile({
-  api,
-  title,
-  sub,
-  cover,
-  alt,
-  onOpen,
-  small = false,
-}: {
-  api: PlayerApi;
-  title: string;
-  sub?: string;
-  cover: { coverUrl?: string; covers?: CoverImage[] };
-  /** Name of the playlist or album the picture belongs to. */
-  alt: string;
-  onOpen: () => void;
-  small?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      className={small ? `${styles.tile} ${styles.tileSmall}` : styles.tile}
-      onClick={onOpen}
-    >
-      <Cover
-        ctx={api.np.ctx}
-        item={cover}
-        px={small ? COVER_PX.tileSmall : COVER_PX.tile}
-        alt={alt}
-        className={styles.tileCover}
-        icon={28}
-        testId="music-tile-cover"
-      />
-      <span className={styles.tileTitle}>{title}</span>
-      {sub ? <span className={styles.tileSub}>{sub}</span> : null}
-    </button>
-  );
-}
 
 /**
  * The start view, never empty: what you played last (a row of covers; a tap plays it) and your playlists as a cover grid (a tap
@@ -81,7 +43,7 @@ export function StartView({
         .then((items) => alive && setRecent(items))
         .catch(() => alive && setRecent('error'));
     if (hasPlaylists)
-      source.playlists!(ctx)
+      readStartPlaylists(source, ctx)
         .then((items) => alive && setPlaylists(items))
         .catch(() => alive && setPlaylists('error'));
     return () => {
@@ -95,12 +57,56 @@ export function StartView({
   }, [read, onRead]);
 
   const open = (v: View) => api.open(v);
+  const going = Array.isArray(recent)
+    ? continueFrom(recent, Array.isArray(playlists) ? playlists : undefined)
+    : [];
   return (
     <div className={styles.start} data-testid="music-start">
+      {going.length > 0 ? (
+        <section aria-labelledby="music-continue">
+          <h2 id="music-continue" className={styles.sectionTitle}>
+            {tm.continueTitle}
+          </h2>
+          <div className={styles.recentRow} role="list" data-testid="music-continue">
+            {going.map((c) => (
+              <div role="listitem" key={`${c.kind}:${c.id}`}>
+                <Tile
+                  api={api}
+                  small
+                  title={c.name}
+                  sub={tm.continueKind[c.kind]}
+                  cover={c.cover}
+                  alt={c.name}
+                  label={api.np.canControl ? tm.continuePlay(c.name) : undefined}
+                  onOpen={() =>
+                    // With "Steuern" a tap plays on where it was; without, it opens the list.
+                    api.np.canControl && api.np.source.play
+                      ? void api.act(() =>
+                          api.np.source.play!(api.np.ctx, { kind: c.kind, id: c.id, name: c.name }),
+                        )
+                      : open({ type: c.kind, id: c.id, name: c.name, back: 'start' })
+                  }
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
       <section aria-labelledby="music-recent">
-        <h2 id="music-recent" className={styles.sectionTitle}>
-          {tm.startRecent}
-        </h2>
+        <div className={styles.sectionHead}>
+          <h2 id="music-recent" className={styles.sectionTitle}>
+            {tm.startRecent}
+          </h2>
+          {hasHistory && Array.isArray(recent) && recent.length > 0 ? (
+            <button
+              type="button"
+              className={`${sx.linkButton} ${styles.sectionLink}`}
+              onClick={() => open({ type: 'recent', back: 'start' })}
+            >
+              {tm.recentAll}
+            </button>
+          ) : null}
+        </div>
         {!hasHistory ? (
           <p className={styles.note}>
             {tm.startNeedsHistory} <Link to={CONNECTIONS}>{tx.settings}</Link>
@@ -130,6 +136,7 @@ export function StartView({
         )}
       </section>
       <section aria-labelledby="music-playlists">
+        {/* No "Alle Playlists" here: the tab "Playlists" is that way (stimulus budget, focus checklist 9). */}
         <h2 id="music-playlists" className={styles.sectionTitle}>
           {tm.startPlaylists}
         </h2>

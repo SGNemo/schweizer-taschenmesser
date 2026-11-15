@@ -21,7 +21,7 @@ const manifest: ModuleManifest = {
     tabs: true,
     signature: 'bill',
   },
-  version: 4,
+  version: 5,
   get description() {
     return t.invoices.meta.description;
   },

@@ -121,8 +121,13 @@ export function plan({ today, days, items, prev = [], settings = {} }) {
       if (isMain(u)) mains++;
     };
     // `sameDay`: a second session of one item on the same day is allowed only under deadline pressure.
+    // A pin on a later day of the horizon holds the item back until that day (planner hub P09; the
+    // app's engine is the reference: `web/src/core/plan/engine.ts` `heldUntil`).
+    const held = (u) =>
+      u.item.pinned > day.date && horizon.some((d) => d.date === u.item.pinned);
     const eligible = (u, sameDay = false) =>
       !placed.has(u.id) &&
+      !held(u) &&
       (!u.item.earliest || u.item.earliest <= day.date) &&
       (u.k === 0 ||
         (sameDay

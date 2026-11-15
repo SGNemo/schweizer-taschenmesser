@@ -13,12 +13,14 @@ import { getManifest } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
 import { useUiStore } from '@/stores/ui';
 import { addFromField, applyDaySetup, asBreak, setEstimate } from '../actions';
-import { breakOps, setupThings } from '../daySetup';
+import { breakOps, setupThings, type SetupRead } from '../daySetup';
 import manifest from '../manifest';
 import { assignmentRepo, dayRepo, itemRepo } from '../repo';
 import { runsSettled, runUser, setManifestsForTests } from '../services';
 
 const SAT = '2026-11-14';
+/** The sheet reads lines with the capture's targets of this device (planner, ToDos and Kalender on, German). */
+const READ: SetupRead = { available: ['todo', 'event', 'reminder', 'break', 'note'], breaks: true };
 const todos = getManifest('todos')!;
 const taskRepo = createCollectionRepo(todos, 'task');
 
@@ -188,8 +190,8 @@ it('the field: „Duschen 15 Min“ is a ToDo of 15 min, „Pause 2 Std Zocken�
 });
 
 it('„Tage einteilen“: a „Pause …“ line is a blocker of its day, the other lines stay ToDos in typed order', async () => {
-  const things = setupThings('Steuer 2 Std\nPause So 2 Std Zocken\nBude 1 Std', SAT, true);
-  expect(things.map((th) => [th.fields.title, th.isBreak ?? false])).toEqual([
+  const things = setupThings('Steuer 2 Std\nPause So 2 Std Zocken\nBude 1 Std', READ);
+  expect(things.map((th) => [th.fields.title, th.type === 'break'])).toEqual([
     ['Steuer', false],
     ['Zocken', true],
     ['Bude', false],

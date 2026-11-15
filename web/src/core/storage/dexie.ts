@@ -14,6 +14,10 @@ const CURSOR_KEY = 'sync.cursor';
 const EPOCH_KEY = 'sync.epoch';
 /** `_meta` key of the "last pull ended complete" flag (see `StorageAdapter.setPullComplete`). */
 export const PULL_COMPLETE_KEY = 'sync.pullComplete';
+/** `_meta` key of the synced table names this device pulled with (sorted; see `restartForNewTables`). */
+export const TABLES_KEY = 'sync.tables';
+/** `_meta` key of the cursor a restart replaced (see `getReplayUntil`). */
+const REPLAY_KEY = 'sync.replayUntil';
 /** Records merged per Dexie transaction. */
 const APPLY_CHUNK = 400;
 /** Outbox rows written per transaction by `markAllDirty`. */
@@ -100,7 +104,10 @@ export class DexieStorageAdapter implements StorageAdapter {
     });
   }
 
-  async applyRemote(ops: FieldOp[], opts: { markDirty?: boolean } = {}): Promise<ApplyResult> {
+  async applyRemote(
+    ops: FieldOp[],
+    opts: { markDirty?: boolean; replay?: boolean } = {},
+  ): Promise<ApplyResult> {
     const result: ApplyResult = { applied: 0, records: 0, skippedUnknown: 0, conflicts: 0 };
     const groups = new Map<string, { collection: string; id: string; ops: FieldOp[] }>();
     let newest = '';
@@ -130,10 +137,12 @@ export class DexieStorageAdapter implements StorageAdapter {
       await rwTransaction(this.database, stores, async () => {
         const dirty: OutboxRow[] = [];
         // A record with unsynced local edits that meets a remote edit of the same field is a conflict
-        // (restores pass `markDirty` and are deliberate, so they are not logged).
-        const queued = opts.markDirty
-          ? []
-          : await this.outbox().bulkGet(chunk.map((g): [string, string] => [g.collection, g.id]));
+        // (restores pass `markDirty` and are deliberate, so they are not logged; a replay after a
+        // cursor restart brings ops this device saw before its local edit: no second author).
+        const queued =
+          opts.markDirty || opts.replay
+            ? []
+            : await this.outbox().bulkGet(chunk.map((g): [string, string] => [g.collection, g.id]));
         const found: ReturnType<typeof conflictRows> = [];
         // The records of the chunk are read once per collection and the merged ones written once.
         const current = new Map<string, SyncRow | undefined>();
@@ -229,7 +238,37 @@ export class DexieStorageAdapter implements StorageAdapter {
   }
 
   async setEpoch(epoch: string | undefined): Promise<void> {
+    // Another data set counts its ops anew: the replaced cursor says nothing about it.
+    await this.meta().delete(REPLAY_KEY);
     if (epoch === undefined) await this.meta().delete(EPOCH_KEY);
     else await this.meta().put({ key: EPOCH_KEY, value: epoch });
+  }
+
+  async restartForNewTables(): Promise<boolean> {
+    const current = [...this.tables].sort();
+    return rwTransaction(this.database, [this.meta()], async () => {
+      const raw = (await this.meta().get(TABLES_KEY))?.value;
+      const stored = Array.isArray(raw) ? (raw as string[]) : undefined;
+      if (stored?.length === current.length && current.every((n, i) => n === stored[i]))
+        return false;
+      // No stored set: an install from before this repair – which tables its pulls knew cannot be
+      // told, so it restarts once – or a fresh one (cursor 0: nothing to restart, no loop).
+      const known = new Set(stored);
+      const grew = !stored || current.some((name) => !known.has(name));
+      const cursor = await this.getCursor();
+      const restart = grew && cursor > 0;
+      if (restart) {
+        const before = ((await this.meta().get(REPLAY_KEY))?.value as number | undefined) ?? 0;
+        await this.meta().put({ key: REPLAY_KEY, value: Math.max(before, cursor) });
+        await this.meta().put({ key: CURSOR_KEY, value: 0 });
+      }
+      // Always the exact current set: a table that leaves and returns later counts as new again.
+      await this.meta().put({ key: TABLES_KEY, value: current });
+      return restart;
+    });
+  }
+
+  async getReplayUntil(): Promise<number> {
+    return ((await this.meta().get(REPLAY_KEY))?.value as number | undefined) ?? 0;
   }
 }
