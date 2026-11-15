@@ -20,6 +20,7 @@ import {
   setupLines,
   setupThings,
   writeSetupDraft,
+  type SetupRead,
 } from '../daySetup';
 import manifest from '../manifest';
 import { getPlannerSettings } from '../prefs';
@@ -28,6 +29,8 @@ import { previewUser, runsSettled, setManifestsForTests } from '../services';
 import { DEFAULT_PLANNER_SETTINGS } from '../settings';
 
 const SAT = '2026-11-14';
+/** The sheet reads lines with the capture's targets of this device (planner, ToDos and Kalender on, German). */
+const READ: SetupRead = { available: ['todo', 'event', 'reminder', 'break', 'note'], breaks: true };
 const SUN = '2026-11-15';
 const MON = '2026-11-16';
 const todos = getManifest('todos')!;
@@ -78,7 +81,7 @@ describe('the dump', () => {
   });
 
   it('reads each line like the planner field: „bis So“ is a hard deadline on Sunday', () => {
-    const things = setupThings('Team-Sachen lesen bis So 18:00\nDuschen', SAT, true);
+    const things = setupThings('Team-Sachen lesen bis So 18:00\nDuschen', READ);
     expect(things).toHaveLength(2);
     expect(things[0]).toMatchObject({ hardDue: SUN, fields: { date: SUN } });
     expect(things[0]!.fields.title).toMatch(/^Team-Sachen lesen/);
@@ -87,7 +90,7 @@ describe('the dump', () => {
   });
 
   it('becomes preview items the way the ToDos source will report them', () => {
-    const [team, shower] = previewItems(setupThings('Team bis So\nDuschen', SAT, true), 1000);
+    const [team, shower] = previewItems(setupThings('Team bis So\nDuschen', READ), 1000);
     expect(team).toMatchObject({ key: 'new:0', due: { date: SUN, hard: true }, createdAt: 1000 });
     expect(shower).toMatchObject({ key: 'new:1', priority: 0, splittable: true, createdAt: 1001 });
     expect(shower!.due).toBeUndefined();
@@ -122,7 +125,7 @@ describe('preview and „Übernehmen“', () => {
   it('the saved ToDos keep the line order in their ids (an age tie is broken by id, as in the preview)', async () => {
     await on();
     const lines = Array.from({ length: 12 }, (_, i) => `Ding ${i + 1}`);
-    await applyDaySetup([], setupThings(lines.join('\n'), SAT, true), [SAT], {});
+    await applyDaySetup([], setupThings(lines.join('\n'), READ), [SAT], {});
     await runsSettled();
     const tasks = (await taskRepo.active().toArray()).sort((a, b) => a.id.localeCompare(b.id));
     expect(tasks.map((x) => x.title)).toEqual(lines);
@@ -130,7 +133,7 @@ describe('preview and „Übernehmen“', () => {
 
   it('the preview plans the new things on the days with time and stores nothing', async () => {
     await on();
-    const things = setupThings('Duschen\nBude aufräumen', SAT, true);
+    const things = setupThings('Duschen\nBude aufräumen', READ);
     const out = await previewUser(
       [
         { op: 'available', date: SAT, min: 0 },
@@ -149,7 +152,7 @@ describe('preview and „Übernehmen“', () => {
 
   it('writes the chosen days and the ToDos as one action; Sunday with time takes things; one undo takes all back', async () => {
     await on();
-    const things = setupThings('Duschen\nTeam-Sachen bis So', SAT, true);
+    const things = setupThings('Duschen\nTeam-Sachen bis So', READ);
     const ok = await applyDaySetup(
       [
         { date: SAT, min: 0 },
@@ -191,5 +194,75 @@ describe('preview and „Übernehmen“', () => {
     expect(toast.message).toBe('Tagesende 23:00, für jeden Tag');
     toast.action!.run();
     await expect.poll(async () => (await getPlannerSettings()).dayEnd).toBe('');
+  });
+});
+
+describe('W23: the sheet reads a line as the many-lines capture does', () => {
+  const LINES = [
+    'Team-Sachen lesen bis So 18:00',
+    'So 19 Uhr erinnere mich: kurz schauen',
+    'Mo 7:30 krankmelden falls nötig',
+    'Pause 2 Std Zocken',
+  ];
+  const calendar = getManifest('calendar')!;
+  const events = () =>
+    db
+      .table('calendar_event')
+      .toArray()
+      .then((rows) => rows.filter((r) => r.deletedAt === null));
+
+  it('same reading as `readLine`: a deadline ToDo, a reminder, a Termin and a break, each on its typed day', () => {
+    const things = setupThings(LINES.join('\n'), READ);
+    expect(things.map((th) => [th.type, th.fields.title, th.fields.date, th.fields.time])).toEqual([
+      ['todo', 'Team-Sachen lesen', SUN, '18:00'],
+      ['reminder', 'Kurz schauen', SUN, '19:00'],
+      ['event', 'Krankmelden falls nötig', MON, '07:30'],
+      ['break', 'Zocken', undefined, undefined],
+    ]);
+    expect(things[0]).toMatchObject({ hardDue: SUN, hardDueTime: '18:00' });
+    // Only the ToDo is a thing the plan distributes; the break blocks its day.
+    expect(previewItems(things, 1).map((i) => i.key)).toEqual(['new:0']);
+  });
+
+  it('„Übernehmen“ saves each line through its own target; one undo takes all of it back', async () => {
+    await on();
+    await db.table('_modules').put({
+      id: 'calendar',
+      enabled: true,
+      dataPolicy: null,
+      createdAt: 1,
+      updatedAt: 1,
+      deviceId: 't',
+      deletedAt: null,
+      _f: {},
+    });
+    await db.table('calendar_event').clear();
+    setManifestsForTests(async () => [todos, calendar]);
+    const ok = await applyDaySetup([], setupThings(LINES.join('\n'), READ), [SAT, SUN, MON], {});
+    await runsSettled();
+    expect(ok).toBe(true);
+    const tasks = await taskRepo.active().toArray();
+    expect(tasks.map((x) => [x.title, x.dueDate, x.dueTime, x.note])).toEqual([
+      ['Team-Sachen lesen', SUN, '18:00', undefined],
+    ]);
+    expect((await itemRepo.get(`todos:${tasks[0]!.id}`))?.due).toEqual({
+      date: SUN,
+      hard: true,
+      time: '18:00',
+    });
+    const evs = (await events()).map((e) => [e.title, e.kind ?? 'event', e.startDate, e.startTime]);
+    expect(evs.sort()).toEqual([
+      ['Krankmelden falls nötig', 'event', MON, '07:30'],
+      ['Kurz schauen', 'reminder', SUN, '19:00'],
+    ]);
+    expect((await events()).find((e) => e.kind === 'reminder')?.once).toBe(true);
+    expect((await dayRepo.get(SAT))?.blockers.map((b) => [b.label, b.min])).toEqual([
+      ['Zocken', 120],
+    ]);
+    const toast = useUiStore.getState().toasts.at(-1)!;
+    toast.action!.run();
+    await expect.poll(async () => taskRepo.active().count()).toBe(0);
+    await expect.poll(async () => (await events()).length).toBe(0);
+    await expect.poll(async () => (await dayRepo.get(SAT))?.blockers ?? []).toEqual([]);
   });
 });

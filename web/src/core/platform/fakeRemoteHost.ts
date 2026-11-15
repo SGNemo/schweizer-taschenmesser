@@ -19,7 +19,8 @@ const RANK: Record<RemoteLevel, number> = { off: 0, media: 1, full: 2 };
 const widens = (next: RemoteHostGrant, old: RemoteHostGrant): boolean =>
   RANK[next.level] > RANK[old.level] ||
   (old.paused && !next.paused) ||
-  (old.unlock && !next.unlock);
+  (old.unlock && !next.unlock) ||
+  (next.power && !old.power);
 
 /** The fake and its test hooks (unit tests use them directly). */
 export function createFakeRemoteHostParts() {
@@ -31,6 +32,7 @@ export function createFakeRemoteHostParts() {
   let asked = 0;
   let failNext: string | undefined;
   let controller: { id: string; level: RemoteLevel } | null = null;
+  let busy = 0;
   const devices: RemoteHostDevice[] = [];
 
   const needRunning = () => {
@@ -82,8 +84,10 @@ export function createFakeRemoteHostParts() {
       const device = devices.find((d) => d.id === id);
       if (!device) throw new Error('not-found');
       mayFail();
-      if (widens(grant, device)) ask();
-      Object.assign(device, grant);
+      // no level, no power (as the shell does)
+      const next = { ...grant, power: grant.level !== 'off' && grant.power };
+      if (widens(next, device)) ask();
+      Object.assign(device, next);
       if (controller?.id === id) controller = null;
     },
     setNotice: async (on) => {
@@ -100,6 +104,9 @@ export function createFakeRemoteHostParts() {
       controller = null;
       return true;
     },
+    reportBusy: async (bits) => {
+      busy = bits;
+    },
   };
 
   const hooks = {
@@ -113,7 +120,7 @@ export function createFakeRemoteHostParts() {
     },
     addDevice(name: string, lastSeen: number | null = null): string {
       const id = `dev${devices.length + 1}`.padEnd(64, '0');
-      devices.push({ id, name, lastSeen, level: 'off', paused: false, unlock: true });
+      devices.push({ id, name, lastSeen, level: 'off', paused: false, unlock: true, power: false });
       return id;
     },
     /** What the person answers in the "Windows dialog" from now on. */
@@ -140,6 +147,8 @@ export function createFakeRemoteHostParts() {
       return true;
     },
     state: status,
+    /** What the web app last reported it is busy with. */
+    busy: () => busy,
   };
   return { host, hooks };
 }

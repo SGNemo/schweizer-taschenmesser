@@ -61,6 +61,11 @@ export interface EventMap {
   'pantry.restock': { name: string; quantity?: string };
   /** A saved link could be a gift idea (bookmarks). The people module keeps it until the reader picks a person. */
   'gift.requested': { title: string; url?: string; priceCents?: number };
+  /**
+   * A checklist should become a routine (Listen: „Als Routine übernehmen“). The routines module adds it with these
+   * steps, every week from today, unless a routine of that name exists; the list itself stays as it is.
+   */
+  'routine.requested': { name: string; steps: string[] };
   /** Something becomes a to-do (a checklist item in a note). The todos module adds it to the inbox. */
   'todo.requested': {
     title: string;

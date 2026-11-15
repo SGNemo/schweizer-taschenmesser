@@ -45,7 +45,12 @@
   align-items: center;
   gap: var(--space-2);
 }
+.titleMenu {
+  margin-inline-start: auto;
+}
 .nowTitle {
+  min-width: 0;
+  overflow-wrap: anywhere;
   margin: 0;
   font-size: var(--text-2xl);
   line-height: 1.15;
@@ -104,6 +109,15 @@
 }
 .volume {
   flex: 0 1 14rem;
+}
+.sleepLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
 }
 .devices {
   display: inline-flex;
@@ -256,6 +270,49 @@
   flex-direction: column;
   gap: var(--space-5);
 }
+/* Playlists tab: a head row (count, "Neue Playlist"), the tools (search, filter, sort), the tiles. */
+.lib {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.libHead,
+.sectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.libHead .sectionTitle,
+.sectionHead .sectionTitle {
+  margin: 0;
+}
+.libTitle {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+.libCount {
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+  font-variant-numeric: var(--font-num);
+}
+.libTools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.libTools > :first-child {
+  flex: 1 1 14rem;
+}
+.sectionLink {
+  min-height: var(--touch);
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--text-sm);
+}
 .recentRow {
   display: flex;
   gap: var(--space-4);
@@ -323,6 +380,7 @@
 }
 /* Widget. */
 .mini {
+  container-type: inline-size;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   grid-template-areas:
@@ -363,6 +421,23 @@
 .miniSub {
   color: var(--text-muted);
   font-size: var(--text-meta);
+}
+.miniSleep {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-meta);
+}
+/* "Zurück" in the widget only from a medium card on: on a small one the three buttons would squeeze the title. */
+.mini .miniPrev {
+  display: none;
+}
+@container (min-width: 22rem) {
+  .mini .miniPrev {
+    display: inline-flex;
+  }
 }
 .miniControls {
   grid-area: controls;

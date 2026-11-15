@@ -10,7 +10,7 @@ const call = <T>(cmd: string, args?: Record<string, unknown>): Promise<T> =>
 
 /**
  * The PC's own remote-control settings (`src-tauri/src/remote.rs`). Nothing here sends input: the
- * five commands only read the state, narrow it, or ask the PC to widen it – and Windows asks the
+ * commands only read the state, narrow it, report what Nemo is busy with, or ask the PC to widen it – and Windows asks the
  * person in a native dialog first, which this page cannot answer.
  */
 export function createRemoteHost(supported: boolean): RemoteHostService {
@@ -22,5 +22,6 @@ export function createRemoteHost(supported: boolean): RemoteHostService {
     setDevice: (id, grant) => call<void>('remote_set_device', { id, ...grant }),
     setNotice: (on) => call<void>('remote_set_notice', { on }),
     end: () => call<boolean>('remote_end'),
+    reportBusy: (bits) => call<void>('remote_set_busy', { bits }),
   };
 }

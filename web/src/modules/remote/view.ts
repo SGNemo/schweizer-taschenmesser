@@ -1,5 +1,10 @@
 import type { RemotePcState } from '@/core/platform/types';
-import type { RemotePad, RemoteView } from '@/core/remote/session';
+import type {
+  RemotePad,
+  RemotePowerPhase,
+  RemotePowerVerb,
+  RemoteView,
+} from '@/core/remote/session';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { t } from '@/strings';
 
@@ -118,4 +123,49 @@ export function stepLink(step: 'pair' | 'disable'): { to: string; label: string 
   return step === 'pair'
     ? { to: settingsPath('sync', 'sync'), label: t.remote.pair }
     : { to: '/library/remote', label: t.remote.disable };
+}
+
+/** The key of a power action in the texts (`t.remote.power.action` and friends). */
+export const POWER_KEY = {
+  'shut-down': 'shutDown',
+  restart: 'restart',
+  sleep: 'sleep',
+  hibernate: 'hibernate',
+  'sign-out': 'signOut',
+} as const satisfies Record<RemotePowerVerb, string>;
+
+/** Where power stands, as one calm sentence; `undefined` while nothing is going on. */
+export function powerText(phase: RemotePowerPhase): string | undefined {
+  const p = t.remote.power;
+  switch (phase.kind) {
+    case 'idle':
+      return undefined;
+    case 'asking':
+      return p.asking;
+    case 'counting':
+      return p.counting[phase.action ? POWER_KEY[phase.action] : 'unknown'];
+    case 'working':
+      return p.working;
+    case 'done':
+      return p.done[phase.action ? POWER_KEY[phase.action] : 'unknown'];
+    case 'cancelled':
+      return p.cancelled;
+    case 'cancel-failed':
+      return p.cancelFailed;
+    case 'unlock':
+      return p.unlock;
+    case 'refused':
+      switch (phase.reason) {
+        case 'not-granted':
+          return p.notGranted;
+        case 'locked':
+          return p.locked;
+        case 'limit':
+          return p.limit;
+        case 'failed':
+          return p.failed;
+        case 'unavailable':
+          return p.unavailable;
+      }
+  }
 }

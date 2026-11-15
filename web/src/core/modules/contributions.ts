@@ -1,5 +1,5 @@
 import { compareText } from '@/core/i18n/format';
-import { refKey, type EntityRef } from '@/core/entitylinks/types';
+import { NEVER_LINKED, refKey, type EntityRef } from '@/core/entitylinks/types';
 import { loadModuleStates, useModuleStates } from './activation';
 import { availableManifests } from '@/core/modules/available';
 import { useSharedLiveQuery } from './sharedQuery';
@@ -101,9 +101,6 @@ export async function plannableSource(manifest: ModuleManifest | undefined) {
 }
 
 /** Notifications due in (from, to] from all given (active) modules, oldest first. */
-/** The vault is never a link source or target: no module is asked, not even a label is read (docs/RULES.md "AI privacy"). */
-const NEVER_LINKED = 'accounts';
-
 /**
  * The address a link falls back to where its module cannot answer (off, or not on this platform): only a mail
  * thread has one – the provider's web mail, without any account. The id is untrusted; nothing is requested.

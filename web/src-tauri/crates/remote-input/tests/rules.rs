@@ -58,7 +58,6 @@ fn only_two_files_simulate_input_each_its_own_kind() {
         "KEYEVENTF_SCANCODE",
         "INPUT_HARDWARE",
         "enigo",
-        "PostMessage",
         "SendMessage",
         "APPCOMMAND",
         "BlockInput",
@@ -89,6 +88,18 @@ fn only_two_files_simulate_input_each_its_own_kind() {
         "IDispatch",
         "CLSIDFromProgID",
     ]);
+    // the one window message: monitor off in `power.rs`, posted (never waited for), no key
+    for (name, text) in sources() {
+        let posts: Vec<&str> = code_lines(&text)
+            .filter(|l| l.contains("PostMessage"))
+            .collect();
+        if name == "power.rs" {
+            assert_eq!(posts.len(), 2, "the import and the one call");
+            assert!(text.contains("WM_SYSCOMMAND,\n") && text.contains("SC_MONITORPOWER as usize"));
+        } else {
+            assert!(posts.is_empty(), "{name}: PostMessage");
+        }
+    }
     let mouse = ["MOUSEEVENTF", "INPUT_MOUSE", "MOUSEINPUT", " mi:"];
     let keys = [
         "VK_",
@@ -209,8 +220,9 @@ fn only_two_files_simulate_input_each_its_own_kind() {
                 "{file} changed, at code line {}:\n  now:    {}\n  pinned: {}\n\
                  Read docs/rules/remote-control.md and have the change reviewed; then update \
                  {name} in tests/rules.rs. A new key also needs: `Key`, `KEYS`, `Code`, `chord`, \
-                 `key_of` and its import, the count of sixteen below, tests/keyboard.rs, the \
-                 hub's list and `key_of` in the shell.",
+                 `key_of` and its import, the count of eighteen below, tests/keyboard.rs, the \
+                 hub's list and `key_of` in the shell, and the count in the crate description, \
+                 `key_of`'s comment in src/remote.rs and docs/ARCHITECTURE-MAP.md.",
                 i + 1,
                 now.get(i).map_or("(end)", String::as_str),
                 pinned.get(i).map_or("(end)", String::as_str),
@@ -239,20 +251,20 @@ fn only_two_files_simulate_input_each_its_own_kind() {
         2,
         "the stub and Windows"
     );
-    // one list of keys, the public one: sixteen
+    // one list of keys, the public one: eighteen
     let list = &keyboard[keyboard.find("pub enum Key {").unwrap()..];
     let list = &list[..list.find("\n}").unwrap()];
     let keys: usize = code_lines(list)
         .skip(1)
         .map(|l| l.split(',').filter(|w| !w.trim().is_empty()).count())
         .sum();
-    assert_eq!(keys, 16, "the fixed list has sixteen keys");
+    assert_eq!(keys, 18, "the fixed list has eighteen keys");
 }
 
-/// The crate is five files and nothing else: no sub-directory, no file pulled in from elsewhere,
+/// The crate is six files and nothing else: no sub-directory, no file pulled in from elsewhere,
 /// no macro that could hide code from the tests that read these files.
 #[test]
-fn the_crate_is_exactly_its_five_files() {
+fn the_crate_is_exactly_its_six_files() {
     let mut names: Vec<String> = fs::read_dir(root().join("src"))
         .unwrap()
         .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
@@ -264,6 +276,7 @@ fn the_crate_is_exactly_its_five_files() {
             "keyboard.rs",
             "lib.rs",
             "pointer.rs",
+            "power.rs",
             "system.rs",
             "worker.rs"
         ]
@@ -285,6 +298,7 @@ fn the_crate_is_exactly_its_five_files() {
         [
             "mod keyboard;",
             "mod pointer;",
+            "mod power;",
             "mod system;",
             "mod worker;"
         ]
@@ -365,12 +379,20 @@ fn no_network_no_files_no_tauri_no_serde() {
             "Win32_Foundation",
             "Win32_Media_Audio",
             "Win32_Media_Audio_Endpoints",
+            // power: the shutdown privilege of this process (src/power.rs)
+            "Win32_Security",
             "Win32_System_Com",
             "Win32_System_Com_StructuredStorage",
             "Win32_System_Variant",
             "Win32_System_RemoteDesktop",
+            // power: sleep, hibernate
+            "Win32_System_Power",
             "Win32_System_Shutdown",
+            // power: this process's own token
+            "Win32_System_Threading",
             "Win32_UI_Input_KeyboardAndMouse",
+            // monitor off: one posted system command (scoped above)
+            "Win32_UI_WindowsAndMessaging",
         ],
         "a new Windows feature needs a review (docs/rules/remote-control.md)"
     );
@@ -459,7 +481,10 @@ fn unsafe_is_windows_only_and_explained() {
                 continue;
             }
             assert!(
-                name == "system.rs" || name == "pointer.rs" || name == "keyboard.rs",
+                name == "system.rs"
+                    || name == "pointer.rs"
+                    || name == "keyboard.rs"
+                    || name == "power.rs",
                 "{name}: unsafe outside the Windows calls"
             );
             let explained = lines[i.saturating_sub(4)..i]
@@ -493,8 +518,10 @@ PageDown,
 Delete,
 F11,
 AltTab,
+F5,
+B,
 }
-pub const KEYS: [Key; 16] = [
+pub const KEYS: [Key; 18] = [
 Key::Enter,
 Key::Escape,
 Key::Backspace,
@@ -511,6 +538,8 @@ Key::PageDown,
 Key::Delete,
 Key::F11,
 Key::AltTab,
+Key::F5,
+Key::B,
 ];
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Code {
@@ -530,6 +559,8 @@ PageDown,
 Delete,
 F11,
 Alt,
+F5,
+B,
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Stroke {
@@ -554,6 +585,8 @@ Key::PageDown => &[Code::PageDown],
 Key::Delete => &[Code::Delete],
 Key::F11 => &[Code::F11],
 Key::AltTab => &[Code::Alt, Code::Tab],
+Key::F5 => &[Code::F5],
+Key::B => &[Code::B],
 }
 }
 pub fn strokes(key: Key) -> Vec<Stroke> {
@@ -658,9 +691,9 @@ mod imp {
 use super::{Code, Keys, Stroke};
 use windows::Win32::UI::Input::KeyboardAndMouse::{
 SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYBD_EVENT_FLAGS,
-KEYEVENTF_EXTENDEDKEY, KEYEVENTF_KEYUP, KEYEVENTF_UNICODE, VIRTUAL_KEY, VK_BACK, VK_DELETE,
-VK_DOWN, VK_END, VK_ESCAPE, VK_F11, VK_HOME, VK_LEFT, VK_MENU, VK_NEXT, VK_PRIOR,
-VK_RETURN, VK_RIGHT, VK_SPACE, VK_TAB, VK_UP,
+KEYEVENTF_EXTENDEDKEY, KEYEVENTF_KEYUP, KEYEVENTF_UNICODE, VIRTUAL_KEY, VK_B, VK_BACK,
+VK_DELETE, VK_DOWN, VK_END, VK_ESCAPE, VK_F11, VK_F5, VK_HOME, VK_LEFT, VK_MENU, VK_NEXT,
+VK_PRIOR, VK_RETURN, VK_RIGHT, VK_SPACE, VK_TAB, VK_UP,
 };
 pub fn native() -> Option<Box<dyn Keys>> {
 Some(Box::new(Windows))
@@ -684,6 +717,8 @@ Code::PageDown => (VK_NEXT, true),
 Code::Delete => (VK_DELETE, true),
 Code::F11 => (VK_F11, false),
 Code::Alt => (VK_MENU, false),
+Code::F5 => (VK_F5, false),
+Code::B => (VK_B, false),
 }
 }
 fn event(vk: VIRTUAL_KEY, scan: u16, flags: KEYBD_EVENT_FLAGS) -> INPUT {
@@ -787,3 +822,34 @@ send(flags, 0, 0, amount);
 }
 }
 "#;
+
+/// Power is never forced: Windows asks programs with unsaved work as on a normal shutdown.
+#[test]
+fn power_is_never_forced_and_only_in_its_file() {
+    assert_absent(&["EWX_FORCE", "InitiateSystemShutdown", "SetSystemPowerState"]);
+    for (name, text) in sources() {
+        for line in code_lines(&text) {
+            for call in [
+                "ExitWindowsEx(",
+                "SetSuspendState(",
+                "AdjustTokenPrivileges(",
+            ] {
+                if line.contains(call) && !line.contains("use ") {
+                    assert_eq!(name, "power.rs", "{call}");
+                }
+            }
+        }
+    }
+    let power = read(root().join("src/power.rs"));
+    // "force" off in both suspend calls
+    assert_eq!(
+        power
+            .matches("SetSuspendState(false, false, false)")
+            .count(),
+        1
+    );
+    assert_eq!(
+        power.matches("SetSuspendState(true, false, false)").count(),
+        1
+    );
+}

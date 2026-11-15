@@ -1,4 +1,5 @@
 import { runAppMigrations } from '@/core/db/appMigrations';
+import { copyTodoLinksAtStart } from '@/core/entitylinks/migrate';
 import { loadModuleStates } from '@/core/modules/activation';
 import { runMigrations } from '@/core/modules/migrate';
 import { availableManifests } from '@/core/modules/available';
@@ -54,6 +55,10 @@ export async function initCore(
   }
   // Forward copies between merged/retired modules (also run after every sync pull and restore).
   await runAppMigrations();
+  // The links a ToDo stores in its own field also become rows of the link table: at every start, whatever
+  // sync does (a copy is stamped like its source, so it never beats a removal). Not awaited: start-up and
+  // the background services do not wait for the scan.
+  void copyTodoLinksAtStart();
   // Profile schedules run once the data is ready, while the app is open.
   if (!stopScheduler && typeof localStorage !== 'undefined')
     stopScheduler = startProfileScheduler();

@@ -57,6 +57,7 @@ function* sourceMtimes() {
   for (const f of [
     'index.html',
     'capture.html',
+    'power.html',
     'vite.config.ts',
     'package-lock.json',
     'scripts/lib/precacheSplit.ts',

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { createCollectionRepo, createRepo } from '@/core/db/repo';
+import { removeLinksFromModule } from '@/core/entitylinks/store';
 import { bus, type DataPolicy } from '@/core/events';
 import { isSafeMode } from '@/core/safemode/safeMode';
 import { runMigrations } from './migrate';
@@ -158,6 +159,8 @@ export async function wipeModuleData(
     const repo = createCollectionRepo(manifest, collection, database);
     await repo.removeMany((await repo.active().primaryKeys()) as string[]);
   }
+  // The links its things carried go with them (tombstones, like the entries; links that lead here stay).
+  await removeLinksFromModule(manifest.id, database);
 }
 
 /** Does the module hold any entries (not counting deleted ones)? Decides whether switching it off has to ask. */

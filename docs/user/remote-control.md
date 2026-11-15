@@ -37,7 +37,17 @@ While the PC is locked, only media and volume work. The phone never sees your sc
 - **Media:** big buttons for playback and volume. If you like, the phone's volume keys control the PC too (a setting of the module).
 - **Touchpad:** swiping moves the pointer, a tap clicks, two fingers scroll.
 - **Keyboard:** type text on the phone, read it, then send it. The text is stored nowhere.
+- **Presentation** (only with a PC whose Nemo knows it): _Next_ big at the bottom, _Back_ beside it, above them _Start_ (F5), _Black_ (B) and _End_ (Esc). Needs the mouse-and-keyboard level like _Keyboard_. The presentation window has to be in front on the PC, and it works only on your home network. With a browser in front, _Start_ (F5) reloads the page. The phone's volume keys keep controlling the volume, they do not turn slides.
 - **On the overview:** the card _Remote_ has one button, _Play / Pause_. One tap connects and sends. If connecting takes longer, the card says so; once it is connected, tap once more. The card never connects by itself.
+
+## Switching the PC off
+
+- **Allow it at the PC:** under _Settings → Connections → Remote control_, next to the device, _May switch the PC off_ (off by default, the PC asks once more).
+- **On the phone:** menu _⋯ → Switch PC off …_, then _Shut down_, _Restart_ or _Sleep_ (below them, quieter: _Hibernate_ where the PC has it, and _Sign out_). The phone's own fingerprint, face or PIN prompt is the confirmation (a phone without a screen lock asks in a short dialog instead).
+- **10 seconds at the PC:** the PC shows a countdown with _Cancel_; you can also cancel on the phone. If the phone loses the connection meanwhile, the PC still goes ahead. Nothing is forced: if a program still asks about saving, the PC stays on.
+- Works only while the PC is unlocked. If Nemo on the PC is still busy (sync, download, backup), the phone says so first: _Shut down anyway_ or _Wait_.
+- Cancelled at the PC twice within an hour, the permission is switched off again for that phone.
+- _Monitor off_ (same menu) switches only the screen off, without a countdown.
 
 ## Ending it and switching it on again
 

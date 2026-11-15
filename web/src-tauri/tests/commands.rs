@@ -68,6 +68,15 @@ fn main_window_is_granted_every_command_except_capture_only_ones() {
         if name == "capture_hide" || name == "capture_read_clipboard" {
             continue;
         }
+        // the countdown window's own two: the main window has no business with them
+        if name == "remote_power_status" || name == "remote_power_cancel" {
+            let permission = format!("allow-{}", name.replace('_', "-"));
+            assert!(
+                !granted.contains(&permission),
+                "{permission} for the main window"
+            );
+            continue;
+        }
         let permission = format!("allow-{}", name.replace('_', "-"));
         assert!(
             granted.contains(&permission),
@@ -404,7 +413,7 @@ fn no_tauri_command_simulates_input() {
     // the key table is written out, one to one: no number, no cast, no catch-all
     let table = &code[code.find("fn key_of(").unwrap()..];
     let table = &table[..table.find("\n}\n").unwrap()];
-    assert_eq!(table.matches(" => K::").count(), 16);
+    assert_eq!(table.matches(" => K::").count(), 18);
     assert!(!table.contains("_ =>") && !table.contains(" as ") && !table.contains("transmute"));
     // no command, state or event carries text or a key back out of the sink
     for forbidden in ["KeyAction", "Keyboard", "keys_of", "key_of"] {
@@ -433,7 +442,17 @@ fn no_tauri_command_simulates_input() {
         ] {
             assert!(!text.contains(api), "{name} mentions {api}");
         }
-        if name != "remote.rs" {
+        if name == "remote_power.rs" {
+            // the countdown reaches the power calls of remote_input, and nothing else of it
+            let other = text
+                .replace("remote_input::power(", "")
+                .replace("remote_input::hibernate_available(", "")
+                .replace("remote_input::PowerAction", "");
+            assert!(
+                !other.contains("remote_input") && !text.contains("InputSink for"),
+                "{name} reaches the input sink"
+            );
+        } else if name != "remote.rs" {
             assert!(
                 !text.contains("remote_input") && !text.contains("InputSink for"),
                 "{name} reaches the input sink"
@@ -607,6 +626,7 @@ fn remote_client_commands_exist_on_the_phone_only() {
         "remote_client_send",
         "remote_client_text",
         "remote_client_pointer",
+        "remote_client_power",
         "remote_client_close",
     ];
     let mobile = mobile_handler_commands();
@@ -691,15 +711,15 @@ fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
             "remote_client.rs mentions {forbidden}"
         );
     }
-    // A key is a name of the fixed list – sixteen, mapped in one table, never built from a
+    // A key is a name of the fixed list – eighteen, mapped in one table, never built from a
     // number – and reaches a record in one place.
     let keys = &code[code.find("fn key_from(").unwrap()..];
     let keys = &keys[..keys.find("\n}\n").unwrap()];
-    assert_eq!(keys.matches("\"key-").count(), 16);
-    assert_eq!(keys.matches(" => Key::").count(), 16);
+    assert_eq!(keys.matches("\"key-").count(), 18);
+    assert_eq!(keys.matches(" => Key::").count(), 18);
     assert!(!keys.contains(" as ") && !keys.contains("parse") && !keys.contains("from_"));
     assert_eq!(code.matches("Record::Key(").count(), 1);
-    assert_eq!(code.matches("Key::").count(), 16);
+    assert_eq!(code.matches("Key::").count(), 18);
     // Text goes out in one place, checked first, and is never kept, echoed or handed back: no
     // DTO, state or error carries it.
     let typed = &code[code.find("pub async fn remote_client_text").unwrap()..];
@@ -805,6 +825,91 @@ fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
                 "{dto} carries {field}"
             );
         }
+    }
+}
+
+/// The countdown window before a power action reads the countdown and stops it – nothing else.
+#[test]
+fn power_window_gets_only_status_and_cancel() {
+    let value: serde_json::Value = serde_json::from_str(&read("capabilities/power.json")).unwrap();
+    let permissions: Vec<&str> = value["permissions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|p| p.as_str().unwrap())
+        .collect();
+    assert_eq!(
+        permissions,
+        ["allow-remote-power-status", "allow-remote-power-cancel"]
+    );
+    assert_eq!(value["windows"], serde_json::json!(["remote-power"]));
+    // no other capability applies to that window
+    for file in [
+        "default.json",
+        "desktop.json",
+        "mobile.json",
+        "capture.json",
+    ] {
+        let value: serde_json::Value =
+            serde_json::from_str(&read(&format!("capabilities/{file}"))).unwrap();
+        for key in ["windows", "webviews"] {
+            let names = value[key].as_array().cloned().unwrap_or_default();
+            assert!(
+                names.iter().all(|w| w != "remote-power" && w != "*"),
+                "{file}"
+            );
+        }
+    }
+}
+
+/// Rule: no Tauri command starts a power action. The commands of `remote_power.rs` read, stop or
+/// add a hint; the one call into the system sits in the countdown's tick, which only the tray
+/// thread runs.
+#[test]
+fn no_tauri_command_starts_a_power_action() {
+    let src = source("remote_power.rs");
+    let start = src.find("// ---- commands ----").expect("commands marker");
+    let end = src.find("#[cfg(test)]").expect("unit tests");
+    let commands = &src[start..end];
+    for word in ["remote_input::", ".request(", ".tick(", "Power::", "Fire"] {
+        assert!(!commands.contains(word), "a command reaches `{word}`");
+    }
+    assert_eq!(src.matches("remote_input::power(").count(), 1);
+    let tick = src.find("pub fn tick(self: &Arc<Self>").expect("tick");
+    let call = src.find("remote_input::power(").unwrap();
+    assert!(
+        tick < call && call < start,
+        "the system call is in the tick"
+    );
+    assert_eq!(src.matches("#[tauri::command]").count(), 0);
+    assert_async(
+        &src,
+        &[
+            "remote_power_status",
+            "remote_power_cancel",
+            "remote_set_busy",
+        ],
+    );
+    // The countdown holds no app handle: window code is reached only through the closures
+    // `remote::attach` builds, never from the hub's sink. (On Windows a sink path into window code
+    // pulls comctl32 v6 imports into the unit-test binary, which has no manifest, and that binary
+    // then fails to load with STATUS_ENTRYPOINT_NOT_FOUND.)
+    let core = &src
+        [src.find("pub struct PowerCore").unwrap()..src.find("pub fn window_closures").unwrap()];
+    for word in [
+        "AppHandle",
+        "get_webview_window",
+        "WebviewWindowBuilder",
+        "show_window(",
+        "close_window(",
+    ] {
+        assert!(!core.contains(word), "the countdown reaches `{word}`");
+    }
+    // and nothing in the shell asks Windows to switch off by itself
+    for file in ["remote.rs", "lib.rs", "capture.rs", "lan_sync.rs"] {
+        let text = source(file);
+        assert!(!text.contains("remote_input::power("), "{file}");
+        assert!(!text.contains("ExitWindowsEx"), "{file}");
     }
 }
 

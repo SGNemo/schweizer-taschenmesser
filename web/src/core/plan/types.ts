@@ -103,7 +103,8 @@ export type PlaceReason =
   | 'capacity';
 
 /** Why a unit moved or dropped out. */
-export type MoveReason = 'bumped' | 'after-part' | 'capacity' | 'carried' | 'pulled' | 'done';
+export type MoveReason =
+  'bumped' | 'after-part' | 'capacity' | 'carried' | 'pulled' | 'pinned' | 'done';
 
 export type WaitReason = 'horizon' | 'too-long' | 'after-hard-due';
 

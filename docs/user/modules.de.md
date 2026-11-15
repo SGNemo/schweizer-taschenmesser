@@ -24,10 +24,10 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 |  | Abos | Abos und wiederkehrende Zahlungen | standardmäßig an |
 |  | Budgets & Sparziele | Ausgabenlimits je Kategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt | bei Neuinstallationen an |
 | **Haushalt** | Listen | Einkauf, Packlisten und Checklisten | bei Neuinstallationen an |
-|  | Routinen | Putzplan und Haushalts-Routinen | bei Neuinstallationen an |
+|  | Routinen | Routinen für den Tag und den Haushalt | bei Neuinstallationen an |
 |  | Vorräte | Was ist im Kühlschrank, im Vorratsschrank und im Tiefkühler? | optional |
 |  | Fitness | Training und Essen grob festhalten | Vorschau |
-| **Wissen** | Merkliste | Links, Lesestoff, Filme, Orte und Ideen merken | optional |
+| **Wissen** | Merkliste | Was du dir noch anschauen, lesen, kaufen, ausprobieren oder besuchen willst | optional |
 |  | Notizen | Notizblock mit formatiertem Text (Markdown), einem festen Zettel immer oben, Anheften und Suche | optional |
 |  | Chat | Gespräche mit dem eingebauten lokalen Modell oder deinen Anbietern | Vorschau |
 |  | Browser | Einfacher Browser mit Tabs, Lesezeichen und privatem Modus | Vorschau, nur Windows- und Android-App |
@@ -36,7 +36,7 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 |  | Musik | Spotify auf einer Seite | Vorschau |
 | **Tresor** | Unterlagen | Ausweise, Verträge, Versicherungen und Garantien mit Ende, Kündigungsfrist und angehängter Datei | optional |
 |  | Passwörter | Passwort-Tresor | optional |
-| **System** | Gerätestatus | Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite | bei Neuinstallationen an |
+| **System** | Gerätestatus | Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite, dazu ein Backup zum Herunterladen | bei Neuinstallationen an |
 |  | Dieser PC | Laufwerke mit Scan der größten Ordner und Systeminfo (Prozessor, Speicher, Akku, Netzwerk) | optional, nur Windows-App |
 |  | Downloads | Lädt Dateien herunter | bei Neuinstallationen an, nur Windows-App |
 |  | Fernbedienung | Steuere Medien, Lautstärke, Maus und Tastatur deines PCs vom Handy aus | Vorschau, nur Android-App |
@@ -52,7 +52,7 @@ Vorschau-Module und -Werkzeuge bleiben versteckt, bis du „In Arbeit anzeigen�
 Besonderheiten der Module, die oben nur eine kurze Zeile haben:
 
 - **Kalender** (standardmäßig an): Erinnerungen und Benachrichtigung vor Terminen. **ToDos:** auch wiederkehrend, mit „Irgendwann“.
-- **Merkliste:** Links, Lesen, Ansehen, Orte und Ideen mit Tags; auf dem Handy per „Teilen“. Ihre Lesezeichen-Ansicht zeigt Kacheln nach erstem Tag gruppiert, z. B. Paketverfolgung, Bahn, Karten …
+- **Merkliste:** was du dir noch anschauen, lesen, kaufen, ausprobieren oder besuchen willst, mit Tags und Status; jeder Merkzettel hat ein Ende (erledigt oder weg). Auf dem Handy per „Teilen“. Der Tab „Lesezeichen“ zeigt die paar Links, die du täglich brauchst, als Kacheln nach erstem Tag gruppiert (Paketverfolgung, Bahn, Karten …); die Lesezeichen deines Browsers ersetzt er nicht.
 - **Notizen:** mit festem **Zettel** oben für Zwischendurch.
 - **Listen:** Einkauf mit „2 Milch“, Packlisten mit Fortschritt und Vorlagen, Checklisten.
 - **Personen:** Geburtstage jährlich im Kalender, mit Alter, Erinnerung und WhatsApp-Gruß; Geschenkideen je Person mit Preis, Link und Stand.
