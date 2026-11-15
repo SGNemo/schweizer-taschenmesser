@@ -42,9 +42,14 @@ const source: PlannableSource = {
     const items: PlannableItem[] = [];
     for (const s of subs) {
       const candidates: Deadline[] = [];
-      // Asked into the plan from the page: that deadline, while it is still the next one (a passed one drops out).
+      // Asked into the plan from the page: that deadline while it is the next one, or just passed (then the planner
+      // says „Frist vorbei“, as for the automatic row); an older mark means nothing.
+      const recentMissed = missedDeadline(s, ctx.today);
       const asked =
-        s.plannedDeadline && nextCancelDeadline(s, ctx.today)?.deadline === s.plannedDeadline
+        s.plannedDeadline &&
+        (nextCancelDeadline(s, ctx.today)?.deadline === s.plannedDeadline ||
+          (recentMissed?.deadline === s.plannedDeadline &&
+            recentMissed.deadline >= addDaysStr(ctx.today, -MISSED_RECENT_DAYS)))
           ? s.plannedDeadline
           : undefined;
       if (!prefs.showInPlan) {

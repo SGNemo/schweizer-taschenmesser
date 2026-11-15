@@ -50,6 +50,12 @@ describe('cancellation deadlines as a planner source', () => {
     await db.table('subscriptions_subscription').clear();
     const near = await add({ plannedDeadline: '2026-11-13' });
     expect((await source.list(ctx)).map((i) => i.id)).toEqual([`${near.id}:2026-11-13`]);
+    // Just passed and asked for: it stays as a late row with the switch off too („Frist vorbei“).
+    await setSettings('module.subscriptions', { showInPlan: false });
+    expect(await source.list({ today: '2026-11-15', until: '2026-11-28' })).toEqual([
+      expect.objectContaining({ id: `${near.id}:2026-11-13` }),
+    ]);
+    await setSettings('module.subscriptions', { showInPlan: true });
     // A request for a deadline that is no longer the next one does nothing.
     await db.table('subscriptions_subscription').clear();
     await add({ startDate: '2026-01-20', plannedDeadline: '2025-11-13' });
