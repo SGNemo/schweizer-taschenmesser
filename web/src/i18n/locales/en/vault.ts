@@ -171,6 +171,7 @@ export const vault: Strings['vault'] = {
         ? 'It is kept and moves to the category you choose here.'
         : 'They are kept and move to the category you choose here.',
     place: (name: string, at: number, of: number) => `${name}: place ${at} of ${of}`,
+    failed: 'That did not work. Please try again.',
     moveTo: 'Move to',
     removeAndMove: 'Delete and move',
     removed: (name: string) => `“${name}” deleted`,

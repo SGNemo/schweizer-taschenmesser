@@ -127,4 +127,26 @@ describe('vault folders', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Speichern' }));
     expect(await screen.findByText('Noch keine Unterlagen in „Garten“.')).toBeTruthy();
   });
+
+  it('a move says the new place once it has landed, and the last place hands the focus to the other arrow', async () => {
+    await documentRepo.create({ title: 'Mietvertrag', category: 'contract' } as never);
+    page();
+    await screen.findByText('Mietvertrag');
+    fireEvent.click(screen.getByRole('button', { name: 'Kategorien bearbeiten' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Ausweise nach unten' }));
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent('Ausweise: Platz 2 von 6'),
+    );
+    const down = screen.getByRole('button', { name: 'Gesundheit nach unten' });
+    expect(down).toBeDisabled();
+    const up = screen.getByRole('button', { name: 'Steuer nach unten' });
+    up.focus();
+    fireEvent.click(up);
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent('Steuer: Platz 6 von 6'),
+    );
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Steuer nach oben' })),
+    );
+  });
 });

@@ -448,7 +448,11 @@ export default function VaultPage() {
       <CategoryDialog
         open={managing !== false}
         startNew={managing === 'new'}
-        onCreated={setCategory}
+        onCreated={(id) => {
+          // The new folder shows as itself, with its own empty state, not as an empty search.
+          setQuery('');
+          setCategory(id);
+        }}
         onClose={() => setManaging(false)}
         cats={cats}
         docs={docs}

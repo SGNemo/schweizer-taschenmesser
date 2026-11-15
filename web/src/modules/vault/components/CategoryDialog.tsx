@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { changedFields } from '@/core/db/patch';
 import { deleteWithUndo, changeWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
+import { useUiStore } from '@/stores/ui';
 import {
   Button,
   categoryColor,
@@ -131,7 +132,11 @@ export function CategoryDialog({
                 void deleteWithUndo(
                   () => removeCategory(cat, []),
                   a.removed(categoryLabel(cat, names)),
-                ).then(() => body.current?.querySelector<HTMLElement>('[data-autofocus]')?.focus());
+                )
+                  .catch(() => useUiStore.getState().toast(a.failed))
+                  .finally(() =>
+                    body.current?.querySelector<HTMLElement>('[data-autofocus]')?.focus(),
+                  );
               else setMode({ kind: 'remove', id: cat.id });
             }}
             onClose={close}
@@ -159,18 +164,19 @@ function CategoryList({
   const a = t.vault.categoryAdmin;
   const movable = cats.filter((c) => !c.fixed);
   const list = useRef<HTMLUListElement>(null);
-  // The arrow last pressed: once the list shows the new place, a disabled arrow (first or last place) hands the
-  // focus to the other one in its row, and the place is said once.
-  const pressed = useRef<{ id: string; dir: -1 | 1 } | null>(null);
+  // One move at a time: a second click before every write of the first has landed would compute from a
+  // half-written order. Cleared once all writes are done.
+  const busy = useRef(false);
+  // Where the pressed folder goes. A move writes several records, so the list can pass through in-between orders:
+  // the place is said, and a now disabled arrow hands the focus to the other one in its row, only once the folder
+  // stands at its target.
+  const target = useRef<{ id: string; dir: -1 | 1; at: number } | null>(null);
   const [said, setSaid] = useState('');
   useEffect(() => {
-    const p = pressed.current;
-    if (!p) return;
-    pressed.current = null;
-    const at = movable.findIndex((c) => c.id === p.id);
-    if (at < 0) return;
-    const cat = movable[at]!;
-    setSaid(a.place(categoryLabel(cat, names), at + 1, movable.length));
+    const p = target.current;
+    if (!p || movable.findIndex((c) => c.id === p.id) !== p.at) return;
+    target.current = null;
+    setSaid(a.place(categoryLabel(movable[p.at], names), p.at + 1, movable.length));
     const row = Array.from(list.current?.querySelectorAll<HTMLElement>('[data-cat]') ?? []).find(
       (el) => el.dataset.cat === p.id,
     );
@@ -178,25 +184,30 @@ function CategoryList({
     if (btn?.disabled) row?.querySelector<HTMLButtonElement>(`[data-move="${-p.dir}"]`)?.focus();
   }, [cats]); // eslint-disable-line react-hooks/exhaustive-deps -- runs when the stored order arrives
   const move = (id: string, dir: -1 | 1) => {
-    // One move at a time: a second click before the list shows the first would compute from the old order.
-    if (pressed.current) return;
+    if (busy.current) return;
     const writes = moveCategory(cats, id, dir);
     if (writes.length === 0) return;
-    pressed.current = { id, dir };
+    busy.current = true;
+    target.current = { id, dir, at: movable.findIndex((c) => c.id === id) + dir };
     // No toast: the list shows the new place at once, and the arrow back undoes it (no toast per click).
     void (async () => {
       for (const w of writes) {
         const cat = cats.find((c) => c.id === w.id);
         if (cat) await writeCategory(cat, { order: w.order });
       }
-    })().catch(() => {
-      pressed.current = null;
-    });
+    })()
+      .catch(() => {
+        target.current = null;
+        useUiStore.getState().toast(a.failed);
+      })
+      .finally(() => {
+        busy.current = false;
+      });
   };
   const counts = docs ? countByResolved(docs, cats) : undefined;
   return (
     <div className={styles.root}>
-      <p className={styles.sr} role="status">
+      <p className="sr-only" role="status">
         {said}
       </p>
       <ul className={styles.list} data-testid="vault-categories" ref={list}>
