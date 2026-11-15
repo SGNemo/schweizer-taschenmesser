@@ -133,7 +133,8 @@ describe('forward with the attachments', () => {
     const state = onCompose.mock.calls[0]![0];
     expect(state.attachments.map((a) => a.filename)).toEqual(['ok.txt']);
     // Said in the compose window itself, not only in a toast the window could cover.
-    expect(state.forwardNote).toMatch(/gross\.zip, weg\.pdf/);
+    expect(state.forwardNote).toMatch(/zu groß für eine Mail: gross\.zip\./);
+    expect(state.forwardNote).toMatch(/Nicht ladbar und nicht mitgeschickt: weg\.pdf\. Du kannst/);
     expect(mocks.attachment).not.toHaveBeenCalledWith(full, 'm1', 'a1');
   });
 
@@ -221,6 +222,42 @@ describe('text snippets', () => {
     expect(body).toBe(`Hallo Max,\n\nDanke!\n\nGruß\n\n${quote}`);
     expect(insertSnippet('', a)).toBe('Danke!');
     expect(ownText(body, quote).trim()).toBe('Hallo Max,\n\nDanke!\n\nGruß');
+  });
+
+  it('errs on the side of less when the quote was edited or the draft has no prefill', () => {
+    const quote = 'Am Montag schrieb Max:\n> zeile 1\n> zeile 2';
+    // The user deleted a quoted line: the header line still marks where the quote starts.
+    expect(ownText('Hi\n\nAm Montag schrieb Max:\n> zeile 1', quote)).toBe('Hi\n\n');
+    // Quote and header both gone or rewritten: nothing counts as the user's own.
+    expect(ownText('ganz anders', quote)).toBe('');
+    // A reopened draft (no prefill): cut at the quote header above the `>` lines.
+    expect(ownText('Danke!\n\nAm Montag schrieb Max:\n> zeile 1')).toBe('Danke!\n\n');
+    expect(ownText('Siehe unten\n\n---------- Weitergeleitete Nachricht ----------\nVon: x')).toBe(
+      'Siehe unten\n\n',
+    );
+  });
+
+  it('removing one says so in the window, and its undo puts it back where it was', async () => {
+    addSnippet('Erster');
+    addSnippet('Zweiter');
+    addSnippet('Dritter');
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <ComposeDialog
+          account={full}
+          initial={emptyCompose()}
+          title="Neue Mail"
+          onClose={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+    await user.click(screen.getByText('Textbausteine'));
+    await user.click(screen.getByRole('button', { name: 'Textbaustein „Zweiter“ entfernen' }));
+    expect(readSnippets().map((x) => x.text)).toEqual(['Erster', 'Dritter']);
+    expect(screen.getByText(/Textbaustein entfernt\./)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Rückgängig' }));
+    expect(readSnippets().map((x) => x.text)).toEqual(['Erster', 'Zweiter', 'Dritter']);
   });
 
   it("never keeps the quote of someone else's mail as a snippet", async () => {

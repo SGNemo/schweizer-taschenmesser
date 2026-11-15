@@ -15,7 +15,9 @@ import {
   ownText,
   readSnippets,
   removeSnippet,
+  restoreSnippet,
   SNIPPETS_MAX,
+  type Snippet,
 } from '../snippets';
 import { MailError } from './MailError';
 import styles from './mail.module.css';
@@ -55,6 +57,9 @@ export function ComposeDialog({
   const [busy, setBusy] = useState(false);
   const [draftError, setDraftError] = useState(false);
   const [snippets, setSnippets] = useState(readSnippets);
+  const [snippetNote, setSnippetNote] = useState<
+    { text: string; undo?: { snippet: Snippet; at: number } } | undefined
+  >();
   const set = (patch: Partial<ComposeState>) => setS((old) => ({ ...old, ...patch }));
   const dirty = s.to + s.cc + s.subject + s.text !== '' || s.attachments.length > 0;
 
@@ -88,7 +93,8 @@ export function ComposeDialog({
 
   async function attach() {
     const { files, tooLarge } = await pickAttachments();
-    if (files.length > 0) set({ attachments: [...s.attachments, ...files] });
+    if (files.length > 0)
+      set({ attachments: [...s.attachments, ...files], forwardNote: undefined });
     setProblem(
       tooLarge.length > 0 ? t.mail.write.compose.fileTooLarge(tooLarge.join(', ')) : undefined,
     );
@@ -175,7 +181,7 @@ export function ComposeDialog({
               <p className={styles.hint}>{t.mail.write.compose.snippetsEmpty}</p>
             ) : (
               <ul className={styles.attachments}>
-                {snippets.map((sn) => (
+                {snippets.map((sn, i) => (
                   <li key={sn.text} className={styles.attachment}>
                     <span className={styles.savedText} title={sn.text}>
                       {sn.name}
@@ -191,9 +197,9 @@ export function ComposeDialog({
                         label={t.mail.write.compose.snippetRemove(sn.name)}
                         onClick={() => {
                           setSnippets(removeSnippet(sn.text));
-                          toast(t.mail.write.compose.snippetRemoved, {
-                            label: t.mail.write.undo,
-                            run: () => setSnippets(addSnippet(sn.text).list),
+                          setSnippetNote({
+                            text: t.mail.write.compose.snippetRemoved,
+                            undo: { snippet: sn, at: i },
                           });
                         }}
                       >
@@ -210,17 +216,41 @@ export function ComposeDialog({
               disabled={ownText(s.text, s.prefill).trim() === ''}
               onClick={() => {
                 if (snippets.length >= SNIPPETS_MAX)
-                  return toast(t.mail.write.compose.snippetsFull);
+                  return setSnippetNote({ text: t.mail.write.compose.snippetsFull });
                 const { list, added } = addSnippet(ownText(s.text, s.prefill));
                 setSnippets(list);
-                toast(
-                  added ? t.mail.write.compose.snippetSaved : t.mail.write.compose.snippetKnown,
-                );
+                setSnippetNote({
+                  text: added
+                    ? t.mail.write.compose.snippetSaved
+                    : t.mail.write.compose.snippetKnown,
+                });
               }}
             >
               {t.mail.write.compose.snippetSave}
             </Button>
-            <p className={styles.hint}>{t.mail.write.compose.snippetsHint}</p>
+            {/* Said here, not in a toast: the compose window is modal and would cover it. */}
+            <p className={styles.hint} aria-live="polite">
+              {snippetNote ? (
+                <>
+                  {snippetNote.text}{' '}
+                  {snippetNote.undo ? (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        const { snippet, at } = snippetNote.undo!;
+                        setSnippets(restoreSnippet(snippet, at));
+                        setSnippetNote(undefined);
+                      }}
+                    >
+                      {t.mail.write.undo}
+                    </Button>
+                  ) : null}
+                </>
+              ) : (
+                t.mail.write.compose.snippetsHint
+              )}
+            </p>
           </details>
           <div>
             {s.attachments.length > 0 ? (
@@ -232,7 +262,12 @@ export function ComposeDialog({
                     </span>
                     <Button
                       aria-label={t.mail.write.compose.removeAttachment(a.filename)}
-                      onClick={() => set({ attachments: s.attachments.filter((_, j) => j !== i) })}
+                      onClick={() =>
+                        set({
+                          attachments: s.attachments.filter((_, j) => j !== i),
+                          forwardNote: undefined,
+                        })
+                      }
                     >
                       {t.actions.delete}
                     </Button>

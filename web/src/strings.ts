@@ -7712,8 +7712,9 @@ export const de = {
         attachments: 'Anhänge',
         attachNote: 'Gesendet wird genau, was hier steht.',
         forwardLoading: 'Anhänge werden geladen …',
-        forwardSkipped: (names: string) =>
-          `Nicht mitgeschickt (zu groß oder nicht ladbar): ${names}. Du kannst sie selbst anhängen.`,
+        forwardTooLarge: (names: string) => `Nicht mitgeschickt, zu groß für eine Mail: ${names}.`,
+        forwardFailed: (names: string) =>
+          `Nicht ladbar und nicht mitgeschickt: ${names}. Du kannst sie selbst anhängen.`,
         snippets: 'Textbausteine',
         snippetsHint: 'Deine Bausteine bleiben auf diesem Gerät.',
         snippetsEmpty: 'Noch keine Textbausteine. Schreib einen Text und merke ihn dir hier.',

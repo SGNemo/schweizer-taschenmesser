@@ -319,8 +319,9 @@ export const mail: Strings['mail'] = {
       attachments: 'Attachments',
       attachNote: 'Exactly what is here is sent.',
       forwardLoading: 'Loading attachments …',
-      forwardSkipped: (names: string) =>
-        `Not sent along (too large or could not be loaded): ${names}. You can attach them yourself.`,
+      forwardTooLarge: (names: string) => `Not sent along, too large for one mail: ${names}.`,
+      forwardFailed: (names: string) =>
+        `Could not be loaded and is not sent along: ${names}. You can attach them yourself.`,
       snippets: 'Text snippets',
       snippetsHint: 'Your snippets stay on this device.',
       snippetsEmpty: 'No text snippets yet. Write a text and keep it here.',

@@ -499,7 +499,8 @@ export default function MailPage() {
       localAi={localAi}
       shortcuts={shortcuts}
       onChanged={box.reload}
-      onCompose={(state, title) => setCompose({ state, title, account })}
+      // A forward that finished loading never replaces a compose window the user opened meanwhile.
+      onCompose={(state, title) => setCompose((cur) => cur ?? { state, title, account })}
       onBack={() => {
         setStartInvoice(undefined);
         update({ thread: null });

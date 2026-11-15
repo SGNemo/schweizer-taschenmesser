@@ -52,7 +52,7 @@ const size = (n: number) =>
 function Attachments({ account, message }: { account: MailAccountRef; message: MailMessage }) {
   const toast = useUiStore((st) => st.toast);
   const [busy, setBusy] = useState<string | undefined>();
-  const [preview, setPreview] = useState<{ name: string; src: string } | undefined>();
+  const [preview, setPreview] = useState<{ id: string; name: string; src: string } | undefined>();
   // The object URL lives as long as the preview is open.
   useEffect(() => (preview ? () => URL.revokeObjectURL(preview.src) : undefined), [preview]);
   if (message.attachments.length === 0) return null;
@@ -62,6 +62,7 @@ function Attachments({ account, message }: { account: MailAccountRef; message: M
       const data = await mailAttachment(account, message.id, id);
       if (data.length > PREVIEW_MAX) throw new Error('too large');
       setPreview({
+        id,
         name,
         src: URL.createObjectURL(new Blob([new Uint8Array(data)], { type: mime })),
       });
@@ -123,7 +124,7 @@ function Attachments({ account, message }: { account: MailAccountRef; message: M
           preview ? (
             <Button
               onClick={() => {
-                const a = message.attachments.find((x) => x.filename === preview.name);
+                const a = message.attachments.find((x) => x.id === preview.id);
                 if (a) void download(a.id, a.filename, a.mime);
               }}
             >
@@ -173,10 +174,18 @@ async function forwardWithAttachments(
     ),
   );
   state.attachments = fetched.filter((x) => x !== undefined);
-  const kept = new Set(state.attachments.map((a) => a.filename));
-  const skipped = message.attachments.filter((a) => !kept.has(a.filename)).map((a) => a.filename);
-  // A lasting line in the compose window, not only a toast that the window could cover.
-  if (skipped.length) state.forwardNote = t.mail.write.compose.forwardSkipped(skipped.join(', '));
+  const fitIds = new Set(fits.map((a) => a.id));
+  const keptIds = new Set(fits.filter((_, i) => fetched[i] !== undefined).map((a) => a.id));
+  const names = (list: MailAttachment[]) => list.map((a) => a.filename).join(', ');
+  const tooLarge = message.attachments.filter((a) => !fitIds.has(a.id));
+  const failed = fits.filter((a) => !keptIds.has(a.id));
+  // A lasting line in the compose window, not only a toast that the window could cover; the too-large ones
+  // cannot be attached by hand either, so only the others get that advice.
+  const notes = [
+    tooLarge.length ? t.mail.write.compose.forwardTooLarge(names(tooLarge)) : '',
+    failed.length ? t.mail.write.compose.forwardFailed(names(failed)) : '',
+  ].filter(Boolean);
+  if (notes.length) state.forwardNote = notes.join(' ');
   return [state, title];
 }
 
@@ -185,7 +194,7 @@ async function forwardWithAttachments(
  * attachments load does nothing, and a result that arrives after the view is gone is dropped.
  */
 function useForward(account: MailAccountRef, onCompose: (s: ComposeState, title: string) => void) {
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<string | undefined>();
   const running = useRef(false);
   const alive = useRef(true);
   useEffect(() => {
@@ -199,14 +208,16 @@ function useForward(account: MailAccountRef, onCompose: (s: ComposeState, title:
     if (message.attachments.length === 0)
       return onCompose(...composeOf('forward', message, account));
     running.current = true;
-    setBusy(true);
+    setBusy(message.id);
+    // Also for the F key, whose card may be folded: the wait is said once.
+    useUiStore.getState().toast(t.mail.write.compose.forwardLoading);
     void forwardWithAttachments(message, account)
       .then((r) => {
         if (alive.current) onCompose(...r);
       })
       .finally(() => {
         running.current = false;
-        if (alive.current) setBusy(false);
+        if (alive.current) setBusy(undefined);
       });
   };
   return { forward, busy };
@@ -513,9 +524,11 @@ export function ThreadView({
   const newest = messages?.filter((m) => !m.labelIds.includes('DRAFT')).at(-1);
   // The newest message that names an unsubscribe page; never in spam (opening it there confirms the address).
   const newsletter = messages
-    ?.filter((m) => m.unsubscribeUrl && !m.labelIds.includes('DRAFT'))
+    ?.filter(
+      (m) =>
+        m.unsubscribeUrl && !m.labelIds.some((l) => l === 'DRAFT' || l === 'SPAM' || l === 'TRASH'),
+    )
     .at(-1);
-  const inSpamNow = !!messages?.length && messages.every((m) => m.labelIds.includes('SPAM'));
   const { forward, busy: forwarding } = useForward(account, onCompose);
   const canCompose = hasFeature(account, 'mail-send') || hasFeature(account, 'mail-modify');
   useMailKeys(shortcuts && canCompose && !!newest, {
@@ -594,7 +607,7 @@ export function ThreadView({
       ) : null}
       {messages === undefined ? <Skeleton height="6rem" /> : <h2>{subject}</h2>}
       {/* Beside the subject, not in the toolbar: it belongs to this newsletter, and the bar keeps three buttons. */}
-      {newsletter?.unsubscribeUrl && !inSpamNow ? (
+      {newsletter?.unsubscribeUrl ? (
         <div className={styles.row}>
           <Unsubscribe url={newsletter.unsubscribeUrl} />
         </div>
@@ -624,7 +637,7 @@ export function ThreadView({
           autoLoadImages={autoLoadImages}
           onCompose={onCompose}
           onForward={forward}
-          forwarding={forwarding}
+          forwarding={forwarding === m.id}
           localAi={localAi}
           startLink={
             startInvoice && m.id === messages[messages.length - 1]!.id ? 'invoice' : undefined
