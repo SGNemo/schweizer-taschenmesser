@@ -65,6 +65,7 @@ function DeltaLine({ d, money }: { d: Delta; money: (m: number) => string }) {
   );
 }
 
+/** The separator `t.finance.breakdown` joins its parts with (de and en): keep both in step. */
 const SEP = ' · ';
 
 /**
