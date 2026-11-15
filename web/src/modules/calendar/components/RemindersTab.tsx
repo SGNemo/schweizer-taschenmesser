@@ -91,7 +91,8 @@ export function reminderMenu(r: Stored<CalendarEvent>, onEdit: () => void): RowM
 export function ReminderRow({ r, onOpen }: { r: Stored<CalendarEvent>; onOpen: () => void }) {
   const status = reminderStatus(r, now());
   const next = nextOccurrenceAt(r, now());
-  const recurrence = describeRecurrence(r.recurrence);
+  // „einmal“ (from the quick capture) takes the place of „Einmalig“, so a one-off row never says it twice.
+  const recurrence = r.once && !r.recurrence ? '' : describeRecurrence(r.recurrence);
   return (
     <ItemRow
       title={r.title}

@@ -42,7 +42,10 @@ describe('RemindersTab', () => {
     await add('Krankmelden', '2026-10-05', { once: true });
     await add('Blumen gießen', '2026-10-05');
     draw();
-    expect(await screen.findByRole('button', { name: /Krankmelden.*einmal/ })).toBeVisible();
+    const row = await screen.findByRole('button', { name: /Krankmelden.*einmal/ });
+    expect(row).toBeVisible();
+    // „einmal“ replaces „Einmalig“: the row never says it twice.
+    expect(row).not.toHaveAccessibleName(/Einmalig/);
     expect(screen.getByRole('button', { name: /Blumen gießen/ })).not.toHaveAccessibleName(
       /einmal/,
     );
