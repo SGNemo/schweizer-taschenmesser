@@ -8527,6 +8527,8 @@ export const de = {
       focus: 'Fokus starten',
       asBreak: 'Als Pause …',
       asBreakTitle: (title: string) => `${title} als Pause`,
+      asBreakDay: 'Tag der Pause',
+      asBreakToday: 'Heute',
       asBreakHint: (day: string) =>
         `Wird am ${day} zur Pause. Das ToDo wird dafür entfernt; Rückgängig holt es zurück.`,
       estimate: 'Dauer …',
