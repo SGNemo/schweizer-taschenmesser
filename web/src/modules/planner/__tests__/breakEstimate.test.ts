@@ -108,6 +108,44 @@ it('„Als Pause …“: a 2-h blocker on the row’s day, no open ToDo; one und
   await expect.poll(async () => snapshot(), { timeout: 3000 }).toEqual(before);
 });
 
+it('a recurring ToDo: the series goes on, nothing is ticked, one undo (journal) restores exactly the start', async () => {
+  const task = await taskRepo.create({
+    listId: 'inbox',
+    done: false,
+    priority: 3,
+    order: 0,
+    title: 'Zocken',
+    dueDate: SAT,
+    recurrence: { freq: 'weekly', interval: 1, byWeekday: [6] },
+  });
+  // Ticked and reopened once before: the next instance already exists as a tombstone.
+  await taskRepo.create(
+    {
+      listId: 'inbox',
+      done: false,
+      priority: 3,
+      order: 0,
+      title: 'Zocken',
+      dueDate: '2026-11-21',
+    },
+    { id: `${task.id}:2026-11-21` },
+  );
+  await taskRepo.remove(`${task.id}:2026-11-21`);
+  await runUser('plan', async () => undefined);
+  await runsSettled();
+  const before = await snapshot();
+  const e = (await entries()).find((x) => x.id === task.id)!;
+  expect(await asBreak(e, SAT, 60, {})).toBe(true);
+  await runsSettled();
+  const live = await taskRepo.active().toArray();
+  expect(live.map((t) => [t.dueDate, t.done])).toEqual([['2026-11-21', false]]);
+  expect((await taskRepo.table.get(task.id))!.done).toBe(false);
+  const toast = lastToast();
+  toast.action!.run();
+  await expect.poll(() => lastToast().message, { timeout: 3000 }).toBe('Rückgängig gemacht.');
+  await expect.poll(async () => snapshot(), { timeout: 3000 }).toEqual(before);
+});
+
 it('„Dauer …“ writes the estimate through the source', async () => {
   await taskRepo.create({
     listId: 'inbox',

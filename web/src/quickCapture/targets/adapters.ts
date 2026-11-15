@@ -451,7 +451,8 @@ const breaks: CaptureTarget = {
         const rest = { ...data, blockers: data.blockers.filter((x) => x.id !== id) };
         // A day this save brought in goes again when nothing else was put on it meanwhile.
         const untouched =
-          rest.blockers.length === 0 && rest.availableMin === undefined && !rest.note && !rest.from;
+          rest.blockers.length === 0 &&
+          Object.keys(rest).every((k) => k === 'date' || k === 'blockers');
         if (fresh && untouched) await repo.remove(b.date);
         else await repo.upsert(b.date, rest);
       },

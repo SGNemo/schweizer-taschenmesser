@@ -284,10 +284,16 @@ export async function asBreak(
       if (!restore) return;
       // The source's own undo joins this action: a source whose removal is no recorded write comes back too.
       recordWrite(restore);
-      const row = await dayRepo.get(date);
-      await dayPatch(date, {
-        blockers: [...(row?.blockers ?? []), { id: randomId(), label: e.title, min }],
-      });
+      try {
+        const row = await dayRepo.get(date);
+        await dayPatch(date, {
+          blockers: [...(row?.blockers ?? []), { id: randomId(), label: e.title, min }],
+        });
+      } catch (err) {
+        // A failed write drops the action's undo: the thing must not stay removed without its blocker.
+        await restore();
+        throw err;
+      }
     },
     { leadOnly: true },
   );

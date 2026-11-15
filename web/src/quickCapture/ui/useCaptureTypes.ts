@@ -24,7 +24,7 @@ export function useCaptureTypes(): {
   fitness: NonNullable<ParseOptions['fitness']>;
   /** Set while the Uhr module is on. */
   place: ParseOptions['place'];
-  /** The planner is on: „Pause …“ / „Freizeit …“ lines are breaks (`ParseOptions.breaks`). */
+  /** The planner is on and the app speaks German: „Pause …“ / „Freizeit …“ lines are breaks (`ParseOptions.breaks`). */
   breaks: boolean;
   /**
    * The targets a person picks by hand (type chips, the row choice): a break is reached only by its word,
@@ -42,7 +42,9 @@ export function useCaptureTypes(): {
     available,
     fitness: { meal: available.includes('meal'), workout: available.includes('workout') },
     place: available.includes('place') ? isPlaceName : undefined,
-    breaks: available.includes('break'),
+    // German words („Pause“, „Freizeit“): read only with German as the app language, so „Pause Netflix“ in English
+    // stays a to-do – the app never guesses what leisure is.
+    breaks: available.includes('break') && getLang() === 'de',
     pickable: available.filter((type) => type !== 'break'),
   };
 }

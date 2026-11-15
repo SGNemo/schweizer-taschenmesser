@@ -360,8 +360,11 @@ describe('onRemove („Als Pause …“, package 4a)', () => {
       ['Zocken', '2026-11-16', false],
     ]);
     expect(dayPlan(live, TODAY, 5).doneToday).toBe(0);
+    // Nothing is ticked: the removed occurrence stays undone (no completed event, no `completedAt`).
+    const gone = (await taskRepo.table.get(task.id))!;
+    expect([gone.done, gone.completedAt]).toEqual([false, undefined]);
+    // The restore brings back the removed rows; the next instance is the planner journal's to take back.
     await undo!();
-    const back = await taskRepo.active().toArray();
-    expect(back.map((t) => [t.id, t.done])).toEqual([[task.id, false]]);
+    expect((await taskRepo.get(task.id))!.done).toBe(false);
   });
 });
