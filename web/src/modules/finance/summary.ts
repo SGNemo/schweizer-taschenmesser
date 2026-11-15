@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo } from 'react';
 import { useModuleStates } from '@/core/modules/activation';
-import { useSharedLiveQuery } from '@/core/modules/sharedQuery';
+import { KEEP_PAGE_MS, useSharedLiveQuery } from '@/core/modules/sharedQuery';
 import { DEFAULT_CURRENCY, sumMinor } from '@/core/money';
 import { useSettings } from '@/core/settings/settings';
 import { endOfMonthStr, today } from '@/core/time/dates';
@@ -16,15 +16,21 @@ import { settings } from './settings';
 
 /** All finance data in one live query; personal-scale data volumes make this cheap. */
 export function useFinanceData(): FinanceData | undefined {
-  // Shared: the finance page, its tabs and the home balance widget read the same bookings once.
-  return useSharedLiveQuery('finance|data', async (): Promise<FinanceData> => {
-    const [accounts, categories, txs] = await Promise.all([
-      accountRepo.active().toArray(),
-      categoryRepo.active().toArray(),
-      transactionRepo.active().toArray(),
-    ]);
-    return { accounts: sortAccounts(accounts), categories, txs };
-  });
+  // Shared: the finance page, its tabs and the home balance widget read the same bookings once. Kept for a
+  // while after the page was left, so a return shows the figures at once instead of reading every booking again.
+  return useSharedLiveQuery(
+    'finance|data',
+    async (): Promise<FinanceData> => {
+      const [accounts, categories, txs] = await Promise.all([
+        accountRepo.active().toArray(),
+        categoryRepo.active().toArray(),
+        transactionRepo.active().toArray(),
+      ]);
+      return { accounts: sortAccounts(accounts), categories, txs };
+    },
+    undefined,
+    { keep: KEEP_PAGE_MS },
+  );
 }
 
 /**

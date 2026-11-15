@@ -3,7 +3,13 @@ import { act, cleanup, render, renderHook, waitFor } from '@testing-library/reac
 import { Component, type ReactNode } from 'react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
-import { LINGER_MS, resetSharedQueries, sharedQueryCount, useSharedLiveQuery } from './sharedQuery';
+import {
+  KEEP_PAGE_MS,
+  LINGER_MS,
+  resetSharedQueries,
+  sharedQueryCount,
+  useSharedLiveQuery,
+} from './sharedQuery';
 
 // Dexie runs the very first live query after the database was opened twice; start warm to count runs.
 beforeAll(async () => {
@@ -99,7 +105,7 @@ describe('useSharedLiveQuery', () => {
     await waitFor(() => expect(result.current).toBe(2));
   });
 
-  it('keeps the query for LINGER_MS after the last subscriber left, then stops it', async () => {
+  it('by default keeps the query for LINGER_MS after the last subscriber left, then stops it', async () => {
     const view = render(<Probe k="gone" />);
     await waitFor(() => expect(sharedQueryCount()).toBe(1));
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
@@ -114,12 +120,38 @@ describe('useSharedLiveQuery', () => {
     }
   });
 
-  it('a subscriber that comes back while it lingers gets the value in its first render', async () => {
+  it('with keep, the query outlives its last subscriber for that long', async () => {
+    const keep = { keep: KEEP_PAGE_MS };
+    const view = renderHook(() => useSharedLiveQuery('kept', read('kept'), undefined, keep));
+    await waitFor(() => expect(sharedQueryCount()).toBe(1));
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      view.unmount();
+      vi.advanceTimersByTime(KEEP_PAGE_MS - 1);
+      expect(sharedQueryCount()).toBe(1);
+      vi.advanceTimersByTime(1);
+      expect(sharedQueryCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('superseded keys without keep do not pile up (a seed run switching on many modules, #847)', async () => {
+    const { rerender } = renderHook(({ k }) => useSharedLiveQuery(k, read(k)), {
+      initialProps: { k: 'm0' },
+    });
+    await waitFor(() => expect(sharedQueryCount()).toBe(1));
+    for (let i = 1; i <= 10; i++) rerender({ k: `m${i}` });
+    await waitFor(() => expect(sharedQueryCount()).toBe(1));
+  });
+
+  it('a subscriber that comes back while the query is kept gets the value in its first render', async () => {
     await db.table('example_entry').put({ id: 'back', value: 4 });
-    const first = renderHook(() => useSharedLiveQuery('back', read('back')));
+    const keep = { keep: KEEP_PAGE_MS };
+    const first = renderHook(() => useSharedLiveQuery('back', read('back'), undefined, keep));
     await waitFor(() => expect(first.result.current).toBe(4));
     first.unmount();
-    const again = renderHook(() => useSharedLiveQuery('back', read('back')));
+    const again = renderHook(() => useSharedLiveQuery('back', read('back'), undefined, keep));
     expect(again.result.current).toBe(4);
   });
 

@@ -1,7 +1,7 @@
 ---
 type: fixed
-area: app
+area: finance
 breaking: false
-de: Zurück zur Übersicht oder zu Finanzen geht schneller: Die Daten einer eben besuchten Seite bleiben eine halbe Minute bereit, statt neu gelesen zu werden.
-en: Going back to the overview or to finance is faster: the data of a page you just visited stays ready for half a minute instead of being read again.
+de: Zurück zu Finanzen geht schneller: Die Buchungen bleiben nach dem Verlassen der Seite eine halbe Minute bereit, statt neu gelesen zu werden.
+en: Going back to finance is faster: the bookings stay ready for half a minute after you leave the page instead of being read again.
 ---

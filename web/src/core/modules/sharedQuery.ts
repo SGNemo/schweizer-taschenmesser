@@ -27,26 +27,34 @@ interface Entry<T> {
   stop?: { unsubscribe(): void };
   /** Pending teardown after the last subscriber left (cancelled when someone subscribes again). */
   timer?: ReturnType<typeof setTimeout>;
+  /** How long the query keeps running after its last subscriber left (the longest any subscriber asked for). */
+  linger: number;
 }
 
 const EMPTY: Snapshot<never> = { has: false };
 const registry = new Map<string, Entry<unknown>>();
 
+/** Grace period before an unused query stops: covers re-mounts while navigating and StrictMode. */
+export const LINGER_MS = 50;
+
 /**
- * How long an unused query keeps running after its last subscriber left: covers re-mounts while navigating and
- * StrictMode, and keeps a page's data for a quick return (back to the overview or to finance shows its figures at
- * once instead of reading them again). The query stays live meanwhile, so what it holds is current.
+ * Opt-in `keep` for a page's own data: the query keeps running this long after the page was left, so a quick
+ * return shows the figures in the first render instead of reading them again. It stays live meanwhile, so what it
+ * holds is current. Only for a fixed key that a page reads (e.g. `finance|data`): keys that change with the active
+ * modules (contributions, module states) must not keep, or a seed run that switches on many modules leaves dozens of
+ * superseded queries running, each re-run on every write (#847).
  */
-export const LINGER_MS = 30_000;
+export const KEEP_PAGE_MS = 30_000;
 
 function acquire<T>(
   key: string,
   querier: () => Promise<T> | T,
-  prepare?: () => Promise<unknown>,
+  prepare: (() => Promise<unknown>) | undefined,
+  linger: number,
 ): Entry<T> {
   let entry = registry.get(key) as Entry<T> | undefined;
   if (!entry) {
-    const created: Entry<T> = { snapshot: EMPTY, listeners: new Set(), refs: 0 };
+    const created: Entry<T> = { snapshot: EMPTY, listeners: new Set(), refs: 0, linger };
     entry = created;
     registry.set(key, created as Entry<unknown>);
     const notify = () => created.listeners.forEach((l) => l());
@@ -80,6 +88,7 @@ function acquire<T>(
     clearTimeout(entry.timer);
     entry.timer = undefined;
   }
+  entry.linger = Math.max(entry.linger, linger);
   entry.refs++;
   return entry;
 }
@@ -93,7 +102,7 @@ function release(key: string): void {
     if (entry.refs > 0) return;
     entry.stop?.unsubscribe();
     registry.delete(key);
-  }, LINGER_MS);
+  }, entry.linger);
 }
 
 /** Number of running shared queries (tests). */
@@ -117,12 +126,16 @@ export function resetSharedQueries(): void {
  * track the table reads after that await (the zone is lost on a native await of a pending import), so
  * it would never re-run when the data changes. With the modules loaded first, the first run only
  * awaits cached ones.
+ *
+ * `options.keep` (ms, default `LINGER_MS`): how long the query outlives its last subscriber, see `KEEP_PAGE_MS`.
  */
 export function useSharedLiveQuery<T>(
   key: string,
   querier: () => Promise<T> | T,
   prepare?: () => Promise<unknown>,
+  options?: { keep?: number },
 ): T | undefined {
+  const keep = options?.keep ?? LINGER_MS;
   // The last result is kept while a new key is loading, like `useLiveQuery` does for new deps.
   const [kept, setKept] = useState<{ has: boolean; value?: T }>({ has: false });
   // The querier of the latest render runs when this subscriber is the one that starts the query.
@@ -142,6 +155,7 @@ export function useSharedLiveQuery<T>(
         key,
         async () => querierRef.current(),
         prepareRef.current ? () => prepareRef.current!() : undefined,
+        keep,
       );
       entry.listeners.add(onChange);
       // The query may have produced its first result before this subscriber was attached.
@@ -151,7 +165,7 @@ export function useSharedLiveQuery<T>(
         release(key);
       };
     },
-    [key],
+    [key, keep],
   );
   const getSnapshot = useCallback(
     () => (registry.get(key)?.snapshot ?? EMPTY) as Snapshot<T>,
