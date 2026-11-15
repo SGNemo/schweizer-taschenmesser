@@ -203,6 +203,17 @@ describe('startAppLock', () => {
     stop();
   });
 
+  it('background: 30 s also locks when the OS froze the timer (caught up from the clock on return)', () => {
+    vi.useFakeTimers();
+    writePrefs({ enabled: true, background: '30s', idleMinutes: '30' });
+    const { stop, background } = start();
+    background();
+    clock += 60_000; // away a minute, but no timer ran
+    document.dispatchEvent(new Event('visibilitychange')); // jsdom: visible
+    expect(useAppLock.getState().locked).toBe(true);
+    stop();
+  });
+
   it('background: never keeps it open', () => {
     vi.useFakeTimers();
     writePrefs({ enabled: true, background: 'never', idleMinutes: '30' });

@@ -57,19 +57,24 @@ export function startAppLock(deps: AppLockDeps = defaultDeps()): () => void {
     };
     restart();
     for (const type of ACTIVITY_EVENTS) window.addEventListener(type, restart, { passive: true });
+    let hiddenAt: number | undefined;
     const stopBackground = deps.onBackground(() => {
       if (prefs.background === 'now') lockApp();
       else if (prefs.background === '30s') {
+        hiddenAt = now();
         clearTimeout(grace);
         grace = setTimeout(lockApp, BACKGROUND_GRACE_MS);
       }
     });
-    // Coming back inside the grace period cancels the pending lock; a timer the OS held back while
-    // hidden is caught up here (the idle time counts from the last input, not from the timer).
+    // Coming back inside the grace period cancels the pending lock. Timers the OS froze while hidden
+    // (Android, background tabs) are caught up from the clock: away 30 s or longer locks, and the idle
+    // time counts from the last input, not from the timer.
     const onVisible = () => {
       if (document.visibilityState !== 'visible') return;
+      const away = hiddenAt === undefined ? 0 : now() - hiddenAt;
+      hiddenAt = undefined;
       clearTimeout(grace);
-      if (now() - lastActivity >= idleMs) lockApp();
+      if (away >= BACKGROUND_GRACE_MS || now() - lastActivity >= idleMs) lockApp();
     };
     document.addEventListener('visibilitychange', onVisible);
     disarm = () => {

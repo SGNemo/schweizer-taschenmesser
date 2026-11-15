@@ -28,7 +28,8 @@ export const tAppLock = defineBundle(
     idleHint: 'Nach dieser Zeit ohne Eingabe sperrt Nemo.',
     idleOption: (min: number) => `${min} min`,
     background: 'Beim Wechsel in eine andere App',
-    backgroundHint: 'Ob Nemo sperrt, wenn du kurz woanders bist.',
+    backgroundHint:
+      'Beim Sperren schließen offene Formulare; Notizen und Schnellerfassung bleiben. „Nach 30 s“ reicht für Kamera und Dateiauswahl.',
     backgroundOptions: { now: 'Sofort', '30s': 'Nach 30 s', never: 'Nie' },
     biometric: 'Mit Fingerabdruck oder Gesicht entsperren',
     biometricHint: 'Die PIN bleibt als zweiter Weg erhalten.',
@@ -37,7 +38,7 @@ export const tAppLock = defineBundle(
     // Dialogs
     setTitle: 'PIN festlegen',
     setIntro:
-      'Vier bis zwölf Ziffern. Merk sie dir gut: ohne sie geht die Sperre nur mit dem Löschen der App-Daten auf. Richte vorher Sync oder ein Backup ein, dann bleiben deine Einträge auch in diesem Fall erhalten.',
+      'Vier bis zwölf Ziffern. Merk sie dir gut: ohne sie geht die Sperre nur mit dem Löschen der App-Daten auf. Richte vorher Sync oder ein Backup ein, dann kannst du deine Einträge danach zurückholen.',
     newPin: 'Neue PIN',
     repeatPin: 'Neue PIN wiederholen',
     currentPin: 'Jetzige PIN',
@@ -98,7 +99,8 @@ export const tAppLock = defineBundle(
       idleHint: 'Nemo locks after this long without input.',
       idleOption: (min: number) => `${min} min`,
       background: 'When you switch to another app',
-      backgroundHint: 'Whether Nemo locks while you are briefly elsewhere.',
+      backgroundHint:
+        'Locking closes open forms; notes and quick capture are kept. “After 30 s” leaves time for the camera or file picker.',
       backgroundOptions: { now: 'Right away', '30s': 'After 30 s', never: 'Never' },
       biometric: 'Unlock with fingerprint or face',
       biometricHint: 'The PIN stays as a second way in.',
@@ -106,7 +108,7 @@ export const tAppLock = defineBundle(
       lockNowHint: 'Locks Nemo right away until you enter the PIN.',
       setTitle: 'Set PIN',
       setIntro:
-        'Four to twelve digits. Keep it in mind: without it the lock only opens by deleting the app data. Set up sync or a backup first, so your entries are safe even then.',
+        'Four to twelve digits. Keep it in mind: without it the lock only opens by deleting the app data. Set up sync or a backup first, so you can get your entries back afterwards.',
       newPin: 'New PIN',
       repeatPin: 'Repeat new PIN',
       currentPin: 'Current PIN',

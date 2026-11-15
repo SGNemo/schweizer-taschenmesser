@@ -13,8 +13,8 @@ import styles from './AppLockGate.module.css';
  * The app lock (device-local, `core/applock`). While locked the routes are not mounted at all: nothing of
  * the app's data stays in the DOM, and every shortcut, the voice key, Back handling and open dialogs stop
  * with them (keeping them mounted under the lock left an open modal dialog on top of the lock screen and
- * earlier key listeners alive – council round 2). The cost: unsaved typing outside a draft-keeping form is
- * lost, which is why leaving the app locks after 30 s by default, not at once.
+ * earlier key listeners alive – council round 2). The cost: unsaved typing outside forms that store their own
+ * draft (notes, quick capture) is lost, which is why leaving the app locks after 30 s by default, not at once.
  */
 export function AppLockGate({ children }: { children: ReactNode }) {
   const locked = useAppLock((s) => s.locked);
@@ -50,8 +50,8 @@ function AppLockScreen() {
     return () => clearInterval(id);
   }, [waiting]);
 
-  // On show, and when a wait ends: the field gets the focus; the old "wrong" line goes (it would be read
-  // out again), the field is simply usable.
+  // On show, and when a wait ends: the field gets the focus; any old line ("wrong", an error) goes (it
+  // would be read out again), the field is simply usable.
   const waitedBefore = useRef(waiting);
   useEffect(() => {
     if (waiting) {

@@ -30,7 +30,7 @@ export function lockApp(everywhere = false): void {
   if (everywhere) lockChannel()?.postMessage('lock');
 }
 
-/** Calls back when another window of this app locked. */
+/** Calls back when another window of this app locked. The receiver locks only itself (`lockApp()`), never sends it on. */
 export function onOtherWindowLock(callback: () => void): () => void {
   const ch = lockChannel();
   if (!ch) return () => undefined;
