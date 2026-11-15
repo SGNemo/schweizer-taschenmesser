@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { db } from '@/core/db/db';
-import { loadModuleStates } from '@/core/modules/activation';
+import { loadModuleStates, useModuleStates } from '@/core/modules/activation';
 import { useUiStore } from '@/stores/ui';
 import { backDepth, resetBackStack } from '@/core/shell/backStack';
 import { readSetupState, SETUP_STATE_KEY, markStepDone } from '@/core/setup/state';
@@ -301,5 +301,41 @@ describe('welcome card', () => {
     // Only what the planner needs: the ToDos are on by default, so only the planner's row was written.
     expect((await db.table('_modules').toArray()).map((r) => r.id)).toEqual(['planner']);
     expect(useUiStore.getState().openAreas).toContain('plan');
+  });
+
+  it('„Tage einteilen“ opens the planner only once its route exists (never the „module is off“ route)', async () => {
+    await db.table('_meta').put({
+      key: SETUP_STATE_KEY,
+      value: {
+        status: 'notStarted',
+        doneSteps: [],
+        skippedSteps: [],
+        version: 1,
+        checklistHidden: false,
+      },
+    });
+    await db.table('_modules').clear();
+    // Like the app's router: the planner's page exists only while the live module states say it is on;
+    // before that the path is the „module is off“ route (which leads to the library).
+    let sawOff = false;
+    function PlannerRoute() {
+      const on = !!useModuleStates()?.planner;
+      useEffect(() => {
+        if (!on) sawOff = true;
+      }, [on]);
+      return on ? <p data-testid="planner-route">Planer</p> : null;
+    }
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route path="/" element={<WelcomeCard />} />
+          <Route path="/planner" element={<PlannerRoute />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    await user.click(await screen.findByRole('button', { name: s.welcomePlanDays }));
+    await screen.findByTestId('planner-route');
+    expect(sawOff).toBe(false);
   });
 });

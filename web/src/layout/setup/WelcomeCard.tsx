@@ -1,11 +1,11 @@
 import { useSetupHost } from '@/core/setup/host';
 import { useSetupState } from '@/core/setup/hooks';
 import { dismissSetup } from '@/core/setup/state';
-import { enableModule, loadModuleStates } from '@/core/modules/activation';
+import { enableModule, loadModuleStates, useModuleStates } from '@/core/modules/activation';
 import { getManifest } from '@/core/modules/registry';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Button, Card } from '@/ui';
 import { TestDataOffer } from '../devTools';
@@ -14,10 +14,12 @@ import styles from './WelcomeCard.module.css';
 /**
  * „Tage einteilen“ (use case „Wochenende retten“, TARGET F1): switches on the planner and what it needs
  * (`requires`: the ToDos) – only on this tap, never anything off –, ends the offer like „Später“ (the setup stays
- * in the settings and the checklist; nothing but the status is stored), keeps the „Planen“ group of the sidebar
- * open (W03) and opens the planner with its three-step sheet.
+ * in the settings and the checklist; nothing but the status is stored) and keeps the „Planen“ group of the sidebar
+ * open (W03). The card then opens the planner with its three-step sheet (`PLAN_DAYS_PATH`).
  */
-async function planDays(go: (to: string) => void): Promise<void> {
+const PLAN_DAYS_PATH = '/planner?start=1';
+
+async function planDays(): Promise<void> {
   const planner = getManifest('planner');
   if (planner) {
     const states = await loadModuleStates();
@@ -28,7 +30,6 @@ async function planDays(go: (to: string) => void): Promise<void> {
     if (planner.area) useUiStore.getState().toggleAreaOpen(planner.area, false);
   }
   await dismissSetup();
-  go('/planner?start=1');
 }
 
 /**
@@ -41,6 +42,15 @@ export function WelcomeCard() {
   const state = useSetupState();
   const open = useSetupHost((s) => s.openWizard);
   const navigate = useNavigate();
+  // „Tage einteilen“ was tapped: the planner opens once the app knows it is on. The routes are built from the
+  // same live module states, so navigating right after the write could still find the „module is off“ route and
+  // end in the library with „Dieses Modul ist nicht aktiv.“ instead of the sheet.
+  const states = useModuleStates();
+  const [opening, setOpening] = useState(false);
+  const plannerOn = !!states?.planner;
+  useEffect(() => {
+    if (opening && plannerOn) void navigate(PLAN_DAYS_PATH);
+  }, [opening, plannerOn, navigate]);
   if (state?.status !== 'notStarted') return null;
   return (
     <div data-testid="setup-welcome" className={styles.card}>
@@ -52,7 +62,7 @@ export function WelcomeCard() {
             {t.setup.start}
           </Button>
           {getManifest('planner') ? (
-            <Button onClick={() => void planDays((to) => void navigate(to))}>
+            <Button onClick={() => void planDays().then(() => setOpening(true))}>
               {t.setup.welcomePlanDays}
             </Button>
           ) : null}
