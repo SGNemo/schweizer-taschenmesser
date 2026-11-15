@@ -209,8 +209,11 @@ export default function FitnessPage() {
         title={t.fitness.meta.name}
         // Each view starts with a short row at the left (a group heading, the week switch): the phone's "⋯" menu
         // lies beside it. An empty view keeps the menu in its own row.
+        // A full-width first row (the running session's line) keeps the phone's "⋯" in its own row.
         besideContent={
-          view === 'week' || view === 'exercises' || (view === 'food' ? !noMeals : !noSessions)
+          view === 'week' ||
+          view === 'exercises' ||
+          (view === 'food' ? !noMeals : !noSessions && !(live && !liveOpen))
         }
         views={
           // The tabs depend on the preferences („Essen“ only with calorie tracking), so they wait for them.
