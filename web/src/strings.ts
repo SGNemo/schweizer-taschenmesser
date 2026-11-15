@@ -7623,8 +7623,10 @@ export const de = {
       selectAll: 'Alle auswählen',
       more: 'Weitere Aktionen für die Auswahl',
       unchanged: 'Da war nichts zu ändern.',
-      partial: (ok: number, total: number) =>
-        `Bei ${ok} von ${total} Mails hat es geklappt. Die übrigen sind unverändert und bleiben ausgewählt.`,
+      partial: (failed: number) =>
+        failed === 1
+          ? 'Bei 1 Mail hat es nicht geklappt. Sie ist unverändert und bleibt ausgewählt.'
+          : `Bei ${failed} Mails hat es nicht geklappt. Sie sind unverändert und bleiben ausgewählt.`,
       done: {
         read: (n: number) => `${n} Mails als gelesen markiert.`,
         unread: (n: number) => `${n} Mails als ungelesen markiert.`,

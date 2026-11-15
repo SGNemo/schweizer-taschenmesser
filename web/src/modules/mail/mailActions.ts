@@ -250,7 +250,7 @@ export async function runStep(
   const ids = done.map((d) => d.id);
   if (ids.length) onChanged('do', ids);
   const message = failed.length
-    ? t.mail.batch.partial(done.length, targets.length)
+    ? t.mail.batch.partial(failed.length)
     : done.length === 0
       ? t.mail.batch.unchanged
       : text(done.length);

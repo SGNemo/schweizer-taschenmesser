@@ -337,8 +337,10 @@ export const mail: Strings['mail'] = {
     selectAll: 'Select all',
     more: 'More actions for the selection',
     unchanged: 'There was nothing to change.',
-    partial: (ok: number, total: number) =>
-      `It worked for ${ok} of ${total} mails. The others are unchanged and stay selected.`,
+    partial: (failed: number) =>
+      failed === 1
+        ? 'It did not work for 1 mail. It is unchanged and stays selected.'
+        : `It did not work for ${failed} mails. They are unchanged and stay selected.`,
     done: {
       read: (n: number) => `${n} mails marked as read.`,
       unread: (n: number) => `${n} mails marked as unread.`,

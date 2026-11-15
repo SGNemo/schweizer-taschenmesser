@@ -405,10 +405,32 @@ describe('select mode in the list', () => {
       }),
     );
     await user.click(await screen.findByRole('menuitem', { name: 'Mit Stern markieren' }));
-    await waitFor(() => expect(lastToast()?.message).toMatch(/Bei 2 von 3 Mails/));
+    await waitFor(() =>
+      expect(lastToast()?.message).toBe(
+        'Bei 1 Mail hat es nicht geklappt. Sie ist unverändert und bleibt ausgewählt.',
+      ),
+    );
     expect(
       within(await screen.findByRole('region', { name: /Auswahl/ })).getByText('1 ausgewählt'),
     ).toBeInTheDocument();
+  });
+
+  it('every call fails: nothing changes, the whole selection stays', async () => {
+    mocks.modify.mockRejectedValue(new ConnectorError('network'));
+    const user = userEvent.setup();
+    page();
+    await screen.findByText('Termin');
+    await user.click(screen.getByTestId('mail-select'));
+    await waitFor(() =>
+      expect(screen.getAllByRole('checkbox', { name: 'Auswählen' })).toHaveLength(3),
+    );
+    await user.click(screen.getByRole('button', { name: 'Alle auswählen' }));
+    const bar = screen.getByRole('region', { name: /Auswahl/ });
+    await user.click(within(bar).getByRole('button', { name: 'Weitere Aktionen für die Auswahl' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Mit Stern markieren' }));
+    await waitFor(() => expect(lastToast()?.message).toMatch(/nichts geändert/));
+    expect(within(bar).getByText('3 ausgewählt')).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
   });
 
   it('a starred row says so beside the time', async () => {
