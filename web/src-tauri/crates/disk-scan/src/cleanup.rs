@@ -84,11 +84,11 @@ pub struct CleanupRoot {
 pub const MAX_CANDIDATES: usize = 5000;
 
 /// Scan options for a clean-up place: every file is its own entry (no "small files" bucket, which
-/// could not be deleted), and no deep recursion.
+/// could not be deleted). The depth stays the default, so a folder's size counts everything a
+/// deletion would remove (the "large" second confirmation depends on it).
 pub fn cleanup_scan_options() -> ScanOptions {
     ScanOptions {
         min_file_bytes: 0,
-        max_depth: 64,
         access_tracked: Some(false),
         ..ScanOptions::default()
     }
@@ -144,11 +144,17 @@ pub fn chromium_profiles(user_data: &Path) -> Vec<PathBuf> {
     v
 }
 
+/// A place may be scanned when it is a real folder: not a symlink or junction (which could lead
+/// the scan, and then a deletion, into a folder that is not a cache at all).
+pub fn is_real_dir(path: &Path) -> bool {
+    std::fs::symlink_metadata(path).is_ok_and(|m| m.is_dir() && !m.file_type().is_symlink())
+}
+
 /// The clean-up places that exist on this machine.
 pub fn cleanup_roots() -> Vec<CleanupRoot> {
     imp::cleanup_roots()
         .into_iter()
-        .filter(|r| r.path.is_dir())
+        .filter(|r| is_real_dir(&r.path))
         .collect()
 }
 
@@ -173,13 +179,16 @@ mod imp {
     }
 
     pub fn cleanup_roots() -> Vec<CleanupRoot> {
-        let mut v = vec![CleanupRoot {
-            kind: CleanupKind::Temp,
-            source: "",
-            path: std::env::temp_dir(),
-            busy_when: &[],
-        }];
+        let mut v = Vec::new();
         if let Some(local) = known(&FOLDERID_LocalAppData) {
+            // The user's temp folder at its fixed place, not what `TEMP`/`TMP` say: a variable
+            // pointing at a profile or a drive would turn ordinary folders into "temp files".
+            v.push(CleanupRoot {
+                kind: CleanupKind::Temp,
+                source: "",
+                path: local.join("Temp"),
+                busy_when: &[],
+            });
             let chromium: [(&'static str, &str, &'static [&'static str]); 3] = [
                 ("chrome", r"Google\Chrome\User Data", &["chrome.exe"]),
                 ("edge", r"Microsoft\Edge\User Data", &["msedge.exe"]),
@@ -238,26 +247,15 @@ mod imp {
 mod imp {
     use super::*;
 
-    /// Linux/macOS: the temp folder, the user cache and Downloads (the same rules apply).
+    /// Linux/macOS: old downloads only. `/tmp` is shared by all users and holds sockets, and
+    /// `~/.cache` holds every program's caches: none of the categories describes them truthfully.
     pub fn cleanup_roots() -> Vec<CleanupRoot> {
-        let mut v = vec![CleanupRoot {
-            kind: CleanupKind::Temp,
-            source: "",
-            path: std::env::temp_dir(),
-            busy_when: &[],
-        }];
+        let mut v = Vec::new();
         if let Ok(home) = std::env::var("HOME") {
-            let home = PathBuf::from(home);
-            v.push(CleanupRoot {
-                kind: CleanupKind::BrowserCache,
-                source: "",
-                path: home.join(".cache"),
-                busy_when: &[],
-            });
             v.push(CleanupRoot {
                 kind: CleanupKind::OldDownloads,
                 source: "",
-                path: home.join("Downloads"),
+                path: PathBuf::from(home).join("Downloads"),
                 busy_when: &[],
             });
         }
@@ -405,7 +403,28 @@ mod tests {
     }
 
     #[test]
-    fn scan_options_keep_every_file_as_an_entry() {
-        assert_eq!(cleanup_scan_options().min_file_bytes, 0);
+    fn scan_options_keep_every_file_as_an_entry_and_the_full_depth() {
+        let o = cleanup_scan_options();
+        assert_eq!(o.min_file_bytes, 0);
+        assert_eq!(o.max_depth, ScanOptions::default().max_depth);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_place_that_is_a_link_is_not_scanned() {
+        let base = std::env::temp_dir().join(format!("tm-cleanup-link-{}", std::process::id()));
+        let real = base.join("real");
+        std::fs::create_dir_all(&real).unwrap();
+        let link = base.join("Cache");
+        std::os::unix::fs::symlink(&real, &link).unwrap();
+        let (is_real, is_link, missing) = (
+            is_real_dir(&real),
+            is_real_dir(&link),
+            is_real_dir(&base.join("nothing")),
+        );
+        let _ = std::fs::remove_dir_all(&base);
+        assert!(is_real);
+        assert!(!is_link, "a symlinked place must be left out");
+        assert!(!missing);
     }
 }

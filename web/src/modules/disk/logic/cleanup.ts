@@ -8,9 +8,12 @@ import type { CleanupPlace } from '@/core/platform/optimize';
  */
 export type Selection = ReadonlySet<number>;
 
-/** Caches and temp files start ticked; the user's own downloads start empty. */
+/**
+ * Caches and temp files start ticked; the user's own downloads start empty, and so does a cache
+ * whose program is running (its files are in use: cleaning it now would leave half a cache).
+ */
 export const initialSelection = (place: CleanupPlace): Selection =>
-  new Set(place.preselected ? place.ids : []);
+  new Set(place.preselected && !place.busy ? place.ids : []);
 
 /** Ids of the suggested entries that have no preview row. */
 export function restIds(place: CleanupPlace): number[] {

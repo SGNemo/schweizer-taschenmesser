@@ -672,7 +672,7 @@ test('"Genauer ansehen" in the tidy tab starts a scan of that folder', async ({ 
   await page.getByRole('button', { name: 'Aufräumen öffnen' }).click();
   await expect(page).toHaveURL(/tab=tidy/);
   await page.getByRole('button', { name: 'Suchen', exact: true }).click();
-  await page.getByRole('button', { name: 'Alte Downloads im Scan ansehen' }).click();
+  await page.getByRole('button', { name: 'Genauer ansehen: Alte Downloads' }).click();
   await expect(
     page.getByRole('heading', { name: /Scan von C:\\Nutzer\\Beispiel\\Downloads/ }),
   ).toBeVisible();
@@ -800,12 +800,12 @@ test('tidy tab: nothing is searched until asked, then suggestions with sizes', a
 
 test('tidy tab: the user’s own downloads start unticked and need a choice', async ({ page }) => {
   await openTidy(page);
-  const clean = page.getByRole('button', { name: 'Alte Downloads aufräumen' });
+  const clean = page.getByRole('button', { name: 'Aufräumen: Alte Downloads' });
   await expect(clean).toBeDisabled();
   await page.getByRole('checkbox', { name: 'urlaub.zip auswählen' }).check();
   await expect(clean).toBeEnabled();
   // Caches and temp files are ticked from the start.
-  await expect(page.getByRole('button', { name: 'Temporäre Dateien aufräumen' })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Aufräumen: Temporäre Dateien' })).toBeEnabled();
   await page.getByText('Vorschau · 3 Einträge').click();
   await expect(page.getByRole('checkbox', { name: 'alt.tmp auswählen' })).toBeChecked();
 });
@@ -817,7 +817,7 @@ test('tidy tab: cleaning goes through the delete dialog, then the suggestion is 
   // One entry stays: untick it.
   await page.getByText('Vorschau · 3 Einträge').click();
   await page.getByRole('checkbox', { name: 'protokoll.log auswählen' }).uncheck();
-  await page.getByRole('button', { name: 'Temporäre Dateien aufräumen' }).click();
+  await page.getByRole('button', { name: 'Aufräumen: Temporäre Dateien' }).click();
   const dialog = page.getByRole('dialog');
   // The same dialog as in the scan: recycle bin preselected, the entries listed.
   await expect(dialog.getByRole('radio', { name: /In den Papierkorb verschieben/ })).toBeChecked();
@@ -836,7 +836,7 @@ test('tidy tab: cleaning goes through the delete dialog, then the suggestion is 
   const history = page.getByRole('list', { name: 'Verlauf' });
   await expect(history).toContainText('Temporäre Dateien: 2,2 GB in den Papierkorb · 2 Dateien');
   await expect(history).not.toContainText('alt.tmp');
-  await history.getByRole('button', { name: 'Papierkorb öffnen' }).click();
+  await history.getByRole('button', { name: /^Papierkorb öffnen/ }).click();
   expect(
     await page.evaluate(() => (globalThis as { __tmCareTools?: string[] }).__tmCareTools),
   ).toEqual(['recycleBin']);

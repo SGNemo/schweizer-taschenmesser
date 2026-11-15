@@ -47,25 +47,31 @@ impl Tool {
         Tool::ALL.into_iter().find(|t| t.code() == code)
     }
 
-    /// Program and fixed arguments. `explorer.exe` resolves `ms-settings:` and `shell:` addresses.
-    pub fn command(self) -> (&'static str, &'static [&'static str]) {
+    /// Where the program lives, its file name and its fixed arguments. `explorer.exe` (in the
+    /// Windows folder) resolves `ms-settings:` and `shell:` addresses; the others are in System32.
+    pub fn command(self) -> (Home, &'static str, &'static [&'static str]) {
         match self {
-            Tool::StorageSettings => ("explorer.exe", &["ms-settings:storagesense"]),
-            Tool::DiskCleanup => ("cleanmgr.exe", &[]),
-            Tool::RecycleBin => ("explorer.exe", &["shell:RecycleBinFolder"]),
-            Tool::StartupApps => ("explorer.exe", &["ms-settings:startupapps"]),
-            Tool::SystemProtection => ("SystemPropertiesProtection.exe", &[]),
-            Tool::OptimizeDrives => ("dfrgui.exe", &[]),
-            Tool::PowerSettings => ("explorer.exe", &["ms-settings:powersleep"]),
+            Tool::StorageSettings => (Home::Windows, "explorer.exe", &["ms-settings:storagesense"]),
+            Tool::DiskCleanup => (Home::System32, "cleanmgr.exe", &[]),
+            Tool::RecycleBin => (Home::Windows, "explorer.exe", &["shell:RecycleBinFolder"]),
+            Tool::StartupApps => (Home::Windows, "explorer.exe", &["ms-settings:startupapps"]),
+            Tool::SystemProtection => (Home::System32, "SystemPropertiesProtection.exe", &[]),
+            Tool::OptimizeDrives => (Home::System32, "dfrgui.exe", &[]),
+            Tool::PowerSettings => (Home::Windows, "explorer.exe", &["ms-settings:powersleep"]),
         }
     }
 
-    /// Opens the tool. Errors on other systems and when Windows cannot start it.
+    /// Opens the tool by its **full path** below the Windows folder (never by bare name: Windows
+    /// would look next to the app's own exe first, where anyone could have put a file of that
+    /// name). Errors on other systems and when Windows cannot start it.
     pub fn open(self) -> std::io::Result<()> {
         #[cfg(windows)]
         {
-            let (program, args) = self.command();
-            std::process::Command::new(program)
+            let (home, program, args) = self.command();
+            let dir = imp::dir_of(home).ok_or_else(|| {
+                std::io::Error::new(std::io::ErrorKind::NotFound, "no windows folder")
+            })?;
+            std::process::Command::new(dir.join(program))
                 .args(args)
                 .spawn()
                 .map(|_| ())
@@ -76,6 +82,53 @@ impl Tool {
                 std::io::ErrorKind::Unsupported,
                 "windows only",
             ))
+        }
+    }
+}
+
+/// The two folders Windows' own tools live in.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Home {
+    /// The Windows folder itself (`C:\Windows`).
+    Windows,
+    /// `C:\Windows\System32`.
+    System32,
+}
+
+#[cfg(windows)]
+mod imp {
+    use super::Home;
+    use std::path::PathBuf;
+    use windows::Win32::System::SystemInformation::{
+        GetSystemDirectoryW, GetSystemWindowsDirectoryW,
+    };
+
+    /// Asked from Windows, not from an environment variable a user or another program could set.
+    pub fn dir_of(home: Home) -> Option<PathBuf> {
+        let mut buf = [0u16; 512];
+        // SAFETY: the buffer is a local slice; the call writes at most its length and returns
+        // the number of characters written (0 on failure, more than the length when too small).
+        let n = unsafe {
+            match home {
+                Home::Windows => GetSystemWindowsDirectoryW(Some(&mut buf)),
+                Home::System32 => GetSystemDirectoryW(Some(&mut buf)),
+            }
+        } as usize;
+        (n > 0 && n < buf.len()).then(|| PathBuf::from(String::from_utf16_lossy(&buf[..n])))
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use crate::tools::Tool;
+
+        #[test]
+        fn every_tool_exists_at_its_full_path() {
+            for t in Tool::ALL {
+                let (home, program, _) = t.command();
+                let path = dir_of(home).expect("windows folder").join(program);
+                assert!(path.is_absolute() && path.is_file(), "{}", path.display());
+            }
         }
     }
 }
@@ -97,7 +150,8 @@ mod tests {
     #[test]
     fn every_tool_is_a_fixed_windows_program_without_a_shell() {
         for t in Tool::ALL {
-            let (program, args) = t.command();
+            let (home, program, args) = t.command();
+            assert_eq!(home == Home::Windows, program == "explorer.exe");
             assert!(program.ends_with(".exe"), "{program}");
             assert!(!program.contains(['\\', '/', ' ']), "{program}");
             for p in ["cmd", "powershell", "pwsh", "wscript", "cscript", "reg"] {
