@@ -261,7 +261,15 @@ function Fields({
       ...(title.trim() ? { title: title.trim() } : {}),
       ...(num(duration) ? { durationMin: Math.round(num(duration)!) } : {}),
       ...(note.trim() ? { note: note.trim() } : {}),
-      exercises: rows.filter((r) => r.name.trim()).map(toExercise),
+      // A superset pairs a row with the next one: never the last row, never a third in a chain.
+      exercises: rows
+        .filter((r) => r.name.trim())
+        .map((r, i, named) =>
+          toExercise({
+            ...r,
+            superset: !!r.superset && i < named.length - 1 && !named[i - 1]?.superset,
+          }),
+        ),
       ...(planned ? { planned: true } : {}),
     };
   }
@@ -304,7 +312,7 @@ function Fields({
   }
 
   // „Anfangen“ on a new session for today or a plan whose day has come – never on a logged one or a later day.
-  const canStart = !!onStart && date <= today() && (!existing || !!existing.planned);
+  const canStart = !!onStart && date === today() && (!existing || !!existing.planned);
   return (
     <Form onSubmit={save}>
       {/* Templates only on a fresh form: a tap never overwrites exercises already typed. */}
@@ -367,7 +375,7 @@ function Fields({
                           label: t.fitness.form.setsSingle,
                           onSelect: () => split(r),
                         },
-                    ...(i < rows.length - 1
+                    ...(i < rows.length - 1 && !rows[i - 1]?.superset
                       ? [
                           {
                             id: 'superset',

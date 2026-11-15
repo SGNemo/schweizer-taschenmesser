@@ -8775,7 +8775,6 @@ export const de = {
       weight: (kg: string) => `${kg} kg`,
       kcal: (kcal: string) => `${kcal} kcal`,
       warmup: 'Aufwärmen',
-      superset: 'Supersatz',
     },
     form: {
       date: 'Datum',
@@ -9001,7 +9000,7 @@ export const de = {
       nothing: 'Beendet. Es war noch kein Satz eingetragen.',
       banner: (time: string) => `Einheit läuft seit ${time}`,
       resume: 'Weiter',
-      saved: 'Gespeichert. Die Einheit läuft weiter, bis du sie beendest.',
+      failed: 'Das ließ sich gerade nicht speichern. Versuch es bitte noch einmal.',
     },
 
     plan: {
