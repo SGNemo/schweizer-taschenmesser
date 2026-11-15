@@ -62,7 +62,6 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 | `src-tauri/{build.rs,capabilities/desktop.json,src/lib.rs}`                              | `feat/disk-optimize-p1…p4`: `disk_*` lines, append-only (row leaves with p4)                |
 | `docs/STATUS.md`                                                                         | only in a `docs(status)` PR of its own (docs only), never in a feature PR                   |
 | `docs/DECISIONS.md`, `docs/HOW-TO.md`, `docs/ARCHITECTURE-MAP.md`, `README.md`           | touch only on real change; one line / one block, no reformatting                            |
-| `web/src/ui/widgets/**`, `web/src/home/**` (round "Tiefe")                               | corrections only while `fix/home-polish` is open (scribble `uebersicht.md`)                 |
 
 ## Hand-over conventions
 
