@@ -366,7 +366,7 @@ test.describe('Planer (week board, package 1)', () => {
     await strip.getByRole('button').nth(1).click();
     await expect(page.getByTestId('day-2026-11-10')).toBeVisible();
     await expect(strip.getByRole('button').nth(1)).toHaveAttribute('aria-pressed', 'true');
-    // The page's ⋯ has no place in the phone's head: it stands at the sheet's foot.
+    // The page's ⋯ has no place in the phone's module head: it stands beside the sheet's day title.
     await strip.getByRole('button').first().click();
     await expect(today(page).getByRole('button', { name: 'Weitere Optionen' })).toBeVisible();
     const overflow = await page.evaluate(

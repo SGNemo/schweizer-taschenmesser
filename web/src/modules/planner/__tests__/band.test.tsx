@@ -68,7 +68,13 @@ describe('week band', () => {
     expect(tiles[0]).toHaveTextContent('Heute · So 15.');
     expect(tiles[1]).toHaveTextContent('37 Min frei');
     expect(tiles[3]).toHaveTextContent('40 Min mehr');
-    const bars = tiles.map((b) => b.querySelector('[role="progressbar"]')!);
+    // The compact form never shows a dash: the count of things, else the free time or „frei“.
+    expect(tiles.map((b) => b.querySelector('[aria-hidden] + [aria-hidden]')!.textContent)).toEqual(
+      ['So15frei', 'Mo162', 'Di173 h 12', 'Mi181', 'Do193 h 12', 'Fr203 h 12', 'Sa213 h 12'],
+    );
+    // The bar lies over the button, not in it (a bar is a `div`): valid HTML, the whole tile still answers.
+    expect(tiles.every((b) => b.querySelector('div') === null)).toBe(true);
+    const bars = tiles.map((b) => b.parentElement!.querySelector('[role="progressbar"]')!);
     expect(bars[3]!.firstElementChild!.className).toMatch(/progressHatch/);
     expect(bars[1]!.firstElementChild!.className).not.toMatch(/progressHatch|progressOver/);
     expect(bars[3]).toHaveAttribute('aria-valuetext', '40 Min mehr als planbar');

@@ -487,20 +487,14 @@ test('B Kopf leeren: zwölf Dinge auf einmal', async ({ page, isMobile }, info) 
     (a) => a.itemKey === `todos:${gaming!.id}`,
   );
   expect(placed, '„Zocken“ is planned on a day').toBeTruthy();
-  const weekday = new Intl.DateTimeFormat('de-DE', { weekday: 'short' })
-    .format(new Date(`${placed!.date}T12:00:00`))
-    .replace('.', '');
-  const dayButton = placed!.date === SATURDAY ? /^Heute/ : new RegExp(`^${weekday}`);
-  if (isMobile)
-    await page
-      .getByRole('group', { name: 'Tage' })
-      .getByRole('button', { name: dayButton })
-      .click();
-  else await page.getByRole('button', { name: dayButton }).first().click();
-  await page
-    .locator(`[data-testid="day-${placed!.date}"]`)
-    .getByRole('button', { name: 'Aktionen für Zocken', exact: true })
-    .click();
+  // The day's tile in the week band (planner hub R1); on the phone the row may lie in the folded „Danach“.
+  await page.getByTestId(`week-${placed!.date}`).click();
+  const placedDay = page.locator(`[data-testid="day-${placed!.date}"]`);
+  const gamingMenu = placedDay.getByRole('button', { name: 'Aktionen für Zocken', exact: true });
+  await expect(placedDay.locator('li').first()).toBeVisible();
+  if (!(await gamingMenu.isVisible()))
+    await placedDay.getByRole('button', { name: /^Danach/ }).click();
+  await gamingMenu.click();
   await page.getByRole('menuitem', { name: 'Als Pause …' }).click();
   await page
     .getByRole('dialog', { name: 'Zocken als Pause' })

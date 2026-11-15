@@ -75,8 +75,9 @@ const MAX: Record<string, Record<Metric | 'seconds', number>> = {
   // prettier-ignore
   'A Ding abhaken · pixel-7': { taps: 2, keys: 0, screens: 1, dialogs: 0, detours: 0, seconds: 4 },
   // B: the sentence moves the thing and „Später“ moves a thing of tomorrow since fix/plan-move-sentence (P08, P09).
+  // R1 on top of it: no tap on a day on the desktop (4 taps, 21 s before); on the phone the fold of „Danach“ takes it.
   // prettier-ignore
-  'B Ding auf einen anderen Tag · desktop-chrome': { taps: 4, keys: 29, screens: 1, dialogs: 1, detours: 1, seconds: 21 },
+  'B Ding auf einen anderen Tag · desktop-chrome': { taps: 3, keys: 29, screens: 1, dialogs: 1, detours: 1, seconds: 20 },
   // prettier-ignore
   'B Ding auf einen anderen Tag · pixel-7': { taps: 4, keys: 29, screens: 1, dialogs: 1, detours: 1, seconds: 26 },
   // before R1: 3 taps, 10 s
@@ -116,7 +117,11 @@ const MAX: Record<string, Record<Metric | 'seconds', number>> = {
 
 /** The targets of R1 (HANDOFF §9) on the screen the page opens on, per window. */
 const TARGET = {
-  /** 1920: at most a quarter of the content area is unpainted (71 % before). */
+  /**
+   * 1920: at most a quarter is unpainted (71 % of the content area before) – of the page's columns: the whole
+   * content area while a context column stands beside the main one, the main column alone while nothing does
+   * (`coverage.emptyColumns`; the share of the whole area is recorded next to it as `coverage.empty`).
+   */
   emptyShare: 0.25,
   /** 1920: thing rows in full on the first screen (0 before) … */
   rowsOnScreen: 8,
@@ -485,10 +490,10 @@ async function measure(page: Page) {
       const y1 = Math.min(lines, Math.ceil((r.bottom - area.top) / CELL));
       for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) g[y * cols + x] = 1;
     };
-    const share = (g: Uint8Array, fromCol = 0) => {
+    const share = (g: Uint8Array, fromCol = 0, toCol = cols) => {
       let n = 0;
-      for (let y = 0; y < lines; y++) for (let x = fromCol; x < cols; x++) n += g[y * cols + x]!;
-      return n / ((cols - fromCol) * lines);
+      for (let y = 0; y < lines; y++) for (let x = fromCol; x < toCol; x++) n += g[y * cols + x]!;
+      return n / ((toCol - fromCol) * lines);
     };
     const visible = (el: Element) => {
       const s = getComputedStyle(el);
@@ -674,6 +679,16 @@ async function measure(page: Page) {
     const formBox = form?.getBoundingClientRect();
     const weekBox = main.querySelector('[aria-label="Woche"]')?.getBoundingClientRect();
 
+    // Where the page's columns end: the area's right edge with a context column, else the main column's.
+    const column = form?.parentElement?.parentElement;
+    const columnsEnd =
+      main.querySelector('aside') || !column
+        ? cols
+        : Math.max(
+            1,
+            Math.min(cols, Math.ceil((column.getBoundingClientRect().right - area.left) / CELL)),
+          );
+
     // Overdue rows.
     const late = thingRows.filter((li) => /Frist war/.test((li as HTMLElement).innerText));
     const lateWord = late[0]
@@ -695,6 +710,12 @@ async function measure(page: Page) {
         ink: share(ink),
         painted: share(painted),
         empty: 1 - share(painted),
+        /**
+         * The same for the page's columns that hold something: with a context column beside the main one that is
+         * the whole area; without one (no appointment, nothing waits) the main column alone, which keeps the width
+         * it has beside the context column (R1 review: rows do not stretch over the page).
+         */
+        emptyColumns: 1 - share(painted, 0, columnsEnd),
         inkRight: share(ink, Math.floor(cols / 2)),
         paintedRight: share(painted, Math.floor(cols / 2)),
         /** Height of the band under the last ink, down to the end of the content area. */
@@ -1184,7 +1205,7 @@ test('M Designmaße: die Woche des Sonntags, wie sie öffnet, und heute', async 
       // Seven tiles fit the phone and the sheet's first things are on the first screen.
       expect(m.rows.onScreen).toBeGreaterThanOrEqual(3);
     } else {
-      expect(m.coverage.empty, 'empty share at 1920').toBeLessThanOrEqual(TARGET.emptyShare);
+      expect(m.coverage.emptyColumns, 'empty share at 1920').toBeLessThanOrEqual(TARGET.emptyShare);
       expect(m.rows.onScreen, 'thing rows in full at 1920').toBeGreaterThanOrEqual(
         TARGET.rowsOnScreen,
       );

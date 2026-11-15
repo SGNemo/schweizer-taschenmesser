@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { Link, MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { findModel } from '@/core/ai/local/catalogue';
 import { writeLocalPrefs } from '@/core/ai/local/prefs';
@@ -500,7 +500,7 @@ describe('planner page', () => {
     expect(then).toHaveAttribute('aria-expanded', 'true');
     expect(within(sheet).getAllByRole('checkbox')).toHaveLength(8);
     const more = within(sheet).getByRole('button', { name: '4 weitere' });
-    expect(more).toHaveAttribute('aria-expanded', 'false');
+    expect(more).not.toHaveAttribute('aria-expanded');
     fireEvent.click(more);
     expect(within(sheet).getAllByRole('checkbox')).toHaveLength(12);
     expect(within(sheet).queryByRole('button', { name: /weitere/ })).toBeNull();
@@ -559,6 +559,7 @@ describe('planner page', () => {
     fireEvent.change(field, { target: { value: 'Keller aufräumen' } });
     fireEvent.submit(field.closest('form')!);
     const error = await screen.findByRole('alert');
+    expect(screen.getByTestId('planner-add-error')).toBe(error);
     expect(error).toHaveTextContent(
       'Das habe ich nicht gespeichert. Dein Text steht noch im Feld.',
     );
@@ -568,6 +569,65 @@ describe('planner page', () => {
     // Typing again takes the message away.
     fireEvent.change(field, { target: { value: 'Keller' } });
     expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  describe('phone', () => {
+    // The window says „phone“ (`PHONE_QUERY`); everything else does not match.
+    beforeEach(() => {
+      vi.stubGlobal('matchMedia', (query: string) => ({
+        matches: query === '(max-width: 899px)',
+        media: query,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+      }));
+    });
+    afterEach(() => vi.unstubAllGlobals());
+
+    it('`?new=1` opens the capture sheet with the field in it – on arrival and on a page that is already there', async () => {
+      const view = render(
+        <MemoryRouter initialEntries={['/planner?new=1']}>
+          <PlannerPage />
+        </MemoryRouter>,
+      );
+      const sheet = await screen.findByRole('dialog', { name: 'Eintragen oder sagen' });
+      expect(
+        within(sheet).getByRole('textbox', { name: 'Eintragen oder sagen' }),
+      ).toBeInTheDocument();
+      // The examples stand in the sheet; the page's own last-row field steps back while it is open.
+      expect(within(sheet).getByRole('group', { name: 'Zum Beispiel' })).toBeInTheDocument();
+      expect(screen.getAllByRole('textbox', { name: 'Eintragen oder sagen' })).toHaveLength(1);
+      view.unmount();
+
+      render(
+        <MemoryRouter initialEntries={['/planner']}>
+          <Link to="/planner?new=1">quick add</Link>
+          <PlannerPage />
+        </MemoryRouter>,
+      );
+      // Mounted without the parameter: no sheet, the field is the page's last row, without examples.
+      await screen.findByRole('group', { name: 'Woche' });
+      expect(screen.queryByRole('dialog', { name: 'Eintragen oder sagen' })).toBeNull();
+      expect(screen.getByRole('textbox', { name: 'Eintragen oder sagen' })).toBeInTheDocument();
+      expect(screen.queryByRole('group', { name: 'Zum Beispiel' })).toBeNull();
+      fireEvent.click(screen.getByRole('link', { name: 'quick add' }));
+      expect(
+        await screen.findByRole('dialog', { name: 'Eintragen oder sagen' }),
+      ).toBeInTheDocument();
+    });
+
+    it('the page’s ⋯ stands beside the day title; the foot has no second „Tage einteilen“', async () => {
+      await plan('2026-11-09', 5);
+      draw();
+      const sheet = await screen.findByTestId('day-2026-11-09');
+      await within(sheet).findByText('Ding 1');
+      expect(within(sheet).getByRole('button', { name: 'Weitere Optionen' })).toBeInTheDocument();
+      expect(within(sheet).getByRole('button', { name: 'Rest verteilen' })).toBeInTheDocument();
+      expect(within(sheet).queryByRole('button', { name: 'Tage einteilen' })).toBeNull();
+      // „Danach“ is folded on the phone until the user opens it.
+      const then = within(sheet).getByRole('button', { name: /Danach · 2 Dinge/ });
+      expect(then).toHaveAttribute('aria-expanded', 'false');
+      expect(within(sheet).getAllByRole('checkbox')).toHaveLength(3);
+    });
   });
 
   it('Monday: „Woche prüfen“ is a quiet line only with the switch on; × hides it for the week', async () => {
