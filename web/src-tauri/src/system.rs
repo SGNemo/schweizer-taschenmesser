@@ -52,6 +52,15 @@ pub async fn system_disk_io(state: State<'_, SystemMonitor>) -> Result<Vec<DiskI
     .map_err(|_| "internal".to_string())?
 }
 
+/// Battery wear and the last unexpected shutdowns / blue screens (time, kind, stop code only).
+/// Read on request ("Gerätestatus" asks once per visit); nothing is stored.
+#[tauri::command]
+pub async fn system_health() -> Result<::system_info::health::Health, String> {
+    tauri::async_runtime::spawn_blocking(::system_info::health::read)
+        .await
+        .map_err(|_| "internal".to_string())
+}
+
 /// True while Windows reports a full-screen game, presentation or busy state (one yes/no from the
 /// shell's own notification state; no process or window information is read).
 #[tauri::command]

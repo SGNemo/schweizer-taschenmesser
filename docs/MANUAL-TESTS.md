@@ -319,8 +319,13 @@ Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währ
 - **GS-5 Heimnetz:** Mit eingerichtetem Heimnetz-Hub: „Heimnetz · Aktiv · n Geräte gekoppelt“; ohne: „Aus“. Nirgends auf der Seite stehen Port, IP-Adresse oder Gerätenamen. ☐
 - **GS-6 Backup:** Automatische Backups einschalten und eines anlegen: „Backup · Gesichert“ mit Zeit, „Nächstes Backup“ mit dem Tag danach; ausschalten: „Nicht geplant“. Ohne gespeicherte Passphrase: „Passphrase fehlt“ mit Punkt, oben „1 braucht einen Blick“. ☐
 - **GS-7 Updates und Netzwerk:** Liegt ein Update vor, steht „Update verfügbar“ mit Punkt davor und oben „1 braucht einen Blick“. Einstellungen → Verbindungen → „Netzwerk sperren“: Zeile „Netzwerk · Gesperrt“, ohne Punkt. ☐
-- **GS-8 Verweis:** Unter den Zeilen steht der Satz zu „Dieser PC“; der Link öffnet den Reiter „System“ (ist „Dieser PC“ aus: die Bibliothek). Am Handy fehlt der Satz. ☐
-- **GS-9 Handy:** Am Android-Gerät: Backup, Sync, Speicher, App; keine Zeilen Heimnetz, Laufwerk, Autostart, kein Akku; jede Zeile lässt sich mit dem Daumen treffen. ☐
+- **GS-8 Verweis:** Unten steht der Satz „Aufräumen und große Ordner finden kannst du in „Dieser PC““; der Link öffnet „Dieser PC“ (ist es aus: die Bibliothek). Am Handy fehlt der Satz. ☐
+- **GS-9 Handy:** Am Android-Gerät: Backup, Sync, Speicher, App; keine Zeilen Heimnetz, Laufwerk, Autostart (der Akku steht unter „Gerade jetzt“, GS-13); jede Zeile lässt sich mit dem Daumen treffen. ☐
+- **GS-10 Gerade jetzt (Windows):** Gerätestatus öffnen: Kacheln Prozessor, Arbeitsspeicher, Netzwerk, (Laptop: Akku), Verbindung, Läuft seit; Werte wie im Task-Manager, Kurven wachsen alle 3 s. Fenster minimieren und zurück: keine Lücke voller Nullen. „Anhalten“: Werte stehen; nach Neustart der App bleibt es angehalten. ☐
+- **GS-11 Programme und Laufwerke (Windows):** „Was gerade arbeitet“ nennt dieselben Programme wie der Task-Manager; „Nach Arbeitsspeicher“ sortiert um. „Laufwerke“: Systemlaufwerk zuerst, Zustand und Temperatur (ohne Admin ggf. „nur mit Administratorrechten“), keine Buchstaben, Namen oder Modelle. ☐
+- **GS-12 Steckbrief:** „Als Text kopieren“, in einen Editor einfügen: System, Windows-Version, Prozessor, Grafik, Arbeitsspeicher, Mainboard, BIOS, Bildschirm, Nemo-Version; keine IP, kein WLAN-Name, kein Benutzername, kein Pfad, keine Audio-Gerätenamen. ☐
+- **GS-13 Handy-Akku:** Am Android-Gerät: „Gerade jetzt“ zeigt den Akkustand wie die Statusleiste; Ladekabel ein/aus: „Lädt“ / „Im Akkubetrieb“ wechselt ohne Neuladen. „Steckbrief“: Android-Version und Nemo-Version. ☐
+- **GS-14 Zustand (Windows):** Am Laptop: „Akku-Zustand“ nennt einen Anteil der ursprünglichen Kapazität und Ladezyklen ähnlich wie `powercfg /batteryreport`; am Desktop-PC fehlt die Kachel. „Unerwartete Neustarts“: nach einem harten Ausschalten (Ein-/Aus-Taste 5 s) steht beim nächsten Öffnen „Ohne Herunterfahren beendet“ mit Zeit; nur Zeit, Art und ggf. Stoppcode, kein Treiber- oder Dateiname. Ohne solche Ereignisse: „Keine“. ☐
 
 ### Downloads und Torrent
 

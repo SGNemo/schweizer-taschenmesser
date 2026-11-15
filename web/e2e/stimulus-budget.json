@@ -102,11 +102,11 @@
       "signatureBlocks": 0
     },
     "d1920--device": {
-      "height": 1080,
-      "buttons": 14,
+      "height": 2515,
+      "buttons": 20,
       "links": 20,
-      "icons": 31,
-      "firstScreenActions": 33,
+      "icons": 41,
+      "firstScreenActions": 36,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
@@ -727,10 +727,10 @@
     },
     "p412--device": {
       "height": 915,
-      "buttons": 5,
+      "buttons": 6,
       "links": 11,
       "icons": 16,
-      "firstScreenActions": 15,
+      "firstScreenActions": 16,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,

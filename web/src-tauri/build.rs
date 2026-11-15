@@ -104,6 +104,7 @@ const COMMANDS: &[&str] = &[
     "system_info",
     "system_processes",
     "system_disk_io",
+    "system_health",
     "system_open_task_manager",
     "system_game_active",
     "system_play_tone",
