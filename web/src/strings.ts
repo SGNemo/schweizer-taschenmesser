@@ -7455,6 +7455,9 @@ export const de = {
       showAnswered: '„Beantwortet?“ anzeigen',
       showAnsweredHelp:
         'Unter einer Mail im Plan, deren letzte Nachricht von dir ist, steht „Beantwortet? · Erledigt“. Nichts wird von selbst erledigt; geprüft wird nur auf diesem Gerät.',
+      shortcuts: 'Tastenkürzel wie in Gmail',
+      shortcutsHelp:
+        'c neue Mail · / suchen · u zurück zur Liste · o öffnen · x auswählen · e archivieren · # Papierkorb · ! Spam · s Stern · r antworten · a allen antworten · f weiterleiten · Umschalt+I gelesen · Umschalt+U ungelesen. J/K wählen die Zeile. Was sonst nachfragt, fragt auch hier.',
     },
     /** A planned mail whose newest message is the person's own („Wochenende retten“ F5): a question, one verb. */
     answered: {
@@ -7538,6 +7541,9 @@ export const de = {
       rowRead: 'Als gelesen markieren',
       rowUnread: 'Als ungelesen markieren',
       rowArchive: 'Archivieren',
+      rowStar: 'Mit Stern markieren',
+      rowUnstar: 'Stern entfernen',
+      starredMark: 'Mit Stern',
       loading: 'Mails werden geladen …',
       more: 'Mehr laden',
       searchLabel: 'Suchen',
@@ -7596,6 +7602,14 @@ export const de = {
       saved: 'Anhang gespeichert.',
       downloadLabel: 'Herunterladen',
       downloadFailed: 'Der Anhang konnte nicht geladen werden.',
+      previewLabel: 'Ansehen',
+      preview: (name: string) => `${name} ansehen`,
+      previewFailed: 'Das Bild konnte nicht geladen werden.',
+      unsubscribe: 'Newsletter abbestellen …',
+      unsubscribeTitle: 'Newsletter abbestellen?',
+      unsubscribeBody: (host: string) =>
+        `Das öffnet die Abmeldeseite von ${host} im Browser. Nemo schickt dabei nichts; abbestellen tust du auf der Seite selbst.`,
+      unsubscribeOpen: 'Seite öffnen',
       blockedImages: (n: number) =>
         n === 1 ? '1 externes Bild blockiert' : `${n} externe Bilder blockiert`,
       loadImages: 'Bilder laden',
@@ -7664,6 +7678,15 @@ export const de = {
       markRead: 'Als gelesen markieren',
       markUnread: 'Als ungelesen markieren',
       label: 'Label setzen …',
+      star: 'Mit Stern markieren',
+      unstar: 'Stern entfernen',
+      important: 'Als wichtig markieren',
+      unimportant: 'Nicht mehr wichtig',
+      spam: 'Als Spam melden',
+      notSpam: 'Kein Spam',
+      untrash: 'Aus dem Papierkorb holen',
+      labelsOf: 'Labels dieses Verlaufs',
+      removeLabel: (name: string) => `Label „${name}“ entfernen`,
       reply: 'Antworten',
       replyAll: 'Allen antworten',
       forward: 'Weiterleiten',
@@ -7677,6 +7700,14 @@ export const de = {
         archived: 'Archiviert.',
         trashed: 'In den Papierkorb gelegt.',
         labelled: (name: string) => `Label „${name}“ gesetzt.`,
+        unlabelled: (name: string) => `Label „${name}“ entfernt.`,
+        starred: 'Mit Stern markiert.',
+        unstarred: 'Stern entfernt.',
+        important: 'Als wichtig markiert.',
+        unimportant: 'Nicht mehr als wichtig markiert.',
+        spam: 'Als Spam gemeldet.',
+        notSpam: 'Zurück im Posteingang.',
+        restored: 'Aus dem Papierkorb zurückgelegt.',
       },
       confirm: {
         archiveTitle: 'Mail archivieren?',
@@ -7691,6 +7722,9 @@ export const de = {
         labelPick: 'Label',
         labelNone: '– Label wählen –',
         labelConfirm: 'Label setzen',
+        spamTitle: 'Als Spam melden?',
+        spamBody:
+          'Der Verlauf verlässt den Posteingang und liegt dann im Ordner „Spam“. Gmail nutzt die Meldung für seinen Spamfilter. Du kannst es gleich zurücknehmen.',
       },
       compose: {
         titleNew: 'Neue Mail',
@@ -7705,8 +7739,25 @@ export const de = {
         body: 'Text',
         attach: 'Anhang hinzufügen',
         attachments: 'Anhänge',
-        attachNote:
-          'Anhänge einer Mail werden beim Weiterleiten nicht mitgeschickt; füge sie hier selbst hinzu.',
+        attachNote: 'Gesendet wird genau, was hier steht.',
+        forwardLoading: 'Anhänge werden geladen …',
+        forwardTooLarge: (names: string) => `Nicht mitgeschickt, zu groß für eine Mail: ${names}.`,
+        forwardTogether: (names: string) =>
+          `Nicht mitgeschickt, zusammen zu groß für eine Mail: ${names}. Leite sie in einer zweiten Mail weiter.`,
+        forwardFailed: (names: string) =>
+          `Nicht mitgeschickt, nicht ladbar: ${names}. Versuch es später noch einmal oder lade sie aus der Mail herunter und häng sie an.`,
+        snippets: 'Textbausteine',
+        snippetsHint: 'Deine Bausteine bleiben auf diesem Gerät.',
+        snippetsEmpty: 'Noch keine Textbausteine. Schreib einen Text und merke ihn dir hier.',
+        snippetsFull:
+          'Es sind schon zwanzig Textbausteine gemerkt. Entferne einen, um diesen zu merken.',
+        snippetInsert: (name: string) => `„${name}“ einfügen`,
+        snippetRemove: (name: string) => `Textbaustein „${name}“ entfernen`,
+        snippetInsertLabel: 'Einfügen',
+        snippetSave: 'Diesen Text als Baustein merken',
+        snippetSaved: 'Als Textbaustein gemerkt.',
+        snippetKnown: 'Diesen Text hast du schon als Baustein.',
+        snippetRemoved: (name: string) => `„${name}“ entfernt.`,
         removeAttachment: (name: string) => `Anhang ${name} entfernen`,
         fileTooLarge: (names: string) => `Zu groß für einen Anhang (höchstens 15 MB): ${names}`,
         invalidAddress: (list: string) => `Das ist keine E-Mail-Adresse: ${list}`,
@@ -7739,6 +7790,58 @@ export const de = {
         retry: 'Erneut versuchen',
         edit: 'Bearbeiten',
         sent: 'Mail gesendet.',
+      },
+    },
+    find: {
+      filters: 'Filter für die Suche',
+      filter: {
+        'is:unread': 'Ungelesen',
+        'has:attachment': 'Mit Anhang',
+        'is:starred': 'Mit Stern',
+        'older_than:1y': 'Älter als ein Jahr',
+      } as Record<string, string>,
+      save: 'Suche merken',
+      forgetThis: 'Nicht mehr merken',
+      saved: 'Gemerkte Suchen',
+      savedFull: 'Es sind schon zehn Suchen gemerkt. Entferne eine, um diese zu merken.',
+      savedDone: 'Suche gemerkt. Sie steht jetzt bei den Ordnern.',
+      forgotten: 'Suche nicht mehr gemerkt.',
+      forget: (q: string) => `Gemerkte Suche „${q}“ entfernen`,
+    },
+    batch: {
+      select: 'Auswählen',
+      selectEnd: 'Auswahl beenden',
+      selectAll: 'Alle auswählen',
+      more: 'Weitere Aktionen für die Auswahl',
+      unchanged: 'Da war nichts zu ändern.',
+      partial: (failed: number) =>
+        failed === 1
+          ? 'Bei 1 Mail hat es nicht geklappt. Sie ist unverändert und bleibt ausgewählt.'
+          : `Bei ${failed} Mails hat es nicht geklappt. Sie sind unverändert und bleiben ausgewählt.`,
+      done: {
+        read: (n: number) => `${n} Mails als gelesen markiert.`,
+        unread: (n: number) => `${n} Mails als ungelesen markiert.`,
+        star: (n: number) => `${n} Mails mit Stern markiert.`,
+        unstar: (n: number) => `Stern bei ${n} Mails entfernt.`,
+        important: (n: number) => `${n} Mails als wichtig markiert.`,
+        unimportant: (n: number) => `${n} Mails nicht mehr als wichtig markiert.`,
+        archive: (n: number) => `${n} Mails archiviert.`,
+        spam: (n: number) => `${n} Mails als Spam gemeldet.`,
+        notSpam: (n: number) => `${n} Mails zurück im Posteingang.`,
+        trash: (n: number) => `${n} Mails in den Papierkorb gelegt.`,
+        untrash: (n: number) => `${n} Mails aus dem Papierkorb zurückgelegt.`,
+      },
+      confirm: {
+        archiveTitle: (n: number) => (n === 1 ? 'Mail archivieren?' : `${n} Mails archivieren?`),
+        trashTitle: (n: number) =>
+          n === 1 ? 'In den Papierkorb legen?' : `${n} Mails in den Papierkorb legen?`,
+        spamTitle: (n: number) => (n === 1 ? 'Als Spam melden?' : `${n} Mails als Spam melden?`),
+        archiveBody:
+          'Die Auswahl verlässt den Posteingang und bleibt unter „Alle Mails“. Du kannst es gleich zurücknehmen.',
+        trashBody:
+          'Gmail löscht Mails im Papierkorb erst nach 30 Tagen. Bis dahin holst du sie jederzeit zurück.',
+        spamBody:
+          'Die Auswahl verlässt den Posteingang und liegt dann im Ordner „Spam“. Gmail nutzt die Meldung für seinen Spamfilter. Du kannst es gleich zurücknehmen.',
       },
     },
     notify: {
