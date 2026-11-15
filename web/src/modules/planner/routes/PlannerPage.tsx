@@ -54,7 +54,7 @@ import { DaySetup } from '../components/DaySetup';
 import { DaySheet } from '../components/DaySheet';
 import { RowChoice, type RowChoiceState } from '../components/RowChoice';
 import { SETUP_DAYS } from '../daySetup';
-import { eveningLine } from '../rest';
+import { duesOf, eveningLine } from '../rest';
 import { dayEndOf } from '../settings';
 import { PlanPreview, type PreviewData } from '../components/PlanPreview';
 import { WeekCheck } from '../components/WeekCheck';
@@ -242,6 +242,7 @@ export default function PlannerPage() {
           lines,
           ...(local ? { note: t.planner.say.localRead } : {}),
           ...(rest ? { noCounts: true } : {}),
+          dues: board ? duesOf(board) : {},
           diff: out.result.diff,
         },
         fromField,

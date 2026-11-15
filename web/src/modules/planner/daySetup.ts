@@ -113,6 +113,18 @@ export const gainsTime = (
   chosen: Readonly<Record<string, number>>,
 ): boolean => days.some((d) => (chosen[d.date] ?? d.availableMin) > d.availableMin);
 
+/**
+ * C6 (CHECK-1-3): the day's appointments already take the chosen time – step 2 says so in one calm line (the chips
+ * stay as they are: time with appointments counted, as on the board).
+ */
+export const eventsFill = (
+  day: { blockers: readonly { min: number; calendar: boolean }[] },
+  min: number,
+): boolean => {
+  const events = day.blockers.filter((b) => b.calendar).reduce((sum, b) => sum + b.min, 0);
+  return min > 0 && events >= min;
+};
+
 /** Key → title of the preview items (the preview names its rows by them). */
 export const previewTitles = (things: readonly SetupThing[]): Record<string, string> =>
   Object.fromEntries(things.map((th) => [th.key, th.fields.title]));

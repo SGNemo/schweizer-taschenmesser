@@ -8618,6 +8618,7 @@ export const de = {
       waits: 'Wartet',
       move: (from: string, to: string) => `${from} → ${to}`,
       from: (day: string) => `war ${day}`,
+      pastDue: (day: string) => `nach der Frist ${day}`,
       earlier: 'früher, weil Platz frei wurde',
       later: 'später, weil der Tag voll ist',
       nothing: 'Am Plan ändert sich nichts.',
@@ -8678,6 +8679,7 @@ export const de = {
       dayEndHint: 'Gilt für jeden Tag. Eine halbe Stunde vorher sagt es der Planer.',
       dayEndSet: (time: string) => `Tagesende ${time}, für jeden Tag`,
       dayEndCleared: 'Kein Tagesende mehr',
+      eventsFill: 'Termine an diesem Tag füllen diese Zeit schon.',
     },
     chip: {
       title: (planned: string, n: number) =>
