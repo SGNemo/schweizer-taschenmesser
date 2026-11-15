@@ -43,7 +43,8 @@ if (!process.argv.includes('--readme')) for (const [name, def] of Object.entries
 const README = process.argv.includes('--readme');
 /** README motifs (docs/assets/screenshots): one overview plus modules with a strong identity, the toolbox, settings. */
 const README_PAGES = [
-  { name: 'overview', path: '/' },
+  // `ready`: a text that only shows once the slow card has loaded (the "Heute" card renders after the strip).
+  { name: 'overview', path: '/', ready: 'Alle Termine' },
   { name: 'calendar', path: `/calendar?view=week&date=${SEED_TODAY}` },
   { name: 'finance', path: '/finance?tab=overview' },
   // The toolbox panel (top bar button "Werkzeuge"), not the tool library page.
@@ -136,6 +137,7 @@ try {
         // On a phone the panel opens on the tool list; show the calculator like the desktop does.
         if (p.mobile) await toolbox.getByText('Rechner', { exact: true }).first().click();
       }
+      if (p.ready) await page.getByText(p.ready, { exact: true }).first().waitFor({ timeout: 30_000 });
       await page.addStyleTag({ content: '[data-testid="dev-badge"]{display:none !important}' });
       // The last click leaves the pointer over the page; park it so no row shows a hover underline.
       await page.mouse.move(0, 0);
