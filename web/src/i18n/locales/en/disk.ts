@@ -489,7 +489,7 @@ export const disk: Strings['disk'] = {
     pointer: 'Temporary files, browser caches and old downloads are under “Tidy up”.',
   },
   history: {
-    lead: 'What Nemo changed on this PC, with the way back. What you tidy up is listed until you close Nemo; changes to startup programs stay listed.',
+    lead: 'What Nemo changed on this PC, with the way back. What you tidy up is listed until you close Nemo; changes to startup programs and Windows settings stay listed.',
     loading: 'Reading history …',
     empty: 'The history is still empty.',
     emptyHint: 'As soon as you tidy something up or switch something, it’s listed here.',
@@ -522,7 +522,7 @@ export const disk: Strings['disk'] = {
     chose: (name: string, choice: string) => `${name}: ${choice}`,
   },
   tweaks: {
-    lead: 'These are settings of Windows. Nemo switches them here, so you don’t have to open Windows’ own Settings app. Every change can be taken back.',
+    lead: 'These are settings of Windows. You can switch them here without looking for them in Windows. Every change can be taken back.',
     onlyWindows: 'These settings exist on Windows only.',
     onlyWindowsHint: 'Nemo changes nothing here on this device.',
     loading: 'Reading settings …',
@@ -539,10 +539,12 @@ export const disk: Strings['disk'] = {
     resetDone: (names: string) => `Reset: ${names}.`,
     resetKept: (names: string) => `Left unchanged: ${names}.`,
     resetLeft: (name: string) => `${name} (changed in Windows in the meantime)`,
+    applyLocked: 'This plan is already active.',
+    noPlan: 'No plan recognised',
     resetFailed: (name: string) => `${name} (couldn’t be reset)`,
     resetNothing: 'There was nothing to reset.',
-    restorePoint: 'Create a restore point',
-    restorePointHint: 'If you like, create a restore point in Windows first. It isn’t required.',
+    restorePoint: 'Open System Protection',
+    restorePointHint: 'If you like, create a restore point there first. It isn’t required.',
     group: {
       appearance: 'Appearance',
       explorer: 'Explorer',
@@ -577,7 +579,7 @@ export const disk: Strings['disk'] = {
     } as Record<string, string>,
     detail: {
       animations:
-        'In Windows it is under Accessibility → Visual effects. Nemo switches it the same way Windows itself does.',
+        'In Windows it is part of the “Animation effects” switch under Accessibility → Visual effects. The switch there may cover more than this one setting.',
       dragFullWindows:
         'Windows calls it “Show window contents while dragging” (Performance Options → Visual Effects). Nemo switches it the same way Windows itself does.',
       pointerSonar:
@@ -613,11 +615,11 @@ export const disk: Strings['disk'] = {
     stateOn: 'Switched on',
     stateOff: 'Switched off',
     stateChoice: (label: string) => (label ? `Active: ${label}` : ''),
-    windowsDefault: 'Windows decides itself (default). Nemo hasn’t set anything here yet.',
+    windowsDefault: 'Nothing is set here; Windows’ default applies.',
     customValue:
-      'Another value is stored here that Nemo can’t place. Undo restores exactly that value.',
+      'Another value is stored here that Nemo can’t place. After a change, Undo puts exactly this value back.',
     unreadable:
-      'Windows doesn’t give out the current value. Without it there would be no way back, so Nemo changes nothing here.',
+      'Nemo can’t read the current value. Without it there would be no way back, so Nemo changes nothing here.',
     turnOn: 'Switch on',
     turnOff: 'Switch off',
     turnOnLabel: (title: string) => `Switch on: ${title}`,

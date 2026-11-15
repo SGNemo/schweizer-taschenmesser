@@ -92,6 +92,9 @@ export function TweaksTab() {
   };
 
   const takeBack = (tweakId: string, entryId: number) => {
+    // Like a change: one thing at a time, so reloads and the focus do not cross.
+    if (busy) return;
+    setBusy(true);
     optimize
       .undo(entryId)
       .then(() => toast(t.disk.history.undoDone))
@@ -102,7 +105,10 @@ export function TweaksTab() {
             : t.disk.history.undoFailed,
         ),
       )
-      .finally(() => readAgain(tweakId));
+      .finally(() => {
+        setBusy(false);
+        readAgain(tweakId);
+      });
   };
 
   const change = (tweak: TweakState, target: boolean | string) => {
@@ -169,7 +175,7 @@ export function TweaksTab() {
           <Button
             onClick={() => {
               setFailed(false);
-              readAgain(null);
+              readAgain(TOP);
             }}
           >
             {x.again}
@@ -262,8 +268,11 @@ function Choice({
     setSeen(tweak.choice);
     setPicked(null);
   }
-  const value = picked ?? tweak.choice ?? '';
+  // A picked plan that Windows no longer lists is forgotten.
+  const listed = picked !== null && tweak.options.some((o) => o.id === picked) ? picked : null;
+  const value = listed ?? tweak.choice ?? '';
   const same = value === (tweak.choice ?? '');
+  const hintId = `disk-tweak-${tweak.id}-apply`;
   return (
     <div className={styles.pair}>
       <SelectField
@@ -272,6 +281,7 @@ function Choice({
         value={value}
         onChange={(e) => setPicked(e.currentTarget.value)}
       >
+        {tweak.choice === null ? <option value="">{x.noPlan}</option> : null}
         {tweak.options.map((o) => (
           <option key={o.id} value={o.id}>
             {o.label}
@@ -283,10 +293,15 @@ function Choice({
         className={styles.apply}
         aria-label={x.applyLabel(title)}
         aria-disabled={same}
+        aria-describedby={same ? hintId : undefined}
         onClick={() => (same ? undefined : onApply(value))}
       >
         {x.apply}
       </Button>
+      {/* Says why the button does nothing while the chosen plan is the active one. */}
+      <span id={hintId} className="sr-only">
+        {x.applyLocked}
+      </span>
     </div>
   );
 }

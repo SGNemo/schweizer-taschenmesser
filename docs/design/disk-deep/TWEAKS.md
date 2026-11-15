@@ -25,6 +25,8 @@ Three mechanisms: a `REG_DWORD` below `HKCU\Software` through the `Registry` sea
 
 Notes: for the two registry values the state while the value is missing is not documented, so the page says "Standard von Windows" and offers "Einschalten" / "Ausschalten" instead of a switch. The `SystemParametersInfo` and shell calls make Windows write its own per-user storage (partly outside `HKCU\Software`); Nemo itself writes no registry value there, and the undo goes through the same API.
 
+In a remote desktop session the three `SystemParametersInfo` settings are not offered: Windows can report them as off there although the stored setting is on, and an undo would then store the wrong state.
+
 A registry value that exists but cannot be read exactly is shown as not changeable and never written (no value from before, no way back). The values from before are stored device-local in `<app local data>/pc-care/journal.json` (setting ids and old values only; never synced, backed up or reported).
 
 ## Rejected or open

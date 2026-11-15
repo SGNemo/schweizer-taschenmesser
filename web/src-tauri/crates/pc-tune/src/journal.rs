@@ -496,7 +496,7 @@ impl Journal {
     /// After a subject was put back to its original: its open entries count as undone.
     pub fn mark_reset(&mut self, kind: Kind, subject: &str) -> Result<(), JournalError> {
         for e in &mut self.file.entries {
-            if e.kind == kind && e.subject == subject && !e.undo.is_empty() {
+            if e.kind == kind && e.subject == subject && !e.undo.is_empty() && !e.stale {
                 e.undone = true;
             }
         }

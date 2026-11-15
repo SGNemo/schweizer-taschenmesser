@@ -135,6 +135,7 @@ pub const WRITABLE: &[(&str, Option<&str>)] = &[
 pub fn writable(key: &str, name: &str) -> bool {
     valid_key(key)
         && valid_name(name)
+        && !name.is_empty()
         && (WRITABLE.iter().any(|(k, n)| {
             k.eq_ignore_ascii_case(key) && n.is_none_or(|n| n.eq_ignore_ascii_case(name))
         }) || (cfg!(test) && key.starts_with(r"Software\NemoPcTuneTest\")))
