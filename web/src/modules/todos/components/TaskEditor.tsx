@@ -4,6 +4,7 @@ import { mailThreadUrl } from '@/core/mail/service';
 import { useModuleStates } from '@/core/modules/activation';
 import { getManifest } from '@/core/modules/registry';
 import { getPlatform } from '@/core/platform';
+import type { NotificationPermissionState } from '@/core/notifications/service';
 import { useFocusSettings } from '@/core/settings/focus';
 import { changedFields } from '@/core/db/patch';
 import type { Stored } from '@/core/db/types';
@@ -84,6 +85,9 @@ function EditorForm({
   const [dueDate, setDueDate] = useState(task.dueDate ?? '');
   const [dueTime, setDueTime] = useState(task.dueTime ?? '');
   const [dueRemind, setDueRemind] = useState(task.dueRemind ?? false);
+  const [permission, setPermission] = useState<NotificationPermissionState>(() =>
+    getPlatform().notifications.permission(),
+  );
   const [recurrence, setRecurrence] = useState<Recurrence | undefined>(task.recurrence);
   const [someday, setSomeday] = useState(task.someday ?? false);
   const [estimate, setEstimate] = useState<number | undefined>(task.estimateMin);
@@ -211,6 +215,26 @@ function EditorForm({
           checked={dueRemind}
           onChange={setDueRemind}
         />
+      ) : null}
+      {/* Switched on without the system's permission: one calm line, asked only on a tap (as the calendar's lead). */}
+      {dueDate && dueTime && dueRemind && (permission === 'default' || permission === 'denied') ? (
+        <div className={styles.dueHint} role="note" data-testid="due-permission-hint">
+          <span>
+            {permission === 'denied'
+              ? t.todos.dueRemindPermissionDenied
+              : t.todos.dueRemindPermissionMissing}
+          </span>
+          {permission === 'default' ? (
+            <Button
+              variant="ghost"
+              onClick={async () =>
+                setPermission(await getPlatform().notifications.requestPermission())
+              }
+            >
+              {t.todos.dueRemindAllow}
+            </Button>
+          ) : null}
+        </div>
       ) : null}
       {isSub ? null : (
         <>

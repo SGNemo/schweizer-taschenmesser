@@ -1697,9 +1697,14 @@ export const de = {
     dueTime: 'Uhrzeit der Frist (optional)',
     dueAt: (day: string, time: string) => `${day}, ${time}`,
     dueRemind: 'Erinnern: 1 Std vorher',
-    dueRemindHint: 'Eine Benachrichtigung je Frist, genau einmal.',
+    dueRemindHint: 'Eine Benachrichtigung je Frist.',
+    dueRemindPermissionMissing:
+      'Benachrichtigungen sind noch nicht erlaubt, die Erinnerung bliebe deshalb aus.',
+    dueRemindPermissionDenied:
+      'Benachrichtigungen sind blockiert. Erlaube sie in den System- oder Browser-Einstellungen, sonst bleibt die Erinnerung aus.',
+    dueRemindAllow: 'Erlauben',
     dueRemindTitle: (time: string, title: string) => `Bis ${time}: ${title}`,
-    dueRemindBody: 'Die Frist ist in einer Stunde.',
+    dueRemindBody: (time: string) => `Die Frist ist um ${time}.`,
     estimate: 'Dauer',
     estimateNone: 'Offen',
     estimateMin: (n: number) => `${n} Min`,

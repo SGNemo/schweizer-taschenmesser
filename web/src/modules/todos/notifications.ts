@@ -23,7 +23,7 @@ export function dueReminder(
     key: `todos:due:${task.id}:${task.dueDate}T${task.dueTime}`,
     at: toEpoch(task.dueDate, task.dueTime) - DUE_REMIND_LEAD_MS,
     title: t.todos.dueRemindTitle(task.dueTime, task.title),
-    body: t.todos.dueRemindBody,
+    body: t.todos.dueRemindBody(task.dueTime),
     url: `/todos?open=${task.id}`,
   };
 }
@@ -39,7 +39,7 @@ const source: NotificationSource = async ({ from, to }) => {
   const open = (await taskRepo.active().toArray()).filter((x) => !x.done);
   const out: DueNotification[] = [];
   // Asked for per task, so also for a subtask or an „Irgendwann“ one: what was switched on is sent.
-  // A catch-up after the app was closed never says „in einer Stunde“ about a deadline that has passed.
+  // A catch-up after the app was closed never reminds of a deadline that has passed.
   const at = now();
   for (const task of open) {
     const n = dueReminder(task);

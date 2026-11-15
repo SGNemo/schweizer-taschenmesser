@@ -70,7 +70,7 @@ describe('deadline reminder „Erinnern: 1 Std vorher“ (package 5b)', () => {
         key: `todos:due:${task.id}:2026-10-05T18:00`,
         at: toEpoch('2026-10-05', '17:00'),
         title: 'Bis 18:00: Team-Sachen lesen',
-        body: 'Die Frist ist in einer Stunde.',
+        body: 'Die Frist ist um 18:00.',
         url: `/todos?open=${task.id}`,
       },
     ]);
@@ -108,7 +108,7 @@ describe('deadline reminder „Erinnern: 1 Std vorher“ (package 5b)', () => {
     expect(out.map((n) => n.title)).toEqual(['Bis 18:00: Team-Sachen lesen']);
   });
 
-  it('a catch-up after the deadline has passed sends nothing („in einer Stunde“ would be wrong)', async () => {
+  it('a catch-up after the deadline has passed sends nothing', async () => {
     await taskRepo.create({ ...due, dueRemind: true });
     setNow(() => toEpoch('2026-10-05', '18:30'));
     expect(await reminders()).toEqual([]);
