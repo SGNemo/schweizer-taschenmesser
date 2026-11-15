@@ -12,8 +12,8 @@ import { MemoryServer } from '@/core/sync/testing';
 import { purgeTombstones, TOMBSTONE_RETENTION_MS } from '@/core/sync/tombstones';
 import { setNow } from '@/core/time/now';
 import { createTestDb } from '@/test-utils';
-import { addLink, addLinkIfAbsent, linkEntries, linkId, removeLink } from './index';
-import { copyTodoLinks, copyTodoLinksAfterSync, copyTodoLinksAtStart } from './migrate';
+import { addLink, addLinkIfAbsent, linkEntries, linkId, removeLink, removeLinkOf } from './index';
+import { copyTodoLinks, todoLink } from './migrate';
 import { LINKS_TABLE } from './store';
 import type { EntityLink } from './types';
 
@@ -213,23 +213,31 @@ describe('links between two devices', () => {
     }
   });
 
-  it('…and as the app does it: with sync configured the first copy waits for the completed pull', async () => {
+  it('a removal made while this device has no row yet still syncs: A (offline, not copied) removes, B holds the row', async () => {
     const a = device();
     const b = device();
     const t = await newTask(a.db);
     await a.sync();
     await b.sync();
+    const todo = { module: 'todos', id: t.id };
+    // B copied and pushed the row. A is offline and has only the array entry.
     await copyTodoLinks(b.db);
-    const [entry] = await linkEntries({ module: 'todos', id: t.id }, b.db);
-    await removeLink(entry!.id, b.db);
     await b.sync();
-
-    await copyTodoLinksAtStart(a.db, true); // start of the new version on A: nothing yet
     expect(await a.db.table(LINKS_TABLE).count()).toBe(0);
-    const round = await a.sync();
-    await copyTodoLinksAfterSync(a.db, round.applied > 0 || round.pushed > 0);
-    expect(await linkEntries({ module: 'todos', id: t.id }, a.db)).toEqual([]);
-    expect((await a.row(entry!.id)).deletedAt).not.toBeNull();
+
+    // The person removes the link in A's editor.
+    await removeLinkOf(todoLink(t.id, { kind: 'mail', id: THREAD, label: LABEL }), a.db);
+    expect((await tasks(a.db).get(t.id))!.links).toBeUndefined();
+    expect(await a.db.table(LINKS_TABLE).count()).toBe(1); // the tombstone
+
+    await a.sync();
+    await b.sync();
+    await a.sync();
+    for (const d of [a, b]) {
+      expect(await linkEntries(todo, d.db)).toEqual([]);
+      expect((await tasks(d.db).get(t.id))!.links).toBeUndefined();
+      expect(await copyTodoLinks(d.db)).toBe(0);
+    }
   });
 
   it('A removes offline, B copies later: the removal wins on both', async () => {

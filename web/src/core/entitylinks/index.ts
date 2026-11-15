@@ -20,7 +20,16 @@ import { getManifest, visibleManifests } from '@/core/modules/registry';
 import { useSharedLiveQuery } from '@/core/modules/sharedQuery';
 import type { ResolvedState } from '@/core/modules/types';
 import { today } from '@/core/time/now';
-import { linkId, linksRepo, readLink, toRow, type LinkRow, type StoredLink } from './store';
+import {
+  carrierStamp,
+  linkId,
+  linksRepo,
+  readLink,
+  toRow,
+  writeStamped,
+  type LinkRow,
+  type StoredLink,
+} from './store';
 import { refKey, refOfKind, type EntityLink, type EntityRef, type LegacyLink } from './types';
 
 export { linkId } from './store';
@@ -104,6 +113,35 @@ export async function addLinkIfAbsent(
 ): Promise<boolean> {
   toRow(link);
   return (await addLinksIfAbsent([link], database)) > 0;
+}
+
+/**
+ * Removes a link by what it is, also when this device holds no row for it yet. For a link a ToDo carries that
+ * matters: its entry may stand only in the task's `links[]` here (the copy has not run, or the row is on
+ * another device) – stripping the array alone would leave no tombstone, and the other device's row would bring
+ * the link back. So the row is first written the way the copy would (stamped like the task's `links` field)
+ * and then removed: the removal is a fact that syncs. One undo of the calling action restores row and entry.
+ */
+export async function removeLinkOf(
+  link: EntityLink,
+  database: TaschenmesserDB = defaultDb,
+): Promise<void> {
+  let data: LinkRow;
+  try {
+    data = toRow(link);
+  } catch {
+    return; // a link that could never be stored has no row to remove
+  }
+  const id = await linkId(data as EntityLink);
+  if (!(await linksRepo(database).table.get(id))) {
+    if (link.from.module !== 'todos') return; // nothing stored, nothing to remove
+    const todos = getManifest('todos');
+    if (!todos?.dataSchema.collections.task) return;
+    const task = await createCollectionRepo(todos, 'task', database).table.get(link.from.id);
+    if (!task) return;
+    await writeStamped([{ id, data, stamp: carrierStamp(task) }], database);
+  }
+  await removeLink(id, database);
 }
 
 /**

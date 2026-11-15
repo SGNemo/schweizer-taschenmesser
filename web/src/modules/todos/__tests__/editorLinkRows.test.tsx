@@ -91,6 +91,31 @@ it('„Entfernen“ drops both the array entry and the row; one undo brings both
   expect((await taskRepo.get(task.id))?.links).toHaveLength(1);
 });
 
+it('„Entfernen“ before the copy ran leaves a tombstone for the entry’s row; undo brings entry and row back', async () => {
+  const e = await event('Zahnarzt');
+  const task = await taskRepo.create({
+    ...base,
+    title: 'Noch ohne Zeile',
+    links: [{ kind: 'event', id: e.id, label: 'Zahnarzt' }],
+  });
+  show(task);
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Termin: Zahnarzt' })).toBeEnabled(),
+  );
+  await userEvent.click(
+    screen.getByRole('button', { name: /Zahnarzt.*entfernen|entfernen.*Zahnarzt/i }),
+  );
+  await waitFor(async () => expect((await taskRepo.get(task.id))?.links).toBeUndefined());
+  await waitFor(async () => {
+    const all = await db.table(LINKS_TABLE).toArray();
+    expect(all).toHaveLength(1);
+    expect(all[0].deletedAt).not.toBeNull();
+  });
+  await undoLast();
+  await waitFor(async () => expect(await liveRows(task)).toEqual([e.id]));
+  expect((await taskRepo.get(task.id))?.links).toHaveLength(1);
+});
+
 it('removing a link that lives only in the table removes that row', async () => {
   const e = await event('Nur Zeile');
   const task = await taskRepo.create({ ...base, title: 'Ohne Feld' });

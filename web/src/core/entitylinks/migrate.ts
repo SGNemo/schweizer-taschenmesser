@@ -4,33 +4,22 @@
  * each entry readable from its other end.
  *
  * Every entry becomes the row `todos:<taskId> → <target>`, `origin`, under its deterministic id. Two rules keep
- * a copy from ever beating a removal:
+ * a copy from beating a removal:
  *  - **Only when absent:** an id that has a row on this device – live or tombstone – is skipped.
  *  - **Stamped like its source:** a copied row is not written "now" but with the HLC of the task's `links` field
- *    (every field, `deletedAt` too), merged by the sync rule and queued for upload – the way app migrations
- *    copy (`core/db/appMigrations.ts`). So every device writes identical ops, and a removal made anywhere after
- *    that array was written (a newer stamp) wins over the copy, also when this device has not pulled it yet.
+ *    (every field, `deletedAt` too) through the sync-apply path (`writeStamped`), as app migrations copy. So
+ *    every device writes identical ops, and a removal made anywhere after that array was written wins over the
+ *    copy – also when this device has not pulled it yet. That is why the copy needs no completed pull first.
  *
- * When it runs (`copyTodoLinksAtStart`, `copyTodoLinksAfterSync`, after a restore): at every app start – with
- * sync configured only once a pull completed on this device, so the first copy sees what the other devices
- * removed – and after a sync round that moved something. Never inside a Dexie upgrade: hashing is no Dexie
- * operation.
+ * When it runs: at every app start (not awaited), after a sync round that moved something and after a restore.
+ * Runs are serialised. Never inside a Dexie upgrade: hashing is no Dexie operation.
  */
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
-import { getMeta, setMeta } from '@/core/db/metaKv';
 import { createCollectionRepo } from '@/core/db/repo';
 import { getManifest } from '@/core/modules/registry';
-import { DexieStorageAdapter } from '@/core/storage/dexie';
-import type { FieldOp } from '@/core/sync/types';
-import { now } from '@/core/time/now';
 import { addLink } from './index';
-import { linkId, LINKS_TABLE, linksRepo, toRow, type LinkRow } from './store';
+import { carrierStamp, linkId, linksRepo, toRow, writeStamped, type LinkRow } from './store';
 import { fromLegacy, LINK_KINDS, type EntityLink, type LegacyLink } from './types';
-
-/** `_meta` key (device-local): when this device first copied its ToDo links (with sync: after a completed pull). */
-export const TODO_LINKS_COPIED_KEY = 'entitylinks.todoLinksCopied';
-
-const HLC_RE = /^\d{13}-\d{4}-/;
 
 const isLegacy = (l: unknown): l is LegacyLink => {
   const link = l as Partial<LegacyLink> | null;
@@ -50,15 +39,6 @@ export const todoLink = (taskId: string, link: LegacyLink): EntityLink => ({
   ...fromLegacy(link),
 });
 
-/** The stamp a task's copied links carry: the one of its `links` field (the oldest of the row as a fallback). */
-function stampOf(task: { _f?: Record<string, string> }): string | undefined {
-  const own = task._f?.links;
-  if (own && HLC_RE.test(own)) return own;
-  return Object.values(task._f ?? {})
-    .filter((s) => HLC_RE.test(s))
-    .sort()[0];
-}
-
 /**
  * Copies every `links[]` entry of every live task that has no row yet. Returns how many rows were written.
  * `revive` is for a „replace“ restore of a backup from before the link table: the backup is the truth again, so
@@ -76,8 +56,7 @@ export async function copyTodoLinks(
     .toArray();
   const wanted = new Map<string, { data: LinkRow; stamp: string; link: EntityLink }>();
   for (const task of tasks) {
-    const stamp = stampOf(task);
-    if (!stamp) continue;
+    const stamp = carrierStamp(task);
     for (const entry of task.links as unknown[]) {
       if (!isLegacy(entry)) continue;
       const link = todoLink(task.id, entry);
@@ -99,61 +78,50 @@ export async function copyTodoLinks(
 
   const ids = [...wanted.keys()];
   const existing = await linksRepo(database).table.bulkGet(ids);
-  const ops: FieldOp[] = [];
-  ids.forEach((id, i) => {
-    if (existing[i]) return; // live or tombstone: present
-    const { data, stamp } = wanted.get(id)!;
-    for (const [field, value] of Object.entries(data))
-      ops.push({ collection: LINKS_TABLE, id, field, hlc: stamp, value });
-    ops.push({ collection: LINKS_TABLE, id, field: 'deletedAt', hlc: stamp, value: null });
-  });
-  if (ops.length === 0) return 0;
-  const storage = new DexieStorageAdapter(database, [LINKS_TABLE]);
-  return (await storage.applyRemote(ops, { markDirty: true })).records;
+  // Live or tombstone: present.
+  const missing = ids.filter((_id, i) => !existing[i]);
+  return writeStamped(
+    missing.map((id) => ({ id, data: wanted.get(id)!.data, stamp: wanted.get(id)!.stamp })),
+    database,
+  );
 }
 
-async function run(database: TaschenmesserDB, opts: { revive?: boolean } = {}): Promise<boolean> {
-  try {
-    await copyTodoLinks(database, opts);
-    return true;
-  } catch {
-    console.error('[entitylinks] copy of the ToDo links failed');
-    return false;
-  }
+let queue: Promise<unknown> = Promise.resolve();
+
+/** One run at a time, never throwing: start-up, sync and restore must not fail (or overlap) over the copy. */
+function enqueue(database: TaschenmesserDB, opts: { revive?: boolean } = {}): Promise<void> {
+  const run = async (): Promise<void> => {
+    try {
+      await copyTodoLinks(database, opts);
+    } catch {
+      console.error('[entitylinks] copy of the ToDo links failed');
+    }
+  };
+  const next = queue.then(run, run);
+  queue = next;
+  return next;
 }
 
-/**
- * The app-start run. Without sync: every start. With sync configured: only once a pull completed on this
- * device since the table exists (the flag) – before that, the first copy waits for `copyTodoLinksAfterSync`.
- */
-export async function copyTodoLinksAtStart(
-  database: TaschenmesserDB = defaultDb,
-  syncConfigured = false,
-): Promise<void> {
-  const copiedBefore = Boolean(await getMeta(TODO_LINKS_COPIED_KEY, database).catch(() => false));
-  if (syncConfigured && !copiedBefore) return;
-  if ((await run(database)) && !copiedBefore && !syncConfigured)
-    await setMeta(TODO_LINKS_COPIED_KEY, { at: now() }, database).catch(() => undefined);
+/** The app-start run: every start, with or without sync. The caller does not wait for it. */
+export function copyTodoLinksAtStart(database: TaschenmesserDB = defaultDb): Promise<void> {
+  return enqueue(database);
 }
 
 /**
- * After a completed sync round: the first copy of this device, and later whenever the round moved something
- * (an older app elsewhere keeps writing arrays; a link written here was just pushed). Never throws.
+ * After a completed sync round that moved something (an older app elsewhere keeps writing arrays; a link
+ * written here was just pushed). A round that moved nothing costs no scan.
  */
-export async function copyTodoLinksAfterSync(
+export function copyTodoLinksAfterSync(
   database: TaschenmesserDB = defaultDb,
   moved = true,
 ): Promise<void> {
-  const copiedBefore = Boolean(await getMeta(TODO_LINKS_COPIED_KEY, database).catch(() => false));
-  if (copiedBefore && !moved) return;
-  if ((await run(database)) && !copiedBefore)
-    await setMeta(TODO_LINKS_COPIED_KEY, { at: now() }, database).catch(() => undefined);
+  return moved ? enqueue(database) : Promise.resolve();
 }
 
-/** After a restore. Never throws (a restore must not fail over it). */
-export async function copyTodoLinksAfterRestore(
+/** After a restore. */
+export function copyTodoLinksAfterRestore(
   database: TaschenmesserDB = defaultDb,
   opts: { revive?: boolean } = {},
 ): Promise<void> {
-  await run(database, opts);
+  return enqueue(database, opts);
 }

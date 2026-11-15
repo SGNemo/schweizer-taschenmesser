@@ -10,6 +10,9 @@ import { hashId } from '@/core/db/hashId';
 import { createRepo, type Repo } from '@/core/db/repo';
 import type { Stored } from '@/core/db/types';
 import { allManifests } from '@/core/modules/registry';
+import { DexieStorageAdapter } from '@/core/storage/dexie';
+import { HLC_RE } from '@/core/sync/ops';
+import type { FieldOp } from '@/core/sync/types';
 import type { ModuleManifest } from '@/core/modules/types';
 import { DATE_RE } from '@/core/time/dates';
 import {
@@ -180,4 +183,48 @@ export async function sweepPurged(
     removed += orphaned.length;
   }
   return removed;
+}
+
+/**
+ * The stamp a ToDo's copied links carry: the HLC of its `links` field, else the oldest stamp of the row. A task
+ * without any stamp (written past the repo) gets one made from its `createdAt` – old, the same on every device,
+ * never "now" – so its links are still copied and anything written later wins.
+ */
+export function carrierStamp(task: {
+  createdAt?: unknown;
+  updatedAt?: unknown;
+  _f?: Record<string, string>;
+}): string {
+  const own = task._f?.links;
+  if (own && HLC_RE.test(own)) return own;
+  const oldest = Object.values(task._f ?? {})
+    .filter((s) => HLC_RE.test(s))
+    .sort()[0];
+  if (oldest) return oldest;
+  const at = [task.createdAt, task.updatedAt].find(
+    (v): v is number => typeof v === 'number' && Number.isFinite(v) && v > 0,
+  );
+  const wall = String(Math.min(Math.floor(at ?? 1), 9_999_999_999_999)).padStart(13, '0');
+  return `${wall}-0000-migrate`;
+}
+
+/**
+ * Writes link rows with a given stamp on every field (`deletedAt` too) instead of "now": merged by the sync
+ * rule and queued for upload – the sync-apply path, as app migrations copy (`core/db/appMigrations.ts`). Used
+ * for rows that stand for something written earlier (a ToDo's `links[]` entry), so that whatever happened to
+ * the link since then – on any device – wins. Returns how many rows changed.
+ */
+export async function writeStamped(
+  items: readonly { id: string; data: LinkRow; stamp: string }[],
+  database: TaschenmesserDB = defaultDb,
+): Promise<number> {
+  const ops: FieldOp[] = [];
+  for (const { id, data, stamp } of items) {
+    for (const [field, value] of Object.entries(data))
+      ops.push({ collection: LINKS_TABLE, id, field, hlc: stamp, value });
+    ops.push({ collection: LINKS_TABLE, id, field: 'deletedAt', hlc: stamp, value: null });
+  }
+  if (ops.length === 0) return 0;
+  const storage = new DexieStorageAdapter(database, [LINKS_TABLE]);
+  return (await storage.applyRemote(ops, { markDirty: true })).records;
 }

@@ -10,7 +10,8 @@ import type { FieldOp } from './types';
 export type SyncRow = SyncFields & Record<string, unknown>;
 
 const FORBIDDEN_FIELDS = new Set(['__proto__', 'constructor', 'prototype']);
-const HLC_RE = /^\d{13}-\d{4}-[a-z0-9]{1,32}$/;
+/** A valid HLC stamp: 13 digits of wall time, a 4-digit counter, the device id. */
+export const HLC_RE = /^\d{13}-\d{4}-[a-z0-9]{1,32}$/;
 const reserved = new Set<string>(ENVELOPE_KEYS.filter((k) => k !== 'deletedAt'));
 
 /** Every stamped field of a record as an op (data fields plus `deletedAt`). */

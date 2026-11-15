@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
-import { linkEntries, removeLink as removeLinkRow, useLinks } from '@/core/entitylinks';
+import {
+  linkEntries,
+  removeLink as removeLinkRow,
+  removeLinkOf,
+  useLinks,
+} from '@/core/entitylinks';
 import { fromLegacy, LINK_KINDS, refKey, refOfKind } from '@/core/entitylinks/types';
 import { useResolvedLinks } from '@/core/modules/contributions';
 import { getPlatform } from '@/core/platform';
@@ -137,15 +142,19 @@ function EditorForm({
       (all ?? []).filter((x) => !(x.kind === l.kind && x.id === l.id));
     focusLink.current = index;
     await undoableWithToast(t.todos.links.removed, t.todos.links.removed, async () => {
+      const from = { module: 'todos', id: task.id };
+      // The row the entry stands for is removed as a tombstone even when this device has none yet (the removal
+      // must reach the devices that do); then every other row to that target; each strips the array entry.
+      await removeLinkOf({ from, ...fromLegacy(l) });
+      const target = refKey(fromLegacy(l).to);
+      for (const r of await linkEntries(from))
+        if (r.direction === 'out' && refKey(r.other) === target) await removeLinkRow(r.id);
+      // Whatever entry is still in the task's own field (a kind the table could not take).
       const current = await taskRepo.get(task.id);
       if (!current) return;
       const rest = without(current.links);
       if (rest.length !== (current.links ?? []).length)
         await taskRepo.update(task.id, { links: rest.length ? rest : undefined });
-      // …and its rows in the link table (every `rel` to that target): one removal, one undo.
-      const target = refKey(fromLegacy(l).to);
-      for (const r of await linkEntries({ module: 'todos', id: task.id }))
-        if (r.direction === 'out' && refKey(r.other) === target) await removeLinkRow(r.id);
     });
   }
 
