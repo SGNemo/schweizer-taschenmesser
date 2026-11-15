@@ -5588,6 +5588,51 @@ export const de = {
         showForecastHelp:
           'Eine Zeile je Limit: wo die Ausgaben im bisherigen Tempo landen, inklusive geplanter wiederkehrender Buchungen.',
       },
+      charts: {
+        section: 'Überblick',
+        more: 'Verlauf und Verteilung',
+        bars: 'Ausgegeben und Limit je Kategorie',
+        barsContext: 'Je Limit sein eigener Zeitraum; der Strich ist das Limit.',
+        target: 'Limit',
+        perDay: {
+          label: 'Noch je Tag',
+          context: (free: string, days: number, end: string) =>
+            `${free} frei in den Monatslimits · ${days === 1 ? 'nur noch heute' : `noch ${days} Tage`} bis ${end}`,
+          none: 'Die Monatslimits sind aufgebraucht.',
+          noneContext: (end: string) => `Neuer Monat ab ${end}.`,
+        },
+        forecast: {
+          label: 'Prognose Monatsende',
+          context: (limit: string) => `von ${limit} Monatslimit, im bisherigen Tempo`,
+          under: (amount: string) => `Etwa ${amount} bleiben übrig.`,
+          over: (amount: string) => `Etwa ${amount} über dem Limit.`,
+        },
+        trend: 'Verlauf der letzten 6 Monate',
+        trendContext:
+          'Ausgaben in Kategorien mit Limit. Quartals- und Jahreslimits zählen anteilig je Monat.',
+        spent: 'Ausgegeben',
+        planned: 'Limit je Monat',
+        donut: 'Wohin das Geld ging',
+        donutCentre: 'Ausgaben',
+        donutContext: (total: string, budgeted: string) =>
+          `Alle Ausgaben im Monat: ${total} · davon ${budgeted} in Kategorien mit Limit`,
+        donutEmpty: 'In diesem Monat noch keine Ausgaben.',
+        uncategorised: 'Ohne Kategorie',
+        cardPerDay: (amount: string, end: string) => `noch ${amount} je Tag bis ${end}`,
+        example: {
+          title: 'Beispiel: ein Monat mit drei Limits',
+          caption: 'So sieht es aus, sobald Limits da sind: je Kategorie ausgegeben und geplant.',
+          food: 'Lebensmittel',
+          leisure: 'Freizeit',
+          transport: 'Unterwegs',
+        },
+        widgetTrend: 'Ausgaben mit Limit, letzte 6 Monate',
+        settings: {
+          showCharts: 'Diagramme über den Limits zeigen',
+          showChartsHelp:
+            'Ausgegeben und Limit, Tagesrate, Prognose, Verlauf und Verteilung. Aus: nur die Karten.',
+        },
+      },
     },
     meta: {
       name: 'Budgets & Sparziele',

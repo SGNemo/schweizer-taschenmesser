@@ -4,14 +4,19 @@ import { currencyOf, formatMoney } from '@/core/money';
 import { monthOf, today } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Button, FortschrittBody, Skeleton, useWidgetSize, WidgetBody } from '@/ui';
-import { useBudgetData } from '../data';
+import { Spark } from '@/ui/charts';
+import { useBudgetData, useBudgetInsights } from '../data';
+import styles from './OverviewWidget.module.css';
 import { goalProgress } from '../compute';
+import { trendValues } from '../insights';
 import { depositRepo, goalRepo } from '../repo';
 
 /** The two budgets that need the most attention (healthy ones too: "75 %" is information), the goals, and "Ausgabe +". */
 export default function OverviewWidget() {
   const day = today();
-  const { data } = useBudgetData(monthOf(day));
+  const month = monthOf(day);
+  const { data } = useBudgetData(month);
+  const insights = useBudgetInsights(month, data);
   const goals = useLiveQuery(() => goalRepo.active().toArray(), []);
   const deposits = useLiveQuery(() => depositRepo.active().toArray(), []);
   const navigate = useNavigate();
@@ -56,6 +61,20 @@ export default function OverviewWidget() {
           entries={[...budgetEntries, ...goalEntries]}
         />
       </WidgetBody>
+      {/* The last six months as a shape (no values to read; the rows above carry the numbers), from size m on. */}
+      {size !== 's' && budgetEntries.length > 0 && insights ? (
+        <p className={styles.trend} data-testid="budgets-widget-trend">
+          <Spark
+            values={trendValues(
+              insights.months,
+              insights.spentPerMonth,
+              insights.hasSpending,
+              month,
+            )}
+          />
+          <span>{t.budgets.ext.charts.widgetTrend}</span>
+        </p>
+      ) : null}
       {/* The one thing done most often next to a budget: an expense (opens finance's booking dialog). */}
       {size !== 's' && budgetEntries.length > 0 ? (
         <Button

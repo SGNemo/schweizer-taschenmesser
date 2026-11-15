@@ -195,3 +195,69 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await expect(page.getByTestId('goal-pace')).toContainText('im Juni 2027 am Ziel');
   });
 });
+
+// Round "Tiefe": the charts above and below the cards (only `@/ui/charts`), the daily rate, the month's forecast,
+// the example in the empty view, and the switch that turns the charts off.
+test.describe('Budgets: charts', () => {
+  test('the empty view shows an example; with a budget the charts, daily rate and forecast appear', async ({
+    page,
+  }) => {
+    await enable(page, 'budgets');
+    await spend(page, '100,00', 'Lebensmittel');
+    await open(page, '/budgets');
+    await expect(page.getByTestId('budgets-example')).toContainText('Beispiel');
+    await expect(page.getByTestId('budget-charts')).toHaveCount(0);
+    await page
+      .getByRole('button', { name: /Limit (hinzufügen|eintragen)/ })
+      .first()
+      .click();
+    const editor = page.getByRole('dialog');
+    await editor.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
+    await editor.getByLabel('Limit pro Monat').fill('400');
+    await save(page);
+    await expect(page.getByTestId('budgets-example')).toHaveCount(0);
+    // 300 € free on the 29th of 30 days: two days left, 150 € a day.
+    const perDay = page.getByTestId('budget-per-day');
+    await expect(perDay).toContainText(/150,00\s€/);
+    await expect(perDay).toContainText('noch 2 Tage bis 30. September');
+    // Run rate 100 € / 29 days × 30 days.
+    const forecast = page.getByTestId('budget-forecast');
+    await expect(forecast).toContainText(/103,45\s€/);
+    await expect(forecast).toContainText(/von 400,00\s€ Monatslimit/);
+    await expect(forecast).toContainText('bleiben übrig');
+    await expect(page.getByTestId('budget-bars')).toContainText('Lebensmittel');
+    await expect(page.getByTestId('budget-trend')).toBeVisible();
+    await expect(page.getByTestId('budget-donut')).toContainText('Lebensmittel');
+    await expect(page.getByTestId('budget-card-note')).toContainText(
+      /noch 150,00\s€ je Tag bis 30\. Sep/,
+    );
+    // A past month has no daily rate and no forecast; the bars stay.
+    await page.getByRole('button', { name: 'Vorheriger Monat' }).click();
+    await expect(page.getByTestId('budget-bars')).toBeVisible();
+    await expect(page.getByTestId('budget-per-day')).toHaveCount(0);
+    await expect(page.getByTestId('budget-forecast')).toHaveCount(0);
+  });
+
+  test('the charts can be switched off; the cards stay', async ({ page }) => {
+    await enable(page, 'budgets');
+    await spend(page, '10,00', 'Lebensmittel');
+    await open(page, '/budgets');
+    await page
+      .getByRole('button', { name: /Limit (hinzufügen|eintragen)/ })
+      .first()
+      .click();
+    const editor = page.getByRole('dialog');
+    await editor.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
+    await editor.getByLabel('Limit pro Monat').fill('50');
+    await save(page);
+    await expect(page.getByTestId('budget-charts')).toBeVisible();
+    await open(page, '/settings/module/budgets');
+    const toggle = page.getByRole('switch', { name: 'Diagramme über den Limits zeigen' });
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-checked', 'false');
+    await open(page, '/budgets');
+    await expect(page.getByRole('listitem').filter({ hasText: 'Lebensmittel' })).toBeVisible();
+    await expect(page.getByTestId('budget-charts')).toHaveCount(0);
+    await expect(page.getByTestId('budget-charts-more')).toHaveCount(0);
+  });
+});

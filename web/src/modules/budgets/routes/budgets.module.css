@@ -72,3 +72,58 @@
 .depositAmount {
   font-variant-numeric: var(--font-num);
 }
+
+/* The overview above the cards: figures, then the charts, as many columns as fit (one on the phone). */
+.charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: var(--space-4);
+  align-content: start;
+}
+.figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.figure > * {
+  display: block;
+}
+.figureLabel {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.figureValue {
+  display: block;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: var(--font-num);
+}
+.figureNote {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+/* The empty view's example sits under its words, as wide as a card. */
+.example {
+  width: min(100%, 32rem);
+  margin-inline: auto;
+  margin-top: var(--space-4);
+  text-align: start;
+}
+/* Trend and breakdown below the cards. */
+.chartsMore {
+  margin-top: var(--space-4);
+}
+/* Head row on wide screens: the two figures beside the wider bars (one column each is too empty). */
+@media (min-width: 900px) {
+  .chartsHead {
+    grid-template-columns: minmax(18rem, 1fr) 2fr;
+  }
+}
