@@ -227,10 +227,12 @@ export async function loadInsights(
     for (const [id, cents] of map) if (budgeted.has(id)) sum += cents;
     return sum;
   });
-  const plannedPerMonth = own.reduce(
-    (sum, b) => sum + monthlyShare(b.monthlyLimitMinor, b.period ?? 'month'),
-    0,
-  );
+  // A child's limit sits inside its parent's when both have one (the parent's spending already holds the child's).
+  const limited = new Set(own.map((b) => b.categoryId));
+  const parentOf = new Map(categories.map((c) => [c.id, c.parentId]));
+  const plannedPerMonth = own
+    .filter((b) => !limited.has(parentOf.get(b.categoryId) ?? ''))
+    .reduce((sum, b) => sum + monthlyShare(b.monthlyLimitMinor, b.period ?? 'month'), 0);
   const viewed = rollUp(maps[maps.length - 1] ?? new Map(), categories);
   const shares = [...viewed]
     .map(([id, value]) => ({ id, value }))
