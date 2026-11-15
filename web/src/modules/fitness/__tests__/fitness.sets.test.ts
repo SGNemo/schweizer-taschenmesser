@@ -128,12 +128,31 @@ describe('fitness live session', () => {
     });
   });
 
+  it('logs only the exercises with a set done, never a plan’s other rows', () => {
+    let s = startLive(
+      {
+        title: 'Oberkörper',
+        exercises: [
+          { name: 'Bank', sets: 4, reps: 8, weightKg: 60 },
+          { name: 'Rudern', sets: 4, reps: 10, weightKg: 50 },
+          { name: 'Laufen', durationMin: 20 },
+        ],
+      },
+      at,
+    );
+    s = finishSet(s, { reps: 8, weightKg: 62.5 }, { now: 0, restSec: 0 });
+    expect(liveSession(s, 0).exercises).toEqual([
+      { name: 'Bank', sets: 1, reps: 8, weightKg: 62.5, log: [{ reps: 8, weightKg: 62.5 }] },
+    ]);
+  });
+
   it('becomes a valid session with the minutes since the start', () => {
     let s = startLive({ exercises: [{ name: 'Kniebeuge' }, { name: ' ' }] }, at);
     s = finishSet(s, { reps: 5 }, { now: 0, restSec: 0 });
     const session = liveSession(s, 47 * 60_000);
     expect(session.durationMin).toBe(47);
     expect(session.exercises).toHaveLength(1);
+    expect(liveSession(s, 10_000).durationMin).toBe(1);
     expect(sessionSchema.safeParse(session).success).toBe(true);
   });
 });

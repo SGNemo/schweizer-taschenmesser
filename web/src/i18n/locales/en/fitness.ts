@@ -54,7 +54,6 @@ export const fitness: Strings['fitness'] = {
     weight: (kg) => `${kg} kg`,
     kcal: (kcal) => `${kcal} kcal`,
     warmup: 'warm-up',
-    superset: 'superset',
   },
   form: {
     date: 'Date',
@@ -283,7 +282,7 @@ export const fitness: Strings['fitness'] = {
     nothing: 'Ended. No set had been logged yet.',
     banner: (time) => `Session running since ${time}`,
     resume: 'Continue',
-    saved: 'Saved. The session keeps running until you end it.',
+    failed: 'That could not be saved just now. Please try again.',
   },
   plan: {
     open: 'Training plan',

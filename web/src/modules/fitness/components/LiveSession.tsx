@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNow } from '@/core/focus/useNow';
 import { formatMinutes } from '@/core/i18n/format';
 import { now } from '@/core/time/now';
@@ -7,7 +7,15 @@ import { useUiStore } from '@/stores/ui';
 import { Button, Checkbox, Dialog, Form, Icon, IconButton, TextField } from '@/ui';
 import { patternOf } from '../catalog';
 import { setDetail } from '../data';
-import { finishSet, liveSession, nextSetDraft, restLeft, saveLive, type LiveState } from '../live';
+import {
+  finishSet,
+  liveSession,
+  MAX_EXERCISES,
+  MAX_SETS,
+  nextSetDraft,
+  restLeft,
+  type LiveState,
+} from '../live';
 import { lastOf } from '../logic';
 import { sessionRepo } from '../repo';
 import type { Session, WorkSet } from '../schema';
@@ -38,9 +46,10 @@ export function LiveSession({
 }: {
   state: LiveState | undefined;
   /** Earlier sessions (last time's values). */
-  sessions: readonly Session[];
+  sessions: readonly (Session & { id?: string })[];
   restSec: number;
   own: readonly string[];
+  /** Every change; the page keeps it on this device (reload, app switch). */
   onChange: (s: LiveState) => void;
   /** Hides the dialog; the session keeps running. */
   onClose: () => void;
@@ -72,7 +81,7 @@ function Running({
   onEnd,
 }: {
   state: LiveState;
-  sessions: readonly Session[];
+  sessions: readonly (Session & { id?: string })[];
   restSec: number;
   own: readonly string[];
   onChange: (s: LiveState) => void;
@@ -81,8 +90,9 @@ function Running({
   const l = t.fitness.live;
   const [picking, setPicking] = useState(false);
   const busy = useRef(false);
-  const time = useNow(1000, !!state.restUntil);
-  const left = restLeft(state, time);
+  const ticking = useNow(1000, !!state.restUntil);
+  // The ticking clock is stale right after a set: never show more rest than is left now.
+  const left = restLeft(state, Math.max(ticking, now()));
   const ex = state.exercises[state.index];
   const count = state.exercises.length;
   const partnerName = ex?.superset
@@ -91,16 +101,17 @@ function Running({
       ? state.exercises[state.index - 1]?.name
       : undefined;
 
-  // Every change stays on this device (reload, app switch).
-  useEffect(() => saveLive(state), [state]);
+  // Last time's values come from earlier sessions, never from the one running now.
+  const earlier = sessions.filter((s) => !state.sessionId || s.id !== state.sessionId);
 
   async function write(next: LiveState): Promise<LiveState> {
     const data: Session = liveSession(next, now());
-    if (next.sessionId) {
+    if (next.sessionId && (await sessionRepo.get(next.sessionId))) {
       // A plan that is started counts from now on, today.
       await sessionRepo.update(next.sessionId, { ...data, planned: undefined });
       return next;
     }
+    // Never written yet, or deleted meanwhile (list, undo, another device): the sets are written anew.
     const created = await sessionRepo.create(data);
     return { ...next, sessionId: created.id };
   }
@@ -110,22 +121,31 @@ function Running({
     busy.current = true;
     try {
       onChange(await write(finishSet(state, set, { now: now(), restSec })));
+    } catch {
+      useUiStore.getState().toast(l.failed);
     } finally {
       busy.current = false;
     }
   }
 
   async function end() {
-    const any = state.exercises.some((e) => e.log?.length);
-    if (any && state.sessionId) {
-      const data = liveSession(state, now());
-      await sessionRepo.update(state.sessionId, { ...data, planned: undefined });
-      useUiStore
-        .getState()
-        .toast(l.finished(formatMinutes(data.durationMin ?? 1, { compact: true })));
-    } else useUiStore.getState().toast(l.nothing);
-    saveLive(undefined);
-    onEnd();
+    if (busy.current) return;
+    busy.current = true;
+    try {
+      if (state.exercises.some((e) => e.log?.length)) {
+        const data = liveSession(state, now());
+        await write(state);
+        useUiStore
+          .getState()
+          .toast(l.finished(formatMinutes(data.durationMin ?? 1, { compact: true })));
+      } else useUiStore.getState().toast(l.nothing);
+    } catch {
+      useUiStore.getState().toast(l.failed);
+    } finally {
+      busy.current = false;
+      // Ended either way: the sets written so far stay.
+      onEnd();
+    }
   }
 
   function add(name: string) {
@@ -165,7 +185,7 @@ function Running({
             <p className={styles.hint}>{t.fitness.form.supersetWith(partnerName)}</p>
           ) : null}
           {state.restUntil ? (
-            <div className={styles.rest} role="status" data-testid="fitness-rest">
+            <div className={styles.rest} data-testid="fitness-rest">
               {left > 0 ? (
                 <>
                   <p className={styles.restTime}>
@@ -181,7 +201,9 @@ function Running({
                   </Button>
                 </>
               ) : (
-                <p className={styles.restTime}>{l.restOver}</p>
+                <p className={styles.restTime} role="status">
+                  {l.restOver}
+                </p>
               )}
               <Button size="sm" variant="ghost" onClick={() => onChange(noRest)}>
                 {l.restSkip}
@@ -200,7 +222,8 @@ function Running({
           )}
           <SetInput
             key={`${state.index}-${ex.log?.length ?? 0}`}
-            draft={nextSetDraft(ex, lastOf(sessions, ex.name))}
+            draft={nextSetDraft(ex, lastOf(earlier, ex.name))}
+            full={(ex.log?.length ?? 0) >= MAX_SETS}
             onDone={(set) => void done(set)}
           />
         </>
@@ -208,10 +231,12 @@ function Running({
         <p className={styles.hint}>{l.pickFirst}</p>
       )}
       <div className={styles.chips}>
-        <Button variant={ex ? 'secondary' : 'primary'} size="sm" onClick={() => setPicking(true)}>
-          <Icon name="plus" size={16} />
-          {l.addExercise}
-        </Button>
+        {count < MAX_EXERCISES ? (
+          <Button variant={ex ? 'secondary' : 'primary'} size="sm" onClick={() => setPicking(true)}>
+            <Icon name="plus" size={16} />
+            {l.addExercise}
+          </Button>
+        ) : null}
         <Button variant="secondary" size="sm" onClick={() => void end()}>
           {l.finish}
         </Button>
@@ -222,7 +247,16 @@ function Running({
 }
 
 /** Reps, kg, warm-up and a note for the next set, offered with the last values. */
-function SetInput({ draft, onDone }: { draft: WorkSet; onDone: (set: WorkSet) => void }) {
+function SetInput({
+  draft,
+  full,
+  onDone,
+}: {
+  draft: WorkSet;
+  /** The exercise holds the most sets a row can keep. */
+  full: boolean;
+  onDone: (set: WorkSet) => void;
+}) {
   const f = t.fitness.form;
   const [reps, setReps] = useState(draft.reps === undefined ? '' : String(draft.reps));
   const [weight, setWeight] = useState(draft.weightKg === undefined ? '' : String(draft.weightKg));
@@ -265,7 +299,7 @@ function SetInput({ draft, onDone }: { draft: WorkSet; onDone: (set: WorkSet) =>
         maxLength={200}
         onChange={(e) => setNote(e.target.value)}
       />
-      <Button type="submit" variant="primary">
+      <Button type="submit" variant="primary" disabled={full}>
         {t.fitness.live.done}
       </Button>
     </Form>
