@@ -139,6 +139,47 @@ describe('planner page', () => {
     await waitFor(() => expect(screen.getByText('nicht im Plan')).toBeInTheDocument());
   });
 
+  it('the row ⋯ has „Dauer …“ and „Als Pause …“: each opens its choice, one tap acts', async () => {
+    const a = await taskRepo.create({
+      listId: 'inbox',
+      title: 'Duschen',
+      done: false,
+      priority: 0,
+      order: 0,
+    });
+    await assignmentRepo.upsert(`todos:${a.id}#0`, {
+      itemKey: `todos:${a.id}`,
+      k: 0,
+      of: 1,
+      date: '2026-11-09',
+      minutes: 30,
+      order: 0,
+      reason: 'new',
+    });
+    draw();
+    const open = async () => {
+      fireEvent.click((await screen.findAllByRole('button', { name: 'Aktionen für Duschen' }))[0]!);
+    };
+    await open();
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Dauer …' }));
+    const sheet = await screen.findByRole('dialog', { name: 'Dauer: Duschen' });
+    expect(
+      within(sheet)
+        .getAllByRole('button', { pressed: false })
+        .map((b) => b.textContent),
+    ).toEqual(['5 Min', '15 Min', '30 Min', '1 h']);
+    fireEvent.click(within(sheet).getByRole('button', { name: '15 Min' }));
+    await waitFor(async () => expect((await taskRepo.get(a.id))!.estimateMin).toBe(15));
+    await open();
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Als Pause …' }));
+    const pause = await screen.findByRole('dialog', { name: 'Duschen als Pause' });
+    fireEvent.click(within(pause).getByRole('button', { name: '1 h' }));
+    await waitFor(async () => expect(await taskRepo.get(a.id)).toBeUndefined());
+    expect((await dayRepo.get('2026-11-09'))!.blockers.map((b) => [b.label, b.min])).toEqual([
+      ['Duschen', 60],
+    ]);
+  });
+
   it('a day off says so in the head and the empty board offers the one field', async () => {
     await dayRepo.upsert('2026-11-09', { date: '2026-11-09', availableMin: 0, blockers: [] });
     draw();

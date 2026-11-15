@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CORPUS, CORPUS_NOW, type CorpusCase } from './corpus';
 import { parseCapture, type CaptureResult } from './index';
 
-type Flat = Omit<CorpusCase, 'from' | 'text' | 'fitness' | 'place'>;
+type Flat = Omit<CorpusCase, 'from' | 'text' | 'fitness' | 'place' | 'breaks'>;
 
 /** Stand-in for the offline city search (the parser folder imports nothing from outside). */
 const KNOWN = new Set(['tokio', 'new york', 'lisbon']);
@@ -31,8 +31,16 @@ function flatten(r: CaptureResult): Flat {
 function misses(c: CorpusCase): string[] {
   const fitness = c.fitness ? { meal: true, workout: true } : undefined;
   const place = c.place ? isPlace : undefined;
-  const got = flatten(parseCapture(c.text, { now: CORPUS_NOW, fitness, place }));
-  const { from: _from, text: _text, fitness: _fitness, place: _place, ...want } = c;
+  const got = flatten(parseCapture(c.text, { now: CORPUS_NOW, fitness, place, breaks: c.breaks }));
+  const {
+    from: _from,
+    text: _text,
+    fitness: _fitness,
+    place: _place,
+    breaks: _breaks,
+    ...want
+  } = c;
+  void _breaks;
   void _from;
   void _text;
   void _fitness;
@@ -43,7 +51,7 @@ function misses(c: CorpusCase): string[] {
 }
 
 // Ratchet: raise this when the parser gets better, never lower it.
-const MIN_HITS = 67;
+const MIN_HITS = 74;
 
 describe('parser corpus (QA sentences)', () => {
   it('reports the hit rate', () => {
@@ -51,7 +59,7 @@ describe('parser corpus (QA sentences)', () => {
     const hits = rows.filter((r) => r.miss.length === 0).length;
     const fields = rows.flatMap((r) =>
       Object.keys(r.c).filter(
-        (k) => k !== 'from' && k !== 'text' && k !== 'fitness' && k !== 'place',
+        (k) => k !== 'from' && k !== 'text' && k !== 'fitness' && k !== 'place' && k !== 'breaks',
       ),
     );
     const missed = rows.reduce((n, r) => n + r.miss.length, 0);

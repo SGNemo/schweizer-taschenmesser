@@ -45,9 +45,9 @@ const MAX: Record<string, Record<Metric | 'seconds', number>> = {
   // prettier-ignore
   'B Kopf leeren: zwölf Dinge auf einmal · pixel-7': { taps: 2, keys: 280, screens: 0, dialogs: 1, detours: 3, seconds: 132 },
   // prettier-ignore
-  'C Wochenende einteilen · desktop-chrome': { taps: 23, keys: 9, screens: 1, dialogs: 2, detours: 1, seconds: 38 },
+  'C Wochenende einteilen · desktop-chrome': { taps: 7, keys: 18, screens: 1, dialogs: 1, detours: 0, seconds: 17 },
   // prettier-ignore
-  'C Wochenende einteilen · pixel-7': { taps: 23, keys: 9, screens: 1, dialogs: 2, detours: 1, seconds: 40 },
+  'C Wochenende einteilen · pixel-7': { taps: 7, keys: 18, screens: 1, dialogs: 1, detours: 0, seconds: 19 },
   // prettier-ignore
   'D Arbeitszeit nachtragen · desktop-chrome': { taps: 6, keys: 20, screens: 2, dialogs: 1, detours: 0, seconds: 18 },
   // prettier-ignore
@@ -461,6 +461,8 @@ test('C Wochenende einteilen', async ({ page, isMobile }, info) => {
   const setup = page.getByRole('dialog', { name: 'Tage einteilen' });
   await expect(setup).toBeVisible();
   m.dialog();
+  // Package 4a: the break is one typed line in step 1 – a 2-h blocker of today, never a ToDo (TARGET F2, REVIEW R3).
+  await m.type(setup.getByLabel('Eine Zeile je Ding'), 'Pause 2 Std Zocken');
   await m.tap(setup.getByRole('button', { name: 'Weiter' }));
   await m.tap(
     setup.getByRole('group', { name: 'Zeit am Samstag' }).getByRole('button', { name: '6 h' }),
@@ -470,17 +472,25 @@ test('C Wochenende einteilen', async ({ page, isMobile }, info) => {
   );
   await m.tap(setup.getByRole('button', { name: 'Weiter' }));
   await expect(setup.getByTestId('plan-preview')).toBeVisible();
+  await expect(setup.getByText('Pause Sa: Zocken · 2 h')).toBeVisible();
   await m.tap(setup.getByRole('button', { name: 'Übernehmen' }));
   await expect(setup).toHaveCount(0);
   await expect(page.getByText('Eingeplant: Sa, So, Mo')).toBeVisible();
-  // The break: a blocker „Zocken“ of 2 h in the day sheet (day parts and „Als Pause“ come with package 4).
-  await openPlannerDay(page, m, isMobile, isMobile ? /^Heute/ : /^Heute · Sa/);
-  const sheet = page.getByRole('dialog');
-  await m.type(sheet.getByLabel('Was blockt die Zeit?'), 'Zocken');
-  await m.type(sheet.getByLabel('Dauer'), '120');
-  await m.tap(sheet.getByRole('button', { name: 'Blocker hinzufügen' }));
-  await expect(sheet.getByText('Zocken')).toBeVisible();
-  await m.tap(sheet.getByRole('button', { name: 'Schließen' }).first());
+  // No open ToDo „Zocken“ (leisure never waits as a task); the blocker sits on Saturday with its own length.
+  const openTasks = await rows<{ title: string; done: boolean }>(page, 'todos_task');
+  expect(openTasks.filter((x) => !x.done && /Zocken/.test(x.title))).toEqual([]);
+  const days = await rows<{ date: string; blockers: { label: string; min: number }[] }>(
+    page,
+    'planner_day',
+  );
+  expect(days.find((d) => d.date === SATURDAY)?.blockers.map((b) => [b.label, b.min])).toEqual([
+    ['Zocken', 120],
+  ]);
+  // The order of the day is the typed one (package 2: line order = order inside the day).
+  await settledCount(page.locator(`[data-testid="day-${SATURDAY}"] li`));
+  const saturday = (await planOf(page)).shown.filter((title) => OPEN.includes(title));
+  expect(saturday.length).toBeGreaterThan(0);
+  expect(saturday).toEqual(OPEN.filter((title) => saturday.includes(title)));
   // W10: Sunday got its time before the distribution: what Saturday cannot hold goes there. The script looks at
   // Sunday to read it (not counted: the facts only).
   if (isMobile)

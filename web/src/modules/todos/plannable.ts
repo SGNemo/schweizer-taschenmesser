@@ -96,6 +96,22 @@ const source: PlannableSource = {
     const task = await taskRepo.get(id);
     if (task && task.estimateMin !== minutes) await taskRepo.update(id, { estimateMin: minutes });
   },
+  // „Als Pause …“: the ToDo goes (with its subtasks, like a delete in the list), so leisure never waits as an open
+  // task (morning digest, „Erledigt heute“). The undo restores exactly the rows this removal took.
+  async onRemove(id) {
+    const task = await taskRepo.get(id);
+    if (!task) return async () => undefined;
+    const ids = [
+      id,
+      ...(await taskRepo.table.where('parentId').equals(id).toArray())
+        .filter((t) => t.deletedAt === null)
+        .map((t) => t.id),
+    ];
+    await taskRepo.removeMany(ids);
+    return async () => {
+      for (const x of ids) await taskRepo.restore(x);
+    };
+  },
 };
 
 export default source;

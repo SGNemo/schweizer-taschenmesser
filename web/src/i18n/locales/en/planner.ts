@@ -129,6 +129,13 @@ export const planner: Strings['planner'] = {
     openMail: 'Go to mail',
     blocker: 'Blocker',
     focus: 'Start focus',
+    asBreak: 'As a break …',
+    asBreakTitle: (title: string) => `${title} as a break`,
+    asBreakHint: (day: string) =>
+      `Becomes a blocker on ${day}. The to-do goes for it; Undo brings it back.`,
+    estimate: 'Duration …',
+    estimateTitle: (title: string) => `Duration: ${title}`,
+    choices: 'Choice',
   },
   reasons: {
     pinned: 'pinned',
@@ -177,6 +184,8 @@ export const planner: Strings['planner'] = {
     weekChecked: 'Week confirmed.',
     window: (day: string, window: string) => `${day}: time window ${window}`,
     windowCleared: (day: string) => `${day}: time window as usual`,
+    asBreak: (title: string, day: string, length: string) => `Break ${day}: ${title} · ${length}`,
+    estimate: (title: string, length: string) => `${title} takes ${length}`,
     off: 'The planner is off.',
   },
   add: {

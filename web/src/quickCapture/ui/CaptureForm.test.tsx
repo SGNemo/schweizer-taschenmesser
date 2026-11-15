@@ -598,3 +598,43 @@ describe('council round 4 – presets, ToDos off, moving lines', () => {
     expect(screen.queryByTestId('capture-more-types')).toBeNull();
   });
 });
+
+describe('breaks („Wochenende retten“ package 4a)', () => {
+  it('with the planner on, „Pause 2 Std Zocken“ is a blocker of today and no ToDo; „Zocken“ stays a ToDo', async () => {
+    await enableModule(getManifest('planner')!);
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} />);
+    await user.type(await box(), 'Pause 2 Std Zocken');
+    await waitFor(() => expect(chips()).toHaveTextContent('Ziel: Planer'));
+    expect(chips()).toHaveTextContent('Heute');
+    expect(chips()).toHaveTextContent('2 h');
+    // A break is reached by its word only: it never sits among the type chips.
+    expect(screen.queryByRole('radio', { name: t.quickCapture.type.break })).toBeNull();
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    const [day] = await db.table('planner_day').toArray();
+    expect(day.blockers.map((b: { label: string; min: number }) => [b.label, b.min])).toEqual([
+      ['Zocken', 120],
+    ]);
+    expect(await db.table('todos_task').count()).toBe(0);
+    // Plain text goes where any plain text goes (the default target); the app never guesses leisure.
+    await user.type(await box(), 'Zocken');
+    await waitFor(() => expect(chips()).toHaveTextContent('Ziel:'));
+    expect(chips()).not.toHaveTextContent('Ziel: Planer');
+  });
+
+  it('with the planner off, „Pause …“ stays a ToDo', async () => {
+    await disableModule(getManifest('planner')!, 'keep');
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} />);
+    await user.type(await box(), 'Pause 2 Std Zocken');
+    await waitFor(() => expect(chips()).toHaveTextContent('Ziel:'));
+    expect(chips()).not.toHaveTextContent('Ziel: Planer');
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    expect(onSaved.mock.calls[0]![0].type).not.toBe('break');
+    expect(await db.table('planner_day').count()).toBe(0);
+  });
+});

@@ -4,9 +4,11 @@
  * says the same here as in the field), the in-memory plan items of the preview, the time chips and the
  * device-local draft of the dump. Nothing here writes to the database.
  */
+import type { PlanOp } from '@/core/plan/instructions';
 import type { PlanItem } from '@/core/plan/types';
 import { now } from '@/core/time/now';
 import type { CaptureFields } from '@/quickCapture/parser';
+import { breakOf } from '@/quickCapture/targets';
 import { readField } from './dueWords';
 
 /** The chips of step 2 in minutes: „keine Zeit · 2 h · 4 h · 6 h · ganzer Tag“ (TARGET F1). */
@@ -22,6 +24,8 @@ export interface SetupThing {
   fields: CaptureFields;
   /** „bis So“ / „Frist …“: the planner item's hard deadline. */
   hardDue?: string;
+  /** „Pause 2 Std Zocken“: a blocker of its day (through the quick-capture target `break`), never a ToDo. */
+  isBreak?: true;
 }
 
 /** The dump's lines without list markers and blanks (a pasted list „- Duschen“ reads as „Duschen“). */
@@ -36,31 +40,64 @@ export function setupLines(text: string): string[] {
 export function setupThings(text: string, today: string, de: boolean): SetupThing[] {
   const at = new Date(now());
   return setupLines(text).flatMap((line, i) => {
-    const { fields, hardDue } = readField(line, at, today, de);
+    const { fields, hardDue, isBreak } = readField(line, at, today, de);
     if (!fields.title?.trim()) return [];
-    return [{ key: `new:${i}`, fields, ...(hardDue ? { hardDue } : {}) }];
+    return [
+      {
+        key: `new:${i}`,
+        fields,
+        ...(hardDue ? { hardDue } : {}),
+        ...(isBreak ? { isBreak } : {}),
+      },
+    ];
   });
 }
 
 /**
  * The things as plan items for the preview's dry run – what the ToDos source will report for them once
  * saved: the estimate, the priority, the date as a soft due (a hard one with a deadline phrase), the start
- * date as the earliest day. Newest last, so they never push an older thing aside on a tie.
+ * date as the earliest day. Newest last, so they never push an older thing aside on a tie. A break is no item
+ * (`breakOps` blocks its day).
  */
 export function previewItems(things: readonly SetupThing[], at: number): PlanItem[] {
-  return things.map((th, i) => {
-    const f = th.fields;
-    const due = th.hardDue ?? f.date;
-    return {
-      key: th.key,
-      ...(f.estimateMin ? { durationMin: f.estimateMin } : {}),
-      priority: (f.priority ?? 0) as PlanItem['priority'],
-      ...(due ? { due: { date: due, hard: !!th.hardDue } } : {}),
-      ...(f.startDate ? { earliest: f.startDate } : {}),
-      splittable: true,
-      createdAt: at + i,
-    };
-  });
+  return things
+    .filter((th) => !th.isBreak)
+    .map((th, i) => {
+      const f = th.fields;
+      const due = th.hardDue ?? f.date;
+      return {
+        key: th.key,
+        ...(f.estimateMin ? { durationMin: f.estimateMin } : {}),
+        priority: (f.priority ?? 0) as PlanItem['priority'],
+        ...(due ? { due: { date: due, hard: !!th.hardDue } } : {}),
+        ...(f.startDate ? { earliest: f.startDate } : {}),
+        splittable: true,
+        createdAt: at + i,
+      };
+    });
+}
+
+/**
+ * The breaks of the dump as `block` ops of the preview's dry run (only date, length and label count there; the
+ * times stay empty when none were typed). Their own sentence is the one the stored break's toast says.
+ */
+export function breakOps(
+  things: readonly SetupThing[],
+  today: string,
+): Extract<PlanOp, { op: 'block' }>[] {
+  return things
+    .filter((th) => th.isBreak)
+    .map((th) => {
+      const b = breakOf(th.fields, { today });
+      return {
+        op: 'block' as const,
+        date: b.date,
+        label: b.label,
+        min: b.min,
+        from: b.from ?? '',
+        to: b.to ?? '',
+      };
+    });
 }
 
 /**

@@ -315,3 +315,33 @@ describe('clean-up while the planner is off', () => {
     expect(await cleanupPlanMarks()).toBe(0);
   });
 });
+
+describe('onRemove („Als Pause …“, package 4a)', () => {
+  it('removes the ToDo and its subtasks: no open ToDo in the digest, „Erledigt heute“ does not count it; the undo brings them back', async () => {
+    const task = await taskRepo.create({ ...base, title: 'Zocken', ...own(TODAY, 0) });
+    const sub = await taskRepo.create({ ...base, title: 'Controller laden', parentId: task.id });
+    const range = { from: NOW - 6 * 3_600_000, to: NOW + 86_400_000 };
+    const digest = (await import('../notifications')).default;
+    expect((await digest(range)).map((n) => n.body)).toEqual(['Zocken']);
+
+    const undo = await source.onRemove!(task.id);
+    const live = await taskRepo.active().toArray();
+    expect(live).toEqual([]);
+    expect(await source.list({ today: TODAY, until: TODAY })).toEqual([]);
+    expect(await digest(range)).toEqual([]);
+    expect(dayPlan(await taskRepo.active().toArray(), TODAY, 5).doneToday).toBe(0);
+    // A removal is no tick: the rows are tombstones, never done.
+    expect((await taskRepo.table.get(task.id))!.done).toBe(false);
+
+    await undo();
+    const back = await taskRepo.active().toArray();
+    expect(back.map((t) => t.id).sort()).toEqual([task.id, sub.id].sort());
+    expect(back.find((t) => t.id === task.id)).toMatchObject(own(TODAY, 0));
+  });
+
+  it('a removed or unknown id is a no-op with a no-op undo', async () => {
+    const undo = await source.onRemove!('nope');
+    await undo();
+    expect(await taskRepo.active().toArray()).toEqual([]);
+  });
+});

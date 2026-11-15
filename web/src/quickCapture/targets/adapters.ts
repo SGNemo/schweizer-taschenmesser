@@ -1,5 +1,6 @@
 import { getLang } from '@/core/i18n/lang';
 import { DEFAULT_CURRENCY, formatMoney } from '@/core/money';
+import { randomId } from '@/core/db/util';
 import { now } from '@/core/time/now';
 import { resolvePlace } from '@/core/time/placeSearch';
 import { addDaysStr, formatDay, nowTime } from '@/core/time/dates';
@@ -353,6 +354,107 @@ const plan: CaptureTarget = {
   },
 };
 
+/** A break without a typed span or length blocks one hour (TARGET F2). */
+export const BREAK_DEFAULT_MIN = 60;
+
+const toMin = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5));
+
+/**
+ * What a „Pause …“ line blocks: its day (typed ?? today), its length (the typed span, else the typed length,
+ * else an hour) and its times only when both were typed („Pause Sa 14 bis 16 Uhr“). A span over midnight is
+ * not a break of one day: its times are dropped, the length stays.
+ */
+export function breakOf(
+  f: CaptureFields,
+  ctx: BuildContext,
+): { date: string; label: string; min: number; from?: string; to?: string } {
+  const day = date(f.date ?? ctx.today)!;
+  const label = title(f);
+  const span = f.time && f.endTime ? toMin(f.endTime) - toMin(f.time) : 0;
+  if (span > 0) return { date: day, label, min: span, from: f.time, to: f.endTime };
+  const min =
+    f.estimateMin && f.estimateMin > 0 ? Math.min(1440, f.estimateMin) : BREAK_DEFAULT_MIN;
+  return { date: day, label, min };
+}
+
+type DayRow = {
+  date: string;
+  availableMin?: number;
+  blockers: { id: string; label: string; min: number; from?: string; to?: string }[];
+  note?: string;
+  from?: string;
+  to?: string;
+};
+
+/** The data fields of a stored day row (the envelope is the repo's). */
+const dayData = (row: Record<string, unknown>): DayRow => {
+  const r = row as DayRow;
+  return {
+    date: r.date,
+    blockers: [...(r.blockers ?? [])],
+    ...(r.availableMin !== undefined ? { availableMin: r.availableMin } : {}),
+    ...(r.note ? { note: r.note } : {}),
+    ...(r.from && r.to ? { from: r.from, to: r.to } : {}),
+  };
+};
+
+/**
+ * „Pause 2 Std Zocken“ with the planner on: a blocker of the planner's day row (id = the date, as the planner
+ * writes it), never a ToDo – leisure is no task that stays open. The undo takes out only this blocker.
+ */
+const breaks: CaptureTarget = {
+  type: 'break',
+  moduleId: 'planner',
+  collection: 'day',
+  build: (f, ctx) => {
+    const b = breakOf(f, ctx);
+    return {
+      date: b.date,
+      blockers: [
+        {
+          id: 'new',
+          label: b.label,
+          min: b.min,
+          ...(b.from && b.to ? { from: b.from, to: b.to } : {}),
+        },
+      ],
+    };
+  },
+  async save(f, ctx) {
+    const b = breakOf(f, ctx);
+    const { repo } = ctx;
+    const id = randomId();
+    const blocker = {
+      id,
+      label: b.label,
+      min: b.min,
+      ...(b.from && b.to ? { from: b.from, to: b.to } : {}),
+    };
+    // A day removed earlier (a tombstone) comes back, as the planner's own `putRow` does it.
+    const stored = await repo.table.get(b.date);
+    if (stored && stored.deletedAt !== null) await repo.restore(b.date);
+    const live = await repo.get(b.date);
+    const base: DayRow = live ? dayData(live) : { date: b.date, blockers: [] };
+    try {
+      await repo.upsert(b.date, { ...base, blockers: [...base.blockers, blocker] });
+    } catch {
+      throw new CaptureError('invalid');
+    }
+    return {
+      id: b.date,
+      type: 'break',
+      moduleId: 'planner',
+      undo: async () => {
+        const now = await repo.get(b.date);
+        if (!now) return;
+        const data = dayData(now);
+        if (!data.blockers.some((x) => x.id === id)) return;
+        await repo.upsert(b.date, { ...data, blockers: data.blockers.filter((x) => x.id !== id) });
+      },
+    };
+  },
+};
+
 /**
  * Allowlist of destinations. The password vault (`accounts`) is deliberately not reachable:
  * `targets.test.ts` pins that no adapter points at it.
@@ -372,4 +474,5 @@ export const TARGETS = {
   subscription: subscriptions,
   birthday: people,
   plan,
+  break: breaks,
 };

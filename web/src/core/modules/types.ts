@@ -638,6 +638,12 @@ export interface PlannableSource {
   onDone?(id: string): Promise<void>;
   /** The estimate was edited in the plan. */
   onEstimate?(id: string, minutes: number): Promise<void>;
+  /**
+   * The planner turned the thing into something that is no task any more („Als Pause …“: a blocker of its day):
+   * the source removes it (soft delete, never a purge) and returns the function that brings it back as it was.
+   * The planner calls it inside its own undoable action, so one undo restores the thing, its row and the plan.
+   */
+  onRemove?(id: string): Promise<() => Promise<void>>;
 }
 
 /**

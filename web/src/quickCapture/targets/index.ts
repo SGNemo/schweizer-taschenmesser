@@ -19,7 +19,7 @@ export { CaptureError } from './types';
 export type { CaptureRef, CaptureTarget, CaptureVia, OpenInvoice, SavedCapture } from './types';
 // `findOpenInvoice` lives in `./lookup` and is loaded on demand (only reminder lines need it).
 export type { InvoiceLookup } from './lookup';
-export { TARGETS, planItemKey } from './adapters';
+export { TARGETS, breakOf, planItemKey } from './adapters';
 
 export interface SaveOptions {
   database?: TaschenmesserDB;
@@ -103,6 +103,11 @@ export async function saveCapture(
   }
   if (target.requiresConfirm && !opts.confirmed) throw new CaptureError('invalid');
   if (target.via) return saveTwoStage(target, target.via, manifest, fields, states, opts);
+  if (target.save)
+    return target.save(fields, {
+      today: today(),
+      repo: createCollectionRepo(manifest, target.collection, opts.database),
+    });
 
   const data = target.build(fields, { today: today() });
   const load = manifest.contributions?.aiCreateDefaults;

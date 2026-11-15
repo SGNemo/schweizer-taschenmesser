@@ -3,6 +3,7 @@
  * write-backs (`runUser`), and ends in one toast line with the undo (`runToast`). Sources are
  * reached only through the contract (`plannableSource`), never by import.
  */
+import { recordWrite } from '@/core/db/recorder';
 import { randomId } from '@/core/db/util';
 import { formatMinutes } from '@/core/i18n/format';
 import { getLang } from '@/core/i18n/lang';
@@ -134,15 +135,31 @@ export async function addRequested(req: EventMap['plan.requested']): Promise<boo
   return true;
 }
 
+/** What a source takes back from a row of the plan (`PlannableSource`). */
+export interface SourceAbility {
+  /** A tick („Erledigt“). */
+  done: boolean;
+  /** „Später“. */
+  assign: boolean;
+  /** „Als Pause …“: the thing can be removed and brought back. */
+  remove: boolean;
+  /** „Dauer …“. */
+  estimate: boolean;
+}
+
 /** Which sources take a tick or „Später“ back (an invoice or a cancellation does not: that stays in its module). */
-export async function sourceAbilities(): Promise<
-  Record<string, { done: boolean; assign: boolean }>
-> {
-  const out: Record<string, { done: boolean; assign: boolean }> = {};
+export async function sourceAbilities(): Promise<Record<string, SourceAbility>> {
+  const out: Record<string, SourceAbility> = {};
   await Promise.all(
     availableManifests().map(async (m) => {
       const s = await plannableSource(m).catch(() => undefined);
-      if (s) out[m.id] = { done: !!s.onDone, assign: !!s.onAssign };
+      if (s)
+        out[m.id] = {
+          done: !!s.onDone,
+          assign: !!s.onAssign,
+          remove: !!s.onRemove,
+          estimate: !!s.onEstimate,
+        };
     }),
   );
   return out;
@@ -177,7 +194,17 @@ async function itemPatch(
 /** The one field: a ToDo through the quick-capture target; „bis Do“ or „Frist“ makes the planner item's due hard. */
 export async function addFromField(text: string, titles: Record<string, string>): Promise<boolean> {
   // The phrase is German, like the quick-capture parser (CONCEPT §6c); elsewhere the ⋯ action sets a deadline.
-  const { fields, hardDue } = readField(text, new Date(now()), today(), getLang() === 'de');
+  const { fields, hardDue, isBreak } = readField(
+    text,
+    new Date(now()),
+    today(),
+    getLang() === 'de',
+  );
+  // „Pause 2 Std Zocken“: a blocker of its day through the quick-capture target, no ToDo (package 4a).
+  if (isBreak)
+    return act(t.planner.day.addBlocker, t.planner.toast.blockerAdded, titles, async () => {
+      await saveCapture('break', fields);
+    });
   const lead = hardDue ? t.planner.toast.addedWithDue(dayName(hardDue)) : t.planner.toast.added;
   return act(t.planner.toast.added, lead, titles, async () => {
     const saved = await saveCapture('todo', fields);
@@ -206,6 +233,64 @@ export async function later(e: PlannableEntry, titles: Record<string, string>): 
   if (!s?.onAssign) return false;
   return act(t.planner.toast.later, t.planner.toast.later, titles, () =>
     s.onAssign!(e.id, addDays(today(), 1)),
+  );
+}
+
+/** The lengths „Als Pause …“ offers (minutes): 1 h · 2 h · 3 h. */
+export const BREAK_CHOICES = [60, 120, 180] as const;
+/** The estimates „Dauer …“ offers: the ToDo editor's values (`todos/components/TaskEditor.tsx` `ESTIMATES`). */
+export const ESTIMATE_CHOICES = [5, 15, 30, 60] as const;
+
+/**
+ * „Als Pause …“ (use case „Wochenende retten“, package 4a): the thing becomes a blocker of `min` minutes on
+ * `date` with its title, and the source removes it (`onRemove`) – leisure never waits as an open task. No
+ * planner field and no engine case: a blocker is what the plan already knows. One undo brings back the thing,
+ * its plan and takes the blocker out again. False for a source that cannot remove (an invoice stays).
+ */
+export async function asBreak(
+  e: PlannableEntry,
+  date: string,
+  min: number,
+  titles: Record<string, string>,
+): Promise<boolean> {
+  const s = await source(e.moduleId);
+  if (!s?.onRemove) return false;
+  const length = formatMinutes(min, { compact: true });
+  return act(
+    t.planner.row.asBreak,
+    t.planner.toast.asBreak(short(e.title), dayName(date), length),
+    titles,
+    async () => {
+      const row = await dayRepo.get(date);
+      await dayPatch(date, {
+        blockers: [...(row?.blockers ?? []), { id: randomId(), label: e.title, min }],
+      });
+      // The source's own undo joins this action: a source whose removal is no recorded write comes back too.
+      recordWrite(await s.onRemove!(e.id));
+    },
+    { leadOnly: true },
+  );
+}
+
+/** „Dauer …“: the thing's estimate through its source (like the sentence op `duration`). */
+export async function setEstimate(
+  e: PlannableEntry,
+  min: number,
+  titles: Record<string, string>,
+): Promise<boolean> {
+  const s = await source(e.moduleId);
+  if (!s?.onEstimate) return false;
+  return act(
+    t.planner.row.estimate,
+    t.planner.toast.estimate(short(e.title), formatMinutes(min, { compact: true })),
+    titles,
+    async () => {
+      await s.onEstimate!(e.id, min);
+      // A length the plan held itself would hide the new estimate (`run.ts`: the item row wins).
+      const key = itemKeyOf(e.moduleId, e.id);
+      if ((await itemRepo.get(key))?.durationMin !== undefined)
+        await itemPatch(e, { durationMin: undefined });
+    },
   );
 }
 
@@ -282,15 +367,20 @@ export function applyDaySetup(
         await dayPatch(d.date, { availableMin: Math.max(0, Math.min(1440, d.min)) });
       if (things.length === 0) return;
       // Ids in line order: ToDos saved in the same millisecond tie on their age and the engine then
-      // breaks the tie by id – sorted, the plan keeps the order the preview showed.
+      // breaks the tie by id – sorted, the plan keeps the order the preview showed. A break („Pause …“)
+      // is a blocker of its day through the quick-capture target `break`: no id, no ToDo.
       const ids = things.map(() => randomId()).sort();
       await saveCaptures(
-        things.map((th, i) => ({ type: 'todo' as const, fields: th.fields, id: ids[i] })),
+        things.map((th, i) =>
+          th.isBreak
+            ? { type: 'break' as const, fields: th.fields }
+            : { type: 'todo' as const, fields: th.fields, id: ids[i] },
+        ),
         things.map((th) => th.fields.title).join('\n'),
       );
       const moduleId = targetFor('todo').moduleId;
       for (const [i, th] of things.entries()) {
-        if (!th.hardDue) continue;
+        if (!th.hardDue || th.isBreak) continue;
         await putRow(itemRepo, itemKeyOf(moduleId, ids[i]!), {
           source: { module: moduleId, id: ids[i]! },
           due: { date: th.hardDue, hard: true },

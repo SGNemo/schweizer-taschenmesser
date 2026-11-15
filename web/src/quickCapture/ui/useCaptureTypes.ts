@@ -24,6 +24,13 @@ export function useCaptureTypes(): {
   fitness: NonNullable<ParseOptions['fitness']>;
   /** Set while the Uhr module is on. */
   place: ParseOptions['place'];
+  /** The planner is on: „Pause …“ / „Freizeit …“ lines are breaks (`ParseOptions.breaks`). */
+  breaks: boolean;
+  /**
+   * The targets a person picks by hand (type chips, the row choice): a break is reached only by its word,
+   * so it never sits among the chips.
+   */
+  pickable: CaptureType[];
 } {
   const states = useModuleStates();
   const [prefs] = useSettings('module.fitness', FITNESS_PREFS, {});
@@ -35,5 +42,7 @@ export function useCaptureTypes(): {
     available,
     fitness: { meal: available.includes('meal'), workout: available.includes('workout') },
     place: available.includes('place') ? isPlaceName : undefined,
+    breaks: available.includes('break'),
+    pickable: available.filter((type) => type !== 'break'),
   };
 }
