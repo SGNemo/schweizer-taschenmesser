@@ -309,17 +309,6 @@ async function sideLink(page: Page, m: Meter, name: string, group: string) {
   return link;
 }
 
-const openPlannerDay = async (page: Page, m: Meter, mobile: boolean, label: RegExp) => {
-  // Desktop: the week list on the left picks the day, its head on the right opens the day sheet.
-  // Phone: the strip picks the day, the day's head opens the sheet. Both are two taps.
-  if (mobile)
-    await m.tap(page.getByRole('group', { name: 'Tage' }).getByRole('button', { name: label }));
-  else await m.tap(page.getByRole('button', { name: label }).first());
-  await m.tap(page.locator('[data-testid^="day-"] button').first());
-  await expect(page.getByRole('dialog')).toBeVisible();
-  m.dialog();
-};
-
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date(`${SATURDAY}T08:30:00`));
   await dismissNotices(page);
