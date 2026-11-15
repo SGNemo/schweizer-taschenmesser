@@ -16,7 +16,7 @@
 //! Decoding is strict: an unknown tag, kind or id, a reserved byte that is not zero, a wrong length
 //! or a control character is an error, and the caller closes the session.
 
-/// Phone → PC: `[level]`, or `[level, features]` ([`FEATURE_POWER`]).
+/// Phone → PC: `[level]`, or `[level, features]` ([`FEATURES`]).
 pub const TAG_OPEN: u8 = 0x20;
 /// PC → phone: `[level, grant, unlock_required, volume, mute, playing, locked]`, and – only when
 /// the `open` carried a features byte – `[features, power]` ([`PowerInfo`]).
@@ -39,8 +39,11 @@ pub const TAG_POWER: u8 = 0x28;
 
 /// Feature bit: power actions, monitor off, the power answer.
 pub const FEATURE_POWER: u8 = 0x01;
+/// Feature bit: the presentation keys ([`Key::F5`], [`Key::B`]; mouse/keyboard level like every
+/// key). Asking for it widens nothing: it only lets the PC take two more ids of the fixed list.
+pub const FEATURE_PRESENT: u8 = 0x02;
 /// The features this side knows. The PC accepts these and ignores every other bit.
-pub const FEATURES: u8 = FEATURE_POWER;
+pub const FEATURES: u8 = FEATURE_POWER | FEATURE_PRESENT;
 
 pub const RECORD_LEN: usize = 4;
 pub const MAX_RECORDS: usize = 32;
@@ -258,9 +261,21 @@ pub enum Key {
     Delete,
     F11,
     AltTab,
+    /// Start the slideshow. Sent only to a PC that accepted [`FEATURE_PRESENT`].
+    F5,
+    /// The letter key B without a modifier: black screen in a slideshow. Sent only to a PC that
+    /// accepted [`FEATURE_PRESENT`].
+    B,
 }
 
-const KEYS: [Key; 16] = [
+impl Key {
+    /// Whether the key belongs to [`FEATURE_PRESENT`] (an older PC does not know its id).
+    pub fn is_present(self) -> bool {
+        matches!(self, Key::F5 | Key::B)
+    }
+}
+
+const KEYS: [Key; 18] = [
     Key::Enter,
     Key::Escape,
     Key::Backspace,
@@ -277,6 +292,8 @@ const KEYS: [Key; 16] = [
     Key::Delete,
     Key::F11,
     Key::AltTab,
+    Key::F5,
+    Key::B,
 ];
 
 /// The fixed list of media-level commands.
@@ -399,6 +416,11 @@ impl Record {
     /// Whether the record needs the `Full` level.
     pub fn needs_full(&self) -> bool {
         !matches!(self, Record::Media(_))
+    }
+
+    /// Whether the record needs [`FEATURE_PRESENT`] (a presentation key).
+    pub fn needs_present(&self) -> bool {
+        matches!(self, Record::Key(k) if k.is_present())
     }
 
     fn bytes(self) -> [u8; RECORD_LEN] {
@@ -643,6 +665,9 @@ mod tests {
         // ids start at 1 and are dense
         assert_eq!(Record::Key(Key::Enter).bytes(), [KIND_KEY, 1, 0, 0]);
         assert_eq!(Record::Key(Key::AltTab).bytes(), [KIND_KEY, 16, 0, 0]);
+        // the presentation keys come after the sixteen older ones: their ids never moved
+        assert_eq!(Record::Key(Key::F5).bytes(), [KIND_KEY, 17, 0, 0]);
+        assert_eq!(Record::Key(Key::B).bytes(), [KIND_KEY, 18, 0, 0]);
         assert_eq!(Record::Media(Media::Lock).bytes(), [KIND_MEDIA, 7, 0, 0]);
         assert_eq!(
             Record::Media(Media::MonitorOff).bytes(),
@@ -669,6 +694,20 @@ mod tests {
     }
 
     #[test]
+    fn only_the_two_presentation_keys_need_their_feature() {
+        for k in KEYS {
+            let present = matches!(k, Key::F5 | Key::B);
+            assert_eq!(k.is_present(), present);
+            assert_eq!(Record::Key(k).needs_present(), present);
+            assert!(Record::Key(k).needs_full(), "a key is the mouse/keyboard level");
+        }
+        for m in MEDIA {
+            assert!(!Record::Media(m).needs_present());
+        }
+        assert!(!Record::Move { dx: 1, dy: 1 }.needs_present());
+    }
+
+    #[test]
     fn malformed_events_are_refused() {
         for bad in [
             &[][..],
@@ -681,7 +720,7 @@ mod tests {
             &[KIND_BUTTON, 3, 1, 0],
             &[KIND_BUTTON, 1, 2, 0], // down is 0 or 1
             &[KIND_KEY, 0, 0, 0],    // id 0
-            &[KIND_KEY, 17, 0, 0],   // past the list
+            &[KIND_KEY, 19, 0, 0],   // past the list
             &[KIND_KEY, 1, 1, 0],    // second byte must be 0
             &[KIND_MEDIA, 9, 0, 0],
             &[KIND_MEDIA, 1, 9, 0],
@@ -717,11 +756,12 @@ mod tests {
         );
         assert_eq!(
             decode_open(&encode_open(Level::Full, Some(FEATURES))),
-            Ok((Level::Full, Some(FEATURE_POWER)))
+            Ok((Level::Full, Some(FEATURE_POWER | FEATURE_PRESENT)))
         );
+        assert_eq!(decode_open(&[2, 0x02]), Ok((Level::Full, Some(FEATURE_PRESENT))));
         // a newer phone's bits are dropped, never a reason to close
         assert_eq!(decode_open(&[1, 0xff]), Ok((Level::Media, Some(FEATURES))));
-        assert_eq!(decode_open(&[1, 0x02]), Ok((Level::Media, Some(0))));
+        assert_eq!(decode_open(&[1, 0x04]), Ok((Level::Media, Some(0))));
         for bad in [&[][..], &[0], &[3], &[0, 1], &[1, 1, 1]] {
             assert!(decode_open(bad).is_err());
         }
@@ -758,7 +798,7 @@ mod tests {
         ] {
             let o = Opened {
                 ext: Some(OpenedExt {
-                    features: FEATURE_POWER,
+                    features: FEATURES,
                     power,
                 }),
                 ..o
@@ -768,7 +808,7 @@ mod tests {
         }
         for bad in [
             &[1, 1, 0, 42, 0, 0, 0, 1][..],   // eight
-            &[1, 1, 0, 42, 0, 0, 0, 0x02, 0], // a feature this side does not know
+            &[1, 1, 0, 42, 0, 0, 0, 0x04, 0], // a feature this side does not know
             &[1, 1, 0, 42, 0, 0, 0, 1, 8],    // an unknown power bit
             &[1, 1, 0, 42, 0, 0, 0, 1, 0, 0], // ten
         ] {

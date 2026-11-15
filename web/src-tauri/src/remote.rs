@@ -92,6 +92,8 @@ fn key_of(key: Key) -> remote_input::Key {
         Key::Delete => K::Delete,
         Key::F11 => K::F11,
         Key::AltTab => K::AltTab,
+        Key::F5 => K::F5,
+        Key::B => K::B,
     }
 }
 
@@ -1170,7 +1172,8 @@ mod tests {
             };
             assert!(key_of(key) == *expected, "key {id}");
         }
-        assert!(::lan_sync::input::wire::decode_events(&[4, 17, 0, 0]).is_err());
+        assert_eq!(remote_input::KEYS.len(), 18);
+        assert!(::lan_sync::input::wire::decode_events(&[4, 19, 0, 0]).is_err());
     }
 
     #[test]

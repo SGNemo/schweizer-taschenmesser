@@ -12,7 +12,7 @@
 //! * **Pointer** ([`Pointer`], `src/pointer.rs`) is simulated input: the mouse part of
 //!   `SendInput` – relative moves, the left and right button, the wheel.
 //! * **Keyboard** ([`Keyboard`], `src/keyboard.rs`) is simulated input too: the keyboard part of
-//!   `SendInput` – text as Unicode units, and the sixteen keys of a fixed list. There is no
+//!   `SendInput` – text as Unicode units, and the eighteen keys of a fixed list. There is no
 //!   "any key" and no free combination.
 //!
 //! Those two files are the only places in the whole app that simulate input

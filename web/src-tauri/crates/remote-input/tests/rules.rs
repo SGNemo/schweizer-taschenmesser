@@ -220,7 +220,7 @@ fn only_two_files_simulate_input_each_its_own_kind() {
                 "{file} changed, at code line {}:\n  now:    {}\n  pinned: {}\n\
                  Read docs/rules/remote-control.md and have the change reviewed; then update \
                  {name} in tests/rules.rs. A new key also needs: `Key`, `KEYS`, `Code`, `chord`, \
-                 `key_of` and its import, the count of sixteen below, tests/keyboard.rs, the \
+                 `key_of` and its import, the count of eighteen below, tests/keyboard.rs, the \
                  hub's list and `key_of` in the shell.",
                 i + 1,
                 now.get(i).map_or("(end)", String::as_str),
@@ -250,14 +250,14 @@ fn only_two_files_simulate_input_each_its_own_kind() {
         2,
         "the stub and Windows"
     );
-    // one list of keys, the public one: sixteen
+    // one list of keys, the public one: eighteen
     let list = &keyboard[keyboard.find("pub enum Key {").unwrap()..];
     let list = &list[..list.find("\n}").unwrap()];
     let keys: usize = code_lines(list)
         .skip(1)
         .map(|l| l.split(',').filter(|w| !w.trim().is_empty()).count())
         .sum();
-    assert_eq!(keys, 16, "the fixed list has sixteen keys");
+    assert_eq!(keys, 18, "the fixed list has eighteen keys");
 }
 
 /// The crate is six files and nothing else: no sub-directory, no file pulled in from elsewhere,
@@ -517,8 +517,10 @@ PageDown,
 Delete,
 F11,
 AltTab,
+F5,
+B,
 }
-pub const KEYS: [Key; 16] = [
+pub const KEYS: [Key; 18] = [
 Key::Enter,
 Key::Escape,
 Key::Backspace,
@@ -535,6 +537,8 @@ Key::PageDown,
 Key::Delete,
 Key::F11,
 Key::AltTab,
+Key::F5,
+Key::B,
 ];
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Code {
@@ -554,6 +558,8 @@ PageDown,
 Delete,
 F11,
 Alt,
+F5,
+B,
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Stroke {
@@ -578,6 +584,8 @@ Key::PageDown => &[Code::PageDown],
 Key::Delete => &[Code::Delete],
 Key::F11 => &[Code::F11],
 Key::AltTab => &[Code::Alt, Code::Tab],
+Key::F5 => &[Code::F5],
+Key::B => &[Code::B],
 }
 }
 pub fn strokes(key: Key) -> Vec<Stroke> {
@@ -682,9 +690,9 @@ mod imp {
 use super::{Code, Keys, Stroke};
 use windows::Win32::UI::Input::KeyboardAndMouse::{
 SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYBD_EVENT_FLAGS,
-KEYEVENTF_EXTENDEDKEY, KEYEVENTF_KEYUP, KEYEVENTF_UNICODE, VIRTUAL_KEY, VK_BACK, VK_DELETE,
-VK_DOWN, VK_END, VK_ESCAPE, VK_F11, VK_HOME, VK_LEFT, VK_MENU, VK_NEXT, VK_PRIOR,
-VK_RETURN, VK_RIGHT, VK_SPACE, VK_TAB, VK_UP,
+KEYEVENTF_EXTENDEDKEY, KEYEVENTF_KEYUP, KEYEVENTF_UNICODE, VIRTUAL_KEY, VK_B, VK_BACK,
+VK_DELETE, VK_DOWN, VK_END, VK_ESCAPE, VK_F11, VK_F5, VK_HOME, VK_LEFT, VK_MENU, VK_NEXT,
+VK_PRIOR, VK_RETURN, VK_RIGHT, VK_SPACE, VK_TAB, VK_UP,
 };
 pub fn native() -> Option<Box<dyn Keys>> {
 Some(Box::new(Windows))
@@ -708,6 +716,8 @@ Code::PageDown => (VK_NEXT, true),
 Code::Delete => (VK_DELETE, true),
 Code::F11 => (VK_F11, false),
 Code::Alt => (VK_MENU, false),
+Code::F5 => (VK_F5, false),
+Code::B => (VK_B, false),
 }
 }
 fn event(vk: VIRTUAL_KEY, scan: u16, flags: KEYBD_EVENT_FLAGS) -> INPUT {

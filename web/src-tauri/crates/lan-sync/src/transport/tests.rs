@@ -1174,6 +1174,12 @@ mod input_client {
         .unwrap();
         assert_eq!(opened.ext, None);
         assert!(!old.has_power());
+        assert!(!old.has_present());
+        assert_eq!(
+            old.send_events(&[Record::Key(wire::Key::F5)]),
+            Err(InputError::Protocol),
+            "never to a PC that did not accept the presentation keys"
+        );
         assert_eq!(
             old.send_power(wire::Power::Cancel, false),
             Err(InputError::Protocol)
@@ -1187,9 +1193,10 @@ mod input_client {
         // the new way: the PC names what it accepted
         let (input, opened, events) = open(&r, &key, Level::Media).unwrap();
         let ext = opened.ext.unwrap();
-        assert_eq!(ext.features, wire::FEATURE_POWER);
+        assert_eq!(ext.features, wire::FEATURES);
         assert!(!ext.power.granted, "a level is no power permission");
         assert!(input.has_power());
+        assert!(input.has_present());
         input.send_power(wire::Power::Cancel, false).unwrap();
         let answer = loop {
             match events.recv_timeout(WAIT).expect("an answer") {
@@ -1208,6 +1215,25 @@ mod input_client {
                 .lock()
                 .unwrap()
                 .contains(&Action::Media(Media::MonitorOff))
+        });
+        input.close();
+    }
+
+    #[test]
+    fn the_presentation_keys_go_over_the_socket_to_a_pc_that_accepted_them() {
+        let r = rig();
+        let key = granted(&r, Level::Full);
+        let (input, opened, _events) = open(&r, &key, Level::Full).unwrap();
+        assert_eq!(opened.level, Level::Full);
+        assert!(opened.ext.unwrap().features & wire::FEATURE_PRESENT != 0);
+        assert!(input.has_present());
+        input
+            .send_events(&[Record::Key(wire::Key::F5), Record::Key(wire::Key::B)])
+            .unwrap();
+        wait_for(|| {
+            let actions = r.sink.actions.lock().unwrap();
+            actions.contains(&Action::Key(wire::Key::F5))
+                && actions.contains(&Action::Key(wire::Key::B))
         });
         input.close();
     }

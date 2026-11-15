@@ -413,7 +413,7 @@ fn no_tauri_command_simulates_input() {
     // the key table is written out, one to one: no number, no cast, no catch-all
     let table = &code[code.find("fn key_of(").unwrap()..];
     let table = &table[..table.find("\n}\n").unwrap()];
-    assert_eq!(table.matches(" => K::").count(), 16);
+    assert_eq!(table.matches(" => K::").count(), 18);
     assert!(!table.contains("_ =>") && !table.contains(" as ") && !table.contains("transmute"));
     // no command, state or event carries text or a key back out of the sink
     for forbidden in ["KeyAction", "Keyboard", "keys_of", "key_of"] {
@@ -711,15 +711,15 @@ fn the_remote_client_only_passes_on_fixed_actions_and_keeps_out_of_sync() {
             "remote_client.rs mentions {forbidden}"
         );
     }
-    // A key is a name of the fixed list – sixteen, mapped in one table, never built from a
+    // A key is a name of the fixed list – eighteen, mapped in one table, never built from a
     // number – and reaches a record in one place.
     let keys = &code[code.find("fn key_from(").unwrap()..];
     let keys = &keys[..keys.find("\n}\n").unwrap()];
-    assert_eq!(keys.matches("\"key-").count(), 16);
-    assert_eq!(keys.matches(" => Key::").count(), 16);
+    assert_eq!(keys.matches("\"key-").count(), 18);
+    assert_eq!(keys.matches(" => Key::").count(), 18);
     assert!(!keys.contains(" as ") && !keys.contains("parse") && !keys.contains("from_"));
     assert_eq!(code.matches("Record::Key(").count(), 1);
-    assert_eq!(code.matches("Key::").count(), 16);
+    assert_eq!(code.matches("Key::").count(), 18);
     // Text goes out in one place, checked first, and is never kept, echoed or handed back: no
     // DTO, state or error carries it.
     let typed = &code[code.find("pub async fn remote_client_text").unwrap()..];
