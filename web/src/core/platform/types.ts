@@ -338,7 +338,10 @@ export type RemoteKeyAction =
   | 'key-page-down'
   | 'key-delete'
   | 'key-f11'
-  | 'key-alt-tab';
+  | 'key-alt-tab'
+  /** Presentation (start the slideshow, black screen): only to a PC whose `opened.present` is true. */
+  | 'key-f5'
+  | 'key-b';
 
 /** The PC's four facts. `volume` is 0–100, or `null` when the PC cannot tell. */
 export interface RemotePcState {
@@ -371,6 +374,8 @@ export interface RemoteOpened {
   state: RemotePcState;
   /** `null`: a PC from before power (no monitor off, no power actions). */
   power: RemotePowerInfo | null;
+  /** The PC takes the presentation keys (`key-f5`, `key-b`); `false` for an older PC. */
+  present: boolean;
 }
 
 /**
@@ -380,7 +385,8 @@ export interface RemoteOpened {
  * `no-answer` (the PC hung up without a word), `unknown-device` (the PC takes no input here, or
  * this device is not paired any more – never a reason to unpair), `protocol`, `closed` (a newer
  * `open` overtook this one), or a [`RemoteCloseReason`]. `send` and `pointer` reject with
- * `closed`, `bad-level` (a mouse action on a media session), `bad-action`, or what a broken
+ * `closed`, `bad-level` (a mouse action on a media session), `bad-action`, `no-power` (monitor off to
+ * a PC without power), `no-present` (a presentation key to a PC without it), or what a broken
  * connection gives (`network`, `no-answer`, `protocol`, …); none is a state to show.
  *
  * Two levels. `full` (mouse) needs a `media` session first, because only the PC's answer tells

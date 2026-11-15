@@ -8,21 +8,29 @@ import { holdKeepAwake } from '@/core/shell/keepAwake';
 import { now } from '@/core/time/now';
 import { t } from '@/strings';
 import { Button, EmptyState, Icon, PageHeader, RowMenu, Tabs, type IconName } from '@/ui';
-import { remoteSession, useLastPc, useRemotePower, useRemoteView } from '../session';
+import {
+  remoteSession,
+  useLastPc,
+  useRemotePower,
+  useRemotePresent,
+  useRemoteView,
+} from '../session';
 import { DEFAULTS, PAD_SPEED, settings, type RemotePrefs } from '../settings';
 import { describe, stepLink, type RemoteLine } from '../view';
 import { useVolumeKeys } from '../volumeKeys';
 import styles from '../remote.module.css';
 import { Keyboard } from './Keyboard';
 import { PowerSheet, PowerStatus } from './Power';
+import { Presentation } from './Presentation';
 import { Touchpad } from './Touchpad';
 
 const HOLD_MS = 1000 / HOLD_STEPS_PER_SECOND;
 
-type RemoteTab = 'media' | 'touchpad' | 'keyboard';
+type RemoteTab = 'media' | 'touchpad' | 'keyboard' | 'present';
 
 /**
- * Three views: Medien (default), Touchpad (`./Touchpad`) and Tastatur (`./Keyboard`).
+ * Three views: Medien (default), Touchpad (`./Touchpad`) and Tastatur (`./Keyboard`); a fourth,
+ * Präsentation (`./Presentation`), on a PC that takes the presentation keys.
  *
  * Medien: volume in the lowest row, transport above it, the state as one line; "Ton aus" and "PC
  * sperren" in the menu, and – on a PC that knows them – "Monitor aus" and "PC ausschalten …" (the
@@ -34,6 +42,7 @@ export default function RemotePage() {
   const supported = getPlatform().remote.supported;
   const live = useRemoteView();
   const power = useRemotePower();
+  const present = useRemotePresent();
   const [powerSheet, setPowerSheet] = useState(false);
   const [prefs, setPrefs] = useSettings('module.remote', settings.schema, settings.defaults);
   const { haptics, keepAwake, volumeKeys, padSpeed, padLegendSeen } = {
@@ -41,7 +50,9 @@ export default function RemotePage() {
     ...(prefs as RemotePrefs | undefined),
   };
   const [menu, setMenu] = useState(false);
-  const [tab, setTab] = useState<RemoteTab>('media');
+  const [chosen, setTab] = useState<RemoteTab>('media');
+  // Präsentation exists only while the PC said it takes those keys
+  const tab: RemoteTab = chosen === 'present' && !present ? 'media' : chosen;
   /** The legend was asked for again from the menu (the stored "seen" stays). */
   const [legendAgain, setLegendAgain] = useState(false);
   const r = t.remote;
@@ -126,6 +137,7 @@ export default function RemotePage() {
           { value: 'media', label: r.media },
           { value: 'touchpad', label: r.touchpad },
           { value: 'keyboard', label: r.keyboard },
+          ...(present ? [{ value: 'present' as const, label: r.presentation.tab }] : []),
         ]}
         onChange={(next) => {
           setTab(next);
@@ -163,6 +175,8 @@ export default function RemotePage() {
         />
       ) : tab === 'keyboard' ? (
         <Keyboard view={view} last={last} tick={tick} onMedia={() => setTab('media')} />
+      ) : tab === 'present' ? (
+        <Presentation view={view} last={last} tick={tick} onMedia={() => setTab('media')} />
       ) : (
         <Media line={line} playing={playing} press={press} />
       )}

@@ -42,6 +42,9 @@ import type {
  *   one first, once; the session ending resets the state, except a countdown, which becomes
  *   `done` (the PC acts without the phone), and `done` itself (the disconnect that follows is
  *   expected and keeps that line until a new session stands).
+ * - presentation (`present()`): what the PC said in its last `opened`, kept until the next one
+ *   says otherwise (a dropped connection does not hide the view); its two keys never go to a PC
+ *   that did not say it takes them.
  */
 export type RemoteView =
   | { kind: 'idle' }
@@ -180,6 +183,8 @@ export function textPieces(text: string): string[] {
     pieces.push(clean.slice(i, i + TEXT_PIECE).join(''));
   return pieces;
 }
+/** The keys only a PC that says `present` takes. */
+const PRESENT_KEYS: ReadonlySet<RemoteKeyAction> = new Set<RemoteKeyAction>(['key-f5', 'key-b']);
 /** Entries that may wait behind the write in flight. */
 const OUT_MAX = 8;
 
@@ -223,6 +228,11 @@ export interface RemoteSession {
    * shell waits for it. The text lives in the queue until it is written and nowhere after.
    */
   type(text: string, enter: boolean): Promise<TypeResult>;
+  /**
+   * Whether the PC takes the presentation keys (`key-f5`, `key-b`), from its last answer to
+   * `open`; `false` before the first one and for an older PC.
+   */
+  present(): boolean;
   /** Whether a press of the phone's volume keys belongs to the PC right now. */
   takesVolumeKeys(): boolean;
   /** Power at the PC right now (a stable object until it changes; listeners hear of changes). */
@@ -265,6 +275,8 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
   const out: Out[] = [];
   let pumping = false;
   let powerView: RemotePowerView = { info: null, phase: { kind: 'idle' } };
+  /** The PC takes the presentation keys (its last `opened` said so). */
+  let present = false;
   /** The last action asked for: its words name what the countdown does. */
   let powerAction: RemotePowerVerb | undefined;
   /** Counts `powerAct` calls: only the latest one sets a state when its call returns. */
@@ -446,6 +458,7 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
         next = { kind: 'idle' };
       // (listeners hear of it with the connected state, one notice)
       powerView = { info: opened.power, phase: next };
+      present = opened.present === true;
       set({ kind: 'connected', pc: opened.state });
       for (const event of early) if (event.session === known) handle(event);
       return undefined;
@@ -815,6 +828,8 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
     },
     key(action) {
       if (!padUsable() || (view.kind === 'connected' && view.pc.locked)) return false;
+      // an older PC would end the session for a key it does not know
+      if (PRESENT_KEYS.has(action) && !present) return false;
       if (out.length >= OUT_MAX) return false;
       out.push({ kind: 'buttons', actions: [action] });
       void pump();
@@ -909,6 +924,7 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       lastAliveAt = -Infinity;
     },
     power: () => powerView,
+    present: () => present,
     powerAct(action, despite = false, lang) {
       // one prompt at a time
       if (powerView.phase.kind === 'asking' && action !== 'cancel') return Promise.resolve();
