@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planer-Hub – Richtung B „Die Woche als Fläche“</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+/* B: seven columns with the real things of every day; the picked day is the wide one; late group above. */
+.b{display:grid;gap:16px}
+.b .topline{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:24px;align-items:start}
+.b .late .things{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:8px}
+.b .late .thing{min-height:52px;border-top:0;grid-template-columns:var(--touch) minmax(0,1fr)}
+.b .late .dur,.b .late .more{display:none}
+.b .week{display:grid;grid-template-columns:1fr 2.7fr 1fr 1fr 1fr 1fr 1fr;gap:8px;align-items:start}
+.b .col{padding:4px;min-width:0}
+.b .col>header{display:grid;gap:4px;padding:8px 8px 6px}
+.b .col .d{font-weight:600;display:flex;justify-content:space-between;gap:6px;white-space:nowrap}
+.b .col.pick>header .d{font-size:var(--text-xl)}
+.b .col .thing{padding:4px 0}
+.b .col .none{padding:10px 8px 14px}
+@media (max-width:899px){
+  .b .topline{display:none}
+  .b .week{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:8px;margin:0 calc(-1 * var(--pad));padding:0 var(--pad);scrollbar-width:none}
+  .b .col{flex:0 0 86%;scroll-snap-align:center}
+  .b .col>header .d{font-size:var(--text-xl)}
+}
+</style></head>
+<body>
+<div class="app">
+<aside class="sidebar" id="sb"></aside>
+<div>
+<header class="top" id="tb"></header>
+<main>
+  <section class="head" id="hd" data-figure="10 h 06 frei" data-sub="diese Woche · eng wird Mo. 16." data-psub="diese Woche"></section>
+  <div class="page b" id="pg"></div>
+</main>
+</div></div>
+<nav class="bottom" id="bt" aria-label="Bereiche"></nav>
+<script src="mock.js"></script>
+<script>
+const { D, I, rows, capture, lateGroup, lateFold, waitFold, count, things, shell, phone } = PH;
+shell();
+const max = 192;
+const col = (d, i) => {
+  const pick = phone || i === D.pick, n = count(d);
+  const bar = `<span class="bar" style="width:${d.cap ? Math.round((d.cap / max) * 100) : 100}%${d.cap ? '' : ';opacity:.35'}"><i style="width:${d.cap ? Math.round((d.used / d.cap) * 100) : 0}%"></i></span>`;
+  const body = d.things.length ? `<ul class="things">${rows(d.things, { compact: !pick })}</ul>` : (d.cap ? '<p class="meta none">nichts geplant</p>' : '');
+  return `<section class="card col${i === D.pick ? ' pick' : ''}" aria-label="${d.name}"><header><div class="d"><span>${i === 0 ? 'Heute · ' : ''}${pick ? d.name : d.id + ' ' + d.n + '.'}</span></div>
+    <span class="meta">${d.cap ? d.free + (pick ? ' von ' + d.of : '') + (n ? ' · ' + things(n) : '') : 'frei'}</span>${bar}</header>${body}</section>`;
+};
+document.getElementById('pg').innerHTML =
+  `<div class="topline"><div style="display:grid;gap:16px">${capture()}${phone ? '' : waitFold()}</div>${lateGroup({ compact: true })}</div>` + (phone ? lateFold() : '') +
+  `<div class="week">${D.days.map(col).join('')}</div>` + (phone ? waitFold() : '');
+// phone: the picked day (Monday) is the page in view; its neighbours peek in at both edges
+if (phone) { const w = document.querySelector('.week'); w.scrollLeft = w.children[D.pick].offsetLeft - (w.clientWidth - w.children[D.pick].clientWidth) / 2; }
+</script>
+</body></html>
