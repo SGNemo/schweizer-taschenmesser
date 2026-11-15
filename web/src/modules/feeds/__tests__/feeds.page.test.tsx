@@ -72,6 +72,17 @@ describe('feeds page: adding made easy', () => {
     expect(await feedRepo.active().count()).toBe(1);
   });
 
+  it('a feed removed after a one-tap subscribe can be subscribed again', async () => {
+    const user = userEvent.setup();
+    view();
+    await user.click(await screen.findByTestId('feeds-catalog-add-tagesschau'));
+    await waitFor(async () => expect(await feedRepo.active().count()).toBe(1));
+    const [feed] = await feedRepo.active().toArray();
+    await feedRepo.remove(feed!.id);
+    await user.click(await screen.findByTestId('feeds-catalog-add-tagesschau'));
+    await waitFor(async () => expect(await feedRepo.active().count()).toBe(1));
+  });
+
   it('reads an address only where it ends in a top-level domain', () => {
     expect(typedAddress('heise.de')).toBe('https://heise.de/');
     expect(typedAddress('u.s.')).toBeUndefined();

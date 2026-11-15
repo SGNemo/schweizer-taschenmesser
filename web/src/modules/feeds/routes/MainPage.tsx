@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useLang } from '@/core/i18n/lang';
 import { useSearchParams } from 'react-router';
 import { collator } from '@/core/i18n/format';
@@ -77,6 +77,10 @@ export default function MainPage() {
 
   /** One tap in the catalogue: subscribed under the group's name, nothing else to fill in. */
   const adding = useRef(new Set<string>());
+  // Once the live list shows a feed, its key is no longer "on its way" (removing it later must not block a new add).
+  useEffect(() => {
+    for (const key of adding.current) if (subscribed.has(key)) adding.current.delete(key);
+  });
   async function addEntry(entry: CatalogEntry) {
     const key = feedKey(entry.url);
     // A double tap lands before the live list knows the first one: keys on their way count too.
