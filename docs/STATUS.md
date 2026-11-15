@@ -19,6 +19,7 @@ UI-Audit 4.0 ist abgenommen: Identity 4.0 gilt seit 0b-8 (2026-11-14, [REPORT �
 - **Use case „Wochenende retten“: nachgemessen** (`docs/design/usecases/wochenende/`, PR #940): alle Pakete sind auf `develop` (1–3 #870/#880/#888, 4a #895, 4b #903, 5a #904, 5b #915, 6 #909/#919, 7 #907, Kontrolle #906). Samstagmorgen A–G am PC: 29 Taps · 429 Zeichen · 8 Ansichten · 6 Dialoge · 1 Umweg · ≈ 176 s (vorher 56 · 420 · 9 · 7 · 8 · ≈ 240); Tabellen in ANALYSIS §5 und TARGET §4. Nicht gebaut: W15 (gemeinsamer Google-OAuth-Client), W16 (Demo-Suche), W08; neue Reibung W23–W25 (ANALYSIS §7). Offen für Sven: Handtest FU-W1 ([MANUAL-TESTS](MANUAL-TESTS.md)).
 - **CI aufräumen, Runde 3** ([perf/CI-2026-11.md](perf/CI-2026-11.md)): Ursache ist die Warteschlange (20 Runner, 22 % der Zeit voll); kleine Workflow-Änderungen in #692, fünf Übergabe-Pakete in [perf/CI-2026-11-PACKAGES.md](perf/CI-2026-11-PACKAGES.md); messen: `node scripts/ci/measure.mjs`.
 - **UI schärfen, Runde 6** ([qa/round-6/STATUS.md](qa/round-6/STATUS.md)): alle acht Fix-PRs auf `develop`; offen U41 Kopfbandhöhen (`fix/ui6-head-heights`) und der Sammel-PR `fix/ui6-followups`.
+- **Modul-Runde „Tiefe & Politur“, Routinen** (Plan `design/routines-deep/PLAN.md` kommt mit #936): Routinen = der eine Ort für „Routine“ (Schritte, ein Formular mit Vorlagen, „Los“); drei gestapelte PRs #936 → #954 → #957, warten auf Sven; die Listen-Seite baut der Listen-Chat.
 
 ## Abgeschlossene Runden (je eine Zeile; alles auf `develop`)
 
