@@ -15,6 +15,7 @@ import { createFakeLaunch } from './fakeLaunch';
 import { createFakeDownloads } from './fakeDownloads';
 import { createFakeTorrent } from './fakeTorrent';
 import { createFakeSystem } from './fakeSystem';
+import { noOptimize } from './optimize';
 import { noLocalModel, type LocalModelService } from './localModel';
 import { createDeviceKeyStore } from '@/core/secrets/deviceKey';
 import { localNotificationService } from '@/core/notifications/service';
@@ -298,6 +299,7 @@ export function createWebPlatform(): PlatformService {
       ? createFakeDisk()
       : {
           supported: false,
+          optimize: noOptimize,
           listDrives: unsupported,
           startScan: unsupported,
           cancelScan: unsupported,

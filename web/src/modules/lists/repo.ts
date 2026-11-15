@@ -150,6 +150,16 @@ export async function duplicateList(listId: string): Promise<string> {
 }
 
 /**
+ * Moves an entry to another list, at its end. The entry keeps all its fields (a section or a category only shows
+ * on a list of that kind), so moving it back loses nothing.
+ */
+export async function moveItem(itemId: string, toListId: string): Promise<void> {
+  const item = await itemRepo.get(itemId);
+  if (!item || item.listId === toListId) return;
+  await itemRepo.update(itemId, { listId: toListId, order: nextOrder(await itemsOf(toListId)) });
+}
+
+/**
  * Deletes a list together with its entries (tombstones). "Zuletzt gelöscht" brings both back for 30 days
  * (`core/trash`: the entries are the list's children).
  */

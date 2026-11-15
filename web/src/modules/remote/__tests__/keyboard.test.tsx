@@ -173,8 +173,9 @@ describe('page Tastatur', () => {
   });
 
   it('every key of the fixed list has its button – a new one cannot be forgotten', async () => {
-    // (the compiler makes this list complete: a key added to the type fails here first)
-    const all: Record<RemoteKeyAction, true> = {
+    // (the compiler makes this list complete: a key added to the type fails here first;
+    // `false`: the key lives on the page Präsentation, see presentation.test.tsx)
+    const all: Record<RemoteKeyAction, boolean> = {
       'key-enter': true,
       'key-backspace': true,
       'key-escape': true,
@@ -191,6 +192,8 @@ describe('page Tastatur', () => {
       'key-page-up': true,
       'key-page-down': true,
       'key-delete': true,
+      'key-f5': false,
+      'key-b': false,
     };
     fake.parts.hooks.setGrant('full');
     await showKeyboard();
@@ -200,7 +203,8 @@ describe('page Tastatur', () => {
     const shown = [
       ...screen.getByTestId('remote-keys').querySelectorAll('button[data-testid^="remote-key-"]'),
     ].map((b) => b.getAttribute('data-testid')!.replace('remote-', ''));
-    expect(shown.sort()).toEqual(Object.keys(all).sort());
+    const here = Object.keys(all).filter((k) => all[k as RemoteKeyAction]);
+    expect(shown.sort()).toEqual(here.sort());
     // the button keeps its name; open or closed is its state
     expect(screen.getByTestId('remote-more-keys').textContent).toBe('Mehr Tasten');
     expect(screen.getByTestId('remote-more-keys').getAttribute('aria-expanded')).toBe('true');

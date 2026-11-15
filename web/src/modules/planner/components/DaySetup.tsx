@@ -235,7 +235,7 @@ export function DaySetup({
             <div className={styles.setupDay} data-testid="setup-day-end">
               <button
                 type="button"
-                className={styles.weekLinkText}
+                className={styles.textLink}
                 aria-expanded={dayEndOpen}
                 onClick={() => setDayEndOpen((o) => !o)}
               >

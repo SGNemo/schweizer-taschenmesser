@@ -1403,7 +1403,9 @@ fn input_session(i: &InputRig, key: &StaticKey) -> Client {
 }
 
 fn open_input(c: &mut Client, level: Level) -> (u8, Vec<u8>) {
-    let wire = c.t.seal(iw::TAG_OPEN, &iw::encode_open(level)).unwrap();
+    let wire =
+        c.t.seal(iw::TAG_OPEN, &iw::encode_open(level, None))
+            .unwrap();
     let (Outcome::Reply(reply) | Outcome::ReplyClose(reply)) =
         c.conn.on_frame(&wire, 7, NOW_MS, T0)
     else {
@@ -1534,7 +1536,7 @@ fn sync_and_input_sessions_never_carry_each_others_frames() {
 
     // a sync session that sends input frames is closed, and nothing reaches the sink
     for (tag, body) in [
-        (iw::TAG_OPEN, iw::encode_open(Level::Full).to_vec()),
+        (iw::TAG_OPEN, iw::encode_open(Level::Full, None).to_vec()),
         (
             iw::TAG_EVENTS,
             iw::encode_events(&[Record::Media(Media::PlayPause)]).unwrap(),

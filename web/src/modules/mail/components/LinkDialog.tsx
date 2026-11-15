@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { suggestCaptureLine } from '@/core/mail/localAssist';
 import { mailPrefill, type MailLinkType } from '@/core/mail/prefill';
 import type { MailAccountRef, MailMessage } from '@/core/mail/types';
@@ -9,7 +9,7 @@ import { announceSaved } from '@/quickCapture/ui/announceSaved';
 import { t } from '@/strings';
 import { Button, Checkbox, Dialog } from '@/ui';
 import { sheetInvoiceId } from '../invoiceRow';
-import { linkInvoiceToThread, saveLink } from '../links';
+import { linkInvoiceToThread, mailDay, saveLink } from '../links';
 import { useUiStore } from '@/stores/ui';
 import styles from './mail.module.css';
 
@@ -72,7 +72,7 @@ export function LinkDialog({
             saved.id,
             threadId,
             message.subject,
-            new Date(message.date).toISOString().slice(0, 10),
+            mailDay(message.date),
             saved.amended ? 'dunning' : 'origin',
           )
         : undefined;
@@ -91,17 +91,28 @@ export function LinkDialog({
       unlink
         ? {
             ...saved,
+            // Both parts on their own: a failing entry undo must not leave the link row behind.
             undo: async () => {
-              await saved.undo();
-              await unlink();
+              await Promise.allSettled([saved.undo(), unlink()]);
             },
           }
         : saved,
     );
   }
 
+  // Saving ends in `close()` only after the link, the link row and the toast are written; by then the
+  // thread view may be gone (another thread, another page). Nothing to reset or close then.
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+
   // A fresh start for the next time the dialog opens (another destination, another mail).
   const close = () => {
+    if (!mounted.current) return;
     setSuggestion({ phase: 'idle' });
     setApplied(undefined);
     setExcerpt(false);

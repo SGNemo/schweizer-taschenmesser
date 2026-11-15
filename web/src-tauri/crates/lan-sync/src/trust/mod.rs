@@ -42,6 +42,12 @@ pub struct RemoteGrant {
     pub paused: bool,
     /// The PC asks the phone to unlock itself before a `Full` session.
     pub unlock: bool,
+    /// Power actions (shut down, restart, sleep, hibernate, sign out). Its own permission, apart
+    /// from the level; it counts only with at least the media level and no pause.
+    pub power: bool,
+    /// Programs of the PC's own list may be started. Its own permission too; it counts only with
+    /// the mouse/keyboard level and no pause.
+    pub programs: bool,
 }
 
 impl RemoteGrant {
@@ -55,9 +61,24 @@ impl RemoteGrant {
     }
 
     /// Whether going from `old` to `self` gives or gives back control in any way (a higher level,
-    /// lifting a pause, dropping the unlock request).
+    /// lifting a pause, dropping the unlock request, allowing power actions or programs).
     pub fn widens(&self, old: &RemoteGrant) -> bool {
-        self.level > old.level || (old.paused && !self.paused) || (old.unlock && !self.unlock)
+        self.level > old.level
+            || (old.paused && !self.paused)
+            || (old.unlock && !self.unlock)
+            || (self.power && !old.power)
+            || (self.programs && !old.programs)
+    }
+
+    /// Whether power actions are allowed now: the flag, at least the media level, no pause.
+    pub fn power_effective(&self) -> bool {
+        self.power && self.effective() >= Level::Media
+    }
+
+    /// Whether programs of the PC's list may be started now: the flag, the mouse/keyboard level,
+    /// no pause.
+    pub fn programs_effective(&self) -> bool {
+        self.programs && self.effective() == Level::Full
     }
 }
 
@@ -67,6 +88,8 @@ impl Default for RemoteGrant {
             level: Level::Off,
             paused: false,
             unlock: true,
+            power: false,
+            programs: false,
         }
     }
 }
@@ -315,6 +338,15 @@ impl SessionRegistry {
             handle.close();
         }
         handle
+    }
+
+    /// Whether a device other than `peer` has a sync session open right now (remote control asks
+    /// before it shuts the PC down; the controlling phone's own sync does not count).
+    pub fn sync_open_except(&self, peer: &PublicKey) -> bool {
+        self.sessions.lock().is_ok_and(|s| {
+            s.iter()
+                .any(|(p, m, h)| p != peer && *m == Mode::Session && !h.is_closed())
+        })
     }
 
     /// Closes every session of this peer, sync and input; returns how many were open.

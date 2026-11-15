@@ -1,3 +1,4 @@
+import { plural } from '@/core/i18n/format';
 import type { Strings } from '@/strings';
 
 export const lists: Strings['lists'] = {
@@ -51,6 +52,11 @@ export const lists: Strings['lists'] = {
     widget: 'Shopping',
     widgetPacking: 'Packing lists',
     quickAdd: 'Shopping',
+    settings: {
+      showInPlan: 'Show in the plan',
+      showInPlanHelp:
+        'A packing list with a trip date appears in the planner as “Pack: <name>” (20 min, by the day before the trip). Shopping joins only through “Add to plan”, as one row. Only with the planner on.',
+    },
   },
   title: 'Lists',
   tabsLabel: 'Your lists',
@@ -155,6 +161,17 @@ export const lists: Strings['lists'] = {
   buyMissing: (n: number) => `Still to buy (${n})`,
   buyMissingDone: (n: number) => `${n} put on the shopping list.`,
   tripIn: (d: number) => `In ${d} days`,
+  plan: {
+    shopping: (n: number) =>
+      plural(n, { one: 'Shopping · # item', other: 'Shopping · # items' }, 'en'),
+    packing: (name: string) => `Pack: ${name}`,
+    toList: 'Go to list',
+    add: 'Add to plan',
+    placed: (day: string) => `In plan · ${day}`,
+    fromPantry: (name: string) => `From the pantry: ${name}`,
+    waits: 'In plan · no day yet',
+    remove: 'Stop planning',
+  },
   // Package "manage lists" (round 2026-11): icon, colour, order, archive.
   listIcon: 'Icon',
   listColour: 'Colour',
@@ -193,6 +210,59 @@ export const lists: Strings['lists'] = {
   unarchivedDone: (name: string) => `“${name}” is back.`,
   archiveHint: 'Archived lists keep their entries and come back under “Manage lists”.',
   editListNamed: (name: string) => `Edit ${name}`,
+  itemList: 'List',
+  movedItem: (item: string, list: string) => `Moved “${item}” to “${list}”.`,
+  starters: {
+    label: 'Template',
+    none: 'Empty list',
+    hint: 'A template fills the new list with entries you can change freely afterwards.',
+    weekly: {
+      name: 'Weekly shop',
+      items: [
+        { name: 'Apples', group: 'produce' },
+        { name: 'Bananas', group: 'produce' },
+        { name: 'Tomatoes', group: 'produce' },
+        { name: 'Lettuce', group: 'produce' },
+        { name: 'Bread', group: 'bakery' },
+        { name: 'Milk', group: 'dairy' },
+        { name: 'Butter', group: 'dairy' },
+        { name: 'Cheese', group: 'dairy' },
+        { name: 'Yoghurt', group: 'dairy' },
+        { name: 'Eggs', group: 'dairy' },
+        { name: 'Pasta', group: 'other' },
+        { name: 'Rice', group: 'other' },
+        { name: 'Coffee', group: 'drinks' },
+        { name: 'Mineral water', group: 'drinks' },
+        { name: 'Toilet paper', group: 'household' },
+        { name: 'Washing-up liquid', group: 'household' },
+      ],
+    },
+    vacation: {
+      name: 'Holiday',
+      items: [
+        { name: 'T-shirts', group: 'Clothes' },
+        { name: 'Trousers', group: 'Clothes' },
+        { name: 'Underwear and socks', group: 'Clothes' },
+        { name: 'Nightwear', group: 'Clothes' },
+        { name: 'Swimwear', group: 'Clothes' },
+        { name: 'Jacket', group: 'Clothes' },
+        { name: 'Toothbrush and toothpaste', group: 'Toiletries' },
+        { name: 'Shower gel and shampoo', group: 'Toiletries' },
+        { name: 'Sun cream', group: 'Toiletries' },
+        { name: 'Medication', group: 'Toiletries' },
+        { name: 'ID card or passport', group: 'Documents' },
+        { name: 'Health insurance card', group: 'Documents' },
+        { name: 'Tickets and bookings', group: 'Documents' },
+        { name: 'Cash and card', group: 'Documents' },
+        { name: 'Charging cable', group: 'Tech' },
+        { name: 'Headphones', group: 'Tech' },
+        { name: 'Power bank', group: 'Tech' },
+        { name: 'Sunglasses', group: 'Other' },
+        { name: 'Book', group: 'Other' },
+      ],
+    },
+  },
+  startedFrom: (name: string, n: number) => `Created “${name}” with ${n} entries.`,
   noListInUse: 'No list yet. Create one with “New list”.',
   noListArchived: 'All lists are archived. Bring one back or create a new one.',
 };

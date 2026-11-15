@@ -7,6 +7,12 @@ import type { EntityRef, LegacyLink } from '@/core/entitylinks/types';
 export type DataPolicy = 'keep' | 'delete';
 
 export interface EventMap {
+  /**
+   * The app lock closed the app (Einstellungen → Sicherheit → App-Sperre; idle, background, "Jetzt sperren" or
+   * another window). The vault locks too, so passing the app's PIN never opens a vault that needs its master
+   * password. No payload.
+   */
+  'app.locked': Record<string, never>;
   /** An invoice was marked as paid (or a paid invoice was edited). Finance books an expense. */
   'invoice.paid': {
     invoiceId: string;
@@ -55,6 +61,11 @@ export interface EventMap {
   'pantry.restock': { name: string; quantity?: string };
   /** A saved link could be a gift idea (bookmarks). The people module keeps it until the reader picks a person. */
   'gift.requested': { title: string; url?: string; priceCents?: number };
+  /**
+   * A checklist should become a routine (Listen: „Als Routine übernehmen“). The routines module adds it with these
+   * steps, every week from today, unless a routine of that name exists; the list itself stays as it is.
+   */
+  'routine.requested': { name: string; steps: string[] };
   /** Something becomes a to-do (a checklist item in a note). The todos module adds it to the inbox. */
   'todo.requested': {
     title: string;
@@ -87,10 +98,15 @@ export interface EventMap {
     link?: LegacyLink;
     /**
      * The thing is a plan item itself (an invoice, a list): the planner places `<module>:<id>` and creates no ToDo
-     * (CONCEPT-SOURCES §3.3). No handler reads it yet: planner hub K2.
+     * (CONCEPT-SOURCES §3.3); its item row is the request (`planner/actions.ts placeRequested`).
      */
     ref?: EntityRef;
   };
+  /**
+   * „Nicht mehr planen“ on a thing asked in by `ref` (a list): the planner excludes its item row `<module>:<id>`, as
+   * its own „Nicht planen“ does, as one undoable action. Nothing happens while the planner is off.
+   */
+  'plan.unrequested': { title: string; ref: EntityRef };
   /**
    * „Tag abschließen“ on the ToDo widget while the planner is on (use case „Wochenende retten“, F3): the planner
    * answers by opening its preview of „Rest verteilen“ through `open` (the asker's navigation; the planner names its

@@ -34,6 +34,11 @@ test('the share page offers only enabled modules and prefills the target', async
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByLabel('Titel')).toHaveValue('Schöner Weg');
   await expect(dialog.getByLabel('Adresse (Link)')).toHaveValue('https://wandern.example/weg');
+  // The browser app has no way to ask a page without a sync server, so the preview tick is not offered
+  // here (with one, or in the desktop/Android app, it is: `bookmarks/__tests__/capture.test.tsx`).
+  await expect(dialog.getByRole('checkbox', { name: /Vorschau von der Seite holen/ })).toHaveCount(
+    0,
+  );
   await dialog.getByRole('button', { name: 'Abbrechen' }).click();
 
   await backSettled(page);

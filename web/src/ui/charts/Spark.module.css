@@ -1,0 +1,19 @@
+/* Own file: `ui/widgets/Sparkline` (in the eager `@/ui` barrel) uses Spark, the other charts' styles stay lazy. */
+/* Spark (widgets): line in the first series colour, optional quiet area. */
+.spark {
+  display: block;
+  overflow: visible;
+}
+.sparkLine {
+  fill: none;
+  stroke: var(--viz-1);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sparkArea {
+  fill: color-mix(in srgb, var(--viz-1) 16%, transparent);
+}
+.sparkDot {
+  fill: var(--viz-1);
+}

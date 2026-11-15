@@ -156,7 +156,6 @@ export const accounts: Strings['accounts'] = {
     totpInvalid: 'Not a valid TOTP key.',
   },
   copy: 'Copy',
-  copied: (what: string) => `${what} copied – cleared from the clipboard after 30 s.`,
   copyUser: 'Copy username',
   copyPassword: 'Copy password',
   copyCode: 'Copy code',

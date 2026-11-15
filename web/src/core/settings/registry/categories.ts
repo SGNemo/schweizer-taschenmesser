@@ -1,6 +1,7 @@
 import { t } from '@/strings';
 import { tSettings4 } from '@/strings.settings4';
 import { tSettingsV31 } from '@/strings.settingsV31';
+import { tSecurity } from '@/strings.security';
 import { SETTINGS_CATEGORY_IDS, type SettingsCategoryDef, type SettingsCategoryId } from './types';
 
 /** Icon (from `ui/icons`) per category. */
@@ -22,10 +23,11 @@ const ICONS: Record<SettingsCategoryId, string> = {
   ueber: 'help',
 };
 
-/** The texts of a category; the accessibility and setup categories' live in their own bundles (no hotspot edit of `strings.ts`). */
+/** The texts of a category; the accessibility, setup and security categories' live in their own bundles (no hotspot edit of `strings.ts`). */
 function catText(id: SettingsCategoryId) {
   if (id === 'barrierefreiheit') return tSettings4.get().accessibility.cat;
   if (id === 'einrichtung') return tSettingsV31.get().setupCat;
+  if (id === 'sicherheit') return tSecurity.get().cat;
   return t.settings.cat[id];
 }
 

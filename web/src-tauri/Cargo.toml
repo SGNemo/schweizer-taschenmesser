@@ -71,6 +71,8 @@ taschenmesser-remote-input = { path = "crates/remote-input" }
 keyring = { version = "=3.6.3", features = ["windows-native", "apple-native", "linux-native"] }
 taschenmesser-disk-scan = { path = "crates/disk-scan" }
 taschenmesser-system-info = { path = "crates/system-info" }
+# PC care of the disk module: history with undo values, registry seam (HKCU only), Windows tools (src/optimize.rs).
+taschenmesser-pc-tune = { path = "crates/pc-tune" }
 # Built-in browser: URL policy and ad/tracker blocker decisions (src/browser.rs).
 taschenmesser-browser-filter = { path = "crates/browser-filter" }
 # HTTP(S) download manager for the Downloads module (src/downloads.rs).

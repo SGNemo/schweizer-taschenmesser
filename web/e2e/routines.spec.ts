@@ -34,7 +34,7 @@ test('"Erledigt" hands the routine to the next name, and "Rückgängig" gives it
   await enable(page, 'routines');
   await ready(page, '/routines?new=1');
   const dialog = page.getByRole('dialog', { name: 'Routine eintragen' });
-  await dialog.getByLabel('Was').fill('Müll rausbringen');
+  await dialog.getByLabel('Name', { exact: true }).fill('Müll rausbringen');
   await dialog.getByRole('button', { name: 'Mehr Felder anzeigen' }).click();
   await dialog.getByLabel('Wer wechselt sich ab').fill('Mia, Ben');
   await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
@@ -56,11 +56,67 @@ test('"Erledigt" hands the routine to the next name, and "Rückgängig" gives it
   await expect(row).toContainText('dran');
 });
 
+test('one way: a start fills the routine; „Los“ ticks it off step by step', async ({ page }) => {
+  await enable(page, 'routines');
+  await ready(page, '/routines?new=1');
+  const dialog = page.getByRole('dialog', { name: 'Routine eintragen' });
+  await dialog.getByRole('button', { name: 'Abend', exact: true }).click();
+  await expect(dialog.getByLabel('Name', { exact: true })).toHaveValue('Abendroutine');
+  await expect(dialog.getByLabel('Wie oft')).toHaveValue('daily');
+  await dialog.getByRole('button', { name: 'Routine eintragen' }).click();
+  await expect(dialog).toHaveCount(0);
+
+  const row = page.getByRole('listitem').filter({ hasText: 'Abendroutine' });
+  await expect(row).toContainText('abends');
+  await expect(row).toContainText('5 Schritte');
+  await row.getByRole('button', { name: 'Los: Abendroutine' }).click();
+  const run = page.getByRole('dialog', { name: 'Abendroutine' });
+  await run.getByRole('checkbox', { name: 'Küche kurz aufräumen' }).check();
+  await expect(run.getByTestId('routine-run-progress')).toHaveText('1 von 5 Schritten');
+  // Closing keeps the tick: the row says how far it got and offers „Weiter“.
+  await run.getByRole('button', { name: 'Später' }).click();
+  await expect(row).toContainText('1 von 5 Schritten');
+  await row.getByRole('button', { name: 'Los: Abendroutine' }).click();
+  for (const step of [
+    'Tasche für morgen packen',
+    'Kleidung für morgen rauslegen',
+    'Handy ans Ladegerät',
+    'Zähne putzen',
+  ])
+    await run.getByRole('checkbox', { name: step }).check();
+  await expect(run).toHaveCount(0);
+  await expect(page.getByText('Abendroutine erledigt.')).toBeVisible();
+  await expect(page.getByTestId('routines-nothing-due')).toBeVisible();
+});
+
+test('reminder and planner: optional, in the same form; a daily start stays out of the plan', async ({
+  page,
+}) => {
+  await enable(page, 'planner');
+  await enable(page, 'routines');
+  await ready(page, '/routines?new=morning');
+  const dialog = page.getByRole('dialog', { name: 'Routine eintragen' });
+  await expect(dialog.getByLabel('Name', { exact: true })).toHaveValue('Morgenroutine');
+  // A routine of every day would fill each plan with the same row: the start leaves it out.
+  const planner = dialog.getByRole('checkbox', { name: 'Im Planer zeigen' });
+  await expect(planner).not.toBeChecked();
+  await dialog.getByRole('button', { name: 'Wochenputz' }).click();
+  await expect(planner).toBeChecked();
+  await dialog.getByRole('button', { name: 'Morgen', exact: true }).click();
+  await dialog.getByLabel('Erinnerung (optional)').fill('07:30');
+  await dialog.getByRole('button', { name: 'Routine eintragen' }).click();
+  await expect(dialog).toHaveCount(0);
+  await page.getByRole('listitem').filter({ hasText: 'Morgenroutine' }).click();
+  const edit = page.getByRole('dialog', { name: 'Routine bearbeiten' });
+  await expect(edit.getByLabel('Erinnerung (optional)')).toHaveValue('07:30');
+  await expect(edit.getByRole('checkbox', { name: 'Im Planer zeigen' })).not.toBeChecked();
+});
+
 test('calm: no red on the page, and a routine that waited is simply "dran"', async ({ page }) => {
   await enable(page, 'routines');
   await ready(page, '/routines?new=1');
   const dialog = page.getByRole('dialog', { name: 'Routine eintragen' });
-  await dialog.getByLabel('Was').fill('Fenster putzen');
+  await dialog.getByLabel('Name', { exact: true }).fill('Fenster putzen');
   await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(dialog).toHaveCount(0);
   // Three weeks later the routine was never ticked: it is "dran", nothing more.
