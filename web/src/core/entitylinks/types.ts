@@ -45,6 +45,12 @@ export const refOfKind = {
   event: 'calendar',
 } as const satisfies Record<LinkKind, string>;
 
+/** The vault is never a link source or target: no module is asked, not even a label is read (docs/RULES.md "AI privacy"). */
+export const NEVER_LINKED = 'accounts';
+
+/** A label is capped: it may hold whatever a sender wrote (a mail subject). */
+export const MAX_LINK_LABEL = 120;
+
 /** `<module>:<id>` – the one key format of a ref. */
 export const refKey = (ref: EntityRef): string => `${ref.module}:${ref.id}`;
 
