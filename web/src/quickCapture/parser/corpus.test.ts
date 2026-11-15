@@ -25,6 +25,7 @@ function flatten(r: CaptureResult): Flat {
     pin: f.pin,
     startDate: f.startDate,
     hardDue: f.hardDue,
+    deadline: f.deadline,
   };
 }
 

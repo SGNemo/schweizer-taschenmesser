@@ -13,4 +13,6 @@ export const migrations: ModuleManifest['migrations'] = {
   4: async () => {},
   // 5: tasks gained the optional `planMark` (the planner's ownership mark on `plannedFor`). Nothing to rewrite.
   5: async () => {},
+  // 6: tasks gained the optional `dueTime` (the deadline's hour) and `dueRemind` („1 Std vorher“, opt-in). Nothing to rewrite.
+  6: async () => {},
 };

@@ -48,13 +48,13 @@ import {
   unmarkDue,
   unpin,
 } from '../actions';
-import type { BoardDay, BoardRow, WaitingRow } from '../board';
+import { dueWas, type BoardDay, type BoardRow, type WaitingRow } from '../board';
 import { capacityLabel, capacityShort, compact } from '../components/capacity';
 import { DaySetup } from '../components/DaySetup';
 import { DaySheet } from '../components/DaySheet';
 import { RowChoice, type RowChoiceState } from '../components/RowChoice';
 import { SETUP_DAYS } from '../daySetup';
-import { eveningLine } from '../rest';
+import { duesOf, eveningLine } from '../rest';
 import { dayEndOf } from '../settings';
 import { PlanPreview, type PreviewData } from '../components/PlanPreview';
 import { WeekCheck } from '../components/WeekCheck';
@@ -242,6 +242,7 @@ export default function PlannerPage() {
           lines,
           ...(local ? { note: t.planner.say.localRead } : {}),
           ...(rest ? { noCounts: true } : {}),
+          dues: board ? duesOf(board) : {},
           diff: out.result.diff,
         },
         fromField,
@@ -604,6 +605,8 @@ export default function PlannerPage() {
     ];
   };
 
+  // „Frist So 18:00“ turns into „Frist war So 18:00“ once the hour has passed (package 5b); read once a minute.
+  const dueClock = useNow(60_000);
   const renderRow = (row: BoardRow, day: BoardDay) => {
     const reason = explainAssignment(
       { reason: row.reason, bumpedBy: row.bumpedBy },
@@ -633,11 +636,19 @@ export default function PlannerPage() {
             </span>
             {/* The part as plain text, only when set (package 4b; no colour carries it). */}
             {row.item?.part ? <span>{` · ${partWord(row.item.part)}`}</span> : null}
-            {row.hardDue ? (
-              <span className={row.late ? styles.dueWas : undefined}>
-                {` · ${row.late ? t.planner.row.dueWas(dayName(row.hardDue)) : t.planner.row.due(dayName(row.hardDue))}`}
-              </span>
-            ) : null}
+            {row.hardDue
+              ? (() => {
+                  const when = row.hardDueTime
+                    ? `${dayName(row.hardDue)} ${row.hardDueTime}`
+                    : dayName(row.hardDue);
+                  const was = dueWas(row, dueClock);
+                  return (
+                    <span className={was ? styles.dueWas : undefined}>
+                      {` · ${was ? t.planner.row.dueWas(when) : t.planner.row.due(when)}`}
+                    </span>
+                  );
+                })()
+              : null}
             {row.entry?.detail ? <span>{` · ${row.entry.detail}`}</span> : null}
             {open ? <span className={styles.reason}>{reason}</span> : null}
           </span>

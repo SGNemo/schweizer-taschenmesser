@@ -75,6 +75,8 @@ const manifest: ModuleManifest = {
   automation: () => import('./automation'),
   contributions: {
     attention: () => import('./attention'),
+    // What a link to one of these says about its target (alive, gone); read through `resolveLink` only.
+    linkTarget: () => import('./linkTarget'),
     onboarding: onboarding,
     quickAdd: [
       {

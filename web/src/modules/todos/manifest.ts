@@ -20,7 +20,7 @@ const manifest: ModuleManifest = {
     tabs: true,
     signature: 'todayCard',
   },
-  version: 5,
+  version: 6,
   get description() {
     return t.todos.meta.description;
   },
@@ -97,6 +97,8 @@ const manifest: ModuleManifest = {
     ],
     calendarItems: () => import('./calendar'),
     plannable: () => import('./plannable'),
+    // What a link to one of these says about its target (alive, gone); read through `resolveLink` only.
+    linkTarget: () => import('./linkTarget'),
     aiCreateDefaults: () => import('./aiDefaults'),
     services: () => import('./services'),
   },

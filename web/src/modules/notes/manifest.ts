@@ -70,6 +70,8 @@ const manifest: ModuleManifest = {
   area: 'knowledge',
   contributions: {
     onboarding,
+    // What a link to one of these says about its target (alive, gone); read through `resolveLink` only.
+    linkTarget: () => import('./linkTarget'),
     services: () => import('./services'),
     quickAdd: [
       {
