@@ -2,6 +2,6 @@
 type: changed
 area: sync
 breaking: false
-de: Verknüpfungen zwischen Einträgen (etwa ToDo und Mail oder Termin) werden jetzt zuverlässig zwischen deinen Geräten abgeglichen und gehen bei einem App-Update nicht mehr verloren.
-en: Links between entries (such as a to-do and a mail or an event) now sync reliably between your devices and are no longer lost by an app update.
+de: Verknüpfungen zwischen Einträgen (etwa ToDo und Mail oder Termin) werden jetzt einzeln zwischen deinen Geräten abgeglichen; der erste Abgleich nach dem Update dauert einmalig länger.
+en: Links between entries (such as a to-do and a mail or an event) now sync one by one between your devices; the first sync after the update takes longer once.
 ---
