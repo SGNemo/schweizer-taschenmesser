@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planer-Hub – Richtung A „Der Tag als Blatt“</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+/* A: one big day sheet, the week as a compact band above it, context in the right column. */
+.a{display:grid;grid-template-columns:minmax(0,1fr) 26rem;gap:24px;align-items:start}
+.a .main,.a .ctx{display:grid;gap:16px;min-width:0}
+.a .ctx .late .thing{min-height:56px;grid-template-columns:var(--touch) minmax(0,1fr) var(--touch)}
+.a .ctx .late .dur{display:none}
+.scrim{position:fixed;inset:0;background:rgb(0 0 0 / .45);z-index:4}
+.sheetcap{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--surface-raised);border-radius:var(--r-lg) var(--r-lg) 0 0;padding:20px 16px 24px;display:block!important}
+@media (max-width:899px){.a{grid-template-columns:minmax(0,1fr);gap:12px}.a .main,.a .ctx{gap:12px}.a .main>.capture{display:none}}
+</style></head>
+<body>
+<div class="app">
+<aside class="sidebar" id="sb"></aside>
+<div>
+<header class="top" id="tb"></header>
+<main>
+  <section class="head" id="hd"></section>
+  <div class="page a">
+    <div class="main" id="main"></div>
+    <aside class="ctx" id="ctx" aria-label="Rund um die Woche"></aside>
+  </div>
+</main>
+</div></div>
+<nav class="bottom" id="bt" aria-label="Bereiche"></nav>
+<script src="mock.js"></script>
+<script>
+const { D, band, capture, daySheet, lateGroup, lateFold, waitFold, context, shell, phone } = PH;
+const hd = document.getElementById('hd');
+const HEAD = { week: ['37 Min frei', 'morgen, Mo. 16. · heute ist frei'], over: ['40 Min mehr als planbar', 'morgen, Mo. 16. · heute ist frei'], many: ['Morgen ist voll', 'Mo. 16. · heute ist frei'], late: ['Heute ist frei.', 'Frist vorbei: 6 Rechnungen'] }[D.state];
+if (HEAD) { hd.dataset.figure = HEAD[0]; hd.dataset.sub = HEAD[1]; hd.dataset.psub = HEAD[1].split(' · ')[0]; }
+shell();
+const day = D.days[D.pick];
+document.getElementById('main').innerHTML = phone
+  ? band() + lateFold() + daySheet(day) + waitFold()
+  : capture({ focus: D.state === 'empty' }) + band() + daySheet(day);
+if (!phone) document.getElementById('ctx').innerHTML = lateGroup() + context() + waitFold();
+// ?sheet=1 (phone): what the plus of the bottom bar opens – the same field, as a bottom sheet.
+if (new URLSearchParams(location.search).get('sheet')) document.body.insertAdjacentHTML('beforeend', '<div class="scrim"></div><div class="sheetcap" role="dialog" aria-label="Ding eintragen">' + capture({ focus: true }) + '</div>');
+</script>
+</body></html>
