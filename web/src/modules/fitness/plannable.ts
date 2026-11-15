@@ -62,6 +62,8 @@ const source: PlannableSource = {
   async onDone(id) {
     const plan = parsePlanItemId(id);
     if (plan) {
+      // A later plan day cannot be done today: nothing is logged (the day stays in the plan).
+      if (plan.date > today()) return;
       const tpl = await templateRepo.get(plan.templateId);
       if (tpl) await sessionRepo.create(sessionFromTemplate(tpl, today()));
       return;
