@@ -9,6 +9,7 @@ import {
   DayBalanceChart,
   IncomeExpenseChart,
   monthLabel,
+  MonthTable,
   NetWorthChart,
 } from '../components/MoneyCharts';
 import type { CategoryTotal, MonthPoint } from '../logic';
@@ -104,5 +105,13 @@ describe('finance charts on the shared blocks (polish p2)', () => {
       'Jan. 2026',
       'Feb.',
     ]);
+  });
+
+  it('the month table follows "Werte ausblenden" like its chart', async () => {
+    await setHideValues(true);
+    render(<MonthTable points={months} />);
+    const table = await screen.findByTestId('table-trend');
+    await waitFor(() => expect(plain(table.textContent)).not.toMatch(/\d,\d\d/));
+    expect(plain(table.textContent)).toContain('Aug.');
   });
 });

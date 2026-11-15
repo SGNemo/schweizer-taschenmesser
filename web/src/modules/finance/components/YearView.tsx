@@ -2,7 +2,7 @@ import { formatMoney } from '@/core/money';
 import { formatDay, monthOf } from '@/core/time/dates';
 import { today } from '@/core/time/now';
 import { t } from '@/strings';
-import { Card } from '@/ui';
+import { Card, SensitiveValue } from '@/ui';
 import { rollupYear, yearSummary } from '../analysis';
 import { useCurrency } from '../currency';
 import type { FinanceData } from '../types';
@@ -81,9 +81,15 @@ export function YearView({ data, year }: { data: FinanceData; year: number }) {
                   </>
                 ) : (
                   <>
-                    <td className={styles.num}>{money(m.income)}</td>
-                    <td className={styles.num}>{money(m.expense)}</td>
-                    <td className={styles.num}>{money(m.net)}</td>
+                    <td className={styles.num}>
+                      <SensitiveValue compact>{money(m.income)}</SensitiveValue>
+                    </td>
+                    <td className={styles.num}>
+                      <SensitiveValue compact>{money(m.expense)}</SensitiveValue>
+                    </td>
+                    <td className={styles.num}>
+                      <SensitiveValue compact>{money(m.net)}</SensitiveValue>
+                    </td>
                   </>
                 )}
               </tr>

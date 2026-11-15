@@ -46,10 +46,11 @@ export function DayBalanceChart({
   dayOnly?: boolean;
 }) {
   const money = useMoney();
+  const days = dayFormat(dayOnly);
   return (
     <Trend
       title={title}
-      labels={points.map((p) => dayFormat(dayOnly).format(parseDate(p.date)))}
+      labels={points.map((p) => days.format(parseDate(p.date)))}
       series={[
         { id: 'balance', label: t.finance.balance, values: points.map((p) => p.balanceMinor) },
       ]}
@@ -153,9 +154,16 @@ export function MonthTable({ points }: { points: readonly IncomePoint[] }) {
         {points.map((p) => (
           <tr key={p.month}>
             <td>{p.label}</td>
-            <td className={styles.num}>{money(p.income)}</td>
-            <td className={styles.num}>{money(p.expense)}</td>
-            <td className={styles.num}>{money(p.net)}</td>
+            {/* "Werte ausblenden" masks the table like the chart it stands for. */}
+            <td className={styles.num}>
+              <SensitiveValue compact>{money(p.income)}</SensitiveValue>
+            </td>
+            <td className={styles.num}>
+              <SensitiveValue compact>{money(p.expense)}</SensitiveValue>
+            </td>
+            <td className={styles.num}>
+              <SensitiveValue compact>{money(p.net)}</SensitiveValue>
+            </td>
           </tr>
         ))}
       </tbody>
