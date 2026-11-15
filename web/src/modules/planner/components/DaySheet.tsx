@@ -153,6 +153,7 @@ export function DaySheet({
               title={b.label}
               meta={
                 [
+                  b.breakOf || b.isBreak ? t.planner.row.breakMeta(compact(b.min)) : '',
                   day.window && b.from && b.to ? `${b.from}–${b.to}` : '',
                   b.calendar ? t.planner.day.calendar : '',
                 ]
@@ -163,7 +164,11 @@ export function DaySheet({
               actions={
                 b.calendar ? undefined : (
                   <IconButton
-                    label={t.planner.day.removeBlocker(b.label)}
+                    label={
+                      b.breakOf
+                        ? t.planner.row.unBreakOf(b.label)
+                        : t.planner.day.removeBlocker(b.label)
+                    }
                     // A break of a thing („Als Pause“) is not a stored blocker: removing it takes the break back.
                     onClick={() =>
                       void (b.breakOf

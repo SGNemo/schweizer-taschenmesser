@@ -235,7 +235,7 @@ export const include = (e: PlannableEntry, titles: Record<string, string>) =>
     itemPatch(e, { excluded: undefined }),
   );
 
-/** The part of the day (row ⋯ „Vormittag · Nachmittag · Abend · Ohne Abschnitt“): orders it inside its day only. */
+/** The part of the day (row ⋯ „Vormittag · Nachmittag · Abend“; the checked one again clears it): orders it inside its day only. */
 export const setPart = (
   e: PlannableEntry,
   part: PlanDayPart | undefined,
@@ -249,8 +249,8 @@ export const setPart = (
   );
 
 /**
- * „Als Pause · 2 h“: on `date` the thing is a break, never planned as work; the day gets a blocker of `min` with its
- * title (and its part). One undo. No total, no rating.
+ * „Als Pause am Sa“ · „2 h“: on `date` the thing is a break, never planned as work; the day gets a blocker of `min`
+ * with its title (and the thing's part). One undo. No total, no rating.
  */
 export const asBreak = (
   e: PlannableEntry,

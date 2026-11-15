@@ -99,4 +99,36 @@ describe('break target', () => {
     await saved.undo();
     expect((await day()).blockers).toEqual([]);
   });
+
+  it('a day deleted with the planner’s data starts fresh: nothing of its old row comes back', async () => {
+    await db.table('planner_day').put({
+      id: '2026-11-14',
+      date: '2026-11-14',
+      availableMin: 30,
+      from: '09:00',
+      to: '12:00',
+      blockers: [{ id: 'old', label: 'Alt', min: 60 }],
+      createdAt: 1,
+      updatedAt: 1,
+      deviceId: 't',
+      deletedAt: 5,
+      _f: {},
+    });
+    await saveCapture('break', { title: 'Pause', date: '2026-11-14' }, { states });
+    const row = await day();
+    expect(row.deletedAt).toBeNull();
+    expect(row.availableMin).toBeUndefined();
+    expect(row.from).toBeUndefined();
+    expect(row.blockers.map((b: { label: string }) => b.label)).toEqual(['Pause']);
+  });
+
+  it('a range across midnight keeps its length, not its times', async () => {
+    await saveCapture(
+      'break',
+      { title: 'Spät', date: '2026-11-14', time: '22:00', endTime: '01:00' },
+      { states },
+    );
+    expect((await day()).blockers).toMatchObject([{ label: 'Spät', min: 180 }]);
+    expect((await day()).blockers[0].from).toBeUndefined();
+  });
 });

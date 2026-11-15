@@ -133,6 +133,7 @@ export const planner: Strings['planner'] = {
     breakGroup: 'As a break',
     breakGroupOn: (day: string) => `As a break on ${day}`,
     unBreak: 'No longer a break',
+    unBreakOf: (title: string) => `${title}: no longer a break`,
     durationGroup: 'Length',
     durationFor: (len: string) => `takes ${len}`,
     breakMeta: (len: string) => `Break · ${len}`,

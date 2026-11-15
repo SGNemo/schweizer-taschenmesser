@@ -365,8 +365,11 @@ const BREAK_MIN = 60;
  * or no time at all. Never across midnight.
  */
 function breakSpan(f: CaptureFields): { min: number; from?: string; to?: string } {
-  if (f.time && f.endTime && toMinutes(f.endTime) > toMinutes(f.time))
-    return { min: toMinutes(f.endTime) - toMinutes(f.time), from: f.time, to: f.endTime };
+  if (f.time && f.endTime) {
+    const d = toMinutes(f.endTime) - toMinutes(f.time);
+    // „22 bis 1 Uhr“: its length is kept, its times are not (a break never crosses midnight on the board).
+    return d > 0 ? { min: d, from: f.time, to: f.endTime } : { min: d + 24 * 60 };
+  }
   const min = f.estimateMin ?? BREAK_MIN;
   if (f.time && toMinutes(f.time) + min <= 24 * 60)
     return { min, from: f.time, to: toClock(toMinutes(f.time) + min) };
@@ -401,11 +404,14 @@ const breaks: CaptureTarget = {
     try {
       const stored = (await ctx.repo.table.get(day)) as
         (DayRow & { deletedAt?: unknown }) | undefined;
-      if (stored?.deletedAt) await ctx.repo.restore(day);
-      const live = stored?.deletedAt ? stored : ((await ctx.repo.get(day)) as DayRow | undefined);
+      const live = stored && !stored.deletedAt ? stored : undefined;
       if (live)
         await ctx.repo.update(day, { blockers: [...(live.blockers ?? []), { id, ...blocker }] });
-      else await ctx.repo.upsert(day, { date: day, blockers: [{ id, ...blocker }] });
+      else {
+        // A day deleted with the planner's data starts fresh: nothing of its old row comes back.
+        if (stored) await ctx.repo.restore(day);
+        await ctx.repo.upsert(day, { date: day, blockers: [{ id, ...blocker }] });
+      }
     } catch {
       throw new CaptureError('invalid');
     }

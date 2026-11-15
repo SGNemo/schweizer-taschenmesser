@@ -5,6 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import type { PlannableEntry } from '@/core/modules/contributions';
 import { parseInstruction } from '@/core/plan/instructions';
+import { buildBoard } from '../board';
 import { breakBlockers, planDays } from '../days';
 import manifest from '../manifest';
 import { migrations } from '../migrations';
@@ -128,6 +129,36 @@ describe('the run keeps v3 fields', () => {
       breakMin: 60,
     });
     await repos.item.remove('todos:k');
+  });
+});
+
+describe('the board on a day with a window', () => {
+  it('lists the day by time (a pinned evening thing below the morning); a row without a time follows', () => {
+    const base = { k: 0, of: 1, date: SAT, minutes: 30, reason: 'new' as const };
+    const board = buildBoard({
+      today: SAT,
+      span: 1,
+      settings: { ...DEFAULT_PLANNER_SETTINGS, windowSaturday: '08:00–20:00' },
+      dayRows: [],
+      itemRows: [],
+      assignments: [
+        {
+          ...base,
+          id: 'todos:p#0',
+          itemKey: 'todos:p',
+          order: 0,
+          reason: 'pinned',
+          from: '16:00',
+          to: '16:30',
+        },
+        { ...base, id: 'todos:x#0', itemKey: 'todos:x', order: 1 },
+        { ...base, id: 'todos:m#0', itemKey: 'todos:m', order: 2, from: '08:00', to: '08:30' },
+      ],
+      entries: [],
+      calendar: [],
+      unplaced: [],
+    });
+    expect(board.days[0]!.rows.map((r) => r.itemKey)).toEqual(['todos:m', 'todos:p', 'todos:x']);
   });
 });
 

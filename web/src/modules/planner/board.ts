@@ -91,6 +91,10 @@ export interface BoardInput {
   titles?: Record<string, string>;
 }
 
+/** 'HH:mm' ascending; a missing time sorts last. */
+const cmpTime = (a?: string, b?: string): number =>
+  a === b ? 0 : a === undefined ? 1 : b === undefined ? -1 : a < b ? -1 : 1;
+
 export const unitTitle = (titles: Record<string, string>, unitId: string): string =>
   titles[unitId.slice(0, unitId.lastIndexOf('#'))] ?? unitId;
 
@@ -112,7 +116,9 @@ export function buildBoard(input: BoardInput): Board {
     const cap = capacity({ date, availableMin, blockers }, { bufferShare });
     const rows: BoardRow[] = input.assignments
       .filter((a) => a.date === date)
-      .sort((a, b) => a.order - b.order)
+      // A day with a window lists its rows by time (a part gives a thing its third; a pinned evening thing then sits
+      // below the morning); a row without a time follows; otherwise the engine's order.
+      .sort((a, b) => (window ? cmpTime(a.from, b.from) : 0) || a.order - b.order)
       .map((a) => {
         const entry = entries.get(a.itemKey);
         const item = items.get(a.itemKey);

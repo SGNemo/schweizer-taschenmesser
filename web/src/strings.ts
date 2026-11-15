@@ -8491,6 +8491,7 @@ export const de = {
       breakGroup: 'Als Pause',
       breakGroupOn: (day: string) => `Als Pause am ${day}`,
       unBreak: 'Keine Pause mehr',
+      unBreakOf: (title: string) => `${title}: keine Pause mehr`,
       durationGroup: 'Dauer',
       durationFor: (len: string) => `dauert ${len}`,
       breakMeta: (len: string) => `Pause · ${len}`,
