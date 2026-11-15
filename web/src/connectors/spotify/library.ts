@@ -19,6 +19,7 @@ const album = z.object({
   artists: z.array(z.object({ name: z.string(), id: z.string().nullish() })).nullish(),
   images: z.array(image).nullish(),
   total_tracks: z.number().nullish(),
+  album_type: z.string().nullish(),
 });
 type RawAlbum = z.infer<typeof album>;
 
@@ -115,9 +116,10 @@ export async function artist(ctx: ConnectorContext, id: string): Promise<ArtistP
       .slice(0, 10),
     albums: (l?.success ? l.data.items : []).flatMap((x) => {
       const item = toAlbum(x);
-      // Spotify lists the same album once per market now and then: once is enough.
-      if (!item || seen.has(item.name)) return [];
-      seen.add(item.name);
+      // Spotify lists the same album once per market now and then: once is enough (a single with the album's title stays).
+      const key = `${x?.album_type ?? ''}:${item?.name}`;
+      if (!item || seen.has(key)) return [];
+      seen.add(key);
       return [item];
     }),
   };

@@ -107,17 +107,21 @@ function SongList({
   items,
   empty,
   back,
+  hideArtist,
 }: {
   api: PlayerApi;
   items: readonly MediaItem[];
   empty: string;
   /** Where "Zurück" leads from an artist page opened from here. */
   back?: Back;
+  /** On an artist page: no "Zu <Künstler>" (it would lead to the page that is open). */
+  hideArtist?: boolean;
 }) {
   const hearts = useHearts(api, items);
   const queue = useQueueAction(api);
   const add = useAddToPlaylist(api);
-  const artist = useArtistAction(api, back);
+  const toArtist = useArtistAction(api, back);
+  const artist = hideArtist ? undefined : toArtist;
   if (items.length === 0) return <p className={styles.note}>{empty}</p>;
   return (
     <>
@@ -238,12 +242,19 @@ function ContentView({
       alive = false;
     };
   }, [canSaveAlbum, source, ctx, view.id]);
+  const [albumBusy, setAlbumBusy] = useState(false);
   const toggleAlbum = (on: boolean) => {
     setAlbumSaved(on);
-    source.saveAlbums!(ctx, [view.id], on).then(changedAlbums, () => {
-      setAlbumSaved(!on);
-      toast(tm.albumSaveFailed);
-    });
+    setAlbumBusy(true);
+    // The albums tab reads afresh, even when "Zurück" comes before the answer.
+    changedAlbums();
+    source.saveAlbums!(ctx, [view.id], on)
+      .catch(() => {
+        setAlbumSaved(!on);
+        changedAlbums();
+        toast(on ? tm.albumSaveFailed : tm.albumRemoveFailed);
+      })
+      .finally(() => setAlbumBusy(false));
   };
   const artist = useArtistAction(api);
   const [hiddenAll, setHiddenAll] = useState<HiddenTracks>(readHidden);
@@ -395,6 +406,7 @@ function ContentView({
                 variant="ghost"
                 aria-pressed={albumSaved}
                 aria-label={albumSaved ? tm.albumUnsaveFor(name) : tm.albumSaveFor(name)}
+                disabled={albumBusy}
                 onClick={() => toggleAlbum(!albumSaved)}
                 data-testid="music-album-save"
               >
@@ -508,7 +520,7 @@ function ArtistView({ api, view }: { api: PlayerApi; view: Extract<View, { type:
       {value.top.length === 0 ? (
         <p className={styles.note}>{tm.artistTopNone}</p>
       ) : (
-        <SongList api={api} items={value.top} empty="" back={here} />
+        <SongList api={api} items={value.top} empty="" back={here} hideArtist />
       )}
       <h3 className={styles.sub}>{tm.artistAlbums}</h3>
       {value.albums.length === 0 ? (

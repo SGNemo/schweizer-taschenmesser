@@ -210,7 +210,7 @@ describe('albums tab', () => {
     route = (c) => (c.method === 'DELETE' ? json({ error: {} }, 500) : undefined);
     fireEvent.click(screen.getByTestId('music-album-save'));
     await waitFor(() =>
-      expect(useUiStore.getState().toasts[0]?.message).toBe('Speichern hat nicht geklappt.'),
+      expect(useUiStore.getState().toasts[0]?.message).toBe('Entfernen hat nicht geklappt.'),
     );
     expect(screen.getByTestId('music-album-save')).toHaveAttribute('aria-pressed', 'true');
   });
