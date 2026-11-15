@@ -770,6 +770,15 @@ mod tests {
     }
 
     #[test]
+    fn the_approval_keys_are_on_the_list_the_real_registry_may_write() {
+        for key in [APPROVED_RUN, APPROVED_FOLDER] {
+            assert!(crate::reg::writable_key(key), "{key}");
+        }
+        // The Run key itself is never written.
+        assert!(!crate::reg::writable_key(RUN));
+    }
+
+    #[test]
     fn unknown_ids_are_refused() {
         let dir = temp_dir("unknown");
         let reg = seeded(&dir);

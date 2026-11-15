@@ -10,10 +10,9 @@ use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use ::pc_tune::tweaks::{self, ResetReport};
-use ::pc_tune::{apply_undo, cleanup_view, system_registry, EntryView, Journal, RegError, Tool};
 use ::pc_tune::{
-    apply_undo, system_effects, system_registry, EntryView, Journal, RegError, Target, Tool,
-    TweakState,
+    apply_undo, cleanup_view, system_effects, system_registry, EntryView, Journal, RegError,
+    Target, Tool, TweakState,
 };
 use serde::Serialize;
 use tauri::{AppHandle, Manager, State};

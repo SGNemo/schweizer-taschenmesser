@@ -115,6 +115,9 @@ pub const WRITABLE_KEYS: &[&str] = &[
     // Autostart: Windows' own "switched off" notes (startup.rs).
     r"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run",
     r"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\StartupFolder",
+    // Settings catalogue (tweaks.rs): the two entries that are registry values.
+    r"Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo",
+    r"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced",
 ];
 
 /// Whether the real registry may be written at `key`.

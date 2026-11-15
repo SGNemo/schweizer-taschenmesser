@@ -557,6 +557,9 @@ pub fn set(
                 key: key.to_string(),
                 name: name.to_string(),
                 previous,
+                // An undo (or reset) leaves the value alone when Windows' own settings changed
+                // it after this.
+                written: Some(wanted.clone()),
             }];
             journal
                 .change(now, Kind::Tweak, id, "", Some(*want), undo, || {
@@ -1557,6 +1560,43 @@ mod tests {
         assert_eq!(reg.get(AD_KEY, "Enabled").unwrap(), Some(Value::Dword(0)));
         assert!(j.views().iter().all(|v| !v.can_undo));
         cleanup(&path);
+    }
+
+    #[test]
+    fn undo_and_reset_leave_alone_what_windows_changed_since() {
+        let path = temp_path("elsewhere");
+        let (reg, fx) = machine();
+        let (mut j, _) = Journal::open(&path).unwrap();
+        let id = set(
+            &mut j,
+            &reg,
+            &fx,
+            "advertisingId",
+            &Target::Switch(false),
+            1,
+        )
+        .unwrap()
+        .unwrap();
+        // The user switches it in Windows' own settings afterwards.
+        reg.set(AD_KEY, "Enabled", &Value::Dword(1)).unwrap();
+        let steps = j.undo_steps(id).unwrap();
+        assert_eq!(
+            apply_undo(&reg, &steps, |w, p| apply_other(&fx, w, p)),
+            Err(RegError::ChangedElsewhere)
+        );
+        let report = reset_all(&mut j, &reg, &fx);
+        assert_eq!(report.failed, vec!["advertisingId".to_string()]);
+        assert_eq!(reg.get(AD_KEY, "Enabled"), Ok(Some(Value::Dword(1))));
+        cleanup(&path);
+    }
+
+    #[test]
+    fn every_registry_entry_is_on_the_list_the_real_registry_may_write() {
+        for t in catalogue() {
+            if let Mechanism::Reg { key, .. } = t.mechanism {
+                assert!(crate::reg::writable_key(key), "{}: {key}", t.id);
+            }
+        }
     }
 
     #[test]
