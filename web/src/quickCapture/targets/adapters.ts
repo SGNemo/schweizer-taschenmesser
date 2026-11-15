@@ -362,13 +362,16 @@ const BREAK_MIN = 60;
 
 /**
  * Where a break sits: a typed range („14 bis 16 Uhr“), a typed start with a length („14 Uhr 2 Std“, „14 Uhr“ = 1 h),
- * or no time at all. Never across midnight.
+ * or no time at all. A range across midnight („22 bis 1 Uhr“) keeps its length without times; a range that ends where
+ * it starts is no range (1 h).
  */
 function breakSpan(f: CaptureFields): { min: number; from?: string; to?: string } {
   if (f.time && f.endTime) {
     const d = toMinutes(f.endTime) - toMinutes(f.time);
     // „22 bis 1 Uhr“: its length is kept, its times are not (a break never crosses midnight on the board).
-    return d > 0 ? { min: d, from: f.time, to: f.endTime } : { min: d + 24 * 60 };
+    if (d > 0) return { min: d, from: f.time, to: f.endTime };
+    if (d < 0) return { min: d + 24 * 60 };
+    return { min: BREAK_MIN, from: f.time, to: toClock(toMinutes(f.time) + BREAK_MIN) };
   }
   const min = f.estimateMin ?? BREAK_MIN;
   if (f.time && toMinutes(f.time) + min <= 24 * 60)
@@ -381,8 +384,8 @@ type DayRow = { blockers?: { id: string }[] };
 /**
  * „Pause 14–16 Uhr“, „Freizeit Sa 2 Std“ (use case „Wochenende retten“, F2): a blocker in the planner's day row of
  * the typed date (or today) with the typed range or length (else 1 h) and a time only when typed, marked as a break.
- * Only the day's `blockers` field is written (the other fields of the row stay as stored); a deleted day row is
- * restored first. The undo takes back only this blocker, read fresh. No total, no rating. Never given an id: a line
+ * A live row gets only its `blockers` field written (its other fields stay as stored); a deleted day row comes back
+ * as a fresh day with only this blocker. The undo takes back only this blocker, read fresh. No total, no rating. Never given an id: a line
  * saved twice adds the break twice (`CaptureTarget.merge`).
  */
 const breaks: CaptureTarget = {
@@ -408,9 +411,10 @@ const breaks: CaptureTarget = {
       if (live)
         await ctx.repo.update(day, { blockers: [...(live.blockers ?? []), { id, ...blocker }] });
       else {
-        // A day deleted with the planner's data starts fresh: nothing of its old row comes back.
-        if (stored) await ctx.repo.restore(day);
+        // A day deleted with the planner's data starts fresh: nothing of its old row comes back. The row is
+        // replaced while still deleted and only then restored, so a stop between the two writes never shows old data.
         await ctx.repo.upsert(day, { date: day, blockers: [{ id, ...blocker }] });
+        if (stored) await ctx.repo.restore(day);
       }
     } catch {
       throw new CaptureError('invalid');

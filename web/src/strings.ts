@@ -8494,6 +8494,7 @@ export const de = {
       unBreakOf: (title: string) => `${title}: keine Pause mehr`,
       durationGroup: 'Dauer',
       durationFor: (len: string) => `dauert ${len}`,
+      breakTag: 'Pause',
       breakMeta: (len: string) => `Pause · ${len}`,
     },
     /** The parts of a day, as the row ⋯ and the field say them. */

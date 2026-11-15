@@ -131,4 +131,15 @@ describe('break target', () => {
     expect((await day()).blockers).toMatchObject([{ label: 'Spät', min: 180 }]);
     expect((await day()).blockers[0].from).toBeUndefined();
   });
+
+  it('a range that ends where it starts is one hour, never a whole day', async () => {
+    await saveCapture(
+      'break',
+      { title: 'Kurz', date: '2026-11-14', time: '14:00', endTime: '14:00' },
+      { states },
+    );
+    expect((await day()).blockers).toMatchObject([
+      { label: 'Kurz', min: 60, from: '14:00', to: '15:00' },
+    ]);
+  });
 });

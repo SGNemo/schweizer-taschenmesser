@@ -136,6 +136,7 @@ export const planner: Strings['planner'] = {
     unBreakOf: (title: string) => `${title}: no longer a break`,
     durationGroup: 'Length',
     durationFor: (len: string) => `takes ${len}`,
+    breakTag: 'Break',
     breakMeta: (len: string) => `Break · ${len}`,
   },
   parts: {
