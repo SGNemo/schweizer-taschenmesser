@@ -16,9 +16,11 @@ export function entryText(e: CareEntry): string {
     return e.on ? t.disk.startup.historyOn(name) : t.disk.startup.historyOff(name);
   }
   if (e.kind === 'tweak') {
-    // A setting is named by its catalogue id; a choice (the power plan) has no on/off.
+    // A setting is named by its catalogue id; a choice (the power plan) has no on/off and says
+    // what was chosen (the plan's name), or just "changed" when the entry carries none.
     const name = t.disk.tweaks.title[e.subject] ?? e.subject;
-    return e.on === null ? h.changed(name) : h.switched(name, e.on);
+    if (e.on !== null) return h.switched(name, e.on);
+    return e.label ? h.chose(name, e.label) : h.changed(name);
   }
   if (e.kind !== 'cleanup') return h.switched(e.label || e.subject, e.on ?? false);
   const what = e.subject === 'scan' ? h.fromScan : (t.disk.tidy.category[e.subject] ?? e.subject);

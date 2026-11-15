@@ -1,4 +1,4 @@
-# Dieser PC – "Einstellungen": the catalogue (p3)
+# Dieser PC – "Windows-Einstellungen": the catalogue (p3)
 
 Code: `web/src-tauri/crates/pc-tune/src/tweaks.rs` (catalogue, rules, tests). Texts: `disk.tweaks` in `web/src/strings.ts`. Plan: [PLAN.md](PLAN.md).
 

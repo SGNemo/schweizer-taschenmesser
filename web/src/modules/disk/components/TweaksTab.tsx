@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getPlatform } from '@/core/platform';
 import type { TweakState } from '@/core/platform/optimize';
 import { useUiStore } from '@/stores/ui';
@@ -9,7 +9,7 @@ import {
   choiceLabel,
   groupTweaks,
   isMicrosoftSource,
-  joinNames,
+  resetMessage,
   switchState,
 } from '../logic/tweaks';
 import styles from './TweaksTab.module.css';
@@ -17,11 +17,15 @@ import styles from './TweaksTab.module.css';
 /** The title of a setting (read at render time); an id without a text shows as itself. */
 export const tweakTitle = (id: string): string => t.disk.tweaks.title[id] ?? id;
 
+/** Focus wish for the top of the tab (no setting has this id). */
+const TOP = ':top';
+
 /**
- * Tab "Einstellungen": a small catalogue of settings Windows offers itself, each with what it
- * does, its risk and the Microsoft page that documents it. A change is made natively only after
- * the state from before is stored, shows up in "Verlauf" with "Rückgängig", and "Alle
- * zurücksetzen" puts everything changed here back. Nothing is switched without a click.
+ * Tab "Windows-Einstellungen": a small catalogue of settings Windows offers itself, each with
+ * what it does, where Windows shows it and the Microsoft page that documents it. A change is made
+ * natively only after the state from before is stored, can be taken back in the notice and later
+ * in "Verlauf", and "Alle zurücksetzen" puts everything changed here back. Nothing is switched
+ * without a click.
  */
 export function TweaksTab() {
   const optimize = getPlatform().disk.optimize;
@@ -31,6 +35,10 @@ export function TweaksTab() {
   const [reload, setReload] = useState(0);
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const rows = useRef(new Map<string, HTMLLIElement>());
+  const lead = useRef<HTMLParagraphElement>(null);
+  const resetWrap = useRef<HTMLDivElement>(null);
+  const focusWish = useRef<string | null>(null);
   const x = t.disk.tweaks;
 
   useEffect(() => {
@@ -49,6 +57,24 @@ export function TweaksTab() {
     };
   }, [optimize, reload]);
 
+  // A change can replace the very control that had the focus (two buttons become a switch, the
+  // reset button leaves with the last change). The focus then goes to what stands in its place,
+  // never to the page body; a focus the user moved elsewhere is left alone.
+  useEffect(() => {
+    const wish = focusWish.current;
+    if (wish === null || !list) return;
+    focusWish.current = null;
+    const active = document.activeElement;
+    if (active && active !== document.body) return;
+    const target =
+      wish === TOP
+        ? (resetWrap.current?.querySelector<HTMLElement>('button') ?? lead.current)
+        : rows.current
+            .get(wish)
+            ?.querySelector<HTMLElement>('[data-control] :is([role="switch"], select, button)');
+    target?.focus();
+  }, [list]);
+
   if (!optimize.windows) {
     return (
       <div className={styles.tab}>
@@ -59,40 +85,61 @@ export function TweaksTab() {
     );
   }
 
+  /** Reads the list again; the focus follows to `wish` if its control is gone by then. */
+  const readAgain = (wish: string | null) => {
+    focusWish.current = wish;
+    setReload((n) => n + 1);
+  };
+
+  const takeBack = (tweakId: string, entryId: number) => {
+    optimize
+      .undo(entryId)
+      .then(() => toast(t.disk.history.undoDone))
+      .catch((e: unknown) =>
+        toast(
+          e instanceof Error && e.message === 'changed-elsewhere'
+            ? t.disk.history.changedElsewhere
+            : t.disk.history.undoFailed,
+        ),
+      )
+      .finally(() => readAgain(tweakId));
+  };
+
   const change = (tweak: TweakState, target: boolean | string) => {
+    // One change at a time. The controls stay enabled meanwhile (a disabled one would lose the
+    // keyboard focus); a second press is simply not taken.
     if (busy) return;
     setBusy(true);
     const title = tweakTitle(tweak.id);
     optimize
       .setTweak(tweak.id, target)
-      .then(() =>
+      .then((entryId) => {
+        if (entryId === null) return;
         toast(
           typeof target === 'boolean'
             ? x.switched(title, target)
             : x.chosen(title, tweak.options.find((o) => o.id === target)?.label ?? ''),
-        ),
-      )
+          { label: t.disk.history.undo, run: () => takeBack(tweak.id, entryId) },
+        );
+      })
       .catch(() => toast(x.setFailed))
       .finally(() => {
         setBusy(false);
-        setReload((n) => n + 1);
+        readAgain(tweak.id);
       });
   };
 
   const resetAll = () => {
     setConfirming(false);
+    if (busy) return;
     setBusy(true);
     optimize
       .resetTweaks()
-      .then((r) => {
-        if (r.restored.length > 0) toast(x.resetDone(joinNames(r.restored.map(tweakTitle))));
-        if (r.left.length > 0) toast(x.resetLeft(joinNames(r.left.map(tweakTitle))));
-        if (r.failed.length > 0) toast(x.resetPartial(joinNames(r.failed.map(tweakTitle))));
-      })
+      .then((r) => toast(resetMessage(r, tweakTitle, x)))
       .catch(() => toast(x.setFailed))
       .finally(() => {
         setBusy(false);
-        setReload((n) => n + 1);
+        readAgain(TOP);
       });
   };
 
@@ -105,40 +152,67 @@ export function TweaksTab() {
 
   return (
     <div className={styles.tab}>
-      <p className={styles.lead}>{x.lead}</p>
-      <div className={styles.bar}>
-        <p className={styles.status} role="status">
-          {list ? x.changedCount(changed.length) : ''}
-        </p>
-        <div className={styles.actions}>
-          <Button onClick={openRestorePoint}>{x.restorePoint}</Button>
-          <Button disabled={busy || changed.length === 0} onClick={() => setConfirming(true)}>
-            {x.resetAll}
+      <p ref={lead} tabIndex={-1} className={styles.lead}>
+        {x.lead}
+      </p>
+      {changed.length > 0 ? (
+        <div className={styles.bar}>
+          <p className={styles.status}>{x.changedCount(changed.length)}</p>
+          <div ref={resetWrap}>
+            <Button onClick={() => (busy ? undefined : setConfirming(true))}>{x.resetAll}</Button>
+          </div>
+        </div>
+      ) : null}
+      {failed ? (
+        <div className={styles.failed}>
+          <p role="alert">{x.failed}</p>
+          <Button
+            onClick={() => {
+              setFailed(false);
+              readAgain(null);
+            }}
+          >
+            {x.again}
           </Button>
         </div>
-      </div>
-      <p className={styles.muted}>{x.restorePointHint}</p>
-      {failed ? <p role="alert">{x.failed}</p> : null}
+      ) : null}
       {!list && !failed ? (
-        <div role="status" aria-label={x.loading}>
+        <div role="status">
+          <span className="sr-only">{x.loading}</span>
           <Skeleton width="60%" height="1.25rem" />
         </div>
       ) : null}
       {list && groups.length === 0 ? <EmptyState title={x.none} /> : null}
       {groups.map((g) => (
-        <section key={g.group} className={styles.group} aria-label={x.group[g.group]}>
-          <h2>{x.group[g.group]}</h2>
+        <section key={g.group} className={styles.group} aria-labelledby={`disk-tweaks-${g.group}`}>
+          <h2 id={`disk-tweaks-${g.group}`}>{x.group[g.group]}</h2>
           <Card as="div">
-            <ul className={styles.list}>
+            <ul className={styles.list} aria-busy={busy}>
               {g.items.map((tweak) => (
-                <li key={tweak.id} className={styles.row} data-testid={`tweak-${tweak.id}`}>
-                  <Row tweak={tweak} busy={busy} onChange={(target) => change(tweak, target)} />
+                <li
+                  key={tweak.id}
+                  ref={(el) => {
+                    if (el) rows.current.set(tweak.id, el);
+                    else rows.current.delete(tweak.id);
+                  }}
+                  className={styles.row}
+                  data-testid={`tweak-${tweak.id}`}
+                >
+                  <Row tweak={tweak} onChange={(target) => change(tweak, target)} />
                 </li>
               ))}
             </ul>
           </Card>
         </section>
       ))}
+      {groups.length > 0 ? (
+        <div className={styles.foot}>
+          <p className={styles.muted}>{x.restorePointHint}</p>
+          <Button variant="ghost" onClick={openRestorePoint}>
+            {x.restorePoint}
+          </Button>
+        </div>
+      ) : null}
       {confirming ? (
         <Dialog
           open
@@ -167,20 +241,67 @@ export function TweaksTab() {
   );
 }
 
+/**
+ * The power plan: the select only chooses, "Übernehmen" applies. (A select that applies on change
+ * would switch the plan of the whole PC on every arrow key.)
+ */
+function Choice({
+  tweak,
+  title,
+  onApply,
+}: {
+  tweak: TweakState;
+  title: string;
+  onApply: (id: string) => void;
+}) {
+  const x = t.disk.tweaks;
+  const [picked, setPicked] = useState<string | null>(null);
+  // Whenever the active plan changes (applied, taken back, reset) the select shows it again.
+  const [seen, setSeen] = useState(tweak.choice);
+  if (seen !== tweak.choice) {
+    setSeen(tweak.choice);
+    setPicked(null);
+  }
+  const value = picked ?? tweak.choice ?? '';
+  const same = value === (tweak.choice ?? '');
+  return (
+    <div className={styles.pair}>
+      <SelectField
+        label={x.chooseLabel(title)}
+        labelHidden
+        value={value}
+        onChange={(e) => setPicked(e.currentTarget.value)}
+      >
+        {tweak.options.map((o) => (
+          <option key={o.id} value={o.id}>
+            {o.label}
+          </option>
+        ))}
+      </SelectField>
+      {/* Locked with `aria-disabled`, not `disabled`: the button keeps the focus after applying. */}
+      <Button
+        className={styles.apply}
+        aria-label={x.applyLabel(title)}
+        aria-disabled={same}
+        onClick={() => (same ? undefined : onApply(value))}
+      >
+        {x.apply}
+      </Button>
+    </div>
+  );
+}
+
 /** One setting: what it is, its control, and the folded details with risk and source. */
 function Row({
   tweak,
-  busy,
   onChange,
 }: {
   tweak: TweakState;
-  busy: boolean;
   onChange: (target: boolean | string) => void;
 }) {
   const x = t.disk.tweaks;
   const title = tweakTitle(tweak.id);
   const state = switchState(tweak);
-  const riskNote = x.riskNote[tweak.id];
   const openSource = () => {
     if (isMicrosoftSource(tweak.sourceUrl)) void getPlatform().app.openUrl(tweak.sourceUrl);
   };
@@ -192,38 +313,17 @@ function Row({
           <p className={styles.what}>{x.what[tweak.id]}</p>
           {tweak.changedHere ? <p className={styles.changed}>{x.changedHere}</p> : null}
         </div>
-        <div className={styles.control}>
-          {!tweak.readable ? null : tweak.kind === 'choice' ? (
-            <SelectField
-              label={x.chooseLabel(title)}
-              labelHidden
-              value={tweak.choice ?? ''}
-              disabled={busy}
-              onChange={(e) => onChange(e.currentTarget.value)}
-            >
-              {tweak.options.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.label}
-                </option>
-              ))}
-            </SelectField>
-          ) : state === 'default' ? (
-            // Windows' own default applies and is not documented: no switch pretends to know it.
+        <div className={styles.control} data-control>
+          {state === 'unreadable' ? null : tweak.kind === 'choice' ? (
+            <Choice tweak={tweak} title={title} onApply={onChange} />
+          ) : state === 'default' || state === 'custom' ? (
+            // No known state (Windows decides itself, or a value this catalogue cannot place):
+            // no switch pretends to know it.
             <div className={styles.pair}>
-              <Button
-                size="sm"
-                disabled={busy}
-                aria-label={x.turnOnLabel(title)}
-                onClick={() => onChange(true)}
-              >
+              <Button size="sm" aria-label={x.turnOnLabel(title)} onClick={() => onChange(true)}>
                 {x.turnOn}
               </Button>
-              <Button
-                size="sm"
-                disabled={busy}
-                aria-label={x.turnOffLabel(title)}
-                onClick={() => onChange(false)}
-              >
+              <Button size="sm" aria-label={x.turnOffLabel(title)} onClick={() => onChange(false)}>
                 {x.turnOff}
               </Button>
             </div>
@@ -233,29 +333,33 @@ function Row({
               labelHidden
               tone="neutral"
               checked={state === 'on'}
-              disabled={busy}
               onChange={onChange}
             />
           )}
         </div>
       </div>
-      {!tweak.readable ? (
-        <p className={styles.state}>{x.unreadable}</p>
-      ) : tweak.kind === 'toggle' ? (
-        <p className={styles.state}>
-          {state === 'default' ? x.windowsDefault : state === 'on' ? x.stateOn : x.stateOff}
-        </p>
-      ) : (
-        <p className={styles.state}>{x.stateChoice(choiceLabel(tweak))}</p>
-      )}
+      <p className={styles.state}>
+        {state === 'unreadable'
+          ? x.unreadable
+          : tweak.kind === 'choice'
+            ? x.stateChoice(choiceLabel(tweak))
+            : state === 'default'
+              ? x.windowsDefault
+              : state === 'custom'
+                ? x.customValue
+                : state === 'on'
+                  ? x.stateOn
+                  : x.stateOff}
+      </p>
       <details className={styles.more}>
         <summary aria-label={x.moreLabel(title)}>{x.more}</summary>
         <div className={styles.moreBody}>
           <p>{x.detail[tweak.id]}</p>
-          <p>
-            {x.risk[tweak.risk]}
-            {riskNote ? ` ${riskNote}` : ''}
-          </p>
+          {tweak.risk === 'low' ? (
+            <p>
+              {x.riskLow} {x.riskNote[tweak.id] ?? ''}
+            </p>
+          ) : null}
           {tweak.refresh === 'explorer' ? <p>{x.refresh.explorer}</p> : null}
           {isMicrosoftSource(tweak.sourceUrl) ? (
             <p>
