@@ -1,0 +1,110 @@
+/* The week band (planner hub R1): seven equal tiles on the page tone. The form follows the band's own width, not
+   the window's: beside the context column on a laptop the tiles are as narrow as on a tablet. */
+.container {
+  container: band / inline-size;
+}
+.band {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: calc(var(--touch) + var(--space-3));
+  padding: var(--space-3);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  background: var(--surface-raised);
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.tile:hover {
+  background: var(--surface-2);
+}
+.tile:active {
+  opacity: 0.8;
+}
+/* The picked day: one tone step and a ring in the text colour (a real outline: it survives forced colours). */
+.tile[aria-pressed='true'] {
+  background: var(--surface-2);
+  outline: 1.5px solid var(--text);
+  outline-offset: -1.5px;
+}
+.tile:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.wide {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0 var(--space-2);
+  min-width: 0;
+}
+.day {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: var(--font-num);
+  white-space: nowrap;
+}
+.count,
+.state {
+  color: var(--text-3);
+  font-size: var(--text-meta);
+  font-variant-numeric: var(--font-num);
+  white-space: nowrap;
+}
+.state {
+  color: var(--text-muted);
+}
+.compact {
+  display: none;
+}
+.bar {
+  display: block;
+}
+/* Compact: weekday and number, the count (or „frei“), the bar. Words never break inside themselves; at a large
+   text size the number drops under the weekday instead. */
+@container band (max-width: 44rem) {
+  .band {
+    gap: var(--space-1);
+  }
+  .tile {
+    align-items: stretch;
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-1);
+    text-align: center;
+  }
+  .wide {
+    display: none;
+  }
+  .compact {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    column-gap: 0.25em;
+    min-width: 0;
+  }
+  .compact .day {
+    font-size: var(--text-meta);
+  }
+  .compact .state {
+    flex-basis: 100%;
+  }
+  .bar {
+    padding: 0 var(--space-1);
+  }
+}

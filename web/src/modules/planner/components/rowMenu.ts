@@ -43,7 +43,11 @@ export function useAbilities() {
 
 export type Abilities = ReturnType<typeof useAbilities>;
 
-/** Builds the ⋯ menu of a row; `date` = the row's day (a waiting row has none: then today, named). */
+/**
+ * Builds the ⋯ menu of a row; `date` = the row's day (a waiting row has none: then today, named). The steps of
+ * every day come first („Später“, „Dauer …“, „Tagesabschnitt …“), the rest under „Mehr“. `tick`: the row's lead is
+ * the tick, so „Erledigt“ is not said twice.
+ */
 export function useRowMenu(ctx: {
   today: string | undefined;
   titles: Record<string, string>;
@@ -56,7 +60,12 @@ export function useRowMenu(ctx: {
   const moduleStates = useModuleStates();
   const mailOn = !!getManifest('mail') && moduleStates?.mail === true;
   const { titles, abilities, why, setWhy, setChoice } = ctx;
-  return (row: BoardRow | WaitingRow, date?: string, reason?: string): RowMenuItem[] => {
+  return (
+    row: BoardRow | WaitingRow,
+    date?: string,
+    reason?: string,
+    opts: { tick?: boolean } = {},
+  ): RowMenuItem[] => {
     const e = row.entry;
     if (!e || !ctx.today) return [];
     const day = date ?? ctx.today;
@@ -66,8 +75,8 @@ export function useRowMenu(ctx: {
     const sourceHard = e.due?.hard === true;
     const excluded = row.item?.excluded === true;
     const open = why === row.unitId;
-    return [
-      ...(abilities.canDone(e.moduleId)
+    const top: RowMenuItem[] = [
+      ...(abilities.canDone(e.moduleId) && !opts.tick
         ? [{ id: 'done', label: t.planner.row.done, onSelect: () => void markDone(e, titles) }]
         : []),
       ...(abilities.canAssign(e.moduleId)
@@ -103,15 +112,8 @@ export function useRowMenu(ctx: {
             },
           ]
         : []),
-      ...(abilities.canRemove(e.moduleId)
-        ? [
-            {
-              id: 'asBreak',
-              label: t.planner.row.asBreak,
-              onSelect: () => setChoice({ kind: 'break', entry: e, date: day }),
-            },
-          ]
-        : []),
+    ];
+    const more: RowMenuItem[] = [
       ...(excluded
         ? [{ id: 'include', label: t.planner.row.include, onSelect: () => void include(e, titles) }]
         : [
@@ -143,6 +145,15 @@ export function useRowMenu(ctx: {
                   onSelect: () => void markDue(e, e.due?.date ?? day, titles),
                 },
           ]),
+      ...(abilities.canRemove(e.moduleId)
+        ? [
+            {
+              id: 'asBreak',
+              label: t.planner.row.asBreak,
+              onSelect: () => setChoice({ kind: 'break', entry: e, date: day }),
+            },
+          ]
+        : []),
       ...(reason
         ? [
             {
@@ -192,6 +203,10 @@ export function useRowMenu(ctx: {
             },
           ]
         : []),
+    ];
+    return [
+      ...top,
+      ...more.map((item, i) => (i === 0 ? { ...item, group: t.planner.row.more } : item)),
     ];
   };
 }
