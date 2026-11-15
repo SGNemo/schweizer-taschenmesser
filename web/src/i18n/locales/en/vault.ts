@@ -13,8 +13,22 @@ export const vault: Strings['vault'] = {
       remindDaysBeforeDeadline: 'Reminder before the notice period (days)',
       remindTime: 'Reminder time',
       remindTimeHelp: 'Format HH:mm',
+      showInPlan: 'Show in the plan',
+      showInPlanHelp:
+        'Notice deadlines and expiry dates appear in the planner as “Cancel contract” or “Renew ID” (15 min, by the last day). The document’s name shows on the planner page only. Only with the planner on.',
     },
   },
+  planCancel: (category: string) =>
+    category === 'insurance' ? 'Cancel insurance' : 'Cancel contract',
+  planRenew: (category: string) =>
+    category === 'identity'
+      ? 'Renew ID'
+      : category === 'warranty'
+        ? 'Check warranty'
+        : category === 'contract' || category === 'insurance'
+          ? 'Check contract end'
+          : 'Renew document',
+  planAction: 'Go to document',
   title: 'Documents',
   add: 'Add document',
   edit: 'Edit document',
