@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { t } from '@/strings';
 import { feedRepo } from '../repo';
+import { typedAddress } from '../routes/AddDialog';
 import MainPage from '../routes/MainPage';
 
 const view = (url = '/feeds') =>
@@ -59,5 +60,22 @@ describe('feeds page: adding made easy', () => {
     expect(await screen.findByRole('textbox', { name: t.feeds.fields.url })).toHaveValue(
       'https://blog.example.org/',
     );
+  });
+
+  it('a quick double tap subscribes once', async () => {
+    const user = userEvent.setup();
+    view();
+    const add = await screen.findByTestId('feeds-catalog-add-tagesschau');
+    await user.dblClick(add);
+    await waitFor(async () => expect(await feedRepo.active().count()).toBe(1));
+    await new Promise((r) => setTimeout(r, 50));
+    expect(await feedRepo.active().count()).toBe(1);
+  });
+
+  it('reads an address only where it ends in a top-level domain', () => {
+    expect(typedAddress('heise.de')).toBe('https://heise.de/');
+    expect(typedAddress('u.s.')).toBeUndefined();
+    expect(typedAddress('192.168.1.20/rss')).toBe('https://192.168.1.20/rss');
+    expect(typedAddress('wetter morgen')).toBeUndefined();
   });
 });

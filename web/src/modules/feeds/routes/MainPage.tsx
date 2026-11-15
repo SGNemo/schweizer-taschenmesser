@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { useLang } from '@/core/i18n/lang';
 import { useSearchParams } from 'react-router';
 import { collator } from '@/core/i18n/format';
@@ -76,15 +76,25 @@ export default function MainPage() {
   const subscribed = new Set((feeds ?? []).map((f) => feedKey(f.url)));
 
   /** One tap in the catalogue: subscribed under the group's name, nothing else to fill in. */
+  const adding = useRef(new Set<string>());
   async function addEntry(entry: CatalogEntry) {
-    if (subscribed.has(feedKey(entry.url))) return;
-    await feedRepo.create({
-      title: entry.title,
-      url: entry.url,
-      category: s.catalog.categories[entry.category],
-      siteUrl: entry.site,
-    });
-    toast(s.catalog.addedToast(entry.title));
+    const key = feedKey(entry.url);
+    // A double tap lands before the live list knows the first one: keys on their way count too.
+    if (subscribed.has(key) || adding.current.has(key)) return;
+    adding.current.add(key);
+    try {
+      await feedRepo.create({
+        title: entry.title,
+        url: entry.url,
+        category: s.catalog.categories[entry.category],
+        siteUrl: entry.site,
+      });
+      toast(s.catalog.addedToast(entry.title));
+    } catch (e) {
+      // Kept on success: the live list may not know the new feed yet.
+      adding.current.delete(key);
+      throw e;
+    }
   }
 
   /** "Abonnieren" under a preview: the feed's own name, no group yet (it can be set in the list). */
@@ -189,7 +199,7 @@ export default function MainPage() {
           <h2 id="feeds-suggestions" className={styles.subhead}>
             {s.suggestions}
           </h2>
-          <ItemList label={s.suggestions}>
+          <ItemList>
             {suggestions(lang, subscribed).map((entry) => (
               <CatalogRow
                 key={entry.id}
