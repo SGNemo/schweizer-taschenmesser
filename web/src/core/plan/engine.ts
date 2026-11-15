@@ -77,12 +77,12 @@ export function plan(input: PlanInput): PlanResult {
   const load: Record<string, DayLoad> = {};
   const bumps: Bump[] = [];
   const isMain = (u: PlanUnit): boolean => u.minutes >= MAIN_THRESHOLD_MIN;
-  /** 2 = was planned for this day (kept), 1 = planned for an earlier day (carried), 0 = new. */
   // A pin on a later day of the horizon holds the item back until then: no earlier day may take it
   // (rules 4 and 5 would otherwise place it first and the pin would never be asked).
   const horizonDates = new Set(horizon.map((d) => d.date));
   const heldUntil = (u: PlanUnit): string | undefined =>
     u.item.pinned && horizonDates.has(u.item.pinned) ? u.item.pinned : undefined;
+  /** 2 = was planned for this day (kept), 1 = planned for an earlier day (carried), 0 = new. */
   const sticky = (u: PlanUnit, date: string): number => {
     const p = prevByUnit.get(u.id);
     return !p || p.date > date ? 0 : p.date === date ? 2 : 1;
@@ -194,8 +194,18 @@ export function plan(input: PlanInput): PlanResult {
     for (const u of units) {
       const p = prevByUnit.get(u.id);
       if (!p || p.date !== day.date || placed.has(u.id)) continue;
-      // Held for its pinned day: nobody took its room, the move's cause is the pin (`diffPlans`).
-      if ((heldUntil(u) ?? '') > day.date) continue;
+      // Held for its pinned day: nobody took its room. The first session's cause is the pin (`diffPlans`);
+      // a later session follows it.
+      if ((heldUntil(u) ?? '') > day.date) {
+        if (u.k > 0)
+          bumps.push({
+            id: u.id,
+            date: day.date,
+            by: [unitId(u.itemKey, u.k - 1)],
+            cause: 'after-part',
+          });
+        continue;
+      }
       // A later session cannot stay on a day its earlier session has not reached: the cause is the part.
       const partId = unitId(u.itemKey, u.k - 1);
       const part = u.k > 0 ? placed.get(partId) : undefined;

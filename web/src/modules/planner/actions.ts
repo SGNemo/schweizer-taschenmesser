@@ -258,12 +258,16 @@ export async function markDone(
 
 /**
  * „Später“: the thing's own date becomes the day after the one it is planned on, never before tomorrow (an
- * earliest day, never a pin) – so it leaves its day whichever day that is. False for a source without a date.
+ * earliest day, never a pin) – so it leaves its day whichever day that is; a pin on the thing is lifted in the
+ * same undoable step. False for a source without a date.
  */
 export async function later(e: PlannableEntry, titles: Record<string, string>): Promise<boolean> {
   const s = await source(e.moduleId);
   if (!s?.onAssign) return false;
   return act(t.planner.toast.later, t.planner.toast.later, titles, async () => {
+    // A pin beats an earliest day: „Später“ on a nailed thing lifts the pin, or nothing would move.
+    if ((await itemRepo.get(itemKeyOf(e.moduleId, e.id)))?.pinned)
+      await itemPatch(e, { pinned: undefined });
     // The first session's row is the thing's first day (`<itemKey>#0`); a waiting thing has none.
     const on = (await assignmentRepo.get(unitId(itemKeyOf(e.moduleId, e.id), 0)))?.date;
     await s.onAssign!(e.id, addDays(on && on > today() ? on : today(), 1));

@@ -131,6 +131,21 @@ it('„Später“ on a thing of tomorrow moves it off that day; one undo restore
   await expect.poll(async () => snapshot(), { timeout: 3000 }).toEqual(before);
 });
 
+it('„Später“ on a nailed thing lifts the pin and moves it; one undo brings pin and day back', async () => {
+  expect(await applyOps([{ op: 'pin', key: 'todos:p2', date: WED }], 'x', {})).toBe(true);
+  await runsSettled();
+  expect(await dayOf('p2')).toBe(WED);
+  const before = await snapshot();
+  expect(before.pins).toEqual([['todos:p2', WED]]);
+  expect(await later(STEUER, {})).toBe(true);
+  await runsSettled();
+  expect(await dayOf('p2')).toBe('2026-11-19');
+  expect((await itemRepo.get('todos:p2'))?.pinned).toBeUndefined();
+
+  useUiStore.getState().toasts.at(-1)!.action!.run();
+  await expect.poll(async () => snapshot(), { timeout: 3000 }).toEqual(before);
+});
+
 it('„Später“ on a thing of today still means tomorrow', async () => {
   // Monday morning: both things are on today.
   setNow(() => new Date(2026, 10, 16, 8, 0).getTime());
