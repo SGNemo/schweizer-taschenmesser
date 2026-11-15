@@ -16,12 +16,10 @@ import styles from './charts.module.css';
 export interface DonutProps extends ChartBaseProps {
   /** Shares: only positive values count; largest first, after `maxSegments` the rest is "Sonstiges". */
   data: readonly ChartDatum[];
-  /** At most this many named slices (default 6). */
+  /** At most this many named slices (default and upper limit 6: one colour and pattern slot each). */
   maxSegments?: number;
-  /** Small word under the sum in the middle (default "Summe"). */
+  /** Small word under the sum in the middle (default "Summe", e.g. "pro Monat"). */
   centreLabel?: string;
-  /** Text in the middle instead of the sum (e.g. "5 Abos"); `null` leaves the middle empty. */
-  centre?: string | null;
 }
 
 /** Ring geometry on a 100 × 100 box: radius 42, stroke 16 (the ring is 16 % of the width). */
@@ -34,13 +32,7 @@ const GAP = 0.8;
  * o'clock, at most six named slices plus "Sonstiges". Slices are steps of the module colour with a pattern each, and
  * the legend beside them names every slice with its value and share: the ring never has to be read by colour.
  */
-export function Donut({
-  data,
-  maxSegments = MAX_SEGMENTS,
-  centreLabel,
-  centre,
-  ...base
-}: DonutProps) {
+export function Donut({ data, maxSegments = MAX_SEGMENTS, centreLabel, ...base }: DonutProps) {
   const prefix = `ch${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const { show, read, hidden } = useValueText(
     base.format ?? defaultFormat,
@@ -118,14 +110,10 @@ export function Donut({
               })}
             </g>
           </svg>
-          {centre === null ? null : (
-            <div className={styles.centre}>
-              <span className={`${styles.centreValue} ${styles.num}`}>{centre ?? show(total)}</span>
-              {centre === undefined ? (
-                <span className={styles.centreLabel}>{centreLabel ?? t.charts.total}</span>
-              ) : null}
-            </div>
-          )}
+          <div className={styles.centre}>
+            <span className={`${styles.centreValue} ${styles.num}`}>{show(total)}</span>
+            <span className={styles.centreLabel}>{centreLabel ?? t.charts.total}</span>
+          </div>
         </div>
         <ol className={styles.legend} data-hidden={hidden || undefined}>
           {shares.map((p) => (

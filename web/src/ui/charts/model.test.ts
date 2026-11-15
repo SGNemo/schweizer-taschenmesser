@@ -28,11 +28,20 @@ describe('foldShares', () => {
     expect(s[6]).toMatchObject({ label: 'Sonstiges', other: true, value: 94 + 93 + 92 + 91 });
   });
 
-  it('keeps a single leftover under its own name', () => {
+  it('seven values: six named, the seventh is "Sonstiges" (never a slice without a pattern slot)', () => {
     const data = Array.from({ length: 7 }, (_, i) => d(`k${i}`, 10 - i));
     const s = foldShares(data, 'Sonstiges');
     expect(s).toHaveLength(7);
-    expect(s.some((x) => x.other)).toBe(false);
+    expect(s[6]).toMatchObject({ label: 'Sonstiges', other: true, value: 4 });
+  });
+
+  it('never more than six named slices, whatever `max` asks for', () => {
+    const data = Array.from({ length: 12 }, (_, i) => d(`k${i}`, 20 - i));
+    expect(foldShares(data, 'R', 10).filter((x) => !x.other)).toHaveLength(6);
+  });
+
+  it('small steps give clean ticks', () => {
+    expect(niceScale([0.1, 0.35]).ticks.every((v) => String(v).length <= 4)).toBe(true);
   });
 
   it('leaves out zero, negative and non-finite values; nothing usable gives no slices', () => {

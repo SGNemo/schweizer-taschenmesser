@@ -14,8 +14,8 @@ export interface BarsProps extends ChartBaseProps {
   data: readonly BarDatum[];
   /** `horizontal` (default): one row per value, names left – categories, budgets. `vertical`: columns – months. */
   orientation?: 'horizontal' | 'vertical';
-  /** Fixed end of the scale (e.g. 100 for percent); default: the largest value or target. */
-  max?: number;
+  /** Name of the target in the key and the table (e.g. "Budget"); default "Geplant". */
+  targetLabel?: string;
 }
 
 /** Labels under columns: at most this many in a narrow chart, more from 36 rem. */
@@ -26,11 +26,11 @@ const COL_VALUES = { narrow: 4, wide: 7 } as const;
 const usable = (v: number | undefined): v is number => v != null && Number.isFinite(v);
 
 /**
- * Values side by side, one colour, scale from zero. With a `target` each bar gets a mark; only a value above its
- * target turns red, and always with an icon and the text "… drüber". Negative values are drawn as zero (the table
- * still says the value); a chart of gains and losses is a `Trend`.
+ * Values side by side, one colour, scale from zero. With a `target` each bar gets a mark; only the part of a value
+ * beyond its target turns red, always with an icon (and "… drüber" in rows, in the key under columns). Negative
+ * values are drawn as zero (the table still says the value); a chart of gains and losses is a `Trend`.
  */
-export function Bars({ data, orientation = 'horizontal', max, ...base }: BarsProps) {
+export function Bars({ data, orientation = 'horizontal', targetLabel, ...base }: BarsProps) {
   const { show, read, hidden } = useValueText(
     base.format ?? defaultFormat,
     base.sensitive ?? false,
@@ -38,7 +38,7 @@ export function Bars({ data, orientation = 'horizontal', max, ...base }: BarsPro
   const rows = data.filter((d) => Number.isFinite(d.value));
   const top = Math.max(0, ...rows.map((d) => d.value), ...rows.map((d) => d.target).filter(usable));
   // No axis to read round numbers from: the longest bar (or mark) fills the track.
-  const scale = { min: 0, max: usable(max) && max > 0 ? max : top || 1 };
+  const scale = { min: 0, max: top || 1 };
   const isOver = (d: BarDatum) => usable(d.target) && d.value > d.target;
   const overCount = rows.filter(isOver).length;
   const hasTarget = rows.some((d) => usable(d.target));
@@ -51,7 +51,7 @@ export function Bars({ data, orientation = 'horizontal', max, ...base }: BarsPro
         <tr>
           <th scope="col">{t.charts.item}</th>
           <th scope="col">{t.charts.value}</th>
-          {hasTarget ? <th scope="col">{t.charts.target}</th> : null}
+          {hasTarget ? <th scope="col">{targetLabel ?? t.charts.target}</th> : null}
         </tr>
       </thead>
       <tbody>
@@ -97,7 +97,7 @@ export function Bars({ data, orientation = 'horizontal', max, ...base }: BarsPro
             >
               <span className={styles.barLabel}>{d.label}</span>
               <span className={styles.track}>
-                <span className={styles.bar} data-over={isOver(d) || undefined} />
+                <Bar d={d} isOver={isOver} className={styles.bar} />
                 {usable(d.target) ? <span className={styles.mark} /> : null}
               </span>
               <span className={styles.barValue}>
@@ -118,7 +118,17 @@ export function Bars({ data, orientation = 'horizontal', max, ...base }: BarsPro
       ) : (
         <Columns rows={rows} vars={vars} show={show} isOver={isOver} />
       )}
-      {hasTarget ? <p className={styles.targetKey}>{t.charts.targetKey}</p> : null}
+      {hasTarget ? (
+        <p className={styles.key}>
+          <span className={styles.targetKey}>{targetLabel ?? t.charts.target}</span>
+          {overCount > 0 && orientation === 'vertical' ? (
+            <span className={styles.overKey}>
+              <Icon name="alert" size={14} />
+              {t.charts.overKey}
+            </span>
+          ) : null}
+        </p>
+      ) : null}
     </ChartFrame>
   );
 }
@@ -153,10 +163,8 @@ function Columns({
             </span>
           </span>
           <span className={styles.colArea}>
-            <span className={styles.colBar} data-over={isOver(d) || undefined} />
-            {d.target != null && Number.isFinite(d.target) ? (
-              <span className={styles.colMark} />
-            ) : null}
+            <Bar d={d} isOver={isOver} className={styles.colBar} />
+            {usable(d.target) ? <span className={styles.colMark} /> : null}
           </span>
           <span
             className={`${styles.colLabel} ${styles.thin}`}
@@ -168,5 +176,22 @@ function Columns({
         </div>
       ))}
     </div>
+  );
+}
+
+/** The bar of one value; the part beyond the target is a red child, so it grows with the bar. */
+function Bar({
+  d,
+  isOver,
+  className,
+}: {
+  d: BarDatum;
+  isOver: (d: BarDatum) => boolean;
+  className: string | undefined;
+}) {
+  return (
+    <span className={className} data-zero={d.value <= 0 || undefined}>
+      {isOver(d) ? <span className={styles.overPart} /> : null}
+    </span>
   );
 }

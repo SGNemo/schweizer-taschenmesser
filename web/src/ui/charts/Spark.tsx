@@ -1,5 +1,5 @@
 import { areaPath, linePath, niceScale } from './model';
-import styles from './charts.module.css';
+import styles from './Spark.module.css';
 
 export interface SparkProps {
   values: readonly (number | null)[];
@@ -18,9 +18,11 @@ export interface SparkProps {
 export function Spark({ values, label, variant = 'line', width = 96, height = 28 }: SparkProps) {
   const finite = values.filter((v): v is number => v != null && Number.isFinite(v));
   if (finite.length === 0) return null;
-  const scale = niceScale(finite, { zero: variant === 'area', count: 2 });
-  // The curve fills the box: a spark shows the shape, not the round numbers of an axis.
-  const box = variant === 'area' ? scale : { min: Math.min(...finite), max: Math.max(...finite) };
+  // The curve fills the box: a spark shows the shape, not the round numbers of an axis (an area starts at zero).
+  const box =
+    variant === 'area'
+      ? niceScale(finite, { zero: true, count: 2 })
+      : { min: Math.min(...finite), max: Math.max(...finite) };
   if (box.min === box.max) {
     box.min -= 1;
     box.max += 1;

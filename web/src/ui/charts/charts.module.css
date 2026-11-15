@@ -28,26 +28,27 @@
   color: var(--text-3);
 }
 
-/* Colour slots of shares: steps of the first series colour towards the surface (no extra hues, so a donut reads as
-   one module), the rest in a neutral grey. A pattern on every slot after the first (`Pattern`) tells them apart
-   without colour. */
+/* Colour slots of shares: steps of the first series colour towards the text colour (no extra hues, so a donut reads
+   as one module). Mixing towards --text only adds contrast, so every slot keeps ≥ 3:1 on the surface in both themes
+   and in the calm grey, and the light pattern ink stays visible on it. "Sonstiges" is a neutral grey. A pattern on
+   every slot after the first (`PatternDefs`) tells them apart without colour. */
 .c0 {
   --c: var(--viz-1);
 }
 .c1 {
-  --c: color-mix(in srgb, var(--viz-1) 84%, var(--surface));
+  --c: color-mix(in srgb, var(--viz-1) 80%, var(--text));
 }
 .c2 {
-  --c: color-mix(in srgb, var(--viz-1) 70%, var(--surface));
+  --c: color-mix(in srgb, var(--viz-1) 64%, var(--text));
 }
 .c3 {
-  --c: color-mix(in srgb, var(--viz-1) 58%, var(--surface));
+  --c: color-mix(in srgb, var(--viz-1) 50%, var(--text));
 }
 .c4 {
-  --c: color-mix(in srgb, var(--viz-1) 48%, var(--surface));
+  --c: color-mix(in srgb, var(--viz-1) 38%, var(--text));
 }
 .c5 {
-  --c: color-mix(in srgb, var(--viz-1) 40%, var(--surface));
+  --c: color-mix(in srgb, var(--viz-1) 28%, var(--text));
 }
 .cOther {
   --c: var(--border-strong);
@@ -55,7 +56,7 @@
 .patternInk {
   stroke: var(--surface);
   fill: var(--surface);
-  opacity: 0.7;
+  opacity: 0.75;
 }
 
 /* Legend (donut, trend): swatch, name, value, share. */
@@ -248,9 +249,26 @@
   background: var(--viz-1);
   transform-origin: left center;
 }
-.bar[data-over],
-.colBar[data-over] {
+/* A zero draws nothing (a sliver would read as a small value); the value text says 0. */
+.bar[data-zero],
+.colBar[data-zero] {
+  display: none;
+}
+/* Over the target: only the part beyond the mark is red (a child of the bar, so it grows with it). */
+.overPart {
+  position: absolute;
   background: var(--danger);
+  border-radius: inherit;
+}
+.bar .overPart {
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: calc((1 - var(--t) / var(--v)) * 100%);
+}
+.colBar .overPart {
+  inset-inline: 0;
+  top: 0;
+  height: calc((1 - var(--t) / var(--v)) * 100%);
 }
 .mark {
   position: absolute;
@@ -276,12 +294,23 @@
   font-size: var(--text-meta);
   white-space: nowrap;
 }
-.targetKey {
+.key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+  font-size: var(--text-meta);
+  color: var(--text-3);
+}
+.targetKey,
+.overKey {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  font-size: var(--text-meta);
-  color: var(--text-3);
+}
+.overKey {
+  gap: var(--space-1);
+  color: var(--danger);
 }
 .targetKey::before {
   content: '';
@@ -329,7 +358,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.colValue[data-over] {
+.colValue[data-over] svg {
   color: var(--danger);
 }
 .colArea {
@@ -464,7 +493,8 @@
 }
 .sCompare .line,
 .line.sCompare {
-  stroke-dasharray: 2 4;
+  stroke-width: 1.5;
+  stroke-dasharray: 1 5;
 }
 .area {
   fill: color-mix(in srgb, var(--viz-1) 16%, transparent);
@@ -503,27 +533,8 @@
   transform: translateX(-100%);
 }
 
-/* Spark (widgets): line in the first series colour, optional quiet area. */
-.spark {
-  display: block;
-  overflow: visible;
-}
-.sparkLine {
-  fill: none;
-  stroke: var(--viz-1);
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.sparkArea {
-  fill: color-mix(in srgb, var(--viz-1) 16%, transparent);
-}
-.sparkDot {
-  fill: var(--viz-1);
-}
-
-/* First appearance only (a remount, not a re-render), transform/opacity only, off with reduced motion – the
-   system's or the app's (Einstellungen → Darstellung → Bewegung). */
+/* Bars grow once on first appearance (DESIGN-SPEC §9; a remount, not a re-render), transform only, off with reduced
+   motion – the system's or the app's (Einstellungen → Darstellung → Bewegung). Donut and trend do not move. */
 @media (prefers-reduced-motion: no-preference) {
   :global(:root:not([data-motion='reduce'])) .bar {
     animation: grow-x var(--dur-slow) var(--ease-out) both;
@@ -532,10 +543,6 @@
   :global(:root:not([data-motion='reduce'])) .colBar {
     animation: grow-y var(--dur-slow) var(--ease-out) both;
     animation-delay: calc(var(--i, 0) * 30ms);
-  }
-  :global(:root:not([data-motion='reduce'])) .donut svg,
-  :global(:root:not([data-motion='reduce'])) .plot svg {
-    animation: appear var(--dur-slow) var(--ease-out) both;
   }
 }
 @keyframes grow-x {
@@ -546,11 +553,5 @@
 @keyframes grow-y {
   from {
     transform: scaleY(0);
-  }
-}
-@keyframes appear {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
   }
 }

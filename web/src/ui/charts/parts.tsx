@@ -1,5 +1,6 @@
 import { useId, type ReactNode } from 'react';
 import { useHideValues } from '@/core/focus/hideValues';
+import { HIDDEN_AMOUNT } from '@/core/focus/maskAmounts';
 import { formatNumber } from '@/core/i18n/format';
 import { t } from '@/strings';
 import styles from './charts.module.css';
@@ -8,9 +9,6 @@ import styles from './charts.module.css';
 export type ValueFormat = (value: number) => string;
 
 export const defaultFormat: ValueFormat = (n) => formatNumber(n);
-
-/** Placeholder for a hidden amount ("Werte ausblenden"); never read out (screen readers get the word). */
-export const MASK = '••••';
 
 /**
  * Text for a value, honouring "Werte ausblenden" when the chart shows amounts (`sensitive`). Hidden, the marks keep
@@ -22,7 +20,7 @@ export function useValueText(format: ValueFormat, sensitive: boolean) {
   return {
     hidden,
     /** Visible text (aria-hidden places). */
-    show: (v: number) => (hidden ? MASK : format(v)),
+    show: (v: number) => (hidden ? HIDDEN_AMOUNT : format(v)),
     /** Text for the screen-reader table and summary; `null` while hidden. */
     read: (v: number) => (hidden ? null : format(v)),
   };
@@ -96,13 +94,13 @@ export function ChartFrame({
   );
 }
 
-/** Pattern slots: none on the first share, then lines and dots that stay apart in grey (calm colours, no colour). */
+/** Pattern slots: none on the first share, then diagonal, dots, horizontal, checks, vertical – apart in grey too. */
 const PATTERNS: readonly (((ink: string) => ReactNode) | null)[] = [
   null,
   (ink) => <path className={ink} d="M-1 1l2-2M0 6l6-6M5 7l2-2" strokeWidth="1.2" />,
   (ink) => <circle className={ink} cx="3" cy="3" r="1.1" stroke="none" />,
   (ink) => <path className={ink} d="M0 3h6" strokeWidth="1.2" />,
-  (ink) => <path className={ink} d="M-1 5l2 2M0 0l6 6M5 -1l2 2" strokeWidth="1.2" />,
+  (ink) => <path className={ink} d="M0 0h3v3H0zM3 3h3v3H3z" stroke="none" />,
   (ink) => <path className={ink} d="M3 0v6" strokeWidth="1.2" />,
 ];
 /** The "Sonstiges" slot: a cross-hatch on grey. */

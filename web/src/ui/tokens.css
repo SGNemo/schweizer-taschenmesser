@@ -470,6 +470,9 @@
    Every other hue (categories, module hues and with them every module tint, the other states) becomes `--calm-ink`,
    a grey without a cast: guard `e2e/seed/calm-colour.seed.spec.ts`. */
 :root[data-color='calm'] {
+  /* Charts too (`ui/charts`): series then differ by line style and pattern only. */
+  --viz-1: var(--calm-ink);
+  --viz-2: var(--calm-ink);
   --cat-1: var(--calm-ink);
   --cat-2: var(--calm-ink);
   --cat-3: var(--calm-ink);

@@ -2,6 +2,6 @@
 type: added
 area: ui
 breaking: false
-de: Neue gemeinsame Diagramme (Torte, Balken, Verlauf) – lesbar auch ohne Farben, mit Werten für Screenreader. Budgets, Abos, Rechnungen und Finanzen nutzen sie als Nächstes.
-en: New shared charts (donut, bars, trend) – readable without colour, with values for screen readers. Budgets, subscriptions, invoices and finance use them next.
+de: Einheitliche Diagramme (Ring, Balken, Verlauf), lesbar auch ohne Farben, im Modus „Ruhig“ und mit Screenreader; „Werte ausblenden“ verdeckt auch dort die Beträge.
+en: Consistent charts (ring, bars, trend), readable without colour, in calm mode and with a screen reader; "Hide values" covers their amounts too.
 ---

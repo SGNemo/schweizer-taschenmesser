@@ -82,12 +82,22 @@ describe('Donut', () => {
     expect(circle.getAttribute('stroke-dasharray')).toBe('100 0');
   });
 
-  it('a centre text replaces the sum; null leaves it empty', () => {
-    const { rerender } = render(<Donut title="T" data={data} centre="3 Abos" />);
-    expect(screen.getByText('3 Abos')).toBeInTheDocument();
+  it('a module may name the sum ("pro Monat")', () => {
+    render(<Donut title="T" data={data} centreLabel="pro Monat" />);
+    expect(screen.getByText('pro Monat')).toBeInTheDocument();
     expect(screen.queryByText('Summe')).toBeNull();
-    rerender(<Donut title="T" data={data} centre={null} />);
-    expect(screen.queryByText('3 Abos')).toBeNull();
+  });
+
+  it('seven values: six named slices and "Sonstiges", each with its own pattern', () => {
+    const seven = Array.from({ length: 7 }, (_, i) => ({ label: `K${i}`, value: 10 - i }));
+    const { container } = render(<Donut title="T" data={seven} />);
+    const slices = [...container.querySelectorAll('[data-slice]')];
+    expect(slices).toHaveLength(7);
+    const patterns = slices
+      .slice(1)
+      .map((g) => g.querySelectorAll('circle')[1]?.getAttribute('stroke'));
+    expect(new Set(patterns).size).toBe(6);
+    expect(patterns.every(Boolean)).toBe(true);
   });
 
   it('"Werte ausblenden" masks amounts of a sensitive chart, shares stay', async () => {
@@ -118,16 +128,30 @@ describe('Bars', () => {
     const { container } = render(<Bars title="Budgets" data={budgets} format={euro} />);
     const over = container.querySelectorAll('[data-over]');
     expect([...over].every((el) => el.closest('li')?.textContent?.includes('Essen'))).toBe(true);
+    // Only the part beyond the mark is red; a zero draws no bar at all.
+    expect(container.querySelectorAll('[class*="overPart"]')).toHaveLength(1);
+    expect(container.querySelectorAll('[data-zero]')).toHaveLength(1);
     expect(screen.getByText('20,00 € drüber')).toBeInTheDocument();
     expect(screen.getByText('20,00 € drüber').querySelector('svg')).not.toBeNull();
     expect(screen.getByText(/von 150,00 €/)).toBeInTheDocument();
-    expect(screen.getByText('Strich: Soll')).toBeInTheDocument();
+    expect(screen.getAllByText('Geplant')).toHaveLength(2); // key and table column
+  });
+
+  it('a module names its target; columns over it get the "drüber" key', () => {
+    render(
+      <Bars title="T" data={budgets} orientation="vertical" targetLabel="Budget" format={euro} />,
+    );
+    expect(screen.getAllByText('Budget')).toHaveLength(2);
+    expect(screen.getByText('drüber')).toBeInTheDocument();
+    expect(
+      within(tableOf(screen.getByRole('figure'))).getByRole('columnheader', { name: 'Budget' }),
+    ).toBeInTheDocument();
   });
 
   it('summary counts the bars over target; the table holds value and target', () => {
     render(<Bars title="Budgets" data={budgets} format={euro} />);
     const fig = screen.getByRole('figure', { name: 'Budgets' });
-    expect(fig).toHaveAccessibleDescription('3 Werte, davon 1 über dem Soll.');
+    expect(fig).toHaveAccessibleDescription('3 Werte, davon 1 mehr als geplant.');
     expect(rows(tableOf(fig))).toEqual([
       ['Essen', '320,00 € (20,00 € drüber)', '300,00 €'],
       ['Freizeit', '80,00 €', '150,00 €'],
@@ -153,7 +177,7 @@ describe('Bars', () => {
 
   it('without targets there is no key and no target column', () => {
     render(<Bars title="T" data={[{ label: 'a', value: 1 }]} />);
-    expect(screen.queryByText('Strich: Soll')).toBeNull();
+    expect(screen.queryAllByText('Geplant')).toHaveLength(0);
     expect(within(tableOf(screen.getByRole('figure'))).getAllByRole('columnheader')).toHaveLength(
       2,
     );
@@ -190,7 +214,7 @@ describe('Bars', () => {
   it('a sensitive chart over target says so without the amount while values are hidden', async () => {
     await setHideValues(true);
     render(<Bars title="T" data={budgets} format={euro} sensitive />);
-    await waitFor(() => expect(screen.getByText('über dem Soll')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('mehr als geplant')).toBeInTheDocument());
     expect(screen.getByRole('figure').textContent).not.toMatch(/\d+,\d\d €/);
   });
 
@@ -212,7 +236,7 @@ describe('Trend', () => {
       />,
     );
     const fig = screen.getByRole('figure', { name: 'Kontostand' });
-    expect(fig).toHaveAccessibleDescription('3 Werte, von 100 bis 120.');
+    expect(fig).toHaveAccessibleDescription('Saldo: 3 Werte, von 100 bis 120.');
     expect(container.querySelectorAll('path')).toHaveLength(1);
     expect(container.querySelector('path')!.getAttribute('d')).toMatch(/^M0 .*L33\.33 .*M100 /);
     expect(container.querySelectorAll('[style*="--x"]').length).toBeGreaterThan(0);
@@ -239,9 +263,9 @@ describe('Trend', () => {
     );
     const legend = container.querySelector('ul')!;
     expect([...legend.querySelectorAll('li')].map((li) => li.textContent)).toEqual([
-      'Einnahmen4',
-      'Ausgaben3',
-      'Vorjahr1',
+      'EinnahmenApr 4',
+      'AusgabenApr 3',
+      'VorjahrApr 1',
     ]);
     expect(
       within(tableOf(screen.getByRole('figure')))
@@ -267,7 +291,7 @@ describe('Trend', () => {
     const { container, rerender } = render(
       <Trend title="T" labels={['Nov']} series={[{ label: 's', values: [5] }]} />,
     );
-    expect(screen.getByRole('figure')).toHaveAccessibleDescription('Ein Wert: 5.');
+    expect(screen.getByRole('figure')).toHaveAccessibleDescription('s: ein Wert, 5.');
     expect(container.querySelector('path')!.getAttribute('d')).toBe('M50 50');
     rerender(<Trend title="T" labels={['Nov']} series={[{ label: 's', values: [null] }]} />);
     expect(screen.getByText('Noch keine Werte.')).toBeInTheDocument();
@@ -300,5 +324,28 @@ describe('Spark', () => {
     const { container } = render(<Spark values={[2, 2, 2]} variant="area" />);
     expect(container.querySelectorAll('path')).toHaveLength(2);
     expect(container.querySelector('path')!.getAttribute('d')).not.toContain('NaN');
+  });
+});
+
+describe('Trend with "Werte ausblenden"', () => {
+  it('no amount in the axis, legend, summary or table; the line keeps its shape', async () => {
+    await setHideValues(true);
+    const { container } = render(
+      <Trend
+        title="Kontostand"
+        labels={['Jan', 'Feb', 'Mär']}
+        series={[
+          { label: 'Ein', values: [120000, 130000, 125000] },
+          { label: 'Aus', values: [90000, 95000, 99000] },
+        ]}
+        format={euro}
+        sensitive
+      />,
+    );
+    const fig = screen.getByRole('figure');
+    await waitFor(() => expect(fig.textContent).not.toMatch(/\d{3}/));
+    expect(fig).toHaveAccessibleDescription('Ein: 3 Werte. Aus: 3 Werte.');
+    expect(rows(tableOf(fig))[0]).toEqual(['Jan', 'Ausgeblendet', 'Ausgeblendet']);
+    expect(container.querySelectorAll('path').length).toBeGreaterThan(1);
   });
 });

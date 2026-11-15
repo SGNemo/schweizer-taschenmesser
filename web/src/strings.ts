@@ -2853,12 +2853,15 @@ export const de = {
     item: 'Eintrag',
     value: 'Wert',
     share: 'Anteil',
-    target: 'Soll',
-    /** Key under bars with a target mark. */
-    targetKey: 'Strich: Soll',
+    /** The mark on a bar (key and table column), unless the module names it ("Budget"). */
+    target: 'Geplant',
     ofTarget: (target: string) => `von ${target}`,
     over: (amount: string) => `${amount} drüber`,
-    overPlain: 'über dem Soll',
+    overPlain: 'mehr als geplant',
+    /** Key under columns: the icon above a column means "over". */
+    overKey: 'drüber',
+    /** Legend of a trend: the series' newest value with its label ("Nov. 2.300,00 €"). */
+    latest: (label: string, value: string) => `${label} ${value}`,
     donutSummary: (n: number, top: string, share: string, total: string | null) =>
       [
         n === 1 ? `Ein Anteil: ${top}` : `${n} Anteile, am größten ${top} mit ${share}`,
@@ -2867,11 +2870,11 @@ export const de = {
         .filter(Boolean)
         .join('. ') + '.',
     barsSummary: (n: number, over: number) =>
-      `${n1(n, 'Ein Wert', `${n} Werte`)}${over > 0 ? `, davon ${over} über dem Soll` : ''}.`,
-    trendSummary: (n: number, first: string | null, last: string | null) =>
+      `${n1(n, 'Ein Wert', `${n} Werte`)}${over > 0 ? `, davon ${over} mehr als geplant` : ''}.`,
+    trendSummary: (label: string, n: number, first: string | null, last: string | null) =>
       n === 1
-        ? `Ein Wert${last ? `: ${last}` : ''}.`
-        : `${n} Werte${first && last ? `, von ${first} bis ${last}` : ''}.`,
+        ? `${label}: ein Wert${last ? `, ${last}` : ''}.`
+        : `${label}: ${n} Werte${first && last ? `, von ${first} bis ${last}` : ''}.`,
   },
   homeEdit: {
     showMore: (n: number) => (n === 1 ? 'Mehr anzeigen · 1 Karte' : `Mehr anzeigen · ${n} Karten`),

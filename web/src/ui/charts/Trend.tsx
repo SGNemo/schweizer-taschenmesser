@@ -26,8 +26,6 @@ export interface TrendProps extends ChartBaseProps {
   compare?: TrendSeries;
   /** `area` fills under the first series and starts the scale at zero; `line` (default) may start elsewhere. */
   variant?: 'line' | 'area';
-  /** Start the value axis at zero for a line too. */
-  fromZero?: boolean;
   /** Shorter text for the value axis (e.g. "1,2 k €"); default: `format`. */
   formatAxis?: ValueFormat;
 }
@@ -45,7 +43,6 @@ export function Trend({
   series: input,
   compare,
   variant = 'line',
-  fromZero = false,
   formatAxis,
   ...base
 }: TrendProps) {
@@ -59,18 +56,24 @@ export function Trend({
     .flatMap((s) => s.values.slice(0, n))
     .filter((v): v is number => v != null && Number.isFinite(v));
   const empty = n === 0 || values.length === 0;
-  const scale = niceScale(values, { zero: fromZero || variant === 'area', count: 4 });
+  const scale = niceScale(values, { zero: variant === 'area', count: 4 });
   const x = (i: number) => (n === 1 ? 50 : (i / (n - 1)) * 100);
   const narrow = labelIndexes(n, X_LABELS.narrow);
   const wide = labelIndexes(n, X_LABELS.wide);
-  const first = series[0];
-  const firstValue = first?.values.find((v): v is number => v != null && Number.isFinite(v));
-  const latest = first ? lastValue(first.values.slice(0, n)) : null;
-  const summary = t.charts.trendSummary(
-    first ? first.values.slice(0, n).filter((v) => v != null && Number.isFinite(v)).length : 0,
-    firstValue == null ? null : read(firstValue),
-    latest ? read(latest.v) : null,
-  );
+  /** One sentence per series (every series is named; the table has every value). */
+  const summary = all
+    .map((s) => {
+      const own = s.values.slice(0, n);
+      const known = own.filter((v): v is number => v != null && Number.isFinite(v));
+      const last = lastValue(own);
+      return t.charts.trendSummary(
+        s.label,
+        known.length,
+        known.length ? read(known[0]!) : null,
+        last ? read(last.v) : null,
+      );
+    })
+    .join(' ');
   const keyed = series.length > 1 || compare != null;
 
   const ownLines = series.map((s, i) => ({ s, cls: SERIES_CLASS[i]! }));
@@ -148,8 +151,8 @@ export function Trend({
                 vectorEffect="non-scaling-stroke"
               />
             ))}
-            {variant === 'area' && first ? (
-              <path className={styles.area} d={areaPath(first.values.slice(0, n), scale)} />
+            {variant === 'area' && series[0] ? (
+              <path className={styles.area} d={areaPath(series[0].values.slice(0, n), scale)} />
             ) : null}
             {lines.map(({ s, cls }, i) => (
               <path
@@ -199,7 +202,9 @@ export function Trend({
                 </svg>
                 <span>{s.label}</span>
                 {last ? (
-                  <span className={`${styles.num} ${styles.muted}`}>{show(last.v)}</span>
+                  <span className={`${styles.num} ${styles.muted}`}>
+                    {t.charts.latest(labels[last.i] ?? '', show(last.v))}
+                  </span>
                 ) : null}
               </li>
             );
