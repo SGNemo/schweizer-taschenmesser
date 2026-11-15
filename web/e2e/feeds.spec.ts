@@ -16,7 +16,12 @@ test('Feeds: hinzufügen, gruppieren, doppelte erkennen, bearbeiten, entfernen',
   await finder
     .getByRole('searchbox', { name: 'Suchen oder Adresse einfügen' })
     .fill('blog.example.org/feed.xml');
-  await finder.getByRole('button', { name: 'Als Feed eintragen' }).click();
+  // "Ansehen" goes online only on this click; without the app or a sync server it says so calmly.
+  await finder.getByRole('button', { name: 'Ansehen' }).click();
+  await expect(
+    finder.getByText(/Die Vorschau geht in der App oder mit eigenem Sync-Server/),
+  ).toBeVisible();
+  await finder.getByRole('button', { name: 'Trotzdem eintragen' }).click();
 
   const dialog = page.getByRole('dialog', { name: 'Feed eintragen' });
   await dialog.getByRole('textbox', { name: /Adresse des Feeds/ }).fill('keine adresse');
@@ -43,7 +48,7 @@ test('Feeds: hinzufügen, gruppieren, doppelte erkennen, bearbeiten, entfernen',
   await page
     .getByRole('searchbox', { name: 'Suchen oder Adresse einfügen' })
     .fill('blog.example.org');
-  await page.getByRole('button', { name: 'Als Feed eintragen' }).click();
+  await page.getByRole('button', { name: 'Ohne Vorschau eintragen' }).click();
   const again = page.getByRole('dialog', { name: 'Feed eintragen' });
   await again
     .getByRole('textbox', { name: /Adresse des Feeds/ })

@@ -93,6 +93,12 @@ export const tLegal = defineBundle(
         to: 'frankfurter.dev (öffentliche Kurse der Europäischen Zentralbank).',
         when: 'Beim Öffnen des Werkzeugs „Währung“.',
       },
+      feeds: {
+        title: 'Feeds: Vorschau und Feed-Suche',
+        what: 'Ein einfacher Abruf der Adresse, die du eingibst oder im Startkatalog antippst: als Feed (neueste Artikel) und, wenn es eine Website ist, die Seite selbst, um ihren Feed zu finden. Keine Einträge, keine Liste deiner Feeds; der Server sieht deine IP-Adresse. Im Browser läuft der Abruf über deinen eigenen Sync-Server.',
+        to: 'Die Website bzw. der Feed-Server der Quelle (im Browser zusätzlich dein eigener Server).',
+        when: 'Nur auf Klick auf „Ansehen“ oder einen Namen im Katalog, nie im Hintergrund.',
+      },
       weather: {
         title: 'Wetter-Zeile (optional)',
         what: 'Beim Suchen eines Ortes der eingegebene Ortsname; danach die auf etwa einen Kilometer gerundete Position des gewählten Ortes (für die Vorhersage der nächsten 7 Tage sowie Luftqualität und Pollen). Keine Einträge, keine Konto- oder Gerätedaten; open-meteo.com sieht deine IP-Adresse und die üblichen Verbindungsdaten.',
@@ -336,6 +342,12 @@ export const tLegal = defineBundle(
           what: 'A request for the euro exchange rates without any data from the app. The rates are cached on the device.',
           to: 'frankfurter.dev (public rates of the European Central Bank).',
           when: 'When you open the “Währung” (currency) tool.',
+        },
+        feeds: {
+          title: 'Feeds: preview and feed lookup',
+          what: 'A plain request for the address you enter or tap in the starter catalogue: as a feed (latest articles) and, for a website, the page itself to find its feed. No entries, no list of your feeds; the server sees your IP address. In the browser the request goes through your own sync server.',
+          to: 'The website or feed server of the source (in the browser also your own server).',
+          when: 'Only when you click “Preview” or a name in the catalogue, never in the background.',
         },
         weather: {
           title: 'Weather line (optional)',

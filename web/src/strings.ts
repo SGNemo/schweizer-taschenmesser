@@ -8941,7 +8941,7 @@ export const de = {
     meta: {
       name: 'Feeds',
       description:
-        'Deine abonnierten Feeds (Nachrichten, Blogs, Podcasts) an einem Ort, nach Gruppen sortiert. Nemo ruft sie nicht selbst ab; ein Tipp öffnet die Seite.',
+        'Deine abonnierten Feeds (Nachrichten, Blogs, Podcasts) an einem Ort, nach Gruppen sortiert, mit einem Startkatalog zum Aussuchen. Nemo ruft Feeds nur auf deinen Klick ab, für die Vorschau; ein Tipp öffnet die Seite.',
       quickAdd: 'Feed eintragen',
       settings: {
         grouped: 'Nach Gruppen ordnen',
@@ -8981,8 +8981,23 @@ export const de = {
       query: 'Suchen oder Adresse einfügen',
       queryHint: 'Name einer Quelle, ein Thema oder die Adresse einer Website oder eines Feeds.',
       address: 'Diese Adresse',
-      addAddress: 'Als Feed eintragen',
-      noMatch: 'Im Katalog ist dazu nichts. Mit der Adresse des Feeds klappt es auch.',
+      addAddress: 'Ohne Vorschau eintragen',
+      preview: 'Ansehen',
+      noMatch: 'Im Katalog ist dazu nichts. Mit der Adresse der Website klappt es auch.',
+    },
+    preview: {
+      checking: (host: string) => `Schaue bei ${host} nach …`,
+      latest: 'Neueste Artikel',
+      noItems: 'In diesem Feed stehen gerade keine Artikel.',
+      subscribe: 'Abonnieren',
+      back: 'Zurück',
+      choose: (n: number) => `Diese Seite hat ${n} Feeds. Welchen möchtest du sehen?`,
+      none: 'Auf dieser Seite steht kein Feed. Du kannst die Adresse trotzdem eintragen.',
+      noProxy: 'Die Vorschau geht in der App oder mit eigenem Sync-Server. Eintragen geht auch so.',
+      network: 'Die Seite antwortet gerade nicht. Eintragen geht auch so.',
+      anyway: 'Trotzdem eintragen',
+      tapHint: 'Ein Tipp auf den Namen zeigt die neuesten Artikel.',
+      previewOf: (name: string) => `${name} ansehen`,
     },
     catalog: {
       label: 'Startkatalog',
