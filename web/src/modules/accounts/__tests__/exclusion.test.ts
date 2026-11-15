@@ -55,6 +55,8 @@ describe('module definition', () => {
     // only its own auto-lock service plus the (empty) onboarding declaration every module carries
     expect(Object.keys(c).sort()).toEqual(['onboarding', 'services']);
     expect(c.onboarding?.importers).toEqual([]);
+    // never a link target: not even a label leaves the vault (`resolveLink` answers `gone` without asking it)
+    expect(c).not.toHaveProperty('linkTarget');
     expect(c).not.toHaveProperty('calendarItems');
     expect(c).not.toHaveProperty('notifications');
     expect(c).not.toHaveProperty('quickAdd');
