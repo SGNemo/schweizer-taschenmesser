@@ -71,7 +71,7 @@ impl Sink {
     }
 }
 
-/// The hub's keys in the words of `remote_input`: the same sixteen, one to one. Written out so
+/// The hub's keys in the words of `remote_input`: the same eighteen, one to one. Written out so
 /// that a key added to one list does not compile until it is decided here.
 fn key_of(key: Key) -> remote_input::Key {
     type K = remote_input::Key;

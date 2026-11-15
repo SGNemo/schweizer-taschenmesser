@@ -221,7 +221,8 @@ fn only_two_files_simulate_input_each_its_own_kind() {
                  Read docs/rules/remote-control.md and have the change reviewed; then update \
                  {name} in tests/rules.rs. A new key also needs: `Key`, `KEYS`, `Code`, `chord`, \
                  `key_of` and its import, the count of eighteen below, tests/keyboard.rs, the \
-                 hub's list and `key_of` in the shell.",
+                 hub's list and `key_of` in the shell, and the count in the crate description, \
+                 `key_of`'s comment in src/remote.rs and docs/ARCHITECTURE-MAP.md.",
                 i + 1,
                 now.get(i).map_or("(end)", String::as_str),
                 pinned.get(i).map_or("(end)", String::as_str),
