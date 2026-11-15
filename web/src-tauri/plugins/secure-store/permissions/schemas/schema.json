@@ -379,6 +379,18 @@
           "markdownDescription": "Denies the get command without any pre-configured scope."
         },
         {
+          "description": "Enables the has command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-has",
+          "markdownDescription": "Enables the has command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the has command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-has",
+          "markdownDescription": "Denies the has command without any pre-configured scope."
+        },
+        {
           "description": "Enables the set command without any pre-configured scope.",
           "type": "string",
           "const": "allow-set",
@@ -403,10 +415,10 @@
           "markdownDescription": "Denies the set_secure_window command without any pre-configured scope."
         },
         {
-          "description": "OS keystore for small secrets, the biometric gate for the vault key and screenshot protection.\n#### This default permission set includes:\n\n- `allow-available`\n- `allow-set`\n- `allow-get`\n- `allow-delete`\n- `allow-biometric-seal`\n- `allow-biometric-unseal`\n- `allow-biometric-has`\n- `allow-biometric-delete`\n- `allow-set-secure-window`",
+          "description": "OS keystore for small secrets, the biometric gate for the vault key and screenshot protection.\n#### This default permission set includes:\n\n- `allow-available`\n- `allow-set`\n- `allow-get`\n- `allow-has`\n- `allow-delete`\n- `allow-biometric-seal`\n- `allow-biometric-unseal`\n- `allow-biometric-has`\n- `allow-biometric-delete`\n- `allow-set-secure-window`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "OS keystore for small secrets, the biometric gate for the vault key and screenshot protection.\n#### This default permission set includes:\n\n- `allow-available`\n- `allow-set`\n- `allow-get`\n- `allow-delete`\n- `allow-biometric-seal`\n- `allow-biometric-unseal`\n- `allow-biometric-has`\n- `allow-biometric-delete`\n- `allow-set-secure-window`"
+          "markdownDescription": "OS keystore for small secrets, the biometric gate for the vault key and screenshot protection.\n#### This default permission set includes:\n\n- `allow-available`\n- `allow-set`\n- `allow-get`\n- `allow-has`\n- `allow-delete`\n- `allow-biometric-seal`\n- `allow-biometric-unseal`\n- `allow-biometric-has`\n- `allow-biometric-delete`\n- `allow-set-secure-window`"
         }
       ]
     }

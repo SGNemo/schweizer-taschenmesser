@@ -6,7 +6,7 @@ export const connectors: Strings['connectors'] = {
     expired: 'The connection has expired. Please sign in again.',
     'rate-limited': 'The service reported too many requests. It will try again later.',
     'not-configured': 'Credentials are still missing.',
-    'no-proxy': 'In the browser, this fetch needs the sync server (Settings → Sync).',
+    'no-proxy': 'In the browser, this fetch needs the sync server (Settings → Sync & backup).',
     network: 'The service can’t be reached right now.',
     denied: 'Sign-in was cancelled or denied.',
     'bad-response': 'The service sent an unexpected response.',
@@ -99,7 +99,7 @@ export const connectors: Strings['connectors'] = {
     notACalendar: 'There is no calendar at this address.',
     unreachable: 'The address can’t be reached.',
     noProxy:
-      'In the browser, this needs the sync server (Settings → Sync), because calendar services block fetching from the browser.',
+      'In the browser, this needs the sync server (Settings → Sync & backup), because calendar services block fetching from the browser.',
   },
   google: {
     name: 'Google',

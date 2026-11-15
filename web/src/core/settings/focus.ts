@@ -88,8 +88,16 @@ export const focusSettingsSchema = z.object({
   weekCheck: z.boolean(),
   /** In the evening: "Tag abschließen" moves what is left to tomorrow. */
   eveningWrapUp: z.boolean(),
+  /**
+   * Planner: one soft notification „Rest verteilen?“ at 20:00 (before the quiet hours) while today still holds
+   * something; once a day, never repeated, no count. Off by default (use case „Wochenende retten“, F3).
+   */
+  restReminder: z.boolean(),
 });
 export type FocusSettings = z.infer<typeof focusSettingsSchema>;
+
+/** Evenings start at this hour (local): „Tag abschließen“ and the planner's „Rest verteilen“ (`eveningWrapUp`). */
+export const EVENING_HOUR = 17;
 
 export const DEFAULT_FOCUS: FocusSettings = {
   nextOne: true,
@@ -125,6 +133,7 @@ export const DEFAULT_FOCUS: FocusSettings = {
   weekReview: false,
   weekCheck: false,
   eveningWrapUp: true,
+  restReminder: false,
 };
 
 /** Live settings; the defaults while loading, so a widget never waits on them. */

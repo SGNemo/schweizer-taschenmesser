@@ -18,7 +18,7 @@ const SHOW_DAYS = 3;
 /**
  * One calm notice per price rise ("Netflix kostet jetzt 14,99 € statt 12,99 €"): shown from the day
  * the app first sees it for a few days, never again afterwards, off with the subscriptions setting.
- * Not red: it is information, not a deadline.
+ * Not red and not accent: it is information, not a deadline and nothing to do today (so it folds).
  */
 const source: AttentionSource = async ({ today }) => {
   const prefs = await getSettings('module.subscriptions', settings.schema, settings.defaults);
@@ -39,8 +39,9 @@ const source: AttentionSource = async ({ today }) => {
     const currency = currencyOf(sub);
     items.push({
       id: `subscriptions:price:${key}`,
-      tone: 'accent',
+      tone: 'warning',
       icon: 'repeat',
+      foldSummary: t.attention.priceFold,
       title: t.attention.subscriptionPrice(
         sub.name,
         formatMoney(rise.fromMinor, currency),

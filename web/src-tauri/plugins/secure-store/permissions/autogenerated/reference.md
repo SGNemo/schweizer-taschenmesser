@@ -7,6 +7,7 @@ OS keystore for small secrets, the biometric gate for the vault key and screensh
 - `allow-available`
 - `allow-set`
 - `allow-get`
+- `allow-has`
 - `allow-delete`
 - `allow-biometric-seal`
 - `allow-biometric-unseal`
@@ -201,6 +202,32 @@ Enables the get command without any pre-configured scope.
 <td>
 
 Denies the get command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`secure-store:allow-has`
+
+</td>
+<td>
+
+Enables the has command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`secure-store:deny-has`
+
+</td>
+<td>
+
+Denies the has command without any pre-configured scope.
 
 </td>
 </tr>

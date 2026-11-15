@@ -10,7 +10,10 @@ test.beforeEach(async ({ page }) => {
 
 /** Clicks "Speichern" and waits until the dialog is gone, i.e. the write has finished. */
 async function save(page: Page) {
-  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+    .click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
@@ -43,7 +46,7 @@ async function liveTransactionCount(page: Page): Promise<number> {
 
 async function addInvoice(page: Page, payee: string, amount: string, due: string) {
   await ready(page, '/invoices?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Rechnung hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Rechnung eintragen' });
   await dialog.getByLabel('Empfänger', { exact: true }).fill(payee);
   await dialog.getByLabel('Betrag').fill(amount);
   await dialog.getByLabel('Fällig am').fill(due);
@@ -55,7 +58,7 @@ async function addTransaction(
   o: { kind: 'Ausgabe' | 'Einnahme'; amount: string; category: string; payee?: string },
 ) {
   await ready(page, '/finance?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Buchung eintragen' });
   await dialog.getByRole('button', { name: o.kind, exact: true }).click();
   await dialog.getByLabel('Betrag').fill(o.amount);
   await dialog.getByLabel('Kategorie').selectOption({ label: o.category });
@@ -64,10 +67,13 @@ async function addTransaction(
 }
 
 test.describe('Invoices', () => {
-  test('creates an invoice, shows it on dashboard and calendar', async ({ page }) => {
+  test('creates an invoice, shows it on dashboard and calendar', async ({ page, isMobile }) => {
     await addInvoice(page, 'Stadtwerke', '89,90', '2026-10-05');
     await expect(page.getByTestId('open-total')).toHaveText(/89,90\s€/);
-    await expect(page.getByRole('button', { name: /^Stadtwerke/ })).toContainText('Fällig am');
+    // The phone's row has one meta line: the date without its label (design check G4).
+    await expect(page.getByRole('button', { name: /^Stadtwerke/ })).toContainText(
+      isMobile ? 'Mo., 5. Okt.' : 'Fällig am: Mo., 5. Okt.',
+    );
 
     await ready(page, '/');
     await expect(page.getByTestId('widget-invoices:due')).toContainText('Stadtwerke');
@@ -82,7 +88,7 @@ test.describe('Invoices', () => {
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Empfänger', { exact: true }).fill('X');
     await dialog.getByLabel('Betrag').fill('zwölf');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(dialog.getByRole('alert')).toContainText('gültigen Betrag');
   });
 
@@ -107,12 +113,22 @@ test.describe('Invoices', () => {
     await expect(row).toContainText('Rechnungen');
     await expect(row).toContainText(/−89,90\s€/);
     await page.getByRole('button', { name: 'Konten', exact: true }).click();
-    await expect(page.getByTestId('balance-Girokonto')).toHaveText(/-89,90\s€/);
+    await expect(page.getByTestId('balance-Girokonto')).toHaveText(/\u221289,90\s€/);
 
     // Reopen → expense disappears
     await ready(page, '/invoices');
     await page.getByRole('button', { name: 'Bezahlt', exact: true }).click();
-    await page.getByRole('button', { name: 'Wieder öffnen' }).click();
+    // On the phone "Wieder öffnen" is in the row's menu (0b-8 follow-up 4: the payee keeps the row's width).
+    if ((page.viewportSize()?.width ?? 0) < 768) {
+      await page
+        .locator('main li')
+        .getByRole('button', { name: 'Weitere Aktionen' })
+        .first()
+        .click();
+      await page.getByRole('menuitem', { name: 'Wieder öffnen' }).click();
+    } else {
+      await page.getByRole('button', { name: 'Wieder öffnen' }).click();
+    }
     await expect(page.getByText('Noch keine bezahlten Rechnungen.')).toBeVisible();
     await expect.poll(() => liveTransactionCount(page)).toBe(0);
     await ready(page, '/finance?tab=transactions');
@@ -135,9 +151,10 @@ test.describe('Invoices', () => {
 test.describe('Subscriptions', () => {
   test('totals per month and year, next charge, cancellation deadline, pausing', async ({
     page,
+    isMobile,
   }) => {
     await ready(page, '/subscriptions?new=1');
-    let dialog = page.getByRole('dialog', { name: 'Abo hinzufügen' });
+    let dialog = page.getByRole('dialog', { name: 'Abo eintragen' });
     await dialog.getByLabel('Name').fill('Streaming');
     await dialog.getByLabel('Betrag').fill('12,99');
     await dialog.getByLabel('Abbuchung am').fill('2026-10-15');
@@ -147,7 +164,7 @@ test.describe('Subscriptions', () => {
     await save(page);
 
     await ready(page, '/subscriptions?new=1');
-    dialog = page.getByRole('dialog', { name: 'Abo hinzufügen' });
+    dialog = page.getByRole('dialog', { name: 'Abo eintragen' });
     await dialog.getByLabel('Name').fill('Cloud');
     await dialog.getByLabel('Betrag').fill('99');
     await dialog.getByLabel('Abbuchung am').fill('2026-12-01');
@@ -157,24 +174,26 @@ test.describe('Subscriptions', () => {
     await expect(page.getByTestId('total-month')).toHaveText(/21,24\s€/);
     await expect(page.getByTestId('total-year')).toHaveText(/254,88\s€/);
     const streaming = page.getByRole('button', { name: /Streaming/ });
-    await expect(streaming).toContainText('Nächste Abbuchung: 15. Okt. 2026');
-    await expect(streaming).toContainText('Kündigen bis: 16. Okt. 2026');
+    // The phone's one meta line (design check G4): the day without the year, a deadline only while it is near.
+    await expect(streaming).toContainText(/Nächste Abbuchung: 15\. Okt\./);
+    if (!isMobile) await expect(streaming).toContainText('Kündigen bis: 16. Okt. 2026');
     await expect(page.getByRole('button', { name: /Cloud/ })).toContainText('Jährlich');
 
     // Pausing removes it from the totals. Desktop: the row's (neutral) switch. Phone: the row has no switch
-    // (one control less per row), "Pausieren" is in the row's menu.
+    // (one control less per row) and no "⋯" (0b-8 G4): "Aktiv" is in the dialog.
     const pause = page.getByRole('switch', { name: /Streaming/ });
     if (await pause.isVisible()) {
       await expect(pause).toHaveAttribute('data-tone', 'neutral');
       await pause.click();
     } else {
       await expect(pause).toHaveCount(0);
+      // Phone (0b-8 G4): no "⋯" per row; "Aktiv" is in the dialog.
+      await page.getByRole('button', { name: /Streaming/ }).click();
+      await page.getByRole('dialog').getByRole('switch', { name: 'Aktiv' }).click();
       await page
-        .getByRole('listitem')
-        .filter({ hasText: 'Streaming' })
-        .getByRole('button', { name: 'Weitere Aktionen' })
+        .getByRole('dialog')
+        .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
         .click();
-      await page.getByRole('menuitem', { name: 'Pausieren' }).click();
     }
     await expect(page.getByTestId('total-month')).toHaveText(/8,25\s€/);
 
@@ -259,7 +278,7 @@ test.describe('Finance', () => {
     await addTransaction(page, { kind: 'Ausgabe', amount: '45,50', category: 'Lebensmittel' });
     await ready(page, '/finance');
     const chart = page.getByTestId('chart-categories');
-    await expect(chart.locator('svg.recharts-surface')).toBeVisible();
+    await expect(chart.getByText(/45,50\s€/)).toBeVisible();
     // Point at the row of the bar (the chart resolves the hovered category from the pointer).
     await chart.hover({ position: { x: 300, y: 24 } });
     const tip = page.getByTestId('chart-tooltip');
@@ -316,20 +335,20 @@ test.describe('Finance', () => {
     await addTransaction(page, { kind: 'Einnahme', amount: '100,00', category: 'Gehalt' });
     await ready(page, '/finance?tab=accounts');
     await togglePageMoreFields(page); // Konten/Kategorien live in Erweitert
-    await page.getByRole('button', { name: 'Konto hinzufügen' }).click();
+    await page.getByRole('button', { name: 'Konto eintragen' }).click();
     await page.getByLabel('Kontoname').fill('Sparkonto');
     await page.getByLabel('Anfangssaldo').fill('1.000,00');
     await save(page);
     await expect(page.getByTestId('balance-Sparkonto')).toHaveText(/1\.000,00\s€/);
     await expect(page.getByTestId('balance-Girokonto')).toHaveText(/100,00\s€/);
 
-    await page.getByRole('button', { name: 'Übersicht', exact: true }).click();
+    await page.getByRole('button', { name: 'Monat', exact: true }).click();
     await expect(page.getByTestId('hero')).toHaveText(/1\.100,00\s€/);
 
     await page.getByRole('button', { name: 'Kategorien', exact: true }).click();
     await page
       .getByRole('region', { name: 'Ausgabenkategorien' })
-      .getByRole('button', { name: 'Kategorie hinzufügen' })
+      .getByRole('button', { name: 'Kategorie eintragen' })
       .click();
     await page.getByLabel('Name').fill('Haustier');
     await save(page);

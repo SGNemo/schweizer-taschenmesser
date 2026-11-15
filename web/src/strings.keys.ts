@@ -27,7 +27,7 @@ export const tKeys = defineBundle(
     chordsNone: 'Kein Werkzeug eingeschaltet.',
     then: (key: string) => `dann ${key}`,
     actions: {
-      quickAdd: 'Neu erfassen',
+      quickAdd: 'Neu eintragen',
       palette: 'Suchen oder fragen',
       today: 'Zur Übersicht (Heute)',
       focus: 'Fokus starten',
@@ -71,7 +71,7 @@ export const tKeys = defineBundle(
       chordsNone: 'No tool is switched on.',
       then: (key: string) => `then ${key}`,
       actions: {
-        quickAdd: 'Add new',
+        quickAdd: 'New entry',
         palette: 'Search or ask',
         today: 'Go to Overview (Today)',
         focus: 'Start focus',

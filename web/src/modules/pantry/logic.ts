@@ -19,6 +19,8 @@ export function expiryText(
   item: Pick<PantryItem, 'expires'>,
   today: string,
   soonDays: number,
+  /** Phone (0b-8 follow-up 15): without the weekday, so "Wird knapp" fits beside it and the label keeps two lines. */
+  opts: { weekday?: boolean } = {},
 ): string | null {
   const d = daysLeft(item, today);
   if (d === undefined) return null;
@@ -26,8 +28,8 @@ export function expiryText(
   if (d === 0) return t.pantry.today;
   if (d <= soonDays) return t.pantry.inDays(d);
   // Short weekday date like every other list; the year only when it is not this one.
-  const pattern =
-    item.expires!.slice(0, 4) === today.slice(0, 4) ? 'EEE, d. MMM' : 'EEE, d. MMM yyyy';
+  const day = item.expires!.slice(0, 4) === today.slice(0, 4) ? 'd. MMM' : 'd. MMM yyyy';
+  const pattern = opts.weekday === false ? day : `EEE, ${day}`;
   return t.pantry.until(formatDay(item.expires!, pattern));
 }
 

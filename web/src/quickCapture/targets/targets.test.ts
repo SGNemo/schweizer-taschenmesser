@@ -351,6 +351,90 @@ describe('saveCapture: plan (two stages)', () => {
   });
 });
 
+describe('saveCapture: break (a blocker of the planner day)', () => {
+  const PLAN_ON = { ...ON, planner: true };
+
+  it('appends a blocker to the day row (today, 1 h by default) and writes no ToDo', async () => {
+    const saved = await saveCapture('break', { title: 'Pause' }, { states: PLAN_ON });
+    const [day] = await rows('planner_day');
+    expect(day).toMatchObject({ id: '2026-09-30', date: '2026-09-30' });
+    expect(day!.blockers).toEqual([{ id: expect.any(String), label: 'Pause', min: 60 }]);
+    expect(await rows('todos_task')).toHaveLength(0);
+    expect(saved).toMatchObject({ type: 'break', moduleId: 'planner' });
+  });
+
+  it('keeps what the day had, takes the typed length or span, and the undo takes out only this blocker', async () => {
+    await saveCapture(
+      'break',
+      { title: 'Freizeit', date: '2026-10-03', time: '14:00', endTime: '16:00' },
+      { states: PLAN_ON },
+    );
+    const second = await saveCapture(
+      'break',
+      { title: 'Zocken', date: '2026-10-03', estimateMin: 120 },
+      { states: PLAN_ON },
+    );
+    const [day] = await rows('planner_day');
+    expect(day!.blockers.map((b: { label: string; min: number; from?: string }) => b)).toEqual([
+      { id: expect.any(String), label: 'Freizeit', min: 120, from: '14:00', to: '16:00' },
+      { id: expect.any(String), label: 'Zocken', min: 120 },
+    ]);
+    await second.undo();
+    const [after] = await rows('planner_day');
+    expect(after!.blockers.map((b: { label: string }) => b.label)).toEqual(['Freizeit']);
+  });
+
+  it('a removed day comes back empty; the undo of a day it brought in removes it again', async () => {
+    await db.table('planner_day').put({
+      id: '2026-10-04',
+      date: '2026-10-04',
+      availableMin: 30,
+      blockers: [{ id: 'old', label: 'Alt', min: 30 }],
+      createdAt: 1,
+      updatedAt: 1,
+      deviceId: 'x',
+      deletedAt: 5,
+      _f: {},
+    });
+    const saved = await saveCapture(
+      'break',
+      { title: 'Zocken', date: '2026-10-04' },
+      { states: PLAN_ON },
+    );
+    const [day] = await rows('planner_day');
+    expect(day).toMatchObject({ deletedAt: null, blockers: [{ label: 'Zocken', min: 60 }] });
+    expect(day!.availableMin).toBeUndefined();
+    await saved.undo();
+    expect((await rows('planner_day'))[0]!.deletedAt).not.toBeNull();
+  });
+
+  it('two breaks of one day in one batch: the undo takes both out', async () => {
+    const saved = await saveCaptures(
+      [
+        { type: 'break', fields: { title: 'Zocken', date: '2026-10-03' } },
+        {
+          type: 'break',
+          fields: { title: 'Freizeit', date: '2026-10-03', time: '14:00', endTime: '16:00' },
+        },
+      ],
+      'Pause Sa Zocken\nFreizeit Sa 14 bis 16 Uhr',
+      { states: PLAN_ON },
+    );
+    expect((await rows('planner_day'))[0]!.blockers).toHaveLength(2);
+    await saved.undo();
+    const [day] = await rows('planner_day');
+    expect(day!.deletedAt === null ? day!.blockers : []).toEqual([]);
+  });
+
+  it('is there only with the planner on', async () => {
+    await expect(saveCapture('break', { title: 'Pause' }, { states: ON })).rejects.toMatchObject({
+      code: 'module-off',
+    });
+    expect(availableTypes({ planner: true })).toContain('break');
+    expect(availableTypes({ todos: true })).not.toContain('break');
+  });
+});
+
 describe('saveCaptures', () => {
   it('saves several entries as one batch with one undo for all', async () => {
     const saved = await saveCaptures(

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { DayPart } from '@/core/plan/types';
 import { DATE_RE, TIME_RE } from '@/core/time/dates';
 
 /**
@@ -29,6 +30,13 @@ export const daySchema = z.object({
   to: z.string().regex(TIME_RE).optional(),
 });
 
+/** The day parts a row may carry (`core/plan/types.ts` `DayPart`). */
+export const DAY_PARTS_ENUM = [
+  'morning',
+  'afternoon',
+  'evening',
+] as const satisfies readonly DayPart[];
+
 export const PLAN_PRIORITIES = [0, 1, 2, 3] as const;
 
 /**
@@ -40,7 +48,14 @@ export const itemSchema = z.object({
   title: z.string().optional(),
   durationMin: z.number().int().min(1).max(1440).optional(),
   priority: z.number().int().min(0).max(3).optional(),
-  due: z.object({ date: z.string().regex(DATE_RE), hard: z.boolean() }).optional(),
+  /** A deadline; `time` ('HH:mm') is its hour („Frist So 18:00“, package 5b): shown, never planned by. */
+  due: z
+    .object({
+      date: z.string().regex(DATE_RE),
+      hard: z.boolean(),
+      time: z.string().regex(TIME_RE).optional(),
+    })
+    .optional(),
   /** The user's own date (a ToDo's `plannedFor` before the first overwrite); read as "not before". */
   earliest: z.string().regex(DATE_RE).optional(),
   /** Nailed to a day („Festnageln“). */
@@ -48,6 +63,8 @@ export const itemSchema = z.object({
   splittable: z.boolean().optional(),
   /** „Nicht planen“. */
   excluded: z.boolean().optional(),
+  /** Tagesabschnitt (package 4b): orders the thing inside its day and, with a window, where it sits; never its day. */
+  part: z.enum(DAY_PARTS_ENUM).optional(),
   order: z.number().default(0),
 });
 

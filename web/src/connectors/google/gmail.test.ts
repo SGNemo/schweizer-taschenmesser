@@ -35,6 +35,7 @@ function mock(handler: (url: URL, call: number) => Response) {
     fetchPublic: fetchFn,
     secrets: {
       get: async () => undefined,
+      has: async () => false,
       set: async () => undefined,
       delete: async () => undefined,
     },
@@ -107,6 +108,25 @@ describe('gmailProvider.threads', () => {
     expect(detail.searchParams.get('format')).toBe('metadata');
     // only GETs against gmail.googleapis.com: nothing can modify the mailbox with this scope
     expect(urls.every((u) => u.host === 'gmail.googleapis.com')).toBe(true);
+  });
+
+  it('keeps the labels of the newest message apart from the union (`SENT` of an older reply does not count)', async () => {
+    const mine = metaThread('t4', 'Frage', false);
+    mine.messages[1]!.labelIds = ['SENT'];
+    const older = metaThread('t5', 'Frage', false);
+    older.messages[0]!.labelIds = ['SENT'];
+    const { ctx } = mock((url) =>
+      url.pathname.endsWith('/threads')
+        ? json({ threads: [{ id: 't4' }, { id: 't5' }] })
+        : json(url.pathname.endsWith('t4') ? mine : older),
+    );
+    const page = await gmailProvider.threads(ctx, {});
+    expect(page.threads.map((t) => [t.id, t.lastLabelIds])).toEqual([
+      ['t4', ['SENT']],
+      ['t5', ['INBOX']],
+    ]);
+    // The union still carries both (the list filters by it).
+    expect(page.threads[1]!.labelIds).toEqual(expect.arrayContaining(['SENT', 'INBOX']));
   });
 
   it('asks for List-Unsubscribe and Precedence and keeps only the derived „personal“ flag', async () => {

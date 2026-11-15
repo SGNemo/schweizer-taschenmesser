@@ -1,6 +1,5 @@
-/* Status lines inside the settings head (Identity 4.0, package 0b-6b): each state is one line of text, a link into
-   its category – name, state, context – with no frame and no fill. Tokens only. "Needs a look" is said by the words
-   of the state and a small ink mark before them, never by red and never by colour alone. */
+/* Status lines inside the settings head (Identity 4.0, package 0b-6b): the grid of the status lines; the line itself is
+   `core/status/StatusLineLink` (shared with the page "Gerätestatus"). Tokens only. */
 .tiles {
   list-style: none;
   margin: var(--space-2) 0 0;
@@ -14,62 +13,11 @@
 .tiles > li {
   min-width: 0;
 }
-.tile {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  align-content: flex-start;
-  gap: 0 var(--space-2);
-  height: 100%;
-  min-height: var(--touch);
-  padding: var(--space-1) var(--space-2);
-  margin-inline: calc(-1 * var(--space-2));
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  text-decoration: none;
-}
-.tile:hover {
-  background: var(--surface-sunken);
-}
-.name {
-  min-width: 0;
-  display: inline-flex;
-  align-items: center;
-  align-self: center;
-  gap: var(--space-2);
-  color: var(--text-muted);
-  font-size: var(--text-label);
-}
-.status {
-  font-size: var(--text-label);
-  font-weight: var(--weight-semibold);
-  overflow-wrap: anywhere;
-}
-.tile[data-attention='true'] .status::before {
-  content: '';
-  display: inline-block;
-  width: 0.5rem;
-  height: 0.5rem;
-  margin-inline-end: var(--space-1);
-  border-radius: var(--radius-full);
-  background: var(--text);
-}
-.context {
-  color: var(--text-3);
-  font-size: var(--text-meta);
-  overflow-wrap: anywhere;
-}
-
 @media (max-width: 899px) {
   /* Phone: two columns of lines, so the head stays a strip, not a screen of its own (name and state wrap onto two
      lines where one is too short). */
   .tiles {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     margin-top: var(--space-1);
-  }
-  /* U55: the context line is never cut. A line that only describes the category stays off the phone; the list below
-     says it too. */
-  .tile[data-generic='true'] .context {
-    display: none;
   }
 }

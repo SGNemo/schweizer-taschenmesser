@@ -104,7 +104,7 @@ export const calendar: Strings['calendar'] = {
   view: 'View',
   prev: 'Back',
   next: 'Next',
-  newEvent: 'New event',
+  newEvent: 'Add event',
   headFree: {
     today: 'Free today',
     rest: 'Nothing more today',
@@ -150,6 +150,7 @@ export const calendar: Strings['calendar'] = {
     empty: 'No reminders yet.',
     emptyAction: 'Add a reminder',
     next: 'Next',
+    once: 'once',
     ended: 'Ended',
     paused: 'Paused',
     active: 'Active',
@@ -199,7 +200,7 @@ export const calendar: Strings['calendar'] = {
     reminder: (lead) => `Reminder: ${lead}`,
   },
   tabsLabel: 'Section',
-  tabCalendar: 'Calendar',
+  tabCalendar: 'Events',
   tabReminders: 'Reminders',
   kinds: {
     event: 'Event',
@@ -214,6 +215,12 @@ export const calendar: Strings['calendar'] = {
     external: 'External',
     plan: 'Plan',
     training: 'Training',
+    gift: 'Gift',
+    trial: 'Trial',
+  } as Record<string, string>,
+  overdueKinds: {
+    invoice: 'Invoice overdue',
+    expiry: 'Expired',
   } as Record<string, string>,
   planLink: 'Plan',
   external: {

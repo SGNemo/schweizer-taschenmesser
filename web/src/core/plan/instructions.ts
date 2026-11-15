@@ -38,6 +38,8 @@ export interface InstructionItem {
   date?: string;
   /** Its hard due, if any. */
   hardDue?: string;
+  /** The day it is nailed to, if any (it stays there when its day is moved). */
+  pinned?: string;
 }
 
 export interface InstructionContext {
@@ -204,15 +206,34 @@ function nextMonday(today: string): string {
   return addDays(today, 8 - iso);
 }
 
-/** „alles von Do nach Fr“: Do is free, its things not before Fr – a hard due before Fr stays first. */
+/**
+ * „alles von Do nach Fr“: Do is free, its things not before Fr – a hard due before Fr stays first, and so does
+ * a thing nailed to Do.
+ */
 function moveAll(a: string, b: string, ctx: InstructionContext): PlanOp[] {
   return [
     { op: 'available', date: a, min: 0 },
     ...ctx.items
-      .filter((i) => i.date === a && !(i.hardDue && i.hardDue < b))
+      .filter((i) => i.date === a && !(i.hardDue && i.hardDue < b) && i.pinned !== a)
       .map((i): PlanOp => ({ op: 'earliest', key: i.key, date: b })),
   ];
 }
+
+/**
+ * „Rest verteilen“ in the evening (use case „Wochenende retten“, F3): the ops of `moveAll(today, tomorrow)` –
+ * today has no time left, each open thing of today waits until tomorrow (the run spreads them over the next
+ * days); a thing nailed to today or due hard today stays. Pure and deterministic; nothing moves before the
+ * user takes the preview.
+ */
+export const restToTomorrow = (ctx: InstructionContext): PlanOp[] =>
+  moveAll(ctx.today, addDays(ctx.today, 1), ctx);
+
+const REST = re(
+  String.raw`(?:den |der )?rest (?:verteilen|auf morgen(?: (?:schieben|verteilen|legen))?)`,
+);
+
+/** The field said „Rest verteilen“ (its preview then speaks one calm sentence, never a count of what was left). */
+export const isRestSentence = (text: string): boolean => REST.test(normalize(text));
 
 /** The sentence → an instruction (German only, like the quick-capture parser). */
 export function parseInstruction(text: string, ctx: InstructionContext): Instruction {
@@ -220,6 +241,9 @@ export function parseInstruction(text: string, ctx: InstructionContext): Instruc
   if (!s) return { kind: 'none' };
   const day = (token: string) => resolveDay(token, ctx.today);
   let m: RegExpExecArray | null;
+
+  // The evening: what is left of today goes to the next days („Rest verteilen“, „Rest auf morgen“).
+  if (REST.test(s)) return { kind: 'ops', ops: restToTomorrow(ctx) };
 
   // Runs.
   if (re(String.raw`(?:alles )?neu (?:mischen|durchmischen)`).test(s))

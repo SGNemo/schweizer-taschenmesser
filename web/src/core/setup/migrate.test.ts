@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { allSetupSteps, applicableSteps } from './registry';
 import { buildChecklist } from './checklist';
-import { initialState } from './state';
+import { initialState, markStepDone } from './state';
 import {
   chooseOrigin,
   EMPTY_MIGRATE,
@@ -124,10 +124,9 @@ describe('step registration', () => {
     expect(ids.indexOf('core.migrate')).toBeGreaterThan(ids.indexOf('core.ai'));
   });
 
-  it('appears on an empty installation only, but stays once an origin was chosen', async () => {
-    const has = async () =>
-      (await applicableSteps(allSetupSteps, ctx)).map((s) => s.id).includes('core.migrate');
-    expect(await has()).toBe(true);
+  const has = async () =>
+    (await applicableSteps(allSetupSteps, ctx)).map((s) => s.id).includes('core.migrate');
+  const addOwnNote = async () => {
     const { allManifests } = await import('@/core/modules/registry');
     const { createCollectionRepo } = await import('@/core/db/repo');
     const notes = allManifests.find((m) => m.id === 'notes')!;
@@ -136,9 +135,29 @@ describe('step registration', () => {
       body: '',
       pinned: false,
     });
+  };
+
+  it('is not offered on an installation that already holds own entries', async () => {
+    await addOwnNote();
     expect(await has()).toBe(false);
     await chooseOrigin('bank');
     expect(await has()).toBe(true);
+  });
+
+  it('a fresh install that never started the setup does not keep the step', async () => {
+    expect(await has()).toBe(true);
+    await addOwnNote();
+    expect(await has()).toBe(false);
+  });
+
+  it('A11 (round 5): once offered, the first own entry does not change the step count', async () => {
+    await markStepDone('core.profiles');
+    expect(await has()).toBe(true);
+    const before = (await applicableSteps(allSetupSteps, ctx)).length;
+    await addOwnNote();
+    expect(await has()).toBe(true);
+    expect((await applicableSteps(allSetupSteps, ctx)).length).toBe(before);
+    expect((await db.table('_meta').get('migrate.offered')).value).toBe(true);
   });
 });
 

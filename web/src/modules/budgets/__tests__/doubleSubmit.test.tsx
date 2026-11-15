@@ -24,7 +24,7 @@ it('a double click on "Speichern" books the deposit once', async () => {
   let open = true;
   render(<DepositDialog goal={goal} onClose={() => (open = false)} />);
   await userEvent.type(screen.getByLabelText('Betrag'), '50');
-  const save = screen.getByRole('button', { name: 'Speichern' });
+  const save = screen.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ });
   fireEvent.click(save);
   fireEvent.click(save);
   await waitFor(() => expect(open).toBe(false));

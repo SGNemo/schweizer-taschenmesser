@@ -1,8 +1,8 @@
 /**
  * Evernote export (`.enex`): `<en-export>` with one `<note>` per note (`title`, `content` = ENML in a
  * CDATA block, `created`, `updated`, `tag`, `note-attributes`, `resource` with base64 `data`).
- * Scanned with `indexOf` – no DOM, no regex over the (possibly huge) base64 blocks. Timestamps are
- * ignored like in the Keep import: the notes model sets its own. Attachments are counted, not stored.
+ * Scanned with `indexOf` – no DOM, no regex over the (possibly huge) base64 blocks. `created` and
+ * `updated` become the note's own dates (D17). Attachments are counted, not stored.
  */
 import { withTagLine, type ParsedNote } from '@/core/io/markdownNote';
 import { addSkip, type SkipCounts } from '../types';
@@ -27,6 +27,16 @@ function element(src: string, name: string, from = 0): { inner: string; end: num
   const close = src.indexOf(closeTag, open.lastIndex);
   if (close < 0) return undefined;
   return { inner: src.slice(open.lastIndex, close), end: close + closeTag.length };
+}
+
+/** Evernote's `20230115T093000Z` (always UTC) as epoch ms; nothing for a missing or broken value. */
+export function enexTime(raw: string | undefined): number | undefined {
+  const m = /^\s*(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z\s*$/.exec(raw ?? '');
+  if (!m) return undefined;
+  const iso = `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}.000Z`;
+  const ms = Date.parse(iso);
+  // An impossible date (Feb 30) does not read back the same: it counts as missing.
+  return Number.isFinite(ms) && ms > 0 && new Date(ms).toISOString() === iso ? ms : undefined;
 }
 
 function plain(s: string): string {
@@ -71,7 +81,13 @@ export function parseEnex(text: string): EnexResult {
       addSkip(result.skipped, 'empty');
       continue;
     }
-    result.notes.push({ title, body: withTagLine(markdown, tags), tags });
+    const parsed: ParsedNote = { title, body: withTagLine(markdown, tags), tags };
+    // The note keeps its own dates (D17), as a Markdown note keeps its front matter's.
+    const createdAt = enexTime(element(rest, 'created')?.inner);
+    const updatedAt = enexTime(element(rest, 'updated')?.inner);
+    if (createdAt !== undefined) parsed.createdAt = createdAt;
+    if (updatedAt !== undefined) parsed.updatedAt = updatedAt;
+    result.notes.push(parsed);
   }
   if (result.total === 0) result.invalid = true;
   return result;

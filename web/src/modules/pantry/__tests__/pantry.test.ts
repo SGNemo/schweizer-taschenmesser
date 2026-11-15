@@ -96,7 +96,7 @@ describe('calendar and reminders', () => {
     await itemRepo.create(item({ name: 'Leer', expires: '2026-10-05', count: 0 }));
     await itemRepo.create(item({ name: 'Später', expires: '2026-12-05' }));
     const items = await calendar({ from: '2026-10-01', to: '2026-10-31' });
-    expect(items.map((i) => i.title)).toEqual(['Läuft bald ab: Joghurt']);
+    expect(items.map((i) => i.title)).toEqual(['MHD: Joghurt']);
     expect(items[0]).toMatchObject({ date: '2026-10-05', allDay: true, source: 'pantry' });
   });
   it('reminds one day before at 18:00 by default, once, only for stocked items', async () => {

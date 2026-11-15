@@ -123,6 +123,15 @@ export async function prepareOp(
 
   if (def.kind === 'create') {
     const data = coerceData(manifest, def, op.data ?? {});
+    if (def.maxActive !== undefined) {
+      const live = await ctx.database
+        .table<{ deletedAt: number | null }>(tableName(manifest.id, def.collection))
+        .filter((r) => r.deletedAt === null)
+        .count();
+      if (live >= def.maxActive) {
+        return { ...base, data, lines: [], error: 'full', ready: false };
+      }
+    }
     const defaulted: string[] = [];
     const loadDefaults = manifest.contributions?.aiCreateDefaults;
     if (loadDefaults) {

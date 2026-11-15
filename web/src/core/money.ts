@@ -1,4 +1,4 @@
-import { decimalSeparator, numberFormat } from '@/core/i18n/format';
+import { decimalSeparator, formatWithMinus, numberFormat } from '@/core/i18n/format';
 
 /**
  * Money is stored as integer minor units (1/100). Accounts and invoices carry an optional ISO 4217
@@ -31,13 +31,17 @@ export const currencyOf = (record?: { currency?: string | undefined } | string |
   return code && isCurrencyCode(code) ? code : DEFAULT_CURRENCY;
 };
 
-/** 1234 → "12,34 €" / "€12.34" (format region of this device), in the given currency (euro by default). */
+/**
+ * 1234 → "12,34 €" / "€12.34" (format region of this device), in the given currency (euro by default).
+ * A negative amount carries the typographic minus ("−5,00 €"), the same sign the pages put before an
+ * expense themselves, never the hyphen `Intl` prints.
+ */
 export const formatMoney = (minor: number, currency: string = DEFAULT_CURRENCY): string =>
-  numberFormat({ style: 'currency', currency: currencyOf(currency) }).format(minor / 100);
+  formatWithMinus(numberFormat({ style: 'currency', currency: currencyOf(currency) }), minor / 100);
 
-/** Whole-euro amount for chart axes: 120000 → "1.200" / "1,200". */
+/** Whole-euro amount for chart axes: 120000 → "1.200" / "1,200", -50000 → "−500". */
 export const formatMoneyAxis = (minor: number): string =>
-  numberFormat({ maximumFractionDigits: 0 }).format(minor / 100);
+  formatWithMinus(numberFormat({ maximumFractionDigits: 0 }), minor / 100);
 
 /** 1234 → "12,34" / "12.34" (for editing in an input; no thousands separators). */
 export const formatMoneyInput = (minor: number): string =>
@@ -55,7 +59,8 @@ export function parseMoney(
   input: string,
   opts: { allowNegative?: boolean; decimal?: string } = {},
 ): number | undefined {
-  let s = input.replace(/[\s€$£¥\u00a0\u202f']/g, '');
+  // The typographic minus the app prints ("−5,00 €") reads back like the hyphen.
+  let s = input.replace(/[\s€$£¥\u00a0\u202f']/g, '').replace(/^\u2212/, '-');
   if (!s) return undefined;
   let negative = false;
   if (s.startsWith('-')) {

@@ -2,7 +2,7 @@ export { KpiWidget, type KpiTrend } from './Kpi';
 export { DueList, type DueEntry } from './DueList';
 export { ProgressList, type ProgressEntry } from './ProgressList';
 export { ChecklistWidget, type ChecklistEntry } from './Checklist';
-export { TimelineWidget, type TimelineItem } from './Timeline';
+export { DatedTimeline, TimelineWidget, type DatedRow, type TimelineItem } from './Timeline';
 export { TileGrid, type TileEntry } from './Tiles';
 export { StatusWidget } from './Status';
 export { GaugeList, type GaugeEntry } from './Gauge';

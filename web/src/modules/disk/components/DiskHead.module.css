@@ -1,4 +1,0 @@
-/* Nothing left to style: since Identity 4.0 (package 0b-6b) the head of "Dieser PC" is the frame's own figure
-   (`DiskHead.tsx`); the ring strip and the context line are gone (the drive cards say both). The file stays because
-   the protected `ui/tokens.test.ts` reads it by name ("head zone" test); the acceptance sweep 0b-8 removes both
-   together. */

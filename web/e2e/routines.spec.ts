@@ -16,7 +16,7 @@ test('a routine: one click, a name, Enter; it is due today', async ({ page }) =>
   const phone = (page.viewportSize()?.width ?? 1280) < 900;
   if (phone) await page.getByTestId('bottom-plus').click();
   else await page.locator('[data-page-action]').click();
-  const dialog = page.getByRole('dialog', { name: 'Routine anlegen' });
+  const dialog = page.getByRole('dialog', { name: 'Routine eintragen' });
   await expect(dialog).toBeVisible();
   // The name field has the focus: typing and Enter is all that is left.
   await page.keyboard.type('Bad putzen');
@@ -33,11 +33,11 @@ test('"Erledigt" hands the routine to the next name, and "Rückgängig" gives it
 }) => {
   await enable(page, 'routines');
   await ready(page, '/routines?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Routine anlegen' });
+  const dialog = page.getByRole('dialog', { name: 'Routine eintragen' });
   await dialog.getByLabel('Name', { exact: true }).fill('Müll rausbringen');
   await dialog.getByRole('button', { name: 'Mehr Felder anzeigen' }).click();
   await dialog.getByLabel('Wer wechselt sich ab').fill('Mia, Ben');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(dialog).toHaveCount(0);
 
   const row = page.getByRole('listitem').filter({ hasText: 'Müll rausbringen' });
@@ -59,11 +59,11 @@ test('"Erledigt" hands the routine to the next name, and "Rückgängig" gives it
 test('one way: a start fills the routine; „Los“ ticks it off step by step', async ({ page }) => {
   await enable(page, 'routines');
   await ready(page, '/routines?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Routine anlegen' });
+  const dialog = page.getByRole('dialog', { name: 'Routine eintragen' });
   await dialog.getByRole('button', { name: 'Abend', exact: true }).click();
   await expect(dialog.getByLabel('Name', { exact: true })).toHaveValue('Abendroutine');
   await expect(dialog.getByLabel('Wie oft')).toHaveValue('daily');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: 'Routine eintragen' }).click();
   await expect(dialog).toHaveCount(0);
 
   const row = page.getByRole('listitem').filter({ hasText: 'Abendroutine' });
@@ -115,9 +115,9 @@ test('reminder and planner: optional, in the same form; a daily start stays out 
 test('calm: no red on the page, and a routine that waited is simply "dran"', async ({ page }) => {
   await enable(page, 'routines');
   await ready(page, '/routines?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Routine anlegen' });
+  const dialog = page.getByRole('dialog', { name: 'Routine eintragen' });
   await dialog.getByLabel('Name', { exact: true }).fill('Fenster putzen');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(dialog).toHaveCount(0);
   // Three weeks later the routine was never ticked: it is "dran", nothing more.
   await page.clock.setFixedTime(new Date('2026-10-20T10:00:00'));

@@ -35,6 +35,7 @@ const source: AttentionSource = async ({ today }) => {
             detail: sum(due),
             to: '/invoices',
             rank: 1,
+            due: 'today' as const,
           },
         ]
       : []),

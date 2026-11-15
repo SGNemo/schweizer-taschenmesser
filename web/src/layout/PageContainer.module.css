@@ -7,10 +7,15 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  /* Crossfade when the page (router key = module) changes; navigation does not slide. */
-  animation: pageIn var(--dur-fast) linear;
+  /* The one navigation motion (DESIGN-SPEC § 9): a 120 ms crossfade when the page (router key = module) changes;
+     nothing slides, and lists and cards appear without an entrance of their own (0b-8). */
+  animation: pageCrossfade var(--dur-fast) linear;
 }
-@keyframes pageIn {
+/* While the frame waits for the page's first read (`layout/firstReadHold`): laid out, not painted. */
+.page[data-held] {
+  visibility: hidden;
+}
+@keyframes pageCrossfade {
   from {
     opacity: 0;
   }

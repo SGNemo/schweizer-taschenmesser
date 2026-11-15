@@ -1,11 +1,16 @@
+import { Link } from 'react-router';
+import { useNow } from '@/core/focus/useNow';
 import { formatMinutes } from '@/core/i18n/format';
 import { dayName } from '@/core/plan/explain';
+import { useFocusSettings } from '@/core/settings/focus';
 import { t } from '@/strings';
 import { ProgressList, useWidgetSize, type ProgressEntry } from '@/ui';
 import { rowsFor } from '@/ui/widgets/size';
 import type { BoardDay } from '../board';
 import { capacityState } from '../components/capacity';
+import { REST_PATH, restOffered } from '../rest';
 import { useBoard } from '../useBoard';
+import styles from './WeekWidget.module.css';
 
 const compact = (min: number) => formatMinutes(min, { compact: true });
 
@@ -49,20 +54,35 @@ export function weekSummary(days: readonly BoardDay[]): string | undefined {
   return t.planner.widget.until(dayName(last.date), compact(planned), compact(free));
 }
 
-/** The week's load: s = today and tomorrow, m = four days, l = six days from today. */
+/**
+ * The week's load: s = today and tomorrow, m = four days, l = six days from today. In the evening (from 17:00,
+ * `focus.eveningWrapUp`) one quiet text action „Rest verteilen“ while today holds something open: it opens the
+ * planner's preview, nothing moves before „Übernehmen“, and it never names how much was left.
+ */
 export default function WeekWidget() {
   const size = useWidgetSize();
   const span = rowsFor(size, [2, 4, 6]);
   const data = useBoard(span);
+  const [focus] = useFocusSettings();
+  const clock = useNow(60_000, focus.eveningWrapUp);
   const days = data?.board.days ?? [];
   const hasPlan = days.some((d) => d.planned > 0);
+  // Not on the smallest card (as the ToDo widget's evening card): its two rows stay alone there.
+  const rest = size !== 's' && restOffered(focus.eveningWrapUp, clock, days[0]);
   return (
-    <ProgressList
-      loading={!data}
-      empty={t.planner.empty}
-      emptyAction={{ label: t.homeEmpty.planner, to: '/planner?new=1' }}
-      summary={hasPlan ? weekSummary(days) : undefined}
-      entries={hasPlan ? weekEntries(days) : []}
-    />
+    <>
+      <ProgressList
+        loading={!data}
+        empty={t.planner.empty}
+        emptyAction={{ label: t.homeEmpty.planner, to: '/planner?new=1' }}
+        summary={hasPlan ? weekSummary(days) : undefined}
+        entries={hasPlan ? weekEntries(days) : []}
+      />
+      {rest ? (
+        <p className={styles.rest} data-testid="week-rest">
+          <Link to={REST_PATH}>{t.planner.rest.link}</Link>
+        </p>
+      ) : null}
+    </>
   );
 }

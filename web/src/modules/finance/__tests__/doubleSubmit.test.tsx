@@ -16,7 +16,7 @@ it('a double click on "Speichern" creates the account once', async () => {
   let open = true;
   render(<AccountEditor target={{ draft: true, order: 0 }} onClose={() => (open = false)} />);
   await userEvent.type(screen.getByLabelText('Kontoname'), 'Bargeld');
-  const save = screen.getByRole('button', { name: 'Speichern' });
+  const save = screen.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ });
   fireEvent.click(save);
   fireEvent.click(save);
   await waitFor(() => expect(open).toBe(false));

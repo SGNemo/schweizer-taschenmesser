@@ -6,7 +6,7 @@ export const shortcuts: Strings['shortcuts'] = {
   items: [
     { keys: ['Ctrl', 'K'], text: 'Search or ask' },
     { keys: ['Ctrl', '.'], text: 'Open the tools' },
-    { keys: ['N'], text: 'Add new' },
+    { keys: ['N'], text: 'New entry' },
     { keys: ['G', 'then H'], text: 'Go to Overview' },
     {
       keys: ['G', 'then P / G / A / W / T'],

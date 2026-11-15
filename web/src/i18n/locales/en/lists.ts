@@ -73,6 +73,8 @@ export const lists: Strings['lists'] = {
     checklist: 'New item',
   } as Record<string, string>,
   empty: 'This list is empty.',
+  emptyAction: 'Add item',
+  addSubmit: 'Add',
   editItem: 'Edit item',
   itemName: 'Name',
   quantity: 'Quantity (optional)',
@@ -101,7 +103,7 @@ export const lists: Strings['lists'] = {
   widgetEmpty: 'Nothing to buy.',
   widgetAction: 'Add item',
   packingEmpty: 'No packing list in progress.',
-  packingAction: 'Create packing list',
+  packingAction: 'New packing list',
   figureUnit: 'left',
   sectionsCount: (n: number) => (n === 1 ? '1 store section' : `${n} store sections`),
   sections: {
