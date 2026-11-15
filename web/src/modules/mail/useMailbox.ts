@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { ConnectorError } from '@/core/connectors/types';
 import { mailThreads } from '@/core/mail/service';
 import type { MailAccountRef, MailErrorCode } from '@/core/mail/types';
-import { DEMO_ACCOUNT, loadThreads, saveThreads, type CachedThreadView } from './cache';
+import type { MailThreadSummary } from '@/core/mail/types';
+import { DEMO_ACCOUNT, lastFromMe, loadThreads, saveThreads, type CachedThreadView } from './cache';
 
 export interface MailboxState {
   threads: CachedThreadView[];
@@ -30,6 +31,13 @@ interface Loaded {
   fromCache: boolean;
   next?: string;
 }
+
+/** A fetched header as the list shows it: the „last message is mine“ flag is read here (the list path) only. */
+const view = (t: MailThreadSummary): CachedThreadView => ({
+  ...t,
+  demo: false,
+  ...(lastFromMe(t) ? { lastFromMe: true as const } : {}),
+});
 
 const fresh = (req: string): Loaded => ({ req, threads: [], loading: true, fromCache: false });
 
@@ -63,9 +71,9 @@ export function useMailbox(
           query: q || undefined,
           labelIds: !q && labelId ? [labelId] : undefined,
         });
-        if (!q) await saveThreads(account.key, page.threads);
+        if (!q) await saveThreads(account.key, page.threads, { list: true });
         set({
-          threads: page.threads.map((t) => ({ ...t, demo: false })),
+          threads: page.threads.map(view),
           next: page.nextPageToken,
           loading: false,
           error: undefined,
@@ -90,13 +98,13 @@ export function useMailbox(
       pageToken,
     })
       .then(async (page) => {
-        if (!q) await saveThreads(account.key, page.threads);
+        if (!q) await saveThreads(account.key, page.threads, { list: true });
         setState((old) =>
           old.req !== req
             ? old
             : {
                 ...old,
-                threads: [...old.threads, ...page.threads.map((t) => ({ ...t, demo: false }))],
+                threads: [...old.threads, ...page.threads.map(view)],
                 next: page.nextPageToken,
                 loading: false,
               },

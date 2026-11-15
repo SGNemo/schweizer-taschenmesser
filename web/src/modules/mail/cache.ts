@@ -10,12 +10,25 @@ import { bodyRepo, threadRepo } from './repo';
 import { threadMetaSchema, type ThreadMeta } from './schema';
 
 export const DEMO_ACCOUNT = 'demo';
+/** The invented own address of the demo mailbox (`seed.ts` ME): a reply of one's own never names a ToDo. */
+export const DEMO_EMAIL = 'test@example.org';
 const MAX_THREADS = 200;
 const MAX_BODIES = 60;
 
 const threadId = (accountKey: string, id: string) => `${accountKey}|${id}`;
 
-export async function saveThreads(accountKey: string, threads: MailThreadSummary[]): Promise<void> {
+/** The newest message carries `SENT` (labels of that message only, never the thread's union). */
+export const lastFromMe = (t: MailThreadSummary): boolean => !!t.lastLabelIds?.includes('SENT');
+
+/**
+ * Saves thread headers. `list: true` only from the mail list (`useMailbox`, the person opened or refreshed
+ * it): then the device-local `lastFromMe` flag is kept; every other caller (the background check) never sets it.
+ */
+export async function saveThreads(
+  accountKey: string,
+  threads: MailThreadSummary[],
+  opts: { list?: boolean } = {},
+): Promise<void> {
   if (threads.length === 0) return;
   const key = await getDeviceKey();
   for (const t of threads) {
@@ -29,6 +42,7 @@ export async function saveThreads(accountKey: string, threads: MailThreadSummary
       labelIds: t.labelIds,
       ...(t.personal !== undefined ? { personal: t.personal } : {}),
       ...(t.lastMessageId ? { lastMessageId: t.lastMessageId } : {}),
+      ...(opts.list && lastFromMe(t) ? { lastFromMe: true as const } : {}),
     };
     await threadRepo.upsert(id, {
       accountKey,
@@ -56,6 +70,8 @@ async function trim(accountKey: string): Promise<void> {
 export interface CachedThreadView extends MailThreadSummary {
   /** True for seed rows (invented mails). */
   demo: boolean;
+  /** The newest message is the person's own (see `ThreadMeta.lastFromMe`). */
+  lastFromMe?: true;
 }
 
 /** Cached headers of an account, newest first; optionally only those carrying a label. */
