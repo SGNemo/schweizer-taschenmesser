@@ -92,7 +92,9 @@ test('pantry: the hand-over also arrives when the app loads slowly (services sta
   // dynamic imports that start one after the other, long after the page can be clicked.
   await page.route('**/assets/*.js', async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 800));
-    await route.continue();
+    // A chunk still waiting here when the test navigates away is cancelled by the browser; continuing it
+    // then throws „Route is already handled!“, which says nothing about the hand-over.
+    await route.continue().catch(() => undefined);
   });
   await page.goto('/pantry');
   await page.getByRole('button', { name: /^Vorrat (hinzufügen|eintragen)$/ }).click();
@@ -112,6 +114,8 @@ test('pantry: the hand-over also arrives when the app loads slowly (services sta
   await row.getByRole('button', { name: 'Auf die Einkaufsliste' }).click();
   // The confirmation comes only once the item is stored, so the list shows it right away.
   await expect(page.getByText('an die Einkaufsliste gesendet')).toBeVisible();
+  // The list entry links back (`ref`), so the entry here says so once the link is resolved.
+  await expect(row).toContainText('Auf der Einkaufsliste');
   await page.unroute('**/assets/*.js');
   await page.goto('/lists');
   await expect(page.getByRole('checkbox', { name: 'Milch' })).toBeVisible();
