@@ -89,7 +89,11 @@ export interface CaptureFields {
   note?: string;
   /** A payment reminder („Mahnung“, „2. Mahnung“): its level (1–3) and the day it was noted, 'YYYY-MM-DD'. */
   dunning?: { level: number; date: string };
-  /** ToDos and plan captures: where the entry came from (`plan.requested` of a note); never set by the parser. */
+  /**
+   * ToDos and plan captures: where the entry came from (`plan.requested` of a note); never set by the parser.
+   * The shape is `LegacyLink` of `core/entitylinks/types.ts`, spelled out because the parser imports nothing from
+   * outside its folder (`isolation.test.ts`); `core/entitylinks/types.test.ts` pins that both stay the same type.
+   */
   link?: { kind: 'note' | 'mail' | 'invoice' | 'event'; id: string; label: string };
 }
 

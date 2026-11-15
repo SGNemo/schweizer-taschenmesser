@@ -1,3 +1,5 @@
+import type { EntityRef, LegacyLink } from '@/core/entitylinks/types';
+
 /**
  * Central catalogue of cross-module events. Adding an event here is the
  * "defined interface" through which modules communicate.
@@ -49,7 +51,12 @@ export interface EventMap {
     tags?: string[];
   };
   /** Something is running low (pantry). The shopping list adds the item unless it is already open there. */
-  'shopping.requested': { name: string; quantity?: string };
+  'shopping.requested': {
+    name: string;
+    quantity?: string;
+    /** The thing that asked (the pantry entry), so the list item can link back. No handler reads it yet: planner hub S3. */
+    ref?: EntityRef;
+  };
   /** Something was bought (shopping list). The pantry adds the amount to the item of that name or creates it. */
   'pantry.restock': { name: string; quantity?: string };
   /** A saved link could be a gift idea (bookmarks). The people module keeps it until the reader picks a person. */
@@ -60,7 +67,7 @@ export interface EventMap {
     note?: string;
     dueDate?: string;
     /** Where the to-do came from (a note, a mail, an invoice, an event): only the id and the title. */
-    link?: { kind: 'note' | 'mail' | 'invoice' | 'event'; id: string; label: string };
+    link?: LegacyLink;
   };
   /**
    * Close one open to-do (the mail row „Beantwortet? · Erledigt“, use case „Wochenende retten“ F5): the todos
@@ -83,7 +90,12 @@ export interface EventMap {
     /** 'YYYY-MM-DD'; `hard` = must be done by then (a deadline the planner keeps). */
     due?: { date: string; hard: boolean };
     /** Where it came from: only the id and the title. */
-    link?: { kind: 'note' | 'mail' | 'invoice' | 'event'; id: string; label: string };
+    link?: LegacyLink;
+    /**
+     * The thing is a plan item itself (an invoice, a list): the planner places `<module>:<id>` and creates no ToDo
+     * (CONCEPT-SOURCES §3.3). No handler reads it yet: planner hub K2.
+     */
+    ref?: EntityRef;
   };
   /**
    * „Tag abschließen“ on the ToDo widget while the planner is on (use case „Wochenende retten“, F3): the planner
