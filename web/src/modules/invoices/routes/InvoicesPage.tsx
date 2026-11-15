@@ -33,6 +33,7 @@ import { payWithUndo } from '../quickActions';
 import { invoiceState, openTotalText, remainingMinor, sortInvoices } from '../logic';
 import { copyPaymentData } from '../pay';
 import { InvoicesHead } from '../components/InvoicesHead';
+import { InvoicesOverview } from '../components/InvoicesOverview';
 import { SignatureMark } from '@/ui/identity';
 import { usePageWidthAtLeast } from '@/ui/pageWidth';
 import { invoiceRepo } from '../repo';
@@ -40,7 +41,7 @@ import type { Invoice } from '../schema';
 import styles from './invoices.module.css';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
 
-type View = 'open' | 'paid' | 'all';
+type View = 'open' | 'paid' | 'all' | 'overview';
 
 export default function InvoicesPage() {
   const invoices = useLiveQuery(async () => sortInvoices(await invoiceRepo.active().toArray()), []);
@@ -99,9 +100,11 @@ export default function InvoicesPage() {
     if (params.get('new')) setParams({}, { replace: true });
   };
 
-  const shown = (invoices ?? []).filter((i) => view === 'all' || i.status === view);
+  const overview = view === 'overview';
+  // The overview tab lists nothing: no row, no detail panel.
+  const shown = overview ? [] : (invoices ?? []).filter((i) => view === 'all' || i.status === view);
   // Nothing open (or nothing at all): the empty state holds the one verb.
-  const emptyOpen = !!invoices && shown.length === 0 && view !== 'paid';
+  const emptyOpen = !!invoices && shown.length === 0 && (view === 'open' || view === 'all');
   const timeGroups = groupByTime(shown, (i) => i.dueDate, day);
   // The panel shows the picked invoice, else the first row as the list shows it (the open view is grouped by time).
   const firstShown = view === 'open' ? timeGroups[0]?.items[0] : shown[0];
@@ -281,6 +284,7 @@ export default function InvoicesPage() {
               { value: 'open', label: t.invoices.open },
               { value: 'paid', label: t.invoices.paid },
               { value: 'all', label: t.invoices.ext.views.all },
+              { value: 'overview', label: t.invoices.ext.overview.tab },
             ]}
             onChange={setView}
           />
@@ -305,38 +309,44 @@ export default function InvoicesPage() {
         <span data-testid="open-total">{openTotalText(invoices ?? [])}</span>
       </div>
 
-      <SplitView
-        enabled={wide && detail !== undefined}
-        asideLabel={t.invoices.ext.detail.label}
-        aside={
-          detail ? (
-            <InvoiceDetail
-              invoice={detail}
-              onEdit={() => setTarget(detail)}
-              onClose={() => setPicked('closed')}
-            />
-          ) : null
-        }
-      >
-        {invoices && shown.length === 0 ? (
-          <EmptyState
-            title={view === 'paid' ? t.invoices.emptyPaid : t.invoices.empty}
-            testId="invoices-empty"
-            motif={<SignatureMark id="bill" size={64} />}
-          >
-            {emptyOpen ? (
-              <Button variant="primary" onClick={() => setTarget({ draft: true })}>
-                {t.invoices.add}
-              </Button>
-            ) : null}
-          </EmptyState>
-        ) : null}
-        {view === 'open' ? (
-          <GroupedList listId="invoices" groups={openGroups} label={t.invoices.title} />
-        ) : (
-          <ItemList label={t.invoices.title}>{shown.map((i) => renderRow(i))}</ItemList>
-        )}
-      </SplitView>
+      {overview ? (
+        invoices ? (
+          <InvoicesOverview invoices={invoices} />
+        ) : null
+      ) : (
+        <SplitView
+          enabled={wide && detail !== undefined}
+          asideLabel={t.invoices.ext.detail.label}
+          aside={
+            detail ? (
+              <InvoiceDetail
+                invoice={detail}
+                onEdit={() => setTarget(detail)}
+                onClose={() => setPicked('closed')}
+              />
+            ) : null
+          }
+        >
+          {invoices && shown.length === 0 ? (
+            <EmptyState
+              title={view === 'paid' ? t.invoices.emptyPaid : t.invoices.empty}
+              testId="invoices-empty"
+              motif={<SignatureMark id="bill" size={64} />}
+            >
+              {emptyOpen ? (
+                <Button variant="primary" onClick={() => setTarget({ draft: true })}>
+                  {t.invoices.add}
+                </Button>
+              ) : null}
+            </EmptyState>
+          ) : null}
+          {view === 'open' ? (
+            <GroupedList listId="invoices" groups={openGroups} label={t.invoices.title} />
+          ) : (
+            <ItemList label={t.invoices.title}>{shown.map((i) => renderRow(i))}</ItemList>
+          )}
+        </SplitView>
+      )}
 
       <InvoiceEditor target={openTarget} onClose={closeEditor} onDuplicated={setTarget} />
       <PayStep invoice={paying} onClose={() => setPaying(null)} />

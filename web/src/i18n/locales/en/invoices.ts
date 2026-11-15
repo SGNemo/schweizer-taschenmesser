@@ -63,6 +63,30 @@ export const invoices: Strings['invoices'] = {
         return overdue > 0 ? `${overdue} overdue · ${count}` : count;
       },
     },
+    overview: {
+      tab: 'Overview',
+      figures: 'Invoices in figures',
+      open: 'Open',
+      late: 'Past due',
+      lateNone: 'Nothing past due.',
+      paidMonth: (month: string) => `Paid in ${month}`,
+      count: (n: number) => (n === 1 ? '1 invoice' : `${n} invoices`),
+      byPayee: 'By payee',
+      byPayeeOpen: 'Open by payee',
+      byPayeePaid: 'Paid by payee, last 12 months',
+      show: 'Show',
+      showOpen: 'Open',
+      showPaid: 'Paid (12 months)',
+      centreOpen: 'open',
+      centrePaid: 'paid',
+      emptyOpen: 'Nothing open right now.',
+      emptyPaid: 'Nothing paid in the last 12 months yet.',
+      months: 'Paid per month',
+      skipped: (n: number, currency: string) =>
+        n === 1
+          ? `1 invoice in another currency is not included; everything in ${currency}.`
+          : `${n} invoices in another currency are not included; everything in ${currency}.`,
+    },
     detail: {
       label: 'Invoice in detail',
       eyebrow: 'Invoice',

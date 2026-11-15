@@ -3051,6 +3051,30 @@ export const de = {
           return overdue > 0 ? `${overdue} überfällig · ${count}` : count;
         },
       },
+      overview: {
+        tab: 'Überblick',
+        figures: 'Rechnungen in Zahlen',
+        open: 'Offen',
+        late: 'Frist vorbei',
+        lateNone: 'Keine Frist vorbei.',
+        paidMonth: (month: string) => `Bezahlt im ${month}`,
+        count: (n: number) => (n === 1 ? '1 Rechnung' : `${n} Rechnungen`),
+        byPayee: 'Nach Empfänger',
+        byPayeeOpen: 'Offen nach Empfänger',
+        byPayeePaid: 'Bezahlt nach Empfänger, letzte 12 Monate',
+        show: 'Zeigen',
+        showOpen: 'Offen',
+        showPaid: 'Bezahlt (12 Monate)',
+        centreOpen: 'offen',
+        centrePaid: 'bezahlt',
+        emptyOpen: 'Gerade ist nichts offen.',
+        emptyPaid: 'In den letzten 12 Monaten noch nichts bezahlt.',
+        months: 'Bezahlt pro Monat',
+        skipped: (n: number, currency: string) =>
+          n === 1
+            ? `1 Rechnung in anderer Währung ist hier nicht dabei; alles in ${currency}.`
+            : `${n} Rechnungen in anderer Währung sind hier nicht dabei; alles in ${currency}.`,
+      },
       detail: {
         label: 'Rechnung im Detail',
         eyebrow: 'Rechnung',
