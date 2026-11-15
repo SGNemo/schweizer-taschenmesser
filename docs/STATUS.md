@@ -24,7 +24,7 @@ UI-Audit 4.0 ist abgenommen: Identity 4.0 gilt seit 0b-8 (2026-11-14, [REPORT �
 
 ## Abgeschlossene Runden (je eine Zeile; alles auf `develop`)
 
-- Gerätestatus „Tiefe“ (#927–#929); offen: Handtests GS-10–14.
+- Gerätestatus „Tiefe“ (#927–#929) und Dieser PC „Tiefe“ (#933–#968); offen: Handtests GS-10–14, PC-A, DO-A, DO3, PC-E.
 - Use case „Wochenende retten“ (`docs/design/usecases/wochenende/`, nachgemessen in #940): Samstagmorgen A–G 29 statt 56 Taps, ≈ 176 statt 240 s (ANALYSIS §5, TARGET §4); nicht gebaut W08, W15, W16, neue Reibung W23–W25; offen für Sven: Handtest FU-W1 ([MANUAL-TESTS](MANUAL-TESTS.md)).
 - Merkliste „Tiefe & Politur“: Rolle, neue Arten, „Schon gemerkt“, „In den Plan“, Widget (#950–#952, [design/bookmarks-deep/PLAN.md](design/bookmarks-deep/PLAN.md)); drei Ja/Nein-Fragen an Sven in #951/#952.
 - Musik „Tiefe & Politur“: Playlists-Tab, Alben, Künstlerseiten, Weiterhören, Schlaf-Timer, Liedtext-Suche, Tasten (SGNemo/schweizer-taschenmesser#937, #953, #969; [features/spotify.md](features/spotify.md)); offen: Handtest mit echtem Konto (`/me`, Playlist bearbeiten, `/me/albums`, Top-Titel), Künstlern folgen (neuer Scope, nicht gebaut).
