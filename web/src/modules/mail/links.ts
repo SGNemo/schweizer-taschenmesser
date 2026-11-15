@@ -16,7 +16,7 @@ import { MAX_LINK_LABEL } from '@/core/entitylinks/types';
 import { cleanSubject } from '@/core/mail/prefill';
 import { safeThreadId } from '@/core/mail/service';
 import { getManifest } from '@/core/modules/registry';
-import { DATE_RE } from '@/core/time/dates';
+import { DATE_RE, toDateString } from '@/core/time/dates';
 import { targetFor, type SavedCapture } from '@/quickCapture/targets';
 import { t } from '@/strings';
 import { linkTypeOf, type MailLink } from './schema';
@@ -32,6 +32,12 @@ import { linkRepo } from './repo';
  *   „(ohne Betreff)“.
  * @param day the mail's day, 'YYYY-MM-DD'.
  */
+/** The mail's local calendar day (`YYYY-MM-DD`); none for an invalid date (a link then carries no day). */
+export function mailDay(ms: number): string | undefined {
+  const d = new Date(ms);
+  return Number.isNaN(d.getTime()) ? undefined : toDateString(d);
+}
+
 export async function linkInvoiceToThread(
   invoiceId: string,
   threadId: string,

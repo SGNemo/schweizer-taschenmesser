@@ -1,41 +1,21 @@
 import { useEffect, useState } from 'react';
 import { getPlatform } from '@/core/platform';
-import type { DiskNode, PlaceSize } from '@/core/platform/disk';
+import type { DiskNode } from '@/core/platform/disk';
 import { t } from '@/strings';
-import { Button, Card, patternStyles } from '@/ui';
+import { Card, patternStyles } from '@/ui';
 import { useDiskStore } from '../store';
 import { formatBytes } from '../format';
-import { formatCapacity } from '../logic/drives';
 import styles from '../routes/DrivesPage.module.css';
 
 /**
- * "Schnellübersicht": what can be tidied without a new scan – the known clean-up places with their
- * sizes and the recycle bin as one compact list, plus the biggest folders of this session's last
- * scan. Sizes are rough; the way to delete stays the scan with its block list and confirmation.
+ * Below the drives: the pointer to the tab "Aufräumen" (which took over the list of clean-up
+ * places and the recycle bin) and the biggest folders of this session's last scan.
  */
-export function QuickOverview({ onScan }: { onScan: (path: string) => void }) {
-  const [places, setPlaces] = useState<PlaceSize[] | null>(null);
-  const [recycle, setRecycle] = useState<number | null>(null);
+export function QuickOverview() {
   const [biggest, setBiggest] = useState<DiskNode[]>([]);
   const scanId = useDiskStore((s) => s.scanId);
   const phase = useDiskStore((s) => s.phase);
   const rootNode = useDiskStore((s) => s.summary?.rootNode);
-
-  useEffect(() => {
-    let alive = true;
-    const disk = getPlatform().disk;
-    disk
-      .placeSizes()
-      .then((p) => alive && setPlaces(p))
-      .catch(() => alive && setPlaces([]));
-    disk
-      .recycleSize()
-      .then((b) => alive && setRecycle(b))
-      .catch(() => undefined);
-    return () => {
-      alive = false;
-    };
-  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -54,51 +34,10 @@ export function QuickOverview({ onScan }: { onScan: (path: string) => void }) {
   }, [scanId, phase, rootNode]);
 
   const q = t.disk.quick;
-  const hasPlaces = (places?.length ?? 0) > 0;
-  if (!hasPlaces && recycle === null && biggest.length === 0) return null;
-  const sizeText = (p: PlaceSize) =>
-    p.partial ? q.atLeast(formatCapacity(p.sizeBytes)) : formatCapacity(p.sizeBytes);
-
   return (
-    <section className={styles.places} aria-label={t.disk.places.title}>
-      <h2>{q.title}</h2>
-      <p className={styles.lead}>{q.lead}</p>
-      {hasPlaces || recycle !== null ? (
-        <Card>
-          <ul className={styles.placeList}>
-            {(places ?? []).map((p) => {
-              const name = t.disk.places.name[p.id]!;
-              return (
-                <li key={p.path} className={styles.placeRow}>
-                  <div className={styles.placeText}>
-                    <span className={styles.placeName} title={p.path}>
-                      {name}
-                    </span>
-                    <span className={styles.meta}>{t.disk.places.hint[p.id]}</span>
-                  </div>
-                  <span className={styles.placeSize}>{sizeText(p)}</span>
-                  <Button
-                    variant="secondary"
-                    aria-label={t.disk.places.scan(name)}
-                    onClick={() => onScan(p.path)}
-                  >
-                    {t.disk.card.scan}
-                  </Button>
-                </li>
-              );
-            })}
-            {recycle !== null ? (
-              <li className={styles.placeRow}>
-                <div className={styles.placeText}>
-                  <span className={styles.placeName}>{q.recycle}</span>
-                  <span className={styles.meta}>{q.recycleHint}</span>
-                </div>
-                <span className={styles.placeSize}>{formatCapacity(recycle)}</span>
-              </li>
-            ) : null}
-          </ul>
-        </Card>
-      ) : null}
+    <div className={styles.places}>
+      {/* A sentence, no button: the tab is right above (one action less on the first screen). */}
+      <p className={styles.pointer}>{t.disk.tidy.pointer}</p>
       {biggest.length > 0 ? (
         <Card title={q.biggest} className={styles.biggest}>
           <p className={styles.meta}>{q.biggestHint}</p>
@@ -112,6 +51,6 @@ export function QuickOverview({ onScan }: { onScan: (path: string) => void }) {
           </ul>
         </Card>
       ) : null}
-    </section>
+    </div>
   );
 }

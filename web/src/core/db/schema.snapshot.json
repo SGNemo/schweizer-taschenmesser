@@ -65,6 +65,7 @@
     "timetrack_session": "id, updatedAt, date, jobId",
     "todos_list": "id, updatedAt, order",
     "todos_task": "id, updatedAt, listId, dueDate, parentId",
+    "vault_category": "id, updatedAt",
     "vault_document": "id, updatedAt, category, expiresOn"
   }
 }

@@ -1,3 +1,4 @@
+import { plural } from '@/core/i18n/format';
 import type { Strings } from '@/strings';
 
 export const lists: Strings['lists'] = {
@@ -51,6 +52,11 @@ export const lists: Strings['lists'] = {
     widget: 'Shopping',
     widgetPacking: 'Packing lists',
     quickAdd: 'Shopping',
+    settings: {
+      showInPlan: 'Show in the plan',
+      showInPlanHelp:
+        'A packing list with a trip date appears in the planner as “Pack: <name>” (20 min, by the day before the trip). Shopping joins only through “Add to plan”, as one row. Only with the planner on.',
+    },
   },
   title: 'Lists',
   tabsLabel: 'Your lists',
@@ -155,6 +161,17 @@ export const lists: Strings['lists'] = {
   buyMissing: (n: number) => `Still to buy (${n})`,
   buyMissingDone: (n: number) => `${n} put on the shopping list.`,
   tripIn: (d: number) => `In ${d} days`,
+  plan: {
+    shopping: (n: number) =>
+      plural(n, { one: 'Shopping · # item', other: 'Shopping · # items' }, 'en'),
+    packing: (name: string) => `Pack: ${name}`,
+    toList: 'Go to list',
+    add: 'Add to plan',
+    placed: (day: string) => `In plan · ${day}`,
+    fromPantry: (name: string) => `From the pantry: ${name}`,
+    waits: 'In plan · no day yet',
+    remove: 'Stop planning',
+  },
   // Package "manage lists" (round 2026-11): icon, colour, order, archive.
   listIcon: 'Icon',
   listColour: 'Colour',

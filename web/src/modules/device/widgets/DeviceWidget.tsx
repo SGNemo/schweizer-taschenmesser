@@ -9,6 +9,8 @@ import {
 import { calmPoint, needingLook, summaryText, withTitle } from '@/core/status/summary';
 import { Skeleton, StatusWidget } from '@/ui';
 import { useLanHubLine, useNextBackupLine } from '../lines';
+import { useCoreFacts } from './useCoreFacts';
+import styles from './DeviceWidget.module.css';
 
 /**
  * How this device is doing, in one sentence (catalogue type: status). It counts every line the page's head counts that
@@ -16,28 +18,38 @@ import { useLanHubLine, useNextBackupLine } from '../lines';
  * not read here), so the widget never says "Nichts Dringendes" while the page it opens names a point. Words of the states only, never an address, a device name or a
  * path; the widget's header leads to the page. Like the page, it speaks once the first reads are back (never "Kein
  * Backup" before the last backup is read). No backup yet and nothing else: "Noch kein Backup", calm (no alert, no
- * warning tone), and the hint leaves the backup out so it is not said twice.
+ * warning tone), and the hint leaves the backup out so it is not said twice. Under it one line of core numbers
+ * (`useCoreFacts`): memory and uptime on the PC, the battery on the phone; never an address or a name.
  */
 export default function DeviceWidget() {
   const sync = useSyncLine();
   const backup = useBackupLine();
   const read = [sync, backup, useUpdatesLine(), useNextBackupLine(), useLanHubLine()];
   const ready = useSettled(!anyLoading(read));
+  const facts = useCoreFacts();
   if (!ready) return <Skeleton width="60%" height="1.25rem" />;
   // A read that hangs past the wait has no words: it is left out, not counted as "all well" or as a point.
   const counted = read.filter((l): l is StatusLine => l !== undefined && !(l.loading && !l.status));
   const look = needingLook(counted).length > 0;
   const calm = calmPoint(counted);
   return (
-    <StatusWidget
-      // No backup yet: the backup line's own icon, not the tick of "all well" (still neutral, never a warning).
-      icon={look ? 'alert' : calm ? calm.icon : 'ok'}
-      state={summaryText(counted)}
-      hint={[backup, sync]
-        .filter((l) => counted.includes(l) && l !== calm)
-        .map(withTitle)
-        .join(' · ')}
-      tone={look ? 'warning' : 'neutral'}
-    />
+    <>
+      <StatusWidget
+        // No backup yet: the backup line's own icon, not the tick of "all well" (still neutral, never a warning).
+        icon={look ? 'alert' : calm ? calm.icon : 'ok'}
+        state={summaryText(counted)}
+        hint={[backup, sync]
+          .filter((l) => counted.includes(l) && l !== calm)
+          .map(withTitle)
+          .join(' · ')}
+        tone={look ? 'warning' : 'neutral'}
+      />
+      {/* The core numbers (one reading, no polling): memory and uptime on the PC, the battery on the phone. */}
+      {facts ? (
+        <p className={styles.facts} data-testid="device-widget-facts">
+          {facts}
+        </p>
+      ) : null}
+    </>
   );
 }

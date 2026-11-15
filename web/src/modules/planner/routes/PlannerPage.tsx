@@ -1,9 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { type FormEvent, useEffect, useId, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
+import { type FormEvent, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { getMeta, setMeta } from '@/core/db/metaKv';
 import { getLang } from '@/core/i18n/lang';
-import { dayName, explainAssignment, explainWait, partWord } from '@/core/plan/explain';
+import { explainAssignment, explainWait } from '@/core/plan/explain';
 import {
   isRestSentence,
   restToTomorrow,
@@ -11,8 +11,6 @@ import {
   type PlanOp,
 } from '@/core/plan/instructions';
 import { useNow } from '@/core/focus/useNow';
-import { useModuleStates } from '@/core/modules/activation';
-import { getManifest } from '@/core/modules/registry';
 import { useFocusSettings } from '@/core/settings/focus';
 import { addDaysStr, formatDay, isoWeekday } from '@/core/time/dates';
 import { today } from '@/core/time/now';
@@ -26,40 +24,37 @@ import {
   ItemList,
   ItemRow,
   PageHeader,
-  Progress,
+  PHONE_QUERY,
   RowMenu,
-  TextField,
   type RowMenuItem,
   SplitView,
+  useMediaQuery,
   useSplitView,
 } from '@/ui';
+import { useHeroTargets } from '@/core/shell/heroContext';
+import { usePageAction } from '@/core/shell/pageAction';
 import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
-import {
-  addFromField,
-  applyOps,
-  exclude,
-  include,
-  later,
-  markDone,
-  markDue,
-  pin,
-  sourceAbilities,
-  type SourceAbility,
-  unmarkDue,
-  unpin,
-} from '../actions';
-import { dueWas, type BoardDay, type BoardRow, type WaitingRow } from '../board';
-import { capacityLabel, capacityShort, compact } from '../components/capacity';
+import { addFromField, applyOps, later, markDone } from '../actions';
+import type { BoardDay, BoardRow } from '../board';
+import { Capture } from '../components/Capture';
+import { CaptureDialog } from '../components/CaptureDialog';
+import { useAbilities, useRowMenu } from '../components/rowMenu';
+import { Part, ThingRow } from '../components/ThingRow';
+import { compact } from '../components/capacity';
+import { appointmentsOf, Context, nextDeadlinesOf } from '../components/Context';
+import { DayPage, DayPageLoading } from '../components/DayPage';
+import { LateGroup, LateRow } from '../components/LateGroup';
+import { tileName, WeekBand } from '../components/WeekBand';
+import { firstDayWithRows, plannerHead } from '../head';
 import { DaySetup } from '../components/DaySetup';
 import { DaySheet } from '../components/DaySheet';
 import { RowChoice, type RowChoiceState } from '../components/RowChoice';
 import { SETUP_DAYS } from '../daySetup';
 import { duesOf, eveningLine } from '../rest';
-import { dayEndOf } from '../settings';
+import { dayEndLabel, dayEndOf } from '../settings';
 import { PlanPreview, type PreviewData } from '../components/PlanPreview';
 import { WeekCheck } from '../components/WeekCheck';
 import { BOARD_DAYS } from '../calendar';
-import { beginPlanFocus, planFocusPath } from '../focus';
 import { overloadText } from '../overload';
 import { readSentence, warmLocalStage, type Said } from '../localStage';
 import { instructionItems, opLines, planLines } from '../say';
@@ -68,11 +63,17 @@ import { useBoard } from '../useBoard';
 import { useUiStore } from '@/stores/ui';
 import styles from './planner.module.css';
 
-/** Days on the board: a rolling week from today (the widget and the phone strip start there too). */
+/** Days on the board: a rolling week from today (the widget starts there too). */
 const SPAN = BOARD_DAYS;
 
 /** Device-local (`_meta`): the Monday of the week whose „Woche prüfen“ line was clicked away. */
 export const WEEK_CHECK_KEY = 'planner.weekCheck.dismissed';
+
+/** Device-local (`_meta`): the day the sheet shows, `{ date, on }` – read only on the calendar day `on` it was picked. */
+export const DAY_KEY = 'planner.hub.day';
+/** Device-local (`_meta`): „Danach“ open or folded, per form of the page (desktop / phone). */
+export const THEN_WIDE_KEY = 'planner.hub.then.wide';
+export const THEN_NARROW_KEY = 'planner.hub.then.narrow';
 
 /** A sentence waiting for „Übernehmen“: its ops and what the engine would do with them. */
 interface Pending {
@@ -87,36 +88,46 @@ interface Pending {
   rest?: boolean;
 }
 
-/** „Teil 1/2“ for the eye, „Teil 1 von 2“ for the screen reader. */
-function Part({ k, of }: { k: number; of: number }) {
-  return (
-    <>
-      <span className={styles.part} aria-hidden="true">
-        {` · ${t.planner.row.part(k + 1, of)}`}
-      </span>
-      <span className="sr-only">{` ${t.planner.row.partAria(k + 1, of)}`}</span>
-    </>
-  );
-}
-
 export default function PlannerPage() {
   const data = useBoard(SPAN);
-  // Master–detail (layout `split`, package 0b-4b): on a wide page the week is a list and the picked day lies in the
-  // panel beside it; below that width the week is a strip of chips above the picked day.
+  // Planner hub R1 (layout `split`): field, week band and the picked day's sheet in the main column; on a wide page
+  // the context column (appointments, what waits) lies beside them, below that width it follows the sheet.
   const wide = useSplitView();
+  const phone = useMediaQuery(PHONE_QUERY);
+  const inFrame = !!useHeroTargets();
   const [params, setParams] = useSearchParams();
   const [text, setText] = useState('');
-  const hintId = useId();
   const [sheetDate, setSheetDate] = useState<string | undefined>();
   // `?check=1` (the lists' „Woche prüfen im Planer“ link, a tap of the user) opens the week sheet.
   const [checking, setChecking] = useState(() => params.get('check') === '1');
   // `?start=1` (the welcome card's „Tage einteilen“, a tap of the user) opens the three-step sheet.
   const [settingUp, setSettingUp] = useState(() => params.get('start') === '1');
   const [menuOpen, setMenuOpen] = useState(false);
-  // The day shown in the one-day layout; `?day=` (the calendar's plan chip) picks it.
+  // Phone: the plus of the bottom bar („Ding“) opens the field as a sheet; `?new=1` (quick add, a tap of the
+  // user) opens it too.
+  const [capturing, setCapturing] = useState(false);
+  // Adjusting state during render: `?new=1` opens the sheet on the phone, also when the page is already there
+  // (the effect below then takes the parameter away).
+  if (phone && params.get('new') === '1' && !capturing) setCapturing(true);
+  usePageAction({ short: t.planner.add.short, onClick: () => setCapturing(true) }, phone);
+  // The entry was not stored (the planner was switched off meanwhile): the field says so, the text is still there.
+  const [addError, setAddError] = useState(false);
+  // The day the sheet shows once the user (or `?day=`, the calendar's plan chip) picked one.
   const [pickedDay, setPickedDay] = useState<string | undefined>(
     () => params.get('day') ?? undefined,
   );
+  const storedPick = useLiveQuery(
+    async () => (await getMeta<{ date: string; on: string }>(DAY_KEY)) ?? null,
+    [],
+  );
+  const thenStored = useLiveQuery(
+    async () => (await getMeta<boolean>(phone ? THEN_NARROW_KEY : THEN_WIDE_KEY)) ?? null,
+    [phone],
+  );
+  // What changed, for screen readers (the picked day and its capacity, a ticked thing).
+  // `n` changes with every announcement, so the same sentence said twice is a new node and is read again.
+  const [status, setStatusState] = useState({ text: '', n: 0 });
+  const setStatus = (text: string) => setStatusState((cur) => ({ text, n: cur.n + 1 }));
   const [why, setWhy] = useState<string | undefined>();
   const [pending, setPending] = useState<Pending | undefined>();
   const [ask, setAsk] = useState<
@@ -131,34 +142,18 @@ export default function PlannerPage() {
   // A model reading the user discarded or stopped: the same sentence, sent again, skips the model.
   const declinedRef = useRef<string | undefined>(undefined);
   const addRef = useRef<HTMLFormElement>(null);
-  // The field is the page's last row: what the planner answers under it is brought into view.
+  // What the planner answers under the field is brought into view.
   const answerRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
-  const moduleStates = useModuleStates();
-  const mailOn = !!getManifest('mail') && moduleStates?.mail === true;
   const [focus] = useFocusSettings();
   const dismissedWeek = useLiveQuery(
     async () => (await getMeta<string>(WEEK_CHECK_KEY)) ?? null,
     [],
   );
 
-  // Which sources take a tick or „Später“ (an invoice, a cancellation: no – that stays in its module).
-  const [abilities, setAbilities] = useState<Record<string, SourceAbility>>();
   // The open choice behind „Als Pause …“ / „Dauer …“ of a row.
   const [choice, setChoice] = useState<RowChoiceState>();
-  useEffect(() => {
-    let live = true;
-    void sourceAbilities().then((a) => live && setAbilities(a));
-    return () => {
-      live = false;
-    };
-  }, []);
-  // Until they are known every source counts as able (no jump for ToDo rows); `markDone` checks again.
-  const canDone = (moduleId: string) => abilities?.[moduleId]?.done ?? true;
-  const canAssign = (moduleId: string) => abilities?.[moduleId]?.assign ?? true;
-  // Shown only once the source is known to take them (a missing ability hides, never offers in vain).
-  const canRemove = (moduleId: string) => abilities?.[moduleId]?.remove === true;
-  const canEstimate = (moduleId: string) => abilities?.[moduleId]?.estimate === true;
+  const abilities = useAbilities();
+  const { canDone, canAssign } = abilities;
 
   const answered = !!pending || !!ask || !!sayLine;
   useEffect(() => {
@@ -175,31 +170,15 @@ export default function PlannerPage() {
     return () => readingRef.current?.abort();
   }, []);
 
-  // `?new=1` (quick add) focuses the one field; `?day=` (the calendar's plan chip) shows that day;
-  // `?week=` (the calendar's „Plan“ entry) lands on the board, which always starts today.
+  // Arrival on a desktop with a keyboard: the field has the focus, so typing is the first thing that works. Never
+  // on the phone or a touch screen (no keyboard sliding in), never over a sheet that opens with the page.
   useEffect(() => {
-    if (params.get('new')) {
-      // the entry row comes with the board (it is the last row under it)
-      if (!board) return;
-      addRef.current?.querySelector('input')?.focus();
-      setParams({}, { replace: true });
-      return;
-    }
-    const day = params.get('day');
-    if (day && board) {
-      document
-        .querySelector(`[data-testid="day-${day}"]`)
-        ?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
-      setParams({}, { replace: true });
-    } else if (params.get('rest')) {
-      // `?rest=1` (the widgets, „Tag abschließen“ over the bus): the preview of „Rest verteilen“, once the board is there.
-      if (!board) return;
-      setParams({}, { replace: true });
-      void showRest();
-    } else if (params.get('week') || params.get('check') || params.get('start'))
-      setParams({}, { replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `showRest` reads the board this effect waits for
-  }, [params, setParams, board]);
+    const keyboard = window.matchMedia?.('(hover: hover) and (pointer: fine)').matches === true;
+    if (!keyboard || window.matchMedia(PHONE_QUERY).matches) return;
+    const query = new URLSearchParams(window.location.search);
+    if (query.get('check') || query.get('start')) return;
+    addRef.current?.querySelector('input')?.focus({ preventScroll: true });
+  }, []);
 
   /** „Rest verteilen“: the ops of `moveAll(today, tomorrow)` as a preview; nothing moves before „Übernehmen“. */
   function showRest() {
@@ -254,6 +233,27 @@ export default function PlannerPage() {
     }
   }
 
+  // `?new=1` (quick add) focuses the one field; `?day=` (the calendar's plan chip) shows that day (read into
+  // `pickedDay` above); `?week=` (the calendar's „Plan“ entry) lands on the page as it is.
+  useEffect(() => {
+    if (params.get('new')) {
+      // Desktop: the field in the page. Phone: the sheet (opened above) focuses its own field when it opens.
+      if (!phone) addRef.current?.querySelector('input')?.focus();
+      setParams({}, { replace: true });
+      return;
+    }
+    if (params.get('day')) {
+      setParams({}, { replace: true });
+    } else if (params.get('rest')) {
+      // `?rest=1` (the widgets, „Tag abschließen“ over the bus): the preview of „Rest verteilen“, once the board is there.
+      if (!board) return;
+      setParams({}, { replace: true });
+      void showRest();
+    } else if (params.get('week') || params.get('check') || params.get('start'))
+      setParams({}, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `showRest` reads the board this effect waits for
+  }, [params, setParams, board]);
+
   async function apply() {
     if (!pending) return;
     setBusy(true);
@@ -261,6 +261,8 @@ export default function PlannerPage() {
       await applyOps(pending.ops, pending.lead, titles, pending.rest === true);
       if (pending.fromField) setText('');
       setPending(undefined);
+      // A sentence said in the phone's sheet changed the plan: the sheet gives the page back.
+      if (pending.fromField) setCapturing(false);
     } finally {
       setBusy(false);
     }
@@ -303,6 +305,7 @@ export default function PlannerPage() {
     e.preventDefault();
     const value = text.trim();
     if (!value || reading) return;
+    setAddError(false);
     setPending(undefined);
     setAsk(undefined);
     setSayLine(undefined);
@@ -380,35 +383,17 @@ export default function PlannerPage() {
     setText('');
     const ok = await addFromField(value, titles);
     // Nothing happened (the planner was switched off meanwhile): the text comes back.
-    if (!ok) setText((cur) => cur || value);
+    if (!ok) {
+      setText((cur) => cur || value);
+      setAddError(true);
+    }
     // The next entry follows right away; no scroll jump while the board below re-renders.
     addRef.current?.querySelector('input')?.focus({ preventScroll: true });
   }
 
-  const headValue = !todayDay
-    ? ''
-    : todayDay.off
-      ? t.planner.head.dayOff
-      : todayDay.free > 0
-        ? t.planner.head.free(compact(todayDay.free))
-        : todayDay.over > 0
-          ? t.planner.head.over(compact(todayDay.over))
-          : todayDay.usable === 0
-            ? t.planner.head.noTime
-            : t.planner.head.full;
-  // U13: the detail line names the next step – today's first thing. W13: with time today and nothing on it, a calm
-  // line – unless the whole board is empty, where the empty state already says it.
-  const boardEmpty =
-    (board?.days.every((d) => d.rows.length === 0) ?? true) && !board?.waiting.length;
-  const headDetail = !todayDay
-    ? undefined
-    : !todayDay.off && todayDay.rows[0]
-      ? t.planner.head.first(todayDay.rows[0].title)
-      : !todayDay.off && todayDay.usable > 0
-        ? boardEmpty
-          ? undefined
-          : t.planner.head.nothing
-        : `${t.planner.head.context(board!.todayCount, compact(todayDay.planned))} · ${t.planner.head.week(formatDay(todayDay.date, 'II'))}`;
+  // The head reports the next day that asks for something (CONCEPT-DESIGN §5): `head.ts`. With no thing on any
+  // day there is no figure; the unseen placeholder keeps the head's height (U01).
+  const head = board ? plannerHead(board.days, { short: phone, late: board.late }) : undefined;
 
   const pageMenu: RowMenuItem[] = [
     {
@@ -419,6 +404,16 @@ export default function PlannerPage() {
     { id: 'check', label: t.planner.check.title, onSelect: () => setChecking(true) },
     { id: 'days', label: t.planner.daySetup.open, onSelect: () => setSettingUp(true) },
   ];
+  // The page's ⋯: in the head's title row on the desktop; on the phone (no action in the module head) beside the
+  // sheet's day title.
+  const pageMenuButton = (
+    <RowMenu
+      label={t.planner.head.menu}
+      items={pageMenu}
+      open={menuOpen}
+      onOpenChange={setMenuOpen}
+    />
+  );
 
   // „Woche prüfen · 2 Schritte“: Mondays only, only with the switch on, until it is clicked away for this week.
   const monday = data ? addDaysStr(data.today, 1 - isoWeekday(data.today)) : undefined;
@@ -429,9 +424,9 @@ export default function PlannerPage() {
     dismissedWeek !== undefined &&
     dismissedWeek !== monday;
 
-  // One evening line under `focus.eveningWrapUp` (REVIEW-FABLE R11): from 30 min before the „Tagesende“ the sentence
-  // „Bald ist Tagesende.“, carrying „Rest verteilen“ while today holds something open (package 6); else that link
-  // from 17:00 (F3). Never a count. The clock is read once a minute.
+  // „Bald ist Tagesende.“ under `focus.eveningWrapUp` (REVIEW-FABLE R11): from 30 min before the „Tagesende“, one
+  // sentence in the head's notice slot, never in the figure (P75). „Rest verteilen“ stands at the sheet's foot at
+  // any hour. Never a count. The clock is read once a minute.
   const clock = useNow(60_000, focus.eveningWrapUp);
   const evening = eveningLine(
     focus.eveningWrapUp,
@@ -439,7 +434,12 @@ export default function PlannerPage() {
     data ? dayEndOf(data.settings) : undefined,
     todayDay,
   );
-  const showRestLink = !pending && evening?.kind === 'rest';
+  const dayEndNotice =
+    evening?.kind === 'dayEnd' ? (
+      <p className={styles.notice} data-testid="day-end-line">
+        {t.planner.rest.dayEnd}
+      </p>
+    ) : null;
 
   /** The three biggest things of the shown week (all their sessions together). */
   const biggest = (() => {
@@ -465,149 +465,29 @@ export default function PlannerPage() {
       : titleOf(unitId);
   };
 
-  /** The ⋯ menu of a row; `date` = the row's day (a waiting row has none: then today, named). */
-  const rowMenu = (row: BoardRow | WaitingRow, date?: string, reason?: string): RowMenuItem[] => {
-    const e = row.entry;
-    if (!e) return [];
-    const day = date ?? data!.today;
-    const pinned = row.item?.pinned !== undefined;
-    const hard = row.item?.due?.hard === true;
-    // A deadline the source holds (invoice, cancellation) is not the planner's to lift or set.
-    const sourceHard = e.due?.hard === true;
-    const excluded = row.item?.excluded === true;
-    const open = why === row.unitId;
-    return [
-      ...(canDone(e.moduleId)
-        ? [{ id: 'done', label: t.planner.row.done, onSelect: () => void markDone(e, titles) }]
-        : []),
-      ...(canAssign(e.moduleId)
-        ? [{ id: 'later', label: t.planner.row.later, onSelect: () => void later(e, titles) }]
-        : []),
-      ...(canEstimate(e.moduleId)
-        ? [
-            {
-              id: 'estimate',
-              label: t.planner.row.estimate,
-              onSelect: () =>
-                setChoice({
-                  kind: 'estimate',
-                  entry: e,
-                  ...(e.durationMin !== undefined ? { current: e.durationMin } : {}),
-                }),
-            },
-          ]
-        : []),
-      // „Tagesabschnitt …“ (package 4b): one entry, the choice opens in `RowChoice`; only on a row of a day
-      // (a waiting row has no day to order in yet).
-      ...(date
-        ? [
-            {
-              id: 'dayPart',
-              label: t.planner.row.dayPart,
-              onSelect: () =>
-                setChoice({
-                  kind: 'part',
-                  entry: e,
-                  ...(row.item?.part ? { current: row.item.part } : {}),
-                }),
-            },
-          ]
-        : []),
-      ...(canRemove(e.moduleId)
-        ? [
-            {
-              id: 'asBreak',
-              label: t.planner.row.asBreak,
-              onSelect: () => setChoice({ kind: 'break', entry: e, date: day }),
-            },
-          ]
-        : []),
-      ...(excluded
-        ? [{ id: 'include', label: t.planner.row.include, onSelect: () => void include(e, titles) }]
-        : [
-            pinned
-              ? { id: 'unpin', label: t.planner.row.unpin, onSelect: () => void unpin(e, titles) }
-              : {
-                  id: 'pin',
-                  label: t.planner.row.pinOn(dayName(day)),
-                  onSelect: () => void pin(e, day, titles),
-                },
-            {
-              id: 'exclude',
-              label: t.planner.row.exclude,
-              onSelect: () => void exclude(e, titles),
-            },
-          ]),
-      ...(sourceHard
-        ? []
-        : [
-            hard
-              ? {
-                  id: 'unmarkDue',
-                  label: t.planner.row.unmarkDue,
-                  onSelect: () => void unmarkDue(e, titles),
-                }
-              : {
-                  id: 'markDue',
-                  label: t.planner.row.markDueOn(dayName(e.due?.date ?? day)),
-                  onSelect: () => void markDue(e, e.due?.date ?? day, titles),
-                },
-          ]),
-      ...(reason
-        ? [
-            {
-              id: 'why',
-              label: t.planner.row.why,
-              checked: open,
-              onSelect: () => setWhy(open ? undefined : row.unitId),
-            },
-          ]
-        : []),
-      ...(date
-        ? [
-            {
-              id: 'focus',
-              label: t.planner.row.focus,
-              onSelect: () => {
-                const title =
-                  row.of > 1
-                    ? `${row.title} · ${t.planner.row.part(row.k + 1, row.of)}`
-                    : row.title;
-                void beginPlanFocus({ unitId: row.unitId, title, minutes: row.minutes }).then(() =>
-                  navigate(planFocusPath(row.unitId)),
-                );
-              },
-            },
-          ]
-        : []),
-      { id: 'open', label: t.planner.row.open, onSelect: () => void navigate(e.to) },
-      // Back to the note it came from (a note's „In den Plan“; the notes page reads `?open=`).
-      ...(e.link?.kind === 'note'
-        ? [
-            {
-              id: 'link',
-              label: t.planner.row.openNote,
-              onSelect: () => void navigate(`/notes?open=${encodeURIComponent(e.link!.id)}`),
-            },
-          ]
-        : []),
-      // Back to the mail it came from („In den Plan“ from the mail list; the mail page reads `?open=`).
-      // Only where the mail module is there and on (desktop): elsewhere the ToDo's note holds the web link.
-      ...(e.link?.kind === 'mail' && mailOn
-        ? [
-            {
-              id: 'mail',
-              label: t.planner.row.openMail,
-              onSelect: () => void navigate(`/mail?open=${encodeURIComponent(e.link!.id)}`),
-            },
-          ]
-        : []),
-    ];
-  };
+  const rowMenu = useRowMenu({
+    today: data?.today,
+    titles,
+    abilities,
+    why,
+    setWhy,
+    setChoice,
+  });
+
+  /** The tick: one tap. The status line says it, the focus moves on to the next tick of the sheet. */
+  async function done(row: BoardRow): Promise<boolean> {
+    const ticks = [...document.querySelectorAll<HTMLElement>('[data-row-tick]')];
+    const at = ticks.indexOf(document.activeElement as HTMLElement);
+    const ok = await markDone(row.entry!, titles);
+    if (!ok) return false;
+    setStatus(t.planner.row.doneName(row.title));
+    if (at >= 0) (ticks[at + 1] ?? ticks[at - 1])?.focus({ preventScroll: true });
+    return true;
+  }
 
   // „Frist So 18:00“ turns into „Frist war So 18:00“ once the hour has passed (package 5b); read once a minute.
   const dueClock = useNow(60_000);
-  const renderRow = (row: BoardRow, day: BoardDay) => {
+  const renderRow = (row: BoardRow, day: BoardDay, next: boolean) => {
     const reason = explainAssignment(
       { reason: row.reason, bumpedBy: row.bumpedBy },
       {
@@ -617,124 +497,74 @@ export default function PlannerPage() {
         nameOf,
       },
     );
-    const open = why === row.unitId;
+    const tick = !!row.entry && canDone(row.entry.moduleId);
     return (
-      <ItemRow
+      <ThingRow
         key={row.unitId}
-        title={
-          <span title={reason}>
-            {row.title}
-            {row.of > 1 ? <Part k={row.k} of={row.of} /> : null}
-          </span>
-        }
-        titleFull
-        // The minutes lead the meta line, the deadline follows, the reason only while „Warum hier?“ is on.
-        meta={
-          <span>
-            <span className={styles.minutes}>
-              {row.approx ? t.planner.row.approx(compact(row.minutes)) : compact(row.minutes)}
-            </span>
-            {/* The part as plain text, only when set (package 4b; no colour carries it). */}
-            {row.item?.part ? <span>{` · ${partWord(row.item.part)}`}</span> : null}
-            {row.hardDue
-              ? (() => {
-                  const when = row.hardDueTime
-                    ? `${dayName(row.hardDue)} ${row.hardDueTime}`
-                    : dayName(row.hardDue);
-                  const was = dueWas(row, dueClock);
-                  return (
-                    <span className={was ? styles.dueWas : undefined}>
-                      {` · ${was ? t.planner.row.dueWas(when) : t.planner.row.due(when)}`}
-                    </span>
-                  );
-                })()
-              : null}
-            {row.entry?.detail ? <span>{` · ${row.entry.detail}`}</span> : null}
-            {open ? <span className={styles.reason}>{reason}</span> : null}
-          </span>
-        }
-        lead={
-          row.entry && canDone(row.entry.moduleId) ? (
-            <input
-              type="checkbox"
-              className={styles.check}
-              aria-label={row.title}
-              data-row-tick
-              checked={false}
-              onChange={() => void markDone(row.entry!, titles)}
-            />
-          ) : undefined
-        }
-        menu={rowMenu(row, day.date, reason)}
-        menuLabel={t.planner.row.menu(row.title)}
-        onSwipeRight={
-          row.entry && canDone(row.entry.moduleId)
-            ? () => void markDone(row.entry!, titles)
-            : undefined
-        }
-        swipeRightLabel={t.planner.row.done}
-        onSwipeLeft={
+        row={row}
+        next={next}
+        reason={reason}
+        whyOpen={why === row.unitId}
+        dueClock={dueClock}
+        menu={rowMenu(row, day.date, reason, { tick })}
+        onDone={tick ? () => done(row) : undefined}
+        onLater={
           row.entry && canAssign(row.entry.moduleId)
             ? () => void later(row.entry!, titles)
             : undefined
         }
-        swipeLeftLabel={t.planner.row.later}
       />
     );
   };
 
-  /** A day's name; today says so in words (the head's „frei heute“ belongs to that row). */
-  const dayTitle = (day: BoardDay) =>
-    day.isToday
-      ? t.planner.board.todayIs(formatDay(day.date, 'EEE d.'))
-      : formatDay(day.date, 'EEE d.');
-
-  const renderDay = (day: BoardDay) => (
-    <section
-      key={day.date}
-      className={styles.column}
-      data-panel={wide || undefined}
-      data-today={day.isToday}
-      data-off={day.off}
-      data-testid={`day-${day.date}`}
-      aria-label={formatDay(day.date, 'EEEE, d. MMMM')}
-    >
-      <button type="button" className={styles.dayButton} onClick={() => setSheetDate(day.date)}>
-        <span className={styles.dayName}>{dayTitle(day)}</span>
-        <span className={styles.capacity}>{capacityLabel(day)}</span>
-        {!day.off ? (
-          <span className={styles.bar}>
-            <Progress
-              value={day.planned}
-              max={Math.max(day.usable, 1)}
-              label={t.planner.board.load(compact(day.planned), compact(day.usable))}
-            />
-          </span>
-        ) : null}
-      </button>
-      {day.blockers.length > 0 || day.rows.length > 0 ? (
-        <ItemList label={formatDay(day.date, 'EEEE')}>
-          {day.blockers.map((b) => (
-            <ItemRow
-              key={b.id}
-              className={styles.blocker}
-              title={b.label}
-              meta={`${t.planner.row.blocker} · ${compact(b.min)}`}
-            />
-          ))}
-          {day.rows.map((row) => renderRow(row, day))}
-        </ItemList>
-      ) : null}
-    </section>
+  // A row of „Frist vorbei“: the one row form, neutral; it sits on no day, so no tick, no „Später“, no duration.
+  const renderLate = (row: BoardRow) => (
+    <ThingRow
+      key={row.unitId}
+      row={row}
+      reason=""
+      whyOpen={false}
+      dueClock={dueClock}
+      menu={rowMenu(row, undefined, undefined, { late: true })}
+      noDuration
+    />
   );
 
   const waiting = board?.waiting ?? [];
+  const late = board?.late ?? [];
   const overflow = data?.last?.today === data?.today ? (data?.last?.overflowMin ?? 0) : 0;
   const nothingPlanned = board !== undefined && board.days.every((d) => d.rows.length === 0);
-  const shownDay = board?.days.find((d) => d.date === pickedDay) ?? board?.days[0];
+  const boardEmpty = nothingPlanned && waiting.length === 0 && late.length === 0;
 
-  // The entry row is the last row under the week (rule 4: one entry, and for
-  // the planner it is the field you type or speak into).
+  // The day the sheet shows: `?day=` or a tile → the pick stored today on this device → the first day that holds
+  // things → today. Once shown it stays (a day does not change under the hand when its last thing is ticked).
+  const days = board?.days;
+  const storedDate = storedPick && storedPick.on === data?.today ? storedPick.date : undefined;
+  const shownDay =
+    !days || storedPick === undefined || thenStored === undefined
+      ? undefined
+      : (days.find((d) => d.date === pickedDay) ??
+        days.find((d) => d.date === storedDate) ??
+        firstDayWithRows(days) ??
+        days[0]);
+  const shownDate = shownDay?.date;
+  // Adjusting state during render: the day the page opened on becomes the pick – once the plan holds things (the
+  // board of a fresh page fills a moment after its days are there; an empty board keeps following).
+  if (shownDate && pickedDay === undefined && (storedDate || !nothingPlanned))
+    setPickedDay(shownDate);
+
+  /** A tile (or a swipe) picks the day: stored for today on this device, said in the status line. */
+  function pick(date: string) {
+    const day = days?.find((d) => d.date === date);
+    if (!day || !data) return;
+    setPickedDay(date);
+    void setMeta(DAY_KEY, { date, on: data.today });
+    setStatus(tileName(day, days?.[1]?.date === date));
+  }
+
+  // „Danach“ is folded on the phone and open on the desktop until the user says otherwise (device-local).
+  const thenOpen = thenStored ?? !phone;
+
   const waitingBlock =
     waiting.length > 0 ? (
       <div className={styles.waiting}>
@@ -791,198 +621,215 @@ export default function PlannerPage() {
         />
       </div>
     ) : null;
-  const entryRow = (
-    <>
-      <form
-        ref={addRef}
-        onSubmit={add}
-        className={styles.add}
-        data-keep-visible
-        aria-busy={reading || undefined}
-      >
-        <div className={styles.grow}>
-          {/* S09 (UI round 6): the hint sits under the whole row, not inside the field, so „Eintragen“ and ⋯ line up
-              with the input instead of with the hint's baseline. The prop replaces TextField's own description: an
-              `error` here would have to be appended to `hintId`. */}
-          <TextField
-            label={t.planner.add.label}
-            placeholder={t.planner.add.placeholder}
-            aria-describedby={hintId}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            readOnly={reading}
-          />
+
+  // What the planner understood, or asks back: right under the field it answers (on the phone, where the page has
+  // no field, above the week).
+  const answer = (
+    <div ref={answerRef}>
+      {sayLine ? (
+        <p className={styles.say} role="status" data-testid="plan-say">
+          {sayLine}
+        </p>
+      ) : null}
+      {ask ? (
+        <div className={styles.say} role="group" aria-label={t.planner.say.askLabel}>
+          <span>{t.planner.say.ask(ask.options[0]!.title, ask.options[1]!.title)}</span>
+          {ask.options.map((o) => (
+            <Button key={o.key} size="sm" onClick={() => void showPreview(ask.ops(o.key), true)}>
+              {o.title}
+            </Button>
+          ))}
         </div>
-        <Button type="submit" variant="primary" disabled={!text.trim() || reading}>
-          {t.planner.add.submit}
-        </Button>
-        {/* N04: the page's ⋯ sits beside the field (a toolbar row with only ⋯ left ~100 px empty above it). */}
-        <RowMenu
-          label={t.planner.head.menu}
-          items={pageMenu}
-          open={menuOpen}
-          onOpenChange={setMenuOpen}
+      ) : null}
+      {pending ? (
+        <PlanPreview
+          data={pending.data}
+          nameOf={nameOf}
+          busy={busy}
+          onApply={() => void apply()}
+          onDiscard={discard}
         />
-      </form>
-      <p id={hintId} className={styles.addHint}>
-        {t.planner.add.hint}
-      </p>
-      {/* What the planner understood, or asks back, lies right under the field it answers. */}
-      <div ref={answerRef}>
-        {sayLine ? (
-          <p className={styles.say} role="status" data-testid="plan-say">
-            {sayLine}
-          </p>
-        ) : null}
-        {ask ? (
-          <div className={styles.say} role="group" aria-label={t.planner.say.askLabel}>
-            <span>{t.planner.say.ask(ask.options[0]!.title, ask.options[1]!.title)}</span>
-            {ask.options.map((o) => (
-              <Button key={o.key} size="sm" onClick={() => void showPreview(ask.ops(o.key), true)}>
-                {o.title}
-              </Button>
-            ))}
-          </div>
-        ) : null}
-        {pending ? (
-          <PlanPreview
-            data={pending.data}
-            nameOf={nameOf}
-            busy={busy}
-            onApply={() => void apply()}
-            onDiscard={discard}
-          />
-        ) : null}
-      </div>
-    </>
+      ) : null}
+    </div>
   );
+
+  // The one field: in the page on the desktop, in the plus's sheet on the phone.
+  const capture = (inDialog: boolean) => (
+    <Capture
+      value={text}
+      onChange={(value) => {
+        setText(value);
+        setAddError(false);
+      }}
+      onSubmit={add}
+      reading={reading}
+      error={addError}
+      focusOnOpen={inDialog}
+      labelHidden={inDialog}
+      // The phone's last row is the field alone; its examples stand in the plus's sheet.
+      examples={inDialog || !phone}
+      formRef={addRef}
+    />
+  );
+
+  // What the sheet says while its day holds nothing: the one empty state of a board without things, else a line.
+  const firstFull = days ? firstDayWithRows(days) : undefined;
+  const emptySheet = boardEmpty ? (
+    <EmptyState
+      title={t.planner.empty}
+      testId="planner-empty"
+      motif={<SignatureMark id="weekBars" size={64} />}
+    >
+      <p className={styles.emptyNext}>{phone ? t.planner.emptyNextPhone : t.planner.emptyNext}</p>
+      {/* Its one action (TARGET F1): the three-step sheet. Secondary: „Eintragen“ stays the page's one filled button. */}
+      <Button onClick={() => setSettingUp(true)} data-testid="planner-days-setup">
+        {t.planner.daySetup.open}
+      </Button>
+    </EmptyState>
+  ) : (
+    <p className={styles.emptyDay} data-testid="planner-empty-day">
+      {shownDay?.isToday && firstFull
+        ? t.planner.sheet.dayOffNext(formatDay(firstFull.date, 'EEEE'))
+        : nothingPlanned && late.length > 0
+          ? late.every((r) => r.entry?.kind === 'invoice')
+            ? t.planner.sheet.onlyLate
+            : t.planner.sheet.onlyLateThings
+          : t.planner.sheet.emptyDay}
+    </p>
+  );
+
+  // „Frist vorbei“ is the first card of the context column where there is one (wide); elsewhere it is one row
+  // above the day's sheet.
+  // „Nächste Fristen“ (R2): a card of the column beside the sheet only – the phone's context is the waiting group
+  // (CONCEPT-DESIGN §4).
+  const deadlines = wide && days ? nextDeadlinesOf(days, waiting) : [];
+  const context = days ? (
+    <Context
+      days={days}
+      before={wide ? <LateGroup rows={late} renderRow={renderLate} /> : undefined}
+      deadlines={deadlines}
+    >
+      {waitingBlock}
+    </Context>
+  ) : null;
+  const hasBeside =
+    !!days && (waiting.length > 0 || appointmentsOf(days).length > 0 || deadlines.length > 0);
+  const hasContext = hasBeside || (wide && late.length > 0);
 
   return (
     <>
-      <PageHeader title={t.planner.title} />
+      <PageHeader title={t.planner.title}>{phone ? null : pageMenuButton}</PageHeader>
       {/* U01: the figure has no caps label, the frame's placeholder for a `kennzahl` head has one. Until the board is
-          read the page holds the row itself, in the figure's own shape, so the head keeps its height. */}
+          read – and while no day holds a thing – the page holds the row itself, in the figure's own shape, unseen, so
+          the head keeps its height. */}
       <HeroSlot area="figure">
-        {todayDay ? (
-          <HeroFigure value={headValue} detail={headDetail} type="thin" testId="planner-head" />
+        {head ? (
+          <HeroFigure value={head.value} detail={head.detail} type="sans" testId="planner-head" />
         ) : (
           <div className={styles.headPending} aria-hidden="true" data-testid="planner-head-pending">
-            <HeroFigure value={'\u00a0'} detail={'\u00a0'} type="thin" />
+            <HeroFigure value={' '} detail={' '} type="sans" />
           </div>
         )}
       </HeroSlot>
-
-      {showRestLink ? (
-        <p className={styles.weekLink} data-testid="rest-link">
-          <button type="button" className={styles.weekLinkText} onClick={() => void showRest()}>
-            {t.planner.rest.link}
-          </button>
-        </p>
+      {/* Outside the app frame (tests, a dialog) there is no notice slot: the sentence then stands in the page. */}
+      {dayEndNotice ? (
+        inFrame ? (
+          <HeroSlot area="notice">{dayEndNotice}</HeroSlot>
+        ) : (
+          dayEndNotice
+        )
       ) : null}
 
-      {evening?.kind === 'dayEnd' ? (
-        <p className={styles.weekLink} data-testid="day-end-line">
-          <span>{t.planner.rest.dayEnd}</span>
-          {evening.rest && !pending ? (
-            <button type="button" className={styles.weekLinkText} onClick={() => void showRest()}>
-              {t.planner.rest.link}
-            </button>
+      {/* Day and plan changes for screen readers: the picked day with its capacity, a ticked thing. */}
+      <p className="sr-only" role="status" data-testid="planner-status">
+        <span key={status.n}>{status.text}</span>
+      </p>
+
+      <SplitView enabled={wide && hasContext} asideLabel={t.planner.ctx.label} aside={context}>
+        {/* Wide and nothing beside it (no appointment, nothing waits): the main column keeps the width it has
+            beside the context column, left-aligned with the head's title – rows do not stretch over the page. */}
+        <div className={wide && !hasContext ? `${styles.main} ${styles.mainAlone}` : styles.main}>
+          {/* Reading order = DOM order: field → band → sheet → context. The field is there from the first paint
+              and never moves under the typing hand (U01). */}
+          {phone ? null : capture(false)}
+          {phone ? null : answer}
+
+          {showWeekLink ? (
+            <p className={styles.weekLink} data-testid="week-check-link">
+              <button type="button" className={styles.textLink} onClick={() => setChecking(true)}>
+                {t.planner.weekLink.label}
+              </button>
+              <IconButton
+                label={t.planner.weekLink.dismiss}
+                onClick={() => void setMeta(WEEK_CHECK_KEY, monday)}
+              >
+                <Icon name="close" size={16} />
+              </IconButton>
+            </p>
           ) : null}
-        </p>
-      ) : null}
 
-      {showWeekLink && !showRestLink && evening?.kind !== 'dayEnd' ? (
-        <p className={styles.weekLink} data-testid="week-check-link">
-          <button type="button" className={styles.weekLinkText} onClick={() => setChecking(true)}>
-            {t.planner.weekLink.label}
-          </button>
-          <IconButton
-            label={t.planner.weekLink.dismiss}
-            onClick={() => void setMeta(WEEK_CHECK_KEY, monday)}
-          >
-            <Icon name="close" size={16} />
-          </IconButton>
-        </p>
-      ) : null}
-
-      {nothingPlanned && waiting.length === 0 ? (
-        <EmptyState
-          title={t.planner.empty}
-          testId="planner-empty"
-          motif={<SignatureMark id="weekBars" size={64} />}
-        >
-          {/* Its one action (TARGET F1): the three-step sheet instead of the stepper as the first way. Secondary:
-              „Eintragen“ under the week stays the page's one filled button. */}
-          <Button onClick={() => setSettingUp(true)} data-testid="planner-days-setup">
-            {t.planner.daySetup.open}
-          </Button>
-        </EmptyState>
-      ) : null}
-
-      {/* The entry row is the last row under the week, so it comes with the board: it is built once, at its place,
-          and never moves or is built anew under the typing hand (U01). */}
-      {board ? (
-        <SplitView
-          enabled={wide && shownDay !== undefined}
-          asideLabel={t.planner.board.dayPanel}
-          aside={shownDay ? renderDay(shownDay) : null}
-        >
-          {wide ? (
-            // The week as a list: one row per day with what is free and how full it is; the picked day is marked.
-            <div className={styles.week}>
-              <ItemList label={t.planner.board.label}>
-                {board.days.map((d) => (
-                  <ItemRow
-                    key={d.date}
-                    current={d.date === shownDay?.date}
-                    onOpen={() => setPickedDay(d.date)}
-                    title={<span data-testid={`week-${d.date}`}>{dayTitle(d)}</span>}
-                    meta={
-                      d.rows.length > 0
-                        ? `${capacityLabel(d)} · ${t.planner.board.things(d.rows.length)}`
-                        : capacityLabel(d)
-                    }
-                    end={
-                      !d.off ? (
-                        <span className={styles.weekBar} aria-hidden="true">
-                          <Progress
-                            value={d.planned}
-                            max={Math.max(d.usable, 1)}
-                            label={t.planner.board.load(compact(d.planned), compact(d.usable))}
-                          />
-                        </span>
-                      ) : undefined
-                    }
-                  />
-                ))}
-              </ItemList>
-            </div>
+          {days ? (
+            <WeekBand days={days} picked={shownDate} onPick={pick} />
           ) : (
-            <div>
-              <div className={styles.strip} role="group" aria-label={t.planner.board.strip}>
-                {board.days.map((d) => (
-                  <button
-                    key={d.date}
-                    type="button"
-                    className={styles.stripChip}
-                    aria-pressed={d.date === shownDay?.date}
-                    aria-current={d.isToday ? 'date' : undefined}
-                    onClick={() => setPickedDay(d.date)}
-                  >
-                    <span>{d.isToday ? t.planner.board.todayShort : dayName(d.date)}</span>
-                    <span>{capacityShort(d)}</span>
-                  </button>
-                ))}
-              </div>
-              {shownDay ? renderDay(shownDay) : null}
-            </div>
+            <div className={styles.bandPending} aria-hidden="true" />
           )}
-          {entryRow}
-          {waitingBlock}
-        </SplitView>
-      ) : null}
 
-      <RowChoice choice={choice} titles={titles} onClose={() => setChoice(undefined)} />
+          {!wide ? <LateRow rows={late} renderRow={renderLate} /> : null}
+
+          {shownDay && days ? (
+            <DayPage
+              key={shownDay.date}
+              day={shownDay}
+              tomorrow={days[1]?.date === shownDay.date}
+              renderRow={(row, next) => renderRow(row, shownDay, next)}
+              onEditDay={() => setSheetDate(shownDay.date)}
+              thenOpen={thenOpen}
+              onThenToggle={(open) => void setMeta(phone ? THEN_NARROW_KEY : THEN_WIDE_KEY, open)}
+              empty={emptySheet}
+              onRest={shownDay.isToday ? () => void showRest() : undefined}
+              // On the phone the page's ⋯ stands in the sheet's head and holds „Tage einteilen“: said once.
+              onSetup={phone ? undefined : () => setSettingUp(true)}
+              headEnd={phone ? pageMenuButton : undefined}
+              dayEnd={
+                data && dayEndOf(data.settings) ? dayEndLabel(dayEndOf(data.settings)!) : undefined
+              }
+              onSwipe={
+                phone
+                  ? (dir) => {
+                      const at = days.findIndex((d) => d.date === shownDay.date);
+                      const to = days[at + dir];
+                      if (to) pick(to.date);
+                    }
+                  : undefined
+              }
+            />
+          ) : (
+            <DayPageLoading />
+          )}
+
+          {/* Not wide: the context follows the sheet in the one column. */}
+          {!wide && hasContext ? <aside aria-label={t.planner.ctx.label}>{context}</aside> : null}
+
+          {/* Phone: the first screen is band and sheet; the plus of the bottom bar opens the field as a sheet.
+              The field also stays where it was before R1, as the page's last row: without it every entry on
+              the phone costs one tap and one sheet more than before (e2e/usecases, paths B and E). */}
+          {phone && !capturing ? capture(false) : null}
+          {phone && !capturing ? answer : null}
+        </div>
+      </SplitView>
+
+      {phone ? (
+        <CaptureDialog open={capturing} onClose={() => setCapturing(false)}>
+          {capture(true)}
+          {answer}
+        </CaptureDialog>
+      ) : null}
+      <RowChoice
+        choice={choice}
+        days={days?.map((d) => d.date) ?? []}
+        titles={titles}
+        onClose={() => setChoice(undefined)}
+      />
       <DaySheet
         day={board?.days.find((d) => d.date === sheetDate)}
         titles={titles}

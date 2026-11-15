@@ -19,7 +19,9 @@ export function weekEntries(days: readonly BoardDay[]): ProgressEntry[] {
   return days.map((d) => {
     const w = t.planner.widget;
     const name = dayName(d.date);
-    const state = capacityState(d);
+    // The widget says an overrun in its detail line („x mehr als planbar“); its title keeps „voll“.
+    const read = capacityState(d);
+    const state = read === 'over' ? 'full' : read;
     const label = d.isToday
       ? state === 'off'
         ? w.todayOff

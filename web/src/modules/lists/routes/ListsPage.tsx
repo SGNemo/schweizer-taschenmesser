@@ -1,12 +1,13 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
+import { usePlanRowEntries } from '@/core/entitylinks/planRow';
 import { bus } from '@/core/events';
 import { useModuleStates } from '@/core/modules/activation';
 import { whenServicesSettled } from '@/core/modules/servicesReady';
 import { useSettled } from '@/core/status/settled';
 import { useSettings } from '@/core/settings/settings';
-import { settings, SETTINGS_SCOPE, settingsSchema } from '../settings';
+import { SETTINGS_DEFAULTS, SETTINGS_SCOPE, settingsSchema } from '../settings';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import type { Stored } from '@/core/db/types';
 import { useUiStore } from '@/stores/ui';
@@ -124,7 +125,7 @@ export default function ListsPage() {
     next.delete('share');
     setParams(next, { replace: true });
   };
-  const [prefs, setPrefs] = useSettings(SETTINGS_SCOPE, settingsSchema, settings.defaults);
+  const [prefs, setPrefs] = useSettings(SETTINGS_SCOPE, settingsSchema, SETTINGS_DEFAULTS);
   const widgetList = pickWidgetList(lists ?? [], prefs?.widgetList ?? '');
   // Own icon or colour: shown in front of the list's first line (the tabs carry names only).
   const mark =
@@ -332,6 +333,27 @@ export default function ListsPage() {
       clearDone(id),
     );
   };
+  // „In den Plan“ / „Im Plan · Di“ (planner hub S3): one plan row for the whole list, only for a shopping or a
+  // packing list, and only while the planner is on (the helper reads that itself). A request has no end of its
+  // own, so „Nicht mehr planen“ stays offered while it stands – also on an emptied list, which offers nothing else.
+  const navigate = useNavigate();
+  const planTarget = useMemo(
+    () =>
+      current && !current.archived && (isShopping || isPacking)
+        ? { ref: { module: 'lists', id: current.id }, title: current.name }
+        : undefined,
+    [current, isShopping, isPacking],
+  );
+  const planEntries = usePlanRowEntries(
+    planTarget,
+    {
+      add: t.lists.plan.add,
+      placed: t.lists.plan.placed,
+      waits: t.lists.plan.waits,
+      remove: t.lists.plan.remove,
+    },
+    (to) => void navigate(to),
+  ).filter((e) => openCount > 0 || e.id === 'not-in-plan');
   const pageMenu = current
     ? [
         // On an empty list the field stands right under the empty state: no second way to it.
@@ -339,6 +361,7 @@ export default function ListsPage() {
         ...(isShopping && doneCount > 0
           ? [{ id: 'clear-bought', label: t.lists.clearBought(doneCount), onSelect: clearBought }]
           : []),
+        ...planEntries,
         { id: 'templates', label: t.lists.routines.title, onSelect: () => setTemplates(true) },
         { id: 'edit-list', label: t.lists.editList, onSelect: () => setListTarget(current) },
         { id: 'manage', label: t.lists.manage, onSelect: () => setManage(true) },

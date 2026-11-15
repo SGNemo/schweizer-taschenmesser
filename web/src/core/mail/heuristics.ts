@@ -4,7 +4,7 @@
  * opened mail for "create from this mail"); this file is pure and deliberately has no access to
  * anything else – no AI, no database.
  */
-import { addDaysStr, pad2 } from '@/core/time/dates';
+import { addDaysStr, pad2, toDateString } from '@/core/time/dates';
 import { parseMoney } from '@/core/money';
 import type { MailFinding } from '@/core/connectors/types';
 
@@ -174,7 +174,11 @@ export function senderName(from: string): string {
 const cleanSubject = (s: string) => s.replace(/^\s*((re|aw|fwd|wg):\s*)+/i, '').trim();
 
 export function analyzeMessage(m: MailMeta): MailFinding | undefined {
-  const mailDate = new Date(m.dateMs).toISOString().slice(0, 10);
+  // The mail's local calendar day (a mail at 00:30 local is that day, not the UTC day before); a mail
+  // without a readable date has no day to read dates against.
+  const sent = new Date(m.dateMs);
+  if (Number.isNaN(sent.getTime())) return undefined;
+  const mailDate = toDateString(sent);
   const subject = cleanSubject(m.subject);
   const text = `${subject}. ${m.snippet}`;
   const amountMinor = findAmount(text);

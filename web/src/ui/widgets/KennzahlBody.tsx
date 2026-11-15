@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { Icon } from '../icons';
 import { Sparkline } from './Sparkline';
 import { useWidgetSize } from './size';
@@ -9,6 +10,32 @@ export interface KennzahlTrend {
   /** Text next to the arrow, e.g. "+120 € zum Vormonat". */
   text: string;
   tone?: 'neutral' | 'danger';
+}
+
+/** Separator of the parts of a context line ("Vermögen · Ausgaben ▲ +120 € zum Vormonat"). */
+const SEP = ' · ';
+
+/**
+ * The context line: it breaks between its parts, never inside one ("Ausgaben ▲ +463,62 € zum Vormonat" stays together;
+ * a part longer than the line still wraps). The dot stays at the end of its line; the text is the same as `text`.
+ */
+function ContextLine({ text }: { text: string }) {
+  const parts = text.split(SEP);
+  return (
+    <p className={styles.sub}>
+      {parts.map((part, i) =>
+        i < parts.length - 1 ? (
+          <Fragment key={i}>
+            <span className={styles.part}>{`${part} ·`}</span>{' '}
+          </Fragment>
+        ) : (
+          <span key={i} className={styles.part}>
+            {part}
+          </span>
+        ),
+      )}
+    </p>
+  );
 }
 
 /**
@@ -46,7 +73,7 @@ export function KennzahlBody({
         {value}
         {unit ? <span className={styles.kpiUnit}> {unit}</span> : null}
       </p>
-      {context ? <p className={styles.sub}>{context}</p> : null}
+      {context ? <ContextLine text={context} /> : null}
       {size !== 's' && trend ? (
         <p className={styles.trend} data-tone={trend.tone ?? 'neutral'}>
           <Icon

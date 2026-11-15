@@ -43,6 +43,9 @@ const CORE_KEYS = {
     'tm-settings-adv':
       '{} (open state of the "Erweitert" fold per settings category; core/settings/foldState.ts)',
     'tm-shortcuts': 'keys {} (overrides of the F-key defaults; core/keyboard/map.ts)',
+    'tm-app-lock':
+      'enabled false, idleMinutes 5, background now, biometric false (app lock; broken value = on; core/applock/prefs.ts)',
+    'tm-app-lock-fails': 'unset (wrong-PIN count and wait end; core/applock/fails.ts)',
     'tm-spotify-now':
       'last now-playing reading, only while connected (core/connectors/nowPlaying.ts)',
     'tm-spotify-no-premium': 'time of a PREMIUM_REQUIRED answer; controls hidden for a day',

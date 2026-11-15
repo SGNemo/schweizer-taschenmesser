@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { formatMinutes, formatNumber } from '@/core/i18n/format';
-import { relativeDayLabel } from '@/core/time/dates';
+import { formatDay, relativeDayLabel } from '@/core/time/dates';
+import { Trend } from '@/ui/charts';
 import { t } from '@/strings';
 import { SignatureMark } from '@/ui/identity';
 import { Dialog, EmptyState, GroupedList, ItemList, ItemRow, TextField } from '@/ui';
@@ -11,6 +12,7 @@ import {
   exerciseOverview,
   isBestEntry,
   reachesBest,
+  trendOf,
   type Best,
   type ExerciseSummary,
 } from '../progress';
@@ -132,6 +134,13 @@ function ExerciseDialog({
 }) {
   const x = t.fitness.exercises;
   const history = name ? exerciseHistory(sessions, name) : [];
+  const trend = trendOf(history);
+  const unit = (n: number) =>
+    trend?.kind === 'weight'
+      ? t.fitness.line.weight(formatNumber(n))
+      : trend?.kind === 'reps'
+        ? t.fitness.line.reps(n)
+        : formatMinutes(n, { compact: true });
   return (
     <Dialog open={name !== null && !!summary} onClose={onClose} title={name ?? ''}>
       {summary ? (
@@ -141,6 +150,25 @@ function ExerciseDialog({
               .filter(Boolean)
               .join(' · ')}
           </p>
+          {/* One point is a sentence (the best above), a course needs two. */}
+          {trend && trend.points.length >= 2 ? (
+            <Trend
+              title={x.trend[trend.kind]}
+              showTitle
+              // With the year once the course spans more than one.
+              labels={trend.points.map((p) =>
+                formatDay(
+                  p.date,
+                  trend.points[0]!.date.slice(0, 4) === trend.points.at(-1)!.date.slice(0, 4)
+                    ? 'd. MMM'
+                    : 'd. MMM yy',
+                ),
+              )}
+              series={[{ label: name ?? '', values: trend.points.map((p) => p.value) }]}
+              format={unit}
+              data-testid="fitness-exercise-trend"
+            />
+          ) : null}
           <p className={styles.groupLabel}>{x.history}</p>
           <ItemList>
             {history.slice(0, HISTORY_ROWS).map((h, i) => (

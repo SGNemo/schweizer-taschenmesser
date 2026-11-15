@@ -84,6 +84,8 @@ const manifest: ModuleManifest = {
       },
     ],
     services: () => import('./services'),
+    plannable: () => import('./plannable'),
+    linkTarget: () => import('./linkTarget'),
     aiCreateDefaults: () => import('./aiDefaults'),
   },
 };

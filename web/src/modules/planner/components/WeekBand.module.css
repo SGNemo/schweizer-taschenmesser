@@ -1,0 +1,126 @@
+/* The week band (planner hub R1): seven equal tiles on the page tone. The form follows the band's own width, not
+   the window's: beside the context column on a laptop the tiles are as narrow as on a tablet. */
+.container {
+  container: band / inline-size;
+}
+.band {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+/* A tile: the button fills it, the bar lies over the button's lower edge (it takes no pointer). */
+.tile {
+  --tile-pad: var(--space-3);
+  /* the room the bar takes under the text: its 8 px and the gap above it */
+  --tile-bar: var(--space-4);
+  position: relative;
+  display: flex;
+  min-width: 0;
+}
+.pick {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  min-height: calc(var(--touch) + var(--space-3));
+  padding: var(--space-2) var(--tile-pad) calc(var(--space-2) + var(--tile-bar));
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  background: var(--surface-raised);
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.pick:hover {
+  background: var(--surface-2);
+}
+.pick:active {
+  opacity: 0.8;
+}
+/* The picked day: one tone step and a ring in the text colour (a real outline: it survives forced colours). */
+.pick[aria-pressed='true'] {
+  background: var(--surface-2);
+  outline: 1.5px solid var(--text);
+  outline-offset: -1.5px;
+}
+.pick:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.wide {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0 var(--space-2);
+  min-width: 0;
+}
+.day {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: var(--font-num);
+  white-space: nowrap;
+}
+.count,
+.state {
+  color: var(--text-3);
+  font-size: var(--text-meta);
+  font-variant-numeric: var(--font-num);
+  white-space: nowrap;
+}
+.state {
+  color: var(--text-muted);
+}
+/* The wide form's day may wrap between words („Heute ·“ above „Di 29.“): a tile at the narrow end of the wide form
+   is too slim for the whole line, and a day must never run past its tile. */
+.wide .day {
+  white-space: normal;
+}
+.compact {
+  display: none;
+}
+.bar {
+  position: absolute;
+  left: var(--tile-pad);
+  right: var(--tile-pad);
+  bottom: var(--space-2);
+  pointer-events: none;
+}
+/* Compact: weekday and number, the count (or the free time, or „frei“), the bar. Words never break inside
+   themselves; at a large text size the number drops under the weekday instead. */
+@container band (max-width: 44rem) {
+  .band {
+    gap: var(--space-1);
+  }
+  .tile {
+    --tile-pad: var(--space-2);
+  }
+  .pick {
+    padding-inline: var(--space-1);
+    text-align: center;
+  }
+  .wide {
+    display: none;
+  }
+  .compact {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    column-gap: 0.25em;
+    min-width: 0;
+  }
+  .compact .day {
+    font-size: var(--text-meta);
+  }
+  .compact .state {
+    flex-basis: 100%;
+  }
+}

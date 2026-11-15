@@ -6,6 +6,10 @@ import type {
   RemoteKeyAction,
   RemoteLevel,
   RemotePcState,
+  RemotePowerAction,
+  RemotePowerAnswer,
+  RemotePowerInfo,
+  RemoteProgramAnswer,
   RemoteService,
 } from '@/core/platform/types';
 
@@ -33,7 +37,22 @@ import type {
  *   session. A device granted only media, and a locked PC, get their sentence without a call; a
  *   dismissed unlock is not asked again by itself (only the person's own step asks again);
  * - what the pad sends goes out in order, one write at a time: moves are summed only while a
- *   write is pending, a press that finds the queue full is dropped, a release never is.
+ *   write is pending, a press that finds the queue full is dropped, a release never is;
+ * - power (`powerAct`): every answer of the PC is the latest state of its countdown, never paired
+ *   with a request; a power answer does not end the session. Without a session an action opens
+ *   one first, once; the session ending resets the state, except a countdown, which becomes
+ *   `done` (the PC acts without the phone), and `done` itself (the disconnect that follows is
+ *   expected and keeps that line until a new session stands).
+ * - presentation (`present()`): what the PC said in its last `opened`, kept until the next one
+ *   says otherwise (a dropped connection does not hide the view); its two keys never go to a PC
+ *   that did not say it takes them.
+ * - programs (`programs()`, `programStart`): the list is what the PC sent – only when this phone
+ *   may start programs – kept across sessions of this visit until a PC without programs answers,
+ *   the PC says `not-granted`, or the page is left. A start needs the mouse level: it goes the
+ *   way of the touchpad (`raise`, with the unlock of that level and no prompt of its own), names
+ *   the slot and echoes the epoch of the list the PC sent (in this session or an earlier one; the
+ *   PC starts nothing when its list changed since), and its answer is one calm line – `started`
+ *   leaves by itself after `PROGRAM_STARTED_SHOWN_MS`, a refusal stays until it is dismissed.
  */
 export type RemoteView =
   | { kind: 'idle' }
@@ -70,6 +89,52 @@ export type RemotePad =
   /** This phone has a screen lock it cannot ask for: the level is not for this phone. */
   | { kind: 'unavailable' };
 
+/** A power action that runs after the PC's countdown (all but `cancel`). */
+export type RemotePowerVerb = Exclude<RemotePowerAction, 'cancel'>;
+
+/** Where power stands, from the PC's latest answer. */
+export type RemotePowerPhase =
+  | { kind: 'idle' }
+  /** The phone's unlock prompt is up, or the action is on its way to the PC. */
+  | { kind: 'asking'; action: RemotePowerVerb }
+  /** A countdown runs at the PC (`action` unknown when it was started before this run). */
+  | { kind: 'counting'; action?: RemotePowerVerb }
+  /** Nemo on the PC is still busy: nothing started; asking again `despite` starts it. */
+  | { kind: 'working'; action: RemotePowerVerb }
+  /** The countdown ran out: the PC goes off (the disconnect after it is expected). */
+  | { kind: 'done'; action?: RemotePowerVerb }
+  /** The countdown was stopped (at the PC or from here): the PC stays on. */
+  | { kind: 'cancelled' }
+  /** "Abbrechen" did not reach the PC (also not on a new session): it has to be done there. */
+  | { kind: 'cancel-failed' }
+  | { kind: 'refused'; reason: 'not-granted' | 'locked' | 'limit' | 'failed' | 'unavailable' }
+  /** The phone's unlock was dismissed: nothing was sent. */
+  | { kind: 'unlock' };
+
+/** Where a program start stands, from the PC's answer. */
+export type RemoteProgramPhase =
+  | { kind: 'idle' }
+  /** The mouse level is being opened, or the start is on its way to the PC. */
+  | { kind: 'starting'; name: string }
+  /** Handed to the PC's system. */
+  | { kind: 'started'; name: string }
+  | {
+      kind: 'refused';
+      reason: 'not-granted' | 'locked' | 'limit' | 'failed' | 'unlock' | 'unavailable';
+    };
+
+export interface RemoteProgramsView {
+  /** The names the PC sent (slot order); `null`: no list (not allowed, or a PC without programs). */
+  list: readonly string[] | null;
+  phase: RemoteProgramPhase;
+}
+
+export interface RemotePowerView {
+  /** The PC's power facts from the last open; `null`: not known yet, or a PC from before power. */
+  info: RemotePowerInfo | null;
+  phase: RemotePowerPhase;
+}
+
 /** What a sync round says about the pairing. */
 export type SyncVerdict = 'ok' | 'not-paired' | 'failed';
 
@@ -89,6 +154,8 @@ export const NO_ANSWER_GAP_MS = 4000;
 export const ANSWER_WAIT_MS = 3000;
 /** "Connecting" is shown at most this long; after that the page says "no answer yet" while it keeps trying. */
 export const OPEN_PATIENCE_MS = 5000;
+/** A program's `started` line goes back to nothing by itself after this long (refusals stay). */
+export const PROGRAM_STARTED_SHOWN_MS = 4000;
 /** The phone's volume keys stay with the PC this long after the session was last alive. */
 export const KEYS_LINGER_MS = 5000;
 
@@ -144,6 +211,8 @@ export function textPieces(text: string): string[] {
     pieces.push(clean.slice(i, i + TEXT_PIECE).join(''));
   return pieces;
 }
+/** The keys only a PC that says `present` takes. */
+const PRESENT_KEYS: ReadonlySet<RemoteKeyAction> = new Set<RemoteKeyAction>(['key-f5', 'key-b']);
 /** Entries that may wait behind the write in flight. */
 const OUT_MAX = 8;
 
@@ -187,8 +256,33 @@ export interface RemoteSession {
    * shell waits for it. The text lives in the queue until it is written and nowhere after.
    */
   type(text: string, enter: boolean): Promise<TypeResult>;
+  /**
+   * Whether the PC takes the presentation keys (`key-f5`, `key-b`), from its last answer to
+   * `open`; `false` before the first one and for an older PC.
+   */
+  present(): boolean;
   /** Whether a press of the phone's volume keys belongs to the PC right now. */
   takesVolumeKeys(): boolean;
+  /** Power at the PC right now (a stable object until it changes; listeners hear of changes). */
+  power(): RemotePowerView;
+  /**
+   * One power action (the phone's unlock prompt, shown by the shell, is the confirmation;
+   * `lang` picks its language). Without a session it opens one first, once. `despite`: after
+   * `working`, the same action again. The PC's answer comes as an event.
+   */
+  powerAct(action: RemotePowerAction, despite?: boolean, lang?: string): Promise<void>;
+  /** The person read a final line (refused, cancelled, done, unlock dismissed) or chose "Warten": back to idle. */
+  powerDismiss(): void;
+  /** The PC's program list and where a start stands (a stable object until it changes). */
+  programs(): RemoteProgramsView;
+  /**
+   * Starts the program in `slot` of the list the PC sent: raises to the mouse level first (its
+   * unlock, if the PC asks for one; `lang` picks the prompt's language). The PC's answer comes
+   * as an event. One start at a time.
+   */
+  programStart(slot: number, lang?: string): Promise<void>;
+  /** The person read a final line: back to idle. */
+  programDismiss(): void;
 }
 
 export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
@@ -218,6 +312,113 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
   /** What the pad sends, in order; one write at a time. */
   const out: Out[] = [];
   let pumping = false;
+  let powerView: RemotePowerView = { info: null, phase: { kind: 'idle' } };
+  /** The PC takes the presentation keys (its last `opened` said so). */
+  let present = false;
+  /** The last action asked for: its words name what the countdown does. */
+  let powerAction: RemotePowerVerb | undefined;
+  /** Counts `powerAct` calls: only the latest one sets a state when its call returns. */
+  let powerCalls = 0;
+  /** The `powerAct` in flight, and its wait for the PC's first answer. */
+  let powerBusy: Promise<void> | undefined;
+  let powerHeard: (() => void) | undefined;
+  /**
+   * The page went to the background while the phone's own prompt was up (a PIN screen can cover
+   * the app): the session is closed once the action is through, not under it.
+   */
+  let closeLater = false;
+  let programsView: RemoteProgramsView = { list: null, phase: { kind: 'idle' } };
+  /** Counts `programStart` calls: only the latest one sets a state when its call returns. */
+  let programCalls = 0;
+  let programHeard: (() => void) | undefined;
+  /** The epoch of the list the PC sent with it; a start echoes it (the PC checks it). */
+  let programEpoch = 0;
+  /** Takes a `started` line away again by itself. */
+  let programFade: ReturnType<typeof setTimeout> | undefined;
+  const setPrograms = (next: Partial<RemoteProgramsView>) => {
+    if (next.phase && programFade !== undefined) {
+      clearTimeout(programFade);
+      programFade = undefined;
+    }
+    programsView = { ...programsView, ...next };
+    for (const listener of listeners) listener(view);
+  };
+  /** The PC's answer to a start. */
+  const programAnswer = (answer: RemoteProgramAnswer) => {
+    programHeard?.();
+    const phase = programsView.phase;
+    if (answer === 'started') {
+      if (phase.kind !== 'starting') return setPrograms({ phase: { kind: 'idle' } });
+      setPrograms({ phase: { kind: 'started', name: phase.name } });
+      // a calm confirmation that leaves by itself; a refusal stays until it is read
+      programFade = setTimeout(() => {
+        programFade = undefined;
+        if (programsView.phase.kind === 'started') setPrograms({ phase: { kind: 'idle' } });
+      }, PROGRAM_STARTED_SHOWN_MS);
+      return;
+    }
+    // a phone that may not (any more) loses the list until the PC sends it again
+    if (answer === 'not-granted')
+      return setPrograms({ list: null, phase: { kind: 'refused', reason: 'not-granted' } });
+    setPrograms({ phase: { kind: 'refused', reason: answer } });
+  };
+
+  const setPower = (next: Partial<RemotePowerView>) => {
+    powerView = { ...powerView, ...next };
+    for (const listener of listeners) listener(view);
+  };
+  const setPhase = (phase: RemotePowerPhase) => setPower({ phase });
+  /** The session is gone: so is what power was doing – except `done`, whose disconnect is expected. */
+  const powerLost = () => {
+    const phase = powerView.phase;
+    // a countdown that ran goes on at the PC without this phone: it ends as it would have
+    if (phase.kind === 'counting') setPhase({ kind: 'done', action: phase.action });
+    else if (phase.kind !== 'idle' && phase.kind !== 'done') setPhase({ kind: 'idle' });
+  };
+  /** One answer of the PC: the latest state of its countdown. */
+  const powerAnswer = (answer: RemotePowerAnswer) => {
+    powerHeard?.();
+    const phase = powerView.phase;
+    const info = powerView.info;
+    switch (answer) {
+      case 'started':
+        return setPower({
+          info: info && { ...info, pending: true },
+          phase: { kind: 'counting', action: powerAction },
+        });
+      case 'pending':
+        // a countdown ran already: what it does is known only if this phone started it
+        return setPower({
+          info: info && { ...info, pending: true },
+          phase: { kind: 'counting', action: phase.kind === 'counting' ? phase.action : undefined },
+        });
+      case 'working':
+        return setPhase(
+          powerAction
+            ? { kind: 'working', action: powerAction }
+            : { kind: 'refused', reason: 'failed' },
+        );
+      case 'cancelled':
+        return setPower({
+          info: info && { ...info, pending: false },
+          phase: { kind: 'cancelled' },
+        });
+      case 'done':
+        return setPower({
+          info: info && { ...info, pending: false },
+          phase: { kind: 'done', action: phase.kind === 'counting' ? phase.action : powerAction },
+        });
+      case 'not-granted':
+        return setPower({
+          info: info && { ...info, granted: false },
+          phase: { kind: 'refused', reason: 'not-granted' },
+        });
+      case 'locked':
+      case 'limit':
+      case 'failed':
+        return setPhase({ kind: 'refused', reason: answer });
+    }
+  };
 
   const setPad = (next: RemotePad) => {
     if (
@@ -237,6 +438,7 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
     emptyOut();
     level = 'media';
     if (pad.kind !== 'unlock' && pad.kind !== 'unavailable') setPad({ kind: 'off' });
+    powerLost();
   };
 
   const set = (next: RemoteView) => {
@@ -255,6 +457,21 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
   /** What the PC says about session `id` (only ever called for the current or the quiet one). */
   const handle = (event: RemoteEvent) => {
     if (event.session !== session && event.session !== quiet) return;
+    // about power: the session goes on (a quiet one's late word changes nothing about it)
+    if (event.kind === 'power') {
+      powerAnswer(event.answer);
+      return;
+    }
+    // the program list and a start's answer: the session goes on
+    if (event.kind === 'programs') {
+      programEpoch = event.epoch;
+      setPrograms({ list: [...event.list] });
+      return;
+    }
+    if (event.kind === 'program') {
+      programAnswer(event.answer);
+      return;
+    }
     stopWaiting();
     if (event.kind === 'state') {
       // a late answer of a session that had gone quiet: it is alive after all
@@ -310,6 +527,23 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       level = opened.level;
       grant = opened.grant;
       noLock = opened.noLock;
+      // a new session stands: what the PC says about power now replaces what was known
+      const phase = powerView.phase;
+      let next: RemotePowerPhase = phase;
+      // (an action waiting for this session keeps its prompt: the PC answers it)
+      if (phase.kind === 'asking') next = phase;
+      else if (opened.power?.pending)
+        next = {
+          kind: 'counting',
+          action: phase.kind === 'counting' || phase.kind === 'done' ? phase.action : undefined,
+        };
+      else if (opened.power === null || phase.kind === 'counting' || phase.kind === 'done')
+        next = { kind: 'idle' };
+      // (listeners hear of it with the connected state, one notice)
+      powerView = { info: opened.power, phase: next };
+      present = opened.present === true;
+      // a PC without programs has no list; one with them sends it right after this answer
+      if (opened.programs !== true) programsView = { ...programsView, list: null };
       set({ kind: 'connected', pc: opened.state });
       for (const event of early) if (event.session === known) handle(event);
       return undefined;
@@ -364,6 +598,11 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
   };
 
   const open = (): Promise<void> => {
+    // back before a close that waited for a prompt: the session still stands
+    if (closeLater) {
+      closeLater = false;
+      if (view.kind === 'connected' && session !== undefined) return Promise.resolve();
+    }
     // an attempt from before a `close()` is not this one: it ends by itself and leaves nothing
     if (opening?.generation === generation) {
       opening.nudge();
@@ -469,6 +708,7 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
   };
   /** Read through a call: an `await` in between may have changed it. */
   const levelNow = (): 'media' | 'full' => level;
+  const viewNow = (): RemoteView => view;
   const padUsable = () =>
     session !== undefined && level === 'full' && pad.kind === 'ready' && view.kind === 'connected';
 
@@ -539,7 +779,166 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
     return last || (code !== 'media-first' && code !== 'unlock-needed');
   };
 
-  return {
+  /** One power action through to its call (see `powerAct`). */
+  const powerRun = async (
+    action: RemotePowerAction,
+    despite: boolean,
+    lang: string | undefined,
+  ): Promise<void> => {
+    const mine = ++powerCalls;
+    const latest = () => mine === powerCalls;
+    if (action !== 'cancel') {
+      powerAction = action;
+      setPhase({ kind: 'asking', action });
+    }
+    const back = () => {
+      if (latest() && powerView.phase.kind === 'asking') setPhase({ kind: 'idle' });
+    };
+    if (view.kind !== 'connected' || session === undefined) {
+      const opens =
+        view.kind === 'idle' ||
+        view.kind === 'disconnected' ||
+        ((view.kind === 'connecting' || view.kind === 'slow') && opening !== undefined);
+      // refused, unreachable, …: the page says why; nothing goes out
+      if (!opens) return back();
+      await open();
+    }
+    // never repeated by itself: without a session (or power) now, it is the person's step again
+    if (!latest() || view.kind !== 'connected' || session === undefined) return back();
+    if (powerView.info === null) return back();
+    const used = session;
+    try {
+      await deps.remote.power(used, action, despite, lang);
+      // the PC answers at once; until then the action counts as on its way (a close waits for it)
+      if (latest() && powerView.phase.kind === 'asking')
+        await new Promise<void>((resolve) => {
+          const heard = () => {
+            clearTimeout(timer);
+            if (powerHeard === heard) powerHeard = undefined;
+            resolve();
+          };
+          const timer = setTimeout(heard, ANSWER_WAIT_MS);
+          powerHeard = heard;
+        });
+    } catch (e) {
+      const code = e instanceof Error ? e.message : '';
+      // the phone's own answer to its prompt counts, also when the page was left meanwhile
+      if (
+        code === 'unlock-cancelled' ||
+        code === 'confirm-cancelled' ||
+        code === 'unlock-failed' ||
+        code === 'unlock-busy'
+      ) {
+        if (latest()) setPhase({ kind: 'unlock' });
+        return;
+      }
+      if (!latest()) return;
+      if (code === 'unlock-unavailable') setPhase({ kind: 'refused', reason: 'unavailable' });
+      else if (code === 'no-power') setPower({ info: null, phase: { kind: 'idle' } });
+      else if (code === 'closed' || code === 'network') {
+        // the session is over (like a send that failed); the next step opens again
+        if (session === used) {
+          stopWaiting();
+          session = undefined;
+          drop(used);
+          padLost();
+          set({ kind: 'disconnected' });
+        }
+        if (action !== 'cancel') return back();
+        // "Abbrechen" must arrive: once more on a new session (it needs no prompt), then say so
+        // (read through a call: `set` changed it since the check above)
+        const before = viewNow().kind;
+        if (before === 'disconnected' || before === 'idle') {
+          await open();
+          const next = session;
+          if (viewNow().kind === 'connected' && next !== undefined && powerView.info !== null) {
+            try {
+              await deps.remote.power(next, 'cancel', false, lang);
+              return;
+            } catch {
+              if (session === next) {
+                stopWaiting();
+                session = undefined;
+                drop(next);
+                padLost();
+                set({ kind: 'disconnected' });
+              }
+            }
+          }
+        }
+        setPhase({ kind: 'cancel-failed' });
+      } else setPhase({ kind: 'refused', reason: 'failed' });
+    }
+  };
+
+  /** One program start through to its answer (see `programStart`). */
+  const programRun = async (slot: number, name: string, lang: string | undefined) => {
+    const mine = ++programCalls;
+    const latest = () => mine === programCalls;
+    const refuse = (reason: Extract<RemoteProgramPhase, { kind: 'refused' }>['reason']) => {
+      if (latest()) setPrograms({ phase: { kind: 'refused', reason } });
+    };
+    setPrograms({ phase: { kind: 'starting', name } });
+    // the mouse level, the way the touchpad gets it (a tap is the person's own step)
+    if (levelNow() !== 'full' || pad.kind !== 'ready') await api.raise(lang, { again: true });
+    if (!latest()) return;
+    if (levelNow() !== 'full' || session === undefined || viewNow().kind !== 'connected') {
+      const now = pad.kind;
+      return refuse(
+        now === 'unlock'
+          ? 'unlock'
+          : now === 'unavailable'
+            ? 'unavailable'
+            : now === 'locked'
+              ? 'locked'
+              : now === 'not-granted'
+                ? 'not-granted'
+                : 'failed',
+      );
+    }
+    const current = viewNow();
+    if (current.kind === 'connected' && current.pc.locked) return refuse('locked');
+    // the slot must still name what the person chose (a new list may have come meanwhile)
+    if (programsView.list?.[slot] !== name) return refuse('failed');
+    const used = session;
+    try {
+      await deps.remote.program(used, slot, programEpoch);
+      // the PC answers at once; no answer in time is a start that did not happen here
+      if (latest() && programsView.phase.kind === 'starting') {
+        const heard = await new Promise<boolean>((resolve) => {
+          const done = (yes: boolean) => {
+            clearTimeout(timer);
+            if (programHeard === hear) programHeard = undefined;
+            resolve(yes);
+          };
+          const hear = () => done(true);
+          const timer = setTimeout(() => done(false), ANSWER_WAIT_MS);
+          programHeard = hear;
+        });
+        if (!heard) refuse('failed');
+      }
+    } catch (e) {
+      const code = e instanceof Error ? e.message : '';
+      if (code === 'locked') return refuse('locked');
+      if (code === 'no-programs') {
+        if (latest()) setPrograms({ list: null, phase: { kind: 'refused', reason: 'failed' } });
+        return;
+      }
+      if (code === 'closed' || code === 'network') {
+        // the session is over (like a send that failed); the next step opens again
+        if (session === used) {
+          stopWaiting();
+          session = undefined;
+          drop(used);
+          padLost();
+          set({ kind: 'disconnected' });
+        }
+      }
+      refuse('failed');
+    }
+  };
+
+  const api: RemoteSession = {
     view: () => view,
     pad: () => pad,
     raise(lang, options) {
@@ -581,6 +980,8 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
     },
     key(action) {
       if (!padUsable() || (view.kind === 'connected' && view.pc.locked)) return false;
+      // an older PC would end the session for a key it does not know
+      if (PRESENT_KEYS.has(action) && !present) return false;
       if (out.length >= OUT_MAX) return false;
       out.push({ kind: 'buttons', actions: [action] });
       void pump();
@@ -617,6 +1018,8 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
         waiting = undefined;
       }
       if (view.kind !== 'connected' || session === undefined) return false;
+      // an older PC would end the session on it
+      if (action === 'monitor-off' && powerView.info === null) return false;
       const used = session;
       // wait for the PC's answer from before the call: it may arrive while the call returns
       // every press that goes out is waited for anew
@@ -648,6 +1051,12 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       }
     },
     async close() {
+      // the phone's own prompt is up: closing now would drop what it confirms
+      if (powerBusy && powerView.phase.kind === 'asking') {
+        closeLater = true;
+        return;
+      }
+      closeLater = false;
       generation += 1;
       opening = undefined;
       waiting = undefined;
@@ -658,6 +1067,11 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       lastAliveAt = -Infinity;
       // (a dismissed unlock stays: coming back to the page must not ask again by itself)
       padLost();
+      // the list is the PC's word for this visit: a new visit hears it anew
+      programCalls += 1;
+      clearTimeout(programFade);
+      programFade = undefined;
+      programsView = { list: null, phase: { kind: 'idle' } };
       set({ kind: 'idle' });
       await Promise.all(
         used.map((id) =>
@@ -666,6 +1080,41 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       );
       lastAliveAt = -Infinity;
     },
+    power: () => powerView,
+    present: () => present,
+    programs: () => programsView,
+    programStart(slot, lang) {
+      const name = programsView.list?.[slot];
+      // one start at a time; only what the PC sent can be started
+      if (name === undefined || programsView.phase.kind === 'starting') return Promise.resolve();
+      return programRun(slot, name, lang);
+    },
+    programDismiss() {
+      if (programsView.phase.kind !== 'starting') setPrograms({ phase: { kind: 'idle' } });
+    },
+    powerAct(action, despite = false, lang) {
+      // one prompt at a time
+      if (powerView.phase.kind === 'asking' && action !== 'cancel') return Promise.resolve();
+      const run = powerRun(action, despite, lang).finally(() => {
+        if (powerBusy !== run) return;
+        powerBusy = undefined;
+        if (closeLater) void api.close();
+      });
+      powerBusy = run;
+      return run;
+    },
+    powerDismiss() {
+      const kind = powerView.phase.kind;
+      if (
+        kind === 'refused' ||
+        kind === 'cancelled' ||
+        kind === 'cancel-failed' ||
+        kind === 'done' ||
+        kind === 'unlock' ||
+        kind === 'working'
+      )
+        setPhase({ kind: 'idle' });
+    },
     // With a session, and for a few seconds after it was last alive (a drop, a reconnect): then
     // the keys go back to the phone, so its own volume is never out of reach for long.
     takesVolumeKeys: () =>
@@ -673,6 +1122,7 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       ((view.kind === 'disconnected' || view.kind === 'connecting' || view.kind === 'slow') &&
         deps.now() - lastAliveAt < KEYS_LINGER_MS),
   };
+  return api;
 }
 
 /** Holding "louder"/"quieter": at most this many steps a second, however fast the keys repeat. */

@@ -5,7 +5,7 @@ import { settingsPath } from '@/core/settings/registry/paths';
 import { tMusicPage } from '@/strings.musicPage';
 import { tSpotify } from '@/strings.spotify';
 import { EmptyState, ErrorState, SkeletonRows } from '@/ui';
-import { readSavedAlbums } from '../library';
+import { readFollowedArtists, readSavedAlbums } from '../library';
 import { Tile } from './Tile';
 import type { PlayerApi } from './types';
 import styles from '../routes/music.module.css';
@@ -24,6 +24,20 @@ export function AlbumsView({ api }: { api: PlayerApi }) {
   const can = features.includes('library') && !!source.savedAlbums;
   const [albums, setAlbums] = useState<MediaItem[] | 'error' | undefined>();
   const [round, setRound] = useState(0);
+  const canFollow = features.includes('follow') && !!source.followedArtists;
+  const [artists, setArtists] = useState<MediaItem[] | 'error' | undefined>();
+  useEffect(() => {
+    if (!canFollow) return;
+    let alive = true;
+    readFollowedArtists(source, ctx).then(
+      (a) => alive && setArtists(a),
+      () => alive && setArtists('error'),
+    );
+    return () => {
+      alive = false;
+    };
+    // "Erneut versuchen" of the albums reads the artists again too.
+  }, [source, ctx, canFollow, round]);
 
   useEffect(() => {
     if (!can) return;
@@ -37,7 +51,7 @@ export function AlbumsView({ api }: { api: PlayerApi }) {
     };
   }, [source, ctx, can, round]);
 
-  if (!can)
+  if (!can && !canFollow)
     return (
       <p className={styles.note}>
         {tm.albumsNeedLibrary} <Link to={CONNECTIONS}>{tx.settings}</Link>
@@ -53,7 +67,11 @@ export function AlbumsView({ api }: { api: PlayerApi }) {
           {Array.isArray(albums) ? tm.albumsCount(albums.length) : ''}
         </span>
       </div>
-      {albums === undefined ? (
+      {!can ? (
+        <p className={styles.note}>
+          {tm.albumsNeedLibrary} <Link to={CONNECTIONS}>{tx.settings}</Link>
+        </p>
+      ) : albums === undefined ? (
         <SkeletonRows count={3} />
       ) : albums === 'error' ? (
         <ErrorState title={tx.listFailed} onRetry={() => setRound((r) => r + 1)} />
@@ -75,6 +93,34 @@ export function AlbumsView({ api }: { api: PlayerApi }) {
           ))}
         </ul>
       )}
+      {canFollow ? (
+        <>
+          <h2 className={styles.sectionTitle}>{tm.followedArtists}</h2>
+          {artists === undefined ? (
+            <SkeletonRows count={2} />
+          ) : artists === 'error' ? (
+            <p className={styles.note}>{tx.listFailed}</p>
+          ) : artists.length === 0 ? (
+            <p className={styles.note}>{tm.followedNone}</p>
+          ) : (
+            <ul className={styles.grid} data-testid="music-followed-artists">
+              {artists.map((a) => (
+                <li key={a.id}>
+                  <Tile
+                    api={api}
+                    title={a.name}
+                    cover={a}
+                    alt={a.name}
+                    onOpen={() =>
+                      api.open({ type: 'artist', id: a.id, name: a.name, back: 'albums' })
+                    }
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      ) : null}
     </section>
   );
 }

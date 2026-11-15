@@ -151,3 +151,31 @@ export function loadByGroup(
     return row && (row.sets || row.minutes) ? [row] : [];
   });
 }
+
+/** One point per day of the measure the best uses (heaviest working weight, else most reps, else minutes). */
+export interface TrendPoints {
+  kind: Best['kind'];
+  points: { date: string; value: number }[];
+}
+
+/**
+ * The course of an exercise for a chart (deep package 4), oldest first: per day the heaviest working
+ * weight (else the most reps, else the longest duration) – the same measure as the best. Days without
+ * that measure are left out, never drawn as zero.
+ */
+export function trendOf(history: readonly ExerciseEntry[]): TrendPoints | undefined {
+  const best = personalBest(history);
+  if (!best) return undefined;
+  const byDay = new Map<string, number>();
+  for (const { date, exercise } of [...history].reverse()) {
+    const values =
+      best.kind === 'minutes'
+        ? [exercise.durationMin ?? 0]
+        : measuredSets(exercise).map((s) =>
+            best.kind === 'weight' ? (s.weightKg ?? 0) : s.weightKg ? 0 : (s.reps ?? 0),
+          );
+    const v = Math.max(0, ...values);
+    if (v > 0) byDay.set(date, Math.max(byDay.get(date) ?? 0, v));
+  }
+  return { kind: best.kind, points: [...byDay].map(([date, value]) => ({ date, value })) };
+}

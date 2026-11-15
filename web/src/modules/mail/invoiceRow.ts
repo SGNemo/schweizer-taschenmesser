@@ -409,9 +409,12 @@ export async function createInvoice(
       label: t.mail.write.undo,
       run: () =>
         void (async () => {
-          await done.undo();
-          await unlink();
-          if (link) await linkRepo.remove(link);
+          // Each part on its own: a failing entry undo must not leave the link rows behind.
+          await Promise.allSettled([
+            done.undo(),
+            unlink(),
+            ...(link ? [linkRepo.remove(link)] : []),
+          ]);
           onChanged();
           toast(t.mail.write.undone);
         })(),
@@ -455,9 +458,12 @@ export async function noteReminder(
       label: t.mail.write.undo,
       run: () =>
         void (async () => {
-          await saved.undo();
-          await unlink();
-          if (link) await linkRepo.remove(link);
+          // Each part on its own: a failing entry undo must not leave the link rows behind.
+          await Promise.allSettled([
+            saved.undo(),
+            unlink(),
+            ...(link ? [linkRepo.remove(link)] : []),
+          ]);
           onChanged();
           toast(t.mail.write.undone);
         })(),

@@ -1,6 +1,7 @@
 import type { Recurrence } from '@/core/recurrence/types';
 import type { SeedContext, SeedModule, SeedRows } from '@/core/seed/types';
 import { firstDue } from './logic';
+import type { Daypart } from './schema';
 
 /**
  * Test data for the Dev-Preview, E2E tests and screenshots. Pure and deterministic: only `ctx`. A household with
@@ -15,6 +16,9 @@ interface Def {
   start: number;
   people?: string[];
   minutes?: number;
+  daypart?: Daypart;
+  /** A routine of the day: steps ticked one by one. */
+  steps?: string[];
 }
 
 const weekly = (interval = 1): Recurrence => ({ freq: 'weekly', interval });
@@ -44,6 +48,20 @@ const DEFS: Def[] = [
     start: -4,
     people: ['Mia', 'Ben'],
     minutes: 5,
+  },
+  {
+    name: 'Morgenroutine',
+    repeat: { freq: 'daily', interval: 1 },
+    start: -30,
+    minutes: 30,
+    daypart: 'morning',
+    steps: [
+      'Ein Glas Wasser trinken',
+      'Medikamente nehmen',
+      'Zähne putzen',
+      'Anziehen',
+      'Frühstücken',
+    ],
   },
   { name: 'Bettwäsche wechseln', room: 'Schlafzimmer', repeat: weekly(2), start: -9, minutes: 15 },
   {
@@ -96,6 +114,8 @@ function seed(ctx: SeedContext): SeedRows {
           people,
           turn: people.length ? Math.floor((i + 1) / 2) % people.length : 0,
           ...(def.minutes ? { minutes: def.minutes } : {}),
+          ...(def.daypart ? { daypart: def.daypart } : {}),
+          steps: (def.steps ?? []).map((text, k) => ({ id: `s${k + 1}`, text })),
         },
       };
     }),
