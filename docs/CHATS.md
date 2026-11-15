@@ -59,7 +59,6 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 | images under `docs/`                                                                     | none ([DOCS-GUIDE](meta/DOCS-GUIDE.md#images)); screenshots go into the PR text             |
 | `docs/STATUS.md`                                                                         | only in a `docs(status)` PR of its own (docs only), never in a feature PR                   |
 | `docs/DECISIONS.md`, `docs/HOW-TO.md`, `docs/ARCHITECTURE-MAP.md`, `README.md`           | touch only on real change; one line / one block, no reformatting                            |
-| `web/src/core/events` (`feat/mail-answered`)                                             | one event `todo.doneRequested` (additive); until that PR merges                             |
 
 ## Hand-over conventions
 
