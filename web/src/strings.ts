@@ -5235,7 +5235,7 @@ export const de = {
     },
     /** Tab "Verlauf": what the page changed on this PC, with the way back. */
     history: {
-      lead: 'Was Nemo auf diesem PC verändert hat, mit dem Weg zurück. Was du aufräumst, steht hier, bis du Nemo schließt; geschaltete Einträge bleiben, bis du sie zurücknimmst.',
+      lead: 'Was Nemo auf diesem PC verändert hat, mit dem Weg zurück. Aufgeräumtes steht hier, bis du Nemo schließt; Änderungen am Autostart bleiben hier stehen.',
       loading: 'Verlauf wird gelesen …',
       empty: 'Im Verlauf steht noch nichts.',
       emptyHint: 'Sobald du etwas aufräumst oder umschaltest, steht es hier.',
@@ -5259,6 +5259,7 @@ export const de = {
       undoLabel: (what: string) => `Rückgängig: ${what}`,
       undoDone: 'Zurückgestellt.',
       undoFailed: 'Das ließ sich nicht zurückstellen.',
+      changedElsewhere: 'Das wurde inzwischen in Windows geändert. Nemo lässt es, wie es ist.',
       undone: 'Zurückgenommen.',
       canUndo: 'Der Wert von vorher ist gespeichert.',
       undoNewerFirst: 'Nimm zuerst die neuere Änderung daran zurück.',
@@ -5378,20 +5379,21 @@ export const de = {
     },
     /** Tab "Autostart": what starts with Windows for this account, with a switch each. */
     startup: {
-      lead: 'Diese Programme starten mit Windows. Schalte ab, was du beim Start nicht brauchst – das Programm bleibt installiert und lässt sich jederzeit wieder einschalten.',
+      lead: 'Hier steht, was mit Windows starten kann. Was du beim Start nicht brauchst, schaltest du aus – das Programm bleibt installiert und lässt sich wieder einschalten.',
       loading: 'Autostart wird gelesen …',
       failed: 'Der Autostart konnte nicht gelesen werden.',
       again: 'Erneut versuchen',
       onlyWindows: 'Den Autostart zeigt Nemo nur unter Windows.',
       empty: 'Hier startet nichts mit Windows.',
       user: 'Für dein Konto',
-      machine: 'Für alle Konten (nur ansehen)',
+      machine: 'Für alle Konten',
       count: (on: number, total: number) => `${on} von ${total} eingeschaltet`,
       machineHint:
-        'Diese Einträge gelten für alle, die diesen PC nutzen. Ändern lassen sie sich in den Windows-Einstellungen.',
+        'Nur zum Ansehen: Diese Einträge gelten für alle, die diesen PC nutzen. Ändern lassen sie sich in den Windows-Einstellungen mit einem Administratorkonto.',
       machineOpen: 'In den Windows-Einstellungen ändern',
       openFailed: 'Das ließ sich nicht öffnen.',
-      switchLabel: (name: string) => `${name} beim Start von Windows starten`,
+      switchLabel: (name: string) => `${name} mit Windows starten`,
+      notSwitchable: 'Lässt sich hier nicht umschalten',
       on: 'Eingeschaltet',
       off: 'Ausgeschaltet',
       folder: 'Autostart-Ordner',
@@ -5401,7 +5403,7 @@ export const de = {
       undoFailed: 'Das ließ sich nicht zurückstellen. Im Verlauf siehst du den Stand.',
       setFailed: 'Das ließ sich nicht umschalten.',
       impact:
-        'Wie viel Zeit ein Programm beim Start braucht, misst Windows selbst. Der Task-Manager zeigt es unter „Autostart-Apps“.',
+        'Wie stark ein Programm den Start von Windows verzögert, schätzt Windows selbst: Der Task-Manager zeigt es unter „Autostart-Apps“ in der Spalte „Startauswirkungen“.',
       historyOff: (name: string) => `${name}: startet nicht mehr mit Windows`,
       historyOn: (name: string) => `${name}: startet wieder mit Windows`,
     },

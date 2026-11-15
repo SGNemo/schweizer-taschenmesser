@@ -3,9 +3,10 @@
 //! Clean-ups are not in here at all: the shell keeps them in memory for the session (the disk
 //! module holds no data: `docs/RULES.md`; [`cleanup_view`] only shapes such a line). Changes
 //! that need a way back (a setting, an autostart entry) are written to one small JSON file in the app's local data folder: device-local, never synced,
-//! never part of a backup or a bug report. Nothing here holds a file path or a file name; a
-//! clean-up entry is a category with a size, a setting entry is the setting's id with the value
-//! from before.
+//! never part of a backup or a bug report. What an entry holds: the id of the setting or
+//! autostart entry, a display name, the time, and per changed value its registry key, its value
+//! name (for an autostart entry that is the Run value's name or the shortcut's file name) and
+//! the bytes from before and after. Never a command line, a path or anything from a scan.
 //!
 //! Two stores in the file:
 //! - `entries`: the changes, newest last, capped at [`MAX_ENTRIES`] (taken-back ones fall out
@@ -41,6 +42,11 @@ pub enum Undo {
         key: String,
         name: String,
         previous: Option<Value>,
+        /// What the change wrote. When set, the undo is refused if the value is no longer this
+        /// one: somebody (Windows' own settings, Task Manager) changed it since, and their
+        /// choice must not be overwritten by ours from before.
+        #[serde(default)]
+        written: Option<Value>,
     },
     /// Something that is not a registry value (the active power plan, a system parameter):
     /// `what` names it, `previous` is its old state as text. Applied by the module that owns it.
@@ -374,17 +380,61 @@ impl Journal {
     }
 
     /// Subjects of `kind` that are changed right now, with the values from before their first
-    /// change ("Alle zurücksetzen").
+    /// change ("Alle zurücksetzen"). Each step expects the value the subject's newest open change
+    /// wrote, so a reset, like an undo, leaves alone what was changed elsewhere since.
     pub fn originals(&self, kind: Kind) -> Vec<(String, Vec<Undo>)> {
         let prefix = subject_key(kind, "");
         self.file
             .originals
             .iter()
             .filter_map(|(k, v)| {
-                k.strip_prefix(&prefix)
-                    .map(|subject| (subject.to_string(), v.undo.clone()))
+                let subject = k.strip_prefix(&prefix)?;
+                let steps = v
+                    .undo
+                    .iter()
+                    .map(|step| self.with_newest_written(kind, subject, step))
+                    .collect();
+                Some((subject.to_string(), steps))
             })
             .collect()
+    }
+
+    /// `step` with `written` taken from the newest open change of the subject to the same value.
+    fn with_newest_written(&self, kind: Kind, subject: &str, step: &Undo) -> Undo {
+        let Undo::Reg {
+            key,
+            name,
+            previous,
+            ..
+        } = step
+        else {
+            return step.clone();
+        };
+        let written = self
+            .file
+            .entries
+            .iter()
+            .rev()
+            .filter(|e| !e.undone && e.kind == kind && e.subject == subject)
+            .flat_map(|e| &e.undo)
+            .find_map(|u| match u {
+                Undo::Reg {
+                    key: k,
+                    name: n,
+                    written,
+                    ..
+                } if k.eq_ignore_ascii_case(key) && n.eq_ignore_ascii_case(name) => {
+                    Some(written.clone())
+                }
+                _ => None,
+            })
+            .flatten();
+        Undo::Reg {
+            key: key.clone(),
+            name: name.clone(),
+            previous: previous.clone(),
+            written,
+        }
     }
 
     /// After a subject was put back to its original: its open entries count as undone.
@@ -429,18 +479,35 @@ pub enum ChangeError<E> {
     Apply(E),
 }
 
-/// Applies the registry steps of an undo. `Other` steps are for the caller (`on_other`).
+/// Applies the steps of an undo. Before anything is put back, every registry step that knows
+/// what it wrote is checked: when the value is no longer that one, the whole undo is refused
+/// with [`RegError::ChangedElsewhere`] and nothing is touched. `Other` steps are for the caller
+/// (`on_other`).
 pub fn apply_undo(
     reg: &dyn Registry,
     steps: &[Undo],
     mut on_other: impl FnMut(&str, &str) -> Result<(), RegError>,
 ) -> Result<(), RegError> {
     for step in steps {
+        if let Undo::Reg {
+            key,
+            name,
+            written: Some(written),
+            ..
+        } = step
+        {
+            if reg.get(key, name)?.as_ref() != Some(written) {
+                return Err(RegError::ChangedElsewhere);
+            }
+        }
+    }
+    for step in steps {
         match step {
             Undo::Reg {
                 key,
                 name,
                 previous,
+                ..
             } => reg.restore(key, name, previous.as_ref())?,
             Undo::Other { what, previous } => on_other(what, previous)?,
         }
@@ -484,6 +551,7 @@ mod tests {
             key: KEY.into(),
             name: name.into(),
             previous: reg.get(KEY, name).unwrap(),
+            written: Some(Value::Dword(to)),
         }];
         j.change(10, Kind::Tweak, name, "", Some(to == 1), undo, || {
             reg.set(KEY, name, &Value::Dword(to))
@@ -702,6 +770,7 @@ mod tests {
                 key: KEY.into(),
                 name: "Shared".into(),
                 previous: reg.get(KEY, "shared").unwrap(),
+                written: None,
             }]
         };
         let first = j
@@ -719,6 +788,29 @@ mod tests {
         j.mark_undone(second).unwrap();
         apply_undo(&reg, &j.undo_steps(first).unwrap(), |_, _| Ok(())).unwrap();
         assert_eq!(reg.get(KEY, "Shared"), Ok(None));
+        cleanup(&path);
+    }
+
+    #[test]
+    fn an_undo_is_refused_when_the_value_was_changed_elsewhere_since() {
+        let path = temp_path("elsewhere");
+        let reg = MemRegistry::new();
+        reg.set(KEY, "a", &Value::Dword(1)).unwrap();
+        let (mut j, _) = Journal::open(&path).unwrap();
+        let id = switch(&mut j, &reg, "a", 0).unwrap();
+        // Windows' own settings change it afterwards.
+        reg.set(KEY, "a", &Value::Dword(9)).unwrap();
+        assert_eq!(
+            apply_undo(&reg, &j.undo_steps(id).unwrap(), |_, _| Ok(())),
+            Err(RegError::ChangedElsewhere)
+        );
+        assert_eq!(reg.get(KEY, "a"), Ok(Some(Value::Dword(9))), "left alone");
+        // Removed elsewhere counts as changed, too.
+        reg.delete(KEY, "a").unwrap();
+        assert_eq!(
+            apply_undo(&reg, &j.undo_steps(id).unwrap(), |_, _| Ok(())),
+            Err(RegError::ChangedElsewhere)
+        );
         cleanup(&path);
     }
 

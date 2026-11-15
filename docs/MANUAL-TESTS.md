@@ -410,6 +410,8 @@ DT-D20. _Zuletzt benutzt:_ `fsutil behavior query disableLastAccess` zeigt den Z
 #### Autostart (Runde `feat/disk-optimize-p2`) – nur auf echtem Windows prüfbar
 
 Mit einem harmlosen Programm, das mit Windows startet (z. B. ein Musik- oder Chat-Programm), nie mit Sicherheitssoftware:
+So geht’s: Task-Manager mit Strg+Umschalt+Esc öffnen, dort „Autostart-Apps“; den Autostart-Ordner mit Win+R und `shell:startup` öffnen; für DO-A5 unter Einstellungen → Konten ein Standardkonto anlegen.
+DO-A6. _In Windows geändert:_ Einen Eintrag in Nemo ausschalten, dann im Task-Manager wieder aktivieren und nochmals deaktivieren. „Rückgängig“ im Verlauf von Nemo sagt „inzwischen in Windows geändert“ und ändert nichts. Außerdem: Die Spalte „Startauswirkungen“ im Task-Manager gibt es so, wie der Hinweissatz unter der Liste sie nennt. ☐
 DO-A1. _Liste stimmt:_ Dieser PC → Autostart zeigt unter „Für dein Konto“ dieselben Programme wie der Task-Manager unter „Autostart-Apps“ (Einträge aus Registrierung und Autostart-Ordner), mit demselben Zustand an/aus; Programme für alle Konten stehen darunter ohne Schalter. Aufgaben aus der Aufgabenplanung fehlen noch (bekannt). ☐
 DO-A2. _Ausschalten wirkt:_ Ein Programm ausschalten, ab- und wieder anmelden: es startet nicht mehr. Der Task-Manager zeigt es als „Deaktiviert“, das Programm ist weiter installiert und lässt sich von Hand starten. ☐
 DO-A3. _Rückgängig:_ Verlauf → „Rückgängig“ beim Eintrag „… startet nicht mehr mit Windows“: Schalter steht wieder auf an, Task-Manager zeigt „Aktiviert“, nach erneutem Anmelden startet das Programm wieder. Auch „Rückgängig“ direkt in der Meldung nach dem Umschalten funktioniert. ☐

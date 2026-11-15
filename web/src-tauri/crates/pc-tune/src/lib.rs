@@ -19,7 +19,7 @@ pub use journal::{
     apply_undo, cleanup_view, ChangeError, Entry, EntryView, Journal, JournalError, Kind, Undo,
     MAX_ENTRIES,
 };
-pub use reg::{valid_key, MemRegistry, RegError, Registry, Value};
+pub use reg::{valid_key, writable_key, MemRegistry, RegError, Registry, Value, WRITABLE_KEYS};
 pub use tools::{Home, Tool};
 pub use tweaks::{system_effects, Effects, MemEffects, Target, TweakError, TweakState};
 
