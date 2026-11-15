@@ -166,7 +166,11 @@ export const vault: Strings['vault'] = {
     removeTitle: (name: string) => `Delete “${name}”`,
     inUse: (n: number) =>
       n === 1 ? '1 document is in this category.' : `${n} documents are in this category.`,
-    keepsDocs: 'They are kept and move to the category you choose here.',
+    keepsDocs: (n: number) =>
+      n === 1
+        ? 'It is kept and moves to the category you choose here.'
+        : 'They are kept and move to the category you choose here.',
+    place: (name: string, at: number, of: number) => `${name}: place ${at} of ${of}`,
     moveTo: 'Move to',
     removeAndMove: 'Delete and move',
     removed: (name: string) => `“${name}” deleted`,

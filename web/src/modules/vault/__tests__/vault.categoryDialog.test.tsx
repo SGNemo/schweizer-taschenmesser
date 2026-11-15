@@ -100,4 +100,31 @@ describe('vault folders', () => {
       }),
     ).toBeTruthy();
   });
+
+  it('the focus follows the dialog: the form’s field, the question’s choice, back to "Fertig"', async () => {
+    await documentRepo.create({ title: 'Handyvertrag', category: 'contract' } as never);
+    page();
+    await screen.findByText('Handyvertrag');
+    fireEvent.click(screen.getByRole('button', { name: 'Kategorien bearbeiten' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Steuer bearbeiten' }));
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByLabelText('Name')));
+    fireEvent.click(screen.getByRole('button', { name: 'Abbrechen' }));
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Fertig' })),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Verträge löschen' }));
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByLabelText('Verschieben nach')),
+    );
+  });
+
+  it('a folder made with "+" is chosen at once', async () => {
+    await documentRepo.create({ title: 'Mietvertrag', category: 'contract' } as never);
+    page();
+    await screen.findByText('Mietvertrag');
+    fireEvent.click(screen.getByRole('button', { name: 'Neue Kategorie' }));
+    fireEvent.change(await screen.findByLabelText('Name'), { target: { value: 'Garten' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Speichern' }));
+    expect(await screen.findByText('Noch keine Unterlagen in „Garten“.')).toBeTruthy();
+  });
 });

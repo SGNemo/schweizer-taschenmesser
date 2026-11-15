@@ -102,5 +102,9 @@ export async function removeCategory(
   if (cat.fixed || cat.id === NO_CATEGORY) throw new Error('"Ohne Kategorie" cannot be removed');
   const target = moveTo === cat.id ? NO_CATEGORY : moveTo;
   await writeCategory(cat, { removed: true });
-  for (const id of docIds) await documentRepo.update(id, { category: target });
+  for (const id of docIds) {
+    // Deleted meanwhile (another tab or device): nothing to move, and the rest must still move.
+    if (!(await documentRepo.get(id))) continue;
+    await documentRepo.update(id, { category: target });
+  }
 }

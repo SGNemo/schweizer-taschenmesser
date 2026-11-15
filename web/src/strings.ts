@@ -5611,7 +5611,11 @@ export const de = {
         n === 1
           ? '1 Unterlage ist in dieser Kategorie.'
           : `${n} Unterlagen sind in dieser Kategorie.`,
-      keepsDocs: 'Sie bleiben erhalten und kommen in die Kategorie, die du hier wählst.',
+      keepsDocs: (n: number) =>
+        n === 1
+          ? 'Sie bleibt erhalten und kommt in die Kategorie, die du hier wählst.'
+          : 'Sie bleiben erhalten und kommen in die Kategorie, die du hier wählst.',
+      place: (name: string, at: number, of: number) => `${name}: Platz ${at} von ${of}`,
       moveTo: 'Verschieben nach',
       removeAndMove: 'Löschen und verschieben',
       removed: (name: string) => `„${name}“ gelöscht`,

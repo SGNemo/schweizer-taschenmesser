@@ -47,7 +47,6 @@ import {
 import { documentRepo, keepBlobIds } from '../repo';
 import styles from './VaultPage.module.css';
 import type { DocCategory, VaultDocument } from '../schema';
-import type { IconName } from '@/ui/icons';
 import { categoryLabel, categoryOfDoc, countByResolved } from '../categories';
 import { CategoryDialog } from '../components/CategoryDialog';
 import { useCategories } from '../useCategories';
@@ -293,7 +292,7 @@ export default function VaultPage() {
                 id: c.id,
                 label: t.vault.labelCount(categoryLabel(c, names), counts.get(c.id) ?? 0),
                 color: categoryColor(c.tone),
-                icon: <Icon name={c.icon as IconName} size={14} />,
+                icon: <Icon name={c.icon} size={14} />,
               })),
             ]}
           >
@@ -449,6 +448,7 @@ export default function VaultPage() {
       <CategoryDialog
         open={managing !== false}
         startNew={managing === 'new'}
+        onCreated={setCategory}
         onClose={() => setManaging(false)}
         cats={cats}
         docs={docs}

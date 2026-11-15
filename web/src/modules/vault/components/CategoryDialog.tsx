@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { changedFields } from '@/core/db/patch';
 import { deleteWithUndo, changeWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
@@ -13,7 +13,6 @@ import {
   SelectField,
   TextField,
 } from '@/ui';
-import type { IconName } from '@/ui/icons';
 import {
   categoryLabel,
   countByResolved,
@@ -41,6 +40,7 @@ export function CategoryDialog({
   cats,
   docs,
   startNew = false,
+  onCreated,
 }: {
   open: boolean;
   onClose: () => void;
@@ -49,6 +49,8 @@ export function CategoryDialog({
   docs: readonly { id: string; category?: string }[] | undefined;
   /** Opened by the "+" beside the folder tabs: straight to the form, and done when it is. */
   startNew?: boolean;
+  /** A new folder was made from the "+" (`startNew`): the page shows it. */
+  onCreated?: (id: string) => void;
 }) {
   const [mode, setMode] = useState<Mode>({ kind: 'list' });
   // Each opening starts where it was opened from (adjusting state during render).
@@ -62,6 +64,21 @@ export function CategoryDialog({
     onClose();
   };
   const back = () => (startNew ? close() : setMode({ kind: 'list' }));
+  // The content changes inside an open dialog (list, form, question): its first field takes the focus each time,
+  // as the dialog does on opening, so keyboard and screen reader never land on the dialog body.
+  const body = useRef<HTMLDivElement>(null);
+  const opened = useRef(false);
+  useEffect(() => {
+    if (!open) {
+      opened.current = false;
+      return;
+    }
+    if (!opened.current) {
+      opened.current = true; // the dialog itself focuses on opening
+      return;
+    }
+    body.current?.querySelector<HTMLElement>('[data-autofocus]')?.focus();
+  }, [open, mode]);
   const names = t.vault.categories;
   const a = t.vault.categoryAdmin;
   const editing = mode.kind === 'edit' ? cats.find((c) => c.id === mode.id) : undefined;
@@ -84,34 +101,43 @@ export function CategoryDialog({
 
   return (
     <Dialog open={open} onClose={close} title={title}>
-      {!open ? null : mode.kind === 'edit' ? (
-        <EditForm key={mode.id ?? 'new'} cat={editing ?? null} cats={cats} onDone={back} />
-      ) : mode.kind === 'remove' && removing ? (
-        <RemoveForm
-          cat={removing}
-          cats={cats}
-          docIds={docsInCategory(docs ?? [], cats, removing.id)}
-          onDone={() => setMode({ kind: 'list' })}
-        />
-      ) : (
-        <CategoryList
-          cats={cats}
-          docs={docs}
-          onEdit={(id) => setMode({ kind: 'edit', id })}
-          onRemove={(cat) => {
-            if (!docs) return;
-            const ids = docsInCategory(docs, cats, cat.id);
-            // An empty folder goes at once: the toast offers "Rückgängig", there is nothing to move.
-            if (ids.length === 0)
-              void deleteWithUndo(
-                () => removeCategory(cat, []),
-                a.removed(categoryLabel(cat, names)),
-              );
-            else setMode({ kind: 'remove', id: cat.id });
-          }}
-          onClose={close}
-        />
-      )}
+      <div ref={body}>
+        {!open ? null : mode.kind === 'edit' ? (
+          <EditForm
+            key={mode.id ?? 'new'}
+            cat={editing ?? null}
+            cats={cats}
+            onDone={back}
+            onCreated={startNew ? onCreated : undefined}
+          />
+        ) : mode.kind === 'remove' && removing ? (
+          <RemoveForm
+            cat={removing}
+            cats={cats}
+            docIds={docsInCategory(docs ?? [], cats, removing.id)}
+            onDone={() => setMode({ kind: 'list' })}
+          />
+        ) : (
+          <CategoryList
+            cats={cats}
+            docs={docs}
+            onEdit={(id) => setMode({ kind: 'edit', id })}
+            onRemove={(cat) => {
+              if (!docs) return;
+              const ids = docsInCategory(docs, cats, cat.id);
+              // An empty folder goes at once: the toast offers "Rückgängig", there is nothing to move.
+              // Its row (and the button that had the focus) goes too: "Fertig" takes the focus.
+              if (ids.length === 0)
+                void deleteWithUndo(
+                  () => removeCategory(cat, []),
+                  a.removed(categoryLabel(cat, names)),
+                ).then(() => body.current?.querySelector<HTMLElement>('[data-autofocus]')?.focus());
+              else setMode({ kind: 'remove', id: cat.id });
+            }}
+            onClose={close}
+          />
+        )}
+      </div>
     </Dialog>
   );
 }
@@ -132,29 +158,56 @@ function CategoryList({
   const names = t.vault.categories;
   const a = t.vault.categoryAdmin;
   const movable = cats.filter((c) => !c.fixed);
+  const list = useRef<HTMLUListElement>(null);
+  // The arrow last pressed: once the list shows the new place, a disabled arrow (first or last place) hands the
+  // focus to the other one in its row, and the place is said once.
+  const pressed = useRef<{ id: string; dir: -1 | 1 } | null>(null);
+  const [said, setSaid] = useState('');
+  useEffect(() => {
+    const p = pressed.current;
+    if (!p) return;
+    pressed.current = null;
+    const at = movable.findIndex((c) => c.id === p.id);
+    if (at < 0) return;
+    const cat = movable[at]!;
+    setSaid(a.place(categoryLabel(cat, names), at + 1, movable.length));
+    const row = Array.from(list.current?.querySelectorAll<HTMLElement>('[data-cat]') ?? []).find(
+      (el) => el.dataset.cat === p.id,
+    );
+    const btn = row?.querySelector<HTMLButtonElement>(`[data-move="${p.dir}"]`);
+    if (btn?.disabled) row?.querySelector<HTMLButtonElement>(`[data-move="${-p.dir}"]`)?.focus();
+  }, [cats]); // eslint-disable-line react-hooks/exhaustive-deps -- runs when the stored order arrives
   const move = (id: string, dir: -1 | 1) => {
+    // One move at a time: a second click before the list shows the first would compute from the old order.
+    if (pressed.current) return;
     const writes = moveCategory(cats, id, dir);
     if (writes.length === 0) return;
+    pressed.current = { id, dir };
     // No toast: the list shows the new place at once, and the arrow back undoes it (no toast per click).
     void (async () => {
       for (const w of writes) {
         const cat = cats.find((c) => c.id === w.id);
         if (cat) await writeCategory(cat, { order: w.order });
       }
-    })();
+    })().catch(() => {
+      pressed.current = null;
+    });
   };
   const counts = docs ? countByResolved(docs, cats) : undefined;
   return (
     <div className={styles.root}>
-      <ul className={styles.list} data-testid="vault-categories">
+      <p className={styles.sr} role="status">
+        {said}
+      </p>
+      <ul className={styles.list} data-testid="vault-categories" ref={list}>
         {cats.map((c) => {
           const name = categoryLabel(c, names);
           const n = counts ? (counts.get(c.id) ?? 0) : undefined;
           const i = movable.findIndex((m) => m.id === c.id);
           return (
-            <li key={c.id} className={styles.row}>
+            <li key={c.id} className={styles.row} data-cat={c.id}>
               <span className={styles.mark} style={{ color: categoryColor(c.tone) }}>
-                <Icon name={c.icon as IconName} size={18} />
+                <Icon name={c.icon} size={18} />
               </span>
               <span className={styles.name}>
                 <span>{name}</span>
@@ -164,12 +217,18 @@ function CategoryList({
               </span>
               {c.fixed ? null : (
                 <span className={styles.tools}>
-                  <IconButton label={a.up(name)} disabled={i <= 0} onClick={() => move(c.id, -1)}>
+                  <IconButton
+                    label={a.up(name)}
+                    disabled={i <= 0}
+                    data-move="-1"
+                    onClick={() => move(c.id, -1)}
+                  >
                     <Icon name="chevronUp" size={18} />
                   </IconButton>
                   <IconButton
                     label={a.down(name)}
                     disabled={i >= movable.length - 1}
+                    data-move="1"
                     onClick={() => move(c.id, 1)}
                   >
                     <Icon name="chevronDown" size={18} />
@@ -207,7 +266,9 @@ function EditForm({
   cat,
   cats,
   onDone,
+  onCreated,
 }: {
+  onCreated?: (id: string) => void;
   /** `null` = a new folder. */
   cat: ResolvedCategory | null;
   cats: readonly ResolvedCategory[];
@@ -239,10 +300,11 @@ function EditForm({
       // Nothing changed: no write, no toast.
       if (Object.keys(patch).length > 0) await changeWithUndo(() => writeCategory(cat, patch));
     } else {
-      await changeWithUndo(
+      const id = await changeWithUndo(
         () => createCategory({ name: trimmed, tone, icon, order: nextCategoryOrder(cats) }),
         a.created(trimmed),
       );
+      onCreated?.(id);
     }
     onDone();
   }
@@ -291,7 +353,7 @@ function EditForm({
               title={a.iconNames[ic] ?? ic}
               onClick={() => setIcon(ic)}
             >
-              <Icon name={ic as IconName} size={20} />
+              <Icon name={ic} size={20} />
             </button>
           ))}
         </div>
@@ -342,7 +404,7 @@ function RemoveForm({
       <p className={styles.lead} data-testid="vault-category-in-use">
         {a.inUse(docIds.length)}
       </p>
-      <p className={styles.hint}>{a.keepsDocs}</p>
+      <p className={styles.hint}>{a.keepsDocs(docIds.length)}</p>
       <SelectField
         label={a.moveTo}
         value={target}

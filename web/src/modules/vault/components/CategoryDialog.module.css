@@ -82,3 +82,12 @@
   height: 1.5rem;
   border-radius: var(--radius-full);
 }
+/* Said to screen readers only (the new place after a move). */
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

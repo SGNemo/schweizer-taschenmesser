@@ -104,8 +104,14 @@ function Fields({
   async function save() {
     const parsed = documentSchema.safeParse({
       title: title.trim(),
-      // The folder may have gone while the dialog was open (another device): never into nowhere.
-      category: live.has(category) ? category : NO_CATEGORY,
+      // Left as it opened on a document whose folder is gone: keep its stored id (the folder may come back with an
+      // undo or a late sync). A folder that went while the dialog was open: never into nowhere.
+      category:
+        existing && category === NO_CATEGORY && !live.has(existing.category)
+          ? existing.category
+          : live.has(category)
+            ? category
+            : NO_CATEGORY,
       provider: provider.trim() || undefined,
       startDate: startDate || undefined,
       endDate: endDate || undefined,

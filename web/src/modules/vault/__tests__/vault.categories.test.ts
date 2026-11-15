@@ -224,6 +224,18 @@ describe('changing categories', () => {
     }
   });
 
+  it('a document deleted meanwhile is skipped: the others still move, and undo works', async () => {
+    const gone = await documentRepo.create(doc({ title: 'Weg', category: 'tax' }));
+    const kept = await documentRepo.create(doc({ title: 'Bleibt', category: 'tax' }));
+    const tax = (await loadCats()).find((x) => x.id === 'tax')!;
+    const ids = [gone.id, kept.id];
+    await documentRepo.remove(gone.id);
+    const { entry } = await undoable('test', () => removeCategory(tax, ids, 'health'));
+    expect((await documentRepo.get(kept.id))?.category).toBe('health');
+    await undoEntry(entry!.id);
+    expect((await documentRepo.get(kept.id))?.category).toBe('tax');
+  });
+
   it('"Ohne Kategorie" cannot be removed or written', async () => {
     const fixed = (await loadCats()).at(-1)!;
     await expect(removeCategory(fixed, [])).rejects.toThrow();

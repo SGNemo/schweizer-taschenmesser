@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { DATE_RE } from '@/core/time/dates';
+import type { IconName } from '@/ui/icons';
 
 /**
  * The built-in categories. Their keys are also their ids in the `category` collection (the same on every
@@ -68,7 +69,7 @@ export const CATEGORY_ICONS = [
   'luggage',
   'users',
   'umbrella',
-] as const;
+] as const satisfies readonly IconName[];
 export type CategoryIcon = (typeof CATEGORY_ICONS)[number];
 
 /**
