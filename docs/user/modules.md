@@ -20,7 +20,7 @@ In the **module library** you turn modules on and off (when turning one off: kee
 |  | Maps & places | Places and routes you need often | preview |
 |  | People | Never forget a birthday again and collect gifts per person | optional |
 | **Money** | Finances | Accounts, income and expenses with categories | on by default |
-|  | Invoices | Open invoices with amount, payee and due date; search, several paid at once, an overview with a pie chart by payee and the paid months | on by default |
+|  | Invoices | Open invoices with amount, payee and due date | on by default |
 |  | Subscriptions | Subscriptions and recurring payments | on by default |
 |  | Budgets & savings goals | Spending limits per category (from Finances) and savings goals with deposits and progress | on for new installations |
 | **Household** | Lists | Shopping, packing lists and checklists | on for new installations |

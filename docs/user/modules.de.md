@@ -20,7 +20,7 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 |  | Karten & Orte | Orte und Wege, die du oft brauchst | Vorschau |
 |  | Personen | Geburtstage nie mehr vergessen und Geschenke je Person sammeln | optional |
 | **Geld** | Finanzen | Konten, Einnahmen und Ausgaben mit Kategorien | standardmäßig an |
-|  | Rechnungen | Offene Rechnungen mit Betrag, Empfänger und Fälligkeit; Suche, mehrere auf einmal bezahlt, ein Überblick mit Tortendiagramm nach Empfänger und den bezahlten Monaten | standardmäßig an |
+|  | Rechnungen | Offene Rechnungen mit Betrag, Empfänger und Fälligkeit | standardmäßig an |
 |  | Abos | Abos und wiederkehrende Zahlungen | standardmäßig an |
 |  | Budgets & Sparziele | Ausgabenlimits je Kategorie (aus den Finanzen) und Sparziele mit Einzahlungen und Fortschritt | bei Neuinstallationen an |
 | **Haushalt** | Listen | Einkauf, Packlisten und Checklisten | bei Neuinstallationen an |
