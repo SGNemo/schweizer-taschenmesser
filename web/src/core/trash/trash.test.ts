@@ -4,7 +4,8 @@ import { putBlob, getBlob } from '@/core/blobs';
 import { db } from '@/core/db/db';
 import { createRepo } from '@/core/db/repo';
 import { TRASH_GRACE_MS, TRASH_RETENTION_MS } from '@/core/db/trash';
-import { setTrashKeep, trashRetentionMs } from './settings';
+import { setSettings } from '@/core/settings/settings';
+import { setTrashKeep, TRASH_SCOPE, trashRetentionMs } from './settings';
 import { flushPurgeQueue, listTrash, purgeEntry, restoreEntry } from './trash';
 
 const docs = createRepo('vault_document', z.looseObject({}));
@@ -122,5 +123,25 @@ describe('recently deleted', () => {
     expect(await trashRetentionMs()).toBe(TRASH_RETENTION_MS);
     await setTrashKeep(false);
     expect(await trashRetentionMs()).toBe(TRASH_GRACE_MS);
+  });
+
+  it('keeps for the chosen 7, 30 or 90 days; a deletion older than the window is hidden', async () => {
+    const day = 24 * 3600_000;
+    for (const days of ['7', '90', '30'] as const) {
+      await setSettings(TRASH_SCOPE, { days });
+      expect(await trashRetentionMs()).toBe(Number(days) * day);
+    }
+    const d = await docs.create({ title: 'Alt' });
+    await docs.remove(d.id);
+    const deletedAt = (await db.table('vault_document').get(d.id)).deletedAt as number;
+    await setSettings(TRASH_SCOPE, { days: '7' });
+    expect(await listTrash(db, deletedAt + 8 * day)).toHaveLength(0);
+    await setSettings(TRASH_SCOPE, { days: '90' });
+    expect(await listTrash(db, deletedAt + 8 * day)).toHaveLength(1);
+  });
+
+  it('a broken stored value falls back to 30 days', async () => {
+    await setSettings(TRASH_SCOPE, { days: '365' });
+    expect(await trashRetentionMs()).toBe(TRASH_RETENTION_MS);
   });
 });
