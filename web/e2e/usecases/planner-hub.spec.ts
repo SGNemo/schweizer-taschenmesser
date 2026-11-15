@@ -5,8 +5,8 @@ import { backSettled, dismissNotices, ready, showPreview } from '../helpers';
 /**
  * The planner page in numbers: the baseline before the „Planer als Steckenpferd“ redesign
  * (docs/design/planner-hub/ANALYSIS-MEASURE.md) and, since package R1 „Der Tag als Blatt“
- * (docs/design/planner-hub/HANDOFF.md §9), its targets as assertions. Two kinds of numbers, both written to
- * `test-results/usecase-planner-hub.md` (facts as JSON in `test-results/usecase-planner-hub/`):
+ * (HANDOFF.md §9 of the round, removed, in the git history), its targets as assertions. Two kinds of numbers,
+ * both written to `test-results/usecase-planner-hub.md` (facts as JSON in `test-results/usecase-planner-hub/`):
  *
  * 1. **Click paths** (the house pattern of `wochenende.spec.ts`): taps, typed characters, screens, dialogs and
  *    detours (an action that did not do what the person meant, or a control the person looks for and that is not

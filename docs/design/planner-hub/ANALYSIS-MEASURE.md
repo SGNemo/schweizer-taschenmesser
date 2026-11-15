@@ -107,3 +107,45 @@ Light and dark give the same geometry; only colours differ.
 | P28 | Week rows | „3 h 12 frei von 3 h 12“ four times | quiet when nothing differs | noise | 1 | `components/capacity.ts:26` | „frei“ + number only | S |
 
 P29–P39 are free. Paths: `web/src/modules/planner/` (pages in `routes/`), else `web/src/`.
+
+## Measured after the round (M)
+
+2026-11-15 · `develop` @ `08137d9f` (K1a–S5 merged) · same script and scene; the page now opens on Monday, so „opens“ is the after column. 1920 = desktop-chrome, 412 = pixel-7; light and dark equal except colours. Target = [CONCEPT-DESIGN](CONCEPT-DESIGN.md) §6 and the R1 asserts (`TARGET` in the spec).
+
+| Measure | Before (opens · Monday) | After (opens) | Target | Met |
+| --- | --- | --- | --- | --- |
+| Empty share 1920 | 71 % · 56 % | 19 % | ≤ 25 % | yes |
+| Empty share 412 | 67 % · 10 % | 17 % | – | – |
+| Thing rows on the first 1920 screen (in full / begun) | 0 · 9 | 14 / 15 (9 of the day + 6 „Frist vorbei“) | ≥ 8 / 9 | yes |
+| Field y 1920 | 567 | 182 | ≤ 260 | yes |
+| Field y 412 | 356 · 900 (fold 851) | 814, cut by the bottom bar; the plus „Ding“ opens it | plus | yes, see M-3 |
+| Targets < 44 px 412 / 1920 | 12 of 20 / 4 of 14 | 0 of 22 / 1 of 62 | 0 (412) | yes; 1920 see M-5 |
+| Font sizes 1920 / 412 | 6 / 8 | 8 / 8 | 6 / 6 (concept), 8 (R1 assert) | assert yes, concept no (shared parts) |
+| Controls · icons 1920 / 412 | 14 · 3 / 20 · 10 | 62 · 42 / 22 · 11 | 47 (concept, 1920) | no: +15 (⋯ and lead per row, context column) |
+| Text / bg colours (chromatic) | 4 / 7 (2) | 4 / 6–7 (1) | not more | yes |
+| Width used 1920 | 64 % | 81 % | – | – |
+| Head | „Heute ist frei.“ | „37 Min frei“ · „morgen, Mo. 16. · heute ist frei“ | the next loaded day | yes |
+| Late invoices | 6 rows in Monday's list and sum | own group, on no day; meta 5.4 : 1 light, 5.2 : 1 dark | own group | yes |
+
+| Path (taps · keys · screens · detours, ≈ s) | Before | After 1920 | After 412 | Target | Met |
+| --- | --- | --- | --- | --- | --- |
+| A tick a thing | 2 · 0 · 1 · 0, 4 s | 1 · 0 · 1 · 0, 3 s | same | 1 | yes |
+| B move to Wednesday | 4 · 29 · 1 · 2, 26 / 31 s | 3 · 0 · 1 · 0, 8 s | same | 3 · 0 · 0 | yes |
+| C1 source: ToDo | 3 · 0 · 2 · 0, 10 s | 1 · 0 · 2 · 0, 8 s | same | 1 | yes |
+| C2 source: invoice | 3 · 0 · 2 · 0, 10 s | 1 · 0 · 2 · 0, 8 s | 2, 9 s | 1 | phone no: unfolding „Frist vorbei“ (bound raised in R2, open) |
+| C3 source: mail | 3 · 0 · 2 · 0, 7 s | 1 · 0 · 2 · 0, 5 s | – | 1 | yes |
+| D „Rest verteilen“ | 2, from 17:00 | 2, any hour; no invoice moved | same | 2, late untouched | yes |
+| E enter a thing | 0 · 14, 6 / 8 s | 0 · 14, 6 s | 0 · 14, 8 s (field reached by scrolling) | phone 1 · 14 (plus) | yes |
+| F settle a late invoice | 6 · 0 · 3 · 1, 20 s | 3 · 0 · 3 · 0, 12 s | 4, 13 s | 2 · 0 · 2 · 0 | no: lead → pay step → „Bezahlt“ is three, plus the unfold on the phone |
+
+**Critique after** (skill `design:design-critique`, 1920 and 412 light, against direction A and [FOCUS-GUIDELINES](../FOCUS-GUIDELINES.md)). The page now leads with the things: field, week band with one scale, Monday's sheet in full width, late money beside it – calm wording, no red text, no counters that only grow. What is left:
+
+| # | Finding | Severity | Next step |
+| --- | --- | --- | --- |
+| M-1 | F is 3 taps (1920) and 4 (412) against the 2 of §6; the pay step is a screen of its own | moderate | let „Bezahlt“ in the pay step return to the plan by itself (no back tap); then lower `MAX` F |
+| M-2 | Phone week chips mix units: „9“ and „1“ count things, „3 h 12“ and „1 h 36“ are free time, „frei“ is a word | moderate | one unit per chip (free time, as on the desktop band), the count only in the accessible name |
+| M-3 | Phone: the field stands under the day and its lower 7 px under the bottom bar on arrival (y 814, fold 851) | moderate | end the page above the bar (bottom padding = bar height) or drop the inline field on the phone where the plus „Ding“ is the way in (D3) |
+| M-4 | 62 controls and 42 icons on the first 1920 screen (concept 47): every row has a lead, a ⋯ and a source glyph | minor | late rows: ⋯ only on hover/focus, the lead „Bezahlt …“ stays visible; recount against the stimulus budget |
+| M-5 | 1920: one `input` without an accessible name, 121 × 42 px, in the content area of every screen (also the empty page) | minor | find it (the spec's `targets.small` names tag and size only), give it a label and ≥ 44 px, or remove it |
+| M-6 | Two large figures compete: h1 „Planer“ 28 px and the head „37 Min frei“ 32 px / 700 | minor | head figure at the h1 size or a lighter weight; the line under it carries the day |
+| M-7 | Label „Eintragen oder sagen“ still reads as voice input (P24) | minor | „Eintragen“ alone; the example chips already show sentences |
