@@ -50,6 +50,8 @@ interface Target {
   to: (c: ReturnType<typeof sharedContent>) => string;
   /** Offered only for this content (a feed needs a shared address). */
   when?: (c: ReturnType<typeof sharedContent>) => boolean;
+  /** Shown only while the module is on (no extra "switch on" row for a module few people use). */
+  onlyWhenOn?: boolean;
 }
 
 const q = (values: Record<string, string>): string =>
@@ -87,9 +89,10 @@ const TARGETS: Target[] = [
       return t.share.toFeed;
     },
     icon: 'wifi',
-    // The page's address: the feeds module looks for its feed (or takes it as a search word).
+    // The page's address goes into the add dialog of the feeds module.
     to: (c) => `/feeds?${q({ add: c.url })}`,
     when: (c) => c.url !== '',
+    onlyWhenOn: true,
   },
 ];
 
@@ -148,7 +151,9 @@ export function ShareTarget() {
           <h2>{t.quickCapture.share.or}</h2>
           <ul className={styles.list} aria-label={t.share.where}>
             {states
-              ? TARGETS.filter((x) => x.when?.(content) ?? true).map((x) => (
+              ? TARGETS.filter(
+                  (x) => (x.when?.(content) ?? true) && (!x.onlyWhenOn || states[x.module]),
+                ).map((x) => (
                   <Card as="li" key={x.module}>
                     {states[x.module] ? (
                       <Link to={x.to(content)} data-testid={`share-${x.module}`}>

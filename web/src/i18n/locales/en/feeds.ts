@@ -45,7 +45,7 @@ export const feeds: Strings['feeds'] = {
     queryHint: 'The name of a source, a topic, or the address of a website or feed.',
     address: 'This address',
     addAddress: 'Add as feed',
-    noMatch: 'Nothing about that in the catalogue. The address of the website works too.',
+    noMatch: 'Nothing about that in the catalogue. The address of the feed works too.',
   },
   catalog: {
     label: 'Starter catalogue',

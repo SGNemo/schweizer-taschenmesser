@@ -8375,7 +8375,7 @@ export const de = {
       queryHint: 'Name einer Quelle, ein Thema oder die Adresse einer Website oder eines Feeds.',
       address: 'Diese Adresse',
       addAddress: 'Als Feed eintragen',
-      noMatch: 'Im Katalog ist dazu nichts. Mit der Adresse der Website klappt es auch.',
+      noMatch: 'Im Katalog ist dazu nichts. Mit der Adresse des Feeds klappt es auch.',
     },
     catalog: {
       label: 'Startkatalog',

@@ -17,7 +17,9 @@ import styles from './feeds.module.css';
 export function typedAddress(query: string): string | undefined {
   const q = query.trim();
   if (!q.includes('.') || /\s/.test(q)) return undefined;
-  return normalizeFeedUrl(q);
+  const url = normalizeFeedUrl(q);
+  // "u.s." is a search word, not a host: an address ends in a top-level domain of letters.
+  return url && /\.[a-z]{2,}$/i.test(new URL(url).hostname) ? url : undefined;
 }
 
 /**

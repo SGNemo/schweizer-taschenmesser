@@ -7,6 +7,8 @@ import { clearAll } from '@/core/ai/testing';
 import { db } from '@/core/db/db';
 import { setNow } from '@/core/time/now';
 import { t } from '@/strings';
+import { enableModule } from '@/core/modules/activation';
+import { getManifest } from '@/core/modules/registry';
 import { ShareTarget, sharedContent, sharedLine } from './ShareTarget';
 
 vi.setConfig({ testTimeout: 20_000 });
@@ -93,7 +95,18 @@ describe('ShareTarget', () => {
     expect(task.note).toContain('Die Heizung im Bad bleibt kalt.');
   });
 
-  it('offers „Als Feed abonnieren“ only for a shared address', async () => {
+  it('offers „Als Feed abonnieren“ only for a shared address, and only with Feeds on', async () => {
+    const { unmount: off } = render(
+      <MemoryRouter
+        initialEntries={[shareUrl({ title: 'Blog', url: 'https://blog.example.org/' })]}
+      >
+        <ShareTarget />
+      </MemoryRouter>,
+    );
+    await screen.findByText(t.share.toNote);
+    expect(screen.queryByText(t.share.toFeed)).toBeNull();
+    off();
+    await enableModule(getManifest('feeds')!);
     const { unmount } = render(
       <MemoryRouter
         initialEntries={[shareUrl({ title: 'Blog', url: 'https://blog.example.org/' })]}
