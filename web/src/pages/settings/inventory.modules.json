@@ -517,6 +517,11 @@
         "label": "Zeitfenster Sonntag",
         "default": ""
       },
+      "dayEnd": {
+        "type": "text",
+        "label": "Tagesende",
+        "default": ""
+      },
       "bufferShare": {
         "type": "select",
         "label": "Puffer",

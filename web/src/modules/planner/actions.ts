@@ -34,7 +34,7 @@ import type { PlanDayRow, PlanItemRow } from './schema';
 import { overloadLine } from './overload';
 import { getPlannerSettings } from './prefs';
 import { PlannerOffError, runUser, type UserRun } from './services';
-import { DEFAULT_PLANNER_SETTINGS, PLANNER_SCOPE } from './settings';
+import { dayEndLabel, DEFAULT_PLANNER_SETTINGS, PLANNER_SCOPE } from './settings';
 import { runToast } from './toast';
 
 const toast = (message: string, run?: UserRun) =>
@@ -386,7 +386,13 @@ export function applyDaySetup(
   reshuffle = false,
   dayEnd?: string,
 ) {
-  const lead = t.planner.toast.planned(shown.map(dayName).join(', '));
+  // Only a day end chosen: the toast says that, not „Eingeplant: …“ (nothing was planned).
+  const onlyDayEnd = dayEnd !== undefined && days.length === 0 && things.length === 0 && !reshuffle;
+  const lead = !onlyDayEnd
+    ? t.planner.toast.planned(shown.map(dayName).join(', '))
+    : dayEnd
+      ? t.planner.daySetup.dayEndSet(dayEndLabel(dayEnd))
+      : t.planner.daySetup.dayEndCleared;
   return act(
     lead,
     lead,

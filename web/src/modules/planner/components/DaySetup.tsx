@@ -23,6 +23,7 @@ import {
 } from '../daySetup';
 import { opLines } from '../say';
 import { PlannerOffError, previewUser } from '../services';
+import { dayEndLabel, dayEndOf } from '../settings';
 import { PlanPreview, type PreviewData } from './PlanPreview';
 import { compact } from './capacity';
 import styles from '../routes/planner.module.css';
@@ -35,9 +36,6 @@ const chipLabel = (min: number) =>
 
 /** The day ends the sheet offers (package 6): 23:00, midnight, none ('' clears the setting). */
 const DAY_END_CHIPS = ['23:00', '00:00', ''] as const;
-
-/** A day end as the sheet writes it: '23:00', '0:00' (the window's written form, without a leading zero). */
-const timeLabel = (hhmm: string) => hhmm.replace(/^0(\d)/, '$1');
 
 /**
  * „Tage einteilen“ (use case „Wochenende retten“, TARGET F1): one sheet in three steps – (1) „Was steht an?“,
@@ -107,7 +105,7 @@ export function DaySetup({
         ),
         ...(newDayEnd === undefined
           ? []
-          : [newDayEnd ? s.dayEndSet(timeLabel(newDayEnd)) : s.dayEndCleared]),
+          : [newDayEnd ? s.dayEndSet(dayEndLabel(newDayEnd)) : s.dayEndCleared]),
       ];
       setPreview({ data: { lines, diff: out.result.diff }, things });
       setStep(3);
@@ -233,16 +231,17 @@ export function DaySetup({
                     {DAY_END_CHIPS.map((v) => (
                       <Chip
                         key={v || 'none'}
-                        label={v ? timeLabel(v) : s.dayEndNone}
+                        label={v ? dayEndLabel(v) : s.dayEndNone}
                         selected={(dayEndChoice ?? dayEnd) === v}
                         onClick={() => setDayEndChoice(v)}
                       />
                     ))}
                   </Chips>
                   <span className={styles.capacity}>
-                    {(DAY_END_CHIPS as readonly string[]).includes(dayEndChoice ?? dayEnd)
+                    {(DAY_END_CHIPS as readonly string[]).includes(dayEndChoice ?? dayEnd) ||
+                    !dayEndOf({ dayEnd })
                       ? s.dayEndHint
-                      : `${s.current(timeLabel(dayEnd))} · ${s.dayEndHint}`}
+                      : `${s.current(dayEndLabel(dayEnd))} · ${s.dayEndHint}`}
                   </span>
                 </>
               ) : null}

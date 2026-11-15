@@ -91,6 +91,9 @@ export const DEFAULT_PLANNER_SETTINGS: PlannerSettings = {
 export const dayEndOf = (settings: Pick<PlannerSettings, 'dayEnd'>): string | undefined =>
   settings.dayEnd ? parseTime(settings.dayEnd) : undefined;
 
+/** A day end as the planner writes it: '23:00', '0:00' (without a leading zero). */
+export const dayEndLabel = (hhmm: string): string => hhmm.replace(/^0(\d)/, '$1');
+
 /** Minutes available on a date by its weekday (Monday = 1 … Sunday = 7) when no day row says otherwise. */
 export function defaultAvailable(settings: PlannerSettings, isoWeekday: number): number {
   if (isoWeekday === 6) return settings.availableSaturday;

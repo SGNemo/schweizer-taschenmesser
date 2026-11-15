@@ -186,7 +186,10 @@ describe('preview and „Übernehmen“', () => {
     expect((await getPlannerSettings()).dayEnd).toBe('23:00');
     // Nothing else changed: no day rows, no ToDos.
     expect(await dayRepo.active().count()).toBe(0);
-    useUiStore.getState().toasts.at(-1)!.action!.run();
+    // Nothing was planned: the toast names the day end, not „Eingeplant: …“.
+    const toast = useUiStore.getState().toasts.at(-1)!;
+    expect(toast.message).toBe('Tagesende 23:00, für jeden Tag');
+    toast.action!.run();
     await expect.poll(async () => (await getPlannerSettings()).dayEnd).toBe('');
   });
 });
