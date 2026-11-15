@@ -755,6 +755,12 @@ button.chip[aria-pressed='true'] {
 .rows > .current.swipeable:focus-within > .row {
   background: var(--row-current);
 }
+/* … and the sunken tone of a recessed block that can be swiped (a fixed training with its tick). */
+.rows > .recessed.swipeable > .row,
+.rows > .recessed.swipeable:hover > .row,
+.rows > .recessed.swipeable:focus-within > .row {
+  background: var(--surface-sunken);
+}
 .reveal {
   position: absolute;
   inset: 0;
