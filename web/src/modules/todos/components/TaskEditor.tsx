@@ -23,6 +23,7 @@ import {
   Switch,
   TextArea,
   TextField,
+  TimeField,
 } from '@/ui';
 import { t } from '@/strings';
 import { now, today } from '@/core/time/now';
@@ -81,6 +82,8 @@ function EditorForm({
   const [listId, setListId] = useState(task.listId);
   const [priority, setPriority] = useState(task.priority);
   const [dueDate, setDueDate] = useState(task.dueDate ?? '');
+  const [dueTime, setDueTime] = useState(task.dueTime ?? '');
+  const [dueRemind, setDueRemind] = useState(task.dueRemind ?? false);
   const [recurrence, setRecurrence] = useState<Recurrence | undefined>(task.recurrence);
   const [someday, setSomeday] = useState(task.someday ?? false);
   const [estimate, setEstimate] = useState<number | undefined>(task.estimateMin);
@@ -110,6 +113,9 @@ function EditorForm({
         listId,
         priority,
         dueDate: dueDate || undefined,
+        // The hour and its reminder only exist with a date; the reminder only with an hour.
+        dueTime: (dueDate && dueTime) || undefined,
+        dueRemind: (dueDate && dueTime && dueRemind) || undefined,
         recurrence: dueDate ? recurrence : undefined,
         someday: someday || undefined,
         estimateMin: estimate,
@@ -197,6 +203,15 @@ function EditorForm({
         value={dueDate}
         onChange={(e) => setDueDate(e.target.value)}
       />
+      {dueDate ? <TimeField label={t.todos.dueTime} value={dueTime} onChange={setDueTime} /> : null}
+      {dueDate && dueTime ? (
+        <Switch
+          label={t.todos.dueRemind}
+          hint={t.todos.dueRemindHint}
+          checked={dueRemind}
+          onChange={setDueRemind}
+        />
+      ) : null}
       {isSub ? null : (
         <>
           <Chips label={t.todos.estimate}>

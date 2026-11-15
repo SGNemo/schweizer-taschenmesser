@@ -4,8 +4,10 @@ import { t } from '@/strings';
 export interface QuickAdd {
   title: string;
   dueDate?: string;
-  /** 'HH:mm'; ToDos have no time field, it goes into the note like in the quick capture. */
+  /** 'HH:mm' as typed; outside a deadline it goes into the note like in the quick capture. */
   time?: string;
+  /** 'HH:mm' of a deadline („bis So 18:00“): the task's `dueTime` instead of a note line. */
+  dueTime?: string;
   priority?: 1 | 2 | 3;
   estimateMin?: number;
   note?: string;
@@ -49,7 +51,11 @@ export function readQuickAdd(text: string, now: Date): QuickAdd {
   return {
     title: restore(fields.title, kept.words),
     ...(fields.date ? { dueDate: fields.date } : {}),
-    ...(fields.time ? { time: fields.time, note: t.quickCapture.todoTimeNote(fields.time) } : {}),
+    ...(fields.time
+      ? fields.deadline && fields.date
+        ? { time: fields.time, dueTime: fields.time }
+        : { time: fields.time, note: t.quickCapture.todoTimeNote(fields.time) }
+      : {}),
     ...(fields.priority ? { priority: fields.priority } : {}),
     ...(fields.estimateMin ? { estimateMin: fields.estimateMin } : {}),
   };
