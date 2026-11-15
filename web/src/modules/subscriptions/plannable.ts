@@ -8,13 +8,19 @@
  * (P86). Only the NEXT of these per subscription, only for active subscriptions that are not cancelled already.
  * No write-back: cancelling stays in this module – the row gets `action` „Kündigen …“ instead, a route that opens
  * the subscription (CONCEPT-LINKS §2 L7; the page treats `?do=cancel` as untrusted and writes nothing).
- * Switch: `showInPlan`.
+ * Switch: `showInPlan`. A deadline asked into the plan from the page („In den Plan“, `plannedDeadline`, still the next one)
+ * is listed regardless of that switch and of the horizon: the person asked for it (`planDeadline.ts`).
  */
 import type { PlannableItem, PlannableSource } from '@/core/modules/types';
 import { getSettings } from '@/core/settings/settings';
 import { addDaysStr } from '@/core/time/dates';
 import { t } from '@/strings';
-import { cancelDeadlinesInRange, missedDeadline, MISSED_RECENT_DAYS } from './logic';
+import {
+  cancelDeadlinesInRange,
+  missedDeadline,
+  MISSED_RECENT_DAYS,
+  nextCancelDeadline,
+} from './logic';
 import { subscriptionRepo } from './repo';
 import { settings } from './settings';
 
@@ -30,23 +36,30 @@ type Deadline = { date: string; trial: boolean };
 const source: PlannableSource = {
   async list(ctx) {
     const prefs = await getSettings('module.subscriptions', settings.schema, settings.defaults);
-    if (!prefs.showInPlan) return [];
     const subs = (await subscriptionRepo.active().toArray()).filter(
       (s) => s.active && !s.recurrence.until,
     );
     const items: PlannableItem[] = [];
     for (const s of subs) {
       const candidates: Deadline[] = [];
+      // Asked into the plan from the page: that deadline, while it is still the next one (a passed one drops out).
+      const asked =
+        s.plannedDeadline && nextCancelDeadline(s, ctx.today)?.deadline === s.plannedDeadline
+          ? s.plannedDeadline
+          : undefined;
+      if (!prefs.showInPlan) {
+        if (asked) items.push(item(s, { date: asked, trial: false }));
+        continue;
+      }
+      if (asked) candidates.push({ date: asked, trial: false });
       // A passed deadline only while it is recent: for quarterly or longer cycles `missedDeadline` has no lower
       // limit, and a months-old row would hide the next real deadline (a trial end, say).
       const recent = addDaysStr(ctx.today, -MISSED_RECENT_DAYS);
       const missed = missedDeadline(s, ctx.today);
-      if (missed && missed.deadline >= recent && missed.deadline !== s.plannedDeadline)
+      if (missed && missed.deadline >= recent)
         candidates.push({ date: missed.deadline, trial: false });
-      // A deadline put into the plan from the page („In den Plan“) has its own ToDo: never a second row for it.
       const next = cancelDeadlinesInRange(s, ctx.today, ctx.until)
         .map((d) => d.deadline)
-        .filter((d) => d !== s.plannedDeadline)
         .sort()[0];
       if (next) candidates.push({ date: next, trial: false });
       const trial = s.trialEndsOn;
@@ -55,24 +68,26 @@ const source: PlannableSource = {
       // One row per subscription: the earliest (a passed deadline first – it is the one at stake).
       const first = candidates.sort((a, b) => a.date.localeCompare(b.date))[0];
       if (!first) continue;
-      items.push({
-        // The deadline is part of the id: the next period is a new thing to plan.
-        id: first.trial ? `${s.id}:trial:${first.date}` : `${s.id}:${first.date}`,
-        kind: 'cancel',
-        title: first.trial
-          ? t.subscriptions.planTrialTitle(s.name)
-          : t.subscriptions.planTitle(s.name),
-        to: `/subscriptions?open=${encodeURIComponent(s.id)}`,
-        durationMin: CANCEL_MINUTES,
-        priority: CANCEL_PRIORITY,
-        // A passed deadline keeps its date: the planner reads it as „Frist vorbei“, it is never moved forward.
-        due: { date: first.date, hard: true },
-        action: { label: t.subscriptions.planAction, to: cancelRoute(s.id) },
-        createdAt: s.createdAt,
-      });
+      items.push(item(s, first));
     }
     return items;
   },
 };
+
+function item(s: { id: string; name: string; createdAt: number }, first: Deadline): PlannableItem {
+  return {
+    // The deadline is part of the id: the next period is a new thing to plan.
+    id: first.trial ? `${s.id}:trial:${first.date}` : `${s.id}:${first.date}`,
+    kind: 'cancel',
+    title: first.trial ? t.subscriptions.planTrialTitle(s.name) : t.subscriptions.planTitle(s.name),
+    to: `/subscriptions?open=${encodeURIComponent(s.id)}`,
+    durationMin: CANCEL_MINUTES,
+    priority: CANCEL_PRIORITY,
+    // A passed deadline keeps its date: the planner reads it as „Frist vorbei“, it is never moved forward.
+    due: { date: first.date, hard: true },
+    action: { label: t.subscriptions.planAction, to: cancelRoute(s.id) },
+    createdAt: s.createdAt,
+  };
+}
 
 export default source;

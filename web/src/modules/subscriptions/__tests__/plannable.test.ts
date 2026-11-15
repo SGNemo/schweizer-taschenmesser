@@ -39,13 +39,21 @@ describe('cancellation deadlines as a planner source', () => {
     ]);
   });
 
-  it('a deadline put into the plan from the page („In den Plan“) is not listed a second time', async () => {
-    await add({ plannedDeadline: '2026-11-13' });
-    expect(await source.list(ctx)).toEqual([]);
-    // An older plan mark does not hide the current deadline.
+  it('a deadline asked into the plan („In den Plan“) is listed beyond the horizon and with the switch off, once', async () => {
+    // Next deadline 2027-01-13: outside the plan of ctx.
+    const far = await add({ startDate: '2026-01-20', plannedDeadline: '2027-01-13' });
+    expect((await source.list(ctx)).map((i) => i.id)).toEqual([`${far.id}:2027-01-13`]);
+    await setSettings('module.subscriptions', { showInPlan: false });
+    expect((await source.list(ctx)).map((i) => i.id)).toEqual([`${far.id}:2027-01-13`]);
+    // Within the plan it is the same single row as without the request.
+    await setSettings('module.subscriptions', { showInPlan: true });
     await db.table('subscriptions_subscription').clear();
-    await add({ plannedDeadline: '2025-11-13' });
-    expect((await source.list(ctx))[0]?.due).toEqual({ date: '2026-11-13', hard: true });
+    const near = await add({ plannedDeadline: '2026-11-13' });
+    expect((await source.list(ctx)).map((i) => i.id)).toEqual([`${near.id}:2026-11-13`]);
+    // A request for a deadline that is no longer the next one does nothing.
+    await db.table('subscriptions_subscription').clear();
+    await add({ startDate: '2026-01-20', plannedDeadline: '2025-11-13' });
+    expect(await source.list(ctx)).toEqual([]);
   });
 
   it('months as notice move by calendar months (core/deadline/notice)', async () => {

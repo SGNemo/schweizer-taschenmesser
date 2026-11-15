@@ -83,6 +83,7 @@ export const subscriptions: Strings['subscriptions'] = {
       plan: 'Add to plan',
       planFor: (name: string) => `Cancel ${name}: add to plan`,
       planned: 'In the plan',
+      plannedToast: (name: string) => `In the plan: cancel ${name}`,
     },
     prices: {
       title: 'Price changes',

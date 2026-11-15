@@ -3226,6 +3226,7 @@ export const de = {
         plan: 'In den Plan',
         planFor: (name: string) => `${name} kündigen: in den Plan`,
         planned: 'Im Plan',
+        plannedToast: (name: string) => `Im Plan: ${name} kündigen`,
       },
       prices: {
         title: 'Preisänderungen',

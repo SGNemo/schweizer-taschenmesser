@@ -55,8 +55,8 @@ export const subscriptionSchema = z.object({
   /** Marked „Kaum genutzt“ on this day (since version 6); the overview names what it costs a year. Nothing else follows. */
   unusedSince: z.string().regex(DATE_RE).optional(),
   /**
-   * The last day to cancel that the user put into the plan with „In den Plan“ (since version 6): a ToDo now stands for
-   * it, so the planner source leaves that deadline out. A later deadline is a new one.
+   * The last day to cancel that the user asked into the plan with „In den Plan“ (since version 6): the planner source
+   * lists that deadline even beyond the horizon and with „Im Plan zeigen“ off. Once it is past, it means nothing.
    */
   plannedDeadline: z.string().regex(DATE_RE).optional().meta({ internal: true }),
 });

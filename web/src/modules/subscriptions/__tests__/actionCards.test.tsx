@@ -2,7 +2,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
-import { bus } from '@/core/events';
+import { useUiStore } from '@/stores/ui';
 import { setHideValues } from '@/core/focus/hideValues';
 import { DeadlinesCard, PricesCard, UnusedCard } from '../components/ActionCards';
 import { planDeadline } from '../planDeadline';
@@ -62,9 +62,7 @@ describe('notice periods card', () => {
     expect(screen.queryByTestId('subscriptions-deadlines')).toBeNull();
   });
 
-  it('„In den Plan“ asks the planner for „<Abo> kündigen“ with a hard due and marks the deadline', async () => {
-    const seen = vi.fn();
-    const off = bus.on('plan.requested', seen);
+  it('„In den Plan“ marks the deadline (undoable); the planner source lists it from then on', async () => {
     const s = await subscriptionRepo.create(
       subscriptionSchema.parse({
         name: 'Zeitung',
@@ -75,14 +73,11 @@ describe('notice periods card', () => {
       }),
     );
     await planDeadline(s, '2026-11-18');
-    off();
-    expect(seen).toHaveBeenCalledWith({
-      title: 'Zeitung kündigen',
-      durationMin: 15,
-      priority: 3,
-      due: { date: '2026-11-18', hard: true },
-    });
     expect((await subscriptionRepo.get(s.id))?.plannedDeadline).toBe('2026-11-18');
+    await useUiStore.getState().toasts.at(-1)?.action?.run();
+    await waitFor(async () =>
+      expect((await subscriptionRepo.get(s.id))?.plannedDeadline).toBeUndefined(),
+    );
   });
 });
 

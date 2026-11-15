@@ -24,17 +24,14 @@ export default function NextChargesWidget() {
       empty={t.subscriptions.widgetEmpty}
       emptyAction={{ label: t.homeEmpty.subscriptions, to: '/subscriptions?new=1' }}
       summary={
-        subs && subs.length > 0
-          ? // The sum of what still runs (an ended one no longer counts) and the next charge by name.
-            first?.charge
-            ? t.subscriptions.ext.widgetSummary(
-                formatTotals(pickTotals(totalsByCurrency(subs, day), 'monthly')),
-                first.s.name,
-                formatDay(first.charge, 'd. MMM'),
-              )
-            : t.widgets.subsSummary(
-                formatTotals(pickTotals(totalsByCurrency(subs, day), 'monthly')),
-              )
+        // The sum of what still runs (an ended one no longer counts) and the next charge by name; when nothing
+        // runs any more there is no sum to name.
+        first?.charge
+          ? t.subscriptions.ext.widgetSummary(
+              formatTotals(pickTotals(totalsByCurrency(subs ?? [], day), 'monthly')),
+              first.s.name,
+              formatDay(first.charge, 'd. MMM'),
+            )
           : undefined
       }
       entries={rows.map(({ s, charge }) => {
