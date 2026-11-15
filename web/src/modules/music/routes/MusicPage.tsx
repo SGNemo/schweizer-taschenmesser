@@ -98,7 +98,6 @@ export default function MusicPage() {
     { id: 'albums', view: { type: 'albums' }, label: tm.tabAlbums },
     { id: 'search', view: { type: 'search' }, label: tx.tabSearch },
     { id: 'liked', view: { type: 'liked' }, label: tx.tabLiked },
-    { id: 'queue', view: { type: 'queue' }, label: tx.navQueue },
   ];
   // A list opened from a tab keeps that tab marked (its way back is in the list's head); the songs played lately are
   // part of the start view.

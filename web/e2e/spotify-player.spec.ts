@@ -306,7 +306,8 @@ test.describe('Music page', () => {
     await page.getByRole('menuitem', { name: 'Zur Warteschlange hinzufügen' }).click();
     await expect.poll(() => mock.api.some((c) => c.startsWith('POST /queue'))).toBe(true);
 
-    await chip(page, /Warteschlange/).click();
+    // No tab of its own: the aside's queue card opens the whole queue.
+    await page.getByRole('button', { name: 'Ganze Warteschlange anzeigen' }).click();
     await expect(main).toContainText('Als Nächstes');
     await expect(main.getByRole('button', { name: 'Als Nächstes abspielen' })).toBeVisible();
 
