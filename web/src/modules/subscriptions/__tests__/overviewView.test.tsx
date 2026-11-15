@@ -80,6 +80,15 @@ describe('subscriptions overview', () => {
     await screen.findByText(/Dazu 2 weitere Abos: zusammen 36,00\s€/);
   });
 
+  it('hides the sum of the folded rest with „Werte ausblenden“', async () => {
+    await setHideValues(true);
+    const many = Array.from({ length: RANKING_BARS + 2 }, (_, i) =>
+      sub({ name: `Abo ${i + 1}`, amountMinor: 100 * (i + 1) }),
+    );
+    render(<OverviewView subs={many} day={DAY} onOpen={() => {}} />);
+    await screen.findByText('Dazu 2 weitere Abos: zusammen ••••');
+  });
+
   it('says so when nothing runs', () => {
     render(<OverviewView subs={[sub({ active: false })]} day={DAY} onOpen={() => {}} />);
     expect(screen.getAllByText('Gerade läuft kein Abo.').length).toBeGreaterThan(0);

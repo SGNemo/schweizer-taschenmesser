@@ -47,6 +47,7 @@ export function OverviewView<R extends Row>({
 }) {
   const v = t.subscriptions.ext.overview;
   const [by, setBy] = useState<ShareBy>('category');
+  const hide = useHideValues();
   const currency = mainCurrency(subs, day);
   const money = (c: number) => formatMoney(c, currency);
   const others = currency ? otherCurrencyCount(subs, day, currency) : 0;
@@ -99,7 +100,10 @@ export function OverviewView<R extends Row>({
         />
         {rest.length > 0 ? (
           <p className={styles.note}>
-            {v.moreInYear(rest.length, money(rest.reduce((sum, r) => sum + r.yearly, 0)))}
+            {v.moreInYear(
+              rest.length,
+              hide ? '••••' : money(rest.reduce((sum, r) => sum + r.yearly, 0)),
+            )}
           </p>
         ) : null}
       </Card>
