@@ -10,7 +10,10 @@ test.beforeEach(async ({ page }) => {
 async function addTodo(page: Page, title: string) {
   await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
   await page.getByRole('dialog').getByLabel('Titel').fill(title);
-  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+    .click();
   await expect(page.getByRole('checkbox', { name: title })).toBeVisible();
 }
 
@@ -22,7 +25,7 @@ async function editTodo(
   await openEditor(page, page.getByRole('button', { name: new RegExp(`^${title}`) }));
   const dialog = page.getByRole('dialog');
   await edit(dialog);
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
@@ -79,7 +82,7 @@ test('U09: the habits page has one filled button', async ({ page }) => {
   await ready(page, '/habits?new=1');
   const dialog = page.getByRole('dialog', { name: 'Gewohnheit eintragen' });
   await dialog.getByRole('button', { name: 'Wasser trinken' }).click();
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByTestId('habit-card')).toHaveCount(1);
   const filled = await page

@@ -284,7 +284,7 @@ export function DeviceResetSection() {
   const [open, setOpen] = useState(false);
   return (
     <SettingsGroup id="device-reset" title={a.reset.title}>
-      <DangerZone>
+      <DangerZone on="page">
         <SettingRow id="device-reset--all" label={a.reset.label} description={a.reset.description}>
           <Button variant="danger" onClick={() => setOpen(true)}>
             {a.reset.label}

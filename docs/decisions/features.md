@@ -11,3 +11,4 @@ New decisions go into the matching topic file as one bullet (not into this index
 - [features-capture-spotify](features-capture-spotify.md) – Comfort packages 4 and 2 (search hits, Quick Capture `n`/`r`; capture & presence: tray „Heute“, shortcuts), voice input, reminders by sentence, Spotify widget and player, Spotify playlist editing
 - [features-mail](features-mail.md) – Several Google accounts; mail module package 1; Mail → Nemo entries; mail write actions; new-mail notifications; local model may read mail
 - [features-kopf-leer](features-kopf-leer.md) – Use case „Kopf leer“ – capture and mail (Q1 …), packages 1, 2 (capture contract), 3b (invoice line), Nachlese
+- [features-wochenende](features-wochenende.md) – Use case „Wochenende retten“: entry „Tage einteilen“, day parts and break block, „Tagesende“, calm Sunday/Monday reminders (Q1–Q4)

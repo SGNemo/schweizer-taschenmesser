@@ -12,6 +12,5 @@ export const homeEmpty: Strings['homeEmpty'] = {
   people: 'Add person',
   vault: 'Add document',
   calendar: 'Add event',
-  finance: 'Add transaction',
   planner: 'Add something',
 };

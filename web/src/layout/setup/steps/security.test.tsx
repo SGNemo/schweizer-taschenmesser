@@ -32,6 +32,7 @@ function installPlatform() {
     secrets: {
       protection: 'device-key',
       get: async (n) => stored.get(n),
+      has: async (n) => Boolean(stored.get(n)),
       set: async (n, v) => void stored.set(n, v),
       delete: async (n) => void stored.delete(n),
     },

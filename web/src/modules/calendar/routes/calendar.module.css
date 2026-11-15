@@ -253,11 +253,14 @@
 .kind_subscription,
 .kind_external,
 .kind_birthday,
+.kind_gift,
+.kind_training,
 .kind_plan {
   background: var(--surface-2);
   color: var(--text);
 }
 .kind_cancel,
+.kind_trial,
 .kind_end,
 .kind_expiry {
   background: var(--warning-soft);

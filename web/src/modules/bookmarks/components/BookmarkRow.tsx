@@ -9,6 +9,7 @@ import { deleteWithUndo, undoableWithToast } from '@/core/undo/withToast';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
 import { Checkbox, ItemRow, type RowMenuItem } from '@/ui';
+import { usePageWidthAtLeast } from '@/ui/pageWidth';
 import { hostOf, statusOf } from '../logic';
 import { itemRepo } from '../repo';
 import type { BookmarkItem } from '../schema';
@@ -114,7 +115,8 @@ export function bookmarkMenu(
 /**
  * One saved item: the title is the one link (an item with an address opens it in a new tab, one
  * without opens the editor), one context line (type, domain, tags as text), the done box and a "⋯"
- * menu for everything else.
+ * menu for everything else. On the phone the line leaves the tags out (0b-8 follow-up 15: they wrapped it to a
+ * second line, rows 104 px); the "⋯" menu filters by them, the editor and the wide list show them.
  */
 export function BookmarkRow({
   item,
@@ -127,6 +129,7 @@ export function BookmarkRow({
   onFilterTag: (tag: string) => void;
   onRead?: (item: Stored<BookmarkItem>) => void;
 }) {
+  const narrow = usePageWidthAtLeast(48) === false;
   return (
     <ItemRow
       title={item.title}
@@ -145,7 +148,7 @@ export function BookmarkRow({
         t.bookmarks.kinds[item.kind],
         statusOf(item) === 'started' ? t.bookmarks.statuses.started : undefined,
         hostOf(item.url),
-        ...item.tags.map((x) => `#${x}`),
+        ...(narrow ? [] : item.tags.map((x) => `#${x}`)),
       ]
         .filter(Boolean)
         .join(' · ')}

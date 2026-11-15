@@ -17,7 +17,7 @@ const AHEAD_DAYS = 14;
 /**
  * Head line of the calendar. With an appointment left today: the countdown line ("in 20 Min · 10:00 Teammeeting",
  * follows the focus setting). Without one the head is not left empty: "Heute frei" with what comes next in the coming
- * two weeks, or "nothing planned". The page's one verb ("Neuer Termin") stays in the toolbar only (U15).
+ * two weeks, or "nothing planned". The page's one verb ("Termin eintragen") stays in the toolbar only (U15).
  */
 export function NextEventLine() {
   const [settings] = useFocusSettings();

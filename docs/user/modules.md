@@ -22,7 +22,7 @@ In the **module library** you turn modules on and off (when turning one off: kee
 | **Money** | Finances | Accounts, income and expenses with categories | on by default |
 |  | Invoices | Open invoices with amount, payee and due date | on by default |
 |  | Subscriptions | Subscriptions and recurring payments | on by default |
-|  | Budgets & savings goals | Monthly limits per expense category (from Finances) and savings goals with deposits and progress | on for new installations |
+|  | Budgets & savings goals | Spending limits per category (from Finances) and savings goals with deposits and progress | on for new installations |
 | **Household** | Lists | Shopping, packing lists and checklists | on for new installations |
 |  | Routines | Cleaning plan and household routines | on for new installations |
 |  | Pantry | What’s in the fridge, the cupboard and the freezer? | optional |
@@ -36,7 +36,8 @@ In the **module library** you turn modules on and off (when turning one off: kee
 |  | Music | Spotify on one page | preview |
 | **Vault** | Documents | IDs, contracts, insurance and warranties with end date, notice period and an attached file | optional |
 |  | Passwords | Password vault | optional |
-| **System** | This PC | Drives with a scan of the biggest folders and system info (processor, memory, battery, network) | optional, Windows app only |
+| **System** | Device status | Backup, sync, storage and updates of this device on one page | on for new installations |
+|  | This PC | Drives with a scan of the biggest folders and system info (processor, memory, battery, network) | optional, Windows app only |
 |  | Downloads | Downloads files | on for new installations, Windows app only |
 |  | Remote | Control media, volume, mouse and keyboard of your PC from your phone | preview, Android app only |
 
@@ -55,8 +56,8 @@ Highlights of the modules that start with a short line above:
 - **Notes:** with a pinned **scratchpad** at the top for quick jots.
 - **Lists:** shopping with “2 milk”, packing lists with progress and templates, checklists.
 - **People:** birthdays yearly in the calendar, with age, reminder and WhatsApp greeting; gift ideas per person with price, link and status.
-- **Budgets & savings goals:** monthly limits per finance category, savings goals with deposits.
-- **Planner** (preview): plan changes like “Donnerstag frei” are said in the field on the planner page (German sentences; a preview shows what moves before anything changes).
+- **Budgets & savings goals:** spending limits per finance category (per month, quarter or year), savings goals with deposits.
+- **Planner** (preview): plan changes like “Donnerstag frei” are said in the field on the planner page (German sentences; a preview shows what moves before anything changes). “Plan my days” (welcome card, empty planner or ⋯) takes in three steps what is coming up and how much time you have today and on the next two days; after the preview, “Apply” enters it all with one undo. In step 2, “Set an end of day” sets one end of day for every day (also in the planner settings); half an hour before, the planner says “The day is ending soon.”, with “Spread the rest” while something is still open today – in the app only, no notification, switched off with “Wrap up the day in the evening”. How much goes on a day is still set by the day's time; the planner never gives times after a time window ends. To practise a fixed bedtime, you can add a habit “In bed by …”.
 - **Maps & places** (preview): saved places and routes, a map with place search, open in your map app; the map only loads when you open it.
 - **Documents:** title, category, provider, start, end, notice period and note are synced like everything else; the **files stay only on the
   device** where they were added (not synced, not in the backup, max. 10 MB per file).
@@ -67,7 +68,7 @@ Highlights of the modules that start with a short line above:
   more (units, date calculator, time zones, dice, anonymous persona, text, images, PDF and **Developer** with Base64/URL, JSON, UUID, hash) can be turned on
   under "Manage tools". In the search (Ctrl+K) a calculation like "240 + 19 %" is computed right away, "Tool: …" opens a
   tool. The former scratch note now lives as the **scratchpad** at the top of Notes (your old text is carried over once).
-- **Import into Notes:** "Set up start data" on the Notes card (Module library) reads Markdown files (e.g. from an Obsidian folder, several at once, or pasted text) and Google Keep exports (the `.json` files from Google Takeout). You see a preview first and untick what you do not want; notes you already have are marked. Titles come from the front matter, the first heading or the file name; tags are kept as `#tags` in the text, Keep checklists become task lists, Keep notes in the trash or archive are left out. ZIP files: unzip them first.
+- **Import into Notes:** "Set up start data" on the Notes card (Module library) reads Markdown files (e.g. from an Obsidian folder, several at once, or pasted text) and Google Keep exports (the `.json` files from Google Takeout). You see a preview first and untick what you do not want; notes you already have are marked. Titles come from the front matter, the first heading or the file name; tags are kept as `#tags` in the text, Keep checklists become task lists, Keep notes in the trash or archive are left out. A ZIP file with a notes folder works too. Markdown notes keep their date (`created:`/`date:` and `modified:` in the front matter, else the file date), notes from Keep or an Evernote export (`.enex`) keep theirs from the export; on other synced devices they show the import date.
 - **This PC** (Windows app only): analyse and clean up drives; the "System" tab shows processor, memory, battery, graphics and network.
 - **Habits** (Planen, off by default): goals with rings – a tick or a number like "8 glasses" – rest days that never count against you, a year grid, and reminders in a time window that stop once the day's goal is met ("Drink water" template). This is a new module; the old habit tracker of 0.3.x stays retired; its old data is not carried over into the new module, but it stays in the database and in every backup.
 - **Time tracking** (Planen, off by default): one click on a project starts the clock, pause and stop, manual entries, projects with colour, client and hourly rate, a week and month report with the amount (rounded to whole cents per entry) and CSV export. If you were away while the timer ran, the app asks – keep the time, deduct it as a break, or stop where you left – and never changes anything by itself. In an event, "Track time" starts the clock. This is a new module; the old time tracker of 0.3.x stays retired; its old data is not carried over into the new module, but it stays in the database and in every backup.

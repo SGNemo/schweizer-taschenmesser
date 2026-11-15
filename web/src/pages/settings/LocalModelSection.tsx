@@ -19,6 +19,7 @@ import { BUILD_CHANNEL } from '@/core/update/buildInfo';
 import { STABLE_RELEASE_PAGE } from '@/core/update/github';
 import { t } from '@/strings';
 import { Badge, Button, Dialog, SettingRow, SettingsGroup, Switch } from '@/ui';
+import { PendingSection } from './SettingsLayout';
 import styles from './settings.module.css';
 
 const l = t.ai.local;
@@ -157,7 +158,9 @@ export function LocalModelSection({
     );
   }
 
-  if (!status) return null;
+  // Until the shell has answered, the tab waits (`TabBody`) instead of showing the group a moment later and pushing
+  // everything below it down (layout shift 0.04–0.09 on "KI"); a failed read waits for nothing.
+  if (!status) return error ? null : <PendingSection />;
   const gap = localModelGap(status, getPlatform().kind, BUILD_CHANNEL);
   if (gap) {
     return (

@@ -5,11 +5,11 @@
   border-radius: var(--radius-md);
   background: var(--surface-raised);
 }
-/* a card is pinned: a small pin in the hue at the top edge */
+/* a card is pinned: a small pin in the hue at the top edge. No z-index: positioned, it paints over the unpositioned
+   media in DOM order; the full-card link's transparent overlay lies over it (a click on the pin opens the link). */
 .card::before {
   content: '';
   position: absolute;
-  z-index: 1;
   top: var(--space-2);
   left: 50%;
   width: 0.75rem;
@@ -65,7 +65,6 @@
   content: '';
   position: absolute;
   inset: 0;
-  z-index: 0;
 }
 .name {
   display: -webkit-box;
@@ -92,7 +91,7 @@
 }
 .menu {
   position: absolute;
-  z-index: 2;
+  z-index: var(--z-raised);
   right: var(--space-1);
   bottom: var(--space-1);
 }

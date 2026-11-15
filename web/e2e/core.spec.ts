@@ -24,7 +24,10 @@ test.describe('ToDos', () => {
 
     await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Steuererklärung');
-    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+      .click();
     await expect(page.getByRole('checkbox', { name: 'Steuererklärung' })).toBeVisible();
 
     // Edit: priority, due date, subtask
@@ -35,7 +38,7 @@ test.describe('ToDos', () => {
     await dialog.getByLabel('Unteraufgabe hinzufügen').fill('Belege sortieren');
     await dialog.getByLabel('Unteraufgabe hinzufügen').press('Enter');
     await expect(dialog.getByRole('checkbox', { name: 'Belege sortieren' })).toBeVisible();
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
 
     const row = page.getByRole('button', { name: /Steuererklärung/ });
@@ -58,7 +61,10 @@ test.describe('ToDos', () => {
 
     await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Fenster putzen');
-    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+      .click();
     await expect(page.getByRole('checkbox', { name: 'Fenster putzen' })).toBeVisible();
 
     await pickTodosList(page, 'Eingang');
@@ -75,14 +81,14 @@ test.describe('ToDos', () => {
 test.describe('Reminders', () => {
   test('creates a monthly "every 1st" reminder and shows the next occurrence', async ({ page }) => {
     await ready(page, '/calendar?tab=reminders&new=1');
-    const dialog = page.getByRole('dialog', { name: 'Erinnerung hinzufügen' });
+    const dialog = page.getByRole('dialog', { name: 'Erinnerung eintragen' });
     await expect(dialog).toBeVisible();
     await dialog.getByLabel('Titel').fill('Miete überweisen');
     await dialog.getByLabel('Datum').fill('2026-10-01');
     await dialog.getByLabel('Beginn').fill('08:00');
     await dialog.getByLabel('Wiederholung').selectOption('monthly');
     await dialog.getByLabel('Tag des Monats').selectOption('1');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
 
     const card = page.getByRole('listitem').filter({ hasText: 'Miete überweisen' });
@@ -95,7 +101,7 @@ test.describe('Reminders', () => {
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Titel').fill('Wasser trinken');
     await dialog.getByLabel('Datum').fill('2026-09-30');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
 
     await ready(page, '/calendar?view=week&date=2026-09-30');
@@ -121,10 +127,16 @@ test.describe('Calendar', () => {
     await ready(page, '/todos');
     await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Paket abholen');
-    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+      .click();
     await openEditor(page, page.getByRole('button', { name: /^Paket abholen/ }));
     await page.getByLabel('Fällig am').fill('2026-09-29');
-    await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
     await expect(page.getByRole('button', { name: /^Paket abholen/ })).toContainText('Heute');
 
@@ -132,18 +144,21 @@ test.describe('Calendar', () => {
     await page.getByLabel('Titel').fill('Blumen gießen');
     await page.getByLabel('Datum').fill('2026-09-29');
     await page.getByLabel('Beginn').fill('18:00');
-    await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
     await expect(calendarEntry(page, /Blumen gießen/)).toBeVisible();
 
     // Event via quick-add route
     await ready(page, '/calendar?new=1');
-    const dialog = page.getByRole('dialog', { name: 'Neuer Termin' });
+    const dialog = page.getByRole('dialog', { name: 'Termin eintragen' });
     await dialog.getByLabel('Titel').fill('Zahnarzt');
     await dialog.getByLabel('Beginn').fill('14:30');
     await dialog.getByRole('button', { name: 'Mehr Felder anzeigen' }).click();
     await dialog.getByRole('textbox', { name: 'Ort' }).fill('Praxis Dr. Meier');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
 
     // Day view: all three sources, sorted (all-day task first, then by time)
@@ -176,11 +191,11 @@ test.describe('Calendar', () => {
 
   test('edits and deletes an event; recurring events repeat', async ({ page }) => {
     await ready(page, '/calendar?new=1&view=week&date=2026-09-29');
-    const dialog = page.getByRole('dialog', { name: 'Neuer Termin' });
+    const dialog = page.getByRole('dialog', { name: 'Termin eintragen' });
     await dialog.getByLabel('Titel').fill('Sport');
     await moreFields(page);
     await dialog.getByLabel('Wiederholung').selectOption('weekly');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
 
     await expect(calendarEntry(page, /Sport/)).toHaveCount(1);
@@ -192,7 +207,10 @@ test.describe('Calendar', () => {
       .getByRole('dialog', { name: 'Termin bearbeiten' })
       .getByLabel('Titel')
       .fill('Sport im Park');
-    await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
     await expect(calendarEntry(page, /Sport im Park/)).toBeVisible();
 
@@ -203,11 +221,11 @@ test.describe('Calendar', () => {
 
   test('rejects an end date before the start', async ({ page }) => {
     await ready(page, '/calendar?new=1');
-    const dialog = page.getByRole('dialog', { name: 'Neuer Termin' });
+    const dialog = page.getByRole('dialog', { name: 'Termin eintragen' });
     await dialog.getByLabel('Titel').fill('Reise');
     await moreFields(page);
     await dialog.getByLabel('Ende (Datum)').fill('2026-09-01');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(dialog.getByRole('alert')).toHaveText(
       'Das Ende darf nicht vor dem Beginn liegen.',
     );
@@ -219,15 +237,24 @@ test.describe('Dashboard', () => {
     await ready(page, '/calendar?new=1');
     await page.getByLabel('Titel').fill('Teammeeting');
     await page.getByLabel('Beginn').fill('11:30');
-    await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
     await ready(page, '/todos');
     await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Bericht senden');
-    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+      .click();
     await openEditor(page, page.getByRole('button', { name: /Bericht senden/ }));
     await page.getByLabel('Fällig am').fill('2026-09-29');
-    await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
 
     await ready(page, '/');

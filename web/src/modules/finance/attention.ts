@@ -37,8 +37,10 @@ const source: AttentionSource = async ({ today }) => {
   });
   return changes.map((c) => ({
     id: `finance:subscription-price:${c.subscriptionId}:${c.toMinor}`,
-    tone: 'accent' as const,
+    // Information, nothing to do today: the calm tone, folded on the overview.
+    tone: 'warning' as const,
     icon: 'repeat' as const,
+    foldSummary: t.attention.priceFold,
     title: t.finance.ext.subPrice.title(
       c.name,
       formatMoney(c.fromMinor, c.currency),

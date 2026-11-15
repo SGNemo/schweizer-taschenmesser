@@ -24,6 +24,8 @@ const schema = z.object({
   offerPlanAll: z.boolean(),
   /** Rows read as an invoice or payment reminder show their values and one verb („Kopf leer“ 3b). */
   offerInvoices: z.boolean(),
+  /** A planned mail whose last message is the person's own shows „Beantwortet? · Erledigt“ (display only). */
+  showAnswered: z.boolean(),
 });
 
 export type MailSettings = z.output<typeof schema>;
@@ -42,6 +44,7 @@ export const settings: ModuleSettings = {
     offerPersonal: true,
     offerPlanAll: true,
     offerInvoices: true,
+    showAnswered: true,
   },
   get keywords() {
     return [
@@ -116,6 +119,16 @@ export const settings: ModuleSettings = {
       },
       get help() {
         return t.mail.meta.offerInvoicesHelp;
+      },
+      type: 'boolean',
+    },
+    {
+      key: 'showAnswered',
+      get label() {
+        return t.mail.meta.showAnswered;
+      },
+      get help() {
+        return t.mail.meta.showAnsweredHelp;
       },
       type: 'boolean',
     },

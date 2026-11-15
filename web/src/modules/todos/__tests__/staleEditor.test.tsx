@@ -31,7 +31,7 @@ it('saving the editor keeps a title changed elsewhere while it was open', async 
   // The other tab saves a new title; the page hands the live record to the open editor.
   rerender(editor(await taskRepo.update(task.id, { title: 'Titel aus Tab B' })));
   await userEvent.selectOptions(await screen.findByLabelText('Priorität'), '2');
-  await userEvent.click(screen.getByRole('button', { name: 'Speichern' }));
+  await userEvent.click(screen.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }));
   await waitFor(async () => expect((await taskRepo.get(task.id))?.priority).toBe(2));
   expect((await taskRepo.get(task.id))?.title).toBe('Titel aus Tab B');
 });
@@ -62,7 +62,7 @@ it('a list move made elsewhere keeps the subtasks with their parent', async () =
   await taskRepo.update(sub.id, { listId: 'work' });
   rerender(editor(await taskRepo.update(task.id, { listId: 'work' })));
   await userEvent.selectOptions(await screen.findByLabelText('Priorität'), '2');
-  await userEvent.click(screen.getByRole('button', { name: 'Speichern' }));
+  await userEvent.click(screen.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }));
   await waitFor(async () => expect((await taskRepo.get(task.id))?.priority).toBe(2));
   expect((await taskRepo.get(task.id))?.listId).toBe('work');
   expect((await taskRepo.get(sub.id))?.listId).toBe('work');

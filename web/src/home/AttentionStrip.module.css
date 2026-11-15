@@ -1,5 +1,5 @@
-/* "Jetzt wichtig" (identity v3): small cards without an edge stripe. The module shows in the icon plate, urgency in the figure
-   and the words; red only for overdue / exceeded / expired. */
+/* "Jetzt wichtig" (identity 4.0): small cards on a tone step, without an edge stripe. The module shows in the icon plate, urgency
+   in the figure and the words; red only for overdue / exceeded. */
 .strip {
   margin-bottom: var(--space-5);
 }
@@ -29,24 +29,18 @@
   height: 100%;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-1);
+  /* Identity 4.0: a tone step on the page, no shadow and no frame. */
+  background: var(--surface-raised);
   color: var(--text);
   text-decoration: none;
 }
 .item:hover {
   background: var(--surface-2);
 }
-/* Tone = a hairline all around plus the words; never a one-sided edge. */
+/* Overdue / exceeded: a hairline all around plus the red figure and the words; never a one-sided edge. The calmer
+   tones carry no colour of their own (they wait behind "Kann warten"). */
 .item[data-tone='danger'] {
-  box-shadow:
-    var(--shadow-1),
-    0 0 0 1px color-mix(in srgb, var(--danger) 45%, transparent);
-}
-.item[data-tone='warning'] {
-  box-shadow:
-    var(--shadow-1),
-    0 0 0 1px color-mix(in srgb, var(--warning) 55%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--danger) 45%, transparent);
 }
 .plate {
   flex: none;
@@ -56,7 +50,7 @@
   height: 2.25rem;
   border-radius: var(--radius-sm);
   /* Without a module (a core item such as the update notice) the plate is neutral. */
-  background: color-mix(in srgb, var(--module-color, var(--text-muted)) 16%, var(--surface));
+  background: color-mix(in srgb, var(--module-color, var(--text-muted)) 14%, var(--surface-raised));
   color: var(--module-color, var(--text-muted));
 }
 .text {
@@ -94,50 +88,55 @@
   font-variant-numeric: var(--font-num);
 }
 
-/* "Wartet noch": one calm dashed card, unfolded on demand (native details, no motion). */
-.waiting {
-  margin-top: var(--space-3);
-  padding: 0 var(--space-3);
-  border: 1px dashed var(--border-strong);
-  border-radius: var(--radius-lg);
-  background: transparent;
+/* "Kann warten · n": one quiet line in the row of the cards (two columns wide, the whole row on a phone). It opens the
+   folded cards below the strip; no motion. */
+.foldCell {
+  grid-column: 1 / -1;
 }
-.waiting[open] {
-  padding-bottom: var(--space-3);
+@container page (min-width: 44rem) {
+  .foldCell {
+    grid-column: span 2;
+  }
 }
-.summary {
+.fold {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  width: 100%;
+  height: 100%;
   min-height: var(--touch);
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: start;
   cursor: pointer;
-  list-style: none;
 }
-.summary::-webkit-details-marker {
-  display: none;
+.fold:hover {
+  background: var(--surface-2);
 }
 .chevron {
   flex: none;
   display: inline-grid;
-  color: var(--text-muted);
 }
-.waiting[open] .chevron {
+.fold[aria-expanded='true'] .chevron {
   transform: rotate(90deg);
 }
-.summaryTitle {
-  font-weight: var(--weight-semibold);
-  font-size: var(--text-sm);
-}
-.summaryHint {
+.foldText {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--text-muted);
-  font-size: var(--text-meta);
+  overflow-wrap: anywhere;
 }
-.reassure {
-  margin: var(--space-2) 0 var(--space-3);
-  color: var(--text-muted);
-  font-size: var(--text-sm);
+.foldTitle {
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+.waitingList {
+  composes: list;
+  margin-top: var(--space-3);
+}
+.waitingList[hidden] {
+  display: none;
 }

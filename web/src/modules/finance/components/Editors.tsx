@@ -54,10 +54,13 @@ function Actions({
   onDelete,
   onDuplicate,
   onClose,
+  submit = t.actions.save,
 }: {
   onDelete?: () => Promise<void>;
   onDuplicate?: () => Promise<void>;
   onClose: () => void;
+  /** The save button's text: "<Ding> eintragen" for a new entry, "Speichern" when editing (one verb per page). */
+  submit?: string;
 }) {
   return (
     <>
@@ -86,7 +89,7 @@ function Actions({
       >
         <Button onClick={onClose}>{t.actions.cancel}</Button>
         <Button type="submit" variant="primary">
-          {t.actions.save}
+          {submit}
         </Button>
       </FormActions>
     </>
@@ -361,6 +364,7 @@ function TransactionForm({
       ) : null}
       <Actions
         onClose={onClose}
+        submit={existing ? t.actions.save : t.finance.addTransaction}
         onDelete={
           existing ? () => deleteWithUndo(() => transactionRepo.remove(existing.id)) : undefined
         }
@@ -538,6 +542,7 @@ function AccountForm({
       {existing ? <p className={styles.muted}>{t.finance.deleteAccountHint}</p> : null}
       <Actions
         onClose={onClose}
+        submit={existing ? t.actions.save : t.finance.addAccount}
         onDelete={existing ? () => deleteWithUndo(() => deleteAccount(existing.id)) : undefined}
       />
     </form>
@@ -692,6 +697,7 @@ function CategoryForm({
       {existing ? <p className={styles.muted}>{t.finance.deleteCategoryHint}</p> : null}
       <Actions
         onClose={onClose}
+        submit={existing ? t.actions.save : t.finance.addCategory}
         onDelete={
           existing ? () => deleteWithUndo(() => categoryRepo.remove(existing.id)) : undefined
         }

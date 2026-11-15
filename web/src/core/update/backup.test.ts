@@ -81,6 +81,7 @@ describe('createPreUpdateBackup', () => {
         protection: 'device-key',
         get: async (name) =>
           name === 'backup.autoPassphrase' ? 'a-long-test-passphrase' : undefined,
+        has: async (name) => name === 'backup.autoPassphrase',
         set: async () => undefined,
         delete: async () => undefined,
       },

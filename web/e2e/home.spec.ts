@@ -77,7 +77,7 @@ test.describe('Home screen', () => {
   test('empty widgets offer a next step', async ({ page }) => {
     await ready(page, '/');
     await expect(
-      page.getByTestId('widget-todos:open').getByRole('link', { name: 'Aufgabe anlegen' }),
+      page.getByTestId('widget-todos:open').getByRole('link', { name: 'Aufgabe eintragen' }),
     ).toBeVisible();
   });
 
@@ -147,11 +147,14 @@ test.describe('Home screen', () => {
       await page.getByRole('dialog').getByLabel('Titel').fill(title);
       await page
         .getByRole('dialog')
-        .getByRole('button', { name: 'Hinzufügen', exact: true })
+        .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
         .click();
       await openEditor(page, page.getByRole('button', { name: new RegExp(title) }));
       await page.getByLabel('Fällig am').fill(due);
-      await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+      await page
+        .getByRole('dialog')
+        .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+        .click();
       await expect(page.getByRole('dialog')).toHaveCount(0);
     }
 
@@ -186,10 +189,16 @@ test.describe('Home screen', () => {
     await ready(page, '/todos');
     await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Alt');
-    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+      .click();
     await openEditor(page, page.getByRole('button', { name: /Alt/ }));
     await page.getByLabel('Fällig am').fill('2026-09-20');
-    await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await ready(page, '/');
     await expect(page.getByRole('region', { name: 'Jetzt wichtig' })).toBeVisible();
@@ -212,10 +221,16 @@ test.describe('Home screen', () => {
     await ready(page, '/todos');
     await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Alt');
-    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+      .click();
     await openEditor(page, page.getByRole('button', { name: /Alt/ }));
     await page.getByLabel('Fällig am').fill('2026-09-20');
-    await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     for (const scheme of ['light', 'dark'] as const) {
       for (const density of ['normal', 'compact']) {

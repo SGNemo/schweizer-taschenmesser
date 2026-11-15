@@ -25,9 +25,9 @@ import { DESKTOP, moduleRoutes, openPage, PHONE, startSeeded } from './guards';
  * module head band), borders, pseudo-elements and SVG (icons, charts). That those turn grey is pinned at the
  * token level (`ui/tokens.test.ts`: every hue and state token is `--calm-ink` in calm, the patterns are off).
  *
- * Light theme only (the theme of the stimulus measurement): the dark neutral steps themselves are bluish
- * (`--surface`: saturation 0.28) and the measurement reads every tone that is not exactly `--bg`, `--surface` or
- * `--surface-2` as a coloured surface there, grey or not.
+ * Light theme only (the theme of the stimulus measurement): the page and its tone steps (`--bg`, `--surface`,
+ * `--surface-2`, `--surface-raised`, `--surface-sunken`) are plain in both themes (#796), but in dark the
+ * measurement still reads the module tints mixed over the bluish surface as saturated, grey or not.
  */
 
 /** Routes whose small marks in a text grey are not counted, with the package that removes the entry. */
@@ -64,8 +64,14 @@ function keptColour({ band, markMax }: { band: number; markMax: number }): Kept 
     probe.style.color = rootStyle.getPropertyValue(name).trim();
     return getComputedStyle(probe).color;
   };
-  const plain = new Set([rgb('--bg'), rgb('--surface'), 'rgba(0, 0, 0, 0)', 'transparent']);
-  const surface2 = rgb('--surface-2');
+  // As in `measurePage`: the page, its surfaces and their tone steps are plain (only tokens that are set).
+  const plain = new Set([
+    ...['--bg', '--surface', '--surface-2', '--surface-raised', '--surface-sunken']
+      .filter((name) => rootStyle.getPropertyValue(name).trim() !== '')
+      .map(rgb),
+    'rgba(0, 0, 0, 0)',
+    'transparent',
+  ]);
   const neutralInk = new Set(['--text', '--text-muted', '--text-3', '--text-on-tint'].map(rgb));
   const inkFills = new Set([rgb('--text-3'), rgb('--text-muted')]);
   const keptTokens = [rgb('--danger'), rgb('--accent')];
@@ -83,11 +89,11 @@ function keptColour({ band, markMax }: { band: number; markMax: number }): Kept 
         }
       : null;
   };
-  const saturation = (c: string) => {
+  // Chroma and its thresholds as in `measurePage` (text > 0.10, surface > 0.06; #854).
+  const chroma = (c: string) => {
     const p = parse(c);
     if (!p || p.a < 0.05) return 0;
-    const max = Math.max(p.r, p.g, p.b);
-    return max === 0 ? 0 : (max - Math.min(p.r, p.g, p.b)) / max;
+    return (Math.max(p.r, p.g, p.b) - Math.min(p.r, p.g, p.b)) / 255;
   };
   const hue = (c: string): number | null => {
     const p = parse(c);
@@ -122,18 +128,12 @@ function keptColour({ band, markMax }: { band: number; markMax: number }): Kept 
     const ownText = Array.from(el.childNodes).some(
       (n) => n.nodeType === 3 && (n.textContent ?? '').trim() !== '',
     );
-    if (ownText && saturation(s.color) > 0.25 && !neutralInk.has(s.color)) {
+    if (ownText && chroma(s.color) > 0.1 && !neutralInk.has(s.color)) {
       if (isKept(s.color)) kept++;
       else others.push(`text ${name(el)} ${s.color}`);
     }
     const bg = parse(s.backgroundColor);
-    if (
-      !plain.has(s.backgroundColor) &&
-      s.backgroundColor !== surface2 &&
-      bg &&
-      bg.a > 0.05 &&
-      saturation(s.backgroundColor) > 0.12
-    ) {
+    if (!plain.has(s.backgroundColor) && bg && bg.a > 0.05 && chroma(s.backgroundColor) > 0.06) {
       if (isKept(s.backgroundColor)) kept++;
       else if (inkFills.has(s.backgroundColor) && r.width <= markMax && r.height <= markMax)
         inkMarks++;

@@ -18,6 +18,12 @@ export function kindLabel(kind: string): string {
   return t.calendar.kinds[kind] ?? kind;
 }
 
+/** Badge text: the kind, or for a deadline whose day passed one word for both ("Abgelaufen", not "Ablauf · Überfällig"). */
+export function badgeLabel(item: CalendarItem, day?: string): string {
+  if (!isOverdue(item, day)) return kindLabel(item.kind);
+  return t.calendar.overdueKinds[item.kind] ?? `${kindLabel(item.kind)} · ${t.meanings.overdue}`;
+}
+
 /**
  * Kinds whose source only lists what is still open (unpaid invoices, food still in stock): only these turn red, and
  * only once their day has passed (DESIGN-SPEC §4a). A cancellation deadline or a contract end that passed is history,
@@ -48,7 +54,6 @@ function timeLabel(item: CalendarItem): string | null {
 /** One calendar entry: time (or "ganztägig"), kind badge and title. */
 export function ItemRow({ item, onOpen, compact, person }: Props) {
   const time = timeLabel(item);
-  const overdue = isOverdue(item);
   const content = (
     <>
       <span className={styles.time}>{time ?? (compact ? '' : t.calendar.allDay)}</span>
@@ -56,7 +61,7 @@ export function ItemRow({ item, onOpen, compact, person }: Props) {
         className={`${styles.kind} ${styles[kindClass(item)] ?? ''}`}
         data-hue={sourceHue(item)}
       >
-        {overdue ? `${kindLabel(item.kind)} · ${t.meanings.overdue}` : kindLabel(item.kind)}
+        {badgeLabel(item)}
       </span>
       <span className={`${styles.itemTitle} ${item.done ? styles.done : ''}`} title={item.title}>
         {item.color ? (

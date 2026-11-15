@@ -1,5 +1,5 @@
 import { createElement } from 'react';
-import { bankDedupeKey, type BankTransaction } from '@/core/io/bank';
+import { bankDedupeKey, type BankParseResult, type BankTransaction } from '@/core/io/bank';
 import { currencyOf, formatMoney, parseMoney, formatMoneyInput } from '@/core/money';
 import type {
   ImportCandidate,
@@ -29,6 +29,18 @@ const nameKey = (name: string) => name.trim().toLowerCase();
 
 const MAX_BANK_ROWS = 2000;
 const FORMAT_NAMES = { csv: 'CSV', camt: 'CAMT', ofx: 'OFX', qif: 'QIF' } as const;
+
+/** "2 Zeilen wurden übersprungen – Zeile 7 (Tankstelle Süd): Datum „31.02.26“ nicht lesbar …" (B10). */
+export function skippedNote(parsed: Pick<BankParseResult, 'skipped' | 'skippedRows'>): string {
+  const s = t.onboarding.finance;
+  const rows = parsed.skippedRows ?? [];
+  if (rows.length === 0) return s.bankSkipped(parsed.skipped);
+  const named = rows.map((r) => {
+    const why = s.bankSkipWhy[r.reason];
+    return s.bankSkippedRow(r.line, r.label, typeof why === 'string' ? why : why(r.value));
+  });
+  return s.bankSkippedNamed(parsed.skipped, named.join('; '), parsed.skipped - rows.length);
+}
 
 async function parseBank(
   input: ImportInput,
@@ -64,7 +76,7 @@ async function parseBank(
         ? s.bankRemembered
         : s.bankDetected(FORMAT_NAMES[read.source.format]),
   ];
-  if (parsed.skipped > 0) notes.push(s.bankSkipped(parsed.skipped));
+  if (parsed.skipped > 0) notes.push(skippedNote(parsed));
   // A file in another currency is never booked to this account (no conversion): said once, calmly.
   const foreign = parsed.transactions.filter((tx) => tx.currency && tx.currency !== currency);
   let rows = parsed.transactions.filter((tx) => !tx.currency || tx.currency === currency);

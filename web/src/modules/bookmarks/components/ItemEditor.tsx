@@ -136,7 +136,7 @@ function Fields({ target, onClose }: { target: NonNullable<ItemTarget>; onClose:
       >
         <Button onClick={onClose}>{t.actions.cancel}</Button>
         <Button type="submit" variant="primary">
-          {t.actions.save}
+          {existing ? t.actions.save : t.bookmarks.add}
         </Button>
       </FormActions>
     </Form>

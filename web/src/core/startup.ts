@@ -4,8 +4,7 @@ import { runMigrations } from '@/core/modules/migrate';
 import { availableManifests } from '@/core/modules/available';
 import { applyDefaultsEra } from '@/core/focus/defaults';
 import { markFreshDefaults } from '@/core/modules/defaults';
-import { appHasData, ensureSetupState } from '@/core/setup/detect';
-import { readSetupState } from '@/core/setup/state';
+import { decideFreshStart, ensureSetupState } from '@/core/setup/detect';
 import { startAutomation } from '@/core/automation/start';
 import { startHistory } from '@/core/settings/history';
 import { startProfileScheduler } from '@/core/settings/profiles';
@@ -15,22 +14,29 @@ let stopHistory: (() => void) | undefined;
 let stopScheduler: (() => void) | undefined;
 let stopAutomation: (() => void) | undefined;
 
-/** One-time app start work: storage persistence and pending module migrations. */
-export async function initCore(): Promise<void> {
+/**
+ * One-time app start work: storage persistence and pending module migrations. `start` is the "fresh
+ * installation?" answer; `main.tsx` decides it before the first render, so nothing the page writes counts.
+ */
+export async function initCore(
+  start: Promise<boolean> | boolean = decideFreshStart(),
+): Promise<void> {
   // The change history listens from the very start, so a change made while the app is still waking up counts too.
   if (!stopHistory && typeof localStorage !== 'undefined') stopHistory = startHistory();
+  // A really empty app (no setup state, no data) is a fresh installation: it gets the calm defaults. The answer is
+  // noted in `_meta` when it is decided, so a first start closed or reloaded before the steps below keeps it.
+  const fresh = await start;
+  await applyDefaultsEra(fresh, (view) => useUiStore.getState().setHomeView(view));
+  // The same fresh installation notes its default set of modules (device-local, never a synced row).
+  await markFreshDefaults(fresh);
+  // Decides `dismissed` (installation with data) vs `notStarted` before any module work writes; it takes
+  // the answer decided above, as the page may have written entries (a first to-do) since.
+  await ensureSetupState(undefined, undefined, !fresh);
   try {
     await navigator.storage?.persist?.();
   } catch {
     // Best effort only.
   }
-  // A really empty app (no setup state, no data) is a fresh installation: it gets the calm defaults.
-  const fresh = !(await readSetupState()) && !(await appHasData());
-  // First: decides `dismissed` (installation with data) vs `notStarted` before anything writes.
-  await ensureSetupState();
-  await applyDefaultsEra(fresh, (view) => useUiStore.getState().setHomeView(view));
-  // The same fresh installation notes its default set of modules (device-local, never a synced row).
-  await markFreshDefaults(fresh);
   // Dev-Preview: an empty app is no longer filled by itself; the welcome card offers
   // "Mit Testdaten ansehen" next to "Einrichtung starten" (A10, round 5), so a tester sees the setup.
   const states = await loadModuleStates();

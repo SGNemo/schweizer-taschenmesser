@@ -10,6 +10,8 @@ export interface GroupedListGroup {
   label: string;
   /** Number of entries, shown next to the label. */
   count: number;
+  /** No count beside the label (a list that must never count what was left, e.g. „Rest verteilen“). */
+  countHidden?: boolean;
   /** A short neutral context after the count („2 h 40 mehr zu tun, als Zeit frei ist“); plain text, never a tone. */
   detail?: string;
   /** The rows (`ItemRow`s) of this group. */
@@ -72,9 +74,11 @@ export function GroupedList({
                 <span>{g.label}</span>
               </button>
               {/* Beside the button, not in it: its name ("… einklappen") must contain all of its visible text. */}
-              <span className={styles.count} aria-label={t.groups.count(g.count)}>
-                {g.count}
-              </span>
+              {g.countHidden ? null : (
+                <span className={styles.count} aria-label={t.groups.count(g.count)}>
+                  {g.count}
+                </span>
+              )}
               {g.detail ? <span className={styles.detail}>{`· ${g.detail}`}</span> : null}
             </h2>
             <div id={bodyId} hidden={!open} className={styles.body}>
