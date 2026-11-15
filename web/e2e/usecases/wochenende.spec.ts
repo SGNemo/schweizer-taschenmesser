@@ -501,7 +501,8 @@ test('C Wochenende einteilen', async ({ page, isMobile }, info) => {
   await expect(sat.getByText('Zocken', { exact: true })).toBeVisible();
   await m.tap((await rowMenu('Zocken')).getByRole('menuitemcheckbox', { name: 'Nachmittag' }));
   await expect(page.getByText('Jetzt: Nachmittag')).toBeVisible();
-  await m.tap((await rowMenu('Zocken')).getByRole('menuitem', { name: 'Als Pause · 2 h' }));
+  // „Als Pause am Sa“ over „1 h · 2 h · 3 h“.
+  await m.tap((await rowMenu('Zocken')).getByRole('menuitem', { name: '2 h', exact: true }));
   // Its row becomes the day's break: its own length and part, no total.
   await expect(sat.locator('li').filter({ hasText: 'Pause · 2 h · Nachmittag' })).toContainText(
     'Zocken',

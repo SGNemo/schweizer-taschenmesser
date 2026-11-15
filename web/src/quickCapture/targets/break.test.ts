@@ -6,7 +6,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { setNow } from '@/core/time/now';
-import { saveCapture } from './index';
+import { saveCapture, saveCaptures } from './index';
 
 const states = { todos: true, planner: true };
 const day = () => db.table('planner_day').get('2026-11-14');
@@ -73,5 +73,30 @@ describe('break target', () => {
     await expect(
       saveCapture('break', { title: 'Pause', date: '2026-11-14' }, { states: { todos: true } }),
     ).rejects.toMatchObject({ code: 'module-off' });
+  });
+
+  it('a typed start with a length keeps its time; a captured break is marked as one', async () => {
+    await saveCapture(
+      'break',
+      { title: 'Zocken', date: '2026-11-14', time: '14:00', estimateMin: 120 },
+      { states },
+    );
+    expect((await day()).blockers).toMatchObject([
+      { label: 'Zocken', min: 120, from: '14:00', to: '16:00', isBreak: true },
+    ]);
+  });
+
+  it('two breaks of one day in a batch: one undo takes both back', async () => {
+    const saved = await saveCaptures(
+      [
+        { type: 'break', fields: { title: 'Pause', date: '2026-11-14' } },
+        { type: 'break', fields: { title: 'Freizeit', date: '2026-11-14' } },
+      ],
+      'Pause\nFreizeit',
+      { states },
+    );
+    expect((await day()).blockers).toHaveLength(2);
+    await saved.undo();
+    expect((await day()).blockers).toEqual([]);
   });
 });

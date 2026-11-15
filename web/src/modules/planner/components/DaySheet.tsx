@@ -22,6 +22,7 @@ import {
   removeBlocker,
   setAvailable,
   setWindow,
+  unBreak,
 } from '../actions';
 import type { BoardDay } from '../board';
 import { capacityLabel, compact } from './capacity';
@@ -163,7 +164,12 @@ export function DaySheet({
                 b.calendar ? undefined : (
                   <IconButton
                     label={t.planner.day.removeBlocker(b.label)}
-                    onClick={() => void removeBlocker(day.date, b.id, titles)}
+                    // A break of a thing („Als Pause“) is not a stored blocker: removing it takes the break back.
+                    onClick={() =>
+                      void (b.breakOf
+                        ? unBreak(b.breakOf, titles)
+                        : removeBlocker(day.date, b.id, titles))
+                    }
                   >
                     <Icon name="trash" />
                   </IconButton>

@@ -573,30 +573,24 @@ export default function PlannerPage() {
         label: t.planner.parts[p],
         group: r.partGroup,
         checked: part === p,
+        // The checked part again takes it away (no separate „Ohne Abschnitt“ entry).
         onSelect: () => void setPart(e, part === p ? undefined : p, titles),
       })),
-      ...(part
-        ? [
-            {
-              id: 'part-none',
-              label: r.partNone,
-              group: r.partGroup,
-              onSelect: () => void setPart(e, undefined, titles),
-            },
-          ]
-        : []),
+      // „Als Pause am Sa“ over „1 h · 2 h · 3 h“: the heading names the day, the entries only the length.
       ...BREAK_CHOICES.map((min) => ({
         id: `break-${min}`,
-        label: r.breakFor(len(min)),
-        group: r.breakGroup,
+        label: len(min),
+        group: r.breakGroupOn(dayName(day)),
         onSelect: () => void asBreak(e, day, min, titles),
       })),
-      ...(canEstimate(e.moduleId)
+      // „Dauer“ only while the thing has no estimate of its own (it is counted with ~30 Min): a short menu otherwise.
+      ...(canEstimate(e.moduleId) &&
+      row.item?.durationMin === undefined &&
+      e.durationMin === undefined
         ? DURATION_CHOICES.map((min) => ({
             id: `duration-${min}`,
             label: r.durationFor(len(min)),
             group: r.durationGroup,
-            checked: row.item?.durationMin === min || e.durationMin === min,
             onSelect: () => void setDuration(e, min, titles),
           }))
         : []),
@@ -705,7 +699,7 @@ export default function PlannerPage() {
               title={b.label}
               // A break shows its own length like any blocker – never a total or a rating.
               meta={[
-                b.breakOf
+                b.breakOf || b.isBreak
                   ? t.planner.row.breakMeta(compact(b.min))
                   : `${t.planner.row.blocker} · ${compact(b.min)}`,
                 b.part ? t.planner.parts[b.part] : '',

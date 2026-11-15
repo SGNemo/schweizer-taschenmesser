@@ -25,17 +25,18 @@ const SHORT: Record<string, string> = {
   sa: 'Samstag',
   so: 'Sonntag',
 };
-const SHORT_DAY = /(?<![\p{L}\d])(mo|di|mi|do|fr|sa|so)\.?(?![\p{L}\d])/giu;
-
-/** Minutes of a break without a typed length. */
-export const BREAK_DEFAULT_MIN = 60;
+/** Only a capitalised one („Sa“, „So.“) or one with a period („so.“): a plain „so“ or „do“ is a word, never a day. */
+const SHORT_DAY =
+  /(?<![\p{L}\d])(?:(Mo|Di|Mi|Do|Fr|Sa|So)\.?|(mo|di|mi|do|fr|sa|so)\.)(?![\p{L}\d])/gu;
 
 export function parseBreak(input: string, opts: ParseOptions): CaptureResult | undefined {
   if (!opts.breaks) return undefined;
   const m = BREAK_START.exec(input);
   if (!m) return undefined;
   const scan: Scan = {
-    t: input.slice(m[0].length).replace(SHORT_DAY, (_, d: string) => SHORT[d.toLowerCase()]!),
+    t: input
+      .slice(m[0].length)
+      .replace(SHORT_DAY, (_, a?: string, b?: string) => SHORT[(a ?? b)!.toLowerCase()]!),
   };
   const endTime = extractEndTime(scan);
   const estimate = extractEstimate(scan);

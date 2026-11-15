@@ -353,7 +353,8 @@ export async function saveCaptures(
   try {
     for (const item of items) saved.push(await saveItem(item, batch));
   } catch (e) {
-    await Promise.allSettled(saved.map((s) => s.undo()));
+    // One after another, newest first: two lines may write into one record (two breaks of a day).
+    for (const s of [...saved].reverse()) await s.undo().catch(() => undefined);
     throw e;
   }
   const written = saved.filter((s) => !s.existed);
@@ -366,7 +367,8 @@ export async function saveCaptures(
     text,
     types: written.map((s) => s.type),
     undo: async () => {
-      await Promise.all(written.map((s) => s.undo()));
+      // One after another, newest first (see above): parallel undos of one record would undo each other.
+      for (const s of [...written].reverse()) await s.undo();
     },
   };
 }

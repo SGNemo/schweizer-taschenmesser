@@ -240,7 +240,11 @@ export function plan(input: PlanInput): PlanResult {
       for (const [id, w] of placeInWindow(
         window,
         day.blockers,
-        todayList.map((a) => ({ ...a, part: unitById.get(a.id)!.item.part })),
+        // Times follow the part first (a pinned evening thing never pushes a morning thing out of the morning);
+        // the day's list order stays as above.
+        todayList
+          .map((a) => ({ ...a, part: unitById.get(a.id)!.item.part }))
+          .sort((a, b) => partRank(a.part) - partRank(b.part) || a.order - b.order),
       )) {
         const a = placed.get(id)!;
         a.from = w.from;

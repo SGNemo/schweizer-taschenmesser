@@ -353,29 +353,34 @@ const plan: CaptureTarget = {
   },
 };
 
-/** A typed range in minutes („14 bis 16 Uhr“), else undefined; never across midnight. */
-const rangeMin = (from?: string, to?: string): number | undefined => {
-  if (!from || !to) return undefined;
-  const m = (x: string) => Number(x.slice(0, 2)) * 60 + Number(x.slice(3, 5));
-  const d = m(to) - m(from);
-  return d > 0 ? d : undefined;
-};
+const toMinutes = (x: string): number => Number(x.slice(0, 2)) * 60 + Number(x.slice(3, 5));
+const toClock = (m: number): string =>
+  `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 
-/** A stored row without its envelope (id, stamps, `_f`), ready for `upsert`. */
-const bare = (row: Record<string, unknown>): Record<string, unknown> =>
-  Object.fromEntries(
-    Object.entries(row).filter(
-      ([k]) => !['id', 'createdAt', 'updatedAt', 'deviceId', 'deletedAt', '_f'].includes(k),
-    ),
-  );
-
-/** Minutes of a break without a typed length (`quickCapture/parser/brk.ts` says the same). */
+/** Minutes of a break without a typed length (the parser and the planner's row ⋯ use the same hour). */
 const BREAK_MIN = 60;
 
 /**
+ * Where a break sits: a typed range („14 bis 16 Uhr“), a typed start with a length („14 Uhr 2 Std“, „14 Uhr“ = 1 h),
+ * or no time at all. Never across midnight.
+ */
+function breakSpan(f: CaptureFields): { min: number; from?: string; to?: string } {
+  if (f.time && f.endTime && toMinutes(f.endTime) > toMinutes(f.time))
+    return { min: toMinutes(f.endTime) - toMinutes(f.time), from: f.time, to: f.endTime };
+  const min = f.estimateMin ?? BREAK_MIN;
+  if (f.time && toMinutes(f.time) + min <= 24 * 60)
+    return { min, from: f.time, to: toClock(toMinutes(f.time) + min) };
+  return { min };
+}
+
+type DayRow = { blockers?: { id: string }[] };
+
+/**
  * „Pause 14–16 Uhr“, „Freizeit Sa 2 Std“ (use case „Wochenende retten“, F2): a blocker in the planner's day row of
- * the typed date (or today) with the typed range or length (else 1 h) and a time only when typed. The day row is
- * merged, never replaced; the undo takes back only this blocker. No total, no rating.
+ * the typed date (or today) with the typed range or length (else 1 h) and a time only when typed, marked as a break.
+ * Only the day's `blockers` field is written (the other fields of the row stay as stored); a deleted day row is
+ * restored first. The undo takes back only this blocker, read fresh. No total, no rating. Never given an id: a line
+ * saved twice adds the break twice (`CaptureTarget.merge`).
  */
 const breaks: CaptureTarget = {
   type: 'break',
@@ -383,34 +388,24 @@ const breaks: CaptureTarget = {
   collection: 'day',
   build: (f, ctx) => {
     const day = date(f.date) ?? ctx.today;
-    const span = rangeMin(f.time, f.endTime);
-    const min = span ?? f.estimateMin ?? BREAK_MIN;
-    if (!f.title.trim() || min < 1 || min > 1440) throw new CaptureError('invalid');
-    return {
-      date: day,
-      label: f.title.trim(),
-      min,
-      ...(span !== undefined ? { from: f.time, to: f.endTime } : {}),
-    };
+    const span = breakSpan(f);
+    if (!f.title.trim() || span.min < 1 || span.min > 1440) throw new CaptureError('invalid');
+    return { date: day, label: f.title.trim(), isBreak: true, ...span };
   },
   async merge(f, ctx) {
-    const b = breaks.build(f, ctx) as {
-      date: string;
-      label: string;
-      min: number;
-      from?: string;
-      to?: string;
-    };
+    const { date: day, ...blocker } = breaks.build(f, ctx) as { date: string } & Record<
+      string,
+      unknown
+    >;
     const id = crypto.randomUUID();
-    const row = (await ctx.repo.get(b.date)) as Record<string, unknown> | undefined;
-    const { date: day, ...blocker } = b;
-    const before = (row?.blockers as { id: string }[] | undefined) ?? [];
     try {
-      await ctx.repo.upsert(day, {
-        ...(row ? bare(row) : {}),
-        date: day,
-        blockers: [...before, { id, ...blocker }],
-      });
+      const stored = (await ctx.repo.table.get(day)) as
+        (DayRow & { deletedAt?: unknown }) | undefined;
+      if (stored?.deletedAt) await ctx.repo.restore(day);
+      const live = stored?.deletedAt ? stored : ((await ctx.repo.get(day)) as DayRow | undefined);
+      if (live)
+        await ctx.repo.update(day, { blockers: [...(live.blockers ?? []), { id, ...blocker }] });
+      else await ctx.repo.upsert(day, { date: day, blockers: [{ id, ...blocker }] });
     } catch {
       throw new CaptureError('invalid');
     }
@@ -419,14 +414,9 @@ const breaks: CaptureTarget = {
       type: 'break',
       moduleId: 'planner',
       undo: async () => {
-        const now = (await ctx.repo.get(day)) as Record<string, unknown> | undefined;
-        if (!now) return;
-        await ctx.repo.upsert(day, {
-          ...bare(now),
-          blockers: ((now.blockers as { id: string }[] | undefined) ?? []).filter(
-            (x) => x.id !== id,
-          ),
-        });
+        const now = (await ctx.repo.get(day)) as DayRow | undefined;
+        if (!now?.blockers?.some((b) => b.id === id)) return;
+        await ctx.repo.update(day, { blockers: now.blockers.filter((b) => b.id !== id) });
       },
     };
   },

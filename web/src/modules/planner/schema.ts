@@ -19,8 +19,8 @@ export const blockerSchema = z.object({
   min: z.number().int().min(0).max(1440),
   from: z.string().regex(TIME_RE).optional(),
   to: z.string().regex(TIME_RE).optional(),
-  /** A break said for a part of the day (v3); shown with it, never summed. */
-  part: dayPartSchema.optional(),
+  /** v3: a break typed in quick capture („Pause 14–16 Uhr“); shown as „Pause“, never summed. */
+  isBreak: z.boolean().optional(),
 });
 
 /** Only days the user touched are stored; a missing day = the weekday default of the settings. */

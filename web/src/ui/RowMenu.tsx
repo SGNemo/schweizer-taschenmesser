@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { menuSide, type MenuSide } from '@/core/shell/menuPlacement';
 import { useBackClose } from '@/core/shell/useBackClose';
 import { t } from '@/strings';
@@ -37,6 +37,7 @@ export function RowMenu({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const uid = useId();
   const root = useRef<HTMLSpanElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const list = useRef<HTMLUListElement>(null);
@@ -98,22 +99,33 @@ export function RowMenu({
   }
 
   let lastGroup: string | undefined;
+  let groupIndex = 0;
   const entries: ReactNode[] = [];
   for (const item of items) {
     if (item.group && item.group !== lastGroup) {
+      groupIndex++;
       entries.push(
-        <li key={`g-${item.group}`} role="presentation" className={styles.group}>
+        <li
+          key={`g-${item.group}`}
+          id={`${uid}-g${groupIndex}`}
+          role="presentation"
+          className={styles.group}
+        >
           {item.group}
         </li>,
       );
     }
     lastGroup = item.group ?? lastGroup;
+    // A grouped entry names its heading as its description („Nachmittag“ – „Tagesabschnitt“): the heading itself is
+    // presentation only, so a screen reader would not say it otherwise.
+    const describedBy = item.group ? `${uid}-g${groupIndex}` : undefined;
     entries.push(
       <li key={item.id} role="none">
         <button
           type="button"
           role={item.checked === undefined ? 'menuitem' : 'menuitemcheckbox'}
           aria-checked={item.checked}
+          aria-describedby={describedBy}
           className={`${styles.item} ${item.danger ? styles.danger : ''}`}
           onClick={() => {
             onOpenChange(false);

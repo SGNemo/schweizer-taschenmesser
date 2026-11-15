@@ -426,4 +426,13 @@ export const CORPUS: CorpusCase[] = [
   },
   { from: 'WE-W05', text: 'Pause 14 bis 16 Uhr Zocken', type: 'todo' },
   { from: 'WE-W05', text: 'Zocken', breaks: true, type: 'todo', title: 'Zocken' },
+  // A plain „so“ is a word, not Sunday (council round 1).
+  {
+    from: 'WE-W05',
+    text: 'Freizeit so 2 Std',
+    breaks: true,
+    type: 'break',
+    date: '2026-10-29',
+    title: 'so',
+  },
 ];

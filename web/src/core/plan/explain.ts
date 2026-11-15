@@ -42,7 +42,7 @@ export function explainAssignment(
   }
 }
 
-/** The part of the day a thing was given („nachmittags, wie gewählt“), added to „Warum hier?“. */
+/** The part of the day a thing was given („Nachmittag, wie gewählt“), added to „Warum hier?“. */
 export const explainPart = (part: PlanDayPart): string =>
   t.planner.reasons.part(t.planner.parts[part]);
 

@@ -69,7 +69,8 @@ export interface CaptureTarget {
   amend?(fields: CaptureFields, match: OpenInvoice, ctx: AmendContext): Promise<SavedCapture>;
   /**
    * Writes into an existing record keyed by the line itself instead of creating one (a break into its day's
-   * blockers). `undo` takes back only what it added.
+   * blockers). `undo` takes back only what it added. Never given `SaveOptions.id`: such a line is not
+   * create-if-absent.
    */
   merge?(fields: CaptureFields, ctx: AmendContext): Promise<SavedCapture>;
 }

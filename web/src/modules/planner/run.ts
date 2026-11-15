@@ -302,8 +302,12 @@ const rowData = (row: PlanItemRow): PlanItemRow => {
     pinned,
     splittable,
     excluded,
+    part,
+    asBreakOn,
+    breakMin,
     order,
   } = row;
+  // Every field of the row: `putRow` replaces it whole, so a field left out here would be lost (v3: part, break).
   return {
     source,
     ...(title !== undefined ? { title } : {}),
@@ -314,6 +318,9 @@ const rowData = (row: PlanItemRow): PlanItemRow => {
     ...(pinned ? { pinned } : {}),
     ...(splittable !== undefined ? { splittable } : {}),
     ...(excluded ? { excluded } : {}),
+    ...(part ? { part } : {}),
+    ...(asBreakOn ? { asBreakOn } : {}),
+    ...(breakMin !== undefined ? { breakMin } : {}),
     order,
   };
 };

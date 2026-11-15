@@ -100,6 +100,37 @@ describe('„Als Pause“', () => {
   });
 });
 
+describe('the run keeps v3 fields', () => {
+  it('copying the user’s own date into an item row keeps its part and its break', async () => {
+    const repos = plannerRepos();
+    await repos.item.upsert('todos:k', {
+      source: { module: 'todos', id: 'k' },
+      part: 'evening',
+      asBreakOn: '2026-11-16',
+      breakMin: 60,
+      order: 0,
+    });
+    const deps: RunDeps = {
+      today: SAT,
+      manifests: [],
+      settings: DEFAULT_PLANNER_SETTINGS,
+      planLimit: 3,
+      settled: true,
+      entries: [entry('k', 'Keller', { plannedFor: '2026-11-15' })],
+      calendar: [],
+      writer: { onAssign: async () => undefined, onRelease: async () => undefined },
+    };
+    await runPlanner(deps, { force: true });
+    expect(await repos.item.get('todos:k')).toMatchObject({
+      earliest: '2026-11-15',
+      part: 'evening',
+      asBreakOn: '2026-11-16',
+      breakMin: 60,
+    });
+    await repos.item.remove('todos:k');
+  });
+});
+
 describe('the field', () => {
   const ctx = {
     today: SAT,

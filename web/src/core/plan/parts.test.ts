@@ -111,6 +111,21 @@ describe('parts of the day', () => {
     expect(out.has('y')).toBe(false);
   });
 
+  it('a pinned evening thing never pushes a morning thing out of the morning', () => {
+    const w = { from: '08:00', to: '20:00' };
+    const r = plan({
+      today: SAT,
+      days: days([600, 240, 240], w),
+      items: [item('p', 'evening', { pinned: SAT }), item('m', 'morning')],
+      settings,
+    });
+    const at = Object.fromEntries(
+      r.assignments.filter((a) => a.date === SAT).map((a) => [a.itemKey.slice(6), a.from]),
+    );
+    expect(order(r)).toEqual(['p', 'm']);
+    expect(at).toEqual({ m: '08:00', p: '16:00' });
+  });
+
   it('says the part in „Warum hier?“', () => {
     expect(explainPart('afternoon')).toBe('Nachmittag, wie gewählt');
   });

@@ -19,6 +19,8 @@ export type DayBlocker = PlanBlocker & {
   calendar: boolean;
   /** A thing taken „Als Pause“ (its item key): the blocker carries its title and length, its ⋯ takes it back. */
   breakOf?: string;
+  /** A break typed in quick capture („Pause 14–16 Uhr“). */
+  isBreak?: boolean;
 };
 
 /** A thing taken „Als Pause“ on a day: a blocker with its title and length. */
@@ -92,7 +94,7 @@ export function planDays(input: {
         label: b.label,
         min: b.min,
         ...times(b),
-        ...(b.part ? { part: b.part } : {}),
+        ...(b.isBreak ? { isBreak: true } : {}),
         calendar: false,
       })),
       ...(input.breaks ?? [])

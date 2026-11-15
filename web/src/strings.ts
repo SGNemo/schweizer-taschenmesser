@@ -8488,11 +8488,9 @@ export const de = {
       focus: 'Fokus starten',
       /** Row ⋯ group heads and entries (use case „Wochenende retten“, F2). */
       partGroup: 'Tagesabschnitt',
-      partNone: 'Ohne Abschnitt',
       breakGroup: 'Als Pause',
-      breakFor: (len: string) => `Als Pause · ${len}`,
+      breakGroupOn: (day: string) => `Als Pause am ${day}`,
       unBreak: 'Keine Pause mehr',
-      breakState: (day: string) => `Pause am ${day}`,
       durationGroup: 'Dauer',
       durationFor: (len: string) => `dauert ${len}`,
       breakMeta: (len: string) => `Pause · ${len}`,
