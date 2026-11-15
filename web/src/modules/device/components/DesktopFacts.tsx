@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { formatNumber } from '@/core/i18n/format';
 import { getPlatform } from '@/core/platform';
 import type { DriveInfo } from '@/core/platform/disk';
 import type { SystemInfo } from '@/core/platform/system';
@@ -9,6 +8,7 @@ import { Button, Icon, Progress, Ring, Segmented, Sparkline, type IconName } fro
 import {
   connection,
   driveViews,
+  formatPercent,
   formatRate,
   passport,
   percentOf,
@@ -84,7 +84,7 @@ function LiveTiles({ live }: { live: LiveState }) {
         id="cpu"
         title={l.cpu}
         ring={{ percent: cpu, label: l.cpu }}
-        value={`${cpu} %`}
+        value={formatPercent(cpu)}
         sub={l.cores(info.cpu.physicalCores, info.cpu.threads)}
         series={live.cpu}
         seriesLabel={l.spark.cpu}
@@ -93,7 +93,7 @@ function LiveTiles({ live }: { live: LiveState }) {
         id="memory"
         title={l.memory}
         ring={{ percent: ram, label: l.memory }}
-        value={`${ram} %`}
+        value={formatPercent(ram)}
         sub={l.memoryContext(
           formatBytes(info.memory.usedBytes),
           formatBytes(info.memory.totalBytes),
@@ -116,7 +116,7 @@ function LiveTiles({ live }: { live: LiveState }) {
           ring={
             battery.percent === null ? undefined : { percent: battery.percent, label: l.battery }
           }
-          value={battery.percent === null ? '–' : `${battery.percent} %`}
+          value={battery.percent === null ? '–' : formatPercent(battery.percent)}
           sub={batteryState}
         />
       ) : null}
@@ -188,9 +188,7 @@ function Programs({ live }: { live: LiveState }) {
                   ) : null}
                 </td>
                 <td className={styles.num}>
-                  {by === 'cpu'
-                    ? `${formatNumber(proc.cpuPercent, { maximumFractionDigits: 1, minimumFractionDigits: 1 })} %`
-                    : formatBytes(proc.memoryBytes)}
+                  {by === 'cpu' ? formatPercent(proc.cpuPercent, 1) : formatBytes(proc.memoryBytes)}
                 </td>
               </tr>
             ))}

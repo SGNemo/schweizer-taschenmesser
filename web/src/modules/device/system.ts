@@ -16,6 +16,14 @@ export const LIVE_MS = 3000;
 export const pushPoint = (list: readonly number[], v: number, max = LIVE_POINTS): number[] =>
   Number.isFinite(v) ? [...list, v].slice(-max) : [...list];
 
+/** "45 %" / "45%" in the user's number format; `digits` for shares like "4,2 %". */
+export const formatPercent = (n: number, digits = 0): string =>
+  formatNumber(n / 100, {
+    style: 'percent',
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  });
+
 export const percentOf = (used: number, total: number): number =>
   total > 0 ? Math.min(100, Math.max(0, Math.round((used / total) * 100))) : 0;
 
@@ -28,7 +36,7 @@ export function formatRate(bytesPerSec: number | null | undefined): string {
   if (bytesPerSec >= MB)
     return `${formatNumber(bytesPerSec / MB, { maximumFractionDigits: 1, minimumFractionDigits: 1 })} MB/s`;
   if (bytesPerSec >= KB) return `${formatNumber(Math.round(bytesPerSec / KB))} KB/s`;
-  return `${Math.round(bytesPerSec)} B/s`;
+  return `${formatNumber(Math.round(bytesPerSec))} B/s`;
 }
 
 const realUp = (network: readonly NetIface[]) =>

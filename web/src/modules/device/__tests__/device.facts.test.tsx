@@ -118,6 +118,9 @@ describe('Gerätestatus – live facts on the PC', () => {
     expect(items[1]).toHaveTextContent('Administratorrechten');
     expect(screen.getByTestId('device-passport')).toHaveTextContent('Beispiel Mainboard B650');
     expect(screen.getByTestId('device-passport')).toHaveTextContent('9.8.7');
+    // A second graphics card is another value of "Grafik", not an unnamed term.
+    const terms = [...screen.getByTestId('device-passport').querySelectorAll('dt')];
+    expect(terms.every((dt) => dt.textContent !== '')).toBe(true);
   });
 
   it('never prints an address, a network or adapter name, a drive letter, label or model, or an audio device', async () => {
@@ -181,8 +184,71 @@ describe('Gerätestatus – live facts on the PC', () => {
       });
       expect(info).toHaveBeenCalledTimes(2);
       expect(localStorage.getItem('tm-device-live-paused')).toBe('1');
+      // "Weiter" reads again at once and every three seconds after that.
+      fireEvent.click(screen.getByTestId('device-live-pause'));
+      await act(async () => {
+        await Promise.resolve();
+      });
+      expect(info).toHaveBeenCalledTimes(3);
+      await act(async () => {
+        vi.advanceTimersByTime(3000);
+      });
+      expect(info).toHaveBeenCalledTimes(4);
     } finally {
       vi.useRealTimers();
+    }
+  });
+});
+
+describe('Gerätestatus – reading only while seen', () => {
+  it('a window that shows again reads at once; leaving the page stops the reading', async () => {
+    const system = createFakeSystem();
+    const info = vi.spyOn(system, 'info');
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+    try {
+      const view = await show(platform('desktop', system));
+      expect(info).toHaveBeenCalledTimes(1);
+      await act(async () => {
+        document.dispatchEvent(new Event('visibilitychange'));
+        await Promise.resolve();
+      });
+      expect(info).toHaveBeenCalledTimes(2);
+      view.unmount();
+      await act(async () => {
+        vi.advanceTimersByTime(30_000);
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+      expect(info).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('phone: a page left before the battery answers attaches no listener', async () => {
+    let answer: (b: unknown) => void = () => undefined;
+    const added: string[] = [];
+    Object.defineProperty(navigator, 'getBattery', {
+      configurable: true,
+      value: () =>
+        new Promise((resolve) => {
+          answer = resolve;
+        }),
+    });
+    try {
+      const view = await show(platform('android'));
+      view.unmount();
+      await act(async () => {
+        answer({
+          level: 0.5,
+          charging: true,
+          addEventListener: (type: string) => added.push(type),
+          removeEventListener: () => undefined,
+        });
+        await Promise.resolve();
+      });
+      expect(added).toEqual([]);
+    } finally {
+      delete (navigator as { getBattery?: unknown }).getBattery;
     }
   });
 });

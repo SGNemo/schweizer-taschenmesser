@@ -30,7 +30,8 @@ export function PassportSection({ facts }: { facts: Fact[] }) {
       <dl className={styles.facts}>
         {facts.map((f) => (
           <Fragment key={f.id}>
-            <dt>{f.label}</dt>
+            {/* A fact without a label (second graphics card, second screen) is another value of the term above. */}
+            {f.label ? <dt>{f.label}</dt> : null}
             <dd>{f.value}</dd>
           </Fragment>
         ))}
