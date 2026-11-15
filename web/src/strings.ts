@@ -4831,6 +4831,8 @@ export const de = {
     tabs: {
       drives: 'Laufwerke',
       tidy: 'Aufräumen',
+      startup: 'Autostart',
+      tweaks: 'Windows-Einstellungen',
       system: 'System',
       history: 'Verlauf',
     } as const,
@@ -4878,6 +4880,14 @@ export const de = {
         full: 'Fast voll – Aufräumen empfohlen.',
       } as Record<string, string>,
       healthLabel: 'Zustand',
+      toTidy: 'Aufräumen öffnen',
+      trimLabel: 'TRIM',
+      trim: {
+        on: 'In Windows eingeschaltet',
+        off: 'In Windows ausgeschaltet. Einschalten geht nur in Windows mit Administratorrechten; Nemo ändert das nicht.',
+      } as Record<string, string>,
+      helpTrim:
+        'Mit TRIM teilt Windows einer SSD mit, welche Bereiche nach dem Löschen frei sind. Ohne TRIM kann eine SSD mit der Zeit langsamer schreiben.',
       health: {
         ok: 'In Ordnung',
         warning: 'Das Laufwerk meldet Probleme – sichere deine Daten.',
@@ -5315,10 +5325,10 @@ export const de = {
     },
     /** Tab "Verlauf": what the page changed on this PC, with the way back. */
     history: {
-      lead: 'Was Nemo auf diesem PC verändert hat, mit dem Weg zurück. Was du aufräumst, steht hier, bis du Nemo schließt.',
+      lead: 'Was Nemo auf diesem PC verändert hat, mit dem Weg zurück. Aufgeräumtes steht hier, bis du Nemo schließt; Änderungen am Autostart und an Windows-Einstellungen bleiben hier stehen.',
       loading: 'Verlauf wird gelesen …',
-      empty: 'In dieser Sitzung noch nichts aufgeräumt.',
-      emptyHint: 'Sobald du etwas aufräumst, steht es hier.',
+      empty: 'Im Verlauf steht noch nichts.',
+      emptyHint: 'Sobald du etwas aufräumst oder umschaltest, steht es hier.',
       reload: 'Erneut laden',
       failed: 'Der Verlauf konnte nicht gelesen werden.',
       recovered: 'Die Verlaufsdatei war beschädigt und wurde neu angelegt. Ältere Einträge fehlen.',
@@ -5339,9 +5349,163 @@ export const de = {
       undoLabel: (what: string) => `Rückgängig: ${what}`,
       undoDone: 'Zurückgestellt.',
       undoFailed: 'Das ließ sich nicht zurückstellen.',
+      changedElsewhere: 'Das wurde inzwischen in Windows geändert. Nemo lässt es, wie es ist.',
       undone: 'Zurückgenommen.',
       canUndo: 'Der Wert von vorher ist gespeichert.',
       undoNewerFirst: 'Nimm zuerst die neuere Änderung daran zurück.',
+      stale: 'Inzwischen in Windows geändert.',
+      changed: (name: string) => `${name}: geändert`,
+      chose: (name: string, choice: string) => `${name}: ${choice}`,
+    },
+    /** Tab "Windows-Einstellungen": documented, reversible Windows settings (`pc-tune` catalogue ids). */
+    tweaks: {
+      lead: 'Das sind Einstellungen von Windows. Hier kannst du sie umstellen, ohne sie in Windows zu suchen. Jede Änderung lässt sich zurücknehmen.',
+      onlyWindows: 'Diese Einstellungen gibt es nur unter Windows.',
+      onlyWindowsHint: 'Auf diesem Gerät ändert Nemo hier nichts.',
+      loading: 'Einstellungen werden gelesen …',
+      failed: 'Die Einstellungen konnten nicht gelesen werden.',
+      again: 'Noch einmal lesen',
+      none: 'Auf diesem PC gibt es hier nichts einzustellen.',
+      changedCount: (n: number) =>
+        n === 1 ? '1 Einstellung von Nemo geändert.' : `${n} Einstellungen von Nemo geändert.`,
+      resetAll: 'Alle zurücksetzen',
+      resetTitle: 'Alle zurücksetzen?',
+      resetText:
+        'Diese Einstellungen bekommen wieder den Wert, den sie vor deiner ersten Änderung hier hatten:',
+      resetConfirm: 'Zurücksetzen',
+      cancel: 'Abbrechen',
+      resetDone: (names: string) => `Zurückgesetzt: ${names}.`,
+      resetKept: (names: string) => `Unverändert geblieben: ${names}.`,
+      resetLeft: (name: string) => `${name} (inzwischen in Windows geändert)`,
+      applyLocked: 'Dieser Plan ist schon aktiv.',
+      noPlan: 'Kein Plan erkannt',
+      resetFailed: (name: string) => `${name} (ließ sich nicht zurücksetzen)`,
+      resetNothing: 'Es gab nichts zurückzusetzen.',
+      restorePoint: 'Computerschutz öffnen',
+      restorePointHint:
+        'Wenn du magst, legst du dort vorher einen Wiederherstellungspunkt an. Nötig ist das nicht.',
+      group: {
+        appearance: 'Darstellung',
+        explorer: 'Explorer',
+        privacy: 'Privatsphäre',
+        power: 'Energie',
+      } as Record<string, string>,
+      title: {
+        animations: 'Animationen in Fenstern',
+        dragFullWindows: 'Fensterinhalt beim Ziehen',
+        pointerSonar: 'Mauszeiger mit Strg zeigen',
+        fileExtensions: 'Dateiendungen anzeigen',
+        hiddenFiles: 'Versteckte Dateien anzeigen',
+        advertisingId: 'Werbe-ID für Apps',
+        trackAppLaunches: 'App-Starts für Start und Suche merken',
+        powerPlan: 'Energiesparplan',
+      } as Record<string, string>,
+      what: {
+        animations:
+          'Bedienelemente in Fenstern blenden weich ein und aus. Ausgeschaltet erscheinen sie sofort.',
+        dragFullWindows:
+          'Beim Verschieben siehst du das ganze Fenster. Ausgeschaltet zeigt Windows nur einen Rahmen.',
+        pointerSonar: 'Ein Druck auf die Strg-Taste zeigt mit Kreisen, wo der Mauszeiger ist.',
+        fileExtensions:
+          'Der Explorer zeigt Endungen wie .pdf oder .exe hinter dem Dateinamen. So siehst du, was für eine Datei es ist.',
+        hiddenFiles:
+          'Der Explorer zeigt auch Dateien und Ordner, die als versteckt markiert sind. Geschützte Systemdateien bleiben ausgeblendet.',
+        advertisingId:
+          'Apps dürfen deine Werbe-ID nutzen, um Werbung auf dich abzustimmen. Ausgeschaltet siehst du nicht weniger Werbung, sie richtet sich aber nicht mehr nach dieser ID.',
+        trackAppLaunches:
+          'Windows merkt sich, welche Apps du startest, und sortiert damit Startmenü und Suche.',
+        powerPlan:
+          'Legt fest, wie Windows zwischen Leistung und Stromverbrauch abwägt. Der Plan gilt für alle Konten dieses PCs. Zur Wahl stehen nur die Pläne, die es hier schon gibt.',
+      } as Record<string, string>,
+      detail: {
+        animations:
+          'In Windows gehört es zum Schalter „Animationseffekte“ unter Barrierefreiheit → Visuelle Effekte. Der Schalter dort kann mehr umfassen als diese eine Einstellung.',
+        dragFullWindows:
+          'In Windows heißt es „Fensterinhalt beim Ziehen anzeigen“ (Leistungsoptionen → Visuelle Effekte). Nemo stellt es auf demselben Weg um wie Windows selbst.',
+        pointerSonar:
+          'In Windows heißt es „Zeigerposition beim Drücken der STRG-Taste anzeigen“ (Mauseigenschaften → Zeigeroptionen). Nemo stellt es auf demselben Weg um wie Windows selbst.',
+        fileExtensions:
+          'Im Explorer heißt es „Dateinamenerweiterungen“ (Anzeigen → Einblenden). Nemo stellt es auf demselben Weg um wie Windows selbst.',
+        hiddenFiles:
+          'Im Explorer heißt es „Ausgeblendete Elemente“ (Anzeigen → Einblenden). Nemo stellt es auf demselben Weg um wie Windows selbst.',
+        advertisingId:
+          'In Windows findest du es unter Datenschutz und Sicherheit → Allgemein. Nemo ändert dieselbe Angabe wie der Schalter dort; sie gilt nur für dein Konto.',
+        trackAppLaunches:
+          'In Windows findest du es unter Datenschutz und Sicherheit → Allgemein. Nemo ändert dieselbe Angabe wie der Schalter dort; sie gilt nur für dein Konto.',
+        powerPlan:
+          'In Windows findest du die Pläne in der Systemsteuerung unter Energieoptionen. Nemo wechselt nur zwischen ihnen, legt keinen neuen an und blendet keinen versteckten ein.',
+      } as Record<string, string>,
+      riskLow: 'Risiko: gering.',
+      riskNote: {
+        hiddenFiles:
+          'Versteckte Dateien gehören oft zu Programmen. Sind sie sichtbar, verschiebt oder löscht man sie leichter aus Versehen.',
+        trackAppLaunches: 'Ausgeschaltet bleibt die Liste „Meistverwendet“ im Startmenü leer.',
+        powerPlan: 'Ein Plan mit mehr Leistung braucht mehr Strom; am Laptop hält der Akku kürzer.',
+      } as Record<string, string>,
+      refresh: {
+        explorer: 'Offene Explorer-Fenster zeigen es nach dem Aktualisieren (F5).',
+      },
+      more: 'Mehr dazu',
+      moreLabel: (title: string) => `Mehr dazu: ${title}`,
+      source: 'Quelle: Dokumentation von Microsoft',
+      sourceLabel: (title: string) =>
+        `Quelle: Dokumentation von Microsoft (${title}, öffnet im Browser)`,
+      changedHere: 'von Nemo geändert',
+      stateOn: 'Eingeschaltet',
+      stateOff: 'Ausgeschaltet',
+      stateChoice: (label: string) => (label ? `Aktiv: ${label}` : ''),
+      windowsDefault: 'Hier ist nichts festgelegt; es gilt der Standard von Windows.',
+      customValue:
+        'Hier ist ein anderer Wert gespeichert, den Nemo nicht einordnet. Nach einer Änderung stellt „Rückgängig“ genau ihn wieder her.',
+      unreadable:
+        'Nemo kann den aktuellen Wert nicht lesen. Ohne ihn gäbe es keinen Weg zurück, deshalb ändert Nemo hier nichts.',
+      turnOn: 'Einschalten',
+      turnOff: 'Ausschalten',
+      turnOnLabel: (title: string) => `Einschalten: ${title}`,
+      turnOffLabel: (title: string) => `Ausschalten: ${title}`,
+      apply: 'Übernehmen',
+      applyLabel: (title: string) => `Übernehmen: ${title}`,
+      chooseLabel: (title: string) => `${title} wählen`,
+      switched: (title: string, on: boolean) =>
+        `${title}: ${on ? 'eingeschaltet' : 'ausgeschaltet'}.`,
+      chosen: (title: string, label: string) => `${title}: ${label}.`,
+      setFailed: 'Das ließ sich nicht umstellen. Es wurde nichts geändert.',
+    },
+    /** Tab "Autostart": what starts with Windows for this account, with a switch each. */
+    startup: {
+      lead: 'Hier steht, was über die Autostart-Liste mit Windows startet. Was du beim Start nicht brauchst, schaltest du aus – das Programm bleibt installiert und lässt sich wieder einschalten.',
+      loading: 'Autostart wird gelesen …',
+      failed: 'Der Autostart konnte nicht gelesen werden.',
+      again: 'Erneut versuchen',
+      onlyWindows: 'Den Autostart zeigt Nemo nur unter Windows.',
+      empty: 'Nemo findet keine Programme in der Autostart-Liste von Windows.',
+      user: 'Für dein Konto',
+      machine: 'Für alle Konten',
+      count: (on: number, total: number) => `${on} von ${total} eingeschaltet`,
+      machineHint:
+        'Nur zum Ansehen: Diese Einträge gelten für alle, die diesen PC nutzen. Ändern lassen sie sich in den Windows-Einstellungen mit einem Administratorkonto.',
+      machineOpen: 'In den Windows-Einstellungen ändern',
+      openFailed: 'Das ließ sich nicht öffnen.',
+      switchLabel: (name: string) => `${name} mit Windows starten`,
+      notSwitchable: 'Lässt sich hier nicht umschalten',
+      on: 'Eingeschaltet',
+      off: 'Ausgeschaltet',
+      folder: 'Autostart-Ordner',
+      nowOff: (name: string) => `${name} startet nicht mehr mit Windows.`,
+      nowOn: (name: string) => `${name} startet wieder mit Windows.`,
+      undo: 'Rückgängig',
+      undoFailed: 'Das ließ sich nicht zurückstellen. Im Verlauf siehst du den Stand.',
+      setFailed: 'Das ließ sich nicht umschalten.',
+      impact:
+        'Wie stark ein Programm den Start von Windows verzögert, schätzt Windows selbst: Der Task-Manager zeigt es unter „Autostart-Apps“ in der Spalte „Startauswirkungen“.',
+      historyOff: (name: string) => `${name}: startet nicht mehr mit Windows`,
+      historyOn: (name: string) => `${name}: startet wieder mit Windows`,
+    },
+    /** Above the drives, only when a built-in drive reports problems: one sentence each, no button. */
+    advice: {
+      title: 'Laufwerkszustand',
+      health: (drive: string) =>
+        `${drive} meldet Probleme. Am besten sicherst du bald die Daten darauf.`,
     },
   },
 

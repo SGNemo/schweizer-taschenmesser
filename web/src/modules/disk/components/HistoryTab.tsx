@@ -11,6 +11,17 @@ import styles from './HistoryTab.module.css';
 /** What a history line says (read at render time). */
 export function entryText(e: CareEntry): string {
   const h = t.disk.history;
+  if (e.kind === 'startup') {
+    const name = e.label || e.subject;
+    return e.on ? t.disk.startup.historyOn(name) : t.disk.startup.historyOff(name);
+  }
+  if (e.kind === 'tweak') {
+    // A setting is named by its catalogue id; a choice (the power plan) has no on/off and says
+    // what was chosen (the plan's name), or just "changed" when the entry carries none.
+    const name = t.disk.tweaks.title[e.subject] ?? e.subject;
+    if (e.on !== null) return h.switched(name, e.on);
+    return e.label ? h.chose(name, e.label) : h.changed(name);
+  }
   if (e.kind !== 'cleanup') return h.switched(e.label || e.subject, e.on ?? false);
   const what = e.subject === 'scan' ? h.fromScan : (t.disk.tidy.category[e.subject] ?? e.subject);
   const size = formatBytes(e.bytes);
@@ -21,6 +32,7 @@ export function entryText(e: CareEntry): string {
 function wayBack(e: CareEntry): string {
   const h = t.disk.history;
   if (e.kind === 'cleanup') return e.permanent ? h.noWayBack : h.restoreHint;
+  if (e.stale) return h.stale;
   return e.undone ? h.undone : e.canUndo ? h.canUndo : h.undoNewerFirst;
 }
 
@@ -53,7 +65,13 @@ export function HistoryTab() {
     optimize
       .undo(e.id)
       .then(() => toast(h.undoDone))
-      .catch(() => toast(h.undoFailed))
+      .catch((err: unknown) =>
+        toast(
+          err instanceof Error && err.message === 'changed-elsewhere'
+            ? h.changedElsewhere
+            : h.undoFailed,
+        ),
+      )
       .finally(() => setReload((n) => n + 1));
   };
 

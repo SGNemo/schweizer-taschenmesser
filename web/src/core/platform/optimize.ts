@@ -52,7 +52,6 @@ export type CareTool =
   | 'recycleBin'
   | 'startupApps'
   | 'systemProtection'
-  | 'optimizeDrives'
   | 'powerSettings';
 
 export type CareKind = 'cleanup' | 'startup' | 'tweak';
@@ -72,6 +71,8 @@ export interface CareEntry {
   on: boolean | null;
   canUndo: boolean;
   undone: boolean;
+  /** Changed elsewhere (in Windows itself) since: cannot be taken back here any more. */
+  stale?: boolean;
 }
 
 export interface CareHistory {
@@ -85,6 +86,79 @@ export interface CareHistory {
   unreadable: boolean;
 }
 
+export type StartupScope = 'user' | 'machine';
+export type StartupSource = 'run' | 'folder';
+
+/** One program that starts with Windows. */
+export interface StartupItem {
+  /** Names the entry for `setStartup`; nothing else is ever sent back. */
+  id: string;
+  name: string;
+  /** The command line, or the file name in the startup folder. For display only. */
+  command: string;
+  /** Best guess at the program (the executable's name without its ending); may be empty. */
+  program: string;
+  /** `machine`: starts for every account of the PC and is only shown. */
+  scope: StartupScope;
+  source: StartupSource;
+  enabled: boolean;
+  switchable: boolean;
+}
+
+export type TweakGroup = 'appearance' | 'explorer' | 'privacy' | 'power';
+export type TweakRisk = 'none' | 'low';
+
+/** One option of a choice (a power plan of this PC, named by Windows). */
+export interface TweakOption {
+  id: string;
+  label: string;
+}
+
+/** One Windows setting of the catalogue with its state on this PC. Texts are keyed by `id`. */
+export interface TweakState {
+  id: string;
+  group: TweakGroup;
+  kind: 'toggle' | 'choice';
+  /**
+   * A switch: its state; `null` = no value set yet (Windows decides), or – with `custom` – a
+   * stored value that is neither this catalogue's on nor its off.
+   */
+  on: boolean | null;
+  /** A value is stored that is neither on nor off here: never call it Windows' default. */
+  custom: boolean;
+  /** A choice: the id of the active option. */
+  choice: string | null;
+  options: TweakOption[];
+  /** Changed from this page: the state from before is stored. */
+  changedHere: boolean;
+  /** Exists on this Windows; the page hides the others. */
+  applicable: boolean;
+  /**
+   * The stored value could be read. When not, the setting is shown as not changeable: without the
+   * value from before there is no way back.
+   */
+  readable: boolean;
+  risk: TweakRisk;
+  /** The Microsoft page that documents the mechanism. */
+  sourceUrl: string;
+  /** `explorer`: open Explorer windows show it after a refresh. */
+  refresh: 'none' | 'explorer';
+}
+
+/** Outcome of "Alle zurücksetzen": setting ids. */
+export interface TweakReset {
+  restored: string[];
+  failed: string[];
+  /** Changed in Windows itself since: left as they are. */
+  left: string[];
+}
+
+/** Read-only facts for the drive cards; `null` = not known. */
+export interface CareHealth {
+  /** TRIM is switched off in Windows (true), on (false) or unknown (null). */
+  trimOff: boolean | null;
+}
+
 export interface OptimizeService {
   /** The Windows-only parts exist here (tools; autostart and settings build on it). */
   windows: boolean;
@@ -95,6 +169,8 @@ export interface OptimizeService {
   cleanupScan(onProgress: (p: CleanupProgress) => void): Promise<CleanupResult>;
   cancelCleanup(): Promise<void>;
   history(): Promise<CareHistory>;
+  /** Read-only health facts (nothing is changed). */
+  health(): Promise<CareHealth>;
   /**
    * Takes a change back (only where `canUndo`): the values from before are put in place again.
    * Rejects with `Error(code)`, e.g. `newer-change`, `already-undone`, `nothing-to-undo`.
@@ -102,6 +178,23 @@ export interface OptimizeService {
   undo(id: number): Promise<void>;
   /** Rejects with `Error('unsupported')` where the tool does not exist. */
   openTool(tool: CareTool): Promise<void>;
+  /** What starts with Windows for this account. Rejects with `Error('unsupported')` elsewhere. */
+  startupList(): Promise<StartupItem[]>;
+  /**
+   * Switches one of the user's own entries on or off (the way Task Manager does; the entry itself
+   * stays). Resolves with the id of the history entry (for `undo`), or `null` when the entry
+   * already was in that state. Rejects with `Error(code)`, e.g. `read-only`, `unknown-entry`.
+   */
+  setStartup(id: string, enabled: boolean): Promise<number | null>;
+  /** The catalogue of Windows settings with their state (Windows only). */
+  tweaks(): Promise<TweakState[]>;
+  /**
+   * Switches a setting (`true`/`false`, or the id of a choice). The state from before is stored
+   * first and the change appears in `history()` with `canUndo`. Rejects with `Error(code)`.
+   */
+  setTweak(id: string, target: boolean | string): Promise<number | null>;
+  /** Puts every setting changed here back to the state from before its first change. */
+  resetTweaks(): Promise<TweakReset>;
 }
 
 const unsupported = (): Promise<never> => Promise.reject(new Error('unsupported'));
@@ -112,6 +205,12 @@ export const noOptimize: OptimizeService = {
   cleanupScan: unsupported,
   cancelCleanup: unsupported,
   history: unsupported,
+  health: unsupported,
   undo: unsupported,
   openTool: unsupported,
+  startupList: unsupported,
+  setStartup: unsupported,
+  tweaks: unsupported,
+  setTweak: unsupported,
+  resetTweaks: unsupported,
 };
