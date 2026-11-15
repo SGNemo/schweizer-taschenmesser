@@ -53,6 +53,7 @@ export { SelectionBar } from './SelectionBar';
 export { RowMenu, type RowMenuItem } from './RowMenu';
 export { DateChips } from './DateChips';
 export { useMediaQuery } from './useMediaQuery';
+export { useCardActionVariant } from './cardAction';
 export { useSelection } from './useSelection';
 export { useOpenParam } from './useOpenParam';
 export { WidgetList, type WidgetEntry } from './WidgetList';

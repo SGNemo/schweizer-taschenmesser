@@ -4,18 +4,20 @@ import { test } from './helpers';
 import { DESKTOP, PHONE, startSeeded } from './guards';
 
 /**
- * How long Wetter, Listen, Chat and Musik hold what waits for their first reads (0b-8 follow-up d), measured, not
- * judged. Per run two numbers: `held`, from the first hold marker in the page to the last one gone – the frame's hold
- * (`[data-held]`, weather and music) or the pages' own row holds (`lists-reading`, `chat-reading`, which appear only
- * once the list or the chat setup is known); and `shown`, wall-clock time from `page.goto` until the page's main part
- * is there with no marker left (boot, code, reads and hold together; the seed fixture fixes the page clock, so this is
- * timed from the test). Plus the layout shift of the whole open. Three runs per page and device: the first visit (weather
- * without a cached forecast), a second load, and a slow one whose answers of the mocked services (open-meteo, Spotify)
- * arrive only after 1.5 s, on a 4× slower CPU (lists and chat read nothing over the network; the slow CPU is what slows
- * their reads). The lines go to the console and the test's annotations.
- *
- * Measurement only, not a CI gate (`open-shift*.seed.spec.ts` guard the CLS): it runs only with `MEASURE_HOLD=1`,
- * e.g. `MEASURE_HOLD=1 npx playwright test --project=seed-dev e2e/seed/open-hold.seed.spec.ts --workers=1`.
+ * How long Wetter and Musik (with `MEASURE_HOLD=1` also Listen and Chat) hold what waits for their first reads (0b-8
+ * follow-up d), and that no open makes them jump, a slow network included. Per run two numbers: `held`, from the first
+ * hold marker in the page to the last one gone – the frame's hold (`[data-held]`, weather and music) or the pages' own
+ * row holds (`lists-reading`, `chat-reading`, which appear only once the list or the chat setup is known); and `shown`,
+ * wall-clock time from `page.goto` until the page's main part is there with no marker left (boot, code, reads and hold
+ * together; the seed fixture fixes the page clock, so this is timed from the test). Plus the layout shift of the whole
+ * open. Three runs per page and device, all in one seeded start per device: the first visit (weather without a cached
+ * forecast), a second load, and a slow one whose answers of the mocked services (open-meteo, Spotify) arrive only after
+ * 1.5 s, on a 4× slower CPU (lists and chat read nothing over the network; the slow CPU is what slows their reads). The
+ * lines go to the console and the test's annotations. Every run holds the CLS at ≤ 0.05: after the frame's bound
+ * (`FIRST_READ_HOLD_MS`) weather paints a head of its final form and puts a late severe-weather hint under the head;
+ * music keeps the player's rows at their height until the player is read. Not covered: a slow first visit ever (no
+ * stage room stored yet, U01): the slow run is the third visit, so the weather's pending head keeps the stored room
+ * (measured by hand without it: phone CLS 0.043, the fact chips wrapping into a second row).
  */
 const CLS_MAX = 0.05;
 const SLOW_ANSWER_MS = 1500;
@@ -109,7 +111,7 @@ async function measure(page: Page, label: string, shown: number) {
  * The answers of the hosts the page mocks come only after `SLOW_ANSWER_MS` (only those: a delayed route falls back to
  * the mock, never to a real host); CPU 4× slower (Chromium only).
  */
-async function slowDown(page: Page, hosts: readonly string[]) {
+async function slowDown(page: Page, hosts: readonly string[]): Promise<() => Promise<void>> {
   const late = (route: Parameters<Parameters<Page['route']>[1]>[0]) =>
     new Promise<void>((done) =>
       setTimeout(() => void route.fallback().then(done, done), SLOW_ANSWER_MS),
@@ -117,9 +119,14 @@ async function slowDown(page: Page, hosts: readonly string[]) {
   for (const host of hosts) await page.route(host, late);
   const cdp = await page.context().newCDPSession(page);
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  // Back to normal for the next page of the same test.
+  return async () => {
+    for (const host of hosts) await page.unroute(host, late);
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+  };
 }
 
-const PAGES = {
+const ALL_PAGES = {
   weather: {
     path: '/weather',
     async prepare(page: Page) {
@@ -158,34 +165,49 @@ const PAGES = {
   },
 } as const;
 
+/**
+ * In CI: the two pages whose hold ends at the bound (weather and music). Lists and chat hold their rows for well
+ * under 0.3 s, and `open-shift.seed.spec.ts` guards their first visit; `MEASURE_HOLD=1` measures them too.
+ */
+const PAGES = Object.fromEntries(
+  Object.entries(ALL_PAGES).filter(
+    ([name]) => !!process.env.MEASURE_HOLD || name === 'weather' || name === 'music',
+  ),
+) as Partial<typeof ALL_PAGES>;
+
 for (const [device, viewport] of [
   ['desktop', DESKTOP],
   ['phone', PHONE],
 ] as const) {
   const phone = device === 'phone';
   test.describe(`hold time when a page opens – ${device}`, () => {
-    test.skip(!process.env.MEASURE_HOLD, 'measurement only: MEASURE_HOLD=1');
     test.use({
       viewport,
       ...(phone ? { isMobile: true, hasTouch: true } : {}),
       seeded: { scale: 'medium', ...(phone ? {} : { desktop: true }), preview: true },
     });
 
-    for (const [name, p] of Object.entries(PAGES)) {
-      test(`${p.path}: first visit, second visit, slow answers`, async ({ page }) => {
-        test.setTimeout(180_000);
-        const after = await p.prepare(page);
-        await watch(page);
-        await startSeeded(page, { phone });
-        await after();
+    // One seeded start per device for all four pages (a start per page cost the seed shard its time limit).
+    test('Wetter, Listen, Chat, Musik: first visit, second visit, slow answers', async ({
+      page,
+    }) => {
+      test.setTimeout(360_000);
+      const afters = [];
+      for (const p of Object.values(PAGES)) afters.push(await p!.prepare(page));
+      await watch(page);
+      await startSeeded(page, { phone });
+      for (const after of afters) await after();
 
-        const runs = [];
+      for (const [name, p] of Object.entries(PAGES) as [
+        string,
+        (typeof ALL_PAGES)[keyof typeof ALL_PAGES],
+      ][]) {
         for (const run of [
           'first visit',
           'second visit',
           p.hosts.length ? 'slow (1.5 s, CPU 4×)' : 'slow (CPU 4×)',
         ]) {
-          if (run.startsWith('slow')) await slowDown(page, p.hosts);
+          const restore = run.startsWith('slow') ? await slowDown(page, p.hosts) : undefined;
           if (run !== 'second visit' && 'fresh' in p) await p.fresh(page);
           const started = Date.now();
           await page.goto(p.path);
@@ -196,11 +218,19 @@ for (const [device, viewport] of [
             { polling: 16, timeout: 15_000 },
           );
           const shown = Date.now() - started;
-          runs.push(await measure(page, `${name} ${device}, ${run}`, shown));
+          const label = `${name} ${device}, ${run}`;
+          const result = await measure(page, label, shown);
+          // The mocked week has a thunderstorm: the hint stays (#791), under the head when it came late.
+          if (name === 'weather') {
+            const hint = run.startsWith('slow')
+              ? page.getByTestId('weather-late-warning').getByTestId('weather-warning')
+              : page.getByTestId('weather-warning');
+            await expect(hint, label).toBeVisible();
+          }
+          expect.soft(result.cls, `layout shift, ${label}`).toBeLessThanOrEqual(CLS_MAX);
+          await restore?.();
         }
-        expect(runs[0]!.cls, 'layout shift, first visit').toBeLessThanOrEqual(CLS_MAX);
-        expect(runs[1]!.cls, 'layout shift, second visit').toBeLessThanOrEqual(CLS_MAX);
-      });
-    }
+      }
+    });
   });
 }

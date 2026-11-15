@@ -234,10 +234,11 @@ export interface ModuleIdentity {
    * The module's entry page paints parts that come from reads after the first paint (0b-8): the weather's
    * severe-weather hint above the head (`HeroSlot area="notice"`) needs the forecast; the music stage and the page
    * below it need the connection, what plays, the player and the start view. The frame lays the notice, the head and
-   * the page out unpainted until the page says those reads are back (`useHeadReady`), at most 1.5 s, so nothing that
-   * arrives with them pushes down what is already on the screen. Hook: `layout/firstReadHold.ts`. Guards:
-   * `e2e/seed/open-shift.seed.spec.ts`, `open-shift-music.seed.spec.ts`; hold times: `open-hold.seed.spec.ts`. Was
-   * `notice` for the weather until 2026-11.
+   * the page out unpainted until the page says those reads are back (`useHeadReady`), at most `FIRST_READ_HOLD_MS`
+   * (0.6 s; after that the page is `late` and keeps its form), so nothing that arrives with them pushes down what is
+   * already on the screen. Hook: `layout/firstReadHold.ts`. Guards: `e2e/seed/open-shift.seed.spec.ts`,
+   * `open-shift-music.seed.spec.ts`, `open-hold.seed.spec.ts` (slow network too). Was `notice` for the weather until
+   * 2026-11.
    */
   firstRead?: boolean;
 }

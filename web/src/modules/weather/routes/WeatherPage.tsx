@@ -12,7 +12,9 @@ import { HourCards } from '../components/HourCards';
 import { PlaceChips } from '../components/PlaceChips';
 import { WeatherAir } from '../components/WeatherAir';
 import { WeatherChart } from '../components/WeatherChart';
-import { WeatherHero } from '../components/WeatherHero';
+import { WarningNotice } from '../components/WarningNotice';
+import { WeatherHero, WeatherHeroPending } from '../components/WeatherHero';
+import { weatherWarnings } from '../warnings';
 import { HeroSlot, SignatureMark, Sky } from '@/ui/identity';
 import { useViewedForecast } from '../useViewedForecast';
 import styles from './weather.module.css';
@@ -32,13 +34,11 @@ export default function WeatherPage() {
   const [settings] = useWeatherSettings();
   const { index, places, weather, loading } = useViewedForecast(requested);
   // The hint above the head comes with the forecast: the frame paints head and page once the first read is back
-  // (`identity.firstRead`, at most 1.5 s), so the hint never pushes them down (0b-8). Nothing to wait for when fetching is
-  // off or the device is offline: no forecast will come, so the page paints at once.
+  // (`identity.firstRead`, at most 0.6 s), so the hint never pushes them down (0b-8). Nothing to wait for when
+  // `loading` is false (no place, switched off, offline, or the request answered or failed): no forecast will come.
+  // `late`: the frame stopped waiting first (a slow network); a hint that comes later goes under the head instead.
   const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
-  useHeadReady(
-    !!settings &&
-      (!settings.place || !!weather || !loading || !isWeatherActive(settings) || offline),
-  );
+  const late = useHeadReady(!!settings && (!!weather || !loading));
 
   if (!settings) return null;
   const title = (weather?.place ?? settings.place ?? '').split(',')[0] || tx.title;
@@ -67,15 +67,35 @@ export default function WeatherPage() {
   const hours = weather ? hourRows(weather.forecast, nowIso) : [];
   const days = weather ? dayRows(weather.forecast, nowIso.slice(0, 10)) : [];
   const ready = !!weather?.forecast.hours && !!weather.forecast.days;
+  const warnings = weather ? weatherWarnings(days) : [];
 
   return (
     <>
       <PageTitle title={title} />
-      {weather ? <WeatherHero weather={weather} /> : null}
+      {weather ? (
+        <WeatherHero weather={weather} warnings={late ? [] : warnings} />
+      ) : loading ? (
+        <WeatherHeroPending />
+      ) : null}
       <PlaceChips index={index} places={places} />
+      {/* A hint that came after the frame stopped waiting sits where the loading line was, under the head: nothing
+          painted is below it yet, so it pushes nothing, and it stays in sight on the phone. */}
+      <div aria-live="polite" data-testid="weather-late-warning">
+        {late && warnings.length > 0 ? (
+          <WarningNotice warnings={warnings} today={nowIso.slice(0, 10)} />
+        ) : null}
+      </div>
       {!weather ? (
         <p className={styles.loading} role="status">
-          {loading ? tx.previewLoading : tp.offline}
+          {/* Nothing is coming: switched off or offline says so (the settings link is in the foot); otherwise
+              the request failed (it is asked again later). */}
+          {loading
+            ? tx.previewLoading
+            : !isWeatherActive(settings)
+              ? tp.switchedOff
+              : offline
+                ? tp.offline
+                : tx.unavailable}
         </p>
       ) : (
         <div className={styles.layout} data-testid="weather-preview">
@@ -106,16 +126,21 @@ export default function WeatherPage() {
           </aside>
         </div>
       )}
-      <p className={styles.foot}>{tx.ratingHint}</p>
-      <p className={styles.foot}>
-        <Link to={SETTINGS}>{tx.settings}</Link>
-      </p>
-      <p className={styles.foot} data-testid="weather-preview-credit">
-        {tx.attribution}{' '}
-        <a href="https://open-meteo.com/" target="_blank" rel="noreferrer noopener">
-          {tx.attributionLink}
-        </a>
-      </p>
+      {/* The foot comes with the forecast: under a loading line it would be pushed down when the forecast arrives. */}
+      {weather || !loading ? (
+        <>
+          <p className={styles.foot}>{tx.ratingHint}</p>
+          <p className={styles.foot}>
+            <Link to={SETTINGS}>{tx.settings}</Link>
+          </p>
+          <p className={styles.foot} data-testid="weather-preview-credit">
+            {tx.attribution}{' '}
+            <a href="https://open-meteo.com/" target="_blank" rel="noreferrer noopener">
+              {tx.attributionLink}
+            </a>
+          </p>
+        </>
+      ) : null}
     </>
   );
 }
