@@ -75,6 +75,7 @@ describe('feeds page: adding made easy', () => {
   it('reads an address only where it ends in a top-level domain', () => {
     expect(typedAddress('heise.de')).toBe('https://heise.de/');
     expect(typedAddress('u.s.')).toBeUndefined();
+    expect(typedAddress('192.168.1.20/rss')).toBe('https://192.168.1.20/rss');
     expect(typedAddress('wetter morgen')).toBeUndefined();
   });
 });

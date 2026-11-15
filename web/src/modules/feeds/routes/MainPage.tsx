@@ -89,8 +89,10 @@ export default function MainPage() {
         siteUrl: entry.site,
       });
       toast(s.catalog.addedToast(entry.title));
-    } finally {
+    } catch (e) {
+      // Kept on success: the live list may not know the new feed yet.
       adding.current.delete(key);
+      throw e;
     }
   }
 

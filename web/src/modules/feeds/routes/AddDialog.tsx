@@ -18,8 +18,11 @@ export function typedAddress(query: string): string | undefined {
   const q = query.trim();
   if (!q.includes('.') || /\s/.test(q)) return undefined;
   const url = normalizeFeedUrl(q);
-  // "u.s." is a search word, not a host: an address ends in a top-level domain of letters.
-  return url && /\.[a-z]{2,}$/i.test(new URL(url).hostname) ? url : undefined;
+  // "u.s." is a search word, not a host: an address ends in a top-level domain (or is an IPv4 address).
+  const host = url ? new URL(url).hostname : '';
+  return /\.([a-z]{2,}|xn--[a-z0-9-]+)$/i.test(host) || /^\d{1,3}(\.\d{1,3}){3}$/.test(host)
+    ? url
+    : undefined;
 }
 
 /**
