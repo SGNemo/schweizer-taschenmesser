@@ -161,4 +161,10 @@ export const device: Strings['device'] = {
     codeHint: 'You can give the stop code in a search or to support.',
     unreadable: 'The event log cannot be read right now.',
   },
+  widget: {
+    memory: (pct: number) => `Memory ${pct} %`,
+    uptime: (value: string) => `running for ${value}`,
+    battery: (pct: number) => `Battery ${pct} %`,
+    charging: 'charging',
+  },
 };

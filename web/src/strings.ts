@@ -9316,6 +9316,12 @@ export const de = {
       codeHint: 'Den Stoppcode kannst du bei einer Suche oder beim Support angeben.',
       unreadable: 'Das Ereignisprotokoll lässt sich gerade nicht lesen.',
     },
+    widget: {
+      memory: (pct: number) => `Arbeitsspeicher ${pct} %`,
+      uptime: (value: string) => `läuft seit ${value}`,
+      battery: (pct: number) => `Akku ${pct} %`,
+      charging: 'lädt',
+    },
   },
 } as const;
 

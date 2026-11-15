@@ -1,0 +1,7 @@
+/* The widget's line of core numbers under the status sentence: calm, muted, tokens only. */
+.facts {
+  margin: var(--space-1) 0 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: var(--font-num);
+}
