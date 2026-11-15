@@ -272,7 +272,7 @@ describe('page Gerätestatus', () => {
     });
     expect(screen.getByTestId('device-hub')).toHaveTextContent('Nicht erreichbar');
     expect(screen.getByTestId('device-hub')).toHaveAttribute('data-attention', 'true');
-    expect(screen.getByTestId('device-next-backup')).toHaveTextContent('Passphrase fehlt');
+    expect(screen.getByTestId('device-next-backup')).toHaveTextContent('Passwort fehlt');
     expect(screen.getByTestId('device-next-backup')).toHaveAttribute('data-attention', 'true');
   });
 

@@ -67,7 +67,7 @@ describe('device widget (catalogue type: status)', () => {
       value: { enabled: true, interval: 'daily', keep: 7 },
     });
     await view();
-    expect(screen.getByText('Nächstes Backup: Passphrase fehlt')).toBeInTheDocument();
+    expect(screen.getByText('Nächstes Backup: Passwort fehlt')).toBeInTheDocument();
     expect(screen.queryByText('Nichts Dringendes')).toBeNull();
   });
 
