@@ -200,7 +200,7 @@ export function plainText(raw: string | null | undefined): string | undefined {
   if (!raw) return undefined;
   // Tags go until none is left (a nested `<<b>x>` would otherwise leave one behind).
   let stripped = raw;
-  for (let prev = ''; prev !== stripped; ) {
+  for (let prev = ''; prev !== stripped;) {
     prev = stripped;
     stripped = stripped.replace(/<[^<>]*>/g, '');
   }
