@@ -331,14 +331,14 @@
     },
     "d1920--planner": {
       "height": 1080,
-      "buttons": 32,
+      "buttons": 38,
       "links": 19,
-      "icons": 40,
-      "firstScreenActions": 50,
+      "icons": 58,
+      "firstScreenActions": 56,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
-      "colouredAboveFold": 7,
+      "colouredAboveFold": 6,
       "signatureBlocks": 0
     },
     "d1920--remote": {
@@ -906,15 +906,15 @@
       "signatureBlocks": 0
     },
     "p412--planner": {
-      "height": 967,
-      "buttons": 17,
+      "height": 1934,
+      "buttons": 19,
       "links": 14,
-      "icons": 13,
+      "icons": 31,
       "firstScreenActions": 30,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
-      "colouredAboveFold": 2,
+      "colouredAboveFold": 6,
       "signatureBlocks": 0
     },
     "p412--reminders": {
