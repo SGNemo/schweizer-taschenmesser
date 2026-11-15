@@ -8,6 +8,7 @@ import { t } from '@/strings';
 import { Card, Icon, ItemList, ItemRow } from '@/ui';
 import type { BoardDay, WaitingRow } from '../board';
 import { compact } from './capacity';
+import { ActionLead, LinkChips, useRowLinks } from './RowLinks';
 import { sourceOf } from './ThingRow';
 import styles from '../routes/planner.module.css';
 
@@ -88,10 +89,48 @@ function deadlineText(d: Pick<NextDeadline, 'date' | 'time'>): string {
   return d.time ? `${date} ${d.time}` : date;
 }
 
+/**
+ * One row of „Nächste Fristen“ in the row grammar of the sheet (K1b): the source's action in the lead slot (else
+ * its icon), the title opens the thing, the date and the source word, the chip line. No ⋯: the card points at
+ * the thing, its day row (or its source) holds the steps.
+ */
+function DeadlineRow({ d }: { d: NextDeadline }) {
+  const navigate = useNavigate();
+  const source = sourceOf(d.entry);
+  const links = useRowLinks(d.entry);
+  const action = d.entry.action;
+  return (
+    <ItemRow
+      lead={
+        action ? (
+          <ActionLead action={action} title={d.title} />
+        ) : (
+          <span className={styles.lead} aria-hidden="true">
+            <Icon name={source.icon} size={20} />
+          </span>
+        )
+      }
+      title={
+        <span className={styles.thingTitle} title={d.title}>
+          {d.title}
+        </span>
+      }
+      onOpen={() => void navigate(d.entry.to)}
+      meta={
+        <span className={styles.meta}>
+          <span>{deadlineText(d)}</span>
+          <span aria-hidden="true">·</span>
+          <span>{source.word}</span>
+        </span>
+      }
+      below={links.length > 0 ? <LinkChips views={links} /> : undefined}
+    />
+  );
+}
+
 /** The card „Nächste Fristen“: title, date and source word; a row opens the thing in its module. No rows, no card. */
 function NextDeadlines({ rows }: { rows: readonly NextDeadline[] }) {
   const id = useId();
-  const navigate = useNavigate();
   if (rows.length === 0) return null;
   return (
     <Card className={styles.sheet} aria-labelledby={id} data-testid="planner-deadlines">
@@ -99,32 +138,9 @@ function NextDeadlines({ rows }: { rows: readonly NextDeadline[] }) {
         {t.planner.ctx.deadlines}
       </h2>
       <ItemList label={t.planner.ctx.deadlines}>
-        {rows.map((d) => {
-          const source = sourceOf(d.entry);
-          return (
-            <ItemRow
-              key={d.itemKey}
-              lead={
-                <span className={styles.lead} aria-hidden="true">
-                  <Icon name={source.icon} size={20} />
-                </span>
-              }
-              title={
-                <span className={styles.thingTitle} title={d.title}>
-                  {d.title}
-                </span>
-              }
-              onOpen={() => void navigate(d.entry.to)}
-              meta={
-                <span className={styles.meta}>
-                  <span>{deadlineText(d)}</span>
-                  <span aria-hidden="true">·</span>
-                  <span>{source.word}</span>
-                </span>
-              }
-            />
-          );
-        })}
+        {rows.map((d) => (
+          <DeadlineRow key={d.itemKey} d={d} />
+        ))}
       </ItemList>
     </Card>
   );

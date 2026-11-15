@@ -48,3 +48,8 @@
 .danger {
   color: var(--danger);
 }
+/* Said, not offered: the muted ink (AA on the menu), no pointer. */
+.item[aria-disabled='true'] {
+  color: var(--text-muted);
+  cursor: default;
+}
