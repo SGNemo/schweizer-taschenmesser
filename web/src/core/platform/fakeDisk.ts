@@ -672,7 +672,7 @@ export function createFakeDisk(): DiskService {
       cleanupCancelled = true;
     },
     async history() {
-      return { entries: [...careEntries].reverse(), recovered: false };
+      return { entries: [...careEntries].reverse(), recovered: false, unreadable: false };
     },
     async undo(id) {
       const entry = careEntries.find((e) => e.id === id);

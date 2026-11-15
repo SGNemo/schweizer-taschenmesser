@@ -89,6 +89,10 @@ EN-E1. _Windows-Portable:_ Einstellungen durchklicken – Kategorien-Leiste link
 Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währenddessen verschieben, in der Titelleiste steht nie „Keine Rückmeldung“, und ein Wechsel zu einem anderen Modul zeigt dessen Inhalt statt „…“. Hintergrund und Einordnung je Command: [perf/MAIN-THREAD-COMMANDS-2026-11.md](perf/MAIN-THREAD-COMMANDS-2026-11.md).
 - **MT-H6 Einstellungen und „Über Nemo“:** „Mit Windows starten“ ein und aus: der Schalter bleibt nach erneutem Öffnen der Seite auf dem gewählten Stand (Task-Manager → Autostart zeigt Nemo bzw. nicht). „Datenordner öffnen“ öffnet den Explorer. Im Systemmonitor „Task-Manager öffnen“ startet ihn. ☐
 
+#### Geheimnis nur abfragen, nicht lesen (`fix/secret-store-has`) – nur auf Windows prüfbar
+
+- **SH1 Backup-Passphrase da/fehlt:** Portable-Exe. Einstellungen → Sync & Backup → Backup → „Automatisch sichern“ an, ohne Passphrase: Hinweis unter dem Passwortfeld „Mindestens 8 Zeichen …“, Gerätestatus → Nächstes Backup „Passphrase fehlt“. Passphrase speichern: Hinweis „Passwort gespeichert …“, Gerätestatus zeigt den Termin; nach Neustart der App beides unverändert. Konnektor mit eigener Client-ID (z. B. Spotify): nach Neustart zeigt das Feld Client-ID weiter `••••••••`. ☐
+
 ### Modul-Bibliothek
 
 #### Bibliotheken in Identität v3 (Paket 2) – nur von Hand prüfbar
@@ -191,7 +195,7 @@ FS-R10. _Abschnitt ohne Hub:_ Heimnetz-Abgleich aus: der Abschnitt zeigt zwei ku
 
 #### Modul-Rahmen, Wetter und Musik (Branch `feat/module-shell-identity`) – nur auf Geräten prüfbar
 
-- **PK4 Ziehen im Zeitraster (≥ 1400 px):** Wochenansicht: Termin ziehen verschiebt (auch auf einen anderen Tag), unteren Rand ziehen ändert die Länge, über leere Fläche ziehen öffnet „Neuer Termin“ mit Beginn/Ende; „Rückgängig“ stellt wieder her; mit Tastatur `Alt+↓` (15 min) und `Alt+Umschalt+↓`; eine Serie lässt sich nicht ziehen (Hinweis). ☐
+- **PK4 Ziehen im Zeitraster (≥ 1400 px):** Wochenansicht: Termin ziehen verschiebt (auch auf einen anderen Tag), unteren Rand ziehen ändert die Länge, über leere Fläche ziehen öffnet „Termin eintragen“ mit Beginn/Ende; „Rückgängig“ stellt wieder her; mit Tastatur `Alt+↓` (15 min) und `Alt+Umschalt+↓`; eine Serie lässt sich nicht ziehen (Hinweis). ☐
 
 ### Musik
 
@@ -216,6 +220,11 @@ KS-3. _Windows Hello:_ Accounts → Tresor anlegen/entsperren → „Import, Exp
 KS-4. _Abbruch:_ Beim Hello-Fenster „Abbrechen" → Tresor bleibt gesperrt, Passwortfeld und Button „Mit Biometrie entsperren" sind da. ☐
 KS-5. _Deaktivieren:_ „Biometrisches Entsperren deaktivieren" → beim nächsten Sperren kein Hello-Fenster mehr; der Eintrag `bio:vault-dek:…` ist aus dem Credential Manager verschwunden. ☐
 KS-6. _Ohne Hello (kein PIN/Gesicht eingerichtet):_ Abschnitt zeigt „Nicht verfügbar…", nichts bricht. ☐
+KS-13. _Siegel nur über Hello (`fix/secure-store-bio-prefix`):_ Dev-Build (`npm run tauri -- dev`), biometrisches Entsperren aktiv, Tresor gesperrt. In den DevTools (F12) `window.__TAURI_INTERNALS__.invoke('plugin:secure-store|get', { request: { name: 'bio:vault-dek:<id>' } })` (`<id>` aus dem Credential-Manager-Eintrag) → Fehler „reserved name", kein Schlüssel; dasselbe mit `set` und `delete`, der Eintrag bleibt unverändert. Danach „Mit Biometrie entsperren" → Hello-Fenster, Tresor offen. ☐
+KS-14. _Hello-Bindung, neu aktivieren (`feat/secure-store-hello-bound-dek`):_ Biometrisches Entsperren aus- und wieder einschalten → Windows Hello fragt (Anzahl der Abfragen notieren: 1 oder 2), das Fenster liegt **vor** der App (falls nicht sichtbar: Alt+Tab bzw. Taskleiste – dann als Fehler notieren; auch ein „hängendes“ Entsperren bedeutet meist ein verdecktes Hello-Fenster). Sperren → „Mit Biometrie entsperren" → ein Hello-Fenster, Tresor offen. **Noch einmal** sperren und entsperren → wieder offen (prüft, dass Hello gleich signiert). Abbrechen → Tresor bleibt zu, nächster Versuch klappt. ☐
+KS-15. _Umstieg von der alten Version:_ Alles mit der **Dev-Preview** (sie hat eigene Daten, die stabile Version sieht diese Einträge nicht). Vor dem Merge dieses PRs: Dev-Preview starten, biometrisches Entsperren aktivieren, App schließen (PR schon gemergt: KS-15 entfällt, nur KS-14 und KS-16 prüfen). Nach dem Merge: Dev-Preview aktualisieren (erscheint nach dem Lauf auf `develop`) → das erste Hello-Fenster **abbrechen**, KS-16 ausführen (Wert noch ohne `h1:`), dann „Mit Biometrie entsperren" → Windows fragt 1- bis 2-mal (notieren), Tresor offen; ab dem zweiten Mal nur noch eine Abfrage. ☐
+KS-16. _Gespeicherter Wert ist nicht der Schlüssel:_ PowerShell als normaler Nutzer öffnen. `Set-ExecutionPolicy -Scope Process Bypass` (gilt nur für dieses Fenster), dann `Install-Module CredentialManager -Scope CurrentUser` (Modul aus der PowerShell Gallery; Rückfrage „nicht vertrauenswürdiges Repository" mit J bestätigen; danach mit `Uninstall-Module CredentialManager` wieder entfernbar). `cmdkey /list | findstr bio:` → aus der Zeile `Ziel: LegacyGeneric:target=…` **nur den Text nach `target=`** kopieren (Dev-Preview: endet auf `.dev`), dann `(Get-StoredCredential -Target '<kopierter Text>').GetNetworkCredential().Password` → der Wert beginnt mit `h1:` (im Zwischenschritt von KS-15 dagegen noch ohne `h1:`). ☐
+KS-17. _Hello zurückgesetzt:_ **Nur mit einem Test-Windows-Konto oder in einer VM** – ein PIN-Reset löscht alle Hello-Schlüssel des Kontos (auch Passkeys anderer Apps). Im Test-Konto: Einstellungen → Konten → Anmeldeoptionen → PIN → „Ich habe meine PIN vergessen" und neue PIN setzen → „Mit Biometrie entsperren" meldet „nicht mehr gültig", Master-Passwort öffnet, Neu-Aktivieren klappt. ☐
 
 #### Launch-Review: Handtests (aus STATUS verschoben, 2026-11-10; Bericht [security/LAUNCH-REVIEW-2026-10-06.md](security/LAUNCH-REVIEW-2026-10-06.md))
 
@@ -298,8 +307,20 @@ Dev-Preview-Exe. Bei jedem Punkt gilt zusätzlich: das Fenster lässt sich währ
 - **S6-4 Browser, privat:** Einen privaten Tab öffnen, eine Seite laden, den Tab schließen: „Tab neu öffnen“ nennt diese Seite nicht. In einem leeren privaten Tab steht kein „Tab neu öffnen“. Nach „Daten löschen“ ist der zuletzt geschlossene Tab vergessen; bei eingeschaltetem Verlauf bietet die Startansicht dann die letzte Seite des Verlaufs an (Verlauf und Lesezeichen bleiben bei „Daten löschen“). Nach „Verlauf löschen“ steht kein Angebot mehr da. ☐
 - **S6-5 Browser, Tabs:** Zwei Tabs öffnen: der offene Tab ist grau hinterlegt und fett, der andere ohne Fläche; in der Tab-Übersicht ebenso, ohne farbigen Rand. Die Webseite selbst liegt ohne Rahmen in der Fläche und folgt dem Fenster beim Vergrößern. ☐
 - **S6-6 Dieser PC:** Oben rechts im Kopf steht der belegte Platz des Systemlaufwerks mit dem Laufwerksnamen darunter; darunter keine Ring-Leiste mehr. „Laufwerke · System“ sind Reiter am Kopf; „System“ zeigt die Live-Werte, „Laufwerke“ die Karten mit „Scannen“. Ein Scan startet wie bisher; Löschen fragt wie bisher (Plan, bei großen oder endgültigen Löschungen die zweite Bestätigung). ☐
-- **S6-7 Downloads:** Läuft ein Download, steht oben rechts „1 läuft“ mit Prozent und Tempo; läuft keiner, steht dort nichts. „Download hinzufügen“ ist der eine gefüllte Knopf oben rechts; „Zielordner zeigen“ steht als neutraler Knopf daneben und öffnet mit einem Klick den Ordner des letzten Downloads. Der Satz „Dateien landen nur im gewählten Ordner. Nemo öffnet oder startet sie nie.“ steht weiter über der Liste. ☐
+- **S6-7 Downloads:** Läuft ein Download, steht oben rechts „1 läuft“ mit Prozent und Tempo; läuft keiner, steht dort nichts. „Download eintragen“ ist der eine gefüllte Knopf oben rechts; „Zielordner zeigen“ steht als neutraler Knopf daneben und öffnet mit einem Klick den Ordner des letzten Downloads. Der Satz „Dateien landen nur im gewählten Ordner. Nemo öffnet oder startet sie nie.“ steht weiter über der Liste. ☐
 - **S6-8 Einstellungen, Startseite:** Einstellungen öffnen: im Kopf stehen sechs Zeilen (Sicherheit, Sync, Backup, Updates, KI, Speicher) in drei Spalten, je Name und Zustand in einer Zeile, darunter klein der Kontext; ohne Rahmen. Jede Zeile führt in ihre Kategorie. Darunter „Schnell umschalten“, dann (im breiten Fenster) drei gleiche Zeilen für Darstellung, Benachrichtigungen und Module. Beim Klick auf eine Kategorie links bleibt die Kategorien-Spalte an ihrem Platz. ☐
+
+#### Gerätestatus (UI-Audit 4.0, Modul-Paket S-b) – Desktop-Zeilen nur in der Windows-App, Handy am echten Gerät
+
+- **GS-1 Neuinstallation:** Nemo frisch installieren (Windows und Android): in der Navigation steht „System“ mit „Gerätestatus“; am Handy: Mehr → System landet direkt auf der Seite. ☐
+- **GS-2 Bestandsgerät:** Ein Gerät, das vor diesem Update installiert war, nach dem Update öffnen: „Gerätestatus“ ist nicht von selbst an; die Einstellungs-Startseite zeigt weiter sechs Zeilen. In der Bibliothek einschalten: die Einstellungen zeigen danach Sicherheit, Gerätestatus, KI. ☐
+- **GS-3 Autostart:** Einstellungen → Schnellerfassung → „Mit Windows starten“ einschalten, Gerätestatus öffnen: Zeile „Autostart · An“; ausschalten, Seite neu öffnen: „Aus“. Ein Klick auf die Zeile führt zu dieser Einstellung. ☐
+- **GS-4 Laufwerk:** Zeile „Laufwerk“ nennt freien und gesamten Platz des Systemlaufwerks (Vergleich mit dem Explorer), ohne Laufwerksbuchstaben oder Namen. ☐
+- **GS-5 Heimnetz:** Mit eingerichtetem Heimnetz-Hub: „Heimnetz · Aktiv · n Geräte gekoppelt“; ohne: „Aus“. Nirgends auf der Seite stehen Port, IP-Adresse oder Gerätenamen. ☐
+- **GS-6 Backup:** Automatische Backups einschalten und eines anlegen: „Backup · Gesichert“ mit Zeit, „Nächstes Backup“ mit dem Tag danach; ausschalten: „Nicht geplant“. Ohne gespeicherte Passphrase: „Passphrase fehlt“ mit Punkt, oben „1 braucht einen Blick“. ☐
+- **GS-7 Updates und Netzwerk:** Liegt ein Update vor, steht „Update verfügbar“ mit Punkt davor und oben „1 braucht einen Blick“. Einstellungen → Verbindungen → „Netzwerk sperren“: Zeile „Netzwerk · Gesperrt“, ohne Punkt. ☐
+- **GS-8 Verweis:** Unter den Zeilen steht der Satz zu „Dieser PC“; der Link öffnet den Reiter „System“ (ist „Dieser PC“ aus: die Bibliothek). Am Handy fehlt der Satz. ☐
+- **GS-9 Handy:** Am Android-Gerät: Backup, Sync, Speicher, App; keine Zeilen Heimnetz, Laufwerk, Autostart, kein Akku; jede Zeile lässt sich mit dem Daumen treffen. ☐
 
 ### Downloads und Torrent
 
@@ -427,6 +448,13 @@ PL3. _Tastatur (Windows):_ Graph anklicken oder mit Tab erreichen, Pfeiltasten v
 - **PF1 Portable-Exe, große Datenmenge:** Dev-Preview-Build, Einstellungen → Entwickler → Testdaten „Groß“ laden (die Skala `xl` gibt es nur in `npm run measure:data`). Übersicht öffnen, Kalender, Budgets, Finanzen öffnen, in der Befehlspalette „tankstelle“ suchen: Zeiten notieren (Stoppuhr), Speicher im Task-Manager. ☐
 - **PF3 Festplatte-Modul (Rust):** „Dieser PC“ → Löschen-Plan und Details eines großen Ordners: bleibt das Fenster bedienbar (Ziel: ja)? Zeiten in die Baseline eintragen. ☐
 
+#### Klick bis Inhalt (0b-8 Performance, [perf/CLICK-TO-CONTENT-2026-11.md](perf/CLICK-TO-CONTENT-2026-11.md))
+
+Dev-Preview-Exe, Einstellungen → Entwickler → Testdaten „Mittel“, alle Module an. Gemessen wird mit der Handy-Stoppuhr oder einer Bildschirmaufnahme (30 fps reichen): vom Klick bis die Überschrift steht („erster Inhalt“) und bis nichts mehr nachrückt („fertig“: Zahlen, Zeilen, Widgets stehen, kein „…“, keine grauen Platzhalter). Jeden Punkt zweimal: direkt nach dem App-Start (erster Besuch) und noch einmal nach einem Wechsel zur Übersicht (zweiter Besuch). Werte in den Bericht (Tabelle „Geräte“) eintragen.
+- **PF-K1 Module:** je Modul die App neu starten und es in der Seitenleiste öffnen: Finanzen, Kalender, ToDos, Notizen, Budgets, Gerätestatus. Notieren: erster Inhalt, fertig. Fällt ein Modul mit über 1 s „fertig“ auf, den Namen dazuschreiben. ☐
+- **PF-K2 Einstellungen, Bibliothek, Übersicht:** nach dem Start Einstellungen öffnen, dann Module-Bibliothek, dann von ToDos zurück zur Übersicht: je erster Inhalt und fertig; dazu, ob die Status-Zeilen der Einstellungen springen (sechs → drei Zeilen). ☐
+- **PF-K3 Eintragen-Dialoge:** auf Finanzen, ToDos und Kalender den Haupt-Knopf („… eintragen“) drücken: Zeit bis der Dialog steht und das erste Feld den Cursor hat; zweimal je Seite. ☐
+
 ## Android
 
 Nur am Android-Handy (APK, Dev-Preview-APK oder PWA in Chrome).
@@ -528,6 +556,10 @@ EN-E2. _Android:_ Einstellungen öffnet die Kategorien-Liste, eine Kategorie öf
 #### Einstellungen in Identität v3 (Paket 1) – nur von Hand prüfbar
 
 - **SV1 Handy, zwei Ebenen:** Einstellungen: Status-Kopf mit sechs Kacheln, darunter Karten und die gruppierte Liste; eine Kategorie antippen zeigt ihren Kopf mit „Einstellungen“ als Rücksprung, Android-Zurück führt zur Liste. ☐
+
+#### Geheimnis nur abfragen, nicht lesen (`fix/secret-store-has`) – nur auf Android prüfbar
+
+- **SH2 Backup-Passphrase und ICS-Kalender:** APK. Einstellungen → Sync & Backup → Backup → „Automatisch sichern“ an, ohne Passphrase: Gerätestatus → Nächstes Backup „Passphrase fehlt“; Passphrase speichern: Termin steht da, Hinweis unter dem Feld „Passwort gespeichert …“, beides auch nach App-Neustart. Konnektor ICS: eine erreichbare ICS-Adresse hinzufügen → „Verbunden“; letzte Adresse entfernen → „Nicht verbunden“. ☐
 
 #### Handtests aus gemergten PRs (aus CHATS.md gesammelt, 2026-11-10)
 
@@ -747,6 +779,13 @@ AP4. _Android:_ die Zeilen mit „Kopieren“ und „Neu würfeln“ sind gut tr
 
 - **PF2 Android-Gerät, große Datenmenge:** wie PF1 auf einem echten Gerät (oder Emulator): Start bis zur Übersicht, Modul öffnen, Suche, Schnellerfassung; Backup erstellen und wiederherstellen. Messwerte der Emulation (4× CPU) stehen in der Baseline. ☐
 
+#### Klick bis Inhalt (0b-8 Performance, [perf/CLICK-TO-CONTENT-2026-11.md](perf/CLICK-TO-CONTENT-2026-11.md))
+
+Dev-Preview-APK auf dem eigenen Handy, Testdaten „Mittel“, Messung wie bei PF-K1 (Bildschirmaufnahme des Handys, dann Bild für Bild). Die Web-Ansicht von Android ist langsamer als Chromium im Container; diese Werte entscheiden, ob die Zielwerte auf dem Handy halten.
+- **PF-K4 Module:** App frisch starten, über „Bereiche“ Finanzen öffnen; neu starten, ToDos; neu starten, Kalender; neu starten, Notizen. Je erster Inhalt und fertig; dann je einmal zurück zur Übersicht und wieder hinein (zweiter Besuch). ☐
+- **PF-K5 Einstellungen und Übersicht:** nach dem Start Einstellungen öffnen (erster Inhalt, fertig, springen die Status-Zeilen?); aus ToDos zurück zur Übersicht (bis alle Widgets stehen). ☐
+- **PF-K6 Eintragen über den Plus-Knopf:** auf ToDos und Finanzen den Plus-Knopf: Zeit bis das Blatt steht und die Tastatur offen ist; zweimal je Seite. ☐
+
 ## Beide Geräte: zusammen oder je einmal
 
 Braucht PC und Handy gleichzeitig (Sync, Fernsteuerung, zwei Geräte) oder soll auf beiden einmal laufen.
@@ -931,7 +970,7 @@ LT-L1. _Karte:_ Termin mit Ort → „Auf der Karte zeigen“ öffnet Google Map
 
 #### Geld-Gruppe: Rechnungen (Paket 2)
 
-- **PH1 Wasser trinken:** Modul-Bibliothek → Gewohnheiten einschalten; „Gewohnheit hinzufügen“ → Vorlage „Wasser trinken“ speichern; „+1“ zählt ein Glas ohne Hinweisfeld, Strg+Z nimmt es zurück; die Benachrichtigungen kommen alle 2 Stunden zwischen 9 und 19 Uhr mit „3 von 8 Gläser“ und hören auf, sobald 8 erreicht sind (Android: App geschlossen, Erinnerung kommt trotzdem). ☐
+- **PH1 Wasser trinken:** Modul-Bibliothek → Gewohnheiten einschalten; „Gewohnheit eintragen“ → Vorlage „Wasser trinken“ speichern; „+1“ zählt ein Glas ohne Hinweisfeld, Strg+Z nimmt es zurück; die Benachrichtigungen kommen alle 2 Stunden zwischen 9 und 19 Uhr mit „3 von 8 Gläser“ und hören auf, sobald 8 erreicht sind (Android: App geschlossen, Erinnerung kommt trotzdem). ☐
 
 ### Zeiterfassung
 
@@ -1421,7 +1460,7 @@ AP1. _Wegwerf-Mail:_ Werkzeug in der Bibliothek einschalten, „Wegwerf-Mail öf
 AP2. _Notiz:_ Notizen einschalten, „Als Notiz speichern“ öffnet eine neue Notiz mit allen Zeilen, auch dem Passwort. ☐
 AP3. _Telefon:_ Deutschland: die Nummern stehen im Bereich 030 23125…, 040 66969…, 089 99998…, 0221 4710…, 069 90009…; kein Anschluss meldet sich. USA: +1 … 555 01xx. ☐
 AP5. _Einstellungen:_ Einstellungen → Werkzeuge → „Anonyme Persona“: Anbieter ändern; im Werkzeug zeigt „Wegwerf-Mail öffnen“ den gleichen Anbieter und öffnet dessen Seite. ☐
-AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei gesperrtem Tresor erst entsperren): das Formular „Zugang hinzufügen“ ist mit Name, Benutzername, Passwort und Notizen gefüllt, nach „Speichern“ liegt der Eintrag verschlüsselt im Tresor; nach einem Neuladen öffnet `/accounts?handoff=1` kein Formular mehr. ☐
+AP6. _Tresor:_ Tresor und Werkzeug einschalten, „Im Tresor speichern“ (bei gesperrtem Tresor erst entsperren): das Formular „Zugang eintragen“ ist mit Name, Benutzername, Passwort und Notizen gefüllt, nach „Zugang eintragen“ liegt der Eintrag verschlüsselt im Tresor; nach einem Neuladen öffnet `/accounts?handoff=1` kein Formular mehr. ☐
 
 #### Werkzeuge: Panel (Handtest)
 
@@ -1475,7 +1514,7 @@ ML-M5. Zweites Google-Konto hinzufügen (Verbindungen → „Weiteres Konto hinz
 ML-M6. Netz aus: die zuletzt gesehenen Köpfe erscheinen mit dem Hinweis „Kein Netz". Token widerrufen (Google-Kontoeinstellungen): Hinweis „abgelaufen" mit Link zu den Verbindungen. ☐
 ML-M7. Mail-Einstellungen → „Zwischenspeicher leeren"; danach ist die Liste erst nach dem Laden wieder gefüllt. Der Cache ist nicht im Sync (zweites Gerät zeigt nichts davon) und nicht im Backup. ☐
 ML-M8. Das HTML-Fenster funktioniert im Windows-Fenster (WebView2) wie im Browser: Mail wird angezeigt, kein Skript läuft. ☐
-ML-M9. (Paket 2, `feat/mail-link`) Eine echte Rechnungsmail öffnen → „Aus dieser Mail anlegen" → Rechnung: Empfänger, Betrag und Fälligkeit sind vorbefüllt (stimmen sie bei deinen Mails?). Es wird erst mit „Speichern" etwas angelegt; die Rechnung enthält den Link zur Mail (öffnet die Mail im Browser). ☐
+ML-M9. (Paket 2, `feat/mail-link`) Eine echte Rechnungsmail öffnen → „Aus dieser Mail anlegen" → Rechnung: Empfänger, Betrag und Fälligkeit sind vorbefüllt (stimmen sie bei deinen Mails?). Es wird erst mit „Rechnung eintragen" etwas angelegt; die Rechnung enthält den Link zur Mail (öffnet die Mail im Browser). ☐
 ML-M10. Dasselbe für Termin (Datum/Uhrzeit aus einer Einladung), ToDo, Erinnerung (morgen 9:00), Merkliste, Notiz. Bei der Notiz kommt der Mailtext nur mit dem Häkchen hinein. In der Mail steht danach „Aus dieser Mail angelegt" mit Link in das Modul; löschst du den Eintrag, verschwindet der Verweis. ☐
 ML-M11. (Paket 3, `feat/mail-write`) Verbindungen → Google: „E-Mails verwalten" und „E-Mails senden" sind aus, jede mit Erklärung. Nur „verwalten" einschalten, „Neu anmelden": Google zeigt die zusätzliche Berechtigung an. Im Mail-Modul erscheinen Archivieren, Papierkorb, „Weitere Aktionen"; Antworten und „Neue Mail" nur mit Entwurf (kein Senden-Knopf). ☐
 ML-M12. Als gelesen/ungelesen markieren wirkt sofort (in Gmail prüfen) und lässt sich in den 6 s zurücknehmen. Archivieren, Label setzen, Papierkorb fragen vorher; „Rückgängig" holt den Verlauf zurück (Papierkorb: auch in Gmail wieder im Posteingang). ☐

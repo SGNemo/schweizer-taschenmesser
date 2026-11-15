@@ -3,7 +3,8 @@ import { withTagLine, type ParsedNote } from './markdownNote';
 /**
  * Google Keep from Google Takeout: one JSON object per note (`title`, `textContent`, `listContent`,
  * `labels`, `isTrashed`, `isArchived`, `isPinned` …); a file may also hold an array of them.
- * Trashed and archived notes are left out. The timestamps are ignored: the notes model sets its own.
+ * Trashed and archived notes are left out. The note keeps its own dates (`createdTimestampUsec`,
+ * `userEditedTimestampUsec`, microseconds), like a Markdown note's front matter (D17).
  * Checklists become Markdown task lists, labels become `#tags` at the end of the text.
  */
 export interface KeepResult {
@@ -27,9 +28,16 @@ interface KeepNote {
   isArchived?: unknown;
   isPinned?: unknown;
   attachments?: unknown;
+  createdTimestampUsec?: unknown;
+  userEditedTimestampUsec?: unknown;
 }
 
 const str = (v: unknown) => (typeof v === 'string' ? v : '');
+/** Keep's microseconds (a number, in some exports a string) as epoch ms; nothing for a missing or broken value. */
+function usecToMs(v: unknown): number | undefined {
+  const n = typeof v === 'string' && /^\d+$/.test(v) ? Number(v) : v;
+  return typeof n === 'number' && Number.isFinite(n) && n > 0 ? Math.floor(n / 1000) : undefined;
+}
 const isObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 
@@ -83,6 +91,10 @@ export function parseGoogleKeep(json: string): KeepResult {
     }
     const note: ParsedNote = { title, body: withTagLine(body, tags), tags };
     if (entry.isPinned === true) note.pinned = true;
+    const createdAt = usecToMs(entry.createdTimestampUsec);
+    const updatedAt = usecToMs(entry.userEditedTimestampUsec);
+    if (createdAt !== undefined) note.createdAt = createdAt;
+    if (updatedAt !== undefined) note.updatedAt = updatedAt;
     result.notes.push(note);
   }
   return result;

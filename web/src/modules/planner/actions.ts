@@ -3,30 +3,39 @@
  * write-backs (`runUser`), and ends in one toast line with the undo (`runToast`). Sources are
  * reached only through the contract (`plannableSource`), never by import.
  */
+import { recordWrite } from '@/core/db/recorder';
 import { randomId } from '@/core/db/util';
 import { formatMinutes } from '@/core/i18n/format';
 import { getLang } from '@/core/i18n/lang';
 import { plannableSource, type PlannableEntry } from '@/core/modules/contributions';
 import { availableManifests } from '@/core/modules/available';
 import { addDays } from '@/core/plan/dates';
-import { dayName } from '@/core/plan/explain';
+import { dayName, partWord } from '@/core/plan/explain';
+import type { DayPart } from '@/core/plan/types';
 import { spanMin, windowText, type TimeWindow } from '@/core/plan/windows';
 import { now, today } from '@/core/time/now';
 import { undoEntry } from '@/core/undo';
 import type { EventMap } from '@/core/events/events';
-import { parseCapture, type CaptureFields } from '@/quickCapture/parser';
-import { saveCapture, type SavedCapture } from '@/quickCapture/targets';
+import type { CaptureFields } from '@/quickCapture/parser';
+import {
+  breakOf,
+  saveCapture,
+  saveCaptures,
+  targetFor,
+  type SavedCapture,
+} from '@/quickCapture/targets';
 import type { PlanOp } from '@/core/plan/instructions';
 import { setSettings } from '@/core/settings/settings';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { extractDuePhrase } from './dueWords';
+import type { SetupThing } from './daySetup';
+import { readFieldWithPart } from './dueWords';
 import { dayRepo, itemKeyOf, itemRepo, putRow } from './repo';
 import type { PlanDayRow, PlanItemRow } from './schema';
 import { overloadLine } from './overload';
 import { getPlannerSettings } from './prefs';
 import { PlannerOffError, runUser, type UserRun } from './services';
-import { DEFAULT_PLANNER_SETTINGS, PLANNER_SCOPE } from './settings';
+import { dayEndLabel, DEFAULT_PLANNER_SETTINGS, PLANNER_SCOPE } from './settings';
 import { runToast } from './toast';
 
 const toast = (message: string, run?: UserRun) =>
@@ -133,15 +142,31 @@ export async function addRequested(req: EventMap['plan.requested']): Promise<boo
   return true;
 }
 
+/** What a source takes back from a row of the plan (`PlannableSource`). */
+export interface SourceAbility {
+  /** A tick („Erledigt“). */
+  done: boolean;
+  /** „Später“. */
+  assign: boolean;
+  /** „Als Pause …“: the thing can be removed and brought back. */
+  remove: boolean;
+  /** „Dauer …“. */
+  estimate: boolean;
+}
+
 /** Which sources take a tick or „Später“ back (an invoice or a cancellation does not: that stays in its module). */
-export async function sourceAbilities(): Promise<
-  Record<string, { done: boolean; assign: boolean }>
-> {
-  const out: Record<string, { done: boolean; assign: boolean }> = {};
+export async function sourceAbilities(): Promise<Record<string, SourceAbility>> {
+  const out: Record<string, SourceAbility> = {};
   await Promise.all(
     availableManifests().map(async (m) => {
       const s = await plannableSource(m).catch(() => undefined);
-      if (s) out[m.id] = { done: !!s.onDone, assign: !!s.onAssign };
+      if (s)
+        out[m.id] = {
+          done: !!s.onDone,
+          assign: !!s.onAssign,
+          remove: !!s.onRemove,
+          estimate: !!s.onEstimate,
+        };
     }),
   );
   return out;
@@ -176,19 +201,45 @@ async function itemPatch(
 /** The one field: a ToDo through the quick-capture target; „bis Do“ or „Frist“ makes the planner item's due hard. */
 export async function addFromField(text: string, titles: Record<string, string>): Promise<boolean> {
   // The phrase is German, like the quick-capture parser (CONCEPT §6c); elsewhere the ⋯ action sets a deadline.
-  const phrase =
-    getLang() === 'de' ? extractDuePhrase(text, today()) : { text, hasDueWord: false as const };
-  const parsed = parseCapture(phrase.text, { now: new Date(now()), defaultType: 'todo' });
-  const hardDue = phrase.date ?? (phrase.hasDueWord ? parsed.fields.date : undefined);
-  // The deadline is the ToDo's date too, so the ToDo page shows it.
-  if (hardDue && !parsed.fields.date) parsed.fields.date = hardDue;
-  const lead = hardDue ? t.planner.toast.addedWithDue(dayName(hardDue)) : t.planner.toast.added;
+  // „Duschen nachmittags“ (package 4b): the part word becomes the item's part (`readFieldWithPart`).
+  const { fields, hardDue, hardDueTime, isBreak, part } = readFieldWithPart(
+    text,
+    new Date(now()),
+    today(),
+    getLang() === 'de',
+  );
+  // „Pause 2 Std Zocken“: a blocker of its day through the quick-capture target, no ToDo (package 4a).
+  if (isBreak) {
+    const b = breakOf(fields, { today: today() });
+    return act(
+      t.planner.day.addBlocker,
+      t.planner.toast.asBreak(
+        short(b.label),
+        dayName(b.date),
+        formatMinutes(b.min, { compact: true }),
+      ),
+      titles,
+      async () => {
+        await saveCapture('break', fields);
+      },
+      { leadOnly: true },
+    );
+  }
+  // A part word read from the line says so (as a deadline does), so „nachmittags“ is not taken for a title word.
+  const lead = hardDue
+    ? t.planner.toast.addedWithDue(dayName(hardDue))
+    : part && fields.title
+      ? t.planner.toast.part(short(fields.title), partWord(part))
+      : t.planner.toast.added;
   return act(t.planner.toast.added, lead, titles, async () => {
-    const saved = await saveCapture('todo', parsed.fields);
-    if (hardDue)
+    const saved = await saveCapture('todo', fields);
+    if (hardDue || part)
       await putRow(itemRepo, itemKeyOf(saved.moduleId, saved.id), {
         source: { module: saved.moduleId, id: saved.id },
-        due: { date: hardDue, hard: true },
+        ...(hardDue
+          ? { due: { date: hardDue, hard: true, ...(hardDueTime ? { time: hardDueTime } : {}) } }
+          : {}),
+        ...(part ? { part } : {}),
         order: 0,
       });
   });
@@ -213,6 +264,92 @@ export async function later(e: PlannableEntry, titles: Record<string, string>): 
   );
 }
 
+/** The lengths „Als Pause …“ offers (minutes): 1 h · 2 h · 3 h. */
+export const BREAK_CHOICES = [60, 120, 180] as const;
+/** The estimates „Dauer …“ offers: the ToDo editor's values (`todos/components/TaskEditor.tsx` `ESTIMATES`). */
+export const ESTIMATE_CHOICES = [5, 15, 30, 60] as const;
+
+/**
+ * „Als Pause …“ (use case „Wochenende retten“, package 4a): the thing becomes a blocker of `min` minutes on
+ * `date` with its title, and the source removes it (`onRemove`) – leisure never waits as an open task. No
+ * planner field and no engine case: a blocker is what the plan already knows. One undo brings back the thing,
+ * its plan and takes the blocker out again. False for a source that cannot remove (an invoice stays).
+ */
+export async function asBreak(
+  e: PlannableEntry,
+  date: string,
+  min: number,
+  titles: Record<string, string>,
+): Promise<boolean> {
+  const s = await source(e.moduleId);
+  if (!s?.onRemove) return false;
+  const length = formatMinutes(min, { compact: true });
+  return act(
+    t.planner.row.asBreak,
+    t.planner.toast.asBreak(short(e.title), dayName(date), length),
+    titles,
+    async () => {
+      // The thing goes first: a second tap or a thing removed on another device adds no second blocker.
+      const restore = await s.onRemove!(e.id);
+      if (!restore) return;
+      // The source's own undo joins this action: a source whose removal is no recorded write comes back too.
+      recordWrite(restore);
+      try {
+        const row = await dayRepo.get(date);
+        await dayPatch(date, {
+          blockers: [...(row?.blockers ?? []), { id: randomId(), label: e.title, min }],
+        });
+      } catch (err) {
+        // A failed write drops the action's undo: the thing must not stay removed without its blocker.
+        await restore().catch(() => undefined);
+        throw err;
+      }
+    },
+    { leadOnly: true },
+  );
+}
+
+/** „Dauer …“: the thing's estimate through its source (like the sentence op `duration`). */
+export async function setEstimate(
+  e: PlannableEntry,
+  min: number,
+  titles: Record<string, string>,
+): Promise<boolean> {
+  const s = await source(e.moduleId);
+  if (!s?.onEstimate) return false;
+  return act(
+    t.planner.row.estimate,
+    t.planner.toast.estimate(short(e.title), formatMinutes(min, { compact: true })),
+    titles,
+    async () => {
+      await s.onEstimate!(e.id, min);
+      // A length the plan held itself would hide the new estimate (`run.ts`: the item row wins).
+      const key = itemKeyOf(e.moduleId, e.id);
+      if ((await itemRepo.get(key))?.durationMin !== undefined)
+        await itemPatch(e, { durationMin: undefined });
+    },
+  );
+}
+
+/**
+ * „Tagesabschnitt …“ (package 4b): Vormittag / Nachmittag / Abend or none, on the planner's own row. Orders
+ * the thing inside its day (and, with a window, where it sits); the engine never moves its day for it.
+ */
+export const setPart = (
+  e: PlannableEntry,
+  part: DayPart | undefined,
+  titles: Record<string, string>,
+) =>
+  act(
+    t.planner.row.dayPart,
+    part
+      ? t.planner.toast.part(short(e.title), partWord(part))
+      : t.planner.toast.partCleared(short(e.title)),
+    titles,
+    () => itemPatch(e, { part }),
+    { leadOnly: true },
+  );
+
 export const pin = (e: PlannableEntry, date: string, titles: Record<string, string>) =>
   act(t.planner.row.pin, t.planner.toast.pinned(dayName(date)), titles, () =>
     itemPatch(e, { pinned: date }),
@@ -235,7 +372,14 @@ export const include = (e: PlannableEntry, titles: Record<string, string>) =>
 
 export const markDue = (e: PlannableEntry, date: string, titles: Record<string, string>) =>
   act(t.planner.row.markDue, t.planner.toast.markedDue(dayName(date)), titles, () =>
-    itemPatch(e, { due: { date, hard: true } }),
+    // The source's own hour of that day comes along („Frist So 18:00“); another day has none.
+    itemPatch(e, {
+      due: {
+        date,
+        hard: true,
+        ...(e.due?.time && e.due.date === date ? { time: e.due.time } : {}),
+      },
+    }),
   );
 
 export const unmarkDue = (e: PlannableEntry, titles: Record<string, string>) =>
@@ -261,6 +405,70 @@ async function dayPatch(date: string, patch: Partial<PlanDayRow>): Promise<void>
 }
 
 export const AVAILABLE_STEP = 30;
+
+/**
+ * „Übernehmen“ of „Tage einteilen“: the chosen minutes of the shown days (day rows only, never the weekday
+ * settings), the dump's things as ToDos through the quick-capture targets (one batch, all or nothing; „bis So“
+ * makes the planner item's deadline hard, as in the field), the „Tagesende“ when one was chosen (a setting for every
+ * day, package 6) and the run – one undoable action, one toast
+ * „Eingeplant: Sa, So, Mo · Rückgängig“. A day that was not touched keeps what it had. `reshuffle` (a day gained
+ * time, W10): the run distributes anew, so the day takes things – the sheet's preview showed every move.
+ */
+export function applyDaySetup(
+  days: readonly { date: string; min: number }[],
+  things: readonly SetupThing[],
+  shown: readonly string[],
+  titles: Record<string, string>,
+  reshuffle = false,
+  dayEnd?: string,
+) {
+  // Only a day end chosen: the toast says that, not „Eingeplant: …“ (nothing was planned).
+  const onlyDayEnd = dayEnd !== undefined && days.length === 0 && things.length === 0 && !reshuffle;
+  const lead = !onlyDayEnd
+    ? t.planner.toast.planned(shown.map(dayName).join(', '))
+    : dayEnd
+      ? t.planner.daySetup.dayEndSet(dayEndLabel(dayEnd))
+      : t.planner.daySetup.dayEndCleared;
+  return act(
+    lead,
+    lead,
+    titles,
+    async () => {
+      // „Tagesende festlegen“ (package 6): the one setting for every day, a recorded write, so the undo takes it back.
+      if (dayEnd !== undefined)
+        await setSettings(PLANNER_SCOPE, { dayEnd }, DEFAULT_PLANNER_SETTINGS);
+      for (const d of days)
+        await dayPatch(d.date, { availableMin: Math.max(0, Math.min(1440, d.min)) });
+      if (things.length === 0) return;
+      // Ids in line order: ToDos saved in the same millisecond tie on their age and the engine then
+      // breaks the tie by id – sorted, the plan keeps the order the preview showed. A break („Pause …“)
+      // is a blocker of its day through the quick-capture target `break`: no id, no ToDo.
+      const ids = things.map(() => randomId()).sort();
+      await saveCaptures(
+        things.map((th, i) =>
+          th.isBreak
+            ? { type: 'break' as const, fields: th.fields }
+            : { type: 'todo' as const, fields: th.fields, id: ids[i] },
+        ),
+        things.map((th) => th.fields.title).join('\n'),
+      );
+      const moduleId = targetFor('todo').moduleId;
+      for (const [i, th] of things.entries()) {
+        if (!th.hardDue || th.isBreak) continue;
+        await putRow(itemRepo, itemKeyOf(moduleId, ids[i]!), {
+          source: { module: moduleId, id: ids[i]! },
+          due: {
+            date: th.hardDue,
+            hard: true,
+            ...(th.hardDueTime ? { time: th.hardDueTime } : {}),
+          },
+          order: 0,
+        });
+      }
+    },
+    { leadOnly: true, reshuffle },
+  );
+}
 
 export const setAvailable = (date: string, min: number, titles: Record<string, string>) =>
   act(
@@ -357,7 +565,13 @@ const refOf = (key: string) => {
  * through the source, the buffer in the settings – and planned in the same `undoable`, never through
  * `core/ai/write`. One toast with the undo.
  */
-export function applyOps(ops: readonly PlanOp[], lead: string, titles: Record<string, string>) {
+export function applyOps(
+  ops: readonly PlanOp[],
+  lead: string,
+  titles: Record<string, string>,
+  /** One calm sentence instead of the moves („Rest verteilen“: never a count of what was left). */
+  leadOnly = false,
+) {
   const reshuffle = ops.some((o) => o.op === 'replan' && o.reshuffle);
   return act(
     lead,
@@ -412,6 +626,6 @@ export function applyOps(ops: readonly PlanOp[], lead: string, titles: Record<st
         }
       }
     },
-    { reshuffle },
+    { reshuffle, leadOnly },
   );
 }

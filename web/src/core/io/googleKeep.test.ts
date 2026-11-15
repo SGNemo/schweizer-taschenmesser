@@ -14,6 +14,17 @@ const note = (extra: Record<string, unknown>) => ({
 });
 
 describe('parseGoogleKeep', () => {
+  it('keeps the note’s own dates (microseconds → ms), also as strings, and drops broken ones', () => {
+    const r = parseGoogleKeep(
+      JSON.stringify([
+        note({ title: 'A', createdTimestampUsec: '1690000000123456' }),
+        note({ title: 'B', createdTimestampUsec: 'gestern', userEditedTimestampUsec: -1 }),
+      ]),
+    );
+    expect(r.notes[0]).toMatchObject({ createdAt: 1690000000123, updatedAt: 1700000000000 });
+    expect(r.notes[1]!.createdAt).toBeUndefined();
+    expect(r.notes[1]!.updatedAt).toBeUndefined();
+  });
   it('strips a leading # from a label so the tag line stays readable', () => {
     const r = parseGoogleKeep(JSON.stringify(note({ title: 'T', labels: [{ name: '#x' }] })));
     expect(r.notes[0]).toMatchObject({ tags: ['x'] });
@@ -36,6 +47,8 @@ describe('parseGoogleKeep', () => {
         body: 'Für Mama: Schal\nFür Papa: Käse\n\n#Familie #Weihnachten-Ü',
         tags: ['Familie', 'Weihnachten-Ü'],
         pinned: true,
+        createdAt: 1690000000000,
+        updatedAt: 1700000000000,
       },
     ]);
   });

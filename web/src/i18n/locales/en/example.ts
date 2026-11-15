@@ -8,6 +8,6 @@ export const example: Strings['example'] = {
   showDone: 'Show completed',
   addPlaceholder: 'New entry …',
   empty: 'No entries yet.',
-  add: 'Add entry',
+  add: 'Add example',
   open: 'Open example',
 };

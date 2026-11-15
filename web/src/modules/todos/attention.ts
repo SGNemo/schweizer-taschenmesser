@@ -5,7 +5,7 @@ import { t } from '@/strings';
 import { taskRepo } from './repo';
 
 /**
- * ToDos due today (accent) and ToDos whose date passed. By default ("ruhiges Jetzt wichtig") the
+ * ToDos due today (accent, `due`) and ToDos whose date passed. By default ("ruhiges Jetzt wichtig") the
  * old ones are "waiting" (warning tone, no day counter); with the setting off they are overdue (danger).
  */
 const source: AttentionSource = async ({ today }) => {
@@ -49,6 +49,8 @@ const source: AttentionSource = async ({ today }) => {
             title: t.attention.todosToday(due),
             to: '/todos',
             rank: 2,
+            // No `coveredBy`: the "Heute" card lists the planned ToDos and the next one, not every ToDo due today.
+            due: 'today' as const,
           },
         ]
       : []),

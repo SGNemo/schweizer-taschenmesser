@@ -51,6 +51,8 @@ export interface NowPlayingHandle {
   /** The last reading (`undefined` = nothing plays) and the moment it was made (epoch ms). */
   current: NowPlaying | undefined;
   readAt: number;
+  /** The first reading since the page opened is back (or failed): what plays is no longer the remembered value. */
+  firstRead: boolean;
   canControl: boolean;
   /** Runs a player action; handles "needs Premium" and "sign-in expired" like the line always did. */
   run(action: () => Promise<void>): Promise<boolean>;
@@ -64,6 +66,15 @@ export interface NowPlayingHandle {
  * `undefined` while the connector is not connected with "Anzeigen"; `current` is `undefined` while nothing plays.
  */
 export function useNowPlaying(): NowPlayingHandle | undefined {
+  return useNowPlayingStatus().np;
+}
+
+/**
+ * `useNowPlaying` plus whether the connection's status has been read (`known`): before that `np` is `undefined` too,
+ * and the page cannot yet tell "not connected" from "not read yet" (0b-8: the page waits instead of showing the
+ * "not connected" state for a moment).
+ */
+export function useNowPlayingStatus(): { np: NowPlayingHandle | undefined; known: boolean } {
   const status = useConnectorStatus(def?.id ?? '');
   const tx = tSpotify.use();
   const toast = useUiStore((st) => st.toast);
@@ -76,6 +87,7 @@ export function useNowPlaying(): NowPlayingHandle | undefined {
     const since = noPremiumSince();
     return since !== undefined && now() - since < NO_PREMIUM_MS;
   });
+  const [firstRead, setFirstRead] = useState(false);
   const poller = useRef<Poller | undefined>(undefined);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -107,6 +119,8 @@ export function useNowPlaying(): NowPlayingHandle | undefined {
           void saveStatus(def.id, { state: 'expired', message: describeError(e) });
         // Rate limit: wait as long as the service asks. Anything else: keep the last reading, no message.
         if (e instanceof ConnectorError && e.code === 'rate-limited') return e.retryAfter ?? 60;
+      } finally {
+        setFirstRead(true);
       }
       return undefined;
     });
@@ -155,16 +169,21 @@ export function useNowPlaying(): NowPlayingHandle | undefined {
     refresh();
   }
 
-  if (!active || !def?.nowPlaying || !ctx) return undefined;
+  const known = status !== undefined;
+  if (!active || !def?.nowPlaying || !ctx) return { np: undefined, known };
   return {
-    source: def.nowPlaying,
-    ctx,
-    features: status?.features ?? [],
-    current: reading.value,
-    readAt: reading.at,
-    canControl,
-    run,
-    control,
-    refresh,
+    known,
+    np: {
+      source: def.nowPlaying,
+      ctx,
+      features: status?.features ?? [],
+      current: reading.value,
+      readAt: reading.at,
+      firstRead,
+      canControl,
+      run,
+      control,
+      refresh,
+    },
   };
 }

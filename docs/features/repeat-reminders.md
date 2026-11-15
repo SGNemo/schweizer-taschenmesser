@@ -11,6 +11,7 @@ A reminder the user set (calendar kind `reminder`) that is not answered comes ba
 - **Existing installations** keep it off until switched on; fresh ones start with it on.
 - **In-app card:** a repeat replaces the card of the same reminder (no stack).
 - **Not repeated:** "Später" entries themselves (they fire once), appointments, staged leads, the digest.
+- **„einmal“ (`once`):** every reminder made by the quick capture (also the clock's „Erinnern nach Ortszeit“) carries `once` and fires exactly once at its time – no extra lead, stage or repeat, whatever the focus settings say (`calendar/__tests__/once.test.ts`); its row says „einmal“, and reminders set in the calendar dialog keep the rule above.
 
 ## Test
 `policy.test.ts` (time series, quiet-hours boundary, mute, answer mid-series, several reminders), `calendar/__tests__/notifications.test.ts` (10:00-style day with a synced answer), `ack.test.ts`, `e2e/reminders.spec.ts` (fixed clock).

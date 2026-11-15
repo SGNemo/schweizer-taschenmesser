@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import type { MailFinding } from '@/core/connectors/types';
+import type { ImportDates } from '@/core/db/repo';
 /**
  * Start-data importers. A module declares them in `contributions.onboarding`; the generic wizard
  * (`OnboardingWizard`) shows them, runs the chosen one, previews the result and only after the user's
@@ -101,7 +102,8 @@ export type ImportInput =
       kind: 'file';
       text: string;
       fileName: string;
-      files?: { name: string; text: string }[];
+      /** `modifiedAt` = file or ZIP entry date (epoch ms), when known. */
+      files?: { name: string; text: string; modifiedAt?: number }[];
       /** Files of an unpacked archive that are not text (images, PDFs): not stored, only reported. */
       binary?: number;
       extras?: Record<string, string>;
@@ -136,6 +138,8 @@ export interface ImportCandidate {
   detail?: string;
   /** Stable key for duplicate detection against stored records and within the import. */
   dedupeKey: string;
+  /** Dates of the source (a note's `created:`), kept as the record's local envelope times. */
+  dates?: ImportDates;
   /** Reminder for the user, shown as a badge (e.g. "Betrag unsicher"). */
   warning?: string;
   /**
@@ -301,7 +305,7 @@ export interface ImportReportCounts {
 /** Files that are already chosen and read (the "import from another app" flow): the wizard starts at the preview. */
 export interface ImportPreset {
   importerId: string;
-  files: { name: string; text: string }[];
+  files: { name: string; text: string; modifiedAt?: number }[];
   /** Non-text files of an unpacked archive, only reported. */
   binary?: number;
   /** Shared by the parts of one multi-part import. */

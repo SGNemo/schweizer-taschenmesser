@@ -48,13 +48,17 @@ export function planLines(board: Board): PlanLine[] {
   return [...out.values()];
 }
 
-/** The rules' view of the same lines: every thing once with its first day and its hard due. */
+/** The rules' view of the same lines: every thing once with its first day, its hard due and its pin. */
 export function instructionItems(board: Board): InstructionItem[] {
+  const pinned = new Map<string, string>();
+  for (const day of board.days)
+    for (const row of day.rows) if (row.item?.pinned) pinned.set(row.itemKey, row.item.pinned);
   return planLines(board).map((l) => ({
     key: l.key,
     title: l.title,
     ...(l.day ? { date: l.day } : {}),
     ...(l.due ? { hardDue: l.due } : {}),
+    ...(pinned.has(l.key) ? { pinned: pinned.get(l.key)! } : {}),
   }));
 }
 

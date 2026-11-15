@@ -90,6 +90,11 @@ export function groupItems<T extends Pick<Item, 'section' | 'category'>>(
     .filter((g) => g.items.length > 0);
 }
 
+/** Store sections the head names: only assigned ones ("Ohne Bereich" is no section to walk to). */
+export function namedSectionCount(groups: readonly ItemGroup<unknown>[]): number {
+  return groups.filter((g) => g.id !== '').length;
+}
+
 /** Sum of the entered prices: what is still to buy and what is in the basket (ticked). */
 export function totals(items: readonly Pick<Item, 'priceCents' | 'done'>[]): {
   openCents: number;

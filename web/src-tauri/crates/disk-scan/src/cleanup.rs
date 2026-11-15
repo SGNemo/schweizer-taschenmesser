@@ -209,7 +209,7 @@ mod imp {
                 }
             }
             if let Ok(profiles) = std::fs::read_dir(local.join(r"Mozilla\Firefox\Profiles")) {
-                for p in profiles.flatten() {
+                for p in profiles.flatten().filter(|p| is_real_dir(&p.path())) {
                     v.push(CleanupRoot {
                         kind: CleanupKind::BrowserCache,
                         source: "firefox",

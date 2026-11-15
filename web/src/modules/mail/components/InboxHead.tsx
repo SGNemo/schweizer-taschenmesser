@@ -14,7 +14,7 @@ export function InboxFigure({ unread }: { unread: number }) {
       value={formatNumber(unread)}
       unit={t.mail.head.unreadUnit}
       detail={t.mail.head.inbox}
-      testId="mail-stamp"
+      testId="mail-unread"
     />
   );
 }

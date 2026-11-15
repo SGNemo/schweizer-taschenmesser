@@ -78,6 +78,11 @@ export interface CareHistory {
   entries: CareEntry[];
   /** The history file was unreadable and a new one was started. */
   recovered: boolean;
+  /**
+   * The file with the stored changes cannot be read right now: only this session's clean-ups
+   * are listed, and nothing can be changed or taken back until it can.
+   */
+  unreadable: boolean;
 }
 
 export type StartupScope = 'user' | 'machine';

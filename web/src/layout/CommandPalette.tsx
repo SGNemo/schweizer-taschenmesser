@@ -561,15 +561,24 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
     // "Einstellung: …" says what is meant: then the settings come first.
     if (normalize(query).startsWith(t.palette.settingsPrefix)) list.unshift(...settingOptions);
     else list.push(...settingOptions);
+    // An entry whose title is exactly the typed text is what is meant: it comes before "Neu eintragen",
+    // so Enter opens it instead of creating a second one. "?" and write sentences keep their order.
+    // Inner spaces are collapsed too ("Zahnarzt  Termin" is the same title).
+    const squash = (text: string) => normalize(text).replace(/\s+/g, ' ');
+    const exact = capture && !writeIntent ? squash(read.text) : '';
+    const exactHits: Option[] = [];
     for (const row of hits) {
-      list.push({
+      const hit: Option = {
         kind: 'hit',
         key: `h-${row.subtitle}-${row.id}`,
         label: row.title,
         icon: 'search',
         row,
-      });
+      };
+      if (exact && row.to && squash(row.title) === exact) exactHits.push(hit);
+      else list.push(hit);
     }
+    if (capture && exactHits.length > 0) list.splice(list.indexOf(capture), 0, ...exactHits);
     return list;
   }, [
     commands,

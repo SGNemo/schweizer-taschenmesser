@@ -279,7 +279,7 @@ async function addProvider(page: Page, presetLabel: string, id: string, key: str
   await section.getByLabel('Anbieter hinzufügen').selectOption({ label: presetLabel });
   const card = section.getByTestId(`provider-${id}`);
   await card.getByLabel('API-Schlüssel').fill(key);
-  await card.getByRole('button', { name: 'Speichern' }).click();
+  await card.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(card.getByText('Gespeichert.')).toBeVisible();
   return card;
 }

@@ -139,10 +139,13 @@ export function useCalendarItems(range: DateRange): CalendarItem[] | undefined {
 }
 
 const TONE_ORDER: Record<AttentionItem['tone'], number> = { danger: 0, accent: 1, warning: 2 };
-export const ATTENTION_LIMIT = 6;
 
-/** Danger first, then accent, then warning; by rank and title inside a tone; capped. */
-export function rankAttention(items: readonly AttentionItem[], limit = ATTENTION_LIMIT) {
+/**
+ * Danger first, then accent, then warning; by rank and title inside a tone. Not capped: the overview shows
+ * everything that is overdue or due today and counts the rest in "Kann warten · n", so a cut here would make
+ * that number wrong. A caller with little room passes its own `limit` (`NowStrip`).
+ */
+export function rankAttention(items: readonly AttentionItem[], limit = Number.POSITIVE_INFINITY) {
   return [...items]
     .sort(
       (a, b) =>
@@ -173,16 +176,18 @@ export async function collectAttention(
   return rankAttention(lists.flat());
 }
 
-/** Live attention items; `undefined` while loading. */
-export function useAttentionItems(): AttentionItem[] | undefined {
+/**
+ * Live attention items; `undefined` while loading. `only` limits the sources to these modules (a module page's
+ * "Jetzt" row needs its own, not the code and queries of every module).
+ */
+export function useAttentionItems(only?: readonly string[]): AttentionItem[] | undefined {
   const states = useModuleStates();
-  const ids = activeManifests(states)
-    .map((m) => m.id)
-    .join(',');
+  const sources = activeManifests(states).filter((m) => !only || only.includes(m.id));
+  const ids = sources.map((m) => m.id).join(',');
   return useSharedLiveQuery(
     `attention|${ids}|${states === undefined}`,
-    async () => (states ? collectAttention(today(), activeManifests(states)) : undefined),
-    preload('attention', activeManifests(states)),
+    async () => (states ? collectAttention(today(), sources) : undefined),
+    preload('attention', sources),
   );
 }
 

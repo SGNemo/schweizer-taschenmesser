@@ -19,15 +19,22 @@ serde_json = "1"
 # Desktop keystores: Windows Credential Manager, macOS Keychain, Linux kernel keyring (no D-Bus needed).
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 keyring = { version = "3", features = ["windows-native", "apple-native", "linux-native"] }
+# Wrapping of the sealed vault key under the Windows Hello signature (`src/desktop/sealed.rs`).
+chacha20poly1305 = { version = "0.10", default-features = false, features = ["alloc"] }
+sha2 = "0.10"
+getrandom = "0.3"
+zeroize = "1"
 
-# Windows Hello (consent verification) for the biometric gate.
+# Windows Hello key credentials (KeyCredentialManager) bind the sealed vault key.
 [target.'cfg(windows)'.dependencies]
 windows-future = "0.2"
 windows = { version = "0.61", features = [
   "Foundation",
-  "Security_Credentials_UI",
+  "Security_Credentials",
+  "Security_Cryptography",
+  "Storage_Streams",
   "Win32_Foundation",
-  "Win32_System_WinRT",
+  "Win32_UI_WindowsAndMessaging",
 ] }
 
 [build-dependencies]
