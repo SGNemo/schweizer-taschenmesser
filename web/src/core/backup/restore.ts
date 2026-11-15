@@ -2,6 +2,8 @@
 import { runAppMigrations } from '@/core/db/appMigrations';
 import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 import { syncedTableNames } from '@/core/db/schema';
+import { copyTodoLinksAfterChange } from '@/core/entitylinks/migrate';
+import { LINKS_TABLE } from '@/core/entitylinks/store';
 import { allManifests } from '@/core/modules/registry';
 import { applyBackup, planRestore, type ApplyHooks, type RestorePlan } from './apply';
 import type { Backup, ImportMode, ImportSummary } from './backup';
@@ -53,5 +55,10 @@ export async function restoreBackup(
   const summary = await applyBackup(backup, mode, database, tableNames, opts.hooks);
   // A backup from before a merge only has the old tables: copy them forward.
   await runAppMigrations(database, { tableNames, restamp: mode === 'replace' });
+  // A backup from before the link table carries ToDo links only in the task's own field.
+  if (tableNames.includes(LINKS_TABLE))
+    await copyTodoLinksAfterChange(database, {
+      revive: mode === 'replace' && !(LINKS_TABLE in backup.tables),
+    });
   return { summary, safetyBackup };
 }

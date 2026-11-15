@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
-import { fromLegacy, refKey } from '@/core/entitylinks/types';
+import { linkEntries, removeLink as removeLinkRow, useLinks } from '@/core/entitylinks';
+import { fromLegacy, LINK_KINDS, refKey, refOfKind } from '@/core/entitylinks/types';
 import { useResolvedLinks } from '@/core/modules/contributions';
 import { getPlatform } from '@/core/platform';
 import type { NotificationPermissionState } from '@/core/notifications/service';
@@ -92,7 +93,23 @@ function EditorForm({
   const [checklist, setChecklist] = useState<ChecklistItem[]>(task.checklist ?? []);
   const [itemText, setItemText] = useState('');
   // Links are no draft: the list shows the stored record, and removing one is written at once (with undo).
-  const links: TaskLink[] = task.links ?? [];
+  // Two places hold them: the task's own `links` (frozen field, still written) and the link table – shown as
+  // one list, an entry of both once (same target).
+  const rowLinks = useLinks({ module: 'todos', id: task.id });
+  const links: TaskLink[] = useMemo(() => {
+    const own = task.links ?? [];
+    const seen = new Set(own.map((l) => refKey(fromLegacy(l).to)));
+    const extra: TaskLink[] = [];
+    for (const r of rowLinks ?? []) {
+      const key = refKey(r.other);
+      const kind = LINK_KINDS.find((k) => refOfKind[k] === r.other.module);
+      // The editor names four kinds of target; a row to anything else has no line here yet.
+      if (r.direction !== 'out' || !kind || seen.has(key)) continue;
+      seen.add(key);
+      extra.push({ kind, id: r.other.id, label: r.link.label });
+    }
+    return extra.length ? [...own, ...extra] : own;
+  }, [task.links, rowLinks]);
   const linkList = useRef<HTMLUListElement>(null);
   // After a removal the focus goes to the remove control of the row that took its place (or the one before).
   const focusLink = useRef<number | null>(null);
@@ -123,7 +140,12 @@ function EditorForm({
       const current = await taskRepo.get(task.id);
       if (!current) return;
       const rest = without(current.links);
-      await taskRepo.update(task.id, { links: rest.length ? rest : undefined });
+      if (rest.length !== (current.links ?? []).length)
+        await taskRepo.update(task.id, { links: rest.length ? rest : undefined });
+      // …and its rows in the link table (every `rel` to that target): one removal, one undo.
+      const target = refKey(fromLegacy(l).to);
+      for (const r of await linkEntries({ module: 'todos', id: task.id }))
+        if (r.direction === 'out' && refKey(r.other) === target) await removeLinkRow(r.id);
     });
   }
 
