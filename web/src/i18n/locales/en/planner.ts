@@ -135,6 +135,20 @@ export const planner: Strings['planner'] = {
       `Becomes a break on ${day}. The to-do is removed; Undo brings it back.`,
     estimate: 'Duration …',
     estimateTitle: (title: string) => `Duration: ${title}`,
+    dayPart: 'Part of day …',
+    dayPartTitle: (title: string) => `Part of day: ${title}`,
+    dayPartHint: 'Orders it within its day. The day stays the same.',
+    dayParts: {
+      morning: 'Morning',
+      afternoon: 'Afternoon',
+      evening: 'Evening',
+      none: 'None',
+    },
+    dayPartShort: {
+      morning: 'in the morning',
+      afternoon: 'in the afternoon',
+      evening: 'in the evening',
+    },
   },
   reasons: {
     pinned: 'pinned',
@@ -149,6 +163,7 @@ export const planner: Strings['planner'] = {
     pulled: (day: string) => `pulled forward, must be done by ${day}`,
     capacity: 'the day has less time',
     others: 'others',
+    part: (part: string) => `${part}, as you chose`,
   },
   wait: {
     title: 'Waiting for free time',
@@ -185,6 +200,8 @@ export const planner: Strings['planner'] = {
     windowCleared: (day: string) => `${day}: time window as usual`,
     asBreak: (title: string, day: string, length: string) => `Break ${day}: ${title} · ${length}`,
     estimate: (title: string, length: string) => `${title} takes ${length}`,
+    part: (title: string, part: string) => `${title}: ${part}`,
+    partCleared: (title: string) => `${title}: no part of day`,
     off: 'The planner is off.',
   },
   add: {

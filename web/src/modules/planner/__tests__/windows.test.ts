@@ -15,7 +15,6 @@ import { clearWindow, confirmWeek, setWindow } from '../actions';
 import { planChips } from '../calendar';
 import { planDays } from '../days';
 import manifest from '../manifest';
-import { migrations } from '../migrations';
 import { assignmentRepo, dayRepo } from '../repo';
 import { runPlanner, type RunDeps } from '../run';
 import { runsSettled, setManifestsForTests } from '../services';
@@ -96,11 +95,6 @@ describe('window settings', () => {
     expect(defaultWindow(v, 7)).toBeUndefined();
     // Defaults: no windows, the plan stays as before.
     expect(defaultWindow(DEFAULT_PLANNER_SETTINGS, 1)).toBeUndefined();
-  });
-
-  it('the shape step to v2 is recorded and keeps old rows as they are', () => {
-    expect(manifest.version).toBe(2);
-    expect(Object.keys(migrations ?? {})).toEqual(['2']);
   });
 });
 

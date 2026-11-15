@@ -175,6 +175,7 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
       ...(row?.pinned ? { pinned: row.pinned } : {}),
       splittable: row?.splittable ?? true,
       ...(row?.excluded ? { excluded: true } : {}),
+      ...(row?.part ? { part: row.part } : {}),
       createdAt: e.createdAt ?? 0,
     });
   }
@@ -296,6 +297,7 @@ const rowData = (row: PlanItemRow): PlanItemRow => {
     pinned,
     splittable,
     excluded,
+    part,
     order,
   } = row;
   return {
@@ -308,6 +310,7 @@ const rowData = (row: PlanItemRow): PlanItemRow => {
     ...(pinned ? { pinned } : {}),
     ...(splittable !== undefined ? { splittable } : {}),
     ...(excluded ? { excluded } : {}),
+    ...(part ? { part } : {}),
     order,
   };
 };

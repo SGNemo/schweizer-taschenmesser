@@ -522,6 +522,34 @@ test('C Wochenende einteilen', async ({ page, isMobile }, info) => {
   const plan = await planOf(page);
   facts(info, 'C', { ...plan, sundayRows });
   await record(info, m, name);
+  // Package 4b, checked but not counted: ⋯ → „Tagesabschnitt …“ → „Abend“ adds 3 taps to the 7 of package 4a,
+  // so the path without a part stays the measured one. One thing gets „Abend“ and then stands after the things
+  // without a part, on the same day.
+  if (isMobile)
+    await page
+      .getByRole('group', { name: 'Tage' })
+      .getByRole('button', { name: /^Heute/ })
+      .click();
+  else
+    await page
+      .getByRole('button', { name: /^Heute · / })
+      .first()
+      .click();
+  const sat = page.locator(`[data-testid="day-${SATURDAY}"]`);
+  await settledCount(sat.locator('li'));
+  const onSaturday = async () => (await planOf(page)).shown.filter((t) => OPEN.includes(t));
+  const before = await onSaturday();
+  expect(before.length).toBeGreaterThan(1);
+  const first = before[0]!;
+  await sat.getByRole('button', { name: `Aktionen für ${first}`, exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Tagesabschnitt …' }).click();
+  await page
+    .getByRole('dialog', { name: `Tagesabschnitt: ${first}` })
+    .getByRole('button', { name: 'Abend', exact: true })
+    .click();
+  await expect(page.getByText(`${first}: abends`)).toBeVisible();
+  await expect.poll(onSaturday).toEqual([...before.slice(1), first]);
+  await expect(sat.getByText('abends')).toBeVisible();
 });
 
 test('D Arbeitszeit nachtragen', async ({ page, isMobile }, info) => {
