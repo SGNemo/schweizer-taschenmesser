@@ -606,6 +606,10 @@ EG-E4. _Android, Akku „eingeschränkt“ für Nemo_ und _„Wecker & Erinnerun
 EG-E5. _Android, „Beenden erzwingen“ und Flugmodus:_ wie EG-E1 (Flugmodus muss gehen). ☐
 EG-E6. _PWA in Chrome (gleiches Handy), mit und ohne Web Push:_ EG-E1 und EG-E3; ohne Push kommt nichts, mit Push kommt es. ☐
 
+#### Frist mit Uhrzeit (Wochenende retten, Paket 5b, #915)
+
+FU-W1. _Android:_ ToDo mit Frist heute und „Uhrzeit der Frist“ in gut einer Stunde anlegen, im Bearbeiten-Dialog „Erinnern: 1 Std vorher“ einschalten (Vorgabe: aus), App schließen: genau eine Benachrichtigung eine Stunde vor der Frist, keine Wiederholung. Gegenprobe: ToDo vorher abhaken oder Schalter aus – es kommt nichts. ☐
+
 #### Erinnern-Zeile, Genommen, Ruhe (P5 Paket A)
 
 EZ-A1. _Android:_ Termin mit Uhrzeit anlegen, „Erinnern → 1 h“ und „Als Vorgabe merken“; ein neuer Termin startet mit „1 h“, ein Termin ohne Uhrzeit bekommt nichts. Ohne Benachrichtigungs-Erlaubnis erscheint ein ruhiger Satz mit „Erlauben“ und „Nicht mehr zeigen“. ☐
