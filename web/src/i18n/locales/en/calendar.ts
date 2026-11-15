@@ -150,6 +150,7 @@ export const calendar: Strings['calendar'] = {
     empty: 'No reminders yet.',
     emptyAction: 'Add a reminder',
     next: 'Next',
+    once: 'once',
     ended: 'Ended',
     paused: 'Paused',
     active: 'Active',

@@ -34,16 +34,20 @@ type Row = { name: string; project: string } & Record<Metric, number> & {
     ms: number;
   };
 
-/** Measured on `develop` 35499492 (2026-11-14). Packages lower these to TARGET §4; never raise them. */
+/**
+ * Measured on `develop` 35499492 (2026-11-14). Packages lower these to TARGET §4; never raise them. One trade:
+ * package 5a (W06) swaps a detour for the two taps of the row pick „Termin“ → „Erinnerung“ in B and G (taps
+ * 2 → 4, detours and seconds lower), as REVIEW-FABLE R6 asked.
+ */
 const MAX: Record<string, Record<Metric | 'seconds', number>> = {
   // prettier-ignore
   'A Erster Start bis Planer · desktop-chrome': { taps: 10, keys: 0, screens: 3, dialogs: 1, detours: 1, seconds: 24 },
   // prettier-ignore
   'A Erster Start bis Planer · pixel-7': { taps: 11, keys: 0, screens: 3, dialogs: 1, detours: 1, seconds: 25 },
   // prettier-ignore
-  'B Kopf leeren: zwölf Dinge auf einmal · desktop-chrome': { taps: 2, keys: 280, screens: 0, dialogs: 1, detours: 3, seconds: 90 },
+  'B Kopf leeren: zwölf Dinge auf einmal · desktop-chrome': { taps: 4, keys: 280, screens: 0, dialogs: 1, detours: 1, seconds: 82 },
   // prettier-ignore
-  'B Kopf leeren: zwölf Dinge auf einmal · pixel-7': { taps: 2, keys: 280, screens: 0, dialogs: 1, detours: 3, seconds: 132 },
+  'B Kopf leeren: zwölf Dinge auf einmal · pixel-7': { taps: 4, keys: 280, screens: 0, dialogs: 1, detours: 1, seconds: 124 },
   // prettier-ignore
   'C Wochenende einteilen · desktop-chrome': { taps: 7, keys: 18, screens: 1, dialogs: 1, detours: 0, seconds: 17 },
   // prettier-ignore
@@ -57,7 +61,7 @@ const MAX: Record<string, Record<Metric | 'seconds', number>> = {
   // prettier-ignore
   'F Abend: Rest auf andere Tage · pixel-7': { taps: 9, keys: 0, screens: 1, dialogs: 1, detours: 1, seconds: 19 },
   // prettier-ignore
-  'G Sonntag-Frist und Montag früh · desktop-chrome': { taps: 2, keys: 102, screens: 1, dialogs: 1, detours: 2, seconds: 43 },
+  'G Sonntag-Frist und Montag früh · desktop-chrome': { taps: 4, keys: 102, screens: 1, dialogs: 1, detours: 0, seconds: 35 },
   // prettier-ignore
   'H Schlaf: Abendgrenze für den Plan · desktop-chrome': { taps: 3, keys: 10, screens: 2, dialogs: 0, detours: 1, seconds: 15 },
 };
@@ -77,6 +81,11 @@ class Meter {
     this.taps += 1;
     if (this.mobile) await target.tap();
     else await target.click();
+  }
+  /** Picking an entry of an open choice (a native select) is one more tap. */
+  async pick(target: Locator, label: string) {
+    this.taps += 1;
+    await target.selectOption({ label });
   }
   /** Typing counts every character; `fill` keeps the test fast, the person types them. */
   async type(target: Locator, text: string) {
@@ -301,6 +310,19 @@ async function settledCount(loc: Locator): Promise<number> {
   return last;
 }
 
+/**
+ * W06 (package 5a): „erinnere mich“ is the only trigger word, so „Mo 7:30 krankmelden falls nötig“ is read as a
+ * Termin; the person switches that preview row to „Erinnerung“ – a tap on the row's target and a tap on the
+ * entry. Honest count: two taps, no detour, because it leads to what was meant.
+ */
+async function rowToReminder(page: Page, m: Meter, line: RegExp) {
+  const row = page.getByTestId('capture-row').filter({ hasText: line });
+  await expect(row.getByTestId('capture-row-target')).toHaveAttribute('data-type', 'event');
+  await m.tap(row.getByTestId('capture-row-target'));
+  await m.pick(row.getByTestId('capture-row-type'), 'Erinnerung');
+  await expect(row.getByTestId('capture-row-target')).toHaveAttribute('data-type', 'reminder');
+}
+
 /** A module link in the sidebar; a folded area group is opened first (one more tap). */
 async function sideLink(page: Page, m: Meter, name: string, group: string) {
   const link = page.getByRole('link', { name, exact: true });
@@ -373,6 +395,11 @@ test('B Kopf leeren: zwölf Dinge auf einmal', async ({ page, isMobile }, info) 
   await expect(page.getByTestId('capture-rows')).toContainText('Schlafrhythmus fixen');
   // W07: the lines go to more than one place – said above the rows, in the order the kinds first appear.
   await expect(page.getByTestId('capture-kinds')).toHaveText(/^ToDo \d+ · Termin \d+$/);
+  await rowToReminder(page, m, /krankmelden/i);
+  // The kinds line shows the result of the pick.
+  await expect(page.getByTestId('capture-kinds')).toHaveText(
+    /^ToDo \d+ · Termin \d+ · Erinnerung 1$/,
+  );
   const kinds = await page
     .getByTestId('capture-rows')
     .evaluate((list) => (list as HTMLElement).innerText.split('\n').filter(Boolean));
@@ -385,6 +412,7 @@ test('B Kopf leeren: zwölf Dinge auf einmal', async ({ page, isMobile }, info) 
     startDate?: string;
     startTime?: string;
     kind?: string;
+    once?: boolean;
   }>(page, 'calendar_event');
   const task = (t: RegExp) => tasks.find((x) => t.test(x.title));
   const event = (t: RegExp) => events.find((x) => t.test(x.title));
@@ -401,6 +429,9 @@ test('B Kopf leeren: zwölf Dinge auf einmal', async ({ page, isMobile }, info) 
   };
   const mondayKind = kindOf(/krankmelden/i);
   if (mondayKind !== 'reminder') m.detour();
+  // A reminder from the capture fires once at its time (`once`), never repeated.
+  const mondayOnce = event(/krankmelden/i)?.once === true;
+  expect(mondayOnce).toBe(true);
   // The Sunday-evening line: a reminder is what was meant.
   const sundayKind = kindOf(/kurz schauen/i);
   // What the plan makes of it (Saturday has 2 h, Sunday 0 by default).
@@ -413,6 +444,7 @@ test('B Kopf leeren: zwölf Dinge auf einmal', async ({ page, isMobile }, info) 
     teamDeadline,
     gamingTask,
     mondayKind,
+    mondayOnce,
     sundayKind,
     tasks: tasks.length,
     events: events.length,
@@ -669,6 +701,7 @@ test('G Sonntag-Frist und Montag früh', async ({ page, isMobile }, info) => {
   m.dialog();
   const input = page.getByRole('textbox', { name: 'Was möchtest du festhalten?' }).last();
   await m.type(input, 'So 19 Uhr erinnere mich kurz zu schauen\nMo 7:30 krankmelden falls nötig');
+  await rowToReminder(page, m, /krankmelden/i);
   await m.tap(page.getByRole('button', { name: 'Alle speichern (2)' }).first());
   await expect(page.getByText('2 Dinge gespeichert')).toBeVisible();
   const items = await rows<{
@@ -676,11 +709,15 @@ test('G Sonntag-Frist und Montag früh', async ({ page, isMobile }, info) => {
     kind?: string;
     startDate?: string;
     startTime?: string;
+    once?: boolean;
   }>(page, 'calendar_event');
   const sunday = items.find((i) => /schauen/i.test(i.title));
   const monday = items.find((i) => /krankmelden/i.test(i.title));
   // Monday's line becomes an appointment (it blocks an hour of the plan and reminds like a meeting).
   if ((monday?.kind ?? 'event') !== 'reminder') m.detour();
+  // Both reminders come from the capture: each fires once at its time, never repeated.
+  expect(sunday?.once).toBe(true);
+  expect(monday?.once).toBe(true);
   facts(info, 'G', {
     team: {
       title: team?.title,
@@ -692,11 +729,13 @@ test('G Sonntag-Frist und Montag früh', async ({ page, isMobile }, info) => {
     timeOnlyInNote,
     sunday: sunday && {
       kind: sunday.kind,
+      once: sunday.once,
       startDate: sunday.startDate,
       startTime: sunday.startTime,
     },
     monday: monday && {
       kind: monday.kind,
+      once: monday.once,
       startDate: monday.startDate,
       startTime: monday.startTime,
     },

@@ -24,6 +24,7 @@ Examples to copy from. Rules: [FOCUS-GUIDELINES.md](FOCUS-GUIDELINES.md) (text r
 | Focus end | "Zeit ist um. Noch fünf Minuten oder fertig?" | "Zeit abgelaufen!" |
 | Focus leave | "Fokus beendet. Dein Stand ist gespeichert." | "Abgebrochen" |
 | Reminder | "Gleich: Paket abholen" · "Erledigt" · "Später ▾" | "Du hast noch nicht reagiert" |
+| Reminder from the quick capture (row meta) | "einmal · Nächste: Mo., 2. Nov. 2026 · 07:30" · en: "once · Next: …" | "Erinnerung ohne Wiederholung!" · "Achtung: nur 1×" |
 | Snooze options | "In 10 Min" · "In 1 Std" · "Heute Abend" · "Morgen früh" | "Ignorieren" |
 | Rest day (streak) | "Pausentag. Die Serie bleibt." | "Serie verloren" |
 | Setting hints | "Zeigt oben eine einzige nächste Aufgabe. Du kannst es jederzeit ausschalten." | "Empfohlen: aktivieren" |
