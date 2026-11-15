@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { Stored } from '@/core/db/types';
 import { t } from '@/strings';
 import { Badge, Dialog, Icon, IconButton, ItemList, ItemRow } from '@/ui';
@@ -32,6 +33,18 @@ export function ManageLists({
 }) {
   const { active, archived } = splitArchived(lists);
   const target = pickShoppingTarget(lists);
+  // Said after a move (polite live region): the row moves, the reader hears where it went.
+  const [said, setSaid] = useState('');
+  async function move(l: Stored<List>, index: number, step: -1 | 1) {
+    const to = index + step;
+    if (to < 0 || to >= active.length) return;
+    await moveList(l.id, step);
+    setSaid(t.lists.movedTo(l.name, to + 1, active.length));
+    // The row was moved in the DOM: keep the focus on the arrow that was pressed.
+    requestAnimationFrame(() =>
+      document.querySelector<HTMLElement>(`[data-move="${l.id}:${step}"]`)?.focus(),
+    );
+  }
   const count = (id: string) => items.filter((i) => i.listId === id).length;
   const detail = (l: Stored<List>) =>
     [t.lists.kinds[l.kind], t.lists.itemCount(count(l.id))].join(' · ');
@@ -59,17 +72,20 @@ export function ManageLists({
       actions={
         inUse ? (
           <span className={styles.rowActions}>
+            {/* aria-disabled, not disabled: a pressed arrow at the edge keeps the focus. */}
             <IconButton
               label={t.lists.moveUp(l.name)}
-              disabled={index === 0}
-              onClick={() => void moveList(l.id, -1)}
+              aria-disabled={index === 0}
+              data-move={`${l.id}:-1`}
+              onClick={() => void move(l, index, -1)}
             >
               <Icon name="chevronUp" />
             </IconButton>
             <IconButton
               label={t.lists.moveDown(l.name)}
-              disabled={index === active.length - 1}
-              onClick={() => void moveList(l.id, 1)}
+              aria-disabled={index === active.length - 1}
+              data-move={`${l.id}:1`}
+              onClick={() => void move(l, index, 1)}
             >
               <Icon name="chevronDown" />
             </IconButton>
@@ -106,6 +122,9 @@ export function ManageLists({
   return (
     <Dialog open={open} onClose={onClose} title={t.lists.manage}>
       <p className={styles.hint}>{t.lists.manageHint}</p>
+      <p className={styles.srOnly} role="status" aria-live="polite">
+        {said}
+      </p>
       <div data-testid="lists-manage">
         <ItemList label={t.lists.tabsLabel}>{active.map((l, i) => row(l, i, true))}</ItemList>
       </div>

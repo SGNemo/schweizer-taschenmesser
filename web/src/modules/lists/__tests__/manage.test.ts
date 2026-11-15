@@ -135,3 +135,13 @@ describe('managing lists (round 2026-11)', () => {
     expect((await itemsOf('camp')).map((i) => i.name).sort()).toEqual(['Kocher', 'Zelt']);
   });
 });
+
+it('every list icon has a name for the picker', async () => {
+  const { LIST_ICONS } = await import('../logic');
+  const { t } = await import('@/strings');
+  const { lists: en } = await import('@/i18n/locales/en/lists');
+  for (const id of LIST_ICONS) {
+    expect(t.lists.iconNames[id]).toBeTruthy();
+    expect(en.iconNames[id]).toBeTruthy();
+  }
+});

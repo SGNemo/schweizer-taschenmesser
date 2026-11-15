@@ -34,7 +34,7 @@ import {
 } from '@/ui';
 import { ItemEditor } from '../components/ItemEditor';
 import { SignatureMark } from '@/ui/identity';
-import { archiveWithUndo, ListEditor, type ListTarget } from '../components/ListEditor';
+import { archiveWithUndo, ListEditor, ListMark, type ListTarget } from '../components/ListEditor';
 import { ManageLists } from '../components/ManageLists';
 import {
   groupItems,
@@ -61,13 +61,7 @@ import {
 } from '../repo';
 import type { Item } from '../schema';
 import { addRequested } from '../services';
-import {
-  createFromStarter,
-  createPackingFromTemplate,
-  createRoutine,
-  ROUTINES,
-  starterName,
-} from '../templates';
+import { createPackingFromTemplate, createRoutine, ROUTINES } from '../templates';
 import styles from './lists.module.css';
 
 /** A ticked entry keeps its place this long (with "Rückgängig" in the notice) before it moves down. */
@@ -118,6 +112,11 @@ export default function ListsPage() {
     (inUse[0] as (typeof inUse)[0] | undefined);
   const sorted = current?.archived ? [...inUse, current] : inUse;
   const [manage, setManage] = useState(false);
+  // Own icon or colour: shown in front of the list's first line (the tabs carry names only).
+  const mark =
+    current && (current.icon || current.tone !== undefined) ? (
+      <ListMark list={current} />
+    ) : undefined;
   /** A list just archived leaves the tab row: the page goes to the first list in use. */
   const leaveArchived = (id: string) => {
     if (params.get('list') === id || current?.id === id) setParams({}, { replace: true });
@@ -389,7 +388,11 @@ export default function ListsPage() {
           lists && current ? (
             <Tabs
               label={t.lists.tabsLabel}
-              items={sorted.map((l) => ({ id: l.id, label: l.name, active: l.id === current.id }))}
+              items={sorted.map((l) => ({
+                id: l.id,
+                label: l.archived ? t.lists.archivedTab(l.name) : l.name,
+                active: l.id === current.id,
+              }))}
               onSelect={(id) => {
                 setParams({ list: id }, { replace: true });
               }}
@@ -424,7 +427,16 @@ export default function ListsPage() {
         />
       ) : null}
       {lists && current && !read ? <div aria-busy="true" data-testid="lists-reading" /> : null}
-      {lists && !current ? <EmptyState title={t.lists.noListInUse} testId="lists-none" /> : null}
+      {lists && !current ? (
+        <EmptyState
+          title={lists.length > 0 ? t.lists.noListArchived : t.lists.noListInUse}
+          testId="lists-none"
+        >
+          {lists.length > 0 ? (
+            <Button onClick={() => setManage(true)}>{t.lists.manage}</Button>
+          ) : null}
+        </EmptyState>
+      ) : null}
       {lists && current && read ? (
         <>
           {current.archived ? (
@@ -437,10 +449,14 @@ export default function ListsPage() {
               has no such line; its empty state says it. */}
           {shown.length === 0 ? (
             tripLine ? (
-              <ListSummary>{tripLine}</ListSummary>
+              <ListSummary mark={mark}>{tripLine}</ListSummary>
             ) : null
           ) : isShopping ? (
-            <ListSummary testId="lists-sums" note={sums.priced > 0 ? t.lists.sumNote : undefined}>
+            <ListSummary
+              testId="lists-sums"
+              mark={mark}
+              note={sums.priced > 0 ? t.lists.sumNote : undefined}
+            >
               {sums.priced > 0 ? (
                 <>
                   <span>{t.lists.sumOpen(formatMoney(sums.openCents))}</span>
@@ -456,7 +472,7 @@ export default function ListsPage() {
             </ListSummary>
           ) : (
             <div className={styles.progress} data-testid="lists-progress">
-              <ListSummary>
+              <ListSummary mark={mark}>
                 {[
                   isPacking
                     ? t.lists.progressPacked(stats.done, stats.total)
@@ -485,10 +501,15 @@ export default function ListsPage() {
                 title={t.lists.empty}
                 testId="lists-empty"
                 motif={
-                  <SignatureMark
-                    id={current.kind === 'shopping' ? 'receipt' : 'todayCard'}
-                    size={64}
-                  />
+                  // A list with its own icon or colour shows it; otherwise the module's signature.
+                  mark ? (
+                    <ListMark list={current} size={64} />
+                  ) : (
+                    <SignatureMark
+                      id={current.kind === 'shopping' ? 'receipt' : 'todayCard'}
+                      size={64}
+                    />
+                  )
                 }
               />
             </div>
@@ -601,24 +622,6 @@ export default function ListsPage() {
               </li>
             ),
           )}
-        </ul>
-        <h3>{t.lists.startersTitle}</h3>
-        <ul className={styles.templates}>
-          {(['weekly', 'vacation'] as const).map((id) => (
-            <li key={id}>
-              <Button
-                onClick={() => {
-                  void createFromStarter(id).then((listId) => {
-                    setTemplates(false);
-                    setParams({ list: listId }, { replace: true });
-                    toast(t.lists.routines.created);
-                  });
-                }}
-              >
-                {starterName(id)}
-              </Button>
-            </li>
-          ))}
         </ul>
         <h3>{t.lists.fromTemplate}</h3>
         <ul className={styles.templates}>
