@@ -48,6 +48,8 @@ interface Target {
   label: string;
   icon: IconName;
   to: (c: ReturnType<typeof sharedContent>) => string;
+  /** Offered only for this content (a feed needs a shared address). */
+  when?: (c: ReturnType<typeof sharedContent>) => boolean;
 }
 
 const q = (values: Record<string, string>): string =>
@@ -78,6 +80,16 @@ const TARGETS: Target[] = [
     },
     icon: 'checklist',
     to: (c) => `/todos?${q({ new: '1', title: c.title || c.text || c.url })}`,
+  },
+  {
+    module: 'feeds',
+    get label() {
+      return t.share.toFeed;
+    },
+    icon: 'wifi',
+    // The page's address: the feeds module looks for its feed (or takes it as a search word).
+    to: (c) => `/feeds?${q({ add: c.url })}`,
+    when: (c) => c.url !== '',
   },
 ];
 
@@ -136,7 +148,7 @@ export function ShareTarget() {
           <h2>{t.quickCapture.share.or}</h2>
           <ul className={styles.list} aria-label={t.share.where}>
             {states
-              ? TARGETS.map((x) => (
+              ? TARGETS.filter((x) => x.when?.(content) ?? true).map((x) => (
                   <Card as="li" key={x.module}>
                     {states[x.module] ? (
                       <Link to={x.to(content)} data-testid={`share-${x.module}`}>

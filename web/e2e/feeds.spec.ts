@@ -11,6 +11,13 @@ test('Feeds: hinzufügen, gruppieren, doppelte erkennen, bearbeiten, entfernen',
     .first()
     .click();
 
+  // The add dialog takes a search word or an address; an address goes on to the form.
+  const finder = page.getByRole('dialog', { name: 'Feed hinzufügen' });
+  await finder
+    .getByRole('searchbox', { name: 'Suchen oder Adresse einfügen' })
+    .fill('blog.example.org/feed.xml');
+  await finder.getByRole('button', { name: 'Als Feed hinzufügen' }).click();
+
   const dialog = page.getByRole('dialog', { name: 'Feed hinzufügen' });
   await dialog.getByRole('textbox', { name: /Adresse des Feeds/ }).fill('keine adresse');
   await dialog.getByRole('button', { name: 'Speichern' }).click();
@@ -33,6 +40,10 @@ test('Feeds: hinzufügen, gruppieren, doppelte erkennen, bearbeiten, entfernen',
     .getByRole('button', { name: /Feed (hinzufügen|eintragen)/ })
     .first()
     .click();
+  await page
+    .getByRole('searchbox', { name: 'Suchen oder Adresse einfügen' })
+    .fill('blog.example.org');
+  await page.getByRole('button', { name: 'Als Feed hinzufügen' }).click();
   const again = page.getByRole('dialog', { name: 'Feed hinzufügen' });
   await again
     .getByRole('textbox', { name: /Adresse des Feeds/ })
@@ -45,6 +56,27 @@ test('Feeds: hinzufügen, gruppieren, doppelte erkennen, bearbeiten, entfernen',
   await page.getByRole('button', { name: /Aktionen für blog.example.org/ }).click();
   await page.getByRole('menuitem', { name: /Entfernen/ }).click();
   await expect(page.getByText('Noch keine Feeds').first()).toBeVisible();
+});
+
+test('Feeds: Vorschläge und Startkatalog mit einem Tipp', async ({ page }) => {
+  await enable(page, 'feeds');
+  await page.goto('/feeds');
+  const suggestions = page.getByTestId('feeds-suggestions');
+  await expect(suggestions.getByRole('button', { name: /hinzufügen/ })).toHaveCount(3);
+  await suggestions.getByRole('button', { name: 'tagesschau.de hinzufügen' }).click();
+  await expect(page.getByRole('heading', { name: /Nachrichten/ })).toBeVisible();
+
+  await page
+    .getByRole('button', { name: /Feed (hinzufügen|eintragen)/ })
+    .first()
+    .click();
+  const finder = page.getByRole('dialog', { name: 'Feed hinzufügen' });
+  await expect(finder.getByTestId('feeds-catalog-added-tagesschau')).toBeVisible();
+  await finder.getByRole('searchbox', { name: 'Suchen oder Adresse einfügen' }).fill('Österreich');
+  await finder.getByRole('button', { name: 'ORF.at hinzufügen' }).click();
+  await expect(finder.getByTestId('feeds-catalog-added-orf')).toBeVisible();
+  await finder.getByRole('button', { name: 'Fertig' }).click();
+  await expect(page.getByRole('heading', { name: /Lokal/ })).toBeVisible();
 });
 
 const OPML = `<?xml version="1.0"?>
