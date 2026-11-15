@@ -24,6 +24,7 @@ UI-Audit 4.0 ist abgenommen: Identity 4.0 gilt seit 0b-8 (2026-11-14, [REPORT �
 
 ## Abgeschlossene Runden (je eine Zeile; alles auf `develop`)
 
+- Gerätestatus „Tiefe“ (#927–#929); offen: Handtests GS-10–14.
 - Use case „Wochenende retten“ (`docs/design/usecases/wochenende/`, nachgemessen in #940): Samstagmorgen A–G 29 statt 56 Taps, ≈ 176 statt 240 s (ANALYSIS §5, TARGET §4); nicht gebaut W08, W15, W16, neue Reibung W23–W25; offen für Sven: Handtest FU-W1 ([MANUAL-TESTS](MANUAL-TESTS.md)).
 - Merkliste „Tiefe & Politur“: Rolle, neue Arten, „Schon gemerkt“, „In den Plan“, Widget (#950–#952, [design/bookmarks-deep/PLAN.md](design/bookmarks-deep/PLAN.md)); drei Ja/Nein-Fragen an Sven in #951/#952.
 - Musik „Tiefe & Politur“: Playlists-Tab, Alben, Künstlerseiten, Weiterhören, Schlaf-Timer, Liedtext-Suche, Tasten (SGNemo/schweizer-taschenmesser#937, #953, #969; [features/spotify.md](features/spotify.md)); offen: Handtest mit echtem Konto (`/me`, Playlist bearbeiten, `/me/albums`, Top-Titel), Künstlern folgen (neuer Scope, nicht gebaut).
@@ -43,7 +44,7 @@ UI-Audit 4.0 ist abgenommen: Identity 4.0 gilt seit 0b-8 (2026-11-14, [REPORT �
 - Datenebene Performance (Phase 1, P2a–d): [perf/DATA-BASELINE-2026-11-03.md](perf/DATA-BASELINE-2026-11-03.md); E2E-Tempo und CI: [perf/CI-BASELINE-2-2026-11-04.md](perf/CI-BASELINE-2-2026-11-04.md).
 - Mail-Modul (Pakete 0–5), Feeds, Browser + Downloads + Torrent, Karten (eigene Karte, Routing, ÖPNV): [features/](features/README.md). Nur mit Mock-Daten oder `cargo check` geprüft: Torrent, Browser-Rust-Teil, Android Custom Tabs (nicht auf Hardware gebaut).
 - Planen-Gruppe, Geld-Gruppe, Haushalt & Tresor, Wissen/Medien/Dienste, Cockpit-Modus, Rechner (Modi, Plotter), Anonyme Persona: [CHANGELOG](../CHANGELOG.md), Rezepte in [HOW-TO](HOW-TO.md).
-- Fokus- und Aufmerksamkeitshilfen (Pakete 1–4, Runden 2–5), Komfort-Review, Lesbarkeit: [features/focus-aids.md](features/focus-aids.md), [product/comfort/07-summary.md](product/comfort/07-summary.md). Nicht in `develop`: Finanz-Tabs Konten/Kategorien in Erweitert (`feat/comfort-finance-advanced`).
+- Fokus- und Aufmerksamkeitshilfen (Pakete 1–4, Runden 2–5), Komfort-Review, Lesbarkeit: [features/focus-aids.md](features/focus-aids.md), [product/comfort/07-summary.md](product/comfort/07-summary.md).
 - QA-Runden (Personas, P1–P6, Runde 4 Chaos): [qa/CONSOLIDATED.md](qa/CONSOLIDATED.md), [qa/round-4/chaos/FINDINGS.md](qa/round-4/chaos/FINDINGS.md) (X25/X31/X37 nur teilweise). Offen: Feld-Reifegrad (Erinnerungs-Felder, Zock-Modus), Kalender „Wetter am Tag“ und „Als Ort speichern“.
 - Fehlerberichte, Sicherheits-Review vor dem Launch, Änderungsprotokoll, Supporter-Modus, KI abschalten, Spracheingabe, KI-Eintragen: [security/LAUNCH-REVIEW-2026-10-06.md](security/LAUNCH-REVIEW-2026-10-06.md) (offen daraus u. a. X2 Pipe-Erstinstanz, V2 Windows-Hello-Wrapping, V4, S5 Sync-Token in den `SecretStore`; vollständig: Abschnitt B des Berichts), [howto/bug-reports.md](howto/bug-reports.md), [howto/changelog.md](howto/changelog.md).
 - Docs-Diät 2026-11 (Startkosten eines Chats, CHATS/STATUS gekürzt, abgeschlossene Arbeitsordner entfernt; Paket 4: Design-Runden 1–7, Lesbarkeitsplan, Visual-Audit und Cleanup 2026-10-03 in DESIGN-SPEC, `howto/known-duplicates.md` und ROADMAP zusammengefasst): [meta/DOCS-DIET-2026-11.md](meta/DOCS-DIET-2026-11.md).
