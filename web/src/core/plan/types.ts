@@ -29,6 +29,13 @@ export interface PlanDay {
 
 export type PlanPriority = 0 | 1 | 2 | 3;
 
+/** Part of a day (package 4b): orders a day's units and, with a window, where in it they sit. Never a day. */
+export type DayPart = 'morning' | 'afternoon' | 'evening';
+export const DAY_PARTS: readonly DayPart[] = ['morning', 'afternoon', 'evening'];
+/** Rank of a part in the day's order: none first, then Vormittag, Nachmittag, Abend. */
+export const partRank = (part: DayPart | undefined): number =>
+  part ? DAY_PARTS.indexOf(part) + 1 : 0;
+
 export interface PlanItem {
   /** `<module>:<id>`; also the first part of every unit id. */
   key: string;
@@ -44,6 +51,8 @@ export interface PlanItem {
   splittable?: boolean;
   /** „Nicht planen“: left out of every run. */
   excluded?: boolean;
+  /** Vormittag / Nachmittag / Abend (planner-own, never a contract field): order inside the day, never the day. */
+  part?: DayPart;
   done?: boolean;
   /** Age for the tie-break "older first" (epoch ms). */
   createdAt: number;
