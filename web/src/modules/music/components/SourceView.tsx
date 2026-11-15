@@ -17,7 +17,14 @@ import { tSpotify } from '@/strings.spotify';
 import type { CoverImage } from '@/core/connectors/coverUrl';
 import type { ConnectorContext } from '@/core/connectors/types';
 import { Button, Icon, TextField } from '@/ui';
-import { canEdit, canRename, changedAlbums, changedPlaylists, readAccount } from '../library';
+import {
+  canEdit,
+  canRename,
+  changedAlbums,
+  changedFollows,
+  changedPlaylists,
+  readAccount,
+} from '../library';
 import { COVER_PX } from '../useCover';
 import { Cover } from './Cover';
 import { useAddToPlaylist } from './AddToPlaylist';
@@ -25,6 +32,7 @@ import { PlaylistDialog, type PlaylistTarget } from './PlaylistDialog';
 import { PlaylistsView } from './PlaylistsView';
 import { AlbumsView } from './AlbumsView';
 import { BackButton } from './Back';
+import { FollowButton } from './FollowButton';
 import { Tile } from './Tile';
 import { TrackList } from './TrackList';
 import { useSavedTracks } from './useSavedTracks';
@@ -246,12 +254,11 @@ function ContentView({
   const toggleAlbum = (on: boolean) => {
     setAlbumSaved(on);
     setAlbumBusy(true);
-    // The albums tab reads afresh, even when "Zurück" comes before the answer.
-    changedAlbums();
+    // The albums tab reads afresh once Spotify has the change (a read before the answer would keep the old list).
     source.saveAlbums!(ctx, [view.id], on)
+      .then(changedAlbums)
       .catch(() => {
         setAlbumSaved(!on);
-        changedAlbums();
         toast(on ? tm.albumSaveFailed : tm.albumRemoveFailed);
       })
       .finally(() => setAlbumBusy(false));
@@ -309,6 +316,15 @@ function ContentView({
   const editable =
     view.type === 'playlist' && features.includes('playlistEdit') && canEdit(value, me);
   const renamable = editable && canRename(value, me);
+  // Someone else's playlist (found in the search, or one you follow): follow or unfollow it ("Playlists bearbeiten").
+  const followable =
+    view.type === 'playlist' &&
+    features.includes('playlistEdit') &&
+    !!source.playlistFollowed &&
+    !!source.followPlaylist &&
+    me !== undefined &&
+    value.ownerId !== undefined &&
+    value.ownerId !== me;
   // Spotify removes a song every time it is in the playlist, and "Rückgängig" can put back one: a song that is in
   // there twice is not offered for removal.
   const counts = new Map<string, number>();
@@ -358,7 +374,7 @@ function ContentView({
         ctx={ctx}
         cover={value}
       >
-        {canControl || (renamable && source.editPlaylist) ? (
+        {canControl || (renamable && source.editPlaylist) || followable ? (
           <div className={styles.headActions}>
             {canControl ? (
               <Button onClick={() => playAll(false)} disabled={visible.length === 0}>
@@ -381,6 +397,15 @@ function ContentView({
                 <Icon name="edit" size={18} />
                 {tm.edit}
               </Button>
+            ) : null}
+            {followable ? (
+              <FollowButton
+                id={view.id}
+                name={name}
+                read={() => source.playlistFollowed!(ctx, view.id)}
+                write={(on) => source.followPlaylist!(ctx, view.id, on)}
+                onChanged={changedPlaylists}
+              />
             ) : null}
           </div>
         ) : null}
@@ -476,7 +501,9 @@ function ContentView({
 function ArtistView({ api, view }: { api: PlayerApi; view: Extract<View, { type: 'artist' }> }) {
   const tx = tSpotify.use();
   const tm = tMusicPage.use();
-  const { source, ctx, canControl } = api.np;
+  const { source, ctx, canControl, features } = api.np;
+  const canFollow =
+    features.includes('follow') && !!source.artistsFollowed && !!source.followArtists;
   const page = useLoad<ArtistPage>(
     source.artist ? () => source.artist!(ctx, view.id) : undefined,
     viewKey(view),
@@ -503,16 +530,27 @@ function ArtistView({ api, view }: { api: PlayerApi; view: Extract<View, { type:
     <>
       {back}
       <ListHeader title={name} focusTitle ctx={ctx} cover={value}>
-        {canControl && source.play ? (
+        {(canControl && source.play) || canFollow ? (
           <div className={styles.headActions}>
-            <Button
-              onClick={() =>
-                void api.act(() => source.play!(ctx, { kind: 'artist', id: view.id, name }))
-              }
-            >
-              <Icon name="play" size={18} />
-              {tm.playArtist}
-            </Button>
+            {canControl && source.play ? (
+              <Button
+                onClick={() =>
+                  void api.act(() => source.play!(ctx, { kind: 'artist', id: view.id, name }))
+                }
+              >
+                <Icon name="play" size={18} />
+                {tm.playArtist}
+              </Button>
+            ) : null}
+            {canFollow ? (
+              <FollowButton
+                id={view.id}
+                name={name}
+                read={() => source.artistsFollowed!(ctx, [view.id]).then(([on]) => on === true)}
+                write={(on) => source.followArtists!(ctx, [view.id], on)}
+                onChanged={changedFollows}
+              />
+            ) : null}
           </div>
         ) : null}
       </ListHeader>

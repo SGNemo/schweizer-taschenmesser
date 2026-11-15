@@ -201,6 +201,7 @@ fn a_grant_belongs_to_an_active_device_and_goes_with_it() {
         paused: false,
         unlock: true,
         power: false,
+        programs: false,
     };
     trust.set_remote(&a, full).unwrap();
     assert_eq!(trust.remote_of(&a), full);
@@ -249,6 +250,30 @@ fn a_grant_belongs_to_an_active_device_and_goes_with_it() {
         ..power
     }
     .power_effective());
+    // programs: their own permission as well; they count only with mouse and keyboard
+    let programs = RemoteGrant {
+        programs: true,
+        ..full
+    };
+    assert!(programs.widens(&full), "allowing programs");
+    assert!(!full.widens(&programs));
+    assert!(programs.programs_effective() && !full.programs_effective());
+    for narrower in [
+        RemoteGrant {
+            paused: true,
+            ..programs
+        },
+        RemoteGrant {
+            level: Level::Media,
+            ..programs
+        },
+        RemoteGrant {
+            level: Level::Off,
+            ..programs
+        },
+    ] {
+        assert!(!narrower.programs_effective());
+    }
     // revoked: the grant is gone and cannot be set again
     trust.revoke(&a).unwrap();
     assert_eq!(trust.remote_of(&a), RemoteGrant::default());

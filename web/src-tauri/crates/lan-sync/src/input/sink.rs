@@ -6,7 +6,7 @@
 //! `state()` after a quiet time, which may wait a bounded moment (see [`InputSink::state`]) – and
 //! it logs nothing.
 
-use super::wire::{Button, Key, Media, PcState, Power, PowerAnswer, Record};
+use super::wire::{Button, Key, Media, PcState, Power, PowerAnswer, ProgramAnswer, Record};
 use crate::noise::PublicKey;
 use std::fmt;
 
@@ -74,6 +74,29 @@ pub trait InputSink: Send + Sync {
     /// the answer. A session tells its phone the news of its device that came after it opened.
     fn power_news(&self) -> Option<(u64, PublicKey, PowerAnswer)> {
         None
+    }
+
+    /// The epoch of the PC's program list: it changes with every change of the list. Cheap (the
+    /// session asks at every tick); the names come with [`InputSink::programs`].
+    fn programs_version(&self) -> u32 {
+        0
+    }
+
+    /// The names of the PC's program list in slot order, and its epoch (both read together).
+    /// Names only: never a path.
+    fn programs(&self) -> (u32, Vec<String>) {
+        (0, Vec::new())
+    }
+
+    /// Starts the program in `slot` of the PC's list for device `peer` – a start that passed the
+    /// session's gate (session, permission, PC not locked, the session's limit). `epoch`: the
+    /// epoch of the list the phone was told; the sink compares it with the list's epoch now,
+    /// under the list's lock, and starts nothing on a mismatch or an empty slot (`Failed`). It
+    /// also keeps the per-device limit (`Limit`), across sessions. The path is the PC's, looked
+    /// up now; it starts without arguments. Answers at once.
+    fn start_program(&self, peer: &PublicKey, slot: u8, epoch: u32) -> ProgramAnswer {
+        let _ = (peer, slot, epoch);
+        ProgramAnswer::Failed
     }
 }
 

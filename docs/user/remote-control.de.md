@@ -49,6 +49,13 @@ Solange der PC gesperrt ist, gehen nur Medien und Lautstärke. Das Handy sieht n
 - Zweimal innerhalb einer Stunde am PC abgebrochen, ist das Ausschalten für dieses Handy wieder aus.
 - _Monitor aus_ (im selben Menü) schaltet nur den Bildschirm aus, ohne Countdown.
 
+## Programm starten
+
+- **Am PC auswählen:** unter _Einstellungen → Verbindungen → Fernsteuerung_ im Block _Programme_ mit _Programm hinzufügen …_ eine `.exe`-Datei oder eine Verknüpfung wählen (höchstens 8). Windows fragt danach noch einmal nach. _Entfernen_ wirkt sofort.
+- **Am PC erlauben:** beim Gerät mit der Stufe Maus und Tastatur _Darf Programme starten_ (ab Werk aus, der PC fragt noch einmal nach).
+- **Am Handy:** Menü _⋯ → Programm starten …_ zeigt die Namen der Liste; ein Tipp öffnet das Programm am PC wie ein Doppelklick dort. Ohne Freigabe fehlt der Eintrag. Wie _Tastatur_ braucht es Maus und Tastatur, also auch dieselbe Abfrage am Handy, wenn der PC sie verlangt.
+- Das Handy sieht nur die Namen, nie Pfade, und schickt keine Zusatzangaben mit. Geht nur, solange der PC entsperrt ist, und höchstens alle 5 Sekunden.
+
 ## Beenden und wieder einschalten
 
 - Am PC zeigt Nemo immer an, wenn ein Gerät steuert: im Fenster oben und am Symbol neben der Uhr.

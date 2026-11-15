@@ -5,9 +5,10 @@ import { checkPlanPage, type PageRule } from './planArea';
 
 /**
  * The plan area after package 0b-4 of UI audit 2026-11, last part (0b-4b part 2: Planer, Karten & Orte, Wetter): see
- * `planArea.ts` for what a page has to hold. Planer is master–detail on a wide page (the week as a list, the picked
- * day beside it) and keeps its inline field as the page's last row (rule 4), so it has no head action
- * (`action: false`). Wetter is a stage: its height with weather data is measured in `head-height.seed.spec.ts`.
+ * `planArea.ts` for what a page has to hold. Planer (planner hub R1, decisions D2/D3 in `docs/decisions/plan-hub.md`):
+ * the week is a band of seven tiles, the picked day's sheet lies below it, and the inline field is the first thing
+ * of the main column on the desktop, so it has no head action (`action: false`). Wetter is a stage: its height with
+ * weather data is measured in `head-height.seed.spec.ts`.
  */
 const PAGES: PageRule[] = [
   { path: '/planner', colouredMax: 10, tabsMin: 0, figure: true, action: false },
@@ -28,28 +29,33 @@ test.describe('plan area, Planer and Karten on tone steps (package 0b-4b, part 2
       console.log(`plan rest desktop: ${JSON.stringify(seen)}`);
     });
 
-    test('Planer: the week is a list, the picked day lies beside it, the field is the last row', async ({
+    test("Planer: the week is a band of seven tiles, the picked day's sheet lies below it, the field comes first", async ({
       page,
     }) => {
       await startSeeded(page);
       await openPage(page, '/planner');
-      const days = page.locator('main [data-testid^="week-"]');
+      const band = page.locator('main [role="group"][aria-label="Woche"]');
+      const days = band.locator('[data-testid^="week-"]');
       await expect(days).toHaveCount(7);
-      await expect(page.locator('main [aria-current="true"]')).toHaveCount(1);
-      const panel = page.locator('main aside');
-      await expect(panel.locator('[data-testid^="day-"]')).toHaveCount(1);
-      // Another day is one click; the panel follows.
+      await expect(band.locator('[aria-pressed="true"]')).toHaveCount(1);
+      const sheets = page.locator('main [data-testid^="day-"][aria-labelledby]');
+      await expect(sheets).toHaveCount(1);
+      // Another day is one click; the sheet follows.
       const second = days.nth(1);
       const id = (await second.getAttribute('data-testid'))!.replace('week-', 'day-');
       await second.click();
-      await expect(panel.getByTestId(id)).toBeVisible();
-      await expect(
-        page.locator('main [aria-current="true"]').getByTestId(id.replace('day-', 'week-')),
-      ).toBeVisible();
-      // Rule 4: the inline field lies under the week, not above it.
+      await expect(page.locator('main').getByTestId(id)).toBeVisible();
+      await expect(sheets).toHaveCount(1);
+      await expect(band.locator('[aria-pressed="true"]')).toHaveAttribute(
+        'data-testid',
+        id.replace('day-', 'week-'),
+      );
+      // The sheet lies under the band; the inline field (D3, revising rule 4 for the planner) above both.
       const field = await page.getByLabel('Eintragen oder sagen').boundingBox();
-      const week = await page.locator('main ul[aria-label="Woche"]').boundingBox();
-      expect(field!.y).toBeGreaterThan(week!.y + week!.height);
+      const week = await band.boundingBox();
+      const sheet = await page.locator('main').getByTestId(id).boundingBox();
+      expect(sheet!.y).toBeGreaterThanOrEqual(week!.y + week!.height);
+      expect(field!.y + field!.height).toBeLessThanOrEqual(week!.y);
     });
 
     test('Wetter: the stage draws its default signature without a surface (design check K7)', async ({

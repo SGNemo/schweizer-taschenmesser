@@ -57,11 +57,9 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 | `core/db/schema.snapshot.json`, Dexie version                                            | on conflict re-run `npm run db:bump` after merging `develop`; never hand-edit               |
 | `web/src/ui/charts/**`                                                                   | wishes via the notes repo; no module copies                                                 |
 | `web/src/pages/Settings.tsx`, `layout/AppShell.tsx`, `router.tsx`                        | small edits, local to your section                                                          |
-| `core/platform/system.ts`, src-tauri `build.rs`, `lib.rs`, `system.rs`, `desktop.json`   | round Tiefe: read commands = geraetestatus (`system_health`), act = dieser-pc               |
 | images under `docs/`                                                                     | none ([DOCS-GUIDE](meta/DOCS-GUIDE.md#images)); screenshots go into the PR text             |
 | `docs/STATUS.md`                                                                         | only in a `docs(status)` PR of its own (docs only), never in a feature PR                   |
 | `docs/DECISIONS.md`, `docs/HOW-TO.md`, `docs/ARCHITECTURE-MAP.md`, `README.md`           | touch only on real change; one line / one block, no reformatting                            |
-| `web/src/ui/widgets/**`, `web/src/home/**` (round "Tiefe")                               | corrections only while `fix/home-polish` is open (scribble `uebersicht.md`)                 |
 
 ## Hand-over conventions
 
