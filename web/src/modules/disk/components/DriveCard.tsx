@@ -12,6 +12,7 @@ import {
   healthView,
   scanWhen,
 } from '../logic/drives';
+import { tidyHelps } from '../logic/advice';
 import { formatRate } from '../logic/system';
 import { growthSinceScan, useDriveHistory } from '../history';
 import { useDiskStore } from '../store';
@@ -73,10 +74,16 @@ export function DriveCard({
   drive: d,
   io,
   onScan,
+  onTidy,
+  trim = null,
 }: {
   drive: DriveInfo;
   io?: DiskIo;
   onScan: () => void;
+  /** To the tidy tab: offered as the next step when this is the almost full system drive. */
+  onTidy?: () => void;
+  /** TRIM state for this drive's details (`null`: not known or not applicable – say nothing). */
+  trim?: 'on' | 'off' | null;
 }) {
   const points = useDriveHistory((s) => s.points[d.root]);
   const lastScan = useDriveHistory((s) => s.lastScan[d.root]);
@@ -134,9 +141,17 @@ export function DriveCard({
 
       <div className={styles.foot}>
         {scanning ? null : (
-          <Button variant="secondary" aria-label={t.disk.open(name)} onClick={onScan}>
-            {c.scan}
-          </Button>
+          <div className={styles.steps}>
+            <Button variant="secondary" aria-label={t.disk.open(name)} onClick={onScan}>
+              {c.scan}
+            </Button>
+            {/* The advice line above says "Aufräumen empfohlen": here is that step. */}
+            {onTidy && tidyHelps(d, level) ? (
+              <Button variant="ghost" onClick={onTidy}>
+                {c.toTidy}
+              </Button>
+            ) : null}
+          </div>
         )}
         <details className={styles.details}>
           <summary className={styles.summary}>
@@ -152,6 +167,14 @@ export function DriveCard({
               <>
                 <dt>{c.temperatureLabel}</dt>
                 <dd>{c.temperature(d.health.temperatureC)}</dd>
+              </>
+            ) : null}
+            {trim ? (
+              <>
+                <dt>
+                  {c.trimLabel} <HelpHint text={c.helpTrim} />
+                </dt>
+                <dd>{c.trim[trim]}</dd>
               </>
             ) : null}
             {points && points.length > 1 ? (

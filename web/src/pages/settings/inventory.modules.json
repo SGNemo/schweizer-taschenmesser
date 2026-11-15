@@ -12,6 +12,11 @@
         "label": "Tresor sperren, wenn die App im Hintergrund ist",
         "default": "now"
       },
+      "clipboardSeconds": {
+        "type": "select",
+        "label": "Kopiertes aus der Zwischenablage löschen",
+        "default": "30"
+      },
       "originMatch": {
         "type": "select",
         "label": "Browser-Erweiterung: Zugangsdaten anbieten für",
@@ -317,6 +322,16 @@
         "label": "Bezahlte Rechnung als Ausgabe buchen",
         "default": true
       },
+      "showInPlan": {
+        "type": "boolean",
+        "label": "Im Plan zeigen",
+        "default": true
+      }
+    }
+  },
+  "lists": {
+    "scope": "module.lists",
+    "fields": {
       "showInPlan": {
         "type": "boolean",
         "label": "Im Plan zeigen",

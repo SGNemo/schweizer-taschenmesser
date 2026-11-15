@@ -19,6 +19,23 @@ const wrap = (size: WidgetSizeName, ui: React.ReactElement) =>
   );
 
 describe('widget bodies (identity v3.1)', () => {
+  it('KennzahlBody: the context line breaks between its parts, never inside one (fix/home-polish)', () => {
+    const context = 'Vermögen, davon 11.598,49 € verfügbar · Ausgaben ▲ +463,62 € zum Vormonat';
+    const { container } = wrap('s', <KennzahlBody value="12.616,33 €" context={context} />);
+    const line = container.querySelector('[data-body="kennzahl"] p:last-of-type')!;
+    // Same text as before (screen readers, tests and "Werte ausblenden" read it unchanged) …
+    expect(line.textContent).toBe(context);
+    // … but each part is one unbreakable box; the dot stays with the part before it.
+    const parts = Array.from(line.children).map((c) => c.textContent);
+    expect(parts).toEqual([
+      'Vermögen, davon 11.598,49 € verfügbar ·',
+      'Ausgaben ▲ +463,62 € zum Vormonat',
+    ]);
+    // A line of one part is one box.
+    const one = wrap('s', <KennzahlBody value="6" context="aus 2 Gruppen" />).container;
+    expect(one.querySelectorAll('[data-body="kennzahl"] p:last-of-type > span')).toHaveLength(1);
+  });
+
   it('KennzahlBody: figure, unit and context line; the sparkline only at size l', () => {
     const { container, rerender } = wrap(
       'l',

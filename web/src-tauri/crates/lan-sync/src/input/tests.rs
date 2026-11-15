@@ -2,7 +2,10 @@ use super::limits::{Bucket, Limits, Verdict};
 use super::remote::{ControlError, FileSwitch, MasterSwitch, MemorySwitch, Remote};
 use super::session::{InputConn, Step, STATE_INTERVAL};
 use super::sink::{Action, InputSink, NoSink};
-use super::wire::{self, Button, Code, Key, Level, Media, Opened, PcState, Record};
+use super::wire::{
+    self, Button, Code, Key, Level, Media, Opened, PcState, Power, PowerAnswer, PowerInfo,
+    ProgramAnswer, Record,
+};
 use crate::noise::{Mode, PublicKey};
 use crate::trust::{Device, MemoryTrustStore, RemoteGrant, SessionRegistry, TrustStore};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -14,6 +17,18 @@ pub(crate) struct TestSink {
     pub actions: Mutex<Vec<Action>>,
     pub state: Mutex<PcState>,
     pub supported: AtomicBool,
+    /// Power actions that reached the sink, with the device and `despite`.
+    pub powers: Mutex<Vec<(PublicKey, Power, bool)>>,
+    /// What the sink answers to the next power action that is not `Cancel`.
+    pub power_answer: Mutex<PowerAnswer>,
+    pub pending: AtomicBool,
+    pub news: Mutex<Option<(u64, PublicKey, PowerAnswer)>>,
+    /// The PC's program list: its epoch and the names.
+    pub programs: Mutex<(u32, Vec<String>)>,
+    /// Program starts that reached the sink: slot and the epoch the phone named.
+    pub starts: Mutex<Vec<(u8, u32)>>,
+    /// How often the names were read (the tick asks for the epoch alone).
+    pub names_read: std::sync::atomic::AtomicUsize,
 }
 
 impl TestSink {
@@ -27,7 +42,36 @@ impl TestSink {
                 locked: false,
             }),
             supported: AtomicBool::new(true),
+            powers: Mutex::new(Vec::new()),
+            power_answer: Mutex::new(PowerAnswer::Started),
+            pending: AtomicBool::new(false),
+            news: Mutex::new(None),
+            programs: Mutex::new((1, vec!["Editor".into(), "Browser".into()])),
+            starts: Mutex::new(Vec::new()),
+            names_read: std::sync::atomic::AtomicUsize::new(0),
         })
+    }
+
+    pub fn starts(&self) -> Vec<(u8, u32)> {
+        std::mem::take(&mut self.starts.lock().unwrap())
+    }
+
+    /// The list changes at the PC.
+    pub fn set_programs(&self, names: &[&str]) {
+        let mut p = self.programs.lock().unwrap();
+        p.0 += 1;
+        p.1 = names.iter().map(|n| (*n).to_owned()).collect();
+    }
+
+    pub fn powers(&self) -> Vec<(PublicKey, Power, bool)> {
+        std::mem::take(&mut self.powers.lock().unwrap())
+    }
+
+    /// Something happened to a countdown at the PC.
+    pub fn tell(&self, device: PublicKey, answer: PowerAnswer) {
+        let mut news = self.news.lock().unwrap();
+        let n = news.map_or(1, |(n, _, _)| n + 1);
+        *news = Some((n, device, answer));
     }
 
     pub fn taken(&self) -> Vec<Action> {
@@ -52,6 +96,36 @@ impl InputSink for TestSink {
     }
     fn apply(&self, action: Action) {
         self.actions.lock().unwrap().push(action);
+    }
+    fn power(&self, device: &PublicKey, power: Power, despite: bool) -> PowerAnswer {
+        self.powers.lock().unwrap().push((*device, power, despite));
+        if power == Power::Cancel {
+            PowerAnswer::Cancelled
+        } else {
+            *self.power_answer.lock().unwrap()
+        }
+    }
+    fn power_info(&self) -> (bool, bool) {
+        (self.pending.load(Ordering::SeqCst), true)
+    }
+    fn power_news(&self) -> Option<(u64, PublicKey, PowerAnswer)> {
+        *self.news.lock().unwrap()
+    }
+    fn programs_version(&self) -> u32 {
+        self.programs.lock().unwrap().0
+    }
+    fn programs(&self) -> (u32, Vec<String>) {
+        self.names_read.fetch_add(1, Ordering::SeqCst);
+        self.programs.lock().unwrap().clone()
+    }
+    fn start_program(&self, _peer: &PublicKey, slot: u8, epoch: u32) -> ProgramAnswer {
+        self.starts.lock().unwrap().push((slot, epoch));
+        let list = self.programs.lock().unwrap();
+        if epoch == list.0 && usize::from(slot) < list.1.len() {
+            ProgramAnswer::Started
+        } else {
+            ProgramAnswer::Failed
+        }
     }
 }
 
@@ -134,7 +208,7 @@ impl Bench {
 
     fn open(&self, device: u8, level: Level) -> (InputConn, Step) {
         let mut c = self.conn(device);
-        let step = c.on_frame(wire::TAG_OPEN, &wire::encode_open(level), T0);
+        let step = c.on_frame(wire::TAG_OPEN, &wire::encode_open(level, None), T0);
         (c, step)
     }
 
@@ -871,7 +945,7 @@ fn the_order_is_hello_open_events_and_anything_else_closes() {
     // open before hello
     let mut c = fresh();
     assert_eq!(
-        c.on_frame(wire::TAG_OPEN, &wire::encode_open(Level::Media), T0),
+        c.on_frame(wire::TAG_OPEN, &wire::encode_open(Level::Media, None), T0),
         Step::Close
     );
     // hello twice
@@ -882,14 +956,17 @@ fn the_order_is_hello_open_events_and_anything_else_closes() {
     let mut c = b.conn(PHONE);
     assert_eq!(events(&mut c, &[PAUSE], T0), Step::Close);
     // a malformed open
-    for bad in [&[][..], &[0], &[3], &[1, 1]] {
+    for bad in [&[][..], &[0], &[3], &[0, 1], &[1, 1, 1]] {
         let mut c = b.conn(PHONE);
         assert_eq!(c.on_frame(wire::TAG_OPEN, bad, T0), Step::Close);
     }
     assert_eq!(b.remote.status().controller, None);
     // in an open session: a second open, a sync tag, a PC → phone tag, an unknown tag, bad bodies
     for (tag, body) in [
-        (wire::TAG_OPEN, wire::encode_open(Level::Full).to_vec()),
+        (
+            wire::TAG_OPEN,
+            wire::encode_open(Level::Full, None).to_vec(),
+        ),
         (crate::client::TAG_REQUEST, b"{\"type\":\"info\"}".to_vec()),
         (crate::client::TAG_RESPONSE, vec![]),
         (wire::TAG_OPENED, vec![2, 2, 0, 0, 0, 0, 0]),
@@ -901,6 +978,12 @@ fn the_order_is_hello_open_events_and_anything_else_closes() {
         (wire::TAG_EVENTS, vec![1, 0, 0]),
         (wire::TAG_TEXT, b"a\nb".to_vec()),
         (wire::TAG_TEXT, vec![]),
+        // power from a phone that did not ask for it in its `open`
+        (
+            wire::TAG_POWER,
+            wire::encode_power(Power::Cancel, false).to_vec(),
+        ),
+        (wire::TAG_EVENTS, vec![5, 8, 0, 0]),
     ] {
         let (mut c, _) = b.opened(PHONE, Level::Full);
         assert_eq!(c.on_frame(tag, &body, T0), Step::Close, "tag {tag:#x}");
@@ -944,7 +1027,7 @@ fn the_pc_tells_a_changed_state_at_most_every_interval_and_nothing_else() {
     assert_eq!(idle.poll(T0), Step::Continue);
     b.remote.enable_now(false).unwrap();
     assert_eq!(idle.poll(T0), Step::Continue);
-    let step = idle.on_frame(wire::TAG_OPEN, &wire::encode_open(Level::Media), T0);
+    let step = idle.on_frame(wire::TAG_OPEN, &wire::encode_open(Level::Media, None), T0);
     assert_eq!(
         step,
         Step::ReplyClose(
@@ -1120,4 +1203,636 @@ fn the_switch_file_is_off_when_missing_and_an_error_when_broken() {
     assert!(s.set(true).is_err());
     assert!(!s.enabled(), "on only once it is on disk");
     std::fs::remove_dir_all(dir).ok();
+}
+
+// ---- power ----
+
+impl Bench {
+    /// Opens the way a phone that knows power does.
+    fn opened_power(&self, device: u8, level: Level) -> (InputConn, Opened) {
+        let mut c = self.conn(device);
+        let step = c.on_frame(
+            wire::TAG_OPEN,
+            &wire::encode_open(level, Some(wire::FEATURES)),
+            T0,
+        );
+        let Step::Reply(wire::TAG_OPENED, body) = step else {
+            panic!("not opened: {step:?}")
+        };
+        (c, wire::decode_opened(&body).unwrap())
+    }
+
+    fn grant_power(&self, device: u8, level: Level, power: bool) {
+        self.remote
+            .grant_now(
+                &key(device),
+                RemoteGrant {
+                    power,
+                    ..grant(level)
+                },
+            )
+            .unwrap();
+    }
+}
+
+fn power(c: &mut InputConn, p: Power, despite: bool, at: Duration) -> Step {
+    c.on_frame(wire::TAG_POWER, &wire::encode_power(p, despite), at)
+}
+
+fn answer(a: PowerAnswer) -> Step {
+    Step::Reply(
+        wire::TAG_POWER_ANSWER,
+        wire::encode_power_answer(a).to_vec(),
+    )
+}
+
+#[test]
+fn an_older_phone_gets_the_old_opened_and_a_newer_one_learns_its_power() {
+    let b = bench();
+    b.grant_power(PHONE, Level::Media, true);
+    let (_c, old) = b.opened(PHONE, Level::Media);
+    assert_eq!(old.ext, None, "seven bytes for a phone that did not ask");
+    b.sink.pending.store(true, Ordering::SeqCst);
+    let (_c, new) = b.opened_power(PHONE, Level::Media);
+    let ext = new.ext.unwrap();
+    assert_eq!(ext.features, wire::FEATURES);
+    assert_eq!(
+        ext.power,
+        PowerInfo {
+            granted: true,
+            pending: true,
+            hibernate: true
+        }
+    );
+    // a phone of a later version asks for more; it gets what this PC has, not a close
+    let mut c = b.conn(PHONE);
+    let Step::Reply(wire::TAG_OPENED, body) = c.on_frame(wire::TAG_OPEN, &[1, 0xff], T0) else {
+        panic!("closed")
+    };
+    assert_eq!(body[7], wire::FEATURES);
+}
+
+#[test]
+fn power_needs_its_own_permission_and_pairing_or_the_level_is_not_it() {
+    let b = bench();
+    b.grant(PHONE, Level::Full);
+    let (mut c, o) = b.opened_power(PHONE, Level::Full);
+    assert!(!o.ext.unwrap().power.granted);
+    for p in [
+        Power::Sleep,
+        Power::Hibernate,
+        Power::SignOut,
+        Power::Restart,
+        Power::ShutDown,
+    ] {
+        assert_eq!(power(&mut c, p, false, T0), answer(PowerAnswer::NotGranted));
+    }
+    assert!(b.sink.powers().is_empty(), "nothing reached the PC");
+    // stopping is always allowed
+    assert_eq!(
+        power(&mut c, Power::Cancel, false, T0),
+        answer(PowerAnswer::Cancelled)
+    );
+    assert_eq!(b.sink.powers(), vec![(key(PHONE), Power::Cancel, false)]);
+    // granted (never while a mouse session is open): on a media session too (the sofa case
+    // needs no mouse)
+    assert!(b
+        .remote
+        .grant_now(
+            &key(PHONE),
+            RemoteGrant {
+                power: true,
+                ..grant(Level::Full)
+            }
+        )
+        .is_err());
+    drop(c);
+    b.grant_power(PHONE, Level::Media, true);
+    let (mut c, o) = b.opened_power(PHONE, Level::Media);
+    assert!(o.ext.unwrap().power.granted);
+    assert_eq!(
+        power(&mut c, Power::ShutDown, true, T0),
+        answer(PowerAnswer::Started)
+    );
+    assert_eq!(b.sink.powers(), vec![(key(PHONE), Power::ShutDown, true)]);
+    // a paused device has nothing, its stored flag notwithstanding
+    let (mut c, _) = b.opened_power(PHONE, Level::Media);
+    b.remote
+        .set_grant(
+            &key(PHONE),
+            RemoteGrant {
+                paused: true,
+                power: true,
+                ..grant(Level::Media)
+            },
+            None,
+        )
+        .unwrap();
+    assert_eq!(
+        closed_with(&power(&mut c, Power::Sleep, false, T0)),
+        Code::Paused
+    );
+    assert!(b.sink.powers().is_empty());
+}
+
+#[test]
+fn a_locked_pc_takes_no_power_action_but_a_cancel_and_monitor_off() {
+    let b = bench();
+    b.grant_power(PHONE, Level::Media, true);
+    let (mut c, _) = b.opened_power(PHONE, Level::Media);
+    b.sink.set_locked(true);
+    assert_eq!(
+        power(&mut c, Power::Sleep, false, T0),
+        answer(PowerAnswer::Locked)
+    );
+    assert!(b.sink.powers().is_empty());
+    assert_eq!(
+        power(&mut c, Power::Cancel, false, T0),
+        answer(PowerAnswer::Cancelled)
+    );
+    assert_eq!(
+        events(&mut c, &[Record::Media(Media::MonitorOff)], T0),
+        Step::Continue
+    );
+    assert_eq!(b.sink.taken(), vec![Action::Media(Media::MonitorOff)]);
+}
+
+#[test]
+fn power_frames_are_limited_and_a_flood_closes() {
+    let b = bench();
+    b.grant_power(PHONE, Level::Media, true);
+    let (mut c, _) = b.opened_power(PHONE, Level::Media);
+    for _ in 0..3 {
+        assert_eq!(
+            power(&mut c, Power::Sleep, false, T0),
+            answer(PowerAnswer::Started)
+        );
+    }
+    assert_eq!(
+        power(&mut c, Power::Sleep, false, T0),
+        answer(PowerAnswer::Limit)
+    );
+    assert_eq!(b.sink.powers().len(), 3);
+    // a cancel is never limited
+    for _ in 0..20 {
+        assert_eq!(
+            power(&mut c, Power::Cancel, false, T0),
+            answer(PowerAnswer::Cancelled)
+        );
+    }
+    // monitor off: once per ten seconds
+    let off = [Record::Media(Media::MonitorOff)];
+    assert_eq!(events(&mut c, &off, T0), Step::Continue);
+    assert_eq!(events(&mut c, &off, T0), Step::Continue);
+    assert_eq!(b.sink.taken().len(), 1);
+    assert_eq!(
+        events(&mut c, &off, T0 + Duration::from_secs(10)),
+        Step::Continue
+    );
+    assert_eq!(b.sink.taken().len(), 1);
+    // without end: closed
+    let mut last = Step::Continue;
+    for _ in 0..3000 {
+        last = power(&mut c, Power::Sleep, false, T0);
+        if last != answer(PowerAnswer::Limit) {
+            break;
+        }
+    }
+    assert_eq!(closed_with(&last), Code::Limit);
+}
+
+#[test]
+fn countdown_news_reaches_the_phone_of_that_device_once_and_nobody_else() {
+    let b = bench();
+    b.grant_power(PHONE, Level::Media, true);
+    b.grant_power(TABLET, Level::Media, true);
+    // news from before the session is not news
+    b.sink.tell(key(PHONE), PowerAnswer::Done);
+    let (mut c, _) = b.opened_power(PHONE, Level::Media);
+    assert_eq!(c.poll(T0), Step::Continue);
+    b.sink.tell(key(PHONE), PowerAnswer::Cancelled);
+    assert_eq!(c.poll(T0), answer(PowerAnswer::Cancelled));
+    assert_eq!(c.poll(T0), Step::Continue, "told once");
+    b.sink.tell(key(TABLET), PowerAnswer::Done);
+    assert_eq!(c.poll(T0), Step::Continue, "another device's countdown");
+    // a phone that did not ask for power hears nothing about it
+    let (mut old, _) = b.opened(PHONE, Level::Media);
+    b.sink.tell(key(PHONE), PowerAnswer::Done);
+    assert_eq!(old.poll(T0), Step::Continue);
+    drop(c);
+}
+
+#[test]
+fn power_actions_never_reach_the_sink_as_input() {
+    let b = bench();
+    b.grant_power(PHONE, Level::Full, true);
+    let (mut c, _) = b.opened_power(PHONE, Level::Full);
+    power(&mut c, Power::Restart, false, T0);
+    assert!(
+        b.sink.taken().is_empty(),
+        "no Action: power has its own way"
+    );
+    // the default sink of a PC without power answers, and never acts
+    let none = NoSink;
+    assert_eq!(
+        none.power(&key(PHONE), Power::ShutDown, false),
+        PowerAnswer::Failed
+    );
+    assert_eq!(
+        none.power(&key(PHONE), Power::Cancel, false),
+        PowerAnswer::Cancelled
+    );
+}
+
+#[test]
+fn no_power_frame_is_free_without_end_not_even_cancel_or_a_refusal() {
+    let b = bench();
+    b.grant(PHONE, Level::Media);
+    // a cancel goes through as an ordinary event; endlessly it is a flood
+    let (mut c, _) = b.opened_power(PHONE, Level::Media);
+    let mut last = Step::Continue;
+    for _ in 0..5000 {
+        last = power(&mut c, Power::Cancel, false, T0);
+        if last != answer(PowerAnswer::Cancelled) && last != answer(PowerAnswer::Limit) {
+            break;
+        }
+    }
+    assert_eq!(closed_with(&last), Code::Limit);
+    // refused because not granted: every refusal is a drop
+    let (mut c, _) = b.opened_power(PHONE, Level::Media);
+    let mut last = Step::Continue;
+    for _ in 0..5000 {
+        last = power(&mut c, Power::ShutDown, false, T0);
+        if last != answer(PowerAnswer::NotGranted) {
+            break;
+        }
+    }
+    assert_eq!(closed_with(&last), Code::Limit);
+    assert!(b.sink.powers().iter().all(|(_, p, _)| *p == Power::Cancel));
+}
+
+// ---- presentation ----
+
+impl Bench {
+    /// Opens with exactly the features `features`.
+    fn opened_with(&self, device: u8, level: Level, features: u8) -> (InputConn, Opened) {
+        let mut c = self.conn(device);
+        let step = c.on_frame(
+            wire::TAG_OPEN,
+            &wire::encode_open(level, Some(features)),
+            T0,
+        );
+        let Step::Reply(wire::TAG_OPENED, body) = step else {
+            panic!("not opened: {step:?}")
+        };
+        (c, wire::decode_opened(&body).unwrap())
+    }
+}
+
+#[test]
+fn the_presentation_keys_need_their_feature_and_the_mouse_level() {
+    let b = bench();
+    b.grant(PHONE, Level::Full);
+    let slides = [Record::Key(Key::F5), Record::Key(Key::B)];
+    // asked for and granted: echoed, and both keys reach the PC
+    let (mut c, o) = b.opened_with(PHONE, Level::Full, wire::FEATURE_PRESENT);
+    assert_eq!(o.ext.unwrap().features, wire::FEATURE_PRESENT);
+    assert_eq!(events(&mut c, &slides, T0), Step::Continue);
+    assert_eq!(
+        b.sink.taken(),
+        vec![Action::Key(Key::F5), Action::Key(Key::B)]
+    );
+    drop(c);
+    // a phone that asked for everything this PC knows gets it
+    let (mut c, o) = b.opened_power(PHONE, Level::Full);
+    assert_eq!(o.ext.unwrap().features, wire::FEATURES);
+    assert_eq!(events(&mut c, &slides[..1], T0), Step::Continue);
+    assert_eq!(b.sink.taken(), vec![Action::Key(Key::F5)]);
+    drop(c);
+    // not asked for (power only, nothing, or the old open): closed, nothing reached the PC – the
+    // frame is judged whole, so a key before it does not act either
+    for features in [Some(wire::FEATURE_POWER), Some(0), None] {
+        for key in [Key::F5, Key::B] {
+            let mut c = b.conn(PHONE);
+            let Step::Reply(wire::TAG_OPENED, body) = c.on_frame(
+                wire::TAG_OPEN,
+                &wire::encode_open(Level::Full, features),
+                T0,
+            ) else {
+                panic!("not opened")
+            };
+            let ext = wire::decode_opened(&body).unwrap().ext;
+            assert!(ext.is_none_or(|e| e.features & wire::FEATURE_PRESENT == 0));
+            assert_eq!(
+                events(&mut c, &[Record::Key(Key::Enter), Record::Key(key)], T0),
+                Step::Close,
+                "{features:?}"
+            );
+            assert!(b.sink.taken().is_empty());
+        }
+    }
+    // a media session closes on them like on every key, feature or not
+    b.grant(PHONE, Level::Media);
+    let (mut c, o) = b.opened_with(PHONE, Level::Media, wire::FEATURE_PRESENT);
+    assert_eq!(o.ext.unwrap().features, wire::FEATURE_PRESENT);
+    assert_eq!(events(&mut c, &slides[..1], T0), Step::Close);
+    assert!(b.sink.taken().is_empty());
+}
+
+#[test]
+fn the_presentation_keys_are_keys_on_a_locked_pc_and_in_the_limits() {
+    let b = bench();
+    b.grant(PHONE, Level::Full);
+    let (mut c, _) = b.opened_with(PHONE, Level::Full, wire::FEATURE_PRESENT);
+    b.sink.set_locked(true);
+    assert_eq!(events(&mut c, &[Record::Key(Key::F5)], T0), Step::Continue);
+    assert!(b.sink.taken().is_empty(), "nothing acts on a locked PC");
+    b.sink.set_locked(false);
+    // the bucket of every key: 30 at once, the rest dropped
+    let slide = [Record::Key(Key::B); MAX_BURST];
+    assert_eq!(events(&mut c, &slide, T0), Step::Continue);
+    assert_eq!(b.sink.taken().len(), 30);
+}
+
+const MAX_BURST: usize = 32;
+
+// ---- programs ----
+
+impl Bench {
+    fn grant_programs(&self, device: u8, level: Level, programs: bool) {
+        self.remote
+            .grant_now(
+                &key(device),
+                RemoteGrant {
+                    programs,
+                    ..grant(level)
+                },
+            )
+            .unwrap();
+    }
+}
+
+fn start(c: &mut InputConn, slot: u8, at: Duration) -> Step {
+    start_on(c, slot, 1, at)
+}
+
+/// A start naming the list's epoch.
+fn start_on(c: &mut InputConn, slot: u8, epoch: u32, at: Duration) -> Step {
+    c.on_frame(
+        wire::TAG_PROGRAM_START,
+        &wire::encode_program_start(slot, epoch),
+        at,
+    )
+}
+
+fn program_answer(a: ProgramAnswer) -> Step {
+    Step::Reply(
+        wire::TAG_PROGRAM_ANSWER,
+        wire::encode_program_answer(a).to_vec(),
+    )
+}
+
+/// The epoch and the names the next tick tells, if any.
+fn told_list(c: &mut InputConn, at: Duration) -> Option<(u32, Vec<String>)> {
+    match c.poll(at) {
+        Step::Reply(wire::TAG_PROGRAMS, body) => Some(wire::decode_programs(&body).unwrap()),
+        _ => None,
+    }
+}
+
+/// The names the next tick tells, if any.
+fn told_programs(c: &mut InputConn, at: Duration) -> Option<Vec<String>> {
+    told_list(c, at).map(|(_, names)| names)
+}
+
+#[test]
+fn the_list_goes_right_after_opened_only_to_a_device_that_may_start_programs() {
+    let b = bench();
+    b.grant_programs(PHONE, Level::Full, true);
+    let (mut c, o) = b.opened_with(PHONE, Level::Full, wire::FEATURE_PROGRAMS);
+    assert_eq!(o.ext.unwrap().features, wire::FEATURE_PROGRAMS, "echoed");
+    // the very next frame is the list with its epoch – before any state
+    assert_eq!(
+        told_list(&mut c, T0).unwrap(),
+        (1, vec!["Editor".to_owned(), "Browser".to_owned()])
+    );
+    let read = b.sink.names_read.load(Ordering::SeqCst);
+    assert_eq!(told_programs(&mut c, T0 + STATE_INTERVAL), None, "once");
+    assert_eq!(
+        b.sink.names_read.load(Ordering::SeqCst),
+        read,
+        "a tick asks for the epoch alone"
+    );
+    // a change of the list at the PC is told again, under its new epoch
+    b.sink.set_programs(&["Editor"]);
+    assert_eq!(
+        told_list(&mut c, T0 + STATE_INTERVAL * 2).unwrap(),
+        (2, vec!["Editor".to_owned()])
+    );
+    drop(c);
+    // a media session of that device hears the list too (the phone raises before a start)
+    let (mut c, _) = b.opened_with(PHONE, Level::Media, wire::FEATURE_PROGRAMS);
+    assert!(told_programs(&mut c, T0).is_some());
+    drop(c);
+    // not asked for, or the old open: no list, ever – and a start closes the session
+    for features in [Some(wire::FEATURE_POWER | wire::FEATURE_PRESENT), None] {
+        let mut c = b.conn(PHONE);
+        let Step::Reply(wire::TAG_OPENED, body) = c.on_frame(
+            wire::TAG_OPEN,
+            &wire::encode_open(Level::Full, features),
+            T0,
+        ) else {
+            panic!("not opened")
+        };
+        let ext = wire::decode_opened(&body).unwrap().ext;
+        assert!(ext.is_none_or(|e| e.features & wire::FEATURE_PROGRAMS == 0));
+        assert_eq!(told_programs(&mut c, T0), None, "{features:?}");
+        assert_eq!(start(&mut c, 0, T0), Step::Close);
+    }
+    // without the permission, or with it but only the media level: asked, echoed, no list (the
+    // menu stays away on the phone)
+    for (level, programs) in [(Level::Full, false), (Level::Media, true)] {
+        b.grant_programs(PHONE, level, programs);
+        let (mut c, o) = b.opened_with(PHONE, level, wire::FEATURES);
+        assert_eq!(o.ext.unwrap().features, wire::FEATURES);
+        assert_eq!(told_programs(&mut c, T0), None, "{programs}");
+    }
+    assert!(b.sink.starts().is_empty());
+}
+
+#[test]
+fn the_list_is_told_again_when_the_permission_comes_back_within_a_session() {
+    let b = bench();
+    b.grant_programs(PHONE, Level::Full, true);
+    let (mut c, _) = b.opened_with(PHONE, Level::Media, wire::FEATURES);
+    assert!(told_programs(&mut c, T0).is_some());
+    // taken away in the store (the media session goes on): nothing is told
+    let full = RemoteGrant {
+        programs: true,
+        ..grant(Level::Full)
+    };
+    let without = RemoteGrant {
+        programs: false,
+        ..full
+    };
+    b.trust.set_remote(&key(PHONE), without).unwrap();
+    assert_eq!(told_programs(&mut c, T0 + STATE_INTERVAL), None);
+    // given back: the same list, told once more
+    b.trust.set_remote(&key(PHONE), full).unwrap();
+    assert_eq!(
+        told_list(&mut c, T0 + STATE_INTERVAL * 2).unwrap(),
+        (1, vec!["Editor".to_owned(), "Browser".to_owned()])
+    );
+    assert_eq!(told_programs(&mut c, T0 + STATE_INTERVAL * 3), None);
+}
+
+#[test]
+fn start_right_after_opened_with_the_current_epoch_is_started() {
+    let b = bench();
+    b.grant_programs(PHONE, Level::Full, true);
+    // the phone heard the list on Medien, then raised: the new session told nothing yet
+    let (mut c, _) = b.opened_with(PHONE, Level::Full, wire::FEATURES);
+    assert_eq!(start(&mut c, 0, T0), program_answer(ProgramAnswer::Started));
+    assert_eq!(b.sink.starts(), vec![(0, 1)]);
+    assert!(told_programs(&mut c, T0).is_some());
+    let at = T0 + Duration::from_secs(10);
+    assert_eq!(start(&mut c, 1, at), program_answer(ProgramAnswer::Started));
+    // a slot past the list: failed, not closed
+    let at = at + Duration::from_secs(10);
+    assert_eq!(start(&mut c, 2, at), program_answer(ProgramAnswer::Failed));
+    assert_eq!(b.sink.starts(), vec![(1, 1), (2, 1)]);
+    // past the longest list, or a start without an epoch: a broken frame
+    let past = c.on_frame(wire::TAG_PROGRAM_START, &[8, 0, 0, 0, 1], at);
+    assert_eq!(past, Step::Close);
+    let (mut c, _) = b.opened_with(PHONE, Level::Full, wire::FEATURES);
+    assert_eq!(c.on_frame(wire::TAG_PROGRAM_START, &[0], at), Step::Close);
+}
+
+#[test]
+fn list_sent_list_changed_start_with_old_epoch_fails_even_after_the_new_list_was_sent() {
+    let b = bench();
+    b.grant_programs(PHONE, Level::Full, true);
+    let (mut c, _) = b.opened_with(PHONE, Level::Full, wire::FEATURES);
+    assert_eq!(told_list(&mut c, T0).unwrap().0, 1);
+    b.sink.set_programs(&["Editor", "Spiel"]);
+    let at = T0 + Duration::from_secs(10);
+    let old = start_on(&mut c, 1, 1, at);
+    assert_eq!(old, program_answer(ProgramAnswer::Failed));
+    assert_eq!(told_list(&mut c, at).unwrap().0, 2, "the new list");
+    let at = at + Duration::from_secs(10);
+    let old = start_on(&mut c, 1, 1, at);
+    assert_eq!(
+        old,
+        program_answer(ProgramAnswer::Failed),
+        "still the old epoch"
+    );
+    assert_eq!(b.sink.starts(), vec![(1, 1), (1, 1)]);
+    // a start on the new epoch goes
+    let at = at + Duration::from_secs(10);
+    let new = start_on(&mut c, 1, 2, at);
+    assert_eq!(new, program_answer(ProgramAnswer::Started));
+    assert_eq!(b.sink.starts(), vec![(1, 2)]);
+}
+
+#[test]
+fn a_start_needs_the_mouse_session_the_permission_and_an_unlocked_pc() {
+    let b = bench();
+    b.grant_programs(PHONE, Level::Full, true);
+    // a media session closes on it, like on a key
+    let (mut c, _) = b.opened_with(PHONE, Level::Media, wire::FEATURES);
+    assert!(told_programs(&mut c, T0).is_some());
+    assert_eq!(start(&mut c, 0, T0), Step::Close);
+    // locked: refused, nothing reached the PC
+    let (mut c, _) = b.opened_with(PHONE, Level::Full, wire::FEATURES);
+    assert!(told_programs(&mut c, T0).is_some());
+    b.sink.set_locked(true);
+    assert_eq!(start(&mut c, 0, T0), program_answer(ProgramAnswer::Locked));
+    b.sink.set_locked(false);
+    assert!(b.sink.starts().is_empty());
+    // the permission taken away: the session ends (a changed grant); nothing starts
+    b.remote
+        .set_grant(&key(PHONE), grant(Level::Full), None)
+        .unwrap();
+    assert_eq!(start(&mut c, 0, T0), Step::Close);
+    assert!(b.sink.starts().is_empty());
+    // a new session of that device: the list is not told and a start is refused
+    let (mut c, _) = b.opened_with(PHONE, Level::Full, wire::FEATURES);
+    assert_eq!(told_programs(&mut c, T0), None);
+    assert_eq!(
+        start(&mut c, 0, T0),
+        program_answer(ProgramAnswer::NotGranted)
+    );
+    assert!(b.sink.starts().is_empty());
+}
+
+#[test]
+fn program_starts_are_limited_and_a_flood_closes() {
+    let b = bench();
+    b.grant_programs(PHONE, Level::Full, true);
+    let (mut c, _) = b.opened_with(PHONE, Level::Full, wire::FEATURES);
+    assert!(told_programs(&mut c, T0).is_some());
+    assert_eq!(start(&mut c, 0, T0), program_answer(ProgramAnswer::Started));
+    // one per five seconds
+    assert_eq!(
+        start(&mut c, 0, T0 + Duration::from_secs(2)),
+        program_answer(ProgramAnswer::Limit)
+    );
+    assert_eq!(
+        start(&mut c, 0, T0 + Duration::from_secs(5)),
+        program_answer(ProgramAnswer::Started)
+    );
+    assert_eq!(b.sink.starts().len(), 2);
+    // a stream of them is a flood like any other
+    let at = T0 + Duration::from_secs(5);
+    let flood = |c: &mut InputConn| {
+        let mut last = Step::Continue;
+        for _ in 0..3000 {
+            last = start(c, 0, at);
+            if matches!(last, Step::ReplyClose(..)) {
+                break;
+            }
+        }
+        last
+    };
+    assert_eq!(closed_with(&flood(&mut c)), Code::Limit);
+    assert!(b.sink.starts().is_empty());
+    // refusals count as drops too (a locked PC here)
+    let (mut c, _) = b.opened_with(PHONE, Level::Full, wire::FEATURES);
+    assert!(told_programs(&mut c, T0).is_some());
+    b.sink.set_locked(true);
+    assert_eq!(closed_with(&flood(&mut c)), Code::Limit);
+    assert!(b.sink.starts().is_empty());
+}
+
+#[test]
+fn a_program_start_never_reaches_the_sink_as_input() {
+    let b = bench();
+    b.grant_programs(PHONE, Level::Full, true);
+    let (mut c, _) = b.opened_with(PHONE, Level::Full, wire::FEATURES);
+    assert!(told_programs(&mut c, T0).is_some());
+    assert_eq!(start(&mut c, 0, T0), program_answer(ProgramAnswer::Started));
+    assert!(b.sink.taken().is_empty());
+    assert!(b.sink.powers().is_empty());
+}
+
+#[test]
+fn a_widening_of_the_shell_passes_only_with_an_untouched_ticket() {
+    let b = bench();
+    b.grant(PHONE, Level::Full);
+    assert_eq!(b.remote.confirm(b.remote.ticket()), Ok(()));
+    // a mouse/keyboard session opened after the ticket was taken (and gone again)
+    let ticket = b.remote.ticket();
+    let (c, _) = b.opened(PHONE, Level::Full);
+    assert_eq!(
+        b.remote.confirm(b.remote.ticket()),
+        Err(ControlError::BusyControlled),
+        "open now"
+    );
+    drop(c);
+    assert_eq!(b.remote.confirm(ticket), Err(ControlError::BusyControlled));
+    // a media session does not count
+    b.grant(PHONE, Level::Media);
+    let ticket = b.remote.ticket();
+    let (_c, _) = b.opened(PHONE, Level::Media);
+    assert_eq!(b.remote.confirm(ticket), Ok(()));
 }

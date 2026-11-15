@@ -14,6 +14,11 @@
   min-width: 0;
   display: flex;
 }
+/* A lone tile, or the last of an odd number, takes the whole row: no half row left empty beside it (one place in
+   "Uhrzeit anderswo" used to sit in the left half of a two-column card). */
+.kachel:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
 .kachelLink {
   flex: 1;
   min-width: 0;
@@ -78,19 +83,23 @@ a.kachelLink:hover {
   text-align: center;
 }
 
-/* notiz: paper with ruled lines, a serif title, the first lines, a context line at the foot. */
+/* notiz: paper with ruled lines, a serif title, the first lines, a context line at the foot. Every text line is one
+   rule high (`--notiz-line`, no gaps between them) and the rules start where the text starts (`background-origin`),
+   so each line stands on its rule instead of being crossed by one. */
 .notiz {
+  --notiz-line: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-sm);
-  background: repeating-linear-gradient(
-      0deg,
-      color-mix(in srgb, var(--module-color, var(--text-3)) 22%, var(--surface)) 0 1px,
-      transparent 1px 1.5rem
-    )
-    var(--surface);
+  background-color: var(--surface);
+  background-image: linear-gradient(
+    180deg,
+    transparent calc(100% - 1px),
+    color-mix(in srgb, var(--module-color, var(--text-3)) 22%, var(--surface)) 0
+  );
+  background-size: 100% var(--notiz-line);
+  background-origin: content-box;
 }
 .notizTitle {
   display: flex;
@@ -100,7 +109,7 @@ a.kachelLink:hover {
   font-family: var(--font-serif);
   font-size: var(--text-lg);
   font-weight: var(--weight-semibold);
-  line-height: 1.5rem;
+  line-height: var(--notiz-line);
 }
 .notizMark {
   display: inline-grid;
@@ -114,13 +123,14 @@ a.kachelLink:hover {
   padding: 0;
 }
 .notizLines li {
-  line-height: 1.5rem;
+  line-height: var(--notiz-line);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .notizMeta {
   margin: 0;
+  line-height: var(--notiz-line);
   font-size: var(--text-meta);
   color: var(--text-3);
 }

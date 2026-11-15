@@ -200,6 +200,8 @@ fn a_grant_belongs_to_an_active_device_and_goes_with_it() {
         level: Level::Full,
         paused: false,
         unlock: true,
+        power: false,
+        programs: false,
     };
     trust.set_remote(&a, full).unwrap();
     assert_eq!(trust.remote_of(&a), full);
@@ -224,6 +226,54 @@ fn a_grant_belongs_to_an_active_device_and_goes_with_it() {
     );
     assert!(!paused.widens(&full) && !RemoteGrant::default().widens(&full));
     assert!(!full.widens(&full));
+    // power is its own permission: allowing it widens, taking it away does not; it counts only
+    // with a level and without a pause
+    let power = RemoteGrant {
+        power: true,
+        ..full
+    };
+    assert!(power.widens(&full), "allowing power");
+    assert!(!full.widens(&power));
+    assert!(power.power_effective() && !full.power_effective());
+    assert!(!RemoteGrant {
+        paused: true,
+        ..power
+    }
+    .power_effective());
+    assert!(!RemoteGrant {
+        level: Level::Off,
+        ..power
+    }
+    .power_effective());
+    assert!(RemoteGrant {
+        level: Level::Media,
+        ..power
+    }
+    .power_effective());
+    // programs: their own permission as well; they count only with mouse and keyboard
+    let programs = RemoteGrant {
+        programs: true,
+        ..full
+    };
+    assert!(programs.widens(&full), "allowing programs");
+    assert!(!full.widens(&programs));
+    assert!(programs.programs_effective() && !full.programs_effective());
+    for narrower in [
+        RemoteGrant {
+            paused: true,
+            ..programs
+        },
+        RemoteGrant {
+            level: Level::Media,
+            ..programs
+        },
+        RemoteGrant {
+            level: Level::Off,
+            ..programs
+        },
+    ] {
+        assert!(!narrower.programs_effective());
+    }
     // revoked: the grant is gone and cannot be set again
     trust.revoke(&a).unwrap();
     assert_eq!(trust.remote_of(&a), RemoteGrant::default());
@@ -261,4 +311,24 @@ fn a_store_without_grants_is_closed() {
     let k = key();
     assert_eq!(Bare.remote_of(&k), RemoteGrant::default());
     assert!(Bare.set_remote(&k, RemoteGrant::default()).is_err());
+}
+
+#[test]
+fn another_devices_sync_session_counts_as_work_and_the_own_one_does_not() {
+    use crate::noise::Mode;
+    let reg = SessionRegistry::new();
+    let (phone, tablet) = (key(), key());
+    assert!(!reg.sync_open_except(&phone));
+    let _own_sync = reg.register(phone, Mode::Session);
+    let _own_input = reg.register(phone, Mode::Input);
+    let other_input = reg.register(tablet, Mode::Input);
+    assert!(!reg.sync_open_except(&phone), "own sync, any input");
+    let other_sync = reg.register(tablet, Mode::Session);
+    assert!(reg.sync_open_except(&phone));
+    other_sync.close();
+    other_input.close();
+    assert!(
+        !reg.sync_open_except(&phone),
+        "closed sessions do not count"
+    );
 }

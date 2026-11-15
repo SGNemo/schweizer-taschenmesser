@@ -8,4 +8,8 @@ export const noRemoteHost: RemoteHostService = {
   setDevice: () => Promise.reject(new Error('unsupported')),
   setNotice: () => Promise.reject(new Error('unsupported')),
   end: async () => false,
+  programs: () => Promise.reject(new Error('unsupported')),
+  addProgram: () => Promise.reject(new Error('unsupported')),
+  removeProgram: () => Promise.reject(new Error('unsupported')),
+  reportBusy: async () => undefined,
 };

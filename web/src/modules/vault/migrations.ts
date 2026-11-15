@@ -16,4 +16,14 @@ export const migrations: ModuleManifest['migrations'] = {
       if (rec.noticeMonths !== undefined || typeof days !== 'number') return;
       return days >= 30 && days % 30 === 0 ? { noticeMonths: days / 30 } : undefined;
     }),
+  // 4: categories became their own collection (`category`). The built-in keys are their ids, so documents keep
+  // their value and nothing is created (built-in categories need no record, see `resolveCategories`). The step is
+  // defensive only: the schema always defaulted `category`, but a hand-written row without one moves to
+  // "Ohne Kategorie" explicitly.
+  4: (ctx) =>
+    ctx.forEachRecord('document', (rec) =>
+      typeof rec.category === 'string' && rec.category.trim() !== ''
+        ? undefined
+        : { category: 'other' },
+    ),
 };

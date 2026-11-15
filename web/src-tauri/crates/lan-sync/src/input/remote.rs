@@ -260,6 +260,13 @@ impl Remote {
         Ok(())
     }
 
+    /// A widening that is neither the switch nor a grant (an entry added to the PC's program
+    /// list): it passes with the ticket of its confirmation, with no mouse/keyboard session open
+    /// and none opened since the ticket was taken. The caller changes its own state only then.
+    pub fn confirm(&self, ticket: Ticket) -> Result<(), ControlError> {
+        self.may_widen(Some(ticket))
+    }
+
     /// The master switch. Switching on is a widening (it needs a ticket). Switching off needs
     /// none: the controlling session is told `remote-off` and stops at its next frame or tick;
     /// every later `open` is refused. Sync sessions are not touched.

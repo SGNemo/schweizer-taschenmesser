@@ -286,6 +286,127 @@ pub fn remote_ask_no_unlock(lang: Lang) -> &'static str {
     }
 }
 
+/// The line in a device's question when it may switch the PC off afterwards.
+pub fn remote_ask_power(lang: Lang) -> &'static str {
+    if german(lang) {
+        "Es darf diesen PC außerdem ausschalten, neu starten, in den Energiesparmodus schicken und abmelden – jedes Mal erst nach 10 Sekunden, in denen du hier abbrechen kannst."
+    } else {
+        "It may also switch this PC off, restart it, put it to sleep and sign out – each time only after 10 seconds in which you can cancel here."
+    }
+}
+
+/// The line in a device's question when it may start programs of the PC's list afterwards.
+pub fn remote_ask_programs(lang: Lang) -> &'static str {
+    if german(lang) {
+        "Es darf außerdem die Programme starten, die hier unter Einstellungen → Verbindungen → Fernsteuerung stehen."
+    } else {
+        "It may also start the programs listed here under Settings → Connections → Remote control."
+    }
+}
+
+/// The file dialog for a new entry of the program list: (title, filter name).
+pub fn remote_program_pick(lang: Lang) -> (&'static str, &'static str) {
+    if german(lang) {
+        ("Programm auswählen", "Programme und Verknüpfungen")
+    } else {
+        ("Choose a program", "Programs and shortcuts")
+    }
+}
+
+/// The confirmation before an entry joins the program list: (title, allow, cancel).
+pub fn remote_program_dialog(lang: Lang) -> (&'static str, &'static str, &'static str) {
+    if german(lang) {
+        ("Programm freigeben?", "Freigeben", "Abbrechen")
+    } else {
+        ("Allow this program?", "Allow", "Cancel")
+    }
+}
+
+/// What adding an entry means: the sentence, the full path on a line of its own (so the owner
+/// sees which file it really is) and, for a shortcut, what it starts with. `name` and `path` are
+/// already plain text.
+pub fn remote_ask_program(lang: Lang, name: &str, path: &str, shortcut: bool) -> String {
+    let mut text = if german(lang) {
+        format!("{name} kann danach von Handys mit der Freigabe gestartet werden.\n\n{path}")
+    } else {
+        format!("{name} can then be started by phones that are allowed to.\n\n{path}")
+    };
+    if shortcut {
+        text.push_str("\n\n");
+        text.push_str(if german(lang) {
+            "Verknüpfung: startet mit den in ihr gespeicherten Angaben."
+        } else {
+            "Shortcut: starts with the details saved in it."
+        });
+    }
+    text
+}
+
+/// The countdown's one sentence: who, what, in how many seconds. `name` is already plain text.
+pub fn power_countdown(
+    lang: Lang,
+    name: &str,
+    act: crate::remote_power::Act,
+    seconds: u64,
+) -> String {
+    use crate::remote_power::Act;
+    if german(lang) {
+        let s = if seconds == 1 {
+            "1 Sekunde".to_owned()
+        } else {
+            format!("{seconds} Sekunden")
+        };
+        match act {
+            Act::ShutDown => format!("{name} schaltet diesen PC in {s} aus."),
+            Act::Restart => format!("{name} startet diesen PC in {s} neu."),
+            Act::Sleep => format!("{name} schickt diesen PC in {s} in den Energiesparmodus."),
+            Act::Hibernate => format!("{name} schickt diesen PC in {s} in den Ruhezustand."),
+            Act::SignOut => format!("{name} meldet dich in {s} ab."),
+        }
+    } else {
+        let s = if seconds == 1 {
+            "1 second".to_owned()
+        } else {
+            format!("{seconds} seconds")
+        };
+        match act {
+            Act::ShutDown => format!("{name} will switch this PC off in {s}."),
+            Act::Restart => format!("{name} will restart this PC in {s}."),
+            Act::Sleep => format!("{name} will put this PC to sleep in {s}."),
+            Act::Hibernate => format!("{name} will hibernate this PC in {s}."),
+            Act::SignOut => format!("{name} will sign you out in {s}."),
+        }
+    }
+}
+
+/// The quiet line under it: what happens to open programs (nothing is forced).
+pub fn power_note(lang: Lang, act: crate::remote_power::Act) -> &'static str {
+    use crate::remote_power::Act;
+    match (german(lang), act) {
+        (true, Act::Sleep | Act::Hibernate) => "Offene Programme bleiben, wie sie sind.",
+        (true, _) => "Fragt ein Programm noch nach dem Speichern, wartet Windows auf dich.",
+        (false, Act::Sleep | Act::Hibernate) => "Open programs stay as they are.",
+        (false, _) => "If a program still asks about saving, Windows waits for you.",
+    }
+}
+
+pub fn power_cancel(lang: Lang) -> &'static str {
+    if german(lang) {
+        "Abbrechen"
+    } else {
+        "Cancel"
+    }
+}
+
+/// The title of the countdown window before a power action.
+pub fn power_title(lang: Lang) -> &'static str {
+    if german(lang) {
+        "Nemo – Fernsteuerung"
+    } else {
+        "Nemo – remote control"
+    }
+}
+
 /// "Last contact" in whole days: no clock format, so no locale is needed.
 pub fn remote_last_contact(lang: Lang, last_seen: Option<u64>, now: u64) -> String {
     let days = last_seen.map(|seen| now.saturating_sub(seen) / 86_400);
@@ -492,6 +613,31 @@ mod tests {
         }
         assert_eq!(remote_dialog(Lang::Fr), remote_dialog(Lang::En));
         assert_ne!(remote_dialog(Lang::De), remote_dialog(Lang::En));
+    }
+
+    #[test]
+    fn adding_a_program_shows_the_full_path_on_its_own_line_and_says_what_a_shortcut_does() {
+        let path = r"C:\Users\A\Desktop\Spiel.exe";
+        for lang in [Lang::De, Lang::En] {
+            let exe = remote_ask_program(lang, "Spiel", path, false);
+            let lines: Vec<&str> = exe.lines().collect();
+            assert!(lines[0].starts_with("Spiel "), "{exe}");
+            assert!(lines.contains(&path), "the path alone on a line: {exe}");
+            assert!(!exe.contains("Verknüpfung") && !exe.contains("Shortcut"));
+            let lnk = remote_ask_program(lang, "Spiel", r"C:\x\Spiel.lnk", true);
+            assert!(lnk.lines().any(|l| l == r"C:\x\Spiel.lnk"));
+            assert!(lnk.ends_with(if lang == Lang::De {
+                "Verknüpfung: startet mit den in ihr gespeicherten Angaben."
+            } else {
+                "Shortcut: starts with the details saved in it."
+            }));
+            // the way to the list, as the settings page names it
+            assert!(remote_ask_programs(lang).contains(if lang == Lang::De {
+                "Einstellungen → Verbindungen → Fernsteuerung"
+            } else {
+                "Settings → Connections → Remote control"
+            }));
+        }
     }
 
     #[test]

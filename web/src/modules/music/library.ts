@@ -33,6 +33,32 @@ export function readSavedAlbums(
   return promise;
 }
 
+let follows:
+  { ctx: ConnectorContext; generation: number; promise: Promise<MediaItem[]> } | undefined;
+let followGeneration = 0;
+
+/** The followed artists, read once per page visit; following or unfollowing calls `changedFollows`. */
+export function readFollowedArtists(
+  source: NowPlayingSource,
+  ctx: ConnectorContext,
+): Promise<MediaItem[]> {
+  if (!source.followedArtists) return Promise.resolve([]);
+  if (follows && follows.ctx === ctx && follows.generation === followGeneration)
+    return follows.promise;
+  const promise = source.followedArtists(ctx);
+  const mine = { ctx, generation: followGeneration, promise };
+  follows = mine;
+  promise.catch(() => {
+    if (follows === mine) follows = undefined;
+  });
+  return promise;
+}
+
+/** An artist was followed or unfollowed: the albums tab reads the followed artists afresh next time. */
+export function changedFollows(): void {
+  followGeneration += 1;
+}
+
 /** An album was saved or removed: the albums tab reads afresh next time. */
 export function changedAlbums(): void {
   albumGeneration += 1;
@@ -119,4 +145,5 @@ export function forgetLibrary(): void {
   lists = undefined;
   account = undefined;
   albums = undefined;
+  follows = undefined;
 }

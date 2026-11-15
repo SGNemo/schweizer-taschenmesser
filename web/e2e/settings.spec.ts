@@ -208,3 +208,68 @@ test('the danger zone asks twice, then wipes this device', async ({ page }) => {
   await ready(page, '/todos?list=inbox');
   await expect(page.getByRole('checkbox', { name: 'Erfundene Aufgabe' })).toHaveCount(0);
 });
+
+test('app lock: PIN, lock now, a wrong PIN, unlock, locked again after a reload, turn off', async ({
+  page,
+}) => {
+  await ready(page, '/settings/sicherheit');
+  const lockSwitch = page.getByRole('switch', { name: 'App-Sperre' });
+  await lockSwitch.click();
+  const setDialog = page.getByRole('dialog', { name: 'PIN festlegen' });
+  await setDialog.getByLabel('Neue PIN', { exact: true }).fill('2468');
+  await setDialog.getByLabel('Neue PIN wiederholen').fill('2468');
+  await setDialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(lockSwitch).toBeChecked();
+
+  await page.getByTestId('app-lock-now').click();
+  const lockScreen = page.getByTestId('app-lock');
+  await expect(lockScreen.getByRole('heading', { name: 'Nemo ist gesperrt' })).toBeVisible();
+  // The app's content is gone, not just covered.
+  await expect(page.getByRole('switch', { name: 'App-Sperre' })).toHaveCount(0);
+  await expect(page.getByRole('navigation')).toHaveCount(0);
+
+  await lockScreen.getByLabel('PIN').fill('1111');
+  await lockScreen.getByRole('button', { name: 'Entsperren' }).click();
+  await expect(lockScreen.getByText('Die PIN passt nicht. Versuch es noch einmal.')).toBeVisible();
+  await lockScreen.getByLabel('PIN').fill('2468');
+  await lockScreen.getByRole('button', { name: 'Entsperren' }).click();
+  await expect(lockSwitch).toBeChecked();
+
+  await page.reload();
+  await expect(lockScreen.getByRole('heading', { name: 'Nemo ist gesperrt' })).toBeVisible();
+  await lockScreen.getByLabel('PIN').fill('2468');
+  await lockScreen.getByRole('button', { name: 'Entsperren' }).click();
+  await expect(lockSwitch).toBeChecked();
+
+  await lockSwitch.click();
+  const offDialog = page.getByRole('dialog', { name: 'App-Sperre ausschalten' });
+  await offDialog.getByLabel('Jetzige PIN').fill('2468');
+  await offDialog.getByRole('button', { name: 'Ausschalten' }).click();
+  await expect(lockSwitch).not.toBeChecked();
+  await ready(page, '/settings/sicherheit'); // waits for the dialog's history step, then loads anew
+  await expect(page.getByTestId('app-lock')).toHaveCount(0);
+  await expect(page.getByRole('switch', { name: 'App-Sperre' })).not.toBeChecked();
+});
+
+test('Sicherheit exists without the vault; "Nur verschlüsselte Backups" removes the readable download', async ({
+  page,
+}) => {
+  await ready(page, '/settings/sicherheit');
+  await expect(page.getByRole('heading', { name: 'Schutz auf diesem Gerät' })).toBeVisible();
+  // "Zugriff auf dieses Gerät": read-only, the sync row leads to the sync tab.
+  const access = page.getByTestId('security-access');
+  await expect(access.getByText('Sync', { exact: true })).toBeVisible();
+  await access.getByRole('link', { name: 'Sync verwalten' }).click();
+  await expect(page).toHaveURL(/\/settings\/sync#sync$/);
+  await expect(page.getByRole('button', { name: 'Backup herunterladen' })).toBeVisible();
+
+  await ready(page, '/settings/sicherheit');
+  await page.getByRole('switch', { name: 'Nur verschlüsselte Backups' }).click();
+  await ready(page, '/settings/sync');
+  await expect(page.getByRole('button', { name: 'Verschlüsselt exportieren' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Backup herunterladen' })).toHaveCount(0);
+  // Device-local: it survives a reload.
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Verschlüsselt exportieren' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Backup herunterladen' })).toHaveCount(0);
+});

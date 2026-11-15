@@ -67,8 +67,10 @@ pub enum Verdict {
 }
 
 /// Events per second (burst): all 500 (250) · clicks 20 · keys 30 · text 512 bytes · media 10 ·
-/// volume up 5 · lock 1 per 10 s. Drops: 2000 at once, then 200 per second, before the session
-/// closes.
+/// volume up 5 · lock 1 per 10 s · monitor off 1 per 10 s · power frames 1 (3) · program starts 1
+/// per 5 s (1). Drops: 2000 at
+/// once, then 200 per second, before the session closes. (How often a countdown may start is the
+/// sink's: per device, across sessions.)
 #[derive(Debug)]
 pub struct Limits {
     all: Bucket,
@@ -78,6 +80,9 @@ pub struct Limits {
     media: Bucket,
     volume_up: Bucket,
     lock: Bucket,
+    monitor: Bucket,
+    power: Bucket,
+    program: Bucket,
     drops: Bucket,
 }
 
@@ -91,6 +96,9 @@ impl Limits {
             media: Bucket::new(10, 100, now),
             volume_up: Bucket::new(5, 50, now),
             lock: Bucket::new(1, 1, now),
+            monitor: Bucket::new(1, 1, now),
+            power: Bucket::new(3, 10, now),
+            program: Bucket::new(1, 2, now),
             drops: Bucket::new(2000, 2000, now),
         }
     }
@@ -108,6 +116,7 @@ impl Limits {
             Record::Key(_) => (Some(&mut self.keys), None),
             Record::Media(Media::VolumeUp) => (Some(&mut self.media), Some(&mut self.volume_up)),
             Record::Media(Media::Lock) => (Some(&mut self.media), Some(&mut self.lock)),
+            Record::Media(Media::MonitorOff) => (Some(&mut self.media), Some(&mut self.monitor)),
             Record::Media(_) => (Some(&mut self.media), None),
         };
         let mut path = [Some(&mut self.all), a, b];
@@ -126,6 +135,33 @@ impl Limits {
         if ok {
             self.all.take(1, now);
             self.text.take(n, now);
+        }
+        self.verdict(ok, now)
+    }
+
+    /// A `Cancel`: it only ever stops something, so it costs only an ordinary event (never a
+    /// power token) – but a stream of them is a flood like any other.
+    pub fn cancel(&mut self, now: Duration) -> Verdict {
+        let ok = self.all.take(1, now);
+        self.verdict(ok, now)
+    }
+
+    /// One power frame that would start a countdown.
+    pub fn power(&mut self, now: Duration) -> Verdict {
+        let ok = self.all.has(1, now) && self.power.has(1, now);
+        if ok {
+            self.all.take(1, now);
+            self.power.take(1, now);
+        }
+        self.verdict(ok, now)
+    }
+
+    /// One program start.
+    pub fn program(&mut self, now: Duration) -> Verdict {
+        let ok = self.all.has(1, now) && self.program.has(1, now);
+        if ok {
+            self.all.take(1, now);
+            self.program.take(1, now);
         }
         self.verdict(ok, now)
     }
