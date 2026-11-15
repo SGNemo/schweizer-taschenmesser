@@ -41,12 +41,20 @@ export function NowPlayer({
   const [seekTo, setSeekTo] = useState<number>();
   const [volume, setVolume] = useState<number>();
   const [failed, setFailed] = useState(false);
+  const [stateFailed, setStateFailed] = useState(false);
   const id = trackIdOf(current?.trackUrl);
   const hearts = useSavedTracks(np, id ? [id] : []);
 
   useEffect(() => {
     let alive = true;
-    const state = source.state?.(ctx).then((s) => void (alive && setPlayer(s ?? 'none')));
+    const state = source.state?.(ctx).then(
+      (s) => void (alive && setPlayer(s ?? 'none')),
+      // A failed read: the rows kept for it go (as before 0b-8); the next round may read it again.
+      (e: unknown) => {
+        if (alive) setStateFailed(true);
+        throw e;
+      },
+    );
     const list = source.devices?.(ctx).then((d) => void (alive && setDevices(d)));
     // A failure changes nothing on the screen; either way the page may show the player now.
     void Promise.allSettled([state, list]).then(() => alive && onRead?.());
@@ -62,6 +70,9 @@ export function NowPlayer({
     np.readAt,
   );
   const state = player && player !== 'none' ? player : undefined;
+  // The player's state is still on its way (`state` answers `undefined` until then; a source without it never asks,
+  // and a failed read gives up).
+  const unread = player === undefined && !!source.state && !stateFailed;
 
   async function act(action: () => Promise<void>) {
     setFailed(false);
@@ -169,7 +180,14 @@ export function NowPlayer({
       ) : (
         <h2 className={styles.nowTitle}>{tx.nothingPlaying}</h2>
       )}
-      {state?.device ? <p className={styles.nowMeta}>{tx.onDevice(state.device)}</p> : null}
+      {state?.device ? (
+        <p className={styles.nowMeta}>{tx.onDevice(state.device)}</p>
+      ) : unread ? (
+        // The device line keeps its place until the player is read (a slow network after the page's hold, 0b-8).
+        <p className={styles.nowMeta} aria-hidden="true">
+          {'\u00a0'}
+        </p>
+      ) : null}
 
       {current && position !== undefined && current.durationMs ? (
         <div className={styles.seek}>
@@ -241,8 +259,10 @@ export function NowPlayer({
       )}
 
       <div className={styles.nowRow}>
-        {canControl && source.setVolume && state?.volume !== undefined ? (
-          <label className={styles.volume}>
+        {canControl && source.setVolume && (state?.volume !== undefined || unread) ? (
+          // Until the player is read the slider is there, disabled and hidden from screen readers (no value to say
+          // yet), so the row keeps its height (0b-8).
+          <label className={styles.volume} aria-hidden={unread || undefined}>
             <Icon name="volume" size={18} />
             <span className="sr-only">{tx.volume}</span>
             <input
@@ -250,12 +270,15 @@ export function NowPlayer({
               aria-label={tx.volume}
               min={0}
               max={100}
-              value={volume ?? state.volume}
+              value={volume ?? state?.volume ?? 0}
+              disabled={state?.volume === undefined}
               onChange={(e) => setVolume(Number(e.target.value))}
               onPointerUp={commitVolume}
               onKeyUp={commitVolume}
             />
-            <span className={styles.time}>{volume ?? state.volume} %</span>
+            <span className={styles.time}>
+              {state?.volume === undefined ? '–' : `${volume ?? state.volume} %`}
+            </span>
           </label>
         ) : null}
         {canControl && source.transfer && source.devices ? (

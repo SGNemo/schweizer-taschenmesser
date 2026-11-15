@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
 import { setNow } from '@/core/time/now';
 import { WEATHER_RETRY_MS, WEATHER_TTL_MS } from '@/core/weather/cache';
-import { chooseWeatherPlace, setWeatherEnabled } from '@/core/weather/settings';
+import { addExtraPlace, chooseWeatherPlace, setWeatherEnabled } from '@/core/weather/settings';
 import { AreaFrame } from '@/layout/AreaFrame';
 import WeatherPage from '../routes/WeatherPage';
 import WeatherWidget from '../widgets/WeatherWidget';
@@ -317,6 +317,100 @@ describe('weather page', () => {
     const warn = await screen.findByTestId('weather-warning');
     expect(warn).toHaveTextContent('Sturmböen bis 78 km/h');
     expect(warn).toHaveTextContent('keine amtliche Warnung');
+  });
+
+  it('a slow forecast: after the hold the head keeps its form, and a late hint goes under the forecast (0b-8)', async () => {
+    at1205();
+    const windy = {
+      ...previewBody,
+      daily: {
+        ...previewBody.daily,
+        wind_gusts_10m_max: dayDates.map((_, i) => (i === 2 ? 78 : 35)),
+      },
+    };
+    // The answer comes after the frame's bound (`FIRST_READ_HOLD_MS`, 0.6 s).
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        () =>
+          new Promise<Response>((resolve) =>
+            setTimeout(() => resolve(new Response(JSON.stringify(windy), { status: 200 })), 900),
+          ),
+      ),
+    );
+    await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
+    renderPage();
+    // Painted before the forecast: the head of its final form, with dashes.
+    expect(await screen.findByTestId('weather-now-pending')).toBeTruthy();
+    await waitFor(() => expect(screen.getByTestId('page')).not.toHaveAttribute('data-held'));
+    expect(screen.getByTestId('weather-now-pending')).toBeTruthy();
+    const late = screen.getByTestId('weather-late-warning');
+    expect(late).toHaveAttribute('aria-live', 'polite');
+    const warn = await within(late).findByTestId('weather-warning', {}, { timeout: 3000 });
+    expect(warn).toHaveTextContent('Sturmböen bis 78 km/h');
+    expect(screen.getAllByTestId('weather-warning')).toHaveLength(1);
+    expect(screen.queryByTestId('weather-now-pending')).toBeNull();
+  });
+
+  it('a failed request: no head waiting with dashes, the way to the settings stays (0b-8)', async () => {
+    at1205();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('down', { status: 503 })),
+    );
+    await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
+    renderPage();
+    await screen.findByRole('link', { name: /Einstellungen/ });
+    await waitFor(() => expect(screen.queryByTestId('weather-now-pending')).toBeNull());
+    expect(screen.getByTestId('weather-preview-credit')).toBeTruthy();
+    // Online: not "sobald du wieder online bist", but that the service did not answer.
+    expect(screen.getByRole('status')).toHaveTextContent('Gerade nicht erreichbar');
+  });
+
+  it('switched off with a place: says so and asks nothing, also for an extra place (0b-8)', async () => {
+    at1205();
+    const fetchSpy = ok(previewBody);
+    vi.stubGlobal('fetch', fetchSpy);
+    await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
+    await addExtraPlace('Zürich, Schweiz', 47.37, 8.54);
+    await setWeatherEnabled(false);
+    renderPage('/weather?place=1');
+    expect(await screen.findByRole('status')).toHaveTextContent('Das Wetter ist ausgeschaltet');
+    expect(screen.queryByTestId('weather-now-pending')).toBeNull();
+    expect(screen.getByRole('link', { name: /Einstellungen/ })).toBeTruthy();
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('an extra place that failed is asked again when you come back to it (0b-8)', async () => {
+    at1205();
+    let extraCalls = 0;
+    let answerSecond: () => void = () => undefined;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        const extra =
+          String(url).includes('/v1/forecast') && String(url).includes('latitude=47.37');
+        if (extra && ++extraCalls === 1) return new Response('down', { status: 503 });
+        if (extra) await new Promise<void>((r) => (answerSecond = r));
+        return new Response(JSON.stringify(previewBody), { status: 200 });
+      }),
+    );
+    await chooseWeatherPlace('Bern, Schweiz', 46.9481, 7.4474);
+    await addExtraPlace('Zürich, Schweiz', 47.37, 8.54);
+    renderPage('/weather?place=1');
+    const down = 'Gerade nicht erreichbar. Probier es später noch einmal.';
+    expect(await screen.findByText(down)).toBeTruthy();
+    const places = () =>
+      within(screen.getByRole('navigation', { name: 'Orte' })).getAllByRole('link');
+    fireEvent.click(places()[0]!);
+    await screen.findByTestId('weather-hours');
+    fireEvent.click(places()[1]!);
+    await waitFor(() => expect(extraCalls).toBe(2));
+    // While the new try runs, the page waits for it: not the failure of the first visit.
+    expect(screen.queryByText(down)).toBeNull();
+    expect(screen.getByRole('status')).toHaveTextContent('Wird geladen');
+    answerSecond();
+    expect(await screen.findByTestId('weather-hours')).toBeTruthy();
   });
 
   it('no hint for an ordinary week', async () => {

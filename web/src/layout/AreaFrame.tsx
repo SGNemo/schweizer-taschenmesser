@@ -157,19 +157,8 @@ export function AreaFrame({
   // 0b-8: the entry page of a module whose hint above the head or whose stage waits for its first reads
   // (`identity.firstRead`: the weather's hint, the music stage) is painted once those reads are back, so nothing that
   // arrives with them pushes the head and the page down (weather's first visit before: CLS 0.6–0.9).
-  const [firstReadHeld, settle] = useFirstReadHold(
+  const [firstReadHeld, settle, firstReadLate] = useFirstReadHold(
     framed && id?.firstRead && manifest && pathname === `/${manifest.id}` ? pathname : undefined,
-  );
-  const controls = useMemo<HeroControls>(
-    () => ({
-      claim: (area) => {
-        setClaims((c) => ({ ...c, [area]: (c[area] ?? 0) + 1 }));
-        return () => setClaims((c) => ({ ...c, [area]: Math.max(0, (c[area] ?? 1) - 1) }));
-      },
-      setTitle: setTitleText,
-      settle,
-    }),
-    [settle],
   );
   const claimed = (area: HeroArea) => (claims[area] ?? 0) > 0;
   const { figure: headline, pending: headlinePending } = useModuleHeadline(manifest);
@@ -182,15 +171,31 @@ export function AreaFrame({
   const roomKey = routeKey && stage ? `${routeKey}@${phone ? 'phone' : 'wide'}` : undefined;
   // The hold restarts for every route (and layout), so the room is measured only once that route's page is there.
   const [figureHold, setPageLoading] = useFigureHold(roomKey);
+  // A page whose head still waits for a late read keeps the room too (`useKeepHeadRoom`); its own flag, so it never
+  // clears the chunk's loading or the other way round.
+  const [keptRoom, setKeptRoom] = useState(false);
+  const controls = useMemo<HeroControls>(
+    () => ({
+      claim: (area) => {
+        setClaims((c) => ({ ...c, [area]: (c[area] ?? 0) + 1 }));
+        return () => setClaims((c) => ({ ...c, [area]: Math.max(0, (c[area] ?? 1) - 1) }));
+      },
+      setTitle: setTitleText,
+      settle,
+      late: firstReadLate,
+      keepRoom: setKeptRoom,
+    }),
+    [settle, firstReadLate],
+  );
   const remembered = useMemo(() => (roomKey ? readHeadRoom(roomKey) : undefined), [roomKey]);
-  const holdRoom = figureHold && !!remembered;
+  const holdRoom = (figureHold || keptRoom) && !!remembered;
   const stageRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = stageRef.current;
-    if (figureHold || !framed || !roomKey || !el) return;
+    if (figureHold || keptRoom || !framed || !roomKey || !el) return;
     const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
     writeHeadRoom(roomKey, el.getBoundingClientRect().height / rem);
-  }, [figureHold, framed, roomKey]);
+  }, [figureHold, keptRoom, framed, roomKey]);
   // Dialogs opened inside the page wear the module's identity in their head (S02, `ui/Dialog`).
   const dialogIdentity = useMemo(
     () =>
@@ -287,6 +292,7 @@ export function AreaFrame({
         {framed && !stage ? (
           <header
             className={`${styles.head} ${firstReadHeld ? styles.held : ''}`}
+            aria-busy={firstReadHeld || undefined}
             data-head="standard"
             data-hue={id?.hue}
             data-hue2={id?.hue2}
@@ -308,6 +314,7 @@ export function AreaFrame({
             as="header"
             bleed
             className={`${styles.stage} ${firstReadHeld ? styles.held : ''}`}
+            busy={firstReadHeld}
             hue={id?.hue}
             hue2={id?.hue2}
             area={area?.id}

@@ -16,6 +16,8 @@ export const tWeatherPage = defineBundle(
       'Das Wetter braucht einen Ort. Nur der Ortsname (beim Suchen) und die ungefähre Position gehen an open-meteo.com, nie deine Einträge.',
     emptyAction: 'Ort wählen',
     offline: 'Gerade keine Wetterdaten. Sie erscheinen, sobald du wieder online bist.',
+    switchedOff:
+      'Das Wetter ist ausgeschaltet. Du kannst es in den Einstellungen wieder einschalten.',
     feelsLike: (n: number) => `fühlt sich an wie ${n}°`,
     keyRain: (hour: string) => `Regen ab ${hour} Uhr`,
     keyDry: 'Kein Regen in Sicht',
@@ -70,6 +72,7 @@ export const tWeatherPage = defineBundle(
         'The weather needs a place. Only the place name (when searching) and the approximate position go to open-meteo.com, never your entries.',
       emptyAction: 'Choose a place',
       offline: 'No weather data right now. It appears as soon as you are online again.',
+      switchedOff: 'Weather is switched off. You can switch it back on in the settings.',
       feelsLike: (n: number) => `feels like ${n}°`,
       keyRain: (hour: string) => `Rain from ${hour}`,
       keyDry: 'No rain in sight',
