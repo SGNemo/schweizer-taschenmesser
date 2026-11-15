@@ -1,10 +1,12 @@
 import type { PlannableEntry } from '@/core/modules/contributions';
 import { dayName } from '@/core/plan/explain';
-import { formatDay } from '@/core/time/dates';
+import { addDaysStr, formatDay } from '@/core/time/dates';
 import { DAY_PARTS, type DayPart } from '@/core/plan/types';
+import { today } from '@/core/time/now';
 import { t } from '@/strings';
 import { Chip, Chips, Dialog } from '@/ui';
 import { asBreak, BREAK_CHOICES, ESTIMATE_CHOICES, pin, setEstimate, setPart } from '../actions';
+import { BOARD_DAYS } from '../calendar';
 import { compact } from './capacity';
 import styles from '../routes/planner.module.css';
 
@@ -22,6 +24,10 @@ export type RowChoiceState =
  * Vormittag · Nachmittag · Abend · Ohne (package 4b), or – „Verschieben …“ (R2) – the days of the week. One tap
  * acts and closes; the toast carries the undo.
  */
+/** Without the board's days: the seven days from today, the board's horizon. */
+const weekFromToday = (): string[] =>
+  Array.from({ length: BOARD_DAYS }, (_, i) => addDaysStr(today(), i));
+
 export function RowChoice({
   choice,
   days,
@@ -29,8 +35,8 @@ export function RowChoice({
   onClose,
 }: {
   choice: RowChoiceState | undefined;
-  /** The days „Verschieben …“ offers: the board's days from today ('YYYY-MM-DD'). */
-  days: readonly string[];
+  /** The days „Verschieben …“ offers: the board's days from today ('YYYY-MM-DD'); default the week from today. */
+  days?: readonly string[];
   titles: Record<string, string>;
   onClose: () => void;
 }) {
@@ -63,7 +69,7 @@ export function RowChoice({
       <Dialog open onClose={onClose} title={r.moveTitle(title)}>
         <p className={styles.capacity}>{r.moveHint}</p>
         <Chips label={r.moveTitle(title)}>
-          {days.map((date) => (
+          {(days ?? weekFromToday()).map((date) => (
             <Chip
               key={date}
               // „Mi 18.“ – weekday and day, as on the week band's tiles.
