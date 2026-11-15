@@ -36,6 +36,7 @@ import type { PlanItem } from '@/core/plan/types';
 import {
   LAST_RUN_KEY,
   previewPlanner,
+  requestedIds,
   restoreSources,
   runPlanner,
   type PreviewOutcome,
@@ -194,11 +195,12 @@ async function inputSnapshot(): Promise<string> {
   const settings = await getPlannerSettings();
   const day = today();
   const until = addDays(day, Number(settings.horizonDays) - 1);
-  const [things, calendar, days, items, assignments, focus, pull, lastSync] = await Promise.all([
-    collectPlannable({ today: day, until }, manifests),
+  const items = await itemRepo.active().toArray();
+  const [things, calendar, days, assignments, focus, pull, lastSync] = await Promise.all([
+    // With the requests, as the run reads them (`buildInputs`): a list asked into the plan is an input.
+    collectPlannable({ today: day, until }, manifests, requestedIds(items)),
     settings.calendarBlocks ? collectCalendarItems({ from: day, to: until }, manifests) : [],
     dayRepo.active().toArray(),
-    itemRepo.active().toArray(),
     assignmentRepo.active().toArray(),
     getFocusSettings(),
     getMeta(PULL_COMPLETE_KEY),

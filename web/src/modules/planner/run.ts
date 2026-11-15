@@ -24,6 +24,7 @@ import {
   collectPlannable,
   plannableSource,
   type PlannableEntry,
+  type RequestedIds,
 } from '@/core/modules/contributions';
 import { isPlannerOwned, type CalendarItem, type ModuleManifest } from '@/core/modules/types';
 import { planDays } from './days';
@@ -120,13 +121,40 @@ export function rowsSignature(rows: readonly (AssignmentRow & { id: string })[])
   );
 }
 
+/**
+ * What the person asked into the plan, per module: every live item row that is not excluded (`plan.requested`
+ * with `ref` writes such a row; „Nicht planen“ or removing the row takes the thing out again). A source reads
+ * its ids as `ctx.requested` and lists an undated thing only then (CONCEPT-SOURCES §3.1 rule 1, §3.3). Sorted,
+ * so the same rows give the same lists on every device.
+ */
+export function requestedIds(
+  rows: readonly Pick<PlanItemRow, 'source' | 'excluded'>[],
+): RequestedIds {
+  const out: Record<string, string[]> = {};
+  for (const r of rows) {
+    if (r.excluded || !r.source?.module || !r.source.id) continue;
+    (out[r.source.module] ??= []).push(r.source.id);
+  }
+  for (const ids of Object.values(out)) ids.sort();
+  return out;
+}
+
 /** Everything the engine needs, plus the input hash (without `prev`, marks, planner-own dates or the assignment rows). */
 export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<RunInputs> {
   const settings = planSettings(deps.settings, deps.planLimit);
   const horizon = Array.from({ length: settings.horizonDays }, (_, i) => addDays(deps.today, i));
   const until = horizon[horizon.length - 1]!;
+  const itemRows = new Map<string, PlanItemRow>(
+    (await repos.item.active().toArray()).map((r) => [r.id, r]),
+  );
+  // The requests come first: an undated thing (a shopping list) is listed only for an id asked into the plan.
   const entries =
-    deps.entries ?? (await collectPlannable({ today: deps.today, until }, deps.manifests));
+    deps.entries ??
+    (await collectPlannable(
+      { today: deps.today, until },
+      deps.manifests,
+      requestedIds([...itemRows.values()]),
+    ));
   const calendar = deps.settings.calendarBlocks
     ? (deps.calendar ??
       (await collectCalendarItems({ from: deps.today, to: until }, deps.manifests)))
@@ -148,9 +176,6 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
     })),
     ...(window ? { window } : {}),
   }));
-  const itemRows = new Map<string, PlanItemRow>(
-    (await repos.item.active().toArray()).map((r) => [r.id, r]),
-  );
   const userDates = new Map<string, string>();
   const titles: Record<string, string> = {};
   const items: PlanItem[] = [];

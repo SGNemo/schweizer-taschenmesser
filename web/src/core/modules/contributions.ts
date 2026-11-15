@@ -58,20 +58,27 @@ export async function collectCalendarItems(
 /** What the planner may plan, with the module that offered it. */
 export type PlannableEntry = PlannableItem & { moduleId: string };
 
+/** Module id → the ids of that module the person asked into the plan (the planner's item rows; CONCEPT-SOURCES §3.3). */
+export type RequestedIds = Readonly<Record<string, readonly string[]>>;
+
 /**
  * Plannable things of all given (active) modules, in manifest order. A failing source never breaks
- * the others; the planner reaches the write-back of a source through `plannableSource`.
+ * the others; the planner reaches the write-back of a source through `plannableSource`. `requested` reaches
+ * each source as `ctx.requested` (its own ids only): a thing without a date is listed only when asked for.
  */
 export async function collectPlannable(
   ctx: { today: string; until: string },
   manifests: readonly ModuleManifest[],
+  requested?: RequestedIds,
 ): Promise<PlannableEntry[]> {
   const lists = await Promise.all(
     manifests.map(async (m) => {
       const load = m.contributions?.plannable;
       if (!load) return [];
+      const asked = requested?.[m.id];
+      const own = asked?.length ? { ...ctx, requested: [...asked] } : ctx;
       try {
-        return (await (await load()).default.list(ctx)).map((i) => ({ ...i, moduleId: m.id }));
+        return (await (await load()).default.list(own)).map((i) => ({ ...i, moduleId: m.id }));
       } catch (e) {
         console.error(`[plannable] source "${m.id}" failed`, e);
         return [];
@@ -81,15 +88,19 @@ export async function collectPlannable(
   return lists.flat();
 }
 
-/** Live plannable things of all active modules; `undefined` while loading. */
-export function usePlannable(ctx: { today: string; until: string }): PlannableEntry[] | undefined {
+/** Live plannable things of all active modules; `undefined` while loading. `requested`: see `collectPlannable`. */
+export function usePlannable(
+  ctx: { today: string; until: string },
+  requested?: RequestedIds,
+): PlannableEntry[] | undefined {
   const states = useModuleStates();
   const ids = activeManifests(states)
     .map((m) => m.id)
     .join(',');
+  const asked = requested ? JSON.stringify(requested) : '';
   return useSharedLiveQuery(
-    `plannable|${ctx.today}|${ctx.until}|${ids}|${states === undefined}`,
-    async () => (states ? collectPlannable(ctx, activeManifests(states)) : undefined),
+    `plannable|${ctx.today}|${ctx.until}|${ids}|${states === undefined}|${asked}`,
+    async () => (states ? collectPlannable(ctx, activeManifests(states), requested) : undefined),
     preload('plannable', activeManifests(states)),
   );
 }

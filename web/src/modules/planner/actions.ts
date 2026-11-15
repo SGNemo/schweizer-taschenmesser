@@ -16,6 +16,7 @@ import { unitId } from '@/core/plan/units';
 import { spanMin, windowText, type TimeWindow } from '@/core/plan/windows';
 import { now, today } from '@/core/time/now';
 import { undoEntry } from '@/core/undo';
+import { NEVER_LINKED, type EntityRef } from '@/core/entitylinks/types';
 import type { EventMap } from '@/core/events/events';
 import type { CaptureFields } from '@/quickCapture/parser';
 import {
@@ -109,9 +110,11 @@ const short = (title: string, max = 32) =>
 /**
  * `plan.requested` (a note's „In den Plan“): a ToDo through the quick-capture target `plan` (with the
  * link back), its planner item (a hard due when asked) and the run, as one undoable action; the toast says
- * on which day it landed: „Im Plan: Vermieter antworten · Di · Rückgängig“.
+ * on which day it landed: „Im Plan: Vermieter antworten · Di · Rückgängig“. With `ref` the thing is a plan item
+ * itself and no ToDo is made (`placeRequested`).
  */
 export async function addRequested(req: EventMap['plan.requested']): Promise<boolean> {
+  if (req.ref) return placeRequested(req.ref, req);
   const title = req.title.trim();
   if (!title) return false;
   const fields: CaptureFields = {
@@ -133,6 +136,53 @@ export async function addRequested(req: EventMap['plan.requested']): Promise<boo
     return false;
   }
   const key = saved ? itemKeyOf(saved.moduleId, saved.id) : undefined;
+  const first = run.outcome.result?.assignments
+    .filter((a) => a.itemKey === key)
+    .sort((a, b) => a.date.localeCompare(b.date))[0];
+  const line = first
+    ? t.planner.toast.requested(short(title), dayName(first.date))
+    : t.planner.toast.requestedWaits(short(title));
+  toast(withOverload(line, await overloadNotice(run)), run);
+  return true;
+}
+
+/**
+ * `plan.requested` with `ref` („In den Plan“ on a thing that is a plan item itself: a list, an invoice;
+ * CONCEPT-SOURCES §3.3): no ToDo. The planner writes only its own item row for `<module>:<id>` – `excluded` off, a
+ * hard due when asked – and runs, as one undoable action with the usual toast. For a thing without a date that row
+ * is also the request: the run hands its id to the source as `ctx.requested` (`run.ts requestedIds`), and „Nicht
+ * planen“ or the undo takes it out again. The ref is untrusted (any module can emit): never the vault, only a
+ * module that is a plan source; a thing its source does not list (nothing open, module off) leaves no row behind.
+ */
+export async function placeRequested(
+  ref: EntityRef,
+  req: Pick<EventMap['plan.requested'], 'title' | 'due'>,
+): Promise<boolean> {
+  if (ref.module === NEVER_LINKED || !ref.id || ref.id.length > 128) return false;
+  if (!(await source(ref.module).catch(() => undefined))) return false;
+  const key = itemKeyOf(ref.module, ref.id);
+  let run: UserRun;
+  try {
+    run = await runUser(t.planner.toast.added, () =>
+      itemPatch(
+        { moduleId: ref.module, id: ref.id },
+        {
+          excluded: undefined,
+          ...(req.due?.hard ? { due: { date: req.due.date, hard: true } } : {}),
+        },
+      ),
+    );
+  } catch (e) {
+    if (!(e instanceof PlannerOffError)) throw e;
+    toast(t.planner.toast.off);
+    return false;
+  }
+  const title = run.outcome.inputs.titles[key];
+  if (title === undefined) {
+    // Not a thing of the plan (nothing open on the list, its module is off): the request is taken back.
+    if (run.entry) await undoEntry(run.entry.id);
+    return false;
+  }
   const first = run.outcome.result?.assignments
     .filter((a) => a.itemKey === key)
     .sort((a, b) => a.date.localeCompare(b.date))[0];
