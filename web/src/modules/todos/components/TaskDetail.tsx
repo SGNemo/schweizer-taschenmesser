@@ -41,9 +41,14 @@ export function TaskDetail({
           {
             label: t.todos.due,
             // The row carries the tone ("Überfällig", "Heute"); here the same fact is plain text, once.
-            value: near(task.dueDate, day)
-              ? `${formatDay(task.dueDate, 'EEEE, d. MMMM yyyy')} · ${relativeDayLabel(task.dueDate, day)}`
-              : formatDay(task.dueDate, 'EEEE, d. MMMM yyyy'),
+            value: (() => {
+              const date = task.dueTime
+                ? t.todos.dueAt(formatDay(task.dueDate, 'EEEE, d. MMMM yyyy'), task.dueTime)
+                : formatDay(task.dueDate, 'EEEE, d. MMMM yyyy');
+              return near(task.dueDate, day)
+                ? `${date} · ${relativeDayLabel(task.dueDate, day)}`
+                : date;
+            })(),
           },
         ]
       : []),
