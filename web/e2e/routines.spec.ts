@@ -95,7 +95,7 @@ test('reminder and planner: optional, in the same form; a daily start stays out 
   await enable(page, 'planner');
   await enable(page, 'routines');
   await ready(page, '/routines?new=morning');
-  const dialog = page.getByRole('dialog', { name: 'Routine anlegen' });
+  const dialog = page.getByRole('dialog', { name: 'Routine eintragen' });
   await expect(dialog.getByLabel('Name', { exact: true })).toHaveValue('Morgenroutine');
   // A routine of every day would fill each plan with the same row: the start leaves it out.
   const planner = dialog.getByRole('checkbox', { name: 'Im Planer zeigen' });
@@ -104,7 +104,7 @@ test('reminder and planner: optional, in the same form; a daily start stays out 
   await expect(planner).toBeChecked();
   await dialog.getByRole('button', { name: 'Morgen', exact: true }).click();
   await dialog.getByLabel('Erinnerung (optional)').fill('07:30');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: 'Routine eintragen' }).click();
   await expect(dialog).toHaveCount(0);
   await page.getByRole('listitem').filter({ hasText: 'Morgenroutine' }).click();
   const edit = page.getByRole('dialog', { name: 'Routine bearbeiten' });
