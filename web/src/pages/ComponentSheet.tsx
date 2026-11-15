@@ -31,6 +31,7 @@ import {
   useDraft,
   useSelection,
 } from '@/ui';
+import { ChartSheet } from './ChartSheet';
 import styles from './ComponentSheet.module.css';
 
 const c = tDev.components;
@@ -198,6 +199,8 @@ export default function ComponentSheet() {
         </div>
         <p className={styles.intro}>{c.dialogHint}</p>
       </section>
+
+      <ChartSheet />
 
       <Dialog
         open={open}
