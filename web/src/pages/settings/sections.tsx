@@ -29,6 +29,7 @@ import {
   AiSwitchSection,
   AiWriteSection,
   AppearanceSection,
+  AppLockSection,
   CalmRemindersSection,
   ConnectorsSection,
   DeviceResetSection,
@@ -78,6 +79,7 @@ import { tRemoteHost } from '@/strings.remoteHost';
 import { tTrash } from '@/strings.trash';
 import { tAdvanced } from '@/strings.advanced';
 import { tKeys } from '@/strings.keys';
+import { tAppLock } from '@/strings.applock';
 import { tSettings4 } from '@/strings.settings4';
 import { tSettings3 } from '@/strings.settings3';
 import { tWeather } from '@/strings.weather';
@@ -1098,6 +1100,34 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
       return [{ key: 'on', label: tSettings3.get().history.on }];
     },
     render: () => <HistorySection />,
+  },
+  {
+    id: 'app-lock',
+    category: 'sicherheit',
+    maturity: 'stable',
+    order: 5,
+    scope: 'local',
+    get title() {
+      return tAppLock.get().title;
+    },
+    get description() {
+      return tAppLock.get().description;
+    },
+    get keywords() {
+      return tAppLock.de.keywords;
+    },
+    get fields() {
+      const a = tAppLock.get();
+      return [
+        { key: 'enabled', label: a.enabled, description: a.enabledHint },
+        { key: 'pin', label: a.changePin, description: a.changePinHint },
+        { key: 'idle', label: a.idle, description: a.idleHint },
+        { key: 'background', label: a.background, description: a.backgroundHint },
+        { key: 'biometric', label: a.biometric, description: a.biometricHint },
+        { key: 'lock-now', label: a.lockNow, description: a.lockNowHint },
+      ];
+    },
+    render: () => <AppLockSection />,
   },
   {
     id: 'shortcuts',
