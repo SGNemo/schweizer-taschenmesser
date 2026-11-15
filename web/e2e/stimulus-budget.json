@@ -331,10 +331,10 @@
     },
     "d1920--planner": {
       "height": 1080,
-      "buttons": 47,
+      "buttons": 56,
       "links": 19,
-      "icons": 69,
-      "firstScreenActions": 61,
+      "icons": 75,
+      "firstScreenActions": 69,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,

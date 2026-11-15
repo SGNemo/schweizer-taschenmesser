@@ -117,6 +117,7 @@ const SEED_SOURCES: readonly (readonly [string, string])[] = [
   ['fitness', 'session'],
   ['routines', 'routine'],
   ['lists', 'list'],
+  ['vault', 'document'],
   ['people', 'gift'],
 ];
 

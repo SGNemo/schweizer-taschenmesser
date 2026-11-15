@@ -3211,7 +3211,7 @@ export const de = {
         remindTimeHelp: 'Format HH:mm',
         showInPlan: 'Im Plan zeigen',
         showInPlanHelp:
-          'Kündigungsfristen stehen im Planer als „<Abo> kündigen“ (15 Min, bis zum letzten Tag der Frist). Nur bei eingeschaltetem Planer.',
+          'Kündigungsfristen stehen im Planer als „<Abo> kündigen“, das Ende einer Probezeit als „<Abo>: Probezeit endet“ (15 Min, bis zum letzten Tag der Frist). Gekündigt wird hier. Nur bei eingeschaltetem Planer.',
         priceHint: 'Hinweis bei Preiserhöhung',
         priceHintHelp:
           'Zeigt einmal unter „Jetzt wichtig“, wenn ein Abo teurer geworden ist. Du kannst es jederzeit ausschalten.',
@@ -3222,6 +3222,8 @@ export const de = {
     edit: 'Abo bearbeiten',
     name: 'Name',
     planTitle: (name: string) => `${name} kündigen`,
+    planTrialTitle: (name: string) => `${name}: Probezeit endet`,
+    planAction: 'Kündigen …',
     firstCharge: 'Abbuchung am',
     noticeDays: 'Kündigungsfrist (Tage vor Abbuchung)',
     noticeHint: 'Leer lassen, wenn jederzeit kündbar.',
@@ -5936,8 +5938,23 @@ export const de = {
         remindDaysBeforeDeadline: 'Erinnerung vor Kündigungsfrist (Tage)',
         remindTime: 'Uhrzeit der Erinnerung',
         remindTimeHelp: 'Format HH:mm',
+        showInPlan: 'Im Plan zeigen',
+        showInPlanHelp:
+          'Kündigungsfristen und Abläufe stehen im Planer als „Vertrag kündigen“ oder „Ausweis verlängern“ (15 Min, bis zum letzten Tag). Der Name der Unterlage steht nur auf der Planer-Seite. Nur bei eingeschaltetem Planer.',
       },
     },
+    /** Plan row titles: the category's wording only, never the document's name (it reaches calendar and widget). */
+    planCancel: (category: string) =>
+      category === 'insurance' ? 'Versicherung kündigen' : 'Vertrag kündigen',
+    planRenew: (category: string) =>
+      category === 'identity'
+        ? 'Ausweis verlängern'
+        : category === 'warranty'
+          ? 'Garantie prüfen'
+          : category === 'contract' || category === 'insurance'
+            ? 'Vertragsende prüfen'
+            : 'Unterlage verlängern',
+    planAction: 'Zum Dokument',
     title: 'Unterlagen',
     add: 'Unterlage eintragen',
     edit: 'Unterlage bearbeiten',
