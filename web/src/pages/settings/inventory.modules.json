@@ -276,6 +276,11 @@
         "type": "number",
         "label": "Einheiten pro Woche",
         "default": 0
+      },
+      "restSec": {
+        "type": "number",
+        "label": "Pause zwischen Sätzen in Sekunden",
+        "default": 90
       }
     }
   },
