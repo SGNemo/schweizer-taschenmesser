@@ -61,7 +61,13 @@ import {
 } from '../repo';
 import type { Item } from '../schema';
 import { addRequested } from '../services';
-import { createPackingFromTemplate, createRoutine, ROUTINES } from '../templates';
+import {
+  createFromStarter,
+  createPackingFromTemplate,
+  createRoutine,
+  ROUTINES,
+  starterName,
+} from '../templates';
 import styles from './lists.module.css';
 
 /** A ticked entry keeps its place this long (with "Rückgängig" in the notice) before it moves down. */
@@ -596,6 +602,24 @@ export default function ListsPage() {
             ),
           )}
         </ul>
+        <h3>{t.lists.startersTitle}</h3>
+        <ul className={styles.templates}>
+          {(['weekly', 'vacation'] as const).map((id) => (
+            <li key={id}>
+              <Button
+                onClick={() => {
+                  void createFromStarter(id).then((listId) => {
+                    setTemplates(false);
+                    setParams({ list: listId }, { replace: true });
+                    toast(t.lists.routines.created);
+                  });
+                }}
+              >
+                {starterName(id)}
+              </Button>
+            </li>
+          ))}
+        </ul>
         <h3>{t.lists.fromTemplate}</h3>
         <ul className={styles.templates}>
           {PACKING_TEMPLATES.map((id) => (
@@ -618,6 +642,7 @@ export default function ListsPage() {
       <ItemEditor
         item={editingItem}
         kind={current?.kind ?? 'checklist'}
+        lists={sorted}
         onClose={() => setEditingItem(null)}
       />
       <ListEditor

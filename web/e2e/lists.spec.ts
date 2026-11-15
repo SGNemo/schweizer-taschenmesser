@@ -180,3 +180,33 @@ test('Lesezeichen: links as tiles, grouped by the first tag', async ({ page }) =
   await page.getByRole('button', { name: 'Merkzettel', exact: true }).click();
   await expect(page.getByRole('link', { name: /Bahn Link/ })).toBeVisible();
 });
+
+test('Vorlage als Start und Einträge zwischen Listen verschieben', async ({ page }) => {
+  await enable(page, 'lists');
+  await open(page, '/lists');
+  await page.getByRole('button', { name: /Neue Liste|Liste eintragen/ }).click();
+  const dialog = page.getByRole('dialog', { name: 'Neue Liste' });
+  await dialog.getByLabel('Vorlage').selectOption({ label: 'Wocheneinkauf' });
+  await expect(dialog.getByLabel('Name der Liste')).toHaveValue('Wocheneinkauf');
+  await expect(dialog.getByLabel('Art')).toHaveValue('shopping');
+  await save(page);
+  await expect(page.getByRole('button', { name: 'Wocheneinkauf', exact: true })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  await expect(page.getByRole('checkbox', { name: 'Kaffee' })).toBeVisible();
+
+  // Move "Kaffee" to the shopping list through the entry's editor.
+  await page
+    .getByRole('listitem')
+    .filter({ hasText: 'Kaffee' })
+    .getByRole('button', { name: 'Eintrag bearbeiten' })
+    .click();
+  const editor = page.getByRole('dialog', { name: 'Eintrag bearbeiten' });
+  await editor.getByLabel('Liste', { exact: true }).selectOption({ label: 'Einkauf' });
+  await save(page);
+  await expect(page.getByText('„Kaffee“ nach „Einkauf“ verschoben.')).toBeVisible();
+  await expect(page.getByRole('checkbox', { name: 'Kaffee' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Einkauf', exact: true }).click();
+  await expect(page.getByRole('checkbox', { name: 'Kaffee' })).toBeVisible();
+});

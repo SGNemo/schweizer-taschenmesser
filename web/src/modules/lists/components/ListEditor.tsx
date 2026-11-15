@@ -19,6 +19,8 @@ import {
 import { iconOf, LIST_ICONS, nextOrder, type ListIcon } from '../logic';
 import { deleteList, listRepo, setArchived } from '../repo';
 import { KINDS, type List, type ListKind } from '../schema';
+import { fillFromStarter, STARTERS, starterKind, starterName, type StarterId } from '../templates';
+import { useUiStore } from '@/stores/ui';
 import styles from './ListManage.module.css';
 
 export type ListTarget = Stored<List> | 'new' | null;
@@ -100,6 +102,15 @@ function Fields({
   const [tripDate, setTripDate] = useState(list?.tripDate ?? '');
   const [place, setPlace] = useState(list?.place ?? '');
   const [error, setError] = useState('');
+  const [starter, setStarter] = useState<StarterId | ''>('');
+  const toast = useUiStore((x) => x.toast);
+  const pickStarter = (id: StarterId | '') => {
+    // The name follows the starter until the reader types one of their own.
+    if (!name.trim() || (starter && name === starterName(starter)))
+      setName(id ? starterName(id) : '');
+    if (id) setKind(starterKind(id));
+    setStarter(id);
+  };
   const shownIcon = icon ?? iconOf({ kind });
 
   async function save() {
@@ -121,6 +132,10 @@ function Fields({
     } else {
       const inUse = existing.filter((l) => !l.archived);
       const created = await listRepo.create({ ...data, order: nextOrder(inUse) });
+      if (starter) {
+        const n = await fillFromStarter(created.id, starter);
+        void toast(t.lists.startedFrom(trimmed, n));
+      }
       onSaved(created.id);
     }
     onClose();
@@ -128,6 +143,21 @@ function Fields({
 
   return (
     <Form onSubmit={save}>
+      {!list ? (
+        <SelectField
+          label={t.lists.starters.label}
+          hint={t.lists.starters.hint}
+          value={starter}
+          onChange={(e) => pickStarter(e.target.value as StarterId | '')}
+        >
+          <option value="">{t.lists.starters.none}</option>
+          {STARTERS.map((id) => (
+            <option key={id} value={id}>
+              {starterName(id)}
+            </option>
+          ))}
+        </SelectField>
+      ) : null}
       <TextField
         label={t.lists.listName}
         value={name}
