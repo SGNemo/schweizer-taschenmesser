@@ -27,7 +27,7 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 |  | Routinen | Putzplan und Haushalts-Routinen | bei Neuinstallationen an |
 |  | Vorräte | Was ist im Kühlschrank, im Vorratsschrank und im Tiefkühler? | optional |
 |  | Fitness | Training und Essen grob festhalten | Vorschau |
-| **Wissen** | Merkliste | Was du dir noch anschauen, lesen, kaufen oder ausprobieren willst | optional |
+| **Wissen** | Merkliste | Was du dir noch anschauen, lesen, kaufen, ausprobieren oder besuchen willst | optional |
 |  | Notizen | Notizblock mit formatiertem Text (Markdown), einem festen Zettel immer oben, Anheften und Suche | optional |
 |  | Chat | Gespräche mit dem eingebauten lokalen Modell oder deinen Anbietern | Vorschau |
 |  | Browser | Einfacher Browser mit Tabs, Lesezeichen und privatem Modus | Vorschau, nur Windows- und Android-App |
