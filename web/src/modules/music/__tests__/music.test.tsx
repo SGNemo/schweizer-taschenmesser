@@ -592,7 +592,8 @@ describe('music page', () => {
     const queue = await screen.findByTestId('music-queue');
     expect(queue).toHaveTextContent('Danach');
     expect(queue).toHaveTextContent('Dannach');
-    fireEvent.click(chip(/Warteschlange/));
+    // No tab of its own: the aside's card opens the whole queue.
+    fireEvent.click(screen.getByRole('button', { name: 'Ganze Warteschlange anzeigen' }));
     await waitFor(() => expect(main()).toHaveTextContent('Als Nächstes'));
     await waitFor(() => expect(within(main()).getAllByTestId('track-row').length).toBe(3));
   });

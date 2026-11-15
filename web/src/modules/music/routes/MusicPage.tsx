@@ -98,7 +98,6 @@ export default function MusicPage() {
     { id: 'search', view: { type: 'search' }, label: tx.tabSearch },
     { id: 'liked', view: { type: 'liked' }, label: tx.tabLiked },
     { id: 'recent', view: { type: 'recent' }, label: tx.navRecent },
-    { id: 'queue', view: { type: 'queue' }, label: tx.navQueue },
   ];
   // A playlist opened from the playlists tab keeps that tab marked (its way back is in the list's head).
   const isOn = (v?: View) =>
