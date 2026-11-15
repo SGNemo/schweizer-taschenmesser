@@ -62,7 +62,8 @@ export function DaySetup({
 }) {
   const s = t.planner.daySetup;
   // The capture's targets on this device: the sheet reads a line exactly as a many-lines capture does (W23).
-  const { available, fitness, place, breaks } = useCaptureTypes();
+  // Until the module states are read every line would fall back to a ToDo: the preview waits for them.
+  const { states, available, fitness, place, breaks } = useCaptureTypes();
   const [step, setStep] = useState<Step>(1);
   const [text, setText] = useState(readSetupDraft);
   // Set by the first keystroke: only typing renews the draft (a reopened sheet does not touch its age).
@@ -98,11 +99,11 @@ export function DaySetup({
       const out = await previewUser([...ops, ...breaks], previewItems(things, now()));
       const names = { ...previewTitles(things), ...out.titles, ...titles };
       const tasks = setupTasks(things).length;
-      // What becomes what: when not every line is a ToDo, the capture's own kinds line („ToDo 9 · Termin 1 · …“)
-      // instead of the count of things, never both. Breaks alone say themselves below.
-      const kinds = kindsOf(things);
+      // What becomes what: when a line is neither a ToDo nor a break, the capture's own kinds line („ToDo 9 ·
+      // Termin 1 · …“) instead of the count of things, never both. A break says itself below (never twice).
+      const kinds = kindsOf(things.filter((th) => th.type !== 'break'));
       const lines = [
-        ...(kinds.length > 1 || (kinds.length === 1 && !tasks && breaks.length === 0)
+        ...(kinds.length > 1 || (kinds.length === 1 && !tasks)
           ? [t.quickCapture.multi.kinds(kinds)]
           : tasks
             ? [s.things(tasks)]
@@ -176,7 +177,7 @@ export function DaySetup({
         <Button variant="ghost" onClick={() => setStep(1)} disabled={busy}>
           {s.back}
         </Button>
-        <Button variant="primary" onClick={() => void toPreview()} disabled={busy}>
+        <Button variant="primary" onClick={() => void toPreview()} disabled={busy || !states}>
           {s.next}
         </Button>
       </>
