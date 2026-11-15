@@ -183,7 +183,8 @@ function Fields({
       steps: parseSteps(steps, existing ? stepsOf(existing) : [], newStepId),
       daypart,
       remindAt,
-      planner,
+      // Only what the user could see is stored: with the planner off, the switch is hidden and left as it is.
+      planner: plannerOn ? planner : undefined,
     };
     if (existing) {
       // Only what was changed here is written (`editPatch`): a due routine stays due, a tick made meanwhile stays.

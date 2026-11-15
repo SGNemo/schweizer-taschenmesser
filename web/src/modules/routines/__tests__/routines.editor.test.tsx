@@ -39,6 +39,9 @@ describe('routine editor: one way to set a routine up', () => {
     expect(r).toMatchObject({ name: 'Morgenroutine', daypart: 'morning', dueDate: today() });
     expect(r!.repeat).toMatchObject({ freq: 'daily', interval: 1 });
     expect(r!.steps).toHaveLength(6);
+    // The planner is off here: its switch was not shown, so nothing is stored for it.
+    expect(screen.queryByRole('checkbox', { name: 'Im Planer zeigen' })).toBeNull();
+    expect(r!.planner).toBeUndefined();
   });
 
   it('a name typed by hand stays when a start is picked; „Leer“ clears the steps', async () => {
