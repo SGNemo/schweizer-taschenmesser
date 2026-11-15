@@ -633,6 +633,9 @@ pub struct ResetReport {
     pub restored: Vec<String>,
     /// Could not be put back (or not noted as put back); they stay "changed here" for a retry.
     pub failed: Vec<String>,
+    /// Changed in Windows itself since: left as they are, and no longer counted as changed
+    /// here (the newer choice stands).
+    pub left: Vec<String>,
 }
 
 /// Puts every setting changed here back to the state from before its **first** change. Each
@@ -640,15 +643,21 @@ pub struct ResetReport {
 pub fn reset_all(journal: &mut Journal, reg: &dyn Registry, effects: &dyn Effects) -> ResetReport {
     let mut report = ResetReport::default();
     for (subject, steps) in journal.originals(Kind::Tweak) {
-        let done = apply_undo(reg, &steps, |what, previous| {
+        let applied = apply_undo(reg, &steps, |what, previous| {
             apply_other(effects, what, previous)
-        })
-        .is_ok()
-            && journal.mark_reset(Kind::Tweak, &subject).is_ok();
-        if done {
-            report.restored.push(subject);
-        } else {
-            report.failed.push(subject);
+        });
+        match applied {
+            Ok(()) if journal.mark_reset(Kind::Tweak, &subject).is_ok() => {
+                report.restored.push(subject)
+            }
+            // Windows' own settings changed it after us: that choice stands, nothing is
+            // written, and the setting stops counting as changed here.
+            Err(RegError::ChangedElsewhere)
+                if journal.mark_stale(Kind::Tweak, &subject).is_ok() =>
+            {
+                report.left.push(subject)
+            }
+            _ => report.failed.push(subject),
         }
     }
     report
@@ -1585,8 +1594,12 @@ mod tests {
             Err(RegError::ChangedElsewhere)
         );
         let report = reset_all(&mut j, &reg, &fx);
-        assert_eq!(report.failed, vec!["advertisingId".to_string()]);
+        assert_eq!(report.left, vec!["advertisingId".to_string()]);
+        assert!(report.failed.is_empty() && report.restored.is_empty());
         assert_eq!(reg.get(AD_KEY, "Enabled"), Ok(Some(Value::Dword(1))));
+        // Settled: no longer "changed here", the history line offers no undo.
+        assert!(!of(&state(&j, &reg, &fx), "advertisingId").changed_here);
+        assert!(j.views().iter().all(|v| !v.can_undo && v.stale));
         cleanup(&path);
     }
 

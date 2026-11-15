@@ -145,6 +145,8 @@ export interface TweakState {
 export interface TweakReset {
   restored: string[];
   failed: string[];
+  /** Changed in Windows itself since: left as they are. */
+  left: string[];
 }
 
 export interface OptimizeService {

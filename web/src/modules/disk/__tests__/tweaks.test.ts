@@ -190,6 +190,6 @@ describe('fake settings', () => {
       '381b4222-f694-41f0-9685-ff5bb260df2e',
     );
     expect((await o.history()).entries.every((e) => !e.canUndo && e.undone)).toBe(true);
-    expect(await o.resetTweaks()).toEqual({ restored: [], failed: [] });
+    expect(await o.resetTweaks()).toEqual({ restored: [], failed: [], left: [] });
   });
 });

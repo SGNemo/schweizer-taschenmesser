@@ -86,6 +86,7 @@ export function TweaksTab() {
       .resetTweaks()
       .then((r) => {
         if (r.restored.length > 0) toast(x.resetDone(joinNames(r.restored.map(tweakTitle))));
+        if (r.left.length > 0) toast(x.resetLeft(joinNames(r.left.map(tweakTitle))));
         if (r.failed.length > 0) toast(x.resetPartial(joinNames(r.failed.map(tweakTitle))));
       })
       .catch(() => toast(x.setFailed))

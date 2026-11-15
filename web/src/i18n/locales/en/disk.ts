@@ -17,7 +17,7 @@ export const disk: Strings['disk'] = {
     drives: 'Drives',
     tidy: 'Tidy up',
     startup: 'Startup',
-    tweaks: 'Settings',
+    tweaks: 'Windows settings',
     system: 'System',
     history: 'History',
   } as const,
@@ -541,6 +541,7 @@ export const disk: Strings['disk'] = {
     cancel: 'Cancel',
     resetDone: (names: string) => `Reset: ${names}.`,
     resetPartial: (names: string) => `Not reset: ${names}. You can try again.`,
+    resetLeft: (names: string) => `Changed in Windows in the meantime, so left as it is: ${names}.`,
     restorePoint: 'Create a restore point',
     restorePointHint: 'If you like, create a restore point in Windows first. It isn’t required.',
     group: {

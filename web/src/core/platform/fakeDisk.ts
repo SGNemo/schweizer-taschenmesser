@@ -846,7 +846,7 @@ export function createFakeDisk(): DiskService {
         restored.push(id);
       }
       tweakOriginals.clear();
-      return { restored, failed: [] };
+      return { restored, failed: [], left: [] };
     },
   };
 

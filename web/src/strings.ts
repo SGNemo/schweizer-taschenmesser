@@ -4749,7 +4749,7 @@ export const de = {
       drives: 'Laufwerke',
       tidy: 'Aufräumen',
       startup: 'Autostart',
-      tweaks: 'Einstellungen',
+      tweaks: 'Windows-Einstellungen',
       system: 'System',
       history: 'Verlauf',
     } as const,
@@ -5289,6 +5289,8 @@ export const de = {
       resetDone: (names: string) => `Zurückgesetzt: ${names}.`,
       resetPartial: (names: string) =>
         `Nicht zurückgesetzt: ${names}. Du kannst es noch einmal versuchen.`,
+      resetLeft: (names: string) =>
+        `Inzwischen in Windows geändert, darum unverändert gelassen: ${names}.`,
       restorePoint: 'Wiederherstellungspunkt anlegen',
       restorePointHint:
         'Wenn du magst, legst du vorher in Windows einen Wiederherstellungspunkt an. Nötig ist das nicht.',

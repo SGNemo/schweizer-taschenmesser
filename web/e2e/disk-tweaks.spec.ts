@@ -110,7 +110,7 @@ test('settings tab: a switch shows the new state, the history takes it back', as
     .click();
   await expect(history).toContainText('Zurückgenommen.');
 
-  await page.getByRole('button', { name: 'Einstellungen', exact: true }).click();
+  await page.getByRole('button', { name: 'Windows-Einstellungen', exact: true }).click();
   await expect(toggle).toHaveAttribute('aria-checked', 'false');
   await expect(row.getByText('von Nemo geändert')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Alle zurücksetzen' })).toBeDisabled();
