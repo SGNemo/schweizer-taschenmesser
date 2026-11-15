@@ -139,9 +139,9 @@ describe('vault folders', () => {
     );
     const down = screen.getByRole('button', { name: 'Gesundheit nach unten' });
     expect(down).toBeDisabled();
-    const up = screen.getByRole('button', { name: 'Steuer nach unten' });
-    up.focus();
-    fireEvent.click(up);
+    const taxDown = screen.getByRole('button', { name: 'Steuer nach unten' });
+    taxDown.focus();
+    fireEvent.click(taxDown);
     await waitFor(() =>
       expect(screen.getByRole('status')).toHaveTextContent('Steuer: Platz 6 von 6'),
     );

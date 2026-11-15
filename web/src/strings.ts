@@ -5616,7 +5616,7 @@ export const de = {
           ? 'Sie bleibt erhalten und kommt in die Kategorie, die du hier wählst.'
           : 'Sie bleiben erhalten und kommen in die Kategorie, die du hier wählst.',
       place: (name: string, at: number, of: number) => `${name}: Platz ${at} von ${of}`,
-      failed: 'Das hat nicht geklappt. Bitte noch einmal versuchen.',
+      failed: 'Das hat nicht geklappt. Probier es noch einmal.',
       moveTo: 'Verschieben nach',
       removeAndMove: 'Löschen und verschieben',
       removed: (name: string) => `„${name}“ gelöscht`,

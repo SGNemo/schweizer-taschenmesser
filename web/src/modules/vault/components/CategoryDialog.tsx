@@ -321,7 +321,11 @@ function EditForm({
   }
 
   return (
-    <Form onSubmit={() => void save()}>
+    <Form
+      onSubmit={() =>
+        void save().catch(() => useUiStore.getState().toast(t.vault.categoryAdmin.failed))
+      }
+    >
       <TextField
         label={a.name}
         value={name}
@@ -411,7 +415,11 @@ function RemoveForm({
   }
 
   return (
-    <Form onSubmit={() => void remove()}>
+    <Form
+      onSubmit={() =>
+        void remove().catch(() => useUiStore.getState().toast(t.vault.categoryAdmin.failed))
+      }
+    >
       <p className={styles.lead} data-testid="vault-category-in-use">
         {a.inUse(docIds.length)}
       </p>
