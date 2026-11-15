@@ -48,11 +48,20 @@ export function StartupTab() {
     optimize
       .undo(entryId)
       .then(() => toast(t.disk.history.undoDone))
-      .catch(() => toast(x.undoFailed))
+      .catch((e: unknown) =>
+        toast(
+          e instanceof Error && e.message === 'changed-elsewhere'
+            ? t.disk.history.changedElsewhere
+            : x.undoFailed,
+        ),
+      )
       .finally(() => void load());
   };
 
   const set = (item: StartupItem, enabled: boolean) => {
+    // One switch at a time. The switches stay enabled meanwhile (a disabled one would lose the
+    // keyboard focus); a second press is simply not taken.
+    if (busy !== null) return;
     setBusy(item.id);
     optimize
       .setStartup(item.id, enabled)
@@ -79,7 +88,7 @@ export function StartupTab() {
 
   return (
     <div className={styles.tab}>
-      <p className={styles.lead}>{x.lead}</p>
+      {items && items.length > 0 ? <p className={styles.lead}>{x.lead}</p> : null}
       {failed ? (
         <>
           <p role="alert">{x.failed}</p>
@@ -119,11 +128,12 @@ export function StartupTab() {
                       labelHidden
                       tone="neutral"
                       checked={item.enabled}
-                      disabled={busy !== null}
                       onChange={(on) => set(item, on)}
                     />
                   ) : (
-                    <span className={styles.state}>{item.enabled ? x.on : x.off}</span>
+                    <span className={styles.state}>
+                      {item.enabled ? x.on : x.off} · {x.notSwitchable}
+                    </span>
                   )}
                 </li>
               ))}

@@ -62,6 +62,9 @@ pub enum RegError {
     /// The value exists but could not be read exactly (access denied, too large): nothing may
     /// be changed, because there would be no exact way back.
     Unreadable,
+    /// The value is no longer the one a change wrote: it was changed elsewhere since, so an
+    /// undo leaves it alone.
+    ChangedElsewhere,
     /// No registry on this system.
     Unsupported,
 }
@@ -72,6 +75,7 @@ impl RegError {
             RegError::KeyNotAllowed => "key-not-allowed",
             RegError::Failed => "failed",
             RegError::Unreadable => "unreadable",
+            RegError::ChangedElsewhere => "changed-elsewhere",
             RegError::Unsupported => "unsupported",
         }
     }
@@ -103,6 +107,23 @@ pub fn valid_key(key: &str) -> bool {
 }
 
 /// A value name the seam writes: not over-long, no control characters.
+/// The keys the real registry lets this crate write, in full: what the catalogues use and
+/// nothing else. [`valid_key`] is the general rule (and all the in-memory fake checks); this
+/// list is the second lock on the real thing, so not even a hand-edited journal file can make an
+/// undo write anywhere else.
+pub const WRITABLE_KEYS: &[&str] = &[
+    // Autostart: Windows' own "switched off" notes (startup.rs).
+    r"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run",
+    r"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\StartupFolder",
+];
+
+/// Whether the real registry may be written at `key`.
+pub fn writable_key(key: &str) -> bool {
+    valid_key(key)
+        && (WRITABLE_KEYS.iter().any(|k| k.eq_ignore_ascii_case(key))
+            || (cfg!(test) && key.starts_with(r"Software\NemoPcTuneTest\")))
+}
+
 pub(crate) fn valid_name(name: &str) -> bool {
     name.len() <= 255 && !name.chars().any(|c| c.is_control())
 }
@@ -425,7 +446,7 @@ mod win {
         }
 
         fn set(&self, key: &str, name: &str, value: &Value) -> Result<(), RegError> {
-            if !valid_key(key) || !valid_name(name) {
+            if !writable_key(key) || !valid_name(name) {
                 return Err(RegError::KeyNotAllowed);
             }
             let (ty, data) = encode(value);
@@ -450,7 +471,7 @@ mod win {
         }
 
         fn delete(&self, key: &str, name: &str) -> Result<(), RegError> {
-            if !valid_key(key) || !valid_name(name) {
+            if !writable_key(key) || !valid_name(name) {
                 return Err(RegError::KeyNotAllowed);
             }
             let (key_w, name_w) = (wide(key), wide(name));
@@ -649,6 +670,25 @@ mod tests {
             assert!(!valid_key(bad), "{bad:?}");
         }
         assert!(!valid_key(&format!(r"Software\{}", "a".repeat(600))));
+    }
+
+    #[test]
+    fn the_real_registry_may_only_be_written_at_the_listed_keys() {
+        for k in WRITABLE_KEYS {
+            assert!(valid_key(k), "{k}");
+            assert!(writable_key(&k.to_uppercase()), "{k}");
+        }
+        for bad in [
+            r"Software\Microsoft\Windows\CurrentVersion\Run",
+            r"Software\Microsoft\Windows\CurrentVersion\RunOnce",
+            r"Software\Microsoft\Windows NT\CurrentVersion\Winlogon",
+            r"Software\Microsoft\Command Processor",
+            r"Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders",
+            r"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run\x",
+            r"Software\X",
+        ] {
+            assert!(!writable_key(bad), "{bad}");
+        }
     }
 
     #[test]

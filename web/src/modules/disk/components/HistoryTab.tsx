@@ -57,7 +57,13 @@ export function HistoryTab() {
     optimize
       .undo(e.id)
       .then(() => toast(h.undoDone))
-      .catch(() => toast(h.undoFailed))
+      .catch((err: unknown) =>
+        toast(
+          err instanceof Error && err.message === 'changed-elsewhere'
+            ? h.changedElsewhere
+            : h.undoFailed,
+        ),
+      )
       .finally(() => setReload((n) => n + 1));
   };
 

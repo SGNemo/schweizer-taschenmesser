@@ -51,7 +51,7 @@ async function openStartup(page: Page) {
   await expect(page.getByRole('list', { name: 'Für dein Konto' })).toBeVisible();
 }
 
-const musikbox = 'Musikbox beim Start von Windows starten';
+const musikbox = 'Musikbox mit Windows starten';
 
 test('startup tab: own entries with a switch, machine-wide entries to look at', async ({
   page,
@@ -63,14 +63,14 @@ test('startup tab: own entries with a switch, machine-wide entries to look at', 
   await expect(page.getByText('3 von 4 eingeschaltet')).toBeVisible();
   await expect(own.getByRole('switch', { name: musikbox })).toBeChecked();
   await expect(
-    own.getByRole('switch', { name: 'Plauderbox beim Start von Windows starten' }),
+    own.getByRole('switch', { name: 'Plauderbox mit Windows starten' }),
   ).not.toBeChecked();
   // A shortcut says where it lies; a program whose name differs from the entry is named.
   await expect(own).toContainText('Autostart-Ordner · Notizzettel.lnk');
   await expect(own).toContainText('Update · ');
 
   // The PC's entries: no switch, the state as text, one way to Windows' settings.
-  const machine = page.getByRole('list', { name: 'Für alle Konten (nur ansehen)' });
+  const machine = page.getByRole('list', { name: 'Für alle Konten' });
   await expect(machine.getByRole('listitem')).toHaveCount(1);
   await expect(machine).toContainText('Druckerhelfer');
   await expect(machine).toContainText('Eingeschaltet');
@@ -79,8 +79,8 @@ test('startup tab: own entries with a switch, machine-wide entries to look at', 
   expect(
     await page.evaluate(() => (globalThis as { __tmCareTools?: string[] }).__tmCareTools),
   ).toEqual(['startupApps']);
-  // No invented figure for the start time: Windows measures it.
-  await expect(page.getByText('misst Windows selbst')).toBeVisible();
+  // No invented figure for the start time: Windows rates it.
+  await expect(page.getByText('schätzt Windows selbst', { exact: false })).toBeVisible();
 });
 
 test('startup tab: switching off is noted in the history and can be taken back there', async ({
@@ -107,7 +107,7 @@ test('startup tab: switching off is noted in the history and can be taken back t
 
 test('startup tab: the notice takes a switch back right away', async ({ page }) => {
   await openStartup(page);
-  const chat = 'Plauderbox beim Start von Windows starten';
+  const chat = 'Plauderbox mit Windows starten';
   await page.getByRole('switch', { name: chat }).click();
   await expect(page.getByRole('switch', { name: chat })).toBeChecked();
   await expect(page.getByText('Plauderbox startet wieder mit Windows.')).toBeVisible();

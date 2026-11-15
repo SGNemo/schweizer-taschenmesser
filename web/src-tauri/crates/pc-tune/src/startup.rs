@@ -189,10 +189,10 @@ pub fn folder_files(dir: &Path) -> Vec<String> {
         .flatten()
         .filter(|e| e.file_type().map(|t| !t.is_dir()).unwrap_or(false))
         .filter_map(|e| e.file_name().into_string().ok())
-        .filter(|n| !n.eq_ignore_ascii_case("desktop.ini"))
-        .take(MAX_ITEMS)
+        .filter(|n| !n.eq_ignore_ascii_case("desktop.ini") && !n.eq_ignore_ascii_case("thumbs.db"))
         .collect();
     out.sort_by_key(|n| n.to_lowercase());
+    out.truncate(MAX_ITEMS);
     out
 }
 
@@ -200,6 +200,13 @@ pub fn folder_files(dir: &Path) -> Vec<String> {
 /// as on (display only); [`set_enabled`] reads it again and refuses to change it.
 fn shown(read: Result<Option<Value>, RegError>) -> bool {
     approved(read.ok().flatten().as_ref())
+}
+
+/// A name an approval value can be filed under so that Windows finds it: one the registry seam
+/// accepts and that was read without loss (a name with a broken character comes back with the
+/// replacement mark and would never match the real entry).
+fn switchable_name(name: &str) -> bool {
+    valid_name(name) && !name.contains('\u{FFFD}')
 }
 
 /// The approval key of a switchable entry.
@@ -223,6 +230,8 @@ fn find_all(reg: &dyn Registry, startup_folder: Option<&Path>) -> Vec<Found> {
         let Some(command) = command_text(&value) else {
             continue;
         };
+        // The key's unnamed default value is left out on purpose: it has no name to show or
+        // to file an approval under.
         if name.is_empty() {
             continue;
         }
@@ -235,7 +244,7 @@ fn find_all(reg: &dyn Registry, startup_folder: Option<&Path>) -> Vec<Found> {
                 scope: Scope::User,
                 source: Source::Run,
                 enabled: shown(reg.get(APPROVED_RUN, &name)),
-                switchable: valid_name(&name),
+                switchable: switchable_name(&name),
             },
             value_name: name,
         });
@@ -253,7 +262,7 @@ fn find_all(reg: &dyn Registry, startup_folder: Option<&Path>) -> Vec<Found> {
                     scope: Scope::User,
                     source: Source::Folder,
                     enabled: shown(reg.get(APPROVED_FOLDER, &file)),
-                    switchable: valid_name(&file),
+                    switchable: switchable_name(&file),
                 },
                 value_name: file,
             });
@@ -271,9 +280,8 @@ fn find_all(reg: &dyn Registry, startup_folder: Option<&Path>) -> Vec<Found> {
             if name.is_empty() {
                 continue;
             }
-            // Off when either the machine or this account says so.
-            let enabled =
-                shown(reg.machine_get(approval, &name)) && shown(reg.get(approval, &name));
+            // Windows keeps the switch of a machine-wide entry in the machine hive.
+            let enabled = shown(reg.machine_get(approval, &name));
             out.push(Found {
                 item: Item {
                     id: format!("{prefix}:{name}"),
@@ -344,6 +352,7 @@ pub fn set_enabled(
                 key: key.to_string(),
                 name: name.to_string(),
                 previous,
+                written: Some(value.clone()),
             }],
             || reg.set(key, name, &value),
         )
@@ -561,7 +570,8 @@ mod tests {
     fn the_list_merges_run_keys_folder_and_approval() {
         let dir = temp_dir("list");
         let reg = seeded(&dir);
-        // This account switched a machine-wide entry off: honoured, although the machine says on.
+        // A value of this account under a machine-wide entry's name does not switch that entry:
+        // Windows keeps the switch of a machine-wide entry in the machine hive.
         reg.set(
             APPROVED_RUN32,
             "OldTool",
@@ -580,7 +590,7 @@ mod tests {
                 ("run:cloud", false, true),
                 ("folder:Notizen.lnk", true, true),
                 ("run:Spotify", true, true),
-                ("machine32:OldTool", false, false),
+                ("machine32:OldTool", true, false),
                 ("machine:SecurityHealth", true, false),
                 ("machine32:Updater", false, false),
             ]
