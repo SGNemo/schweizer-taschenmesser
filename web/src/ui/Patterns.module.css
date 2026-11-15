@@ -369,6 +369,28 @@
     opacity: 1;
   }
 }
+/* `controls="always"`: the actions stay in sight at rest. */
+.actionsAlways {
+  opacity: 1;
+}
+/* `weight="next"`: the row to do first says so by weight alone. */
+.next > .row .title {
+  font-weight: var(--weight-semibold);
+}
+/* `recessed`: a fixed block among the rows. One tone step down, no hairline above or below it, no hover tone. */
+.rows > .recessed,
+.rows > .recessed:hover,
+.rows > .recessed:focus-within {
+  background: var(--surface-sunken);
+  border-radius: var(--radius-md);
+  border-top-color: transparent;
+}
+.rows > .recessed + * {
+  border-top-color: transparent;
+}
+.recessed > .row .title {
+  font-weight: normal;
+}
 /* The row's enter animation makes every row its own layer: the row with an open menu must sit above the rows below it. */
 .item:has(.actionsOpen) {
   position: relative;
@@ -447,6 +469,19 @@ button.chip[aria-pressed='true'] {
 }
 .progressWarn {
   background: var(--warning);
+}
+/* An overrun in the bar's own hue: hatched, so it is told from a full bar without a second colour. */
+.progressHatch {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--module-color, var(--accent)) 0 3px,
+    color-mix(in srgb, var(--module-color, var(--accent)) 35%, transparent) 3px 6px
+  );
+}
+/* A real border (it survives forced colours); the fill keeps the track's rounding. */
+.progressOutline {
+  box-sizing: border-box;
+  border: 1px solid var(--border-strong);
 }
 .overdue {
   color: var(--danger);

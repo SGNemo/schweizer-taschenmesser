@@ -175,33 +175,78 @@ test.describe('plan lists beside the detail panel', () => {
   }
 });
 
-// Package 0b-4b, part 2: the Planer is master–detail too (the week as a list, the picked day beside it).
-test.describe('Planer beside its day panel', () => {
+// Planner hub R1 (decision D2, `docs/decisions/plan-hub.md`): the week is a band of seven tiles above the picked
+// day's sheet; beside the context column on a laptop the tiles take their compact form. Per width: the band stays
+// seven tiles in one row, no tile's text is cut or runs past its tile, no tile runs past the window, and the page
+// does not scroll sideways.
+interface Band {
+  tiles: { name: string; top: number; right: number; overflow: boolean; cut: string[] }[];
+  window: number;
+  sideways: boolean;
+}
+
+/** Runs in the page. */
+function readBand(): Band {
+  const band = document.querySelector('main [role="group"][aria-label="Woche"]')!;
+  const tiles = [...band.querySelectorAll<HTMLElement>('[data-testid^="week-"]')];
+  return {
+    tiles: tiles.map((tile) => {
+      const box = tile.getBoundingClientRect();
+      // The text the tile shows: every leaf of its visible form (the screen-reader sentence is clipped on purpose).
+      const leaves = [...tile.querySelectorAll<HTMLElement>('span')].filter(
+        (el) =>
+          !el.closest('.sr-only') &&
+          el.children.length === 0 &&
+          (el.textContent ?? '').trim() !== '' &&
+          el.getBoundingClientRect().width > 0,
+      );
+      return {
+        name: tile.getAttribute('data-testid') ?? '',
+        top: Math.round(box.top),
+        right: box.right,
+        overflow: tile.scrollWidth > tile.clientWidth,
+        cut: leaves
+          .filter((el) => {
+            const r = el.getBoundingClientRect();
+            return r.left < box.left - 0.5 || r.right > box.right + 0.5;
+          })
+          .map((el) => el.textContent ?? ''),
+      };
+    }),
+    window: document.documentElement.clientWidth,
+    sideways: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  };
+}
+
+test.describe('Planer: the week band above its day sheet', () => {
   test.use({ seeded: { scale: 'medium', desktop: true, preview: true } });
 
   for (const width of WIDTHS) {
-    test(`the week keeps its text at ${width} px`, async ({ page }) => {
+    test(`the band keeps seven tiles and their text at ${width} px`, async ({ page }) => {
       await page.setViewportSize({ width, height: HEIGHT });
       await startSeeded(page);
       await openPage(page, '/planner');
-      await settle(page);
-      await expect(page.locator('main aside')).toBeVisible();
-      const r = await page.evaluate(read);
+      const notice = page.getByRole('button', { name: 'Schließen', exact: true });
+      if (await notice.count()) await notice.first().click();
+      await expect(page.locator('main [data-testid^="day-"][aria-labelledby]')).toBeVisible();
+      await page.waitForTimeout(400);
+      const r = await page.evaluate(readBand);
       if (SHOTS) {
         mkdirSync(SHOTS, { recursive: true });
         await page.screenshot({ path: join(SHOTS, `planner-${width}.png`) });
       }
       expect.soft(r.sideways, 'the page scrolls sideways').toBe(false);
-      expect(r.rows.length, 'rows').toBeGreaterThan(0);
-      for (const row of r.rows) {
+      expect(r.tiles, 'tiles').toHaveLength(7);
+      expect
+        .soft(new Set(r.tiles.map((tile) => tile.top)).size, 'the seven tiles stand in one row')
+        .toBe(1);
+      for (const tile of r.tiles) {
+        expect.soft(tile.overflow, `${tile.name}: its content overflows`).toBe(false);
+        expect.soft(tile.cut, `${tile.name}: text runs past the tile`).toEqual([]);
         expect
-          .soft(row.text, `text of "${row.title}" is ${row.text} px wide`)
-          .toBeGreaterThanOrEqual(TEXT_MIN);
-        expect
-          .soft(row.height, `row "${row.title}" is ${row.height} px high`)
-          .toBeLessThanOrEqual(ROW_MAX);
+          .soft(tile.right, `${tile.name}: the tile runs past the window`)
+          .toBeLessThanOrEqual(r.window);
       }
-      expect.soft(r.current, "one row is the panel's day").toHaveLength(1);
     });
   }
 });
