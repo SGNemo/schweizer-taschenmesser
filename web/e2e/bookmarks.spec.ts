@@ -201,6 +201,40 @@ test.describe('Capture (round 2026-11, package 2)', () => {
   });
 });
 
+test.describe('Plan and widget (round 2026-11, package 3)', () => {
+  test('"In den Plan" offers a Merkzettel to the planner; taking it out keeps it', async ({
+    page,
+  }) => {
+    await enable(page, 'todos');
+    await enable(page, 'planner');
+    await enable(page, 'bookmarks');
+    await add(page, 'Dune', '', '', 'Film/Serie');
+    await (await rowMenu(page, 'Dune')).getByRole('menuitem', { name: 'In den Plan' }).click();
+    await expect(page.getByText('Im Plan. Der Planer sucht freie Zeit dafür.')).toBeVisible();
+    await expect(rowOf(page, 'Dune')).toContainText('im Plan');
+    await ready(page, '/planner');
+    await expect(page.locator('main').getByText('Film/Serie: Dune').first()).toBeVisible();
+    await ready(page, '/bookmarks');
+    await (
+      await rowMenu(page, 'Dune')
+    )
+      .getByRole('menuitem', { name: 'Aus dem Plan nehmen' })
+      .click();
+    await expect(rowOf(page, 'Dune')).not.toContainText('im Plan');
+    await expect(rowOf(page, 'Dune')).toBeVisible();
+  });
+
+  test('without the planner the action offers to switch it on', async ({ page }) => {
+    await enable(page, 'bookmarks');
+    await add(page, 'Dune', '', '', 'Film/Serie');
+    await (await rowMenu(page, 'Dune')).getByRole('menuitem', { name: 'In den Plan' }).click();
+    await expect(
+      page.getByText('Dafür braucht es das Modul „Planer“, das gerade ausgeschaltet ist.'),
+    ).toBeVisible();
+    await expect(rowOf(page, 'Dune')).not.toContainText('im Plan');
+  });
+});
+
 test.describe('Calm Lesezeichen tiles (focus audit 2)', () => {
   test.beforeEach(async ({ page }) => {
     await enable(page, 'bookmarks');

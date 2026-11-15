@@ -27,6 +27,8 @@ export function bookmarkMenu(
     read?: (item: Stored<BookmarkItem>) => void;
     /** Offer "Vorschau von der Seite holen" (list and pinboard; the link tiles show no preview). */
     preview?: boolean;
+    /** Offer "In den Plan" / "Aus dem Plan nehmen" (not on the permanent link tiles). */
+    plan?: boolean;
   },
 ): RowMenuItem[] {
   const status = statusOf(item);
@@ -59,6 +61,35 @@ export function bookmarkMenu(
             onSelect: () => void itemRepo.update(item.id, { done: false, started: false }),
           },
         ]),
+    ...(on.plan && status !== 'done'
+      ? [
+          item.inPlan
+            ? {
+                id: 'unplan',
+                label: t.bookmarks.planRemove,
+                onSelect: () =>
+                  void undoableWithToast(t.bookmarks.planRemoved, t.bookmarks.planRemoved, () =>
+                    itemRepo.update(item.id, { inPlan: false }),
+                  ),
+              }
+            : {
+                id: 'plan',
+                label: t.bookmarks.planAdd,
+                onSelect: () => {
+                  const mark = async () => {
+                    await undoableWithToast(t.bookmarks.planAdded, t.bookmarks.planAdded, () =>
+                      itemRepo.update(item.id, { inPlan: true }),
+                    );
+                  };
+                  void loadModuleStates().then((states) =>
+                    states.planner === true
+                      ? mark()
+                      : offerEnableModule('planner', t.bookmarks.planOff, mark),
+                  );
+                },
+              },
+        ]
+      : []),
     // One click = one fetch from the page itself; works whatever the "Linkvorschau laden" setting says.
     ...(on.preview && item.url && !item.preview
       ? [
@@ -118,7 +149,7 @@ export function bookmarkMenu(
       label: t.actions.duplicate,
       onSelect: () =>
         void undoableWithToast(t.actions.duplicated, t.actions.duplicated, () =>
-          itemRepo.create({ ...copyData(item), done: false, started: false }),
+          itemRepo.create({ ...copyData(item), done: false, started: false, inPlan: undefined }),
         ),
     },
     {
@@ -165,6 +196,7 @@ export function BookmarkRow({
       meta={[
         t.bookmarks.kinds[item.kind],
         statusOf(item) === 'started' ? t.bookmarks.statuses.started : undefined,
+        item.inPlan && !item.done ? t.bookmarks.inPlan : undefined,
         hostOf(item.url),
         ...(narrow ? [] : item.tags.map((x) => `#${x}`)),
       ]
@@ -175,6 +207,7 @@ export function BookmarkRow({
         filterTag: onFilterTag,
         read: onRead,
         preview: true,
+        plan: true,
       })}
     />
   );

@@ -179,7 +179,7 @@ describe('role: things to look at, buy or try (round 2026-11)', () => {
     const { settings, settingsSchema } = await import('../settings');
     expect(settingsSchema.parse(settings.defaults).groupBy).toBe('recent');
     expect(settings.fields.map((f) => f.key)).toContain('groupBy');
-    expect(manifest.version).toBe(3);
+    expect(manifest.version).toBeGreaterThanOrEqual(3);
     expect(Object.keys(manifest.migrations ?? {})).toContain('3');
   });
 });

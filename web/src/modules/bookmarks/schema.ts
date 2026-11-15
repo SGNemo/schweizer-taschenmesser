@@ -23,6 +23,10 @@ export const itemSchema = z.object({
   done: z.boolean().default(false),
   /** Status "Angefangen" between open and done; `done` wins when both are set. */
   started: z.boolean().default(false),
+  /** "In den Plan": the person offered this one to the planner (`plannable.ts`); nothing is planned without it. */
+  inPlan: z.boolean().optional(),
+  /** Minutes for the plan when the person changed the estimate there; else a default by kind. */
+  planMinutes: z.number().int().min(1).max(1440).optional(),
   /** What the page said about itself (link preview, only when the setting is on); the picture lives in `_blobs`. */
   preview: z
     .object({

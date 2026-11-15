@@ -118,6 +118,42 @@ export function tagCounts(items: readonly Pick<BookmarkItem, 'tags'>[]): [string
     .map((e) => [e.label, e.n]);
 }
 
+/** Minutes the planner sets aside for a Merkzettel of a kind, until the person says otherwise. */
+export const PLAN_MINUTES: Record<Kind, number> = {
+  link: 15,
+  read: 20,
+  watch: 90,
+  book: 30,
+  place: 60,
+  buy: 15,
+  try: 30,
+  idea: 15,
+  other: 15,
+};
+
+export const planMinutesOf = (i: Pick<BookmarkItem, 'kind' | 'planMinutes'>): number =>
+  i.planMinutes ?? PLAN_MINUTES[i.kind];
+
+/** Friday to Sunday: the widget offers its three things "fürs Wochenende". */
+export function isWeekendNear(day: string): boolean {
+  const weekday = new Date(`${day}T12:00:00`).getDay();
+  return weekday === 5 || weekday === 6 || weekday === 0;
+}
+
+/**
+ * What the widget offers next: at most `max` open Merkzettel, never the permanent links (kind "link").
+ * First what is in the plan, then what was started, then the rest; inside each the newest first.
+ */
+export function pickNext<
+  T extends Pick<BookmarkItem, 'kind' | 'done' | 'started' | 'inPlan'> & { createdAt: number },
+>(items: readonly T[], max = 3): T[] {
+  const rank = (i: T) => (i.inPlan ? 0 : i.started ? 1 : 2);
+  return items
+    .filter((i) => !i.done && i.kind !== 'link')
+    .sort((a, b) => rank(a) - rank(b) || b.createdAt - a.createdAt)
+    .slice(0, max);
+}
+
 /** Open → started → done. `done` wins when both flags are set. */
 export type Status = 'open' | 'started' | 'done';
 export const statusOf = (i: Pick<BookmarkItem, 'done' | 'started'>): Status =>

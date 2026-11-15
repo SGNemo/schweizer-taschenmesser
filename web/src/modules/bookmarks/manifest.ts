@@ -20,7 +20,7 @@ const manifest: ModuleManifest = {
     tabs: true,
     signature: 'pinboard',
   },
-  version: 3,
+  version: 4,
   get description() {
     return t.bookmarks.meta.description;
   },
@@ -88,6 +88,7 @@ const manifest: ModuleManifest = {
       },
     ],
     services: () => import('./services'),
+    plannable: () => import('./plannable'),
   },
 };
 

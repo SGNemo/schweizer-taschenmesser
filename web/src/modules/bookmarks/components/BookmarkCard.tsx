@@ -70,6 +70,7 @@ export function BookmarkCard({
           {[
             t.bookmarks.kinds[item.kind],
             status === 'open' ? undefined : t.bookmarks.statuses[status],
+            item.inPlan && !item.done ? t.bookmarks.inPlan : undefined,
             site,
           ]
             .filter(Boolean)
@@ -92,6 +93,7 @@ export function BookmarkCard({
             filterTag: onFilterTag,
             read: onRead,
             preview: true,
+            plan: true,
           })}
         />
       </div>
