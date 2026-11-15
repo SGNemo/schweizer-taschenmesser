@@ -7713,8 +7713,10 @@ export const de = {
         attachNote: 'Gesendet wird genau, was hier steht.',
         forwardLoading: 'Anhänge werden geladen …',
         forwardTooLarge: (names: string) => `Nicht mitgeschickt, zu groß für eine Mail: ${names}.`,
+        forwardTogether: (names: string) =>
+          `Nicht mitgeschickt, zusammen zu groß für eine Mail: ${names}. Leite sie in einer zweiten Mail weiter.`,
         forwardFailed: (names: string) =>
-          `Nicht ladbar und nicht mitgeschickt: ${names}. Du kannst sie selbst anhängen.`,
+          `Nicht mitgeschickt, nicht ladbar: ${names}. Versuch es später noch einmal oder lade sie aus der Mail herunter und häng sie an.`,
         snippets: 'Textbausteine',
         snippetsHint: 'Deine Bausteine bleiben auf diesem Gerät.',
         snippetsEmpty: 'Noch keine Textbausteine. Schreib einen Text und merke ihn dir hier.',
@@ -7726,7 +7728,7 @@ export const de = {
         snippetSave: 'Diesen Text als Baustein merken',
         snippetSaved: 'Als Textbaustein gemerkt.',
         snippetKnown: 'Diesen Text hast du schon als Baustein.',
-        snippetRemoved: 'Textbaustein entfernt.',
+        snippetRemoved: (name: string) => `„${name}“ entfernt.`,
         removeAttachment: (name: string) => `Anhang ${name} entfernen`,
         fileTooLarge: (names: string) => `Zu groß für einen Anhang (höchstens 15 MB): ${names}`,
         invalidAddress: (list: string) => `Das ist keine E-Mail-Adresse: ${list}`,

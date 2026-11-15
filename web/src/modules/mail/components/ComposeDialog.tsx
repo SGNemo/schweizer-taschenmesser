@@ -189,7 +189,10 @@ export function ComposeDialog({
                     <span className={styles.row}>
                       <Button
                         aria-label={t.mail.write.compose.snippetInsert(sn.name)}
-                        onClick={() => set({ text: insertSnippet(s.text, sn, s.prefill) })}
+                        onClick={() => {
+                          set({ text: insertSnippet(s.text, sn, s.prefill) });
+                          setSnippetNote(undefined);
+                        }}
                       >
                         {t.mail.write.compose.snippetInsertLabel}
                       </Button>
@@ -198,7 +201,7 @@ export function ComposeDialog({
                         onClick={() => {
                           setSnippets(removeSnippet(sn.text));
                           setSnippetNote({
-                            text: t.mail.write.compose.snippetRemoved,
+                            text: t.mail.write.compose.snippetRemoved(sn.name),
                             undo: { snippet: sn, at: i },
                           });
                         }}
@@ -213,7 +216,7 @@ export function ComposeDialog({
             <Button
               variant="ghost"
               // Only the user's own words: never the quote or a forwarded mail.
-              disabled={ownText(s.text, s.prefill).trim() === ''}
+              disabled={s.fromDraft || ownText(s.text, s.prefill).trim() === ''}
               onClick={() => {
                 if (snippets.length >= SNIPPETS_MAX)
                   return setSnippetNote({ text: t.mail.write.compose.snippetsFull });
@@ -239,18 +242,23 @@ export function ComposeDialog({
                       variant="ghost"
                       onClick={() => {
                         const { snippet, at } = snippetNote.undo!;
-                        setSnippets(restoreSnippet(snippet, at));
-                        setSnippetNote(undefined);
+                        const list = restoreSnippet(snippet, at);
+                        setSnippets(list);
+                        // The list filled up meanwhile: say so instead of losing it without a word.
+                        setSnippetNote(
+                          list.some((x) => x.text === snippet.text)
+                            ? undefined
+                            : { text: t.mail.write.compose.snippetsFull },
+                        );
                       }}
                     >
                       {t.mail.write.undo}
                     </Button>
                   ) : null}
                 </>
-              ) : (
-                t.mail.write.compose.snippetsHint
-              )}
+              ) : null}
             </p>
+            <p className={styles.hint}>{t.mail.write.compose.snippetsHint}</p>
           </details>
           <div>
             {s.attachments.length > 0 ? (
@@ -275,7 +283,11 @@ export function ComposeDialog({
                 ))}
               </ul>
             ) : null}
-            {s.forwardNote ? <p className={styles.hint}>{s.forwardNote}</p> : null}
+            {s.forwardNote ? (
+              <p className={styles.hint} role="status">
+                {s.forwardNote}
+              </p>
+            ) : null}
             <Button onClick={() => void attach()}>{t.mail.write.compose.attach}</Button>
             <p className={styles.hint}>{t.mail.write.compose.attachNote}</p>
           </div>

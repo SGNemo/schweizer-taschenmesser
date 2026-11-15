@@ -134,7 +134,7 @@ describe('forward with the attachments', () => {
     expect(state.attachments.map((a) => a.filename)).toEqual(['ok.txt']);
     // Said in the compose window itself, not only in a toast the window could cover.
     expect(state.forwardNote).toMatch(/zu groß für eine Mail: gross\.zip\./);
-    expect(state.forwardNote).toMatch(/Nicht ladbar und nicht mitgeschickt: weg\.pdf\. Du kannst/);
+    expect(state.forwardNote).toMatch(/Nicht mitgeschickt, nicht ladbar: weg\.pdf\./);
     expect(mocks.attachment).not.toHaveBeenCalledWith(full, 'm1', 'a1');
   });
 
@@ -221,6 +221,8 @@ describe('text snippets', () => {
     body = insertSnippet(body, b, quote);
     expect(body).toBe(`Hallo Max,\n\nDanke!\n\nGruß\n\n${quote}`);
     expect(insertSnippet('', a)).toBe('Danke!');
+    // The quote was deleted and the user wrote fresh text: the snippet still goes below it.
+    expect(insertSnippet('Hallo', a, quote)).toBe('Hallo\n\nDanke!');
     expect(ownText(body, quote).trim()).toBe('Hallo Max,\n\nDanke!\n\nGruß');
   });
 
@@ -235,6 +237,25 @@ describe('text snippets', () => {
     expect(ownText('Siehe unten\n\n---------- Weitergeleitete Nachricht ----------\nVon: x')).toBe(
       'Siehe unten\n\n',
     );
+  });
+
+  it('a reopened draft is never a snippet source (its quote layout is unknown)', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <ComposeDialog
+          account={full}
+          initial={emptyCompose({
+            text: 'Danke!\n\nOn Sun, Max Muster <max@example.org>\nwrote:\n\n> geheim',
+            fromDraft: true,
+          })}
+          title="Entwurf"
+          onClose={vi.fn()}
+        />
+      </MemoryRouter>,
+    );
+    await user.click(screen.getByText('Textbausteine'));
+    expect(screen.getByRole('button', { name: 'Diesen Text als Baustein merken' })).toBeDisabled();
   });
 
   it('removing one says so in the window, and its undo puts it back where it was', async () => {
@@ -255,7 +276,7 @@ describe('text snippets', () => {
     await user.click(screen.getByText('Textbausteine'));
     await user.click(screen.getByRole('button', { name: 'Textbaustein „Zweiter“ entfernen' }));
     expect(readSnippets().map((x) => x.text)).toEqual(['Erster', 'Dritter']);
-    expect(screen.getByText(/Textbaustein entfernt\./)).toBeInTheDocument();
+    expect(screen.getByText(/„Zweiter“ entfernt\./)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Rückgängig' }));
     expect(readSnippets().map((x) => x.text)).toEqual(['Erster', 'Zweiter', 'Dritter']);
   });

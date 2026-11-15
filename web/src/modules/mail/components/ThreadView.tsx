@@ -150,7 +150,7 @@ const canPreview = (a: MailAttachment) => PREVIEW_MIMES.has(a.mime) && a.size <=
 /**
  * Forward with the original attachments: they are fetched and put into the compose window, where each one
  * is listed and can be removed before the review step (nothing travels unseen). What is too large for one
- * mail or cannot be fetched stays out, and the toast names it.
+ * mail or cannot be fetched stays out, and the compose window names it.
  */
 async function forwardWithAttachments(
   message: MailMessage,
@@ -177,12 +177,15 @@ async function forwardWithAttachments(
   const fitIds = new Set(fits.map((a) => a.id));
   const keptIds = new Set(fits.filter((_, i) => fetched[i] !== undefined).map((a) => a.id));
   const names = (list: MailAttachment[]) => list.map((a) => a.filename).join(', ');
-  const tooLarge = message.attachments.filter((a) => !fitIds.has(a.id));
+  const left = message.attachments.filter((a) => !fitIds.has(a.id));
+  // Too large on its own vs. no room left beside the others: different advice for each.
+  const tooLarge = left.filter((a) => a.size > MAX_MAIL_BYTES - state.text.length);
+  const together = left.filter((a) => !tooLarge.includes(a));
   const failed = fits.filter((a) => !keptIds.has(a.id));
-  // A lasting line in the compose window, not only a toast that the window could cover; the too-large ones
-  // cannot be attached by hand either, so only the others get that advice.
+  // A lasting line in the compose window, not only a toast that the window could cover.
   const notes = [
     tooLarge.length ? t.mail.write.compose.forwardTooLarge(names(tooLarge)) : '',
+    together.length ? t.mail.write.compose.forwardTogether(names(together)) : '',
     failed.length ? t.mail.write.compose.forwardFailed(names(failed)) : '',
   ].filter(Boolean);
   if (notes.length) state.forwardNote = notes.join(' ');
@@ -310,6 +313,7 @@ function MessageCard({
   onCompose,
   onForward,
   forwarding,
+  forwardBlocked,
   localAi,
   startLink,
 }: {
@@ -325,7 +329,10 @@ function MessageCard({
   autoLoadImages: boolean;
   onCompose: (state: ComposeState, title: string) => void;
   onForward: (message: MailMessage) => void;
+  /** This message's forward is loading (its button says so). */
   forwarding: boolean;
+  /** Any forward of the thread is loading: one at a time. */
+  forwardBlocked: boolean;
 }) {
   const canCompose = hasFeature(account, 'mail-send') || hasFeature(account, 'mail-modify');
   const isDraft = message.labelIds.includes('DRAFT');
@@ -345,6 +352,8 @@ function MessageCard({
         text: message.text ?? mailText(message),
         threadId: message.threadId,
         draftId,
+        // A reopened draft may hold a quote in any layout (Gmail web, mobile, HTML): never a snippet source.
+        fromDraft: true,
       }),
       t.mail.write.compose.titleDraft,
     );
@@ -429,7 +438,7 @@ function MessageCard({
                       {t.mail.write.replyAll}
                     </Button>
                   ) : null}
-                  <Button disabled={forwarding} onClick={() => onForward(message)}>
+                  <Button disabled={forwardBlocked} onClick={() => onForward(message)}>
                     {forwarding ? t.mail.write.compose.forwardLoading : t.mail.write.forward}
                   </Button>
                 </>
@@ -638,6 +647,7 @@ export function ThreadView({
           onCompose={onCompose}
           onForward={forward}
           forwarding={forwarding === m.id}
+          forwardBlocked={forwarding !== undefined}
           localAi={localAi}
           startLink={
             startInvoice && m.id === messages[messages.length - 1]!.id ? 'invoice' : undefined

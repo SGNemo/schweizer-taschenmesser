@@ -11,6 +11,8 @@ export interface ComposeState extends ComposeFields {
   draftId?: string;
   /** The quote or forward header the window was opened with (snippets go above it, never take it along). */
   prefill?: string;
+  /** Opened from a saved draft: its quote cannot be told apart reliably, so it is never kept as a snippet. */
+  fromDraft?: boolean;
   /** A forward left attachments out (too large, not loadable): said in the window, not only in a toast. */
   forwardNote?: string;
 }

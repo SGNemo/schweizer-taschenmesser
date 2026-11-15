@@ -320,8 +320,10 @@ export const mail: Strings['mail'] = {
       attachNote: 'Exactly what is here is sent.',
       forwardLoading: 'Loading attachments …',
       forwardTooLarge: (names: string) => `Not sent along, too large for one mail: ${names}.`,
+      forwardTogether: (names: string) =>
+        `Not sent along, too large together for one mail: ${names}. Forward them in a second mail.`,
       forwardFailed: (names: string) =>
-        `Could not be loaded and is not sent along: ${names}. You can attach them yourself.`,
+        `Not sent along, could not be loaded: ${names}. Try again later, or download them from the mail and attach them.`,
       snippets: 'Text snippets',
       snippetsHint: 'Your snippets stay on this device.',
       snippetsEmpty: 'No text snippets yet. Write a text and keep it here.',
@@ -332,7 +334,7 @@ export const mail: Strings['mail'] = {
       snippetSave: 'Keep this text as a snippet',
       snippetSaved: 'Kept as a text snippet.',
       snippetKnown: 'This text is already a snippet.',
-      snippetRemoved: 'Snippet removed.',
+      snippetRemoved: (name: string) => `“${name}” removed.`,
       removeAttachment: (name: string) => `Remove attachment ${name}`,
       fileTooLarge: (names: string) => `Too large for an attachment (15 MB at most): ${names}`,
       invalidAddress: (list: string) => `This is not an email address: ${list}`,
