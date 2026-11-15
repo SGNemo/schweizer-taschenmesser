@@ -683,6 +683,7 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
     action: RemotePowerAction,
     despite: boolean,
     lang: string | undefined,
+    again = false,
   ): Promise<void> => {
     const mine = ++powerCalls;
     const latest = () => mine === powerCalls;
@@ -708,6 +709,17 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
     const used = session;
     try {
       await deps.remote.power(used, action, despite, lang);
+      // the PC answers at once; until then the action counts as on its way (a close waits for it)
+      if (latest() && powerView.phase.kind === 'asking')
+        await new Promise<void>((resolve) => {
+          const heard = () => {
+            clearTimeout(timer);
+            if (powerHeard === heard) powerHeard = undefined;
+            resolve();
+          };
+          const timer = setTimeout(heard, ANSWER_WAIT_MS);
+          powerHeard = heard;
+        });
     } catch (e) {
       const code = e instanceof Error ? e.message : '';
       // the phone's own answer to its prompt counts, also when the page was left meanwhile
@@ -732,12 +744,18 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
           padLost();
           set({ kind: 'disconnected' });
         }
-        back();
+        if (action !== 'cancel') return back();
+        // "Abbrechen" must arrive: once more on a new session (it needs no prompt), then say so
+        if (!again && (view.kind === 'disconnected' || view.kind === 'idle')) {
+          await powerRun('cancel', false, lang, true);
+          if (powerView.phase.kind !== 'cancel-failed') return;
+        }
+        if (latest() || again) setPhase({ kind: 'cancel-failed' });
       } else setPhase({ kind: 'refused', reason: 'failed' });
     }
   };
 
-  return {
+  const api: RemoteSession = {
     view: () => view,
     pad: () => pad,
     raise(lang, options) {
@@ -879,7 +897,7 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       const run = powerRun(action, despite, lang).finally(() => {
         if (powerBusy !== run) return;
         powerBusy = undefined;
-        if (closeLater) void this.close();
+        if (closeLater) void api.close();
       });
       powerBusy = run;
       return run;
@@ -902,6 +920,7 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
       ((view.kind === 'disconnected' || view.kind === 'connecting' || view.kind === 'slow') &&
         deps.now() - lastAliveAt < KEYS_LINGER_MS),
   };
+  return api;
 }
 
 /** Holding "louder"/"quieter": at most this many steps a second, however fast the keys repeat. */
