@@ -4800,8 +4800,8 @@ export const de = {
       toTidy: 'Aufräumen öffnen',
       trimLabel: 'TRIM',
       trim: {
-        on: 'Eingeschaltet',
-        off: 'Ausgeschaltet. Einschalten geht nur in Windows mit Administratorrechten; Nemo ändert das nicht.',
+        on: 'In Windows eingeschaltet',
+        off: 'In Windows ausgeschaltet. Einschalten geht nur in Windows mit Administratorrechten; Nemo ändert das nicht.',
       } as Record<string, string>,
       helpTrim:
         'Mit TRIM teilt Windows einer SSD mit, welche Bereiche nach dem Löschen frei sind. Ohne TRIM kann eine SSD mit der Zeit langsamer schreiben.',
@@ -5418,9 +5418,9 @@ export const de = {
       historyOff: (name: string) => `${name}: startet nicht mehr mit Windows`,
       historyOn: (name: string) => `${name}: startet wieder mit Windows`,
     },
-    /** "Empfehlungen" above the drives: at most three, each with one next step. */
+    /** Above the drives, only when a built-in drive reports problems: one sentence each, no button. */
     advice: {
-      title: 'Bitte ansehen',
+      title: 'Laufwerkszustand',
       health: (drive: string) =>
         `${drive} meldet Probleme. Am besten sicherst du bald die Daten darauf.`,
     },

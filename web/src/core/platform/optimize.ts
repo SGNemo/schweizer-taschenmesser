@@ -52,7 +52,6 @@ export type CareTool =
   | 'recycleBin'
   | 'startupApps'
   | 'systemProtection'
-  | 'optimizeDrives'
   | 'powerSettings';
 
 export type CareKind = 'cleanup' | 'startup' | 'tweak';

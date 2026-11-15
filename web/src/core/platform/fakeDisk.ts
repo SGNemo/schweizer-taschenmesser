@@ -914,7 +914,13 @@ export function createFakeDisk(): DiskService {
   return {
     supported: true,
     optimize,
-    listDrives: async () => DRIVES,
+    // Tests set `__tmDiskTroubled` to a drive root to play a drive that reports problems.
+    listDrives: async () => {
+      const troubled = (globalThis as { __tmDiskTroubled?: string }).__tmDiskTroubled;
+      return DRIVES.map((d) =>
+        d.root === troubled ? { ...d, health: { ...d.health, status: 'warning' as const } } : d,
+      );
+    },
     async startScan(root, onProgress) {
       const scanId = ++nextId;
       const state: State = {

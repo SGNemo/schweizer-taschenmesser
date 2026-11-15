@@ -874,18 +874,37 @@ test('the almost full system drive offers the tidy tab; TRIM is a quiet fact in 
   });
   await page.goto('/disk');
   // No drive of the fake PC reports problems: there is no extra block.
-  await expect(page.getByRole('heading', { name: 'Bitte ansehen' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Laufwerkszustand' })).toHaveCount(0);
   const cards = page.getByRole('list', { name: 'Laufwerke' }).getByRole('listitem');
   const system = cards.filter({ hasText: 'Systemlaufwerk' });
   // TRIM: only on the built-in SSD, folded under "Details", with no button.
   await system.getByText('Details').click();
   await expect(system).toContainText('TRIM');
-  await expect(system).toContainText('Ausgeschaltet. Einschalten geht nur in Windows');
+  await expect(system).toContainText('In Windows ausgeschaltet. Einschalten geht nur in Windows');
   await expect(cards.filter({ hasText: 'Daten' }).getByText('TRIM')).toHaveCount(0);
   // "Fast voll – Aufräumen empfohlen." has its step on the card; the data drive has none.
   await expect(page.getByRole('button', { name: 'Aufräumen öffnen' })).toHaveCount(1);
   await system.getByRole('button', { name: 'Aufräumen öffnen' }).click();
   await expect(page).toHaveURL(/tab=tidy/);
+});
+
+test('a built-in drive that reports problems is named above the cards, calmly and without a button', async ({
+  page,
+}) => {
+  await asDesktop(page);
+  await enableDisk(page);
+  await page.addInitScript(() => {
+    (globalThis as { __tmDiskTroubled?: string }).__tmDiskTroubled = 'D:\\';
+  });
+  await page.goto('/disk');
+  const block = page.getByRole('region', { name: 'Laufwerkszustand' });
+  await expect(block.getByRole('listitem')).toHaveCount(1);
+  await expect(block).toContainText(
+    'D:\\ (Daten) meldet Probleme. Am besten sicherst du bald die Daten darauf.',
+  );
+  await expect(block.getByRole('button')).toHaveCount(0);
+  const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
+  expect(results.violations).toEqual([]);
 });
 
 test('the old /system path leads to the System tab', async ({ page }) => {

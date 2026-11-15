@@ -17,7 +17,7 @@ export function troubledDrives(drives: readonly DriveInfo[]): DriveInfo[] {
 
 /**
  * Whether an almost full drive's card offers the tidy tab as its next step: only the system
- * drive, because the places that tab looks at (temp, caches, downloads) all live there. Another
+ * drive, because the places that tab looks at usually live there (temp, caches). Another
  * full drive has its own "Scannen" as the step that can help.
  */
 export const tidyHelps = (d: DriveInfo, level: 'ok' | 'tight' | 'full'): boolean =>

@@ -65,11 +65,11 @@ export const disk: Strings['disk'] = {
       full: 'Almost full – tidying up recommended.',
     } as Record<string, string>,
     healthLabel: 'Health',
-    toTidy: 'Go to Tidy up',
+    toTidy: 'Open Tidy up',
     trimLabel: 'TRIM',
     trim: {
-      on: 'Switched on',
-      off: 'Switched off. Switching it on takes administrator rights in Windows; Nemo doesn’t change it.',
+      on: 'Switched on in Windows',
+      off: 'Switched off in Windows. Switching it on takes administrator rights in Windows; Nemo doesn’t change it.',
     } as Record<string, string>,
     helpTrim:
       'With TRIM, Windows tells an SSD which areas are free after deleting. Without TRIM an SSD can get slower at writing over time.',
@@ -669,7 +669,7 @@ export const disk: Strings['disk'] = {
     historyOn: (name: string) => `${name}: starts with Windows again`,
   },
   advice: {
-    title: 'Worth a look',
+    title: 'Drive health',
     health: (drive: string) =>
       `${drive} reports problems. It’s best to back up the data on it soon.`,
   },
