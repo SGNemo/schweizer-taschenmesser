@@ -145,3 +145,9 @@ export const UpdateSection = lazyOnline<object>(() =>
 export const ModuleSection = lazyOnline<{ manifest: ModuleManifest }>(() =>
   import('./ModuleSection').then((m) => ({ default: m.ModuleSection })),
 );
+export const ProtectSection = lazyOnline<object>(() =>
+  import('./SecuritySections').then((m) => ({ default: m.ProtectSection })),
+);
+export const AccessSection = lazyOnline<object>(() =>
+  import('./SecuritySections').then((m) => ({ default: m.AccessSection })),
+);

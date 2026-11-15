@@ -18,6 +18,8 @@ import { tClock } from '@/strings.clock';
 import { tDiag } from '@/strings.diagnostics';
 import { tLegal } from '@/strings.legal';
 import {
+  AccessSection,
+  ProtectSection,
   AutomationLogSection,
   AutomationSection,
   AboutSection,
@@ -81,6 +83,7 @@ import { tKeys } from '@/strings.keys';
 import { tSettings4 } from '@/strings.settings4';
 import { tSettings3 } from '@/strings.settings3';
 import { tWeather } from '@/strings.weather';
+import { tSecurity } from '@/strings.security';
 import { actionLabel, shortcutActions, shortcutRowKey } from '@/core/keyboard/labels';
 
 const s = t.settings;
@@ -1140,6 +1143,66 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
         <ShortcutsSection />
       </SettingsGroup>
     ),
+  },
+  {
+    id: 'security-protect',
+    category: 'sicherheit',
+    maturity: 'stable',
+    order: 10,
+    scope: 'local',
+    get title() {
+      return tSecurity.get().protect.title;
+    },
+    get keywords() {
+      return tSecurity.get().protect.keywords;
+    },
+    fields: [
+      {
+        key: 'screen',
+        get label() {
+          return tSecurity.get().protect.screen;
+        },
+        get description() {
+          return tSecurity.get().protect.screenHint;
+        },
+      },
+      {
+        key: 'encryptedOnly',
+        get label() {
+          return tSecurity.get().protect.encryptedOnly;
+        },
+        get description() {
+          return tSecurity.get().protect.encryptedOnlyHint;
+        },
+      },
+      {
+        key: 'report',
+        get label() {
+          return tSecurity.get().protect.report;
+        },
+        get description() {
+          return tSecurity.get().protect.reportHint;
+        },
+      },
+    ],
+    render: () => <ProtectSection />,
+  },
+  {
+    id: 'security-access',
+    category: 'sicherheit',
+    maturity: 'stable',
+    order: 30,
+    scope: 'local',
+    get title() {
+      return tSecurity.get().access.title;
+    },
+    get description() {
+      return tSecurity.get().access.description;
+    },
+    get keywords() {
+      return tSecurity.get().access.keywords;
+    },
+    render: () => <AccessSection />,
   },
   {
     id: 'recently-deleted',

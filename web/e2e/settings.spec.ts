@@ -208,3 +208,26 @@ test('the danger zone asks twice, then wipes this device', async ({ page }) => {
   await ready(page, '/todos?list=inbox');
   await expect(page.getByRole('checkbox', { name: 'Erfundene Aufgabe' })).toHaveCount(0);
 });
+
+test('Sicherheit exists without the vault; "Nur verschlüsselte Backups" removes the readable download', async ({
+  page,
+}) => {
+  await ready(page, '/settings/sicherheit');
+  await expect(page.getByRole('heading', { name: 'Schutz auf diesem Gerät' })).toBeVisible();
+  // "Zugriff auf dieses Gerät": read-only, the sync row leads to the sync tab.
+  const access = page.getByTestId('security-access');
+  await expect(access.getByText('Sync', { exact: true })).toBeVisible();
+  await access.getByRole('link', { name: 'Sync verwalten' }).click();
+  await expect(page).toHaveURL(/\/settings\/sync#sync$/);
+  await expect(page.getByRole('button', { name: 'Backup herunterladen' })).toBeVisible();
+
+  await ready(page, '/settings/sicherheit');
+  await page.getByRole('switch', { name: 'Nur verschlüsselte Backups' }).click();
+  await ready(page, '/settings/sync');
+  await expect(page.getByRole('button', { name: 'Verschlüsselt exportieren' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Backup herunterladen' })).toHaveCount(0);
+  // Device-local: it survives a reload.
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Verschlüsselt exportieren' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Backup herunterladen' })).toHaveCount(0);
+});
