@@ -361,7 +361,7 @@ export function ThreadView({
   // What entries store: the same thread without the account's address (U17); „In Gmail öffnen“ keeps it.
   const stored = mailWebUrl(account, threadId, { forStorage: true });
   return (
-    <div className={styles.thread}>
+    <div className={styles.thread} data-shortcut-scope={shortcuts ? 'mail' : undefined}>
       <div className={styles.row}>
         <Button onClick={onBack}>
           <Icon name="chevronLeft" /> {t.mail.view.back}

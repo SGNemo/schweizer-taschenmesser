@@ -299,6 +299,10 @@ export default function MailPage() {
   const [recent, setRecent] = useState<string[]>(readSearches);
   const [saved, setSaved] = useState<string[]>(readSaved);
   const searchForm = useRef<HTMLFormElement>(null);
+  // The remembered entry that matches the running search (any case), in its stored spelling.
+  const savedQuery = query
+    ? saved.find((x) => x.toLowerCase() === query.trim().toLowerCase())
+    : undefined;
   const senders = useMemo(
     () => [...new Set(box.threads.map((th) => personName(th.from)))],
     [box.threads],
@@ -401,7 +405,9 @@ export default function MailPage() {
     },
     search: () => searchForm.current?.querySelector<HTMLInputElement>('input')?.focus(),
     back: () => {
-      if (threadId) update({ thread: null });
+      if (!threadId) return;
+      setStartInvoice(undefined);
+      update({ thread: null });
     },
     open: () => {
       const id = focusedThreadId();
@@ -594,8 +600,8 @@ export default function MailPage() {
           <div className={styles.picker}>
             <SelectField
               label={t.mail.page.label}
-              value={query && isSaved(saved, query) ? `q:${query}` : labelId}
-              disabled={query !== '' && !isSaved(saved, query)}
+              value={savedQuery ? `q:${savedQuery}` : labelId}
+              disabled={query !== '' && !savedQuery}
               onChange={(e) =>
                 e.target.value.startsWith('q:')
                   ? update({ q: e.target.value.slice(2), thread: null })
@@ -678,7 +684,8 @@ export default function MailPage() {
                 label={t.mail.find.filter[f] ?? f}
                 selected={hasFilter(query, f)}
                 onClick={() => {
-                  const next = toggleFilter(query || draft, f);
+                  const next = toggleFilter(draft, f);
+                  setRecent(rememberSearch(next));
                   setDraft(next);
                   update({ q: next || null, thread: null });
                 }}
@@ -865,7 +872,7 @@ export default function MailPage() {
                     <button
                       type="button"
                       className={styles.labelBtn}
-                      aria-current={q === query ? 'true' : undefined}
+                      aria-current={q === savedQuery ? 'true' : undefined}
                       onClick={() => update({ q, thread: null })}
                     >
                       <span className={styles.savedText}>{q}</span>

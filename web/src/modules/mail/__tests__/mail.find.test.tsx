@@ -43,6 +43,7 @@ vi.mock('@/core/mail/service', async (orig) => ({
 import MailPage from '../routes/MailPage';
 import { forgetSearch, hasFilter, readSaved, saveSearch, toggleFilter } from '../searchHistory';
 import { mailKeyOf } from '../useMailKeys';
+import { createShortcutHandler } from '@/core/keyboard/shortcuts';
 
 const summary = (id: string, subject: string, labelIds = ['INBOX']): MailThreadSummary => ({
   id,
@@ -193,6 +194,48 @@ describe('keyboard shortcuts', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     key('u');
     await waitFor(() => expect(screen.queryByText('Treffen am Freitag')).toBeNull());
+  });
+
+  it("the app's own E steps aside in an open mail: E archives, it does not click the focused row", async () => {
+    // The app shell's handler, registered first in the capture phase like `layout/useShortcuts.ts`.
+    const global = createShortcutHandler({
+      destination: () => undefined,
+      go: vi.fn(),
+      quickAdd: vi.fn(),
+      showShortcuts: vi.fn(),
+      undo: vi.fn(),
+      toolAvailable: () => false,
+      openTool: vi.fn(),
+      fkeys: () => ({}),
+      runAction: vi.fn(),
+    });
+    window.addEventListener('keydown', global, true);
+    try {
+      page('/mail?thread=t1');
+      await screen.findByRole('button', { name: 'Mit Stern markieren' });
+      // A focusable row inside the page, focused like after J/K.
+      const row = document.createElement('button');
+      row.setAttribute('data-row', '');
+      const clicked = vi.fn();
+      row.addEventListener('click', clicked);
+      const li = document.createElement('li');
+      li.append(row);
+      document.body.append(li);
+      row.focus();
+      key('e');
+      expect(await screen.findByRole('dialog', {}, { timeout: 3000 })).toBeInTheDocument();
+      expect(clicked).not.toHaveBeenCalled();
+      li.remove();
+    } finally {
+      window.removeEventListener('keydown', global, true);
+    }
+  });
+
+  it('/ works with Shift (German keyboard: Shift+7)', async () => {
+    page();
+    await screen.findByText('Rechnung');
+    key('/', { shiftKey: true });
+    expect(document.activeElement).toBe(screen.getByPlaceholderText(/Suchen, z\. B\./));
   });
 
   it('switched off in the settings: the keys do nothing', async () => {

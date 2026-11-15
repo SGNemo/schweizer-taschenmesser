@@ -58,16 +58,16 @@ export function mailKeyOf(e: KeyLike): MailKey | undefined {
   if (typeof document !== 'undefined' && document.querySelector('dialog[open]')) return undefined;
   if (e.shiftKey && (e.key === 'I' || e.key === 'i')) return 'read';
   if (e.shiftKey && (e.key === 'U' || e.key === 'u')) return 'unread';
-  // `#` and `!` need Shift on most layouts; letters must come without it.
-  if (e.key === '#' || e.key === '!') return PLAIN[e.key];
+  // `#`, `!` and `/` need Shift on many layouts (German: Shift+7 is `/`); letters must come without it.
+  if (e.key === '#' || e.key === '!' || e.key === '/') return PLAIN[e.key];
   if (e.shiftKey) return undefined;
   return PLAIN[e.key.toLowerCase()];
 }
 
 /**
  * Listens for the given mail keys while `enabled`. The listener sits in the capture phase, so a key the
- * mail page uses (E = archive) is taken before the app's own meaning (E = open the focused row); keys
- * without a handler pass through untouched.
+ * mail page uses is handled once; the app's own E (open the focused row) steps aside while an open mail
+ * carries `data-shortcut-scope="mail"` (`core/keyboard/shortcuts.ts`). Keys without a handler pass through.
  */
 export function useMailKeys(
   enabled: boolean,

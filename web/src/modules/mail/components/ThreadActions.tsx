@@ -79,7 +79,7 @@ export function ThreadActions({
       if (has('INBOX') && !inTrash && !inSpam) ask('archive');
     },
     trash: () => {
-      if (!inTrash) ask('trash');
+      if (!inTrash && !inSpam) ask('trash');
     },
     spam: () => {
       if (!inSpam && !inTrash) ask('spam');
