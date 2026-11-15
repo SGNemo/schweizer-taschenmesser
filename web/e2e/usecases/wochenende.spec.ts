@@ -264,8 +264,16 @@ async function rows<T>(page: Page, store: string): Promise<T[]> {
 async function planOf(page: Page) {
   return page.evaluate(() => {
     const titles = (sel: string) =>
+      // The row's title (planner hub R1: the row leads with its tick, so the first line is not the title any more).
       Array.from(document.querySelectorAll(`${sel} li`))
-        .map((li) => (li as HTMLElement).innerText.split('\n')[0]!.trim())
+        .map((li) =>
+          (
+            (li.querySelector('[data-row] > span') as HTMLElement | null)?.innerText ??
+            (li as HTMLElement).innerText
+          )
+            .split('\n')[0]!
+            .trim(),
+        )
         .filter(Boolean);
     const shownDay = document
       .querySelector('main [data-testid^="day-"]')
@@ -282,10 +290,10 @@ async function planOf(page: Page) {
         .find((s) => /^Wartet auf freie Zeit/.test(s))
         ?.split('\n')[0],
       shown: titles('main [data-testid^="day-"]'),
-      // Desktop: one row per day („Sa. 14. · 1 h 42 frei von 3 h 12 · 3 Dinge“); phone: the strip chips.
-      week: Array.from(
-        document.querySelectorAll('main [aria-label="Woche"] li, main [aria-label="Tage"] button'),
-      ).map((e) => (e as HTMLElement).innerText.replace(/\s+/g, ' ').trim()),
+      // One tile per day, read by its name („Heute, Samstag, 14. November: 1 h 42 frei von 3 h 12 · 3 Dinge“).
+      week: Array.from(document.querySelectorAll('main [aria-label="Woche"] button .sr-only')).map(
+        (e) => (e.textContent ?? '').replace(/\s+/g, ' ').trim(),
+      ),
     };
   });
 }
@@ -352,9 +360,10 @@ test('A Erster Start bis Planer', async ({ page, isMobile }, info) => {
   const sheet = page.getByRole('dialog', { name: 'Tage einteilen' });
   await expect(sheet).toBeVisible();
   m.dialog();
-  await expect(page.getByTestId('planner-head')).toBeVisible();
-  // W13: an empty board with time today never says „Heute ist frei“ beside „… frei heute“.
-  await expect(page.getByTestId('planner-head')).not.toContainText('Heute ist frei');
+  await expect(page.getByRole('group', { name: 'Woche' })).toBeVisible();
+  // W13: an empty board with time today never says „Heute ist frei“ beside „… frei heute“ – since planner hub R1 a
+  // board without things has no head figure at all.
+  await expect(page.getByTestId('planner-head')).toHaveCount(0);
   // W03: the planner is in the navigation right away (desktop: its „Planen“ group is open; phone: the „Mehr“ sheet).
   const plannerInNav = isMobile
     ? true
@@ -524,9 +533,7 @@ test('C Wochenende einteilen', async ({ page, isMobile }, info) => {
   expect(saturday).toEqual(OPEN.filter((title) => saturday.includes(title)));
   // W10: Sunday got its time before the distribution: what Saturday cannot hold goes there. The script looks at
   // Sunday to read it (not counted: the facts only).
-  if (isMobile)
-    await page.getByRole('group', { name: 'Tage' }).getByRole('button', { name: /^So/ }).click();
-  else await page.getByRole('button', { name: /^So/ }).first().click();
+  await page.getByTestId(`week-${SUNDAY}`).click();
   const sundayRows = await settledCount(page.locator(`[data-testid="day-${SUNDAY}"] li`));
   if (sundayRows === 0) m.detour();
   const plan = await planOf(page);
@@ -535,16 +542,7 @@ test('C Wochenende einteilen', async ({ page, isMobile }, info) => {
   // Package 4b, checked but not counted: ⋯ → „Tagesabschnitt …“ → „Abend“ adds 3 taps to the 7 of package 4a,
   // so the path without a part stays the measured one. One thing gets „Abend“ and then stands after the things
   // without a part, on the same day.
-  if (isMobile)
-    await page
-      .getByRole('group', { name: 'Tage' })
-      .getByRole('button', { name: /^Heute/ })
-      .click();
-  else
-    await page
-      .getByRole('button', { name: /^Heute · / })
-      .first()
-      .click();
+  await page.getByTestId(`week-${SATURDAY}`).click();
   const sat = page.locator(`[data-testid="day-${SATURDAY}"]`);
   await settledCount(sat.locator('li'));
   const onSaturday = async () => (await planOf(page)).shown.filter((t) => OPEN.includes(t));
@@ -834,14 +832,17 @@ test('H Schlaf: Abendgrenze für den Plan', async ({ page, isMobile }, info) => 
   // The setting must hold the day end for every day; anything else is a detour to the settings page.
   const dayEnd = stored?.dayEnd;
   if (dayEnd !== '23:00') m.detour();
-  // 22:30, half an hour before: one calm sentence in the head, with „Rest verteilen“ while „Duschen“ is open.
+  // 22:30, half an hour before: one calm sentence in the head's notice slot (planner hub R1: never in the figure,
+  // and it carries no link of its own). „Rest verteilen“ stands at the foot of today's sheet while „Duschen“ is open.
   await page.clock.setFixedTime(new Date(`${SATURDAY}T22:30:00`));
   await page.reload();
   const line = page.getByTestId('day-end-line');
-  await expect(line).toContainText('Bald ist Tagesende.');
-  await expect(line.getByRole('button', { name: 'Rest verteilen' })).toBeVisible();
-  // One line at a time: the 17:00 link is not there besides it.
-  await expect(page.getByTestId('rest-link')).toHaveCount(0);
+  await expect(line).toHaveText('Bald ist Tagesende.');
+  await expect(line.getByRole('button')).toHaveCount(0);
+  await expect(line).toBeVisible();
+  await expect(
+    page.getByTestId('rest-link').getByRole('button', { name: 'Rest verteilen' }),
+  ).toHaveCount(1);
   const said = (await line.innerText()).replace(/\s+/g, ' ').trim();
   // The switch `focus.eveningWrapUp` off: no evening line at all (not counted, the switch is set once).
   await page.evaluate(
@@ -876,7 +877,8 @@ test('H Schlaf: Abendgrenze für den Plan', async ({ page, isMobile }, info) => 
   await page.reload();
   await expect(page.getByTestId('planner-head')).toBeVisible();
   await expect(page.getByTestId('day-end-line')).toHaveCount(0);
-  await expect(page.getByTestId('rest-link')).toHaveCount(0);
+  // The link at the sheet's foot is a standing step of the day, no evening line: it stays.
+  await expect(page.getByTestId('rest-link')).toHaveCount(1);
   facts(info, 'H', { dayEnd, line: said });
   await record(info, m, name);
 });

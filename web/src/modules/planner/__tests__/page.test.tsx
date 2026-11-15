@@ -16,7 +16,7 @@ import { FOCUS_SCOPE } from '@/core/settings/focus';
 import { setSettings } from '@/core/settings/settings';
 import { setNow } from '@/core/time/now';
 import { assignmentRepo, dayRepo, itemRepo } from '../repo';
-import PlannerPage, { WEEK_CHECK_KEY } from '../routes/PlannerPage';
+import PlannerPage, { DAY_KEY, THEN_WIDE_KEY, WEEK_CHECK_KEY } from '../routes/PlannerPage';
 
 const NOW = new Date(2026, 10, 9, 10, 0).getTime(); // Monday 2026-11-09
 const todos = getManifest('todos')!;
@@ -55,7 +55,7 @@ beforeEach(async () => {
 afterEach(() => setNow());
 
 describe('planner page', () => {
-  it('shows the week as a list of seven days, the picked day with minutes and parts, a blocker, the waiting group', async () => {
+  it('shows the week as a band of seven tiles, the picked day as a sheet with parts and a blocker, the waiting group', async () => {
     const a = await taskRepo.create({
       listId: 'inbox',
       title: 'Steuer',
@@ -100,26 +100,51 @@ describe('planner page', () => {
     });
     draw();
     // (The head figure renders into the frame's hero slot, which only exists inside the shell: e2e covers it.)
-    // Package 0b-4b: one day at a time. Outside the shell (no page width) the week is the strip of seven chips above
-    // the picked day; on a wide page the same days are a list beside it (e2e/seed/plan-area-rest.seed.spec.ts).
-    const strip = await screen.findByRole('group', { name: 'Tage' });
-    const chips = within(strip).getAllByRole('button');
+    // Planner hub R1: one day at a time, as a sheet under the week band (seven tiles at every width). The page
+    // opens on the first day that holds things – here today.
+    const band = await screen.findByRole('group', { name: 'Woche' });
+    const chips = within(band).getAllByRole('button');
     expect(chips).toHaveLength(7);
-    expect(chips[0]).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByTestId('day-2026-11-09')).toHaveTextContent('2 h 12 frei von 3 h 12');
+    await waitFor(() => expect(chips[0]).toHaveAttribute('aria-pressed', 'true'));
+    expect(chips[0]).toHaveAttribute('aria-current', 'date');
+    expect(chips[0]).toHaveAccessibleName(
+      'Heute, Montag, 9. November: 2 h 12 frei von 3 h 12 · 1 Ding',
+    );
+    expect(chips[1]).toHaveAccessibleName(
+      'Morgen, Dienstag, 10. November: 1 h 24 frei von 2 h 24 · 1 Ding',
+    );
+    const sheet = screen.getByTestId('day-2026-11-09');
+    expect(sheet).toHaveTextContent('2 h 12 frei von 3 h 12');
+    expect(within(sheet).getByRole('heading', { level: 2 })).toHaveTextContent(
+      'Heute · Montag, 9. November',
+    );
+    // One row form: the source in a word, the duration at the end, „Zuerst“ above the first rows.
+    expect(within(sheet).getByRole('heading', { level: 3, name: 'Zuerst' })).toBeInTheDocument();
+    expect(within(sheet).getByRole('list', { name: 'Zuerst' })).toHaveTextContent('ToDo');
+    expect(within(sheet).getByRole('list', { name: 'Zuerst' })).toHaveTextContent('1 h');
     expect(screen.getByText('Teil 1 von 2')).toHaveClass('sr-only');
     // Another day is one click away: its blocker shows then.
     expect(screen.queryByText('Zahnarzt')).toBeNull();
     fireEvent.click(chips[1]!);
     expect(screen.getByTestId('day-2026-11-10')).toHaveTextContent('1 h 24 frei von 2 h 24');
+    expect(screen.getByTestId('day-2026-11-10')).toHaveTextContent(
+      'Morgen · Dienstag, 10. November',
+    );
     expect(screen.getByText('Zahnarzt')).toBeInTheDocument();
+    // The pick is said for screen readers and kept for today on this device.
+    expect(screen.getByTestId('planner-status')).toHaveTextContent(
+      'Morgen, Dienstag, 10. November: 1 h 24 frei von 2 h 24 · 1 Ding',
+    );
+    await waitFor(async () =>
+      expect(await getMeta(DAY_KEY)).toEqual({ date: '2026-11-10', on: '2026-11-09' }),
+    );
     fireEvent.click(chips[0]!);
     // „Nicht planen“ things sit in the waiting group with a way back.
     expect(screen.getByText('Wartet auf freie Zeit')).toBeInTheDocument();
     expect(screen.getByText('Keller')).toBeInTheDocument();
-    // Erledigt is one tap: a tick in the row, named after the thing; „Warum hier?“ sits in the ⋯ menu, no reason text at rest.
-    expect(screen.getAllByRole('checkbox').length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('checkbox').every((c) => c.getAttribute('aria-label'))).toBe(true);
+    // Erledigt is one tap: a tick in the row's lead slot, named „Erledigt: <thing>“; „Warum hier?“ sits in the ⋯ menu,
+    // no reason text at rest.
+    expect(screen.getByRole('checkbox', { name: 'Erledigt: Steuer' })).toBeInTheDocument();
     expect(screen.queryByRole('checkbox', { name: 'Erledigt' })).toBeNull();
     expect(screen.queryByText('neu, nach Priorität')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Warum hier?' })).toBeNull();
@@ -417,6 +442,132 @@ describe('planner page', () => {
       await screen.findByText('Meinst du Keller aufräumen oder Keller streichen?'),
     ).toBeInTheDocument();
     expect(screen.getByRole('group', { name: 'Welches ist gemeint?' })).toBeInTheDocument();
+  });
+
+  /** `n` ToDos planned on `date`, 10 min each, in order. */
+  const plan = async (date: string, n: number) => {
+    for (let i = 0; i < n; i++) {
+      const task = await taskRepo.create({
+        listId: 'inbox',
+        title: `Ding ${i + 1}`,
+        done: false,
+        priority: 0,
+        order: i,
+        estimateMin: 10,
+      });
+      await assignmentRepo.upsert(`todos:${task.id}#0`, {
+        itemKey: `todos:${task.id}`,
+        k: 0,
+        of: 1,
+        date,
+        minutes: 10,
+        order: i,
+        reason: 'new',
+      });
+    }
+  };
+
+  it('opens on the first day that holds things; today, picked, says where they are', async () => {
+    await plan('2026-11-11', 2);
+    draw();
+    // Monday is today and empty: the sheet shows Wednesday, the band marks it.
+    const sheet = await screen.findByTestId('day-2026-11-11');
+    expect(within(sheet).getByRole('heading', { level: 2 })).toHaveTextContent(
+      'Mittwoch, 11. November',
+    );
+    const tiles = within(screen.getByRole('group', { name: 'Woche' })).getAllByRole('button');
+    expect(tiles[2]).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByTestId('planner-empty')).toBeNull();
+    fireEvent.click(tiles[0]!);
+    expect(await screen.findByTestId('planner-empty-day')).toHaveTextContent(
+      'Heute ist frei. Der nächste Tag mit Dingen ist Mittwoch.',
+    );
+    fireEvent.click(tiles[1]!);
+    expect(screen.getByTestId('planner-empty-day')).toHaveTextContent(
+      'Für diesen Tag ist nichts geplant.',
+    );
+  });
+
+  it('„Zuerst“ holds three rows, „Danach“ five and „n weitere“; a fold never hides fewer than two', async () => {
+    await plan('2026-11-09', 12);
+    draw();
+    const sheet = await screen.findByTestId('day-2026-11-09');
+    await within(sheet).findByText('Ding 1');
+    expect(
+      within(within(sheet).getByRole('list', { name: 'Zuerst' })).getAllByRole('listitem'),
+    ).toHaveLength(3);
+    const then = within(sheet).getByRole('button', { name: /Danach · 9/ });
+    expect(then).toHaveAttribute('aria-expanded', 'true');
+    expect(within(sheet).getAllByRole('checkbox')).toHaveLength(8);
+    const more = within(sheet).getByRole('button', { name: '4 weitere' });
+    expect(more).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(more);
+    expect(within(sheet).getAllByRole('checkbox')).toHaveLength(12);
+    expect(within(sheet).queryByRole('button', { name: /weitere/ })).toBeNull();
+    // The fold of „Danach“ is kept on this device.
+    fireEvent.click(then);
+    await waitFor(() => expect(then).toHaveAttribute('aria-expanded', 'false'));
+    expect(within(sheet).getAllByRole('checkbox')).toHaveLength(3);
+    expect(await getMeta(THEN_WIDE_KEY)).toBe(false);
+    // The foot offers the two steps of a day (the tick itself – one tap – is measured in e2e, path A).
+    expect(within(sheet).getByRole('button', { name: 'Rest verteilen' })).toBeInTheDocument();
+    expect(within(sheet).getByRole('button', { name: 'Tage einteilen' })).toBeInTheDocument();
+    expect(within(sheet).getByRole('checkbox', { name: 'Erledigt: Ding 1' })).not.toBeChecked();
+  });
+
+  it('nine rows show in full: three first, six after (hiding one would hide fewer than two)', async () => {
+    await plan('2026-11-09', 9);
+    draw();
+    const sheet = await screen.findByTestId('day-2026-11-09');
+    await within(sheet).findByText('Ding 9');
+    expect(within(sheet).getAllByRole('checkbox')).toHaveLength(9);
+    expect(within(sheet).queryByRole('button', { name: /weitere/ })).toBeNull();
+  });
+
+  it('an example chip fills the field and focuses it; it never submits', async () => {
+    draw();
+    const field = await screen.findByLabelText('Eintragen oder sagen');
+    expect(field).toHaveAttribute('placeholder', 'Was steht an?');
+    const examples = screen.getByRole('group', { name: 'Zum Beispiel' });
+    expect(
+      within(examples)
+        .getAllByRole('button')
+        .map((b) => b.textContent),
+    ).toEqual(['Steuer 2 Std bis Do', 'Donnerstag frei', 'schieb Saugen auf Mi']);
+    fireEvent.click(within(examples).getByRole('button', { name: 'Donnerstag frei' }));
+    expect(field).toHaveValue('Donnerstag frei');
+    expect(document.activeElement).toBe(field);
+    expect(screen.queryByTestId('plan-preview')).toBeNull();
+    expect(await dayRepo.get('2026-11-12')).toBeUndefined();
+    expect(await db.table('todos_task').count()).toBe(0);
+  });
+
+  it('an entry that was not stored says so and keeps the text', async () => {
+    draw();
+    const field = await screen.findByLabelText('Eintragen oder sagen');
+    // The planner is switched off behind the open page: nothing is stored.
+    await db.table('_modules').put({
+      id: 'planner',
+      enabled: false,
+      dataPolicy: null,
+      createdAt: 1,
+      updatedAt: 2,
+      deviceId: 't',
+      deletedAt: null,
+      _f: {},
+    });
+    fireEvent.change(field, { target: { value: 'Keller aufräumen' } });
+    fireEvent.submit(field.closest('form')!);
+    const error = await screen.findByRole('alert');
+    expect(error).toHaveTextContent(
+      'Das habe ich nicht gespeichert. Dein Text steht noch im Feld.',
+    );
+    expect(field).toHaveValue('Keller aufräumen');
+    expect(field).toHaveAttribute('aria-invalid', 'true');
+    expect(field).toHaveAttribute('aria-describedby', error.id);
+    // Typing again takes the message away.
+    fireEvent.change(field, { target: { value: 'Keller' } });
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 
   it('Monday: „Woche prüfen“ is a quiet line only with the switch on; × hides it for the week', async () => {

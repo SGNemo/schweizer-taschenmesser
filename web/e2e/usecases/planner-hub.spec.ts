@@ -3,22 +3,23 @@ import { expect, test, type Locator, type Page, type TestInfo } from '@playwrigh
 import { backSettled, dismissNotices, ready, showPreview } from '../helpers';
 
 /**
- * Baseline of the planner page before the „Planer als Steckenpferd“ redesign
- * (docs/design/planner-hub/ANALYSIS-MEASURE.md). Two kinds of numbers, both written to
+ * The planner page in numbers: the baseline before the „Planer als Steckenpferd“ redesign
+ * (docs/design/planner-hub/ANALYSIS-MEASURE.md) and, since package R1 „Der Tag als Blatt“
+ * (docs/design/planner-hub/HANDOFF.md §9), its targets as assertions. Two kinds of numbers, both written to
  * `test-results/usecase-planner-hub.md` (facts as JSON in `test-results/usecase-planner-hub/`):
  *
  * 1. **Click paths** (the house pattern of `wochenende.spec.ts`): taps, typed characters, screens, dialogs and
  *    detours (an action that did not do what the person meant, or a control the person looks for and that is not
  *    there) with the same seconds model (tap 1 s, character 0,25 s keyboard / 0,4 s phone, screen 2 s, dialog 3 s,
- *    detour 5 s). `MAX` holds what `develop` 6ef3a2cb measured on 2026-11-15; the packages of the redesign lower
- *    it, nobody raises it.
- * 2. **Design measures** of the first screen at 1920 × 1080 and 412 × 915, light and dark, recorded with loose
- *    sanity checks only (the planner is being rebuilt; cosmetic drift must not turn this file red).
+ *    detour 5 s). `MAX` held what `develop` 6ef3a2cb measured on 2026-11-15; R1 lowered it to what it measures
+ *    (the baseline stands in the comment of each line); the next packages lower it, nobody raises it.
+ * 2. **Design measures** of the first screen at 1920 × 1080 and 412 × 915, light and dark. The R1 targets are
+ *    asserted on the screen the page opens on (`TARGET`); everything else is recorded with loose sanity checks.
  *
  * The scene is the maintainer's Sunday: 2026-11-15, an empty install with ToDos, Rechnungen and Planer on, three
  * ToDos (35 + 30 + 30 min) and six open invoices that were due on the Sunday, Tuesday and Thursday before. The
  * planner's defaults (Sunday 0 min, weekday 4 h less 20 % buffer) put all nine on Monday and leave 37 min free
- * there. Made-up data only; rows go straight into IndexedDB, as in `wochenende.spec.ts`.
+ * there. Since R1 the page opens on that Monday (the first day that holds things). Made-up data only; rows go straight into IndexedDB, as in `wochenende.spec.ts`.
  *
  * How the design measures are taken (`measure`, in the page):
  * - **Content area** = the part of the first screen that belongs to the page: `main`'s box, below the module head
@@ -33,7 +34,8 @@ import { backSettled, dismissNotices, ready, showPreview } from '../helpers';
  * - **Stimulus** = distinct text colours, distinct background colours and how many of all of them are chromatic
  *   (channel spread > 40), plus the number of controls and icons on the first screen.
  * - **Targets** = visible controls in the content area whose hit box (probed with `elementFromPoint`, so an
- *   enlarged pseudo-element counts) is narrower or lower than 44 px.
+ *   enlarged pseudo-element counts) is narrower or lower than 44 px. A control the fold cuts is not counted (R1:
+ *   its box is whole, the screen ends in it).
  * - **Overdue rows** = rows saying „Frist war …“: the day they sit on, their colour, its contrast on the row.
  *
  * Run (from `web/`; the app build is served on 4173):
@@ -60,38 +62,73 @@ type Row = { name: string; project: string } & Record<Metric, number> & {
     ms: number;
   };
 
-/** Measured on `develop` 6ef3a2cb (2026-11-15). The redesign packages lower these; never raise them. */
+/**
+ * Upper bounds per path. Measured on `develop` 6ef3a2cb (2026-11-15) and lowered by R1 to what the sheet measures
+ * (the page opens on the day with things: no tap on a day; the title opens the source: no ⋯ → „Öffnen“). The
+ * trailing comment is the baseline before R1. The redesign packages lower these; never raise them.
+ */
 const MAX: Record<string, Record<Metric | 'seconds', number>> = {
+  // before R1: 2 taps, 4 s
   // prettier-ignore
-  'A Ding abhaken · desktop-chrome': { taps: 2, keys: 0, screens: 1, dialogs: 0, detours: 0, seconds: 4 },
+  'A Ding abhaken · desktop-chrome': { taps: 1, keys: 0, screens: 1, dialogs: 0, detours: 0, seconds: 3 },
+  // as before R1: the fold of „Danach“ takes the tap the day took
   // prettier-ignore
   'A Ding abhaken · pixel-7': { taps: 2, keys: 0, screens: 1, dialogs: 0, detours: 0, seconds: 4 },
+  // before R1: 4 taps, 26 s
   // prettier-ignore
-  'B Ding auf einen anderen Tag · desktop-chrome': { taps: 4, keys: 29, screens: 1, dialogs: 1, detours: 2, seconds: 26 },
+  'B Ding auf einen anderen Tag · desktop-chrome': { taps: 3, keys: 29, screens: 1, dialogs: 1, detours: 2, seconds: 25 },
+  // as before R1: the fold of „Danach“ takes the tap the day took
   // prettier-ignore
   'B Ding auf einen anderen Tag · pixel-7': { taps: 4, keys: 29, screens: 1, dialogs: 1, detours: 2, seconds: 31 },
+  // before R1: 3 taps, 10 s
   // prettier-ignore
-  'C1 Quelle öffnen: ToDo · desktop-chrome': { taps: 3, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 10 },
+  'C1 Quelle öffnen: ToDo · desktop-chrome': { taps: 1, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 8 },
+  // before R1: 3 taps, 10 s
   // prettier-ignore
-  'C1 Quelle öffnen: ToDo · pixel-7': { taps: 3, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 10 },
+  'C1 Quelle öffnen: ToDo · pixel-7': { taps: 2, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 9 },
+  // before R1: 3 taps, 10 s
   // prettier-ignore
-  'C2 Quelle öffnen: Rechnung · desktop-chrome': { taps: 3, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 10 },
+  'C2 Quelle öffnen: Rechnung · desktop-chrome': { taps: 1, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 8 },
+  // before R1: 3 taps, 10 s
   // prettier-ignore
-  'C2 Quelle öffnen: Rechnung · pixel-7': { taps: 3, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 10 },
+  'C2 Quelle öffnen: Rechnung · pixel-7': { taps: 1, keys: 0, screens: 2, dialogs: 1, detours: 0, seconds: 8 },
+  // before R1: 3 taps, 7 s
   // prettier-ignore
-  'C3 Quelle öffnen: Mail · desktop-chrome': { taps: 3, keys: 0, screens: 2, dialogs: 0, detours: 0, seconds: 7 },
+  'C3 Quelle öffnen: Mail · desktop-chrome': { taps: 2, keys: 0, screens: 2, dialogs: 0, detours: 0, seconds: 6 },
+  // as before R1
   // prettier-ignore
   'D Rest verteilen · desktop-chrome': { taps: 2, keys: 0, screens: 1, dialogs: 1, detours: 0, seconds: 7 },
+  // as before R1
   // prettier-ignore
   'D Rest verteilen · pixel-7': { taps: 2, keys: 0, screens: 1, dialogs: 1, detours: 0, seconds: 7 },
+  // as before R1
   // prettier-ignore
   'E Ding über das Planer-Feld · desktop-chrome': { taps: 0, keys: 14, screens: 1, dialogs: 0, detours: 0, seconds: 6 },
+  // as before R1
   // prettier-ignore
   'E Ding über das Planer-Feld · pixel-7': { taps: 0, keys: 14, screens: 1, dialogs: 0, detours: 0, seconds: 8 },
+  // before R1: 6 taps, 20 s
   // prettier-ignore
-  'F Überfällige Rechnung begleichen · desktop-chrome': { taps: 6, keys: 0, screens: 3, dialogs: 1, detours: 1, seconds: 20 },
+  'F Überfällige Rechnung begleichen · desktop-chrome': { taps: 4, keys: 0, screens: 3, dialogs: 1, detours: 1, seconds: 18 },
+  // before R1: 6 taps, 20 s
   // prettier-ignore
-  'F Überfällige Rechnung begleichen · pixel-7': { taps: 6, keys: 0, screens: 3, dialogs: 1, detours: 1, seconds: 20 },
+  'F Überfällige Rechnung begleichen · pixel-7': { taps: 4, keys: 0, screens: 3, dialogs: 1, detours: 1, seconds: 18 },
+};
+
+/** The targets of R1 (HANDOFF §9) on the screen the page opens on, per window. */
+const TARGET = {
+  /** 1920: at most a quarter of the content area is unpainted (71 % before). */
+  emptyShare: 0.25,
+  /** 1920: thing rows in full on the first screen (0 before) … */
+  rowsOnScreen: 8,
+  /** … and thing rows that at least begin on it (3 „Zuerst“ + 6 „Danach“). */
+  rowsBegun: 9,
+  /** 1920: the field's top edge (567 before). */
+  fieldY: 260,
+  /** 412: controls with a hit box under 44 px (12 of 20 before). */
+  smallTargets: 0,
+  /** Both: distinct font sizes in `main` (HANDOFF §10 Q4: 8 with the unchanged shared parts). */
+  fontSizes: 8,
 };
 
 class Meter {
@@ -389,16 +426,12 @@ async function settledCount(loc: Locator): Promise<number> {
 const day = (page: Page, date: string) => page.locator(`[data-testid="day-${date}"]`);
 const things = (page: Page, date: string) => day(page, date).locator('li');
 
-/** The control that shows another day: a row of the week list (wide) or a chip of the strip (narrow). */
-function dayPick(page: Page, name: RegExp) {
-  return page
-    .getByRole('list', { name: 'Woche' })
-    .getByRole('button', { name })
-    .or(page.getByRole('group', { name: 'Tage' }).getByRole('button', { name }))
-    .first();
+/** The control that shows another day: its tile in the week band (at every width). */
+function dayPick(page: Page, date: string) {
+  return page.getByRole('group', { name: 'Woche' }).getByTestId(`week-${date}`);
 }
 
-/** What the page says: the head, the week (rows or chips) and the titles on the shown day. */
+/** What the page says: the head, the week (the tiles' names) and the titles on the shown day. */
 async function boardOf(page: Page) {
   return page.evaluate(() => {
     const text = (e: Element | null) =>
@@ -411,9 +444,9 @@ async function boardOf(page: Page) {
       ),
       shownDay: shown?.getAttribute('data-testid'),
       shown: Array.from(shown?.querySelectorAll('li') ?? []).map((li) => text(li)),
-      week: Array.from(
-        document.querySelectorAll('main [aria-label="Woche"] li, main [aria-label="Tage"] button'),
-      ).map(text),
+      week: Array.from(document.querySelectorAll('main [aria-label="Woche"] button .sr-only')).map(
+        (e) => (e.textContent ?? '').replace(/\s+/g, ' ').trim(),
+      ),
     };
   });
 }
@@ -607,7 +640,16 @@ async function measure(page: Page) {
         .slice(0, 40);
     const targets = controls
       .filter((el) => !frame?.contains(el))
-      .map((el) => ({ name: name(el), tag: el.tagName.toLowerCase(), ...hitBox(el) }));
+      .map((el) => {
+        const r = el.getBoundingClientRect();
+        return {
+          name: name(el),
+          tag: el.tagName.toLowerCase(),
+          ...hitBox(el),
+          // Cut by the fold (or by the head): its hit box is whole, only not all of it is on this screen.
+          cut: r.bottom > area.bottom || r.top < area.top,
+        };
+      });
 
     // The things: rows of the shown day.
     const thingRows = Array.from(main.querySelectorAll('[data-testid^="day-"] li'));
@@ -619,17 +661,19 @@ async function measure(page: Page) {
     const metaLine = first?.querySelector('[data-row] > span + span');
     const head = document.querySelector('[data-testid="planner-head"]');
     const headBox = head?.getBoundingClientRect();
-    const weekRow = main.querySelector('[aria-label="Woche"] li');
-    const chip = main.querySelector('[aria-label="Tage"] button');
+    // A tile of the week band; its visible form (wide or compact) carries the day and the state line.
+    const weekRow = main.querySelector('[aria-label="Woche"] button');
+    const tileForm = Array.from(
+      weekRow?.querySelectorAll(':scope > span[aria-hidden="true"]') ?? [],
+    ).find((el) => visible(el) && el.querySelector('span'));
+    const chip = weekRow;
 
     // The capture field.
     const form = main.querySelector('form');
     const input = form?.querySelector('input');
     const inputBox = input?.getBoundingClientRect();
     const formBox = form?.getBoundingClientRect();
-    const weekBox = (
-      main.querySelector('[aria-label="Woche"]') ?? main.querySelector('[aria-label="Tage"]')
-    )?.getBoundingClientRect();
+    const weekBox = main.querySelector('[aria-label="Woche"]')?.getBoundingClientRect();
 
     // Overdue rows.
     const late = thingRows.filter((li) => /Frist war/.test((li as HTMLElement).innerText));
@@ -674,6 +718,8 @@ async function measure(page: Page) {
       rows: {
         all: thingRows.length,
         onScreen: boxes.filter((r) => r.top >= area.top && r.bottom <= area.bottom).length,
+        /** Rows whose top edge lies on the first screen (the last one may be cut by the fold). */
+        begun: boxes.filter((r) => r.height > 0 && r.top >= area.top && r.top < area.bottom).length,
         firstY: boxes[0] ? Math.round(boxes[0].top) : null,
         height: boxes[0] ? Math.round(boxes[0].height) : null,
         weekRowHeight: weekRow ? Math.round(weekRow.getBoundingClientRect().height) : null,
@@ -708,8 +754,8 @@ async function measure(page: Page) {
         head: fontOf(head),
         headDetail: fontOf(head?.nextElementSibling),
         h1: fontOf(main.querySelector('h1')),
-        weekTitle: fontOf(weekRow?.querySelector('[data-row] > span')),
-        weekMeta: fontOf(weekRow?.querySelector('[data-row] > span + span')),
+        weekTitle: fontOf(tileForm?.querySelector('span span') ?? tileForm?.querySelector('span')),
+        weekMeta: fontOf(tileForm?.querySelector(':scope > span:last-child')),
         chip: fontOf(chip),
       },
       stimulus: {
@@ -722,7 +768,7 @@ async function measure(page: Page) {
       },
       targets: {
         all: targets.length,
-        small: targets.filter((t) => t.w < 44 || t.h < 44),
+        small: targets.filter((t) => !t.cut && (t.w < 44 || t.h < 44)),
       },
       overdue: {
         rows: late.length,
@@ -746,7 +792,8 @@ async function measure(page: Page) {
 /** Measures the open page under `scheme`, stores the row and (with `PLANNER_HUB_SHOTS`) a picture. */
 async function design(page: Page, info: TestInfo, screen: string, scheme: 'dark' | 'light') {
   await page.emulateMedia({ colorScheme: scheme });
-  await expect(page.getByTestId('planner-head')).toBeVisible();
+  // The board is there (a page without things has no head figure: the band is what always comes with it).
+  await expect(page.getByRole('group', { name: 'Woche' })).toBeVisible();
   await page.mouse.move(0, 0); // no hover state in the numbers
   const m = await measure(page);
   const project = info.project.name;
@@ -783,14 +830,25 @@ test('A Ding abhaken', async ({ page, isMobile }, info) => {
   const m = new Meter(page, isMobile);
   await m.go('/planner');
   await expect(page.getByTestId('planner-head')).toBeVisible();
-  // The page opens on today (Sunday, empty): the nine things of Monday are one tap away.
-  await expect(dayPick(page, /^Mo/)).toBeVisible();
-  const onLanding = await settledCount(page.locator('main [data-testid^="day-"] li'));
-  await m.tap(dayPick(page, /^Mo/));
+  // The page opens on the first day that holds things (Monday; today, Sunday, is free): the nine things are there
+  // without a tap, and the tile says so.
   await expect(things(page, MONDAY)).not.toHaveCount(0);
-  const before = await settledCount(things(page, MONDAY));
-  await m.tap(day(page, MONDAY).getByRole('checkbox', { name: 'Wohnung saugen', exact: true }));
+  await expect(dayPick(page, MONDAY)).toHaveAttribute('aria-pressed', 'true');
+  await expect(dayPick(page, SUNDAY)).toHaveAttribute('aria-current', 'date');
+  const onLanding = await settledCount(page.locator('main [data-testid^="day-"] li'));
+  expect(onLanding).toBe(isMobile ? 3 : 9);
+  const before = onLanding;
+  // „Danach“ is folded on the phone: its rows are one tap away there (counted).
+  const tick = day(page, MONDAY).getByRole('checkbox', {
+    name: 'Erledigt: Wohnung saugen',
+    exact: true,
+  });
+  if (!(await tick.isVisible()))
+    await m.tap(day(page, MONDAY).getByRole('button', { name: /^Danach/ }));
+  await m.tap(tick);
   await expect(day(page, MONDAY).getByText('Wohnung saugen')).toHaveCount(0);
+  // Said for screen readers too (the status line), next to the undo toast.
+  await expect(page.getByTestId('planner-status')).toHaveText('Erledigt: Wohnung saugen');
   const done = (await rows<{ title: string; done: boolean }>(page, 'todos_task')).find(
     (t) => t.title === 'Wohnung saugen',
   )?.done;
@@ -805,12 +863,18 @@ test('B Ding auf einen anderen Tag', async ({ page, isMobile }, info) => {
   await prepare(page, 'week');
   const m = new Meter(page, isMobile);
   await m.go('/planner');
-  await m.tap(dayPick(page, /^Mo/));
+  await expect(things(page, MONDAY)).not.toHaveCount(0);
   await settledCount(things(page, MONDAY));
-  // First look: the row's ⋯. It names no other day („Später“ means tomorrow, „Festnageln auf Mo“ the day it is on).
-  await m.tap(
-    day(page, MONDAY).getByRole('button', { name: 'Aktionen für Wohnung saugen', exact: true }),
-  );
+  // „Danach“ is folded on the phone: the thing is in it (one tap, counted).
+  const actions = day(page, MONDAY).getByRole('button', {
+    name: 'Aktionen für Wohnung saugen',
+    exact: true,
+  });
+  if (!(await actions.isVisible()))
+    await m.tap(day(page, MONDAY).getByRole('button', { name: /^Danach/ }));
+  // First look: the row's ⋯. It names no other day („Später“ means tomorrow, „Festnageln auf Mo“ the day it is on;
+  // „Verschieben …“ is package R2).
+  await m.tap(actions);
   await expect(page.getByRole('menuitem').first()).toBeVisible();
   const menu = await page.getByRole('menuitem').allInnerTexts();
   const menuMoves = menu.some((item) => /\b(Mi|Mittwoch|Verschieben|Anderer Tag)\b/.test(item));
@@ -833,7 +897,7 @@ test('B Ding auf einen anderen Tag', async ({ page, isMobile }, info) => {
   await page.waitForTimeout(1500);
   await settledCount(things(page, MONDAY));
   const stillMonday = await day(page, MONDAY).getByText('Wohnung saugen').count();
-  await dayPick(page, /^Mi/).click();
+  await dayPick(page, WEDNESDAY).click();
   await expect(day(page, WEDNESDAY)).toBeVisible();
   await settledCount(things(page, WEDNESDAY));
   const onWednesday = await day(page, WEDNESDAY).getByText('Wohnung saugen').count();
@@ -842,7 +906,7 @@ test('B Ding auf einen anderen Tag', async ({ page, isMobile }, info) => {
     await rows<{ id: string; pinned?: string; source?: { id: string } }>(page, 'planner_item')
   ).find((r) => r.source?.id === 'p1')?.pinned;
   // Not counted: what „Später“ does with a thing of tomorrow (the toast says „Später“; does the thing move?).
-  await dayPick(page, /^Mo/).click();
+  await dayPick(page, MONDAY).click();
   await settledCount(things(page, MONDAY));
   let laterMoved: boolean | null = null;
   const other = day(page, MONDAY).getByRole('button', {
@@ -871,16 +935,37 @@ test('B Ding auf einen anderen Tag', async ({ page, isMobile }, info) => {
   await record(info, m, name);
 });
 
-/** Monday's row ⋯ → `entry`: the way to the source of a thing. */
-async function openSource(page: Page, m: Meter, title: string, entry: string, h1: RegExp) {
+/**
+ * The way to the source of a thing on Monday's sheet. `entry` undefined: the row's title, which opens the thing in
+ * its module (one tap since R1); else the row's ⋯ and that entry (a second place the thing came from). The ⋯ is
+ * read either way (not counted when the title is the way).
+ */
+async function openSource(
+  page: Page,
+  m: Meter,
+  title: string,
+  entry: string | undefined,
+  h1: RegExp,
+) {
   await m.go('/planner');
-  await m.tap(dayPick(page, /^Mo/));
+  await expect(things(page, MONDAY)).not.toHaveCount(0);
   await settledCount(things(page, MONDAY));
-  await m.tap(
-    day(page, MONDAY).getByRole('button', { name: `Aktionen für ${title}`, exact: true }),
-  );
+  const row = things(page, MONDAY).filter({ hasText: title });
+  const actions = row.getByRole('button', { name: `Aktionen für ${title}`, exact: true });
+  // „Danach“ is folded on the phone: a thing in it is one tap away (counted).
+  if (!(await actions.isVisible()))
+    await m.tap(day(page, MONDAY).getByRole('button', { name: /^Danach/ }));
+  if (entry) await m.tap(actions);
+  else await actions.click();
+  await expect(page.getByRole('menuitem').first()).toBeVisible();
   const menu = await page.getByRole('menuitem').allInnerTexts();
-  await m.nav(page.getByRole('menuitem', { name: entry, exact: true }), h1);
+  if (entry) {
+    await m.nav(page.getByRole('menuitem', { name: entry, exact: true }), h1);
+    return menu;
+  }
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('menuitem')).toHaveCount(0);
+  await m.nav(row.locator('button[data-row]'), h1);
   return menu;
 }
 
@@ -888,7 +973,7 @@ test('C1 Quelle öffnen: ToDo', async ({ page, isMobile }, info) => {
   const name = 'C1 Quelle öffnen: ToDo';
   await prepare(page, 'week');
   const m = new Meter(page, isMobile);
-  const menu = await openSource(page, m, 'Angebot Fahrradladen prüfen', 'Öffnen', /ToDos/);
+  const menu = await openSource(page, m, 'Angebot Fahrradladen prüfen', undefined, /ToDos/);
   // The source opens as its edit form, over the list.
   const dialog = page.getByRole('dialog', { name: 'Aufgabe bearbeiten' });
   await expect(dialog).toBeVisible();
@@ -911,7 +996,13 @@ test('C2 Quelle öffnen: Rechnung', async ({ page, isMobile }, info) => {
   const name = 'C2 Quelle öffnen: Rechnung';
   await prepare(page, 'week');
   const m = new Meter(page, isMobile);
-  const menu = await openSource(page, m, 'Stadtwerke Musterstadt bezahlen', 'Öffnen', /Rechnungen/);
+  const menu = await openSource(
+    page,
+    m,
+    'Stadtwerke Musterstadt bezahlen',
+    undefined,
+    /Rechnungen/,
+  );
   const dialog = page.getByRole('dialog', { name: 'Rechnung bearbeiten' });
   await expect(dialog).toBeVisible();
   m.dialog();
@@ -950,14 +1041,15 @@ test('C3 Quelle öffnen: Mail', async ({ page, isMobile }, info) => {
 test('D Rest verteilen', async ({ page, isMobile }, info) => {
   const name = 'D Rest verteilen';
   await prepare(page, 'week');
-  // Monday morning: today holds the nine things; the link is not offered before 17:00 (recorded, not counted).
+  // Monday morning: today holds the nine things; since R1 the link stands at the sheet's foot at any hour
+  // (recorded, not counted).
   await page.clock.setFixedTime(new Date(`${MONDAY}T10:00:00`));
   await ready(page, '/planner');
   await expect(things(page, MONDAY)).not.toHaveCount(0);
   await settledCount(things(page, MONDAY));
   const morning = await boardOf(page);
   const linkInTheMorning = await page.getByTestId('rest-link').count();
-  // Monday 18:00: the evening link under the head.
+  // Monday 18:00: the same link at the foot of today's sheet.
   await page.clock.setFixedTime(new Date(`${MONDAY}T18:00:00`));
   const m = new Meter(page, isMobile);
   await m.go('/planner');
@@ -1026,20 +1118,25 @@ test('F Überfällige Rechnung begleichen', async ({ page, isMobile }, info) => 
   await prepare(page, 'week');
   const m = new Meter(page, isMobile);
   await m.go('/planner');
-  await m.tap(dayPick(page, /^Mo/));
+  await expect(things(page, MONDAY)).not.toHaveCount(0);
   await settledCount(things(page, MONDAY));
   const row = things(page, MONDAY).filter({ hasText: 'Stadtwerke Musterstadt bezahlen' });
   await expect(row).toHaveCount(1);
-  // The person looks for the tick the ToDo rows have: an invoice row has none.
+  // The person looks for the tick the ToDo rows have: an invoice row has none (its lead slot shows the source's
+  // icon; „Bezahlt …“ in that slot is package K1b).
   const tick = await row.getByRole('checkbox').count();
   if (tick === 0) m.detour();
-  await m.tap(
-    row.getByRole('button', { name: 'Aktionen für Stadtwerke Musterstadt bezahlen', exact: true }),
-  );
+  // The ⋯ cannot pay either (read, not counted).
+  await row
+    .getByRole('button', { name: 'Aktionen für Stadtwerke Musterstadt bezahlen', exact: true })
+    .click();
+  await expect(page.getByRole('menuitem').first()).toBeVisible();
   const menu = await page.getByRole('menuitem').allInnerTexts();
   const payInMenu = menu.some((item) => /bezahl|Erledigt/i.test(item));
-  // The only way on: „Öffnen“ leaves the planner and lands in the invoice's edit form, which cannot pay either.
-  await m.nav(page.getByRole('menuitem', { name: 'Öffnen', exact: true }), /Rechnungen/);
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('menuitem')).toHaveCount(0);
+  // The way on: the title leaves the planner and lands in the invoice's edit form, which cannot pay either.
+  await m.nav(row.locator('button[data-row]'), /Rechnungen/);
   const dialog = page.getByRole('dialog', { name: 'Rechnung bearbeiten' });
   await expect(dialog).toBeVisible();
   m.dialog();
@@ -1054,7 +1151,6 @@ test('F Überfällige Rechnung begleichen', async ({ page, isMobile }, info) => 
   await expect(page.getByText('Als bezahlt markiert.')).toBeVisible();
   // Back to the plan.
   await m.back(/Planer/);
-  await dayPick(page, /^Mo/).click();
   await expect(things(page, MONDAY)).not.toHaveCount(0);
   await expect(day(page, MONDAY).getByText('Stadtwerke Musterstadt bezahlen')).toHaveCount(0);
   const paid = (await rows<{ payee: string; status: string }>(page, 'invoices_invoice')).find(
@@ -1065,35 +1161,63 @@ test('F Überfällige Rechnung begleichen', async ({ page, isMobile }, info) => 
   await record(info, m, name);
 });
 
-test('M Designmaße: die Woche des Sonntags, leer, Montag', async ({ page }, info) => {
+test('M Designmaße: die Woche des Sonntags, wie sie öffnet, und heute', async ({
+  page,
+  isMobile,
+}, info) => {
   test.setTimeout(120_000);
-  // (1) Sunday as the page opens: today is free, the nine things of Monday are not on the screen.
+  // (1) Sunday as the page opens: on Monday, the first day that holds things – the nine things are on the screen.
   await prepare(page, 'week');
   await ready(page, '/planner');
-  await expect(dayPick(page, /^Mo/)).toBeVisible();
+  await expect(things(page, MONDAY)).not.toHaveCount(0);
+  await expect(dayPick(page, MONDAY)).toHaveAttribute('aria-pressed', 'true');
+  await settledCount(things(page, MONDAY));
   await page.waitForTimeout(1500);
   const landing = await design(page, info, 'M1 Sonntag, wie die Seite öffnet', 'dark');
-  await design(page, info, 'M1 Sonntag, wie die Seite öffnet', 'light');
-  // (2) Monday picked: the maintainer's screenshot.
-  await dayPick(page, /^Mo/).click();
-  await expect(things(page, MONDAY)).not.toHaveCount(0);
-  await settledCount(things(page, MONDAY));
-  const monday = await design(page, info, 'M2 Sonntag, Montag gewählt', 'dark');
-  await design(page, info, 'M2 Sonntag, Montag gewählt', 'light');
+  const landingLight = await design(page, info, 'M1 Sonntag, wie die Seite öffnet', 'light');
   const board = await boardOf(page);
-  expect(monday.rows.all).toBeGreaterThan(0);
+  // The targets of R1 (HANDOFF §9), on the screen the page opens on, in both themes.
+  for (const m of [landing, landingLight]) {
+    expect(m.fonts.sizes.length, 'font sizes').toBeLessThanOrEqual(TARGET.fontSizes);
+    if (isMobile) {
+      expect(m.targets.small, 'targets under 44 px on the phone').toHaveLength(TARGET.smallTargets);
+      // Seven tiles fit the phone and the sheet's first things are on the first screen.
+      expect(m.rows.onScreen).toBeGreaterThanOrEqual(3);
+    } else {
+      expect(m.coverage.empty, 'empty share at 1920').toBeLessThanOrEqual(TARGET.emptyShare);
+      expect(m.rows.onScreen, 'thing rows in full at 1920').toBeGreaterThanOrEqual(
+        TARGET.rowsOnScreen,
+      );
+      expect(m.rows.begun, 'thing rows begun at 1920').toBeGreaterThanOrEqual(TARGET.rowsBegun);
+      expect(m.field?.y, 'field y at 1920').toBeLessThanOrEqual(TARGET.fieldY);
+      expect(m.field?.underWeek, 'field above the week').toBe(false);
+    }
+  }
+  // The field has the focus on arrival on the desktop, never on the phone.
+  const field = page.getByRole('textbox', { name: 'Eintragen oder sagen' });
+  expect(await field.evaluate((el) => el === document.activeElement)).toBe(!isMobile);
+  // (2) Today picked (Sunday, free): one calm line that says where the things are.
+  await dayPick(page, SUNDAY).click();
+  await expect(day(page, SUNDAY)).toContainText(
+    'Heute ist frei. Der nächste Tag mit Dingen ist Montag.',
+  );
+  const today = await design(page, info, 'M2 Sonntag, heute gewählt', 'dark');
+  await design(page, info, 'M2 Sonntag, heute gewählt', 'light');
+  expect(landing.rows.all).toBeGreaterThan(0);
+  expect(today.rows.all).toBe(0);
   facts(info, 'M', {
     head: [board.head, board.headDetail],
     week: board.week,
     thingsOnLanding: landing.rows.all,
-    thingsOnMonday: monday.rows.all,
-    rows: monday.rows,
-    overdue: monday.overdue,
-    smallTargets: monday.targets.small,
-    fonts: monday.fonts,
-    colours: monday.stimulus.colours,
-    field: monday.field,
-    headBox: monday.head,
+    thingsOnToday: today.rows.all,
+    rows: landing.rows,
+    overdue: landing.overdue,
+    smallTargets: landing.targets.small,
+    fonts: landing.fonts,
+    colours: landing.stimulus.colours,
+    field: landing.field,
+    headBox: landing.head,
+    coverage: landing.coverage,
   });
 });
 
@@ -1101,6 +1225,8 @@ test('N Designmaße: leere Seite', async ({ page }, info) => {
   await prepare(page, 'empty');
   await ready(page, '/planner');
   await expect(page.getByTestId('planner-empty')).toBeVisible();
+  // Nothing planned: no figure in the head (head rule 4), the sheet says the next step.
+  await expect(page.getByTestId('planner-head')).toHaveCount(0);
   await page.waitForTimeout(1000);
   const empty = await design(page, info, 'N Leer', 'dark');
   await design(page, info, 'N Leer', 'light');
