@@ -3048,8 +3048,47 @@ export const de = {
         /** The important part first: a line cut short on the phone still says the right thing. */
         context: (n: number, overdue: number) => {
           const count = n === 1 ? '1 Rechnung' : `${n} Rechnungen`;
-          return overdue > 0 ? `${overdue} überfällig · ${count}` : count;
+          return overdue > 0 ? `Frist vorbei: ${overdue} · ${count}` : count;
         },
+      },
+      batch: {
+        select: 'Auswählen',
+        selectAll: 'Alle auswählen',
+        paid: (n: number) =>
+          n === 1 ? '1 Rechnung als bezahlt markiert.' : `${n} Rechnungen als bezahlt markiert.`,
+      },
+      search: {
+        label: 'Rechnungen durchsuchen',
+        placeholder: 'Rechnungen suchen',
+        none: (q: string) => `Keine Rechnung passt zu „${q}“.`,
+        clear: 'Suche leeren',
+      },
+      overview: {
+        tab: 'Überblick',
+        figures: 'Rechnungen in Zahlen',
+        late: 'Frist vorbei',
+        lateNone: 'Alle Fristen laufen noch.',
+        lateShow: (n: number) =>
+          n === 1
+            ? 'Frist vorbei: 1 Rechnung, in der Liste zeigen'
+            : `Frist vorbei: ${n} Rechnungen, in der Liste zeigen`,
+        paidMonth: (month: string) => `Bezahlt im ${month}`,
+        count: (n: number) => (n === 1 ? '1 Rechnung' : `${n} Rechnungen`),
+        byPayee: 'Nach Empfänger',
+        byPayeeOpen: 'Offen nach Empfänger',
+        byPayeePaid: 'Bezahlt nach Empfänger, letzte 12 Monate',
+        show: 'Zeigen',
+        showOpen: 'Offen',
+        showPaid: 'Bezahlt, 12 Monate',
+        centreOpen: 'offen',
+        centrePaid: 'bezahlt',
+        emptyOpen: 'Gerade ist nichts offen.',
+        emptyPaid: 'In den letzten 12 Monaten noch nichts bezahlt.',
+        months: 'Bezahlt pro Monat',
+        skipped: (n: number, currency: string) =>
+          n === 1
+            ? `1 Rechnung in anderer Währung ist hier nicht dabei; alles in ${currency}.`
+            : `${n} Rechnungen in anderer Währung sind hier nicht dabei; alles in ${currency}.`,
       },
       detail: {
         label: 'Rechnung im Detail',
