@@ -187,7 +187,7 @@ test('„Übersicht“: donut by kind or subscription, the next 30 days; the lis
   await page.getByRole('button', { name: 'Abos', exact: true }).click();
   await page
     .getByRole('group', { name: 'Sortieren nach' })
-    .getByRole('button', { name: 'Kosten' })
+    .getByRole('button', { name: 'Pro Jahr' })
     .click();
   await expect(page).toHaveURL(/sort=cost/);
   await page.reload();

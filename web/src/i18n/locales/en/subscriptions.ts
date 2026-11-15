@@ -70,8 +70,8 @@ export const subscriptions: Strings['subscriptions'] = {
     },
     sort: {
       label: 'Sort by',
-      next: 'Date',
-      cost: 'Cost',
+      next: 'Due',
+      cost: 'Per year',
       name: 'Name',
     },
     perYearShort: (amount: string) => `${amount} a year`,
