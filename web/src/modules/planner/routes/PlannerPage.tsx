@@ -32,10 +32,12 @@ import {
   useSplitView,
 } from '@/ui';
 import { useHeroTargets } from '@/core/shell/heroContext';
+import { usePageAction } from '@/core/shell/pageAction';
 import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import { addFromField, applyOps, later, markDone } from '../actions';
 import type { BoardDay, BoardRow } from '../board';
 import { Capture } from '../components/Capture';
+import { CaptureDialog } from '../components/CaptureDialog';
 import { useAbilities, useRowMenu } from '../components/rowMenu';
 import { Part, ThingRow } from '../components/ThingRow';
 import { compact } from '../components/capacity';
@@ -100,6 +102,12 @@ export default function PlannerPage() {
   // `?start=1` (the welcome card's „Tage einteilen“, a tap of the user) opens the three-step sheet.
   const [settingUp, setSettingUp] = useState(() => params.get('start') === '1');
   const [menuOpen, setMenuOpen] = useState(false);
+  // The phone has no field in the page: the plus of the bottom bar („Ding“) opens it as a sheet. `?new=1` (quick
+  // add, a tap of the user) opens it too.
+  const [capturing, setCapturing] = useState(() => phone && params.get('new') === '1');
+  usePageAction({ short: t.planner.add.short, onClick: () => setCapturing(true) }, phone);
+  // The entry was not stored (the planner was switched off meanwhile): the field says so, the text is still there.
+  const [addError, setAddError] = useState(false);
   // The day the sheet shows once the user (or `?day=`, the calendar's plan chip) picked one.
   const [pickedDay, setPickedDay] = useState<string | undefined>(
     () => params.get('day') ?? undefined,
@@ -154,6 +162,16 @@ export default function PlannerPage() {
   useEffect(() => {
     void warmLocalStage();
     return () => readingRef.current?.abort();
+  }, []);
+
+  // Arrival on a desktop with a keyboard: the field has the focus, so typing is the first thing that works. Never
+  // on the phone or a touch screen (no keyboard sliding in), never over a sheet that opens with the page.
+  useEffect(() => {
+    const keyboard = window.matchMedia?.('(hover: hover) and (pointer: fine)').matches === true;
+    if (!keyboard || window.matchMedia(PHONE_QUERY).matches) return;
+    const query = new URLSearchParams(window.location.search);
+    if (query.get('check') || query.get('start')) return;
+    addRef.current?.querySelector('input')?.focus({ preventScroll: true });
   }, []);
 
   /** „Rest verteilen“: the ops of `moveAll(today, tomorrow)` as a preview; nothing moves before „Übernehmen“. */
@@ -213,6 +231,7 @@ export default function PlannerPage() {
   // `pickedDay` above); `?week=` (the calendar's „Plan“ entry) lands on the page as it is.
   useEffect(() => {
     if (params.get('new')) {
+      // Desktop: the field in the page; the phone's sheet focuses its own field when it opens.
       addRef.current?.querySelector('input')?.focus();
       setParams({}, { replace: true });
       return;
@@ -278,6 +297,7 @@ export default function PlannerPage() {
     e.preventDefault();
     const value = text.trim();
     if (!value || reading) return;
+    setAddError(false);
     setPending(undefined);
     setAsk(undefined);
     setSayLine(undefined);
@@ -355,7 +375,10 @@ export default function PlannerPage() {
     setText('');
     const ok = await addFromField(value, titles);
     // Nothing happened (the planner was switched off meanwhile): the text comes back.
-    if (!ok) setText((cur) => cur || value);
+    if (!ok) {
+      setText((cur) => cur || value);
+      setAddError(true);
+    }
     // The next entry follows right away; no scroll jump while the board below re-renders.
     addRef.current?.querySelector('input')?.focus({ preventScroll: true });
   }
@@ -607,6 +630,23 @@ export default function PlannerPage() {
     </div>
   );
 
+  // The one field: in the page on the desktop, in the plus's sheet on the phone.
+  const capture = (inDialog: boolean) => (
+    <Capture
+      value={text}
+      onChange={(value) => {
+        setText(value);
+        setAddError(false);
+      }}
+      onSubmit={add}
+      reading={reading}
+      error={addError}
+      focusOnOpen={inDialog}
+      labelHidden={inDialog}
+      formRef={addRef}
+    />
+  );
+
   // What the sheet says while its day holds nothing: the one empty state of a board without things, else a line.
   const firstFull = days ? firstDayWithRows(days) : undefined;
   const emptySheet = boardEmpty ? (
@@ -665,14 +705,8 @@ export default function PlannerPage() {
         <div className={styles.main}>
           {/* Reading order = DOM order: field → band → sheet → context. The field is there from the first paint
               and never moves under the typing hand (U01). */}
-          <Capture
-            value={text}
-            onChange={setText}
-            onSubmit={add}
-            reading={reading}
-            formRef={addRef}
-          />
-          {answer}
+          {phone ? null : capture(false)}
+          {phone && capturing ? null : answer}
 
           {showWeekLink ? (
             <p className={styles.weekLink} data-testid="week-check-link">
@@ -726,6 +760,12 @@ export default function PlannerPage() {
         </div>
       </SplitView>
 
+      {phone ? (
+        <CaptureDialog open={capturing} onClose={() => setCapturing(false)}>
+          {capture(true)}
+          {answer}
+        </CaptureDialog>
+      ) : null}
       <RowChoice choice={choice} titles={titles} onClose={() => setChoice(undefined)} />
       <DaySheet
         day={board?.days.find((d) => d.date === sheetDate)}

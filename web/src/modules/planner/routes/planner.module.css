@@ -27,6 +27,12 @@
   flex: 1;
   min-width: 0;
 }
+/* Nothing was stored: said under the row, in words and in the danger ink (an error, the one place for it here). */
+.addError {
+  margin: var(--space-1) 0 0;
+  color: var(--danger);
+  font-size: var(--text-meta);
+}
 /* „Zum Beispiel“ and three chips under the field: they fill the field, they never submit. */
 .examples {
   display: flex;
