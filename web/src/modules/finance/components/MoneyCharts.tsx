@@ -19,6 +19,12 @@ import styles from '../routes/finance.module.css';
 const dayFormat = (dayOnly: boolean) =>
   dateTimeFormat(dayOnly ? { day: 'numeric' } : { day: 'numeric', month: 'numeric' });
 
+/**
+ * "Feb." for a month, with the year only where it starts or turns ("Okt. 2025", "Jan. 2026"): "Feb. 26" read as a day.
+ */
+export const monthLabel = (month: string, index: number): string =>
+  formatDay(`${month}-01`, index === 0 || month.endsWith('-01') ? 'MMM yyyy' : 'MMM');
+
 function useMoney() {
   const currency = useCurrency();
   return (minor: number) => formatMoney(minor, currency);
@@ -199,7 +205,7 @@ export function NetWorthChart({ points, title }: { points: readonly WorthPoint[]
       <h2 className={styles.chartTitle}>{title}</h2>
       <Trend
         title={title}
-        labels={points.map((p) => formatDay(`${p.month}-01`, 'MMM yy'))}
+        labels={points.map((p, i) => monthLabel(p.month, i))}
         series={[
           {
             id: 'worth',

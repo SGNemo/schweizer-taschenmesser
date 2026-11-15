@@ -3362,7 +3362,7 @@ export const de = {
       month: {
         title: 'Diesen Monat',
         free: 'Frei bis Monatsende',
-        coming: (amount: string) => `Kommt noch ${amount}`,
+        coming: (amount: string) => `Noch fällig ${amount}`,
         nothingComing: 'Nichts mehr fällig',
         spent: (amount: string) => `Ausgegeben ${amount}`,
         spentNone: 'Noch nichts ausgegeben',

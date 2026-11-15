@@ -8,6 +8,7 @@ import {
   CategoryDonut,
   DayBalanceChart,
   IncomeExpenseChart,
+  monthLabel,
   NetWorthChart,
 } from '../components/MoneyCharts';
 import type { CategoryTotal, MonthPoint } from '../logic';
@@ -94,5 +95,14 @@ describe('finance charts on the shared blocks (polish p2)', () => {
     const chart = await screen.findByTestId('net-worth-chart');
     await waitFor(() => expect(plain(chart.textContent)).not.toMatch(/\d,\d\d/));
     expect(plain(screen.getByTestId('net-worth-chart-change').textContent)).not.toMatch(/\d,\d\d/);
+  });
+
+  it('month labels name the year only where it starts or turns ("Feb. 26" read as a day)', () => {
+    expect(['2025-11', '2025-12', '2026-01', '2026-02'].map(monthLabel)).toEqual([
+      'Nov. 2025',
+      'Dez.',
+      'Jan. 2026',
+      'Feb.',
+    ]);
   });
 });

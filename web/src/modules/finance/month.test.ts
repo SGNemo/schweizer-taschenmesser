@@ -46,7 +46,7 @@ describe('monthContext (polish p1: the widget line of "Diesen Monat")', () => {
         money,
         t.finance.ext.month,
       ),
-    ).toBe('Kommt noch 97.49 € · Ausgegeben 120.00 €');
+    ).toBe('Noch fällig 97.49 € · Ausgegeben 120.00 €');
   });
   it('says "nothing spent yet" in words instead of a zero amount', () => {
     expect(

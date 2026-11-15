@@ -72,9 +72,20 @@ export function YearView({ data, year }: { data: FinanceData; year: number }) {
             {sum.months.map((m) => (
               <tr key={m.month}>
                 <th scope="row">{formatDay(`${m.month}-01`, 'LLLL')}</th>
-                <td className={styles.num}>{money(m.income)}</td>
-                <td className={styles.num}>{money(m.expense)}</td>
-                <td className={styles.num}>{money(m.net)}</td>
+                {m.month > monthOf(today()) ? (
+                  // A month still to come has no figures yet: a quiet dash, not three times 0,00 €.
+                  <>
+                    <td className={`${styles.num} ${styles.muted}`}>–</td>
+                    <td className={`${styles.num} ${styles.muted}`}>–</td>
+                    <td className={`${styles.num} ${styles.muted}`}>–</td>
+                  </>
+                ) : (
+                  <>
+                    <td className={styles.num}>{money(m.income)}</td>
+                    <td className={styles.num}>{money(m.expense)}</td>
+                    <td className={styles.num}>{money(m.net)}</td>
+                  </>
+                )}
               </tr>
             ))}
           </tbody>
