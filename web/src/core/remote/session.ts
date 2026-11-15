@@ -610,6 +610,7 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
   };
   /** Read through a call: an `await` in between may have changed it. */
   const levelNow = (): 'media' | 'full' => level;
+  const viewNow = (): RemoteView => view;
   const padUsable = () =>
     session !== undefined && level === 'full' && pad.kind === 'ready' && view.kind === 'connected';
 
@@ -747,10 +748,12 @@ export function createRemoteSession(deps: RemoteSessionDeps): RemoteSession {
         }
         if (action !== 'cancel') return back();
         // "Abbrechen" must arrive: once more on a new session (it needs no prompt), then say so
-        if (view.kind === 'disconnected' || view.kind === 'idle') {
+        // (read through a call: `set` changed it since the check above)
+        const before = viewNow().kind;
+        if (before === 'disconnected' || before === 'idle') {
           await open();
           const next = session;
-          if (view.kind === 'connected' && next !== undefined && powerView.info !== null) {
+          if (viewNow().kind === 'connected' && next !== undefined && powerView.info !== null) {
             try {
               await deps.remote.power(next, 'cancel', false, lang);
               return;
