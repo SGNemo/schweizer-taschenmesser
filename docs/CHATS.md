@@ -31,6 +31,7 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 10. Designkontrolle 0b-1 bis 0b-3 (#750): vier Fragen im Bericht ([DESIGN-CHECK](design/ui-audit-2026-11/DESIGN-CHECK-0b-1-3.md)) und welche „sofort“-Befunde als Fix-PRs kommen (alle neun Themen; zuerst G1, Rechnungen bei 1280 px).
 11. #759 (0b-6a Wissen + Bibliothek): vier Ratschen-Treffer freigeben. (ja; die drei Fragen sind beantwortet, siehe Entscheidung; danach Fix-PR „Chat-Plus ohne KI gesperrt“ und 0b-6b)
 12. Wochenende retten: die offenen Paket-PRs (5a, 6, 4b, 7, Kontrolle 1–3) prüfen und mergen; danach 5b, zuletzt Paket 8 – Prompts in [usecases/wochenende/PACKAGES.md](design/usecases/wochenende/PACKAGES.md).
+13. Planer-Zentrale ([planner-hub](design/planner-hub/PACKAGES.md)): läuft ohne Stopp durch; ansehen: Richtung A und die zwei zurückgenommenen Entscheidungen D2/D3 (Mockups im PR-Text von #922), Reiz-Budget der Planer-Ansichten für R1. (so lassen)
 
 **Handgriffe:**
 

@@ -1,3 +1,4 @@
+import { randomId } from '@/core/db/util';
 import { createCollectionRepo, type Repo } from '@/core/db/repo';
 import type { TaschenmesserDB } from '@/core/db/db';
 import { loadModuleStates, type ModuleStates } from '@/core/modules/activation';
@@ -350,8 +351,16 @@ export async function saveCaptures(
   if (items.length === 0) throw new CaptureError('invalid');
   const saved: SavedCapture[] = [];
   const batch: SaveOptions = { ...opts, confirmed: false };
+  // Ids in line order for the batch's new ToDos (C4, as `applyDaySetup` does): saved in the same millisecond
+  // they tie on their age, and the planner breaks the tie by id – sorted, the plan keeps the typed order.
+  const ordered = items.map(() => randomId()).sort();
+  const withIds = items.map((item, i) =>
+    !item.id && !item.amend && (item.type === 'todo' || item.type === 'plan')
+      ? { ...item, id: ordered[i] }
+      : item,
+  );
   try {
-    for (const item of items) saved.push(await saveItem(item, batch));
+    for (const item of withIds) saved.push(await saveItem(item, batch));
   } catch (e) {
     // One after another, newest first: two entries on the same row (two breaks of one day) never race.
     for (const s of [...saved].reverse()) await s.undo().catch(() => undefined);
