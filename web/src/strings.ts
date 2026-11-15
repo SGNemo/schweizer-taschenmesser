@@ -7573,6 +7573,14 @@ export const de = {
       saved: 'Anhang gespeichert.',
       downloadLabel: 'Herunterladen',
       downloadFailed: 'Der Anhang konnte nicht geladen werden.',
+      previewLabel: 'Ansehen',
+      preview: (name: string) => `${name} ansehen`,
+      previewFailed: 'Das Bild konnte nicht geladen werden.',
+      unsubscribe: 'Newsletter abbestellen …',
+      unsubscribeTitle: 'Newsletter abbestellen?',
+      unsubscribeBody: (host: string) =>
+        `Das öffnet die Abmeldeseite von ${host} im Browser. Nemo schickt dabei nichts; abbestellen tust du auf der Seite selbst.`,
+      unsubscribeOpen: 'Seite öffnen',
       blockedImages: (n: number) =>
         n === 1 ? '1 externes Bild blockiert' : `${n} externe Bilder blockiert`,
       loadImages: 'Bilder laden',
@@ -7703,7 +7711,20 @@ export const de = {
         attach: 'Anhang hinzufügen',
         attachments: 'Anhänge',
         attachNote:
-          'Anhänge einer Mail werden beim Weiterleiten nicht mitgeschickt; füge sie hier selbst hinzu.',
+          'Gesendet wird genau, was hier steht – beim Weiterleiten auch die Anhänge der Mail.',
+        forwardLoading: 'Anhänge der Mail werden geladen …',
+        forwardSkipped: (names: string) =>
+          `Nicht mitgeschickt (zu groß oder nicht ladbar): ${names}. Du kannst sie selbst anhängen.`,
+        snippets: 'Textbausteine',
+        snippetsHint: 'Deine Bausteine bleiben auf diesem Gerät.',
+        snippetsEmpty: 'Noch keine Textbausteine. Schreib einen Text und merke ihn dir hier.',
+        snippetsFull:
+          'Es sind schon zwanzig Textbausteine gemerkt. Entferne einen, um diesen zu merken.',
+        snippetInsert: (name: string) => `„${name}“ einfügen`,
+        snippetRemove: (name: string) => `Textbaustein „${name}“ entfernen`,
+        snippetInsertLabel: 'Einfügen',
+        snippetSave: 'Diesen Text als Baustein merken',
+        snippetSaved: 'Als Textbaustein gemerkt.',
         removeAttachment: (name: string) => `Anhang ${name} entfernen`,
         fileTooLarge: (names: string) => `Zu groß für einen Anhang (höchstens 15 MB): ${names}`,
         invalidAddress: (list: string) => `Das ist keine E-Mail-Adresse: ${list}`,

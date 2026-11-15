@@ -4,6 +4,7 @@ import { ConnectorError } from '@/core/connectors/types';
 import { mailAttachment, mailThread, mailWebUrl } from '@/core/mail/service';
 import type { MailLinkType } from '@/core/mail/prefill';
 import type {
+  MailAttachment,
   MailAccountRef,
   MailErrorCode,
   MailLabel,
@@ -13,7 +14,8 @@ import type {
 import { getPlatform } from '@/core/platform';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Button, Icon, Skeleton } from '@/ui';
+import { Button, Dialog, Icon, Skeleton } from '@/ui';
+import { MAX_MAIL_BYTES } from '@/core/mail/compose';
 import { DEMO_ACCOUNT, loadThreadBodies, saveBody } from '../cache';
 import { fullWhen, personName, subjectOf } from '../format';
 import { formatAddress } from '@/core/mail/address';
@@ -50,7 +52,18 @@ const size = (n: number) =>
 function Attachments({ account, message }: { account: MailAccountRef; message: MailMessage }) {
   const toast = useUiStore((st) => st.toast);
   const [busy, setBusy] = useState<string | undefined>();
+  const [preview, setPreview] = useState<{ name: string; src: string } | undefined>();
   if (message.attachments.length === 0) return null;
+  async function view(id: string, name: string, mime: string) {
+    setBusy(id);
+    try {
+      setPreview({ name, src: dataUrl(await mailAttachment(account, message.id, id), mime) });
+    } catch {
+      toast(t.mail.view.previewFailed);
+    } finally {
+      setBusy(undefined);
+    }
+  }
   async function download(id: string, fileName: string, mime: string) {
     setBusy(id);
     try {
@@ -72,6 +85,16 @@ function Attachments({ account, message }: { account: MailAccountRef; message: M
             <span>
               {a.filename} <span className={styles.meta}>({size(a.size)})</span>
             </span>
+            {canPreview(a) ? (
+              <Button
+                variant="ghost"
+                disabled={busy !== undefined}
+                aria-label={t.mail.view.preview(a.filename)}
+                onClick={() => void view(a.id, a.filename, a.mime)}
+              >
+                {t.mail.view.previewLabel}
+              </Button>
+            ) : null}
             <Button
               disabled={busy !== undefined}
               aria-label={t.mail.view.download(a.filename)}
@@ -82,7 +105,89 @@ function Attachments({ account, message }: { account: MailAccountRef; message: M
           </li>
         ))}
       </ul>
+      <Dialog
+        open={preview !== undefined}
+        onClose={() => setPreview(undefined)}
+        title={preview?.name ?? ''}
+        size="roomy"
+      >
+        {preview ? <img className={styles.preview} src={preview.src} alt={preview.name} /> : null}
+      </Dialog>
     </section>
+  );
+}
+
+/**
+ * Images the app can show itself (a data URL inside the app's own CSP, never in the mail frame). SVG stays
+ * out: it can carry script and links; PDF cannot be framed (the app allows no frames), it is saved instead.
+ */
+const PREVIEW_MIMES = new Set(['image/png', 'image/jpeg', 'image/gif', 'image/webp']);
+const PREVIEW_MAX = 8 * 1_048_576;
+const canPreview = (a: MailAttachment) => PREVIEW_MIMES.has(a.mime) && a.size <= PREVIEW_MAX;
+
+/**
+ * Forward with the original attachments: they are fetched and put into the compose window, where each one
+ * is listed and can be removed before the review step (nothing travels unseen). What is too large for one
+ * mail or cannot be fetched stays out, and the toast names it.
+ */
+async function forwardWithAttachments(
+  message: MailMessage,
+  account: MailAccountRef,
+): Promise<[ComposeState, string]> {
+  const [state, title] = composeOf('forward', message, account);
+  const skipped: string[] = [];
+  let total = state.text.length;
+  for (const a of message.attachments) {
+    if (total + a.size > MAX_MAIL_BYTES) {
+      skipped.push(a.filename);
+      continue;
+    }
+    try {
+      const data = await mailAttachment(account, message.id, a.id);
+      total += data.length;
+      state.attachments.push({ filename: a.filename, mime: a.mime, data });
+    } catch {
+      skipped.push(a.filename);
+    }
+  }
+  if (skipped.length)
+    useUiStore.getState().toast(t.mail.write.compose.forwardSkipped(skipped.join(', ')));
+  return [state, title];
+}
+
+/**
+ * „Newsletter abbestellen …“: only for an https unsubscribe page, and only after a confirmation that names
+ * the site; Nemo opens the page in the browser and sends nothing itself.
+ */
+function Unsubscribe({ url }: { url: string }) {
+  const [asking, setAsking] = useState(false);
+  const host = new URL(url).hostname;
+  return (
+    <>
+      <Button variant="ghost" onClick={() => setAsking(true)}>
+        {t.mail.view.unsubscribe}
+      </Button>
+      <Dialog
+        open={asking}
+        onClose={() => setAsking(false)}
+        title={t.mail.view.unsubscribeTitle}
+        footer={<Button onClick={() => setAsking(false)}>{t.actions.cancel}</Button>}
+      >
+        <div className={styles.panel}>
+          <p>{t.mail.view.unsubscribeBody(host)}</p>
+          <Button
+            variant="primary"
+            data-autofocus
+            onClick={() => {
+              setAsking(false);
+              void getPlatform().app.openUrl(url);
+            }}
+          >
+            {t.mail.view.unsubscribeOpen}
+          </Button>
+        </div>
+      </Dialog>
+    </>
   );
 }
 
@@ -171,6 +276,18 @@ function MessageCard({
   }
 
   const [cid, setCid] = useState<Record<string, string>>({});
+  const [forwarding, setForwarding] = useState(false);
+  async function forward() {
+    if (message.attachments.length === 0)
+      return onCompose(...composeOf('forward', message, account));
+    setForwarding(true);
+    useUiStore.getState().toast(t.mail.write.compose.forwardLoading);
+    try {
+      onCompose(...(await forwardWithAttachments(message, account)));
+    } finally {
+      setForwarding(false);
+    }
+  }
   const [linkType, setLinkType] = useState<MailLinkType | undefined>(startLink);
 
   useEffect(() => {
@@ -248,7 +365,7 @@ function MessageCard({
                       {t.mail.write.replyAll}
                     </Button>
                   ) : null}
-                  <Button onClick={() => onCompose(...composeOf('forward', message, account))}>
+                  <Button disabled={forwarding} onClick={() => void forward()}>
                     {t.mail.write.forward}
                   </Button>
                 </>
@@ -341,6 +458,7 @@ export function ThreadView({
   const subject = messages?.[0] ? subjectOf(messages[0].subject) : '';
   // r/a/f answer the newest message that is not a draft, like its buttons.
   const newest = messages?.filter((m) => !m.labelIds.includes('DRAFT')).at(-1);
+  const newestAny = messages?.at(-1);
   const canCompose = hasFeature(account, 'mail-send') || hasFeature(account, 'mail-modify');
   useMailKeys(shortcuts && canCompose && !!newest, {
     reply: () => newest && onCompose(...composeOf('reply', newest, account)),
@@ -348,7 +466,9 @@ export function ThreadView({
       newest &&
       newest.to.length + newest.cc.length > 1 &&
       onCompose(...composeOf('replyAll', newest, account)),
-    forward: () => newest && onCompose(...composeOf('forward', newest, account)),
+    forward: () => {
+      if (newest) void forwardWithAttachments(newest, account).then((r) => onCompose(...r));
+    },
   });
   const loaded = [...new Set(messages?.flatMap((m) => m.labelIds) ?? [])];
   const labelIds = labelsNow ?? loaded;
@@ -369,6 +489,7 @@ export function ThreadView({
         <Button onClick={onBack}>
           <Icon name="chevronLeft" /> {t.mail.view.back}
         </Button>
+        {newestAny?.unsubscribeUrl ? <Unsubscribe url={newestAny.unsubscribeUrl} /> : null}
         {web && account.key !== DEMO_ACCOUNT ? (
           <Button onClick={() => void getPlatform().app.openUrl(web)}>
             {t.mail.view.openInGmail}

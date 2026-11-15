@@ -411,3 +411,20 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* An attachment shown in the app: never wider or taller than the dialog. */
+.preview {
+  display: block;
+  max-width: 100%;
+  max-height: 70vh;
+  margin: 0 auto;
+  object-fit: contain;
+}
+
+/* Text snippets in the compose window: folded by default, its rows like the attachment rows. */
+.snippets > summary {
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}

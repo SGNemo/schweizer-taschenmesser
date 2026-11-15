@@ -5,10 +5,11 @@ import { hasFeature, mailSaveDraft } from '@/core/mail/service';
 import type { MailAccountRef } from '@/core/mail/types';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
-import { Button, Dialog, TextArea, TextField } from '@/ui';
+import { Button, Dialog, Icon, IconButton, TextArea, TextField } from '@/ui';
 import { toDraft, toOutgoing, type ComposeProblem, type ComposeState } from '../composeState';
 import { pickAttachments } from '../pickAttachments';
 import { queueSend } from '../pendingSend';
+import { addSnippet, insertSnippet, readSnippets, removeSnippet, SNIPPETS_MAX } from '../snippets';
 import { MailError } from './MailError';
 import styles from './mail.module.css';
 
@@ -46,6 +47,7 @@ export function ComposeDialog({
   const [problem, setProblem] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
   const [draftError, setDraftError] = useState(false);
+  const [snippets, setSnippets] = useState(readSnippets);
   const set = (patch: Partial<ComposeState>) => setS((old) => ({ ...old, ...patch }));
   const dirty = s.to + s.cc + s.subject + s.text !== '' || s.attachments.length > 0;
 
@@ -159,6 +161,48 @@ export function ComposeDialog({
             onChange={(e) => set({ text: e.target.value })}
             data-autofocus={!!s.to}
           />
+          {/* Folded: a quiet way to the user's own texts; nothing is inserted by itself. */}
+          <details className={styles.snippets}>
+            <summary>{t.mail.write.compose.snippets}</summary>
+            {snippets.length === 0 ? (
+              <p className={styles.hint}>{t.mail.write.compose.snippetsEmpty}</p>
+            ) : (
+              <ul className={styles.attachments}>
+                {snippets.map((sn, i) => (
+                  <li key={`${sn.name}-${i}`} className={styles.attachment}>
+                    <span className={styles.savedText}>{sn.name}</span>
+                    <span className={styles.row}>
+                      <Button
+                        aria-label={t.mail.write.compose.snippetInsert(sn.name)}
+                        onClick={() => set({ text: insertSnippet(s.text, sn) })}
+                      >
+                        {t.mail.write.compose.snippetInsertLabel}
+                      </Button>
+                      <IconButton
+                        label={t.mail.write.compose.snippetRemove(sn.name)}
+                        onClick={() => setSnippets(removeSnippet(i))}
+                      >
+                        <Icon name="close" size={16} />
+                      </IconButton>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <Button
+              variant="ghost"
+              disabled={s.text.trim() === ''}
+              onClick={() => {
+                if (snippets.length >= SNIPPETS_MAX)
+                  return toast(t.mail.write.compose.snippetsFull);
+                setSnippets(addSnippet(s.text));
+                toast(t.mail.write.compose.snippetSaved);
+              }}
+            >
+              {t.mail.write.compose.snippetSave}
+            </Button>
+            <p className={styles.hint}>{t.mail.write.compose.snippetsHint}</p>
+          </details>
           <div>
             {s.attachments.length > 0 ? (
               <ul className={styles.attachments}>
