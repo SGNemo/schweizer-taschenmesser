@@ -21,12 +21,26 @@ Places whose time is always in view: tiles on the overview, a list page, offline
 2. **Unknown zone from the AI ("JST") is refused, not corrected.** Defaults never replace a given field (`core/ai/write/prepare.ts`). Recommendation: keep it (clean refusal, no wrong data); listed in 01 as "not in this package".
 3. **Hand tests** (Windows/Android): [MANUAL-TESTS](../MANUAL-TESTS.md) "Uhr (Paket 1)".
 
+## Package 2 (`feat/clock-alarm`)
+
+Decided by Sven: 1a 2a 3a 4a ([decisions/modules-zeit.md](../decisions/modules-zeit.md), 2026-11-15).
+
+| Part                                                                                                                                                                     | Where                                                                     |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| Row ⋯ → „Erinnern um …“: text, date and time of the place, live preview „Bei dir: Fr., 16. Jan. 11:00“, past times refused                                               | `components/RemindDialog.tsx`                                             |
+| Conversion per date (`zonedInstant`), so a DST switch at one place only moves the local time; start = next full hour there                                               | `logic.ts` (`remindAt`, `nextFullHour`), `__tests__/clock.remind.test.ts` |
+| One calendar reminder through the quick-capture target `reminder`, title „Mama anrufen (19:00 in Tokio)“, undo in the toast; calendar off → a line with the library link | `saveCapture` (`quickCapture/targets`)                                    |
+| Notifications not allowed → the calendar's calm line with the settings link; no new kind of notification                                                                 | `RemindDialog.tsx`                                                        |
+| Head ⋯ → „Timer“ opens the Timer tool (only while it is on)                                                                                                              | `routes/ClockPage.tsx`                                                    |
+
+Not in it: repeating reminders in the place's zone (needs a zone field on calendar entries), own alarm engine, tones, snooze loops.
+
 ## Next packages (each its own branch, decision first)
 
-| #   | Package            | Core question                                                                   | Recommendation (for the decision chat)                                                                                                                   |
-| --- | ------------------ | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2   | Wecker & Timer     | own alarm system in Uhr, or the existing calendar reminders and the Timer tool? | no own alarm engine: "Erinnerung um 9:00 Tokio-Zeit" creates a calendar reminder (converted to local time); the Timer stays a tool, linked from the page |
-| 3   | Besprechungsplaner | hour matrix over the places, pick a slot, hand it to the calendar               | a view on the Uhr page (`?view=plan`), working hours per place as a field, hand-over by URL parameters of the calendar                                   |
-| 4   | Wetter je Ort      | network for a module that is offline today                                      | global switch, off by default; coordinates from the city table (no geocoding); page rows only, not the widget                                            |
+| #   | Package               | Core question                                                                   | Recommendation (for the decision chat)                                                                                                                   |
+| --- | --------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2   | Wecker & Timer (done) | own alarm system in Uhr, or the existing calendar reminders and the Timer tool? | no own alarm engine: "Erinnerung um 9:00 Tokio-Zeit" creates a calendar reminder (converted to local time); the Timer stays a tool, linked from the page |
+| 3   | Besprechungsplaner    | hour matrix over the places, pick a slot, hand it to the calendar               | a view on the Uhr page (`?view=plan`), working hours per place as a field, hand-over by URL parameters of the calendar                                   |
+| 4   | Wetter je Ort         | network for a module that is offline today                                      | global switch, off by default; coordinates from the city table (no geocoding); page rows only, not the widget                                            |
 
 Not planned (no package): Android home-screen widget, own sync paths, seconds, world map.
