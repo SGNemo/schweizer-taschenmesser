@@ -185,6 +185,7 @@ export function BudgetCharts({
       ) : null}
       <Card title={c.bars}>
         <Bars
+          className={styles.calmBars}
           title={c.bars}
           data={own.map((r) => ({
             id: r.budget.id,
@@ -210,6 +211,7 @@ export function ExampleBars() {
   return (
     <div className={styles.example} data-testid="budgets-example">
       <Bars
+        className={styles.calmBars}
         title={e.title}
         showTitle
         data={[

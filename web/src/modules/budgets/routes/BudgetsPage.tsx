@@ -264,12 +264,15 @@ export default function BudgetsPage() {
                         </button>
                         <span>{s.pct} %</span>
                       </div>
-                      <Progress
-                        value={s.spent}
-                        max={s.limit}
-                        label={categoryName(b.categoryId)}
-                        over={s.tone === 'over'}
-                      />
+                      {/* With the charts on, the bars above show this limit's fill: no second bar on the card. */}
+                      {prefs?.showCharts && cur === mainCurrency ? null : (
+                        <Progress
+                          value={s.spent}
+                          max={s.limit}
+                          label={categoryName(b.categoryId)}
+                          over={s.tone === 'over'}
+                        />
+                      )}
                       {periodText || carryText || rateText ? (
                         <p className={styles.note} data-testid="budget-card-note">
                           {[periodText, carryText, rateText].filter(Boolean).join(' · ')}

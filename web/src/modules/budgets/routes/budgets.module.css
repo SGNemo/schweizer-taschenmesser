@@ -127,3 +127,9 @@
     grid-template-columns: minmax(18rem, 1fr) 2fr;
   }
 }
+
+/* Spent against limit in the calm grey of the chart blocks' own calm mode: red stays for the part over a limit
+   only (Sven: "rot nur bei überschritten, sonst ruhige Töne"). The block reads its series colour from `--viz-1`. */
+.calmBars {
+  --viz-1: var(--calm-ink);
+}
