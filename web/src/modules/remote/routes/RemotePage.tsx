@@ -54,10 +54,8 @@ export default function RemotePage() {
   // Präsentation exists only while the PC said it takes those keys
   const tab: RemoteTab = chosen === 'present' && !present ? 'media' : chosen;
   // a PC without presentation sends the page back to Medien for good: a later answer with the
-  // feature must not switch the tab by itself
-  useEffect(() => {
-    if (chosen === 'present' && !present) setTab('media');
-  }, [chosen, present]);
+  // feature must not switch the tab by itself (adjusted while rendering, not in an effect)
+  if (chosen === 'present' && !present) setTab('media');
   /** The legend was asked for again from the menu (the stored "seen" stays). */
   const [legendAgain, setLegendAgain] = useState(false);
   const r = t.remote;
