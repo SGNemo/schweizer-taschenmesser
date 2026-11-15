@@ -101,16 +101,63 @@ test('Packliste: pack, reset, copy as template, checklist and delete', async ({ 
   await (await openPageMenu(page)).getByRole('menuitem', { name: 'Alles zurücksetzen' }).click();
   await expect(page.getByTestId('lists-progress')).toContainText('0 von 2 gepackt');
 
-  // Delete the copy through the editor; the shopping list cannot be deleted.
+  // Delete the copy through the editor; since round 2026-11 the shopping list can be deleted too (with undo).
   await page.getByRole('button', { name: 'Kopie von Urlaub' }).click();
   await (await openPageMenu(page)).getByRole('menuitem', { name: 'Liste bearbeiten' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Liste löschen' }).click();
   await expect(page.getByRole('button', { name: 'Kopie von Urlaub' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Einkauf', exact: true }).click();
   await (await openPageMenu(page)).getByRole('menuitem', { name: 'Liste bearbeiten' }).click();
-  await expect(page.getByRole('dialog').getByRole('button', { name: 'Liste löschen' })).toHaveCount(
-    0,
+  await page.getByRole('dialog').getByRole('button', { name: 'Liste löschen' }).click();
+  await expect(page.getByRole('button', { name: 'Einkauf', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Rückgängig' }).click();
+  await expect(page.getByRole('button', { name: 'Einkauf', exact: true })).toBeVisible();
+});
+
+test('Listen verwalten: icon and colour, order, archive and bring back', async ({ page }) => {
+  await enable(page, 'lists');
+  await open(page, '/lists');
+  await page.getByRole('button', { name: /Neue Liste|Liste eintragen/ }).click();
+  const dialog = page.getByRole('dialog', { name: 'Neue Liste' });
+  await dialog.getByLabel('Name der Liste').fill('Geschenke');
+  await dialog.getByRole('button', { name: 'Geschenk', exact: true }).click();
+  await expect(dialog.getByRole('button', { name: 'Geschenk', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
   );
+  await dialog.getByRole('button', { name: 'Farbe 3' }).click();
+  await save(page);
+  const tabs = page.getByRole('navigation', { name: 'Deine Listen' }).getByRole('button');
+  await expect(tabs).toHaveText(['Einkauf', 'Geschenke']);
+
+  // Move "Geschenke" in front of the shopping list.
+  await (await openPageMenu(page)).getByRole('menuitem', { name: 'Listen verwalten' }).click();
+  const manage = page.getByRole('dialog', { name: 'Listen verwalten' });
+  await expect(manage.getByText('Bekommt neue Einkäufe')).toBeVisible();
+  await manage.getByRole('button', { name: 'Geschenke nach oben' }).click();
+  await expect(manage.getByTestId('lists-manage').getByRole('listitem').first()).toContainText(
+    'Geschenke',
+  );
+  await manage.getByRole('button', { name: 'Schließen' }).click();
+  await expect(tabs).toHaveText(['Geschenke', 'Einkauf']);
+
+  // Archive: out of the tab row, back through "Listen verwalten".
+  await page.getByRole('button', { name: 'Geschenke', exact: true }).click();
+  await (await openPageMenu(page)).getByRole('menuitem', { name: 'Liste bearbeiten' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Liste archivieren' }).click();
+  await expect(tabs).toHaveText(['Einkauf']);
+  await backSettled(page);
+  await (await openPageMenu(page)).getByRole('menuitem', { name: 'Listen verwalten' }).click();
+  const archived = page.getByTestId('lists-archived');
+  await expect(archived).toContainText('Geschenke');
+  await archived.getByRole('button', { name: 'Geschenke bearbeiten' }).click();
+  await page.getByRole('menuitem', { name: 'Zurückholen' }).click();
+  await expect(page.getByTestId('lists-archived')).toHaveCount(0);
+  await page
+    .getByRole('dialog', { name: 'Listen verwalten' })
+    .getByRole('button', { name: 'Schließen' })
+    .click();
+  await expect(tabs).toHaveText(['Einkauf', 'Geschenke']);
 });
 
 test('Lesezeichen: links as tiles, grouped by the first tag', async ({ page }) => {

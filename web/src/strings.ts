@@ -5440,6 +5440,47 @@ export const de = {
     buyMissing: (n: number) => `Noch kaufen (${n})`,
     buyMissingDone: (n: number) => `${n} auf die Einkaufsliste gesetzt.`,
     tripIn: (d: number) => `In ${d} Tagen`,
+    // Package „Listen verwalten“ (round 2026-11): icon, colour, order, archive.
+    listIcon: 'Symbol',
+    listColour: 'Farbe',
+    noColour: 'Ohne Farbe',
+    colourN: (n: number) => `Farbe ${n}`,
+    iconNames: {
+      cart: 'Einkaufswagen',
+      luggage: 'Koffer',
+      checklist: 'Checkliste',
+      home: 'Haus',
+      gift: 'Geschenk',
+      star: 'Stern',
+      heart: 'Herz',
+      package: 'Paket',
+      calendar: 'Kalender',
+      car: 'Auto',
+      sun: 'Sonne',
+      wrench: 'Werkzeug',
+    } as Record<string, string>,
+    manage: 'Listen verwalten',
+    manageHint:
+      'Reihenfolge der Reiter, Archiv und Löschen. Was Vorräte, Schnellerfassung und Assistent einkaufen wollen, landet auf der ersten Einkaufsliste.',
+    shoppingTarget: 'Bekommt neue Einkäufe',
+    itemCount: (n: number) => (n === 1 ? '1 Eintrag' : `${n} Einträge`),
+    moveUp: (name: string) => `${name} nach oben`,
+    moveDown: (name: string) => `${name} nach unten`,
+    archive: 'Archivieren',
+    unarchive: 'Zurückholen',
+    archiveList: 'Liste archivieren',
+    archivedTitle: 'Archiv',
+    archivedBadge: 'Archiviert',
+    archivedNote: 'Diese Liste ist archiviert und steht nicht bei den Reitern.',
+    archivedDone: (name: string) => `„${name}“ archiviert.`,
+    unarchivedDone: (name: string) => `„${name}“ ist zurück.`,
+    archiveHint:
+      'Archivierte Listen behalten ihre Einträge und kommen unter „Listen verwalten“ zurück.',
+    deleteHint: (trash: string) =>
+      `Löschen kannst du rückgängig machen. Danach liegt die Liste mit ihren Einträgen unter „${trash}“.`,
+    editListNamed: (name: string) => `${name} bearbeiten`,
+    noListInUse:
+      'Keine Liste in Gebrauch. Leg eine neue an oder hol eine aus dem Archiv zurück („⋯“ → „Listen verwalten“).',
   },
 
   vault: {

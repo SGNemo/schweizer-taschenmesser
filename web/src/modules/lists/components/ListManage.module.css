@@ -1,0 +1,66 @@
+/* Icon and colour pickers of the list editor, rows of "Listen verwalten". */
+.field {
+  display: grid;
+  gap: var(--space-2);
+}
+.legend {
+  font-size: var(--text-label);
+  font-weight: var(--weight-semibold);
+  color: var(--text-muted);
+}
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.choice {
+  width: var(--touch);
+  height: var(--touch);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+.swatch {
+  border-radius: var(--radius-full);
+}
+.choice[aria-pressed='true'] {
+  border-color: var(--text);
+}
+.dot {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--radius-full);
+}
+/* "Ohne Farbe": a ring, not a filled dot. */
+.dotNone {
+  border: 2px dashed var(--border-strong);
+}
+.hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+/* The list's icon in its colour (never alone: the name is always next to it). */
+.mark {
+  display: inline-flex;
+  color: var(--list-tone, var(--text-muted));
+}
+.rowActions {
+  display: inline-flex;
+  gap: var(--space-1);
+  align-items: center;
+}
+.section {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+.section h3 {
+  margin: 0;
+  font-size: var(--text-label);
+}
