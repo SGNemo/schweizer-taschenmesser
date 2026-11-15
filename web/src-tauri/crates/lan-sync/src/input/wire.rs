@@ -699,7 +699,10 @@ mod tests {
             let present = matches!(k, Key::F5 | Key::B);
             assert_eq!(k.is_present(), present);
             assert_eq!(Record::Key(k).needs_present(), present);
-            assert!(Record::Key(k).needs_full(), "a key is the mouse/keyboard level");
+            assert!(
+                Record::Key(k).needs_full(),
+                "a key is the mouse/keyboard level"
+            );
         }
         for m in MEDIA {
             assert!(!Record::Media(m).needs_present());
@@ -758,7 +761,10 @@ mod tests {
             decode_open(&encode_open(Level::Full, Some(FEATURES))),
             Ok((Level::Full, Some(FEATURE_POWER | FEATURE_PRESENT)))
         );
-        assert_eq!(decode_open(&[2, 0x02]), Ok((Level::Full, Some(FEATURE_PRESENT))));
+        assert_eq!(
+            decode_open(&[2, 0x02]),
+            Ok((Level::Full, Some(FEATURE_PRESENT)))
+        );
         // a newer phone's bits are dropped, never a reason to close
         assert_eq!(decode_open(&[1, 0xff]), Ok((Level::Media, Some(FEATURES))));
         assert_eq!(decode_open(&[1, 0x04]), Ok((Level::Media, Some(0))));
