@@ -25,6 +25,7 @@ import {
   Skeleton,
   TextField,
   useMediaQuery,
+  useSelection,
   type GroupedListGroup,
   type RowMenuItem,
 } from '@/ui';
@@ -36,6 +37,7 @@ import { ComposeDialog } from '../components/ComposeDialog';
 import { PendingSendBar } from '../components/PendingSendBar';
 import { InvoiceLine } from '../components/InvoiceLine';
 import { ThreadView } from '../components/ThreadView';
+import { BatchBar } from '../components/BatchBar';
 import { createInvoice, noteReminder, type InvoiceOffer } from '../invoiceRow';
 import { useInvoiceOffers } from '../useInvoiceOffers';
 import { emptyCompose, type ComposeState } from '../composeState';
@@ -56,6 +58,7 @@ import { dayGroup, personName, shortWhen, subjectOf, type DayGroup } from '../fo
 import { threadRepo } from '../repo';
 import { settings } from '../settings';
 import { rowAction } from '../rowActions';
+import { STEPS } from '../mailActions';
 import { readSearches, rememberSearch, suggestionsFor } from '../searchHistory';
 import { useMailbox } from '../useMailbox';
 import { useMailSummary } from '../useSummary';
@@ -80,8 +83,14 @@ function ThreadList({
   titleOf,
   invoices,
   onInvoice,
+  selection,
 }: {
   threads: CachedThreadView[];
+  /** Select mode: a checkbox per row (Shift-click takes a range). */
+  selection?: {
+    isSelected: (id: string) => boolean;
+    toggle: (id: string, extend: boolean) => void;
+  };
   onOpen: (id: string) => void;
   /** Quick actions of one row (in den Plan, read/unread, archive). */
   menuFor?: (th: CachedThreadView) => RowMenuItem[];
@@ -119,6 +128,16 @@ function ThreadList({
                     {th.messageCount > 1 ? ` (${th.messageCount})` : ''}
                   </span>
                   <span className={styles.rowWhen}>
+                    {th.labelIds.includes('STARRED') ? (
+                      <span
+                        className={styles.starMark}
+                        role="img"
+                        aria-label={t.mail.page.starredMark}
+                        data-testid="mail-starred"
+                      >
+                        <Icon name="star" size={14} />{' '}
+                      </span>
+                    ) : null}
                     {planned.has(th.id) ? (
                       <span className={styles.planMark} data-testid="mail-in-plan">
                         {plannerOn ? t.mail.plan.mark : t.mail.plan.todo.mark} ·{' '}
@@ -137,6 +156,9 @@ function ThreadList({
                 </span>
               }
               onOpen={() => onOpen(th.id)}
+              selectable={!!selection}
+              selected={selection?.isSelected(th.id)}
+              onSelectChange={(_, extend) => selection?.toggle(th.id, extend)}
               menu={menuFor?.(th)}
               // A quiet button only where the pointer hovers (PC); on touch it is in ⋯ and a swipe,
               // so a phone row never carries a standing button.
@@ -250,6 +272,18 @@ export default function MailPage() {
     personalOnly && offerPersonal ? box.threads.filter((th) => th.personal !== false) : box.threads;
   const offerInvoices = (prefs as { offerInvoices?: boolean } | undefined)?.offerInvoices ?? true;
   const invoices = useInvoiceOffers(shown, offerInvoices) ?? NO_OFFERS;
+  // Select mode (manage permission): checkboxes on the rows and the batch bar. A new folder, search or
+  // account starts without a selection.
+  const [selecting, setSelecting] = useState(false);
+  const order = useMemo(() => shown.map((th) => th.id), [shown]);
+  const selection = useSelection(order);
+  const viewKey = `${account?.key}|${labelId}|${query}|${personalOnly}`;
+  const [seenView, setSeenView] = useState(viewKey);
+  if (seenView !== viewKey) {
+    setSeenView(viewKey);
+    setSelecting(false);
+    if (selection.count > 0) selection.clear();
+  }
   // An unsure invoice row asked for the sheet: the thread opens with it (never a write without a look).
   const [startInvoice, setStartInvoice] = useState<string | undefined>();
   // The filter hides every mail loaded so far: say so and offer the way back, never a bare „empty“.
@@ -405,6 +439,18 @@ export default function MailPage() {
           ...(canModify ? modifyItems(th) : []),
         ]
       : undefined;
+  const starItem = (th: (typeof box.threads)[number]): RowMenuItem =>
+    th.labelIds.includes('STARRED')
+      ? {
+          id: 'unstar',
+          label: t.mail.page.rowUnstar,
+          onSelect: () => void rowAction(account, th.id, 'unstar', box.reload),
+        }
+      : {
+          id: 'star',
+          label: t.mail.page.rowStar,
+          onSelect: () => void rowAction(account, th.id, 'star', box.reload),
+        };
   const modifyItems = (th: (typeof box.threads)[number]): RowMenuItem[] => [
     th.unread
       ? {
@@ -417,6 +463,7 @@ export default function MailPage() {
           label: t.mail.page.rowUnread,
           onSelect: () => void rowAction(account, th.id, 'unread', box.reload),
         },
+    starItem(th),
     ...(th.labelIds.includes('INBOX')
       ? [
           {
@@ -499,7 +546,7 @@ export default function MailPage() {
         </IconButton>
       </form>
 
-      {(offerPersonal || (offerPlanAll && onPlan)) && box.threads.length > 0 ? (
+      {(offerPersonal || (offerPlanAll && onPlan) || canModify) && box.threads.length > 0 ? (
         <div className={styles.row}>
           {offerPersonal ? (
             <Chips>
@@ -524,7 +571,47 @@ export default function MailPage() {
               {states?.planner ? t.mail.plan.all : t.mail.plan.todo.all}
             </Button>
           ) : null}
+          {canModify && shown.length > 0 ? (
+            <>
+              <Button
+                variant="ghost"
+                aria-pressed={selecting}
+                onClick={() => {
+                  if (selecting) selection.clear();
+                  setSelecting(!selecting);
+                }}
+                data-testid="mail-select"
+              >
+                {selecting ? t.mail.batch.selectEnd : t.mail.batch.select}
+              </Button>
+              {selecting && selection.count < shown.length ? (
+                <Button variant="ghost" onClick={selection.selectAll}>
+                  {t.mail.batch.selectAll}
+                </Button>
+              ) : null}
+            </>
+          ) : null}
         </div>
+      ) : null}
+      {selecting && selection.count > 0 ? (
+        <BatchBar
+          account={account}
+          ids={selection.ids}
+          labelId={query ? '' : labelId}
+          confirmMoves={confirmMoves}
+          onCancel={() => {
+            selection.clear();
+            setSelecting(false);
+          }}
+          onDone={(direction, ids, action) => {
+            if (direction === 'do') {
+              selection.clear();
+              if (threadId && ids.includes(threadId) && STEPS[action].leaves)
+                update({ thread: null });
+            }
+            box.reload();
+          }}
+        />
       ) : null}
       {planAll ? (
         <PlanAllDialog
@@ -576,6 +663,7 @@ export default function MailPage() {
           onPlan={onPlan}
           titleOf={(th) => planTitle(account, th)}
           invoices={invoices}
+          selection={selecting ? selection : undefined}
           onInvoice={(th, offer) => {
             if (offer.kind === 'create') void createInvoice(account, th, offer, box.reload);
             else if (offer.kind === 'note') void noteReminder(account, th, offer, box.reload);

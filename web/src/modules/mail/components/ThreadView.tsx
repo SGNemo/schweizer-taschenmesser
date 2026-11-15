@@ -19,7 +19,7 @@ import { LinkDialog } from './LinkDialog';
 import { useModuleStates } from '@/core/modules/activation';
 import { fromOf, planMail, plannedThreads } from '../planMail';
 import { LocalSummary } from './LocalSummary';
-import { ThreadActions } from './ThreadActions';
+import { ThreadActions, ThreadLabels } from './ThreadActions';
 import { LinkMenu } from './LinkMenu';
 import { LinkedEntries } from './LinkedEntries';
 import { MailFrame } from './MailFrame';
@@ -305,7 +305,8 @@ export function ThreadView({
   startInvoice?: boolean;
 }) {
   const [messages, setMessages] = useState<MailMessage[] | undefined>();
-  const [unreadNow, setUnreadNow] = useState<boolean | undefined>();
+  // The thread's labels after a change here (undefined: as loaded).
+  const [labelsNow, setLabelsNow] = useState<string[] | undefined>();
   const [error, setError] = useState<MailErrorCode | undefined>();
   const [openIds, setOpenIds] = useState<string[]>([]);
 
@@ -339,6 +340,7 @@ export function ThreadView({
   }, [account, threadId, cacheBodies]);
 
   const subject = messages?.[0] ? subjectOf(messages[0].subject) : '';
+  const labelIds = labelsNow ?? [...new Set(messages?.flatMap((m) => m.labelIds) ?? [])];
   const web = mailWebUrl(account, threadId);
   const states = useModuleStates();
   const planned = useLiveQuery(() => plannedThreads(account.key), [account.key]);
@@ -384,15 +386,25 @@ export function ThreadView({
         <ThreadActions
           account={account}
           threadId={threadId}
-          unread={unreadNow ?? messages.some((m) => m.unread)}
+          labelIds={labelIds}
           labels={labels}
           confirmMoves={confirmMoves}
-          onUnread={setUnreadNow}
+          onLabels={setLabelsNow}
           onChanged={onChanged}
           onLeave={onBack}
         />
       ) : null}
       {messages === undefined ? <Skeleton height="6rem" /> : <h2>{subject}</h2>}
+      {messages ? (
+        <ThreadLabels
+          account={account}
+          threadId={threadId}
+          labelIds={labelIds}
+          labels={labels}
+          onLabels={setLabelsNow}
+          onChanged={onChanged}
+        />
+      ) : null}
       {error ? <MailError code={error} /> : null}
       {messages?.length === 0 && !error ? (
         <p className={styles.hint}>{t.mail.view.loadFailed}</p>
