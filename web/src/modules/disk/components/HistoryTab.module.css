@@ -6,12 +6,10 @@
 .lead {
   color: var(--text-muted);
   margin: calc(-1 * var(--space-3)) 0 0;
-  max-width: 60ch;
 }
 .note {
   margin: 0;
   color: var(--text-muted);
-  max-width: 68ch;
 }
 .list {
   list-style: none;

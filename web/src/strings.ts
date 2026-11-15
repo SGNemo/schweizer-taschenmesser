@@ -5231,7 +5231,6 @@ export const de = {
       /** The drives tab's pointer to this tab (replaces the former list of places there). */
       pointer:
         'Temporäre Dateien, Browser-Zwischenspeicher und alte Downloads findest du unter „Aufräumen“.',
-      pointerLink: 'Aufräumen öffnen',
     },
     /** Tab "Verlauf": what the page changed on this PC, with the way back. */
     history: {

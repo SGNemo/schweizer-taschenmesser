@@ -487,7 +487,6 @@ export const disk: Strings['disk'] = {
       openFailed: 'That couldn’t be opened.',
     },
     pointer: 'Temporary files, browser caches and old downloads are under “Tidy up”.',
-    pointerLink: 'Go to Tidy up',
   },
   history: {
     lead: 'What Nemo changed on this PC, with the way back. What you tidy up is listed until you close Nemo; changes to startup programs stay listed.',
