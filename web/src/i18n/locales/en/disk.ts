@@ -507,5 +507,13 @@ export const disk: Strings['disk'] = {
     restore: 'Open recycle bin',
     restoreHint: 'You can restore the files in the recycle bin.',
     noWayBack: 'Deleted permanently – this can’t be brought back.',
+    switched: (name: string, on: boolean) => `${name}: ${on ? 'switched on' : 'switched off'}`,
+    undo: 'Undo',
+    undoLabel: (what: string) => `Undo: ${what}`,
+    undoDone: 'Put back.',
+    undoFailed: 'That couldn’t be put back.',
+    undone: 'Taken back.',
+    canUndo: 'The value from before is stored.',
+    undoNewerFirst: 'Take back the newer change to it first.',
   },
 };

@@ -603,6 +603,13 @@ export function createFakeDisk(): DiskService {
     async history() {
       return { entries: [...careEntries].reverse(), recovered: false };
     },
+    async undo(id) {
+      const entry = careEntries.find((e) => e.id === id);
+      if (!entry) throw new Error('unknown-entry');
+      if (!entry.canUndo) throw new Error(entry.undone ? 'already-undone' : 'nothing-to-undo');
+      entry.undone = true;
+      entry.canUndo = false;
+    },
     async openTool(tool) {
       ((globalThis as { __tmCareTools?: string[] }).__tmCareTools ??= []).push(tool);
     },

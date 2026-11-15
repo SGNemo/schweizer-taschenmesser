@@ -90,6 +90,11 @@ export interface OptimizeService {
   cleanupScan(onProgress: (p: CleanupProgress) => void): Promise<CleanupResult>;
   cancelCleanup(): Promise<void>;
   history(): Promise<CareHistory>;
+  /**
+   * Takes a change back (only where `canUndo`): the values from before are put in place again.
+   * Rejects with `Error(code)`, e.g. `newer-change`, `already-undone`, `nothing-to-undo`.
+   */
+  undo(id: number): Promise<void>;
   /** Rejects with `Error('unsupported')` where the tool does not exist. */
   openTool(tool: CareTool): Promise<void>;
 }
@@ -102,5 +107,6 @@ export const noOptimize: OptimizeService = {
   cleanupScan: unsupported,
   cancelCleanup: unsupported,
   history: unsupported,
+  undo: unsupported,
   openTool: unsupported,
 };

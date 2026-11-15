@@ -11,9 +11,17 @@ import styles from './HistoryTab.module.css';
 /** What a history line says (read at render time). */
 export function entryText(e: CareEntry): string {
   const h = t.disk.history;
+  if (e.kind !== 'cleanup') return h.switched(e.label || e.subject, e.on ?? false);
   const what = e.subject === 'scan' ? h.fromScan : (t.disk.tidy.category[e.subject] ?? e.subject);
   const size = formatBytes(e.bytes);
   return e.permanent ? h.deleted(what, size, e.files) : h.trashed(what, size, e.files);
+}
+
+/** The second half of a line: how this change is taken back, or that it was. */
+function wayBack(e: CareEntry): string {
+  const h = t.disk.history;
+  if (e.kind === 'cleanup') return e.permanent ? h.noWayBack : h.restoreHint;
+  return e.undone ? h.undone : e.canUndo ? h.canUndo : h.undoNewerFirst;
 }
 
 /**
@@ -28,6 +36,8 @@ export function HistoryTab() {
   const [failed, setFailed] = useState(false);
   const h = t.disk.history;
 
+  const [reload, setReload] = useState(0);
+
   useEffect(() => {
     let alive = true;
     optimize
@@ -37,7 +47,15 @@ export function HistoryTab() {
     return () => {
       alive = false;
     };
-  }, [optimize]);
+  }, [optimize, reload]);
+
+  const undo = (e: CareEntry) => {
+    optimize
+      .undo(e.id)
+      .then(() => toast(h.undoDone))
+      .catch(() => toast(h.undoFailed))
+      .finally(() => setReload((n) => n + 1));
+  };
 
   const openBin = () => {
     optimize.openTool('recycleBin').catch(() => toast(t.disk.tidy.windows.openFailed));
@@ -68,9 +86,14 @@ export function HistoryTab() {
                   <span className={styles.meta}>
                     {formatTimestamp(e.at * 1000)}
                     {' · '}
-                    {e.permanent ? h.noWayBack : h.restoreHint}
+                    {wayBack(e)}
                   </span>
                 </div>
+                {e.canUndo ? (
+                  <Button aria-label={h.undoLabel(entryText(e))} onClick={() => undo(e)}>
+                    {h.undo}
+                  </Button>
+                ) : null}
                 {e.kind === 'cleanup' && !e.permanent && optimize.windows ? (
                   <Button onClick={openBin}>{h.restore}</Button>
                 ) : null}

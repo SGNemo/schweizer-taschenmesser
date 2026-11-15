@@ -31,6 +31,7 @@ export function createOptimize(): OptimizeService {
     },
     cancelCleanup: () => call('disk_cleanup_cancel'),
     history: () => call<CareHistory>('disk_care_history'),
+    undo: (id) => call('disk_care_undo', { id }),
     openTool: (tool) => call('disk_care_open_tool', { tool }),
   };
 }

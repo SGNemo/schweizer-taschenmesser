@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use ::pc_tune::{EntryView, Journal, Tool};
+use ::pc_tune::{apply_undo, system_registry, EntryView, Journal, RegError, Tool};
 use serde::Serialize;
 use tauri::{AppHandle, Manager, State};
 
@@ -94,4 +94,24 @@ pub fn disk_care_history(app: AppHandle, care: State<'_, PcCare>) -> Result<Hist
 pub fn disk_care_open_tool(tool: String) -> Result<(), String> {
     let tool = Tool::from_code(&tool).ok_or("unknown-tool")?;
     tool.open().map_err(|_| "unsupported".to_string())
+}
+
+/// Takes back the parts of an undo that are not registry values. Each package that makes such a
+/// change adds its case here; an unknown one is refused, so nothing is marked as taken back that
+/// was not.
+fn undo_other(_what: &str, _previous: &str) -> Result<(), RegError> {
+    Err(RegError::Unsupported)
+}
+
+/// Takes one change of the history back (the newest change of its subject only) by putting the
+/// stored values from before in place again. A clean-up has nothing to take back here: its way
+/// back is the recycle bin.
+#[tauri::command(async)]
+pub fn disk_care_undo(app: AppHandle, care: State<'_, PcCare>, id: u64) -> Result<(), String> {
+    let reg = system_registry().ok_or("unsupported")?;
+    care.with(&app, |j| {
+        let steps = j.undo_steps(id).map_err(|e| e.code().to_string())?;
+        apply_undo(reg.as_ref(), &steps, undo_other).map_err(|e| e.code().to_string())?;
+        j.mark_undone(id).map_err(|e| e.code().to_string())
+    })
 }

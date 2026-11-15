@@ -92,6 +92,7 @@ const COMMANDS: &[&str] = &[
     "disk_cleanup_cancel",
     "disk_care_history",
     "disk_care_open_tool",
+    "disk_care_undo",
     "llm_status",
     "llm_download",
     "llm_download_cancel",

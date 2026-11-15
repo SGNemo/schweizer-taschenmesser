@@ -250,6 +250,7 @@ pub fn run() {
             disk::disk_cleanup_cancel,
             optimize::disk_care_history,
             optimize::disk_care_open_tool,
+            optimize::disk_care_undo,
             local_llm::llm_status,
             local_llm::llm_download,
             local_llm::llm_download_cancel,

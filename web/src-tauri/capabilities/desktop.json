@@ -93,6 +93,7 @@
     "allow-disk-cleanup-cancel",
     "allow-disk-care-history",
     "allow-disk-care-open-tool",
+    "allow-disk-care-undo",
     "allow-llm-status",
     "allow-llm-download",
     "allow-llm-download-cancel",
