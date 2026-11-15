@@ -78,6 +78,7 @@ export const quickCapture: Strings['quickCapture'] = {
   chooseType: 'Please choose where the entry should go.',
   inboxHint: (target: string) => `Goes to “${target}”. You can sort it later.`,
   fullFormHint: 'Ctrl+Enter opens the full form.',
+  moreTypes: (n: number) => `More (${n})`,
   financeConfirm: 'Finance entries are only recorded after you confirm.',
   saved: (name: string) => `Saved in ${name}`,
   undo: 'Undo',

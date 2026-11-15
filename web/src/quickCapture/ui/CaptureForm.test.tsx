@@ -577,4 +577,24 @@ describe('council round 4 – presets, ToDos off, moving lines', () => {
     expect(onSaved).not.toHaveBeenCalled();
     expect((await db.table('invoices_invoice').toArray()).every((x) => !x.dunningLevel)).toBe(true);
   });
+
+  it('folds the type chips to six; a folded selected type takes the sixth slot; „Mehr“ shows the rest', async () => {
+    for (const id of ['bookmarks', 'lists', 'invoices', 'notes', 'subscriptions', 'people'])
+      await enableModule(getManifest(id)!);
+    const user = userEvent.setup();
+    render(<CaptureForm initialType="note" onSaved={() => undefined} />);
+    await box();
+    const group = await screen.findByRole('radiogroup', { name: t.quickCapture.title });
+    await waitFor(() => expect(within(group).getAllByRole('radio')).toHaveLength(6));
+    const radios = within(group).getAllByRole('radio');
+    // The first five never move; the sixth is the selected type, which would otherwise be folded.
+    expect(radios[5]).toHaveAccessibleName(t.quickCapture.type.note);
+    expect(radios[5]).toHaveAttribute('aria-checked', 'true');
+    const more = screen.getByTestId('capture-more-types');
+    const folded = Number(/\d+/.exec(more.textContent ?? '')?.[0]);
+    expect(folded).toBeGreaterThan(0);
+    await user.click(more);
+    expect(within(group).getAllByRole('radio')).toHaveLength(6 + folded);
+    expect(screen.queryByTestId('capture-more-types')).toBeNull();
+  });
 });

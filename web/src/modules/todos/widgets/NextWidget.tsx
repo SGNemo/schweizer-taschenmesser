@@ -12,7 +12,15 @@ import { addDaysStr, formatDay, today } from '@/core/time/dates';
 import { now, pad2 } from '@/core/time/now';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { Button, Checkbox, Dialog, RowMenu, useWidgetSize, WidgetBody } from '@/ui';
+import {
+  Button,
+  Checkbox,
+  Dialog,
+  RowMenu,
+  useCardActionVariant,
+  useWidgetSize,
+  WidgetBody,
+} from '@/ui';
 import { beginFocus, focusMinutesFor, focusPath } from '../focus';
 import { nextTier, type PickTask } from '../next';
 import { EVENING_HOUR, leftToday, weekReview, type ProgressTask } from '../progress';
@@ -37,6 +45,8 @@ const untilText = (minutes: number): string =>
  * counts days.
  */
 export default function NextWidget() {
+  // Phone: the plus owns the one filled accent (decision #856).
+  const startVariant = useCardActionVariant();
   const size = useWidgetSize();
   const navigate = useNavigate();
   const [settings] = useFocusSettings();
@@ -177,7 +187,7 @@ export default function NextWidget() {
                 .join(' · ')}
             </span>
             <div className={styles.actions}>
-              <Button variant="primary" onClick={() => void start()} data-focus-start>
+              <Button variant={startVariant} onClick={() => void start()} data-focus-start>
                 {t.focus.next.startMin(focusMinutesFor(next, settings.focusMinutes))}
               </Button>
               <Button variant="ghost" onClick={() => void later()}>
