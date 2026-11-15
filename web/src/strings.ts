@@ -8455,6 +8455,8 @@ export const de = {
         tomorrow ? `morgen, ${day} · heute ist frei` : `${day} · heute ist frei`,
       ctxNextShort: (day: string, tomorrow: boolean) => (tomorrow ? `morgen, ${day}` : day),
       fullNext: (day: string) => `Für ${day} ist genug geplant.`,
+      dayFree: 'Heute ist frei.',
+      ctxLate: (count: string) => `Frist vorbei: ${count}`,
     },
     board: {
       label: 'Woche',
@@ -8474,6 +8476,12 @@ export const de = {
       tileName: (day: string, capacity: string, things: string) =>
         things ? `${day}: ${capacity} · ${things}` : `${day}: ${capacity}`,
       editDay: (day: string) => `Zeit für ${day} ändern`,
+      why: 'Warum?',
+      whyTime: (min: string) => `${min} für den Tag.`,
+      whyOff: (list: string) => `Abgezogen: ${list}.`,
+      whyBuffer: (min: string) => `Puffer ${min}`,
+      whyWindow: (window: string) => `Zeitfenster ${window}.`,
+      whyEnd: (time: string) => `Tagesende ${time}.`,
     },
     sheet: {
       first: 'Zuerst',
@@ -8483,6 +8491,8 @@ export const de = {
       overLine: 'Der Tag hat mehr Dinge als Zeit.',
       dayOffNext: (day: string) => `Heute ist frei. Der nächste Tag mit Dingen ist ${day}.`,
       emptyDay: 'Für diesen Tag ist nichts geplant.',
+      onlyLate: 'Die Woche ist leer. Offen sind nur die Rechnungen unter „Frist vorbei“.',
+      onlyLateThings: 'Die Woche ist leer. Offen ist nur, was unter „Frist vorbei“ steht.',
     },
     src: {
       task: 'ToDo',
@@ -8495,6 +8505,12 @@ export const de = {
     ctx: {
       label: 'Rund um die Woche',
       appointments: 'Termine',
+    },
+    late: {
+      title: 'Frist vorbei',
+      invoices: (n: number) => (n === 1 ? '1 Rechnung' : `${n} Rechnungen`),
+      line: 'Liegt auf keinem Tag. Bezahlt ist bezahlt – wann, entscheidest du.',
+      row: (count: string) => `Frist vorbei · ${count}`,
     },
     day: {
       available: 'Verfügbar',
@@ -8534,7 +8550,9 @@ export const de = {
       done: 'Erledigt',
       later: 'Später',
       pin: 'Festnageln',
-      pinOn: (day: string) => `Festnageln auf ${day}`,
+      move: 'Verschieben …',
+      moveTitle: (title: string) => `Verschieben: ${title}`,
+      moveHint: 'Es bleibt an dem Tag, den du wählst – bis du es wieder löst.',
       unpin: 'Nicht mehr festnageln',
       exclude: 'Nicht planen',
       include: 'Wieder planen',
