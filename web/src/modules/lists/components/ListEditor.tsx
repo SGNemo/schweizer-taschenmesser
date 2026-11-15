@@ -3,7 +3,6 @@ import { useState, type CSSProperties } from 'react';
 import type { Stored } from '@/core/db/types';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { tTrash } from '@/strings.trash';
 import {
   Button,
   categoryColor,
@@ -149,26 +148,10 @@ function Fields({
           </option>
         ))}
       </SelectField>
-      <div className={styles.field} role="group" aria-label={t.lists.listIcon}>
-        <span className={styles.legend}>{t.lists.listIcon}</span>
-        <div className={styles.choices}>
-          {LIST_ICONS.map((id) => (
-            <button
-              key={id}
-              type="button"
-              className={styles.choice}
-              aria-pressed={shownIcon === id}
-              aria-label={t.lists.iconNames[id]}
-              title={t.lists.iconNames[id]}
-              onClick={() => setIcon(id)}
-            >
-              <Icon name={id} size={20} />
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className={styles.field} role="group" aria-label={t.lists.listColour}>
-        <span className={styles.legend}>{t.lists.listColour}</span>
+      <div className={styles.field} role="group" aria-labelledby="list-colour-legend">
+        <span className={styles.legend} id="list-colour-legend">
+          {t.lists.listColour}
+        </span>
         <div className={styles.choices}>
           <button
             type="button"
@@ -195,6 +178,26 @@ function Fields({
           ))}
         </div>
       </div>
+      <div className={styles.field} role="group" aria-labelledby="list-icon-legend">
+        <span className={styles.legend} id="list-icon-legend">
+          {t.lists.listIcon}
+        </span>
+        <div className={styles.choices}>
+          {LIST_ICONS.map((id) => (
+            <button
+              key={id}
+              type="button"
+              className={styles.choice}
+              aria-pressed={shownIcon === id}
+              aria-label={t.lists.iconNames[id]}
+              title={t.lists.iconNames[id]}
+              onClick={() => setIcon(id)}
+            >
+              <Icon name={id} size={20} />
+            </button>
+          ))}
+        </div>
+      </div>
       {kind === 'packing' ? (
         <>
           <TextField
@@ -211,7 +214,6 @@ function Fields({
         value={note}
         onChange={(e) => setNote(e.target.value)}
       />
-      {list ? <p className={styles.hint}>{t.lists.deleteHint(tTrash.get().title)}</p> : null}
       <FormActions
         start={
           list ? (
