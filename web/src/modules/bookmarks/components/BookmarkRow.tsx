@@ -199,7 +199,9 @@ export function BookmarkRow({
       meta={[
         t.bookmarks.kinds[item.kind],
         statusOf(item) === 'started' ? t.bookmarks.statuses.started : undefined,
-        planner && item.inPlan && !item.done ? t.bookmarks.inPlan : undefined,
+        planner && item.inPlan && !item.done && item.kind !== 'link'
+          ? t.bookmarks.inPlan
+          : undefined,
         hostOf(item.url),
         ...(narrow ? [] : item.tags.map((x) => `#${x}`)),
       ]

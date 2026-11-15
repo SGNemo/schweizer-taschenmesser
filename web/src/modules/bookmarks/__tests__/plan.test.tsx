@@ -31,6 +31,8 @@ describe('the Merkliste as a source of the planner', () => {
     await create({ title: 'Dune', kind: 'watch', inPlan: true });
     await create({ title: 'Nicht markiert', kind: 'read' });
     await create({ title: 'Schon erledigt', kind: 'read', inPlan: true, done: true });
+    // Marked once, then turned into a permanent link: no longer offered.
+    await create({ title: 'Bahn', kind: 'link', inPlan: true });
     const items = await source.list(ctx);
     expect(items).toHaveLength(1);
     expect(items[0]).toMatchObject({

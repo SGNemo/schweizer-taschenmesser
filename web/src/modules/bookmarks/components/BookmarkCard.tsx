@@ -72,7 +72,9 @@ export function BookmarkCard({
           {[
             t.bookmarks.kinds[item.kind],
             status === 'open' ? undefined : t.bookmarks.statuses[status],
-            planner && item.inPlan && !item.done ? t.bookmarks.inPlan : undefined,
+            planner && item.inPlan && !item.done && item.kind !== 'link'
+              ? t.bookmarks.inPlan
+              : undefined,
             site,
           ]
             .filter(Boolean)

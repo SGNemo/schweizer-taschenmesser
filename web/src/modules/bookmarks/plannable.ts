@@ -12,13 +12,16 @@ export const BOOKMARK_KIND = 'bookmark';
 
 const source: PlannableSource = {
   async list() {
-    const marked = (await itemRepo.active().toArray()).filter((i) => i.inPlan && !i.done);
+    // A permanent link is never planned, also when a marked entry became one afterwards.
+    const marked = (await itemRepo.active().toArray()).filter(
+      (i) => i.inPlan && !i.done && i.kind !== 'link',
+    );
     return marked.map((i): PlannableItem => ({
       id: i.id,
       kind: BOOKMARK_KIND,
-      // "Film/Serie: Dune"; a plain link or "Sonstiges" says nothing about what to do, so only its title.
+      // "Film/Serie: Dune"; "Sonstiges" says nothing about what to do, so only its title.
       title: t.bookmarks.planTitle(
-        i.kind === 'link' || i.kind === 'other' ? '' : (t.bookmarks.kinds[i.kind] ?? ''),
+        i.kind === 'other' ? '' : (t.bookmarks.kinds[i.kind] ?? ''),
         i.title,
       ),
       to: `/bookmarks?open=${encodeURIComponent(i.id)}`,
