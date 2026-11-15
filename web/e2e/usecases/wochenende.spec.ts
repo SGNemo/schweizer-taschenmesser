@@ -741,6 +741,41 @@ test('H Schlaf: Abendgrenze für den Plan', async ({ page, isMobile }, info) => 
   await expect(line.getByRole('button', { name: 'Rest verteilen' })).toBeVisible();
   // One line at a time: the 17:00 link is not there besides it.
   await expect(page.getByTestId('rest-link')).toHaveCount(0);
-  facts(info, 'H', { dayEnd, line: (await line.innerText()).replace(/\s+/g, ' ').trim() });
+  const said = (await line.innerText()).replace(/\s+/g, ' ').trim();
+  // The switch `focus.eveningWrapUp` off: no evening line at all (not counted, the switch is set once).
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open('taschenmesser');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const db = open.result;
+          const tx = db.transaction('_settings', 'readwrite');
+          const store = tx.objectStore('_settings');
+          const get = store.get('focus');
+          get.onsuccess = () =>
+            store.put({
+              createdAt: 1,
+              deviceId: 'e2e',
+              deletedAt: null,
+              _f: {},
+              ...get.result,
+              id: 'focus',
+              updatedAt: Date.now(),
+              eveningWrapUp: false,
+            });
+          tx.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+          tx.onerror = () => reject(tx.error);
+        };
+      }),
+  );
+  await page.reload();
+  await expect(page.getByTestId('planner-head')).toBeVisible();
+  await expect(page.getByTestId('day-end-line')).toHaveCount(0);
+  await expect(page.getByTestId('rest-link')).toHaveCount(0);
+  facts(info, 'H', { dayEnd, line: said });
   await record(info, m, name);
 });
