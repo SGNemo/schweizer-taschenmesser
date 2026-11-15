@@ -9,7 +9,11 @@ export const TRASH_KEEP_DAYS = ['7', '30', '90'] as const;
 export type TrashKeepDays = (typeof TRASH_KEEP_DAYS)[number];
 
 /** "Zuletzt gelöscht aufbewahren": on by default (it keeps data longer, so it has an off switch), 30 days. */
-export const trashSettingsSchema = z.object({ keep: z.boolean(), days: z.enum(TRASH_KEEP_DAYS) });
+// `days` falls back on its own: a value this build does not know (a newer device) must not reset `keep`.
+export const trashSettingsSchema = z.object({
+  keep: z.boolean(),
+  days: z.enum(TRASH_KEEP_DAYS).catch('30'),
+});
 export const DEFAULT_TRASH: z.output<typeof trashSettingsSchema> = { keep: true, days: '30' };
 
 export const useTrashSettings = () => {

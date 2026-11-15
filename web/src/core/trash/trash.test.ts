@@ -140,8 +140,11 @@ describe('recently deleted', () => {
     expect(await listTrash(db, deletedAt + 8 * day)).toHaveLength(1);
   });
 
-  it('a broken stored value falls back to 30 days', async () => {
+  it('an unknown stored value falls back to 30 days and keeps the switch', async () => {
+    await setTrashKeep(false);
     await setSettings(TRASH_SCOPE, { days: '365' });
+    expect(await trashRetentionMs()).toBe(TRASH_GRACE_MS);
+    await setTrashKeep(true);
     expect(await trashRetentionMs()).toBe(TRASH_RETENTION_MS);
   });
 });
