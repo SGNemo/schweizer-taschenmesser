@@ -11,6 +11,10 @@ import styles from './HistoryTab.module.css';
 /** What a history line says (read at render time). */
 export function entryText(e: CareEntry): string {
   const h = t.disk.history;
+  if (e.kind === 'startup') {
+    const name = e.label || e.subject;
+    return e.on ? t.disk.startup.historyOn(name) : t.disk.startup.historyOff(name);
+  }
   if (e.kind !== 'cleanup') return h.switched(e.label || e.subject, e.on ?? false);
   const what = e.subject === 'scan' ? h.fromScan : (t.disk.tidy.category[e.subject] ?? e.subject);
   const size = formatBytes(e.bytes);

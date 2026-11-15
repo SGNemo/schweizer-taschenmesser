@@ -4693,6 +4693,7 @@ export const de = {
     tabs: {
       drives: 'Laufwerke',
       tidy: 'Aufräumen',
+      startup: 'Autostart',
       system: 'System',
       history: 'Verlauf',
     } as const,
@@ -5205,6 +5206,35 @@ export const de = {
       undone: 'Zurückgenommen.',
       canUndo: 'Der Wert von vorher ist gespeichert.',
       undoNewerFirst: 'Nimm zuerst die neuere Änderung daran zurück.',
+    },
+    /** Tab "Autostart": what starts with Windows for this account, with a switch each. */
+    startup: {
+      lead: 'Diese Programme starten mit Windows. Schalte ab, was du beim Start nicht brauchst – das Programm bleibt installiert und lässt sich jederzeit wieder einschalten.',
+      loading: 'Autostart wird gelesen …',
+      failed: 'Der Autostart konnte nicht gelesen werden.',
+      again: 'Erneut versuchen',
+      onlyWindows: 'Den Autostart zeigt Nemo nur unter Windows.',
+      empty: 'Hier startet nichts mit Windows.',
+      user: 'Für dein Konto',
+      machine: 'Für alle Konten (nur ansehen)',
+      count: (on: number, total: number) => `${on} von ${total} eingeschaltet`,
+      machineHint:
+        'Diese Einträge gelten für alle, die diesen PC nutzen. Ändern lassen sie sich in den Windows-Einstellungen.',
+      machineOpen: 'In den Windows-Einstellungen ändern',
+      openFailed: 'Das ließ sich nicht öffnen.',
+      switchLabel: (name: string) => `${name} beim Start von Windows starten`,
+      on: 'Eingeschaltet',
+      off: 'Ausgeschaltet',
+      folder: 'Autostart-Ordner',
+      nowOff: (name: string) => `${name} startet nicht mehr mit Windows.`,
+      nowOn: (name: string) => `${name} startet wieder mit Windows.`,
+      undo: 'Rückgängig',
+      undoFailed: 'Das ließ sich nicht zurückstellen. Im Verlauf siehst du den Stand.',
+      setFailed: 'Das ließ sich nicht umschalten.',
+      impact:
+        'Wie viel Zeit ein Programm beim Start braucht, misst Windows selbst. Der Task-Manager zeigt es unter „Autostart-Apps“.',
+      historyOff: (name: string) => `${name}: startet nicht mehr mit Windows`,
+      historyOn: (name: string) => `${name}: startet wieder mit Windows`,
     },
   },
 

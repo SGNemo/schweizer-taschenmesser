@@ -365,6 +365,15 @@ DT-D18. _Live-Scan:_ großes Laufwerk scannen: statt Balken eine Zeile „Scan l
 DT-D19. _Steam zuletzt gespielt:_ Laufwerk mit Steam-Spielen (auch eine zweite Bibliothek, z. B. `D:\SteamLibrary`) scannen: Filter „Spiele (Steam)“ erscheint, listet die installierten Spiele, am längsten nicht gespielte zuerst, mit Datum wie in Steam (Bibliothek → Spiel → „Zuletzt gespielt“); ein nie gestartetes Spiel zeigt „Kein Spieldatum von Steam“; die Details eines Spielordners zeigen „Zuletzt gespielt“. ☐
 DT-D20. _Zuletzt benutzt:_ `fsutil behavior query disableLastAccess` zeigt den Zustand. Ist er „aktiviert“ (0 oder 2): Scan von C: → Legende sagt „letzte Benutzung“, Filter heißt „Lange nicht benutzt“ und misst standardmäßig nach „letztem Öffnen“ (Umschalten auf „letzter Änderung“ geht); eine alte Testdatei öffnen, nach ~1 Std. neu scannen → ihre Kachel wird „jung“ gefärbt und sie fällt aus der Liste. Ist er „deaktiviert“ (1 oder 3) oder das Laufwerk FAT/exFAT (USB-Stick): alles bleibt bei „letzte Änderung“ / „Lange nicht geändert“, ohne Umschalter. ☐
 
+#### Autostart (Runde `feat/disk-optimize-p2`) – nur auf echtem Windows prüfbar
+
+Mit einem harmlosen Programm, das mit Windows startet (z. B. ein Musik- oder Chat-Programm), nie mit Sicherheitssoftware:
+DO-A1. _Liste stimmt:_ Dieser PC → Autostart zeigt unter „Für dein Konto“ dieselben Programme wie der Task-Manager unter „Autostart-Apps“ (Einträge aus Registrierung und Autostart-Ordner), mit demselben Zustand an/aus; Programme für alle Konten stehen darunter ohne Schalter. Aufgaben aus der Aufgabenplanung fehlen noch (bekannt). ☐
+DO-A2. _Ausschalten wirkt:_ Ein Programm ausschalten, ab- und wieder anmelden: es startet nicht mehr. Der Task-Manager zeigt es als „Deaktiviert“, das Programm ist weiter installiert und lässt sich von Hand starten. ☐
+DO-A3. _Rückgängig:_ Verlauf → „Rückgängig“ beim Eintrag „… startet nicht mehr mit Windows“: Schalter steht wieder auf an, Task-Manager zeigt „Aktiviert“, nach erneutem Anmelden startet das Programm wieder. Auch „Rückgängig“ direkt in der Meldung nach dem Umschalten funktioniert. ☐
+DO-A4. _Beide Richtungen:_ Ein Programm im Task-Manager deaktivieren → in Nemo (Reiter neu öffnen) steht es auf aus; in Nemo einschalten → Task-Manager zeigt „Aktiviert“. Eine Verknüpfung im Autostart-Ordner (`shell:startup`) lässt sich genauso schalten und liegt danach weiter im Ordner. ☐
+DO-A5. _Ohne Adminrechte:_ Als Standardbenutzer (kein Administrator): Schalten der eigenen Einträge funktioniert ohne Nachfrage von Windows; „In den Windows-Einstellungen ändern“ öffnet Einstellungen → Apps → Autostart. ☐
+
 #### Übersicht und Dieser PC (Runde `feat/dashboard-variety-system-module`) – nur auf echtem Windows/Android prüfbar
 
 DV-V1. _GPU-Erkennung:_ Dieser PC → System → Grafik: die **RTX 4070** erscheint (mit Speicher ≈ 12 GB und Treiberversion, „aktiv“), **nicht** „Microsoft Basic Render Driver“. Bei mehreren Grafikkarten (z. B. Prozessorgrafik) sind alle gelistet. ☐
