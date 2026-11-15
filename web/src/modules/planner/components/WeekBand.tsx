@@ -89,12 +89,14 @@ export function WeekBand({
               className={styles.tile}
               data-testid={`week-${d.date}`}
               data-off={d.off || undefined}
-              aria-label={tileName(d, i === 1)}
               aria-pressed={d.date === picked}
               aria-current={d.isToday ? 'date' : undefined}
               tabIndex={d.date === stop ? 0 : -1}
               onClick={() => onPick(d.date)}
             >
+              {/* The name is the sentence; the two visible forms are its short picture (hidden from the name, so
+                  the tile is not read twice). */}
+              <span className="sr-only">{tileName(d, i === 1)}</span>
               <span className={styles.wide} aria-hidden="true">
                 <span className={styles.top}>
                   <span className={styles.day}>

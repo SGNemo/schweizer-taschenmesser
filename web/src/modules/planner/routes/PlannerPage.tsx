@@ -102,8 +102,8 @@ export default function PlannerPage() {
   // `?start=1` (the welcome card's „Tage einteilen“, a tap of the user) opens the three-step sheet.
   const [settingUp, setSettingUp] = useState(() => params.get('start') === '1');
   const [menuOpen, setMenuOpen] = useState(false);
-  // The phone has no field in the page: the plus of the bottom bar („Ding“) opens it as a sheet. `?new=1` (quick
-  // add, a tap of the user) opens it too.
+  // Phone: the plus of the bottom bar („Ding“) opens the field as a sheet; `?new=1` (quick add, a tap of the
+  // user) opens it too.
   const [capturing, setCapturing] = useState(() => phone && params.get('new') === '1');
   usePageAction({ short: t.planner.add.short, onClick: () => setCapturing(true) }, phone);
   // The entry was not stored (the planner was switched off meanwhile): the field says so, the text is still there.
@@ -255,6 +255,8 @@ export default function PlannerPage() {
       await applyOps(pending.ops, pending.lead, titles, pending.rest === true);
       if (pending.fromField) setText('');
       setPending(undefined);
+      // A sentence said in the phone's sheet changed the plan: the sheet gives the page back.
+      if (pending.fromField) setCapturing(false);
     } finally {
       setBusy(false);
     }
@@ -643,6 +645,8 @@ export default function PlannerPage() {
       error={addError}
       focusOnOpen={inDialog}
       labelHidden={inDialog}
+      // The phone's last row is the field alone; its examples stand in the plus's sheet.
+      examples={inDialog || !phone}
       formRef={addRef}
     />
   );
@@ -706,7 +710,7 @@ export default function PlannerPage() {
           {/* Reading order = DOM order: field → band → sheet → context. The field is there from the first paint
               and never moves under the typing hand (U01). */}
           {phone ? null : capture(false)}
-          {phone && capturing ? null : answer}
+          {phone ? null : answer}
 
           {showWeekLink ? (
             <p className={styles.weekLink} data-testid="week-check-link">
@@ -739,7 +743,8 @@ export default function PlannerPage() {
               onThenToggle={(open) => void setMeta(phone ? THEN_NARROW_KEY : THEN_WIDE_KEY, open)}
               empty={emptySheet}
               onRest={shownDay.isToday ? () => void showRest() : undefined}
-              onSetup={() => setSettingUp(true)}
+              // On the phone the page's ⋯ stands in the same foot and holds „Tage einteilen“: said once.
+              onSetup={phone ? undefined : () => setSettingUp(true)}
               footEnd={phone ? pageMenuButton : undefined}
               onSwipe={
                 phone
@@ -757,6 +762,12 @@ export default function PlannerPage() {
 
           {/* Not wide: the context follows the sheet in the one column. */}
           {!wide && hasContext ? <aside aria-label={t.planner.ctx.label}>{context}</aside> : null}
+
+          {/* Phone: the first screen is band and sheet; the plus of the bottom bar opens the field as a sheet.
+              The field also stays where it was before R1, as the page's last row: without it every entry on
+              the phone costs one tap and one sheet more than before (e2e/usecases, paths B and E). */}
+          {phone && !capturing ? capture(false) : null}
+          {phone && !capturing ? answer : null}
         </div>
       </SplitView>
 

@@ -17,6 +17,7 @@ export function Capture({
   error,
   focusOnOpen,
   labelHidden,
+  examples: withExamples = true,
   formRef,
 }: {
   value: string;
@@ -30,6 +31,8 @@ export function Capture({
   focusOnOpen?: boolean;
   /** The label is said by what surrounds the field (a dialog's title). */
   labelHidden?: boolean;
+  /** `false`: the field without its example chips (the phone's last row; the plus's sheet carries them). */
+  examples?: boolean;
   formRef?: Ref<HTMLFormElement>;
 }) {
   const examples = Object.values(t.planner.add.examples);
@@ -68,23 +71,25 @@ export function Capture({
           {t.planner.add.error}
         </p>
       ) : null}
-      <div className={styles.examples} role="group" aria-label={t.planner.add.examplesLead}>
-        <span className={styles.examplesLead} aria-hidden="true">
-          {t.planner.add.examplesLead}
-        </span>
-        {examples.map((example) => (
-          <Chip
-            key={example}
-            label={example}
-            onClick={() => {
-              onChange(example);
-              // The chip fills the field; the person reads, changes and sends it there.
-              const form = typeof formRef === 'object' ? formRef?.current : undefined;
-              form?.querySelector('input')?.focus({ preventScroll: true });
-            }}
-          />
-        ))}
-      </div>
+      {withExamples ? (
+        <div className={styles.examples} role="group" aria-label={t.planner.add.examplesLead}>
+          <span className={styles.examplesLead} aria-hidden="true">
+            {t.planner.add.examplesLead}
+          </span>
+          {examples.map((example) => (
+            <Chip
+              key={example}
+              label={example}
+              onClick={() => {
+                onChange(example);
+                // The chip fills the field; the person reads, changes and sends it there.
+                const form = typeof formRef === 'object' ? formRef?.current : undefined;
+                form?.querySelector('input')?.focus({ preventScroll: true });
+              }}
+            />
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

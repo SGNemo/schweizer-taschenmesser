@@ -38,7 +38,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
+  /* 32 px chips with a 44 px hit box: wrapped lines keep 44 px from line to line */
+  gap: var(--space-3) var(--space-2);
   margin: var(--space-2) 0 0;
 }
 .examplesLead {
@@ -64,9 +65,9 @@ section.sheet {
   --sheet-inset: var(--space-2);
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1);
   min-width: 0;
-  padding: var(--space-4) var(--space-2);
+  padding: var(--space-3) var(--space-2);
 }
 .sheetHead {
   display: grid;
@@ -89,6 +90,7 @@ section.sheet {
 }
 /* The capacity is a text button: it opens the day's settings. */
 .capacityButton {
+  min-width: var(--touch);
   min-height: var(--touch);
   padding: 0;
   color: var(--text-muted);
@@ -112,7 +114,8 @@ section.sheet {
 .groupHead {
   display: flex;
   align-items: center;
-  margin: var(--space-2) 0 0;
+  min-height: var(--space-5);
+  margin: 0;
   padding: 0 var(--sheet-inset);
   color: var(--text-muted);
   font-size: var(--text-meta);
@@ -179,6 +182,7 @@ section.sheet {
 }
 /* A text link that acts in place („Rest verteilen“, „Tage einteilen“, „Woche prüfen“): the link tokens, 44 px to hit. */
 .textLink {
+  min-width: var(--touch);
   min-height: var(--touch);
   padding: 0;
   color: var(--link);
@@ -217,6 +221,19 @@ section.sheet {
   justify-content: center;
   width: 100%;
   min-height: var(--touch);
+}
+/* The tick is drawn at 24 px; the box itself answers on the whole 44 px slot. */
+.lead input::before {
+  content: '';
+  position: absolute;
+  /* 44 px around the box's 24 (its 1 px frame counted) */
+  inset: calc((1.5rem - var(--touch)) / 2 - 1px);
+}
+/* The ⋯ of a row and of the page: the shared icon button draws 40 px and answers on 42 (its frame is not part of
+   the enlarged hit box); in the sheet it answers on the full 44. */
+section.sheet [data-row-actions] button::after,
+.footEnd button::after {
+  inset: -3px;
 }
 .thingTitle {
   font-size: var(--text-md);

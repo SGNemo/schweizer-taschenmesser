@@ -94,7 +94,8 @@ export function DayPage({
   empty: ReactNode;
   /** „Rest verteilen“ – only where it has something to act on (today). */
   onRest?: () => void;
-  onSetup: () => void;
+  /** „Tage einteilen“ as a link of the foot; left out where the foot's ⋯ already offers it (phone). */
+  onSetup?: () => void;
   /** At the end of the foot (the page's ⋯ on the phone). */
   footEnd?: ReactNode;
   /** Phone: a sideways swipe on the sheet, not started on a row (`1` = the next day). */
@@ -255,7 +256,7 @@ export function DayPage({
               </button>
             </span>
           ) : null}
-          {hasRows ? (
+          {hasRows && onSetup ? (
             <button type="button" className={styles.textLink} onClick={onSetup}>
               {t.planner.daySetup.open}
             </button>
