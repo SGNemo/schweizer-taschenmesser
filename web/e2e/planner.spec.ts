@@ -234,7 +234,10 @@ test.describe('Planer (week board, package 1)', () => {
     await ready(page, '/todos');
     await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
     await page.getByRole('dialog').getByLabel('Titel').fill('Alte Sache gestern 60min');
-    await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+      .click();
     await expect(page.getByRole('button', { name: /Alte Sache/ }).first()).toBeVisible();
     // Without the plan the overdue thing is on today.
     // The count of today is the head's figure, named by its context line ("heute · etwa 60 Min").
@@ -392,7 +395,7 @@ test.describe('Planer (calendar chip, prefix, sentences – package 2)', () => {
     await sw.click();
     await expect(sw).toHaveAttribute('aria-checked', 'false');
     await ready(page, '/calendar?view=month&date=2026-11-09');
-    await expect(page.getByRole('button', { name: 'Neuer Termin' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Termin eintragen' })).toBeVisible();
     await expect(page.getByRole('button', { name: /^Plan · / })).toHaveCount(0);
   });
 
@@ -752,5 +755,45 @@ test.describe('Planer (time windows, templates – package 5)', () => {
     await expect(await day(page, '2026-11-10')).toContainText('Blogpost');
     await page.getByRole('button', { name: 'Rückgängig' }).last().click();
     await expect(page.getByTestId('planner-head')).not.toContainText('Heute ist frei.');
+  });
+});
+
+test.describe('Planer (package 3 of „Wochenende retten“: „Rest verteilen“)', () => {
+  test.beforeEach(({ isMobile }) => {
+    test.skip(isMobile, 'wide board only');
+  });
+
+  test('„Tag abschließen“ on the overview asks the planner: its preview opens, nothing moves before „Übernehmen“', async ({
+    page,
+  }) => {
+    await page.clock.setFixedTime(new Date('2026-11-09T21:00:00'));
+    await enablePlanner(page);
+    await ready(page, '/planner');
+    await enter(page, 'Keller 30min');
+    await enter(page, 'Blogpost 30min');
+    // Both things fit today (Monday 4 h); the board shows them once the runs have settled.
+    const rows = 2;
+    await expect(today(page).locator('li')).toHaveCount(rows);
+    // The evening link sits in the head (from 17:00, „Tag abschließen“ on): no count of what was left.
+    await expect(page.getByTestId('rest-link')).toHaveText('Rest verteilen');
+
+    // The overview's „Heute“ card: with the planner on its evening action asks the planner (event bus).
+    await ready(page, '/');
+    const wrap = page.getByTestId('wrap-up');
+    await expect(wrap.getByRole('button', { name: 'Auf morgen schieben' })).toHaveCount(0);
+    await wrap.getByRole('button', { name: 'Rest verteilen' }).click();
+    await expect(page).toHaveURL(/\/planner/);
+    const preview = page.getByTestId('plan-preview');
+    await expect(preview).toContainText('Was heute offen ist, geht auf die nächsten Tage.');
+    // No count of what was left anywhere in it (group heads included).
+    await expect(preview).not.toContainText(/\d/);
+    // Nothing moved yet.
+    await expect(today(page).locator('li')).toHaveCount(rows);
+    await preview.getByRole('button', { name: 'Übernehmen' }).click();
+    await expect(page.getByText('Auf die nächsten Tage verteilt.')).toBeVisible();
+    await expect(today(page).locator('li')).toHaveCount(0);
+    // One undo brings today back.
+    await page.getByRole('button', { name: 'Rückgängig' }).last().click();
+    await expect(today(page).locator('li')).toHaveCount(rows);
   });
 });

@@ -9,6 +9,8 @@ export interface PreviewData {
   lines: string[];
   /** Where the reading came from when it was not the rules („Vom lokalen Modell gelesen – bitte prüfen.“). */
   note?: string;
+  /** No counts beside the groups („Rest verteilen“ never counts what was left). */
+  noCounts?: boolean;
   diff: PlanDiff;
 }
 
@@ -45,12 +47,15 @@ export function PlanPreview({
   busy,
   onApply,
   onDiscard,
+  discardLabel,
 }: {
   data: PreviewData;
   nameOf: (unitId: string) => string;
   busy?: boolean;
   onApply: () => void;
   onDiscard: () => void;
+  /** „Zurück“ where the preview is a step of a sheet („Tage einteilen“); „Verwerfen“ otherwise. */
+  discardLabel?: string;
 }) {
   const p = t.planner.preview;
   const moved = data.diff.moved;
@@ -63,6 +68,7 @@ export function PlanPreview({
             id: 'moved',
             label: p.moved,
             count: moved.length,
+            countHidden: data.noCounts === true,
             children: (
               <ItemList>
                 {moved.map((m) => (
@@ -86,6 +92,7 @@ export function PlanPreview({
             id: 'added',
             label: p.added,
             count: added.length,
+            countHidden: data.noCounts === true,
             children: (
               <ItemList>
                 {added.map((a) => (
@@ -102,6 +109,7 @@ export function PlanPreview({
             id: 'waits',
             label: p.waits,
             count: waits.length,
+            countHidden: data.noCounts === true,
             children: (
               <ItemList>
                 {waits.map((w) => (
@@ -136,7 +144,7 @@ export function PlanPreview({
           {p.apply}
         </Button>
         <Button variant="ghost" onClick={onDiscard} disabled={busy}>
-          {p.discard}
+          {discardLabel ?? p.discard}
         </Button>
       </div>
     </section>

@@ -17,13 +17,16 @@ async function open(page: Page, url: string) {
 }
 
 async function save(page: Page) {
-  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+    .click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
 async function spend(page: Page, amount: string, category: string, date = '2026-09-20') {
   await open(page, '/finance?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Buchung eintragen' });
   await dialog.getByRole('button', { name: 'Ausgabe', exact: true }).click();
   await dialog.getByLabel('Betrag').fill(amount);
   await moreFields(page);
@@ -41,7 +44,7 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await spend(page, '35,00', 'Lebensmittel', '2026-09-10');
     await open(page, '/budgets');
     await page
-      .getByRole('button', { name: /Budget (hinzufügen|eintragen)/ })
+      .getByRole('button', { name: /Limit (hinzufügen|eintragen)/ })
       .first() // the head's action (the phone's plus) and, while the list is empty, the empty state's one verb
       .click();
     const editor = page.getByRole('dialog');
@@ -49,6 +52,8 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await editor.getByLabel('Limit pro Monat').fill('300');
     await moreFields(page);
     await editor.getByLabel('Zeitraum', { exact: true }).selectOption('quarter');
+    // The amount names the picked period.
+    await expect(editor.getByLabel('Limit pro Quartal')).toHaveValue('300');
     await save(page);
     const card = page.getByRole('listitem').filter({ hasText: 'Lebensmittel' });
     await expect(card).toContainText(/75,00\s€/); // July + September
@@ -60,7 +65,7 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await spend(page, '20,00', 'Lebensmittel', '2026-08-10'); // 100 € limit: 80 € left in August
     await open(page, '/budgets');
     await page
-      .getByRole('button', { name: /Budget (hinzufügen|eintragen)/ })
+      .getByRole('button', { name: /Limit (hinzufügen|eintragen)/ })
       .first() // the head's action (the phone's plus) and, while the list is empty, the empty state's one verb
       .click();
     const editor = page.getByRole('dialog');
@@ -81,7 +86,7 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await spend(page, '60,00', 'Lebensmittel', '2026-09-15');
     await open(page, '/budgets');
     await page
-      .getByRole('button', { name: /Budget (hinzufügen|eintragen)/ })
+      .getByRole('button', { name: /Limit (hinzufügen|eintragen)/ })
       .first() // the head's action (the phone's plus) and, while the list is empty, the empty state's one verb
       .click();
     const editor = page.getByRole('dialog');
@@ -111,7 +116,7 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await spend(page, '1,00', 'Lebensmittel'); // also makes the default categories
     await open(page, '/budgets');
     await page
-      .getByRole('button', { name: /Budget (hinzufügen|eintragen)/ })
+      .getByRole('button', { name: /Limit (hinzufügen|eintragen)/ })
       .first() // the head's action (the phone's plus) and, while the list is empty, the empty state's one verb
       .click();
     const editor = page.getByRole('dialog');
@@ -133,7 +138,7 @@ test.describe('Budgets: periods, carry-over, forecast, history, goal plan', () =
     await spend(page, '1,00', 'Lebensmittel');
     await open(page, '/budgets');
     await page
-      .getByRole('button', { name: /Budget (hinzufügen|eintragen)/ })
+      .getByRole('button', { name: /Limit (hinzufügen|eintragen)/ })
       .first() // the head's action (the phone's plus) and, while the list is empty, the empty state's one verb
       .click();
     const editor = page.getByRole('dialog');

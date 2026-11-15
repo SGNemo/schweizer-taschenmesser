@@ -11,4 +11,6 @@ export const migrations: ModuleManifest['migrations'] = {
   3: async () => {},
   // 4: named calendars (`calendar_calendar`) and the optional `calendarId` on events; nothing to rewrite.
   4: async () => {},
+  // 5: reminders gained the optional `once` („einmal“); old records keep the global repeat rule.
+  5: async () => {},
 };

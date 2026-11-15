@@ -36,6 +36,21 @@ describe('native secret store', () => {
     await store.delete('a');
     expect(mocks.invoke).toHaveBeenLastCalledWith(`${P}delete`, { request: { name: 'a' } });
   });
+
+  it('asks the plugin only whether a secret is there (desktop and Android share the command)', async () => {
+    const store = createNativeStore();
+    mocks.invoke.mockResolvedValueOnce({ present: true });
+    expect(await store.has('backup.autoPassphrase')).toBe(true);
+    expect(mocks.invoke).toHaveBeenLastCalledWith(`${P}has`, {
+      request: { name: 'backup.autoPassphrase' },
+    });
+    mocks.invoke.mockResolvedValueOnce({ present: false });
+    expect(await store.has('none')).toBe(false);
+    // anything but a plain `true` is a no – a stray value never turns into a yes
+    mocks.invoke.mockResolvedValueOnce({ present: 'secret' });
+    expect(await store.has('odd')).toBe(false);
+    expect(mocks.invoke.mock.calls.map(([cmd]) => cmd)).toEqual([`${P}has`, `${P}has`, `${P}has`]);
+  });
 });
 
 describe('biometrics', () => {

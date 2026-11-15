@@ -72,9 +72,9 @@ test.describe('phone 412x915', () => {
     await expect(
       main.getByRole('group', { name: 'Kalender' }).getByRole('button').first(),
     ).toBeVisible();
-    // Identity 4.0: the phone has no "Neuer Termin" button in the page (the plus of the bottom bar adds one); the
+    // Identity 4.0: the phone has no "Termin eintragen" button in the page (the plus of the bottom bar adds one); the
     // toolbar starts under the module head.
-    await expect(main.getByRole('button', { name: 'Neuer Termin' })).toHaveCount(0);
+    await expect(main.getByRole('button', { name: 'Termin eintragen' })).toHaveCount(0);
     const head = (await page.getByTestId('module-frame').boundingBox())!;
     const top = head.y + head.height;
     const grid = (await main.locator('table').boundingBox())!.y;

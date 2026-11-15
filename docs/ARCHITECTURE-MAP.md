@@ -19,8 +19,8 @@ Fast "where is what" index (paths checked against the tree). Rationale and long 
 | `.github/workflows/` | `ci.yml`, `release.yml`, `dev-preview.yml` (reusable, called from `ci.yml`), `site.yml` (only on `site/**` changes) |
 
 ## `web/` layout
-- `src/core/` – framework code (no UI pages): db, sync, ai, crypto, modules, platform, …
-- `src/modules/<id>/` – feature modules (manifest-driven). Present: accounts, bookmarks, budgets, calendar, **disk** (desktop only), example (dev only), **feeds** (subscription list), finance, **clock** (Uhr: places and their time, preview), **fitness** (training + rough kcal, preview), invoices, **lists**, **maps** (Karten & Orte), notes, pantry, **people**, subscriptions, todos, vault, browser, chat, downloads, habits, mail, music, planner, timetrack, weather; **disk** = Dieser PC.
+- `src/core/` – framework code (no UI pages): db, sync, ai, crypto, modules, platform, …; `core/status/` = the device's status lines (sync, backup, updates, storage: `lines.ts`, `StatusLineLink`), read by the settings head and by the module `device`.
+- `src/modules/<id>/` – feature modules (manifest-driven). Present: accounts, bookmarks, budgets, calendar, **device** (Gerätestatus at `/device`, every platform, holds no data), **disk** (desktop only), example (dev only), **feeds** (subscription list), finance, **clock** (Uhr: places and their time, preview), **fitness** (training + rough kcal, preview), invoices, **lists**, **maps** (Karten & Orte), notes, pantry, **people**, subscriptions, todos, vault, browser, chat, downloads, habits, mail, music, planner, timetrack, weather; **disk** = Dieser PC.
 - `src/tools/<id>/` – helpers (16: calc, currency, dates, dev, dice, diff, image, pdf, persona, qr, regex, screenshot, text, timer, timezones, units).
 - `src/connectors/<id>/` – outside services: `google/`, `ics/`.
 - `src/layout/` – app shell: `AppShell`, `Sidebar` (rail), `TopBar`, `BottomNav`, `AreaFrame`, `useNavItems`, `PageContainer`, `CommandPalette`, `QuickAdd`, `tools/` (toolbox panel), `assistant/`.

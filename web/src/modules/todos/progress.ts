@@ -121,5 +121,5 @@ export function leftToday(tasks: readonly ProgressTask[], today: string): Progre
   );
 }
 
-/** Evenings start at this hour (local). */
-export const EVENING_HOUR = 17;
+/** Evenings start at this hour (local); one value with the planner's „Rest verteilen“. */
+export { EVENING_HOUR } from '@/core/settings/focus';

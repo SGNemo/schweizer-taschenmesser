@@ -21,7 +21,7 @@ export function typedAddress(query: string): string | undefined {
 }
 
 /**
- * "Feed hinzufügen": one field for a search word or an address. A word filters the starter catalogue
+ * "Feed eintragen": one field for a search word or an address. A word filters the starter catalogue
  * (one tap adds a source); an address is offered as itself and goes on to the form.
  */
 export function AddDialog({

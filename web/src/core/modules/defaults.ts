@@ -17,7 +17,7 @@ import { db as defaultDb, type TaschenmesserDB } from '@/core/db/db';
 export const DEFAULTS_VERSION_KEY = 'defaults.version';
 export const DEFAULTS_OFF_KEY = 'defaults.off';
 /** The set a fresh installation gets today. */
-export const CURRENT_DEFAULTS_VERSION = 5;
+export const CURRENT_DEFAULTS_VERSION = 6;
 
 /**
  * Modules per default set. `downloads` only exists in the desktop app (`manifest.platforms`), so it is simply not
@@ -27,6 +27,9 @@ const SETS: Readonly<Record<number, readonly string[]>> = {
   4: ['lists', 'budgets', 'downloads'],
   // Module package H-b (2026-11): routines. A device that started with set 4 keeps set 4.
   5: ['lists', 'budgets', 'downloads', 'routines'],
+  // Module package S-b (2026-11): device status. Set 5 is shipped, and a device never changes its set: adding
+  // `device` to set 5 would switch it on unasked on every device that started with it, hence a set of its own.
+  6: ['lists', 'budgets', 'downloads', 'routines', 'device'],
 };
 
 /** The modules a fresh installation gets today (for lists outside the app: README, user docs, website catalog). */

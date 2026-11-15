@@ -164,6 +164,7 @@ export const REMINDER_RESET_KEYS = [
   'leadHint',
   'todoDigest',
   'todoDigestTime',
+  'restReminder',
 ] as const satisfies readonly (keyof FocusSettings)[];
 
 /** Puts a section back to its defaults and offers "Rückgängig" in the confirmation toast. */

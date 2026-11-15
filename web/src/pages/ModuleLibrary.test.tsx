@@ -108,6 +108,19 @@ describe('ModuleLibrary', () => {
     expect(await screen.findByTestId('module-example')).toBeInTheDocument();
   });
 
+  it('„Arbeitszeit“ finds the time tracking (use case „Wochenende retten“, W14) and switches nothing on', async () => {
+    const user = userEvent.setup();
+    await renderLibrary();
+    await user.type(
+      screen.getByRole('searchbox', { name: tComfort.get().library.search }),
+      'Arbeitszeit',
+    );
+    const card = within(await screen.findByTestId('module-timetrack'));
+    await waitFor(() => expect(screen.queryByTestId('module-example')).not.toBeInTheDocument());
+    // Found, not enabled: the person decides with the switch.
+    expect(await toggle(card)).not.toBeChecked();
+  });
+
   it('marks a module that is new since the library was last looked at, once', async () => {
     markLibrarySeen([{ id: 'something-else', version: 1 }]);
     const first = render(

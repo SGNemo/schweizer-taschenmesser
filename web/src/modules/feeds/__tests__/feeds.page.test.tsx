@@ -24,7 +24,7 @@ describe('feeds page: adding made easy', () => {
     const user = userEvent.setup();
     view();
     const box = await screen.findByTestId('feeds-suggestions');
-    const adds = within(box).getAllByRole('button', { name: /hinzufügen/ });
+    const adds = within(box).getAllByRole('button', { name: /abonnieren/ });
     expect(adds).toHaveLength(3);
     await user.click(screen.getByTestId('feeds-catalog-add-tagesschau'));
     await waitFor(async () => expect(await feedRepo.active().count()).toBe(1));

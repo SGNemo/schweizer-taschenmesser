@@ -18,7 +18,7 @@ async function add(page: Page, title: string, url: string, tags = '', kind = '')
   if (tags || kind) await moreFields(page);
   if (kind) await dialog.getByLabel('Art').selectOption({ label: kind });
   if (tags) await dialog.getByLabel('Tags').fill(tags);
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(dialog).toHaveCount(0);
 }
 
@@ -44,12 +44,15 @@ test.describe('Calm Merkliste page (focus audit 2)', () => {
 
   test('a row has one link (the title) and a menu; the title opens the address', async ({
     page,
+    isMobile,
   }) => {
     const row = rowOf(page, 'Pasta Rezept');
     await expect(row.getByRole('link')).toHaveCount(1);
     await expect(row.getByRole('link')).toHaveAttribute('rel', 'noreferrer noopener');
     await expect(row).toContainText('koch.de');
-    await expect(row).toContainText('#Kochen · #Rezept'); // domain and tags as text
+    // Domain and tags as text; the phone leaves the tags out (one meta line, 0b-8 follow-up 15).
+    if (isMobile) await expect(row).not.toContainText('#Kochen');
+    else await expect(row).toContainText('#Kochen · #Rezept');
     await expect(row.getByRole('button', { name: 'Weitere Aktionen' })).toBeVisible();
     // No row anywhere carries more than one link (no separate "Link öffnen" icon any more).
     for (const item of await page
@@ -77,7 +80,7 @@ test.describe('Calm Merkliste page (focus audit 2)', () => {
     await menu.getByRole('menuitem', { name: 'Bearbeiten' }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Titel').fill('Pasta Rezept neu');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(dialog).toHaveCount(0);
     await expect(rowOf(page, 'Pasta Rezept neu')).toBeVisible();
   });
@@ -183,7 +186,7 @@ test.describe('Calm Lesezeichen tiles (focus audit 2)', () => {
     await menu.getByRole('menuitem', { name: 'Bearbeiten' }).click();
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Titel').fill('Bahn neu');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(dialog).toHaveCount(0);
     await tile(page, 'Bahn neu').getByRole('button', { name: 'Weitere Aktionen' }).click();
     await page

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, expect, it } from 'vitest';
@@ -41,7 +41,9 @@ it('a part payment added in the dialog survives "Speichern"', async () => {
   await userEvent.type(await screen.findByLabelText('Gezahlte Summe'), '100');
   await userEvent.click(screen.getByRole('button', { name: 'Teilzahlung erfassen' }));
   await waitFor(async () => expect((await invoiceRepo.get(inv.id))?.payments?.length).toBe(1));
-  await userEvent.click(screen.getByRole('button', { name: 'Speichern' }));
+  await userEvent.click(
+    within(screen.getByRole('dialog')).getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }),
+  );
   await waitFor(() => expect(screen.queryByLabelText('Gezahlte Summe')).toBeNull());
   expect((await invoiceRepo.get(inv.id))?.payments?.map((p) => p.amountMinor)).toEqual([10000]);
 });

@@ -20,11 +20,11 @@ test('a due reminder fires a notification while the app is open', async ({ page 
 
   // The OS popup is what this test is about: the in-app card is off by default, so it must still fire.
   await page.goto('/calendar?tab=reminders&new=1');
-  const dialog = page.getByRole('dialog', { name: 'Erinnerung hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Erinnerung eintragen' });
   await dialog.getByLabel('Titel').fill('Tabletten nehmen');
   await dialog.getByLabel('Datum').fill('2026-09-29');
   await dialog.getByLabel('Beginn').fill('20:00');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0); // write is done once the dialog closed
   await expect(page.getByRole('button', { name: /Tabletten nehmen/ })).toBeVisible();
 

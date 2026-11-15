@@ -28,6 +28,8 @@ export interface CorpusCase {
   fitness?: true;
   /** Run with the Uhr module on (`ParseOptions.place`, a stub that knows Tokio, New York and Lisbon). */
   place?: true;
+  /** Run with the planner on (`ParseOptions.breaks`): „Pause …“ / „Freizeit …“ lines. */
+  breaks?: true;
 }
 
 export const CORPUS_NOW = new Date(2026, 9, 29, 10, 0);
@@ -236,6 +238,33 @@ export const CORPUS: CorpusCase[] = [
     date: '2026-11-03',
     hardDue: true,
   },
+  // Breaks (use case „Wochenende retten“, package 4a): with the planner on a line that starts with „Pause“ or
+  // „Freizeit“ is a blocker of its day; the day, the span or the length only when typed.
+  {
+    from: 'break',
+    breaks: true,
+    text: 'Pause 2 Std Zocken',
+    type: 'break',
+    title: 'Zocken',
+    estimateMin: 120,
+  },
+  {
+    from: 'break',
+    breaks: true,
+    text: 'Freizeit Sa 14 bis 16 Uhr',
+    type: 'break',
+    title: 'Freizeit',
+    date: '2026-10-31',
+    time: '14:00',
+    endTime: '16:00',
+  },
+  { from: 'break', breaks: true, text: 'Pause morgen', type: 'break', date: '2026-10-30' },
+  { from: 'break', breaks: true, text: 'Pause', type: 'break', title: 'Pause' },
+  // The app never guesses what leisure is: a plain „Zocken“ stays a ToDo, and so does „Pause …“ with the planner off.
+  { from: 'break', breaks: true, text: 'Zocken', type: 'todo', title: 'Zocken' },
+  { from: 'break', breaks: true, text: 'Pausenbrot kaufen', type: 'todo' },
+  { from: 'break', breaks: true, text: 'Pause-Taste reparieren', type: 'todo' },
+  { from: 'break', text: 'Pause 2 Std Zocken', type: 'todo', estimateMin: 120 },
   // Uhr: „uhr <Stadt>“ adds a place, parsed with the module on; anything that is no place stays a ToDo.
   { from: 'clock', place: true, text: 'uhr Tokio', type: 'place', title: 'Tokio' },
   { from: 'clock', place: true, text: 'Uhr: New York', type: 'place', title: 'New York' },
@@ -360,4 +389,57 @@ export const CORPUS: CorpusCase[] = [
     type: 'todo',
     title: 'Mahnung Stadtwerke prüfen',
   },
+  // Use case „Wochenende retten“ (W04): „bis/spätestens <Tag>“ is a deadline for a thing to do, even with a
+  // time; a time span („bis 18 Uhr“), an appointment or a leisure slot stays an event.
+  {
+    from: 'WE-W04',
+    text: 'Team-Sachen lesen bis So 18:00',
+    type: 'todo',
+    date: '2026-11-01',
+    time: '18:00',
+    title: 'Team-Sachen lesen',
+  },
+  { from: 'WE-W04', text: 'Team-Sachen lesen bis Sonntag', type: 'todo', date: '2026-11-01' },
+  {
+    from: 'WE-W04',
+    text: 'spätestens Montag Bericht schicken',
+    type: 'todo',
+    date: '2026-11-02',
+    title: 'Bericht schicken',
+  },
+  { from: 'WE-W04', text: 'Termin bis 18 Uhr', type: 'event', time: '18:00' },
+  { from: 'WE-W04', text: 'Mo 9:30 Teamrunde', type: 'event', date: '2026-11-02', time: '09:30' },
+  { from: 'WE-W04', text: 'Fr 20 Uhr Kino mit Anna', type: 'event', date: '2026-10-30' },
+  { from: 'WE-W04', text: 'Sa 14 Uhr Fußball', type: 'event', date: '2026-10-31', time: '14:00' },
+  { from: 'WE-W04', text: 'Miete bis 20.11. 850 €', type: 'invoice', amountMinor: 85000 },
+  // A start before „bis“ makes a span, not a deadline: stays an event (review of package 1).
+  {
+    from: 'WE-W04',
+    text: 'Fr 18 Uhr bis So Hütte',
+    type: 'event',
+    date: '2026-10-30',
+    time: '18:00',
+  },
+  { from: 'WE-W04', text: 'Konferenz 10.11. 9 Uhr bis 12.11.', type: 'event', date: '2026-11-10' },
+  { from: 'WE-W04', text: 'Seminar Mo 9 Uhr bis Mi', type: 'event', date: '2026-11-02' },
+  { from: 'WE-W04', text: 'Montage Regal bis Sonntag 18 Uhr', type: 'todo', date: '2026-11-01' },
+  // W06 (package 5a): „erinnere mich“ is the only trigger word; „falls nötig“ keeps a timed line a Termin
+  // (the preview row switches it to „Erinnerung“ in one tap). The reminder target adds `once`.
+  {
+    from: 'WE-W06',
+    text: 'Mo 7:30 krankmelden falls nötig',
+    type: 'event',
+    date: '2026-11-02',
+    time: '07:30',
+  },
+  {
+    from: 'WE-W06',
+    text: 'Mo 7:30 erinnere mich: krankmelden',
+    type: 'reminder',
+    date: '2026-11-02',
+    time: '07:30',
+    title: 'Krankmelden',
+  },
+  { from: 'WE-W06', text: 'Fr 20 Uhr Kino mit Anna', type: 'event', time: '20:00' },
+  { from: 'WE-W06', text: 'Mo 9:30 Teamrunde', type: 'event', title: 'Teamrunde' },
 ];
