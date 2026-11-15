@@ -27,7 +27,8 @@ const leadAt = (date: string, time: string, minutes: number): number =>
  * Key: `event:<id>:<date>T<time>`. With the focus settings "gestaffelt" there are extra, soft
  * notifications at the chosen lead times (`…:s<minutes>`); with "Ruhige Erinnerungen" an unanswered
  * reminder comes back (`…:r1` …, every `repeatMinutes`, at most `repeatMax`) until it is answered
- * (`core/notifications/ack`); quiet hours and "Stumm" thin the repeats out centrally.
+ * (`core/notifications/ack`); quiet hours and "Stumm" thin the repeats out centrally. A reminder with
+ * `once` („einmal“, from the quick capture) notifies exactly once per occurrence, at its time.
  */
 const source: NotificationSource = async ({ from, to }) => {
   const prefs = await getSettings('module.calendar', settingsSchema, settings.defaults as never);
@@ -49,6 +50,8 @@ const source: NotificationSource = async ({ from, to }) => {
       const key = `event:${e.id}:${date}T${time}`;
       const url = `/calendar?view=day&date=${date}`;
       if (inRange(at)) out.push({ key, at, title: e.title, body: e.note, url, taken: e.taken });
+      // „einmal“: this one notification and nothing else – no extra lead, stage or repeat.
+      if (e.once) continue;
       for (const extra of new Set(e.notify!.extraMinutes ?? [])) {
         if (extra === e.notify!.minutesBefore) continue;
         const extraAt = leadAt(date, time, extra);

@@ -1866,6 +1866,8 @@ export const de = {
       empty: 'Noch keine Erinnerungen.',
       emptyAction: 'Erinnerung eintragen',
       next: 'Nächste',
+      /** A reminder that notifies exactly once at its time (from the quick capture), shown on its row. */
+      once: 'einmal',
       ended: 'Beendet',
       paused: 'Pausiert',
       active: 'Aktiv',

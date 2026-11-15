@@ -423,4 +423,23 @@ export const CORPUS: CorpusCase[] = [
   { from: 'WE-W04', text: 'Konferenz 10.11. 9 Uhr bis 12.11.', type: 'event', date: '2026-11-10' },
   { from: 'WE-W04', text: 'Seminar Mo 9 Uhr bis Mi', type: 'event', date: '2026-11-02' },
   { from: 'WE-W04', text: 'Montage Regal bis Sonntag 18 Uhr', type: 'todo', date: '2026-11-01' },
+  // W06 (package 5a): „erinnere mich“ is the only trigger word; „falls nötig“ keeps a timed line a Termin
+  // (the preview row switches it to „Erinnerung“ in one tap). The reminder target adds `once`.
+  {
+    from: 'WE-W06',
+    text: 'Mo 7:30 krankmelden falls nötig',
+    type: 'event',
+    date: '2026-11-02',
+    time: '07:30',
+  },
+  {
+    from: 'WE-W06',
+    text: 'Mo 7:30 erinnere mich: krankmelden',
+    type: 'reminder',
+    date: '2026-11-02',
+    time: '07:30',
+    title: 'Krankmelden',
+  },
+  { from: 'WE-W06', text: 'Fr 20 Uhr Kino mit Anna', type: 'event', time: '20:00' },
+  { from: 'WE-W06', text: 'Mo 9:30 Teamrunde', type: 'event', title: 'Teamrunde' },
 ];

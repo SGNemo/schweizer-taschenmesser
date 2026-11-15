@@ -79,6 +79,8 @@ const calendar: CaptureTarget = {
 const reminders: CaptureTarget = {
   type: 'reminder',
   // A reminder is a calendar event of the kind "reminder" that notifies at its time (since 0.7.0).
+  // „einmal“ (`once`): a reminder made here notifies exactly once at its time – no lead, stage or
+  // repeat (decision Q4 a); reminders set in the calendar dialog keep the global rule.
   moduleId: 'calendar',
   collection: 'event',
   build: (f, ctx) => ({
@@ -88,6 +90,7 @@ const reminders: CaptureTarget = {
     startDate: date(f.date ?? ctx.today),
     startTime: f.time ?? '09:00',
     notify: { minutesBefore: 0, enabled: true },
+    once: true,
     ...(f.recurrence ? { recurrence: f.recurrence } : {}),
     ...noteOf(f.note),
   }),

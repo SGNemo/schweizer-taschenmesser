@@ -100,6 +100,7 @@ export function ReminderRow({ r, onOpen }: { r: Stored<CalendarEvent>; onOpen: (
       meta={
         <>
           {recurrence ? `${recurrence} · ` : null}
+          {r.once ? `${t.calendar.reminders.once} · ` : null}
           {next
             ? `${t.calendar.reminders.next}: ${formatDay(next.date, 'EEE, d. MMM yyyy')} · ${next.time}`
             : null}

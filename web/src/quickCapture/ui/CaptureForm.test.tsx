@@ -240,6 +240,33 @@ describe('CaptureForm', () => {
     expect(reminder).toMatchObject({ title: 'Oma anrufen', kind: 'reminder' });
   });
 
+  it('W06: a row with day and time switches from „Termin“ to „Erinnerung“ in the preview, the kinds line follows, it fires once', async () => {
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    render(<CaptureForm onSaved={onSaved} />);
+    fireEvent.change(await box(), {
+      target: { value: 'Mo 7:30 krankmelden falls nötig\nFr 20 Uhr Kino mit Anna\nMilch kaufen' },
+    });
+    await waitFor(() => expect(rowTypes()).toEqual(['event', 'event', 'todo']));
+    expect(screen.getByTestId('capture-kinds')).toHaveTextContent('Termin 2 · ToDo 1');
+    await pickTarget(user, 0, 'reminder');
+    await waitFor(() => expect(rowTypes()).toEqual(['reminder', 'event', 'todo']));
+    expect(screen.getByTestId('capture-kinds')).toHaveTextContent(
+      'Erinnerung 1 · Termin 1 · ToDo 1',
+    );
+    await user.click(screen.getByRole('button', { name: t.quickCapture.multi.saveAll(3) }));
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    const events = await db.table('calendar_event').toArray();
+    expect(events.find((e) => /krankmelden/i.test(e.title))).toMatchObject({
+      kind: 'reminder',
+      once: true,
+      startDate: '2026-10-05',
+      startTime: '07:30',
+    });
+    // The counter line stays an appointment with the calendar's own rule.
+    expect(events.find((e) => /Kino/.test(e.title))).not.toHaveProperty('once');
+  });
+
   it('unclear rows land in the inbox as typed; a batch never books (one tap, a `$` line becomes a ToDo)', async () => {
     const user = userEvent.setup();
     const onSaved = vi.fn();
