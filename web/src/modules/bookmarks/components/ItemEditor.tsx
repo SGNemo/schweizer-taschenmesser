@@ -15,7 +15,7 @@ import {
   TextField,
 } from '@/ui';
 import { findDuplicate, formatTags, normalizeUrl, parseTags, statusOf } from '../logic';
-import { fetchPreviewFor, previewEnabled } from '../preview';
+import { fetchPreviewFor, previewAvailable, previewEnabled } from '../preview';
 import { itemRepo } from '../repo';
 import { KINDS, type BookmarkItem, type Kind } from '../schema';
 import { deleteWithUndo } from '@/core/undo/withToast';
@@ -79,8 +79,10 @@ function Fields({
   const [note, setNote] = useState(existing?.note ?? '');
   const [error, setError] = useState('');
   // A shared link gets its preview on saving, unless the tick is taken away (the page learns of the fetch).
-  const shared = !existing && !!draft.shared && !!draft.url;
-  const [withPreview, setWithPreview] = useState(shared);
+  // Offered only where this device can ask the page at all (`previewAvailable`).
+  const canPreview = useLiveQuery(() => previewAvailable(), []) === true;
+  const shared = !existing && !!draft.shared && !!draft.url && canPreview;
+  const [withPreview, setWithPreview] = useState(true);
   // The same page (or, without an address, the same title) already saved: say so, never block.
   const all = useLiveQuery(() => itemRepo.active().toArray(), []);
   const duplicate = all ? findDuplicate(all, { title, url }, existing?.id) : undefined;

@@ -58,7 +58,7 @@ Nemo is a set of small modules for everyday life. You turn on what you need in t
 |  | Routines | Cleaning plan and household routines | on for new installations |
 |  | Pantry | What’s in the fridge, the cupboard and the freezer? | optional |
 |  | Fitness | Keep a rough log of training and food | preview |
-| **Knowledge** | Saved | Save links, reading, films, places and ideas | optional |
+| **Knowledge** | Saved | What you still want to look at, read, buy, try out or visit | optional |
 |  | Notes | Notebook with formatted text (Markdown), a fixed scratchpad always at the top, pinning and search | optional |
 |  | Chat | Conversations with the built-in local model or your providers | preview |
 |  | Browser | Simple browser with tabs, bookmarks and a private mode | preview, Windows and Android apps only |

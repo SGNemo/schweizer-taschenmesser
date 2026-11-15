@@ -1,7 +1,7 @@
 import type { Stored } from '@/core/db/types';
 import { copyData } from '@/core/db/copy';
 import { bus } from '@/core/events';
-import { loadModuleStates } from '@/core/modules/activation';
+import { loadModuleStates, useModuleStates } from '@/core/modules/activation';
 import { offerEnableModule } from '@/core/modules/offerEnable';
 import { whenServicesSettled } from '@/core/modules/servicesReady';
 import { getPlatform } from '@/core/platform';
@@ -27,7 +27,10 @@ export function bookmarkMenu(
     read?: (item: Stored<BookmarkItem>) => void;
     /** Offer "Vorschau von der Seite holen" (list and pinboard; the link tiles show no preview). */
     preview?: boolean;
-    /** Offer "In den Plan" / "Aus dem Plan nehmen" (not on the permanent link tiles). */
+    /**
+     * Offer "In den Plan" / "Aus dem Plan nehmen": only while the planner is switched on, and never for the
+     * permanent links (kind "link", the tiles).
+     */
     plan?: boolean;
   },
 ): RowMenuItem[] {
@@ -61,7 +64,7 @@ export function bookmarkMenu(
             onSelect: () => void itemRepo.update(item.id, { done: false, started: false }),
           },
         ]),
-    ...(on.plan && status !== 'done'
+    ...(on.plan && status !== 'done' && item.kind !== 'link'
       ? [
           item.inPlan
             ? {
@@ -75,18 +78,10 @@ export function bookmarkMenu(
             : {
                 id: 'plan',
                 label: t.bookmarks.planAdd,
-                onSelect: () => {
-                  const mark = async () => {
-                    await undoableWithToast(t.bookmarks.planAdded, t.bookmarks.planAdded, () =>
-                      itemRepo.update(item.id, { inPlan: true }),
-                    );
-                  };
-                  void loadModuleStates().then((states) =>
-                    states.planner === true
-                      ? mark()
-                      : offerEnableModule('planner', t.bookmarks.planOff, mark),
-                  );
-                },
+                onSelect: () =>
+                  void undoableWithToast(t.bookmarks.planAdded, t.bookmarks.planAdded, () =>
+                    itemRepo.update(item.id, { inPlan: true }),
+                  ),
               },
         ]
       : []),
@@ -97,10 +92,16 @@ export function bookmarkMenu(
             id: 'preview',
             label: t.bookmarks.previewFetch,
             onSelect: () =>
-              void fetchPreviewNow(item.id, item.url!).then((ok) =>
+              void fetchPreviewNow(item.id, item.url!).then((result) =>
                 useUiStore
                   .getState()
-                  .toast(ok ? t.bookmarks.previewFetched : t.bookmarks.previewNone),
+                  .toast(
+                    result === 'ok'
+                      ? t.bookmarks.previewFetched
+                      : result === 'unavailable'
+                        ? t.bookmarks.previewUnavailable
+                        : t.bookmarks.previewNone,
+                  ),
               ),
           },
         ]
@@ -179,6 +180,8 @@ export function BookmarkRow({
   onRead?: (item: Stored<BookmarkItem>) => void;
 }) {
   const narrow = usePageWidthAtLeast(48) === false;
+  // "im Plan" is only true while there is a plan: the mark stays stored when the planner is switched off.
+  const planner = useModuleStates()?.planner === true;
   return (
     <ItemRow
       title={item.title}
@@ -196,7 +199,7 @@ export function BookmarkRow({
       meta={[
         t.bookmarks.kinds[item.kind],
         statusOf(item) === 'started' ? t.bookmarks.statuses.started : undefined,
-        item.inPlan && !item.done ? t.bookmarks.inPlan : undefined,
+        planner && item.inPlan && !item.done ? t.bookmarks.inPlan : undefined,
         hostOf(item.url),
         ...(narrow ? [] : item.tags.map((x) => `#${x}`)),
       ]
@@ -207,7 +210,7 @@ export function BookmarkRow({
         filterTag: onFilterTag,
         read: onRead,
         preview: true,
-        plan: true,
+        plan: planner,
       })}
     />
   );

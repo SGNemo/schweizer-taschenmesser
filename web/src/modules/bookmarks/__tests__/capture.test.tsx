@@ -102,7 +102,9 @@ describe('preview only on a click or for a shared link (setting off)', () => {
         onClose={() => {}}
       />,
     );
-    expect(screen.getByRole('checkbox', { name: /Vorschau von der Seite holen/ })).toBeChecked();
+    expect(
+      await screen.findByRole('checkbox', { name: /Vorschau von der Seite holen/ }),
+    ).toBeChecked();
     await user.click(screen.getByRole('button', { name: 'Merkzettel eintragen' }));
     await waitFor(async () => {
       const [item] = await itemRepo.active().toArray();
@@ -119,7 +121,7 @@ describe('preview only on a click or for a shared link (setting off)', () => {
         onClose={onClose}
       />,
     );
-    await user.click(screen.getByRole('checkbox', { name: /Vorschau von der Seite holen/ }));
+    await user.click(await screen.findByRole('checkbox', { name: /Vorschau von der Seite holen/ }));
     await user.click(screen.getByRole('button', { name: 'Merkzettel eintragen' }));
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     await new Promise((r) => setTimeout(r, 50));
@@ -144,5 +146,31 @@ describe('preview only on a click or for a shared link (setting off)', () => {
     expect(
       bookmarkMenu(plain, { edit: () => {}, preview: true }).some((m) => m.id === 'preview'),
     ).toBe(false);
+  });
+});
+
+describe('the browser app without a sync server cannot ask a page', () => {
+  beforeEach(() => {
+    setPlatform({ ...createWebPlatform(), fetch: vi.fn() as never });
+  });
+
+  it('the row action says so instead of blaming the page', async () => {
+    const { fetchPreviewNow, previewAvailable } = await import('../preview');
+    const item = await create({ title: 'T', url: 'https://a.example/x' });
+    expect(await previewAvailable()).toBe(false);
+    expect(await fetchPreviewNow(item.id, 'https://a.example/x')).toBe('unavailable');
+    expect((await itemRepo.get(item.id))?.preview).toBeUndefined();
+  });
+
+  it('a shared link shows no preview tick there', async () => {
+    render(
+      <ItemEditor
+        target={{ draft: true, title: 'T', url: 'https://a.example/x', shared: true }}
+        onClose={() => {}}
+      />,
+    );
+    await screen.findByLabelText('Adresse (Link)');
+    await new Promise((r) => setTimeout(r, 50));
+    expect(screen.queryByRole('checkbox', { name: /Vorschau von der Seite holen/ })).toBeNull();
   });
 });

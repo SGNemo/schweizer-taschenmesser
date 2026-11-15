@@ -210,7 +210,7 @@ test.describe('Plan and widget (round 2026-11, package 3)', () => {
     await enable(page, 'bookmarks');
     await add(page, 'Dune', '', '', 'Film/Serie');
     await (await rowMenu(page, 'Dune')).getByRole('menuitem', { name: 'In den Plan' }).click();
-    await expect(page.getByText('Im Plan. Der Planer sucht freie Zeit dafür.')).toBeVisible();
+    await expect(page.getByText('Steht jetzt im Plan.')).toBeVisible();
     await expect(rowOf(page, 'Dune')).toContainText('im Plan');
     await ready(page, '/planner');
     await expect(page.locator('main').getByText('Film/Serie: Dune').first()).toBeVisible();
@@ -224,14 +224,12 @@ test.describe('Plan and widget (round 2026-11, package 3)', () => {
     await expect(rowOf(page, 'Dune')).toBeVisible();
   });
 
-  test('without the planner the action offers to switch it on', async ({ page }) => {
+  test('without the planner the menu has no plan entry', async ({ page }) => {
     await enable(page, 'bookmarks');
     await add(page, 'Dune', '', '', 'Film/Serie');
-    await (await rowMenu(page, 'Dune')).getByRole('menuitem', { name: 'In den Plan' }).click();
-    await expect(
-      page.getByText('Dafür braucht es das Modul „Planer“, das gerade ausgeschaltet ist.'),
-    ).toBeVisible();
-    await expect(rowOf(page, 'Dune')).not.toContainText('im Plan');
+    const menu = await rowMenu(page, 'Dune');
+    await expect(menu.getByRole('menuitem', { name: 'Bearbeiten' })).toBeVisible();
+    await expect(menu.getByRole('menuitem', { name: 'In den Plan' })).toHaveCount(0);
   });
 });
 

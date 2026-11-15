@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
+import { useModuleStates } from '@/core/modules/activation';
 import { today } from '@/core/time/now';
 import { t } from '@/strings';
 import { WidgetList } from '@/ui';
@@ -11,7 +12,11 @@ import { itemRepo } from '../repo';
  * their own widget.
  */
 export default function RecentWidget() {
-  const next = useLiveQuery(async () => pickNext(await itemRepo.active().toArray()), []);
+  const planner = useModuleStates()?.planner === true;
+  const next = useLiveQuery(
+    async () => pickNext(await itemRepo.active().toArray(), 3, planner),
+    [planner],
+  );
   return (
     <WidgetList
       emptyAction={{ label: t.homeEmpty.bookmarks, to: '/bookmarks?new=1' }}
@@ -27,7 +32,7 @@ export default function RecentWidget() {
       entries={(next ?? []).map((i) => ({
         key: i.id,
         title: i.title,
-        meta: [t.bookmarks.kinds[i.kind], i.inPlan ? t.bookmarks.inPlan : undefined]
+        meta: [t.bookmarks.kinds[i.kind], planner && i.inPlan ? t.bookmarks.inPlan : undefined]
           .filter(Boolean)
           .join(' · '),
       }))}

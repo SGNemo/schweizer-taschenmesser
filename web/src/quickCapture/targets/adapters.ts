@@ -127,7 +127,7 @@ const BOOKMARK_KIND_WORDS: Record<string, string> = {
 
 /** "film: Dune" → kind `watch`, title "Dune". A word alone ("Buch") stays the title. */
 export function bookmarkKindFromText(text: string): { kind?: string; title: string } {
-  const match = /^(\p{L}+):?\s+(\S.*)$/u.exec(text.trim());
+  const match = /^(\p{L}+)(?::\s*|\s+)(\S[\s\S]*)$/u.exec(text.trim());
   const kind = match ? BOOKMARK_KIND_WORDS[match[1]!.toLowerCase()] : undefined;
   return kind ? { kind, title: match![2]!.trim() } : { title: text.trim() };
 }

@@ -79,7 +79,7 @@ describe('BookmarkRow', () => {
     expect(onEdit).toHaveBeenCalledOnce();
   });
 
-  it('the menu holds edit, the two status entries, plan, fetch preview, copy link, gift idea, one entry per tag, duplicate and delete', async () => {
+  it('the menu holds edit, the two status entries, fetch preview, copy link, gift idea, one entry per tag, duplicate and delete', async () => {
     const { row, onEdit, onFilterTag } = setup(
       stored({ title: 'Pasta', url: 'https://koch.de/', tags: ['Kochen', 'Rezept'] }),
     );
@@ -91,7 +91,6 @@ describe('BookmarkRow', () => {
       'Bearbeiten',
       'Als angefangen markieren',
       'Als erledigt markieren',
-      'In den Plan',
       'Vorschau von der Seite holen',
       'Link kopieren',
       'Als Geschenkidee',

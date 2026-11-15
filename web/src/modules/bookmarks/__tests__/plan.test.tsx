@@ -4,7 +4,8 @@ import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import type { Stored } from '@/core/db/types';
-import { validateManifest } from '@/core/modules/registry';
+import { enableModule } from '@/core/modules/activation';
+import { getManifest, validateManifest } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
 import { bookmarkMenu } from '../components/BookmarkRow';
 import { isWeekendNear, pickNext, planMinutesOf } from '../logic';
@@ -77,8 +78,9 @@ describe('"In den Plan" in the menu', () => {
     const done = await menu({ done: true });
     expect(done).not.toContain('plan');
     expect(done).not.toContain('unplan');
-    // The permanent link tiles have no plan entry.
+    // No entry while the planner is off (`plan: false`), and never for a permanent link.
     expect(await menu({}, false)).not.toContain('plan');
+    expect(await menu({ kind: 'link' })).not.toContain('plan');
   });
 
   it('taking it out keeps the Merkzettel', async () => {
@@ -106,6 +108,12 @@ describe('widget "Als Nächstes"', () => {
     ]);
     expect(picked.map((i) => i.title)).toEqual(['Im Plan', 'Angefangen', 'Neu']);
     expect(pickNext([])).toEqual([]);
+    // With the planner off the mark means nothing: it neither ranks nor shows.
+    expect(
+      pickNext([make('Im Plan', 1, { inPlan: true }), make('Neu', 5)], 3, false).map(
+        (i) => i.title,
+      ),
+    ).toEqual(['Neu', 'Im Plan']);
   });
 
   it('the weekend starts on Friday', () => {
@@ -116,6 +124,7 @@ describe('widget "Als Nächstes"', () => {
   });
 
   it('shows the three with their kind and one calm line, no count', async () => {
+    await enableModule(getManifest('planner')!);
     await create({ title: 'Dune', kind: 'watch', inPlan: true });
     await create({ title: 'Kopfhörer', kind: 'buy' });
     const view = render(

@@ -7,7 +7,9 @@
 import { useEffect, useState } from 'react';
 import { deleteBlob, getBlob, putBlob } from '@/core/blobs';
 import { parsePageMeta } from '@/core/io/pageMeta';
-import { fetchPublic } from '@/core/net/fetchPublic';
+import { fetchPublic, PublicFetchError } from '@/core/net/fetchPublic';
+import { getPlatform } from '@/core/platform';
+import { loadServerConfig } from '@/core/sync/service';
 import { getSettings } from '@/core/settings/settings';
 import { itemRepo } from './repo';
 import { settings as moduleSettings, settingsSchema } from './settings';
@@ -28,14 +30,27 @@ export async function previewEnabled(): Promise<boolean> {
   }
 }
 
+/** `unavailable`: this device cannot ask the page (the browser app has no way out without the sync server). */
+export type PreviewResult = 'ok' | 'none' | 'unavailable';
+
+/** Can this device fetch a page at all? The desktop and Android app ask it themselves; the browser app needs the sync server. */
+export async function previewAvailable(): Promise<boolean> {
+  if (getPlatform().isNative) return true;
+  try {
+    return !!(await loadServerConfig());
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Fetches and stores the preview of one item; every failure ends quietly (the row just has no preview).
- * `true` = something was stored.
+ * `ok` = something was stored.
  */
-export async function fetchPreviewNow(id: string, url: string): Promise<boolean> {
+export async function fetchPreviewNow(id: string, url: string): Promise<PreviewResult> {
   try {
     const res = await fetchPublic(url, undefined, undefined, 'page');
-    if (!res.ok) return false;
+    if (!res.ok) return 'none';
     const meta = parsePageMeta(await res.text(), url);
     let image = false;
     if (meta.imageUrl) {
@@ -49,14 +64,14 @@ export async function fetchPreviewNow(id: string, url: string): Promise<boolean>
         /* no picture is fine */
       }
     }
-    if (!meta.title && !meta.description && !meta.siteName && !image) return false;
+    if (!meta.title && !meta.description && !meta.siteName && !image) return 'none';
     await itemRepo.update(id, {
       preview: { site: meta.siteName, description: meta.description, image: image || undefined },
     });
-    return true;
-  } catch {
+    return 'ok';
+  } catch (e) {
     /* offline, blocked, not a page: no preview */
-    return false;
+    return e instanceof PublicFetchError && e.code === 'no-proxy' ? 'unavailable' : 'none';
   }
 }
 

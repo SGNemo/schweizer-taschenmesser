@@ -1,6 +1,6 @@
 # Merkliste – role and plan (round "Tiefe & Politur", 2026-11)
 
-Maintainer: "Merkliste ist nicht polished genug, mir fehlt der Sinn." This file fixes the role first, then the packages. Decisions: [decisions/modules-household-knowledge.md](../../decisions/modules-household-knowledge.md).
+Maintainer: "Merkliste ist nicht polished genug, mir fehlt der Sinn." This file fixes the role first, then the packages. Decisions: [decisions/modules-bookmarks.md](../../decisions/modules-bookmarks.md).
 
 ## Role (two sentences)
 

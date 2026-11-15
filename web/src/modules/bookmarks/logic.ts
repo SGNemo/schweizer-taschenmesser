@@ -32,7 +32,8 @@ const TRACKING = /^(utm_\w+|fbclid|gclid|dclid|msclkid|mc_cid|mc_eid|igshid|si|r
 
 /**
  * The address reduced to what makes it the same page: host without "www.", path without a trailing
- * slash, the remaining query sorted; scheme, fragment and tracking parameters are dropped. Used only
+ * slash, the remaining query sorted; scheme, fragment and tracking parameters are dropped (a fragment
+ * that is a route, "#/…" or "#!…", stays). Used only
  * to compare, never stored. Not an address → undefined.
  */
 export function urlKey(input: string | undefined): string | undefined {
@@ -45,7 +46,8 @@ export function urlKey(input: string | undefined): string | undefined {
     .map(([k, v]) => `${k}=${v}`)
     .join('&');
   const path = url.pathname.replace(/\/+$/, '');
-  return `${url.host.replace(/^www\./, '').toLowerCase()}${path}${query ? `?${query}` : ''}`;
+  const route = /^#[/!]/.test(url.hash) ? url.hash : '';
+  return `${url.host.replace(/^www\./, '').toLowerCase()}${path}${query ? `?${query}` : ''}${route}`;
 }
 
 /**
@@ -142,12 +144,13 @@ export function isWeekendNear(day: string): boolean {
 
 /**
  * What the widget offers next: at most `max` open Merkzettel, never the permanent links (kind "link").
- * First what is in the plan, then what was started, then the rest; inside each the newest first.
+ * First what is in the plan (only while the planner is on: `planner`), then what was started, then the rest;
+ * inside each the newest first.
  */
 export function pickNext<
   T extends Pick<BookmarkItem, 'kind' | 'done' | 'started' | 'inPlan'> & { createdAt: number },
->(items: readonly T[], max = 3): T[] {
-  const rank = (i: T) => (i.inPlan ? 0 : i.started ? 1 : 2);
+>(items: readonly T[], max = 3, planner = true): T[] {
+  const rank = (i: T) => (planner && i.inPlan ? 0 : i.started ? 1 : 2);
   return items
     .filter((i) => !i.done && i.kind !== 'link')
     .sort((a, b) => rank(a) - rank(b) || b.createdAt - a.createdAt)
