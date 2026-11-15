@@ -59,9 +59,13 @@ describe('routine editor: one way to set a routine up', () => {
     expect(await screen.findByLabelText('Wie oft')).toHaveValue('weekdays');
     const sat = screen.getByRole('button', { name: 'Sa' });
     expect(sat).toHaveAttribute('aria-pressed', 'true');
-    expect(sat).toBeDisabled();
+    // The last day stays chosen, stays reachable and says why.
+    expect(sat).toHaveAttribute('aria-disabled', 'true');
+    expect(sat).toHaveAccessibleDescription('Ein Tag bleibt immer gewählt.');
+    await user.click(sat);
+    expect(sat).toHaveAttribute('aria-pressed', 'true');
     await user.click(screen.getByRole('button', { name: 'Mo' }));
-    expect(sat).toBeEnabled();
+    expect(sat).not.toHaveAttribute('aria-disabled');
   });
 
   it('„Anders“ opens the full rule', async () => {
@@ -73,6 +77,38 @@ describe('routine editor: one way to set a routine up', () => {
 });
 
 describe('Durchführen: step by step', () => {
+  it('a turn ticked elsewhere meanwhile: a late tick is not written into the new turn', async () => {
+    const user = userEvent.setup();
+    const day = today();
+    const r = await routineRepo.create({
+      name: 'Abendroutine',
+      repeat: { freq: 'daily', interval: 1 },
+      startDate: day,
+      dueDate: day,
+      people: [],
+      turn: 0,
+      steps: [
+        { id: 'a', text: 'Tasche packen' },
+        { id: 'b', text: 'Zähne putzen' },
+      ],
+    });
+    render(
+      <MemoryRouter>
+        <RoutineRun id={r.id} onClose={vi.fn()} onEdit={vi.fn()} />
+      </MemoryRouter>,
+    );
+    const box = await screen.findByRole('checkbox', { name: 'Tasche packen' });
+    // Done on another device: the row moves on before the tick lands.
+    const getSpy = vi.spyOn(routineRepo, 'get').mockResolvedValueOnce({
+      ...(await routineRepo.get(r.id))!,
+      dueDate: '2099-01-01',
+    });
+    await user.click(box);
+    await waitFor(() => expect(getSpy).toHaveBeenCalled());
+    getSpy.mockRestore();
+    expect((await routineRepo.get(r.id))?.progress).toBeUndefined();
+  });
+
   beforeEach(async () => {
     await db.table('routines_routine').clear();
   });

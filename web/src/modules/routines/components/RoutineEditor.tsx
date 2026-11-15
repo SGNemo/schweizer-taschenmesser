@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { weekdayShort } from '@/core/recurrence/describe';
 import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
@@ -12,6 +12,7 @@ import {
   Dialog,
   Form,
   FormActions,
+  Icon,
   SelectField,
   TextArea,
   TextField,
@@ -145,6 +146,9 @@ function Fields({
     if (next === 'custom' && rhythm !== 'custom') setCustom(ruleOf(rhythm, days));
   }
 
+  const last = days.length === 1 ? days[0] : undefined;
+  const lastDayHintId = useId();
+
   const repeat: Recurrence =
     rhythm === 'custom' ? custom : ruleOf(rhythm, rhythm === 'weekdays' ? days : []);
 
@@ -191,6 +195,7 @@ function Fields({
                 aria-pressed={chosen === id}
                 onClick={() => choose(id)}
               >
+                {chosen === id ? <Icon name="check" size={16} /> : null}
                 {t.routines.starts[id].label}
               </button>
             ))}
@@ -200,6 +205,7 @@ function Fields({
               aria-pressed={chosen === undefined}
               onClick={() => choose(undefined)}
             >
+              {chosen === undefined ? <Icon name="check" size={16} /> : null}
               {t.routines.starts.blank}
             </button>
           </div>
@@ -251,14 +257,22 @@ function Fields({
                 type="button"
                 className={styles.chip}
                 aria-pressed={days.includes(wd)}
-                // The last day stays chosen: a routine without a day would never come round.
-                disabled={days.length === 1 && days[0] === wd}
-                onClick={() => toggleDay(wd)}
+                // The last day stays chosen (a routine without a day would never come round); it stays in the
+                // tab order and says why it does not change.
+                aria-disabled={last === wd || undefined}
+                aria-describedby={last === wd ? lastDayHintId : undefined}
+                onClick={() => (last === wd ? undefined : toggleDay(wd))}
               >
+                {days.includes(wd) ? <Icon name="check" size={16} /> : null}
                 {weekdayShort(wd)}
               </button>
             ))}
           </div>
+          {last !== undefined ? (
+            <span id={lastDayHintId} className={styles.hint}>
+              {t.routines.fields.lastDay}
+            </span>
+          ) : null}
         </fieldset>
       ) : null}
       {rhythm === 'custom' ? (

@@ -76,6 +76,21 @@ describe('steps', () => {
     expect(stepsText(before)).toBe('Wasser trinken\nZähne putzen');
   });
 
+  it('with the same number of lines, a corrected line keeps the id of the step at its place', () => {
+    const before = [
+      { id: 'a', text: 'Wasser trinken' },
+      { id: 'b', text: 'Zähne putzn' },
+    ];
+    expect(parseSteps('Wasser trinken\nZähne putzen', before, ids)).toEqual([
+      { id: 'a', text: 'Wasser trinken' },
+      { id: 'b', text: 'Zähne putzen' },
+    ]);
+    // A line more: the changed text is a new step.
+    expect(
+      parseSteps('Wasser trinken\nZähne putzen\nAnziehen', before, ids).map((s) => s.id),
+    ).toEqual(['a', 'n1', 'n2']);
+  });
+
   it('at most 40 steps', () => {
     const text = Array.from({ length: 50 }, (_, i) => `Schritt ${i}`).join('\n');
     expect(parseSteps(text, [], ids)).toHaveLength(40);
@@ -174,6 +189,17 @@ describe('new and edited routines', () => {
     });
   });
 
+  it('a rule changed to weekdays moves the next day to the first of them', () => {
+    // Due Tuesday 2026-09-29, now only on Saturdays.
+    const r = make({ repeat: { freq: 'weekly', interval: 1 } });
+    const patch = editPatch(r, form({ repeat: { freq: 'weekly', interval: 1, byWeekday: [6] } }));
+    expect(patch).toMatchObject({ dueDate: '2026-10-03', startDate: '2026-10-03' });
+    // Still on one of the days: it stays due.
+    const tue = editPatch(r, form({ repeat: { freq: 'weekly', interval: 1, byWeekday: [2, 6] } }));
+    expect(tue.dueDate).toBeUndefined();
+    expect(tue.startDate).toBe('2026-09-29');
+  });
+
   it('due ones sort morning before evening before any time', () => {
     const list = [
       make({ name: 'C', daypart: undefined }),
@@ -200,7 +226,7 @@ describe('migration 2: steps', () => {
     await db.table('routines_routine').clear();
   });
 
-  it('gives every routine an empty list of steps and changes nothing else', async () => {
+  it('rewrites nothing (a write could win over steps another device added); the row reads as no steps', async () => {
     const old = await routineRepo.create({
       name: 'Bad putzen',
       room: 'Bad',
@@ -213,7 +239,8 @@ describe('migration 2: steps', () => {
     await db.table('_meta').put({ key: 'moduleVersion.routines', value: 1 });
     await runMigrations(manifest);
     const after = await routineRepo.get(old.id);
-    expect(after?.steps).toEqual([]);
+    expect(after?.updatedAt).toBe(old.updatedAt);
+    expect(stepsOf(after!)).toEqual([]);
     expect(after).toMatchObject({
       name: 'Bad putzen',
       room: 'Bad',

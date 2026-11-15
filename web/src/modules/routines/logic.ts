@@ -128,23 +128,38 @@ export function allStepsDone(r: Pick<Routine, 'steps' | 'progress' | 'dueDate'>)
 
 /**
  * The steps as typed (one per line) → steps. A line that is still there keeps its id (and so its tick), also
- * when only its capital letters changed; a new line gets a new id from `newId`.
+ * when only its capital letters changed or, with the same number of lines, its text was corrected in place; a new
+ * line gets a new id from `newId`.
  */
 export function parseSteps(text: string, existing: readonly Step[], newId: () => string): Step[] {
-  const free = [...existing];
-  const out: Step[] = [];
+  const lines: string[] = [];
   for (const raw of text.split('\n')) {
     const line = raw
       .trim()
       .replace(/^[-–•*]\s*/, '')
       .slice(0, 200);
-    if (!line) continue;
-    const at = free.findIndex((s) => s.text.toLocaleLowerCase() === line.toLocaleLowerCase());
-    const id = at >= 0 ? free.splice(at, 1)[0]!.id : newId();
-    out.push({ id, text: line });
-    if (out.length === 40) break;
+    if (line) lines.push(line);
+    if (lines.length === 40) break;
   }
-  return out;
+  const used = new Set<string>();
+  const byText = lines.map((line) => {
+    const hit = existing.find(
+      (s) => !used.has(s.id) && s.text.toLocaleLowerCase() === line.toLocaleLowerCase(),
+    );
+    if (hit) used.add(hit.id);
+    return hit?.id;
+  });
+  // Same number of lines: a line whose text changed is the step at its place (a corrected typo keeps its tick).
+  const samePlaces = lines.length === existing.length;
+  return lines.map((line, i) => {
+    const atPlace = existing[i];
+    const id =
+      byText[i] ??
+      (samePlaces && atPlace && !used.has(atPlace.id)
+        ? (used.add(atPlace.id), atPlace.id)
+        : newId());
+    return { id, text: line };
+  });
 }
 
 /** Steps → the text of the steps field (one per line). */
@@ -277,8 +292,14 @@ export function editPatch(
     patch.dueDate = form.dueDate;
     patch.startDate = form.dueDate;
   } else if (ruleChanged) {
-    // A new rhythm counts from the day the routine is due next.
-    patch.startDate = existing.dueDate;
+    // A new rhythm counts from the day the routine is due next; with weekdays, from the first of them on or after
+    // it (a routine moved to „Samstag“ is not due on the Tuesday it was due before).
+    const rule = openEnded(form.repeat);
+    const first = rule.byWeekday?.length
+      ? (firstOnOrAfter(rule, existing.dueDate, existing.dueDate) ?? existing.dueDate)
+      : existing.dueDate;
+    patch.startDate = first;
+    if (first !== existing.dueDate) patch.dueDate = first;
   }
   const people = parsePeople(form.people);
   if (people.join('\n') !== existing.people.join('\n')) {

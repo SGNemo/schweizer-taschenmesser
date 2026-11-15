@@ -26,7 +26,8 @@ export function RoutineRun({
   const r = routine && routine.id === id && !routine.deletedAt ? routine : undefined;
   return (
     <Dialog open={id !== null && !!r} onClose={onClose} title={r?.name ?? ''}>
-      {r ? <Steps r={r} onClose={onClose} onEdit={onEdit} /> : null}
+      {/* A new turn (ticked elsewhere meanwhile) starts with a fresh list: nothing shown carries over. */}
+      {r ? <Steps key={`${r.id}:${r.dueDate}`} r={r} onClose={onClose} onEdit={onEdit} /> : null}
     </Dialog>
   );
 }
@@ -54,6 +55,9 @@ function Steps({
 
   async function toggle(stepId: string, checked: boolean) {
     setShown((s) => ({ ...s, [stepId]: checked }));
+    // Done elsewhere in the meantime (widget, plan, another device): this list belongs to a turn that is over.
+    const live = await routineRepo.get(r.id);
+    if (!live || live.dueDate !== r.dueDate) return;
     const patch = toggleStepPatch(
       { ...r, progress: { day: r.dueDate, done: [...done] } },
       stepId,

@@ -9023,6 +9023,7 @@ export const de = {
         custom: 'Anders',
       },
       days: 'An welchen Tagen',
+      lastDay: 'Ein Tag bleibt immer gewählt.',
       daypart: 'Tageszeit',
       daypartAny: 'Egal',
       dayparts: { morning: 'Morgens', midday: 'Mittags', evening: 'Abends' },

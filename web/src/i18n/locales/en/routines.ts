@@ -101,6 +101,7 @@ export const routines: Strings['routines'] = {
       custom: 'Other',
     },
     days: 'On which days',
+    lastDay: 'One day always stays chosen.',
     daypart: 'Time of day',
     daypartAny: 'Any time',
     dayparts: { morning: 'Morning', midday: 'Midday', evening: 'Evening' },
