@@ -875,7 +875,7 @@ fn no_tauri_command_starts_a_power_action() {
         assert!(!commands.contains(word), "a command reaches `{word}`");
     }
     assert_eq!(src.matches("remote_input::power(").count(), 1);
-    let tick = src.find("pub fn tick(&self").expect("tick");
+    let tick = src.find("pub fn tick(self: &Arc<Self>").expect("tick");
     let call = src.find("remote_input::power(").unwrap();
     assert!(
         tick < call && call < start,
@@ -890,6 +890,21 @@ fn no_tauri_command_starts_a_power_action() {
             "remote_set_busy",
         ],
     );
+    // The countdown holds no app handle: window code is reached only through the closures
+    // `remote::attach` builds, never from the hub's sink. (On Windows a sink path into window code
+    // pulls comctl32 v6 imports into the unit-test binary, which has no manifest, and that binary
+    // then fails to load with STATUS_ENTRYPOINT_NOT_FOUND.)
+    let core = &src
+        [src.find("pub struct PowerCore").unwrap()..src.find("pub fn window_closures").unwrap()];
+    for word in [
+        "AppHandle",
+        "get_webview_window",
+        "WebviewWindowBuilder",
+        "show_window(",
+        "close_window(",
+    ] {
+        assert!(!core.contains(word), "the countdown reaches `{word}`");
+    }
     // and nothing in the shell asks Windows to switch off by itself
     for file in ["remote.rs", "lib.rs", "capture.rs", "lan_sync.rs"] {
         let text = source(file);

@@ -324,10 +324,6 @@ impl RemoteHost {
         &self.power
     }
 
-    pub fn power_arc(&self) -> Arc<PowerCore> {
-        self.power.clone()
-    }
-
     fn parts(&self) -> Result<Parts, String> {
         let slot = self.slot.lock().map_err(|_| "internal")?;
         Ok(slot.as_ref().ok_or("not-started")?.parts.clone())
@@ -458,13 +454,22 @@ pub fn attach(
     {
         let (r, t) = (remote.clone(), trust.clone());
         let lang_app = app.clone();
+        let (show, close, visible) = crate::remote_power::window_closures(app);
+        let rust_app = app.clone();
         host.power.attach(Env {
-            app: app.clone(),
             allowed: Box::new(move |key| r.enabled() && r.grant_of(key).power_effective()),
-            other_sync: Box::new(move |key| sessions.sync_open_except(key)),
+            working: Box::new(move |key| {
+                let downloads = rust_app
+                    .try_state::<crate::downloads::Downloads>()
+                    .is_some_and(|d| d.active());
+                downloads || sessions.sync_open_except(key)
+            }),
             name: Box::new(move |key| {
                 plain(&name_of(crate::capture::native_lang(&lang_app), &t, key))
             }),
+            show,
+            close,
+            visible,
         });
     }
     let Ok(mut slot) = host.slot.lock() else {
