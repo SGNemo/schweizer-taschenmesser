@@ -5410,6 +5410,17 @@ export const de = {
       historyOff: (name: string) => `${name}: startet nicht mehr mit Windows`,
       historyOn: (name: string) => `${name}: startet wieder mit Windows`,
     },
+    /** "Empfehlungen" above the drives: at most three, each with one next step. */
+    advice: {
+      title: 'Empfehlungen',
+      full: (drive: string, free: string) => `${drive} ist fast voll – ${free} frei.`,
+      health: (drive: string) =>
+        `${drive} meldet Probleme. Sichere die Daten darauf, bevor du etwas anderes tust.`,
+      trimOff:
+        'Windows teilt der SSD gelöschte Bereiche gerade nicht mit (TRIM ist aus). In „Laufwerke optimieren“ siehst du den Stand.',
+      toTidy: 'Aufräumen öffnen',
+      toOptimize: '„Laufwerke optimieren“ öffnen',
+    },
   },
 
   budgets: {

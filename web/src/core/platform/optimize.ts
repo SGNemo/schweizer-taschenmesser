@@ -149,6 +149,12 @@ export interface TweakReset {
   left: string[];
 }
 
+/** Read-only facts for the recommendations of the drives tab; `null` = not known. */
+export interface CareHealth {
+  /** TRIM is switched off in Windows (true), on (false) or unknown (null). */
+  trimOff: boolean | null;
+}
+
 export interface OptimizeService {
   /** The Windows-only parts exist here (tools; autostart and settings build on it). */
   windows: boolean;
@@ -159,6 +165,8 @@ export interface OptimizeService {
   cleanupScan(onProgress: (p: CleanupProgress) => void): Promise<CleanupResult>;
   cancelCleanup(): Promise<void>;
   history(): Promise<CareHistory>;
+  /** Read-only health facts (nothing is changed). */
+  health(): Promise<CareHealth>;
   /**
    * Takes a change back (only where `canUndo`): the values from before are put in place again.
    * Rejects with `Error(code)`, e.g. `newer-change`, `already-undone`, `nothing-to-undo`.
@@ -193,6 +201,7 @@ export const noOptimize: OptimizeService = {
   cleanupScan: unsupported,
   cancelCleanup: unsupported,
   history: unsupported,
+  health: unsupported,
   undo: unsupported,
   openTool: unsupported,
   startupList: unsupported,

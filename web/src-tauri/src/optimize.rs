@@ -247,3 +247,11 @@ pub fn disk_tweaks_reset_all(
         Ok(tweaks::reset_all(j, reg.as_ref(), effects.as_ref()))
     })
 }
+
+/// Read-only facts for the recommendations on the drives tab (is TRIM switched off). Unknown
+/// facts are reported as unknown, never guessed.
+#[tauri::command(async)]
+pub fn disk_care_health() -> Result<::pc_tune::health::Health, String> {
+    let reg = system_registry().ok_or("unsupported")?;
+    Ok(::pc_tune::health::health(reg.as_ref()))
+}

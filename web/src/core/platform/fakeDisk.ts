@@ -732,6 +732,12 @@ export function createFakeDisk(): DiskService {
     async cancelCleanup() {
       cleanupCancelled = true;
     },
+    async health() {
+      // Tests set `__tmCareTrimOff` to play a PC where TRIM is switched off.
+      return {
+        trimOff: (globalThis as { __tmCareTrimOff?: boolean }).__tmCareTrimOff ?? false,
+      };
+    },
     async history() {
       return { entries: [...careEntries].reverse(), recovered: false, unreadable: false };
     },

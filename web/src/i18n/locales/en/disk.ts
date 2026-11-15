@@ -659,4 +659,14 @@ export const disk: Strings['disk'] = {
     historyOff: (name: string) => `${name}: no longer starts with Windows`,
     historyOn: (name: string) => `${name}: starts with Windows again`,
   },
+  advice: {
+    title: 'Recommendations',
+    full: (drive: string, free: string) => `${drive} is almost full – ${free} free.`,
+    health: (drive: string) =>
+      `${drive} reports problems. Back up the data on it before you do anything else.`,
+    trimOff:
+      'Windows isn’t telling the SSD about deleted areas right now (TRIM is off). “Optimise drives” shows the state.',
+    toTidy: 'Go to Tidy up',
+    toOptimize: 'Open “Optimise drives”',
+  },
 };

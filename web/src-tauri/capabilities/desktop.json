@@ -94,6 +94,7 @@
     "allow-disk-care-history",
     "allow-disk-care-open-tool",
     "allow-disk-care-undo",
+    "allow-disk-care-health",
     "allow-disk-startup-list",
     "allow-disk-startup-set",
     "allow-disk-tweaks-list",

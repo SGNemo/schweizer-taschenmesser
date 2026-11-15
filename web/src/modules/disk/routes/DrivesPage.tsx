@@ -7,6 +7,7 @@ import type { DiskIo } from '@/core/platform/system';
 import { t } from '@/strings';
 import { EmptyState, PageHeader, Skeleton, Tabs } from '@/ui';
 import SystemTab from '../components/SystemTab';
+import { Advice } from '../components/Advice';
 import { CleanupTab } from '../components/CleanupTab';
 import { HistoryTab } from '../components/HistoryTab';
 import { StartupTab } from '../components/StartupTab';
@@ -196,6 +197,7 @@ function DrivesTab({
         </div>
       ) : null}
       {drives && drives.length === 0 ? <EmptyState title={t.disk.empty} /> : null}
+      {drives && drives.length > 0 ? <Advice drives={drives} onTidy={onTidy} /> : null}
       {drives && drives.length > 0 ? (
         <ul className={styles.grid} aria-label={t.disk.tabs.drives}>
           {drives.map((d) => (

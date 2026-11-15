@@ -9,6 +9,7 @@
 //! - **Nothing runs by itself.** Every function is a direct answer to a click; there is no
 //!   schedule, no background work and no logging of values.
 
+pub mod health;
 pub mod journal;
 pub mod reg;
 pub mod startup;

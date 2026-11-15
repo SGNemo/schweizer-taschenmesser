@@ -1,5 +1,6 @@
 import { Channel, invoke } from '@tauri-apps/api/core';
 import type {
+  CareHealth,
   CareHistory,
   CleanupProgress,
   CleanupResult,
@@ -39,6 +40,7 @@ export function createOptimize(): OptimizeService {
     },
     cancelCleanup: () => call('disk_cleanup_cancel'),
     history: () => call<CareHistory>('disk_care_history'),
+    health: () => call<CareHealth>('disk_care_health'),
     undo: (id) => call('disk_care_undo', { id }),
     openTool: (tool) => call('disk_care_open_tool', { tool }),
     startupList: () => call<StartupItem[]>('disk_startup_list'),

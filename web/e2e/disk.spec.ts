@@ -669,7 +669,7 @@ test('"Im Scan ansehen" in the tidy tab starts a scan of that folder', async ({ 
   await enableDisk(page);
   await page.goto('/disk');
   // The drives tab points to the tab that took over the clean-up places.
-  await page.getByRole('button', { name: 'Aufräumen öffnen' }).click();
+  await page.getByRole('button', { name: 'Aufräumen öffnen' }).last().click();
   await expect(page).toHaveURL(/tab=tidy/);
   await page.getByRole('button', { name: 'Suchen', exact: true }).click();
   await page.getByRole('button', { name: 'Im Scan ansehen: Alte Downloads' }).click();
@@ -861,6 +861,28 @@ test('tidy and history tabs have no accessibility violations', async ({ page }) 
   await expect(page.getByText('Im Verlauf steht noch nichts.')).toBeVisible();
   const history = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
   expect(history.violations).toEqual([]);
+});
+
+test('recommendations: an almost full drive leads to the tidy tab, TRIM off to Windows’ tool', async ({
+  page,
+}) => {
+  await asDesktop(page);
+  await enableDisk(page);
+  await page.addInitScript(() => {
+    (globalThis as { __tmCareTrimOff?: boolean }).__tmCareTrimOff = true;
+  });
+  await page.goto('/disk');
+  const advice = page.getByRole('region', { name: 'Empfehlungen' });
+  // The system drive of the fake PC is 92 % full; D: and the USB stick are fine or not ours.
+  await expect(advice).toContainText('C:\\ ist fast voll – 38,2 GB frei.');
+  await expect(advice.getByRole('listitem')).toHaveCount(2);
+  await expect(advice).toContainText('TRIM ist aus');
+  await advice.getByRole('button', { name: '„Laufwerke optimieren“ öffnen' }).click();
+  expect(
+    await page.evaluate(() => (globalThis as { __tmCareTools?: string[] }).__tmCareTools),
+  ).toEqual(['optimizeDrives']);
+  await advice.getByRole('button', { name: 'Aufräumen öffnen' }).first().click();
+  await expect(page).toHaveURL(/tab=tidy/);
 });
 
 test('the old /system path leads to the System tab', async ({ page }) => {
