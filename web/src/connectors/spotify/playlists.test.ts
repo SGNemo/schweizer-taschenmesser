@@ -93,6 +93,8 @@ describe('playlists for the playlists tab', () => {
     expect(plainText('  <b></b> ')).toBeUndefined();
     expect(plainText('a&lt;b&gt;&#65;&nbsp;\n c &unknown;')).toBe('a<b>A c &unknown;');
     expect(plainText('x'.repeat(400))).toHaveLength(300);
+    // Nested tags never leave a tag behind (the text is rendered as text anyway).
+    expect(plainText('a<<b>script>alert(1)<</b>/script>b')).toBe('aalert(1)b');
   });
 });
 

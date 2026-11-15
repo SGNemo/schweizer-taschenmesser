@@ -198,8 +198,14 @@ const ENTITIES: Record<string, string> = {
  */
 export function plainText(raw: string | null | undefined): string | undefined {
   if (!raw) return undefined;
-  const text = raw
-    .replace(/<[^>]*>/g, '')
+  // Tags go until none is left (a nested `<<b>x>` would otherwise leave one behind).
+  let stripped = raw;
+  for (let prev = ''; prev !== stripped; ) {
+    prev = stripped;
+    stripped = stripped.replace(/<[^<>]*>/g, '');
+  }
+  const text = stripped
+    .replace(/[<>]/g, '')
     .replace(/&(#x[0-9a-f]{1,6}|#[0-9]{1,7}|[a-z]{2,6});/gi, (all, code: string) => {
       const c = code.toLowerCase();
       const n = c.startsWith('#x')
