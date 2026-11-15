@@ -3,6 +3,7 @@
 Part of [features](features.md). Index of areas: [DECISIONS](../DECISIONS.md).
 
 ## Disk module & platform-only modules
+
 - **Modules can declare `platforms`; the filter is `availableManifests()`, resolved lazily.** Module states are synced, so a desktop-only module must vanish from router, nav, dashboard and services on the other platforms, not only from the library. The platform is known only after `initPlatform()`; importing it in the registry would create a cycle through the DB, hence `core/modules/available.ts`. Source: PR #8 (2026-09-30).
 - **Own recursive scan with `read_dir` + `rayon`, not `jwalk`/`walkdir`.** Folder sums come straight from the recursion (jwalk yields flat entries and would need a rebuild), cancel is per folder, errors are collected per folder, no hidden-file skipping by default. `walkdir` is single-threaded. Source: PR #8 (2026-09-30).
 - **Size = space on the volume (rounded to clusters), file size shown next to it; cloud-only files count 0.** The tool answers "what eats my space". `GetCompressedFileSizeW` per file would be too slow. Source: PR #8 (2026-09-30).
@@ -15,3 +16,4 @@ Part of [features](features.md). Index of areas: [DECISIONS](../DECISIONS.md).
 - **Scan results are never persisted, synced, backed up or given to the assistant/local API** (no collections, no `aiSchema`, `dataApi: false` + id block). Optional scan cache and MFT quick scan (admin) are ideas only. Source: PR #8 (2026-09-30).
 - **`pdf-lib` 1.17.1 pinned, loaded only when the PDF tool opens.** Last release (unmaintained, MIT); the alternative is a WASM PDF engine (much bigger). Source: PR #8 (2026-09-30).
 - **Pantry → shopping list through the event `shopping.requested`**; the shopping module subscribes while enabled (no module import). Source: PR #8 (2026-09-30).
+- **"Einstellungen" (Windows tweaks) is a closed catalogue with an admission rule**: per-user setting Windows offers itself, Microsoft-documented mechanism with URL, no admin, restored from the journal; where a documented API exists (`SystemParametersInfo`, `SHGetSetSettings`, power-scheme API) it is used instead of the registry value behind it; no policy keys; an undocumented default shows as "Standard von Windows" instead of a guessed switch. Catalogue and rejected candidates: `docs/design/disk-deep/TWEAKS.md`. Source: `feat/disk-optimize-p3` (2026-11-15).

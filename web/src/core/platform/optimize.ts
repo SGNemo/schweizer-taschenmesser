@@ -80,6 +80,42 @@ export interface CareHistory {
   recovered: boolean;
 }
 
+export type TweakGroup = 'appearance' | 'explorer' | 'privacy' | 'power';
+export type TweakRisk = 'none' | 'low';
+
+/** One option of a choice (a power plan of this PC, named by Windows). */
+export interface TweakOption {
+  id: string;
+  label: string;
+}
+
+/** One Windows setting of the catalogue with its state on this PC. Texts are keyed by `id`. */
+export interface TweakState {
+  id: string;
+  group: TweakGroup;
+  kind: 'toggle' | 'choice';
+  /** A switch: its state; `null` = Windows' own default applies (no value set yet). */
+  on: boolean | null;
+  /** A choice: the id of the active option. */
+  choice: string | null;
+  options: TweakOption[];
+  /** Changed from this page: the state from before is stored. */
+  changedHere: boolean;
+  /** Exists on this Windows; the page hides the others. */
+  applicable: boolean;
+  risk: TweakRisk;
+  /** The Microsoft page that documents the mechanism. */
+  sourceUrl: string;
+  /** `explorer`: open Explorer windows show it after a refresh. */
+  refresh: 'none' | 'explorer';
+}
+
+/** Outcome of "Alle zurücksetzen": setting ids. */
+export interface TweakReset {
+  restored: string[];
+  failed: string[];
+}
+
 export interface OptimizeService {
   /** The Windows-only parts exist here (tools; autostart and settings build on it). */
   windows: boolean;
@@ -97,6 +133,15 @@ export interface OptimizeService {
   undo(id: number): Promise<void>;
   /** Rejects with `Error('unsupported')` where the tool does not exist. */
   openTool(tool: CareTool): Promise<void>;
+  /** The catalogue of Windows settings with their state (Windows only). */
+  tweaks(): Promise<TweakState[]>;
+  /**
+   * Switches a setting (`true`/`false`, or the id of a choice). The state from before is stored
+   * first and the change appears in `history()` with `canUndo`. Rejects with `Error(code)`.
+   */
+  setTweak(id: string, target: boolean | string): Promise<void>;
+  /** Puts every setting changed here back to the state from before its first change. */
+  resetTweaks(): Promise<TweakReset>;
 }
 
 const unsupported = (): Promise<never> => Promise.reject(new Error('unsupported'));
@@ -109,4 +154,7 @@ export const noOptimize: OptimizeService = {
   history: unsupported,
   undo: unsupported,
   openTool: unsupported,
+  tweaks: unsupported,
+  setTweak: unsupported,
+  resetTweaks: unsupported,
 };

@@ -1,5 +1,12 @@
 import { Channel, invoke } from '@tauri-apps/api/core';
-import type { CareHistory, CleanupProgress, CleanupResult, OptimizeService } from '../optimize';
+import type {
+  CareHistory,
+  CleanupProgress,
+  CleanupResult,
+  OptimizeService,
+  TweakReset,
+  TweakState,
+} from '../optimize';
 
 type CleanupEvent = ({ event: 'progress' } & CleanupProgress) | ({ event: 'done' } & CleanupResult);
 
@@ -33,5 +40,8 @@ export function createOptimize(): OptimizeService {
     history: () => call<CareHistory>('disk_care_history'),
     undo: (id) => call('disk_care_undo', { id }),
     openTool: (tool) => call('disk_care_open_tool', { tool }),
+    tweaks: () => call<TweakState[]>('disk_tweaks_list'),
+    setTweak: (id, target) => call('disk_tweak_set', { id, target }),
+    resetTweaks: () => call<TweakReset>('disk_tweaks_reset_all'),
   };
 }

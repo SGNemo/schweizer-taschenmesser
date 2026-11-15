@@ -9,6 +9,7 @@ import { EmptyState, PageHeader, Skeleton, Tabs } from '@/ui';
 import SystemTab from '../components/SystemTab';
 import { CleanupTab } from '../components/CleanupTab';
 import { HistoryTab } from '../components/HistoryTab';
+import { TweaksTab } from '../components/TweaksTab';
 import { DiskHead } from '../components/DiskHead';
 import { DriveCard } from '../components/DriveCard';
 import { QuickOverview } from '../components/QuickOverview';
@@ -20,12 +21,13 @@ import styles from './DrivesPage.module.css';
 /** Drives are re-read while the tab is open: the history and the live speed need fresh numbers. */
 const REFRESH_MS = 5000;
 
-const TABS = ['drives', 'tidy', 'system', 'history'] as const;
+const TABS = ['drives', 'tidy', 'tweaks', 'system', 'history'] as const;
 type Tab = (typeof TABS)[number];
 
 /**
- * "Dieser PC": tabs Laufwerke (scan entry), Aufräumen (suggestions), System (live facts) and
- * Verlauf (what the page changed, with the way back), selected via `?tab=`.
+ * "Dieser PC": tabs Laufwerke (scan entry), Aufräumen (suggestions), Einstellungen (documented
+ * Windows settings), System (live facts) and Verlauf (what the page changed, with the way back),
+ * selected via `?tab=`.
  */
 export default function ThisPcPage() {
   const [params, setParams] = useSearchParams();
@@ -50,6 +52,7 @@ export default function ThisPcPage() {
       />
       {tab === 'system' ? <SystemTab /> : null}
       {tab === 'tidy' ? <CleanupTab onScan={startScan} onDrives={() => setTab('drives')} /> : null}
+      {tab === 'tweaks' ? <TweaksTab /> : null}
       {tab === 'history' ? <HistoryTab /> : null}
       {tab === 'drives' ? (
         <DrivesTab {...list} onScan={startScan} onTidy={() => setTab('tidy')} />

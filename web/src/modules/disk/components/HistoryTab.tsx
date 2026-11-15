@@ -11,6 +11,11 @@ import styles from './HistoryTab.module.css';
 /** What a history line says (read at render time). */
 export function entryText(e: CareEntry): string {
   const h = t.disk.history;
+  if (e.kind === 'tweak') {
+    // A setting is named by its catalogue id; a choice (the power plan) has no on/off.
+    const name = t.disk.tweaks.title[e.subject] ?? e.subject;
+    return e.on === null ? h.changed(name) : h.switched(name, e.on);
+  }
   if (e.kind !== 'cleanup') return h.switched(e.label || e.subject, e.on ?? false);
   const what = e.subject === 'scan' ? h.fromScan : (t.disk.tidy.category[e.subject] ?? e.subject);
   const size = formatBytes(e.bytes);

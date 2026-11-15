@@ -16,6 +16,7 @@ export const disk: Strings['disk'] = {
   tabs: {
     drives: 'Drives',
     tidy: 'Tidy up',
+    tweaks: 'Settings',
     system: 'System',
     history: 'History',
   } as const,
@@ -515,5 +516,112 @@ export const disk: Strings['disk'] = {
     undone: 'Taken back.',
     canUndo: 'The value from before is stored.',
     undoNewerFirst: 'Take back the newer change to it first.',
+    changed: (name: string) => `${name}: changed`,
+  },
+  tweaks: {
+    lead: 'Settings Windows offers itself, in one place. Every change is stored with the value from before and can be taken back.',
+    onlyWindows: 'These settings exist on Windows only.',
+    onlyWindowsHint: 'Nemo changes nothing here on this device.',
+    loading: 'Reading settings …',
+    failed: 'The settings couldn’t be read.',
+    none: 'There is nothing to set here on this PC.',
+    changedCount: (n: number) =>
+      n === 0
+        ? 'Nothing changed by Nemo.'
+        : n === 1
+          ? '1 setting changed by Nemo.'
+          : `${n} settings changed by Nemo.`,
+    resetAll: 'Reset all',
+    resetTitle: 'Reset all?',
+    resetText: 'These settings get back the value they had before your first change here:',
+    resetConfirm: 'Reset',
+    cancel: 'Cancel',
+    resetDone: (names: string) => `Reset: ${names}.`,
+    resetPartial: (names: string) => `Not reset: ${names}. You can try again.`,
+    restorePoint: 'Create a restore point',
+    restorePointHint: 'If you like, create a restore point in Windows first. It isn’t required.',
+    group: {
+      appearance: 'Appearance',
+      explorer: 'Explorer',
+      privacy: 'Privacy',
+      power: 'Power',
+    } as Record<string, string>,
+    title: {
+      animations: 'Animations in windows',
+      dragFullWindows: 'Window contents while dragging',
+      pointerSonar: 'Show the pointer with Ctrl',
+      fileExtensions: 'Show file extensions',
+      hiddenFiles: 'Show hidden files',
+      advertisingId: 'Advertising ID for apps',
+      trackAppLaunches: 'Remember app launches for Start and search',
+      powerPlan: 'Power plan',
+    } as Record<string, string>,
+    what: {
+      animations: 'Controls inside windows fade in and out. Switched off, they appear at once.',
+      dragFullWindows:
+        'You see the whole window while you move it. Switched off, Windows shows only an outline.',
+      pointerSonar: 'Pressing the Ctrl key shows with circles where the pointer is.',
+      fileExtensions:
+        'Explorer shows endings such as .pdf or .exe after the file name, so you see what kind of file it is.',
+      hiddenFiles:
+        'Explorer also shows files and folders that are marked as hidden. Protected system files stay hidden.',
+      advertisingId:
+        'Apps may use your advertising ID to tailor ads to you. Switched off, you don’t see fewer ads, but they no longer follow this ID.',
+      trackAppLaunches:
+        'Windows remembers which apps you start and uses that to sort the Start menu and search.',
+      powerPlan:
+        'Decides how Windows balances performance and power use. You can choose only among the plans this PC already has.',
+    } as Record<string, string>,
+    detail: {
+      animations:
+        'Nemo switches this through the Windows function SystemParametersInfo (client area animation). In Windows it is under Accessibility → Visual effects.',
+      dragFullWindows:
+        'Nemo switches this through the Windows function SystemParametersInfo. Windows calls it “Show window contents while dragging” (Performance Options → Visual Effects).',
+      pointerSonar:
+        'Nemo switches this through the Windows function SystemParametersInfo. Windows calls it “Show location of pointer when I press the CTRL key” (Mouse Properties → Pointer Options).',
+      fileExtensions:
+        'Nemo switches this through the Windows function SHGetSetSettings. Explorer calls it “File name extensions” (View → Show).',
+      hiddenFiles:
+        'Nemo switches this through the Windows function SHGetSetSettings. Explorer calls it “Hidden items” (View → Show).',
+      advertisingId:
+        'Nemo sets your user value “Enabled” under “AdvertisingInfo”, which Microsoft documents. In Windows it is under Privacy & security → General.',
+      trackAppLaunches:
+        'Nemo sets your user value “Start_TrackProgs”, which Microsoft documents. In Windows it is under Privacy & security → General.',
+      powerPlan:
+        'Nemo switches the active plan through the Windows function PowerSetActiveScheme, creates no new plan and unhides none. The plan applies to the whole PC.',
+    } as Record<string, string>,
+    risk: {
+      none: 'Risk: none.',
+      low: 'Risk: low.',
+    } as Record<string, string>,
+    riskNote: {
+      hiddenFiles:
+        'Hidden files often belong to programs. Once visible, they are easier to move or delete by accident.',
+      trackAppLaunches: 'Switched off, the “Most used” list in the Start menu stays empty.',
+      powerPlan:
+        'A plan with more performance uses more power; on a laptop the battery lasts less long.',
+    } as Record<string, string>,
+    refresh: {
+      explorer: 'Open Explorer windows show it after a refresh (F5).',
+    },
+    more: 'More about this',
+    moreLabel: (title: string) => `More about “${title}”`,
+    source: 'Source: Microsoft documentation',
+    sourceLabel: (title: string) => `Source for “${title}”: Microsoft documentation`,
+    changedHere: 'changed by Nemo',
+    stateOn: 'Switched on',
+    stateOff: 'Switched off',
+    stateChoice: (label: string) => (label ? `Active: ${label}` : ''),
+    windowsDefault: 'Windows default – nothing has been set here yet.',
+    turnOn: 'Switch on',
+    turnOff: 'Switch off',
+    turnOnLabel: (title: string) => `${title}: switch on`,
+    turnOffLabel: (title: string) => `${title}: switch off`,
+    chooseLabel: (title: string) => `Choose ${title}`,
+    switched: (title: string, on: boolean) =>
+      `${title}: ${on ? 'switched on' : 'switched off'}. The value from before is in the history.`,
+    chosen: (title: string, label: string) =>
+      `${title}: ${label}. The plan from before is in the history.`,
+    setFailed: 'That couldn’t be changed. Nothing was changed.',
   },
 };

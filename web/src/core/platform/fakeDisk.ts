@@ -23,7 +23,13 @@ import {
   type SteamGame,
 } from './disk';
 
-import type { CareEntry, CleanupCategory, CleanupPlace, OptimizeService } from './optimize';
+import type {
+  CareEntry,
+  CleanupCategory,
+  CleanupPlace,
+  OptimizeService,
+  TweakState,
+} from './optimize';
 
 const GB = 1e9;
 const MB = 1e6;
@@ -519,6 +525,56 @@ const CLEANUP_SPECS: {
   },
 ];
 
+const SPI_DOC =
+  'https://learn.microsoft.com/windows/win32/api/winuser/nf-winuser-systemparametersinfow';
+const SHELL_DOC =
+  'https://learn.microsoft.com/windows/win32/api/shlobj_core/nf-shlobj_core-shgetsetsettings';
+const PRIVACY_DOC =
+  'https://learn.microsoft.com/windows/privacy/manage-connections-from-windows-operating-system-components-to-microsoft-services';
+const POWER_DOC =
+  'https://learn.microsoft.com/windows/win32/api/powersetting/nf-powersetting-powersetactivescheme';
+
+const fakeToggle = (
+  id: string,
+  group: TweakState['group'],
+  on: boolean | null,
+  sourceUrl: string,
+  risk: TweakState['risk'] = 'none',
+  refresh: TweakState['refresh'] = 'none',
+): TweakState => ({
+  id,
+  group,
+  kind: 'toggle',
+  on,
+  choice: null,
+  options: [],
+  changedHere: false,
+  applicable: true,
+  risk,
+  sourceUrl,
+  refresh,
+});
+
+/** The native catalogue (`crates/pc-tune/src/tweaks.rs`) with invented states. */
+const FAKE_TWEAKS: TweakState[] = [
+  fakeToggle('animations', 'appearance', true, SPI_DOC),
+  fakeToggle('dragFullWindows', 'appearance', true, SPI_DOC),
+  fakeToggle('pointerSonar', 'appearance', false, SPI_DOC),
+  fakeToggle('fileExtensions', 'explorer', false, SHELL_DOC, 'none', 'explorer'),
+  fakeToggle('hiddenFiles', 'explorer', false, SHELL_DOC, 'low', 'explorer'),
+  fakeToggle('advertisingId', 'privacy', true, PRIVACY_DOC),
+  fakeToggle('trackAppLaunches', 'privacy', null, PRIVACY_DOC, 'low'),
+  {
+    ...fakeToggle('powerPlan', 'power', null, POWER_DOC, 'low'),
+    kind: 'choice',
+    choice: '381b4222-f694-41f0-9685-ff5bb260df2e',
+    options: [
+      { id: '381b4222-f694-41f0-9685-ff5bb260df2e', label: 'Ausbalanciert' },
+      { id: 'a1841308-3541-4fab-bc81-f71556f20b4a', label: 'Energiesparmodus' },
+    ],
+  },
+];
+
 /** A scan takes ~0.3 s so tests can see the progress state and press "Abbrechen". */
 export function createFakeDisk(): DiskService {
   interface State {
@@ -553,6 +609,15 @@ export function createFakeDisk(): DiskService {
   // 0 = only `__tmDiskScanStep()` moves it), so a spec can watch the live picture grow in steps.
   const stepMs = () =>
     Number((globalThis as { __tmDiskScanStepMs?: number }).__tmDiskScanStepMs ?? 60);
+
+  // Windows settings ("Einstellungen"): invented states, same ids as the native catalogue.
+  const tweaks: TweakState[] = FAKE_TWEAKS.map((x) => ({ ...x, options: [...x.options] }));
+  /** Per history entry the state from before; per setting the state before its first change. */
+  const tweakBefore = new Map<number, { on: boolean | null; choice: string | null }>();
+  const tweakOriginals = new Map<
+    string,
+    { on: boolean | null; choice: string | null; entry: number }
+  >();
 
   const optimize: OptimizeService = {
     windows: true,
@@ -607,11 +672,76 @@ export function createFakeDisk(): DiskService {
       const entry = careEntries.find((e) => e.id === id);
       if (!entry) throw new Error('unknown-entry');
       if (!entry.canUndo) throw new Error(entry.undone ? 'already-undone' : 'nothing-to-undo');
+      if (entry.kind === 'tweak') {
+        const newer = careEntries.some(
+          (e) => e.id > id && e.kind === 'tweak' && e.subject === entry.subject && !e.undone,
+        );
+        if (newer) throw new Error('newer-change');
+        const before = tweakBefore.get(id);
+        const tweak = tweaks.find((x) => x.id === entry.subject);
+        if (tweak && before) {
+          tweak.on = before.on;
+          tweak.choice = before.choice;
+          const first = tweakOriginals.get(tweak.id);
+          if (first && first.entry === id) tweakOriginals.delete(tweak.id);
+          tweak.changedHere = tweakOriginals.has(tweak.id);
+        }
+      }
       entry.undone = true;
       entry.canUndo = false;
     },
     async openTool(tool) {
       ((globalThis as { __tmCareTools?: string[] }).__tmCareTools ??= []).push(tool);
+    },
+    async tweaks() {
+      return tweaks.map((x) => ({ ...x, options: [...x.options] }));
+    },
+    async setTweak(id, target) {
+      const tweak = tweaks.find((x) => x.id === id);
+      if (!tweak) throw new Error('unknown-tweak');
+      if (!tweak.applicable) throw new Error('not-applicable');
+      const toggle = tweak.kind === 'toggle';
+      if (toggle !== (typeof target === 'boolean')) throw new Error('bad-target');
+      if (!toggle && !tweak.options.some((o) => o.id === target)) throw new Error('bad-target');
+      if (toggle ? tweak.on === target : tweak.choice === target) return;
+      const before = { on: tweak.on, choice: tweak.choice };
+      const entryId = careEntries.length + 1;
+      careEntries.push({
+        id: entryId,
+        at: FAKE_NOW,
+        kind: 'tweak',
+        subject: id,
+        label: '',
+        bytes: 0,
+        files: 0,
+        permanent: false,
+        on: typeof target === 'boolean' ? target : null,
+        canUndo: true,
+        undone: false,
+      });
+      tweakBefore.set(entryId, before);
+      if (!tweakOriginals.has(id)) tweakOriginals.set(id, { ...before, entry: entryId });
+      if (typeof target === 'boolean') tweak.on = target;
+      else tweak.choice = target;
+      tweak.changedHere = true;
+    },
+    async resetTweaks() {
+      const restored: string[] = [];
+      for (const [id, first] of tweakOriginals) {
+        const tweak = tweaks.find((x) => x.id === id)!;
+        tweak.on = first.on;
+        tweak.choice = first.choice;
+        tweak.changedHere = false;
+        for (const e of careEntries) {
+          if (e.kind === 'tweak' && e.subject === id) {
+            e.undone = true;
+            e.canUndo = false;
+          }
+        }
+        restored.push(id);
+      }
+      tweakOriginals.clear();
+      return { restored, failed: [] };
     },
   };
 
