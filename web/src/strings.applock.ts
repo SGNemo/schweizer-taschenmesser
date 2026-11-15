@@ -23,6 +23,7 @@ export const tAppLock = defineBundle(
     enabled: 'App-Sperre',
     enabledHint: 'Beim Start und nach einer Pause fragt Nemo nach deiner PIN.',
     changePin: 'PIN ändern',
+    changeButton: 'Ändern',
     changePinHint: 'Erst die jetzige PIN, dann zweimal die neue.',
     idle: 'Sperren nach',
     idleHint: 'Nach dieser Zeit ohne Eingabe sperrt Nemo.',
@@ -34,6 +35,7 @@ export const tAppLock = defineBundle(
     biometric: 'Mit Fingerabdruck oder Gesicht entsperren',
     biometricHint: 'Die PIN bleibt als zweiter Weg erhalten.',
     lockNow: 'Jetzt sperren',
+    lockButton: 'Sperren',
     lockNowHint: 'Sperrt Nemo sofort, bis du die PIN eingibst.',
     // Dialogs
     setTitle: 'PIN festlegen',
@@ -94,6 +96,7 @@ export const tAppLock = defineBundle(
       enabled: 'App lock',
       enabledHint: 'At start and after a break Nemo asks for your PIN.',
       changePin: 'Change PIN',
+      changeButton: 'Change',
       changePinHint: 'First the current PIN, then the new one twice.',
       idle: 'Lock after',
       idleHint: 'Nemo locks after this long without input.',
@@ -105,6 +108,7 @@ export const tAppLock = defineBundle(
       biometric: 'Unlock with fingerprint or face',
       biometricHint: 'The PIN stays as a second way in.',
       lockNow: 'Lock now',
+      lockButton: 'Lock',
       lockNowHint: 'Locks Nemo right away until you enter the PIN.',
       setTitle: 'Set PIN',
       setIntro:

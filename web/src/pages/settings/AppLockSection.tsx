@@ -57,7 +57,9 @@ export function AppLockSection() {
       {prefs.enabled ? (
         <>
           <SettingRow id="app-lock--pin" label={s.changePin} description={s.changePinHint}>
-            <Button onClick={() => setMode('change')}>{s.changePin}</Button>
+            <Button aria-label={s.changePin} onClick={() => setMode('change')}>
+              {s.changeButton}
+            </Button>
           </SettingRow>
           <SettingRow id="app-lock--idle" label={s.idle} description={s.idleHint}>
             <Segmented<IdleMinutes>
@@ -86,8 +88,8 @@ export function AppLockSection() {
             </SettingRow>
           ) : null}
           <SettingRow id="app-lock--lock-now" label={s.lockNow} description={s.lockNowHint}>
-            <Button data-testid="app-lock-now" onClick={() => lockApp(true)}>
-              {s.lockNow}
+            <Button data-testid="app-lock-now" aria-label={s.lockNow} onClick={() => lockApp(true)}>
+              {s.lockButton}
             </Button>
           </SettingRow>
         </>
