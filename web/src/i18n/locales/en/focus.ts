@@ -103,7 +103,7 @@ export const focus: Strings['focus'] = {
       'Shows one calm sentence in the appointment form and after saving a reminder when notifications are not allowed.',
     followUp: 'Repeat quietly',
     followUpHint:
-      'A reminder you set yourself comes back at intervals until you choose “Done” or “Later”. Nothing at night.',
+      'A reminder you set yourself comes back at intervals until you choose “Done” or “Later”. Nothing at night. Reminders from quick capture (“once”) come only once.',
     repeatEvery: 'Gap',
     repeatEveryOption: (m: number) => `${m} min`,
     repeatMax: 'At most',
