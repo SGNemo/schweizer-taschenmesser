@@ -25,7 +25,7 @@ export const notifications: Strings['notifications'] = {
       'Optional: your sync server sends reminders via Web Push, even when the app is closed. For this, the app uploads the upcoming notifications of the next two weeks (title and text) to your server – encrypted only, when end-to-end encryption is on.',
     state: {
       unsupported: 'This browser doesn’t support Web Push.',
-      'needs-sync': 'Push needs the connection to your sync server (Settings → Sync).',
+      'needs-sync': 'Push needs the connection to your sync server (Settings → Sync & backup).',
       denied: 'Notifications are blocked – please allow them in your browser settings.',
       off: 'Off',
       on: 'Active on this device',

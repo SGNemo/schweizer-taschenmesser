@@ -31,7 +31,7 @@ import { decimalSeparator } from '@/core/i18n/format';
 import { TransferEditor, transferPair, type TransferTarget } from './TransferEditor';
 import type { FinanceData } from '../types';
 import type { Stored } from '@/core/db/types';
-import type { Transaction } from '../schema';
+import type { Account, Transaction } from '../schema';
 import { categoryIcon } from '../categoryIcon';
 import styles from '../routes/finance.module.css';
 import { SignatureMark } from '@/ui/identity';
@@ -331,6 +331,13 @@ export function TransactionsTab({
   );
 }
 
+/** The kind as the row's meta, left out when the name already says it ("Girokonto / Girokonto"). */
+export function kindMeta(a: Pick<Account, 'name' | 'kind'>): string | undefined {
+  if (!a.kind) return undefined;
+  const label = t.finance.ext.accountKind[a.kind];
+  return label.trim().toLocaleLowerCase() === a.name.trim().toLocaleLowerCase() ? undefined : label;
+}
+
 export function AccountsTab({ data }: { data: FinanceData }) {
   const [target, setTarget] = useState<AccountTarget>(null);
   const [transfer, setTransfer] = useState<TransferTarget>(null);
@@ -361,7 +368,7 @@ export function AccountsTab({ data }: { data: FinanceData }) {
           <ItemRow
             key={a.id}
             title={a.name}
-            meta={a.kind ? t.finance.ext.accountKind[a.kind] : undefined}
+            meta={kindMeta(a)}
             onOpen={() => setTarget(a)}
             end={
               <span className={styles.amount} data-testid={`balance-${a.name}`}>

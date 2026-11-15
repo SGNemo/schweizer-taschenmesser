@@ -2742,7 +2742,7 @@ export const de = {
       state: {
         unsupported: 'Dieser Browser unterstützt kein Web Push.',
         'needs-sync':
-          'Push braucht die Verbindung zu deinem Sync-Server (Einstellungen → Synchronisation).',
+          'Push braucht die Verbindung zu deinem Sync-Server (Einstellungen → Sync & Backup).',
         denied: 'Benachrichtigungen sind blockiert – bitte in den Browser-Einstellungen erlauben.',
         off: 'Aus',
         on: 'Aktiv auf diesem Gerät',
@@ -4511,6 +4511,8 @@ export const de = {
     /** Widget row of an expired item (N08): the best-before day, never "seit n Tagen". */
     expiredOn: (day: string) => `MHD war ${day}`,
     expiresNotice: (n: string) => `Läuft bald ab: ${n}`,
+    /** Calendar entry of a best-before day: no tense, the badge says "Ablauf" or "Abgelaufen". */
+    calendarTitle: (n: string) => `MHD: ${n}`,
     expiresBody: (date: string) => `Haltbar bis ${date}`,
     widgetEmpty: 'Nichts läuft bald ab.',
     restockOne: (n: string) => `Auf die Einkaufsliste: ${n}`,
@@ -5911,7 +5913,7 @@ export const de = {
       'rate-limited': 'Der Dienst hat zu viele Anfragen gemeldet. Es wird später erneut versucht.',
       'not-configured': 'Es fehlen noch Zugangsdaten.',
       'no-proxy':
-        'Im Browser braucht dieser Abruf den Sync-Server (Einstellungen → Synchronisierung).',
+        'Im Browser braucht dieser Abruf den Sync-Server (Einstellungen → Sync & Backup).',
       network: 'Der Dienst ist gerade nicht erreichbar.',
       denied: 'Die Anmeldung wurde abgebrochen oder abgelehnt.',
       'bad-response': 'Der Dienst hat eine unerwartete Antwort geschickt.',
@@ -6006,7 +6008,7 @@ export const de = {
       notACalendar: 'Unter dieser Adresse liegt kein Kalender.',
       unreachable: 'Die Adresse ist nicht erreichbar.',
       noProxy:
-        'Im Browser braucht das den Sync-Server (Einstellungen → Synchronisierung), weil Kalender-Dienste den Abruf aus dem Browser blockieren.',
+        'Im Browser braucht das den Sync-Server (Einstellungen → Sync & Backup), weil Kalender-Dienste den Abruf aus dem Browser blockieren.',
     },
     google: {
       name: 'Google',
@@ -9105,8 +9107,8 @@ export const de = {
       dueContext: 'Läuft, sobald Nemo das nächste Mal prüft',
       off: 'Nicht geplant',
       offContext: 'Automatische Backups sind aus',
-      noPassphrase: 'Passphrase fehlt',
-      noPassphraseContext: 'Ohne Passphrase läuft kein automatisches Backup',
+      noPassphrase: 'Passwort fehlt',
+      noPassphraseContext: 'Ohne Passwort läuft kein automatisches Backup',
       manual: 'Von Hand',
       manualContext: 'Im Browser sicherst du als Datei, wann du willst',
     },
