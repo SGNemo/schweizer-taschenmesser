@@ -170,8 +170,7 @@ function TaskRow({
       done={task.done}
       current={currentId === task.id}
       tone={tone === 'overdue' && !waiting ? 'overdue' : tone === 'today' ? 'today' : undefined}
-      // U02: an open subtask under a done parent keeps its plain title (see `.subOpen`).
-      className={sub ? `${styles.sub} ${task.done ? '' : styles.subOpen}` : undefined}
+      className={sub ? styles.sub : undefined}
       onOpen={() => onOpen(task)}
       onSwipeRight={() => onToggle(task, !task.done)}
       swipeRightLabel={task.done ? t.todos.markedOpen : t.todos.markedDone}
@@ -267,9 +266,12 @@ function TaskRow({
               }
             >
               {tone === 'overdue' && !waiting ? `${t.todos.overdue}: ` : ''}
-              {waiting
-                ? formatDay(task.dueDate, 'EEE, d. MMM')
-                : relativeDayLabel(task.dueDate, day)}
+              {(() => {
+                const label = waiting
+                  ? formatDay(task.dueDate, 'EEE, d. MMM')
+                  : relativeDayLabel(task.dueDate, day);
+                return task.dueTime ? t.todos.dueAt(label, task.dueTime) : label;
+              })()}
             </span>
           ) : null}
           {task.startDate && task.startDate > day ? (
@@ -480,6 +482,7 @@ export default function TodosPage() {
         priority: typed.priority ?? 0,
         order: 0,
         ...(typed.dueDate ? { dueDate: typed.dueDate } : {}),
+        ...(typed.dueDate && typed.dueTime ? { dueTime: typed.dueTime } : {}),
         ...(typed.estimateMin ? { estimateMin: typed.estimateMin } : {}),
         ...(typed.note ? { note: typed.note } : {}),
         ...((selected === SOMEDAY || pageView === 'someday') && !typed.dueDate

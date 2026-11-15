@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import { enable, ready } from './helpers';
+import { openPageMenu } from './money-helpers';
 
 /**
  * Round 5, person B (office clerk, Excel, Sparkasse): the three tasks of the first 15 minutes on a
@@ -43,13 +44,13 @@ test('B01/B03: a Sparkasse file on a fresh app is booked and fills a grocery bud
   await enable(page, 'budgets'); // part of the "Finanz-Fokus" profile
   await ready(page, '/budgets');
   await page
-    .getByRole('button', { name: /Budget (hinzufügen|eintragen)/ })
+    .getByRole('button', { name: /Limit (hinzufügen|eintragen)/ })
     .first() // the head's action (the phone's plus) and, while the list is empty, the empty state's one verb
     .click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Kategorie').selectOption({ label: 'Lebensmittel' });
   await dialog.getByLabel('Limit pro Monat').fill('400');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   // Rewe 54,37 + Bäckerei 6,80 in November.
   await expect(
@@ -57,11 +58,13 @@ test('B01/B03: a Sparkasse file on a fresh app is booked and fills a grocery bud
   ).toBeVisible();
 });
 
-test('B02/B07: the export sits next to the bookings and opens in Excel', async ({ page }) => {
+test('B02/B07: the export of the bookings opens in Excel', async ({ page }) => {
   await importStatement(page);
   await ready(page, '/finance?tab=transactions');
+  await expect(page.getByText(/Lebensmittel · Girokonto/).first()).toBeVisible();
   const download = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Als CSV exportieren' }).click();
+  // 0b-8 G7: an entry of the page's "⋯" menu, no button row of its own.
+  await (await openPageMenu(page)).getByRole('menuitem', { name: 'Als CSV exportieren' }).click();
   const file = await (await download).path();
   const bytes = readFileSync(file);
   expect([...bytes.subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf]);
@@ -82,7 +85,7 @@ test('B06: after importing older bookings the balance can be set to what the ban
     .click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel(/Kontostand heute laut Bank/).fill('1.250,00');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByTestId('balance-Girokonto')).toHaveText(/1\.250,00\s€/);
 });

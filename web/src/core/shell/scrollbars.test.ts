@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { SCROLLING_MS, watchScrolling } from './scrollbars';
+import { SCROLLING_MS, watchScrollbarWidth, watchScrolling } from './scrollbars';
 
 describe('scrollbars (identity v3)', () => {
   beforeEach(() => vi.useFakeTimers());
@@ -45,5 +45,31 @@ describe('scrollbars (identity v3)', () => {
     expect(css).toMatch(
       /\[data-scrolling='true'\]\s*\{[^}]*scrollbar-color:\s*var\(--scroll-thumb\)/,
     );
+  });
+});
+
+describe('scrollbar width (0b-R: the right edge with a classic scrollbar)', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('puts the measured width on the root, measures again on resize and cleans up', () => {
+    let width = 11;
+    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(() => 100);
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(() => 100 - width);
+    const root = document.documentElement;
+    const before = document.body.children.length;
+    const stop = watchScrollbarWidth();
+    expect(root.style.getPropertyValue('--scrollbar-w')).toBe('11px');
+    // A browser zoom changes the width in CSS pixels.
+    width = 9;
+    window.dispatchEvent(new Event('resize'));
+    expect(root.style.getPropertyValue('--scrollbar-w')).toBe('9px');
+    // Overlay scrollbars take no room.
+    width = 0;
+    window.dispatchEvent(new Event('resize'));
+    expect(root.style.getPropertyValue('--scrollbar-w')).toBe('0px');
+    // The probe never stays in the page.
+    expect(document.body.children).toHaveLength(before);
+    stop();
+    expect(root.style.getPropertyValue('--scrollbar-w')).toBe('');
   });
 });

@@ -124,3 +124,40 @@
     grid-area: menu;
   }
 }
+/* "Erinnern um …": text, then the place's day and time side by side (stacked on the phone), then the local preview. */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-3);
+}
+@media (max-width: 30rem) {
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* The local time is the figure to check before saving: larger and strong, never coloured. */
+.preview {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+}
+.banner a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+}

@@ -19,7 +19,7 @@ afterEach(() => {
 });
 
 // UI round 6, U26: an empty page says one sentence and offers one step; the head button steps back meanwhile.
-it('the empty page holds the one filled step "Rechnung hinzufügen"', async () => {
+it('the empty page holds the one filled step "Rechnung eintragen"', async () => {
   render(
     <MemoryRouter initialEntries={['/invoices']}>
       <InvoicesPage />
@@ -27,7 +27,7 @@ it('the empty page holds the one filled step "Rechnung hinzufügen"', async () =
   );
   const empty = await screen.findByTestId('invoices-empty');
   expect(empty).toHaveTextContent('Keine offenen Rechnungen.');
-  const step = within(empty).getByRole('button', { name: 'Rechnung hinzufügen' });
+  const step = within(empty).getByRole('button', { name: 'Rechnung eintragen' });
   expect(step.className).toMatch(/primary/);
   const filled = screen.getAllByRole('button').filter((b) => /primary/.test(b.className));
   expect(filled).toEqual([step]);

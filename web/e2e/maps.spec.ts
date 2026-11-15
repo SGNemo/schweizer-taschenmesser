@@ -233,7 +233,10 @@ test.describe('Karten & Orte', () => {
     await card.getByRole('button', { name: 'Als Ort speichern' }).click();
     await page.getByLabel('Name').fill('Schloss');
     await page.getByRole('switch', { name: 'Auf der Übersicht zeigen' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Speichern', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     await expect(page.getByTestId('map-marker')).toHaveAttribute('aria-label', 'Schloss');
 
     // The map fits the window (also on a phone) and the marker is inside it.
@@ -265,7 +268,7 @@ test.describe('Karten & Orte', () => {
     expect((await primaryActions(page)).length).toBeLessThanOrEqual(1);
     expect(await primaryActions(page)).not.toContain('Suchen');
     await page.getByRole('button', { name: 'Orte', exact: true }).click();
-    // "Ort hinzufügen" opens the map with the search field ready.
+    // "Ort eintragen" opens the map with the search field ready.
     await page.getByRole('button', { name: /Ort (hinzufügen|eintragen)/ }).click();
     await expect(page.getByLabel('Ort oder Adresse suchen')).toBeFocused();
 
@@ -295,7 +298,10 @@ test.describe('Karten & Orte', () => {
     await to.getByLabel('Ort suchen').fill('49.5712, 11.0257');
     await to.getByRole('button', { name: 'Suchen' }).click();
     await to.getByRole('button', { name: '49.5712, 11.0257' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Speichern', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     const row = page.getByText(/Fahrrad · 49\.5981, 11\.0044 → 49\.5712, 11\.0257/);
     await expect(row).toBeVisible();
     await expect(page.getByText('Zum Markt')).toBeVisible();
@@ -321,7 +327,10 @@ test.describe('Karten & Orte', () => {
     await to.getByLabel('Ort suchen').fill('49.5712, 11.0257');
     await to.getByRole('button', { name: 'Suchen' }).click();
     await to.getByRole('button', { name: '49.5712, 11.0257' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Speichern', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     await expect(page.getByText('Zum Markt')).toBeVisible();
     expect(seen.filter((u) => hostOf(u) === 'routing.openstreetmap.de')).toEqual([]);
 
@@ -356,7 +365,10 @@ test.describe('Karten & Orte', () => {
     await to.getByLabel('Ort suchen').fill('49.4521, 11.0767');
     await to.getByRole('button', { name: 'Suchen' }).click();
     await to.getByRole('button', { name: '49.4521, 11.0767' }).click();
-    await page.getByRole('dialog').getByRole('button', { name: 'Speichern', exact: true }).click();
+    await page
+      .getByRole('dialog')
+      .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+      .click();
     await expect(page.getByText('Mit dem Zug')).toBeVisible();
     expect(seen.filter((u) => hostOf(u) === 'api.transitous.org')).toEqual([]);
 
@@ -547,6 +559,10 @@ test.describe('Karten & Orte', () => {
   }) => {
     await mockOsm(page);
     await enable(page, 'maps');
+    // The map's one-time notice was read on an earlier visit (the first visit: next test).
+    await page.goto('/maps?view=map');
+    await page.getByRole('dialog').getByRole('button', { name: 'Verstanden' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
     await ready(page, '/maps');
     // Click 1: the one action of the page (desktop: in the head; phone: the plus of the bottom bar).
     await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
@@ -574,5 +590,22 @@ test.describe('Karten & Orte', () => {
       .click();
     await expect(page.getByTestId('map-selection')).toBeVisible();
     await expect(page.getByRole('dialog')).toHaveCount(0);
+  });
+  test('„Ort eintragen“ on the first visit: the notice first, then the search has the focus', async ({
+    page,
+  }) => {
+    await mockOsm(page);
+    await enable(page, 'maps');
+    await page.goto('/maps');
+    await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
+    const notice = page.getByRole('dialog');
+    await expect(notice.getByTestId('notice-dialog')).toBeVisible();
+    const search = page.getByLabel('Ort oder Adresse suchen');
+    await expect(search).not.toBeFocused();
+    await notice.getByRole('button', { name: 'Verstanden' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(search).toBeFocused();
+    await page.keyboard.insertText('Schlossplatz Erlangen');
+    await expect(search).toHaveValue('Schlossplatz Erlangen');
   });
 });

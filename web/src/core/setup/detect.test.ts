@@ -23,6 +23,13 @@ describe('start migration', () => {
     expect((await ensureSetupState()).status).toBe('notStarted');
   });
 
+  it('takes what the start read: a page default written since does not make it an existing one', async () => {
+    const hasData = await appHasData();
+    // A page writes its own default (the to-do list) while the app is still starting.
+    await db.table(dataTable).put({ id: 'default' });
+    expect((await ensureSetupState(db, allManifests, hasData)).status).toBe('notStarted');
+  });
+
   it.each([
     ['module data', () => db.table(dataTable).put({ id: 'x' })],
     ['a module switched on or off', () => db.table('_modules').put({ id: 'todos', enabled: true })],

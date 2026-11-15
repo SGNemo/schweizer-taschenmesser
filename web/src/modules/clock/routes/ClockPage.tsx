@@ -5,20 +5,15 @@ import { useFormatLocale } from '@/core/i18n/format';
 import { useSettings } from '@/core/settings/settings';
 import { localZone } from '@/core/time/placeSearch';
 import { useMinuteNow } from '@/core/time/useMinuteNow';
+import { useTools } from '@/core/tools/state';
 import { changeWithUndo, undoableWithToast } from '@/core/undo/withToast';
+import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import {
-  Button,
-  EmptyState,
-  Icon,
-  PageAction,
-  PageHeader,
-  RowMenu,
-  SortableList,
-  useOpenParam,
-} from '@/ui';
-import { HeroFigure, HeroSlot } from '@/ui/identity';
+import { Button, EmptyState, Icon, PageAction, PageHeader, RowMenu, useOpenParam } from '@/ui';
+import { SortableList } from '@/ui/SortableList';
+import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import { AddPlaceDialog } from '../components/AddPlaceDialog';
+import { RemindDialog } from '../components/RemindDialog';
 import { RenameDialog } from '../components/RenameDialog';
 import { MAX_PLACES, listPlaces, placeRepo, reorderPlaces, type StoredPlace } from '../repo';
 import { settings, type ClockPrefs } from '../settings';
@@ -39,7 +34,11 @@ export default function ClockPage() {
   const [params, setParams] = useSearchParams();
   const [adding, setAdding] = useState(false);
   const [renaming, setRenaming] = useState<StoredPlace | null>(null);
+  const [reminding, setReminding] = useState<StoredPlace | null>(null);
   const [menu, setMenu] = useState<string | null>(null);
+  const [headMenu, setHeadMenu] = useState(false);
+  // The Timer stays a tool (decision 2026-11-15): the page only opens it, there is no second timer here.
+  const timer = useTools()?.active.find((tool) => tool.id === 'timer');
   useOpenParam((id) => placeRepo.get(id), setRenaming);
 
   // `?new=1` (Quick-Add, widget, palette) opens the search; closing drops the parameter.
@@ -76,6 +75,20 @@ export default function ClockPage() {
           <Icon name="plus" size={18} />
           {t.clock.add}
         </PageAction>
+        {timer ? (
+          <RowMenu
+            label={t.clock.more}
+            open={headMenu}
+            onOpenChange={setHeadMenu}
+            items={[
+              {
+                id: 'timer',
+                label: t.clock.timer,
+                onSelect: () => useUiStore.getState().openTools(timer.id),
+              },
+            ]}
+          />
+        ) : null}
       </PageHeader>
       <HeroSlot area="figure">
         <HeroFigure
@@ -87,7 +100,11 @@ export default function ClockPage() {
       </HeroSlot>
 
       {places && list.length === 0 ? (
-        <EmptyState title={t.clock.empty} testId="clock-empty">
+        <EmptyState
+          title={t.clock.empty}
+          testId="clock-empty"
+          motif={<SignatureMark id="dial" size={64} />}
+        >
           <Button variant="primary" onClick={() => setAdding(true)}>
             {t.clock.addFirst}
           </Button>
@@ -134,6 +151,11 @@ export default function ClockPage() {
                       onOpenChange={(o) => setMenu(o ? p.id : null)}
                       items={[
                         {
+                          id: 'remind',
+                          label: t.clock.menu.remind,
+                          onSelect: () => setReminding(p),
+                        },
+                        {
                           id: 'rename',
                           label: t.clock.menu.rename,
                           onSelect: () => setRenaming(p),
@@ -167,6 +189,12 @@ export default function ClockPage() {
       ) : null}
 
       <AddPlaceDialog open={addOpen && !full} onClose={closeAdd} />
+      <RemindDialog
+        key={`remind-${reminding?.id ?? 'none'}`}
+        place={reminding}
+        hereZone={here}
+        onClose={() => setReminding(null)}
+      />
       <RenameDialog
         key={renaming?.id ?? 'none'}
         place={renaming}

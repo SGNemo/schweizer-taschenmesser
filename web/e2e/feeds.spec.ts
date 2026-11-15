@@ -11,9 +11,9 @@ test('Feeds: hinzufügen, gruppieren, doppelte erkennen, bearbeiten, entfernen',
     .first()
     .click();
 
-  const dialog = page.getByRole('dialog', { name: 'Feed hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Feed eintragen' });
   await dialog.getByRole('textbox', { name: /Adresse des Feeds/ }).fill('keine adresse');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(dialog.getByRole('alert')).toHaveText(
     'Das ist keine Web-Adresse (http oder https).',
   );
@@ -22,7 +22,7 @@ test('Feeds: hinzufügen, gruppieren, doppelte erkennen, bearbeiten, entfernen',
     .getByRole('textbox', { name: /Adresse des Feeds/ })
     .fill('blog.example.org/feed.xml');
   await dialog.getByRole('combobox', { name: 'Gruppe' }).fill('Blogs');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
 
   // Name defaults to the host; the list is grouped.
   await expect(page.getByRole('heading', { name: /Blogs/ })).toBeVisible();
@@ -33,11 +33,11 @@ test('Feeds: hinzufügen, gruppieren, doppelte erkennen, bearbeiten, entfernen',
     .getByRole('button', { name: /Feed (hinzufügen|eintragen)/ })
     .first()
     .click();
-  const again = page.getByRole('dialog', { name: 'Feed hinzufügen' });
+  const again = page.getByRole('dialog', { name: 'Feed eintragen' });
   await again
     .getByRole('textbox', { name: /Adresse des Feeds/ })
     .fill('https://www.blog.example.org/feed.xml');
-  await again.getByRole('button', { name: 'Speichern' }).click();
+  await again.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(again.getByRole('alert')).toHaveText('Diesen Feed hast du schon.');
   await again.getByRole('button', { name: 'Abbrechen' }).click();
 

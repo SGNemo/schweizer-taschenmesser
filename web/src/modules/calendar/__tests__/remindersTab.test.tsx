@@ -38,6 +38,19 @@ afterEach(() => {
 });
 
 describe('RemindersTab', () => {
+  it('a reminder from the quick capture says „einmal“ on its row; one from the dialog does not', async () => {
+    await add('Krankmelden', '2026-10-05', { once: true });
+    await add('Blumen gießen', '2026-10-05');
+    draw();
+    const row = await screen.findByRole('button', { name: /Krankmelden.*einmal/ });
+    expect(row).toBeVisible();
+    // „einmal“ replaces „Einmalig“: the row never says it twice.
+    expect(row).not.toHaveAccessibleName(/Einmalig/);
+    expect(screen.getByRole('button', { name: /Blumen gießen/ })).not.toHaveAccessibleName(
+      /einmal/,
+    );
+  });
+
   it('groups by date and keeps "Erledigt" folded; a row has one main button and a "⋯" menu', async () => {
     await add('Heute dran', '2026-10-02');
     await add('Später dran', '2026-11-01');

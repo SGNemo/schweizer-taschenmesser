@@ -104,7 +104,7 @@
     "fields": {
       "warnAtPercent": {
         "type": "number",
-        "label": "Warnen ab (Prozent des Budgets)",
+        "label": "Warnen ab (Prozent des Limits)",
         "default": 80
       },
       "showForecast": {
@@ -347,6 +347,11 @@
         "label": "Rechnungen in der Liste erkennen",
         "default": true
       },
+      "showAnswered": {
+        "type": "boolean",
+        "label": "„Beantwortet?“ anzeigen",
+        "default": true
+      },
       "notify": {
         "type": "boolean",
         "label": "Bei neuen Mails benachrichtigen",
@@ -515,6 +520,11 @@
       "windowSunday": {
         "type": "text",
         "label": "Zeitfenster Sonntag",
+        "default": ""
+      },
+      "dayEnd": {
+        "type": "text",
+        "label": "Tagesende",
         "default": ""
       },
       "bufferShare": {

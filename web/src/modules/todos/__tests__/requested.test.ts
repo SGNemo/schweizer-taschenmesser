@@ -41,3 +41,38 @@ describe('todo.requested', () => {
     stop();
   });
 });
+
+describe('todo.doneRequested', () => {
+  it('ticks off the open to-do with that id (as a tap does); a done, deleted or unknown id is left alone', async () => {
+    const stop = start();
+    const open = await taskRepo.create({
+      listId: 'inbox',
+      title: 'Lisa antworten',
+      done: false,
+      priority: 0,
+      order: 0,
+    });
+    const gone = await taskRepo.create({
+      listId: 'inbox',
+      title: 'Weg',
+      done: false,
+      priority: 0,
+      order: 0,
+    });
+    await taskRepo.remove(gone.id);
+    await bus.emit('todo.doneRequested', { id: open.id });
+    await bus.emit('todo.doneRequested', { id: gone.id });
+    await bus.emit('todo.doneRequested', { id: 'nope' });
+    const after = await taskRepo.get(open.id);
+    expect(after?.done).toBe(true);
+    expect(after?.completedAt).toBeTypeOf('number');
+    expect(await taskRepo.get(gone.id)).toBeUndefined();
+    // Asked again: no second write (completedAt stays).
+    await bus.emit('todo.doneRequested', { id: open.id });
+    expect((await taskRepo.get(open.id))?.completedAt).toBe(after?.completedAt);
+    stop();
+    await taskRepo.update(open.id, { done: false, completedAt: undefined });
+    await bus.emit('todo.doneRequested', { id: open.id });
+    expect((await taskRepo.get(open.id))?.done).toBe(false);
+  });
+});

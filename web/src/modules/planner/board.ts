@@ -11,7 +11,7 @@ import { planDays, type DayBlocker } from './days';
 import { itemKeyOf } from './repo';
 import type { AssignmentRow, PlanDayRow, PlanItemRow } from './schema';
 import { defaultAvailable, type PlannerSettings } from './settings';
-import { isoWeekday } from '@/core/time/dates';
+import { isoWeekday, toEpoch } from '@/core/time/dates';
 
 export type BoardBlocker = DayBlocker;
 
@@ -29,6 +29,8 @@ export interface BoardRow {
   approx: boolean;
   pinned: boolean;
   hardDue?: string;
+  /** The deadline's hour ('HH:mm', package 5b), only next to `hardDue`. */
+  hardDueTime?: string;
   /** The source's own date before the planner (for „Warum hier?“ of a carried thing). */
   entry?: PlannableEntry;
   item?: PlanItemRow;
@@ -94,6 +96,32 @@ export interface BoardInput {
 export const unitTitle = (titles: Record<string, string>, unitId: string): string =>
   titles[unitId.slice(0, unitId.lastIndexOf('#'))] ?? unitId;
 
+/**
+ * A row's hard deadline and its hour: for the same day the source is the authority (the ToDo editor may have
+ * changed or cleared the hour since); for another day the plan row's own hour.
+ */
+function dueOf(
+  due: { date: string; time?: string },
+  source?: { date: string; time?: string },
+): Pick<BoardRow, 'hardDue' | 'hardDueTime'> {
+  const time = source?.date === due.date ? source.time : due.time;
+  return { hardDue: due.date, ...(time ? { hardDueTime: time } : {}) };
+}
+
+/**
+ * „Frist war …“ instead of „Frist …“ (package 5b): the session lies after the deadline, or the deadline itself
+ * has passed – its day is over, or its hour on that day (`at` = now, epoch ms). Calm text either way, never red.
+ */
+export function dueWas(
+  row: Pick<BoardRow, 'hardDue' | 'hardDueTime' | 'late'>,
+  at: number,
+): boolean {
+  if (!row.hardDue) return false;
+  if (row.late) return true;
+  const end = toEpoch(row.hardDue, row.hardDueTime ?? '23:59') + (row.hardDueTime ? 0 : 60_000);
+  return at >= end;
+}
+
 export function buildBoard(input: BoardInput): Board {
   const entries = new Map(input.entries.map((e) => [itemKeyOf(e.moduleId, e.id), e]));
   const items = new Map(input.itemRows.map((r) => [r.id, r]));
@@ -132,9 +160,9 @@ export function buildBoard(input: BoardInput): Board {
           pinned: item?.pinned === date,
           // A deadline marked in the plan, or one the source holds as hard (an invoice, a cancellation).
           ...(item?.due?.hard
-            ? { hardDue: item.due.date }
+            ? dueOf(item.due, entry?.due)
             : entry?.due?.hard
-              ? { hardDue: entry.due.date }
+              ? dueOf(entry.due)
               : {}),
           ...(entry ? { entry } : {}),
           ...(item ? { item } : {}),

@@ -117,7 +117,7 @@ function Fields({ target, onClose }: { target: NonNullable<PlaceTarget>; onClose
       >
         <Button onClick={onClose}>{t.actions.cancel}</Button>
         <Button type="submit" variant="primary">
-          {t.actions.save}
+          {existing ? t.actions.save : t.maps.place.titleAdd}
         </Button>
       </FormActions>
     </Form>

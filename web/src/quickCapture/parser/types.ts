@@ -21,7 +21,12 @@ export type CaptureType =
   /** A training session for Fitness (prefix „training“/„workout“). */
   | 'workout'
   /** A place for the Uhr module (prefix „uhr“/„clock“ and a known city or zone). */
-  | 'place';
+  | 'place'
+  /**
+   * A break in the planner: a line that starts with „Pause“ or „Freizeit“, only while the caller can save one
+   * (`ParseOptions.breaks`); it becomes a blocker of its day, never a ToDo.
+   */
+  | 'break';
 
 /** One exercise of a `workout` capture („Bankdrücken 3×8 60“). */
 export interface CaptureExercise {
@@ -71,6 +76,11 @@ export interface CaptureFields {
   pin?: string;
   /** Plan captures: `date` is a hard deadline („bis Do“, „Frist“). */
   hardDue?: boolean;
+  /**
+   * ToDos: `date` (and `time`, if typed) is a deadline – „bis/spätestens <Tag>“ („Team-Sachen lesen bis So 18:00“).
+   * The ToDo target then writes the time as the deadline's hour (`dueTime`), not as a note line.
+   */
+  deadline?: true;
   /** Meal captures: rough kcal. */
   kcal?: number;
   /** Workout captures: the exercises of the line. */
@@ -128,4 +138,9 @@ export interface ParseOptions {
    * is read like any other text.
    */
   place?: (name: string) => boolean;
+  /**
+   * Set while the planner is on: a line that starts with „Pause“ or „Freizeit“ is a break (`break`). Without it
+   * the line is read like any other text (a ToDo); the parser never guesses what leisure is from other words.
+   */
+  breaks?: boolean;
 }

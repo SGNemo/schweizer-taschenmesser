@@ -6,7 +6,7 @@ async function createAndDelete(page: Page, title: string) {
   await ready(page, '/vault?new=1');
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Titel').fill(title);
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   // Master–detail: on a wide page the folder shows in the panel and "Bearbeiten" opens the dialog.
   await openEditor(

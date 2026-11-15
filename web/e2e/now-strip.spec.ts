@@ -11,12 +11,12 @@ async function addLowItem(page: Page) {
     .getByRole('button', { name: /Vorrat (hinzufügen|eintragen)/ })
     .first()
     .click();
-  const dialog = page.getByRole('dialog', { name: 'Vorrat hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Vorrat eintragen' });
   await dialog.getByLabel('Name', { exact: true }).fill('Milch');
   await dialog.getByLabel('Vorrat (Anzahl)').fill('1');
   await moreFields(page);
   await dialog.getByLabel('Nachkaufen ab (Anzahl, optional)').fill('2');
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 

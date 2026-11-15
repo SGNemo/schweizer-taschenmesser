@@ -6,7 +6,7 @@
  * notebook `10_Arbeit`, tag `#Projekte`; notebooks are flat), and attachments that cannot be stored
  * are counted.
  */
-import { parseMarkdownNote, withTagLine, type ParsedNote } from '@/core/io/markdownNote';
+import { noteDates, parseMarkdownNote, withTagLine, type ParsedNote } from '@/core/io/markdownNote';
 import { isHiddenPath } from '../files';
 import { addSkip, type SkipCounts, type SourceFile } from '../types';
 
@@ -85,7 +85,11 @@ export function parseMarkdownFolder(
   const skipped: SkipCounts = {};
   addSkip(skipped, 'attachment', opts.binary ?? 0);
   const notesFiles = files
-    .map((f) => ({ path: inner(f.name).replaceAll('\\', '/'), text: f.text }))
+    .map((f) => ({
+      path: inner(f.name).replaceAll('\\', '/'),
+      text: f.text,
+      modifiedAt: f.modifiedAt,
+    }))
     .filter((f) => !NOT_NOTES.test(f.path) && !isHiddenPath(f.path));
   // The vault's own name (one folder around everything) is not a notebook.
   const roots = new Set(notesFiles.map((f) => f.path.split('/')[0]));
@@ -103,6 +107,9 @@ export function parseMarkdownFolder(
     const place = placeOf(segments.slice(0, -1));
     const note = withFolderTag(parsed, place.tag);
     if (place.folder) note.folder = place.folder;
+    // Front matter first, else the file's own date (ZIP entry, file system): D17, round 5.
+    const dates = noteDates(note, file.modifiedAt);
+    if (dates) Object.assign(note, dates);
     notes.push(note);
   }
   return { notes, skipped, total: notesFiles.length };

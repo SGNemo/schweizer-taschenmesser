@@ -91,7 +91,6 @@ a.kachelLink:hover {
       transparent 1px 1.5rem
     )
     var(--surface);
-  box-shadow: var(--shadow-1);
 }
 .notizTitle {
   display: flex;

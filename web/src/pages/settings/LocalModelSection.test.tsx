@@ -11,6 +11,7 @@ import { createWebPlatform } from '@/core/platform/web';
 import type * as BuildInfo from '@/core/update/buildInfo';
 import { t } from '@/strings';
 import { LocalModelSection } from './LocalModelSection';
+import { TAB_SETTLE_MS, TabBody } from './SettingsLayout';
 
 // The Dev-Preview flavour: a desktop build without the model must say "Testversion", not "built without".
 vi.mock('@/core/update/buildInfo', async (original) => ({
@@ -48,6 +49,27 @@ beforeEach(() => {
 afterEach(() => setPlatform(undefined));
 
 describe('LocalModelSection', () => {
+  it('holds the settings tab until the shell has answered, so the group does not push the page down', async () => {
+    const fake = createFakeLocalModel();
+    let answer!: () => void;
+    const answered = new Promise<void>((r) => (answer = r));
+    setPlatform({
+      ...createWebPlatform(),
+      localModel: { ...fake, status: async () => (await answered, fake.status()) },
+    });
+    const { container } = render(
+      <TabBody>
+        <LocalModelSection models={[pinned]} />
+      </TabBody>,
+    );
+    const shown = () => container.querySelector('[data-shown]')!.getAttribute('data-shown');
+    await new Promise((r) => setTimeout(r, TAB_SETTLE_MS * 3));
+    expect(shown()).toBe('false');
+    answer();
+    await waitFor(() => expect(shown()).toBe('true'));
+    expect(container.textContent).toContain(l.title);
+  });
+
   it('says so in the browser, without a link to another download', async () => {
     render(<LocalModelSection models={[pinned]} />);
     expect(await screen.findByTestId('local-unavailable')).toHaveTextContent(

@@ -25,6 +25,7 @@ const MODULES = [
   'accounts',
   'pantry',
   'routines',
+  'device',
   'people',
   'lists',
   'maps',
@@ -132,6 +133,7 @@ const PAGES = [
   ['accounts (set up)', '/accounts'],
   ['pantry', '/pantry'],
   ['routines', '/routines'],
+  ['device', '/device'],
   ['people', '/people'],
   ['lists', '/lists'],
   ['maps', '/maps'],
@@ -220,13 +222,15 @@ for (const scheme of ['light', 'dark'] as const) {
       await page.getByLabel('Master-Passwort', { exact: true }).fill(MASTER);
       await page.getByLabel('Master-Passwort wiederholen').fill(MASTER);
       await page.getByRole('button', { name: 'Tresor erstellen' }).click();
-      await expect(page.getByRole('button', { name: 'Zugang hinzufügen' })).toBeVisible({
-        timeout: 20_000,
-      });
+      await expect(page.getByRole('button', { name: 'Zugang eintragen', exact: true })).toBeVisible(
+        {
+          timeout: 20_000,
+        },
+      );
       await audit(page, `accounts empty (${scheme})`);
 
-      await page.getByRole('button', { name: 'Zugang hinzufügen' }).click();
-      const form = page.getByRole('dialog', { name: 'Zugang hinzufügen' });
+      await page.getByRole('button', { name: 'Zugang eintragen', exact: true }).click();
+      const form = page.getByRole('dialog', { name: 'Zugang eintragen' });
       await form.getByLabel('Name', { exact: true }).fill('Beispiel');
       await form.getByLabel('Passwort', { exact: true }).fill('ein-ganz-normales-passwort-1');
       await form.getByLabel('Einmalcode (TOTP)').fill('JBSWY3DPEHPK3PXP');
@@ -246,7 +250,7 @@ for (const scheme of ['light', 'dark'] as const) {
         )
         .toBe(0);
       await audit(page, `accounts form + generator (${scheme})`);
-      await form.getByRole('button', { name: 'Speichern' }).click();
+      await form.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
 
       // a dialog on phones, the side panel ("Details") from 1200 px
       const detail = page
@@ -309,6 +313,22 @@ for (const scheme of ['light', 'dark'] as const) {
       await dialog.getByRole('button', { name: '2 Einträge importieren' }).click();
       await expect(dialog.getByRole('status')).toHaveText('2 Einträge wurden importiert.');
       await audit(page, `wizard result (${scheme})`);
+    });
+
+    test('planner: „Tage einteilen“ in its three steps', async ({ page }) => {
+      await page.goto('/planner?start=1');
+      const sheet = page.getByRole('dialog', { name: 'Tage einteilen' });
+      await expect(sheet.getByLabel('Eine Zeile je Ding')).toBeVisible();
+      await audit(page, `day setup things (${scheme})`);
+      await sheet.getByLabel('Eine Zeile je Ding').fill('Duschen\nBude aufräumen');
+      await sheet.getByRole('button', { name: 'Weiter' }).click();
+      await expect(sheet.getByText('Wie viel Zeit hast du?')).toBeVisible();
+      await audit(page, `day setup time (${scheme})`);
+      await sheet.getByRole('group').first().getByRole('button', { name: '4 h' }).click();
+      await sheet.getByRole('button', { name: 'Weiter' }).click();
+      await expect(sheet.getByTestId('plan-preview')).toBeVisible();
+      await audit(page, `day setup preview (${scheme})`);
+      await page.keyboard.press('Escape');
     });
 
     test('dialogs: command palette, quick add, create forms', async ({ page }) => {

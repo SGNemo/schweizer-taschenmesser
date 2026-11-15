@@ -22,6 +22,8 @@ const manifest: ModuleManifest = {
     head: 'stage',
     signature: 'coverTone',
     type: 'mono',
+    // Stage, player and start view are built from the first reads of the connection: head and page wait for them (0b-8).
+    firstRead: true,
   },
   version: 1,
   get description() {

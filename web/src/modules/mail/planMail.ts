@@ -96,6 +96,26 @@ export async function plannedThreads(accountKey: string): Promise<Set<string>> {
 }
 
 /**
+ * Open ToDos made from a mail of an account: thread id → ToDo id (live and not ticked off). The row asks
+ * „Beantwortet?“ only for these; a ToDo that is done or deleted asks nothing.
+ */
+export async function openPlans(accountKey: string): Promise<Map<string, string>> {
+  const rows = await linkRepo
+    .active()
+    .filter((r) => r.accountKey === accountKey && r.type === 'todo')
+    .toArray();
+  const todos = getManifest('todos');
+  if (!todos || rows.length === 0) return new Map();
+  const tasks = await createCollectionRepo(todos, 'task').table.bulkGet(rows.map((r) => r.entryId));
+  const out = new Map<string, string>();
+  rows.forEach((r, i) => {
+    const task = tasks[i] as { deletedAt: number | null; done?: boolean } | undefined;
+    if (task && task.deletedAt === null && !task.done) out.set(r.threadId, r.entryId);
+  });
+  return out;
+}
+
+/**
  * Threads whose ToDo from a mail was deleted (on this device or synced from another): the preview marks
  * them „war im Plan“ and leaves them unticked; only an explicit tick brings the entry back.
  */

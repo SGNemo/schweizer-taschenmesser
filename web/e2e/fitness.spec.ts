@@ -1,7 +1,30 @@
 import { expect, test, type Page } from '@playwright/test';
 import { strToU8, zipSync } from 'fflate';
 import { openPageMenu } from './money-helpers';
-import { backSettled, calendarEntry, enable, ready, showAllWidgets, showPreview } from './helpers';
+import {
+  backSettled,
+  calendarEntry,
+  enable,
+  moreFields,
+  ready,
+  showAllWidgets,
+  showPreview,
+} from './helpers';
+
+/**
+ * Sets, reps and weight of the first exercises in the session row. On the phone the row names only count and
+ * minutes (0b-8 follow-up 15: the details made it two to four lines); there the row must not carry them.
+ * The page decides by its own width (`usePageWidthAtLeast(48)`); both projects here have no sidebar beside it
+ * on the phone (412 px) and a wide page on the desktop, so the viewport picks the same branch.
+ */
+async function expectRowDetail(page: Page, detail: RegExp) {
+  if ((page.viewportSize()?.width ?? 0) < 768) {
+    await expect(page.locator('main').getByText(detail)).toHaveCount(0);
+    await expect(page.locator('main [data-row]').first()).toContainText(/\d+ Übung/);
+  } else {
+    await expect(page.getByText(detail)).toBeVisible();
+  }
+}
 
 /**
  * Fitness (package 1, docs/features/fitness.md): a session shows up in the widget and the calendar,
@@ -36,7 +59,7 @@ async function rows(page: Page, table: string): Promise<Record<string, unknown>[
 
 async function capture(page: Page, text: string) {
   await page.goto('/');
-  await page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }).click();
+  await page.getByRole('button', { name: /Neu: etwas eintragen|Neu eintragen/ }).click();
   await page.getByRole('textbox', { name: 'Was möchtest du festhalten?' }).fill(text);
   await expect(page.getByText('Ziel: Fitness')).toBeVisible();
   await page.getByRole('button', { name: 'Speichern', exact: true }).click();
@@ -48,19 +71,21 @@ test('a session: logged in the form, counted in the widget, shown in the calenda
 }) => {
   await page.goto('/fitness?new=session');
   const dialog = page.getByRole('dialog', { name: 'Einheit eintragen' });
-  // Yesterday, so „Wie letztes Mal“ is offered for today below.
+  // Yesterday, so „Wie letztes Mal“ is offered for today below. Day and duration are behind „Mehr Felder“.
+  await expect(dialog).toBeVisible();
+  await moreFields(page);
   await dialog.getByLabel('Datum').fill('2026-11-07');
   await dialog.getByRole('combobox', { name: 'Übung' }).fill('Bankdrücken');
   await dialog.getByLabel('Sätze').fill('3');
   await dialog.getByLabel('Wdh.').fill('8');
   await dialog.getByLabel('kg', { exact: true }).fill('60');
   await dialog.getByLabel('Dauer in Minuten').fill('45');
-  await dialog.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
   await expect(page.getByTestId('fitness-week')).toContainText('1');
   await expect(page.getByRole('button', { name: /Bankdrücken/ }).first()).toBeVisible();
-  await expect(page.getByText(/Bankdrücken 3 × 8 · 60 kg/)).toBeVisible();
+  await expectRowDetail(page, /Bankdrücken 3 × 8 · 60 kg/);
 
   await ready(page, '/');
   const widget = page.getByTestId('widget-fitness:week');
@@ -110,7 +135,10 @@ test('kcal by quick capture adds up to the day sum, past the goal only in words'
   await page.goto('/fitness?view=food');
   await (await openPageMenu(page)).getByRole('menuitem', { name: 'Tagesziel' }).click();
   await page.getByRole('dialog').getByLabel('kcal pro Tag').fill('900');
-  await page.getByRole('dialog').getByRole('button', { name: 'Speichern', exact: true }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Speichern|.+ eintragen)$/ })
+    .click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   // The head says it the same calm way.
   await expect(page.locator('main').getByText('1.000 kcal · Ziel 900')).toBeVisible();
@@ -132,7 +160,7 @@ test('the goal can be worked out; weight, height and age are never stored', asyn
   await expect(dialog.getByTestId('fitness-estimate')).toHaveText('Etwa 2.750 kcal pro Tag');
   await dialog.getByRole('button', { name: 'Übernehmen' }).click();
   await expect(dialog.getByLabel('kcal pro Tag')).toHaveValue('2750');
-  await dialog.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
   const settings = (await rows(page, '_settings')).find((r) => r.id === 'module.fitness');
@@ -148,24 +176,30 @@ test('the goal can be worked out; weight, height and age are never stored', asyn
     expect(stored).not.toContain(value);
 });
 
-test('a planned session: in „Jetzt wichtig“ with its time, counted only once done, the week in rows', async ({
+test('a planned session: on the overview with its time, counted only once done, the week in rows', async ({
   page,
 }) => {
   await page.goto('/fitness?new=session');
   const dialog = page.getByRole('dialog', { name: 'Einheit eintragen' });
   await dialog.getByRole('combobox', { name: 'Übung' }).fill('Kniebeuge');
   await dialog.getByLabel('Sätze').fill('4');
+  // "Geplant" stays beside the exercises (it feeds "Jetzt wichtig"); ticking it opens the day behind "Mehr Felder".
   await dialog.getByLabel('Geplant, noch nicht gemacht').check();
+  await expect(dialog.getByLabel('Datum')).toBeVisible();
   await dialog.getByLabel('Uhrzeit').fill('18:00');
-  await dialog.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
   // Planned: listed under „Geplant“, not counted.
   await expect(page.getByText('Geplant', { exact: true })).toBeVisible();
   await expect(page.getByTestId('fitness-week')).toContainText('0');
 
+  // The "Heute" card of the overview names it with its time; "Jetzt wichtig" does not repeat it.
   await ready(page, '/');
-  await expect(page.getByText('Heute 18:00 · Training: Kniebeuge')).toBeVisible();
+  const today = page.getByTestId('widget-todos:next');
+  await expect(today).toContainText('18:00');
+  await expect(today).toContainText('Kniebeuge');
+  await expect(page.getByText('Heute 18:00 · Training: Kniebeuge')).toHaveCount(0);
 
   await ready(page, '/fitness');
   await page.getByRole('button', { name: 'Erledigt: Kniebeuge' }).click();
@@ -231,7 +265,7 @@ test('import from another app: a Strong export is recognised, previewed and land
   await backSettled(page);
 
   await ready(page, '/fitness');
-  await expect(page.getByText(/Bankdrücken \(Langhantel\) 2 × 8 · 60 kg/)).toBeVisible();
+  await expectRowDetail(page, /Bankdrücken \(Langhantel\) 2 × 8 · 60 kg/);
   // The page's ⋯ menu offers the import too.
   await page.getByRole('button', { name: 'Weitere Aktionen' }).click();
   await expect(page.getByRole('menuitem', { name: /Importieren/ })).toBeVisible();
@@ -254,7 +288,7 @@ test('the catalogue: picked by group with its pictogram, the plate week fills', 
   await expect(picker).toHaveCount(0);
   await expect(dialog.getByRole('combobox', { name: 'Übung' })).toHaveValue('Klimmzüge');
   await dialog.getByLabel('Sätze').fill('3');
-  await dialog.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 
   // Sunday 2026-11-08 is the last plate of the week (Monday start): full now.
@@ -307,7 +341,7 @@ test('import from MyFitnessPal: the export ZIP brings a day of exercise and a me
   await backSettled(page);
 
   await ready(page, '/fitness');
-  await expect(page.getByText(/Squats, Barbell 3 × 5 · 80 kg/)).toBeVisible();
+  await expectRowDetail(page, /Squats, Barbell 3 × 5 · 80 kg/);
   // The weight from Measurement-Summary is nowhere.
   await expect(page.getByText(/81[,.]4/)).toHaveCount(0);
 });
