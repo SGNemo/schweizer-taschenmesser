@@ -43,6 +43,7 @@ import { Part, ThingRow } from '../components/ThingRow';
 import { compact } from '../components/capacity';
 import { appointmentsOf, Context } from '../components/Context';
 import { DayPage, DayPageLoading } from '../components/DayPage';
+import { LateGroup, LateRow } from '../components/LateGroup';
 import { tileName, WeekBand } from '../components/WeekBand';
 import { firstDayWithRows, plannerHead } from '../head';
 import { DaySetup } from '../components/DaySetup';
@@ -50,7 +51,7 @@ import { DaySheet } from '../components/DaySheet';
 import { RowChoice, type RowChoiceState } from '../components/RowChoice';
 import { SETUP_DAYS } from '../daySetup';
 import { duesOf, eveningLine } from '../rest';
-import { dayEndOf } from '../settings';
+import { dayEndLabel, dayEndOf } from '../settings';
 import { PlanPreview, type PreviewData } from '../components/PlanPreview';
 import { WeekCheck } from '../components/WeekCheck';
 import { BOARD_DAYS } from '../calendar';
@@ -392,7 +393,7 @@ export default function PlannerPage() {
 
   // The head reports the next day that asks for something (CONCEPT-DESIGN §5): `head.ts`. With no thing on any
   // day there is no figure; the unseen placeholder keeps the head's height (U01).
-  const head = board ? plannerHead(board.days, { short: phone }) : undefined;
+  const head = board ? plannerHead(board.days, { short: phone, late: board.late }) : undefined;
 
   const pageMenu: RowMenuItem[] = [
     {
@@ -516,10 +517,24 @@ export default function PlannerPage() {
     );
   };
 
+  // A row of „Frist vorbei“: the one row form, neutral; it sits on no day, so no tick, no „Später“, no duration.
+  const renderLate = (row: BoardRow) => (
+    <ThingRow
+      key={row.unitId}
+      row={row}
+      reason=""
+      whyOpen={false}
+      dueClock={dueClock}
+      menu={rowMenu(row, undefined, undefined, { late: true })}
+      noDuration
+    />
+  );
+
   const waiting = board?.waiting ?? [];
+  const late = board?.late ?? [];
   const overflow = data?.last?.today === data?.today ? (data?.last?.overflowMin ?? 0) : 0;
   const nothingPlanned = board !== undefined && board.days.every((d) => d.rows.length === 0);
-  const boardEmpty = nothingPlanned && waiting.length === 0;
+  const boardEmpty = nothingPlanned && waiting.length === 0 && late.length === 0;
 
   // The day the sheet shows: `?day=` or a tile → the pick stored today on this device → the first day that holds
   // things → today. Once shown it stays (a day does not change under the hand when its last thing is ticked).
@@ -675,12 +690,26 @@ export default function PlannerPage() {
     <p className={styles.emptyDay} data-testid="planner-empty-day">
       {shownDay?.isToday && firstFull
         ? t.planner.sheet.dayOffNext(formatDay(firstFull.date, 'EEEE'))
-        : t.planner.sheet.emptyDay}
+        : nothingPlanned && late.length > 0
+          ? late.every((r) => r.entry?.kind === 'invoice')
+            ? t.planner.sheet.onlyLate
+            : t.planner.sheet.onlyLateThings
+          : t.planner.sheet.emptyDay}
     </p>
   );
 
-  const context = days ? <Context days={days}>{waitingBlock}</Context> : null;
-  const hasContext = !!days && (waiting.length > 0 || appointmentsOf(days).length > 0);
+  // „Frist vorbei“ is the first card of the context column where there is one (wide); elsewhere it is one row
+  // above the day's sheet.
+  const context = days ? (
+    <Context
+      days={days}
+      before={wide ? <LateGroup rows={late} renderRow={renderLate} /> : undefined}
+    >
+      {waitingBlock}
+    </Context>
+  ) : null;
+  const hasBeside = !!days && (waiting.length > 0 || appointmentsOf(days).length > 0);
+  const hasContext = hasBeside || (wide && late.length > 0);
 
   return (
     <>
@@ -740,6 +769,8 @@ export default function PlannerPage() {
             <div className={styles.bandPending} aria-hidden="true" />
           )}
 
+          {!wide ? <LateRow rows={late} renderRow={renderLate} /> : null}
+
           {shownDay && days ? (
             <DayPage
               key={shownDay.date}
@@ -754,6 +785,9 @@ export default function PlannerPage() {
               // On the phone the page's ⋯ stands in the sheet's head and holds „Tage einteilen“: said once.
               onSetup={phone ? undefined : () => setSettingUp(true)}
               headEnd={phone ? pageMenuButton : undefined}
+              dayEnd={
+                data && dayEndOf(data.settings) ? dayEndLabel(dayEndOf(data.settings)!) : undefined
+              }
               onSwipe={
                 phone
                   ? (dir) => {
@@ -785,7 +819,12 @@ export default function PlannerPage() {
           {answer}
         </CaptureDialog>
       ) : null}
-      <RowChoice choice={choice} titles={titles} onClose={() => setChoice(undefined)} />
+      <RowChoice
+        choice={choice}
+        days={days?.map((d) => d.date) ?? []}
+        titles={titles}
+        onClose={() => setChoice(undefined)}
+      />
       <DaySheet
         day={board?.days.find((d) => d.date === sheetDate)}
         titles={titles}

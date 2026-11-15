@@ -17,11 +17,21 @@ export function appointmentsOf(days: readonly BoardDay[]) {
  * What stands around the week (planner hub R1): the appointments of the seven days and, as `children`, the group
  * that waits for free time. Beside the sheet on a wide page, under it elsewhere. No appointments: no card.
  */
-export function Context({ days, children }: { days: readonly BoardDay[]; children?: ReactNode }) {
+export function Context({
+  days,
+  before,
+  children,
+}: {
+  days: readonly BoardDay[];
+  /** The first card of the column („Frist vorbei“, R2). */
+  before?: ReactNode;
+  children?: ReactNode;
+}) {
   const id = useId();
   const appointments = appointmentsOf(days);
   return (
     <div className={styles.context}>
+      {before}
       {appointments.length > 0 ? (
         <Card className={styles.sheet} aria-labelledby={id} data-testid="planner-appointments">
           <h2 id={id} className={styles.cardHead}>

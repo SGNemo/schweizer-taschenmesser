@@ -1,4 +1,5 @@
 import { formatMinutes } from '@/core/i18n/format';
+import { windowText, type TimeWindow } from '@/core/plan/windows';
 import { t } from '@/strings';
 
 export const compact = (min: number): string => formatMinutes(min, { compact: true });
@@ -56,4 +57,33 @@ export function capacityTile(day: Capacity): string {
   return capacityState(day) === 'free'
     ? t.planner.board.freeShort(compact(day.free))
     : capacityShort(day);
+}
+
+/**
+ * „Warum?“ beside the day's capacity (planner hub R2, P80): one line that names what the time goes to – the day's
+ * available time, every blocker by name with its length, the buffer, the time window and the day's end when set.
+ * „4 h für den Tag. Abgezogen: Teamrunde 1 h, Puffer 36 Min. Tagesende 21:00.“ Text only.
+ */
+export function capacityWhy(
+  day: {
+    availableMin: number;
+    raw: number;
+    usable: number;
+    blockers: readonly { label: string; min: number }[];
+    window?: TimeWindow;
+  },
+  dayEnd?: string,
+): string {
+  const b = t.planner.board;
+  const buffer = day.raw - day.usable;
+  const off = [
+    ...day.blockers.map((x) => `${x.label} ${compact(x.min)}`),
+    ...(buffer > 0 ? [b.whyBuffer(compact(buffer))] : []),
+  ];
+  return [
+    b.whyTime(compact(day.availableMin)),
+    ...(off.length > 0 ? [b.whyOff(off.join(', '))] : []),
+    ...(day.window ? [b.whyWindow(windowText(day.window))] : []),
+    ...(dayEnd ? [b.whyEnd(dayEnd)] : []),
+  ].join(' ');
 }
