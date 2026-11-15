@@ -157,3 +157,29 @@ describe('grouping of the list', () => {
     expect(groups[1]!.items.map((i) => i.title)).toEqual(['c', 'a']);
   });
 });
+
+describe('role: things to look at, buy or try (round 2026-11)', () => {
+  it('knows the kinds "buy" and "try" and groups them between place and idea', () => {
+    expect(itemSchema.safeParse({ title: 'Kopfhörer', kind: 'buy' }).success).toBe(true);
+    expect(itemSchema.safeParse({ title: 'Sauerteig', kind: 'try' }).success).toBe(true);
+    const groups = groupItems(
+      [
+        stored({ title: 'Idee', kind: 'idea' }),
+        stored({ title: 'Sauerteig', kind: 'try' }),
+        stored({ title: 'Kopfhörer', kind: 'buy' }),
+        stored({ title: 'See', kind: 'place' }),
+      ],
+      'kind',
+      '2026-09-29',
+    );
+    expect(groups.map((g) => g.id)).toEqual(['place', 'buy', 'try', 'idea']);
+  });
+
+  it('the grouping is a stored setting (default: recent), so it survives a reload', async () => {
+    const { settings, settingsSchema } = await import('../settings');
+    expect(settingsSchema.parse(settings.defaults).groupBy).toBe('recent');
+    expect(settings.fields.map((f) => f.key)).toContain('groupBy');
+    expect(manifest.version).toBe(3);
+    expect(Object.keys(manifest.migrations ?? {})).toContain('3');
+  });
+});

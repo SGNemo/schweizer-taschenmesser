@@ -147,6 +147,11 @@ test.describe('Calm Merkliste page (focus audit 2)', () => {
     await expect(list.getByRole('heading', { name: /Film/ })).toBeVisible();
     await expect(list.getByRole('heading', { name: /Kochen/ })).toBeVisible();
     await expect(list.getByRole('listitem')).toHaveCount(2);
+    // The grouping is kept: after a reload the list is still grouped by tag.
+    await ready(page, '/bookmarks');
+    await expect(
+      page.getByRole('group', { name: 'Merkliste' }).getByRole('heading', { name: /Kochen/ }),
+    ).toBeVisible();
     await (
       await openBookmarksMenu(page)
     )
@@ -154,6 +159,26 @@ test.describe('Calm Merkliste page (focus audit 2)', () => {
       .click();
     await expect(list.getByRole('heading', { name: /Link/ })).toBeVisible();
     await expect(list.getByRole('listitem')).toHaveCount(2);
+  });
+});
+
+test.describe('Role of the Merkliste (round 2026-11)', () => {
+  test('the empty page says what belongs here; "Kaufen" and "Ausprobieren" are kinds', async ({
+    page,
+  }) => {
+    await enable(page, 'bookmarks');
+    await ready(page, '/bookmarks');
+    await expect(page.getByTestId('bookmarks-empty')).toContainText(
+      'was du dir anschauen, lesen, kaufen oder ausprobieren willst',
+    );
+    await ready(page, '/bookmarks?view=links');
+    await expect(page.getByTestId('bookmarks-empty')).toContainText(
+      'Die Lesezeichen deines Browsers ersetzt das nicht.',
+    );
+    await add(page, 'Kopfhörer', '', '', 'Kaufen');
+    await add(page, 'Sauerteig ansetzen', '', '', 'Ausprobieren');
+    await expect(rowOf(page, 'Kopfhörer')).toContainText('Kaufen');
+    await expect(rowOf(page, 'Sauerteig ansetzen')).toContainText('Ausprobieren');
   });
 });
 

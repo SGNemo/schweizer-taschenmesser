@@ -20,7 +20,7 @@ const manifest: ModuleManifest = {
     tabs: true,
     signature: 'pinboard',
   },
-  version: 2,
+  version: 3,
   get description() {
     return t.bookmarks.meta.description;
   },

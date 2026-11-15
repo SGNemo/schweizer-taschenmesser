@@ -1,7 +1,9 @@
 import { compareText } from '@/core/i18n/format';
 import { addDaysStr, toDateString } from '@/core/time/dates';
 import { KINDS, type BookmarkItem, type Kind } from './schema';
-import type { SortMode } from './settings';
+import type { Grouping, SortMode } from './settings';
+
+export { GROUPINGS, type Grouping } from './settings';
 
 /** "example.com/x" → "https://example.com/x"; anything that is not a http(s) address → undefined. */
 export function normalizeUrl(input: string): string | undefined {
@@ -121,10 +123,6 @@ export function sorter<T extends BookmarkItem & { createdAt: number }>(
     return (a, b) => STATUS_ORDER[statusOf(a)] - STATUS_ORDER[statusOf(b)] || newest(a, b);
   return newest;
 }
-
-/** How the list is grouped: by when it was saved (default), by first tag or by type. */
-export type Grouping = 'recent' | 'tag' | 'kind';
-export const GROUPINGS: readonly Grouping[] = ['recent', 'tag', 'kind'];
 
 /** `id` is stable and safe in a DOM id; `tag` is the tag text of a tag group ('' = no tag). */
 export interface ItemGroup<T> {

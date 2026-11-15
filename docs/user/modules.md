@@ -27,7 +27,7 @@ In the **module library** you turn modules on and off (when turning one off: kee
 |  | Routines | Cleaning plan and household routines | on for new installations |
 |  | Pantry | What’s in the fridge, the cupboard and the freezer? | optional |
 |  | Fitness | Keep a rough log of training and food | preview |
-| **Knowledge** | Saved | Save links, reading, films, places and ideas | optional |
+| **Knowledge** | Saved | What you still want to look at, read, buy or try out | optional |
 |  | Notes | Notebook with formatted text (Markdown), a fixed scratchpad always at the top, pinning and search | optional |
 |  | Chat | Conversations with the built-in local model or your providers | preview |
 |  | Browser | Simple browser with tabs, bookmarks and a private mode | preview, Windows and Android apps only |
@@ -52,7 +52,7 @@ Preview modules and tools stay hidden until you turn on “Show work in progress
 Highlights of the modules that start with a short line above:
 
 - **Calendar** (on by default): reminders and a notification before events. **To-dos**: also recurring, with “Someday”.
-- **Saved:** links, reading, films, places and ideas with tags; on the phone via “Share”. Its bookmarks view shows tiles grouped by first tag, for example parcel tracking, trains, maps …
+- **Saved:** what you still want to look at, read, buy, try out or visit, with tags and a status; every saved item has an end (done or gone). On the phone via “Share”. The “Bookmarks” tab shows the few links you need every day as tiles grouped by first tag (parcel tracking, trains, maps …); it does not replace your browser’s bookmarks.
 - **Notes:** with a pinned **scratchpad** at the top for quick jots.
 - **Lists:** shopping with “2 milk”, packing lists with progress and templates, checklists.
 - **People:** birthdays yearly in the calendar, with age, reminder and WhatsApp greeting; gift ideas per person with price, link and status.

@@ -1,6 +1,16 @@
 import { z } from 'zod';
 
-export const KINDS = ['link', 'read', 'watch', 'book', 'place', 'idea', 'other'] as const;
+export const KINDS = [
+  'link',
+  'read',
+  'watch',
+  'book',
+  'place',
+  'buy',
+  'try',
+  'idea',
+  'other',
+] as const;
 export type Kind = (typeof KINDS)[number];
 
 export const itemSchema = z.object({

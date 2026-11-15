@@ -69,10 +69,10 @@ export default function BookmarksPage() {
     moduleSettings.defaults as never,
   );
   const prefs = stored ?? (moduleSettings.defaults as BookmarksSettings);
+  const grouping: Grouping = prefs.groupBy;
   const navigate = useNavigate();
   const read = (i: { id: string }) => void navigate(`/bookmarks/read/${i.id}`);
   const [filter, setFilter] = useState<Filter>({ view: 'open', kind: 'all', query: '' });
-  const [grouping, setGrouping] = useState<Grouping>('recent');
   const [menuOpen, setMenuOpen] = useState(false);
   const [advanced, setAdvanced] = useAdvanced('bookmarks');
   const tx = tAdvanced.use();
@@ -209,7 +209,7 @@ export default function BookmarksPage() {
       group: t.bookmarks.groupBy,
       label: t.bookmarks.groupings[g],
       checked: grouping === g,
-      onSelect: () => setGrouping(g),
+      onSelect: () => void setPrefs({ groupBy: g }),
     })),
   ];
   const startItems = useStartDataItems('bookmarks');
