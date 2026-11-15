@@ -159,7 +159,7 @@ describe('playlists tab', () => {
     expect(sent('GET', '/me').filter((c) => c.path === '/me')).toHaveLength(1);
   });
 
-  it('the start view leads to the tab with "Alle Playlists", without reading the list again', async () => {
+  it('the tab takes the playlists of the start view without reading them again', async () => {
     await connect();
     render(
       <MemoryRouter initialEntries={['/music']}>
@@ -168,7 +168,8 @@ describe('playlists tab', () => {
         </AreaFrame>
       </MemoryRouter>,
     );
-    fireEvent.click(await screen.findByRole('button', { name: 'Alle Playlists' }));
+    await screen.findByTestId('music-playlists');
+    fireEvent.click(tab('Playlists'));
     await waitFor(() => expect(tiles()).toHaveLength(4));
     expect(sent('GET', '/me/playlists')).toHaveLength(1);
   });

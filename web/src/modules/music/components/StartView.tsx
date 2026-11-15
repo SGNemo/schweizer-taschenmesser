@@ -136,20 +136,10 @@ export function StartView({
         )}
       </section>
       <section aria-labelledby="music-playlists">
-        <div className={styles.sectionHead}>
-          <h2 id="music-playlists" className={styles.sectionTitle}>
-            {tm.startPlaylists}
-          </h2>
-          {hasPlaylists ? (
-            <button
-              type="button"
-              className={`${sx.linkButton} ${styles.sectionLink}`}
-              onClick={() => open({ type: 'playlists' })}
-            >
-              {tm.allPlaylists}
-            </button>
-          ) : null}
-        </div>
+        {/* No "Alle Playlists" here: the tab "Playlists" is that way (stimulus budget, focus checklist 9). */}
+        <h2 id="music-playlists" className={styles.sectionTitle}>
+          {tm.startPlaylists}
+        </h2>
         {!hasPlaylists ? (
           <p className={styles.note}>
             {tm.startNeedsPlaylists} <Link to={CONNECTIONS}>{tx.settings}</Link>
