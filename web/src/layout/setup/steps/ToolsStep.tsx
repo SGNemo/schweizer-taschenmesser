@@ -36,7 +36,7 @@ export default function ToolsStep({ registerCommit }: SetupStepProps) {
   const ids = ordered.map((tool) => tool.id);
   return (
     <>
-      <Switch label={s.showDev} checked={showDev} onChange={setShowDev} />
+      <Switch tone="neutral" label={s.showDev} checked={showDev} onChange={setShowDev} />
       <ul className={patternStyles.gridList}>
         {shown.map((tool) => (
           <li
@@ -45,6 +45,7 @@ export default function ToolsStep({ registerCommit }: SetupStepProps) {
           >
             <span className={patternStyles.grow}>
               <Switch
+                tone="neutral"
                 label={`${tool.name} (${s.groups[tool.group]})`}
                 hint={tool.description}
                 checked={isEnabled(tool, values)}

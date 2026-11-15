@@ -8,6 +8,7 @@ function memory(protection: SecretStore['protection'] = 'device-key') {
     protection,
     map,
     get: async (n) => map.get(n),
+    has: async (n) => Boolean(map.get(n)),
     set: async (n, v) => void map.set(n, v),
     delete: async (n) => void map.delete(n),
   };
@@ -95,5 +96,51 @@ describe('migrating secret store', () => {
     legacy.map.set('k', 'v');
     await createMigratingStore(primary, legacy).delete('k');
     expect(legacy.map.has('k')).toBe(false);
+  });
+
+  describe('has', () => {
+    it('answers from the keystore, else from the legacy store, and moves nothing', async () => {
+      const primary = memory('os-keystore');
+      const legacy = memory();
+      primary.map.set('a', '1');
+      legacy.map.set('b', '2');
+      const store = createMigratingStore(primary, legacy);
+      expect(await store.has('a')).toBe(true);
+      expect(await store.has('b')).toBe(true);
+      expect(await store.has('c')).toBe(false);
+      expect(legacy.map.get('b')).toBe('2'); // only `get` migrates
+      expect(primary.map.has('b')).toBe(false);
+    });
+
+    it('never reads a value to answer', async () => {
+      const primary = memory('os-keystore');
+      const legacy = memory();
+      primary.map.set('a', '1');
+      legacy.map.set('b', '2');
+      const read = () => Promise.reject(new Error('get must not be called'));
+      primary.get = read;
+      legacy.get = read;
+      const store = createMigratingStore(primary, legacy);
+      expect(await store.has('a')).toBe(true);
+      expect(await store.has('b')).toBe(true);
+    });
+
+    it('falls back to the legacy store when the keystore cannot answer', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      try {
+        const primary = memory('os-keystore');
+        primary.has = async () => {
+          throw new Error('boom');
+        };
+        const legacy = memory();
+        legacy.map.set('k', 'v');
+        const store = createMigratingStore(primary, legacy);
+        expect(await store.has('k')).toBe(true);
+        expect(await store.has('other')).toBe(false);
+        expect(JSON.stringify(warn.mock.calls)).not.toContain('"v"');
+      } finally {
+        warn.mockRestore();
+      }
+    });
   });
 });

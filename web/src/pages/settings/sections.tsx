@@ -662,6 +662,12 @@ export const CORE_SECTIONS: readonly SettingsSectionDef[] = [
           return t.focus.reminders.todoDigest;
         },
       },
+      {
+        key: 'restReminder',
+        get label() {
+          return t.focus.reminders.restReminder;
+        },
+      },
     ],
     reset: focusReset(REMINDER_RESET_KEYS),
     render: () => <CalmRemindersSection />,

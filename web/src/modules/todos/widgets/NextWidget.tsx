@@ -5,12 +5,23 @@ import { resetSkipped, skipSuggestion, useSkippedToday } from '@/core/focus/stat
 import { useNow } from '@/core/focus/useNow';
 import { useModuleStates } from '@/core/modules/activation';
 import { useCalendarItems } from '@/core/modules/contributions';
+import { useOverviewBlocks } from '@/core/modules/overviewBlocks';
+import { useAmountMask } from '@/core/focus/maskAmounts';
+import { bus } from '@/core/events';
 import { useFocusSettings } from '@/core/settings/focus';
 import { addDaysStr, formatDay, today } from '@/core/time/dates';
 import { now, pad2 } from '@/core/time/now';
 import { undoableWithToast } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { Button, Checkbox, Dialog, RowMenu, useWidgetSize, WidgetBody } from '@/ui';
+import {
+  Button,
+  Checkbox,
+  Dialog,
+  RowMenu,
+  useCardActionVariant,
+  useWidgetSize,
+  WidgetBody,
+} from '@/ui';
 import { beginFocus, focusMinutesFor, focusPath } from '../focus';
 import { nextTier, type PickTask } from '../next';
 import { EVENING_HOUR, leftToday, weekReview, type ProgressTask } from '../progress';
@@ -35,6 +46,8 @@ const untilText = (minutes: number): string =>
  * counts days.
  */
 export default function NextWidget() {
+  // Phone: the plus owns the one filled accent (decision #856).
+  const startVariant = useCardActionVariant();
   const size = useWidgetSize();
   const navigate = useNavigate();
   const [settings] = useFocusSettings();
@@ -56,7 +69,7 @@ export default function NextWidget() {
   // (while the planner is off its marks are cleaned away anyway).
   const states = useModuleStates();
   const plannerOn = states === undefined || states.planner === true;
-  const { next, plan, planRows, until } = buildToday({
+  const { next, plan, planRows, until, appointments } = buildToday({
     tasks: all,
     items: items ?? [],
     day,
@@ -67,6 +80,14 @@ export default function NextWidget() {
     // The planner's order counts only while the planner is on (CONCEPT §2: inactive = the mark is ignored).
     planMarks: plannerOn,
   });
+  // The day's appointments are listed here only when the overview says so (`'today'`: the agenda block is not on
+  // the page): nothing stands on the overview twice. The one the "in 20 Min" line names is not repeated.
+  const blocks = useOverviewBlocks();
+  const mask = useAmountMask();
+  const listAppointments = blocks?.includes('today') === true;
+  const untilShown = settings.timeToNext ? until?.item : undefined;
+  const dayRows = listAppointments ? appointments.shown.filter((a) => a !== untilShown) : [];
+  const noTasks = all.length === 0;
   const openCount = all.filter((x) => !x.done && !x.someday && !x.parentId).length;
   const showPlan = settings.dayPlan && size !== 's';
   const review = useMemo(
@@ -95,6 +116,10 @@ export default function NextWidget() {
     undoableWithToast(t.focus.progress.wrapDone, t.focus.progress.wrapDone, async () => {
       for (const x of left) await taskRepo.update(x.id, userPlannedFor(x, addDaysStr(day, 1)));
     });
+  // With the planner on, „Tag abschließen“ asks it over the bus (no module import): the planner opens its preview of
+  // „Rest verteilen“, and nothing moves before „Übernehmen“ there. „Auf morgen schieben“ is the way without it.
+  const restInPlan = states?.planner === true;
+  const askPlanner = () => bus.emit('plan.restRequested', { open: (path) => void navigate(path) });
   const toggle = (id: string, done: boolean) => {
     const task = all.find((x) => x.id === id);
     if (!task) return;
@@ -115,22 +140,49 @@ export default function NextWidget() {
 
   return (
     <WidgetBody
-      loading={!tasks}
-      isEmpty={all.length === 0}
+      // The day's appointments belong to the card's first paint: without them it would grow a moment later.
+      loading={!tasks || items === undefined}
+      // Appointments of today are content too: without a single ToDo the card still names them.
+      isEmpty={noTasks && dayRows.length === 0 && !untilShown}
       empty={t.focus.next.empty}
       emptyAction={{ label: t.focus.next.emptyAction, to: '/todos?new=1' }}
     >
       {settings.timeToNext && until ? (
         <p className={styles.until} data-testid="today-until">
           <strong>{untilText(until.minutes)}</strong>
-          {` · ${until.item.time} ${until.item.title}`}
+          {` · ${until.item.time} `}
+          {mask(until.item.title)}
         </p>
       ) : null}
 
-      {settings.nextOne ? (
+      {dayRows.length > 0 ? (
+        <ul className={styles.dayRows} data-testid="today-appointments">
+          {dayRows.map((a) => (
+            <li key={`${a.source}:${a.id}`} className={styles.row}>
+              <Link to={a.to ?? '/calendar'} className={styles.dayLink}>
+                {mask(a.title)}
+              </Link>
+              <span className={styles.est}>{a.allDay || !a.time ? t.calendar.allDay : a.time}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {listAppointments && appointments.hidden > 0 ? (
+        <Link to="/calendar" className={styles.allLink}>
+          {t.home.agenda.all}
+        </Link>
+      ) : null}
+
+      {noTasks ? (
+        <p className={styles.hint}>
+          {t.focus.next.empty} <Link to="/todos?new=1">{t.focus.next.emptyAction}</Link>
+        </p>
+      ) : null}
+
+      {settings.nextOne && !noTasks ? (
         next ? (
           <div className={styles.card} data-testid="next-card">
-            <span className={styles.title}>{next.title}</span>
+            <span className={styles.title}>{mask(next.title)}</span>
             <span className={styles.meta}>
               {[
                 listName(next.listId),
@@ -140,7 +192,7 @@ export default function NextWidget() {
                 .join(' · ')}
             </span>
             <div className={styles.actions}>
-              <Button variant="primary" onClick={() => void start()} data-focus-start>
+              <Button variant={startVariant} onClick={() => void start()} data-focus-start>
                 {t.focus.next.startMin(focusMinutesFor(next, settings.focusMinutes))}
               </Button>
               <Button variant="ghost" onClick={() => void later()}>
@@ -179,7 +231,7 @@ export default function NextWidget() {
         )
       ) : null}
 
-      {showPlan ? (
+      {showPlan && !noTasks ? (
         <div className={styles.plan} data-testid="day-plan">
           {planRows.length > 0 ? (
             <ul className={styles.rows}>
@@ -188,7 +240,7 @@ export default function NextWidget() {
                 return (
                   <li key={p.id} className={styles.row}>
                     <Checkbox
-                      label={full.title}
+                      label={mask(full.title)}
                       checked={false}
                       onChange={() => toggle(p.id, true)}
                     />
@@ -228,9 +280,17 @@ export default function NextWidget() {
           <span className={styles.planTitle}>{t.focus.progress.wrapTitle}</span>
           {left.length > 0 ? (
             <>
-              <p className={styles.hint}>{t.focus.progress.wrapLeft(left.length)}</p>
+              <p className={styles.hint}>
+                {restInPlan
+                  ? t.focus.progress.wrapRestLine
+                  : t.focus.progress.wrapLeft(left.length)}
+              </p>
               <div className={styles.actions}>
-                <Button onClick={() => void wrapUp()}>{t.focus.progress.wrapAction}</Button>
+                {restInPlan ? (
+                  <Button onClick={() => void askPlanner()}>{t.focus.progress.wrapRest}</Button>
+                ) : (
+                  <Button onClick={() => void wrapUp()}>{t.focus.progress.wrapAction}</Button>
+                )}
               </div>
             </>
           ) : (
@@ -276,7 +336,7 @@ export default function NextWidget() {
             <ul className={styles.rows}>
               {options.map((o) => (
                 <li key={o.id} className={styles.row}>
-                  <span>{o.title}</span>
+                  <span>{mask(o.title)}</span>
                   <Button
                     onClick={() => {
                       void undoableWithToast(t.focus.plan.planned, t.focus.plan.planned, () =>

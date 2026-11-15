@@ -54,6 +54,7 @@ export default function FocusStep({ registerCommit, setCanContinue, mode }: Setu
       {KEYS.map((key) => (
         <div key={key} data-testid={`setup-focus-${key}`}>
           <Switch
+            tone="neutral"
             label={s[key]}
             checked={draft[key]}
             onChange={(on) => setDraft({ ...draft, [key]: on })}

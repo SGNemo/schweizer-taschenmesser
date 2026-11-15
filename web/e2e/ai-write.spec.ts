@@ -241,7 +241,7 @@ test.describe('Eintragen per KI (Regeln, 0 Token)', () => {
     await write(page, 'Aufgabe Zahnarzt anrufen; Aufgabe Pakete abholen');
     await expect(page.getByTestId('ai-write-op')).toHaveCount(2);
     await page
-      .getByRole('checkbox', { name: /Pakete abholen|Aufgabe anlegen/ })
+      .getByRole('checkbox', { name: /Pakete abholen|Aufgabe eintragen/ })
       .last()
       .uncheck();
     await page.getByTestId('ai-write-confirm').click();
@@ -265,7 +265,7 @@ test.describe('Eintragen per KI (Regeln, 0 Token)', () => {
       // page, which offers "Eintragen" for it.
       await page.locator('header').first().getByRole('button', { name: /suche/i }).click();
     } else {
-      await page.getByRole('button', { name: 'Neu: schnell hinzufügen' }).click();
+      await page.getByRole('button', { name: 'Neu: etwas eintragen' }).click();
       await page.getByTestId('quick-add-ai').click();
       await expect(box).toHaveAttribute('placeholder', /Rechnung Stadtwerke/);
     }
@@ -275,7 +275,7 @@ test.describe('Eintragen per KI (Regeln, 0 Token)', () => {
     else await box.press('Enter');
     await expect(page.getByTestId('ai-write-preview')).toBeVisible();
     await expect(
-      page.getByTestId('ai-write-preview').getByText('Rechnung anlegen', { exact: true }),
+      page.getByTestId('ai-write-preview').getByText('Rechnung eintragen', { exact: true }),
     ).toBeVisible();
   });
 

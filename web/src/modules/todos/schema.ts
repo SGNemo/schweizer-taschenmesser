@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { recurrenceSchema } from '@/core/recurrence/types';
-import { DATE_RE } from '@/core/time/dates';
+import { DATE_RE, TIME_RE } from '@/core/time/dates';
 
 export const LIST_KINDS = ['list', 'project'] as const;
 
@@ -53,6 +53,13 @@ export const taskSchema = z.object({
     .default(0)
     .meta({ description: '0 = keine, 1 = niedrig, 2 = mittel, 3 = hoch' }),
   dueDate: z.string().regex(DATE_RE).optional(),
+  /** The deadline's hour ('HH:mm', local) – „bis So 18:00“; only read together with `dueDate`. */
+  dueTime: z.string().regex(TIME_RE).optional(),
+  /**
+   * Opt-in „Erinnern: 1 Std vorher“: one notification an hour before `dueDate` + `dueTime` (`notifications.ts`).
+   * Set only by the person in the editor: not part of the import format (no AI or API switches it on in bulk).
+   */
+  dueRemind: z.boolean().optional().meta({ internal: true }),
   /** Repeats from `dueDate`: ticking it off creates the next one (see `completeTask`). */
   recurrence: recurrenceSchema.optional(),
   /** "Irgendwann": kept out of the open views, the widget and the calendar. */

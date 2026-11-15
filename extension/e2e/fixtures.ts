@@ -41,7 +41,7 @@ async function setUpVault(app: Page) {
   await app.getByLabel('Master-Passwort', { exact: true }).fill(MASTER);
   await app.getByLabel('Master-Passwort wiederholen').fill(MASTER);
   await app.getByRole('button', { name: 'Tresor erstellen' }).click();
-  await expect(app.getByRole('button', { name: 'Zugang hinzufügen' })).toBeVisible({
+  await expect(app.getByRole('button', { name: 'Zugang eintragen', exact: true })).toBeVisible({
     timeout: 20_000,
   });
   await openExtensionDialog(app);

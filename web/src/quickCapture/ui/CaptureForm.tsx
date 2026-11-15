@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react';
 import { useFocusSettings } from '@/core/settings/focus';
 import { now, today } from '@/core/time/now';
 import { t } from '@/strings';
@@ -31,6 +39,7 @@ import {
   type ReminderRow,
 } from './batch';
 import { previewChips } from './chips';
+import { visibleTypes } from './typeFold';
 import { clearCaptureDraft, readCaptureDraft, writeCaptureDraft } from './draft';
 import { clearReopenDraft, peekReopenDraft, reopenCapture } from './reopen';
 import { resolveTarget } from './resolve';
@@ -72,6 +81,8 @@ export interface CaptureFormProps {
   idFor?: Partial<Record<CaptureType, string>>;
   onSaved: (saved: SavedCapture) => void;
   onCancel?: () => void;
+  /** Further ways in (quick add: free text, the other forms): above the actions, which stay the sheet's foot (K4). */
+  beforeActions?: ReactNode;
 }
 
 const typeLabel = (type: CaptureType, kind: CaptureFields['kind']): string =>
@@ -82,6 +93,7 @@ function errorText(e: unknown): string {
     if (e.code === 'module-off') return t.quickCapture.errors.moduleOff(e.detail ?? '');
     if (e.code === 'invalid') return t.quickCapture.errors.invalid;
     if (e.code === 'currency') return t.quickCapture.errors.currency(e.detail ?? '');
+    if (e.code === 'full' && e.detail) return e.detail;
   }
   return t.quickCapture.errors.failed;
 }
@@ -112,13 +124,14 @@ export function CaptureForm({
   oneEntry,
   bookChip = true,
   onOpenFull,
+  beforeActions,
   idFor,
   onSaved,
   onCancel,
 }: CaptureFormProps) {
   const [settings] = useCaptureSettings();
   // One source for the module states and the types they allow (a second query could lag behind).
-  const { states, available, fitness, place } = useCaptureTypes();
+  const { states, available, fitness, place, breaks, pickable } = useCaptureTypes();
   const [focus] = useFocusSettings();
   // "Ändern" after a multi-line save puts the text back (see `reopen.ts`).
   // A text kept from an app the phone killed mid-typing comes back too (C04, `draft.ts`).
@@ -143,6 +156,8 @@ export function CaptureForm({
   const [lookups, setLookups] = useState<Record<string, LookupResult>>({});
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  // „Mehr (n)“ opened: every type chip in view until the sheet closes (decision #856).
+  const [typesOpen, setTypesOpen] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   // The booking toast outlives the sheet: its undo must know whether the sheet is still there.
   const mounted = useRef(true);
@@ -169,9 +184,10 @@ export function CaptureForm({
         defaultType: settings?.defaultType,
         fitness,
         place,
+        breaks,
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `fitness` is rebuilt per render; its two flags are the deps
-    [single, settings?.defaultType, fitness.meal, fitness.workout, place],
+    [single, settings?.defaultType, fitness.meal, fitness.workout, place, breaks],
   );
   const resolveOpts = {
     available,
@@ -214,6 +230,7 @@ export function CaptureForm({
               defaultType: settings?.defaultType,
               fitness,
               place,
+              breaks,
             });
             const chosen = rowOverride[key];
             const res = resolveTarget(part, r, { ...resolveOpts, override: chosen?.type });
@@ -258,9 +275,20 @@ export function CaptureForm({
       fitness.meal,
       fitness.workout,
       place,
+      breaks,
     ],
   );
-  const rowTypes = batchTypes(available);
+  // „ToDo 9 · Termin 3“: what the rows turn into, in the order the kinds first appear (W07).
+  const kinds = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const r of rows)
+      if (r.type) {
+        const label = typeLabel(r.type, r.fields.kind);
+        counts.set(label, (counts.get(label) ?? 0) + 1);
+      }
+    return [...counts].map(([label, n]) => `${label} ${n}`);
+  }, [rows]);
+  const rowTypes = batchTypes(pickable);
 
   // Reminder lines look for their open invoice while the person types; the result only changes text.
   // Keyed by the line and whether invoices are on, so switching the module on or off looks again.
@@ -331,6 +359,8 @@ export function CaptureForm({
     setError('');
   };
 
+  const shownTypes = visibleTypes(pickable, type, typesOpen);
+
   const pick = (next: CaptureType) => {
     setOverride(next);
     setPicked(finalPick(next, result.type, singlePlan.type, singlePending));
@@ -341,9 +371,9 @@ export function CaptureForm({
   };
 
   const cycle = (step: 1 | -1) => {
-    if (available.length === 0) return;
-    const i = type ? available.indexOf(type) : step === 1 ? -1 : 0;
-    pick(available[(i + step + available.length) % available.length]!);
+    if (pickable.length === 0) return;
+    const i = type ? pickable.indexOf(type) : step === 1 ? -1 : 0;
+    pick(pickable[(i + step + pickable.length) % pickable.length]!);
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -366,7 +396,7 @@ export function CaptureForm({
       // With several lines the arrows move the cursor; the rows have their own target menus.
       e.preventDefault();
       cycle(e.key === 'ArrowDown' ? 1 : -1);
-    } else if (e.key === 'Tab' && tabSwitchesType && available.length > 1 && !multi) {
+    } else if (e.key === 'Tab' && tabSwitchesType && pickable.length > 1 && !multi) {
       e.preventDefault();
       cycle(e.shiftKey ? -1 : 1);
     }
@@ -556,6 +586,12 @@ export function CaptureForm({
           </p>
         )}
 
+        {multi && kinds.length > 1 ? (
+          // More than one place: say it above the rows, so a line that is no ToDo is seen first (W07).
+          <p className={styles.hint} data-testid="capture-kinds">
+            {t.quickCapture.multi.kinds(kinds)}
+          </p>
+        ) : null}
         {multi ? (
           <ul
             className={styles.rows}
@@ -670,23 +706,39 @@ export function CaptureForm({
         ) : null}
 
         {multi ? null : (
-          <div className={styles.types} role="radiogroup" aria-label={t.quickCapture.title}>
-            {available.map((a) => (
+          <div className={styles.types}>
+            {/* Five fixed chips and one for the selected type; the rest behind „Mehr (n)“ (decision #856). */}
+            <div className={styles.typeGroup} role="radiogroup" aria-label={t.quickCapture.title}>
+              {shownTypes.shown.map((a) => (
+                <button
+                  key={a}
+                  type="button"
+                  role="radio"
+                  aria-checked={a === type}
+                  tabIndex={tabSwitchesType ? -1 : 0}
+                  className={styles.type}
+                  onClick={() => pick(a)}
+                >
+                  {typeLabel(a, fields.kind)}
+                </button>
+              ))}
+            </div>
+            {shownTypes.hidden > 0 ? (
               <button
-                key={a}
                 type="button"
-                role="radio"
-                aria-checked={a === type}
-                tabIndex={tabSwitchesType ? -1 : 0}
                 className={styles.type}
-                onClick={() => pick(a)}
+                aria-expanded={false}
+                tabIndex={tabSwitchesType ? -1 : 0}
+                onClick={() => setTypesOpen(true)}
+                data-testid="capture-more-types"
               >
-                {typeLabel(a, fields.kind)}
+                {t.quickCapture.moreTypes(shownTypes.hidden)}
               </button>
-            ))}
+            ) : null}
           </div>
         )}
 
+        {beforeActions}
         {confirming && type && !multi ? (
           <div className={styles.draft} data-testid="capture-draft">
             <p className={styles.hint}>{t.quickCapture.financeConfirm}</p>

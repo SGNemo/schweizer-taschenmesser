@@ -2,7 +2,7 @@
 //!
 //! - a **keystore** for small secrets (AI provider keys): Windows Credential Manager (macOS Keychain /
 //!   Linux keyring for development) and the Android Keystore,
-//! - a **biometric gate** for the password vault's data key: Windows Hello consent (desktop) and
+//! - a **biometric gate** for the password vault's data key: wrapped under a Windows Hello key (desktop) and
 //!   `BiometricPrompt` with a Keystore key that requires user authentication (Android),
 //! - **screenshot protection** (`FLAG_SECURE`) on Android.
 //!
@@ -48,6 +48,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             commands::available,
             commands::set,
             commands::get,
+            commands::has,
             commands::delete,
             commands::biometric_seal,
             commands::biometric_unseal,

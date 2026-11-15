@@ -13,7 +13,10 @@ async function addTodo(page: Page, title: string) {
   await ready(page, '/todos');
   await page.locator('[data-page-action]:visible, [data-testid="bottom-plus"]:visible').click();
   await page.getByRole('dialog').getByLabel('Titel').fill(title);
-  await page.getByRole('dialog').getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Aufgabe eintragen', exact: true })
+    .click();
   await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
 }
 
@@ -33,7 +36,7 @@ test.describe('Focus and attention aids', () => {
     // One thing only: no sidebar, no bottom navigation, no quick-add button.
     await expect(page.getByRole('navigation', { name: 'Hauptnavigation' })).toHaveCount(0);
     await expect(
-      page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }),
+      page.getByRole('button', { name: /Neu: etwas eintragen|Neu eintragen/ }),
     ).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Fertig' }).click();
@@ -178,7 +181,7 @@ test.describe('Focus and attention aids', () => {
     page,
   }) => {
     await ready(page, '/');
-    await page.getByRole('button', { name: /Neu: schnell hinzufügen|Neu eintragen/ }).click();
+    await page.getByRole('button', { name: /Neu: etwas eintragen|Neu eintragen/ }).click();
     const input = page.getByRole('textbox', { name: 'Was möchtest du festhalten?' });
     await input.fill('t Formular ausfüllen 15 min');
     await expect(page.getByTestId('capture-chips')).toContainText('etwa 15 Min');

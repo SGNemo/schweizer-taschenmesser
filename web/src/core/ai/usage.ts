@@ -175,6 +175,19 @@ export const loadUsageRows = (database: TaschenmesserDB = defaultDb): Promise<Us
 
 export const useUsageRows = (): UsageRow[] | undefined => useLiveQuery(() => loadUsageRows(), []);
 
+/** Input plus output tokens of the calls since `since` (ms), read by the `at` index, not the whole table. */
+export const loadTokensSince = async (
+  since: number,
+  database: TaschenmesserDB = defaultDb,
+): Promise<number> =>
+  (await table(database).where('at').aboveOrEqual(since).toArray()).reduce(
+    (n, r) => n + r.inputTokens + r.outputTokens,
+    0,
+  );
+
+export const useTokensSince = (since: number): number | undefined =>
+  useLiveQuery(() => loadTokensSince(since), [since]);
+
 export const resetUsage = (database: TaschenmesserDB = defaultDb): Promise<void> =>
   table(database).clear();
 

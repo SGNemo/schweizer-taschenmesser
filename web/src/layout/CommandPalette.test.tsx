@@ -268,6 +268,56 @@ describe('assistant in the palette', () => {
     expect(screen.getByTestId('where')).toHaveTextContent('/calendar');
   });
 
+  it('puts an entry whose title is exactly the typed text before "Neu eintragen", and Enter opens it', async () => {
+    await eventRepo.create(
+      eventSchema.parse({ title: 'Zahnarzt Termin', startDate: '2026-10-01' }),
+    );
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <Where />
+        <CommandPalette />
+      </MemoryRouter>,
+    );
+    await user.type(await screen.findByRole('combobox'), 'zahnarzt termin');
+    await waitFor(() =>
+      expect(screen.getAllByRole('option')[0]).toHaveTextContent('Zahnarzt Termin'),
+    );
+    expect(screen.getAllByRole('option')[1]).toHaveTextContent(
+      `${t.palette.capture}: „zahnarzt termin“`,
+    );
+    await user.keyboard('{Enter}');
+    expect(screen.getByTestId('where')).toHaveTextContent('/calendar');
+    expect(useUiStore.getState().quickAddOpen).toBeFalsy();
+  });
+
+  it('an exact title keeps its place for a question and matches with doubled spaces', async () => {
+    await eventRepo.create(
+      eventSchema.parse({ title: 'Zahnarzt Termin', startDate: '2026-10-01' }),
+    );
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <Where />
+        <CommandPalette />
+      </MemoryRouter>,
+    );
+    const box = await screen.findByRole('combobox');
+    // A question is never captured: the hit does not move before the assistant.
+    await user.type(box, '?zahnarzt termin');
+    await waitFor(() =>
+      expect(
+        screen.getAllByRole('option').some((o) => /Zahnarzt Termin/.test(o.textContent ?? '')),
+      ).toBe(true),
+    );
+    expect(screen.getAllByRole('option')[0]).toHaveTextContent(`${t.ai.palette.askLocal}:`);
+    await user.clear(box);
+    await user.type(box, 'zahnarzt  termin');
+    await waitFor(() =>
+      expect(screen.getAllByRole('option')[0]).toHaveTextContent('Zahnarzt Termin'),
+    );
+  });
+
   it('confirms before creating an entry', async () => {
     const prepared = await prepareCreate(
       { module: 'todos', collection: 'task', data: { title: 'Brot kaufen' } },

@@ -1,7 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { TaschenmesserDB } from '@/core/db/db';
 import { createTestDb } from '@/test-utils';
-import { loadLastBackup, recordFileBackup } from './lastBackup';
+import {
+  lastBackupVersion,
+  loadLastBackup,
+  recordFileBackup,
+  subscribeLastBackup,
+} from './lastBackup';
 
 let database: TaschenmesserDB;
 const meta = () => database.table<{ key: string; value: unknown }, string>('_meta');
@@ -45,5 +50,17 @@ describe('last backup for the status head (D07)', () => {
   it('keeps only the time on the device, nothing about the file', async () => {
     await recordFileBackup(database, 1_000);
     expect((await meta().get('backup.file.last'))?.value).toEqual({ at: 1_000 });
+  });
+
+  it('tells open status lines after a recorded file backup, so they read again (Gerätestatus dialog)', async () => {
+    let calls = 0;
+    const before = lastBackupVersion();
+    const stop = subscribeLastBackup(() => calls++);
+    await recordFileBackup(database, 2_000);
+    expect(calls).toBe(1);
+    expect(lastBackupVersion()).toBe(before + 1);
+    stop();
+    await recordFileBackup(database, 3_000);
+    expect(calls).toBe(1);
   });
 });

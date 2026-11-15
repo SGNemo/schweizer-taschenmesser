@@ -2,6 +2,7 @@
 /**
  * Prepends download links, the two short install guides and the SHA-256 of every file to the Dev-Preview
  * release notes (publish job of .github/workflows/dev-preview.yml). Reads the files, writes only --out.
+ * The body is capped (`capReleaseBody`): the oldest builds are dropped once it nears GitHub's limit.
  *
  *   node web/scripts/dev-release-body.mjs --dir dl --repo owner/name --tag dev-preview \
  *     --notes dl/DEV_NOTES.md --out notes.md Nemo-Portable-dev.exe Nemo-dev.apk ...
@@ -9,7 +10,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { devInstallBlock } from './lib/devReleaseBody.ts';
+import { capReleaseBody, devInstallBlock } from './lib/devReleaseBody.ts';
 
 const args = process.argv.slice(2);
 const opt = (k) => {
@@ -31,7 +32,11 @@ try {
       .update(readFileSync(join(dir, name)))
       .digest('hex'),
   }));
-  writeFileSync(out, devInstallBlock(repo, tag, files) + readFileSync(notes, 'utf8'));
+  // Capped below GitHub's 125,000-character limit: oldest builds go first, whole sections only.
+  writeFileSync(
+    out,
+    capReleaseBody(devInstallBlock(repo, tag, files), readFileSync(notes, 'utf8'), repo),
+  );
 } catch (e) {
   console.error(e.message);
   process.exit(1);

@@ -8,12 +8,12 @@ test.beforeEach(async ({ page }) => {
 
 async function addBooking(page: Page, payee: string, amount: string, date: string) {
   await ready(page, '/finance?new=1');
-  const dialog = page.getByRole('dialog', { name: 'Buchung hinzufügen' });
+  const dialog = page.getByRole('dialog', { name: 'Buchung eintragen' });
   await dialog.getByLabel('Betrag').fill(amount);
   await moreFields(page); // the date is one of the rarely used fields since UI audit 2026-11, package 0b-3
   await dialog.getByLabel('Datum').fill(date);
   await dialog.getByLabel('Empfänger / Titel').fill(payee);
-  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 }
 
@@ -42,6 +42,11 @@ test('open gifts of all people in one list; "Verschenkt" is one click and undoab
   page,
 }) => {
   await enable(page, 'people');
+  // Empty: the first view names what it lists, and no bare list surface sits under the empty state.
+  await ready(page, '/people');
+  await expect(page.getByRole('button', { name: 'Geburtstage', exact: true })).toBeVisible();
+  await expect(page.getByTestId('people-empty')).toBeVisible();
+  await expect(page.locator('main [data-list-surface]')).toHaveCount(0);
   for (const [name, gift] of [
     ['Anna', 'Kochbuch'],
     ['Ben', 'Schal'],
@@ -50,7 +55,7 @@ test('open gifts of all people in one list; "Verschenkt" is one click and undoab
     const dialog = page.getByRole('dialog', { name: 'Person eintragen' });
     await dialog.getByLabel('Name', { exact: true }).fill(name);
     await dialog.getByLabel('Geburtsdatum').fill('1990-10-03');
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await page
       .getByRole('button', { name: new RegExp(`^${name}`) })
@@ -58,7 +63,7 @@ test('open gifts of all people in one list; "Verschenkt" is one click and undoab
       .click();
     await page.getByRole('button', { name: 'Geschenkidee hinzufügen' }).first().click();
     await page.getByRole('dialog').getByLabel('Idee', { exact: true }).fill(gift);
-    await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Geschenkidee hinzufügen' }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
   }
 

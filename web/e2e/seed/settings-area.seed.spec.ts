@@ -39,13 +39,11 @@ const PAGES = [
 ];
 const HEAD_MAX = { desktop: 120, phone: 144 } as const;
 /**
- * The settings carry their own search field above the head on the phone (76 px), so 220 px + that field, + one more
- * line where the description under the title takes two.
+ * The phone search is an icon in the title line since P3 (no field above the head any more): measured 177–230 px
+ * (before 284–313); 220 px + half a line where the description under the title takes two.
  */
-const SECTION_Y_PHONE = 320;
+const SECTION_Y_PHONE = 244;
 const SHIFT_MAX = 0.05;
-/** "KI" still moves once while its local-model part reads its state (0.04–0.09, before 0.10): a follow-up. */
-const SHIFT: Record<string, number> = { '/settings/ki': 0.1 };
 /**
  * Frames that stay: the danger zone (`ui/SettingsParts` `DangerZone`, red with its words) and the file picker
  * "Datei wählen", which is a control drawn as a button (a `span`, so the count does not skip it like a `button`).
@@ -207,7 +205,7 @@ async function check(page: Page, phone: boolean, theme: string) {
       .toBeLessThanOrEqual(FRAMES[path] ?? 0);
     expect.soft(m.shadows, `${path}: shadows in main`).toBe(0);
     // The tab appears in one piece.
-    expect.soft(r.shift, `${path}: layout shift`).toBeLessThanOrEqual(SHIFT[path] ?? SHIFT_MAX);
+    expect.soft(r.shift, `${path}: layout shift`).toBeLessThanOrEqual(SHIFT_MAX);
     expect.soft(r.sideways, `${path}: the page scrolls sideways`).toBe(false);
     if (phone) {
       expect.soft(r.small, `${path}: controls below 44 px`).toEqual([]);

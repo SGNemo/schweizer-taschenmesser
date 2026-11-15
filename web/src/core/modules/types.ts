@@ -230,6 +230,17 @@ export interface ModuleIdentity {
    * compares it with the page.
    */
   tabs?: boolean;
+  /**
+   * The module's entry page paints parts that come from reads after the first paint (0b-8): the weather's
+   * severe-weather hint above the head (`HeroSlot area="notice"`) needs the forecast; the music stage and the page
+   * below it need the connection, what plays, the player and the start view. The frame lays the notice, the head and
+   * the page out unpainted until the page says those reads are back (`useHeadReady`), at most `FIRST_READ_HOLD_MS`
+   * (0.6 s; after that the page is `late` and keeps its form), so nothing that arrives with them pushes down what is
+   * already on the screen. Hook: `layout/firstReadHold.ts`. Guards: `e2e/seed/open-shift.seed.spec.ts`,
+   * `open-shift-music.seed.spec.ts`, `open-hold.seed.spec.ts` (slow network too). Was `notice` for the weather until
+   * 2026-11.
+   */
+  firstRead?: boolean;
 }
 
 export type WidgetSize = 's' | 'm' | 'l';
@@ -330,6 +341,8 @@ export interface AiActionDef {
   examples: AiActionExample[];
   /** Hints for the free rule parser (stage 0, no tokens). Plain data; the parser lives in core. */
   parse?: AiActionParseHints;
+  /** `create` only: at most this many live rows; the preview then shows `error: 'full'` and writes nothing. */
+  maxActive?: number;
 }
 
 /** Which part of a sentence fills which field. Each role maps to a field of `AiActionDef.fields`; `estimate` = an effort in minutes („2 Std“). */
@@ -529,6 +542,9 @@ export type NotificationSource = (range: {
   to: number;
 }) => Promise<DueNotification[]>;
 
+/** A block of the overview that lists single things itself: the agenda ("Heute · Morgen · diese Woche") or the "Heute" card. */
+export type AttentionCover = 'agenda' | 'today';
+
 /**
  * One entry of the home screen's "Jetzt wichtig" strip. `danger` is only for overdue / exceeded /
  * expired things, `accent` for "act today", `warning` for "running out soon / almost full".
@@ -543,6 +559,22 @@ export interface AttentionItem {
   to: string;
   /** Lower comes first within a tone. */
   rank?: number;
+  /**
+   * The thing is due today. Such an entry is never folded into "Kann warten" (and neither is a `danger`
+   * one); everything else is. Only a source that reports "due today" sets it: the tone does not say it,
+   * `accent` and `warning` are also worn by things of the coming days.
+   */
+  due?: 'today';
+  /**
+   * Blocks of the overview that list the same thing by itself. While one of them is on the page the
+   * strip leaves the entry out, so nothing stands there twice (`home/attentionFold.ts`, `coveredIds`).
+   */
+  coveredBy?: readonly AttentionCover[];
+  /**
+   * One short phrase for the folded line when `n` entries of this kind (same id up to the second colon)
+   * wait: "2 Budgets fast aufgebraucht". Without it the line shows the title.
+   */
+  foldSummary?: (n: number) => string;
 }
 
 /** Collects what needs attention now; modules may only read their own data. */
@@ -563,8 +595,12 @@ export interface PlannableItem {
   to: string;
   durationMin?: number;
   priority?: 0 | 1 | 2 | 3;
-  /** `hard` = must be done by then (invoice, cancellation); a ToDo's own date is soft. */
-  due?: { date: string; hard: boolean };
+  /**
+   * `hard` = must be done by then (invoice, cancellation); a ToDo's own date is soft. `time` ('HH:mm', local) is
+   * the hour of the deadline („Frist So 18:00“): shown and used for an opt-in reminder by the source; the plan
+   * still places by day only.
+   */
+  due?: { date: string; hard: boolean; time?: string };
   /** Not before this day. */
   earliest?: string;
   /** The day the source carries (a ToDo's `plannedFor`); the planner reads it as the earliest day. */
@@ -606,6 +642,15 @@ export interface PlannableSource {
   onDone?(id: string): Promise<void>;
   /** The estimate was edited in the plan. */
   onEstimate?(id: string, minutes: number): Promise<void>;
+  /**
+   * The planner turned the thing into something that is no task any more („Als Pause …“: a blocker of its day):
+   * the source removes it (soft delete, never a purge) and returns the function that brings it back as it was (and
+   * takes back what the removal created itself, e.g. the next instance of a series), or
+   * `undefined` when there was nothing to remove (gone or done meanwhile). The planner records the function into its
+   * own undoable action, next to the source's recorded writes, so it must be idempotent; one undo restores the
+   * thing, its row and the plan.
+   */
+  onRemove?(id: string): Promise<(() => Promise<void>) | undefined>;
 }
 
 /**

@@ -57,6 +57,13 @@ export interface EventMap {
     link?: { kind: 'note' | 'mail' | 'invoice' | 'event'; id: string; label: string };
   };
   /**
+   * Close one open to-do (the mail row „Beantwortet? · Erledigt“, use case „Wochenende retten“ F5): the todos
+   * module ticks it off the way a tap in the list does (`setDone`, next instance of a repeating one). Only the
+   * id travels; a missing, deleted or done to-do is left alone. The asker wraps the emit in `undoable` for its
+   * „Rückgängig“ (the handler's writes happen inside the awaited emit). Never sent without a tap.
+   */
+  'todo.doneRequested': { id: string };
+  /**
    * Something should go into the plan (a note: „In den Plan“). The planner adds a to-do through the
    * quick-capture target (with the link) plus its planner item, plans it and says on which day it landed.
    * Nothing happens while the planner is off.
@@ -72,6 +79,12 @@ export interface EventMap {
     /** Where it came from: only the id and the title. */
     link?: { kind: 'note' | 'mail' | 'invoice' | 'event'; id: string; label: string };
   };
+  /**
+   * „Tag abschließen“ on the ToDo widget while the planner is on (use case „Wochenende retten“, F3): the planner
+   * answers by opening its preview of „Rest verteilen“ through `open` (the asker's navigation; the planner names its
+   * own page). Nothing moves before the user takes the preview. Nothing happens while the planner is off.
+   */
+  'plan.restRequested': { open: (path: string) => void };
   /** Something starts the clock (a calendar event: "Zeit erfassen"). Time tracking starts a session without a project, titled as a note. */
   'timetrack.start.requested': { title: string; sourceRef?: string };
   /**

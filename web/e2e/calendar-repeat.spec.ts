@@ -7,7 +7,7 @@ test.describe('Calendar: repeating shifts (QA V04)', () => {
   }) => {
     await page.clock.install({ time: new Date('2026-10-29T10:00:00') });
     await ready(page, '/calendar?new=1');
-    const dialog = page.getByRole('dialog', { name: 'Neuer Termin' });
+    const dialog = page.getByRole('dialog', { name: 'Termin eintragen' });
     await dialog.getByLabel('Titel').fill('Frühdienst');
     await dialog.getByLabel('Datum', { exact: true }).fill('2026-11-02');
     await dialog.getByLabel('Beginn').fill('06:00');
@@ -20,7 +20,7 @@ test.describe('Calendar: repeating shifts (QA V04)', () => {
     await dialog.getByLabel('Alle (Wochen)').fill('2');
     for (const day of ['Mo', 'Di', 'Mi'])
       await dialog.getByRole('button', { name: day, exact: true }).click();
-    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     // The editor closes with an in-app URL change (its Back entry pops); a goto in that gap can be aborted.
     await backSettled(page);

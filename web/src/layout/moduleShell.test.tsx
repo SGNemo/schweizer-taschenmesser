@@ -132,7 +132,7 @@ describe('module frame (Identity 4.0: one title row with tabs)', () => {
       '/finance',
       <PageHeader title="Finanzen">
         <button type="button">Mehr</button>
-        <PageAction short="Buchung" onClick={() => undefined}>
+        <PageAction short="Buchung" onClick={() => undefined} title="Neue Buchung (Alt+N)">
           Neue Buchung
         </PageAction>
       </PageHeader>,
@@ -140,6 +140,11 @@ describe('module frame (Identity 4.0: one title row with tabs)', () => {
     const frame = await screen.findByTestId('module-frame');
     const row = within(frame).getByTestId('module-title-row');
     expect(await within(row).findByRole('button', { name: 'Neue Buchung' })).toBeVisible();
+    // A shortcut hint reaches the button as its tooltip (notes: "Neue Seite (Alt+N)").
+    expect(within(row).getByRole('button', { name: 'Neue Buchung' })).toHaveAttribute(
+      'title',
+      'Neue Buchung (Alt+N)',
+    );
     expect(within(row).getByRole('button', { name: 'Mehr' })).toBeVisible();
     expect(row.querySelectorAll('[data-page-action]')).toHaveLength(1);
     // The head no longer has a write button of its own ("Mit KI eintragen" lives in the capture sheet and the palette).

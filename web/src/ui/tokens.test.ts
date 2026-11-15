@@ -380,11 +380,8 @@ describe('design tokens', () => {
         ...cssFiles().filter(
           (f) => f.startsWith('ui/identity/') || f === 'ui/HeadSurface.module.css',
         ),
-        'modules/mail/components/InboxHead.module.css',
         'modules/accounts/components/AccountsHead.module.css',
         'modules/lists/components/ListSignature.module.css',
-        'modules/downloads/components/DownloadsBand.module.css',
-        'modules/disk/components/DiskHead.module.css',
       ];
       expect(files.length).toBeGreaterThan(10);
       for (const rel of files)

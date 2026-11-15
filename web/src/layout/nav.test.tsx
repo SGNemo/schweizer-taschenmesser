@@ -9,7 +9,8 @@ import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { AreaFrame } from './AreaFrame';
 import { usePageActionStore } from '@/core/shell/pageAction';
-import { BottomNav, BOTTOM_AREA_SLOTS } from './BottomNav';
+import { BottomNav, BOTTOM_AREA_SLOTS, moreHolds } from './BottomNav';
+import { MoreSheet } from './MoreSheet';
 import { Sidebar } from './Sidebar';
 
 const tree: NavTree = {
@@ -136,6 +137,22 @@ describe('sidebar', () => {
     expect(useUiStore.getState().sidebar).toBe('wide');
   });
 
+  it('Escape hides the name of the focused rail icon until the focus moves on (WCAG 1.4.13)', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter initialEntries={['/finance']}>
+        <Sidebar tree={tree} rail canExpand />
+      </MemoryRouter>,
+    );
+    const geld = screen.getByRole('link', { name: 'Geld' });
+    geld.focus();
+    await user.keyboard('{Escape}');
+    expect(geld).toHaveAttribute('data-tip-off');
+    expect(geld).toHaveFocus();
+    await user.tab();
+    expect(geld).not.toHaveAttribute('data-tip-off');
+  });
+
   it('a rail forced by the viewport offers no expand button', () => {
     render(
       <MemoryRouter>
@@ -187,6 +204,68 @@ describe('bottom navigation', () => {
     );
     const nav = screen.getByRole('navigation', { name: t.nav.main });
     expect(within(nav).queryByRole('link', { name: 'Haushalt' })).toBeNull();
+  });
+
+  it('Mehr shows the place of a page behind it: a further area in its colour, library and settings in ink (M8)', () => {
+    const three: NavTree = {
+      ...tree,
+      areas: [
+        ...tree.areas,
+        {
+          id: 'household',
+          label: 'Haushalt',
+          icon: 'cart',
+          to: '/haushalt',
+          items: [{ to: '/lists', label: 'Listen', icon: 'checklist', moduleId: 'lists' }],
+        },
+      ],
+    };
+    expect(moreHolds(three, '/lists/abc')).toEqual({ active: true, area: 'household' });
+    expect(moreHolds(three, '/settings/sync')).toEqual({ active: true });
+    expect(moreHolds(three, '/library')).toEqual({ active: true });
+    expect(moreHolds(three, '/finance')).toEqual({ active: false });
+    expect(moreHolds(three, '/')).toEqual({ active: false });
+    expect(moreHolds(three, '/settingsx')).toEqual({ active: false });
+    const view = render(
+      <MemoryRouter initialEntries={['/lists']}>
+        <BottomNav tree={three} onMore={() => undefined} />
+      </MemoryRouter>,
+    );
+    const nav = screen.getByRole('navigation', { name: t.nav.main });
+    const more = within(nav).getByRole('button', { name: t.nav.more });
+    expect(more).toHaveAttribute('aria-current', 'true');
+    expect(more).toHaveAttribute('data-area', 'household');
+    // One place at a time: no link of the bar is current.
+    expect(nav.querySelectorAll('a[aria-current]')).toHaveLength(0);
+    view.unmount();
+    render(
+      <MemoryRouter initialEntries={['/finance']}>
+        <BottomNav tree={three} onMore={() => undefined} />
+      </MemoryRouter>,
+    );
+    const more2 = screen.getByRole('button', { name: t.nav.more });
+    expect(more2).not.toHaveAttribute('aria-current');
+    expect(more2).not.toHaveAttribute('data-area');
+  });
+
+  it('the Mehr sheet marks the current place too', () => {
+    const household = {
+      id: 'household' as const,
+      label: 'Haushalt',
+      icon: 'cart' as const,
+      to: '/haushalt',
+      items: [{ to: '/lists', label: 'Listen', icon: 'checklist' as const, moduleId: 'lists' }],
+    };
+    render(
+      <MemoryRouter initialEntries={['/lists/1']}>
+        <MoreSheet open onClose={() => undefined} areas={[household]} />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('link', { name: 'Haushalt' })).toHaveAttribute(
+      'aria-current',
+      'location',
+    );
+    expect(screen.getByRole('link', { name: t.nav.settings })).not.toHaveAttribute('aria-current');
   });
 
   it('the plus has one fixed name per context, and the name contains the visible text (WCAG 2.5.3)', async () => {
