@@ -103,7 +103,7 @@ export function startAppLock(deps: AppLockDeps = defaultDeps()): () => void {
     arm();
   };
   const unsubPrefs = subscribePrefs(follow);
-  const unsubOthers = onOtherWindowLock(() => lockApp(true));
+  const unsubOthers = onOtherWindowLock(() => lockApp());
   follow();
   void reconcile(deps);
   return () => {

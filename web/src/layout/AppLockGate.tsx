@@ -10,37 +10,15 @@ import { Button, Logo, TextField } from '@/ui';
 import styles from './AppLockGate.module.css';
 
 /**
- * The app lock (device-local, `core/applock`). Locked at start: the app is not mounted at all until
- * the PIN. Locked later (idle, background, "Jetzt sperren"): the app stays mounted but hidden and
- * `inert` under the lock screen, so a half-typed entry, an open dialog or a file picker's answer is
- * not lost (FOCUS-GUIDELINES 5); nothing of it is visible, focusable or read out, and no key reaches it.
+ * The app lock (device-local, `core/applock`). While locked the routes are not mounted at all: nothing of
+ * the app's data stays in the DOM, and every shortcut, the voice key, Back handling and open dialogs stop
+ * with them (keeping them mounted under the lock left an open modal dialog on top of the lock screen and
+ * earlier key listeners alive – council round 2). The cost: unsaved typing outside a draft-keeping form is
+ * lost, which is why leaving the app locks after 30 s by default, not at once.
  */
 export function AppLockGate({ children }: { children: ReactNode }) {
   const locked = useAppLock((s) => s.locked);
-  const [opened, setOpened] = useState(!locked);
-  if (!locked && !opened) setOpened(true);
-  if (!opened) return <AppLockScreen />;
-  return (
-    <>
-      <div hidden={locked} inert={locked} data-testid="app-lock-content">
-        {children}
-      </div>
-      {locked ? <AppLockScreen /> : null}
-    </>
-  );
-}
-
-/** While locked, no key outside the lock screen reaches the app (shortcuts, palette, F-keys). */
-function useBlockKeys(panel: React.RefObject<HTMLElement | null>) {
-  useEffect(() => {
-    const block = (e: KeyboardEvent) => {
-      if (panel.current && e.target instanceof Node && panel.current.contains(e.target)) return;
-      e.stopImmediatePropagation();
-      e.preventDefault();
-    };
-    window.addEventListener('keydown', block, true);
-    return () => window.removeEventListener('keydown', block, true);
-  }, [panel]);
+  return locked ? <AppLockScreen /> : <>{children}</>;
 }
 
 function waitText(ms: number): string {
@@ -58,9 +36,7 @@ function AppLockScreen() {
   const [wait, setWait] = useState(() => waitRemaining());
   const [bioReady, setBioReady] = useState(false);
   const input = useRef<HTMLInputElement>(null);
-  const panel = useRef<HTMLFormElement>(null);
   const triedBio = useRef(false);
-  useBlockKeys(panel);
   // Read out once when the wait starts (a per-second change in a live region would talk for minutes).
   const [waitSaid, setWaitSaid] = useState(() =>
     waitRemaining() > 0 ? waitText(waitRemaining()) : '',
@@ -71,15 +47,21 @@ function AppLockScreen() {
   useEffect(() => {
     if (!waiting) return;
     const id = setInterval(() => setWait(waitRemaining()), 1000);
-    return () => {
-      clearInterval(id);
-      input.current?.focus(); // the field is usable again: give it the focus back
-    };
+    return () => clearInterval(id);
   }, [waiting]);
 
+  // On show, and when a wait ends: the field gets the focus; the old "wrong" line goes (it would be read
+  // out again), the field is simply usable.
+  const waitedBefore = useRef(waiting);
   useEffect(() => {
+    if (waiting) {
+      waitedBefore.current = true;
+      return;
+    }
+    if (waitedBefore.current) setMessage(undefined);
+    waitedBefore.current = false;
     input.current?.focus();
-  }, []);
+  }, [waiting]);
 
   const tryBio = async () => {
     setBusy(true);
@@ -155,7 +137,7 @@ function AppLockScreen() {
 
   return (
     <main className={styles.page} data-testid="app-lock">
-      <form ref={panel} className={styles.panel} onSubmit={(e) => void submit(e)}>
+      <form className={styles.panel} onSubmit={(e) => void submit(e)}>
         <div className={styles.logo}>
           <Logo size={56} />
         </div>

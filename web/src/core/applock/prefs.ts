@@ -24,10 +24,12 @@ const schema = z.object({
 
 export type AppLockPrefs = z.infer<typeof schema>;
 
+// Leaving the app locks after 30 s by default: a trip to the file picker or the camera comes back to the
+// same page (the lock unmounts it). A broken stored value still falls back to "now", the safe side.
 export const DEFAULT_PREFS: AppLockPrefs = {
   enabled: false,
   idleMinutes: '5',
-  background: 'now',
+  background: '30s',
   biometric: false,
 };
 

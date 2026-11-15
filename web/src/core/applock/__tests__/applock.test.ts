@@ -105,7 +105,7 @@ describe('prefs', () => {
     expect(DEFAULT_PREFS).toEqual({
       enabled: false,
       idleMinutes: '5',
-      background: 'now',
+      background: '30s',
       biometric: false,
     });
   });
@@ -279,6 +279,21 @@ describe('council fixes', () => {
     clock -= 10 * 24 * 3600_000; // the clock jumps back ten days
     expect(waitRemaining()).toBeLessThanOrEqual(waitFor(6));
     expect(waitRemaining()).toBeLessThanOrEqual(MAX_WAIT_MS);
+  });
+
+  it('only "Jetzt sperren" reaches the other windows; idle and background lock this window only', async () => {
+    const other = new BroadcastChannel('nemo-app-lock'); // stands for a second window
+    const got: unknown[] = [];
+    other.onmessage = (e) => got.push(e.data);
+    const settle = () => new Promise((r) => setTimeout(r, 30));
+    writePrefs({ enabled: true });
+    lockApp(); // idle / background
+    await settle();
+    expect(got).toEqual([]);
+    lockApp(true); // "Jetzt sperren"
+    await settle();
+    expect(got).toEqual(['lock']);
+    other.close();
   });
 
   it('a lock tells the vault (event `app.locked`); nothing is sent while the lock is off', () => {

@@ -86,7 +86,7 @@ export function AppLockSection() {
             </SettingRow>
           ) : null}
           <SettingRow id="app-lock--lock-now" label={s.lockNow} description={s.lockNowHint}>
-            <Button data-testid="app-lock-now" onClick={() => lockApp()}>
+            <Button data-testid="app-lock-now" onClick={() => lockApp(true)}>
               {s.lockNow}
             </Button>
           </SettingRow>

@@ -37,7 +37,7 @@ export const tAppLock = defineBundle(
     // Dialogs
     setTitle: 'PIN festlegen',
     setIntro:
-      'Vier bis zwölf Ziffern. Merk sie dir gut: ohne sie geht die Sperre nur mit dem Löschen der App-Daten auf. Richte vorher Sync oder ein Backup ein, dann ist dabei nichts verloren.',
+      'Vier bis zwölf Ziffern. Merk sie dir gut: ohne sie geht die Sperre nur mit dem Löschen der App-Daten auf. Richte vorher Sync oder ein Backup ein, dann bleiben deine Einträge auch in diesem Fall erhalten.',
     newPin: 'Neue PIN',
     repeatPin: 'Neue PIN wiederholen',
     currentPin: 'Jetzige PIN',
@@ -106,7 +106,7 @@ export const tAppLock = defineBundle(
       lockNowHint: 'Locks Nemo right away until you enter the PIN.',
       setTitle: 'Set PIN',
       setIntro:
-        'Four to twelve digits. Keep it in mind: without it the lock only opens by deleting the app data. Set up sync or a backup first, then nothing is lost that way.',
+        'Four to twelve digits. Keep it in mind: without it the lock only opens by deleting the app data. Set up sync or a backup first, so your entries are safe even then.',
       newPin: 'New PIN',
       repeatPin: 'Repeat new PIN',
       currentPin: 'Current PIN',
