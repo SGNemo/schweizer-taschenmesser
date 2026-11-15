@@ -470,8 +470,9 @@ describe('music page', () => {
     expect(start).toHaveTextContent('„Playlists“');
     fireEvent.click(chip(/Lieblingssongs/));
     expect(main()).toHaveTextContent('„Lieblingssongs“');
-    fireEvent.click(chip(/Zuletzt gespielt/));
-    expect(main()).toHaveTextContent('„Zuletzt gehört“ ankreuzen');
+    // The songs played lately are part of the start view (no tab of their own since round p2): without "Verlauf" the
+    // start view names the feature and offers no way into an empty list.
+    expect(within(start).queryByRole('button', { name: 'Alle anzeigen' })).toBeNull();
   });
 
   it('opening a playlist lists every song with artist, album and length, and plays nothing', async () => {
@@ -592,7 +593,8 @@ describe('music page', () => {
     const queue = await screen.findByTestId('music-queue');
     expect(queue).toHaveTextContent('Danach');
     expect(queue).toHaveTextContent('Dannach');
-    fireEvent.click(chip(/Warteschlange/));
+    // No tab of its own: the aside's card opens the whole queue.
+    fireEvent.click(screen.getByRole('button', { name: 'Ganze Warteschlange anzeigen' }));
     await waitFor(() => expect(main()).toHaveTextContent('Als Nächstes'));
     await waitFor(() => expect(within(main()).getAllByTestId('track-row').length).toBe(3));
   });
@@ -621,8 +623,13 @@ describe('music page', () => {
         ? { items: [{ track: T('h1', 'Gestern').track }, { track: T('h2', 'Vorgestern').track }] }
         : undefined;
     await renderPage();
-    await screen.findByTestId('music-start');
-    fireEvent.click(chip(/Zuletzt gespielt/));
+    // Reached from the start view's row ("Alle anzeigen"), with the way back to the start view.
+    fireEvent.click(
+      within(await screen.findByTestId('music-start')).getByRole('button', {
+        name: 'Alle anzeigen',
+      }),
+    );
+    expect(await screen.findByRole('button', { name: 'Zurück zur Startansicht' })).toBeTruthy();
     expect(await within(main()).findByRole('button', { name: 'Gestern abspielen' })).toBeTruthy();
     fireEvent.click(within(main()).getByRole('button', { name: 'Vorgestern abspielen' }));
     await waitFor(() => expect(sent('PUT', '/me/player/play')).toHaveLength(1));
@@ -649,7 +656,7 @@ describe('music page', () => {
     await renderPage();
     await screen.findByTestId('music-start');
     fireEvent.click(chip(/^Suchen$/));
-    const input = within(main()).getByLabelText('Titel, Playlist oder Album suchen');
+    const input = within(main()).getByLabelText('Titel, Künstler, Playlist oder Album suchen');
     fireEvent.change(input, { target: { value: 'Fe' } });
     fireEvent.change(input, { target: { value: 'Feuer' } });
     expect(searches).toHaveLength(0);

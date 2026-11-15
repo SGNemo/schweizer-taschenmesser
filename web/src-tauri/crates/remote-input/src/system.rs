@@ -15,6 +15,7 @@ pub trait System {
     fn playing(&mut self) -> Option<bool>;
     fn lock(&mut self) -> bool;
     fn locked(&mut self) -> Option<bool>;
+    fn monitor_off(&mut self) -> bool;
 }
 
 /// Carries out one command.
@@ -44,6 +45,9 @@ pub(crate) fn apply(sys: &mut dyn System, command: Command) {
         }
         Command::Lock => {
             sys.lock();
+        }
+        Command::MonitorOff => {
+            sys.monitor_off();
         }
     }
 }
@@ -211,6 +215,10 @@ mod imp {
         fn lock(&mut self) -> bool {
             // SAFETY: takes no arguments; asks Windows to lock the workstation.
             unsafe { LockWorkStation() }.is_ok()
+        }
+
+        fn monitor_off(&mut self) -> bool {
+            crate::power::monitor_off()
         }
 
         fn locked(&mut self) -> Option<bool> {

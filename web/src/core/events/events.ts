@@ -7,6 +7,12 @@ import type { EntityRef, LegacyLink } from '@/core/entitylinks/types';
 export type DataPolicy = 'keep' | 'delete';
 
 export interface EventMap {
+  /**
+   * The app lock closed the app (Einstellungen → Sicherheit → App-Sperre; idle, background, "Jetzt sperren" or
+   * another window). The vault locks too, so passing the app's PIN never opens a vault that needs its master
+   * password. No payload.
+   */
+  'app.locked': Record<string, never>;
   /** An invoice was marked as paid (or a paid invoice was edited). Finance books an expense. */
   'invoice.paid': {
     invoiceId: string;
@@ -55,6 +61,11 @@ export interface EventMap {
   'pantry.restock': { name: string; quantity?: string };
   /** A saved link could be a gift idea (bookmarks). The people module keeps it until the reader picks a person. */
   'gift.requested': { title: string; url?: string; priceCents?: number };
+  /**
+   * A checklist should become a routine (Listen: „Als Routine übernehmen“). The routines module adds it with these
+   * steps, every week from today, unless a routine of that name exists; the list itself stays as it is.
+   */
+  'routine.requested': { name: string; steps: string[] };
   /** Something becomes a to-do (a checklist item in a note). The todos module adds it to the inbox. */
   'todo.requested': {
     title: string;

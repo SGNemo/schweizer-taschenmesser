@@ -182,6 +182,8 @@ export const planner: Strings['planner'] = {
     focus: 'Start focus',
     asBreak: 'As a break …',
     asBreakTitle: (title: string) => `${title} as a break`,
+    asBreakDay: 'Day of the break',
+    asBreakToday: 'Today',
     asBreakHint: (day: string) =>
       `Becomes a break on ${day}. The to-do is removed; Undo brings it back.`,
     estimate: 'Duration …',

@@ -38,6 +38,8 @@ interface Line {
   kg?: number;
   step?: number;
   min?: number;
+  /** Done back to back with the next line (deep package 2). */
+  superset?: true;
 }
 interface Program {
   title: Tx;
@@ -53,7 +55,7 @@ const PROGRAMS: Program[] = [
       { ex: 'benchPress', sets: 4, reps: 8, kg: 50, step: 2.5 },
       { ex: 'row', sets: 4, reps: 10, kg: 40, step: 2.5 },
       { ex: 'shoulderPress', sets: 3, reps: 10, kg: 22, step: 1 },
-      { ex: 'latPulldown', sets: 3, reps: 10, kg: 45, step: 2.5 },
+      { ex: 'latPulldown', sets: 3, reps: 10, kg: 45, step: 2.5, superset: true },
       { ex: 'bicepsCurl', sets: 3, reps: 12, kg: 10, step: 1 },
     ],
   },
@@ -112,16 +114,34 @@ const MEALS = {
   ],
 };
 
-function exercises(ctx: SeedContext, program: Program, weeksAgo: number) {
+/**
+ * The sets one by one (deep package 2): a warm-up at half the weight, then the working sets, the last one with
+ * a rep less now and then. Only the sessions of the last two weeks (older ones stay plain, as imports are).
+ */
+function setLog(l: Line, kg: number, tired: boolean) {
+  const warm = { reps: 10, weightKg: Math.round(kg / 5) * 2.5, warmup: true as const };
+  const work = Array.from({ length: l.sets ?? 1 }, (_, i) => ({
+    reps: tired && i === (l.sets ?? 1) - 1 ? l.reps! - 1 : l.reps!,
+    weightKg: kg,
+  }));
+  return [warm, ...work];
+}
+
+function exercises(ctx: SeedContext, program: Program, weeksAgo: number, detailed = false) {
   // Two weeks per step: the older the session, the lighter the weight.
   const steps = Math.max(0, 6 - Math.floor(weeksAgo / 2));
-  return program.lines.map((l) => ({
-    name: ctx.text(EX[l.ex]),
-    ...(l.sets ? { sets: l.sets } : {}),
-    ...(l.reps ? { reps: l.reps } : {}),
-    ...(l.kg ? { weightKg: Math.round((l.kg + steps * (l.step ?? 0)) * 10) / 10 } : {}),
-    ...(l.min ? { durationMin: l.min } : {}),
-  }));
+  return program.lines.map((l, i) => {
+    const kg = l.kg ? Math.round((l.kg + steps * (l.step ?? 0)) * 10) / 10 : undefined;
+    return {
+      name: ctx.text(EX[l.ex]),
+      ...(l.sets ? { sets: l.sets } : {}),
+      ...(l.reps ? { reps: l.reps } : {}),
+      ...(kg ? { weightKg: kg } : {}),
+      ...(l.min ? { durationMin: l.min } : {}),
+      ...(l.superset ? { superset: true as const } : {}),
+      ...(detailed && kg && l.reps ? { log: setLog(l, kg, i % 2 === 1) } : {}),
+    };
+  });
 }
 
 function seed(ctx: SeedContext): SeedRows {
@@ -146,7 +166,7 @@ function seed(ctx: SeedContext): SeedRows {
           time: ctx.rng.pick(['07:00', '12:30', '18:00', '18:30', '19:15']),
           title: ctx.text(program.title),
           durationMin: program.durationMin + ctx.rng.int(-5, 10),
-          exercises: exercises(ctx, program, w),
+          exercises: exercises(ctx, program, w, w <= 1),
         },
       });
     }

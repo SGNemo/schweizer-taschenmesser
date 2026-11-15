@@ -10,6 +10,8 @@ interface Hooks {
   answer(next: 'allow' | 'cancel'): void;
   asked(): number;
   open(id: string, level?: 'media' | 'full'): boolean;
+  pickFile(file: string | null): void;
+  programs(): string[];
 }
 declare global {
   interface Window {
@@ -124,4 +126,34 @@ test('a phone never sees the section', async ({ page }) => {
   await page.goto('/settings/verbindungen');
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   await expect(page.getByTestId('remote-host')).toHaveCount(0);
+});
+
+test('programs: added through the PC’s own dialog and question, a device may start them only with mouse and keyboard', async ({
+  page,
+}, info) => {
+  await page.goto('/settings/verbindungen');
+  const section = page.getByTestId('remote-host');
+  await expect(section).toBeVisible();
+  await page.evaluate(() => window.__tmRemoteHost.addDevice('Pixel 7'));
+  await section.getByRole('switch', { name: 'Fernsteuerung erlauben' }).click();
+  await expect(section.getByTestId('remote-programs-none')).toHaveText(
+    'Noch kein Programm ausgewählt.',
+  );
+  await page.evaluate(() => window.__tmRemoteHost.pickFile('C:\\Programme\\OBS Studio.exe'));
+  await section.getByTestId('remote-program-add').click();
+  await expect(section.getByTestId('remote-program-note')).toHaveText('Programm hinzugefügt.');
+  await expect(section.getByTestId('remote-program')).toContainText('OBS Studio');
+  expect(await page.evaluate(() => window.__tmRemoteHost.asked())).toBe(1);
+
+  const allow = section.getByRole('switch', { name: 'Darf Programme starten' });
+  await expect(allow).toHaveCount(0);
+  await section.getByTestId('remote-level').selectOption('full');
+  await expect(allow).toHaveAttribute('aria-checked', 'false');
+  await allow.click();
+  await expect(allow).toHaveAttribute('aria-checked', 'true');
+  await section.screenshot({ path: info.outputPath('remote-5-programs.png') });
+
+  await section.getByRole('button', { name: 'OBS Studio entfernen' }).click();
+  await expect(section.getByTestId('remote-programs-none')).toBeVisible();
+  expect(await page.evaluate(() => window.__tmRemoteHost.programs())).toEqual([]);
 });

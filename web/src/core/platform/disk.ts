@@ -1,3 +1,5 @@
+import type { OptimizeService } from './optimize';
+
 /**
  * Contract of the disk module's native side (`src-tauri/src/disk.rs`, crate `disk-scan`).
  * The scan tree lives in Rust; the webview only sees views of it and refers to entries by node id.
@@ -263,6 +265,8 @@ export interface ScanHandle {
 /** Desktop only; `supported` is false in the browser and on Android. */
 export interface DiskService {
   supported: boolean;
+  /** PC care: clean-up suggestions, history, Windows' own tools. */
+  optimize: OptimizeService;
   listDrives(): Promise<DriveInfo[]>;
   startScan(root: string, onProgress: (p: ScanProgress) => void): Promise<ScanHandle>;
   cancelScan(scanId: number): Promise<void>;

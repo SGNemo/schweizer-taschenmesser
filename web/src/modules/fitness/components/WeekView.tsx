@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import { formatMinutes } from '@/core/i18n/format';
+import { Bars } from '@/ui/charts';
 import { addDaysStr, formatDay, relativeDayLabel } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Button, Icon, IconButton, ItemList, ItemRow } from '@/ui';
 import { kcalText } from '../data';
+import { GROUPS } from '../catalog';
 import { weekDays, weekOf } from '../logic';
-import type { Meal, Session } from '../schema';
+import { loadByGroup } from '../progress';
+import { planDays } from '../plan';
+import type { Meal, Session, Template } from '../schema';
 import { WeekPlates } from './WeekPlates';
 import styles from '../fitness.module.css';
 
@@ -20,6 +24,7 @@ export function WeekView({
   meals,
   nutrition,
   loadedFrom,
+  templates = [],
 }: {
   day: string;
   weekStart: 1 | 7;
@@ -28,12 +33,29 @@ export function WeekView({
   nutrition: boolean;
   /** The first day the page loaded; the arrows never step to a week before it (it would look empty). */
   loadedFrom: string;
+  /** Templates with weekdays: the plan's days from today on („laut Plan: Oberkörper“). */
+  templates?: readonly Template[];
 }) {
   const [offset, setOffset] = useState(0);
   const { from, to } = weekOf(addDaysStr(day, offset * 7), weekStart);
   const days = weekDays(from, sessions, meals, day);
+  // Only today and later: a passed plan day is never shown as missed.
+  const plan = to >= day ? planDays(templates, sessions, from > day ? from : day, to) : [];
+  const planned = (date: string) =>
+    plan.filter((p) => p.date === date).map((p) => t.fitness.plan.week(p.template.title));
   const canGoBack = addDaysStr(from, -7) >= weekOf(loadedFrom, weekStart).from;
   const w = t.fitness.week;
+  const load = loadByGroup(sessions, { from, to }, [...GROUPS, 'other']);
+  const setGroups = load.filter((g) => g.sets);
+  // Groups with only a duration (a run) stay a line of text: minutes and sets share no axis.
+  const minuteGroups = load
+    .filter((g) => !g.sets)
+    .map((g) =>
+      w.groupMinutes(
+        t.fitness.catalog.groups[g.group],
+        formatMinutes(g.minutes, { compact: true }),
+      ),
+    );
   const total = days.reduce(
     (a, d) => ({
       sessions: a.sessions + d.sessions,
@@ -81,6 +103,45 @@ export function WeekView({
       <p className={styles.hint} data-testid="fitness-week-total">
         {w.total}: {line(total)}
       </p>
+      <div className={styles.weekCharts}>
+        {setGroups.length ? (
+          <Bars
+            title={w.groupsChart}
+            showTitle
+            data={setGroups.map((g) => ({
+              id: g.group,
+              label: t.fitness.catalog.groups[g.group],
+              value: g.sets,
+            }))}
+            format={(n) => t.fitness.line.sets(n)}
+            data-testid="fitness-week-groups"
+          />
+        ) : null}
+        {minuteGroups.length ? (
+          <p className={styles.hint} data-testid="fitness-week-minutes">
+            {w.byGroup}: {minuteGroups.join(' · ')}
+          </p>
+        ) : null}
+        {/* The week's kcal as columns from three days with meals on (two columns say less than the rows below):
+          plain amounts, no goal mark (eating is never „over“). */}
+        {nutrition && days.filter((d) => d.date <= day && d.meals > 0).length >= 3 ? (
+          <Bars
+            title={w.kcalChart}
+            showTitle
+            orientation="vertical"
+            // Days not lived yet are left out: a „0 kcal“ for tomorrow would read like a day without food.
+            data={days
+              .filter((d) => d.date <= day)
+              .map((d) => ({
+                id: d.date,
+                label: formatDay(d.date, 'EEE'),
+                value: d.kcal,
+              }))}
+            format={(n) => t.fitness.line.kcal(kcalText(n))}
+            data-testid="fitness-week-kcal"
+          />
+        ) : null}
+      </div>
       <ItemList>
         {days.map((d) => (
           <ItemRow
@@ -90,7 +151,13 @@ export function WeekView({
                 ? `${relativeDayLabel(day, day)}, ${formatDay(d.date, 'd. MMM')}`
                 : formatDay(d.date, 'EEEE, d. MMM')
             }
-            meta={line(d)}
+            meta={
+              planned(d.date).length
+                ? [line(d) === w.nothing ? '' : line(d), ...planned(d.date)]
+                    .filter(Boolean)
+                    .join(' · ')
+                : line(d)
+            }
           />
         ))}
       </ItemList>

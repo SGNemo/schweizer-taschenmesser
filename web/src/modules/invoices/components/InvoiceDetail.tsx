@@ -7,11 +7,14 @@ import { t } from '@/strings';
 import { Button, DetailPanel, NoReadAid } from '@/ui';
 import { remainingMinor } from '../logic';
 import type { Invoice } from '../schema';
+import { useInvoiceLinkFacts } from './InvoiceLinks';
 
 /**
  * The invoice picked in the list, in the panel of the wide page (master–detail): payee, what is still open, the
  * date and the payment data. Paying stays the row's own button; changing it is the dialog behind
- * "Bearbeiten"; deleting and copying the payment data stay in the row's menu and in that dialog.
+ * "Bearbeiten"; deleting and copying the payment data stay in the row's menu and in that dialog. An invoice that
+ * came from a mail says so („Aus Mail“, „Mahnung aus Mail vom …“: one tap to the thread), and while the planner
+ * is on, the day it stands on („Im Plan“).
  */
 export function InvoiceDetail({
   invoice: i,
@@ -28,6 +31,7 @@ export function InvoiceDetail({
   const state = dueState(i.dueDate, today(), { done: !open });
   const rest = remainingMinor(i);
   const money = (minor: number) => formatMoney(minor, i.currency);
+  const linkFacts = useInvoiceLinkFacts(i.id);
   const facts = [
     open
       ? {
@@ -50,6 +54,7 @@ export function InvoiceDetail({
     ...(i.repeat ? [{ label: t.invoices.repeat, value: t.invoices.repeatOptions[i.repeat] }] : []),
     ...(i.dunningLevel ? [{ label: e.dunning.label, value: e.dunning.level(i.dunningLevel) }] : []),
     ...(i.note ? [{ label: t.form.note, value: i.note }] : []),
+    ...linkFacts,
   ];
   return (
     <DetailPanel

@@ -12,7 +12,9 @@ import { SideLists } from '../components/SideLists';
 import { SourceView } from '../components/SourceView';
 import { StartView } from '../components/StartView';
 import { trackIdOf, type PlayerApi, type View } from '../components/types';
+import { forgetLibrary } from '../library';
 import { useShortcuts } from '../useShortcuts';
+import { useSleepWatcher } from '../sleepTimer';
 import { settings as moduleSettings, settingsSchema, type MusicPrefs } from '../settings';
 import { useNowPlayingStatus } from '../useNowPlaying';
 import styles from './music.module.css';
@@ -42,13 +44,21 @@ export default function MusicPage() {
   const [version, setVersion] = useState(0);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
+  // Leaving the page: the playlist names read for it go too.
+  useEffect(() => () => forgetLibrary(), []);
   const [stored] = useSettings('module.music', settingsSchema, moduleSettings.defaults as never);
   const prefs = stored ?? (moduleSettings.defaults as MusicPrefs);
+  useSleepWatcher(np);
   useShortcuts(
     np,
     prefs.shortcuts,
     () => setView({ type: 'search' }),
     trackIdOf(np?.current?.trackUrl),
+    () => {
+      np?.refresh(800);
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => setVersion((v) => v + 1), 1200);
+    },
   );
 
   if (!np) {
@@ -91,12 +101,18 @@ export default function MusicPage() {
   };
   const views: { id: string; view?: View; label: string }[] = [
     { id: 'start', label: tm.start },
+    { id: 'playlists', view: { type: 'playlists' }, label: tm.tabPlaylists },
+    { id: 'albums', view: { type: 'albums' }, label: tm.tabAlbums },
     { id: 'search', view: { type: 'search' }, label: tx.tabSearch },
     { id: 'liked', view: { type: 'liked' }, label: tx.tabLiked },
-    { id: 'recent', view: { type: 'recent' }, label: tx.navRecent },
-    { id: 'queue', view: { type: 'queue' }, label: tx.navQueue },
   ];
-  const isOn = (v?: View) => (v ? view?.type === v.type && !('id' in v) : !view);
+  // A list opened from a tab keeps that tab marked (its way back is in the list's head); the songs played lately are
+  // part of the start view.
+  const from = view && 'back' in view ? view.back : undefined;
+  const isOn = (v?: View) =>
+    v
+      ? (view?.type === v.type && !('id' in v)) || (typeof from === 'string' && from === v.type)
+      : !view || from === 'start';
 
   return (
     <>

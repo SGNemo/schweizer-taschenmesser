@@ -1,6 +1,6 @@
 # Fitness (module, concept – phase 1)
 
-Log training (exercises, sets, weight, duration) and calories (meals, kcal, rough). Not a gym coach, not a diet app: calm, rough, honest. Wish: Sven, for a friend who likes "a rough overview". State: **packages 1–3 merged (#565, #573, #581), package 4 („Eigenart“) built (`feat/fitness-4`)**. Rules applied: [FOCUS-GUIDELINES](../design/FOCUS-GUIDELINES.md), [MODULE-IDENTITY](../design/MODULE-IDENTITY.md) v3.1, [DESIGN-SPEC](../design/DESIGN-SPEC.md) §4a, [new-module](../howto/new-module.md).
+Log training (exercises, sets, weight, duration) and calories (meals, kcal, rough). Not a gym coach, not a diet app: calm, rough, honest. Wish: Sven, for a friend who likes "a rough overview". State: **packages 1–5 merged; round „Tiefe“ in packages p1–p4 ([fitness-deep/PLAN](../design/fitness-deep/PLAN.md))**. Rules applied: [FOCUS-GUIDELINES](../design/FOCUS-GUIDELINES.md), [MODULE-IDENTITY](../design/MODULE-IDENTITY.md) v3.1, [DESIGN-SPEC](../design/DESIGN-SPEC.md) §4a, [new-module](../howto/new-module.md).
 
 ## 1. One module or two – recommendation: **one module `fitness`**
 
@@ -138,3 +138,34 @@ Not planned: body data, weight trend, step counter, external food databases, spe
 - **Known limit:** meals are matched with their kcal, so a meal changed in MFP (or Cronometer) after an import comes in a second time.
 - **Yazio not built:** its own export format is not documented and no sample could be checked; it waits for a real export file.
 
+
+## Deep p1 as built („Übungen“, `feat/fitness-deep-p1`)
+
+- **View „Übungen“** (tab after Training, `?view=exercises`): every exercise ever logged (all sessions, not only the page's 90 days; never a plan) by muscle group in catalogue order, own names by their words (`groupOf`: „Kurzhantel-Rudern“ → Rücken), the rest „Weitere“; row = „Zuletzt Gestern · 3 × 5 · 80 kg · Bestwert 100 kg × 5“, or only „Bestwert“ when the last time reached it; a search narrows the list. Tap → history (newest first, 30 rows, the rest counted), the row that set the best says „Bestwert“.
+- **Personal best** (`progress.ts`): heaviest weight (more reps at the same weight beat fewer), else most reps without weight, else longest duration; the first day a value was reached keeps it. Shown as a fact only: no toast, no badge, no comparison with a judgement.
+- **Form:** under each exercise with a known name „Letztes Mal (Mo., 3. Nov.): 3 × 8 · 60 kg“ (never read from the session being edited). **Catalogue:** a search over the catalogue and own exercises („Deine Übungen“); a name that matches nothing is taken as an own exercise with one tap.
+- **Week:** one line „Je Muskelgruppe: Brust 6 Sätze · Beine 9 Sätze · Ausdauer 1 h 05“ (an exercise with reps or kg but no set count is one set; duration-only exercises count minutes). Bars follow in p4.
+
+## Deep p2 as built („Einheit starten“, single sets, `feat/fitness-deep-p2`)
+
+- **Data (manifest v3, nothing rewritten):** an exercise may carry `log` (single sets: reps, kg, `warmup`, a note ≤ 200) and `superset` (back to back with the next exercise). With a log, `sets`/`reps`/`weightKg` are its summary (`sets.ts`: working sets, heaviest weight with its reps), so lists, week, imports and „Wie letztes Mal“ read it unchanged; bests and sets per muscle group never count a warm-up.
+- **Form:** ⋯ on each exercise: „Sätze einzeln eintragen“ (the summary becomes equal sets, each with reps, kg, „Aufwärmen“, note) / „Sätze zusammenfassen“ (notes and warm-ups go), „Supersatz mit der nächsten Übung“ (a hint names the partner). „Anfangen“ beside the form's actions for a new session today or a plan whose day has come.
+- **„Einheit starten“** (⋯ of Training, or „Anfangen“): one exercise at a time with last time's values, „Satz fertig“, the set list in words. Nothing is written before the first set; after every set the session is saved (a started plan becomes logged, today). Rest timer: setting „Pause zwischen Sätzen“ (default 90 s, 0 = off), text only („Pause · 1:12“, „+30 s“, „Pause beenden“, then „Pause ist um.“), no sound, no vibration, no notification. A superset rests only after the pair. „Einheit beenden“ stores the minutes since the start („Einheit gespeichert · 47 Min“).
+- **Interruption:** the running state is device-local (`localStorage`, never synced); closing the dialog or a reload shows „Einheit läuft seit 18:02 · Weiter“ above the list; a state from an earlier day is dropped quietly (its sets are saved).
+- **Seed v4:** the last two weeks log sets one by one with a warm-up; „Latziehen“ is a superset with „Bizepscurls“.
+- **Known limits:** one running session per device; the duration counts from the start, also across a long break; only exercises with a set done are written (a started plan's other rows are not logged, cardio is logged in the form); the running dialog writes the whole exercise list after each set, so an edit of the same session in the form or on another device meanwhile is replaced (field LWW on `exercises`); the assistant still sees no exercises (`aiSchema` unchanged).
+
+## Deep p3 as built (training plan, `feat/fitness-deep-p3`)
+
+- **Data (manifest v4, nothing rewritten):** a template may carry `weekdays` (ISO 1–7). A plan day is derived (`plan.ts`), never stored: it exists only from today on and only on a day without any session (logged or planned), so a passed plan day just disappears – never „verpasst“, no counter.
+- **„Trainingsplan“** (⋯ of Training and Woche): seven toggles per template (saved on every tap, week start respected); three splits to start with (Ganzkörper 2 ×: Mo/Do · Ober-/Unterkörper 4 ×: Mo, Di, Do, Fr · Drücken/Ziehen/Beine 3 ×: Mo, Mi, Fr), catalogue exercises with sets and reps but no weights (the first session fills them in); a template of the same title keeps its exercises and only takes the days; toast with „Rückgängig“.
+- **Today:** one row „Heute laut Plan: Oberkörper · 5 Übungen · 55 Min“ with „Anfangen“ (→ „Einheit starten“ with the template), above the list, gone once the day has a session or a live session runs. **Week:** „laut Plan: Oberkörper“ on today and later days.
+- **Planner:** plan days as items `plan:<templateId>:<date>` (pinned to their day like a planned session, the template's length or 45 min); ticked off = a logged session from the template today; an edited estimate is not written (the template keeps its length). Calendar and „Jetzt wichtig“ do not show plan days (noise; a planned session with a time still does).
+- **Off:** a template without weekdays is not in the plan; removing the days removes the plan.
+- **Known limits:** any session on a day hides every plan item of that day (two templates on one weekday: doing one hides the other); ticking a later plan day in the planner logs nothing (it can only be done on its day).
+
+## Deep p4 as built (charts, `feat/fitness-deep-p4`, needs `@/ui/charts` from `feat/ui-charts`)
+
+- **Exercise history:** a `Trend` „Schwerstes Gewicht je Trainingstag“ (else „Meiste Wiederholungen“, else „Dauer“: the best's measure, `trendOf`), one point per day, from two days on; one point stays the sentence „Bestwert …“. Days without the measure are left out, never drawn as zero.
+- **Week:** `Bars` „Sätze je Muskelgruppe“ (horizontal, catalogue order) replace the text line; groups with only minutes (a run) stay one line of text, since minutes and sets share no axis. `Bars` „kcal je Tag“ (columns, only with „Kalorien erfassen“ and any kcal that week): from three days with meals on, plain amounts, **no target mark** – the charts' red is „over target“, and eating is never „over“.
+- Charts follow the blocks' rules (legend and table in words, module hue, „Ruhig“ grey, reduced motion); no own chart code in the module.

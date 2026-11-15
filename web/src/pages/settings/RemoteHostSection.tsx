@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { getPlatform } from '@/core/platform';
-import type { RemoteHostDevice, RemoteHostGrant, RemoteLevel } from '@/core/platform/types';
+import type {
+  RemoteHostDevice,
+  RemoteHostGrant,
+  RemoteHostPrograms,
+  RemoteLevel,
+} from '@/core/platform/types';
 import { refreshRemoteHost, useRemoteHost, useRemoteHostWatch } from '@/core/remote/host';
 import { settingsPath } from '@/core/settings/registry/paths';
 import { formatDateTime } from '@/core/time/dates';
@@ -25,6 +30,9 @@ function errorText(e: unknown, l: Texts): string | undefined {
   return Object.hasOwn(l.errors, code) ? l.errors[code as ErrorCode] : l.errors.failed;
 }
 
+/** Most entries of the PC's program list (the shell refuses a ninth). */
+const PROGRAMS_MAX = 8;
+
 /**
  * Settings → Verbindungen → Fernsteuerung (desktop): which paired device may control this PC
  * (concept `docs/design/remote-control/CONCEPT.md` §4, rules `docs/rules/remote-control.md`).
@@ -40,6 +48,30 @@ export function RemoteHostSection() {
   const [note, setNote] = useState<string>();
   /** What was said about the notification switch: shown right below it, not far above. */
   const [noticeNote, setNoticeNote] = useState<string>();
+  /**
+   * The PC's program list (names only) and its epoch; `undefined` until read, or when it cannot
+   * be read.
+   */
+  const [programList, setPrograms] = useState<RemoteHostPrograms>();
+  const programs = programList?.list;
+  /** What was said about the program list: shown right below it. */
+  const [programNote, setProgramNote] = useState<string>();
+  const running = !off && host.supported;
+  useEffect(() => {
+    if (!running) return;
+    let alive = true;
+    host
+      .programs()
+      .then((list) => {
+        if (alive) setPrograms(list);
+      })
+      .catch(() => {
+        if (alive) setPrograms(undefined);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [host, running]);
   // A Windows dialog can outlive this page: once it is gone, an answer changes nothing here and
   // must not fill the shared state again (nobody would keep it fresh).
   const open = useRef(true);
@@ -60,6 +92,7 @@ export function RemoteHostSection() {
   ) {
     setNote(undefined);
     setNoticeNote(undefined);
+    setProgramNote(undefined);
     setBusy(true);
     let said = done;
     try {
@@ -70,6 +103,10 @@ export function RemoteHostSection() {
     if (!open.current) return;
     await refreshRemoteHost();
     if (!open.current) return;
+    // the list may have changed too (it is read with every change, never kept on its own)
+    const list = await host.programs().catch(() => undefined);
+    if (!open.current) return;
+    setPrograms(list);
     say(said);
     setBusy(false);
   }
@@ -112,6 +149,8 @@ export function RemoteHostSection() {
         level: now.level,
         paused: now.paused,
         unlock: now.unlock,
+        power: now.power,
+        programs: now.programs,
         ...patch,
       });
     });
@@ -205,6 +244,26 @@ export function RemoteHostSection() {
                     ))}
                   </SelectField>
                 )}
+                {/* switching off is its own permission, offered once the device may do anything */}
+                {!d.paused && d.level !== 'off' ? (
+                  <Switch
+                    label={l.power}
+                    hint={l.powerHint}
+                    checked={d.power}
+                    disabled={busy || !status.enabled}
+                    onChange={(on) => void setGrant(d, { power: on })}
+                  />
+                ) : null}
+                {/* programs of the list below: a permission of the mouse/keyboard level */}
+                {!d.paused && d.level === 'full' ? (
+                  <Switch
+                    label={l.programsAllow}
+                    hint={l.programsAllowHint}
+                    checked={d.programs}
+                    disabled={busy || !status.enabled}
+                    onChange={(on) => void setGrant(d, { programs: on })}
+                  />
+                ) : null}
                 {/* the phone's own unlock: only mouse and keyboard ask for it */}
                 {!d.paused && d.level === 'full' ? (
                   <Switch
@@ -219,6 +278,57 @@ export function RemoteHostSection() {
             ))}
           </>
         )}
+      </Step>
+      <Step title={l.programs.title}>
+        <p className={styles.muted}>{l.programs.help}</p>
+        {programs === undefined ? null : programs.length === 0 ? (
+          <p className={styles.muted} data-testid="remote-programs-none">
+            {l.programs.none}
+          </p>
+        ) : (
+          <ul className={styles.plainList} data-testid="remote-programs">
+            {programs.map((p) => (
+              <li key={p.slot} className={styles.row} data-testid="remote-program">
+                <span>{p.name}</span>
+                <Button
+                  variant="ghost"
+                  onClick={() =>
+                    void change(
+                      // (the list's epoch: nothing is removed from a list that changed since)
+                      () => host.removeProgram(p.slot, programList?.version ?? -1),
+                      l.programs.removed(p.name),
+                      setProgramNote,
+                    )
+                  }
+                  disabled={busy}
+                  aria-label={l.programs.removeLabel(p.name)}
+                  data-testid="remote-program-remove"
+                >
+                  {l.programs.remove}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {programs !== undefined ? (
+          <Actions>
+            <Button
+              onClick={() => void change(() => host.addProgram(), l.programs.added, setProgramNote)}
+              disabled={busy || programs.length >= PROGRAMS_MAX}
+              data-testid="remote-program-add"
+            >
+              {l.programs.add}
+            </Button>
+          </Actions>
+        ) : null}
+        {programs !== undefined && programs.length >= PROGRAMS_MAX ? (
+          <p className={styles.muted}>{l.programs.full}</p>
+        ) : null}
+        {programNote ? (
+          <p role="status" className={styles.muted} data-testid="remote-program-note">
+            {programNote}
+          </p>
+        ) : null}
       </Step>
       <Switch
         label={l.notice}

@@ -27,6 +27,7 @@ import { dismissNotices, ready, showPreview } from '../helpers';
 const OUT = 'test-results/usecase-wochenende';
 const SATURDAY = '2026-11-14';
 const SUNDAY = '2026-11-15';
+const MONDAY = '2026-11-16';
 
 type Metric = 'taps' | 'keys' | 'screens' | 'dialogs' | 'detours';
 type Row = { name: string; project: string } & Record<Metric, number> & {
@@ -479,8 +480,8 @@ test('B Kopf leeren: zwölf Dinge auf einmal', async ({ page, isMobile }, info) 
   });
   await record(info, m, name);
   // Package 4a, checked but not counted (the one detour of this path, fixed by hand): the bare „Zocken“ became a
-  // ToDo; ⋯ → „Als Pause …“ → „2 h“ on its plan row turns it into a break of the day the plan put it on – no open
-  // ToDo „Zocken“ afterwards. Three taps plus finding the day; the facts name that day.
+  // ToDo; ⋯ → „Als Pause …“ → „Heute“ → „2 h“ on its plan row turns it into today's break (W24) – no open ToDo
+  // „Zocken“ afterwards. Finding the row's day stays; the facts name both days.
   const gaming = tasks.find((x) => /^Zocken/.test(x.title)) as { id: string } | undefined;
   expect(gaming).toBeTruthy();
   const placed = (await rows<{ itemKey: string; date: string }>(page, 'planner_assignment')).find(
@@ -496,10 +497,13 @@ test('B Kopf leeren: zwölf Dinge auf einmal', async ({ page, isMobile }, info) 
     await placedDay.getByRole('button', { name: /^Danach/ }).click();
   await gamingMenu.click();
   await page.getByRole('menuitem', { name: 'Als Pause …' }).click();
-  await page
-    .getByRole('dialog', { name: 'Zocken als Pause' })
-    .getByRole('button', { name: '2 h', exact: true })
-    .click();
+  const asBreakSheet = page.getByRole('dialog', { name: 'Zocken als Pause' });
+  // W24 (fixed): the plan put „Zocken“ on another day; the small sheet offers „Heute“ beside the row's day, and
+  // the person means now. On a row of today there is no choice to make.
+  if (placed!.date !== SATURDAY)
+    await asBreakSheet.getByRole('button', { name: 'Heute', exact: true }).click();
+  await expect(asBreakSheet.getByText('Wird am Sa zur Pause.', { exact: false })).toBeVisible();
+  await asBreakSheet.getByRole('button', { name: '2 h', exact: true }).click();
   await expect
     .poll(async () =>
       (await rows<{ title: string; done: boolean }>(page, 'todos_task')).filter(
@@ -516,9 +520,17 @@ test('B Kopf leeren: zwölf Dinge auf einmal', async ({ page, isMobile }, info) 
     .poll(async () => (await breakOf())?.blockers.map((b) => [b.label, b.min]))
     .toEqual([['Zocken', 120]]);
   const breakDay = await breakOf();
-  expect(breakDay?.date).toBe(placed!.date);
+  expect(breakDay?.date).toBe(SATURDAY);
   facts(info, 'B-break', { gamingPlannedOn: placed!.date, breakOn: breakDay?.date });
 });
+
+/** W23: the lines that the sheet once turned into ToDos on Saturday (ANALYSIS §7). */
+const W23_LINES = [
+  'Team-Sachen lesen bis So 18:00',
+  'So 19 Uhr erinnere mich: kurz schauen',
+  'Mo 7:30 krankmelden falls nötig',
+  'Pause 1 Std Zocken',
+];
 
 const OPEN = [
   'Arbeitszeit eintragen',
@@ -606,6 +618,46 @@ test('C Wochenende einteilen', async ({ page, isMobile }, info) => {
   await expect(page.getByText(`${first}: abends`)).toBeVisible();
   await expect.poll(onSaturday).toEqual([...before.slice(1), first]);
   await expect(sat.getByText('abends')).toBeVisible();
+  // W23 (fixed), checked but not counted: the sheet reads a line exactly as the quick capture's many lines do – a
+  // ToDo with its deadline and hour, a reminder (`once`), a Termin and a break, each on the day typed. The preview
+  // says what becomes what with the capture's kinds line.
+  await page.getByRole('button', { name: 'Weitere Optionen', exact: true }).first().click();
+  await page.getByRole('menuitem', { name: 'Tage einteilen' }).click();
+  await expect(setup).toBeVisible();
+  await setup.getByLabel('Eine Zeile je Ding').fill(W23_LINES.join('\n'));
+  await setup.getByRole('button', { name: 'Weiter' }).click();
+  await setup.getByRole('button', { name: 'Weiter' }).click();
+  await expect(setup.getByText('ToDo 1 · Erinnerung 1 · Termin 1')).toBeVisible();
+  await setup.getByRole('button', { name: 'Übernehmen' }).click();
+  await expect(setup).toHaveCount(0);
+  await expect
+    .poll(async () =>
+      (
+        await rows<{ title: string; dueDate?: string; dueTime?: string; note?: string }>(
+          page,
+          'todos_task',
+        )
+      )
+        .filter((x) => /Team-Sachen/.test(x.title))
+        .map((x) => [x.dueDate, x.dueTime, x.note ?? '']),
+    )
+    .toEqual([[SUNDAY, '18:00', '']]);
+  const sheetEvents = (
+    await rows<{
+      title: string;
+      kind?: string;
+      startDate?: string;
+      startTime?: string;
+      once?: boolean;
+    }>(page, 'calendar_event')
+  )
+    .map((e) => [e.title, e.kind ?? 'event', e.startDate, e.startTime, e.once === true])
+    .sort();
+  expect(sheetEvents).toEqual([
+    ['Krankmelden falls nötig', 'event', MONDAY, '07:30', false],
+    ['Kurz schauen', 'reminder', SUNDAY, '19:00', true],
+  ]);
+  facts(info, 'C-sheet-lines', { sheetEvents });
 });
 
 test('D Arbeitszeit nachtragen', async ({ page, isMobile }, info) => {

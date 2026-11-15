@@ -3,22 +3,7 @@ import { createElement, type ReactNode } from 'react';
 import { act, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import misc from '@/ui/Misc.module.css';
-import {
-  gridColumns,
-  packedRows,
-  SETTLE_CAP_MS,
-  stagedCards,
-  stillLoading,
-  usePackedGrid,
-} from './masonry';
-
-describe('packed overview grid (U19)', () => {
-  it('spans a card over its own height plus the gap below, in 1 px rows', () => {
-    expect(packedRows(200, 24)).toBe(224);
-    expect(packedRows(312.4, 24)).toBe(337);
-    expect(packedRows(0, 0)).toBe(1);
-  });
-});
+import { gridColumns, SETTLE_CAP_MS, stagedCards, stillLoading, useGridBuildUp } from './masonry';
 
 describe('build-up helpers', () => {
   const card = (loading: boolean) => {
@@ -63,7 +48,7 @@ describe('build-up: cards of a step show together, once', () => {
     onShown?: () => void;
     holdNew?: boolean;
   }): ReactNode {
-    const ref = usePackedGrid<HTMLDivElement>(
+    const ref = useGridBuildUp<HTMLDivElement>(
       props.keys.join('|'),
       true,
       props.ready ?? true,

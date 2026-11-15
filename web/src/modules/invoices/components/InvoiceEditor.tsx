@@ -23,6 +23,7 @@ import { saveInvoice } from '../actions';
 import { ibanValid } from '../iban';
 import { attachmentKey, copyIban, copyPaymentData } from '../pay';
 import { AttachmentSection, type AttachmentChoice } from './AttachmentSection';
+import { InvoiceLinks } from './InvoiceLinks';
 import { PaymentsSection } from './PaymentsSection';
 import { invoiceRepo } from '../repo';
 import { INVOICE_REPEATS, type Invoice, type InvoiceRepeat } from '../schema';
@@ -135,6 +136,9 @@ function Form({
         payments,
         dunningLevel: level > 0 ? level : undefined,
         dunnedAt: level > 0 ? dunnedAt || undefined : undefined,
+        // What a noted reminder claims has no field in this form: kept as it is, and gone with the level.
+        dunnedDueDate: level > 0 ? existing?.dunnedDueDate : undefined,
+        dunnedAmountMinor: level > 0 ? existing?.dunnedAmountMinor : undefined,
         iban: iban.trim() || undefined,
         bic: bic.trim() || undefined,
         attachment: attachmentMeta,
@@ -189,6 +193,8 @@ function Form({
           </option>
         ))}
       </SelectField>
+      {/* Where it came from (a mail, a reminder's mail) and its plan day: the phone has no detail panel. */}
+      {existing ? <InvoiceLinks invoiceId={existing.id} onLeave={onClose} /> : null}
       {existing && !isPaid ? (
         <PaymentsSection invoiceId={existing.id} currency={existing.currency} onPaid={onClose} />
       ) : null}
@@ -293,6 +299,8 @@ function Form({
                   payments: undefined,
                   dunningLevel: undefined,
                   dunnedAt: undefined,
+                  dunnedDueDate: undefined,
+                  dunnedAmountMinor: undefined,
                   attachment: undefined,
                   dueDate: addMonthsStr(existing.dueDate, 1),
                 }),

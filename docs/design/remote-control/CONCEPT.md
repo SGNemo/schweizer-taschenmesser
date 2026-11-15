@@ -1,6 +1,6 @@
 # Remote control – the phone steers the PC over the paired home network (concept)
 
-Branch `design/remote-control-concept`, 2026-11-10. Status: **concept, no product code**; Sven answered §12 on 2026-11-10 (all four recommendations), so §11 is decided. Packages: [PACKAGES.md](PACKAGES.md). Prototype: [proto/](proto/run.mjs). Builds on [sync-lan/CONCEPT.md](../sync-lan/CONCEPT.md) (hub, pairing, trust list) and the LAN rule in [RULES.md](../../RULES.md).
+Branch `design/remote-control-concept`, 2026-11-10. Status: **concept, no product code**; Sven answered §12 on 2026-11-10 (all four recommendations), so §11 is decided. Packages: [PACKAGES.md](PACKAGES.md). Prototype: [proto/](proto/run.mjs). Builds on [sync-lan/CONCEPT.md](../sync-lan/CONCEPT.md) (hub, pairing, trust list) and the LAN rule in [RULES.md](../../RULES.md). Extension (power, presentation, programs; 2026-11-15): [remote-power-deep/PLAN.md](../remote-power-deep/PLAN.md).
 
 Sven's wish: „Ich benutze Unified Remote, um mit dem Handy meinen PC zu steuern. Das will ich in Nemo haben – die Geräte sind im Netzwerk eh gepaart. Maus steuern, Medien (Ton) steuern: lauter, leiser, nächster Song usw.“
 

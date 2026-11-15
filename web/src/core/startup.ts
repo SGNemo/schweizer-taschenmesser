@@ -1,4 +1,5 @@
 import { runAppMigrations } from '@/core/db/appMigrations';
+import { copyTodoLinksAtStart } from '@/core/entitylinks/migrate';
 import { loadModuleStates } from '@/core/modules/activation';
 import { runMigrations } from '@/core/modules/migrate';
 import { availableManifests } from '@/core/modules/available';
@@ -7,12 +8,16 @@ import { markFreshDefaults } from '@/core/modules/defaults';
 import { decideFreshStart, ensureSetupState } from '@/core/setup/detect';
 import { startAutomation } from '@/core/automation/start';
 import { startHistory } from '@/core/settings/history';
+import { startAppLock } from '@/core/applock/start';
+import { startScreenGuard } from '@/core/security/screen';
 import { startProfileScheduler } from '@/core/settings/profiles';
 import { useUiStore } from '@/stores/ui';
 
 let stopHistory: (() => void) | undefined;
 let stopScheduler: (() => void) | undefined;
 let stopAutomation: (() => void) | undefined;
+let stopAppLock: (() => void) | undefined;
+let stopScreenGuard: (() => void) | undefined;
 
 /**
  * One-time app start work: storage persistence and pending module migrations. `start` is the "fresh
@@ -23,6 +28,11 @@ export async function initCore(
 ): Promise<void> {
   // The change history listens from the very start, so a change made while the app is still waking up counts too.
   if (!stopHistory && typeof localStorage !== 'undefined') stopHistory = startHistory();
+  // The app lock (device-local, off by default) arms its idle and background timers; the locked state at
+  // start is already set before the first render (`core/applock/state.ts`).
+  if (!stopAppLock && typeof document !== 'undefined') stopAppLock = startAppLock();
+  // "Bildschirmschutz: überall" (Android) from the very start, before any data shows.
+  if (!stopScreenGuard && typeof localStorage !== 'undefined') stopScreenGuard = startScreenGuard();
   // A really empty app (no setup state, no data) is a fresh installation: it gets the calm defaults. The answer is
   // noted in `_meta` when it is decided, so a first start closed or reloaded before the steps below keeps it.
   const fresh = await start;
@@ -45,6 +55,10 @@ export async function initCore(
   }
   // Forward copies between merged/retired modules (also run after every sync pull and restore).
   await runAppMigrations();
+  // The links a ToDo stores in its own field also become rows of the link table: at every start, whatever
+  // sync does (a copy is stamped like its source, so it never beats a removal). Not awaited: start-up and
+  // the background services do not wait for the scan.
+  void copyTodoLinksAtStart();
   // Profile schedules run once the data is ready, while the app is open.
   if (!stopScheduler && typeof localStorage !== 'undefined')
     stopScheduler = startProfileScheduler();

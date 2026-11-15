@@ -1,0 +1,7 @@
+/* A row's "Verwalten"/"Ansehen" link: a full touch target, text stays a link. */
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  white-space: nowrap;
+}
