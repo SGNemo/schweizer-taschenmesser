@@ -52,6 +52,11 @@
         "label": "Sortierung",
         "default": "newest"
       },
+      "groupBy": {
+        "type": "select",
+        "label": "Gruppierung",
+        "default": "recent"
+      },
       "linkPreview": {
         "type": "boolean",
         "label": "Linkvorschau laden",
