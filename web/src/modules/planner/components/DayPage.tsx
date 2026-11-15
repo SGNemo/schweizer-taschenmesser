@@ -3,7 +3,7 @@ import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Card, Icon, ItemList, ItemRow, Progress, SkeletonRows } from '@/ui';
 import type { BoardBlocker, BoardDay, BoardRow } from '../board';
-import { capacityLabel, capacityState, compact } from './capacity';
+import { capacityLabel, capacityState, capacityWhy, compact } from './capacity';
 import styles from '../routes/planner.module.css';
 
 /** The first rows of a day are „Zuerst“; what follows is „Danach“. */
@@ -70,9 +70,10 @@ export function DayPageLoading() {
 }
 
 /**
- * The picked day as one sheet (planner hub R1): its name, its capacity (a text button that opens the day's
- * settings) and the bar; then the fixed blocks, „Zuerst“ (≤ 3 rows, the first one strong) and „Danach“ (folded on
- * the phone, on the desktop five rows and „n weitere“); a foot with the two steps a day offers.
+ * The picked day as one sheet (planner hub R1): its name, its capacity (a text button that opens „Warum?“, R2 –
+ * one line and „Zeit ändern“; a day off opens the day's settings) and the bar; then the fixed blocks, „Zuerst“
+ * (≤ 3 rows, the first one strong) and „Danach“ (folded on the phone, on the desktop five rows and „n weitere“); a
+ * foot with the two steps a day offers.
  */
 export function DayPage({
   day,
@@ -86,6 +87,7 @@ export function DayPage({
   onSetup,
   headEnd,
   onSwipe,
+  dayEnd,
 }: {
   day: BoardDay;
   /** The day after today: its title says „Morgen“. */
@@ -104,9 +106,13 @@ export function DayPage({
   headEnd?: ReactNode;
   /** Phone: a sideways swipe on the sheet, not started on a row (`1` = the next day). */
   onSwipe?: (dir: 1 | -1) => void;
+  /** The „Tagesende“ of the settings ('H:mm' as shown), named in the „Warum?“ line when set. */
+  dayEnd?: string;
 }) {
   const id = useId();
   const [all, setAll] = useState(false);
+  // „Warum?“: the one line that says what the day's time goes to; closed until asked.
+  const [whyOpen, setWhyOpen] = useState(false);
   const thenRef = useRef<HTMLDivElement>(null);
   const start = useRef<{ x: number; y: number } | undefined>(undefined);
   const first = day.rows.slice(0, FIRST_ROWS);
@@ -115,6 +121,7 @@ export function DayPage({
   const shown = folded ? then.slice(0, THEN_ROWS) : then;
   const state = capacityState(day);
   const hasRows = day.rows.length > 0;
+  const editName = t.planner.board.editDay(formatDay(day.date, 'EEEE'));
 
   const onTouchStart = (e: TouchEvent) => {
     const touch = e.touches[0];
@@ -147,14 +154,32 @@ export function DayPage({
           {dayTitle(day, tomorrow)}
         </h2>
         {headEnd ? <span className={styles.headEnd}>{headEnd}</span> : null}
-        <button
-          type="button"
-          className={styles.capacityButton}
-          aria-label={`${capacityLabel(day)} – ${t.planner.board.editDay(formatDay(day.date, 'EEEE'))}`}
-          onClick={onEditDay}
-        >
-          {capacityLabel(day)}
-        </button>
+        <span className={styles.capacityLine}>
+          {day.off ? (
+            // A day off has no question to answer: its capacity opens the day's settings.
+            <button
+              type="button"
+              className={styles.capacityButton}
+              aria-label={`${capacityLabel(day)} – ${editName}`}
+              onClick={onEditDay}
+            >
+              {capacityLabel(day)}
+            </button>
+          ) : (
+            // „Warum?“ (R2, P80): the capacity itself is the one control – no second link beside it.
+            <button
+              type="button"
+              className={styles.capacityButton}
+              data-testid="planner-why"
+              aria-label={t.planner.board.whyName(capacityLabel(day))}
+              aria-expanded={whyOpen}
+              aria-controls={`${id}-why`}
+              onClick={() => setWhyOpen((open) => !open)}
+            >
+              {capacityLabel(day)}
+            </button>
+          )}
+        </span>
         {!day.off ? (
           <div className={styles.sheetBar}>
             <Progress
@@ -166,6 +191,28 @@ export function DayPage({
               outline
             />
           </div>
+        ) : null}
+        {!day.off ? (
+          <p
+            id={`${id}-why`}
+            className={styles.whyLine}
+            hidden={!whyOpen}
+            data-testid="planner-why-line"
+          >
+            {whyOpen ? (
+              <>
+                <span>{capacityWhy(day, dayEnd)}</span>{' '}
+                <button
+                  type="button"
+                  className={styles.textLink}
+                  aria-label={editName}
+                  onClick={onEditDay}
+                >
+                  {t.planner.board.editTime}
+                </button>
+              </>
+            ) : null}
+          </p>
         ) : null}
       </div>
 

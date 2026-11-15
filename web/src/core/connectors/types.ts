@@ -378,6 +378,16 @@ export interface NowPlayingSource {
   saveAlbums?(ctx: ConnectorContext, ids: string[], on: boolean): Promise<void>;
   /** An artist's picture, most played songs and albums. No scope. */
   artist?(ctx: ConnectorContext, id: string): Promise<ArtistPage>;
+  /** The artists the user follows (up to 200). Feature "Folgen". */
+  followedArtists?(ctx: ConnectorContext): Promise<MediaItem[]>;
+  /** For each artist id: does the user follow it? */
+  artistsFollowed?(ctx: ConnectorContext, ids: string[]): Promise<boolean[]>;
+  /** Follows (`on`) or unfollows artists. */
+  followArtists?(ctx: ConnectorContext, ids: string[], on: boolean): Promise<void>;
+  /** Does the user follow this playlist? (Feature "Playlists bearbeiten".) */
+  playlistFollowed?(ctx: ConnectorContext, id: string): Promise<boolean>;
+  /** Follows (`on`) or unfollows a playlist. */
+  followPlaylist?(ctx: ConnectorContext, id: string, on: boolean): Promise<void>;
   /** Playlist editing; each needs its own feature/scope ("Playlists bearbeiten", off until chosen). */
   createPlaylist?(ctx: ConnectorContext, name: string, description?: string): Promise<Playlist>;
   renamePlaylist?(ctx: ConnectorContext, id: string, name: string): Promise<void>;

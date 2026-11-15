@@ -224,7 +224,9 @@ describe('planner page', () => {
   it('the day sheet offers „2 h · 4 h · 6 h · ganzer Tag“: one tap sets the day, the pick shows as chosen (W09)', async () => {
     draw();
     const day = await screen.findByTestId('day-2026-11-09');
-    fireEvent.click(within(day).getAllByRole('button')[0]!);
+    // R2: the capacity opens „Warum?“, „Zeit ändern“ in it the day's settings.
+    fireEvent.click(within(day).getByTestId('planner-why'));
+    fireEvent.click(within(day).getByRole('button', { name: /^Zeit für .* ändern$/ }));
     const sheet = await screen.findByRole('dialog');
     const picks = within(
       within(sheet).getByRole('group', { name: 'Verfügbare Zeit schnell wählen' }),

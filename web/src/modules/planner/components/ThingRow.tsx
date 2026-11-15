@@ -51,6 +51,7 @@ export function ThingRow({
   menu,
   onDone,
   onLater,
+  noDuration,
 }: {
   row: BoardRow;
   /** The first row of „Zuerst“: its title is strong. */
@@ -64,6 +65,8 @@ export function ThingRow({
   /** The source takes a tick (ToDo, routine): one tap; undefined for an invoice or a cancellation. */
   onDone?: () => Promise<boolean>;
   onLater?: () => void;
+  /** A row of „Frist vorbei“: it takes no day time, so it shows none. */
+  noDuration?: boolean;
 }) {
   const navigate = useNavigate();
   // Ticked: the row fades while the source stores it, then leaves with the board's next reading.
@@ -153,14 +156,16 @@ export function ThingRow({
             </Fragment>
           ))}
           {/* Phone: the duration closes the meta line, so the title has the row's width (the end slot is hidden). */}
-          <span className={styles.metaDuration}>
-            {facts.length > 0 ? <span aria-hidden="true">· </span> : null}
-            {duration}
-          </span>
+          {noDuration ? null : (
+            <span className={styles.metaDuration}>
+              {facts.length > 0 ? <span aria-hidden="true">· </span> : null}
+              {duration}
+            </span>
+          )}
           {whyOpen ? <span className={styles.reason}>{reason}</span> : null}
         </span>
       }
-      end={<span className={styles.duration}>{duration}</span>}
+      end={noDuration ? undefined : <span className={styles.duration}>{duration}</span>}
       menu={menu}
       menuLabel={t.planner.row.menu(row.title)}
       onSwipeRight={done}

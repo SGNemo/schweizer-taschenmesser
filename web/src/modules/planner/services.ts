@@ -8,7 +8,8 @@
  *  - user actions from the planner UI run inside one `undoable` together with their run and write-backs
  *    (`runUser`); every other run is background: serialised behind any open user action, not undoable.
  *  - `plan.requested` (a note's „In den Plan“) becomes a ToDo plus planner item and one undoable run
- *    (`actions.addRequested`, loaded on demand: `actions.ts` itself imports this file).
+ *    (`actions.addRequested`, loaded on demand: `actions.ts` itself imports this file); `plan.unrequested`
+ *    excludes the item row of a thing asked in by ref (`actions.unrequest`).
  *  - `module.disabling` for the planner stops the runs and hands every planner-own date back to its
  *    source (both policies), before the state is written and before any wipe.
  */
@@ -36,6 +37,7 @@ import type { PlanItem } from '@/core/plan/types';
 import {
   LAST_RUN_KEY,
   previewPlanner,
+  requestedIds,
   restoreSources,
   runPlanner,
   type PreviewOutcome,
@@ -194,11 +196,12 @@ async function inputSnapshot(): Promise<string> {
   const settings = await getPlannerSettings();
   const day = today();
   const until = addDays(day, Number(settings.horizonDays) - 1);
-  const [things, calendar, days, items, assignments, focus, pull, lastSync] = await Promise.all([
-    collectPlannable({ today: day, until }, manifests),
+  const items = await itemRepo.active().toArray();
+  const [things, calendar, days, assignments, focus, pull, lastSync] = await Promise.all([
+    // With the requests, as the run reads them (`buildInputs`): a list asked into the plan is an input.
+    collectPlannable({ today: day, until }, manifests, requestedIds(items)),
     settings.calendarBlocks ? collectCalendarItems({ from: day, to: until }, manifests) : [],
     dayRepo.active().toArray(),
-    itemRepo.active().toArray(),
     assignmentRepo.active().toArray(),
     getFocusSettings(),
     getMeta(PULL_COMPLETE_KEY),
@@ -276,6 +279,12 @@ export default function start(): () => void {
       .then((m) => m.addRequested(req))
       .then(() => undefined, logError('planner.request')),
   );
+  // „Nicht mehr planen“ on a thing asked in by ref: its item row is excluded (`actions.unrequest`).
+  const offUnrequested = bus.on('plan.unrequested', (req) =>
+    import('./actions')
+      .then((m) => m.unrequest(req))
+      .then(() => undefined, logError('planner.unrequest')),
+  );
   // The ToDo widget's evening action: the planner opens its own preview of the evening ops (nothing moves yet).
   const offRest = bus.on('plan.restRequested', (req) => req.open(REST_PATH));
   const offDisabling = bus.on('module.disabling', async ({ moduleId, policy }) => {
@@ -283,6 +292,7 @@ export default function start(): () => void {
     stopped = true;
     active = false;
     offRequested();
+    offUnrequested();
     offRest();
     clearTimeout(timer);
     clearTimeout(midnight);
@@ -306,6 +316,7 @@ export default function start(): () => void {
     if (typeof document !== 'undefined')
       document.removeEventListener('visibilitychange', onVisible);
     offRequested();
+    offUnrequested();
     offRest();
     offDisabling();
   };

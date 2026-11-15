@@ -2,7 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { ConnectorError, type ConnectorContext } from '@/core/connectors/types';
 import { search } from './api';
 import { recent, tracks } from './browse';
-import { albumsSaved, artist, saveAlbums, savedAlbums } from './library';
+import {
+  albumsSaved,
+  artist,
+  artistsFollowed,
+  followArtists,
+  followedArtists,
+  followPlaylist,
+  playlistFollowed,
+  saveAlbums,
+  savedAlbums,
+} from './library';
 
 // Handwritten bodies shaped after the documented responses (no network in tests); names and ids are invented.
 function ctxWith(route: (url: string, method: string) => Response) {
@@ -148,5 +158,75 @@ describe('ids for the artist and album views', () => {
     const out = await search(ctx, 'Band');
     expect(calls[0]!.url).toContain('type=track%2Cplaylist%2Calbum%2Cartist');
     expect(out.artists).toEqual([expect.objectContaining({ kind: 'artist', id: 'ar1' })]);
+  });
+});
+
+describe('following', () => {
+  it('lists followed artists by cursor pages, only on the API host, bad ids dropped', async () => {
+    let n = 0;
+    const { ctx, calls } = ctxWith(() => {
+      n += 1;
+      return json({
+        artists: {
+          items: [
+            { id: `ar${n}`, name: `Band ${n}`, images: [] },
+            { id: 'bad id', name: 'x' },
+          ],
+          next:
+            n === 1
+              ? 'https://api.spotify.com/v1/me/following?type=artist&after=ar1&limit=50'
+              : 'https://elsewhere.example/v1/me/following',
+        },
+      });
+    });
+    const out = await followedArtists(ctx);
+    expect(out.map((a) => [a.kind, a.id])).toEqual([
+      ['artist', 'ar1'],
+      ['artist', 'ar2'],
+    ]);
+    expect(calls).toHaveLength(2);
+    expect(calls[0]!.url).toBe('https://api.spotify.com/v1/me/following?type=artist&limit=50');
+  });
+
+  it('asks whom the user follows and follows or unfollows with PUT / DELETE', async () => {
+    const { ctx, calls } = ctxWith((url) =>
+      url.includes('/contains') ? json([true]) : new Response(null, { status: 204 }),
+    );
+    expect(await artistsFollowed(ctx, ['ar1', '../x'])).toEqual([true, false]);
+    expect(calls[0]!.url).toBe(
+      'https://api.spotify.com/v1/me/following/contains?type=artist&ids=ar1',
+    );
+    await followArtists(ctx, ['ar1'], false);
+    expect(calls[1]).toEqual({
+      url: 'https://api.spotify.com/v1/me/following?type=artist&ids=ar1',
+      method: 'DELETE',
+    });
+    await expect(followArtists(ctx, ['a/b'], true)).rejects.toBeInstanceOf(ConnectorError);
+  });
+
+  it('follows a playlist privately and asks whether it is followed', async () => {
+    const bodies: (string | undefined)[] = [];
+    const calls: { url: string; method: string }[] = [];
+    const base = ctxWith(() => json([false])).ctx;
+    const ctx = {
+      ...base,
+      fetch: (async (input: RequestInfo | URL, init?: RequestInit) => {
+        calls.push({ url: String(input), method: init?.method ?? 'GET' });
+        bodies.push(init?.body as string | undefined);
+        return String(input).endsWith('/contains')
+          ? json([true])
+          : new Response(null, { status: 200 });
+      }) as typeof fetch,
+    };
+    expect(await playlistFollowed(ctx, 'PL1')).toBe(true);
+    await followPlaylist(ctx, 'PL1', true);
+    expect(calls[1]).toEqual({
+      url: 'https://api.spotify.com/v1/playlists/PL1/followers',
+      method: 'PUT',
+    });
+    expect(JSON.parse(bodies[1]!)).toEqual({ public: false });
+    await followPlaylist(ctx, 'PL1', false);
+    expect(calls[2]!.method).toBe('DELETE');
+    await expect(followPlaylist(ctx, '../PL', true)).rejects.toBeInstanceOf(ConnectorError);
   });
 });

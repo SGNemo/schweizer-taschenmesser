@@ -23,21 +23,35 @@ export function firstDayWithRows<T extends Pick<BoardDay, 'rows'>>(
   return days.find((d) => d.rows.length > 0);
 }
 
+type LateThing = { entry?: { kind: string } };
+
+/** „6 Rechnungen“ – the things of „Frist vorbei“ counted in their own word; mixed kinds are „6 Dinge“. */
+export function lateCount(late: readonly LateThing[]): string {
+  return late.every((r) => r.entry?.kind === 'invoice')
+    ? t.planner.late.invoices(late.length)
+    : t.planner.board.things(late.length);
+}
+
 /** Open things of a day (a thing cut into parts counts once). */
 const thingsOf = (day: HeadDay): number => new Set(day.rows.map((r) => r.itemKey)).size;
 
 /**
  * Rule 1: today has rows → today's free time, context „heute · 3 Dinge“ (exactly one thing: „Heute: … Das reicht
  * für heute.“). Rule 2: else the first day with rows → its figure, context „morgen, Mo. 16. · heute ist frei“
- * (`short`: the first half, for the phone). Rule 4: no rows at all → no figure. (Rule 3, only late money, is R2.)
+ * (`short`: the first half, for the phone). Rule 3 (R2): no rows, only late money (`late`) → „Heute ist frei.“, context
+ * „Frist vorbei: 6 Rechnungen“. Rule 4: nothing at all → no figure.
  */
 export function plannerHead(
   days: readonly HeadDay[],
-  opts: { short?: boolean } = {},
+  opts: { short?: boolean; late?: readonly LateThing[] } = {},
 ): PlannerHead | undefined {
   const day = firstDayWithRows(days);
-  if (!day) return undefined;
   const h = t.planner.head;
+  if (!day) {
+    // Rule 3: nothing on any day, only money past its deadline – the day is free, the context names the group.
+    const late = opts.late ?? [];
+    return late.length > 0 ? { value: h.dayFree, detail: h.ctxLate(lateCount(late)) } : undefined;
+  }
   const tomorrow = days[1]?.date === day.date;
   const value =
     day.free > 0

@@ -45,7 +45,15 @@ describe('resolveLink', () => {
   it('the vault offers no resolver, and the modules that do are exactly the linkable ones', () => {
     expect(getManifest('accounts')!.contributions).not.toHaveProperty('linkTarget');
     const targets = allManifests.filter((m) => m.contributions?.linkTarget).map((m) => m.id);
-    expect(targets.sort()).toEqual(['calendar', 'invoices', 'mail', 'notes', 'todos']);
+    expect(targets.sort()).toEqual([
+      'calendar',
+      'invoices',
+      'lists',
+      'mail',
+      'notes',
+      'pantry',
+      'todos',
+    ]);
   });
 
   it('a failing resolver is logged by the registry id only, never by the stored module string', async () => {

@@ -81,3 +81,39 @@ test('albums tab, album heart, artist page and "Weiterhören"', async ({ page })
   await expect(main.getByRole('button', { name: 'Hit abspielen' })).toBeVisible();
   await expect(main.getByTestId('music-artist-albums')).toContainText('Erstes Album');
 });
+
+test('"Folgen" on an artist page, and the followed artists in the albums tab', async ({ page }) => {
+  const mock = await mockSpotify(page);
+  let followed = false;
+  mock.browse = (method, pathname, search) => {
+    if (pathname === '/v1/me/following/contains') return { status: 200, body: [followed] };
+    if (pathname === '/v1/me/following' && method === 'GET')
+      return {
+        status: 200,
+        body: { artists: { items: [{ id: 'ar1AAA', name: 'Erfundene Band' }], next: null } },
+      };
+    if (pathname === '/v1/me/following' && method === 'PUT') {
+      followed = true;
+      return { status: 204 };
+    }
+    if (pathname === '/v1/me/albums' && method === 'GET')
+      return { status: 200, body: { items: [] } };
+    if (pathname === '/v1/artists/ar1AAA') return { status: 200, body: { name: 'Erfundene Band' } };
+    if (pathname.startsWith('/v1/artists/ar1AAA/'))
+      return { status: 200, body: { tracks: [], items: [] } };
+    return defaultBrowse(method, pathname, search);
+  };
+  await seedConnected(page, ['show', 'control', 'library', 'follow']);
+  await ready(page, '/music');
+  await page
+    .getByRole('navigation', { name: 'Ansichten' })
+    .getByRole('button', { name: 'Alben' })
+    .click();
+  const artists = page.getByTestId('music-followed-artists');
+  await artists.getByRole('button', { name: /Erfundene Band/ }).click();
+  const follow = page.getByTestId('music-follow');
+  await expect(follow).toHaveAttribute('aria-pressed', 'false');
+  await follow.click();
+  await expect(follow).toHaveAttribute('aria-pressed', 'true');
+  expect(mock.api).toContain('PUT /v1/me/following');
+});

@@ -40,6 +40,7 @@ import {
   type Filter,
 } from '../logic';
 import { ScanDialog } from '../components/ScanDialog';
+import { LowBadge, RestockButton } from '../components/OnList';
 import { PantryHead, type ShelfCounts } from '../components/PantryHead';
 import { itemRepo } from '../repo';
 import { PLACES } from '../schema';
@@ -68,9 +69,12 @@ export default function PantryPage() {
   };
 
   /** Sends names to the shopping list and confirms once the list has stored them. */
-  const requestRestock = (names: string[]) => {
+  const requestRestock = (asked: { id: string; name: string }[]) => {
+    const names = asked.map((i) => i.name);
     const send = async () => {
-      for (const name of names) await bus.emit('shopping.requested', { name });
+      // `ref`: the list entry links back to this entry („Auf der Einkaufsliste“).
+      for (const i of asked)
+        await bus.emit('shopping.requested', { name: i.name, ref: { module: 'pantry', id: i.id } });
       void toast(
         names.length === 1 ? t.pantry.restocked(names[0]!) : t.pantry.restockedMany(names.length),
       );
@@ -90,7 +94,9 @@ export default function PantryPage() {
     void changeWithUndo(() => itemRepo.update(i.id, { count: next }));
     if (autoRestock && moduleStates?.lists === true && crossedMinimum(i, next))
       void whenServicesSettled()
-        .then(() => bus.emit('shopping.requested', { name: i.name }))
+        .then(() =>
+          bus.emit('shopping.requested', { name: i.name, ref: { module: 'pantry', id: i.id } }),
+        )
         .then(() => toast(t.pantry.autoRestocked(i.name)));
   };
 
@@ -169,7 +175,7 @@ export default function PantryPage() {
                   {
                     id: 'restock-all',
                     label: t.pantry.restockAll(low.length),
-                    onSelect: () => requestRestock(low.map((i) => i.name)),
+                    onSelect: () => requestRestock(low),
                   },
                 ]
               : []),
@@ -234,23 +240,22 @@ export default function PantryPage() {
                             )}
                           </span>
                         ) : null}
-                        {restockable ? <Badge>{t.pantry.lowStock}</Badge> : null}
+                        {restockable ? <LowBadge id={i.id} /> : null}
                       </span>
                     }
                     onOpen={() => setTarget(i)}
-                    onSwipeRight={restockable ? () => requestRestock([i.name]) : undefined}
+                    onSwipeRight={restockable ? () => requestRestock([i]) : undefined}
                     swipeRightLabel={t.pantry.restock}
                     end={
                       <span className={lamp.endCol}>
                         <span className={lamp.controls}>
                           {/* Fixed slot: every tile's end column has the same width, cart or not. */}
                           {restockable ? (
-                            <IconButton
-                              label={t.pantry.restockOne(i.name)}
-                              onClick={() => requestRestock([i.name])}
-                            >
-                              <Icon name="cart" size={18} />
-                            </IconButton>
+                            <RestockButton
+                              id={i.id}
+                              name={i.name}
+                              onRestock={() => requestRestock([i])}
+                            />
                           ) : (
                             <span className={lamp.slot} aria-hidden="true" />
                           )}
