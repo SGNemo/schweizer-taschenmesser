@@ -356,6 +356,14 @@ export default function ListsPage() {
                   );
                 },
               },
+              {
+                id: 'archive',
+                label: t.lists.archiveList,
+                onSelect: () => {
+                  archiveWithUndo(current, true);
+                  leaveArchived(current.id);
+                },
+              },
             ]
           : []),
         ...(toBuy.length > 0
@@ -686,7 +694,6 @@ export default function ListsPage() {
         existing={lists ?? []}
         onClose={() => setListTarget(null)}
         onSaved={(id) => setParams({ list: id }, { replace: true })}
-        onArchived={leaveArchived}
       />
       {current ? (
         <FillFromPantry
