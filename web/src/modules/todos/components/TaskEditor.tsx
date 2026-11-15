@@ -1,8 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
-import { mailThreadUrl } from '@/core/mail/service';
-import { useModuleStates } from '@/core/modules/activation';
-import { getManifest } from '@/core/modules/registry';
+import { fromLegacy, refKey } from '@/core/entitylinks/types';
+import { useResolvedLinks } from '@/core/modules/contributions';
 import { getPlatform } from '@/core/platform';
 import { useFocusSettings } from '@/core/settings/focus';
 import { changedFields } from '@/core/db/patch';
@@ -40,12 +39,6 @@ function deleteTaskUndoable(id: string) {
   return undoableWithToast(t.todos.taskDeleted, t.todos.taskDeleted, () => deleteTask(id));
 }
 
-/** Where a link of a task opens (`?open=<id>` is understood by every module page). */
-export function linkPath(l: TaskLink): string {
-  const base = { note: '/notes', mail: '/mail', invoice: '/invoices', event: '/calendar' }[l.kind];
-  return `${base}?open=${encodeURIComponent(l.id)}`;
-}
-
 /** Offered effort estimates in minutes. */
 const ESTIMATES = [5, 15, 30, 60] as const;
 
@@ -76,7 +69,7 @@ function EditorForm({
   onClose,
 }: Omit<Props, 'task'> & { task: StoredTask }) {
   // The record as the editor opened it: only fields that differ from it are saved (QA X01).
-  const [opened] = useState(task);
+  const [opened, setOpened] = useState(task);
   const [title, setTitle] = useState(task.title);
   const [listId, setListId] = useState(task.listId);
   const [priority, setPriority] = useState(task.priority);
@@ -92,11 +85,29 @@ function EditorForm({
   const [checklist, setChecklist] = useState<ChecklistItem[]>(task.checklist ?? []);
   const [itemText, setItemText] = useState('');
   const [links, setLinks] = useState<TaskLink[]>(task.links ?? []);
-  const states = useModuleStates();
+  // Every link is read through its target module (`resolveLink`): alive, gone, or not readable on this device.
+  const linkStates = useResolvedLinks(links.map((l) => fromLegacy(l).to));
   const [subTitle, setSubTitle] = useState('');
   const isSub = Boolean(task.parentId);
   const navigate = useNavigate();
   const [focus] = useFocusSettings();
+
+  /**
+   * „Entfernen“ on a link whose target no longer exists: written at once (the row says nothing true any more),
+   * with the usual undo. The editor's baseline follows, so „Speichern“ does not write `links` a second time.
+   */
+  async function removeGone(l: TaskLink) {
+    const without = (all: readonly TaskLink[] | undefined) =>
+      (all ?? []).filter((x) => !(x.kind === l.kind && x.id === l.id));
+    setLinks(without);
+    setOpened((o) => ({ ...o, links: without(o.links).length ? without(o.links) : undefined }));
+    await undoableWithToast(t.todos.links.removed, t.todos.links.removed, async () => {
+      const current = await taskRepo.get(task.id);
+      if (!current) return;
+      const rest = without(current.links);
+      await taskRepo.update(task.id, { links: rest.length ? rest : undefined });
+    });
+  }
 
   async function save(e: FormEvent) {
     e.preventDefault();
@@ -302,32 +313,56 @@ function EditorForm({
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>{t.todos.links.title}</h3>
           <ul className={styles.checklist}>
-            {links.map((l) => (
-              <li key={`${l.kind}:${l.id}`} className={styles.checkItem}>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    // A mail opens in the app where the mail module is (desktop), else on the web.
-                    // While the states load, a desktop with the mail module opens the app (the common case).
-                    if (l.kind === 'mail' && (!getManifest('mail') || states?.mail === false)) {
-                      const url = mailThreadUrl(l.id);
-                      if (url) void getPlatform().app.openUrl(url);
-                      return;
-                    }
-                    onClose();
-                    void navigate(linkPath(l));
-                  }}
-                >
-                  {`${t.todos.links.kinds[l.kind]}: ${l.label}`}
-                </Button>
-                <IconButton
-                  label={t.todos.links.remove(l.label)}
-                  onClick={() => setLinks((all) => all.filter((x) => x !== l))}
-                >
-                  <Icon name="trash" />
-                </IconButton>
-              </li>
-            ))}
+            {links.map((l) => {
+              const state = linkStates?.get(refKey(fromLegacy(l).to));
+              // An alive target shows its title of today; everywhere else the label of the time stands in.
+              const name = `${t.todos.links.kinds[l.kind]}: ${
+                state?.state === 'alive' && state.title ? state.title : l.label
+              }`;
+              // Only a mail has a web address (its module is off, not on this device, or the thread is not cached).
+              const url = state && 'url' in state ? state.url : undefined;
+              return (
+                <li key={`${l.kind}:${l.id}`} className={styles.checkItem}>
+                  {state?.state === 'alive' ? (
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        onClose();
+                        void navigate(state.to);
+                      }}
+                    >
+                      {name}
+                    </Button>
+                  ) : (
+                    <span className={styles.linkText}>
+                      {name}
+                      {state?.state === 'gone' ? ` · ${t.todos.links.gone}` : null}
+                      {state?.state === 'elsewhere' ? ` · ${t.todos.links.elsewhere}` : null}
+                    </span>
+                  )}
+                  {url ? (
+                    <Button variant="ghost" onClick={() => void getPlatform().app.openUrl(url)}>
+                      {t.todos.links.inBrowser}
+                    </Button>
+                  ) : null}
+                  {state?.state === 'gone' ? (
+                    <Button
+                      aria-label={t.todos.links.remove(l.label)}
+                      onClick={() => void removeGone(l)}
+                    >
+                      {t.todos.links.removeGone}
+                    </Button>
+                  ) : (
+                    <IconButton
+                      label={t.todos.links.remove(l.label)}
+                      onClick={() => setLinks((all) => all.filter((x) => x !== l))}
+                    >
+                      <Icon name="trash" />
+                    </IconButton>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </div>
       ) : null}
