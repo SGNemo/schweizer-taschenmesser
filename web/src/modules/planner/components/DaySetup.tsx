@@ -12,6 +12,7 @@ import type { BoardDay } from '../board';
 import {
   breakOps,
   clearSetupDraft,
+  eventsFill,
   gainsTime,
   previewItems,
   previewTitles,
@@ -213,6 +214,9 @@ export function DaySetup({
                   {(SETUP_CHIPS as readonly number[]).includes(value) ? null : (
                     <span className={styles.capacity}>{s.current(chipLabel(value))}</span>
                   )}
+                  {eventsFill(d, value) ? (
+                    <span className={styles.capacity}>{s.eventsFill}</span>
+                  ) : null}
                 </div>
               );
             })}

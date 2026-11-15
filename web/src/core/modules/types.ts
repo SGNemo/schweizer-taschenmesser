@@ -595,8 +595,12 @@ export interface PlannableItem {
   to: string;
   durationMin?: number;
   priority?: 0 | 1 | 2 | 3;
-  /** `hard` = must be done by then (invoice, cancellation); a ToDo's own date is soft. */
-  due?: { date: string; hard: boolean };
+  /**
+   * `hard` = must be done by then (invoice, cancellation); a ToDo's own date is soft. `time` ('HH:mm', local) is
+   * the hour of the deadline („Frist So 18:00“): shown and used for an opt-in reminder by the source; the plan
+   * still places by day only.
+   */
+  due?: { date: string; hard: boolean; time?: string };
   /** Not before this day. */
   earliest?: string;
   /** The day the source carries (a ToDo's `plannedFor`); the planner reads it as the earliest day. */

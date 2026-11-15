@@ -10,6 +10,7 @@ Examples to copy from. Rules: [FOCUS-GUIDELINES.md](FOCUS-GUIDELINES.md) (text r
 | Deadline that ends today | "1 Kündigungsfrist endet heute" · en: "1 notice period ends today" | "Letzte Chance!" |
 | Old ToDo | "offen seit letzter Woche" · "geplant für Mo., 21. Sep." | "Überfällig seit 12 Tagen" |
 | Date passed (due lists, widgets) | "war am Di. fällig" · "war am 17. Sep. fällig" · Vorräte "MHD war Mo." | "seit 3 Tagen" · "seit gestern" |
+| Deadline with an hour (planner row, ToDo) | "Frist So 18:00" · afterwards "Frist war So 18:00" (plain text, never red) · opt-in reminder "Bis 18:00: Team-Sachen lesen" · "Die Frist ist um 18:00." | "Frist verpasst!" · "Nur noch 1 Stunde!" |
 | Money deadline passed | "Rechnung offen · 12,00 € · Frist war am 21. Sep." | "Du hast die Frist verpasst" |
 | Replan | "Neu planen" · "Auf die nächsten Tage verteilt." (+ Rückgängig) | "Aufräumen" |
 | Rest of the day (evening) | "Rest verteilen" · "Was heute offen ist, geht auf die nächsten Tage." · "Rest verteilen?" | "3 Sachen liegen geblieben" · "Du hast heute nicht alles geschafft" |
