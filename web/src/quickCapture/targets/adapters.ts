@@ -50,7 +50,14 @@ const todos: CaptureTarget = {
     ...(f.startDate ? { startDate: date(f.startDate) } : {}),
     ...(f.estimateMin ? { estimateMin: f.estimateMin } : {}),
     ...(f.priority ? { priority: f.priority } : {}),
-    ...noteOf(f.time ? t.quickCapture.todoTimeNote(f.time) : undefined, f.note),
+    // A deadline's hour („bis So 18:00“) is the ToDo's `dueTime`; any other typed time stays a note line.
+    ...(f.time && f.date && (f.deadline || f.hardDue) ? { dueTime: f.time } : {}),
+    ...noteOf(
+      f.time && !(f.date && (f.deadline || f.hardDue))
+        ? t.quickCapture.todoTimeNote(f.time)
+        : undefined,
+      f.note,
+    ),
     ...(f.link ? { links: [f.link] } : {}),
   }),
 };
@@ -352,7 +359,9 @@ const plan: CaptureTarget = {
       source: { module: first?.moduleId ?? 'todos', id: first?.id ?? 'new' },
       order: 0,
       ...(pinned ? { pinned } : {}),
-      ...(f.hardDue && f.date ? { due: { date: date(f.date), hard: true } } : {}),
+      ...(f.hardDue && f.date
+        ? { due: { date: date(f.date), hard: true, ...(f.time ? { time: f.time } : {}) } }
+        : {}),
     };
   },
 };

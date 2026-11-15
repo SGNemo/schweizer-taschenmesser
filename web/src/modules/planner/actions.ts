@@ -202,7 +202,7 @@ async function itemPatch(
 export async function addFromField(text: string, titles: Record<string, string>): Promise<boolean> {
   // The phrase is German, like the quick-capture parser (CONCEPT §6c); elsewhere the ⋯ action sets a deadline.
   // „Duschen nachmittags“ (package 4b): the part word becomes the item's part (`readFieldWithPart`).
-  const { fields, hardDue, isBreak, part } = readFieldWithPart(
+  const { fields, hardDue, hardDueTime, isBreak, part } = readFieldWithPart(
     text,
     new Date(now()),
     today(),
@@ -236,7 +236,9 @@ export async function addFromField(text: string, titles: Record<string, string>)
     if (hardDue || part)
       await putRow(itemRepo, itemKeyOf(saved.moduleId, saved.id), {
         source: { module: saved.moduleId, id: saved.id },
-        ...(hardDue ? { due: { date: hardDue, hard: true } } : {}),
+        ...(hardDue
+          ? { due: { date: hardDue, hard: true, ...(hardDueTime ? { time: hardDueTime } : {}) } }
+          : {}),
         ...(part ? { part } : {}),
         order: 0,
       });
@@ -370,7 +372,14 @@ export const include = (e: PlannableEntry, titles: Record<string, string>) =>
 
 export const markDue = (e: PlannableEntry, date: string, titles: Record<string, string>) =>
   act(t.planner.row.markDue, t.planner.toast.markedDue(dayName(date)), titles, () =>
-    itemPatch(e, { due: { date, hard: true } }),
+    // The source's own hour of that day comes along („Frist So 18:00“); another day has none.
+    itemPatch(e, {
+      due: {
+        date,
+        hard: true,
+        ...(e.due?.time && e.due.date === date ? { time: e.due.time } : {}),
+      },
+    }),
   );
 
 export const unmarkDue = (e: PlannableEntry, titles: Record<string, string>) =>
@@ -437,7 +446,11 @@ export function applyDaySetup(
         if (!th.hardDue || th.isBreak) continue;
         await putRow(itemRepo, itemKeyOf(moduleId, ids[i]!), {
           source: { module: moduleId, id: ids[i]! },
-          due: { date: th.hardDue, hard: true },
+          due: {
+            date: th.hardDue,
+            hard: true,
+            ...(th.hardDueTime ? { time: th.hardDueTime } : {}),
+          },
           order: 0,
         });
       }

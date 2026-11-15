@@ -1,5 +1,5 @@
 /**
- * The deadline phrase of the planner's field (CONCEPT §1): „bis Do“ / „Frist Do“ / „bis Donnerstag“.
+ * The deadline phrase of the planner's field (CONCEPT §1): „bis Do“ / „Frist Do“ / „bis Donnerstag“ / „spätestens So“.
  * The quick-capture parser reads full weekday names; the short German forms are resolved here and
  * taken out of the text, so the ToDo's title stays clean. Pure; `today` is 'YYYY-MM-DD'.
  */
@@ -19,9 +19,9 @@ const LONG: Record<string, number> = {
   sonntag: 7,
 };
 const PHRASE =
-  /\b(bis|frist)\s+(mo|di|mi|do|fr|sa|so|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonnabend|sonntag)\b\.?/i;
+  /(?<![\p{L}\d])(bis|frist|spätestens)\s+(mo|di|mi|do|fr|sa|so|montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonnabend|sonntag)(?![\p{L}\d])\.?/iu;
 /** „Frist“ or „bis“ without a day the parser can read itself („bis 12.11.“): still a deadline. */
-export const DUE_WORDS = /\b(bis|frist)\b/i;
+export const DUE_WORDS = /(?<![\p{L}\d])(bis|frist|spätestens)(?![\p{L}\d])/iu;
 
 const isoWeekday = (date: string): number => {
   const d = new Date(`${date}T00:00:00Z`).getUTCDay();
@@ -82,8 +82,9 @@ export function extractDuePhrase(text: string, today: string): DuePhrase {
 /**
  * What the planner field makes of a line: the ToDo's fields and the planner item's hard due. A due phrase
  * („bis So“) wins over any date the parser reads from the rest („… 18:00“ alone would read as today), so the
- * ToDo's date and the planner's deadline are always the same day. A clock time stays a note line (as the
- * quick-capture target writes it). `de` = the phrase is read (German only, like the parser). A line that starts
+ * ToDo's date and the planner's deadline are always the same day. A clock time next to a deadline is its hour
+ * (`hardDueTime`, the ToDo's `dueTime`, package 5b); without a deadline it stays a note line (as the quick-capture
+ * target writes it). `de` = the phrase is read (German only, like the parser). A line that starts
  * with „Pause“ or „Freizeit“ is a break (`isBreak`, German only, as in the quick capture): no ToDo, a blocker of its day.
  */
 export function readField(
@@ -91,7 +92,7 @@ export function readField(
   now: Date,
   today: string,
   de: boolean,
-): { fields: CaptureFields; hardDue?: string; isBreak?: true } {
+): { fields: CaptureFields; hardDue?: string; hardDueTime?: string; isBreak?: true } {
   // „Pause …“ / „Freizeit …“ (package 4a): a blocker of its day, read as the quick capture reads it (German only).
   if (de) {
     const brk = parseCapture(text, { now, defaultType: 'todo', breaks: true });
@@ -104,7 +105,10 @@ export function readField(
   // The deadline is the ToDo's date too, so the ToDo page shows the same day as the planner.
   if (phrase.date) fields.date = phrase.date;
   else if (hardDue && !fields.date) fields.date = hardDue;
-  return { fields, hardDue };
+  if (!hardDue) return { fields };
+  // „bis So 18:00“: the time is the deadline's hour, on the ToDo (`dueTime`) and the plan row alike.
+  fields.deadline = true;
+  return { fields, hardDue, ...(fields.time ? { hardDueTime: fields.time } : {}) };
 }
 
 /**

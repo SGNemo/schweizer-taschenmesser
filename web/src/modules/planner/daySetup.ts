@@ -24,6 +24,8 @@ export interface SetupThing {
   fields: CaptureFields;
   /** „bis So“ / „Frist …“: the planner item's hard deadline. */
   hardDue?: string;
+  /** „bis So 18:00“: the deadline's hour ('HH:mm', package 5b). */
+  hardDueTime?: string;
   /** „Pause 2 Std Zocken“: a blocker of its day (through the quick-capture target `break`), never a ToDo. */
   isBreak?: true;
 }
@@ -40,13 +42,14 @@ export function setupLines(text: string): string[] {
 export function setupThings(text: string, today: string, de: boolean): SetupThing[] {
   const at = new Date(now());
   return setupLines(text).flatMap((line, i) => {
-    const { fields, hardDue, isBreak } = readField(line, at, today, de);
+    const { fields, hardDue, hardDueTime, isBreak } = readField(line, at, today, de);
     if (!fields.title?.trim()) return [];
     return [
       {
         key: `new:${i}`,
         fields,
         ...(hardDue ? { hardDue } : {}),
+        ...(hardDueTime ? { hardDueTime } : {}),
         ...(isBreak ? { isBreak } : {}),
       },
     ];
