@@ -3102,6 +3102,9 @@ export const de = {
       open: (amount: string) => `Offen: ${amount}`,
       amountHint: 'Weniger als der offene Betrag wird als Teilzahlung erfasst.',
       confirm: 'Bezahlt',
+      /** The invoice was paid elsewhere while the step was open: nothing was written. */
+      alreadyPaid: 'Schon bezahlt.',
+      failed: 'Das hat nicht geklappt. Probier es noch einmal.',
     },
     payee: 'Empfänger',
     reference: 'Verwendungszweck / Rechnungsnummer',
