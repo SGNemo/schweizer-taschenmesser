@@ -506,6 +506,11 @@
         "type": "text",
         "label": "Uhrzeit der Erinnerung",
         "default": "09:00"
+      },
+      "showInPlan": {
+        "type": "boolean",
+        "label": "Im Plan zeigen",
+        "default": true
       }
     }
   },
