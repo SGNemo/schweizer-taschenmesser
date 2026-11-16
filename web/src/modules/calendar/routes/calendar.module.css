@@ -31,7 +31,7 @@
   min-width: 0;
 }
 /* Phone: a row of its own that scrolls sideways as a whole, so the switch shows every label in full ("Jahr", not
-   "Jah") and the chips never take a row of their own; the right edge fades out like the switch's own scroll. */
+   "Jah") and the chips never take a row of their own; while it overflows the right edge fades out like the switch's. */
 @media (max-width: 899px) {
   /* The page's "⋯" menu lies at the right edge of the first row (`besideContent`): the month's name ends before it. */
   .title {
@@ -47,6 +47,9 @@
     /* Room for the focus ring inside the scroller. */
     padding: 3px;
     margin: -3px;
+  }
+  /* The fade says "more to the right": only while the row really overflows (`useOverflowMark`). */
+  .viewRow[data-overflow='true'] {
     mask-image: linear-gradient(90deg, #000 calc(100% - 2rem), transparent);
   }
   .viewRow::-webkit-scrollbar {

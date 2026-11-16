@@ -129,7 +129,7 @@ test.describe('component sheet', () => {
 
   test('rows can be selected with a Shift range and the bar clears with Esc', async ({ page }) => {
     await ready(page, '/dev/components');
-    const boxes = page.getByRole('checkbox', { name: 'Auswählen' });
+    const boxes = page.getByRole('checkbox', { name: / auswählen$/ });
     await boxes.nth(0).click();
     await boxes.nth(2).click({ modifiers: ['Shift'] });
     await expect(page.getByText('3 ausgewählt')).toBeVisible();

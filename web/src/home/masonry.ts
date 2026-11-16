@@ -33,7 +33,7 @@ export function stillLoading(cards: readonly HTMLElement[], skeleton: string): b
 /**
  * The overview grid's build-up and its empty-card mark. The grid itself is plain CSS (rows of equal height,
  * `Home.module.css`; the masonry packing of U19 gave way to flush rows in round "Tiefe"). A card whose body is only the
- * compact empty state is marked `data-empty`. Measurements only write attributes (no React state).
+ * compact empty state (it carries `data-empty`, never found by a style class) is marked `data-empty` too. Measurements only write attributes (no React state).
  * `enabled = false` (the overview's edit mode) shows every card at once and holds nothing back.
  * Build-up (decision "Overview builds up in grid order"): a card that mounts waits hidden (`data-wait`,
  * `visibility: hidden` in `Home.module.css`) until every waiting card has its content, or `SETTLE_CAP_MS` after the
@@ -65,7 +65,7 @@ export function useGridBuildUp<T extends HTMLElement>(
       return;
     }
     const mark = (el: HTMLElement) => {
-      const empty = el.querySelector(`.${misc.emptyCompact}`) !== null;
+      const empty = el.querySelector('[data-empty]') !== null;
       if (empty !== el.hasAttribute('data-empty')) el.toggleAttribute('data-empty', empty);
     };
     const children = () => Array.from(grid.children) as HTMLElement[];

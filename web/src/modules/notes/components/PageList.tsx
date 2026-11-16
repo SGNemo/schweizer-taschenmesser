@@ -193,12 +193,14 @@ export function PageList(p: PageListProps) {
           label={t.notes.notebooks}
           value={filter}
           onChange={p.onFilter}
+          nowrap
           tabs={[
-            { id: 'all', label: `${t.notes.allPages} · ${total}` },
-            { id: 'none', label: `${t.notes.general} · ${counts.get(null) ?? 0}` },
+            { id: 'all', label: t.notes.allPages, count: total },
+            { id: 'none', label: t.notes.general, count: counts.get(null) ?? 0 },
             ...books.map((b) => ({
               id: b.id,
-              label: `${b.name} · ${counts.get(b.id) ?? 0}`,
+              label: b.name,
+              count: counts.get(b.id) ?? 0,
               color: categoryColor(b.tone),
               icon: <Icon name={b.icon as IconName} size={14} />,
             })),

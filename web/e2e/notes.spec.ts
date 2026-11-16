@@ -134,11 +134,11 @@ test.describe('notebook (pages, notebooks, tabs, history, trash)', () => {
     await dialog.getByRole('button', { name: 'Ziel' }).click();
     await dialog.getByRole('button', { name: /^(Speichern|.+ eintragen)$/ }).click();
     const chip = (name: RegExp) => page.getByRole('button', { name });
-    await expect(chip(/^Arbeit · 0/)).toHaveAttribute('aria-pressed', 'true');
+    await expect(chip(/^Arbeit\s*0$/)).toHaveAttribute('aria-pressed', 'true');
 
     // A page created while the notebook is shown lands in it.
     await addPage(page, 'Protokoll', 'Montag besprochen');
-    await expect(chip(/^Arbeit · 1/)).toBeVisible();
+    await expect(chip(/^Arbeit\s*1$/)).toBeVisible();
     await chip(/^Allgemein/).click();
     await expect(rows(page).filter({ hasText: 'Montag besprochen' })).toHaveCount(0);
     await chip(/^Alle Seiten/).click();
@@ -154,8 +154,8 @@ test.describe('notebook (pages, notebooks, tabs, history, trash)', () => {
       .getByRole('dialog', { name: 'Verschieben nach' })
       .getByRole('button', { name: 'Allgemein' })
       .click();
-    await expect(chip(/^Arbeit · 0/)).toBeVisible();
-    await expect(chip(/^Allgemein · 1/)).toBeVisible();
+    await expect(chip(/^Arbeit\s*0$/)).toBeVisible();
+    await expect(chip(/^Allgemein\s*1$/)).toBeVisible();
   });
 
   test('open pages become tabs, a tab closes without touching the page', async ({ page }) => {
@@ -333,8 +333,8 @@ test.describe('notebook (links, search, export, import, to-do)', () => {
     await dialog.locator('input[type=file][webkitdirectory]').setInputFiles(dir);
     await expect(dialog.getByRole('status')).toContainText('2 Seiten, 1 Notizbuch');
     await dialog.getByRole('button', { name: 'Importieren' }).click();
-    await expect(page.getByRole('button', { name: /^Reisen · 2/ })).toBeVisible();
-    await page.getByRole('button', { name: /^Reisen · 2/ }).click();
+    await expect(page.getByRole('button', { name: /^Reisen\s*2$/ })).toBeVisible();
+    await page.getByRole('button', { name: /^Reisen\s*2$/ }).click();
     await expect(rows(page).filter({ hasText: 'Colosseum besuchen' })).toBeVisible();
 
     // The same folder again: nothing new.

@@ -155,6 +155,8 @@ export const de = {
   },
   ui: {
     selectRow: 'Auswählen',
+    /** The checkbox of a selectable row, named after the row so a screen reader says which one it ticks. */
+    selectRowNamed: (title: string) => `„${title}“ auswählen`,
     searchPlaceholder: 'Suchen …',
     retry: 'Erneut versuchen',
     loading: 'Wird geladen',
@@ -2872,6 +2874,8 @@ export const de = {
   charts: {
     empty: 'Noch keine Werte.',
     other: 'Sonstiges',
+    /** The folded rest when the data already has a category "Sonstiges". */
+    otherMore: 'Weitere',
     total: 'Summe',
     item: 'Eintrag',
     value: 'Wert',

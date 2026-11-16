@@ -44,6 +44,8 @@ describe('build-up: cards of a step show together, once', () => {
   function Grid(props: {
     keys: string[];
     loading: string[];
+    /** Cards whose body is an empty state (`WidgetBody` marks it `data-empty`). */
+    empty?: string[];
     ready?: boolean;
     onShown?: () => void;
     holdNew?: boolean;
@@ -62,7 +64,13 @@ describe('build-up: cards of a step show together, once', () => {
         createElement('div', {
           key: k,
           'data-k': k,
-          dangerouslySetInnerHTML: { __html: props.loading.includes(k) ? skeleton : k },
+          dangerouslySetInnerHTML: {
+            __html: props.loading.includes(k)
+              ? skeleton
+              : props.empty?.includes(k)
+                ? `<div data-empty=""><p>${k}</p></div>`
+                : k,
+          },
         }),
       ),
     );
@@ -141,6 +149,15 @@ describe('build-up: cards of a step show together, once', () => {
     expect(waits(getByTestId('grid'))).toEqual(['a', 'b']);
     act(() => vi.advanceTimersByTime(20));
     expect(waits(getByTestId('grid'))).toEqual([]);
+  });
+
+  it('marks a card whose body is an empty state, by its data attribute, not a style class', () => {
+    const { getByTestId } = render(
+      createElement(Grid, { keys: ['a', 'b'], loading: [], empty: ['b'] }),
+    );
+    const card = (k: string) => getByTestId('grid').querySelector(`[data-k="${k}"]`)!;
+    expect(card('b')).toHaveAttribute('data-empty');
+    expect(card('a')).not.toHaveAttribute('data-empty');
   });
 
   it('once built, a card that mounts later (another view) shows at once', () => {

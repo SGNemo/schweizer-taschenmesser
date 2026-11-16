@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router';
 import { motionReduced } from '@/core/shell/topbarCollapse';
+import { useOverflowMark } from './useOverflowMark';
 import styles from './Tabs.module.css';
 
 export interface TabItem {
@@ -59,19 +60,7 @@ export function Tabs<T extends string = string>(props: TabsByItems | TabsByValue
   }, [activeId]);
   const labels = items.map((i) => i.label).join('|');
   // The edge fade of the phone's row is drawn only while the row overflows (`Tabs.module.css`).
-  useEffect(() => {
-    const el = nav.current;
-    if (!el) return;
-    const mark = () => {
-      el.dataset.overflow = el.scrollWidth > el.clientWidth + 1 ? 'true' : 'false';
-    };
-    mark();
-    if (typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver(mark);
-    ro.observe(el);
-    return () => ro.disconnect();
-    // The labels decide the row's width (a language switch changes them without resizing the box).
-  }, [labels]);
+  useOverflowMark(nav, labels);
   return (
     <nav ref={nav} aria-label={label} className={styles.tabs}>
       {items.map((i) =>
