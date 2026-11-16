@@ -73,6 +73,8 @@ pub fn clean(raw: &str) -> String {
             '<' | '>' | ':' | '"' | '/' | '\\' | '|' | '?' | '*' => '_',
             // breaks between words stay a gap ("Rechnung\tMärz" is not "RechnungMärz")
             '\t' | '\n' | '\r' | '\u{2028}' | '\u{2029}' => ' ',
+            // every other space (no-break, em, ideographic …) is a plain one, so runs collapse
+            c if category.get(c) == GeneralCategory::SpaceSeparator => ' ',
             c => c,
         })
         // invisible: controls, line separators, format characters (bidi, zero-width) and every
@@ -118,7 +120,10 @@ fn fit(stem: &str, ext: &str, room: usize) -> String {
     };
     // a name without an extension of its own must not get one from the cut
     // ("a….exe.bbbbbbbbbbbbbbbbbbbbbbbbb" cut to "a….exe"): the cut end stays a stem
-    if ext.is_empty() && cut.len() < stem.len() && extension(&out).is_some() {
+    if ext.is_empty()
+        && cut.len() < stem.len()
+        && extension(&out).is_some_and(|e| e.len() < MAX_EXT_BYTES)
+    {
         out.push('_');
     }
     // Windows treats "CON", "con.txt", "con .txt" and "con.tar.gz" alike: the first segment counts
@@ -343,6 +348,14 @@ mod tests {
         assert_eq!(
             clean(&format!("x.exe.{}", "b".repeat(25))),
             format!("x.exe.{}", "b".repeat(25))
+        );
+        // a dot far back is no extension: the cut name stays as it is
+        let mr = clean(&format!("Mr. {}", "Smith ".repeat(40)));
+        assert!(mr.starts_with("Mr. Smith") && !mr.ends_with('_'), "{mr}");
+        // wide blanks are one plain space
+        assert_eq!(
+            clean("a\u{3000}\u{3000}\u{3000}b\u{00A0}\u{2003}c.pdf"),
+            "a b c.pdf"
         );
         // composed again after an invisible character is gone
         assert_eq!(clean("e\u{200B}\u{301}.txt"), "é.txt");

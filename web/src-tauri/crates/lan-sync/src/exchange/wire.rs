@@ -435,6 +435,18 @@ pub enum OfferError {
     Unusable([u8; 16]),
 }
 
+impl OfferError {
+    /// What the receiver answers: `refuse {too-large}`, `refuse {rejected}`, or nothing (the
+    /// session closes on a frame without an id).
+    pub fn answer(self) -> Option<([u8; 16], RefuseCode)> {
+        match self {
+            OfferError::Broken => None,
+            OfferError::TooLarge(id) => Some((id, RefuseCode::TooLarge)),
+            OfferError::Unusable(id) => Some((id, RefuseCode::Rejected)),
+        }
+    }
+}
+
 pub fn decode_offer(body: &[u8]) -> Result<Offer, OfferError> {
     let id = id_of(body).ok_or(OfferError::Broken)?;
     let unusable = OfferError::Unusable(id);
@@ -442,19 +454,21 @@ pub fn decode_offer(body: &[u8]) -> Result<Offer, OfferError> {
     let size = r.u64().ok_or(unusable)?;
     let sha256: [u8; 32] = r.take(32).and_then(|b| b.try_into().ok()).ok_or(unusable)?;
     let name = r.short_text().ok_or(unusable)?;
-    let mime = r.short_text().ok_or(unusable)?;
+    // the media type is only a hint: raw bytes here, read as UTF-8 below or else "unknown"
+    let mime_len = usize::from(*r.take(1).and_then(|b| b.first()).ok_or(unusable)?);
+    let mime_raw = r.take(mime_len).ok_or(unusable)?;
     if !r.0.is_empty() {
         return Err(unusable);
     }
     if size > MAX_FILE {
         return Err(OfferError::TooLarge(id));
     }
-    // the media type is only a hint: one this side cannot read is "unknown", not a reason to refuse
-    let mime = if plain_mime(&mime) {
-        mime
-    } else {
-        String::new()
-    };
+    // one this side cannot read (not UTF-8, not a plain token type) is "unknown", never a refusal
+    let mime = std::str::from_utf8(mime_raw)
+        .ok()
+        .filter(|m| plain_mime(m))
+        .unwrap_or("")
+        .to_owned();
     Offer::new(id, size, sha256, name, mime).map_err(|_| unusable)
 }
 
@@ -496,6 +510,10 @@ pub enum ResultCode {
 }
 
 pub fn encode_accept(id: &[u8; 16], from: u64) -> [u8; 24] {
+    debug_assert!(
+        from <= MAX_FILE,
+        "the peer refuses a resume point past the largest file"
+    );
     let mut out = [0u8; 24];
     out[..16].copy_from_slice(id);
     out[16..].copy_from_slice(&from.to_be_bytes());
@@ -574,9 +592,10 @@ pub fn chunk_header(id: &[u8; 16], offset: u64) -> [u8; 24] {
     out
 }
 
-/// `None` for an empty chunk or one over [`MAX_CHUNK`] (the caller cuts files into chunks).
+/// `None` for an empty chunk, one over [`MAX_CHUNK`] or an offset past [`MAX_FILE`] (the caller
+/// cuts files into chunks; the peer would refuse any of them).
 pub fn encode_chunk(id: &[u8; 16], offset: u64, bytes: &[u8]) -> Option<Vec<u8>> {
-    if bytes.is_empty() || bytes.len() > MAX_CHUNK {
+    if bytes.is_empty() || bytes.len() > MAX_CHUNK || offset > MAX_FILE {
         return None;
     }
     let mut out = Vec::with_capacity(24 + bytes.len());
@@ -671,6 +690,11 @@ impl<'a> Reader<'a> {
         std::str::from_utf8(self.take(len)?).ok().map(str::to_owned)
     }
 }
+
+const _: () = assert!(
+    TAG_PING > TAG_FILE_LAST,
+    "ping stays outside the file records"
+);
 
 #[cfg(test)]
 mod tests {
@@ -846,6 +870,21 @@ mod tests {
         let mut big = encode_offer(&o);
         big[16..24].copy_from_slice(&(MAX_FILE + 1).to_be_bytes());
         assert_eq!(decode_offer(&big), Err(OfferError::TooLarge([9; 16])));
+        // what each failure is answered with
+        assert_eq!(
+            OfferError::TooLarge([9; 16]).answer(),
+            Some(([9; 16], RefuseCode::TooLarge))
+        );
+        assert_eq!(
+            OfferError::Unusable([9; 16]).answer(),
+            Some(([9; 16], RefuseCode::Rejected))
+        );
+        assert_eq!(OfferError::Broken.answer(), None);
+        // a media type that is not UTF-8 is "unknown" too
+        let mut latin = encode_offer(&offer("a.txt", "text/plain", 1).unwrap());
+        let n = latin.len();
+        latin[n - 1] = 0xe9;
+        assert_eq!(decode_offer(&latin).unwrap().mime(), "");
         // a sender passes its local name through `name::clean`: always a valid offer name
         for local in [
             "発表資料".repeat(30) + ".pptx",
@@ -916,11 +955,9 @@ mod tests {
             decode_accept(&encode_accept(&id, MAX_FILE)),
             Ok((id, MAX_FILE))
         );
-        assert_eq!(
-            decode_accept(&encode_accept(&id, MAX_FILE + 1)),
-            Err(Malformed)
-        );
-        assert_eq!(decode_accept(&encode_accept(&id, u64::MAX)), Err(Malformed));
+        let mut past = encode_accept(&id, MAX_FILE);
+        past[16..].copy_from_slice(&(MAX_FILE + 1).to_be_bytes());
+        assert_eq!(decode_accept(&past), Err(Malformed));
         assert_eq!(decode_wait(&[0; 16]), Err(Malformed));
     }
 
@@ -939,7 +976,9 @@ mod tests {
         assert_eq!(decode_chunk(&over), Err(Malformed));
         assert_eq!(decode_chunk(&body[..24]), Err(Malformed));
         assert_eq!(decode_chunk(&body[..20]), Err(Malformed));
-        let far = encode_chunk(&id, u64::MAX, &[1]).unwrap();
+        assert!(encode_chunk(&id, MAX_FILE + 1, &[1]).is_none());
+        let mut far = encode_chunk(&id, MAX_FILE, &[1]).unwrap();
+        far[16..24].copy_from_slice(&u64::MAX.to_be_bytes());
         assert_eq!(decode_chunk(&far), Err(Malformed));
     }
 
@@ -952,7 +991,6 @@ mod tests {
             assert_eq!(*t, TAG_FILE_FIRST + u8::try_from(i).unwrap());
         }
         assert_eq!(TAG_FILE_LAST, 0x3c);
-        assert!(TAG_PING > TAG_FILE_LAST);
         assert_eq!(
             FEATURES & FEATURE_FILES,
             0,
