@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { t } from '@/strings';
 import { useUiStore } from '@/stores/ui';
 import { Icon } from './icons';
@@ -35,6 +35,7 @@ export function GroupedList({
   groups,
   label,
   columns,
+  forceOpen,
 }: {
   listId: string;
   groups: readonly GroupedListGroup[];
@@ -45,9 +46,25 @@ export function GroupedList({
    * sits in a list (U23b).
    */
   columns?: boolean;
+  /**
+   * Every group starts open, whatever was folded before (search hits must never hide in a folded group). Folding
+   * while forced is local to this showing; the stored fold state stays untouched and applies again afterwards.
+   */
+  forceOpen?: boolean;
 }) {
   const closed = useUiStore((s) => s.closedGroups);
-  const toggle = useUiStore((s) => s.toggleGroupOpen);
+  const toggleStored = useUiStore((s) => s.toggleGroupOpen);
+  const [forcedClosed, setForcedClosed] = useState<readonly string[]>([]);
+  const [wasForced, setWasForced] = useState(forceOpen);
+  if (wasForced !== forceOpen) {
+    // A new forced showing starts with every group open again.
+    setWasForced(forceOpen);
+    setForcedClosed([]);
+  }
+  const toggle = (key: string) =>
+    forceOpen
+      ? setForcedClosed((c) => (c.includes(key) ? c.filter((k) => k !== key) : [...c, key]))
+      : toggleStored(key);
   return (
     <div
       className={columns ? `${styles.root} ${styles.columns}` : styles.root}
@@ -57,7 +74,11 @@ export function GroupedList({
       {groups.map((g) => {
         const key = `${listId}:${g.id}`;
         const toggled = closed.includes(key);
-        const open = g.defaultClosed ? toggled : !toggled;
+        const open = forceOpen
+          ? !forcedClosed.includes(key)
+          : g.defaultClosed
+            ? toggled
+            : !toggled;
         const bodyId = `grp-${listId}-${g.id}`;
         return (
           <section key={g.id} className={styles.group} data-group={g.id}>
