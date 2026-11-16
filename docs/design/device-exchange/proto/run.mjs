@@ -19,9 +19,11 @@ import {
   ephemeral,
   keys,
   parse,
+  partName,
   risk,
 } from "./wire.mjs";
 
+const PHONE_ID = crypto.randomBytes(8);
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROUNDS = Number(process.env.ROUNDS ?? 5);
 const SIZES = (process.env.SIZES ?? "1,16,64,256").split(",").map(Number);
@@ -47,7 +49,7 @@ async function connect() {
   const sock = net.connect(port, ip);
   await new Promise((r) => sock.once("connect", r));
   const me = ephemeral();
-  sock.write(me.pub);
+  sock.write(Buffer.concat([me.pub, PHONE_ID])); // ephemeral key + stand-in device id
   const theirs = await new Promise((r) => sock.once("data", r));
   const ch = channel(sock, keys(me, theirs.subarray(0, 32), true));
   if (theirs.length > 32) sock.emit("data", theirs.subarray(32));
@@ -203,7 +205,10 @@ const cut2 = await sendFile(big, {
   name: "Backup.zip",
   stopAt: Math.floor(size * 0.4),
 });
-const part = path.join(inbox, `${cut2.id}.part`);
+const part = fs
+  .readdirSync(inbox)
+  .map((n) => path.join(inbox, n))
+  .find((n) => n.endsWith(`${cut2.id}.part`));
 const fd = fs.openSync(part, "r+");
 fs.writeSync(fd, Buffer.from([0xff ^ fs.readFileSync(part)[1000]]), 0, 1, 1000); // one flipped byte on disk
 fs.closeSync(fd);
@@ -233,6 +238,10 @@ const names = [
   ["..", "Datei"],
   ["x".repeat(300) + ".jpeg", "x".repeat(115) + ".jpeg"],
   ["e\u0301te\u0301.txt", "été.txt"],
+  ["con .txt", "_con.txt"],
+  ["CON  .txt", "_CON.txt"],
+  ["nul.tar.gz", "_nul.tar.gz"],
+  ["Rechnung\u3164\u3164.pdf.exe", "Rechnung__.pdf.exe"],
 ];
 const nameFails = names
   .filter(([i, o]) => cleanName(i) !== o)
@@ -241,20 +250,32 @@ const nameFails = names
       `${JSON.stringify(i)} → ${JSON.stringify(cleanName(i))} (want ${JSON.stringify(o)})`,
   );
 const risks = {
-  "Rechnung.pdf.exe": "dangerous",
-  "setup.MSI": "dangerous",
-  "Link.lnk": "dangerous",
-  "app.apk": "dangerous",
-  "Foto.jpg": "plain",
-  exe: "plain",
+  "Rechnung.pdf.exe": "other",
+  "setup.MSI": "other",
+  "Link.lnk": "other",
+  "app.apk": "other",
+  "x.msc": "other",
+  "hilfe.chm": "other",
+  "seite.html": "other",
+  "bild.svg": "other",
+  "a.appref-ms": "other",
+  exe: "other",
+  "Foto.JPG": "plain",
   "Liste.pdf": "plain",
 };
 const riskFails = Object.entries(risks)
   .filter(([n, r]) => risk(n) !== r)
   .map(([n]) => n);
+let partIdChecked = false;
+try {
+  partName("ab".repeat(8), "../../x");
+} catch {
+  partIdChecked = true;
+}
 Object.assign(checks, {
   fileNames: nameFails.length === 0,
-  dangerousExtensions: riskFails.length === 0,
+  openAllowList: riskFails.length === 0,
+  partIdChecked,
 });
 const one = await sendFile(path.join(work, `f${SIZES[0]}.bin`), {
   name: "../Foto.jpg",

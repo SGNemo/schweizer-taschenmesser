@@ -140,8 +140,12 @@ const RESERVED =
   /^(con|prn|aux|nul|com[0-9¹²³]|lpt[0-9¹²³]|conin\$|conout\$)$/i;
 // Bidi overrides/isolates, zero-width and other format characters (Unicode category Cf), controls.
 const INVISIBLE = /[\p{Cc}\p{Cf}\u2028\u2029]/gu;
+// Letters that render blank (Hangul fillers, Braille blank): they could push the real extension
+// off a narrow card, so they become "_" (the card also truncates in the middle, never the end).
+const BLANK = /[\u115F\u1160\u3164\uFFA0\u2800]/g;
 const FORBIDDEN = /[<>:"/\\|?*]/g;
 const MAX_NAME_BYTES = 120;
+const trimEnd = (x) => x.replace(/[\s.]+$/, "");
 
 /**
  * Turns a sender's name into one plain file name for the receiver's folder: no path, no control
@@ -152,27 +156,40 @@ const MAX_NAME_BYTES = 120;
 export function cleanName(raw) {
   let s = String(raw ?? "").normalize("NFC");
   s = s.split(/[\\/]/).pop(); // last path segment only: "../../x" → "x", "C:\\x" → "x"
-  s = s.replace(INVISIBLE, "").replace(FORBIDDEN, "_");
-  s = s.replace(/^[\s.]+/, "").replace(/[\s.]+$/, ""); // no leading dots (hidden/".."), no trailing dot/space
+  s = s.replace(INVISIBLE, "").replace(BLANK, "_").replace(FORBIDDEN, "_");
+  s = trimEnd(s.replace(/^[\s.]+/, "")); // no leading dots (hidden/".."), no trailing dot/space
   if (!s) s = "Datei";
   const dot = s.lastIndexOf(".");
-  let stem = dot > 0 ? s.slice(0, dot) : s;
+  let stem = dot > 0 ? trimEnd(s.slice(0, dot)) : s; // "con .txt": the stem is "con"
   let ext = dot > 0 ? s.slice(dot) : "";
-  if (RESERVED.test(stem.split(".")[0])) stem = `_${stem}`;
   if (Buffer.byteLength(ext) > 20) ext = ""; // an "extension" that long is not one
   while (Buffer.byteLength(stem + ext) > MAX_NAME_BYTES)
     stem = [...stem].slice(0, -1).join("");
-  return stem.replace(/[\s.]+$/, "") + ext;
+  stem = trimEnd(stem) || "Datei";
+  // Windows treats "CON", "con.txt", "con .txt" and "con.tar.gz" alike: test the first segment.
+  if (RESERVED.test(trimEnd(stem.split(".")[0]))) stem = `_${stem}`;
+  return stem + ext;
 }
 
-// Opened by Windows or Android as a program, script, installer, shortcut or disk image.
-const DANGEROUS = new Set(
-  "exe com scr pif bat cmd ps1 psm1 psd1 vbs vbe js jse wsf wsh hta msi msix msixbundle msp mst appx appxbundle appinstaller lnk url scf inf reg cpl dll sys jar apk xapk apks iso img vhd vhdx library-ms settingcontent-ms".split(
+// Allow-list: only these get "Öffnen" (the OS default app). Everything else – programs, scripts,
+// shortcuts, installers, disk images, HTML/SVG (local script), unknown types – is "other": warning
+// line, only "Im Ordner zeigen". Inverted on purpose: a deny-list always misses a handler.
+const OPENABLE = new Set(
+  "jpg jpeg png gif webp heic heif avif bmp mp3 m4a aac ogg opus flac wav mp4 m4v mov mkv webm pdf txt md csv docx xlsx pptx odt ods odp zip 7z".split(
     " ",
   ),
 );
-/** 'dangerous' = shown with a warning, never opened from Nemo. Last extension decides ("a.pdf.exe"). */
-export const risk = (name) =>
-  DANGEROUS.has(name.split(".").pop().toLowerCase()) && name.includes(".")
-    ? "dangerous"
-    : "plain";
+/** 'plain' = may be opened on a click; 'other' = never opened from Nemo. Last extension decides. */
+export const risk = (name) => {
+  const dot = name.lastIndexOf(".");
+  return dot > 0 && OPENABLE.has(name.slice(dot + 1).toLowerCase())
+    ? "plain"
+    : "other";
+};
+
+/** Part files are named from the authenticated peer and a validated 16-byte id, never sender text. */
+export const partName = (peerHex, idHex) => {
+  if (!/^[0-9a-f]{32}$/.test(idHex) || !/^[0-9a-f]{16,64}$/.test(peerHex))
+    throw new Error("bad id");
+  return `${peerHex}-${idHex}.part`;
+};
