@@ -32,7 +32,11 @@ pub use control::{
     Exchange, ExchangeInbox, ExchangeOutbox, InboxFull, MemoryInbox, MemoryOutbox, Stored,
 };
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
-pub use files::{Decision, ExchangeFiles, MemoryFiles, Received, SendOutcome};
+pub use files::{Decision, ExchangeFiles, SendOutcome, Stopped};
+#[cfg(all(test, not(any(target_os = "android", target_os = "ios"))))]
+pub use files::{MemoryFiles, Received};
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+mod transfer;
 
 #[cfg(all(test, not(any(target_os = "android", target_os = "ios"))))]
 mod tests;

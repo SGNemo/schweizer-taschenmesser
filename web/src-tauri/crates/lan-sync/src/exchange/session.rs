@@ -11,21 +11,17 @@
 //!   until the phone's next `ping` (it pings while the page is open), then the head is offered
 //!   again.
 //! * Every frame and every tick checks the switch and the grant again: switching off or pausing at
-//!   the PC ends the session with the reason.
+//!   the PC ends the session with the reason. While a file streams, the switch, the grant and the
+//!   outbox are asked at most every `transfer::CHECK_EVERY` (not once per 64 KB chunk).
 //! * Files (package 2b), only when both sides agreed on `FEATURE_FILES` and the shell wired them:
-//!   one transfer per direction at a time. Device → PC: `offer` → the shell decides (`accept`
-//!   from an offset, `wait` for its user, `refuse`); chunks must follow each other without a gap
-//!   (anything else closes); `end` → the shell checks and answers `result`. PC → device: the head
-//!   of the shell's file queue is offered, streamed after `accept` (a text item may go between
-//!   two chunks), `end`, then the device's `result`. A transfer the session leaves unfinished is
-//!   reported to the shell (the part stays for a resume; the outgoing file stays queued).
+//!   the rules are in `transfer.rs`; a text item goes before the next chunk.
 //!
-//! The session reads the controls (`admit`, `limited`, `record`, the inbox and outbox and the
-//! live count) and never changes a setting.
+//! The session reads the controls (`admit`, `limited`, `record`, the inbox, outbox and files and
+//! the live count) and never changes a setting.
 
 use super::control::{Exchange, Stored};
-use super::files::{Decision, SendOutcome};
-use super::wire::{self, AckState, Code, ItemError, RefuseCode, ResultCode};
+use super::transfer::{Ctx, Transfers, CHECK_EVERY};
+use super::wire::{self, AckState, Code, ItemError};
 use crate::noise::PublicKey;
 use std::fmt;
 use std::sync::Arc;
@@ -64,48 +60,13 @@ enum Phase {
         /// The last item the phone answered for good: never offered again in this session, even
         /// if the outbox still hands it out.
         answered: Option<[u8; 16]>,
-        /// Both sides agreed on files.
-        files: bool,
-        /// The device's file that comes in.
-        incoming: Option<Incoming>,
-        /// The PC's file that goes out.
-        outgoing: Option<Outgoing>,
-        /// Files of the queue this session is done with (answered, refused, cancelled or failed):
-        /// not offered again until the next session.
-        offered: Vec<[u8; 16]>,
+        /// Files, when both sides agreed on them.
+        files: Option<Transfers>,
+        /// When the controls were last asked while a file streamed.
+        checked: Option<Duration>,
     },
     Done,
 }
-
-struct Incoming {
-    id: [u8; 16],
-    size: u64,
-    /// Where the next chunk starts.
-    next: u64,
-    /// Waits for the PC's user: no chunk may come yet.
-    waiting: bool,
-}
-
-struct Outgoing {
-    id: [u8; 16],
-    size: u64,
-    state: Out,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum Out {
-    /// The offer is out; the device answers.
-    Offered,
-    /// The device waits for its user; it sends `accept` or `refuse` later.
-    Waiting,
-    /// Chunks go out from this offset.
-    Streaming(u64),
-    /// `end` is out; the device answers with `result`.
-    Ended,
-}
-
-/// Files of the queue one session tries at most (a queue of failing files cannot spin forever).
-const OFFERS_PER_SESSION: usize = 64;
 
 pub struct ExchangeConn {
     exchange: Arc<Exchange>,
@@ -161,10 +122,8 @@ impl ExchangeConn {
                             in_flight: None,
                             stalled: false,
                             answered: None,
-                            files: accepted & wire::FEATURE_FILES != 0,
-                            incoming: None,
-                            outgoing: None,
-                            offered: Vec::new(),
+                            files: (accepted & wire::FEATURE_FILES != 0).then(Transfers::default),
+                            checked: None,
                         };
                         self.exchange.session_opened(&self.peer);
                         self.counted = true;
@@ -173,9 +132,9 @@ impl ExchangeConn {
                     }
                 },
             },
-            Phase::Live { .. } => match self.exchange.admit(&self.peer) {
+            Phase::Live { .. } => match self.controls(now) {
                 Err(code) => refused(code),
-                Ok(()) => self.live(tag, body, now),
+                Ok(_) => self.live(tag, body, now),
             },
             _ => Step::Close,
         };
@@ -190,20 +149,47 @@ impl ExchangeConn {
         }
     }
 
-    fn live(&mut self, tag: u8, body: &[u8], now: Duration) -> Step {
-        if (wire::TAG_FILE_FIRST..=wire::TAG_FILE_LAST).contains(&tag) {
-            return self.file_frame(tag, body, now);
+    /// The switch and the grant: on every frame and tick, but while a file streams at most every
+    /// [`CHECK_EVERY`]. `Ok(true)`: they were asked now (the outbox may be asked too).
+    fn controls(&mut self, now: Duration) -> Result<bool, Code> {
+        if let Phase::Live {
+            files: Some(files),
+            checked,
+            ..
+        } = &mut self.phase
+        {
+            if files.streaming() && checked.is_some_and(|t| now.saturating_sub(t) < CHECK_EVERY) {
+                return Ok(false);
+            }
+            *checked = Some(now);
         }
+        self.exchange.admit(&self.peer).map(|()| true)
+    }
+
+    fn live(&mut self, tag: u8, body: &[u8], now: Duration) -> Step {
         let Phase::Live {
             in_flight,
             stalled,
             answered,
+            files,
             ..
         } = &mut self.phase
         else {
             return Step::Close;
         };
         let (exchange, peer) = (&self.exchange, &self.peer);
+        if (wire::TAG_FILE_FIRST..=wire::TAG_FILE_LAST).contains(&tag) {
+            // only when agreed on and wired
+            let (Some(files), Some(store)) = (files.as_mut(), exchange.files()) else {
+                return Step::Close;
+            };
+            let cx = Ctx {
+                exchange,
+                files: store,
+                peer,
+            };
+            return files.on_frame(&cx, tag, body, now);
+        }
         match tag {
             wire::TAG_ITEM => {
                 let item = match wire::decode_item(body) {
@@ -252,213 +238,14 @@ impl ExchangeConn {
         }
     }
 
-    /// A file record from the device. Without the feature (or a shell that wired files) it closes.
-    fn file_frame(&mut self, tag: u8, body: &[u8], now: Duration) -> Step {
-        let Phase::Live {
-            files: true,
-            incoming,
-            outgoing,
-            offered,
-            ..
-        } = &mut self.phase
-        else {
-            return Step::Close;
-        };
-        let (exchange, peer) = (&self.exchange, &self.peer);
-        let Some(store) = exchange.files() else {
-            return Step::Close;
-        };
-        match tag {
-            wire::TAG_OFFER => {
-                // one incoming transfer at a time: a second offer is a broken peer
-                if incoming.is_some() {
-                    return Step::Close;
-                }
-                let offer = match wire::decode_offer(body) {
-                    Ok(o) => o,
-                    Err(e) => {
-                        return match e.answer() {
-                            Some((id, code)) => refuse(&id, code),
-                            None => Step::Close,
-                        }
-                    }
-                };
-                if let Some(minutes) = exchange.limited(peer, now) {
-                    return refused(Code::Limit(minutes));
-                }
-                let id = *offer.id();
-                match store.offered(peer, &offer) {
-                    Decision::Accept { from } if from <= offer.size() => {
-                        *incoming = Some(Incoming {
-                            id,
-                            size: offer.size(),
-                            next: from,
-                            waiting: false,
-                        });
-                        Step::Reply(wire::TAG_ACCEPT, wire::encode_accept(&id, from).to_vec())
-                    }
-                    // a resume point past the end: the shell's part is broken, nothing is taken
-                    Decision::Accept { .. } => refuse(&id, RefuseCode::Rejected),
-                    Decision::Wait(reason) => {
-                        *incoming = Some(Incoming {
-                            id,
-                            size: offer.size(),
-                            next: 0,
-                            waiting: true,
-                        });
-                        Step::Reply(wire::TAG_WAIT, wire::encode_wait(&id, reason).to_vec())
-                    }
-                    Decision::Refuse(code) => refuse(&id, code),
-                }
-            }
-            wire::TAG_CHUNK => {
-                let Ok((id, offset, bytes)) = wire::decode_chunk(body) else {
-                    return Step::Close;
-                };
-                let Some(inc) = incoming.as_mut().filter(|i| i.id == id && !i.waiting) else {
-                    return Step::Close;
-                };
-                let len = u64::try_from(bytes.len()).unwrap_or(u64::MAX);
-                // contiguous, and never past the offered size
-                if offset != inc.next || inc.next.saturating_add(len) > inc.size {
-                    return Step::Close;
-                }
-                match store.write(peer, &id, offset, bytes) {
-                    Ok(()) => {
-                        inc.next += len;
-                        Step::Continue
-                    }
-                    Err(code) => {
-                        *incoming = None;
-                        result(&id, code)
-                    }
-                }
-            }
-            wire::TAG_END => {
-                let Ok(id) = wire::decode_id(body) else {
-                    return Step::Close;
-                };
-                if !incoming.as_ref().is_some_and(|i| i.id == id && !i.waiting) {
-                    return Step::Close;
-                }
-                *incoming = None;
-                let code = store.finish(peer, &id);
-                if code == ResultCode::Ok {
-                    exchange.record(peer, now);
-                }
-                result(&id, code)
-            }
-            wire::TAG_CANCEL => {
-                let Ok(id) = wire::decode_id(body) else {
-                    return Step::Close;
-                };
-                if let Some(inc) = incoming.take_if(|i| i.id == id) {
-                    if !inc.waiting {
-                        store.interrupted(peer, &id);
-                    }
-                } else if outgoing.take_if(|o| o.id == id).is_some() {
-                    offered.push(id);
-                    store.sent(peer, &id, SendOutcome::Cancelled);
-                }
-                // a cancel of a transfer that is already over is no error (the frames crossed)
-                Step::Continue
-            }
-            wire::TAG_ACCEPT => {
-                let Ok((id, from)) = wire::decode_accept(body) else {
-                    return Step::Close;
-                };
-                match outgoing.as_mut() {
-                    Some(o)
-                        if o.id == id
-                            && matches!(o.state, Out::Offered | Out::Waiting)
-                            && from <= o.size =>
-                    {
-                        o.state = Out::Streaming(from);
-                        Step::Continue
-                    }
-                    _ => Step::Close,
-                }
-            }
-            wire::TAG_WAIT => {
-                let Ok((id, reason)) = wire::decode_wait(body) else {
-                    return Step::Close;
-                };
-                match outgoing.as_mut() {
-                    Some(o) if o.id == id && o.state == Out::Offered => {
-                        o.state = Out::Waiting;
-                        store.sent(peer, &id, SendOutcome::Waiting(reason));
-                        Step::Continue
-                    }
-                    _ => Step::Close,
-                }
-            }
-            wire::TAG_REFUSE => {
-                let Ok((id, code)) = wire::decode_refuse(body) else {
-                    return Step::Close;
-                };
-                match outgoing.as_ref() {
-                    Some(o) if o.id == id && matches!(o.state, Out::Offered | Out::Waiting) => {
-                        *outgoing = None;
-                        offered.push(id);
-                        store.sent(peer, &id, SendOutcome::Refused(code));
-                        Step::Continue
-                    }
-                    _ => Step::Close,
-                }
-            }
-            wire::TAG_RESULT => {
-                let Ok((id, code)) = wire::decode_result(body) else {
-                    return Step::Close;
-                };
-                // the device may give up early (full, failed) while chunks still go out
-                match outgoing.as_ref() {
-                    Some(o)
-                        if o.id == id
-                            && (o.state == Out::Ended
-                                || (matches!(o.state, Out::Streaming(_))
-                                    && code != ResultCode::Ok)) =>
-                    {
-                        *outgoing = None;
-                        offered.push(id);
-                        store.sent(peer, &id, SendOutcome::Done(code));
-                        Step::Continue
-                    }
-                    _ => Step::Close,
-                }
-            }
-            _ => Step::Close,
-        }
-    }
-
-    /// Called on every tick of the connection: the next queued item for this device, or the
-    /// reason the PC ended the session. Never resets the connection's idle timer.
-    pub fn poll(&mut self, _now: Duration) -> Step {
-        let step = match &mut self.phase {
-            Phase::Live {
-                in_flight,
-                stalled,
-                answered,
-                ..
-            } => match self.exchange.admit(&self.peer) {
+    /// Called on every turn of the connection (several per tick while a file streams): the next
+    /// queued item or file record for this device, or the reason the PC ended the session. Never
+    /// resets the connection's idle timer.
+    pub fn poll(&mut self, now: Duration) -> Step {
+        let step = match &self.phase {
+            Phase::Live { .. } => match self.controls(now) {
                 Err(code) => refused(code),
-                Ok(()) => {
-                    let item = if in_flight.is_none() && !*stalled {
-                        match self.exchange.outbox().next(&self.peer) {
-                            Some(item) if *answered != Some(*item.id()) => {
-                                *in_flight = Some(*item.id());
-                                Some(Step::Reply(wire::TAG_ITEM, wire::encode_item(&item)))
-                            }
-                            Some(_) | None => None,
-                        }
-                    } else {
-                        None
-                    };
-                    // a text item goes first; a file record otherwise
-                    match item {
-                        Some(step) => step,
-                        None => self.poll_files(),
-                    }
-                }
+                Ok(asked) => self.poll_live(now, asked),
             },
             Phase::Done => Step::Close,
             _ => Step::Continue,
@@ -466,90 +253,38 @@ impl ExchangeConn {
         self.finish(step)
     }
 
-    /// The file side of a tick: the user's late answer to a waiting offer, the next chunk, the
-    /// `end`, or a new offer from the queue.
-    fn poll_files(&mut self) -> Step {
+    /// `asked`: the controls were asked on this turn (the outbox is asked with them).
+    fn poll_live(&mut self, now: Duration, asked: bool) -> Step {
         let Phase::Live {
-            files: true,
-            incoming,
-            outgoing,
-            offered,
+            in_flight,
+            stalled,
+            answered,
+            files,
             ..
         } = &mut self.phase
         else {
             return Step::Continue;
         };
-        let (peer, Some(store)) = (&self.peer, self.exchange.files()) else {
-            return Step::Continue;
-        };
-        // the PC's user answered a waiting offer of the device
-        if let Some(inc) = incoming.as_mut().filter(|i| i.waiting) {
-            match store.decided(peer, &inc.id) {
-                Some(Decision::Accept { from }) if from <= inc.size => {
-                    inc.waiting = false;
-                    inc.next = from;
-                    return Step::Reply(
-                        wire::TAG_ACCEPT,
-                        wire::encode_accept(&inc.id, from).to_vec(),
-                    );
+        // while a file streams, the outbox is asked only when the controls were
+        let ask = asked;
+        if ask && in_flight.is_none() && !*stalled {
+            if let Some(item) = self.exchange.outbox().next(&self.peer) {
+                if *answered != Some(*item.id()) {
+                    // a text item goes before the next file record
+                    *in_flight = Some(*item.id());
+                    return Step::Reply(wire::TAG_ITEM, wire::encode_item(&item));
                 }
-                Some(Decision::Accept { .. }) => {
-                    let id = inc.id;
-                    *incoming = None;
-                    return refuse(&id, RefuseCode::Rejected);
-                }
-                Some(Decision::Refuse(code)) => {
-                    let id = inc.id;
-                    *incoming = None;
-                    return refuse(&id, code);
-                }
-                Some(Decision::Wait(_)) | None => {}
             }
         }
-        match outgoing.as_mut() {
-            Some(o) => match o.state {
-                Out::Streaming(next) if next >= o.size => {
-                    o.state = Out::Ended;
-                    Step::Reply(wire::TAG_END, o.id.to_vec())
-                }
-                Out::Streaming(next) => {
-                    let left = usize::try_from(o.size - next).unwrap_or(usize::MAX);
-                    let want = left.min(wire::MAX_CHUNK);
-                    let mut body = vec![0u8; 24 + want];
-                    body[..24].copy_from_slice(&wire::chunk_header(&o.id, next));
-                    match store.read(peer, &o.id, next, &mut body[24..]) {
-                        Ok(n) if n > 0 && n <= want => {
-                            body.truncate(24 + n);
-                            o.state = Out::Streaming(next + u64::try_from(n).unwrap_or(0));
-                            Step::Reply(wire::TAG_CHUNK, body)
-                        }
-                        // shorter than offered, changed or gone: cancel; the shell decides
-                        // whether it stays queued
-                        _ => {
-                            let id = o.id;
-                            *outgoing = None;
-                            offered.push(id);
-                            store.sent(peer, &id, SendOutcome::Interrupted);
-                            Step::Reply(wire::TAG_CANCEL, id.to_vec())
-                        }
-                    }
-                }
-                Out::Offered | Out::Waiting | Out::Ended => Step::Continue,
-            },
-            None if offered.len() < OFFERS_PER_SESSION => match store.next_offer(peer, offered) {
-                // the shell skips what this session is done with; this checks it once more
-                Some(offer) if !offered.contains(offer.id()) => {
-                    *outgoing = Some(Outgoing {
-                        id: *offer.id(),
-                        size: offer.size(),
-                        state: Out::Offered,
-                    });
-                    Step::Reply(wire::TAG_OFFER, wire::encode_offer(&offer))
-                }
-                Some(_) | None => Step::Continue,
-            },
-            None => Step::Continue,
-        }
+        let (Some(files), Some(store)) = (files.as_mut(), self.exchange.files()) else {
+            return Step::Continue;
+        };
+        let cx = Ctx {
+            exchange: &self.exchange,
+            files: store,
+            peer: &self.peer,
+        };
+        files.poll(&cx, now)
     }
 
     /// Whether an `open` was accepted since the last call (the router replaces the device's older
@@ -567,23 +302,21 @@ impl ExchangeConn {
         step
     }
 
-    /// The session ends with a transfer unfinished: the shell keeps the incoming part for a resume
-    /// and the outgoing file in its queue.
+    /// The session ends with transfers unfinished: the shell hears about each of them.
     fn leave_files(&mut self) {
         let Phase::Live {
-            incoming, outgoing, ..
+            files: Some(files), ..
         } = &mut self.phase
         else {
             return;
         };
-        let (peer, Some(store)) = (&self.peer, self.exchange.files()) else {
-            return;
-        };
-        if let Some(inc) = incoming.take().filter(|i| !i.waiting) {
-            store.interrupted(peer, &inc.id);
-        }
-        if let Some(out) = outgoing.take().filter(|o| o.state != Out::Waiting) {
-            store.sent(peer, &out.id, SendOutcome::Interrupted);
+        if let Some(store) = self.exchange.files() {
+            let cx = Ctx {
+                exchange: &self.exchange,
+                files: store,
+                peer: &self.peer,
+            };
+            files.leave(&cx);
         }
     }
 
@@ -600,12 +333,4 @@ impl Drop for ExchangeConn {
         self.leave_files();
         self.uncount();
     }
-}
-
-fn refuse(id: &[u8; 16], code: RefuseCode) -> Step {
-    Step::Reply(wire::TAG_REFUSE, wire::encode_refuse(id, code).to_vec())
-}
-
-fn result(id: &[u8; 16], code: ResultCode) -> Step {
-    Step::Reply(wire::TAG_RESULT, wire::encode_result(id, code).to_vec())
 }

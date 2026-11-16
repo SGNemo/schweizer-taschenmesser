@@ -1843,10 +1843,13 @@ mod exchange_files_over_socket {
         s.chunk(&[5; 16], 20, &[1; 10]).unwrap();
         assert_eq!(rx.recv_timeout(WAIT).unwrap(), Event::Closed(None));
         let deadline = Instant::now() + WAIT;
-        while r.files.interruptions().is_empty() {
+        while r.files.stops().is_empty() {
             assert!(Instant::now() < deadline);
             std::thread::sleep(Duration::from_millis(5));
         }
-        assert_eq!(r.files.interruptions(), vec![[5; 16]]);
+        assert_eq!(
+            r.files.stops(),
+            vec![([5; 16], crate::exchange::files::Stopped::Lost)]
+        );
     }
 }
