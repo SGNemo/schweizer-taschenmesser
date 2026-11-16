@@ -152,6 +152,7 @@ export const finance: Strings['finance'] = {
   available: 'Available',
   tabs: {
     overview: 'Month',
+    overviewYear: 'Year',
     transactions: 'Transactions',
     trend: 'History',
     accounts: 'Accounts',
