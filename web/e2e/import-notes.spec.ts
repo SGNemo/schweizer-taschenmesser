@@ -132,6 +132,6 @@ test('Notizen: ein Obsidian-Export (ZIP) behält Ordner, Reihenfolge und Unteror
   await dialog.getByRole('button', { name: 'Schließen' }).last().click();
 
   await page.goto('/notes');
-  await expect(page.getByRole('button', { name: /10_Arbeit · 3/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /10_Arbeit\s*3$/ })).toBeVisible();
   await expect(page.getByText('#Projekte').first()).toBeVisible();
 });

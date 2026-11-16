@@ -31,13 +31,13 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 |  | Notizen | Notizblock mit formatiertem Text (Markdown), einem festen Zettel immer oben, Anheften und Suche | optional |
 |  | Chat | Gespräche mit dem eingebauten lokalen Modell oder deinen Anbietern | Vorschau |
 |  | Browser | Einfacher Browser mit Tabs, Lesezeichen und privatem Modus | Vorschau, nur Windows- und Android-App |
-|  | Feeds | Deine abonnierten Feeds (Nachrichten, Blogs, Podcasts) an einem Ort, nach Gruppen sortiert | optional |
+|  | Feeds | Deine abonnierten Feeds (Nachrichten, Blogs, Podcasts) an einem Ort | optional |
 |  | E-Mail | Posteingang, Suche und Mails lesen | Vorschau, nur Windows-App |
 |  | Musik | Spotify auf einer Seite | Vorschau |
 | **Tresor** | Unterlagen | Ausweise, Verträge, Versicherungen und Garantien mit Ende, Kündigungsfrist und angehängter Datei | optional |
 |  | Passwörter | Passwort-Tresor | optional |
 | **System** | Gerätestatus | Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite, dazu ein Backup zum Herunterladen | bei Neuinstallationen an |
-|  | Dieser PC | Laufwerke mit Scan der größten Ordner und Systeminfo (Prozessor, Speicher, Akku, Netzwerk) | optional, nur Windows-App |
+|  | Dieser PC | Laufwerke mit Scan der größten Ordner, Aufräum-Vorschläge und Systeminfo | optional, nur Windows-App |
 |  | Downloads | Lädt Dateien herunter | bei Neuinstallationen an, nur Windows-App |
 |  | Fernbedienung | Steuere Medien, Lautstärke, Maus und Tastatur deines PCs vom Handy aus | Vorschau, nur Android-App |
 

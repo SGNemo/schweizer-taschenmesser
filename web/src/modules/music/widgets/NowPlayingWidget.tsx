@@ -34,7 +34,7 @@ export default function NowPlayingWidget() {
     <WidgetBody
       loading={false}
       isEmpty={!np}
-      empty={tm.notConnectedTitle}
+      empty={tm.widgetNotConnected}
       emptyAction={{ label: tm.widgetConnect, to: settingsPath('verbindungen') }}
     >
       {np ? (

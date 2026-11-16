@@ -166,6 +166,7 @@ export function AddDialog({
           {hits.length > 0 ? (
             <GroupedList
               listId="feeds-catalog"
+              forceOpen={searching}
               label={s.catalog.label}
               groups={groupCatalog(hits).map((g) => ({
                 id: g.category,

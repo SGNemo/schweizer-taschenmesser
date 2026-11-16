@@ -37,7 +37,7 @@ In the **module library** you turn modules on and off (when turning one off: kee
 | **Vault** | Documents | IDs, contracts, insurance and warranties with end date, notice period and an attached file | optional |
 |  | Passwords | Password vault | optional |
 | **System** | Device status | Backup, sync, storage and updates of this device on one page, plus a backup to download | on for new installations |
-|  | This PC | Drives with a scan of the biggest folders and system info (processor, memory, battery, network) | optional, Windows app only |
+|  | This PC | Drives with a scan of the biggest folders, tidy-up suggestions and system info | optional, Windows app only |
 |  | Downloads | Downloads files | on for new installations, Windows app only |
 |  | Remote | Control media, volume, mouse and keyboard of your PC from your phone | preview, Android app only |
 

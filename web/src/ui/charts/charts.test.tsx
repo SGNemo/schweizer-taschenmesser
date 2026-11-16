@@ -72,6 +72,21 @@ describe('Donut', () => {
     expect(rows(table)[6]![0]).toBe('Sonstiges');
   });
 
+  it('the folded rest never borrows the name of a real category "Sonstiges"', () => {
+    const many = Array.from({ length: 9 }, (_, i) => ({ label: `K${i}`, value: 10 - i }));
+    many[0] = { label: 'Sonstiges', value: 10 };
+    render(<Donut title="T" data={many} />);
+    const labels = rows(tableOf(screen.getByRole('figure'))).map((r) => r[0]);
+    expect(labels.filter((l) => l === 'Sonstiges')).toHaveLength(1);
+    expect(labels[6]).toBe('Weitere');
+  });
+
+  it('a module may name the folded rest', () => {
+    const many = Array.from({ length: 9 }, (_, i) => ({ label: `K${i}`, value: 10 - i }));
+    render(<Donut title="T" data={many} otherLabel="Kleine Posten" />);
+    expect(rows(tableOf(screen.getByRole('figure')))[6]![0]).toBe('Kleine Posten');
+  });
+
   it('empty and one-value states', () => {
     const { rerender } = render(<Donut title="T" data={[]} />);
     expect(screen.getByText('Noch keine Werte.')).toBeInTheDocument();

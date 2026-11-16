@@ -70,6 +70,8 @@ struct Core {
     /// Remote control: the PC's own controls and the sink the input session acts through.
     remote: Arc<::lan_sync::input::Remote>,
     sink: Arc<crate::remote::Sink>,
+    /// Device exchange: wired on every desktop, its switch decides (`crate::exchange`).
+    exchange: Arc<::lan_sync::exchange::Exchange>,
 }
 
 struct LiveState {
@@ -380,9 +382,13 @@ fn build(app: &AppHandle) -> Result<(Arc<Core>, DataKeyDto), String> {
             &app.state::<crate::remote::RemoteHost>(),
         )
     };
+    // Device exchange is wired on every desktop too: a phone whose PC has it off hears
+    // `exchange-off`, never "unknown device".
+    let exchange = crate::exchange::parts(app, &dir, trust.clone());
     let router = Arc::new(
         Router::new(endpoint, host.clone(), hub.clone(), Admission::new())
-            .with_input(remote.clone(), sink.clone()),
+            .with_input(remote.clone(), sink.clone())
+            .with_exchange(exchange.clone()),
     );
     let launcher = RealLauncher::new(
         router,
@@ -405,6 +411,7 @@ fn build(app: &AppHandle) -> Result<(Arc<Core>, DataKeyDto), String> {
         }),
         remote,
         sink,
+        exchange,
     });
     Ok((core, key_dto))
 }
@@ -458,6 +465,12 @@ pub fn lan_hub_start(app: AppHandle, state: State<'_, LanSync>) -> Result<StartD
             core.sink.clone(),
             core.sessions.clone(),
         );
+        crate::exchange::attach(
+            &app,
+            core.exchange.clone(),
+            core.trust.clone(),
+            core.remote.clone(),
+        );
     }
     let stop = Arc::new(AtomicBool::new(false));
     let (wake, rx) = mpsc::channel::<()>();
@@ -477,6 +490,7 @@ pub fn lan_hub_start(app: AppHandle, state: State<'_, LanSync>) -> Result<StartD
             Err(_) => {
                 // nothing listens: the controls go again
                 crate::remote::detach(&app);
+                crate::exchange::detach(&app);
                 return Err("internal".to_owned());
             }
         }
@@ -517,6 +531,7 @@ pub fn lan_hub_stop(app: AppHandle, state: State<'_, LanSync>) -> Result<(), Str
         // the tray – whatever closing said, so nothing is left pointing at a stopped hub.
         let closed = r.core.sessions.close_all();
         crate::remote::detach(&app);
+        crate::exchange::detach(&app);
         closed.map_err(|_| "internal")?;
     }
     Ok(())
@@ -632,13 +647,22 @@ pub fn lan_devices(state: State<'_, LanSync>) -> Result<Vec<DeviceDto>, String> 
 
 /// Unpairs a device and closes its open connections at once.
 #[tauri::command(async)]
-pub fn lan_revoke(state: State<'_, LanSync>, id: String) -> Result<bool, String> {
+pub fn lan_revoke(app: AppHandle, state: State<'_, LanSync>, id: String) -> Result<bool, String> {
     with_core(&state, |core, wake| {
         let key = from_hex32(&id).ok_or("bad-id")?;
         let changed = core
             .sessions
             .revoke(&*core.trust, &PublicKey::from_bytes(key))
             .map_err(|_| "failed")?;
+        // what this PC queued for it goes too
+        let active: Vec<PublicKey> = core
+            .trust
+            .list()
+            .into_iter()
+            .filter(|d| !d.revoked)
+            .map(|d| d.key)
+            .collect();
+        crate::exchange::keep_only(&app, &active);
         let _ = wake.send(());
         Ok(changed)
     })

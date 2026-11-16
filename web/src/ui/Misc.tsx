@@ -99,6 +99,8 @@ export function EmptyState({
   return (
     <div
       className={compact ? `${styles.empty} ${styles.emptyCompact}` : styles.empty}
+      // The overview marks a card whose body is this compact state (`home/masonry.ts`) by this attribute.
+      data-empty={compact ? '' : undefined}
       data-testid={testId}
     >
       {motif && !compact ? (

@@ -56,11 +56,23 @@ describe('ItemRow', () => {
         <ItemRow title="A" selectable selected={false} onSelectChange={onSelect} />
       </ItemList>,
     );
-    await user.click(screen.getByRole('checkbox', { name: 'Auswählen' }));
+    await user.click(screen.getByRole('checkbox', { name: '„A“ auswählen' }));
     expect(onSelect).toHaveBeenLastCalledWith(true, false);
     await user.keyboard('{Shift>}');
-    await user.click(screen.getByRole('checkbox', { name: 'Auswählen' }));
+    await user.click(screen.getByRole('checkbox', { name: '„A“ auswählen' }));
     expect(onSelect).toHaveBeenLastCalledWith(true, true);
+  });
+
+  it('names the row in its checkbox so a screen reader knows which row it ticks', () => {
+    render(
+      <ItemList>
+        <ItemRow title="Stadtwerke" selectable selected={false} onSelectChange={vi.fn()} />
+        <ItemRow title={<b>Bahn</b>} selectable selected={false} onSelectChange={vi.fn()} />
+      </ItemList>,
+    );
+    expect(screen.getByRole('checkbox', { name: '„Stadtwerke“ auswählen' })).toBeInTheDocument();
+    // A title that is not plain text keeps the generic name.
+    expect(screen.getByRole('checkbox', { name: 'Auswählen' })).toBeInTheDocument();
   });
 
   it('a done row stays readable (class applied, text kept)', () => {
