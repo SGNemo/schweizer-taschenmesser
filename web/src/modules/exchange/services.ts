@@ -26,6 +26,8 @@ const FINAL = new Set(['bad-item', 'bad-id', 'bad-kind', 'bad-peer', 'not-found'
 
 let session: ExchangeSession | null = null;
 let opening = false;
+/** The phone's service runs; a session that opens after it stopped is closed at once. */
+let running = false;
 /** One opened session and whether its own `closed` event came; events of an older one are ignored. */
 interface Life {
   closed: boolean;
@@ -166,21 +168,19 @@ function drop(): void {
 }
 
 export async function connect(ex: ExchangeService): Promise<void> {
-  if (session || opening || document.visibilityState !== 'visible') return;
+  if (!running || session || opening || document.visibilityState !== 'visible') return;
   opening = true;
   const life: Life = { closed: false, session: null };
   try {
     const opened = await ex.open((e) => onPhoneEvent(ex, e, life));
-    // closed already, or the app went to the background while it connected: no session there
-    if (life.closed || document.visibilityState !== 'visible') {
+    // closed already, the module went off, or the app went to the background while it connected
+    if (life.closed || !running || document.visibilityState !== 'visible') {
       void opened.close().catch(() => undefined);
       return;
     }
     life.session = opened;
     session = opened;
     useExchangeView.setState({ open: true, problem: null, minutes: null });
-    await pull(ex);
-    await resend(ex, ['waiting', 'sent', 'full']);
   } catch (e) {
     session = null;
     const p = problemOf(e instanceof Error ? e.message : null);
@@ -191,6 +191,11 @@ export async function connect(ex: ExchangeService): Promise<void> {
     });
   } finally {
     opening = false;
+  }
+  // a failure taking things over is not a failed session: it stays, the next event tries again
+  if (session && running) {
+    await pull(ex).catch(() => undefined);
+    await resend(ex, ['waiting', 'sent', 'full']).catch(() => undefined);
   }
 }
 
@@ -255,6 +260,7 @@ export default function start(): () => void {
     const timer = setInterval(changed, STATUS_EVERY_MS);
     stops.push(() => clearInterval(timer));
   } else {
+    running = true;
     void connect(ex);
     const retry = setInterval(() => void connect(ex), RETRY_EVERY_MS);
     const ping = setInterval(() => {
@@ -275,6 +281,7 @@ export default function start(): () => void {
       clearInterval(ping);
       document.removeEventListener('visibilitychange', onVisible);
       // the module went off (or the app quits): nothing more is taken in
+      running = false;
       drop();
     });
   }
