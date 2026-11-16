@@ -209,7 +209,9 @@ test.describe('Spotify connector', () => {
     await seedConnected(page, ['show']);
     await ready(page, '/');
     await expect.poll(() => mock.api.length).toBeGreaterThan(0);
-    await expect(page.getByTestId('widget-music:player')).toContainText('Spotify ist nicht verbunden.');
+    await expect(page.getByTestId('widget-music:player')).toContainText(
+      'Spotify ist nicht verbunden.',
+    );
     await ready(page, '/settings/verbindungen');
     await expect(
       page.getByTestId('connector-spotify').getByText('Abgelaufen', { exact: true }),
