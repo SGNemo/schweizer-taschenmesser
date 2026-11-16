@@ -21,6 +21,9 @@ import styles from '../routes/invoices.module.css';
  * books it), less is recorded as a part payment. Either way the toast carries the undo. Opening this dialog
  * writes nothing; closing it writes nothing.
  *
+ * `onPaid` runs once „Bezahlt“ went through (paid, part paid, or found paid elsewhere) – the page hands the person
+ * back to the plan from there (M-1); cancelling, closing or a failed write never runs it.
+ *
  * The step follows the invoice live: paid or deleted elsewhere while it is open, it closes with a calm word
  * and writes nothing; the state is checked once more right before the write, and a toast never claims a
  * write that did not happen.
@@ -28,9 +31,11 @@ import styles from '../routes/invoices.module.css';
 export function PayStep({
   invoice,
   onClose,
+  onPaid,
 }: {
   invoice: Stored<Invoice> | null;
   onClose: () => void;
+  onPaid?: () => void;
 }) {
   return (
     <Dialog
@@ -38,7 +43,9 @@ export function PayStep({
       onClose={onClose}
       title={invoice ? t.invoices.payStep.title(invoice.payee) : ''}
     >
-      {invoice ? <Form key={invoice.id} invoice={invoice} onClose={onClose} /> : null}
+      {invoice ? (
+        <Form key={invoice.id} invoice={invoice} onClose={onClose} onPaid={onPaid} />
+      ) : null}
     </Dialog>
   );
 }
@@ -48,7 +55,15 @@ function notOpenMessage(invoice: Stored<Invoice> | undefined): string {
   return invoice?.status === 'paid' ? t.invoices.payStep.alreadyPaid : t.invoices.links.gone;
 }
 
-function Form({ invoice: initial, onClose }: { invoice: Stored<Invoice>; onClose: () => void }) {
+function Form({
+  invoice: initial,
+  onClose,
+  onPaid,
+}: {
+  invoice: Stored<Invoice>;
+  onClose: () => void;
+  onPaid?: () => void;
+}) {
   const id = initial.id;
   // `null` while the first read is under way; `undefined` once the invoice is gone (deleted or missing).
   const live = useLiveQuery(() => invoiceRepo.get(id), [id], null);
@@ -78,6 +93,7 @@ function Form({ invoice: initial, onClose }: { invoice: Stored<Invoice>; onClose
     if (minor > rest) return setError(t.invoices.ext.payment.tooMuch(money(rest)));
     settled.current = true;
     const toast = useUiStore.getState().toast;
+    let through = false;
     try {
       // Once more right before the write: paid or deleted meanwhile means nothing is written.
       const current = await invoiceRepo.get(id);
@@ -94,10 +110,12 @@ function Form({ invoice: initial, onClose }: { invoice: Stored<Invoice>; onClose
           });
         else toast(notOpenMessage(await invoiceRepo.get(id)));
       }
+      through = true;
     } catch {
       toast(p.failed);
     }
     onClose();
+    if (through) onPaid?.();
   }
   const payOnce = useSubmitOnce(pay);
 
