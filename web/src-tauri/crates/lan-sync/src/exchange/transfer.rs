@@ -6,8 +6,10 @@
 //! Rules (both directions alike):
 //! * One **active** transfer per direction: offered (answer pending), streaming, or ended (result
 //!   pending). Up to [`PENDING`] more offers may wait for the receiver's user; a waiting offer does
-//!   not hold the active slot, so small files are not stuck behind one large file. The next offer
-//!   comes only when no transfer is active and fewer than [`PENDING`] wait.
+//!   not hold the active slot, so small files are not stuck behind one large file. An offer that
+//!   arrives while a transfer is active (it crossed an accept) is parked and answered when the
+//!   slot frees; an accept for a waiting offer while another offer is still unanswered starts the
+//!   accepted one and lets the other wait. More than [`PENDING`] open offers close the session.
 //! * Chunks are contiguous and never past the offered size; anything else closes the session.
 //! * Frames cross on the wire: chunks, `end`, `result`, `accept`, `wait`, `refuse` and `cancel`
 //!   for a transfer this side already ended are dropped, never a reason to close.
@@ -19,7 +21,7 @@
 use super::control::Exchange;
 use super::files::{Decision, ExchangeFiles, SendOutcome, Stopped};
 use super::session::Step;
-use super::wire::{self, Code, RefuseCode, ResultCode};
+use super::wire::{self, Code, Offer, RefuseCode, ResultCode};
 use crate::noise::PublicKey;
 use std::time::Duration;
 
@@ -66,8 +68,12 @@ struct WaitingOut {
 #[derive(Default)]
 pub(crate) struct Transfers {
     active_in: Option<Incoming>,
-    /// Incoming offers waiting for the PC's user: id and size.
-    waiting_in: Vec<([u8; 16], u64)>,
+    /// Incoming offers waiting for the PC's user: id, size, and where to start once the user
+    /// said yes while another file came in.
+    waiting_in: Vec<([u8; 16], u64, Option<u64>)>,
+    /// Incoming offers that came while a transfer was active (the device could not know: the
+    /// PC's user accepted a waiting one meanwhile). Answered when the slot is free.
+    parked_in: Vec<Offer>,
     /// Incoming transfers this session ended: late frames for them are dropped.
     ended_in: Vec<[u8; 16]>,
     offers_in: usize,
@@ -127,11 +133,11 @@ impl Transfers {
             }
         };
         let id = *offer.id();
-        // the device offers only while nothing of it is active, and never one that already waits
-        if self.active_in.is_some()
-            || self.waiting_in.len() >= PENDING
-            || self.waiting_in.iter().any(|(w, _)| *w == id)
-        {
+        // never one that is open already, never more than PENDING unanswered or waiting
+        let open = self.active_in.as_ref().is_some_and(|i| i.id == id)
+            || self.waiting_in.iter().any(|(w, ..)| *w == id)
+            || self.parked_in.iter().any(|p| *p.id() == id);
+        if open || self.waiting_in.len() + self.parked_in.len() >= PENDING {
             return Step::Close;
         }
         if let Some(minutes) = cx.exchange.limited(cx.peer, now) {
@@ -139,7 +145,18 @@ impl Transfers {
         }
         // offered again after an end in this session (a resume after a failure)
         self.ended_in.retain(|e| *e != id);
-        match cx.files.offered(cx.peer, &offer) {
+        if self.active_in.is_some() {
+            // crossed the PC's accept of a waiting offer: answered when the slot is free
+            self.parked_in.push(offer);
+            return Step::Continue;
+        }
+        self.decide(cx, &offer)
+    }
+
+    /// The shell decides on an offer of the device; the answer goes out.
+    fn decide(&mut self, cx: &Ctx<'_>, offer: &Offer) -> Step {
+        let id = *offer.id();
+        match cx.files.offered(cx.peer, offer) {
             Decision::Accept { from } if from <= offer.size() => {
                 self.active_in = Some(Incoming {
                     id,
@@ -151,7 +168,7 @@ impl Transfers {
             // a resume point past the end: the shell's part is broken, nothing is taken
             Decision::Accept { .. } => refuse(&id, RefuseCode::Rejected),
             Decision::Wait(reason) => {
-                self.waiting_in.push((id, offer.size()));
+                self.waiting_in.push((id, offer.size(), None));
                 Step::Reply(wire::TAG_WAIT, wire::encode_wait(&id, reason).to_vec())
             }
             Decision::Refuse(code) => refuse(&id, code),
@@ -209,10 +226,14 @@ impl Transfers {
         if self.active_in.as_ref().is_some_and(|i| i.id == id) {
             self.end_in(id);
             cx.files.stopped(cx.peer, &id, Stopped::Cancelled);
-        } else if let Some(at) = self.waiting_in.iter().position(|(w, _)| *w == id) {
+        } else if let Some(at) = self.waiting_in.iter().position(|(w, ..)| *w == id) {
             self.waiting_in.remove(at);
             self.ended_in.push(id);
             cx.files.stopped(cx.peer, &id, Stopped::Withdrawn);
+        } else if let Some(at) = self.parked_in.iter().position(|p| *p.id() == id) {
+            // the shell never saw it
+            self.parked_in.remove(at);
+            self.ended_in.push(id);
         } else if self.active_out.as_ref().is_some_and(|o| o.id == id) {
             self.active_out = None;
             self.done_out(cx, id, SendOutcome::Cancelled, false);
@@ -235,12 +256,32 @@ impl Transfers {
             o.state = Out::Streaming(from);
             return Step::Continue;
         }
-        if let Some(w) = self.waiting_out.iter_mut().find(|w| w.id == id) {
+        if let Some(at) = self.waiting_out.iter().position(|w| w.id == id) {
+            let w = &mut self.waiting_out[at];
             if w.from.is_some() || from > w.size {
                 return Step::Close;
             }
-            // it starts as soon as the active slot is free (`poll`)
-            w.from = Some(from);
+            match self.active_out.as_ref().map(|o| o.state) {
+                // the slot only holds an unanswered offer: it waits now, the accepted one runs
+                // (the device accepted this one while that offer crossed on the wire)
+                None | Some(Out::Offered) => {
+                    let w = self.waiting_out.remove(at);
+                    if let Some(o) = self.active_out.take() {
+                        self.waiting_out.push(WaitingOut {
+                            id: o.id,
+                            size: o.size,
+                            from: None,
+                        });
+                    }
+                    self.active_out = Some(Outgoing {
+                        id: w.id,
+                        size: w.size,
+                        state: Out::Streaming(from),
+                    });
+                }
+                // it starts as soon as the running file is through (`poll`)
+                Some(_) => w.from = Some(from),
+            }
             return Step::Continue;
         }
         self.late_out(&id)
@@ -261,6 +302,15 @@ impl Transfers {
                     size: o.size,
                     from: None,
                 });
+                cx.files.sent(cx.peer, &id, SendOutcome::Waiting(reason));
+                Step::Continue
+            }
+            // an offer the slot gave up for an accepted one: it waits on this side already
+            None if self
+                .waiting_out
+                .iter()
+                .any(|w| w.id == id && w.from.is_none()) =>
+            {
                 cx.files.sent(cx.peer, &id, SendOutcome::Waiting(reason));
                 Step::Continue
             }
@@ -302,6 +352,18 @@ impl Transfers {
             self.done_out(cx, id, SendOutcome::Done(code), code != ResultCode::Ok);
             return Step::Continue;
         }
+        // accepted, not started yet, and the device gives up already (its disk is full)
+        if code != ResultCode::Ok {
+            if let Some(at) = self
+                .waiting_out
+                .iter()
+                .position(|w| w.id == id && w.from.is_some())
+            {
+                self.waiting_out.remove(at);
+                self.done_out(cx, id, SendOutcome::Done(code), true);
+                return Step::Continue;
+            }
+        }
         self.late_out(&id)
     }
 
@@ -336,39 +398,52 @@ impl Transfers {
     /// What the shell is asked at most every [`CHECK_EVERY`]: the PC's user answered a waiting
     /// offer of the device (only while nothing comes in), or took back a file that is offered.
     fn checks(&mut self, cx: &Ctx<'_>) -> Option<Step> {
-        if self.active_in.is_none() {
-            for at in 0..self.waiting_in.len() {
-                let (id, size) = self.waiting_in[at];
-                match cx.files.decided(cx.peer, &id) {
-                    Some(Decision::Accept { from }) if from <= size => {
-                        self.waiting_in.remove(at);
-                        self.active_in = Some(Incoming {
-                            id,
-                            size,
-                            next: from,
-                        });
-                        let accept = wire::encode_accept(&id, from);
-                        return Some(Step::Reply(wire::TAG_ACCEPT, accept.to_vec()));
-                    }
-                    Some(Decision::Accept { .. }) => {
-                        self.waiting_in.remove(at);
-                        self.ended_in.push(id);
-                        return Some(refuse(&id, RefuseCode::Rejected));
-                    }
-                    Some(Decision::Refuse(code)) => {
-                        self.waiting_in.remove(at);
-                        self.ended_in.push(id);
-                        return Some(refuse(&id, code));
-                    }
-                    Some(Decision::Wait(_)) | None => {}
+        // the PC's user answered a waiting offer: a no goes out at once, a yes when the slot is
+        // free (it is kept until then; `decided` answers once)
+        for at in 0..self.waiting_in.len() {
+            let (id, size, accepted) = self.waiting_in[at];
+            if accepted.is_some() {
+                continue;
+            }
+            match cx.files.decided(cx.peer, &id) {
+                Some(Decision::Accept { from }) if from <= size => {
+                    self.waiting_in[at].2 = Some(from);
                 }
+                Some(Decision::Accept { .. }) => {
+                    self.waiting_in.remove(at);
+                    self.ended_in.push(id);
+                    return Some(refuse(&id, RefuseCode::Rejected));
+                }
+                Some(Decision::Refuse(code)) => {
+                    self.waiting_in.remove(at);
+                    self.ended_in.push(id);
+                    return Some(refuse(&id, code));
+                }
+                Some(Decision::Wait(_)) | None => {}
+            }
+        }
+        if self.active_in.is_none() {
+            if let Some(at) = self.waiting_in.iter().position(|w| w.2.is_some()) {
+                let (id, size, from) = self.waiting_in.remove(at);
+                let from = from.unwrap_or(0);
+                self.active_in = Some(Incoming {
+                    id,
+                    size,
+                    next: from,
+                });
+                let accept = wire::encode_accept(&id, from);
+                return Some(Step::Reply(wire::TAG_ACCEPT, accept.to_vec()));
+            }
+            if !self.parked_in.is_empty() {
+                let offer = self.parked_in.remove(0);
+                return Some(self.decide(cx, &offer));
             }
         }
         // a file the PC took out of its queue while the device was still asked about it
         let gone = |id: &[u8; 16]| !cx.files.queued(cx.peer, id);
         if let Some(o) = self
             .active_out
-            .take_if(|o| o.state == Out::Offered && gone(&o.id))
+            .take_if(|o| matches!(o.state, Out::Offered | Out::Streaming(_)) && gone(&o.id))
         {
             self.done_out(cx, o.id, SendOutcome::Interrupted, false);
             return Some(Step::Reply(wire::TAG_CANCEL, o.id.to_vec()));
@@ -440,9 +515,11 @@ impl Transfers {
         if let Some(inc) = self.active_in.take() {
             cx.files.stopped(cx.peer, &inc.id, Stopped::Lost);
         }
-        for (id, _) in self.waiting_in.drain(..) {
+        for (id, ..) in self.waiting_in.drain(..) {
             cx.files.stopped(cx.peer, &id, Stopped::Withdrawn);
         }
+        // parked offers never reached the shell
+        self.parked_in.clear();
         if let Some(out) = self.active_out.take() {
             cx.files.sent(cx.peer, &out.id, SendOutcome::Interrupted);
         }

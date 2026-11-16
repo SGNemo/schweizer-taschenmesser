@@ -533,7 +533,7 @@ fn drive(
                 Polled::Nothing => break,
                 Polled::Close => return,
             }
-            if conn.is_closed() {
+            if sh.stop.load(Ordering::SeqCst) || conn.is_closed() {
                 return;
             }
         }

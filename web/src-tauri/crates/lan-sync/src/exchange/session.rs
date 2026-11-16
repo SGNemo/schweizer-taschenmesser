@@ -266,8 +266,7 @@ impl ExchangeConn {
             return Step::Continue;
         };
         // while a file streams, the outbox is asked only when the controls were
-        let ask = asked;
-        if ask && in_flight.is_none() && !*stalled {
+        if asked && in_flight.is_none() && !*stalled {
             if let Some(item) = self.exchange.outbox().next(&self.peer) {
                 if *answered != Some(*item.id()) {
                     // a text item goes before the next file record

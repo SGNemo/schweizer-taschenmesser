@@ -552,18 +552,17 @@ mod files {
     fn a_gap_a_second_offer_or_bytes_past_the_size_close_and_keep_the_part() {
         let f = file_rig();
         for bad in [
-            (wire::TAG_CHUNK, chunk(1, 5, &[0; 5])),             // gap
-            (wire::TAG_CHUNK, chunk(1, 0, &[0; 11])),            // past the size
-            (wire::TAG_CHUNK, chunk(2, 0, &[0; 5])),             // an id that never came
-            (wire::TAG_OFFER, wire::encode_offer(&offer(2, 1))), // offer while one is active
-            (wire::TAG_END, vec![2; 16]),                        // end of an id that never came
+            (wire::TAG_CHUNK, chunk(1, 5, &[0; 5])),  // gap
+            (wire::TAG_CHUNK, chunk(1, 0, &[0; 11])), // past the size
+            (wire::TAG_CHUNK, chunk(2, 0, &[0; 5])),  // an id that never came
+            (wire::TAG_END, vec![2; 16]),             // end of an id that never came
         ] {
             let mut c = open_files(&f);
             offer_frame(&mut c, 1, 10);
             assert_eq!(c.on_frame(bad.0, &bad.1, T0), Step::Close, "{:#04x}", bad.0);
         }
         // every closed transfer was left to the shell as lost (the part stays)
-        assert_eq!(f.files.stops(), vec![([1; 16], Stopped::Lost); 5]);
+        assert_eq!(f.files.stops(), vec![([1; 16], Stopped::Lost); 4]);
     }
 
     #[test]
@@ -900,6 +899,133 @@ mod files {
             c.poll(later(3)),
             Step::Continue,
             "nothing is offered twice in a session"
+        );
+    }
+
+    #[test]
+    fn a_device_offer_that_crossed_the_pc_accept_is_parked_and_answered_later() {
+        let f = file_rig();
+        let mut c = open_files(&f);
+        f.files.set_decision(Decision::Wait(WaitReason::Large));
+        offer_frame(&mut c, 1, 4);
+        // the PC's user accepts it; the device offers the next one at the same moment
+        f.files.decide_later([1; 16], Decision::Accept { from: 0 });
+        assert!(matches!(c.poll(later(1)), Step::Reply(wire::TAG_ACCEPT, _)));
+        f.files.set_decision(Decision::Accept { from: 0 });
+        assert_eq!(
+            offer_frame(&mut c, 2, 3),
+            Step::Continue,
+            "parked, not closed"
+        );
+        c.on_frame(wire::TAG_CHUNK, &chunk(1, 0, b"abcd"), T0);
+        assert!(matches!(
+            c.on_frame(wire::TAG_END, &[1; 16], T0),
+            Step::Reply(wire::TAG_RESULT, _)
+        ));
+        // the slot is free: the parked offer gets its answer
+        assert_eq!(
+            c.poll(later(2)),
+            reply(wire::TAG_ACCEPT, &wire::encode_accept(&[2; 16], 0))
+        );
+    }
+
+    #[test]
+    fn a_device_accept_that_crossed_the_next_pc_offer_starts_and_the_offer_waits() {
+        let f = file_rig();
+        f.files.queue(&f.r.peer, offer(1, 3), vec![1; 3]);
+        f.files.queue(&f.r.peer, offer(2, 4), vec![2; 4]);
+        let mut c = open_files(&f);
+        c.poll(T0);
+        let wait = wire::encode_wait(&[1; 16], WaitReason::Large);
+        c.on_frame(wire::TAG_WAIT, &wait, T0);
+        // the PC offers the next; the device accepts the first before it saw that
+        assert!(
+            matches!(c.poll(later(1)), Step::Reply(wire::TAG_OFFER, b) if b[..16] == [2u8; 16])
+        );
+        assert_eq!(
+            c.on_frame(wire::TAG_ACCEPT, &wire::encode_accept(&[1; 16], 0), T0),
+            Step::Continue
+        );
+        assert!(
+            matches!(c.poll(later(1)), Step::Reply(wire::TAG_CHUNK, b) if b[..16] == [1u8; 16])
+        );
+        // the device's answer to the second comes later, while the first streams: it waits
+        let wait2 = wire::encode_wait(&[2; 16], WaitReason::Daily);
+        assert_eq!(c.on_frame(wire::TAG_WAIT, &wait2, T0), Step::Continue);
+        assert_eq!(c.poll(later(1)), reply(wire::TAG_END, &[1; 16]));
+    }
+
+    #[test]
+    fn a_late_no_goes_out_at_once_and_a_late_yes_waits_for_the_slot() {
+        let f = file_rig();
+        let mut c = open_files(&f);
+        f.files.set_decision(Decision::Wait(WaitReason::Large));
+        offer_frame(&mut c, 1, 4);
+        offer_frame(&mut c, 2, 4);
+        f.files.set_decision(Decision::Accept { from: 0 });
+        offer_frame(&mut c, 3, 4);
+        // while 3 comes in, the PC's user says no to 1 and yes to 2
+        f.files
+            .decide_later([1; 16], Decision::Refuse(RefuseCode::Declined));
+        f.files.decide_later([2; 16], Decision::Accept { from: 0 });
+        assert_eq!(
+            c.poll(later(1)),
+            reply(
+                wire::TAG_REFUSE,
+                &wire::encode_refuse(&[1; 16], RefuseCode::Declined)
+            )
+        );
+        assert_eq!(
+            c.poll(later(2)),
+            Step::Continue,
+            "the yes waits for the slot"
+        );
+        c.on_frame(wire::TAG_CHUNK, &chunk(3, 0, b"drei"), T0);
+        c.on_frame(wire::TAG_END, &[3; 16], T0);
+        assert_eq!(
+            c.poll(later(3)),
+            reply(wire::TAG_ACCEPT, &wire::encode_accept(&[2; 16], 0))
+        );
+    }
+
+    #[test]
+    fn a_streaming_file_the_pc_withdraws_is_cancelled_without_counting_as_a_failure() {
+        let f = file_rig();
+        let data = vec![1u8; 3 * wire::MAX_CHUNK];
+        f.files.queue(&f.r.peer, offer(1, data.len() as u64), data);
+        let mut c = open_files(&f);
+        c.poll(T0);
+        c.on_frame(wire::TAG_ACCEPT, &wire::encode_accept(&[1; 16], 0), T0);
+        assert!(matches!(c.poll(later(1)), Step::Reply(wire::TAG_CHUNK, _)));
+        f.files.withdraw(&f.r.peer, &[1; 16]);
+        assert_eq!(c.poll(later(2)), reply(wire::TAG_CANCEL, &[1; 16]));
+        assert_eq!(
+            f.files.outcomes(),
+            vec![([1; 16], SendOutcome::Interrupted)]
+        );
+    }
+
+    #[test]
+    fn an_accepted_waiting_file_the_device_gives_up_on_early_is_done() {
+        let f = file_rig();
+        f.files.queue(&f.r.peer, offer(1, 3), vec![1; 3]);
+        f.files.queue(&f.r.peer, offer(2, 4), vec![2; 4]);
+        let mut c = open_files(&f);
+        c.poll(T0);
+        c.on_frame(
+            wire::TAG_WAIT,
+            &wire::encode_wait(&[1; 16], WaitReason::Large),
+            T0,
+        );
+        c.poll(later(1));
+        c.on_frame(wire::TAG_ACCEPT, &wire::encode_accept(&[2; 16], 0), T0);
+        // 1 accepted while 2 streams, then the device is full
+        c.on_frame(wire::TAG_ACCEPT, &wire::encode_accept(&[1; 16], 0), T0);
+        let full = wire::encode_result(&[1; 16], ResultCode::Full);
+        assert_eq!(c.on_frame(wire::TAG_RESULT, &full, T0), Step::Continue);
+        assert_eq!(
+            f.files.outcomes().last(),
+            Some(&([1; 16], SendOutcome::Done(ResultCode::Full)))
         );
     }
 
