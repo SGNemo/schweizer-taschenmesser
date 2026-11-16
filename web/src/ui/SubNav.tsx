@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { motionReduced } from '@/core/shell/topbarCollapse';
 import type { ModuleHue } from '@/core/modules/types';
 import { Icon, type IconName } from './icons';
+import { useOverflowMark } from './useOverflowMark';
 import styles from './SubNav.module.css';
 
 export interface SubNavItem {
@@ -40,6 +41,8 @@ export function SubNav({
     const left = Math.max(0, el.scrollLeft + b.left - a.left - (el.clientWidth - b.width) / 2);
     el.scrollTo({ left, behavior: motionReduced() ? 'auto' : 'smooth' });
   }, [activeId]);
+  // The edge fade is drawn only while the row overflows (`SubNav.module.css`).
+  useOverflowMark(nav, items.map((i) => i.label).join('|'));
   return (
     <nav
       ref={nav}

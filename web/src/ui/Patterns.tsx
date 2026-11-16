@@ -12,6 +12,7 @@ import { ReadableText } from './ReadableText';
 import { RowMenu, type RowMenuItem } from './RowMenu';
 import { useSwipeRow } from './useSwipeRow';
 import { useMediaQuery } from './useMediaQuery';
+import { useOverflowMark } from './useOverflowMark';
 import { usePageWidthAtLeast } from './pageWidth';
 import styles from './Patterns.module.css';
 
@@ -176,21 +177,8 @@ export function Segmented<T extends string>({
 }) {
   const box = useRef<HTMLDivElement>(null);
   const labels = options.map((o) => o.label).join('|');
-  // The edge fade of the phone's row says "more to the right", so it is drawn only while the row overflows
-  // (`.segment[data-overflow]`); on a row that fits it faded the last option for nothing.
-  useEffect(() => {
-    const el = box.current;
-    if (!el) return;
-    const mark = () => {
-      el.dataset.overflow = el.scrollWidth > el.clientWidth + 1 ? 'true' : 'false';
-    };
-    mark();
-    if (typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver(mark);
-    ro.observe(el);
-    return () => ro.disconnect();
-    // The labels decide the row's width (a language switch changes them without resizing the box).
-  }, [labels]);
+  // The edge fade of the phone's row is drawn only while the row overflows (`.segment[data-overflow]`).
+  useOverflowMark(box, labels);
   return (
     <div ref={box} className={styles.segment} role="group" aria-label={label}>
       {options.map((o) => (

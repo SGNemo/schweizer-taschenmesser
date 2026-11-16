@@ -1,7 +1,7 @@
 import { NowStrip } from '@/core/modules/NowStrip';
 import { PersonFilter, usePersonFilter } from '@/core/people/PersonFilter';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useCalendarItems } from '@/core/modules/contributions';
 import { changeWithUndo } from '@/core/undo/withToast';
@@ -23,6 +23,7 @@ import {
   Tabs,
   useAdvancedMenuItem,
   useOpenParam,
+  useOverflowMark,
   useSplitView,
 } from '@/ui';
 import { Agenda } from '../components/Agenda';
@@ -160,6 +161,14 @@ export default function CalendarPage() {
     );
   }
 
+  // The phone's view row fades at its end only while it overflows (`.viewRow[data-overflow]`). The row exists only
+  // on the calendar tab once the view is known, so both are part of the key.
+  const viewRow = useRef<HTMLDivElement>(null);
+  useOverflowMark(
+    viewRow,
+    `${view}|${params.get('tab')}|${plannerOn}|${advanced}|${VIEWS.map((v) => VIEW_LABEL[v]).join('|')}`,
+  );
+
   if (!view) return null;
   const list = (items ?? []).filter((i) => !forPerson || i.personId === forPerson);
   const tab = params.get('tab') === 'reminders' ? 'reminders' : 'calendar';
@@ -247,7 +256,7 @@ export default function CalendarPage() {
           {viewTitle(view, date, weekStart)}
         </h2>
         {/* U25: views and calendar chips share one row; on the phone it scrolls sideways as a whole. */}
-        <div className={styles.viewRow}>
+        <div ref={viewRow} className={styles.viewRow}>
           <Segmented<CalendarView | typeof PLAN_LINK>
             label={t.calendar.view}
             value={view}

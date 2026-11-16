@@ -1,5 +1,5 @@
 /* The module row of the phone's module head (Identity 4.0, rule 3): one row of text pills, 44 px high, that scrolls
-   sideways; the right edge fades out so a cut-off pill reads as "more", never as clipped. */
+   sideways; while it overflows the right edge fades out so a cut-off pill reads as "more", never as clipped. */
 .subnav {
   display: flex;
   flex-wrap: nowrap;
@@ -10,9 +10,12 @@
   scrollbar-width: none;
   margin-inline: calc(-1 * var(--page-gutter));
   padding-inline: var(--page-gutter);
+}
+/* Only while the row really overflows (`useOverflowMark`): a row that fits keeps its last pill clear. */
+.subnav[data-overflow='true'] {
   mask-image: linear-gradient(90deg, #000 calc(100% - 2.25rem), transparent);
 }
-.subnav[data-scrolled] {
+.subnav[data-overflow='true'][data-scrolled] {
   mask-image: linear-gradient(
     90deg,
     transparent,
