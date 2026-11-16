@@ -4,12 +4,17 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { CalendarItem } from '@/core/modules/types';
 import { MonthView } from '../components/Views';
 
-/** A wide window (every width condition holds); `coarse` says whether its primary pointer is a finger. */
-function windowWith(coarse: boolean) {
+/** A wide window (every width condition holds) with a primary pointer and maybe a touch screen besides it. */
+function windowWith(primary: 'fine' | 'coarse', anyCoarse: boolean) {
+  const holds = (part: string) => {
+    if (part.includes('not (any-pointer: coarse)')) return !anyCoarse;
+    if (part.includes('any-pointer: coarse')) return anyCoarse;
+    if (part.includes('pointer: fine')) return primary === 'fine';
+    if (part.includes('pointer: coarse')) return primary === 'coarse';
+    return true;
+  };
   vi.stubGlobal('matchMedia', (query: string) => ({
-    matches: !query
-      .split(/\s+and\s+/)
-      .some((part) => part.includes(coarse ? 'pointer: fine' : 'pointer: coarse')),
+    matches: query.split(/\s+and\s+(?![^(]*\))/).every(holds),
     media: query,
     addEventListener: () => undefined,
     removeEventListener: () => undefined,
@@ -36,13 +41,19 @@ afterEach(() => {
 
 describe('calendar month view: lines or marks (H14)', () => {
   it('names entries as lines in a wide window with a mouse', () => {
-    windowWith(false);
+    windowWith('fine', false);
     draw();
     expect(screen.getByRole('button', { name: /Zahnarzt/ })).toBeTruthy();
   });
 
   it('shows the phone marks on a touch screen (coarse pointer), whatever its width', () => {
-    windowWith(true);
+    windowWith('coarse', true);
+    draw();
+    expect(screen.queryByRole('button', { name: /Zahnarzt/ })).toBeNull();
+  });
+
+  it('shows the phone marks on a touch desktop (mouse first, touch screen besides)', () => {
+    windowWith('fine', true);
     draw();
     expect(screen.queryByRole('button', { name: /Zahnarzt/ })).toBeNull();
   });

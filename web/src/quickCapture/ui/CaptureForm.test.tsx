@@ -247,6 +247,12 @@ describe('CaptureForm', () => {
     await waitFor(() => expect(rowTypes()).toEqual(['todo', 'todo']));
     expect(hint()).toHaveTextContent(t.quickCapture.multi.calmHint);
     expect(hint()).not.toHaveTextContent('erinnere mich');
+    // A ToDo with a deadline hour is no Termin: no hint.
+    fireEvent.change(await box(), {
+      target: { value: 'Steuer abgeben bis Fr 18:00\nMilch kaufen' },
+    });
+    await waitFor(() => expect(rowTypes()).toEqual(['todo', 'todo']));
+    expect(hint()).not.toHaveTextContent('erinnere mich');
     fireEvent.change(await box(), {
       target: { value: 'So 19 Uhr kurz schauen wie es mir geht\nMilch kaufen' },
     });

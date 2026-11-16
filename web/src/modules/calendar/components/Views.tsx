@@ -37,13 +37,14 @@ interface ViewProps {
 const TIME_GRID_REM = 66;
 const TIME_GRID_QUERY = '(min-width: 1400px)';
 /**
- * From this page width (and a window of at least 700 px) a month cell names its entries as lines (same threshold as
- * `@container page` in the CSS); below, a cell shows marks and a count, and a title only where it fits in full.
- * Only with a mouse or pen as the primary pointer: a 24 px line is too small for a finger (44 px), so a tablet or a
- * touch desktop gets the phone's marks whatever its width (decision of #746, docs/decisions/ui-shell-identity-40-plan.md).
+ * From this page width (and a window of at least 700 px) a month cell names its entries as lines; below, a cell shows
+ * marks and a count, and a title only where it fits in full (`@container page` in the CSS only sizes the cells).
+ * Only on a mouse-only screen: a 24 px line is too small for a finger (44 px), so a tablet or a touch desktop (mouse
+ * first, touch screen besides: `any-pointer: coarse`, as in design-rules) gets the phone's marks whatever its width
+ * (decision of #746, docs/decisions/ui-shell-identity-40-plan.md).
  */
 const MONTH_CHIPS_REM = 40;
-const MONTH_LINES_QUERY = '(min-width: 700px) and (pointer: fine)';
+const MONTH_LINES_QUERY = '(min-width: 700px) and (pointer: fine) and (not (any-pointer: coarse))';
 
 function useTimeGrid(): boolean {
   const viewport = useMediaQuery(TIME_GRID_QUERY);

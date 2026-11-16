@@ -541,9 +541,12 @@ export function CaptureForm({
   };
 
   // W25: a timed line becomes a Termin unless it says „erinnere mich“; the batch names the word once, while no
-  // line uses it yet (one trigger word, no second button).
+  // line uses it yet (one trigger word, no second button). Only a Termin counts: it means the calendar is on, so a
+  // reminder is possible; a timed ToDo (calendar off) or fitness line is no such case.
   const timedNoReminder =
-    multi && rows.some((r) => r.fields.time) && !rows.some((r) => r.type === 'reminder');
+    multi &&
+    rows.some((r) => r.type === 'event' && r.fields.time) &&
+    !rows.some((r) => r.type === 'reminder');
 
   return (
     <>
