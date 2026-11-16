@@ -162,6 +162,7 @@ const PATTERNS: Record<string, Partial<Record<KnownLang | 'en-US', string>>> = {
   'EEEE, d. MMM': { en: 'EEEE d MMM', 'en-US': 'EEEE, MMM d' },
   'd.': { en: 'd' },
   'd.M.': { en: 'd/M', 'en-US': 'M/d' },
+  'd. MMM yy': { en: 'd MMM yy', 'en-US': 'MMM d, yy' },
   "'KW' II": {
     en: "'Week' II",
     es: "'Semana' II",

@@ -141,14 +141,25 @@ describe('formatDay in English (H13)', () => {
         if (e.isDirectory()) walk(p);
         else if (/\.tsx?$/.test(e.name) && !/\.test\.tsx?$/.test(e.name)) {
           const text = readFileSync(p, 'utf8');
-          for (const call of text.matchAll(/formatDay\(([^;]*?)\)/g))
-            for (const lit of call[1]!.matchAll(/'([^'\n]*)'|"([^"\n]*)"/g))
+          // The arguments run to the matching close paren (calls can nest, e.g. `….slice(0, 4)`).
+          for (const call of text.matchAll(/formatDay\(/g)) {
+            let depth = 1;
+            let end = call.index + call[0].length;
+            while (end < text.length && depth > 0) {
+              const c = text[end++];
+              if (c === '(') depth++;
+              else if (c === ')') depth--;
+            }
+            const args = text.slice(call.index + call[0].length, end - 1);
+            for (const lit of args.matchAll(/'([^'\n]*)'|"([^"\n]*)"/g))
               patterns.add((lit[1] ?? lit[2])!);
+          }
         }
       }
     };
     walk(src);
     expect(patterns.has('EEEE, d. MMMM')).toBe(true); // the scan finds the calls
+    expect(patterns.has('d. MMM yy')).toBe(true); // … also behind a nested call
     for (const region of ['auto', 'en-US'] as const) {
       await english(region);
       for (const p of patterns)
