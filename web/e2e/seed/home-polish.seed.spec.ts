@@ -84,9 +84,11 @@ test.describe('overview polish – desktop 1920', () => {
 
   test('a context line breaks between its parts, never inside one', async ({ page }) => {
     const grid = await openDetailed(page, false);
-    const balance = grid.getByTestId('widget-finance:balance');
-    await expect(balance).toBeVisible();
-    const parts = await balance.evaluate((card) => {
+    // "Diesen Monat" has two parts ("Noch fällig … · Ausgegeben …"); the balance card's line is one sentence since the
+    // finance polish (#998).
+    const month = grid.getByTestId('widget-finance:month');
+    await expect(month).toBeVisible();
+    const parts = await month.evaluate((card) => {
       const spans = Array.from(
         card.querySelectorAll('[data-body="kennzahl"] p:last-of-type > span'),
       );
@@ -95,7 +97,7 @@ test.describe('overview polish – desktop 1920', () => {
         split: spans.filter((x) => x.getClientRects().length > 1).length,
       };
     });
-    // The seeded balance line has several parts; each is one box that never breaks across lines.
+    // The seeded line has several parts; each is one box that never breaks across lines.
     expect(parts.count).toBeGreaterThan(1);
     expect(parts.split).toBe(0);
   });
