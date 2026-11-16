@@ -2,6 +2,7 @@ import type { Strings } from '@/strings';
 
 export const ui: Strings['ui'] = {
   selectRow: 'Select',
+  selectRowNamed: (title: string) => `Select “${title}”`,
   searchPlaceholder: 'Search …',
   retry: 'Try again',
   loading: 'Loading',

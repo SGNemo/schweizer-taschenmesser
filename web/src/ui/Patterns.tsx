@@ -454,7 +454,7 @@ export function ItemRow({
       <div className={styles.row} style={swipe.style} {...swipe.bind}>
         {selectable ? (
           <Checkbox
-            label={t.ui.selectRow}
+            label={typeof title === 'string' ? t.ui.selectRowNamed(title) : t.ui.selectRow}
             labelHidden
             checked={!!selected}
             onChange={() => undefined}

@@ -155,6 +155,8 @@ export const de = {
   },
   ui: {
     selectRow: 'Auswählen',
+    /** The checkbox of a selectable row, named after the row so a screen reader says which one it ticks. */
+    selectRowNamed: (title: string) => `„${title}“ auswählen`,
     searchPlaceholder: 'Suchen …',
     retry: 'Erneut versuchen',
     loading: 'Wird geladen',
