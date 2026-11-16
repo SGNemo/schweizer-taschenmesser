@@ -24,6 +24,8 @@ describe('feeds widget', () => {
       'href',
       '/feeds?new=1',
     );
+    // A sentence like the other empty lines, with its full stop.
+    expect(screen.getByText('Noch keine Feeds.')).toBeInTheDocument();
   });
 
   it('shows the number of feeds; the context names the groups and does not repeat the number', async () => {

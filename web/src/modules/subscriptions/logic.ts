@@ -238,26 +238,6 @@ export function trialDaysLeft(s: { trialEndsOn?: string }, today: string): numbe
   return s.trialEndsOn && s.trialEndsOn >= today ? daysBetween(today, s.trialEndsOn) : undefined;
 }
 
-/**
- * The most expensive running subscriptions by yearly cost, in the main currency (the euro, else the
- * first by code): amounts of other currencies are never ranked against it.
- */
-export function topExpensive<T extends Sub & { name: string }>(
-  subs: readonly T[],
-  today: string,
-  n = 3,
-): T[] {
-  const running = subs.filter((s) => s.active && nextCharge(s, today) !== undefined);
-  const currencies = [...new Set(running.map((s) => currencyOf(s)))].sort((a, b) =>
-    a === DEFAULT_CURRENCY ? -1 : b === DEFAULT_CURRENCY ? 1 : a.localeCompare(b),
-  );
-  const main = currencies[0];
-  return running
-    .filter((s) => currencyOf(s) === main)
-    .sort((a, b) => annualCost(b) - annualCost(a) || compareText(a.name, b.name))
-    .slice(0, n);
-}
-
 /** One or two capital letters for a service tile: "Streaming Plus" → "SP", "Spotify" → "S". */
 export function monogram(name: string): string {
   const words = name

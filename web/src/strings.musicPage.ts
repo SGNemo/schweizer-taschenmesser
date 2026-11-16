@@ -10,6 +10,8 @@ export const tMusicPage = defineBundle(
     widgetIdle: 'Gerade läuft nichts.',
     widgetOpen: 'Musik öffnen',
     widgetConnect: 'Spotify verbinden',
+    /** The widget's empty line: a calm sentence like the other empty lines; the action is `widgetConnect`. */
+    widgetNotConnected: 'Spotify ist nicht verbunden.',
     notConnectedTitle: 'Verbinde Spotify',
     notConnectedText:
       'Hier erscheint, was läuft, mit Cover, Steuerung und deinen Playlists. Verbinden geht unter Verbindungen; Titel und Interpret bleiben auf diesem Gerät.',
@@ -31,7 +33,6 @@ export const tMusicPage = defineBundle(
       'Für „Zuletzt gespielt“ braucht Nemo die Funktion „Verlauf“ unter Verbindungen.',
     startNeedsPlaylists:
       'Für deine Playlists braucht Nemo die Funktion „Playlists“ unter Verbindungen.',
-    libraryTitle: 'Bibliothek',
     queueTitle: 'Warteschlange',
     queueMore: 'Alle anzeigen',
     queueAll: 'Ganze Warteschlange anzeigen',
@@ -135,6 +136,7 @@ export const tMusicPage = defineBundle(
       widgetIdle: 'Nothing is playing.',
       widgetOpen: 'Open music',
       widgetConnect: 'Connect Spotify',
+      widgetNotConnected: 'Spotify is not connected.',
       notConnectedTitle: 'Connect Spotify',
       notConnectedText:
         'This shows what plays, with cover, controls and your playlists. Connecting is under Connections; titles and artists stay on this device.',
@@ -153,7 +155,6 @@ export const tMusicPage = defineBundle(
       startEmpty: 'Nothing played yet. Search for something or open a playlist.',
       startNeedsHistory: '“Recently played” needs the “History” feature under Connections.',
       startNeedsPlaylists: 'Your playlists need the “Playlists” feature under Connections.',
-      libraryTitle: 'Library',
       queueTitle: 'Queue',
       queueMore: 'Show all',
       queueAll: 'Show the whole queue',
@@ -269,7 +270,6 @@ export const tMusicPage = defineBundle(
       startEmpty: 'Aún no has escuchado nada. Busca algo o abre una lista.',
       startNeedsHistory: '«Escuchado hace poco» necesita la función «Historial» en Conexiones.',
       startNeedsPlaylists: 'Tus listas necesitan la función «Listas» en Conexiones.',
-      libraryTitle: 'Biblioteca',
       queueTitle: 'Cola',
       queueMore: 'Ver todo',
       backToStart: 'Volver al inicio',
@@ -306,7 +306,6 @@ export const tMusicPage = defineBundle(
       startNeedsHistory:
         '« Écoutés récemment » nécessite la fonction « Historique » sous Connexions.',
       startNeedsPlaylists: 'Tes playlists nécessitent la fonction « Playlists » sous Connexions.',
-      libraryTitle: 'Bibliothèque',
       queueTitle: 'File d’attente',
       queueMore: 'Tout afficher',
       backToStart: 'Retour à l’accueil',
@@ -341,7 +340,6 @@ export const tMusicPage = defineBundle(
       startEmpty: 'Nada tocado ainda. Busque algo ou abra uma playlist.',
       startNeedsHistory: '“Tocadas recentemente” precisa do recurso “Histórico” em Conexões.',
       startNeedsPlaylists: 'Suas playlists precisam do recurso “Playlists” em Conexões.',
-      libraryTitle: 'Biblioteca',
       queueTitle: 'Fila',
       queueMore: 'Ver tudo',
       backToStart: 'Voltar ao início',

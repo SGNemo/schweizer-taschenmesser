@@ -42,7 +42,6 @@ export const maps: Strings['maps'] = {
     recent: 'Recientes',
     name: 'Nombre',
     navigate: 'Navegar',
-    navigateTo: (name: string) => `Navegar a ${name}`,
     none: 'No hay lugares que coincidan.',
     last: (name: string) => `Último guardado: ${name}`,
     pinHint: 'Aún no hay lugares guardados.',

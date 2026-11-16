@@ -6,7 +6,6 @@ export const invoices: Strings['invoices'] = {
     state: {
       partial: 'Partiellement payée',
       overdue: 'En retard',
-      overdueDays: (n: number) => (n === 1 ? 'depuis 1 jour' : `depuis ${n} jours`),
       rest: (amount: string) => `Reste ${amount} à payer`,
     },
     payment: {
