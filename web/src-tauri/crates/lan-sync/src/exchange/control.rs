@@ -4,6 +4,7 @@
 //! PC's own controls; the shell confirms every widening in a native dialog before it calls them.
 //! No frame from the network reaches a writer (`tests/rules.rs`).
 
+use super::files::ExchangeFiles;
 use super::wire::{AckState, Code, Item};
 use crate::input::{MasterSwitch, MemorySwitch};
 use crate::noise::PublicKey;
@@ -145,6 +146,8 @@ pub struct Exchange {
     trust: Arc<dyn TrustStore>,
     inbox: Arc<dyn ExchangeInbox>,
     outbox: Arc<dyn ExchangeOutbox>,
+    /// Files (package 2b): only when the shell wires them is `FEATURE_FILES` accepted.
+    files: Option<Arc<dyn ExchangeFiles>>,
     /// When each stored item of a device came in (the last [`RATE_WINDOW`] only). Memory only.
     rate: Mutex<HashMap<[u8; 32], VecDeque<Duration>>>,
     /// Live exchange sessions per device (opened and not yet dropped).
@@ -163,9 +166,16 @@ impl Exchange {
             trust,
             inbox,
             outbox,
+            files: None,
             rate: Mutex::new(HashMap::new()),
             live: Mutex::new(HashMap::new()),
         }
+    }
+
+    /// With files: sessions that ask for `FEATURE_FILES` get it.
+    pub fn with_files(mut self, files: Arc<dyn ExchangeFiles>) -> Self {
+        self.files = Some(files);
+        self
     }
 
     /// Off switch, memory inbox and outbox (tests).
@@ -290,5 +300,9 @@ impl Exchange {
 
     pub(crate) fn outbox(&self) -> &dyn ExchangeOutbox {
         &*self.outbox
+    }
+
+    pub(crate) fn files(&self) -> Option<&dyn ExchangeFiles> {
+        self.files.as_deref()
     }
 }

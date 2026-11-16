@@ -648,6 +648,7 @@ fn no_frame_from_the_network_reaches_an_exchange_setter() {
         "record",
         "inbox",
         "outbox",
+        "files",
         "session_opened",
         "session_ended",
     ];

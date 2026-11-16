@@ -429,3 +429,352 @@ fn grants_widen_only_from_off_or_paused_to_on() {
     assert!(!off.widens(&ON) && !paused.widens(&ON) && !ON.widens(&ON));
     assert!(!off.effective() && !paused.effective() && ON.effective());
 }
+
+// ---- files (package 2b) ----
+
+mod files {
+    use super::*;
+    use crate::exchange::files::{Decision, MemoryFiles, SendOutcome};
+    use crate::exchange::wire::{Offer, RefuseCode, ResultCode, WaitReason, FEATURE_FILES};
+
+    struct FileRig {
+        r: Rig,
+        files: Arc<MemoryFiles>,
+        exchange: Arc<Exchange>,
+    }
+
+    fn file_rig() -> FileRig {
+        let r = granted();
+        let files = Arc::new(MemoryFiles::new());
+        let exchange = Arc::new(
+            Exchange::new(
+                r.switch.clone(),
+                r.trust.clone(),
+                r.inbox.clone(),
+                r.outbox.clone(),
+            )
+            .with_files(files.clone()),
+        );
+        FileRig { r, files, exchange }
+    }
+
+    fn open_files(f: &FileRig) -> ExchangeConn {
+        let mut c = ExchangeConn::new(f.exchange.clone(), f.r.peer);
+        c.on_hello();
+        assert_eq!(
+            c.on_frame(wire::TAG_OPEN, &wire::encode_open(FEATURE_FILES), T0),
+            Step::Reply(
+                wire::TAG_OPENED,
+                wire::encode_opened(FEATURE_FILES).to_vec()
+            )
+        );
+        c
+    }
+
+    fn offer(n: u8, size: u64) -> Offer {
+        Offer::new(
+            [n; 16],
+            size,
+            [0; 32],
+            format!("Datei {n}.bin"),
+            String::new(),
+        )
+        .unwrap()
+    }
+
+    fn chunk(n: u8, offset: u64, bytes: &[u8]) -> Vec<u8> {
+        wire::encode_chunk(&[n; 16], offset, bytes).unwrap()
+    }
+
+    fn reply(tag: u8, body: &[u8]) -> Step {
+        Step::Reply(tag, body.to_vec())
+    }
+
+    #[test]
+    fn without_wired_files_the_feature_is_not_given_and_file_records_close() {
+        let r = granted();
+        let mut c = ExchangeConn::new(r.exchange.clone(), r.peer);
+        c.on_hello();
+        assert_eq!(
+            c.on_frame(wire::TAG_OPEN, &wire::encode_open(FEATURE_FILES), T0),
+            Step::Reply(wire::TAG_OPENED, wire::encode_opened(0).to_vec())
+        );
+        let o = wire::encode_offer(&offer(1, 10));
+        assert_eq!(c.on_frame(wire::TAG_OFFER, &o, T0), Step::Close);
+        // wired, but the device did not ask: closes too
+        let f = file_rig();
+        let mut c = ExchangeConn::new(f.exchange.clone(), f.r.peer);
+        c.on_hello();
+        c.on_frame(wire::TAG_OPEN, &wire::encode_open(0), T0);
+        assert_eq!(c.on_frame(wire::TAG_OFFER, &o, T0), Step::Close);
+    }
+
+    #[test]
+    fn a_device_file_comes_in_chunk_by_chunk_and_is_finished_by_the_shell() {
+        let f = file_rig();
+        let mut c = open_files(&f);
+        let data: Vec<u8> = (0..150_000u32).map(|i| (i % 251) as u8).collect();
+        let o = offer(1, data.len() as u64);
+        assert_eq!(
+            c.on_frame(wire::TAG_OFFER, &wire::encode_offer(&o), T0),
+            reply(wire::TAG_ACCEPT, &wire::encode_accept(&[1; 16], 0))
+        );
+        let mut at = 0usize;
+        for part in data.chunks(wire::MAX_CHUNK) {
+            assert_eq!(
+                c.on_frame(wire::TAG_CHUNK, &chunk(1, at as u64, part), T0),
+                Step::Continue
+            );
+            at += part.len();
+        }
+        assert_eq!(
+            c.on_frame(wire::TAG_END, &[1; 16], T0),
+            reply(
+                wire::TAG_RESULT,
+                &wire::encode_result(&[1; 16], ResultCode::Ok)
+            )
+        );
+        let got = f.files.received();
+        assert_eq!(got.len(), 1);
+        assert_eq!(got[0].bytes, data);
+        assert_eq!(got[0].result, Some(ResultCode::Ok));
+        // the transfer is over: a late chunk is a broken peer
+        assert_eq!(
+            c.on_frame(wire::TAG_CHUNK, &chunk(1, 0, &[1]), T0),
+            Step::Close
+        );
+    }
+
+    #[test]
+    fn a_gap_a_second_offer_or_bytes_past_the_size_close_and_keep_the_part() {
+        let f = file_rig();
+        for bad in [
+            (wire::TAG_CHUNK, chunk(1, 5, &[0; 5])),             // gap
+            (wire::TAG_CHUNK, chunk(1, 0, &[0; 11])),            // past the size
+            (wire::TAG_CHUNK, chunk(2, 0, &[0; 5])),             // another id
+            (wire::TAG_OFFER, wire::encode_offer(&offer(2, 1))), // second offer
+            (wire::TAG_END, vec![2; 16]),                        // end of another id
+        ] {
+            let mut c = open_files(&f);
+            c.on_frame(wire::TAG_OFFER, &wire::encode_offer(&offer(1, 10)), T0);
+            assert_eq!(c.on_frame(bad.0, &bad.1, T0), Step::Close, "{:#04x}", bad.0);
+        }
+        // every closed transfer was left to the shell for a resume
+        assert_eq!(f.files.interruptions().len(), 5);
+    }
+
+    #[test]
+    fn offers_are_refused_or_wait_for_the_user() {
+        let f = file_rig();
+        let mut c = open_files(&f);
+        // over 4 GB: too large, with the id
+        let mut big = wire::encode_offer(&offer(3, 1));
+        big[16..24].copy_from_slice(&(wire::MAX_FILE + 1).to_be_bytes());
+        assert_eq!(
+            c.on_frame(wire::TAG_OFFER, &big, T0),
+            reply(
+                wire::TAG_REFUSE,
+                &wire::encode_refuse(&[3; 16], RefuseCode::TooLarge)
+            )
+        );
+        // the shell refuses
+        f.files.set_decision(Decision::Refuse(RefuseCode::Full));
+        assert_eq!(
+            c.on_frame(wire::TAG_OFFER, &wire::encode_offer(&offer(4, 5)), T0),
+            reply(
+                wire::TAG_REFUSE,
+                &wire::encode_refuse(&[4; 16], RefuseCode::Full)
+            )
+        );
+        // the shell waits for its user: no chunk before the answer
+        f.files.set_decision(Decision::Wait(WaitReason::Large));
+        assert_eq!(
+            c.on_frame(wire::TAG_OFFER, &wire::encode_offer(&offer(5, 5)), T0),
+            reply(
+                wire::TAG_WAIT,
+                &wire::encode_wait(&[5; 16], WaitReason::Large)
+            )
+        );
+        assert_eq!(c.poll(T0), Step::Continue);
+        f.files.decide_later([5; 16], Decision::Accept { from: 0 });
+        assert_eq!(
+            c.poll(T0),
+            reply(wire::TAG_ACCEPT, &wire::encode_accept(&[5; 16], 0))
+        );
+        assert_eq!(
+            c.on_frame(wire::TAG_CHUNK, &chunk(5, 0, b"Hallo"), T0),
+            Step::Continue
+        );
+        assert_eq!(
+            c.on_frame(wire::TAG_END, &[5; 16], T0),
+            reply(
+                wire::TAG_RESULT,
+                &wire::encode_result(&[5; 16], ResultCode::Ok)
+            )
+        );
+        // a chunk of a waiting offer is a broken peer
+        f.files.set_decision(Decision::Wait(WaitReason::Daily));
+        c.on_frame(wire::TAG_OFFER, &wire::encode_offer(&offer(6, 5)), T0);
+        assert_eq!(
+            c.on_frame(wire::TAG_CHUNK, &chunk(6, 0, b"x"), T0),
+            Step::Close
+        );
+    }
+
+    #[test]
+    fn a_queued_file_goes_out_after_accept_and_leaves_the_queue_on_its_result() {
+        let f = file_rig();
+        let data = vec![7u8; 2 * wire::MAX_CHUNK + 10];
+        f.files
+            .queue(&f.r.peer, offer(7, data.len() as u64), data.clone());
+        let mut c = open_files(&f);
+        assert_eq!(
+            c.poll(T0),
+            reply(
+                wire::TAG_OFFER,
+                &wire::encode_offer(&offer(7, data.len() as u64))
+            )
+        );
+        // nothing more until the device answers
+        assert_eq!(c.poll(T0), Step::Continue);
+        assert_eq!(
+            c.on_frame(wire::TAG_ACCEPT, &wire::encode_accept(&[7; 16], 0), T0),
+            Step::Continue
+        );
+        let mut got = Vec::new();
+        loop {
+            match c.poll(T0) {
+                Step::Reply(wire::TAG_CHUNK, body) => {
+                    let (id, offset, bytes) = wire::decode_chunk(&body).unwrap();
+                    assert_eq!((id, offset), ([7; 16], got.len() as u64));
+                    got.extend_from_slice(bytes);
+                }
+                Step::Reply(wire::TAG_END, body) => {
+                    assert_eq!(body, vec![7; 16]);
+                    break;
+                }
+                other => panic!("{other:?}"),
+            }
+        }
+        assert_eq!(got, data);
+        assert_eq!(c.poll(T0), Step::Continue, "waits for the result");
+        assert_eq!(
+            c.on_frame(
+                wire::TAG_RESULT,
+                &wire::encode_result(&[7; 16], ResultCode::Ok),
+                T0
+            ),
+            Step::Continue
+        );
+        assert_eq!(
+            f.files.outcomes(),
+            vec![([7; 16], SendOutcome::Done(ResultCode::Ok))]
+        );
+        assert_eq!(f.files.next_offer_for(&f.r.peer), None);
+    }
+
+    #[test]
+    fn a_resume_starts_at_the_device_part_and_a_text_item_goes_between_chunks() {
+        let f = file_rig();
+        let data: Vec<u8> = (0..(3 * wire::MAX_CHUNK) as u32).map(|i| i as u8).collect();
+        f.files
+            .queue(&f.r.peer, offer(8, data.len() as u64), data.clone());
+        let mut c = open_files(&f);
+        c.poll(T0);
+        let from = wire::MAX_CHUNK as u64 + 7;
+        c.on_frame(wire::TAG_ACCEPT, &wire::encode_accept(&[8; 16], from), T0);
+        let Step::Reply(wire::TAG_CHUNK, body) = c.poll(T0) else {
+            panic!("a chunk");
+        };
+        let (_, offset, bytes) = wire::decode_chunk(&body).unwrap();
+        assert_eq!(offset, from);
+        assert_eq!(bytes, &data[from as usize..from as usize + bytes.len()]);
+        // a text item for the device goes before the next chunk
+        f.r.outbox
+            .push(&f.r.peer, item(9, Kind::Text, "Zwischendurch"));
+        assert!(matches!(c.poll(T0), Step::Reply(wire::TAG_ITEM, _)));
+        assert!(matches!(c.poll(T0), Step::Reply(wire::TAG_CHUNK, _)));
+    }
+
+    #[test]
+    fn an_unfinished_transfer_is_left_to_the_shell_and_a_device_cancel_drops_the_file() {
+        let f = file_rig();
+        f.files.queue(&f.r.peer, offer(10, 100), vec![1; 100]);
+        {
+            let mut c = open_files(&f);
+            c.poll(T0);
+            c.on_frame(wire::TAG_ACCEPT, &wire::encode_accept(&[10; 16], 0), T0);
+            c.on_frame(wire::TAG_OFFER, &wire::encode_offer(&offer(11, 50)), T0);
+            c.on_frame(wire::TAG_CHUNK, &chunk(11, 0, &[2; 20]), T0);
+            // the session ends (dropped) with both transfers open
+        }
+        assert_eq!(
+            f.files.outcomes(),
+            vec![([10; 16], SendOutcome::Interrupted)]
+        );
+        assert_eq!(f.files.interruptions(), vec![[11; 16]]);
+        // still queued: offered again on the next session, then cancelled by the device
+        let mut c = open_files(&f);
+        assert!(matches!(c.poll(T0), Step::Reply(wire::TAG_OFFER, _)));
+        c.on_frame(wire::TAG_ACCEPT, &wire::encode_accept(&[10; 16], 20), T0);
+        assert_eq!(c.on_frame(wire::TAG_CANCEL, &[10; 16], T0), Step::Continue);
+        assert_eq!(
+            f.files.outcomes().last(),
+            Some(&([10; 16], SendOutcome::Cancelled))
+        );
+        assert_eq!(f.files.next_offer_for(&f.r.peer), None);
+        // a cancel that crossed an ended transfer is no error
+        assert_eq!(c.on_frame(wire::TAG_CANCEL, &[10; 16], T0), Step::Continue);
+    }
+
+    #[test]
+    fn a_file_that_cannot_be_read_is_cancelled_and_a_refused_one_not_offered_again() {
+        let f = file_rig();
+        // offered as 100 bytes, only 40 there
+        f.files.queue(&f.r.peer, offer(12, 100), vec![3; 40]);
+        f.files.queue(&f.r.peer, offer(13, 5), vec![4; 5]);
+        let mut c = open_files(&f);
+        c.poll(T0);
+        c.on_frame(wire::TAG_ACCEPT, &wire::encode_accept(&[12; 16], 0), T0);
+        assert!(matches!(c.poll(T0), Step::Reply(wire::TAG_CHUNK, _)));
+        assert_eq!(c.poll(T0), reply(wire::TAG_CANCEL, &[12; 16]));
+        assert_eq!(
+            f.files.outcomes(),
+            vec![([12; 16], SendOutcome::Interrupted)]
+        );
+        // the next file is offered; the broken one stays queued for the shell, not again here
+        assert_eq!(
+            c.poll(T0),
+            reply(wire::TAG_OFFER, &wire::encode_offer(&offer(13, 5)))
+        );
+        let refuse = wire::encode_refuse(&[13; 16], RefuseCode::Declined);
+        assert_eq!(c.on_frame(wire::TAG_REFUSE, &refuse, T0), Step::Continue);
+        assert_eq!(
+            c.poll(T0),
+            Step::Continue,
+            "nothing is offered twice in a session"
+        );
+    }
+
+    #[test]
+    fn answers_for_another_file_close() {
+        let f = file_rig();
+        f.files.queue(&f.r.peer, offer(14, 5), vec![5; 5]);
+        for bad in [
+            (wire::TAG_ACCEPT, wire::encode_accept(&[15; 16], 0).to_vec()),
+            (wire::TAG_ACCEPT, wire::encode_accept(&[14; 16], 6).to_vec()),
+            (
+                wire::TAG_RESULT,
+                wire::encode_result(&[14; 16], ResultCode::Ok).to_vec(),
+            ),
+            (
+                wire::TAG_WAIT,
+                wire::encode_wait(&[15; 16], WaitReason::Large).to_vec(),
+            ),
+        ] {
+            let mut c = open_files(&f);
+            c.poll(T0);
+            assert_eq!(c.on_frame(bad.0, &bad.1, T0), Step::Close, "{:#04x}", bad.0);
+        }
+    }
+}

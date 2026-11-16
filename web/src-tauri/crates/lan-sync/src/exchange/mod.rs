@@ -8,6 +8,8 @@
 //!   the session and changed only by the PC's own controls – never by a frame from the network –,
 //!   plus the boundaries to the shell: the inbox (where an item is stored before it is acked) and
 //!   the outbox (what the PC queued for a device).
+//! * `files` (hub): the boundary to the files on disk (receive: decide, write, finish; send:
+//!   queue, read, outcome) and a memory implementation for tests.
 //! * `session` (hub): one exchange connection – `hello`, `open`, then items both ways, one PC → phone
 //!   item in flight at a time, each removed from the outbox only after the phone's `ack`.
 //!
@@ -21,12 +23,16 @@ pub mod wire;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub mod control;
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
+pub mod files;
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub mod session;
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub use control::{
     Exchange, ExchangeInbox, ExchangeOutbox, InboxFull, MemoryInbox, MemoryOutbox, Stored,
 };
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+pub use files::{Decision, ExchangeFiles, MemoryFiles, Received, SendOutcome};
 
 #[cfg(all(test, not(any(target_os = "android", target_os = "ios"))))]
 mod tests;
