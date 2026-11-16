@@ -44,6 +44,7 @@ export const AREAS: Record<string, Label> = {
   remote: { de: 'Fernbedienung', en: 'Remote' },
   disk: { de: 'Dieser PC', en: 'This PC' },
   downloads: { de: 'Downloads', en: 'Downloads' },
+  exchange: { de: 'Austausch', en: 'Device drop' },
   example: { de: 'Beispiel', en: 'Example' },
   feeds: { de: 'Feeds', en: 'Feeds' },
   finance: { de: 'Finanzen', en: 'Finance' },

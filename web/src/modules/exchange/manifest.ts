@@ -19,8 +19,8 @@ const manifest: ModuleManifest = {
   },
   icon: 'swap',
   identity: {
-    hue: 'teal',
-    hue2: 'ocean',
+    hue: 'ocean',
+    hue2: 'teal',
     widget: 'status',
     head: 'standard',
     signature: 'handoff',
@@ -64,7 +64,7 @@ const manifest: ModuleManifest = {
   seed: { version: 1, dependsOn: [] },
   layout: 'content',
   order: 199,
-  area: 'system',
+  area: 'knowledge',
   contributions: {
     onboarding: noOnboarding,
     services: () => import('./services'),
