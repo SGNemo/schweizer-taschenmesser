@@ -360,11 +360,12 @@ describe('proxyFetch', () => {
     const down = fakeDeps({ 'a.example.test': ok({ status: 503 }) });
     await expect(proxyFetch('https://a.example.test/x', {}, down.deps)).rejects.toMatchObject({
       code: 'upstream-error',
+      upstreamStatus: 503,
     });
     const none = fakeDeps({ 'a.example.test': [] });
-    await expect(proxyFetch('https://a.example.test/x', {}, none.deps)).rejects.toMatchObject({
-      code: 'upstream-error',
-    });
+    const err = await proxyFetch('https://a.example.test/x', {}, none.deps).catch((e) => e);
+    expect(err).toMatchObject({ code: 'upstream-error' });
+    expect(err.upstreamStatus).toBeUndefined();
   });
 });
 
@@ -546,6 +547,30 @@ describe('GET /v1/proxy', () => {
     const res = await app.inject({ method: 'GET', url: `/v1/proxy?url=${url}`, headers: auth });
     expect(res.statusCode).toBe(status);
     expect(res.json()).toEqual({ error });
+  });
+
+  it('keeps 502 for an upstream error and tells the client the upstream status', async () => {
+    const { app } = await setup({
+      proxy: fakeDeps({
+        'gone.example.test': ok({ status: 404 }),
+        'down.example.test': [],
+      }).deps,
+    });
+    const gone = await app.inject({
+      method: 'GET',
+      url: '/v1/proxy?url=https%3A%2F%2Fgone.example.test%2Fx',
+      headers: auth,
+    });
+    expect(gone.statusCode).toBe(502);
+    expect(gone.json()).toEqual({ error: 'upstream-error', upstreamStatus: 404 });
+    // No answer from the host at all: no status to tell, the body stays as before.
+    const down = await app.inject({
+      method: 'GET',
+      url: '/v1/proxy?url=https%3A%2F%2Fdown.example.test%2Fx',
+      headers: auth,
+    });
+    expect(down.statusCode).toBe(502);
+    expect(down.json()).toEqual({ error: 'upstream-error' });
   });
 
   it('validates the query and rate-limits the route', async () => {

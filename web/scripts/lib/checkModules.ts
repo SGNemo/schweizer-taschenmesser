@@ -276,13 +276,50 @@ export function checkSettingsFieldMeta(
   levels: readonly string[],
 ): string[] {
   const errors: string[] = [];
-  for (const m of source.matchAll(/\bgroup:\s*['"]([^'"]*)['"]/g))
-    if (!groups.includes(m[1]!))
-      errors.push(`${id}: settings field group "${m[1]}" is not one of ${groups.join(', ')}`);
-  for (const m of source.matchAll(/\blevel:\s*['"]([^'"]*)['"]/g))
-    if (!levels.includes(m[1]!))
-      errors.push(`${id}: settings field level "${m[1]}" is not one of ${levels.join(', ')}`);
+  for (const value of fieldMetaValues(source, 'group'))
+    if (!groups.includes(value))
+      errors.push(`${id}: settings field group "${value}" is not one of ${groups.join(', ')}`);
+  for (const value of fieldMetaValues(source, 'level'))
+    if (!levels.includes(value))
+      errors.push(`${id}: settings field level "${value}" is not one of ${levels.join(', ')}`);
   return errors;
+}
+
+/**
+ * String values of `prop` only where it sits in a settings field object (a sibling of the field's
+ * `key:`), so a setting that is itself named `group` or `level` (in the schema or the defaults) is
+ * not misread as field placement.
+ */
+function fieldMetaValues(source: string, prop: string): string[] {
+  const values: string[] = [];
+  for (const m of source.matchAll(new RegExp(`\\b${prop}:\\s*['"]([^'"]*)['"]`, 'g'))) {
+    let depth = 0;
+    let start = -1;
+    for (let i = m.index - 1; i >= 0; i--) {
+      const c = source[i];
+      if (c === '}' || c === ']') depth++;
+      else if (c === '{' || c === '[') {
+        if (depth === 0) {
+          if (c === '{') start = i;
+          break;
+        }
+        depth--;
+      }
+    }
+    if (start < 0) continue;
+    depth = 0;
+    let own = '';
+    for (let i = start + 1; i < source.length; i++) {
+      const c = source[i];
+      if (c === '{' || c === '[') depth++;
+      else if (c === '}' || c === ']') {
+        if (depth === 0) break;
+        depth--;
+      } else if (depth === 0) own += c;
+    }
+    if (/\bkey:\s*['"]/.test(own)) values.push(m[1]!);
+  }
+  return values;
 }
 
 /**
