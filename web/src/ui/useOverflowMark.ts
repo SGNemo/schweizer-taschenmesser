@@ -22,8 +22,10 @@ export function useOverflowMark(ref: RefObject<HTMLElement | null>, key: string)
       typeof MutationObserver === 'undefined'
         ? null
         : new MutationObserver((records) => {
-            for (const r of records)
+            for (const r of records) {
               for (const n of r.addedNodes) if (n instanceof Element) ro?.observe(n);
+              for (const n of r.removedNodes) if (n instanceof Element) ro?.unobserve(n);
+            }
             mark();
           });
     mo?.observe(el, { childList: true });
