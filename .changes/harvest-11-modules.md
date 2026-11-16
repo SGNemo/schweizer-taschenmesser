@@ -2,8 +2,8 @@
 type: fixed
 area: bookmarks
 breaking: false
-de: Nur ein wirklich über „Teilen“ empfangener Link bietet die Vorschau an; Einträge der Arten „Kaufen“ und „Ausprobieren“ kommen auch aus anderen Modulen richtig an.
-en: Only a link really received through "Share" offers its preview; entries of the kinds "Buy" and "Try" also arrive correctly from other modules.
+de: Nur ein wirklich über „Teilen“ empfangener Link bietet die Vorschau an.
+en: Only a link really received through "Share" offers its preview.
 ---
 
 ---

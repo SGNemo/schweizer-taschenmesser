@@ -86,6 +86,15 @@ describe('Dieser PC head (Identity 4.0)', () => {
     expect(screen.getByTestId('signature')).toBeEmptyDOMElement();
   });
 
+  it('draws no placeholder once reading the drives failed', () => {
+    render(
+      <Head>
+        <DiskHead drives={null} failed />
+      </Head>,
+    );
+    expect(screen.queryByTestId('disk-head-used')).toBeNull();
+  });
+
   it('picks the system drive, else the first one', () => {
     expect(headDrive([drive('D:\\', 1, 1), drive('C:\\', 1, 1, true)])?.root).toBe('C:\\');
     expect(headDrive([drive('D:\\', 1, 1)])?.root).toBe('D:\\');

@@ -42,7 +42,7 @@ export default function ThisPcPage() {
   const startScan = useStartScan();
   return (
     <>
-      <DiskHead drives={list.drives} />
+      <DiskHead drives={list.drives} failed={list.failed} />
       <PageHeader
         title={t.disk.title}
         views={
