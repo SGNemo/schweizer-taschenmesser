@@ -36,6 +36,7 @@ mod portable;
 mod remote;
 #[cfg(desktop)]
 mod remote_notice;
+#[cfg(desktop)]
 mod remote_power;
 #[cfg(desktop)]
 mod remote_programs;
