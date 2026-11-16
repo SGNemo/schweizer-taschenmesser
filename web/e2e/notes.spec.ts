@@ -333,8 +333,8 @@ test.describe('notebook (links, search, export, import, to-do)', () => {
     await dialog.locator('input[type=file][webkitdirectory]').setInputFiles(dir);
     await expect(dialog.getByRole('status')).toContainText('2 Seiten, 1 Notizbuch');
     await dialog.getByRole('button', { name: 'Importieren' }).click();
-    await expect(page.getByRole('button', { name: /^Reisen · 2/ })).toBeVisible();
-    await page.getByRole('button', { name: /^Reisen · 2/ }).click();
+    await expect(page.getByRole('button', { name: /^Reisen\s*2$/ })).toBeVisible();
+    await page.getByRole('button', { name: /^Reisen\s*2$/ }).click();
     await expect(rows(page).filter({ hasText: 'Colosseum besuchen' })).toBeVisible();
 
     // The same folder again: nothing new.
