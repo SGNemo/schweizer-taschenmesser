@@ -43,9 +43,10 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  /* 32 px chips with a 44 px hit box: wrapped lines keep 44 px from line to line */
+  /* 32 px chips with a 44 px hit box: wrapped lines keep 44 px from line to line, and the first line's hit box
+     stays clear of the field above it (M-5: 4 px let it cover the field's lower edge) */
   gap: var(--space-3) var(--space-2);
-  margin: var(--space-1) 0 0;
+  margin: var(--space-2) 0 0;
 }
 .examplesLead {
   color: var(--text-3);

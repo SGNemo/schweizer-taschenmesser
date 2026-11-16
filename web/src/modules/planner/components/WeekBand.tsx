@@ -32,8 +32,8 @@ export function tileName(day: BoardDay, tomorrow: boolean): string {
 }
 
 /**
- * The week as a band of seven tiles (planner hub R1): day, number of things, free time and a bar whose track length
- * is the day's capacity on the week's scale. A tile picks the day shown in the sheet. One tab stop; ←/→/Home/End
+ * The week as a band of seven tiles (planner hub R1): day, number of things (wide form only), free time and a bar
+ * whose track length is the day's capacity on the week's scale. A tile picks the day shown in the sheet. One tab stop; ←/→/Home/End
  * move the focus, Enter or Space picks. Below 44 rem of its own width the tiles take the compact form.
  */
 export function WeekBand({
@@ -116,8 +116,9 @@ export function WeekBand({
                 <span className={styles.compact} aria-hidden="true">
                   <span className={styles.day}>{dayName(d.date)}</span>
                   <span className={styles.day}>{formatDay(d.date, 'd')}</span>
-                  {/* The count of things, else what the day has: its free time or one state word („frei“). */}
-                  <span className={styles.state}>{n > 0 ? n : capacityShort(d)}</span>
+                  {/* One unit on every tile (M-2): the free time or one state word („frei“, „voll“); the count of
+                      things is in the tile's name only. */}
+                  <span className={styles.state}>{capacityShort(d)}</span>
                 </span>
               </button>
               {/* The button's name says the load in words; the bar is its picture. */}

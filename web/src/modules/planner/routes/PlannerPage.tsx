@@ -668,8 +668,9 @@ export default function PlannerPage() {
       reading={reading}
       error={addError}
       focusOnOpen={inDialog}
-      labelHidden={inDialog}
-      // The phone's last row is the field alone; its examples stand in the plus's sheet.
+      // The phone's last row is the field alone, its label for screen readers (placeholder and „Eintragen“ say
+      // it; M-3: the row fits above the bottom bar on arrival); its examples stand in the plus's sheet.
+      labelHidden={inDialog || phone}
       examples={inDialog || !phone}
       formRef={addRef}
     />
