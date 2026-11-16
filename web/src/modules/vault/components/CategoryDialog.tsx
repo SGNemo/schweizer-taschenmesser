@@ -69,14 +69,32 @@ export function CategoryDialog({
   // as the dialog does on opening, so keyboard and screen reader never land on the dialog body.
   const body = useRef<HTMLDivElement>(null);
   const opened = useRef(false);
+  // Back on the list (cancel, save), the focus returns to the button that opened the form or question:
+  // the folder (`data-cat`) and the button in its row (`data-return`); `cat: null` is "Neue Kategorie".
+  const returnTo = useRef<{ cat: string | null; button: 'edit' | 'remove' } | null>(null);
   useEffect(() => {
     if (!open) {
       opened.current = false;
+      returnTo.current = null;
       return;
     }
     if (!opened.current) {
       opened.current = true; // the dialog itself focuses on opening
       return;
+    }
+    const from = mode.kind === 'list' ? returnTo.current : null;
+    if (from) {
+      returnTo.current = null;
+      const row =
+        from.cat === null
+          ? body.current
+          : Array.from(body.current?.querySelectorAll<HTMLElement>('[data-cat]') ?? []).find(
+              (el) => el.dataset.cat === from.cat,
+            );
+      const btn = row?.querySelector<HTMLButtonElement>(
+        `[data-return="${from.cat === null ? 'add' : from.button}"]`,
+      );
+      if (btn && !btn.disabled) return btn.focus();
     }
     body.current?.querySelector<HTMLElement>('[data-autofocus]')?.focus();
   }, [open, mode]);
@@ -122,7 +140,10 @@ export function CategoryDialog({
           <CategoryList
             cats={cats}
             docs={docs}
-            onEdit={(id) => setMode({ kind: 'edit', id })}
+            onEdit={(id) => {
+              returnTo.current = { cat: id, button: 'edit' };
+              setMode({ kind: 'edit', id });
+            }}
             onRemove={(cat) => {
               if (!docs) return;
               const ids = docsInCategory(docs, cats, cat.id);
@@ -137,7 +158,10 @@ export function CategoryDialog({
                   .finally(() =>
                     body.current?.querySelector<HTMLElement>('[data-autofocus]')?.focus(),
                   );
-              else setMode({ kind: 'remove', id: cat.id });
+              else {
+                returnTo.current = { cat: cat.id, button: 'remove' };
+                setMode({ kind: 'remove', id: cat.id });
+              }
             }}
             onClose={close}
           />
@@ -244,10 +268,15 @@ function CategoryList({
                   >
                     <Icon name="chevronDown" size={18} />
                   </IconButton>
-                  <IconButton label={a.edit(name)} onClick={() => onEdit(c.id)}>
+                  <IconButton label={a.edit(name)} data-return="edit" onClick={() => onEdit(c.id)}>
                     <Icon name="edit" size={18} />
                   </IconButton>
-                  <IconButton label={a.remove(name)} disabled={!docs} onClick={() => onRemove(c)}>
+                  <IconButton
+                    label={a.remove(name)}
+                    disabled={!docs}
+                    data-return="remove"
+                    onClick={() => onRemove(c)}
+                  >
                     <Icon name="trash" size={18} />
                   </IconButton>
                 </span>
@@ -259,7 +288,7 @@ function CategoryList({
       <p className={styles.hint}>{a.fixedHint}</p>
       <FormActions
         start={
-          <Button onClick={() => onEdit(null)}>
+          <Button data-return="add" onClick={() => onEdit(null)}>
             <Icon name="plus" size={18} />
             {a.add}
           </Button>

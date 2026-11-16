@@ -101,7 +101,7 @@ describe('vault folders', () => {
     ).toBeTruthy();
   });
 
-  it('the focus follows the dialog: the form’s field, the question’s choice, back to "Fertig"', async () => {
+  it('the focus follows the dialog: the form’s field, the question’s choice, back to the button that opened it', async () => {
     await documentRepo.create({ title: 'Handyvertrag', category: 'contract' } as never);
     page();
     await screen.findByText('Handyvertrag');
@@ -110,11 +110,26 @@ describe('vault folders', () => {
     await waitFor(() => expect(document.activeElement).toBe(screen.getByLabelText('Name')));
     fireEvent.click(screen.getByRole('button', { name: 'Abbrechen' }));
     await waitFor(() =>
-      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Fertig' })),
+      expect(document.activeElement).toBe(
+        screen.getByRole('button', { name: 'Steuer bearbeiten' }),
+      ),
     );
     fireEvent.click(screen.getByRole('button', { name: 'Verträge löschen' }));
     await waitFor(() =>
       expect(document.activeElement).toBe(screen.getByLabelText('Verschieben nach')),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Abbrechen' }));
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Verträge löschen' })),
+    );
+    const dialog = screen.getByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Neue Kategorie' }));
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByLabelText('Name')));
+    fireEvent.click(screen.getByRole('button', { name: 'Abbrechen' }));
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        within(dialog).getByRole('button', { name: 'Neue Kategorie' }),
+      ),
     );
   });
 
