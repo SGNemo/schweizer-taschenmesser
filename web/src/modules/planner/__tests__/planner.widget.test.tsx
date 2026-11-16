@@ -111,6 +111,6 @@ describe('week widget', () => {
       'nichts geplant',
     ]);
     expect(entries.every((e) => e.overText === undefined)).toBe(true);
-    expect(weekSummary(days)).toBe('Bis Do: 9 h 9 geplant · 47 Min frei');
+    expect(weekSummary(days)).toBe('Bis Do: 9 h 09 geplant · 47 Min frei');
   });
 });

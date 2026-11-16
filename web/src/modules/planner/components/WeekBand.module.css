@@ -94,8 +94,8 @@
   bottom: var(--space-2);
   pointer-events: none;
 }
-/* Compact: weekday and number, the count (or the free time, or „frei“), the bar. Words never break inside
-   themselves; at a large text size the number drops under the weekday instead. */
+/* Compact: weekday and number, the free time (or one state word), the bar. Words never break inside themselves;
+   at a large text size the number drops under the weekday, a long state („40 Min mehr“) breaks between words. */
 @container band (max-width: 44rem) {
   .band {
     gap: var(--space-1);
@@ -103,8 +103,9 @@
   .tile {
     --tile-pad: var(--space-2);
   }
+  /* No side padding: the centred free time („37 Min“) needs the tile's whole width on a phone. */
   .pick {
-    padding-inline: var(--space-1);
+    padding-inline: 0;
     text-align: center;
   }
   .wide {
@@ -122,5 +123,6 @@
   }
   .compact .state {
     flex-basis: 100%;
+    white-space: normal;
   }
 }

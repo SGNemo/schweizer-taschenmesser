@@ -160,7 +160,14 @@ export default function FinancePage() {
           <Tabs
             label={t.finance.tabsLabel}
             value={tab}
-            options={tabs.map((k) => ({ value: k, label: t.finance.tabs[k] }))}
+            options={tabs.map((k) => ({
+              value: k,
+              // The first tab names what it shows: "Monat", or "Jahr" while the year is open (no "Monat" above "Jahr").
+              label:
+                k === 'overview' && period === 'year'
+                  ? t.finance.tabs.overviewYear
+                  : t.finance.tabs[k],
+            }))}
             onChange={(k) => go({ tab: k })}
           />
         }

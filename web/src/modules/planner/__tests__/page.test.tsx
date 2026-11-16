@@ -645,4 +645,20 @@ describe('planner page', () => {
     await waitFor(() => expect(screen.queryByTestId('week-check-link')).toBeNull());
     expect(await getMeta(WEEK_CHECK_KEY)).toBe('2026-11-09');
   });
+
+  it('every field on the page has a name, on the empty board and with things (M-5)', async () => {
+    const named = () => {
+      const fields = [...document.querySelectorAll('input, select, textarea')];
+      expect(fields.length).toBeGreaterThan(0);
+      for (const field of fields) expect(field).toHaveAccessibleName();
+    };
+    const { unmount } = draw();
+    await screen.findByTestId('planner-empty');
+    named();
+    unmount();
+    await plan('2026-11-09', 2);
+    draw();
+    await within(await screen.findByTestId('day-2026-11-09')).findByText('Ding 1');
+    named();
+  });
 });
