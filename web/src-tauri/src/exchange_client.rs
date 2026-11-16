@@ -12,7 +12,7 @@
 // compiled on the desktop for the unit tests only; no command of it is registered there
 #![cfg_attr(not(mobile), allow(dead_code))]
 
-use crate::exchange_store::{hex, id_from_hex, kind_from, unix_ms, Entry, Inbox};
+use crate::exchange_store::{hex, id_from_hex, kind_from, unix_ms, Entry, Inbox, Key};
 use lan_sync::exchange::wire::{AckState, Code, Item};
 use lan_sync::exchange_client::{Event, ExchangeError, ExchangeSession};
 use serde::Serialize;
@@ -113,6 +113,21 @@ fn current<R: Runtime>(app: &AppHandle<R>, session: u64) -> Result<Arc<ExchangeS
     }
 }
 
+/// Ends a session for good. The reader's callback holds `Shared`, and `Shared` holds the session:
+/// taking it out of `Shared` breaks that cycle, so the session really closes now.
+fn end(open: Option<(u64, Arc<Shared>)>) {
+    if let Some((_, shared)) = open {
+        let session = shared.session.lock().ok().and_then(|mut s| s.take());
+        if let Some(session) = session {
+            match Arc::try_unwrap(session) {
+                Ok(s) => s.close(),
+                // a send still holds it: dropping the last reference shuts it
+                Err(s) => drop(s),
+            }
+        }
+    }
+}
+
 fn ack(shared: &Shared, id: [u8; 16], state: AckState) {
     let Ok(slot) = shared.session.lock() else {
         return;
@@ -138,10 +153,9 @@ pub async fn exchange_client_open<R: Runtime>(
     tauri::async_runtime::spawn_blocking(move || {
         let state = app.state::<ExchangeClient>();
         let id = state.newest.fetch_add(1, Ordering::SeqCst) + 1;
-        // the session this one replaces ends now (dropping it shuts it)
-        if let Ok(mut open) = state.open.lock() {
-            open.take();
-        }
+        // the session this one replaces ends now
+        let old = state.open.lock().ok().and_then(|mut o| o.take());
+        end(old);
         let (hub, addr, name) = crate::lan_client::hub_entry(&app)?;
         let key = crate::lan_client::stored_key(&app)?;
         let inbox = inbox(&app)?;
@@ -246,29 +260,31 @@ pub async fn exchange_client_close<R: Runtime>(app: AppHandle<R>, session: u64) 
             Ok(mut open) if open.as_ref().is_some_and(|(id, _)| *id == session) => open.take(),
             _ => None,
         };
-        drop(taken);
+        end(taken);
     })
     .await;
 }
 
-/// What arrived and is not taken over yet.
+/// What arrived and is not taken over yet (off the main thread: the file can be large).
 #[tauri::command]
-pub fn exchange_client_take<R: Runtime>(app: AppHandle<R>) -> Result<Vec<Entry>, String> {
-    Ok(inbox(&app)?.pending())
+pub async fn exchange_client_take<R: Runtime>(app: AppHandle<R>) -> Result<Vec<Entry>, String> {
+    tauri::async_runtime::spawn_blocking(move || Ok(inbox(&app)?.pending()))
+        .await
+        .map_err(|_| "internal".to_owned())?
 }
 
 /// The page keeps these now.
 #[tauri::command]
-pub fn exchange_client_confirm<R: Runtime>(
+pub async fn exchange_client_confirm<R: Runtime>(
     app: AppHandle<R>,
-    ids: Vec<String>,
+    items: Vec<Key>,
 ) -> Result<(), String> {
-    let ids: Vec<String> = ids
-        .into_iter()
-        .filter(|i| id_from_hex(i).is_some())
-        .collect();
-    inbox(&app)?.confirm(&ids);
-    Ok(())
+    tauri::async_runtime::spawn_blocking(move || {
+        inbox(&app)?.confirm(&items);
+        Ok(())
+    })
+    .await
+    .map_err(|_| "internal".to_owned())?
 }
 
 #[cfg(test)]

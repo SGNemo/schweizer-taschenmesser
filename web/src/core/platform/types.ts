@@ -286,6 +286,7 @@ export interface ExchangeAnswer {
 export interface ExchangeDevice {
   id: string;
   name: string;
+  /** Unix **seconds** of the last sync contact. */
   lastSeen: number | null;
   /** Granted at this PC (and `paused` there). */
   on: boolean;
@@ -318,12 +319,20 @@ export interface ExchangeSession {
   close(): Promise<void>;
 }
 
+/** Items and answers are named by the other device and the item's id (ids are per device). */
+export interface ExchangeKey {
+  peer: string;
+  id: string;
+}
+
 /**
  * Device exchange. `side`: `pc` on the desktop (the hub), `phone` on Android, `null` elsewhere.
- * Errors are `Error(code)`: `not-started`, `not-found`, `bad-item`, `outbox-full`, `storage`,
- * `cancelled` / `busy-controlled` / `asking` / `changed` (the native confirmation at the PC),
- * and for `open`: `network`, `no-answer`, `unknown-device`, `not-paired`, `exchange-off`,
- * `not-granted`, `paused`, `limit:<minutes>`.
+ * Errors are `Error(code)`. PC: `not-started` (hub off), `not-found`, `bad-peer`, `bad-id`,
+ * `bad-kind`, `bad-item`, `outbox-full`, `storage`, `no-data-dir`, `internal`, and from the native
+ * confirmation `cancelled`, `busy-controlled`, `asking`, `changed`. Phone `open`: `network`,
+ * `no-answer`, `unknown-device` (also: not at home, or the PC has no device exchange), `not-paired`,
+ * `keystore-unavailable`, `protocol`, `closed`, `exchange-off`, `not-granted`, `paused`,
+ * `limit:<minutes>` – the same `limit` arrives on a `closed` event as `reason` + `minutes`.
  */
 export interface ExchangeService {
   side: 'pc' | 'phone' | null;
@@ -331,10 +340,10 @@ export interface ExchangeService {
   status(): Promise<ExchangePcStatus>;
   /** PC: queues an item for a paired device. */
   send(peer: string, item: { id: string; kind: ExchangeKind; body: string }): Promise<void>;
-  /** Both: received items not taken over yet; PC also the answers since last time. */
+  /** Both: received items not taken over yet; PC also the answers not confirmed yet. */
   take(): Promise<{ items: ExchangeItem[]; answers: ExchangeAnswer[] }>;
-  /** Both: the page keeps these items now. */
-  confirm(ids: string[]): Promise<void>;
+  /** Both: the page stored these items (and, PC, answers); they leave the shell's files. */
+  confirm(items: ExchangeKey[], answers?: ExchangeKey[]): Promise<void>;
   /** PC: the module at this PC. On with a stored grant is asked in a native dialog. */
   setEnabled(enabled: boolean): Promise<void>;
   /** PC: one device's grant. On / un-pause is asked in a native dialog. */

@@ -207,13 +207,13 @@ pub fn remote_dialog(lang: Lang) -> (&'static str, &'static str, &'static str) {
     }
 }
 
-/// The confirmation before a device may send messages and files to this PC (device exchange):
+/// The confirmation before a device may exchange messages and links with this PC (device exchange):
 /// (title, allow, cancel).
 pub fn exchange_dialog(lang: Lang) -> (&'static str, &'static str, &'static str) {
     if german(lang) {
         ("Austausch erlauben?", "Erlauben", "Abbrechen")
     } else {
-        ("Allow device drop?", "Allow", "Cancel")
+        ("Allow Device drop?", "Allow", "Cancel")
     }
 }
 

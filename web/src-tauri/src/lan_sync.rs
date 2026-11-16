@@ -655,7 +655,14 @@ pub fn lan_revoke(app: AppHandle, state: State<'_, LanSync>, id: String) -> Resu
             .revoke(&*core.trust, &PublicKey::from_bytes(key))
             .map_err(|_| "failed")?;
         // what this PC queued for it goes too
-        crate::exchange::forget(&app, &PublicKey::from_bytes(key));
+        let active: Vec<PublicKey> = core
+            .trust
+            .list()
+            .into_iter()
+            .filter(|d| !d.revoked)
+            .map(|d| d.key)
+            .collect();
+        crate::exchange::keep_only(&app, &active);
         let _ = wake.send(());
         Ok(changed)
     })
@@ -664,7 +671,9 @@ pub fn lan_revoke(app: AppHandle, state: State<'_, LanSync>, id: String) -> Resu
 /// "Schlüssel erneuern": a new data key version, the store is emptied (new epoch), every open
 /// connection ends. The new key goes to the web app; devices must pair again.
 #[tauri::command(async)]
-pub fn lan_hub_rotate(state: State<'_, LanSync>) -> Result<DataKeyDto, String> {
+pub fn lan_hub_rotate(app: AppHandle, state: State<'_, LanSync>) -> Result<DataKeyDto, String> {
+    // nothing this PC queued for a device outlives its pairing
+    crate::exchange::keep_only(&app, &[]);
     with_core(&state, |core, wake| {
         let old = core
             .data_keys

@@ -13,7 +13,9 @@
 //!
 //! Nothing here logs: no text, link, name or size.
 
-use crate::exchange_store::{hex, id_from_hex, kind_from, unix_ms, Answer, Entry, Inbox, Outbox};
+use crate::exchange_store::{
+    hex, id_from_hex, kind_from, unix_ms, Answer, Entry, Inbox, Key, Outbox,
+};
 use crate::texts::{self, Lang};
 use lan_sync::exchange::control::Stored;
 use lan_sync::exchange::wire::{AckState, Item};
@@ -91,29 +93,42 @@ impl ExchangeOutbox for HubOutbox {
     }
 }
 
+/// `<app data>/lan-sync/exchange` (the hub's folder; the files outlive a hub that is off).
+fn exchange_dir(app: &AppHandle) -> Option<std::path::PathBuf> {
+    let dir = crate::capture::app_data_folder(app)?
+        .join("lan-sync")
+        .join("exchange");
+    std::fs::create_dir_all(&dir).ok()?;
+    Some(dir)
+}
+
 impl ExchangeHost {
-    fn files(&self, dir: &Path) -> (Arc<Inbox>, Arc<Outbox>) {
+    /// Inbox and outbox, opened once from the app's data folder – whether the hub runs or not.
+    fn files(&self, app: &AppHandle) -> Option<(Arc<Inbox>, Arc<Outbox>)> {
         let mut files = match self.files.lock() {
             Ok(f) => f,
             Err(p) => p.into_inner(),
         };
-        files
-            .get_or_insert_with(|| {
-                (
-                    Arc::new(Inbox::open(&dir.join("inbox.json"))),
-                    Arc::new(Outbox::open(&dir.join("outbox.json"))),
-                )
-            })
-            .clone()
+        if files.is_none() {
+            let dir = exchange_dir(app)?;
+            *files = Some((
+                Arc::new(Inbox::open(&dir.join("inbox.json"))),
+                Arc::new(Outbox::open(&dir.join("outbox.json"))),
+            ));
+        }
+        files.clone()
     }
 
     fn parts(&self) -> Result<Parts, String> {
         let slot = self.slot.lock().map_err(|_| "internal")?;
         Ok(slot.as_ref().ok_or("not-started")?.clone())
     }
+}
 
-    fn opened_files(&self) -> Option<(Arc<Inbox>, Arc<Outbox>)> {
-        self.files.lock().ok().and_then(|f| f.clone())
+fn switch_at(dir: &Path) -> Arc<dyn MasterSwitch> {
+    match FileSwitch::open(&dir.join("switch.json")) {
+        Ok(s) => Arc::new(s),
+        Err(_) => Arc::new(ClosedSwitch),
     }
 }
 
@@ -122,11 +137,21 @@ pub fn parts(app: &AppHandle, lan_dir: &Path, trust: Arc<FileTrustStore>) -> Arc
     let dir = lan_dir.join("exchange");
     let _ = std::fs::create_dir_all(&dir);
     let host = app.state::<ExchangeHost>();
-    let (inbox, outbox) = host.files(&dir);
-    let switch: Arc<dyn MasterSwitch> = match FileSwitch::open(&dir.join("switch.json")) {
-        Ok(s) => Arc::new(s),
-        Err(_) => Arc::new(ClosedSwitch),
-    };
+    let (inbox, outbox) = host.files(app).unwrap_or_else(|| {
+        (
+            Arc::new(Inbox::open(&dir.join("inbox.json"))),
+            Arc::new(Outbox::open(&dir.join("outbox.json"))),
+        )
+    });
+    // queues of devices that are no longer paired go
+    let active: Vec<String> = trust
+        .list()
+        .into_iter()
+        .filter(|d| !d.revoked)
+        .map(|d| hex(d.key.as_bytes()))
+        .collect();
+    outbox.keep_only(&active);
+    let switch = switch_at(&dir);
     Arc::new(Exchange::new(
         switch,
         trust,
@@ -163,17 +188,25 @@ pub fn detach(app: &AppHandle) {
     }
 }
 
-/// A device was unpaired: what this PC queued for it goes.
-pub fn forget(app: &AppHandle, key: &PublicKey) {
-    if let Some((_, outbox)) = app.state::<ExchangeHost>().opened_files() {
-        outbox.forget(&hex(key.as_bytes()));
+/// Devices were unpaired (or the key renewed): only the queues of `active` devices stay.
+pub fn keep_only(app: &AppHandle, active: &[PublicKey]) {
+    if let Some((_, outbox)) = app.state::<ExchangeHost>().files(app) {
+        let keep: Vec<String> = active.iter().map(|k| hex(k.as_bytes())).collect();
+        outbox.keep_only(&keep);
     }
+}
+
+/// Unicode format characters (bidi controls, zero-width characters, BOM, soft hyphen …).
+fn is_format(c: char) -> bool {
+    matches!(c,
+        '\u{00AD}' | '\u{061C}' | '\u{180E}' | '\u{200B}'..='\u{200F}' | '\u{202A}'..='\u{202E}'
+        | '\u{2060}'..='\u{2064}' | '\u{2066}'..='\u{206F}' | '\u{FEFF}' | '\u{FFF9}'..='\u{FFFB}')
 }
 
 /// Plain text for a dialog: no control or format characters from a device name.
 fn plain(name: &str) -> String {
     name.chars()
-        .filter(|c| !c.is_control() && !matches!(*c, '\u{200B}'..='\u{200F}' | '\u{202A}'..='\u{202E}' | '\u{2066}'..='\u{2069}'))
+        .filter(|c| !c.is_control() && !is_format(*c))
         .take(64)
         .collect::<String>()
         .trim()
@@ -231,6 +264,7 @@ impl Drop for Asking<'_> {
 pub struct DeviceDto {
     id: String,
     name: String,
+    /// Unix seconds of the last sync contact.
     last_seen: Option<u64>,
     on: bool,
     paused: bool,
@@ -266,18 +300,20 @@ pub struct TakeDto {
 // ---- commands (all `async`: two of them wait for a native dialog) ----
 
 #[tauri::command(async)]
-pub fn exchange_status(state: State<'_, ExchangeHost>) -> StatusDto {
+pub fn exchange_status(app: AppHandle, state: State<'_, ExchangeHost>) -> StatusDto {
     let queued = state
-        .opened_files()
+        .files(&app)
         .map(|(_, o)| o.queued())
         .unwrap_or_default()
         .into_iter()
         .map(|(peer, id, state)| QueuedDto { peer, id, state })
         .collect();
     let Ok(parts) = state.parts() else {
+        // the hub is off: the stored switch still says what the module is at this PC
+        let enabled = exchange_dir(&app).is_some_and(|d| switch_at(&d).enabled());
         return StatusDto {
             running: false,
-            enabled: false,
+            enabled,
             devices: Vec::new(),
             queued,
         };
@@ -310,6 +346,7 @@ pub fn exchange_status(state: State<'_, ExchangeHost>) -> StatusDto {
 /// Queues a message or link for a paired device; it goes out on that device's next session.
 #[tauri::command(async)]
 pub fn exchange_send(
+    app: AppHandle,
     state: State<'_, ExchangeHost>,
     peer: String,
     id: String,
@@ -329,17 +366,19 @@ pub fn exchange_send(
         body,
     )
     .map_err(|_| "bad-item")?;
-    let (_, outbox) = state.opened_files().ok_or("not-started")?;
-    outbox.push(&peer, &item, unix_ms())
+    let (_, outbox) = state.files(&app).ok_or("no-data-dir")?;
+    // always the lower-case key: the hub looks the queue up by it
+    outbox.push(&hex(key.as_bytes()), &item, unix_ms())
 }
 
-/// Received items the web view has not taken over yet, and the devices' answers since last time.
+/// Received items the web view has not taken over yet, and the devices' answers it has not
+/// confirmed (both survive a restart until `exchange_confirm`).
 #[tauri::command(async)]
-pub fn exchange_take(state: State<'_, ExchangeHost>) -> TakeDto {
-    match state.opened_files() {
+pub fn exchange_take(app: AppHandle, state: State<'_, ExchangeHost>) -> TakeDto {
+    match state.files(&app) {
         Some((inbox, outbox)) => TakeDto {
             items: inbox.pending(),
-            answers: outbox.take_answers(),
+            answers: outbox.answers(),
         },
         None => TakeDto {
             items: Vec::new(),
@@ -348,15 +387,17 @@ pub fn exchange_take(state: State<'_, ExchangeHost>) -> TakeDto {
     }
 }
 
-/// The web view keeps these items now.
+/// The web view stored these items and answers.
 #[tauri::command(async)]
-pub fn exchange_confirm(state: State<'_, ExchangeHost>, ids: Vec<String>) {
-    if let Some((inbox, _)) = state.opened_files() {
-        let ids: Vec<String> = ids
-            .into_iter()
-            .filter(|i| id_from_hex(i).is_some())
-            .collect();
-        inbox.confirm(&ids);
+pub fn exchange_confirm(
+    app: AppHandle,
+    state: State<'_, ExchangeHost>,
+    items: Vec<Key>,
+    answers: Vec<Key>,
+) {
+    if let Some((inbox, outbox)) = state.files(&app) {
+        inbox.confirm(&items);
+        outbox.confirm_answers(&answers);
     }
 }
 
@@ -431,6 +472,9 @@ fn ask(
     lang: Lang,
     names: &str,
 ) -> Result<(), String> {
+    // The ticket comes first: a mouse/keyboard session opened at any moment from here on –
+    // before the question, while it is on screen (and closed again), or still open – refuses.
+    let ticket = parts.remote.ticket();
     if parts.remote.full_session_open() {
         return Err("busy-controlled".to_owned());
     }
@@ -438,10 +482,10 @@ fn ask(
     if !confirmed(app, lang, names) {
         return Err("cancelled".to_owned());
     }
-    if parts.remote.full_session_open() {
-        return Err("busy-controlled".to_owned());
-    }
-    Ok(())
+    parts
+        .remote
+        .confirm(ticket)
+        .map_err(|_| "busy-controlled".to_owned())
 }
 
 #[cfg(test)]
@@ -454,5 +498,6 @@ mod tests {
         assert_eq!(shown_name(Lang::De, "  "), "Dein Handy");
         assert_eq!(shown_name(Lang::En, ""), "Your phone");
         assert_eq!(plain(&"x".repeat(100)).len(), 64);
+        assert_eq!(plain("Pi\u{FEFF}xel\u{2060} 7\u{00AD}"), "Pixel 7");
     }
 }
