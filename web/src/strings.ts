@@ -1617,6 +1617,8 @@ export const de = {
       wasDue: (date: string) => `war am ${date} fällig`,
       moveTo: (view: string) => `Verschieben nach ${view}`,
       hint: 'Karte ziehen oder „⋯“ nutzen.',
+      /** The board's sideways scroll area (a keyboard stop, so the arrows scroll it). */
+      label: 'Board-Spalten',
     },
     tags: {
       label: 'Tags',
