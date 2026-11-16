@@ -67,6 +67,14 @@ pub enum ServerError {
     Bind,
 }
 
+/// The base of the monotonic time handed to the router (rate limits of handshakes and of device
+/// exchange). One per process, not per server: the supervisor restarts the server on the same
+/// router after a network change or a wake, and times kept by the router must stay comparable.
+fn process_base() -> Instant {
+    static BASE: std::sync::OnceLock<Instant> = std::sync::OnceLock::new();
+    *BASE.get_or_init(Instant::now)
+}
+
 struct Shared {
     router: Arc<Router>,
     cfg: ServerConfig,
@@ -222,7 +230,7 @@ impl Server {
             router,
             cfg,
             stop: AtomicBool::new(false),
-            started: Instant::now(),
+            started: process_base(),
             counts: Mutex::new(Counts::default()),
             deliveries: Mutex::new(HashMap::new()),
         });
