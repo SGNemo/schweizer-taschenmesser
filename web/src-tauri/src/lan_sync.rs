@@ -671,9 +671,7 @@ pub fn lan_revoke(app: AppHandle, state: State<'_, LanSync>, id: String) -> Resu
 /// "Schlüssel erneuern": a new data key version, the store is emptied (new epoch), every open
 /// connection ends. The new key goes to the web app; devices must pair again.
 #[tauri::command(async)]
-pub fn lan_hub_rotate(app: AppHandle, state: State<'_, LanSync>) -> Result<DataKeyDto, String> {
-    // nothing this PC queued for a device outlives its pairing
-    crate::exchange::keep_only(&app, &[]);
+pub fn lan_hub_rotate(state: State<'_, LanSync>) -> Result<DataKeyDto, String> {
     with_core(&state, |core, wake| {
         let old = core
             .data_keys

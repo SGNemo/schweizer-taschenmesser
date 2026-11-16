@@ -104,13 +104,18 @@ fn exchange_dir(app: &AppHandle) -> Option<std::path::PathBuf> {
 
 impl ExchangeHost {
     /// Inbox and outbox, opened once from the app's data folder – whether the hub runs or not.
+    /// One pair per run: two in-memory copies of a file would overwrite each other.
     fn files(&self, app: &AppHandle) -> Option<(Arc<Inbox>, Arc<Outbox>)> {
+        self.files_in(exchange_dir(app))
+    }
+
+    fn files_in(&self, dir: Option<std::path::PathBuf>) -> Option<(Arc<Inbox>, Arc<Outbox>)> {
         let mut files = match self.files.lock() {
             Ok(f) => f,
             Err(p) => p.into_inner(),
         };
         if files.is_none() {
-            let dir = exchange_dir(app)?;
+            let dir = dir?;
             *files = Some((
                 Arc::new(Inbox::open(&dir.join("inbox.json"))),
                 Arc::new(Outbox::open(&dir.join("outbox.json"))),
@@ -137,12 +142,13 @@ pub fn parts(app: &AppHandle, lan_dir: &Path, trust: Arc<FileTrustStore>) -> Arc
     let dir = lan_dir.join("exchange");
     let _ = std::fs::create_dir_all(&dir);
     let host = app.state::<ExchangeHost>();
-    let (inbox, outbox) = host.files(app).unwrap_or_else(|| {
-        (
+    let (inbox, outbox) = match host.files(app).or_else(|| host.files_in(Some(dir.clone()))) {
+        Some(files) => files,
+        None => (
             Arc::new(Inbox::open(&dir.join("inbox.json"))),
             Arc::new(Outbox::open(&dir.join("outbox.json"))),
-        )
-    });
+        ),
+    };
     // queues of devices that are no longer paired go
     let active: Vec<String> = trust
         .list()
