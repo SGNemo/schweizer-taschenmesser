@@ -248,9 +248,14 @@ impl Exchange {
 
     /// Records one stored item of `peer` (refused and rejected items do not count). `limited` was
     /// asked first, so the device has a place in the table.
+    /// The table never grows past its cap here either (two new devices may pass `limited` at once).
     pub(crate) fn record(&self, peer: &PublicKey, now: Duration) {
         if let Ok(mut rate) = self.rate.lock() {
-            rate.entry(*peer.as_bytes()).or_default().push_back(now);
+            if let Some(times) = rate.get_mut(peer.as_bytes()) {
+                times.push_back(now);
+            } else if rate.len() < MAX_TRACKED {
+                rate.insert(*peer.as_bytes(), VecDeque::from([now]));
+            }
         }
     }
 

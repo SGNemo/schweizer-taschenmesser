@@ -172,11 +172,13 @@ fn check_body(kind: Kind, body: &str) -> Result<(), Malformed> {
             }
         }
         Kind::Link => {
-            let lower = body
-                .get(..8)
-                .map(str::to_ascii_lowercase)
-                .unwrap_or_default();
-            let scheme = lower.starts_with("https://") || lower.starts_with("http://");
+            // on bytes: the 8th byte of `http://über…` is inside a character
+            let starts = |p: &str| {
+                body.as_bytes()
+                    .get(..p.len())
+                    .is_some_and(|b| b.eq_ignore_ascii_case(p.as_bytes()))
+            };
+            let scheme = starts("https://") || starts("http://");
             // no whitespace, controls or invisible format characters (bidi tricks) in an address
             let plain = body
                 .chars()
@@ -323,6 +325,7 @@ mod tests {
         );
         assert!(item(Kind::Link, "http://192.168.1.10:8080/x").is_ok());
         assert!(item(Kind::Link, "https://bücher.example/").is_ok());
+        assert!(item(Kind::Link, "http://über.example/").is_ok());
         assert!(item(Kind::Link, "http://[fe80::1]:8080/").is_ok());
         assert!(item(Kind::Link, "https://example.org/?mail=a@b.example").is_ok());
         let big = item(Kind::Text, &"x".repeat(MAX_BODY)).unwrap();
