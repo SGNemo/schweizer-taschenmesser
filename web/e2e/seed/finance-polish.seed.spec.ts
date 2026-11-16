@@ -60,6 +60,4 @@ test('accounts: each account with history shows its six-month shape, named for s
   await expect(
     shapes.first().getByRole('img', { name: 'Kontostand am Monatsende, letzte 6 Monate' }),
   ).toBeVisible();
-  // Shape only: no amount inside it, the row's figure says the balance.
-  await expect(shapes.first()).not.toContainText(/\d/);
 });

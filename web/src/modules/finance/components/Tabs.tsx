@@ -1,5 +1,5 @@
 import { compareText } from '@/core/i18n/format';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { currencyOf, formatMoney, parseMoney } from '@/core/money';
 import { getPlatform } from '@/core/platform';
@@ -346,15 +346,19 @@ export function AccountsTab({ data }: { data: FinanceData }) {
   const [target, setTarget] = useState<AccountTarget>(null);
   const [transfer, setTransfer] = useState<TransferTarget>(null);
   const day = today();
-  const map = balances(data.accounts, data.txs, day);
   // The shape of each balance over the last six month ends (from the account's start; the newest point is today).
-  // The React compiler memoises this per data read.
-  const shapes = new Map(
-    data.accounts.map((a) => [
-      a.id,
-      netWorthSeries([a], data.txs, day, 6).map((p) => p.valueMinor),
-    ]),
+  // One pass over the bookings per account: once per data read, not on every dialog toggle.
+  const shapes = useMemo(
+    () =>
+      new Map(
+        data.accounts.map((a) => [
+          a.id,
+          netWorthSeries([a], data.txs, day, 6).map((p) => p.valueMinor),
+        ]),
+      ),
+    [data, day],
   );
+  const map = balances(data.accounts, data.txs, day);
 
   return (
     <>
