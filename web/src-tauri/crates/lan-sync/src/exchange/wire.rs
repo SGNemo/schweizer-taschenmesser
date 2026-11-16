@@ -332,7 +332,7 @@ pub const MAX_MIME: usize = 64;
 pub const MAX_CHUNK: usize = crate::noise::frame::MAX_FRAME - 16 - 1 - 16 - 8;
 
 /// A file the sender offers. Built only by [`Offer::new`] (or decoding, which uses it). `Debug`
-/// shows neither name nor type.
+/// shows neither name, type nor size.
 #[derive(Clone, PartialEq, Eq)]
 pub struct Offer {
     id: [u8; 16],
@@ -344,9 +344,8 @@ pub struct Offer {
 
 impl fmt::Debug for Offer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Offer")
-            .field("size", &self.size)
-            .finish_non_exhaustive()
+        // no name, type or size: none of them may reach a log or a panic message
+        f.debug_struct("Offer").finish_non_exhaustive()
     }
 }
 
@@ -362,12 +361,7 @@ impl Offer {
         mime: String,
     ) -> Result<Offer, Malformed> {
         let name_ok = !name.is_empty() && name.len() <= MAX_OFFER_NAME && !name.contains('\0');
-        let mime_ok = mime.is_empty()
-            || (mime.len() <= MAX_MIME
-                && mime.bytes().all(|b| b.is_ascii_graphic())
-                && mime
-                    .split_once('/')
-                    .is_some_and(|(t, st)| !t.is_empty() && !st.is_empty() && !st.contains('/')));
+        let mime_ok = mime.is_empty() || plain_mime(&mime);
         if size > MAX_FILE || !name_ok || !mime_ok {
             return Err(Malformed);
         }
@@ -403,6 +397,19 @@ impl Offer {
     }
 }
 
+/// `type/subtype` of RFC 6838 token characters only (no parameters), at most [`MAX_MIME`] bytes.
+fn plain_mime(mime: &str) -> bool {
+    let token = |t: &str| {
+        !t.is_empty()
+            && t.bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b"!#$&-^_.+".contains(&b))
+    };
+    mime.len() <= MAX_MIME
+        && mime
+            .split_once('/')
+            .is_some_and(|(t, st)| token(t) && token(st))
+}
+
 pub fn encode_offer(offer: &Offer) -> Vec<u8> {
     let mut out = Vec::with_capacity(16 + 8 + 32 + 2 + offer.name.len() + offer.mime.len());
     out.extend_from_slice(&offer.id);
@@ -421,7 +428,10 @@ pub fn encode_offer(offer: &Offer) -> Vec<u8> {
 pub enum OfferError {
     /// Not even an id: a broken peer, the session closes.
     Broken,
-    /// A readable id, but an offer this side does not take: answered `refuse`, never written.
+    /// Over [`MAX_FILE`]: answered `refuse {too-large}`.
+    TooLarge([u8; 16]),
+    /// A readable id, but an offer this side cannot read (name, lengths): answered
+    /// `refuse {rejected}`, never written.
     Unusable([u8; 16]),
 }
 
@@ -436,6 +446,15 @@ pub fn decode_offer(body: &[u8]) -> Result<Offer, OfferError> {
     if !r.0.is_empty() {
         return Err(unusable);
     }
+    if size > MAX_FILE {
+        return Err(OfferError::TooLarge(id));
+    }
+    // the media type is only a hint: one this side cannot read is "unknown", not a reason to refuse
+    let mime = if plain_mime(&mime) {
+        mime
+    } else {
+        String::new()
+    };
     Offer::new(id, size, sha256, name, mime).map_err(|_| unusable)
 }
 
@@ -459,6 +478,8 @@ pub enum RefuseCode {
     Declined,
     /// This device may not send files here.
     NotGranted,
+    /// An offer this side cannot read (`OfferError::Unusable`): the sender drops it and says so.
+    Rejected,
 }
 
 /// How a transfer ended at the receiver.
@@ -487,6 +508,10 @@ pub fn decode_accept(body: &[u8]) -> Result<([u8; 16], u64), Malformed> {
     }
     let id = id_of(body).ok_or(Malformed)?;
     let from = Reader(&body[16..]).u64().ok_or(Malformed)?;
+    // never past the largest file: `from + len` always fits a u64 on the other side
+    if from > MAX_FILE {
+        return Err(Malformed);
+    }
     Ok((id, from))
 }
 
@@ -520,6 +545,7 @@ pub fn encode_refuse(id: &[u8; 16], code: RefuseCode) -> [u8; 17] {
             RefuseCode::Full => 2,
             RefuseCode::Declined => 3,
             RefuseCode::NotGranted => 4,
+            RefuseCode::Rejected => 5,
         },
     )
 }
@@ -533,9 +559,19 @@ pub fn decode_refuse(body: &[u8]) -> Result<([u8; 16], RefuseCode), Malformed> {
             2 => RefuseCode::Full,
             3 => RefuseCode::Declined,
             4 => RefuseCode::NotGranted,
+            5 => RefuseCode::Rejected,
             _ => return Err(Malformed),
         },
     ))
+}
+
+/// The 24 bytes before a chunk's data: a sender can read the file straight into a buffer after
+/// them (then at most [`MAX_CHUNK`] data bytes).
+pub fn chunk_header(id: &[u8; 16], offset: u64) -> [u8; 24] {
+    let mut out = [0u8; 24];
+    out[..16].copy_from_slice(id);
+    out[16..].copy_from_slice(&offset.to_be_bytes());
+    out
 }
 
 /// `None` for an empty chunk or one over [`MAX_CHUNK`] (the caller cuts files into chunks).
@@ -543,9 +579,8 @@ pub fn encode_chunk(id: &[u8; 16], offset: u64, bytes: &[u8]) -> Option<Vec<u8>>
     if bytes.is_empty() || bytes.len() > MAX_CHUNK {
         return None;
     }
-    let mut out = Vec::with_capacity(16 + 8 + bytes.len());
-    out.extend_from_slice(id);
-    out.extend_from_slice(&offset.to_be_bytes());
+    let mut out = Vec::with_capacity(24 + bytes.len());
+    out.extend_from_slice(&chunk_header(id, offset));
     out.extend_from_slice(bytes);
     Some(out)
 }
@@ -555,17 +590,13 @@ pub fn decode_chunk(body: &[u8]) -> Result<([u8; 16], u64, &[u8]), Malformed> {
     let id = id_of(body).ok_or(Malformed)?;
     let offset = Reader(&body[16..]).u64().ok_or(Malformed)?;
     let bytes = &body[24..];
-    if bytes.is_empty() || bytes.len() > MAX_CHUNK {
+    if bytes.is_empty() || bytes.len() > MAX_CHUNK || offset > MAX_FILE {
         return Err(Malformed);
     }
     Ok((id, offset, bytes))
 }
 
-/// `end` and `cancel` carry the id only.
-pub fn encode_id(id: &[u8; 16]) -> [u8; 16] {
-    *id
-}
-
+/// `end` and `cancel` carry the id only: their body is the 16 bytes of the id.
 pub fn decode_id(body: &[u8]) -> Result<[u8; 16], Malformed> {
     if body.len() != 16 {
         return Err(Malformed);
@@ -804,6 +835,27 @@ mod tests {
         ] {
             assert_eq!(bad, Err(Malformed));
         }
+        // parameters are not a plain type; a type the receiver cannot read is only "unknown"
+        assert_eq!(offer("a", "text/plain;charset=utf-8", 1), Err(Malformed));
+        assert!(offer("a", "application/vnd.ms-excel", 1).is_ok());
+        let mut odd = encode_offer(&offer("a.txt", "text/plain", 1).unwrap());
+        let n = odd.len();
+        odd[n - 3] = b';';
+        assert_eq!(decode_offer(&odd).unwrap().mime(), "");
+        // too large is its own answer
+        let mut big = encode_offer(&o);
+        big[16..24].copy_from_slice(&(MAX_FILE + 1).to_be_bytes());
+        assert_eq!(decode_offer(&big), Err(OfferError::TooLarge([9; 16])));
+        // a sender passes its local name through `name::clean`: always a valid offer name
+        for local in [
+            "発表資料".repeat(30) + ".pptx",
+            "a\0b.txt".into(),
+            "".into(),
+            "x".repeat(900),
+        ] {
+            let cleaned = crate::exchange::name::clean(&local);
+            assert!(offer(&cleaned, "", 1).is_ok(), "{local:?}");
+        }
         // a readable id with a broken rest is answered, not a reason to close
         let mut body = encode_offer(&o);
         body.push(0);
@@ -819,7 +871,7 @@ mod tests {
         }
         let debug = format!("{o:?}");
         assert!(
-            !debug.contains("Urlaub") && !debug.contains("jpeg"),
+            !debug.contains("Urlaub") && !debug.contains("jpeg") && !debug.contains("2500000"),
             "{debug}"
         );
     }
@@ -829,8 +881,8 @@ mod tests {
         let id = [5u8; 16];
         assert_eq!(decode_accept(&encode_accept(&id, 0)), Ok((id, 0)));
         assert_eq!(
-            decode_accept(&encode_accept(&id, 1 << 40)),
-            Ok((id, 1 << 40))
+            decode_accept(&encode_accept(&id, 1 << 30)),
+            Ok((id, 1 << 30))
         );
         for r in [WaitReason::Large, WaitReason::Daily] {
             assert_eq!(decode_wait(&encode_wait(&id, r)), Ok((id, r)));
@@ -840,6 +892,7 @@ mod tests {
             RefuseCode::Full,
             RefuseCode::Declined,
             RefuseCode::NotGranted,
+            RefuseCode::Rejected,
         ] {
             assert_eq!(decode_refuse(&encode_refuse(&id, c)), Ok((id, c)));
         }
@@ -851,7 +904,7 @@ mod tests {
         ] {
             assert_eq!(decode_result(&encode_result(&id, c)), Ok((id, c)));
         }
-        assert_eq!(decode_id(&encode_id(&id)), Ok(id));
+        assert_eq!(decode_id(&id), Ok(id));
         // wrong lengths and unknown codes
         assert_eq!(decode_accept(&[0; 23]), Err(Malformed));
         assert_eq!(decode_accept(&[0; 25]), Err(Malformed));
@@ -859,6 +912,15 @@ mod tests {
         assert_eq!(decode_refuse(&with_byte(&id, 0)), Err(Malformed));
         assert_eq!(decode_result(&with_byte(&id, 4)), Err(Malformed));
         assert_eq!(decode_id(&[0; 17]), Err(Malformed));
+        assert_eq!(
+            decode_accept(&encode_accept(&id, MAX_FILE)),
+            Ok((id, MAX_FILE))
+        );
+        assert_eq!(
+            decode_accept(&encode_accept(&id, MAX_FILE + 1)),
+            Err(Malformed)
+        );
+        assert_eq!(decode_accept(&encode_accept(&id, u64::MAX)), Err(Malformed));
         assert_eq!(decode_wait(&[0; 16]), Err(Malformed));
     }
 
@@ -877,6 +939,8 @@ mod tests {
         assert_eq!(decode_chunk(&over), Err(Malformed));
         assert_eq!(decode_chunk(&body[..24]), Err(Malformed));
         assert_eq!(decode_chunk(&body[..20]), Err(Malformed));
+        let far = encode_chunk(&id, u64::MAX, &[1]).unwrap();
+        assert_eq!(decode_chunk(&far), Err(Malformed));
     }
 
     #[test]
