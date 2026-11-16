@@ -17,7 +17,7 @@
 pub mod frame;
 
 use frame::{
-    FrameError, INPUT_CAP, MAX_FRAME, MODE_INPUT, MODE_PAIR, MODE_SESSION, NOISE_M1_LEN,
+    FrameError, INPUT_CAP, MAX_FRAME, MODE_EXCHANGE, MODE_INPUT, MODE_PAIR, MODE_SESSION, NOISE_M1_LEN,
     PRE_CONFIRM_CAP, PRE_HANDSHAKE_CAP, PROLOGUE_BASE, TAG_UNKNOWN_DEVICE, WIRE_M1_LEN,
 };
 use snow::params::DHChoice;
@@ -40,6 +40,8 @@ pub enum Mode {
     /// Remote-control input session (`crate::input`): same pattern and keys as a sync session, its
     /// own prologue byte.
     Input,
+    /// Device-exchange session (`crate::exchange`): same pattern and keys, its own prologue byte.
+    Exchange,
 }
 
 impl Mode {
@@ -48,6 +50,7 @@ impl Mode {
             Mode::Pair => MODE_PAIR,
             Mode::Session => MODE_SESSION,
             Mode::Input => MODE_INPUT,
+            Mode::Exchange => MODE_EXCHANGE,
         }
     }
     fn from_byte(b: u8) -> Option<Mode> {
@@ -55,13 +58,14 @@ impl Mode {
             MODE_PAIR => Some(Mode::Pair),
             MODE_SESSION => Some(Mode::Session),
             MODE_INPUT => Some(Mode::Input),
+            MODE_EXCHANGE => Some(Mode::Exchange),
             _ => None,
         }
     }
     fn pattern(self) -> &'static str {
         match self {
             Mode::Pair => PATTERN_PAIR,
-            Mode::Session | Mode::Input => PATTERN_SESSION,
+            Mode::Session | Mode::Input | Mode::Exchange => PATTERN_SESSION,
         }
     }
     fn prologue(self) -> Vec<u8> {
@@ -253,7 +257,8 @@ impl Transport {
     /// cap for good.
     pub fn raise_cap(&mut self) -> bool {
         match self.mode {
-            Mode::Session => self.cap = MAX_FRAME,
+            // an exchange session carries file chunks (package 2): Noise's own limit
+            Mode::Session | Mode::Exchange => self.cap = MAX_FRAME,
             Mode::Input => self.cap = INPUT_CAP,
             Mode::Pair => return false,
         }

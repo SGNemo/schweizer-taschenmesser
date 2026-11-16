@@ -576,3 +576,122 @@ fn mdns_is_a_desktop_only_dependency() {
     }
     assert!(m.contains("mdns-sd"));
 }
+
+#[test]
+fn exchange_sync_input_stay_apart() {
+    // the exchange session never reaches the store, the sync handler or the input gate
+    assert_absent(
+        &[
+            "crate::store",
+            "crate::Store",
+            "Store::",
+            "handle_json",
+            "FieldOp",
+            "crate::hub",
+            "rusqlite",
+            "crate::input::session",
+            "crate::input::sink",
+            "crate::input::Remote",
+            "InputSink",
+        ],
+        Some("src/exchange"),
+    );
+    assert_absent(&["crate::exchange", "TAG_ITEM"], Some("src/hub/handler"));
+    assert_absent(&["crate::exchange"], Some("src/input"));
+    assert_absent(&["crate::exchange"], Some("src/store"));
+    // its own handshake mode, and it leaves no trace of use
+    let frame = source("src/noise/frame.rs");
+    assert!(frame.contains("pub const MODE_EXCHANGE: u8 = 4;"));
+    assert_absent(&["touch(", "last_seen", "lastSeen"], Some("src/exchange"));
+    // the router only builds an exchange session for the exchange mode, and the home-network loss
+    // closes exchange sessions too
+    // (the whole file: `source` stops at the first `#[cfg(test)]`, which the router has early)
+    let router = fs::read_to_string(root().join("src/hub/router.rs")).unwrap();
+    assert!(router.contains("(Mode::Exchange, _, Some(exchange))"));
+    assert!(router.contains("close_exchange_sessions()"));
+    // the endpoint accepts mode 4 only with `exchange_ok` (home network and exchange wired)
+    let endpoint = fs::read_to_string(root().join("src/endpoint.rs")).unwrap();
+    assert!(endpoint.contains("noise::Mode::Exchange => exchange_ok,"));
+}
+
+#[test]
+fn no_frame_from_the_network_reaches_an_exchange_setter() {
+    let setters = [
+        "set_enabled",
+        "set_device",
+        "set_exchange",
+        ".set(",
+    ];
+    for name in [
+        "src/exchange/wire.rs",
+        "src/exchange/session.rs",
+        "src/transport/exchange_client.rs",
+        "src/hub/router.rs",
+        "src/endpoint.rs",
+    ] {
+        let text = source(name);
+        for line in code_lines(&text) {
+            for s in setters {
+                assert!(!line.contains(s), "{name}: `{s}` in `{}`", line.trim());
+            }
+        }
+    }
+    // the trust store's exchange setter is called by the PC's controls and the store itself only
+    for (name, text) in production_sources() {
+        if name == "src/exchange/control.rs" || name.starts_with("src/trust/") {
+            continue;
+        }
+        for line in code_lines(&text) {
+            assert!(!line.contains("set_exchange"), "{name}: {}", line.trim());
+        }
+    }
+    // the session uses exactly the reading half of `Exchange`
+    let session = source("src/exchange/session.rs");
+    let allowed = ["admit", "count", "inbox", "outbox"];
+    for line in code_lines(&session) {
+        let mut rest = line;
+        while let Some(at) = rest.find("exchange.") {
+            rest = &rest[at + "exchange.".len()..];
+            let name: String = rest
+                .chars()
+                .take_while(|c| c.is_alphanumeric() || *c == '_')
+                .collect();
+            assert!(
+                allowed.contains(&name.as_str()),
+                "session.rs calls Exchange::{name}"
+            );
+        }
+    }
+}
+
+#[test]
+fn exchange_hub_parts_are_compiled_out_on_mobile_and_the_wire_is_not() {
+    let gate = "#[cfg(not(any(target_os = \"android\", target_os = \"ios\")))]";
+    let lib = fs::read_to_string(root().join("src/lib.rs")).unwrap();
+    let lines: Vec<&str> = lib.lines().map(str::trim).collect();
+    for module in ["pub mod exchange;", "pub mod exchange_client;"] {
+        let at = lines
+            .iter()
+            .position(|l| *l == module)
+            .unwrap_or_else(|| panic!("{module} missing"));
+        assert!(
+            !lines[at - 1].starts_with("#[cfg") && !lines[at - 2].starts_with("#[cfg"),
+            "{module} stays available to devices"
+        );
+    }
+    let ex = fs::read_to_string(root().join("src/exchange/mod.rs")).unwrap();
+    let ex_lines: Vec<&str> = ex.lines().map(str::trim).collect();
+    for module in ["control", "session"] {
+        let decl = format!("pub mod {module};");
+        let at = ex_lines
+            .iter()
+            .position(|l| *l == decl)
+            .unwrap_or_else(|| panic!("{decl} missing"));
+        assert_eq!(ex_lines[at - 1], gate, "exchange::{module} must be gated");
+    }
+    let at = ex_lines
+        .iter()
+        .position(|l| *l == "pub mod wire;")
+        .expect("wire module");
+    assert!(!ex_lines[at - 1].starts_with("#[cfg"));
+}

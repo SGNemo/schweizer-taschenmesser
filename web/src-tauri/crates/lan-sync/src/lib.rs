@@ -11,6 +11,9 @@
 
 /// The daily mDNS hint (hub announces it, devices match it to find a hub that got a new address).
 pub mod hint;
+/// Device exchange (messages and files, phone ↔ PC): the wire format on every target, the hub side
+/// on the desktop.
+pub mod exchange;
 /// Remote control (phone → PC input): the wire format on every target, the hub side on the desktop.
 pub mod input;
 pub mod noise;
@@ -27,6 +30,10 @@ pub mod client;
 /// under `src/transport` like every other; compiled on every target.
 #[path = "transport/input_client.rs"]
 pub mod input_client;
+/// The device side of device exchange (phone, second PC): an exchange session with the hub. Its
+/// socket lives under `src/transport` like every other; compiled on every target.
+#[path = "transport/exchange_client.rs"]
+pub mod exchange_client;
 /// Device side: picks the announcements of the pinned hub after it got a new address.
 #[path = "transport/rediscover.rs"]
 pub mod rediscover;
