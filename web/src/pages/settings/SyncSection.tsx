@@ -257,7 +257,10 @@ export function SyncSection() {
             </p>
           ) : null}
           <Actions>
-            <Button type="submit" variant="primary" disabled={busy}>
+            {/* With the home network beside it (desktop, phone), its pairing is the one primary: the own server is the
+                folded alternative. Once a server is connected, „Jetzt synchronisieren“ stays primary and the home
+                network offers only a plain „switch“ button. */}
+            <Button type="submit" variant={lan ? 'secondary' : 'primary'} disabled={busy}>
               {busy ? t.sync.connecting : t.sync.connect}
             </Button>
             {failure === 'server-has-plain-data' || failure === 'vault-outdated' ? (
