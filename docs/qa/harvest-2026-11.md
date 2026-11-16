@@ -1,0 +1,67 @@
+# Restpunkte-Ernte 2026-11
+
+Small open follow-ups (≤ M, no contract, no data migration) collected on 2026-11-16 from `develop` 84293cc0, each checked against the code before it was listed. Bundles: one branch `fix/harvest-11-<thema>` and one PR each. Status: `#…` = open PR, „erledigt in #…“ = on `develop`. H01–H18 are merged; the rest wait for review (2026-11-16).
+
+Sources: CHATS = `docs/CHATS.md` „Wartet auf Sven“ · STATUS = `docs/STATUS.md` „Laufende Runden“ · R6 = `docs/qa/round-6/STATUS.md` „Offen aus den PRs“ · DC = `docs/design/ui-audit-2026-11/DESIGN-CHECK-0b-1-3.md` · WE = `docs/design/usecases/wochenende/ANALYSIS.md` §7 · SC = notes repo `rounds/2026-11-tiefe/<file>`.
+
+## Harvested
+
+| Id | Quelle | Punkt | Bereich | Aufwand | Bündel | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| H01 | SC mail, diagramme | `ItemRow` selection checkbox is named only „Auswählen“; name the row | ui | S | ui | erledigt in #1025 |
+| H02 | SC diagramme (Wunsch finanzen) | Donut folds the rest as „Sonstiges“, which collides with a real category of that name | ui | S | ui | erledigt in #1025 |
+| H03 | SC feeds | Feeds catalog search: a group folded earlier stays folded and hides its hits (`GroupedList` cannot force open) | ui | S | ui | erledigt in #1025 |
+| H04 | R6 `ui/` (S7) | Row-end fade only on overflow: `SubNav`, calendar `.viewRow` (phone), ToDos `.chips` still fade always | ui | S | ui | erledigt in #1025 |
+| H05 | R6 `ui/` (U39) | `home/masonry.ts` finds empty cards via the `misc.emptyCompact` class import instead of `data-empty` | ui | S | ui | erledigt in #1025 |
+| H06 | R6 `ui/` (U22, U53) | Notes notebook tabs put the count into the label and do not use `FolderTabs` `count`/`nowrap` | ui | S | ui | erledigt in #1025 |
+| H07 | R6 Texte | Unused string keys `budgets.ext.head.chip`, `maps.placesBar.navigateTo`, `tMusicPage.libraryTitle` | Texte | S | texts | erledigt in #1014 |
+| H08 | CHATS (ehem. Entscheidung 3, „ja“), C27 | „seit n Tagen“: C27 is done (`core/time/due.ts`); left is the unused `invoices.ext.state.overdueDays` „seit n Tagen“ | Texte | S | texts | erledigt in #1014 |
+| H09 | SC uebersicht | Music widget empty line „Verbinde Spotify“ is not a sentence → „Spotify ist nicht verbunden.“ + link | Texte | S | texts | erledigt in #1014 |
+| H10 | SC uebersicht | Feeds widget empty line „Noch keine Feeds“ lacks the full stop the other empty lines have | Texte | S | texts | erledigt in #1014 |
+| H11 | SC abos | `topExpensive` in `subscriptions/logic.ts` has no caller | Geld | S | texts | erledigt in #1014 |
+| H12 | SC merkliste, geraetestatus | Generated module tables stale: „Dieser PC“ description in README, `docs/user/modules`, site catalog (`npm run gen:modules`) | Texte | S | texts | erledigt in #1014 |
+| H13 | SC budgets | `formatDay(…, 'd. MMMM')` has no locale entry in `core/time/dates.ts` PATTERNS (English reads „30. November“) | Texte | S | texts | erledigt in #1014 |
+| H14 | STATUS UI-Audit 4.0 (#746) | Calendar month rows: phone rendering on touch desktops and tablets (coarse pointer) | Planen | S | plan | erledigt in #1028 |
+| H15 | WE W25 | Capture batch hint could name „erinnere mich“ once a timed line is in the batch | Planen | S | plan | erledigt in #1028 |
+| H16 | R6 Neu | ToDos board scroll area is not keyboard-focusable (axe `scrollable-region-focusable`) | Planen | S | plan | erledigt in #1028 |
+| H17 | R6 Neu | Head eyebrow „Planen · Gewohnheiten/Zeiterfassung“ cut on the phone | Planen | S | plan | nicht mehr reproduzierbar (412 px: nur „PLANEN“, kein Überlauf), erledigt in #1028 |
+| H18 | R6 Restsprung | `/todos` first visit shifts when the Heute card arrives after the tasks | Planen | S | plan | nicht mehr reproduzierbar (CLS ≤ 0,003), erledigt in #1028 |
+| H19 | SC merkliste | `bookmark.requested.kind` lacks `buy`, `try`; ShareTarget does not pass `shared=1` to `/bookmarks` | Wissen | S | modules | #1030 |
+| H20 | SC listen, routinen | Lists → Routinen: template dialog „Morgen-/Abendroutine“ links to `/routines?new=…` while Routinen is on; checklist ⋯ „Als Routine übernehmen“ (`routine.requested`) | Haushalt | M | modules | #1030 |
+| H21 | SC unterlagen | Vault category dialog: „Abbrechen“ returns focus to „Fertig“, not to the row that opened the form | Tresor | S | modules | #1030 |
+| H22 | SC routinen | Routine editor: no hint when notifications are blocked (ToDos and calendar have one) | Haushalt | S | modules | #1030 |
+| H23 | R6 Neu | Settings → Sync: LAN primary and „Jetzt synchronisieren“ on screen together (two primary buttons) | Einstellungen | S | modules | #1030 |
+| H24 | R6 Restsprung | `/disk`: `DiskHead` renders nothing until the drives arrive, so the head height switches | System | S | modules | #1030 |
+| H25 | SC merkliste | `check:modules` reads a module setting named `group` as a settings field group | Werkzeuge | S | tooling | #1027 (Ratschen-Freigabe nötig) |
+| H26 | SC feeds | Sync-server proxy answers every upstream error with 502; the app cannot tell „not found“ from „host down“ | Server | S | tooling | #1027 |
+
+## Checked and already done (no work)
+
+DC F1–F3, K1, K2 (minimum), K4, K5, G1–G4, G6–G8, P1–P5 (#746, #751, #752, #754, #755, #804, #817) · R6 `.done .title`, `FolderTabs` component, `WidgetBody data-empty`, U07 rest, setup `--kb-inset`, setup spec origin, calendar overdue word and „gift“ (all #877), Uhrzeit-Kontrast (month lines restyled), Finanzen-Kontokarten and Handy-FAB (components gone with Identity 4.0), Finanzen → Verlauf two primaries · STATUS 0b-E follow-ups (`TabBody` test, phone search icon, link hit strip) and 0b-R `data-hue`/scrollbar (9c69cf253), rail tooltip Escape (#800) · Chat-Plus ohne KI gesperrt (#767) · WE W23, W24 (#962) · fitness widget duration (#1009) · `d. MMMM` callers (8e0ed7b5e; H13 is the guard).
+
+## Not taken (needs Sven, own prompt, or bigger than M)
+
+| Punkt | Quelle | Warum nicht |
+| --- | --- | --- |
+| U41 head band heights | R6, CHATS | own plan with mockup and stop |
+| `--page-gutter` off the 4-px grid | R6 | token change (`tokens.css` hotspot, one chat at a time) |
+| Übersicht CLS 0,18 empty install | CHATS 1, R6 | Sven's decision without recommendation |
+| HN-L9 b freeze time | CHATS | needs the hand test on a phone first |
+| Module shortcuts in the `?` sheet | STATUS Mail | needs a way for modules to register shortcuts (manifest contract) |
+| Mail PDF preview | STATUS Mail | CSP (`frame-src 'none'`), security |
+| Routine notification „Erledigt“ finishes the routine | SC routinen | notification actions do not exist (SW, Tauri, Android): M+ feature |
+| Tray „Heute“ titles and notifications while the app lock is on | SC einstellungen | platform seam (`core/platform/tauri`), decided as a follow-up in `decisions/ui-shell-settings-v2.md`; M |
+| Native date fields in payments, transfer, budget dialogs | DC F3 (seen) | outside F3's scope; fits a money wording/fields PR |
+| Global quick-add `/chat?new=1` without AI | #767 leftover | quick-add contribution filter (manifest contract) |
+| `splittable` in `PlannableItem` | SC merkliste | manifest contract |
+| Leere Karten in Ausführlich ans Ende, Duplizieren, Lesezeichen-Merkmal, Rechnungs-Kategorie | SC uebersicht, merkliste, rechnungen | Sven's yes/no |
+| `@/ui` `Tabs` icon per tab | SC listen | new component API, wish without a decision |
+| Hand tests, secrets, repo settings, #845 pictures, site slots, CI packages, 0b-4b/0b-6b rests | all | excluded by the round's prompt |
+
+## New follow-ups found while building (not done, each ≤ S unless noted)
+
+| Punkt | Wo | Empfehlung |
+| --- | --- | --- |
+| `subscriptions.ext.top` („Teuerste Abos“) looks unused; `howto/money-subscriptions.md` still describes the block | #1014 | remove after a check for dynamic readers |
+| App reads `upstreamStatus` from `/v1/proxy` (404/410 → „Adresse gibt es nicht mehr“, like a direct 404 on the desktop) | #1027 | small web PR in `core/net/fetchPublic.ts` callers |
+| `e2e/seed/touch-desktop.seed.spec.ts` line 9 still calls the month view a known case | #1028 | drop the sentence, add `/calendar?view=month` to its paths (seed specs may be ratchet-protected) |
