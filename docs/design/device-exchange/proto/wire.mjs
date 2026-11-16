@@ -147,7 +147,7 @@ const FORBIDDEN = /[<>:"/\\|?*]/g;
 const MAX_NAME_BYTES = 120;
 const trimEnd = (x) => x.replace(/[\s.]+$/, "");
 const DEFUSE = new Set(
-  "url lnk scf library-ms searchconnector-ms search-ms desktop website appref-ms".split(
+  "url lnk scf library-ms searchconnector-ms search-ms desktop website appref-ms theme themepack deskthemepack".split(
     " ",
   ),
 );
@@ -169,14 +169,33 @@ export function cleanName(raw) {
   if (dot > 0 && Buffer.byteLength(s.slice(dot)) > 20) dot = -1;
   let stem = dot > 0 ? trimEnd(s.slice(0, dot)) : s; // "con .txt": the stem is "con"
   let ext = dot > 0 ? s.slice(dot) : "";
-  // Shortcut-like files make Explorer resolve an icon or target just by showing the folder (an
-  // SMB path leaks the NTLM hash): they get "_" appended, so no handler ever parses them.
-  if (DEFUSE.has(ext.slice(1).toLowerCase())) ext += "_";
-  stem = cutBytes(stem, MAX_NAME_BYTES - Buffer.byteLength(ext)); // one pass, never quadratic
-  stem = trimEnd(stem) || "Datei";
-  // Windows treats "CON", "con.txt", "con .txt" and "con.tar.gz" alike: test the first segment.
-  if (RESERVED.test(trimEnd(stem.split(".")[0]))) stem = `_${stem}`;
-  return stem + ext;
+  const fit = (room) => {
+    let st = trimEnd(cutBytes(stem, room - Buffer.byteLength(ext))) || "Datei"; // one pass
+    // Windows treats "CON", "con.txt", "con .txt" and "con.tar.gz" alike: test the first segment.
+    if (RESERVED.test(trimEnd(st.split(".")[0]))) st = `_${st}`;
+    return defuse(st + ext);
+  };
+  // the "_" of a reserved name and of `defuse` need up to two more bytes: cut again, check again
+  let name = fit(MAX_NAME_BYTES);
+  for (
+    let room = MAX_NAME_BYTES - 1;
+    Buffer.byteLength(name) > MAX_NAME_BYTES;
+    room--
+  )
+    name = fit(room);
+  return name;
+}
+
+/**
+ * Shortcut-like files make Explorer resolve an icon or target just by showing the folder (an SMB
+ * path leaks the NTLM hash): they get "_" appended, so no handler ever parses them. Checked on the
+ * FINAL name, after every cut, so a cut can never uncover such an extension.
+ */
+function defuse(name) {
+  const dot = name.lastIndexOf(".");
+  return dot > 0 && DEFUSE.has(name.slice(dot + 1).toLowerCase())
+    ? `${name}_`
+    : name;
 }
 
 /** Longest prefix of whole code points that fits into `max` UTF-8 bytes. */
@@ -195,7 +214,7 @@ function cutBytes(text, max) {
 // shortcuts, installers, disk images, HTML/SVG (local script), unknown types – is "other": warning
 // line, only "Im Ordner zeigen". Inverted on purpose: a deny-list always misses a handler.
 const OPENABLE = new Set(
-  "jpg jpeg png gif webp heic heif avif bmp mp3 m4a aac ogg opus flac wav mp4 m4v mov mkv webm pdf txt md csv docx xlsx pptx odt ods odp zip".split(
+  "jpg jpeg png gif webp heic heif avif bmp mp3 m4a aac ogg opus flac wav mp4 m4v mov mkv webm pdf txt md csv docx xlsx pptx odt ods odp".split(
     " ",
   ),
 );

@@ -247,6 +247,11 @@ const names = [
   ["Start.LNK", "Start.LNK_"],
   ["Suche.searchConnector-ms", "Suche.searchConnector-ms_"],
   ["y".repeat(30000) + ".txt", "y".repeat(116) + ".txt"],
+  ["a".repeat(115) + ".lnk." + "b".repeat(25), "a".repeat(115) + ".lnk_"],
+  ["a".repeat(115) + ".url." + "b".repeat(25), "a".repeat(115) + ".url_"],
+  ["a".repeat(116) + ".scf" + "b".repeat(30), "a".repeat(116) + ".sc"],
+  ["Design.themepack", "Design.themepack_"],
+  ["con." + "c".repeat(116) + ".txt", "_con." + "c".repeat(111) + ".txt"],
 ];
 const nameFails = names
   .filter(([i, o]) => cleanName(i) !== o)
@@ -268,7 +273,7 @@ const risks = {
   "Foto.JPG": "plain",
   "Liste.pdf": "plain",
   "Archiv.7z": "other",
-  "Archiv.zip": "plain",
+  "Archiv.zip": "other",
 };
 const riskFails = Object.entries(risks)
   .filter(([n, r]) => risk(n) !== r)
