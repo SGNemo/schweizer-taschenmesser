@@ -240,6 +240,27 @@ describe('CaptureForm', () => {
     expect(reminder).toMatchObject({ title: 'Oma anrufen', kind: 'reminder' });
   });
 
+  it('W25: once a timed line is in the batch and none says „erinnere mich“, the hint names it once', async () => {
+    render(<CaptureForm onSaved={() => undefined} />);
+    const hint = () => screen.getByTestId('capture-line-hint');
+    fireEvent.change(await box(), { target: { value: 'Milch kaufen\nAuto waschen' } });
+    await waitFor(() => expect(rowTypes()).toEqual(['todo', 'todo']));
+    expect(hint()).toHaveTextContent(t.quickCapture.multi.calmHint);
+    expect(hint()).not.toHaveTextContent('erinnere mich');
+    fireEvent.change(await box(), {
+      target: { value: 'So 19 Uhr kurz schauen wie es mir geht\nMilch kaufen' },
+    });
+    await waitFor(() => expect(rowTypes()).toEqual(['event', 'todo']));
+    expect(hint()).toHaveTextContent(t.quickCapture.multi.calmHint);
+    expect(hint()).toHaveTextContent(t.quickCapture.multi.reminderHint);
+    // A line that already says it: the hint is the calm one again.
+    fireEvent.change(await box(), {
+      target: { value: 'So 19 Uhr kurz schauen\nerinnere mich Mo 8 Uhr Arzt anrufen' },
+    });
+    await waitFor(() => expect(rowTypes()).toEqual(['event', 'reminder']));
+    expect(hint()).not.toHaveTextContent('erinnere mich');
+  });
+
   it('W06: a row with day and time switches from „Termin“ to „Erinnerung“ in the preview, the kinds line follows, it fires once', async () => {
     const user = userEvent.setup();
     const onSaved = vi.fn();

@@ -1137,6 +1137,8 @@ export const de = {
       bookIncome: 'Als Einnahme buchen',
       bookLine: (action: string, line: string) => `${action}: ${line}`,
       calmHint: 'Eine Zeile = ein Eintrag. Sortiert wird später.',
+      /** Once a line with a time is in the batch and none says it (W25): the trigger word, named once. */
+      reminderHint: 'Für eine Erinnerung: „erinnere mich …“ in die Zeile.',
       /** Above the rows when they go to more than one place: „ToDo 9 · Termin 3“ (typed order stays). */
       kinds: (parts: string[]) => parts.join(' · '),
       dunningMatch: (payee: string, due: string) =>

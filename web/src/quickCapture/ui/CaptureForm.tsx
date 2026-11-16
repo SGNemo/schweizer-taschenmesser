@@ -540,6 +540,11 @@ export function CaptureForm({
     ].join(' · ');
   };
 
+  // W25: a timed line becomes a Termin unless it says „erinnere mich“; the batch names the word once, while no
+  // line uses it yet (one trigger word, no second button).
+  const timedNoReminder =
+    multi && rows.some((r) => r.fields.time) && !rows.some((r) => r.type === 'reminder');
+
   return (
     <>
       <form
@@ -569,6 +574,7 @@ export function CaptureForm({
           // Several lines: the calm promise, on every device (U01).
           <p className={styles.hint} data-testid="capture-line-hint">
             {t.quickCapture.multi.calmHint}
+            {timedNoReminder ? ` ${t.quickCapture.multi.reminderHint}` : null}
           </p>
         ) : (
           <p className={[styles.hint, styles.lineHint].join(' ')} data-testid="capture-line-hint">
