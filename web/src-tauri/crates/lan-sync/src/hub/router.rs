@@ -414,6 +414,10 @@ impl Connection {
                     Ok(Incoming::App { tag, body }) => exchange.on_frame(tag, &body, mono),
                     Ok(Incoming::Unpair) | Err(_) => ExchangeStep::Close,
                 };
+                // an accepted `open` (authenticated) replaces the device's older exchange session
+                if matches!(step, ExchangeStep::Reply(crate::exchange::wire::TAG_OPENED, _)) {
+                    s.replace_older_exchange();
+                }
                 seal_exchange(s, step)
             }
         };

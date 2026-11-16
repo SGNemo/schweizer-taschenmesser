@@ -4,7 +4,7 @@
 //! PC's own controls; the shell confirms every widening in a native dialog before it calls them.
 //! No frame from the network reaches a writer (`tests/rules.rs`).
 
-use super::wire::{Code, Item};
+use super::wire::{AckState, Code, Item};
 use crate::input::{MasterSwitch, MemorySwitch};
 use crate::noise::PublicKey;
 use crate::trust::{ExchangeGrant, TrustError, TrustStore};
@@ -12,8 +12,8 @@ use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-/// Items one device may send in one window.
-pub const ITEMS_PER_WINDOW: u32 = 300;
+/// Items one device may have stored in any [`RATE_WINDOW`] (a sliding window).
+pub const ITEMS_PER_WINDOW: usize = 300;
 pub const RATE_WINDOW: Duration = Duration::from_secs(60 * 60);
 /// Devices tracked by the rate limit at once (only granted devices ever get here).
 const MAX_TRACKED: usize = 256;
@@ -24,15 +24,22 @@ pub struct InboxFull;
 
 /// Where an item from a device is kept **before** it is acked (the shell writes it to a file, the
 /// web view takes it over later). An `Ok` means: it survives a restart.
+///
+/// Delivery is at least once: a lost ack (a replaced session, an idle close, the home network
+/// gone) makes the device send the item again. `store` of an id it already holds for that device
+/// is therefore `Ok` and stores nothing new.
 pub trait ExchangeInbox: Send + Sync {
     fn store(&self, from: &PublicKey, item: &Item) -> Result<(), InboxFull>;
 }
 
-/// What the PC queued for a device. `next` hands out the oldest item without removing it;
-/// `delivered` removes it after the device's `ack`.
+/// What the PC queued for a device. `next` hands out the oldest item without removing it and is
+/// asked on every tick of a live session: it must answer from memory (write files only on change).
+/// `answered` reports the device's answer to an item it sent: `Stored` and `Rejected` take it out
+/// of the queue (the shell shows „Kam nicht an“ for `Rejected`), `Refused` keeps it (the device
+/// is full; the shell shows that, and it is offered again on the device's next ping).
 pub trait ExchangeOutbox: Send + Sync {
     fn next(&self, to: &PublicKey) -> Option<Item>;
-    fn delivered(&self, to: &PublicKey, id: &[u8; 16]);
+    fn answered(&self, to: &PublicKey, id: &[u8; 16], state: AckState);
 }
 
 /// Inbox for tests and tools.
@@ -59,7 +66,12 @@ impl ExchangeInbox for MemoryInbox {
             return Err(InboxFull);
         }
         let mut items = self.items.lock().map_err(|_| InboxFull)?;
-        items.push((*from.as_bytes(), item.clone()));
+        let known = items
+            .iter()
+            .any(|(k, i)| k == from.as_bytes() && i.id() == item.id());
+        if !known {
+            items.push((*from.as_bytes(), item.clone()));
+        }
         Ok(())
     }
 }
@@ -68,6 +80,7 @@ impl ExchangeInbox for MemoryInbox {
 #[derive(Default)]
 pub struct MemoryOutbox {
     queues: Mutex<HashMap<[u8; 32], VecDeque<Item>>>,
+    answers: Mutex<Vec<([u8; 16], AckState)>>,
 }
 
 impl MemoryOutbox {
@@ -85,24 +98,29 @@ impl MemoryOutbox {
             .map(|q| q.get(to.as_bytes()).map_or(0, VecDeque::len))
             .unwrap_or(0)
     }
+    /// Every answer, in order.
+    pub fn answers(&self) -> Vec<([u8; 16], AckState)> {
+        self.answers.lock().map(|a| a.clone()).unwrap_or_default()
+    }
 }
 
 impl ExchangeOutbox for MemoryOutbox {
     fn next(&self, to: &PublicKey) -> Option<Item> {
         self.queues.lock().ok()?.get(to.as_bytes())?.front().cloned()
     }
-    fn delivered(&self, to: &PublicKey, id: &[u8; 16]) {
+    fn answered(&self, to: &PublicKey, id: &[u8; 16], state: AckState) {
+        if let Ok(mut a) = self.answers.lock() {
+            a.push((*id, state));
+        }
+        if state == AckState::Refused {
+            return;
+        }
         if let Ok(mut q) = self.queues.lock() {
             if let Some(queue) = q.get_mut(to.as_bytes()) {
-                queue.retain(|i| &i.id != id);
+                queue.retain(|i| i.id() != id);
             }
         }
     }
-}
-
-struct Window {
-    started: Duration,
-    count: u32,
 }
 
 /// Device exchange at this PC.
@@ -111,7 +129,10 @@ pub struct Exchange {
     trust: Arc<dyn TrustStore>,
     inbox: Arc<dyn ExchangeInbox>,
     outbox: Arc<dyn ExchangeOutbox>,
-    rate: Mutex<HashMap<[u8; 32], Window>>,
+    /// When each stored item of a device came in (the last [`RATE_WINDOW`] only). Memory only.
+    rate: Mutex<HashMap<[u8; 32], VecDeque<Duration>>>,
+    /// Live exchange sessions per device (opened and not yet dropped).
+    live: Mutex<HashMap<[u8; 32], u32>>,
 }
 
 impl Exchange {
@@ -127,6 +148,7 @@ impl Exchange {
             inbox,
             outbox,
             rate: Mutex::new(HashMap::new()),
+            live: Mutex::new(HashMap::new()),
         }
     }
 
@@ -175,33 +197,68 @@ impl Exchange {
         }
     }
 
-    /// Counts one item of `peer`; `false` once the device sent [`ITEMS_PER_WINDOW`] in the window.
-    /// `now` is monotonic time from the caller (nothing here reads a clock). Kept in memory only.
-    pub(crate) fn count(&self, peer: &PublicKey, now: Duration) -> bool {
+    /// While the device has [`ITEMS_PER_WINDOW`] stored items in the last [`RATE_WINDOW`]: the
+    /// whole minutes until the oldest of them leaves the window (1..=60). `now` is monotonic time
+    /// from the caller (nothing here reads a clock).
+    pub(crate) fn limited(&self, peer: &PublicKey, now: Duration) -> Option<u8> {
+        let Ok(mut rate) = self.rate.lock() else {
+            return Some(60);
+        };
+        let times = rate.get_mut(peer.as_bytes())?;
+        while times
+            .front()
+            .is_some_and(|t| now.saturating_sub(*t) >= RATE_WINDOW)
+        {
+            times.pop_front();
+        }
+        if times.len() < ITEMS_PER_WINDOW {
+            return None;
+        }
+        let oldest = *times.front()?;
+        let left = RATE_WINDOW.saturating_sub(now.saturating_sub(oldest));
+        let minutes = left.as_secs().div_ceil(60).clamp(1, 60);
+        Some(u8::try_from(minutes).unwrap_or(60))
+    }
+
+    /// Records one stored item of `peer` (refused and rejected items do not count). `false` when
+    /// the table of devices is full (fail-closed).
+    pub(crate) fn record(&self, peer: &PublicKey, now: Duration) -> bool {
         let Ok(mut rate) = self.rate.lock() else {
             return false;
         };
         if rate.len() >= MAX_TRACKED && !rate.contains_key(peer.as_bytes()) {
-            rate.retain(|_, w| now.saturating_sub(w.started) < RATE_WINDOW);
+            rate.retain(|_, t| t.back().is_some_and(|b| now.saturating_sub(*b) < RATE_WINDOW));
             if rate.len() >= MAX_TRACKED {
                 return false;
             }
         }
-        let w = rate.entry(*peer.as_bytes()).or_insert(Window {
-            started: now,
-            count: 0,
-        });
-        if now.saturating_sub(w.started) >= RATE_WINDOW {
-            *w = Window {
-                started: now,
-                count: 0,
-            };
-        }
-        if w.count >= ITEMS_PER_WINDOW {
-            return false;
-        }
-        w.count += 1;
+        rate.entry(*peer.as_bytes()).or_default().push_back(now);
         true
+    }
+
+    /// Whether the device has a live exchange session (it opened one that was accepted and has
+    /// not ended). For the PC's „erreichbar“ and „wird übergeben“.
+    pub fn connected(&self, peer: &PublicKey) -> bool {
+        self.live
+            .lock()
+            .is_ok_and(|l| l.get(peer.as_bytes()).is_some_and(|n| *n > 0))
+    }
+
+    pub(crate) fn session_opened(&self, peer: &PublicKey) {
+        if let Ok(mut l) = self.live.lock() {
+            *l.entry(*peer.as_bytes()).or_default() += 1;
+        }
+    }
+
+    pub(crate) fn session_ended(&self, peer: &PublicKey) {
+        if let Ok(mut l) = self.live.lock() {
+            if let Some(n) = l.get_mut(peer.as_bytes()) {
+                *n = n.saturating_sub(1);
+                if *n == 0 {
+                    l.remove(peer.as_bytes());
+                }
+            }
+        }
     }
 
     pub(crate) fn inbox(&self) -> &dyn ExchangeInbox {

@@ -434,6 +434,22 @@ impl SessionRegistry {
         self.close_where(|p, m| m == Mode::Exchange && peer.map_or(true, |x| x == p))
     }
 
+    /// Closes the device's exchange sessions but `keep` (a newer one replaced them).
+    pub fn close_exchange_except(&self, peer: &PublicKey, keep: &SessionHandle) -> usize {
+        let Ok(mut s) = self.sessions.lock() else {
+            return 0;
+        };
+        let mut n = 0;
+        for (p, m, h) in s.iter() {
+            if p == peer && *m == Mode::Exchange && !Arc::ptr_eq(&h.closed, &keep.closed) && !h.is_closed() {
+                h.close();
+                n += 1;
+            }
+        }
+        s.retain(|(_, _, h)| !h.is_closed());
+        n
+    }
+
     fn close_where(&self, pick: impl Fn(&PublicKey, Mode) -> bool) -> usize {
         let Ok(mut s) = self.sessions.lock() else {
             return 0;

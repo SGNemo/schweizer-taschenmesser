@@ -1,24 +1,31 @@
 //! One exchange connection at the hub: `hello`, then `open` (refused unless exchange is on at this
-//! PC and the device is granted and not paused), then items both ways.
+//! PC, the device is granted and not paused, and under its rate limit), then items both ways.
 //!
-//! * Phone → PC: each item is checked, counted against the rate limit and stored in the inbox
-//!   **before** it is acked; an inbox that cannot take it answers `ack refused` (the phone keeps it).
-//! * PC → phone: one item of the outbox in flight at a time, removed only on the phone's
-//!   `ack stored`; `ack refused` (the phone is full) stops sending for this session.
+//! * Phone → PC: each item is checked and stored in the inbox **before** it is acked. An inbox
+//!   that cannot take it answers `ack refused` (the phone keeps it); an item with a readable id
+//!   but a body this side does not take answers `ack rejected` (it leaves the phone's queue
+//!   instead of blocking it); only a frame without an id closes. Only stored items count against
+//!   the rate limit; once it is reached the session ends with `limit` and the minutes left.
+//! * PC → phone: one item of the outbox in flight at a time; the phone's answer goes to the outbox
+//!   (`Stored`/`Rejected` take it out, `Refused` keeps it). After `Refused` nothing more goes out
+//!   until the phone's next `ping` (it pings while the page is open), then the head is offered
+//!   again.
 //! * Every frame and every tick checks the switch and the grant again: switching off or pausing at
 //!   the PC ends the session with the reason.
 //!
-//! The session reads the controls (`enabled`, `admit`, `count`) and never changes them.
+//! The session reads the controls (`admit`, `limited`, `record`, the inbox and outbox and the
+//! live count) and never changes a setting.
 
 use super::control::Exchange;
-use super::wire::{self, AckState, Code};
+use super::wire::{self, AckState, Code, ItemError};
 use crate::noise::PublicKey;
+use std::fmt;
 use std::sync::Arc;
 use std::time::Duration;
 
 /// What the connection does next. `Reply`/`ReplyClose` carry a tag and a plaintext body; the
-/// caller seals them.
-#[derive(Debug, PartialEq, Eq)]
+/// caller seals them. `Debug` shows the tag only, never a body.
+#[derive(PartialEq, Eq)]
 pub enum Step {
     Continue,
     Reply(u8, Vec<u8>),
@@ -27,13 +34,24 @@ pub enum Step {
     Close,
 }
 
+impl fmt::Debug for Step {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Step::Continue => f.write_str("Continue"),
+            Step::Close => f.write_str("Close"),
+            Step::Reply(tag, _) => write!(f, "Reply({tag:#04x}, ..)"),
+            Step::ReplyClose(tag, _) => write!(f, "ReplyClose({tag:#04x}, ..)"),
+        }
+    }
+}
+
 enum Phase {
     AwaitHello,
     AwaitOpen,
     Live {
         /// The PC → phone item that waits for its ack.
         in_flight: Option<[u8; 16]>,
-        /// The phone said it is full: nothing more goes out in this session.
+        /// The phone said it is full: nothing more goes out until its next ping.
         stalled: bool,
     },
     Done,
@@ -43,10 +61,12 @@ pub struct ExchangeConn {
     exchange: Arc<Exchange>,
     peer: PublicKey,
     phase: Phase,
+    /// Counted in the exchange's live sessions (from an accepted `open` until the drop).
+    counted: bool,
 }
 
 fn refused(code: Code) -> Step {
-    Step::ReplyClose(wire::TAG_REFUSED, wire::encode_code(code).to_vec())
+    Step::ReplyClose(wire::TAG_REFUSED, wire::encode_code(code))
 }
 
 impl ExchangeConn {
@@ -55,6 +75,7 @@ impl ExchangeConn {
             exchange,
             peer,
             phase: Phase::AwaitHello,
+            counted: false,
         }
     }
 
@@ -74,76 +95,76 @@ impl ExchangeConn {
         let step = match &mut self.phase {
             Phase::AwaitOpen if tag == wire::TAG_OPEN => match wire::decode_open(body) {
                 Err(_) => Step::Close,
-                Ok(asked) => match self.exchange.admit(&self.peer) {
+                Ok(asked) => match self.allowed(now) {
                     Err(code) => refused(code),
                     Ok(()) => {
                         self.phase = Phase::Live {
                             in_flight: None,
                             stalled: false,
                         };
+                        self.exchange.session_opened(&self.peer);
+                        self.counted = true;
                         let accepted = asked & wire::FEATURES;
                         Step::Reply(wire::TAG_OPENED, wire::encode_opened(accepted).to_vec())
                     }
                 },
             },
-            Phase::Live { in_flight, stalled } => match self.exchange.admit(&self.peer) {
+            Phase::Live { .. } => match self.exchange.admit(&self.peer) {
                 Err(code) => refused(code),
-                Ok(()) => Self::live(
-                    &self.exchange,
-                    &self.peer,
-                    in_flight,
-                    stalled,
-                    tag,
-                    body,
-                    now,
-                ),
+                Ok(()) => self.live(tag, body, now),
             },
             _ => Step::Close,
         };
         self.finish(step)
     }
 
-    fn live(
-        exchange: &Exchange,
-        peer: &PublicKey,
-        in_flight: &mut Option<[u8; 16]>,
-        stalled: &mut bool,
-        tag: u8,
-        body: &[u8],
-        now: Duration,
-    ) -> Step {
+    fn allowed(&self, now: Duration) -> Result<(), Code> {
+        self.exchange.admit(&self.peer)?;
+        match self.exchange.limited(&self.peer, now) {
+            Some(minutes) => Err(Code::Limit(minutes)),
+            None => Ok(()),
+        }
+    }
+
+    fn live(&mut self, tag: u8, body: &[u8], now: Duration) -> Step {
+        let Phase::Live { in_flight, stalled } = &mut self.phase else {
+            return Step::Close;
+        };
+        let (exchange, peer) = (&self.exchange, &self.peer);
         match tag {
             wire::TAG_ITEM => {
-                let Ok(item) = wire::decode_item(body) else {
-                    return Step::Close;
+                let item = match wire::decode_item(body) {
+                    Ok(item) => item,
+                    Err(ItemError::Unusable(id)) => {
+                        let ack = wire::encode_ack(&id, AckState::Rejected);
+                        return Step::Reply(wire::TAG_ACK, ack.to_vec());
+                    }
+                    Err(ItemError::Broken) => return Step::Close,
                 };
-                if !exchange.count(peer, now) {
-                    return refused(Code::Limit);
+                if let Some(minutes) = exchange.limited(peer, now) {
+                    return refused(Code::Limit(minutes));
                 }
                 let state = match exchange.inbox().store(peer, &item) {
-                    Ok(()) => AckState::Stored,
-                    Err(_) => AckState::Refused,
+                    Ok(()) if exchange.record(peer, now) => AckState::Stored,
+                    // the device table is full: kept, but answered as refused (fail-closed)
+                    Ok(()) | Err(_) => AckState::Refused,
                 };
-                Step::Reply(wire::TAG_ACK, wire::encode_ack(&item.id, state).to_vec())
+                Step::Reply(wire::TAG_ACK, wire::encode_ack(item.id(), state).to_vec())
             }
             wire::TAG_ACK => match wire::decode_ack(body) {
                 // an ack must answer the item in flight; anything else is a broken peer
                 Ok((id, state)) if *in_flight == Some(id) => {
                     *in_flight = None;
-                    match state {
-                        AckState::Stored => exchange.outbox().delivered(peer, &id),
-                        AckState::Refused => *stalled = true,
-                    }
+                    *stalled = state == AckState::Refused;
+                    exchange.outbox().answered(peer, &id, state);
                     Step::Continue
                 }
                 _ => Step::Close,
             },
-            wire::TAG_PING => {
-                if body.is_empty() {
-                    Step::Continue
-                } else {
-                    Step::Close
-                }
+            wire::TAG_PING if body.is_empty() => {
+                // the phone may have room again: offer the head once more
+                *stalled = false;
+                Step::Continue
             }
             // file tags (package 2), sync and input tags, anything unknown
             _ => Step::Close,
@@ -159,7 +180,7 @@ impl ExchangeConn {
                 Ok(()) if in_flight.is_none() && !*stalled => {
                     match self.exchange.outbox().next(&self.peer) {
                         Some(item) => {
-                            *in_flight = Some(item.id);
+                            *in_flight = Some(*item.id());
                             Step::Reply(wire::TAG_ITEM, wire::encode_item(&item))
                         }
                         None => Step::Continue,
@@ -176,7 +197,21 @@ impl ExchangeConn {
     fn finish(&mut self, step: Step) -> Step {
         if matches!(step, Step::Close | Step::ReplyClose(..)) {
             self.phase = Phase::Done;
+            self.uncount();
         }
         step
+    }
+
+    fn uncount(&mut self) {
+        if self.counted {
+            self.counted = false;
+            self.exchange.session_ended(&self.peer);
+        }
+    }
+}
+
+impl Drop for ExchangeConn {
+    fn drop(&mut self) {
+        self.uncount();
     }
 }

@@ -50,6 +50,11 @@ fn rig_with(cfg: ServerConfig) -> Rig {
 
 /// `home`: whether the one bind counts as the stored home network (input sessions only there).
 fn rig_on(cfg: ServerConfig, home: bool) -> Rig {
+    rig_full(cfg, home, true)
+}
+
+/// `wire_exchange`: whether the shell wired device exchange into the router.
+fn rig_full(cfg: ServerConfig, home: bool, wire_exchange: bool) -> Rig {
     let keys = MemoryKeyStore::empty();
     let hub_key = keys.load_or_create().unwrap().public();
     let trust = Arc::new(MemoryTrustStore::new());
@@ -80,11 +85,11 @@ fn rig_on(cfg: ServerConfig, home: bool) -> Rig {
         inbox.clone(),
         outbox.clone(),
     ));
-    let router = Arc::new(
-        Router::new(ep, host.clone(), hub, adm)
-            .with_input(remote.clone(), sink.clone())
-            .with_exchange(exchange.clone()),
-    );
+    let mut router = Router::new(ep, host.clone(), hub, adm).with_input(remote.clone(), sink.clone());
+    if wire_exchange {
+        router = router.with_exchange(exchange.clone());
+    }
+    let router = Arc::new(router);
     let server = Server::start_for_tests(&loopback(), router.clone(), cfg).unwrap();
     Rig {
         exchange,
@@ -1395,13 +1400,13 @@ mod exchange_over_socket {
         // PC → phone: the queued item, removed from the outbox only after the ack
         assert_eq!(rx.recv_timeout(WAIT).unwrap(), Event::Item(queued.clone()));
         assert_eq!(r.outbox.len(&key.public()), 1);
-        s.ack(&queued.id, AckState::Stored).unwrap();
+        s.ack(queued.id(), AckState::Stored).unwrap();
         // phone → PC: stored in the inbox, then acked
         let link = item(1, Kind::Link, "https://example.org/rezept");
         s.send_item(&link).unwrap();
         assert_eq!(
             rx.recv_timeout(WAIT).unwrap(),
-            Event::Ack(link.id, AckState::Stored)
+            Event::Ack(*link.id(), AckState::Stored)
         );
         assert_eq!(r.inbox.items(), vec![(*key.public().as_bytes(), link)]);
         assert_eq!(r.outbox.len(&key.public()), 0);
@@ -1507,7 +1512,7 @@ mod exchange_over_socket {
         second.send_item(&i).unwrap();
         assert_eq!(
             rx2.recv_timeout(WAIT).unwrap(),
-            Event::Ack(i.id, AckState::Stored)
+            Event::Ack(*i.id(), AckState::Stored)
         );
     }
 
@@ -1515,16 +1520,16 @@ mod exchange_over_socket {
     fn a_ping_keeps_a_session_past_the_idle_timeout() {
         let r = rig_with(ServerConfig {
             tick: Duration::from_millis(20),
-            idle_timeout: Duration::from_millis(400),
+            idle_timeout: Duration::from_millis(1500),
             ..ServerConfig::default()
         });
         let key = granted(&r);
         let (s, rx) = open(&r, &key).unwrap();
-        for _ in 0..6 {
-            std::thread::sleep(Duration::from_millis(150));
+        for _ in 0..8 {
+            std::thread::sleep(Duration::from_millis(300));
             s.ping().unwrap();
         }
-        assert!(rx.try_recv().is_err(), "still open after 900 ms");
+        assert!(rx.try_recv().is_err(), "still open after 2.4 s");
         // without pings it closes
         assert_eq!(rx.recv_timeout(WAIT).unwrap(), Event::Closed(None));
     }
@@ -1537,6 +1542,41 @@ mod exchange_over_socket {
         r.sessions.revoke(&*r.trust, &key.public()).unwrap();
         assert!(matches!(rx.recv_timeout(WAIT).unwrap(), Event::Closed(_)));
         assert_eq!(open(&r, &key).err(), Some(ExchangeError::UnknownDevice));
+    }
+
+    #[test]
+    fn on_the_home_network_without_exchange_wired_the_phone_gets_the_plain_refusal() {
+        let r = rig_full(
+            ServerConfig {
+                tick: Duration::from_millis(20),
+                ..ServerConfig::default()
+            },
+            true,
+            false,
+        );
+        let key = granted(&r);
+        assert_eq!(open(&r, &key).err(), Some(ExchangeError::UnknownDevice));
+    }
+
+    #[test]
+    fn a_replayed_message_1_does_not_end_the_live_session() {
+        let r = rig();
+        let key = granted(&r);
+        let (live, rx) = open(&r, &key).unwrap();
+        // what someone on the network could resend: a valid message 1 of this device, never followed
+        // by a transport frame
+        let (_init, m1) = noise::start_initiator(Mode::Exchange, &key, &r.hub_key, None).unwrap();
+        let mut replay = connect(&r);
+        send(&mut replay, &m1);
+        assert!(recv(&mut replay).is_some(), "message 2 comes back");
+        std::thread::sleep(Duration::from_millis(100));
+        let i = item(6, Kind::Text, "noch da");
+        live.send_item(&i).unwrap();
+        assert_eq!(
+            rx.recv_timeout(WAIT).unwrap(),
+            Event::Ack(*i.id(), AckState::Stored)
+        );
+        assert!(r.exchange.connected(&key.public()));
     }
 
     #[test]

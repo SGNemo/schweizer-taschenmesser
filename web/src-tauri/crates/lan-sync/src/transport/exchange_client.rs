@@ -8,7 +8,14 @@
 //!   client).
 //! * **Acks:** an `Event::Item` must be stored by the caller first, then answered with
 //!   `ack(id, Stored)` (or `Refused` when it cannot keep it); the PC sends its next item only after
-//!   that answer. An item of this device counts as delivered only on `Event::Ack(id, Stored)`.
+//!   that answer. An item of this device counts as delivered only on `Event::Ack(id, Stored)`;
+//!   `Rejected` means the PC cannot take it (show „Kam nicht an“, do not send it again), `Refused`
+//!   that the PC is full (keep it, send it again later).
+//! * **At least once:** after a lost ack the same id may come (and must be sent) again; both sides
+//!   store an id once.
+//! * **Keep-alive is the caller's:** it decides how long the session lives (page visible, a
+//!   hand-over running) and pings at least every 60 s for that time; after `Refused` on a PC item
+//!   a ping also asks the PC to offer it again.
 //! * **Keep it open:** the hub closes a session after 120 s without a frame from this side. The
 //!   caller sends `ping` at least every 60 s for as long as it wants the session (the page is
 //!   visible, or a hand-over runs).
@@ -22,7 +29,7 @@
 //!   Open again on the next trigger; the answer to that `open` is the real state.
 
 use crate::client::{hello_name, ClientError, Conn, IO_TIMEOUT};
-use crate::exchange::wire::{self, AckState, Code, Item};
+use crate::exchange::wire::{self, AckState, Code, Item, ItemError};
 use crate::noise::frame::{MAX_FRAME, PRE_CONFIRM_CAP, TAG_HELLO};
 use crate::noise::{self, Finished, Mode, PublicKey, StaticKey, Transport};
 use crate::qr;
@@ -52,8 +59,12 @@ pub enum ExchangeError {
 /// What the PC sends. After `Closed` nothing follows.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Event {
-    /// An item the PC queued for this device: store it, then `ack` it.
+    /// An item the PC queued for this device: store it, then `ack` it. Delivery is at least once:
+    /// an id this device already stored is acked `Stored` again without a second card.
     Item(Item),
+    /// An item with a readable id that this version cannot take: answer `ack(id, Rejected)`, so
+    /// it leaves the PC's queue instead of blocking it.
+    Unusable([u8; 16]),
     /// The PC's answer to an item of this device.
     Ack([u8; 16], AckState),
     /// The session is over: with the PC's reason, or `None` when the connection was lost.
@@ -274,12 +285,17 @@ fn read_loop(
 /// One frame of the PC as an event, or the end of the session (with the PC's reason if it said one).
 fn event_of(tag: u8, body: &[u8]) -> Result<Event, Option<Code>> {
     match tag {
-        wire::TAG_ITEM => wire::decode_item(body).map(Event::Item),
-        wire::TAG_ACK => wire::decode_ack(body).map(|(id, s)| Event::Ack(id, s)),
-        wire::TAG_REFUSED => return Err(wire::decode_code(body).ok()),
-        _ => return Err(None),
+        wire::TAG_ITEM => match wire::decode_item(body) {
+            Ok(item) => Ok(Event::Item(item)),
+            Err(ItemError::Unusable(id)) => Ok(Event::Unusable(id)),
+            Err(ItemError::Broken) => Err(None),
+        },
+        wire::TAG_ACK => wire::decode_ack(body)
+            .map(|(id, s)| Event::Ack(id, s))
+            .map_err(|_| None),
+        wire::TAG_REFUSED => Err(wire::decode_code(body).ok()),
+        _ => Err(None),
     }
-    .map_err(|_| None)
 }
 
 /// Tests reach the hub on loopback (production code only ever dials private addresses).

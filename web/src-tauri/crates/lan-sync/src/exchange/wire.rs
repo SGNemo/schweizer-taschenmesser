@@ -30,8 +30,8 @@ pub const FEATURES: u8 = 0;
 
 /// Longest item body, in bytes.
 pub const MAX_BODY: usize = 16 * 1024;
-/// Longest link, in bytes.
-pub const MAX_LINK: usize = 2048;
+/// Longest link, in bytes (as long as any text: map, office and tracking links are often 2–4 KB).
+pub const MAX_LINK: usize = MAX_BODY;
 /// An item frame: tag, id, kind, body.
 pub const ITEM_HEADER: usize = 16 + 1;
 
@@ -48,8 +48,8 @@ pub enum Code {
     NotGranted,
     /// Paused at the PC.
     Paused,
-    /// Too many items in the last hour.
-    Limit,
+    /// Too many items in the last hour; the minutes until the next one is taken (1..=60).
+    Limit(u8),
 }
 
 impl Code {
@@ -58,17 +58,8 @@ impl Code {
             Code::ExchangeOff => 1,
             Code::NotGranted => 2,
             Code::Paused => 3,
-            Code::Limit => 4,
+            Code::Limit(_) => 4,
         }
-    }
-    fn from_byte(b: u8) -> Option<Code> {
-        Some(match b {
-            1 => Code::ExchangeOff,
-            2 => Code::NotGranted,
-            3 => Code::Paused,
-            4 => Code::Limit,
-            _ => return None,
-        })
     }
 }
 
@@ -100,12 +91,13 @@ impl Kind {
     }
 }
 
-/// One message. `Debug` never shows the body.
+/// One message, checked: the only way to build one is [`Item::new`] (or decoding, which uses it), so
+/// no outbox or caller can queue an item the other side would not take. `Debug` never shows the body.
 #[derive(Clone, PartialEq, Eq)]
 pub struct Item {
-    pub id: [u8; 16],
-    pub kind: Kind,
-    pub body: String,
+    id: [u8; 16],
+    kind: Kind,
+    body: String,
 }
 
 impl fmt::Debug for Item {
@@ -118,11 +110,40 @@ impl fmt::Debug for Item {
 
 impl Item {
     /// A checked item, or `Malformed` (empty, too long, a control character, a link that is not
-    /// a plain `http(s)` address).
+    /// a plain `http(s)` address). Line breaks of text are normalised to `\n` (CRLF and CR from a
+    /// Windows clipboard or a web form are ordinary text).
     pub fn new(id: [u8; 16], kind: Kind, body: String) -> Result<Item, Malformed> {
+        let body = match kind {
+            Kind::Text | Kind::Clip if body.contains('\r') => {
+                body.replace("\r\n", "\n").replace('\r', "\n")
+            }
+            _ => body,
+        };
         check_body(kind, &body)?;
         Ok(Item { id, kind, body })
     }
+
+    pub fn id(&self) -> &[u8; 16] {
+        &self.id
+    }
+
+    pub fn kind(&self) -> Kind {
+        self.kind
+    }
+
+    pub fn body(&self) -> &str {
+        &self.body
+    }
+}
+
+/// Why an item frame was not taken.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ItemError {
+    /// Not even an id: a broken peer, the session closes.
+    Broken,
+    /// A readable id but a body this side does not take (an unknown kind, a link rule of another
+    /// version): answered `ack rejected`, so it leaves the sender's queue instead of blocking it.
+    Unusable([u8; 16]),
 }
 
 /// The receiver's answer to one item.
@@ -132,6 +153,8 @@ pub enum AckState {
     Stored,
     /// Not kept (the receiver's inbox is full); the sender keeps it and tries again later.
     Refused,
+    /// Never taken (the receiver cannot read this item); the sender drops it and says so.
+    Rejected,
 }
 
 fn check_body(kind: Kind, body: &str) -> Result<(), Malformed> {
@@ -152,7 +175,11 @@ fn check_body(kind: Kind, body: &str) -> Result<(), Malformed> {
             let plain = body
                 .chars()
                 .all(|c| !c.is_whitespace() && !c.is_control() && !is_format(c));
-            if body.len() > MAX_LINK || !scheme || !plain || body.len() <= "http://".len() {
+            // at least one host character after `://`
+            let host = body
+                .split_once("://")
+                .is_some_and(|(_, rest)| rest.chars().next().is_some_and(|c| c != '/'));
+            if body.len() > MAX_LINK || !scheme || !plain || !host {
                 return Err(Malformed);
             }
         }
@@ -192,15 +219,22 @@ pub fn decode_opened(body: &[u8]) -> Result<u8, Malformed> {
     }
 }
 
-pub fn encode_code(code: Code) -> [u8; 1] {
-    [code.byte()]
+/// `[code]`, and for `limit` `[code, minutes]`.
+pub fn encode_code(code: Code) -> Vec<u8> {
+    match code {
+        Code::Limit(minutes) => vec![code.byte(), minutes],
+        _ => vec![code.byte()],
+    }
 }
 
 pub fn decode_code(body: &[u8]) -> Result<Code, Malformed> {
-    match body {
-        [b] => Code::from_byte(*b).ok_or(Malformed),
-        _ => Err(Malformed),
-    }
+    Ok(match body {
+        [1] => Code::ExchangeOff,
+        [2] => Code::NotGranted,
+        [3] => Code::Paused,
+        [4, m] if (1..=60).contains(m) => Code::Limit(*m),
+        _ => return Err(Malformed),
+    })
 }
 
 pub fn encode_item(item: &Item) -> Vec<u8> {
@@ -211,15 +245,16 @@ pub fn encode_item(item: &Item) -> Vec<u8> {
     out
 }
 
-pub fn decode_item(body: &[u8]) -> Result<Item, Malformed> {
-    if body.len() <= ITEM_HEADER {
-        return Err(Malformed);
+pub fn decode_item(body: &[u8]) -> Result<Item, ItemError> {
+    if body.len() < ITEM_HEADER {
+        return Err(ItemError::Broken);
     }
     let mut id = [0u8; 16];
     id.copy_from_slice(&body[..16]);
-    let kind = Kind::from_byte(body[16]).ok_or(Malformed)?;
-    let text = std::str::from_utf8(&body[ITEM_HEADER..]).map_err(|_| Malformed)?;
-    Item::new(id, kind, text.to_owned())
+    let unusable = ItemError::Unusable(id);
+    let kind = Kind::from_byte(body[16]).ok_or(unusable)?;
+    let text = std::str::from_utf8(&body[ITEM_HEADER..]).map_err(|_| unusable)?;
+    Item::new(id, kind, text.to_owned()).map_err(|_| unusable)
 }
 
 pub fn encode_ack(id: &[u8; 16], state: AckState) -> [u8; 17] {
@@ -228,6 +263,7 @@ pub fn encode_ack(id: &[u8; 16], state: AckState) -> [u8; 17] {
     out[16] = match state {
         AckState::Stored => 1,
         AckState::Refused => 2,
+        AckState::Rejected => 3,
     };
     out
 }
@@ -241,6 +277,7 @@ pub fn decode_ack(body: &[u8]) -> Result<([u8; 16], AckState), Malformed> {
     let state = match body[16] {
         1 => AckState::Stored,
         2 => AckState::Refused,
+        3 => AckState::Rejected,
         _ => return Err(Malformed),
     };
     Ok((id, state))
@@ -264,6 +301,12 @@ mod tests {
             let i = item(kind, body).unwrap();
             assert_eq!(decode_item(&encode_item(&i)).unwrap(), i);
         }
+        let crlf = item(Kind::Clip, "Zeile 1\r\nZeile 2\rZeile 3").unwrap();
+        assert_eq!(crlf.body(), "Zeile 1\nZeile 2\nZeile 3");
+        let long_link = format!("https://maps.example.org/route?{}", "a".repeat(4000));
+        assert!(item(Kind::Link, &long_link).is_ok(), "real links are often 2–4 KB");
+        assert!(item(Kind::Link, "http://192.168.1.10:8080/x").is_ok());
+        assert!(item(Kind::Link, "https://bücher.example/").is_ok());
         let big = item(Kind::Text, &"x".repeat(MAX_BODY)).unwrap();
         assert!(1 + encode_item(&big).len() + 16 <= crate::noise::frame::MAX_FRAME);
         assert_eq!(item(Kind::Text, &"x".repeat(MAX_BODY + 1)), Err(Malformed));
@@ -283,7 +326,11 @@ mod tests {
             "https://example.org/\u{202E}gpj.exe",
             "https://ex\u{200B}ample.org",
             "http://",
+            "https://",
+            "https:///pfad",
             "HTTPS:",
+            "www.example.org",
+            "https://example.org\n",
         ] {
             assert_eq!(item(Kind::Link, bad), Err(Malformed), "{bad:?}");
         }
@@ -292,14 +339,15 @@ mod tests {
             item(Kind::Link, &format!("https://{}", "a".repeat(MAX_LINK))),
             Err(Malformed)
         );
-        // broken frames
-        assert_eq!(decode_item(&[0; 17]), Err(Malformed));
+        // no id: broken; an id with a body this side does not take: unusable (acked `rejected`)
+        assert_eq!(decode_item(&[0; 16]), Err(ItemError::Broken));
+        assert_eq!(decode_item(&[7; 17]), Err(ItemError::Unusable([7; 16])));
         let mut bad_kind = encode_item(&item(Kind::Text, "x").unwrap());
         bad_kind[16] = 9;
-        assert_eq!(decode_item(&bad_kind), Err(Malformed));
+        assert_eq!(decode_item(&bad_kind), Err(ItemError::Unusable([7; 16])));
         let mut bad_utf8 = encode_item(&item(Kind::Text, "x").unwrap());
         bad_utf8.push(0xff);
-        assert_eq!(decode_item(&bad_utf8), Err(Malformed));
+        assert_eq!(decode_item(&bad_utf8), Err(ItemError::Unusable([7; 16])));
     }
 
     #[test]
@@ -308,12 +356,15 @@ mod tests {
         assert_eq!(decode_open(&[0, 0]), Err(Malformed));
         assert_eq!(decode_open(&[1]), Err(Malformed));
         assert_eq!(decode_opened(&encode_opened(0)), Ok(0));
-        for c in [Code::ExchangeOff, Code::NotGranted, Code::Paused, Code::Limit] {
+        for c in [Code::ExchangeOff, Code::NotGranted, Code::Paused, Code::Limit(42)] {
             assert_eq!(decode_code(&encode_code(c)), Ok(c));
         }
         assert_eq!(decode_code(&[0]), Err(Malformed));
+        assert_eq!(decode_code(&[4]), Err(Malformed));
+        assert_eq!(decode_code(&[4, 0]), Err(Malformed));
+        assert_eq!(decode_code(&[4, 61]), Err(Malformed));
         let id = [3; 16];
-        for s in [AckState::Stored, AckState::Refused] {
+        for s in [AckState::Stored, AckState::Refused, AckState::Rejected] {
             assert_eq!(decode_ack(&encode_ack(&id, s)), Ok((id, s)));
         }
         assert_eq!(decode_ack(&[0; 16]), Err(Malformed));

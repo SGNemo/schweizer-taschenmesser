@@ -154,11 +154,6 @@ impl Endpoint {
         match self.trust.find_by_key(&peer) {
             Some(d) if !d.revoked && here => match first.accept() {
                 Ok((m2, transport, _)) => {
-                    // a newer exchange session of a device replaces its older one (one per device,
-                    // so a phone never holds two of the four connections per address with it)
-                    if mode == noise::Mode::Exchange {
-                        self.sessions.close_exchange(Some(&peer));
-                    }
                     // registered before the first frame: a revoke between message 2 and `hello` counts
                     let handle = self.sessions.register(peer, mode);
                     FirstReply::Accept {
@@ -243,6 +238,15 @@ impl Session {
 
     pub fn is_closed(&self) -> bool {
         self.handle.is_closed()
+    }
+
+    /// An exchange session whose `open` was accepted replaces the device's older exchange sessions
+    /// (one per device, so a phone never holds two of the four connections per address). Only
+    /// then – never at message 1, which can be replayed by anyone who saw it on the network.
+    pub fn replace_older_exchange(&self) {
+        if self.mode == noise::Mode::Exchange && self.authenticated {
+            self.sessions.close_exchange_except(&self.peer, &self.handle);
+        }
     }
 
     pub fn cap(&self) -> usize {

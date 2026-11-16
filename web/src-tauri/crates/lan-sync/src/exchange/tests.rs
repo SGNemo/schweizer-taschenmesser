@@ -1,4 +1,5 @@
 use super::control::{Exchange, MemoryInbox, MemoryOutbox, ITEMS_PER_WINDOW, RATE_WINDOW};
+use super::wire::ItemError;
 use super::session::{ExchangeConn, Step};
 use super::wire::{self, AckState, Code, Item, Kind};
 use crate::input::{MasterSwitch, MemorySwitch};
@@ -77,7 +78,7 @@ fn item(n: u8, kind: Kind, body: &str) -> Item {
 }
 
 fn refused(code: Code) -> Step {
-    Step::ReplyClose(wire::TAG_REFUSED, vec![code.byte()])
+    Step::ReplyClose(wire::TAG_REFUSED, wire::encode_code(code))
 }
 
 #[test]
@@ -140,7 +141,7 @@ fn an_item_is_stored_before_it_is_acked_and_a_full_inbox_says_refused() {
         c.on_frame(wire::TAG_ITEM, &wire::encode_item(&a), T0),
         Step::Reply(
             wire::TAG_ACK,
-            wire::encode_ack(&a.id, AckState::Stored).to_vec()
+            wire::encode_ack(a.id(), AckState::Stored).to_vec()
         )
     );
     assert_eq!(r.inbox.items(), vec![(*r.peer.as_bytes(), a)]);
@@ -150,7 +151,7 @@ fn an_item_is_stored_before_it_is_acked_and_a_full_inbox_says_refused() {
         c.on_frame(wire::TAG_ITEM, &wire::encode_item(&b), T0),
         Step::Reply(
             wire::TAG_ACK,
-            wire::encode_ack(&b.id, AckState::Refused).to_vec()
+            wire::encode_ack(b.id(), AckState::Refused).to_vec()
         )
     );
     assert_eq!(r.inbox.items().len(), 1);
@@ -160,14 +161,11 @@ fn an_item_is_stored_before_it_is_acked_and_a_full_inbox_says_refused() {
 fn foreign_broken_and_reserved_frames_close_the_session() {
     let r = granted();
     let good = wire::encode_item(&item(1, Kind::Text, "x"));
-    let mut bad_link = good.clone();
-    bad_link[16] = 2; // "x" is no link
     let cases: Vec<(u8, Vec<u8>)> = vec![
         (crate::client::TAG_REQUEST, b"{}".to_vec()),
         (0x20, vec![0, 0, 0, 0]), // an input tag
         (wire::TAG_FILE_FIRST, vec![0; 20]),
         (wire::TAG_FILE_LAST, vec![]),
-        (wire::TAG_ITEM, bad_link),
         (wire::TAG_ITEM, good[..10].to_vec()),
         (wire::TAG_OPEN, wire::encode_open(0).to_vec()), // a second open
         (wire::TAG_PING, vec![1]),
@@ -181,37 +179,121 @@ fn foreign_broken_and_reserved_frames_close_the_session() {
     }
     let mut c = opened(&r);
     assert_eq!(c.on_frame(wire::TAG_PING, &[], T0), Step::Continue);
+    // a readable id with a body this side does not take is answered, not a reason to close
+    let mut bad_link = good.clone();
+    bad_link[16] = 2; // "x" is no link
+    assert!(matches!(
+        c.on_frame(wire::TAG_ITEM, &bad_link, T0),
+        Step::Reply(wire::TAG_ACK, _)
+    ));
+}
+
+fn numbered(n: u32) -> Item {
+    let mut id = [0u8; 16];
+    id[..4].copy_from_slice(&n.to_be_bytes());
+    Item::new(id, Kind::Text, "x".into()).unwrap()
 }
 
 #[test]
-fn the_rate_limit_ends_a_flood_and_a_new_window_starts_fresh() {
+fn the_rate_limit_counts_stored_items_slides_and_names_the_minutes_left() {
     let r = granted();
     let mut c = opened(&r);
-    for n in 0..ITEMS_PER_WINDOW {
-        let mut id = [0u8; 16];
-        id[..4].copy_from_slice(&n.to_be_bytes());
-        let i = Item::new(id, Kind::Text, "x".into()).unwrap();
+    // refused items (full inbox) do not use up the budget
+    r.inbox.full.store(true, Ordering::SeqCst);
+    for n in 0..400 {
+        c.on_frame(wire::TAG_ITEM, &wire::encode_item(&numbered(n)), T0);
+    }
+    r.inbox.full.store(false, Ordering::SeqCst);
+    let half = Duration::from_secs(30 * 60);
+    for n in 0..ITEMS_PER_WINDOW as u32 {
+        let at = if n < 150 { T0 } else { T0 + half };
         assert!(matches!(
-            c.on_frame(wire::TAG_ITEM, &wire::encode_item(&i), T0),
+            c.on_frame(wire::TAG_ITEM, &wire::encode_item(&numbered(1000 + n)), at),
             Step::Reply(wire::TAG_ACK, _)
         ));
     }
     let one_more = item(0xee, Kind::Text, "x");
     assert_eq!(
-        c.on_frame(wire::TAG_ITEM, &wire::encode_item(&one_more), T0),
-        refused(Code::Limit)
+        c.on_frame(wire::TAG_ITEM, &wire::encode_item(&one_more), T0 + half),
+        refused(Code::Limit(30))
     );
-    // the count belongs to the device, not to the session
-    let mut c = opened(&r);
+    // an open while the window is full is refused with the minutes left, so the phone stops dialling
+    let mut c = ExchangeConn::new(r.exchange.clone(), r.peer);
+    c.on_hello();
     assert_eq!(
-        c.on_frame(wire::TAG_ITEM, &wire::encode_item(&one_more), T0),
-        refused(Code::Limit)
+        c.on_frame(wire::TAG_OPEN, &wire::encode_open(0), T0 + half),
+        refused(Code::Limit(30))
     );
-    let mut c = opened(&r);
+    // sliding: once the first 150 leave the window, there is room again
+    let mut c = opened_at(&r, T0 + RATE_WINDOW);
     assert!(matches!(
         c.on_frame(wire::TAG_ITEM, &wire::encode_item(&one_more), T0 + RATE_WINDOW),
         Step::Reply(wire::TAG_ACK, _)
     ));
+}
+
+fn opened_at(r: &Rig, at: Duration) -> ExchangeConn {
+    let mut c = ExchangeConn::new(r.exchange.clone(), r.peer);
+    c.on_hello();
+    assert!(matches!(
+        c.on_frame(wire::TAG_OPEN, &wire::encode_open(0), at),
+        Step::Reply(wire::TAG_OPENED, _)
+    ));
+    c
+}
+
+#[test]
+fn an_item_sent_again_after_a_lost_ack_is_stored_once_and_acked_again() {
+    let r = granted();
+    let a = item(1, Kind::Text, "einmal");
+    let mut c = opened(&r);
+    c.on_frame(wire::TAG_ITEM, &wire::encode_item(&a), T0);
+    let mut c = opened(&r);
+    assert_eq!(
+        c.on_frame(wire::TAG_ITEM, &wire::encode_item(&a), T0),
+        Step::Reply(
+            wire::TAG_ACK,
+            wire::encode_ack(a.id(), AckState::Stored).to_vec()
+        )
+    );
+    assert_eq!(r.inbox.items().len(), 1);
+}
+
+#[test]
+fn an_unusable_item_is_rejected_by_id_and_the_session_goes_on() {
+    let r = granted();
+    let mut c = opened(&r);
+    let mut unknown_kind = wire::encode_item(&item(5, Kind::Text, "x"));
+    unknown_kind[16] = 9;
+    assert_eq!(
+        c.on_frame(wire::TAG_ITEM, &unknown_kind, T0),
+        Step::Reply(
+            wire::TAG_ACK,
+            wire::encode_ack(&[5; 16], AckState::Rejected).to_vec()
+        )
+    );
+    assert_eq!(wire::decode_item(&unknown_kind), Err(ItemError::Unusable([5; 16])));
+    assert!(r.inbox.items().is_empty());
+    assert_eq!(c.on_frame(wire::TAG_PING, &[], T0), Step::Continue);
+}
+
+#[test]
+fn live_sessions_are_counted_for_the_pcs_state() {
+    let r = granted();
+    assert!(!r.exchange.connected(&r.peer));
+    let c = opened(&r);
+    assert!(r.exchange.connected(&r.peer));
+    drop(c);
+    assert!(!r.exchange.connected(&r.peer));
+    let mut c = opened(&r);
+    c.on_frame(0x3e, &[], T0); // closes
+    assert!(!r.exchange.connected(&r.peer));
+    // a refused open never counts
+    r.exchange.set_enabled(false).unwrap();
+    let mut c = ExchangeConn::new(r.exchange.clone(), r.peer);
+    c.on_hello();
+    c.on_frame(wire::TAG_OPEN, &wire::encode_open(0), T0);
+    assert!(!r.exchange.connected(&r.peer));
 }
 
 #[test]
@@ -234,13 +316,13 @@ fn the_outbox_goes_out_one_item_at_a_time_and_leaves_only_on_a_stored_ack() {
     assert_eq!(
         other.on_frame(
             wire::TAG_ACK,
-            &wire::encode_ack(&b.id, AckState::Stored),
+            &wire::encode_ack(b.id(), AckState::Stored),
             T0
         ),
         Step::Close
     );
     assert_eq!(
-        c.on_frame(wire::TAG_ACK, &wire::encode_ack(&a.id, AckState::Stored), T0),
+        c.on_frame(wire::TAG_ACK, &wire::encode_ack(a.id(), AckState::Stored), T0),
         Step::Continue
     );
     assert_eq!(r.outbox.len(&r.peer), 1);
@@ -248,22 +330,39 @@ fn the_outbox_goes_out_one_item_at_a_time_and_leaves_only_on_a_stored_ack() {
         c.poll(T0),
         Step::Reply(wire::TAG_ITEM, wire::encode_item(&b))
     );
-    // the phone is full: the item stays, nothing more goes out in this session
+    // the phone is full: the item stays, nothing more goes out until its next ping
     assert_eq!(
         c.on_frame(
             wire::TAG_ACK,
-            &wire::encode_ack(&b.id, AckState::Refused),
+            &wire::encode_ack(b.id(), AckState::Refused),
             T0
         ),
         Step::Continue
     );
     assert_eq!(r.outbox.len(&r.peer), 1);
     assert_eq!(c.poll(T0), Step::Continue);
-    // a fresh session tries again
-    let mut c = opened(&r);
+    assert_eq!(c.on_frame(wire::TAG_PING, &[], T0), Step::Continue);
     assert_eq!(
         c.poll(T0),
         Step::Reply(wire::TAG_ITEM, wire::encode_item(&b))
+    );
+    // the phone cannot read it: it leaves the queue and the shell hears why
+    assert_eq!(
+        c.on_frame(
+            wire::TAG_ACK,
+            &wire::encode_ack(b.id(), AckState::Rejected),
+            T0
+        ),
+        Step::Continue
+    );
+    assert_eq!(r.outbox.len(&r.peer), 0);
+    assert_eq!(
+        r.outbox.answers(),
+        vec![
+            (*a.id(), AckState::Stored),
+            (*b.id(), AckState::Refused),
+            (*b.id(), AckState::Rejected)
+        ]
     );
 }
 

@@ -647,7 +647,15 @@ fn no_frame_from_the_network_reaches_an_exchange_setter() {
     }
     // the session uses exactly the reading half of `Exchange`
     let session = source("src/exchange/session.rs");
-    let allowed = ["admit", "count", "inbox", "outbox"];
+    let allowed = [
+        "admit",
+        "limited",
+        "record",
+        "inbox",
+        "outbox",
+        "session_opened",
+        "session_ended",
+    ];
     for line in code_lines(&session) {
         let mut rest = line;
         while let Some(at) = rest.find("exchange.") {
