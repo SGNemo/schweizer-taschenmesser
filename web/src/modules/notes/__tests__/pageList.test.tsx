@@ -2,6 +2,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { FolderTabs } from '@/ui/FolderTabs';
 import { PageList, type PageListProps } from '../components/PageList';
 
 const props = (over: Partial<PageListProps> = {}): PageListProps => ({
@@ -66,5 +67,31 @@ describe('PageList controls (U22: fewer rows before the first note)', () => {
     );
     await userEvent.click(screen.getByRole('menuitemcheckbox', { name: /Titel/ }));
     expect(onSort).toHaveBeenCalledWith('title');
+  });
+});
+
+describe('PageList notebook tabs', () => {
+  const book = {
+    id: 'nb1',
+    name: 'Arbeit',
+    tone: 1,
+    icon: 'note',
+    order: 0,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    deviceId: 'd',
+  } as unknown as PageListProps['books'][number];
+
+  it('shows each count as the tab count (0 included), not inside the name, on one scrolling line', () => {
+    render(<PageList {...props({ books: [book] })} />);
+    const group = screen.getByRole('group', { name: 'Notizbücher' });
+    expect(group).not.toHaveTextContent('·');
+    expect(screen.getByRole('button', { name: /^Arbeit\s*0$/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Allgemein\s*0$/ })).toBeInTheDocument();
+    const { container } = render(
+      <FolderTabs label="x" tabs={[]} value="" onChange={() => undefined} nowrap />,
+    );
+    const nowrapRow = (container.querySelector('[role="group"] > div') as HTMLElement).className;
+    expect((group.firstElementChild as HTMLElement).className).toBe(nowrapRow);
   });
 });
