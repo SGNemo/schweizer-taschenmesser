@@ -34,6 +34,7 @@ In der **Modul-Bibliothek** schaltest du Module ein und aus (beim Ausschalten: D
 |  | Feeds | Deine abonnierten Feeds (Nachrichten, Blogs, Podcasts) an einem Ort | optional |
 |  | E-Mail | Posteingang, Suche und Mails lesen | Vorschau, nur Windows-App |
 |  | Musik | Spotify auf einer Seite | Vorschau |
+|  | Austausch | Notizen und Links zwischen Handy und PC hin- und herschicken | Vorschau, nur Windows- und Android-App |
 | **Tresor** | Unterlagen | Ausweise, Verträge, Versicherungen und Garantien mit Ende, Kündigungsfrist und angehängter Datei | optional |
 |  | Passwörter | Passwort-Tresor | optional |
 | **System** | Gerätestatus | Backup, Sync, Speicher und Updates dieses Geräts auf einer Seite, dazu ein Backup zum Herunterladen | bei Neuinstallationen an |
