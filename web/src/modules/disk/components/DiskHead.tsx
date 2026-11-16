@@ -17,8 +17,30 @@ function splitCapacity(text: string): { value: string; unit: string } {
  * drive's own card below, so the page says them once (no ring strip and no second line under the head). Sizes
  * only: no file or folder names, nothing from a scan.
  */
-export function DiskHead({ drives }: { drives: readonly DriveInfo[] | null }) {
-  const main = drives ? headDrive(drives) : undefined;
+export function DiskHead({
+  drives,
+  failed = false,
+}: {
+  drives: readonly DriveInfo[] | null;
+  failed?: boolean;
+}) {
+  // While the drives are read (`null`) the figure holds its place with a dash, so the head keeps its height and
+  // the page does not jump when the number arrives (no spinner: the reading takes a moment only). After a failed
+  // reading there is no number to wait for: the head stays empty and the page says what went wrong.
+  if (failed) return null;
+  if (!drives)
+    return (
+      <HeroSlot area="figure">
+        <HeroFigure
+          type="mono"
+          detail={'\u00a0'}
+          value="–"
+          unit={t.disk.head.used}
+          testId="disk-head-used"
+        />
+      </HeroSlot>
+    );
+  const main = headDrive(drives);
   if (!main) return null;
   const figure = splitCapacity(formatCapacity(Math.max(0, main.totalBytes - main.freeBytes)));
   return (

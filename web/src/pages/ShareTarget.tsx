@@ -65,7 +65,8 @@ const TARGETS: Target[] = [
       return t.share.toBookmarks;
     },
     icon: 'bookmark',
-    to: (c) => `/bookmarks?${q({ title: c.title, text: c.text, url: c.url })}`,
+    // `shared=1`: the bookmarks form offers to fetch the preview of a shared link.
+    to: (c) => `/bookmarks?${q({ title: c.title, text: c.text, url: c.url, shared: '1' })}`,
   },
   {
     module: 'notes',

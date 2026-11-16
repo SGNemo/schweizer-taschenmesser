@@ -65,14 +65,34 @@ describe('Dieser PC head (Identity 4.0)', () => {
     expect(screen.getByTestId('extra')).toBeEmptyDOMElement();
   });
 
-  it('draws nothing before the first reading', () => {
+  it('holds the figure’s place before the first reading (same structure, no number, no layout shift)', () => {
+    const shape = (el: HTMLElement) =>
+      Array.from(el.querySelectorAll('*')).map((n) => `${n.tagName}.${n.className}`);
+    const { unmount } = render(
+      <Head>
+        <DiskHead drives={[drive('C:\\', 476.8, 38.2, true)]} />
+      </Head>,
+    );
+    const loaded = shape(screen.getByTestId('figure'));
+    unmount();
     render(
       <Head>
         <DiskHead drives={null} />
       </Head>,
     );
-    expect(screen.getByTestId('figure')).toBeEmptyDOMElement();
+    const figure = screen.getByTestId('figure');
+    expect(shape(figure)).toEqual(loaded);
+    expect(screen.getByTestId('disk-head-used')).not.toHaveTextContent(/\d/);
     expect(screen.getByTestId('signature')).toBeEmptyDOMElement();
+  });
+
+  it('draws no placeholder once reading the drives failed', () => {
+    render(
+      <Head>
+        <DiskHead drives={null} failed />
+      </Head>,
+    );
+    expect(screen.queryByTestId('disk-head-used')).toBeNull();
   });
 
   it('picks the system drive, else the first one', () => {

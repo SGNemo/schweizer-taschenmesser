@@ -5800,6 +5800,8 @@ export const de = {
       add: 'Liste anlegen',
       created: 'Liste angelegt.',
       weekInPlanner: 'Woche prüfen im Planer',
+      /** With the routines module on, the morning and evening templates lead there. */
+      inRoutines: (name: string) => `${name} bei den Routinen`,
       morning: {
         name: 'Morgenroutine',
         items: [
@@ -5940,6 +5942,7 @@ export const de = {
     suggestions: 'Schon mal gekauft',
     sumNote: 'Nur Artikel mit Preis',
     share: 'Als Text teilen',
+    asRoutine: 'Als Routine übernehmen',
     shareCopied: 'Liste kopiert, du kannst sie jetzt einfügen.',
     tripDate: 'Reisedatum (optional)',
     tripPlace: 'Ziel (optional)',
@@ -10380,6 +10383,11 @@ export const de = {
       stepsHint: 'Ein Schritt pro Zeile. Dann lässt sich die Routine Schritt für Schritt abhaken.',
       remindAt: 'Erinnerung (optional)',
       remindAtHint: 'Uhrzeit an den Tagen, an denen die Routine dran ist. Leer lassen für keine.',
+      remindPermissionMissing:
+        'Benachrichtigungen sind noch nicht erlaubt, die Erinnerung bliebe deshalb aus.',
+      remindPermissionDenied:
+        'Benachrichtigungen sind blockiert. Erlaube sie in den System- oder Browser-Einstellungen, sonst bleibt die Erinnerung aus.',
+      remindAllow: 'Erlauben',
       planner: 'Im Planer zeigen',
       plannerHint: 'Der Planer findet Zeit dafür an den Tagen, an denen sie dran ist.',
       room: 'Raum',

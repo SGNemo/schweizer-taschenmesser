@@ -10,6 +10,7 @@ export const lists: Strings['lists'] = {
     add: 'Create list',
     created: 'List created.',
     weekInPlanner: 'Check the week in the planner',
+    inRoutines: (name: string) => `${name} in Routines`,
     morning: {
       name: 'Morning routine',
       items: [
@@ -148,6 +149,7 @@ export const lists: Strings['lists'] = {
   suggestions: 'Bought before',
   sumNote: 'Items with a price only',
   share: 'Share as text',
+  asRoutine: 'Turn into a routine',
   shareCopied: 'List copied, ready to paste.',
   tripDate: 'Trip date (optional)',
   tripPlace: 'Destination (optional)',

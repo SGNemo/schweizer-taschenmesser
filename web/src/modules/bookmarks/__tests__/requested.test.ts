@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
-import { bus } from '@/core/events';
+import { bus, type EventMap } from '@/core/events';
+import { KINDS } from '../schema';
 import { itemRepo } from '../repo';
 import start, { addRequested } from '../services';
 
@@ -36,6 +37,17 @@ describe('bookmark.requested', () => {
       tags: ['Abend'],
     });
     expect(items.find((i) => i.title === 'Was')?.kind).toBe('read');
+  });
+
+  it('the event accepts every kind the module knows (buy, try included)', async () => {
+    // Type-level: fails `typecheck` when the event's kind union lags behind KINDS.
+    const kinds: NonNullable<EventMap['bookmark.requested']['kind']>[] = [...KINDS];
+    await addRequested({ title: 'Kaufen', url: 'https://shop.example.test/a', kind: 'buy' });
+    await addRequested({ title: 'Probieren', url: 'https://shop.example.test/b', kind: 'try' });
+    const items = await itemRepo.active().toArray();
+    expect(kinds).toContain('try');
+    expect(items.find((i) => i.title === 'Kaufen')?.kind).toBe('buy');
+    expect(items.find((i) => i.title === 'Probieren')?.kind).toBe('try');
   });
 
   it('is handled while the module service runs, and not after it stopped', async () => {

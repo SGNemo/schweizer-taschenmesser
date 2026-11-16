@@ -1,5 +1,7 @@
 import { useId, useState } from 'react';
 import { useModuleStates } from '@/core/modules/activation';
+import type { NotificationPermissionState } from '@/core/notifications/service';
+import { getPlatform } from '@/core/platform';
 import { weekdayShort } from '@/core/recurrence/describe';
 import { RecurrenceEditor } from '@/core/recurrence/RecurrenceEditor';
 import type { Recurrence } from '@/core/recurrence/types';
@@ -120,6 +122,9 @@ function Fields({
   );
   const [note, setNote] = useState(existing?.note ?? '');
   const [remindAt, setRemindAt] = useState(existing?.remindAt ?? '');
+  const [permission, setPermission] = useState<NotificationPermissionState>(() =>
+    getPlatform().notifications.permission(),
+  );
   const [planner, setPlanner] = useState(
     existing ? existing.planner !== false : start ? ROUTINE_STARTS[start].planner : true,
   );
@@ -310,6 +315,26 @@ function Fields({
         value={remindAt}
         onChange={setRemindAt}
       />
+      {/* A time without the system's permission: one calm line, asked only on a tap (as the to-do's reminder). */}
+      {remindAt && (permission === 'default' || permission === 'denied') ? (
+        <div className={styles.remindHint} role="note" data-testid="remind-permission-hint">
+          <span>
+            {permission === 'denied'
+              ? t.routines.fields.remindPermissionDenied
+              : t.routines.fields.remindPermissionMissing}
+          </span>
+          {permission === 'default' ? (
+            <Button
+              variant="ghost"
+              onClick={async () =>
+                setPermission(await getPlatform().notifications.requestPermission())
+              }
+            >
+              {t.routines.fields.remindAllow}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
       {plannerOn ? (
         <Checkbox
           label={t.routines.fields.planner}
