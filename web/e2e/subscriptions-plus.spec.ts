@@ -154,3 +154,57 @@ test('"Gekündigt zum" says the first allowed day when an earlier one is typed',
   await dialog.getByLabel('Gekündigt zum (optional)').blur();
   await expect(dialog.getByRole('alert')).toContainText('Frühestens am 15.10.2026.');
 });
+
+test('„Übersicht“: donut by kind or subscription, the next 30 days; the list sorts by cost and keeps it on reload', async ({
+  page,
+}) => {
+  await addStreaming(page);
+  await ready(page, '/subscriptions?new=1');
+  const dialog = page.getByRole('dialog', { name: 'Abo eintragen' });
+  await dialog.getByLabel('Name').fill('Versicherung');
+  await dialog.getByLabel('Betrag').fill('60');
+  await dialog.getByLabel('Abbuchung am').fill('2027-03-01');
+  await dialog.getByLabel('Wiederholung').selectOption('yearly');
+  await save(page);
+
+  await page.getByRole('button', { name: 'Übersicht' }).click();
+  await expect(page).toHaveURL(/view=overview/);
+  const overview = page.getByTestId('subscriptions-overview');
+  await expect(overview.getByRole('figure', { name: 'Kosten pro Monat nach Art' })).toBeVisible();
+  await overview.getByRole('button', { name: 'Abo', exact: true }).click();
+  await expect(overview.getByRole('figure', { name: 'Kosten pro Monat nach Abo' })).toContainText(
+    'Versicherung',
+  );
+  // Only the monthly charge falls into the next 30 days (the yearly one is in March).
+  const upcoming = page.getByTestId('subscriptions-upcoming');
+  await expect(upcoming).toContainText('Streaming');
+  await expect(upcoming).not.toContainText('Versicherung');
+  await expect(page.getByTestId('upcoming-sum')).toHaveText(/9,99\s€/);
+  await expect(overview.getByRole('figure', { name: 'Was kostet mich das im Jahr' })).toContainText(
+    /119,88\s€/,
+  );
+
+  await page.getByRole('button', { name: 'Abos', exact: true }).click();
+  await page
+    .getByRole('group', { name: 'Sortieren nach' })
+    .getByRole('button', { name: 'Pro Jahr' })
+    .click();
+  await expect(page).toHaveURL(/sort=cost/);
+  await page.reload();
+  const rows = page.getByRole('list', { name: 'Abos' }).getByRole('listitem');
+  await expect(rows.first()).toContainText('Streaming');
+  await expect(rows.first()).toContainText(/119,88\s€ im Jahr/);
+  await expect(rows.nth(1)).toContainText('Versicherung');
+});
+
+test('„Kaum genutzt“ from the dialog: the row says so and the overview names the yearly cost', async ({
+  page,
+}) => {
+  await addStreaming(page);
+  await page.getByRole('button', { name: /Streaming/ }).click();
+  await page.getByRole('dialog').getByRole('switch', { name: 'Kaum genutzt' }).click();
+  await save(page);
+  await expect(page.getByRole('button', { name: /Streaming/ })).toContainText('Kaum genutzt');
+  await page.getByRole('button', { name: 'Übersicht' }).click();
+  await expect(page.getByTestId('subscriptions-unused')).toContainText(/Streaming.*119,88\s€/);
+});
