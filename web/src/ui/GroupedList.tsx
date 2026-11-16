@@ -74,11 +74,7 @@ export function GroupedList({
       {groups.map((g) => {
         const key = `${listId}:${g.id}`;
         const toggled = closed.includes(key);
-        const open = forceOpen
-          ? !forcedClosed.includes(key)
-          : g.defaultClosed
-            ? toggled
-            : !toggled;
+        const open = forceOpen ? !forcedClosed.includes(key) : g.defaultClosed ? toggled : !toggled;
         const bodyId = `grp-${listId}-${g.id}`;
         return (
           <section key={g.id} className={styles.group} data-group={g.id}>

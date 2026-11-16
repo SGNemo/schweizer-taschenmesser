@@ -42,7 +42,8 @@ export function Donut({ data, centreLabel, otherLabel, ...base }: DonutProps) {
     base.sensitive ?? false,
   );
   const rest =
-    otherLabel ?? (data.some((d) => d.label === t.charts.other) ? t.charts.otherMore : t.charts.other);
+    otherLabel ??
+    (data.some((d) => d.label === t.charts.other) ? t.charts.otherMore : t.charts.other);
   const shares = foldShares(data, rest);
   const total = shares.reduce((s, p) => s + p.value, 0);
   const top = shares[0];
