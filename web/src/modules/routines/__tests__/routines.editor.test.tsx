@@ -2,11 +2,13 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { db } from '@/core/db/db';
+import { getPlatform } from '@/core/platform';
 import { today } from '@/core/time/dates';
 import { RoutineEditor, type RoutineTarget } from '../components/RoutineEditor';
 import { RoutineRun } from '../components/RoutineRun';
+import { newRoutine } from '../logic';
 import { routineRepo } from '../repo';
 
 const editor = (target: RoutineTarget, onClose = vi.fn()) =>
@@ -145,5 +147,41 @@ describe('Durchführen: step by step', () => {
     await waitFor(async () => expect((await routineRepo.get(r.id))?.dueDate).not.toBe(day));
     expect(onClose).toHaveBeenCalled();
     expect((await routineRepo.get(r.id))?.lastDoneOn).toBe(day);
+  });
+});
+
+describe('routine editor: a reminder without the system permission', () => {
+  beforeEach(async () => {
+    await db.table('routines_routine').clear();
+  });
+  afterEach(() => vi.restoreAllMocks());
+
+  it('a time set while notifications are not allowed shows one calm line; „Erlauben“ only while it can be asked', async () => {
+    const perm = vi.spyOn(getPlatform().notifications, 'permission').mockReturnValue('default');
+    const user = userEvent.setup();
+    const { unmount } = editor({ draft: true });
+    await screen.findByLabelText('Name');
+    expect(screen.queryByTestId('remind-permission-hint')).toBeNull();
+    await user.type(screen.getByLabelText(/Erinnerung/), '0730');
+    expect((await screen.findByTestId('remind-permission-hint')).textContent).toMatch(
+      /noch nicht erlaubt/,
+    );
+    expect(screen.getByRole('button', { name: 'Erlauben' })).toBeTruthy();
+    unmount();
+    perm.mockReturnValue('denied');
+    const stored = await routineRepo.create({
+      ...newRoutine({
+        name: 'Pflanzen gießen',
+        room: '',
+        repeat: { freq: 'weekly', interval: 1 },
+        people: '',
+        dueDate: today(),
+        note: '',
+      }),
+      remindAt: '08:00',
+    });
+    editor(stored);
+    expect((await screen.findByTestId('remind-permission-hint')).textContent).toMatch(/blockiert/);
+    expect(screen.queryByRole('button', { name: 'Erlauben' })).toBeNull();
   });
 });

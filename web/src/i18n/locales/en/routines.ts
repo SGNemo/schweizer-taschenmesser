@@ -109,6 +109,10 @@ export const routines: Strings['routines'] = {
     stepsHint: 'One step per line. Then the routine can be ticked off step by step.',
     remindAt: 'Reminder (optional)',
     remindAtHint: 'A time on the days the routine is due. Leave empty for none.',
+    remindPermissionMissing: 'Notifications are not allowed yet, so this reminder wouldn’t show.',
+    remindPermissionDenied:
+      'Notifications are blocked. Allow them in the system or browser settings, otherwise this reminder won’t show.',
+    remindAllow: 'Allow',
     planner: 'Show in the planner',
     plannerHint: 'The planner finds time for it on the days it is due.',
     room: 'Room',

@@ -10378,6 +10378,11 @@ export const de = {
       stepsHint: 'Ein Schritt pro Zeile. Dann lässt sich die Routine Schritt für Schritt abhaken.',
       remindAt: 'Erinnerung (optional)',
       remindAtHint: 'Uhrzeit an den Tagen, an denen die Routine dran ist. Leer lassen für keine.',
+      remindPermissionMissing:
+        'Benachrichtigungen sind noch nicht erlaubt, die Erinnerung bliebe deshalb aus.',
+      remindPermissionDenied:
+        'Benachrichtigungen sind blockiert. Erlaube sie in den System- oder Browser-Einstellungen, sonst bleibt die Erinnerung aus.',
+      remindAllow: 'Erlauben',
       planner: 'Im Planer zeigen',
       plannerHint: 'Der Planer findet Zeit dafür an den Tagen, an denen sie dran ist.',
       room: 'Raum',
