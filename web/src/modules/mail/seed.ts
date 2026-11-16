@@ -118,7 +118,8 @@ const MAILS: Mock[] = [
 ];
 
 function seed(ctx: SeedContext): SeedRows {
-  const n = ctx.count({ small: 4, medium: MAILS.length, large: MAILS.length });
+  // The letter (last) only in the large seed: the medium one is the stimulus inventory's page.
+  const n = ctx.count({ small: 4, medium: MAILS.length - 1, large: MAILS.length });
   const rows = MAILS.slice(0, n);
   const thread = rows.map((m, i) => {
     const threadId = ctx.id('mail', 'thread', i);
