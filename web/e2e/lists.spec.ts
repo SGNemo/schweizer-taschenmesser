@@ -255,17 +255,18 @@ test('Routinen: Vorlagen führen zu den Routinen, eine Checkliste wird zur Routi
   // Routines off: the template makes a checklist, the menu offers no routine.
   await (await openPageMenu(page)).getByRole('menuitem', { name: 'Aus Vorlage' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Abendroutine' }).click();
-  await expect(page.getByRole('button', { name: 'Abendroutine', exact: true })).toHaveAttribute(
-    'aria-current',
-    'page',
-  );
+  // The new list's tab (the frame's tab row; the page can show a template button of the same name meanwhile).
+  const tab = page
+    .getByTestId('module-frame')
+    .getByRole('button', { name: 'Abendroutine', exact: true });
+  await expect(tab).toHaveAttribute('aria-current', 'page');
   const menu = await openPageMenu(page);
   await expect(menu.getByRole('menuitem', { name: 'Als Routine übernehmen' })).toHaveCount(0);
   await page.keyboard.press('Escape');
 
   await enable(page, 'routines');
   await open(page, '/lists');
-  await page.getByRole('button', { name: 'Abendroutine', exact: true }).click();
+  await tab.click();
   await (await openPageMenu(page)).getByRole('menuitem', { name: 'Aus Vorlage' }).click();
   const dialog = page.getByRole('dialog');
   await expect(
