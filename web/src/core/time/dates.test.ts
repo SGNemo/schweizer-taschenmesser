@@ -1,9 +1,15 @@
-import { describe, expect, it } from 'vitest';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
+import { loadCatalog } from '@/core/i18n/catalogs';
+import { setFormatPref } from '@/core/i18n/format';
+import { setLang } from '@/core/i18n/lang';
 import {
   addDaysStr,
   addMonthsInSeries,
   endOfMonthStr,
   formatDateTime,
+  formatDay,
   humanDateHint,
   isCalendarDate,
   parseDate,
@@ -101,5 +107,52 @@ describe('isCalendarDate (X19)', () => {
       '',
     ])
       expect(isCalendarDate(bad), bad).toBe(false);
+  });
+});
+
+describe('formatDay in English (H13)', () => {
+  afterEach(() => {
+    setFormatPref('auto');
+    setLang('de');
+  });
+  const english = async (region: 'auto' | 'en-US') => {
+    await loadCatalog('en');
+    setLang('en');
+    setFormatPref(region);
+  };
+
+  it('writes a day with the full month name without the German day dot', async () => {
+    expect(formatDay('2026-11-30', 'd. MMMM')).toBe('30. November');
+    await english('auto');
+    expect(formatDay('2026-11-30', 'd. MMMM')).toBe('30 November');
+    expect(formatDay('2026-11-30', 'EEEE, d. MMM')).toBe('Monday 30 Nov');
+    await english('en-US');
+    expect(formatDay('2026-11-30', 'd. MMMM')).toBe('November 30');
+    expect(formatDay('2026-11-30', 'EEEE, d. MMM')).toBe('Monday, Nov 30');
+  });
+
+  /** Every German-style pattern the app passes to `formatDay` has an English equivalent. */
+  it('no pattern in the source shows a German day dot in English', async () => {
+    const src = join(__dirname, '../..');
+    const patterns = new Set<string>();
+    const walk = (dir: string) => {
+      for (const e of readdirSync(dir, { withFileTypes: true })) {
+        const p = join(dir, e.name);
+        if (e.isDirectory()) walk(p);
+        else if (/\.tsx?$/.test(e.name) && !/\.test\.tsx?$/.test(e.name)) {
+          const text = readFileSync(p, 'utf8');
+          for (const call of text.matchAll(/formatDay\(([^;]*?)\)/g))
+            for (const lit of call[1]!.matchAll(/'([^'\n]*)'|"([^"\n]*)"/g))
+              patterns.add((lit[1] ?? lit[2])!);
+        }
+      }
+    };
+    walk(src);
+    expect(patterns.has('EEEE, d. MMMM')).toBe(true); // the scan finds the calls
+    for (const region of ['auto', 'en-US'] as const) {
+      await english(region);
+      for (const p of patterns)
+        expect(formatDay('2026-11-30', p), `${p} (${region})`).not.toMatch(/\d\.(\s|$)/);
+    }
   });
 });
