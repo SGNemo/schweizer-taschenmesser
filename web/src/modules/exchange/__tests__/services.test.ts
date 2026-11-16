@@ -134,4 +134,18 @@ describe('exchange background work', () => {
     await expect(deliver(pc, row.id)).rejects.toThrow('bad-item');
     expect((await itemRepo.get(row.id))?.state).toBe('rejected');
   });
+  it('a removed received card stays a marker until it expires, so a late resend cannot revive it', async () => {
+    const pc = createFakeExchange('pc');
+    hooks().arrive('text', 'Spät nochmal');
+    const { items } = await pc.take();
+    await pull(pc);
+    const row = (await itemRepo.active().first())!;
+    await itemRepo.remove(row.id);
+    await sweep(row.createdAt + UNDO_KEEP_MS + 60_000);
+    pc.take = async () => ({ items, answers: [] });
+    await pull(pc);
+    expect(await itemRepo.active().count()).toBe(0);
+    await sweep(row.createdAt + RETENTION_MS + 60_000);
+    expect(await db.table('exchange_item').count()).toBe(0);
+  });
 });

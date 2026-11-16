@@ -1,4 +1,4 @@
-import { bus } from '@/core/events/bus';
+import { loadStoredModuleState } from '@/core/modules/activation';
 import { getPlatform } from '@/core/platform';
 import type { ExchangeEvent, ExchangeService, ExchangeSession } from '@/core/platform/types';
 import { UNDO_KEEP_MS, expired, problemOf } from './logic';
@@ -26,8 +26,11 @@ const FINAL = new Set(['bad-item', 'bad-id', 'bad-kind', 'bad-peer', 'not-found'
 
 let session: ExchangeSession | null = null;
 let opening = false;
-/** Bumped by every `closed` event: an `open` that was overtaken by one keeps no dead session. */
-let closings = 0;
+/** One opened session and whether its own `closed` event came; events of an older one are ignored. */
+interface Life {
+  closed: boolean;
+  session: ExchangeSession | null;
+}
 let pulling: Promise<void> = Promise.resolve();
 
 /**
@@ -113,8 +116,13 @@ export async function deliver(ex: ExchangeService, rowId: string): Promise<void>
     else if (session) await session.send(item);
     else return; // stays `waiting`; it goes out with the next session
   } catch (e) {
-    if (e instanceof Error && FINAL.has(e.message))
-      await itemRepo.update(row.id, { state: 'rejected' });
+    if (e instanceof Error && FINAL.has(e.message)) {
+      await serial(async () => {
+        const current = await itemRepo.get(row.id);
+        if (current && ['waiting', 'sent', 'full'].includes(current.state))
+          await itemRepo.update(row.id, { state: 'rejected' });
+      });
+    }
     throw e;
   }
   await markSent(row.id);
@@ -132,12 +140,14 @@ async function resend(ex: ExchangeService, states: readonly string[]): Promise<v
   for (const r of open) await deliver(ex, r.id).catch(() => undefined);
 }
 
-function onPhoneEvent(ex: ExchangeService, e: ExchangeEvent): void {
+function onPhoneEvent(ex: ExchangeService, e: ExchangeEvent, life: Life): void {
   if (e.type === 'received') void pull(ex);
   else if (e.type === 'answer') void serial(() => answered(e.id, e.state));
   else {
+    life.closed = true;
+    // an older session's end (it was replaced or dropped) says nothing about the current one
+    if (life.session !== null && life.session !== session) return;
     session = null;
-    closings += 1;
     const p = problemOf(e.reason, e.minutes);
     useExchangeView.setState({
       open: false,
@@ -147,17 +157,26 @@ function onPhoneEvent(ex: ExchangeService, e: ExchangeEvent): void {
   }
 }
 
+/** Ends the current session from this side (background, a dead ping, the module going off). */
+function drop(): void {
+  const current = session;
+  session = null;
+  void current?.close().catch(() => undefined);
+  useExchangeView.setState({ open: false });
+}
+
 export async function connect(ex: ExchangeService): Promise<void> {
   if (session || opening || document.visibilityState !== 'visible') return;
   opening = true;
-  const before = closings;
+  const life: Life = { closed: false, session: null };
   try {
-    const opened = await ex.open((e) => onPhoneEvent(ex, e));
+    const opened = await ex.open((e) => onPhoneEvent(ex, e, life));
     // closed already, or the app went to the background while it connected: no session there
-    if (closings !== before || document.visibilityState !== 'visible') {
-      void opened.close();
+    if (life.closed || document.visibilityState !== 'visible') {
+      void opened.close().catch(() => undefined);
       return;
     }
+    life.session = opened;
     session = opened;
     useExchangeView.setState({ open: true, problem: null, minutes: null });
     await pull(ex);
@@ -182,7 +201,9 @@ export async function connect(ex: ExchangeService): Promise<void> {
 export async function sweep(at = now()): Promise<void> {
   const gone = await itemRepo.table
     .filter(
-      (r) => expired(r.createdAt, at) || (r.deletedAt !== null && at - r.deletedAt > UNDO_KEEP_MS),
+      (r) =>
+        expired(r.createdAt, at) ||
+        (r.direction === 'out' && r.deletedAt !== null && at - r.deletedAt > UNDO_KEEP_MS),
     )
     .primaryKeys();
   if (gone.length) await itemRepo.purge(gone);
@@ -204,7 +225,13 @@ export default function start(): () => void {
   const stops: (() => void)[] = [() => clearInterval(sweeper)];
   if (ex.side === 'pc') {
     const changed = () => {
-      void pull(ex).catch(() => undefined);
+      // one take at a time is enough: the next tick picks up what came meanwhile
+      if (!taking) {
+        taking = true;
+        void pull(ex)
+          .catch(() => undefined)
+          .finally(() => (taking = false));
+      }
       void refreshPc(ex);
       // queued while the hub was off or the outbox full: tried again (the shell keeps an id once)
       if (!resending) {
@@ -215,15 +242,16 @@ export default function start(): () => void {
       }
     };
     let resending = false;
+    let taking = false;
     changed();
     stops.push(ex.onChanged(changed));
-    // switching the module off switches the PC's exchange off too, so phones hear `exchange-off`
-    // (narrowing: no dialog). Awaited before the module's state changes.
-    stops.push(
-      bus.on('module.disabling', async ({ moduleId }) => {
-        if (moduleId === 'exchange') await ex.setEnabled(false).catch(() => undefined);
-      }),
-    );
+    // the service stops when the module goes off (here or by sync) and when the app quits: only
+    // the first switches the PC's exchange off, so phones hear `exchange-off` (narrowing, no dialog)
+    stops.push(() => {
+      void loadStoredModuleState('exchange')
+        .then((state) => (state?.enabled === false ? ex.setEnabled(false) : undefined))
+        .catch(() => undefined);
+    });
     const timer = setInterval(changed, STATUS_EVERY_MS);
     stops.push(() => clearInterval(timer));
   } else {
@@ -232,24 +260,22 @@ export default function start(): () => void {
     const ping = setInterval(() => {
       const current = session;
       current?.ping().catch(() => {
-        // gone without a `closed` event: the next retry opens a fresh one
-        if (session === current) session = null;
+        // gone without a `closed` event: closed here, the next retry opens a fresh one
+        if (session === current) drop();
       });
     }, PING_EVERY_MS);
     const onVisible = () => {
       if (document.visibilityState === 'visible') void connect(ex);
-      else if (session) {
-        // in the background the app may be frozen: the session ends and opens again on return
-        void session.close();
-        session = null;
-        useExchangeView.setState({ open: false });
-      }
+      // in the background the app may be frozen: the session ends and opens again on return
+      else if (session) drop();
     };
     document.addEventListener('visibilitychange', onVisible);
     stops.push(() => {
       clearInterval(retry);
       clearInterval(ping);
       document.removeEventListener('visibilitychange', onVisible);
+      // the module went off (or the app quits): nothing more is taken in
+      drop();
     });
   }
   return () => stops.forEach((s) => s());

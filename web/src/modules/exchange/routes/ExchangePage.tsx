@@ -87,7 +87,8 @@ function PcView({ ex }: { ex: ExchangeService }) {
           <DeviceLine key={d.id} ex={ex} device={d} />
         ))}
       </ul>
-      <Conversation ex={ex} peer={device.id} side="pc" />
+      {/* a fresh history per device: no cards of the last one read out as new */}
+      <Conversation key={device.id} ex={ex} peer={device.id} side="pc" />
     </>
   );
 }
