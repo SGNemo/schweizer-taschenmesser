@@ -126,16 +126,65 @@ function dateNear(text: string, hint: RegExp, mailDate: string): string | undefi
   return findDates(after, mailDate)[0]?.date;
 }
 
+const NUMBER_WORDS: Record<string, number> = {
+  eine: 1,
+  einer: 1,
+  einem: 1,
+  zwei: 2,
+  drei: 3,
+  vier: 4,
+  fünf: 5,
+  sechs: 6,
+  sieben: 7,
+  acht: 8,
+  zehn: 10,
+  vierzehn: 14,
+  einundzwanzig: 21,
+  dreißig: 30,
+};
+/** „innerhalb von 14 Tagen“, „binnen zwei Wochen“, „within 30 days“ (counted from the mail's day). */
+const RELATIVE_DUE =
+  /(?:innerhalb\s+(?:von\s+)?|binnen\s+|within\s+)(\d{1,3}|[a-zäöüß]+)\s*(tag(?:e|en)?|kalendertag(?:e|en)?|werktag(?:e|en)?|woche(?:n)?|days?|weeks?)\b/i;
+
+/** A due day said as a span from the mail's day; `undefined` without one. */
+export function relativeDue(text: string, mailDate: string): string | undefined {
+  const m = RELATIVE_DUE.exec(text);
+  if (!m) return undefined;
+  const n = /^\d+$/.test(m[1]!) ? Number(m[1]) : NUMBER_WORDS[m[1]!.toLowerCase()];
+  if (!n) return undefined;
+  const unit = m[2]!.toLowerCase();
+  const days = unit.startsWith('woche') || unit.startsWith('week') ? n * 7 : n;
+  // Working days: a week has five of them (a calm upper bound, never earlier than the letter means).
+  const span = unit.startsWith('werktag') ? Math.ceil((days / 5) * 7) : days;
+  return span > 0 && span <= 366 ? addDaysStr(mailDate, span) : undefined;
+}
+
+/** „Rechnungsnummer: R-2026-17“, „Aktenzeichen 12/26“, „Ihr Zeichen: AB-3“: the reference to quote when paying. */
+const REFERENCE =
+  /(?<![\p{L}\p{N}])(?:rechnungs-?\s?(?:nr|nummer)|rechnung\s+nr|kostennote\s+nr|aktenzeichen|az\.|ihr\s+zeichen|unser\s+zeichen|kundennummer|kunden-nr|vorgangsnummer|verwendungszweck)\.?\s*[:.]?\s*((?=[A-Za-z/._-]*\d)[A-Za-z0-9][A-Za-z0-9/._-]{1,30}[A-Za-z0-9])/iu;
+export function findReference(text: string): string | undefined {
+  return REFERENCE.exec(text)?.[1];
+}
+
+/**
+ * The due day of an invoice text: a date after a due word („fällig“, „bis zum 24.11.2026“), else a span
+ * („innerhalb von 14 Tagen“) from the mail's day.
+ */
+export function findDue(text: string, mailDate: string): string | undefined {
+  return dateNear(text, RE.due, mailDate) ?? relativeDue(text, mailDate);
+}
+
 const RE = {
+  // Letters say „Forderung“ or „Kostennote“ where a shop says „Rechnung“.
   invoice:
-    /(rechnung|invoice|zahlungserinnerung|mahnung|zahlungsaufforderung|payment due|offener betrag)/i,
+    /(rechnung|invoice|zahlungserinnerung|mahnung|zahlungsaufforderung|payment due|offener betrag|\bforderung|kostennote|honorarnote|zahlungsfrist)/i,
   subscription:
     /(\babo\b|abonnement|subscription|mitgliedschaft|membership|verlängert sich|verlängerung|renewal|auto-?renew|abbuchung)/i,
   contract:
     /(kündigungsfrist|vertragslaufzeit|vertragsende|vertragsbestätigung|versicherungsschein|versicherungspolice|\bpolice\b|auftragsbestätigung|laufzeit)/i,
   event:
     /(ticket|buchungsbestätigung|buchung|reservierung|reservation|boarding|\bflug\b|einladung|termin|check-?in|veranstaltung|konzert|zugfahrt|fahrkarte)/i,
-  due: /(fällig|zahlbar|zahlungsziel|zahlung bis|spätestens|due)/i,
+  due: /(fällig|zahlbar|zahlungsziel|zahlungsfrist|zahlung bis|spätestens|\bbis zum\b|\bbis\s+(?=\d)|due)/i,
   end: /(vertragsende|läuft bis|laufzeit bis|gültig bis|endet am|bis zum|ende der laufzeit)/i,
   next: /(nächste abbuchung|nächste zahlung|verlängert sich am|verlängerung am|renews on|abgebucht am|am)/i,
 };
@@ -193,7 +242,7 @@ export function analyzeMessage(m: MailMeta): MailFinding | undefined {
   const marketing = m.bulk;
 
   if (RE.invoice.test(text)) {
-    const date = dateNear(text, RE.due, mailDate);
+    const date = findDue(text, mailDate);
     if (amountMinor === undefined && !date) return undefined;
     // Marketing mails love the word "Rechnung"; they only count with amount AND due date.
     if (marketing && (amountMinor === undefined || !date)) return undefined;

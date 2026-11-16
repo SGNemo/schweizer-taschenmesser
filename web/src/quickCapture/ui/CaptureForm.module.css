@@ -200,3 +200,14 @@ textarea.input {
   font: inherit;
   font-size: var(--text-sm);
 }
+
+/* The mail dialog's fields: one column on a phone, two from a roomy sheet on. */
+.fieldPanel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}

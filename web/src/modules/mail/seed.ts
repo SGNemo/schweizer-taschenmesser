@@ -104,6 +104,17 @@ const MAILS: Mock[] = [
     personal: true,
     reply: { text: 'Klar, ich bin um 10 Uhr da.', days: -1, time: '20:05' },
   },
+  {
+    // A letter as lawyers write it: „Kostennote“ and a span instead of „Rechnung“ and a date.
+    from: { name: 'Kanzlei Beispiel & Partner', email: 'post@kanzlei.example.org' },
+    subject: 'Ihr Zeichen AB-77 – Kostennote',
+    text: 'Sehr geehrte Damen und Herren,\n\nin der Angelegenheit Beispiel Wohnbau GmbH übersenden wir unsere Kostennote. Bitte überweisen Sie den Gesamtbetrag von EUR 186,40 innerhalb von 14 Tagen.\n\nMit freundlichen Grüßen\nKanzlei Beispiel & Partner',
+    days: -3,
+    time: '14:20',
+    unread: false,
+    labels: ['INBOX'],
+    personal: false,
+  },
 ];
 
 function seed(ctx: SeedContext): SeedRows {

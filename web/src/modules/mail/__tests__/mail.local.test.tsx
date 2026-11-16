@@ -157,13 +157,15 @@ describe('a suggestion for "create from this mail"', () => {
     expect(box).toHaveTextContent('Vorschlag: Stadtwerke 84,30 € 15.11.2026');
     expect(suggest.mock.calls[0]![0]).toBe('invoice');
     // not applied yet: the field still has the rule-based prefill; nothing saved
-    expect(within(dialog).getByRole('textbox')).toHaveValue(
-      'Stadtwerke Musterstadt 84,30 € 15.11.2026',
-    );
+    expect(
+      within(dialog).getByRole('textbox', { name: 'Was möchtest du festhalten?' }),
+    ).toHaveValue('Stadtwerke Musterstadt 84,30 € 15.11.2026');
     expect(await db.table('invoices_invoice').count()).toBe(0);
     await user.click(within(box).getByRole('button', { name: 'Übernehmen' }));
     await waitFor(() =>
-      expect(within(dialog).getByRole('textbox')).toHaveValue('Stadtwerke 84,30 € 15.11.2026'),
+      expect(
+        within(dialog).getByRole('textbox', { name: 'Was möchtest du festhalten?' }),
+      ).toHaveValue('Stadtwerke 84,30 € 15.11.2026'),
     );
     expect(await db.table('invoices_invoice').count()).toBe(0); // still the user's call to save
   });
@@ -175,9 +177,9 @@ describe('a suggestion for "create from this mail"', () => {
     const dialog = await openInvoiceDialog(user);
     await user.click(within(dialog).getByRole('button', { name: 'Vorschlag vom lokalen Modell' }));
     await user.click(await within(dialog).findByRole('button', { name: 'Verwerfen' }));
-    expect(within(dialog).getByRole('textbox')).toHaveValue(
-      'Stadtwerke Musterstadt 84,30 € 15.11.2026',
-    );
+    expect(
+      within(dialog).getByRole('textbox', { name: 'Was möchtest du festhalten?' }),
+    ).toHaveValue('Stadtwerke Musterstadt 84,30 € 15.11.2026');
     suggest.mockResolvedValueOnce(undefined);
     await user.click(within(dialog).getByRole('button', { name: 'Vorschlag vom lokalen Modell' }));
     expect(await within(dialog).findByText(/Kein lokales Modell bereit/)).toBeInTheDocument();

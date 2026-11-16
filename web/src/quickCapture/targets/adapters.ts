@@ -10,10 +10,14 @@ import {
   CaptureError,
   type AmendContext,
   type BuildContext,
+  type CaptureFieldSpec,
   type CaptureTarget,
   type OpenInvoice,
   type SavedCapture,
 } from './types';
+
+/** The title as the first field of most targets (a required one: `title()` rejects an empty one). */
+const TITLE: CaptureFieldSpec = { key: 'title', input: 'text', label: 'title', required: true };
 
 /** Shared guard: adapters reject an empty title instead of writing a blank record. */
 function title(fields: CaptureFields): string {
@@ -41,6 +45,7 @@ function noteOf(...parts: (string | undefined)[]): { note?: string } {
 
 const todos: CaptureTarget = {
   type: 'todo',
+  fields: [TITLE, { key: 'date', input: 'day', label: 'due' }],
   moduleId: 'todos',
   collection: 'task',
   // `listId` comes from the module's `aiCreateDefaults` (the inbox list).
@@ -62,6 +67,11 @@ const todos: CaptureTarget = {
 
 const calendar: CaptureTarget = {
   type: 'event',
+  fields: [
+    TITLE,
+    { key: 'date', input: 'day', label: 'date' },
+    { key: 'time', input: 'time', label: 'time' },
+  ],
   moduleId: 'calendar',
   collection: 'event',
   build: (f, ctx: BuildContext) => {
@@ -83,6 +93,11 @@ const calendar: CaptureTarget = {
 
 const reminders: CaptureTarget = {
   type: 'reminder',
+  fields: [
+    TITLE,
+    { key: 'date', input: 'day', label: 'when' },
+    { key: 'time', input: 'time', label: 'time' },
+  ],
   // A reminder is a calendar event of the kind "reminder" that notifies at its time (since 0.7.0).
   // „einmal“ (`once`): a reminder made here notifies exactly once at its time – no lead, stage or
   // repeat (decision Q4 a); reminders set in the calendar dialog keep the global rule.
@@ -139,6 +154,7 @@ export function bookmarkKindFromText(text: string): { kind?: string; title: stri
 
 const bookmarks: CaptureTarget = {
   type: 'bookmark',
+  fields: [TITLE, { key: 'url', input: 'text', label: 'url' }],
   moduleId: 'bookmarks',
   collection: 'item',
   // Direct write: the module's dedupe service (`bookmark.requested`) only runs in the main window.
@@ -158,6 +174,7 @@ const bookmarks: CaptureTarget = {
 /** The text becomes an entry of the shopping list as typed ("2 Milch"); `listId` comes from the module's `aiCreateDefaults`. */
 const lists: CaptureTarget = {
   type: 'list',
+  fields: [TITLE],
   moduleId: 'lists',
   collection: 'item',
   build: (f) => ({ name: title(f), done: false }),
@@ -165,6 +182,11 @@ const lists: CaptureTarget = {
 
 const finance: CaptureTarget = {
   type: 'finance',
+  fields: [
+    { key: 'title', input: 'text', label: 'payee' },
+    { key: 'amountMinor', input: 'money', label: 'amount', required: true },
+    { key: 'date', input: 'day', label: 'date' },
+  ],
   moduleId: 'finance',
   collection: 'transaction',
   requiresConfirm: true,
@@ -185,6 +207,12 @@ const finance: CaptureTarget = {
 
 const invoices: CaptureTarget = {
   type: 'invoice',
+  fields: [
+    { key: 'title', input: 'text', label: 'payee', required: true },
+    { key: 'amountMinor', input: 'money', label: 'amount', required: true },
+    { key: 'date', input: 'day', label: 'due' },
+    { key: 'reference', input: 'text', label: 'reference' },
+  ],
   moduleId: 'invoices',
   collection: 'invoice',
   // The payee is the text left over after the amount, the due date and the word "Rechnung".
@@ -196,6 +224,7 @@ const invoices: CaptureTarget = {
       ...(f.currency ? { currency: f.currency } : {}),
       dueDate: date(f.date ?? ctx.today),
       status: 'open',
+      ...(f.reference?.trim() ? { reference: f.reference.trim() } : {}),
       // A reminder for an invoice that was not filed yet: the invoice starts at its level.
       ...(f.dunning
         ? {
@@ -291,6 +320,11 @@ async function amendInvoice(
 /** Fitness (docs/features/fitness.md §5): a meal with rough kcal, a session with its exercises. */
 const meal: CaptureTarget = {
   type: 'meal',
+  fields: [
+    TITLE,
+    { key: 'kcal', input: 'number', label: 'kcal', required: true },
+    { key: 'date', input: 'day', label: 'date' },
+  ],
   moduleId: 'fitness',
   collection: 'meal',
   build: (f, ctx) => {
@@ -307,6 +341,7 @@ const meal: CaptureTarget = {
 
 const workout: CaptureTarget = {
   type: 'workout',
+  fields: [],
   moduleId: 'fitness',
   collection: 'session',
   build: (f, ctx) => {
@@ -325,6 +360,7 @@ const workout: CaptureTarget = {
  */
 const place: CaptureTarget = {
   type: 'place',
+  fields: [],
   moduleId: 'clock',
   collection: 'place',
   build: (f) => {
@@ -340,6 +376,12 @@ const place: CaptureTarget = {
 
 const subscriptions: CaptureTarget = {
   type: 'subscription',
+  fields: [
+    { key: 'title', input: 'text', label: 'name', required: true },
+    { key: 'amountMinor', input: 'money', label: 'amount', required: true },
+    { key: 'recurrence', input: 'rhythm', label: 'rhythm', required: true },
+    { key: 'date', input: 'day', label: 'start' },
+  ],
   moduleId: 'subscriptions',
   collection: 'subscription',
   build: (f, ctx) => {
@@ -357,6 +399,10 @@ const subscriptions: CaptureTarget = {
 /** A birthday becomes a person; without a known year the age stays unknown. */
 const people: CaptureTarget = {
   type: 'birthday',
+  fields: [
+    { key: 'title', input: 'text', label: 'name', required: true },
+    { key: 'date', input: 'day', label: 'birthday', required: true },
+  ],
   moduleId: 'people',
   collection: 'person',
   build: (f) => {
@@ -368,6 +414,7 @@ const people: CaptureTarget = {
 
 const notes: CaptureTarget = {
   type: 'note',
+  fields: [TITLE],
   moduleId: 'notes',
   collection: 'note',
   build: (f) => {
@@ -387,6 +434,11 @@ export const planItemKey = (moduleId: string, id: string): string => `${moduleId
  */
 const plan: CaptureTarget = {
   type: 'plan',
+  fields: [
+    TITLE,
+    { key: 'estimateMin', input: 'minutes', label: 'duration' },
+    { key: 'date', input: 'day', label: 'deadline', with: { hardDue: true } },
+  ],
   moduleId: 'planner',
   collection: 'item',
   via: { type: 'todo', id: (first) => planItemKey(first.moduleId, first.id) },
@@ -453,6 +505,7 @@ const dayData = (row: Record<string, unknown>): DayRow => {
  */
 const breaks: CaptureTarget = {
   type: 'break',
+  fields: [],
   moduleId: 'planner',
   collection: 'day',
   build: (f, ctx) => {

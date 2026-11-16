@@ -39,6 +39,48 @@ export interface CaptureVia {
   id(first: CaptureRef): string;
 }
 
+/** Which word a field of the edit panel carries (`t.quickCapture.field`). */
+export type CaptureFieldLabel =
+  | 'title'
+  | 'payee'
+  | 'name'
+  | 'amount'
+  | 'due'
+  | 'date'
+  | 'time'
+  | 'when'
+  | 'reference'
+  | 'rhythm'
+  | 'duration'
+  | 'deadline'
+  | 'start'
+  | 'birthday'
+  | 'url'
+  | 'kcal';
+
+/**
+ * One field the sheet can show for a target (the mail dialog's edit panel). `required` mirrors what
+ * `build` rejects without it, so the panel names the missing field before a save fails (`targets.test.ts`
+ * pins both against each other).
+ */
+export interface CaptureFieldSpec {
+  key:
+    | 'title'
+    | 'amountMinor'
+    | 'date'
+    | 'time'
+    | 'reference'
+    | 'recurrence'
+    | 'estimateMin'
+    | 'url'
+    | 'kcal';
+  input: 'text' | 'money' | 'day' | 'time' | 'rhythm' | 'minutes' | 'number';
+  label: CaptureFieldLabel;
+  required?: boolean;
+  /** Written along when the field holds a value (a plan's day as a hard deadline). */
+  with?: Partial<CaptureFields>;
+}
+
 /**
  * One capture destination. Adapters know the field names of a module's public collection and
  * nothing else: they never import module code, they write through the manifest + `createRepo`.
@@ -49,6 +91,8 @@ export interface CaptureTarget {
   collection: string;
   /** Finance drafts are only booked after an explicit confirmation. */
   requiresConfirm?: boolean;
+  /** The fields the edit panel shows for this target, in order (empty: the line alone says it all). */
+  fields: readonly CaptureFieldSpec[];
   /**
    * Maps parsed fields to the raw record. Throws `CaptureError('invalid')` for unusable input. A
    * two-stage target gets the first record in `first` (absent while the form only checks the input).
