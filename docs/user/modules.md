@@ -34,6 +34,7 @@ In the **module library** you turn modules on and off (when turning one off: kee
 |  | Feeds | Your subscribed feeds (news, blogs, podcasts) in one place, sorted by group | optional |
 |  | Mail | Inbox, search and reading mail | preview, Windows app only |
 |  | Music | Spotify on one page | preview |
+|  | Device drop | Send notes and links between phone and PC | preview, Windows and Android apps only |
 | **Vault** | Documents | IDs, contracts, insurance and warranties with end date, notice period and an attached file | optional |
 |  | Passwords | Password vault | optional |
 | **System** | Device status | Backup, sync, storage and updates of this device on one page, plus a backup to download | on for new installations |

@@ -124,6 +124,7 @@ Default order: saved positions first, then the manifest order (no spreading by s
 | Browser `browser` | knowledge | cobalt | sky | schreib | kacheln | `addressBar` |
 | Feeds `feeds` | knowledge | moss | lime | regal | kennzahl | `masthead` |
 | E-Mail `mail` | knowledge | teal | ocean | schreib | notiz | `stamp` (page: package 2) |
+| Austausch `exchange` | knowledge | ocean | fern | standard | status | `handoff` (concept said System/teal; no System pair is free: decision in `docs/decisions/core-device-exchange-hub.md`) |
 | Musik `music` | knowledge | orchid | violet | cover | cover | `coverTone` |
 | Unterlagen `vault` | vault | indigo | violet | regal | kennzahl | `folderTab` (widget: package 2) |
 | Passwörter `accounts` | vault | slate | – | tresor | status | `vaultDoor` |

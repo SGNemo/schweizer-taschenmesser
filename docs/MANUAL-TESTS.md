@@ -997,6 +997,18 @@ FB18. _Tastatur (braucht die Stufe „Medien, Maus und Tastatur“ am PC; am PC 
 
 FB19. _Wiedergabe / Pause von der Übersicht (Musik oder Video läuft am PC):_ ein Tipp auf „Wiedergabe / Pause“ → kurz „Verbindet mit deinem PC …“, dann pausiert der PC, die Karte zeigt „Dein PC · Lautstärke … %“, am PC erscheint der Chip. Noch ein Tipp → es läuft weiter. Zur Fernbedienung wechseln und zurück, oder Nemo in den Hintergrund → am PC verschwindet der Chip, die Karte zeigt wieder nur „Dein PC“. PC aus oder Nemo am PC beendet, dann tippen → nach wenigen Sekunden der Satz „Dein PC ist gerade nicht erreichbar …“ mit „Öffnen“; „Öffnen“ führt in die Fernbedienung. Am PC „Fernsteuerung beenden“, dann tippen → Satz mit dem Schritt am PC, nichts wird gesendet. Langsames WLAN: steht nach einigen Sekunden „Verbunden. Tippe noch einmal.“, hat der erste Tipp nichts gesendet, der zweite schon. Zweimal schnell hintereinander tippen, während es verbindet → es pausiert genau einmal, kein „Tippe noch einmal“. TalkBack liest diese Sätze vor; nach einem Satz mit „Öffnen“ prüfen, wo der TalkBack-Fokus steht. Zwei Minuten nichts tippen → die Lautstärke verschwindet von der Karte, es verbindet sich nichts von selbst. ☐
 
+### Austausch
+
+#### Austausch: Notizen und Links (`feat/exchange-module`)
+
+Gekoppeltes Handy und Windows-PC im selben Heimnetz, Abgleich im Heimnetz an. Nur erfundene Texte und Links.
+
+AX1. _Einschalten am PC:_ Mehr → Modul-Bibliothek → „Austausch“ an → Seite „Austausch“: genau ein gekoppeltes Handy ist vorausgewählt → „Austausch einschalten“ → **nativer Windows-Dialog** nennt das Gerät; „Nein“ → ruhige Zeile „Nichts geändert.“, nichts ist an; „Ja“ → Gerät steht als „erreichbar“ bzw. „gerade nicht verbunden“. Während eine Fernsteuerung (Maus/Tastatur) läuft, wird nicht gefragt: Zeile „Gerade steuert ein Handy diesen PC …“. ☐
+AX2. _PC → Handy:_ am PC eine Notiz und einen Link `https://example.org` senden, Handy-App ist zu → Karte „Kommt an, sobald Nemo auf deinem Handy offen ist.“; Nemo am Handy öffnen → Austausch: beide Karten da, am PC „Angekommen“. „Kopieren“ legt den Text erst nach dem Tipp in die Zwischenablage; „Öffnen“ beim Link öffnet den Browser erst nach dem Tipp. Nichts öffnet sich von selbst. ☐
+AX3. _Handy → PC:_ am Handy eine Notiz senden, während der PC aus ist → „Geht raus, sobald du im Heimnetz bist …“; PC an, Austausch-Seite am Handy offen → Karte am PC, am Handy „Angekommen“, kein Doppel. Handy ins Mobilnetz → dieselbe ruhige Zeile, nichts geht verloren; zurück im WLAN → kommt an. ☐
+AX4. _Pause, zweites Gerät, Entkoppeln:_ am PC in der Gerätezeile „Pausieren“ (fragt nicht) → Handy zeigt „Austausch ist am PC pausiert. Am PC: Austausch → Fortsetzen.“, Senden bleibt „wartet“; „Fortsetzen“ fragt nativ, danach geht es raus. Ein zweites gekoppeltes Gerät steht als „Austausch ist für dieses Gerät noch aus.“ mit „Einschalten“ (nativer Dialog). Handy am PC entkoppeln → seine Warteschlange am PC ist weg. Im Ordner `%APPDATA%\io.github.sgnemo.taschenmesser\lan-sync\exchange` und im Log stehen keine Nachrichtentexte außer in `inbox.json`/`outbox.json` (bis zur Übernahme); im Sync, im Backup und in der Suche taucht keine Karte auf. ☐
+
+
 ### Kalender
 
 #### Links, Teilen, Lesezeichen (Phase 13, Schritt 6)

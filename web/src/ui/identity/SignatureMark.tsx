@@ -189,6 +189,15 @@ export const SIGNATURE_MARKS: Record<Exclude<SignatureId, 'none'>, ReactNode> = 
       <path d="M3 12h7" strokeWidth="2.5" />
     </>
   ),
+  // A phone and a screen with a card between them: device exchange.
+  handoff: (
+    <>
+      <rect x="2.5" y="5" width="6" height="13" rx="1.5" />
+      <rect x="15" y="6" width="7" height="9" rx="1" />
+      <path d="M17 18.5h3" />
+      <rect x="9.5" y="9.5" width="5" height="4" rx="0.8" />
+    </>
+  ),
   // Seven bars of a week, three of them filled: the planner's load.
   weekBars: (
     <>

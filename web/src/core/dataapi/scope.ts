@@ -7,7 +7,14 @@
 import type { ModuleManifest } from '@/core/modules/types';
 
 /** Modules that must never be reachable, whatever their manifest says. */
-export const BLOCKED_MODULES: readonly string[] = ['accounts', 'disk', 'chat', 'remote', 'device'];
+export const BLOCKED_MODULES: readonly string[] = [
+  'accounts',
+  'disk',
+  'chat',
+  'remote',
+  'device',
+  'exchange',
+];
 
 /** Names of the collections of a module that the API exposes (synced, not opted out). */
 export function apiCollections(manifest: ModuleManifest): string[] {
