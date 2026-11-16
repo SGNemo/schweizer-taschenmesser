@@ -17,6 +17,15 @@
 //!   side. The caller decides how long the session lives (page visible, a hand-over running) and
 //!   pings at least every 60 s for that time; after `Refused` on a PC item a ping also asks the PC
 //!   to offer it again.
+//! * **Files** (`open_with(FEATURE_FILES)`): one offer of this device at a time – the next only
+//!   after the PC's `Refuse`, `Result`, or `Wait` (up to three may wait for the PC's user), or
+//!   after `cancel`; a second offer while one is open closes the session. The PC's chunks are
+//!   checked here before they become events (only for an accepted offer, contiguous, within its
+//!   size); frames that crossed an end are dropped.
+//! * **`on_event` must not block**: it runs on the only reader thread. Hand chunks to another
+//!   thread for writing and never call a sender from inside it, or both sides stall until the
+//!   write timeout. Ping during a long download too: the hub's idle timer counts only frames
+//!   from this side.
 //! * Only private IPv4 addresses are dialled. Nothing is logged or formatted.
 //! * `UnknownDevice` (authenticated refusal of the handshake) means: not paired any more, **or**
 //!   not on the home network, **or** a PC without device exchange. Never unpair because of it;
@@ -98,6 +107,8 @@ type OnEvent = Box<dyn FnMut(Event) + Send>;
 pub struct ExchangeSession {
     /// The PC accepted files on this session.
     files: bool,
+    /// What the PC may send next about files (shared with the reader thread).
+    guard: Arc<Mutex<Guard>>,
     writer: Mutex<Conn>,
     closer: Conn,
     transport: Arc<Mutex<Transport>>,
@@ -209,15 +220,21 @@ impl ExchangeSession {
         let transport = Arc::new(Mutex::new(transport));
         let stop = Arc::new(AtomicBool::new(false));
         let over = Arc::new(AtomicBool::new(false));
+        let guard = Arc::new(Mutex::new(Guard::default()));
         let reader = {
-            let (transport, stop, over) = (transport.clone(), stop.clone(), over.clone());
+            let (transport, stop, over, guard) =
+                (transport.clone(), stop.clone(), over.clone(), guard.clone());
             std::thread::Builder::new()
                 .name("lan-exchange-read".into())
-                .spawn(move || read_loop(read_half, &transport, &stop, &over, files, on_event))
+                .spawn(move || {
+                    let files = files.then_some(&*guard);
+                    read_loop(read_half, &transport, &stop, &over, files, on_event)
+                })
                 .map_err(|_| ExchangeError::Network)?
         };
         Ok(ExchangeSession {
             files,
+            guard,
             writer: Mutex::new(conn),
             closer,
             transport,
@@ -247,13 +264,18 @@ impl ExchangeSession {
         self.files
     }
 
-    /// Offers one of this device's files; the PC answers `Accept`, `Wait` or `Refuse`.
+    /// Offers one of this device's files; the PC answers `Accept`, `Wait` or `Refuse`. One at a
+    /// time (see the module's header): the next only after that answer ended it or it waits.
     pub fn offer(&self, offer: &Offer) -> Result<(), ExchangeError> {
         self.file(wire::TAG_OFFER, &wire::encode_offer(offer))
     }
 
     /// Takes the PC's file from `from` (`> 0` resumes a part this device kept).
     pub fn accept(&self, id: &[u8; 16], from: u64) -> Result<(), ExchangeError> {
+        // only an offer that stands, one at a time, from inside the file
+        if !self.with_guard(|g| g.accepted(id, from))? {
+            return Err(ExchangeError::Protocol);
+        }
         self.file(wire::TAG_ACCEPT, &wire::encode_accept(id, from))
     }
 
@@ -262,6 +284,7 @@ impl ExchangeSession {
     }
 
     pub fn refuse(&self, id: &[u8; 16], code: RefuseCode) -> Result<(), ExchangeError> {
+        self.with_guard(|g| g.dropped(id))?;
         self.file(wire::TAG_REFUSE, &wire::encode_refuse(id, code))
     }
 
@@ -277,11 +300,19 @@ impl ExchangeSession {
 
     /// This device's answer to the PC's file (after `End`, or early when it cannot go on).
     pub fn result(&self, id: &[u8; 16], code: ResultCode) -> Result<(), ExchangeError> {
+        self.with_guard(|g| g.dropped(id))?;
         self.file(wire::TAG_RESULT, &wire::encode_result(id, code))
     }
 
+    /// Cancels a transfer in either direction (or withdraws an offer waiting for its user).
     pub fn cancel(&self, id: &[u8; 16]) -> Result<(), ExchangeError> {
+        self.with_guard(|g| g.dropped(id))?;
         self.file(wire::TAG_CANCEL, id)
+    }
+
+    fn with_guard<T>(&self, f: impl FnOnce(&mut Guard) -> T) -> Result<T, ExchangeError> {
+        let mut g = self.guard.lock().map_err(|_| ExchangeError::Network)?;
+        Ok(f(&mut g))
     }
 
     fn file(&self, tag: u8, body: &[u8]) -> Result<(), ExchangeError> {
@@ -341,7 +372,7 @@ fn read_loop(
     transport: &Mutex<Transport>,
     stop: &AtomicBool,
     over: &AtomicBool,
-    files: bool,
+    files: Option<&Mutex<Guard>>,
     mut on_event: OnEvent,
 ) {
     let stopped = || stop.load(Ordering::SeqCst);
@@ -358,15 +389,144 @@ fn read_loop(
         let Ok((tag, body)) = frame else {
             break None;
         };
-        match event_of(tag, &body, files) {
-            Ok(event) => on_event(event),
+        let event = match event_of(tag, &body, files.is_some()) {
+            Ok(event) => event,
             Err(end) => break end,
+        };
+        let pass = match files.map(Mutex::lock) {
+            None => Pass::Yes,
+            Some(Ok(mut g)) => g.check(&event),
+            Some(Err(_)) => Pass::Broken,
+        };
+        match pass {
+            Pass::Yes => on_event(event),
+            Pass::Drop => {}
+            Pass::Broken => break None,
         }
     };
     over.store(true, Ordering::SeqCst);
     conn.shutdown();
     if !stopped() {
         on_event(Event::Closed(end));
+    }
+}
+
+/// Offers of the PC that may wait for this device's user at once.
+const PENDING_OFFERS: usize = 3;
+/// Ended transfers remembered (late frames for them are dropped).
+const ENDED_KEPT: usize = 64;
+
+/// What the PC may send next about files: its offers that stand, the one transfer this device
+/// accepted, and the ones that ended (so frames that crossed are dropped, not trusted). A PC that
+/// sends chunks out of order, past the offered size or for nothing accepted ends the session, as
+/// does a fourth offer while three stand or an offer while one streams.
+#[derive(Default)]
+struct Guard {
+    offers: Vec<([u8; 16], u64)>,
+    /// Accepted: id, size, where the next chunk starts.
+    incoming: Option<([u8; 16], u64, u64)>,
+    ended: Vec<[u8; 16]>,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+enum Pass {
+    Yes,
+    /// It crossed an end on the wire: not passed on.
+    Drop,
+    Broken,
+}
+
+impl Guard {
+    fn check(&mut self, event: &Event) -> Pass {
+        match event {
+            Event::Offer(o) => {
+                let id = *o.id();
+                if self.incoming.is_some()
+                    || self.offers.len() >= PENDING_OFFERS
+                    || self.offers.iter().any(|(x, _)| *x == id)
+                {
+                    return Pass::Broken;
+                }
+                self.ended.retain(|e| *e != id);
+                self.offers.push((id, o.size()));
+                Pass::Yes
+            }
+            Event::Chunk(id, offset, bytes) => match &mut self.incoming {
+                Some((at, size, next)) if at == id => {
+                    let len = u64::try_from(bytes.0.len()).unwrap_or(u64::MAX);
+                    if offset != next || next.saturating_add(len) > *size {
+                        return Pass::Broken;
+                    }
+                    *next += len;
+                    Pass::Yes
+                }
+                _ => self.late(id),
+            },
+            // the caller checks length and hash and answers `result`
+            Event::End(id) => match self.incoming {
+                Some((at, ..)) if at == *id => {
+                    self.end(*id);
+                    Pass::Yes
+                }
+                _ => self.late(id),
+            },
+            Event::Cancel(id) => {
+                if self.incoming.is_some_and(|(at, ..)| at == *id) {
+                    self.end(*id);
+                }
+                self.offers.retain(|(x, _)| x != id);
+                Pass::Yes
+            }
+            _ => Pass::Yes,
+        }
+    }
+
+    /// The caller takes an offer that stands, from inside it, while nothing else comes in.
+    fn accepted(&mut self, id: &[u8; 16], from: u64) -> bool {
+        if self.incoming.is_some() {
+            return false;
+        }
+        match self.offers.iter().position(|(x, s)| x == id && from <= *s) {
+            Some(at) => {
+                let (_, size) = self.offers.remove(at);
+                self.incoming = Some((*id, size, from));
+                true
+            }
+            None => false,
+        }
+    }
+
+    /// The caller refused, cancelled or answered a transfer: frames for it from now on crossed.
+    fn dropped(&mut self, id: &[u8; 16]) {
+        let had = self.offers.iter().any(|(x, _)| x == id)
+            || self.incoming.is_some_and(|(at, ..)| at == *id);
+        self.offers.retain(|(x, _)| x != id);
+        if self.incoming.is_some_and(|(at, ..)| at == *id) {
+            self.incoming = None;
+        }
+        if had {
+            self.remember(*id);
+        }
+    }
+
+    fn end(&mut self, id: [u8; 16]) {
+        self.incoming = None;
+        self.remember(id);
+    }
+
+    fn remember(&mut self, id: [u8; 16]) {
+        if self.ended.len() >= ENDED_KEPT {
+            self.ended.remove(0);
+        }
+        self.ended.push(id);
+    }
+
+    fn late(&self, id: &[u8; 16]) -> Pass {
+        if self.ended.contains(id) {
+            Pass::Drop
+        } else {
+            Pass::Broken
+        }
     }
 }
 
@@ -451,5 +611,74 @@ pub(crate) mod testing {
         on_event: OnEvent,
     ) -> Result<ExchangeSession, ExchangeError> {
         ExchangeSession::open_at(addr, own, hub, "Phone", wire::FEATURE_FILES, on_event)
+    }
+}
+
+#[cfg(test)]
+mod guard_tests {
+    use super::*;
+
+    fn offer(n: u8, size: u64) -> Event {
+        Event::Offer(Offer::new([n; 16], size, [0; 32], "a.bin".into(), String::new()).unwrap())
+    }
+
+    fn chunk(n: u8, at: u64, len: usize) -> Event {
+        Event::Chunk([n; 16], at, ChunkBytes(vec![0; len]))
+    }
+
+    #[test]
+    fn a_pc_sends_chunks_only_for_what_this_device_accepted_in_order() {
+        let mut g = Guard::default();
+        assert_eq!(g.check(&chunk(1, 0, 5)), Pass::Broken, "nothing accepted");
+        assert_eq!(g.check(&offer(1, 10)), Pass::Yes);
+        assert_eq!(
+            g.check(&chunk(1, 0, 5)),
+            Pass::Broken,
+            "offered is not accepted"
+        );
+        assert!(!g.accepted(&[1; 16], 11), "past the end");
+        assert!(!g.accepted(&[2; 16], 0), "never offered");
+        assert!(g.accepted(&[1; 16], 2));
+        assert_eq!(
+            g.check(&chunk(1, 0, 5)),
+            Pass::Broken,
+            "before the resume point"
+        );
+        let mut g2 = Guard::default();
+        g2.check(&offer(1, 10));
+        g2.accepted(&[1; 16], 2);
+        assert_eq!(g2.check(&chunk(1, 2, 5)), Pass::Yes);
+        assert_eq!(g2.check(&chunk(1, 7, 4)), Pass::Broken, "past the size");
+        let mut g3 = Guard::default();
+        g3.check(&offer(1, 10));
+        g3.accepted(&[1; 16], 0);
+        g3.check(&chunk(1, 0, 10));
+        assert_eq!(g3.check(&Event::End([1; 16])), Pass::Yes);
+        // late frames of the ended transfer are dropped; an end of nothing is broken
+        assert_eq!(g3.check(&chunk(1, 10, 1)), Pass::Drop);
+        assert_eq!(g3.check(&Event::End([1; 16])), Pass::Drop);
+        assert_eq!(g3.check(&Event::End([9; 16])), Pass::Broken);
+    }
+
+    #[test]
+    fn offers_are_bounded_and_a_dropped_transfer_drops_its_late_chunks() {
+        let mut g = Guard::default();
+        for n in 1..=PENDING_OFFERS as u8 {
+            assert_eq!(g.check(&offer(n, 5)), Pass::Yes);
+        }
+        assert_eq!(
+            g.check(&offer(9, 5)),
+            Pass::Broken,
+            "a fourth while three stand"
+        );
+        assert_eq!(g.check(&offer(1, 5)), Pass::Broken, "the same again");
+        assert!(g.accepted(&[1; 16], 0));
+        assert!(!g.accepted(&[2; 16], 0), "one at a time");
+        // this device gives up early (its disk is full): the PC's chunks in flight are dropped
+        g.dropped(&[1; 16]);
+        assert_eq!(g.check(&chunk(1, 0, 5)), Pass::Drop);
+        // the PC cancels a standing offer: it may be offered again later
+        assert_eq!(g.check(&Event::Cancel([2; 16])), Pass::Yes);
+        assert_eq!(g.check(&offer(2, 5)), Pass::Yes);
     }
 }

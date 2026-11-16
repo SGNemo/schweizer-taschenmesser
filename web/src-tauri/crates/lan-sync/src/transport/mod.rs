@@ -511,17 +511,31 @@ fn drive(
             }
             short_reads = busy;
         }
-        match reader.poll(stream, conn.frame_cap(), cfg.frame_deadline) {
-            Polled::Frame(wire) => {
-                last = Instant::now();
-                let (unix_s, unix_ms) = unix_now();
-                let out = conn.on_frame(&wire, unix_s, unix_ms, sh.started.elapsed());
-                if !act(stream, out) {
+        // what came in: the first read waits (a tick, or 1 ms while frames wait to go out); more
+        // frames that are already there are taken at once, so a device that streams to this side
+        // is not held to one frame per pass while this side streams too
+        for read in 0..MAX_READS_PER_PASS {
+            if read == 1 && !short_reads {
+                if stream.set_read_timeout(Some(BUSY_READ)).is_err() {
                     return;
                 }
+                short_reads = true;
             }
-            Polled::Nothing => {}
-            Polled::Close => return,
+            match reader.poll(stream, conn.frame_cap(), cfg.frame_deadline) {
+                Polled::Frame(wire) => {
+                    last = Instant::now();
+                    let (unix_s, unix_ms) = unix_now();
+                    let out = conn.on_frame(&wire, unix_s, unix_ms, sh.started.elapsed());
+                    if !act(stream, out) {
+                        return;
+                    }
+                }
+                Polled::Nothing => break,
+                Polled::Close => return,
+            }
+            if conn.is_closed() {
+                return;
+            }
         }
         // unasked frames (input state, exchange items, file chunks): as many as the connection has
         // and the socket takes, for one tick at most, then read again – an incoming frame never
@@ -530,6 +544,10 @@ fn drive(
         busy = true;
         let until = Instant::now() + cfg.tick;
         for _ in 0..MAX_UNASKED_PER_PASS {
+            // switched off, the home network gone, a replaced session: stop at once
+            if sh.stop.load(Ordering::SeqCst) || conn.is_closed() {
+                return;
+            }
             match conn.poll_outbound(sh.started.elapsed()) {
                 Outcome::Continue => {
                     busy = false;
@@ -552,6 +570,8 @@ fn drive(
     }
 }
 
+/// Most incoming frames one pass takes before it writes again.
+const MAX_READS_PER_PASS: usize = 64;
 /// Most unasked frames one pass writes before it reads again (64 KB frames: about 16 MB).
 const MAX_UNASKED_PER_PASS: usize = 256;
 /// The read timeout while unasked frames wait (a timeout of zero is not allowed).
