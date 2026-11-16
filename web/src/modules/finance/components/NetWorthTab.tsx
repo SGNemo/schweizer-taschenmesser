@@ -8,7 +8,7 @@ import { useCurrency } from '../currency';
 import { useOpenUntilMonthEnd } from '../summary';
 import type { FinanceData } from '../types';
 import styles from '../routes/finance.module.css';
-import { TrendChart } from './TrendChart';
+import { NetWorthChart } from './MoneyCharts';
 
 /**
  * "Verlauf": the net worth ("Vermögen", the head's figure on this tab) with its context line, split by the kind of
@@ -94,12 +94,7 @@ export function NetWorthTab({
           </Button>
         </EmptyState>
       ) : (
-        <TrendChart
-          points={points}
-          title={t.finance.netWorthTitle}
-          testId="net-worth-chart"
-          lastElsewhere
-        />
+        <NetWorthChart points={points} title={t.finance.netWorthTitle} />
       )}
     </>
   );

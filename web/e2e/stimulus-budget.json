@@ -162,15 +162,15 @@
       "signatureBlocks": 0
     },
     "d1920--finance": {
-      "height": 1887,
+      "height": 1551,
       "buttons": 66,
       "links": 14,
-      "icons": 69,
+      "icons": 76,
       "firstScreenActions": 52,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
-      "colouredAboveFold": 7,
+      "colouredAboveFold": 3,
       "signatureBlocks": 0
     },
     "d1920--fitness": {
@@ -750,10 +750,10 @@
       "signatureBlocks": 0
     },
     "p412--finance": {
-      "height": 2186,
+      "height": 1787,
       "buttons": 15,
       "links": 9,
-      "icons": 12,
+      "icons": 22,
       "firstScreenActions": 21,
       "borders": 0,
       "shadows": 0,

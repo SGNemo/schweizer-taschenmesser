@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildForecast } from './forecast';
-import { monthGlance } from './month';
+import { monthContext, monthGlance } from './month';
+import { t } from '@/strings';
 
 // Round 5, person B: one rough card "Diesen Monat" – still coming, spent, free (= the outlook).
 describe('monthGlance', () => {
@@ -33,5 +34,23 @@ describe('monthGlance', () => {
       spentMinor: 5_437,
       freeMinor: 100_000 - 1_299 - 8_450,
     });
+  });
+});
+
+describe('monthContext (polish p1: the widget line of "Diesen Monat")', () => {
+  const money = (n: number) => `${(n / 100).toFixed(2)} €`;
+  it('names what is due, then what was spent, both capitalised', () => {
+    expect(
+      monthContext(
+        { comingCount: 2, comingMinor: 9_749, spentMinor: 12_000 },
+        money,
+        t.finance.ext.month,
+      ),
+    ).toBe('Noch fällig 97.49 € · Ausgegeben 120.00 €');
+  });
+  it('says "nothing spent yet" in words instead of a zero amount', () => {
+    expect(
+      monthContext({ comingCount: 0, comingMinor: 0, spentMinor: 0 }, money, t.finance.ext.month),
+    ).toBe('Nichts mehr fällig · Noch nichts ausgegeben');
   });
 });

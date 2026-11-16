@@ -106,6 +106,14 @@ test.describe('Finance: transfers, splits, year, outlook', () => {
     await ready(page, '/finance?tab=overview&period=year&year=2026');
     await expect(page.getByTestId('year-label')).toHaveText('2026');
     await expect(page.getByTestId('year-income')).toBeVisible();
+    // Amounts in the month table stand right-aligned in tabular figures (polish p1: the class never matched).
+    const cell = page.getByTestId('year-months').locator('tbody td').first();
+    await expect(cell).toHaveCSS('text-align', 'right');
+    await expect(cell).toHaveCSS('font-variant-numeric', 'tabular-nums');
+    // December has not come yet (fixed clock: September): a dash, not 0,00 € (polish p2).
+    await expect(page.getByTestId('year-months').locator('tbody tr').last()).not.toContainText(
+      '0,00',
+    );
     await page.getByRole('button', { name: 'Vorheriges Jahr' }).click();
     await expect(page.getByTestId('year-label')).toHaveText('2025');
   });

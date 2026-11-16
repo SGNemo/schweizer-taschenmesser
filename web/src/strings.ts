@@ -3460,13 +3460,14 @@ export const de = {
         done: 'Export gespeichert.',
         file: 'buchungen',
       },
-      widget: { addExpense: 'Ausgabe +', vsPrevious: (change: string) => `${change} zum Vormonat` },
+      widget: { addExpense: 'Ausgabe +' },
       month: {
         title: 'Diesen Monat',
         free: 'Frei bis Monatsende',
-        coming: (amount: string) => `Kommt noch ${amount}`,
+        coming: (amount: string) => `Noch fällig ${amount}`,
         nothingComing: 'Nichts mehr fällig',
-        spent: (amount: string) => `bisher ausgegeben ${amount}`,
+        spent: (amount: string) => `Ausgegeben ${amount}`,
+        spentNone: 'Noch nichts ausgegeben',
         open: 'Was noch kommt',
       },
       settings: {
@@ -3528,7 +3529,6 @@ export const de = {
       ]
         .filter(Boolean)
         .join(' · '),
-    expensesByCategory: 'Ausgaben nach Kategorie',
     trend: 'Einnahmen und Ausgaben der letzten 6 Monate',
     balanceCurve: 'Verlauf im Monat',
     netWorthTitle: 'Vermögen am Monatsende',
@@ -3559,7 +3559,6 @@ export const de = {
           : invoices
             ? 'Keine Rechnung offen.'
             : 'Kein Abo mehr bis Monatsende.',
-      curve: (a: string, b: string) => `Vermögen von ${a} auf ${b}`,
       byKind: 'Vermögen nach Art des Kontos',
       otherCurrency: (code: string) => `Konten in ${code}`,
       notConverted: 'nicht umgerechnet',
@@ -3568,10 +3567,7 @@ export const de = {
       /** The amount is a part of the figure, not the figure. */
       widgetAvailable: (amount: string) => `Vermögen, davon ${amount} verfügbar`,
     },
-    categoriesRing: (n: number) => (n === 1 ? '1 Kategorie' : `${n} Kategorien`),
     ringTitle: 'Wohin das Geld ging',
-    curveFrom: 'Monatsbeginn',
-    curveLabel: (a: string, b: string) => `Kontostand von ${a} auf ${b}`,
     showTable: 'Als Tabelle anzeigen',
     showChart: 'Als Diagramm anzeigen',
     tableShort: 'Tabelle',

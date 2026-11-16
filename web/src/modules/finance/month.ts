@@ -34,3 +34,23 @@ export function monthGlance(input: {
     spentMinor,
   };
 }
+
+/**
+ * The widget's context line: what is still due, then what went out – two parts of the same weight, each starting with a
+ * capital. Nothing spent yet is said in words ("Noch nichts ausgegeben"), not as "0,00 €".
+ */
+export function monthContext(
+  g: Pick<MonthGlance, 'comingCount' | 'comingMinor' | 'spentMinor'>,
+  money: (minor: number) => string,
+  m: {
+    coming: (amount: string) => string;
+    nothingComing: string;
+    spent: (amount: string) => string;
+    spentNone: string;
+  },
+): string {
+  return [
+    g.comingCount > 0 ? m.coming(money(g.comingMinor)) : m.nothingComing,
+    g.spentMinor > 0 ? m.spent(money(g.spentMinor)) : m.spentNone,
+  ].join(' · ');
+}
