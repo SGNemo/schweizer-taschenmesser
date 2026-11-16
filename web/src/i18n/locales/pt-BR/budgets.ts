@@ -33,7 +33,6 @@ export const budgets: Strings['budgets'] = {
     },
     head: {
       free: 'Ainda livre',
-      chip: (name: string, pct: number) => `${name} ${pct} %`,
       context: (n: number, over: number) =>
         over === 0
           ? n === 1

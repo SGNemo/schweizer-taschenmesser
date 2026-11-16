@@ -42,6 +42,7 @@ import { createLocalApi } from './localApi';
 import { createLanHub } from './lanHub';
 import { createRemote } from './remote';
 import { createRemoteHost } from './remoteHost';
+import { createExchange } from './exchange';
 import { createLanClient } from './lanClient';
 import { createLanWatch } from './lanWatch';
 import { createVaultBridge } from './vaultBridge';
@@ -221,6 +222,7 @@ export async function createTauriPlatform(): Promise<PlatformService> {
     lanHub: createLanHub(kind === 'desktop'),
     remoteHost: createRemoteHost(kind === 'desktop'),
     remote: createRemote(kind === 'android'),
+    exchange: createExchange(kind === 'desktop' ? 'pc' : kind === 'android' ? 'phone' : null),
     lanClient: createLanClient(kind === 'android' || kind === 'desktop'),
     lanWatch: createLanWatch(kind === 'android'),
     disk: createDisk(kind === 'desktop'),

@@ -84,7 +84,7 @@ export const feeds: Strings['feeds'] = {
     label: 'Feeds',
     context: (_n: number, g: number) =>
       g === 0 ? 'no groups' : g === 1 ? 'in 1 group' : `in ${g} groups`,
-    empty: 'No feeds yet',
+    empty: 'No feeds yet.',
     add: 'Add feed',
   },
 };
