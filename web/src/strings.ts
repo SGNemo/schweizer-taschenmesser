@@ -2997,7 +2997,6 @@ export const de = {
       state: {
         partial: 'Teilweise bezahlt',
         overdue: 'Überfällig',
-        overdueDays: (n: number) => (n === 1 ? 'seit 1 Tag' : `seit ${n} Tagen`),
         rest: (amount: string) => `Noch ${amount} offen`,
       },
       payment: {
@@ -5663,7 +5662,6 @@ export const de = {
         bookings: 'Buchungen ansehen',
       },
       head: {
-        chip: (name: string, pct: number) => `${name} ${pct} %`,
         /** Names the figure (the head draws no label), then what matters; short enough for the phone's head. */
         context: (over: number) => (over > 0 ? `Frei · ${over} darüber` : 'Frei · im Rahmen'),
         ring: (n: number) => `Verteilung der Ausgaben auf ${n} Budgets`,
@@ -7891,7 +7889,6 @@ export const de = {
       recent: 'Zuletzt',
       name: 'Name',
       navigate: 'Navigieren',
-      navigateTo: (name: string) => `Zu ${name} navigieren`,
       none: 'Keine passenden Orte.',
       last: (name: string) => `Zuletzt gespeichert: ${name}`,
       pinHint: 'Noch kein Ort gespeichert.',
@@ -9228,7 +9225,7 @@ export const de = {
       /** Context under the feed count: only the groups, never the number again. */
       context: (_n: number, g: number) =>
         g === 0 ? 'ohne Gruppen' : g === 1 ? 'aus 1 Gruppe' : `aus ${g} Gruppen`,
-      empty: 'Noch keine Feeds',
+      empty: 'Noch keine Feeds.',
       add: 'Feed eintragen',
     },
   },

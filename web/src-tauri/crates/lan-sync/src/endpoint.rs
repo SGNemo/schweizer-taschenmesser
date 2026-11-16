@@ -100,18 +100,24 @@ impl Endpoint {
         self.sessions.close_input(None)
     }
 
-    /// Handles the first message of a connection on which no input session may start.
-    pub fn handle_first(&self, wire: &[u8]) -> FirstReply {
-        self.handle_first_on(wire, false)
+    /// Closes every exchange session (the home network was lost); sync and input stay.
+    pub fn close_exchange_sessions(&self) -> usize {
+        self.sessions.close_exchange(None)
     }
 
-    /// Handles the first message of a connection. `input_ok`: the connection came in on the stored
-    /// home network and the hub has remote control wired; only then an input session is accepted.
-    pub fn handle_first_on(&self, wire: &[u8], input_ok: bool) -> FirstReply {
+    /// Handles the first message of a connection on which no input or exchange session may start.
+    pub fn handle_first(&self, wire: &[u8]) -> FirstReply {
+        self.handle_first_on(wire, false, false)
+    }
+
+    /// Handles the first message of a connection. Per mode: `input_ok` / `exchange_ok` say that the
+    /// connection came in on the stored home network **and** the hub has that side wired; only
+    /// then an input or exchange session is accepted (otherwise the authenticated refusal).
+    pub fn handle_first_on(&self, wire: &[u8], input_ok: bool, exchange_ok: bool) -> FirstReply {
         if wire.first() == Some(&MODE_PAIR) {
             self.pair_first(wire)
         } else {
-            self.session_first(wire, input_ok)
+            self.session_first(wire, input_ok, exchange_ok)
         }
     }
 
@@ -134,13 +140,17 @@ impl Endpoint {
         }
     }
 
-    fn session_first(&self, wire: &[u8], input_ok: bool) -> FirstReply {
+    fn session_first(&self, wire: &[u8], input_ok: bool, exchange_ok: bool) -> FirstReply {
         let Ok(first) = noise::read_first(&self.key, wire, None) else {
             return FirstReply::Drop;
         };
         let peer = first.peer();
         let mode = first.mode();
-        let here = mode != noise::Mode::Input || input_ok;
+        let here = match mode {
+            noise::Mode::Input => input_ok,
+            noise::Mode::Exchange => exchange_ok,
+            noise::Mode::Pair | noise::Mode::Session => true,
+        };
         match self.trust.find_by_key(&peer) {
             Some(d) if !d.revoked && here => match first.accept() {
                 Ok((m2, transport, _)) => {
@@ -228,6 +238,16 @@ impl Session {
 
     pub fn is_closed(&self) -> bool {
         self.handle.is_closed()
+    }
+
+    /// An exchange session whose `open` was accepted replaces the device's older exchange sessions
+    /// (one per device, so a phone never holds two of the four connections per address). Only
+    /// then – never at message 1, which can be replayed by anyone who saw it on the network.
+    pub fn replace_older_exchange(&self) {
+        if self.mode == noise::Mode::Exchange && self.authenticated {
+            self.sessions
+                .close_exchange_except(&self.peer, &self.handle);
+        }
     }
 
     pub fn cap(&self) -> usize {

@@ -1,7 +1,7 @@
 //! Wire layout and frame rules of the LAN channel (no I/O, no keys).
 //!
 //! Handshake message 1 on the wire: `mode byte (1) || Noise message 1 (96 B)` = 97 B. Modes: pairing,
-//! sync session, input session (remote control, `crate::input`).
+//! sync session, input session (remote control, `crate::input`), exchange session (`crate::exchange`).
 //! Message 2 is the bare Noise message (48 B, 49 B when it carries `unknown-device`).
 //! Transport frame = Noise ciphertext of `tag (1) || body`. Framing on the stream (length prefix) is
 //! the transport's business (package 2b); these checks work on one complete message.
@@ -14,6 +14,10 @@ pub const MODE_SESSION: u8 = 2;
 /// Mode byte: remote-control input session of an already paired device (`IK`, own prologue, so a
 /// sync session can never become an input session or the other way round).
 pub const MODE_INPUT: u8 = 3;
+
+/// Mode byte: device-exchange session of an already paired device (`IK`, own prologue: messages and
+/// files never travel in a sync or input session, `crate::exchange`).
+pub const MODE_EXCHANGE: u8 = 4;
 
 /// Noise message 1 length for both patterns (e 32 + encrypted s 32 + tag 16 + tag 16).
 pub const NOISE_M1_LEN: usize = 96;

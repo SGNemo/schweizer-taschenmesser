@@ -27,6 +27,9 @@ impl DataKeyProvider for Keys {
 }
 
 struct Rig {
+    exchange: Arc<crate::exchange::Exchange>,
+    inbox: Arc<crate::exchange::MemoryInbox>,
+    outbox: Arc<crate::exchange::MemoryOutbox>,
     remote: Arc<Remote>,
     sink: Arc<TestSink>,
     router: Arc<Router>,
@@ -47,6 +50,11 @@ fn rig_with(cfg: ServerConfig) -> Rig {
 
 /// `home`: whether the one bind counts as the stored home network (input sessions only there).
 fn rig_on(cfg: ServerConfig, home: bool) -> Rig {
+    rig_full(cfg, home, true)
+}
+
+/// `wire_exchange`: whether the shell wired device exchange into the router.
+fn rig_full(cfg: ServerConfig, home: bool, wire_exchange: bool) -> Rig {
     let keys = MemoryKeyStore::empty();
     let hub_key = keys.load_or_create().unwrap().public();
     let trust = Arc::new(MemoryTrustStore::new());
@@ -69,10 +77,25 @@ fn rig_on(cfg: ServerConfig, home: bool) -> Rig {
     let switch = Arc::new(MemorySwitch::new());
     let remote = Arc::new(Remote::new(trust.clone(), switch));
     let sink = TestSink::new();
-    let router =
-        Arc::new(Router::new(ep, host.clone(), hub, adm).with_input(remote.clone(), sink.clone()));
+    let inbox = Arc::new(crate::exchange::MemoryInbox::new());
+    let outbox = Arc::new(crate::exchange::MemoryOutbox::new());
+    let exchange = Arc::new(crate::exchange::Exchange::new(
+        Arc::new(MemorySwitch::new()),
+        trust.clone(),
+        inbox.clone(),
+        outbox.clone(),
+    ));
+    let mut router =
+        Router::new(ep, host.clone(), hub, adm).with_input(remote.clone(), sink.clone());
+    if wire_exchange {
+        router = router.with_exchange(exchange.clone());
+    }
+    let router = Arc::new(router);
     let server = Server::start_for_tests(&loopback(), router.clone(), cfg).unwrap();
     Rig {
+        exchange,
+        inbox,
+        outbox,
         remote,
         sink,
         router,
@@ -82,6 +105,14 @@ fn rig_on(cfg: ServerConfig, home: bool) -> Rig {
         sessions,
         hub_key,
     }
+}
+
+#[test]
+fn every_server_of_the_process_hands_the_router_the_same_clock() {
+    let a = rig();
+    let b = rig();
+    assert_eq!(a.server.shared.started, b.server.shared.started);
+    assert_eq!(a.server.shared.started, process_base());
 }
 
 fn rig() -> Rig {
@@ -1312,6 +1343,266 @@ mod input_client {
                 )
                 .err(),
                 Some(InputError::Network),
+                "{public}"
+            );
+        }
+    }
+}
+
+// ---- device exchange over the socket ----
+
+mod exchange_over_socket {
+    use super::*;
+    use crate::exchange::wire::{AckState, Code, Item, Kind};
+    use crate::exchange_client::{testing::open_via, Event, ExchangeError, ExchangeSession};
+    use crate::trust::ExchangeGrant;
+    use std::sync::mpsc::{channel, Receiver};
+
+    const WAIT: Duration = Duration::from_secs(5);
+
+    fn addr(r: &Rig) -> std::net::SocketAddrV4 {
+        r.server.local_addrs()[0]
+    }
+
+    /// A paired device with the exchange grant, on a hub where exchange is on.
+    fn granted(r: &Rig) -> StaticKey {
+        let key = StaticKey::generate().unwrap();
+        pair_over_socket(r, &key);
+        r.exchange.set_enabled(true).unwrap();
+        r.exchange
+            .set_device(
+                &key.public(),
+                ExchangeGrant {
+                    on: true,
+                    paused: false,
+                },
+            )
+            .unwrap();
+        key
+    }
+
+    fn open(r: &Rig, key: &StaticKey) -> Result<(ExchangeSession, Receiver<Event>), ExchangeError> {
+        let (tx, rx) = channel();
+        open_via(
+            addr(r),
+            key,
+            &r.hub_key,
+            Box::new(move |e| {
+                let _ = tx.send(e);
+            }),
+        )
+        .map(|s| (s, rx))
+    }
+
+    fn item(n: u8, kind: Kind, body: &str) -> Item {
+        Item::new([n; 16], kind, body.into()).unwrap()
+    }
+
+    #[test]
+    fn a_granted_phone_sends_a_link_and_receives_what_the_pc_queued_while_sync_goes_on() {
+        let r = rig();
+        let key = granted(&r);
+        let queued = item(2, Kind::Text, "Vergiss nicht: Milch");
+        r.outbox.push(&key.public(), queued.clone());
+        let mut sync = session(&r, &key);
+        let (s, rx) = open(&r, &key).unwrap();
+        // PC → phone: the queued item, removed from the outbox only after the ack
+        assert_eq!(rx.recv_timeout(WAIT).unwrap(), Event::Item(queued.clone()));
+        assert_eq!(r.outbox.len(&key.public()), 1);
+        s.ack(queued.id(), AckState::Stored).unwrap();
+        // phone → PC: stored in the inbox, then acked
+        let link = item(1, Kind::Link, "https://example.org/rezept");
+        s.send_item(&link).unwrap();
+        assert_eq!(
+            rx.recv_timeout(WAIT).unwrap(),
+            Event::Ack(*link.id(), AckState::Stored)
+        );
+        assert_eq!(r.inbox.items(), vec![(*key.public().as_bytes(), link)]);
+        assert_eq!(r.outbox.len(&key.public()), 0);
+        // sync is untouched by it
+        assert!(sync
+            .request(&json!({"keyVersion": 1, "type": "info"}))
+            .get("error")
+            .is_none());
+        s.close();
+    }
+
+    #[test]
+    fn every_refusal_reaches_the_phone_as_its_own_code() {
+        let r = rig();
+        let key = StaticKey::generate().unwrap();
+        pair_over_socket(&r, &key);
+        assert_eq!(
+            open(&r, &key).err(),
+            Some(ExchangeError::Refused(Code::ExchangeOff))
+        );
+        r.exchange.set_enabled(true).unwrap();
+        assert_eq!(
+            open(&r, &key).err(),
+            Some(ExchangeError::Refused(Code::NotGranted))
+        );
+        r.exchange
+            .set_device(
+                &key.public(),
+                ExchangeGrant {
+                    on: true,
+                    paused: true,
+                },
+            )
+            .unwrap();
+        assert_eq!(
+            open(&r, &key).err(),
+            Some(ExchangeError::Refused(Code::Paused))
+        );
+        // a stranger only gets the authenticated refusal of the handshake
+        let stranger = StaticKey::generate().unwrap();
+        assert_eq!(
+            open(&r, &stranger).err(),
+            Some(ExchangeError::UnknownDevice)
+        );
+    }
+
+    #[test]
+    fn pausing_at_the_pc_ends_an_open_session_with_the_reason() {
+        let r = rig();
+        let key = granted(&r);
+        let (_s, rx) = open(&r, &key).unwrap();
+        r.exchange
+            .set_device(
+                &key.public(),
+                ExchangeGrant {
+                    on: true,
+                    paused: true,
+                },
+            )
+            .unwrap();
+        assert_eq!(
+            rx.recv_timeout(WAIT).unwrap(),
+            Event::Closed(Some(Code::Paused))
+        );
+    }
+
+    #[test]
+    fn outside_the_home_network_the_hub_takes_sync_but_no_exchange() {
+        let r = rig_on(
+            ServerConfig {
+                tick: Duration::from_millis(20),
+                ..ServerConfig::default()
+            },
+            false,
+        );
+        let key = granted(&r);
+        assert_eq!(open(&r, &key).err(), Some(ExchangeError::UnknownDevice));
+        let mut sync = session(&r, &key);
+        assert!(sync
+            .request(&json!({"keyVersion": 1, "type": "info"}))
+            .get("error")
+            .is_none());
+    }
+
+    #[test]
+    fn losing_the_home_network_closes_an_open_exchange_session() {
+        let r = rig();
+        let key = granted(&r);
+        let (_s, rx) = open(&r, &key).unwrap();
+        r.router
+            .set_binds(loopback().into_iter().map(|b| b.with_home(false)).collect());
+        assert_eq!(rx.recv_timeout(WAIT).unwrap(), Event::Closed(None));
+    }
+
+    #[test]
+    fn a_newer_exchange_session_of_a_device_replaces_the_older_one() {
+        let r = rig();
+        let key = granted(&r);
+        let (_first, rx1) = open(&r, &key).unwrap();
+        let (second, rx2) = open(&r, &key).unwrap();
+        assert_eq!(rx1.recv_timeout(WAIT).unwrap(), Event::Closed(None));
+        let i = item(4, Kind::Clip, "kopiert");
+        second.send_item(&i).unwrap();
+        assert_eq!(
+            rx2.recv_timeout(WAIT).unwrap(),
+            Event::Ack(*i.id(), AckState::Stored)
+        );
+    }
+
+    #[test]
+    fn a_ping_keeps_a_session_past_the_idle_timeout() {
+        let r = rig_with(ServerConfig {
+            tick: Duration::from_millis(20),
+            idle_timeout: Duration::from_millis(1500),
+            ..ServerConfig::default()
+        });
+        let key = granted(&r);
+        let (s, rx) = open(&r, &key).unwrap();
+        for _ in 0..8 {
+            std::thread::sleep(Duration::from_millis(300));
+            s.ping().unwrap();
+        }
+        assert!(rx.try_recv().is_err(), "still open after 2.4 s");
+        // without pings it closes
+        assert_eq!(rx.recv_timeout(WAIT).unwrap(), Event::Closed(None));
+    }
+
+    #[test]
+    fn revoking_closes_the_exchange_session() {
+        let r = rig();
+        let key = granted(&r);
+        let (_s, rx) = open(&r, &key).unwrap();
+        r.sessions.revoke(&*r.trust, &key.public()).unwrap();
+        assert!(matches!(rx.recv_timeout(WAIT).unwrap(), Event::Closed(_)));
+        assert_eq!(open(&r, &key).err(), Some(ExchangeError::UnknownDevice));
+    }
+
+    #[test]
+    fn on_the_home_network_without_exchange_wired_the_phone_gets_the_plain_refusal() {
+        let r = rig_full(
+            ServerConfig {
+                tick: Duration::from_millis(20),
+                ..ServerConfig::default()
+            },
+            true,
+            false,
+        );
+        let key = granted(&r);
+        assert_eq!(open(&r, &key).err(), Some(ExchangeError::UnknownDevice));
+    }
+
+    #[test]
+    fn a_replayed_message_1_does_not_end_the_live_session() {
+        let r = rig();
+        let key = granted(&r);
+        let (live, rx) = open(&r, &key).unwrap();
+        // what someone on the network could resend: a valid message 1 of this device, never followed
+        // by a transport frame
+        let (_init, m1) = noise::start_initiator(Mode::Exchange, &key, &r.hub_key, None).unwrap();
+        let mut replay = connect(&r);
+        send(&mut replay, &m1);
+        assert!(recv(&mut replay).is_some(), "message 2 comes back");
+        std::thread::sleep(Duration::from_millis(100));
+        let i = item(6, Kind::Text, "noch da");
+        live.send_item(&i).unwrap();
+        assert_eq!(
+            rx.recv_timeout(WAIT).unwrap(),
+            Event::Ack(*i.id(), AckState::Stored)
+        );
+        assert!(r.exchange.connected(&key.public()));
+    }
+
+    #[test]
+    fn the_exchange_client_dials_private_addresses_only() {
+        let key = StaticKey::generate().unwrap();
+        let hub = StaticKey::generate().unwrap().public();
+        for public in ["8.8.8.8:4000", "127.0.0.1:4000", "100.64.0.1:4000"] {
+            assert_eq!(
+                ExchangeSession::open(
+                    public.parse().unwrap(),
+                    &key,
+                    &hub,
+                    "Phone",
+                    Box::new(|_| {})
+                )
+                .err(),
+                Some(ExchangeError::Network),
                 "{public}"
             );
         }

@@ -187,7 +187,7 @@ afterEach(() => {
 describe('music widget (overview)', () => {
   it('not connected: one calm next step, nothing is asked', async () => {
     renderWidget();
-    expect(await screen.findByText('Verbinde Spotify')).toBeTruthy();
+    expect(await screen.findByText('Spotify ist nicht verbunden.')).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Spotify verbinden' })).toHaveAttribute(
       'href',
       '/settings/verbindungen',
@@ -223,7 +223,7 @@ describe('music widget (overview)', () => {
   it('without "Anzeigen" it looks like not connected, even with the control scope', async () => {
     await connect(['control']);
     renderWidget();
-    expect(await screen.findByText('Verbinde Spotify')).toBeTruthy();
+    expect(await screen.findByText('Spotify ist nicht verbunden.')).toBeTruthy();
     await new Promise((r) => setTimeout(r, 60));
     expect(requested()).toEqual([]);
   });
@@ -874,7 +874,7 @@ describe('covers', () => {
     );
     withCovers();
     renderWidget();
-    await screen.findByText('Verbinde Spotify');
+    await screen.findByText('Spotify ist nicht verbunden.');
     await renderPage();
     await act(async () => {
       await new Promise((r) => setTimeout(r, 30));

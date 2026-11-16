@@ -105,6 +105,28 @@ pub enum TrustError {
     Storage,
 }
 
+/// Whether a paired device may send messages and files to this PC and receive what the PC queued
+/// for it (device exchange, `crate::exchange`). Pairing gives none of it; only someone at the PC
+/// changes it, every widening behind the PC's own native confirmation (the shell's job).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct ExchangeGrant {
+    pub on: bool,
+    /// Paused at the PC: nothing is accepted until someone there switches it on again.
+    pub paused: bool,
+}
+
+impl ExchangeGrant {
+    /// What the hub acts on: on and not paused.
+    pub fn effective(&self) -> bool {
+        self.on && !self.paused
+    }
+
+    /// Whether going from `old` to `self` lets the device exchange where it could not before.
+    pub fn widens(&self, old: &ExchangeGrant) -> bool {
+        self.effective() && !old.effective()
+    }
+}
+
 pub trait TrustStore: Send + Sync {
     /// Active or revoked entry for this key.
     fn find_by_key(&self, key: &PublicKey) -> Option<Device>;
@@ -128,6 +150,15 @@ pub trait TrustStore: Send + Sync {
     fn set_remote(&self, _key: &PublicKey, _grant: RemoteGrant) -> Result<(), TrustError> {
         Err(TrustError::Storage)
     }
+    /// The device-exchange grant of an active device; unknown, revoked and unsupported = none.
+    fn exchange_of(&self, _key: &PublicKey) -> ExchangeGrant {
+        ExchangeGrant::default()
+    }
+    /// Sets the exchange grant of an active device. Called only from the PC's own controls
+    /// (`exchange::Exchange`), never on behalf of a network message.
+    fn set_exchange(&self, _key: &PublicKey, _grant: ExchangeGrant) -> Result<(), TrustError> {
+        Err(TrustError::Storage)
+    }
 }
 
 /// In-memory trust list (tests, and the logic behind the shell's persistent one).
@@ -136,6 +167,8 @@ pub struct MemoryTrustStore {
     devices: Mutex<HashMap<[u8; 32], Device>>,
     /// Only non-default grants are kept; a device that is removed or revoked loses its entry.
     grants: Mutex<HashMap<[u8; 32], RemoteGrant>>,
+    /// Device-exchange grants, kept the same way (only non-default ones).
+    exchange: Mutex<HashMap<[u8; 32], ExchangeGrant>>,
 }
 
 impl MemoryTrustStore {
@@ -232,12 +265,46 @@ impl TrustStore for MemoryTrustStore {
         }
         Ok(())
     }
+
+    fn exchange_of(&self, key: &PublicKey) -> ExchangeGrant {
+        let active = self
+            .devices
+            .lock()
+            .is_ok_and(|m| m.get(key.as_bytes()).is_some_and(|d| !d.revoked));
+        if !active {
+            return ExchangeGrant::default();
+        }
+        self.exchange
+            .lock()
+            .ok()
+            .and_then(|g| g.get(key.as_bytes()).copied())
+            .unwrap_or_default()
+    }
+
+    fn set_exchange(&self, key: &PublicKey, grant: ExchangeGrant) -> Result<(), TrustError> {
+        let devices = self.devices.lock().map_err(|_| TrustError::Storage)?;
+        match devices.get(key.as_bytes()) {
+            Some(d) if !d.revoked => {}
+            Some(_) => return Err(TrustError::Revoked),
+            None => return Err(TrustError::NotFound),
+        }
+        let mut grants = self.exchange.lock().map_err(|_| TrustError::Storage)?;
+        if grant == ExchangeGrant::default() {
+            grants.remove(key.as_bytes());
+        } else {
+            grants.insert(*key.as_bytes(), grant);
+        }
+        Ok(())
+    }
 }
 
 impl MemoryTrustStore {
     /// A poisoned grant map reads as "no grant" everywhere, so a failure here stays closed.
     fn forget_grant(&self, key: &PublicKey) {
         if let Ok(mut g) = self.grants.lock() {
+            g.remove(key.as_bytes());
+        }
+        if let Ok(mut g) = self.exchange.lock() {
             g.remove(key.as_bytes());
         }
     }
@@ -358,6 +425,33 @@ impl SessionRegistry {
     /// device, or of all with `None`. Returns how many were open.
     pub fn close_input(&self, peer: Option<&PublicKey>) -> usize {
         self.close_where(|p, m| m == Mode::Input && peer.map_or(true, |x| x == p))
+    }
+
+    /// Closes the exchange sessions and leaves sync and input alone: of one device (paused, or a
+    /// newer exchange session of it replaces this one), or of all with `None` (home network lost,
+    /// exchange switched off at the PC). Returns how many were open.
+    pub fn close_exchange(&self, peer: Option<&PublicKey>) -> usize {
+        self.close_where(|p, m| m == Mode::Exchange && peer.map_or(true, |x| x == p))
+    }
+
+    /// Closes the device's exchange sessions but `keep` (a newer one replaced them).
+    pub fn close_exchange_except(&self, peer: &PublicKey, keep: &SessionHandle) -> usize {
+        let Ok(mut s) = self.sessions.lock() else {
+            return 0;
+        };
+        let mut n = 0;
+        for (p, m, h) in s.iter() {
+            if p == peer
+                && *m == Mode::Exchange
+                && !Arc::ptr_eq(&h.closed, &keep.closed)
+                && !h.is_closed()
+            {
+                h.close();
+                n += 1;
+            }
+        }
+        s.retain(|(_, _, h)| !h.is_closed());
+        n
     }
 
     fn close_where(&self, pick: impl Fn(&PublicKey, Mode) -> bool) -> usize {
