@@ -196,3 +196,15 @@ test('„Übersicht“: donut by kind or subscription, the next 30 days; the lis
   await expect(rows.first()).toContainText(/119,88\s€ im Jahr/);
   await expect(rows.nth(1)).toContainText('Versicherung');
 });
+
+test('„Kaum genutzt“ from the dialog: the row says so and the overview names the yearly cost', async ({
+  page,
+}) => {
+  await addStreaming(page);
+  await page.getByRole('button', { name: /Streaming/ }).click();
+  await page.getByRole('dialog').getByRole('switch', { name: 'Kaum genutzt' }).click();
+  await save(page);
+  await expect(page.getByRole('button', { name: /Streaming/ })).toContainText('Kaum genutzt');
+  await page.getByRole('button', { name: 'Übersicht' }).click();
+  await expect(page.getByTestId('subscriptions-unused')).toContainText(/Streaming.*119,88\s€/);
+});

@@ -105,3 +105,73 @@
     padding-inline: var(--space-2);
   }
 }
+
+/* Rows of the action cards (deadlines, prices, unused): name and a fact line, an action or amount at the end. */
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cardRow {
+  display: flex;
+  /* Narrow cards: the action moves under the text instead of squeezing it into four lines. */
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--space-3);
+  min-height: var(--touch);
+}
+.cardRow + .cardRow {
+  border-top: 1px solid var(--border);
+}
+.rowMain {
+  flex: 1 1 14rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: var(--touch);
+  justify-content: center;
+  padding: var(--space-1) 0;
+  background: none;
+  border: 0;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.rowMain:hover .name {
+  text-decoration: underline;
+}
+.rowMeta {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: var(--font-num);
+}
+.rowEnd {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+}
+/* A near deadline: warning colour with a clock and "in n Tagen", as in the list; red only once it was missed. */
+.warn {
+  color: var(--warning);
+  font-weight: var(--weight-semibold);
+}
+.warn svg,
+.planned svg {
+  margin-right: var(--space-1);
+  vertical-align: -0.125em;
+}
+.planned {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.more summary {
+  min-height: var(--touch);
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}

@@ -3257,6 +3257,37 @@ export const de = {
         name: 'Name',
       },
       perYearShort: (amount: string) => `${amount} im Jahr`,
+      deadlines: {
+        title: 'Kündigungsfristen',
+        none: 'In den nächsten 90 Tagen endet keine Kündigungsfrist.',
+        by: (date: string) => `Kündigen bis ${date}`,
+        otherwise: (amount: string, date: string) => `sonst ${amount} am ${date}`,
+        plan: 'In den Plan',
+        planFor: (name: string) => `${name} kündigen: in den Plan`,
+        planned: 'Im Plan',
+        plannedToast: (name: string) => `Im Plan: ${name} kündigen`,
+        later: (n: number) =>
+          n === 1 ? 'Eine weitere Frist bis 90 Tage' : `${n} weitere Fristen bis 90 Tage`,
+      },
+      prices: {
+        title: 'Preisänderungen',
+        change: (from: string, to: string, pct: number) =>
+          `${from} → ${to} (${pct > 0 ? '+' : ''}${pct} %)`,
+        since: (date: string) => `seit ${date}`,
+        perYear: (amount: string, up: boolean) =>
+          up ? `${amount} mehr im Jahr` : `${amount} weniger im Jahr`,
+      },
+      unused: {
+        title: 'Kaum genutzt',
+        mark: 'Kaum genutzt',
+        markHint: 'Die Übersicht zeigt dann, was es im Jahr kostet.',
+        menuMark: 'Als kaum genutzt markieren',
+        menuUnmark: 'Wird wieder genutzt',
+        sum: (n: number, amount: string) =>
+          n === 1 ? `1 Abo, ${amount} im Jahr` : `${n} Abos, zusammen ${amount} im Jahr`,
+      },
+      widgetSummary: (monthly: string, name: string, date: string) =>
+        `${monthly} pro Monat · nächste: ${name}, ${date}`,
       suggest: {
         apply: (amount: string) => `Preis übernehmen: ${amount}`,
         seen: (amount: string) => `Zuletzt abgebucht: ${amount}`,

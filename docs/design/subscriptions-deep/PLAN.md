@@ -17,7 +17,7 @@ See where the money goes and what comes next without reading every row; act on a
 | Package | Branch | Content | Data |
 | --- | --- | --- | --- |
 | p1 | `feat/subscriptions-overview-p1` | views „Abos | Übersicht“ (`?view=overview`); `Donut` per month by kind or by subscription (switch); „Nächste 30 Tage“ timeline with sum; „Was kostet mich das im Jahr“ (`Bars`, 8 + one sentence); list order „Fällig | Pro Jahr | Name“ (`?sort=`), by cost the row says „… im Jahr“; „Teuerste Abos“ goes (the ranking replaces it) | none |
-| p2 | `feat/subscriptions-overview-p2` | „Kündigungsfristen“ card with „In den Plan“ (planner on; `plan.requested`, the plannable item of that deadline then steps back); „Preisänderungen“ card (vorher → nachher, % and per year); „Ungenutzt“ mark (dialog + row menu) with the yearly saving in the overview; widget: second size-aware KPI „Abos pro Monat“ with the next charge | `plannedDeadline?`, `unusedSince?`; manifest v6; seed v3 (one price change, one unused) |
+| p2 | `feat/subscriptions-overview-p2` | „Kündigungsfristen“ card (30 days, the rest up to 90 folded) with „In den Plan“ (planner on; marks the deadline, `plannable.ts` lists it beyond the horizon, undoable); „Preisänderungen“ card (vorher → nachher, % and per year); „Kaum genutzt“ mark (dialog + row menu) with the yearly saving in the overview; widget summary: sum per month + next charge by name (no second widget: one per module is enough) | `plannedDeadline?`, `unusedSince?`; manifest v6; seed v3 (one price change, one unused) |
 
 ## Reihenfolge
 

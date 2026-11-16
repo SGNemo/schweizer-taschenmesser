@@ -40,6 +40,8 @@ import {
 import { subscriptionRepo } from '../repo';
 import { ServiceTile } from '../components/ServiceTile';
 import { OverviewView } from '../components/OverviewView';
+import { planDeadline } from '../planDeadline';
+import { useModuleStates } from '@/core/modules/activation';
 import { isSortKey, sortList, SORT_KEYS, type SortKey } from '../overview';
 import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import { useAdvanced } from '@/core/settings/comfort';
@@ -111,6 +113,7 @@ export default function SubscriptionsPage() {
   const rawSort = params.get('sort');
   const sort: SortKey = isSortKey(rawSort) ? rawSort : 'next';
   const rows = sortList(subs ?? [], day, sort);
+  const plannerOn = useModuleStates()?.planner === true;
 
   const advancedItem = useAdvancedMenuItem('subscriptions');
   // The head's one figure: the monthly sum of the main currency. Its context line leads with what needs a decision
@@ -200,7 +203,12 @@ export default function SubscriptionsPage() {
         </div>
       ) : null}
       {hasSubs && view === 'overview' ? (
-        <OverviewView subs={subs} day={day} onOpen={(s) => setTarget(s)} />
+        <OverviewView
+          subs={subs}
+          day={day}
+          onOpen={(s) => setTarget(s)}
+          onPlan={plannerOn ? (s, deadline) => void planDeadline(s, deadline) : undefined}
+        />
       ) : null}
 
       {empty ? (
@@ -224,6 +232,8 @@ export default function SubscriptionsPage() {
             const soon = cancel ? cancelTone(cancel.deadline, day) : undefined;
             const increase = recentIncrease(s.priceHistory ?? [], day);
             const status = subscriptionStatus(s, day);
+            // „Kaum genutzt“ counts only while the subscription still costs something.
+            const unused = !!s.unusedSince && s.active && !!charge;
             const plainMonthly =
               s.recurrence.freq === 'monthly' && (s.recurrence.interval ?? 1) === 1;
             // Sorted by cost a running row says what it costs in a year: the key of the order is visible.
@@ -275,13 +285,14 @@ export default function SubscriptionsPage() {
                     // "Erweitert" keeps the full line.
                     <>
                       {!s.active ? <Badge>{t.subscriptions.paused}</Badge> : null}
+                      {unused ? <Badge>{t.subscriptions.ext.unused.mark}</Badge> : null}
                       {status === 'trial' ? (
                         <Badge tone="info">{t.subscriptions.ext.trial.chip}</Badge>
                       ) : null}
                       {status === 'ended' ? (
                         <Badge>{t.subscriptions.ext.status.ended}</Badge>
                       ) : null}
-                      {(!s.active || status === 'trial' || status === 'ended') &&
+                      {(unused || !s.active || status === 'trial' || status === 'ended') &&
                       (charge || !plainMonthly) &&
                       s.active
                         ? ' '
@@ -314,13 +325,14 @@ export default function SubscriptionsPage() {
                     <>
                       {/* Status badges sit in the meta line: the amount column stays put (U56). */}
                       {!s.active ? <Badge>{t.subscriptions.paused}</Badge> : null}
+                      {unused ? <Badge>{t.subscriptions.ext.unused.mark}</Badge> : null}
                       {status === 'trial' ? (
                         <Badge tone="info">{t.subscriptions.ext.trial.chip}</Badge>
                       ) : null}
                       {status === 'ended' ? (
                         <Badge>{t.subscriptions.ext.status.ended}</Badge>
                       ) : null}
-                      {!s.active || status === 'trial' || status === 'ended' ? ' ' : null}
+                      {unused || !s.active || status === 'trial' || status === 'ended' ? ' ' : null}
                       {facts.join(' · ')}
                       {missed ? (
                         <span className={styles.missed} title={tDeadline.get().missedNote}>
@@ -356,6 +368,18 @@ export default function SubscriptionsPage() {
                           id: 'active',
                           label: s.active ? t.subscriptions.pause : t.subscriptions.resume,
                           onSelect: () => toggle(!s.active),
+                        },
+                        {
+                          id: 'unused',
+                          label: s.unusedSince
+                            ? t.subscriptions.ext.unused.menuUnmark
+                            : t.subscriptions.ext.unused.menuMark,
+                          onSelect: () =>
+                            void changeWithUndo(() =>
+                              subscriptionRepo.update(s.id, {
+                                unusedSince: s.unusedSince ? undefined : day,
+                              }),
+                            ),
                         },
                         { id: 'delete', label: t.actions.delete, danger: true, onSelect: remove },
                       ]
