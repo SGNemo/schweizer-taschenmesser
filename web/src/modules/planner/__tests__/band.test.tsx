@@ -68,9 +68,17 @@ describe('week band', () => {
     expect(tiles[0]).toHaveTextContent('Heute · So 15.');
     expect(tiles[1]).toHaveTextContent('37 Min frei');
     expect(tiles[3]).toHaveTextContent('40 Min mehr');
-    // The compact form never shows a dash: the count of things, else the free time or „frei“.
+    // The compact form shows one unit (M-2): the free time or one state word, never a count, never a dash.
     expect(tiles.map((b) => b.querySelector('[aria-hidden] + [aria-hidden]')!.textContent)).toEqual(
-      ['So15frei', 'Mo162', 'Di173 h 12', 'Mi181', 'Do193 h 12', 'Fr203 h 12', 'Sa213 h 12'],
+      [
+        'So15frei',
+        'Mo1637 Min',
+        'Di173 h 12',
+        'Mi1840 Min mehr',
+        'Do193 h 12',
+        'Fr203 h 12',
+        'Sa213 h 12',
+      ],
     );
     // The bar lies over the button, not in it (a bar is a `div`): valid HTML, the whole tile still answers.
     expect(tiles.every((b) => b.querySelector('div') === null)).toBe(true);

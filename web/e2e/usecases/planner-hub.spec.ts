@@ -144,7 +144,7 @@ const TARGET = {
   rowsBegun: 9,
   /** 1920: the field's top edge (567 before). */
   fieldY: 260,
-  /** 412: controls with a hit box under 44 px (12 of 20 before). */
+  /** Controls with a hit box under 44 px: 412 (12 of 20 before), since M-5 also 1920 (1 of 62 before). */
   smallTargets: 0,
   /** Both: distinct font sizes in `main` (HANDOFF §10 Q4: 8 with the unchanged shared parts). */
   fontSizes: 8,
@@ -735,12 +735,23 @@ async function measure(page: Page) {
     const controls = Array.from(
       main.querySelectorAll('button, a[href], input, select, textarea, [role="button"], summary'),
     ).filter((el) => visible(el) && inArea(el.getBoundingClientRect()));
+    // The control's name as a screen reader hears it, roughly: aria-labelledby, aria-label, a `<label>`, its text,
+    // its title. A placeholder is no name (M-5: the field was listed nameless because its `<label>` was not read).
     const name = (el: Element) =>
       (
-        el.getAttribute('aria-label') ??
-        (el as HTMLElement).innerText ??
-        el.getAttribute('placeholder') ??
-        el.tagName
+        (el.getAttribute('aria-labelledby') ?? '')
+          .split(/\s+/)
+          .map((id) => (id ? (document.getElementById(id)?.textContent ?? '') : ''))
+          .join(' ')
+          .trim() ||
+        el.getAttribute('aria-label') ||
+        Array.from((el as HTMLInputElement).labels ?? [])
+          .map((l) => l.textContent ?? '')
+          .join(' ')
+          .trim() ||
+        (el as HTMLElement).innerText ||
+        el.getAttribute('title') ||
+        ''
       )
         .replace(/\s+/g, ' ')
         .trim()
@@ -868,6 +879,8 @@ async function measure(page: Page) {
             h: Math.round(inputBox.height),
             formY: formBox ? Math.round(formBox.top) : null,
             onScreen: inputBox.bottom <= area.bottom,
+            /** Begun on the first screen, ended under the bottom bar or the fold (M-3). */
+            cut: inputBox.top < area.bottom && inputBox.bottom > area.bottom,
             underWeek: weekBox ? inputBox.top >= weekBox.bottom : null,
             underThings: boxes.length ? inputBox.top >= boxes[boxes.length - 1]!.bottom : null,
             font: fontOf(input),
@@ -896,6 +909,8 @@ async function measure(page: Page) {
       targets: {
         all: targets.length,
         small: targets.filter((t) => !t.cut && (t.w < 44 || t.h < 44)),
+        /** Controls in the content area without a name (M-5). */
+        unnamed: targets.filter((t) => !t.name).map((t) => t.tag),
       },
       overdue: {
         rows: late.length,
@@ -1389,6 +1404,9 @@ test('M Designmaße: die Woche des Sonntags, wie sie öffnet, und heute', async 
   // The targets of R1 (HANDOFF §9), on the screen the page opens on, in both themes.
   for (const m of [landing, landingLight]) {
     expect(m.fonts.sizes.length, 'font sizes').toBeLessThanOrEqual(TARGET.fontSizes);
+    expect(m.targets.unnamed, 'controls without a name').toEqual([]);
+    // M-3: the field is never cut by the bottom bar (phone) or the fold on arrival.
+    expect(m.field?.cut, 'field cut on arrival').toBe(false);
     if (isMobile) {
       expect(m.targets.small, 'targets under 44 px on the phone').toHaveLength(TARGET.smallTargets);
       // Seven tiles fit the phone and the sheet's first things are on the first screen.
@@ -1406,6 +1424,8 @@ test('M Designmaße: die Woche des Sonntags, wie sie öffnet, und heute', async 
       expect(m.rows.begun, 'thing rows begun at 1920').toBeGreaterThanOrEqual(TARGET.rowsBegun);
       expect(m.field?.y, 'field y at 1920').toBeLessThanOrEqual(TARGET.fieldY);
       expect(m.field?.underWeek, 'field above the week').toBe(false);
+      // M-5: the example chips' hit boxes no longer cover the field's lower edge (1 of 62 before).
+      expect(m.targets.small, 'targets under 44 px at 1920').toHaveLength(TARGET.smallTargets);
     }
   }
   // The field has the focus on arrival on the desktop, never on the phone.
@@ -1446,6 +1466,10 @@ test('N Designmaße: leere Seite', async ({ page }, info) => {
   await page.waitForTimeout(1000);
   const empty = await design(page, info, 'N Leer', 'dark');
   await design(page, info, 'N Leer', 'light');
+  // M-5 and M-3 on the empty page too: every control named, all of them ≥ 44 px, the field whole on arrival.
+  expect(empty.targets.unnamed, 'controls without a name').toEqual([]);
+  expect(empty.targets.small, 'targets under 44 px').toHaveLength(TARGET.smallTargets);
+  expect(empty.field?.cut, 'field cut on arrival').toBe(false);
   const board = await boardOf(page);
   facts(info, 'N', {
     head: [board.head, board.headDetail],
