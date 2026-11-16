@@ -22,7 +22,7 @@
       "buttons": 54,
       "links": 48,
       "icons": 67,
-      "firstScreenActions": 65,
+      "firstScreenActions": 73,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
@@ -151,14 +151,14 @@
     },
     "d1920--exchange": {
       "height": 1080,
-      "buttons": 0,
-      "links": 0,
-      "icons": 0,
-      "firstScreenActions": 0,
+      "buttons": 20,
+      "links": 17,
+      "icons": 34,
+      "firstScreenActions": 36,
       "borders": 0,
       "shadows": 0,
       "surfaceLanguages": 0,
-      "colouredAboveFold": 0,
+      "colouredAboveFold": 3,
       "signatureBlocks": 0
     },
     "d1920--feeds": {
@@ -210,7 +210,7 @@
       "signatureBlocks": 0
     },
     "d1920--home-all": {
-      "height": 4098,
+      "height": 4601,
       "buttons": 43,
       "links": 99,
       "icons": 174,
