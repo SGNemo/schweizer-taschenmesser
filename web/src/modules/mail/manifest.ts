@@ -78,7 +78,7 @@ const manifest: ModuleManifest = {
   // Only tested against a mocked Gmail API so far; a real-account check is open (MANUAL-TESTS "E-Mail lesen").
   maturity: 'preview',
   defaultEnabled: false,
-  seed: { version: 4, dependsOn: [] },
+  seed: { version: 5, dependsOn: [] },
   layout: 'split',
   area: 'knowledge',
   automation: () => import('./automation'),

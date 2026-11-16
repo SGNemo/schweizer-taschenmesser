@@ -87,6 +87,8 @@ export interface CaptureFields {
   exercises?: CaptureExercise[];
   /** Free text kept alongside the entry (e.g. the body of shared text); never set by the parser. */
   note?: string;
+  /** Invoices: the reference to quote when paying (from a mail); never set by the parser. */
+  reference?: string;
   /** A payment reminder („Mahnung“, „2. Mahnung“): its level (1–3) and the day it was noted, 'YYYY-MM-DD'. */
   dunning?: { level: number; date: string };
   /**

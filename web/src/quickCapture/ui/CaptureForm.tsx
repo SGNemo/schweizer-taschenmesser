@@ -41,6 +41,7 @@ import {
   type ReminderRow,
 } from './batch';
 import { previewChips } from './chips';
+import { FieldPanel, missingFields, type FieldEdits } from './FieldPanel';
 import { visibleTypes } from './typeFold';
 import { clearCaptureDraft, readCaptureDraft, writeCaptureDraft } from './draft';
 import { clearReopenDraft, peekReopenDraft, reopenCapture } from './reopen';
@@ -85,6 +86,11 @@ export interface CaptureFormProps {
   onCancel?: () => void;
   /** Further ways in (quick add: free text, the other forms): above the actions, which stay the sheet's foot (K4). */
   beforeActions?: ReactNode;
+  /**
+   * The chosen target's fields as inputs below the line (`CaptureTarget.fields`), prefilled and editable; a
+   * missing required one is named at its field after a save attempt (the mail dialog). Single entry only.
+   */
+  editFields?: boolean;
 }
 
 function errorText(e: unknown): string {
@@ -125,6 +131,7 @@ export function CaptureForm({
   onOpenFull,
   beforeActions,
   idFor,
+  editFields,
   onSaved,
   onCancel,
 }: CaptureFormProps) {
@@ -154,6 +161,9 @@ export function CaptureForm({
   // Open-invoice lookups of payment reminder lines, keyed by the line (`findOpenInvoice`).
   const [lookups, setLookups] = useState<Record<string, LookupResult>>({});
   const [error, setError] = useState('');
+  // The edit panel (`editFields`): values changed by hand, and whether a save was tried (messages only then).
+  const [edits, setEdits] = useState<FieldEdits>({});
+  const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
   // „Mehr (n)“ opened: every type chip in view until the sheet closes (decision #856).
   const [typesOpen, setTypesOpen] = useState(false);
@@ -196,7 +206,8 @@ export function CaptureForm({
   const resolved = resolveTarget(single, result, { ...resolveOpts, override });
   // No question: text the parser is unsure about goes to the default target (the ToDo inbox) as typed.
   const fallbackType = resolved.inbox ? resolved.type : undefined;
-  const singleFields: CaptureFields = { ...resolved.fields, ...extra };
+  const panel = editFields && !multi;
+  const singleFields: CaptureFields = { ...resolved.fields, ...extra, ...(panel ? edits : {}) };
   // The single sheet treats a payment reminder the same way as a line of a batch.
   // Lookups are keyed by the line and whether invoices are on (switching the module looks again).
   const lookupKey = (line: string) => `${states?.invoices ? 1 : 0}:${line}`;
@@ -218,6 +229,9 @@ export function CaptureForm({
   const chips = previewChips(fields, type, result.notes, today()).filter(
     (c) => !singlePlan.amend || c.id === 'amount',
   );
+  const specs = panel && type ? targetFor(type).fields : [];
+  // A reminder noted on its open invoice needs nothing more than the line.
+  const missing = singlePlan.amend ? {} : missingFields(specs, fields);
 
   const rows = useMemo(
     () =>
@@ -356,6 +370,8 @@ export function CaptureForm({
     setPicked(finalPick(next, result.type, singlePlan.type, singlePending));
     setConfirming(false);
     setError('');
+    // Another target asks anew: its messages only after the next attempt.
+    setTried(false);
     // Back to the field so Enter saves right after a mouse pick.
     inputRef.current?.focus();
   };
@@ -463,6 +479,8 @@ export function CaptureForm({
             : await saveWithId(type!, fields, confirmed),
       );
       setText('');
+      setEdits({});
+      setTried(false);
       if (keepDraft) clearCaptureDraft();
       setOverride(undefined);
       setPicked(false);
@@ -502,6 +520,11 @@ export function CaptureForm({
       return setError(t.quickCapture.multi.dunningChoose(singleFields.title));
     if (!type) return setError(t.quickCapture.chooseType);
     if (badDate(chips)) return setError(t.quickCapture.errors.invalid);
+    if (panel) {
+      setTried(true);
+      // The missing fields say so at the field (the panel), not in one sentence for all.
+      if (Object.keys(missing).length > 0) return setError('');
+    }
     if (targetFor(type).requiresConfirm && !confirming) {
       const problem = buildProblem(type, fields);
       return problem ? setError(problem) : setConfirming(true);
@@ -736,6 +759,19 @@ export function CaptureForm({
             ) : null}
           </div>
         )}
+
+        {panel && type ? (
+          <FieldPanel
+            specs={specs}
+            fields={fields}
+            errors={tried ? missing : {}}
+            onEdit={(next) => {
+              setEdits((cur) => ({ ...cur, ...next }));
+              setConfirming(false);
+              setError('');
+            }}
+          />
+        ) : null}
 
         {beforeActions}
         {confirming && type && !multi ? (

@@ -3,9 +3,17 @@
  * extra fields it saves along). Pure and local – the recognition is `heuristics.ts`; nothing leaves
  * the device. The user always sees the result in the capture sheet before anything is saved.
  */
-import { addDaysStr, pad2 } from '@/core/time/dates';
+import { addDaysStr, pad2, toDateString } from '@/core/time/dates';
 import { plainText } from '@/core/io/feed';
-import { analyzeMessage, dunningOf, senderName } from './heuristics';
+import {
+  analyzeMessage,
+  dunningOf,
+  findAmount,
+  findDates,
+  findDue,
+  findReference,
+  senderName,
+} from './heuristics';
 import type { MailMessage } from './types';
 
 export type MailLinkType = 'invoice' | 'event' | 'todo' | 'reminder' | 'bookmark' | 'note';
@@ -25,12 +33,24 @@ export interface MailPrefill {
   /** What the capture sheet starts with (one line; the parser reads date, time and amount from it). */
   text: string;
   /** Fields saved along with the entry, merged over the parsed ones; `link` points back to the thread (U09). */
-  extra: { note?: string; url?: string; link?: { kind: 'mail'; id: string; label: string } };
+  extra: {
+    note?: string;
+    url?: string;
+    /** Invoice: the reference to quote when paying („Rechnungsnummer“, „Aktenzeichen“). */
+    reference?: string;
+    link?: { kind: 'mail'; id: string; label: string };
+  };
   /** The plain-text excerpt the user may add to a note (not part of `extra` unless chosen). */
   excerpt?: string;
 }
 
 const EXCERPT_CHARS = 400;
+
+/** The mail's local calendar day (the heuristics read dates against it); `undefined` for an unreadable date. */
+function localDay(ms: number): string | undefined {
+  const d = new Date(ms);
+  return Number.isNaN(d.getTime()) ? undefined : toDateString(d);
+}
 
 /** 'YYYY-MM-DD' → '15.11.2026' (a form every language of the parser reads). */
 const dmy = (d: string) => `${d.slice(8, 10)}.${d.slice(5, 7)}.${d.slice(0, 4)}`;
@@ -67,7 +87,8 @@ export function mailPrefill(
     id: m.id,
     from: sender,
     subject,
-    snippet: body.slice(0, 1500),
+    // The whole opened mail (capped by `mailText`): a letter names the amount after a long opening.
+    snippet: body,
     dateMs: m.date,
     bulk: false,
   });
@@ -94,6 +115,8 @@ export function mailPrefill(
     excerpt,
     base,
     opts,
+    text: `${subject}. ${body}`,
+    mailDate: localDay(m.date),
   });
   return { ...result, extra: { ...result.extra, ...back } };
 }
@@ -109,7 +132,13 @@ function mailPrefillFor(
     excerpt,
     base,
     opts,
+    text,
+    mailDate,
   }: {
+    /** Subject and body as one text (what the heuristics read). */
+    text: string;
+    /** The mail's local day, 'YYYY-MM-DD' (absent for an unreadable date). */
+    mailDate: string | undefined;
     subject: string;
     sender: string;
     found: ReturnType<typeof analyzeMessage>;
@@ -123,11 +152,16 @@ function mailPrefillFor(
 ): MailPrefill {
   switch (type) {
     case 'invoice': {
-      const amount = found?.amountMinor;
-      const due = found?.kind === 'invoice' ? found.date : undefined;
+      // The person chose „Rechnung“: the amount and due day are read even when the mail does not look
+      // like a bill to the scan (a lawyer's letter says „Forderung“ or „Kostennote“, not „Rechnung“).
+      const amount = found?.amountMinor ?? findAmount(text);
+      const due =
+        (found?.kind === 'invoice' ? found.date : undefined) ??
+        (mailDate ? findDue(text, mailDate) : undefined);
+      const reference = findReference(text);
       // A payment reminder keeps its word, so the sheet looks for the open invoice first („Kopf leer“ 3b).
       // The word is parser input (the parser reads German reminder words in every language), not UI text.
-      const level = found?.kind === 'invoice' ? dunning : undefined;
+      const level = dunning;
       return {
         ...base,
         text: [
@@ -138,14 +172,21 @@ function mailPrefillFor(
         ]
           .filter(Boolean)
           .join(' '),
-        extra: link ? { note: link } : {},
+        extra: { ...(link ? { note: link } : {}), ...(reference ? { reference } : {}) },
       };
     }
     case 'event': {
-      const when = found?.kind === 'event' ? found : undefined;
+      // The first day from the mail's day on, when the scan did not read the mail as an appointment.
+      const when =
+        found?.kind === 'event'
+          ? found
+          : mailDate
+            ? findDates(text, mailDate).find((d) => d.date >= mailDate)
+            : undefined;
+      const time = found?.kind === 'event' ? found.time : undefined;
       return {
         ...base,
-        text: [subject || sender, when?.date ? dmy(when.date) : '', when?.time ?? '']
+        text: [subject || sender, when?.date ? dmy(when.date) : '', time ?? '']
           .filter(Boolean)
           .join(' '),
         extra: link ? { note: link } : {},

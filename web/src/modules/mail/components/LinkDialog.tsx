@@ -200,6 +200,7 @@ export function LinkDialog({
               extra={prefill.extra}
               onCancel={close}
               idFor={idFor}
+              editFields
               onSaved={(saved) => void filed(saved).finally(close)}
             />
           ) : null}

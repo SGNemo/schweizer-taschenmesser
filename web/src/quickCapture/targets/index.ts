@@ -18,7 +18,14 @@ import {
 } from './types';
 
 export { CaptureError } from './types';
-export type { CaptureRef, CaptureTarget, CaptureVia, OpenInvoice, SavedCapture } from './types';
+export type {
+  CaptureFieldSpec,
+  CaptureRef,
+  CaptureTarget,
+  CaptureVia,
+  OpenInvoice,
+  SavedCapture,
+} from './types';
 // `findOpenInvoice` lives in `./lookup` and is loaded on demand (only reminder lines need it).
 export type { InvoiceLookup } from './lookup';
 export { TARGETS, breakOf, planItemKey } from './adapters';

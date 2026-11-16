@@ -94,7 +94,7 @@ describe('create from this mail', () => {
     await user.click(await screen.findByRole('menuitem', { name: 'Rechnung' }));
 
     const dialog = await screen.findByRole('dialog');
-    const field = within(dialog).getByRole('textbox');
+    const field = within(dialog).getByRole('textbox', { name: 'Was möchtest du festhalten?' });
     expect(field).toHaveValue('Stadtwerke Musterstadt 84,30 € 15.11.2026');
     expect(within(dialog).getByText(/ein Link zu dieser Mail/)).toBeInTheDocument();
     // the preview is shown, nothing is stored yet
