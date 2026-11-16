@@ -5794,6 +5794,8 @@ export const de = {
       add: 'Liste anlegen',
       created: 'Liste angelegt.',
       weekInPlanner: 'Woche prüfen im Planer',
+      /** With the routines module on, the morning and evening templates lead there. */
+      inRoutines: (name: string) => `${name} bei den Routinen`,
       morning: {
         name: 'Morgenroutine',
         items: [
@@ -5934,6 +5936,7 @@ export const de = {
     suggestions: 'Schon mal gekauft',
     sumNote: 'Nur Artikel mit Preis',
     share: 'Als Text teilen',
+    asRoutine: 'Als Routine übernehmen',
     shareCopied: 'Liste kopiert, du kannst sie jetzt einfügen.',
     tripDate: 'Reisedatum (optional)',
     tripPlace: 'Ziel (optional)',

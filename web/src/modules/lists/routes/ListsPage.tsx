@@ -435,6 +435,22 @@ export default function ListsPage() {
               },
             ]
           : []),
+        // A checklist can become a routine while that module is on (it keeps the name and its lines as steps).
+        ...(current.kind === 'checklist' && moduleStates?.routines === true
+          ? [
+              {
+                id: 'as-routine',
+                label: t.lists.asRoutine,
+                onSelect: () =>
+                  void bus
+                    .emit('routine.requested', {
+                      name: current.name,
+                      steps: shown.map((i) => i.name),
+                    })
+                    .then(() => navigate('/routines')),
+              },
+            ]
+          : []),
         { id: 'share', label: t.lists.share, onSelect: () => void share() },
       ]
     : // No list in use (all archived or deleted): the way back to the archive stays in the menu.
@@ -668,6 +684,13 @@ export default function ListsPage() {
               <li key={id}>
                 <Link to="/planner?check=1" onClick={() => setTemplates(false)}>
                   {t.lists.routines.weekInPlanner}
+                </Link>
+              </li>
+            ) : id !== 'week' && moduleStates?.routines ? (
+              // With the routines module on, morning and evening routines live there (with steps and a start).
+              <li key={id}>
+                <Link to={`/routines?new=${id}`} onClick={() => setTemplates(false)}>
+                  {t.lists.routines.inRoutines(t.lists.routines[id].name)}
                 </Link>
               </li>
             ) : (

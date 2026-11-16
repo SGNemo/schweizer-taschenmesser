@@ -246,3 +246,43 @@ test('Teilen auf eine Liste und das Widget zeigt die gewählte Liste', async ({ 
     (await openPageMenu(page)).getByRole('menuitemcheckbox', { name: 'Im Widget zeigen' }),
   ).toHaveAttribute('aria-checked', 'true');
 });
+
+test('Routinen: Vorlagen führen zu den Routinen, eine Checkliste wird zur Routine', async ({
+  page,
+}) => {
+  await enable(page, 'lists');
+  await open(page, '/lists');
+  // Routines off: the template makes a checklist, the menu offers no routine.
+  await (await openPageMenu(page)).getByRole('menuitem', { name: 'Aus Vorlage' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Abendroutine' }).click();
+  await expect(page.getByRole('button', { name: 'Abendroutine', exact: true })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  const menu = await openPageMenu(page);
+  await expect(menu.getByRole('menuitem', { name: 'Als Routine übernehmen' })).toHaveCount(0);
+  await page.keyboard.press('Escape');
+
+  await enable(page, 'routines');
+  await open(page, '/lists');
+  await page.getByRole('button', { name: 'Abendroutine', exact: true }).click();
+  await (await openPageMenu(page)).getByRole('menuitem', { name: 'Aus Vorlage' }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(
+    dialog.getByRole('link', { name: 'Morgenroutine bei den Routinen' }),
+  ).toHaveAttribute('href', '/routines?new=morning');
+  await expect(dialog.getByRole('link', { name: 'Abendroutine bei den Routinen' })).toHaveAttribute(
+    'href',
+    '/routines?new=evening',
+  );
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+
+  await (
+    await openPageMenu(page)
+  )
+    .getByRole('menuitem', { name: 'Als Routine übernehmen' })
+    .click();
+  await expect(page).toHaveURL(/\/routines$/);
+  await expect(page.getByRole('main').getByText('Abendroutine').first()).toBeVisible();
+});
