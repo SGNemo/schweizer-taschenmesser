@@ -3,7 +3,7 @@
 //! (the hub does not start; it never silently begins with an empty list), and a change that cannot
 //! be written is refused: an `add` is rolled back, a `revoke` stays revoked in memory (towards closed).
 
-use super::{Device, MemoryTrustStore, RemoteGrant, TrustError, TrustStore};
+use super::{Device, ExchangeGrant, MemoryTrustStore, RemoteGrant, TrustError, TrustStore};
 use crate::input::wire::Level;
 use crate::noise::PublicKey;
 use serde::{Deserialize, Serialize};
@@ -31,6 +31,11 @@ struct FileDevice {
     /// Programs of the PC's list may be started (missing in older files = no).
     #[serde(default, rename = "remotePrograms")]
     remote_programs: bool,
+    /// Device exchange allowed (missing in older files = no).
+    #[serde(default)]
+    exchange: bool,
+    #[serde(default, rename = "exchangePaused")]
+    exchange_paused: bool,
 }
 
 fn level_off() -> String {
@@ -135,6 +140,14 @@ impl FileTrustStore {
                             },
                         )
                         .map_err(|_| OpenError::Corrupt)?;
+                        mem.set_exchange(
+                            &PublicKey::from_bytes(key),
+                            ExchangeGrant {
+                                on: d.exchange,
+                                paused: d.exchange_paused,
+                            },
+                        )
+                        .map_err(|_| OpenError::Corrupt)?;
                     }
                 }
             }
@@ -157,6 +170,7 @@ impl FileTrustStore {
                 .into_iter()
                 .map(|d| {
                     let grant = self.mem.remote_of(&d.key);
+                    let exchange = self.mem.exchange_of(&d.key);
                     FileDevice {
                         key: to_hex(d.key.as_bytes()),
                         name: d.name,
@@ -167,6 +181,8 @@ impl FileTrustStore {
                         remote_unlock: grant.unlock,
                         remote_power: grant.power,
                         remote_programs: grant.programs,
+                        exchange: exchange.on,
+                        exchange_paused: exchange.paused,
                     }
                 })
                 .collect(),
@@ -237,6 +253,24 @@ impl TrustStore for FileTrustStore {
         if let Err(e) = self.persist() {
             if grant.widens(&old) {
                 let _ = self.mem.set_remote(key, old);
+            }
+            return Err(e);
+        }
+        Ok(())
+    }
+
+    fn exchange_of(&self, key: &PublicKey) -> ExchangeGrant {
+        self.mem.exchange_of(key)
+    }
+
+    /// Like `set_remote`: a widening that cannot be written is rolled back, a narrowing stays.
+    fn set_exchange(&self, key: &PublicKey, grant: ExchangeGrant) -> Result<(), TrustError> {
+        let _g = self.io.lock().map_err(|_| TrustError::Storage)?;
+        let old = self.mem.exchange_of(key);
+        self.mem.set_exchange(key, grant)?;
+        if let Err(e) = self.persist() {
+            if grant.widens(&old) {
+                let _ = self.mem.set_exchange(key, old);
             }
             return Err(e);
         }
@@ -350,6 +384,55 @@ mod tests {
         // nothing was rewritten just by opening
         assert_eq!(std::fs::read_to_string(&path).unwrap(), old);
         std::fs::remove_dir_all(d).ok();
+    }
+
+    #[test]
+    fn exchange_grants_survive_a_restart_old_files_have_none_and_revoke_clears() {
+        let d = dir("exchange");
+        let path = d.join("trust.json");
+        {
+            let s = FileTrustStore::open(&path).unwrap();
+            for b in 1..=3 {
+                s.add(dev(b)).unwrap();
+            }
+            let on = ExchangeGrant {
+                on: true,
+                paused: false,
+            };
+            s.set_exchange(&dev(1).key, on).unwrap();
+            s.set_exchange(
+                &dev(2).key,
+                ExchangeGrant {
+                    on: true,
+                    paused: true,
+                },
+            )
+            .unwrap();
+            s.set_exchange(&dev(3).key, on).unwrap();
+            s.revoke(&dev(3).key).unwrap();
+        }
+        let text = std::fs::read_to_string(&path).unwrap();
+        assert!(text.contains(r#""exchange":true"#) && text.contains(r#""exchangePaused":true"#));
+        let s = FileTrustStore::open(&path).unwrap();
+        assert!(s.exchange_of(&dev(1).key).effective());
+        assert!(s.exchange_of(&dev(2).key).on && !s.exchange_of(&dev(2).key).effective());
+        assert_eq!(
+            s.exchange_of(&dev(3).key),
+            ExchangeGrant::default(),
+            "revoked"
+        );
+        // a file from before device exchange: nobody has it
+        let old = d.join("old.json");
+        std::fs::write(
+            &old,
+            format!(
+                r#"{{"v":1,"devices":[{{"key":"{}","name":"P","lastSeen":null,"revoked":false}}]}}"#,
+                to_hex(dev(1).key.as_bytes())
+            ),
+        )
+        .unwrap();
+        let s = FileTrustStore::open(&old).unwrap();
+        assert_eq!(s.exchange_of(&dev(1).key), ExchangeGrant::default());
     }
 
     #[test]

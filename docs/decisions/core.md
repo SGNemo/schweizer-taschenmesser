@@ -8,6 +8,7 @@ New decisions go into the matching topic file as one bullet (not into this index
 - [core-sync](core-sync.md) – Sync: field LWW by HLC, `SyncAdapter`, E2E values, single-tenant server, no tombstone GC, failed-login limit, batched storage adapter, `syncSettled()`, encrypted-server detection, vault server holds ciphertext only
 - [core-lan-sync-hub](core-lan-sync-hub.md) – LAN sync: PC as server, hub store (b), Noise channel and pairing (2a), hub core (2b-1), hub network (2b-2)
 - [core-lan-sync-devices](core-lan-sync-devices.md) – LAN sync: hub PC syncs (3a), phone pairs (3b), in-app QR scanner, stable port, switch from server, Wi-Fi trigger (4 rest B), second PC
+- [core-device-exchange-hub](core-device-exchange-hub.md) – Device exchange: package 1a (hub exchange session, mode 4, grant, wire, client)
 - [core-remote-control-1](core-remote-control-1.md) – Remote control: concept, package 1a (input session, grant), 1b part 1 (PC side in Rust), 1b part 2 (settings, chip, web seam)
 - [core-remote-control-2](core-remote-control-2.md) – Remote control: package 2 (phone client, module „Fernbedienung“), package 3 (pointer sink, PC notice, latency probe)
 - [core-remote-control-3](core-remote-control-3.md) – Remote control: package 3, part 3 (phone client for the mouse level, page Touchpad, the level in the PC's settings)

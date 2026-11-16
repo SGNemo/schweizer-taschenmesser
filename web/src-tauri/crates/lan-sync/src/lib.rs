@@ -9,6 +9,9 @@
 
 #![cfg_attr(not(test), forbid(unsafe_code))]
 
+/// Device exchange (messages and files, phone ↔ PC): the wire format on every target, the hub side
+/// on the desktop.
+pub mod exchange;
 /// The daily mDNS hint (hub announces it, devices match it to find a hub that got a new address).
 pub mod hint;
 /// Remote control (phone → PC input): the wire format on every target, the hub side on the desktop.
@@ -23,6 +26,10 @@ mod store;
 /// under `src/transport` like the hub's (`tests/rules.rs`), but it is compiled on every target.
 #[path = "transport/client.rs"]
 pub mod client;
+/// The device side of device exchange (phone, second PC): an exchange session with the hub. Its
+/// socket lives under `src/transport` like every other; compiled on every target.
+#[path = "transport/exchange_client.rs"]
+pub mod exchange_client;
 /// The device side of remote control (the phone): an input session with the hub. Its socket lives
 /// under `src/transport` like every other; compiled on every target.
 #[path = "transport/input_client.rs"]
