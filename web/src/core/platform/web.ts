@@ -5,6 +5,8 @@ import { createFakeVaultBridge } from './fakeVaultBridge';
 import { createFakeLanHub, noLanHub } from './fakeLanHub';
 import { createFakeRemoteHost } from './fakeRemoteHost';
 import { createFakeRemote } from './fakeRemote';
+import { createFakeExchange } from './fakeExchange';
+import { noExchange } from './noExchange';
 import { noRemote } from './noRemote';
 import { noRemoteHost } from './noRemoteHost';
 import { createFakeLanClient, createFakeLanWatch, noLanClient, noLanWatch } from './fakeLanClient';
@@ -292,6 +294,14 @@ export function createWebPlatform(): PlatformService {
     remoteHost: isE2eBuild() ? createFakeRemoteHost() : noRemoteHost,
     // E2E builds only: the demo PC "PC-Sven" for the phone's remote control.
     remote: isE2eBuild() ? createFakeRemote() : noRemote,
+    // E2E builds only: device exchange with the demo phone „Pixel 7“ (PC) or the demo PC (phone).
+    exchange: isE2eBuild()
+      ? e2eKind() === 'android'
+        ? createFakeExchange('phone')
+        : e2eKind() === 'desktop'
+          ? createFakeExchange('pc')
+          : noExchange
+      : noExchange,
     lanClient: isE2eBuild() ? createFakeLanClient() : noLanClient,
     lanWatch: isE2eBuild() ? createFakeLanWatch() : noLanWatch,
     // E2E builds only: an invented folder tree instead of the native scan.

@@ -32,6 +32,13 @@ mod optimize;
 mod panic_log;
 #[cfg(desktop)]
 mod portable;
+// Device exchange: the PC side (desktop), the phone side (mobile and unit tests) and the files
+// both keep their delivery state in.
+#[cfg(desktop)]
+mod exchange;
+#[cfg(any(mobile, test))]
+mod exchange_client;
+mod exchange_store;
 #[cfg(desktop)]
 mod remote;
 #[cfg(desktop)]
@@ -140,7 +147,9 @@ pub fn run() {
     // webcam in the WebView), not by a native scanner view.
     let builder = builder.manage(lan_client::LanClient::default());
     #[cfg(mobile)]
-    let builder = builder.manage(remote_client::RemoteClient::default());
+    let builder = builder
+        .manage(remote_client::RemoteClient::default())
+        .manage(exchange_client::ExchangeClient::default());
 
     // Desktop self-update (signature-verified by the plugin; see update.rs).
     #[cfg(desktop)]
@@ -160,6 +169,7 @@ pub fn run() {
         .manage(oauth::OAuthListener::default())
         .manage(lan_sync::LanSync::default())
         .manage(remote::RemoteHost::default())
+        .manage(exchange::ExchangeHost::default())
         .manage(local_api::LocalApi::default())
         .manage(disk::DiskScans::default())
         .manage(optimize::PcCare::default())
@@ -227,6 +237,12 @@ pub fn run() {
             remote_power::remote_power_status,
             remote_power::remote_power_cancel,
             remote_power::remote_set_busy,
+            exchange::exchange_status,
+            exchange::exchange_send,
+            exchange::exchange_take,
+            exchange::exchange_confirm,
+            exchange::exchange_set_enabled,
+            exchange::exchange_set_device,
             lan_client::lan_client_pair,
             lan_client::lan_client_pair_cancel,
             lan_client::lan_client_request,
@@ -320,7 +336,13 @@ pub fn run() {
         remote_client::remote_client_pointer,
         remote_client::remote_client_power,
         remote_client::remote_client_program,
-        remote_client::remote_client_close
+        remote_client::remote_client_close,
+        exchange_client::exchange_client_open,
+        exchange_client::exchange_client_send,
+        exchange_client::exchange_client_ping,
+        exchange_client::exchange_client_close,
+        exchange_client::exchange_client_take,
+        exchange_client::exchange_client_confirm
     ]);
 
     // Windows creates the main window itself (portable data folder); every desktop OS then sets up

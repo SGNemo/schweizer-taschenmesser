@@ -1040,3 +1040,74 @@ fn secret_presence_is_a_registered_command_of_the_page() {
     assert!(has.contains("webview_name(&request.name)?"));
     assert!(has.contains("-> Result<HasResponse>"));
 }
+
+/// Device exchange: the phone's commands on the phone only, the PC's on the desktop only; the
+/// PC's grant commands ask in a native dialog and therefore never run on the main thread.
+#[test]
+fn exchange_commands_sit_on_their_side_only() {
+    let phone_side = [
+        "exchange_client_open",
+        "exchange_client_send",
+        "exchange_client_ping",
+        "exchange_client_close",
+        "exchange_client_take",
+        "exchange_client_confirm",
+    ];
+    let pc_side = [
+        "exchange_status",
+        "exchange_send",
+        "exchange_take",
+        "exchange_confirm",
+        "exchange_set_enabled",
+        "exchange_set_device",
+    ];
+    let mobile = mobile_handler_commands();
+    let desktop = handler_commands();
+    let mobile_json = permissions_of("capabilities/mobile.json");
+    let desktop_json = permissions_of("capabilities/desktop.json");
+    let default_json = permissions_of("capabilities/default.json");
+    for name in phone_side {
+        let permission = format!("allow-{}", name.replace('_', "-"));
+        assert!(mobile.iter().any(|c| c == name), "{name}: not on the phone");
+        assert!(!desktop.iter().any(|c| c == name), "{name}: on the desktop");
+        assert!(mobile_json.contains(&permission), "{permission}");
+        assert!(!desktop_json.contains(&permission) && !default_json.contains(&permission));
+    }
+    for name in pc_side {
+        let permission = format!("allow-{}", name.replace('_', "-"));
+        assert!(
+            desktop.iter().any(|c| c == name),
+            "{name}: not on the desktop"
+        );
+        assert!(!mobile.iter().any(|c| c == name), "{name}: on the phone");
+        assert!(desktop_json.contains(&permission), "{permission}");
+        assert!(!mobile_json.contains(&permission) && !default_json.contains(&permission));
+    }
+    let src = source("exchange.rs");
+    for name in ["exchange_set_enabled", "exchange_set_device"] {
+        let at = src.find(&format!("pub fn {name}(")).expect(name);
+        let before = &src[..at];
+        let attr = before.rfind("#[tauri::command").expect("attribute");
+        assert!(
+            before[attr..].starts_with("#[tauri::command(async)]"),
+            "{name} waits for a dialog: async"
+        );
+    }
+    // nothing of it logs
+    for file in ["exchange.rs", "exchange_client.rs", "exchange_store.rs"] {
+        let text = source(file);
+        for needle in [
+            "println!",
+            "eprintln!",
+            "dbg!",
+            "tracing::",
+            "log::info",
+            "log::warn",
+            "log::error",
+            "log::debug",
+            "log::trace",
+        ] {
+            assert!(!text.contains(needle), "{file}: {needle}");
+        }
+    }
+}

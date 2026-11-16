@@ -207,6 +207,34 @@ pub fn remote_dialog(lang: Lang) -> (&'static str, &'static str, &'static str) {
     }
 }
 
+/// The confirmation before a device may exchange messages and links with this PC (device exchange):
+/// (title, allow, cancel).
+pub fn exchange_dialog(lang: Lang) -> (&'static str, &'static str, &'static str) {
+    if german(lang) {
+        ("Austausch erlauben?", "Erlauben", "Abbrechen")
+    } else {
+        ("Allow Device drop?", "Allow", "Cancel")
+    }
+}
+
+/// The question itself, for one device or several (names joined).
+pub fn exchange_question(lang: Lang, names: &str) -> String {
+    if german(lang) {
+        format!("{names} darf dir Nachrichten und Links schicken und bekommt, was du an dieses Gerät sendest. Nur im Heimnetz.")
+    } else {
+        format!("{names} may send you messages and links and receives what you send to it. Home network only.")
+    }
+}
+
+/// A paired device without a name.
+pub fn exchange_unnamed(lang: Lang) -> &'static str {
+    if german(lang) {
+        "Dein Handy"
+    } else {
+        "Your phone"
+    }
+}
+
 /// The confirmation before the notice of a mouse/keyboard session is switched off:
 /// (title, switch off, cancel).
 pub fn remote_quiet_dialog(lang: Lang) -> (&'static str, &'static str, &'static str) {
