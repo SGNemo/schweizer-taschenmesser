@@ -146,6 +146,11 @@ const BLANK = /[\u115F\u1160\u3164\uFFA0\u2800]/g;
 const FORBIDDEN = /[<>:"/\\|?*]/g;
 const MAX_NAME_BYTES = 120;
 const trimEnd = (x) => x.replace(/[\s.]+$/, "");
+const DEFUSE = new Set(
+  "url lnk scf library-ms searchconnector-ms search-ms desktop website appref-ms".split(
+    " ",
+  ),
+);
 
 /**
  * Turns a sender's name into one plain file name for the receiver's folder: no path, no control
@@ -159,23 +164,38 @@ export function cleanName(raw) {
   s = s.replace(INVISIBLE, "").replace(BLANK, "_").replace(FORBIDDEN, "_");
   s = trimEnd(s.replace(/^[\s.]+/, "")); // no leading dots (hidden/".."), no trailing dot/space
   if (!s) s = "Datei";
-  const dot = s.lastIndexOf(".");
+  let dot = s.lastIndexOf(".");
+  // an "extension" over 20 bytes is not one: it stays part of the stem, nothing is dropped
+  if (dot > 0 && Buffer.byteLength(s.slice(dot)) > 20) dot = -1;
   let stem = dot > 0 ? trimEnd(s.slice(0, dot)) : s; // "con .txt": the stem is "con"
   let ext = dot > 0 ? s.slice(dot) : "";
-  if (Buffer.byteLength(ext) > 20) ext = ""; // an "extension" that long is not one
-  while (Buffer.byteLength(stem + ext) > MAX_NAME_BYTES)
-    stem = [...stem].slice(0, -1).join("");
+  // Shortcut-like files make Explorer resolve an icon or target just by showing the folder (an
+  // SMB path leaks the NTLM hash): they get "_" appended, so no handler ever parses them.
+  if (DEFUSE.has(ext.slice(1).toLowerCase())) ext += "_";
+  stem = cutBytes(stem, MAX_NAME_BYTES - Buffer.byteLength(ext)); // one pass, never quadratic
   stem = trimEnd(stem) || "Datei";
   // Windows treats "CON", "con.txt", "con .txt" and "con.tar.gz" alike: test the first segment.
   if (RESERVED.test(trimEnd(stem.split(".")[0]))) stem = `_${stem}`;
   return stem + ext;
 }
 
+/** Longest prefix of whole code points that fits into `max` UTF-8 bytes. */
+function cutBytes(text, max) {
+  let out = "";
+  let used = 0;
+  for (const ch of text) {
+    used += Buffer.byteLength(ch);
+    if (used > max) break;
+    out += ch;
+  }
+  return out;
+}
+
 // Allow-list: only these get "Öffnen" (the OS default app). Everything else – programs, scripts,
 // shortcuts, installers, disk images, HTML/SVG (local script), unknown types – is "other": warning
 // line, only "Im Ordner zeigen". Inverted on purpose: a deny-list always misses a handler.
 const OPENABLE = new Set(
-  "jpg jpeg png gif webp heic heif avif bmp mp3 m4a aac ogg opus flac wav mp4 m4v mov mkv webm pdf txt md csv docx xlsx pptx odt ods odp zip 7z".split(
+  "jpg jpeg png gif webp heic heif avif bmp mp3 m4a aac ogg opus flac wav mp4 m4v mov mkv webm pdf txt md csv docx xlsx pptx odt ods odp zip".split(
     " ",
   ),
 );

@@ -242,6 +242,11 @@ const names = [
   ["CON  .txt", "_CON.txt"],
   ["nul.tar.gz", "_nul.tar.gz"],
   ["Rechnung\u3164\u3164.pdf.exe", "Rechnung__.pdf.exe"],
+  ["x.pdf." + "a".repeat(26), "x.pdf." + "a".repeat(26)],
+  ["Ordner.url", "Ordner.url_"],
+  ["Start.LNK", "Start.LNK_"],
+  ["Suche.searchConnector-ms", "Suche.searchConnector-ms_"],
+  ["y".repeat(30000) + ".txt", "y".repeat(116) + ".txt"],
 ];
 const nameFails = names
   .filter(([i, o]) => cleanName(i) !== o)
@@ -262,6 +267,8 @@ const risks = {
   exe: "other",
   "Foto.JPG": "plain",
   "Liste.pdf": "plain",
+  "Archiv.7z": "other",
+  "Archiv.zip": "plain",
 };
 const riskFails = Object.entries(risks)
   .filter(([n, r]) => risk(n) !== r)
