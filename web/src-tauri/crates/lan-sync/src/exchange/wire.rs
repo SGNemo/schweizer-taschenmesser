@@ -175,10 +175,17 @@ fn check_body(kind: Kind, body: &str) -> Result<(), Malformed> {
             let plain = body
                 .chars()
                 .all(|c| !c.is_whitespace() && !c.is_control() && !is_format(c));
-            // at least one host character after `://`
-            let host = body
-                .split_once("://")
-                .is_some_and(|(_, rest)| rest.chars().next().is_some_and(|c| c != '/'));
+            // an authority that starts with a host character and carries no user part (`a@b`
+            // shows one host and opens another) and no backslash
+            let host = body.split_once("://").is_some_and(|(_, rest)| {
+                let end = rest.find(['/', '?', '#']).unwrap_or(rest.len());
+                let authority = &rest[..end];
+                authority
+                    .chars()
+                    .next()
+                    .is_some_and(|c| c.is_alphanumeric() || c == '[')
+                    && !authority.contains(['@', '\\'])
+            });
             if body.len() > MAX_LINK || !scheme || !plain || !host {
                 return Err(Malformed);
             }
@@ -307,6 +314,8 @@ mod tests {
         assert!(item(Kind::Link, &long_link).is_ok(), "real links are often 2–4 KB");
         assert!(item(Kind::Link, "http://192.168.1.10:8080/x").is_ok());
         assert!(item(Kind::Link, "https://bücher.example/").is_ok());
+        assert!(item(Kind::Link, "http://[fe80::1]:8080/").is_ok());
+        assert!(item(Kind::Link, "https://example.org/?mail=a@b.example").is_ok());
         let big = item(Kind::Text, &"x".repeat(MAX_BODY)).unwrap();
         assert!(1 + encode_item(&big).len() + 16 <= crate::noise::frame::MAX_FRAME);
         assert_eq!(item(Kind::Text, &"x".repeat(MAX_BODY + 1)), Err(Malformed));
@@ -330,6 +339,12 @@ mod tests {
             "https:///pfad",
             "HTTPS:",
             "www.example.org",
+            "https://@evil.example",
+            "https://bank.example@evil.example/login",
+            "https://?x",
+            "https://#",
+            "https://\\evil.example",
+            "https://-x.example",
             "https://example.org\n",
         ] {
             assert_eq!(item(Kind::Link, bad), Err(Malformed), "{bad:?}");

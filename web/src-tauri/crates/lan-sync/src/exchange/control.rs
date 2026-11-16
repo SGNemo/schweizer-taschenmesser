@@ -26,8 +26,9 @@ pub struct InboxFull;
 /// web view takes it over later). An `Ok` means: it survives a restart.
 ///
 /// Delivery is at least once: a lost ack (a replaced session, an idle close, the home network
-/// gone) makes the device send the item again. `store` of an id it already holds for that device
-/// is therefore `Ok` and stores nothing new.
+/// gone) makes the device send the item again – also after the web view has taken the first copy
+/// over. `store` of an id it has seen from that device (kept at least for [`RATE_WINDOW`], across
+/// the hand-over) is therefore `Ok` and stores nothing new.
 pub trait ExchangeInbox: Send + Sync {
     fn store(&self, from: &PublicKey, item: &Item) -> Result<(), InboxFull>;
 }
@@ -204,6 +205,13 @@ impl Exchange {
         let Ok(mut rate) = self.rate.lock() else {
             return Some(60);
         };
+        // a device the full table cannot track is not taken (fail-closed, before anything is stored)
+        if rate.len() >= MAX_TRACKED && !rate.contains_key(peer.as_bytes()) {
+            rate.retain(|_, t| t.back().is_some_and(|b| now.saturating_sub(*b) < RATE_WINDOW));
+            if rate.len() >= MAX_TRACKED {
+                return Some(60);
+            }
+        }
         let times = rate.get_mut(peer.as_bytes())?;
         while times
             .front()
@@ -220,20 +228,12 @@ impl Exchange {
         Some(u8::try_from(minutes).unwrap_or(60))
     }
 
-    /// Records one stored item of `peer` (refused and rejected items do not count). `false` when
-    /// the table of devices is full (fail-closed).
-    pub(crate) fn record(&self, peer: &PublicKey, now: Duration) -> bool {
-        let Ok(mut rate) = self.rate.lock() else {
-            return false;
-        };
-        if rate.len() >= MAX_TRACKED && !rate.contains_key(peer.as_bytes()) {
-            rate.retain(|_, t| t.back().is_some_and(|b| now.saturating_sub(*b) < RATE_WINDOW));
-            if rate.len() >= MAX_TRACKED {
-                return false;
-            }
+    /// Records one stored item of `peer` (refused and rejected items do not count). `limited` was
+    /// asked first, so the device has a place in the table.
+    pub(crate) fn record(&self, peer: &PublicKey, now: Duration) {
+        if let Ok(mut rate) = self.rate.lock() {
+            rate.entry(*peer.as_bytes()).or_default().push_back(now);
         }
-        rate.entry(*peer.as_bytes()).or_default().push_back(now);
-        true
     }
 
     /// Whether the device has a live exchange session (it opened one that was accepted and has

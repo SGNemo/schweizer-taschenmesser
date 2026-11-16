@@ -145,9 +145,11 @@ impl ExchangeConn {
                     return refused(Code::Limit(minutes));
                 }
                 let state = match exchange.inbox().store(peer, &item) {
-                    Ok(()) if exchange.record(peer, now) => AckState::Stored,
-                    // the device table is full: kept, but answered as refused (fail-closed)
-                    Ok(()) | Err(_) => AckState::Refused,
+                    Ok(()) => {
+                        exchange.record(peer, now);
+                        AckState::Stored
+                    }
+                    Err(_) => AckState::Refused,
                 };
                 Step::Reply(wire::TAG_ACK, wire::encode_ack(item.id(), state).to_vec())
             }
