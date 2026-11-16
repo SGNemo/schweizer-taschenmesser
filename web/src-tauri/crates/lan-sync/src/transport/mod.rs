@@ -480,6 +480,9 @@ fn drive(
     let cfg = sh.cfg;
     let born = Instant::now();
     let mut last = Instant::now();
+    // unasked frames still wait: the next read must not block for a whole tick
+    let mut busy = false;
+    let mut short_reads = false;
     loop {
         if sh.stop.load(Ordering::SeqCst) || conn.is_closed() {
             return;
@@ -501,6 +504,13 @@ fn drive(
         } else if last.elapsed() > cfg.idle_timeout {
             return;
         }
+        if busy != short_reads {
+            let wait = if busy { BUSY_READ } else { cfg.tick };
+            if stream.set_read_timeout(Some(wait)).is_err() {
+                return;
+            }
+            short_reads = busy;
+        }
         match reader.poll(stream, conn.frame_cap(), cfg.frame_deadline) {
             Polled::Frame(wire) => {
                 last = Instant::now();
@@ -513,12 +523,39 @@ fn drive(
             Polled::Nothing => {}
             Polled::Close => return,
         }
-        // at most one unasked frame per pass (the read above returns after `tick` at the latest)
-        if !act(stream, conn.poll_outbound(sh.started.elapsed())) {
-            return;
+        // unasked frames (input state, exchange items, file chunks): as many as the connection has
+        // and the socket takes, for one tick at most, then read again – an incoming frame never
+        // waits behind a long transfer for more than a tick
+        // `busy`: the pass stopped (tick or turn limit) while frames still waited
+        busy = true;
+        let until = Instant::now() + cfg.tick;
+        for _ in 0..MAX_UNASKED_PER_PASS {
+            match conn.poll_outbound(sh.started.elapsed()) {
+                Outcome::Continue => {
+                    busy = false;
+                    break;
+                }
+                Outcome::Reply(w) => {
+                    if !write_frame(stream, &w) {
+                        return;
+                    }
+                }
+                closing => {
+                    let _ = act(stream, closing);
+                    return;
+                }
+            }
+            if Instant::now() >= until {
+                break;
+            }
         }
     }
 }
+
+/// Most unasked frames one pass writes before it reads again (64 KB frames: about 16 MB).
+const MAX_UNASKED_PER_PASS: usize = 256;
+/// The read timeout while unasked frames wait (a timeout of zero is not allowed).
+const BUSY_READ: Duration = Duration::from_millis(1);
 
 /// How long a closing connection keeps reading (and discarding) so its last frame arrives.
 const GOODBYE: Duration = Duration::from_millis(500);

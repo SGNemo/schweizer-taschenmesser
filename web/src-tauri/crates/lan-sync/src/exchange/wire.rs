@@ -584,6 +584,16 @@ pub fn decode_refuse(body: &[u8]) -> Result<([u8; 16], RefuseCode), Malformed> {
     ))
 }
 
+/// The bytes of a received chunk. `Debug` shows the length only, never the bytes.
+#[derive(Clone, PartialEq, Eq)]
+pub struct ChunkBytes(pub Vec<u8>);
+
+impl fmt::Debug for ChunkBytes {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("ChunkBytes").field(&self.0.len()).finish()
+    }
+}
+
 /// The 24 bytes before a chunk's data: a sender can read the file straight into a buffer after
 /// them (then at most [`MAX_CHUNK`] data bytes).
 pub fn chunk_header(id: &[u8; 16], offset: u64) -> [u8; 24] {

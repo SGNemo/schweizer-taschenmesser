@@ -27,7 +27,9 @@
 //!   Open again on the next trigger; the answer to that `open` is the real state.
 
 use crate::client::{hello_name, ClientError, Conn, IO_TIMEOUT};
-use crate::exchange::wire::{self, AckState, Code, Item, ItemError};
+use crate::exchange::wire::{
+    self, AckState, ChunkBytes, Code, Item, ItemError, Offer, RefuseCode, ResultCode, WaitReason,
+};
 use crate::noise::frame::{MAX_FRAME, PRE_CONFIRM_CAP, TAG_HELLO};
 use crate::noise::{self, Finished, Mode, PublicKey, StaticKey, Transport};
 use crate::qr;
@@ -67,6 +69,25 @@ pub enum Event {
     Ack([u8; 16], AckState),
     /// The session is over: with the PC's reason, or `None` when the connection was lost.
     Closed(Option<Code>),
+    // ---- files, only on a session opened with `FEATURE_FILES` that the PC accepted ----
+    /// The PC offers a file (its name is raw: clean it before any use). Answer `accept`, `wait`
+    /// or `refuse`.
+    Offer(Offer),
+    /// An offer of the PC this side cannot take: answer `refuse` with this code.
+    BadOffer([u8; 16], RefuseCode),
+    /// The PC takes this device's file from the offset: send chunks from there.
+    Accept([u8; 16], u64),
+    /// The PC's user decides first; `Accept` or `Refuse` follows later.
+    Wait([u8; 16], WaitReason),
+    Refuse([u8; 16], RefuseCode),
+    /// Bytes of the PC's file at an offset (contiguous; check that before writing).
+    Chunk([u8; 16], u64, ChunkBytes),
+    /// Every byte of the PC's file is out: check length and hash, answer `result`.
+    End([u8; 16]),
+    /// The PC's answer to this device's file.
+    Result([u8; 16], ResultCode),
+    /// The PC cancelled a transfer (either direction).
+    Cancel([u8; 16]),
 }
 
 /// The reader runs until the session ends; this is only how long one wait may last.
@@ -75,6 +96,8 @@ const READ_WAIT: Duration = Duration::from_secs(24 * 60 * 60);
 type OnEvent = Box<dyn FnMut(Event) + Send>;
 
 pub struct ExchangeSession {
+    /// The PC accepted files on this session.
+    files: bool,
     writer: Mutex<Conn>,
     closer: Conn,
     transport: Arc<Mutex<Transport>>,
@@ -106,10 +129,23 @@ impl ExchangeSession {
         name: &str,
         on_event: OnEvent,
     ) -> Result<ExchangeSession, ExchangeError> {
+        Self::open_with(addr, own, hub, name, 0, on_event)
+    }
+
+    /// As [`open`](Self::open), asking for `features` (`wire::FEATURE_FILES`); whether the PC
+    /// accepted them is [`files`](Self::files).
+    pub fn open_with(
+        addr: SocketAddrV4,
+        own: &StaticKey,
+        hub: &PublicKey,
+        name: &str,
+        features: u8,
+        on_event: OnEvent,
+    ) -> Result<ExchangeSession, ExchangeError> {
         if !qr::is_private_v4(addr.ip().octets()) {
             return Err(ExchangeError::Network);
         }
-        Self::open_at(addr, own, hub, name, on_event)
+        Self::open_at(addr, own, hub, name, features, on_event)
     }
 
     fn open_at(
@@ -117,8 +153,10 @@ impl ExchangeSession {
         own: &StaticKey,
         hub: &PublicKey,
         name: &str,
+        features: u8,
         on_event: OnEvent,
     ) -> Result<ExchangeSession, ExchangeError> {
+        let asked = features & wire::FEATURES;
         let mut conn = Conn::connect(addr).map_err(net)?;
         let (init, m1) = noise::start_initiator(Mode::Exchange, own, hub, None)
             .map_err(|_| ExchangeError::Protocol)?;
@@ -139,7 +177,7 @@ impl ExchangeSession {
         conn.write(&hello).map_err(net)?;
         transport.raise_cap();
         let open = transport
-            .seal(wire::TAG_OPEN, &wire::encode_open(wire::FEATURES))
+            .seal(wire::TAG_OPEN, &wire::encode_open(asked))
             .map_err(|_| ExchangeError::Protocol)?;
         conn.write(&open).map_err(net)?;
         let answer = match conn.read(MAX_FRAME, IO_TIMEOUT, &|| false) {
@@ -150,20 +188,21 @@ impl ExchangeSession {
         let (tag, body) = transport
             .open(&answer)
             .map_err(|_| ExchangeError::Protocol)?;
-        match tag {
+        let files = match tag {
             wire::TAG_OPENED => {
                 let accepted = wire::decode_opened(&body).map_err(|_| ExchangeError::Protocol)?;
                 // an `opened` names only features that were asked for
-                if accepted & !wire::FEATURES != 0 {
+                if accepted & !asked != 0 {
                     return Err(ExchangeError::Protocol);
                 }
+                accepted & wire::FEATURE_FILES != 0
             }
             wire::TAG_REFUSED => {
                 return Err(wire::decode_code(&body)
                     .map_or(ExchangeError::Protocol, ExchangeError::Refused))
             }
             _ => return Err(ExchangeError::Protocol),
-        }
+        };
 
         let read_half = conn.try_clone().map_err(net)?;
         let closer = conn.try_clone().map_err(net)?;
@@ -174,10 +213,11 @@ impl ExchangeSession {
             let (transport, stop, over) = (transport.clone(), stop.clone(), over.clone());
             std::thread::Builder::new()
                 .name("lan-exchange-read".into())
-                .spawn(move || read_loop(read_half, &transport, &stop, &over, on_event))
+                .spawn(move || read_loop(read_half, &transport, &stop, &over, files, on_event))
                 .map_err(|_| ExchangeError::Network)?
         };
         Ok(ExchangeSession {
+            files,
             writer: Mutex::new(conn),
             closer,
             transport,
@@ -200,6 +240,55 @@ impl ExchangeSession {
     /// Answers an item of the PC – `Stored` only once it is kept on this device.
     pub fn ack(&self, id: &[u8; 16], state: AckState) -> Result<(), ExchangeError> {
         self.send(wire::TAG_ACK, &wire::encode_ack(id, state))
+    }
+
+    /// Whether the PC accepted files on this session.
+    pub fn files(&self) -> bool {
+        self.files
+    }
+
+    /// Offers one of this device's files; the PC answers `Accept`, `Wait` or `Refuse`.
+    pub fn offer(&self, offer: &Offer) -> Result<(), ExchangeError> {
+        self.file(wire::TAG_OFFER, &wire::encode_offer(offer))
+    }
+
+    /// Takes the PC's file from `from` (`> 0` resumes a part this device kept).
+    pub fn accept(&self, id: &[u8; 16], from: u64) -> Result<(), ExchangeError> {
+        self.file(wire::TAG_ACCEPT, &wire::encode_accept(id, from))
+    }
+
+    pub fn wait(&self, id: &[u8; 16], reason: WaitReason) -> Result<(), ExchangeError> {
+        self.file(wire::TAG_WAIT, &wire::encode_wait(id, reason))
+    }
+
+    pub fn refuse(&self, id: &[u8; 16], code: RefuseCode) -> Result<(), ExchangeError> {
+        self.file(wire::TAG_REFUSE, &wire::encode_refuse(id, code))
+    }
+
+    /// One chunk of this device's file (at most `wire::MAX_CHUNK` bytes, contiguous).
+    pub fn chunk(&self, id: &[u8; 16], offset: u64, bytes: &[u8]) -> Result<(), ExchangeError> {
+        let body = wire::encode_chunk(id, offset, bytes).ok_or(ExchangeError::Protocol)?;
+        self.file(wire::TAG_CHUNK, &body)
+    }
+
+    pub fn end(&self, id: &[u8; 16]) -> Result<(), ExchangeError> {
+        self.file(wire::TAG_END, id)
+    }
+
+    /// This device's answer to the PC's file (after `End`, or early when it cannot go on).
+    pub fn result(&self, id: &[u8; 16], code: ResultCode) -> Result<(), ExchangeError> {
+        self.file(wire::TAG_RESULT, &wire::encode_result(id, code))
+    }
+
+    pub fn cancel(&self, id: &[u8; 16]) -> Result<(), ExchangeError> {
+        self.file(wire::TAG_CANCEL, id)
+    }
+
+    fn file(&self, tag: u8, body: &[u8]) -> Result<(), ExchangeError> {
+        if !self.files {
+            return Err(ExchangeError::Protocol);
+        }
+        self.send(tag, body)
     }
 
     /// Keeps the session against the hub's idle close; at least every 60 s while it is wanted.
@@ -252,6 +341,7 @@ fn read_loop(
     transport: &Mutex<Transport>,
     stop: &AtomicBool,
     over: &AtomicBool,
+    files: bool,
     mut on_event: OnEvent,
 ) {
     let stopped = || stop.load(Ordering::SeqCst);
@@ -268,7 +358,7 @@ fn read_loop(
         let Ok((tag, body)) = frame else {
             break None;
         };
-        match event_of(tag, &body) {
+        match event_of(tag, &body, files) {
             Ok(event) => on_event(event),
             Err(end) => break end,
         }
@@ -281,7 +371,15 @@ fn read_loop(
 }
 
 /// One frame of the PC as an event, or the end of the session (with the PC's reason if it said one).
-fn event_of(tag: u8, body: &[u8]) -> Result<Event, Option<Code>> {
+/// File records end it unless files were agreed on.
+fn event_of(tag: u8, body: &[u8], files: bool) -> Result<Event, Option<Code>> {
+    if (wire::TAG_FILE_FIRST..=wire::TAG_FILE_LAST).contains(&tag) {
+        return if files {
+            file_event(tag, body)
+        } else {
+            Err(None)
+        };
+    }
     match tag {
         wire::TAG_ITEM => match wire::decode_item(body) {
             Ok(item) => Ok(Event::Item(item)),
@@ -296,6 +394,42 @@ fn event_of(tag: u8, body: &[u8]) -> Result<Event, Option<Code>> {
     }
 }
 
+fn file_event(tag: u8, body: &[u8]) -> Result<Event, Option<Code>> {
+    let broken = |_| None;
+    Ok(match tag {
+        wire::TAG_OFFER => match wire::decode_offer(body) {
+            Ok(o) => Event::Offer(o),
+            Err(e) => match e.answer() {
+                Some((id, code)) => Event::BadOffer(id, code),
+                None => return Err(None),
+            },
+        },
+        wire::TAG_ACCEPT => {
+            let (id, from) = wire::decode_accept(body).map_err(broken)?;
+            Event::Accept(id, from)
+        }
+        wire::TAG_WAIT => {
+            let (id, r) = wire::decode_wait(body).map_err(broken)?;
+            Event::Wait(id, r)
+        }
+        wire::TAG_REFUSE => {
+            let (id, c) = wire::decode_refuse(body).map_err(broken)?;
+            Event::Refuse(id, c)
+        }
+        wire::TAG_CHUNK => {
+            let (id, offset, bytes) = wire::decode_chunk(body).map_err(broken)?;
+            Event::Chunk(id, offset, ChunkBytes(bytes.to_vec()))
+        }
+        wire::TAG_END => Event::End(wire::decode_id(body).map_err(broken)?),
+        wire::TAG_RESULT => {
+            let (id, c) = wire::decode_result(body).map_err(broken)?;
+            Event::Result(id, c)
+        }
+        wire::TAG_CANCEL => Event::Cancel(wire::decode_id(body).map_err(broken)?),
+        _ => return Err(None),
+    })
+}
+
 /// Tests reach the hub on loopback (production code only ever dials private addresses).
 #[cfg(all(test, feature = "store"))]
 pub(crate) mod testing {
@@ -307,6 +441,15 @@ pub(crate) mod testing {
         hub: &PublicKey,
         on_event: OnEvent,
     ) -> Result<ExchangeSession, ExchangeError> {
-        ExchangeSession::open_at(addr, own, hub, "Phone", on_event)
+        ExchangeSession::open_at(addr, own, hub, "Phone", 0, on_event)
+    }
+
+    pub fn open_files_via(
+        addr: SocketAddrV4,
+        own: &StaticKey,
+        hub: &PublicKey,
+        on_event: OnEvent,
+    ) -> Result<ExchangeSession, ExchangeError> {
+        ExchangeSession::open_at(addr, own, hub, "Phone", wire::FEATURE_FILES, on_event)
     }
 }
