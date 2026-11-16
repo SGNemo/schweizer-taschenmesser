@@ -441,13 +441,14 @@ export default function ListsPage() {
               {
                 id: 'as-routine',
                 label: t.lists.asRoutine,
-                onSelect: () =>
-                  void bus
-                    .emit('routine.requested', {
-                      name: current.name,
-                      steps: shown.map((i) => i.name),
-                    })
-                    .then(() => navigate('/routines')),
+                // Navigate in the same tick: a later push would race the menu's own `history.back()` on close.
+                onSelect: () => {
+                  void bus.emit('routine.requested', {
+                    name: current.name,
+                    steps: shown.map((i) => i.name),
+                  });
+                  void navigate('/routines');
+                },
               },
             ]
           : []),
