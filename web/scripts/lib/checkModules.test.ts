@@ -235,13 +235,29 @@ describe('checkSettingsFieldMeta', () => {
   const levels = ['basic', 'advanced'];
   it('accepts known groups and levels and sources without them', () => {
     expect(
-      checkSettingsFieldMeta('x', "{ group: 'display', level: 'advanced' }", groups, levels),
+      checkSettingsFieldMeta(
+        'x',
+        "fields: [{ key: 'a', group: 'display', level: 'advanced' }]",
+        groups,
+        levels,
+      ),
     ).toEqual([]);
     expect(checkSettingsFieldMeta('x', '{ fields: [] }', groups, levels)).toEqual([]);
   });
   it('rejects an unknown group or level', () => {
-    expect(checkSettingsFieldMeta('x', "{ group: 'misc' }", groups, levels)).toHaveLength(1);
-    expect(checkSettingsFieldMeta('x', "{ level: 'pro' }", groups, levels)).toHaveLength(1);
+    const field = (meta: string) => `fields: [{ key: 'a', type: 'text', ${meta} }]`;
+    expect(checkSettingsFieldMeta('x', field("group: 'misc'"), groups, levels)).toHaveLength(1);
+    expect(checkSettingsFieldMeta('x', field("level: 'pro'"), groups, levels)).toHaveLength(1);
+  });
+  it('ignores a setting that is itself named group or level', () => {
+    const source = [
+      "defaults: { group: 'family', level: 'pro' },",
+      'fields: [',
+      "  { key: 'group', type: 'select', options: [{ value: 'family', label: 'F' }] },",
+      "  { key: 'level', type: 'text', group: 'display' },",
+      '],',
+    ].join('\n');
+    expect(checkSettingsFieldMeta('x', source, groups, levels)).toEqual([]);
   });
 });
 
