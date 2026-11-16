@@ -17,7 +17,8 @@ import {
   SelectField,
   TextArea,
 } from '@/ui';
-import { bodyOf, hostOf, kindOf, newItemId, openable } from '../logic';
+import { bodyOf, fits, hostOf, kindOf, newItemId, openable } from '../logic';
+import { now } from '@/core/time/now';
 import { itemRepo } from '../repo';
 import { deliver, refreshPc } from '../services';
 import { useExchangeView } from '../state';
@@ -81,11 +82,11 @@ function PcView({ ex }: { ex: ExchangeService }) {
           ))}
         </SelectField>
       ) : null}
-      <p className={styles.note}>
-        {device.name || t.exchange.peer.phone} ·{' '}
-        {device.connected ? t.exchange.reach.connected : t.exchange.reach.away}
-      </p>
-      {device.paused ? <Paused ex={ex} device={device} /> : null}
+      <ul className={styles.devices}>
+        {pc.devices.map((d) => (
+          <DeviceLine key={d.id} ex={ex} device={d} />
+        ))}
+      </ul>
       <Conversation ex={ex} peer={device.id} side="pc" />
     </>
   );
@@ -119,14 +120,7 @@ function Setup({
       }
       await refreshPc(ex);
     } catch (e) {
-      const code = e instanceof Error ? e.message : '';
-      setProblem(
-        code === 'cancelled'
-          ? t.exchange.pc.cancelled
-          : code === 'busy-controlled'
-            ? t.exchange.pc.busyControlled
-            : t.exchange.pc.failed,
-      );
+      setProblem(widenProblem(e));
     } finally {
       setBusy(false);
     }
@@ -171,30 +165,57 @@ function Setup({
   );
 }
 
-function Paused({ ex, device }: { ex: ExchangeService; device: ExchangeDevice }) {
+/** Why widening failed, as a calm line. */
+function widenProblem(e: unknown): string {
+  const code = e instanceof Error ? e.message : '';
+  return code === 'cancelled'
+    ? t.exchange.pc.cancelled
+    : code === 'busy-controlled'
+      ? t.exchange.pc.busyControlled
+      : t.exchange.pc.failed;
+}
+
+/**
+ * One paired device at the PC: its state and the one thing to do with it. Switching on and
+ * resuming widen what it may do, so the shell asks in a native dialog; pausing never asks.
+ */
+function DeviceLine({ ex, device }: { ex: ExchangeService; device: ExchangeDevice }) {
   const [problem, setProblem] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const name = device.name || t.exchange.peer.phone;
+  const state = !device.on
+    ? t.exchange.pc.deviceOff
+    : device.paused
+      ? t.exchange.pc.paused
+      : device.connected
+        ? t.exchange.reach.connected
+        : t.exchange.reach.away;
+  const [label, on, paused] = !device.on
+    ? [t.exchange.pc.enable, true, false]
+    : device.paused
+      ? [t.exchange.pc.resume, true, false]
+      : [t.exchange.pc.pause, true, true];
+
+  function act() {
+    setBusy(true);
+    setProblem(null);
+    void ex
+      .setDevice(device.id, on, paused)
+      .then(() => refreshPc(ex))
+      .catch((e: unknown) => setProblem(widenProblem(e)))
+      .finally(() => setBusy(false));
+  }
+
   return (
-    <p className={styles.note} role="status">
-      {t.exchange.pc.paused}{' '}
-      <Button
-        variant="secondary"
-        onClick={() =>
-          void ex
-            .setDevice(device.id, true, false)
-            .then(() => refreshPc(ex))
-            .catch((e: unknown) =>
-              setProblem(
-                e instanceof Error && e.message === 'cancelled'
-                  ? t.exchange.pc.cancelled
-                  : t.exchange.pc.failed,
-              ),
-            )
-        }
-      >
-        {t.exchange.pc.resume}
+    <li className={styles.device}>
+      <span role="status" className={styles.note}>
+        {name} · {state}
+        {problem ? ` ${problem}` : null}
+      </span>
+      <Button variant="secondary" disabled={busy} onClick={act}>
+        {label}
       </Button>
-      {problem ? ` ${problem}` : null}
-    </p>
+    </li>
   );
 }
 
@@ -250,6 +271,7 @@ function Conversation({
   );
   const [text, setText] = useState('');
   const [problem, setProblem] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
 
   // what is on screen is seen: the widget's „neu“ clears
   useEffect(() => {
@@ -257,16 +279,22 @@ function Conversation({
   }, [rows]);
 
   async function send() {
-    if (!text.trim()) return;
+    if (!text.trim() || sending) return;
     const kind = kindOf(text);
+    const body = bodyOf(text, kind);
     setProblem(null);
+    if (!fits(body)) {
+      setProblem(t.exchange.compose.tooLong);
+      return;
+    }
+    setSending(true);
     try {
       const row = await itemRepo.create({
         peer,
         itemId: newItemId(),
         direction: 'out',
         kind,
-        body: bodyOf(text, kind),
+        body,
         state: 'waiting',
         unseen: false,
       });
@@ -275,6 +303,8 @@ function Conversation({
       await deliver(ex, row.id).catch(() => undefined);
     } catch {
       setProblem(t.exchange.compose.failed);
+    } finally {
+      setSending(false);
     }
   }
 
@@ -288,11 +318,13 @@ function Conversation({
   return (
     <>
       {rows && rows.length === 0 ? <EmptyState title={t.exchange.empty} /> : null}
-      <ul className={styles.list} aria-live="polite">
-        {(rows ?? []).map((r) => (
-          <Card key={r.id} row={r} side={side} />
-        ))}
-      </ul>
+      <div role="log" aria-relevant="additions">
+        <ul className={styles.list}>
+          {(rows ?? []).map((r) => (
+            <Card key={r.id} row={r} side={side} />
+          ))}
+        </ul>
+      </div>
       {rows && rows.length > 0 ? <p className={styles.footer}>{t.exchange.footer}</p> : null}
       <div className={styles.compose}>
         <div className={styles.composeField}>
@@ -300,13 +332,12 @@ function Conversation({
             label={t.exchange.compose.label}
             placeholder={t.exchange.compose.placeholder}
             value={text}
-            maxLength={16_000}
             rows={2}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={onKey}
           />
         </div>
-        <Button variant="primary" disabled={!text.trim()} onClick={() => void send()}>
+        <Button variant="primary" disabled={!text.trim() || sending} onClick={() => void send()}>
           {t.exchange.compose.send}
         </Button>
       </div>
@@ -337,11 +368,22 @@ function stateLine(row: Stored, side: 'pc' | 'phone'): string | null {
 }
 
 function Card({ row, side }: { row: Stored; side: 'pc' | 'phone' }) {
-  const [copied, setCopied] = useState(false);
-  const time = useMemo(
-    () => dateTimeFormat({ hour: '2-digit', minute: '2-digit' }).format(new Date(row.createdAt)),
-    [row.createdAt],
-  );
+  const [copied, setCopied] = useState<'yes' | 'no' | null>(null);
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(null), 3000);
+    return () => clearTimeout(timer);
+  }, [copied]);
+  const time = useMemo(() => {
+    const at = new Date(row.createdAt);
+    // cards stay 30 days: one from an earlier day says which
+    const sameDay = at.toDateString() === new Date(now()).toDateString();
+    return dateTimeFormat(
+      sameDay
+        ? { hour: '2-digit', minute: '2-digit' }
+        : { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' },
+    ).format(at);
+  }, [row.createdAt]);
   const from =
     row.direction === 'out'
       ? t.exchange.from.you
@@ -378,10 +420,15 @@ function Card({ row, side }: { row: Stored; side: 'pc' | 'phone' }) {
           onClick={() =>
             void getPlatform()
               .clipboard.writeText(row.body)
-              .then(() => setCopied(true))
+              .then(() => setCopied('yes'))
+              .catch(() => setCopied('no'))
           }
         >
-          {copied ? t.exchange.actions.copied : t.exchange.actions.copy}
+          {copied === 'yes'
+            ? t.exchange.actions.copied
+            : copied === 'no'
+              ? t.exchange.actions.copyFailed
+              : t.exchange.actions.copy}
         </Button>
         <IconButton
           label={t.exchange.actions.remove}

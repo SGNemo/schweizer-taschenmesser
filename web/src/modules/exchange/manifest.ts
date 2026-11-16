@@ -20,7 +20,7 @@ const manifest: ModuleManifest = {
   icon: 'swap',
   identity: {
     hue: 'ocean',
-    hue2: 'teal',
+    hue2: 'fern',
     widget: 'status',
     head: 'standard',
     signature: 'handoff',

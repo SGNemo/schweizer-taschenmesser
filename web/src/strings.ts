@@ -10591,12 +10591,14 @@ export const de = {
       placeholder: 'Nachricht oder Link …',
       send: 'Senden',
       failed: 'Konnte nicht gespeichert werden. Bitte nochmal senden.',
+      tooLong: 'Das ist zu lang für eine Karte. Kürze den Text oder teile ihn auf.',
     },
     actions: {
       copy: 'Kopieren',
       open: 'Öffnen',
       remove: 'Karte entfernen',
       copied: 'Kopiert',
+      copyFailed: 'Kopieren ging nicht',
     },
     empty: 'Noch nichts hier. Schick dir eine Notiz oder einen Link.',
     footer: 'Karten bleiben 30 Tage.',
@@ -10628,11 +10630,10 @@ export const de = {
       notPaired:
         'Noch nicht mit deinem PC gekoppelt. Kopple ihn, dann kannst du ihm Notizen und Links schicken.',
       pair: 'Mit PC koppeln',
-      unreachable: 'Geht raus, sobald du im Heimnetz bist und Nemo auf deinem PC läuft.',
       exchangeOff:
         'Austausch ist am PC noch nicht eingeschaltet. Am PC: Mehr → Modul-Bibliothek → Austausch.',
       notGranted: 'Austausch ist für dieses Handy am PC noch aus. Am PC: Austausch → Einschalten.',
-      paused: 'Austausch ist am PC pausiert. Am PC wieder einschalten.',
+      paused: 'Austausch ist am PC pausiert. Am PC: Austausch → Fortsetzen.',
       limit: (minutes: number) =>
         `Gerade zu viel auf einmal. Der Rest geht in ${minutes} Minuten weiter.`,
     },

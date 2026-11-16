@@ -91,6 +91,12 @@ test('PC: switched on once for the one paired phone, a link goes out and a note 
   await expect(got.getByRole('button', { name: 'Kopieren' })).toBeVisible();
   await expect(page.getByText('Karten bleiben 30 Tage.')).toBeVisible();
   await audit(page, 'conversation');
+
+  // the off switch per device: pausing never asks, resuming does (the fake says yes)
+  await page.getByRole('button', { name: 'Pausieren' }).click();
+  await expect(page.getByText('Pixel 7 · Für dieses Gerät pausiert.')).toBeVisible();
+  await page.getByRole('button', { name: 'Fortsetzen' }).click();
+  await expect(page.getByText(/Pixel 7 · erreichbar/)).toBeVisible();
 });
 
 test('phone: a note goes to the PC, and a pause at the PC is said calmly', async ({ page }) => {
@@ -107,7 +113,7 @@ test('phone: a note goes to the PC, and a pause at the PC is said calmly', async
   );
   await fake(page, 'closeSession', 'paused', null);
   await expect(
-    page.getByText('Austausch ist am PC pausiert. Am PC wieder einschalten.'),
+    page.getByText('Austausch ist am PC pausiert. Am PC: Austausch → Fortsetzen.'),
   ).toBeVisible();
   await audit(page, 'phone');
 });

@@ -4,6 +4,7 @@ import type { SeedContext, SeedModule, SeedRows } from '@/core/seed/types';
  * Test data for the Dev-Preview, e2e tests and screenshots: a short conversation with the demo
  * phone (the fake shell's „Pixel 7“). Pure and deterministic; invented content only.
  */
+/** The fake shell's demo device (`FAKE_PEER` in `core/platform/fakeExchange.ts`): both must match. */
 const PEER = 'ab'.repeat(32);
 
 const CARDS: { direction: 'in' | 'out'; kind: 'text' | 'link'; body: string; unseen: boolean }[] = [

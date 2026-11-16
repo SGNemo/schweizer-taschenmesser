@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   bodyOf,
   expired,
+  fits,
   hostOf,
   kindOf,
   newItemId,
@@ -46,5 +47,23 @@ describe('exchange logic', () => {
     expect(problemOf('not-paired')).toEqual({ problem: 'notPaired' });
     expect(problemOf('unknown-device')).toEqual({ problem: 'unreachable' });
     expect(problemOf(null)).toBeNull();
+  });
+  it('follows the shell: bidi, zero-width and odd hosts are text, control characters go', () => {
+    expect(kindOf('https://exa\u202Emple.org')).toBe('text');
+    expect(kindOf('https://exa\u200Bmple.org')).toBe('text');
+    expect(kindOf('http://-x.org')).toBe('text');
+    expect(kindOf('http://[::1]:8080/a')).toBe('link');
+    expect(kindOf('https://über.example/ä')).toBe('link');
+    expect(bodyOf('a\u0007b\r\nc\td  ', 'text')).toBe('ab\nc\td');
+  });
+
+  it('counts the size in bytes as the shell does', () => {
+    expect(fits('x'.repeat(16_384))).toBe(true);
+    expect(fits('ä'.repeat(8_193))).toBe(false);
+    expect(fits('   ')).toBe(false);
+  });
+
+  it('takes the minutes of a closed session from the event', () => {
+    expect(problemOf('limit', 12)).toEqual({ problem: 'limit', minutes: 12 });
   });
 });
