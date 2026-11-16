@@ -2,17 +2,22 @@
 //! `docs/design/device-exchange/CONCEPT.md` §4 "Delivery state is Rust's").
 //!
 //! * **Inbox**: items another device sent here, kept until the web view took them over into its
-//!   history (`take`, then `confirm`). An item is acked to the sender only after it is in this
+//!   history (`pending`, then `confirm`). An item is acked to the sender only after it is in this
 //!   file. The ids seen per device are kept two hours, also after the hand-over, so a resend after
 //!   a lost ack never makes a second card (delivery is at least once).
-//! * **Outbox** (the PC only): what this PC queued for a device, with the device's last answer.
+//! * **Outbox** (the PC only): what this PC queued for a device, and the devices' answers until the
+//!   web view confirmed them (so a restart never loses whether an item arrived or was rejected).
 //!
-//! One JSON file each, replaced atomically (temp file + rename). Text bodies are user data and
-//! stay in the app's own data folder; nothing here is logged or formatted for a log.
+//! Everything is keyed by (device, id): two devices may use the same id. One JSON file each,
+//! written to a temp file, synced, then renamed. A file that exists but cannot be read is moved
+//! aside (`*.broken`), never overwritten. Text bodies are user data and stay in the app's own data
+//! folder; nothing here is logged or formatted for a log.
+#![cfg_attr(mobile, allow(dead_code))]
 
 use lan_sync::exchange::wire::{AckState, Item, Kind};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
+use std::io::Write as _;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -115,6 +120,14 @@ impl Entry {
     }
 }
 
+/// A (device, id) pair the web view names.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct Key {
+    pub peer: String,
+    pub id: String,
+}
+
 /// Why the inbox did not take an item.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum InboxError {
@@ -128,6 +141,44 @@ pub enum StoreResult {
     Known,
 }
 
+/// Reads a JSON file. Missing: empty. Present but unreadable: moved aside to `*.broken` (never
+/// overwritten), then empty.
+fn read_json<T: Default + for<'de> Deserialize<'de>>(path: &Path) -> T {
+    match std::fs::read(path) {
+        Ok(bytes) => match serde_json::from_slice(&bytes) {
+            Ok(value) => value,
+            Err(_) => {
+                let mut aside = path.as_os_str().to_owned();
+                aside.push(".broken");
+                let _ = std::fs::rename(path, aside);
+                T::default()
+            }
+        },
+        Err(_) => T::default(),
+    }
+}
+
+/// Temp file, synced to disk, then renamed over the file (and the folder synced where possible):
+/// what is acked is on disk.
+fn write_json<T: Serialize>(path: &Path, value: &T) -> std::io::Result<()> {
+    let dir = path.parent().unwrap_or_else(|| Path::new("."));
+    std::fs::create_dir_all(dir)?;
+    let bytes = serde_json::to_vec(value).map_err(std::io::Error::other)?;
+    let mut tmp = path.as_os_str().to_owned();
+    tmp.push(".tmp");
+    {
+        let mut f = std::fs::File::create(&tmp)?;
+        f.write_all(&bytes)?;
+        f.sync_all()?;
+    }
+    std::fs::rename(&tmp, path)?;
+    #[cfg(unix)]
+    if let Ok(d) = std::fs::File::open(dir) {
+        let _ = d.sync_all();
+    }
+    Ok(())
+}
+
 #[derive(Default, Serialize, Deserialize)]
 struct InboxFile {
     v: u8,
@@ -139,25 +190,6 @@ struct InboxFile {
 pub struct Inbox {
     path: PathBuf,
     state: Mutex<InboxFile>,
-}
-
-fn read_json<T: Default + for<'de> Deserialize<'de>>(path: &Path) -> T {
-    // a missing or broken file starts empty: these files hold no settings, only items in transit
-    std::fs::read(path)
-        .ok()
-        .and_then(|b| serde_json::from_slice(&b).ok())
-        .unwrap_or_default()
-}
-
-fn write_json<T: Serialize>(path: &Path, value: &T) -> std::io::Result<()> {
-    if let Some(dir) = path.parent() {
-        std::fs::create_dir_all(dir)?;
-    }
-    let bytes = serde_json::to_vec(value).map_err(std::io::Error::other)?;
-    let mut tmp = path.as_os_str().to_owned();
-    tmp.push(".tmp");
-    std::fs::write(&tmp, bytes)?;
-    std::fs::rename(&tmp, path)
 }
 
 impl Inbox {
@@ -213,32 +245,28 @@ impl Inbox {
             .unwrap_or_default()
     }
 
-    /// The web view keeps these now; they leave the inbox (their ids stay seen).
-    pub fn confirm(&self, ids: &[String]) {
+    /// The web view keeps these now; they leave the inbox (their ids stay seen). A write that
+    /// fails leaves them in the file: after a restart they are offered again, and the web view
+    /// keeps an id once.
+    pub fn confirm(&self, keys: &[Key]) {
         if let Ok(mut file) = self.state.lock() {
-            file.items.retain(|e| !ids.contains(&e.id));
+            file.items
+                .retain(|e| !keys.iter().any(|k| k.peer == e.peer && k.id == e.id));
             let _ = write_json(&self.path, &*file);
         }
     }
 }
 
-/// One queued item and the device's last answer.
+/// One queued item: `queued`, or `full` after the device said it has no room.
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct OutEntry {
     entry: Entry,
-    /// `queued`, or `full` after the device said it has no room.
     state: String,
 }
 
-#[derive(Default, Serialize, Deserialize)]
-struct OutboxFile {
-    v: u8,
-    queue: Vec<OutEntry>,
-}
-
 /// The device's answer to an item, for the web view.
-#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Answer {
     pub peer: String,
@@ -247,11 +275,17 @@ pub struct Answer {
     pub state: String,
 }
 
+#[derive(Default, Serialize, Deserialize)]
+struct OutboxFile {
+    v: u8,
+    queue: Vec<OutEntry>,
+    /// Answers the web view has not confirmed yet (they survive a restart).
+    answers: Vec<Answer>,
+}
+
 pub struct Outbox {
     path: PathBuf,
     state: Mutex<OutboxFile>,
-    /// Answers the web view has not read yet (memory only: the web view also reads the queue).
-    answers: Mutex<Vec<Answer>>,
 }
 
 impl Outbox {
@@ -263,19 +297,24 @@ impl Outbox {
         Outbox {
             path: path.to_owned(),
             state: Mutex::new(file),
-            answers: Mutex::new(Vec::new()),
         }
     }
 
-    /// Queues an item for `peer`. `Err` when the queue is full or the file cannot be written.
+    /// Queues an item for `peer` (lower-case hex key). `Err` when the queue is full or the file
+    /// cannot be written. The same (device, id) again is a no-op.
     pub fn push(&self, peer: &str, item: &Item, now_ms: u64) -> Result<(), String> {
         let mut file = self.state.lock().map_err(|_| "internal")?;
+        let id = hex(item.id());
+        if file
+            .queue
+            .iter()
+            .any(|e| e.entry.peer == peer && e.entry.id == id)
+        {
+            return Ok(());
+        }
         let queued = file.queue.iter().filter(|e| e.entry.peer == peer).count();
         if queued >= OUTBOX_MAX_PER_DEVICE {
             return Err("outbox-full".to_owned());
-        }
-        if file.queue.iter().any(|e| e.entry.id == hex(item.id())) {
-            return Ok(());
         }
         file.queue.push(OutEntry {
             entry: Entry::of(peer, item, now_ms),
@@ -298,28 +337,26 @@ impl Outbox {
     }
 
     /// The device answered: delivered and rejected leave the queue (from memory even if the file
-    /// cannot be written), full stays.
+    /// cannot be written), full stays. The answer is kept until the web view confirms it.
     pub fn answer(&self, peer: &str, id: &[u8; 16], state: AckState) {
         let id = hex(id);
         if let Ok(mut file) = self.state.lock() {
+            let mine = |e: &OutEntry| e.entry.peer == peer && e.entry.id == id;
             match state {
                 AckState::Refused => {
-                    for e in file.queue.iter_mut().filter(|e| e.entry.id == id) {
+                    for e in file.queue.iter_mut().filter(|e| mine(e)) {
                         e.state = "full".to_owned();
                     }
                 }
-                AckState::Stored | AckState::Rejected => {
-                    file.queue.retain(|e| e.entry.id != id);
-                }
+                AckState::Stored | AckState::Rejected => file.queue.retain(|e| !mine(e)),
             }
-            let _ = write_json(&self.path, &*file);
-        }
-        if let Ok(mut answers) = self.answers.lock() {
-            answers.push(Answer {
+            file.answers.retain(|a| !(a.peer == peer && a.id == id));
+            file.answers.push(Answer {
                 peer: peer.to_owned(),
                 id,
                 state: state_name(state).to_owned(),
             });
+            let _ = write_json(&self.path, &*file);
         }
     }
 
@@ -336,18 +373,27 @@ impl Outbox {
             .unwrap_or_default()
     }
 
-    /// The answers since the last call.
-    pub fn take_answers(&self) -> Vec<Answer> {
-        self.answers
+    /// The answers the web view has not confirmed yet.
+    pub fn answers(&self) -> Vec<Answer> {
+        self.state
             .lock()
-            .map(|mut a| std::mem::take(&mut *a))
+            .map(|f| f.answers.clone())
             .unwrap_or_default()
     }
 
-    /// A device was unpaired: its queue goes.
-    pub fn forget(&self, peer: &str) {
+    /// The web view stored these answers.
+    pub fn confirm_answers(&self, keys: &[Key]) {
         if let Ok(mut file) = self.state.lock() {
-            file.queue.retain(|e| e.entry.peer != peer);
+            file.answers
+                .retain(|a| !keys.iter().any(|k| k.peer == a.peer && k.id == a.id));
+            let _ = write_json(&self.path, &*file);
+        }
+    }
+
+    /// Only these devices keep their queue (a device unpaired, or all after "Schlüssel erneuern").
+    pub fn keep_only(&self, peers: &[String]) {
+        if let Ok(mut file) = self.state.lock() {
+            file.queue.retain(|e| peers.contains(&e.entry.peer));
             let _ = write_json(&self.path, &*file);
         }
     }
@@ -366,6 +412,13 @@ mod tests {
 
     fn item(n: u8, body: &str) -> Item {
         Item::new([n; 16], Kind::Text, body.to_owned()).unwrap()
+    }
+
+    fn key(peer: &str, n: u8) -> Key {
+        Key {
+            peer: peer.to_owned(),
+            id: hex(&[n; 16]),
+        }
     }
 
     #[test]
@@ -388,8 +441,10 @@ mod tests {
         );
         let inbox = Inbox::open(&path);
         assert_eq!(inbox.pending().len(), 2);
-        inbox.confirm(&[hex(&[1; 16])]);
-        assert!(inbox.pending().is_empty());
+        // confirming one device's item leaves the other device's item with the same id
+        inbox.confirm(&[key("aa", 1)]);
+        assert_eq!(inbox.pending().len(), 1);
+        assert_eq!(inbox.pending()[0].peer, "bb");
         // taken over by the web view, the id is still seen: no second card
         assert_eq!(
             inbox.store("aa", &item(1, "x"), 3_000),
@@ -420,28 +475,53 @@ mod tests {
     }
 
     #[test]
-    fn the_outbox_survives_a_restart_and_answers_take_items_out_or_mark_them_full() {
+    fn a_broken_file_is_moved_aside_not_overwritten() {
+        let d = dir("broken");
+        let path = d.join("inbox.json");
+        std::fs::write(&path, b"{ not json").unwrap();
+        let inbox = Inbox::open(&path);
+        assert!(inbox.pending().is_empty());
+        assert_eq!(
+            std::fs::read(d.join("inbox.json.broken")).unwrap(),
+            b"{ not json"
+        );
+        inbox.store("aa", &item(1, "x"), 1).unwrap();
+        assert_eq!(Inbox::open(&path).pending().len(), 1);
+    }
+
+    #[test]
+    fn the_outbox_survives_a_restart_and_keeps_answers_until_confirmed() {
         let d = dir("outbox");
         let path = d.join("outbox.json");
         let out = Outbox::open(&path);
         out.push("aa", &item(1, "eins"), 1).unwrap();
         out.push("aa", &item(2, "zwei"), 2).unwrap();
-        out.push("bb", &item(3, "drei"), 3).unwrap();
+        // the same id to another device is its own entry
+        out.push("bb", &item(1, "eins"), 3).unwrap();
+        assert_eq!(out.queued().len(), 3);
         let out = Outbox::open(&path);
         assert_eq!(out.next_for("aa").unwrap().id(), &[1; 16]);
         out.answer("aa", &[1; 16], AckState::Stored);
+        assert_eq!(
+            out.next_for("bb").unwrap().id(),
+            &[1; 16],
+            "b's own entry stays"
+        );
         assert_eq!(out.next_for("aa").unwrap().id(), &[2; 16]);
         out.answer("aa", &[2; 16], AckState::Refused);
         assert_eq!(out.next_for("aa").unwrap().id(), &[2; 16], "full stays");
         out.answer("aa", &[2; 16], AckState::Rejected);
         assert!(out.next_for("aa").is_none());
-        let answers = out.take_answers();
+        // answers survive a restart until the web view confirms them (latest per item)
+        let out = Outbox::open(&path);
+        let answers = out.answers();
         assert_eq!(
             answers.iter().map(|a| a.state.as_str()).collect::<Vec<_>>(),
-            ["delivered", "full", "rejected"]
+            ["delivered", "rejected"]
         );
-        assert!(out.take_answers().is_empty());
-        out.forget("bb");
+        out.confirm_answers(&[key("aa", 1), key("aa", 2)]);
+        assert!(out.answers().is_empty());
+        out.keep_only(&[]);
         assert!(out.queued().is_empty());
     }
 

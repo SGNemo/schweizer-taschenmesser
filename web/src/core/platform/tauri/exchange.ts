@@ -33,7 +33,7 @@ export function createExchange(side: 'pc' | 'phone' | null): ExchangeService {
       status: () => call<ExchangePcStatus>('exchange_status'),
       send: (peer, item) => call<void>('exchange_send', { peer, ...item }),
       take: () => call<{ items: ExchangeItem[]; answers: ExchangeAnswer[] }>('exchange_take'),
-      confirm: (ids) => call<void>('exchange_confirm', { ids }),
+      confirm: (items, answers = []) => call<void>('exchange_confirm', { items, answers }),
       setEnabled: (enabled) => call<void>('exchange_set_enabled', { enabled }),
       setDevice: (id, on, paused) => call<void>('exchange_set_device', { id, on, paused }),
       onChanged: (cb) => {
@@ -58,22 +58,35 @@ export function createExchange(side: 'pc' | 'phone' | null): ExchangeService {
         items: await call<ExchangeItem[]>('exchange_client_take'),
         answers: [],
       }),
-      confirm: (ids) => call<void>('exchange_client_confirm', { ids }),
+      confirm: (items) => call<void>('exchange_client_confirm', { items }),
       open: async (onEvent: (e: ExchangeEvent) => void) => {
-        let mine = 0;
+        // every `open` has its own channel; once its session is closed (or never opened) the
+        // channel says nothing more
+        let live = true;
         const channel = new Channel<Wire>();
         channel.onmessage = (w) => {
-          // events of an older session are not this one's
-          if (mine !== 0 && w.session !== mine) return;
+          if (!live) return;
           if (w.type === 'received') onEvent({ type: 'received' });
           else if (w.type === 'answer') onEvent({ type: 'answer', id: w.id, state: w.state });
-          else onEvent({ type: 'closed', reason: w.reason, minutes: w.minutes });
+          else {
+            live = false;
+            onEvent({ type: 'closed', reason: w.reason, minutes: w.minutes });
+          }
         };
-        mine = await call<number>('exchange_client_open', { onEvent: channel });
+        let session: number;
+        try {
+          session = await call<number>('exchange_client_open', { onEvent: channel });
+        } catch (e) {
+          live = false;
+          throw e;
+        }
         return {
-          send: (item) => call<void>('exchange_client_send', { session: mine, ...item }),
-          ping: () => call<void>('exchange_client_ping', { session: mine }),
-          close: () => call<void>('exchange_client_close', { session: mine }),
+          send: (item) => call<void>('exchange_client_send', { session, ...item }),
+          ping: () => call<void>('exchange_client_ping', { session }),
+          close: () => {
+            live = false;
+            return call<void>('exchange_client_close', { session });
+          },
         };
       },
     };

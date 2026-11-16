@@ -47,22 +47,25 @@ describe('exchange bridge', () => {
       on: true,
       paused: false,
     });
-    await ex.confirm(['x']);
-    expect(mocks.invoke).toHaveBeenLastCalledWith('exchange_confirm', { ids: ['x'] });
+    await ex.confirm([{ peer: 'aa', id: 'x' }]);
+    expect(mocks.invoke).toHaveBeenLastCalledWith('exchange_confirm', {
+      items: [{ peer: 'aa', id: 'x' }],
+      answers: [],
+    });
     mocks.invoke.mockRejectedValueOnce('cancelled');
     await expect(ex.setEnabled(true)).rejects.toThrow('cancelled');
     await expect(ex.open(() => {})).rejects.toThrow('unsupported');
   });
 
-  it('phone: opens a session and passes on only the events of that session', async () => {
+  it('phone: opens a session; its channel goes quiet once the session is over', async () => {
     const ex = createExchange('phone');
     mocks.invoke.mockResolvedValueOnce(7);
     const events: unknown[] = [];
     const s = await ex.open((e) => events.push(e));
     const channel = mocks.channels[0]!;
     channel.onmessage?.({ type: 'received', session: 7 });
-    channel.onmessage?.({ type: 'answer', session: 6, id: 'old', state: 'delivered' });
     channel.onmessage?.({ type: 'closed', session: 7, reason: 'limit', minutes: 12 });
+    channel.onmessage?.({ type: 'received', session: 7 });
     expect(events).toEqual([
       { type: 'received' },
       { type: 'closed', reason: 'limit', minutes: 12 },
@@ -77,5 +80,11 @@ describe('exchange bridge', () => {
     await s.ping();
     expect(mocks.invoke).toHaveBeenLastCalledWith('exchange_client_ping', { session: 7 });
     await expect(ex.status()).rejects.toThrow('unsupported');
+    // a failed open leaves its channel quiet too
+    mocks.invoke.mockRejectedValueOnce('exchange-off');
+    const later: unknown[] = [];
+    await expect(ex.open((e) => later.push(e))).rejects.toThrow('exchange-off');
+    mocks.channels[1]!.onmessage?.({ type: 'received', session: 8 });
+    expect(later).toEqual([]);
   });
 });
