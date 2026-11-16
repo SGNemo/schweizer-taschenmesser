@@ -120,4 +120,17 @@ describe('ShareTarget', () => {
     await screen.findByText(t.share.toNote);
     expect(screen.queryByText(t.share.toFeed)).toBeNull();
   });
+
+  it('sends a link to the bookmarks marked as shared (`shared=1`)', async () => {
+    await enableModule(getManifest('bookmarks')!);
+    render(
+      <MemoryRouter initialEntries={[shareUrl({ title: 'Rezept', url: 'https://example.org/r' })]}>
+        <ShareTarget />
+      </MemoryRouter>,
+    );
+    const link = await screen.findByTestId('share-bookmarks');
+    const params = new URLSearchParams(link.getAttribute('href')!.split('?')[1]);
+    expect(params.get('shared')).toBe('1');
+    expect(params.get('url')).toBe('https://example.org/r');
+  });
 });

@@ -94,7 +94,7 @@ test.describe('Merkliste', () => {
   test('a link shared from another app opens the create dialog prefilled', async ({ page }) => {
     await enable(page, 'bookmarks');
     await page.goto(
-      '/bookmarks?title=Schöner%20Wanderweg&text=Schau%20mal%20https%3A%2F%2Fwandern.example%2Fweg',
+      '/bookmarks?title=Schöner%20Wanderweg&text=Schau%20mal%20https%3A%2F%2Fwandern.example%2Fweg&shared=1',
     );
     const dialog = page.getByRole('dialog');
     await expect(dialog.getByLabel('Titel')).toHaveValue('Schöner Wanderweg');

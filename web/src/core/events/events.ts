@@ -47,7 +47,7 @@ export interface EventMap {
     url: string;
     note?: string;
     /** What it is (the bookmarks module ignores a value it does not know); none means "read later". */
-    kind?: 'link' | 'read' | 'watch' | 'book' | 'place' | 'idea' | 'other';
+    kind?: 'link' | 'read' | 'watch' | 'book' | 'place' | 'buy' | 'try' | 'idea' | 'other';
     tags?: string[];
   };
   /** Something is running low (pantry). The shopping list adds the item unless it is already open there. */

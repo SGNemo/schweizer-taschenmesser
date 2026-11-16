@@ -63,8 +63,8 @@ function sharedDraft(params: URLSearchParams): {
     draft: true,
     title: title || undefined,
     url: url && normalizeUrl(url) ? url : undefined,
-    // `new=1` is the app's own way in (quick add, full form); without it the content came through "Teilen".
-    shared: !params.get('new'),
+    // Only the share page (`/share`) sets `shared=1`; quick add and the full form open a plain draft.
+    shared: params.get('shared') === '1',
   };
 }
 
