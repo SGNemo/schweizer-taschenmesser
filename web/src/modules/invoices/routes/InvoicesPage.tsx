@@ -41,6 +41,7 @@ import { InvoicesOverview } from '../components/InvoicesOverview';
 import { SignatureMark } from '@/ui/identity';
 import { usePageWidthAtLeast } from '@/ui/pageWidth';
 import { invoiceRepo } from '../repo';
+import { returnRoute } from '../returnTo';
 import type { Invoice } from '../schema';
 import styles from './invoices.module.css';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
@@ -62,26 +63,34 @@ export default function InvoicesPage() {
   // CONCEPT-LINKS §2 L7): the id must name a live invoice of this module (`invoiceRepo.get` – anything else opens
   // nothing), and `do=pay` only OPENS the pay step of an invoice that is still open. Nothing is written until
   // the person confirms there. Any other value of `do` is ignored; both parameters leave the URL after reading.
+  // `from` (M-1) is only a key of the fixed list in `returnTo.ts` (`plan` → the planner): after „Bezahlt“ the
+  // page hands the person back there; any other value means staying here. It leaves the URL with `do`.
   const doParam = useRef<string | null>(null);
+  const fromParam = useRef<string | null>(null);
   useEffect(() => {
     doParam.current = params.get('do');
+    fromParam.current = params.get('from');
   });
+  const [returnTo, setReturnTo] = useState<string | undefined>();
   useOpenParam(
     (id) => invoiceRepo.get(id),
     (invoice) => {
       setPicked({ id: invoice.id });
-      if (doParam.current === 'pay' && invoice.status === 'open') setPaying(invoice);
-      else setTarget(invoice);
+      if (doParam.current === 'pay' && invoice.status === 'open') {
+        setPaying(invoice);
+        setReturnTo(returnRoute(fromParam.current));
+      } else setTarget(invoice);
     },
   );
-  // Without an id there is nothing to do: `do` (and an empty `open`) just leaves the URL.
-  const strayDo = params.has('do') && !params.get('open');
+  // Without an id there is nothing to do: `do`, `from` (and an empty `open`) just leave the URL.
+  const strayDo = (params.has('do') || params.has('from')) && !params.get('open');
   useEffect(() => {
     if (!strayDo) return;
     setParams(
       (p) => {
         const next = new URLSearchParams(p);
         next.delete('do');
+        next.delete('from');
         if (!next.get('open')) next.delete('open');
         return next;
       },
@@ -474,7 +483,16 @@ export default function InvoicesPage() {
       )}
 
       <InvoiceEditor target={openTarget} onClose={closeEditor} onDuplicated={setTarget} />
-      <PayStep invoice={paying} onClose={() => setPaying(null)} />
+      <PayStep
+        invoice={paying}
+        onClose={() => {
+          setPaying(null);
+          setReturnTo(undefined);
+        }}
+        // Back where the step was asked for (the planner keeps its day): the visit here was a step, not a place,
+        // so it gives its history entry to the plan. The toast with the undo stays.
+        onPaid={returnTo ? () => void navigate(returnTo, { replace: true }) : undefined}
+      />
     </>
   );
 }

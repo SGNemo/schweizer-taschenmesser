@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, useLocation } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { db } from '@/core/db/db';
 import { addLink } from '@/core/entitylinks';
@@ -155,6 +155,94 @@ describe('`?open=<id>&do=pay`', () => {
     open(`/invoices?open=${i.id}&do=pay`);
     expect(await screen.findByRole('dialog', { name: 'Rechnung bearbeiten' })).toBeVisible();
     await stripped();
+    expect(await snapshot()).toBe(before);
+    expect(events).toEqual([]);
+  });
+});
+
+describe('`&from=plan`: „Bezahlt“ hands the person back to the plan (M-1)', () => {
+  function Path() {
+    const { pathname, search } = useLocation();
+    return <output data-testid="path">{pathname + search}</output>;
+  }
+  const openWithPlanner = (url: string) =>
+    render(
+      <MemoryRouter initialEntries={['/planner', url]} initialIndex={1}>
+        <Routes>
+          <Route path="/invoices" element={<InvoicesPage />} />
+          <Route path="/planner" element={<h1>Planer</h1>} />
+        </Routes>
+        <Path />
+      </MemoryRouter>,
+    );
+  const path = () => screen.getByTestId('path');
+
+  it('after „Bezahlt“ the planner is back, the toast with the undo stays', async () => {
+    const i = await add();
+    openWithPlanner(`/invoices?open=${i.id}&do=pay&from=plan`);
+    const dialog = await screen.findByRole('dialog', { name: 'Stadtwerke bezahlt?' });
+    // Opening wrote nothing and the marker left the URL with the others.
+    await waitFor(() => expect(path()).toHaveTextContent(/^\/invoices$/));
+    expect(events).toEqual([]);
+    await userEvent.click(within(dialog).getByTestId('pay-step-confirm'));
+    await waitFor(() => expect(path()).toHaveTextContent(/^\/planner$/));
+    expect(await invoiceRepo.get(i.id)).toMatchObject({ status: 'paid' });
+    const toast = useUiStore.getState().toasts.at(-1)!;
+    expect(toast.message).toBe('Als bezahlt markiert.');
+    expect(toast.action?.label).toBe('Rückgängig');
+  });
+
+  it('a part payment returns too; cancelling stays on the invoices and writes nothing', async () => {
+    const i = await add();
+    openWithPlanner(`/invoices?open=${i.id}&do=pay&from=plan`);
+    let dialog = await screen.findByRole('dialog', { name: 'Stadtwerke bezahlt?' });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Abbrechen' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(path()).toHaveTextContent(/^\/invoices$/);
+    expect(events).toEqual([]);
+    cleanup();
+
+    openWithPlanner(`/invoices?open=${i.id}&do=pay&from=plan`);
+    dialog = await screen.findByRole('dialog', { name: 'Stadtwerke bezahlt?' });
+    const amount = within(dialog).getByLabelText(/Gezahlte Summe/);
+    await userEvent.clear(amount);
+    await userEvent.type(amount, '10');
+    await userEvent.click(within(dialog).getByTestId('pay-step-confirm'));
+    await waitFor(() => expect(path()).toHaveTextContent(/^\/planner$/));
+    expect((await invoiceRepo.get(i.id))?.payments).toHaveLength(1);
+  });
+
+  it('any other `from` – or none – stays on the invoices after „Bezahlt“', async () => {
+    for (const from of [
+      '',
+      'PLAN',
+      '/planner',
+      '//evil.example',
+      'https://x.example',
+      '__proto__',
+    ]) {
+      const i = await add();
+      const suffix = from ? `&from=${encodeURIComponent(from)}` : '';
+      openWithPlanner(`/invoices?open=${i.id}&do=pay${suffix}`);
+      const dialog = await screen.findByRole('dialog', { name: 'Stadtwerke bezahlt?' });
+      await waitFor(() => expect(path()).toHaveTextContent(/^\/invoices$/));
+      await userEvent.click(within(dialog).getByTestId('pay-step-confirm'));
+      await waitFor(async () => expect((await invoiceRepo.get(i.id))?.status).toBe('paid'));
+      await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+      expect(path()).toHaveTextContent(/^\/invoices$/);
+      cleanup();
+    }
+  });
+
+  it('`from` without a pay step does nothing: it leaves the URL, the invoice opens as usual', async () => {
+    const i = await add();
+    const before = await snapshot();
+    openWithPlanner('/invoices?from=plan');
+    await waitFor(() => expect(path()).toHaveTextContent(/^\/invoices$/));
+    cleanup();
+    openWithPlanner(`/invoices?open=${i.id}&from=plan`);
+    expect(await screen.findByRole('dialog', { name: 'Rechnung bearbeiten' })).toBeVisible();
+    await waitFor(() => expect(path()).toHaveTextContent(/^\/invoices$/));
     expect(await snapshot()).toBe(before);
     expect(events).toEqual([]);
   });

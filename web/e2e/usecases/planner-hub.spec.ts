@@ -120,14 +120,14 @@ const MAX: Record<string, Record<Metric | 'seconds', number>> = {
   // as before R1
   // prettier-ignore
   'E Ding über das Planer-Feld · pixel-7': { taps: 0, keys: 14, screens: 1, dialogs: 0, detours: 0, seconds: 8 },
-  // K1b: „Bezahlt …“ in the lead slot → the invoice's pay step → „Bezahlt“ → back; no tick looked for in vain
-  // (R1: 4 taps, 1 detour, 18 s; before R1: 6 taps, 20 s)
+  // M-1: „Bezahlt …“ in the lead slot → the invoice's pay step → „Bezahlt“, which returns to the plan by itself
+  // (K1b: 3 taps, 12 s – a back tap; R1: 4 taps, 1 detour, 18 s; before R1: 6 taps, 20 s)
   // prettier-ignore
-  'F Überfällige Rechnung begleichen · desktop-chrome': { taps: 3, keys: 0, screens: 3, dialogs: 1, detours: 0, seconds: 12 },
-  // K1b: as on the desktop plus the unfolding tap of „Frist vorbei“ (R2: 5 taps, 1 detour, 19 s; before R1: 6 taps,
-  // 20 s)
+  'F Überfällige Rechnung begleichen · desktop-chrome': { taps: 2, keys: 0, screens: 3, dialogs: 1, detours: 0, seconds: 11 },
+  // M-1: as on the desktop plus the unfolding tap of „Frist vorbei“ (K1b: 4 taps, 13 s; R2: 5 taps, 1 detour, 19 s;
+  // before R1: 6 taps, 20 s)
   // prettier-ignore
-  'F Überfällige Rechnung begleichen · pixel-7': { taps: 4, keys: 0, screens: 3, dialogs: 1, detours: 0, seconds: 13 },
+  'F Überfällige Rechnung begleichen · pixel-7': { taps: 3, keys: 0, screens: 3, dialogs: 1, detours: 0, seconds: 12 },
 };
 
 /** The targets of R1 (HANDOFF §9) on the screen the page opens on, per window. */
@@ -192,6 +192,11 @@ class Meter {
     this.screens += 1;
     await backSettled(this.page);
     await this.page.goBack();
+    await expect(this.page.locator('main h1')).toContainText(h1);
+  }
+  /** A screen the app returns to by itself after a tap (no tap of its own, one screen). */
+  async arrive(h1: RegExp) {
+    this.screens += 1;
     await expect(this.page.locator('main h1')).toContainText(h1);
   }
   /** Putting an open menu away without picking from it: one tap (beside it, or Escape). */
@@ -1311,9 +1316,10 @@ test('F Überfällige Rechnung begleichen', async ({ page, isMobile }, info) => 
   m.dialog();
   await m.tap(dialog.getByRole('button', { name: 'Bezahlt', exact: true }));
   await expect(dialog).toHaveCount(0);
+  // M-1: „Bezahlt“ hands the person back to the plan by itself (`&from=plan`); the toast with the undo stays.
+  await m.arrive(/Planer/);
   await expect(page.getByText('Als bezahlt markiert.')).toBeVisible();
-  // Back to the plan.
-  await m.back(/Planer/);
+  await expect(page.getByRole('button', { name: 'Rückgängig' })).toBeVisible();
   await expect(things(page, MONDAY)).not.toHaveCount(0);
   // Five are left in the group; the paid one is gone from it.
   const left = await lateGroup(page);
