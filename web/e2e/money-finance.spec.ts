@@ -105,6 +105,10 @@ test.describe('Finance: transfers, splits, year, outlook', () => {
   test('the year view sums twelve months', async ({ page }) => {
     await ready(page, '/finance?tab=overview&period=year&year=2026');
     await expect(page.getByTestId('year-label')).toHaveText('2026');
+    // The first tab names what it shows: "Jahr" here, never "Monat" above the year (follow-up of the polish round).
+    const tabs = page.getByRole('navigation', { name: 'Bereich' });
+    await expect(tabs.getByRole('button', { name: 'Jahr', exact: true })).toBeVisible();
+    await expect(tabs.getByRole('button', { name: 'Monat', exact: true })).toHaveCount(0);
     await expect(page.getByTestId('year-income')).toBeVisible();
     // Amounts in the month table stand right-aligned in tabular figures (polish p1: the class never matched).
     const cell = page.getByTestId('year-months').locator('tbody td').first();

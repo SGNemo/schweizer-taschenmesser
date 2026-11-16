@@ -3505,6 +3505,8 @@ export const de = {
     tabs: {
       /** The month view ("Übersicht" is the home in the bottom bar; "Verlauf" holds several months). */
       overview: 'Monat',
+      /** The same tab while it shows a whole year (Monat/Jahr switch): the tab names what it shows. */
+      overviewYear: 'Jahr',
       transactions: 'Buchungen',
       trend: 'Verlauf',
       accounts: 'Konten',
