@@ -2,8 +2,9 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 import type { Stored } from '@/core/db/types';
-import { currencyOf, formatMoney, DEFAULT_CURRENCY } from '@/core/money';
+import { currencyOf, formatMoney } from '@/core/money';
 import { addMonthsToMonth, formatDay, formatMonth, monthOf, today } from '@/core/time/dates';
+import { useSettings } from '@/core/settings/settings';
 import { StartDataMenu } from '@/core/importer/StartDataMenu';
 import { t } from '@/strings';
 import {
@@ -22,7 +23,10 @@ import {
   useAdvancedMenuItem,
   useOpenParam,
 } from '@/ui';
-import { useBudgetData } from '../data';
+import { mainCurrencyOf, useBudgetData, useBudgetInsights } from '../data';
+import { BudgetCharts, ExampleBars } from '../components/BudgetCharts';
+import { dailyRate } from '../insights';
+import { settings, settingsSchema } from '../settings';
 import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import styles from './budgets.module.css';
 import {
@@ -74,14 +78,18 @@ export default function BudgetsPage() {
   );
   const budgets = rows.map((r) => r.budget);
   // The head: what is still free in the main currency and where the spending went (decoration; the cards carry every number).
-  const mainCurrency = rows.some((r) => currencyOf(r.budget) === DEFAULT_CURRENCY)
-    ? DEFAULT_CURRENCY
-    : rows[0] && currencyOf(rows[0].budget);
+  const mainCurrency = mainCurrencyOf(budgets);
+  const [prefs] = useSettings(
+    'module.budgets',
+    settingsSchema,
+    settings.defaults as { warnAtPercent: number; showForecast: boolean; showCharts: boolean },
+  );
   const inMain = rows.filter((r) => currencyOf(r.budget) === mainCurrency);
   const free = inMain.reduce((sum, r) => sum + Math.max(0, r.limit - r.spent), 0);
   const overCount = inMain.filter((r) => r.status.tone === 'over').length;
   const canAddBudget = Boolean(financeOn) && categories.some((c) => !taken.has(c.id));
   const advancedItem = useAdvancedMenuItem('budgets');
+  const insights = useBudgetInsights(month, data, Boolean(prefs?.showCharts));
   // An empty view holds the one filled step itself (U26); the head's action steps back then.
   const emptyBudgets = !!data && budgets.length === 0 && Boolean(financeOn);
   const emptyGoals = !!goals && goals.length === 0;
@@ -173,6 +181,16 @@ export default function BudgetsPage() {
                   <span aria-hidden="true">›</span>
                 </IconButton>
               </div>
+              {data && budgets.length > 0 && prefs?.showCharts ? (
+                <BudgetCharts
+                  part="head"
+                  month={month}
+                  data={data}
+                  rows={rows}
+                  insights={insights}
+                  categoryName={categoryName}
+                />
+              ) : null}
               {data && budgets.length === 0 ? (
                 <EmptyState
                   title={t.budgets.emptyBudgets}
@@ -184,6 +202,7 @@ export default function BudgetsPage() {
                       {t.budgets.emptyBudgetAction}
                     </Button>
                   ) : null}
+                  <ExampleBars />
                 </EmptyState>
               ) : null}
               <ItemList layout="grid" label={t.budgets.listBudgets}>
@@ -208,6 +227,17 @@ export default function BudgetsPage() {
                     r.projected !== undefined && s.tone !== 'over' && r.projected > r.limit
                       ? t.budgets.ext.forecast.over(formatMoney(r.projected - r.limit, cur))
                       : undefined;
+                  // What is left per day to the period's end (running and not used up): the card's own pace.
+                  const rate =
+                    r.running && s.remaining > 0
+                      ? dailyRate(s.remaining, r.info.from, r.info.to, day)
+                      : undefined;
+                  const rateText = rate
+                    ? t.budgets.ext.charts.cardPerDay(
+                        formatMoney(rate.perDay, cur),
+                        formatDay(r.info.to, 'd. MMM'),
+                      )
+                    : '';
                   return (
                     <Card as="li" key={b.id}>
                       <div className={patternStyles.row}>
@@ -234,15 +264,18 @@ export default function BudgetsPage() {
                         </button>
                         <span>{s.pct} %</span>
                       </div>
-                      <Progress
-                        value={s.spent}
-                        max={s.limit}
-                        label={categoryName(b.categoryId)}
-                        over={s.tone === 'over'}
-                      />
-                      {periodText || carryText ? (
-                        <p className={styles.note}>
-                          {[periodText, carryText].filter(Boolean).join(' · ')}
+                      {/* With the charts on, the bars above show this limit's fill: no second bar on the card. */}
+                      {prefs?.showCharts && cur === mainCurrency ? null : (
+                        <Progress
+                          value={s.spent}
+                          max={s.limit}
+                          label={categoryName(b.categoryId)}
+                          over={s.tone === 'over'}
+                        />
+                      )}
+                      {periodText || carryText || rateText ? (
+                        <p className={styles.note} data-testid="budget-card-note">
+                          {[periodText, carryText, rateText].filter(Boolean).join(' · ')}
                         </p>
                       ) : null}
                       {forecast ? (
@@ -254,6 +287,16 @@ export default function BudgetsPage() {
                   );
                 })}
               </ItemList>
+              {data && budgets.length > 0 && prefs?.showCharts ? (
+                <BudgetCharts
+                  part="more"
+                  month={month}
+                  data={data}
+                  rows={rows}
+                  insights={insights}
+                  categoryName={categoryName}
+                />
+              ) : null}
             </>
           )}
         </>

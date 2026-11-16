@@ -188,7 +188,10 @@ describe('the plan row of a dunned invoice (step 3)', () => {
       on: '2026-10-20',
     });
     const [row] = await source.list(ctx);
-    expect(row!.action).toEqual({ label: 'Bezahlt …', to: `/invoices?open=${i.id}&do=pay` });
+    expect(row!.action).toEqual({
+      label: 'Bezahlt …',
+      to: `/invoices?open=${i.id}&do=pay&from=plan`,
+    });
     expect(payRoute('a b&do=x')).toBe('/invoices?open=a%20b%26do%3Dx&do=pay');
     expect(row!.links).toEqual([
       {

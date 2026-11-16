@@ -1,21 +1,37 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router';
 import { currencyOf, formatMoney } from '@/core/money';
+import { useSettings } from '@/core/settings/settings';
 import { monthOf, today } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Button, FortschrittBody, Skeleton, useWidgetSize, WidgetBody } from '@/ui';
-import { useBudgetData } from '../data';
+import { Spark } from '@/ui/charts';
+import { useBudgetData, useBudgetInsights } from '../data';
+import styles from './OverviewWidget.module.css';
 import { goalProgress } from '../compute';
+import { trendValues } from '../insights';
+import { settings, settingsSchema } from '../settings';
 import { depositRepo, goalRepo } from '../repo';
 
 /** The two budgets that need the most attention (healthy ones too: "75 %" is information), the goals, and "Ausgabe +". */
 export default function OverviewWidget() {
   const day = today();
-  const { data } = useBudgetData(monthOf(day));
+  const month = monthOf(day);
+  const { data } = useBudgetData(month);
+  const size = useWidgetSize();
+  const [prefs] = useSettings(
+    'module.budgets',
+    settingsSchema,
+    settings.defaults as { warnAtPercent: number; showForecast: boolean; showCharts: boolean },
+  );
+  // The curve only from size m on and while the charts are on (the module setting switches it off too).
+  const showTrend = size !== 's' && Boolean(prefs?.showCharts);
+  const insights = useBudgetInsights(month, data, showTrend);
   const goals = useLiveQuery(() => goalRepo.active().toArray(), []);
   const deposits = useLiveQuery(() => depositRepo.active().toArray(), []);
   const navigate = useNavigate();
-  const size = useWidgetSize();
+  const trend =
+    insights && trendValues(insights.months, insights.spentPerMonth, insights.hasSpending, month);
   if (!data || !goals || !deposits) return <Skeleton width="60%" height="1.25rem" />;
 
   const name = (id: string) =>
@@ -56,6 +72,13 @@ export default function OverviewWidget() {
           entries={[...budgetEntries, ...goalEntries]}
         />
       </WidgetBody>
+      {/* The last six months as a shape (no values to read; the rows above carry the numbers), from size m on. */}
+      {showTrend && budgetEntries.length > 0 && trend?.some((v) => v !== null) ? (
+        <p className={styles.trend} data-testid="budgets-widget-trend">
+          <Spark values={trend} />
+          <span>{t.budgets.ext.charts.widgetTrend}</span>
+        </p>
+      ) : null}
       {/* The one thing done most often next to a budget: an expense (opens finance's booking dialog). */}
       {size !== 's' && budgetEntries.length > 0 ? (
         <Button

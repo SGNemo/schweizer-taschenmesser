@@ -570,3 +570,11 @@
     transform: scaleY(0);
   }
 }
+
+/* The screen readers' table inside the 1 px `sr-only` box: `sr-only` keeps text on one line, so an auto table grew
+   as wide as its longest row and ended past a phone's edge (seed overflow walk, /budgets at 412 px). A fixed layout
+   at 1 px keeps every cell inside the box; reading order and values stay the same. */
+.srTable {
+  table-layout: fixed;
+  width: 1px;
+}

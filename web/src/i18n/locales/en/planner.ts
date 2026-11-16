@@ -122,6 +122,15 @@ export const planner: Strings['planner'] = {
     line: 'Sits on no day. Paid is paid – when is up to you.',
     row: (count: string) => `Deadline passed · ${count}`,
   },
+  passed: {
+    label: 'Training of the last days',
+    ask: (day: string) => `Training on ${day} – log it?`,
+    log: 'Log',
+    logFor: (day: string) => `Log the training on ${day}`,
+    skip: 'Leave out',
+    skipFor: (day: string) => `Leave out the training on ${day}`,
+    skipped: 'Left out.',
+  },
   day: {
     available: 'Available',
     less: 'Less time',

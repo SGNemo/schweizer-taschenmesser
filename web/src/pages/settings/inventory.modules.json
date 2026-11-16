@@ -121,6 +121,11 @@
         "type": "boolean",
         "label": "Prognose bis Zeitraumende zeigen",
         "default": true
+      },
+      "showCharts": {
+        "type": "boolean",
+        "label": "Diagramme über den Limits zeigen",
+        "default": true
       }
     }
   },

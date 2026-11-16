@@ -882,4 +882,34 @@ test.describe('Planer (package 3 of „Wochenende retten“: „Rest verteilen�
     await page.getByRole('button', { name: 'Rückgängig' }).last().click();
     await expect(today(page).locator('li')).toHaveCount(rows);
   });
+
+  test('a training on Saturday that was never logged is asked once under today: „Weglassen“, undo, „Eintragen“', async ({
+    page,
+  }) => {
+    await enablePlanner(page, ['fitness']);
+    await put(page, 'fitness_session', {
+      id: 'e2e-sat',
+      date: '2026-11-07',
+      time: '18:00',
+      title: 'Oberkörper',
+      durationMin: 60,
+      exercises: [],
+      planned: true,
+    });
+    await ready(page, '/planner');
+    const passed = page.getByTestId('planner-passed');
+    await expect(passed).toContainText(/Training vom Sa.* – eintragen\?/);
+    await expect(passed.getByRole('listitem')).toHaveCount(1);
+    // Calm: no count, never on a day, never late.
+    await expect(page.locator('[data-testid^="day-"]')).not.toContainText('Oberkörper');
+    await passed.getByRole('button', { name: /weglassen$/ }).click();
+    await expect(passed).toHaveCount(0);
+    await page.getByRole('button', { name: 'Rückgängig' }).last().click();
+    await expect(page.getByTestId('planner-passed')).toBeVisible();
+    await page
+      .getByTestId('planner-passed')
+      .getByRole('button', { name: /eintragen$/ })
+      .click();
+    await expect(page.getByTestId('planner-passed')).toHaveCount(0);
+  });
 });

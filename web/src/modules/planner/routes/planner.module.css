@@ -625,3 +625,10 @@ section.sheet .headEnd button[aria-expanded='true'] {
     display: inline;
   }
 }
+
+/* „Training vom Sa – eintragen?“ (`PassedTrainings`): its two answers side by side, wrapping on a narrow row. */
+.passedActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}

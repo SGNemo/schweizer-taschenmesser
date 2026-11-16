@@ -15,6 +15,7 @@ import { getSettings } from '@/core/settings/settings';
 import { formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import { invoiceRepo } from './repo';
+import type { ReturnFrom } from './returnTo';
 import { settings } from './settings';
 
 export const PAY_MINUTES = 10;
@@ -22,8 +23,12 @@ export const PAY_PRIORITY = 2;
 /** While a reminder is noted the invoice goes first among the things of its day. */
 export const DUNNED_PRIORITY = 3;
 
-/** The route of the invoice's own pay step. The page treats both parameters as untrusted and only opens the step. */
-export const payRoute = (id: string): string => `/invoices?open=${encodeURIComponent(id)}&do=pay`;
+/**
+ * The route of the invoice's own pay step. The page treats every parameter as untrusted and only opens the step;
+ * `from` (a key of `returnTo.ts`) lets „Bezahlt“ hand the person back to where they came from.
+ */
+export const payRoute = (id: string, from?: ReturnFrom): string =>
+  `/invoices?open=${encodeURIComponent(id)}&do=pay${from ? `&from=${from}` : ''}`;
 
 /** The day the invoice must be paid by: the noted reminder's deadline, else the invoice's own. */
 export const hardDue = (i: { dueDate: string; dunnedDueDate?: string }): string =>
@@ -92,7 +97,7 @@ const source: PlannableSource = {
         priority: i.dunningLevel ? DUNNED_PRIORITY : PAY_PRIORITY,
         // The planner takes the earlier of this and a hard deadline the person set on the plan row.
         due: { date: hardDue(i), hard: true },
-        action: { label: t.invoices.planAction, to: payRoute(i.id) },
+        action: { label: t.invoices.planAction, to: payRoute(i.id, 'plan') },
         ...(links.length ? { links } : {}),
         createdAt: i.createdAt,
       });
