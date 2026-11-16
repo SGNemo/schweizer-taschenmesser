@@ -29,17 +29,17 @@ Stand 2026-11-09. Quelle: [PLAN.md](PLAN.md) (Pakete), Fund-IDs aus [FINDINGS.md
 - **Übersicht „Alle Widgets“:** Zeilen weiter ungleich hoch (U19 → #599); CLS 0,03.
 - **Handy (412×915 dunkel, mit/ohne Testdaten):** kein seitlicher Überlauf auf keiner Seite; Primärknöpfe > 1 nur Finanzen → Verlauf (leer) und Einstellungen → Sync; Rot wie oben. Wortumbrüche jetzt mit Trennstrich (`hyphens`, U57 – Abos „Haftpflicht-versicherung“, Lesezeichen, Übersichts-Zeilen; der Detektor zählt sie weiter). Abgeschnitten: Monatszellen (S03, erster Titel nur wenn er ganz passt), ToDo-Heute-Karte „nächste Sache“ (Ellipse), Kopf-Eyebrow „Planen · Gewohnheiten/Zeiterfassung“ im Kopfband (neu, klein), Finanzen-Kontokarten. CLS: Einstellungsseiten 0,07–0,22 (Darstellung 0,215 mit Testdaten, Benachrichtigungen 0,12, KI 0,12, Über 0,12), Werkzeuge 0,10, Tresor 0,07 – außerhalb der U01-Modulseiten, Follow-up. axe serious: ToDos-Board Scrollbereich nicht fokussierbar (wie U35), Notizen-Karten-Meta-Kontrast.
 
-## Offen aus den PRs (Follow-ups, je ein kleiner PR)
+## Offen aus den PRs (Follow-ups)
 
-- **`ui/`:** `Patterns.module.css` `.done .title` erreicht verschachtelte Zeilen (Ursache U02; ToDos überschreiben lokal) → `.done > .row .title`; `FolderTabs` versteckt Zähler 0 (U53) und braucht eine `nowrap`-Option (U22); `data-empty` am `WidgetBody` statt Klassen-Import (U39); Fade am Zeilen-Ende nur bei Überlauf (S7 der Kalender-Review).
-- **U07 Rest** (`tools/image`, `tools/pdf`, RecoveryScreen): `fix/ui6-filefield-rest`.
-- **Übersicht, leere Installation:** CLS 0,18 je Laden (develop 0,03), weil das dichte Raster neu packt, wenn eine Karte einen Frame später kommt; Testdaten-Übersicht unverändert (0,18 vs 0,19). Entscheidung Sven: hinnehmen oder Raster erst packen, wenn alle Karten da sind.
-- **Modulseiten mit Restsprung:** `/todos` erster Besuch 0,05–0,07 (Heute-Karte kommt nach den Tasks; `modules/todos`), `/disk` 0,13 (`DiskHead` wechselt Signatur-Höhe), `/` 0,14 (`home/`).
-- **Einrichtung:** Fußzeile ohne `--kb-inset` (Handy-Tastatur); `e2e/setup.spec.ts` hat `localhost:4173` fest verdrahtet.
-- **Kalender:** „Ablauf · Überfällig“ (per-Art-Wort fehlt), Art „gift“ unübersetzt, Handy-Raster-Oberkante 569 statt ≤ 480 px (braucht Kopfband/Reiter, siehe U41).
-- **Texte:** eingefrorene es/fr/pt-BR behalten alte Kontextzeilen (Feeds-Widget, Zeiterfassung, Benachrichtigungs-Status); ungenutzte Schlüssel (`budgets.ext.head.chip`, `maps.placesBar.navigateTo`, `tMusicPage.libraryTitle`) für die nächste String-Bereinigung.
-- **Neu aus der Nachmessung:** Uhrzeit-Kontrast auf eigenen Monatszeilen (S03), Finanzen → Verlauf und Einstellungen → Sync je zwei Primärknöpfe, Finanzen-Kontokarten kürzen den Text, Kopf-Eyebrow am Handy abgeschnitten (Planen-Seiten), ToDos-Board-Scrollbereich ohne Tastaturfokus, Layout-Sprung auf Einstellungsseiten und Werkzeugen am Handy (0,07–0,22), `--page-gutter` nicht auf dem 4-px-Raster (Token).
-- **Handy-FAB** überdeckt Zeilen-⋯ und Karten-Knöpfe (Abos, Gewohnheiten) – Board-Notiz für `layout/`.
+Stand 2026-11-16, nachgeprüft in der Restpunkte-Ernte ([harvest-2026-11.md](../harvest-2026-11.md)); erledigt = auf `develop`.
+
+- **`ui/`:** `.done > .row .title`, `FolderTabs` Zähler 0 + `nowrap`, `data-empty` am `WidgetBody`: erledigt in #877; Übernahme in Notizen-Reitern (H06), Übersicht über `data-empty` (H05), Fade nur bei Überlauf auch für `SubNav` und Kalender-Ansichtszeile (H04): erledigt in #1025.
+- **U07 Rest**, **Einrichtung** (`--kb-inset`, `setup.spec.ts` ohne festen Port), **Kalender** („Ablauf · Überfällig“, „gift“): erledigt in #877. Handy-Raster-Oberkante bleibt bei U41.
+- **Übersicht, leere Installation:** CLS 0,18 – Entscheidung Sven ([CHATS](../../CHATS.md)).
+- **Modulseiten mit Restsprung:** `/todos` nicht mehr reproduzierbar (CLS ≤ 0,003, #1028), `/disk` Kopf mit Platzhalter (H24, Ernte-PR `fix/harvest-11-modules`), `/` siehe Übersicht.
+- **Texte:** ungenutzte Schlüssel entfernt (#1014); eingefrorene es/fr/pt-BR bleiben wie sie sind ([FROZEN](../../i18n/FROZEN.md)).
+- **Neu aus der Nachmessung:** Uhrzeit-Kontrast, Finanzen → Verlauf, Kontokarten: erledigt (Monatszeilen und Kopf umgebaut, Identity 4.0); Einstellungen → Sync ein Primärknopf (H23, `fix/harvest-11-modules`); Kopf-Eyebrow am Handy nicht mehr reproduzierbar (#1028); ToDos-Board fokussierbar (#1028); Layout-Sprung Einstellungen/Werkzeuge am Handy nicht nachgemessen; `--page-gutter` (Token, offen).
+- **Handy-FAB:** entfallen (Plus in der Bottom-Bar, Identity 4.0).
 
 ## Später (unverändert aus PLAN.md)
 

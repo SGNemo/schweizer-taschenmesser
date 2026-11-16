@@ -21,27 +21,25 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 
 1. Übersicht ohne Daten springt je Laden um 0,18: hinnehmen oder Raster erst nach allen Karten packen? ([qa/round-6](qa/round-6/STATUS.md))
 2. Pflicht-Check `Web` im `develop`-Ruleset in GitHub eintragen? (ja; danach Bullet in `decisions/meta.md`)
-3. „seit n Tagen“ überall einheitlich: eigenes Paket? (ja; C27 aus #496)
-4. Bestätigen: kein Muster hinter Text im Modulkopf (AE2, mit 0b-2)? (ja; AE6 erledigt: seit #694 bewegt sich auf der Website nichts)
-5. Browser-Erweiterung: Store oder Release-Zip? (erst X1–X14 prüfen)
-6. Unterlagen: Titel auf der Übersicht als Opt-in? (nein; #489)
-7. Backup: „Was ging wohin?“ auch ohne „In Arbeit anzeigen“? (#566)
-8. Merkliste und Unterlagen mit demselben Kopf lassen? Akzent-Varianten statt festem 25°-Abstand der Modulfarben? (#485)
-9. „Open questions“ in den PR-Texten von #656 (`disk_delete` nur per Attribut `async`?), #632, #490, #492.
-10. Designkontrolle 0b-1 bis 0b-3 (#750): vier Fragen im Bericht ([DESIGN-CHECK](design/ui-audit-2026-11/DESIGN-CHECK-0b-1-3.md)) und welche „sofort“-Befunde als Fix-PRs kommen (alle neun Themen; zuerst G1, Rechnungen bei 1280 px).
-11. #759 (0b-6a Wissen + Bibliothek): vier Ratschen-Treffer freigeben. (ja; die drei Fragen sind beantwortet, siehe Entscheidung; danach Fix-PR „Chat-Plus ohne KI gesperrt“ und 0b-6b)
-12. Planer-Zentrale ([planner-hub](design/planner-hub/README.md)): läuft ohne Stopp durch; ansehen: Richtung A und die zwei zurückgenommenen Entscheidungen D2/D3 (Mockups im PR-Text von #922), Reiz-Budget der Planer-Ansichten für R1. (so lassen)
-13. Austausch Handy ↔ PC ([CONCEPT §11](design/device-exchange/CONCEPT.md)): Handy holt erst beim Öffnen? (ja, v1) · nur Heimnetz? (ja) · Name „Austausch“? (ja) · Regelzeile (Paket R) mergen.
+3. Bestätigen: kein Muster hinter Text im Modulkopf (AE2, mit 0b-2)? (ja; AE6 erledigt: seit #694 bewegt sich auf der Website nichts)
+4. Browser-Erweiterung: Store oder Release-Zip? (erst X1–X14 prüfen)
+5. Unterlagen: Titel auf der Übersicht als Opt-in? (nein; #489)
+6. Backup: „Was ging wohin?“ auch ohne „In Arbeit anzeigen“? (#566)
+7. Merkliste und Unterlagen mit demselben Kopf lassen? Akzent-Varianten statt festem 25°-Abstand der Modulfarben? (#485)
+8. „Open questions“ in den PR-Texten von #656 (`disk_delete` nur per Attribut `async`?), #632, #490, #492.
+9. #759 (0b-6a Wissen + Bibliothek): vier Ratschen-Treffer freigeben. (ja; die drei Fragen sind beantwortet, siehe Entscheidung)
+10. Planer-Zentrale ([planner-hub](design/planner-hub/README.md)): läuft ohne Stopp durch; ansehen: Richtung A und die zwei zurückgenommenen Entscheidungen D2/D3 (Mockups im PR-Text von #922), Reiz-Budget der Planer-Ansichten für R1. (so lassen)
+11. Austausch Handy ↔ PC ([CONCEPT §11](design/device-exchange/CONCEPT.md)): Handy holt erst beim Öffnen? (ja, v1) · nur Heimnetz? (ja) · Name „Austausch“? (ja) · Regelzeile (Paket R) mergen.
 
 **Handgriffe:**
 
-- PRs: #606 mergen, wenn grün; #542 vor dem Launch entscheiden (Dev-Preview- und Dev-Keystore-Teil offen; Repo-Secrets bis dahin unverändert).
+- PRs: #1027 zwei Ratschen-Treffer (`checkModules`, geschützt) freigeben (ja; Ernte H25); #606 mergen, wenn grün; #542 vor dem Launch entscheiden (Dev-Preview- und Dev-Keystore-Teil offen; Repo-Secrets bis dahin unverändert).
 - `ci.yml`-Patch aus #653 einspielen (`GITHUB_TOKEN` nur am Ratschen-Schritt statt im Job-`env` von `stimulus-budget`).
 - Dezember: `nemo-merge` (`meta/agents-v3/nemo-merge.json`) anlegen, Probelauf `ratchet.mjs --pr` mit Wegwerf-PR, Treffer von #640/#642 ansehen (`decisions/meta.md`).
 - Agenten v3.1: `ant apply` der sieben, `--prune` der 16 alten, dann `claude-lock.json` committen ([SETUP](meta/agents-v3/SETUP.md) §2a).
 - Fernsteuerung: Handtests FB1–FB19 ohne FB13 ([MANUAL-TESTS.md](MANUAL-TESTS.md), echtes Handy und Windows-PC); danach Modul und Einstellungs-Abschnitt auf `stable` stellen lassen.
 - `qa/round-5/<x>/MESSAGE.md` an A–D mit Dev-Preview-Link schicken.
-- Chats starten: `fix/ui6-head-heights` (U41), `fix/ui6-followups`; nach 0b-8 alle Bildschirmfotos (README, Social-Preview) neu.
+- Chats starten: `fix/ui6-head-heights` (U41); nach 0b-8 alle Bildschirmfotos (README, Social-Preview) neu.
 - Website – Bilder, sobald die App steht: Chat nach [design/site/SLOTS.md](design/site/SLOTS.md) starten (sechs Slots).
 - HN-L9 b: Zeit bis zum Einfrieren in `design/sync-lan/CONCEPT.md` §9 nachtragen.
 
