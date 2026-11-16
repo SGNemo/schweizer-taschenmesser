@@ -116,6 +116,7 @@ export const quickCapture: Strings['quickCapture'] = {
     bookIncome: 'Book as income',
     bookLine: (action: string, line: string) => `${action}: ${line}`,
     calmHint: 'One line = one entry. Sorting comes later.',
+    reminderHint: 'For a reminder: put “erinnere mich …” in the line.',
     kinds: (parts: string[]) => parts.join(' · '),
     dunningMatch: (payee: string, due: string) =>
       `Reminder for invoice ${payee}, due ${due} · note it`,

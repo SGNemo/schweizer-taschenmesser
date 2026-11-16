@@ -36,7 +36,14 @@ export function BoardView({ tasks, day, onOpen, onMove, onTomorrow, planner = fa
   return (
     <>
       <p className={styles.boardHint}>{t.todos.board.hint}</p>
-      <div className={styles.board} data-testid="todos-board">
+      {/* Scrolls sideways on narrow screens: a named keyboard stop, so the arrow keys reach the far columns. */}
+      <div
+        className={styles.board}
+        data-testid="todos-board"
+        role="region"
+        aria-label={t.todos.board.label}
+        tabIndex={0}
+      >
         {columns.map(({ view, cards }) => (
           <section
             key={view}

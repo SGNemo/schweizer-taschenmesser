@@ -39,6 +39,7 @@ export const todos: Strings['todos'] = {
     wasDue: (date: string) => `was due ${date}`,
     moveTo: (view: string) => `Move to ${view}`,
     hint: 'Drag a card or use "⋯".',
+    label: 'Board columns',
   },
   tags: {
     label: 'Tags',
