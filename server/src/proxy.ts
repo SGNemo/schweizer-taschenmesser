@@ -31,7 +31,11 @@ export type ProxyErrorCode =
   | 'upstream-error';
 
 export class ProxyError extends Error {
-  constructor(readonly code: ProxyErrorCode) {
+  /** HTTP status of a non-2xx upstream answer (`upstream-error` only), so the app can tell gone from down. */
+  constructor(
+    readonly code: ProxyErrorCode,
+    readonly upstreamStatus?: number,
+  ) {
     super(code);
   }
 }
@@ -330,7 +334,7 @@ export async function proxyFetch(
         body: Buffer.alloc(0),
       };
     }
-    if (res.status < 200 || res.status >= 300) throw new ProxyError('upstream-error');
+    if (res.status < 200 || res.status >= 300) throw new ProxyError('upstream-error', res.status);
     const type = (res.headers['content-type'] ?? '').split(';')[0]!.trim();
     if (!rule.types.test(type)) throw new ProxyError('unsupported-type');
     if (res.body.length > rule.maxBytes) throw new ProxyError('too-large');

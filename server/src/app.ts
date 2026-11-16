@@ -546,7 +546,11 @@ export async function buildApp(opts: AppOptions): Promise<FastifyInstance> {
           .send(r.body);
       } catch (e) {
         const code = e instanceof ProxyError ? e.code : 'upstream-error';
-        return reply.code(PROXY_STATUS[code] ?? 502).send({ error: code });
+        // The status stays 502; the body adds what the host answered (e.g. 404/410 = gone, 5xx = down).
+        const upstreamStatus = e instanceof ProxyError ? e.upstreamStatus : undefined;
+        return reply
+          .code(PROXY_STATUS[code] ?? 502)
+          .send(upstreamStatus === undefined ? { error: code } : { error: code, upstreamStatus });
       }
     },
   );
