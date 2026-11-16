@@ -1,11 +1,3 @@
-.header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin-bottom: var(--space-4);
-}
 .tabs {
   margin-bottom: var(--space-4);
 }
@@ -70,15 +62,13 @@
   font-size: var(--text-lg);
   font-weight: var(--weight-semibold);
   overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
 }
 .income {
   color: var(--success);
 }
-
-/* Charts */
-.charts {
-  display: grid;
-  gap: var(--space-4);
+/* A card followed by another block: the same distance as between the grids around it. */
+.block {
   margin-bottom: var(--space-5);
 }
 .chartHead {
@@ -86,7 +76,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 .chartHead button {
   flex: none;
@@ -95,60 +85,16 @@
 .chartTitle {
   font-size: var(--text-md);
   font-weight: var(--weight-semibold);
+  /* A chart's value axis starts at its top edge: room under the heading so its top label never touches it. */
+  margin: 0 0 var(--space-4);
 }
-/* Legend of the two-series charts: one row above the chart (not the ring's column legend below). */
-.seriesLegend {
-  list-style: none;
-  display: flex;
-  gap: var(--space-4);
-  margin: 0 0 var(--space-3);
-  padding: 0;
-  font-size: var(--text-sm);
-  color: var(--text);
-}
-.seriesLegend li {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-.seriesSwatch {
-  width: 10px;
-  height: 10px;
-  border-radius: var(--radius-full);
-}
-.tooltip {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-2);
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--text-sm);
-  color: var(--text);
-}
-.tooltipTitle {
-  color: var(--text-muted);
-  margin-bottom: 2px;
-}
-.tooltipRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-.lineKey {
-  width: 12px;
-  height: 3px;
-  border-radius: var(--radius-full);
-  flex: none;
-}
-.tooltipValue {
-  font-weight: var(--weight-semibold);
-  font-variant-numeric: tabular-nums;
-}
-.tooltipName {
-  color: var(--text-muted);
+.chartHead .chartTitle {
+  margin: 0;
 }
 .table {
   width: 100%;
+  /* Under a chart in the same card (the year's months). */
+  margin-top: var(--space-4);
   border-collapse: collapse;
   font-size: var(--text-sm);
 }
@@ -162,9 +108,6 @@
 .table th.num {
   text-align: right;
   font-variant-numeric: tabular-nums;
-}
-.empty {
-  color: var(--text-muted);
 }
 
 /* Lists */
@@ -231,14 +174,6 @@
   }
 }
 
-/* Wide pages without a side panel: the two charts sit next to each other. */
-@container page (min-width: 62rem) {
-  .charts:not(.chartsOne) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
-  }
-}
-
 /* Import rules (folded under the categories) */
 .rulesBox {
   margin-top: var(--space-4);
@@ -257,19 +192,6 @@
   background: var(--surface-raised);
   border-radius: var(--radius-md);
 }
-
-/* Month curve, category ring. */
-.curve {
-  width: 100%;
-  height: 11rem;
-  display: block;
-}
-.curveLine {
-  fill: none;
-  stroke: var(--module-color);
-  stroke-width: 2.5;
-  stroke-linejoin: round;
-}
 .curveFoot {
   display: flex;
   justify-content: space-between;
@@ -282,38 +204,6 @@
 .curveFoot .income {
   color: var(--success);
   font-weight: var(--weight-semibold);
-}
-.ringRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-5);
-  flex-wrap: wrap;
-}
-.legend {
-  flex: 1 1 12rem;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  font-size: var(--text-sm);
-}
-.legend li {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-.legend b {
-  margin-left: auto;
-  font-variant-numeric: var(--font-num);
-  font-weight: var(--weight-semibold);
-}
-.swatch {
-  width: 0.7rem;
-  height: 0.7rem;
-  border-radius: var(--radius-full);
-  flex: none;
 }
 .visuals {
   display: grid;
@@ -340,6 +230,16 @@
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--module-color) 14%, var(--surface));
   color: var(--module-color);
+}
+/* Phone (the list's wrap rule in ui/Patterns starts at 40 rem): icon, 9 rem of text, a four-digit amount and "⋯" filled
+   the 412-px row to the pixel, so "⋯" fell alone under the amount of every income. A smaller icon, closer to the text,
+   leaves the row 8 px to spare (polish p1). */
+@media (max-width: 40rem) {
+  .catIcon {
+    width: 1.75rem;
+    height: 1.75rem;
+    margin-inline-end: calc(-1 * var(--space-1));
+  }
 }
 
 /* ---- money group: transfers, splits, categories, filters, year, outlook ---- */
@@ -522,59 +422,6 @@
     max-width: var(--page-reading);
   }
 }
-
-/* Chart boxes: the bars grow with their rows (`--bars`, set by the chart; 40 px a row), the trend has a fixed height. */
-.barsBox {
-  height: calc(var(--bars, 1) * 40px + 8px);
-}
-.trendBox {
-  height: 232px;
-}
-/* The bar charts (Charts.tsx), drawn as boxes; the 0 line of the grid is the month axis: axis text at the size of the former chart (12 px), bars grow in by
-   transform only (the global reduced-motion rule stops it). */
-.plotBox {
-  position: relative;
-}
-.tipLayer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 1;
-  pointer-events: none;
-  white-space: nowrap;
-}
-.barRows {
-  list-style: none;
-  margin: 0;
-  padding: 4px 0;
-}
-.barRow {
-  display: grid;
-  grid-template-columns: 124px minmax(0, 1fr);
-  align-items: center;
-  height: 40px;
-}
-.barName {
-  padding-inline-end: 8px;
-  line-height: 1;
-  text-align: end;
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-}
-/* The room right of the plot (88 px) holds the amount at the tip of the longest bar. */
-.barPlot {
-  display: flex;
-  align-items: center;
-  height: 100%;
-  padding-inline-end: 88px;
-  border-inline-start: 1px solid var(--border);
-}
-.picked .barPlot {
-  background: var(--surface-2);
-  background-clip: content-box;
-}
 .bar {
   flex: none;
   height: 16px;
@@ -583,73 +430,9 @@
   transform-origin: left;
   animation: growX 240ms var(--ease-out);
 }
-.barValue {
-  flex: none;
-  margin-inline-start: 5px;
-  font-size: var(--text-xs);
-  color: var(--text);
-  white-space: nowrap;
-}
 .picked .bar,
 .picked .column {
   opacity: 0.8;
-}
-.yAxis {
-  position: absolute;
-  inset: 8px auto 30px 0;
-  width: 52px;
-}
-.yAxis span,
-.columnLabel {
-  position: absolute;
-  font-size: var(--text-xs);
-  line-height: 1;
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-.yAxis span {
-  right: 8px;
-  transform: translateY(50%);
-}
-/* The highest step is not centred on its line but hangs below it, inside the plot. */
-.yAxis .topTick {
-  transform: none;
-  top: 0;
-}
-.columnsPlot {
-  position: absolute;
-  inset: 8px 4px 30px 52px;
-  display: flex;
-}
-.gridLine {
-  position: absolute;
-  left: 0;
-  right: 0;
-  border-top: 1px solid var(--border);
-}
-.columnBand {
-  position: relative;
-  flex: 1 1 0;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 2px;
-}
-.columnBand.picked {
-  background: var(--surface-2);
-}
-.column {
-  width: 14px;
-  border-radius: 4px 4px 0 0;
-  transform-origin: bottom;
-  animation: growY 240ms var(--ease-out);
-}
-.columnLabel {
-  top: 100%;
-  left: 0;
-  right: 0;
-  margin-top: 8px;
-  text-align: center;
 }
 @keyframes growX {
   from {

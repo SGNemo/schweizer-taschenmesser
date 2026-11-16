@@ -4,7 +4,7 @@ import { today } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Button, KpiWidget, SensitiveValue, useWidgetSize } from '@/ui';
 import { currenciesOf, filterByCurrency } from '../logic';
-import { monthGlance } from '../month';
+import { monthContext, monthGlance } from '../month';
 import { useFinanceData, useForecast } from '../summary';
 
 /** "Diesen Monat": free at the month's end (the outlook), what is still coming and what was spent. */
@@ -26,14 +26,7 @@ export default function MonthWidget() {
       value={noAccounts || !g ? undefined : formatMoney(g.freeMinor, currency)}
       empty={t.finance.noAccounts}
       emptyAction={{ label: t.finance.title, to: '/finance?tab=accounts' }}
-      context={
-        !g
-          ? ''
-          : [
-              g.comingCount > 0 ? m.coming(formatMoney(g.comingMinor, currency)) : m.nothingComing,
-              m.spent(formatMoney(g.spentMinor, currency)),
-            ].join(' · ')
-      }
+      context={g ? monthContext(g, (n) => formatMoney(n, currency), m) : ''}
     />
   );
   return (

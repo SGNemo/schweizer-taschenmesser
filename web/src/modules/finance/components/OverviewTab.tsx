@@ -1,40 +1,24 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useMemo } from 'react';
 import { formatMoney } from '@/core/money';
 import { useCurrency } from '../currency';
 import { t } from '@/strings';
-import { Button, Card, SensitiveValue } from '@/ui';
+import { Card, SensitiveValue } from '@/ui';
 import { monthSummary, monthlyTrend } from '../logic';
 import { compareMonths, topCategoryTotals, type Delta } from '../analysis';
 import { ForecastCard } from './ForecastCard';
 import type { FinanceData } from '../types';
 import { totalBalance, useAvailability } from '../summary';
 import { monthBalanceSeries } from '../balanceSeries';
-import { CategoryRing } from './CategoryRing';
-import { MonthCurve } from './MonthCurve';
-// Plain elements, a few kB: loaded with the overview, so the cards never wait on a chunk or change height.
-import { CategoryBars as Charts, CategoryTable, TrendColumns as Trend, TrendTable } from './Charts';
+// The shared chart blocks (`@/ui/charts`): loaded with the overview, so the cards never wait on a chunk.
+import {
+  CategoryDonut,
+  ChartCard,
+  DayBalanceChart,
+  IncomeExpenseChart,
+  MonthTable,
+} from './MoneyCharts';
 import { today } from '@/core/time/dates';
 import styles from '../routes/finance.module.css';
-
-function ChartCard({ title, chart, table }: { title: string; chart: ReactNode; table: ReactNode }) {
-  const [asTable, setAsTable] = useState(false);
-  return (
-    <Card>
-      <div className={styles.chartHead}>
-        <h2 className={styles.chartTitle}>{title}</h2>
-        <Button
-          variant="ghost"
-          size="sm"
-          aria-label={asTable ? t.finance.showChart : t.finance.showTable}
-          onClick={() => setAsTable(!asTable)}
-        >
-          {asTable ? t.finance.chartShort : t.finance.tableShort}
-        </Button>
-      </div>
-      {asTable ? table : chart}
-    </Card>
-  );
-}
 
 /**
  * "▲ +120,00 € (+8 %) zum Vormonat": arrow and sign as text, no colour of its own (more spending is not "bad" by
@@ -65,6 +49,27 @@ function DeltaLine({ d, money }: { d: Delta; money: (m: number) => string }) {
   );
 }
 
+/** The separator `t.finance.breakdown` joins its parts with (de and en): keep both in step. */
+const SEP = ' · ';
+
+/**
+ * A line of parts ("Kontostand 12.616,33 € · offene Rechnungen −1.017,84 €") that breaks between its parts, never
+ * inside one: on the phone an amount used to land alone on the next line. The text stays the same for screen readers.
+ */
+export function PartsLine({ text }: { text: string }) {
+  const parts = text.split(SEP);
+  return (
+    <>
+      {parts.map((part, i) => (
+        <Fragment key={i}>
+          <span className={styles.nowrap}>{i < parts.length - 1 ? `${part} ·` : part}</span>
+          {i < parts.length - 1 ? ' ' : null}
+        </Fragment>
+      ))}
+    </>
+  );
+}
+
 /** `narrow`: the overview shares the row with a side panel, so the charts stay in one column. */
 export function OverviewTab({
   data,
@@ -84,7 +89,8 @@ export function OverviewTab({
   const { sum, byCategory, cmp, hasPrevious, trend, curve } = useMemo(
     () => ({
       sum: monthSummary(data.txs, month),
-      byCategory: topCategoryTotals(data.txs, month, data.categories),
+      // Every category: the donut folds the small ones into one slice itself (folding twice made a rest inside a rest).
+      byCategory: topCategoryTotals(data.txs, month, data.categories, Number.POSITIVE_INFINITY),
       cmp: compareMonths(data.txs, month),
       hasPrevious: data.txs.some((x) => x.date.slice(0, 7) < month),
       trend: monthlyTrend(data.txs, month, 6),
@@ -103,11 +109,13 @@ export function OverviewTab({
         <p className={styles.breakdown} data-testid="hero-breakdown">
           {/* Its amounts add up to the head's figure, so the line hides with it ("Werte ausblenden"). */}
           <SensitiveValue>
-            {t.finance.breakdown(
-              money(a.balance),
-              a.useInvoices && a.openInvoices ? money(a.openInvoices) : '',
-              a.useSubs && a.subscriptions ? money(a.subscriptions) : '',
-            )}
+            <PartsLine
+              text={t.finance.breakdown(
+                money(a.balance),
+                a.useInvoices && a.openInvoices ? money(a.openInvoices) : '',
+                a.useSubs && a.subscriptions ? money(a.subscriptions) : '',
+              )}
+            />
           </SensitiveValue>
         </p>
       ) : null}
@@ -146,36 +154,31 @@ export function OverviewTab({
       </div>
 
       <div className={`${styles.visuals} ${narrow ? styles.visualsOne : ''}`}>
-        <MonthCurve points={curve} />
-        <CategoryRing rows={byCategory} />
+        {curve.length >= 2 ? (
+          <Card>
+            <h2 className={styles.chartTitle}>{t.finance.balanceCurve}</h2>
+            <DayBalanceChart
+              points={curve}
+              title={t.finance.balanceCurve}
+              testId="month-curve"
+              dayOnly
+            />
+          </Card>
+        ) : null}
+        {/* One chart for the month's categories (the ring and a bar chart said the same twice and disagreed). */}
+        <Card>
+          <h2 className={styles.chartTitle}>{t.finance.ringTitle}</h2>
+          <CategoryDonut rows={byCategory} title={t.finance.ringTitle} />
+        </Card>
       </div>
 
       <ForecastCard data={data} />
 
-      <div className={`${styles.charts} ${narrow ? styles.chartsOne : ''}`}>
-        <ChartCard
-          title={t.finance.expensesByCategory}
-          chart={
-            byCategory.length ? (
-              <Charts rows={byCategory} />
-            ) : (
-              <p className={styles.empty}>{t.finance.noExpenses}</p>
-            )
-          }
-          table={
-            byCategory.length ? (
-              <CategoryTable rows={byCategory} />
-            ) : (
-              <p className={styles.empty}>{t.finance.noExpenses}</p>
-            )
-          }
-        />
-        <ChartCard
-          title={t.finance.trend}
-          chart={<Trend points={trend} />}
-          table={<TrendTable points={trend} />}
-        />
-      </div>
+      <ChartCard
+        title={t.finance.trend}
+        chart={<IncomeExpenseChart points={trend} title={t.finance.trend} />}
+        table={<MonthTable points={trend} />}
+      />
     </>
   );
 }

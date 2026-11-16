@@ -1,18 +1,23 @@
 import { formatMoney } from '@/core/money';
-import { formatDay } from '@/core/time/dates';
+import { formatDay, monthOf } from '@/core/time/dates';
+import { today } from '@/core/time/now';
 import { t } from '@/strings';
 import { Card } from '@/ui';
 import { rollupYear, yearSummary } from '../analysis';
 import { useCurrency } from '../currency';
 import type { FinanceData } from '../types';
+import { CategoryDonut, IncomeExpenseChart, useMoneyCell } from './MoneyCharts';
 import styles from '../routes/finance.module.css';
 
 /** The year as a table: income, expenses and result per month (numbers right-aligned), the savings rate, where the money went. */
 export function YearView({ data, year }: { data: FinanceData; year: number }) {
   const currency = useCurrency();
   const money = (m: number) => formatMoney(m, currency);
+  // "Werte ausblenden": the table masks like the chart above it.
+  const cell = useMoneyCell();
   const sum = yearSummary(data.txs, year);
-  const top = rollupYear(data.txs, year, data.categories).slice(0, 8);
+  // Every category: the donut folds the small ones itself.
+  const top = rollupYear(data.txs, year, data.categories);
   const name = (id: string | undefined) =>
     (id && data.categories.find((c) => c.id === id)?.name) || t.finance.noCategory;
   const e = t.finance.ext.year;
@@ -41,19 +46,26 @@ export function YearView({ data, year }: { data: FinanceData; year: number }) {
           </span>
         </Card>
       </div>
-      <Card>
+      <Card className={styles.block}>
         <h2 className={styles.chartTitle}>{e.byMonth}</h2>
-        <table className={styles.table}>
+        {/* The months as two lines above their table; months still to come stay empty, not zero. */}
+        <IncomeExpenseChart
+          points={sum.months.map((m) => ({ ...m, label: formatDay(`${m.month}-01`, 'MMM') }))}
+          title={e.byMonth}
+          upTo={monthOf(today())}
+          testId="year-chart"
+        />
+        <table className={styles.table} data-testid="year-months">
           <thead>
             <tr>
               <th scope="col">{t.finance.ext.period.month}</th>
-              <th scope="col" className="num">
+              <th scope="col" className={styles.num}>
                 {t.finance.income}
               </th>
-              <th scope="col" className="num">
+              <th scope="col" className={styles.num}>
                 {t.finance.expense}
               </th>
-              <th scope="col" className="num">
+              <th scope="col" className={styles.num}>
                 {t.finance.net}
               </th>
             </tr>
@@ -62,9 +74,20 @@ export function YearView({ data, year }: { data: FinanceData; year: number }) {
             {sum.months.map((m) => (
               <tr key={m.month}>
                 <th scope="row">{formatDay(`${m.month}-01`, 'LLLL')}</th>
-                <td className="num">{money(m.income)}</td>
-                <td className="num">{money(m.expense)}</td>
-                <td className="num">{money(m.net)}</td>
+                {m.month > monthOf(today()) ? (
+                  // A month still to come has no figures yet: a quiet dash, not three times 0,00 €.
+                  <>
+                    <td className={`${styles.num} ${styles.muted}`}>–</td>
+                    <td className={`${styles.num} ${styles.muted}`}>–</td>
+                    <td className={`${styles.num} ${styles.muted}`}>–</td>
+                  </>
+                ) : (
+                  <>
+                    <td className={styles.num}>{cell(m.income)}</td>
+                    <td className={styles.num}>{cell(m.expense)}</td>
+                    <td className={styles.num}>{cell(m.net)}</td>
+                  </>
+                )}
               </tr>
             ))}
           </tbody>
@@ -73,14 +96,15 @@ export function YearView({ data, year }: { data: FinanceData; year: number }) {
       {top.length > 0 ? (
         <Card>
           <h2 className={styles.chartTitle}>{e.topCategories}</h2>
-          <ul className={styles.legend}>
-            {top.map((r) => (
-              <li key={r.categoryId ?? 'none'}>
-                <span>{name(r.categoryId)}</span>
-                <b>{money(r.amountMinor)}</b>
-              </li>
-            ))}
-          </ul>
+          <CategoryDonut
+            rows={top.map((r) => ({
+              categoryId: r.categoryId,
+              name: name(r.categoryId),
+              amountMinor: r.amountMinor,
+            }))}
+            title={e.topCategories}
+            testId="year-categories"
+          />
         </Card>
       ) : null}
     </>

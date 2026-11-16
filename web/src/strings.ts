@@ -3048,8 +3048,47 @@ export const de = {
         /** The important part first: a line cut short on the phone still says the right thing. */
         context: (n: number, overdue: number) => {
           const count = n === 1 ? '1 Rechnung' : `${n} Rechnungen`;
-          return overdue > 0 ? `${overdue} überfällig · ${count}` : count;
+          return overdue > 0 ? `Frist vorbei: ${overdue} · ${count}` : count;
         },
+      },
+      batch: {
+        select: 'Auswählen',
+        selectAll: 'Alle auswählen',
+        paid: (n: number) =>
+          n === 1 ? '1 Rechnung als bezahlt markiert.' : `${n} Rechnungen als bezahlt markiert.`,
+      },
+      search: {
+        label: 'Rechnungen durchsuchen',
+        placeholder: 'Rechnungen suchen',
+        none: (q: string) => `Keine Rechnung passt zu „${q}“.`,
+        clear: 'Suche leeren',
+      },
+      overview: {
+        tab: 'Überblick',
+        figures: 'Rechnungen in Zahlen',
+        late: 'Frist vorbei',
+        lateNone: 'Alle Fristen laufen noch.',
+        lateShow: (n: number) =>
+          n === 1
+            ? 'Frist vorbei: 1 Rechnung, in der Liste zeigen'
+            : `Frist vorbei: ${n} Rechnungen, in der Liste zeigen`,
+        paidMonth: (month: string) => `Bezahlt im ${month}`,
+        count: (n: number) => (n === 1 ? '1 Rechnung' : `${n} Rechnungen`),
+        byPayee: 'Nach Empfänger',
+        byPayeeOpen: 'Offen nach Empfänger',
+        byPayeePaid: 'Bezahlt nach Empfänger, letzte 12 Monate',
+        show: 'Zeigen',
+        showOpen: 'Offen',
+        showPaid: 'Bezahlt, 12 Monate',
+        centreOpen: 'offen',
+        centrePaid: 'bezahlt',
+        emptyOpen: 'Gerade ist nichts offen.',
+        emptyPaid: 'In den letzten 12 Monaten noch nichts bezahlt.',
+        months: 'Bezahlt pro Monat',
+        skipped: (n: number, currency: string) =>
+          n === 1
+            ? `1 Rechnung in anderer Währung ist hier nicht dabei; alles in ${currency}.`
+            : `${n} Rechnungen in anderer Währung sind hier nicht dabei; alles in ${currency}.`,
       },
       detail: {
         label: 'Rechnung im Detail',
@@ -3186,6 +3225,69 @@ export const de = {
         unit: '/ Monat',
         paused: (n: number) => (n === 1 ? '1 pausiert' : `${n} pausiert`),
       },
+      overview: {
+        tab: 'Übersicht',
+        listTab: 'Abos',
+        tabsLabel: 'Ansicht',
+        sharesTitle: 'Wofür du zahlst',
+        sharesByCategory: 'Kosten pro Monat nach Art',
+        sharesByProvider: 'Kosten pro Monat nach Abo',
+        byLabel: 'Aufteilen nach',
+        byCategory: 'Art',
+        byProvider: 'Abo',
+        noCategory: 'Ohne Art',
+        perMonth: 'pro Monat',
+        nothingRunning: 'Gerade läuft kein Abo.',
+        otherCurrencies: (n: number) =>
+          n === 1
+            ? '1 Abo in einer anderen Währung ist nicht mitgerechnet.'
+            : `${n} Abos in anderen Währungen sind nicht mitgerechnet.`,
+        upcomingTitle: 'Nächste 30 Tage',
+        upcomingEmpty: 'In den nächsten 30 Tagen wird nichts abgebucht.',
+        upcomingSum: (n: number) =>
+          n === 1 ? '1 Abbuchung, zusammen' : `${n} Abbuchungen, zusammen`,
+        yearTitle: 'Was kostet mich das im Jahr',
+        moreInYear: (n: number, amount: string) =>
+          n === 1 ? `Dazu 1 weiteres Abo: ${amount}` : `Dazu ${n} weitere Abos: zusammen ${amount}`,
+      },
+      sort: {
+        label: 'Sortieren nach',
+        next: 'Fällig',
+        cost: 'Pro Jahr',
+        name: 'Name',
+      },
+      perYearShort: (amount: string) => `${amount} im Jahr`,
+      deadlines: {
+        title: 'Kündigungsfristen',
+        none: 'In den nächsten 90 Tagen endet keine Kündigungsfrist.',
+        by: (date: string) => `Kündigen bis ${date}`,
+        otherwise: (amount: string, date: string) => `sonst ${amount} am ${date}`,
+        plan: 'In den Plan',
+        planFor: (name: string) => `${name} kündigen: in den Plan`,
+        planned: 'Im Plan',
+        plannedToast: (name: string) => `Im Plan: ${name} kündigen`,
+        later: (n: number) =>
+          n === 1 ? 'Eine weitere Frist bis 90 Tage' : `${n} weitere Fristen bis 90 Tage`,
+      },
+      prices: {
+        title: 'Preisänderungen',
+        change: (from: string, to: string, pct: number) =>
+          `${from} → ${to} (${pct > 0 ? '+' : ''}${pct} %)`,
+        since: (date: string) => `seit ${date}`,
+        perYear: (amount: string, up: boolean) =>
+          up ? `${amount} mehr im Jahr` : `${amount} weniger im Jahr`,
+      },
+      unused: {
+        title: 'Kaum genutzt',
+        mark: 'Kaum genutzt',
+        markHint: 'Die Übersicht zeigt dann, was es im Jahr kostet.',
+        menuMark: 'Als kaum genutzt markieren',
+        menuUnmark: 'Wird wieder genutzt',
+        sum: (n: number, amount: string) =>
+          n === 1 ? `1 Abo, ${amount} im Jahr` : `${n} Abos, zusammen ${amount} im Jahr`,
+      },
+      widgetSummary: (monthly: string, name: string, date: string) =>
+        `${monthly} pro Monat · nächste: ${name}, ${date}`,
       suggest: {
         apply: (amount: string) => `Preis übernehmen: ${amount}`,
         seen: (amount: string) => `Zuletzt abgebucht: ${amount}`,
@@ -3358,13 +3460,14 @@ export const de = {
         done: 'Export gespeichert.',
         file: 'buchungen',
       },
-      widget: { addExpense: 'Ausgabe +', vsPrevious: (change: string) => `${change} zum Vormonat` },
+      widget: { addExpense: 'Ausgabe +' },
       month: {
         title: 'Diesen Monat',
         free: 'Frei bis Monatsende',
-        coming: (amount: string) => `Kommt noch ${amount}`,
+        coming: (amount: string) => `Noch fällig ${amount}`,
         nothingComing: 'Nichts mehr fällig',
-        spent: (amount: string) => `bisher ausgegeben ${amount}`,
+        spent: (amount: string) => `Ausgegeben ${amount}`,
+        spentNone: 'Noch nichts ausgegeben',
         open: 'Was noch kommt',
       },
       settings: {
@@ -3426,7 +3529,6 @@ export const de = {
       ]
         .filter(Boolean)
         .join(' · '),
-    expensesByCategory: 'Ausgaben nach Kategorie',
     trend: 'Einnahmen und Ausgaben der letzten 6 Monate',
     balanceCurve: 'Verlauf im Monat',
     netWorthTitle: 'Vermögen am Monatsende',
@@ -3457,7 +3559,6 @@ export const de = {
           : invoices
             ? 'Keine Rechnung offen.'
             : 'Kein Abo mehr bis Monatsende.',
-      curve: (a: string, b: string) => `Vermögen von ${a} auf ${b}`,
       byKind: 'Vermögen nach Art des Kontos',
       otherCurrency: (code: string) => `Konten in ${code}`,
       notConverted: 'nicht umgerechnet',
@@ -3466,10 +3567,7 @@ export const de = {
       /** The amount is a part of the figure, not the figure. */
       widgetAvailable: (amount: string) => `Vermögen, davon ${amount} verfügbar`,
     },
-    categoriesRing: (n: number) => (n === 1 ? '1 Kategorie' : `${n} Kategorien`),
     ringTitle: 'Wohin das Geld ging',
-    curveFrom: 'Monatsbeginn',
-    curveLabel: (a: string, b: string) => `Kontostand von ${a} auf ${b}`,
     showTable: 'Als Tabelle anzeigen',
     showChart: 'Als Diagramm anzeigen',
     tableShort: 'Tabelle',
