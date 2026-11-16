@@ -75,7 +75,8 @@ export const exchange: Strings['exchange'] = {
     unreachable: 'Goes out as soon as you are on your home network and Nemo runs on your PC.',
     exchangeOff:
       'Device drop is not turned on at the PC yet. At the PC: More → Module library → Device drop.',
-    notGranted: 'Device drop is still off for this phone at the PC. At the PC: Device drop → Turn on.',
+    notGranted:
+      'Device drop is still off for this phone at the PC. At the PC: Device drop → Turn on.',
     paused: 'Device drop is paused at the PC. Turn it on again there.',
     limit: (minutes: number) => `Too much at once. The rest goes on in ${minutes} minutes.`,
   },

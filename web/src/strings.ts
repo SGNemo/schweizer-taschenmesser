@@ -10608,10 +10608,12 @@ export const de = {
       notPaired:
         'Noch kein Gerät gekoppelt. Kopple dein Handy, dann kannst du ihm Notizen und Links schicken.',
       pair: 'Gerät koppeln',
-      hubOff: 'Der Abgleich im Heimnetz ist aus. Schalte ihn ein, damit dein Handy diesen PC erreicht.',
+      hubOff:
+        'Der Abgleich im Heimnetz ist aus. Schalte ihn ein, damit dein Handy diesen PC erreicht.',
       hubOn: 'Abgleich öffnen',
       setupTitle: 'Austausch einschalten',
-      setupLead: 'Wähle, welche Geräte dir Notizen und Links schicken dürfen. Windows fragt einmal nach.',
+      setupLead:
+        'Wähle, welche Geräte dir Notizen und Links schicken dürfen. Windows fragt einmal nach.',
       setupHint: 'Was du an dein Handy schickst, kommt an, sobald Nemo dort offen ist.',
       setupButton: 'Austausch einschalten',
       deviceOff: 'Austausch ist für dieses Gerät noch aus.',

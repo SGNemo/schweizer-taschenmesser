@@ -112,7 +112,11 @@ export async function connect(ex: ExchangeService): Promise<void> {
   } catch (e) {
     session = null;
     const p = problemOf(e instanceof Error ? e.message : null);
-    useExchangeView.setState({ open: false, problem: p?.problem ?? 'unreachable', minutes: p?.minutes ?? null });
+    useExchangeView.setState({
+      open: false,
+      problem: p?.problem ?? 'unreachable',
+      minutes: p?.minutes ?? null,
+    });
   } finally {
     opening = false;
   }

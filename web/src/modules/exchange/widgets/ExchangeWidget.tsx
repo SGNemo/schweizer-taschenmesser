@@ -10,11 +10,23 @@ import { itemRepo } from '../repo';
  */
 export default function ExchangeWidget() {
   const fresh = useLiveQuery(
-    async () => (await itemRepo.active().filter((r) => r.direction === 'in' && r.unseen).toArray()).length,
+    async () =>
+      (
+        await itemRepo
+          .active()
+          .filter((r) => r.direction === 'in' && r.unseen)
+          .toArray()
+      ).length,
     [],
   );
   if (!getPlatform().exchange.side) {
-    return <StatusWidget icon="swap" state={t.exchange.unsupported} />;
+    return (
+      <StatusWidget
+        icon="swap"
+        state={t.exchange.unsupported}
+        action={{ label: t.exchange.widget.open, to: '/exchange' }}
+      />
+    );
   }
   return (
     <StatusWidget

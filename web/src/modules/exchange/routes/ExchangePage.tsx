@@ -5,16 +5,25 @@ import { dateTimeFormat } from '@/core/i18n/format';
 import { getPlatform } from '@/core/platform';
 import type { ExchangeDevice, ExchangeService } from '@/core/platform/types';
 import { settingsPath } from '@/core/settings/registry/paths';
+import { deleteWithUndo } from '@/core/undo/withToast';
 import { t } from '@/strings';
-import { Button, Checkbox, EmptyState, Icon, IconButton, PageHeader, SelectField, TextArea } from '@/ui';
+import {
+  Button,
+  Checkbox,
+  EmptyState,
+  Icon,
+  IconButton,
+  PageHeader,
+  SelectField,
+  TextArea,
+} from '@/ui';
 import { bodyOf, hostOf, kindOf, newItemId, openable } from '../logic';
 import { itemRepo } from '../repo';
-import type { ExchangeRow } from '../schema';
 import { deliver, refreshPc } from '../services';
 import { useExchangeView } from '../state';
 import styles from '../exchange.module.css';
 
-type Stored = ExchangeRow & { id: string; createdAt: string };
+type Stored = NonNullable<Awaited<ReturnType<typeof itemRepo.get>>>;
 
 /** On the phone every card is with the one paired PC; its outgoing cards name it so. */
 const PHONE_PEER = 'pc';
@@ -132,8 +141,10 @@ function Setup({
           <li key={d.id}>
             <Checkbox
               label={d.name || t.exchange.peer.phone}
-              hint={
-                d.lastSeen ? t.exchange.pc.lastSeen(fmt.format(new Date(d.lastSeen * 1000))) : undefined
+              description={
+                d.lastSeen
+                  ? t.exchange.pc.lastSeen(fmt.format(new Date(d.lastSeen * 1000)))
+                  : undefined
               }
               checked={picked.includes(d.id)}
               onChange={(e) =>
@@ -144,7 +155,11 @@ function Setup({
         ))}
       </ul>
       <p className={styles.note}>{t.exchange.pc.setupHint}</p>
-      <Button variant="primary" disabled={busy || picked.length === 0} onClick={() => void turnOn()}>
+      <Button
+        variant="primary"
+        disabled={busy || picked.length === 0}
+        onClick={() => void turnOn()}
+      >
         {t.exchange.pc.setupButton}
       </Button>
       {problem ? (
@@ -226,10 +241,10 @@ function Conversation({
   const rows = useLiveQuery(
     async () =>
       (
-        (await itemRepo
+        await itemRepo
           .active()
           .filter((r) => side === 'phone' || r.peer === peer)
-          .sortBy('createdAt')) as Stored[]
+          .sortBy('createdAt')
       ).slice(-300),
     [peer, side],
   );
@@ -368,7 +383,10 @@ function Card({ row, side }: { row: Stored; side: 'pc' | 'phone' }) {
         >
           {copied ? t.exchange.actions.copied : t.exchange.actions.copy}
         </Button>
-        <IconButton label={t.exchange.actions.remove} onClick={() => void itemRepo.remove(row.id)}>
+        <IconButton
+          label={t.exchange.actions.remove}
+          onClick={() => void deleteWithUndo(() => itemRepo.remove(row.id))}
+        >
           <Icon name="trash" />
         </IconButton>
       </div>

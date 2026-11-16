@@ -37,20 +37,14 @@ export function hostOf(link: string): string {
   }
 }
 
-/** Cards older than the retention, for the sweep. */
-export function expired(createdAt: string, at = now()): boolean {
-  const t = Date.parse(createdAt);
-  return Number.isFinite(t) && at - t > RETENTION_MS;
+/** Cards older than the retention, for the sweep (`createdAt` in ms). */
+export function expired(createdAt: number, at = now()): boolean {
+  return Number.isFinite(createdAt) && at - createdAt > RETENTION_MS;
 }
 
 /** Why a phone's session was refused or ended, as the key of its sentence. */
 export type PhoneProblem =
-  | 'notPaired'
-  | 'unreachable'
-  | 'exchangeOff'
-  | 'notGranted'
-  | 'paused'
-  | 'limit';
+  'notPaired' | 'unreachable' | 'exchangeOff' | 'notGranted' | 'paused' | 'limit';
 
 /** The error code of `open` (or the reason of `closed`) as a problem; `null` = nothing to say. */
 export function problemOf(code: string | null): { problem: PhoneProblem; minutes?: number } | null {

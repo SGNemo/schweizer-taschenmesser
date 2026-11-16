@@ -7,8 +7,18 @@ import type { SeedContext, SeedModule, SeedRows } from '@/core/seed/types';
 const PEER = 'ab'.repeat(32);
 
 const CARDS: { direction: 'in' | 'out'; kind: 'text' | 'link'; body: string; unseen: boolean }[] = [
-  { direction: 'out', kind: 'link', body: 'https://example.org/rezepte/linsensuppe', unseen: false },
-  { direction: 'in', kind: 'text', body: 'Vergiss nicht, die Waschmaschine auszuräumen.', unseen: false },
+  {
+    direction: 'out',
+    kind: 'link',
+    body: 'https://example.org/rezepte/linsensuppe',
+    unseen: false,
+  },
+  {
+    direction: 'in',
+    kind: 'text',
+    body: 'Vergiss nicht, die Waschmaschine auszuräumen.',
+    unseen: false,
+  },
   { direction: 'in', kind: 'link', body: 'https://example.org/fahrplan/linie-7', unseen: true },
 ];
 
