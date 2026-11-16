@@ -11,10 +11,15 @@
 //!   two never mix: a sync session closes on any tag but `request`, an input session hands its
 //!   frames to `input::session` only (which knows no sync tag) and never reaches the [`Hub`]. An
 //!   input session starts only on a connection that came in on a bind of the stored home network.
+//! * An exchange session (device exchange) is the third kind, by its own handshake mode: its frames
+//!   go to `exchange::session` only, never to the [`Hub`] or the input gate, and it too starts only
+//!   on the stored home network and closes when that is lost.
 
 use super::netpolicy::{peer_allowed, Bind};
 use super::{Hub, HubError, Response, TAG_REQUEST, TAG_RESPONSE};
 use crate::endpoint::{Conn, Endpoint, FirstReply, Incoming, Session};
+use crate::exchange::session::{ExchangeConn, Step as ExchangeStep};
+use crate::exchange::Exchange;
 use crate::input::session::{InputConn, Step};
 use crate::input::{InputSink, Remote};
 use crate::noise::frame::{FrameError, PRE_CONFIRM_CAP, PRE_HANDSHAKE_CAP};
@@ -140,6 +145,8 @@ pub struct Router {
     admission: Mutex<Admission>,
     /// Remote control, if the shell wired it. Without it every input session is refused.
     input: Option<(Arc<Remote>, Arc<dyn InputSink>)>,
+    /// Device exchange, if the shell wired it. Without it every exchange session is refused.
+    exchange: Option<Arc<Exchange>>,
 }
 
 /// What the transport does with a first message.
@@ -167,6 +174,7 @@ impl Router {
             hub,
             admission: Mutex::new(admission),
             input: None,
+            exchange: None,
         }
     }
 
@@ -175,6 +183,12 @@ impl Router {
     /// system cannot be controlled, so the phone hears `unsupported` instead of a bare refusal.
     pub fn with_input(mut self, remote: Arc<Remote>, sink: Arc<dyn InputSink>) -> Self {
         self.input = Some((remote, sink));
+        self
+    }
+
+    /// Wires device exchange: the PC's switch and grants, inbox and outbox.
+    pub fn with_exchange(mut self, exchange: Arc<Exchange>) -> Self {
+        self.exchange = Some(exchange);
         self
     }
 
@@ -197,6 +211,8 @@ impl Router {
                 remote.home_lost();
             }
             self.endpoint.close_input_sessions();
+            // exchange is home-network only too, not just at its handshake
+            self.endpoint.close_exchange_sessions();
         }
     }
 
@@ -236,7 +252,8 @@ impl Router {
             return Opened::Drop(Some(r));
         }
         let input_ok = home && self.input.is_some();
-        match self.endpoint.handle_first_on(wire, input_ok) {
+        let exchange_ok = home && self.exchange.is_some();
+        match self.endpoint.handle_first_on(wire, input_ok, exchange_ok) {
             FirstReply::Drop => Opened::Drop(None),
             FirstReply::Refused { m2 } => Opened::Refuse(m2),
             FirstReply::Accept { m2, conn } => {
@@ -245,15 +262,23 @@ impl Router {
                         attempt,
                         helloed: false,
                     },
-                    Conn::Session(s) => match (s.mode(), &self.input) {
-                        (Mode::Input, Some((remote, sink))) => {
+                    Conn::Session(s) => match (s.mode(), &self.input, &self.exchange) {
+                        (Mode::Input, Some((remote, sink)), _) => {
                             let conn =
                                 InputConn::new(remote.clone(), sink.clone(), s.peer(), s.handle());
                             Kind::Input(s, Box::new(conn))
                         }
                         // the endpoint accepts an input session only with `input_ok`
-                        (Mode::Input, None) => return Opened::Drop(None),
-                        _ => Kind::Session(s),
+                        (Mode::Input, None, _) => return Opened::Drop(None),
+                        (Mode::Exchange, _, Some(exchange)) => {
+                            let conn = ExchangeConn::new(exchange.clone(), s.peer());
+                            Kind::Exchange(s, Box::new(conn))
+                        }
+                        // the endpoint accepts an exchange session only with `exchange_ok`
+                        (Mode::Exchange, _, None) => return Opened::Drop(None),
+                        // never the sync handler for anything but a sync session
+                        (Mode::Session, _, _) => Kind::Session(s),
+                        (Mode::Pair, _, _) => return Opened::Drop(None),
                     },
                 };
                 Opened::Accept {
@@ -279,6 +304,8 @@ enum Kind {
     Session(Box<Session>),
     /// Input session (remote control): its frames go to the `InputConn` and nowhere else.
     Input(Box<Session>, Box<InputConn>),
+    /// Exchange session (device exchange): its frames go to the `ExchangeConn` and nowhere else.
+    Exchange(Box<Session>, Box<ExchangeConn>),
 }
 
 /// What to do after a frame.
@@ -308,7 +335,7 @@ impl Connection {
     pub fn pairing_attempt(&self) -> Option<u64> {
         match self.kind {
             Kind::Pairing { attempt, .. } => Some(attempt),
-            Kind::Session(_) | Kind::Input(..) => None,
+            Kind::Session(_) | Kind::Input(..) | Kind::Exchange(..) => None,
         }
     }
 
@@ -317,14 +344,14 @@ impl Connection {
     pub fn frame_cap(&self) -> usize {
         match &self.kind {
             Kind::Pairing { .. } => PRE_CONFIRM_CAP,
-            Kind::Session(s) | Kind::Input(s, _) => s.cap(),
+            Kind::Session(s) | Kind::Input(s, _) | Kind::Exchange(s, _) => s.cap(),
         }
     }
 
     pub fn is_closed(&self) -> bool {
         self.done
             || match &self.kind {
-                Kind::Session(s) | Kind::Input(s, _) => s.is_closed(),
+                Kind::Session(s) | Kind::Input(s, _) | Kind::Exchange(s, _) => s.is_closed(),
                 Kind::Pairing { .. } => false,
             }
     }
@@ -381,6 +408,18 @@ impl Connection {
                 };
                 seal_step(s, step)
             }
+            Kind::Exchange(s, exchange) => {
+                let step = match s.receive(wire, now_unix) {
+                    Ok(Incoming::Hello(_)) => exchange.on_hello(),
+                    Ok(Incoming::App { tag, body }) => exchange.on_frame(tag, &body, mono),
+                    Ok(Incoming::Unpair) | Err(_) => ExchangeStep::Close,
+                };
+                // an accepted `open` (authenticated) replaces the device's older exchange session
+                if exchange.take_opened() {
+                    s.replace_older_exchange();
+                }
+                seal_exchange(s, step)
+            }
         };
         self.finish(out)
     }
@@ -396,6 +435,10 @@ impl Connection {
             Kind::Input(s, input) => {
                 let step = input.poll(mono);
                 seal_step(s, step)
+            }
+            Kind::Exchange(s, exchange) => {
+                let step = exchange.poll(mono);
+                seal_exchange(s, step)
             }
             Kind::Pairing { .. } | Kind::Session(_) => Outcome::Continue,
         };
@@ -417,6 +460,18 @@ fn seal_step(s: &mut Session, step: Step) -> Outcome {
         Step::Close => Outcome::Close,
         Step::Reply(tag, body) => s.send(tag, &body).map_or(Outcome::Close, Outcome::Reply),
         Step::ReplyClose(tag, body) => s
+            .send(tag, &body)
+            .map_or(Outcome::Close, Outcome::ReplyClose),
+    }
+}
+
+/// Seals what an exchange session wants to send. A frame that cannot be sealed closes the connection.
+fn seal_exchange(s: &mut Session, step: ExchangeStep) -> Outcome {
+    match step {
+        ExchangeStep::Continue => Outcome::Continue,
+        ExchangeStep::Close => Outcome::Close,
+        ExchangeStep::Reply(tag, body) => s.send(tag, &body).map_or(Outcome::Close, Outcome::Reply),
+        ExchangeStep::ReplyClose(tag, body) => s
             .send(tag, &body)
             .map_or(Outcome::Close, Outcome::ReplyClose),
     }
