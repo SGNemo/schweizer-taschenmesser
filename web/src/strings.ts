@@ -2874,6 +2874,8 @@ export const de = {
   charts: {
     empty: 'Noch keine Werte.',
     other: 'Sonstiges',
+    /** The folded rest when the data already has a category "Sonstiges". */
+    otherMore: 'Weitere',
     total: 'Summe',
     item: 'Eintrag',
     value: 'Wert',

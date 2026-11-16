@@ -18,6 +18,11 @@ export interface DonutProps extends ChartBaseProps {
   data: readonly ChartDatum[];
   /** Small word under the sum in the middle (default "Summe", e.g. "pro Monat"). */
   centreLabel?: string;
+  /**
+   * Name of the folded rest (default "Sonstiges"). Without it, data that already holds a "Sonstiges" gets "Weitere",
+   * so the rest never reads like that one category.
+   */
+  otherLabel?: string;
 }
 
 /** Ring geometry on a 100 × 100 box: radius 42, stroke 16 (the ring is 16 % of the width). */
@@ -30,13 +35,15 @@ const GAP = 0.8;
  * o'clock, at most six named slices plus "Sonstiges". Slices are steps of the module colour with a pattern each, and
  * the legend beside them names every slice with its value and share: the ring never has to be read by colour.
  */
-export function Donut({ data, centreLabel, ...base }: DonutProps) {
+export function Donut({ data, centreLabel, otherLabel, ...base }: DonutProps) {
   const prefix = `ch${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   const { show, read, hidden } = useValueText(
     base.format ?? defaultFormat,
     base.sensitive ?? false,
   );
-  const shares = foldShares(data, t.charts.other);
+  const rest =
+    otherLabel ?? (data.some((d) => d.label === t.charts.other) ? t.charts.otherMore : t.charts.other);
+  const shares = foldShares(data, rest);
   const total = shares.reduce((s, p) => s + p.value, 0);
   const top = shares[0];
   const summary = top

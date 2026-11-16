@@ -3,6 +3,7 @@ import type { Strings } from '@/strings';
 export const charts: Strings['charts'] = {
   empty: 'No values yet.',
   other: 'Other',
+  otherMore: 'More',
   total: 'Total',
   item: 'Item',
   value: 'Value',
