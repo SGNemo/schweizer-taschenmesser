@@ -94,6 +94,7 @@ test('PC: switched on once for the one paired phone, a link goes out and a note 
 });
 
 test('phone: a note goes to the PC, and a pause at the PC is said calmly', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   await enable(page, 'android');
   await page.goto('/exchange');
   await page.getByLabel('Nachricht oder Link').fill('Zeile eins\nZeile zwei');
