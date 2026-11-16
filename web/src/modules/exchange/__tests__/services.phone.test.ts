@@ -16,4 +16,15 @@ describe('exchange on the phone', () => {
     stop();
     expect(useExchangeView.getState().open).toBe(false);
   });
+  it('closes a session that opens after the module stopped', async () => {
+    const { default: start } = await import('../services');
+    let resolve!: (s: Awaited<ReturnType<typeof phone.open>>) => void;
+    const close = vi.fn(async () => undefined);
+    phone.open = () => new Promise((r) => (resolve = r));
+    const stop = start();
+    stop();
+    resolve({ send: async () => undefined, ping: async () => undefined, close });
+    await vi.waitFor(() => expect(close).toHaveBeenCalled());
+    expect(useExchangeView.getState().open).toBe(false);
+  });
 });

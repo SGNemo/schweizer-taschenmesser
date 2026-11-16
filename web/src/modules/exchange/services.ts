@@ -143,8 +143,8 @@ async function resend(ex: ExchangeService, states: readonly string[]): Promise<v
 }
 
 function onPhoneEvent(ex: ExchangeService, e: ExchangeEvent, life: Life): void {
-  if (e.type === 'received') void pull(ex);
-  else if (e.type === 'answer') void serial(() => answered(e.id, e.state));
+  if (e.type === 'received') void pull(ex).catch(() => undefined);
+  else if (e.type === 'answer') void serial(() => answered(e.id, e.state)).catch(() => undefined);
   else {
     life.closed = true;
     // an older session's end (it was replaced or dropped) says nothing about the current one
@@ -183,6 +183,8 @@ export async function connect(ex: ExchangeService): Promise<void> {
     useExchangeView.setState({ open: true, problem: null, minutes: null });
   } catch (e) {
     session = null;
+    // stopped meanwhile: nothing to say any more
+    if (!running) return;
     const p = problemOf(e instanceof Error ? e.message : null);
     useExchangeView.setState({
       open: false,
@@ -211,7 +213,8 @@ export async function sweep(at = now()): Promise<void> {
         (r.direction === 'out' && r.deletedAt !== null && at - r.deletedAt > UNDO_KEEP_MS),
     )
     .primaryKeys();
-  if (gone.length) await itemRepo.purge(gone);
+  // in the state queue: no answer is written to a card that is being deleted
+  if (gone.length) await serial(() => itemRepo.purge(gone));
 }
 
 export async function refreshPc(ex: ExchangeService): Promise<void> {
@@ -261,6 +264,7 @@ export default function start(): () => void {
     stops.push(() => clearInterval(timer));
   } else {
     running = true;
+    let catchingUp = false;
     void connect(ex);
     const retry = setInterval(() => void connect(ex), RETRY_EVERY_MS);
     const ping = setInterval(() => {
@@ -269,6 +273,15 @@ export default function start(): () => void {
         // gone without a `closed` event: closed here, the next retry opens a fresh one
         if (session === current) drop();
       });
+      // what failed to be taken over or sent while the session stayed open is tried again here
+      if (current && !catchingUp) {
+        catchingUp = true;
+        void pull(ex)
+          .catch(() => undefined)
+          .then(() => resend(ex, ['waiting']))
+          .catch(() => undefined)
+          .finally(() => (catchingUp = false));
+      }
     }, PING_EVERY_MS);
     const onVisible = () => {
       if (document.visibilityState === 'visible') void connect(ex);
