@@ -23,9 +23,9 @@ export const de = {
     startsFrom: (date: string, time: string) => `ab ${date}, ${time} Uhr`,
     /** A duration in minutes, long form ("3 Std 5 Min", "45 Min"); see `formatMinutes`. */
     duration: (h: number, m: number) => (h > 0 ? `${h} Std ${m} Min` : `${m} Min`),
-    /** The compact form for boards, bars and widget rows ("1 h 30", "4 h", "45 Min"). */
+    /** The compact form for boards, bars and widget rows ("1 h 30", "3 h 02", "4 h", "45 Min"); minutes after hours always have two digits. */
     durationCompact: (h: number, m: number) =>
-      h > 0 ? (m > 0 ? `${h} h ${m}` : `${h} h`) : `${m} Min`,
+      h > 0 ? (m > 0 ? `${h} h ${String(m).padStart(2, '0')}` : `${h} h`) : `${m} Min`,
   },
   about: {
     title: 'Über Nemo',

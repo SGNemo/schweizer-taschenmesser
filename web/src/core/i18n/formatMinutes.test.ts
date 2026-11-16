@@ -20,6 +20,21 @@ describe('formatMinutes', () => {
     expect(formatMinutes(192, { compact: true })).toBe('3 h 12');
   });
 
+  it.each([
+    [0, '0 Min', '0 min'],
+    [2, '2 Min', '2 min'],
+    [59, '59 Min', '59 min'],
+    [60, '1 h', '1 h'],
+    [62, '1 h 02', '1 h 02'],
+    [122, '2 h 02', '2 h 02'],
+    [182, '3 h 02', '3 h 02'],
+  ])('compact form pads minutes after hours: %i → "%s" / "%s"', async (min, de, en) => {
+    expect(formatMinutes(min, { compact: true })).toBe(de);
+    await loadCatalog('en');
+    setLang('en');
+    expect(formatMinutes(min, { compact: true })).toBe(en);
+  });
+
   it('clamps negative and fractional input to whole minutes', () => {
     expect(formatMinutes(-5, { compact: true })).toBe('0 Min');
     expect(formatMinutes(29.6)).toBe('30 Min');

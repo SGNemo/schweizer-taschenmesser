@@ -7,5 +7,5 @@ export const time: Strings['time'] = {
   startsFrom: (date: string, time: string) => `from ${date}, ${time}`,
   duration: (h: number, m: number) => (h > 0 ? `${h} h ${m} min` : `${m} min`),
   durationCompact: (h: number, m: number) =>
-    h > 0 ? (m > 0 ? `${h} h ${m}` : `${h} h`) : `${m} min`,
+    h > 0 ? (m > 0 ? `${h} h ${String(m).padStart(2, '0')}` : `${h} h`) : `${m} min`,
 };
