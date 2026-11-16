@@ -10622,7 +10622,7 @@ export const de = {
       pause: 'Pausieren',
       lastSeen: (when: string) => `zuletzt gesehen: ${when}`,
       device: 'Gerät',
-      cancelled: 'Nicht eingeschaltet.',
+      cancelled: 'Nichts geändert.',
       busyControlled: 'Gerade steuert ein Handy diesen PC. Danach geht das wieder.',
       failed: 'Das hat nicht geklappt. Bitte nochmal versuchen.',
     },
@@ -10631,7 +10631,7 @@ export const de = {
         'Noch nicht mit deinem PC gekoppelt. Kopple ihn, dann kannst du ihm Notizen und Links schicken.',
       pair: 'Mit PC koppeln',
       exchangeOff:
-        'Austausch ist am PC noch nicht eingeschaltet. Am PC: Mehr → Modul-Bibliothek → Austausch.',
+        'Austausch ist am PC noch nicht eingeschaltet. Am PC: Mehr → Modul-Bibliothek → Austausch, dann „Austausch einschalten“.',
       notGranted: 'Austausch ist für dieses Handy am PC noch aus. Am PC: Austausch → Einschalten.',
       paused: 'Austausch ist am PC pausiert. Am PC: Austausch → Fortsetzen.',
       limit: (minutes: number) =>

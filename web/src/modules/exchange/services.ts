@@ -1,3 +1,4 @@
+import { bus } from '@/core/events/bus';
 import { getPlatform } from '@/core/platform';
 import type { ExchangeEvent, ExchangeService, ExchangeSession } from '@/core/platform/types';
 import { UNDO_KEEP_MS, expired, problemOf } from './logic';
@@ -25,6 +26,8 @@ const FINAL = new Set(['bad-item', 'bad-id', 'bad-kind', 'bad-peer', 'not-found'
 
 let session: ExchangeSession | null = null;
 let opening = false;
+/** Bumped by every `closed` event: an `open` that was overtaken by one keeps no dead session. */
+let closings = 0;
 let pulling: Promise<void> = Promise.resolve();
 
 /**
@@ -33,7 +36,12 @@ let pulling: Promise<void> = Promise.resolve();
  * would both store them.
  */
 export function pull(ex: ExchangeService): Promise<void> {
-  const run = pulling.then(() => pullOnce(ex));
+  return serial(() => pullOnce(ex));
+}
+
+/** One queue for everything that reads a card's state and writes it back. */
+function serial(work: () => Promise<void>): Promise<void> {
+  const run = pulling.then(work);
   pulling = run.catch(() => undefined);
   return run;
 }
@@ -80,10 +88,15 @@ async function answered(
   if (row && row.state !== state) await itemRepo.update(row.id, { state });
 }
 
-/** `waiting` → `sent` only: an answer that came in meanwhile is never stepped back. */
-async function markSent(rowId: string): Promise<void> {
-  const row = await itemRepo.get(rowId);
-  if (row?.state === 'waiting') await itemRepo.update(rowId, { state: 'sent' });
+/**
+ * `waiting` → `sent` only: an answer that came in meanwhile is never stepped back. Runs in the same
+ * queue as taking answers over, so no answer lands between the check and the write.
+ */
+function markSent(rowId: string): Promise<void> {
+  return serial(async () => {
+    const row = await itemRepo.get(rowId);
+    if (row?.state === 'waiting') await itemRepo.update(rowId, { state: 'sent' });
+  });
 }
 
 /**
@@ -121,9 +134,10 @@ async function resend(ex: ExchangeService, states: readonly string[]): Promise<v
 
 function onPhoneEvent(ex: ExchangeService, e: ExchangeEvent): void {
   if (e.type === 'received') void pull(ex);
-  else if (e.type === 'answer') void answered(e.id, e.state);
+  else if (e.type === 'answer') void serial(() => answered(e.id, e.state));
   else {
     session = null;
+    closings += 1;
     const p = problemOf(e.reason, e.minutes);
     useExchangeView.setState({
       open: false,
@@ -136,10 +150,11 @@ function onPhoneEvent(ex: ExchangeService, e: ExchangeEvent): void {
 export async function connect(ex: ExchangeService): Promise<void> {
   if (session || opening || document.visibilityState !== 'visible') return;
   opening = true;
+  const before = closings;
   try {
     const opened = await ex.open((e) => onPhoneEvent(ex, e));
-    // the app went to the background while it connected: no session there
-    if (document.visibilityState !== 'visible') {
+    // closed already, or the app went to the background while it connected: no session there
+    if (closings !== before || document.visibilityState !== 'visible') {
       void opened.close();
       return;
     }
@@ -160,7 +175,10 @@ export async function connect(ex: ExchangeService): Promise<void> {
   }
 }
 
-/** Deletes for good: cards past the retention, and removed cards once their undo is over. */
+/**
+ * Deletes for good: cards past the retention, and removed own cards once their undo is over
+ * (removed received cards stay as markers until they expire, so a late resend cannot revive them).
+ */
 export async function sweep(at = now()): Promise<void> {
   const gone = await itemRepo.table
     .filter(
@@ -189,17 +207,34 @@ export default function start(): () => void {
       void pull(ex).catch(() => undefined);
       void refreshPc(ex);
       // queued while the hub was off or the outbox full: tried again (the shell keeps an id once)
-      void resend(ex, ['waiting']);
+      if (!resending) {
+        resending = true;
+        void resend(ex, ['waiting'])
+          .catch(() => undefined)
+          .finally(() => (resending = false));
+      }
     };
+    let resending = false;
     changed();
     stops.push(ex.onChanged(changed));
+    // switching the module off switches the PC's exchange off too, so phones hear `exchange-off`
+    // (narrowing: no dialog). Awaited before the module's state changes.
+    stops.push(
+      bus.on('module.disabling', async ({ moduleId }) => {
+        if (moduleId === 'exchange') await ex.setEnabled(false).catch(() => undefined);
+      }),
+    );
     const timer = setInterval(changed, STATUS_EVERY_MS);
     stops.push(() => clearInterval(timer));
   } else {
     void connect(ex);
     const retry = setInterval(() => void connect(ex), RETRY_EVERY_MS);
     const ping = setInterval(() => {
-      if (session) session.ping().catch(() => undefined);
+      const current = session;
+      current?.ping().catch(() => {
+        // gone without a `closed` event: the next retry opens a fresh one
+        if (session === current) session = null;
+      });
     }, PING_EVERY_MS);
     const onVisible = () => {
       if (document.visibilityState === 'visible') void connect(ex);

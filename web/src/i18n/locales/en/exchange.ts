@@ -67,7 +67,7 @@ export const exchange: Strings['exchange'] = {
     pause: 'Pause',
     lastSeen: (when: string) => `last seen: ${when}`,
     device: 'Device',
-    cancelled: 'Not turned on.',
+    cancelled: 'Nothing changed.',
     busyControlled: 'A phone is controlling this PC right now. This works again afterwards.',
     failed: 'That did not work. Please try again.',
   },
@@ -75,7 +75,7 @@ export const exchange: Strings['exchange'] = {
     notPaired: 'Not paired with your PC yet. Pair it, then you can send it notes and links.',
     pair: 'Pair with PC',
     exchangeOff:
-      'Device drop is not turned on at the PC yet. At the PC: More → Module library → Device drop.',
+      'Device drop is not turned on at the PC yet. At the PC: More → Module library → Device drop, then "Turn on Device drop".',
     notGranted:
       'Device drop is still off for this phone at the PC. At the PC: Device drop → Turn on.',
     paused: 'Device drop is paused at the PC. At the PC: Device drop → Resume.',

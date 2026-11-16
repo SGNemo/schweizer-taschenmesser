@@ -208,9 +208,9 @@ function DeviceLine({ ex, device }: { ex: ExchangeService; device: ExchangeDevic
 
   return (
     <li className={styles.device}>
-      <span role="status" className={styles.note}>
+      <span className={styles.note}>
         {name} · {state}
-        {problem ? ` ${problem}` : null}
+        <span role="status">{problem ? ` ${problem}` : null}</span>
       </span>
       <Button variant="secondary" disabled={busy} onClick={act}>
         {label}
@@ -318,13 +318,16 @@ function Conversation({
   return (
     <>
       {rows && rows.length === 0 ? <EmptyState title={t.exchange.empty} /> : null}
-      <div role="log" aria-relevant="additions">
-        <ul className={styles.list}>
-          {(rows ?? []).map((r) => (
-            <Card key={r.id} row={r} side={side} />
-          ))}
-        </ul>
-      </div>
+      {/* only once the cards are there: an empty log that fills up would read them all aloud */}
+      {rows ? (
+        <div key={peer} role="log" aria-relevant="additions">
+          <ul className={styles.list}>
+            {rows.map((r) => (
+              <Card key={r.id} row={r} side={side} />
+            ))}
+          </ul>
+        </div>
+      ) : null}
       {rows && rows.length > 0 ? <p className={styles.footer}>{t.exchange.footer}</p> : null}
       <div className={styles.compose}>
         <div className={styles.composeField}>
@@ -333,7 +336,10 @@ function Conversation({
             placeholder={t.exchange.compose.placeholder}
             value={text}
             rows={2}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => {
+              setText(e.target.value);
+              if (problem) setProblem(null);
+            }}
             onKeyDown={onKey}
           />
         </div>
