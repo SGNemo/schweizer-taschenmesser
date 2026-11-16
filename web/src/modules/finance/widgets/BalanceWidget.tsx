@@ -65,8 +65,8 @@ export default function BalanceWidget() {
             : '',
           others,
           // No comparison of the month's spending here: mid-month it set a part month against a whole one (the page's
-          // cards and "Diesen Monat" carry the month). One sentence that names the figure is enough for a glance.
-          a?.deducting || others ? '' : accountsLabel,
+          // cards and "Diesen Monat" carry the month). What the figure is, then how many accounts it covers.
+          accountsLabel,
         ]
           .filter(Boolean)
           .join(' · ')}
