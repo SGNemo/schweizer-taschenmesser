@@ -36,7 +36,7 @@ Stand 2026-11-16, nachgeprüft in der Restpunkte-Ernte ([harvest-2026-11.md](../
 - **`ui/`:** `.done > .row .title`, `FolderTabs` Zähler 0 + `nowrap`, `data-empty` am `WidgetBody`: erledigt in #877; Übernahme in Notizen-Reitern (H06), Übersicht über `data-empty` (H05), Fade nur bei Überlauf auch für `SubNav` und Kalender-Ansichtszeile (H04): erledigt in #1025.
 - **U07 Rest**, **Einrichtung** (`--kb-inset`, `setup.spec.ts` ohne festen Port), **Kalender** („Ablauf · Überfällig“, „gift“): erledigt in #877. Handy-Raster-Oberkante bleibt bei U41.
 - **Übersicht, leere Installation:** CLS 0,18 – Entscheidung Sven ([CHATS](../../CHATS.md)).
-- **Modulseiten mit Restsprung:** `/todos` nicht mehr reproduzierbar (CLS ≤ 0,003, #1028), `/disk` Kopf mit Platzhalter (H24, Ernte-PR `fix/harvest-11-modules`), `/` siehe Übersicht.
+- **Modulseiten mit Restsprung:** `/todos` nicht mehr reproduzierbar (CLS ≤ 0,003, #1028), `/disk` Kopf mit Platzhalter (H24, Ernte-PR `fix/harvest-11-modules`), `/` 0,14 fällt unter dieselbe Entscheidung wie die leere Übersicht (CHATS).
 - **Texte:** ungenutzte Schlüssel entfernt (#1014); eingefrorene es/fr/pt-BR bleiben wie sie sind ([FROZEN](../../i18n/FROZEN.md)).
 - **Neu aus der Nachmessung:** Uhrzeit-Kontrast, Finanzen → Verlauf, Kontokarten: erledigt (Monatszeilen und Kopf umgebaut, Identity 4.0); Einstellungen → Sync ein Primärknopf (H23, `fix/harvest-11-modules`); Kopf-Eyebrow am Handy nicht mehr reproduzierbar (#1028); ToDos-Board fokussierbar (#1028); Layout-Sprung Einstellungen/Werkzeuge am Handy nicht nachgemessen; `--page-gutter` (Token, offen).
 - **Handy-FAB:** entfallen (Plus in der Bottom-Bar, Identity 4.0).
