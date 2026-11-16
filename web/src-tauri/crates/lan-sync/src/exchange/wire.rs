@@ -2,8 +2,9 @@
 //! (`0x10`, `0x11`) and input (`0x20..=0x2b`), checked by a test. Binary, explicit lengths, every
 //! string checked as UTF-8; nothing here is formatted or logged.
 //!
-//! Package 1a carries `open`, `opened`, `refused`, `item`, `ack` and `ping`. The file tags
-//! `0x35..=0x3c` are reserved for package 2; a session that receives one closes.
+//! Package 1a carries `open`, `opened`, `refused`, `item`, `ack` and `ping`. Package 2a defines
+//! the file records `0x35..=0x3c` (offer, accept, wait, refuse, chunk, end, result, cancel);
+//! until a session negotiates [`FEATURE_FILES`] (package 2b) it still closes on any of them.
 
 use std::fmt;
 
@@ -17,16 +18,35 @@ pub const TAG_REFUSED: u8 = 0x32;
 pub const TAG_ITEM: u8 = 0x33;
 /// Both ways: `id (16) · state (1)`; the sender counts an item as delivered only on `stored`.
 pub const TAG_ACK: u8 = 0x34;
-/// First and last tag reserved for files (package 2).
-pub const TAG_FILE_FIRST: u8 = 0x35;
-pub const TAG_FILE_LAST: u8 = 0x3c;
+/// First and last tag of the file records.
+pub const TAG_FILE_FIRST: u8 = TAG_OFFER;
+pub const TAG_FILE_LAST: u8 = TAG_CANCEL;
+/// Sender: `id · size u64 · sha256 (32) · name length · name · mime length · mime`.
+pub const TAG_OFFER: u8 = 0x35;
+/// Receiver: `id · from u64` (`from > 0` resumes a part this side kept).
+pub const TAG_ACCEPT: u8 = 0x36;
+/// Receiver: `id · reason` – the user decides (_Annehmen_) before anything is written.
+pub const TAG_WAIT: u8 = 0x37;
+/// Receiver: `id · code` – not taken.
+pub const TAG_REFUSE: u8 = 0x38;
+/// Sender: `id · offset u64 · bytes`; offsets are contiguous.
+pub const TAG_CHUNK: u8 = 0x39;
+/// Sender: `id` – every byte is out.
+pub const TAG_END: u8 = 0x3a;
+/// Receiver: `id · code` – `ok` only when length and SHA-256 match the offer.
+pub const TAG_RESULT: u8 = 0x3b;
+/// Either side, any time: `id`.
+pub const TAG_CANCEL: u8 = 0x3c;
 /// Phone → PC: keeps the session against the hub's idle close (it counts inbound frames only).
 pub const TAG_PING: u8 = 0x3d;
 
 /// Version of this wire.
 pub const VERSION: u8 = 1;
-/// Features this version knows (none yet; files come with their own bit in package 2).
+/// Features this version knows (none yet: files are offered once both sides ask for
+/// [`FEATURE_FILES`], package 2b).
 pub const FEATURES: u8 = 0;
+/// The feature bit of file transfers.
+pub const FEATURE_FILES: u8 = 1;
 
 /// Longest item body, in bytes.
 pub const MAX_BODY: usize = 16 * 1024;
@@ -298,6 +318,329 @@ pub fn decode_ack(body: &[u8]) -> Result<([u8; 16], AckState), Malformed> {
     Ok((id, state))
 }
 
+// ---- files (package 2a: records only; the session flow is package 2b) ----
+
+/// Largest file, in bytes (v1). Above 100 MB, or above 1 GB from one device in a day, the
+/// receiver answers `wait` and the user decides; this is the hard cap of the wire.
+pub const MAX_FILE: u64 = 4 * 1024 * 1024 * 1024;
+/// Longest name in an offer (raw sender text, cleaned by the receiver: `exchange::name`).
+pub const MAX_OFFER_NAME: usize = 255;
+/// Longest media type in an offer.
+pub const MAX_MIME: usize = 64;
+/// Most bytes in one chunk: the 65 535-byte frame minus the AEAD tag (16), the record tag (1),
+/// the id (16) and the offset (8).
+pub const MAX_CHUNK: usize = crate::noise::frame::MAX_FRAME - 16 - 1 - 16 - 8;
+
+/// A file the sender offers. Built only by [`Offer::new`] (or decoding, which uses it). `Debug`
+/// shows neither name nor type.
+#[derive(Clone, PartialEq, Eq)]
+pub struct Offer {
+    id: [u8; 16],
+    size: u64,
+    sha256: [u8; 32],
+    name: String,
+    mime: String,
+}
+
+impl fmt::Debug for Offer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Offer")
+            .field("size", &self.size)
+            .finish_non_exhaustive()
+    }
+}
+
+impl Offer {
+    /// A checked offer, or `Malformed`: size over [`MAX_FILE`], a name that is empty, longer than
+    /// [`MAX_OFFER_NAME`] bytes or holds a NUL, a media type that is not a plain `type/subtype`
+    /// of at most [`MAX_MIME`] printable ASCII characters (empty means unknown).
+    pub fn new(
+        id: [u8; 16],
+        size: u64,
+        sha256: [u8; 32],
+        name: String,
+        mime: String,
+    ) -> Result<Offer, Malformed> {
+        let name_ok = !name.is_empty() && name.len() <= MAX_OFFER_NAME && !name.contains('\0');
+        let mime_ok = mime.is_empty()
+            || (mime.len() <= MAX_MIME
+                && mime.bytes().all(|b| b.is_ascii_graphic())
+                && mime
+                    .split_once('/')
+                    .is_some_and(|(t, st)| !t.is_empty() && !st.is_empty() && !st.contains('/')));
+        if size > MAX_FILE || !name_ok || !mime_ok {
+            return Err(Malformed);
+        }
+        Ok(Offer {
+            id,
+            size,
+            sha256,
+            name,
+            mime,
+        })
+    }
+
+    pub fn id(&self) -> &[u8; 16] {
+        &self.id
+    }
+
+    pub fn size(&self) -> u64 {
+        self.size
+    }
+
+    pub fn sha256(&self) -> &[u8; 32] {
+        &self.sha256
+    }
+
+    /// The sender's name, untrusted: clean it (`exchange::name::clean`) before any use.
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// The sender's media type, untrusted and only a hint (empty = unknown).
+    pub fn mime(&self) -> &str {
+        &self.mime
+    }
+}
+
+pub fn encode_offer(offer: &Offer) -> Vec<u8> {
+    let mut out = Vec::with_capacity(16 + 8 + 32 + 2 + offer.name.len() + offer.mime.len());
+    out.extend_from_slice(&offer.id);
+    out.extend_from_slice(&offer.size.to_be_bytes());
+    out.extend_from_slice(&offer.sha256);
+    // both fit a byte: `Offer::new` caps them at 255 and 64
+    out.push(u8::try_from(offer.name.len()).unwrap_or(u8::MAX));
+    out.extend_from_slice(offer.name.as_bytes());
+    out.push(u8::try_from(offer.mime.len()).unwrap_or(u8::MAX));
+    out.extend_from_slice(offer.mime.as_bytes());
+    out
+}
+
+/// Why an offer frame was not taken.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum OfferError {
+    /// Not even an id: a broken peer, the session closes.
+    Broken,
+    /// A readable id, but an offer this side does not take: answered `refuse`, never written.
+    Unusable([u8; 16]),
+}
+
+pub fn decode_offer(body: &[u8]) -> Result<Offer, OfferError> {
+    let id = id_of(body).ok_or(OfferError::Broken)?;
+    let unusable = OfferError::Unusable(id);
+    let mut r = Reader(&body[16..]);
+    let size = r.u64().ok_or(unusable)?;
+    let sha256: [u8; 32] = r.take(32).and_then(|b| b.try_into().ok()).ok_or(unusable)?;
+    let name = r.short_text().ok_or(unusable)?;
+    let mime = r.short_text().ok_or(unusable)?;
+    if !r.0.is_empty() {
+        return Err(unusable);
+    }
+    Offer::new(id, size, sha256, name, mime).map_err(|_| unusable)
+}
+
+/// Why the receiver waits for the user before taking a file.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WaitReason {
+    /// Over 100 MB.
+    Large,
+    /// Over 1 GB from this device today.
+    Daily,
+}
+
+/// Why the receiver does not take a file.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RefuseCode {
+    /// Over [`MAX_FILE`].
+    TooLarge,
+    /// Not enough free space on the receiving side.
+    Full,
+    /// The user said no.
+    Declined,
+    /// This device may not send files here.
+    NotGranted,
+}
+
+/// How a transfer ended at the receiver.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ResultCode {
+    /// Length and SHA-256 match the offer; the file is in place.
+    Ok,
+    /// Length or SHA-256 differ: the part is deleted.
+    Mismatch,
+    /// The disk filled up while writing.
+    Full,
+    /// Writing failed otherwise.
+    Failed,
+}
+
+pub fn encode_accept(id: &[u8; 16], from: u64) -> [u8; 24] {
+    let mut out = [0u8; 24];
+    out[..16].copy_from_slice(id);
+    out[16..].copy_from_slice(&from.to_be_bytes());
+    out
+}
+
+pub fn decode_accept(body: &[u8]) -> Result<([u8; 16], u64), Malformed> {
+    if body.len() != 24 {
+        return Err(Malformed);
+    }
+    let id = id_of(body).ok_or(Malformed)?;
+    let from = Reader(&body[16..]).u64().ok_or(Malformed)?;
+    Ok((id, from))
+}
+
+pub fn encode_wait(id: &[u8; 16], reason: WaitReason) -> [u8; 17] {
+    with_byte(
+        id,
+        match reason {
+            WaitReason::Large => 1,
+            WaitReason::Daily => 2,
+        },
+    )
+}
+
+pub fn decode_wait(body: &[u8]) -> Result<([u8; 16], WaitReason), Malformed> {
+    let (id, b) = id_and_byte(body)?;
+    Ok((
+        id,
+        match b {
+            1 => WaitReason::Large,
+            2 => WaitReason::Daily,
+            _ => return Err(Malformed),
+        },
+    ))
+}
+
+pub fn encode_refuse(id: &[u8; 16], code: RefuseCode) -> [u8; 17] {
+    with_byte(
+        id,
+        match code {
+            RefuseCode::TooLarge => 1,
+            RefuseCode::Full => 2,
+            RefuseCode::Declined => 3,
+            RefuseCode::NotGranted => 4,
+        },
+    )
+}
+
+pub fn decode_refuse(body: &[u8]) -> Result<([u8; 16], RefuseCode), Malformed> {
+    let (id, b) = id_and_byte(body)?;
+    Ok((
+        id,
+        match b {
+            1 => RefuseCode::TooLarge,
+            2 => RefuseCode::Full,
+            3 => RefuseCode::Declined,
+            4 => RefuseCode::NotGranted,
+            _ => return Err(Malformed),
+        },
+    ))
+}
+
+/// `None` for an empty chunk or one over [`MAX_CHUNK`] (the caller cuts files into chunks).
+pub fn encode_chunk(id: &[u8; 16], offset: u64, bytes: &[u8]) -> Option<Vec<u8>> {
+    if bytes.is_empty() || bytes.len() > MAX_CHUNK {
+        return None;
+    }
+    let mut out = Vec::with_capacity(16 + 8 + bytes.len());
+    out.extend_from_slice(id);
+    out.extend_from_slice(&offset.to_be_bytes());
+    out.extend_from_slice(bytes);
+    Some(out)
+}
+
+/// `(id, offset, bytes)`; the bytes borrow the frame (nothing is copied before it is written).
+pub fn decode_chunk(body: &[u8]) -> Result<([u8; 16], u64, &[u8]), Malformed> {
+    let id = id_of(body).ok_or(Malformed)?;
+    let offset = Reader(&body[16..]).u64().ok_or(Malformed)?;
+    let bytes = &body[24..];
+    if bytes.is_empty() || bytes.len() > MAX_CHUNK {
+        return Err(Malformed);
+    }
+    Ok((id, offset, bytes))
+}
+
+/// `end` and `cancel` carry the id only.
+pub fn encode_id(id: &[u8; 16]) -> [u8; 16] {
+    *id
+}
+
+pub fn decode_id(body: &[u8]) -> Result<[u8; 16], Malformed> {
+    if body.len() != 16 {
+        return Err(Malformed);
+    }
+    id_of(body).ok_or(Malformed)
+}
+
+pub fn encode_result(id: &[u8; 16], code: ResultCode) -> [u8; 17] {
+    with_byte(
+        id,
+        match code {
+            ResultCode::Ok => 0,
+            ResultCode::Mismatch => 1,
+            ResultCode::Full => 2,
+            ResultCode::Failed => 3,
+        },
+    )
+}
+
+pub fn decode_result(body: &[u8]) -> Result<([u8; 16], ResultCode), Malformed> {
+    let (id, b) = id_and_byte(body)?;
+    Ok((
+        id,
+        match b {
+            0 => ResultCode::Ok,
+            1 => ResultCode::Mismatch,
+            2 => ResultCode::Full,
+            3 => ResultCode::Failed,
+            _ => return Err(Malformed),
+        },
+    ))
+}
+
+fn id_of(body: &[u8]) -> Option<[u8; 16]> {
+    body.get(..16)?.try_into().ok()
+}
+
+fn with_byte(id: &[u8; 16], b: u8) -> [u8; 17] {
+    let mut out = [0u8; 17];
+    out[..16].copy_from_slice(id);
+    out[16] = b;
+    out
+}
+
+fn id_and_byte(body: &[u8]) -> Result<([u8; 16], u8), Malformed> {
+    match body {
+        [.., b] if body.len() == 17 => Ok((id_of(body).ok_or(Malformed)?, *b)),
+        _ => Err(Malformed),
+    }
+}
+
+/// Reads fields front to back; every read checks the length.
+struct Reader<'a>(&'a [u8]);
+
+impl<'a> Reader<'a> {
+    fn take(&mut self, n: usize) -> Option<&'a [u8]> {
+        if self.0.len() < n {
+            return None;
+        }
+        let (head, rest) = self.0.split_at(n);
+        self.0 = rest;
+        Some(head)
+    }
+
+    fn u64(&mut self) -> Option<u64> {
+        self.take(8)?.try_into().ok().map(u64::from_be_bytes)
+    }
+
+    /// One length byte, then that many bytes of UTF-8.
+    fn short_text(&mut self) -> Option<String> {
+        let len = usize::from(*self.take(1)?.first()?);
+        std::str::from_utf8(self.take(len)?).ok().map(str::to_owned)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -430,5 +773,126 @@ mod tests {
     fn debug_never_shows_a_body() {
         let i = item(Kind::Text, "geheim").unwrap();
         assert!(!format!("{i:?}").contains("geheim"));
+    }
+    fn offer(name: &str, mime: &str, size: u64) -> Result<Offer, Malformed> {
+        Offer::new([9; 16], size, [3; 32], name.to_owned(), mime.to_owned())
+    }
+
+    #[test]
+    fn offers_round_trip_and_are_checked() {
+        let o = offer("Urlaub 2026.jpg", "image/jpeg", 2_500_000).unwrap();
+        assert_eq!(decode_offer(&encode_offer(&o)).unwrap(), o);
+        let raw = offer("../../Rechnung\u{202E}fdp.exe", "", MAX_FILE).unwrap();
+        assert_eq!(
+            decode_offer(&encode_offer(&raw)).unwrap().name(),
+            "../../Rechnung\u{202E}fdp.exe",
+            "the wire carries the raw name: the receiver cleans it"
+        );
+        assert!(offer(&"n".repeat(MAX_OFFER_NAME), "a/b", 0).is_ok());
+        for bad in [
+            offer("", "image/png", 1),
+            offer(&"n".repeat(MAX_OFFER_NAME + 1), "", 1),
+            offer("a\0b", "", 1),
+            offer("a", "", MAX_FILE + 1),
+            offer("a", "image", 1),
+            offer("a", "image/", 1),
+            offer("a", "/png", 1),
+            offer("a", "a/b/c", 1),
+            offer("a", "image/p ng", 1),
+            offer("a", "bild/ä", 1),
+            offer("a", &format!("a/{}", "b".repeat(MAX_MIME)), 1),
+        ] {
+            assert_eq!(bad, Err(Malformed));
+        }
+        // a readable id with a broken rest is answered, not a reason to close
+        let mut body = encode_offer(&o);
+        body.push(0);
+        assert_eq!(decode_offer(&body), Err(OfferError::Unusable([9; 16])));
+        let mut bad_utf8 = encode_offer(&o);
+        let at = 16 + 8 + 32 + 1;
+        bad_utf8[at] = 0xff;
+        assert_eq!(decode_offer(&bad_utf8), Err(OfferError::Unusable([9; 16])));
+        for cut in 0..encode_offer(&o).len() {
+            let r = decode_offer(&encode_offer(&o)[..cut]);
+            assert!(r.is_err(), "cut at {cut}");
+            assert_eq!(r.is_err() && cut < 16, r == Err(OfferError::Broken));
+        }
+        let debug = format!("{o:?}");
+        assert!(
+            !debug.contains("Urlaub") && !debug.contains("jpeg"),
+            "{debug}"
+        );
+    }
+
+    #[test]
+    fn file_control_records_round_trip() {
+        let id = [5u8; 16];
+        assert_eq!(decode_accept(&encode_accept(&id, 0)), Ok((id, 0)));
+        assert_eq!(
+            decode_accept(&encode_accept(&id, 1 << 40)),
+            Ok((id, 1 << 40))
+        );
+        for r in [WaitReason::Large, WaitReason::Daily] {
+            assert_eq!(decode_wait(&encode_wait(&id, r)), Ok((id, r)));
+        }
+        for c in [
+            RefuseCode::TooLarge,
+            RefuseCode::Full,
+            RefuseCode::Declined,
+            RefuseCode::NotGranted,
+        ] {
+            assert_eq!(decode_refuse(&encode_refuse(&id, c)), Ok((id, c)));
+        }
+        for c in [
+            ResultCode::Ok,
+            ResultCode::Mismatch,
+            ResultCode::Full,
+            ResultCode::Failed,
+        ] {
+            assert_eq!(decode_result(&encode_result(&id, c)), Ok((id, c)));
+        }
+        assert_eq!(decode_id(&encode_id(&id)), Ok(id));
+        // wrong lengths and unknown codes
+        assert_eq!(decode_accept(&[0; 23]), Err(Malformed));
+        assert_eq!(decode_accept(&[0; 25]), Err(Malformed));
+        assert_eq!(decode_wait(&with_byte(&id, 3)), Err(Malformed));
+        assert_eq!(decode_refuse(&with_byte(&id, 0)), Err(Malformed));
+        assert_eq!(decode_result(&with_byte(&id, 4)), Err(Malformed));
+        assert_eq!(decode_id(&[0; 17]), Err(Malformed));
+        assert_eq!(decode_wait(&[0; 16]), Err(Malformed));
+    }
+
+    #[test]
+    fn chunks_fill_a_frame_and_no_more() {
+        let id = [1u8; 16];
+        let full = vec![0xaa; MAX_CHUNK];
+        let body = encode_chunk(&id, 7, &full).unwrap();
+        // tag + body + AEAD tag is exactly one frame
+        assert_eq!(1 + body.len() + 16, crate::noise::frame::MAX_FRAME);
+        assert_eq!(decode_chunk(&body).unwrap(), (id, 7, &full[..]));
+        assert!(encode_chunk(&id, 0, &[]).is_none());
+        assert!(encode_chunk(&id, 0, &vec![0; MAX_CHUNK + 1]).is_none());
+        let mut over = body.clone();
+        over.push(0);
+        assert_eq!(decode_chunk(&over), Err(Malformed));
+        assert_eq!(decode_chunk(&body[..24]), Err(Malformed));
+        assert_eq!(decode_chunk(&body[..20]), Err(Malformed));
+    }
+
+    #[test]
+    fn file_tags_are_the_reserved_range() {
+        let tags = [
+            TAG_OFFER, TAG_ACCEPT, TAG_WAIT, TAG_REFUSE, TAG_CHUNK, TAG_END, TAG_RESULT, TAG_CANCEL,
+        ];
+        for (i, t) in tags.iter().enumerate() {
+            assert_eq!(*t, TAG_FILE_FIRST + u8::try_from(i).unwrap());
+        }
+        assert_eq!(TAG_FILE_LAST, 0x3c);
+        assert!(TAG_PING > TAG_FILE_LAST);
+        assert_eq!(
+            FEATURES & FEATURE_FILES,
+            0,
+            "files are not offered before package 2b"
+        );
     }
 }

@@ -76,6 +76,8 @@ council (Guardian Pflicht: KI-Trennung, keine Pfade/Inhalte im Log; Architect: P
 
 ### Prompt – package 2: files and images (`feat/exchange-files`)
 
+Built in three PRs (decision in `docs/decisions/core-device-exchange-hub.md`): **2a** file records + received names (`crates/lan-sync`), **2b** transport loop, session flow, receiver store, phone client, **2c** shell commands, dialogs, thumbnails, module cards.
+
 ```
 Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Closing: #closing · PR: #pr-text
 Routing: Claude Code · Austausch – Dateien und Bilder (Paket 2) · Opus
