@@ -2,7 +2,7 @@
 type: fixed
 area: accessibility
 breaking: false
-de: In auswählbaren Listen sagt ein Screenreader beim Häkchen jetzt, welcher Eintrag gemeint ist („„Stadtwerke“ auswählen“).
+de: In auswählbaren Listen nennt ein Screenreader beim Häkchen jetzt den Eintrag, z. B. „Stadtwerke“.
 en: In selectable lists a screen reader now names the entry a checkbox ticks ("Select “Stadtwerke”").
 ---
 type: fixed

@@ -1,10 +1,12 @@
 // @vitest-environment jsdom
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
+import { useRef, useState } from 'react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SubNav } from './SubNav';
+import { useOverflowMark } from './useOverflowMark';
 
 const items = [
   { id: 'a', label: 'Aufgaben', to: '/todos', active: true, icon: 'check' as const },
@@ -37,6 +39,29 @@ describe('row-end fade only on overflow', () => {
       </MemoryRouter>,
     );
     expect(screen.getByTestId('subnav')).toHaveAttribute('data-overflow', 'true');
+  });
+
+  // The calendar's chips mount after the row (a live query): a child added later must mark the row again.
+  it('marks again when a child is added after mount', async () => {
+    let addChip = () => undefined as void;
+    function Row() {
+      const ref = useRef<HTMLDivElement>(null);
+      const [chips, setChips] = useState(false);
+      addChip = () => setChips(true);
+      useOverflowMark(ref, 'fixed');
+      return (
+        <div ref={ref} data-testid="row">
+          <span>Monat</span>
+          {chips ? <span>Arbeit</span> : null}
+        </div>
+      );
+    }
+    widths(300, 300);
+    render(<Row />);
+    expect(screen.getByTestId('row')).toHaveAttribute('data-overflow', 'false');
+    widths(600, 300);
+    await act(async () => addChip());
+    expect(screen.getByTestId('row')).toHaveAttribute('data-overflow', 'true');
   });
 
   // The style sheets draw the fade only under `[data-overflow='true']`: a row that fits keeps its last entry clear.
