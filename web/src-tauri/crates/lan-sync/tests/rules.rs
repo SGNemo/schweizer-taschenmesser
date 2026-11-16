@@ -640,14 +640,15 @@ fn no_frame_from_the_network_reaches_an_exchange_setter() {
             assert!(!line.contains("set_exchange"), "{name}: {}", line.trim());
         }
     }
-    // the session uses exactly the reading half of `Exchange`
-    let session = source("src/exchange/session.rs");
+    // the session and its file side use exactly the reading half of `Exchange`
+    let session = source("src/exchange/session.rs") + &source("src/exchange/transfer.rs");
     let allowed = [
         "admit",
         "limited",
         "record",
         "inbox",
         "outbox",
+        "files",
         "session_opened",
         "session_ended",
     ];
@@ -662,6 +663,17 @@ fn no_frame_from_the_network_reaches_an_exchange_setter() {
             assert!(
                 allowed.contains(&name.as_str()),
                 "session.rs calls Exchange::{name}"
+            );
+        }
+    }
+    // the files boundary only reads, writes files and reports: no setting can hide behind it
+    let files = source("src/exchange/files.rs");
+    for word in ["fn set_", "set_exchange", "set_enabled", "grant", "trust"] {
+        for line in code_lines(&files) {
+            assert!(
+                !line.contains(word),
+                "files.rs: `{word}` in `{}`",
+                line.trim()
             );
         }
     }
@@ -684,8 +696,12 @@ fn exchange_hub_parts_are_compiled_out_on_mobile_and_the_wire_is_not() {
     }
     let ex = fs::read_to_string(root().join("src/exchange/mod.rs")).unwrap();
     let ex_lines: Vec<&str> = ex.lines().map(str::trim).collect();
-    for module in ["control", "session"] {
-        let decl = format!("pub mod {module};");
+    for (module, decl) in [
+        ("control", "pub mod control;"),
+        ("session", "pub mod session;"),
+        ("files", "pub mod files;"),
+        ("transfer", "mod transfer;"),
+    ] {
         let at = ex_lines
             .iter()
             .position(|l| *l == decl)

@@ -76,7 +76,7 @@ council (Guardian Pflicht: KI-Trennung, keine Pfade/Inhalte im Log; Architect: P
 
 ### Prompt – package 2: files and images (`feat/exchange-files`)
 
-Built in three PRs (decision in `docs/decisions/core-device-exchange-hub.md`): **2a** file records + received names (`crates/lan-sync`), **2b** transport loop, session flow, receiver store, phone client, **2c** shell commands, dialogs, thumbnails, module cards.
+Built in four PRs (decision in `docs/decisions/core-device-exchange-files.md`): **2a** file records + received names (`crates/lan-sync`), **2b-1** transport loop and session flow (`crates/lan-sync`), **2b-2** receiver store on disk and the phone's side, **2c** shell commands, dialogs, thumbnails, module cards.
 
 ```
 Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Closing: #closing · PR: #pr-text
