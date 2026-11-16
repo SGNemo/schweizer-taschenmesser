@@ -18,7 +18,21 @@ function splitCapacity(text: string): { value: string; unit: string } {
  * only: no file or folder names, nothing from a scan.
  */
 export function DiskHead({ drives }: { drives: readonly DriveInfo[] | null }) {
-  const main = drives ? headDrive(drives) : undefined;
+  // While the drives are read (`null`) the figure holds its place with a dash, so the head keeps its height and
+  // the page does not jump when the number arrives (no spinner: the reading takes a moment only).
+  if (!drives)
+    return (
+      <HeroSlot area="figure">
+        <HeroFigure
+          type="mono"
+          detail={'\u00a0'}
+          value="–"
+          unit={t.disk.head.used}
+          testId="disk-head-used"
+        />
+      </HeroSlot>
+    );
+  const main = headDrive(drives);
   if (!main) return null;
   const figure = splitCapacity(formatCapacity(Math.max(0, main.totalBytes - main.freeBytes)));
   return (
