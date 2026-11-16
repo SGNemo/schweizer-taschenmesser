@@ -10558,13 +10558,90 @@ export const de = {
   exchange: {
     meta: {
       name: 'Austausch',
-      description: 'TODO: Ein Satz, was Austausch macht.',
-      quickAdd: 'Austausch: neuer Eintrag',
-      showDone: 'Erledigte anzeigen',
+      description:
+        'Notizen und Links zwischen Handy und PC hin- und herschicken – im Heimnetz, über die bestehende Kopplung.',
+      widget: 'Austausch',
     },
-    empty: 'Noch keine Einträge.',
-    add: 'Eintrag anlegen',
-    addPlaceholder: 'Neuer Eintrag …',
+    peer: {
+      pc: 'Dein PC',
+      phone: 'Dein Handy',
+    },
+    from: {
+      phone: 'vom Handy',
+      pc: 'vom PC',
+      you: 'von dir',
+    },
+    kind: {
+      text: 'Notiz',
+      link: 'Link',
+      clip: 'Zwischenablage',
+    },
+    state: {
+      waitingPc: 'Kommt an, sobald Nemo auf deinem Handy offen ist.',
+      waitingPhone: 'Geht raus, sobald du im Heimnetz bist und Nemo auf deinem PC läuft.',
+      sent: 'Wird übergeben',
+      delivered: 'Angekommen',
+      fullPc: 'Auf dem PC ist gerade zu wenig Platz.',
+      fullPhone: 'Auf dem Handy ist gerade zu wenig Platz.',
+      rejected: 'Kam nicht an.',
+    },
+    reach: {
+      connected: 'erreichbar',
+      away: 'gerade nicht verbunden',
+    },
+    compose: {
+      label: 'Nachricht oder Link',
+      placeholder: 'Nachricht oder Link …',
+      send: 'Senden',
+      failed: 'Konnte nicht gespeichert werden. Bitte nochmal senden.',
+    },
+    actions: {
+      copy: 'Kopieren',
+      open: 'Öffnen',
+      remove: 'Karte entfernen',
+      copied: 'Kopiert',
+    },
+    empty: 'Noch nichts hier. Schick dir eine Notiz oder einen Link.',
+    footer: 'Karten bleiben 30 Tage.',
+    unsupported: 'Austausch geht in der Desktop-App und auf dem Handy.',
+    pc: {
+      notPaired:
+        'Noch kein Gerät gekoppelt. Kopple dein Handy, dann kannst du ihm Notizen und Links schicken.',
+      pair: 'Gerät koppeln',
+      hubOff: 'Der Abgleich im Heimnetz ist aus. Schalte ihn ein, damit dein Handy diesen PC erreicht.',
+      hubOn: 'Abgleich öffnen',
+      setupTitle: 'Austausch einschalten',
+      setupLead: 'Wähle, welche Geräte dir Notizen und Links schicken dürfen. Windows fragt einmal nach.',
+      setupHint: 'Was du an dein Handy schickst, kommt an, sobald Nemo dort offen ist.',
+      setupButton: 'Austausch einschalten',
+      deviceOff: 'Austausch ist für dieses Gerät noch aus.',
+      enable: 'Einschalten',
+      paused: 'Für dieses Gerät pausiert.',
+      resume: 'Fortsetzen',
+      pause: 'Pausieren',
+      lastSeen: (when: string) => `zuletzt gesehen: ${when}`,
+      device: 'Gerät',
+      cancelled: 'Nicht eingeschaltet.',
+      busyControlled: 'Gerade steuert ein Handy diesen PC. Danach geht das wieder.',
+      failed: 'Das hat nicht geklappt. Bitte nochmal versuchen.',
+    },
+    phone: {
+      notPaired:
+        'Noch nicht mit deinem PC gekoppelt. Kopple ihn, dann kannst du ihm Notizen und Links schicken.',
+      pair: 'Mit PC koppeln',
+      unreachable: 'Geht raus, sobald du im Heimnetz bist und Nemo auf deinem PC läuft.',
+      exchangeOff:
+        'Austausch ist am PC noch nicht eingeschaltet. Am PC: Mehr → Modul-Bibliothek → Austausch.',
+      notGranted: 'Austausch ist für dieses Handy am PC noch aus. Am PC: Austausch → Einschalten.',
+      paused: 'Austausch ist am PC pausiert. Am PC wieder einschalten.',
+      limit: (minutes: number) =>
+        `Gerade zu viel auf einmal. Der Rest geht in ${minutes} Minuten weiter.`,
+    },
+    widget: {
+      nothing: 'Nichts Neues',
+      fresh: (n: number) => (n === 1 ? '1 Neues' : `${n} Neue`),
+      open: 'Austausch öffnen',
+    },
   },
 } as const;
 

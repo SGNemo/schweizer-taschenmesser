@@ -23,7 +23,7 @@ let opening = false;
 /** Takes received items and answers over into the history (stored, then confirmed). */
 export async function pull(ex: ExchangeService): Promise<void> {
   const { items, answers } = await ex.take();
-  const keep: string[] = [];
+  const keep: { peer: string; id: string }[] = [];
   for (const item of items) {
     const known = await itemRepo
       .active()
@@ -40,16 +40,25 @@ export async function pull(ex: ExchangeService): Promise<void> {
         unseen: true,
       });
     }
-    keep.push(item.id);
+    keep.push({ peer: item.peer, id: item.id });
   }
-  if (keep.length) await ex.confirm(keep);
-  for (const a of answers) await answered(a.id, a.state);
+  for (const a of answers) await answered(a.id, a.state, a.peer);
+  if (keep.length || answers.length) {
+    await ex.confirm(
+      keep,
+      answers.map((a) => ({ peer: a.peer, id: a.id })),
+    );
+  }
 }
 
-async function answered(itemId: string, state: 'delivered' | 'full' | 'rejected'): Promise<void> {
+async function answered(
+  itemId: string,
+  state: 'delivered' | 'full' | 'rejected',
+  peer?: string,
+): Promise<void> {
   const row = await itemRepo
     .active()
-    .filter((r) => r.itemId === itemId && r.direction === 'out')
+    .filter((r) => r.itemId === itemId && r.direction === 'out' && (!peer || r.peer === peer))
     .first();
   if (row && row.state !== state) await itemRepo.update(row.id, { state });
 }
@@ -117,7 +126,7 @@ async function sweep(): Promise<void> {
   for (const r of old) await itemRepo.remove(r.id);
 }
 
-async function refreshPc(ex: ExchangeService): Promise<void> {
+export async function refreshPc(ex: ExchangeService): Promise<void> {
   try {
     useExchangeView.setState({ pc: await ex.status() });
   } catch {

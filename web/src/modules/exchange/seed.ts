@@ -1,21 +1,29 @@
 import type { SeedContext, SeedModule, SeedRows } from '@/core/seed/types';
 
 /**
- * Test data for the Dev-Preview, E2E tests and screenshots (contract: docs/HOW-TO.md "Seed bauen").
- * Pure and deterministic: only `ctx` (rng, today, day(), id(), count()) – no Date.now(), no
- * Math.random(). Dates relative to `ctx.today`, invented German content, every widget non-empty.
- * Bump `seed.version` in the manifest whenever the output changes.
+ * Test data for the Dev-Preview, e2e tests and screenshots: a short conversation with the demo
+ * phone (the fake shell's „Pixel 7“). Pure and deterministic; invented content only.
  */
-const TITLES = ['Erster Beispieleintrag', 'Zweiter Beispieleintrag', 'Dritter Beispieleintrag'];
+const PEER = 'ab'.repeat(32);
+
+const CARDS: { direction: 'in' | 'out'; kind: 'text' | 'link'; body: string; unseen: boolean }[] = [
+  { direction: 'out', kind: 'link', body: 'https://example.org/rezepte/linsensuppe', unseen: false },
+  { direction: 'in', kind: 'text', body: 'Vergiss nicht, die Waschmaschine auszuräumen.', unseen: false },
+  { direction: 'in', kind: 'link', body: 'https://example.org/fahrplan/linie-7', unseen: true },
+];
 
 function seed(ctx: SeedContext): SeedRows {
-  const n = ctx.count({ small: 3, medium: 12, large: 200 });
   return {
-    entry: Array.from({ length: n }, (_, i) => ({
-      id: ctx.id('exchange', 'entry', i),
+    item: CARDS.map((c, i) => ({
+      id: ctx.id('exchange', 'item', i),
       data: {
-        title: i < TITLES.length ? TITLES[i]! : `${ctx.rng.pick(TITLES)} ${i + 1}`,
-        done: ctx.rng.chance(0.3),
+        peer: PEER,
+        itemId: (i + 1).toString(16).padStart(32, '0'),
+        direction: c.direction,
+        kind: c.kind,
+        body: c.body,
+        state: c.direction === 'out' ? 'delivered' : 'received',
+        unseen: c.unseen,
       },
     })),
   };

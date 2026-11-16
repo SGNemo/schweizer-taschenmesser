@@ -1,35 +1,35 @@
-import { t } from '@/strings';
 import { noOnboarding } from '@/core/importer/types';
 import { ALL_WIDGET_SIZES, type ModuleManifest } from '@/core/modules/types';
-import { aiSchema } from './ai';
+import { t } from '@/strings';
 import { migrations } from './migrations';
-import { entrySchema } from './schema';
+import { itemSchema } from './schema';
 import { settings } from './settings';
 
+/**
+ * Device exchange („Austausch“, concept `docs/design/device-exchange/CONCEPT.md`): notes and links
+ * between the phone and the PC over the home-network pairing. The cards are device-local
+ * (`local: true`): never synced, never in a backup, never searched – no `aiSchema`, no data API
+ * (also blocked by id in `core/dataapi/scope.ts`), so nothing of it can reach the assistant. Who
+ * may send to the PC is decided at the PC alone (its grant, confirmed by Windows).
+ */
 const manifest: ModuleManifest = {
   id: 'exchange',
   get name() {
     return t.exchange.meta.name;
   },
-  icon: 'puzzle',
-  // Identity v3 (docs/design/identity-v3/02-CONCEPT.md, docs/design/MODULE-IDENTITY.md): the hue from the palette
-  // (lime | moss | fern | teal | ocean | sky | cobalt | indigo | violet | orchid | slate; free in the area, 25° apart),
-  // the catalogue type of the main widget (kpi | dueList | progress | checklist | timeline | tiles | status | gauge), the
-  // widget's shape (kennzahl | zeitleiste | fortschritt | cover | himmel | kacheln | status | notiz | fokus | faellig | checkliste),
-  // the head variant (standard | stage; Identity 4.0: `standard` for every module, a stage is the exception) and the
-  // signature (the drawing the module is recognised by; two modules with one hue each need one of their own, so pick
-  // yours from SIGNATURES before you ship: 'none' only passes while no other module has your hue).
+  icon: 'swap',
   identity: {
-    hue: 'slate',
-    widgetType: 'kpi',
-    widget: 'kennzahl',
+    hue: 'teal',
+    hue2: 'ocean',
+    widget: 'status',
     head: 'standard',
-    signature: 'none',
+    signature: 'handoff',
   },
   version: 1,
   get description() {
     return t.exchange.meta.description;
   },
+  platforms: ['desktop', 'android'],
   routes: [
     {
       path: '/exchange',
@@ -37,47 +37,37 @@ const manifest: ModuleManifest = {
         return t.exchange.meta.name;
       },
       nav: true,
-      component: () => import('./routes/MainPage'),
+      component: () => import('./routes/ExchangePage'),
     },
   ],
   dataSchema: {
     collections: {
-      entry: { schema: entrySchema, indexes: ['createdAt'] },
+      item: { schema: itemSchema, indexes: ['createdAt'], local: true },
     },
   },
   migrations,
   widgets: [
     {
-      id: 'summary',
+      id: 'status',
       get title() {
-        return t.exchange.meta.name;
+        return t.exchange.meta.widget;
       },
       defaultSize: 's',
       sizes: ALL_WIDGET_SIZES,
-      component: () => import('./widgets/SummaryWidget'),
+      component: () => import('./widgets/ExchangeWidget'),
     },
   ],
-  aiSchema,
   settings,
+  dataApi: false,
   defaultEnabled: false,
-  maturity: 'stable',
+  maturity: 'preview',
   seed: { version: 1, dependsOn: [] },
-  // layout: 'content', // page width: 'narrow' | 'content' | 'wide' | 'full' (default 'content')
-  area: 'knowledge', // navigation area: plan | money | household | knowledge | vault | system
-  // order: 50, // lower = earlier in navigation and library (default 100)
-  // automation: () => import('./automation'), // events, state checks and `create` actions for rules (docs/howto/automation.md); never for secrets
+  layout: 'content',
+  order: 199,
+  area: 'system',
   contributions: {
-    // Start-data importers (see modules/todos/importer.ts); `noOnboarding` = nothing to import.
     onboarding: noOnboarding,
-    quickAdd: [
-      {
-        id: 'new',
-        get label() {
-          return t.exchange.meta.quickAdd;
-        },
-        to: '/exchange?new=1',
-      },
-    ],
+    services: () => import('./services'),
   },
 };
 
