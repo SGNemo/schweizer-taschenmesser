@@ -42,6 +42,74 @@ export const subscriptions: Strings['subscriptions'] = {
       unit: '/ month',
       paused: (n: number) => `${n} paused`,
     },
+    overview: {
+      tab: 'Overview',
+      listTab: 'Subscriptions',
+      tabsLabel: 'View',
+      sharesTitle: 'What you pay for',
+      sharesByCategory: 'Cost per month by type',
+      sharesByProvider: 'Cost per month by subscription',
+      byLabel: 'Split by',
+      byCategory: 'Type',
+      byProvider: 'Subscription',
+      noCategory: 'No type',
+      perMonth: 'per month',
+      nothingRunning: 'No subscription is running right now.',
+      otherCurrencies: (n: number) =>
+        n === 1
+          ? '1 subscription in another currency is not included.'
+          : `${n} subscriptions in other currencies are not included.`,
+      upcomingTitle: 'Next 30 days',
+      upcomingEmpty: 'Nothing is charged in the next 30 days.',
+      upcomingSum: (n: number) => (n === 1 ? '1 charge, in total' : `${n} charges, in total`),
+      yearTitle: 'What does it cost me per year',
+      moreInYear: (n: number, amount: string) =>
+        n === 1
+          ? `Plus 1 more subscription: ${amount}`
+          : `Plus ${n} more subscriptions: ${amount} in total`,
+    },
+    sort: {
+      label: 'Sort by',
+      next: 'Due',
+      cost: 'Per year',
+      name: 'Name',
+    },
+    perYearShort: (amount: string) => `${amount} a year`,
+    deadlines: {
+      title: 'Notice periods',
+      none: 'No notice period ends in the next 90 days.',
+      by: (date: string) => `Cancel by ${date}`,
+      otherwise: (amount: string, date: string) => `otherwise ${amount} on ${date}`,
+      plan: 'Add to plan',
+      planFor: (name: string) => `Cancel ${name}: add to plan`,
+      planned: 'In the plan',
+      plannedToast: (name: string) => `In the plan: cancel ${name}`,
+      later: (n: number) =>
+        n === 1
+          ? 'One more notice period within 90 days'
+          : `${n} more notice periods within 90 days`,
+    },
+    prices: {
+      title: 'Price changes',
+      change: (from: string, to: string, pct: number) =>
+        `${from} → ${to} (${pct > 0 ? '+' : ''}${pct} %)`,
+      since: (date: string) => `since ${date}`,
+      perYear: (amount: string, up: boolean) =>
+        up ? `${amount} more per year` : `${amount} less per year`,
+    },
+    unused: {
+      title: 'Hardly used',
+      mark: 'Hardly used',
+      markHint: 'The overview then shows what it costs per year.',
+      menuMark: 'Mark as hardly used',
+      menuUnmark: 'In use again',
+      sum: (n: number, amount: string) =>
+        n === 1
+          ? `1 subscription, ${amount} per year`
+          : `${n} subscriptions, ${amount} per year in total`,
+    },
+    widgetSummary: (monthly: string, name: string, date: string) =>
+      `${monthly} per month · next: ${name}, ${date}`,
     suggest: {
       apply: (amount: string) => `Take over the price: ${amount}`,
       seen: (amount: string) => `Last charged: ${amount}`,

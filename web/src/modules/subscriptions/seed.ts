@@ -215,6 +215,11 @@ function seed(ctx: SeedContext): SeedRows {
         paymentMethod: PAYMENT[i % PAYMENT.length],
         // One subscription is still in its trial (ends in five days).
         ...(i === 1 && active ? { trialEndsOn: ctx.day(5) } : {}),
+        // The first got dearer at its last charge (the overview's „Preisänderungen“); the paper is hardly read.
+        ...(i === 0
+          ? { priceHistory: [{ date: ctx.day(-ago), fromMinor: 1099, toMinor: amountMinor }] }
+          : {}),
+        ...(i === 4 && active ? { unusedSince: ctx.day(-20) } : {}),
       },
     };
   });
