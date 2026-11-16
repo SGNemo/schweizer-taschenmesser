@@ -94,6 +94,7 @@ function Form({
     trialEndsOn: existing?.trialEndsOn ?? '',
     category: (existing?.category ?? '') as SubscriptionCategory | '',
     paymentMethod: existing?.paymentMethod ?? '',
+    unused: !!existing?.unusedSince,
   });
   const {
     name,
@@ -108,6 +109,7 @@ function Form({
     trialEndsOn,
     category,
     paymentMethod,
+    unused,
   } = draft.values;
   const setName = (v: string) => draft.set('name', v);
   const setAmount = (v: string) => draft.set('amount', v);
@@ -168,6 +170,8 @@ function Form({
       trialEndsOn: trialEndsOn || undefined,
       category: category || undefined,
       paymentMethod: paymentMethod.trim() || undefined,
+      // Keeps the day it was first marked; switched off it goes.
+      unusedSince: unused ? (existing?.unusedSince ?? today()) : undefined,
       priceHistory: existing
         ? recordPriceChange(existing.priceHistory ?? [], today(), existing.amountMinor, amountMinor)
         : [],
@@ -338,6 +342,14 @@ function Form({
       </AdvancedFields>
       {existing ? (
         <Switch label={t.subscriptions.active} checked={active} onChange={setActive} />
+      ) : null}
+      {existing ? (
+        <Switch
+          label={t.subscriptions.ext.unused.mark}
+          hint={t.subscriptions.ext.unused.markHint}
+          checked={unused}
+          onChange={(v) => draft.set('unused', v)}
+        />
       ) : null}
       <FormActions
         start={

@@ -18,8 +18,10 @@ const manifest: ModuleManifest = {
     widget: 'faellig',
     head: 'standard',
     signature: 'cycle',
+    // The page has views „Abos | Übersicht“: the head keeps the tab row from the first paint.
+    tabs: true,
   },
-  version: 5,
+  version: 6,
   get description() {
     return t.subscriptions.meta.description;
   },
@@ -54,7 +56,7 @@ const manifest: ModuleManifest = {
   settings,
   defaultEnabled: true,
   maturity: 'stable',
-  seed: { version: 2, dependsOn: ['finance'] },
+  seed: { version: 3, dependsOn: ['finance'] },
   layout: 'wide',
   order: 60,
   area: 'money',
