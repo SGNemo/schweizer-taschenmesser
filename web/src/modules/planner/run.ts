@@ -129,14 +129,14 @@ export function rowsSignature(rows: readonly (AssignmentRow & { id: string })[])
  * What the person asked into the plan, per module: every live item row that is not excluded (`plan.requested`
  * with `ref` writes such a row; „Nicht planen“ or removing the row takes the thing out again). A source reads
  * its ids as `ctx.requested` and lists an undated thing only then (CONCEPT-SOURCES §3.1 rule 1, §3.3). Sorted,
- * so the same rows give the same lists on every device.
+ * so the same rows give the same lists on every device. A passed training let go (`skipped`) is no request.
  */
 export function requestedIds(
-  rows: readonly Pick<PlanItemRow, 'source' | 'excluded'>[],
+  rows: readonly Pick<PlanItemRow, 'source' | 'excluded' | 'skipped'>[],
 ): RequestedIds {
   const out: Record<string, string[]> = {};
   for (const r of rows) {
-    if (r.excluded || !r.source?.module || !r.source.id) continue;
+    if (r.excluded || r.skipped || !r.source?.module || !r.source.id) continue;
     (out[r.source.module] ??= []).push(r.source.id);
   }
   for (const ids of Object.values(out)) ids.sort();
@@ -345,6 +345,7 @@ const rowData = (row: PlanItemRow): PlanItemRow => {
     splittable,
     excluded,
     part,
+    skipped,
     order,
   } = row;
   return {
@@ -358,6 +359,7 @@ const rowData = (row: PlanItemRow): PlanItemRow => {
     ...(splittable !== undefined ? { splittable } : {}),
     ...(excluded ? { excluded } : {}),
     ...(part ? { part } : {}),
+    ...(skipped ? { skipped } : {}),
     order,
   };
 };

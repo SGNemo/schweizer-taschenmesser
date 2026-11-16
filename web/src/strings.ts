@@ -9351,6 +9351,15 @@ export const de = {
       line: 'Liegt auf keinem Tag. Bezahlt ist bezahlt – wann, entscheidest du.',
       row: (count: string) => `Frist vorbei · ${count}`,
     },
+    passed: {
+      label: 'Training der letzten Tage',
+      ask: (day: string) => `Training vom ${day} – eintragen?`,
+      log: 'Eintragen',
+      logFor: (day: string) => `Training vom ${day} eintragen`,
+      skip: 'Weglassen',
+      skipFor: (day: string) => `Training vom ${day} weglassen`,
+      skipped: 'Weggelassen.',
+    },
     day: {
       available: 'Verfügbar',
       less: 'Weniger Zeit',

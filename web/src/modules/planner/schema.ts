@@ -65,6 +65,11 @@ export const itemSchema = z.object({
   excluded: z.boolean().optional(),
   /** Tagesabschnitt (package 4b): orders the thing inside its day and, with a window, where it sits; never its day. */
   part: z.enum(DAY_PARTS_ENUM).optional(),
+  /**
+   * „Weglassen“ of a training whose day has passed unlogged (`passed.ts`, v5): that day. Today's page no longer asks
+   * for it; a session moved to another day asks again. Never read by the run.
+   */
+  skipped: z.string().regex(DATE_RE).optional(),
   order: z.number().default(0),
 });
 

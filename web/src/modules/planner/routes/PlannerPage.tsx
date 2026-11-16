@@ -43,6 +43,7 @@ import { ThingRow, WaitRow } from '../components/ThingRow';
 import { appointmentsOf, Context, nextDeadlinesOf } from '../components/Context';
 import { DayPage, DayPageLoading } from '../components/DayPage';
 import { LateGroup, LateRow } from '../components/LateGroup';
+import { PassedTrainings } from '../components/PassedTrainings';
 import { tileName, WeekBand } from '../components/WeekBand';
 import { firstDayWithRows, plannerHead } from '../head';
 import { DaySetup } from '../components/DaySetup';
@@ -809,6 +810,11 @@ export default function PlannerPage() {
           ) : (
             <DayPageLoading />
           )}
+
+          {/* A training whose day passed unlogged: asked once, quietly, under today's sheet only. */}
+          {shownDay?.isToday && data ? (
+            <PassedTrainings today={data.today} titles={titles} />
+          ) : null}
 
           {/* Not wide: the context follows the sheet in the one column. */}
           {!wide && hasContext ? <aside aria-label={t.planner.ctx.label}>{context}</aside> : null}

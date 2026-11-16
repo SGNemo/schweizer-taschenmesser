@@ -131,6 +131,16 @@ describe('a fixed block (S4)', () => {
     }
   });
 
+  it('a passed day never comes back: no late row, no day load, also with its old row in `prev`', () => {
+    // Sunday's training was never logged; on Monday today's page asks (`planner/passed.ts`), the engine does not.
+    const prev = [{ id: 'fitness:s1#0', date: '2026-11-08', reason: 'pinned' as const }];
+    const r = plan({ today: MON, days: week(), items: [gym('2026-11-08')], prev, settings: H });
+    expect(r.assignments).toEqual([]);
+    expect(r.unplaced).toEqual([]);
+    expect(Object.values(r.load).every((l) => l.planned === 0)).toBe(true);
+    expect(r.diff.removed.map((x) => x.id)).toEqual(['fitness:s1#0']);
+  });
+
   it('an appointment that overlaps it is not counted twice', () => {
     const days = week();
     days[0]!.blockers = [{ label: 'Teamrunde', min: 60, from: '18:30', to: '19:30' }];
