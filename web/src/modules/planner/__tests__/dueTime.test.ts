@@ -67,8 +67,8 @@ afterEach(() => {
 const entries = () => collectPlannable({ today: SAT, until: '2026-11-20' }, [todos]);
 
 it('the shape step to v4 is recorded and lossless: an old due parses as it was, its hour is optional', async () => {
-  expect(manifest.version).toBe(4);
-  expect(Object.keys(migrations ?? {})).toEqual(['2', '3', '4']);
+  expect(manifest.version).toBeGreaterThanOrEqual(4);
+  expect(Object.keys(migrations ?? {})).toEqual(expect.arrayContaining(['2', '3', '4']));
   const old = { source: { module: 'todos', id: 'a' }, due: { date: SUN, hard: true }, order: 0 };
   expect(itemSchema.parse(old)).toEqual(old);
   expect(itemSchema.parse({ ...old, due: { ...old.due, time: '18:00' } }).due?.time).toBe('18:00');

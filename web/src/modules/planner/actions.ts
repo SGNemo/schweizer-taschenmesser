@@ -443,6 +443,21 @@ export const exclude = (e: PlannableEntry, titles: Record<string, string>) =>
     itemPatch(e, { excluded: true }),
   );
 
+/**
+ * „Weglassen“ of a training whose day passed unlogged (`passed.ts`): the planner's own item row keeps that day as
+ * `skipped`, so today's page asks no more. The source keeps the session as it is; one undo brings the question back.
+ */
+export const skipPassed = (e: PlannableEntry, date: string, titles: Record<string, string>) =>
+  act(
+    t.planner.passed.skip,
+    t.planner.passed.skipped,
+    titles,
+    () => itemPatch(e, { skipped: date }),
+    {
+      leadOnly: true,
+    },
+  );
+
 export const include = (e: PlannableEntry, titles: Record<string, string>) =>
   act(t.planner.row.include, t.planner.toast.included, titles, () =>
     itemPatch(e, { excluded: undefined }),
