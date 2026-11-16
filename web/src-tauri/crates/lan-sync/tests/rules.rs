@@ -616,12 +616,7 @@ fn exchange_sync_input_stay_apart() {
 
 #[test]
 fn no_frame_from_the_network_reaches_an_exchange_setter() {
-    let setters = [
-        "set_enabled",
-        "set_device",
-        "set_exchange",
-        ".set(",
-    ];
+    let setters = ["set_enabled", "set_device", "set_exchange", ".set("];
     for name in [
         "src/exchange/wire.rs",
         "src/exchange/session.rs",

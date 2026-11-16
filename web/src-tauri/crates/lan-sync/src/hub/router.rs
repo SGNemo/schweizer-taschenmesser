@@ -415,7 +415,7 @@ impl Connection {
                     Ok(Incoming::Unpair) | Err(_) => ExchangeStep::Close,
                 };
                 // an accepted `open` (authenticated) replaces the device's older exchange session
-                if matches!(step, ExchangeStep::Reply(crate::exchange::wire::TAG_OPENED, _)) {
+                if exchange.take_opened() {
                     s.replace_older_exchange();
                 }
                 seal_exchange(s, step)

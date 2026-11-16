@@ -441,7 +441,11 @@ impl SessionRegistry {
         };
         let mut n = 0;
         for (p, m, h) in s.iter() {
-            if p == peer && *m == Mode::Exchange && !Arc::ptr_eq(&h.closed, &keep.closed) && !h.is_closed() {
+            if p == peer
+                && *m == Mode::Exchange
+                && !Arc::ptr_eq(&h.closed, &keep.closed)
+                && !h.is_closed()
+            {
                 h.close();
                 n += 1;
             }

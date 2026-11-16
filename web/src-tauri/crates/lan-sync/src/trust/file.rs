@@ -416,7 +416,11 @@ mod tests {
         let s = FileTrustStore::open(&path).unwrap();
         assert!(s.exchange_of(&dev(1).key).effective());
         assert!(s.exchange_of(&dev(2).key).on && !s.exchange_of(&dev(2).key).effective());
-        assert_eq!(s.exchange_of(&dev(3).key), ExchangeGrant::default(), "revoked");
+        assert_eq!(
+            s.exchange_of(&dev(3).key),
+            ExchangeGrant::default(),
+            "revoked"
+        );
         // a file from before device exchange: nobody has it
         let old = d.join("old.json");
         std::fs::write(

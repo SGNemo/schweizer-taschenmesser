@@ -1,6 +1,6 @@
 use super::control::{Exchange, MemoryInbox, MemoryOutbox, ITEMS_PER_WINDOW, RATE_WINDOW};
-use super::wire::ItemError;
 use super::session::{ExchangeConn, Step};
+use super::wire::ItemError;
 use super::wire::{self, AckState, Code, Item, Kind};
 use crate::input::{MasterSwitch, MemorySwitch};
 use crate::noise::PublicKey;
@@ -91,7 +91,11 @@ fn open_is_refused_with_the_reason_until_switch_and_grant_allow_it() {
     };
     assert_eq!(try_open(&r), refused(Code::ExchangeOff), "off by default");
     r.switch.set(true).unwrap();
-    assert_eq!(try_open(&r), refused(Code::NotGranted), "pairing is not permission");
+    assert_eq!(
+        try_open(&r),
+        refused(Code::NotGranted),
+        "pairing is not permission"
+    );
     r.exchange
         .set_device(
             &r.peer,
@@ -169,7 +173,10 @@ fn foreign_broken_and_reserved_frames_close_the_session() {
         (wire::TAG_ITEM, good[..10].to_vec()),
         (wire::TAG_OPEN, wire::encode_open(0).to_vec()), // a second open
         (wire::TAG_PING, vec![1]),
-        (wire::TAG_ACK, wire::encode_ack(&[5; 16], AckState::Stored).to_vec()), // nothing in flight
+        (
+            wire::TAG_ACK,
+            wire::encode_ack(&[5; 16], AckState::Stored).to_vec(),
+        ), // nothing in flight
         (0x3e, vec![]),
     ];
     for (tag, body) in cases {
@@ -227,7 +234,11 @@ fn the_rate_limit_counts_stored_items_slides_and_names_the_minutes_left() {
     // sliding: once the first 150 leave the window, there is room again
     let mut c = opened_at(&r, T0 + RATE_WINDOW);
     assert!(matches!(
-        c.on_frame(wire::TAG_ITEM, &wire::encode_item(&one_more), T0 + RATE_WINDOW),
+        c.on_frame(
+            wire::TAG_ITEM,
+            &wire::encode_item(&one_more),
+            T0 + RATE_WINDOW
+        ),
         Step::Reply(wire::TAG_ACK, _)
     ));
 }
@@ -272,7 +283,10 @@ fn an_unusable_item_is_rejected_by_id_and_the_session_goes_on() {
             wire::encode_ack(&[5; 16], AckState::Rejected).to_vec()
         )
     );
-    assert_eq!(wire::decode_item(&unknown_kind), Err(ItemError::Unusable([5; 16])));
+    assert_eq!(
+        wire::decode_item(&unknown_kind),
+        Err(ItemError::Unusable([5; 16]))
+    );
     assert!(r.inbox.items().is_empty());
     assert_eq!(c.on_frame(wire::TAG_PING, &[], T0), Step::Continue);
 }
@@ -322,7 +336,11 @@ fn the_outbox_goes_out_one_item_at_a_time_and_leaves_only_on_a_stored_ack() {
         Step::Close
     );
     assert_eq!(
-        c.on_frame(wire::TAG_ACK, &wire::encode_ack(a.id(), AckState::Stored), T0),
+        c.on_frame(
+            wire::TAG_ACK,
+            &wire::encode_ack(a.id(), AckState::Stored),
+            T0
+        ),
         Step::Continue
     );
     assert_eq!(r.outbox.len(&r.peer), 1);
@@ -388,7 +406,10 @@ fn switching_off_or_pausing_at_the_pc_ends_a_live_session_with_the_reason() {
         c.on_frame(wire::TAG_ITEM, &wire::encode_item(&i), T0),
         refused(Code::ExchangeOff)
     );
-    assert!(r.inbox.items().is_empty(), "nothing stored after the switch went off");
+    assert!(
+        r.inbox.items().is_empty(),
+        "nothing stored after the switch went off"
+    );
     // another device's outbox is never sent here
     r.exchange.set_enabled(true).unwrap();
     r.outbox

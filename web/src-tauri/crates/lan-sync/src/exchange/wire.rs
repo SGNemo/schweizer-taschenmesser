@@ -164,12 +164,18 @@ fn check_body(kind: Kind, body: &str) -> Result<(), Malformed> {
     match kind {
         // line breaks and tabs are text; every other control character is not
         Kind::Text | Kind::Clip => {
-            if body.chars().any(|c| c.is_control() && c != '\n' && c != '\t') {
+            if body
+                .chars()
+                .any(|c| c.is_control() && c != '\n' && c != '\t')
+            {
                 return Err(Malformed);
             }
         }
         Kind::Link => {
-            let lower = body.get(..8).map(str::to_ascii_lowercase).unwrap_or_default();
+            let lower = body
+                .get(..8)
+                .map(str::to_ascii_lowercase)
+                .unwrap_or_default();
             let scheme = lower.starts_with("https://") || lower.starts_with("http://");
             // no whitespace, controls or invisible format characters (bidi tricks) in an address
             let plain = body
@@ -311,7 +317,10 @@ mod tests {
         let crlf = item(Kind::Clip, "Zeile 1\r\nZeile 2\rZeile 3").unwrap();
         assert_eq!(crlf.body(), "Zeile 1\nZeile 2\nZeile 3");
         let long_link = format!("https://maps.example.org/route?{}", "a".repeat(4000));
-        assert!(item(Kind::Link, &long_link).is_ok(), "real links are often 2–4 KB");
+        assert!(
+            item(Kind::Link, &long_link).is_ok(),
+            "real links are often 2–4 KB"
+        );
         assert!(item(Kind::Link, "http://192.168.1.10:8080/x").is_ok());
         assert!(item(Kind::Link, "https://bücher.example/").is_ok());
         assert!(item(Kind::Link, "http://[fe80::1]:8080/").is_ok());
@@ -371,7 +380,12 @@ mod tests {
         assert_eq!(decode_open(&[0, 0]), Err(Malformed));
         assert_eq!(decode_open(&[1]), Err(Malformed));
         assert_eq!(decode_opened(&encode_opened(0)), Ok(0));
-        for c in [Code::ExchangeOff, Code::NotGranted, Code::Paused, Code::Limit(42)] {
+        for c in [
+            Code::ExchangeOff,
+            Code::NotGranted,
+            Code::Paused,
+            Code::Limit(42),
+        ] {
             assert_eq!(decode_code(&encode_code(c)), Ok(c));
         }
         assert_eq!(decode_code(&[0]), Err(Malformed));

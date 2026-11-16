@@ -22,7 +22,7 @@ pub mod session;
 
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub use control::{
-    Exchange, ExchangeInbox, ExchangeOutbox, InboxFull, MemoryInbox, MemoryOutbox,
+    Exchange, ExchangeInbox, ExchangeOutbox, InboxFull, MemoryInbox, MemoryOutbox, Stored,
 };
 
 #[cfg(all(test, not(any(target_os = "android", target_os = "ios"))))]

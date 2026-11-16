@@ -85,7 +85,8 @@ fn rig_full(cfg: ServerConfig, home: bool, wire_exchange: bool) -> Rig {
         inbox.clone(),
         outbox.clone(),
     ));
-    let mut router = Router::new(ep, host.clone(), hub, adm).with_input(remote.clone(), sink.clone());
+    let mut router =
+        Router::new(ep, host.clone(), hub, adm).with_input(remote.clone(), sink.clone());
     if wire_exchange {
         router = router.with_exchange(exchange.clone());
     }
@@ -104,6 +105,14 @@ fn rig_full(cfg: ServerConfig, home: bool, wire_exchange: bool) -> Rig {
         sessions,
         hub_key,
     }
+}
+
+#[test]
+fn every_server_of_the_process_hands_the_router_the_same_clock() {
+    let a = rig();
+    let b = rig();
+    assert_eq!(a.server.shared.started, b.server.shared.started);
+    assert_eq!(a.server.shared.started, process_base());
 }
 
 fn rig() -> Rig {
@@ -1585,8 +1594,14 @@ mod exchange_over_socket {
         let hub = StaticKey::generate().unwrap().public();
         for public in ["8.8.8.8:4000", "127.0.0.1:4000", "100.64.0.1:4000"] {
             assert_eq!(
-                ExchangeSession::open(public.parse().unwrap(), &key, &hub, "Phone", Box::new(|_| {}))
-                    .err(),
+                ExchangeSession::open(
+                    public.parse().unwrap(),
+                    &key,
+                    &hub,
+                    "Phone",
+                    Box::new(|_| {})
+                )
+                .err(),
                 Some(ExchangeError::Network),
                 "{public}"
             );

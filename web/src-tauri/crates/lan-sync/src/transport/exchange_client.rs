@@ -13,12 +13,10 @@
 //!   that the PC is full (keep it, send it again later).
 //! * **At least once:** after a lost ack the same id may come (and must be sent) again; both sides
 //!   store an id once.
-//! * **Keep-alive is the caller's:** it decides how long the session lives (page visible, a
-//!   hand-over running) and pings at least every 60 s for that time; after `Refused` on a PC item
-//!   a ping also asks the PC to offer it again.
-//! * **Keep it open:** the hub closes a session after 120 s without a frame from this side. The
-//!   caller sends `ping` at least every 60 s for as long as it wants the session (the page is
-//!   visible, or a hand-over runs).
+//! * **Keep-alive is the caller's:** the hub closes a session after 120 s without a frame from this
+//!   side. The caller decides how long the session lives (page visible, a hand-over running) and
+//!   pings at least every 60 s for that time; after `Refused` on a PC item a ping also asks the PC
+//!   to offer it again.
 //! * Only private IPv4 addresses are dialled. Nothing is logged or formatted.
 //! * `UnknownDevice` (authenticated refusal of the handshake) means: not paired any more, **or**
 //!   not on the home network, **or** a PC without device exchange. Never unpair because of it;

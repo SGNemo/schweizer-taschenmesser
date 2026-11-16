@@ -245,7 +245,8 @@ impl Session {
     /// then – never at message 1, which can be replayed by anyone who saw it on the network.
     pub fn replace_older_exchange(&self) {
         if self.mode == noise::Mode::Exchange && self.authenticated {
-            self.sessions.close_exchange_except(&self.peer, &self.handle);
+            self.sessions
+                .close_exchange_except(&self.peer, &self.handle);
         }
     }
 

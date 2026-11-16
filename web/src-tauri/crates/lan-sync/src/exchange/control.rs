@@ -30,11 +30,20 @@ pub struct InboxFull;
 /// over. `store` of an id it has seen from that device (kept at least for [`RATE_WINDOW`], across
 /// the hand-over) is therefore `Ok` and stores nothing new.
 pub trait ExchangeInbox: Send + Sync {
-    fn store(&self, from: &PublicKey, item: &Item) -> Result<(), InboxFull>;
+    fn store(&self, from: &PublicKey, item: &Item) -> Result<Stored, InboxFull>;
+}
+
+/// What `store` did: kept a new item, or knew the id already (only new ones count against the
+/// rate limit).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Stored {
+    New,
+    Known,
 }
 
 /// What the PC queued for a device. `next` hands out the oldest item without removing it and is
-/// asked on every tick of a live session: it must answer from memory (write files only on change).
+/// asked on every tick of a live session: it must answer from memory (write files only on change),
+/// and `answered` must drop the item from memory even when writing that down fails.
 /// `answered` reports the device's answer to an item it sent: `Stored` and `Rejected` take it out
 /// of the queue (the shell shows „Kam nicht an“ for `Rejected`), `Refused` keeps it (the device
 /// is full; the shell shows that, and it is offered again on the device's next ping).
@@ -62,7 +71,7 @@ impl MemoryInbox {
 }
 
 impl ExchangeInbox for MemoryInbox {
-    fn store(&self, from: &PublicKey, item: &Item) -> Result<(), InboxFull> {
+    fn store(&self, from: &PublicKey, item: &Item) -> Result<Stored, InboxFull> {
         if self.full.load(std::sync::atomic::Ordering::SeqCst) {
             return Err(InboxFull);
         }
@@ -70,10 +79,11 @@ impl ExchangeInbox for MemoryInbox {
         let known = items
             .iter()
             .any(|(k, i)| k == from.as_bytes() && i.id() == item.id());
-        if !known {
-            items.push((*from.as_bytes(), item.clone()));
+        if known {
+            return Ok(Stored::Known);
         }
-        Ok(())
+        items.push((*from.as_bytes(), item.clone()));
+        Ok(Stored::New)
     }
 }
 
@@ -107,7 +117,12 @@ impl MemoryOutbox {
 
 impl ExchangeOutbox for MemoryOutbox {
     fn next(&self, to: &PublicKey) -> Option<Item> {
-        self.queues.lock().ok()?.get(to.as_bytes())?.front().cloned()
+        self.queues
+            .lock()
+            .ok()?
+            .get(to.as_bytes())?
+            .front()
+            .cloned()
     }
     fn answered(&self, to: &PublicKey, id: &[u8; 16], state: AckState) {
         if let Ok(mut a) = self.answers.lock() {
@@ -207,7 +222,10 @@ impl Exchange {
         };
         // a device the full table cannot track is not taken (fail-closed, before anything is stored)
         if rate.len() >= MAX_TRACKED && !rate.contains_key(peer.as_bytes()) {
-            rate.retain(|_, t| t.back().is_some_and(|b| now.saturating_sub(*b) < RATE_WINDOW));
+            rate.retain(|_, t| {
+                t.back()
+                    .is_some_and(|b| now.saturating_sub(*b) < RATE_WINDOW)
+            });
             if rate.len() >= MAX_TRACKED {
                 return Some(60);
             }
