@@ -16,7 +16,9 @@ import {
   ItemRow,
   PageAction,
   PageHeader,
+  Segmented,
   Switch,
+  Tabs,
   useAdvancedMenuItem,
   useOpenParam,
 } from '@/ui';
@@ -25,7 +27,6 @@ import {
   changePercent,
   monthlyEquivalent,
   subscriptionStatus,
-  topExpensive,
   annualCost,
   nextCancelDeadline,
   missedDeadline,
@@ -38,6 +39,8 @@ import {
 } from '../logic';
 import { subscriptionRepo } from '../repo';
 import { ServiceTile } from '../components/ServiceTile';
+import { OverviewView } from '../components/OverviewView';
+import { isSortKey, sortList, SORT_KEYS, type SortKey } from '../overview';
 import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import { useAdvanced } from '@/core/settings/comfort';
 import { tDeadline } from '@/strings.deadline';
@@ -84,15 +87,30 @@ export default function SubscriptionsPage() {
 
   // `?new=1` (Quick-Add) opens the create dialog; derived from the URL.
   const openTarget = target ?? (params.get('new') ? { draft: true as const } : null);
+  const setParam = (key: string, value: string | undefined) =>
+    setParams(
+      (p) => {
+        const next = new URLSearchParams(p);
+        if (value) next.set(key, value);
+        else next.delete(key);
+        return next;
+      },
+      { replace: true },
+    );
   const closeEditor = () => {
     setTarget(null);
-    if (params.get('new')) setParams({}, { replace: true });
+    // Only the dialog's own parameter leaves the URL: the view and the order stay.
+    if (params.get('new')) setParam('new', undefined);
   };
 
   const sums = totalsByCurrency(subs ?? [], day);
   const [advanced] = useAdvanced('subscriptions');
   const compact = narrow && !advanced;
-  const top = advanced ? topExpensive(subs ?? [], day, 3) : [];
+  // View and order live in the URL: a reload or the way back keeps them (focus checklist 5).
+  const view = params.get('view') === 'overview' ? 'overview' : 'list';
+  const rawSort = params.get('sort');
+  const sort: SortKey = isSortKey(rawSort) ? rawSort : 'next';
+  const rows = sortList(subs ?? [], day, sort);
 
   const advancedItem = useAdvancedMenuItem('subscriptions');
   // The head's one figure: the monthly sum of the main currency. Its context line leads with what needs a decision
@@ -109,7 +127,23 @@ export default function SubscriptionsPage() {
 
   return (
     <>
-      <PageHeader title={t.subscriptions.title} besideContent>
+      <PageHeader
+        title={t.subscriptions.title}
+        besideContent
+        views={
+          hasSubs ? (
+            <Tabs
+              label={t.subscriptions.ext.overview.tabsLabel}
+              value={view}
+              options={[
+                { value: 'list', label: t.subscriptions.ext.overview.listTab },
+                { value: 'overview', label: t.subscriptions.ext.overview.tab },
+              ]}
+              onChange={(v) => setParam('view', v === 'overview' ? v : undefined)}
+            />
+          ) : undefined
+        }
+      >
         {/* While there is no subscription the empty state holds the one filled step (U26). */}
         <PageAction
           short={t.subscriptions.meta.quickAdd}
@@ -140,39 +174,35 @@ export default function SubscriptionsPage() {
         </HeroSlot>
       ) : null}
 
-      {/* One quiet line: the year (and the monthly sums of further currencies). The month stands in the head. */}
+      {/* One quiet line: the year (and the monthly sums of further currencies); the month stands in the head. In the
+          list the order of the rows sits at its end. */}
       {hasSubs ? (
-        <p className={styles.totals}>
-          {t.subscriptions.perYear}{' '}
-          <b data-testid="total-year">{formatTotals(pickTotals(sums, 'yearly'))}</b>
-          {otherMonthly.length > 0 ? (
-            <>
-              {' · '}
-              {t.subscriptions.ext.head.alsoMonthly}{' '}
-              <b data-testid="total-month-other">{formatTotals(new Map(otherMonthly))}</b>
-            </>
+        <div className={styles.listBar}>
+          <p className={styles.totals}>
+            {t.subscriptions.perYear}{' '}
+            <b data-testid="total-year">{formatTotals(pickTotals(sums, 'yearly'))}</b>
+            {otherMonthly.length > 0 ? (
+              <>
+                {' · '}
+                {t.subscriptions.ext.head.alsoMonthly}{' '}
+                <b data-testid="total-month-other">{formatTotals(new Map(otherMonthly))}</b>
+              </>
+            ) : null}
+          </p>
+          {view === 'list' ? (
+            <Segmented
+              label={t.subscriptions.ext.sort.label}
+              value={sort}
+              options={SORT_KEYS.map((k) => ({ value: k, label: t.subscriptions.ext.sort[k] }))}
+              onChange={(k) => setParam('sort', k === 'next' ? undefined : k)}
+            />
           ) : null}
-        </p>
+        </div>
+      ) : null}
+      {hasSubs && view === 'overview' ? (
+        <OverviewView subs={subs} day={day} onOpen={(s) => setTarget(s)} />
       ) : null}
 
-      {top.length > 0 ? (
-        <section aria-label={t.subscriptions.ext.top.title} data-testid="top-expensive">
-          <h2 className={styles.topTitle}>{t.subscriptions.ext.top.title}</h2>
-          <ul className={styles.topList}>
-            {top.map((s) => (
-              <li key={s.id}>
-                <ServiceTile name={s.name} />
-                <span>
-                  {s.name} ·{' '}
-                  {t.subscriptions.ext.top.perYear(
-                    formatMoney(Math.round(annualCost(s)), currencyOf(s)),
-                  )}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
       {empty ? (
         <EmptyState
           title={t.subscriptions.empty}
@@ -185,9 +215,9 @@ export default function SubscriptionsPage() {
         </EmptyState>
       ) : null}
       {/* No list surface without rows: an empty one drew a bare strip below the empty state (design check G6). */}
-      {empty || !subs?.length ? null : (
+      {empty || !subs?.length || view === 'overview' ? null : (
         <ItemList label={t.subscriptions.title}>
-          {subs.map((s) => {
+          {rows.map((s) => {
             const charge = s.active ? nextCharge(s, day) : undefined;
             const cancel = s.active ? nextCancelDeadline(s, day) : undefined;
             const missed = s.active ? missedDeadline(s, day) : undefined;
@@ -196,6 +226,13 @@ export default function SubscriptionsPage() {
             const status = subscriptionStatus(s, day);
             const plainMonthly =
               s.recurrence.freq === 'monthly' && (s.recurrence.interval ?? 1) === 1;
+            // Sorted by cost a running row says what it costs in a year: the key of the order is visible.
+            const yearly =
+              sort === 'cost' && s.active && charge
+                ? t.subscriptions.ext.perYearShort(
+                    formatMoney(Math.round(annualCost(s)), currencyOf(s)),
+                  )
+                : '';
             const facts = [
               describeRecurrence(s.recurrence),
               charge
@@ -207,11 +244,12 @@ export default function SubscriptionsPage() {
                 ? t.subscriptions.cancelledBadge(formatDay(s.recurrence.until, 'd. MMM yyyy'))
                 : '',
               increase ? t.subscriptions.priceUp(changePercent(increase)) : '',
-              plainMonthly
-                ? ''
-                : t.subscriptions.ext.monthlyShort(
-                    formatMoney(monthlyEquivalent(s), currencyOf(s)),
-                  ),
+              yearly ||
+                (plainMonthly
+                  ? ''
+                  : t.subscriptions.ext.monthlyShort(
+                      formatMoney(monthlyEquivalent(s), currencyOf(s)),
+                    )),
               // Category and payment method are power details: they show in Erweitert.
               advanced && s.category ? t.subscriptions.ext.category[s.category] : '',
               advanced ? (s.paymentMethod ?? '') : '',
@@ -260,6 +298,7 @@ export default function SubscriptionsPage() {
                         ? ` · ${t.subscriptions.cancelledBadge(formatDay(s.recurrence.until, 'd. MMM'))}`
                         : null}
                       {increase ? ` · ${t.subscriptions.priceUp(changePercent(increase))}` : null}
+                      {yearly ? ` · ${yearly}` : null}
                       {cancel && soon?.tone === 'soon' ? (
                         <span
                           className={`${styles.cancelLine} ${styles.warn}`}
