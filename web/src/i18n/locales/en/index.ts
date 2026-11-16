@@ -80,6 +80,7 @@ import { clock } from './clock';
 import { remote } from './remote';
 import { routines } from './routines';
 import { device } from './device';
+import { exchange } from './exchange';
 
 export const en: Strings = {
   appName: 'Nemo',
@@ -163,4 +164,5 @@ export const en: Strings = {
   remote,
   routines,
   device,
+  exchange,
 };

@@ -10555,6 +10555,17 @@ export const de = {
       charging: 'lädt',
     },
   },
+  exchange: {
+    meta: {
+      name: 'Austausch',
+      description: 'TODO: Ein Satz, was Austausch macht.',
+      quickAdd: 'Austausch: neuer Eintrag',
+      showDone: 'Erledigte anzeigen',
+    },
+    empty: 'Noch keine Einträge.',
+    add: 'Eintrag anlegen',
+    addPlaceholder: 'Neuer Eintrag …',
+  },
 } as const;
 
 /** Shape every translation must have: same keys, strings for strings, same function signatures. */

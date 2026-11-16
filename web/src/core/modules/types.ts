@@ -184,6 +184,7 @@ export const SIGNATURES = [
   'weekBars',
   'dumbbell',
   'dial',
+  'handoff',
   // tools
   'display',
   'flow',
