@@ -448,3 +448,10 @@
 .groupFoot {
   margin-top: var(--space-3);
 }
+
+/* Konten: the shape of a balance over the last six month ends under the account's name (shape only, the amount is the
+   row's figure). No axis. */
+.accountShape {
+  display: block;
+  line-height: 0;
+}
