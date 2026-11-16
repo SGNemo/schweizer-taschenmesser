@@ -180,6 +180,7 @@ fn write_json<T: Serialize>(path: &Path, value: &T) -> std::io::Result<()> {
 }
 
 #[derive(Default, Serialize, Deserialize)]
+#[serde(default)]
 struct InboxFile {
     v: u8,
     items: Vec<Entry>,
@@ -276,6 +277,7 @@ pub struct Answer {
 }
 
 #[derive(Default, Serialize, Deserialize)]
+#[serde(default)]
 struct OutboxFile {
     v: u8,
     queue: Vec<OutEntry>,
@@ -342,6 +344,20 @@ impl Outbox {
         let id = hex(id);
         if let Ok(mut file) = self.state.lock() {
             let mine = |e: &OutEntry| e.entry.peer == peer && e.entry.id == id;
+            // the same `full` again (a stalled item offered on every ping) changes nothing
+            let unchanged = state == AckState::Refused
+                && file
+                    .queue
+                    .iter()
+                    .filter(|e| mine(e))
+                    .all(|e| e.state == "full")
+                && file
+                    .answers
+                    .iter()
+                    .any(|a| a.peer == peer && a.id == id && a.state == "full");
+            if unchanged {
+                return;
+            }
             match state {
                 AckState::Refused => {
                     for e in file.queue.iter_mut().filter(|e| mine(e)) {

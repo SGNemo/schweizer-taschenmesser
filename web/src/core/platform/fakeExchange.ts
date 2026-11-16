@@ -71,10 +71,18 @@ export function createFakeExchange(side: 'pc' | 'phone'): ExchangeService {
     answers.push({ peer: q.peer, id, state });
     changed();
   };
+  const timers = new Set<string>();
   const flush = () => {
     if (!deliverable()) return;
-    for (const q of [...queued])
-      if (q.state === 'queued') setTimeout(() => answerPc(q.id, 'delivered'), 300);
+    for (const q of [...queued]) {
+      if (q.state !== 'queued' || timers.has(q.id)) continue;
+      timers.add(q.id);
+      setTimeout(() => {
+        timers.delete(q.id);
+        // paused or gone meanwhile: it stays queued, as in the shell
+        if (deliverable()) answerPc(q.id, 'delivered');
+      }, 300);
+    }
   };
 
   const hooks: FakeExchangeHooks = {
