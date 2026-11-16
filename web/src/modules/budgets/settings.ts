@@ -7,11 +7,13 @@ export const settingsSchema = z.object({
   warnAtPercent: z.number().int().min(10).max(99),
   /** One line per budget: where the period ends at the pace so far. */
   showForecast: z.boolean(),
+  /** The charts above the cards (spent and limit, daily rate, forecast, trend, breakdown). */
+  showCharts: z.boolean(),
 });
 
 export const settings: ModuleSettings = {
   schema: settingsSchema,
-  defaults: { warnAtPercent: 80, showForecast: true },
+  defaults: { warnAtPercent: 80, showForecast: true, showCharts: true },
   fields: [
     {
       key: 'warnAtPercent',
@@ -31,6 +33,16 @@ export const settings: ModuleSettings = {
       type: 'boolean',
       get help() {
         return t.budgets.ext.settings.showForecastHelp;
+      },
+    },
+    {
+      key: 'showCharts',
+      get label() {
+        return t.budgets.ext.charts.settings.showCharts;
+      },
+      type: 'boolean',
+      get help() {
+        return t.budgets.ext.charts.settings.showChartsHelp;
       },
     },
   ],

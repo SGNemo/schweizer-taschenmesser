@@ -58,6 +58,52 @@ export const budgets: Strings['budgets'] = {
       showForecastHelp:
         'One line per limit: where the spending ends up at the pace so far, including planned repeating bookings.',
     },
+    charts: {
+      section: 'Overview',
+      more: 'Trend and breakdown',
+      bars: 'Spent and limit per category',
+      barsContext: 'Each limit in its own period; the line is the limit.',
+      target: 'Limit',
+      perDay: {
+        label: 'Left per day',
+        context: (free: string, days: number, end: string) =>
+          `${free} free in the monthly limits · ${days === 1 ? 'today only' : `${days} days left`} until ${end}`,
+        none: 'The monthly limits are used up.',
+        noneContext: (end: string) => `New month from ${end}.`,
+      },
+      forecast: {
+        label: 'Forecast for month end',
+        context: (limit: string) => `of ${limit} monthly limit, at the pace so far`,
+        under: (amount: string) => `About ${amount} left over.`,
+        over: (amount: string) => `About ${amount} over the limit.`,
+      },
+      trend: 'The last 6 months',
+      trendContext:
+        'Spending in categories with a limit. Quarterly and yearly limits count pro rata per month.',
+      spent: 'Spent',
+      planned: 'Limit per month',
+      donut: 'Where the money went',
+      donutCentre: 'Spending',
+      donutContext: (total: string, budgeted: string) =>
+        `All spending this month: ${total} · ${budgeted} of it in categories with a limit`,
+      donutEmpty: 'No spending this month yet.',
+      uncategorised: 'No category',
+      cardPerDay: (amount: string, end: string) => `${amount} a day left until ${end}`,
+      example: {
+        title: 'Example: a month with three limits',
+        caption:
+          'This is what it looks like once there are limits: spent and planned per category.',
+        food: 'Groceries',
+        leisure: 'Leisure',
+        transport: 'Getting around',
+      },
+      widgetTrend: 'Spending with a limit, last 6 months',
+      settings: {
+        showCharts: 'Show charts above the limits',
+        showChartsHelp:
+          'Spent and limit, daily rate, forecast, trend and breakdown. Off: the cards only.',
+      },
+    },
   },
   meta: {
     name: 'Budgets & savings goals',

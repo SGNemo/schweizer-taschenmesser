@@ -83,7 +83,7 @@ export function ChartFrame({
           <div aria-hidden="true">{children}</div>
           {/* A table ignores a 1 px width; the wrapper keeps it out of the layout. */}
           <div className="sr-only">
-            <table>
+            <table className={styles.srTable}>
               <caption>{base.title}</caption>
               {table}
             </table>
