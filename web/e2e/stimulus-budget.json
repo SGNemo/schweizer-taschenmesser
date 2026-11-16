@@ -149,6 +149,18 @@
       "colouredAboveFold": 3,
       "signatureBlocks": 0
     },
+    "d1920--exchange": {
+      "height": 1080,
+      "buttons": 0,
+      "links": 0,
+      "icons": 0,
+      "firstScreenActions": 0,
+      "borders": 0,
+      "shadows": 0,
+      "surfaceLanguages": 0,
+      "colouredAboveFold": 0,
+      "signatureBlocks": 0
+    },
     "d1920--feeds": {
       "height": 1080,
       "buttons": 29,
