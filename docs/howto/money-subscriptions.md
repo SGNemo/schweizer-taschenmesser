@@ -8,7 +8,7 @@ Binding rules: [MODULE-IDENTITY](../design/MODULE-IDENTITY.md). Index: [HOW-TO](
 
 ## Pure logic (expectation tables in `__tests__/depth.test.ts`)
 
-`monthlyEquivalent` (rounded half up: weekly 5,00 € → 21,67 €, two weekdays a week, every 3 weeks, yearly /12), `subscriptionStatus` (`paused` beats `trial`; the last day counts as still running; `ended` has no charge left), `trialDaysLeft`, `topExpensive` (running ones, yearly cost, main currency only), `monogram` and `paletteIndex` (the tile: one or two letters, a stable hue from the ten module hues).
+`monthlyEquivalent` (rounded half up: weekly 5,00 € → 21,67 €, two weekdays a week, every 3 weeks, yearly /12), `subscriptionStatus` (`paused` beats `trial`; the last day counts as still running; `ended` has no charge left), `trialDaysLeft`, `monogram` and `paletteIndex` (the tile: one or two letters, a stable hue from the ten module hues).
 
 ## Signature: service tiles
 

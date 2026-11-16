@@ -261,6 +261,99 @@ export interface RemoteHostStatus {
   devices: RemoteHostDevice[];
 }
 
+/** Device exchange (`src-tauri/src/exchange*.rs`): what one item is. */
+export type ExchangeKind = 'text' | 'link' | 'clip';
+
+/** One message or link. `peer` = the other device's key (hex), `id` = 32 hex digits, `at` = ms. */
+export interface ExchangeItem {
+  peer: string;
+  id: string;
+  kind: ExchangeKind;
+  body: string;
+  at: number;
+}
+
+/** The other device's answer to an item this device sent. */
+export type ExchangeAnswerState = 'delivered' | 'full' | 'rejected';
+
+export interface ExchangeAnswer {
+  peer: string;
+  id: string;
+  state: ExchangeAnswerState;
+}
+
+/** A paired device as the PC sees it. */
+export interface ExchangeDevice {
+  id: string;
+  name: string;
+  /** Unix **seconds** of the last sync contact. */
+  lastSeen: number | null;
+  /** Granted at this PC (and `paused` there). */
+  on: boolean;
+  paused: boolean;
+  /** Has an exchange session open right now. */
+  connected: boolean;
+}
+
+export interface ExchangePcStatus {
+  /** The hub runs on this PC. */
+  running: boolean;
+  /** The module is on at this PC (the hub's switch). */
+  enabled: boolean;
+  devices: ExchangeDevice[];
+  /** What this PC queued and the devices have not taken yet (`full`: that device had no room). */
+  queued: { peer: string; id: string; state: 'queued' | 'full' }[];
+}
+
+/** What the phone's open session reports. `closed.reason`: `exchange-off`, `not-granted`, `paused`, `limit` (with `minutes`) or `null` (connection gone). */
+export type ExchangeEvent =
+  | { type: 'received' }
+  | { type: 'answer'; id: string; state: ExchangeAnswerState }
+  | { type: 'closed'; reason: string | null; minutes: number | null };
+
+/** An open session of the phone with its PC. Calls reject with `closed` once it is over. */
+export interface ExchangeSession {
+  send(item: { id: string; kind: ExchangeKind; body: string }): Promise<void>;
+  /** At least every 60 s while the session is wanted (the PC closes it after 120 s of silence). */
+  ping(): Promise<void>;
+  close(): Promise<void>;
+}
+
+/** Items and answers are named by the other device and the item's id (ids are per device). */
+export interface ExchangeKey {
+  peer: string;
+  id: string;
+}
+
+/**
+ * Device exchange. `side`: `pc` on the desktop (the hub), `phone` on Android, `null` elsewhere.
+ * Errors are `Error(code)`. PC: `not-started` (hub off), `not-found`, `bad-peer`, `bad-id`,
+ * `bad-kind`, `bad-item`, `outbox-full`, `storage`, `no-data-dir`, `internal`, and from the native
+ * confirmation `cancelled`, `busy-controlled`, `asking`, `changed`. Phone `open`: `network`,
+ * `no-answer`, `unknown-device` (also: not at home, or the PC has no device exchange), `not-paired`,
+ * `keystore-unavailable`, `protocol`, `closed`, `exchange-off`, `not-granted`, `paused`,
+ * `limit:<minutes>` – the same `limit` arrives on a `closed` event as `reason` + `minutes`.
+ */
+export interface ExchangeService {
+  side: 'pc' | 'phone' | null;
+  /** PC: the hub, the switch, the paired devices and the queue. */
+  status(): Promise<ExchangePcStatus>;
+  /** PC: queues an item for a paired device. */
+  send(peer: string, item: { id: string; kind: ExchangeKind; body: string }): Promise<void>;
+  /** Both: received items not taken over yet; PC also the answers not confirmed yet. */
+  take(): Promise<{ items: ExchangeItem[]; answers: ExchangeAnswer[] }>;
+  /** Both: the page stored these items (and, PC, answers); they leave the shell's files. */
+  confirm(items: ExchangeKey[], answers?: ExchangeKey[]): Promise<void>;
+  /** PC: the module at this PC. On with a stored grant is asked in a native dialog. */
+  setEnabled(enabled: boolean): Promise<void>;
+  /** PC: one device's grant. On / un-pause is asked in a native dialog. */
+  setDevice(id: string, on: boolean, paused: boolean): Promise<void>;
+  /** PC: something arrived or a device answered. Returns the unsubscribe. */
+  onChanged(cb: () => void): () => void;
+  /** Phone: opens a session with the paired PC (replaces an open one). */
+  open(onEvent: (e: ExchangeEvent) => void): Promise<ExchangeSession>;
+}
+
 /**
  * Desktop only: this PC's own remote-control settings (`src-tauri/src/remote.rs`). No call sends
  * input. Narrowing is immediate; every widening (a higher level, lifting a pause, dropping the
@@ -694,6 +787,8 @@ export interface PlatformService {
   remoteHost: RemoteHostService;
   /** The phone as a remote control of the paired PC (Android only). */
   remote: RemoteService;
+  /** Device exchange: messages and links between the phone and the PC (desktop and Android). */
+  exchange: ExchangeService;
   /** Home-network sync, device side (Android). */
   lanClient: LanClientService;
   /** Wi-Fi available/lost for home-network sync (Android). */

@@ -157,6 +157,12 @@ const PATTERNS: Record<string, Partial<Record<KnownLang | 'en-US', string>>> = {
   },
   'd. MMM': { en: 'd MMM', 'en-US': 'MMM d', es: 'd MMM', fr: 'd MMM', 'pt-BR': "d 'de' MMM" },
   'EEE d.': { en: 'EEE d', es: 'EEE d', fr: 'EEE d', 'pt-BR': 'EEE d' },
+  // Added after the freeze of es/fr/pt-BR (docs/i18n/FROZEN.md): English only.
+  'd. MMMM': { en: 'd MMMM', 'en-US': 'MMMM d' },
+  'EEEE, d. MMM': { en: 'EEEE d MMM', 'en-US': 'EEEE, MMM d' },
+  'd.': { en: 'd' },
+  'd.M.': { en: 'd/M', 'en-US': 'M/d' },
+  'd. MMM yy': { en: 'd MMM yy', 'en-US': 'MMM d, yy' },
   "'KW' II": {
     en: "'Week' II",
     es: "'Semana' II",

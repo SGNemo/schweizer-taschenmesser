@@ -4,7 +4,6 @@ import {
   monthlyEquivalent,
   paletteIndex,
   subscriptionStatus,
-  topExpensive,
   trialDaysLeft,
 } from '../logic';
 import { subscriptionSchema } from '../schema';
@@ -74,33 +73,6 @@ describe('status (expectation table)', () => {
     expect(trialDaysLeft({ trialEndsOn: '2026-03-10' }, '2026-03-10')).toBe(0);
     expect(trialDaysLeft({ trialEndsOn: '2026-03-09' }, '2026-03-10')).toBeUndefined();
     expect(trialDaysLeft({}, '2026-03-10')).toBeUndefined();
-  });
-});
-
-describe('most expensive', () => {
-  const list = [
-    sub({ name: 'Cheap', amountMinor: 399 }),
-    sub({ name: 'Year', amountMinor: 9900, recurrence: { freq: 'yearly', interval: 1 } }), // 99/yr
-    sub({ name: 'Big', amountMinor: 1999 }), // 239.88/yr
-    sub({ name: 'Paused', amountMinor: 99999, active: false }),
-    sub({ name: 'Dollar', amountMinor: 50000, currency: 'USD' }),
-    sub({
-      name: 'Ended',
-      amountMinor: 88888,
-      recurrence: { freq: 'monthly', interval: 1, until: '2026-01-01' },
-    }),
-  ];
-  it('ranks running ones by yearly cost in the main currency only', () => {
-    expect(topExpensive(list, '2026-03-10', 3).map((s) => s.name)).toEqual([
-      'Big',
-      'Year',
-      'Cheap',
-    ]);
-    expect(topExpensive(list, '2026-03-10', 1)).toHaveLength(1);
-  });
-  it('ties break by name', () => {
-    const t = [sub({ name: 'B' }), sub({ name: 'A' })];
-    expect(topExpensive(t, '2026-03-10').map((s) => s.name)).toEqual(['A', 'B']);
   });
 });
 
