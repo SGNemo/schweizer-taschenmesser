@@ -54,6 +54,11 @@ export const plannerSettingsSchema = z.object({
   horizonDays: z.enum(HORIZONS),
   maxSessionMin: z.enum(MAX_SESSIONS),
   minSessionMin: z.number().int().min(5).max(240),
+  /**
+   * No longer read and no longer shown (planner rethink): nothing is planned by itself any more. The key stays, and
+   * the one-time step writes `false` (`migrateModel.ts`), so a device still on the old version stops its
+   * background runs.
+   */
   autoReplan: z.boolean(),
   calendarBlocks: z.boolean(),
   allDayBlocks: z.boolean(),
@@ -256,16 +261,6 @@ export const settings: ModuleSettings = {
       },
       get help() {
         return s().minSessionMinHelp;
-      },
-    },
-    {
-      key: 'autoReplan',
-      type: 'boolean',
-      get label() {
-        return s().autoReplan;
-      },
-      get help() {
-        return s().autoReplanHelp;
       },
     },
     {

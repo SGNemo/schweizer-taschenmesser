@@ -45,6 +45,7 @@ import {
   type RunDeps,
   type RunOutcome,
 } from './run';
+import { migrateModel } from './migrateModel';
 import { getPlannerSettings } from './prefs';
 import { REST_PATH } from './rest';
 
@@ -272,7 +273,8 @@ export default function start(): () => void {
     clearTimeout(timer);
     timer = setTimeout(() => void runBackground().catch(logError('planner.run')), 50);
   };
-  // The day changes while the app is open: yesterday's leftovers must be carried without a write.
+  // The day changes while the app is open: the pass refreshes what the board reads (nothing is moved – what lay
+  // on yesterday is „Noch offen“ now).
   const armMidnight = () => {
     clearTimeout(midnight);
     midnight = setTimeout(() => {
@@ -285,7 +287,12 @@ export default function start(): () => void {
   };
   void preload()
     .catch(() => undefined)
-    .then(() => {
+    .then(async () => {
+      if (!active) return;
+      // The step into „the plan stays put“ (pins → locks), once the sync has settled; a start that is not settled
+      // leaves it to the next one – a pin that is still stored is found again.
+      if (await syncSettled(undefined, { wait: true }))
+        await migrateModel(today()).catch(logError('planner.migrate'));
       if (!active) return;
       sub = liveQuery(inputSnapshot).subscribe({
         next: schedule,
