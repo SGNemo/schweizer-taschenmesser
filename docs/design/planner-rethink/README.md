@@ -11,7 +11,7 @@ Branch `design/planner-rethink`, 2026-11-21. The maintainer's brief: the planner
 | [CONCEPT-COPY](CONCEPT-COPY.md) | every new word, German and English, with the rejected ones |
 | [CONCEPT-DIRECTIONS](CONCEPT-DIRECTIONS.md) | directions A/B/C, critique, FOCUS checklist, accessibility review |
 | [HANDOFF](HANDOFF.md) | what is on screen after package 1, states, edge cases, tests |
-| [PACKAGES](PACKAGES.md), [PACKAGES-4-7](PACKAGES-4-7.md) | seven packages with their prompts |
+| [PACKAGES](PACKAGES.md), [PACKAGES-2-3](PACKAGES-2-3.md), [PACKAGES-4-7](PACKAGES-4-7.md) | seven packages with their prompts |
 | [`mockups/`](mockups/) | `a.html`, `b.html`, `c.html`, `render.mjs` |
 | [`planner-rethink.spec.ts`](../../../web/e2e/usecases/planner-rethink.spec.ts) | the measuring script: `IST` (green on `develop`), `TARGET` (asserted by the last package) |
 

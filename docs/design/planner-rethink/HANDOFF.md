@@ -7,11 +7,11 @@ Package 1 changes the contract, not the room: the page looks as it does today, m
 | Element | Today | After package 1 |
 | --- | --- | --- |
 | Tabs under the page head | none | `Tabs` (`@/ui`): „Plan“ · „Noch offen“; `?tab=open`; the tab is always there, a dot (`aria-hidden`) while it holds rows, name „Noch offen: Dinge von Mo, Di“ / „Noch offen“ |
-| Tab „Noch offen“ | – | rows grouped by their passed day (`GroupedList`, head „Mo 16.“), locked ones first in each group; each row = the existing `ThingRow` with its ⋯ menu („Verschieben …“ first); empty: „Nichts offen von früher.“ No group actions yet (package 3) |
+| Tab „Noch offen“ | – | first group „Fest – braucht einen neuen Tag“ (the things that were fest, the maintainer's „marked and first“), then one group per passed day (`GroupedList`, head „Mo 16.“); each row says „war Mo“; each row = the existing `ThingRow` with its ⋯ menu („Verschieben …“ first); empty: „Nichts offen von früher.“ No group actions yet (package 3) |
 | Day sheet rows | title, minutes, „fest“ on a pinned row, reason behind „Warum hier?“ | title, minutes, „fest“ on a locked row; **no** „Warum hier?“, no reason line, no „Teil 1/2“ unless parts exist |
 | Row ⋯ | „Verschieben …“ pins; „Später“; „Nicht mehr festnageln“ | „Verschieben …“ moves (hint „Es liegt dann an diesem Tag. Sonst bewegt sich nichts.“); „Später“ = next day; „Nicht mehr fest“ on a locked row (the one-tap lock comes with package 2) |
 | „Wartet auf freie Zeit“ | things the engine could not place, with the overload figure | „Noch ohne Tag“: things without a placement; folded as today; no figure of minutes |
-| Field | new thing is spread by the run | lands on the day on the sheet, else today; toast „Liegt auf Do · Rückgängig“ |
+| Field | new thing is spread by the run | lands on the day on the sheet, else today; a date in the text sets the day instead (no lock); toast „Liegt auf Do · Rückgängig“ |
 | Toasts | „Eingeplant: Mi · X jetzt Do · 1 mehr“ | one fact: „Liegt auf Do“, „Erledigt“, „Vom Tag genommen“ – no second half, nothing else moved |
 | Day figure | free = usable − planned, may read „voll“ | same; when planned > usable the existing line „… mehr als planbar“ (`t.planner` already has the wording for a day with more things than time); the calm line with the action comes with package 2 |
 | „Rest verteilen“, „Tage einteilen“, sentences | preview from `plan()` over everything | preview from `propose()`: only the handed-over things move; head „Vorschlag – noch ist nichts verschoben.“ |
@@ -24,7 +24,7 @@ Package 1 changes the contract, not the room: the page looks as it does today, m
 | laid | as today | default |
 | fest | chip „fest“ (existing `row.fixed` string, now for the lock only); a fixed block shows its time, not the word | text + (from package 2) icon, never colour alone |
 | in „Noch offen“ | same row, meta „war Mo“ in the muted ink token | no warning tone, no red |
-| without a day | row in „Noch ohne Tag“ | chips „Vorschlag …“ / „In ToDos …“ come with package 6 |
+| without a day | row in „Noch ohne Tag“ | chips „Vorschlag …“ / „In ToDos …“ come with package 2 |
 | thing done at its source | row gone at once (hidden by the selector) | no write |
 
 ## 3. Interaction
@@ -62,4 +62,4 @@ Reused only: `Tabs`, `GroupedList`, `ThingRow`, `RowChoice`, `PlanPreview`, `Emp
 
 ## 8. Tests package 1 owes
 
-`core/plan/propose.test.ts` (determinism, stability under partial acceptance, `stay` untouched, fixtures S1–S6 rewritten) · invariants 1–4 of CONCEPT-MIGRATION §7 as `modules/planner/__tests__/staysPut.test.ts` (row snapshot per action, write spy over midnight / start / focus / sync / foreign edit) · `migration.test.ts` (table of §2, second start writes nothing, restore runs it again) · ToDo helpers (mark without `prior`, disable keeps the date) · `e2e/usecases/planner-rethink.spec.ts` re-measured: U1 `unaskedAfterTwoDays` 0, `collateral` 0, `layCollateral` 0, U2–U4 „ja“.
+`core/plan/propose.test.ts` (determinism, stability under partial acceptance, `stay` untouched, fixtures S1–S6 rewritten) · invariants 1–4 of CONCEPT-MIGRATION §7 as `modules/planner/__tests__/staysPut.test.ts` (row snapshot per action; write spy over midnight / start / focus / sync / foreign edit; one undo entry per writing action incl. „Übernehmen“; a closed preview writes nothing; a throwing source, a switched-off module and a thing outside the listing window keep their rows) · convergence: move on A + lock on B → A's day, locked; remove on A + move on B → removed · `migration.test.ts` (every row of the §2 table on the U1 plan after its repair plus a pin three weeks ahead, second start writes nothing, restore runs it again) · ToDo helpers (mark without `prior`, disable keeps the date) · `e2e/usecases/planner-rethink.spec.ts` re-measured: U1 `unaskedAfterTwoDays` 0, `collateral` 0, `layCollateral` 0, `untraceable` 0, U2–U4 „ja“.
