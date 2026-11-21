@@ -54,6 +54,11 @@ describe('sanitize', () => {
     expect(out).not.toContain('privat');
     expect(out).toContain('failed');
   });
+  it('hides a user folder with spaces at the very end of a message too', () => {
+    const out = sanitize('cannot open C:\\Users\\Erika Musterfrau');
+    expect(out).not.toContain('Musterfrau');
+    expect(out).toContain('cannot open');
+  });
   it('truncates long messages', () => {
     expect(sanitize('word '.repeat(200)).length).toBeLessThanOrEqual(MAX_MESSAGE);
   });

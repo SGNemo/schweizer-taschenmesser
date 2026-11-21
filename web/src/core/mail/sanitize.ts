@@ -140,7 +140,9 @@ function install(): void {
         else node.remove();
       } else if (/^data:image\//i.test(src)) {
         // already inline
-      } else if (/^https?:\/\//i.test(src)) {
+      } else if (isPublicHttpsUrl(src)) {
+        // Only what "Bilder laden" can really fetch is offered: a public https address. Plain http and
+        // addresses in the home network are dropped like any other unusable source (no dead button).
         current.remote.add(src);
         const data = current.options.images?.[src];
         if (data) {
@@ -220,7 +222,7 @@ export function mailDocument(bodyHtml: string): string {
  *
  * The sender chooses these addresses, so only public https hosts are asked (`isPublicHttpsUrl`): never
  * plain http, a device in the home network, this computer or a cloud metadata address. A body whose
- * declared length is over the limit is not read at all.
+ * declared length is over the limit is not read at all, and a redirect is never followed.
  */
 export async function fetchRemoteImages(
   urls: readonly string[],
@@ -233,11 +235,15 @@ export async function fetchRemoteImages(
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
+      // No redirects: the address the sender wrote was judged, a second one would not be. The browser
+      // obeys `redirect`, the desktop's own fetch `maxRedirections` (it then hands back the 3xx answer).
       const res = await fetchFn(url, {
         signal: controller.signal,
         referrerPolicy: 'no-referrer',
         credentials: 'omit',
-      });
+        redirect: 'error',
+        maxRedirections: 0,
+      } as RequestInit);
       const mime = (res.headers.get('content-type') ?? '').split(';')[0]!.trim().toLowerCase();
       if (!res.ok || !/^image\/(png|jpe?g|gif|webp|avif|bmp)$/.test(mime)) continue;
       const declared = Number(res.headers.get('content-length'));

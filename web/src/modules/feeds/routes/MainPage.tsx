@@ -238,7 +238,7 @@ export default function MainPage() {
                     key={feed.id}
                     title={feed.title}
                     meta={hostOf(feed.url)}
-                    href={safeHttpUrl(feed.siteUrl) ?? feed.url}
+                    href={safeHttpUrl(feed.siteUrl, feed.url) ?? feed.url}
                     menuLabel={s.rowMenu(feed.title)}
                     menu={[
                       {

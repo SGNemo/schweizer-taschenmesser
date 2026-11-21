@@ -134,7 +134,12 @@ describe('fetchRemoteImages', () => {
     );
     expect(Object.keys(out)).toEqual(['https://a.example/ok.png']);
     expect(out['https://a.example/ok.png']).toMatch(/^data:image\/png;base64,/);
-    expect(seen[0]).toMatchObject({ referrerPolicy: 'no-referrer', credentials: 'omit' });
+    expect(seen[0]).toMatchObject({
+      referrerPolicy: 'no-referrer',
+      credentials: 'omit',
+      redirect: 'error',
+      maxRedirections: 0,
+    });
   });
 
   it('asks only public https hosts: no http, no LAN, loopback or metadata address, no credentials', async () => {
@@ -173,5 +178,27 @@ describe('fetchRemoteImages', () => {
     }) as unknown as typeof fetch;
     expect(await fetchRemoteImages(['https://a.example/huge.png'], fetchFn)).toEqual({});
     expect(read).toBe(false);
+  });
+  it('skips an answer that is a redirect (the desktop fetch hands back the 3xx)', async () => {
+    const fetchFn = (async () =>
+      new Response(null, {
+        status: 302,
+        headers: { location: 'http://192.168.1.1/cgi-bin/reboot' },
+      })) as unknown as typeof fetch;
+    expect(await fetchRemoteImages(['https://a.example/moved.png'], fetchFn)).toEqual({});
+  });
+});
+
+describe('sanitizeMailHtml: which remote images are offered', () => {
+  it('offers only public https images; http and home-network sources are dropped, not counted', () => {
+    const out = sanitizeMailHtml(
+      '<p>x</p><img src="https://a.example/ok.png" width="200" height="100">' +
+        '<img src="http://a.example/plain.png" width="200" height="100">' +
+        '<img src="https://192.168.1.1/cgi-bin/reboot" width="200" height="100">',
+    );
+    expect(out.remoteImages).toEqual(['https://a.example/ok.png']);
+    expect(out.blocked).toBe(1);
+    expect(out.html).not.toContain('192.168.1.1');
+    expect(out.html).not.toContain('plain.png');
   });
 });

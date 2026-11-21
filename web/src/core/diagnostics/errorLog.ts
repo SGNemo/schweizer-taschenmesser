@@ -47,7 +47,7 @@ export function scrub(text: string): string {
       })
       .replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, '[mail]')
       // A Windows user folder may contain spaces ("Erika Musterfrau"): take that part whole, then the rest up to a space.
-      .replace(/[A-Za-z]:\\(?:Users\\[^\\\r\n"']+(?=\\))?[^\s"']*/gi, '[path]')
+      .replace(/[A-Za-z]:\\(?:Users\\[^\\\r\n"']{1,64}?(?=\\|$))?[^\s"']*/gi, '[path]')
       .replace(/\\\\[^\s"'\\]+(?:\\[^\s"']*)?/g, '[path]')
       .replace(/\/(home|Users|root)\/[^\s/"']+(\/[^\s"']*)?/g, '/$1/[user]')
       .replace(/\b\d{1,3}(?:\.\d{1,3}){3}\b/g, '[ip]')

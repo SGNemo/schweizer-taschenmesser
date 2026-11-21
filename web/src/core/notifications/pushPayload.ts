@@ -46,9 +46,20 @@ export function parsePushMessage(text: string): PushMessage | undefined {
   }
 }
 
-/** A link inside the app: one leading slash, then no second slash, backslash or control character (those leave the origin). */
-// eslint-disable-next-line no-control-regex
-const APP_PATH = /^\/(?![/\\])[^\u0000-\u001f\\]*$/;
+/**
+ * A link inside the app. Judged the way the browser will read it: resolved against a made-up origin it
+ * must stay on that origin and its path must not start with two slashes (tab and line-break characters
+ * are dropped by the URL parser, so "/<tab>/host" is "//host").
+ */
+function isAppPath(value: string): boolean {
+  if (!value.startsWith('/') || value.includes('\\')) return false;
+  try {
+    const url = new URL(value, 'https://app.invalid');
+    return url.origin === 'https://app.invalid' && !url.pathname.startsWith('//');
+  } catch {
+    return false;
+  }
+}
 
 export function asPayload(value: unknown): PushPayload | undefined {
   if (typeof value !== 'object' || value === null) return undefined;
@@ -57,7 +68,7 @@ export function asPayload(value: unknown): PushPayload | undefined {
   return {
     title: v.title,
     body: typeof v.body === 'string' ? v.body : undefined,
-    url: typeof v.url === 'string' && APP_PATH.test(v.url) ? v.url : undefined,
+    url: typeof v.url === 'string' && isAppPath(v.url) ? v.url : undefined,
     ...(v.quiet === true ? { quiet: true as const } : {}),
   };
 }

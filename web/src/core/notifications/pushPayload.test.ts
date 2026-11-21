@@ -24,7 +24,10 @@ describe('push payload link', () => {
     for (const url of [
       '//evil.example/login',
       '/\\evil.example/login',
-      '/\tevil',
+      '/\t/evil.example',
+      '/\n/evil.example',
+      '/..//evil.example',
+      '/.//evil.example',
       'https://evil.example/',
       'javascript:alert(1)',
       'todos',
