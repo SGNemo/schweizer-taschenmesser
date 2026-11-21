@@ -7,9 +7,9 @@ Part of [ANALYSIS](ANALYSIS.md). Paths under `web/src/`. Verdict per row: **stay
 | What | Today | Verdict | After the rebuild |
 | --- | --- | --- | --- |
 | Write-back to ToDos (`plannedFor`, `planMark`; `modules/todos/plannable.ts:24-58`, `run.ts:407-433`) | every run writes the first day of every thing | **changes** | written only by the action that sets or clears a day (place, move, apply a preview, undo); never by a background pass. `planMark` keeps its meaning (planner-own date) and `prior` |
-| A date set in ToDos (`views.ts:26 userPlannedFor`) | read as „earliest“, never a day | **changes** | a date set by hand in ToDos lays the thing on that day: the ToDo-side helper emits `plan.dayRequested`, the planner writes the row and nothing back ([CONCEPT-MIGRATION](CONCEPT-MIGRATION.md) §4); no background adoption |
+| A date set in ToDos (`views.ts:26 userPlannedFor`) | read as „earliest“, never a day | **changes** | a date set by hand in ToDos shows in the planner as the chip „In ToDos: Do“, one tap lays the thing there ([CONCEPT-MIGRATION](CONCEPT-MIGRATION.md) §4); nothing is adopted in the background |
 | „Heute“ card, `dayPlan`, „im Plan: Mi“ (`todos/next.ts:87`, `TodosPage.tsx:280`) | follow `plannedFor` | **stays** | a missed thing keeps `plannedFor` in the past, so the card still lists it under today (`plannedFor ≤ today`) – the card needs no change |
-| Disable clean-up (`services.ts:294`, `todos/planMark.ts:28`) | hands dates back to `prior` or clears them | **changes** | a laid day is his date: the mark is cleared, `plannedFor` stays |
+| Disable clean-up (`services.ts:294`, `todos/planMark.ts:28`) | hands dates back to `prior` or clears them | **changes** | a laid day is his date: the mark is cleared, `plannedFor` stays; a `prior` from the engine's time still comes back |
 | Sync gate `syncSettled()` (`core/sync/service.ts:181`) | guards the copy of user dates in background runs | **changes** | guards the one-time migration only; no background writer is left |
 | Sources (`contributions.plannable`: todos, bookmarks, fitness, routines, invoices, subscriptions, vault, lists, people; habits `blocks`) | listed, the run places them | **changes** | listed as before; a dated occurrence (training, routine) shows on its day; a thing with a deadline only arrives as a _suggestion_ (question 2); `fixed` blocks and habit blocks are read live, never stored as placements ([CONCEPT-MIGRATION](CONCEPT-MIGRATION.md) §6) |
 | `plan.requested` (notes, lists, mail; `actions.ts:116`) | ToDo + run, toast names the day | **changes** | ToDo + placed on the day asked for, else today; the toast names that day |
@@ -29,7 +29,7 @@ Part of [ANALYSIS](ANALYSIS.md). Paths under `web/src/`. Verdict per row: **stay
 | Sync (field LWW; `planner_day`, `planner_item`, `planner_assignment`; deterministic ids) | two devices run and converge by recomputing | **changes** | the placement is plain data: the later action wins per field; no device recomputes another device's plan. Convergence becomes the ordinary LWW case |
 | Input hash, row signature, `LastRun` in `_meta` (`run.ts:38-52`, `242-260`) | skip unchanged runs | **goes** (for the background) | kept only as the base of a preview |
 | Midnight and visibility timers (`services.ts:255-280`) | start a run | **changes** | trigger a re-render only (today changed → missed group) |
-| `autoReplan`, `horizonDays`, `bufferShare`, `maxSessionMin` | engine inputs | **changes** | `autoReplan` becomes „Neues automatisch vorschlagen“ (off); the horizon is the range of a suggestion, not of the plan |
+| `autoReplan`, `horizonDays`, `bufferShare`, `maxSessionMin` | engine inputs | **changes** | `autoReplan` is set to off once and hidden; „Neues automatisch vorschlagen“ is a new key (off); the horizon is the range of a suggestion, not of the plan |
 | Engine tests and fixtures S1–S6, `run.test.ts` | pin the automaton | **changes** | the engine keeps determinism and fixpoint as a _proposer_; fixtures get a `stay` input that never moves; run tests about background runs are replaced by „no write without an action“ |
 
 ## 2. What users expect (`design:research-synthesis`)

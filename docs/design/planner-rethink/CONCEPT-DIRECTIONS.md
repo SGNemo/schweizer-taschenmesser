@@ -13,7 +13,7 @@ Part of [CONCEPT](CONCEPT.md). Mockups: [`mockups/`](mockups/) (`a.html`, `b.htm
 | Phone (412) | sheet + band as today; grid by switch | days stacked, long | cells show a number only; the panel below |
 | Lock, overbooking | lock on every row; one warm line on the day, „+ 2 h 10“ on the tile | chip on the card; line in the column head | lock in the panel; „+ 2 h 10“ in the cell |
 
-**A – for:** it keeps the planner hub's sheet, band and one figure (decisions D2/D3, stimulus budget), so the rebuild changes the contract and not the room; the phone is the same surface; the four-week view costs nothing until asked for. **Against:** laying out a whole week means changing the day on the sheet or dragging onto small tiles; only one day's things are readable at once. **Mitigation:** drop targets get the full tile, the day pick is two taps from every row, multi-select moves several at once.
+**A – for:** it keeps the planner hub's sheet, band and one figure (decisions D2/D3, stimulus budget), so the rebuild changes the contract and not the room; the phone is the same surface; the four-week view costs nothing until asked for. **Against:** laying out a whole week means changing the day on the sheet or dragging onto small tiles; only one day's things are readable at once. **Mitigation:** drop targets get the full tile, the day pick is two taps from a missed row and three from any other (⋯ first), multi-select moves several at once.
 
 **B – for:** laying is spatial and direct, the week is readable at a glance, drag feels natural. **Against:** 20–30 cards and seven capacity lines at once – the stimulus load the planner hub removed (`ANALYSIS-MEASURE` P02) comes back; cards with a 44-px lock and menu get two lines high, so a column shows five things; on the phone it collapses into a long list where drag is the weakest way. It would also undo D2 („sheet, band and context column replace the week rows“) a fortnight after it shipped.
 
@@ -26,8 +26,8 @@ Part of [CONCEPT](CONCEPT.md). Mockups: [`mockups/`](mockups/) (`a.html`, `b.htm
 | Finding (first drafts) | Severity | Change made |
 | --- | --- | --- |
 | A: the missed group competed with today's rows for the first glance | moderate | the group sits on a muted surface, folds after three rows on the phone (seven on the desktop), has no figure in its head |
-| A: „Verschieben …“ as text on every missed row crowds 412 px (title wraps to two lines) | moderate | phone: the row keeps lock and ⋯; the day pick is the first entry of the menu and the swipe-left action |
-| A: band tiles at 412 px carry three lines of 11-px text | moderate | phone tile: weekday, date and the load bar; the figure only for the day on the sheet and for an overbooked day |
+| A: „Verschieben …“ as text on every missed row crowds 412 px (title wraps to two lines) | moderate | the missed row carries tick, lock and one move button (icon with a name on the phone, „Verschieben …“ on the desktop), no ⋯ – two taps to a day on both |
+| A: band tiles at 412 px carry three lines of 11-px text | moderate | phone tile: weekday and date; the figure only for the day on the sheet and an overbooked day („+ 2 h 10 mehr“); a passed day with open things keeps the word „offen“ |
 | A/C: a lock on every row is 3–10 extra icons | moderate | open lock in muted ink, filled lock in the accent together with the word „fest“; FOCUS item 9: the row's „Warum hier?“ and the reason line go (nothing was decided for him) |
 | B: capacity in every column head reads as seven warnings when a week is full | critical | not fixable without hiding what the board is for – one reason against B |
 | C: „+ 1“ in a cell hides the thing he is looking for | critical | cells show a count, not titles, in A's grid |

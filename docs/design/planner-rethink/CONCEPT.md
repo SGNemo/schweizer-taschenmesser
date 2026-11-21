@@ -8,18 +8,18 @@ The plan is **data the person lays**, not the output of a run. A thing sits on t
 
 ## 1. States
 
-One row is the whole truth: the **placement** (`planner_assignment`: thing, part, `date`, `minutes`, `order`, `locked`). Day and lock live in the same row, so they cannot disagree, also not after a sync merge. A ToDo dated in ToDos gets a row through the bus ([CONCEPT-MIGRATION](CONCEPT-MIGRATION.md) §4). Everything else is derived at read time by one function, used by every surface (sheet, band, grid, load, calendar chips, widget, the readers outside the planner):
+One row is the whole truth: the **placement** (`planner_assignment`: thing, part, `date`, `minutes`, `order`, `locked`). Day and lock live in the same row, so they cannot disagree, also not after a sync merge. Everything else is derived at read time by one function, used by every surface of the planner (sheet, band, grid, load, calendar chips, widget, the readers of its rows). A date set in ToDos is not a day in the plan; it shows as the chip „In ToDos: Do“ ([CONCEPT-MIGRATION](CONCEPT-MIGRATION.md) §4):
 
 ```
 dayOf(thing) = date of its placement row      (the thing is open at its source)
-             ?? the day of a dated occurrence at its source (a training on Thursday, a routine's turn)
+             ?? the `day` of a dated turn at its source (a training on Thursday, a routine's occurrence)
              ?? none
 ```
 
 | State | Is | Seen as | Who sets it |
 | --- | --- | --- | --- |
 | **no day** | `dayOf` = none | folded group „Noch ohne Tag“ under the day | default for a thing without a date; „Vom Tag nehmen“ |
-| **laid** | `dayOf` = a day from today on | a row on its day | entering, moving, dragging, taking a proposal, dating it at its source |
+| **laid** | `dayOf` = a day from today on | a row on its day | entering, moving, dragging, taking a proposal or a chip |
 | **locked** („fest“) | the row has `locked` | the row with a closed lock and the word „fest“ | the lock on the row; „… fest“ / „…!“ in the field |
 | **proposed** | **never stored** – a row of a preview, or the chip „Vorschlag: Do“ on a thing without a day | preview / chip | the proposer, on request |
 | **missed** | a placement row with a date before today, thing still open | group on today („Noch offen von Mo, Di“) | nobody – a date passing is not a write |
@@ -30,7 +30,7 @@ Transitions – each is one undoable action of the person; the proposer has none
 - laid → another day: move. **Nothing else changes its day.** „Später“ is the move to the next day.
 - laid ⇄ locked: one tap on the lock. Moving a locked thing by hand is allowed and keeps the lock (it binds the proposer, not him); the toast says so („Steuer liegt auf Mi · fest“).
 - laid / locked → missed: time. Back: „Alle auf heute“, a day pick, „Verteilen …“ (preview; leaves locked things out).
-- any → no day: „Vom Tag nehmen“ (removes the row). Any → gone: done or deleted at the source, „Nicht planen“ – see [CONCEPT-MIGRATION](CONCEPT-MIGRATION.md) §3 for who removes the row.
+- any → no day: „Vom Tag nehmen“ (removes the row). Any → gone: done or deleted at the source (the row is hidden, never deleted behind his back – [CONCEPT-MIGRATION](CONCEPT-MIGRATION.md) §3), „Nicht planen“.
 
 **Order inside a day** stays on the row (`order`): a new or moved thing goes to the end, a drop takes its position; fixed blocks and appointments sort by their time as today; the order is mirrored to the ToDo (`planMark.order`), so the „Heute“ card keeps its order.
 
@@ -47,28 +47,28 @@ load(date, placements, day) → { usable, planned, over }      // pure, no store
 ```
 
 - `stay` = every placement the action did not hand over (always: locked ones, other days' things). It comes back untouched – no rule is left that moves it (kept, carried, bumped, pulled, after-part go).
-- `loose` = the units the button names: things without a day („Woche vorschlagen“), today's unlocked rest („Rest verteilen“), the unlocked missed things („Verteilen …“). A unit is a whole thing or one existing part; `propose` never splits.
+- `loose` = the units the button names: things without a day („Woche vorschlagen“), the unlocked things of the day on the sheet („Rest verteilen“ – on today: what is still open), the unlocked missed things („Verteilen …“). A unit is a whole thing or one existing part; `propose` never splits.
 - Order of the loose units as before: hard due first (latest start), priority, soft due, age, id; into days of `range` with room (usable minutes, `planLimit` main things), never onto an overbooked day, never before a source's start date.
-- Deterministic, no clock inside. **Fixpoint over units:** `propose` with its own proposals moved into `stay` proposes nothing. Fixtures S1–S6 are rewritten as (stay, loose) → proposals, each with one line why it changed.
-- It runs **only** for a preview (button or sentence) and for the chip „Vorschlag: Do“ on a thing without a day that has a deadline (computed at render, never written). No timer, no live query, no write of its own.
+- Deterministic, no clock inside. **Stable under partial acceptance:** when some proposals are taken (moved into `stay`), `propose` over the remaining loose units returns the remaining proposals unchanged. Fixtures S1–S6 are rewritten as (stay, loose) → proposals, each with one line why it changed.
+- It runs **only** for a preview (button or sentence) and for the chips „Vorschlag: Do“: one call over all things without a day that have a deadline (so two chips never claim the same room), computed at render, never written. These deadline chips always show; the setting „Neues automatisch vorschlagen“ adds chips for things without a deadline. No timer, no live query, no write of its own.
 - **Overbooking:** `over > 0` shows „2 h 10 mehr als planbar“ on the day and offers „Rest verteilen“. Nothing is displaced.
 
 ## 3. Missed
 
 - **Where:** one group on top of today's sheet (question 1); each row names its day („war Mo“). The rows stay stored on their day, so a past day in the week or four-week view shows them too, with the word „offen“ and no figure.
-- **In one move:** „Alle auf heute“ (1 tap), „Verteilen …“ (preview → „Übernehmen“, 2 taps), per row the day pick (2 taps); several at once by „Auswählen“. Each is one undo entry. Nothing happens until he taps.
+- **In one move:** „Alle auf heute“ (1 tap), „Verteilen …“ (preview → „Übernehmen“, 2 taps), per row the day pick (2 taps on desktop and phone: a missed row carries tick, lock and the move button, no ⋯); several at once by „Auswählen“. Each is one undo entry. Nothing happens until he taps.
 - **Locked and missed:** stays in the group with its lock; „Verteilen …“ leaves it out and says so („1 bleibt: fest“); „Alle auf heute“ and the day pick move it, lock kept.
 - **Calm:** no red, no count in the page head, no „seit 3 Tagen“; the group shows three rows on the phone, seven on the desktop, then „und 4 weitere“; the head always names the days. A thing open for more than 14 days gets the quiet offer „Vom Tag nehmen“. Money past its deadline stays in „Frist vorbei“ as today.
 - The ToDo's `plannedFor` stays the passed date, so the „Heute“ card keeps listing it (`plannedFor ≤ today`) without a write.
 
 ## 4. Entering
 
-A new thing typed into the planner's field lands on **the day on the sheet, else today** – also when that day is full (the line „… mehr als planbar“ appears) or kept free (hint „Do ist frei gehalten. Liegt trotzdem dort.“). No other thing moves. A date in the text wins („Zahnarzt 7.12.“); „bis Do“ stays a deadline and the thing lands on the day on the sheet. **Lock words** after a day: „fest“, „lock“ or a trailing „!“ („Zahnarzt Do fest“, „Zahnarzt Do!“); not „muss“ (too common in titles). `plan.requested` from another module: the day asked for, else today. Things dumped without a day keep their two doors: the pile sheet („Tage einteilen“, step 1) and the global quick capture create things **without** a day.
+A new thing typed into the planner's field lands on **the day on the sheet, else today** – also when that day is full (the line „… mehr als planbar“ appears) or kept free (hint „Do ist frei gehalten. Liegt trotzdem dort.“). No other thing moves. A date in the text wins („Zahnarzt 7.12.“); „bis Do“ stays a deadline and the thing lands on the day on the sheet. **Lock words** after a day: „fest“, „lock“ or a trailing „!“ („Zahnarzt Do fest“, „Zahnarzt Do!“); without a day in the text they stay part of the title and lock nothing; not „muss“ (too common in titles). `plan.requested` from another module: the day asked for, else today. Things dumped without a day keep their two doors: the pile sheet („Tage einteilen“, step 1) and the global quick capture create things **without** a day.
 
 ## 5. More than a week
 
 - **Range:** any date. The plan has no horizon; `horizonDays` only bounds how far a proposal looks (default 14).
-- **View:** the week band pages („‹ KW 47 ›“, „Heute“); a switch in the band's row turns it into a **four-week grid** with one load mark per day (question 3).
+- **View:** the week band pages („‹ KW 47 ›“, „Heute“); a switch in the band's row turns it into a **four-week grid** (question 3); a grid day shows the number of things, „offen“ for a passed day with open things and „+ 2 h 10 mehr“ when overbooked – free minutes only fit the band.
 - **Onto any date:** „Verschieben …“ shows the four weeks from today as its picker (‹ › for more): row menu, „Verschieben …“, day = **3 taps** for any day in the next four weeks. Band and grid are drop targets.
 - **Time of later weeks:** the weekday defaults hold for every date; only touched days are stored. „Zeiten dieser Woche“ (the former „Woche prüfen“) applies a template to the week in view and runs nothing.
 - **Cost:** views read placements by the `date` index for their range; sources are listed up to the last day in view; `load` per visible day (28 at most).

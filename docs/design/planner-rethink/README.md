@@ -36,4 +36,5 @@ Branch `design/planner-rethink`, 2026-11-21. The maintainer's brief: the planner
 - **„locken“** is called „fest“ in the app (a lock on the row; the word is already there). „gesperrt“ reads as disabled.
 - **„verpasst“** is not printed above the list; the group says „Noch offen von Mo, Di“ and each row „war Mo“ – his days, without a verdict.
 - Lock words in the field: „… fest“, „… lock“ or a trailing „!“. „Neues automatisch vorschlagen“ is off by default. Moving a locked thing by hand keeps its lock.
+- **A date set in ToDos** is not laid into the plan by itself: the thing shows the chip „In ToDos: Do“, one tap takes it. (Named cost: „Für heute“ in ToDos is on the „Heute“ card at once, in the planner after that tap.)
 - **Two devices:** phone and PC have to get the version together; a device on the old version would keep reshuffling ([CONCEPT-MIGRATION](CONCEPT-MIGRATION.md) §5).
