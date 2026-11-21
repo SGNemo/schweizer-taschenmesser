@@ -63,6 +63,8 @@ struct WaitingOut {
     id: [u8; 16],
     size: u64,
     from: Option<u64>,
+    /// The device said `wait` for it (once; a second `wait` is a broken peer).
+    answered: bool,
 }
 
 #[derive(Default)]
@@ -134,7 +136,12 @@ impl Transfers {
         };
         let id = *offer.id();
         // never one that is open already, never more than PENDING unanswered or waiting
-        let open = self.active_in.as_ref().is_some_and(|i| i.id == id)
+        // an id of this side's own files would make a later `cancel` ambiguous
+        let ours = self.active_out.as_ref().is_some_and(|o| o.id == id)
+            || self.waiting_out.iter().any(|w| w.id == id)
+            || self.done_out.contains(&id);
+        let open = ours
+            || self.active_in.as_ref().is_some_and(|i| i.id == id)
             || self.waiting_in.iter().any(|(w, ..)| *w == id)
             || self.parked_in.iter().any(|p| *p.id() == id);
         if open || self.waiting_in.len() + self.parked_in.len() >= PENDING {
@@ -267,10 +274,12 @@ impl Transfers {
                 None | Some(Out::Offered) => {
                     let w = self.waiting_out.remove(at);
                     if let Some(o) = self.active_out.take() {
+                        // never answered yet: the device's `wait` for it comes later
                         self.waiting_out.push(WaitingOut {
                             id: o.id,
                             size: o.size,
                             from: None,
+                            answered: false,
                         });
                     }
                     self.active_out = Some(Outgoing {
@@ -301,6 +310,7 @@ impl Transfers {
                     id,
                     size: o.size,
                     from: None,
+                    answered: true,
                 });
                 cx.files.sent(cx.peer, &id, SendOutcome::Waiting(reason));
                 Step::Continue
@@ -309,8 +319,11 @@ impl Transfers {
             None if self
                 .waiting_out
                 .iter()
-                .any(|w| w.id == id && w.from.is_none()) =>
+                .any(|w| w.id == id && w.from.is_none() && !w.answered) =>
             {
+                if let Some(w) = self.waiting_out.iter_mut().find(|w| w.id == id) {
+                    w.answered = true;
+                }
                 cx.files.sent(cx.peer, &id, SendOutcome::Waiting(reason));
                 Step::Continue
             }
@@ -515,8 +528,14 @@ impl Transfers {
         if let Some(inc) = self.active_in.take() {
             cx.files.stopped(cx.peer, &inc.id, Stopped::Lost);
         }
-        for (id, ..) in self.waiting_in.drain(..) {
-            cx.files.stopped(cx.peer, &id, Stopped::Withdrawn);
+        for (id, _, accepted) in self.waiting_in.drain(..) {
+            // a yes of the PC's user that had not started yet keeps what the shell prepared
+            let how = if accepted.is_some() {
+                Stopped::Lost
+            } else {
+                Stopped::Withdrawn
+            };
+            cx.files.stopped(cx.peer, &id, how);
         }
         // parked offers never reached the shell
         self.parked_in.clear();

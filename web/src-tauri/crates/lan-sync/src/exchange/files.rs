@@ -105,7 +105,9 @@ pub trait ExchangeFiles: Send + Sync {
     /// on the last read: `end` follows the last byte without asking again.
     fn read(&self, to: &PublicKey, id: &[u8; 16], offset: u64, buf: &mut [u8])
         -> Result<usize, ()>;
-    /// How an outgoing file ended.
+    /// How an outgoing file ended (or that it waits for the device's user). An offer that gave
+    /// up the active slot for a file the device accepted meanwhile is reported `Waiting` only once
+    /// the device says so; until then it simply stands.
     fn sent(&self, to: &PublicKey, id: &[u8; 16], outcome: SendOutcome);
 }
 

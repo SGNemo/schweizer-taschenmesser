@@ -23,6 +23,10 @@
 //!   file frame of the PC is checked here before it becomes an event (chunks only for an accepted
 //!   offer, contiguous, within its size; answers only for this device's own offers; at most three
 //!   standing PC offers, also while a file streams); frames that crossed an end are dropped.
+//! * **Order across directions**: an `Accept` for one of this device's waiting files may arrive
+//!   while another of its offers is still unanswered – stream it at once; the other offer's answer
+//!   follows after it. A yes of this device's user to a PC offer while a PC file comes in is held
+//!   by the caller and sent after that file's `End` (`accept` refuses until then).
 //! * **`on_event` must not block**: it runs on the only reader thread. Hand chunks to another
 //!   thread for writing and never call a sender from inside it, or both sides stall until the
 //!   write timeout. Ping during a long download too: the hub's idle timer counts only frames
@@ -286,11 +290,19 @@ impl ExchangeSession {
         self.file(wire::TAG_ACCEPT, &wire::encode_accept(id, from))
     }
 
+    /// This device's user decides on a PC offer that stands.
     pub fn wait(&self, id: &[u8; 16], reason: WaitReason) -> Result<(), ExchangeError> {
+        if !self.with_guard(|g| g.answering(id))? {
+            return Err(ExchangeError::Protocol);
+        }
         self.file(wire::TAG_WAIT, &wire::encode_wait(id, reason))
     }
 
+    /// Refuses a PC offer that stands (an accepted file is ended with `cancel` or `result`).
     pub fn refuse(&self, id: &[u8; 16], code: RefuseCode) -> Result<(), ExchangeError> {
+        if !self.with_guard(|g| g.answering(id))? {
+            return Err(ExchangeError::Protocol);
+        }
         self.with_guard(|g| g.dropped(id))?;
         self.file(wire::TAG_REFUSE, &wire::encode_refuse(id, code))
     }
@@ -471,8 +483,11 @@ impl Guard {
             Event::Offer(o) => {
                 let id = *o.id();
                 // an offer may come while a file streams (it crossed an accept): bounded only
-                if self.offers.len() >= PENDING_OFFERS || self.offers.iter().any(|(x, _)| *x == id)
-                {
+                // never an id that stands, comes in, or is one of this device's own files
+                let taken = self.offers.iter().any(|(x, _)| *x == id)
+                    || self.incoming.is_some_and(|(at, ..)| at == id)
+                    || self.own_state(&id).is_some();
+                if self.offers.len() >= PENDING_OFFERS || taken {
                     return Pass::Broken;
                 }
                 self.ended.retain(|e| *e != id);
@@ -553,6 +568,11 @@ impl Guard {
             }
             _ => Pass::Yes,
         }
+    }
+
+    /// The caller may answer `wait` or `refuse`: only for a PC offer that stands.
+    fn answering(&self, id: &[u8; 16]) -> bool {
+        self.offers.iter().any(|(x, _)| x == id)
     }
 
     /// The caller takes a PC offer that stands, from inside it, while nothing else comes in.
@@ -804,6 +824,23 @@ mod guard_tests {
         assert_eq!(g.check(&chunk(1, 0, 5)), Pass::Drop);
         assert_eq!(g.check(&Event::Cancel([2; 16])), Pass::Yes);
         assert_eq!(g.check(&offer(2, 5)), Pass::Yes);
+    }
+
+    #[test]
+    fn wait_and_refuse_only_for_a_pc_offer_that_stands() {
+        let mut g = Guard::default();
+        assert!(!g.answering(&[1; 16]), "never offered");
+        g.check(&offer(1, 5));
+        assert!(g.answering(&[1; 16]));
+        assert!(g.accepted(&[1; 16], 0));
+        assert!(
+            !g.answering(&[1; 16]),
+            "accepted: cancel or result, not wait or refuse"
+        );
+        // a PC offer under the id of the file that comes in, or of this device's own, is broken
+        assert_eq!(g.check(&offer(1, 5)), Pass::Broken);
+        assert!(g.offering(&[7; 16], 3));
+        assert_eq!(g.check(&offer(7, 5)), Pass::Broken);
     }
 
     #[test]

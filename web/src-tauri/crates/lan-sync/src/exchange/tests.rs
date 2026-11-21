@@ -1030,6 +1030,57 @@ mod files {
     }
 
     #[test]
+    fn a_device_answers_a_moved_back_offer_once_and_cannot_reuse_a_pc_id() {
+        let f = file_rig();
+        f.files.queue(&f.r.peer, offer(1, 3), vec![1; 3]);
+        f.files.queue(&f.r.peer, offer(2, 4), vec![2; 4]);
+        let mut c = open_files(&f);
+        c.poll(T0);
+        c.on_frame(
+            wire::TAG_WAIT,
+            &wire::encode_wait(&[1; 16], WaitReason::Large),
+            T0,
+        );
+        c.poll(later(1));
+        // 2 is offered, the device accepts 1 meanwhile: 2 moves back
+        c.on_frame(wire::TAG_ACCEPT, &wire::encode_accept(&[1; 16], 0), T0);
+        let wait2 = wire::encode_wait(&[2; 16], WaitReason::Daily);
+        assert_eq!(c.on_frame(wire::TAG_WAIT, &wait2, T0), Step::Continue);
+        assert_eq!(
+            c.on_frame(wire::TAG_WAIT, &wait2, T0),
+            Step::Close,
+            "once only"
+        );
+        // a device offer under an id of the PC's own file is a broken peer
+        let mut c = open_files(&f);
+        c.poll(T0);
+        let own = *f.files.next_offer_for(&f.r.peer).unwrap().id();
+        let same = Offer::new(own, 5, [0; 32], "x.bin".into(), String::new()).unwrap();
+        assert_eq!(
+            c.on_frame(wire::TAG_OFFER, &wire::encode_offer(&same), T0),
+            Step::Close
+        );
+    }
+
+    #[test]
+    fn an_accepted_offer_that_never_started_is_lost_not_withdrawn() {
+        let f = file_rig();
+        {
+            let mut c = open_files(&f);
+            f.files.set_decision(Decision::Wait(WaitReason::Large));
+            offer_frame(&mut c, 1, 4);
+            f.files.set_decision(Decision::Accept { from: 0 });
+            offer_frame(&mut c, 2, 4);
+            f.files.decide_later([1; 16], Decision::Accept { from: 0 });
+            c.poll(later(1));
+            // the session ends while 2 comes in and 1 waits with a yes
+        }
+        let stops = f.files.stops();
+        assert!(stops.contains(&([1; 16], Stopped::Lost)), "{stops:?}");
+        assert!(stops.contains(&([2; 16], Stopped::Lost)), "{stops:?}");
+    }
+
+    #[test]
     fn answers_for_a_file_never_offered_close() {
         let f = file_rig();
         f.files.queue(&f.r.peer, offer(14, 5), vec![5; 5]);
