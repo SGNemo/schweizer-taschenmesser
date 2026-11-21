@@ -143,10 +143,30 @@ mod imp {
     use super::{Error, RegOp};
     use std::process::Command;
 
+    #[link(name = "kernel32")]
+    extern "system" {
+        fn GetSystemDirectoryW(buffer: *mut u16, size: u32) -> u32;
+    }
+
+    /// `reg.exe` by its full path in the Windows system folder, asked from Windows. Never by bare
+    /// name: Windows would look next to the app's own exe first (for the portable app often the
+    /// Downloads folder), where anyone could have put a file of that name.
+    pub(super) fn reg_exe() -> Option<std::path::PathBuf> {
+        let mut buf = [0u16; 512];
+        // SAFETY: the buffer is a local array; the call writes at most `size` characters and
+        // returns how many it wrote (0 on failure, more than `size` when the buffer is too small).
+        let n = unsafe { GetSystemDirectoryW(buf.as_mut_ptr(), buf.len() as u32) } as usize;
+        (n > 0 && n < buf.len())
+            .then(|| std::path::PathBuf::from(String::from_utf16_lossy(&buf[..n])).join("reg.exe"))
+    }
+
     fn reg(args: &[&str]) -> bool {
         use std::os::windows::process::CommandExt;
+        let Some(exe) = reg_exe() else {
+            return false;
+        };
         // CREATE_NO_WINDOW: no console flash.
-        Command::new("reg")
+        Command::new(exe)
             .args(args)
             .creation_flags(0x0800_0000)
             .output()
@@ -327,6 +347,13 @@ mod tests {
         for exe in ["", "a\"b.exe", "a\nb.exe"] {
             assert_eq!(plan("Nemo", exe, true), Err(PlanError::Invalid), "{exe}");
         }
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn reg_is_started_by_its_full_path_in_the_system_folder() {
+        let exe = super::imp::reg_exe().expect("system folder");
+        assert!(exe.is_absolute() && exe.is_file(), "{}", exe.display());
     }
 
     #[cfg(not(windows))]

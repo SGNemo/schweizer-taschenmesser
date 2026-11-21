@@ -1111,3 +1111,46 @@ fn exchange_commands_sit_on_their_side_only() {
         }
     }
 }
+
+/// Every `.rs` file below `dir` (not `target`, not `gen`).
+fn rust_files(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
+    for entry in fs::read_dir(dir).unwrap().flatten() {
+        let path = entry.path();
+        let name = entry.file_name().to_string_lossy().into_owned();
+        if path.is_dir() {
+            if name != "target" && name != "gen" && name != "node_modules" {
+                rust_files(&path, out);
+            }
+        } else if name.ends_with(".rs") {
+            out.push(path);
+        }
+    }
+}
+
+/// A program started by bare name (`Command::new("reg")`) is looked up by Windows next to the
+/// app's own exe first. The portable exe often lives in the Downloads folder, so a downloaded
+/// file called `reg.exe` would run in its place. Programs are started by a full path that
+/// Windows names (system folder) or that the app built itself, never by a text literal.
+#[test]
+fn no_program_is_started_by_bare_name() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let mut files = Vec::new();
+    for dir in ["src", "crates", "plugins"] {
+        rust_files(&root.join(dir), &mut files);
+    }
+    assert!(files.len() > 50, "found the sources");
+    let mut hits = Vec::new();
+    for file in files {
+        let text = fs::read_to_string(&file).unwrap();
+        for (n, line) in text.lines().enumerate() {
+            let code = line.split("//").next().unwrap_or("");
+            if let Some(at) = code.find("Command::new(") {
+                let arg = code[at + "Command::new(".len()..].trim_start();
+                if arg.starts_with('"') || arg.starts_with("r\"") || arg.starts_with("r#") {
+                    hits.push(format!("{}:{}", file.display(), n + 1));
+                }
+            }
+        }
+    }
+    assert!(hits.is_empty(), "started by bare name: {hits:?}");
+}
