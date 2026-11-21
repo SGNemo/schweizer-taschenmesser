@@ -14,6 +14,17 @@ After the answers of 2026-11-21 ([README](README.md)). Order: **strictly 1 → 2
 
 Hotspots across the packages: `web/src/core/plan/**`, `web/src/modules/planner/{run,services,actions,board}.ts`, `routes/PlannerPage.tsx`, `web/src/modules/todos/{plannable,planMark}.ts`, `web/src/core/modules/types.ts` (1, maybe 6), `web/src/strings.ts` (all).
 
+## Package 1 as built (PR #1035) – where it differs from its prompt
+
+Built by the chat that wrote this plan; the prompt below stays as the specification it started from.
+
+- **The engine keeps `plan()` and gains `loose`** instead of a new `propose()`: with `loose` every stored day inside the planned days is set first whatever the room, a passed or far day is left alone (`kept`), a thing without a day gets none (`no-day`), and only the named items go through the old rules. Every caller passes `loose`; the rules without it are reachable from the tests only (fixtures S1–S6 unchanged) and go with package 7. Why: the smallest change that makes „nothing moves“ true by construction.
+- **The background pass stays as a read-refresh** (live query, midnight, tab focus): it hands nothing to the engine, so it writes no row and tells no source anything (tested); it keeps `planner.lastRun` current, which the board still reads for „Noch ohne Tag“ and titles. Removing the pass and `lastRun` moves to package 7.
+- **Rows of fixed blocks are still written** by that pass (a training gets its row as before); hiding them instead belongs with the removal of the pass.
+- **„Fest an diesem Tag“ / „Nicht mehr fest“ are in the row's ⋯ already** (package 2 adds the one-tap lock on the row).
+- **Not in package 1:** `PlannableItem.day?` (a dated training or routine has no row until it is laid – it sits under „Noch ohne Tag“ like deadline things; package 2 with the chips), the restore hook (the step is keyed on the data instead: a pin that is still stored is taken over at the next start, also after a restore), the schema clean-up of `of`/`reason`/`bumpedBy`/`late`.
+- **Measured:** 0 unasked moves, 0 collateral, every missed thing says „war Mo“, a new thing lands on the day on the sheet; laying ten things by hand costs 31 taps instead of 8 because nothing is pre-spread („Neu verteilen“ proposes; packages 5 and 6 bring it down).
+
 ### Prompt – package 1: Zustandsmodell, Migration, „nichts wandert von selbst“ (`feat/plan-stays-put`)
 
 ```
