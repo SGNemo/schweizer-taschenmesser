@@ -24,6 +24,12 @@ Do this on a **fresh Windows VM** and a **real Android device** before a release
 - [ ] **Update N → N+1:** install N+1 over N (same signature); data stays.
 - [ ] Uninstall: app removed; no leftover entry in Settings → Apps; keystore secrets gone with it.
 
+## Sicherheit
+- [ ] Urteil je Kanal gelesen: [security/LAUNCH-REVIEW-2026-11.md](security/LAUNCH-REVIEW-2026-11.md). Kein Kanal mit „no“ wird veröffentlicht; jede Auflage ist behoben oder mit Begründung angenommen (im Release-Issue notieren).
+- [ ] SC1 geschlossen (private Notiz; GitHub-Einstellungen aus „For the maintainer in GitHub“, Punkte 1–2).
+- [ ] Die drei Fix-PRs der Kontrolle sind gemergt (`fix/security-web-inputs`, `fix/security-windows-spawn`, `fix/security-privacy-texts`); Pakete 1–3 aus [security/LAUNCH-REVIEW-2026-11-PACKAGES.md](security/LAUNCH-REVIEW-2026-11-PACKAGES.md) entschieden.
+- [ ] Handtests SEC-1 bis SEC-13 in [MANUAL-TESTS.md](MANUAL-TESTS.md) gelaufen; Abweichungen stehen im Release-Issue.
+
 ## Sign-off
 - [ ] Nothing in the screenshots/logs contains real data.
 - [ ] Known problems written into the release notes.

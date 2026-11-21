@@ -255,6 +255,19 @@ KS-17. _Hello zurückgesetzt:_ **Nur mit einem Test-Windows-Konto oder in einer 
 LR1. _X1 Pipe auf Windows mit zweitem Nutzer_ (Fix: SQOS-Flag in `ipc.rs`). ☐
 LR2. _V1 Credential-Manager nach „Alle Daten löschen“_: das biometrische Siegel des Tresors ist danach weg. ☐
 
+#### Sicherheitskontrolle 2026-11: Handtests am Windows-PC (Bericht [security/LAUNCH-REVIEW-2026-11.md](security/LAUNCH-REVIEW-2026-11.md))
+
+Je Test: Schritte → erwartet → Befund, der daran hängt. Nur erfundene Daten. SEC-1 und SEC-2 ersetzen LR1/LR2.
+
+SEC-1. _Zweiter Windows-Nutzer und Tresor-Bridge (X1, X2):_ Zwei lokale Konten A und B, schneller Benutzerwechsel. B meldet sich zuerst an und startet Nemo. Dann A: Nemo starten, Tresor entsperren, Erweiterung koppeln, auf einer Testseite „Ausfüllen“. → Erwartet: A's Erweiterung bekommt nie Einträge von B, B nie von A. Bis Paket 5 gemergt ist, darf A's Nemo neben B's Pipe weiterlaufen (X2 offen; notieren, was die Einstellungsseite zeigt), danach steht dort „belegt“. ☐
+SEC-2. _Windows Hello und „Alle Daten löschen“ (V1, R1, R2):_ Tresor mit Hello entsperren, Heimnetz-Abgleich mit einem Handy koppeln, dem Handy „Medien und Lautstärke“ freigeben, dann Einstellungen → „Alle Daten löschen“. Danach **ohne Neustart** am Handy „Jetzt abgleichen“ und die Fernbedienung öffnen; `netstat -ano` auf den Hub-Port; Anmeldeinformationsverwaltung und den Ordner `lan-sync` im lokalen App-Datenordner ansehen; App neu starten. → Erwartet: kein Tresor-Siegel mehr (V1). Heute (R1 offen) sagt der Bericht voraus: Hub lauscht weiter, Handy gleicht noch ab, Ordner `lan-sync` und die Einträge `…lan-sync` sind noch da – bitte bestätigen. Nach Paket 2: kein Listener, Ordner und Einträge weg, Handy zeigt „nicht mehr gekoppelt“. ☐
+SEC-7. _Dev-Preview wird einer stabilen Installation nicht angeboten (P2):_ Stabile `Nemo-Portable.exe` starten, Einstellungen → Updates → „Jetzt suchen“, während das Pre-Release `dev-preview` neuer ist. → Erwartet: kein Angebot. Gegenprobe: in der Dev-Preview „Jetzt suchen“ → sie bekommt nur Dev-Builds, nie die stabile Version. ☐
+SEC-8. _Fremde Datei neben der Exe (PC1):_ Portable Exe in einen leeren Ordner legen, daneben eine harmlose Testdatei mit dem Namen `reg.exe` (z. B. eine Kopie von `notepad.exe`), ebenso `taskmgr.exe` und `explorer.exe`. Downloads → Abschnitt Torrent öffnen; Dieser PC → „Task-Manager öffnen“; in Downloads „Im Ordner zeigen“. → Erwartet (mit dem Fix `fix/security-windows-spawn`): es öffnet sich nie der Editor, sondern Task-Manager und Explorer. Ohne den Fix öffnet sich der Editor (Befund bestätigt). ☐
+SEC-9. _Browser-Tab kommt nicht an Nemo heran (B2, B6):_ Modul Browser an. Eine eigene Testseite öffnen, die `typeof window.__TAURI_INTERNALS__` anzeigt und `window.__TAURI_INTERNALS__?.invoke('lan_hub_status')` versucht; danach `http://tauri.localhost/` und `http://ipc.localhost/` in die Adresszeile. → Erwartet: jeder `invoke` wird abgelehnt; die beiden Adressen zeigen nicht die Nemo-Oberfläche (sonst B2 bestätigt). Außerdem: Kamera-/Standort-Testseite → keine Abfrage, kein Zugriff. ☐
+SEC-10. _Freigabe-Dialog: Standardtaste (F1):_ Einstellungen → Verbindungen → Fernsteuerung → Stufe eines Geräts erhöhen; im Windows-Fenster sofort Enter, beim zweiten Versuch die Leertaste drücken. → Erwartet: nichts wird freigegeben („Abbrechen“ ist vorgewählt). Wird freigegeben: F1 bestätigt, Paket 8. ☐
+SEC-11. _Torrent hört auf, wenn er aus ist (DL2):_ Torrent-Teil einschalten, `netstat -ano` → ein lauschender Port von Nemo. Dann nacheinander: Seite verlassen; Modul Downloads ausschalten; Fenster ins Tray schließen. Jeweils `netstat`. → Erwartet nach Paket 3: Port weg, sobald Modul oder Torrent-Teil aus ist. Heute bleibt er bis „Ausschalten“ oder App-Ende (Befund bestätigen). ☐
+SEC-12. _Bilder in Mails (M1):_ Sich selbst eine HTML-Mail mit `<img src="http://192.168.1.1/x.png">` und einem Bild von einer öffentlichen https-Adresse schicken, im Modul Mail öffnen, „Bilder laden“. Am Router- oder Testserver-Log prüfen. → Erwartet (mit `fix/security-web-inputs`): nur die öffentliche https-Adresse wird abgerufen. ☐
+
 ### Browser-Erweiterung
 
 #### Browser-Erweiterung (Brave) und Tresor-Brücke – nur von Hand prüfbar (Windows)
@@ -509,6 +522,13 @@ N2. _Android-APK als Update über die bestehende Installation:_ App-Name „Nemo
 #### Launch-Review: Handtests (aus STATUS verschoben, 2026-11-10; Bericht [security/LAUNCH-REVIEW-2026-10-06.md](security/LAUNCH-REVIEW-2026-10-06.md))
 
 LR3. _Android-APK-Update._ ☐
+
+#### Sicherheitskontrolle 2026-11: Handtests am Android-Handy (Bericht [security/LAUNCH-REVIEW-2026-11.md](security/LAUNCH-REVIEW-2026-11.md))
+
+SEC-6 ersetzt LR3.
+
+SEC-6. _APK-Update mit falscher Prüfsumme (S13, T3):_ Braucht einen Test-Build (oder einen Proxy am PC), der für die Datei `…apk.sha256` einen anderen Wert liefert. Update starten. → Erwartet: Download läuft, danach „Prüfsumme stimmt nicht“, die Datei wird verworfen, der Android-Installer erscheint nicht. Gegenprobe ohne Eingriff: normales Update N → N+1 installiert, Daten bleiben. Zusatz: eine mit fremdem Schlüssel signierte APK gleichen Paketnamens von Hand installieren → Android lehnt ab. ☐
+SEC-13. _Sperrbildschirm und Zwischenablage (NS6, NS8/V4):_ Erinnerung mit erkennbarem Titel anlegen, Handy sperren, Erinnerung abwarten → notieren, ob der Titel auf dem Sperrbildschirm steht (heute erwartet: ja, wenn Android Inhalte zeigt; nach Paket 9: nein, bis du es einschaltest). Im Tresor ein Passwort kopieren (Android 13+) → notieren, ob die Vorschau unten links den Klartext zeigt (heute erwartet: ja; nach Paket 9: Punkte). ☐
 
 #### Backlog-Ernte (`chore/backlog-harvest-2026-11`) – nur auf Geräten prüfbar
 
@@ -1009,6 +1029,14 @@ AX3. _Handy → PC:_ am Handy eine Notiz senden, während der PC aus ist → „
 AX4. _Pause, zweites Gerät, Entkoppeln:_ am PC in der Gerätezeile „Pausieren“ (fragt nicht) → Handy zeigt „Austausch ist am PC pausiert. Am PC: Austausch → Fortsetzen.“, Senden bleibt „wartet“; „Fortsetzen“ fragt nativ, danach geht es raus. Ein zweites gekoppeltes Gerät steht als „Austausch ist für dieses Gerät noch aus.“ mit „Einschalten“ (nativer Dialog). Handy am PC entkoppeln → seine Warteschlange am PC ist weg. Im Ordner `%APPDATA%\io.github.sgnemo.taschenmesser\lan-sync\exchange` und im Log stehen keine Nachrichtentexte außer in `inbox.json`/`outbox.json` (bis zur Übernahme); im Sync, im Backup und in der Suche taucht keine Karte auf. ☐
 AX-T1. _Fernbedienung während einer großen Übertragung (ab Paket 2c):_ eine Datei > 500 MB vom PC aufs Handy schicken und währenddessen das Touchpad und die Medientasten der Fernbedienung benutzen: Bewegung und Tasten reagieren spürbar wie sonst; Messung (MB/s, gefühlte Verzögerung) in `docs/decisions/core-device-exchange-files.md` (2b-1) nachtragen; bei spürbarer Verzögerung eine Folgeaufgabe anlegen. ☐
 
+
+### Sicherheit
+
+#### Sicherheitskontrolle 2026-11: Handtests mit PC und Handy (Bericht [security/LAUNCH-REVIEW-2026-11.md](security/LAUNCH-REVIEW-2026-11.md))
+
+SEC-3. _Koppeln und Entkoppeln mit drittem Gerät im WLAN (H1, H3, H5, H6):_ PC (Hub), Handy A (gekoppelt), ein drittes Gerät C im selben WLAN (zweites Handy mit Nemo oder ein Laptop mit Portscanner). (a) Kopplungsfenster am PC öffnen, C fotografiert den QR und koppelt zuerst, mit dem Gerätenamen von A → am PC stehen Name und Code; nur bestätigen, wenn der Code am eigenen Handy derselbe ist. (b) C scannt das Netz (`nmap` auf den Hub-Port, `dns-sd -B _nemo-sync._tcp`) → nur ein zufälliger Name, kein Gerätename, ohne Kopplung keine Daten. (c) A entkoppeln, während A gerade abgleicht → A zeigt binnen Sekunden „nicht mehr gekoppelt“, ein neuer Abgleich scheitert, die Fernbedienung an A auch; nach PC-Neustart bleibt A draußen. (d) Kopplungsdialog 15 Minuten offen lassen → notieren, ob der Hub so lange lauscht (H4). ☐
+SEC-4. _Ausschalten vom Handy bei gesperrtem PC (Fernsteuerung):_ Handy hat „Darf den PC ausschalten“. PC mit Win+L sperren. Am Handy „Ausschalten“, „Neu starten“, „Energie sparen“, Tastatureingabe, „Programm starten“. → Erwartet: nichts davon passiert, das Handy zeigt den ruhigen Satz; „Monitor aus“, Lautstärke und Medientasten gehen weiter. Danach PC entsperren, Countdown starten und während des Countdowns sperren → Countdown bricht ab. ☐
+SEC-5. _Austausch mit präpariertem Namen und Inhalt (E5, E7, E8):_ Heute gehen nur Text und Links. Vom Handy senden: einen Link `javascript:alert(1)`, einen Link `file:///C:/Windows/win.ini`, einen Link `https://user:pw@example.org`, einen Text mit `<img src=x onerror=alert(1)>`. → Erwartet: kein Link außer http/https wird als Link angenommen, nichts wird ausgeführt, HTML steht als Text da. Sobald Dateien gehen (Pakete 2b-2/2c): eine Datei mit dem Namen `..\..\Desktop\x.lnk`, eine namens `CON.txt`, eine mit einem Rechts-nach-links-Zeichen im Namen (`rechnung[U+202E]fdp.exe`) und eine, die im Zielordner schon existiert → landet nur im Zielordner, unter bereinigtem Namen, überschreibt nichts, wird nie geöffnet. ☐
 
 ### Kalender
 
