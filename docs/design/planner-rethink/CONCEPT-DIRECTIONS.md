@@ -19,7 +19,7 @@ Part of [CONCEPT](CONCEPT.md). Mockups: [`mockups/`](mockups/) (`a.html`, `b.htm
 
 **C – for:** „more than a week“ is the surface itself; deadlines weeks ahead are visible. **Against:** 28 cells with titles break „one figure in the head“ and the stimulus budget; cells cut titles; the phone shows numbers only, so the main surface there is the side panel anyway; it duplicates the calendar module's month view, which already carries the plan chips.
 
-**Recommendation: A**, with B's drag (band tiles and grid days as drop targets) and C's grid as the „4 Wochen“ switch. It reaches every target of the concept (§9) with the least new stimulus and the least rework of what the planner hub measured.
+**Recommendation: A**, with B's drag (band tiles and grid days as drop targets) and C's grid as the „4 Wochen“ switch. It reaches every target of the concept (§8) with the least new stimulus and the least rework of what the planner hub measured.
 
 ## 2. Critique folded in (`design:design-critique`)
 
@@ -36,7 +36,7 @@ Part of [CONCEPT](CONCEPT.md). Mockups: [`mockups/`](mockups/) (`a.html`, `b.htm
 | A: the missed amount showed in three places (group, band tiles, grid) | minor | past days say „offen“ without a figure |
 | All: a preview must say that nothing has happened yet | minor | fixed head „Vorschlag – noch ist nichts verschoben.“ |
 
-**FOCUS checklist** (direction A): 1 stimulus – adds the lock per row and at most one group; removes reason lines, „Warum hier?“, the waiting group's overload figure and every move toast („X jetzt Do“). 2 off switch – „Neues automatisch vorschlagen“ (off by default); the missed group folds. 3 next step – „Alle auf heute“ is the one plain action of the group. 4 wording – [CONCEPT-COPY](CONCEPT-COPY.md). 5 interruption – nothing is half-applied: a preview that is closed changed nothing. 6 tests – named per package in the plan that follows the answers. 7 readability – lock = icon + word; overbooking = text + tone. 9 removed instead – see 1. 8 clicks – concept §9.
+**FOCUS checklist** (direction A): 1 stimulus – adds the lock per row and at most one group; removes reason lines, „Warum hier?“, the waiting group's overload figure and every move toast („X jetzt Do“). 2 off switch – „Neues automatisch vorschlagen“ (off by default); the missed group folds. 3 next step – „Alle auf heute“ is the one plain action of the group. 4 wording – [CONCEPT-COPY](CONCEPT-COPY.md). 5 interruption – nothing is half-applied: a preview that is closed changed nothing. 6 tests – named per package in the plan that follows the answers. 7 readability – lock = icon + word; overbooking = text + tone. 9 removed instead – see 1. 8 clicks – concept §8.
 
 ## 3. Accessibility of direction A (`design:accessibility-review`, WCAG 2.1 AA)
 

@@ -16,6 +16,8 @@ dayOf(thing) = date of its placement row      (the thing is open at its source)
              ?? none
 ```
 
+`dayOf` is per unit (a thing, or one part of it); where a reader needs one day for a thing in parts (the ToDo mirror, „Im Plan · Mi“), it is the earliest part from today on.
+
 | State | Is | Seen as | Who sets it |
 | --- | --- | --- | --- |
 | **no day** | `dayOf` = none | folded group „Noch ohne Tag“ under the day | default for a thing without a date; „Vom Tag nehmen“ |
@@ -50,7 +52,7 @@ load(date, placements, day) → { usable, planned, over }      // pure, no store
 - `loose` = the units the button names: things without a day („Woche vorschlagen“), the unlocked things of the day on the sheet („Rest verteilen“ – on today: what is still open), the unlocked missed things („Verteilen …“). A unit is a whole thing or one existing part; `propose` never splits.
 - Order of the loose units as before: hard due first (latest start), priority, soft due, age, id; into days of `range` with room (usable minutes, `planLimit` main things), never onto an overbooked day, never before a source's start date.
 - Deterministic, no clock inside. **Stable under partial acceptance:** when some proposals are taken (moved into `stay`), `propose` over the remaining loose units returns the remaining proposals unchanged. Fixtures S1–S6 are rewritten as (stay, loose) → proposals, each with one line why it changed.
-- It runs **only** for a preview (button or sentence) and for the chips „Vorschlag: Do“: one call over all things without a day that have a deadline (so two chips never claim the same room), computed at render, never written. These deadline chips always show; the setting „Neues automatisch vorschlagen“ adds chips for things without a deadline. No timer, no live query, no write of its own.
+- It runs **only** for a preview (button or sentence) and for the chips „Vorschlag: Do“: **one** call over all things without a day that get a chip (so two chips never claim the same room), computed at render, never written. Deadline chips always show; the setting „Neues automatisch vorschlagen“ adds things without a deadline to the same call, ordered after every deadline thing – switching it never changes a deadline chip's day (fixture). No timer, no live query, no write of its own.
 - **Overbooking:** `over > 0` shows „2 h 10 mehr als planbar“ on the day and offers „Rest verteilen“. Nothing is displaced.
 
 ## 3. Missed
