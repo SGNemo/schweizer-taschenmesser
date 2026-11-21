@@ -194,6 +194,17 @@ pub async fn exchange_client_open<R: Runtime>(
                         minutes,
                     });
                 }
+                // files: this session is opened without `FEATURE_FILES`, so the PC sends none
+                // (the client closes on a file frame); the phone's files come in package 2b-2
+                Event::Offer(_)
+                | Event::BadOffer(..)
+                | Event::Accept(..)
+                | Event::Wait(..)
+                | Event::Refuse(..)
+                | Event::Chunk(..)
+                | Event::End(_)
+                | Event::Result(..)
+                | Event::Cancel(_) => {}
             })
         };
         let session = ExchangeSession::open(addr, &key, &hub, &name, events).map_err(error_name)?;

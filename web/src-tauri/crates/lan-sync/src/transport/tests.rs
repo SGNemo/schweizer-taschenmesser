@@ -30,6 +30,7 @@ struct Rig {
     exchange: Arc<crate::exchange::Exchange>,
     inbox: Arc<crate::exchange::MemoryInbox>,
     outbox: Arc<crate::exchange::MemoryOutbox>,
+    files: Arc<crate::exchange::MemoryFiles>,
     remote: Arc<Remote>,
     sink: Arc<TestSink>,
     router: Arc<Router>,
@@ -79,12 +80,16 @@ fn rig_full(cfg: ServerConfig, home: bool, wire_exchange: bool) -> Rig {
     let sink = TestSink::new();
     let inbox = Arc::new(crate::exchange::MemoryInbox::new());
     let outbox = Arc::new(crate::exchange::MemoryOutbox::new());
-    let exchange = Arc::new(crate::exchange::Exchange::new(
-        Arc::new(MemorySwitch::new()),
-        trust.clone(),
-        inbox.clone(),
-        outbox.clone(),
-    ));
+    let files = Arc::new(crate::exchange::MemoryFiles::new());
+    let exchange = Arc::new(
+        crate::exchange::Exchange::new(
+            Arc::new(MemorySwitch::new()),
+            trust.clone(),
+            inbox.clone(),
+            outbox.clone(),
+        )
+        .with_files(files.clone()),
+    );
     let mut router =
         Router::new(ep, host.clone(), hub, adm).with_input(remote.clone(), sink.clone());
     if wire_exchange {
@@ -96,6 +101,7 @@ fn rig_full(cfg: ServerConfig, home: bool, wire_exchange: bool) -> Rig {
         exchange,
         inbox,
         outbox,
+        files,
         remote,
         sink,
         router,
@@ -1606,5 +1612,245 @@ mod exchange_over_socket {
                 "{public}"
             );
         }
+    }
+}
+
+// ---- device exchange files over the socket (package 2b) ----
+
+mod exchange_files_over_socket {
+    use super::*;
+    use crate::exchange::files::SendOutcome;
+    use crate::exchange::wire::{Offer, ResultCode};
+    use crate::exchange_client::{
+        testing::{open_files_via, open_via},
+        Event, ExchangeSession,
+    };
+    use crate::input::wire::{Level, Media, Record};
+    use crate::trust::{ExchangeGrant, RemoteGrant};
+    use std::sync::mpsc::{channel, Receiver};
+    use std::time::Instant;
+
+    const WAIT: Duration = Duration::from_secs(20);
+
+    /// The production tick: the old loop wrote one unasked frame per 200 ms pass.
+    fn rig_prod() -> Rig {
+        rig_with(ServerConfig::default())
+    }
+
+    fn granted(r: &Rig) -> StaticKey {
+        let key = StaticKey::generate().unwrap();
+        pair_over_socket(r, &key);
+        r.exchange.set_enabled(true).unwrap();
+        r.exchange
+            .set_device(
+                &key.public(),
+                ExchangeGrant {
+                    on: true,
+                    paused: false,
+                },
+            )
+            .unwrap();
+        key
+    }
+
+    fn open_files(r: &Rig, key: &StaticKey) -> (ExchangeSession, Receiver<Event>) {
+        let (tx, rx) = channel();
+        let s = open_files_via(
+            r.server.local_addrs()[0],
+            key,
+            &r.hub_key,
+            Box::new(move |e| {
+                let _ = tx.send(e);
+            }),
+        )
+        .unwrap();
+        (s, rx)
+    }
+
+    fn offer(n: u8, size: usize) -> Offer {
+        Offer::new(
+            [n; 16],
+            size as u64,
+            [0; 32],
+            "Video.mp4".into(),
+            "video/mp4".into(),
+        )
+        .unwrap()
+    }
+
+    fn data(size: usize) -> Vec<u8> {
+        (0..size).map(|i| (i * 7 % 251) as u8).collect()
+    }
+
+    #[test]
+    fn without_asking_for_files_a_session_has_none() {
+        let r = rig();
+        let key = granted(&r);
+        let (tx, _rx) = channel();
+        let s = open_via(
+            r.server.local_addrs()[0],
+            &key,
+            &r.hub_key,
+            Box::new(move |e| {
+                let _ = tx.send(e);
+            }),
+        )
+        .unwrap();
+        assert!(!s.files());
+        assert!(s.offer(&offer(1, 1)).is_err(), "never put on the wire");
+        let (f, _) = open_files(&r, &key);
+        assert!(f.files());
+    }
+
+    #[test]
+    fn a_pc_file_streams_to_the_phone_fast_and_touchpad_input_stays_quick() {
+        let r = rig_prod();
+        let key = granted(&r);
+        // the same phone also has remote control
+        r.remote.enable_now(true).unwrap();
+        r.remote
+            .grant_now(
+                &key.public(),
+                RemoteGrant {
+                    level: Level::Media,
+                    ..RemoteGrant::default()
+                },
+            )
+            .unwrap();
+        let size = 8 * 1024 * 1024;
+        let bytes = data(size);
+        r.files.queue(&key.public(), offer(2, size), bytes.clone());
+        let (s, rx) = open_files(&r, &key);
+        let Event::Offer(o) = rx.recv_timeout(WAIT).unwrap() else {
+            panic!("an offer");
+        };
+        assert_eq!((o.size(), o.name()), (size as u64, "Video.mp4"));
+        let started = Instant::now();
+        s.accept(o.id(), 0).unwrap();
+
+        // remote control on its own session while the file streams
+        let (input, _) = crate::input_client::testing::open_via(
+            r.server.local_addrs()[0],
+            &key,
+            &r.hub_key,
+            Level::Media,
+            Box::new(|_| {}),
+        )
+        .unwrap();
+        let mut got = Vec::with_capacity(size);
+        let mut worst = Duration::ZERO;
+        let mut presses = 0;
+        loop {
+            match rx.recv_timeout(WAIT).unwrap() {
+                Event::Chunk(id, offset, b) => {
+                    assert_eq!((id, offset), (*o.id(), got.len() as u64));
+                    got.extend_from_slice(&b.0);
+                    // every 32 chunks: one key press, timed until the PC has it
+                    if got.len() / wire_chunk() % 32 == 0 && presses < 4 {
+                        presses += 1;
+                        let before = r.sink.actions.lock().unwrap().len();
+                        let t = Instant::now();
+                        input
+                            .send_events(&[Record::Media(Media::VolumeUp)])
+                            .unwrap();
+                        while r.sink.actions.lock().unwrap().len() == before {
+                            assert!(t.elapsed() < Duration::from_secs(2), "input stalled");
+                            std::thread::sleep(Duration::from_millis(1));
+                        }
+                        worst = worst.max(t.elapsed());
+                    }
+                }
+                Event::End(id) => {
+                    assert_eq!(id, *o.id());
+                    break;
+                }
+                other => panic!("{other:?}"),
+            }
+        }
+        let took = started.elapsed();
+        assert_eq!(got, bytes);
+        s.result(o.id(), ResultCode::Ok).unwrap();
+        // the old loop: 129 frames at one per 200 ms pass = about 26 s (generous for slow CI)
+        assert!(took < Duration::from_secs(15), "8 MB took {took:?}");
+        // input runs on its own connection: a transfer never holds it up (on loopback; on Wi-Fi a
+        // transfer shares the air: hand test in MANUAL-TESTS)
+        assert!(
+            presses > 0 && worst < Duration::from_secs(1),
+            "input {worst:?}"
+        );
+        let deadline = Instant::now() + WAIT;
+        while r.files.outcomes().is_empty() {
+            assert!(Instant::now() < deadline);
+            std::thread::sleep(Duration::from_millis(5));
+        }
+        assert_eq!(
+            r.files.outcomes(),
+            vec![(*o.id(), SendOutcome::Done(ResultCode::Ok))]
+        );
+        s.close();
+    }
+
+    fn wire_chunk() -> usize {
+        crate::exchange::wire::MAX_CHUNK
+    }
+
+    #[test]
+    fn a_phone_file_arrives_at_the_pc_and_a_text_item_passes_meanwhile() {
+        let r = rig_prod();
+        let key = granted(&r);
+        let size = 3 * 1024 * 1024 + 17;
+        let bytes = data(size);
+        let (s, rx) = open_files(&r, &key);
+        s.offer(&offer(3, size)).unwrap();
+        assert_eq!(rx.recv_timeout(WAIT).unwrap(), Event::Accept([3; 16], 0));
+        let mut at = 0;
+        for part in bytes.chunks(wire_chunk()) {
+            s.chunk(&[3; 16], at as u64, part).unwrap();
+            at += part.len();
+            if at == wire_chunk() * 10 {
+                let note = crate::exchange::wire::Item::new(
+                    [4; 16],
+                    crate::exchange::wire::Kind::Text,
+                    "zwischendurch".into(),
+                )
+                .unwrap();
+                s.send_item(&note).unwrap();
+            }
+        }
+        s.end(&[3; 16]).unwrap();
+        let mut answers = Vec::new();
+        while answers.len() < 2 {
+            answers.push(rx.recv_timeout(WAIT).unwrap());
+        }
+        assert!(answers.contains(&Event::Result([3; 16], ResultCode::Ok)));
+        assert!(answers.contains(&Event::Ack(
+            [4; 16],
+            crate::exchange::wire::AckState::Stored
+        )));
+        let got = r.files.received();
+        assert_eq!(got.len(), 1);
+        assert_eq!(got[0].bytes, bytes);
+        s.close();
+    }
+
+    #[test]
+    fn a_gap_closes_the_session_and_the_part_is_left_for_a_resume() {
+        let r = rig();
+        let key = granted(&r);
+        let (s, rx) = open_files(&r, &key);
+        s.offer(&offer(5, 100)).unwrap();
+        assert_eq!(rx.recv_timeout(WAIT).unwrap(), Event::Accept([5; 16], 0));
+        s.chunk(&[5; 16], 0, &[1; 10]).unwrap();
+        s.chunk(&[5; 16], 20, &[1; 10]).unwrap();
+        assert_eq!(rx.recv_timeout(WAIT).unwrap(), Event::Closed(None));
+        let deadline = Instant::now() + WAIT;
+        while r.files.stops().is_empty() {
+            assert!(Instant::now() < deadline);
+            std::thread::sleep(Duration::from_millis(5));
+        }
+        assert_eq!(
+            r.files.stops(),
+            vec![([5; 16], crate::exchange::files::Stopped::Lost)]
+        );
     }
 }
