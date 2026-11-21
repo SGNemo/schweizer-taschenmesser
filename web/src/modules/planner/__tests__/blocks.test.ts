@@ -180,7 +180,8 @@ describe('the board', () => {
 
 describe('sentences and „Rest verteilen“ leave a fixed training where it is', () => {
   const boardOf = async (entries: PlannableEntry[]) => {
-    await runPlanner(deps(entries));
+    // The day is laid out once; the training needs nobody to lay it (its source fixes it).
+    await runPlanner(deps(entries), { force: true, reshuffle: true });
     return buildBoard({
       today: TODAY,
       span: 7,

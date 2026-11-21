@@ -85,7 +85,7 @@ it('one undo takes back today’s day row, the item rows, the assignments and th
       title,
       estimateMin: 30,
     });
-  await runUser('plan', async () => undefined);
+  await runUser('plan', async () => undefined, { reshuffle: true });
   await runsSettled();
   const before = await snapshot();
   expect(before.rows.some(([, date]) => date === SAT)).toBe(true);

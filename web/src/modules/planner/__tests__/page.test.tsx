@@ -140,7 +140,7 @@ describe('planner page', () => {
     );
     fireEvent.click(chips[0]!);
     // „Nicht planen“ things sit in the waiting group with a way back.
-    expect(screen.getByText('Wartet auf freie Zeit')).toBeInTheDocument();
+    expect(screen.getByText('Noch ohne Tag')).toBeInTheDocument();
     expect(screen.getByText('Keller')).toBeInTheDocument();
     // Erledigt is one tap: a tick in the row's lead slot, named „Erledigt: <thing>“; „Warum hier?“ sits in the ⋯ menu,
     // no reason text at rest.
@@ -155,9 +155,9 @@ describe('planner page', () => {
     // behind „Warum hier?“ too. Excluded things carry a state, not a verb.
     expect(screen.getByText('· Nichts davon muss heute sein.')).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /Wartet auf freie Zeit/ }).getAttribute('aria-expanded'),
+      screen.getByRole('button', { name: /Noch ohne Tag/ }).getAttribute('aria-expanded'),
     ).toBe('false');
-    fireEvent.click(screen.getByRole('button', { name: /Wartet auf freie Zeit/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Noch ohne Tag/ }));
     expect(screen.queryByText('nicht im Plan')).toBeNull();
     fireEvent.click(screen.getAllByRole('button', { name: 'Aktionen für Keller' })[0]!);
     fireEvent.click(await screen.findByRole('menuitemcheckbox', { name: 'Warum hier?' }));

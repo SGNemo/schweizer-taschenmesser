@@ -12,7 +12,11 @@ import { collectPlannable } from '@/core/modules/contributions';
 import { getManifest } from '@/core/modules/registry';
 import { setNow } from '@/core/time/now';
 import { useUiStore } from '@/stores/ui';
+import { getMeta } from '@/core/db/metaKv';
 import { addFromField, applyDaySetup, asBreak, setEstimate } from '../actions';
+import { buildBoard } from '../board';
+import { LAST_RUN_KEY, type LastRun } from '../run';
+import { DEFAULT_PLANNER_SETTINGS } from '../settings';
 import { breakOps, setupThings, type SetupRead } from '../daySetup';
 import manifest from '../manifest';
 import { assignmentRepo, dayRepo, itemRepo } from '../repo';
@@ -79,6 +83,25 @@ async function snapshot() {
 
 const entries = () => collectPlannable({ today: SAT, until: '2026-11-20' }, [todos]);
 const lastToast = () => useUiStore.getState().toasts.at(-1)!;
+/** The item keys the board shows on its days (stored rows, the live ToDos, the last run's titles – as the page). */
+const shownKeys = async () => {
+  const last = await getMeta<LastRun>(LAST_RUN_KEY);
+  const board = buildBoard({
+    today: SAT,
+    span: 7,
+    settings: DEFAULT_PLANNER_SETTINGS,
+    dayRows: await dayRepo.active().toArray(),
+    itemRows: await itemRepo.active().toArray(),
+    assignments: await assignmentRepo.active().toArray(),
+    entries: await entries(),
+    calendar: [],
+    unplaced: last?.unplaced ?? [],
+    titles: { ...last?.titles },
+  });
+  return [...board.days.flatMap((d) => d.rows), ...board.open, ...board.waiting].map(
+    (r) => r.itemKey,
+  );
+};
 
 it('„Als Pause …“: a 2-h blocker on the row’s day, no open ToDo; one undo restores ToDo, plan and day', async () => {
   for (const title of ['Duschen', 'Zocken', 'Bude'])
@@ -90,7 +113,7 @@ it('„Als Pause …“: a 2-h blocker on the row’s day, no open ToDo; one und
       title,
       estimateMin: 30,
     });
-  await runUser('plan', async () => undefined);
+  await runUser('plan', async () => undefined, { reshuffle: true });
   await runsSettled();
   const before = await snapshot();
   const zocken = (await entries()).find((e) => e.title === 'Zocken')!;
@@ -101,7 +124,11 @@ it('„Als Pause …“: a 2-h blocker on the row’s day, no open ToDo; one und
   const after = await snapshot();
   expect(after.tasks.map((x) => x.title).sort()).toEqual(['Bude', 'Duschen']);
   expect(after.blockers).toEqual([[SAT, 'Zocken', 120]]);
-  expect(after.rows.some(([id]) => id.startsWith(`todos:${zocken.id}#`))).toBe(false);
+  // Nothing is tidied and nothing else moves: every row is stored on its day as before – the board just no
+  // longer shows the thing that is gone.
+  expect(after.rows).toEqual(before.rows);
+  expect(await shownKeys()).not.toContain(`todos:${zocken.id}`);
+  expect(await shownKeys()).toHaveLength(2);
   // Not a tick: the ToDo is gone, never done.
   expect((await taskRepo.table.get(zocken.id))!.done).toBe(false);
   expect(lastToast().message).toBe('Pause Sa: Zocken · 2 h');
@@ -133,7 +160,7 @@ it('a recurring ToDo: the series goes on, nothing is ticked, one undo (journal) 
     { id: `${task.id}:2026-11-21` },
   );
   await taskRepo.remove(`${task.id}:2026-11-21`);
-  await runUser('plan', async () => undefined);
+  await runUser('plan', async () => undefined, { reshuffle: true });
   await runsSettled();
   const before = await snapshot();
   const e = (await entries()).find((x) => x.id === task.id)!;

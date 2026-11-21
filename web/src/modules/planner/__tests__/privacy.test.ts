@@ -157,7 +157,7 @@ describe('pin (1): „KI aus“', () => {
       if (said.kind !== 'ops') throw new Error('expected ops');
       const preview = await previewPlanner(deps(), said.ops);
       expect(preview.result.assignments.length).toBeGreaterThan(0);
-      const run = await runPlanner(deps(), { force: true });
+      const run = await runPlanner(deps(), { force: true, reshuffle: true });
       expect(run.result).toBeDefined();
       expect(generate).not.toHaveBeenCalled();
       expect(fake.requests).toHaveLength(0);
