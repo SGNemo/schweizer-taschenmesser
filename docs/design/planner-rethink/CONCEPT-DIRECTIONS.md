@@ -32,21 +32,23 @@ Part of [CONCEPT](CONCEPT.md). Mockups: [`mockups/`](mockups/) (`a.html`, `b.htm
 | B: capacity in every column head reads as seven warnings when a week is full | critical | not fixable without hiding what the board is for – one reason against B |
 | C: „+ 1“ in a cell hides the thing he is looking for | critical | cells show a count, not titles, in A's grid |
 | All: the overbooking line looked like an error | minor | warning tone on a soft surface, no icon, sentence without „zu viel“; the action is a link, not a filled button |
+| A: view switch and ⋯ sat in the title row; identity 4.0 keeps the head to title, one figure and one action | moderate | the switch „Woche · 4 Wochen“ sits in the band's row beside the paging; the head is title, figure, ⋯ |
+| A: the missed amount showed in three places (group, band tiles, grid) | minor | past days say „offen“ without a figure |
 | All: a preview must say that nothing has happened yet | minor | fixed head „Vorschlag – noch ist nichts verschoben.“ |
 
-**FOCUS checklist** (direction A): 1 stimulus – adds the lock per row and at most one group; removes reason lines, „Warum hier?“, the waiting group's overload figure and every move toast („X jetzt Do“). 2 off switch – „Neues automatisch vorschlagen“ (off by default); the missed group folds. 3 next step – „Alle auf heute“ is the one plain action of the group. 4 wording – [CONCEPT-COPY](CONCEPT-COPY.md). 5 interruption – nothing is half-applied: a preview that is closed changed nothing. 6 tests – packages 1–6 name them. 7 readability – lock = icon + word; overbooking = text + tone. 9 removed instead – see 1. 8 clicks – concept §9.
+**FOCUS checklist** (direction A): 1 stimulus – adds the lock per row and at most one group; removes reason lines, „Warum hier?“, the waiting group's overload figure and every move toast („X jetzt Do“). 2 off switch – „Neues automatisch vorschlagen“ (off by default); the missed group folds. 3 next step – „Alle auf heute“ is the one plain action of the group. 4 wording – [CONCEPT-COPY](CONCEPT-COPY.md). 5 interruption – nothing is half-applied: a preview that is closed changed nothing. 6 tests – named per package in the plan that follows the answers. 7 readability – lock = icon + word; overbooking = text + tone. 9 removed instead – see 1. 8 clicks – concept §9.
 
 ## 3. Accessibility of direction A (`design:accessibility-review`, WCAG 2.1 AA)
 
-Design-stage review of the mockup and the interaction plan; 0 critical, 4 major, 4 minor – all become acceptance points of the packages named.
+Design-stage review of the mockup and the interaction plan; 0 critical, 4 major, 4 minor – all become acceptance points of the packages (numbers = the planned order: 2 enter/lock/overbooking, 3 missed, 4 several weeks, 5 moving).
 
 | # | Issue | Criterion | Severity | Requirement |
 | --- | --- | --- | --- | --- |
 | 1 | Drag is the visible way to move | 2.1.1, 2.5.7 | major | every drag has a single-pointer and keyboard equal: „Verschieben …“ in the row menu (first entry), `M` on a focused row, arrow keys + Enter in the grid (package 5) |
 | 2 | The lock is an icon-only toggle | 4.1.2, 1.1.1 | major | `button` with `aria-pressed`, name „Fest an diesem Tag: Arzt anrufen“; state also as the word „fest“ (package 2) |
 | 3 | A move changes two places at once (row leaves, tile figure changes) | 4.1.3 | major | one polite live message per action („Angebot liegt auf Do“), the undo toast stays reachable; focus goes to the next row, never to the page top (packages 3, 5) |
-| 4 | Band and grid days are buttons with visual load only | 1.3.1, 4.1.2 | major | name carries date, load and state („Donnerstag, 19. November: 2 h 10 mehr geplant, als Zeit ist · 3 Dinge“); the day on the sheet has `aria-current="date"`; the grid is a `grid` with row/column headers (package 4) |
-| 5 | Overbooking in warning tone | 1.4.1, 1.4.3 | minor | never colour alone (text „… mehr geplant …“); warning text on its soft surface ≥ 4.5 : 1 in both themes – measured in `e2e/readability.spec.ts` (package 2) |
+| 4 | Band and grid days are buttons with visual load only | 1.3.1, 4.1.2 | major | name carries date, load and state („Donnerstag, 19. November: 2 h 10 mehr als planbar · 3 Dinge“); the day on the sheet has `aria-current="date"`; the grid is a `grid` with row/column headers (package 4) |
+| 5 | Overbooking in warning tone | 1.4.1, 1.4.3 | minor | never colour alone (text „… mehr als planbar“); warning text on its soft surface ≥ 4.5 : 1 in both themes – measured in `e2e/readability.spec.ts` (package 2) |
 | 6 | Past days dimmed with opacity | 1.4.3 | minor | dim by the muted ink token, not by opacity, so text stays ≥ 4.5 : 1 (package 4) |
 | 7 | Targets: lock, ⋯, paging arrows, grid days | 2.5.5 | minor | ≥ 44 × 44 px; grid days at 412 px are 52 × 44 (7 across with 6-px gaps) – `e2e/touch-hit-phone.spec.ts` gets the grid (package 4) |
 | 8 | Long press to drag on touch | 2.5.1 | minor | never the only way (see 1); a long press that is cancelled changes nothing (package 5) |

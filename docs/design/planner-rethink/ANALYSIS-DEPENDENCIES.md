@@ -7,15 +7,15 @@ Part of [ANALYSIS](ANALYSIS.md). Paths under `web/src/`. Verdict per row: **stay
 | What | Today | Verdict | After the rebuild |
 | --- | --- | --- | --- |
 | Write-back to ToDos (`plannedFor`, `planMark`; `modules/todos/plannable.ts:24-58`, `run.ts:407-433`) | every run writes the first day of every thing | **changes** | written only by the action that sets or clears a day (place, move, apply a preview, undo); never by a background pass. `planMark` keeps its meaning (planner-own date) and `prior` |
-| A date set in ToDos (`views.ts:26 userPlannedFor`) | read as „earliest“, never a day | **changes** | a date set by hand in ToDos _is_ the day: the thing is laid there (one writer per action, no loop: the planner adopts, it does not write back the same value) |
+| A date set in ToDos (`views.ts:26 userPlannedFor`) | read as „earliest“, never a day | **changes** | a date set by hand in ToDos lays the thing on that day: the ToDo-side helper emits `plan.dayRequested`, the planner writes the row and nothing back ([CONCEPT-MIGRATION](CONCEPT-MIGRATION.md) §4); no background adoption |
 | „Heute“ card, `dayPlan`, „im Plan: Mi“ (`todos/next.ts:87`, `TodosPage.tsx:280`) | follow `plannedFor` | **stays** | a missed thing keeps `plannedFor` in the past, so the card still lists it under today (`plannedFor ≤ today`) – the card needs no change |
-| Disable clean-up (`services.ts:294`, `todos/planMark.ts:28`) | hands dates back | **stays** | |
-| Sync gate `syncSettled()` (`core/sync/service.ts:181`) | guards the copy of user dates in background runs | **changes** | guards only the one-time migration and the adoption of ToDo dates; no background writer is left to guard |
-| Sources (`contributions.plannable`: todos, bookmarks, fitness, routines, invoices, subscriptions, vault, lists, people; habits `blocks`) | listed, the run places them | **changes** | listed as before; a thing with a deadline or an own date arrives as a _suggestion_ (question 2), nothing is placed silently. `fixed` blocks (a training at 18:00) and habit blocks stay what they are: read live, never stored as placements |
-| `plan.requested` (notes, lists, mail; `actions.ts:116`) | ToDo + run, toast names the day | **changes** | ToDo + placed on the day asked for, else the day on the sheet / today; the toast names that day |
+| Disable clean-up (`services.ts:294`, `todos/planMark.ts:28`) | hands dates back to `prior` or clears them | **changes** | a laid day is his date: the mark is cleared, `plannedFor` stays |
+| Sync gate `syncSettled()` (`core/sync/service.ts:181`) | guards the copy of user dates in background runs | **changes** | guards the one-time migration only; no background writer is left |
+| Sources (`contributions.plannable`: todos, bookmarks, fitness, routines, invoices, subscriptions, vault, lists, people; habits `blocks`) | listed, the run places them | **changes** | listed as before; a dated occurrence (training, routine) shows on its day; a thing with a deadline only arrives as a _suggestion_ (question 2); `fixed` blocks and habit blocks are read live, never stored as placements ([CONCEPT-MIGRATION](CONCEPT-MIGRATION.md) §6) |
+| `plan.requested` (notes, lists, mail; `actions.ts:116`) | ToDo + run, toast names the day | **changes** | ToDo + placed on the day asked for, else today; the toast names that day |
 | Quick capture `p …` (`quickCapture/targets/adapters.ts:435`) | pin, earliest or hard due | **changes** | a day in the text places, a lock word locks |
 | Calendar chips and time blocks (`modules/planner/calendar.ts`) | from the stored rows, 7 days | **changes** | from the stored placements, for the range the calendar asks; no run needed |
-| Readers of the rows outside (`quickCapture/targets/index.ts:232 plannedOn`, mail „Im Plan · Mi“) | read `planner_assignment` | **stays** | the rows keep id and `date` |
+| Readers of the rows outside (`quickCapture/targets/index.ts:232 plannedOn`, mail „Im Plan · Mi“) | read `planner_assignment` | **stays** | the rows keep id and `date`; read through the one selector that hides finished things ([CONCEPT-MIGRATION](CONCEPT-MIGRATION.md) §3) |
 | „Rest verteilen“ (`rest.ts`, 20:00 notice) | ops → preview → run | **stays**, narrower | preview and apply as today; only things that may be spread (not locked) move; one undo |
 | „Tage einteilen“ (`daySetup.ts`) | preview → run, may reshuffle | **changes** | places the typed things on the days chosen; „verteilen“ inside it is the same suggest step with preview |
 | „Woche prüfen“ (`WeekCheck.tsx`, `actions.ts:628`) | writes day rows, then a run without preview | **changes** | writes the day rows only; a day that now holds more than its time says so |
@@ -30,7 +30,7 @@ Part of [ANALYSIS](ANALYSIS.md). Paths under `web/src/`. Verdict per row: **stay
 | Input hash, row signature, `LastRun` in `_meta` (`run.ts:38-52`, `242-260`) | skip unchanged runs | **goes** (for the background) | kept only as the base of a preview |
 | Midnight and visibility timers (`services.ts:255-280`) | start a run | **changes** | trigger a re-render only (today changed → missed group) |
 | `autoReplan`, `horizonDays`, `bufferShare`, `maxSessionMin` | engine inputs | **changes** | `autoReplan` becomes „Neues automatisch vorschlagen“ (off); the horizon is the range of a suggestion, not of the plan |
-| Engine tests and fixtures S1–S6, `run.test.ts` | pin the automaton | **changes** | the engine keeps determinism and fixpoint as a _suggester_; fixtures get a `placed` input that never moves; run tests about background runs are replaced by „no write without an action“ |
+| Engine tests and fixtures S1–S6, `run.test.ts` | pin the automaton | **changes** | the engine keeps determinism and fixpoint as a _proposer_; fixtures get a `stay` input that never moves; run tests about background runs are replaced by „no write without an action“ |
 
 ## 2. What users expect (`design:research-synthesis`)
 

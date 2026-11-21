@@ -13,8 +13,9 @@ import { ready } from '../helpers';
  * Plus four entry paths: a new thing on a chosen day, on a full day, on a day off, and on a day in three weeks.
  *
  * `IST` is the state measured on `develop` (2026-11-21); the script is green against it. `TARGET` holds the
- * values the rebuild has to reach (CONCEPT.md §10); package 7 of PACKAGES.md switches the assertion from `IST`
- * to `TARGET`. The table lands in `test-results/usecase-planner-rethink.md`, the facts next to it.
+ * values the rebuild has to reach (CONCEPT.md §8). Every package of the rebuild re-measures `IST` for the paths it
+ * changes (and says so in its PR); the last one switches the assertion from `IST` to `TARGET`. The table lands in
+ * `test-results/usecase-planner-rethink.md`, the facts next to it.
  *
  *   npx playwright test e2e/usecases/planner-rethink.spec.ts --project=desktop-chrome --trace off
  */
@@ -61,7 +62,7 @@ const TARGET: Record<string, Figures> = {
     collateral: 0,
     layCollateral: 0,
     untraceable: 0,
-    repairTaps: 3,
+    repairTaps: 10,
     repairRounds: 1,
     layoutReached: 'ja',
   },
@@ -70,7 +71,7 @@ const TARGET: Record<string, Figures> = {
   'U4 Neues an einem freien Tag': { landsOnChosenDay: 'ja', collateral: 0 },
   'U5 Ding auf einen Tag in drei Wochen': {
     possible: 'ja',
-    taps: 4,
+    taps: 3,
     dayVisibleInPlanner: 'ja',
     collateral: 0,
   },

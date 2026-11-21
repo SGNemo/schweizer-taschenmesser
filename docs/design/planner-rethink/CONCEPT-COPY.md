@@ -9,12 +9,14 @@ Part of [CONCEPT](CONCEPT.md). Rules: [FOCUS-WORDING](../FOCUS-WORDING.md) (no g
 | Lock, toast | Fest: Mi · Rückgängig / Gelöst: Mi · Rückgängig | Fixed: Wed / Released: Wed | „Festgenagelt“ |
 | Fixed block (training at 18:00) | 18:00–19:00 (the time alone) | 18:00–19:00 | „fest“ – now means the lock only (R12) |
 | Missed, group head | Noch offen von Mo, Di | Still open from Mon, Tue | „Verpasst“ (judges; FOCUS-WORDING bars it in meta), „Überfällig“ (money only), „Liegen geblieben“ |
-| Missed, more than two days | Noch offen von früher | Still open from earlier | a count in the head |
+| Missed, more than three days | Noch offen seit Do, 12. | Still open since Thu 12 | „von früher“ (hides the days he is looking for), a count in the head |
 | Missed, hint under the head | Nichts davon ist weg. Du entscheidest, wohin. | Nothing is gone. You decide where it goes. | „Du hast … nicht geschafft“ |
 | Missed, row meta | war Mo | was Mon | „seit 2 Tagen“ |
 | Missed, actions | Alle auf heute · Verteilen … | All to today · Spread … | „Aufräumen“, „Nachholen“ (duty) |
 | Missed, old ones | Vom Tag nehmen | Take off the day | „Aufgeben“ |
 | Missed, locked left out | 1 bleibt: fest | 1 stays: fixed | – |
+| Moved while locked, toast | Steuer liegt auf Mi · fest · Rückgängig | Steuer is on Wed · fixed · Undo | releasing the lock silently |
+| Past day in band and grid | offen | open | a figure („3 offen“) – the amount lives in the group only |
 | No day, group head | Noch ohne Tag | No day yet | „Eingang“ (taken by ToDos), „Wartet auf freie Zeit“ (the engine's view), „Backlog“ |
 | No day, hint | Nichts davon muss heute sein. | None of it has to be today. | (kept from Kopf leer) |
 | Proposal chip | Vorschlag: Do | Suggestion: Thu | „Geplant für“ (it is not) |
@@ -23,9 +25,9 @@ Part of [CONCEPT](CONCEPT.md). Rules: [FOCUS-WORDING](../FOCUS-WORDING.md) (no g
 | Spread today's rest | Rest verteilen | Spread the rest | (kept) |
 | Preview head | Vorschlag – noch ist nichts verschoben. | A suggestion – nothing has moved yet. | – |
 | Preview buttons | Übernehmen · Verwerfen | Apply · Discard | (kept) |
-| Overbooked day, line | 2 h 10 mehr geplant, als Zeit ist | 2 h 10 more planned than there is time | „Überbucht“, „Zu viel geplant“ (barred), „Limit erreicht“ |
-| Overbooked day, band tile | + 2 h 10 (name: „2 h 10 mehr geplant, als Zeit ist“) | + 2 h 10 | red, „!“ |
-| Entered on a full day, toast | Liegt auf Mo. Der Tag hat jetzt mehr Dinge als Zeit. | On Mon. The day now holds more than its time. | „Kein Platz“ |
+| Overbooked day, line | 2 h 10 mehr als planbar | 2 h 10 more than fits | (the wording FOCUS-WORDING already has); „Überbucht“, „Zu viel geplant“ (barred), „Limit erreicht“ |
+| Overbooked day, band tile | + 2 h 10 (name: „2 h 10 mehr als planbar“) | + 2 h 10 | red, „!“ |
+| Entered on a full day, toast | Liegt auf Mo. Jetzt ist mehr geplant als planbar. | On Mon. More is planned now than fits. | „Kein Platz“ |
 | Entered on a day kept free | Do ist frei gehalten. Liegt trotzdem dort. | Thu is kept free. It sits there anyway. | „Tag frei“ (clashes with „frei“ = free time, C9) |
 | Entered, plain toast | Liegt auf Do · Rückgängig | On Thu · Undo | „Eingeplant: Mi · X jetzt Do“ (no second half is left) |
 | Move, dialog hint | Es liegt dann an diesem Tag. Sonst bewegt sich nichts. | It then sits on that day. Nothing else moves. | „… bis du es wieder löst“ |
@@ -34,7 +36,7 @@ Part of [CONCEPT](CONCEPT.md). Rules: [FOCUS-WORDING](../FOCUS-WORDING.md) (no g
 | Split | In Teile aufteilen … | Split into parts … | „Sitzungen“ |
 | Setting (was „Automatisch neu planen“) | Neues automatisch vorschlagen | Suggest a day for new things | – |
 | Setting, help | Aus: Neues liegt ohne Tag, bis du es legst. An: es bekommt einen Vorschlag. Verschoben wird nie von selbst. | Off: new things have no day until you place them. On: they get a suggestion. Nothing ever moves by itself. | – |
-| Field examples | Zahnarzt Do fest · Steuer 2 Std bis Fr · Do frei halten | – (German parser only) | „Donnerstag frei“ stays understood |
+| Field examples | Zahnarzt Do fest · Steuer 2 Std bis Fr · Do frei halten | – (German parser only) | „Donnerstag frei“ stays understood; „lock“ and a trailing „!“ lock too |
 | Week band, paging | Woche davor · Woche danach · Heute | Previous week · Next week · Today | – |
 | View switch | Woche · 4 Wochen | Week · 4 weeks | „Monat“ (it is not a calendar month) |
 | Change note | Der Plan bleibt jetzt liegen: Dinge wechseln den Tag nur noch, wenn du sie bewegst. | The plan now stays put: things change their day only when you move them. | – |

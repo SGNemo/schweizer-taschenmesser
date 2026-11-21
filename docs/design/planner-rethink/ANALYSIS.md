@@ -18,13 +18,13 @@ The switch `autoReplan` (off = no background run) is no way out: user actions st
 | --- | --- | --- | --- |
 | **U1** lay out a week (10 things on Mo–Fr), miss two days, put it back | things on another day than laid, without an action (Wednesday morning) | **5** of 10 | 0 |
 | | missed things whose row says where they were meant to be | 0 of 5 (**5 untraceable**) | all |
-| | handles to put the plan back (find, menu, „Verschieben …“, day) | **17** taps in 3 passes | 3 (one „Alle auf heute“ or pick + day) |
+| | handles to put the plan back (find, menu, „Verschieben …“, day) | **17** taps in 3 passes | 10 in 1 pass (or 1: „Alle auf heute“) |
 | | things that changed their day while he moved another one (repair) | **4** | 0 |
 | | same while laying out the week | 1 | 0 |
 | **U2** new thing while Thursday is on the sheet | lands on Thursday | no (Wednesday) | yes |
 | **U3** new thing of an hour, today full | lands on today | no (Wednesday) | yes, day shows the overbooking |
 | **U4** new thing on a day off | lands there | no (Wednesday) | yes, with a hint |
-| **U5** a thing onto Monday in three weeks | possible | **no**: the dialog offers 7 days, the sentence „schieb … auf 7.12.“ changes nothing visible, the day is not reachable | yes, ≤ 4 taps |
+| **U5** a thing onto Monday in three weeks | possible | **no**: the dialog offers 7 days, the sentence „schieb … auf 7.12.“ changes nothing visible, the day is not reachable | yes, 3 taps |
 
 What happened in U1, step by step (facts file `test-results/usecase-planner-rethink/U1-desktop-chrome-facts.json`):
 
