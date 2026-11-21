@@ -11,12 +11,16 @@
 //!   until the phone's next `ping` (it pings while the page is open), then the head is offered
 //!   again.
 //! * Every frame and every tick checks the switch and the grant again: switching off or pausing at
-//!   the PC ends the session with the reason.
+//!   the PC ends the session with the reason. While a file streams, the switch, the grant and the
+//!   outbox are asked at most every `transfer::CHECK_EVERY` (not once per 64 KB chunk).
+//! * Files (package 2b), only when both sides agreed on `FEATURE_FILES` and the shell wired them:
+//!   the rules are in `transfer.rs`; a text item goes before the next chunk.
 //!
-//! The session reads the controls (`admit`, `limited`, `record`, the inbox and outbox and the
-//! live count) and never changes a setting.
+//! The session reads the controls (`admit`, `limited`, `record`, the inbox, outbox and files and
+//! the live count) and never changes a setting.
 
 use super::control::{Exchange, Stored};
+use super::transfer::{Ctx, Transfers, CHECK_EVERY};
 use super::wire::{self, AckState, Code, ItemError};
 use crate::noise::PublicKey;
 use std::fmt;
@@ -56,6 +60,10 @@ enum Phase {
         /// The last item the phone answered for good: never offered again in this session, even
         /// if the outbox still hands it out.
         answered: Option<[u8; 16]>,
+        /// Files, when both sides agreed on them.
+        files: Option<Transfers>,
+        /// When the controls were last asked while a file streamed.
+        checked: Option<Duration>,
     },
     Done,
 }
@@ -104,22 +112,29 @@ impl ExchangeConn {
                 Ok(asked) => match self.allowed(now) {
                     Err(code) => refused(code),
                     Ok(()) => {
+                        let mine = if self.exchange.files().is_some() {
+                            wire::FEATURES
+                        } else {
+                            wire::FEATURES & !wire::FEATURE_FILES
+                        };
+                        let accepted = asked & mine;
                         self.phase = Phase::Live {
                             in_flight: None,
                             stalled: false,
                             answered: None,
+                            files: (accepted & wire::FEATURE_FILES != 0).then(Transfers::default),
+                            checked: None,
                         };
                         self.exchange.session_opened(&self.peer);
                         self.counted = true;
                         self.opened = true;
-                        let accepted = asked & wire::FEATURES;
                         Step::Reply(wire::TAG_OPENED, wire::encode_opened(accepted).to_vec())
                     }
                 },
             },
-            Phase::Live { .. } => match self.exchange.admit(&self.peer) {
+            Phase::Live { .. } => match self.controls(now) {
                 Err(code) => refused(code),
-                Ok(()) => self.live(tag, body, now),
+                Ok(_) => self.live(tag, body, now),
             },
             _ => Step::Close,
         };
@@ -134,16 +149,47 @@ impl ExchangeConn {
         }
     }
 
+    /// The switch and the grant: on every frame and tick, but while a file streams at most every
+    /// [`CHECK_EVERY`]. `Ok(true)`: they were asked now (the outbox may be asked too).
+    fn controls(&mut self, now: Duration) -> Result<bool, Code> {
+        if let Phase::Live {
+            files: Some(files),
+            checked,
+            ..
+        } = &mut self.phase
+        {
+            if files.streaming() && checked.is_some_and(|t| now.saturating_sub(t) < CHECK_EVERY) {
+                return Ok(false);
+            }
+            *checked = Some(now);
+        }
+        self.exchange.admit(&self.peer).map(|()| true)
+    }
+
     fn live(&mut self, tag: u8, body: &[u8], now: Duration) -> Step {
         let Phase::Live {
             in_flight,
             stalled,
             answered,
+            files,
+            ..
         } = &mut self.phase
         else {
             return Step::Close;
         };
         let (exchange, peer) = (&self.exchange, &self.peer);
+        if (wire::TAG_FILE_FIRST..=wire::TAG_FILE_LAST).contains(&tag) {
+            // only when agreed on and wired
+            let (Some(files), Some(store)) = (files.as_mut(), exchange.files()) else {
+                return Step::Close;
+            };
+            let cx = Ctx {
+                exchange,
+                files: store,
+                peer,
+            };
+            return files.on_frame(&cx, tag, body, now);
+        }
         match tag {
             wire::TAG_ITEM => {
                 let item = match wire::decode_item(body) {
@@ -187,36 +233,57 @@ impl ExchangeConn {
                 *stalled = false;
                 Step::Continue
             }
-            // file tags (package 2), sync and input tags, anything unknown
+            // sync and input tags, anything unknown
             _ => Step::Close,
         }
     }
 
-    /// Called on every tick of the connection: the next queued item for this device, or the
-    /// reason the PC ended the session. Never resets the connection's idle timer.
-    pub fn poll(&mut self, _now: Duration) -> Step {
-        let step = match &mut self.phase {
-            Phase::Live {
-                in_flight,
-                stalled,
-                answered,
-            } => match self.exchange.admit(&self.peer) {
+    /// Called on every turn of the connection (several per tick while a file streams): the next
+    /// queued item or file record for this device, or the reason the PC ended the session. Never
+    /// resets the connection's idle timer.
+    pub fn poll(&mut self, now: Duration) -> Step {
+        let step = match &self.phase {
+            Phase::Live { .. } => match self.controls(now) {
                 Err(code) => refused(code),
-                Ok(()) if in_flight.is_none() && !*stalled => {
-                    match self.exchange.outbox().next(&self.peer) {
-                        Some(item) if *answered != Some(*item.id()) => {
-                            *in_flight = Some(*item.id());
-                            Step::Reply(wire::TAG_ITEM, wire::encode_item(&item))
-                        }
-                        Some(_) | None => Step::Continue,
-                    }
-                }
-                Ok(()) => Step::Continue,
+                Ok(asked) => self.poll_live(now, asked),
             },
             Phase::Done => Step::Close,
             _ => Step::Continue,
         };
         self.finish(step)
+    }
+
+    /// `asked`: the controls were asked on this turn (the outbox is asked with them).
+    fn poll_live(&mut self, now: Duration, asked: bool) -> Step {
+        let Phase::Live {
+            in_flight,
+            stalled,
+            answered,
+            files,
+            ..
+        } = &mut self.phase
+        else {
+            return Step::Continue;
+        };
+        // while a file streams, the outbox is asked only when the controls were
+        if asked && in_flight.is_none() && !*stalled {
+            if let Some(item) = self.exchange.outbox().next(&self.peer) {
+                if *answered != Some(*item.id()) {
+                    // a text item goes before the next file record
+                    *in_flight = Some(*item.id());
+                    return Step::Reply(wire::TAG_ITEM, wire::encode_item(&item));
+                }
+            }
+        }
+        let (Some(files), Some(store)) = (files.as_mut(), self.exchange.files()) else {
+            return Step::Continue;
+        };
+        let cx = Ctx {
+            exchange: &self.exchange,
+            files: store,
+            peer: &self.peer,
+        };
+        files.poll(&cx, now)
     }
 
     /// Whether an `open` was accepted since the last call (the router replaces the device's older
@@ -227,10 +294,29 @@ impl ExchangeConn {
 
     fn finish(&mut self, step: Step) -> Step {
         if matches!(step, Step::Close | Step::ReplyClose(..)) {
+            self.leave_files();
             self.phase = Phase::Done;
             self.uncount();
         }
         step
+    }
+
+    /// The session ends with transfers unfinished: the shell hears about each of them.
+    fn leave_files(&mut self) {
+        let Phase::Live {
+            files: Some(files), ..
+        } = &mut self.phase
+        else {
+            return;
+        };
+        if let Some(store) = self.exchange.files() {
+            let cx = Ctx {
+                exchange: &self.exchange,
+                files: store,
+                peer: &self.peer,
+            };
+            files.leave(&cx);
+        }
     }
 
     fn uncount(&mut self) {
@@ -243,6 +329,7 @@ impl ExchangeConn {
 
 impl Drop for ExchangeConn {
     fn drop(&mut self) {
+        self.leave_files();
         self.uncount();
     }
 }

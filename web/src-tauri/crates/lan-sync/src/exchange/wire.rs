@@ -3,8 +3,9 @@
 //! string checked as UTF-8; nothing here is formatted or logged.
 //!
 //! Package 1a carries `open`, `opened`, `refused`, `item`, `ack` and `ping`. Package 2a defines
-//! the file records `0x35..=0x3c` (offer, accept, wait, refuse, chunk, end, result, cancel);
-//! until a session negotiates [`FEATURE_FILES`] (package 2b) it still closes on any of them.
+//! the file records `0x35..=0x3c` (offer, accept, wait, refuse, chunk, end, result, cancel); a
+//! session carries them only when both sides agreed on [`FEATURE_FILES`] at `open`, and closes
+//! on any of them otherwise.
 
 use std::fmt;
 
@@ -42,9 +43,9 @@ pub const TAG_PING: u8 = 0x3d;
 
 /// Version of this wire.
 pub const VERSION: u8 = 1;
-/// Features this version knows (none yet: files are offered once both sides ask for
-/// [`FEATURE_FILES`], package 2b).
-pub const FEATURES: u8 = 0;
+/// Features this version knows. A side asks for what it can do; the PC accepts files only when its
+/// shell wired them (`Exchange::with_files`).
+pub const FEATURES: u8 = FEATURE_FILES;
 /// The feature bit of file transfers.
 pub const FEATURE_FILES: u8 = 1;
 
@@ -583,6 +584,16 @@ pub fn decode_refuse(body: &[u8]) -> Result<([u8; 16], RefuseCode), Malformed> {
     ))
 }
 
+/// The bytes of a received chunk. `Debug` shows the length only, never the bytes.
+#[derive(Clone, PartialEq, Eq)]
+pub struct ChunkBytes(pub Vec<u8>);
+
+impl fmt::Debug for ChunkBytes {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("ChunkBytes").field(&self.0.len()).finish()
+    }
+}
+
 /// The 24 bytes before a chunk's data: a sender can read the file straight into a buffer after
 /// them (then at most [`MAX_CHUNK`] data bytes).
 pub fn chunk_header(id: &[u8; 16], offset: u64) -> [u8; 24] {
@@ -991,10 +1002,6 @@ mod tests {
             assert_eq!(*t, TAG_FILE_FIRST + u8::try_from(i).unwrap());
         }
         assert_eq!(TAG_FILE_LAST, 0x3c);
-        assert_eq!(
-            FEATURES & FEATURE_FILES,
-            0,
-            "files are not offered before package 2b"
-        );
+        assert_eq!(FEATURES & FEATURE_FILES, FEATURE_FILES);
     }
 }
