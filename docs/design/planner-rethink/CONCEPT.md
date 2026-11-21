@@ -1,6 +1,6 @@
 # Planner rethink – the new model (phase 2)
 
-Branch `design/planner-rethink`, 2026-11-21. Status: **waits for four answers** ([README](README.md) „Fragen“). Analysis: [ANALYSIS](ANALYSIS.md). Data, migration, sync, sources: [CONCEPT-MIGRATION](CONCEPT-MIGRATION.md). Words: [CONCEPT-COPY](CONCEPT-COPY.md). Directions, critique, accessibility: [CONCEPT-DIRECTIONS](CONCEPT-DIRECTIONS.md). Supersedes the run and engine rules of [plan/CONCEPT.md](../plan/CONCEPT.md) §2–§3 once package 1 is merged; the source contract (§4), the calendar chips (§5) and the AI layer (§6) there stay. Package numbers below refer to the plan written after the answers.
+Branch `design/planner-rethink`, 2026-11-21. Status: **approved 2026-11-21** – answers in [README](README.md) and [decisions/plan-rethink.md](../../decisions/plan-rethink.md); packages: [PACKAGES](PACKAGES.md). Analysis: [ANALYSIS](ANALYSIS.md). Data, migration, sync, sources: [CONCEPT-MIGRATION](CONCEPT-MIGRATION.md). Words: [CONCEPT-COPY](CONCEPT-COPY.md). Directions, critique, accessibility: [CONCEPT-DIRECTIONS](CONCEPT-DIRECTIONS.md). Supersedes the run and engine rules of [plan/CONCEPT.md](../plan/CONCEPT.md) §2–§3 once package 1 is merged; the source contract (§4), the calendar chips (§5) and the AI layer (§6) there stay. Package numbers below refer to the plan written after the answers.
 
 ## 0. In one paragraph
 
@@ -24,7 +24,7 @@ dayOf(thing) = date of its placement row      (the thing is open at its source)
 | **laid** | `dayOf` = a day from today on | a row on its day | entering, moving, dragging, taking a proposal or a chip |
 | **locked** („fest“) | the row has `locked` | the row with a closed lock and the word „fest“ | the lock on the row; „… fest“ / „…!“ in the field |
 | **proposed** | **never stored** – a row of a preview, or the chip „Vorschlag: Do“ on a thing without a day | preview / chip | the proposer, on request |
-| **missed** | a placement row with a date before today, thing still open | group on today („Noch offen von Mo, Di“) | nobody – a date passing is not a write |
+| **missed** | a placement row with a date before today, thing still open | a row in the tab „Noch offen“ | nobody – a date passing is not a write |
 
 Transitions – each is one undoable action of the person; the proposer has none:
 
@@ -49,18 +49,18 @@ load(date, placements, day) → { usable, planned, over }      // pure, no store
 ```
 
 - `stay` = every placement the action did not hand over (always: locked ones, other days' things). It comes back untouched – no rule is left that moves it (kept, carried, bumped, pulled, after-part go).
-- `loose` = the units the button names: things without a day („Woche vorschlagen“), the unlocked things of the day on the sheet („Rest verteilen“ – on today: what is still open), the unlocked missed things („Verteilen …“). A unit is a whole thing or one existing part; `propose` never splits.
+- `loose` = the units the button names: things without a day („Woche vorschlagen“), the unlocked things of the day on the sheet („Rest verteilen“ – on today: what is still open), the unlocked things of the tab „Noch offen“ („Verteilen …“). A unit is a whole thing or one existing part; `propose` never splits.
 - Order of the loose units as before: hard due first (latest start), priority, soft due, age, id; into days of `range` with room (usable minutes, `planLimit` main things), never onto an overbooked day, never before a source's start date.
 - Deterministic, no clock inside. **Stable under partial acceptance:** when some proposals are taken (moved into `stay`), `propose` over the remaining loose units returns the remaining proposals unchanged. Fixtures S1–S6 are rewritten as (stay, loose) → proposals, each with one line why it changed.
 - It runs **only** for a preview (button or sentence) and for the chips „Vorschlag: Do“: **one** call over all things without a day that get a chip (so two chips never claim the same room), computed at render, never written. Deadline chips always show; the setting „Neues automatisch vorschlagen“ adds things without a deadline to the same call, ordered after every deadline thing – switching it never changes a deadline chip's day (fixture). No timer, no live query, no write of its own.
 - **Overbooking:** `over > 0` shows „2 h 10 mehr als planbar“ on the day and offers „Rest verteilen“. Nothing is displaced.
 
-## 3. Missed
+## 3. Missed – the tab „Noch offen“ (the maintainer's answer to question 1)
 
-- **Where:** one group on top of today's sheet (question 1); each row names its day („war Mo“). The rows stay stored on their day, so a past day in the week or four-week view shows them too, with the word „offen“ and no figure.
-- **In one move:** „Alle auf heute“ (1 tap), „Verteilen …“ (preview → „Übernehmen“, 2 taps), per row the day pick (2 taps on desktop and phone: a missed row carries tick, lock and the move button, no ⋯); several at once by „Auswählen“. Each is one undo entry. Nothing happens until he taps.
-- **Locked and missed:** stays in the group with its lock; „Verteilen …“ leaves it out and says so („1 bleibt: fest“); „Alle auf heute“ and the day pick move it, lock kept.
-- **Calm:** no red, no count in the page head, no „seit 3 Tagen“; the group shows three rows on the phone, seven on the desktop, then „und 4 weitere“; the head always names the days. A thing open for more than 14 days gets the quiet offer „Vom Tag nehmen“. Money past its deadline stays in „Frist vorbei“ as today.
+- **Where:** the planner gets a second tab, **„Noch offen“**, next to „Plan“. It holds every thing whose day has passed, grouped by that day („Mo 16.“, „Di 17.“). Things that were **fest** land there too and come first in their own group „Fest – braucht einen neuen Tag“, each with its lock, so he places them before the rest. The rows stay stored on their day; a past day in the week or four-week view says „offen“ without a figure.
+- **Finding it:** the tab shows a quiet dot while it holds something (name: „Noch offen: Dinge von Mo, Di“), never a count; today's sheet carries one plain line on top, „Von Mo, Di ist noch etwas offen.“ with the link „Ansehen“. The tab is always there; empty it says „Nichts offen von früher.“
+- **From there, in one move:** „Alle auf heute“ (1 tap), „Verteilen …“ (preview → „Übernehmen“, 2 taps; the fixed ones stay out and are named „1 bleibt: fest“), per row the day pick (2 taps: the row carries tick, lock and a move button, no ⋯); several at once by „Auswählen“. Each is one undo entry. Nothing happens until he taps. A fixed thing moved by hand keeps its lock on the new day.
+- **Calm:** no red, no count in the page head or on the tab, no „seit 3 Tagen“. A thing open for more than 14 days gets the quiet offer „Vom Tag nehmen“. Money past its deadline stays in „Frist vorbei“ as today.
 - The ToDo's `plannedFor` stays the passed date, so the „Heute“ card keeps listing it (`plannedFor ≤ today`) without a write.
 
 ## 4. Entering
@@ -70,7 +70,7 @@ A new thing typed into the planner's field lands on **the day on the sheet, else
 ## 5. More than a week
 
 - **Range:** any date. The plan has no horizon; `horizonDays` only bounds how far a proposal looks (default 14).
-- **View:** the week band pages („‹ KW 47 ›“, „Heute“); a switch in the band's row turns it into a **four-week grid** (question 3); a grid day shows the number of things, „offen“ for a passed day with open things and „+ 2 h 10 mehr“ when overbooked – free minutes only fit the band.
+- **View:** the week band pages („‹ KW 47 ›“, „Heute“); a switch in the band's row turns it into a **four-week grid**; a grid day shows the number of things, „offen“ for a passed day with open things and „+ 2 h 10 mehr“ when overbooked – free minutes only fit the band.
 - **Onto any date:** „Verschieben …“ shows the four weeks from today as its picker (‹ › for more): row menu, „Verschieben …“, day = **3 taps** for any day in the next four weeks. Band and grid are drop targets.
 - **Time of later weeks:** the weekday defaults hold for every date; only touched days are stored. „Zeiten dieser Woche“ (the former „Woche prüfen“) applies a template to the week in view and runs nothing.
 - **Cost:** views read placements by the `date` index for their range; sources are listed up to the last day in view; `load` per visible day (28 at most).

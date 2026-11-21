@@ -8,7 +8,7 @@ Part of [CONCEPT](CONCEPT.md). Mockups: [`mockups/`](mockups/) (`a.html`, `b.htm
 | --- | --- | --- | --- |
 | Main surface | the day as a sheet (as today), the week band above it pages; a switch shows four weeks instead of the band | seven columns side by side, things as cards; a tray on the left for „Noch offen von …“ and „Noch ohne Tag“ | a four-week grid with titles in the cells; the day opens beside it |
 | More than a week | page the band; „4 Wochen“ grid with one load mark per day | page week by week; open a second week below | native |
-| Missed | group on top of today's sheet | tray, always visible | group in the day panel; past cells dimmed |
+| Missed (drawn before the answer; decided: the tab „Noch offen“, [CONCEPT](CONCEPT.md) §3) | group on top of today's sheet | tray, always visible | group in the day panel; past cells dimmed |
 | Moving | drag onto a band tile or grid day; menu; `M` | drag between columns is the main way; menu | drag between cells; menu |
 | Phone (412) | sheet + band as today; grid by switch | days stacked, long | cells show a number only; the panel below |
 | Lock, overbooking | lock on every row; one warm line on the day, „+ 2 h 10“ on the tile | chip on the card; line in the column head | lock in the panel; „+ 2 h 10“ in the cell |

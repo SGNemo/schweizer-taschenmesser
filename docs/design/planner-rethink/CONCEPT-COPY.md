@@ -8,8 +8,11 @@ Part of [CONCEPT](CONCEPT.md). Rules: [FOCUS-WORDING](../FOCUS-WORDING.md) (no g
 | Lock, toggle name | Fest an diesem Tag | Keep on this day | „Festnageln“ (two words for one thing with „fest“), „Sperren“ |
 | Lock, toast | Fest: Mi · Rückgängig / Nicht mehr fest: Mi · Rückgängig | Fixed: Wed / No longer fixed: Wed | „Festgenagelt“; „Gelöst“ (reads as solved) |
 | Fixed block (training at 18:00) | 18:00–19:00 (the time alone) | 18:00–19:00 | „fest“ – now means the lock only (R12) |
-| Missed, group head | Noch offen von Mo, Di | Still open from Mon, Tue | „Verpasst“ (judges; FOCUS-WORDING bars it in meta), „Überfällig“ (money only), „Liegen geblieben“ |
-| Missed, more than three days | Noch offen seit Do, 12. | Still open since Thu 12 | „von früher“ (hides the days he is looking for), a count in the head |
+| Missed, the tab | Noch offen (dot while it holds something; name: „Noch offen: Dinge von Mo, Di“) | Still open | „Verpasst“ (judges; FOCUS-WORDING bars it in meta), „Überfällig“ (money only), „Liegen geblieben“, a count on the tab |
+| Missed, line on today | Von Mo, Di ist noch etwas offen. · Ansehen | Something from Mon, Tue is still open. · Show | a figure („5 offen“) |
+| Missed, group heads in the tab | Fest – braucht einen neuen Tag · Mo 16. · Di 17. | Fixed – needs a new day · Mon 16 · Tue 17 | – |
+| Missed, tab empty | Nichts offen von früher. | Nothing open from earlier. | – |
+| Missed, line on today, more than three days | Seit Do, 12. ist noch etwas offen. · Ansehen | Something has been open since Thu 12. | „von früher“ (hides the days he is looking for) |
 | Missed, hint under the head | Nichts davon ist weg. Du entscheidest, wohin. | Nothing is gone. You decide where it goes. | „Du hast … nicht geschafft“ |
 | Missed, row meta | war Mo | was Mon | „seit 2 Tagen“ |
 | Missed, actions | Alle auf heute · Verteilen … | All to today · Spread … | „Aufräumen“, „Nachholen“ (duty) |
