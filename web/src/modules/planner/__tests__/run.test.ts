@@ -18,6 +18,7 @@ import { undoEntry } from '@/core/undo';
 import { useUiStore } from '@/stores/ui';
 import { createTestDb } from '@/test-utils';
 import { act, setAvailable } from '../actions';
+import { buildBoard } from '../board';
 import manifest from '../manifest';
 import { assignmentRepo, dayRepo, itemRepo, plannerRepos, putRow } from '../repo';
 import { LAST_RUN_KEY, restoreSources, runPlanner, type LastRun, type RunDeps } from '../run';
@@ -47,6 +48,23 @@ const rows = async () =>
   (await assignmentRepo.active().toArray())
     .map((a) => [a.id, a.date, a.minutes, a.order, a.reason] as const)
     .sort();
+/** „Alles auslegen“: every thing without a locked row is handed to the engine (the set-up of a laid plan). */
+const LAY = { force: true, reshuffle: true } as const;
+/** The board as the page builds it, from the stored rows and the ToDos as their source lists them. */
+const board = async () =>
+  buildBoard({
+    today: TODAY,
+    span: 7,
+    settings: H,
+    dayRows: await dayRepo.active().toArray(),
+    itemRows: await itemRepo.active().toArray(),
+    assignments: await assignmentRepo.active().toArray(),
+    entries: (
+      await (await plannableSource(todos))!.list({ today: TODAY, until: '2026-11-15' })
+    ).map((e) => ({ ...e, moduleId: 'todos' })),
+    calendar: [],
+    unplaced: (await getMeta<LastRun>(LAST_RUN_KEY))?.unplaced ?? [],
+  });
 const modulesRow = (id: string, enabled: boolean) =>
   db.table('_modules').put({
     id,
@@ -87,15 +105,36 @@ afterEach(() => {
 });
 
 describe('a run', () => {
-  it('plans the ToDos, stores deterministic rows and writes the first day back with a mark', async () => {
+  it('a plain run lays nothing: no row, no write-back, the things are „Noch ohne Tag“', async () => {
     const a = await task('Steuer', { estimateMin: 120, priority: 2 });
     const b = await task('Kurz', { estimateMin: 10 });
     const r = await runPlanner(deps());
     expect(r.ran).toBe(true);
+    expect(r.rowWrites).toBe(0);
+    expect(r.writeBacks).toBe(0);
+    expect(await rows()).toEqual([]);
+    expect(r.result!.unplaced.map((u) => [u.id, u.reason]).sort()).toEqual(
+      [
+        [`todos:${a.id}#0`, 'no-day'],
+        [`todos:${b.id}#0`, 'no-day'],
+      ].sort(),
+    );
+    expect((await stored(a.id))!.plannedFor).toBeUndefined();
+    expect((await stored(a.id))!.planMark).toBeUndefined();
+    expect((await board()).waiting.map((w) => [w.title, w.reason]).sort()).toEqual([
+      ['Kurz', 'no-day'],
+      ['Steuer', 'no-day'],
+    ]);
+  });
+
+  it('„alles auslegen“ plans the ToDos, stores deterministic rows (nothing is cut into sessions) and writes the day back with a mark', async () => {
+    const a = await task('Steuer', { estimateMin: 120, priority: 2 });
+    const b = await task('Kurz', { estimateMin: 10 });
+    const r = await runPlanner(deps(), LAY);
+    expect(r.ran).toBe(true);
     expect(await rows()).toEqual(
       [
-        [`todos:${a.id}#0`, TODAY, 60, 0, 'new'],
-        [`todos:${a.id}#1`, '2026-11-10', 60, 0, 'new'],
+        [`todos:${a.id}#0`, TODAY, 120, 0, 'new'],
         [`todos:${b.id}#0`, TODAY, 10, 1, 'new'],
       ].sort(),
     );
@@ -113,10 +152,21 @@ describe('a run', () => {
     });
   });
 
+  it('only the things an action hands over are laid (`loose`); the others keep no day', async () => {
+    const a = await task('A', { estimateMin: 30 });
+    const b = await task('B', { estimateMin: 30 });
+    const r = await runPlanner(deps(), { force: true, loose: [`todos:${a.id}`] });
+    expect(await rows()).toEqual([[`todos:${a.id}#0`, TODAY, 30, 0, 'new']]);
+    expect(r.writeBacks).toBe(1);
+    expect(await stored(a.id)).toMatchObject({ plannedFor: TODAY, planMark: { date: TODAY } });
+    expect((await stored(b.id))!.plannedFor).toBeUndefined();
+    expect(r.result!.unplaced).toMatchObject([{ id: `todos:${b.id}#0`, reason: 'no-day' }]);
+  });
+
   it('one run → zero follow-up writes; the same input is a fixpoint', async () => {
     await task('A', { estimateMin: 45 });
     await task('B', { estimateMin: 200 });
-    const first = await runPlanner(deps());
+    const first = await runPlanner(deps(), LAY);
     expect(first.rowWrites).toBeGreaterThan(0);
     const before = await rows();
     // Unchanged input: a background run does not even plan.
@@ -127,21 +177,37 @@ describe('a run', () => {
     expect(again.rowWrites).toBe(0);
     expect(again.writeBacks).toBe(0);
     expect(await rows()).toEqual(before);
+    // „Alles auslegen“ on a plan that is laid already: the same rows again, nothing written.
+    const laid = await runPlanner(deps(), LAY);
+    expect(laid.rowWrites).toBe(0);
+    expect(laid.writeBacks).toBe(0);
+    expect(await rows()).toEqual(before);
   });
 
-  it('a done thing frees its rows (tombstones) and a reopened one gets them back – visible again', async () => {
+  it('a done thing keeps its row and the board hides it; reopened it is back on its day', async () => {
     const a = await task('A', { estimateMin: 45 });
-    await runPlanner(deps());
+    await runPlanner(deps(), LAY);
+    // Laid on Wednesday by hand, so „back on its day“ is not just today.
+    await assignmentRepo.update(`todos:${a.id}#0`, { date: '2026-11-11' });
     const source = (await plannableSource(todos))!;
     await source.onDone!(a.id);
     const r = await runPlanner(deps());
     expect(r.ran).toBe(true);
-    expect(await rows()).toEqual([]);
-    expect((await assignmentRepo.table.get(`todos:${a.id}#0`))?.deletedAt).not.toBeNull();
-    await taskRepo.update(a.id, { done: false, completedAt: undefined });
-    await runPlanner(deps());
-    expect(await rows()).toEqual([[`todos:${a.id}#0`, TODAY, 45, 0, 'new']]);
+    expect(r.rowWrites).toBe(0);
+    // Nothing is tidied: the row is stored as it was, no tombstone.
+    expect(await rows()).toEqual([[`todos:${a.id}#0`, '2026-11-11', 45, 0, 'new']]);
     expect((await assignmentRepo.table.get(`todos:${a.id}#0`))?.deletedAt).toBeNull();
+    const hidden = await board();
+    expect(hidden.days.flatMap((d) => d.rows)).toEqual([]);
+    expect(hidden.waiting).toEqual([]);
+    expect(hidden.open).toEqual([]);
+    await taskRepo.update(a.id, { done: false, completedAt: undefined });
+    const back = await runPlanner(deps());
+    expect(back.rowWrites).toBe(0);
+    expect(await rows()).toEqual([[`todos:${a.id}#0`, '2026-11-11', 45, 0, 'new']]);
+    expect((await board()).days.flatMap((d) => d.rows.map((x) => [d.date, x.unitId]))).toEqual([
+      ['2026-11-11', `todos:${a.id}#0`],
+    ]);
   });
 
   it('a run produces no automation event (only plannedFor/planMark change on the ToDo)', async () => {
@@ -149,7 +215,7 @@ describe('a run', () => {
     await task('B', { estimateMin: 20 });
     const seen: WriteSignal[] = [];
     setWriteListener((s) => seen.push(s));
-    await runPlanner(deps());
+    await runPlanner(deps(), LAY);
     setWriteListener(undefined);
     const todoWrites = seen.filter((s) => s.table === 'todos_task');
     expect(todoWrites.length).toBeGreaterThan(0);
@@ -160,20 +226,30 @@ describe('a run', () => {
     expect(events).toEqual([]);
   });
 
-  it('no sync configured → the user’s date is copied to the item’s earliest and into prior; a cleared date removes it', async () => {
+  it('no sync configured → the user’s date is the lower bound and goes into prior, never into the item’s earliest; a cleared date moves nothing', async () => {
     const a = await task('Später Do', { estimateMin: 30, plannedFor: '2026-11-12' });
     expect(await syncSettled()).toBe(true);
-    await runPlanner(deps({ settled: await syncSettled() }));
-    expect(await itemRepo.get(`todos:${a.id}`)).toMatchObject({ earliest: '2026-11-12' });
+    await runPlanner(deps({ settled: await syncSettled() }), LAY);
+    expect(await rows()).toEqual([[`todos:${a.id}#0`, '2026-11-12', 30, 0, 'new']]);
+    // The planner keeps no copy of the person's date.
+    expect(await itemRepo.get(`todos:${a.id}`)).toBeUndefined();
     expect(await stored(a.id)).toMatchObject({
       plannedFor: '2026-11-12',
       planMark: { date: '2026-11-12', prior: '2026-11-12' },
     });
-    // The user clears the date on the ToDo page: the copy goes too (an unlisted writer would leave a stale mark; here the helper's shape).
+    // The user clears the date on the ToDo page: the thing stays where it lies and a pass nobody asked for
+    // tells the ToDo nothing.
     await taskRepo.update(a.id, { plannedFor: undefined, planMark: undefined });
-    await runPlanner(deps());
-    expect((await itemRepo.get(`todos:${a.id}`))?.earliest).toBeUndefined();
-    // Nothing is pulled forward by itself (rule 6): the thing keeps Thursday, now without a prior.
+    const pass = await runPlanner(deps());
+    expect(pass.ran).toBe(true);
+    expect(pass.rowWrites).toBe(0);
+    expect(pass.writeBacks).toBe(0);
+    expect(await itemRepo.get(`todos:${a.id}`)).toBeUndefined();
+    expect(await rows()).toEqual([[`todos:${a.id}#0`, '2026-11-12', 30, 0, 'new']]);
+    expect((await stored(a.id))!.plannedFor).toBeUndefined();
+    // An action that names the thing tells its source the day it lies on – now without a prior.
+    const named = await runPlanner(deps(), { force: true, touched: [`todos:${a.id}`] });
+    expect(named.rowWrites).toBe(0);
     expect(await stored(a.id)).toMatchObject({
       plannedFor: '2026-11-12',
       planMark: { date: '2026-11-12' },
@@ -183,8 +259,9 @@ describe('a run', () => {
 
   it('gate closed → the user’s date is neither copied nor overwritten, but used as the lower bound', async () => {
     const a = await task('Später Do', { estimateMin: 30, plannedFor: '2026-11-12' });
-    const r = await runPlanner(deps({ settled: false }));
+    const r = await runPlanner(deps({ settled: false }), LAY);
     expect(r.result!.assignments[0]).toMatchObject({ date: '2026-11-12' });
+    expect(r.writeBacks).toBe(0);
     expect(await itemRepo.get(`todos:${a.id}`)).toBeUndefined();
     const t = (await stored(a.id))!;
     expect(t.plannedFor).toBe('2026-11-12');
@@ -221,14 +298,14 @@ describe('a run', () => {
     expect(half.planMark).toBeUndefined(); // reads as the user's date – exactly the case the gate is for
     expect((await db.table('_meta').get(PULL_COMPLETE_KEY))?.value).toBe(false);
     expect(await syncSettled()).toBe(false);
-    await runPlanner(deps({ settled: await syncSettled() }));
+    await runPlanner(deps({ settled: await syncSettled() }), LAY);
     expect(await itemRepo.get(`todos:${t.id}`)).toBeUndefined();
     expect((await taskRepo.table.get(t.id))!.plannedFor).toBe('2026-11-12');
     other.close();
     await other.delete();
   });
 
-  it('two devices converge: the same input gives the same rows, and after a sync neither writes again', async () => {
+  it('two devices converge: the same action on the same input gives the same rows, and after a sync neither writes again', async () => {
     const entries: PlannableEntry[] = [
       {
         moduleId: 'todos',
@@ -258,14 +335,20 @@ describe('a run', () => {
     const server = new MemoryServer();
     const devices = [createTestDb(), createTestDb()];
     for (const database of devices) {
-      const r = await runPlanner(deps({ database, entries, writer, calendar: [] }));
-      expect(r.rowWrites).toBe(3);
+      // A pass nobody asked for lays nothing on either device …
+      expect((await runPlanner(deps({ database, entries, writer, calendar: [] }))).rowWrites).toBe(
+        0,
+      );
+      // … the same action („alles auslegen“) lays the same rows: one per thing, nothing is cut into sessions.
+      const r = await runPlanner(deps({ database, entries, writer, calendar: [] }), LAY);
+      expect(r.rowWrites).toBe(2);
     }
     const shape = async (database: (typeof devices)[number]) =>
       (await plannerRepos(database).assignment.active().toArray())
         .map((a) => [a.id, a.date, a.minutes, a.order])
         .sort();
     expect(await shape(devices[0]!)).toEqual(await shape(devices[1]!));
+    expect(await shape(devices[0]!)).toHaveLength(2);
     for (const database of devices)
       await runSync({ storage: new DexieStorageAdapter(database), adapter: server.adapter() });
     for (const database of devices)
@@ -275,6 +358,9 @@ describe('a run', () => {
         force: true,
       });
       expect(r.rowWrites).toBe(0);
+      expect(
+        (await runPlanner(deps({ database, entries, writer, calendar: [] }), LAY)).rowWrites,
+      ).toBe(0);
     }
     for (const database of devices) {
       database.close();
@@ -284,7 +370,7 @@ describe('a run', () => {
 
   it('a sync-applied change of the rows triggers a background recompute that writes only the differing rows', async () => {
     const a = await task('A', { estimateMin: 45 });
-    await runPlanner(deps());
+    await runPlanner(deps(), LAY);
     // Another device placed the thing on Wednesday: the shared row is the plan (rule 6, nothing is pulled forward)…
     await assignmentRepo.update(`todos:${a.id}#0`, { date: '2026-11-11' });
     const kept = await runPlanner(deps());
@@ -303,12 +389,16 @@ describe('a run', () => {
 describe('the service', () => {
   it('a user action with its run is one undoable; undo stays undone (the next background run writes nothing)', async () => {
     const a = await task('Alt', { estimateMin: 45 });
-    await runBackground();
+    await runBackground(LAY);
     const before = await rows();
+    expect(before).toEqual([[`todos:${a.id}#0`, TODAY, 45, 0, 'new']]);
     const { entry } = await runUser('Neu', async () => {
-      await task('Neu', { estimateMin: 60, priority: 3 });
+      const neu = await task('Neu', { estimateMin: 60, priority: 3 });
+      return { loose: [`todos:${neu.id}`] };
     });
-    expect(await rows()).not.toEqual(before);
+    // The new thing is laid; the old one keeps its day (a higher priority moves nothing).
+    expect(await rows()).toHaveLength(2);
+    expect((await assignmentRepo.get(`todos:${a.id}#0`))?.date).toBe(TODAY);
     expect(entry).toBeDefined();
     expect(await undoEntry(entry!.id)).toBe(true);
     expect(await rows()).toEqual(before);
@@ -322,20 +412,40 @@ describe('the service', () => {
     expect(r!.writeBacks).toBe(0);
   });
 
-  it('a new appointment replans by itself (live query, not the write hook)', async () => {
+  it('a background run lays and moves nothing: a new thing waits without a day, a laid one stays', async () => {
+    const a = await task('Alt', { estimateMin: 45 });
+    await runBackground(LAY);
+    const before = await rows();
+    const neu = await task('Neu', { estimateMin: 60, priority: 3 });
+    const r = await runBackground();
+    expect(r!.ran).toBe(true);
+    expect(r!.rowWrites).toBe(0);
+    expect(r!.writeBacks).toBe(0);
+    expect(await rows()).toEqual(before);
+    expect((await stored(neu.id))!.plannedFor).toBeUndefined();
+    expect(r!.result!.unplaced).toMatchObject([{ id: `todos:${neu.id}#0`, reason: 'no-day' }]);
+    expect(await stored(a.id)).toMatchObject({ plannedFor: TODAY });
+  });
+
+  it('a new appointment is seen by itself (live query, not the write hook) and moves nothing: the day is over its time', async () => {
     await modulesRow('todos', true);
     await modulesRow('calendar', true);
     await modulesRow('planner', true);
     await dayRepo.upsert(TODAY, { date: TODAY, availableMin: 60, blockers: [] });
-    await task('A', { estimateMin: 45 });
+    const a = await task('A', { estimateMin: 45 });
+    // Laid on today by the person.
+    await runUser('lay', async () => ({ loose: [`todos:${a.id}`] }));
+    expect(await rows()).toEqual([[`todos:${a.id}#0`, TODAY, 45, 0, 'new']]);
     setManifestsForTests(undefined);
     const stop = start();
     await vi.waitFor(
-      async () =>
-        expect(await rows()).toEqual([[expect.stringMatching(/#0$/), TODAY, 45, 0, 'new']]),
-      { timeout: 4000 },
+      async () => expect((await getMeta<LastRun>(LAST_RUN_KEY))?.usableMin).toBeDefined(),
+      {
+        timeout: 4000,
+      },
     );
-    // A timed appointment of 50 minutes today: 60 − 50 = 10 raw, nothing fits → the thing moves to tomorrow.
+    const usable = (await getMeta<LastRun>(LAST_RUN_KEY))!.usableMin;
+    // A timed appointment of 50 minutes today: 60 − 50 = 10 raw, the thing no longer fits – and stays.
     await createCollectionRepo(calendar, 'event').create({
       title: 'Zahnarzt',
       startDate: TODAY,
@@ -343,11 +453,16 @@ describe('the service', () => {
       startTime: '10:00',
       endTime: '10:50',
     });
-    await vi.waitFor(async () => expect((await rows())[0]?.[1]).toBe('2026-11-10'), {
-      timeout: 4000,
-    });
+    // The background run saw the appointment (the week's usable time went down) …
+    await vi.waitFor(
+      async () => expect((await getMeta<LastRun>(LAST_RUN_KEY))!.usableMin).toBeLessThan(usable),
+      { timeout: 4000 },
+    );
     stop();
     await runsSettled();
+    // … and wrote no row and told the ToDo nothing.
+    expect(await rows()).toEqual([[`todos:${a.id}#0`, TODAY, 45, 0, 'new']]);
+    expect(await stored(a.id)).toMatchObject({ plannedFor: TODAY, planMark: { date: TODAY } });
   });
 
   it('Später Do → assigned Sa, Do never undercut → disabling (keep and delete) hands Do back, no active mark', async () => {
@@ -367,7 +482,7 @@ describe('the service', () => {
       await dayRepo.upsert('2026-11-12', { date: '2026-11-12', availableMin: 0, blockers: [] });
       await dayRepo.upsert('2026-11-13', { date: '2026-11-13', availableMin: 0, blockers: [] });
       const a = await task('Später', { estimateMin: 30, plannedFor: '2026-11-12' });
-      const r = await runPlanner(deps());
+      const r = await runPlanner(deps(), LAY);
       expect(r.result!.assignments[0]!.date).toBe('2026-11-14');
       expect(await stored(a.id)).toMatchObject({
         plannedFor: '2026-11-14',
@@ -388,9 +503,12 @@ describe('the service', () => {
     await modulesRow('todos', true);
     await enableModule(manifest);
     const a = await task('Später', { estimateMin: 30, plannedFor: '2026-11-12' });
-    await runPlanner(deps());
+    await runPlanner(deps(), LAY);
     await taskRepo.update(a.id, { plannedFor: undefined, planMark: undefined });
-    await runPlanner(deps());
+    // A pass nobody asked for tells the ToDo nothing; the action that names the thing writes its day, without a prior.
+    expect((await runPlanner(deps())).writeBacks).toBe(0);
+    expect((await stored(a.id))!.plannedFor).toBeUndefined();
+    await runPlanner(deps(), { force: true, touched: [`todos:${a.id}`] });
     expect(await stored(a.id)).toMatchObject({
       plannedFor: '2026-11-12',
       planMark: { date: '2026-11-12' },
@@ -406,7 +524,7 @@ describe('the service', () => {
     await modulesRow('todos', true);
     await enableModule(manifest);
     const a = await task('A', { estimateMin: 30, plannedFor: '2026-11-11' });
-    await runPlanner(deps());
+    await runPlanner(deps(), LAY);
     expect(await stored(a.id)).toMatchObject({ planMark: { prior: '2026-11-11' } });
     // The planner's own handler is not running; another listener throws.
     const err = vi.spyOn(console, 'error').mockImplementation(() => undefined);
@@ -456,13 +574,14 @@ describe('the service', () => {
         writer,
         aborted: () => off,
       }),
+      LAY,
     );
     expect(r.ran).toBe(false);
     expect(writer.onAssign).toHaveBeenCalledTimes(1);
     expect(await getMeta(LAST_RUN_KEY)).toBeUndefined();
     expect([a.id, b.id]).toHaveLength(2);
     // Already off before the run: not even the rows are written.
-    const r2 = await runPlanner(deps({ aborted: () => true }));
+    const r2 = await runPlanner(deps({ aborted: () => true }), LAY);
     expect(r2.ran).toBe(false);
     expect(await assignmentRepo.active().count()).toBe(2); // the first run's rows stay (the ToDo side cleans marks)
   });
@@ -470,9 +589,10 @@ describe('the service', () => {
   it('switching off forgets the planner’s undo entries: the toast’s Rückgängig replays nothing', async () => {
     await modulesRow('todos', true);
     await enableModule(manifest);
-    await task('A', { estimateMin: 30 });
-    const run = await runUser('x', async () => undefined);
+    const a = await task('A', { estimateMin: 30 });
+    const run = await runUser('x', async () => ({ loose: [`todos:${a.id}`] }));
     expect(run.entry).toBeDefined();
+    expect(await assignmentRepo.active().count()).toBe(1);
     const stop = start();
     await disableModule(manifest, 'delete');
     stop();
@@ -539,24 +659,28 @@ describe('council round 1', () => {
     await enableModule(manifest);
     // Today is Monday 2026-11-09; the user's own date was last Friday.
     const a = await task('Alt', { estimateMin: 30, plannedFor: '2026-11-06' });
-    await runPlanner(deps());
+    const key = `todos:${a.id}`;
+    await runPlanner(deps(), LAY);
     expect(await stored(a.id)).toMatchObject({
       plannedFor: TODAY,
       planMark: { date: TODAY, prior: '2026-11-06' },
     });
-    // Excluded by the user: the run lets go, a past prior stays away (it would land on today's card by itself).
-    await putRow(itemRepo, `todos:${a.id}`, {
+    // Excluded by the user: the run of that action lets go (the row goes, the source hears it), a past prior
+    // stays away (it would land on today's card by itself).
+    await putRow(itemRepo, key, {
       source: { module: 'todos', id: a.id },
       excluded: true,
       order: 0,
     });
-    await runPlanner(deps());
+    const out = await runPlanner(deps(), { force: true, touched: [key] });
+    expect(out.rowWrites).toBe(1);
+    expect(await rows()).toEqual([]);
     expect((await stored(a.id))!.plannedFor).toBeUndefined();
     expect((await stored(a.id))!.planMark).toBeUndefined();
     // Switching the module off: the same past date comes back (the ToDo side's own clean-up rule).
-    await putRow(itemRepo, `todos:${a.id}`, { source: { module: 'todos', id: a.id }, order: 0 });
+    await putRow(itemRepo, key, { source: { module: 'todos', id: a.id }, order: 0 });
     await taskRepo.update(a.id, { plannedFor: '2026-11-06' });
-    await runPlanner(deps());
+    await runPlanner(deps(), { force: true, loose: [key] });
     expect(await stored(a.id)).toMatchObject({
       plannedFor: TODAY,
       planMark: { prior: '2026-11-06' },
@@ -579,7 +703,7 @@ describe('council round 1', () => {
     expect(await assignmentRepo.active().count()).toBe(0);
   });
 
-  it('the gate closes, then opens: the user date is overwritten without another write', async () => {
+  it('the gate closes, then opens: no background run lays a row or writes a mark; the action that names the thing does', async () => {
     await modulesRow('todos', true);
     await modulesRow('planner', true);
     await db.table('_secrets').put({
@@ -588,24 +712,38 @@ describe('council round 1', () => {
     });
     await db.table('_meta').put({ key: PULL_COMPLETE_KEY, value: false });
     const a = await task('Später Do', { estimateMin: 30, plannedFor: '2026-11-12' });
+    const key = `todos:${a.id}`;
     setManifestsForTests(undefined);
     const stop = start();
-    await vi.waitFor(async () => expect(await rows()).toHaveLength(1), { timeout: 4000 });
-    // Gated: no copy, no mark.
-    expect((await stored(a.id))!.planMark).toBeUndefined();
-    expect(await itemRepo.get(`todos:${a.id}`)).toBeUndefined();
-    // The round ends: the flag turns true and the service runs again by itself.
-    await db.table('_meta').put({ key: PULL_COMPLETE_KEY, value: true });
-    await db.table('_meta').put({ key: 'sync.lastSyncAt', value: NOW });
+    // The service's own run happened: the thing has no day, nothing was written.
     await vi.waitFor(
       async () =>
-        expect((await stored(a.id))!.planMark).toMatchObject({
-          date: '2026-11-12',
-          prior: '2026-11-12',
-        }),
+        expect((await getMeta<LastRun>(LAST_RUN_KEY))?.unplaced).toMatchObject([
+          { id: `${key}#0`, reason: 'no-day' },
+        ]),
       { timeout: 4000 },
     );
-    expect(await itemRepo.get(`todos:${a.id}`)).toMatchObject({ earliest: '2026-11-12' });
+    expect(await rows()).toEqual([]);
+    // Gated: the person lays the thing – the row is written, the ToDo's own date is neither copied nor marked.
+    await runUser('lay', async () => ({ loose: [key] }));
+    expect(await rows()).toEqual([[`${key}#0`, '2026-11-12', 30, 0, 'new']]);
+    expect((await stored(a.id))!.planMark).toBeUndefined();
+    expect(await itemRepo.get(key)).toBeUndefined();
+    // The round ends: the flag turns true. A background run moves nothing and writes nothing back.
+    await db.table('_meta').put({ key: PULL_COMPLETE_KEY, value: true });
+    await db.table('_meta').put({ key: 'sync.lastSyncAt', value: NOW });
+    const pass = await runBackground({ force: true });
+    expect(pass!.rowWrites).toBe(0);
+    expect(pass!.writeBacks).toBe(0);
+    expect((await stored(a.id))!.planMark).toBeUndefined();
+    // The next action that names the thing writes the mark, with the person's date as prior.
+    await runUser('touch', async () => ({ touched: [key] }));
+    expect((await stored(a.id))!.planMark).toMatchObject({
+      date: '2026-11-12',
+      prior: '2026-11-12',
+    });
+    expect(await rows()).toEqual([[`${key}#0`, '2026-11-12', 30, 0, 'new']]);
+    expect(await itemRepo.get(key)).toBeUndefined();
     stop();
     await runsSettled();
   });

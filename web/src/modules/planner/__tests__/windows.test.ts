@@ -47,6 +47,8 @@ const times = async () =>
   (await assignmentRepo.active().toArray())
     .map((a) => [a.date, a.minutes, a.from, a.to] as const)
     .sort();
+/** „Alles auslegen“: the set-up of a laid plan. */
+const LAY = { force: true, reshuffle: true } as const;
 const appointment = (over: Partial<CalendarItem> = {}): CalendarItem => ({
   id: 'e1',
   source: 'calendar',
@@ -129,15 +131,38 @@ describe('days with windows', () => {
 describe('a run with windows', () => {
   it('without a window: rows as before, no times', async () => {
     await task('Steuer', { estimateMin: 120, priority: 2 });
-    await runPlanner(deps());
-    expect((await times()).every(([, , from]) => from === undefined)).toBe(true);
+    await runPlanner(deps(), LAY);
+    // One row (nothing is cut into sessions by itself), no times.
+    expect(await times()).toEqual([[TODAY, 120, undefined, undefined]]);
   });
 
   it('stores times around a timed appointment; minutes unchanged; a forced rerun writes nothing', async () => {
-    await task('Steuer', { estimateMin: 120, priority: 2 });
-    await task('Kurz', { estimateMin: 10 });
-    await runPlanner(deps());
+    const steuer = await task('Steuer', { estimateMin: 120, priority: 2 });
+    const kurz = await task('Kurz', { estimateMin: 10 });
+    // A plan from the engine's time: „Steuer“ lies in two sessions (stored parts stay parts), „Kurz“ on today.
+    const row = (
+      itemKey: string,
+      k: number,
+      of: number,
+      date: string,
+      minutes: number,
+      order = 0,
+    ) =>
+      assignmentRepo.upsert(`${itemKey}#${k}`, {
+        itemKey,
+        k,
+        of,
+        date,
+        minutes,
+        order,
+        reason: 'new',
+      });
+    await row(`todos:${steuer.id}`, 0, 2, TODAY, 60);
+    await row(`todos:${steuer.id}`, 1, 2, '2026-11-10', 60);
+    await row(`todos:${kurz.id}`, 0, 1, TODAY, 10, 1);
+    expect((await runPlanner(deps())).rowWrites).toBe(0);
     const minutesBefore = (await times()).map(([d, m]) => [d, m]);
+    // A pass nobody asked for (the window and the appointment are new): no day changes, only the times.
     await runPlanner(deps({ settings: WIN, calendar: [appointment()] }));
     // The appointment 09:30–10:30 leaves 09:00–09:30 too short for the first hour of „Steuer“:
     // it starts after the appointment, „Kurz“ follows after a short pause. Only the times are new.
@@ -156,7 +181,7 @@ describe('a run with windows', () => {
 
   it('the window going away removes the times again', async () => {
     await task('Steuer', { estimateMin: 45 });
-    await runPlanner(deps({ settings: WIN }));
+    await runPlanner(deps({ settings: WIN }), LAY);
     expect((await times())[0]).toEqual([TODAY, 45, '09:00', '09:45']);
     await runPlanner(deps());
     expect((await times())[0]).toEqual([TODAY, 45, undefined, undefined]);
