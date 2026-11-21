@@ -62,6 +62,7 @@ export function ThingRow({
   onDone,
   onLater,
   noDuration,
+  was,
 }: {
   row: BoardRow;
   /** The first row of „Zuerst“: its title is strong. */
@@ -77,6 +78,8 @@ export function ThingRow({
   onLater?: () => void;
   /** A row of „Frist vorbei“: it takes no day time, so it shows none. */
   noDuration?: boolean;
+  /** „Noch offen“: the day the row lies on, which has passed – said as „war Mo“, calm, never a tone. */
+  was?: string;
 }) {
   const navigate = useNavigate();
   // Ticked: the row fades while the source stores it, then leaves with the board's next reading.
@@ -113,6 +116,7 @@ export function ThingRow({
     facts.push(<span>{`${row.fixed.from}–${row.fixed.to}`}</span>);
     facts.push(<span>{t.planner.row.fixed}</span>);
   } else if (row.pinned) facts.push(<span>{t.planner.row.fixed}</span>);
+  if (was) facts.push(<span>{t.planner.open.was(dayName(was))}</span>);
   if (entry?.detail)
     facts.push(
       MONEY.test(entry.detail) ? (

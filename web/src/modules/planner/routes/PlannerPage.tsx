@@ -3,7 +3,7 @@ import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { getMeta, setMeta } from '@/core/db/metaKv';
 import { getLang } from '@/core/i18n/lang';
-import { explainAssignment, explainWait } from '@/core/plan/explain';
+import { dayName, explainAssignment, explainWait } from '@/core/plan/explain';
 import {
   isRestSentence,
   restToTomorrow,
@@ -24,6 +24,7 @@ import {
   GroupedList,
   ItemList,
   PageHeader,
+  Tabs,
   PHONE_QUERY,
   RowMenu,
   type RowMenuItem,
@@ -35,7 +36,7 @@ import { useHeroTargets } from '@/core/shell/heroContext';
 import { usePageAction } from '@/core/shell/pageAction';
 import { HeroFigure, HeroSlot, SignatureMark } from '@/ui/identity';
 import { addFromField, applyOps, later, markDone } from '../actions';
-import type { BoardDay, BoardRow } from '../board';
+import type { BoardDay, BoardRow, OpenRow } from '../board';
 import { Capture } from '../components/Capture';
 import { CaptureDialog } from '../components/CaptureDialog';
 import { useAbilities, useRowMenu } from '../components/rowMenu';
@@ -394,7 +395,7 @@ export default function PlannerPage() {
       }
     }
     setText('');
-    const ok = await addFromField(value, titles);
+    const ok = await addFromField(value, titles, shownDate);
     // Nothing happened (the planner was switched off meanwhile): the text comes back.
     if (!ok) {
       setText((cur) => cur || value);
@@ -529,6 +530,92 @@ export default function PlannerPage() {
       />
     );
   };
+
+  // „Noch offen“ (planner rethink): the rows of days that have passed. Nothing moved them; from here the person
+  // puts them on a day again („Verschieben …“ first in the row's ⋯). Things that are „fest“ come first.
+  const tab = params.get('tab') === 'open' ? 'open' : 'plan';
+  const openRows = data?.board.open ?? [];
+  const renderOpen = (row: OpenRow) => {
+    const tick = !!row.entry && canDone(row.entry.moduleId);
+    return (
+      <ThingRow
+        key={row.unitId}
+        row={row}
+        reason=""
+        whyOpen={false}
+        dueClock={dueClock}
+        was={row.date}
+        menu={rowMenu(row, undefined, undefined, { tick })}
+        onDone={tick ? () => done(row) : undefined}
+        onLater={
+          row.entry && canAssign(row.entry.moduleId)
+            ? () => void later(row.entry!, titles)
+            : undefined
+        }
+      />
+    );
+  };
+  const openDates = [...new Set(openRows.filter((r) => !r.pinned).map((r) => r.date))].sort();
+  const openFixed = openRows.filter((r) => r.pinned);
+  const openBlock = (
+    <div data-testid="planner-open">
+      {openRows.length === 0 ? (
+        <p className={styles.reason}>{t.planner.open.empty}</p>
+      ) : (
+        <GroupedList
+          listId="planner-open"
+          groups={[
+            ...(openFixed.length
+              ? [
+                  {
+                    id: 'fixed',
+                    label: t.planner.open.fixedGroup,
+                    count: openFixed.length,
+                    countHidden: true,
+                    children: <ItemList>{openFixed.map(renderOpen)}</ItemList>,
+                  },
+                ]
+              : []),
+            ...openDates.map((date) => {
+              const rows = openRows.filter((r) => !r.pinned && r.date === date);
+              return {
+                id: date,
+                label: `${dayName(date)} ${formatDay(date, 'd.')}`,
+                count: rows.length,
+                countHidden: true,
+                children: <ItemList>{rows.map(renderOpen)}</ItemList>,
+              };
+            }),
+          ]}
+        />
+      )}
+    </div>
+  );
+  // The tab says that something is there with a quiet dot, never with a count.
+  const tabs = (
+    <Tabs
+      label={t.planner.tabs.label}
+      value={tab}
+      options={[
+        { value: 'plan', label: t.planner.tabs.plan },
+        {
+          value: 'open',
+          label: openRows.length ? `${t.planner.tabs.open} •` : t.planner.tabs.open,
+        },
+      ]}
+      onChange={(next) =>
+        setParams(
+          (p) => {
+            const q = new URLSearchParams(p);
+            if (next === 'open') q.set('tab', 'open');
+            else q.delete('tab');
+            return q;
+          },
+          { replace: true },
+        )
+      }
+    />
+  );
 
   // A row of „Frist vorbei“: the one row form, neutral; it sits on no day, so no tick, no „Später“, no duration.
   const renderLate = (row: BoardRow) => (
@@ -759,6 +846,8 @@ export default function PlannerPage() {
           {phone ? null : capture(false)}
           {phone ? null : answer}
 
+          {tabs}
+
           {showWeekLink ? (
             <p className={styles.weekLink} data-testid="week-check-link">
               <button type="button" className={styles.textLink} onClick={() => setChecking(true)}>
@@ -773,49 +862,59 @@ export default function PlannerPage() {
             </p>
           ) : null}
 
-          {days ? (
-            <WeekBand days={days} picked={shownDate} onPick={pick} />
+          {tab === 'open' ? (
+            openBlock
           ) : (
-            <div className={styles.bandPending} aria-hidden="true" />
+            <>
+              {days ? (
+                <WeekBand days={days} picked={shownDate} onPick={pick} />
+              ) : (
+                <div className={styles.bandPending} aria-hidden="true" />
+              )}
+
+              {!wide ? <LateRow rows={late} renderRow={renderLate} /> : null}
+
+              {shownDay && days ? (
+                <DayPage
+                  key={shownDay.date}
+                  day={shownDay}
+                  tomorrow={days[1]?.date === shownDay.date}
+                  renderRow={(row, next) => renderRow(row, shownDay, next)}
+                  onEditDay={() => setSheetDate(shownDay.date)}
+                  thenOpen={thenOpen}
+                  onThenToggle={(open) =>
+                    void setMeta(phone ? THEN_NARROW_KEY : THEN_WIDE_KEY, open)
+                  }
+                  empty={emptySheet}
+                  onRest={shownDay.isToday ? () => void showRest() : undefined}
+                  // On the phone the page's ⋯ stands in the sheet's head and holds „Tage einteilen“: said once.
+                  onSetup={phone ? undefined : () => setSettingUp(true)}
+                  headEnd={phone ? pageMenuButton : undefined}
+                  dayEnd={
+                    data && dayEndOf(data.settings)
+                      ? dayEndLabel(dayEndOf(data.settings)!)
+                      : undefined
+                  }
+                  onSwipe={
+                    phone
+                      ? (dir) => {
+                          const at = days.findIndex((d) => d.date === shownDay.date);
+                          const to = days[at + dir];
+                          if (to) pick(to.date);
+                        }
+                      : undefined
+                  }
+                />
+              ) : (
+                <DayPageLoading />
+              )}
+
+              {/* A training whose day passed unlogged: asked once, quietly, under today's sheet only. */}
+              {shownDay?.isToday && data ? (
+                <PassedTrainings today={data.today} titles={titles} />
+              ) : null}
+            </>
           )}
-
-          {!wide ? <LateRow rows={late} renderRow={renderLate} /> : null}
-
-          {shownDay && days ? (
-            <DayPage
-              key={shownDay.date}
-              day={shownDay}
-              tomorrow={days[1]?.date === shownDay.date}
-              renderRow={(row, next) => renderRow(row, shownDay, next)}
-              onEditDay={() => setSheetDate(shownDay.date)}
-              thenOpen={thenOpen}
-              onThenToggle={(open) => void setMeta(phone ? THEN_NARROW_KEY : THEN_WIDE_KEY, open)}
-              empty={emptySheet}
-              onRest={shownDay.isToday ? () => void showRest() : undefined}
-              // On the phone the page's ⋯ stands in the sheet's head and holds „Tage einteilen“: said once.
-              onSetup={phone ? undefined : () => setSettingUp(true)}
-              headEnd={phone ? pageMenuButton : undefined}
-              dayEnd={
-                data && dayEndOf(data.settings) ? dayEndLabel(dayEndOf(data.settings)!) : undefined
-              }
-              onSwipe={
-                phone
-                  ? (dir) => {
-                      const at = days.findIndex((d) => d.date === shownDay.date);
-                      const to = days[at + dir];
-                      if (to) pick(to.date);
-                    }
-                  : undefined
-              }
-            />
-          ) : (
-            <DayPageLoading />
-          )}
-
-          {/* A training whose day passed unlogged: asked once, quietly, under today's sheet only. */}
-          {shownDay?.isToday && data ? (
-            <PassedTrainings today={data.today} titles={titles} />
-          ) : null}
 
           {/* Not wide: the context follows the sheet in the one column. */}
           {!wide && hasContext ? <aside aria-label={t.planner.ctx.label}>{context}</aside> : null}

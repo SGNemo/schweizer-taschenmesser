@@ -1,5 +1,4 @@
 import type { AfterSeedContext, SeedContext, SeedModule, SeedRows } from '@/core/seed/types';
-import { getPlannerSettings } from './prefs';
 import { assignmentRepo, itemKeyOf, itemRepo } from './repo';
 import { resumeRuns, runBackground, suspendRuns } from './services';
 
@@ -128,9 +127,6 @@ const SEED_SOURCES: readonly (readonly [string, string])[] = [
  * exist (runs never create days), so every day row is the seed's or the person's.
  */
 async function afterSeed(ctx: AfterSeedContext): Promise<{ collection: string; ids: string[] }[]> {
-  // Automatic planning switched off: the test data gets no run either (a run would also touch the
-  // person's own things); rows a later planner action makes for seed tasks are a known dev-data edge.
-  if (!(await getPlannerSettings()).autoReplan) return [];
   const seedKeys = new Set<string>();
   for (const [moduleId, collection] of SEED_SOURCES)
     for (const id of await ctx.seeded(moduleId, collection)) seedKeys.add(itemKeyOf(moduleId, id));
@@ -142,7 +138,8 @@ async function afterSeed(ctx: AfterSeedContext): Promise<{ collection: string; i
       if (seedKeys.has(key.slice(0, i))) return true;
     return false;
   };
-  await runBackground({ force: true });
+  // The test data is laid out once (every thing handed to the engine); afterwards it stays like any plan.
+  await runBackground({ force: true, reshuffle: true });
   // Every row of a seed task – also one the service's own run wrote before this hook (re-registering is harmless),
   // and also a deleted one: on a slow device the service runs between the todos rows and the planner's own rows,
   // plans the task that is meant to stay out, and the run above takes that row away again. Its tombstone is test

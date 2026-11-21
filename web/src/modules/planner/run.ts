@@ -7,7 +7,6 @@
  */
 import { getMeta, setMeta } from '@/core/db/metaKv';
 import { addDays } from '@/core/plan/dates';
-import { diffPlans } from '@/core/plan/diff';
 import { plan } from '@/core/plan/engine';
 import type { PlanOp } from '@/core/plan/instructions';
 import type {
@@ -85,8 +84,10 @@ export interface RunInputs {
   itemRows: Map<string, PlanItemRow>;
   /** Item key → the user's own date (a source date the planner does not own), if any. */
   userDates: Map<string, string>;
-  /** The planner's copy of a user's date (`item.earliest`) is out of step (new, changed or cleared): a run must bring it in step. */
-  pendingEarliest: boolean;
+  /** Items with a row that is „fest“: no proposal takes them. */
+  lockedKeys: Set<string>;
+  /** Items whose rows a run takes away: „Nicht planen“ and late money. Nothing else is ever removed by a run. */
+  removeKeys: Set<string>;
   settings: PlanSettings;
   hash: string;
   titles: Record<string, string>;
@@ -184,6 +185,13 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
     })),
     ...(window ? { window } : {}),
   }));
+  const prevRows = new Map<string, AssignmentRow & { id: string }>(
+    (await repos.assignment.active().toArray()).map((r) => [r.id, r]),
+  );
+  const inParts = new Set([...prevRows.values()].filter((r) => r.k > 0).map((r) => r.itemKey));
+  const lockedKeys = new Set([...prevRows.values()].filter((r) => r.locked).map((r) => r.itemKey));
+  // Rows the run itself may take away: of a thing the person took out („Nicht planen“) and of late money (D7).
+  const removeKeys = new Set<string>();
   const userDates = new Map<string, string>();
   const titles: Record<string, string> = {};
   const items: PlanItem[] = [];
@@ -195,7 +203,11 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
     // „Frist vorbei“ (D7): late money is no item of the run – it sits on no day, counts in no sum and no
     // sentence moves it. Its stored session rows go with this run (`writeRows`), a mark on its source with the
     // write-back (`writeBackPlan`); the input hash changes with the item list, so that run happens.
-    if (lateMoneyDue(e, row, deps.today)) continue;
+    if (lateMoneyDue(e, row, deps.today)) {
+      removeKeys.add(key);
+      continue;
+    }
+    if (row?.excluded) removeKeys.add(key);
     const userDate = e.plannedFor && !isPlannerOwned(e) ? e.plannedFor : undefined;
     if (userDate) userDates.set(key, userDate);
     const dueAny = row?.due?.hard ? row.due : (e.due ?? row?.due);
@@ -214,29 +226,21 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
         ? { earliest: max(e.earliest, userDate ?? row?.earliest) }
         : {}),
       ...(row?.pinned ? { pinned: row.pinned } : {}),
-      splittable: row?.splittable ?? true,
+      // Nothing is cut into sessions by itself any more (planner rethink): a thing is one unit unless its stored
+      // rows already are parts from the engine's time.
+      splittable: inParts.has(key),
       ...(row?.excluded ? { excluded: true } : {}),
       ...(row?.part ? { part: row.part } : {}),
       ...(fixed ? { fixed } : {}),
       createdAt: e.createdAt ?? 0,
     });
   }
-  const prevRows = new Map<string, AssignmentRow & { id: string }>(
-    (await repos.assignment.active().toArray()).map((r) => [r.id, r]),
-  );
   const prev: PrevAssignment[] = [...prevRows.values()].map((r) => ({
     id: r.id,
     date: r.date,
     reason: r.reason,
     ...(r.bumpedBy ? { bumpedBy: r.bumpedBy } : {}),
   }));
-  const pendingEarliest = entries.some((e) => {
-    if (e.done) return false;
-    const key = itemKeyOf(e.moduleId, e.id);
-    const row = itemRows.get(key);
-    const userDate = userDates.get(key);
-    return userDate ? row?.earliest !== userDate : !e.plannedFor && row?.earliest !== undefined;
-  });
   // Days with a fixed block (S4): what it takes depends on the blocker times it overlaps (`fixedCharges`).
   const fixedDays = new Set(items.flatMap((i) => (i.fixed ? [i.fixed.date] : [])));
   const hash = fnv1a(
@@ -266,7 +270,8 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
     prevRows,
     itemRows,
     userDates,
-    pendingEarliest,
+    lockedKeys,
+    removeKeys,
     settings,
     hash,
     titles,
@@ -304,67 +309,11 @@ export interface RunOutcome {
   prevOverflowMin?: number;
 }
 
-/** Keeps the planner-owned item rows in step with the user's own date (copy, replace, remove) – only while the gate is open. */
-async function syncEarliest(
-  inputs: RunInputs,
-  repos: PlannerRepos,
-  settled: boolean,
-): Promise<number> {
-  if (!settled) return 0;
-  let n = 0;
-  for (const e of inputs.entries) {
-    if (e.done) continue;
-    const key = itemKeyOf(e.moduleId, e.id);
-    const row = inputs.itemRows.get(key);
-    const userDate = inputs.userDates.get(key);
-    if (userDate) {
-      if (row?.earliest === userDate) continue;
-      const data: PlanItemRow = row
-        ? { ...rowData(row), earliest: userDate }
-        : { source: { module: e.moduleId, id: e.id }, order: 0, earliest: userDate };
-      if (await putRow(repos.item, key, data)) n++;
-    } else if (!e.plannedFor && row?.earliest) {
-      // The user cleared the date: the copy goes too.
-      const { earliest: _gone, ...rest } = rowData(row);
-      void _gone;
-      if (await putRow(repos.item, key, rest)) n++;
-    }
-  }
-  return n;
-}
-
-const rowData = (row: PlanItemRow): PlanItemRow => {
-  const {
-    source,
-    title,
-    durationMin,
-    priority,
-    due,
-    earliest,
-    pinned,
-    splittable,
-    excluded,
-    part,
-    skipped,
-    order,
-  } = row;
-  return {
-    source,
-    ...(title !== undefined ? { title } : {}),
-    ...(durationMin !== undefined ? { durationMin } : {}),
-    ...(priority !== undefined ? { priority } : {}),
-    ...(due ? { due } : {}),
-    ...(earliest ? { earliest } : {}),
-    ...(pinned ? { pinned } : {}),
-    ...(splittable !== undefined ? { splittable } : {}),
-    ...(excluded ? { excluded } : {}),
-    ...(part ? { part } : {}),
-    ...(skipped ? { skipped } : {}),
-    order,
-  };
-};
-
-/** Writes the engine's assignments in place and removes the units that stopped being placed. */
+/**
+ * Writes the engine's assignments in place. A row is taken away only for a thing the person took out of the plan
+ * („Nicht planen“) or for late money (`removeKeys`): a thing that is done, not listed right now (its module is
+ * off, its source failed) or lies on a passed day keeps its row – the board hides it, nothing tidies it.
+ */
 export async function writeRows(
   result: PlanResult,
   inputs: RunInputs,
@@ -384,6 +333,8 @@ export async function writeRows(
       minutes: a.minutes,
       order: a.order,
       reason: a.reason,
+      // „fest“ belongs to the row and survives every run; a thing a proposal moved was never locked.
+      ...(inputs.prevRows.get(a.id)?.locked ? { locked: true } : {}),
       ...(a.bumpedBy?.length ? { bumpedBy: a.bumpedBy } : {}),
       ...(a.late ? { late: true } : {}),
       ...(a.from && a.to ? { from: a.from, to: a.to } : {}),
@@ -393,6 +344,7 @@ export async function writeRows(
   for (const id of inputs.prevRows.keys()) {
     if (aborted?.()) return n;
     if (live.has(id)) continue;
+    if (!inputs.removeKeys.has(inputs.prevRows.get(id)!.itemKey)) continue;
     await repos.assignment.remove(id);
     n++;
   }
@@ -408,14 +360,24 @@ export async function writeBackPlan(
   result: PlanResult,
   inputs: RunInputs,
   deps: RunDeps,
+  touched?: ReadonlySet<string>,
 ): Promise<number> {
   const writer: SourceWriter = deps.writer ?? defaultWriter(deps.manifests);
-  const first = firstDays(result.assignments);
+  // A day that has passed is still the thing's day (it is „Noch offen“ there): the rows the engine left alone
+  // count like the ones it set, so a missed thing keeps its date at the source.
+  const keptRows = (result.kept ?? []).flatMap((id) => {
+    const r = inputs.prevRows.get(id);
+    return r ? [r as Assignment] : [];
+  });
+  const first = firstDays([...result.assignments, ...keptRows]);
   let n = 0;
   for (const e of inputs.entries) {
     if (deps.aborted?.()) break;
     if (e.done) continue;
     const key = itemKeyOf(e.moduleId, e.id);
+    // The plan stays put: a source hears about a day only from the action that named the thing (`touched`).
+    // A pass nobody asked for (start, midnight, an edit elsewhere) tells no source anything.
+    if (touched && !touched.has(key)) continue;
     const userSet = inputs.userDates.has(key);
     if (!deps.settled && userSet) continue; // gate closed: used in memory only
     const target = first.get(key);
@@ -452,34 +414,46 @@ function defaultWriter(manifests: readonly ModuleManifest[]): SourceWriter {
  */
 export async function runPlanner(
   deps: RunDeps,
-  opts: { force?: boolean; reshuffle?: boolean } = {},
+  opts: {
+    force?: boolean;
+    /** „alles neu mischen“: every thing that is not „fest“ is handed to the engine. */
+    reshuffle?: boolean;
+    /** Item keys the action hands to the engine (placed or moved by its rules); everything else stays. */
+    loose?: readonly string[];
+    /** Item keys the action named besides the loose ones: their source is told the day. */
+    touched?: readonly string[];
+    /** The ops of a sentence or sheet that was applied: what they hand over is read like in the preview (`looseOf`). */
+    ops?: readonly PlanOp[];
+  } = {},
 ): Promise<RunOutcome> {
   const repos = plannerRepos(deps.database);
   const inputs = await buildInputs(deps, repos);
   const last = await getMeta<LastRun>(LAST_RUN_KEY, deps.database);
   const rowsSig = rowsSignature([...inputs.prevRows.values()]);
-  if (
-    !opts.force &&
-    last &&
-    last.hash === inputs.hash &&
-    last.rowsSig === rowsSig &&
-    !(deps.settled && inputs.pendingEarliest)
-  )
+  if (!opts.force && last && last.hash === inputs.hash && last.rowsSig === rowsSig)
     return { ran: false, inputs, rowWrites: 0, writeBacks: 0 };
   const bail = () => deps.aborted?.() === true;
   if (bail()) return { ran: false, inputs, rowWrites: 0, writeBacks: 0 };
-  let rowWrites = await syncEarliest(inputs, repos, deps.settled);
+  // What lies stays (docs/design/planner-rethink): the engine only gets the things the action handed over.
+  const loose = opts.reshuffle
+    ? looseAll(inputs)
+    : [...new Set([...(opts.loose ?? []), ...looseOf(inputs, opts.ops ?? [])])];
   const result = plan({
     today: deps.today,
     days: inputs.days,
     items: inputs.items,
-    // „alles neu mischen“: the one explicit reshuffle starts from an empty plan (CONCEPT §3 rule 6).
-    prev: opts.reshuffle ? [] : inputs.prev,
+    prev: inputs.prev,
+    loose,
     settings: inputs.settings,
   });
-  if (bail()) return { ran: false, inputs, rowWrites, writeBacks: 0 };
-  rowWrites += await writeRows(result, inputs, repos, deps.aborted);
-  const writeBacks = await writeBackPlan(result, inputs, deps);
+  if (bail()) return { ran: false, inputs, rowWrites: 0, writeBacks: 0 };
+  const rowWrites = await writeRows(result, inputs, repos, deps.aborted);
+  const writeBacks = await writeBackPlan(
+    result,
+    inputs,
+    deps,
+    new Set([...loose, ...(opts.touched ?? [])]),
+  );
   if (bail()) return { ran: false, inputs, rowWrites, writeBacks };
   const written = (await repos.assignment.active().toArray()) as (AssignmentRow & { id: string })[];
   const lastRun: LastRun = {
@@ -582,12 +556,11 @@ export async function previewPlanner(
     today: deps.today,
     days: next.days,
     items: next.items,
-    prev: next.reshuffle ? [] : inputs.prev,
+    prev: inputs.prev,
+    loose: looseOf(inputs, ops, extra),
     settings: next.settings,
   });
-  // A reshuffle compares with what is stored, not with the empty plan it started from.
-  const diff = next.reshuffle ? diffAgainst(inputs.prev, result) : result.diff;
-  return { result: { ...result, diff }, titles: inputs.titles, prev: inputs.prev };
+  return { result, titles: inputs.titles, prev: inputs.prev };
 }
 
 export interface PreviewOutcome {
@@ -596,10 +569,31 @@ export interface PreviewOutcome {
   prev: PrevAssignment[];
 }
 
-/** Moves and new units between stored rows and a fresh result (causes unknown: `carried`/`pulled` by direction). */
-function diffAgainst(prev: readonly PrevAssignment[], next: PlanResult): PlanResult['diff'] {
-  const live = new Set([...next.assignments, ...next.unplaced].map((u) => u.id));
-  return diffPlans(prev, next.assignments, [], live);
+/** Every thing a proposal may take: all that is not „fest“. */
+export function looseAll(inputs: Pick<RunInputs, 'items' | 'lockedKeys'>): string[] {
+  return inputs.items.filter((i) => !inputs.lockedKeys.has(i.key)).map((i) => i.key);
+}
+
+/**
+ * What a sentence or a sheet hands to the engine: the things an op names for another day (`pin`, `earliest`), the
+ * typed things that are not stored yet (`extra`), and for „neu verteilen“ every thing without a day – for „alles
+ * neu mischen“ every thing that is not „fest“. A spread never takes a thing that is „fest“; a move the person
+ * names herself („schieb X auf Mi“) may.
+ */
+export function looseOf(
+  inputs: Pick<RunInputs, 'items' | 'lockedKeys' | 'prevRows'>,
+  ops: readonly PlanOp[],
+  extra: readonly PlanItem[] = [],
+): string[] {
+  const out = new Set<string>(extra.map((i) => i.key));
+  const laid = new Set([...inputs.prevRows.values()].map((r) => r.itemKey));
+  for (const op of ops) {
+    if (op.op === 'pin' || op.op === 'earliest') out.add(op.key);
+    if (op.op === 'replan')
+      for (const i of inputs.items) if (op.reshuffle || !laid.has(i.key)) out.add(i.key);
+  }
+  const named = new Set(ops.flatMap((op) => (op.op === 'pin' ? [op.key] : [])));
+  return [...out].filter((k) => named.has(k) || !inputs.lockedKeys.has(k));
 }
 
 /**
