@@ -35,8 +35,9 @@ Part of [CONCEPT](CONCEPT.md). Rules: [FOCUS-WORDING](../FOCUS-WORDING.md) (no g
 | Move, keyboard hint (menu) | Verschieben … (M) | Move … (M) | – |
 | Split | In Teile aufteilen … | Split into parts … | „Sitzungen“ |
 | Setting (was „Automatisch neu planen“) | Neues automatisch vorschlagen | Suggest a day for new things | – |
-| Setting, help | Was du im Planer einträgst, liegt auf dem Tag, den du ansiehst. Neues von woanders liegt ohne Tag; mit Frist bekommt es einen Vorschlag. An: auch ohne Frist. Verschoben wird nie von selbst. | What you enter in the planner sits on the day you look at. New things from elsewhere have no day; with a deadline they get a suggestion. On: also without one. Nothing ever moves by itself. | „Neues liegt ohne Tag“ alone (reads as: what I type goes nowhere) |
-| Date set in ToDos, chip | In ToDos: Do | In ToDos: Thu | laying it silently |
+| Setting, help | Was du im Planer einträgst, liegt auf dem Tag, den du ansiehst. Neues aus anderen Bereichen liegt ohne Tag, außer es hat dort schon einen Termin; mit Frist bekommt es einen Vorschlag. An: auch ohne Frist. Verschoben wird nie von selbst. | What you enter in the planner sits on the day you look at. New things from other areas have no day unless they are dated there; with a deadline they get a suggestion. On: also without one. Nothing ever moves by itself. | „Neues liegt ohne Tag“ alone (reads as: what I type goes nowhere) |
+| Date set in ToDos, muted row | In ToDos: Do · Hierher legen | In ToDos: Thu · Place here | laying it silently |
+| Day without time in band and grid | – (name: „keine Zeit“) | – | „frei“ (means free time), „Tag frei“ |
 | Field examples | Zahnarzt Do fest · Steuer 2 Std bis Fr · Do frei halten | – (German parser only) | „Donnerstag frei“ stays understood; „lock“ and a trailing „!“ lock too |
 | Week band, paging | Woche davor · Woche danach · Heute | Previous week · Next week · Today | – |
 | View switch | Woche · 4 Wochen | Week · 4 weeks | „Monat“ (it is not a calendar month) |

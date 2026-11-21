@@ -40,7 +40,7 @@ Acceptance for package 1: on a copy of the seed and on a plan shaped like U1 aft
 ## 4. ToDos: one truth, one direction
 
 - **The row is the only truth about the day in the planner.** Planner → ToDo: the action that sets, moves or removes a placement writes `plannedFor` + `planMark { date, order }` for that thing (`onAssign`) in the same undo entry; it never writes `prior`. No pass over all things, no write when only the lock or the order of another thing changes.
-- **A date set in ToDos is not copied into the plan.** Where the ToDo's own date (mark missing or for another day) differs from the row – or there is no row – the planner shows the thing where its row says (or under „Noch ohne Tag“) with the chip „In ToDos: Do“; one tap lays it there. So: no bus mirror, no background adoption, no loop, and a ToDo undo needs no second undo in the planner. Named cost: „Für heute“ tapped in ToDos shows on the „Heute“ card at once and in the planner as a chip until taken.
+- **A date set in ToDos is not copied into the plan.** Where the ToDo's own date (mark missing or for another day) differs from the row – or there is no row – the planner shows a muted row with the chip „In ToDos: Do“ **on that date's sheet** (so „Für heute“ is visible on today at once); one tap („Hierher legen“) lays it there. The row is derived, never stored, counts for no load, and a date before today shows the chip under „Noch ohne Tag“ instead. So: no bus mirror, no background adoption, no loop, and a ToDo undo needs no second undo in the planner. Named cost: one tap in the planner until the thing counts as laid.
 - **Scope of `dayOf`:** the planner's own surfaces, its calendar chips and widget, and the readers of the rows (`quickCapture/targets/index.ts:232`, mail „Im Plan · Mi“). The ToDo views keep reading `plannedFor`.
 - **Switching the planner off:** `plannedFor` stays on the ToDo as his date and the mark is cleared; only where a `planMark.prior` from the engine's time exists, that date comes back as today (`modules/todos/planMark.ts:19`). Policy „keep“: rows stay and show again on re-enable. Policy „delete“: rows, locks and parts are gone; on re-enable the ToDos carry their dates and show the chip „In ToDos: …“ – nothing is laid without a tap.
 - **Sync gate** `syncSettled()`: needed for the migration only.
@@ -59,7 +59,7 @@ Acceptance for package 1: on a copy of the seed and on a plan shaped like U1 aft
 | carries a deadline only (invoice, cancellation, document, gift, packing list) | „Noch ohne Tag“ with the chip „Vorschlag: Do · Frist Fr“; one tap lays it (question 2) |
 | timed block (`fixed`) and habit blocks | shown at their time, never a placement, never movable here |
 | asked in by „In den Plan“ (`plan.requested`) | laid on the day asked for, else today |
-| a ToDo dated in ToDos | chip „In ToDos: Do“ (§4) |
+| a ToDo dated in ToDos | muted row with the chip „In ToDos: Do“ on that day (§4) |
 | everything else | „Noch ohne Tag“ |
 
 `day?` is the one change to the `plannable` contract (`core/modules/types.ts`, a hotspot: heads-up in the notes repo before package 1 starts).
