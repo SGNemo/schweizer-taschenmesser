@@ -71,7 +71,7 @@ export const tLegal = defineBundle(
       },
       google: {
         title: 'Google-Verbindung (Windows)',
-        what: 'Anmeldung bei Google mit deiner eigenen OAuth-Anwendung (nur Lesen). Kalender: Termine der gewählten Kalender, ab 60 Tage zurück bis 400 Tage voraus. E-Mail: nur auf deinen Klick Absender, Betreff, Datum und Abmelde-Kopfzeile passender Mails und ob die letzte Nachricht von dir ist (nur auf dem Gerät), nie der Inhalt. Berechtigungen: calendar.readonly und gmail.readonly, je nach Auswahl.',
+        what: 'Anmeldung bei Google mit deiner eigenen OAuth-Anwendung. Kalender (nur Lesen): Termine der gewählten Kalender, ab 60 Tage zurück bis 400 Tage voraus. E-Mail (nur mit dem Modul „Mail“): Absender, Betreff, Datum, Text und Anhänge der Mails, die du ansiehst, und ob die letzte Nachricht von dir ist (nur auf dem Gerät). Gelesene Mail-Texte bleiben verschlüsselt auf diesem Gerät: kein Sync, keine Cloud-KI. Archivieren, Markieren, Löschen und Senden erst, wenn du diese Zusatzrechte einschaltest. Berechtigungen: calendar.readonly und gmail.readonly, je nach Auswahl; auf Wunsch gmail.modify und gmail.send.',
         to: 'Google (accounts.google.com, oauth2.googleapis.com, www.googleapis.com, gmail.googleapis.com). Der Betreiber von Nemo erhält nichts.',
         when: 'Nur nach dem Verbinden. Kalender-Abgleich im Hintergrund etwa alle 30 Minuten. Trennen widerruft den Zugriff. Das Zugriffs-Token läuft ab, wenn dein Google-Projekt im Status „Testing“ ist (nach 7 Tagen): dann „Neu anmelden“.',
       },
@@ -171,7 +171,7 @@ export const tLegal = defineBundle(
       'connector-google': {
         title: 'Du verbindest ein Google-Konto',
         body: [
-          'Nemo liest mit deiner eigenen Google-Anwendung nur: Kalender (calendar.readonly) und/oder die Köpfe von E-Mails (gmail.readonly), je nach Auswahl. Die Daten gehen von Google direkt an dieses Gerät, nicht an den Betreiber von Nemo.',
+          'Nemo liest mit deiner eigenen Google-Anwendung, je nach Auswahl: Kalender (calendar.readonly) und/oder deine E-Mails samt Text und Anhängen (gmail.readonly). Senden und Aufräumen (gmail.send, gmail.modify) nur, wenn du diese Zusatzrechte einschaltest. Die Daten gehen von Google direkt an dieses Gerät, nicht an den Betreiber von Nemo.',
           'Google verarbeitet die Anmeldung nach eigenen Regeln. Steht dein Google-Projekt auf „Testing“, läuft die Anmeldung nach 7 Tagen ab; dann hilft „Neu anmelden“. Trennen widerruft den Zugriff.',
         ],
       },
@@ -321,7 +321,7 @@ export const tLegal = defineBundle(
         },
         google: {
           title: 'Google connection (Windows)',
-          what: 'Sign-in to Google with your own OAuth application (read only). Calendar: events of the chosen calendars, from 60 days back to 400 days ahead. Email: only when you click, sender, subject, date and unsubscribe header of matching mails and whether the last message is yours (on this device only), never the content. Permissions: calendar.readonly and gmail.readonly, depending on your choice.',
+          what: 'Sign-in to Google with your own OAuth application. Calendar (read only): events of the chosen calendars, from 60 days back to 400 days ahead. Email (only with the Mail module): sender, subject, date, text and attachments of the mails you look at, and whether the last message is yours (on this device only). Mail texts you have read stay encrypted on this device: no sync, no cloud AI. Archiving, marking, deleting and sending only once you switch on these extra permissions. Permissions: calendar.readonly and gmail.readonly, depending on your choice; gmail.modify and gmail.send if you want them.',
           to: 'Google (accounts.google.com, oauth2.googleapis.com, www.googleapis.com, gmail.googleapis.com). The maintainer of Nemo receives nothing.',
           when: 'Only after connecting. Calendar sync in the background about every 30 minutes. Disconnecting revokes access. The access token expires if your Google project is in “Testing” status (after 7 days): then use “Neu anmelden” (sign in again).',
         },
@@ -421,7 +421,7 @@ export const tLegal = defineBundle(
         'connector-google': {
           title: 'You are connecting a Google account',
           body: [
-            'With your own Google application, Nemo only reads: calendar (calendar.readonly) and/or email headers (gmail.readonly), depending on your choice. The data goes from Google straight to this device, not to the maintainer of Nemo.',
+            'With your own Google application, Nemo reads, depending on your choice: calendar (calendar.readonly) and/or your emails including text and attachments (gmail.readonly). Sending and tidying up (gmail.send, gmail.modify) only if you switch on these extra permissions. The data goes from Google straight to this device, not to the maintainer of Nemo.',
             'Google processes the sign-in under its own rules. If your Google project is in “Testing” status, the sign-in expires after 7 days; “Sign in again” fixes that. Disconnecting revokes access.',
           ],
         },

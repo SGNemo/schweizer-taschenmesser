@@ -5,7 +5,7 @@
 ## In Kürze
 
 - **Lokal zuerst:** Alle Daten liegen in der Datenbank des Geräts (IndexedDB bzw. App-Speicher). Es gibt kein Konto und keinen Cloud-Dienst von Nemo.
-- **Sync ist optional** und läuft nur über einen Server, den du selbst betreibst. Inhalte lassen sich Ende-zu-Ende verschlüsseln; der Server sieht dann nur Sammlung, IDs und Zeitstempel.
+- **Sync ist optional** und läuft nur über einen Server, den du selbst betreibst, oder im Heimnetz direkt zwischen deinen gekoppelten Geräten (immer verschlüsselt). Inhalte lassen sich Ende-zu-Ende verschlüsseln; der Server sieht dann nur Sammlung, IDs und Zeitstempel.
 - **KI sieht keine Daten:** Der Assistent schickt nur deine Frage, das Datum und die Feldnamen der aktiven Module an einen Anbieter, niemals Einträge. Zwei Ausnahmen löst nur du selbst aus: im Chat kannst du Daten eines Moduls anhängen (die App zeigt vorher genau, was mitgeschickt wird), und über die lokale Import-Schnittstelle kannst du einer KI auf deinem PC Leserechte für einzelne Module geben. Der Passwort-Tresor ist für KI, Suche und Import unsichtbar.
 - **Passwörter:** Tresor mit Argon2id und AES-256-GCM, Schlüssel im Betriebssystem-Keystore (Windows Credential Manager, Android Keystore), optional Biometrie; Screenshot-Schutz in der Android-App.
 - **Downloads sind signiert:** Der Update-Inhalt ist mit dem Update-Schlüssel des Projekts signiert und wird vor dem Einspielen geprüft; die APK ist mit dem Projekt-Keystore signiert. Ein Windows-Code-Signing-Zertifikat gibt es nicht (SmartScreen-Hinweis beim ersten Start). Die App fragt einmal täglich bei GitHub nach Updates (beim Start und beim Wechsel in den Vordergrund); GitHub sieht dabei deine IP-Adresse. Abschaltbar unter Einstellungen → Updates.
@@ -21,7 +21,10 @@ Diese Verbindungen baut die App nur in den genannten Fällen auf; außer deiner 
 - **api.ipify.org** – nur auf Klick auf „Öffentliche IP abfragen“ (Dieser PC → System).
 - **huggingface.co** – Download des lokalen KI-Modells, erst nach deiner Bestätigung (Prüfsumme wird kontrolliert).
 - **Feed- und Kalender-Adressen**, die du abonniert hast – in der App direkt, im Browser über den Proxy deines eigenen Sync-Servers.
-- **Google** und **Spotify** – nur mit einer von dir eingerichteten Verbindung (Spotify: was gerade läuft und ein paar Steuerbefehle; Titel und Interpret bleiben auf diesem Gerät); **KI-Anbieter** – nur mit einem von dir hinterlegten Schlüssel.
+- **Google** und **Spotify** – nur mit einer von dir eingerichteten Verbindung (Google: Kalender; mit dem Modul Mail deine E-Mails samt Text und Anhängen, Senden und Aufräumen nur mit den Zusatzrechten. Spotify: was gerade läuft, deine Playlists und Bibliothek, Steuerbefehle; Titel und Interpret bleiben auf diesem Gerät); **KI-Anbieter** – nur mit einem von dir hinterlegten Schlüssel.
+- **Karten** (OpenStreetMap: Kacheln, Nominatim, Routing, Overpass; transitous.org) – nur im Modul Karten: der Kartenausschnitt, dein Suchbegriff, Start und Ziel einer Route.
+- **Eingebauter Browser, Downloads, Torrent** (Windows, jeweils aus, bis du sie einschaltest) – die Seiten und Dateien, die du anforderst; Torrent zeigt deine IP-Adresse anderen Teilnehmern, Trackern und dem DHT-Netz und bietet geladene Teile zugleich an.
+- **Heimnetz** – Abgleich, Austausch und Fernsteuerung zwischen deinen eigenen gekoppelten Geräten im selben WLAN, verschlüsselt, ohne Server; der PC meldet sich dafür im eigenen WLAN.
 
 ### Sync-Server absichern
 
