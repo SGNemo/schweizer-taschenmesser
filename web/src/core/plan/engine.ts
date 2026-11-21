@@ -67,13 +67,34 @@ export function plan(input: PlanInput): PlanResult {
   // A previous day beyond the horizon (it shrank, or the row is old) is no plan any more: the unit is
   // new again, otherwise rule 5 would skip it on every day and the fixpoint would need a second run.
   const lastDay = horizon.at(-1)?.date;
+  // The plan stays put: with `loose` only the named items may be placed or moved (see `PlanInput.loose`).
+  const staying = input.loose !== undefined;
+  const looseKeys = new Set(input.loose ?? []);
+  const keyOfUnit = (id: string) => id.slice(0, id.lastIndexOf('#'));
+  const isLoose = (id: string): boolean => !staying || looseKeys.has(keyOfUnit(id));
+  const firstDay = horizon[0]?.date;
+  // A day that stays: inside the planned days, of a unit nobody handed over.
+  const stays = (a: PrevAssignment): boolean =>
+    staying &&
+    !isLoose(a.id) &&
+    firstDay !== undefined &&
+    a.date >= firstDay &&
+    a.date <= (lastDay ?? '');
+  // Left alone: a unit nobody handed over whose day has passed or lies beyond the planned days.
+  const keptIds = new Set(
+    staying ? prev.filter((a) => !isLoose(a.id) && !stays(a)).map((a) => a.id) : [],
+  );
   const prevByUnit = new Map(
-    prev.filter((a) => lastDay === undefined || a.date <= lastDay).map((a) => [a.id, a]),
+    prev
+      .filter((a) => (staying ? stays(a) : lastDay === undefined || a.date <= lastDay))
+      .map((a) => [a.id, a]),
   );
   const all = input.items.filter((i) => !i.done && !i.excluded).flatMap((i) => toUnits(i, s));
   const unitById = new Map(all.map((u) => [u.id, u]));
   // Fixed blocks (S4) are placed by their own rule 2b only: no other rule sees them, so none can move them.
-  const units = all.filter((u) => !u.item.fixed);
+  // With `loose` the rules only see the handed-over units; the rest is set by the stay rule or left alone.
+  const nonFixed = all.filter((u) => !u.item.fixed);
+  const units = staying ? nonFixed.filter((u) => isLoose(u.id)) : nonFixed;
   const fixedUnits = all.filter((u) => u.item.fixed);
   let fixedDemand = 0;
   const placed = new Map<string, Assignment>();
@@ -160,6 +181,13 @@ export function plan(input: PlanInput): PlanResult {
       }
     });
 
+    // The stay rule: what lies on this day and was not handed over stays, whatever the room. It keeps its
+    // stored cause; the day's sums count it, so the rules below only fill what is left.
+    if (staying)
+      for (const u of nonFixed) {
+        const p = prevByUnit.get(u.id);
+        if (p && p.date === day.date && !placed.has(u.id)) put(u, p.reason);
+      }
     // Rule 3: pinned – the user nailed the item to this day; capacity is not asked (overload is counted).
     for (const u of units) if (u.item.pinned === day.date && eligible(u)) put(u, 'pinned');
 
@@ -317,9 +345,15 @@ export function plan(input: PlanInput): PlanResult {
 
   // Rule 7: honest output – late and unplaced units, with their reason.
   const unplaced: Unplaced[] = [];
-  for (const u of units) {
+  for (const u of nonFixed) {
+    if (keptIds.has(u.id)) continue;
     const a = placed.get(u.id);
     const base = { id: u.id, itemKey: u.itemKey, k: u.k, of: u.of, minutes: u.minutes };
+    // Not handed over and never laid: it has no day and asks for none.
+    if (!a && staying && !isLoose(u.id)) {
+      unplaced.push({ ...base, reason: 'no-day' });
+      continue;
+    }
     if (a && u.item.due?.hard && a.date > u.item.due.date) {
       a.late = true;
       unplaced.push({ ...base, reason: 'after-hard-due', date: a.date, due: u.item.due.date });
@@ -340,9 +374,17 @@ export function plan(input: PlanInput): PlanResult {
   }
 
   // The diff names every row that changes, also one from a day beyond the horizon (moved, or removed).
-  const diff = diffPlans(prev, assignments, bumps, new Set(unitById.keys()));
+  // What is left alone is no part of the diff (it neither moved nor went).
+  const diff = diffPlans(
+    prev.filter((a) => !keptIds.has(a.id)),
+    assignments,
+    bumps,
+    new Set(unitById.keys()),
+  );
   // A fixed block outside the horizon asks for no time here; one inside asks for what it takes of its day.
-  const demandMin = units.reduce((n, u) => n + u.minutes, fixedDemand);
+  const demandMin = (
+    staying ? nonFixed.filter((u) => placed.has(u.id) || isLoose(u.id)) : units
+  ).reduce((n, u) => n + u.minutes, fixedDemand);
   const usableMin = Object.values(load).reduce((n, l) => n + l.usable, 0);
   return {
     assignments,
@@ -352,5 +394,6 @@ export function plan(input: PlanInput): PlanResult {
     overflowMin: Math.max(0, demandMin - usableMin),
     demandMin,
     usableMin,
+    ...(staying ? { kept: [...keptIds].sort() } : {}),
   };
 }
