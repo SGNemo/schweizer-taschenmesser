@@ -225,7 +225,6 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
       ...(max(e.earliest, userDate ?? row?.earliest)
         ? { earliest: max(e.earliest, userDate ?? row?.earliest) }
         : {}),
-      ...(row?.pinned ? { pinned: row.pinned } : {}),
       // Nothing is cut into sessions by itself any more (planner rethink): a thing is one unit unless its stored
       // rows already are parts from the engine's time.
       splittable: inParts.has(key),
@@ -235,6 +234,9 @@ export async function buildInputs(deps: RunDeps, repos: PlannerRepos): Promise<R
       createdAt: e.createdAt ?? 0,
     });
   }
+  // „Nicht planen“ also for a thing its source no longer lists (a list asked in by ref stops being listed once
+  // it is taken out): its rows go too.
+  for (const [key, row] of itemRows) if (row.excluded) removeKeys.add(key);
   const prev: PrevAssignment[] = [...prevRows.values()].map((r) => ({
     id: r.id,
     date: r.date,
@@ -452,7 +454,9 @@ export async function runPlanner(
     result,
     inputs,
     deps,
-    new Set([...loose, ...(opts.touched ?? [])]),
+    // What a run takes out of the plan („Nicht planen“, late money) is told to its source as well: the day the
+    // planner once wrote there goes with the row.
+    new Set([...loose, ...(opts.touched ?? []), ...inputs.removeKeys]),
   );
   if (bail()) return { ran: false, inputs, rowWrites, writeBacks };
   const written = (await repos.assignment.active().toArray()) as (AssignmentRow & { id: string })[];

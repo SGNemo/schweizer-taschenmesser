@@ -110,7 +110,7 @@ async function switchedOff(): Promise<boolean> {
 
 /**
  * A background run: serialised, not undoable, skipped while nothing changed or the module is off.
- * `force` (the seed's first run) plans even when nothing changed and `autoReplan` is off.
+ * `force` (the seed's first run) runs even when nothing changed; `reshuffle` lays the seed's things out once.
  */
 export function runBackground(
   opts: { force?: boolean; reshuffle?: boolean } = {},

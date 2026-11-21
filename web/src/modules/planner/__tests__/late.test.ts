@@ -302,22 +302,17 @@ describe('the run: late money is no item of the engine', () => {
     expect(after.hash).not.toBe(before.hash);
   });
 
-  it('a mark the planner left on such a source is handed back by the action that names it – never by a pass nobody asked for; a user’s date is not copied', async () => {
+  it('a mark the planner left on such a source is handed back with the run that takes the thing off the days; a user’s date is not copied', async () => {
     const w = writer();
     const marked = {
       ...lateA,
       plannedFor: MON,
       planMark: { date: MON, order: 0 },
     };
-    // A background pass tells no source anything.
-    const pass = await runPlanner(deps({ entries: [marked, plain], writer: w }));
-    expect(pass.ran).toBe(true);
-    expect(pass.writeBacks).toBe(0);
-    expect(w.onAssign).not.toHaveBeenCalled();
-    const r = await runPlanner(deps({ entries: [marked, plain], writer: w }), {
-      force: true,
-      touched: ['invoices:zahnarzt'],
-    });
+    // Late money leaves the days by the run's own rule (D7), so the day the planner once wrote goes with it –
+    // the one thing a pass tells a source. The thing that merely has no day hears nothing.
+    const r = await runPlanner(deps({ entries: [marked, plain], writer: w }));
+    expect(r.ran).toBe(true);
     expect(w.onAssign).toHaveBeenCalledTimes(1);
     expect(w.onAssign).toHaveBeenCalledWith('invoices', 'zahnarzt', undefined);
     expect(r.inputs.userDates.has('invoices:zahnarzt')).toBe(false);
