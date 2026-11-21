@@ -37,6 +37,28 @@ describe('feeds page: adding made easy', () => {
     });
   });
 
+  it('a row links to the site only when that is a web address, otherwise to the feed', async () => {
+    await feedRepo.create({
+      title: 'Importiert',
+      url: 'https://feed.example.org/rss.xml',
+      category: '',
+      siteUrl: 'ms-settings:network-status',
+    });
+    await feedRepo.create({
+      title: 'Mit Seite',
+      url: 'https://other.example.org/rss.xml',
+      category: '',
+      siteUrl: 'https://other.example.org/',
+    });
+    view();
+    const odd = await screen.findByRole('link', { name: /Importiert/ });
+    expect(odd).toHaveAttribute('href', 'https://feed.example.org/rss.xml');
+    expect(screen.getByRole('link', { name: /Mit Seite/ })).toHaveAttribute(
+      'href',
+      'https://other.example.org/',
+    );
+  });
+
   it('the add dialog searches the catalogue and marks what is subscribed', async () => {
     await feedRepo.create({
       title: 'heise online',

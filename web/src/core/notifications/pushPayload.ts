@@ -46,6 +46,10 @@ export function parsePushMessage(text: string): PushMessage | undefined {
   }
 }
 
+/** A link inside the app: one leading slash, then no second slash, backslash or control character (those leave the origin). */
+// eslint-disable-next-line no-control-regex
+const APP_PATH = /^\/(?![/\\])[^\u0000-\u001f\\]*$/;
+
 export function asPayload(value: unknown): PushPayload | undefined {
   if (typeof value !== 'object' || value === null) return undefined;
   const v = value as Record<string, unknown>;
@@ -53,7 +57,7 @@ export function asPayload(value: unknown): PushPayload | undefined {
   return {
     title: v.title,
     body: typeof v.body === 'string' ? v.body : undefined,
-    url: typeof v.url === 'string' && v.url.startsWith('/') ? v.url : undefined,
+    url: typeof v.url === 'string' && APP_PATH.test(v.url) ? v.url : undefined,
     ...(v.quiet === true ? { quiet: true as const } : {}),
   };
 }

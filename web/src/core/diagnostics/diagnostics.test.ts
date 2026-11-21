@@ -44,6 +44,16 @@ describe('sanitize', () => {
     expect(out).not.toContain('/home/erika');
     expect(out).not.toContain('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
   });
+  it('hides a Windows user folder with spaces and network paths', () => {
+    const out = sanitize(
+      'open C:\\Users\\Erika Musterfrau\\Documents\\Steuer 2026.pdf failed, also \\\\nas-keller\\privat\\x.txt',
+    );
+    expect(out).not.toContain('Musterfrau');
+    expect(out).not.toContain('Erika');
+    expect(out).not.toContain('nas-keller');
+    expect(out).not.toContain('privat');
+    expect(out).toContain('failed');
+  });
   it('truncates long messages', () => {
     expect(sanitize('word '.repeat(200)).length).toBeLessThanOrEqual(MAX_MESSAGE);
   });

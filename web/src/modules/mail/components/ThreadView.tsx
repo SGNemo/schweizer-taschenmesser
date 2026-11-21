@@ -19,6 +19,7 @@ import { MAX_MAIL_BYTES } from '@/core/mail/compose';
 import { DEMO_ACCOUNT, loadThreadBodies, saveBody } from '../cache';
 import { fullWhen, personName, subjectOf } from '../format';
 import { formatAddress } from '@/core/mail/address';
+import { attachmentFileName } from '@/core/mail/fileName';
 import { forwardFields, replyFields, type ComposeFields } from '@/core/mail/reply';
 import { hasFeature, mailDrafts } from '@/core/mail/service';
 import { mailText } from '@/core/mail/prefill';
@@ -76,7 +77,11 @@ function Attachments({ account, message }: { account: MailAccountRef; message: M
     setBusy(id);
     try {
       const data = await mailAttachment(account, message.id, id);
-      const outcome = await getPlatform().saveFile({ fileName, data, mime });
+      const outcome = await getPlatform().saveFile({
+        fileName: attachmentFileName(fileName),
+        data,
+        mime,
+      });
       if (outcome === 'saved') toast(t.mail.view.saved);
     } catch {
       toast(t.mail.view.downloadFailed);

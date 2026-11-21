@@ -8,6 +8,7 @@
  * The result is shown in a sandboxed `<iframe srcdoc>` without scripts (`MailFrame`); this file is the
  * second line of defence, the iframe CSP (`mailDocument`) the third.
  */
+import { isPublicHttpsUrl } from '@/core/net/publicUrl';
 import DOMPurify from 'dompurify';
 
 export interface SanitizeOptions {
@@ -216,6 +217,10 @@ export function mailDocument(bodyHtml: string): string {
 /**
  * Downloads the images the user allowed (through the platform `fetch`: native, no CORS) and returns them
  * as data URLs. Bounded: at most `max` images of at most `maxBytes` each; failures are skipped.
+ *
+ * The sender chooses these addresses, so only public https hosts are asked (`isPublicHttpsUrl`): never
+ * plain http, a device in the home network, this computer or a cloud metadata address. A body whose
+ * declared length is over the limit is not read at all.
  */
 export async function fetchRemoteImages(
   urls: readonly string[],
@@ -224,7 +229,7 @@ export async function fetchRemoteImages(
 ): Promise<Record<string, string>> {
   const { max = 20, maxBytes = 1_500_000, timeoutMs = 8000 } = opts;
   const out: Record<string, string> = {};
-  for (const url of urls.slice(0, max)) {
+  for (const url of urls.filter(isPublicHttpsUrl).slice(0, max)) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
@@ -235,6 +240,8 @@ export async function fetchRemoteImages(
       });
       const mime = (res.headers.get('content-type') ?? '').split(';')[0]!.trim().toLowerCase();
       if (!res.ok || !/^image\/(png|jpe?g|gif|webp|avif|bmp)$/.test(mime)) continue;
+      const declared = Number(res.headers.get('content-length'));
+      if (Number.isFinite(declared) && declared > maxBytes) continue;
       const bytes = new Uint8Array(await res.arrayBuffer());
       if (bytes.length === 0 || bytes.length > maxBytes) continue;
       let binary = '';

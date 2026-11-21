@@ -136,4 +136,42 @@ describe('fetchRemoteImages', () => {
     expect(out['https://a.example/ok.png']).toMatch(/^data:image\/png;base64,/);
     expect(seen[0]).toMatchObject({ referrerPolicy: 'no-referrer', credentials: 'omit' });
   });
+
+  it('asks only public https hosts: no http, no LAN, loopback or metadata address, no credentials', async () => {
+    const asked: string[] = [];
+    const fetchFn = (async (url: string) => {
+      asked.push(url);
+      return new Response(png, { status: 200, headers: { 'content-type': 'image/png' } });
+    }) as unknown as typeof fetch;
+    const out = await fetchRemoteImages(
+      [
+        'http://a.example/plain.png',
+        'https://192.168.1.1/cgi-bin/reboot',
+        'http://127.0.0.1:8787/x.png',
+        'https://169.254.169.254/latest',
+        'https://router.lan/x.png',
+        'https://user:pw@a.example/x.png',
+        'https://a.example/ok.png',
+      ],
+      fetchFn,
+    );
+    expect(asked).toEqual(['https://a.example/ok.png']);
+    expect(Object.keys(out)).toEqual(['https://a.example/ok.png']);
+  });
+  it('does not read a body whose declared length is over the limit', async () => {
+    let read = false;
+    const fetchFn = (async () => {
+      const res = new Response(png, {
+        status: 200,
+        headers: { 'content-type': 'image/png', 'content-length': '5000000' },
+      });
+      res.arrayBuffer = () => {
+        read = true;
+        return Promise.resolve(png.buffer);
+      };
+      return res;
+    }) as unknown as typeof fetch;
+    expect(await fetchRemoteImages(['https://a.example/huge.png'], fetchFn)).toEqual({});
+    expect(read).toBe(false);
+  });
 });
