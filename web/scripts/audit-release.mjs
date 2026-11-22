@@ -82,16 +82,16 @@ console.log(
   `Audited ${files.length} file(s); searched for ${configured.length} secret value(s) (${configured.join(', ') || 'none configured'})${publish ? ', publishing' : ', dry run'}.`,
 );
 if (findings.length > 0) {
+  // Workflow commands (::error::) are read from stdout; only the plain verdict goes to stderr.
   const unset = findings.filter((f) => f.rule === 'secret-not-provided');
   for (const f of findings) {
     if (f.rule === 'secret-not-provided') continue;
-    console.error(`::error::${f.rule}: ${f.file}${f.detail ? ` (${f.detail})` : ''}`);
+    console.log(`::error::${f.rule}: ${f.file}${f.detail ? ` (${f.detail})` : ''}`);
   }
   if (unset.length > 0) {
-    console.error(
+    console.log(
       `::error::secret-not-provided: ${unset.length} name(s) from AUDIT_SECRET_ENV without a value (or the list is empty). Check the GitHub secrets mapped in this workflow step (node scripts/keys.mjs secrets).`,
     );
-    // Variable names only, on stdout like the "searched for" line above.
     console.log(`Without a value: ${unset.map((f) => f.detail).join(', ')}`);
   }
   console.error(`\nAudit FAILED with ${findings.length} finding(s). Nothing may be published.`);
