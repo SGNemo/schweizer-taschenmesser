@@ -12,18 +12,20 @@
  *  - pin before today, row elsewhere → the row stays where the person sees it, not „fest“;
  *  - the pin is cleared in every case.
  *
- * No other row is touched. `autoReplan` is switched off once per device (`MODEL_KEY`): the new planner never reads
- * it, but a device that is still on the old version stops its background runs with it.
+ * No other row is touched. `autoReplan` is stored as off where the install syncs: the new planner never reads it,
+ * but a device that is still on the old version stops its background runs with it.
  */
 import { getMeta, setMeta } from '@/core/db/metaKv';
 import { DEFAULT_MIN } from '@/core/plan/types';
 import { unitId } from '@/core/plan/units';
 import { setSettings } from '@/core/settings/settings';
+import { loadSyncConfig } from '@/core/sync/service';
+import { getPlannerSettings } from './prefs';
 import { plannerRepos, putRow, type PlannerDb } from './repo';
 import type { AssignmentRow, PlanItemRow } from './schema';
 import { DEFAULT_PLANNER_SETTINGS, PLANNER_SCOPE } from './settings';
 
-/** Device-local: this device has made the step (the setting part runs once). */
+/** Device-local: this device has made the step. */
 export const MODEL_KEY = 'planner.model';
 export const MODEL = 2;
 
@@ -86,8 +88,11 @@ export async function migratePins(
 export async function migrateModel(today: string): Promise<string[]> {
   const moved: string[] = [];
   await migratePins(today, undefined, moved);
-  if ((await getMeta<number>(MODEL_KEY)) === MODEL) return moved;
-  await setSettings(PLANNER_SCOPE, { autoReplan: false }, DEFAULT_PLANNER_SETTINGS);
-  await setMeta(MODEL_KEY, MODEL);
+  // `autoReplan` off, for the sake of a device that is still on the old version: only an install that syncs has
+  // such a device, so an app without a sync writes nothing (and nothing reaches its outbox). Checked at every
+  // start – a sync that is set up later gets the value then; once stored as off, nothing is written again.
+  if ((await loadSyncConfig()) && (await getPlannerSettings()).autoReplan !== false)
+    await setSettings(PLANNER_SCOPE, { autoReplan: false }, DEFAULT_PLANNER_SETTINGS);
+  if ((await getMeta<number>(MODEL_KEY)) !== MODEL) await setMeta(MODEL_KEY, MODEL);
   return moved;
 }

@@ -42,7 +42,14 @@ const plan = async () =>
 beforeEach(async () => {
   setNow(() => NOW);
   await createTestDb();
-  for (const t of ['planner_item', 'planner_assignment', '_settings', '_meta'])
+  for (const t of [
+    'planner_item',
+    'planner_assignment',
+    '_settings',
+    '_meta',
+    '_secrets',
+    '_outbox',
+  ])
     await db.table(t).clear();
 });
 
@@ -105,9 +112,19 @@ describe('pins become locks on the row', () => {
     expect(await plan()).toEqual({ 'todos:late#0': '2026-11-20 fest' });
   });
 
-  it('switches the old automatic planning off once and marks the device', async () => {
+  it('marks the device; without a sync nothing is written to the settings (no other device to stop)', async () => {
     await migrateModel(TODAY);
     expect(await getMeta(MODEL_KEY)).toBe(MODEL);
+    expect(await db.table('_settings').count()).toBe(0);
+    expect(await db.table('_outbox').count()).toBe(0);
+  });
+
+  it('with a sync set up the old automatic planning is stored as off, once', async () => {
+    await db.table('_secrets').put({ key: 'syncConfig', value: { kind: 'server' } });
+    await migrateModel(TODAY);
     expect((await getPlannerSettings()).autoReplan).toBe(false);
+    const writes = await db.table('_outbox').count();
+    await migrateModel(TODAY);
+    expect(await db.table('_outbox').count()).toBe(writes);
   });
 });
