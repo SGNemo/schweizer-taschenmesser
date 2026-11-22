@@ -76,6 +76,8 @@ fn code(e: impl std::fmt::Display) -> String {
         "dir",
         "not-found",
         "already-added",
+        "bad-path",
+        "tracker",
     ] {
         if msg == known {
             return msg;
@@ -213,19 +215,19 @@ pub async fn torrent_preview(
 
 #[tauri::command]
 pub async fn torrent_add(
+    app: AppHandle,
     state: State<'_, Torrents>,
     input: SourceIn,
     dir: String,
     files: Option<Vec<usize>>,
 ) -> Result<usize, String> {
+    // the same folder rule as a download (DL6)
+    let dir = app
+        .state::<crate::downloads::Downloads>()
+        .target(&app, &dir)?;
     let engine = state.engine().await?;
     let src = source(input)?;
-    match tokio::time::timeout(
-        PREVIEW_TIMEOUT,
-        engine.add(src, &PathBuf::from(dir), files, vec![]),
-    )
-    .await
-    {
+    match tokio::time::timeout(PREVIEW_TIMEOUT, engine.add(src, &dir, files, vec![])).await {
         Ok(r) => r.map_err(code),
         Err(_) => Err("timeout".into()),
     }

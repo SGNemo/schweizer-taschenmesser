@@ -194,6 +194,7 @@ pub fn run() {
             torrent::torrent_watch,
             downloads::downloads_default_dir,
             downloads::downloads_add,
+            downloads::downloads_pick_dir,
             downloads::downloads_pause,
             downloads::downloads_resume,
             downloads::downloads_remove,

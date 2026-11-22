@@ -3,7 +3,7 @@
 //! started. "Folder" shows the file in the file manager.
 
 use std::{
-    path::PathBuf,
+    path::{Path, PathBuf},
     sync::{Arc, Mutex, OnceLock},
 };
 
@@ -17,6 +17,55 @@ pub struct Downloads {
     /// One `downloads_*` command at a time: they run off the main thread, and the main thread used
     /// to be what kept two of them (two writes of the job list, pause and resume) apart.
     gate: Mutex<()>,
+    /// Folders the user chose in the native dialog on this PC (DL6, DL10); read once from
+    /// `download-folders.json`, which only Rust writes.
+    picked: Mutex<Option<Vec<PathBuf>>>,
+}
+
+/// Most folders remembered (the newest stay).
+const MAX_PICKED: usize = 20;
+
+fn picked_file(app: &AppHandle) -> Result<PathBuf, String> {
+    Ok(state_file(app)?.with_file_name("download-folders.json"))
+}
+
+/// Same folder, same spelling: links and `..` resolved, so a string cannot dress up another path.
+fn canonical(dir: &Path) -> Option<PathBuf> {
+    std::fs::canonicalize(dir).ok().filter(|p| p.is_dir())
+}
+
+/// Whether `dir` may receive files (DL6): the system's Downloads folder, or a folder the user picked
+/// in the native dialog on this PC. A folder from synced settings, a backup or a script in the web
+/// view is refused (`dir`) until it is picked here. Returns the folder to use.
+fn allowed(dir: &Path, downloads: Option<&Path>, picked: &[PathBuf]) -> Result<PathBuf, String> {
+    let dir = canonical(dir).ok_or("dir")?;
+    let is_downloads = downloads.and_then(canonical).is_some_and(|d| d == dir);
+    if is_downloads || picked.contains(&dir) {
+        Ok(dir)
+    } else {
+        Err("dir".into())
+    }
+}
+
+impl Downloads {
+    fn picked(&self, app: &AppHandle) -> Vec<PathBuf> {
+        let mut slot = self.picked.lock().unwrap_or_else(|e| e.into_inner());
+        if slot.is_none() {
+            let list: Vec<PathBuf> = picked_file(app)
+                .ok()
+                .and_then(|f| std::fs::read(f).ok())
+                .and_then(|b| serde_json::from_slice(&b).ok())
+                .unwrap_or_default();
+            *slot = Some(list);
+        }
+        slot.clone().unwrap_or_default()
+    }
+
+    /// Checks `dir` for a download or a torrent (`crate::torrent` asks too).
+    pub(crate) fn target(&self, app: &AppHandle, dir: &str) -> Result<PathBuf, String> {
+        let downloads = app.path().download_dir().ok();
+        allowed(Path::new(dir), downloads.as_deref(), &self.picked(app))
+    }
 }
 
 pub(crate) fn state_file(app: &AppHandle) -> Result<PathBuf, String> {
@@ -87,6 +136,8 @@ pub(crate) fn wipe(app: &AppHandle) -> Result<(), String> {
             }
         }
     }
+    *state.picked.lock().unwrap_or_else(|e| e.into_inner()) = Some(Vec::new());
+    crate::device_wipe::remove_file(&picked_file(app)?)?;
     crate::device_wipe::remove_file(&state_file(app)?)
 }
 
@@ -132,11 +183,36 @@ pub fn downloads_add(
     dir: String,
     expected_hash: Option<String>,
 ) -> Result<Job, String> {
+    let dir = state.target(&app, &dir)?;
     state
-        .with(&app, |m| {
-            m.add(&url, &PathBuf::from(dir), expected_hash.as_deref())
-        })?
+        .with(&app, |m| m.add(&url, &dir, expected_hash.as_deref()))?
         .map_err(add_error)
+}
+
+/// "Ordner wählen": Rust opens the system folder dialog itself and remembers the choice, so only a
+/// folder the user picked here (or the Downloads folder) is ever written to (DL6). `None` when the
+/// user cancels.
+#[tauri::command(async)]
+pub fn downloads_pick_dir(
+    app: AppHandle,
+    state: State<'_, Downloads>,
+) -> Result<Option<String>, String> {
+    use tauri_plugin_dialog::DialogExt as _;
+    let Some(chosen) = app.dialog().file().blocking_pick_folder() else {
+        return Ok(None);
+    };
+    let path = chosen.into_path().map_err(|_| "dir")?;
+    let dir = canonical(&path).ok_or("dir")?;
+    let mut list = state.picked(&app);
+    list.retain(|p| *p != dir);
+    list.push(dir.clone());
+    if list.len() > MAX_PICKED {
+        list.remove(0);
+    }
+    let json = serde_json::to_vec(&list).map_err(|_| "internal")?;
+    std::fs::write(picked_file(&app)?, json).map_err(|_| "io")?;
+    *state.picked.lock().unwrap_or_else(|e| e.into_inner()) = Some(list);
+    Ok(Some(dir.to_string_lossy().into_owned()))
 }
 
 #[tauri::command(async)]
@@ -219,4 +295,36 @@ pub fn downloads_reveal(
         job.dir.clone()
     };
     ::disk_scan::reveal_in_file_manager(&target).map_err(|_| "unsupported".to_string())
+}
+
+#[cfg(test)]
+mod folder_tests {
+    use super::*;
+
+    /// DL6/DL10: a folder named by the web view (from synced settings, a backup, a script) is
+    /// refused unless it is the Downloads folder or one picked in the native dialog here.
+    #[test]
+    fn only_the_downloads_folder_and_picked_folders_are_targets() {
+        let root = std::env::temp_dir().join(format!("nemo-dl-allowed-{}", std::process::id()));
+        let downloads = root.join("Downloads");
+        let picked = root.join("Filme");
+        let startup = root.join("Startup");
+        for d in [&downloads, &picked, &startup] {
+            std::fs::create_dir_all(d).unwrap();
+        }
+        let list = vec![canonical(&picked).unwrap()];
+        assert!(allowed(&downloads, Some(&downloads), &list).is_ok());
+        assert!(allowed(&picked, Some(&downloads), &list).is_ok());
+        assert_eq!(
+            allowed(&startup, Some(&downloads), &list),
+            Err("dir".to_owned())
+        );
+        // another spelling of a refused folder stays refused; a picked one stays allowed
+        let sneaky = picked.join("..").join("Startup");
+        assert!(allowed(&sneaky, Some(&downloads), &list).is_err());
+        let same = downloads.join("..").join("Filme");
+        assert!(allowed(&same, Some(&downloads), &list).is_ok());
+        assert!(allowed(&root.join("missing"), Some(&downloads), &list).is_err());
+        let _ = std::fs::remove_dir_all(&root);
+    }
 }

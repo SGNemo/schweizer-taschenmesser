@@ -17,8 +17,6 @@ export const downloads: Strings['downloads'] = {
   },
   settings: {
     limitKb: 'Speed limit for all downloads (KB/s, 0 = unlimited)',
-    folder: 'Download folder (empty = the system Downloads folder)',
-    torrent: 'Switch the BitTorrent part on',
     torrentDht:
       'Find participants through the DHT network (needed for magnet links without a tracker)',
     torrentUpnp: 'Open the port on the router automatically (UPnP)',
@@ -68,7 +66,8 @@ export const downloads: Strings['downloads'] = {
   errors: {
     scheme: 'Only addresses with http:// or https:// work.',
     url: 'That is not a valid address.',
-    dir: 'The folder does not exist.',
+    dir: 'Nemo does not take this folder. Choose it with “Choose folder”.',
+    blocked: 'Nemo does not download from addresses in the home network or on this PC.',
     hash: 'The checksum needs 64 (SHA-256) or 128 (SHA-512) characters from 0–9 and a–f.',
     other: 'That did not work.',
   },
@@ -84,6 +83,11 @@ export const downloads: Strings['downloads'] = {
     io: 'The file could not be written.',
     checksum: 'The checksum does not match. The file was deleted.',
     size: 'The file arrived incomplete.',
+    blocked:
+      'The address leads into the home network or to this PC. Nemo does not download from there.',
+    redirect: 'The address redirects too often or to an unencrypted address.',
+    url: 'The saved address is not valid.',
+    scheme: 'Only addresses with http:// or https:// work.',
   },
   row: {
     eta: (d: string) => `${d} left`,
@@ -130,6 +134,7 @@ export const downloads: Strings['downloads'] = {
       turnOn: 'Switch the torrent part on',
     },
     turnOff: 'Switch the torrent part off',
+    deviceOnly: 'These switches apply on this PC only.',
     starting: 'Starting …',
     launch: {
       needModule: 'This needs the “Downloads” module.',
@@ -167,7 +172,11 @@ export const downloads: Strings['downloads'] = {
       notMagnet: 'That is not a magnet link.',
       timeout: 'No sources found. Check the link or try again later.',
       alreadyAdded: 'This torrent is already in the list.',
-      dir: 'The folder does not exist.',
+      dir: 'Nemo does not take this folder. Choose it with “Choose folder”.',
+      badPath:
+        'The torrent contains file names Windows could read differently. Nemo does not load it.',
+      tracker:
+        'The torrent names a tracker in the home network or on this PC. Nemo does not load it.',
       other: 'That did not work.',
     },
     state: {

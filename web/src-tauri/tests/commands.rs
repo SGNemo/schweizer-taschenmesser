@@ -250,7 +250,8 @@ fn blocking_commands_never_run_on_the_main_thread() {
         downloads
             .matches("#[tauri::command(async)]\npub fn downloads_")
             .count(),
-        10
+        // + downloads_pick_dir (the native folder dialog, DL6)
+        11
     );
     assert_eq!(downloads.matches("#[tauri::command]").count(), 1);
     assert!(downloads.contains("#[tauri::command]\npub fn downloads_default_dir("));

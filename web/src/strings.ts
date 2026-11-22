@@ -8771,8 +8771,6 @@ export const de = {
     },
     settings: {
       limitKb: 'Tempolimit für alle Downloads (KB/s, 0 = unbegrenzt)',
-      folder: 'Download-Ordner (leer = Downloads-Ordner des Systems)',
-      torrent: 'BitTorrent-Teil einschalten',
       torrentDht: 'Teilnehmer über das DHT-Netz suchen (nötig für Magnet-Links ohne Tracker)',
       torrentUpnp: 'Port am Router automatisch öffnen (UPnP)',
       torrentUpKb: 'Torrent: Upload-Limit (KB/s, 0 = unbegrenzt)',
@@ -8821,7 +8819,8 @@ export const de = {
     errors: {
       scheme: 'Nur Adressen mit http:// oder https:// gehen.',
       url: 'Das ist keine gültige Adresse.',
-      dir: 'Den Ordner gibt es nicht.',
+      dir: 'Diesen Ordner nimmt Nemo nicht. Wähle ihn mit „Ordner wählen“ aus.',
+      blocked: 'Von Adressen im Heimnetz oder auf diesem PC lädt Nemo nichts herunter.',
       hash: 'Die Prüfsumme muss 64 (SHA-256) oder 128 (SHA-512) Zeichen aus 0–9 und a–f haben.',
       other: 'Das hat nicht geklappt.',
     },
@@ -8837,6 +8836,10 @@ export const de = {
       io: 'Die Datei konnte nicht geschrieben werden.',
       checksum: 'Die Prüfsumme stimmt nicht. Die Datei wurde gelöscht.',
       size: 'Die Datei ist unvollständig angekommen.',
+      blocked: 'Die Adresse führt ins Heimnetz oder auf diesen PC. Von dort lädt Nemo nichts.',
+      redirect: 'Die Adresse leitet zu oft weiter oder auf eine unverschlüsselte Adresse.',
+      url: 'Die gespeicherte Adresse ist ungültig.',
+      scheme: 'Nur Adressen mit http:// oder https:// gehen.',
     },
     row: {
       eta: (d: string) => `noch ${d}`,
@@ -8883,6 +8886,7 @@ export const de = {
         turnOn: 'Torrent-Teil einschalten',
       },
       turnOff: 'Torrent-Teil ausschalten',
+      deviceOnly: 'Diese Schalter gelten nur auf diesem PC.',
       starting: 'Wird gestartet …',
       launch: {
         needModule: 'Dafür braucht es das Modul „Downloads“.',
@@ -8920,7 +8924,11 @@ export const de = {
         notMagnet: 'Das ist kein Magnet-Link.',
         timeout: 'Keine Quellen gefunden. Prüfe den Link oder versuche es später noch einmal.',
         alreadyAdded: 'Dieser Torrent ist schon in der Liste.',
-        dir: 'Den Ordner gibt es nicht.',
+        dir: 'Diesen Ordner nimmt Nemo nicht. Wähle ihn mit „Ordner wählen“ aus.',
+        badPath:
+          'Der Torrent enthält Dateinamen, die Windows anders lesen könnte. Nemo lädt ihn nicht.',
+        tracker:
+          'Der Torrent nennt einen Tracker im Heimnetz oder auf diesem PC. Nemo lädt ihn nicht.',
         other: 'Das hat nicht geklappt.',
       },
       state: {

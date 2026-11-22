@@ -2,12 +2,22 @@ import { useEffect, useState } from 'react';
 import { requireNotice } from '@/core/legal/notices';
 import { getPlatform } from '@/core/platform';
 import type { TorrentInfo } from '@/core/platform/torrent';
-import { useSettings } from '@/core/settings/settings';
 import { useUiStore } from '@/stores/ui';
 import { t } from '@/strings';
-import { Button, Dialog, FormActions, Icon, IconButton, ItemList, ItemRow, Progress } from '@/ui';
+import {
+  Button,
+  Dialog,
+  FormActions,
+  Icon,
+  IconButton,
+  ItemList,
+  ItemRow,
+  Progress,
+  Switch,
+} from '@/ui';
+import { useDevicePrefs } from '../devicePrefs';
 import { formatBytes, percent } from '../lib/format';
-import { settings, type DownloadsPrefs } from '../settings';
+import type { DownloadsPrefs } from '../settings';
 import { resetTorrents, useTorrents, watchTorrents } from '../torrentStore';
 import { AddTorrentDialog } from './AddTorrentDialog';
 import { DownloadsEmpty } from '../components/DownloadsEmpty';
@@ -42,7 +52,8 @@ export function TorrentSection({
   onIncomingHandled: () => void;
 }) {
   const platform = getPlatform().torrent;
-  const [, setPrefs] = useSettings('module.downloads', settings.schema, settings.defaults);
+  // on/off, DHT, UPnP and the folder: this PC only (DL10)
+  const [device, setDevice] = useDevicePrefs();
   const torrents = useTorrents((s) => s.torrents);
   const [status, setStatus] = useState<Status>('starting');
   const [adding, setAdding] = useState(false);
@@ -58,11 +69,11 @@ export function TorrentSection({
     seedMinutes: prefs.seedMinutes,
   };
   const limitKey = JSON.stringify(limits);
-  const { torrentDht: dht, torrentUpnp: upnp } = prefs;
+  const { dht, upnp } = device;
 
   // The engine starts only after the notice was confirmed; limits apply as soon as they change.
   useEffect(() => {
-    if (!prefs.torrent || !platform.supported) return;
+    if (!device.torrent || !platform.supported) return;
     let alive = true;
     void (async () => {
       await requireNotice('downloads-torrent');
@@ -78,23 +89,23 @@ export function TorrentSection({
     return () => {
       alive = false;
     };
-  }, [platform, prefs.torrent, dht, upnp, limitKey]);
+  }, [platform, device.torrent, dht, upnp, limitKey]);
 
   // Something arrived from outside: once the engine is up, the add dialog opens with it.
   useEffect(() => {
-    if (!incoming || !prefs.torrent || status !== 'ready') return;
+    if (!incoming || !device.torrent || status !== 'ready') return;
     queueMicrotask(() => {
       setInitial(incoming);
       setAdding(true);
       onIncomingHandled();
     });
-  }, [incoming, prefs.torrent, status, onIncomingHandled]);
+  }, [incoming, device.torrent, status, onIncomingHandled]);
 
   const launch = getPlatform().launch;
   useEffect(() => {
-    if (!launch.supported || !prefs.torrent) return;
+    if (!launch.supported || !device.torrent) return;
     void launch.isRegistered().then(setLaunchRegistered, () => undefined);
-  }, [launch, prefs.torrent]);
+  }, [launch, device.torrent]);
 
   async function toggleAssociation() {
     try {
@@ -112,7 +123,7 @@ export function TorrentSection({
 
   if (!platform.supported) return null;
 
-  if (!prefs.torrent) {
+  if (!device.torrent) {
     return (
       // Off: one quiet block (heading, one line, a secondary button) – the page's one filled action stays „Download eintragen“ (U11).
       <section className={styles.torrent}>
@@ -130,14 +141,22 @@ export function TorrentSection({
 
   async function turnOn() {
     await requireNotice('downloads-torrent');
-    setPrefs({ torrent: true });
+    setDevice({ torrent: true });
   }
 
   async function turnOff() {
     await platform.stop().catch(() => undefined);
     resetTorrents();
     setStatus('starting');
-    setPrefs({ torrent: false });
+    setDevice({ torrent: false });
+  }
+
+  // DHT and UPnP are read when the engine starts: a change restarts it with the new value.
+  async function setNetwork(patch: { dht?: boolean; upnp?: boolean }) {
+    await platform.stop().catch(() => undefined);
+    resetTorrents();
+    setStatus('starting');
+    setDevice(patch);
   }
 
   return (
@@ -180,10 +199,23 @@ export function TorrentSection({
           </Button>
         </div>
       ) : null}
+      <div>
+        <Switch
+          label={t.downloads.settings.torrentDht}
+          checked={dht}
+          onChange={(on) => void setNetwork({ dht: on })}
+        />
+        <Switch
+          label={t.downloads.settings.torrentUpnp}
+          checked={upnp}
+          onChange={(on) => void setNetwork({ upnp: on })}
+        />
+        <p className={styles.hint}>{t.downloads.torrent.deviceOnly}</p>
+      </div>
       <TorrentIp />
       <AddTorrentDialog
         open={adding}
-        defaultFolder={prefs.folder}
+        defaultFolder={device.folder}
         initial={initial}
         onClose={() => setAdding(false)}
       />

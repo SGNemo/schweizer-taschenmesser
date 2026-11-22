@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getPlatform } from '@/core/platform';
+import { setDevicePrefs } from '../devicePrefs';
 import type { TorrentPreview, TorrentSource } from '@/core/platform/torrent';
 import { t } from '@/strings';
 import { Button, Checkbox, Dialog, Form, FormActions, TextField } from '@/ui';
@@ -17,6 +18,8 @@ function errorText(code: string): string {
   if (code === 'not-a-magnet') return e.notMagnet;
   if (code === 'already-added') return e.alreadyAdded;
   if (code === 'dir') return e.dir;
+  if (code === 'bad-path') return e.badPath;
+  if (code === 'tracker') return e.tracker;
   return e.other;
 }
 
@@ -194,18 +197,17 @@ export function AddTorrentDialog({
           <p className={styles.sub}>
             {t.downloads.torrent.add.selected}: {formatBytes(selectedBytes)}
           </p>
-          <TextField
-            label={t.downloads.add.folder}
-            value={dir}
-            onChange={(e) => setDir(e.target.value)}
-          />
+          {/* shown only: a folder is chosen in the system dialog, which Nemo remembers (DL6) */}
+          <TextField label={t.downloads.add.folder} value={dir} readOnly />
           <div>
             <Button
               onClick={() =>
                 void getPlatform()
                   .downloads.pickDir()
                   .then((picked) => {
-                    if (picked) setDir(picked);
+                    if (!picked) return;
+                    setDir(picked);
+                    setDevicePrefs({ folder: picked });
                   })
               }
             >

@@ -28,11 +28,9 @@ export function createDownloads(supported: boolean): DownloadsService {
       return invoke<void>('downloads_watch', { events });
     },
     defaultDir: () => invoke<string>('downloads_default_dir'),
-    async pickDir() {
-      const { open } = await import('@tauri-apps/plugin-dialog');
-      const picked = await open({ directory: true, multiple: false });
-      return typeof picked === 'string' ? picked : null;
-    },
+    // Rust opens the dialog itself and remembers the folder; only such a folder (or the system's
+    // Downloads folder) is ever written to (security review 2026-11, DL6).
+    pickDir: () => invoke<string | null>('downloads_pick_dir'),
     add: (url, dir, expectedHash) =>
       invoke<DownloadJob>('downloads_add', { url, dir, expectedHash: expectedHash || null }),
     pause: (id) => invoke<void>('downloads_pause', { id }),
