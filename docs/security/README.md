@@ -9,3 +9,4 @@ Rules live in root `CLAUDE.md` and [../RULES.md](../RULES.md); reporting path fo
 | [FINDINGS-2026-10-01.md](FINDINGS-2026-10-01.md) | 2026-10-01 | open code-scanning/Dependabot alerts and their handling |
 | [LAUNCH-REVIEW-2026-10-06.md](LAUNCH-REVIEW-2026-10-06.md) | 2026-10-06 | read-only launch review of all security areas, privacy comparison, phase-2 plan |
 | [DEPS-AUDIT-2026-11-08.md](DEPS-AUDIT-2026-11-08.md) | 2026-11-08 | read-only review of dependency advisories on `develop` (cargo/npm audit), real vs. dev-only, proposals |
+| [LAUNCH-REVIEW-2026-11.md](LAUNCH-REVIEW-2026-11.md) | 2026-11-21 | launch review 2 at `7ef17176`: verdict per channel, the areas new since October, status of the old findings, network inventory; prompts for the open work: [LAUNCH-REVIEW-2026-11-PACKAGES.md](LAUNCH-REVIEW-2026-11-PACKAGES.md) |

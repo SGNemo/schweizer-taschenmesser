@@ -17,6 +17,8 @@ Not stored in this file: `npm run chats:sync` prints the list from GitHub (`chat
 
 **Handtests:** alle in [MANUAL-TESTS.md](MANUAL-TESTS.md), eine Liste je Gerät; im PR #704 die Liste „möglicherweise veraltet“ bestätigen.
 
+**Sicherheitskontrolle – Urteil und Blocker:** [LAUNCH-REVIEW-2026-11](security/LAUNCH-REVIEW-2026-11.md): Windows, Android, Website „no“ bis SC1 zu ist (private Notiz); dann je Kanal jeden „medium“-Befund seiner Zeile per Fix mergen oder im Release-Issue schriftlich annehmen (Empfehlungen dort); Handtests SEC-1–14.
+
 **Entscheidungen** (Empfehlung in Klammern):
 
 1. Übersicht ohne Daten springt je Laden um 0,18: hinnehmen oder Raster erst nach allen Karten packen? ([qa/round-6](qa/round-6/STATUS.md))
