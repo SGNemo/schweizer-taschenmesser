@@ -197,12 +197,14 @@ const meta = (id: string) => ({
 
 /**
  * An empty install with only the named modules switched on (what one switch in the library writes) and,
- * optionally, open ToDos – nothing else: no seed, no settings, no planner days.
+ * optionally, open ToDos – nothing else: no seed, no settings, no planner days. `laidOn` is the day the person
+ * laid the thing on (its stored placement row, as „Verschieben …“ writes it): since the planner rethink, package 1,
+ * nothing is spread unasked, so a path that starts from a laid-out day says where its things lie.
  */
 async function prepare(
   page: Page,
   modules: string[],
-  tasks: { title: string; plannedFor?: string; dueDate?: string }[] = [],
+  tasks: { title: string; plannedFor?: string; dueDate?: string; laidOn?: string }[] = [],
 ) {
   await page.goto('/');
   await expect(page.locator('main h1')).toBeVisible();
@@ -213,12 +215,15 @@ async function prepare(
         open.onerror = () => reject(open.error);
         open.onsuccess = () => {
           const db = open.result;
-          const tx = db.transaction(['_modules', 'todos_list', 'todos_task'], 'readwrite');
+          const tx = db.transaction(
+            ['_modules', 'todos_list', 'todos_task', 'planner_assignment'],
+            'readwrite',
+          );
           for (const id of modules)
             tx.objectStore('_modules').put({ ...base, id, enabled: true, dataPolicy: null });
           if (tasks.length) {
             tx.objectStore('todos_list').put({ ...base, id: 'inbox', name: 'Eingang', order: 0 });
-            tasks.forEach((t, i) =>
+            tasks.forEach(({ laidOn, ...t }, i) => {
               tx.objectStore('todos_task').put({
                 ...base,
                 id: `w${i}`,
@@ -227,8 +232,21 @@ async function prepare(
                 priority: 0,
                 order: i,
                 ...t,
-              }),
-            );
+              });
+              // A ToDo without an estimate counts 30 minutes in the plan.
+              if (laidOn)
+                tx.objectStore('planner_assignment').put({
+                  ...base,
+                  id: `todos:w${i}#0`,
+                  itemKey: `todos:w${i}`,
+                  k: 0,
+                  of: 1,
+                  date: laidOn,
+                  minutes: 30,
+                  order: i,
+                  reason: 'new',
+                });
+            });
           }
           tx.oncomplete = () => {
             db.close();
@@ -296,7 +314,7 @@ async function planOf(page: Page) {
         .trim(),
       waitingHead: Array.from(document.querySelectorAll('main *'))
         .map((e) => (e as HTMLElement).innerText ?? '')
-        .find((s) => /^Wartet auf freie Zeit/.test(s))
+        .find((s) => /^Noch ohne Tag/.test(s))
         ?.split('\n')[0],
       shown: titles('main [data-testid^="day-"]'),
       // One tile per day, read by its name („Heute, Samstag, 14. November: 1 h 42 frei von 3 h 12 · 3 Dinge“).
@@ -461,11 +479,14 @@ test('B Kopf leeren: zwölf Dinge auf einmal', async ({ page, isMobile }, info) 
   expect(mondayOnce).toBe(true);
   // The Sunday-evening line: a reminder is what was meant.
   const sundayKind = kindOf(/kurz schauen/i);
-  // What the plan makes of it (Saturday has 2 h, Sunday 0 by default).
+  // What the plan makes of it: nothing by itself (planner rethink, package 1) – the captured things are on no
+  // day, they sit under „Noch ohne Tag“ and the head has no figure.
   await ready(page, '/planner');
-  await expect(page.getByTestId('planner-head')).toBeVisible();
+  await expect(page.locator('[data-group="wait"] h2')).toContainText('Noch ohne Tag');
+  await expect(page.getByTestId('planner-head')).toHaveCount(0);
   await page.waitForTimeout(1500);
   const plan = await planOf(page);
+  expect(plan.shown).toEqual([]);
   facts(info, 'B', {
     kinds,
     teamDeadline,
@@ -484,6 +505,13 @@ test('B Kopf leeren: zwölf Dinge auf einmal', async ({ page, isMobile }, info) 
   // „Zocken“ afterwards. Finding the row's day stays; the facts name both days.
   const gaming = tasks.find((x) => /^Zocken/.test(x.title)) as { id: string } | undefined;
   expect(gaming).toBeTruthy();
+  // The row needs a day first: the person takes the page's proposal (⋯ → „Neu verteilen“ → „Übernehmen“; not
+  // counted like the rest of this check – what Saturday (2 h) and the next days make of it).
+  await page.getByRole('button', { name: 'Weitere Optionen', exact: true }).first().click();
+  await page.getByRole('menuitem', { name: 'Neu verteilen' }).click();
+  await page.getByTestId('plan-preview').getByRole('button', { name: 'Übernehmen' }).click();
+  await expect(page.getByTestId('plan-preview')).toHaveCount(0);
+  await expect(page.getByTestId('planner-head')).toBeVisible();
   const placed = (await rows<{ itemKey: string; date: string }>(page, 'planner_assignment')).find(
     (a) => a.itemKey === `todos:${gaming!.id}`,
   );
@@ -552,7 +580,9 @@ test('C Wochenende einteilen', async ({ page, isMobile }, info) => {
   );
   const m = new Meter(page, isMobile);
   await m.go('/planner');
-  await expect(page.getByTestId('planner-head')).toBeVisible();
+  // The eight open ToDos are on no day yet (nothing is spread unasked): they wait under „Noch ohne Tag“.
+  await expect(page.locator('[data-group="wait"] h2')).toContainText('Noch ohne Tag');
+  await expect(page.getByTestId('planner-head')).toHaveCount(0);
   // Package 2: „Tage einteilen“ from the planner ⋯ – the things are already there (step 1 „Weiter“), time for
   // Saturday and Sunday as chips (step 2), the preview (step 3) and „Übernehmen“. Time comes before the
   // distribution, so Sunday takes things (W10).
@@ -791,20 +821,22 @@ test('E Mail: Persönlich, Suche, Rechnung, Antwort in den Plan', async ({
 
 test('F Abend: Rest auf andere Tage', async ({ page, isMobile }, info) => {
   const name = 'F Abend: Rest auf andere Tage';
-  // Saturday 21:00: four open things on an empty install; the run puts three on today (limit of three main
-  // items) and one on Monday; Sunday has its default 0, so „Später“ lands on Monday.
+  // Saturday 21:00: four open things on an empty install; three lie on today and one on Monday (laid by the
+  // person: nothing is spread unasked; before the planner rethink the run put them there). Sunday has its
+  // default 0.
   await page.clock.setFixedTime(new Date(`${SATURDAY}T21:00:00`));
   await prepare(
     page,
     ['todos', 'planner'],
-    ['Bude aufräumen', 'Duschen', 'Pfand zusammenräumen', 'WhatsApp antworten'].map((title) => ({
+    ['Bude aufräumen', 'Duschen', 'Pfand zusammenräumen', 'WhatsApp antworten'].map((title, i) => ({
       title,
+      laidOn: i < 3 ? SATURDAY : MONDAY,
     })),
   );
   const m = new Meter(page, isMobile);
   await m.go('/planner');
   await expect(page.getByTestId('planner-head')).toBeVisible();
-  await settledCount(page.locator(`[data-testid="day-${SATURDAY}"] li`));
+  expect(await settledCount(page.locator(`[data-testid="day-${SATURDAY}"] li`))).toBe(3);
   const before = await planOf(page);
   // Package 3 (TARGET F3): after 17:00 the head offers one quiet link „Rest verteilen“ – the ops of „alles von heute
   // auf morgen“; the preview shows the moves, „Übernehmen“ takes them, nothing moved before.
@@ -906,7 +938,8 @@ test('G Sonntag-Frist und Montag früh', async ({ page, isMobile }, info) => {
 test('H Schlaf: Abendgrenze für den Plan', async ({ page, isMobile }, info) => {
   const name = 'H Schlaf: Abendgrenze für den Plan';
   test.skip(isMobile, 'measured on the PC');
-  await prepare(page, ['todos', 'planner'], [{ title: 'Duschen' }]);
+  // „Duschen“ lies on today (laid by the person; nothing is spread unasked).
+  await prepare(page, ['todos', 'planner'], [{ title: 'Duschen', laidOn: SATURDAY }]);
   const m = new Meter(page, false);
   await page.goto('/planner');
   await expect(page.getByTestId('planner-head')).toBeVisible();
