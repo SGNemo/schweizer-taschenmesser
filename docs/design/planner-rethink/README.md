@@ -9,6 +9,7 @@ Branch `design/planner-rethink`, 2026-11-21. The maintainer's brief: the planner
 | [CONCEPT](CONCEPT.md) | states, the engine as a proposer, missed, entering, more than a week, moving, counter-scenarios, targets |
 | [CONCEPT-MIGRATION](CONCEPT-MIGRATION.md) | stored shape, the one-time migration, finished things, mirror to ToDos, two devices, sources, the four invariants |
 | [CONCEPT-COPY](CONCEPT-COPY.md) | every new word, German and English, with the rejected ones |
+| [`mockups/`](mockups/) | `a.html`, `b.html`, `c.html`, `render.mjs` – the look of the directions; A is the reference |
 | [CONCEPT-DIRECTIONS](CONCEPT-DIRECTIONS.md) | directions A/B/C, critique, FOCUS checklist, accessibility review |
 | [`planner-rethink.spec.ts`](../../../web/e2e/usecases/planner-rethink.spec.ts) | the measuring script: `IST` (green on `develop`), `TARGET` (asserted by the last package) |
 
@@ -24,11 +25,11 @@ Branch `design/planner-rethink`, 2026-11-21. The maintainer's brief: the planner
 
 ## Answers (2026-11-21) – decisions in [decisions/plan-rethink.md](../../decisions/plan-rethink.md)
 
-1. **Missed things:** the maintainer's own idea – a tab **„Noch offen“** in the planner; from there he spreads them again. Things that were fest land there too, marked, so he places them first ([CONCEPT](CONCEPT.md) §3). The mockups (pictures in the PR text of the design round; files removed, `git show 48dae5711:docs/design/planner-rethink/mockups/a.html`) still show the group on today's sheet that was proposed.
+1. **Missed things:** the maintainer's own idea – a tab **„Noch offen“** in the planner; from there he spreads them again. Things that were fest land there too, marked, so he places them first ([CONCEPT](CONCEPT.md) §3). The mockups still show the group on today's sheet that was proposed.
 2. **Sources with a deadline:** „Noch ohne Tag“ with the chip „Vorschlag: Do · Frist Fr“.
 3. **Standard view:** one week with paging; „4 Wochen“ as a switch.
 4. **Direction:** A „Blatt und Band“.
 
 Read from his words and left uncontradicted: „aufteilbar“ = may be spread over days on request (never cut into parts by itself); „locken“ = „fest“; lock words „… fest“, „… lock“, „…!“; „Neues automatisch vorschlagen“ off; a date set in ToDos shows as a muted row „In ToDos: Do“; a pin on a later day is honoured at the update; phone and PC get the version together.
 
-Built in seven packages (2026-11-22, PRs #1034–#1053); what was decided along the way: [decisions/plan-rethink.md](../../decisions/plan-rethink.md). The working documents of the round (packages, hand-off, mockups) were removed after the last package.
+Built in seven packages (2026-11-22, PRs #1034–#1053); what was decided along the way: [decisions/plan-rethink.md](../../decisions/plan-rethink.md). The working documents of the round (packages, hand-off) were removed after the last package; the mockups stay as the reference for the look of direction A (a follow-up package brings the page closer to it).

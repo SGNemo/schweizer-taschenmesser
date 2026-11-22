@@ -1,6 +1,6 @@
 # Planner rethink – three directions, critique, accessibility
 
-Part of [CONCEPT](CONCEPT.md). Mockups `a`, `b`, `c` (1920 and 412 px, light and dark) are pictures in the PR text of the design round; their files were removed after the rebuild. All three share the model (§1–§7 of the concept) and the words; they differ in the surface.
+Part of [CONCEPT](CONCEPT.md). Mockups: [`mockups/`](mockups/) (`a.html`, `b.html`, `c.html`; render with `node ../docs/design/planner-rethink/mockups/render.mjs` from `web/`, 1920 and 412 px, light and dark; pictures in the PR text). All three share the model (§1–§7 of the concept) and the words; they differ in the surface.
 
 ## 1. The directions
 
