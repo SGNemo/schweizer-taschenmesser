@@ -672,7 +672,7 @@ test('"Im Scan ansehen" in the tidy tab starts a scan of that folder', async ({ 
   await expect(page.getByText('findest du unter „Aufräumen“')).toBeVisible();
   await page.getByRole('button', { name: 'Aufräumen', exact: true }).click();
   await expect(page).toHaveURL(/tab=tidy/);
-  await page.getByRole('button', { name: 'Suchen', exact: true }).click();
+  await page.getByTestId('page').getByRole('button', { name: 'Suchen', exact: true }).click();
   await page.getByRole('button', { name: 'Im Scan ansehen: Alte Downloads' }).click();
   await expect(
     page.getByRole('heading', { name: /Scan von C:\\Nutzer\\Beispiel\\Downloads/ }),
@@ -770,7 +770,7 @@ async function openTidy(page: Page) {
   await asDesktop(page);
   await enableDisk(page);
   await page.goto('/disk?tab=tidy');
-  await page.getByRole('button', { name: 'Suchen', exact: true }).click();
+  await page.getByTestId('page').getByRole('button', { name: 'Suchen', exact: true }).click();
   await expect(page.getByText(/^3 Vorschläge · zusammen/)).toBeVisible();
 }
 
@@ -783,7 +783,7 @@ test('tidy tab: nothing is searched until asked, then suggestions with sizes', a
   const windows = page.getByRole('region', { name: 'Macht Windows selbst' });
   await expect(windows.getByText('Papierkorb', { exact: true })).toBeVisible();
   await expect(windows).toContainText('1,1 GB');
-  await page.getByRole('button', { name: 'Suchen', exact: true }).click();
+  await page.getByTestId('page').getByRole('button', { name: 'Suchen', exact: true }).click();
   const list = page.getByRole('list', { name: 'Vorschläge' });
   await expect(list.getByRole('heading', { name: 'Temporäre Dateien' })).toBeVisible();
   await expect(
