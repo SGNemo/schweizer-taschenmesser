@@ -90,6 +90,23 @@ describe('merged APK manifest (NS4)', () => {
     expect(rules('android:allowBackup="false" android:usesCleartextTraffic="false"')).toEqual([]);
   });
 
+  it('an exported component is listed with the permission that guards it', () => {
+    const guarded =
+      '    <receiver android:name="x.R" android:exported="true" android:permission="android.permission.DUMP" />';
+    expect(parseManifest(manifest({ components: guarded })).exported).toContain(
+      'x.R (android.permission.DUMP)',
+    );
+    // listed with its guard: passes; the same name without the guard fails
+    const withGuard = { ...allow, exported: [...allow.exported, 'x.R (android.permission.DUMP)'] };
+    expect(checkMergedManifest(manifest({ components: guarded }), withGuard)).toEqual([]);
+    expect(
+      checkMergedManifest(
+        manifest({ components: '    <receiver android:name="x.R" android:exported="true" />' }),
+        withGuard,
+      ).map((f) => f.detail),
+    ).toEqual(['x.R']);
+  });
+
   it('a location permission is never allowed, whatever the list says', () => {
     expect(
       checkMergedManifest(manifest({ permissions: ['android.permission.ACCESS_FINE_LOCATION'] }), {

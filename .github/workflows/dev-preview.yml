@@ -48,6 +48,21 @@ on:
         value: ${{ jobs.prepare.outputs.tag }}
       publish:
         value: ${{ jobs.prepare.outputs.publish }}
+    # Only the dev signing secrets reach this workflow from ci.yml (no `secrets: inherit`), so it cannot
+    # touch a production key even by mistake (SC2).
+    secrets:
+      TAURI_DEV_SIGNING_PRIVATE_KEY:
+        required: false
+      TAURI_DEV_SIGNING_PRIVATE_KEY_PASSWORD:
+        required: false
+      ANDROID_DEV_KEYSTORE_BASE64:
+        required: false
+      ANDROID_DEV_KEYSTORE_PASSWORD:
+        required: false
+      ANDROID_DEV_KEY_ALIAS:
+        required: false
+      ANDROID_DEV_KEY_PASSWORD:
+        required: false
   workflow_dispatch:
     inputs:
       target:
@@ -176,7 +191,7 @@ jobs:
           [ -n "$ANDROID_ALIAS" ] || missing+=(ANDROID_DEV_KEY_ALIAS)
           [ -n "$ANDROID_ALIAS_PASSWORD" ] || missing+=(ANDROID_DEV_KEY_PASSWORD)
           if [ "${#missing[@]}" -gt 0 ]; then
-            echo "::error::Missing GitHub secrets: ${missing[*]}. Nothing was built or published. The dev APK has its own keystore: 'node scripts/keys.mjs android --dev', then 'node scripts/keys.mjs secrets' (docs/howto/release-deps.md → Dev-Preview keys)."
+            echo "::error::Missing GitHub secrets: ${missing[*]}. Nothing was built or published. Create them on your machine: cd web && node scripts/keys.mjs android --dev (ANDROID_DEV_*) or updater --dev (TAURI_DEV_*), then node scripts/keys.mjs secrets (docs/howto/release-deps.md → Dev-Preview keys)."
             exit 1
           fi
 
@@ -509,6 +524,7 @@ jobs:
             --version "${{ needs.prepare.outputs.version || inputs.version }}" --tag "$TAG" \
             --repo "$GITHUB_REPOSITORY" --notes dl/DEV_NOTES.md --out dl/dev-latest.json
           cat dl/dev-latest.json
+          # Pattern rules only, on purpose: generated JSON, the files it names passed the final audit above.
           node web/scripts/audit-release.mjs --path dl/dev-latest.json
           node web/scripts/verify-sig.mjs dl/Nemo-Portable-dev.exe --pubkey-from web/src-tauri/tauri.dev.conf.json
           (cd dl && sha256sum -c Nemo-dev.apk.sha256)

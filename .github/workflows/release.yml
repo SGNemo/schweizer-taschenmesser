@@ -3,9 +3,9 @@ name: Release
 # Tag `vX.Y.Z` (or `vX.Y.Z-beta.N`) → signed portable Windows exe + signed Android APK + GitHub Release.
 # Second way: a manual run on `main` with the input `version` (must equal web/package.json, tag must not
 # exist yet) builds the same and creates the tag + release itself. Use one way per release, never both.
-# Pushes to `develop` or `main` that touch the native shell (the `main` run also warms the cache that a
-# manual release run on `main` can read: caches written on develop are not visible there), and manual runs WITHOUT `version`, are DRY RUNS: they
-# build and upload artifacts but never create a release. How to create keys/secrets and cut a release:
+# Pushes to `develop` or `main` that touch the native shell, and manual runs WITHOUT `version`, are DRY RUNS:
+# they build and upload artifacts but never sign, never pass a signing secret to a step and never create a
+# release. A publishing run restores no cache (full build). How to create keys/secrets and cut a release:
 # see docs/howto/release-deps.md ("Release").
 
 on:
@@ -28,8 +28,8 @@ permissions:
   contents: read
 
 concurrency:
-  # One group per ref: a release started right after a push to main waits for that push's dry run, which
-  # leaves the Windows cache warm. (GitHub keeps one pending run per group; a newer push replaces a pending one.)
+  # One group per ref: a release started right after a push to main waits for that push's dry run.
+  # (GitHub keeps one pending run per group; a newer push replaces a pending one.)
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
@@ -129,7 +129,9 @@ jobs:
             node scripts/check-legal.mjs
           fi
 
-      # Dry runs never read the signing secrets (SC3): code merged to develop runs in them.
+      # Dry runs never pass a signing secret to a step (SC3): code merged to develop runs in them.
+      # Residual: a job that references a secret may still receive its value on the runner even when the
+      # step is skipped; only separate signing jobs/environments close that (parked PR #542).
       - name: Which signing keys are configured
         if: steps.meta.outputs.publish == 'true'
         id: keys
@@ -185,7 +187,8 @@ jobs:
     name: Windows (portable)
     needs: prepare
     runs-on: windows-latest
-    timeout-minutes: 45
+    # A publishing build starts cold (no cache, SC4): more time than a cached dry run.
+    timeout-minutes: ${{ needs.prepare.outputs.publish == 'true' && 120 || 45 }}
     env:
       CARGO_TARGET_DIR: C:/t
     defaults:
@@ -200,6 +203,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: ${{ needs.prepare.outputs.publish != 'true' && 'npm' || '' }}
+          package-manager-cache: ${{ needs.prepare.outputs.publish != 'true' }}
           cache-dependency-path: web/package-lock.json
       - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable branch, toolchain: stable
         with:
@@ -327,7 +331,7 @@ jobs:
     name: Android APK
     needs: prepare
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: ${{ needs.prepare.outputs.publish == 'true' && 90 || 40 }}
     defaults:
       run:
         working-directory: web
@@ -343,6 +347,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: ${{ needs.prepare.outputs.publish != 'true' && 'npm' || '' }}
+          package-manager-cache: ${{ needs.prepare.outputs.publish != 'true' }}
           cache-dependency-path: web/package-lock.json
       - uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable branch, toolchain: stable
         with:
@@ -487,6 +492,7 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --notes dl/RELEASE_NOTES.md --out dl/latest.json
           cat dl/latest.json
+          # Pattern rules only, on purpose: generated JSON, the files it names passed the final audit above.
           node web/scripts/audit-release.mjs --path dl/latest.json
 
       # The checksum must match its file and latest.json must point at the Nemo executable.
@@ -553,7 +559,7 @@ jobs:
           {
             echo "## Dry run – nothing was published"
             echo
-            echo "Version \`${{ needs.prepare.outputs.version }}\`. Dry runs neither read nor use the signing keys: the artifacts are unsigned."
+            echo "Version \`${{ needs.prepare.outputs.version }}\`. Dry runs pass no signing key to any step: the artifacts are unsigned."
             echo
             echo '```'
             ls -l dl

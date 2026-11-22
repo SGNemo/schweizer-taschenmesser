@@ -872,7 +872,14 @@ jobs:
     with:
       target: dev-preview
       stage: build
-    secrets: inherit
+    # Only the dev signing secrets, never the production ones (SC2).
+    secrets:
+      TAURI_DEV_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_DEV_SIGNING_PRIVATE_KEY }}
+      TAURI_DEV_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_DEV_SIGNING_PRIVATE_KEY_PASSWORD }}
+      ANDROID_DEV_KEYSTORE_BASE64: ${{ secrets.ANDROID_DEV_KEYSTORE_BASE64 }}
+      ANDROID_DEV_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_DEV_KEYSTORE_PASSWORD }}
+      ANDROID_DEV_KEY_ALIAS: ${{ secrets.ANDROID_DEV_KEY_ALIAS }}
+      ANDROID_DEV_KEY_PASSWORD: ${{ secrets.ANDROID_DEV_KEY_PASSWORD }}
 
   # An older run never turns the preview back: right before the publish, compare this commit with the one the
   # published preview was built from (`+<sha>` at the end of the release name). Publish when this commit is ahead
@@ -948,7 +955,14 @@ jobs:
       full: ${{ needs.dev-preview-build.outputs.full }}
       tag: ${{ needs.dev-preview-build.outputs.tag }}
       publish: ${{ needs.dev-preview-build.outputs.publish }}
-    secrets: inherit
+    # Only the dev signing secrets, never the production ones (SC2).
+    secrets:
+      TAURI_DEV_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_DEV_SIGNING_PRIVATE_KEY }}
+      TAURI_DEV_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_DEV_SIGNING_PRIVATE_KEY_PASSWORD }}
+      ANDROID_DEV_KEYSTORE_BASE64: ${{ secrets.ANDROID_DEV_KEYSTORE_BASE64 }}
+      ANDROID_DEV_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_DEV_KEYSTORE_PASSWORD }}
+      ANDROID_DEV_KEY_ALIAS: ${{ secrets.ANDROID_DEV_KEY_ALIAS }}
+      ANDROID_DEV_KEY_PASSWORD: ${{ secrets.ANDROID_DEV_KEY_PASSWORD }}
 
   # A red run on develop says who is next: the merges since the last green run of this part (gate: since the last
   # published Dev-Preview; rest: since the last green rest or full run), because a run can stand for several pushes

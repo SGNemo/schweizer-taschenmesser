@@ -155,7 +155,7 @@ With the GitHub CLI (from the repository, keys in ${dir}):
 const commands = { updater, android, secrets };
 const command = commands[process.argv[2]];
 if (!command) {
-  console.error('Usage: keys.mjs updater [--dev] | android | secrets');
+  console.error('Usage: keys.mjs updater [--dev] | android [--dev] | secrets');
   process.exit(2);
 }
 command();

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { coverageFindings } from './audit';
 
 const secret = (name: string, value: string) => ({ name, value });
+const KEY = [secret('TAURI_SIGNING_PRIVATE_KEY', 'invented-value-for-the-test')];
 
 describe('audit coverage (SC9): nothing is waved through unseen', () => {
   it('fails on a path without files, also in a dry run', () => {
@@ -40,7 +41,7 @@ describe('audit coverage (SC9): nothing is waved through unseen', () => {
       coverageFindings({
         publish: true,
         paths: [{ path: 'dl', files: 4 }],
-        secrets: [],
+        secrets: KEY,
         signatures: 0,
       }),
     ).toEqual([{ file: 'dl', rule: 'no-signature' }]);
@@ -48,18 +49,24 @@ describe('audit coverage (SC9): nothing is waved through unseen', () => {
       coverageFindings({
         publish: true,
         paths: [{ path: 'dl', files: 4 }],
-        secrets: [],
+        secrets: KEY,
         signatures: 1,
       }),
     ).toEqual([]);
     // without --pubkey-from (signatures undefined) nothing is required
     expect(
-      coverageFindings({ publish: true, paths: [{ path: 'x', files: 1 }], secrets: [] }),
+      coverageFindings({ publish: true, paths: [{ path: 'x', files: 1 }], secrets: KEY }),
     ).toEqual([]);
   });
 
+  it('publishing with no secret names at all is a finding (an emptied AUDIT_SECRET_ENV)', () => {
+    expect(
+      coverageFindings({ publish: true, paths: [{ path: 'dl', files: 4 }], secrets: [] }),
+    ).toEqual([{ file: '(environment)', rule: 'secret-not-provided', detail: 'AUDIT_SECRET_ENV' }]);
+  });
+
   it('publishing without any path is a finding, not a pass', () => {
-    expect(coverageFindings({ publish: true, paths: [], secrets: [] })).toEqual([
+    expect(coverageFindings({ publish: true, paths: [], secrets: KEY })).toEqual([
       { file: '(none)', rule: 'empty-path' },
     ]);
   });

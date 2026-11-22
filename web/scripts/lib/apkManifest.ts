@@ -12,7 +12,10 @@ export interface MergedManifest {
   permissions: string[];
   /** Attributes of `<application>`. */
   application: Record<string, string>;
-  /** Components another app can start or bind (explicitly exported, or with an intent filter and no `exported`). */
+  /**
+   * Components another app can start or bind (explicitly exported, or with an intent filter and no
+   * `exported`), as `name` or `name (permission)` when `android:permission` guards it.
+   */
   exported: string[];
 }
 
@@ -22,8 +25,9 @@ export interface ManifestAllowList {
 }
 
 /**
- * Reviewed 2026-11 from the release APK's merged manifest (dry run of `release.yml`). Adding an entry
- * is a security review: say in the PR why the app needs it.
+ * Taken from the merged manifest of the release APK (dry run of `release.yml` on 2026-11-22, printed
+ * by the check step) and reviewed entry by entry. Adding or changing an entry is a security review:
+ * say in the PR why the app needs it. Exported components carry their guarding permission.
  */
 export const APK_ALLOW_LIST: ManifestAllowList = {
   permissions: [
@@ -64,7 +68,9 @@ export function parseManifest(xml: string): MergedManifest {
     if (!COMPONENTS.has(el.tag) || stack.at(-1)?.tag !== 'application') return;
     const exported = el.attrs['android:exported'];
     if (exported === 'true' || (exported === undefined && el.filter)) {
-      result.exported.push(el.attrs['android:name'] ?? '(unnamed)');
+      const name = el.attrs['android:name'] ?? '(unnamed)';
+      const guard = el.attrs['android:permission'];
+      result.exported.push(guard ? `${name} (${guard})` : name);
     }
   };
   for (const m of xml.matchAll(/<(\/?)([A-Za-z][\w.-]*)((?:[^>"]|"[^"]*")*?)(\/?)>/g)) {

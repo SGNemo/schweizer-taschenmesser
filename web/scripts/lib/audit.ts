@@ -222,7 +222,7 @@ export interface AuditCoverage {
 
 /**
  * An audit that saw nothing must not pass (SC9): a path without files is always a finding. When
- * publishing, every secret named for the audit must have a value (a gating mistake in the workflow
+ * publishing, AUDIT_SECRET_ENV must name secrets and every one of them must have a value (a gating mistake in the workflow
  * would otherwise turn the value search off unnoticed), and a public key without a single signature
  * to check is a finding too.
  */
@@ -231,6 +231,13 @@ export function coverageFindings(c: AuditCoverage): Finding[] {
   if (c.paths.length === 0) findings.push({ file: '(none)', rule: 'empty-path' });
   for (const p of c.paths) if (p.files === 0) findings.push({ file: p.path, rule: 'empty-path' });
   if (c.publish) {
+    if (c.secrets.length === 0) {
+      findings.push({
+        file: '(environment)',
+        rule: 'secret-not-provided',
+        detail: 'AUDIT_SECRET_ENV',
+      });
+    }
     for (const s of c.secrets) {
       if (s.value.trim() === '') {
         findings.push({ file: '(environment)', rule: 'secret-not-provided', detail: s.name });
