@@ -1,0 +1,17 @@
+[package]
+name = "taschenmesser-file-names"
+version = "0.1.0"
+authors = ["SGNemo"]
+description = "One cleaner for file names that come from outside (device exchange, downloads, torrents) and the Mark-of-the-Web for files from the internet. Pure std apart from Unicode data; no logging, no unsafe."
+edition = "2021"
+rust-version = "1.77"
+publish = false
+
+[lib]
+name = "file_names"
+
+[dependencies]
+# NFC and the Unicode category "format" of a name. The versions the shell already locks (through
+# `url`/`idna`): no new library in the app.
+icu_normalizer = { version = "2.3", default-features = false, features = ["compiled_data"] }
+icu_properties = { version = "2.3", default-features = false, features = ["compiled_data"] }

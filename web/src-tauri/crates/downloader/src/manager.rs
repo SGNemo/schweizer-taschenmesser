@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     job::{HashCheck, Job, State},
-    name::{file_name_from_url, unique_name},
-    worker,
+    name::{file_name_from_url, sanitize_file_name, unique_name},
+    net, worker,
 };
 
 /// How many jobs download at the same time; the rest wait as `Queued`.
@@ -38,6 +38,8 @@ pub enum AddError {
     Dir,
     /// The pasted hash is neither SHA-256 (64) nor SHA-512 (128 hex characters).
     Hash,
+    /// An address of the home network or this PC (`localhost`, `192.168.…`): never downloaded from.
+    Host,
 }
 
 impl AddError {
@@ -47,6 +49,7 @@ impl AddError {
             AddError::Scheme => "scheme",
             AddError::Dir => "dir",
             AddError::Hash => "hash",
+            AddError::Host => "blocked",
         }
     }
 }
@@ -63,9 +66,13 @@ struct Saved {
 
 pub(crate) struct Inner {
     state_file: PathBuf,
+    /// Internet only, except in this crate's integration tests.
+    pub(crate) reach: net::Reach,
     /// One `persist` at a time: commands and worker threads share the temporary file.
     persist_gate: Mutex<()>,
     pub(crate) jobs: Mutex<Vec<Job>>,
+    /// Addresses with user name or password, for this run only: the job list keeps them without (DL9).
+    with_credentials: Mutex<HashMap<u64, String>>,
     flags: Mutex<HashMap<u64, Arc<AtomicU8>>>,
     pub(crate) global_bps: AtomicU64,
     next_id: AtomicU64,
@@ -89,6 +96,11 @@ impl Inner {
         if let Some(j) = lock(&self.jobs).iter_mut().find(|j| j.id == id) {
             f(j);
         }
+    }
+
+    /// The address to request: with its credentials when they were given in this run.
+    pub(crate) fn request_url(&self, id: u64) -> Option<String> {
+        lock(&self.with_credentials).get(&id).cloned()
     }
 
     pub(crate) fn job(&self, id: u64) -> Option<Job> {
@@ -156,6 +168,17 @@ impl Inner {
     }
 }
 
+/// A saved job as `add` would have made it, or `None`: an address without credentials that
+/// passes [`net::check_url`], an existing absolute folder, a plain file name that the cleaner
+/// leaves as it is. A saved address with credentials (an older list) loses them.
+fn still_valid(mut job: Job, reach: net::Reach) -> Option<Job> {
+    let parsed = url::Url::parse(&job.url).ok()?;
+    net::check_url_for(&parsed, reach).ok()?;
+    job.url = net::without_credentials(&parsed).to_string();
+    let plain = job.file_name == sanitize_file_name(&job.file_name);
+    (job.dir.is_absolute() && job.dir.is_dir() && plain).then_some(job)
+}
+
 /// The download manager. Cheap to clone; all clones share the jobs.
 #[derive(Clone)]
 pub struct Manager(pub(crate) Arc<Inner>);
@@ -164,11 +187,34 @@ impl Manager {
     /// Opens (or creates) the job list at `state_file`. Jobs that were running when the program ended
     /// come back as `Paused` with their partial file; nothing starts by itself.
     pub fn open(state_file: PathBuf, notify: Arc<dyn Fn() + Send + Sync>) -> Manager {
+        Self::open_with(state_file, notify, net::Reach::Internet)
+    }
+
+    /// The download tests' manager: their server is on 127.0.0.1 (never in a build of the app).
+    #[cfg(test)]
+    pub fn open_allowing_loopback(
+        state_file: PathBuf,
+        notify: Arc<dyn Fn() + Send + Sync>,
+    ) -> Manager {
+        Self::open_with(state_file, notify, net::Reach::InternetAndLoopback)
+    }
+
+    fn open_with(
+        state_file: PathBuf,
+        notify: Arc<dyn Fn() + Send + Sync>,
+        reach: net::Reach,
+    ) -> Manager {
         let saved: Saved = fs::read(&state_file)
             .ok()
             .and_then(|b| serde_json::from_slice(&b).ok())
             .unwrap_or_default();
-        let mut jobs = saved.jobs;
+        // An edited or old list is checked again: a job whose folder, name or address would not have
+        // been accepted by `add` is dropped, so "remove + delete data" can never reach another path (DL9).
+        let mut jobs: Vec<Job> = saved
+            .jobs
+            .into_iter()
+            .filter_map(|j| still_valid(j, reach))
+            .collect();
         let next = jobs.iter().map(|j| j.id).max().unwrap_or(0) + 1;
         for j in &mut jobs {
             j.speed_bps = 0;
@@ -182,8 +228,10 @@ impl Manager {
         }
         Manager(Arc::new(Inner {
             state_file,
+            reach,
             persist_gate: Mutex::new(()),
             jobs: Mutex::new(jobs),
+            with_credentials: Mutex::new(HashMap::new()),
             flags: Mutex::new(HashMap::new()),
             global_bps: AtomicU64::new(saved.global_bps),
             next_id: AtomicU64::new(saved.next_id.max(next)),
@@ -203,8 +251,10 @@ impl Manager {
     /// address (a `Content-Disposition` name replaces it when the download starts).
     pub fn add(&self, url: &str, dir: &Path, expected_hash: Option<&str>) -> Result<Job, AddError> {
         let parsed = url::Url::parse(url.trim()).map_err(|_| AddError::Url)?;
-        if !matches!(parsed.scheme(), "http" | "https") || parsed.host_str().is_none() {
-            return Err(AddError::Scheme);
+        match net::check_url_for(&parsed, self.0.reach) {
+            Ok(()) => {}
+            Err(net::Refused::Host) => return Err(AddError::Host),
+            Err(_) => return Err(AddError::Scheme),
         }
         if !dir.is_absolute() || !dir.is_dir() {
             return Err(AddError::Dir);
@@ -218,9 +268,13 @@ impl Manager {
         let name = unique_name(dir, &file_name_from_url(&parsed), &|n| {
             self.0.name_taken(dir, n, id)
         });
+        let stored = net::without_credentials(&parsed);
+        if stored != parsed {
+            lock(&self.0.with_credentials).insert(id, parsed.to_string());
+        }
         let job = Job {
             id,
-            url: parsed.to_string(),
+            url: stored.to_string(),
             file_name: name,
             dir: dir.to_path_buf(),
             state: State::Queued,
@@ -278,6 +332,7 @@ impl Manager {
             jobs.iter().position(|j| j.id == id).map(|i| jobs.remove(i))
         };
         let Some(job) = job else { return };
+        lock(&self.0.with_credentials).remove(&id);
         if let Some(f) = flag {
             // The worker is still running: it stops, and deletes the partial file when asked to.
             f.store(

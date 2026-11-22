@@ -32,7 +32,8 @@ fn serve(body: Vec<u8>) -> Server {
                 let mut reader = BufReader::new(stream.try_clone().unwrap());
                 let mut request = String::new();
                 reader.read_line(&mut request).unwrap();
-                let path = request.split_whitespace().nth(1).unwrap_or("/").to_string();
+                let path = request.split_whitespace().nth(1).unwrap_or("/");
+                let path = path.split('?').next().unwrap_or("/").to_string();
                 let mut start = 0usize;
                 loop {
                     let mut line = String::new();
@@ -43,6 +44,20 @@ fn serve(body: Vec<u8>) -> Server {
                         seen.lock().unwrap().push(v.trim().to_string());
                         start = v.trim().trim_end_matches('-').parse().unwrap_or(0);
                     }
+                }
+                // redirects: to the home network, in a loop, and one fine hop to the file
+                let location = match path.as_str() {
+                    "/to-home" => Some("http://10.0.0.1/data.bin".to_owned()),
+                    "/to-file" => Some("/data.bin".to_owned()),
+                    p if p.starts_with("/loop") => Some(format!("{p}x")),
+                    _ => None,
+                };
+                if let Some(to) = location {
+                    let _ = stream.write_all(
+                        format!("HTTP/1.1 302 Found\r\nLocation: {to}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n")
+                            .as_bytes(),
+                    );
+                    return;
                 }
                 if path != "/data.bin" && path != "/cd" {
                     let _ = stream.write_all(
@@ -107,7 +122,7 @@ fn env(name: &str) -> Env {
 }
 
 fn open(e: &Env) -> Manager {
-    Manager::open(e.state.clone(), Arc::new(|| {}))
+    Manager::open_allowing_loopback(e.state.clone(), Arc::new(|| {}))
 }
 
 fn wait(m: &Manager, id: u64, what: &str, ok: impl Fn(&Job) -> bool) -> Job {
@@ -336,4 +351,97 @@ fn only_http_and_existing_folders_and_a_missing_page_fails() {
     assert_eq!(j.error.as_deref(), Some("http"));
     assert!(files(&e.dir).is_empty());
     let _ = std::fs::remove_dir_all(e.root);
+}
+
+/// DL4: an address of the home network is refused when it is added, and a redirect to one stops
+/// the download; redirects are followed hop by hop, at most three.
+#[test]
+fn home_network_addresses_and_redirects_are_checked() {
+    let e = env("hosts");
+    let internet_only = Manager::open(e.state.clone(), Arc::new(|| {}));
+    assert_eq!(
+        internet_only.add("http://127.0.0.1:9/x.bin", &e.dir, None).unwrap_err(),
+        AddError::Host
+    );
+    assert_eq!(
+        internet_only.add("http://192.168.178.1/x.bin", &e.dir, None).unwrap_err(),
+        AddError::Host
+    );
+    assert_eq!(
+        internet_only.add("http://localhost/x.bin", &e.dir, None).unwrap_err(),
+        AddError::Host
+    );
+    drop(internet_only);
+
+    let srv = serve(body(1000));
+    let m = open(&e);
+    let home = m.add(&format!("{}/to-home", srv.base), &e.dir, None).unwrap();
+    let failed = wait(&m, home.id, "blocked", |j| j.state == State::Failed);
+    assert_eq!(failed.error.as_deref(), Some("blocked"));
+    let looping = m.add(&format!("{}/loop", srv.base), &e.dir, None).unwrap();
+    let failed = wait(&m, looping.id, "redirect", |j| j.state == State::Failed);
+    assert_eq!(failed.error.as_deref(), Some("redirect"));
+    let fine = m.add(&format!("{}/to-file", srv.base), &e.dir, None).unwrap();
+    assert_eq!(done(&m, fine.id).total, Some(1000));
+    let _ = std::fs::remove_dir_all(&e.root);
+}
+
+/// DL9: user name and password are used in this run but never written to the job list.
+#[test]
+fn credentials_stay_out_of_the_job_list() {
+    let e = env("creds");
+    let srv = serve(body(500));
+    let m = open(&e);
+    let with = srv.base.replace("http://", "http://nutzer:geheim@");
+    let job = m.add(&format!("{with}/data.bin?token=t"), &e.dir, None).unwrap();
+    assert!(!job.url.contains("geheim") && !job.url.contains("nutzer"));
+    done(&m, job.id);
+    let saved = std::fs::read_to_string(&e.state).unwrap();
+    assert!(!saved.contains("geheim") && !saved.contains("nutzer"));
+    assert!(saved.contains("token=t"), "the address itself stays for resuming");
+    let _ = std::fs::remove_dir_all(&e.root);
+}
+
+/// DL9: an edited job list cannot point "remove + delete data" at another path.
+#[test]
+fn an_edited_job_list_is_checked_on_load() {
+    let e = env("edited");
+    let outside = e.root.join("outside.bin");
+    std::fs::write(&outside, b"keep me").unwrap();
+    let dir = e.dir.to_string_lossy().replace('\\', "\\\\");
+    let job = |id: u64, name: &str, url: &str| {
+        format!(
+            r#"{{"id":{id},"url":"{url}","fileName":"{name}","dir":"{dir}","state":"done","done":7,"total":7,"limitBps":0,"error":null,"sha256":null,"expectedHash":null,"hashCheck":null}}"#
+        )
+    };
+    let list = format!(
+        r#"{{"nextId":9,"globalBps":0,"jobs":[{},{},{}]}}"#,
+        job(1, "../outside.bin", "https://example.org/a"),
+        job(2, "ok.bin", "file:///etc/passwd"),
+        job(3, "fine.bin", "https://example.org/fine.bin"),
+    );
+    std::fs::write(&e.state, list).unwrap();
+    let m = Manager::open(e.state.clone(), Arc::new(|| {}));
+    let ids: Vec<u64> = m.snapshot().iter().map(|j| j.id).collect();
+    assert_eq!(ids, [3]);
+    m.remove(1, true);
+    assert!(outside.exists());
+    let _ = std::fs::remove_dir_all(&e.root);
+}
+
+/// DL3: a finished download carries the Mark-of-the-Web, without the address's credentials.
+#[cfg(windows)]
+#[test]
+fn a_finished_file_is_marked_as_from_the_internet() {
+    let e = env("motw");
+    let srv = serve(body(300));
+    let m = open(&e);
+    let with = srv.base.replace("http://", "http://nutzer:geheim@");
+    let job = done(&m, m.add(&format!("{with}/data.bin"), &e.dir, None).unwrap().id);
+    let mut stream = job.final_path().into_os_string();
+    stream.push(":Zone.Identifier");
+    let text = std::fs::read_to_string(stream).unwrap();
+    assert!(text.contains("ZoneId=3"));
+    assert!(!text.contains("geheim"));
+    let _ = std::fs::remove_dir_all(&e.root);
 }

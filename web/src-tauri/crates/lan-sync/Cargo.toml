@@ -31,11 +31,8 @@ subtle = "2"
 base64 = "0.22"
 # Daily mDNS hint (HMAC-SHA256 written out in `discovery`, no extra HMAC crate). Already in the lockfile.
 sha2 = { version = "0.10", default-features = false }
-# Device exchange file names (package 2a): NFC and the Unicode category "format" of a received name.
-# The versions the shell already locks (through `url`/`idna`): no new library in the app. A range,
-# not an exact pin: Cargo keeps one 2.x of each, so an update of `url` can move them together.
-icu_normalizer = { version = "2.3", default-features = false, features = ["compiled_data"] }
-icu_properties = { version = "2.3", default-features = false, features = ["compiled_data"] }
+# Device exchange file names: the cleaner shared with the downloads (security review 2026-11, DL8).
+taschenmesser-file-names = { path = "../file-names" }
 
 # Desktop hub only (never compiled for Android/iOS, root rule): mDNS announcement of the hub.
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]

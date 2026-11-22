@@ -5842,8 +5842,17 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+ "taschenmesser-file-names",
  "ureq",
  "url",
+]
+
+[[package]]
+name = "taschenmesser-file-names"
+version = "0.1.0"
+dependencies = [
+ "icu_normalizer",
+ "icu_properties",
 ]
 
 [[package]]
@@ -5852,8 +5861,6 @@ version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "getrandom 0.3.4",
- "icu_normalizer",
- "icu_properties",
  "mdns-sd",
  "rusqlite",
  "serde",
@@ -5861,6 +5868,7 @@ dependencies = [
  "sha2",
  "snow",
  "subtle",
+ "taschenmesser-file-names",
  "zeroize",
 ]
 

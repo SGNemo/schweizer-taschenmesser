@@ -5,17 +5,8 @@
 //! only. Pure: no file system here, nothing is logged. Mirrors the prototype `proto/wire.mjs`
 //! (`cleanName`, `risk`, `partName`) and its cases in `proto/run.mjs`.
 
-use icu_normalizer::ComposingNormalizerBorrowed;
-use icu_properties::props::{DefaultIgnorableCodePoint, GeneralCategory};
-use icu_properties::{CodePointMapData, CodePointSetData};
-
-/// Longest cleaned name, in UTF-8 bytes, with its extension and a " (n)" (filesystems allow 255;
-/// the rest is room for the folder and a calm card).
-pub const MAX_NAME_BYTES: usize = 120;
-/// An "extension" longer than this (with its dot) is no extension: it stays part of the stem.
-const MAX_EXT_BYTES: usize = 20;
-/// The name of a file whose name cleaned away to nothing.
-const FALLBACK: &str = "Datei";
+pub use file_names::{candidates, clean, defused, unique, MAX_NAME_BYTES};
+use file_names::extension;
 
 /// Types Nemo may open on a click (with the system's default app). Everything else is "other".
 /// An allow-list on purpose: a deny-list always misses a handler. Archives are not on it:
@@ -24,25 +15,6 @@ const OPENABLE: &[&str] = &[
     "jpg", "jpeg", "png", "gif", "webp", "heic", "heif", "avif", "bmp", "mp3", "m4a", "aac", "ogg",
     "opus", "flac", "wav", "mp4", "m4v", "mov", "mkv", "webm", "pdf", "txt", "md", "csv", "docx",
     "xlsx", "pptx", "odt", "ods", "odp",
-];
-
-/// Types Explorer resolves (icon, target) just by showing the folder; an SMB path there leaks the
-/// user's NTLM hash. They get `_` appended, so no handler ever parses them (`pif`: a DOS program
-/// shortcut, run on open). `desktop.ini` is the same as a whole name: see [`defuse`].
-const DEFUSE: &[&str] = &[
-    "url",
-    "pif",
-    "lnk",
-    "scf",
-    "library-ms",
-    "searchconnector-ms",
-    "search-ms",
-    "desktop",
-    "website",
-    "appref-ms",
-    "theme",
-    "themepack",
-    "deskthemepack",
 ];
 
 /// Whether Nemo may open a received file.
@@ -54,128 +26,6 @@ pub enum Risk {
     Other,
 }
 
-/// One plain file name from a sender's name: the last path segment only, NFC, no control,
-/// format or bidi characters, blank-looking letters and `<>:"/\|?*` as `_`, no dot or space at
-/// either end (also before the extension), Windows device names with a leading `_`, at most
-/// [`MAX_NAME_BYTES`] with the extension kept, shortcut types defused on the final name.
-pub fn clean(raw: &str) -> String {
-    let nfc = ComposingNormalizerBorrowed::new_nfc();
-    let whole = nfc.normalize(raw);
-    // the last segment only: "../../x" → "x", "C:\x" → "x"
-    let last = whole.rsplit(['/', '\\']).next().unwrap_or("");
-    let category = CodePointMapData::<GeneralCategory>::new();
-    let ignorable = CodePointSetData::new::<DefaultIgnorableCodePoint>();
-    let mapped: String = last
-        .chars()
-        .map(|c| match c {
-            // letters that render blank could push the real extension off a narrow card
-            '\u{115F}' | '\u{1160}' | '\u{3164}' | '\u{FFA0}' | '\u{2800}' => '_',
-            '<' | '>' | ':' | '"' | '/' | '\\' | '|' | '?' | '*' => '_',
-            // breaks between words stay a gap ("Rechnung\tMärz" is not "RechnungMärz")
-            '\t' | '\n' | '\r' | '\u{2028}' | '\u{2029}' => ' ',
-            // every other space (no-break, em, ideographic …) is a plain one, so runs collapse
-            c if category.get(c) == GeneralCategory::SpaceSeparator => ' ',
-            c => c,
-        })
-        // invisible: controls, line separators, format characters (bidi, zero-width) and every
-        // other default-ignorable code point (variation selectors, combining grapheme joiner …)
-        .filter(|&c| {
-            !(c.is_control() || category.get(c) == GeneralCategory::Format || ignorable.contains(c))
-        })
-        .collect();
-    // removing a character can leave a combining mark next to its base: compose again
-    let mapped = nfc.normalize(&mapped);
-    // one space where there were several
-    let mut mapped_once = String::with_capacity(mapped.len());
-    for c in mapped.chars() {
-        if !(c == ' ' && mapped_once.ends_with(' ')) {
-            mapped_once.push(c);
-        }
-    }
-    let mapped = mapped_once;
-    // no leading dots (hidden, ".."), no trailing dot or space
-    let s = trim_end(mapped.trim_start_matches(|c: char| c.is_whitespace() || c == '.'));
-    let s = if s.is_empty() { FALLBACK } else { s };
-    let (stem, ext) = match s.rfind('.') {
-        Some(dot) if dot > 0 && s.len() - dot <= MAX_EXT_BYTES => (trim_end(&s[..dot]), &s[dot..]),
-        _ => (s, ""),
-    };
-    // the "_" of a device name and of a defused type need up to two more bytes: cut again
-    let mut room = MAX_NAME_BYTES;
-    loop {
-        let name = fit(stem, ext, room);
-        if name.len() <= MAX_NAME_BYTES || room == 0 {
-            return name;
-        }
-        room -= 1;
-    }
-}
-
-fn fit(stem: &str, ext: &str, room: usize) -> String {
-    let cut = trim_end(cut_bytes(stem, room.saturating_sub(ext.len())));
-    let mut out = if cut.is_empty() {
-        FALLBACK.to_owned()
-    } else {
-        cut.to_owned()
-    };
-    // a name without an extension of its own must not get one from the cut
-    // ("a….exe.bbbbbbbbbbbbbbbbbbbbbbbbb" cut to "a….exe"): the cut end stays a stem
-    if ext.is_empty()
-        && cut.len() < stem.len()
-        && extension(&out).is_some_and(|e| e.len() < MAX_EXT_BYTES)
-    {
-        out.push('_');
-    }
-    // Windows treats "CON", "con.txt", "con .txt" and "con.tar.gz" alike: the first segment counts
-    if reserved(trim_end(out.split('.').next().unwrap_or(""))) {
-        out.insert(0, '_');
-    }
-    defuse(out + ext)
-}
-
-/// Windows device names (any case, also with the superscript digits Windows accepts).
-fn reserved(segment: &str) -> bool {
-    let lower = segment.to_lowercase();
-    if matches!(
-        lower.as_str(),
-        "con" | "prn" | "aux" | "nul" | "conin$" | "conout$"
-    ) {
-        return true;
-    }
-    let mut chars = lower.chars();
-    let prefix: String = chars.by_ref().take(3).collect();
-    let rest: Vec<char> = chars.collect();
-    matches!(prefix.as_str(), "com" | "lpt")
-        && matches!(rest.as_slice(), [d] if d.is_ascii_digit() || matches!(d, '¹' | '²' | '³'))
-}
-
-/// `name` with `_` appended when its final extension is a shortcut-like type, or when it is
-/// `desktop.ini` (Explorer reads its icon from a folder marked read-only or system).
-fn defuse(mut name: String) -> String {
-    if defused_ext(&name) {
-        name.push('_');
-    }
-    name
-}
-
-fn defused_ext(name: &str) -> bool {
-    name.eq_ignore_ascii_case("desktop.ini")
-        || extension(name).is_some_and(|e| DEFUSE.iter().any(|d| e.eq_ignore_ascii_case(d)))
-}
-
-/// Whether a cleaned name is a shortcut-like type that [`clean`] defused (`Ordner.url_`).
-pub fn defused(name: &str) -> bool {
-    name.strip_suffix('_').is_some_and(defused_ext)
-}
-
-/// The final extension without its dot, if the name has one after a non-empty stem.
-fn extension(name: &str) -> Option<&str> {
-    match name.rfind('.') {
-        Some(dot) if dot > 0 => Some(&name[dot + 1..]),
-        _ => None,
-    }
-}
-
 /// Whether Nemo may open this (cleaned) name; the last extension decides.
 pub fn risk(name: &str) -> Risk {
     match extension(name) {
@@ -184,55 +34,11 @@ pub fn risk(name: &str) -> Risk {
     }
 }
 
-/// The names to try for a cleaned name, in order: the name itself, then "stem (2).ext" …
-/// "stem (9999).ext", each within [`MAX_NAME_BYTES`] (the stem is cut, never the extension).
-/// The caller creates each one create-new and takes the first that works, so a race never
-/// replaces a file and an error other than "exists" can stop the search.
-pub fn candidates(name: &str) -> impl Iterator<Item = String> + '_ {
-    // a defused name keeps its whole tail ("x.url_"): the counter goes before it
-    let (stem, ext) = match name.rfind('.') {
-        Some(dot) if dot > 0 && name.len() - dot <= MAX_EXT_BYTES + 1 => {
-            (&name[..dot], &name[dot..])
-        }
-        _ => (name, ""),
-    };
-    std::iter::once(name.to_owned()).chain((2..=9999u32).map(move |n| {
-        let counter = format!(" ({n})");
-        let room = MAX_NAME_BYTES.saturating_sub(ext.len() + counter.len());
-        let cut = trim_end(cut_bytes(stem, room));
-        format!(
-            "{}{counter}{ext}",
-            if cut.is_empty() { FALLBACK } else { cut }
-        )
-    }))
-}
-
-/// The first of [`candidates`] that `taken` says is free (`None` when none is).
-pub fn unique(name: &str, mut taken: impl FnMut(&str) -> bool) -> Option<String> {
-    candidates(name).find(|c| !taken(c))
-}
-
 /// The half-written file of an incoming transfer: named only from the authenticated device and
 /// the validated item id, never from anything the sender wrote.
 pub fn part(peer: &[u8; 32], id: &[u8; 16]) -> String {
     let hex = |bytes: &[u8]| bytes.iter().map(|b| format!("{b:02x}")).collect::<String>();
     format!("{}-{}.part", hex(peer), hex(id))
-}
-
-fn trim_end(s: &str) -> &str {
-    s.trim_end_matches(|c: char| c.is_whitespace() || c == '.')
-}
-
-/// The longest prefix of whole characters that fits into `max` UTF-8 bytes.
-fn cut_bytes(text: &str, max: usize) -> &str {
-    if text.len() <= max {
-        return text;
-    }
-    let mut end = max;
-    while !text.is_char_boundary(end) {
-        end -= 1;
-    }
-    &text[..end]
 }
 
 #[cfg(test)]

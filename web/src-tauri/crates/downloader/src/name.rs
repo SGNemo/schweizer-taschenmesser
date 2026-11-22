@@ -1,10 +1,5 @@
 use std::path::{Path, PathBuf};
 
-const RESERVED: &[&str] = &[
-    "con", "prn", "aux", "nul", "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8",
-    "com9", "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9",
-];
-const MAX_LEN: usize = 150;
 
 fn percent_decode(s: &str) -> String {
     let bytes = s.as_bytes();
@@ -27,39 +22,11 @@ fn percent_decode(s: &str) -> String {
     String::from_utf8_lossy(&out).into_owned()
 }
 
-/// A safe single file name: no folders, no characters Windows rejects, no reserved device names,
-/// no leading/trailing dots or spaces, capped in length (the extension is kept). Never empty.
+/// A safe single file name: the cleaner the device exchange uses (`file_names::clean`: last
+/// segment only, no control, format or bidi characters, no characters Windows rejects, no device
+/// names, shortcut types defused, length capped with the extension kept). Never empty.
 pub fn sanitize_file_name(raw: &str) -> String {
-    let last = raw.rsplit(['/', '\\']).next().unwrap_or("");
-    let cleaned: String = last
-        .chars()
-        .map(|c| {
-            if c.is_control() || matches!(c, '<' | '>' | ':' | '"' | '|' | '?' | '*') {
-                '_'
-            } else {
-                c
-            }
-        })
-        .collect();
-    let mut name = cleaned.trim_matches(|c| c == '.' || c == ' ').to_string();
-    if name.is_empty() {
-        name = "download".into();
-    }
-    if name.chars().count() > MAX_LEN {
-        let ext: String = Path::new(&name)
-            .extension()
-            .map(|e| format!(".{}", e.to_string_lossy()))
-            .filter(|e| e.chars().count() <= 16)
-            .unwrap_or_default();
-        let keep = MAX_LEN - ext.chars().count();
-        let stem: String = name.chars().take(keep).collect();
-        name = format!("{stem}{ext}");
-    }
-    let stem = name.split('.').next().unwrap_or("").to_ascii_lowercase();
-    if RESERVED.contains(&stem.as_str()) {
-        name = format!("_{name}");
-    }
-    name
+    file_names::clean(raw)
 }
 
 /// Name from a `Content-Disposition` header (`filename*=UTF-8''…` wins over `filename=`), sanitised.
@@ -83,7 +50,11 @@ pub fn file_name_from_url(url: &url::Url) -> String {
         .path_segments()
         .and_then(|mut s| s.next_back())
         .unwrap_or("");
-    sanitize_file_name(&percent_decode(seg))
+    let decoded = percent_decode(seg);
+    if decoded.trim_matches(['.', ' ', '/', '\\']).is_empty() {
+        return "download".into();
+    }
+    sanitize_file_name(&decoded)
 }
 
 /// `name`, or `name (1).ext`, `name (2).ext` … – the first one that does not exist in `dir`
@@ -121,13 +92,18 @@ mod tests {
             sanitize_file_name("we<ir>d:na?me*.iso"),
             "we_ir_d_na_me_.iso"
         );
-        assert_eq!(sanitize_file_name("  ..  "), "download");
-        assert_eq!(sanitize_file_name(""), "download");
+        assert_eq!(sanitize_file_name("  ..  "), "Datei");
+        assert_eq!(sanitize_file_name(""), "Datei");
+        // DL8: device names with a space or a superscript digit, bidi overrides, shortcut types
+        assert_eq!(sanitize_file_name("CON .txt"), "_CON.txt");
+        assert_eq!(sanitize_file_name("COM¹.log"), "_COM¹.log");
+        assert_eq!(sanitize_file_name("Rechnung\u{202E}fdp.exe"), "Rechnungfdp.exe");
+        assert_eq!(sanitize_file_name("Ordner.url"), "Ordner.url_");
         assert_eq!(sanitize_file_name("CON.txt"), "_CON.txt");
         assert_eq!(sanitize_file_name("nul"), "_nul");
         let long = format!("{}.tar.gz", "x".repeat(400));
         let cut = sanitize_file_name(&long);
-        assert!(cut.chars().count() <= MAX_LEN && cut.ends_with(".gz"));
+        assert!(cut.len() <= file_names::MAX_NAME_BYTES && cut.ends_with(".gz"));
     }
 
     #[test]
