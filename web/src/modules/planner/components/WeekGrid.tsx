@@ -4,6 +4,7 @@ import { addDaysStr, formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import type { BoardDay } from '../board';
 import { capacityShort, capacityState } from './capacity';
+import { droppedOn, useDragState, withDropped } from './dragMove';
 import { isPassed, thingCount, tileName } from './WeekBand';
 import styles from './WeekGrid.module.css';
 
@@ -18,13 +19,17 @@ export function WeekGrid({
   picked,
   today,
   onPick,
+  drop,
 }: {
   days: readonly BoardDay[];
   picked: string | undefined;
   today: string;
   onPick: (date: string) => void;
+  /** The cells take a dragged row (package 5); a passed day never does. */
+  drop?: boolean;
 }) {
   const box = useRef<HTMLDivElement>(null);
+  const drag = useDragState();
   const weeks = Array.from({ length: Math.ceil(days.length / 7) }, (_, w) =>
     days.slice(w * 7, w * 7 + 7),
   );
@@ -63,16 +68,25 @@ export function WeekGrid({
           {week.map((d) => {
             const passed = isPassed(d, today);
             const n = thingCount(d);
-            const over = !passed && capacityState(d) === 'over';
+            // A row dragged over the cell: the day as it would be – a full one says its overbooking.
+            const dropped = passed ? null : droppedOn(drag, d.date);
+            const shown = dropped === null ? d : withDropped(d, dropped);
+            const over = !passed && capacityState(shown) === 'over';
             const word = passed
               ? d.rows.length > 0
                 ? t.planner.board.open
                 : ''
               : over
-                ? capacityShort(d)
+                ? capacityShort(shown)
                 : '';
             return (
-              <div key={d.date} role="gridcell" className={styles.cell}>
+              <div
+                key={d.date}
+                role="gridcell"
+                className={styles.cell}
+                data-drop-date={passed || !drop ? undefined : d.date}
+                data-drop-over={dropped !== null || undefined}
+              >
                 <button
                   type="button"
                   className={styles.pick}

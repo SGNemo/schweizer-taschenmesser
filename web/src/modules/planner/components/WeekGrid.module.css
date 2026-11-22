@@ -77,3 +77,8 @@
     justify-content: center;
   }
 }
+/* A row dragged over the cell (package 5): a dashed outline; „+ … mehr“ says when the day would be full. */
+.cell[data-drop-over] .pick {
+  outline: 2px dashed var(--focus);
+  outline-offset: -2px;
+}

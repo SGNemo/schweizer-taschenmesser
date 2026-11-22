@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { type KeyboardEvent, useState } from 'react';
 import type { PlannableEntry } from '@/core/modules/contributions';
 import { dayName } from '@/core/plan/explain';
 import { addDaysStr, formatDay } from '@/core/time/dates';
@@ -59,6 +59,18 @@ function DayPick({
   onPick: (date: string) => void;
 }) {
   const [offset, setOffset] = useState(0);
+  const onArrows = (e: KeyboardEvent<HTMLDivElement>) => {
+    const step = (
+      { ArrowRight: 1, ArrowLeft: -1, ArrowDown: 7, ArrowUp: -7 } as Record<string, number>
+    )[e.key];
+    if (!step) return;
+    const chips = [...e.currentTarget.querySelectorAll<HTMLButtonElement>('button')];
+    const at = chips.indexOf(document.activeElement as HTMLButtonElement);
+    const to = chips[at + step];
+    if (at < 0 || !to) return;
+    e.preventDefault();
+    to.focus();
+  };
   const from = addDaysStr(first, offset);
   const dates = Array.from({ length: PICK_DAYS }, (_, i) => addDaysStr(from, i));
   const weeks = Array.from({ length: PICK_DAYS / BOARD_DAYS }, (_, w) =>
@@ -87,19 +99,22 @@ function DayPick({
           <Icon name="chevronRight" size={16} />
         </IconButton>
       </div>
-      {weeks.map((week) => (
-        <Chips key={week[0]} label={label}>
-          {week.map((date) => (
-            <Chip
-              key={date}
-              // „Mi 18.“ – weekday and day, as on the week band's tiles.
-              label={`${dayName(date)} ${formatDay(date, 'd.')}`}
-              selected={on === date}
-              onClick={() => onPick(date)}
-            />
-          ))}
-        </Chips>
-      ))}
+      {/* Arrow keys pick the day (package 5, the move by keyboard): ← → a day, ↑ ↓ a week; Enter acts. */}
+      <div onKeyDown={onArrows}>
+        {weeks.map((week) => (
+          <Chips key={week[0]} label={label}>
+            {week.map((date) => (
+              <Chip
+                key={date}
+                // „Mi 18.“ – weekday and day, as on the week band's tiles.
+                label={`${dayName(date)} ${formatDay(date, 'd.')}`}
+                selected={on === date}
+                onClick={() => onPick(date)}
+              />
+            ))}
+          </Chips>
+        ))}
+      </div>
     </>
   );
 }

@@ -67,6 +67,7 @@ export function ThingRow({
   onMove,
   onTakeOff,
   select,
+  draggable,
 }: {
   row: BoardRow;
   /** The first row of „Zuerst“: its title is strong. */
@@ -95,6 +96,8 @@ export function ThingRow({
   onTakeOff?: () => void;
   /** „Auswählen“: the row is a choice of the selection (a checkbox in front, no tick). */
   select?: { selected: boolean; onChange: (selected: boolean) => void };
+  /** The row can be dragged onto a day and moved with `M` (package 5; the page's `useDragMove` acts). */
+  draggable?: boolean;
 }) {
   const navigate = useNavigate();
   // Ticked: the row fades while the source stores it, then leaves with the board's next reading.
@@ -185,6 +188,7 @@ export function ThingRow({
         <span
           className={next ? styles.thingTitle : `${styles.thingTitle} ${styles.thingWeight}`}
           title={row.title}
+          data-drag-unit={draggable && !select ? row.unitId : undefined}
         >
           {row.title}
           {row.of > 1 ? <Part k={row.k} of={row.of} /> : null}
@@ -277,6 +281,7 @@ export function WaitRow({
   why,
   menu,
   chip,
+  draggable,
 }: {
   row: WaitingRow;
   reason: string;
@@ -285,13 +290,15 @@ export function WaitRow({
   menu: RowMenuItem[];
   /** „Vorschlag: Do · Frist Fr · Übernehmen“ or „In ToDos: Mo 16.“: one fact and at most one step. */
   chip?: ReactNode;
+  /** The row can be dragged onto a day and moved with `M` (package 5). */
+  draggable?: boolean;
 }) {
   const links = useRowLinks(row.entry);
   const linkMenu = useLinkMenu(links);
   return (
     <ItemRow
       title={
-        <span>
+        <span data-drag-unit={draggable ? row.unitId : undefined}>
           {row.title}
           {row.of > 1 ? <Part k={row.k} of={row.of} /> : null}
         </span>

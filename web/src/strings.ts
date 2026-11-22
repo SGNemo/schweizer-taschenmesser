@@ -9478,6 +9478,11 @@ export const de = {
       blockerFrom: 'Blocker von',
       blockerTo: 'Blocker bis',
     },
+    // Package 5: the label under the pointer while a row is dragged (decoration; the drop's toast says the rest).
+    drag: {
+      pick: 'Auf einen Tag ziehen',
+      drop: 'Hier ablegen',
+    },
     row: {
       part: (k: number, of: number) => `Teil ${k}/${of}`,
       partAria: (k: number, of: number) => `Teil ${k} von ${of}`,

@@ -224,7 +224,8 @@ describe('the page with late invoices', () => {
     draw();
     fireEvent.click((await screen.findAllByRole('button', { name: 'Aktionen für Saugen' }))[0]!);
     const menu = (await screen.findAllByRole('menuitem')).map((m) => m.textContent);
-    expect(menu.slice(0, 2)).toEqual(['Verschieben …', 'Später']);
+    // „Verschieben …“ first, its key „M“ beside it (package 5).
+    expect(menu.slice(0, 2)).toEqual(['Verschieben …M', 'Später']);
     expect(menu.some((m) => /Festnageln/.test(m ?? ''))).toBe(false);
     fireEvent.click(screen.getByRole('menuitem', { name: 'Verschieben …' }));
     const sheet = await screen.findByRole('dialog', { name: 'Verschieben: Saugen' });

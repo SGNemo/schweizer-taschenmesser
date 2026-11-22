@@ -18,6 +18,8 @@ export interface RowMenuItem {
   checked?: boolean;
   /** Said, not offered (a link whose target is gone): `aria-disabled`, still reachable by the arrow keys. */
   disabled?: boolean;
+  /** The entry's keyboard key on the focused row („M“): shown beside the label (not on touch), `aria-keyshortcuts`. */
+  shortcut?: string;
 }
 
 /**
@@ -117,6 +119,7 @@ export function RowMenu({
           role={item.checked === undefined ? 'menuitem' : 'menuitemcheckbox'}
           aria-checked={item.checked}
           aria-disabled={item.disabled || undefined}
+          aria-keyshortcuts={item.shortcut}
           className={`${styles.item} ${item.danger ? styles.danger : ''}`}
           onClick={() => {
             if (item.disabled) return;
@@ -125,6 +128,11 @@ export function RowMenu({
           }}
         >
           {item.label}
+          {item.shortcut ? (
+            <kbd className={styles.shortcut} aria-hidden="true">
+              {item.shortcut}
+            </kbd>
+          ) : null}
           {item.checked ? <Icon name="check" size={16} /> : null}
         </button>
       </li>,

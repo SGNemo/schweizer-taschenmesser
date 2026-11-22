@@ -1016,3 +1016,49 @@ describe('package 2, council round 2', () => {
     expect(await assignmentRepo.get(`${key('p2')}#0`)).toMatchObject({ date: MON, locked: true });
   });
 });
+
+/**
+ * Package 5 (moving by dragging): a drop is `moveTo` of the dropped thing onto the day under the pointer. Row
+ * snapshot: after every drop exactly one row has changed – the dropped thing's – also onto a full day and back.
+ */
+describe('package 5: a drop moves the dropped thing and nothing else', () => {
+  beforeEach(layFour);
+
+  it('Zeilen-Schnappschuss: every drop changes exactly one row', async () => {
+    // Monday gets full first: a drop onto a full day still moves only that thing (the toast says the overbooking).
+    for (let i = 5; i < 12; i++) {
+      await addTask(`x${i}`, `Ding x${i}`, 60);
+      expect(await moveTo(await entryOf(`x${i}`), MON, {})).toBe(true);
+    }
+    await runsSettled();
+    const drops: [string, string][] = [
+      ['p1', THU],
+      ['p3', MON],
+      ['x5', FRI],
+      ['p4', TUE],
+      ['p1', WED],
+    ];
+    for (const [id, to] of drops) {
+      const before = await rowDates();
+      expect(await moveTo(await entryOf(id), to, {})).toBe(true);
+      await runsSettled();
+      const after = await rowDates();
+      const changed = Object.keys({ ...before, ...after }).filter((r) => before[r] !== after[r]);
+      expect(changed, `${id} → ${to}`).toEqual([`${key(id)}#0`]);
+      expect(after[`${key(id)}#0`]).toBe(to);
+    }
+  });
+
+  it('a drop onto a full day says its overbooking in the one toast', async () => {
+    for (let i = 5; i < 12; i++) {
+      await addTask(`x${i}`, `Ding x${i}`, 60);
+      expect(await moveTo(await entryOf(`x${i}`), TUE, {})).toBe(true);
+    }
+    await runsSettled();
+    useUiStore.setState({ toasts: [] });
+    expect(await moveTo(await entryOf('p1'), TUE, {})).toBe(true);
+    const toasts = useUiStore.getState().toasts;
+    expect(toasts).toHaveLength(1);
+    expect(toasts[0]!.message).toMatch(/mehr geplant als planbar/);
+  });
+});
