@@ -10,7 +10,7 @@ Die Windows-App kann selbst der Abgleich-Punkt sein. Handy und PC gleichen sich 
 2. **Handy:** _Einstellungen → Sync & Backup → Mit PC koppeln_, Kamera erlauben, Code scannen.
 3. Beide zeigen denselben 6-stelligen Code. Am PC: _Koppeln_.
 
-Nichts wird eingetippt. Die Daten bleiben Ende-zu-Ende verschlüsselt; der PC hört nur im Heimnetz zu (nie in öffentlichen Netzen), und nur gekoppelte Geräte kommen herein. Am PC siehst du die gekoppelten Geräte und kannst jedes lösen; unter _Weitere Einstellungen_ gibt es _Schlüssel erneuern_ und _Abgleich im Heimnetz ausschalten_. Das Handy gleicht ab, wenn die App geöffnet wird oder nach vorne kommt; Abgleich bei ganz geschlossener App ist noch nicht gebaut. Bekommt der PC im Heimnetz eine neue Adresse (etwa nach einem neuen Router), wartet das Handy weiter: am Handy die Kopplung lösen und neu koppeln.
+Nichts wird eingetippt. Die Daten bleiben Ende-zu-Ende verschlüsselt; der PC nimmt Verbindungen nur im Heimnetz an (nie in öffentlichen Netzen), und nur gekoppelte Geräte kommen herein. Am PC siehst du die gekoppelten Geräte und kannst jedes lösen; unter _Weitere Einstellungen_ gibt es _Schlüssel erneuern_ und _Abgleich im Heimnetz ausschalten_. Das Handy gleicht ab, wenn die App geöffnet wird oder nach vorne kommt; Abgleich bei ganz geschlossener App ist noch nicht gebaut. Bekommt der PC im Heimnetz eine neue Adresse (etwa nach einem neuen Router), wartet das Handy weiter: am Handy die Kopplung lösen und neu koppeln.
 
 Ein eigener Server (unten) geht weiterhin: auf PC und Handy liegt er eingeklappt unter _Eigener Server (erweitert)_. Ein Weg pro Gerät: erst den einen trennen, dann den anderen nutzen. Ein Gerät am eigenen Server bietet _Vom Server auf das Heimnetz umstellen_: erst eine Sicherung, dann die Liste der Geräte, die der Server noch kennt (jedes lässt sich dort sperren – sie gleichen weiter über den Server ab, bis du sie auch umstellst), dann Trennen; deine Daten bleiben auf dem Gerät, danach koppelst du wie gewohnt.
 
@@ -100,7 +100,8 @@ vorausgewählt. Danach synchronisiert die App beim Start, jede Minute, nach loka
   Verschlüsselung lässt sich nur auf einem leeren Server einschalten; enthält der Server schon Klartext-Daten, bietet
   die App an, ihn zurückzusetzen (das löscht alle Serverdaten; die Geräte laden ihre Daten danach erneut hoch).
 - **Zugangsdaten** (Token, Schlüssel) bleiben lokal in der Datenbank des Browsers, werden nie synchronisiert und nie
-  in ein Backup geschrieben.
+  in ein Backup geschrieben. Eine Ausnahme: Beim Koppeln eines Geräts für den Abgleich im Heimnetz geht der
+  Datenschlüssel einmal, verschlüsselt, an dieses Gerät.
 - **Neuer oder zurückgesetzter Server:** die App erkennt das und lädt alle lokalen Daten hoch.
 - **Trennen** beendet nur den Sync auf diesem Gerät, lokale Daten bleiben.
 

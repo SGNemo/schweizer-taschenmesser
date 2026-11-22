@@ -10,7 +10,7 @@ The Windows app can be the sync point itself. Phone and PC sync as soon as both 
 2. **Phone:** _Settings → Sync & backup → Pair with PC_, allow the camera, scan the code.
 3. Both show the same 6-digit code. On the PC: _Pair_.
 
-Nothing is typed. The data stays end-to-end encrypted; the PC only listens on your home network (never on public networks) and only paired devices get in. On the PC you see the paired devices and can unpair each one; _More settings_ has _Renew key_ and _Turn off home-network sync_. The phone syncs when the app is opened or comes to the front; syncing with the app fully closed is not built yet. If the PC gets a new address on your home network (for example after a new router), the phone keeps waiting: unpair on the phone and pair again.
+Nothing is typed. The data stays end-to-end encrypted; the PC only accepts connections on your home network (never on public networks) and only paired devices get in. On the PC you see the paired devices and can unpair each one; _More settings_ has _Renew key_ and _Turn off home-network sync_. The phone syncs when the app is opened or comes to the front; syncing with the app fully closed is not built yet. If the PC gets a new address on your home network (for example after a new router), the phone keeps waiting: unpair on the phone and pair again.
 
 Your own server (below) still works: on the desktop and the phone it sits folded under _Own server (advanced)_. One way per device: disconnect one before using the other. A device on your own server offers _Switch from server to home network_: it saves a backup first, lists the devices the server still knows (each can be locked there – they keep syncing through the server until you switch them too), then disconnects; your data stays on the device, and you pair as usual.
 
@@ -100,7 +100,8 @@ changes and when it comes back online/visible; the status is shown in the settin
   Encryption can only be turned on for an empty server; if the server already holds plain-text data,
   the app offers to reset it (this deletes all server data; the devices then upload their data again).
 - **Credentials** (token, keys) stay local in the browser's database, are never synced and never
-  written into a backup.
+  written into a backup. One exception: when you pair a device for home-network sync, the data key goes
+  once, encrypted, to that device.
 - **New or reset server:** the app detects this and uploads all local data.
 - **Disconnect** only stops sync on this device; local data stays.
 

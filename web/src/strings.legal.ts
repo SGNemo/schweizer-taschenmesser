@@ -34,10 +34,10 @@ export const tLegal = defineBundle(
         when: 'Immer. Es gibt kein Konto und keinen Dienst des Betreibers, der Daten der App erhält.',
       },
       sync: {
-        title: 'Sync mit deinem eigenen Server',
-        what: 'Änderungen deiner Einträge und Einstellungen (Sammlung, Eintrags-Id, Feldname, Zeitstempel, Wert). Mit Passwortsatz werden die Werte Ende-zu-Ende verschlüsselt; Sammlung, Id, Feld und Zeitstempel bleiben für den Server lesbar. Zugangsdaten, Schlüssel und lokale Stände werden nie übertragen.',
-        to: 'Der Server, dessen Adresse du selbst einträgst und betreibst. Kein Dienst des Betreibers von Nemo.',
-        when: 'Nur nach dem Verbinden unter Sync & Backup: beim Start, etwa jede Minute, bei Änderungen.',
+        title: 'Sync (eigener Server oder Heimnetz)',
+        what: 'Änderungen deiner Einträge und Einstellungen (Sammlung, Eintrags-Id, Feldname, Zeitstempel, Wert). Mit Passwortsatz werden die Werte Ende-zu-Ende verschlüsselt; Sammlung, Id, Feld und Zeitstempel bleiben für den Server lesbar. Zugangsdaten, Schlüssel und lokale Stände werden nie übertragen; nur beim Koppeln im Heimnetz geht der Datenschlüssel einmal, verschlüsselt, an das gekoppelte Gerät.',
+        to: 'Der Server, dessen Adresse du selbst einträgst und betreibst. Kein Dienst des Betreibers von Nemo. Beim Abgleich im Heimnetz stattdessen direkt deine gekoppelten Geräte im Heimnetz, immer verschlüsselt; der PC meldet sich dafür im Heimnetz, während du ein Gerät koppelst und solange eines gekoppelt ist. Austausch und Fernsteuerung laufen, wenn du sie einschaltest, über denselben Heimnetz-Zugang des PCs (eigene Sitzung).',
+        when: 'Nur nach dem Verbinden unter Sync & Backup bzw. nach dem Koppeln im Heimnetz: beim Start, etwa jede Minute, bei Änderungen.',
       },
       push: {
         title: 'Web-Push-Erinnerungen (optional)',
@@ -71,9 +71,9 @@ export const tLegal = defineBundle(
       },
       google: {
         title: 'Google-Verbindung (Windows)',
-        what: 'Anmeldung bei Google mit deiner eigenen OAuth-Anwendung (nur Lesen). Kalender: Termine der gewählten Kalender, ab 60 Tage zurück bis 400 Tage voraus. E-Mail: nur auf deinen Klick Absender, Betreff, Datum und Abmelde-Kopfzeile passender Mails und ob die letzte Nachricht von dir ist (nur auf dem Gerät), nie der Inhalt. Berechtigungen: calendar.readonly und gmail.readonly, je nach Auswahl.',
-        to: 'Google (accounts.google.com, oauth2.googleapis.com, www.googleapis.com, gmail.googleapis.com). Der Betreiber von Nemo erhält nichts.',
-        when: 'Nur nach dem Verbinden. Kalender-Abgleich im Hintergrund etwa alle 30 Minuten. Trennen widerruft den Zugriff. Das Zugriffs-Token läuft ab, wenn dein Google-Projekt im Status „Testing“ ist (nach 7 Tagen): dann „Neu anmelden“.',
+        what: 'Anmeldung bei Google mit deiner eigenen OAuth-Anwendung. Kalender (nur Lesen): Termine der gewählten Kalender, ab 60 Tage zurück bis 400 Tage voraus. E-Mail beim Import (Rechnungen, Abos, Termine, Verträge): nur auf deinen Klick Absender, Betreff, Datum, Abmelde-Kopfzeile und Vorschauzeile passender Mails. E-Mail im Modul „E-Mail“: Absender, Betreff und Vorschau der Mail-Liste, Text der Mails, die du öffnest, Anhänge, wenn du sie speicherst oder weiterleitest, und ob die letzte Nachricht von dir ist (nur auf dem Gerät). Gelesene Mail-Texte bleiben verschlüsselt auf diesem Gerät: kein Sync, keine Cloud-KI. „Bilder laden“ in einer Mail oder die Einstellung „Immer laden“ ruft die Bildadressen ab, die der Absender gewählt hat. Markieren, Archivieren, in den Papierkorb legen und Senden erst, wenn du „E-Mails verwalten“ oder „E-Mails senden“ einschaltest. Berechtigungen: calendar.readonly und gmail.readonly, je nach Auswahl; auf Wunsch gmail.modify und gmail.send.',
+        to: 'Google (accounts.google.com, oauth2.googleapis.com, www.googleapis.com, gmail.googleapis.com); bei „Bilder laden“ oder „Immer laden“ die Bildserver des Absenders (sie sehen deine IP-Adresse). Der Betreiber von Nemo erhält nichts.',
+        when: 'Nur nach dem Verbinden. Kalender-Abgleich im Hintergrund etwa alle 30 Minuten. E-Mail: beim Öffnen der Liste; solange die Kachel des Moduls auf der Übersicht steht, höchstens alle 10 Minuten; und, wenn du die Benachrichtigung über neue Mails einschaltest, im eingestellten Abstand. Trennen widerruft den Zugriff. Das Zugriffs-Token läuft ab, wenn dein Google-Projekt im Status „Testing“ ist (nach 7 Tagen): dann „Neu anmelden“.',
       },
       spotify: {
         title: 'Spotify (optional, Windows)',
@@ -171,7 +171,7 @@ export const tLegal = defineBundle(
       'connector-google': {
         title: 'Du verbindest ein Google-Konto',
         body: [
-          'Nemo liest mit deiner eigenen Google-Anwendung nur: Kalender (calendar.readonly) und/oder die Köpfe von E-Mails (gmail.readonly), je nach Auswahl. Die Daten gehen von Google direkt an dieses Gerät, nicht an den Betreiber von Nemo.',
+          'Nemo liest mit deiner eigenen Google-Anwendung, je nach Auswahl: Kalender (calendar.readonly) und/oder deine E-Mails samt Text und Anhängen (gmail.readonly). Senden und Aufräumen (gmail.send, gmail.modify) nur, wenn du „E-Mails senden“ oder „E-Mails verwalten“ einschaltest. Die Daten gehen von Google direkt an dieses Gerät, nicht an den Betreiber von Nemo.',
           'Google verarbeitet die Anmeldung nach eigenen Regeln. Steht dein Google-Projekt auf „Testing“, läuft die Anmeldung nach 7 Tagen ab; dann hilft „Neu anmelden“. Trennen widerruft den Zugriff.',
         ],
       },
@@ -284,10 +284,10 @@ export const tLegal = defineBundle(
           when: 'Always. There is no account and no service run by the maintainer that receives app data.',
         },
         sync: {
-          title: 'Sync with your own server',
-          what: 'Changes to your entries and settings (collection, entry id, field name, timestamp, value). With a passphrase the values are end-to-end encrypted; collection, id, field and timestamp stay readable for the server. Credentials, keys and local state are never transferred.',
-          to: 'The server whose address you enter and run yourself. Not a service run by the maintainer of Nemo.',
-          when: 'Only after you connect it under Sync & backup: at start, about every minute, and on changes.',
+          title: 'Sync (own server or home network)',
+          what: 'Changes to your entries and settings (collection, entry id, field name, timestamp, value). With a passphrase the values are end-to-end encrypted; collection, id, field and timestamp stay readable for the server. Credentials, keys and local state are never transferred; only when you pair in the home network does the data key go once, encrypted, to the paired device.',
+          to: 'The server whose address you enter and run yourself. Not a service run by the maintainer of Nemo. With home-network sync instead straight to your paired devices in the home network, always encrypted; for this the PC announces itself in the home network while you pair a device and as long as one is paired. Device drop and Remote, when you switch them on, go through the PC’s same home-network access (a separate session).',
+          when: 'Only after you connect it under Sync & backup, or after pairing in the home network: at start, about every minute, and on changes.',
         },
         push: {
           title: 'Web push reminders (optional)',
@@ -321,9 +321,9 @@ export const tLegal = defineBundle(
         },
         google: {
           title: 'Google connection (Windows)',
-          what: 'Sign-in to Google with your own OAuth application (read only). Calendar: events of the chosen calendars, from 60 days back to 400 days ahead. Email: only when you click, sender, subject, date and unsubscribe header of matching mails and whether the last message is yours (on this device only), never the content. Permissions: calendar.readonly and gmail.readonly, depending on your choice.',
-          to: 'Google (accounts.google.com, oauth2.googleapis.com, www.googleapis.com, gmail.googleapis.com). The maintainer of Nemo receives nothing.',
-          when: 'Only after connecting. Calendar sync in the background about every 30 minutes. Disconnecting revokes access. The access token expires if your Google project is in “Testing” status (after 7 days): then use “Neu anmelden” (sign in again).',
+          what: 'Sign-in to Google with your own OAuth application. Calendar (read only): events of the chosen calendars, from 60 days back to 400 days ahead. Email during import (bills, subscriptions, appointments, contracts): only when you click, sender, subject, date, unsubscribe header and preview line of matching mails. Email in the Mail module: sender, subject and preview of the mail list, the text of the mails you open, attachments when you save or forward them, and whether the last message is yours (on this device only). Mail texts you have read stay encrypted on this device: no sync, no cloud AI. “Load images” in a mail or the setting “Always load” fetches the image addresses the sender chose. Marking, archiving, moving to the bin and sending only once you switch on “Manage mail” or “Send mail”. Permissions: calendar.readonly and gmail.readonly, depending on your choice; gmail.modify and gmail.send if you want them.',
+          to: 'Google (accounts.google.com, oauth2.googleapis.com, www.googleapis.com, gmail.googleapis.com); with “Load images” or “Always load” the sender’s image servers (they see your IP address). The maintainer of Nemo receives nothing.',
+          when: 'Only after connecting. Calendar sync in the background about every 30 minutes. Mail: when you open the list; while the module’s tile is on the Overview, at most every 10 minutes; and, if you switch on “Notify about new mail”, at the interval you set. Disconnecting revokes access. The access token expires if your Google project is in “Testing” status (after 7 days): then use “Neu anmelden” (sign in again).',
         },
         spotify: {
           title: 'Spotify (optional, Windows)',
@@ -421,7 +421,7 @@ export const tLegal = defineBundle(
         'connector-google': {
           title: 'You are connecting a Google account',
           body: [
-            'With your own Google application, Nemo only reads: calendar (calendar.readonly) and/or email headers (gmail.readonly), depending on your choice. The data goes from Google straight to this device, not to the maintainer of Nemo.',
+            'With your own Google application, Nemo reads, depending on your choice: calendar (calendar.readonly) and/or your emails including text and attachments (gmail.readonly). Sending and tidying up (gmail.send, gmail.modify) only if you switch on “Send mail” or “Manage mail”. The data goes from Google straight to this device, not to the maintainer of Nemo.',
             'Google processes the sign-in under its own rules. If your Google project is in “Testing” status, the sign-in expires after 7 days; “Sign in again” fixes that. Disconnecting revokes access.',
           ],
         },

@@ -7,6 +7,9 @@ Please include: affected version (Settings → Updates shows it), platform (Wind
 
 ## Scope
 - The app (`web/`), the native shells (`web/src-tauri/`), the sync server (`server/`), the MCP wrapper (`mcp/`) and the browser extension (`extension/`, with its native-messaging bridge to the Windows app).
+- Everything between your own devices in the home network: home-network sync (pairing, the hub in the Windows app), device exchange and remote control (phone → PC input, power, program start).
+- The Windows-only modules that touch the network or the system: built-in browser, downloads and torrent, "This PC" (tweaks, disk clean-up).
+- The website (`site/`) and the supporter-code service (`services/supporter-webhook/`).
 - Release artifacts: portable Windows executable, Android APK, `latest.json`. The Dev preview ("Nemo Dev") is an untested build of `develop`: reports are welcome, but only the latest stable release is supported.
 
 Out of scope: third-party services users connect on their own (AI providers, Google, feed hosts), and problems that require a compromised device.

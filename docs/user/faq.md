@@ -21,4 +21,4 @@ That was the old name. Technical identifiers (package name, file paths) keep it 
 Yes, MIT licence. Costs only arise with paid AI providers that you set up yourself. Voluntary support is possible via [Ko-fi](https://ko-fi.com/nemojr) and only unlocks cosmetic extras.
 
 ## Does Nemo send my data anywhere?
-No. Data stays on your device. Sync only runs through a server you operate yourself, and AI providers never receive your entries. Details: [Security](security.md).
+Not on its own. Data stays on your device unless you set something up: sync (a server you operate yourself, or your own paired devices in the home network), a connection such as Google or Spotify, or an AI provider. The assistant sends your question and field names, never entries; in the chat you can attach a module's data after a preview. What connects where: [Security](security.md).
