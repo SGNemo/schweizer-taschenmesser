@@ -83,7 +83,7 @@ if (findings.length > 0) {
   }
   if (findings.some((f) => f.rule === 'secret-not-provided')) {
     console.error(
-      'A name from AUDIT_SECRET_ENV is empty (or the list is): check the GitHub secret mapped to it in this workflow step (node scripts/keys.mjs secrets).',
+      'AUDIT_SECRET_ENV is empty or names a secret without a value: check the GitHub secrets mapped in this workflow step (node scripts/keys.mjs secrets).',
     );
   }
   console.error(`\nAudit FAILED with ${findings.length} finding(s). Nothing may be published.`);
