@@ -9,8 +9,6 @@
  */
 import type { CalendarItem, CalendarSource } from '@/core/modules/types';
 import { getMeta } from '@/core/db/metaKv';
-import { addDays } from '@/core/plan/dates';
-import { today } from '@/core/time/now';
 import { t } from '@/strings';
 import { compact } from './components/capacity';
 import { getPlannerSettings } from './prefs';
@@ -19,7 +17,7 @@ import { LAST_RUN_KEY, type LastRun } from './run';
 import type { AssignmentRow } from './schema';
 
 export const PLAN_KIND = 'plan';
-/** Days the board shows from today (`routes/PlannerPage.tsx` SPAN). */
+/** Days the band shows (`routes/PlannerPage.tsx` SPAN): one week; the grid shows four (package 4). */
 export const BOARD_DAYS = 7;
 
 type ChipRow = Pick<AssignmentRow, 'date' | 'itemKey' | 'minutes'> &
@@ -76,13 +74,10 @@ export function planChips(
 const source: CalendarSource = async (range) => {
   const settings = await getPlannerSettings();
   if (!settings.calendarChips) return [];
-  // Only the board's week (today + 6): a chip opens the board on its day, later days are not on it.
-  const last = addDays(today(), BOARD_DAYS - 1);
-  const to = range.to < last ? range.to : last;
-  if (to < range.from) return [];
+  // The range the calendar asks for (package 4): every planned day opens the board on it – a later week pages there.
   const rows = await assignmentRepo.table
     .where('date')
-    .between(range.from, to, true, true)
+    .between(range.from, range.to, true, true)
     .filter((r) => r.deletedAt === null)
     .toArray();
   // Titles of the last run (device-local, like the board's „Warum hier?“): only needed for timed blocks.

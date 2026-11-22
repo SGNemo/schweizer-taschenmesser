@@ -228,11 +228,14 @@ describe('the page with late invoices', () => {
     expect(menu.some((m) => /Festnageln/.test(m ?? ''))).toBe(false);
     fireEvent.click(screen.getByRole('menuitem', { name: 'Verschieben …' }));
     const sheet = await screen.findByRole('dialog', { name: 'Verschieben: Saugen' });
-    expect(
-      within(sheet)
-        .getAllByRole('button', { pressed: false })
-        .map((b) => b.textContent),
-    ).toEqual(['So 15.', 'Di 17.', 'Mi 18.', 'Do 19.', 'Fr 20.', 'Sa 21.']);
+    // Four weeks from today (package 4); the day it lies on is the pressed one, ‹ › page by four weeks.
+    const chips = within(sheet)
+      .getAllByRole('button', { pressed: false })
+      .map((b) => b.textContent)
+      .filter((x) => /^\p{L}{2} \d+\.$/u.test(x ?? ''));
+    expect(chips).toHaveLength(27);
+    expect(chips.slice(0, 6)).toEqual(['So 15.', 'Di 17.', 'Mi 18.', 'Do 19.', 'Fr 20.', 'Sa 21.']);
+    expect(chips.at(-1)).toBe('Sa 12.');
     // The day the thing lies on is the chosen chip.
     expect(
       within(sheet)

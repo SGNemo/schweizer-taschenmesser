@@ -29,7 +29,7 @@ describe('plan chips in the calendar', () => {
     ]);
   });
 
-  it('reads the stored sessions of the board week only (day 10 has no column to open); the switch turns the chips off', async () => {
+  it('reads the stored sessions of the range the calendar asks for (package 4: a later week pages there); the switch turns the chips off', async () => {
     for (const [id, date] of [
       ['todos:a#0', '2026-11-09'],
       ['todos:b#0', '2026-11-09'],
@@ -47,8 +47,10 @@ describe('plan chips in the calendar', () => {
     await assignmentRepo.remove('todos:b#0');
     const range = { from: '2026-11-09', to: '2026-11-15' };
     expect((await source(range)).map((c) => c.title)).toEqual(['Plan · 30 Min · 1 Ding']);
-    // The session on the 20th is planned, but past the board's week: no chip that would open a missing column.
-    expect(await source({ from: '2026-11-16', to: '2026-11-22' })).toEqual([]);
+    // The session on the 20th lies in a later week: its chip opens the board there (package 4).
+    expect((await source({ from: '2026-11-16', to: '2026-11-22' })).map((c) => c.to)).toEqual([
+      '/planner?day=2026-11-20',
+    ]);
     await setSettings(PLANNER_SCOPE, { calendarChips: false });
     expect(await source(range)).toEqual([]);
   });

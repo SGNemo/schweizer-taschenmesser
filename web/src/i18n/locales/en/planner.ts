@@ -67,6 +67,18 @@ export const planner: Strings['planner'] = {
   },
   board: {
     label: 'Week',
+    prev: 'Previous week',
+    next: 'Next week',
+    today: 'Today',
+    gridView: '4 weeks',
+    gridViewMenu: 'Show 4 weeks',
+    weekViewMenu: 'Show the week',
+    gridLabel: 'Four weeks',
+    gridPrev: 'Previous four weeks',
+    gridNext: 'Next four weeks',
+    range: (from: string, to: string) => `${from} – ${to}`,
+    open: 'open',
+    cellName: (day: string, rest: string) => (rest ? `${day}: ${rest}` : day),
     freeOf: (free: string, usable: string) => `${free} free of ${usable}`,
     off: 'off',
     full: 'full',
@@ -359,7 +371,7 @@ export const planner: Strings['planner'] = {
     reshuffle: 'Reshuffled from scratch',
   },
   weekLink: {
-    label: 'Check the week · 2 steps',
+    label: 'Times of this week · 2 steps',
     dismiss: 'Hide for this week',
   },
   focus: {
@@ -437,7 +449,7 @@ export const planner: Strings['planner'] = {
       `Until ${day}: ${planned} planned · ${free} free`,
   },
   check: {
-    title: 'Check the week',
+    title: 'Times of this week',
     intro: 'Is the time per day right? Confirming is enough; each day can be changed on its own.',
     confirm: 'Looks right',
     biggest: 'The three biggest things',

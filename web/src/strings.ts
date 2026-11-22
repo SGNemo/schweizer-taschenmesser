@@ -1394,7 +1394,7 @@ export const de = {
       weekReview: 'Rückblick auf die Woche',
       weekReviewHint:
         'Ein freundlicher Blick darauf, was in den letzten sieben Tagen fertig wurde.',
-      weekCheck: '„Woche prüfen“ am Montag',
+      weekCheck: '„Zeiten dieser Woche“ am Montag',
       weekCheckHint:
         'Montags steht im Planer eine stille Zeile, die zum Wochenzettel führt. Ein × blendet sie für die Woche aus; über ⋯ ist der Zettel immer da.',
       openLine: '„Noch offen“ auf heute',
@@ -5847,7 +5847,7 @@ export const de = {
       hint: 'Eine kleine Checkliste zum Abhaken. Nach dem Abhaken mit „Zurücksetzen“ ist sie wieder bereit.',
       add: 'Liste anlegen',
       created: 'Liste angelegt.',
-      weekInPlanner: 'Woche prüfen im Planer',
+      weekInPlanner: 'Zeiten dieser Woche im Planer',
       /** With the routines module on, the morning and evening templates lead there. */
       inRoutines: (name: string) => `${name} bei den Routinen`,
       morning: {
@@ -9369,6 +9369,18 @@ export const de = {
     },
     board: {
       label: 'Woche',
+      prev: 'Woche davor',
+      next: 'Woche danach',
+      today: 'Heute',
+      gridView: '4 Wochen',
+      gridViewMenu: '4 Wochen zeigen',
+      weekViewMenu: 'Woche zeigen',
+      gridLabel: 'Vier Wochen',
+      gridPrev: 'Vier Wochen davor',
+      gridNext: 'Vier Wochen danach',
+      range: (from: string, to: string) => `${from} – ${to}`,
+      open: 'offen',
+      cellName: (day: string, rest: string) => (rest ? `${day}: ${rest}` : day),
       freeOf: (free: string, usable: string) => `${free} frei von ${usable}`,
       off: 'frei',
       full: 'voll',
@@ -9664,7 +9676,7 @@ export const de = {
       reshuffle: 'Alles neu gemischt',
     },
     weekLink: {
-      label: 'Woche prüfen · 2 Schritte',
+      label: 'Zeiten dieser Woche · 2 Schritte',
       dismiss: 'Für diese Woche ausblenden',
     },
     focus: {
@@ -9743,7 +9755,7 @@ export const de = {
         `Bis ${day}: ${planned} geplant · ${free} frei`,
     },
     check: {
-      title: 'Woche prüfen',
+      title: 'Zeiten dieser Woche',
       intro: 'Stimmt die Zeit je Tag? Bestätigen reicht – ändern geht je Tag.',
       confirm: 'Passt so',
       biggest: 'Die drei größten Dinge',

@@ -530,7 +530,8 @@ describe('planner page', () => {
     draw();
     const field = await screen.findByLabelText('Eintragen oder sagen');
     expect(field).toHaveAttribute('placeholder', 'Was steht an?');
-    const examples = screen.getByRole('group', { name: 'Zum Beispiel' });
+    // The examples show once the board is read and the week is empty.
+    const examples = await screen.findByRole('group', { name: 'Zum Beispiel' });
     expect(
       within(examples)
         .getAllByRole('button')
@@ -632,13 +633,13 @@ describe('planner page', () => {
     });
   });
 
-  it('Monday: „Woche prüfen“ is a quiet line only with the switch on; × hides it for the week', async () => {
+  it('Monday: „Zeiten dieser Woche“ is a quiet line only with the switch on; × hides it for the week', async () => {
     draw();
     await screen.findByLabelText('Eintragen oder sagen');
     expect(screen.queryByTestId('week-check-link')).toBeNull();
     await setSettings(FOCUS_SCOPE, { weekCheck: true });
     const line = await screen.findByTestId('week-check-link');
-    expect(line).toHaveTextContent('Woche prüfen · 2 Schritte');
+    expect(line).toHaveTextContent('Zeiten dieser Woche · 2 Schritte');
     // Nothing opened by itself.
     expect(screen.queryByRole('dialog')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Für diese Woche ausblenden' }));

@@ -123,8 +123,10 @@ export interface Board {
 
 export interface BoardInput {
   today: string;
-  /** How many days from today. */
+  /** How many days from `from`. */
   span: number;
+  /** The first day of the board (default today); an earlier one shows passed days (package 4: the 4-week grid). */
+  from?: string;
   settings: PlannerSettings;
   dayRows: readonly (PlanDayRow & { id: string })[];
   itemRows: readonly (PlanItemRow & { id: string })[];
@@ -284,7 +286,7 @@ export function buildBoard(input: BoardInput): Board {
     };
   };
   const built = planDays({
-    today: input.today,
+    today: input.from ?? input.today,
     span: input.span,
     settings: input.settings,
     dayRows: input.dayRows,
