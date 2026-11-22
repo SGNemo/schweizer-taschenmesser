@@ -10,37 +10,39 @@ Follow-ups: prompts for everything not fixed here in [LAUNCH-REVIEW-2026-11-PACK
 
 Rule: an open critical or high finding in a channel = **no**; medium = condition (fix before the release, or the maintainer accepts it with a reason; the recommendation is given); low/info = list.
 
-| Channel | Verdict | Why | Shortest way to "yes" |
+| Channel | Verdict | Open findings that decide it | Way to "yes" |
 |---|---|---|---|
-| Windows exe | **no** | SC1 (high, release pipeline, details private) | the first part of SC1 is GitHub settings (about 15 minutes); then **yes with conditions**: merge the three fix PRs (PC1, M1, D6/D8), package 2 (R1), package 3 (DL1–DL3) or keep the torrent part off by default as today and accept DL1/DL3, decide X2/S5/AI1 |
-| Android APK | **no** | SC1 (high) | as above; then **yes with conditions**: SC2/SC3 (own dev keystore, signing only on publish – package 1), S13 (accept: integrity rests on the OS signature check, see below), R1 phone side |
-| PWA | **yes with conditions** | S5 (medium, since September), R1 does not apply (no hub) | accept S5 with the documented reason or run package 6; R6 (no CSP for the self-hosted PWA) is low |
-| Sync server | **yes with conditions** | N9 (compose default publishes on all interfaces, CORS `*`; low in the review, medium in the audit) | doc line or `127.0.0.1:` default (package 10) |
-| Browser extension | **yes with conditions** | X2, X4 (medium, open since October) | package 5, or accept both as documented limits in VAULT-EXTENSION.md (recommendation: fix X2, accept X4) |
-| Website | **no** | SC1 also covers what the site publishes; D6, D8 fixed in the privacy-texts PR | SC1 (settings part) + merge the privacy-texts PR; legal placeholders: [../legal/LAUNCH-LEGAL-CHECKLIST.md](../legal/LAUNCH-LEGAL-CHECKLIST.md) (3 done, 14 open) |
+| Windows exe | **no** | high: SC1. Medium: SC3, R1, DL1–DL3, X2, S5, AI1, V5; PC1, M1, D6, D8 (fixed, to merge) | 1. close SC1 (every step of the private note). 2. Merge the three fix PRs. 3. Packages 1 (SC3), 2 (R1) and 3 (DL3; DL1/DL2 may instead be accepted while the torrent part stays off and device-local, see DL10). 4. Decide X2, S5, AI1: fix (packages 5–7) or accept in writing. V5: recommendation accept |
+| Android APK | **no** | high: SC1. Medium: SC2, SC3, S13, R1 (phone side), S5, AI1, V5; M1, D6 (fixed, to merge) | 1. close SC1. 2. Merge the fix PRs. 3. Package 1 (SC2, SC3), package 2. 4. S13 and V5: recommendation accept; S5, AI1 as above |
+| PWA | **yes with conditions** | medium: S5, AI1, V5 | accept S5 with the documented reason or run package 6; AI1 package 7; V5 accept. Lows: R6 (no CSP for the self-hosted PWA), Q2 |
+| Sync server | **yes** | none from medium up. Lows: N9, R8 | list only: say in the server doc how to publish on `127.0.0.1` behind a tunnel (package 10) |
+| Browser extension | **yes with conditions** | medium: X2, X4 (open since October) | package 5, or accept both as documented limits in VAULT-EXTENSION.md (recommendation: fix X2, accept X4) |
+| Website | **no** | high: SC1. Medium: D6, D8 (fixed, to merge) | 1. close SC1. 2. Merge the privacy-texts PR. Not security: legal placeholders in [../legal/LAUNCH-LEGAL-CHECKLIST.md](../legal/LAUNCH-LEGAL-CHECKLIST.md) (3 done, 14 open) |
 
-No critical finding. One high finding (SC1). The Dev-Preview that friends already run is affected by every finding below that is not marked "preview module" – none of them is remotely exploitable without a user action or a paired device, except what SC1 covers.
+SC1 has one closing condition everywhere in these documents: **every step of the private note is done**. It concerns the signed artifacts and the website. PWA and sync server are built by the user from the repository; the extension has no release channel yet (open decision 4 in CHATS.md) – if it ships as a release file it inherits SC1.
+
+No critical finding. One high finding (SC1). The Dev-Preview that friends already run is affected by every finding below that is not marked "preview module". Apart from SC1, which is not described here, none of them works without a user action, a paired device or script execution inside the app.
 
 ### Blockers, in order
 
-1. **SC1** – release pipeline, high. Details are not in this repository (public repo, no fix in this PR): they were handed to the maintainer privately. Closes with GitHub settings plus the parked secrets migration #542. Until then: no release.
+1. **SC1** – release pipeline, high. Details and steps are not in this repository (public repo, no fix in this PR): they were handed to the maintainer privately. Until it is closed: no release. Known open point next to it: the parked secrets migration #542.
 2. **R1** – "Alle Daten löschen" leaves the home-network hub running and trusted (medium, package 2).
 3. **PC1, M1, D6, D8** – fixed in the three fix PRs of this review (below); they only need a merge.
 4. **DL1–DL3** – torrent overwrites existing files, peer listener outlives the module, no Mark-of-the-Web (medium, package 3).
 5. **SC2, SC3** – dev and production APK share one keystore; dry runs see production keys (medium, hard-limit area, package 1).
-6. **X2, X4, S5, S13, AI1** – known or residual mediums: decide fix or accept (packages 4–7).
+6. **X2, X4, S5, S13, AI1, V5** – known or residual mediums: decide fix or accept (packages 4–7; recommendation for S13 and V5: accept).
 
 ### Fixed in this review (three PRs, each with a test that was red before)
 
 | PR branch | Findings | Test |
 |---|---|---|
-| `fix/security-web-inputs` | M1 mail images only from public https hosts; M3 attachment name; M4 feed link scheme; R4 push link stays in the app; R7 diagnostics scrubber | `core/mail/sanitize.test.ts`, `core/mail/fileName.test.ts`, `feeds.page.test.tsx`, `pushPayload.test.ts`, `diagnostics.test.ts` |
+| `fix/security-web-inputs` | M1 mail images only from public https hosts, no redirects; M3 attachment name; M4 feed link scheme; R4 push link stays in the app; R7 diagnostics scrubber | `core/mail/sanitize.test.ts`, `core/mail/fileName.test.ts`, `feeds.page.test.tsx`, `pushPayload.test.ts`, `diagnostics.test.ts` |
 | `fix/security-windows-spawn` | PC1 system tools by full path | `tests/commands.rs` `no_program_is_started_by_bare_name` + Windows unit tests |
-| `fix/security-privacy-texts` | D6, D8, D10, D12, D14 | `core/legal/legal.test.ts` |
+| `fix/security-privacy-texts` | D6, D8 (list completed; the claim "every connection" is gone, the page points to the in-app list), D10, D12, D14, part of D7 | `core/legal/legal.test.ts` |
 
 ## Findings
 
-"Who": **chat** = a normal package; **Sven merges** = inside a hard-limit area (signing, secrets, gitleaks, artifact audit, `release.yml`, sync encryption, crypto, vault logic, `guard.rs`) or GitHub settings. Paths are relative to `web/src-tauri/` for Rust and `web/src/` for TypeScript unless they start with another top-level folder.
+"Who": **chat** = a normal package; **Sven merges** = inside a hard-limit area (signing, secrets, gitleaks, artifact audit, `release.yml`, sync encryption, crypto, vault logic, `guard.rs`) or GitHub settings. "Accept" means the recommendation is to accept the finding for 1.0 in writing. Paths are relative to `web/src-tauri/` for Rust and `web/src/` for TypeScript unless they start with another top-level folder.
 
 ### Medium and above
 
@@ -54,19 +56,19 @@ No critical finding. One high finding (SC1). The Dev-Preview that friends alread
 | DL2 | medium | torrent | The peer listener binds `0.0.0.0` (random port) and, once started, keeps running with DHT and seeding after leaving the page, switching the module off or closing to tray; no "home network only" or metered rule. Inherent to torrent while it is on; the finding is that "off" does not stop it | `crates/torrent/src/engine.rs:101-104`, `src/torrent.rs:118-126`, `modules/downloads/routes/TorrentSection.tsx:136-141` (only caller of `stop`) | M | chat |
 | DL3 | medium | downloads | No Mark-of-the-Web on files from the HTTP downloader or torrents, so SmartScreen and Office Protected View do not trigger as for a browser download | no `Zone.Identifier` writer in `web/src-tauri` (only a name test in `crates/lan-sync/src/exchange/name.rs:309`); `crates/downloader/src/worker.rs:289` | S–M | chat |
 | PC1 | medium | Windows shell | `reg`, `taskmgr.exe`, `explorer.exe` started by bare name: Windows looks next to the app's exe first. Portable exe in Downloads + a downloaded file of that name → runs without SmartScreen when the torrent section opens (`association_status`), on "reveal" or "open Task Manager" | `crates/os-association/src/lib.rs:149`, `src/system.rs:87`, `crates/disk-scan/src/system.rs:205`; `crates/pc-tune/src/tools.rs:60-66` already did it right | S | **fixed** (`fix/security-windows-spawn`) |
-| M1 | medium | mail (preview module) | "Bilder laden" (or `images: 'always'`) fetched up to 20 sender-chosen URLs with the raw platform fetch: `http:` allowed, no public-host rule → blind GETs to router/IoT/loopback; body read whole before the size check | `core/mail/sanitize.ts:220-251`, `modules/mail/components/MailFrame.tsx:47-67` | S | **fixed** (`fix/security-web-inputs`) |
+| M1 | medium | mail (preview module) | "Bilder laden" (or `images: 'always'`) fetched up to 20 sender-chosen URLs with the raw platform fetch: `http:` allowed, no public-host rule → blind GETs to router/IoT/loopback; body read whole before the size check | `core/mail/sanitize.ts:220-251` (body read at `:238-239` before the size test), `modules/mail/components/MailFrame.tsx:47-67` | S | **fixed** (`fix/security-web-inputs`) |
 | D6 | medium | privacy texts | In-app notices, DATA-FLOWS and both website privacy pages said Gmail "headers only / never the content / read only"; the Mail module reads whole messages and attachments, caches bodies and, with opt-in scopes, modifies and sends | code `connectors/google/gmail.ts:261,271,288,296,312,329-344`, `connectors/google/index.ts:58-82`; texts `strings.legal.ts:74,174,324,424`, `docs/legal/DATA-FLOWS.md:16`, `site/src/pages/datenschutz.astro:55`, `site/src/pages/en/privacy.astro:53` | docs | **fixed** (`fix/security-privacy-texts`) |
-| D8 | medium | privacy texts | The website page that says "every connection Nemo makes" left out maps hosts, the built-in browser and its search engine, downloads, torrent, web push and Spotify's image servers | `site/src/i18n/de.ts:128-137,179`, `site/src/i18n/en.ts:120-128,169`, `docs/user/security.md:16-24`; code see network inventory | docs | **fixed** (same PR) |
+| D8 | medium | privacy texts | The website page that says "every connection Nemo makes", the user doc and the README list left out maps hosts, the built-in browser and its search engine, downloads, torrent, web push, home-network sync and Spotify's image servers; the start page said entries leave the device only by sync to the own server or an AI question | `site/src/i18n/de.ts:113,128-137,179`, `site/src/i18n/en.ts:107,120-128,169`, `docs/user/security.md:16-24`, `README.md:173-174`; code see network inventory | docs | **fixed** (same PR) |
 | AI1 | medium | AI router | The October fix stops fallback inside one call. After a provider error (cooldown) the **next** message or "try again" goes to provider 2 with the whole conversation, including data attached earlier – possibly a "may train" free tier; the UI promises "your configured provider" | `core/ai/router.ts:105-121,148`, pinned as intended in `core/ai/router.test.ts:152`; `modules/chat/engine.ts:98-105`; `strings.ts:7650,7688` | S/M | chat |
 | X2 | medium | vault bridge | Open since October: first pipe instance on Windows is not enforced, Nemo can serve beside a squatter | `crates/vault-bridge/src/ipc.rs:218-226,247-248,263-265`, `crates/vault-bridge/src/server.rs:107-114` | M | Sven merges |
 | X4 | medium | extension | Open since October: overlay host can be hidden or covered by the page (same-site UI redress) | `extension/src/content/ui.ts:21-32` | M | chat |
 | S5 | medium | sync | Open since September: the sync token lives in IndexedDB `_secrets.syncConfig`, not in the OS secret store (the service worker reads only the key from that record) | `core/sync/service.ts:120,131,144`, `sw.ts:55-68` | M | Sven merges (secrets) |
 | S13 | medium | Android update | Open: the expected APK digest is the unsigned `.sha256` asset of the same release; authenticity rests on GitHub + TLS and Android's same-certificate check. Recommendation: **accept** for 1.0 (the OS refuses an APK signed with another key), revisit with package 4 | `core/update/github.ts:18-28,113`, `core/platform/tauri/updater.ts:106-128` | M | Sven merges |
-| V5 | medium (residual) | backup | Envelope types and the 64 MB cap are checked; the data part is still not validated against the collection schema, and `BackupSection.tsx:65` reads the file before the cap. Recommendation: accept for 1.0 (own file, preview, safety copy) | `core/backup/backup.ts:16-31,100,124-126` | M | chat |
+| V5 | medium (residual) | backup | Envelope types and the 64 MB cap are checked; the data part is still not validated against the collection schema, and `pages/settings/BackupSection.tsx:65` reads the file before the cap. Recommendation: accept for 1.0 (own file, preview, safety copy) | `core/backup/backup.ts:16-31,100,124-126` | M | accept (or package 10) |
 
 ### Low and info, by area
 
-**Home-network sync (B1).** All sentences of the LAN-sync rule hold in code, with three caveats (H4, H6, home-network change is confirmed by the web app only, `src/lan_sync.rs:712`).
+**Home-network sync (B1).** The sentences of the LAN-sync rule hold in code, with four caveats: H4, H6, H10, and the home-network change is confirmed by the web app only (`src/lan_sync.rs:712`).
 
 | ID | Sev | Finding | Evidence | Size |
 |---|---|---|---|---|
@@ -76,6 +78,7 @@ No critical finding. One high finding (SC1). The Dev-Preview that friends alread
 | H4 | low | The pairing window has no total lifetime (renewed every 2 s until cancel): hub listens on every "Private" network meanwhile | `crates/lan-sync/src/pairing/mod.rs:321,400,641`, `src/lan_sync.rs:283` | S |
 | H5 | low | A failed write of `trust.json` keeps a revocation in memory only; the UI swallows the error; after a restart the device is trusted again | `crates/lan-sync/src/trust/file.rs:220-227`, `pages/settings/LanHubSection.tsx:112` | S |
 | H6 | low | The confirmation on the PC is a click in the webview; the UI passes the code back itself, so the compare in `confirm` proves nothing. Not a native dialog, unlike remote-control grants | `src/lan_sync.rs:584-620`, `pages/settings/LanHubSection.tsx:436` | M |
+| H10 | low | "Never `0.0.0.0`" holds for the hub's TCP listener, not for discovery: while the hub runs, the mDNS library keeps wildcard UDP sockets on `0.0.0.0:5353` and `[::]:5353` and has joined the multicast group on every interface. It only *receives* queries there; announcements go out on the bound addresses only. The crate's comment says so, the rule text does not | `crates/lan-sync/src/discovery.rs:7-13` | M (bind per interface) or reword the rule; Sven decides |
 | H7–H9 | info | Hub public key is a presence oracle for a revoked device (documented); `lan_hub_start` returns the raw data key each round; first pairing stores the network of the first private default-route interface | `crates/lan-sync/src/discovery.rs:29,71`; `src/lan_sync.rs:437-450`; `src/lan_sync.rs:126,305` | – |
 
 **Remote control (B2).** Every sentence of `docs/rules/remote-control.md` holds: default off, widening only through a Rust ticket plus native dialog (`src/remote.rs:255-261,296-300`), locked PC drops input, power and programs (`crates/lan-sync/src/input/session.rs:339,364,386,415`, `src/remote_power.rs:202`), countdown native, programs by slot and epoch only, replay stopped by Noise nonces.
@@ -98,7 +101,7 @@ No critical finding. One high finding (SC1). The Dev-Preview that friends alread
 | E5 | low | Peer-chosen device name in the native grant dialog (lookalike names, U+2028) | `src/exchange.rs:206-220` | S |
 | E6–E9 | info | For the file packages: limit counts finished files only, name cleaning has no caller yet, no symlink/MotW/open code; bidi characters in text; items in plaintext files for up to 30 days | `crates/lan-sync/src/exchange/transfer.rs:123-152,222-225`, `name.rs:23-27` | with 2b-2 |
 
-**Browser module (B4, preview, off by default).** No capability names a tab label or a remote origin (`tests/commands.rs:105-130`); scheme allow-list in Rust; pop-ups denied; downloads never saved by the webview; permissions denied on Windows; filter list bundled; no vault access.
+**Browser module (B4, preview, off by default).** No capability names a tab label or a remote origin (`tests/commands.rs:105-130`); scheme allow-list in Rust; pop-ups denied; downloads never saved by the webview; permission requests denied on Windows (read in code, not run: SEC-9); filter list bundled; no vault access. The module also exists on Android, where a page opens in a Chrome custom tab with only the address passed.
 
 | ID | Sev | Finding | Evidence | Size |
 |---|---|---|---|---|
@@ -118,7 +121,8 @@ No critical finding. One high finding (SC1). The Dev-Preview that friends alread
 | DL7 | low | No size cap, free-space check or read timeout; preview cache never evicted | `crates/downloader/src/worker.rs:92,141,253-258` | S |
 | DL8 | low | Bidi overrides stay in names; reserved-name gaps (`CON .txt`, `COM¹`); torrent folder name unchecked | `crates/downloader/src/name.rs:37,57-61`, `crates/torrent/src/engine.rs:416-434` | S |
 | DL9 | low | `downloads.json` keeps full URLs (credentials, signed tokens); reloaded unchecked, so an edited file makes "remove + delete data" delete another path | `crates/downloader/src/manager.rs:113-125,223,292-295` | S |
-| DL10, DL11 | info | `module.downloads` settings (UPnP, folder) sync between devices; unchecked multiplications | `modules/downloads/settings.ts:25-33`, `src/torrent.rs:133,136` | S |
+| DL10 | low | The Downloads settings live in the synced settings: another device with the data key (or a merged backup) can switch the torrent part, DHT and UPnP on and set the default target folder. The peer listener then opens the next time the Downloads page is opened (after its notice), and a pre-filled folder such as the Startup folder is accepted natively (DL6) and gets no Mark-of-the-Web (DL3). "Torrent off by default" is therefore a default, not a guarantee | `modules/downloads/settings.ts:7-11,25-33,42-47`, `core/settings/settings.ts:9` | S (device-local keys, native check of the folder) |
+| DL11 | info | Unchecked multiplications | `src/torrent.rs:133,136` | S |
 
 **This PC / tweaks / OS entry points (B6).** `git diff d48a4fe..7ef17176 -- '**/guard.rs'` is empty. Closed catalogue, HKCU only, no elevation, journal native-only, association on click, launch arguments only pre-fill a dialog.
 
@@ -155,9 +159,9 @@ No critical finding. One high finding (SC1). The Dev-Preview that friends alread
 | Q3 | low | Bookmark `url` from sync or a share file is not scheme-checked before it becomes an `href` | `modules/bookmarks/schema.ts:19`, `components/BookmarkRow.tsx:188` | S |
 | Q4, Q5 | info | One-tap invoice from a mail with a spoofed display name; quadratic trims inside the import worker | `modules/mail/invoiceRow.ts:65-75` | – |
 
-**Preview modules and what runs by default (B10).** Preview: browser, chat, clock, exchange, fitness, mail, maps, music, remote. A fresh install enables calendar, finance, invoices, subscriptions, todos, weather, lists, budgets, routines, device and (desktop) downloads; no preview module. Native `setup` starts nothing that listens (`src/lib.rs:351-361`); services start from the web layer for enabled modules. Dev and stable builds differ only in dev tools and seed. MOD1 (info): **no native command checks module state** (`src/lib.rs:181-323`) – "off" and "preview" reduce the UI, not the native surface; every command is granted to webview `main` only, so this matters only after script execution in the main webview (none found; CSP `script-src 'self'`). MOD2 (info): `_modules` rows sync, so a device holding the data key can switch a module on for another device. Consequence for the verdict: a finding in a preview module still counts where its native part is reachable from `main`; M1 was therefore fixed rather than parked as "stays off".
+**Preview modules and what runs by default (B10).** Preview: browser, chat, clock, exchange, fitness, mail, maps, music, remote. A fresh install enables calendar, finance, invoices, subscriptions, todos, weather, lists, budgets, routines, device and (desktop) downloads; no preview module. Native `setup` opens no network listener (`src/lib.rs:351-361`); services start from the web layer for enabled modules. Three things do exist from the start: the single-instance hand-over (a second start passes its arguments to the running app, which only pre-fills the Downloads dialog, `src/lib.rs:120-124`); the hidden quick-capture window, which shares the main window's profile and so its database (`src/capture.rs:154-170`; it has two commands of its own); and the PC side of remote control, which is a settings switch (off by default), not tied to the preview module `remote` on the phone. Dev and stable builds have the same default modules and maturity filter; they differ in keys, bundle id, dev tools, seed and possibly the bundled local model. MOD1 (info): **no native command checks module state** (`src/lib.rs:181-323`) – "off" and "preview" reduce the UI, not the native surface; all but four commands are granted to webview `main` only (the capture and remote-power windows get two each, by window label), so this matters only after script execution in the main webview (none found; CSP `script-src 'self'`). MOD2 (info): `_modules` rows sync, so a device holding the data key can switch a module on for another device. Consequence for the verdict: a finding in a preview module still counts where its native part is reachable from `main`; M1 was therefore fixed rather than parked as "stays off".
 
-**Native shell (part C).** Capabilities: `main` only (by `webviews`), capture window 2 commands, power window 2, no `remote` scope; CSP `script-src 'self' 'wasm-unsafe-eval'`, `frame-src`/`object-src`/`form-action` none; no devtools, no global Tauri; ACL test in step with handlers. Full command inventory: kept outside the repo (174 rows), weak inputs are DL6 and NS9.
+**Native shell (part C).** Capabilities: `main` only (by `webviews`), capture window 2 commands, power window 2, no `remote` scope; CSP `script-src 'self' 'wasm-unsafe-eval'`, `frame-src`/`object-src`/`form-action` none; no devtools, no global Tauri; ACL test in step with handlers. Full command inventory: kept outside the repo (174 rows), weak inputs are DL6 and NS9. One capability is the common cause behind M1, M2 and DL4: `http:default` allows every `http://` and `https://` host and port for `main` (`capabilities/default.json:84-99`) and the CSP allows `connect-src https: http:`, so the public-host rule exists only in app code (`core/net/fetchPublic.ts`); accepted in October (T1) because plain-HTTP sync servers and feeds need it.
 
 | ID | Sev | Finding | Evidence | Size |
 |---|---|---|---|---|
@@ -184,6 +188,8 @@ No critical finding. One high finding (SC1). The Dev-Preview that friends alread
 
 "Alle Daten löschen" – not cleared today (R1–R3): `lan-sync/` (`trust.json`, `hub.db`, `home.json`, `port`, `remote.json`, `remote-notice.json`, `remote-programs.json`, `exchange/*`), keyring slots of the hub, `lan-client:` entries on the phone, `downloads.json`, `torrent-state/`, `browser-profile/` (a clear command exists, it is not called), `models/`, `pc-care/journal.json`, `logs/panic.log`, the native-messaging manifest and its registry entry, `share.code.*`, the push subscription on the server. Cleared: database, `tm-*` local storage, AI keys, all connector secrets, PIN, biometric and app-lock seals, vault seal (V1), auto-backup passphrase.
 
+**Supporter codes.** The in-app check is unchanged since October: signatures are verified offline (`core/supporter/verify.ts`), the test key is accepted only in the E2E build, names from a code are sanitised (`packages/supporter-codes/src/code.ts:133,167`), and the status gates only palettes and the badge. The webhook requires its rate limiter and refuses the test key id. No finding.
+
 **Supply chain and pipeline (part D).**
 
 | ID | Sev | Finding | Evidence | Size |
@@ -192,7 +198,7 @@ No critical finding. One high finding (SC1). The Dev-Preview that friends alread
 | SC5 | low | `libsqlite3-sys` 0.30.1, RUSTSEC-2026-0459 (needs write access next to the hub database; not realistically reachable) | `web/src-tauri/Cargo.lock`, `crates/lan-sync/src/store.rs:97` | M |
 | SC6 | low | The pin test does not read `.github/actions/*/action.yml` (all five `uses:` there are pinned today) | `web/scripts/lib/actionsPinned.test.ts:11` | S |
 | SC7 | low | Dependabot misses the root and `scripts/agents` npm projects, two crate lockfiles and one Gradle project; no audit job in CI | `.github/dependabot.yml` | S |
-| SC8–SC11 | info | Ratchet proxy approval ends 2026-11-22; the artifact audit passes on an empty folder; one stale line in `.gitleaksignore`; the licence list ships ids and links, no licence texts (Apache-2.0 §4) | `web/scripts/ratchet.mjs:52-54`, `web/scripts/audit-release.mjs:38-46`, `.gitleaksignore:17`, `web/src/core/about/licenses.json` | S–M |
+| SC8–SC11 | info | Ratchet proxy approval ends 2026-11-22; the artifact audit passes on an empty folder; one stale line in `.gitleaksignore`; the licence list ships ids and links, no licence texts (Apache-2.0 §4) | `web/scripts/ratchet.mjs:52-54`, `web/scripts/audit-release.mjs:38-46`, `.gitleaksignore:17`, `web/src/core/about/licenses.json` | S–M; SC9 and SC10: Sven merges |
 
 Audit results (run on this commit):
 
@@ -209,10 +215,10 @@ Audit results (run on this commit):
 
 | ID | Sev | Finding | Evidence |
 |---|---|---|---|
-| D7 | low | Mail remote images (tracking pixel on "Bilder laden") and the optional Gmail poll are in no promise document | `core/mail/sanitize.ts:220`, `modules/mail/notifyService.ts:49-88` |
+| D7 | low | Mail remote images (tracking pixel on "Bilder laden") and the optional Gmail poll were in no promise document – **fixed** for in-app notices, DATA-FLOWS, website and user docs in the texts PR | `core/mail/sanitize.ts:220`, `modules/mail/notifyService.ts:49-88` |
 | D9 | low | Opt-in breach check sends 5 hex characters of each password's SHA-1 to api.pwnedpasswords.com; undocumented everywhere | `modules/accounts/breach.ts:9,72`, `modules/accounts/settings.ts:17-33` |
-| D10 | low | "Sync only through your own server" ignored home-network sync, exchange and remote control (listener + mDNS) – **fixed** in the texts PR for website and user docs; DATA-FLOWS and in-app flows still lack a row | `docs/user/security.md:8`, `crates/lan-sync/src/discovery.rs:1-28` |
-| D11 | low | Bookmark and tab previews fetch pages automatically (opt-in settings); DATA-FLOWS says "never in the background" for the browser | `modules/bookmarks/preview.ts:50-58`, `modules/browser/tabPreviews.ts:25-29`, `docs/legal/DATA-FLOWS.md:21` |
+| D10 | low | "Sync only through your own server" ignored home-network sync, exchange and remote control (listener + mDNS) – **fixed** in the texts PR (website, user docs, README, DATA-FLOWS and the in-app `sync` notice; an own row for exchange and remote control is left to package 11) | `docs/user/security.md:8`, `README.md:173`, `site/src/i18n/de.ts:113`, `crates/lan-sync/src/discovery.rs:1-28` |
+| D11 | low | Bookmark and tab previews fetch pages automatically (opt-in settings); DATA-FLOWS and the in-app browser notice say "never in the background" | `modules/bookmarks/preview.ts:50-58`, `modules/browser/tabPreviews.ts:25-29`, `docs/legal/DATA-FLOWS.md:21`, `strings.legal.ts:118,368` |
 | D12 | low | Spotify scopes are broader than the site text – **fixed** | `connectors/spotify/index.ts:121-166` |
 | D13 | info | Stale: `docs/legal/data-flows-hinweise.md:9`; the in-app host list lacks api.anthropic.com (`core/net/catalogue.ts:31-38`) | – |
 | D14 | low | SECURITY.md scope did not name the new parts – **fixed** | `SECURITY.md` |
@@ -238,7 +244,7 @@ No regression. Verified at the code, not from the old status table.
 | L1, L2 | fixed | `crates/local-api/tests/server.rs:256,360` |
 | W1–W3 | fixed | `services/supporter-webhook/test/webhook.test.ts:87,250-260` |
 | T1–T4 | fixed (T2: `allowBackup` asserted, cleartext only reported → NS4) | `core/platform/tauri/csp.test.ts`, `plugins/apk-installer/src/validate.rs:60` |
-| T5 | **open** (low, = M5) | `src/oauth.rs:110-111,180-200` |
+| T5 | **open** (low, = M5) | `src/oauth.rs:109-141,182-213` (bind at `:134`) |
 | T6, T7, T8 | unchanged (info): portable exe at a drive root protects the drive; pre-update copy is plaintext without a backup passphrase; `$APPDATA/**` file scope | `core/update/backup.ts:42-50`, `capabilities/default.json:53-74` |
 | A1 | fixed inside one call; residual AI1 | `core/ai/router.test.ts:142` |
 | A2–A4, A6 | fixed | `connectors/ics/ics.test.ts:107`, `core/ai/config.test.ts:100`, `core/connectors/service.test.ts:280` |
@@ -252,7 +258,7 @@ No regression. Verified at the code, not from the old status table.
 | Website controller placeholder | no placeholder in the repo; build variables, production build fails without them | `site/src/legal.js:22-40`, `npm run check:legal`: 0 open |
 | Not re-verified | X10, X11, N8, L3–L7, W4–W8, A7, A8, P4, P7–P13 (info items) | – |
 
-Hand tests of October: none is ticked in MANUAL-TESTS.md. LR1 (pipe, second user), LR2 (Hello + reset) and LR3 (APK update, without the wrong-digest step) exist; the Android clipboard check, "dev preview is not offered to a stable install" and the run-log check had no entry. X11 there expects "belegt", which X2 says cannot happen on Windows. All are now covered by `SEC-1` to `SEC-13`.
+Hand tests of October: none is ticked in MANUAL-TESTS.md. LR1 (pipe, second user), LR2 (Hello + reset) and LR3 (APK update, without the wrong-digest step) exist; the Android clipboard check, "dev preview is not offered to a stable install" and the run-log check had no entry. X11 there expects "belegt", which X2 says cannot happen on Windows. All are now covered by `SEC-1` to `SEC-14`.
 
 ## Not checked, because …
 
@@ -285,10 +291,10 @@ Hand tests of October: none is ticked in MANUAL-TESTS.md. LR1 (pipe, second user
 | ICS and feed addresses (browser: through `/v1/proxy` of the own server) | subscription ~30 min; feed lookup on click | request | W U F |
 | Own sync server | after setup: start, ~60 s, on change | field changes (end-to-end encrypted with a passphrase), token | W U F |
 | Web push: own server → the browser vendor's push service | when switched on | reminder title, text, link | W F |
-| Built-in browser: opened pages, search engine (default DuckDuckGo) | Windows, module on, on input | what a browser sends | W U F |
+| Built-in browser: opened pages, search engine (default DuckDuckGo) | Windows and Android (there a Chrome custom tab), module on, on input | what a browser sends | W U F |
 | Downloads: the file's server; torrent: peers, trackers, DHT, optional UPnP; listener on all interfaces | Windows, on click; torrent part off by default | request; IP address and info hash | W U F |
-| Home network: hub listener on private addresses, mDNS announcement, phone → pinned private address | after pairing | sync, exchange, input inside a Noise channel | W U (F: missing, D10) |
-| Sender-chosen image hosts in a mail | "Bilder laden" or setting "always" | request (now public https only) | F (D7 for the rest) |
+| Home network: hub TCP listener on private addresses of the home network; mDNS announcement on those addresses (the library's UDP sockets on port 5353 are wildcard, H10); phone → pinned private address | hub: while home-network sync is on; data after pairing | sync, exchange, input inside a Noise channel | W U F |
+| Sender-chosen image hosts in a mail | "Bilder laden" or setting "always" | request (with the fix: public https only, no redirects) | W U F |
 | Link and bookmark previews, reader view, tab previews | opt-in settings or click | second request for the page and its preview image | – (D11) |
 | api.pwnedpasswords.com | opt-in breach check in the vault | first 5 hex characters of a SHA-1 | – (D9) |
 | System browser links (Google/Apple Maps, WhatsApp, Ko-fi, Genius, provider consoles, unsubscribe and mail links) | click | the address | F |
@@ -297,13 +303,10 @@ Hand tests of October: none is ticked in MANUAL-TESTS.md. LR1 (pipe, second user
 
 ## For the maintainer in GitHub
 
-Seen from outside on 2026-11-21: private vulnerability reporting **on**; secret scanning **on** with push protection **on** (non-provider patterns and validity checks off); Dependabot security updates **on**. Branch and tag rules were read too; their state and what to change are in the private note for SC1, not here. Not readable from this session: Actions permissions, environments, Dependabot and code-scanning alerts, collaborators and tokens.
+Seen from outside on 2026-11-21: private vulnerability reporting **on**; secret scanning **on** with push protection **on** (non-provider patterns and validity checks off); Dependabot security updates **on**. Not readable from this session: Actions permissions, environments, Dependabot and code-scanning alerts, collaborators and tokens.
 
-Checklist (do all, in this order; 1–2 are the first half of the way out of the "no" above):
-
-1. Rules for release tags and for `main` (who may create, update, delete; force pushes; pull request required).
-2. Signing secrets behind an environment with yourself as required reviewer (parked in #542).
-3. `develop` ruleset: add the required status checks (open item 2 in CHATS.md).
-4. Settings → Actions → General: workflow permissions "read", "allow GitHub Actions to create and approve pull requests" off, workflows from fork pull requests need approval.
-5. Review who has write access and which tokens (automation, agents) exist; shorten their lifetime.
-6. Secret scanning: switch on non-provider patterns and validity checks. Look at the open code-scanning and Dependabot alerts.
+1. SC1: the steps are in the private note.
+2. `develop` ruleset: add the required status checks (open item 2 in CHATS.md).
+3. Settings → Actions → General: workflow permissions "read", "allow GitHub Actions to create and approve pull requests" off, workflows from fork pull requests need approval.
+4. Review who has write access and which tokens (automation, agents) exist; shorten their lifetime.
+5. Secret scanning: switch on non-provider patterns and validity checks. Look at the open code-scanning and Dependabot alerts.

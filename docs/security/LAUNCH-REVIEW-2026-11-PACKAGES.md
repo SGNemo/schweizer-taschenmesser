@@ -1,23 +1,23 @@
 # Launch review 2 – packages (prompts)
 
-Findings and evidence: [LAUNCH-REVIEW-2026-11.md](LAUNCH-REVIEW-2026-11.md). One package = one chat, one branch from fresh `develop`, one PR against `develop`; paste one prompt per chat. Order = order of the blockers. "Sven merges" = the package touches a hard-limit area (signing, secrets, `release.yml`, sync encryption, vault logic); the chat never merges. Every package: a test that is red before, `.changes/*-security.md` (de + en), hand tests into [../MANUAL-TESTS.md](../MANUAL-TESTS.md) next to the `SEC-…` block, `council` with a Guardian. Delete this file in the PR that closes the last package.
+Findings and evidence: [LAUNCH-REVIEW-2026-11.md](LAUNCH-REVIEW-2026-11.md). One package = one chat, one branch from fresh `develop`, one PR against `develop`; paste one prompt per chat. Order = order of the blockers. "Sven merges" = the package touches a hard-limit area (signing, secrets, gitleaks configuration, artifact audit, `release.yml`, sync encryption, crypto, vault logic, `guard.rs`) or needs GitHub settings; the chat never merges. Every package: a test that is red before, `.changes/*-security.md` (de + en), hand tests into [../MANUAL-TESTS.md](../MANUAL-TESTS.md) next to the `SEC-…` block, `council` with a Guardian. Delete this file in the PR that closes the last package.
 
 | # | Package | Branch | Findings | Blocks | Who merges |
 |---|---|---|---|---|---|
-| 0 | GitHub settings (no chat) | – | SC1 part 1, list "For the maintainer in GitHub" | exe, APK, website | Sven, by hand |
-| 1 | Release pipeline: signing only where it belongs | `ci/security-release-guard` | SC1 code part, SC2, SC3, SC4, SC9, NS4 | exe, APK | Sven |
+| 0 | SC1 (no chat) | – | steps of the private note; list "For the maintainer in GitHub" | exe, APK, website | Sven, by hand |
+| 1 | Release pipeline: signing only where it belongs | `ci/security-release-guard` | SC2, SC3, SC4, SC9, SC10, NS4 (and what the private note assigns to it) | exe, APK (condition) | Sven |
 | 2 | "Alle Daten löschen" also wipes the native stores | `fix/security-reset-native` | R1, R2, R3 | exe, APK | Sven |
-| 3 | Downloads and torrent hardening | `fix/security-downloads-hardening` | DL1–DL9, DL11 | exe (condition) | – |
+| 3 | Downloads and torrent hardening | `fix/security-downloads-hardening` | DL1–DL11 | exe (condition) | – |
 | 4 | Android update: flavour and version | `fix/security-update-auth` | NS2, NS3, S13 (decision) | APK (condition) | Sven |
 | 5 | Vault bridge first instance, overlay host | `fix/security-bridge-first-instance` | X2, X4 | extension, exe (condition) | Sven |
-| 6 | Sync token into the secret store | `fix/security-sync-token-store` | S5 | PWA, apps (condition) | Sven |
+| 6 | Sync token into the secret store | `fix/security-sync-token-store` | S5 | exe, APK, PWA (condition) | Sven |
 | 7 | Chat stays with its provider | `fix/security-ai-provider-pin` | AI1 | exe, APK, PWA (condition) | – |
-| 8 | Home network and remote control, small hardening | `fix/security-lan-hardening` | H1, H2, H4, H5, H6, F1, F2, F3, E1–E5 | – | – (H3: Sven) |
+| 8 | Home network and remote control, small hardening | `fix/security-lan-hardening` | H1, H2, H4, H5, H6, H10, F1, F2, F3, E1–E5 | – | – (H3, H10 rule text: Sven) |
 | 9 | Android: manifest, lock screen, clipboard | `fix/security-android-surface` | NS5, NS6, NS8 (V4) | – | – |
-| 10 | Web layer and server lows | `fix/security-web-lows` | R5, R6, R8, M2, M5, M6, Q1, Q2, Q3, B1–B3, PC2, PC3, N9, V5, SC6, SC7 | – | – |
-| 11 | Privacy texts, second pass | `docs/security-privacy-texts-2` | D7, D9, D10 (rest), D11, D13, M7, F5 | – | – |
+| 10 | Web layer and server lows | `fix/security-web-lows` | R5, R6, R8, M2, M5, M6, Q1, Q2, Q3, B1–B3, PC2, PC3, N9, SC6, SC7; V5 only if not accepted | – | – |
+| 11 | Privacy texts, second pass | `docs/security-privacy-texts-2` | D9, D10 (rest), D11, D13, M7, F5 | – | – |
 
-Not packaged (info, accept or decide in passing): H7–H9, F4, F6, F7, E6–E9 (review with the exchange file packages), B4–B7, DL10, PC4, PC5, A5, A9–A11, MOD1, MOD2, NS9, NS10, Q4, Q5, SC5, SC8, SC10, SC11, D15, V9, T6–T8, P5.
+Not packaged – info items and lows whose recommendation is "accept for 1.0": H7–H9, F4, F6, F7, E6–E9 (review with the exchange file packages), B4–B7, PC4, PC5, A5 (low, accept), A9–A11, MOD1, MOD2, NS9, NS10, Q4, Q5, SC5 (low, accept: not reachable), SC8, SC11, D15, V9, T6–T8, P5 (low, accept). Mediums with recommendation accept: S13, V5.
 
 ### Prompt – package 1: release pipeline (`ci/security-release-guard`)
 
@@ -25,17 +25,17 @@ Not packaged (info, accept or decide in passing): H7–H9, F4, F6, F7, E6–E9 (
 Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
 Routing: Claude Code · Sicherheit Paket 1 – Release-Pipeline: Signieren nur beim Veröffentlichen · Opus
 
-# Aufgabe (unbeaufsichtigt): SC1 (Code-Teil), SC2, SC3, SC4, SC9, NS4 aus docs/security/LAUNCH-REVIEW-2026-11.md
-Lies den Bericht, docs/howto/release-deps.md, docs/architecture/releases.md, PR #542 (geparkt; nichts daraus übernehmen, ohne es zu nennen) und die private Notiz zu SC1, die Sven diesem Prompt beilegt. Details zu SC1 nie in Repo, PR oder Scribble.
+# Aufgabe (unbeaufsichtigt): SC2, SC3, SC4, SC9, SC10, NS4 aus docs/security/LAUNCH-REVIEW-2026-11.md
+Lies den Bericht, docs/howto/release-deps.md, docs/architecture/releases.md, PR #542 (geparkt; nichts daraus übernehmen, ohne es zu nennen). Sven legt diesem Prompt die private Notiz zu SC1 bei: was sie diesem Paket zuweist, gehört dazu; ihr Inhalt steht nie in Repo, PR-Text, Commit oder Scribble.
 ## Pflichtliste
-- `release.yml`: Tag-Build nur, wenn der Tag-Commit Vorfahr von `origin/main` ist; Signier-Secrets und APK-Signatur nur bei `publish == 'true'`; kein Cache-Restore im veröffentlichenden Build.
-- `dev-preview.yml`: eigene Secret-Namen für den Dev-Keystore (Sven legt sie an; ohne sie stoppt der Job mit klarer Meldung wie beim Dev-Updater-Schlüssel), Dispatch nur auf `develop`.
-- `audit-release.mjs`: beim Veröffentlichen schlägt ein leerer Ordner fehl; geprüft wird das zusammengeführte Manifest der signierten APK (Berechtigungen, exportierte Komponenten, Klartext aus) gegen eine Erlaubt-Liste.
+- SC3: Signier-Secrets und APK-Signatur nur bei `publish == 'true'`. SC4: kein Cache-Restore im veröffentlichenden Build.
+- SC2: eigene Secret-Namen für den Dev-Keystore (Sven legt sie an; ohne sie stoppt der Job mit klarer Meldung wie beim Dev-Updater-Schlüssel).
+- SC9/NS4: `audit-release.mjs` schlägt beim Veröffentlichen auf einem leeren Ordner fehl; geprüft wird das zusammengeführte Manifest der signierten APK (Berechtigungen, exportierte Komponenten, Klartext aus) gegen eine Erlaubt-Liste. SC10: veraltete Zeile in `.gitleaksignore` nur als Vorschlag.
 - Nichts abschwächen: gitleaks, Artefakt-Audit, Schlüsselprüfung bleiben mindestens so streng.
 ## Abnahme
 Tests in `web/scripts/lib/*.test.ts` vorher rot; Probelauf-Log im PR-Text; `git diff --stat` im PR-Text; was Sven in GitHub anlegen muss, als Liste.
 ## Skills
-council (Guardian: kürzester Weg eines Schreibzugriffs zum Schlüssel). Mergt Sven selbst. Full stop.
+council (Guardian: wo Schlüssel neben Code aus einem Branch liegen). Mergt Sven selbst. Full stop.
 ```
 
 ### Prompt – package 2: reset wipes the native stores (`fix/security-reset-native`)
@@ -63,7 +63,7 @@ council (Guardian: was ein früher gekoppeltes Gerät und wer den PC übernimmt 
 Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
 Routing: Claude Code · Sicherheit Paket 3 – Downloads und Torrent härten · Opus
 
-# Aufgabe (unbeaufsichtigt): DL1–DL9, DL11
+# Aufgabe (unbeaufsichtigt): DL1–DL11
 Lies den Bericht (Abschnitt Downloads), web/src-tauri/crates/{downloader,torrent}, src/{downloads,torrent}.rs, modules/downloads. Zuerst im Quelltext von librqbit 9.1.0 klären (im PR-Text festhalten): wie Dateipfade aus der Metainfo behandelt werden (`..`, absolut, reservierte Namen), ob `Session::stop` Listener und DHT schließt.
 ## Pflichtliste
 - DL1: nie überschreiben (eigener Unterordner oder Vorabprüfung; Fortsetzen eines eigenen Torrents bleibt möglich).
@@ -71,6 +71,7 @@ Lies den Bericht (Abschnitt Downloads), web/src-tauri/crates/{downloader,torrent
 - DL3: `Zone.Identifier` (ZoneId 3) nach dem Umbenennen, auch für Torrent-Dateien.
 - DL4/DL5: private, Loopback- und Link-Local-Ziele ablehnen, Weiterleitungen je Sprung prüfen (höchstens 3), https→http nicht folgen; Tracker-Adressen filtern.
 - DL6: Zielordner nur aus der nativen Ordnerwahl (Token in Rust) oder dem Download-Ordner; `desktop.json`-Beschreibung berichtigen.
+- DL10: Torrent-Schalter, DHT, UPnP und Zielordner gerätelokal (nicht im Sync); ein vorbelegter Ordner wird nativ geprüft wie DL6.
 - DL7–DL9, DL11: Lese-Timeout, Namensbereinigung (ein gemeinsamer Bereiniger mit `crates/lan-sync/src/exchange/name.rs`), Adressen ohne Zugangsdaten speichern, beim Laden neu prüfen, `saturating_mul`.
 ## Abnahme
 Je Punkt ein Rust-Test, vorher rot; Handtests SEC-11 und zwei neue (MotW, vorhandene Datei); Lizenz/Lock unverändert oder begründet.
@@ -154,13 +155,13 @@ council. Full stop.
 Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
 Routing: Claude Code · Sicherheit Paket 8 – Heimnetz und Fernsteuerung: kleine Härtungen · Opus
 
-# Aufgabe (unbeaufsichtigt): H1, H2, H4, H5, H6, F1, F2, F3, E1–E5; H3 nur als Vorschlag
+# Aufgabe (unbeaufsichtigt): H1, H2, H4, H5, H6, F1, F2, F3, E1–E5; H3 und H10 nur als Vorschlag
 Lies den Bericht, RULES „LAN sync“, docs/rules/remote-control.md, docs/design/sync-lan/CONCEPT.md. Noise, Schlüssel und Datenschlüssel nur lesen. Hotspot `crates/lan-sync`: Heads-up zuerst.
 ## Pflichtliste
 - H1: Frist bis zum ersten authentifizierten Frame, Annahmen zählen ins Limit. H2: `open()` nur im WLAN. H4: Gesamtdauer des Kopplungsfensters. H5: Fehler zeigen, Speichern wiederholen. H6: Code am PC eintippen oder nativer Dialog.
 - F1: „Abbrechen“ ist Standardtaste. F2: Gleicher-Hub-Prüfung. F3/NS7: Dateibereich der Seite einengen + Test.
 - E1–E5: Grenzen je Gerät, Limit am Handy, Modul-aus erreicht den nativen Schalter, Ausgang bei Pause, Namensfilter im Dialog.
-- H3: Text und Ablauf „Schlüssel erneuern nach dem Entkoppeln“ als Vorschlag im PR-Text (Sync-Verschlüsselung: Sven entscheidet).
+- H3: Text und Ablauf „Schlüssel erneuern nach dem Entkoppeln“ als Vorschlag im PR-Text (Sync-Verschlüsselung: Sven entscheidet). H10: mDNS je Schnittstelle binden oder den Regelsatz „nie 0.0.0.0“ auf den TCP-Listener einschränken – beide Wege mit Aufwand, Sven entscheidet (Regeltext).
 ## Abnahme
 Rust-Tests je Punkt vorher rot; `tests/rules.rs` erweitert; Handtests SEC-3, SEC-10.
 ## Skills
@@ -189,7 +190,7 @@ council. Full stop.
 Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
 Routing: Claude Code · Sicherheit Paket 10 – kleine Befunde in Web-Schicht und Server · Opus
 
-# Aufgabe (unbeaufsichtigt): R5, R6, R8, M2, M5, M6, Q1, Q2, Q3, B1–B3, PC2, PC3, N9, V5, SC6, SC7
+# Aufgabe (unbeaufsichtigt): R5, R6, R8, M2, M5, M6, Q1, Q2, Q3, B1–B3, PC2, PC3, N9, SC6, SC7 (V5 nur, wenn Sven es nicht angenommen hat)
 Lies den Bericht; je Befund die kleinste Änderung mit einem Test, der vorher rot ist. Höchstens zwei PRs (Web/Server · Rust). Was sich als größer zeigt, kommt als Vorschlag in den PR-Text.
 ## Abnahme
 check, test, e2e grün; Liste „gemacht / zurückgestellt mit Grund“.
@@ -203,8 +204,8 @@ council. Full stop.
 Git: docs/PROMPT-TEMPLATES.md#git · Rules: #hard-rules · Docs: #knowledge · Questions: #questions · Closing: #closing · PR: #pr-text
 Routing: Claude Code · Sicherheit Paket 11 – Datenschutztexte, zweiter Durchgang · Opus
 
-# Aufgabe (unbeaufsichtigt): D7, D9, D10 (Rest), D11, D13, M7, F5
-- Neue Flüsse in `docs/legal/DATA-FLOWS.md` und `tLegal.flows` (de + en, ids in `core/legal/legal.test.ts`): Heimnetz, Leck-Prüfung (pwnedpasswords), Link- und Tab-Vorschau, Bilder in Mails und Gmail-Abfrage.
+# Aufgabe (unbeaufsichtigt): D9, D10 (Rest), D11, D13, M7, F5
+- Neue Flüsse in `docs/legal/DATA-FLOWS.md` und `tLegal.flows` (de + en, ids in `core/legal/legal.test.ts`): Austausch und Fernsteuerung im Heimnetz als eigene Zeile, Leck-Prüfung (pwnedpasswords), Link- und Tab-Vorschau („nie im Hintergrund“ in `strings.legal.ts:118,368` berichtigen).
 - `core/net/catalogue.ts`: api.anthropic.com. Spotify: Trennen widerruft nicht bei Spotify (Text + docs/user/spotify*.md). Regeltext Fernsteuerung: Maus/Tastatur-Freigabe reicht so weit wie der Nutzer.
 - Website-Liste und docs/user/security*.md nachziehen.
 ## Abnahme
