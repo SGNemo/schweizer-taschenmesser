@@ -174,6 +174,10 @@ export const planner: Strings['planner'] = {
     blockerFrom: 'Blocker from',
     blockerTo: 'Blocker to',
   },
+  drag: {
+    pick: 'Drag onto a day',
+    drop: 'Drop here',
+  },
   row: {
     part: (k: number, of: number) => `Part ${k}/${of}`,
     partAria: (k: number, of: number) => `Part ${k} of ${of}`,

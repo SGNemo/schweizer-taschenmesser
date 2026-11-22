@@ -53,3 +53,14 @@
   color: var(--text-muted);
   cursor: default;
 }
+/* The entry's key (`M`): quiet beside the label; no keyboard on touch, so not shown there. */
+.shortcut {
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-meta);
+}
+@media (hover: none) {
+  .shortcut {
+    display: none;
+  }
+}

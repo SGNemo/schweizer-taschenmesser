@@ -717,3 +717,17 @@ section.sheet .headEnd button[aria-expanded='true'] {
   color: var(--text);
   font-weight: var(--weight-semibold);
 }
+/* Package 5: one listener for the page's rows (a box of no layout of its own); the row being dragged stays in
+   place, marked (its text keeps its contrast); while dragging no text is selected. */
+.dragHost {
+  display: contents;
+}
+.dragHost :global(li[data-drag-source]) {
+  background: var(--surface-sunken);
+  outline: 1.5px dashed var(--border-strong);
+  outline-offset: -1.5px;
+}
+:global(html[data-dragging]) {
+  cursor: grabbing;
+  user-select: none;
+}

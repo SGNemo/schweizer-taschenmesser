@@ -113,16 +113,15 @@ export function useRowMenu(ctx: {
     const excluded = row.item?.excluded === true;
     const open = why === row.unitId;
     const top: RowMenuItem[] = [
-      ...(abilities.canDone(e.moduleId) && !opts.tick
-        ? [{ id: 'done', label: t.planner.row.done, onSelect: () => void markDone(e, titles) }]
-        : []),
-      // „Verschieben …“: day chips; the thing lies on the chosen day from then on, nothing else moves.
+      // „Verschieben …“ first (package 5; also `M` on the row and dragging): the day chips; the thing lies on the chosen
+      // day from then on, nothing else moves.
       ...(excluded
         ? []
         : [
             {
               id: 'move',
               label: t.planner.row.move,
+              shortcut: 'M',
               onSelect: () =>
                 setChoice({
                   kind: 'move',
@@ -131,6 +130,9 @@ export function useRowMenu(ctx: {
                 }),
             },
           ]),
+      ...(abilities.canDone(e.moduleId) && !opts.tick
+        ? [{ id: 'done', label: t.planner.row.done, onSelect: () => void markDone(e, titles) }]
+        : []),
       ...(abilities.canAssign(e.moduleId)
         ? [{ id: 'later', label: t.planner.row.later, onSelect: () => void later(e, titles) }]
         : []),

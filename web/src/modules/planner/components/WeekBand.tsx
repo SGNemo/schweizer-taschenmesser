@@ -4,6 +4,7 @@ import { addDaysStr, formatDay } from '@/core/time/dates';
 import { t } from '@/strings';
 import { Progress } from '@/ui';
 import type { BoardDay } from '../board';
+import { droppedOn, useDragState, withDropped } from './dragMove';
 import { capacityLabel, capacityShort, capacityState, capacityTile, compact } from './capacity';
 import styles from './WeekBand.module.css';
 
@@ -49,14 +50,18 @@ export function WeekBand({
   picked,
   onPick,
   today,
+  drop,
 }: {
   days: readonly BoardDay[];
   picked: string | undefined;
   onPick: (date: string) => void;
   /** Today ('YYYY-MM-DD'): a day before it is a passed day („offen“, no load). Default: none is passed. */
   today?: string;
+  /** The tiles take a dragged row (package 5; the planner page). */
+  drop?: boolean;
 }) {
   const box = useRef<HTMLDivElement>(null);
+  const drag = useDragState();
   const most = Math.max(1, ...days.map((d) => d.usable));
   // The roving stop: the picked day, else the first tile.
   const stop = days.some((d) => d.date === picked) ? picked : days[0]?.date;
@@ -94,6 +99,9 @@ export function WeekBand({
           const state = capacityState(d);
           const number = formatDay(d.date, 'd.');
           const passed = !!today && isPassed(d, today);
+          // A row dragged over the tile (package 5): the tile shows the day as it would be – a full one its overbooking.
+          const dropped = passed ? null : droppedOn(drag, d.date);
+          const shown = dropped === null ? d : withDropped(d, dropped);
           // A passed day: „offen“ while something of it is open, else nothing – never a figure, never a bar.
           const passedWord = passed && d.rows.length > 0 ? t.planner.board.open : '';
           return (
@@ -104,6 +112,8 @@ export function WeekBand({
               className={styles.tile}
               data-off={d.off || undefined}
               data-passed={passed || undefined}
+              data-drop-date={passed || !drop ? undefined : d.date}
+              data-drop-over={dropped !== null || undefined}
             >
               <button
                 type="button"
@@ -132,14 +142,14 @@ export function WeekBand({
                       <span className={styles.count}>{t.planner.board.things(n)}</span>
                     ) : null}
                   </span>
-                  <span className={styles.state}>{passed ? passedWord : capacityTile(d)}</span>
+                  <span className={styles.state}>{passed ? passedWord : capacityTile(shown)}</span>
                 </span>
                 <span className={styles.compact} aria-hidden="true">
                   <span className={styles.day}>{dayName(d.date)}</span>
                   <span className={styles.day}>{formatDay(d.date, 'd')}</span>
                   {/* One unit on every tile (M-2): the free time or one state word („frei“, „voll“); the count of
                       things is in the tile's name only. */}
-                  <span className={styles.state}>{passed ? passedWord : capacityShort(d)}</span>
+                  <span className={styles.state}>{passed ? passedWord : capacityShort(shown)}</span>
                 </span>
               </button>
               {/* The button's name says the load in words; the bar is its picture (none for a passed day). */}

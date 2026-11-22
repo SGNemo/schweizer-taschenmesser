@@ -583,8 +583,16 @@ export const setPart = (
   );
 
 /** „Verschieben …“: the thing lies on that day from now on. Nothing else moves; it is not „fest“ by that. */
+/**
+ * „Verschieben …“, `M` and a drop on a day (package 5): the thing lies on that day and nothing else moves; one undo. A
+ * full or kept-free target says so in the toast – the one live message of the move.
+ */
 export async function moveTo(e: PlannableEntry, date: string, titles: Record<string, string>) {
-  return act(t.planner.row.move, await laidLine(e, date), titles, () => layOn(e, date));
+  const line = await laidLine(e, date);
+  const plain = line === t.planner.toast.laid(dayName(date));
+  return act(t.planner.row.move, line, titles, () => layOn(e, date), {
+    leadAfter: (run) => dayNote(date, run, plain ? undefined : line),
+  });
 }
 
 /**

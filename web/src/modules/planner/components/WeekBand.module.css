@@ -131,3 +131,8 @@
 .tile[data-passed] .pick {
   color: var(--text-muted);
 }
+/* A row dragged over the tile (package 5): a dashed outline; the tile's words say what the day would hold. */
+.tile[data-drop-over] .pick {
+  outline: 2px dashed var(--focus);
+  outline-offset: -2px;
+}

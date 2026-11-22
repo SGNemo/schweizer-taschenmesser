@@ -41,6 +41,7 @@ import {
   allToday,
   applyOps,
   layHere,
+  moveTo,
   later,
   markDone,
   setLocked,
@@ -48,6 +49,7 @@ import {
   spreadOpen,
   takeOff,
 } from '../actions';
+import type { PlannableEntry } from '@/core/modules/contributions';
 import type { BoardDay, BoardRow, OpenRow } from '../board';
 import { Capture } from '../components/Capture';
 import { CaptureDialog } from '../components/CaptureDialog';
@@ -59,6 +61,8 @@ import { LateGroup, LateRow } from '../components/LateGroup';
 import { PassedTrainings } from '../components/PassedTrainings';
 import { tileName, WeekBand } from '../components/WeekBand';
 import { WeekGrid } from '../components/WeekGrid';
+import { DragGhost } from '../components/DragGhost';
+import { useDragMove, type DragRow } from '../components/dragMove';
 import { firstDayWithRows, plannerHead } from '../head';
 import { DaySetup } from '../components/DaySetup';
 import { DaySheet } from '../components/DaySheet';
@@ -206,6 +210,9 @@ export default function PlannerPage() {
   const [choice, setChoice] = useState<RowChoiceState>();
   // „Auswählen“ in the tab „Noch offen“ (package 3): the chosen rows, one day for all of them.
   const [selecting, setSelecting] = useState(false);
+  // „Auswählen“ on the day sheet (package 5, the page's ⋯): its chosen rows, one day for all of them.
+  const [dayPicking, setDayPicking] = useState<string | undefined>();
+  const [dayChosen, setDayChosen] = useState<Set<string>>(() => new Set());
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const abilities = useAbilities();
   const { canDone, canAssign } = abilities;
@@ -521,36 +528,6 @@ export default function PlannerPage() {
     ? plannerHead(board.days.slice(0, SPAN), { short: phone, late: board.late })
     : undefined;
 
-  const pageMenu: RowMenuItem[] = [
-    // Phone: the switch „4 Wochen“ lives here (the band's row keeps the phone's stimulus budget).
-    ...(phone
-      ? [
-          {
-            id: 'grid',
-            label: grid ? t.planner.board.weekViewMenu : t.planner.board.gridViewMenu,
-            onSelect: toggleGrid,
-          },
-        ]
-      : []),
-    {
-      id: 'replan',
-      label: t.planner.head.replan,
-      onSelect: () => void showPreview([{ op: 'replan', reshuffle: false }]),
-    },
-    { id: 'check', label: t.planner.check.title, onSelect: () => setChecking(true) },
-    { id: 'days', label: t.planner.daySetup.open, onSelect: () => setSettingUp(true) },
-  ];
-  // The page's ⋯: in the head's title row on the desktop; on the phone (no action in the module head) beside the
-  // sheet's day title.
-  const pageMenuButton = (
-    <RowMenu
-      label={t.planner.head.menu}
-      items={pageMenu}
-      open={menuOpen}
-      onOpenChange={setMenuOpen}
-    />
-  );
-
   // „Woche prüfen · 2 Schritte“: Mondays only, only with the switch on, until it is clicked away for this week.
   const monday = data ? addDaysStr(data.today, 1 - isoWeekday(data.today)) : undefined;
   const showWeekLink =
@@ -648,6 +625,29 @@ export default function PlannerPage() {
 
   // „Frist So 18:00“ turns into „Frist war So 18:00“ once the hour has passed (package 5b); read once a minute.
   const dueClock = useNow(60_000);
+  // Package 5: the rows that can be dragged onto a day (or moved with `M`), filled while they render; the page's
+  // column listens once. A drop is the same move as „Verschieben …“: that thing on that day, nothing else.
+  const movers = new Map<string, DragRow>();
+  const mover = (
+    row: { unitId: string; title: string; minutes: number; entry?: PlannableEntry },
+    menu: readonly RowMenuItem[] | undefined,
+    from?: string,
+  ) => {
+    const e = row.entry;
+    // As the menu: a row that offers „Verschieben …“ (or the open tab's move button) can be dragged.
+    if (!e || (menu && !menu.some((m) => m.id === 'move'))) return false;
+    movers.set(row.unitId, {
+      unitId: row.unitId,
+      title: row.title,
+      minutes: row.minutes,
+      ...(from ? { from } : {}),
+      onDrop: (date) => void moveTo(e, date, titles),
+      onMoveKey: () => setChoice({ kind: 'move', entry: e, ...(from ? { on: from } : {}) }),
+    });
+    return true;
+  };
+  const dragHost = useDragMove((unitId) => movers.get(unitId));
+
   const renderRow = (row: BoardRow, day: BoardDay, next: boolean) => {
     const reason = explainAssignment(
       { reason: row.reason, bumpedBy: row.bumpedBy },
@@ -659,19 +659,35 @@ export default function PlannerPage() {
       },
     );
     const tick = !!row.entry && canDone(row.entry.moduleId);
+    const menu = rowMenu(row, day.date, reason, {
+      tick,
+      // The same rule as the toggle: no one-day lock on a part of a thing.
+      lockInMenu: lockHidden(row) && row.of === 1 && !row.derived,
+    });
     return (
       <ThingRow
         key={row.unitId}
         row={row}
         next={next}
+        draggable={!row.fixed && mover(row, menu, day.date)}
+        select={
+          dayPicking === day.date && canMove(row)
+            ? {
+                selected: dayChosen.has(row.unitId),
+                onChange: (on) =>
+                  setDayChosen((cur) => {
+                    const next = new Set(cur);
+                    if (on) next.add(row.unitId);
+                    else next.delete(row.unitId);
+                    return next;
+                  }),
+              }
+            : undefined
+        }
         reason={reason}
         whyOpen={why === row.unitId}
         dueClock={dueClock}
-        menu={rowMenu(row, day.date, reason, {
-          tick,
-          // The same rule as the toggle: no one-day lock on a part of a thing.
-          lockInMenu: lockHidden(row) && row.of === 1 && !row.derived,
-        })}
+        menu={menu}
         lock={lockHidden(row) ? undefined : lockOf(row, day.date)}
         onDone={tick ? () => done(row) : undefined}
         onLater={
@@ -706,6 +722,7 @@ export default function PlannerPage() {
         was={row.pinned ? row.date : undefined}
         // Package 3: tick, title, „war Mo“, lock and a move button – no ⋯; two taps to a day, also on the phone.
         menu={[]}
+        draggable={mover(row, undefined, row.date)}
         lock={lockOf(row, row.date)}
         onMove={
           row.entry ? () => setChoice({ kind: 'move', entry: row.entry!, on: row.date }) : undefined
@@ -924,6 +941,89 @@ export default function PlannerPage() {
         days.find((d) => d.date === storedDate) ??
         firstDayWithRows(week ?? []) ??
         days[0]);
+
+  // A row a drag or „Auswählen“ can move: a thing of a source that is not a fixed block or left out.
+  const canMove = (r: BoardRow) => !!r.entry && !r.fixed && r.item?.excluded !== true;
+  // The day selection belongs to the shown day of the tab „Plan“: another day or the other tab ends it (adjusting
+  // state during render).
+  if (dayPicking && (tab !== 'plan' || (shownDay && shownDay.date !== dayPicking))) {
+    setDayPicking(undefined);
+    setDayChosen(new Set());
+  }
+  const endDayPick = () => {
+    setDayPicking(undefined);
+    setDayChosen(new Set());
+  };
+  /** „Auswählen“ on the day sheet: the bar (count, „Auf einen Tag …“, cancel) or, while nothing is chosen, „Alle“. */
+  const daySelection = (day: BoardDay) => {
+    const rows = day.rows.filter((r) => canMove(r) && dayChosen.has(r.unitId));
+    const label = `${dayName(day.date)} ${formatDay(day.date, 'd.')}`;
+    const entries = [
+      ...new Map(rows.flatMap((r) => (r.entry ? [[r.itemKey, r.entry] as const] : []))).values(),
+    ];
+    return rows.length > 0 ? (
+      <SelectionBar count={entries.length} onCancel={endDayPick}>
+        <Button onClick={() => setChoice({ kind: 'moveMany', entries, onDone: endDayPick })}>
+          {t.planner.open.moveSelected}
+        </Button>
+      </SelectionBar>
+    ) : (
+      <p className={styles.openActions} data-testid="day-select">
+        <Button
+          variant="ghost"
+          aria-label={t.planner.open.selectGroup(label)}
+          onClick={() => setDayChosen(new Set(day.rows.filter(canMove).map((r) => r.unitId)))}
+        >
+          {t.planner.open.selectGroupShort}
+        </Button>
+        <Button variant="ghost" onClick={endDayPick}>
+          {t.actions.cancel}
+        </Button>
+      </p>
+    );
+  };
+  const pageMenu: RowMenuItem[] = [
+    // Phone: the switch „4 Wochen“ lives here (the band's row keeps the phone's stimulus budget).
+    ...(phone
+      ? [
+          {
+            id: 'grid',
+            label: grid ? t.planner.board.weekViewMenu : t.planner.board.gridViewMenu,
+            onSelect: toggleGrid,
+          },
+        ]
+      : []),
+    {
+      id: 'replan',
+      label: t.planner.head.replan,
+      onSelect: () => void showPreview([{ op: 'replan', reshuffle: false }]),
+    },
+    // „Auswählen“ (package 5): several things of the shown day onto one day – where something can move.
+    ...(tab === 'plan' && shownDay && shownDay.rows.some(canMove)
+      ? [
+          {
+            id: 'select',
+            label: t.planner.open.select,
+            onSelect: () => {
+              setDayChosen(new Set());
+              setDayPicking(shownDay.date);
+            },
+          },
+        ]
+      : []),
+    { id: 'check', label: t.planner.check.title, onSelect: () => setChecking(true) },
+    { id: 'days', label: t.planner.daySetup.open, onSelect: () => setSettingUp(true) },
+  ];
+  // The page's ⋯: in the head's title row on the desktop; on the phone (no action in the module head) beside the
+  // sheet's day title.
+  const pageMenuButton = (
+    <RowMenu
+      label={t.planner.head.menu}
+      items={pageMenu}
+      open={menuOpen}
+      onOpenChange={setMenuOpen}
+    />
+  );
   const shownDate = shownDay?.date;
   // Adjusting state during render: the day the page opened on becomes the pick – once the plan holds things (the
   // board of a fresh page fills a moment after its days are there; an empty board keeps following).
@@ -1116,14 +1216,16 @@ export default function PlannerPage() {
             : w.reason === 'later'
               ? t.planner.wait.later(`${dayName(w.date!)} ${formatDay(w.date!, 'd.M.')}`)
               : explainWait({ reason: w.reason, bumpedBy: w.bumpedBy }, nameOf);
+        const menu = rowMenu(w, undefined, reason);
         return (
           <WaitRow
             key={w.unitId}
             row={w}
             reason={reason}
             why={why === w.unitId}
-            menu={rowMenu(w, undefined, reason)}
+            menu={menu}
             chip={chipOf(w)}
+            draggable={mover(w, menu)}
           />
         );
       })}
@@ -1305,156 +1407,173 @@ export default function PlannerPage() {
       ) : null}
 
       {/* Day and plan changes for screen readers: the picked day with its capacity, a ticked thing. */}
+      <DragGhost />
       <p className="sr-only" role="status" data-testid="planner-status">
         <span key={status.n}>{status.text}</span>
       </p>
 
-      <SplitView enabled={wide && hasContext} asideLabel={t.planner.ctx.label} aside={context}>
-        {/* Wide and nothing beside it (no appointment, nothing waits): the main column keeps the width it has
+      {/* Package 5: rows of the sheet, the tab and „Noch ohne Tag“ (beside, when wide) drag onto the band's days. */}
+      <div ref={dragHost} className={styles.dragHost}>
+        <SplitView enabled={wide && hasContext} asideLabel={t.planner.ctx.label} aside={context}>
+          {/* Wide and nothing beside it (no appointment, nothing waits): the main column keeps the width it has
             beside the context column, left-aligned with the head's title – rows do not stretch over the page. */}
-        <div className={wide && !hasContext ? `${styles.main} ${styles.mainAlone}` : styles.main}>
-          {/* Reading order = DOM order: field → band → sheet → context. The field is there from the first paint
+          <div className={wide && !hasContext ? `${styles.main} ${styles.mainAlone}` : styles.main}>
+            {/* Reading order = DOM order: field → band → sheet → context. The field is there from the first paint
               and never moves under the typing hand (U01). */}
-          {phone ? null : capture(false)}
-          {phone ? null : answer}
+            {phone ? null : capture(false)}
+            {phone ? null : answer}
 
-          {/* The tabs are there while something is open from earlier (or that tab is shown): an empty „Noch
+            {/* The tabs are there while something is open from earlier (or that tab is shown): an empty „Noch
               offen“ is no control worth a row – on the phone it would push the field under the bottom bar. */}
-          {openRows.length > 0 || tab === 'open' ? tabs : null}
+            {openRows.length > 0 || tab === 'open' ? tabs : null}
 
-          {showWeekLink && tab !== 'open' ? (
-            <p className={styles.weekLink} data-testid="week-check-link">
-              <button type="button" className={styles.textLink} onClick={() => setChecking(true)}>
-                {t.planner.weekLink.label}
-              </button>
-              <IconButton
-                label={t.planner.weekLink.dismiss}
-                onClick={() => void setMeta(WEEK_CHECK_KEY, monday)}
-              >
-                <Icon name="close" size={16} />
-              </IconButton>
-            </p>
-          ) : null}
+            {showWeekLink && tab !== 'open' ? (
+              <p className={styles.weekLink} data-testid="week-check-link">
+                <button type="button" className={styles.textLink} onClick={() => setChecking(true)}>
+                  {t.planner.weekLink.label}
+                </button>
+                <IconButton
+                  label={t.planner.weekLink.dismiss}
+                  onClick={() => void setMeta(WEEK_CHECK_KEY, monday)}
+                >
+                  <Icon name="close" size={16} />
+                </IconButton>
+              </p>
+            ) : null}
 
-          {tab === 'open' ? (
-            openBlock
-          ) : (
-            <>
-              {bandDays && data ? (
-                <>
-                  {bandRow}
-                  {grid ? (
-                    <WeekGrid days={bandDays} picked={shownDate} today={data.today} onPick={pick} />
-                  ) : (
-                    <WeekBand days={bandDays} picked={shownDate} onPick={pick} today={data.today} />
-                  )}
-                </>
-              ) : (
-                <div className={styles.bandPending} aria-hidden="true" />
-              )}
+            {tab === 'open' ? (
+              openBlock
+            ) : (
+              <>
+                {bandDays && data ? (
+                  <>
+                    {bandRow}
+                    {grid ? (
+                      <WeekGrid
+                        days={bandDays}
+                        picked={shownDate}
+                        today={data.today}
+                        onPick={pick}
+                        drop
+                      />
+                    ) : (
+                      <WeekBand
+                        days={bandDays}
+                        picked={shownDate}
+                        onPick={pick}
+                        today={data.today}
+                        drop
+                      />
+                    )}
+                  </>
+                ) : (
+                  <div className={styles.bandPending} aria-hidden="true" />
+                )}
 
-              {!wide ? <LateRow rows={late} renderRow={renderLate} /> : null}
+                {!wide ? <LateRow rows={late} renderRow={renderLate} /> : null}
 
-              {/* „Von Mo, Di ist noch etwas offen.“ – one calm line over today's sheet, never a count (CONCEPT §3). */}
-              {shownDay?.isToday && openRows.length > 0 && focus.openLine ? (
-                <p className={styles.openLine} data-testid="open-line">
-                  <span>{openLineText(openRows)}</span>
-                  <button
-                    type="button"
-                    className={styles.textLink}
-                    onClick={() =>
-                      setParams(
-                        (p) => {
-                          const q = new URLSearchParams(p);
-                          q.set('tab', 'open');
-                          return q;
-                        },
-                        { replace: true },
-                      )
+                {/* „Von Mo, Di ist noch etwas offen.“ – one calm line over today's sheet, never a count (CONCEPT §3). */}
+                {shownDay?.isToday && openRows.length > 0 && focus.openLine ? (
+                  <p className={styles.openLine} data-testid="open-line">
+                    <span>{openLineText(openRows)}</span>
+                    <button
+                      type="button"
+                      className={styles.textLink}
+                      onClick={() =>
+                        setParams(
+                          (p) => {
+                            const q = new URLSearchParams(p);
+                            q.set('tab', 'open');
+                            return q;
+                          },
+                          { replace: true },
+                        )
+                      }
+                    >
+                      {t.planner.open.show}
+                    </button>
+                  </p>
+                ) : null}
+
+                {shownDay && dayPicking === shownDay.date ? daySelection(shownDay) : null}
+                {shownDay && days ? (
+                  <DayPage
+                    key={shownDay.date}
+                    day={shownDay}
+                    tomorrow={days[1]?.date === shownDay.date}
+                    renderRow={(row, next) => renderRow(row, shownDay, next)}
+                    onEditDay={() => setSheetDate(shownDay.date)}
+                    thenOpen={thenOpen}
+                    onThenToggle={(open) =>
+                      void setMeta(phone ? THEN_NARROW_KEY : THEN_WIDE_KEY, open)
                     }
-                  >
-                    {t.planner.open.show}
-                  </button>
-                </p>
-              ) : null}
+                    empty={emptySheet}
+                    // „Rest verteilen“ only where something can go (a day of dated turns and locks alone has nothing).
+                    onRest={
+                      shownDay.isToday && shownDay.rows.some(movable)
+                        ? () => void showRest()
+                        : undefined
+                    }
+                    // Only where something can go: a day over its time by fixed blocks, turns or locks alone has no link.
+                    onSpread={
+                      shownDay.rows.some(movable) ? () => void showSpread(shownDay) : undefined
+                    }
+                    hints={
+                      shownDay.hints?.length ? (
+                        <ItemList label={t.planner.chips.todoList}>
+                          {shownDay.hints.map((h) => (
+                            <TodoHintRow
+                              key={h.itemKey}
+                              title={h.title}
+                              date={h.date}
+                              onPlace={() => void layHere(h.entry, h.date, titles)}
+                            />
+                          ))}
+                        </ItemList>
+                      ) : undefined
+                    }
+                    // On the phone the page's ⋯ stands in the sheet's head and holds „Tage einteilen“: said once.
+                    onSetup={phone ? undefined : () => setSettingUp(true)}
+                    headEnd={phone ? pageMenuButton : undefined}
+                    dayEnd={
+                      data && dayEndOf(data.settings)
+                        ? dayEndLabel(dayEndOf(data.settings)!)
+                        : undefined
+                    }
+                    onSwipe={
+                      phone
+                        ? (dir) => {
+                            const at = days.findIndex((d) => d.date === shownDay.date);
+                            const to = days[at + dir];
+                            if (to) pick(to.date);
+                          }
+                        : undefined
+                    }
+                  />
+                ) : (
+                  <DayPageLoading />
+                )}
 
-              {shownDay && days ? (
-                <DayPage
-                  key={shownDay.date}
-                  day={shownDay}
-                  tomorrow={days[1]?.date === shownDay.date}
-                  renderRow={(row, next) => renderRow(row, shownDay, next)}
-                  onEditDay={() => setSheetDate(shownDay.date)}
-                  thenOpen={thenOpen}
-                  onThenToggle={(open) =>
-                    void setMeta(phone ? THEN_NARROW_KEY : THEN_WIDE_KEY, open)
-                  }
-                  empty={emptySheet}
-                  // „Rest verteilen“ only where something can go (a day of dated turns and locks alone has nothing).
-                  onRest={
-                    shownDay.isToday && shownDay.rows.some(movable)
-                      ? () => void showRest()
-                      : undefined
-                  }
-                  // Only where something can go: a day over its time by fixed blocks, turns or locks alone has no link.
-                  onSpread={
-                    shownDay.rows.some(movable) ? () => void showSpread(shownDay) : undefined
-                  }
-                  hints={
-                    shownDay.hints?.length ? (
-                      <ItemList label={t.planner.chips.todoList}>
-                        {shownDay.hints.map((h) => (
-                          <TodoHintRow
-                            key={h.itemKey}
-                            title={h.title}
-                            date={h.date}
-                            onPlace={() => void layHere(h.entry, h.date, titles)}
-                          />
-                        ))}
-                      </ItemList>
-                    ) : undefined
-                  }
-                  // On the phone the page's ⋯ stands in the sheet's head and holds „Tage einteilen“: said once.
-                  onSetup={phone ? undefined : () => setSettingUp(true)}
-                  headEnd={phone ? pageMenuButton : undefined}
-                  dayEnd={
-                    data && dayEndOf(data.settings)
-                      ? dayEndLabel(dayEndOf(data.settings)!)
-                      : undefined
-                  }
-                  onSwipe={
-                    phone
-                      ? (dir) => {
-                          const at = days.findIndex((d) => d.date === shownDay.date);
-                          const to = days[at + dir];
-                          if (to) pick(to.date);
-                        }
-                      : undefined
-                  }
-                />
-              ) : (
-                <DayPageLoading />
-              )}
+                {/* A training whose day passed unlogged: asked once, quietly, under today's sheet only. */}
+                {shownDay?.isToday && data ? (
+                  <PassedTrainings today={data.today} titles={titles} />
+                ) : null}
+              </>
+            )}
 
-              {/* A training whose day passed unlogged: asked once, quietly, under today's sheet only. */}
-              {shownDay?.isToday && data ? (
-                <PassedTrainings today={data.today} titles={titles} />
-              ) : null}
-            </>
-          )}
+            {/* Not wide: the context follows the sheet in the one column. */}
+            {!wide && hasContext && tab !== 'open' ? (
+              <aside aria-label={t.planner.ctx.label}>{context}</aside>
+            ) : null}
 
-          {/* Not wide: the context follows the sheet in the one column. */}
-          {!wide && hasContext && tab !== 'open' ? (
-            <aside aria-label={t.planner.ctx.label}>{context}</aside>
-          ) : null}
-
-          {/* Phone: the first screen is band and sheet; the plus of the bottom bar opens the field as a sheet.
+            {/* Phone: the first screen is band and sheet; the plus of the bottom bar opens the field as a sheet.
               The field also stays where it was before R1, as the page's last row: without it every entry on
               the phone costs one tap and one sheet more than before (e2e/usecases, paths B and E). */}
-          {phone && !capturing ? capture(false) : null}
-          {phone && !capturing ? answer : null}
-        </div>
-      </SplitView>
+            {phone && !capturing ? capture(false) : null}
+            {phone && !capturing ? answer : null}
+          </div>
+        </SplitView>
+      </div>
 
       {phone ? (
         <CaptureDialog open={capturing} onClose={() => setCapturing(false)}>

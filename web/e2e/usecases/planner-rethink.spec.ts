@@ -39,7 +39,8 @@ type Figures = Record<string, number | string>;
 /** The measured state; a path fails when the planner behaves differently (then re-measure and say why). */
 const IST: Record<string, Figures> = {
   'U1 Woche legen, zwei Tage verpassen, zurücklegen': {
-    layTaps: 31,
+    // Package 5 (2026-11-22): 31 → 11 – „Noch ohne Tag“ open once, then one drag per thing onto its day's tile.
+    layTaps: 11,
     layCollateral: 0,
     unaskedAfterTwoDays: 0,
     untraceable: 0,
@@ -247,6 +248,42 @@ class Hand {
     await expect(this.page.getByTestId(`day-${date}`)).toBeVisible();
   }
   /**
+   * Dragging a thing onto a day of the band (package 5): find it (open its day or „Noch ohne Tag“), then one
+   * gesture – counted as one tap. Up to the band the pointer rests at the window's top edge (the page scrolls).
+   * Returns false when the band shows no tile for that day.
+   */
+  async drag(title: string, to: string): Promise<boolean> {
+    const at = (await layout(this.page))[title]?.split('+')[0];
+    if (at) await this.show(at);
+    else await this.unfold(title);
+    const row = this.page
+      .locator('li')
+      .filter({
+        has: this.page.getByRole('button', { name: `Aktionen für ${title}`, exact: true }),
+      })
+      .first();
+    const handle = row.locator('[data-drag-unit]').first();
+    const tile = this.page.getByTestId(`week-${to}`);
+    if (!(await handle.count()) || !(await tile.count())) return false;
+    await handle.scrollIntoViewIfNeeded();
+    const a = (await handle.boundingBox())!;
+    const height = this.page.viewportSize()!.height;
+    this.taps += 1;
+    await this.page.mouse.move(a.x + 10, a.y + a.height / 2);
+    await this.page.mouse.down();
+    await this.page.mouse.move(a.x + 30, a.y + a.height / 2, { steps: 3 });
+    for (let i = 0; i < 100; i++) {
+      const b = await tile.boundingBox();
+      if (b && b.y >= 0 && b.y + b.height <= height) break;
+      await this.page.mouse.move(a.x + 30, 10);
+      await this.page.waitForTimeout(50);
+    }
+    const b = (await tile.boundingBox())!;
+    await this.page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 6 });
+    await this.page.mouse.up();
+    return true;
+  }
+  /**
    * „Verschieben …“ of one thing onto a day: find it (open its day), row menu, „Verschieben …“, the day chip.
    * Returns false when the dialog does not offer that day.
    */
@@ -357,13 +394,14 @@ test('U1 Woche legen, zwei Tage verpassen, zurücklegen', async ({ page }, info)
   await expect(page.locator('main h1')).toContainText('Planer');
   const auto = await settled(page);
 
-  // 1. Lay out the week: every thing that is not where he wants it is moved there („Verschieben …“).
+  // 1. Lay out the week: every thing that is not where he wants it is dragged onto its day (package 5; before:
+  // „Verschieben …“, 3 taps and the finding).
   const lay = new Hand(page);
   const layCollateral: string[] = [];
   for (const [title, to] of Object.entries(WANT)) {
     const before = await settled(page);
     if (before[title] === to) continue;
-    expect(await lay.move(title, to), `${title} → ${to}`).toBe(true);
+    expect(await lay.drag(title, to), `${title} → ${to}`).toBe(true);
     layCollateral.push(...changed(before, await settled(page), [title]));
   }
   const laid = await settled(page);
