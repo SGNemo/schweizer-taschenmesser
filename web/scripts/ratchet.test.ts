@@ -5,8 +5,6 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
-// proxy-2026-11: the imports MAINTAINER_LOGIN, PROXY_APPROVAL_UNTIL, proxyApproval, proxyOpen, proxyReason;
-// DURING/AFTER, proxyComment and the `now` options of run() and ci().
 import {
   approvalMessage,
   BUDGET_FILE,
@@ -1038,10 +1036,9 @@ const checkOf = (extra: object = {}) => ({
   ...extra,
 });
 const ENV = { GITHUB_TOKEN: 'placeholder-token' };
-// proxy-2026-11
-/** Inside and after the window of the temporary proxy approval. */
+/** A time inside the proxy approval window, and one long after its start (it has no end). */
 const DURING = Date.parse('2026-11-15T12:00:00Z');
-const AFTER = Date.parse(PROXY_APPROVAL_UNTIL);
+const LATER = Date.parse('2030-01-01T00:00:00Z');
 const proxyComment = (body: string, extra: object = {}) => ({
   body,
   user: { login: MAINTAINER_LOGIN, type: 'User' },
@@ -1079,8 +1076,7 @@ describe('--pr (merge rule) with recorded API answers', () => {
       env: ENV,
       fetchImpl: api.fetchImpl,
       publicKey: opts.publicKey ?? PUBLIC_PEM,
-      // The cases above test the signature alone: the proxy window is closed unless a case opens it.
-      now: opts.now ?? AFTER,
+      now: opts.now ?? LATER,
       out: (line: string) => lines.push(line),
     });
     return { code, text: lines.join('\n'), calls: api.calls };
@@ -1400,7 +1396,6 @@ describe('--pr (merge rule) with recorded API answers', () => {
     ).toBe(0);
     expect(await cli(['--pr', 'x'], deps({ pull: {} }))).toBe(2);
   });
-  // proxy-2026-11
   it('proxy approval: maintainer, this hash and a reason → mergeable, the reason is printed', async () => {
     const p = pullRequest(true);
     const work = p.clone();
@@ -1415,15 +1410,14 @@ describe('--pr (merge rule) with recorded API answers', () => {
     expect(r.text).toContain('Reason: One more button on finance, approved in chat.');
     expect(r.text).toContain(`budget ${BUDGET_FILE} d1920--finance.buttons 20→25`);
     expect(r.text).toMatch(/Mergeable/);
-    // The same comment after the window: only the signature counts again.
+    // The proxy approval has no end: the same comment still counts years later.
     const late = await run(
       work,
       { pull: pullOf(p.head), comments: [proxyComment(body)], ...green(p.head) },
-      { head: p.head, now: AFTER },
+      { head: p.head, now: LATER },
     );
-    expect(late.code).toBe(1);
+    expect(late.code).toBe(0);
   });
-  // proxy-2026-11
   it('proxy approval: wrong author, wrong hash, no reason, or an old hash after a new push → not mergeable', async () => {
     const p = pullRequest(true);
     const work = p.clone();
@@ -1437,7 +1431,6 @@ describe('--pr (merge rule) with recorded API answers', () => {
       proxyComment(line),
       proxyComment(`${line}\n   \n 42 `),
       proxyComment(`ok\n${line}\nReason: ok`),
-      proxyComment(`${line}\nReason: ok`, { created_at: PROXY_APPROVAL_UNTIL }),
       proxyComment(`${line}\nReason: ok`, { created_at: '2026-11-13T23:59:59Z' }),
       proxyComment(`${line}\nReason: ok`, { updated_at: '2026-11-15T11:00:00Z' }), // edited
       proxyComment(`${line}\nwaiting for Sven's OK`), // a request, not an approval
@@ -1473,7 +1466,6 @@ describe('--pr (merge rule) with recorded API answers', () => {
     expect(hashIn(again.text)).not.toBe(hash);
     expect(again.code).toBe(1);
   });
-  // proxy-2026-11
   it('proxy approval needs the green Web check like every approval', async () => {
     const p = pullRequest(true);
     const work = p.clone();
@@ -1493,7 +1485,6 @@ describe('--pr (merge rule) with recorded API answers', () => {
   });
 });
 
-// proxy-2026-11
 describe('proxyApproval', () => {
   const at = { pr: 7, hash: HASH, now: DURING };
   const line = `stimulus-raise ${REPO}#7 ${HASH}`;
@@ -1521,15 +1512,24 @@ describe('proxyApproval', () => {
     expect(proxyApproval(proxyComment(`x${ok}`), at)).toBeNull();
     expect(proxyApproval(null, at)).toBeNull();
   });
-  it('never for a hit on the script itself: the trust root needs the signature', () => {
+  it('also for a hit on the script itself; no end unless a date is set', () => {
     const ok = proxyComment(`${line}\nReason: ok`);
     const own = ['protected web/scripts/ratchet.mjs a→b'];
-    expect(proxyReason([ok], { hits: own, pr: 7, hash: HASH, now: DURING })).toBeUndefined();
-    expect(proxyOpen(own, DURING)).toBe(false);
-    const other = ['protected web/scripts/ratchet.test.ts a→b'];
-    expect(proxyReason([ok], { hits: other, pr: 7, hash: HASH, now: DURING })).toBe('ok');
-    expect(proxyOpen(other, DURING)).toBe(true);
-    expect(proxyOpen(other, AFTER)).toBe(false);
+    expect(PROXY_APPROVAL_UNTIL).toBeNull();
+    expect(proxyReason([ok], { hits: own, pr: 7, hash: HASH, now: LATER })).toBe('ok');
+    expect(proxyOpen(own, LATER)).toBe(true);
+    const until = '2026-11-22T00:00:00Z';
+    expect(proxyOpen(own, DURING, until)).toBe(true);
+    expect(proxyOpen(own, Date.parse(until), until)).toBe(false);
+    expect(proxyApproval(ok, { pr: 7, hash: HASH, now: Date.parse(until), until })).toBeNull();
+    expect(
+      proxyApproval(proxyComment(`${line}\nReason: ok`, { created_at: until }), {
+        pr: 7,
+        hash: HASH,
+        now: DURING,
+        until,
+      }),
+    ).toBeNull();
   });
 });
 
@@ -1549,7 +1549,7 @@ describe('--base --head (CI feedback)', () => {
     h: ReturnType<typeof history>,
     r: Partial<Recorded>,
     env: object = { PR_NUMBER: '7' },
-    now: number = AFTER,
+    now: number = LATER,
   ) => {
     const api = recorded({ pull: {}, ...r });
     const lines: string[] = [];
@@ -1586,15 +1586,14 @@ describe('--base --head (CI feedback)', () => {
     });
     expect(r.code).toBe(0);
   });
-  // proxy-2026-11
-  it('hits with a proxy approval comment for this hash: green while the window is open', async () => {
+  it('hits with a proxy approval comment for this hash: green', async () => {
     const h = history(true);
     const hash = hashOf(collectHits(h.repo, h.base, h.head));
     const comments = [proxyComment(`stimulus-raise ${REPO}#7 ${hash}\nReason: ok`)];
     const open = await ci(h, { comments }, { PR_NUMBER: '7' }, DURING);
     expect(open.code).toBe(0);
     expect(open.text).toContain('Reason: ok');
-    expect((await ci(h, { comments }, { PR_NUMBER: '7' }, AFTER)).code).toBe(1);
+    expect((await ci(h, { comments }, { PR_NUMBER: '7' }, LATER)).code).toBe(0);
     const wrong = [proxyComment(`stimulus-raise ${REPO}#7 ${'cd'.repeat(32)}\nReason: ok`)];
     expect((await ci(h, { comments: wrong }, { PR_NUMBER: '7' }, DURING)).code).toBe(1);
     expect((await ci(h, { comments, fail: /comments/ }, { PR_NUMBER: '7' }, DURING)).code).toBe(1);
