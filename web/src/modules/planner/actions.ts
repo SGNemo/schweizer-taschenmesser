@@ -654,6 +654,73 @@ export function spreadDay(
   );
 }
 
+/**
+ * „Auf einen Tag …“ of a selection, and „Alle auf heute“ of the tab „Noch offen“ (planner rethink, package 3): every
+ * named thing lies on `date` – each keeps its lock, nothing else moves. One action, one undo, one toast.
+ */
+export function moveMany(
+  entries: readonly PlannableEntry[],
+  date: string,
+  titles: Record<string, string>,
+  lead = t.planner.open.movedMany(entries.length, dayName(date)),
+) {
+  return act(t.planner.row.move, lead, titles, async () => {
+    const touched: string[] = [];
+    for (const e of entries) touched.push(...((await layOn(e, date)).touched ?? []));
+    return { touched };
+  });
+}
+
+/** „Alle auf heute“: every thing of the tab „Noch offen“ lies on today – one tap, one undo (CONCEPT §3). */
+export const allToday = (entries: readonly PlannableEntry[], titles: Record<string, string>) =>
+  moveMany(entries, today(), titles, t.planner.open.allTodayDone);
+
+/**
+ * „Verteilen …“ of the tab „Noch offen“: its things that are not „fest“ go to the proposer – today first, nothing
+ * before it. The preview showed exactly this; at „Übernehmen“ only what still lies unlocked on a passed day is
+ * handed over (a thing laid or locked meanwhile stays out). The fixed ones stay and are named; one undo.
+ */
+export function spreadOpen(keys: readonly string[], fixed: number, titles: Record<string, string>) {
+  const day = today();
+  let still: string[] = [];
+  let fixedNow = fixed;
+  const lineOf = () =>
+    still.length === 0
+      ? fixedNow > 0
+        ? t.planner.spread.fixed(fixedNow)
+        : t.planner.preview.nothing
+      : fixedNow > 0
+        ? `${t.planner.spread.done}\n${t.planner.spread.fixed(fixedNow)}`
+        : t.planner.spread.done;
+  return act(
+    t.planner.open.spread,
+    t.planner.spread.done,
+    titles,
+    async () => {
+      still = [];
+      for (const key of keys) {
+        const rows = await rowsOf(key);
+        if (rows.length !== 1 || rows[0]!.of !== 1 || rows[0]!.date >= day) continue;
+        if (rows[0]!.locked) fixedNow += 1;
+        else still.push(key);
+      }
+      return { loose: still, notBefore: day };
+    },
+    { leadOnly: true, proposes: true, leadAfter: async () => lineOf() },
+  );
+}
+
+/**
+ * „Vom Tag nehmen“ (offered on a thing open for more than 14 days): its rows go, the thing is „Noch ohne Tag“ again.
+ * The source hears it (a date the planner wrote goes with the row, the person's own date stays). One undo.
+ */
+export const takeOff = (e: PlannableEntry, titles: Record<string, string>) =>
+  act(t.planner.open.takeOff, t.planner.open.takenOff(short(e.title)), titles, async () => {
+    const key = itemKeyOf(e.moduleId, e.id);
+    for (const r of await rowsOf(key)) await assignmentRepo.remove(r.id);
+    return { touched: [key] };
+  });
+
 /** „Fest an diesem Tag“ / „Nicht mehr fest“: the lock on the thing's rows. No proposal takes a thing that is fest. */
 export async function setLocked(
   e: PlannableEntry,

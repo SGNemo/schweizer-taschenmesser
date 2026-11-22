@@ -6,7 +6,15 @@ import { DAY_PARTS, type DayPart } from '@/core/plan/types';
 import { today } from '@/core/time/now';
 import { t } from '@/strings';
 import { Chip, Chips, Dialog } from '@/ui';
-import { asBreak, BREAK_CHOICES, ESTIMATE_CHOICES, moveTo, setEstimate, setPart } from '../actions';
+import {
+  asBreak,
+  BREAK_CHOICES,
+  ESTIMATE_CHOICES,
+  moveMany,
+  moveTo,
+  setEstimate,
+  setPart,
+} from '../actions';
 import { BOARD_DAYS } from '../calendar';
 import { compact } from './capacity';
 import styles from '../routes/planner.module.css';
@@ -20,7 +28,9 @@ export type RowChoiceState =
   | { kind: 'estimate'; entry: PlannableEntry; current?: number }
   | { kind: 'part'; entry: PlannableEntry; current?: DayPart }
   /** „Verschieben …“: `on` = the day the row lies on (none while it has no day). */
-  | { kind: 'move'; entry: PlannableEntry; on?: string };
+  | { kind: 'move'; entry: PlannableEntry; on?: string }
+  /** „Auf einen Tag …“ of a selection (tab „Noch offen“, package 3): one day for all of them, one undo. */
+  | { kind: 'moveMany'; entries: readonly PlannableEntry[]; onDone?: () => void };
 
 /**
  * The small sheet behind one ⋯ entry (REVIEW-FABLE R8: one entry opens the choice instead of a menu row per
@@ -46,6 +56,27 @@ export function RowChoice({
 }) {
   if (!choice) return null;
   const r = t.planner.row;
+  if (choice.kind === 'moveMany') {
+    const heading = t.planner.open.moveManyTitle(choice.entries.length);
+    return (
+      <Dialog open onClose={onClose} title={heading}>
+        <p className={styles.capacity}>{r.moveHint}</p>
+        <Chips label={heading}>
+          {(days ?? weekFromToday()).map((date) => (
+            <Chip
+              key={date}
+              label={`${dayName(date)} ${formatDay(date, 'd.')}`}
+              onClick={() => {
+                onClose();
+                choice.onDone?.();
+                void moveMany(choice.entries, date, titles);
+              }}
+            />
+          ))}
+        </Chips>
+      </Dialog>
+    );
+  }
   const title = choice.entry.title;
   const pickEstimate = (min: number) => {
     onClose();

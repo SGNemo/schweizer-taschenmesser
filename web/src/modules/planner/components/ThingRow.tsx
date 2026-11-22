@@ -64,6 +64,9 @@ export function ThingRow({
   noDuration,
   was,
   lock,
+  onMove,
+  onTakeOff,
+  select,
 }: {
   row: BoardRow;
   /** The first row of „Zuerst“: its title is strong. */
@@ -83,6 +86,15 @@ export function ThingRow({
   was?: string;
   /** The lock („fest“) in one tap; left out where the row cannot be locked (a fixed block, „Frist vorbei“). */
   lock?: { locked: boolean; onToggle: () => void };
+  /**
+   * „Noch offen“ (package 3): a move button in place of the ⋯ menu – two taps to a day, also on the phone. With it
+   * the row has no ⋯ at all.
+   */
+  onMove?: () => void;
+  /** „Vom Tag nehmen“, offered on a thing open for more than 14 days. */
+  onTakeOff?: () => void;
+  /** „Auswählen“: the row is a choice of the selection (a checkbox in front, no tick). */
+  select?: { selected: boolean; onChange: (selected: boolean) => void };
 }) {
   const navigate = useNavigate();
   // Ticked: the row fades while the source stores it, then leaves with the board's next reading.
@@ -91,17 +103,20 @@ export function ThingRow({
   const source = entry ? sourceOf(entry) : undefined;
   const action = onDone ? undefined : entry?.action;
   const links = useRowLinks(entry);
-  const fullMenu = withLinks(menu, useActionMenu(action), useLinkMenu(links));
-  const done = onDone
-    ? () => {
-        if (leaving) return;
-        setLeaving(true);
-        // Nothing happened (the source said no): the row stays as it was.
-        void onDone().then((ok) => {
-          if (!ok) setLeaving(false);
-        });
-      }
-    : undefined;
+  const linkedMenu = withLinks(menu, useActionMenu(action), useLinkMenu(links));
+  // „Noch offen“: the row's steps are on the row itself – no ⋯.
+  const fullMenu = onMove ? [] : linkedMenu;
+  const done =
+    onDone && !select
+      ? () => {
+          if (leaving) return;
+          setLeaving(true);
+          // Nothing happened (the source said no): the row stays as it was.
+          void onDone().then((ok) => {
+            if (!ok) setLeaving(false);
+          });
+        }
+      : undefined;
 
   const duration = row.approx ? t.planner.row.approx(compact(row.minutes)) : compact(row.minutes);
   const facts: ReactNode[] = [];
@@ -196,21 +211,50 @@ export function ThingRow({
       }
       below={links.length > 0 ? <LinkChips views={links} /> : undefined}
       end={noDuration ? undefined : <span className={styles.duration}>{duration}</span>}
+      selectable={select ? true : undefined}
+      selected={select?.selected}
+      onSelectChange={select ? (on) => select.onChange(on) : undefined}
       actions={
-        lock && !row.fixed ? (
-          <button
-            type="button"
-            className={lock.locked ? `${styles.lock} ${styles.lockOn}` : styles.lock}
-            aria-pressed={lock.locked}
-            aria-label={t.planner.row.lockName(row.title)}
-            title={t.planner.row.lockName(row.title)}
-            data-testid="row-lock"
-            onClick={lock.onToggle}
-          >
-            <Icon name={lock.locked ? 'lock' : 'unlock'} size={16} />
-            {/* The state in a word beside the symbol, never in colour alone. */}
-            {lock.locked ? <span aria-hidden="true">{t.planner.row.fixed}</span> : null}
-          </button>
+        lock || onMove || onTakeOff ? (
+          <>
+            {onTakeOff && !select ? (
+              <button
+                type="button"
+                className={styles.textLink}
+                aria-label={t.planner.open.takeOffName(row.title)}
+                onClick={onTakeOff}
+              >
+                {t.planner.open.takeOff}
+              </button>
+            ) : null}
+            {lock && !row.fixed && !select ? (
+              <button
+                type="button"
+                className={lock.locked ? `${styles.lock} ${styles.lockOn}` : styles.lock}
+                aria-pressed={lock.locked}
+                aria-label={t.planner.row.lockName(row.title)}
+                title={t.planner.row.lockName(row.title)}
+                data-testid="row-lock"
+                onClick={lock.onToggle}
+              >
+                <Icon name={lock.locked ? 'lock' : 'unlock'} size={16} />
+                {/* The state in a word beside the symbol, never in colour alone. */}
+                {lock.locked ? <span aria-hidden="true">{t.planner.row.fixed}</span> : null}
+              </button>
+            ) : null}
+            {onMove && !select ? (
+              <button
+                type="button"
+                className={styles.lock}
+                aria-label={t.planner.row.moveTitle(row.title)}
+                title={t.planner.row.moveTitle(row.title)}
+                data-row-move
+                onClick={onMove}
+              >
+                <Icon name="calendar" size={16} />
+              </button>
+            ) : null}
+          </>
         ) : undefined
       }
       menu={fullMenu}

@@ -46,7 +46,7 @@ export function FocusSection() {
   const hideValues = useHideValuesSetting();
   // „Woche prüfen“ belongs to the planner: hidden while the planner is off.
   const plannerOn = useModuleStates()?.planner === true;
-  const extras: readonly BoolKey[] = plannerOn ? [...EXTRAS, 'weekCheck'] : EXTRAS;
+  const extras: readonly BoolKey[] = plannerOn ? [...EXTRAS, 'weekCheck', 'openLine'] : EXTRAS;
   const s = t.focus.settings;
   const toast = useUiStore((x) => x.toast);
   const on = (keys: readonly BoolKey[]) => keys.filter((k) => values[k]).length;
@@ -119,6 +119,7 @@ export function FocusSection() {
         {toggle('streaks', s.streaks, s.streaksHint)}
         {toggle('weekReview', s.weekReview, s.weekReviewHint)}
         {plannerOn ? toggle('weekCheck', s.weekCheck, s.weekCheckHint) : null}
+        {plannerOn ? toggle('openLine', s.openLine, s.openLineHint) : null}
         {toggle('searchHistory', s.searchHistory, s.searchHistoryHint)}
         <SettingRow id="focus--hideValues" label={s.hideValues} description={s.hideValuesHint}>
           <Switch

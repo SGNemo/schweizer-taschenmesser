@@ -11,6 +11,10 @@ export interface TabItem {
   active: boolean;
   /** Route to navigate to (renders a link); without it the tab calls `onSelect`. */
   to?: string;
+  /** A quiet dot after the label: the view holds something (never a count). `name` then says what in words. */
+  mark?: boolean;
+  /** The accessible name when it says more than the label („Noch offen: Dinge von Mo, Di“). */
+  name?: string;
 }
 
 interface TabsByItems {
@@ -26,7 +30,7 @@ interface TabsByItems {
 interface TabsByValue<T extends string> {
   label: string;
   value: T;
-  options: readonly { value: T; label: string }[];
+  options: readonly { value: T; label: string; mark?: boolean; name?: string }[];
   onChange: (value: T) => void;
   items?: never;
   onSelect?: never;
@@ -42,7 +46,13 @@ export function Tabs<T extends string = string>(props: TabsByItems | TabsByValue
   const { label } = props;
   const items: readonly TabItem[] =
     props.options !== undefined
-      ? props.options.map((o) => ({ id: o.value, label: o.label, active: o.value === props.value }))
+      ? props.options.map((o) => ({
+          id: o.value,
+          label: o.label,
+          active: o.value === props.value,
+          ...(o.mark ? { mark: true } : {}),
+          ...(o.name ? { name: o.name } : {}),
+        }))
       : props.items;
   const onSelect = (id: string) =>
     props.options !== undefined ? props.onChange(id as T) : props.onSelect?.(id);
@@ -70,8 +80,10 @@ export function Tabs<T extends string = string>(props: TabsByItems | TabsByValue
             to={i.to}
             className={styles.tab}
             aria-current={i.active ? 'page' : undefined}
+            aria-label={i.name}
           >
             {i.label}
+            {i.mark ? <span className={styles.mark} aria-hidden="true" /> : null}
           </Link>
         ) : (
           <button
@@ -79,9 +91,11 @@ export function Tabs<T extends string = string>(props: TabsByItems | TabsByValue
             type="button"
             className={styles.tab}
             aria-current={i.active ? 'page' : undefined}
+            aria-label={i.name}
             onClick={() => onSelect(i.id)}
           >
             {i.label}
+            {i.mark ? <span className={styles.mark} aria-hidden="true" /> : null}
           </button>
         ),
       )}

@@ -1397,6 +1397,9 @@ export const de = {
       weekCheck: '„Woche prüfen“ am Montag',
       weekCheckHint:
         'Montags steht im Planer eine stille Zeile, die zum Wochenzettel führt. Ein × blendet sie für die Woche aus; über ⋯ ist der Zettel immer da.',
+      openLine: '„Noch offen“ auf heute',
+      openLineHint:
+        'Liegt von vergangenen Tagen noch etwas offen, sagt es eine stille Zeile auf dem heutigen Blatt, ohne Zahl. Der Reiter „Noch offen“ bleibt auch ohne die Zeile da.',
       eveningWrapUp: '„Tag abschließen“ am Abend',
       eveningWrapUpHint:
         'Ab dem späten Nachmittag lässt sich Übriges mit einem Tipp auf morgen schieben. Mit dem Planer zeigt erst eine Vorschau, wohin der Rest geht. Mit einem Tagesende sagt der Planer eine halbe Stunde vorher „Bald ist Tagesende.“',
@@ -9529,13 +9532,30 @@ export const de = {
       label: 'Ansicht',
       plan: 'Plan',
       open: 'Noch offen',
-      openFrom: (days: string) => `Noch offen · ${days}`,
+      openFrom: (days: string) => `Noch offen: Dinge von ${days}`,
       since: (day: string) => `seit ${day}`,
     },
     open: {
       empty: 'Nichts offen von früher.',
       was: (day: string) => `war ${day}`,
       fixedGroup: 'Fest – braucht einen neuen Tag',
+      line: (days: string) => `Von ${days} ist noch etwas offen.`,
+      lineSince: (day: string) => `Seit ${day} ist noch etwas offen.`,
+      show: 'Ansehen',
+      allToday: 'Alle auf heute',
+      spread: 'Verteilen …',
+      select: 'Auswählen',
+      selectGroup: (day: string) => `Alle von ${day} auswählen`,
+      selectGroupShort: 'Alle',
+      moveSelected: 'Auf einen Tag …',
+      moveManyTitle: (n: number) => (n === 1 ? 'Verschieben: 1 Ding' : `Verschieben: ${n} Dinge`),
+      takeOff: 'Vom Tag nehmen',
+      takeOffName: (title: string) => `Vom Tag nehmen: ${title}`,
+      spreadLine: 'Was offen ist, geht auf heute oder die nächsten Tage.',
+      allTodayDone: 'Alles liegt auf heute.',
+      movedMany: (n: number, day: string) =>
+        n === 1 ? `Liegt auf ${day}` : `${n} Dinge liegen auf ${day}`,
+      takenOff: (title: string) => `${title} ist jetzt ohne Tag`,
     },
     toast: {
       planned: (days: string) => `Eingeplant: ${days}`,

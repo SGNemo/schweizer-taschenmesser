@@ -500,7 +500,7 @@ test.describe('Planer (week board, package 1)', () => {
     await expect(page.getByRole('button', { name: 'Neu planen' })).toHaveCount(0);
   });
 
-  test('a thing laid on Monday is still on Monday two days later and listed under „Noch offen“ with „war Mo“; „Verschieben …“ from there puts it on a day and nothing else moves', async ({
+  test('a thing laid on Monday is still on Monday two days later and listed under „Noch offen“; its move button puts it on a day and nothing else moves', async ({
     page,
   }) => {
     await enablePlanner(page);
@@ -532,25 +532,29 @@ test.describe('Planer (week board, package 1)', () => {
     );
     await expect(page.locator('main')).not.toContainText('Keller');
     expect(await laid()).toEqual({ '60 min': '2026-11-09', '45 min': '2026-11-12' });
-    // It is listed under „Noch offen“ (the tab names the day, never a count), under the head of its day.
-    await expect(tabs).toContainText('Noch offen · Mo');
-    await tabs.getByText('Noch offen · Mo').click();
+    // Today's sheet says it in one calm line (package 3), never a count; the tab carries a dot, its name the day.
+    await expect(page.getByTestId('open-line')).toHaveText('Von Mo ist noch etwas offen.Ansehen');
+    const openTab = tabs.getByRole('button', { name: 'Noch offen: Dinge von Mo 9.' });
+    await expect(openTab).toBeVisible();
+    await expect(tabs).not.toContainText(/\d/);
+    await page.getByTestId('open-line').getByRole('button', { name: 'Ansehen' }).click();
     await expect(page).toHaveURL(/tab=open/);
     const open = page.getByTestId('planner-open');
     await expect(open.locator('li')).toHaveCount(1);
     await expect(open.locator('li')).toContainText('Keller');
     await expect(open).toContainText('Mo 9.');
     await expect(open).not.toContainText('Angebot');
-    // „Verschieben …“ from there puts it on a day; the other thing stays where it lies.
-    await open.getByRole('button', { name: 'Aktionen für Keller' }).click();
-    await page.getByRole('menuitem', { name: 'Verschieben …' }).click();
+    // The row has no ⋯: its move button and a day – two taps; the other thing stays where it lies.
+    await expect(open.getByRole('button', { name: 'Aktionen für Keller' })).toHaveCount(0);
+    await open.getByRole('button', { name: 'Verschieben: Keller' }).click();
     await page
       .getByRole('dialog', { name: 'Verschieben: Keller' })
       .getByRole('button', { name: 'Fr 13.', exact: true })
       .click();
     await expect(toast(page)).toContainText('Liegt auf Fr');
     await expect(open).toContainText('Nichts offen von früher.');
-    await expect(tabs).not.toContainText('·');
+    // Nothing open any more: the tab has its plain name again.
+    await expect(tabs.getByRole('button', { name: 'Noch offen', exact: true })).toBeVisible();
     expect(await laid()).toEqual({ '60 min': '2026-11-13', '45 min': '2026-11-12' });
     await ready(page, '/planner');
     await expect(await day(page, '2026-11-13')).toContainText('Keller');
@@ -1179,5 +1183,78 @@ test.describe('Planer (planner rethink, package 2: lock words, overbooking, chip
       'aria-pressed',
       'false',
     );
+  });
+});
+
+test.describe('Planer (planner rethink, package 3: „Noch offen“ in one move)', () => {
+  test.beforeEach(({ isMobile }) => {
+    test.skip(isMobile, 'wide board only');
+  });
+
+  /** Three things on Monday and one on Tuesday, then Thursday morning. */
+  async function missedWeek(page: Page) {
+    await enablePlanner(page);
+    await ready(page, '/planner');
+    for (const line of ['Keller 30min', 'Angebot 30min', 'Steuer 30min']) await enter(page, line);
+    await day(page, '2026-11-10');
+    await enter(page, 'Blogpost 30min');
+    await expect(toast(page)).toContainText('Liegt auf Di');
+    await page.clock.setFixedTime(new Date('2026-11-12T10:00:00'));
+    await ready(page, '/planner?tab=open');
+    const open = page.getByTestId('planner-open');
+    await expect(open.locator('li')).toHaveCount(4);
+    return open;
+  }
+
+  test('„Alle auf heute“: one tap, one undo; the row has tick, lock and a move button, no ⋯', async ({
+    page,
+  }) => {
+    const open = await missedWeek(page);
+    const keller = open.locator('li', { hasText: 'Keller' });
+    await expect(keller.getByRole('checkbox', { name: 'Erledigt: Keller' })).toBeVisible();
+    await expect(keller.getByRole('button', { name: 'Fest an diesem Tag: Keller' })).toBeVisible();
+    await expect(keller.getByRole('button', { name: 'Verschieben: Keller' })).toBeVisible();
+    await expect(keller.getByRole('button', { name: 'Aktionen für Keller' })).toHaveCount(0);
+    await open.getByRole('button', { name: 'Alle auf heute' }).click();
+    await expect(toast(page)).toContainText('Alles liegt auf heute.');
+    await expect(open).toContainText('Nichts offen von früher.');
+    const onThursday = (await rows(page, 'planner_assignment')).filter(
+      (r) => r.deletedAt === null && r.date === '2026-11-12',
+    );
+    expect(onThursday).toHaveLength(4);
+    await page.getByRole('button', { name: 'Rückgängig' }).last().click();
+    await expect(open.locator('li')).toHaveCount(4);
+  });
+
+  test('„Verteilen …“ shows a preview, leaves the fixed one and names it; „Auswählen“ moves a day in one go', async ({
+    page,
+  }) => {
+    const open = await missedWeek(page);
+    await open.getByRole('button', { name: 'Fest an diesem Tag: Steuer' }).click();
+    await expect(toast(page)).toContainText('Fest am Mo');
+    // The fixed one comes first, in its own group.
+    await expect(open.locator('h2').first()).toContainText('Fest – braucht einen neuen Tag');
+    await open.getByRole('button', { name: 'Verteilen …' }).click();
+    const preview = page.getByTestId('plan-preview');
+    await expect(preview).toContainText('Was offen ist, geht auf heute oder die nächsten Tage.');
+    await expect(preview).toContainText('1 bleibt: fest');
+    // Nothing moved yet.
+    await expect(open.locator('li')).toHaveCount(4);
+    await preview.getByRole('button', { name: 'Verwerfen' }).click();
+    await expect(open.locator('li')).toHaveCount(4);
+
+    // „Auswählen“: Monday's two things that are not fest onto Friday – one day pick, one undo.
+    await open.getByRole('button', { name: 'Auswählen' }).click();
+    await open.getByRole('button', { name: 'Alle von Mo 9. auswählen' }).click();
+    await expect(page.getByText('2 ausgewählt')).toBeVisible();
+    await page.getByRole('button', { name: 'Auf einen Tag …' }).click();
+    await page
+      .getByRole('dialog', { name: 'Verschieben: 2 Dinge' })
+      .getByRole('button', { name: 'Fr 13.', exact: true })
+      .click();
+    await expect(toast(page)).toContainText('2 Dinge liegen auf Fr');
+    await expect(open.locator('li')).toHaveCount(2);
+    await expect(open).toContainText('Steuer');
+    await expect(open).toContainText('Blogpost');
   });
 });

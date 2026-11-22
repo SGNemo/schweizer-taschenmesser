@@ -43,7 +43,8 @@ const IST: Record<string, Figures> = {
     layCollateral: 0,
     unaskedAfterTwoDays: 0,
     untraceable: 0,
-    repairTaps: 16,
+    // Package 3 (2026-11-22): 16 → 9 – the tab, then per passed day „Auswählen“ · „Alle“ · „Auf einen Tag …“ · day.
+    repairTaps: 9,
     repairRounds: 1,
     collateral: 0,
     layoutReached: 'ja',
@@ -60,6 +61,7 @@ const IST: Record<string, Figures> = {
   },
   // Package 2 (2026-11-22): the lock is one tap on the row (package 1: ⋯ and „Fest an diesem Tag“, 2 taps).
   'U6 Ding fest machen': { taps: 1, locked: 'ja', collateral: 0 },
+  'U7 Alle auf heute': { taps: 1, onToday: 'ja', collateral: 0 },
 };
 /** What the rebuild has to reach. */
 const TARGET: Record<string, Figures> = {
@@ -82,6 +84,7 @@ const TARGET: Record<string, Figures> = {
     collateral: 0,
   },
   'U6 Ding fest machen': { taps: 1, locked: 'ja', collateral: 0 },
+  'U7 Alle auf heute': { taps: 1, onToday: 'ja', collateral: 0 },
 };
 
 const base = { createdAt: 1, updatedAt: 1, deviceId: 'e2e', deletedAt: null, _f: {} };
@@ -250,10 +253,17 @@ class Hand {
     const at = (await layout(this.page))[title]?.split('+')[0];
     if (at) await this.show(at);
     else await this.unfold(title);
-    await this.tap(
-      this.page.getByRole('button', { name: `Aktionen für ${title}`, exact: true }).first(),
-    );
-    await this.tap(this.page.getByRole('menuitem', { name: 'Verschieben …' }));
+    // „Noch offen“ (package 3): the row's own move button, no ⋯ – one tap less.
+    const direct = this.page
+      .getByTestId('planner-open')
+      .getByRole('button', { name: `Verschieben: ${title}`, exact: true });
+    if (at && at < this.today && (await direct.count())) await this.tap(direct.first());
+    else {
+      await this.tap(
+        this.page.getByRole('button', { name: `Aktionen für ${title}`, exact: true }).first(),
+      );
+      await this.tap(this.page.getByRole('menuitem', { name: 'Verschieben …' }));
+    }
     const dialog = this.page.getByRole('dialog', { name: `Verschieben: ${title}` });
     await expect(dialog).toBeVisible();
     const chip = dialog.locator(`[data-date="${to}"], [data-testid="move-${to}"]`).first();
@@ -267,6 +277,20 @@ class Hand {
     await expect(dialog).toHaveCount(0);
     return true;
   }
+}
+
+/**
+ * Every thing still open from one passed day onto one day, in one move (package 3): „Noch offen“ → „Auswählen“ →
+ * the day's „Alle“ → „Auf einen Tag …“ → the day chip.
+ */
+async function moveDay(hand: Hand, page: Page, from: string, to: string) {
+  await hand.tab(true);
+  await hand.tap(page.getByTestId('open-actions').getByRole('button', { name: 'Auswählen' }));
+  await hand.tap(page.getByRole('button', { name: `Alle von ${chipLabel(from)} auswählen` }));
+  await hand.tap(page.getByRole('button', { name: 'Auf einen Tag …' }));
+  const dialog = page.getByRole('dialog', { name: /^Verschieben: \d+ Dinge?$/ });
+  await hand.tap(dialog.getByRole('button', { name: chipLabel(to), exact: true }));
+  await expect(dialog).toHaveCount(0);
 }
 
 const WD = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
@@ -404,6 +428,15 @@ test('U1 Woche legen, zwei Tage verpassen, zurücklegen', async ({ page }, info)
   const repairCollateral: string[] = [];
   let rounds = 0;
   let reached = false;
+  // A passed day whose things all go to one day is moved in one go (package 3: „Auswählen“, the day's „Alle“).
+  for (const from of [...new Set(missed.map((k) => wednesday[k]!.split('+')[0]!))].sort()) {
+    const things = missed.filter((k) => wednesday[k]!.split('+')[0] === from);
+    const targets = new Set(things.map((k) => GOAL[k]));
+    if (targets.size !== 1 || things.length < 2) continue;
+    const before = await settled(page);
+    await moveDay(fix, page, from, [...targets][0]!);
+    repairCollateral.push(...changed(before, await settled(page), things));
+  }
   while (rounds < 4 && !reached) {
     rounds += 1;
     for (const [title, to] of Object.entries(GOAL)) {
@@ -584,5 +617,40 @@ test('U6 Ding fest machen', async ({ page }, info) => {
     'U6 Ding fest machen',
     { taps: hand.taps, locked: locked ? 'ja' : 'nein', collateral: changed(before, after).length },
     { at, before, after },
+  );
+});
+
+test('U7 Alle auf heute', async ({ page }, info) => {
+  // Three things laid on Monday, nothing done; Wednesday he puts all of them on today in one move.
+  const THREE = ['Angebot', 'Steuer', 'Keller'];
+  await prepare(page, THREE);
+  await ready(page, '/planner');
+  await expect(page.locator('main h1')).toContainText('Planer');
+  const lay = new Hand(page);
+  for (const title of THREE) expect(await lay.move(title, MO)).toBe(true);
+  await settled(page);
+  await page.clock.setFixedTime(new Date(`${MI}T08:00:00`));
+  await page.reload();
+  await expect(page.locator('main h1')).toContainText('Planer');
+  const before = await settled(page);
+  const hand = new Hand(page);
+  hand.today = MI;
+  // Finding the tab is the scene (the line on today, or the tab); the move itself is what is counted.
+  await hand.tab(true);
+  hand.taps = 0;
+  await hand.tap(page.getByTestId('open-actions').getByRole('button', { name: 'Alle auf heute' }));
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Alles liegt auf heute.' }),
+  ).toBeVisible();
+  const after = await settled(page);
+  record(
+    info,
+    'U7 Alle auf heute',
+    {
+      taps: hand.taps,
+      onToday: THREE.every((k) => after[k] === MI) ? 'ja' : 'nein',
+      collateral: changed(before, after, THREE).length,
+    },
+    { before, after },
   );
 });
